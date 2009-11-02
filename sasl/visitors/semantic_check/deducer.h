@@ -2,6 +2,7 @@ class deducer_entry{
 	bool operator == ( const deducer_entry& rhs );
 	deducer_entry& operator = ( const deducer_entry& rhs );
 	dedcuer_entry( const dedcuer_entry& rhs );
+	deducer_entry( h_ast_node_type type );
 	
 	size_t hash_value();
 	
@@ -13,6 +14,12 @@ private:
 };
 
 struct deducer_value{
+	deducer_value(){
+	}
+	
+	bool is_valid(){
+		return ded.is_valid();
+	}
 	deducer_value( const deduction& ded, h_ct_operator ct_op, h_code_generator code_gen )
 		: ded( ded ), ct_op( ct_op ), code_gen( code_gen ) 
 	{}
@@ -119,15 +126,12 @@ public:
 			entries.push_back( deducer_entry ( ded_iter->type ) );
 		}
 		
-		param_match_cost best_match;
-		param_match_cost second_best_match;
+		param_match best_match;
+		vector< param_match > conflict_matches;
 		
-		try_match( entries, best_match, second_best_match );
-		if( ! predicator( best_match.return_value() ) ){
-			return best_match.return_value();
-		}
-		if( best_match.is_better_than( second_best_match ) ){
-			best_match.return_value().params( entries );
+		try_match( entries, best_match, conflict_matches, predicator );
+		if( conflict_matches.empty() ){
+			return best_matches.return_value();
 		}
 		
 		return deducer_value( deduction::ambigous() );
@@ -137,6 +141,85 @@ private:
 	h_typecast_deducer typecast_ded_;
 	typedef trie_map< deducer_entry, deducer_value > deducers_map_t;
 	deducers_map_t deducers_;
+	
+	bool is_better_deducer( const deducer_entry& lhs, const deducer_entry& rhs){
+		//  如果 T1 和 T2 是相同的类型，则两个转换都不是更好的转换
+		if ( lhs.type.is_equal(rhs.type) ){ return 0; }
+		
+		bool can_lhs2rhs_implicit = typecast_ded_->deduce( lhs, rhs ).can_implicit();
+		bool can_rhs2lhs_implicit = typecast_ded_->deduce( rhs, lhs ).can_implicit();
+		
+		// 如果存在 T1 到 T2 的隐式转换，且不存在 T2 到 T1 的隐式转换，则 C1 是更好的转换
+		if ( can_lhs2rhs_implicit && ! can_rhs2lhs_implicit ){
+			return 1;
+		}
+		
+		// 如果存在 T2 到 T1 的隐式转换，且不存在 T1 到 T2 的隐式转换，则 C2 是更好的转换
+		if ( ! can_lhs2rhs_implicit && can_rhs2lhs_implicit ){
+			return -1;
+		}
+		
+		// 如果 T1 为 sbyte 而 T2 为 byte, ushort, int 或者 long，则 C1 是更好的转换
+		//	如果 T1 为 sbyte 而 T2 为 byte、ushort、uint 或 ulong，则 C1 为更好的转换。
+		// 如果 T2 为 sbyte 而 T1 为 byte、ushort、uint 或 ulong，则 C2 为更好的转换。
+		// 如果 T1 为 short 而 T2 为 ushort、uint 或 ulong，则 C1 为更好的转换。
+		// 如果 T2 为 short 而 T1 为 ushort、uint 或 ulong，则 C2 为更好的转换。
+		// 如果 T1 为 int 而 T2 为 uint 或 ulong，则 C1 为更好的转换。
+		// 如果 T2 为 int 而 T1 为 uint 或 ulong，则 C2 为更好的转换。
+		// 如果 T1 为 long 而 T2 为 ulong，则 C1 为更好的转换。
+		// 如果 T2 为 long 而 T1 为 ulong，则 C2 为更好的转换。
+		buildin_types lhs_typecode = lhs.type->get_buildin_typecode();
+		buildin_types rhs_typecode = rhs.type->get_buildin_typecode();
+		
+		if ( is_better_buildin_type_conversation( lhs_typecode, rhs_typecode ) ){
+			return 1;
+		}
+		
+		if ( is_better_buildin_type_conversation( rhs_typecode, lhs_typecode ) ){
+			return -1;
+		}
+		
+		//否则，C1，C2都不是更好的转换。
+		return 0;
+	}
+	
+	bool is_better_buildin_type_conversation(  buildin_types lhs, buildin_types rhs ){
+		if ( lhs_typecode == buildin_types::sasl_int8 &&
+			(	rhs_typecode == buildin_types::sasl_uint8 ||
+				rhs_typecode == buildin_types::sasl_uint16 ||
+				rhs_typecode == buildin_types::sasl_uint32 ||
+				rhs_typecode == buildin_types::sasl_uint64
+			)
+		) {
+			return true;
+		}
+		
+		if ( lhs_typecode == buildin_types::sasl_int16 &&
+			(	rhs_typecode == buildin_types::sasl_uint16 ||
+				rhs_typecode == buildin_types::sasl_uint32 ||
+				rhs_typecode == buildin_types::sasl_uin64
+			)
+		) {
+			return true;
+		}
+		
+	if ( lhs_typecode == buildin_types::sasl_int32 &&
+			(	rhs_typecode == buildin_types::sasl_uint32 ||
+				rhs_typecode == buildin_types::sasl_uin64
+			)
+		) {
+			return true;
+		}
+		
+		if ( lhs_typecode == buildin_types::sasl_int64 &&
+			(	rhs_typecode == buildin_types::sasl_uin64
+			)
+		) {
+			return true;
+		}
+		
+		return false;
+	}
 	
 	bool deduce_predicator( const deducer_value& v ){
 		return ! v.ded.is_failed();
@@ -150,13 +233,16 @@ private:
 		return v.code_gen != NULL;
 	}
 	
-	void try_match(
+	bool try_match(
 		const vector< deducer_entry >& entries,
-		param_match_cost& best_match,
-		param_match_cost& second_best_match
-		function< bool ( const deducer_value& )> predicator
+		param_match& best_match,
+		vector< param_match >& conflict_matches,
+		function< bool (const deducer_result&) > predicator
 		)
 	{
+		conflict_matches.clear();
+		best_match.initialize();
+		
 		// DFS 搜索
 		vector< deducers_map_t::const_child_iterator_t > trie_map_iter_stack;
 		trie_map_iter_stack.push_back( deducers_.begin() );
@@ -183,63 +269,62 @@ private:
 			
 			// 如果正好满了，说明是一种可匹配的情况，则输出。
 			if( trie_map_iter_stack.size() == entries.size() ){
-				param_match_cost candidate_deduction = match_deduction( entries, trie_map_iter_stack );
-				update_best_matches( candidate_deduction, best_match, second_best_match );
+				param_match candidate_deduction = match_deduction( entries, trie_map_iter_stack, predicator );
+				update_best_matches( candidate_deduction, best_match, conflict_matches );
 				++trie_map_iter_stack.back();
 				continue;
 			}
 			
 			// 如果当前节点能够匹配entry，那么就再深入一层，否则的话就忽略当前的往后迭代一个。
-			const deducer_entry& cur_entry ( entries[ trie_map_iter_stack.size() - 1 ] );
+			size_t iter_idx = trie_map_iter_stack.size() - 1;
+			const deducer_entry& cur_entry ( entries[ iter_idx ] );
 			const_child_iterator_t& cur_iter( trie_map_iter_stack.back() );
 			
 			deducer_value cur_value = typecast_ded_.generate_deduce(
-					deducer_entry.to_deduction(), 
-					(cur_iter->first).to_deduction() 
-					);
+				deducer_entry.to_deduction(), 
+				(cur_iter->first).to_deduction() 
+				);
 			
 			if( predicator( cur_value ) ){
-				++cur_iter;
-			} else {
-				trie_map_iter_stack.push_back( cur_iter->child_begin() );
+				deducer_value best_entry = best_match.result_value().params()[iter_idx];
+				if ( ! is_better_deducer(best_entry, cur_entry) ){
+					trie_map_iter_stack.push_back( cur_iter->child_begin() );	
+					continue;
+				}
 			}
+			++cur_iter;
 		}
 	}
 	
 	void update_best_matches( 
 		const deducer_value& candidate_match, 
-		param_match_cost& best_match, 
-		param_match_cost& second_best_match ){
-		
+		param_match& best_match, 
+		vector< param_match >& conflict_matches ){
 		if ( candidate_match.is_better_than( best_match ) ){
-			second_best_match = best_match;
+			conflict_matches.clear();
 			best_match = candidate_match;
 			return;
 		} 
 		
-		if ( candidate_match.is_better_than( second_best_match ) ){
-			second_best_match = candidate_match;
-		}
+		conflict_matches.push_back( candidate_match );
 	}
 	
-	param_match_cost match_params( 
+	param_match match_deduction( 
 		const vector< deducer_entry >& entries,
 		const vector< deducers_map_t::const_child_iterator_t >& ref,
 		function< bool (const deducer_result&) > predicator
 		){
-		deducer_value costed_deducer_value = ref.back()->value();
-		param_match_cost match_cost.result_value( costed_deducer_value );
+		param_match ret_match;
 		
-		if( predicator( costed_deducer_value ) ){
-			return param_match_cost();
-		}
+		deducer_value ded_val = ref.back()->value();
+		ret_match.result_value( ded_val );
 		
 		for( size_t i_entry = 0; i_entry < entries.size(); ++i_entry ){
-			match_cost.param_costs().push_back(
-				typecast_ded_.deduce( entries[i_entry].to_deduction(), ref[i_entry]->first.to_deduction() ).cost()
+			ret_match.param_deds().push_back(
+				typecast_ded_.deduce( entries[i_entry].to_deduction(), ref[i_entry]->first.to_deduction() )
 				);
 		}
 		
-		return match_cost;
+		return ret_match;
 	}
 };
