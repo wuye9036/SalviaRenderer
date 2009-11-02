@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project kpf_version="4" id="583715b5-0f04-40e9-9737-3bc685c401aa" name="swizzle.kpf">
+<preference-set idref="583715b5-0f04-40e9-9737-3bc685c401aa">
+  <boolean id="import_live">1</boolean>
+</preference-set>
+<preference-set idref="583715b5-0f04-40e9-9737-3bc685c401aa/swizzle.py">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="language">Python</string>
+  <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string relative="path" id="filename">swizzle.py</string>
+  <string id="mpostparams"></string>
+  <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params"></string>
+  <string id="executable-params"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string id="userEnvironment"></string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+</project>

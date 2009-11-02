@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EFLIB", "..\..\eflib\build\vc8_0\efl.vcproj", "{6D86391E-C412-42B1-AB5D-54357A4055BC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoftArtX", "SoftArtX.vcproj", "{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoftArt", "SoftArt.vcproj", "{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SampleWindow", "SampleWindow.vcproj", "{3E906B17-1731-40DB-9C0C-6A4941C1E95B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77} = {8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}
+		{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E} = {60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}
+		{6D86391E-C412-42B1-AB5D-54357A4055BC} = {6D86391E-C412-42B1-AB5D-54357A4055BC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EFLIB_test", "..\..\eflib\build\vc8_0\eflib_test.vcproj", "{C2BA1256-6011-42CC-9091-AE4104BCC72B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6D86391E-C412-42B1-AB5D-54357A4055BC} = {6D86391E-C412-42B1-AB5D-54357A4055BC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ddx_ddy_test", "..\..\test\softart\build\ddx_ddy_test.vcproj", "{55B280B5-0E3D-4DB8-A57B-F53414D8F644}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77} = {8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}
+		{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E} = {60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}
+		{6D86391E-C412-42B1-AB5D-54357A4055BC} = {6D86391E-C412-42B1-AB5D-54357A4055BC}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6D86391E-C412-42B1-AB5D-54357A4055BC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6D86391E-C412-42B1-AB5D-54357A4055BC}.Debug|Win32.Build.0 = Debug|Win32
+		{6D86391E-C412-42B1-AB5D-54357A4055BC}.Release|Win32.ActiveCfg = Release|Win32
+		{6D86391E-C412-42B1-AB5D-54357A4055BC}.Release|Win32.Build.0 = Release|Win32
+		{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}.Debug|Win32.Build.0 = Debug|Win32
+		{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}.Release|Win32.ActiveCfg = Release|Win32
+		{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}.Release|Win32.Build.0 = Release|Win32
+		{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}.Debug|Win32.Build.0 = Debug|Win32
+		{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}.Release|Win32.ActiveCfg = Release|Win32
+		{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}.Release|Win32.Build.0 = Release|Win32
+		{3E906B17-1731-40DB-9C0C-6A4941C1E95B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3E906B17-1731-40DB-9C0C-6A4941C1E95B}.Debug|Win32.Build.0 = Debug|Win32
+		{3E906B17-1731-40DB-9C0C-6A4941C1E95B}.Release|Win32.ActiveCfg = Release|Win32
+		{3E906B17-1731-40DB-9C0C-6A4941C1E95B}.Release|Win32.Build.0 = Release|Win32
+		{C2BA1256-6011-42CC-9091-AE4104BCC72B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C2BA1256-6011-42CC-9091-AE4104BCC72B}.Debug|Win32.Build.0 = Debug|Win32
+		{C2BA1256-6011-42CC-9091-AE4104BCC72B}.Release|Win32.ActiveCfg = Release|Win32
+		{C2BA1256-6011-42CC-9091-AE4104BCC72B}.Release|Win32.Build.0 = Release|Win32
+		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Debug|Win32.ActiveCfg = Debug|Win32
+		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Debug|Win32.Build.0 = Debug|Win32
+		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Release|Win32.ActiveCfg = Release|Win32
+		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

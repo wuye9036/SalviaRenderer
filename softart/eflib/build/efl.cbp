@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="EFLIB" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug Win32">
+				<Option output="G:\Programming\Projects\Cpp\SoftArt\eflib\build\..\..\Win32\libefl_d" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="G:\Programming\Projects\Cpp\SoftArt\eflib\build\..\..\Debug Win32\efl" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-DWIN32" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_LIB" />
+					<Add option="-D_CRT_SECURE_NO_WARNINGS" />
+					<Add option="-D_SCL_SECURE_NO_WARNINGS" />
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-O0" />
+				</Compiler>
+			</Target>
+			<Target title="Release Win32">
+				<Option output="lib" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="G:\Programming\Projects\Cpp\SoftArt\eflib\build\..\..\Release Win32\efl" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_LIB" />
+					<Add option="-D_CRT_SECURE_NO_WARNINGS" />
+					<Add option="-D_SCL_SECURE_NO_WARNINGS" />
+					<Add option="-D_SECURE_SCL=0" />
+					<Add option="-W" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="..\src\collision_detection.cpp" />
+		<Unit filename="..\src\debug_helper.cpp" />
+		<Unit filename="..\src\initialize.cpp" />
+		<Unit filename="..\src\math.cpp" />
+		<Unit filename="..\src\stringx.cpp" />
+		<Unit filename="..\include\config.h" />
+		<Unit filename="..\include\debug_helper.h" />
+		<Unit filename="..\include\eflib.h" />
+		<Unit filename="..\include\includer.h" />
+		<Unit filename="..\include\math.h" />
+		<Unit filename="..\include\platform.h" />
+		<Unit filename="..\include\pool.h" />
+		<Unit filename="..\include\stl_utilities.h" />
+		<Unit filename="..\include\user_config.h" />
+		<Unit filename="..\include\detail\win32.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
