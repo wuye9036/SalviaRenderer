@@ -1,0 +1,8 @@
+vector<int, 4> c(3, 5, x += y = (5, x), 7 ), k = vec4(9.0);
+int32 d = 22; //
+/***
+***/
+float vk, st;
+struct t{ /*xcjkjsd*/
+float fv, ss;
+} c;

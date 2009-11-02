@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug Win32" />
+	<File name="ast_tree_generator.cpp" open="1" top="1" tabpos="7">
+		<Cursor position="1473" topLine="74" />
+	</File>
+	<File name="parser_buildin_types.h" open="1" top="0" tabpos="1">
+		<Cursor position="496" topLine="31" />
+	</File>
+	<File name="parser_ids.h" open="1" top="0" tabpos="2">
+		<Cursor position="1464" topLine="38" />
+	</File>
+	<File name="parser_initialized_declarator_list.h" open="1" top="0" tabpos="3">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="parser_semantic.h" open="1" top="0" tabpos="4">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="parser_structure_declaration.h" open="1" top="0" tabpos="6">
+		<Cursor position="596" topLine="0" />
+	</File>
+	<File name="parser_whitespace.h" open="1" top="0" tabpos="5">
+		<Cursor position="0" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>

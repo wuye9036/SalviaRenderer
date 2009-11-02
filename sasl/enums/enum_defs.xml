@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<enums>
+	<enum name="type_qualifiers">
+		<HasName/>
+		<item>_const</item>
+	    <item>_volatile</item>
+		<item>_uniform</item>
+	</enum>
+	
+	<enum name="buildin_types">
+		<AutoGen expression = "2**$index$"/>
+		<Ortho/>
+		<HasName/>
+		<Convertible />
+		
+		<item>sasl_void</item>
+		
+		<item>sasl_bool</item>
+		
+		<item>sasl_int8</item>
+		<item>sasl_uint8</item>
+		<item>sasl_int16</item>
+		<item>sasl_uint16</item>
+		<item>sasl_int32</item>
+		<item>sasl_uint32</item>
+		<item>sasl_int64</item>
+		<item>sasl_uint64</item>
+		
+		<item>sasl_half</item>
+		<item>sasl_float</item>
+		<item>sasl_double</item>
+		
+		<item>sasl_vector</item>
+		<item>sasl_matrix</item>
+
+		<item>sasl_function</item>
+		<item>sasl_array</item>
+		<item>sasl_struct</item>
+		
+		<item>sasl_unknown</item>
+	</enum>
+	
+	<enum name="ast_node_types" storage_type="int64_t">
+		<AutoGen expression= "2**$index$" />
+		<Ortho/>
+		<HasName/>
+		<item>unknown</item>
+		<item>type_qual</item>
+		<item>type</item>
+		<item>expression</item>
+		<item>expression_list</item>
+		<item>array_type</item>
+	</enum>
+	
+	<enum name="semantics">
+		<Ortho/>
+		<AutoGen expression="2**$index$"/>
+		<item>BINORMAL</item>
+		<item>BLENDINDICES</item>
+		<item>BLENDWEIGHT</item>
+		<item>NORMAL</item>
+		<item>POSITION</item>
+		<item>POSITIONT</item>
+		<item>PSIZE</item>
+		<item>TENGENT</item>
+		<item>TEXCOORD</item>
+		<item>TESSFACTOR</item>
+		<item>VFACE</item>
+		<item>VPOS</item>
+		<item>DEPTH</item>
+		<item>SV_ClipDistance</item>
+		<item>SV_CullDistance</item>
+		<item>SV_Coverage</item>
+		<item>SV_Depth</item>
+		<item>SV_IsFrontFace</item>
+		<item>SV_Position</item>
+		<item>SV_RenderTargetArrayIndex</item>
+		<item>SV_SampleIndex</item>
+		<item>SV_Target</item>
+		<item>SV_ViewPortArrayIndex</item>
+		<item>SV_InstanceID</item>
+		<item>SV_PrimitiveID</item>
+		<item>SV_VertexID</item>
+	</enum>
+	
+	<enum name="operators">
+		<HasName />
+		<Order />
+		<AutoGen expression= "$index$" />
+		<item>none</item>
+		
+		<item>add</item>
+		<item>sub</item>
+		<item>mul</item>
+		<item>div</item>
+		<item>mod</item>
+		
+		<item>assign</item>
+		<item>add_assign</item>
+		<item>sub_assign</item>
+		<item>mul_assign</item>
+		<item>div_assign</item>
+		<item>mod_assign</item>
+		
+		<item>bit_not</item>
+		<item>bit_and_assign</item>
+		<item>bit_or_assign</item>
+		<item>bit_xor_assign</item>
+		
+		<item>lshift_assign</item>
+		<item>rshift_assign</item>
+		
+		<item>equal</item>
+		<item>less</item>
+		<item>less_equal</item>
+		<item>greater</item>
+		<item>greater_equal</item>
+		
+		<item>left_shift</item>
+		<item>right_shift</item>
+		
+		<item>prefix_incr</item>
+		<item>prefix_decr</item>
+		<item>postfix_incr</item>
+		<item>postfix_decr</item>
+		<item>positive</item>
+		<item>negative</item>
+		
+		<item>logic_or</item>
+		<item>logic_and</item>
+		<item>logic_not</item>
+		
+		<item>bit_and</item>
+		<item>bit_or</item>
+		<item>bit_xor</item>
+	</enum>
+
+	<enum name="integer_type_suffixes">
+		<HasName />
+		<AutoGen expression= "$index$+1" />
+		<item>u</item>
+		<item>l</item>
+		<item>ul</item>
+		<item>lu</item>
+	</enum>
+	
+	<enum name="real_type_suffixes">
+		<HasName />
+		<AutoGen expression= "$index$+1" />
+		<item>e</item>
+		<item>f</item>
+	</enum>
+	
+	<enum name="literal_types">
+		<HasName />
+		<AutoGen expression="$index$+1" />
+		<item>boolean</item>
+		<item>integer</item>
+		<item>real</item>
+		<item>string</item>
+		<item>character</item>
+	</enum>
+	
+	<enum name="control_statements">
+		<HasName/>
+		<AutoGen expression="$index$+1" />
+		<item>_return</item>
+		<item>_break</item>
+		<item>_continue</item>
+	</enum>
+	
+	<enum name="labels">
+		<HasName/>
+		<AutoGen expression = "$index$+1" />
+		<item>_case</item>
+		<item>_default</item>
+		<item>_identifier</item>
+	</enum>
+</enums>

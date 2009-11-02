@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Spirit_SASL" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug Win32">
+				<Option output="Spirit_SASL" prefix_auto="1" extension_auto="1" />
+				<Option object_output="Debug Win32" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-DWIN32" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-DTIXML_USE_STL" />
+					<Add option="-DBOOST_ALL_DYN_LINK" />
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+				</Compiler>
+				<Linker>
+					<Add library="tinyxml_vc80-mt-x86-d-stl" />
+					<Add directory="E:\Programming\Library\tinyxml\x86" />
+					<Add directory="E:\Programming\Project\Cpp\SoftArt\win32" />
+				</Linker>
+			</Target>
+			<Target title="Release Win32">
+				<Option output="Spirit_SASL" prefix_auto="1" extension_auto="1" />
+				<Option object_output="Release Win32" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-W" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="ReadMe.txt" />
+		<Unit filename="ast_tree_generator.cpp" />
+		<Unit filename="default_formatter.cpp" />
+		<Unit filename="parser_buildin_types.cpp" />
+		<Unit filename="parser_declaration.cpp" />
+		<Unit filename="parser_declaration_specifier.cpp" />
+		<Unit filename="parser_expression.cpp" />
+		<Unit filename="parser_initialized_declarator_list.cpp" />
+		<Unit filename="parser_structure_declaration.cpp" />
+		<Unit filename="parser_whitespace.cpp" />
+		<Unit filename="Spirit_SASL.cpp" />
+		<Unit filename="stdafx.cpp" />
+		<Unit filename="project\context.cpp" />
+		<Unit filename="project\error_reporters.cpp" />
+		<Unit filename="project\makefile.cpp" />
+		<Unit filename="program.cpp" />
+		<Unit filename="project\project.cpp" />
+		<Unit filename="project\unit.cpp" />
+		<Unit filename="parser_tree\ast_node_buildin_type.cpp" />
+		<Unit filename="parser_tree\ast_node_composite_type.cpp" />
+		<Unit filename="parser_tree\ast_node_declaration.cpp" />
+		<Unit filename="parser_tree\ast_node_expression.cpp" />
+		<Unit filename="parser_tree\ast_node_identifier.cpp" />
+		<Unit filename="parser_tree\ast_node_list.cpp" />
+		<Unit filename="parser_tree\ast_node_literal_expression.cpp" />
+		<Unit filename="parser_tree\ast_node_struct.cpp" />
+		<Unit filename="parser_tree\ast_node_type.cpp" />
+		<Unit filename="parser_tree\ast_node_type_qualifier.cpp" />
+		<Unit filename="enums\ast_node_types.cpp" />
+		<Unit filename="enums\buildin_types.cpp" />
+		<Unit filename="enums\integer_type_suffixes.cpp" />
+		<Unit filename="enums\literal_types.cpp" />
+		<Unit filename="enums\operators.cpp" />
+		<Unit filename="enums\real_type_suffixes.cpp" />
+		<Unit filename="enums\type_qualifiers.cpp" />
+		<Unit filename="ast_node_actors.h" />
+		<Unit filename="ast_tree_generator.h" />
+		<Unit filename="declare_handle.h" />
+		<Unit filename="enum_base.h" />
+		<Unit filename="formatters.h" />
+		<Unit filename="parser_buildin_types.h" />
+		<Unit filename="parser_declaration.h" />
+		<Unit filename="parser_declaration_specifier.h" />
+		<Unit filename="parser_expression.h" />
+		<Unit filename="parser_ids.h" />
+		<Unit filename="parser_initialized_declarator_list.h" />
+		<Unit filename="parser_semantic.h" />
+		<Unit filename="parser_structure_declaration.h" />
+		<Unit filename="parser_whitespace.h" />
+		<Unit filename="program.h" />
+		<Unit filename="SASLParser.h" />
+		<Unit filename="stdafx.h" />
+		<Unit filename="project\context.h" />
+		<Unit filename="project\error_reporter.h" />
+		<Unit filename="project\error_reporters.h" />
+		<Unit filename="project\makefile.h" />
+		<Unit filename="project\preprocessor.h" />
+		<Unit filename="project\project.h" />
+		<Unit filename="project\unit.h" />
+		<Unit filename="parser_tree\ast_node.h" />
+		<Unit filename="parser_tree\ast_node_buildin_type.h" />
+		<Unit filename="parser_tree\ast_node_composite_type.h" />
+		<Unit filename="parser_tree\ast_node_declaration.h" />
+		<Unit filename="parser_tree\ast_node_expression.h" />
+		<Unit filename="parser_tree\ast_node_literal_expression.h" />
+		<Unit filename="parser_tree\ast_node_stack.h" />
+		<Unit filename="parser_tree\ast_node_struct.h" />
+		<Unit filename="parser_tree\ast_node_type_qualifier.h" />
+		<Unit filename="enums\buildin_types.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
