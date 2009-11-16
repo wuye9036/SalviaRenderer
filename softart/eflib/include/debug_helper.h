@@ -36,7 +36,7 @@ namespace efl{
 	template<class T>
 	void print_vector(std::ostream& os, const T& v)
 	{
-		for(T::const_iterator cit = v.begin(); cit != v.end(); ++cit)
+                for(typename T::const_iterator cit = v.begin(); cit != v.end(); ++cit)
 		{
 			os << *cit << " ";
 		}

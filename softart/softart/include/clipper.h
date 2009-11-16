@@ -16,13 +16,13 @@ const size_t plane_num = 10;
 
 class clipper
 { 
-	const viewport*												pvp_;
+	const viewport*									pvp_;
 	efl::recycled_pool<32, efl::pool::unsafe_debug>	pool_;
-	std::vector<const vs_output_impl*>							clipped_verts_[2];
-	std::vector<bool>											is_vert_from_pool_[2];
-	boost::array<efl::vec4, plane_num>					planes_;
-	boost::array<bool, plane_num>							planes_enable_;
-	size_t																last_stage;
+	std::vector<const vs_output_impl*>				clipped_verts_[2];
+	std::vector<bool>								is_vert_from_pool_[2];
+	boost::array<efl::vec4, plane_num>				planes_;
+	boost::array<bool, plane_num>					planes_enable_;
+	size_t											last_stage;
 
 public:
 	clipper();

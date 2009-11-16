@@ -2,6 +2,7 @@
 #define EFLIB_MATRIX_H
 
 #include "vector.h"
+#include <memory.h>
 
 namespace efl
 {

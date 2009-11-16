@@ -32,6 +32,8 @@ Modify Log:
 
 #include "eflib/include/math.h"
 
+#include <vector>
+
 //利用FreeImage创建纹理
 h_texture create_texture_fi(
 					   renderer_impl* psr,

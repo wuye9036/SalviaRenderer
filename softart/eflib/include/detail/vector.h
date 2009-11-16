@@ -7,7 +7,10 @@
 #include "../platform.h"
 #include "../debug_helper.h"
 #include <cmath>
-#include <xutility>
+
+#ifdef EFLIB_MSVC
+#   include <xutility>
+#endif
 
 namespace efl{
 

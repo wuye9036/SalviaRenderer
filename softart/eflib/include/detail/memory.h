@@ -4,6 +4,8 @@
 #include <boost/type_traits.hpp>
 #include <limits>
 
+#include <stdlib.h>
+
 #ifdef max
 #	undef max
 #	undef min
@@ -14,7 +16,10 @@ namespace efl{
 //¶ÔÆëºê
 #ifdef _MSC_VER
 #	define ALIGN16	__declspec(align(16))
-#	define ALIGN4		__declspec(align(4))
+#	define ALIGN4	__declspec(align(4))
+#else
+#	define ALIGN16
+#	define ALIGN4
 #endif
 
 

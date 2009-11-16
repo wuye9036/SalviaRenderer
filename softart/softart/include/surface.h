@@ -40,15 +40,18 @@ public:
 		elem_size_(color_infos[pxfmt].size),is_locked_(false)
 	{}
 
-	~surface()
-	{
+	~surface(){
+		release();
+	}
+
+	void release(){
 		custom_assert(!is_locked_, "");
 		if(is_locked()) delete [] plockeddata_;
 	}
 
 	void rebuild(size_t width, size_t height, pixel_format pxfmt)
 	{
-		surface::~surface();
+		release();
 		new(this) surface(width, height, pxfmt);
 	}
 
