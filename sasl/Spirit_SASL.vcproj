@@ -266,6 +266,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\enums\labels.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\enums\literal_types.cpp"
 					>
 				</File>

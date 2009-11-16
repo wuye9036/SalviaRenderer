@@ -81,7 +81,10 @@ DEFINE_DEFAULT_TREE_NODE_PROCESSORS(
 	(r_program)
 	(r_whitespace)
 	(r_newline_space)
+	(r_inline_white_space)
  	(r_type_suffix)
+	(r_statement_list)
+	(r_preprocessor_line)
 );
 
 ////////////////////
