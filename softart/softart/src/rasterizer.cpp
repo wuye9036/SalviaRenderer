@@ -362,12 +362,8 @@ void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_outp
 			if( iy >= vptop ){
 				break;
 			}
-			do{ // do{}while(0) idioms
 
-				if( iy < vpbottom ){
-					break; //do increment and goto next scanline
-				}
-
+			if( iy >= vpbottom ){
 				//扫描线在视口内的就做扫描线
 				int icx_s = 0;
 				int icx_e = 0;
@@ -397,23 +393,21 @@ void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_outp
 				icx_e = efl::clamp<int>(icx_e, vpleft, vpright - 1);
 
 				//如果起点大于终点说明scanline中不包含任何像素中心，直接跳过。
-				if(icx_s > icx_e) {
-					break; //do increment and goto next scanline
+				if(icx_s <= icx_e) {
+					float offsetx = float(icx_s) + 0.5f - pvert[0]->wpos.x;
+
+					//设置扫描线信息
+					scanline_info scanline(current_base_scanline);
+					integral(scanline.base_vert, offsetx, ddx);
+
+					scanline.base_x = icx_s;
+					scanline.base_y = iy;
+					scanline.scanline_width = icx_e - icx_s + 1;
+
+					//光栅化
+					rasterize_scanline_impl(scanline);
 				}
-
-				float offsetx = float(icx_s) + 0.5f - pvert[0]->wpos.x;
-
-				//设置扫描线信息
-				scanline_info scanline(current_base_scanline);
-				integral(scanline.base_vert, offsetx, ddx);
-
-				scanline.base_x = icx_s;
-				scanline.base_y = iy;
-				scanline.scanline_width = icx_e - icx_s + 1;
-
-				//光栅化
-				rasterize_scanline_impl(scanline);
-			}while(0);
+			}
 
 			//差分递增
 			integral(current_base_scanline.base_vert, 1.0f, ddy);

@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 using namespace efl;
 using namespace boost;
 
-int _tmain(int argc, _TCHAR* argv[])
+int _tmain(int /*argc*/, _TCHAR* /*argv[]*/)
 {
 	renderer_parameters rp;
 	rp.backbuffer_format = pixel_format_color_rgba32f;

@@ -56,7 +56,7 @@ class ps_shader: public pixel_shader
 
 class ddx_ps_shader:public pixel_shader
 {
-	bool shader_prog(const vs_output& in, ps_output& out)
+	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		out.color[0] = ddx(0);
 		return true;
