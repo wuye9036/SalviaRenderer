@@ -15,7 +15,9 @@
 
 #include "eflib/include/eflib.h"
 
+#include <iostream>
 #include <boost/assign.hpp>
+#include <boost/timer.hpp>
 
 using namespace efl;
 using namespace boost;
@@ -75,6 +77,15 @@ public:
 	h_renderer hsr;
 	h_texture sm_tex;
 
+	h_mesh planar_mesh;
+	h_mesh box_mesh;
+
+	uint32_t num_frames;
+	double accumulate_time;
+	float fps;
+
+	boost::timer timer;
+
 	CSRSampleWindowView::CSRSampleWindowView()
 	{
 	}
@@ -95,6 +106,7 @@ public:
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_PAINT, OnPaint)
 		MESSAGE_HANDLER(WM_LBUTTONUP, OnClick)
+		MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
 	END_MSG_MAP()
 
 	// Handler prototypes (uncomment arguments if needed):
@@ -111,7 +123,7 @@ public:
 
 		hsr = create_software_renderer(&render_params, h_device());
 
-		h_mesh planar = create_planar(
+		planar_mesh = create_planar(
 			hsr.get(), 
 			vec3(-3.0f, -1.0f, -3.0f), 
 			vec3(6.0f, 0.0f, 0.0f), 
@@ -119,7 +131,46 @@ public:
 			1, 1, true
 			);
 		
-		h_mesh box = create_box(hsr.get());
+		box_mesh = create_box(hsr.get());
+
+		num_frames = 0;
+		accumulate_time = 0;
+		fps = 0;
+
+		return 0;
+	}
+
+	LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+	{
+		CPaintDC dc(m_hWnd);
+		//TODO: Add your drawing code here
+
+		RECT rc;
+		this->GetClientRect(&rc);
+		//hsr->get_device()->present(rect<size_t>(0, 0, 0, 0), rect<size_t>(0, 0, 0, 0));
+		render.Render(dc.m_hDC, rc);
+		return 0;
+	}
+
+	void Render()
+	{
+		// measure statistics
+		++ num_frames;
+		accumulate_time += static_cast<float>(timer.elapsed());
+
+		// check if new second
+		if (accumulate_time > 1)
+		{
+			// new second - not 100% precise
+			fps = num_frames / accumulate_time;
+
+			accumulate_time = 0;
+			num_frames  = 0;
+		}
+
+		timer.restart();
+
+		cout << fps << endl;
 
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
@@ -144,23 +195,11 @@ public:
 
 		hsr->set_cull_mode(cull_none);
 
-		box->render();
+		box_mesh->render();
 
 		render.UpdateBackBuffer(static_pointer_cast<renderer_impl>(hsr)->get_framebuffer().get());
 
-		return 0;
-	}
-
-	LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		CPaintDC dc(m_hWnd);
-		//TODO: Add your drawing code here
-
-		RECT rc;
-		this->GetClientRect(&rc);
-		//hsr->get_device()->present(rect<size_t>(0, 0, 0, 0), rect<size_t>(0, 0, 0, 0));
-		render.Render(dc.m_hDC, rc);
-		return 0;
+		InvalidateRect(NULL);
 	}
 
 	LRESULT OnClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
@@ -176,4 +215,9 @@ public:
 		}
 		return 0;
 	}
+
+	LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		return 1;
+    }
 };

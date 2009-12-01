@@ -4,6 +4,37 @@
 
 #pragma once
 
+class CGameLoop : public CMessageLoop
+{
+public:
+	int GameRun()
+	{
+		for(;;)
+		{
+			if (::PeekMessage(&m_msg, NULL, 0, 0, PM_REMOVE))
+			{
+				if (WM_QUIT == m_msg.message)
+				{
+					ATLTRACE2(atlTraceUI, 0, _T("CGameLoop::Run - exiting\n"));
+					break;        // WM_QUIT, exit message loop
+				}
+
+				if(!PreTranslateMessage(&m_msg))
+				{
+					::TranslateMessage(&m_msg);
+					::DispatchMessage(&m_msg);
+				}
+			}
+			else
+			{
+				OnIdle(0);
+			}
+		}
+
+		return (int)m_msg.wParam;
+	}
+};
+
 class CMainFrame : public CFrameWindowImpl<CMainFrame>, public CUpdateUI<CMainFrame>,
 		public CMessageFilter, public CIdleHandler
 {
@@ -24,6 +55,8 @@ public:
 
 	virtual BOOL OnIdle()
 	{
+		m_view.Render();
+
 		UIUpdateToolBar();
 		return FALSE;
 	}

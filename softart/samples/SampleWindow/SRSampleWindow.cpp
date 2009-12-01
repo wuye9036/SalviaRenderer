@@ -25,7 +25,7 @@ CAppModule _Module;
 
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
-	CMessageLoop theLoop;
+	CGameLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 
 	CMainFrame wndMain;
@@ -38,13 +38,13 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
 	wndMain.ShowWindow(nCmdShow);
 
-	int nRet = theLoop.Run();
+	int nRet = theLoop.GameRun();
 
 	_Module.RemoveMessageLoop();
 	return nRet;
 }
 
-int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
+int main()
 {
 	shared_ptr<_tfstream> hf(new _tfstream("c:/log.txt", ios::out));
 	typedef slog<text_log_serializer> slog_type;
@@ -63,10 +63,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	AtlInitCommonControls(ICC_COOL_CLASSES | ICC_BAR_CLASSES);	// add flags to support other controls
 
-	hRes = _Module.Init(NULL, hInstance);
+	hRes = _Module.Init(NULL, ::GetModuleHandle(NULL));
 	ATLASSERT(SUCCEEDED(hRes));
 
-	int nRet = Run(lpstrCmdLine, nCmdShow);
+	int nRet = Run(NULL, SW_SHOWDEFAULT);
 
 	_Module.Term();
 	::CoUninitialize();

@@ -31,7 +31,7 @@ Modify Log:
 //#	define SOFTARTX_WINDOWS
 //#endif
 
-//#define SOFTARTX_DIRECT3D9
+#define SOFTARTX_DIRECT3D9
 //#define SOFTARTX_GDIPLUS
 //#define SOFTARTX_OPENGL2
 

@@ -18,11 +18,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include "softartx/include/user_config.h"
 
-#ifdef SOFTARTX_DEVICE_D3D9
+#ifdef SOFTARTX_DIRECT3D9
 
-#include "softartx/include/mesh.h"
-#include "softartx/include/mesh_loader.h"
-#include "softartx/include/detail/device_d3d9_impl.h"
+#include "softartx/include/resource/mesh.h"
+//#include "softartx/include/resource/mesh_loader.h"
+#include "softart/include/renderer_impl.h"
+#include "softartx/include/presenter/dev_d3d9.h"
 
 #include "softart/include/renderer.h"
 #include "softart/include/buffer.h"
@@ -133,7 +134,7 @@ h_mesh create_mesh_from_xfile(renderer_impl* psr, const _tstring& filename)
 {
 	const device_info& dev = static_pointer_cast<device_impl>(psr->get_device())->get_physical_device();
 
-	IDirect3DDevice9* pdev = dev.pdxdev;
+	IDirect3DDevice9* pdev = reinterpret_cast<IDirect3DDevice9*>(dev.pdevice);
 	if(pdev == NULL) return h_mesh();
 
 	DWORD material_counts;
