@@ -38,34 +38,51 @@ protected:
 class vs_output
 {
 public:
-	typedef boost::array<efl::vec4, vso_color_regcnt> color_array_type;
+	enum
+	{
+		am_linear = 1UL << 0,
+		am_nointerpolation = 1UL << 1,
+		am_noperspective = 1UL << 2,
+		am_sample = 1UL << 3
+	};
+
+public:
 	typedef boost::array<efl::vec4, vso_attrib_regcnt> attrib_array_type;
+	typedef boost::array<uint32_t, vso_attrib_regcnt> attrib_modifier_array_type;
 
 	efl::vec4 position;
 	efl::vec4 wpos;
-	boost::array<efl::vec4, vso_color_regcnt> colors;
-	boost::array<efl::vec4, vso_attrib_regcnt> attributes;
+
+	attrib_array_type attributes;
+	attrib_modifier_array_type attribute_modifiers;
+
+	uint32_t used_attribute_mask;
 
 protected:
 	vs_output(){}
 	vs_output(
 		const efl::vec4& position, 
 		const efl::vec4& wpos,
-		const color_array_type& colors,
-		const attrib_array_type& attribs)
-		:position(position), wpos(wpos), colors(colors), attributes(attribs)
+		const attrib_array_type& attribs,
+		const attrib_modifier_array_type& modifiers,
+		uint32_t used_attrib_mask)
+		:position(position), wpos(wpos), attributes(attribs), attribute_modifiers(modifiers),
+			used_attribute_mask(used_attrib_mask)
 	{}
 
 	//拷贝构造与赋值
 	vs_output(const vs_output& rhs)
-		:position(rhs.position), wpos(rhs.wpos), colors(rhs.colors), attributes(rhs.attributes){}
+		:position(rhs.position), wpos(rhs.wpos), attributes(rhs.attributes), attribute_modifiers(rhs.attribute_modifiers),
+			used_attribute_mask(rhs.used_attribute_mask)
+	{}
 
 	vs_output& operator = (const vs_output& rhs){
 		if(&rhs == this) return *this;
 		position = rhs.position;
 		wpos = rhs.wpos;
-		colors = rhs.colors;
 		attributes = rhs.attributes;
+		attribute_modifiers = rhs.attribute_modifiers;
+		used_attribute_mask = rhs.used_attribute_mask;
 		return *this;
 	}
 };

@@ -43,6 +43,7 @@ public:
 		vec4 pos = in[0];
 		transform(out.position, wvp, pos);
 		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
+		out.used_attribute_mask = 1UL;
 	}
 };
 
@@ -117,7 +118,7 @@ public:
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
 		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_rgba8;
+		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 

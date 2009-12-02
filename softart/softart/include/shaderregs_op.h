@@ -45,9 +45,10 @@ public:
 	vs_output_impl(
 		const efl::vec4& position, 
 		const efl::vec4& wpos,
-		const color_array_type& colors,
-		const attrib_array_type& attribs)
-		:vs_output(position, wpos, colors, attribs)
+		const attrib_array_type& attribs,
+		const attrib_modifier_array_type& modifiers,
+		uint32_t used_attribute_mask)
+		:vs_output(position, wpos, attribs, modifiers, used_attribute_mask)
 	{}
 
 	//拷贝构造与赋值
@@ -58,8 +59,9 @@ public:
 		if(&rhs == this) return *this;
 		position = rhs.position;
 		wpos = rhs.wpos;
-		colors = rhs.colors;
 		attributes = rhs.attributes;
+		attribute_modifiers = rhs.attribute_modifiers;
+		used_attribute_mask = rhs.used_attribute_mask;
 		return *this;
 	}
 };

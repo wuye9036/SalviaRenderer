@@ -155,6 +155,7 @@
 				EnableEnhancedInstructionSet="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				DebugInformationFormat="3"
 				DisableSpecificWarnings="4819"
 			/>
 			<Tool
@@ -173,7 +174,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="$(SolutionDir)../../$(PlatformName)/SoftArt.lib $(SolutionDir)../../$(PlatformName)/SoftArtX.lib $(SolutionDir)../../$(PlatformName)/EFLib.lib freeimage.lib gdiplus.lib"
 				LinkIncremental="1"
-				GenerateDebugInformation="false"
+				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)$(TargetName).pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"

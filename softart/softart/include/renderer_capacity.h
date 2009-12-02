@@ -5,7 +5,6 @@
 const size_t vsi_attrib_regcnt = 4;
 
 //the count of vs output resigters
-const size_t vso_color_regcnt = 2;
 const size_t vso_attrib_regcnt = 8;
 
 //the count of ps output registers
