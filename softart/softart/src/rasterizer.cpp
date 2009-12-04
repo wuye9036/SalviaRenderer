@@ -115,6 +115,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
+		vs_output unprojed;
 		for(int iPixel = sx; iPixel < ex; ++iPixel)
 		{
 			//忽略不在vp范围内的像素
@@ -128,7 +129,8 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 			}
 
 			//进行像素渲染
-			if(hps_->execute(unproject(px_in), px_out)){
+			unproject(unprojed, px_in);
+			if(hps_->execute(unprojed, px_out)){
 				hfb_->render_pixel(iPixel, int(px_in.wpos.y), px_out);
 			}
 
@@ -169,6 +171,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 		vs_output px_in = lerp(px_start, px_end, (fsy + 0.5f - start->wpos.y) / diff_dir);
 
 		//x-major 的线绘制
+		vs_output unprojed;
 		for(int iPixel = sy; iPixel < ey; ++iPixel)
 		{
 			//忽略不在vp范围内的像素
@@ -182,7 +185,8 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 			}
 
 			//进行像素渲染
-			if(hps_->execute(unproject(px_in), px_out)){
+			unproject(unprojed, px_in);
+			if(hps_->execute(unprojed, px_out)){
 				hfb_->render_pixel(int(px_in.wpos.x), iPixel, px_out);
 			}
 
@@ -422,13 +426,15 @@ void rasterizer::rasterize_scanline_impl(const scanline_info& sl)
 	vs_output px_in(sl.base_vert);
 	ps_output px_out;
 
+	vs_output unprojed;
 	for(size_t i_pixel = 0; i_pixel < sl.scanline_width; ++i_pixel)
 	{
 		//if(px_in.wpos.z <= 0.0f)
 			//continue;
 
 		//执行shader program
-		if(hps_->execute(unproject(px_in), px_out) ){
+		unproject(unprojed, px_in);
+		if(hps_->execute(unprojed, px_out)){
 			hfb_->render_pixel(sl.base_x + i_pixel, sl.base_y, px_out);
 		}
 

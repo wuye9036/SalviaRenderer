@@ -24,7 +24,7 @@ void framebuffer::initialize(renderer_impl* pparent)
 framebuffer::framebuffer(size_t width, size_t height, pixel_format fmt)
 :dbuf_(width*height), sbuf_(width*height),
 width_(width), height_(height), fmt_(fmt),
-back_cbufs_(4), cbufs_(4), buf_valids(4)
+back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_regcnt)
 {
 	for(size_t i = 0; i < back_cbufs_.size(); ++i){
 		back_cbufs_[i].reset();
@@ -132,40 +132,13 @@ void framebuffer::render_pixel(size_t x, size_t y, const ps_output& ps)
 	if(! hbs) return;
 
 	//composing input...
-	boost::array<const color_rgba32f*, pso_color_regcnt> input_color_pointers;
-	input_color_pointers.assign(NULL);
-
-	for(size_t i = 0; i < pso_color_regcnt; ++i){ input_color_pointers[i] = (color_rgba32f*)&ps.color[i]; }
-	backbuffer_pixel_in in(input_color_pointers, &ps.pos.z, &sbuf_[y*width_+x]);
+	backbuffer_pixel_in in(ps, &sbuf_[y*width_+x]);
 
 	//composing output...
-	boost::array<color_rgba32f, pso_color_regcnt> output_colors;
-	output_colors.assign(color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f));
-	for(size_t i = 0; i < cbufs_.size(); ++i){
-		if(buf_valids[i]){
-			output_colors[i] = cbufs_[i]->get_texel(x, y);
-		}
-	}
-
-	boost::array<color_rgba32f*, pso_color_regcnt> output_color_pointers;
-	output_color_pointers.assign(NULL);
-	for(size_t i = 0; i < pso_color_regcnt; ++i){ 
-		if(buf_valids[i]){
-			output_color_pointers[i] = &output_colors[i];
-		}
-	}
-
-	backbuffer_pixel_out inout(output_color_pointers, &dbuf_[y*width_+x], &sbuf_[y*width_+x]);
+	backbuffer_pixel_out inout(cbufs_, x, y, &dbuf_[y*width_+x], &sbuf_[y*width_+x]);
 
 	//execute target shader
 	hbs->execute(inout, in);
-
-	//write back colors
-	for(size_t i = 0; i < pso_color_regcnt; ++i){ 
-		if(buf_valids[i]){
-			cbufs_[i]->set_texel(x, y, inout.color(i));
-		}
-	}
 }
 
 void framebuffer::clear_color(size_t tar_id, const color_rgba32f& c){

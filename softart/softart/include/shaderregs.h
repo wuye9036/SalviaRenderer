@@ -3,6 +3,7 @@
 
 #include "decl.h"
 #include "colors.h"
+#include "surface.h"
 #include "renderer_capacity.h"
 
 #include "eflib/include/math.h"
@@ -109,24 +110,22 @@ public:
 //vs_output compute_derivate
 struct ps_output
 {
-	efl::vec4 pos;
+	float depth;
 	boost::array<efl::vec4, pso_color_regcnt> color;
-	
-	ps_output(){}
 };
 
 struct backbuffer_pixel_in
 {
-	backbuffer_pixel_in(const boost::array<const color_rgba32f*, pso_color_regcnt>& pcolors, const float* depth, const size_t* stencil)
-		:pcolor_(pcolors), pdepth_(depth), pstencil_(stencil){
+	backbuffer_pixel_in(const ps_output& ps, const size_t* stencil)
+		:ps_(&ps), pstencil_(stencil){
 	}
 
 	const color_rgba32f& color(size_t regidx) const{
-		return *pcolor_[regidx];
+		return *reinterpret_cast<const color_rgba32f*>(&ps_->color[regidx]);
 	}
 
 	float depth() const{
-		return *pdepth_;
+		return ps_->depth;
 	}
 
 	size_t stencil() const{
@@ -137,25 +136,26 @@ private:
 	backbuffer_pixel_in(const backbuffer_pixel_in& rhs);
 	backbuffer_pixel_in& operator = (const backbuffer_pixel_in& rhs);
 
-	boost::array<const color_rgba32f*, pso_color_regcnt> pcolor_;
-	const float* pdepth_;
+	const ps_output* ps_;
 	const size_t* pstencil_;
 };
 
 struct backbuffer_pixel_out
 {
-	backbuffer_pixel_out(const boost::array<color_rgba32f*, pso_color_regcnt>& pcolors, float* depth, size_t* stencil)
-		:pcolor_(pcolors), pdepth_(depth), pstencil_(stencil){
+	backbuffer_pixel_out(std::vector<surface*>& cbuf, size_t x, size_t y, float* depth, size_t* stencil)
+		:cbuf_(&cbuf), cbuf_x_(x), cbuf_y_(y), pdepth_(depth), pstencil_(stencil){
 			is_color_rewritten_.assign(false);
 	}
 
-	const color_rgba32f& color(size_t regidx) const{ return *pcolor_[regidx];}
+	color_rgba32f color(size_t regidx) const{
+		return (*cbuf_)[regidx]->get_texel(cbuf_x_, cbuf_y_);
+	}
 	float depth() const { return *pdepth_; }
 	size_t stencil() const { return *pstencil_; }
 
-	color_rgba32f& color(size_t regidx){
+	void color(size_t regidx, const color_rgba32f& clr){
 		is_color_rewritten_[regidx] = true;
-		return *pcolor_[regidx];
+		(*cbuf_)[regidx]->set_texel(cbuf_x_, cbuf_y_, clr);
 	}
 
 	float& depth(){
@@ -171,7 +171,8 @@ private:
 	backbuffer_pixel_out& operator = (const backbuffer_pixel_out& rhs);
 
 	boost::array<bool, pso_color_regcnt> is_color_rewritten_;
-	boost::array<color_rgba32f*, pso_color_regcnt> pcolor_;
+	std::vector<surface*>* cbuf_;
+	size_t cbuf_x_, cbuf_y_;
 	float* pdepth_;
 	size_t* pstencil_;
 };

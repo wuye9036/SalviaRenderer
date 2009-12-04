@@ -176,6 +176,6 @@ bool pixel_shader::execute(const vs_output& in, ps_output& out){
 	custom_assert(ptriangleinfo_, "");
 	ppxin_ = &in;
 	bool rv = shader_prog(in, out);
-	out.pos = in.wpos;
+	out.depth = in.wpos.z;
 	return rv;
 }
