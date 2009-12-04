@@ -146,11 +146,7 @@ void framebuffer::clear_color(size_t tar_id, const color_rgba32f& c){
 	custom_assert(tar_id < cbufs_.size(), "渲染目标标识设置错误！");
 	custom_assert(cbufs_[tar_id] && buf_valids[tar_id], "试图对一个无效的渲染目标设置颜色！");
 
-	for(size_t i_y = 0; i_y < height_; ++i_y){
-		for(size_t i_x = 0; i_x < width_; ++i_x){
-			cbufs_[tar_id]->set_texel(i_x, i_y, c);
-		}
-	}
+	cbufs_[tar_id]->fill_clr_texels(0, 0, width_, height_, c);
 }
 
 void framebuffer::clear_depth(float d){
@@ -175,11 +171,7 @@ void framebuffer::clear_color(size_t tar_id, const rect<size_t>& rc, const color
 	custom_assert(cbufs_[tar_id] && buf_valids[tar_id], "试图对一个无效的渲染目标设置颜色！");
 	custom_assert(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "锁定区域超过了帧缓冲范围！");
 
-	for(size_t i_y = rc.y; i_y < rc.h + rc.y; ++i_y){
-		for(size_t i_x = rc.x; i_x < rc.w + rc.x; ++i_x){
-			cbufs_[tar_id]->set_texel(i_x, i_y, c);
-		}
-	}
+	cbufs_[tar_id]->fill_clr_texels(rc.x, rc.y, rc.w, rc.h, c);
 }
 
 void framebuffer::clear_depth(const rect<size_t>& rc, float d){
