@@ -8,7 +8,7 @@
 
 const size_t invalid_id = 0xffffffff;
 
-default_vertex_cache::default_vertex_cache() : verts_pool_( sizeof(vs_output_impl) )
+default_vertex_cache::default_vertex_cache() : verts_pool_( sizeof(vs_output) )
 {
 }
 
@@ -37,9 +37,9 @@ void default_vertex_cache::resize(size_t s)
 	btransformed_.insert(btransformed_.end(), s - btransformed_.size(), false);
 }
 
-vs_output_impl& default_vertex_cache::fetch(cache_entry_index id)
+vs_output& default_vertex_cache::fetch(cache_entry_index id)
 {
-	static vs_output_impl null_obj;
+	static vs_output null_obj;
 
 	if(id < vert_base_)
 	{
@@ -64,25 +64,25 @@ vs_output_impl& default_vertex_cache::fetch(cache_entry_index id)
 	//return null_obj;
 }
 
-vs_output_impl& default_vertex_cache::fetch_for_write(cache_entry_index /*id*/)
+vs_output& default_vertex_cache::fetch_for_write(cache_entry_index /*id*/)
 {
 	custom_assert(false, "Deprecated!");
 	return verts_[0];
 }
 
-vs_output_impl* default_vertex_cache::new_vertex()
+vs_output* default_vertex_cache::new_vertex()
 {
-	return (vs_output_impl*)(verts_pool_.malloc());
+	return (vs_output*)(verts_pool_.malloc());
 }
 
-void default_vertex_cache::delete_vertex(vs_output_impl* const pvert)
+void default_vertex_cache::delete_vertex(vs_output* const pvert)
 {
 	bool isfrom = verts_pool_.is_from(pvert);
 	custom_assert(isfrom, "");
 
 	if(verts_pool_.is_from(pvert))
 	{
-		pvert->~vs_output_impl();
+		pvert->~vs_output();
 		verts_pool_.free(pvert);
 	}
 }

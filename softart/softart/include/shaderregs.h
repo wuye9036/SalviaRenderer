@@ -1,6 +1,7 @@
 #ifndef SOFTART_SHADERREGS_H
 #define SOFTART_SHADERREGS_H
 
+#include "decl.h"
 #include "colors.h"
 #include "renderer_capacity.h"
 
@@ -16,9 +17,6 @@ public:
 	const efl::vec4& operator [](size_t i) const;
 	efl::vec4& operator[](size_t i);
 
-protected:
-	vsinput_attributes_t attributes_;
-	
 	vs_input(){}
 	
 	vs_input(vsinput_attributes_t& attrs)
@@ -33,10 +31,31 @@ protected:
 	{
 		attributes_ = rhs.attributes_;
 	}
+
+protected:
+	vsinput_attributes_t attributes_;
 };
 
 class vs_output
 {
+	friend vs_output operator + (const vs_output& vso0, const vs_output& vso1);
+	friend vs_output operator - (const vs_output& vso0, const vs_output& vso1);
+	friend vs_output operator * (const vs_output& vso0, float f);
+	friend vs_output operator * (float f, const vs_output& vso0);
+	friend vs_output operator / (const vs_output& vso0, float f);
+
+	friend vs_output project(const vs_output& in);
+	friend vs_output& project(vs_output& out, const vs_output& in);
+	friend vs_output unproject(const vs_output& in);
+	friend vs_output& unproject(vs_output& out, const vs_output& in);
+
+	friend vs_output lerp(const vs_output& start, const vs_output& end, float step);
+	friend vs_output& integral(vs_output& inout, float step, const vs_output& derivation);
+
+	friend void update_wpos(vs_output& vso, const viewport& vp);
+
+	friend float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
+
 public:
 	enum
 	{
@@ -56,24 +75,24 @@ public:
 	attrib_array_type attributes;
 	attrib_modifier_array_type attribute_modifiers;
 
-	uint32_t used_attribute_mask;
+	uint32_t num_used_attribute;
 
-protected:
+public:
 	vs_output(){}
 	vs_output(
 		const efl::vec4& position, 
 		const efl::vec4& wpos,
 		const attrib_array_type& attribs,
 		const attrib_modifier_array_type& modifiers,
-		uint32_t used_attrib_mask)
+		uint32_t num_used_attrib)
 		:position(position), wpos(wpos), attributes(attribs), attribute_modifiers(modifiers),
-			used_attribute_mask(used_attrib_mask)
+			num_used_attribute(num_used_attrib)
 	{}
 
 	//拷贝构造与赋值
 	vs_output(const vs_output& rhs)
 		:position(rhs.position), wpos(rhs.wpos), attributes(rhs.attributes), attribute_modifiers(rhs.attribute_modifiers),
-			used_attribute_mask(rhs.used_attribute_mask)
+			num_used_attribute(rhs.num_used_attribute)
 	{}
 
 	vs_output& operator = (const vs_output& rhs){
@@ -82,7 +101,7 @@ protected:
 		wpos = rhs.wpos;
 		attributes = rhs.attributes;
 		attribute_modifiers = rhs.attribute_modifiers;
-		used_attribute_mask = rhs.used_attribute_mask;
+		num_used_attribute = rhs.num_used_attribute;
 		return *this;
 	}
 };

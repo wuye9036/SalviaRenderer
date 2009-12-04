@@ -37,6 +37,7 @@ struct ps_output;
 
 //public structure
 struct input_element_decl;
+struct viewport;
 
 //handles
 DECL_HANDLE(vertex_cache, h_vertex_cache);

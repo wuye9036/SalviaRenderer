@@ -48,9 +48,9 @@ void stream_assembler::set_input_layout(const input_layout_decl& layout)
 	layout_ = layout;
 }
 
-vs_input_impl stream_assembler::fetch_vertex(size_t idx)
+vs_input stream_assembler::fetch_vertex(size_t idx)
 {
-	vs_input_impl rv;
+	vs_input rv;
 
 	for(size_t i_elemdecl = 0; i_elemdecl < layout_.size(); ++i_elemdecl){
 		input_element_decl& ied = layout_[i_elemdecl];

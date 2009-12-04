@@ -43,7 +43,7 @@ public:
 		vec4 pos = in[0];
 		transform(out.position, wvp, pos);
 		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
-		out.used_attribute_mask = 1UL;
+		out.num_used_attribute = 1;
 	}
 };
 

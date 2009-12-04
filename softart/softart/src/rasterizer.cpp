@@ -18,9 +18,9 @@ struct scanline_info
 {
 	size_t scanline_width;
 
-	vs_output_impl ddx;
+	vs_output ddx;
 
-	vs_output_impl base_vert;
+	vs_output base_vert;
 	size_t base_x;
 	size_t base_y;
 
@@ -58,7 +58,7 @@ IMPL_RS_UPDATED(rasterizer, pixel_shader)
  *   线段的光栅化步骤：
  *			1 寻找主方向，获得主方向距离分量并求得主方向上的差分
  *			2 计算ddx与ddy（用于mip的选择）
- *			3 利用主方向及主方向差分计算像素位置及vs_output_impl
+ *			3 利用主方向及主方向差分计算像素位置及vs_output
  *			4 执行pixel shader
  *			5 将像素渲染到framebuffer中
  *
@@ -67,17 +67,17 @@ IMPL_RS_UPDATED(rasterizer, pixel_shader)
  *			2 wpos的x y z分量已经除以了clip w
  *			3 positon.w为1.0f / clip w
  **************************************************/
-void rasterizer::rasterize_line_impl(const vs_output_impl& v0, const vs_output_impl& v1)
+void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 {
-	vs_output_impl diff = project(v1) - project(v0);
+	vs_output diff = project(v1) - project(v0);
 	const efl::vec4& dir = diff.wpos;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
 	//构造差分
-	vs_output_impl derivation = diff;
+	vs_output derivation = diff;
 
-	vs_output_impl ddx = diff * (diff.wpos.x / (diff.wpos.xy().length_sqr()));
-	vs_output_impl ddy = diff * (diff.wpos.y / (diff.wpos.xy().length_sqr()));
+	vs_output ddx = diff * (diff.wpos.x / (diff.wpos.xy().length_sqr()));
+	vs_output ddy = diff * (diff.wpos.y / (diff.wpos.xy().length_sqr()));
 
 	ps_output px_out;
 
@@ -86,7 +86,7 @@ void rasterizer::rasterize_line_impl(const vs_output_impl& v0, const vs_output_i
 	{
 
 		//调换起终点，使方向递增
-		const vs_output_impl *start, *end;
+		const vs_output *start, *end;
 		if(dir.x < 0){
 			start = &v1;
 			end = &v0;
@@ -108,11 +108,11 @@ void rasterizer::rasterize_line_impl(const vs_output_impl& v0, const vs_output_i
 		sx = efl::clamp<int>(sx, 0, int(hfb_->get_width() - 1));
 		ex = efl::clamp<int>(ex, 0, int(hfb_->get_width()));
 
-		//设置起点的vs_output_impl
-		vs_output_impl px_start(project(*start));
-		vs_output_impl px_end(project(*end));
+		//设置起点的vs_output
+		vs_output px_start(project(*start));
+		vs_output px_end(project(*end));
 		float step = fsx + 0.5f - start->wpos.x;
-		vs_output_impl px_in = lerp(px_start, px_end, step / diff_dir);
+		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
 		for(int iPixel = sx; iPixel < ex; ++iPixel)
@@ -140,7 +140,7 @@ void rasterizer::rasterize_line_impl(const vs_output_impl& v0, const vs_output_i
 	else //y major
 	{
 		//调换序列依据方向
-		const vs_output_impl *start, *end;
+		const vs_output *start, *end;
 		if(dir.y < 0){
 			start = &v1;
 			end = &v0;
@@ -162,11 +162,11 @@ void rasterizer::rasterize_line_impl(const vs_output_impl& v0, const vs_output_i
 		sy = efl::clamp<int>(sy, 0, int(hfb_->get_height() - 1));
 		ey = efl::clamp<int>(ey, 0, int(hfb_->get_height()));
 
-		//设置起点的vs_output_impl
-		vs_output_impl px_start(project(*start));
-		vs_output_impl px_end(project(*end));
+		//设置起点的vs_output
+		vs_output px_start(project(*start));
+		vs_output px_end(project(*end));
 		float step = fsy + 0.5f - start->wpos.y;
-		vs_output_impl px_in = lerp(px_start, px_end, (fsy + 0.5f - start->wpos.y) / diff_dir);
+		vs_output px_in = lerp(px_start, px_end, (fsy + 0.5f - start->wpos.y) / diff_dir);
 
 		//x-major 的线绘制
 		for(int iPixel = sy; iPixel < ey; ++iPixel)
@@ -197,7 +197,7 @@ void rasterizer::rasterize_line_impl(const vs_output_impl& v0, const vs_output_i
 *   三角形的光栅化步骤：
 *			1 光栅化生成扫描线及扫描线差分信息
 *			2 rasterizer_scanline_impl处理扫描线
-*			3 生成逐个像素的vs_output_impl
+*			3 生成逐个像素的vs_output
 *			4 执行pixel shader
 *			5 将像素渲染到framebuffer中
 *
@@ -206,7 +206,7 @@ void rasterizer::rasterize_line_impl(const vs_output_impl& v0, const vs_output_i
 *			2 wpos的x y z分量已经除以了clip w
 *			3 positon.w为1.0f / clip w
 **************************************************/
-void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_output_impl& v1, const vs_output_impl& v2)
+void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2)
 {
 	typedef slog<text_log_serializer> slog_type;
 	log_serializer_indent_scope<log_system<slog_type>::slog_type> scope(&log_system<slog_type>::instance());
@@ -225,7 +225,7 @@ void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_outp
 	/**********************************************************
 	*        将顶点按照y大小排序，求出三角形面积与边
 	**********************************************************/
-	const vs_output_impl* pvert[3] = {&v0, &v1, &v2};
+	const vs_output* pvert[3] = {&v0, &v1, &v2};
 
 	//升序排列
 	if(pvert[0]->wpos.y > pvert[1]->wpos.y){
@@ -238,11 +238,11 @@ void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_outp
 	}
 
 	//初始化边及边上属性的差
-	vs_output_impl e01 = project(*(pvert[1])) - project(*(pvert[0]));
+	vs_output e01 = project(*(pvert[1])) - project(*(pvert[0]));
 	//float watch_x = e01.attributes[2].x;
 	
-	vs_output_impl e02 = project(*(pvert[2])) - project(*(pvert[0]));
-	vs_output_impl e12;
+	vs_output e02 = project(*(pvert[2])) - project(*(pvert[0]));
+	vs_output e12;
 
 
 
@@ -262,8 +262,8 @@ void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_outp
 	/**********************************************************
 	*  求解各个属性的差分式
 	*********************************************************/
-	vs_output_impl ddx((e02 * e01.wpos.y - e02.wpos.y * e01)*inv_area);
-	vs_output_impl ddy((e01 * e02.wpos.x - e01.wpos.x * e02)*inv_area);
+	vs_output ddx((e02 * e01.wpos.y - e02.wpos.y * e01)*inv_area);
+	vs_output ddy((e01 * e02.wpos.x - e01.wpos.x * e02)*inv_area);
 
 	triangle_info info;
 	info.set(pvert[0]->wpos, ddx, ddy);
@@ -302,8 +302,8 @@ void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_outp
 		int isy(0), iey(0);	//Part的起止扫描线号
 
 		//扫描线的起止顶点
-		const vs_output_impl* s_vert = NULL;
-		const vs_output_impl* e_vert = NULL;
+		const vs_output* s_vert = NULL;
+		const vs_output* e_vert = NULL;
 
 		//依据片段设置起始参数
 		if(iPart == bot_part){
@@ -419,7 +419,7 @@ void rasterizer::rasterize_triangle_impl(const vs_output_impl& v0, const vs_outp
 //Note:传入的像素将w乘回到attribute上.
 void rasterizer::rasterize_scanline_impl(const scanline_info& sl)
 {
-	vs_output_impl px_in(sl.base_vert);
+	vs_output px_in(sl.base_vert);
 	ps_output px_out;
 
 	for(size_t i_pixel = 0; i_pixel < sl.scanline_width; ++i_pixel)
@@ -442,7 +442,7 @@ rasterizer::rasterizer()
 	fm_ = fill_solid;
 }
 
-void rasterizer::rasterize_line(const vs_output_impl& v0, const vs_output_impl& v1)
+void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1)
 {
 	//如果完全超过边界，则剔除
 	const viewport& vp = pparent_->get_viewport();
@@ -459,7 +459,7 @@ void rasterizer::rasterize_line(const vs_output_impl& v0, const vs_output_impl& 
 	rasterize_line_impl(v0, v1);
 }
 
-void rasterizer::rasterize_triangle(const vs_output_impl& v0, const vs_output_impl& v1, const vs_output_impl& v2)
+void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2)
 {
 	//边界剔除
 	const viewport& vp = pparent_->get_viewport();
@@ -483,7 +483,7 @@ void rasterizer::rasterize_triangle(const vs_output_impl& v0, const vs_output_im
 	} else {
 		h_clipper clipper = pparent_->get_clipper();
 		clipper->set_viewport(vp);
-		const vector<const vs_output_impl*>& clipped_verts = clipper->clip(v0, v1, v2);
+		const vector<const vs_output*>& clipped_verts = clipper->clip(v0, v1, v2);
 
 		for(size_t i_tri = 1; i_tri < clipped_verts.size() - 1; ++i_tri){
 			rasterize_triangle_impl(*clipped_verts[0], *clipped_verts[i_tri], *clipped_verts[i_tri+1]);

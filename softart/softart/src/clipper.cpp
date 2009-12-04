@@ -8,7 +8,7 @@
 using namespace efl;
 using namespace std;
 
-clipper::clipper():last_stage(0), pool_(sizeof(vs_output_impl)){
+clipper::clipper():last_stage(0), pool_(sizeof(vs_output)){
 	//预先设置6个面，其余面清零
 	planes_[0] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	planes_[1] = vec4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -44,14 +44,14 @@ void clipper::set_clip_plane_enable(bool /*enable*/, size_t idx)
 	planes_enable_[idx - 6] = false;
 }
 
-const vector<const vs_output_impl*>& clipper::clip(const vs_output_impl& v0, const vs_output_impl& v1, const vs_output_impl& v2)
+const vector<const vs_output*>& clipper::clip(const vs_output& v0, const vs_output& v1, const vs_output& v2)
 {
 	//清理上一次clipper所使用的内存
 	for(size_t i = 0; i < 2; ++i)
 	{
 		for(size_t ivert = 0; ivert < clipped_verts_[i].size(); ++ivert)	{
 			if(is_vert_from_pool_[i][ivert]){
-				pool_.free(const_cast<vs_output_impl*>(clipped_verts_[i][ivert]));
+				pool_.free(const_cast<vs_output*>(clipped_verts_[i][ivert]));
 			}
 		}
 	}
@@ -94,7 +94,7 @@ const vector<const vs_output_impl*>& clipper::clip(const vs_output_impl& v0, con
 				is_vert_from_pool_[dest_stage].push_back(false);
 
 				if(dj < 0.0f){
-					vs_output_impl* pclipped = (vs_output_impl*)(pool_.malloc());
+					vs_output* pclipped = (vs_output*)(pool_.malloc());
 
 					//LERP
 					*pclipped = *clipped_verts_[src_stage][i] + (*clipped_verts_[src_stage][j] - *clipped_verts_[src_stage][i]) * ( di / (di - dj));
@@ -105,7 +105,7 @@ const vector<const vs_output_impl*>& clipper::clip(const vs_output_impl& v0, con
 				}
 			} else {
 				if(dj >= 0.0f){
-					vs_output_impl* pclipped = (vs_output_impl*)(pool_.malloc());
+					vs_output* pclipped = (vs_output*)(pool_.malloc());
 
 					//LERP
 					*pclipped = *clipped_verts_[src_stage][j] + (*clipped_verts_[src_stage][i] - *clipped_verts_[src_stage][j]) * ( dj / (dj - di));
