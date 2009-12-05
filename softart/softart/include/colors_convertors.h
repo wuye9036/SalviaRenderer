@@ -41,7 +41,8 @@ decl_type_fmt_pair(color_bgra8, 2);
 decl_type_fmt_pair(color_rgba8, 3);
 decl_type_fmt_pair(color_r32f, 4);
 decl_type_fmt_pair(color_rg32f, 5);
-decl_type_fmt_pair(color_max, 6);
+decl_type_fmt_pair(color_r32i, 6);
+decl_type_fmt_pair(color_max, 7);
 
 const int pixel_format_color_ub = pixel_format_color_max - 1;
 /*************************************
@@ -53,7 +54,8 @@ const pixel_information color_infos[pixel_type_to_fmt<color_max>::fmt] = {
 	decl_color_info(color_bgra8),
 	decl_color_info(color_rgba8),
 	decl_color_info(color_r32f),
-	decl_color_info(color_rg32f)
+	decl_color_info(color_rg32f),
+	decl_color_info(color_r32i)
 };
 
 /**************************************

@@ -65,7 +65,7 @@ public:
 	bool shader_prog(backbuffer_pixel_out& inout, const backbuffer_pixel_in& in){
 		if(inout.depth() > in.depth()){
 			inout.color(0, in.color(0));
-			inout.depth() = in.depth();
+			inout.depth(in.depth());
 		}
 		return true;
 	}

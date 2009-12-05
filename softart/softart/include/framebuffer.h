@@ -12,8 +12,8 @@ class framebuffer : public render_stage
 {
 private:
 	std::vector<boost::shared_ptr<surface> > back_cbufs_;
-	std::vector<float> dbuf_;
-	std::vector<size_t> sbuf_;
+	boost::shared_ptr<surface> dbuf_;
+	boost::shared_ptr<surface> sbuf_;
 	
 	std::vector<bool> buf_valids;
 	std::vector<surface* > cbufs_; //framebuffer没有释放surface的权力
@@ -52,10 +52,10 @@ public:
 	//清理
 	void clear_color(size_t tar_id, const color_rgba32f& c);
 	void clear_depth(float d);
-	void clear_stencil(uint32_t s);
+	void clear_stencil(int32_t s);
 	void clear_color(size_t tar_id, const efl::rect<size_t>& rc, const color_rgba32f& c);
 	void clear_depth(const efl::rect<size_t>& rc, float d);
-	void clear_stencil(const efl::rect<size_t>& rc, uint32_t s);
+	void clear_stencil(const efl::rect<size_t>& rc, int32_t s);
 };
 
 //DECL_HANDLE(framebuffer, h_framebuffer);

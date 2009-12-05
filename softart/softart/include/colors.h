@@ -263,10 +263,49 @@ struct color_bgra8
 	}
 private:
 	color_bgra8& assign(const color_rgba32f& rhs){
-		r = comp_t( efl::clamp(rhs.r * 255.0f, 0.0f, 255.0f) );
-		g = comp_t( efl::clamp(rhs.g * 255.0f, 0.0f, 255.0f) );
-		b = comp_t( efl::clamp(rhs.b * 255.0f, 0.0f, 255.0f) );
-		a = comp_t( efl::clamp(rhs.a * 255.0f, 0.0f, 255.0f) );
+		r = comp_t( efl::clamp(rhs.r * 255.0f + 0.5f, 0.0f, 255.0f) );
+		g = comp_t( efl::clamp(rhs.g * 255.0f + 0.5f, 0.0f, 255.0f) );
+		b = comp_t( efl::clamp(rhs.b * 255.0f + 0.5f, 0.0f, 255.0f) );
+		a = comp_t( efl::clamp(rhs.a * 255.0f + 0.5f, 0.0f, 255.0f) );
+		return *this;
+	}
+};
+
+struct color_r32i
+{
+	typedef int32_t comp_t;
+	comp_t r;
+
+	color_r32i():r(0){}
+	color_r32i(const comp_t* color):r(*color){}
+	color_r32i(comp_t r):r(r){}
+
+	template<class T>
+	color_r32i(const T& rhs){
+		*this = rhs;
+	}
+
+	color_r32i& operator = (const color_r32i& rhs){
+		r = rhs.r;
+		return *this;
+	}
+
+	color_r32i& operator = (const color_rgba32f& rhs){
+		return assign(rhs);
+	}
+
+	template<class T>
+	color_r32i& operator = (const T& rhs){
+		return assign(rhs.to_rgba32f());
+	}
+
+	color_rgba32f to_rgba32f() const{
+		return color_rgba32f(float(r), 0.0f, 0.0f, 0.0f);
+	}
+
+private:
+	color_r32i& assign(const color_rgba32f& rhs){
+		r = comp_t( rhs.r + 0.5f );
 		return *this;
 	}
 };

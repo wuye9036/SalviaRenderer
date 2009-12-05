@@ -52,6 +52,7 @@ class vs_output
 
 	friend vs_output lerp(const vs_output& start, const vs_output& end, float step);
 	friend vs_output& integral(vs_output& inout, float step, const vs_output& derivation);
+	friend vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
 
 	friend void update_wpos(vs_output& vso, const viewport& vp);
 
@@ -116,8 +117,8 @@ struct ps_output
 
 struct backbuffer_pixel_in
 {
-	backbuffer_pixel_in(const ps_output& ps, const size_t* stencil)
-		:ps_(&ps), pstencil_(stencil){
+	backbuffer_pixel_in(const ps_output& ps, surface* sbuf, size_t x, size_t y)
+		:ps_(&ps), sbuf_(sbuf), buf_x_(x), buf_y_(y){
 	}
 
 	const color_rgba32f& color(size_t regidx) const{
@@ -128,8 +129,8 @@ struct backbuffer_pixel_in
 		return ps_->depth;
 	}
 
-	size_t stencil() const{
-		return *pstencil_;
+	int32_t get_stencil() const{
+		return int32_t(sbuf_->get_texel(buf_x_, buf_y_).r);
 	}
 
 private:
@@ -137,33 +138,38 @@ private:
 	backbuffer_pixel_in& operator = (const backbuffer_pixel_in& rhs);
 
 	const ps_output* ps_;
-	const size_t* pstencil_;
+	surface* sbuf_;
+	size_t buf_x_, buf_y_;
 };
 
 struct backbuffer_pixel_out
 {
-	backbuffer_pixel_out(std::vector<surface*>& cbuf, size_t x, size_t y, float* depth, size_t* stencil)
-		:cbuf_(&cbuf), cbuf_x_(x), cbuf_y_(y), pdepth_(depth), pstencil_(stencil){
+	backbuffer_pixel_out(std::vector<surface*>& cbuf, surface* dbuf, surface* sbuf, size_t x, size_t y)
+		:cbuf_(&cbuf), dbuf_(dbuf), sbuf_(sbuf), buf_x_(x), buf_y_(y) {
 			is_color_rewritten_.assign(false);
 	}
 
 	color_rgba32f color(size_t regidx) const{
-		return (*cbuf_)[regidx]->get_texel(cbuf_x_, cbuf_y_);
+		return (*cbuf_)[regidx]->get_texel(buf_x_, buf_y_);
 	}
-	float depth() const { return *pdepth_; }
-	size_t stencil() const { return *pstencil_; }
+	float depth() const{
+		return dbuf_->get_texel(buf_x_, buf_y_).r;
+	}
+	int32_t stencil() const{
+		return int32_t(sbuf_->get_texel(buf_x_, buf_y_).r);
+	}
 
 	void color(size_t regidx, const color_rgba32f& clr){
 		is_color_rewritten_[regidx] = true;
-		(*cbuf_)[regidx]->set_texel(cbuf_x_, cbuf_y_, clr);
+		(*cbuf_)[regidx]->set_texel(buf_x_, buf_y_, clr);
 	}
 
-	float& depth(){
-		return *pdepth_;
+	void depth(float depth){
+		dbuf_->set_texel(buf_x_, buf_y_, color_rgba32f(depth, 0, 0, 0));
 	}
 
-	size_t& stencil(){
-		return *pstencil_;
+	void stencil(int32_t stencil){
+		sbuf_->set_texel(buf_x_, buf_y_, color_rgba32f(float(stencil), 0, 0, 0));
 	}
 
 private:
@@ -172,8 +178,8 @@ private:
 
 	boost::array<bool, pso_color_regcnt> is_color_rewritten_;
 	std::vector<surface*>* cbuf_;
-	size_t cbuf_x_, cbuf_y_;
-	float* pdepth_;
-	size_t* pstencil_;
+	surface* dbuf_;
+	surface* sbuf_;
+	size_t buf_x_, buf_y_;
 };
 #endif

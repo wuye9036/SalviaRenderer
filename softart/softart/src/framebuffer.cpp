@@ -22,8 +22,7 @@ void framebuffer::initialize(renderer_impl* pparent)
 }
 
 framebuffer::framebuffer(size_t width, size_t height, pixel_format fmt)
-:dbuf_(width*height), sbuf_(width*height),
-width_(width), height_(height), fmt_(fmt),
+:width_(width), height_(height), fmt_(fmt),
 back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_regcnt)
 {
 	for(size_t i = 0; i < back_cbufs_.size(); ++i){
@@ -31,6 +30,8 @@ back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_re
 	}
 
 	back_cbufs_[0].reset(new surface(width, height, fmt));
+	dbuf_.reset(new surface(width, height,  pixel_format_color_r32f));
+	sbuf_.reset(new surface(width, height,  pixel_format_color_r32i));
 
 	for(size_t i = 0; i < cbufs_.size(); ++i){
 		cbufs_[i] = back_cbufs_[i].get();
@@ -132,10 +133,10 @@ void framebuffer::render_pixel(size_t x, size_t y, const ps_output& ps)
 	if(! hbs) return;
 
 	//composing input...
-	backbuffer_pixel_in in(ps, &sbuf_[y*width_+x]);
+	backbuffer_pixel_in in(ps, sbuf_.get(), x, y);
 
 	//composing output...
-	backbuffer_pixel_out inout(cbufs_, x, y, &dbuf_[y*width_+x], &sbuf_[y*width_+x]);
+	backbuffer_pixel_out inout(cbufs_, dbuf_.get(), sbuf_.get(), x, y);
 
 	//execute target shader
 	hbs->execute(inout, in);
@@ -146,23 +147,15 @@ void framebuffer::clear_color(size_t tar_id, const color_rgba32f& c){
 	custom_assert(tar_id < cbufs_.size(), "渲染目标标识设置错误！");
 	custom_assert(cbufs_[tar_id] && buf_valids[tar_id], "试图对一个无效的渲染目标设置颜色！");
 
-	cbufs_[tar_id]->fill_clr_texels(0, 0, width_, height_, c);
+	cbufs_[tar_id]->fill_texels(0, 0, width_, height_, c);
 }
 
 void framebuffer::clear_depth(float d){
-	for(size_t i_y = 0; i_y < height_; ++i_y){
-		for(size_t i_x = 0; i_x < width_; ++i_x){
-			dbuf_[i_y*width_ + i_x] = d;
-		}
-	}
+	dbuf_->fill_texels(0, 0, width_, height_, color_rgba32f(d, 0, 0, 0));
 }
 
-void framebuffer::clear_stencil(uint32_t s){
-	for(size_t i_y = 0; i_y < height_; ++i_y){
-		for(size_t i_x = 0; i_x < width_; ++i_x){
-			sbuf_[i_y*width_ + i_x] = s;
-		}
-	}
+void framebuffer::clear_stencil(int32_t s){
+	sbuf_->fill_texels(0, 0, width_, height_, color_rgba32f(float(s), 0, 0, 0));
 }
 
 void framebuffer::clear_color(size_t tar_id, const rect<size_t>& rc, const color_rgba32f& c){
@@ -171,25 +164,17 @@ void framebuffer::clear_color(size_t tar_id, const rect<size_t>& rc, const color
 	custom_assert(cbufs_[tar_id] && buf_valids[tar_id], "试图对一个无效的渲染目标设置颜色！");
 	custom_assert(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "锁定区域超过了帧缓冲范围！");
 
-	cbufs_[tar_id]->fill_clr_texels(rc.x, rc.y, rc.w, rc.h, c);
+	cbufs_[tar_id]->fill_texels(rc.x, rc.y, rc.w, rc.h, c);
 }
 
 void framebuffer::clear_depth(const rect<size_t>& rc, float d){
 	custom_assert(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "锁定区域超过了帧缓冲范围！");
 
-	for(size_t i_y = rc.y; i_y < rc.h + rc.y; ++i_y){
-		for(size_t i_x = rc.x; i_x < rc.w + rc.x; ++i_x){
-			dbuf_[i_y*width_ + i_x] = d;
-		}
-	}
+	dbuf_->fill_texels(rc.x, rc.y, rc.w, rc.h, color_rgba32f(d, 0, 0, 0));
 }
 
-void framebuffer::clear_stencil(const rect<size_t>& rc, uint32_t s){
+void framebuffer::clear_stencil(const rect<size_t>& rc, int32_t s){
 	custom_assert(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "锁定区域超过了帧缓冲范围！");
 
-	for(size_t i_y = rc.y; i_y < rc.h + rc.y; ++i_y){
-		for(size_t i_x = rc.x; i_x < rc.w + rc.x; ++i_x){
-			sbuf_[i_y*width_ + i_x] = s;
-		}
-	}
+	sbuf_->fill_texels(rc.x, rc.y, rc.w, rc.h, color_rgba32f(float(s), 0, 0, 0));
 }

@@ -145,8 +145,8 @@ public:
 		pixel_format_convertor::convert(pxfmt_, pixel_format_color_rgba32f, (void*)&datas_[(width_*y+x)*elem_size_], (const void*)(&color));
 	}
 
-	void fill_clr_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color){
-		pixel_format_convertor::convert(pxfmt_, pixel_format_color_rgba32f, (void*)&datas_[(width_*sy+sx)*elem_size_], (const void*)(&color));
+	void fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color){
+		set_texel(sx, sy, color);
 		for (size_t x = sx + 1; x < sx + width; ++ x){
 			memcpy(&datas_[(width_ * sy + x) * elem_size_], &datas_[(width_ * sy + sx) * elem_size_], elem_size_);
 		}

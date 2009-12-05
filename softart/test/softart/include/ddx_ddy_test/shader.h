@@ -70,7 +70,7 @@ class bs_shader: public blend_shader
 		if(in.depth() < inout.depth())
 		{
 			inout.color(0, in.color(0));
-			inout.depth() = in.depth();
+			inout.depth(in.depth());
 		}
 		return true;
 	}

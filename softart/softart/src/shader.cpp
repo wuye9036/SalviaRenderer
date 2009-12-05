@@ -177,6 +177,31 @@ vs_output& integral(vs_output& inout, float step, const vs_output& derivation)
 	return inout;
 }
 
+vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
+{
+	assert(in.num_used_attribute == derivation.num_used_attribute);
+
+	out.position = in.position + derivation.position * step;
+	out.wpos = in.wpos + derivation.wpos * step;
+
+	float inv_w = 1.0f / out.wpos.w;
+
+	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
+		assert(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr]);
+		out.attributes[i_attr] = in.attributes[i_attr];
+		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		if (!(in.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] += derivation.attributes[i_attr] * step;
+		}
+		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+			out.attributes[i_attr] *= inv_w;
+		}
+	}
+	out.num_used_attribute = in.num_used_attribute;
+
+	return out;
+}
+
 void update_wpos(vs_output& vso, const viewport& vp)
 {
 	float invw = (efl::equal<float>(vso.position.w, 0.0f)) ? 1.0f : 1.0f / vso.position.w;
