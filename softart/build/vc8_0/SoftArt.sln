@@ -19,13 +19,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EFLIB_test", "..\..\eflib\b
 		{6D86391E-C412-42B1-AB5D-54357A4055BC} = {6D86391E-C412-42B1-AB5D-54357A4055BC}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ddx_ddy_test", "..\..\test\softart\build\vc9_0\ddx_ddy_test.vcproj", "{55B280B5-0E3D-4DB8-A57B-F53414D8F644}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8E60428A-A2DF-4C9B-BDA7-B98480DEFB77} = {8E60428A-A2DF-4C9B-BDA7-B98480DEFB77}
-		{60CCCDD1-AE3F-469A-8C55-6CDD45C6435E} = {60CCCDD1-AE3F-469A-8C55-6CDD45C6435E}
-		{6D86391E-C412-42B1-AB5D-54357A4055BC} = {6D86391E-C412-42B1-AB5D-54357A4055BC}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -52,10 +45,6 @@ Global
 		{C2BA1256-6011-42CC-9091-AE4104BCC72B}.Debug|Win32.Build.0 = Debug|Win32
 		{C2BA1256-6011-42CC-9091-AE4104BCC72B}.Release|Win32.ActiveCfg = Release|Win32
 		{C2BA1256-6011-42CC-9091-AE4104BCC72B}.Release|Win32.Build.0 = Release|Win32
-		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Debug|Win32.ActiveCfg = Debug|Win32
-		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Debug|Win32.Build.0 = Debug|Win32
-		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Release|Win32.ActiveCfg = Release|Win32
-		{55B280B5-0E3D-4DB8-A57B-F53414D8F644}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

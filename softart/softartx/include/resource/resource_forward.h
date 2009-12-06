@@ -1,0 +1,7 @@
+#ifndef SOFTARTX_RESOURCE_FORWARD_H
+#define SOFTARTX_RESOURCE_FORWARD_H
+
+#define BEGIN_NS_SOFTARTX_RESOURCE() namespace softartx{ namespace resource{
+#define END_NS_SOFTARTX_RESOURCE() }}
+
+#endif //SOFTARTX_RESOURCE_FORWARD_H

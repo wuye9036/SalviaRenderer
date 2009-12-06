@@ -38,7 +38,7 @@ public:
 	void set_render_target_enabled(render_target tar, size_t tar_id);
 
 	void set_render_target(render_target tar, size_t tar_id, surface* psurf);
-	surface* get_render_target(render_target tar, size_t tar_id);
+	surface* get_render_target(render_target tar, size_t tar_id) const;
 
 	//»ñµÃäÖÈ¾×´Ì¬	
 	efl::rect<size_t> get_rect();

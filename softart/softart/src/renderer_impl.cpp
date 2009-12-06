@@ -350,7 +350,7 @@ h_rasterizer renderer_impl::get_rasterizer()
 	return hrast_;
 }
 
-h_framebuffer renderer_impl::get_framebuffer()
+h_framebuffer renderer_impl::get_framebuffer() const
 {
 	return hfb_; 
 }

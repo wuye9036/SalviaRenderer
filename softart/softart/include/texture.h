@@ -41,7 +41,7 @@ public:
 	virtual void lock(void** pData, size_t miplevel, const efl::rect<size_t>& lrc, lock_mode lm, size_t z_slice = 0) = 0;
 	virtual void unlock() = 0;
 
-	virtual surface& get_surface(size_t miplevel, size_t z_slice) = 0;
+	virtual surface& get_surface(size_t miplevel, size_t z_slice = 0) = 0;
 	virtual const surface& get_surface(size_t miplevel, size_t z_slice = 0) const = 0;
 
 	virtual size_t get_width(size_t miplevel) const= 0;

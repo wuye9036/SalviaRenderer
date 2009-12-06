@@ -1,5 +1,22 @@
-#include "../include/framebuffer.h"
+/*
+Copyright (C) 2007-2010 Minmin Gong, Ye Wu
 
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
+
+#include "../include/framebuffer.h"
 #include "../include/surface.h"
 #include "../include/renderer_impl.h"
 #include "../include/shader.h"
@@ -101,7 +118,7 @@ void framebuffer::set_render_target(render_target tar, size_t tar_id, surface* p
 	cbufs_[tar_id] = psurf;
 }
 
-surface* framebuffer::get_render_target(render_target tar, size_t tar_id)
+surface* framebuffer::get_render_target(render_target tar, size_t tar_id) const
 {
 	custom_assert(tar == render_target_color, "只能获得颜色缓冲");
 	custom_assert(tar_id < cbufs_.size(), "颜色缓冲ID设置错误");

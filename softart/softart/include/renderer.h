@@ -77,6 +77,8 @@ public:
 	virtual result set_render_target_available(render_target tar, size_t tar_id, bool valid) = 0;
 	virtual bool get_render_target_available(render_target tar, size_t tar_id) const = 0;
 
+	virtual h_framebuffer get_framebuffer() const = 0;
+
 	//do not support get function for a while
 	virtual result set_render_target(render_target tar, size_t tar_id, surface* psurf) = 0;
 

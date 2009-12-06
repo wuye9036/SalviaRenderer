@@ -58,6 +58,10 @@ const pixel_information color_infos[pixel_type_to_fmt<color_max>::fmt] = {
 	decl_color_info(color_r32i)
 };
 
+inline const pixel_information& get_color_info( pixel_format pf ){
+	return color_infos[pf];
+}
+
 /**************************************
  * 颜色转换工具
  *************************************/

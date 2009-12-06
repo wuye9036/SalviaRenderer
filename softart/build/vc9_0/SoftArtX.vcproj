@@ -45,7 +45,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)../../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;SOFTARTX_D3D9_ENABLED;SOFTARTX_GDIPLUS_ENABLED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -116,7 +116,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_SECURE_SCL=0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_SECURE_SCL=0;SOFTARTX_D3D9_ENABLED;SOFTARTX_GDIPLUS_ENABLED"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -297,11 +297,11 @@
 				Name="presenter"
 				>
 				<File
-					RelativePath="..\..\softartx\src\presenter\device_dx9.cpp"
+					RelativePath="..\..\softartx\src\presenter\dx9\dev_d3d9.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\src\presenter\WindowsUtil.cpp"
+					RelativePath="..\..\softartx\src\presenter\gdiplus\dev_gdiplus.cpp"
 					>
 				</File>
 			</Filter>
@@ -309,27 +309,39 @@
 				Name="resource"
 				>
 				<File
-					RelativePath="..\..\softartx\src\resource\mesh.cpp"
+					RelativePath="..\..\softartx\src\resource\mesh\sa\mesh.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\src\resource\mesh_io.cpp"
+					RelativePath="..\..\softartx\src\resource\mesh\sa\mesh_io.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\src\resource\mesh_io_dx9.cpp"
+					RelativePath="..\..\softartx\src\resource\mesh\dx9\mesh_io_d3d9.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\src\resource\tex_io.cpp"
+					RelativePath="..\..\softartx\src\resource\texture\sa\tex_io.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\src\resource\tex_io_freeimage.cpp"
+					RelativePath="..\..\softartx\src\resource\texture\freeimage\tex_io_freeimage.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\src\resource\tex_io_gdiplus.cpp"
+					RelativePath="..\..\softartx\src\resource\texture\gdiplus\tex_io_gdiplus.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="utility"
+				>
+				<File
+					RelativePath="..\..\softartx\src\utility\d3d9_utilities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\src\utility\freeimage_utility.cpp"
 					>
 				</File>
 			</Filter>
@@ -339,68 +351,87 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\softartx\include\inc_d3d9.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\softartx\include\inc_d3d9x.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\softartx\include\inc_gdiplus.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\softartx\include\user_config.h"
-				>
-			</File>
 			<Filter
-				Name="presenter"
+				Name="resource"
 				>
 				<File
-					RelativePath="..\..\softartx\include\presenter\dev.h"
+					RelativePath="..\..\softartx\include\resource\mesh\sa\mesh.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\presenter\dev_d3d9.h"
+					RelativePath="..\..\softartx\include\resource\mesh\sa\mesh_io.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\inc_windows.h"
+					RelativePath="..\..\softartx\include\resource\mesh\dx9\mesh_io_d3d9.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\presenter\WindowsUtil.h"
+					RelativePath="..\..\softartx\include\resource\resource_forward.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\include\resource\texture\sa\tex_io.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\include\resource\texture\freeimage\tex_io_freeimage.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\include\resource\texture\gdiplus\tex_io_gdiplus.h"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="resource"
-				Filter="resource"
+				Name="utility"
 				>
 				<File
-					RelativePath="..\..\softartx\include\resource\mesh.h"
+					RelativePath="..\..\softartx\include\utility\d3d9_utilities.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\resource\mesh_io.h"
+					RelativePath="..\..\softartx\include\utility\freeimage_utilities.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\resource\mesh_io_d3d9.h"
+					RelativePath="..\..\softartx\include\utility\inc_d3d9.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\resource\tex_io.h"
+					RelativePath="..\..\softartx\include\utility\inc_d3d9x.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\resource\tex_io_freeimage.h"
+					RelativePath="..\..\softartx\include\utility\inc_gdiplus.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\softartx\include\resource\tex_io_gdiplus.h"
+					RelativePath="..\..\softartx\include\utility\inc_windows.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\include\utility\user_config.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\include\utility\utility_forward.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="presenter"
+				>
+				<File
+					RelativePath="..\..\softartx\include\presenter\sa\dev.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\include\presenter\dx9\dev_d3d9.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\softartx\include\presenter\gdiplus\dev_gdiplus.h"
 					>
 				</File>
 			</Filter>

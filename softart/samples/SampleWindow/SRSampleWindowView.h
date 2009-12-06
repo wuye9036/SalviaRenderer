@@ -4,17 +4,13 @@
 
 #pragma once
 
-#include "softartx/include/presenter/WindowsUtil.h"
-#include "softartx/include/presenter/dev.h"
-#include "softartx/include/resource/mesh_io.h"
-
+#include "softartx/include/presenter/gdiplus/dev_gdiplus.h"
+#include "softartx/include/resource/mesh/sa/mesh_io.h"
 #include "softart/include/shader.h"
 #include "softart/include/renderer_impl.h"
 #include "softart/include/resource_manager.h"
 #include "softart/include/rasterizer.h"
-
 #include "eflib/include/eflib.h"
-
 #include <iostream>
 #include <boost/assign.hpp>
 #include <boost/timer.hpp>
@@ -23,6 +19,10 @@ using namespace efl;
 using namespace boost;
 using namespace boost::assign;
 using namespace std;
+using namespace softartx;
+using namespace softartx::resource;
+using namespace softartx::presenter;
+using namespace Gdiplus;
 
 struct vert
 {
@@ -74,7 +74,7 @@ public:
 class CSRSampleWindowView : public CWindowImpl<CSRSampleWindowView>
 {
 public:
-	WindowsUtil_GDIPlus render;
+	presenter::h_dev_gdiplus present_dev;
 	h_renderer hsr;
 	h_texture sm_tex;
 
@@ -117,12 +117,14 @@ public:
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
+		present_dev = dev_gdiplus::create_device( NULL, Rect() );
+
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 
-		hsr = create_software_renderer(&render_params, h_device());
+		hsr = create_software_renderer(&render_params, boost::shared_polymorphic_cast<device>(present_dev) );
 
 		planar_mesh = create_planar(
 			hsr.get(), 
@@ -148,8 +150,11 @@ public:
 
 		RECT rc;
 		this->GetClientRect(&rc);
-		//hsr->get_device()->present(rect<size_t>(0, 0, 0, 0), rect<size_t>(0, 0, 0, 0));
-		render.Render(dc.m_hDC, rc);
+		Graphics g(dc.m_hDC);
+		Rect draw_rect((INT)rc.left, (INT)rc.top, (INT)rc.right-rc.left, (INT)rc.bottom-rc.top);
+		present_dev->set_device_info(&g, draw_rect);
+		present_dev->attach_framebuffer( hsr->get_framebuffer().get() );
+		present_dev->present();
 		return 0;
 	}
 
@@ -163,7 +168,7 @@ public:
 		if (accumulate_time > 1)
 		{
 			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
+			fps = float( num_frames / accumulate_time );
 
 			accumulate_time = 0;
 			num_frames  = 0;
@@ -198,8 +203,6 @@ public:
 
 		box_mesh->render();
 
-		render.UpdateBackBuffer(static_pointer_cast<renderer_impl>(hsr)->get_framebuffer().get());
-
 		InvalidateRect(NULL);
 	}
 
@@ -219,6 +222,11 @@ public:
 
 	LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		UNREF_PARAM(uMsg);
+		UNREF_PARAM(wParam);
+		UNREF_PARAM(lParam);
+		UNREF_PARAM(bHandled);
+
 		return 1;
     }
 };

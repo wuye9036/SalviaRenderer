@@ -55,6 +55,10 @@ public:
 		new(this) surface(width, height, pxfmt);
 	}
 
+	void lock_readonly(void** pdata, const efl::rect<size_t>& rc) const{
+		const_cast<surface * const>(this)->lock(pdata, rc, lock_read_only);
+	}
+
 	void lock(void** pdata, const efl::rect<size_t>& rc, lock_mode lm){
 		custom_assert(rc.h > 0 && rc.w > 0, "锁定区域大小需为正数！");
 		custom_assert(rc.x + rc.w <= get_width() && rc.y + rc.h <= get_height(), "锁定区域超界！");
@@ -87,6 +91,9 @@ public:
 		return;
 	}
 
+	void unlock() const{
+		const_cast<surface * const>(this)->unlock();
+	}
 	void unlock()
 	{
 		custom_assert(is_locked(), "对未锁定的surface解锁！");

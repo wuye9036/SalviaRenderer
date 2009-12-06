@@ -71,6 +71,8 @@ public:
 	virtual result set_render_target_available(render_target tar, size_t tar_id, bool valid);
 	virtual bool get_render_target_available(render_target tar, size_t tar_id) const;
 
+	virtual h_framebuffer get_framebuffer() const;
+
 	//do not support get function for a while
 	virtual result set_render_target(render_target tar, size_t tar_id, surface* psurf);
 
@@ -111,7 +113,7 @@ public:
 
 	h_geometry_assembler get_geometry_assembler();
 	h_rasterizer get_rasterizer();
-	h_framebuffer get_framebuffer();
+	
 	h_device get_device();
 	h_vertex_cache get_vertex_cache();
 	h_clipper get_clipper();
