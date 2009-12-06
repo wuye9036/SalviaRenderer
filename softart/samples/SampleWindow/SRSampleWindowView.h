@@ -82,7 +82,7 @@ public:
 	h_mesh box_mesh;
 
 	uint32_t num_frames;
-	double accumulate_time;
+	float accumulate_time;
 	float fps;
 
 	boost::timer timer;
@@ -151,7 +151,7 @@ public:
 		RECT rc;
 		this->GetClientRect(&rc);
 		Graphics g(dc.m_hDC);
-		Rect draw_rect((INT)rc.left, (INT)rc.top, (INT)rc.right-rc.left, (INT)rc.bottom-rc.top);
+		Rect draw_rect((INT)rc.left, (INT)rc.top, hsr->get_framebuffer()->get_width(), hsr->get_framebuffer()->get_height());
 		present_dev->set_device_info(&g, draw_rect);
 		present_dev->attach_framebuffer( hsr->get_framebuffer().get() );
 		present_dev->present();
@@ -168,7 +168,7 @@ public:
 		if (accumulate_time > 1)
 		{
 			// new second - not 100% precise
-			fps = float( num_frames / accumulate_time );
+			fps = num_frames / accumulate_time;
 
 			accumulate_time = 0;
 			num_frames  = 0;

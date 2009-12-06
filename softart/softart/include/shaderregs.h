@@ -106,6 +106,12 @@ public:
 		num_used_attribute = rhs.num_used_attribute;
 		return *this;
 	}
+
+public:
+	vs_output& operator+=(const vs_output& rhs);
+	vs_output& operator-=(const vs_output& rhs);
+	vs_output& operator*=(float f);
+	vs_output& operator/=(float f);
 };
 
 //vs_output compute_derivate

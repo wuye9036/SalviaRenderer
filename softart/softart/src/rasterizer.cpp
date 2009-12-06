@@ -423,19 +423,20 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 //Note:传入的像素将w乘回到attribute上.
 void rasterizer::rasterize_scanline_impl(const scanline_info& sl)
 {
-	vs_output px_in;
+	vs_output px_in(sl.base_vert);
 	ps_output px_out;
+	vs_output unprojed;
 	for(size_t i_pixel = 0; i_pixel < sl.scanline_width; ++i_pixel)
 	{
-		integral_unproject(px_in, sl.base_vert, static_cast<float>(i_pixel), sl.ddx);
-
 		//if(px_in.wpos.z <= 0.0f)
 			//continue;
-
-		//执行shader program
-		if(hps_->execute(px_in, px_out)){
+ 
+		unproject(unprojed, px_in);
+		if(hps_->execute(unprojed, px_out)){
 			hfb_->render_pixel(sl.base_x + i_pixel, sl.base_y, px_out);
 		}
+
+		integral(px_in, 1.0f, sl.ddx);
 	}
 }
 

@@ -15,70 +15,77 @@ efl::vec4& vs_input::operator[](size_t i)
 	return attributes_[i];
 }
 
+vs_output& vs_output::operator+=(const vs_output& rhs)
+{
+	assert(num_used_attribute == rhs.num_used_attribute);
+
+	position += rhs.position;
+	wpos += rhs.wpos;
+	for(size_t i_attr = 0; i_attr < num_used_attribute; ++i_attr){
+		assert(attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr]);
+		attributes[i_attr] += rhs.attributes[i_attr];
+	}
+
+	return *this;
+}
+
+vs_output& vs_output::operator-=(const vs_output& rhs)
+{
+	assert(num_used_attribute == rhs.num_used_attribute);
+
+	position -= rhs.position;
+	wpos -= rhs.wpos;
+	for(size_t i_attr = 0; i_attr < num_used_attribute; ++i_attr){
+		assert(attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr]);
+		attributes[i_attr] -= rhs.attributes[i_attr];
+	}
+
+	return *this;
+}
+
+vs_output& vs_output::operator*=(float f)
+{
+	position *= f;
+	wpos *= f;
+	for(size_t i_attr = 0; i_attr < num_used_attribute; ++i_attr){
+		attributes[i_attr] *= f;
+	}
+
+	return *this;
+}
+
+vs_output& vs_output::operator/=(float f)
+{
+	custom_assert(!efl::equal<float>(f, 0.0f), "");
+	return operator*=(1.0f / f);
+}
+
 /**************************************
  *  Vertex Shader Output
  *************************************/
 vs_output operator + (const vs_output& vso0, const vs_output& vso1)
 {
-	assert(vso0.num_used_attribute == vso1.num_used_attribute);
-
-	vs_output ret_vso;
-
-	ret_vso.position = vso0.position + vso1.position;
-	ret_vso.wpos = vso0.wpos + vso1.wpos;
-	for(size_t i_attr = 0; i_attr < vso0.num_used_attribute; ++i_attr){
-		assert(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr]);
-
-		ret_vso.attributes[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
-		ret_vso.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
-	}
-	ret_vso.num_used_attribute = vso0.num_used_attribute;
-
-	return ret_vso;
+	return vs_output(vso0) += vso1;
 }
 
 vs_output operator - (const vs_output& vso0, const vs_output& vso1)
 {
-	assert(vso0.num_used_attribute == vso1.num_used_attribute);
-
-	vs_output ret_vso;
-
-	ret_vso.position = vso0.position - vso1.position;
-	ret_vso.wpos = vso0.wpos - vso1.wpos;
-	for(size_t i_attr = 0; i_attr < vso0.num_used_attribute; ++i_attr){
-		assert(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr]);
-
-		ret_vso.attributes[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
-		ret_vso.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
-	}
-	ret_vso.num_used_attribute = vso0.num_used_attribute;
-
-	return ret_vso;
+	return vs_output(vso0) -= vso1;
 }
 
 vs_output operator * (const vs_output& vso0, float f)
 {
-	vs_output ret_vso;
-	ret_vso.position = vso0.position * f;
-	ret_vso.wpos = vso0.wpos * f;
-	for(size_t i_attr = 0; i_attr < vso0.num_used_attribute; ++i_attr){
-		ret_vso.attributes[i_attr] = vso0.attributes[i_attr] * f;
-		ret_vso.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
-	}
-	ret_vso.num_used_attribute = vso0.num_used_attribute;
-
-	return ret_vso;
+	return vs_output(vso0) *= f;
 }
 
 vs_output operator * (float f, const vs_output& vso0)
 {
-	return vso0 * f;
+	return operator*(vso0, f);
 }
 
 vs_output operator / (const vs_output& vso0, float f)
 {
-	custom_assert(!efl::equal<float>(f, 0.0f), "");
-	return vso0 * (1.0f / f);
+	return vs_output(vso0) /= f;
 }
 
 vs_output project(const vs_output& in)
