@@ -5,6 +5,7 @@
 #include "decl.h"
 #include "colors.h"
 #include "render_stage.h"
+#include "shaderregs.h"
 
 #include <vector>
 
@@ -20,6 +21,8 @@ private:
 
 	size_t width_, height_;
 	pixel_format fmt_;
+
+	backbuffer_pixel_out target_pixel_;
 
 	bool check_buf(surface* psurf);
 

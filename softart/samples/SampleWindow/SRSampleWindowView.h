@@ -43,6 +43,7 @@ public:
 		vec4 pos = in[0];
 		transform(out.position, wvp, pos);
 		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
+		out.attribute_modifiers[0] = 0;
 		out.num_used_attribute = 1;
 	}
 };
@@ -62,10 +63,10 @@ public:
 class ts : public blend_shader
 {
 public:
-	bool shader_prog(backbuffer_pixel_out& inout, const backbuffer_pixel_in& in){
-		if(inout.depth() > in.depth()){
-			inout.color(0, in.color(0));
-			inout.depth(in.depth());
+	bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in){
+		if(inout.depth() > in.depth){
+			inout.color(0, in.color[0]);
+			inout.depth(in.depth);
 		}
 		return true;
 	}

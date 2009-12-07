@@ -40,15 +40,16 @@ void framebuffer::initialize(renderer_impl* pparent)
 
 framebuffer::framebuffer(size_t width, size_t height, pixel_format fmt)
 :width_(width), height_(height), fmt_(fmt),
-back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_regcnt)
+back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_regcnt),
+dbuf_(new surface(width, height,  pixel_format_color_r32f)),
+sbuf_(new surface(width, height,  pixel_format_color_r32i)),
+target_pixel_(cbufs_, dbuf_.get(), sbuf_.get())
 {
 	for(size_t i = 0; i < back_cbufs_.size(); ++i){
 		back_cbufs_[i].reset();
 	}
 
 	back_cbufs_[0].reset(new surface(width, height, fmt));
-	dbuf_.reset(new surface(width, height,  pixel_format_color_r32f));
-	sbuf_.reset(new surface(width, height,  pixel_format_color_r32i));
 
 	for(size_t i = 0; i < cbufs_.size(); ++i){
 		cbufs_[i] = back_cbufs_[i].get();
@@ -149,14 +150,11 @@ void framebuffer::render_pixel(size_t x, size_t y, const ps_output& ps)
 	custom_assert(hbs, "Î´ÉèÖÃTarget Shader!");
 	if(! hbs) return;
 
-	//composing input...
-	backbuffer_pixel_in in(ps, sbuf_.get(), x, y);
-
 	//composing output...
-	backbuffer_pixel_out inout(cbufs_, dbuf_.get(), sbuf_.get(), x, y);
+	target_pixel_.set_pos(x, y);
 
 	//execute target shader
-	hbs->execute(inout, in);
+	hbs->execute(target_pixel_, ps);
 }
 
 void framebuffer::clear_color(size_t tar_id, const color_rgba32f& c){

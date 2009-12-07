@@ -236,6 +236,6 @@ void vertex_shader::execute(const vs_input& in, vs_output& out){
 	shader_prog(in, out);
 }
 
-void blend_shader::execute(backbuffer_pixel_out& out, const backbuffer_pixel_in& in){
+void blend_shader::execute(backbuffer_pixel_out& out, const ps_output& in){
 	shader_prog(out, in);
 }

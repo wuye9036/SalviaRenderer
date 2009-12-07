@@ -123,8 +123,8 @@ public:
 class blend_shader : public shader_impl
 {
 public:
-	void execute(backbuffer_pixel_out& inout, const backbuffer_pixel_in& in);
-	virtual bool shader_prog(backbuffer_pixel_out& inout, const backbuffer_pixel_in& in) = 0;
+	void execute(backbuffer_pixel_out& inout, const ps_output& in);
+	virtual bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in) = 0;
 };
 
 #endif

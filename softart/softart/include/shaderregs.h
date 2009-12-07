@@ -121,38 +121,15 @@ struct ps_output
 	boost::array<efl::vec4, pso_color_regcnt> color;
 };
 
-struct backbuffer_pixel_in
-{
-	backbuffer_pixel_in(const ps_output& ps, surface* sbuf, size_t x, size_t y)
-		:ps_(&ps), sbuf_(sbuf), buf_x_(x), buf_y_(y){
-	}
-
-	const color_rgba32f& color(size_t regidx) const{
-		return *reinterpret_cast<const color_rgba32f*>(&ps_->color[regidx]);
-	}
-
-	float depth() const{
-		return ps_->depth;
-	}
-
-	int32_t get_stencil() const{
-		return int32_t(sbuf_->get_texel(buf_x_, buf_y_).r);
-	}
-
-private:
-	backbuffer_pixel_in(const backbuffer_pixel_in& rhs);
-	backbuffer_pixel_in& operator = (const backbuffer_pixel_in& rhs);
-
-	const ps_output* ps_;
-	surface* sbuf_;
-	size_t buf_x_, buf_y_;
-};
-
 struct backbuffer_pixel_out
 {
-	backbuffer_pixel_out(std::vector<surface*>& cbuf, surface* dbuf, surface* sbuf, size_t x, size_t y)
-		:cbuf_(&cbuf), dbuf_(dbuf), sbuf_(sbuf), buf_x_(x), buf_y_(y) {
-			is_color_rewritten_.assign(false);
+	backbuffer_pixel_out(std::vector<surface*>& cbuf, surface* dbuf, surface* sbuf)
+		:cbuf_(&cbuf), dbuf_(dbuf), sbuf_(sbuf) {
+	}
+
+	void set_pos(size_t x, size_t y){
+		buf_x_ = x;
+		buf_y_ = y;
 	}
 
 	color_rgba32f color(size_t regidx) const{
@@ -166,7 +143,6 @@ struct backbuffer_pixel_out
 	}
 
 	void color(size_t regidx, const color_rgba32f& clr){
-		is_color_rewritten_[regidx] = true;
 		(*cbuf_)[regidx]->set_texel(buf_x_, buf_y_, clr);
 	}
 
@@ -182,7 +158,6 @@ private:
 	backbuffer_pixel_out(const backbuffer_pixel_out& rhs);
 	backbuffer_pixel_out& operator = (const backbuffer_pixel_out& rhs);
 
-	boost::array<bool, pso_color_regcnt> is_color_rewritten_;
 	std::vector<surface*>* cbuf_;
 	surface* dbuf_;
 	surface* sbuf_;
