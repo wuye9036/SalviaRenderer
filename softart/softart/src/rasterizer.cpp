@@ -73,6 +73,8 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 	const efl::vec4& dir = diff.wpos;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
+	h_blend_shader hbs = pparent_->get_blend_shader();
+
 	//构造差分
 	vs_output derivation = diff;
 
@@ -131,7 +133,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(hps_->execute(unprojed, px_out)){
-				hfb_->render_pixel(iPixel, int(px_in.wpos.y), px_out);
+				hfb_->render_pixel(hbs, iPixel, int(px_in.wpos.y), px_out);
 			}
 
 			//差分递增
@@ -187,7 +189,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1)
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(hps_->execute(unprojed, px_out)){
-				hfb_->render_pixel(int(px_in.wpos.x), iPixel, px_out);
+				hfb_->render_pixel(hbs, int(px_in.wpos.x), iPixel, px_out);
 			}
 
 			//差分递增
@@ -423,6 +425,8 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 //Note:传入的像素将w乘回到attribute上.
 void rasterizer::rasterize_scanline_impl(const scanline_info& sl)
 {
+	h_blend_shader hbs = pparent_->get_blend_shader();
+
 	vs_output px_in(sl.base_vert);
 	ps_output px_out;
 	vs_output unprojed;
@@ -433,7 +437,7 @@ void rasterizer::rasterize_scanline_impl(const scanline_info& sl)
  
 		unproject(unprojed, px_in);
 		if(hps_->execute(unprojed, px_out)){
-			hfb_->render_pixel(sl.base_x + i_pixel, sl.base_y, px_out);
+			hfb_->render_pixel(hbs, sl.base_x + i_pixel, sl.base_y, px_out);
 		}
 
 		integral(px_in, 1.0f, sl.ddx);

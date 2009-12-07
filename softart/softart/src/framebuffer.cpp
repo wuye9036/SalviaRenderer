@@ -144,9 +144,8 @@ pixel_format framebuffer::get_buffer_format() const{
 }
 
 //äÖÈ¾
-void framebuffer::render_pixel(size_t x, size_t y, const ps_output& ps)
+void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps)
 {
-	h_blend_shader hbs = pparent_->get_blend_shader();
 	custom_assert(hbs, "Î´ÉèÖÃTarget Shader!");
 	if(! hbs) return;
 
