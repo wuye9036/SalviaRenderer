@@ -44,7 +44,7 @@ private:
 
 	d3d9_device(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params);
 public:
-	h_d3d9_device create(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params);
+	static h_d3d9_device create(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params);
 	IDirect3D9* get_d3d9() const;
 	IDirect3DDevice9* get_d3d_device9() const;
 	~d3d9_device();

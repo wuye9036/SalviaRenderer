@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "softartx/include/presenter/dx9/dev_d3d9.h"
 #include "softartx/include/presenter/gdiplus/dev_gdiplus.h"
 #include "softartx/include/resource/mesh/sa/mesh_io.h"
 #include "softart/include/shader.h"
@@ -14,6 +15,8 @@
 #include <iostream>
 #include <boost/assign.hpp>
 #include <boost/timer.hpp>
+
+//#define USE_GDIPLUS
 
 using namespace efl;
 using namespace boost;
@@ -75,7 +78,7 @@ public:
 class CSRSampleWindowView : public CWindowImpl<CSRSampleWindowView>
 {
 public:
-	presenter::h_dev_gdiplus present_dev;
+	h_device present_dev;
 	h_renderer hsr;
 	h_texture sm_tex;
 
@@ -118,14 +121,39 @@ public:
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
+#ifdef USE_GDIPLUS
 		present_dev = dev_gdiplus::create_device( NULL, Rect() );
+#else
+		D3DPRESENT_PARAMETERS d3dpp;
+		std::memset(&d3dpp, 0, sizeof(d3dpp));
+		d3dpp.Windowed					= true;
+		d3dpp.BackBufferCount			= 1;
+		d3dpp.BackBufferWidth			= 512;
+		d3dpp.BackBufferHeight			= 512;
+		d3dpp.hDeviceWindow				= m_hWnd;
+		d3dpp.SwapEffect				= D3DSWAPEFFECT_DISCARD;
+		d3dpp.PresentationInterval		= D3DPRESENT_INTERVAL_IMMEDIATE;
+		d3dpp.BackBufferFormat			= D3DFMT_X8R8G8B8;
+
+		softartx::utility::d3d9_device_param device_params;
+		device_params.adapter = 0;
+		device_params.devtype = D3DDEVTYPE_HAL;
+		device_params.focuswnd = m_hWnd;
+		device_params.behavior = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+
+		softartx::utility::h_d3d9_device d3d9dev = softartx::utility::d3d9_device::create(device_params, d3dpp);
+
+		present_dev = dev_d3d9::create_device( d3d9dev );
+#endif
 
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 
-		hsr = create_software_renderer(&render_params, boost::shared_polymorphic_cast<device>(present_dev) );
+		hsr = create_software_renderer(&render_params, present_dev);
+
+		present_dev->attach_framebuffer( hsr->get_framebuffer().get() );
 
 		planar_mesh = create_planar(
 			hsr.get(), 
@@ -149,12 +177,13 @@ public:
 		CPaintDC dc(m_hWnd);
 		//TODO: Add your drawing code here
 
+#ifdef USE_GDIPLUS
 		RECT rc;
 		this->GetClientRect(&rc);
 		Graphics g(dc.m_hDC);
 		Rect draw_rect((INT)rc.left, (INT)rc.top, hsr->get_framebuffer()->get_width(), hsr->get_framebuffer()->get_height());
-		present_dev->set_device_info(&g, draw_rect);
-		present_dev->attach_framebuffer( hsr->get_framebuffer().get() );
+		boost::shared_polymorphic_cast<dev_gdiplus>(present_dev)->set_device_info(&g, draw_rect);
+#endif
 		present_dev->present();
 		return 0;
 	}

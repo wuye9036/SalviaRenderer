@@ -5,6 +5,9 @@
 
 #include "eflib/include/math.h"
 
+class device;
+DECL_HANDLE(device, h_device)
+
 class device
 {
 public:

@@ -21,11 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 BEGIN_NS_SOFTARTX_UTILITY()
 d3d9_device::d3d9_device(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params){
 	//初始化D3D9
-	if(pd3d9_ == NULL){
-		pd3d9_ = Direct3DCreate9(D3D_SDK_VERSION);
-	} else {
-		pd3d9_->AddRef();
-	}
+	pd3d9_ = Direct3DCreate9(D3D_SDK_VERSION);
 
 	//初始化Device
 	if( FAILED(pd3d9_->CreateDevice(

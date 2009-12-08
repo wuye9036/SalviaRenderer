@@ -34,7 +34,7 @@ struct Vertex
 
 BEGIN_NS_SOFTARTX_PRESENTER()
 
-dev_d3d9::dev_d3d9(h_d3d9_device dev): dev_(dev){
+dev_d3d9::dev_d3d9(h_d3d9_device dev): dev_(dev), buftex_(NULL){
 }
 
 dev_d3d9::~dev_d3d9(){
@@ -127,7 +127,12 @@ void dev_d3d9::present()
 	pdxdev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, &verts[0], sizeof(Vertex));
 	pdxdev->EndScene();
 
-	pdxdev->Present(NULL, NULL, NULL, NULL);
+	RECT rc;
+	rc.left = 0;
+	rc.top = 0;
+	rc.right = pfb_->get_width();
+	rc.bottom = pfb_->get_height();
+	pdxdev->Present(NULL, &rc, NULL, NULL);
 }
 
 END_NS_SOFTARTX_PRESENTER()
