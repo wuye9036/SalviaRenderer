@@ -52,6 +52,8 @@ private:
 	softartx::utility::h_d3d9_device dev_;
 	IDirect3DTexture9* buftex_;
 	framebuffer* pfb_;
+
+	IDirect3DVertexBuffer9* vb_;
 };
 
 END_NS_SOFTARTX_PRESENTER()

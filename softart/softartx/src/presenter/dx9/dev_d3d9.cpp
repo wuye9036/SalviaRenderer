@@ -34,13 +34,43 @@ struct Vertex
 
 BEGIN_NS_SOFTARTX_PRESENTER()
 
-dev_d3d9::dev_d3d9(h_d3d9_device dev): dev_(dev), buftex_(NULL){
+dev_d3d9::dev_d3d9(h_d3d9_device dev): dev_(dev), buftex_(NULL), vb_(NULL){
+	//ÉèÖÃäÖÈ¾¶¥µã
+	Vertex verts[] = 
+	{
+		/* x,  y, z, u, v */
+		{-1.0f, -1.0f, 0.5f, 0.0f, 0.0f},
+		{ 1.0f, -1.0f, 0.5f, 1.0f, 0.0f},
+		{-1.0f,  1.0f, 0.5f, 0.0f, 1.0f},
+		{ 1.0f,  1.0f, 0.5f, 1.0f, 1.0f}
+	};
+
+	IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
+
+	HRESULT hr = pdxdev->CreateVertexBuffer(
+		sizeof(verts), D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &vb_, NULL);
+
+	Vertex* p;
+	vb_->Lock(0, 0, reinterpret_cast<void**>(&p), 0);
+	memcpy(p, verts, sizeof(verts));
+	vb_->Unlock();
+
+	pdxdev->SetStreamSource(0, vb_, 0, sizeof(Vertex));
+	pdxdev->SetFVF(FVF);
+	pdxdev->SetRenderState(D3DRS_LIGHTING, FALSE);
+	pdxdev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+	pdxdev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+	pdxdev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
 }
 
 dev_d3d9::~dev_d3d9(){
 	if (buftex_){
 		buftex_->Release();
 		buftex_ = NULL;
+	}
+	if (vb_){
+		vb_->Release();
+		vb_ = NULL;
 	}
 }
 
@@ -67,6 +97,8 @@ void dev_d3d9::attach_framebuffer(framebuffer* pfb)
 		buftex_ = NULL; 
 		pfb_ = NULL;
 	}
+
+	dev_->get_d3d_device9()->SetTexture(0, buftex_);
 }
 
 void dev_d3d9::present()
@@ -78,7 +110,7 @@ void dev_d3d9::present()
 	byte* src_addr = NULL;
 	surface* prt = pfb_->get_render_target(render_target_color, 0);
 
-	if( FAILED(buftex_->LockRect(0, &locked_rc, NULL, 0)) ){
+	if( FAILED(buftex_->LockRect(0, &locked_rc, NULL, D3DLOCK_DISCARD)) ){
 		return;
 	}
 
@@ -99,32 +131,10 @@ void dev_d3d9::present()
 	prt->unlock();
 	buftex_->UnlockRect(0);
 
-	//ÉèÖÃäÖÈ¾¶¥µã
-	Vertex verts[] = 
-	{
-		/* x,  y, z, u, v */
-		{-1.0f, -1.0f, 0.5f, 0.0f, 0.0f},
-		{ 1.0f, -1.0f, 0.5f, 1.0f, 0.0f},
-		{-1.0f,  1.0f, 0.5f, 0.0f, 1.0f},
-		{ 1.0f,  1.0f, 0.5f, 1.0f, 1.0f}
-	};
-
 	IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
 
-	pdxdev->SetFVF(FVF);
-	pdxdev->SetTexture(0, buftex_);
-
-	pdxdev->SetRenderState(D3DRS_LIGHTING, FALSE);
-	pdxdev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	pdxdev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-
-	pdxdev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	pdxdev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-
-	pdxdev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(64, 64, 128), 1.0f, 0);
-
 	pdxdev->BeginScene();
-	pdxdev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, &verts[0], sizeof(Vertex));
+	pdxdev->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 	pdxdev->EndScene();
 
 	RECT rc;
