@@ -323,8 +323,8 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 
 	vp_.minz = 0.0f;
 	vp_.maxz = 1.0f;
-	vp_.w = pparam->backbuffer_width;
-	vp_.h = pparam->backbuffer_height;
+	vp_.w = static_cast<float>(pparam->backbuffer_width);
+	vp_.h = static_cast<float>(pparam->backbuffer_height);
 	vp_.x = vp_.y = 0;
 
 	initialize();

@@ -43,20 +43,17 @@ class dev_gdiplus;
 DECL_HANDLE(dev_gdiplus, h_dev_gdiplus)
 
 class dev_gdiplus: public device{
-	dev_gdiplus(Gdiplus::Graphics* gdev, const Gdiplus::Rect& rc);
+	dev_gdiplus(HWND hwnd);
 
-	Gdiplus::Graphics* g_;
+	HWND hwnd_;
 	Gdiplus::Rect rc_;
 	framebuffer* fb_;
 	boost::shared_ptr<Gdiplus::Bitmap> pbmp_;
 
 public:
 	~dev_gdiplus();
-	static h_dev_gdiplus create_device(
-		Gdiplus::Graphics* gdev, const Gdiplus::Rect& rc
-		);
+	static h_dev_gdiplus create_device(HWND hwnd);
 
-	void set_device_info(Gdiplus::Graphics* g, const Gdiplus::Rect& rc);
 	virtual void attach_framebuffer(framebuffer* pfb);
 	virtual void present();
 };

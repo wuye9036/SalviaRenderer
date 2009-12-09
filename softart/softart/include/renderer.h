@@ -13,10 +13,10 @@
 #include <vector>
 
 struct viewport{
-	int x;
-	int y;
-	size_t w;
-	size_t h;
+	float x;
+	float y;
+	float w;
+	float h;
 	float minz;
 	float maxz;
 };

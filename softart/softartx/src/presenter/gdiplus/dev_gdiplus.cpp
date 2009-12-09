@@ -30,14 +30,14 @@ gdiplus_initializer gdiplus_initializer::init_;
 
 BEGIN_NS_SOFTARTX_PRESENTER()
 
-dev_gdiplus::dev_gdiplus(Graphics *gdev, const Rect &rc): g_(gdev), rc_(rc), fb_(NULL){
+dev_gdiplus::dev_gdiplus(HWND hwnd): hwnd_(hwnd), fb_(NULL){
 }
 
 dev_gdiplus::~dev_gdiplus(){
 }
 
-h_dev_gdiplus dev_gdiplus::create_device(Graphics *gdev, const Rect &rc){
-	return h_dev_gdiplus( new dev_gdiplus( gdev, rc ) );
+h_dev_gdiplus dev_gdiplus::create_device(HWND hwnd){
+	return h_dev_gdiplus( new dev_gdiplus( hwnd ) );
 }
 
 void dev_gdiplus::attach_framebuffer(framebuffer *pfb){
@@ -45,6 +45,8 @@ void dev_gdiplus::attach_framebuffer(framebuffer *pfb){
 		return;
 	}
 	fb_ = pfb;
+
+	rc_ = Rect(0, 0, fb_->get_width(), fb_->get_height());
 
 	if ( !pbmp_ || 
 		pbmp_->GetWidth() < (INT)fb_->get_width() || 
@@ -58,6 +60,9 @@ void dev_gdiplus::present(){
 	if (fb_ == NULL){
 		return;
 	}
+
+	Gdiplus::Graphics g(::GetDC(hwnd_));
+
 	//将framebuffer的surface拷贝到bitmap中
 	Rect rcFramebuffer(0, 0, (INT)fb_->get_width(), (INT)fb_->get_height());
 	surface* rt = fb_->get_render_target(render_target_color, 0);
@@ -87,12 +92,7 @@ void dev_gdiplus::present(){
 	pbmp_->UnlockBits(&bmpData);
 
 	//渲染到设备上
-	g_->DrawImage(pbmp_.get(), rc_);
-}
-
-void dev_gdiplus::set_device_info(Gdiplus::Graphics *g, const Gdiplus::Rect &rc){
-	g_ = g;
-	rc_ = rc;
+	g.DrawImage(pbmp_.get(), rc_);
 }
 
 END_NS_SOFTARTX_PRESENTER()
