@@ -16,8 +16,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifdef SOFTARTX_GDIPLUS_ENABLED
-
 #include "softartx/include/presenter/gdiplus/dev_gdiplus.h"
 #include "softart/include/surface.h"
 
@@ -96,5 +94,3 @@ void dev_gdiplus::present(){
 }
 
 END_NS_SOFTARTX_PRESENTER()
-
-#endif //SOFTARTX_GDIPLUS_ENABLED

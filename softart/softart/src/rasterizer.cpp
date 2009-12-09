@@ -243,11 +243,13 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 			swap(pvert[1], pvert[0]);
 	}
 
+	vs_output projed_vert0 = project(*(pvert[0]));
+
 	//初始化边及边上属性的差
-	vs_output e01 = project(*(pvert[1])) - project(*(pvert[0]));
+	vs_output e01 = project(*(pvert[1])) - projed_vert0;
 	//float watch_x = e01.attributes[2].x;
 	
-	vs_output e02 = project(*(pvert[2])) - project(*(pvert[0]));
+	vs_output e02 = project(*(pvert[2])) - projed_vert0;
 	vs_output e12;
 
 
@@ -291,6 +293,13 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 	const int bot_part = 0;
 	//const int top_part = 1;
 
+	const viewport& vp = pparent_->get_viewport();
+
+	int vpleft = int(max(0, vp.x));
+	int vpbottom = int(max(0, vp.y));
+	int vpright = int(min(vp.x+vp.w, hfb_->get_width()));
+	int vptop = int(min(vp.y+vp.h, hfb_->get_height()));
+
 	for(int iPart = 0; iPart < 2; ++iPart){
 
 		//两条边的dxdy
@@ -317,14 +326,13 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 			e_vert = pvert[1];
 
 			dxdy0 = dxdy_01;
-			dxdy1 = dxdy_02;
 		} else {
 			s_vert = pvert[1];
 			e_vert = pvert[2];
 
 			dxdy0 = dxdy_12;
-			dxdy1 = dxdy_02;
 		}
+		dxdy1 = dxdy_02;
 
 		if(equal<float>(s_vert->wpos.y, e_vert->wpos.y)){
 			continue; // next part
@@ -341,26 +349,18 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 		//起点的x计算由于三角形的不同而有所不同
 		if(iPart == bot_part){
 			fsx0 = pvert[0]->wpos.x + dxdy_01*(fsy + 0.5f - pvert[0]->wpos.y);
-			fsx1 = pvert[0]->wpos.x + dxdy_02*(fsy + 0.5f - pvert[0]->wpos.y);
 		} else {
-			fsx0 = pvert[1]->wpos.x + dxdy_12*(fsy +0.5f - pvert[1]->wpos.y);
-			fsx1 = pvert[0]->wpos.x + dxdy_02*(fsy +0.5f - pvert[0]->wpos.y);
+			fsx0 = pvert[1]->wpos.x + dxdy_12*(fsy + 0.5f - pvert[1]->wpos.y);
 		}
+		fsx1 = pvert[0]->wpos.x + dxdy_02*(fsy + 0.5f - pvert[0]->wpos.y);
 
 		//设置基准扫描线的属性
-		project(base_scanline.base_vert, *(pvert[0]));
+		base_scanline.base_vert = projed_vert0;
 		integral(base_scanline.base_vert, offsety, ddy);
 
 		//当前的基准扫描线，起点在(base_vert.x, scanline.y)处。
 		//在传递到rasterize_scanline之前需要将基础点调整到扫描线的最左端。
 		scanline_info current_base_scanline(base_scanline);
-
-		const viewport& vp = pparent_->get_viewport();
-
-		int vpleft = int(max(0, vp.x));
-		int vpbottom = int(max(0, vp.y));
-		int vpright = int(min(vp.x+vp.w, hfb_->get_width()));
-		int vptop = int(min(vp.y+vp.h, hfb_->get_height()));
 
 		for(int iy = isy; iy <= iey; ++iy)
 		{	
@@ -395,12 +395,12 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 					icx_e = (int)ceil(fcx0 - 0.5f) - 1;
 				}
 
-				icx_s = efl::clamp<int>(icx_s, vpleft, vpright - 1);
-				icx_e = efl::clamp<int>(icx_e, vpleft, vpright - 1);
+				icx_s = efl::clamp(icx_s, vpleft, vpright - 1);
+				icx_e = efl::clamp(icx_e, vpleft, vpright - 1);
 
 				//如果起点大于终点说明scanline中不包含任何像素中心，直接跳过。
 				if(icx_s <= icx_e) {
-					float offsetx = float(icx_s) + 0.5f - pvert[0]->wpos.x;
+					float offsetx = icx_s + 0.5f - pvert[0]->wpos.x;
 
 					//设置扫描线信息
 					scanline_info scanline(current_base_scanline);

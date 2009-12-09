@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #ifndef SOFTARTX_D3D9_UTILITIES_H
 #define SOFTARTX_D3D9_UTILITIES_H
 
-#ifdef SOFTARTX_D3D9_ENABLED
 #include "utility_forward.h"
 #include "inc_d3d9.h"
 #include "softart/include/handles.h"
@@ -51,7 +50,5 @@ public:
 };
 
 END_NS_SOFTARTX_UTILITY()
-
-#endif // SOFTARTX_D3D9_ENABLED
 
 #endif // SOFTARTX_D3D9_UTILITIES_H

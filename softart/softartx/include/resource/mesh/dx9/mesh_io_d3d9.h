@@ -27,8 +27,6 @@ Modify Log:
 #ifndef SOFTARTX_MESH_IO_D3D9_H
 #define SOFTARTX_MESH_IO_D3D9_H
 
-#ifdef SOFTARTX_D3D9_ENABLED
-
 #include "softartx/include/resource/resource_forward.h"
 #include "softartx/include/utility/inc_d3d9x.h"
 #include "softartx/include/resource/mesh/sa/mesh.h"
@@ -43,5 +41,4 @@ h_mesh create_mesh_from_xfile(renderer* psr, softartx::utility::d3d9_device* dev
 
 END_NS_SOFTARTX_RESOURCE()
 
-#endif //SOFTARTX_D3D9_ENABLED
 #endif //SOFTARTX_MESH_IO_D3D9_H

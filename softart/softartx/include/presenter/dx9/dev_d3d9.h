@@ -19,8 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #ifndef SOFTARTX_DEV_D3D9_H
 #define SOFTARTX_DEV_D3D9_H
 
-#ifdef SOFTARTX_D3D9_ENABLED
-
 #include "softartx/include/presenter/sa/dev.h"
 #include "softartx/include/utility/d3d9_utilities.h"
 #include "eflib/include/math.h"
@@ -60,5 +58,4 @@ private:
 
 END_NS_SOFTARTX_PRESENTER()
 
-#endif // SOFTARTX_D3D9_ENABLED
 #endif //SOFTARTX_DEV_D3D9_H

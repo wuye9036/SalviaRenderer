@@ -184,11 +184,11 @@ public:
 
 			accumulate_time = 0;
 			num_frames  = 0;
+
+			cout << fps << endl;
 		}
 
 		timer.restart();
-
-		cout << fps << endl;
 
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);

@@ -27,8 +27,6 @@ Modify Log:
 #ifndef SOFTARTX_TEX_IO_GDIPLUS_H
 #define SOFTARTX_TEX_IO_GDIPLUS_H
 
-#ifdef SOFTARTX_GDIPLUS_ENABLED
-
 #include "softartx/include/resource/texture/sa/tex_io.h"
 #include "softart/include/surface.h"
 #include "softart/include/decl.h"
@@ -59,7 +57,5 @@ Gdiplus::Rect efl_rect_to_gdiplus_rect(const efl::rect<T>& src){
 }
 
 END_NS_SOFTARTX_RESOURCE()
-
-#endif //SOFTARTX_GDIPLUS_ENABLED
 
 #endif //SOFTARTX_TEX_IO_GDIPLUS_H

@@ -11,7 +11,7 @@
 					static bool isIgnoreAlways = false;\
 					if(!isIgnoreAlways) {\
 					if((*efl::detail::ProcPreAssert)(exp?true:false, #exp, desc, __LINE__, __FILE__, __FUNCTION__, &isIgnoreAlways))\
-						{ {_asm { int 3 }} }\
+						{ abort(); }\
 					}\
 				}
 #else

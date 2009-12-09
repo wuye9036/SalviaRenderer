@@ -16,8 +16,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifdef SOFTARTX_D3D9_ENABLED
-
 #include "softartx/include/resource/mesh/dx9/mesh_io_d3d9.h"
 #include "softart/include/renderer.h"
 #include "softart/include/buffer.h"
@@ -147,5 +145,3 @@ h_mesh create_mesh_from_xfile(renderer* psr, d3d9_device* dev, const _tstring& f
 }
 
 END_NS_SOFTARTX_RESOURCE()
-
-#endif //SOFTARTX_D3D9_ENABLED

@@ -16,7 +16,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifdef SOFTARTX_D3D9_ENABLED
 #include "softartx/include/utility/d3d9_utilities.h"
 BEGIN_NS_SOFTARTX_UTILITY()
 d3d9_device::d3d9_device(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params){
@@ -54,5 +53,3 @@ IDirect3DDevice9* d3d9_device::get_d3d_device9() const{
 }
 
 END_NS_SOFTARTX_UTILITY()
-
-#endif //SOFTARTX_D3D9_ENABLED

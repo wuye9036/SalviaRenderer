@@ -26,8 +26,6 @@ Modify Log:
 #ifndef SOFTARTX_DEV_GDIPLUS_H
 #define SOFTARTX_DEV_GDIPLUS_H
 
-#ifdef SOFTARTX_GDIPLUS_ENABLED
-
 #include "softartx/include/presenter/sa/dev.h"
 #include "softartx/include/utility/inc_gdiplus.h"
 #include "softart/include/framebuffer.h"
@@ -84,6 +82,5 @@ public:
 #endif
 	}
 };
-#endif //SOFTARTX_GDIPLUS_ENABLED
 
 #endif //SOFTARTX_DEV_GDIPLUS_H
