@@ -140,8 +140,8 @@ void dev_d3d9::present()
 	RECT rc;
 	rc.left = 0;
 	rc.top = 0;
-	rc.right = pfb_->get_width();
-	rc.bottom = pfb_->get_height();
+	rc.right = (LONG)pfb_->get_width();
+	rc.bottom = (LONG)pfb_->get_height();
 	pdxdev->Present(NULL, &rc, NULL, NULL);
 }
 
