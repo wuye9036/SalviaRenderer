@@ -178,24 +178,124 @@
 				RelativePath=".\sasl2.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\src\vm\vm.cpp"
+			<Filter
+				Name="code_generator"
 				>
-			</File>
+			</Filter>
+			<Filter
+				Name="enums"
+				>
+				<File
+					RelativePath=".\enums\literal_types.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\operators.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\syntax_node_types.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\token_types.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="syntax_tree"
+				>
+				<File
+					RelativePath=".\src\syntax_tree\constant.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\syntax_tree\expression.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="parser"
+				>
+			</Filter>
+			<Filter
+				Name="vm"
+				>
+				<File
+					RelativePath=".\src\vm\vm.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="头文件"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\stdafx.h"
+			<Filter
+				Name="vm"
 				>
-			</File>
-			<File
-				RelativePath=".\include\vm\vm.h"
+				<File
+					RelativePath=".\include\vm\vm.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="parser"
 				>
-			</File>
+				<File
+					RelativePath=".\include\syntax_tree\token.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="code_generator"
+				>
+				<File
+					RelativePath=".\include\code_generator\vm_codegen.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="syntax_tree"
+				>
+				<File
+					RelativePath=".\include\syntax_tree\constant.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser\expression.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\syntax_tree\node.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="enums"
+				>
+				<File
+					RelativePath=".\enums\enum_base.h"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\literal_types.h"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\operators.h"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\syntax_node_types.h"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\token_types.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="资源文件"

@@ -37,18 +37,6 @@ struct instruction{
 	int arg1;
 };
 
-class code_generator{
-	vector<instruction> ins_;
-public:
-	code_generator& op( op_code op, int arg0 = 0, int arg1 = 0 ){
-		ins_.push_back( instruction(op, arg0, arg1) );
-		return *this;
-	}
-	const vector<instruction>& codes(){
-		return ins_;
-	}
-};
-
 class vm
 {
 public:
