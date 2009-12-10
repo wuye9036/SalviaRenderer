@@ -30,9 +30,14 @@ class geometry_assembler : public render_stage
 	template<class T>
 		void draw_index_impl(size_t startpos, size_t prim_count, int basevert);
 
+	template<class T, int N>
+		void dispatch_primitive_impl(std::vector<std::vector<T> >& tiles, T* indices);
+
 public:
 	stream_assembler sa_;
 	default_vertex_cache dvc_;
+	int num_tiles_x_, num_tiles_y_;
+
 	//
 	//Inherited
 	void initialize(renderer_impl* pparent);

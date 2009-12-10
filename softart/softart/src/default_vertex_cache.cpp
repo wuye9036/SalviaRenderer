@@ -34,7 +34,7 @@ void default_vertex_cache::reset()
 void default_vertex_cache::resize(size_t s)
 {
 	verts_.resize(s);
-	btransformed_.insert(btransformed_.end(), s - btransformed_.size(), false);
+	btransformed_.assign(s, false);
 }
 
 vs_output& default_vertex_cache::fetch(cache_entry_index id)
@@ -50,7 +50,8 @@ vs_output& default_vertex_cache::fetch(cache_entry_index id)
 	size_t pos = id - vert_base_;
 
 	if( pos > verts_.size() ){
-		resize(id+1);
+		custom_assert(false, "");
+		return null_obj;
 	}
 
 	if(! btransformed_[pos]){
