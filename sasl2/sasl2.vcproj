@@ -213,6 +213,10 @@
 					RelativePath=".\src\syntax_tree\expression.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\src\syntax_tree\operator_literal.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="parser"
@@ -244,7 +248,11 @@
 				Name="parser"
 				>
 				<File
-					RelativePath=".\include\syntax_tree\token.h"
+					RelativePath=".\include\parser\binary_expression.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser\token.h"
 					>
 				</File>
 			</Filter>
@@ -264,11 +272,19 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\parser\expression.h"
+					RelativePath=".\include\syntax_tree\expression.h"
 					>
 				</File>
 				<File
 					RelativePath=".\include\syntax_tree\node.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\syntax_tree\operator_literal.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\syntax_tree\token.h"
 					>
 				</File>
 			</Filter>

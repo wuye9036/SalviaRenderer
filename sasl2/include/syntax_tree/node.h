@@ -2,10 +2,11 @@
 #define SASL_SYNTAX_TREE_NODE_H
 
 #include "../../enums/syntax_node_types.h"
+#include "token.h"
 #include <boost/utility.hpp>
 
 struct node{
-	// token_location loc;
+	token_attr tok;
 	syntax_node_types type;
 
 	template <typename NodeT> NodeT* clone() const{
@@ -17,13 +18,15 @@ struct node{
 	}
 
 protected:
-	explicit node(syntax_node_types type): type(type){
+	node(syntax_node_types type, const token_attr& tok): type(type), tok(tok){
 	}
-	node( const node& rhs ): type(rhs.type){
+	node( const node& rhs ): type(rhs.type), tok(tok){
 	}
 	node& operator = ( const node& rhs ){
 		type = rhs.type;
+		tok = rhs.tok;
 	}
+	
 	virtual node* clone_impl() const = 0;
 	virtual node* deepcopy_impl() const = 0;
 };

@@ -2,17 +2,53 @@
 #include "include/code_generator/vm_codegen.h"
 #include "include/syntax_tree/expression.h"
 #include "include/syntax_tree/constant.h"
+#include "include/parser/binary_expression.h"
+#include "include/parser/token.h"
+
 #include <tchar.h>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <boost/bind.hpp>
+#include <boost/lambda/lambda.hpp>
+
+using namespace std;
+using namespace boost;
+
+struct token_printer{
+	template <typename TokenT>
+	bool operator()( const TokenT& tok ){
+		cout << "token " << get<token_attr>( tok.value() ).lit << " " << "at " << get<token_attr>( tok.value() ).column << endl;
+		return true;
+	}
+};
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	binary_expression bin_expr;
-	bin_expr.op = operators::add;
-	bin_expr.left_expr.reset( new constant( 10 ) );
-	bin_expr.right_expr.reset( new constant( 67 ) );
+
+	std::string str("3+2");
+	char const* first = str.c_str();
+	char const* last = &first[str.size()];
+
+	sasl_tokenizer sasl_tok;
+	binary_expression_grammar<sasl_token_iterator> g( sasl_tok );
+
+	try{
+		bool r = boost::spirit::lex::tokenize_and_parse( first, last, sasl_tok, g, bin_expr );
+		if (r){
+			cout << "ok" << endl;
+		} else {
+			cout << "fail" << endl;
+		}
+	} catch (const std::runtime_error& e){
+		cout << e.what() << endl;
+	}
+
+	//bin_expr.op = operators::add;
+	//bin_expr.left_expr.reset( new constant( 10 ) );
+	//bin_expr.right_expr.reset( new constant( 67 ) );
 
 	vm_codegen vm_cg;
 	vm_cg

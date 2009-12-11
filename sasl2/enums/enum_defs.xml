@@ -59,6 +59,7 @@
 		<item>_keyword</item>
 		<item>_identifier</item>
 		<item>_constant</item>
+		<item>_operator</item>
 	</enum>
 	
 	<enum name="literal_types">

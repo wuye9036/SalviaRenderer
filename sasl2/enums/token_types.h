@@ -24,6 +24,7 @@ public:
 
 	const static this_type _identifier;
 	const static this_type _keyword;
+	const static this_type _operator;
 	const static this_type _constant;
 
 

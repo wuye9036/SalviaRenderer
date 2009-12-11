@@ -172,11 +172,11 @@ public:
 
 	template <typename ValueT>
 	void stack_back_value(ValueT& v){
-		esp_based_value( v, -sizeof(ValueT) );
+		esp_based_value( v, - sizeof(ValueT) );
 	}
 
 	void stack_pop(size_t size){
-		esp( esp() - size );
+		esp( esp() - (int)size );
 	}
 
 	template<typename ValueT>
