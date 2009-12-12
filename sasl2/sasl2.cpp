@@ -28,15 +28,15 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	binary_expression bin_expr;
 
-	std::string str("3+2");
+	std::string str("3+  2");
 	char const* first = str.c_str();
 	char const* last = &first[str.size()];
 
 	sasl_tokenizer sasl_tok;
-	binary_expression_grammar<sasl_token_iterator> g( sasl_tok );
+	binary_expression_grammar<sasl_token_iterator, sasl_skipper> g( sasl_tok );
 
 	try{
-		bool r = boost::spirit::lex::tokenize_and_parse( first, last, sasl_tok, g, bin_expr );
+		bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SKIPPER( sasl_tok ), bin_expr );
 		if (r){
 			cout << "ok" << endl;
 		} else {

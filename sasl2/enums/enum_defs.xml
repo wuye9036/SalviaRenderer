@@ -60,6 +60,10 @@
 		<item>_identifier</item>
 		<item>_constant</item>
 		<item>_operator</item>
+		<item>_whitespace</item>
+		<item>_preprocessor</item>
+		<item>_comment</item>
+		<item>_newline</item>
 	</enum>
 	
 	<enum name="literal_types">

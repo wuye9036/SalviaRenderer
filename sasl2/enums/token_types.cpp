@@ -6,10 +6,14 @@ using namespace boost;
 using namespace std;
 
 
+const token_types token_types::_comment ( 7 );
+const token_types token_types::_preprocessor ( 6 );
+const token_types token_types::_operator ( 4 );
+const token_types token_types::_whitespace ( 5 );
+const token_types token_types::_constant ( 3 );
+const token_types token_types::_newline ( 8 );
 const token_types token_types::_identifier ( 2 );
 const token_types token_types::_keyword ( 1 );
-const token_types token_types::_operator ( 4 );
-const token_types token_types::_constant ( 3 );
 
  
 struct enum_hasher: public std::unary_function< token_types, std::size_t> {
@@ -25,15 +29,23 @@ private:
 
 public:
 	dict_wrapper_token_types(){
+		enum_to_name.insert( std::make_pair( token_types::_comment, "_comment" ) );
+		enum_to_name.insert( std::make_pair( token_types::_preprocessor, "_preprocessor" ) );
+		enum_to_name.insert( std::make_pair( token_types::_operator, "_operator" ) );
+		enum_to_name.insert( std::make_pair( token_types::_whitespace, "_whitespace" ) );
+		enum_to_name.insert( std::make_pair( token_types::_constant, "_constant" ) );
+		enum_to_name.insert( std::make_pair( token_types::_newline, "_newline" ) );
 		enum_to_name.insert( std::make_pair( token_types::_identifier, "_identifier" ) );
 		enum_to_name.insert( std::make_pair( token_types::_keyword, "_keyword" ) );
-		enum_to_name.insert( std::make_pair( token_types::_operator, "_operator" ) );
-		enum_to_name.insert( std::make_pair( token_types::_constant, "_constant" ) );
 
+		name_to_enum.insert( std::make_pair( "_comment", token_types::_comment ) );
+		name_to_enum.insert( std::make_pair( "_preprocessor", token_types::_preprocessor ) );
+		name_to_enum.insert( std::make_pair( "_operator", token_types::_operator ) );
+		name_to_enum.insert( std::make_pair( "_whitespace", token_types::_whitespace ) );
+		name_to_enum.insert( std::make_pair( "_constant", token_types::_constant ) );
+		name_to_enum.insert( std::make_pair( "_newline", token_types::_newline ) );
 		name_to_enum.insert( std::make_pair( "_identifier", token_types::_identifier ) );
 		name_to_enum.insert( std::make_pair( "_keyword", token_types::_keyword ) );
-		name_to_enum.insert( std::make_pair( "_operator", token_types::_operator ) );
-		name_to_enum.insert( std::make_pair( "_constant", token_types::_constant ) );
 
 	}
 

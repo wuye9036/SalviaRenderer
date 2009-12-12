@@ -22,10 +22,14 @@ public:
 		return *this;
 	}
 
+	const static this_type _comment;
+	const static this_type _preprocessor;
+	const static this_type _operator;
+	const static this_type _whitespace;
+	const static this_type _constant;
+	const static this_type _newline;
 	const static this_type _identifier;
 	const static this_type _keyword;
-	const static this_type _operator;
-	const static this_type _constant;
 
 
 	static std::string to_name( const this_type& enum_val );
