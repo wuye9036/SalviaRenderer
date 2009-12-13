@@ -43,8 +43,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="../../"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;BOOST_ALL_DYN_LINK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -109,15 +109,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="../../"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;BOOST_ALL_DYN_LINK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
 				ProgramDataBaseFileName="$(OutDir)\$(ProjectName).pdb"
 				WarningLevel="4"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 				DisableSpecificWarnings="4819"
 			/>
 			<Tool
@@ -180,7 +180,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0;BOOST_ALL_DYN_LINK"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="1"
@@ -245,7 +245,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				AdditionalIncludeDirectories="../../"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0;BOOST_ALL_DYN_LINK"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				WarningLevel="4"
@@ -367,6 +367,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\..\softart\include\atomic.h"
+				>
+			</File>
 			<File
 				RelativePath="..\..\softart\include\buffer.h"
 				>

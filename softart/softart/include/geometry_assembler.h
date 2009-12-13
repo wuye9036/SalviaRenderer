@@ -10,7 +10,10 @@
 #include "enums.h"
 #include "handles.h"
 
+#include "atomic.h"
+
 #include <boost/array.hpp>
+#include <boost/thread.hpp>
 
 #include <vector>
 
@@ -33,11 +36,14 @@ class geometry_assembler : public render_stage
 	template<class T, int N>
 		void dispatch_primitive_impl(std::vector<std::vector<T> >& tiles, T* indices);
 
-public:
+	template<class T>
+		void rasterize_primitive_func(const std::vector<std::vector<T> >& tiles, atomic<int32_t>& working_tile);
+
 	stream_assembler sa_;
 	default_vertex_cache dvc_;
 	int num_tiles_x_, num_tiles_y_;
 
+public:
 	//
 	//Inherited
 	void initialize(renderer_impl* pparent);
@@ -54,6 +60,10 @@ public:
 	//»æÖÆº¯Êý
 	void draw(size_t startpos, size_t count);
 	void draw_index(size_t startpos, size_t prim_count, int basevert);
+
+	stream_assembler& get_stream_assembler(){
+		return sa_;
+	}
 };
 
 #endif

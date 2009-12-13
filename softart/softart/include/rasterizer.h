@@ -6,7 +6,8 @@
 #include "shader.h"
 #include "framebuffer.h"
 
-#include "boost/smart_ptr.hpp"
+#include <boost/smart_ptr.hpp>
+#include <boost/thread.hpp>
 
 struct scanline_info;
 
@@ -17,6 +18,9 @@ class rasterizer : public render_stage
 
 	h_pixel_shader hps_;
 	h_framebuffer hfb_;
+
+	boost::mutex logger_mutex_;
+	boost::mutex clipper_mutex_;
 
 	//线光栅化。光栅化后的点将直接传到PS中处理。
 	void rasterize_line_impl(const vs_output& v0, const vs_output& v1, const viewport& vp);

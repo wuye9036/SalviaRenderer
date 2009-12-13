@@ -12,6 +12,8 @@
 #include "../include/stream_assembler.h"
 #include "../include/vertex_cache.h"
 
+#include <boost/bind.hpp>
+
 using namespace std;
 using namespace efl;
 
@@ -204,6 +206,46 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<std::vector<T> >& t
 }
 
 template<class T>
+void geometry_assembler::rasterize_primitive_func(const std::vector<std::vector<T> >& tiles, atomic<int32_t>& working_tile)
+{
+	const h_rasterizer& hrast = pparent_->get_rasterizer();
+	const viewport& vp = pparent_->get_viewport();
+
+	viewport tile_vp;
+	tile_vp.w = TILE_SIZE;
+	tile_vp.h = TILE_SIZE;
+	tile_vp.minz = vp.minz;
+	tile_vp.maxz = vp.maxz;
+
+	int32_t local_working_tile = (working_tile ++).value();
+
+	while (local_working_tile < tiles.size()){
+		const std::vector<T>& prims = tiles[local_working_tile];
+		int y = local_working_tile / num_tiles_x_;
+		int x = local_working_tile - y * num_tiles_x_;
+		tile_vp.x = x * TILE_SIZE;
+		tile_vp.y = y * TILE_SIZE;
+
+		switch(primtopo_){
+		case primitive_line_list:
+		case primitive_line_strip:
+			for(size_t iprim = 0; iprim < prims.size(); iprim += 2){
+				hrast->rasterize_line(dvc_.fetch(prims[iprim + 0]), dvc_.fetch(prims[iprim + 0]), tile_vp);
+			}
+			break;
+		case primitive_triangle_list:
+		case primitive_triangle_strip:
+			for(size_t iprim = 0; iprim < prims.size(); iprim += 3){
+				hrast->rasterize_triangle(dvc_.fetch(prims[iprim + 0]), dvc_.fetch(prims[iprim + 1]), dvc_.fetch(prims[iprim + 2]), tile_vp);
+			}
+			break;
+		}
+
+		local_working_tile = (working_tile ++).value();
+	}
+}
+
+template<class T>
 void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int basevert){
 
 	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
@@ -281,33 +323,12 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 		break;
 	}
 
-	viewport tile_vp;
-	tile_vp.w = TILE_SIZE;
-	tile_vp.h = TILE_SIZE;
-	tile_vp.minz = vp.minz;
-	tile_vp.maxz = vp.maxz;
-	for (int y = 0; y < num_tiles_y_; ++ y){
-		for (int x = 0; x < num_tiles_x_; ++ x){
-			const std::vector<T>& prims = tiles[y * num_tiles_x_ + x];
-			tile_vp.x = x * TILE_SIZE;
-			tile_vp.y = y * TILE_SIZE;
-
-			switch(primtopo_){
-			case primitive_line_list:
-			case primitive_line_strip:
-				for(size_t iprim = 0; iprim < prims.size(); iprim += 2){
-					hrast->rasterize_line(dvc_.fetch(prims[iprim + 0]), dvc_.fetch(prims[iprim + 0]), tile_vp);
-				}
-				break;
-			case primitive_triangle_list:
-			case primitive_triangle_strip:
-				for(size_t iprim = 0; iprim < prims.size(); iprim += 3){
-					hrast->rasterize_triangle(dvc_.fetch(prims[iprim + 0]), dvc_.fetch(prims[iprim + 1]), dvc_.fetch(prims[iprim + 2]), tile_vp);
-				}
-				break;
-			}
-		}
-	}
+	atomic<int32_t> working_tile(0);
+	// TODO: use a thread pool
+	boost::thread_group rast_threads;
+	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, tiles, boost::ref(working_tile)));
+	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, tiles, boost::ref(working_tile)));
+	rast_threads.join_all();
 }
 
 void geometry_assembler::draw_index(size_t startpos, size_t prim_count, int basevert){

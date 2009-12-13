@@ -22,8 +22,6 @@ private:
 	size_t width_, height_;
 	pixel_format fmt_;
 
-	backbuffer_pixel_out target_pixel_;
-
 	bool check_buf(surface* psurf);
 
 public:

@@ -1,0 +1,370 @@
+#ifndef SOFTART_ATOMIC_H
+#define SOFTART_ATOMIC_H
+
+#include "eflib/include/eflib.h"
+
+#ifdef BOOST_WINDOWS
+#include <windows.h>
+#endif
+
+template <typename T>
+class atomic
+{
+public:
+	explicit atomic(T const & rhs);
+	atomic(atomic const & rhs);
+
+	T value() const;
+	void value(T const & rhs);
+
+	atomic& operator=(T const & rhs);
+	atomic& operator=(atomic const & rhs);
+
+	bool operator<(T const & rhs) const;
+	bool operator<(atomic const & rhs) const;
+	bool operator<=(int32_t const & rhs) const;
+	bool operator<=(T const & rhs) const;
+	bool operator>(T const & rhs) const;
+	bool operator>(atomic const & rhs) const;
+	bool operator>=(T const & rhs) const;
+	bool operator>=(atomic const & rhs) const;
+
+	bool operator==(T const & rhs) const;
+	bool operator==(atomic const & rhs) const;
+
+	bool operator!=(T const & rhs) const;
+	bool operator!=(atomic const & rhs) const;
+
+	atomic const & operator++();
+	atomic const & operator--();
+	atomic operator++(int);
+	atomic operator--(int);
+
+	atomic& operator+=(T const & rhs);
+	atomic& operator+=(atomic const & rhs);
+	atomic& operator-=(T const & rhs);
+	atomic& operator-=(atomic const & rhs);
+	atomic& operator&=(T const & rhs);
+	atomic& operator&=(atomic const & rhs);
+	atomic& operator|=(T const & rhs);
+	atomic& operator|=(atomic const & rhs);
+	atomic& operator^=(T const & rhs);
+	atomic& operator^=(atomic const & rhs);
+
+	bool cas(T const & old_val, T const & new_val);
+};
+
+template <>
+class atomic<int32_t>
+{
+public:
+	atomic()
+	{
+	}
+
+	explicit atomic(int32_t rhs)
+	{
+		this->value(rhs);
+	}
+
+	int32_t value() const
+	{
+#ifdef BOOST_WINDOWS
+		return value_;
+#elif (__GNUC__ >= 4)
+		return __sync_fetch_and_add(&value_, 0);
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		return __gnu_cxx::__exchange_and_add(&value_, 0);
+#endif
+	}
+
+	void value(int32_t const & rhs)
+	{
+#ifdef BOOST_WINDOWS
+		InterlockedExchange(reinterpret_cast<long*>(&value_), rhs);
+#elif (__GNUC__ >= 4)
+		value_ = rhs;
+		__sync_synchronize();
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		value_ = rhs;
+#endif
+	}
+
+	atomic& operator=(int32_t const & rhs)
+	{
+		this->value(rhs);
+		return *this;
+	}
+	atomic& operator=(atomic const & rhs)
+	{
+		this->value(rhs.value_);
+		return *this;
+	}
+
+	bool cas(int32_t const & old_val, int32_t const & new_val)
+	{
+#ifdef BOOST_WINDOWS
+		return old_val == InterlockedCompareExchange(reinterpret_cast<long*>(&value_), new_val, old_val);
+#elif (__GNUC__ >= 4)
+		return __sync_bool_compare_and_swap(&value_, old_val, new_val);
+#else
+		return old_val == __cmpxchg(&value_, old_val, new_val, sizeof(old_val));
+#endif
+	}
+
+	bool operator<(int32_t const & rhs) const
+	{
+		return this->value() < rhs;
+	}
+	bool operator<(atomic const & rhs) const
+	{
+		return this->value() < rhs.value();
+	}
+	bool operator<=(int32_t const & rhs) const
+	{
+		return this->value() <= rhs;
+	}
+	bool operator<=(atomic const & rhs) const
+	{
+		return this->value() <= rhs.value();
+	}
+	bool operator>(int32_t const & rhs) const
+	{
+		return this->value() > rhs;
+	}
+	bool operator>(atomic const & rhs) const
+	{
+		return this->value() > rhs.value();
+	}
+	bool operator>=(int32_t const & rhs) const
+	{
+		return this->value() >= rhs;
+	}
+	bool operator>=(atomic const & rhs) const
+	{
+		return this->value() >= rhs.value();
+	}
+
+	bool operator==(int32_t const & rhs) const
+	{
+		return this->value() == rhs;
+	}
+	bool operator==(atomic const & rhs) const
+	{
+		return this->value() == rhs.value();
+	}
+
+	bool operator!=(int32_t const & rhs) const
+	{
+		return this->value() != rhs;
+	}
+	bool operator!=(atomic const & rhs) const
+	{
+		return this->value() != rhs.value();
+	}
+
+	atomic& operator+=(int32_t const & rhs)
+	{
+#ifdef BOOST_WINDOWS
+		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), rhs);
+#elif (__GNUC__ >= 4)
+		__sync_add_and_fetch(&value_, rhs);
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		__gnu_cxx::__exchange_and_add(&value_, rhs);
+#else
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand + rhs;
+		} while (!this->cas(comperand, exchange));
+#endif
+		return *this;
+	}
+	atomic& operator+=(atomic const & rhs)
+	{
+#ifdef BOOST_WINDOWS
+		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), rhs.value_);
+#elif (__GNUC__ >= 4)
+		__sync_add_and_fetch(&value_, rhs.value_);
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		__gnu_cxx::__exchange_and_add(&value_, rhs.value_);
+#else
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand + rhs.value_;
+		} while (!this->cas(comperand, exchange));
+#endif
+		return *this;
+	}
+
+	atomic& operator-=(int32_t const & rhs)
+	{
+#ifdef BOOST_WINDOWS
+		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), -rhs);
+#elif (__GNUC__ >= 4)
+		__sync_sub_and_fetch(&value_, rhs);
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		__gnu_cxx::__exchange_and_add(&value_, -rhs);
+#else
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand - rhs;
+		} while (!this->cas(comperand, exchange));
+#endif
+		return *this;
+	}
+	atomic& operator-=(atomic const & rhs)
+	{
+#ifdef BOOST_WINDOWS
+		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), -rhs.value_);
+#elif (__GNUC__ >= 4)
+		__sync_add_and_fetch(&value_, -rhs.value_);
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		__gnu_cxx::__exchange_and_add(&value_, -rhs.value_);
+#else
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand - rhs.value_;
+		} while (!this->cas(comperand, exchange));
+#endif
+		return *this;
+	}
+
+	atomic& operator*=(int32_t const & rhs)
+	{
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand * rhs;
+		} while (!this->cas(comperand, exchange));
+		return *this;
+	}
+
+	atomic& operator/=(int32_t const & rhs)
+	{
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand / rhs;
+		} while (!this->cas(comperand, exchange));
+		return *this;
+	}
+
+	atomic& operator%=(int32_t const & rhs)
+	{
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand % rhs;
+		} while (!this->cas(comperand, exchange));
+		return *this;
+	}
+
+	atomic& operator&=(int32_t const & rhs)
+	{
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand & rhs;
+		} while (!this->cas(comperand, exchange));
+		return *this;
+	}
+
+	atomic& operator|=(int32_t const & rhs)
+	{
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand | rhs;
+		} while (!this->cas(comperand, exchange));
+		return *this;
+	}
+
+	atomic& operator^=(int32_t const & rhs)
+	{
+		int32_t comperand;
+		int32_t exchange;
+		do
+		{
+			comperand = value_;
+			exchange = comperand ^ rhs;
+		} while (!this->cas(comperand, exchange));
+		return *this;
+	}
+
+	atomic const & operator++()
+	{
+#ifdef BOOST_WINDOWS
+		InterlockedIncrement(reinterpret_cast<long*>(&value_));
+#elif (__GNUC__ >= 4)
+		__sync_add_and_fetch(&value_, 1);
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		__gnu_cxx::__exchange_and_add(&value_, 1);
+#else
+		this->operator+=(1);
+#endif
+		return *this;
+	}
+
+	atomic const & operator--()
+	{
+#ifdef BOOST_WINDOWS
+		InterlockedDecrement(reinterpret_cast<long*>(&value_));
+#elif (__GNUC__ >= 4)
+		__sync_sub_and_fetch(&value_, 1);
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+		__gnu_cxx::__exchange_and_add(&value_, -1);
+#else
+		this->operator-=(1);
+#endif
+		return *this;
+	}
+
+	atomic operator++(int)
+	{
+		atomic tmp = *this;
+		++ *this;
+		return tmp;
+	}
+
+	atomic operator--(int)
+	{
+		atomic tmp = *this;
+		-- *this;
+		return tmp;
+	}
+
+private:
+#ifdef BOOST_WINDOWS
+	mutable int32_t value_;
+#elif (__GNUC__ >= 4)
+	mutable int32_t value_;
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)
+	mutable _Atomic_word value_;
+#else
+	mutable int32_t value_;
+#endif
+};
+
+#endif		// SOFTART_ATOMIC_H

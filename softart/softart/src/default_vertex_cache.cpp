@@ -27,7 +27,7 @@ void default_vertex_cache::reset()
 	btransformed_.clear();
 
 	pvs_ = get_weak_handle(pparent_->get_vertex_shader());
-	psa_ = &(pparent_->get_geometry_assembler()->sa_);
+	psa_ = &(pparent_->get_geometry_assembler()->get_stream_assembler());
 	pvp_ = &(pparent_->get_viewport());
 }
 

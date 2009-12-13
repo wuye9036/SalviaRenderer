@@ -42,8 +42,7 @@ framebuffer::framebuffer(size_t width, size_t height, pixel_format fmt)
 :width_(width), height_(height), fmt_(fmt),
 back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_regcnt),
 dbuf_(new surface(width, height,  pixel_format_color_r32f)),
-sbuf_(new surface(width, height,  pixel_format_color_r32i)),
-target_pixel_(cbufs_, dbuf_.get(), sbuf_.get())
+sbuf_(new surface(width, height,  pixel_format_color_r32i))
 {
 	for(size_t i = 0; i < back_cbufs_.size(); ++i){
 		back_cbufs_[i].reset();
@@ -150,10 +149,11 @@ void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, co
 	if(! hbs) return;
 
 	//composing output...
-	target_pixel_.set_pos(x, y);
+	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
+	target_pixel.set_pos(x, y);
 
 	//execute target shader
-	hbs->execute(target_pixel_, ps);
+	hbs->execute(target_pixel, ps);
 }
 
 void framebuffer::clear_color(size_t tar_id, const color_rgba32f& c){
