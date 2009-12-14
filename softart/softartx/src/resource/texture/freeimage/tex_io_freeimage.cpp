@@ -28,6 +28,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <boost/static_assert.hpp>
 #include <algorithm>
 
+#pragma comment(lib, "freeimage.lib")
+
 using namespace efl;
 using namespace std;
 

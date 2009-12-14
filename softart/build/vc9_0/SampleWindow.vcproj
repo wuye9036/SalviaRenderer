@@ -366,7 +366,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(SolutionDir)../../$(PlatformName)/SoftArt.lib $(SolutionDir)../../$(PlatformName)/SoftArtX.lib $(SolutionDir)../../$(PlatformName)/EFLib.lib freeimage.lib gdiplus.lib"
+				AdditionalDependencies="$(SolutionDir)../../$(PlatformName)/SoftArt.lib $(SolutionDir)../../$(PlatformName)/SoftArtX.lib $(SolutionDir)../../$(PlatformName)/EFLib.lib gdiplus.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../3rd_party/boost.task/lib/x64"
 				GenerateDebugInformation="true"
