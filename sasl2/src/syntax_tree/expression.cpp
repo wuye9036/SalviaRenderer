@@ -5,6 +5,13 @@
 using namespace boost;
 using namespace boost::fusion;
 
+binary_expression& binary_expression::operator = ( const boost::fusion::vector< constant, operator_literal, constant > & rhs ){
+	left_expr.reset( at_c<0>(rhs).clone<constant>() );
+	op = at_c<1>(rhs).op;
+	right_expr.reset( at_c<2>(rhs).clone<constant>() );
+	return *this;
+}
+
 //Ç³¿½±´
 binary_expression& binary_expression::operator = ( const binary_expression& rhs ){
 	op = rhs.op;
