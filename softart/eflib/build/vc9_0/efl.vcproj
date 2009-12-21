@@ -117,7 +117,7 @@
 				EnableEnhancedInstructionSet="0"
 				ProgramDataBaseFileName="$(OutDir)\$(ProjectName).pdb"
 				WarningLevel="4"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 				DisableSpecificWarnings="4819"
 			/>
 			<Tool

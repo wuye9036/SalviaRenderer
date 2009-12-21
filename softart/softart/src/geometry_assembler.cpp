@@ -12,6 +12,8 @@
 #include "../include/stream_assembler.h"
 #include "../include/vertex_cache.h"
 
+#include "../include/cpuinfo.h"
+
 #include <boost/bind.hpp>
 
 using namespace std;
@@ -357,27 +359,31 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 		break;
 	}
 
-	for (size_t i = 0; i < indices.size(); ++ i)
+	std::vector<T> unique_indices = indices;
+	std::sort(unique_indices.begin(), unique_indices.end());
+	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
+
+	for (size_t i = 0; i < unique_indices.size(); ++ i)
 	{
-		dvc_.fetch(indices[i]);
+		dvc_.fetch(unique_indices[i]);
 	}
 
 	atomic<int32_t> working_prim(0);
 	// TODO: use a thread pool
 	boost::thread_group dispatch_threads;
-	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
-	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
-	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
-	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+	for (size_t i = 0; i < num_cpu_cores(); ++ i)
+	{
+		dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+	}
 	dispatch_threads.join_all();
 
 	atomic<int32_t> working_tile(0);
 	// TODO: use a thread pool
 	boost::thread_group rast_threads;
-	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
-	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
-	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
-	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
+	for (size_t i = 0; i < num_cpu_cores(); ++ i)
+	{
+		rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
+	}
 	rast_threads.join_all();
 }
 

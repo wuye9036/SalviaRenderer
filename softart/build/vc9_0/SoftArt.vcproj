@@ -117,7 +117,7 @@
 				EnableFunctionLevelLinking="true"
 				ProgramDataBaseFileName="$(OutDir)\$(ProjectName).pdb"
 				WarningLevel="4"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 				DisableSpecificWarnings="4819"
 			/>
 			<Tool
@@ -298,6 +298,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\softart\src\cpuinfo.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\softart\src\default_vertex_cache.cpp"
 				>
 			</File>
@@ -385,6 +389,10 @@
 			</File>
 			<File
 				RelativePath="..\..\softart\include\colors_convertors.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\softart\include\cpuinfo.h"
 				>
 			</File>
 			<File
