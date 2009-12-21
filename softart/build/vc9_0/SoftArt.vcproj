@@ -412,6 +412,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\softart\include\lockfree_queue.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\softart\include\rasterizer.h"
 				>
 			</File>

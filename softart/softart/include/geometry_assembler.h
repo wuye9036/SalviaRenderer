@@ -11,6 +11,7 @@
 #include "handles.h"
 
 #include "atomic.h"
+#include "lockfree_queue.h"
 
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
@@ -33,11 +34,11 @@ class geometry_assembler : public render_stage
 	template<class T>
 		void draw_index_impl(size_t startpos, size_t prim_count, int basevert);
 
-	template<class T, int N>
-		void dispatch_primitive_impl(std::vector<std::vector<T> >& tiles, T* indices);
+	template<class T>
+		void dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, std::vector<T> const & indices, atomic<int32_t>& working_prim, int32_t prim_count);
 
 	template<class T>
-		void rasterize_primitive_func(const std::vector<std::vector<T> >& tiles, atomic<int32_t>& working_tile);
+		void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile);
 
 	stream_assembler sa_;
 	default_vertex_cache dvc_;

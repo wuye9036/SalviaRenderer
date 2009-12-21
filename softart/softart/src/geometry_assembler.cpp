@@ -173,40 +173,64 @@ void geometry_assembler::draw(size_t startpos, size_t prim_count){
 	}
 }
 
-template<class T, int N>
-void geometry_assembler::dispatch_primitive_impl(std::vector<std::vector<T> >& tiles, T* indices){
+template<class T>
+void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, std::vector<T> const & indices, atomic<int32_t>& working_prim, int32_t prim_count){
 	//TODO: 需要支持index restart, DX 10 Spec
 
-	const vs_output& v0 = dvc_.fetch(indices[0]);
-	float x_min = v0.wpos.x;
-	float x_max = v0.wpos.x;
-	float y_min = v0.wpos.y;
-	float y_max = v0.wpos.y;
+	int32_t local_working_prim = (working_prim ++).value();
 
-	for (int i = 1; i < N; ++ i)
+	int N;
+	switch(primtopo_)
 	{
-		const vs_output& v = dvc_.fetch(indices[i]);
-		x_min = std::min(x_min, v.wpos.x);
-		x_max = std::max(x_max, v.wpos.x);
-		y_min = std::min(y_min, v.wpos.y);
-		y_max = std::max(y_max, v.wpos.y);
+	case primitive_line_list:
+	case primitive_line_strip:
+		N = 2;
+		break;
+	case primitive_triangle_list:
+	case primitive_triangle_strip:
+		N = 3;
+		break;
 	}
 
-	int sx = efl::clamp(static_cast<int>(floor(x_min / TILE_SIZE)), 0, num_tiles_x_);
-	int sy = efl::clamp(static_cast<int>(floor(y_min / TILE_SIZE)), 0, num_tiles_y_);
-	int ex = efl::clamp(static_cast<int>(ceil(x_max / TILE_SIZE)), 0, num_tiles_x_);
-	int ey = efl::clamp(static_cast<int>(ceil(y_max / TILE_SIZE)), 0, num_tiles_y_);
+	float x_min;
+	float x_max;
+	float y_min;
+	float y_max;
+	while (local_working_prim < prim_count)
+	{
+		const vs_output& v0 = dvc_.fetch(indices[local_working_prim * N + 0]);
+		x_min = v0.wpos.x;
+		x_max = v0.wpos.x;
+		y_min = v0.wpos.y;
+		y_max = v0.wpos.y;
 
-	for (int y = sy; y < ey; ++ y){
-		for (int x = sx; x < ex; ++ x){
-			std::vector<T>& tile = tiles[y * num_tiles_x_ + x];
-			tile.insert(tile.end(), indices, indices + N);
+		for (size_t i = 1; i < N; ++ i)
+		{
+			const vs_output& v = dvc_.fetch(indices[local_working_prim * N + i]);
+			x_min = std::min(x_min, v.wpos.x);
+			x_max = std::max(x_max, v.wpos.x);
+			y_min = std::min(y_min, v.wpos.y);
+			y_max = std::max(y_max, v.wpos.y);
 		}
+
+		int sx = efl::clamp(static_cast<int>(floor(x_min / TILE_SIZE)), 0, num_tiles_x_);
+		int sy = efl::clamp(static_cast<int>(floor(y_min / TILE_SIZE)), 0, num_tiles_y_);
+		int ex = efl::clamp(static_cast<int>(ceil(x_max / TILE_SIZE)), 0, num_tiles_x_);
+		int ey = efl::clamp(static_cast<int>(ceil(y_max / TILE_SIZE)), 0, num_tiles_y_);
+
+		for (int y = sy; y < ey; ++ y){
+			for (int x = sx; x < ex; ++ x){
+				lockfree_queue<uint32_t>& tile = tiles[y * num_tiles_x_ + x];
+				tile.enqueue(local_working_prim);
+			}
+		}
+
+		local_working_prim = (working_prim ++).value();
 	}
 }
 
 template<class T>
-void geometry_assembler::rasterize_primitive_func(const std::vector<std::vector<T> >& tiles, atomic<int32_t>& working_tile)
+void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile)
 {
 	const h_rasterizer& hrast = pparent_->get_rasterizer();
 	const viewport& vp = pparent_->get_viewport();
@@ -220,23 +244,26 @@ void geometry_assembler::rasterize_primitive_func(const std::vector<std::vector<
 	int32_t local_working_tile = (working_tile ++).value();
 
 	while (local_working_tile < tiles.size()){
-		const std::vector<T>& prims = tiles[local_working_tile];
+		lockfree_queue<uint32_t>& prims = tiles[local_working_tile];
 		int y = local_working_tile / num_tiles_x_;
 		int x = local_working_tile - y * num_tiles_x_;
 		tile_vp.x = x * TILE_SIZE;
 		tile_vp.y = y * TILE_SIZE;
 
+		uint32_t iprim;
 		switch(primtopo_){
 		case primitive_line_list:
 		case primitive_line_strip:
-			for(size_t iprim = 0; iprim < prims.size(); iprim += 2){
-				hrast->rasterize_line(dvc_.fetch(prims[iprim + 0]), dvc_.fetch(prims[iprim + 0]), tile_vp);
+			while (!prims.empty()){
+				prims.dequeue(iprim);
+				hrast->rasterize_line(dvc_.fetch(indices[iprim * 2 + 0]), dvc_.fetch(indices[iprim * 2 + 1]), tile_vp);
 			}
 			break;
 		case primitive_triangle_list:
 		case primitive_triangle_strip:
-			for(size_t iprim = 0; iprim < prims.size(); iprim += 3){
-				hrast->rasterize_triangle(dvc_.fetch(prims[iprim + 0]), dvc_.fetch(prims[iprim + 1]), dvc_.fetch(prims[iprim + 2]), tile_vp);
+			while (!prims.empty()){
+				prims.dequeue(iprim);
+				hrast->rasterize_triangle(dvc_.fetch(indices[iprim * 3 + 0]), dvc_.fetch(indices[iprim * 3 + 1]), dvc_.fetch(indices[iprim * 3 + 2]), tile_vp);
 			}
 			break;
 		}
@@ -289,45 +316,68 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 	const viewport& vp = pparent_->get_viewport();
 	num_tiles_x_ = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
 	num_tiles_y_ = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
-	std::vector<std::vector<T> > tiles(num_tiles_x_ * num_tiles_y_);
+	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x_ * num_tiles_y_);
+	std::vector<std::vector<uint32_t> > tiles2(num_tiles_x_ * num_tiles_y_);
 
+	std::vector<T> indices;
 	switch(primtopo_)
 	{
 	case primitive_line_list:
+		indices.resize(prim_count * 2);
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			T indices[2] = { pidx[iprim * 2 + 0], pidx[iprim * 2 + 1] };
-			dispatch_primitive_impl<T, 2>(tiles, indices);
+			indices[iprim * 2 + 0] = pidx[iprim * 2 + 0];
+			indices[iprim * 2 + 1] = pidx[iprim * 2 + 1];
 		}
 		break;
 	case primitive_line_strip:
+		indices.resize(prim_count * 2);
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			T indices[2] = { pidx[iprim + 0], pidx[iprim + 1] };
-			dispatch_primitive_impl<T, 2>(tiles, indices);
+			indices[iprim * 2 + 0] = pidx[iprim + 0];
+			indices[iprim * 2 + 1] = pidx[iprim + 1];
 		}
 		break;
 	case primitive_triangle_list:
+		indices.resize(prim_count * 3);
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			T indices[3] = { pidx[iprim * 3 + 0], pidx[iprim * 3 + 1], pidx[iprim * 3 + 2] };
-			dispatch_primitive_impl<T, 3>(tiles, indices);
+			indices[iprim * 3 + 0] = pidx[iprim * 3 + 0];
+			indices[iprim * 3 + 1] = pidx[iprim * 3 + 1];
+			indices[iprim * 3 + 2] = pidx[iprim * 3 + 2];
 		}
 		break;
 	case primitive_triangle_strip:
+		indices.resize(prim_count * 3);
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			T indices[3] = { pidx[iprim + 0], pidx[iprim + 1], pidx[iprim + 2] };
+			indices[iprim * 3 + 0] = pidx[iprim + 0];
+			indices[iprim * 3 + 1] = pidx[iprim + 1];
+			indices[iprim * 3 + 2] = pidx[iprim + 2];
 			if(iprim & 1){
-				std::swap(indices[0], indices[2]);
+				std::swap(indices[iprim * 3 + 0], indices[iprim * 3 + 2]);
 			}
-
-			dispatch_primitive_impl<T, 3>(tiles, indices);
 		}
 		break;
 	}
 
+	for (size_t i = 0; i < indices.size(); ++ i)
+	{
+		dvc_.fetch(indices[i]);
+	}
+
+	atomic<int32_t> working_prim(0);
+	// TODO: use a thread pool
+	boost::thread_group dispatch_threads;
+	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+	dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+	dispatch_threads.join_all();
+
 	atomic<int32_t> working_tile(0);
 	// TODO: use a thread pool
 	boost::thread_group rast_threads;
-	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, tiles, boost::ref(working_tile)));
-	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, tiles, boost::ref(working_tile)));
+	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
+	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
+	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
+	rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
 	rast_threads.join_all();
 }
 
