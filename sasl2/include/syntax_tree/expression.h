@@ -19,16 +19,7 @@ struct primary_expression: public node{
 };
 
 struct binary_expression: public node{
-	binary_expression& operator = ( const boost::fusion::vector< constant, operator_literal, constant > & rhs ){
-		using namespace boost;
-		using namespace boost::fusion;
-
-		left_expr.reset( at_c<0>(rhs).clone<constant>() );
-		op = at_c<1>(rhs).op;
-		right_expr.reset( at_c<2>(rhs).clone<constant>() );
-		return *this;
-	}
-
+	binary_expression& operator = ( const boost::fusion::vector< constant, operator_literal, constant > & rhs );
 	binary_expression& operator = ( const binary_expression& rhs );
 
 	operators op;

@@ -29,12 +29,12 @@ enum reg{
 
 struct instruction{
 	instruction( op_code op ): op(op), arg0(0), arg1(0){}
-	instruction( op_code op, int arg0 ): op(op), arg0(arg0), arg1(0){}
-	instruction( op_code op, int arg0, int arg1 ): op(op), arg0(arg0), arg1(arg1){}
+	instruction( op_code op, intptr_t arg0 ): op(op), arg0(arg0), arg1(0){}
+	instruction( op_code op, intptr_t arg0, intptr_t arg1 ): op(op), arg0(arg0), arg1(arg1){}
 
 	op_code op;
-	int arg0;
-	int arg1;
+	intptr_t arg0;
+	intptr_t arg1;
 };
 
 class vm
@@ -48,7 +48,7 @@ public:
 	// 将清空指令槽，eip置为0后开始调用，至op_halt退出。
 	// 返回r[0]的值。
 	********************************************************/
-	int raw_call(const vector<instruction>& ins){
+	intptr_t raw_call(const vector<instruction>& ins){
 		op_buffer = ins;
 		eip = 0;
 		ebp = 0;
@@ -64,7 +64,7 @@ public:
 			<< " ESP: " << esp() 
 			<< " EIP: " << eip 
 			<< endl;*/
-		if ( eip >= (int)op_buffer.size() ){
+		if ( eip >= (intptr_t)op_buffer.size() ){
 			return false;
 		}
 
@@ -80,7 +80,7 @@ public:
 		return execute_op( ins.op, ins.arg0, ins.arg1 );
 	}
 
-	bool execute_op(op_code op, int arg0, int arg1){
+	bool execute_op(op_code op, intptr_t arg0, intptr_t arg1){
 		switch (op)
 		{
 		case op_halt:
@@ -92,7 +92,7 @@ public:
 			break;
 		case op_push: 
 			{
-				int& pushed_reg( r[arg0] );
+				intptr_t& pushed_reg( r[arg0] );
 				stack_push( pushed_reg );
 				break;
 			}
@@ -104,20 +104,20 @@ public:
 			}
 		case op_loadrc:
 			{
-				int& reg( r[arg0] );
-				int val = arg1;
+				intptr_t& reg( r[arg0] );
+				intptr_t val = arg1;
 				reg = val;
 				break;
 			}
 		case op_loadrs:
 			{
-				int& reg( r[arg0] );
+				intptr_t& reg( r[arg0] );
 				ebp_based_value( reg, arg1 );
 				break;
 			}
 		case op_call:
 			{
-				int tar_addr = arg0;
+				intptr_t tar_addr = arg0;
 				stack_push( esp() );
 				stack_push( eip );
 				ebp = esp();
@@ -172,11 +172,11 @@ public:
 
 	template <typename ValueT>
 	void stack_back_value(ValueT& v){
-		esp_based_value( v, - sizeof(ValueT) );
+		esp_based_value( v, - ((intptr_t)sizeof(ValueT)) );
 	}
 
 	void stack_pop(size_t size){
-		esp( esp() - (int)size );
+		esp( esp() - (intptr_t)size );
 	}
 
 	template<typename ValueT>
@@ -184,11 +184,11 @@ public:
 		stack.insert( stack.end(), (byte*)&v, (byte*)&v + sizeof(v) );	
 	}
 
-	int esp(){
-		return (int) stack.size();
+	intptr_t esp(){
+		return (intptr_t) stack.size();
 	}
 
-	void esp( int addr ){
+	void esp( intptr_t addr ){
 		stack.resize(addr);
 	}
 
@@ -196,9 +196,9 @@ public:
 	vector<byte> stack;
 	vector<instruction> op_buffer;
 
-	int eip;
-	int ebp;
+	intptr_t eip;
+	intptr_t ebp;
 
-	int r[16];
-	int jump_to;
+	intptr_t r[16];
+	intptr_t jump_to;
 };

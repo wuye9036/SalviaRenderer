@@ -79,7 +79,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//	;
 
 	vm machine;
-	int result = machine.raw_call( vm_cg.codes() );
+	intptr_t result = machine.raw_call( vm_cg.codes() );
 
 	std::cout << result << endl;
 

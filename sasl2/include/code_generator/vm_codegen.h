@@ -29,6 +29,8 @@ public:
 	const vector<instruction>& codes(){
 		return ins_;
 	}
+
+
 };
 
 #endif //SASL_CODE_GENERATOR_VM_CODEGEN_H
