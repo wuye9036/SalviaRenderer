@@ -40,7 +40,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)../../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0;BOOST_ALL_DYN_LINK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -164,6 +164,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\softart\src\cpuinfo.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\softart\src\default_vertex_cache.cpp"
 				>
 			</File>
@@ -234,6 +238,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\softart\include\atomic.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\softart\include\buffer.h"
 				>
 			</File>
@@ -246,7 +254,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\softart\include\colors_convertors.h"
+				RelativePath="..\..\softart\include\cpuinfo.h"
 				>
 			</File>
 			<File
@@ -266,11 +274,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\softart\include\functions_tblhelper.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\softart\include\geometry_assembler.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\softart\include\handles.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\softart\include\lockfree_queue.h"
 				>
 			</File>
 			<File
@@ -334,7 +350,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\softart\include\type_register.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\softart\include\vertex_cache.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\softart\include\voidptr.h"
 				>
 			</File>
 		</Filter>
