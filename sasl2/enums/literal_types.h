@@ -1,6 +1,6 @@
 
-#ifndef SASL_LITERAL_TYPES_H
-#define SASL_LITERAL_TYPES_H
+#ifndef SASL_ENUMS_LITERAL_TYPES_H
+#define SASL_ENUMS_LITERAL_TYPES_H
 
 #include "../enums/enum_base.h" 
 

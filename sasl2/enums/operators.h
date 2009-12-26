@@ -1,6 +1,6 @@
 
-#ifndef SASL_OPERATORS_H
-#define SASL_OPERATORS_H
+#ifndef SASL_ENUMS_OPERATORS_H
+#define SASL_ENUMS_OPERATORS_H
 
 #include "../enums/enum_base.h" 
 

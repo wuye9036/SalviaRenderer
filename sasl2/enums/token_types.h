@@ -1,6 +1,6 @@
 
-#ifndef SASL_TOKEN_TYPES_H
-#define SASL_TOKEN_TYPES_H
+#ifndef SASL_ENUMS_TOKEN_TYPES_H
+#define SASL_ENUMS_TOKEN_TYPES_H
 
 #include "../enums/enum_base.h" 
 

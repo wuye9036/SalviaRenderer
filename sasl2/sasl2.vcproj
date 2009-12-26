@@ -340,6 +340,10 @@
 			<Filter
 				Name="code_generator"
 				>
+				<File
+					RelativePath=".\src\code_generator\vm_codegen.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="enums"
@@ -350,6 +354,10 @@
 				</File>
 				<File
 					RelativePath=".\enums\operators.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\enums\storage_mode.cpp"
 					>
 				</File>
 				<File
@@ -432,6 +440,10 @@
 				>
 				<File
 					RelativePath=".\include\code_generator\vm_codegen.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\code_generator\vm_storage.h"
 					>
 				</File>
 			</Filter>

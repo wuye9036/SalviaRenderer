@@ -11,7 +11,7 @@
 
 	<SupportCode>
 		<PreInclude>../enums/enum_base.h</PreInclude>
-		<IncludeGuardPrefix>SASL</IncludeGuardPrefix>
+		<IncludeGuardPrefix>SASL_ENUMS</IncludeGuardPrefix>
 		<IncludeGuardPostfix>H</IncludeGuardPostfix>
 	</SupportCode>
 </Config>

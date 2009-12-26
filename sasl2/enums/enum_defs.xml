@@ -82,4 +82,14 @@
 		<item>node</item>
 		<item>constant</item>
 	</enum>
+	
+	<enum name="storage_mode">
+		<HasName/>
+		<Convertible/>
+		<AutoGen expression = "$index$"/>
+		<item>none</item>
+		<item>constant</item>
+		<item>register_id</item>
+		<item>stack_based_address</item>
+	</enum>
 </enums>
