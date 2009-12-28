@@ -26,7 +26,7 @@ struct token_printer{
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	binary_expression bin_expr;
+	binary_expression::handle_t bin_expr;
 
 	std::string str("3+  2");
 	char const* first = str.c_str();
@@ -39,6 +39,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SKIPPER( sasl_tok ), bin_expr );
 		if (r){
 			cout << "ok" << endl;
+			bin_expr->update();
 		} else {
 			cout << "fail" << endl;
 		}

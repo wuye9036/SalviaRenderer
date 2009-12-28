@@ -1,6 +1,7 @@
 #ifndef SASL_SYNTAX_TREE_EXPRESSION_H
 #define SASL_SYNTAX_TREE_EXPRESSION_H
 
+#include "adapt_instrusive_struct_handle.h"
 #include "../syntax_tree/node.h"
 #include "../syntax_tree/constant.h"
 #include "../syntax_tree/operator_literal.h"
@@ -18,21 +19,25 @@ struct primary_expression: public node{
 	boost::variant< boost::shared_ptr<constant> > value;
 };
 
-struct binary_expression: public node{
-	binary_expression& operator = ( const boost::fusion::vector< constant, operator_literal, constant > & rhs );
-	binary_expression& operator = ( const binary_expression& rhs );
+struct binary_expression: public non_terminal<binary_expression> {
+	operator_literal::handle_t op;
+	constant::handle_t left_expr;
+	constant::handle_t right_expr;
 
-	operators op;
-	boost::shared_ptr<constant> left_expr;
-	boost::shared_ptr<constant> right_expr;
+	void update(){
+		op->update();
+		left_expr->update();
+		right_expr->update();
+	}
 
 	binary_expression();
-	binary_expression( const binary_expression& rhs );
-
-protected:
-	//inhertied
-	node* clone_impl() const;
-	node* deepcopy_impl() const;
 };
+
+SASL_ADAPT_INSTRUSIVE_STRUCT_HANDLE( 
+									binary_expression::handle_t, 
+									( constant::handle_t, left_expr )
+									( operator_literal::handle_t, op )
+									( constant::handle_t, right_expr )
+									);
 
 #endif //SASL_SYNTAX_TREE_EXPRESSION_H

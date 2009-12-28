@@ -2,9 +2,9 @@
 
 using namespace boost;
 
-vm_codegen::storage_ptr vm_codegen::emit_constant( const constant& t ){
+vm_codegen::storage_ptr vm_codegen::emit_constant( const constant::handle_t& t ){
 	vm::regid_t reg = allocate_reg();
-	mcgen_._load_r_si( reg, t.val );
+	mcgen_._load_r_si( reg, t->val );
 	return create_storage( storage_mode::register_id, reg );
 }
 
@@ -50,15 +50,15 @@ void vm_codegen::free_storage( storage_t& s )
 	}
 }
 
-vm_codegen& vm_codegen::emit_expression( const binary_expression& expr )
+vm_codegen& vm_codegen::emit_expression( const binary_expression::handle_t& expr )
 {
-	if ( expr.op != operators::add ){
+	if ( expr->op->op != operators::add ){
 		return *this;
 	}
 
 	{
-		storage_ptr c0 = emit_constant( *expr.left_expr );
-		storage_ptr c1 = emit_constant( *expr.right_expr );
+		storage_ptr c0 = emit_constant( expr->left_expr );
+		storage_ptr c1 = emit_constant( expr->right_expr );
 
 		mcgen_._add_si( c0->addr, c1->addr );
 	}

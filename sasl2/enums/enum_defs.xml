@@ -79,6 +79,7 @@
 	<enum name="syntax_node_types">
 		<HasName/>
 		<AutoGen expression = "$index$+1"/>
+		<item>token</item>
 		<item>node</item>
 		<item>constant</item>
 	</enum>

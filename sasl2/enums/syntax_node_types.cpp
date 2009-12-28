@@ -6,8 +6,9 @@ using namespace boost;
 using namespace std;
 
 
-const syntax_node_types syntax_node_types::node ( 1 );
-const syntax_node_types syntax_node_types::constant ( 2 );
+const syntax_node_types syntax_node_types::node ( 2 );
+const syntax_node_types syntax_node_types::token ( 1 );
+const syntax_node_types syntax_node_types::constant ( 3 );
 
  
 struct enum_hasher: public std::unary_function< syntax_node_types, std::size_t> {
@@ -24,9 +25,11 @@ private:
 public:
 	dict_wrapper_syntax_node_types(){
 		enum_to_name.insert( std::make_pair( syntax_node_types::node, "node" ) );
+		enum_to_name.insert( std::make_pair( syntax_node_types::token, "token" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::constant, "constant" ) );
 
 		name_to_enum.insert( std::make_pair( "node", syntax_node_types::node ) );
+		name_to_enum.insert( std::make_pair( "token", syntax_node_types::token ) );
 		name_to_enum.insert( std::make_pair( "constant", syntax_node_types::constant ) );
 
 	}

@@ -23,6 +23,7 @@ public:
 	}
 
 	const static this_type node;
+	const static this_type token;
 	const static this_type constant;
 
 

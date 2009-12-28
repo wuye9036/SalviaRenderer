@@ -8,32 +8,26 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
 
-DEFINE_GRAMMAR( binary_expression_grammar, binary_expression() ){
+DEFINE_GRAMMAR( binary_expression_grammar, binary_expression::handle_t() ){
 	template <typename TokenDefT>
 	binary_expression_grammar( const TokenDefT& tok ): binary_expression_grammar::base_type( start )
 	{
-		using boost::spirit::qi::_val;
-		using boost::spirit::qi::_1;
+		start %= ( literal_int >> literal_op >>  literal_int );
 
-		start = pre_start [_val = _1];
+		literal_op %= tok_op;
+		literal_int %= tok_int;
 
-		pre_start %= (  literal_int >> literal_op >> literal_int );
-
-		literal_int = 
-			tok.littok_int [_val = _1]
-			;
-
-		literal_op = 
-			tok.optok_add [_val = _1]
-			;
+		tok_op %= tok.optok_add;
+		tok_int %= tok.littok_int;
 	}
 
 	RULE_DEFINE_HELPER();
 
-	typename rule<operator_literal()>::type literal_op;
-	typename rule<constant()>::type literal_int;
-	typename rule<boost::fusion::vector<constant, operator_literal, constant>()>::type pre_start;
-	typename rule<binary_expression()>::type start;
+	typename rule<binary_expression::handle_t()>::type start;
+	typename rule<operator_literal::handle_t()>::type literal_op;
+	typename rule<constant::handle_t()>::type literal_int;
+
+	typename rule<token_attr::handle_t()>::type tok_op, tok_int;
 };
 
 #endif // SASL_PARSER_BINARY_EXPRESSION_H

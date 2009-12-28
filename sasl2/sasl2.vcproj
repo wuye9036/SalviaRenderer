@@ -427,6 +427,10 @@
 				Name="parser"
 				>
 				<File
+					RelativePath=".\include\syntax_tree\adapt_instrusive_struct_handle.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\parser\binary_expression.h"
 					>
 				</File>

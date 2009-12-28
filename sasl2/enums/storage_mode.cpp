@@ -7,8 +7,9 @@ using namespace std;
 
 
 const storage_mode storage_mode::none ( 0 );
-const storage_mode storage_mode::stack_based_address ( 2 );
-const storage_mode storage_mode::register_id ( 1 );
+const storage_mode storage_mode::constant ( 1 );
+const storage_mode storage_mode::stack_based_address ( 3 );
+const storage_mode storage_mode::register_id ( 2 );
 
  
 struct enum_hasher: public std::unary_function< storage_mode, std::size_t> {
@@ -25,10 +26,12 @@ private:
 public:
 	dict_wrapper_storage_mode(){
 		enum_to_name.insert( std::make_pair( storage_mode::none, "none" ) );
+		enum_to_name.insert( std::make_pair( storage_mode::constant, "constant" ) );
 		enum_to_name.insert( std::make_pair( storage_mode::stack_based_address, "stack_based_address" ) );
 		enum_to_name.insert( std::make_pair( storage_mode::register_id, "register_id" ) );
 
 		name_to_enum.insert( std::make_pair( "none", storage_mode::none ) );
+		name_to_enum.insert( std::make_pair( "constant", storage_mode::constant ) );
 		name_to_enum.insert( std::make_pair( "stack_based_address", storage_mode::stack_based_address ) );
 		name_to_enum.insert( std::make_pair( "register_id", storage_mode::register_id ) );
 

@@ -23,6 +23,7 @@ public:
 	}
 
 	const static this_type none;
+	const static this_type constant;
 	const static this_type stack_based_address;
 	const static this_type register_id;
 

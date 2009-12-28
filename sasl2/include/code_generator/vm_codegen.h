@@ -16,8 +16,8 @@ public:
 
 	vm_codegen();
 
-	storage_ptr emit_constant( const constant& c );
-	vm_codegen& emit_expression( const binary_expression& expr );
+	storage_ptr emit_constant( const constant::handle_t& c );
+	vm_codegen& emit_expression( const binary_expression::handle_t& expr );
 
 	const std::vector<instruction>& codes();
 

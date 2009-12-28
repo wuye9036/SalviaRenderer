@@ -7,7 +7,7 @@
 #include <boost/mpl/vector.hpp>
 #include <string>
 
-typedef boost::mpl::vector< token_attr > sasl_token_attr_type;
+typedef boost::mpl::vector< token_attr::handle_t > sasl_token_attr_type;
 typedef boost::spirit::lex::lexertl::token< const char*, sasl_token_attr_type > sasl_token_type;
 typedef boost::spirit::lex::lexertl::actor_lexer< sasl_token_type > sasl_lexer_base;
 
@@ -27,7 +27,8 @@ struct token_attribute_setter{
 	void operator () (IteratorT& start, IteratorT& end, PassFlagT& matched, IdtypeT& id, ContextT& ctx){
 		string lit;
 		lit.assign( start, end );
-		ctx.set_value( token_attr( lit, lex_ctxt.line, lex_ctxt.column ) );
+		token_attr::handle_t tok = token_attr::handle_t( new token_attr( lit, lex_ctxt.line, lex_ctxt.column ) );
+		ctx.set_value( tok );
 		lex_ctxt.column += lit.length();
 	}
 
@@ -63,7 +64,7 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 			;
 	}
 
-	boost::spirit::lex::token_def<token_attr> 
+	boost::spirit::lex::token_def<token_attr::handle_t> 
 		littok_int, 
 		optok_add, 
 		whitetok_space,

@@ -1,22 +1,27 @@
 #ifndef SASL_SYNTAX_TREE_CONSTANT_H
 #define SASL_SYNTAX_TREE_CONSTANT_H
 
+#include "adapt_instrusive_struct_handle.h"
 #include "node.h"
 #include "token.h"
 #include <boost/variant.hpp>
 
-struct constant: public node{
+struct constant: public terminal<constant>{
 	//literal_types lit_type;
 	int val;
-	explicit constant( int val = 0);
-	constant& operator = (const token_attr& token);
-	constant& operator = ( const constant& rhs );
-	constant( const constant& rhs );
-	constant& operator = ( int val );
+
+	constant()
+		: terminal<constant>( syntax_node_types::constant, token_attr::handle_t() ){}
+	void update();
+
 protected:
-	//inherited
-	constant* clone_impl() const;
-	constant* deepcopy_impl() const;
+	this_type& operator = (const this_type&);
+	constant( const this_type& );
 };
+
+//SASL_ADAPT_INSTRUSIVE_STRUCT_HANDLE( 
+//									constant::handle_t, 
+//									( token_attr::handle_t, tok )
+//									);
 
 #endif //SASL_SYNTAX_TREE_CONSTANT_H
