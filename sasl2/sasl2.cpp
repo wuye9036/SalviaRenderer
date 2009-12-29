@@ -2,6 +2,7 @@
 #include "include/code_generator/vm_codegen.h"
 #include "include/syntax_tree/expression.h"
 #include "include/syntax_tree/constant.h"
+#include "include/syntax_tree/syntax_tree_builder.h"
 #include "include/parser/binary_expression.h"
 #include "include/parser/token.h"
 
@@ -24,9 +25,11 @@ struct token_printer{
 	}
 };
 
+namespace pt = sasl::parser_tree;
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	binary_expression_ bin_expr_;
+	pt::binary_expression bin_expr_;
 	binary_expression::handle_t bin_expr;
 
 	std::string str("3+  2");

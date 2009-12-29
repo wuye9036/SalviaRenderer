@@ -3,15 +3,13 @@
 
 #include "parser_forward.h"
 
-#include "../syntax_tree/constant.h"
-#include "../syntax_tree/expression.h"
-#include "../syntax_tree/operator_literal.h"
-#include "../syntax_tree/inner_ast.h"
+#include "../parser_tree/literal.h"
+#include "../parser_tree/expression.h"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
 
-DEFINE_GRAMMAR( binary_expression_grammar, binary_expression_() ){
+DEFINE_GRAMMAR( binary_expression_grammar, sasl::parser_tree::binary_expression() ){
 	template <typename TokenDefT>
 	binary_expression_grammar( const TokenDefT& tok ): binary_expression_grammar::base_type( start )
 	{
@@ -23,9 +21,9 @@ DEFINE_GRAMMAR( binary_expression_grammar, binary_expression_() ){
 
 	RULE_DEFINE_HELPER();
 
-	typename rule<binary_expression_()>::type start;
-	typename rule<operator_literal_()>::type literal_op;
-	typename rule<constant_()>::type literal_int;
+	typename rule<sasl::parser_tree::binary_expression()>::type start;
+	typename rule<sasl::parser_tree::operator_literal()>::type literal_op;
+	typename rule<sasl::parser_tree::constant()>::type literal_int;
 };
 
 #endif // SASL_PARSER_BINARY_EXPRESSION_H

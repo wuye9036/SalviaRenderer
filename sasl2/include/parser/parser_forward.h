@@ -12,10 +12,4 @@
 		 typedef boost::spirit::qi::rule<IteratorT, SignatureT, skipper_type> type; \
 	};
 	
-//#define BEGIN_ASSIGN_TO_ATTRIBUTE_FROM_VALUE() namespace boost { namespace spirit {namespace traits{ \
-//	template <typename Attrib, typename T, typename Enable> struct assign_to_attribute_from_value { \
-//	static void call(T const& val, Attrib& attr){
-//
-//#define END_ASSIGN_TO_ATTRIBUTE_FROM_VALUE() }}}
-
 #endif //SASL_PARSER_PARSER_FORWARD_H

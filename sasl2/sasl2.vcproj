@@ -427,10 +427,6 @@
 				Name="parser"
 				>
 				<File
-					RelativePath=".\include\syntax_tree\adapt_instrusive_struct_handle.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\parser\binary_expression.h"
 					>
 				</File>
@@ -471,15 +467,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\syntax_tree\inner_ast.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\syntax_tree\node.h"
 					>
 				</File>
 				<File
 					RelativePath=".\include\syntax_tree\operator_literal.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\syntax_tree\syntax_tree_builder.h"
 					>
 				</File>
 				<File
@@ -508,6 +504,22 @@
 				</File>
 				<File
 					RelativePath=".\enums\token_types.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="parser_tree"
+				>
+				<File
+					RelativePath=".\include\parser_tree\expression.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser_tree\literal.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser_tree\parser_tree_forward.h"
 					>
 				</File>
 			</Filter>
