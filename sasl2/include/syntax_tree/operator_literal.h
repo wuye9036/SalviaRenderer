@@ -6,12 +6,12 @@
 #include "adapt_instrusive_struct_handle.h"
 #include "../../enums/operators.h"
 
-struct operator_literal: public terminal<operator_literal>{
+struct operator_literal: public node_impl<operator_literal>{
 	
 	operators op;
 
 	operator_literal( )
-		: terminal< operator_literal >( syntax_node_types::node, token_attr_handle() ), op( operators::none ){}
+		: node_impl< operator_literal >( syntax_node_types::node, token_attr::handle_t() ), op( operators::none ){}
 
 	void update();
 

@@ -1,32 +1,25 @@
 #ifndef SASL_SYNTAX_TREE_TOKEN_H
 #define SASL_SYNTAX_TREE_TOKEN_H
 
-#include "node.h"
+#include <string>
+#include <boost/smart_ptr.hpp>
 
-struct token_attr: public terminal<token_attr>{
-	typedef token_attr_handle handle_t;
+struct token_attr{
+	typedef boost::shared_ptr<token_attr> handle_t;
 
-	token_attr( const token_attr_handle& )
-		: terminal<token_attr>( syntax_node_types::token, handle_t() ) {}
+	token_attr()
+		: file_name("undefined"), column(0), line(0), lit("UNINITIALIZED_VALUE"){}
+	token_attr( const token_attr& rhs )
+		: file_name( rhs.file_name ), column(rhs.column), line(rhs.line), lit(rhs.lit){}
+	template< typename IteratorT > token_attr( const IteratorT& first, const IteratorT& last ){}
 
-	template< typename IteratorT >
-	token_attr( const IteratorT& first, const IteratorT& last ):
-		: terminal<token_attr>( syntax_node_types::token, handle_t() ){
+	token_attr& operator = ( const token_attr& rhs){
+		file_name = rhs.file_name;
+		column = rhs.column;
+		line = rhs.line;
+		lit = rhs.lit;	
+		return *this;
 	}
-
-	token_attr( 
-		const std::string& lit = std::string(), 
-		size_t line = 0, size_t column = 0, 
-		const std::string& file_name = std::string("undefined") )
-		
-		:lit(lit), 
-		line(line), column(column),
-		file_name(file_name),
-		terminal<token_attr>( syntax_node_types::token, handle_t() )
-	{
-	}
-
-	void update() {}
 
 	std::string lit;
 	std::size_t line;

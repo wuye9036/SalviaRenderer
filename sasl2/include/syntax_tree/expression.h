@@ -15,11 +15,7 @@
 struct constant;
 struct operator_literal;
 
-struct primary_expression: public node{
-	boost::variant< boost::shared_ptr<constant> > value;
-};
-
-struct binary_expression: public non_terminal<binary_expression> {
+struct binary_expression: public node_impl<binary_expression> {
 	operator_literal::handle_t op;
 	constant::handle_t left_expr;
 	constant::handle_t right_expr;

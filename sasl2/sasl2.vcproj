@@ -471,7 +471,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\syntax_tree\handle.h"
+					RelativePath=".\include\syntax_tree\inner_ast.h"
 					>
 				</File>
 				<File

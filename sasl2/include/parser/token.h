@@ -7,7 +7,7 @@
 #include <boost/mpl/vector.hpp>
 #include <string>
 
-typedef boost::mpl::vector< token_attr::handle_t > sasl_token_attr_type;
+typedef boost::mpl::vector< token_attr > sasl_token_attr_type;
 typedef boost::spirit::lex::lexertl::token< const char*, sasl_token_attr_type > sasl_token_type;
 typedef boost::spirit::lex::lexertl::actor_lexer< sasl_token_type > sasl_lexer_base;
 
@@ -25,11 +25,16 @@ struct token_attribute_setter{
 
 	template <typename IteratorT, typename PassFlagT, typename IdtypeT, typename ContextT>
 	void operator () (IteratorT& start, IteratorT& end, PassFlagT& matched, IdtypeT& id, ContextT& ctx){
-		string lit;
-		lit.assign( start, end );
-		token_attr::handle_t tok = token_attr::handle_t( new token_attr( lit, lex_ctxt.line, lex_ctxt.column ) );
-		ctx.set_value( tok );
-		lex_ctxt.column += lit.length();
+		token_attr attr;
+		attr.lit.assign(start, end);
+		
+		attr.column = lex_ctxt.column;
+		attr.file_name = "undefined";
+		attr.line = lex_ctxt.line;
+
+		ctx.set_value( attr );
+
+		lex_ctxt.column += attr.lit.length();
 	}
 
 	lex_context& lex_ctxt;
@@ -50,9 +55,10 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 		(whitetok_pp_line = "#line.*{NEWLINE}").id(token_types::_preprocessor.to_value());
 		(whitetok_c_comment = "\\/\\*[^*]*\\*+([^/*][^*]*\\*+)*\\/").id(token_types::_comment.to_value());
 		(whitetok_cpp_comment = "\\/\\/.*{NEWLINE}").id(token_types::_comment.to_value());
-		this->self = 
+
+		this->self =
 			littok_int					[attr_setter]
-			| optok_add					[attr_setter]
+			| optok_add					[attr_setter]			
 			;
 
 		this->self("SKIPPED") =
@@ -60,11 +66,11 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 			| whitetok_newline			[attr_setter]
 			| whitetok_pp_line			[attr_setter]
 			| whitetok_c_comment		[attr_setter]
-			| whitetok_cpp_comment		[attr_setter]
+			| whitetok_cpp_comment		[attr_setter]							
 			;
 	}
 
-	boost::spirit::lex::token_def<token_attr::handle_t> 
+	boost::spirit::lex::token_def<token_attr> 
 		littok_int, 
 		optok_add, 
 		whitetok_space,
