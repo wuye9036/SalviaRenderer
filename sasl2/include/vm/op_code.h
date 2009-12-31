@@ -37,14 +37,18 @@ enum op_code{
 	/*********************************
 	*	拷贝
 	*********************************/
-	op_load_r_si,
-	// 描述：		读入带符号常数到寄存器中
-	// 指令格式：	op_load_r_si REG0, CONST
+	op_load_i32r_fr,
+	// 描述：		将浮点寄存器中的数值截断后取32位整数保存到整数寄存器中。
+	// 指令格式：	op_load_i32r_fr REG, FREG
+	// 参数：		REG：整数寄存器号，FREG：浮点寄存器号
+	op_load_fr_i32r,
+	// 描述：		将32位整数转换成浮点数保存到浮点数寄存器中。
+	// 指令格式：	op_load_fr_i32r FREG, REG
+	// 参数：		FREG：浮点寄存器号，REG：整数寄存器号
+	op_load_r,
+	// 描述：		将一个常量读入到寄存器中
+	// 指令格式：	op_load_r REG0, CONST
 	// 参数：		REG0：目标寄存器号，CONST：有符号整数
-	op_load_r_ui,
-	// 描述：		读入无符号常数到寄存器中
-	// 指令格式：	op_load_r_ui REG0, CONST
-	// 参数：		REG0：目标寄存器号，CONST：无符号整数
 	op_load_r_s,
 	// 描述：		从栈中读取到寄存器中
 	// 指令格式：	op_load_r_ssi REG0, OFFSET

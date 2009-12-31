@@ -1,7 +1,13 @@
 #ifndef SASL_CODE_GENERATOR_MICRO_CODE_GEN_H
 #define SASL_CODE_GENERATOR_MICRO_CODE_GEN_H
 
+#include "forward.h"
 #include "../vm/vm.h"
+
+BEGIN_NS_SASL_CODE_GENERATOR()
+
+using sasl::vm::vm;
+using sasl::vm::instruction;
 
 class micro_code_gen{
 	std::vector<instruction> codes_;
@@ -18,7 +24,10 @@ public:
 
 	micro_code_gen& _add_si( vm::regid_t dest, vm::regid_t src );
 
-	micro_code_gen& _load_r_si( vm::regid_t dest, vm::intreg_t c );
+	micro_code_gen& _load_r( vm::regid_t dest, vm::intreg_t c );
+	micro_code_gen& _load_i32r_fr( vm::regid_t dest, vm::intreg_t src );
+	micro_code_gen& _load_fr_i32r( vm::regid_t dest, vm::intreg_t src );
 };
 
+END_NS_SASL_CODE_GENERATOR()
 #endif

@@ -1,7 +1,6 @@
 #ifndef SASL_SYNTAX_TREE_CONSTANT_H
 #define SASL_SYNTAX_TREE_CONSTANT_H
 
-#include "adapt_instrusive_struct_handle.h"
 #include "node.h"
 #include "token.h"
 #include <boost/variant.hpp>

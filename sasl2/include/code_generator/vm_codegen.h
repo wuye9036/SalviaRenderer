@@ -1,6 +1,7 @@
 #ifndef SASL_CODE_GENERATOR_VM_CODEGEN_H
 #define SASL_CODE_GENERATOR_VM_CODEGEN_H
 
+#include "forward.h"
 #include "vm_storage.h"
 #include "micro_code_gen.h"
 #include "../syntax_tree/expression.h"
@@ -8,9 +9,14 @@
 #include <bitset>
 #include <cassert>
 
+BEGIN_NS_SASL_CODE_GENERATOR()
+
+using sasl::vm::vm;
+using sasl::vm::instruction;
+
 class vm_codegen{
 public:
-	typedef vm_storage<vm::addr_t> storage_t;
+	typedef vm_storage<vm::address_t> storage_t;
 	typedef boost::shared_ptr< storage_t > storage_ptr;
 	typedef storage_t::address_t address_t;
 
@@ -30,7 +36,7 @@ public:
 
 private:
 	micro_code_gen mcgen_;
-	std::bitset<vm::register_count> reg_usage;
+	std::bitset<vm::i_register_count> reg_usage;
 
 	boost::shared_ptr<storage_t> create_storage( storage_mode mode, address_t addr );
 	void free_storage( storage_t& s );
@@ -51,5 +57,7 @@ private:
 		vm_codegen& vm;
 	};
 };
+
+END_NS_SASL_CODE_GENERATOR()
 
 #endif //SASL_CODE_GENERATOR_VM_CODEGEN_H

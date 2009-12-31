@@ -1,11 +1,14 @@
 #ifndef SASL_VM_VM_H
 #define SASL_VM_VM_H
 
+#include "forward.h"
 #include "op_code.h"
 #include "vm_stack.h"
 #include <eflib/include/platform.h>
 #include <vector>
 #include <iostream>
+
+BEGIN_NS_SASL_VM()
 
 enum reg{
 	r0 = 0,
@@ -28,13 +31,15 @@ struct instruction{
 class vm
 {
 public:
-	typedef intptr_t intreg_t;
-	typedef uintptr_t uintreg_t;
-	typedef intptr_t regid_t;
-	typedef intptr_t addr_t;
-	typedef intptr_t offset_t;
+	typedef intptr_t	raw_t;
 
-	static const int register_count = 16;
+	typedef raw_t		address_t;
+	typedef raw_t		regid_t;
+	typedef raw_t		offset_t;
+	typedef raw_t		intreg_t;
+
+	static const raw_t i_register_count = 16;
+	static const raw_t f_register_count = 16;
 
 	vm(void);
 	~vm(void);
@@ -90,14 +95,18 @@ public:
 	}
 
 	//virtual machine storage
-	vm_stack<addr_t> stack;
+	vm_stack<address_t> stack;
 	std::vector<instruction> op_buffer;
 
 	intptr_t eip;
 	intptr_t ebp;
 
-	intptr_t r[register_count];
+	intptr_t r[i_register_count];
+	intptr_t f[f_register_count];
+
 	intptr_t jump_to;
 };
+
+END_NS_SASL_VM()
 
 #endif //SASL_VM_VM_H

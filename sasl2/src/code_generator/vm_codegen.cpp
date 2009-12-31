@@ -2,9 +2,11 @@
 
 using namespace boost;
 
+BEGIN_NS_SASL_CODE_GENERATOR()
+
 vm_codegen::storage_ptr vm_codegen::emit_constant( const constant::handle_t& t ){
 	vm::regid_t reg = allocate_reg();
-	mcgen_._load_r_si( reg, t->val );
+	mcgen_._load_r( reg, t->val );
 	return create_storage( storage_mode::register_id, reg );
 }
 
@@ -26,7 +28,7 @@ void vm_codegen::_restore_r( vm::regid_t reg_id )
 
 vm::regid_t vm_codegen::allocate_reg()
 {
-	for( vm::regid_t id = 0; id < vm::regid_t(vm::register_count); ++id ){
+	for( vm::regid_t id = 0; id < vm::regid_t(vm::i_register_count); ++id ){
 		if ( !reg_usage.test(id) ){
 			reallocate_reg( id );
 			return id;
@@ -88,3 +90,5 @@ void vm_codegen::storage_deleter::operator()( storage_t* p )
 	vm.free_storage(*p);
 	delete p;
 }
+
+END_NS_SASL_CODE_GENERATOR()

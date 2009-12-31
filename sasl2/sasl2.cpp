@@ -14,6 +14,9 @@
 #include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 
+using namespace sasl::vm;
+using namespace sasl::code_generator;
+
 using namespace std;
 using namespace boost;
 

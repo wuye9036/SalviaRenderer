@@ -1,5 +1,7 @@
 #include "../../include/vm/vm.h"
 
+BEGIN_NS_SASL_VM()
+
 vm::vm(void): eip(0), jump_to(0), ebp(0){
 }
 
@@ -27,7 +29,15 @@ bool vm::execute_op(op_code op, intptr_t arg0, intptr_t arg1){
 			stack.pop( r[arg0] );
 			break;
 		}
-	case op_load_r_si:
+	case op_load_fr_i32r:
+		{
+			f[arg0] = r[arg1];
+		}
+	case op_load_i32r_fr:
+		{
+			r[arg1] = int(f[arg0]);
+		}
+	case op_load_r:
 		{
 			r[arg0] = arg1;
 			break;
@@ -56,3 +66,5 @@ bool vm::execute_op(op_code op, intptr_t arg0, intptr_t arg1){
 
 	return true;
 }
+
+END_NS_SASL_VM()

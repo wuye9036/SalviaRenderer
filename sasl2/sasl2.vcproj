@@ -411,6 +411,10 @@
 				Name="vm"
 				>
 				<File
+					RelativePath=".\include\vm\forward.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\vm\op_code.h"
 					>
 				</File>
@@ -422,6 +426,46 @@
 					RelativePath=".\include\vm\vm_stack.h"
 					>
 				</File>
+				<Filter
+					Name="op_code"
+					>
+					<File
+						RelativePath=".\include\vm\op_code\dispatcher.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\forward.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\instruction.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\instruction_list.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\naming.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\operand_type.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\parameter.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\storage.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\utility.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="parser"
@@ -442,6 +486,10 @@
 			<Filter
 				Name="code_generator"
 				>
+				<File
+					RelativePath=".\include\code_generator\forward.h"
+					>
+				</File>
 				<File
 					RelativePath=".\include\code_generator\micro_code_gen.h"
 					>
