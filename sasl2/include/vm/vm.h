@@ -3,8 +3,13 @@
 
 #include "forward.h"
 #include "op_code.h"
+#include "op_code/instruction_list.h"
+#include "op_code/processor.h"
+#include "op_code/dispatcher.h"
+
 #include "vm_stack.h"
 #include <eflib/include/platform.h>
+#include <boost/utility/addressof.hpp>
 #include <vector>
 #include <iostream>
 
@@ -15,28 +20,37 @@ enum reg{
 	r1, r2, r3, r4,
 	r5, r6, r7, r8, r9,
 	r10, r11, r12, r13,
-	r14, r15
+	r14, 
 };
 
-struct instruction{
-	instruction( op_code op ): op(op), arg0(0), arg1(0){}
-	instruction( op_code op, intptr_t arg0 ): op(op), arg0(arg0), arg1(0){}
-	instruction( op_code op, intptr_t arg0, intptr_t arg1 ): op(op), arg0(arg0), arg1(arg1){}
+template< typename RawT >
+struct machine_information{
+	typedef RawT raw_t;
 
-	op_code op;
-	intptr_t arg0;
-	intptr_t arg1;
+	typedef raw_t address_t;
+	typedef raw_t regid_t;
+	typedef raw_t offset_t;
+	typedef raw_t operand_t;
+
+	typedef int opcode_t;
 };
 
-class vm
+typedef machine_information<intptr_t> machine_t;
+
+struct instruction: public machine_t{
+	instruction( opcode_t op ): op(op), arg0(0), arg1(0){}
+	instruction( opcode_t op, operand_t arg0 ): op(op), arg0(arg0), arg1(0){}
+	instruction( opcode_t op, operand_t arg0, operand_t arg1 ): op(op), arg0(arg0), arg1(arg1){}
+
+	opcode_t op;
+	operand_t arg0;
+	operand_t arg1;
+};
+
+class vm : public machine_t
 {
 public:
-	typedef intptr_t	raw_t;
-
-	typedef raw_t		address_t;
-	typedef raw_t		regid_t;
-	typedef raw_t		offset_t;
-	typedef raw_t		intreg_t;
+	typedef machine_t machine_t;
 
 	static const raw_t i_register_count = 16;
 	static const raw_t f_register_count = 16;
@@ -81,7 +95,7 @@ public:
 		return execute_op( ins.op, ins.arg0, ins.arg1 );
 	}
 
-	bool execute_op(op_code op, intptr_t arg0, intptr_t arg1);
+	bool execute_op(opcode_t op, operand_t arg0, operand_t arg1);
 
 	//instruction operators
 	void jump(){
@@ -105,6 +119,57 @@ public:
 	intptr_t f[f_register_count];
 
 	intptr_t jump_to;
+
+private:
+	// 参数转换函数
+	template <typename ParameterT>
+	typename ParameterT::value_t* convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag*, SASL_ENABLE_IF_STORAGE(ParameterT, c) ){
+		return reinterpret_cast<typename ParameterT::value_t*>(const_cast<address_t*>(boost::addressof(par.addr)));
+	}
+
+	template <typename ParameterT>
+	typename ParameterT::value_t* convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag*, SASL_ENABLE_IF_STORAGE(ParameterT, gr) ){
+		ParameterT::value_t* retptr = boost::addressof(r[par.addr]);
+		return retptr;
+	}
+
+	template <typename ParameterT>
+	typename ParameterT::value_t* convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag*, SASL_ENABLE_IF_STORAGE(ParameterT, a) ){
+		ParameterT::value_t* retptr = reinterpret_cast<typename ParameterT::value_t*>( par.addr );
+		return retptr;
+	}
+
+	template <typename ParameterT>
+	typename ParameterT::value_t* convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag*, SASL_ENABLE_IF_STORAGE(ParameterT, ia) ){
+		address_t value_addr = *(reinterpret_cast<address_t*>( par.addr ));
+		typename ParameterT::value_t* retptr = reinterpret_cast<typename ParameterT::value_t*>( value_addr );
+		return retptr;
+	}
+
+	template <typename ParameterT>
+	typename ParameterT::value_t* convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag*, SASL_ENABLE_IF_STORAGE(ParameterT, igr) ){
+		address_t value_addr = r[par.addr];
+		typename ParameterT::value_t* retptr = reinterpret_cast<typename ParameterT::value_t*>( value_addr );
+		return retptr;
+	}
+
+	template <typename ParameterT>
+	typename ParameterT::value_t& convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag& ){
+		return *( convert_parameter( par, (const typename ParameterT::value_t_tag*)(NULL) ) );
+	}
+
+	// 预定义的声明
+	SASL_DECLARE_DEFAULT_PROCESSORS( SASL_VM_INSTRUCTIONS, machine_t );
+	
+	template <typename ValueT>
+	SASL_PROCESSOR_SN( add, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+		arg0 += arg1;
+	}
+
+	template <typename ValueT>
+	SASL_PROCESSOR_SN( load, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+		arg0 = arg1;
+	}
 };
 
 END_NS_SASL_VM()

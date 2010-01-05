@@ -1,5 +1,5 @@
 #include "../../include/code_generator/micro_code_gen.h"
-
+#include "../../include/vm/op_code/instruction_list.h"
 using namespace std;
 
 BEGIN_NS_SASL_CODE_GENERATOR()
@@ -8,31 +8,15 @@ const vector<instruction>& micro_code_gen::codes(){
 	return codes_;
 }
 
-micro_code_gen& micro_code_gen::_add_si( vm::regid_t dest, vm::regid_t src ){
-	return emit_op( op_add_si, dest, src );
+micro_code_gen& micro_code_gen::_add( vm::regid_t dest, vm::regid_t src ){
+	return emit_op( NS_SASL_VM_OP_CODE(add_gr_raw_gr_raw), dest, src );
 }
 
-micro_code_gen& micro_code_gen::_load_r( vm::regid_t dest, vm::intreg_t c ){
-	return emit_op( op_load_r, dest, c );
+micro_code_gen& micro_code_gen::_load( vm::regid_t dest, vm::raw_t c ){
+	return emit_op( NS_SASL_VM_OP_CODE(load_gr_raw_c_raw), dest, c );
 }
 
-micro_code_gen& micro_code_gen::_load_i32r_fr( vm::regid_t dest, vm::intreg_t src){
-	return emit_op( op_load_i32r_fr, dest, src );
-}
-
-micro_code_gen& micro_code_gen::_load_fr_i32r( vm::regid_t dest, vm::intreg_t src){
-	return emit_op( op_load_fr_i32r, dest, src );
-}
-
-micro_code_gen& micro_code_gen::_push( vm::regid_t reg ){
-	return emit_op( op_push, reg );
-}
-
-micro_code_gen& micro_code_gen::_pop( vm::regid_t reg ){
-	return emit_op( op_pop, reg );
-}
-
-micro_code_gen& micro_code_gen::emit_op( op_code op, vm::intreg_t arg0, vm::intreg_t arg1 ){
+micro_code_gen& micro_code_gen::emit_op( vm::opcode_t op, vm::raw_t arg0, vm::raw_t arg1 ){
 	codes_.push_back( instruction(op, arg0, arg1) );
 	return *this;
 }

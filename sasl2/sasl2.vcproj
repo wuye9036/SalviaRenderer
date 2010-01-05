@@ -123,6 +123,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../softart"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				GeneratePreprocessedFile="0"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -455,6 +456,10 @@
 					</File>
 					<File
 						RelativePath=".\include\vm\op_code\parameter.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\processor.h"
 						>
 					</File>
 					<File

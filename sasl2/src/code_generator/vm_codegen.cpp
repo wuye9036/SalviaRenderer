@@ -6,7 +6,7 @@ BEGIN_NS_SASL_CODE_GENERATOR()
 
 vm_codegen::storage_ptr vm_codegen::emit_constant( const constant::handle_t& t ){
 	vm::regid_t reg = allocate_reg();
-	mcgen_._load_r( reg, t->val );
+	mcgen_._load( reg, t->val );
 	return create_storage( storage_mode::register_id, reg );
 }
 
@@ -16,14 +16,14 @@ shared_ptr<vm_codegen::storage_t> vm_codegen::create_storage( storage_mode mode,
 
 void vm_codegen::_save_r( vm::regid_t reg_id )
 {
-	free_reg( reg_id );
-	mcgen_._push( reg_id );
+	//free_reg( reg_id );
+	//mcgen_._push( reg_id );
 }
 
 void vm_codegen::_restore_r( vm::regid_t reg_id )
 {
-	reallocate_reg( reg_id );
-	mcgen_._pop( reg_id );
+	//reallocate_reg( reg_id );
+	//mcgen_._pop( reg_id );
 }
 
 vm::regid_t vm_codegen::allocate_reg()
@@ -62,7 +62,7 @@ vm_codegen& vm_codegen::emit_expression( const binary_expression::handle_t& expr
 		storage_ptr c0 = emit_constant( expr->left_expr );
 		storage_ptr c1 = emit_constant( expr->right_expr );
 
-		mcgen_._add_si( c0->addr, c1->addr );
+		mcgen_._add( c0->addr, c1->addr );
 	}
 
 

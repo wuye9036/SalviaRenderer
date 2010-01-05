@@ -3,6 +3,9 @@
 
 #include "forward.h"
 
+#define SASL_STORAGE_FULL_NAME( STORAGE ) NS_SASL_VM_OP_CODE_STORAGE( STORAGE )
+#define SASL_SFN( STORAGE ) SASL_STORAGE_FULL_NAME( STORAGE )
+
 BEGIN_NS_SASL_VM_OP_CODE_STORAGE()
 
 /**********************
@@ -15,6 +18,9 @@ struct dr;	// double register
 struct stk;	// stack
 struct a;	// absolute( address )
 struct c;	// constant
+
+struct ia;	// Indirect Address
+struct igr;	// Indirect Generic Register
 
 struct _;	// no storage( for unused param )
 

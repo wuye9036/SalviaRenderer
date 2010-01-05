@@ -2,33 +2,36 @@
 #define SASL_VM_OP_CODE_INSTRUCTION_LIST_H
 
 #include "forward.h"
-#include "macros.h"
-#include <boost/config.hpp>
+#include "instruction.h"
+#include "parameter.h"
+#include "storage.h"
+#include "operand_type.h"
+
 /**************************
 	指令集定义处。
 	注意：如果有新的指令，请在此处添加声明。
 **************************/
 
-#define SASL_VM_INSTRUCTIONS			\
-	(add,	stk, i32, stk, i32 )		\
-	(load,	gr,  raw, c,   i32 )		\
+#define SASL_VM_INSTRUCTIONS		\
+	((add,	gr, raw, gr, raw ))		\
+	((load,	gr, raw, c,  raw ))		\
 	\
 	/***
 	***/
 
 BEGIN_NS_SASL_VM_OP_CODE()
 
-SASL_VM_INSTRUCTIONS_ID( SASL_VM_INSTRUCTIONS );
+SASL_VM_INSTRUCTIONS_OPCODE( SASL_VM_INSTRUCTIONS );
 
-template <int InstructioID> struct instruction{
-	static const int id = InstructionID;
+template <int Opcode> struct typecode{
+	static const int id = Opcode;
 };
 
-template <typename InstructionT, typename AddressT>
+template <typename InstructionT, typename MachineT>
 struct instruction_info{
 	typedef InstructionT type;
-	typedef parameter<storage::_, value_type::_, AddressT> p0_t;
-	typedef parameter<storage::_, value_type::_, AddressT> p1_t;
+	typedef parameter< SASL_SFN(_), typename SASL_OTFT(_, MachineT), MachineT> p0_t;
+	typedef parameter< SASL_SFN(_), typename SASL_OTFT(_, MachineT), MachineT> p1_t;
 };
 
 END_NS_SASL_VM_OP_CODE()

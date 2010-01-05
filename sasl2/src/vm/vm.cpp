@@ -9,62 +9,15 @@ vm::~vm(void)
 {
 }
 
-bool vm::execute_op(op_code op, intptr_t arg0, intptr_t arg1){
-	switch (op)
-	{
-	case op_halt:
-		return false;
-	case op_nop:
-		break;
-	case op_add_si:
-		r[arg0] += r[arg1];
-		break;
-	case op_push: 
-		{
-			stack.push( r[arg0] );
-			break;
-		}
-	case op_pop:
-		{
-			stack.pop( r[arg0] );
-			break;
-		}
-	case op_load_fr_i32r:
-		{
-			f[arg0] = r[arg1];
-		}
-	case op_load_i32r_fr:
-		{
-			r[arg1] = int(f[arg0]);
-		}
-	case op_load_r:
-		{
-			r[arg0] = arg1;
-			break;
-		}
-	case op_load_r_s:
-		{
-			r[arg0] = stack.value_frame_based<intreg_t>( arg1 );
-			break;
-		}
-	case op_call:
-		{
-			intptr_t tar_addr = arg0;
-			stack.push( eip );
-			stack.enter_frame();
-			jump_to = tar_addr;
-			break;
-		}
-	case op_ret:
-		{
-			stack.leave_frame();
-			stack.pop( jump_to );
-			++jump_to;
-			break;
-		}
-	}
+SASL_MEMBER_PROCESSOR_CONVERT_PARAMETER_TO_VALUE_REFERENCE( vm, (add, gr, raw, gr, raw) )
+SASL_MEMBER_PROCESSOR_CONVERT_PARAMETER_TO_VALUE_REFERENCE( vm, (load, gr, raw, c, raw) )
 
+bool vm::execute_op(opcode_t op, operand_t arg0, operand_t arg1){
+	switch( op ){
+		SASL_DISPATCH_INSTRUCTIONS( SASL_VM_INSTRUCTIONS, arg0, arg1 )
+	}
 	return true;
 }
+
 
 END_NS_SASL_VM()
