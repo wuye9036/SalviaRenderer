@@ -8,77 +8,88 @@
 #include <boost/preprocessor/seq.hpp>
 #include <boost/utility/enable_if.hpp>
 
-// 转换类型并转发的Processor
-// 要求VM有相应的转换方法。
-// VM 的 签名：convert_parameter( ToT& to, FromT& from );
-#define SASL_PROCESSOR_NAME_SN( INSTRUCTION_SHORT_NAME ) BOOST_PP_CAT(INSTRUCTION_SHORT_NAME, _processor)
-#define SASL_PROCESSOR_NAME( INSTRUCTION ) SASL_PROCESSOR_NAME_SN( SASL_ISN( INSTRUCTION ) )
+///////////////////////////
+// Processor Naming
+///////////////////////////
+#define SASL_PROCESSOR_NAME_ISN( INSTRUCTION_SHORT_NAME ) BOOST_PP_CAT(INSTRUCTION_SHORT_NAME, _processor)
+#define SASL_PROCESSOR_NAME( INSTRUCTION ) SASL_PROCESSOR_NAME_ISN( SASL_ISN( INSTRUCTION ) )
 
-#define SASL_PROCESSOR( INSTRUCTION, P0_TYPE, P1_TYPE )	\
+///////////////////////////
+// Processor Declaration
+///////////////////////////
+#define SASL_PROCESSOR_DECL( INSTRUCTION, P0_TYPE, P1_TYPE )	\
 	void SASL_PROCESSOR_NAME( INSTRUCTION ) (			\
 		P0_TYPE arg0,									\
 		P1_TYPE arg1									\
 		)
 
-#define SASL_PROCESSOR_SN( INSTRUCTION_SHORT_NAME, P0_TYPE, P1_TYPE, ENABLE_IF_TYPE )\
-	void SASL_PROCESSOR_NAME_SN(INSTRUCTION_SHORT_NAME) (	\
+#define SASL_SPECIALIZED_PROCESSOR_DECL_ISN( INSTRUCTION_SHORT_NAME, P0_TYPE, P1_TYPE, ENABLE_IF_TYPE )\
+	void SASL_PROCESSOR_NAME_ISN(INSTRUCTION_SHORT_NAME) (	\
 		P0_TYPE arg0,										\
 		P1_TYPE arg1,										\
 		ENABLE_IF_TYPE dummy = 0							\
 		)
 
-#define SASL_MEMBER_PROCESSOR( CLASS_NAME, INSTRUCTION, P0_TYPE, P1_TYPE)	\
-	SASL_MEMBER_PROCESSOR_SN( CLASS_NAME, SASL_ISN(INSTRUCTION), P0_TYPE, P1_TYPE )
+#define SASL_PROCESSOR_DECL_DEFAULT( INSTRUCTION, MACHINE_T ) 		\
+	SASL_PROCESSOR_DECL( INSTRUCTION,								\
+		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 0, MACHINE_T)&,	\
+		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 1, MACHINE_T)&	\
+		)
 
-#define SASL_MEMBER_PROCESSOR_SN( CLASS_NAME, INSTRUCTION_SHORT_NAME, P0_TYPE, P1_TYPE )	\
-	void BOOST_PP_CAT(CLASS_NAME,::)SASL_PROCESSOR_NAME_SN( INSTRUCTION_SHORT_NAME )(		\
+///////////////////////////
+// Processor Implementation Signature
+///////////////////////////
+#define SASL_PROCESSOR_IMPL( CLASS_NAME, INSTRUCTION, P0_TYPE, P1_TYPE)	\
+	SASL_PROCESSOR_IMPL_ISN( CLASS_NAME, SASL_ISN(INSTRUCTION), P0_TYPE, P1_TYPE )
+
+#define SASL_PROCESSOR_IMPL_ISN( CLASS_NAME, INSTRUCTION_SHORT_NAME, P0_TYPE, P1_TYPE )	\
+	void BOOST_PP_CAT(CLASS_NAME,::)SASL_PROCESSOR_NAME_ISN( INSTRUCTION_SHORT_NAME )(		\
 		P0_TYPE arg0,																		\
 		P1_TYPE arg1																		\
-	)
+		)
 
-#define SASL_DEFAULT_MEMBER_PROCESSOR( CLASS_NAME, INSTRUCTION )	\
-	SASL_MEMBER_PROCESSOR( CLASS_NAME, INSTRUCTION,					\
+#define SASL_PROCESSOR_IMPL_DEFAULT( CLASS_NAME, INSTRUCTION )	\
+	SASL_PROCESSOR_IMPL( CLASS_NAME, INSTRUCTION,					\
 		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 0, BOOST_PP_CAT(CLASS_NAME, ::machine_t) )&,	\
 		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 1, BOOST_PP_CAT(CLASS_NAME, ::machine_t) )&	\
 		)
 
-#define SASL_DEFAULT_PROCESSOR( INSTRUCTION, MACHINE_T ) 		\
-	SASL_PROCESSOR( INSTRUCTION,								\
-		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 0, MACHINE_T)&,	\
-		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 1, MACHINE_T)&	\
-	)
-
-#define SASL_PROCESSOR_TYPE_CONVERTING( INSTRUCTION, P0_CONVERTED_TYPE, P1_CONVERTED_TYPE ) \
-	SASL_DEFAULT_PROCESSOR(INSTRUCTION) {				\
-		/*function body									
-		dispatch type converted instruction.*/;			\
-		SASL_PROCESSOR_NAME( INSTRUCTION )(				\
-			convert_parameter(arg0, P0_CONVERTED_TYPE() ),	\
-			convert_parameter(arg1, P1_CONVERTED_TYPE() )	\
-		);												\
-	}
-#define SASL_MEMBER_PROCESSOR_TYPE_CONVERTING( CLASS_NAME, INSTRUCTION, P0_CONVERTED_TYPE, P1_CONVERTED_TYPE )	\
-	SASL_DEFAULT_MEMBER_PROCESSOR( CLASS_NAME, INSTRUCTION ){	\
+//////////////////////////////////////////
+// Predefined Processor Implementation
+//////////////////////////////////////////
+#define SASL_PROCESSOR_IMPL_TYPE_CONVERTING( CLASS_NAME, INSTRUCTION, P0_CONVERTED_TYPE, P1_CONVERTED_TYPE )	\
+	SASL_PROCESSOR_IMPL_DEFAULT( CLASS_NAME, INSTRUCTION ){	\
 		SASL_PROCESSOR_NAME( INSTRUCTION )(				\
 			convert_parameter(arg0, P0_CONVERTED_TYPE() ),	\
 			convert_parameter(arg1, P1_CONVERTED_TYPE() )	\
 		);												\
 	}
 
-#define SASL_MEMBER_PROCESSOR_CONVERT_PARAMETER_TO_VALUE_REFERENCE( CLASS_NAME, INSTRUCTION )	\
-	SASL_MEMBER_PROCESSOR_TYPE_CONVERTING(	\
+#define SASL_PROCESSOR_IMPL_CONVERT_PARAMETER_TO_VALUE_REFERENCE( CLASS_NAME, INSTRUCTION )	\
+	SASL_PROCESSOR_IMPL_TYPE_CONVERTING(	\
 		CLASS_NAME, INSTRUCTION,			\
 		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 0, BOOST_PP_CAT(CLASS_NAME, ::machine_t))::value_t_tag,	\
 		SASL_FULL_PARAMETER_TYPE(INSTRUCTION, 1, BOOST_PP_CAT(CLASS_NAME, ::machine_t))::value_t_tag	\
 		)
 
-#define SASL_DECLARE_DEFAULT_PROCESSOR_I( r, data, elem )	\
-	SASL_DEFAULT_PROCESSOR( elem, data ) ;
+///////////////////////////////////////
+// Processor Calling
+///////////////////////////////////////
+#define SASL_CALL_PROCESSOR( INSTRUCTION, ARG0, ARG1 )	\
+	SASL_PROCESSOR_NAME( INSTRUCTION ) ( ARG0, ARG1 )
 
+////////////////////////////////////////
+//	batched instruction processor declaration support
+////////////////////////////////////////
+#define SASL_DECLARE_DEFAULT_PROCESSOR_I( r, data, elem )	\
+	SASL_PROCESSOR_DECL_DEFAULT( elem, data ) ;
 #define SASL_DECLARE_DEFAULT_PROCESSORS( INSTRUCTION_SEQ, MACHINE_T )	\
 	BOOST_PP_SEQ_FOR_EACH( SASL_DECLARE_DEFAULT_PROCESSOR_I, MACHINE_T, INSTRUCTION_SEQ )
 
-#define SASL_ENABLE_IF_STORAGE(PARAMETER_T, STORAGE) typename boost::enable_if< boost::is_same< typename BOOST_PP_CAT(PARAMETER_T, ::storage_tag), SASL_STORAGE_FULL_NAME( STORAGE ) > >::type* dummy = 0
+///////////////////////////////
+// Compile Conditions
+///////////////////////////////
+#define SASL_ENABLE_IF_STORAGE(PARAMETER_T, STORAGE) typename boost::enable_if< boost::is_same< typename BOOST_PP_CAT(PARAMETER_T, ::storage_tag), SASL_NAMESPACED_STORAGE_NAME( STORAGE ) > >::type* dummy = 0
 #define SASL_DISABLE_IF_PARAMETER(T) typename boost::disable_if< NS_SASL_VM_OP_CODE(is_parameter< T >) >::type*
 
 #endif

@@ -162,12 +162,12 @@ private:
 	SASL_DECLARE_DEFAULT_PROCESSORS( SASL_VM_INSTRUCTIONS, machine_t );
 	
 	template <typename ValueT>
-	SASL_PROCESSOR_SN( add, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( add, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
 		arg0 += arg1;
 	}
 
 	template <typename ValueT>
-	SASL_PROCESSOR_SN( load, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( load, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
 		arg0 = arg1;
 	}
 };

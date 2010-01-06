@@ -9,8 +9,8 @@ vm::~vm(void)
 {
 }
 
-SASL_MEMBER_PROCESSOR_CONVERT_PARAMETER_TO_VALUE_REFERENCE( vm, (add, gr, raw, gr, raw) )
-SASL_MEMBER_PROCESSOR_CONVERT_PARAMETER_TO_VALUE_REFERENCE( vm, (load, gr, raw, c, raw) )
+SASL_PROCESSOR_IMPL_CONVERT_PARAMETER_TO_VALUE_REFERENCE( vm, (add, gr, raw, gr, raw) )
+SASL_PROCESSOR_IMPL_CONVERT_PARAMETER_TO_VALUE_REFERENCE( vm, (load, gr, raw, c, raw) )
 
 bool vm::execute_op(opcode_t op, operand_t arg0, operand_t arg1){
 	switch( op ){

@@ -28,9 +28,9 @@ public:
 	typedef typename ValueT::type			value_t;
 	
 private:
-	typedef boost::is_same< storage_tag, SASL_SFN(gr) > is_gr_storage;
-	typedef boost::is_same< storage_tag, SASL_SFN(fr) > is_fr_storage;
-	typedef boost::is_same< storage_tag, SASL_SFN(dr) > is_dr_storage;
+	typedef boost::is_same< storage_tag, SASL_NSSN(gr) > is_gr_storage;
+	typedef boost::is_same< storage_tag, SASL_NSSN(fr) > is_fr_storage;
+	typedef boost::is_same< storage_tag, SASL_NSSN(dr) > is_dr_storage;
 	typedef boost::mpl::or_< is_gr_storage, boost::mpl::or_< is_fr_storage, is_dr_storage > > is_r_storage;
 
 public:

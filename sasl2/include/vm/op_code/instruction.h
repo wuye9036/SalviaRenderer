@@ -34,7 +34,7 @@
 
 #define SASL_PARAMETER_TYPE( INSTRUCTION, I, MACHINE_T )				\
 	parameter<															\
-		SASL_SFN( SASL_IPS(INSTRUCTION, I) ),			\
+		SASL_NSSN( SASL_IPS(INSTRUCTION, I) ),			\
 		SASL_OTFT( SASL_IPT(INSTRUCTION, I), MACHINE_T ),	\
 		MACHINE_T														\
 	>

@@ -467,6 +467,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\include\vm\op_code\typed_opcode_generator.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\vm\op_code\typeless_opcode_generator.h"
+						>
+					</File>
+					<File
 						RelativePath=".\include\vm\op_code\utility.h"
 						>
 					</File>

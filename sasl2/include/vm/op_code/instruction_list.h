@@ -30,8 +30,8 @@ template <int Opcode> struct typecode{
 template <typename InstructionT, typename MachineT>
 struct instruction_info{
 	typedef InstructionT type;
-	typedef parameter< SASL_SFN(_), typename SASL_OTFT(_, MachineT), MachineT> p0_t;
-	typedef parameter< SASL_SFN(_), typename SASL_OTFT(_, MachineT), MachineT> p1_t;
+	typedef parameter< SASL_NSSN(_), typename SASL_OTFT(_, MachineT), MachineT> p0_t;
+	typedef parameter< SASL_NSSN(_), typename SASL_OTFT(_, MachineT), MachineT> p1_t;
 };
 
 END_NS_SASL_VM_OP_CODE()
