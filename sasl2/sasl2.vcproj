@@ -393,6 +393,14 @@
 			<Filter
 				Name="parser"
 				>
+				<File
+					RelativePath=".\src\parser\binary_expression.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\token.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="vm"
@@ -484,17 +492,37 @@
 				Name="parser"
 				>
 				<File
-					RelativePath=".\include\parser\binary_expression.h"
+					RelativePath=".\include\parser\grammars.h"
 					>
 				</File>
 				<File
 					RelativePath=".\include\parser\parser_forward.h"
 					>
 				</File>
-				<File
-					RelativePath=".\include\parser\token.h"
+				<Filter
+					Name="grammars"
 					>
-				</File>
+					<File
+						RelativePath=".\include\parser\grammars\expression.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\grammars\token.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="detail"
+					>
+					<File
+						RelativePath=".\include\parser\detail\binary_expression.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\token.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="code_generator"

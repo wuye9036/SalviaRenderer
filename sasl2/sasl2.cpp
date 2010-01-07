@@ -3,8 +3,7 @@
 #include "include/syntax_tree/expression.h"
 #include "include/syntax_tree/constant.h"
 #include "include/syntax_tree/syntax_tree_builder.h"
-#include "include/parser/binary_expression.h"
-#include "include/parser/token.h"
+#include "include/parser/grammars.h"
 
 #include <tchar.h>
 #include <iostream>
@@ -43,7 +42,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	binary_expression_grammar<sasl_token_iterator, sasl_skipper> g( sasl_tok );
 
 	try{
-		bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SKIPPER( sasl_tok ), bin_expr_ );
+		bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SASL_PARSER_SKIPPER( sasl_tok ), bin_expr_ );
 		if (r){
 			cout << "ok" << endl;
 			bin_expr = syntax_tree_builder().build_expression( bin_expr_ );
