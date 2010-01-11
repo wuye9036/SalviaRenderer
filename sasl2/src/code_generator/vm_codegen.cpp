@@ -4,12 +4,6 @@ using namespace boost;
 
 BEGIN_NS_SASL_CODE_GENERATOR()
 
-vm_codegen::storage_ptr vm_codegen::emit_constant( const constant::handle_t& t ){
-	vm::regid_t reg = allocate_reg();
-	mcgen_._load( reg, t->val );
-	return create_storage( storage_mode::register_id, reg );
-}
-
 shared_ptr<vm_codegen::storage_t> vm_codegen::create_storage( storage_mode mode, vm_codegen::address_t addr ){
 	return shared_ptr<vm_codegen::storage_t>( new vm_codegen::storage_t(mode, addr), storage_deleter(*this) );	
 }
@@ -52,22 +46,6 @@ void vm_codegen::free_storage( storage_t& s )
 	}
 }
 
-vm_codegen& vm_codegen::emit_expression( const binary_expression::handle_t& expr )
-{
-	if ( expr->op->op != operators::add ){
-		return *this;
-	}
-
-	{
-		storage_ptr c0 = emit_constant( expr->left_expr );
-		storage_ptr c1 = emit_constant( expr->right_expr );
-
-		mcgen_._add( c0->addr, c1->addr );
-	}
-
-
-	return *this;
-}
 
 const std::vector<instruction>& vm_codegen::codes()
 {

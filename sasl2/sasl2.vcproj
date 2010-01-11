@@ -571,6 +571,10 @@
 					RelativePath=".\include\syntax_tree\token.h"
 					>
 				</File>
+				<File
+					RelativePath=".\include\syntax_tree\visitor.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="enums"

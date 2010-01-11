@@ -4,5 +4,7 @@ void operator_literal::update()
 {
 	if ( tok->lit == "+" ){
 		op = operators::add;
+	} else if (tok->lit == "-" ) {
+		op = operators::sub;
 	}
 }

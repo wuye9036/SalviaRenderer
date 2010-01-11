@@ -6,13 +6,14 @@
 #include <boost/shared_ptr.hpp>
 
 struct token_attr;
+class syntax_tree_visitor;
 
 struct node{
 	syntax_node_types type;
 	token_attr::handle_t tok;
 	
 	virtual void update() = 0;
-
+	virtual void accept( syntax_tree_visitor* visitor ) = 0;
 protected:
 	node(syntax_node_types type, const token_attr::handle_t& tok)
 		: type(type), tok(tok){

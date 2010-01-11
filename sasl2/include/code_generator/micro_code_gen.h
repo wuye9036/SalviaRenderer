@@ -25,6 +25,7 @@ public:
 	SASL_DECL_TYPELESS_CODE_GENERATORS( micro_code_gen, SASL_VM_INSTRUCTIONS, machine_t );
 
 	micro_code_gen& _add( vm::regid_t dest, vm::regid_t src );
+	micro_code_gen& _sub( vm::regid_t dest, vm::regid_t src );
 	micro_code_gen& _load( vm::regid_t dest, vm::raw_t c );
 };
 

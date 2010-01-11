@@ -14,6 +14,11 @@ micro_code_gen& micro_code_gen::_add( vm::regid_t dest, vm::regid_t src ){
 	return _add_gr_raw_gr_raw( dest, src );
 }
 
+micro_code_gen& micro_code_gen::_sub( vm::regid_t dest, vm::regid_t src )
+{
+	return _sub_gr_raw_gr_raw( dest, src );
+}
+
 micro_code_gen& micro_code_gen::_load( vm::regid_t dest, vm::raw_t c ){
 	return _load_gr_raw_c_raw( dest, c );
 }

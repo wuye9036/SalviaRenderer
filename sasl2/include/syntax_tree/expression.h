@@ -15,10 +15,30 @@
 struct constant;
 struct operator_literal;
 
-struct binary_expression: public node_impl<binary_expression> {
+struct expression: public node_impl<expression>{
+	expression( syntax_node_types nodetype)
+		:node_impl( nodetype, token_attr::handle_t() ){}
+};
+
+struct constant_expression: public expression{
+	constant::handle_t value;
+	void update(){
+		value->update();
+	}
+	void accept( syntax_tree_visitor* visitor ){
+		visitor->visit( *this );
+	}
+	constant_expression(): expression( syntax_node_types::node ){}
+};
+
+struct binary_expression: public expression {
 	operator_literal::handle_t op;
-	constant::handle_t left_expr;
-	constant::handle_t right_expr;
+	expression::handle_t left_expr;
+	expression::handle_t right_expr;
+
+	void accept( syntax_tree_visitor* visitor ){
+		visitor->visit( *this );
+	}
 
 	void update(){
 		op->update();

@@ -123,6 +123,12 @@ public:
 private:
 	// 参数转换函数
 	template <typename ParameterT>
+	typename ParameterT::value_t* convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag*, SASL_ENABLE_IF_STORAGE(ParameterT, _) ){
+		// 稻草人函数，只是返回一个有效地址而已。
+		return reinterpret_cast<typename ParameterT::value_t*>(const_cast<address_t*>(boost::addressof(par.addr)));
+	}
+
+	template <typename ParameterT>
 	typename ParameterT::value_t* convert_parameter( const ParameterT& par, const typename ParameterT::value_t_tag*, SASL_ENABLE_IF_STORAGE(ParameterT, c) ){
 		return reinterpret_cast<typename ParameterT::value_t*>(const_cast<address_t*>(boost::addressof(par.addr)));
 	}
@@ -162,8 +168,23 @@ private:
 	SASL_DECLARE_DEFAULT_PROCESSORS( SASL_VM_INSTRUCTIONS, machine_t );
 	
 	template <typename ValueT>
+	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( push, ValueT&, SASL_OPERAND_TYPE(_, machine_t)&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+		stack.push(arg0);
+	}
+
+	template <typename ValueT>
+	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( pop, ValueT&, SASL_OPERAND_TYPE(_, machine_t)&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+		arg0 = stack.pop<ValueT>();
+	}
+
+	template <typename ValueT>
 	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( add, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
 		arg0 += arg1;
+	}
+
+	template <typename ValueT>
+	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( sub, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+		arg0 -= arg1;
 	}
 
 	template <typename ValueT>

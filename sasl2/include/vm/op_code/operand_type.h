@@ -18,7 +18,7 @@
 BEGIN_NS_SASL_VM_OP_CODE_OPERAND_TYPE()
 
 template <typename MachineT> struct operand_types{
-	struct null;
+	struct null{};
 	SASL_MAPPING_OPERAND_TAG_AND_TYPES(
 		((_, null))
 		((i32, int32_t))

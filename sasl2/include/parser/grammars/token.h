@@ -22,8 +22,38 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 	sasl_tokens();
 
 	boost::spirit::lex::token_def<token_attr> 
-		littok_int, 
-		optok_add, 
+		littok_int,
+
+		marktok_plus,				// +
+		marktok_minus,				// -
+		marktok_asterisk,			// *
+		marktok_slash,				// /
+		marktok_backslash,			/* \ */
+		marktok_caret,				// ^
+		marktok_ampersand,			// &
+		marktok_percent,			// %
+		marktok_equal,				// =
+		marktok_comma,				// ,
+		marktok_colon,				// ;
+		marktok_dot,				// .
+		marktok_exclamation,		// !
+		marktok_question,			// ?
+		marktok_squote,				// '
+		marktok_dquote,				// "
+		marktok_vertical,			// |
+
+		marktok_lparen, marktok_rparen, // ()
+		marktok_lbrace, marktok_rbrace,	// {}
+		marktok_left_square_bracket, marktok_right_square_bracket,	// []
+		marktok_left_angle_bracket, marktok_right_angle_bracket,	// <>
+
+		optok_arith_assign,
+		optok_shift,
+		optok_equal,
+		optok_relation,
+		optok_logic_or, optok_logic_and,
+		optok_self_incr,
+
 		whitetok_space,
 		whitetok_newline,
 		whitetok_pp_line,

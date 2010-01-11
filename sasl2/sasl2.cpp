@@ -34,7 +34,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	pt::binary_expression bin_expr_;
 	binary_expression::handle_t bin_expr;
 
-	std::string str("3+  2");
+	std::string str("4 - ( 5 - (1-6) + (4-3) + (3-6) )");
 	char const* first = str.c_str();
 	char const* last = &first[str.size()];
 
@@ -42,21 +42,27 @@ int _tmain(int argc, _TCHAR* argv[])
 	binary_expression_grammar<sasl_token_iterator, sasl_skipper> g( sasl_tok );
 
 	try{
-		bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SASL_PARSER_SKIPPER( sasl_tok ), bin_expr_ );
-		if (r){
-			cout << "ok" << endl;
-			bin_expr = syntax_tree_builder().build_expression( bin_expr_ );
-			bin_expr->update();
-		} else {
-			cout << "fail" << endl;
+		try{
+			bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SASL_PARSER_SKIPPER( sasl_tok ), bin_expr_);
+			if (r){
+				cout << "ok" << endl;
+				bin_expr = syntax_tree_builder_impl().build_binary_expression( bin_expr_ );
+				bin_expr->update();
+			} else {
+				cout << "fail" << endl;
+			}
+		} 
+		catch ( boost::spirit::qi::expectation_failure<sasl_token_iterator> const& x)
+		{
+			std::cout << "expected: " << x.what_;
+			//std::cout << "got: \"" << std::string(x.first, x.last) << '"' << std::endl;
 		}
 	} catch (const std::runtime_error& e){
 		cout << e.what() << endl;
 	}
 
 	vm_codegen vm_cg;
-	vm_cg
-		.emit_expression( bin_expr );
+	vm_cg.emit_expression( bin_expr );
 
 	vm machine;
 	intptr_t result = machine.raw_call( vm_cg.codes() );
