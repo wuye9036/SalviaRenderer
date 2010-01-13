@@ -6,5 +6,9 @@ void operator_literal::update()
 		op = operators::add;
 	} else if (tok->lit == "-" ) {
 		op = operators::sub;
+	} else if (tok->lit == "*" ) {
+		op = operators::mul;
+	} else if (tok->lit == "/" ) {
+		op = operators::div;
 	}
 }

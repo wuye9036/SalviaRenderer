@@ -68,6 +68,7 @@
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
+				HeapCommitSize="0"
 				TargetMachine="1"
 			/>
 			<Tool

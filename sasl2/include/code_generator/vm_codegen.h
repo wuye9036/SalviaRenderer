@@ -36,6 +36,10 @@ public:
 			mcgen_._add(0, 1);
 		} else if (v.op->op == operators::sub){
 			mcgen_._sub(0, 1);
+		} else if (v.op->op == operators::mul) {
+			mcgen_._mul_gr_raw_gr_raw( 0, 1 );
+		} else if (v.op->op == operators::div) {
+			mcgen_._div_gr_raw_gr_raw( 0, 1 );
 		}
 
 		mcgen_._push_gr_raw( 0, 0 );

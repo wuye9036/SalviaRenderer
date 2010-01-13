@@ -15,6 +15,8 @@
 #define SASL_VM_INSTRUCTIONS		\
 	((add,	gr, raw, gr, raw ))		\
 	((sub,  gr, raw, gr, raw ))		\
+	((mul,  gr, raw, gr, raw ))		\
+	((div,  gr, raw, gr, raw ))		\
 	((load,	gr, raw, c,  raw ))		\
 	((push, gr, raw, _,  _))		\
 	((pop,  gr, raw, _,  _))		\

@@ -8,6 +8,7 @@ BEGIN_NS_SASL_PARSER_TREE()
 
 typedef token_attr constant;
 typedef token_attr operator_literal;
+typedef token_attr identifier_literal;
 
 END_NS_SASL_PARSER_TREE()
 

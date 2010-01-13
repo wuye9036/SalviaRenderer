@@ -31,10 +31,12 @@ namespace pt = sasl::parser_tree;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	pt::binary_expression bin_expr_;
+	pt::expression bin_expr_;
 	binary_expression::handle_t bin_expr;
 
-	std::string str("4 - ( 5 - (1-6) + (4-3) + (3-6) )");
+	std::string str;
+	cin >> str;
+
 	char const* first = str.c_str();
 	char const* last = &first[str.size()];
 
@@ -46,8 +48,8 @@ int _tmain(int argc, _TCHAR* argv[])
 			bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SASL_PARSER_SKIPPER( sasl_tok ), bin_expr_);
 			if (r){
 				cout << "ok" << endl;
-				bin_expr = syntax_tree_builder_impl().build_binary_expression( bin_expr_ );
-				bin_expr->update();
+				/*bin_expr = syntax_tree_builder_impl().build( bin_expr_ );
+				bin_expr->update();*/
 			} else {
 				cout << "fail" << endl;
 			}
@@ -61,13 +63,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		cout << e.what() << endl;
 	}
 
-	vm_codegen vm_cg;
-	vm_cg.emit_expression( bin_expr );
+	//vm_codegen vm_cg;
+	//vm_cg.emit_expression( bin_expr );
 
-	vm machine;
-	intptr_t result = machine.raw_call( vm_cg.codes() );
+	//vm machine;
+	//intptr_t result = machine.raw_call( vm_cg.codes() );
 
-	std::cout << result << endl;
+	//std::cout << result << endl;
 
 	system("pause");
 	return 0;

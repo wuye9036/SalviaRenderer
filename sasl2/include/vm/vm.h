@@ -167,6 +167,7 @@ private:
 	// 预定义的声明
 	SASL_DECLARE_DEFAULT_PROCESSORS( SASL_VM_INSTRUCTIONS, machine_t );
 	
+	// 实际的处理函数
 	template <typename ValueT>
 	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( push, ValueT&, SASL_OPERAND_TYPE(_, machine_t)&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
 		stack.push(arg0);
@@ -185,6 +186,16 @@ private:
 	template <typename ValueT>
 	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( sub, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
 		arg0 -= arg1;
+	}
+
+	template <typename ValueT>
+	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( mul, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+		arg0 *= arg1;
+	}
+
+	template <typename ValueT>
+	SASL_SPECIALIZED_PROCESSOR_DECL_ISN( div, ValueT&, ValueT&, SASL_DISABLE_IF_PARAMETER(ValueT) ){
+		arg0 /= arg1;
 	}
 
 	template <typename ValueT>
