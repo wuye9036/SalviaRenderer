@@ -41,10 +41,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	char const* last = &first[str.size()];
 
 	sasl_tokenizer sasl_tok;
-	binary_expression_grammar<sasl_token_iterator, sasl_skipper> g( sasl_tok );
+	expression_grammar<sasl_token_iterator, sasl_skipper> g( sasl_tok );
 
 	try{
 		try{
+			bool tok_r = tokenize( first, last, sasl_tok, token_printer() );
+			if(tok_r && (first == last) ){
+				cout << "Tokenize Succeed!" << endl;
+			} else {
+				throw runtime_error( "Tokenize Failed!" );
+			}
+
+			first = str.c_str();
+			last = &first[str.size()];
 			bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SASL_PARSER_SKIPPER( sasl_tok ), bin_expr_);
 			if (r){
 				cout << "ok" << endl;

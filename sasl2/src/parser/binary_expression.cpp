@@ -3,5 +3,6 @@
 
 void instantiate_binary_expression(){
 	sasl_tokenizer tok;
-	binary_expression_grammar<sasl_token_iterator, sasl_skipper> g( tok );
+	cast_expression_grammar<sasl_token_iterator, sasl_skipper>* expr(NULL);
+	binary_expression_grammar<sasl_token_iterator, sasl_skipper> g(tok, *expr);
 }

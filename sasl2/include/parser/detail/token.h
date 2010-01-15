@@ -125,8 +125,8 @@ sasl_tokens<BaseLexerT>::sasl_tokens(){
 
 	this->self =
 		// literal
-		littok_int					[*attr_setter]
-		| littok_float				[*attr_setter]
+		littok_float				[*attr_setter]
+		| littok_int				[*attr_setter]
 		| littok_bool				[*attr_setter]
 		// operator
 		| optok_arith_assign		[*attr_setter]

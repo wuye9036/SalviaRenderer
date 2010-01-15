@@ -44,7 +44,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../softart"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_SPIRIT_DONT_USE_MPL_ASSERT_MSG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -399,6 +399,58 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\parser\cast_expression.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\expression.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\parser\literal_constant.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\primary_expression.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\parser\token.cpp"
 					>
 				</File>
@@ -508,6 +560,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\include\parser\grammars\literal_constant.h"
+						>
+					</File>
+					<File
 						RelativePath=".\include\parser\grammars\token.h"
 						>
 					</File>
@@ -517,6 +573,22 @@
 					>
 					<File
 						RelativePath=".\include\parser\detail\binary_expression.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\cast_expression.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\expression.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\literal_constant.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\primary_expression.h"
 						>
 					</File>
 					<File

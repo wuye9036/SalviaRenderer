@@ -25,7 +25,6 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 		littok_int,
 		littok_float,
 		littok_bool,
-
 		littok_ident,
 
 		marktok_plus,				// +
