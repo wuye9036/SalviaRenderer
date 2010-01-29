@@ -4,7 +4,6 @@
 #include "node.h"
 #include "token.h"
 #include "visitor.h"
-#include <boost/variant.hpp>
 
 struct constant: public node_impl<constant>{
 	//literal_types lit_type;

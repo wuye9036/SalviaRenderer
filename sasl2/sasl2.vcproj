@@ -387,6 +387,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\syntax_tree\identifier.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\syntax_tree\operator_literal.cpp"
 					>
 				</File>
@@ -626,6 +630,10 @@
 				</File>
 				<File
 					RelativePath=".\include\syntax_tree\expression.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\syntax_tree\identifier.h"
 					>
 				</File>
 				<File

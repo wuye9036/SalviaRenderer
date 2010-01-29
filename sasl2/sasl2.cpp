@@ -31,8 +31,8 @@ namespace pt = sasl::parser_tree;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	pt::expression bin_expr_;
-	binary_expression::handle_t bin_expr;
+	pt::expression pt_expr;
+	expression::handle_t st_expr;
 
 	std::string str;
 	cin >> str;
@@ -54,11 +54,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
 			first = str.c_str();
 			last = &first[str.size()];
-			bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SASL_PARSER_SKIPPER( sasl_tok ), bin_expr_);
+			bool r = boost::spirit::lex::tokenize_and_phrase_parse( first, last, sasl_tok, g, SASL_PARSER_SKIPPER( sasl_tok ), pt_expr);
 			if (r){
 				cout << "ok" << endl;
-				/*bin_expr = syntax_tree_builder_impl().build( bin_expr_ );
-				bin_expr->update();*/
+				st_expr = syntax_tree_builder_impl().build( pt_expr );
 			} else {
 				cout << "fail" << endl;
 			}

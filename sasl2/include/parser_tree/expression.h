@@ -45,9 +45,15 @@ typedef boost::variant<
 
 typedef binary_expression<rhs_expression>		assign_expression;
 typedef binary_expression<assign_expression>	expression_lst;
-typedef expression_lst							expression;
+typedef expression_lst expression;
 
-
+template <typename ChildExpressionT>
+struct binary_expression {
+	typedef ChildExpressionT child_expression_t;
+	typedef std::vector<boost::fusion::vector< operator_literal, child_expression_t> > expr_list_t;
+	child_expression_t first_expr;
+	expr_list_t follow_exprs;
+};
 
 typedef boost::variant<
 	boost::recursive_wrapper<idx_expression>,
@@ -57,14 +63,6 @@ typedef boost::variant<
 typedef boost::variant<
 	constant,
 	boost::recursive_wrapper<paren_expression> >	pm_expression;
-
-template <typename ChildExpressionT>
-struct binary_expression {
-	typedef ChildExpressionT child_expression_t;
-	typedef std::vector<boost::fusion::vector< operator_literal, child_expression_t> > expr_list_t;
-	child_expression_t first_expr;
-	expr_list_t follow_exprs;
-};
 
 struct typecast_expression {
 	operator_literal	lparen;
