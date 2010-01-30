@@ -55,7 +55,6 @@ vs_output* geometry_assembler::transform_vertex(size_t startpos, size_t count)
 {
 	//进行顶点变换
 	dvc_.set_vert_range(startpos, startpos+count);
-	dvc_.resize(count);
 
 	return NULL;
 }
@@ -209,10 +208,10 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint
 		for (size_t i = 1; i < N; ++ i)
 		{
 			const vs_output& v = dvc_.fetch(indices[local_working_prim * N + i]);
-			x_min = std::min(x_min, v.wpos.x);
-			x_max = std::max(x_max, v.wpos.x);
-			y_min = std::min(y_min, v.wpos.y);
-			y_max = std::max(y_max, v.wpos.y);
+			x_min = min(x_min, v.wpos.x);
+			x_max = max(x_max, v.wpos.x);
+			y_min = min(y_min, v.wpos.y);
+			y_max = max(y_max, v.wpos.y);
 		}
 
 		int sx = efl::clamp(static_cast<int>(floor(x_min / TILE_SIZE)), 0, num_tiles_x_);
@@ -359,14 +358,7 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 		break;
 	}
 
-	std::vector<T> unique_indices = indices;
-	std::sort(unique_indices.begin(), unique_indices.end());
-	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
-
-	for (size_t i = 0; i < unique_indices.size(); ++ i)
-	{
-		dvc_.fetch(unique_indices[i]);
-	}
+	dvc_.transform_vertices(indices);
 
 	atomic<int32_t> working_prim(0);
 	// TODO: use a thread pool

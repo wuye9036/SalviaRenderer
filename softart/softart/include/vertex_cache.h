@@ -3,12 +3,17 @@
 
 #include "decl.h"
 
+#include "eflib/include/eflib.h"
+
 #include <vector>
 #include <utility>
 
 #include "render_stage.h"
 
 #include <boost/pool/pool.hpp>
+#include <boost/thread.hpp>
+
+#include "atomic.h"
 
 class stream_assembler;
 
@@ -20,7 +25,9 @@ class vertex_cache : public render_stage
 public:
 	virtual void set_vert_range(size_t minvert, size_t maxvert) = 0;
 	virtual void reset() = 0;
-	virtual void resize(size_t s) = 0;
+
+	virtual void transform_vertices(const std::vector<uint16_t>& indices) = 0;
+	virtual void transform_vertices(const std::vector<uint32_t>& indices) = 0;
 
 	virtual vs_output& fetch(cache_entry_index id) = 0;
 	virtual vs_output& fetch_for_write(cache_entry_index id) = 0;
@@ -38,7 +45,9 @@ public:
 
 	void set_vert_range(size_t minvert, size_t maxvert);
 	void reset();
-	void resize(size_t s);
+
+	void transform_vertices(const std::vector<uint16_t>& indices);
+	void transform_vertices(const std::vector<uint32_t>& indices);
 
 	vs_output& fetch(cache_entry_index id);
 	vs_output& fetch_for_write(cache_entry_index id);
@@ -47,11 +56,14 @@ public:
 	void delete_vertex(vs_output* const pvert);
 
 private:
+	template<class T>
+		void transform_vertex_impl(const std::vector<T>& indices, atomic<int32_t>& working_index, int32_t index_count);
+
+private:
 	size_t vert_base_;
 	vertex_shader* pvs_;
 	stream_assembler* psa_;
 
-	std::vector<bool> btransformed_;
 	std::vector<vs_output> verts_;
 
 	boost::pool<> verts_pool_;
