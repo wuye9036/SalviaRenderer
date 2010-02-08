@@ -35,10 +35,10 @@ public:
 	bool operator!=(T const & rhs) const;
 	bool operator!=(atomic const & rhs) const;
 
-	atomic const & operator++();
-	atomic const & operator--();
-	atomic operator++(int);
-	atomic operator--(int);
+	T const & operator++();
+	T const & operator--();
+	T operator++(int);
+	T operator--(int);
 
 	atomic& operator+=(T const & rhs);
 	atomic& operator+=(atomic const & rhs);
@@ -313,7 +313,7 @@ public:
 		return *this;
 	}
 
-	atomic const & operator++()
+	int32_t const & operator++()
 	{
 #ifdef BOOST_WINDOWS
 		InterlockedIncrement(reinterpret_cast<long*>(&value_));
@@ -324,10 +324,10 @@ public:
 #else
 		this->operator+=(1);
 #endif
-		return *this;
+		return value_;
 	}
 
-	atomic const & operator--()
+	int32_t const & operator--()
 	{
 #ifdef BOOST_WINDOWS
 		InterlockedDecrement(reinterpret_cast<long*>(&value_));
@@ -338,21 +338,31 @@ public:
 #else
 		this->operator-=(1);
 #endif
-		return *this;
+		return value_;
 	}
 
-	atomic operator++(int)
+	int32_t operator++(int)
 	{
-		atomic tmp = *this;
-		++ *this;
-		return tmp;
+		long old_val;
+		long new_val;
+		do
+		{
+			old_val = value_;
+			new_val = old_val + 1;		
+		} while (!this->cas(old_val, new_val));
+		return old_val;
 	}
 
-	atomic operator--(int)
+	int32_t operator--(int)
 	{
-		atomic tmp = *this;
-		-- *this;
-		return tmp;
+		long old_val;
+		long new_val;
+		do
+		{
+			old_val = value_;
+			new_val = old_val - 1;		
+		} while (!this->cas(old_val, new_val));
+		return old_val;
 	}
 
 private:

@@ -16,6 +16,8 @@
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
 
+#include "boost/threadpool.hpp"
+
 #include <vector>
 
 class geometry_assembler : public render_stage
@@ -43,6 +45,9 @@ class geometry_assembler : public render_stage
 	stream_assembler sa_;
 	default_vertex_cache dvc_;
 	int num_tiles_x_, num_tiles_y_;
+
+	int num_threads_;
+	boost::threadpool::pool tp_;
 
 public:
 	//

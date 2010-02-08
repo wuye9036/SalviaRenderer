@@ -13,6 +13,8 @@
 #include <boost/pool/pool.hpp>
 #include <boost/thread.hpp>
 
+#include "boost/threadpool.hpp"
+
 #include "atomic.h"
 
 class stream_assembler;
@@ -68,6 +70,9 @@ private:
 
 	boost::pool<> verts_pool_;
 	const viewport* pvp_;
+
+	int num_threads_;
+	boost::threadpool::pool tp_;
 };
 
 #endif

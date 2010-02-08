@@ -53,7 +53,7 @@ vs_input stream_assembler::fetch_vertex(size_t idx)
 	vs_input rv;
 
 	for(size_t i_elemdecl = 0; i_elemdecl < layout_.size(); ++i_elemdecl){
-		input_element_decl& ied = layout_[i_elemdecl];
+		const input_element_decl& ied = layout_[i_elemdecl];
 		size_t sidx = ied.stream_idx;
 		size_t ridx = ied.regidx;
 		

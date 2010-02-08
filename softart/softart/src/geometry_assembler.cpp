@@ -69,7 +69,8 @@ void geometry_assembler::initialize(renderer_impl* pparent)
 
 geometry_assembler::geometry_assembler()
 :indexbuf_((buffer*)NULL),
-primtopo_(primitive_triangle_list), idxtype_(index_int16)
+primtopo_(primitive_triangle_list), idxtype_(index_int16),
+num_threads_(num_cpu_cores()), tp_(num_threads_)
 {}
 
 void geometry_assembler::set_primitive_topology(primitive_topology prim_topo){
@@ -178,7 +179,7 @@ template<class T>
 void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, std::vector<T> const & indices, atomic<int32_t>& working_prim, int32_t prim_count){
 	//TODO: 需要支持index restart, DX 10 Spec
 
-	int32_t local_working_prim = (working_prim ++).value();
+	int32_t local_working_prim = working_prim ++;
 
 	int N;
 	switch(primtopo_)
@@ -226,7 +227,7 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint
 			}
 		}
 
-		local_working_prim = (working_prim ++).value();
+		local_working_prim = working_prim ++;
 	}
 }
 
@@ -242,7 +243,7 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 	tile_vp.minz = vp.minz;
 	tile_vp.maxz = vp.maxz;
 
-	int32_t local_working_tile = (working_tile ++).value();
+	int32_t local_working_tile = working_tile ++;
 
 	while (local_working_tile < tiles.size()){
 		lockfree_queue<uint32_t>& prims = tiles[local_working_tile];
@@ -269,7 +270,7 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 			break;
 		}
 
-		local_working_tile = (working_tile ++).value();
+		local_working_tile = working_tile ++;
 	}
 }
 
@@ -361,22 +362,18 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 	dvc_.transform_vertices(indices);
 
 	atomic<int32_t> working_prim(0);
-	// TODO: use a thread pool
-	boost::thread_group dispatch_threads;
-	for (size_t i = 0; i < num_cpu_cores(); ++ i)
+	for (size_t i = 0; i < num_threads_; ++ i)
 	{
-		dispatch_threads.create_thread(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+		tp_.schedule(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
 	}
-	dispatch_threads.join_all();
+	tp_.wait();
 
 	atomic<int32_t> working_tile(0);
-	// TODO: use a thread pool
-	boost::thread_group rast_threads;
-	for (size_t i = 0; i < num_cpu_cores(); ++ i)
+	for (size_t i = 0; i < num_threads_; ++ i)
 	{
-		rast_threads.create_thread(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
+		tp_.schedule(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
 	}
-	rast_threads.join_all();
+	tp_.wait();
 }
 
 void geometry_assembler::draw_index(size_t startpos, size_t prim_count, int basevert){

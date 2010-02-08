@@ -9,7 +9,8 @@
 
 const size_t invalid_id = 0xffffffff;
 
-default_vertex_cache::default_vertex_cache() : verts_pool_( sizeof(vs_output) )
+default_vertex_cache::default_vertex_cache() : verts_pool_( sizeof(vs_output) ),
+num_threads_(num_cpu_cores()), tp_(num_threads_)
 {
 }
 
@@ -34,7 +35,7 @@ void default_vertex_cache::reset()
 template <typename T>
 void default_vertex_cache::transform_vertex_impl(const std::vector<T>& indices, atomic<int32_t>& working_index, int32_t index_count)
 {
-	int32_t local_working_index = (working_index ++).value();
+	int32_t local_working_index = working_index ++;
 
 	while (local_working_index < index_count)
 	{
@@ -53,7 +54,7 @@ void default_vertex_cache::transform_vertex_impl(const std::vector<T>& indices, 
 		pvs_->execute(psa_->fetch_vertex(id), verts_[pos]);
 		update_wpos(verts_[pos], *pvp_);
 
-		local_working_index = (working_index ++).value();
+		local_working_index = working_index ++;
 	}
 }
 
@@ -65,13 +66,11 @@ void default_vertex_cache::transform_vertices(const std::vector<uint16_t>& indic
 	verts_.resize(unique_indices.size());
 
 	atomic<int32_t> working_index(0);
-	// TODO: use a thread pool
-	boost::thread_group transform_threads;
-	for (size_t i = 0; i < num_cpu_cores(); ++ i)
+	for (size_t i = 0; i < num_threads_; ++ i)
 	{
-		transform_threads.create_thread(boost::bind(&default_vertex_cache::transform_vertex_impl<uint16_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
+		tp_.schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint16_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
 	}
-	transform_threads.join_all();
+	tp_.wait();
 }
 
 void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indices)
@@ -82,13 +81,11 @@ void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indic
 	verts_.resize(unique_indices.size());
 
 	atomic<int32_t> working_index(0);
-	// TODO: use a thread pool
-	boost::thread_group transform_threads;
-	for (size_t i = 0; i < num_cpu_cores(); ++ i)
+	for (size_t i = 0; i < num_threads_; ++ i)
 	{
-		transform_threads.create_thread(boost::bind(&default_vertex_cache::transform_vertex_impl<uint32_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
+		tp_.schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint32_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
 	}
-	transform_threads.join_all();
+	tp_.wait();
 }
 
 vs_output& default_vertex_cache::fetch(cache_entry_index id)
