@@ -11,8 +11,9 @@
 #include "../include/rasterizer.h"
 #include "../include/stream_assembler.h"
 #include "../include/vertex_cache.h"
-
 #include "../include/cpuinfo.h"
+
+#include "../include/thread_pool.h"
 
 #include <boost/bind.hpp>
 
@@ -69,8 +70,7 @@ void geometry_assembler::initialize(renderer_impl* pparent)
 
 geometry_assembler::geometry_assembler()
 :indexbuf_((buffer*)NULL),
-primtopo_(primitive_triangle_list), idxtype_(index_int16),
-num_threads_(num_cpu_cores()), tp_(num_threads_)
+primtopo_(primitive_triangle_list), idxtype_(index_int16)
 {}
 
 void geometry_assembler::set_primitive_topology(primitive_topology prim_topo){
@@ -393,43 +393,43 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 	}
 
 	atomic<int32_t> working_prim(0);
-	for (size_t i = 0; i < num_threads_; ++ i){
+	for (size_t i = 0; i < num_cpu_cores(); ++ i){
 		switch(primtopo_)
 		{
 		case primitive_line_list:
-			tp_.schedule(boost::bind(&geometry_assembler::generate_line_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			global_thread_pool().schedule(boost::bind(&geometry_assembler::generate_line_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
 			break;
 	
 		case primitive_line_strip:
-			tp_.schedule(boost::bind(&geometry_assembler::generate_line_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			global_thread_pool().schedule(boost::bind(&geometry_assembler::generate_line_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
 			break;
 		
 		case primitive_triangle_list:
-			tp_.schedule(boost::bind(&geometry_assembler::generate_triangle_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			global_thread_pool().schedule(boost::bind(&geometry_assembler::generate_triangle_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
 			break;
 
 		case primitive_triangle_strip:
-			tp_.schedule(boost::bind(&geometry_assembler::generate_triangle_strip_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			global_thread_pool().schedule(boost::bind(&geometry_assembler::generate_triangle_strip_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
 			break;
 		}
 	}
-	tp_.wait();
+	global_thread_pool().wait();
 
 	dvc_.transform_vertices(indices);
 
 	working_prim = 0;
-	for (size_t i = 0; i < num_threads_; ++ i)
+	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
-		tp_.schedule(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
 	}
-	tp_.wait();
+	global_thread_pool().wait();
 
 	atomic<int32_t> working_tile(0);
-	for (size_t i = 0; i < num_threads_; ++ i)
+	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
-		tp_.schedule(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
 	}
-	tp_.wait();
+	global_thread_pool().wait();
 }
 
 void geometry_assembler::draw_index(size_t startpos, size_t prim_count, int basevert){

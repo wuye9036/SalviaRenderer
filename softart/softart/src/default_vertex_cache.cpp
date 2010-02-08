@@ -7,10 +7,11 @@
 #include "../include/geometry_assembler.h"
 #include "../include/cpuinfo.h"
 
+#include "../include/thread_pool.h"
+
 const size_t invalid_id = 0xffffffff;
 
-default_vertex_cache::default_vertex_cache() : verts_pool_( sizeof(vs_output) ),
-num_threads_(num_cpu_cores()), tp_(num_threads_)
+default_vertex_cache::default_vertex_cache() : verts_pool_( sizeof(vs_output) )
 {
 }
 
@@ -66,11 +67,11 @@ void default_vertex_cache::transform_vertices(const std::vector<uint16_t>& indic
 	verts_.resize(unique_indices.size());
 
 	atomic<int32_t> working_index(0);
-	for (size_t i = 0; i < num_threads_; ++ i)
+	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
-		tp_.schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint16_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
+		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint16_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
 	}
-	tp_.wait();
+	global_thread_pool().wait();
 }
 
 void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indices)
@@ -81,11 +82,11 @@ void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indic
 	verts_.resize(unique_indices.size());
 
 	atomic<int32_t> working_index(0);
-	for (size_t i = 0; i < num_threads_; ++ i)
+	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
-		tp_.schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint32_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
+		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint32_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
 	}
-	tp_.wait();
+	global_thread_pool().wait();
 }
 
 vs_output& default_vertex_cache::fetch(cache_entry_index id)

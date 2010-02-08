@@ -365,6 +365,10 @@
 				RelativePath="..\..\softart\src\texture_cube.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\softart\src\thread_pool.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -481,6 +485,10 @@
 			</File>
 			<File
 				RelativePath="..\..\softart\include\texture.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\softart\include\thread_pool.h"
 				>
 			</File>
 			<File
