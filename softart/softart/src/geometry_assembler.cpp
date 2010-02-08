@@ -275,6 +275,64 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 }
 
 template<class T>
+void geometry_assembler::generate_line_list_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count)
+{
+	int32_t local_working_prim = working_prim ++;
+
+	while (local_working_prim < prim_count){
+		indices[local_working_prim * 2 + 0] = pidx[local_working_prim * 2 + 0];
+		indices[local_working_prim * 2 + 1] = pidx[local_working_prim * 2 + 1];
+
+		local_working_prim = working_prim ++;
+	}
+}
+
+template<class T>
+void geometry_assembler::generate_line_strip_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count)
+{
+	int32_t local_working_prim = working_prim ++;
+
+	while (local_working_prim < prim_count){
+		indices[local_working_prim * 2 + 0] = pidx[local_working_prim + 0];
+		indices[local_working_prim * 2 + 1] = pidx[local_working_prim + 1];
+
+		local_working_prim = working_prim ++;
+	}
+}
+
+template<class T>
+void geometry_assembler::generate_triangle_list_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count)
+{
+	int32_t local_working_prim = working_prim ++;
+
+	while (local_working_prim < prim_count){
+		indices[local_working_prim * 3 + 0] = pidx[local_working_prim * 3 + 0];
+		indices[local_working_prim * 3 + 1] = pidx[local_working_prim * 3 + 1];
+		indices[local_working_prim * 3 + 2] = pidx[local_working_prim * 3 + 2];
+
+		local_working_prim = working_prim ++;
+	}
+}
+
+template<class T>
+void geometry_assembler::generate_triangle_strip_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count)
+{
+	int32_t local_working_prim = working_prim ++;
+
+	while (local_working_prim < prim_count){
+		indices[local_working_prim * 3 + 0] = pidx[local_working_prim + 0];
+		indices[local_working_prim * 3 + 1] = pidx[local_working_prim + 1];
+		indices[local_working_prim * 3 + 2] = pidx[local_working_prim + 2];
+
+		if(local_working_prim & 1){
+			std::swap(indices[local_working_prim * 3 + 0], indices[local_working_prim * 3 + 2]);
+		}
+
+		local_working_prim = working_prim ++;
+	}
+}
+
+template<class T>
 void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int basevert){
 
 	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
@@ -319,49 +377,47 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 	num_tiles_x_ = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
 	num_tiles_y_ = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
 	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x_ * num_tiles_y_);
-	std::vector<std::vector<uint32_t> > tiles2(num_tiles_x_ * num_tiles_y_);
 
 	std::vector<T> indices;
 	switch(primtopo_)
 	{
 	case primitive_line_list:
-		indices.resize(prim_count * 2);
-		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			indices[iprim * 2 + 0] = pidx[iprim * 2 + 0];
-			indices[iprim * 2 + 1] = pidx[iprim * 2 + 1];
-		}
-		break;
 	case primitive_line_strip:
 		indices.resize(prim_count * 2);
-		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			indices[iprim * 2 + 0] = pidx[iprim + 0];
-			indices[iprim * 2 + 1] = pidx[iprim + 1];
-		}
 		break;
+
 	case primitive_triangle_list:
-		indices.resize(prim_count * 3);
-		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			indices[iprim * 3 + 0] = pidx[iprim * 3 + 0];
-			indices[iprim * 3 + 1] = pidx[iprim * 3 + 1];
-			indices[iprim * 3 + 2] = pidx[iprim * 3 + 2];
-		}
-		break;
 	case primitive_triangle_strip:
 		indices.resize(prim_count * 3);
-		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			indices[iprim * 3 + 0] = pidx[iprim + 0];
-			indices[iprim * 3 + 1] = pidx[iprim + 1];
-			indices[iprim * 3 + 2] = pidx[iprim + 2];
-			if(iprim & 1){
-				std::swap(indices[iprim * 3 + 0], indices[iprim * 3 + 2]);
-			}
-		}
 		break;
 	}
 
+	atomic<int32_t> working_prim(0);
+	for (size_t i = 0; i < num_threads_; ++ i){
+		switch(primtopo_)
+		{
+		case primitive_line_list:
+			tp_.schedule(boost::bind(&geometry_assembler::generate_line_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			break;
+	
+		case primitive_line_strip:
+			tp_.schedule(boost::bind(&geometry_assembler::generate_line_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			break;
+		
+		case primitive_triangle_list:
+			tp_.schedule(boost::bind(&geometry_assembler::generate_triangle_list_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			break;
+
+		case primitive_triangle_strip:
+			tp_.schedule(boost::bind(&geometry_assembler::generate_triangle_strip_indices_impl<T>, this, boost::ref(indices), pidx, boost::ref(working_prim), prim_count));
+			break;
+		}
+	}
+	tp_.wait();
+
 	dvc_.transform_vertices(indices);
 
-	atomic<int32_t> working_prim(0);
+	working_prim = 0;
 	for (size_t i = 0; i < num_threads_; ++ i)
 	{
 		tp_.schedule(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));

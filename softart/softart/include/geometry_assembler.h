@@ -42,6 +42,15 @@ class geometry_assembler : public render_stage
 	template<class T>
 		void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile);
 
+	template<class T>
+		void generate_line_list_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
+	template<class T>
+		void generate_line_strip_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
+	template<class T>
+		void generate_triangle_list_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
+	template<class T>
+		void generate_triangle_strip_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
+
 	stream_assembler sa_;
 	default_vertex_cache dvc_;
 	int num_tiles_x_, num_tiles_y_;
