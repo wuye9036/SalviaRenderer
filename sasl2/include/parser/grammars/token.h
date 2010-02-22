@@ -1,6 +1,7 @@
 #ifndef SASL_PARSER_GRAMMARS_TOKEN_H
 #define SASL_PARSER_GRAMMARS_TOKEN_H
 
+#include "../parser_forward.h"
 #include "../../syntax_tree/token.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/vector.hpp>
@@ -27,6 +28,22 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 		littok_bool,
 		littok_ident,
 
+		kwtok_const,
+		kwtok_uniform,
+		kwtok_shared,
+		kwtok_struct,
+		kwtok_typedef,
+		kwtok_break,
+		kwtok_continue,
+		kwtok_case,
+		kwtok_return,
+		kwtok_switch,
+		kwtok_else,
+		kwtok_for,
+		kwtok_if,
+		kwtok_while,
+		kwtok_do,
+		
 		marktok_plus,				// +
 		marktok_minus,				// -
 		marktok_asterisk,			// *
@@ -51,6 +68,8 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 		marktok_lbrace, marktok_rbrace,	// {}
 		marktok_lsbracket, marktok_rsbracket,	// []
 		marktok_labracket, marktok_rabracket,	// <>
+
+		marktok_error,
 
 		optok_arith_assign,
 		optok_shift,

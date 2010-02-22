@@ -6,11 +6,11 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/lex.hpp>
 
-DEFINE_GRAMMAR( literal_constant_grammar, sasl::parser_tree::constant() ){
-	template <typename TokenDefT>
-	literal_constant_grammar( const TokenDefT& tok );
+SASL_DEFINE_GRAMMAR( literal_constant_grammar, sasl::parser_tree::constant() ){
+	template <typename TokenDefT, typename SASLGrammarT>
+	literal_constant_grammar( const TokenDefT& tok, SASLGrammarT& g );
 
-	RULE_DEFINE_HELPER();
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
 	typename rule<sasl::parser_tree::constant()>::type lit_const;
 };

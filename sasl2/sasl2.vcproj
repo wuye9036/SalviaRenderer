@@ -399,11 +399,23 @@
 				Name="parser"
 				>
 				<File
+					RelativePath=".\src\parser\assignment_expression.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\parser\binary_expression.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\src\parser\cast_expression.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\declaration.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\declaration_specifier.cpp"
 					>
 				</File>
 				<File
@@ -447,6 +459,18 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\src\parser\expression_list.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\initialization_declarator_list.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\initializer.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\parser\literal_constant.cpp"
 					>
 				</File>
@@ -455,7 +479,23 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\parser\program.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\statement.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\struct_declaration.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\parser\token.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\parser\variable_declaration.cpp"
 					>
 				</File>
 			</Filter>
@@ -553,6 +593,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\parser\instancing.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\parser\parser_forward.h"
 					>
 				</File>
@@ -560,11 +604,35 @@
 					Name="grammars"
 					>
 					<File
+						RelativePath=".\include\parser\grammars\declaration.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\grammars\declaration_specifier.h"
+						>
+					</File>
+					<File
 						RelativePath=".\include\parser\grammars\expression.h"
 						>
 					</File>
 					<File
+						RelativePath=".\include\parser\grammars\initialized_declarator_list.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\grammars\initializer.h"
+						>
+					</File>
+					<File
 						RelativePath=".\include\parser\grammars\literal_constant.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\grammars\program.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\grammars\statement.h"
 						>
 					</File>
 					<File
@@ -576,6 +644,10 @@
 					Name="detail"
 					>
 					<File
+						RelativePath=".\include\parser\detail\assignment_expression.h"
+						>
+					</File>
+					<File
 						RelativePath=".\include\parser\detail\binary_expression.h"
 						>
 					</File>
@@ -584,7 +656,27 @@
 						>
 					</File>
 					<File
+						RelativePath=".\include\parser\detail\declaration.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\declaration_specifier.h"
+						>
+					</File>
+					<File
 						RelativePath=".\include\parser\detail\expression.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\expression_list.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\initialized_declarator_list.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\initializer.h"
 						>
 					</File>
 					<File
@@ -596,7 +688,23 @@
 						>
 					</File>
 					<File
+						RelativePath=".\include\parser\detail\program.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\statement.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\struct_declaration.h"
+						>
+					</File>
+					<File
 						RelativePath=".\include\parser\detail\token.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\parser\detail\variable_declaration.h"
 						>
 					</File>
 				</Filter>
@@ -685,7 +793,23 @@
 				Name="parser_tree"
 				>
 				<File
+					RelativePath=".\include\parser_tree\declaration.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser_tree\declaration_specifier.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser_tree\declarator.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\parser_tree\expression.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser_tree\initializer.h"
 					>
 				</File>
 				<File
@@ -694,6 +818,14 @@
 				</File>
 				<File
 					RelativePath=".\include\parser_tree\parser_tree_forward.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser_tree\program.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\parser_tree\statement.h"
 					>
 				</File>
 			</Filter>

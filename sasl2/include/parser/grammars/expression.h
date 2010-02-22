@@ -2,39 +2,28 @@
 #define SASL_PARSER_GRAMMARS_EXPRESSION_H
 
 #include "../parser_forward.h"
-#include "literal_constant.h"
 #include "../../parser_tree/expression.h"
 #include "../../parser_tree/literal.h"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/lex.hpp>
 
-template <typename IteratorT, typename LexerT> struct expression_grammar;
+SASL_DEFINE_GRAMMAR( primary_expression_grammar, sasl::parser_tree::pm_expression() ){
+	template <typename TokenDefT, typename SASLGrammarT>
+	primary_expression_grammar( const TokenDefT& tok, SASLGrammarT& g );
 
-DEFINE_GRAMMAR( primary_expression_grammar, sasl::parser_tree::pm_expression() ){
-	template <typename TokenDefT>
-	primary_expression_grammar(
-		const TokenDefT& tok,
-		expression_grammar<IteratorT, LexerT>& e );
-
-	expression_grammar<IteratorT, LexerT>& expr;
-	
-	RULE_DEFINE_HELPER();
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
 	typename rule<sasl::parser_tree::pm_expression()>::type			pmexpr;
 	typename rule<sasl::parser_tree::paren_expression()>::type		parenexpr;
 	typename rule<sasl::parser_tree::identifier_literal()>::type	ident;
 	typename rule<sasl::parser_tree::operator_literal()>::type		lparen, rparen;
-	literal_constant_grammar<IteratorT, LexerT> lit_const;
 };
 
-DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression()){
-	template<typename TokenDefT>
-	cast_expression_grammar(
-		const TokenDefT& tok,
-		primary_expression_grammar<IteratorT, LexerT>& pmexpr_,
-		expression_grammar<IteratorT, LexerT>& expr_);
+SASL_DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression()){
+	template<typename TokenDefT, typename SASLGrammarT>
+	cast_expression_grammar(const TokenDefT& tok, SASLGrammarT& g);
 
-	RULE_DEFINE_HELPER();
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
 	typename rule<sasl::parser_tree::cast_expression()>::type		castexpr;
 	typename rule<sasl::parser_tree::typecast_expression()>::type	typecastedexpr;
@@ -46,12 +35,9 @@ DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression()){
 	typename rule<sasl::parser_tree::idx_expression()>::type		idxexpr;
 	typename rule<sasl::parser_tree::call_expression()>::type		callexpr;
 	typename rule<sasl::parser_tree::mem_expression()>::type		memexpr;
-	
-	primary_expression_grammar<IteratorT, LexerT>& pmexpr;
-	expression_grammar<IteratorT, LexerT>& expr;
 
-	typename rule<sasl::parser_tree::identifier_literal()>::type	ident;
-	typename rule<sasl::parser_tree::operator_literal()>::type
+	typename rule<token_attr()>::type
+		ident,
 		opinc,
 		opmember,
 		opunary,
@@ -60,15 +46,11 @@ DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression()){
 		;
 };
 
-DEFINE_GRAMMAR( binary_expression_grammar, sasl::parser_tree::lor_expression() ){
-	template <typename TokenDefT>
-	binary_expression_grammar(
-		const TokenDefT& tok,
-		cast_expression_grammar<IteratorT, LexerT>& castexpr_ );
+SASL_DEFINE_GRAMMAR( binary_expression_grammar, sasl::parser_tree::lor_expression() ){
+	template <typename TokenDefT, typename SASLGrammarT>
+	binary_expression_grammar(const TokenDefT& tok, SASLGrammarT& g);
 
-	RULE_DEFINE_HELPER();
-
-	cast_expression_grammar<IteratorT, LexerT>& castexpr;
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
 	typename rule<sasl::parser_tree::lor_expression()>::type	lorexpr;
 	typename rule<sasl::parser_tree::land_expression()>::type	landexpr;
@@ -80,25 +62,24 @@ DEFINE_GRAMMAR( binary_expression_grammar, sasl::parser_tree::lor_expression() )
 	typename rule<sasl::parser_tree::shf_expression()>::type	shfexpr;
 	typename rule<sasl::parser_tree::add_expression()>::type	addexpr;
 	typename rule<sasl::parser_tree::mul_expression()>::type	mulexpr;
-	typename rule<sasl::parser_tree::operator_literal()>::type
+
+	typename rule<token_attr()>::type
 		opadd,
 		opmul,
 		oprel,
 		opshift,
 		opband, opbxor, opbor,
 		opland, oplor,
-		opequal
+		opequal,
+		ident
 		;
-
-	typename rule<sasl::parser_tree::identifier_literal()>::type
-		identifier;
 };
 
-DEFINE_GRAMMAR( expression_grammar, sasl::parser_tree::expression() ){
-	template <typename TokenDefT>
-	expression_grammar( const TokenDefT& tok );
+SASL_DEFINE_GRAMMAR( expression_grammar, sasl::parser_tree::expression() ){
+	template <typename TokenDefT, typename SASLGrammarT>
+	expression_grammar( const TokenDefT& tok, SASLGrammarT& g );
 
-	RULE_DEFINE_HELPER();
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
 	typename rule<sasl::parser_tree::expression()>::type expr;
 
@@ -107,15 +88,38 @@ DEFINE_GRAMMAR( expression_grammar, sasl::parser_tree::expression() ){
 	typename rule<sasl::parser_tree::rhs_expression()>::type	rhsexpr;
 	typename rule<sasl::parser_tree::cond_expression()>::type	condexpr;
 
-	typename rule<sasl::parser_tree::operator_literal()>::type
+	typename rule<token_attr()>::type
 		opassign,
 		comma, question, colon
 		;
-
-	boost::shared_ptr<binary_expression_grammar<IteratorT, LexerT> > plorexpr;
-	boost::shared_ptr<cast_expression_grammar<IteratorT, LexerT> > pcastexpr;
-	boost::shared_ptr<primary_expression_grammar<IteratorT, LexerT> > ppmexpr;
 };
 
+SASL_DEFINE_GRAMMAR( assignment_expression_grammar, sasl::parser_tree::assign_expression() ){
+	
+	template <typename TokenDefT, typename SASLGrammarT>
+	assignment_expression_grammar(const TokenDefT& tok, SASLGrammarT& g);
+
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
+
+	typename rule<sasl::parser_tree::assign_expression()>::type	assignexpr;
+	typename rule<sasl::parser_tree::rhs_expression()>::type	rhsexpr;
+	typename rule<sasl::parser_tree::cond_expression()>::type	condexpr;
+
+	typename rule<token_attr()>::type
+		opassign,
+		question, colon
+		;
+};
+
+SASL_DEFINE_GRAMMAR( expression_list_grammar, sasl::parser_tree::expression_lst() ){
+	template <typename TokenDefT, typename SASLGrammarT>
+	expression_list_grammar(const TokenDefT& tok, SASLGrammarT& g);
+	
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
+
+	typename rule<sasl::parser_tree::expression_lst()>::type exprlst;
+
+	typename rule<token_attr()>::type comma;
+};
 
 #endif

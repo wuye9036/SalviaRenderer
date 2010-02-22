@@ -3,8 +3,11 @@
 
 #include "parser_tree_forward.h"
 #include "literal.h"
+#include <boost/variant.hpp>
 #include <boost/fusion/adapted.hpp>
+#include <boost/fusion/tuple.hpp>
 #include <boost/optional.hpp>
+#include <vector>
 
 BEGIN_NS_SASL_PARSER_TREE()
 

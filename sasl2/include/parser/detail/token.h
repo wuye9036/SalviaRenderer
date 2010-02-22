@@ -5,7 +5,7 @@
 #include "../../parser_tree/literal.h"
 #include "../../enums/token_types.h"
 #include <string>
-
+#include <iostream>
 struct lex_context{
 	lex_context(): line(0), column(0) {}
 	size_t line;
@@ -23,6 +23,8 @@ struct token_attribute_setter{
 		token_attr attr;
 		attr.lit.assign(start, end);
 		
+		std::cout << attr.lit;
+
 		attr.column = lex_ctxt.column;
 		attr.file_name = "undefined";
 		attr.line = lex_ctxt.line;
@@ -75,8 +77,23 @@ sasl_tokens<BaseLexerT>::sasl_tokens(){
 	(littok_int = "({DIGIT}+{INT_TYPE_SUFFIX}?)|(0x{HEX_DIGIT}+{INT_TYPE_SUFFIX}?)");
 	(littok_float = "({DIGIT_SEQ}?{DOT}{DIGIT_SEQ}{EXPONENT_PART}?{REAL_TYPE_SUFFIX}?)|({DIGIT_SEQ}{EXPONENT_PART}{REAL_TYPE_SUFFIX}?)|({DIGIT_SEQ}{REAL_TYPE_SUFFIX})");
 	(littok_bool = "(true)|(false)");
-
 	(littok_ident = "[a-zA-Z_][0-9a-zA-Z_]*");
+
+	kwtok_const = "const";
+	kwtok_uniform = "uniform";
+	kwtok_struct = "struct";
+	kwtok_typedef = "typedef";
+	kwtok_shared = "shared";
+	kwtok_break = "break";
+	kwtok_continue = "continue";
+	kwtok_case = "case";
+	kwtok_return = "return";
+	kwtok_switch = "switch";
+	kwtok_else = "else";
+	kwtok_for = "for";
+	kwtok_if = "if";
+	kwtok_while = "while";
+	kwtok_do = "do";
 
 	// markers
 	(marktok_plus = "{PLUS}");
@@ -108,6 +125,8 @@ sasl_tokens<BaseLexerT>::sasl_tokens(){
 	(marktok_labracket = "{LABRACKET}");
 	(marktok_rabracket = "{RABRACKET}");
 
+	(marktok_error = "[.]");
+
 	// composited operators
 	(optok_arith_assign = "\\*=|\\/=|%=|\\+=|\\-=|\\>\\>=|\\<\\<=|&=|\\^=|\\|=");
 	(optok_shift = "\\<\\<|\\>\\>");
@@ -128,6 +147,24 @@ sasl_tokens<BaseLexerT>::sasl_tokens(){
 		littok_float				[*attr_setter]
 		| littok_int				[*attr_setter]
 		| littok_bool				[*attr_setter]
+
+		//keywords
+		| kwtok_const				[*attr_setter]
+		| kwtok_uniform				[*attr_setter]
+		| kwtok_struct				[*attr_setter]
+		| kwtok_shared				[*attr_setter]
+		| kwtok_typedef				[*attr_setter]
+		| kwtok_break				[*attr_setter]
+		| kwtok_continue			[*attr_setter]
+		| kwtok_case				[*attr_setter]
+		| kwtok_return				[*attr_setter]
+		| kwtok_switch				[*attr_setter]
+		| kwtok_else				[*attr_setter]
+		| kwtok_for					[*attr_setter]
+		| kwtok_if					[*attr_setter]
+		| kwtok_while				[*attr_setter]
+		| kwtok_do					[*attr_setter]
+
 		// operator
 		| optok_arith_assign		[*attr_setter]
 		| optok_shift				[*attr_setter]
@@ -170,6 +207,9 @@ sasl_tokens<BaseLexerT>::sasl_tokens(){
 
 		// identifier
 		| littok_ident				[*attr_setter]
+		
+		// marktok error
+		| marktok_error				[*attr_setter]
 		;
 
 	this->self("SKIPPED") =
