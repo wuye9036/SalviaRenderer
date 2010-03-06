@@ -112,7 +112,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_SECURE_SCL=0;SOFTARTX_GDIPLUS_ENABLED;SOFTARTX_D3D9_ENABLED"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_SECURE_SCL=0;SOFTARTX_GDIPLUS_ENABLED;SOFTARTX_D3D9_ENABLED;BOOST_ALL_DYN_LINK"
 				RuntimeLibrary="2"
 				EnableEnhancedInstructionSet="1"
 				UsePrecompiledHeader="0"
