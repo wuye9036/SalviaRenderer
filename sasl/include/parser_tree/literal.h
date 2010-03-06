@@ -2,13 +2,11 @@
 #define SASL_PARSER_TREE_LITERAL_H
 
 #include "parser_tree_forward.h"
-#include "../syntax_tree/token.h"
+#include "../common/token_attr.h"
 
 BEGIN_NS_SASL_PARSER_TREE()
 
-typedef token_attr constant;
-typedef token_attr operator_literal;
-typedef token_attr identifier_literal;
+typedef sasl::common::token_attr token_attr;
 
 END_NS_SASL_PARSER_TREE()
 

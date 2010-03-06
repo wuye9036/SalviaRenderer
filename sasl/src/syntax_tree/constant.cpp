@@ -3,6 +3,9 @@
 
 using namespace boost;
 
-void constant::update(){
-	val = boost::lexical_cast<int>(tok->lit);
+BEGIN_NS_SASL_SYNTAX_TREE()
+
+constant::constant(){
 }
+
+END_NS_SASL_SYNTAX_TREE()

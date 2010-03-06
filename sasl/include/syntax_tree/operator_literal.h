@@ -1,24 +1,26 @@
 #ifndef SASL_SYNTAX_TREE_OPERATOR_LITERAL_H
 #define SASL_SYNTAX_TREE_OPERATOR_LITERAL_H
 
+#include "syntax_tree_fwd.h"
 #include "node.h"
 #include "token.h"
-#include "../../enums/operators.h"
+#include <sasl/enums/operators.h>
 
-struct operator_literal: public node_impl<operator_literal>{
-	
-	operators op;
+BEGIN_NS_SASL_SYNTAX_TREE()
 
-	operator_literal( )
-		: node_impl< operator_literal >( syntax_node_types::node, token_attr::handle_t() ), op( operators::none ){}
+class operator_table{
+	std::tr1::unordered_map<std::string, operators> lit2op;
+	std::tr1::unordered_map<operators, std::string> op2lit;
 
-	void update();
-	void accept( syntax_tree_visitor* visitor ){
-		// visitor->visit( *this );
-	}
-protected:
-	this_type& operator = (const this_type&);
-	operator_literal( const this_type& );
+	operator_table();
+	operator_table& add( const std::string& lit, operators op );
+
+public:
+	static operator_table& instance();
+	operators find( const string& lit, bool is_unary = false, bool is_postfix = false) const;
+	const string& find( operators op ) const;
 };
+
+END_NS_SASL_SYNTAX_TREE()
 
 #endif //SASL_SYNTAX_TREE_OPERATOR_LITERAL_H

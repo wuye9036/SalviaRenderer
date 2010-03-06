@@ -1,166 +1,96 @@
 #ifndef SASL_SYNTAX_TREE_EXPRESSION_H
 #define SASL_SYNTAX_TREE_EXPRESSION_H
 
-#include "../syntax_tree/node.h"
-#include "../syntax_tree/constant.h"
-#include "../syntax_tree/operator_literal.h"
-#include "../syntax_tree/identifier.h"
-#include "../../enums/operators.h"
-#include <boost/variant.hpp>
+#include "syntax_tree_fwd.h"
+#include "node.h"
 #include <boost/smart_ptr.hpp>
-#include <boost/fusion/sequence.hpp>
-#include <boost/fusion/include/vector.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/fusion/adapted.hpp>
+#include <string>
 
-struct constant;
-struct operator_literal;
+namespace sasl { 
+	namespace common {
+		struct token_attr;
+	}
+}
 
-struct expression: public node_impl<expression>{
-	expression( syntax_node_types nodetype)
-		:node_impl( nodetype, token_attr::handle_t() ){}
+BEGIN_NS_SASL_SYNTAX_TREE()
+
+using sasl::common::token_attr;
+class syntax_tree_visitor;
+
+struct expression: public node{
+	expression( syntax_node_types nodetype, boost::shared_ptr<token_attr> tok);
 };
 
 struct constant_expression: public expression{
-	constant::handle_t value;
-	void update(){
-		value->update();
-	}
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit( *this );
-	}
-	constant_expression(): expression( syntax_node_types::node ){}
+	constant_expression();
+	void accept( syntax_tree_visitor* visitor );
+	boost::shared_ptr<constant> value;
 };
 
 struct unary_expression: public expression{
-	expression::handle_t expr;
-	operator_literal::handle_t op;
+	unary_expression( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor );
 
-	void update(){
-		expr->update();
-		op->update();
-	}
-
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit( *this );
-	}
-
-	unary_expression(): expression( syntax_node_types::node ){}
+	boost::shared_ptr<expression> expr;
+	operators op;
 };
 
 struct cast_expression: public expression{
-	identifier::handle_t type_ident;
-	expression::handle_t expr;
+	cast_expression( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor);
 
-	void update(){
-		type_ident->update();
-		expr->update();
-	}
-
-	void accept( syntax_tree_visitor* visitor){
-		visitor->visit( *this );
-	}
-	
-	cast_expression(): expression( syntax_node_types::node ){}
+	boost::shared_ptr<identifier> casted_type_name;
+	boost::shared_ptr<expression> expr;
 };
 
 struct binary_expression: public expression {
-	operator_literal::handle_t op;
-	expression::handle_t left_expr;
-	expression::handle_t right_expr;
+	binary_expression( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor );
 
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit( *this );
-	}
-
-	void update(){
-		op->update();
-		left_expr->update();
-		right_expr->update();
-	}
-
-	binary_expression();
+	operators op;
+	boost::shared_ptr<expression> left_expr;
+	boost::shared_ptr<expression> right_expr;
 };
 
 struct expression_list: public expression{
-	std::vector< expression::handle_t > exprs;
+	expression_list( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor);
 
-	void accept( syntax_tree_visitor* visitor){
-		visitor->visit(*this);
-	}
-
-	void update(){
-		for(std::vector<expression::handle_t>::iterator it = exprs.begin(); it != exprs.end(); ++it){
-			(*it)->update();
-		}
-	}
-
-	expression_list(): expression( syntax_node_types::node ){}
+	std::vector< boost::shared_ptr<expression> > exprs;
 };
 
 struct cond_expression: public expression{
-	expression::handle_t cond_expr;
-	expression::handle_t yes_expr;
-	expression::handle_t no_expr;
-	
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit(*this);
-	}
+	cond_expression( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor );
 
-	void update(){
-		cond_expr->update();
-		yes_expr->update();
-		no_expr->update();
-	}
-
-	cond_expression(): expression( syntax_node_types::node ){}
+	boost::shared_ptr<expression> cond_expr;
+	boost::shared_ptr<expression> yes_expr;
+	boost::shared_ptr<expression> no_expr;
 };
 
 struct index_expression: public expression{
-	expression::handle_t expr;
-	expression::handle_t idxexpr;
+	index_expression( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor );
 
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit(*this);
-	}
-
-	void update(){
-		expr->update();
-		idxexpr->update();
-	}
-	index_expression(): expression( syntax_node_types::node ){}
+	boost::shared_ptr<expression> expr;
+	boost::shared_ptr<expression> index_expr;
 };
 
 struct call_expression: public expression{
-	expression::handle_t expr;
-	std::vector<expression::handle_t> params;
+	call_expression( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor );
 
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit(*this);
-	}
-
-	void update(){
-		expr->update();
-		for(size_t ipar = 0; ipar < params.size(); ++ipar){
-			params[ipar]->update();
-		}
-	}
-
-	call_expression(): expression( syntax_node_types::node ){}
+	boost::shared_ptr<expression> expr;
+	std::vector<boost::shared_ptr<expression> > args;
 };
 
 struct member_expression: public expression{
-	expression::handle_t expr;
-	identifier::handle_t member_ident;
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit( *this );
-	}
-	void update(){
-		expr->update();
-		member_ident->update();
-	}
-
-	member_expression(): expression( syntax_node_types::node ){}
+	member_expression( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* visitor );
+	boost::shared_ptr<expression> expr;
+	boost::shared_ptr<identifier> member_ident;
 };
+
+END_NS_SASL_SYNTAX_TREE()
 
 #endif //SASL_SYNTAX_TREE_EXPRESSION_H

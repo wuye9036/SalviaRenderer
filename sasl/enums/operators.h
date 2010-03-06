@@ -6,7 +6,7 @@
 
 struct operators :
 	public enum_base< operators, int >
-	, compare_op< operators >, equal_op< operators >
+	, bitwise_op< operators >, equal_op< operators >
 {
 	friend struct enum_hasher;
 private:
@@ -23,6 +23,7 @@ public:
 	}
 
 	const static this_type sub_assign;
+	const static this_type bit_not_assign;
 	const static this_type less;
 	const static this_type bit_and;
 	const static this_type bit_or_assign;
@@ -31,6 +32,7 @@ public:
 	const static this_type postfix_incr;
 	const static this_type lshift_assign;
 	const static this_type mul_assign;
+	const static this_type unary_op;
 	const static this_type prefix_decr;
 	const static this_type bit_xor_assign;
 	const static this_type sub;
@@ -50,11 +52,13 @@ public:
 	const static this_type add_assign;
 	const static this_type mod;
 	const static this_type none;
+	const static this_type not_equal;
 	const static this_type logic_or;
 	const static this_type greater_equal;
 	const static this_type left_shift;
 	const static this_type equal;
 	const static this_type postfix_decr;
+	const static this_type postfix_op;
 	const static this_type div_assign;
 	const static this_type less_equal;
 	const static this_type div;

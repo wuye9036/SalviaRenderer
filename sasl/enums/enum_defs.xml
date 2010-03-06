@@ -2,7 +2,7 @@
 <enums>
 	<enum name="operators">
 		<HasName />
-		<Order />
+		<Ortho />
 		<AutoGen expression= "$index$" />
 		<item>none</item>
 		
@@ -19,7 +19,7 @@
 		<item>div_assign</item>
 		<item>mod_assign</item>
 		
-		<item>bit_not</item>
+		<item>bit_not_assign</item>
 		<item>bit_and_assign</item>
 		<item>bit_or_assign</item>
 		<item>bit_xor_assign</item>
@@ -28,6 +28,7 @@
 		<item>rshift_assign</item>
 		
 		<item>equal</item>
+		<item>not_equal</item>
 		<item>less</item>
 		<item>less_equal</item>
 		<item>greater</item>
@@ -36,12 +37,14 @@
 		<item>left_shift</item>
 		<item>right_shift</item>
 		
+		<item value = "1 * (2 ** 16)">unary_op</item>
+		<item value = "2 * (2 ** 24)">postfix_op</item>
 		<item>prefix_incr</item>
 		<item>prefix_decr</item>
-		<item>postfix_incr</item>
-		<item>postfix_decr</item>
-		<item>positive</item>
-		<item>negative</item>
+		<item value = "$postfix_op$ + $prefix_incr$">postfix_incr</item>
+		<item value = "$postfix_op$ + $prefix_decr$">postfix_decr</item>
+		<item value = "$add$ + $unary_op$">positive</item>
+		<item value = "$sub$ + $unary_op$">negative</item>
 		
 		<item>logic_or</item>
 		<item>logic_and</item>
@@ -50,6 +53,7 @@
 		<item>bit_and</item>
 		<item>bit_or</item>
 		<item>bit_xor</item>
+		<item>bit_not</item>
 	</enum>
 	
 	<enum name="token_types">
@@ -66,7 +70,7 @@
 		<item>_newline</item>
 	</enum>
 	
-	<enum name="literal_types">
+	<enum name="literal_constant_types">
 		<HasName />
 		<AutoGen expression="$index$+1" />
 		<item>boolean</item>
@@ -76,12 +80,76 @@
 		<item>character</item>
 	</enum>	
 	
-	<enum name="syntax_node_types">
+	<enum name="buildin_type_code">
+		<HasName />
+		<Ortho />
+		<item value="0">none</item>
+		
+		<item value="0 * (2 ** 24)">_scalar</item>
+		<item value="1 * (2 ** 24)">_vector</item>
+		<item value="2 * (2 ** 24)">_matrix</item>
+		
+		<item value="1 * (2 ** 16)">_unsigned</item>
+		<item value="0 * (2 ** 16)">_signed</item>
+		
+		<item value="1 or $_signed$">_int8</item>
+		<item value="2 or $_signed$">_int16</item>
+		<item value="3 or $_signed$">_int32</item>
+		<item value="4 or $_signed$">_int64</item>
+		
+		<item value="1 or $_unsigned$">_uint8</item>
+		<item value="2 or $_unsigned$">_uint16</item>
+		<item value="3 or $_unsigned$">_uint32</item>
+		<item value="4 or $_unsigned$">_uint64</item>
+		
+		<item value="5">float</item>
+		<item value="6">double</item>
+	</enum>
+	
+	<enum name="syntax_node_types" storage_type = "uint64_t">
 		<HasName/>
+		<Convertible/>
+		<Ortho/>
 		<AutoGen expression = "$index$+1"/>
-		<item>token</item>
-		<item>node</item>
-		<item>constant</item>
+		<item value="0">node</item>
+		
+		<item value = "1 * (2 ** 48)">declaration</item>
+		<item value = "2 * (2 ** 48)">expression</item>
+		<item value = "3 * (2 ** 48)">statement</item>
+		<item value = "4 * (2 ** 48)">initializer</item>
+		
+		<item value = "$declaration$ + 1 * (2 ** 32)">type_specifier</item>
+		<item value = "$declaration$ + 1">variable_declaration</item>
+		<item value = "$declaration$ + 2">typedef_definition</item>
+		
+		<item value = "$expression$ + 1">constant_expression</item>
+		<item value = "$expression$ + 2">unary_expression</item>
+		<item value = "$expression$ + 3">cast_expression</item>
+		<item value = "$expression$ + 4">binary_expression</item>
+		<item value = "$expression$ + 5">expression_list</item>
+		<item value = "$expression$ + 6">cond_expression</item>
+		<item value = "$expression$ + 7">index_expression</item>
+		<item value = "$expression$ + 8">call_expression</item>
+		<item value = "$expression$ + 9">member_expression</item>
+		
+		<item value = "$type_specifier$ + 1">buildin_type</item>
+		<item value = "$type_specifier$ + 2">quanlified_type</item>
+		<item value = "$type_specifier$ + 3">array_type</item>
+		<item value = "$type_specifier$ + 4">struct_type</item>
+		<item value = "$type_specifier$ + 5">function_type</item>
+
+		<item value = "$statement$ + 1">declaration_statement</item>
+		<item value = "$statement$ + 2">if_statement</item>
+		<item value = "$statement$ + 3">while_statement</item>
+		<item value = "$statement$ + 4">dowhile_statement</item>
+		<item value = "$statement$ + 5">switch_statement</item>
+		<item value = "$statement$ + 6">compound_statement</item>
+		<item value = "$statement$ + 7">expression_statement</item>
+		<item value = "$statement$ + 8">jump_statement</item>
+		<item value = "$statement$ + 9">for_statement</item>
+
+		<item value = "$initializer$ + 1">expression_initializer</item>
+		<item value = "$initializer$ + 2">member_initializer</item>
 	</enum>
 	
 	<enum name="storage_mode">
@@ -92,5 +160,14 @@
 		<item>constant</item>
 		<item>register_id</item>
 		<item>stack_based_address</item>
+	</enum>
+	
+	<enum name="jump_mode">
+		<HasName />
+		<AutoGen expression = "$index$" />
+		<item>none</item>
+		<item>_break</item>
+		<item>_continue</item>
+		<item>_return</item>
 	</enum>
 </enums>

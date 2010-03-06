@@ -10,9 +10,14 @@
 
 #define SASL_PARSER_SKIPPER( TOKENIZER ) ( boost::spirit::qi::in_state("SKIPPED")[ TOKENIZER .self] )
 
-struct lex_context;
+namespace sasl{ 
+	namespace common{
+		class lex_context;
+		struct token_attr;
+	}
+}
+
 struct token_attribute_setter;
-struct token_attr;
 
 typedef boost::mpl::vector< token_attr > sasl_token_attr_type;
 typedef boost::spirit::lex::lexertl::token< const char*, sasl_token_attr_type > sasl_token_type;
@@ -22,7 +27,7 @@ template <typename BaseLexerT>
 struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 	sasl_tokens();
 
-	boost::spirit::lex::token_def<token_attr> 
+	boost::spirit::lex::token_def<sasl::common::token_attr> 
 		littok_int,
 		littok_float,
 		littok_bool,
@@ -85,7 +90,7 @@ struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
 		whitetok_cpp_comment
 		;
 
-	boost::shared_ptr<lex_context> ctxt;
+	boost::shared_ptr<sasl::common::lex_context> ctxt;
 	boost::shared_ptr<token_attribute_setter> attr_setter;
 };
 

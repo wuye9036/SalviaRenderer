@@ -73,6 +73,14 @@ struct bitwise_op{
 		((DerivedT*)this)->val_ ^= rhs.val_;
 		return static_cast<DerivedT&>(*this);
 	}
+	
+	bool included( const DerivedT& rhs ){
+		return ((DerivedT*)this)->val_ & rhs.val_ == rhs.val_;
+	}
+	
+	bool excluded( const DerivedT& rhs ){
+		return ((DerivedT*)this)->val_ & rhs.val_ == (typename Derived::storage_type)0;
+	}
 };
 
 template <typename DerivedT, typename StorageT>

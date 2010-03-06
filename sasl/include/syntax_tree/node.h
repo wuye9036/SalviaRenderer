@@ -1,34 +1,26 @@
 #ifndef SASL_SYNTAX_TREE_NODE_H
 #define SASL_SYNTAX_TREE_NODE_H
 
-#include "../../enums/syntax_node_types.h"
+#include "syntax_tree_fwd.h"
 #include "token.h"
+#include <sasl/enums/syntax_node_types.h>
 #include <boost/shared_ptr.hpp>
+
+BEGIN_NS_SASL_SYNTAX_TREE()
 
 struct token_attr;
 class syntax_tree_visitor;
 
 struct node{
-	syntax_node_types type;
-	token_attr::handle_t tok;
-	
-	virtual void update() = 0;
+	syntax_node_types				type_id;
+	boost::shared_ptr<token_attr>	tok;
+
 	virtual void accept( syntax_tree_visitor* visitor ) = 0;
 protected:
-	node(syntax_node_types type, const token_attr::handle_t& tok)
-		: type(type), tok(tok){
-	}
-	virtual ~node(){}
+	node(syntax_node_types tid, boost::shared_ptr<token_attr> tok);
+	virtual ~node();
 };
 
-template <typename DerivedT>
-struct node_impl: public node{
-	typedef DerivedT this_type;
-	typedef node_impl<DerivedT> base_type;
-	typedef boost::shared_ptr<DerivedT> handle_t;
-
-	node_impl(syntax_node_types type, token_attr::handle_t tok)
-		: node(type, tok){}
-};
+END_NS_SASL_SYNTAX_TREE()
 
 #endif //SASL_SYNTAX_TREE_NODE_H

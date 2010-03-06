@@ -1,24 +1,24 @@
 #ifndef SASL_SYNTAX_TREE_CONSTANT_H
 #define SASL_SYNTAX_TREE_CONSTANT_H
 
-#include "node.h"
-#include "token.h"
-#include "visitor.h"
+#include "syntax_tree_fwd.h"
+#include <sasl/include/common/token_attr.h>
+#include <sasl/enums/literal_constant_types.h>
 
-struct constant: public node_impl<constant>{
-	//literal_types lit_type;
-	int val;
+BEGIN_NS_SASL_SYNTAX_TREE()
 
-	constant()
-		: node_impl<constant>( syntax_node_types::constant, token_attr::handle_t() ){}
-	void update();
-	void accept( syntax_tree_visitor* visitor ){
-		visitor->visit( *this );
-	}
+struct constant{
+	typedef constant this_type;
 
+	literal_constant_types type_id_of_value;
+	sasl::common::token_attr literal_of_value;
+
+	constant();
 protected:
 	this_type& operator = (const this_type&);
 	constant( const this_type& );
 };
+
+END_NS_SASL_SYNTAX_TREE()
 
 #endif //SASL_SYNTAX_TREE_CONSTANT_H
