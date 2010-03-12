@@ -4,6 +4,9 @@
 #include "eflib/include/stl_utilities.h"
 #include <boost/smart_ptr.hpp>
 #include <string>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 #define BEGIN_ENUM(enum_type) enum enum_type{
 #define END_ENUM(enum_type) enum_type##_invalid_value = 0x7FFFFFFF, enum_type##_invalid
@@ -180,5 +183,7 @@ enum render_target
 	render_target_stencil = 2,
 	render_target_count = 3
 };
+
+END_NS_SOFTART()
 
 #endif

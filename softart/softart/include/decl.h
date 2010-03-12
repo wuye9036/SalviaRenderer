@@ -2,6 +2,9 @@
 #define SOFTART_DECL_H
 
 #include "handles.h"
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 // stages of pipeline
 class renderer_mementor;
@@ -61,5 +64,7 @@ DECL_HANDLE(device, h_device);
 DECL_HANDLE(renderer, h_renderer);
 DECL_HANDLE(clipper, h_clipper);
 DECL_HANDLE(renderer_mementor, h_renderer_mementor);
+
+END_NS_SOFTART()
 
 #endif

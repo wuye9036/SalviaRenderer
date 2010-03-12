@@ -8,6 +8,8 @@
 #include <boost/pool/pool.hpp>
 
 #include <vector>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
 
 //template<class Pool, size_t plane_num, size_t clipped_vert_list_size>
 const size_t plane_num = 10;
@@ -33,5 +35,6 @@ public:
 
 };
 
+END_NS_SOFTART()
 
 #endif

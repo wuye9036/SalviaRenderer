@@ -9,6 +9,9 @@
 #include "eflib/include/math.h"
 
 #include <boost/array.hpp>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class vs_input
 {
@@ -163,4 +166,6 @@ private:
 	surface* sbuf_;
 	size_t buf_x_, buf_y_;
 };
+END_NS_SOFTART()
+
 #endif

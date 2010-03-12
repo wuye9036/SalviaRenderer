@@ -8,6 +8,9 @@
 
 #include <boost/smart_ptr.hpp>
 #include <boost/thread.hpp>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 struct scanline_info;
 
@@ -46,5 +49,7 @@ public:
 };
 
 //DECL_HANDLE(rasterizer, h_rasterizer);
+
+END_NS_SOFTART()
 
 #endif

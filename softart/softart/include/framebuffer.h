@@ -8,6 +8,9 @@
 #include "shaderregs.h"
 
 #include <vector>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class framebuffer : public render_stage
 {
@@ -60,5 +63,7 @@ public:
 };
 
 //DECL_HANDLE(framebuffer, h_framebuffer);
+
+END_NS_SOFTART()
 
 #endif

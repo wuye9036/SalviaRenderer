@@ -1,5 +1,8 @@
 #ifndef SOFTART_COLOR_CONVERTORS_H
 #define SOFTART_COLOR_CONVERTORS_H
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 struct color_max{};
 
@@ -120,5 +123,7 @@ private:
 		}
 	}
 };
+
+END_NS_SOFTART()
 
 #endif

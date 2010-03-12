@@ -8,6 +8,9 @@
 
 #include <vector>
 
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 class buffer
 {
 	std::vector<uint8_t> bufdata_;
@@ -41,5 +44,7 @@ public:
 		}
 	}
 };
+
+END_NS_SOFTART()
 
 #endif

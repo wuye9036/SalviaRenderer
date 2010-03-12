@@ -22,6 +22,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "../include/shader.h"
 
 #include <xmemory>
+BEGIN_NS_SOFTART()
+
 
 using namespace efl;
 using namespace std;
@@ -192,3 +194,5 @@ void framebuffer::clear_stencil(const rect<size_t>& rc, int32_t s){
 
 	sbuf_->fill_texels(rc.x, rc.y, rc.w, rc.h, color_rgba32f(float(s), 0, 0, 0));
 }
+
+END_NS_SOFTART()

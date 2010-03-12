@@ -37,16 +37,16 @@ Modify Log:
 BEGIN_NS_SOFTARTX_RESOURCE()
 class texture_io_gdiplus: public texture_io{
 public:
-	virtual h_texture load(renderer* pr, const std::_tstring& filename, pixel_format tex_pxfmt);
-	virtual h_texture load_cube(renderer* pr, const std::vector<std::_tstring>& filenames, pixel_format fmt);
+	virtual softart::h_texture load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt);
+	virtual softart::h_texture load_cube(softart::renderer* pr, const std::vector<std::_tstring>& filenames, softart::pixel_format fmt);
 
-	virtual void save(const surface& surf, const std::_tstring& filename, pixel_format pxfmt);
+	virtual void save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt);
 
 	static texture_io_gdiplus& instance();
 
 private:
-	bool load(surface& surf, const efl::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const efl::rect<size_t>& src_region);
-	bool copy_image_to_surface(surface& surf, const efl::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const efl::rect<size_t>& src_region);
+	bool load(softart::surface& surf, const efl::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const efl::rect<size_t>& src_region);
+	bool copy_image_to_surface(softart::surface& surf, const efl::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const efl::rect<size_t>& src_region);
 	texture_io_gdiplus(){
 	}
 };

@@ -23,6 +23,7 @@ using namespace boost;
 using namespace std;
 using namespace Gdiplus;
 using namespace efl;
+using namespace softart;
 
 gdiplus_initializer gdiplus_initializer::init_;
 
@@ -38,7 +39,7 @@ h_dev_gdiplus dev_gdiplus::create_device(HWND hwnd){
 	return h_dev_gdiplus( new dev_gdiplus( hwnd ) );
 }
 
-void dev_gdiplus::attach_framebuffer(framebuffer *pfb){
+void dev_gdiplus::attach_framebuffer(softart::framebuffer *pfb){
 	if (fb_ == pfb) {
 		return;
 	}
@@ -63,7 +64,7 @@ void dev_gdiplus::present(){
 
 	//将framebuffer的surface拷贝到bitmap中
 	Rect rcFramebuffer(0, 0, (INT)fb_->get_width(), (INT)fb_->get_height());
-	surface* rt = fb_->get_render_target(render_target_color, 0);
+	softart::surface* rt = fb_->get_render_target(render_target_color, 0);
 
 	void* pfbdata = NULL;
 	BitmapData bmpData;
@@ -75,7 +76,7 @@ void dev_gdiplus::present(){
 	
 	for(size_t iheight = 0; iheight < fb_->get_height(); ++iheight)
 	{
-		pixel_format rt_pxfmt = rt->get_pixel_format();
+		softart::pixel_format rt_pxfmt = rt->get_pixel_format();
 		byte* surface_scanline_addr = (byte*)pfbdata + (fb_->get_height() - iheight - 1)*get_color_info(rt_pxfmt).size*rt->get_width();
 		byte* bmp_scanline_addr = ((uint8_t*)pixels) + bmpData.Stride * iheight;
 

@@ -5,6 +5,9 @@
 #include "../include/enums.h"
 
 #include "eflib/include/eflib.h"
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class texture_1d;
 class texture_2d;
@@ -65,4 +68,6 @@ public:
 		) const;
 };
 
+
+END_NS_SOFTART()
 #endif

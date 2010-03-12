@@ -1,5 +1,7 @@
 #include "softart/include/shaderregs_op.h"
 #include "softart/include/shader.h"
+BEGIN_NS_SOFTART()
+
 
 using namespace boost;
 using namespace efl;
@@ -179,3 +181,4 @@ bool pixel_shader::execute(const vs_output& in, ps_output& out){
 	out.depth = in.wpos.z;
 	return rv;
 }
+END_NS_SOFTART()

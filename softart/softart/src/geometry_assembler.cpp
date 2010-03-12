@@ -16,6 +16,8 @@
 #include "../include/thread_pool.h"
 
 #include <boost/bind.hpp>
+BEGIN_NS_SOFTART()
+
 
 using namespace std;
 using namespace efl;
@@ -443,3 +445,5 @@ void geometry_assembler::draw_index(size_t startpos, size_t prim_count, int base
 		return;		
 	}
 }
+
+END_NS_SOFTART()

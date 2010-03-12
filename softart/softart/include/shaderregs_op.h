@@ -4,6 +4,9 @@
 #include "shaderregs.h"
 
 #include <boost/static_assert.hpp>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 struct viewport;
 
@@ -22,5 +25,7 @@ class triangle_info
 public:
 	void set(const efl::vec4& base_vert, const vs_output& ddx, const vs_output& ddy);
 };
+
+END_NS_SOFTART()
 
 #endif

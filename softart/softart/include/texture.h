@@ -9,6 +9,9 @@
 
 #include <boost/smart_ptr.hpp>
 #include <vector>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class texture
 {
@@ -115,5 +118,7 @@ public:
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);
 };
+
+END_NS_SOFTART()
 
 #endif

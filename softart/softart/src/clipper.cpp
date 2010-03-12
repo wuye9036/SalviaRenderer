@@ -4,6 +4,8 @@
 #include "../include/shader.h"
 
 #include <algorithm>
+BEGIN_NS_SOFTART()
+
 
 using namespace efl;
 using namespace std;
@@ -128,3 +130,4 @@ const vector<const vs_output*>& clipper::clip(const vs_output& v0, const vs_outp
 	is_vert_from_pool_[dest_stage].clear();
 	return clipped_verts_[src_stage];
 }
+END_NS_SOFTART()

@@ -2,6 +2,7 @@
 
 #include "../include/surface.h"
 #include "../include/texture.h"
+BEGIN_NS_SOFTART()
 
 using namespace efl;
 using namespace std;
@@ -399,3 +400,4 @@ color_rgba32f sampler::sample_cube(
 	//return color_rgba32f(invlod, invlod, invlod, 1.0f);
 	return sample_cube(coord.x, coord.y, coord.z, lod);
 }
+END_NS_SOFTART()

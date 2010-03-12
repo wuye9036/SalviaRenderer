@@ -4,6 +4,8 @@
 #ifdef EFLIB_WINDOWS
 #include <windows.h>
 #endif
+BEGIN_NS_SOFTART()
+
 
 uint32_t num_cpu_cores()
 {
@@ -28,3 +30,5 @@ uint32_t num_cpu_cores()
 
 	return num;
 }
+
+END_NS_SOFTART()

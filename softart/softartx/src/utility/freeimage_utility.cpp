@@ -4,7 +4,7 @@
 
 using namespace std;
 using namespace efl;
-
+using namespace softart;
 BEGIN_NS_SOFTARTX_RESOURCE()
 
 FIBITMAP* load_image(const std::_tstring& filename, int flag FI_DEFAULT(0))

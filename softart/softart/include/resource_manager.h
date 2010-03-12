@@ -3,6 +3,9 @@
 
 #include "buffer.h"
 #include "texture.h"
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class buffer_manager
 {
@@ -38,5 +41,7 @@ public:
 		custom_assert(false, "");
 	}
 };
+
+END_NS_SOFTART()
 
 #endif

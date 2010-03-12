@@ -1,6 +1,8 @@
 #include "../include/shaderregs_op.h"
 #include "../include/shader.h"
 #include "../include/renderer.h"
+BEGIN_NS_SOFTART()
+
 
 using namespace boost;
 using namespace efl;
@@ -239,3 +241,4 @@ void vertex_shader::execute(const vs_input& in, vs_output& out){
 void blend_shader::execute(backbuffer_pixel_out& out, const ps_output& in){
 	shader_prog(out, in);
 }
+END_NS_SOFTART()

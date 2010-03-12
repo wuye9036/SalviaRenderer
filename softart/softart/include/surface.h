@@ -7,6 +7,9 @@
 #include "eflib/include/math.h"
 
 #include <vector>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class surface
 {	
@@ -162,5 +165,7 @@ public:
 		}
 	}
 };
+
+END_NS_SOFTART()
 
 #endif

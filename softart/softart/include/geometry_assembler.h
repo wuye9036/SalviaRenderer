@@ -17,6 +17,9 @@
 #include <boost/thread.hpp>
 
 #include <vector>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class geometry_assembler : public render_stage
 {
@@ -75,5 +78,7 @@ public:
 		return sa_;
 	}
 };
+
+END_NS_SOFTART()
 
 #endif

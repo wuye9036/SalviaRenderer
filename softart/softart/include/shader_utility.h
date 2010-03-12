@@ -4,6 +4,9 @@
 #include "type_register.h"
 #include "functions_tblhelper.h"
 #include "eflib/include/eflib.h"
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 namespace shader_constant
 {
@@ -84,4 +87,6 @@ namespace detail
 		}
 	};
 }
+END_NS_SOFTART()
+
 #endif

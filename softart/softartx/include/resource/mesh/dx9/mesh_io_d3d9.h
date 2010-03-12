@@ -36,8 +36,8 @@ Modify Log:
 
 BEGIN_NS_SOFTARTX_RESOURCE()
 
-h_mesh create_mesh_from_dx9mesh(renderer* psr, LPD3DXMESH pmesh);
-h_mesh create_mesh_from_xfile(renderer* psr, softartx::utility::d3d9_device* dev, const std::_tstring& filename);
+h_mesh create_mesh_from_dx9mesh(softart::renderer* psr, LPD3DXMESH pmesh);
+h_mesh create_mesh_from_xfile(softart::renderer* psr, softartx::utility::d3d9_device* dev, const std::_tstring& filename);
 
 END_NS_SOFTARTX_RESOURCE()
 

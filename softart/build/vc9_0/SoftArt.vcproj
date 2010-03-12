@@ -472,6 +472,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\softart\include\softart_fwd.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\softart\include\stream.h"
 				>
 			</File>

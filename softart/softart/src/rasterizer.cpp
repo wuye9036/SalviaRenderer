@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <boost/format.hpp>
+BEGIN_NS_SOFTART()
+
 
 using namespace std;
 using namespace efl;
@@ -523,3 +525,4 @@ void rasterizer::set_fill_mode(fill_mode fm)
 {
 	fm_ = fm;
 }
+END_NS_SOFTART()

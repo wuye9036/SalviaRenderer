@@ -14,6 +14,9 @@
 
 #include <vector>
 #include <map>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 struct viewport;
 struct scanline_info;
@@ -66,7 +69,7 @@ public:
 
 private:
 	typedef std::map<std::_tstring, shader_constant::voidptr> variable_map;
-	typedef std::map<std::_tstring, boost::shared_ptr<::detail::container> > container_variable_map;
+	typedef std::map<std::_tstring, boost::shared_ptr<detail::container> > container_variable_map;
 
 	variable_map varmap_;
 	container_variable_map contmap_;
@@ -75,7 +78,7 @@ private:
 	result register_var_as_container_impl(const std::_tstring& varname, T& var, const ElemType&)
 	{
 		varmap_[varname] = shader_constant::voidptr(&var);
-		contmap_[varname] = boost::shared_ptr<::detail::container>(new detail::container_impl<T, ElemType>(var));
+		contmap_[varname] = boost::shared_ptr<detail::container>(new detail::container_impl<T, ElemType>(var));
 		return result::ok;
 	}
 };
@@ -126,5 +129,7 @@ public:
 	void execute(backbuffer_pixel_out& inout, const ps_output& in);
 	virtual bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in) = 0;
 };
+
+END_NS_SOFTART()
 
 #endif

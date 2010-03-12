@@ -5,6 +5,9 @@
 #include "enums.h"
 
 #include <boost/any.hpp>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 //声明 RenderState Updated 事件的默认处理函数
 #define DECL_RS_UPDATED(rsname) virtual result on_##rsname##_updated(){return result::ok;}
@@ -46,5 +49,7 @@ public:
 
 	virtual ~render_stage(){}
 };
+
+END_NS_SOFTART()
 
 #endif

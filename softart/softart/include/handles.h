@@ -3,6 +3,8 @@
 
 #include <boost/smart_ptr.hpp>
 
+
+
 template <class T>
 struct handle_maker
 {
@@ -26,5 +28,6 @@ typename H::element_type* get_weak_handle(H handle)
 {
 	return handle.get();
 }
+
 
 #endif

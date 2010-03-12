@@ -37,18 +37,18 @@ BEGIN_NS_SOFTARTX_RESOURCE()
 #ifdef SOFTARTX_FREEIMAGE_ENABLED
 class texture_io_fi: public texture_io{
 public:
-	virtual h_texture load(renderer* pr, const std::_tstring& filename, pixel_format tex_pxfmt);
-	virtual h_texture load_cube(renderer* pr, const vector<_tstring>& filenames, pixel_format fmt);
+	virtual softart::h_texture load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt);
+	virtual softart::h_texture load_cube(softart::renderer* pr, const vector<_tstring>& filenames, softart::pixel_format fmt);
 
-	virtual void save(const surface& surf, const std::_tstring& filename, pixel_format pxfmt);
+	virtual void save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt);
 
 	static texture_to_fi& instance(){
 		texture_to_fi ins;
 		return ins;
 	}
 private:
-	h_texture load( surface& surf, const rect<size_t>& dest_region, FIBITMAP* img, const rect<size_t>& src_region );
-	h_texture load(renderer* pr, const FIBITMAP* img, const efl::rect<size_t>& src, pixel_format tex_pxfmt, size_t dest_width, size_t dest_height);
+	softart::h_texture load( softart::surface& surf, const rect<size_t>& dest_region, FIBITMAP* img, const rect<size_t>& src_region );
+	softart::h_texture load(softart::renderer* pr, const FIBITMAP* img, const efl::rect<size_t>& src, softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height);
 
 	texture_io_fi(){}
 };

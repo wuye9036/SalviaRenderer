@@ -5,7 +5,7 @@
 #include "../include/shader.h"
 
 #include "eflib/include/eflib.h"
-
+BEGIN_NS_SOFTART()
 using namespace efl;
 
 vec4 get_vec4(input_type type, input_register_usage_decl usage, const void* data)
@@ -85,3 +85,4 @@ void stream_assembler::set_stream(stream_index stridx, h_buffer hbuf)
 
 	streams_[stridx] = hbuf;
 }
+END_NS_SOFTART()

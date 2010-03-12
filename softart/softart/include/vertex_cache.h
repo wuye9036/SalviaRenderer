@@ -13,6 +13,9 @@
 #include <boost/pool/pool.hpp>
 
 #include "atomic.h"
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class stream_assembler;
 
@@ -68,5 +71,7 @@ private:
 	boost::pool<> verts_pool_;
 	const viewport* pvp_;
 };
+
+END_NS_SOFTART()
 
 #endif

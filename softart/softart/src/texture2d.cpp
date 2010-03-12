@@ -2,6 +2,7 @@
 
 #include "../include/surface.h"
 #include "../include/sampler.h"
+BEGIN_NS_SOFTART()
 
 using namespace efl;
 
@@ -158,3 +159,4 @@ void  texture_2d::set_min_lod(size_t miplevel)
 	if(! (max_lod_ <= miplevel && miplevel < ml_limit)) return;
 	min_lod_ = miplevel;
 }
+END_NS_SOFTART()

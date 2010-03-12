@@ -37,10 +37,10 @@ BEGIN_NS_SOFTARTX_RESOURCE()
 
 class texture_io{
 public:
-	virtual h_texture load(renderer* pr, const std::_tstring& filename, pixel_format tex_pxfmt) = 0;
-	virtual h_texture load_cube(renderer* pr, const std::vector<std::_tstring>& cube_imgs, pixel_format tex_pxfmt) = 0;
+	virtual softart::h_texture load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt) = 0;
+	virtual softart::h_texture load_cube(softart::renderer* pr, const std::vector<std::_tstring>& cube_imgs, softart::pixel_format tex_pxfmt) = 0;
 
-	virtual void save(const surface& surf, const std::_tstring& filename, pixel_format pxfmt) = 0;
+	virtual void save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt) = 0;
 };
 
 END_NS_SOFTARTX_RESOURCE()

@@ -7,6 +7,9 @@
 
 #include "eflib/include/eflib.h"
 #include <boost/type_traits.hpp>
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 using efl::round;
 
 //内部使用的标准颜色类型，实质上是rgba32f。色彩范围没有归一化。
@@ -320,7 +323,9 @@ inline color_rgba32f lerp(const color_rgba32f& c0, float t0, const color_rgba32f
 {
 	return color_rgba32f(c0.get_vec4() * t0 + c1.get_vec4() * t1);
 }
+END_NS_SOFTART()
 
 #include "colors_convertors.h"
+
 
 #endif

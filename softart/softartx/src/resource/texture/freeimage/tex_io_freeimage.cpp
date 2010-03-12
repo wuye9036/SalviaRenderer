@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 using namespace efl;
 using namespace std;
-
+using namespace softart;
 BEGIN_NS_SOFTARTX_RESOURCE()
 
 //从FIBITMAP将图像拷贝至Surface中。
@@ -42,7 +42,7 @@ BEGIN_NS_SOFTARTX_RESOURCE()
 //		将SoftArt中间颜色变换成目标Surface的颜色格式，拷贝到目标Surface中。
 //	模板参数：FIColorT，FIBITMAP的存储格式
 template<typename FIColorT> bool copy_image_to_surface(
-	surface& surf, const rect<size_t>& dest_rect,
+	softart::surface& surf, const rect<size_t>& dest_rect,
 	FIBITMAP* image, const rect<size_t>& src_rect,
 	typename FIUC<FIColorT>::CompT default_alpha = (typename FIUC<FIColorT>::CompT)(0) 
 	)
@@ -89,7 +89,7 @@ template<typename FIColorT> bool copy_image_to_surface(
 	return true;
 }
 //将Image的局部拷贝到surface里的指定区域内。如果源区域和目标区域大小不同，则进行双线插值的缩放。
-bool texture_io_fi::load( surface& surf, const rect<size_t>& dest_region, FIBITMAP* img, const rect<size_t>& src_region ){
+bool texture_io_fi::load( softart::surface& surf, const rect<size_t>& dest_region, FIBITMAP* img, const rect<size_t>& src_region ){
 	rect<size_t> scaled_img_region ;
 	FIBITMAP* scaled_img = make_image_copy(scaled_img_region, dest_region.w, dest_region.h, img, src_region);
 
@@ -116,7 +116,7 @@ bool texture_io_fi::load( surface& surf, const rect<size_t>& dest_region, FIBITM
 	FreeImage_Unload(scaled_img);
 }
 //根据图像创建纹理。
-h_texture texture_io_fi::load(renderer* pr, const std::_tstring& filename, pixel_format tex_pxfmt){
+softart::h_texture texture_io_fi::load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt){
 	FIBITMAP* img = load_image( filename );
 	
 	size_t src_w = FreeImage_GetWidth(img);
@@ -126,11 +126,11 @@ h_texture texture_io_fi::load(renderer* pr, const std::_tstring& filename, pixel
 }
 
 //选取图像的一部分创建纹理。
-h_texture texture_io_fi::load(renderer* pr,
+softart::h_texture texture_io_fi::load(softart::renderer* pr,
 		const FIBITMAP* img, const efl::rect<size_t>& src,
-		pixel_format tex_pxfmt, size_t dest_width, size_t dest_height)
+		softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height)
 {
-	h_texture ret((texture*)NULL);
+	softart::h_texture ret((texture*)NULL);
 	ret = psr->get_tex_mgr()->create_texture_2d(src.w, src.h, tex_pxfmt);
 	if( !load(ret->get_surface(0), filename, tex_pxfmt) ){
 		ret.reset();
@@ -139,8 +139,8 @@ h_texture texture_io_fi::load(renderer* pr,
 }
 
 //使用六张图像创建Cube纹理。Cube纹理的每面大小和第一张纹理的大小相同。如果其他文件的大小与第一张不同，则按第一张的大小缩放。
-h_texture texture_io_fi::load_cube(renderer* pr, const vector<_tstring>& filenames, pixel_format fmt){
-	h_texture ret(NULL);
+softart::h_texture texture_io_fi::load_cube(softart::renderer* pr, const vector<_tstring>& filenames, softart::pixel_format fmt){
+	softart::h_texture ret(NULL);
 
 	for(int i_cubeface = 0; i_cubeface < 6; ++i){
 		FIBITMAP* cube_img = load_image( filenames[i_cubeface] );
@@ -166,7 +166,7 @@ h_texture texture_io_fi::load_cube(renderer* pr, const vector<_tstring>& filenam
 	return ret;
 }
 //将表面按照PNG或者HDR格式保存为文件。
-void texture_io_fi::save(const surface& surf, const std::_tstring& filename, pixel_format pxfmt){
+void texture_io_fi::save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt){
 	FREE_IMAGE_TYPE fit = FIT_UNKNOWN;
 	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 

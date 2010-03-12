@@ -1,4 +1,6 @@
 #include "../include/colors.h"
+BEGIN_NS_SOFTART()
+
 
 template <int outColor, int inColor>
 struct color_convertor_initializer
@@ -39,3 +41,4 @@ pixel_format_convertor::pixel_array_convertor pixel_format_convertor::array_conv
 pixel_format_convertor::pixel_format_convertor(){
 	color_convertor_initializer<pixel_format_color_max - 1, pixel_format_color_max - 1> init_(&convertors[0][0], &array_convertors[0][0]);
 }
+END_NS_SOFTART()

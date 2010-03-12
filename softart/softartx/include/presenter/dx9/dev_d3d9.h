@@ -33,13 +33,13 @@ BEGIN_NS_SOFTARTX_PRESENTER()
 class dev_d3d9;
 DECL_HANDLE(dev_d3d9, h_dev_d3d9);
 
-class dev_d3d9 : public device
+class dev_d3d9 : public softart::device
 {
 public:
 	static h_dev_d3d9 create_device(HWND hwnd, softartx::utility::h_d3d9_device dev = softartx::utility::h_d3d9_device());
 
 	//inherited
-	virtual void attach_framebuffer(framebuffer* pfb);
+	virtual void attach_framebuffer(softart::framebuffer* pfb);
 	virtual void present();
 
 	~dev_d3d9();
@@ -51,7 +51,7 @@ private:
 	HWND hwnd_;
 	softartx::utility::h_d3d9_device dev_;
 	IDirect3DTexture9* buftex_;
-	framebuffer* pfb_;
+	softart::framebuffer* pfb_;
 
 	IDirect3DVertexBuffer9* vb_;
 };

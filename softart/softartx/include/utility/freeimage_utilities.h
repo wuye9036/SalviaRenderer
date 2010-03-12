@@ -103,30 +103,30 @@ private:
 template<typename FIColorT>
 struct softart_rgba_color_type{
 	typedef color_max type;
-	const pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
 };
 template<>
 struct softart_rgba_color_type<RGBQUAD>{
 	typedef color_rgba8 type;
-	const pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<RGBTRIPLE>{
 	typedef color_rgba8 type;
-	const pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBF>{
 	typedef color_rgba32f type;
-	const pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBAF>{
 	typedef color_rgba32f type;
-	const pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
 };
 END_NS_SOFTARTX_RESOURCE()
 

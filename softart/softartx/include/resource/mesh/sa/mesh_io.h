@@ -33,10 +33,10 @@ Modify Log:
 
 BEGIN_NS_SOFTARTX_RESOURCE()
 
-h_mesh create_box(renderer* psr);
-h_mesh create_cylinder(renderer* psr);
+h_mesh create_box(softart::renderer* psr);
+h_mesh create_cylinder(softart::renderer* psr);
 h_mesh create_planar(
-					 renderer* psr,
+					 softart::renderer* psr,
 					 const efl::vec3& start_pos,
 					 const efl::vec3& x_dir,	 const efl::vec3& y_dir,
 					 size_t repeat_x, size_t repeat_y,

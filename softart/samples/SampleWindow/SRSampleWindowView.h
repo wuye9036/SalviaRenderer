@@ -22,6 +22,7 @@ using namespace efl;
 using namespace boost;
 using namespace boost::assign;
 using namespace std;
+using namespace softart;
 using namespace softartx;
 using namespace softartx::resource;
 using namespace softartx::presenter;

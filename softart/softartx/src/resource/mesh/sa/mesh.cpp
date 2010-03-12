@@ -25,10 +25,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 using namespace std;
 using namespace efl;
-
+using namespace softart;
 BEGIN_NS_SOFTARTX_RESOURCE()
 
-mesh::mesh(renderer* psr)
+mesh::mesh(softart::renderer* psr)
 {
 	custom_assert(psr, "");
 
@@ -48,20 +48,20 @@ size_t mesh::get_face_count()
 	return primcount_;
 }
 
-h_buffer mesh::get_buffer(size_t buf_id)
+softart::h_buffer mesh::get_buffer(size_t buf_id)
 {
 	custom_assert(buf_id < get_buffer_count(), "");
 	
 	if(buf_id < get_buffer_count()){return bufs_[buf_id];}
-	return h_buffer();
+	return softart::h_buffer();
 }
 
-h_buffer mesh::get_index_buffer()
+softart::h_buffer mesh::get_index_buffer()
 {
 	return get_buffer(idxbufid_);
 }
 
-h_buffer mesh::get_vertex_buffer()
+softart::h_buffer mesh::get_vertex_buffer()
 {
 	return get_buffer(vertbufid_);
 }
@@ -70,7 +70,7 @@ void mesh::gen_adjancency(){
 	NO_IMPL();
 }
 
-void mesh::render(const input_layout_decl& layout)
+void mesh::render(const softart::input_layout_decl& layout)
 {
 	custom_assert(pdev_, "");
 	if(!pdev_) return;
@@ -99,7 +99,7 @@ void mesh::set_buffer_count(size_t bufcount)
 	bufs_.resize(bufcount);
 }
 
-h_buffer mesh::create_buffer(size_t bufid, size_t size)
+softart::h_buffer mesh::create_buffer(size_t bufid, size_t size)
 {
 	custom_assert(bufid < bufs_.size(), "");
 	custom_assert(pdev_, "");
@@ -109,7 +109,7 @@ h_buffer mesh::create_buffer(size_t bufid, size_t size)
 		return bufs_[bufid];
 	}
 
-	return h_buffer();
+	return softart::h_buffer();
 }
 
 void mesh::set_index_buf_id(size_t bufid)
@@ -127,7 +127,7 @@ void mesh::set_primitive_count(size_t primcount)
 	primcount_ = primcount;
 }
 
-void mesh::set_index_type(index_type idxtype)
+void mesh::set_index_type(softart::index_type idxtype)
 {
 	switch(idxtype){
 		case index_int16:
@@ -139,7 +139,7 @@ void mesh::set_index_type(index_type idxtype)
 	}
 }
 
-void mesh::set_default_layout(const input_layout_decl& layout)
+void mesh::set_default_layout(const softart::input_layout_decl& layout)
 {
 	default_layout_ = layout;
 }

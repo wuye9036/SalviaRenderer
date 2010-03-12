@@ -2,6 +2,9 @@
 #define SOFTART_RENDERER_IMPL_H
 
 #include "renderer.h"
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 struct state_block
 {
@@ -118,5 +121,7 @@ public:
 	h_vertex_cache get_vertex_cache();
 	h_clipper get_clipper();
 };
+
+END_NS_SOFTART()
 
 #endif

@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 using namespace efl;
 using namespace softartx::utility;
-
+using namespace softart;
 #define FVF (D3DFVF_XYZ | D3DFVF_TEX1)
 struct Vertex
 {
@@ -86,7 +86,7 @@ h_dev_d3d9 dev_d3d9::create_device(HWND hwnd, h_d3d9_device dev){
 }
 
 //inherited
-void dev_d3d9::attach_framebuffer(framebuffer* pfb)
+void dev_d3d9::attach_framebuffer(softart::framebuffer* pfb)
 {
 	if (!dev_)
 	{
@@ -141,7 +141,7 @@ void dev_d3d9::present()
 	//首先将framebuffer copy到纹理上
 	D3DLOCKED_RECT locked_rc;
 	byte* src_addr = NULL;
-	surface* prt = pfb_->get_render_target(render_target_color, 0);
+	softart::surface* prt = pfb_->get_render_target(render_target_color, 0);
 
 	if( FAILED(buftex_->LockRect(0, &locked_rc, NULL, D3DLOCK_DISCARD)) ){
 		return;

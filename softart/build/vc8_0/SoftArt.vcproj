@@ -365,6 +365,10 @@
 				RelativePath="..\..\softart\include\voidptr.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\softart\include\softart_pwd.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="资源文件"

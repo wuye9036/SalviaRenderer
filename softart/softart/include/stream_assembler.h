@@ -4,6 +4,9 @@
 #include "decl.h"
 #include "render_stage.h"
 #include "stream.h"
+#include "softart_fwd.h"
+BEGIN_NS_SOFTART()
+
 
 class stream_assembler// : public render_stage
 {
@@ -16,5 +19,7 @@ public:
 
 	vs_input fetch_vertex(size_t idx);
 };
+
+END_NS_SOFTART()
 
 #endif

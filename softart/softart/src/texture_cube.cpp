@@ -1,5 +1,6 @@
 #include "../include/surface.h"
 #include "../include/texture.h"
+BEGIN_NS_SOFTART()
 
 using namespace efl;
 
@@ -83,3 +84,4 @@ void texture_cube::set_min_lod(size_t miplevel){
 		subtexs_[i].set_min_lod(miplevel);
 	}
 }
+END_NS_SOFTART()

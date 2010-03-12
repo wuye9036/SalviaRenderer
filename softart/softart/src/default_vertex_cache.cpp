@@ -8,6 +8,8 @@
 #include "../include/cpuinfo.h"
 
 #include "../include/thread_pool.h"
+BEGIN_NS_SOFTART()
+
 
 const size_t invalid_id = 0xffffffff;
 
@@ -133,3 +135,5 @@ void default_vertex_cache::delete_vertex(vs_output* const pvert)
 		verts_pool_.free(pvert);
 	}
 }
+
+END_NS_SOFTART()
