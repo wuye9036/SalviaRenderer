@@ -51,8 +51,8 @@ public:
 		out.attributes[1] = in[1];
 		out.attributes[2] = in[2];
 		out.attribute_modifiers[0] = 0;
-		out.attribute_modifiers[1] = 1;
-		out.attribute_modifiers[2] = 2;
+		out.attribute_modifiers[1] = 0;
+		out.attribute_modifiers[2] = softart::vs_output::am_linear;
 		out.num_used_attribute = 3;
 	}
 };
@@ -228,7 +228,7 @@ public:
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
-			mat_translate(world , i * 0.5 , 0 , i * 0.5);
+			mat_translate(world , -0.5 + i * 0.5 , 0 , -0.5 + i * 0.5);
 			mat_mul(wvp, mat_mul(wvp, proj, view), world);
 			pvs->set_constant(_T("WorldViewProjMat"), &wvp);
 			box_mesh->render();

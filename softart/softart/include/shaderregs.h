@@ -62,7 +62,7 @@ class vs_output
 	friend float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
 
 public:
-	enum
+	enum attrib_modifier_type
 	{
 		am_linear = 1UL << 0,
 		am_nointerpolation = 1UL << 1,

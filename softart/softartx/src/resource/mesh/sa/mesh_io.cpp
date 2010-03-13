@@ -43,9 +43,9 @@ h_mesh create_box(softart::renderer* psr)
 	pmesh->set_buffer_count(id_count);
 
 	softart::h_buffer verts = pmesh->create_buffer(vertbufid, sizeof(vec4)*24);
-	softart::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t)*36);
 	softart::h_buffer normals = pmesh->create_buffer(normbufid, sizeof(vec4)*24);
 	softart::h_buffer uvs = pmesh->create_buffer(uvid, sizeof(vec4)*24);
+	softart::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t)*36);
 
 	vec4* pverts = (vec4*)(verts->raw_data(0));
 	uint16_t* pidxs = (uint16_t*)(indices->raw_data(0));
