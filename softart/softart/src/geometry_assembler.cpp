@@ -183,7 +183,7 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint
 
 	int32_t local_working_prim = working_prim ++;
 
-	int N;
+	int N = 0;
 	switch(primtopo_)
 	{
 	case primitive_line_list:
@@ -193,6 +193,10 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint
 	case primitive_triangle_list:
 	case primitive_triangle_strip:
 		N = 3;
+		break;
+	default:
+		custom_assert(false, "geometry_assembler::dispatch_primitive_impl not support this primitive type.");
+
 		break;
 	}
 
@@ -395,6 +399,8 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 	}
 
 	atomic<int32_t> working_prim(0);
+#ifdef SOFTART_MULTITHEADING_ENABLED
+
 	for (size_t i = 0; i < num_cpu_cores(); ++ i){
 		switch(primtopo_)
 		{
@@ -416,22 +422,50 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 		}
 	}
 	global_thread_pool().wait();
+#else
+	switch(primtopo_)
+	{
+	case primitive_line_list:
+		geometry_assembler::generate_line_list_indices_impl<T>(boost::ref(indices), pidx, boost::ref(working_prim), prim_count);
+		break;
+
+	case primitive_line_strip:
+		geometry_assembler::generate_line_list_indices_impl<T>(boost::ref(indices), pidx, boost::ref(working_prim), prim_count);
+		break;
+
+	case primitive_triangle_list:
+		geometry_assembler::generate_triangle_list_indices_impl<T>(boost::ref(indices), pidx, boost::ref(working_prim), prim_count);
+		break;
+
+	case primitive_triangle_strip:
+		geometry_assembler::generate_triangle_strip_indices_impl<T>(boost::ref(indices), pidx, boost::ref(working_prim), prim_count);
+		break;
+	}
+#endif
 
 	dvc_.transform_vertices(indices);
 
 	working_prim = 0;
+#ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
 		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_impl<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count));
 	}
 	global_thread_pool().wait();
+#else
+	geometry_assembler::dispatch_primitive_impl<T>(boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count);
+#endif
 
 	atomic<int32_t> working_tile(0);
+#ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
 		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile)));
 	}
 	global_thread_pool().wait();
+#else
+	geometry_assembler::rasterize_primitive_func<T>(boost::ref(tiles), boost::ref(indices), boost::ref(working_tile));
+#endif
 }
 
 void geometry_assembler::draw_index(size_t startpos, size_t prim_count, int basevert){

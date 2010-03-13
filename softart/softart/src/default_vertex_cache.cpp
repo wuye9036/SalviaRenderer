@@ -69,11 +69,15 @@ void default_vertex_cache::transform_vertices(const std::vector<uint16_t>& indic
 	verts_.resize(unique_indices.size());
 
 	atomic<int32_t> working_index(0);
+#ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
 		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint16_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
 	}
 	global_thread_pool().wait();
+#else
+	default_vertex_cache::transform_vertex_impl<uint16_t>(boost::ref(unique_indices), boost::ref(working_index), unique_indices.size());
+#endif
 }
 
 void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indices)
@@ -84,11 +88,15 @@ void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indic
 	verts_.resize(unique_indices.size());
 
 	atomic<int32_t> working_index(0);
+#ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
 		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint32_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
 	}
 	global_thread_pool().wait();
+#else
+	default_vertex_cache::transform_vertex_impl<uint32_t>(boost::ref(unique_indices), boost::ref(working_index), unique_indices.size());
+#endif
 }
 
 vs_output& default_vertex_cache::fetch(cache_entry_index id)

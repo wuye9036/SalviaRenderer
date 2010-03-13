@@ -48,18 +48,32 @@ public:
 		vec4 pos = in[0];
 		transform(out.position, wvp, pos);
 		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
+		out.attributes[1] = in[1];
+		out.attributes[2] = in[2];
 		out.attribute_modifiers[0] = 0;
-		out.num_used_attribute = 1;
+		out.attribute_modifiers[1] = 1;
+		out.attribute_modifiers[2] = 2;
+		out.num_used_attribute = 3;
 	}
 };
 
 class ps : public pixel_shader
 {
+	sampler sampler_;
+	softart::h_texture tex_;
 public:
+
+	ps(softart::h_texture tex)
+		: tex_(tex)
+	{
+		sampler_.set_texture(tex_.get());
+	}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		out.color[0].xyz(in.attributes[0].xyz());
-		out.color[0].w = 1.0f;
+		
+		//out.color[0].xyz(in.attributes[0].xyz());
+		color_rgba32f color = tex2d(sampler_ , 2);
+		out.color[0].xyzw(color.r , color.g , color.b , color.a);
 
 		return true;
 	}
@@ -151,7 +165,7 @@ public:
 		box_mesh = create_box(hsr.get());
 
 		h_vertex_shader pvs(new vs());
-		h_pixel_shader pps(new ps());
+		h_pixel_shader pps(new ps(texture_io_gdiplus::instance().load(hsr.get() , _T("D:\\src\\softart\\softart\\Win32\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
 		h_blend_shader pts(new ts());
 
 		hsr->set_vertex_shader(pvs);

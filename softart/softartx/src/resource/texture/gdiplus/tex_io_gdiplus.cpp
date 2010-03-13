@@ -29,7 +29,18 @@ using namespace efl;
 using namespace std;
 using namespace softart;
 BEGIN_NS_SOFTARTX_RESOURCE()
+ULONG_PTR g_gdiplus = 0;
+texture_io_gdiplus::texture_io_gdiplus()
+{
+	GdiplusStartupInput gdiplusStartupInput;
 
+	GdiplusStartup(&g_gdiplus, &gdiplusStartupInput, NULL);
+
+}
+texture_io_gdiplus::~texture_io_gdiplus()
+{
+	GdiplusShutdown(g_gdiplus);
+}
 texture_io_gdiplus& texture_io_gdiplus::instance(){
 	static texture_io_gdiplus s_instance;
 	return s_instance;
