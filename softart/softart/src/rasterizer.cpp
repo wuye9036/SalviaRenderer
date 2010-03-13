@@ -221,23 +221,23 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 **************************************************/
 void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp)
 {
-	{
-		boost::mutex::scoped_lock lock(logger_mutex_);
-	
-		typedef slog<text_log_serializer> slog_type;
-		log_serializer_indent_scope<log_system<slog_type>::slog_type> scope(&log_system<slog_type>::instance());
+	//{
+	//	boost::mutex::scoped_lock lock(logger_mutex_);
+	//
+	//	typedef slog<text_log_serializer> slog_type;
+	//	log_serializer_indent_scope<log_system<slog_type>::slog_type> scope(&log_system<slog_type>::instance());
 
-		//记录三角形的屏幕坐标系顶点。
-		log_system<slog_type>::instance().write(_EFLIB_T("wv0"),
-			to_tstring(str(format("( %1%, %2%, %3%)") % v0.wpos.x % v0.wpos.y % v0.wpos.z)), LOGLEVEL_MESSAGE
-			);
-		log_system<slog_type>::instance().write(_EFLIB_T("wv1"), 
-			to_tstring(str(format("( %1%, %2%, %3%)") % v1.wpos.x % v1.wpos.y % v1.wpos.z)), LOGLEVEL_MESSAGE
-			);
-		log_system<slog_type>::instance().write(_EFLIB_T("wv2"), 
-			to_tstring(str(format("( %1%, %2%, %3%)") % v2.wpos.x % v2.wpos.y % v2.wpos.z)), LOGLEVEL_MESSAGE
-			);
-	}
+	//	//记录三角形的屏幕坐标系顶点。
+	//	log_system<slog_type>::instance().write(_EFLIB_T("wv0"),
+	//		to_tstring(str(format("( %1%, %2%, %3%)") % v0.wpos.x % v0.wpos.y % v0.wpos.z)), LOGLEVEL_MESSAGE
+	//		);
+	//	log_system<slog_type>::instance().write(_EFLIB_T("wv1"), 
+	//		to_tstring(str(format("( %1%, %2%, %3%)") % v1.wpos.x % v1.wpos.y % v1.wpos.z)), LOGLEVEL_MESSAGE
+	//		);
+	//	log_system<slog_type>::instance().write(_EFLIB_T("wv2"), 
+	//		to_tstring(str(format("( %1%, %2%, %3%)") % v2.wpos.x % v2.wpos.y % v2.wpos.z)), LOGLEVEL_MESSAGE
+	//		);
+	//}
 
 	/**********************************************************
 	*        将顶点按照y大小排序，求出三角形面积与边
@@ -481,35 +481,33 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 	//边界剔除
 	
 	//背面剔除
-	if(cm_ != cull_none){
+	if(cm_ != cull_none)
+	{
 		float area = compute_area(v0, v1, v2);
-		if( (cm_ == cull_front) && (area > 0) ){
+		if( (cm_ == cull_front) && (area > 0) )
+		{
 			return;
 		}
-		if( (cm_ == cull_back) && (area < 0) ){
+		if( (cm_ == cull_back) && (area < 0) )
+		{
 			return;
 		}
 	}
 
 	//渲染
-	if(fm_ == fill_wireframe){
+	if(fm_ == fill_wireframe)
+	{
 		rasterize_line(v0, v1, vp);
 		rasterize_line(v1, v2, vp);
 		rasterize_line(v0, v2, vp);
-	} else {
+	} else
+	{
 		vector<vs_output> clipped_verts;
-		{
-			boost::mutex::scoped_lock lock(clipper_mutex_);
-			h_clipper clipper = pparent_->get_clipper();
-			clipper->set_viewport(vp);
-			const vector<const vs_output*>& clipped_verts_ptrs = clipper->clip(v0, v1, v2);
-			clipped_verts.resize(clipped_verts_ptrs.size());
-			for(size_t i = 0; i < clipped_verts.size(); ++i){
-				clipped_verts[i] = *clipped_verts_ptrs[i];
-			}
-		}
+		h_clipper clipper = pparent_->get_clipper();
+		clipper->clip(clipped_verts , vp , v0, v1, v2);
 
-		for(size_t i_tri = 1; i_tri < clipped_verts.size() - 1; ++i_tri){
+		for(size_t i_tri = 1; i_tri < clipped_verts.size() - 1; ++i_tri)
+		{
 			rasterize_triangle_impl(clipped_verts[0], clipped_verts[i_tri], clipped_verts[i_tri+1], vp);
 		}
 		//rasterize_triangle_impl(v0, v1, v2);

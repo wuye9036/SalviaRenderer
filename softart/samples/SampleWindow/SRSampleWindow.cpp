@@ -46,7 +46,7 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
 int main()
 {
-	shared_ptr<_tfstream> hf(new _tfstream("c:/log.txt", ios::out));
+	shared_ptr<_tfstream> hf(new _tfstream("log.txt", ios::out));
 	typedef slog<text_log_serializer> slog_type;
 	log_system<slog_type>::slog_type slog = log_system<slog_type>::instance(hf);
 	slog.begin_log();

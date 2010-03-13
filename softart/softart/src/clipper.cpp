@@ -19,35 +19,33 @@ clipper::clipper():last_stage(0), pool_(sizeof(vs_output)){
 	planes_[4] = vec4(0.0f, -1.0f, 0.0f, 1.0f);
 	planes_[5] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
 
-	std::fill(planes_enable_.begin(), planes_enable_.begin()+6, true);
-	std::fill(planes_enable_.begin()+6, planes_enable_.end(), false);
+	std::fill(planes_enable_.begin(), planes_enable_.begin()+default_plane_num, true);
+	std::fill(planes_enable_.begin()+default_plane_num, planes_enable_.end(), false);
 }
 
-void clipper::set_viewport(const viewport& vp)
-{
-	pvp_ = &vp;
-}
 
 void clipper::set_clip_plane(const vec4& plane, size_t idx)
 {
-	if(idx >= 6 + planes_.size()){
+	if(idx >= default_plane_num + planes_.size()){
 		custom_assert(false, "");
 	}
 
-	planes_[idx - 6] = plane;
+	planes_[idx - default_plane_num] = plane;
 }
 
 void clipper::set_clip_plane_enable(bool /*enable*/, size_t idx)
 {
-	if(idx >= 6 + planes_enable_.size()){
+	if(idx >= default_plane_num + planes_enable_.size()){
 		custom_assert(false, "");
 	}
 
-	planes_enable_[idx - 6] = false;
+	planes_enable_[idx - default_plane_num] = false;
 }
 
-const vector<const vs_output*>& clipper::clip(const vs_output& v0, const vs_output& v1, const vs_output& v2)
+void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2)
 {
+	boost::mutex::scoped_lock lock(clipper_mutex_);
+
 	//清理上一次clipper所使用的内存
 	for(size_t i = 0; i < 2; ++i)
 	{
@@ -100,7 +98,7 @@ const vector<const vs_output*>& clipper::clip(const vs_output& v0, const vs_outp
 
 					//LERP
 					*pclipped = *clipped_verts_[src_stage][i] + (*clipped_verts_[src_stage][j] - *clipped_verts_[src_stage][i]) * ( di / (di - dj));
-					update_wpos(*pclipped, *pvp_);
+					update_wpos(*pclipped, vp);
 
 					clipped_verts_[dest_stage].push_back(pclipped);
 					is_vert_from_pool_[dest_stage].push_back(true);
@@ -111,7 +109,7 @@ const vector<const vs_output*>& clipper::clip(const vs_output& v0, const vs_outp
 
 					//LERP
 					*pclipped = *clipped_verts_[src_stage][j] + (*clipped_verts_[src_stage][i] - *clipped_verts_[src_stage][j]) * ( dj / (dj - di));
-					update_wpos(*pclipped, *pvp_);
+					update_wpos(*pclipped, vp);
 
 					clipped_verts_[dest_stage].push_back(pclipped);
 					is_vert_from_pool_[dest_stage].push_back(true);
@@ -128,6 +126,11 @@ const vector<const vs_output*>& clipper::clip(const vs_output& v0, const vs_outp
 	//返回
 	clipped_verts_[dest_stage].clear();
 	is_vert_from_pool_[dest_stage].clear();
-	return clipped_verts_[src_stage];
+
+	const std::vector<const vs_output*> &clipped_verts_ptrs = clipped_verts_[src_stage];
+	out_clipped_verts.resize(clipped_verts_ptrs.size());
+	for(size_t i = 0; i < clipped_verts_ptrs.size(); ++i){
+		out_clipped_verts[i] = *clipped_verts_ptrs[i];
+	}
 }
 END_NS_SOFTART()
