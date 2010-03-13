@@ -7,6 +7,7 @@
 #include "softartx/include/presenter/dx9/dev_d3d9.h"
 #include "softartx/include/presenter/gdiplus/dev_gdiplus.h"
 #include "softartx/include/resource/mesh/sa/mesh_io.h"
+#include "softartx\include\resource\texture\gdiplus\tex_io_gdiplus.h"
 #include "softart/include/shader.h"
 #include "softart/include/renderer_impl.h"
 #include "softart/include/resource_manager.h"
@@ -177,7 +178,8 @@ public:
 	{
 		// measure statistics
 		++ num_frames;
-		accumulate_time += static_cast<float>(timer.elapsed());
+		float elapsed_time = static_cast<float>(timer.elapsed());
+		accumulate_time += elapsed_time;
 
 		// check if new second
 		if (accumulate_time > 1)
@@ -196,7 +198,9 @@ public:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		vec4 camera(1.5f, 1.5f, 1.5f, 1.0f);
+		static float s_angle = 0;
+		s_angle += elapsed_time * 60.0f * (TWO_PI / 360.0f);
+		vec4 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f, 1.0f);
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
@@ -207,9 +211,10 @@ public:
 
 		hsr->set_cull_mode(cull_none);
 
+
 		for(float i = 0 ; i < 1 ; i ++)
 		{
-			mat_translate(world , i * 0.1 , 0 , 0);
+			mat_translate(world , i * 0.5 , 0 , i * 0.5);
 			mat_mul(wvp, mat_mul(wvp, proj, view), world);
 			pvs->set_constant(_T("WorldViewProjMat"), &wvp);
 			box_mesh->render();
