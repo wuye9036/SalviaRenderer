@@ -143,9 +143,9 @@ public:
 		planar_mesh = create_planar(
 			hsr.get(), 
 			vec3(-3.0f, -1.0f, -3.0f), 
-			vec3(6.0f, 0.0f, 0.0f), 
-			vec3(0.0f, 0.0f, 6.0f),
-			1, 1, true
+			vec3(0.5f, 0.0f, 0.0f), 
+			vec3(0.0f, 0.0f, 0.5f),
+			20, 20, true
 			);
 		
 		box_mesh = create_box(hsr.get());
@@ -218,6 +218,7 @@ public:
 			mat_mul(wvp, mat_mul(wvp, proj, view), world);
 			pvs->set_constant(_T("WorldViewProjMat"), &wvp);
 			box_mesh->render();
+			planar_mesh->render();
 		}
 
 		InvalidateRect(NULL);
