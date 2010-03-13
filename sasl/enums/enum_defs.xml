@@ -38,7 +38,7 @@
 		<item>right_shift</item>
 		
 		<item value = "1 * (2 ** 16)">unary_op</item>
-		<item value = "2 * (2 ** 24)">postfix_op</item>
+		<item value = "1 * (2 ** 24) + $unary_op$">postfix_op</item>
 		<item>prefix_incr</item>
 		<item>prefix_decr</item>
 		<item value = "$postfix_op$ + $prefix_incr$">postfix_incr</item>

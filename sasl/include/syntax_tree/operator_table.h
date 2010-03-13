@@ -1,5 +1,5 @@
-#ifndef SASL_SYNTAX_TREE_OPERATOR_LITERAL_H
-#define SASL_SYNTAX_TREE_OPERATOR_LITERAL_H
+#ifndef SASL_SYNTAX_TREE_OPERATOR_TABLE_H
+#define SASL_SYNTAX_TREE_OPERATOR_TABLE_H
 
 #include "syntax_tree_fwd.h"
 #include "node.h"
@@ -17,8 +17,8 @@ class operator_table{
 
 public:
 	static operator_table& instance();
-	operators find( const string& lit, bool is_unary = false, bool is_postfix = false) const;
-	const string& find( operators op ) const;
+	operators find( const std::string& lit, bool is_unary = false, bool is_postfix = false) const;
+	const std::string& find( operators op ) const;
 };
 
 END_NS_SASL_SYNTAX_TREE()

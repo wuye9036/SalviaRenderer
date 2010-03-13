@@ -2,7 +2,7 @@
 #define SASL_PARSER_TREE_EXPRESSION_H
 
 #include "parser_tree_forward.h"
-#include "literal.h"
+#include <sasl/include/common/token_attr.h>
 #include <boost/variant.hpp>
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/tuple.hpp>
@@ -53,7 +53,7 @@ typedef expression_lst expression;
 template <typename ChildExpressionT>
 struct binary_expression {
 	typedef ChildExpressionT child_expression_t;
-	typedef std::vector<boost::fusion::vector< operator_literal, child_expression_t> > expr_list_t;
+	typedef std::vector<boost::fusion::vector< token_attr, child_expression_t> > expr_list_t;
 	child_expression_t first_expr;
 	expr_list_t follow_exprs;
 };
@@ -62,16 +62,16 @@ typedef boost::variant<
 	boost::recursive_wrapper<idx_expression>,
 	boost::recursive_wrapper<call_expression>,
 	boost::recursive_wrapper<mem_expression>,
-	operator_literal >								expression_post;
+	token_attr >								expression_post;
 typedef boost::variant<
-	constant,
+	token_attr,
 	boost::recursive_wrapper<paren_expression> >	pm_expression;
 
 struct typecast_expression {
-	operator_literal	lparen;
-	identifier_literal	ident;
-	operator_literal	rparen;
-	expression			expr;
+	token_attr	lparen;
+	token_attr	ident;
+	token_attr	rparen;
+	expression	expr;
 };
 
 struct post_expression{
@@ -86,31 +86,31 @@ struct cond_expression{
 };
 
 struct idx_expression{
-	operator_literal	lsbracket;
-	expression			expr;
-	operator_literal	rsbracket;
+	token_attr	lsbracket;
+	expression	expr;
+	token_attr	rsbracket;
 };
 
 struct call_expression{
-	operator_literal			lparen;
+	token_attr			lparen;
 	boost::optional<expression>	args;
-	operator_literal			rparen;
+	token_attr			rparen;
 };
 
 struct mem_expression{
-	operator_literal	dot;
-	identifier_literal	ident;
+	token_attr	dot;
+	token_attr	ident;
 };
 
 struct unaried_expression{
-	operator_literal	preop;
+	token_attr	preop;
 	cast_expression		expr;
 };
 
 struct paren_expression {
-	operator_literal lparen;
+	token_attr lparen;
 	expression expr;
-	operator_literal rparen;
+	token_attr rparen;
 };
 
 END_NS_SASL_PARSER_TREE()
@@ -142,9 +142,9 @@ SASL_ADAPT_BINARY_EXPRESSION( assign_expression );
 SASL_ADAPT_BINARY_EXPRESSION( expression_lst );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::typecast_expression,
-						  (sasl::parser_tree::operator_literal, lparen)
-						  (sasl::parser_tree::identifier_literal, ident)
-						  (sasl::parser_tree::operator_literal, rparen)
+						  (sasl::common::token_attr, lparen)
+						  (sasl::common::token_attr, ident)
+						  (sasl::common::token_attr, rparen)
 						  (sasl::parser_tree::expression, expr)
 						  );
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::post_expression,
@@ -156,26 +156,26 @@ BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::cond_expression,
 						  (sasl::parser_tree::cond_expression::branches_t, branchexprs)
 						  );
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::idx_expression,
-						  (sasl::parser_tree::operator_literal, lsbracket)
+						  (sasl::common::token_attr, lsbracket)
 						  (sasl::parser_tree::expression, expr)
-						  (sasl::parser_tree::operator_literal, rsbracket)
+						  (sasl::common::token_attr, rsbracket)
 						  );
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::call_expression,
-						  (sasl::parser_tree::operator_literal, lparen)
+						  (sasl::common::token_attr, lparen)
 						  (boost::optional<sasl::parser_tree::expression>, args)
-						  (sasl::parser_tree::operator_literal, rparen)
+						  (sasl::common::token_attr, rparen)
 						  );
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::mem_expression,
-						  (sasl::parser_tree::operator_literal, dot)
-						  (sasl::parser_tree::identifier_literal, ident)
+						  (sasl::common::token_attr, dot)
+						  (sasl::common::token_attr, ident)
 						  );
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::unaried_expression,
-						  (sasl::parser_tree::operator_literal, preop)
+						  (sasl::common::token_attr, preop)
 						  (sasl::parser_tree::cast_expression, expr)
 						  );
 BOOST_FUSION_ADAPT_STRUCT(sasl::parser_tree::paren_expression, 
-						  (sasl::parser_tree::operator_literal, lparen)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::expression, expr)
-						  (sasl::parser_tree::operator_literal, rparen)
+						  (sasl::common::token_attr, rparen)
 						  );
 #endif

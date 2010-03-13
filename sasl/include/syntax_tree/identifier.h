@@ -10,5 +10,4 @@ struct identifier{
 	identifier(const std::string& name ): name(name){}
 };
 
-
 #endif

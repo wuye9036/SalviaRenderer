@@ -504,7 +504,7 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 	{
 		vector<vs_output> clipped_verts;
 		h_clipper clipper = pparent_->get_clipper();
-		clipper->clip(clipped_verts , vp , v0, v1, v2);
+		clipper->clip(clipped_verts , pparent_->get_viewport() , v0, v1, v2);
 
 		for(size_t i_tri = 1; i_tri < clipped_verts.size() - 1; ++i_tri)
 		{

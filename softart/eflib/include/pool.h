@@ -143,7 +143,7 @@ namespace efl{
 				is_used_[idx] = false;
 			}
 
-		private:
+		protected:
 			int64_t elem_size_;
 			Storage pool_;
 			std::vector<bool> is_used_;
@@ -169,12 +169,14 @@ namespace efl{
 
 		void* malloc()
 		{
-			return AllocType::alloc();
+			// return AllocType::alloc();
+			return ::malloc( elem_size_ );
 		}
 
 		void free(void* const pointer)
 		{
-			return AllocType::free(pointer);
+			// return AllocType::free(pointer);
+			return ::free(pointer);
 		}
 	};
 

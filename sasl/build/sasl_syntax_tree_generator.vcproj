@@ -366,11 +366,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\syntax_tree\operator_literal.cpp"
+					RelativePath="..\src\syntax_tree\operator_table.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\src\syntax_tree\symbol.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\syntax_tree\syntax_tree_builder_impl.cpp"
 					>
 				</File>
 			</Filter>
@@ -404,7 +408,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\include\syntax_tree\operator_literal.h"
+					RelativePath="..\include\syntax_tree\operator_table.h"
 					>
 				</File>
 				<File
@@ -413,6 +417,10 @@
 				</File>
 				<File
 					RelativePath="..\include\syntax_tree\syntax_tree_builder.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\syntax_tree\syntax_tree_builder_impl.h"
 					>
 				</File>
 				<File
