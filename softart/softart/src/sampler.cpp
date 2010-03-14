@@ -244,9 +244,8 @@ void sampler::set_border_color(const color_rgba32f& border_color)
 	border_color_ = border_color;
 }
 
-color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
+color_rgba32f sampler::sample_impl(const texture &tex , float coordx, float coordy, float miplevel) const
 {
-	const texture_2d& tex = *(texture_2d*)(ptex_);
 	bool is_mag = true;
 
 	if(filters_[sampler_state_mip] == filter_point) {
@@ -290,30 +289,53 @@ color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 	return border_color_;
 }
 
-color_rgba32f sampler::sample(
+color_rgba32f sampler::sample_impl(const texture &tex , 
 								 float coordx, float coordy,
 								 const vec4& ddx, const vec4& ddy,
 								 float invQ, float lod_bias) const
 {
-	return sample_2d(
+	return sample_2d_impl(tex ,
 		vec4(coordx, coordy, 0.0f, 1.0f / invQ),
 		ddx, ddy, invQ, lod_bias
 		);
 }
 
-color_rgba32f sampler::sample_2d(
+color_rgba32f sampler::sample_2d_impl(const texture &tex , 
 								 const vec4& coord,
 								 const vec4& ddx, const vec4& ddy,
 								 float invQ, float lod_bias) const
 {
 	float q = invQ == 0 ? 1.0f : 1.0f / invQ;
 	vec4 origin_coord(coord * q);
-	const texture_2d& tex = *(texture_2d*)(ptex_);
 	vec4 size((float)tex.get_width(0), (float)tex.get_height(0), (float)tex.get_depth(0), 0.0f);
 
 	float lod = calc_lod(origin_coord, size, ddx, ddy, invQ, lod_bias);
-	return sample(coord.x, coord.y, lod);
+	return sample_impl(tex , coord.x, coord.y, lod);
 }
+
+
+color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
+{
+	return sample_impl(*(const texture_2d*)ptex_, coordx, coordy, miplevel);
+}
+
+color_rgba32f sampler::sample(
+					 float coordx, float coordy, 
+					 const efl::vec4& ddx, const efl::vec4& ddy, 
+					 float invQ, float lod_bias) const
+{
+	return sample_impl(*(const texture_2d*)ptex_, coordx, coordy, ddx, ddy, invQ, lod_bias);
+}
+
+
+color_rgba32f sampler::sample_2d(
+						const efl::vec4& coord,
+						const efl::vec4& ddx, const efl::vec4& ddy,
+						float invQ, float lod_bias) const
+{
+	return sample_2d_impl(*(const texture_2d*)ptex_, coord, ddx, ddy, invQ, lod_bias);
+}
+
 
 color_rgba32f sampler::sample_cube(
 	float coordx, float coordy, float coordz,
@@ -378,9 +400,7 @@ color_rgba32f sampler::sample_cube(
 
 	//ÔÝÊ±ÏÈ²»Ëãddx ddy
 	const texture_cube* pcube = (texture_cube*)ptex_;
-	ptex_ = &(pcube->get_face(major_dir));
-	color_rgba32f rv = sample(s, t, miplevel);
-	ptex_ = pcube;
+	color_rgba32f rv = sample_impl(pcube->get_face(major_dir) , s, t, miplevel);
 	return rv;
 }
 

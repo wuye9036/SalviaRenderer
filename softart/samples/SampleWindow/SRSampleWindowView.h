@@ -7,7 +7,7 @@
 #include "softartx/include/presenter/dx9/dev_d3d9.h"
 #include "softartx/include/presenter/gdiplus/dev_gdiplus.h"
 #include "softartx/include/resource/mesh/sa/mesh_io.h"
-#include "softartx\include\resource\texture\gdiplus\tex_io_gdiplus.h"
+#include "softartx/include/resource/texture/gdiplus/tex_io_gdiplus.h"
 #include "softart/include/shader.h"
 #include "softart/include/renderer_impl.h"
 #include "softart/include/resource_manager.h"
