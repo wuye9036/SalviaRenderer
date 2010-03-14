@@ -50,8 +50,8 @@ public:
 		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
 		out.attributes[1] = in[1];
 		out.attributes[2] = in[2];
-		out.attribute_modifiers[0] = 0;
-		out.attribute_modifiers[1] = 0;
+		out.attribute_modifiers[0] = softart::vs_output::am_linear;
+		out.attribute_modifiers[1] = softart::vs_output::am_linear;
 		out.attribute_modifiers[2] = softart::vs_output::am_linear;
 		out.num_used_attribute = 3;
 	}
@@ -72,8 +72,10 @@ public:
 	{
 		
 		//out.color[0].xyz(in.attributes[0].xyz());
+		//out.color[0].w = 0.5;
 		color_rgba32f color = tex2d(sampler_ , 2);
-		out.color[0].xyzw(color.r , color.g , color.b , color.a);
+		color.a = 0.5;
+		out.color[0] = color.get_vec4();
 
 		return true;
 	}
@@ -94,7 +96,8 @@ public:
 	{
 		if(inout.depth() > in.depth)
 		{
-			inout.color(0, in.color[0]);
+			color_rgba32f color = in.color[0];
+			inout.color(0, lerp(inout.color(0) , 1.0f - color.a , color , color.a));
 			inout.depth(in.depth);
 		}
 		return true;
@@ -165,15 +168,15 @@ public:
 		planar_mesh = create_planar(
 			hsr.get(), 
 			vec3(-3.0f, -1.0f, -3.0f), 
-			vec3(0.5f, 0.0f, 0.0f), 
-			vec3(0.0f, 0.0f, 0.5f),
-			20, 20, true
+			vec3(6, 0.0f, 0.0f), 
+			vec3(0.0f, 0.0f, 6),
+			1, 1, true
 			);
 		
 		box_mesh = create_box(hsr.get());
 
 		h_vertex_shader pvs(new vs());
-		h_pixel_shader pps(new ps(texture_io_gdiplus::instance().load(hsr.get() , _T("D:\\src\\softart\\softart\\Win32\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
+		h_pixel_shader pps(new ps(texture_io_gdiplus::instance().load(hsr.get() , _T("..\\samples\\Resources\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
 		h_blend_shader pts(new ts());
 
 		hsr->set_vertex_shader(pvs);
@@ -232,6 +235,7 @@ public:
 		const h_vertex_shader& pvs = hsr->get_vertex_shader();
 
 		hsr->set_cull_mode(cull_none);
+		//hsr->set_fill_mode(fill_wireframe);
 
 
 		for(float i = 0 ; i < 1 ; i ++)
