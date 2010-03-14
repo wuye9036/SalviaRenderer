@@ -146,29 +146,30 @@ void geometry_assembler::draw(size_t startpos, size_t prim_count){
 
 	const viewport& vp = pparent_->get_viewport();
 	const h_rasterizer& hrast = pparent_->get_rasterizer();
+	pixel_shader *pps = pparent_->get_pixel_shader().get();
 	switch(primtopo_)
 	{
 	case primitive_line_list:
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			hrast->rasterize_line(dvc_.fetch(iprim*2), dvc_.fetch(iprim*2+1), vp, 0);
+			hrast->rasterize_line(dvc_.fetch(iprim*2), dvc_.fetch(iprim*2+1), vp, pps);
 		}
 		break;
 	case primitive_line_strip:
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			hrast->rasterize_line(dvc_.fetch(iprim), dvc_.fetch(iprim+1), vp, 0);
+			hrast->rasterize_line(dvc_.fetch(iprim), dvc_.fetch(iprim+1), vp, pps);
 		}
 		break;
 	case primitive_triangle_list:
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
-			hrast->rasterize_triangle(dvc_.fetch(iprim*3), dvc_.fetch(iprim*3+1), dvc_.fetch(iprim*3+2), vp, 0);
+			hrast->rasterize_triangle(dvc_.fetch(iprim*3), dvc_.fetch(iprim*3+1), dvc_.fetch(iprim*3+2), vp, pps);
 		}
 		break;
 	case primitive_triangle_strip:
 		for(size_t iprim = 0; iprim < prim_count; ++iprim){
 			if(iprim % 2 == 0){
-				hrast->rasterize_triangle(dvc_.fetch(iprim), dvc_.fetch(iprim+1), dvc_.fetch(iprim+2), vp, 0);
+				hrast->rasterize_triangle(dvc_.fetch(iprim), dvc_.fetch(iprim+1), dvc_.fetch(iprim+2), vp, pps);
 			} else {
-				hrast->rasterize_triangle(dvc_.fetch(iprim+2), dvc_.fetch(iprim+1), dvc_.fetch(iprim), vp, 0);
+				hrast->rasterize_triangle(dvc_.fetch(iprim+2), dvc_.fetch(iprim+1), dvc_.fetch(iprim), vp, pps);
 			}
 		}
 		break;
@@ -238,7 +239,7 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint
 }
 
 template<class T>
-void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile , size_t thread_index)
+void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile , pixel_shader *pps)
 {
 	const h_rasterizer& hrast = pparent_->get_rasterizer();
 	const viewport& vp = pparent_->get_viewport();
@@ -264,14 +265,14 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 		case primitive_line_strip:
 			while (!prims.empty()){
 				prims.dequeue(iprim);
-				hrast->rasterize_line(dvc_.fetch(indices[iprim * 2 + 0]), dvc_.fetch(indices[iprim * 2 + 1]), tile_vp, thread_index);
+				hrast->rasterize_line(dvc_.fetch(indices[iprim * 2 + 0]), dvc_.fetch(indices[iprim * 2 + 1]), tile_vp, pps);
 			}
 			break;
 		case primitive_triangle_list:
 		case primitive_triangle_strip:
 			while (!prims.empty()){
 				prims.dequeue(iprim);
-				hrast->rasterize_triangle(dvc_.fetch(indices[iprim * 3 + 0]), dvc_.fetch(indices[iprim * 3 + 1]), dvc_.fetch(indices[iprim * 3 + 2]), tile_vp, thread_index);
+				hrast->rasterize_triangle(dvc_.fetch(indices[iprim * 3 + 0]), dvc_.fetch(indices[iprim * 3 + 1]), dvc_.fetch(indices[iprim * 3 + 2]), tile_vp, pps);
 			}
 			break;
 		}
@@ -459,16 +460,25 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 
 
 	atomic<int32_t> working_tile(0);
+	h_pixel_shader hps = pparent_->get_pixel_shader();
 #ifdef SOFTART_MULTITHEADING_ENABLED
-	hrast->create_ps_clones(num_cpu_cores() - 1);
-	for (size_t i = 0; i < num_cpu_cores(); ++ i)
+	size_t num_threads = num_cpu_cores();
+	pixel_shader **ppps = new pixel_shader*[num_threads];
+	for (size_t i = 0; i < num_threads; ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile), i));
+		// create pixel_shader clone per thread from hps
+		ppps[i] = hps->create_clone();
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func<T>, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_tile), ppps[i]));
 	}
 	global_thread_pool().wait();
-	hrast->destroy_ps_clones();
+	// destroy all pixel_shader clone
+	for (size_t i = 0; i < num_threads; ++ i)
+	{
+		hps->destroy_clone(ppps[i]);
+	}
+	delete[] ppps;
 #else
-	geometry_assembler::rasterize_primitive_func<T>(boost::ref(tiles), boost::ref(indices), boost::ref(working_tile));
+	geometry_assembler::rasterize_primitive_func<T>(boost::ref(tiles), boost::ref(indices), boost::ref(working_tile), hps.get());
 #endif
 }
 
