@@ -46,7 +46,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../../;$(ProjectDir)../../../3rd_party/threadpool;$(ProjectDir)../../../3rd_party/FreeImage/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;BOOST_ALL_DYN_LINK"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
