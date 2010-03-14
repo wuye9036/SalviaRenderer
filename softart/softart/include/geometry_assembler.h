@@ -41,7 +41,7 @@ class geometry_assembler : public render_stage
 		void dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, std::vector<T> const & indices, atomic<int32_t>& working_prim, int32_t prim_count);
 
 	template<class T>
-		void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile);
+		void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile , size_t thread_index);
 
 	template<class T>
 		void generate_line_list_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);

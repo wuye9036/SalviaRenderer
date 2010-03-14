@@ -77,6 +77,14 @@ public:
 
 		return true;
 	}
+	virtual pixel_shader *create_clone()
+	{
+		return new ps(*this);
+	}
+	virtual void destroy_clone(pixel_shader *ps_clone)
+	{
+		delete ps_clone;
+	}
 };
 
 class ts : public blend_shader

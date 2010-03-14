@@ -4,6 +4,7 @@
 #include "../include/clipper.h"
 #include "../include/framebuffer.h"
 #include "../include/renderer_impl.h"
+#include "../include/cpuinfo.h"
 
 #include "eflib/include/slog.h"
 
@@ -52,6 +53,12 @@ void rasterizer::initialize(renderer_impl* pparent)
 
 IMPL_RS_UPDATED(rasterizer, pixel_shader)
 {
+	size_t num_of_clones = num_ps_clones_;
+	if(num_of_clones)
+	{
+		destroy_ps_clones();
+		create_ps_clones(num_of_clones);
+	}
 	hps_ = pparent_->get_pixel_shader();
 	return result::ok;
 }
@@ -69,8 +76,10 @@ IMPL_RS_UPDATED(rasterizer, pixel_shader)
  *			2 wpos的x y z分量已经除以了clip w
  *			3 positon.w为1.0f / clip w
  **************************************************/
-void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, const viewport& vp)
+void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, const viewport& vp, size_t thread_index)
 {
+	pixel_shader *pps = get_ps(thread_index);
+
 	vs_output diff = project(v1) - project(v0);
 	const efl::vec4& dir = diff.wpos;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
@@ -106,7 +115,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 
 		triangle_info info;
 		info.set(start->wpos, ddx, ddy);
-		hps_->ptriangleinfo_ = &info;
+		pps->ptriangleinfo_ = &info;
 
 		float fsx = floor(start->wpos.x + 0.5f);
 
@@ -139,7 +148,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 
 			//进行像素渲染
 			unproject(unprojed, px_in);
-			if(hps_->execute(unprojed, px_out)){
+			if(pps->execute(unprojed, px_out)){
 				hfb_->render_pixel(hbs, iPixel, int(px_in.wpos.y), px_out);
 			}
 
@@ -162,7 +171,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 
 		triangle_info info;
 		info.set(start->wpos, ddx, ddy);
-		hps_->ptriangleinfo_ = &info;
+		pps->ptriangleinfo_ = &info;
 
 		float fsy = floor(start->wpos.y + 0.5f);
 
@@ -195,7 +204,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 
 			//进行像素渲染
 			unproject(unprojed, px_in);
-			if(hps_->execute(unprojed, px_out)){
+			if(pps->execute(unprojed, px_out)){
 				hfb_->render_pixel(hbs, int(px_in.wpos.x), iPixel, px_out);
 			}
 
@@ -219,8 +228,10 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 *			2 wpos的x y z分量已经除以了clip w
 *			3 positon.w为1.0f / clip w
 **************************************************/
-void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp)
+void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, size_t thread_index)
 {
+	pixel_shader *pps = get_ps(thread_index);
+
 	//{
 	//	boost::mutex::scoped_lock lock(logger_mutex_);
 	//
@@ -287,7 +298,7 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 	triangle_info info;
 	info.set(pvert[0]->wpos, ddx, ddy);
 	// TODO: This is not thread safe
-	hps_->ptriangleinfo_ = &info;
+	pps->ptriangleinfo_ = &info;
 
 	/*************************************
 	*   设置基本的scanline属性。
@@ -421,7 +432,7 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 					scanline.scanline_width = icx_e - icx_s + 1;
 
 					//光栅化
-					rasterize_scanline_impl(scanline);
+					rasterize_scanline_impl(scanline, thread_index);
 				}
 			}
 
@@ -433,8 +444,10 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 
 //扫描线光栅化程序，将对扫描线依据差分信息进行光栅化并将光栅化的片段传递到像素着色器中.
 //Note:传入的像素将w乘回到attribute上.
-void rasterizer::rasterize_scanline_impl(const scanline_info& sl)
+void rasterizer::rasterize_scanline_impl(const scanline_info& sl, size_t thread_index)
 {
+	pixel_shader *pps = get_ps(thread_index);
+
 	h_blend_shader hbs = pparent_->get_blend_shader();
 
 	vs_output px_in(sl.base_vert);
@@ -446,7 +459,7 @@ void rasterizer::rasterize_scanline_impl(const scanline_info& sl)
 			//continue;
  
 		unproject(unprojed, px_in);
-		if(hps_->execute(unprojed, px_out)){
+		if(pps->execute(unprojed, px_out)){
 			hfb_->render_pixel(hbs, sl.base_x + i_pixel, sl.base_y, px_out);
 		}
 
@@ -458,9 +471,35 @@ rasterizer::rasterizer()
 {
 	cm_ = cull_back;
 	fm_ = fill_solid;
+	pps_clones_ = 0;
+	num_ps_clones_ = 0;
 }
-
-void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp)
+rasterizer::~rasterizer()
+{
+}
+void rasterizer::create_ps_clones(size_t num_of_clones)
+{
+	num_ps_clones_ = num_of_clones;
+	if(num_of_clones > 0)
+	{
+		pps_clones_ = new pixel_shader*[num_of_clones];
+		for(size_t i = 0 ; i < num_of_clones ; i ++)
+		{
+			pps_clones_[i] = hps_->create_clone();
+		}
+	}
+}
+void rasterizer::destroy_ps_clones()
+{
+	if(!pps_clones_)
+		return;
+	for(size_t i = 0 ; i < num_ps_clones_ ; i ++)
+	{
+		hps_->destroy_clone(pps_clones_[i]);
+	}
+	delete[]pps_clones_;
+}
+void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, size_t thread_index)
 {
 	//如果完全超过边界，则剔除
 
@@ -473,10 +512,10 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 	if(v0.wpos.z >= vp.maxz && v1.wpos.z >= vp.maxz) return;
 
 	//render
-	rasterize_line_impl(v0, v1, vp);
+	rasterize_line_impl(v0, v1, vp, thread_index);
 }
 
-void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp)
+void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, size_t thread_index)
 {
 	//边界剔除
 	
@@ -494,9 +533,9 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 	//渲染
 	if(fm_ == fill_wireframe)
 	{
-		rasterize_line(v0, v1, vp);
-		rasterize_line(v1, v2, vp);
-		rasterize_line(v0, v2, vp);
+		rasterize_line(v0, v1, vp, thread_index);
+		rasterize_line(v1, v2, vp, thread_index);
+		rasterize_line(v0, v2, vp, thread_index);
 	} else
 	{
 		vector<vs_output> clipped_verts;
@@ -506,7 +545,7 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 
 		for(int i_tri = 1; i_tri < int(clipped_verts.size()) - 1; ++i_tri)
 		{
-			rasterize_triangle_impl(clipped_verts[0], clipped_verts[i_tri], clipped_verts[i_tri+1], vp);
+			rasterize_triangle_impl(clipped_verts[0], clipped_verts[i_tri], clipped_verts[i_tri+1], vp, thread_index);
 		}
 	}
 }
