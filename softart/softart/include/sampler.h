@@ -21,7 +21,7 @@ class sampler
 	int max_miplevel_;
 	float lod_bias_;
 	color_rgba32f border_color_;
-	const void* ptex_;
+	const texture* ptex_;
 
 	float calc_lod(
 		const efl::vec4& attribute, 
@@ -34,14 +34,14 @@ class sampler
 		float x, float y,
 		sampler_state ss) const;
 
-	color_rgba32f sample_impl(const texture &tex , float coordx, float coordy, float miplevel) const;
+	color_rgba32f sample_impl(const texture *tex , float coordx, float coordy, float miplevel) const;
 
-	color_rgba32f sample_impl(const texture &tex , 
+	color_rgba32f sample_impl(const texture *tex , 
 		float coordx, float coordy, 
 		const efl::vec4& ddx, const efl::vec4& ddy, 
 		float invQ, float lod_bias) const;
 
-	color_rgba32f sample_2d_impl(const texture &tex , 
+	color_rgba32f sample_2d_impl(const texture *tex , 
 		const efl::vec4& coord,
 		const efl::vec4& ddx, const efl::vec4& ddy,
 		float invQ, float lod_bias) const;
@@ -54,7 +54,7 @@ public:
 	void set_lod_bias(float bias);
 	void set_max_miplevel(int level);
 	void set_border_color(const color_rgba32f& border_color);
-	void set_texture(const void* ptex){ptex_ = ptex;}
+	void set_texture(const texture* ptex){ptex_ = ptex;}
 
 	color_rgba32f sample(float coordx, float coordy, float miplevel) const;
 

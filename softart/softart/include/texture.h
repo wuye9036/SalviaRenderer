@@ -13,6 +13,7 @@
 BEGIN_NS_SOFTART()
 
 
+
 class texture
 {
 protected:
@@ -36,6 +37,8 @@ protected:
 	}
 public:
 	texture():max_lod_(0), min_lod_(0){}
+
+	virtual texture_type get_texture_type()const = 0;
 
 	size_t get_min_lod() const{return min_lod_;}
 	size_t get_max_lod() const{return max_lod_;}
@@ -69,6 +72,11 @@ public:
 	texture_2d(size_t width, size_t height, pixel_format format);
 	void reset(size_t width, size_t height, pixel_format format);
 
+	virtual texture_type get_texture_type()const
+	{
+		return texture_type_2d;
+	};
+
 	virtual void gen_mipmap(filter_type filter);
 
 	virtual void lock(void** pData, size_t miplevel, const efl::rect<size_t>& lrc, lock_mode lm, size_t z_slice = 0);
@@ -97,6 +105,10 @@ public:
 	texture_cube(size_t width, size_t height, pixel_format format);
 	void reset(size_t width, size_t height, pixel_format format);
 
+	virtual texture_type get_texture_type()const
+	{
+		return texture_type_cube;
+	};
 	virtual void gen_mipmap(filter_type filter);
 
 	virtual void lock(void** pData, size_t miplevel, const efl::rect<size_t>& lrc, lock_mode lm, size_t z_slice = 0);

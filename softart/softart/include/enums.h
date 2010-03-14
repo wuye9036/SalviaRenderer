@@ -116,6 +116,15 @@ enum fill_mode
 /****************************
  * Texture
  ***************************/
+
+enum texture_type
+{
+	texture_type_1d = 0,
+	texture_type_2d = 1,
+	texture_type_cube = 2,
+	texture_type_count = 3,
+};
+
 enum address_mode
 {
 	address_wrap = 0,
