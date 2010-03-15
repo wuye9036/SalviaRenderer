@@ -176,7 +176,7 @@ public:
 		box_mesh = create_box(hsr.get());
 
 		h_vertex_shader pvs(new vs());
-		h_pixel_shader pps(new ps(texture_io_gdiplus::instance().load(hsr.get() , _T("..\\samples\\Resources\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
+		h_pixel_shader pps(new ps(texture_io_gdiplus::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
 		h_blend_shader pts(new ts());
 
 		hsr->set_vertex_shader(pvs);

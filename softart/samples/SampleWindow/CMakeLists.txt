@@ -7,8 +7,8 @@ ADD_DEFINITIONS( -DWIN32
 )
 check_build_with_unicode()
 
-INCLUDE_DIRECTORIES(../../
-)
+INCLUDE_DIRECTORIES(../../)
+
 set (HEADER_FILES
 	AboutDlg.h
 	MainFrm.h
@@ -45,3 +45,5 @@ TARGET_LINK_LIBRARIES(SampleWindow
 	SoftArt
 	SoftArtX
 )
+
+config_output_paths()

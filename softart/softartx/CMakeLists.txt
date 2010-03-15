@@ -63,3 +63,6 @@ IF (WIN32)
 	TARGET_LINK_LIBRARIES (SoftArtX "gdiplus") 
 	#ENDIF (USE_GDIPLUS_LIBRARY) 
 ENDIF (WIN32) 
+
+
+config_output_paths()

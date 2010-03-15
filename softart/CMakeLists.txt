@@ -9,7 +9,7 @@ endif ()
 
 option(SOFTART_BUILD_WITH_UNICODE "Build with unicode." TRUE)
 
-set(SOFTART_BINARY_DIR "../Win32")
+#set(CMAKE_USE_RELATIVE_PATHS TRUE)
 
 macro(check_build_with_unicode)
 	if(SOFTART_BUILD_WITH_UNICODE)
@@ -19,6 +19,12 @@ macro(check_build_with_unicode)
 		)
 	endif ()
 endmacro(check_build_with_unicode)
+
+macro(config_output_paths)
+	SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/bin)
+	SET(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/lib)
+endmacro(config_output_paths)
+
 
 ADD_SUBDIRECTORY( eflib )
 ADD_SUBDIRECTORY( softart )

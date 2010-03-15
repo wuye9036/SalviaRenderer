@@ -39,3 +39,5 @@ ADD_LIBRARY( EFLIB STATIC
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
+
+config_output_paths()
