@@ -2,11 +2,6 @@ PROJECT( SoftArt )
 
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
-if (NOT APPLE)
-  # Create debug libraries with _d postfix
-  set(CMAKE_DEBUG_POSTFIX "_d")
-endif ()
-
 option(SOFTART_BUILD_WITH_UNICODE "Build with unicode." TRUE)
 
 #set(CMAKE_USE_RELATIVE_PATHS TRUE)
@@ -20,11 +15,7 @@ macro(check_build_with_unicode)
 	endif ()
 endmacro(check_build_with_unicode)
 
-macro(config_output_paths)
-	SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/bin)
-	SET(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/lib)
-endmacro(config_output_paths)
-
+ADD_SUBDIRECTORY( cmake )
 
 ADD_SUBDIRECTORY( eflib )
 ADD_SUBDIRECTORY( softart )

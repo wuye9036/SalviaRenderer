@@ -65,4 +65,4 @@ IF (WIN32)
 ENDIF (WIN32) 
 
 
-config_output_paths()
+config_output_paths(SoftArtX)

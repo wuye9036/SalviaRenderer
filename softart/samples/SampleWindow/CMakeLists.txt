@@ -45,5 +45,7 @@ TARGET_LINK_LIBRARIES(SampleWindow
 	SoftArt
 	SoftArtX
 )
+config_output_paths(SampleWindow)
 
-config_output_paths()
+
+ogre_create_vcproj_userfile(SampleWindow)

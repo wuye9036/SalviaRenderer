@@ -78,4 +78,4 @@ TARGET_LINK_LIBRARIES(SoftArt
 EFLIB
 )
 
-config_output_paths()
+config_output_paths(SoftArt)
