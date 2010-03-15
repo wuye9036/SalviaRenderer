@@ -16,8 +16,8 @@ namespace std{
 	typedef wfstream _tfstream;
 	typedef wstringstream _tstringstream;
 #else
-	typedef cin _tcin;
-	typedef cout _tcout;
+	static istream& _tcin(cin);
+	static ostream& _tcout(cout);
 	typedef ostream _tostream;
 	typedef istream _tistream;
 	typedef fstream _tfstream;
