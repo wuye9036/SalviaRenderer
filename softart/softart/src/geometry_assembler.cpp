@@ -254,24 +254,32 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 
 	while (local_working_tile < tiles.size()){
 		lockfree_queue<uint32_t>& prims = tiles[local_working_tile];
+
+		std::vector<uint32_t> sorted_prims;
+		uint32_t iprim;
+		while (!prims.empty()){
+			prims.dequeue(iprim);
+			sorted_prims.push_back(iprim);
+		}
+		std::sort(sorted_prims.begin(), sorted_prims.end());
+
 		int y = local_working_tile / num_tiles_x_;
 		int x = local_working_tile - y * num_tiles_x_;
 		tile_vp.x = x * TILE_SIZE;
 		tile_vp.y = y * TILE_SIZE;
 
-		uint32_t iprim;
 		switch(primtopo_){
 		case primitive_line_list:
 		case primitive_line_strip:
-			while (!prims.empty()){
-				prims.dequeue(iprim);
+			for (size_t i = 0; i < sorted_prims.size(); ++ i){
+				iprim = sorted_prims[i];
 				hrast->rasterize_line(dvc_.fetch(indices[iprim * 2 + 0]), dvc_.fetch(indices[iprim * 2 + 1]), tile_vp, pps);
 			}
 			break;
 		case primitive_triangle_list:
 		case primitive_triangle_strip:
-			while (!prims.empty()){
-				prims.dequeue(iprim);
+			for (size_t i = 0; i < sorted_prims.size(); ++ i){
+				iprim = sorted_prims[i];
 				hrast->rasterize_triangle(dvc_.fetch(indices[iprim * 3 + 0]), dvc_.fetch(indices[iprim * 3 + 1]), dvc_.fetch(indices[iprim * 3 + 2]), tile_vp, pps);
 			}
 			break;
