@@ -25,8 +25,6 @@ using namespace Gdiplus;
 using namespace efl;
 using namespace softart;
 
-gdiplus_initializer gdiplus_initializer::init_;
-
 BEGIN_NS_SOFTARTX_PRESENTER()
 
 dev_gdiplus::dev_gdiplus(HWND hwnd): hwnd_(hwnd), fb_(NULL){

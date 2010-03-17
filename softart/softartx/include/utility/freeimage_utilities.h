@@ -1,17 +1,19 @@
 #ifndef SOFTARTX_FREEIMAGE_UTILITIES_H
 #define SOFTARTX_FREEIMAGE_UTILITIES_H
 
-#define SOFTARTX_FREEIMAGE_ENABLED
+#include <softartx/include/utility/user_config.h>
+
 #ifdef SOFTARTX_FREEIMAGE_ENABLED
 
+#include "utility_forward.h"
 #include "softart/include/colors.h"
 #include "eflib/include/eflib.h"
 #include <FreeImage.h>
-#include <tchar.h>
 #include <boost/static_assert.hpp>
 #include <algorithm>
+#include <tchar.h>
 
-BEGIN_NS_SOFTARTX_RESOURCE()
+BEGIN_NS_SOFTARTX_UTILITY()
 // 读取位图
 FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 
@@ -19,7 +21,9 @@ FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 bool check_image_type_support(FIBITMAP* image);
 
 // 将位图的指定区域缩放拷贝成指定大小的副本。
-FIBITMAP* make_bitmap_copy(FIBITMAP* image, const rect<size_t>& src, size_t dest_width, size_t dest_height);
+FIBITMAP* make_bitmap_copy( efl::rect<size_t>& out_region,
+						   size_t dest_width, size_t dest_height,
+						   FIBITMAP* image, const efl::rect<size_t>& src_region );
 
 // 统一颜色的字节序列访问。
 // 将不同字节序列表示的颜色，通过适配器转换成统一的访问接口。
@@ -102,32 +106,34 @@ private:
 // 获得与FreeImage内部颜色格式相同的，并按照RGBA色序排列的SoftArt颜色类型。
 template<typename FIColorT>
 struct softart_rgba_color_type{
-	typedef color_max type;
-	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	typedef softart::color_max type;
+	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
 };
 template<>
 struct softart_rgba_color_type<RGBQUAD>{
-	typedef color_rgba8 type;
-	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	typedef softart::color_rgba8 type;
+	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<RGBTRIPLE>{
-	typedef color_rgba8 type;
-	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	typedef softart::color_rgba8 type;
+	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBF>{
-	typedef color_rgba32f type;
-	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	typedef softart::color_rgba32f type;
+	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBAF>{
-	typedef color_rgba32f type;
-	const softart::pixel_format fmt = pixel_type_to_fmt<typename type>::fmt;
+	typedef softart::color_rgba32f type;
+	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
 };
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SOFTARTX_UTILITY()
+
+#endif // SOFTART_FREEIMAGE_ENABLED
 
 #endif

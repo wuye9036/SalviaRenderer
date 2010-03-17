@@ -22,7 +22,7 @@ BEGIN_NS_SOFTART()
 using namespace std;
 using namespace efl;
 
-const int TILE_SIZE = 64;
+const int TILE_SIZE = 256;
 
 template<class T>
 void geometry_assembler::get_vert_range(size_t startpos, size_t count, int basevert, size_t& min_vert, size_t& max_vert)
@@ -174,13 +174,13 @@ void geometry_assembler::draw(size_t startpos, size_t prim_count){
 		}
 		break;
 	default:
-		custom_assert(false, "Primitive Topology错了！");
+		custom_assert(false, "Invalid primitive topology!");
 	}
 }
 
 template<class T>
 void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, std::vector<T> const & indices, atomic<int32_t>& working_prim, int32_t prim_count){
-	//TODO: 需要支持index restart, DX 10 Spec
+	//TODO: need support feature "index restart" from DX 10 Spec
 
 	int32_t local_working_prim = working_prim ++;
 

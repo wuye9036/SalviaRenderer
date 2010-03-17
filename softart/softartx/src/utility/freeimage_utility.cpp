@@ -1,13 +1,14 @@
-#ifdef SOFTARTX_FREEIMAGE_ENABLED
-
 #include <softartx/include/utility/freeimage_utilities.h>
+
+#ifdef SOFTARTX_FREEIMAGE_ENABLED
 
 using namespace std;
 using namespace efl;
 using namespace softart;
-BEGIN_NS_SOFTARTX_RESOURCE()
 
-FIBITMAP* load_image(const std::_tstring& filename, int flag FI_DEFAULT(0))
+BEGIN_NS_SOFTARTX_UTILITY()
+
+FIBITMAP* load_image(const std::_tstring& filename, int flag)
 {
 	string ansi_filename = to_ansi_string(filename);
 
@@ -84,7 +85,7 @@ FIBITMAP* make_bitmap_copy(
 			image, (int)src_region.x, (int)src_region.y, (int)(src_region.x+src_region.w), int(src_region.y+src_region.h)
 			);
 		FreeImage_Unload(image);
-		if(!sub_image) return ret;
+		if(!sub_image) return NULL;
 	}
 
 	// scale
@@ -97,6 +98,6 @@ FIBITMAP* make_bitmap_copy(
 	return scaled_image;
 }
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SOFTARTX_UTILITY()
 
 #endif //SOFTARTX_FREEIMAGE_ENABLED

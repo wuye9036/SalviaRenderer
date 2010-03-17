@@ -8,6 +8,7 @@
 #include "softartx/include/presenter/gdiplus/dev_gdiplus.h"
 #include "softartx/include/resource/mesh/sa/mesh_io.h"
 #include "softartx/include/resource/texture/gdiplus/tex_io_gdiplus.h"
+#include "softartx/include/resource/texture/freeimage/tex_io_freeimage.h"
 #include "softart/include/shader.h"
 #include "softart/include/renderer_impl.h"
 #include "softart/include/resource_manager.h"
@@ -176,7 +177,7 @@ public:
 		box_mesh = create_box(hsr.get());
 
 		h_vertex_shader pvs(new vs());
-		h_pixel_shader pps(new ps(texture_io_gdiplus::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
+		h_pixel_shader pps(new ps(texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
 		h_blend_shader pts(new ts());
 
 		hsr->set_vertex_shader(pvs);
