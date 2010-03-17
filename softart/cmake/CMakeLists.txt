@@ -20,3 +20,25 @@ function(ogre_create_vcproj_userfile TARGETNAME)
   endif ()
 endfunction(ogre_create_vcproj_userfile)
 
+macro(config_3rd_party)
+	set(3rd_party_path ${CMAKE_HOME_DIRECTORY}/../3rd_party)
+	set(3rd_party_includes
+		${3rd_party_path}/threadpool
+		${3rd_party_path}/FreeImage/include
+	)
+	if(CMAKE_CL_64)
+		set(3rd_party_libs ${3rd_party_path}/FreeImage/lib/x64)
+	else(CMAKE_CL_64)
+		set(3rd_party_libs ${3rd_party_path}/FreeImage/lib/win32)
+	endif(CMAKE_CL_64)
+endmacro(config_3rd_party)
+
+
+macro(check_build_with_unicode)
+	if(SOFTART_BUILD_WITH_UNICODE)
+		ADD_DEFINITIONS(
+			-DUNICODE
+			-D_UNICODE
+		)
+	endif ()
+endmacro(check_build_with_unicode)

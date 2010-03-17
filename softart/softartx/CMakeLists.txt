@@ -1,16 +1,13 @@
-ADD_DEFINITIONS( -DWIN32
+ADD_DEFINITIONS(
 -D_LIB
--D_CRT_SECURE_NO_DEPRECATE
--D_SCL_SECURE_NO_DEPRECATE
--D_SECURE_SCL=0
 -DBOOST_ALL_DYN_LINK
 )
 check_build_with_unicode()
-
+config_3rd_party()
 INCLUDE_DIRECTORIES(../
-../../3rd_party/threadpool
-../../3rd_party/FreeImage/include
+${3rd_party_includes}
 )
+LINK_DIRECTORIES(${3rd_party_libs})
 
 set (HEADER_FILES
 	include/resource/mesh/sa/mesh.h
@@ -57,12 +54,10 @@ SoftArt
 )
 
 IF (WIN32) 
-	#SET (USE_GDIPLUS_LIBRARY CACHE BOOL "Should we use the GDIPLUS.dll (better drawing)")  
-	#IF (USE_GDIPLUS_LIBRARY) 
-	#MESSAGE ("Using gdiplus.dll for better drawings") 
 	TARGET_LINK_LIBRARIES (SoftArtX "gdiplus") 
-	#ENDIF (USE_GDIPLUS_LIBRARY) 
 ENDIF (WIN32) 
+
+TARGET_LINK_LIBRARIES (SoftArtX FreeImage) 
 
 
 config_output_paths(SoftArtX)
