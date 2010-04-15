@@ -31,7 +31,7 @@ class geometry_assembler : public render_stage
 	primitive_topology primtopo_;
 	index_type	idxtype_;
 
-	void draw_index_impl(size_t startpos, size_t prim_count, int basevert);
+	void draw_index_impl(size_t prim_count);
 	void dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, atomic<int32_t>& working_prim, int32_t prim_count, uint32_t stride);
 	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, atomic<int32_t>& working_tile, const h_pixel_shader& pps);
 	void generate_indices_impl(std::vector<uint32_t>& indices, atomic<int32_t>& working_prim, int32_t prim_count, uint32_t stride);

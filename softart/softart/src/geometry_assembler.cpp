@@ -130,7 +130,8 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 
 	int32_t local_working_tile = working_tile ++;
 
-	while (local_working_tile < tiles.size()){
+	int32_t num_tiles = static_cast<int32_t>(tiles.size());
+	while (local_working_tile < num_tiles){
 		lockfree_queue<uint32_t>& prims = tiles[local_working_tile];
 
 		std::vector<uint32_t> sorted_prims;
@@ -143,8 +144,8 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 
 		int y = local_working_tile / num_tiles_x_;
 		int x = local_working_tile - y * num_tiles_x_;
-		tile_vp.x = x * TILE_SIZE;
-		tile_vp.y = y * TILE_SIZE;
+		tile_vp.x = static_cast<float>(x * TILE_SIZE);
+		tile_vp.y = static_cast<float>(y * TILE_SIZE);
 
 		switch(primtopo_){
 		case primitive_line_list:
@@ -178,7 +179,7 @@ void geometry_assembler::generate_indices_impl(std::vector<uint32_t>& indices, a
 	}
 }
 
-void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int basevert){
+void geometry_assembler::draw_index_impl(size_t prim_count){
 
 	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
 	if(!pparent_) return;
@@ -213,7 +214,7 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 	num_tiles_y_ = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
 	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x_ * num_tiles_y_);
 
-	size_t prim_size = 0;
+	uint32_t prim_size = 0;
 	switch(primtopo_)
 	{
 	case primitive_line_list:
@@ -234,7 +235,7 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 	size_t num_threads = num_cpu_cores();
 
 	for (size_t i = 0; i < num_threads; ++ i){
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::generate_indices_impl, this, boost::ref(indices), boost::ref(working_prim), prim_count, prim_size));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::generate_indices_impl, this, boost::ref(indices), boost::ref(working_prim), static_cast<int32_t>(prim_count), prim_size));
 	}
 	global_thread_pool().wait();
 #else
@@ -248,7 +249,7 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 #ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_threads; ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_impl, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), prim_count, prim_size));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_impl, this, boost::ref(tiles), boost::ref(indices), boost::ref(working_prim), static_cast<int32_t>(prim_count), prim_size));
 	}
 	global_thread_pool().wait();
 #else
@@ -272,20 +273,20 @@ void geometry_assembler::draw_index_impl(size_t startpos, size_t prim_count, int
 		hps->destroy_clone(ppps[i]);
 	}
 #else
-	geometry_assembler::rasterize_primitive_func(boost::ref(tiles), boost::ref(indices), boost::ref(working_tile), hps.get());
+	geometry_assembler::rasterize_primitive_func(boost::ref(tiles), boost::ref(indices), boost::ref(working_tile), hps);
 #endif
 }
 
 void geometry_assembler::draw(size_t startpos, size_t prim_count){
 	dvc_.reset();
-	ind_fetcher_.initialize(h_buffer(), idxtype_, primtopo_, startpos, 0);
-	draw_index_impl(startpos, prim_count, 0);
+	ind_fetcher_.initialize(h_buffer(), idxtype_, primtopo_, static_cast<uint32_t>(startpos), 0);
+	draw_index_impl(prim_count);
 }
 
 void geometry_assembler::draw_index(size_t startpos, size_t prim_count, int basevert){
 	dvc_.reset();
-	ind_fetcher_.initialize(indexbuf_, idxtype_, primtopo_, startpos, basevert);
-	draw_index_impl(startpos, prim_count, basevert);
+	ind_fetcher_.initialize(indexbuf_, idxtype_, primtopo_, static_cast<uint32_t>(startpos), basevert);
+	draw_index_impl(prim_count);
 }
 
 END_NS_SOFTART()

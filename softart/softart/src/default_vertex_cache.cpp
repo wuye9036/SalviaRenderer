@@ -63,7 +63,7 @@ void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indic
 #ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
+		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl, this, boost::ref(unique_indices), boost::ref(working_index), static_cast<int32_t>(unique_indices.size())));
 	}
 	global_thread_pool().wait();
 #else
@@ -102,7 +102,7 @@ void default_vertex_cache::delete_vertex(vs_output* const pvert)
 	bool isfrom = verts_pool_.is_from(pvert);
 	custom_assert(isfrom, "");
 
-	if(verts_pool_.is_from(pvert))
+	if(isfrom)
 	{
 		pvert->~vs_output();
 		verts_pool_.free(pvert);
