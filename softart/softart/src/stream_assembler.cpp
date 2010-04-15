@@ -85,4 +85,14 @@ void stream_assembler::set_stream(stream_index stridx, h_buffer hbuf)
 
 	streams_[stridx] = hbuf;
 }
+
+size_t stream_assembler::num_vertices() const
+{
+	const input_element_decl& ied = layout_[0];
+	h_buffer hb = streams_[ied.stream_idx];
+	custom_assert(hb, "");
+
+	return hb->get_size() / ied.stride;
+}
+
 END_NS_SOFTART()

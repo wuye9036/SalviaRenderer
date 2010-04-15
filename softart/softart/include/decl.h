@@ -19,6 +19,7 @@ class rasterizer;
 class pixel_shader;
 class blend_shader;
 class framebuffer;
+class index_fetcher;
 
 // resources
 class buffer_manager;

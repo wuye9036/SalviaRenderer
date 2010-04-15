@@ -70,7 +70,7 @@ IMPL_RS_UPDATED(rasterizer, pixel_shader)
  *			2 wpos的x y z分量已经除以了clip w
  *			3 positon.w为1.0f / clip w
  **************************************************/
-void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, const viewport& vp, pixel_shader *pps)
+void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
 
 	vs_output diff = project(v1) - project(v0);
@@ -221,7 +221,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 *			2 wpos的x y z分量已经除以了clip w
 *			3 positon.w为1.0f / clip w
 **************************************************/
-void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, pixel_shader *pps)
+void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
 
 	//{
@@ -436,7 +436,7 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 
 //扫描线光栅化程序，将对扫描线依据差分信息进行光栅化并将光栅化的片段传递到像素着色器中.
 //Note:传入的像素将w乘回到attribute上.
-void rasterizer::rasterize_scanline_impl(const scanline_info& sl, pixel_shader *pps)
+void rasterizer::rasterize_scanline_impl(const scanline_info& sl, const h_pixel_shader& pps)
 {
 
 	h_blend_shader hbs = pparent_->get_blend_shader();
@@ -466,7 +466,7 @@ rasterizer::rasterizer()
 rasterizer::~rasterizer()
 {
 }
-void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, pixel_shader *pps)
+void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
 	//如果完全超过边界，则剔除
 
@@ -482,7 +482,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 	rasterize_line_impl(v0, v1, vp, pps);
 }
 
-void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, pixel_shader *pps)
+void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
 	//边界剔除
 	

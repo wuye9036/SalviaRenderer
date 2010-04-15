@@ -180,7 +180,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../;$(ProjectDir)../../../3rd_party/threadpool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0;BOOST_ALL_DYN_LINK"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0;BOOST_ALL_DYN_LINK;SOFTART_MULTITHEADING_ENABLED"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -245,7 +245,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				AdditionalIncludeDirectories="../../;$(ProjectDir)../../../3rd_party/threadpool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0;BOOST_ALL_DYN_LINK"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_SECURE_SCL=0;BOOST_ALL_DYN_LINK;SOFTART_MULTITHEADING_ENABLED"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				WarningLevel="4"
@@ -315,6 +315,10 @@
 			</File>
 			<File
 				RelativePath="..\..\softart\src\geometry_assembler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\softart\src\index_fetcher.cpp"
 				>
 			</File>
 			<File
@@ -421,6 +425,10 @@
 			</File>
 			<File
 				RelativePath="..\..\softart\include\handles.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\softart\include\index_fetcher.h"
 				>
 			</File>
 			<File

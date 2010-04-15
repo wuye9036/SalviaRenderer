@@ -80,13 +80,13 @@ public:
 
 		return true;
 	}
-	virtual pixel_shader *create_clone()
+	virtual h_pixel_shader create_clone()
 	{
-		return new ps(*this);
+		return h_pixel_shader(new ps(*this));
 	}
-	virtual void destroy_clone(pixel_shader *ps_clone)
+	virtual void destroy_clone(h_pixel_shader& ps_clone)
 	{
-		delete ps_clone;
+		ps_clone.reset();
 	}
 };
 

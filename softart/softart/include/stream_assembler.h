@@ -18,6 +18,7 @@ public:
 	void set_stream(stream_index stridx, h_buffer hbuf);
 
 	vs_input fetch_vertex(size_t idx);
+	size_t num_vertices() const;
 };
 
 END_NS_SOFTART()

@@ -21,11 +21,6 @@ void default_vertex_cache::initialize(renderer_impl* psr){
 	pparent_ = psr;
 }
 
-void default_vertex_cache::set_vert_range(size_t minvert, size_t /*maxvert*/)
-{
-	vert_base_ = minvert;
-}
-
 void default_vertex_cache::reset()
 {
 	verts_.clear();
@@ -35,49 +30,21 @@ void default_vertex_cache::reset()
 	pvp_ = &(pparent_->get_viewport());
 }
 
-template <typename T>
-void default_vertex_cache::transform_vertex_impl(const std::vector<T>& indices, atomic<int32_t>& working_index, int32_t index_count)
+void default_vertex_cache::transform_vertex_impl(const std::vector<uint32_t>& indices, atomic<int32_t>& working_index, int32_t index_count)
 {
 	int32_t local_working_index = working_index ++;
 
 	while (local_working_index < index_count)
 	{
-		T id = indices[local_working_index];
+		uint32_t id = indices[local_working_index];
 
-		if (id < vert_base_){
-			custom_assert(false, "");
-		}
+		custom_assert(used_verts_[id] == local_working_index, "");
 
-		size_t pos = id - vert_base_;
-	
-		if (pos > verts_.size()){
-			custom_assert(false, "");
-		}
-
-		pvs_->execute(psa_->fetch_vertex(id), verts_[pos]);
-		update_wpos(verts_[pos], *pvp_);
+		pvs_->execute(psa_->fetch_vertex(id), verts_[local_working_index]);
+		update_wpos(verts_[local_working_index], *pvp_);
 
 		local_working_index = working_index ++;
 	}
-}
-
-void default_vertex_cache::transform_vertices(const std::vector<uint16_t>& indices)
-{
-	std::vector<uint16_t> unique_indices = indices;
-	std::sort(unique_indices.begin(), unique_indices.end());
-	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
-	verts_.resize(unique_indices.size());
-
-	atomic<int32_t> working_index(0);
-#ifdef SOFTART_MULTITHEADING_ENABLED
-	for (size_t i = 0; i < num_cpu_cores(); ++ i)
-	{
-		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint16_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
-	}
-	global_thread_pool().wait();
-#else
-	default_vertex_cache::transform_vertex_impl<uint16_t>(boost::ref(unique_indices), boost::ref(working_index), unique_indices.size());
-#endif
 }
 
 void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indices)
@@ -86,16 +53,21 @@ void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indic
 	std::sort(unique_indices.begin(), unique_indices.end());
 	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
 	verts_.resize(unique_indices.size());
+	used_verts_.assign(psa_->num_vertices(), -1);
+	for (size_t i = 0; i < unique_indices.size(); ++ i)
+	{
+		used_verts_[unique_indices[i]] = static_cast<int32_t>(i);
+	}
 
 	atomic<int32_t> working_index(0);
 #ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl<uint32_t>, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
+		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl, this, boost::ref(unique_indices), boost::ref(working_index), unique_indices.size()));
 	}
 	global_thread_pool().wait();
 #else
-	default_vertex_cache::transform_vertex_impl<uint32_t>(boost::ref(unique_indices), boost::ref(working_index), unique_indices.size());
+	default_vertex_cache::transform_vertex_impl(boost::ref(unique_indices), boost::ref(working_index), unique_indices.size());
 #endif
 }
 
@@ -103,19 +75,12 @@ vs_output& default_vertex_cache::fetch(cache_entry_index id)
 {
 	static vs_output null_obj;
 
-	if(id < vert_base_){
+	if((id > used_verts_.size()) || (-1 == used_verts_[id])){
 		custom_assert(false, "");
 		return null_obj;
 	}
 
-	size_t pos = id - vert_base_;
-
-	if( pos > verts_.size() ){
-		custom_assert(false, "");
-		return null_obj;
-	}
-
-	return verts_[pos];
+	return verts_[used_verts_[id]];
 
 	//custom_assert(false, "");
 	//return null_obj;

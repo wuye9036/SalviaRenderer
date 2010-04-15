@@ -1,0 +1,98 @@
+#include "../include/buffer.h"
+#include "../include/index_fetcher.h"
+
+BEGIN_NS_SOFTART()
+
+void index_fetcher::initialize(h_buffer hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
+{
+	indexbuf_ = hbuf;
+	idxtype_ = idxtype;
+	primtopo_ = primtopo;
+	if (index_int16 == idxtype_)
+	{
+		stride_ = 2;
+	}
+	else
+	{
+		custom_assert(index_int32 == idxtype_, "Wrong index type");
+		stride_ = 4;
+	}
+	startpos_ = startpos * stride_;
+	basevert_ = basevert;
+}
+
+void index_fetcher::fetch_indices(uint32_t* prim_indices, uint32_t id)
+{
+	//TODO: need support feature "index restart" from DX 10 Spec
+
+	uint32_t count;
+	uint32_t ids[3];
+	switch(primtopo_)
+	{
+	case primitive_line_list:
+		count = 2;
+		ids[0] = id * 2 + 0;
+		ids[1] = id * 2 + 1;
+		break;
+
+	case primitive_line_strip:
+		count = 2;
+		ids[0] = id + 0;
+		ids[1] = id + 1;
+		break;
+	
+	case primitive_triangle_list:
+		count = 3;
+		ids[0] = id * 3 + 0;
+		ids[1] = id * 3 + 1;
+		ids[2] = id * 3 + 2;
+		break;
+
+	case primitive_triangle_strip:
+		count = 3;
+		ids[0] = id + 0;
+		ids[1] = id + 1;
+		ids[2] = id + 2;
+
+		if(id & 1){
+			std::swap(ids[0], ids[2]);
+		}
+		break;
+
+	default:
+		custom_assert(false, "");
+		count = 0;
+		break;
+	}
+
+	if (indexbuf_)
+	{
+		if (index_int16 == idxtype_)
+		{
+			uint16_t* pidx = reinterpret_cast<uint16_t*>(indexbuf_->raw_data(startpos_));
+			for (uint32_t i = 0; i < count; ++ i)
+			{
+				prim_indices[i] = pidx[ids[i]] + basevert_;
+			}
+		}
+		else
+		{
+			custom_assert(index_int32 == idxtype_, "Wrong index type");
+
+			uint32_t* pidx = reinterpret_cast<uint32_t*>(indexbuf_->raw_data(startpos_));
+			for (uint32_t i = 0; i < count; ++ i)
+			{
+				prim_indices[i] = pidx[ids[i]] + basevert_;
+			}
+		}
+	}
+	else
+	{
+		for (uint32_t i = 0; i < count; ++ i)
+		{
+			prim_indices[i] = ids[i] + basevert_;
+		}
+	}
+}
+
+END_NS_SOFTART()

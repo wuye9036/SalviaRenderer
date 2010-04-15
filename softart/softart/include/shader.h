@@ -121,8 +121,8 @@ public:
 	bool execute(const vs_output& in, ps_output& out);
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;
 
-	virtual pixel_shader *create_clone() = 0;
-	virtual void destroy_clone(pixel_shader *ps_clone) = 0;
+	virtual h_pixel_shader create_clone() = 0;
+	virtual void destroy_clone(h_pixel_shader& ps_clone) = 0;
 };
 
 //it is called when render a shaded pixel into framebuffer

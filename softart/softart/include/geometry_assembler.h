@@ -13,6 +13,8 @@
 #include "atomic.h"
 #include "lockfree_queue.h"
 
+#include "index_fetcher.h"
+
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
 
@@ -29,31 +31,14 @@ class geometry_assembler : public render_stage
 	primitive_topology primtopo_;
 	index_type	idxtype_;
 
-	template<class T>
-		void get_vert_range(size_t startpos, size_t count, int basevert, size_t& min_vert, size_t& max_vert);
-
-	vs_output* transform_vertex(size_t startpos, size_t count);
-
-	template<class T>
-		void draw_index_impl(size_t startpos, size_t prim_count, int basevert);
-
-	template<class T>
-		void dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, std::vector<T> const & indices, atomic<int32_t>& working_prim, int32_t prim_count);
-
-	template<class T>
-		void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<T>& indices, atomic<int32_t>& working_tile , pixel_shader *pps);
-
-	template<class T>
-		void generate_line_list_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
-	template<class T>
-		void generate_line_strip_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
-	template<class T>
-		void generate_triangle_list_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
-	template<class T>
-		void generate_triangle_strip_indices_impl(std::vector<T>& indices, T* pidx, atomic<int32_t>& working_prim, int32_t prim_count);
+	void draw_index_impl(size_t startpos, size_t prim_count, int basevert);
+	void dispatch_primitive_impl(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, atomic<int32_t>& working_prim, int32_t prim_count, uint32_t stride);
+	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, atomic<int32_t>& working_tile, const h_pixel_shader& pps);
+	void generate_indices_impl(std::vector<uint32_t>& indices, atomic<int32_t>& working_prim, int32_t prim_count, uint32_t stride);
 
 	stream_assembler sa_;
 	default_vertex_cache dvc_;
+	index_fetcher ind_fetcher_;
 	int num_tiles_x_, num_tiles_y_;
 
 public:
