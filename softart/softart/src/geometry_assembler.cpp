@@ -22,7 +22,7 @@ BEGIN_NS_SOFTART()
 using namespace std;
 using namespace efl;
 
-const int TILE_SIZE = 256;
+const int TILE_SIZE = 64;
 
 void geometry_assembler::initialize(renderer_impl* pparent)
 {
@@ -86,25 +86,33 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint
 	float y_max;
 	while (local_working_prim < prim_count)
 	{
-		const vs_output& v0 = dvc_.fetch(indices[local_working_prim * stride + 0]);
-		x_min = v0.wpos.x;
-		x_max = v0.wpos.x;
-		y_min = v0.wpos.y;
-		y_max = v0.wpos.y;
+		{
+			const vs_output& v0 = dvc_.fetch(indices[local_working_prim * stride + 0]);
+			const float sign_w = sign(v0.wpos.w);
+			const float x = v0.wpos.x * sign_w;
+			const float y = v0.wpos.y * sign_w;
+			x_min = x;
+			x_max = x;
+			y_min = y;
+			y_max = y;
+		}
 
 		for (size_t i = 1; i < stride; ++ i)
 		{
 			const vs_output& v = dvc_.fetch(indices[local_working_prim * stride + i]);
-			x_min = min(x_min, v.wpos.x);
-			x_max = max(x_max, v.wpos.x);
-			y_min = min(y_min, v.wpos.y);
-			y_max = max(y_max, v.wpos.y);
+			const float sign_w = sign(v.wpos.w);
+			const float x = v.wpos.x * sign_w;
+			const float y = v.wpos.y * sign_w;
+			x_min = min(x_min, x);
+			x_max = max(x_max, x);
+			y_min = min(y_min, y);
+			y_max = max(y_max, y);
 		}
 
-		int sx = efl::clamp(static_cast<int>(floor(x_min / TILE_SIZE)), 0, num_tiles_x_);
-		int sy = efl::clamp(static_cast<int>(floor(y_min / TILE_SIZE)), 0, num_tiles_y_);
-		int ex = efl::clamp(static_cast<int>(ceil(x_max / TILE_SIZE)), 0, num_tiles_x_);
-		int ey = efl::clamp(static_cast<int>(ceil(y_max / TILE_SIZE)), 0, num_tiles_y_);
+		int sx = min(static_cast<int>(floor(max(0, x_min) / TILE_SIZE)), num_tiles_x_);
+		int sy = min(static_cast<int>(floor(max(0, y_min) / TILE_SIZE)), num_tiles_y_);
+		int ex = min(static_cast<int>(ceil(max(0, x_max) / TILE_SIZE)) + 1, num_tiles_x_);
+		int ey = min(static_cast<int>(ceil(max(0, y_max) / TILE_SIZE)) + 1, num_tiles_y_);
 
 		for (int y = sy; y < ey; ++ y){
 			for (int x = sx; x < ex; ++ x){
