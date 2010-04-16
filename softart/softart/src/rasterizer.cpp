@@ -85,10 +85,10 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 	vs_output ddx = diff * (diff.wpos.x / (diff.wpos.xy().length_sqr()));
 	vs_output ddy = diff * (diff.wpos.y / (diff.wpos.xy().length_sqr()));
 
-	int vpleft = int(max(0, vp.x));
-	int vpbottom = int(max(0, vp.y));
-	int vpright = int(min(vp.x+vp.w, hfb_->get_width()));
-	int vptop = int(min(vp.y+vp.h, hfb_->get_height()));
+	int vpleft = int(max(0.0f, vp.x));
+	int vpbottom = int(max(0.0f, vp.y));
+	int vpright = int(min(vp.x+vp.w, (float)(hfb_->get_width())));
+	int vptop = int(min(vp.y+vp.h, (float)(hfb_->get_height())));
 
 	ps_output px_out;
 
@@ -308,10 +308,10 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 	const int bot_part = 0;
 	//const int top_part = 1;
 
-	int vpleft = int(max(0, vp.x));
-	int vpbottom = int(max(0, vp.y));
-	int vpright = int(min(vp.x+vp.w, hfb_->get_width()));
-	int vptop = int(min(vp.y+vp.h, hfb_->get_height()));
+	int vpleft = int(max(0.0f, vp.x));
+	int vpbottom = int(max(0.0f, vp.y));
+	int vpright = int(min(vp.x+vp.w, (float)(hfb_->get_width())));
+	int vptop = int(min(vp.y+vp.h, (float)(hfb_->get_height())));
 
 	for(int iPart = 0; iPart < 2; ++iPart){
 

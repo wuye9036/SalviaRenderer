@@ -10,7 +10,7 @@ BEGIN_NS_SOFTART()
 using namespace efl;
 using namespace std;
 
-clipper::clipper():last_stage(0), pool_(sizeof(vs_output)){
+clipper::clipper(){
 	//预先设置6个面，其余面清零
 	planes_[0] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	planes_[1] = vec4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -44,29 +44,14 @@ void clipper::set_clip_plane_enable(bool /*enable*/, size_t idx)
 
 void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2)
 {
-	boost::mutex::scoped_lock lock(clipper_mutex_);
-
-	//清理上一次clipper所使用的内存
-	for(size_t i = 0; i < 2; ++i)
-	{
-		for(size_t ivert = 0; ivert < clipped_verts_[i].size(); ++ivert)	{
-			if(is_vert_from_pool_[i][ivert]){
-				pool_.free(const_cast<vs_output*>(clipped_verts_[i][ivert]));
-			}
-		}
-	}
-
-	is_vert_from_pool_[0].clear();
+	efl::pool::stack_pool< vs_output, 20 > pool;
+	std::vector<const vs_output*> clipped_verts_[2];
 	clipped_verts_[0].clear();
 
 	//开始clip, Ping-Pong idioms
 	clipped_verts_[0].push_back(&v0);
 	clipped_verts_[0].push_back(&v1);
 	clipped_verts_[0].push_back(&v2);
-
-	is_vert_from_pool_[0].push_back(false);
-	is_vert_from_pool_[0].push_back(false);
-	is_vert_from_pool_[0].push_back(false);
 
 	float di, dj;
 	size_t src_stage = 0;
@@ -79,7 +64,6 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 		}
 
 		clipped_verts_[dest_stage].clear();
-		is_vert_from_pool_[dest_stage].clear();
 
 		for(size_t i = 0, j = 1; i < clipped_verts_[src_stage].size(); ++i, ++j)
 		{
@@ -91,28 +75,25 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 
 			if(di >= 0.0f){
 				clipped_verts_[dest_stage].push_back(clipped_verts_[src_stage][i]);
-				is_vert_from_pool_[dest_stage].push_back(false);
 
 				if(dj < 0.0f){
-					vs_output* pclipped = (vs_output*)(pool_.malloc());
+					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
 					*pclipped = *clipped_verts_[src_stage][i] + (*clipped_verts_[src_stage][j] - *clipped_verts_[src_stage][i]) * ( di / (di - dj));
 					update_wpos(*pclipped, vp);
 
 					clipped_verts_[dest_stage].push_back(pclipped);
-					is_vert_from_pool_[dest_stage].push_back(true);
 				}
 			} else {
 				if(dj >= 0.0f){
-					vs_output* pclipped = (vs_output*)(pool_.malloc());
+					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
 					*pclipped = *clipped_verts_[src_stage][j] + (*clipped_verts_[src_stage][i] - *clipped_verts_[src_stage][j]) * ( dj / (dj - di));
 					update_wpos(*pclipped, vp);
 
 					clipped_verts_[dest_stage].push_back(pclipped);
-					is_vert_from_pool_[dest_stage].push_back(true);
 				}
 			}
 		}
@@ -125,7 +106,6 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 	}
 	//返回
 	clipped_verts_[dest_stage].clear();
-	is_vert_from_pool_[dest_stage].clear();
 
 	const std::vector<const vs_output*> &clipped_verts_ptrs = clipped_verts_[src_stage];
 	out_clipped_verts.resize(clipped_verts_ptrs.size());
