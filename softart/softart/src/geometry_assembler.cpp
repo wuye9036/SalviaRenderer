@@ -13,7 +13,14 @@
 #include "../include/vertex_cache.h"
 #include "../include/cpuinfo.h"
 
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 4512 4244)
+#endif
 #include "../include/thread_pool.h"
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 
 #include <boost/bind.hpp>
 BEGIN_NS_SOFTART()

@@ -5,7 +5,6 @@
 #include "eflib/include/eflib.h"
 
 #include <boost/array.hpp>
-#include <boost/thread.hpp>
 
 #include <vector>
 #include "softart_fwd.h"

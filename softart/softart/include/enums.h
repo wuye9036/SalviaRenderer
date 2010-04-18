@@ -136,10 +136,9 @@ enum address_mode
 
 enum filter_type
 {
-	filter_none = 0,
-	filter_point = 1,
-	filter_linear = 2,
-	filter_type_count = 3
+	filter_point = 0,
+	filter_linear = 1,
+	filter_type_count = 2
 };
 
 enum sampler_state

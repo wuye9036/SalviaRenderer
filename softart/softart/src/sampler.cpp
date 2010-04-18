@@ -160,17 +160,13 @@ namespace surface_sampler
 	}
 
 	typedef color_rgba32f (*op_type)(const surface& surf, float x, float y, address_mode addr_mode0, address_mode addr_mode1, const color_rgba32f& border_color);
-	const op_type op_table[filter_type_count] = {NULL, &nearest, &linear};
+	const op_type op_table[filter_type_count] = {&nearest, &linear};
 };
 
-float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx, const vec4& ddy, float invQ, float bias) const
+float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
 {
-	float wx = attribute.w + ddx.w;
-	float wy = attribute.w + ddy.w;
-	if(wx == 0.0f) wx = 1.0f;
-	if(wy == 0.0f) wy = 1.0f;
-	efl::vec4 ddx2 = (attribute + ddx) / wx - attribute * invQ;
-	efl::vec4 ddy2 = (attribute + ddy) / wy - attribute * invQ;
+	efl::vec4 ddx2 = (attribute + ddx) * inv_x_w - attribute * inv_w;
+	efl::vec4 ddy2 = (attribute + ddy) * inv_y_w - attribute * inv_w;
 
 	float rho, lambda;
 
@@ -202,8 +198,7 @@ color_rgba32f sampler::sample_surface(
 
 sampler::sampler()
 {
-	filters_[sampler_state_min] = filters_[sampler_state_mag] = filter_point;
-	filters_[sampler_state_mip] = filter_none;
+	filters_[sampler_state_min] = filters_[sampler_state_mag] = filters_[sampler_state_mip] = filter_point;
 
 	for(int i = 0; i < sampler_axis_count; ++i){addr_modes_[i] = address_clamp;}
 	border_color_ = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
@@ -223,7 +218,6 @@ void sampler::set_filter_type(sampler_state sstate, filter_type filter)
 {
 	custom_assert((0 <= sstate && sstate < sampler_state_count), "");
 	custom_assert((0 <= filter && filter <= filter_type_count), "");
-	custom_assert( ! (sstate != sampler_state_mip && filter == filter_none), "为非mip采样设置过滤器none!" );
 
 	filters_[sstate] = filter;
 }
@@ -259,11 +253,6 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		return sample_surface(	tex->get_surface(tex->get_max_lod()), coordx, coordy,	sampler_state_mag);
 	}
 
-	//无Mipmap的缩小采样
-	if(filters_[sampler_state_mip] == filter_none){
-		return sample_surface(	tex->get_surface(tex->get_max_lod()), coordx, coordy,	sampler_state_min);
-	}
-
 	if(filters_[sampler_state_mip] == filter_point){
 		size_t ml = size_t(ceil(miplevel + 0.5f)) - 1;
 		ml = clamp(ml, tex->get_max_lod(), tex->get_min_lod());
@@ -292,24 +281,24 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 color_rgba32f sampler::sample_impl(const texture *tex , 
 								 float coordx, float coordy,
 								 const vec4& ddx, const vec4& ddy,
-								 float invQ, float lod_bias) const
+								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
 	return sample_2d_impl(tex ,
-		vec4(coordx, coordy, 0.0f, 1.0f / invQ),
-		ddx, ddy, invQ, lod_bias
+		vec4(coordx, coordy, 0.0f, 1.0f / inv_w),
+		ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias
 		);
 }
 
 color_rgba32f sampler::sample_2d_impl(const texture *tex , 
 								 const vec4& coord,
 								 const vec4& ddx, const vec4& ddy,
-								 float invQ, float lod_bias) const
+								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	float q = invQ == 0 ? 1.0f : 1.0f / invQ;
+	float q = inv_w == 0 ? 1.0f : 1.0f / inv_w;
 	vec4 origin_coord(coord * q);
 	vec4 size((float)tex->get_width(0), (float)tex->get_height(0), (float)tex->get_depth(0), 0.0f);
 
-	float lod = calc_lod(origin_coord, size, ddx, ddy, invQ, lod_bias);
+	float lod = calc_lod(origin_coord, size, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 	return sample_impl(tex , coord.x, coord.y, lod);
 }
 
@@ -322,18 +311,18 @@ color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 color_rgba32f sampler::sample(
 					 float coordx, float coordy, 
 					 const efl::vec4& ddx, const efl::vec4& ddy, 
-					 float invQ, float lod_bias) const
+					 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_impl(ptex_, coordx, coordy, ddx, ddy, invQ, lod_bias);
+	return sample_impl(ptex_, coordx, coordy, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 }
 
 
 color_rgba32f sampler::sample_2d(
 						const efl::vec4& coord,
 						const efl::vec4& ddx, const efl::vec4& ddy,
-						float invQ, float lod_bias) const
+						float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_2d_impl(ptex_, coord, ddx, ddy, invQ, lod_bias);
+	return sample_2d_impl(ptex_, coord, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 }
 
 
@@ -412,10 +401,10 @@ color_rgba32f sampler::sample_cube(
 	const efl::vec4& coord,
 	const efl::vec4& ddx,
 	const efl::vec4& ddy,
-	float invQ, float lod_bias
+	float inv_x_w, float inv_y_w, float inv_w, float lod_bias
 	) const
 {
-	float q = invQ == 0 ? 1.0f : 1.0f / invQ;
+	float q = inv_w == 0 ? 1.0f : 1.0f / inv_w;
 	vec4 origin_coord(coord * q);
 
 	if(ptex_->get_texture_type() != texture_type_cube)
@@ -423,7 +412,7 @@ color_rgba32f sampler::sample_cube(
 		custom_assert(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
-	float lod = calc_lod(origin_coord, vec4(float(pcube->get_width()), float(pcube->get_height()), 0.0f, 0.0f), ddx, ddy, invQ, lod_bias);
+	float lod = calc_lod(origin_coord, vec4(float(pcube->get_width()), float(pcube->get_height()), 0.0f, 0.0f), ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 	//return color_rgba32f(vec4(coord.xyz(), 1.0f));
 	//return color_rgba32f(invlod, invlod, invlod, 1.0f);
 	return sample_cube(coord.x, coord.y, coord.z, lod);

@@ -27,7 +27,7 @@ class sampler
 		const efl::vec4& attribute, 
 		const efl::vec4& size, 
 		const efl::vec4& ddx, const efl::vec4& ddy, 
-		float invQ, float bias) const;
+		float inv_x_w, float inv_y_w, float inv_w, float bias) const;
 
 	color_rgba32f sample_surface(
 		const surface& surf,
@@ -39,12 +39,12 @@ class sampler
 	color_rgba32f sample_impl(const texture *tex , 
 		float coordx, float coordy, 
 		const efl::vec4& ddx, const efl::vec4& ddy, 
-		float invQ, float lod_bias) const;
+		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_2d_impl(const texture *tex , 
 		const efl::vec4& coord,
 		const efl::vec4& ddx, const efl::vec4& ddy,
-		float invQ, float lod_bias) const;
+		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 public:
 	sampler();
@@ -61,12 +61,12 @@ public:
 	color_rgba32f sample(
 		float coordx, float coordy, 
 		const efl::vec4& ddx, const efl::vec4& ddy, 
-		float invQ, float lod_bias) const;
+		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_2d(
 		const efl::vec4& coord,
 		const efl::vec4& ddx, const efl::vec4& ddy,
-		float invQ, float lod_bias) const;
+		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_cube(
 		float coordx, float coordy, float coordz,
@@ -77,7 +77,7 @@ public:
 		const efl::vec4& coord,
 		const efl::vec4& ddx,
 		const efl::vec4& ddy,
-		float invQ, float lod_bias
+		float inv_x_w, float inv_y_w, float inv_w, float lod_bias
 		) const;
 };
 

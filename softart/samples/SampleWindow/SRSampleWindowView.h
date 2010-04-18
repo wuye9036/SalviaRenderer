@@ -67,6 +67,9 @@ public:
 	ps(softart::h_texture tex)
 		: tex_(tex)
 	{
+		sampler_.set_filter_type(sampler_state_min, filter_linear);
+		sampler_.set_filter_type(sampler_state_mag, filter_linear);
+		sampler_.set_filter_type(sampler_state_mip, filter_linear);
 		sampler_.set_texture(tex_.get());
 	}
 	bool shader_prog(const vs_output& in, ps_output& out)
@@ -176,8 +179,12 @@ public:
 		
 		box_mesh = create_box(hsr.get());
 
+		h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8);
+		tex->set_min_lod(8);
+		tex->gen_mipmap(filter_linear);
+
 		h_vertex_shader pvs(new vs());
-		h_pixel_shader pps(new ps(texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8)));
+		h_pixel_shader pps(new ps(tex));
 		h_blend_shader pts(new ts());
 
 		hsr->set_vertex_shader(pvs);

@@ -528,9 +528,17 @@ namespace efl{
 		return lhs * s;
 	}
 
+	inline vec2 operator * (const vec2& lhs, const vec2& rhs){
+		return vec2(lhs.x * rhs.x, lhs.y * rhs.y);
+	}
+
 	inline vec2 operator / (const vec2& lhs, float s){
 		float invs = 1.0f / s;
 		return lhs * invs;
+	}
+
+	inline vec2 operator / (const vec2& lhs, const vec2& rhs){
+		return vec2(lhs.x / rhs.x, lhs.y / rhs.y);
 	}
 
 	//vec3
@@ -566,9 +574,17 @@ namespace efl{
 		return lhs * s;
 	}
 
+	inline vec3 operator * (const vec3& lhs, const vec3& rhs){
+		return vec3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+	}
+
 	inline vec3 operator / (const vec3& lhs, float s){
 		float invs = 1.0f / s;
 		return lhs * invs;
+	}
+
+	inline vec3 operator / (const vec3& lhs, const vec3& rhs){
+		return vec3(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z);
 	}
 
 	//vec4
@@ -604,9 +620,17 @@ namespace efl{
 		return lhs * s;
 	}
 
+	inline vec4 operator * (const vec4& lhs, const vec4& rhs){
+		return vec4(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w);
+	}
+
 	inline vec4 operator / (const vec4& lhs, float s){
 		float invs = 1.0f / s;
 		return lhs * invs;
+	}
+
+	inline vec4 operator / (const vec4& lhs, const vec4& rhs){
+		return vec4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w);
 	}
 
 	SWIZZLE_IMPL_FOR_VEC2();

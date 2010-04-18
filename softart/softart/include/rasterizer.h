@@ -7,7 +7,6 @@
 #include "framebuffer.h"
 
 #include <boost/smart_ptr.hpp>
-#include <boost/thread.hpp>
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 
