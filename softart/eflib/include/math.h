@@ -124,7 +124,7 @@ namespace efl{
 	template <class Vec>
 	Vec lerp(const Vec& v1, const Vec& v2, float t)
 	{
-		return Vec(v1*(1.0f-t) + v2*t);
+		return Vec(v1 + (v2 - v1) * t);
 	}
 
 	vec3 reflect3(const vec3& i, const vec3& n);

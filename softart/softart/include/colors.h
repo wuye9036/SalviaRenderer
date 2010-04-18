@@ -39,9 +39,6 @@ struct color_rgba32f
 		return *this;
 	}
 
-	operator float* (){return (float*)this;}
-	operator const float* () const {return (const float*)this;}
-
 	efl::float4* get_pointer()
 	{
 		custom_assert(is_aligned(this, 16), "");
@@ -314,14 +311,14 @@ private:
 };
 
 template<class T>
-T lerp(const T& c0, float t0, const T& c1, float t1)
+inline T lerp(const T& c0, const T& c1, float t)
 {
-	return T(lerp(c0.to_rgba32f(), t0 + c1.to_rgba32f(), t1));
+	return T(lerp(c0.to_rgba32f(), c1.to_rgba32f(), t));
 }
 
-inline color_rgba32f lerp(const color_rgba32f& c0, float t0, const color_rgba32f& c1, float t1)
+inline color_rgba32f lerp(const color_rgba32f& c0, const color_rgba32f& c1, float t)
 {
-	return color_rgba32f(c0.get_vec4() * t0 + c1.get_vec4() * t1);
+	return color_rgba32f(c0.get_vec4() + (c1.get_vec4() - c0.get_vec4()) * t);
 }
 END_NS_SOFTART()
 

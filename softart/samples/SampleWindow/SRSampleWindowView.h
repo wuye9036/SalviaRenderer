@@ -101,7 +101,7 @@ public:
 		if(inout.depth() > in.depth)
 		{
 			color_rgba32f color = in.color[0];
-			inout.color(0, lerp(inout.color(0) , 1.0f - color.a , color , color.a));
+			inout.color(0, lerp(inout.color(0), color, color.a));
 			inout.depth(in.depth);
 		}
 		return true;

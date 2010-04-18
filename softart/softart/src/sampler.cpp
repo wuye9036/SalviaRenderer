@@ -153,10 +153,10 @@ namespace surface_sampler
 		c2 = surf.get_texel(xpos0, ypos1);
 		c3 = surf.get_texel(xpos1, ypos1);
 
-		color_rgba32f c01 = lerp(c0, 1.0f - tx, c1, tx);
-		color_rgba32f c23 = lerp(c2, 1.0f - tx, c3, tx);
+		color_rgba32f c01 = lerp(c0, c1, tx);
+		color_rgba32f c23 = lerp(c2, c3, tx);
 
-		return lerp(c01, 1.0f - ty, c23, ty);
+		return lerp(c01, c23, ty);
 	}
 
 	typedef color_rgba32f (*op_type)(const surface& surf, float x, float y, address_mode addr_mode0, address_mode addr_mode1, const color_rgba32f& border_color);
@@ -271,7 +271,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		color_rgba32f c0 = sample_surface(tex->get_surface(low), coordx, coordy, sampler_state_min);
 		color_rgba32f c1 = sample_surface(tex->get_surface(up), coordx, coordy, sampler_state_min);
 	
-		return lerp(c0, 1.0f - frac, c1, frac);
+		return lerp(c0, c1, frac);
 	}
 
 	custom_assert(false, "出现了错误的mip filters参数");
