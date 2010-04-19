@@ -116,10 +116,10 @@ void geometry_assembler::dispatch_primitive_impl(std::vector<lockfree_queue<uint
 			y_max = max(y_max, y);
 		}
 
-		int sx = min(static_cast<int>(floor(max(0, x_min) / TILE_SIZE)), num_tiles_x_);
-		int sy = min(static_cast<int>(floor(max(0, y_min) / TILE_SIZE)), num_tiles_y_);
-		int ex = min(static_cast<int>(ceil(max(0, x_max) / TILE_SIZE)) + 1, num_tiles_x_);
-		int ey = min(static_cast<int>(ceil(max(0, y_max) / TILE_SIZE)) + 1, num_tiles_y_);
+		int sx = min(static_cast<int>(fast_floor(max(0, x_min) / TILE_SIZE)), num_tiles_x_);
+		int sy = min(static_cast<int>(fast_floor(max(0, y_min) / TILE_SIZE)), num_tiles_y_);
+		int ex = min(static_cast<int>(fast_ceil(max(0, x_max) / TILE_SIZE)) + 1, num_tiles_x_);
+		int ey = min(static_cast<int>(fast_ceil(max(0, y_max) / TILE_SIZE)) + 1, num_tiles_y_);
 
 		for (int y = sy; y < ey; ++ y){
 			for (int x = sx; x < ex; ++ x){

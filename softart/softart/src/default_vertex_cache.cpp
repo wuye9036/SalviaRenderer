@@ -16,6 +16,8 @@
 #pragma warning(pop)
 #endif
 
+#include <boost/ref.hpp>
+
 BEGIN_NS_SOFTART()
 
 

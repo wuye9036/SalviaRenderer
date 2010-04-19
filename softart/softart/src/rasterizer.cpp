@@ -110,10 +110,10 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 		info.set(start->wpos, ddx, ddy);
 		pps->ptriangleinfo_ = &info;
 
-		float fsx = floor(start->wpos.x + 0.5f);
+		float fsx = fast_floor(start->wpos.x + 0.5f);
 
 		int sx = int(fsx);
-		int ex = int(floor(end->wpos.x - 0.5f));
+		int ex = int(fast_floor(end->wpos.x - 0.5f));
 
 		//截取到屏幕内
 		sx = efl::clamp<int>(sx, vpleft, int(vpright - 1));
@@ -166,10 +166,10 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 		info.set(start->wpos, ddx, ddy);
 		pps->ptriangleinfo_ = &info;
 
-		float fsy = floor(start->wpos.y + 0.5f);
+		float fsy = fast_floor(start->wpos.y + 0.5f);
 
 		int sy = int(fsy);
-		int ey = int(floor(end->wpos.y - 0.5f));
+		int ey = int(fast_floor(end->wpos.y - 0.5f));
 
 		//截取到屏幕内
 		sy = efl::clamp<int>(sy, vptop, int(vpbottom - 1));
@@ -351,8 +351,8 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 			continue; // next part
 		}
 
-		fsy = ceil(s_vert->wpos.y + 0.5f) - 1;
-		fey = ceil(e_vert->wpos.y - 0.5f) - 1;
+		fsy = fast_ceil(s_vert->wpos.y + 0.5f) - 1;
+		fey = fast_ceil(e_vert->wpos.y - 0.5f) - 1;
 
 		isy = int(fsy);
 		iey = int(fey);
@@ -401,11 +401,11 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 				//}
 
 				if(fcx0 < fcx1){
-					icx_s = (int)ceil(fcx0 + 0.5f) - 1;
-					icx_e = (int)ceil(fcx1 - 0.5f) - 1;
+					icx_s = (int)fast_ceil(fcx0 + 0.5f) - 1;
+					icx_e = (int)fast_ceil(fcx1 - 0.5f) - 1;
 				} else {
-					icx_s = (int)ceil(fcx1 + 0.5f) - 1;
-					icx_e = (int)ceil(fcx0 - 0.5f) - 1;
+					icx_s = (int)fast_ceil(fcx1 + 0.5f) - 1;
+					icx_e = (int)fast_ceil(fcx0 - 0.5f) - 1;
 				}
 
 				//如果起点大于终点说明scanline中不包含任何像素中心，直接跳过。

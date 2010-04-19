@@ -11,12 +11,12 @@ namespace addresser
 {
 	float wrap(float coord, float /*half_pixel_size*/)
 	{
-		return coord - floor(coord);
+		return coord - fast_floor(coord);
 	}
 
 	float mirror(float coord, float /*half_pixel_size*/)
 	{
-		float selection_coord = floor(coord);
+		float selection_coord = fast_floor(coord);
 		return 
 			int(selection_coord) % 2 == 0 
 			? coord - selection_coord
@@ -42,33 +42,33 @@ namespace coord_calculator
 	int nearest_wrap(float coord, int size)
 	{
 		float o_coord = addresser::wrap(coord, 0.5f / float(size));
-		return (int(floor(o_coord * float(size))) + size) % size;
+		return (int(fast_floor(o_coord * size)) + size) % size;
 	}
 
 	int nearest_mirror(float coord, int size)
 	{
 		float o_coord = addresser::mirror(coord, 0.5f / float(size));
-		return clamp(int(floor(o_coord * float(size))), 0, size - 1);
+		return clamp(int(fast_floor(o_coord * size)), 0, size - 1);
 	}
 
 	int nearest_clamp(float coord, int size)
 	{
 		float o_coord = addresser::clamp(coord, 0.5f / float(size));
-		int rv = int(floor(o_coord * float(size)));
+		int rv = int(fast_floor(o_coord * size));
 		return clamp(rv, 0, size-1);
 	}
 
 	int nearest_border(float coord, int size)
 	{
 		float o_coord = addresser::border(coord, 0.5f / float(size));
-		int rv = int(floor(o_coord * float(size)));
+		int rv = int(fast_floor(o_coord * size));
 		return rv >= size ? -1 : rv;
 	}
 
 	void linear_wrap(int& low, int& up, float& frac, float coord, int size)
 	{
 		float o_coord = addresser::wrap(coord, 0.5f / size)  * float(size) - 0.5f;
-		float coord_ipart = floor(o_coord);
+		float coord_ipart = fast_floor(o_coord);
 
 		low = (size + int(coord_ipart)) % size;
 		up = (size + low + 1) % size;
@@ -79,7 +79,7 @@ namespace coord_calculator
 	{
 		
 		float o_coord = addresser::mirror(coord, 0.5f / size) * float(size) - 0.5f;
-		float coord_ipart = floor(o_coord);
+		float coord_ipart = fast_floor(o_coord);
 
 		low = int(coord_ipart);
 		up = low + 1;
@@ -92,7 +92,7 @@ namespace coord_calculator
 	void linear_clamp(int& low, int& up, float& frac, float coord, int size)
 	{
 		float o_coord = addresser::clamp(coord, 0.5f / size)  * float(size) - 0.5f;
-		float coord_ipart = floor(o_coord);
+		float coord_ipart = fast_floor(o_coord);
 
 		low = int(coord_ipart);
 		up = low + 1;
@@ -106,7 +106,7 @@ namespace coord_calculator
 	void linear_border(int& low, int& up, float& frac, float coord, int size)
 	{
 		float o_coord = addresser::border(coord, 0.5f / size)  * float(size) - 0.5f;
-		float coord_ipart = floor(o_coord);
+		float coord_ipart = fast_floor(o_coord);
 
 		low = int(coord_ipart);
 		up = low + 1;
@@ -254,19 +254,19 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 	}
 
 	if(filters_[sampler_state_mip] == filter_point){
-		size_t ml = size_t(ceil(miplevel + 0.5f)) - 1;
+		size_t ml = size_t(fast_ceil(miplevel + 0.5f)) - 1;
 		ml = clamp(ml, tex->get_max_lod(), tex->get_min_lod());
 
 		return sample_surface(	tex->get_surface(ml), coordx, coordy,	sampler_state_min);
 	}
 
 	if(filters_[sampler_state_mip] == filter_linear){
-		size_t low = (size_t)floor(miplevel);
+		size_t low = (size_t)fast_floor(miplevel);
 		size_t up = low + 1;
 
 		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
 		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());
-		float frac = miplevel - floor(miplevel);
+		float frac = miplevel - fast_floor(miplevel);
 
 		color_rgba32f c0 = sample_surface(tex->get_surface(low), coordx, coordy, sampler_state_min);
 		color_rgba32f c1 = sample_surface(tex->get_surface(up), coordx, coordy, sampler_state_min);
