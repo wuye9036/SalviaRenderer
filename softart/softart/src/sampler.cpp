@@ -179,7 +179,7 @@ float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx
 
 	rho = max(	max(maxD.x, maxD.y), maxD.z);
 	if(rho == 0.0f) rho = 0.000001f;
-	lambda = log2(rho);
+	lambda = fast_log2(rho);
 	return lambda + bias;
 }
 

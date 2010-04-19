@@ -95,6 +95,20 @@ namespace efl{
 
 	inline float log2(float f){return std::log(f) * 1.442695f;}
 
+	// From http://www.musicdsp.org/showone.php?id=63
+	inline float fast_log2(float val)
+	{
+		custom_assert(val > 0, "");
+
+		int* exp_ptr = reinterpret_cast<int*>(&val);
+		int x = *exp_ptr;
+		int log_2 = ((x >> 23) & 255) - 128;
+		x &= ~(255 << 23);
+		x += 127 << 23;
+		*exp_ptr = x;
+		return val + log_2;
+	}
+
 	//////////////////////////////////////
 	// base vector function
 	//////////////////////////////////////
