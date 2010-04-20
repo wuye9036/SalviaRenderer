@@ -85,10 +85,10 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 	vs_output ddx = diff * (diff.wpos.x / (diff.wpos.xy().length_sqr()));
 	vs_output ddy = diff * (diff.wpos.y / (diff.wpos.xy().length_sqr()));
 
-	int vpleft = int(max(0.0f, vp.x));
-	int vpbottom = int(max(0.0f, vp.y));
-	int vpright = int(min(vp.x+vp.w, (float)(hfb_->get_width())));
-	int vptop = int(min(vp.y+vp.h, (float)(hfb_->get_height())));
+	int vpleft = fast_floori(max(0.0f, vp.x));
+	int vpbottom = fast_floori(max(0.0f, vp.y));
+	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
+	int vptop = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
 
 	ps_output px_out;
 
@@ -112,8 +112,8 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 
 		float fsx = fast_floor(start->wpos.x + 0.5f);
 
-		int sx = int(fsx);
-		int ex = int(fast_floor(end->wpos.x - 0.5f));
+		int sx = fast_floori(fsx);
+		int ex = fast_floori(end->wpos.x - 0.5f);
 
 		//截取到屏幕内
 		sx = efl::clamp<int>(sx, vpleft, int(vpright - 1));
@@ -142,7 +142,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, iPixel, int(px_in.wpos.y), px_out);
+				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.wpos.y), px_out);
 			}
 
 			//差分递增
@@ -168,8 +168,8 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 
 		float fsy = fast_floor(start->wpos.y + 0.5f);
 
-		int sy = int(fsy);
-		int ey = int(fast_floor(end->wpos.y - 0.5f));
+		int sy = fast_floori(fsy);
+		int ey = fast_floori(end->wpos.y - 0.5f);
 
 		//截取到屏幕内
 		sy = efl::clamp<int>(sy, vptop, int(vpbottom - 1));
@@ -198,7 +198,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, int(px_in.wpos.x), iPixel, px_out);
+				hfb_->render_pixel(hbs, fast_floori(px_in.wpos.x), iPixel, px_out);
 			}
 
 			//差分递增
@@ -308,10 +308,10 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 	const int bot_part = 0;
 	//const int top_part = 1;
 
-	int vpleft = int(max(0.0f, vp.x));
-	int vpbottom = int(max(0.0f, vp.y));
-	int vpright = int(min(vp.x+vp.w, (float)(hfb_->get_width())));
-	int vptop = int(min(vp.y+vp.h, (float)(hfb_->get_height())));
+	int vpleft = fast_floori(max(0.0f, vp.x));
+	int vpbottom = fast_floori(max(0.0f, vp.y));
+	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
+	int vptop = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
 
 	for(int iPart = 0; iPart < 2; ++iPart){
 
@@ -354,8 +354,8 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 		fsy = fast_ceil(s_vert->wpos.y + 0.5f) - 1;
 		fey = fast_ceil(e_vert->wpos.y - 0.5f) - 1;
 
-		isy = int(fsy);
-		iey = int(fey);
+		isy = fast_floori(fsy);
+		iey = fast_floori(fey);
 
 		offsety = fsy + 0.5f - pvert[0]->wpos.y;
 

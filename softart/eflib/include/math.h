@@ -167,6 +167,33 @@ namespace efl{
 		return n.f;
 	}
 
+	// From http://www.stereopsis.com/sree/fpu2006.html
+	inline int fast_floori(double d)
+	{
+		const double DOUBLE_MAGIC_DELTA = 1.5e-8; //almost .5f = .5f + 1e^(number of exp bit)
+		const double DOUBLE_MAGIC_ROUND_EPS = 0.5 - DOUBLE_MAGIC_DELTA; //almost .5f = .5f - 1e^(number of exp bit) 
+		const double DME = -DOUBLE_MAGIC_ROUND_EPS;
+		const double DOUBLE_MAGIC = 6755399441055744.0; // 2^51 + 2^52
+		if (d < 0)
+		{
+			d -= DME;
+		}
+		else
+		{
+			d += DME;
+		}
+
+		union INTORDOUBLE
+		{
+			int i;
+			double d;
+		};
+
+		INTORDOUBLE n;
+		n.d = d + DOUBLE_MAGIC;
+		return n.i;
+	}
+
 	//////////////////////////////////////
 	// base vector function
 	//////////////////////////////////////

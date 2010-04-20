@@ -24,7 +24,7 @@ d3d9_device::d3d9_device(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& 
 
 	//³õÊ¼»¯Device
 	if( FAILED(pd3d9_->CreateDevice(
-		param.adapter,	param.devtype,	param.focuswnd, param.behavior, 
+		param.adapter,	param.devtype,	param.focuswnd, param.behavior | D3DCREATE_FPU_PRESERVE, 
 		&present_params, &pd3ddev9_
 		))) {
 		pd3ddev9_ = NULL;
