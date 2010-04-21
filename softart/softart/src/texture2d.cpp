@@ -46,10 +46,20 @@ void  texture_2d::gen_mipmap(filter_type filter)
 		surfs_[iLevel].rebuild(cur_sizex, cur_sizey, fmt_);
 		surfs_[iLevel].lock((void**)&pdata, rect<size_t>(0, 0, cur_sizex, cur_sizey), lock_write_only);
 
-		sampler s;
-		s.set_filter_type(sampler_state_min, filter);
-		s.set_filter_type(sampler_state_mag, filter);
-		s.set_filter_type(sampler_state_mip, filter_point);
+		sampler_desc desc;
+		desc.min_filter = filter;
+		desc.mag_filter = filter;
+		desc.mip_filter = filter_point;
+		desc.addr_mode_u = address_clamp;
+		desc.addr_mode_v = address_clamp;
+		desc.addr_mode_w = address_clamp;
+		desc.mip_lod_bias = 0;
+		desc.max_anisotropy = 0;
+		desc.comparison_func = compare_function_always;
+		desc.border_color = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
+		desc.min_lod = -1e20f;
+		desc.max_lod = 1e20f;
+		sampler s(desc);
 		s.set_texture(this);
 
 #if 0

@@ -60,24 +60,35 @@ public:
 
 class ps : public pixel_shader
 {
-	sampler sampler_;
+	softart::h_sampler sampler_;
 	softart::h_texture tex_;
 public:
 
 	ps(softart::h_texture tex)
 		: tex_(tex)
 	{
-		sampler_.set_filter_type(sampler_state_min, filter_linear);
-		sampler_.set_filter_type(sampler_state_mag, filter_linear);
-		sampler_.set_filter_type(sampler_state_mip, filter_linear);
-		sampler_.set_texture(tex_.get());
+		sampler_desc desc;
+		desc.min_filter = filter_linear;
+		desc.mag_filter = filter_linear;
+		desc.mip_filter = filter_linear;
+		desc.addr_mode_u = address_clamp;
+		desc.addr_mode_v = address_clamp;
+		desc.addr_mode_w = address_clamp;
+		desc.mip_lod_bias = 0;
+		desc.max_anisotropy = 0;
+		desc.comparison_func = compare_function_always;
+		desc.border_color = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
+		desc.min_lod = -1e20f;
+		desc.max_lod = 1e20f;
+		sampler_.reset(new sampler(desc));
+		sampler_->set_texture(tex_.get());
 	}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		
 		//out.color[0].xyz(in.attributes[0].xyz());
 		//out.color[0].w = 0.5;
-		color_rgba32f color = tex2d(sampler_ , 2);
+		color_rgba32f color = tex2d(*sampler_ , 2);
 		color.a = 0.5;
 		out.color[0] = color.get_vec4();
 

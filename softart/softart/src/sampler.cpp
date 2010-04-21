@@ -32,37 +32,34 @@ namespace addresser
 	{
 		return efl::clamp(coord * size, -0.5f, size + 0.5f);
 	}
-
-	typedef float (*op_type)(float coord, int size);
-	const op_type op_table[address_mode_count] = {&wrap, &mirror, &clamp, &border};
 };
 
 namespace coord_calculator
 {
-	int nearest_wrap(float coord, int size)
+	void nearest_wrap(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
 	{
 		float o_coord = addresser::wrap(coord, size);
-		return (fast_floori(o_coord) + size) % size;
+		low = (fast_floori(o_coord) + size) % size;
 	}
 
-	int nearest_mirror(float coord, int size)
+	void nearest_mirror(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
 	{
 		float o_coord = addresser::mirror(coord, size);
-		return clamp(fast_floori(o_coord), 0, size - 1);
+		low = clamp(fast_floori(o_coord), 0, size - 1);
 	}
 
-	int nearest_clamp(float coord, int size)
+	void nearest_clamp(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
 	{
 		float o_coord = addresser::clamp(coord, size);
 		int rv = fast_floori(o_coord);
-		return clamp(rv, 0, size - 1);
+		low = clamp(rv, 0, size - 1);
 	}
 
-	int nearest_border(float coord, int size)
+	void nearest_border(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
 	{
 		float o_coord = addresser::border(coord, size);
 		int rv = fast_floori(o_coord);
-		return rv >= size ? -1 : rv;
+		low = rv >= size ? -1 : rv;
 	}
 
 	void linear_wrap(int& low, int& up, float& frac, float coord, int size)
@@ -121,35 +118,36 @@ namespace coord_calculator
 		frac = o_coord - coord_ipart;
 	}
 
-	typedef int (*op_type_nearest)(float coord, int size);
-	const op_type_nearest 
-		op_table_nearest[address_mode_count] =
-	{&nearest_wrap, &nearest_mirror, &nearest_clamp, &nearest_border};
-
-	typedef void (*op_type_linear)(int& low, int& up, float& frac, float coord, int size);
-	const op_type_linear 
-		op_table_linear[address_mode_count] =
-	{&linear_wrap, &linear_mirror, &linear_clamp, &linear_border};
+	const sampler::coord_calculator_op_type
+		op_table[address_mode_count][filter_type_count] =
+	{
+		{ &nearest_wrap, &linear_wrap },
+		{ &nearest_mirror, &linear_mirror },
+		{ &nearest_clamp, &linear_clamp },
+		{ &nearest_border, &linear_border }
+	};
 };
 
 namespace surface_sampler
 {
-	color_rgba32f nearest(const surface& surf, float x, float y, address_mode addr_mode0, address_mode addr_mode1, const color_rgba32f& border_color)
+	color_rgba32f nearest(const surface& surf, float x, float y, const sampler::coord_calculator_op_type* addr_mode0, const sampler::coord_calculator_op_type* addr_mode1, const color_rgba32f& border_color)
 	{
-		int ix = coord_calculator::op_table_nearest[addr_mode0](x, int(surf.get_width()));
-		int iy = coord_calculator::op_table_nearest[addr_mode1](y, int(surf.get_height()));
+		int ix, iy;
+		float frac;
+		addr_mode0[filter_point](ix, ix, frac, x, int(surf.get_width()));
+		addr_mode1[filter_point](iy, iy, frac, y, int(surf.get_height()));
 
 		if(ix < 0 || iy < 0) return border_color;
 		return surf.get_texel(ix, iy);
 	}
 
-	color_rgba32f linear(const surface& surf, float x, float y, address_mode addr_mode0, address_mode addr_mode1, const color_rgba32f& /*border_color*/)
+	color_rgba32f linear(const surface& surf, float x, float y, const sampler::coord_calculator_op_type* addr_mode0, const sampler::coord_calculator_op_type* addr_mode1, const color_rgba32f& /*border_color*/)
 	{
 		int xpos0, ypos0, xpos1, ypos1;
 		float tx, ty;
 
-		coord_calculator::op_table_linear[addr_mode0](xpos0, xpos1, tx, x, int(surf.get_width()));
-		coord_calculator::op_table_linear[addr_mode1](ypos0, ypos1, ty, y, int(surf.get_height()));
+		addr_mode0[filter_linear](xpos0, xpos1, tx, x, int(surf.get_width()));
+		addr_mode1[filter_linear](ypos0, ypos1, ty, y, int(surf.get_height()));
 
 		color_rgba32f c0, c1, c2, c3;
 
@@ -164,8 +162,7 @@ namespace surface_sampler
 		return lerp(c01, c23, ty);
 	}
 
-	typedef color_rgba32f (*op_type)(const surface& surf, float x, float y, address_mode addr_mode0, address_mode addr_mode1, const color_rgba32f& border_color);
-	const op_type op_table[filter_type_count] = {&nearest, &linear};
+	const sampler::filter_op_type op_table[filter_type_count] = {&nearest, &linear};
 };
 
 float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
@@ -193,61 +190,31 @@ color_rgba32f sampler::sample_surface(
 	float x, float y,
 	sampler_state ss) const
 {
-	return surface_sampler::op_table[filters_[ss]](
+	return filters_[ss](
 			surf, 
 			x, y,
 			addr_modes_[sampler_axis_u], addr_modes_[sampler_axis_v],
-			border_color_
+			desc_.border_color
 			);
 }
 
-sampler::sampler()
+sampler::sampler(const sampler_desc& desc)
+	: desc_(desc)
 {
-	filters_[sampler_state_min] = filters_[sampler_state_mag] = filters_[sampler_state_mip] = filter_point;
+	filters_[sampler_state_min] = surface_sampler::op_table[desc.min_filter];
+	filters_[sampler_state_mag] = surface_sampler::op_table[desc.mag_filter];
+	filters_[sampler_state_mip] = surface_sampler::op_table[desc.mip_filter];
 
-	for(int i = 0; i < sampler_axis_count; ++i){addr_modes_[i] = address_clamp;}
-	border_color_ = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
-	lod_bias_ = 0;
-	max_miplevel_ = 0;
-}
-
-void sampler::set_address_mode(sampler_axis axis, address_mode addr_mode)
-{
-	custom_assert((axis < sampler_axis_count && axis >= 0), "");
-	custom_assert((addr_mode < address_mode_count && addr_mode >= 0), "");
-
-	addr_modes_[axis] = addr_mode;
-}	
-
-void sampler::set_filter_type(sampler_state sstate, filter_type filter)
-{
-	custom_assert((0 <= sstate && sstate < sampler_state_count), "");
-	custom_assert((0 <= filter && filter <= filter_type_count), "");
-
-	filters_[sstate] = filter;
-}
-
-void sampler::set_lod_bias(float bias)
-{
-	lod_bias_ = bias;
-}
-
-void sampler::set_max_miplevel(int level)
-{
-	custom_assert(level >= 0, "");
-	max_miplevel_ = level;
-}
-
-void sampler::set_border_color(const color_rgba32f& border_color)
-{
-	border_color_ = border_color;
+	addr_modes_[sampler_axis_u] = coord_calculator::op_table[desc_.addr_mode_u];
+	addr_modes_[sampler_axis_v] = coord_calculator::op_table[desc_.addr_mode_v];
+	addr_modes_[sampler_axis_w] = coord_calculator::op_table[desc_.addr_mode_w];
 }
 
 color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coordy, float miplevel) const
 {
 	bool is_mag = true;
 
-	if(filters_[sampler_state_mip] == filter_point) {
+	if(desc_.mip_filter == filter_point) {
 		is_mag = (miplevel < 0.5f);
 	} else {
 		is_mag = (miplevel < 0);
@@ -258,14 +225,14 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		return sample_surface(tex->get_surface(tex->get_max_lod()), coordx, coordy, sampler_state_mag);
 	}
 
-	if(filters_[sampler_state_mip] == filter_point){
+	if(desc_.mip_filter == filter_point){
 		size_t ml = fast_floori(miplevel + 0.5f);
 		ml = clamp(ml, tex->get_max_lod(), tex->get_min_lod());
 
 		return sample_surface(tex->get_surface(ml), coordx, coordy, sampler_state_min);
 	}
 
-	if(filters_[sampler_state_mip] == filter_linear){
+	if(desc_.mip_filter == filter_linear){
 		size_t low = fast_floori(miplevel);
 		size_t up = low + 1;
 
@@ -281,7 +248,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 	}
 
 	custom_assert(false, "出现了错误的mip filters参数");
-	return border_color_;
+	return desc_.border_color;
 }
 
 color_rgba32f sampler::sample_impl(const texture *tex , 

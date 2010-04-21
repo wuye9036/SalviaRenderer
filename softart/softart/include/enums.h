@@ -192,6 +192,18 @@ enum render_target
 	render_target_count = 3
 };
 
+enum compare_function
+{
+	compare_function_never = 0,
+	compare_function_less = 1,
+	compare_function_equal = 2,
+	compare_function_less_equal = 3,
+	compare_function_greater = 4,
+	compare_function_not_equal = 5,
+	compare_function_greater_equal = 6,
+	compare_function_always = 7	
+};
+
 END_NS_SOFTART()
 
 #endif

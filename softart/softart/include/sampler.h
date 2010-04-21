@@ -14,14 +14,32 @@ class texture_1d;
 class texture_2d;
 class surface;
 
+struct sampler_desc {
+    filter_type min_filter;
+	filter_type mag_filter;
+	filter_type mip_filter;
+    address_mode addr_mode_u;
+    address_mode addr_mode_v;
+    address_mode addr_mode_w;
+    float mip_lod_bias;
+    uint32_t max_anisotropy;
+    compare_function comparison_func;
+    color_rgba32f border_color;
+    float min_lod;
+    float max_lod;
+};
+
 class sampler
 {
-	filter_type filters_[sampler_state_count];
-	address_mode addr_modes_[sampler_axis_count];
-	int max_miplevel_;
-	float lod_bias_;
-	color_rgba32f border_color_;
+public:
+	typedef void (*coord_calculator_op_type)(int& low, int& up, float& frac, float coord, int size);
+	typedef color_rgba32f (*filter_op_type)(const surface& surf, float x, float y, const coord_calculator_op_type* addr_mode0, const coord_calculator_op_type* addr_mode1, const color_rgba32f& border_color);
+
+private:
+	sampler_desc desc_;
 	const texture* ptex_;
+	filter_op_type filters_[sampler_state_count];
+	const coord_calculator_op_type* addr_modes_[sampler_axis_count];
 
 	float calc_lod(
 		const efl::vec4& attribute, 
@@ -47,13 +65,8 @@ class sampler
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 public:
-	sampler();
+	explicit sampler(const sampler_desc& desc);
 
-	void set_address_mode(sampler_axis axis, address_mode addr_mode);
-	void set_filter_type(sampler_state sstate, filter_type filter);
-	void set_lod_bias(float bias);
-	void set_max_miplevel(int level);
-	void set_border_color(const color_rgba32f& border_color);
 	void set_texture(const texture* ptex){ptex_ = ptex;}
 
 	color_rgba32f sample(float coordx, float coordy, float miplevel) const;

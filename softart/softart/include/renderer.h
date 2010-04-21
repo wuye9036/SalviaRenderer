@@ -101,7 +101,7 @@ public:
 	virtual h_texture create_texcube(size_t width, size_t height, pixel_format fmt) = 0;
 	virtual result release_texture(h_texture& htex) = 0;
 
-	virtual h_sampler create_sampler() = 0;
+	virtual h_sampler create_sampler(const sampler_desc& desc) = 0;
 	virtual result release_sampler(h_sampler& hsmp) = 0;
 
 	//render operations

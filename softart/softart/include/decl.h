@@ -25,6 +25,8 @@ class index_fetcher;
 class buffer_manager;
 class texture_manager;
 
+struct sampler_desc;
+
 class buffer;
 class surface;
 class texture;

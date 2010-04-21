@@ -235,9 +235,9 @@ result renderer_impl::release_texture(h_texture& htex)
 	return result::ok;
 }
 
-h_sampler renderer_impl::create_sampler()
+h_sampler renderer_impl::create_sampler(const sampler_desc& desc)
 {
-	return h_sampler(new sampler);
+	return h_sampler(new sampler(desc));
 }
 
 result renderer_impl::release_sampler(h_sampler& hsmp)
