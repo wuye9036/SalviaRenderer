@@ -52,26 +52,11 @@ void dev_d3d9::init_device()
 {
 	if (dev_)
 	{
-		//ÉèÖÃäÖÈ¾¶¥µã
-		Vertex verts[] = 
-		{
-			/* x,  y, z, u, v */
-			{-1.0f, -1.0f, 0.5f, 0.0f, 0.0f},
-			{ 1.0f, -1.0f, 0.5f, 1.0f, 0.0f},
-			{-1.0f,  1.0f, 0.5f, 0.0f, 1.0f},
-			{ 1.0f,  1.0f, 0.5f, 1.0f, 1.0f}
-		};
-
 		IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
 
-		HRESULT hr = pdxdev->CreateVertexBuffer(
-			sizeof(verts), D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &vb_, NULL);
-
-		Vertex* p;
-		vb_->Lock(0, 0, reinterpret_cast<void**>(&p), 0);
-		memcpy(p, verts, sizeof(verts));
-		vb_->Unlock();
-
+		pdxdev->CreateVertexBuffer(
+			4 * sizeof(Vertex), D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &vb_, NULL);
+		
 		pdxdev->SetStreamSource(0, vb_, 0, sizeof(Vertex));
 		pdxdev->SetFVF(FVF);
 		pdxdev->SetRenderState(D3DRS_LIGHTING, FALSE);
@@ -120,6 +105,20 @@ void dev_d3d9::attach_framebuffer(softart::framebuffer* pfb)
 	if(pfb == NULL) return;
 
 	IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
+
+	//ÉèÖÃäÖÈ¾¶¥µã
+	Vertex verts[] = 
+	{
+		/* x,  y, z, u, v */
+		{-1.0f + 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 0.0f},
+		{ 1.0f + 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 0.0f},
+		{-1.0f + 1.0f / pfb->get_width(),  1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 1.0f},
+		{ 1.0f + 1.0f / pfb->get_width(),  1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 1.0f}
+	};
+	Vertex* p;
+	vb_->Lock(0, 0, reinterpret_cast<void**>(&p), 0);
+	memcpy(p, verts, sizeof(verts));
+	vb_->Unlock();
 
 	pfb_ = pfb;
 	HRESULT hr = pdxdev->CreateTexture(

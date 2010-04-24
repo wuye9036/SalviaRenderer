@@ -35,15 +35,15 @@ struct vert
 	vec4 pos;
 };
 
-class vs : public vertex_shader
+class vs_box : public vertex_shader
 {
 	mat44 wvp;
 public:
-	vs():wvp(mat44::identity()){
+	vs_box():wvp(mat44::identity()){
 		register_var(_T("WorldViewProjMat"), wvp);
 	}
 
-	vs(const mat44& wvp):wvp(wvp){}
+	vs_box(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in[0];
@@ -58,13 +58,13 @@ public:
 	}
 };
 
-class ps : public pixel_shader
+class ps_box : public pixel_shader
 {
 	softart::h_sampler sampler_;
 	softart::h_texture tex_;
 public:
 
-	ps(softart::h_texture tex)
+	ps_box(const softart::h_texture& tex)
 		: tex_(tex)
 	{
 		sampler_desc desc;
@@ -96,7 +96,69 @@ public:
 	}
 	virtual h_pixel_shader create_clone()
 	{
-		return h_pixel_shader(new ps(*this));
+		return h_pixel_shader(new ps_box(*this));
+	}
+	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	{
+		ps_clone.reset();
+	}
+};
+
+class vs_plane : public vertex_shader
+{
+	mat44 wvp;
+public:
+	vs_plane():wvp(mat44::identity()){
+		register_var(_T("WorldViewProjMat"), wvp);
+	}
+
+	vs_plane(const mat44& wvp):wvp(wvp){}
+	void shader_prog(const vs_input& in, vs_output& out)
+	{
+		vec4 pos = in[0];
+		transform(out.position, wvp, pos);
+		out.attributes[0] = vec4(in[0].x, in[0].z, 0, 0);
+		out.attribute_modifiers[0] = softart::vs_output::am_linear;
+		out.num_used_attribute = 1;
+	}
+};
+
+class ps_plane : public pixel_shader
+{
+	softart::h_sampler sampler_;
+	softart::h_texture tex_;
+public:
+
+	ps_plane(const softart::h_texture& tex)
+		: tex_(tex)
+	{
+		sampler_desc desc;
+		desc.min_filter = filter_linear;
+		desc.mag_filter = filter_linear;
+		desc.mip_filter = filter_linear;
+		desc.addr_mode_u = address_wrap;
+		desc.addr_mode_v = address_wrap;
+		desc.addr_mode_w = address_wrap;
+		desc.mip_lod_bias = 0;
+		desc.max_anisotropy = 0;
+		desc.comparison_func = compare_function_always;
+		desc.border_color = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
+		desc.min_lod = -1e20f;
+		desc.max_lod = 1e20f;
+		sampler_.reset(new sampler(desc));
+		sampler_->set_texture(tex_.get());
+	}
+	bool shader_prog(const vs_output& in, ps_output& out)
+	{
+		color_rgba32f color = tex2d(*sampler_, 0);
+		color.a = 1;
+		out.color[0] = color.get_vec4();
+
+		return true;
+	}
+	virtual h_pixel_shader create_clone()
+	{
+		return h_pixel_shader(new ps_plane(*this));
 	}
 	virtual void destroy_clone(h_pixel_shader& ps_clone)
 	{
@@ -128,6 +190,11 @@ public:
 
 	h_mesh planar_mesh;
 	h_mesh box_mesh;
+
+	h_vertex_shader pvs_box;
+	h_pixel_shader pps_box;
+	h_vertex_shader pvs_plane;
+	h_pixel_shader pps_plane;
 
 	uint32_t num_frames;
 	float accumulate_time;
@@ -190,16 +257,24 @@ public:
 		
 		box_mesh = create_box(hsr.get());
 
-		h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8);
-		tex->set_min_lod(8);
-		tex->gen_mipmap(filter_linear);
+		pvs_box.reset(new vs_box());
+		pvs_plane.reset(new vs_plane());
 
-		h_vertex_shader pvs(new vs());
-		h_pixel_shader pps(new ps(tex));
+		{
+			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8);
+			tex->set_min_lod(8);
+			tex->gen_mipmap(filter_linear);
+			pps_box.reset(new ps_box(tex));
+		}
+
+		{
+			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\chessboard.png") , softart::pixel_format_color_rgba8);
+			tex->set_min_lod(5);
+			tex->gen_mipmap(filter_linear);
+			pps_plane.reset(new ps_plane(tex));
+		}
+
 		h_blend_shader pts(new ts());
-
-		hsr->set_vertex_shader(pvs);
-		hsr->set_pixel_shader(pps);
 		hsr->set_blend_shader(pts);
 
 		num_frames = 0;
@@ -251,19 +326,23 @@ public:
 		mat_lookat(view, camera, vec4::gen_coord(0.0f, 0.0f, 0.0f), vec4::gen_vector(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, HALF_PI, 1.0f, 0.1f, 100.0f);
 
-		const h_vertex_shader& pvs = hsr->get_vertex_shader();
-
 		hsr->set_cull_mode(cull_none);
 		//hsr->set_fill_mode(fill_wireframe);
-
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5 + i * 0.5 , 0 , -0.5 + i * 0.5);
 			mat_mul(wvp, mat_mul(wvp, proj, view), world);
-			pvs->set_constant(_T("WorldViewProjMat"), &wvp);
-			box_mesh->render();
+
+			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
+			hsr->set_vertex_shader(pvs_plane);
+			hsr->set_pixel_shader(pps_plane);
 			planar_mesh->render();
+			
+			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
+			hsr->set_vertex_shader(pvs_box);
+			hsr->set_pixel_shader(pps_box);
+			box_mesh->render();
 		}
 
 		InvalidateRect(NULL);
