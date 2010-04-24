@@ -63,7 +63,7 @@ class gdiplus_initializer
 	Gdiplus::GdiplusStartupInput gdiPlusInput_;
 	ULONG_PTR gdiPlusToken_;
 public:
-	gdiplus_initializer( void* p )
+	gdiplus_initializer()
 	{
 #ifdef _CONSOLE
 		_tprintf(_T("%s"), _T("Gdiplus Initialized.\n"));
