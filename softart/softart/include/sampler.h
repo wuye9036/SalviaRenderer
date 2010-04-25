@@ -32,14 +32,12 @@ struct sampler_desc {
 class sampler
 {
 public:
-	typedef void (*coord_calculator_op_type)(int& low, int& up, float& frac, float coord, int size);
-	typedef color_rgba32f (*filter_op_type)(const surface& surf, float x, float y, const coord_calculator_op_type* addr_mode0, const coord_calculator_op_type* addr_mode1, const color_rgba32f& border_color);
+	typedef color_rgba32f (*filter_op_type)(const surface& surf, float x, float y, const color_rgba32f& border_color);
 
 private:
 	sampler_desc desc_;
 	const texture* ptex_;
 	filter_op_type filters_[sampler_state_count];
-	const coord_calculator_op_type* addr_modes_[sampler_axis_count];
 
 	float calc_lod(
 		const efl::vec4& attribute, 

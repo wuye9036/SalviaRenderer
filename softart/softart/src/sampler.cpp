@@ -9,145 +9,109 @@ using namespace std;
 
 namespace addresser
 {
-	float wrap(float coord, int size)
+	struct wrap
 	{
-		return (coord - fast_floor(coord)) * size;
-	}
+		static float op1(float coord, int size)
+		{
+			return fmod(coord, static_cast<float>(size)) - 0.5f;
+		}
 
-	float mirror(float coord, int size)
-	{
-		float selection_coord = fast_floor(coord);
-		return 
-			(fast_floori(selection_coord) % 2 == 0 
-			? coord - selection_coord
-			: 1 + selection_coord - coord) * size;
-	}
+		static int op2(int coord, int size)
+		{
+			return (size + coord) % size;
+		}
+	};
 
-	float clamp(float coord, int size)
+	struct mirror
 	{
-		return efl::clamp(coord * size, 0.5f, size - 0.5f);
-	}
+		static float op1(float coord, int size)
+		{
+			int selection_coord = fast_floori(coord / size);
+			return 
+				(selection_coord & 1 
+				? size + selection_coord * size - coord
+				: coord - selection_coord * size) - 0.5f;
+		}
 
-	float border(float coord, int size)
+		static int op2(int coord, int size)
+		{
+			return efl::clamp(coord, 0, size - 1);
+		}
+	};
+
+	struct clamp
 	{
-		return efl::clamp(coord * size, -0.5f, size + 0.5f);
-	}
+		static float op1(float coord, int size)
+		{
+			return efl::clamp(coord, 0.5f, size - 0.5f) - 0.5f;
+		}
+
+		static int op2(int coord, int size)
+		{
+			return efl::clamp(coord, 0, size - 1);
+		}
+	};
+
+	struct border
+	{
+		static float op1(float coord, int size)
+		{
+			return efl::clamp(coord, -0.5f, size + 0.5f) - 0.5f;
+		}
+
+		static int op2(int coord, int size)
+		{
+			return coord >= size ? -1 : coord;
+		}
+	};
 };
 
 namespace coord_calculator
 {
-	void nearest_wrap(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
+	template <typename addresser_type>
+	int nearest_cc(float coord, int size)
 	{
-		float o_coord = addresser::wrap(coord, size);
-		low = (fast_floori(o_coord) + size) % size;
+		float o_coord = addresser_type::op1(coord * size, size);
+		int coord_ipart = fast_floori(o_coord + 0.5f);
+		return addresser_type::op2(coord_ipart, size);
 	}
 
-	void nearest_mirror(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
+	template <typename addresser_type>
+	void linear_cc(int& low, int& up, float& frac, float coord, int size)
 	{
-		float o_coord = addresser::mirror(coord, size);
-		low = clamp(fast_floori(o_coord), 0, size - 1);
-	}
-
-	void nearest_clamp(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
-	{
-		float o_coord = addresser::clamp(coord, size);
-		int rv = fast_floori(o_coord);
-		low = clamp(rv, 0, size - 1);
-	}
-
-	void nearest_border(int& low, int& /*up*/, float& /*frac*/, float coord, int size)
-	{
-		float o_coord = addresser::border(coord, size);
-		int rv = fast_floori(o_coord);
-		low = rv >= size ? -1 : rv;
-	}
-
-	void linear_wrap(int& low, int& up, float& frac, float coord, int size)
-	{
-		float o_coord = addresser::wrap(coord, size) - 0.5f;
+		float o_coord = addresser_type::op1(coord * size, size);
 		int coord_ipart = fast_floori(o_coord);
 
 		low = coord_ipart;
 		up = low + 1;
 
-		low = (size + low) % size;
-		up = (size + up) % size;
+		low = addresser_type::op2(low, size);
+		up = addresser_type::op2(up, size);
 
 		frac = o_coord - coord_ipart;
 	}
-
-	void linear_mirror(int& low, int& up, float& frac, float coord, int size)
-	{
-		float o_coord = addresser::mirror(coord, size) - 0.5f;
-		int coord_ipart = fast_floori(o_coord);
-
-		low = coord_ipart;
-		up = low + 1;
-
-		low = efl::clamp(low, 0, size - 1);
-		up = efl::clamp(up, 0, size - 1);
-
-		frac = o_coord - coord_ipart;
-	}
-
-	void linear_clamp(int& low, int& up, float& frac, float coord, int size)
-	{
-		float o_coord = addresser::clamp(coord, size) - 0.5f;
-		int coord_ipart = fast_floori(o_coord);
-
-		low = coord_ipart;
-		up = low + 1;
-
-		low = efl::clamp(low, 0, size - 1);
-		up = efl::clamp(up, 0, size - 1);
-
-		frac = o_coord - coord_ipart;
-	}
-
-	void linear_border(int& low, int& up, float& frac, float coord, int size)
-	{
-		float o_coord = addresser::border(coord, size) - 0.5f;
-		int coord_ipart = fast_floori(o_coord);
-
-		low = coord_ipart;
-		up = low + 1;
-
-		low = (low >= size ? -1 : low);
-		up = (up >= size ? -1 : up);
-
-		frac = o_coord - coord_ipart;
-	}
-
-	const sampler::coord_calculator_op_type
-		op_table[address_mode_count][filter_type_count] =
-	{
-		{ &nearest_wrap, &linear_wrap },
-		{ &nearest_mirror, &linear_mirror },
-		{ &nearest_clamp, &linear_clamp },
-		{ &nearest_border, &linear_border }
-	};
 };
 
 namespace surface_sampler
 {
-	color_rgba32f nearest(const surface& surf, float x, float y, const sampler::coord_calculator_op_type* addr_mode0, const sampler::coord_calculator_op_type* addr_mode1, const color_rgba32f& border_color)
+	template <typename addresser_type_u, typename addresser_type_v>
+	color_rgba32f nearest(const surface& surf, float x, float y, const color_rgba32f& border_color)
 	{
-		int ix, iy;
-		float frac;
-		addr_mode0[filter_point](ix, ix, frac, x, int(surf.get_width()));
-		addr_mode1[filter_point](iy, iy, frac, y, int(surf.get_height()));
+		int ix = coord_calculator::nearest_cc<addresser_type_u>(x, int(surf.get_width()));
+		int iy = coord_calculator::nearest_cc<addresser_type_v>(y, int(surf.get_height()));
 
 		if(ix < 0 || iy < 0) return border_color;
 		return surf.get_texel(ix, iy);
 	}
 
-	color_rgba32f linear(const surface& surf, float x, float y, const sampler::coord_calculator_op_type* addr_mode0, const sampler::coord_calculator_op_type* addr_mode1, const color_rgba32f& /*border_color*/)
+	template <typename addresser_type_u, typename addresser_type_v>
+	color_rgba32f linear(const surface& surf, float x, float y, const color_rgba32f& /*border_color*/)
 	{
 		int xpos0, ypos0, xpos1, ypos1;
 		float tx, ty;
 
-		addr_mode0[filter_linear](xpos0, xpos1, tx, x, int(surf.get_width()));
-		addr_mode1[filter_linear](ypos0, ypos1, ty, y, int(surf.get_height()));
+		coord_calculator::linear_cc<addresser_type_u>(xpos0, xpos1, tx, x, int(surf.get_width()));
+		coord_calculator::linear_cc<addresser_type_v>(ypos0, ypos1, ty, y, int(surf.get_height()));
 
 		color_rgba32f c0, c1, c2, c3;
 
@@ -162,8 +126,62 @@ namespace surface_sampler
 		return lerp(c01, c23, ty);
 	}
 
-	const sampler::filter_op_type op_table[filter_type_count] = {&nearest, &linear};
-};
+	const sampler::filter_op_type filter_table[filter_type_count][address_mode_count][address_mode_count] = 
+	{
+		{
+			{
+				nearest<addresser::wrap, addresser::wrap>,
+				nearest<addresser::wrap, addresser::mirror>,
+				nearest<addresser::wrap, addresser::clamp>,
+				nearest<addresser::wrap, addresser::border>
+			},
+			{
+				nearest<addresser::mirror, addresser::wrap>,
+				nearest<addresser::mirror, addresser::mirror>,
+				nearest<addresser::mirror, addresser::clamp>,
+				nearest<addresser::mirror, addresser::border>
+			},
+			{
+				nearest<addresser::clamp, addresser::wrap>,
+				nearest<addresser::clamp, addresser::mirror>,
+				nearest<addresser::clamp, addresser::clamp>,
+				nearest<addresser::clamp, addresser::border>
+			},
+			{
+				nearest<addresser::border, addresser::wrap>,
+				nearest<addresser::border, addresser::mirror>,
+				nearest<addresser::border, addresser::clamp>,
+				nearest<addresser::border, addresser::border>
+			}
+		},
+		{
+			{
+				linear<addresser::wrap, addresser::wrap>,
+				linear<addresser::wrap, addresser::mirror>,
+				linear<addresser::wrap, addresser::clamp>,
+				linear<addresser::wrap, addresser::border>
+			},
+			{
+				linear<addresser::mirror, addresser::wrap>,
+				linear<addresser::mirror, addresser::mirror>,
+				linear<addresser::mirror, addresser::clamp>,
+				linear<addresser::mirror, addresser::border>
+			},
+			{
+				linear<addresser::clamp, addresser::wrap>,
+				linear<addresser::clamp, addresser::mirror>,
+				linear<addresser::clamp, addresser::clamp>,
+				linear<addresser::clamp, addresser::border>
+			},
+			{
+				linear<addresser::border, addresser::wrap>,
+				linear<addresser::border, addresser::mirror>,
+				linear<addresser::border, addresser::clamp>,
+				linear<addresser::border, addresser::border>
+			}
+		}
+	};
+}
 
 float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
 {
@@ -193,7 +211,6 @@ color_rgba32f sampler::sample_surface(
 	return filters_[ss](
 			surf, 
 			x, y,
-			addr_modes_[sampler_axis_u], addr_modes_[sampler_axis_v],
 			desc_.border_color
 			);
 }
@@ -201,13 +218,9 @@ color_rgba32f sampler::sample_surface(
 sampler::sampler(const sampler_desc& desc)
 	: desc_(desc)
 {
-	filters_[sampler_state_min] = surface_sampler::op_table[desc.min_filter];
-	filters_[sampler_state_mag] = surface_sampler::op_table[desc.mag_filter];
-	filters_[sampler_state_mip] = surface_sampler::op_table[desc.mip_filter];
-
-	addr_modes_[sampler_axis_u] = coord_calculator::op_table[desc_.addr_mode_u];
-	addr_modes_[sampler_axis_v] = coord_calculator::op_table[desc_.addr_mode_v];
-	addr_modes_[sampler_axis_w] = coord_calculator::op_table[desc_.addr_mode_w];
+	filters_[sampler_state_min] = surface_sampler::filter_table[desc_.min_filter][desc_.addr_mode_u][desc.addr_mode_v];
+	filters_[sampler_state_mag] = surface_sampler::filter_table[desc_.mag_filter][desc_.addr_mode_u][desc.addr_mode_v];
+	filters_[sampler_state_mip] = surface_sampler::filter_table[desc_.mip_filter][desc_.addr_mode_u][desc.addr_mode_v];
 }
 
 color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coordy, float miplevel) const
