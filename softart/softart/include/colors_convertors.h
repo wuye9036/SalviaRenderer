@@ -74,14 +74,11 @@ class pixel_format_convertor
 public:
 	static inline void convert(pixel_format outfmt, pixel_format infmt, void* outpixel, const void* inpixel)
 	{
-		static pixel_format_convertor instance;
 		(convertors[outfmt][infmt])(outpixel, inpixel);
 	}
 
 	static inline void convert_array(pixel_format outfmt, pixel_format infmt, void* outpixel, const void* inpixel, int count, int outstride = 0, int instride = 0)
 	{
-		static pixel_format_convertor instance;
-
 		outstride = (outstride == 0) ? color_infos[outfmt].size : outstride;
 		instride = (instride == 0) ? color_infos[infmt].size : instride;
 
@@ -91,8 +88,9 @@ public:
 	typedef void (*pixel_convertor)(void* outcolor, const void* incolor);
 	typedef void (*pixel_array_convertor)(void* outcolor, const void* incolor, int outstride, int instride, int count);
 
-private:
 	pixel_format_convertor();
+
+private:
 
 	//convertors[outfmt][infmt]
 	static pixel_convertor convertors[pixel_format_color_max][pixel_format_color_max];

@@ -1,6 +1,7 @@
 #include "../include/colors.h"
 BEGIN_NS_SOFTART()
 
+static pixel_format_convertor pfc_instance;
 
 template <int outColor, int inColor>
 struct color_convertor_initializer

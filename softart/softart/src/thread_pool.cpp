@@ -1,5 +1,6 @@
-#ifdef SOFTART_MULTITHEADING_ENABLED
 #include "eflib/include/eflib.h"
+
+#ifdef SOFTART_MULTITHEADING_ENABLED
 #include "../include/cpuinfo.h"
 #ifdef EFLIB_MSVC
 #pragma warning(push)

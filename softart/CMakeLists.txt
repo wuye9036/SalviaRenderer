@@ -7,7 +7,6 @@ option(SOFTART_BUILD_WITH_UNICODE "Build with unicode(wide-byte) or ansi(multi-b
 #set(CMAKE_USE_RELATIVE_PATHS TRUE)
 
 ADD_DEFINITIONS(
--wd4819
 -W4
 )
 

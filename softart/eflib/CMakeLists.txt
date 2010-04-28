@@ -1,10 +1,3 @@
-ADD_DEFINITIONS( -DWIN32
--D_LIB
--D_CRT_SECURE_NO_DEPRECATE
--D_SCL_SECURE_NO_DEPRECATE
--D_SECURE_SCL=0
--DBOOST_ALL_DYN_LINK
-)
 check_build_with_unicode()
 
 set (HEADER_FILES
@@ -22,7 +15,19 @@ set (HEADER_FILES
 	include/unicode_utility.h
 	include/user_config.h
 	include/util.h
+	include/detail/collision_detection.h
+	include/detail/constant.h
+	include/detail/initialize.h
+	include/detail/matrix.h
+	include/detail/memory.h
+	include/detail/quaternion.h
+	include/detail/streamx.h
+	include/detail/stringx.h
+	include/detail/swizzle.h
+	include/detail/typedefs.h
+	include/detail/vector.h
 	include/detail/win32.h
+	include/detail/write_mask.h
 )
 
 set (SOURCE_FILES
@@ -31,6 +36,7 @@ set (SOURCE_FILES
 	src/initialize.cpp
 	src/log_serializer.cpp
 	src/math.cpp
+	src/quaternion.cpp
 	src/slog.cpp
 	src/stringx.cpp
 )

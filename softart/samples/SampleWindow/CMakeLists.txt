@@ -1,8 +1,3 @@
-ADD_DEFINITIONS(
--D_LIB
--DBOOST_ALL_DYN_LINK
-)
-
 check_build_with_unicode()
 config_3rd_party()
 
