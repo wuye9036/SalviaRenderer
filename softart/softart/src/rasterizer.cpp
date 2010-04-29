@@ -401,11 +401,11 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 				//}
 
 				if(fcx0 < fcx1){
-					icx_s = (int)fast_ceil(fcx0 + 0.5f) - 1;
-					icx_e = (int)fast_ceil(fcx1 - 0.5f) - 1;
+					icx_s = fast_ceili(fcx0 + 0.5f) - 1;
+					icx_e = fast_ceili(fcx1 - 0.5f) - 1;
 				} else {
-					icx_s = (int)fast_ceil(fcx1 + 0.5f) - 1;
-					icx_e = (int)fast_ceil(fcx0 - 0.5f) - 1;
+					icx_s = fast_ceili(fcx1 + 0.5f) - 1;
+					icx_e = fast_ceili(fcx0 - 0.5f) - 1;
 				}
 
 				//如果起点大于终点说明scanline中不包含任何像素中心，直接跳过。

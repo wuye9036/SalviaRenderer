@@ -123,7 +123,7 @@ namespace efl{
 		return fast_log2(val) * 0.69314718f;
 	}
 
-	inline float fast_ceil(float val)
+	inline float fast_round(float val)
 	{
 		union INTORFLOAT
 		{
@@ -137,51 +137,25 @@ namespace efl{
 		bias.i = ((23 + 127) << 23) + (n.i & 0x80000000);
 		n.f += bias.f;
 		n.f -= bias.f;
-		if (n.f < val)
-		{
-			n.f += 1;
-		}
-
 		return n.f;
+	}
+
+	inline float fast_ceil(float val)
+	{
+		float f = fast_round(val);
+		return (f < val) ? f + 1 : f;
 	}
 
 	inline float fast_floor(float val)
 	{
-		union INTORFLOAT
-		{
-			int i;
-			float f;
-		};
-
-		INTORFLOAT n;
-		INTORFLOAT bias;
-		n.f = val;
-		bias.i = ((23 + 127) << 23) + (n.i & 0x80000000);
-		n.f += bias.f;
-		n.f -= bias.f;
-		if (n.f > val)
-		{
-			n.f -= 1;
-		}
-
-		return n.f;
+		float f = fast_round(val);
+		return (f > val) ? f - 1 : f;
 	}
 
 	// From http://www.stereopsis.com/sree/fpu2006.html
-	inline int fast_floori(double d)
+	inline int fast_roundi(double d)
 	{
-		const double DOUBLE_MAGIC_DELTA = 1.5e-8; //almost .5f = .5f + 1e^(number of exp bit)
-		const double DOUBLE_MAGIC_ROUND_EPS = 0.5 - DOUBLE_MAGIC_DELTA; //almost .5f = .5f - 1e^(number of exp bit) 
-		const double DME = -DOUBLE_MAGIC_ROUND_EPS;
 		const double DOUBLE_MAGIC = 6755399441055744.0; // 2^51 + 2^52
-		if (d < 0)
-		{
-			d -= DME;
-		}
-		else
-		{
-			d += DME;
-		}
 
 		union INTORDOUBLE
 		{
@@ -192,6 +166,18 @@ namespace efl{
 		INTORDOUBLE n;
 		n.d = d + DOUBLE_MAGIC;
 		return n.i;
+	}
+
+	inline int fast_ceili(double d)
+	{
+		int i = fast_roundi(d);
+		return (i < d) ? i + 1 : i;
+	}
+
+	inline int fast_floori(double d)
+	{
+		int i = fast_roundi(d);
+		return (i > d) ? i - 1 : i;
 	}
 
 	//////////////////////////////////////

@@ -13,12 +13,12 @@ namespace addresser
 	{
 		static float op1(float coord, int size)
 		{
-			return fmod(coord, static_cast<float>(size)) - 0.5f;
+			return (coord - fast_floor(coord)) * size - 0.5f;
 		}
 
 		static int op2(int coord, int size)
 		{
-			return (size + coord) % size;
+			return (size * 8192 + coord) % size;
 		}
 	};
 
@@ -26,11 +26,11 @@ namespace addresser
 	{
 		static float op1(float coord, int size)
 		{
-			int selection_coord = fast_floori(coord / size);
+			int selection_coord = fast_floori(coord);
 			return 
 				(selection_coord & 1 
-				? size + selection_coord * size - coord
-				: coord - selection_coord * size) - 0.5f;
+				? 1 + selection_coord - coord
+				: coord - selection_coord) * size - 0.5f;
 		}
 
 		static int op2(int coord, int size)
@@ -43,7 +43,7 @@ namespace addresser
 	{
 		static float op1(float coord, int size)
 		{
-			return efl::clamp(coord, 0.5f, size - 0.5f) - 0.5f;
+			return efl::clamp(coord * size, 0.5f, size - 0.5f) - 0.5f;
 		}
 
 		static int op2(int coord, int size)
@@ -56,7 +56,7 @@ namespace addresser
 	{
 		static float op1(float coord, int size)
 		{
-			return efl::clamp(coord, -0.5f, size + 0.5f) - 0.5f;
+			return efl::clamp(coord * size, -0.5f, size + 0.5f) - 0.5f;
 		}
 
 		static int op2(int coord, int size)
@@ -71,7 +71,7 @@ namespace coord_calculator
 	template <typename addresser_type>
 	int nearest_cc(float coord, int size)
 	{
-		float o_coord = addresser_type::op1(coord * size, size);
+		float o_coord = addresser_type::op1(coord, size);
 		int coord_ipart = fast_floori(o_coord + 0.5f);
 		return addresser_type::op2(coord_ipart, size);
 	}
@@ -79,7 +79,7 @@ namespace coord_calculator
 	template <typename addresser_type>
 	void linear_cc(int& low, int& up, float& frac, float coord, int size)
 	{
-		float o_coord = addresser_type::op1(coord * size, size);
+		float o_coord = addresser_type::op1(coord, size);
 		int coord_ipart = fast_floori(o_coord);
 
 		low = coord_ipart;
