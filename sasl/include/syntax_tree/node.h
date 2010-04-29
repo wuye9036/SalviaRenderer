@@ -2,7 +2,7 @@
 #define SASL_SYNTAX_TREE_NODE_H
 
 #include "syntax_tree_fwd.h"
-#include "token.h"
+#include <sasl/include/common/token_attr.h>
 #include <sasl/enums/syntax_node_types.h>
 #include <boost/shared_ptr.hpp>
 

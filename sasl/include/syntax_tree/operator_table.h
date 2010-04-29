@@ -3,8 +3,9 @@
 
 #include "syntax_tree_fwd.h"
 #include "node.h"
-#include "token.h"
+#include <sasl/include/common/token_attr.h>
 #include <sasl/enums/operators.h>
+#include <boost/tr1/unordered_map.hpp>
 
 BEGIN_NS_SASL_SYNTAX_TREE()
 
