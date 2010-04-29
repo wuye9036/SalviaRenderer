@@ -25,8 +25,8 @@ public:
 	const static this_type _scalar;
 	const static this_type none;
 	const static this_type _unsigned;
-	const static this_type float;
-	const static this_type double;
+	const static this_type _double;
+	const static this_type _float;
 	const static this_type _matrix;
 	const static this_type _int64;
 	const static this_type _uint64;

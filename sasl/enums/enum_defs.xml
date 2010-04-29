@@ -102,8 +102,8 @@
 		<item value="3 or $_unsigned$">_uint32</item>
 		<item value="4 or $_unsigned$">_uint64</item>
 		
-		<item value="5">float</item>
-		<item value="6">double</item>
+		<item value="5">_float</item>
+		<item value="6">_double</item>
 	</enum>
 	
 	<enum name="syntax_node_types" storage_type = "uint64_t">

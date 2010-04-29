@@ -1,10 +1,15 @@
 #ifndef SASL_SYNTAX_TREE_DECLARATION_H
 #define SASL_SYNTAX_TREE_DECLARATION_H
 
-#include "syntax_tree_fwd.h"
+#include <sasl/include/syntax_tree/syntax_tree_fwd.h>
+#include <sasl/include/syntax_tree/identifier.h>
+#include <sasl/include/syntax_tree/node.h>
+#include <sasl/include/syntax_tree/visitor.h>
 #include <sasl/include/common/token_attr.h>
-#include <boost/enums/buildin_type_code.h>
+#include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/syntax_node_types.h>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 namespace sasl{
 	namespace common{
@@ -16,6 +21,8 @@ BEGIN_NS_SASL_SYNTAX_TREE()
 
 struct type_specifier;
 struct statement;
+struct expression;
+
 using sasl::common::token_attr;
 
 struct initializer: public node{
@@ -54,13 +61,13 @@ struct type_definition: public declaration{
 	token_attr ident;
 };
 
-struct type_speficier: public declaration{
-	type_speficier(syntax_node_types type_id, boost::shared_ptr<token_attr> tok);
+struct type_specifier: public declaration{
+	type_specifier(syntax_node_types type_id, boost::shared_ptr<token_attr> tok);
 	buildin_type_code type_id_of_value;
 	virtual bool is_buildin() const = 0;
 };
 
-struct buildin_type: public type_speficier{
+struct buildin_type: public type_specifier{
 	buildin_type( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* v );
 	bool is_buildin() const;
@@ -92,7 +99,7 @@ struct struct_type: public type_specifier{
 	struct_type( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* v );
 	boost::shared_ptr< token_attr > name;
-	std::vector< declaration > decls;
+	std::vector< boost::shared_ptr<declaration> > decls;
 };
 
 struct parameter{

@@ -1,7 +1,7 @@
 #ifndef SASL_COMMON_TOKEN_ATTR_H
 #define SASL_COMMON_TOKEN_ATTR_H
 
-#include "common_fwd.h"
+#include <sasl/include/common/common_fwd.h>
 #include <boost/smart_ptr.hpp>
 #include <string>
 

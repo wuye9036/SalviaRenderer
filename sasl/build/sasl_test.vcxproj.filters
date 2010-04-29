@@ -29,5 +29,11 @@
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\syntax_tree\symbol_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\syntax_tree\symbol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
