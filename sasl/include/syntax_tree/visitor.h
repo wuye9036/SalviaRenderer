@@ -25,10 +25,10 @@ struct variable_declaration;
 struct type_definition;
 struct type_specifier;
 struct buildin_type;
-struct type_identfier;
+struct type_identifier;
 struct qualified_type;
 struct array_type;
-struct parameter_list;
+struct struct_type;
 struct parameter;
 struct function_type;
 

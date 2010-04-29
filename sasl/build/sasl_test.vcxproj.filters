@@ -21,6 +21,9 @@
     <ClCompile Include="..\test\llvm_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h">
