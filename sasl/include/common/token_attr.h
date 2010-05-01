@@ -17,7 +17,7 @@ struct token_attr{
 	template< typename IteratorT > token_attr( const IteratorT& first, const IteratorT& last ){}
 
 	token_attr::handle_t make_copy() const{
-		return token_attr::handle_t( new ( token_attr(*this) ) );
+		return token_attr::handle_t( new token_attr(*this) );
 	}
 
 	token_attr& operator = ( const token_attr& rhs){

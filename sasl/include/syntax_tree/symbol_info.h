@@ -1,20 +1,23 @@
 #ifndef SASL_SYNTAX_TREE_SYMBOL_INFO_H
 #define SASL_SYNTAX_TREE_SYMBOL_INFO_H
 
+#include <sasl/include/syntax_tree/syntax_tree_fwd.h>
+#include <string>
+
+BEGIN_NS_SASL_SYNTAX_TREE()
+
 class symbol_info{
-	// for structure
-	size_t size;
-	
-	// for structure member
-	size_t offset;
-
-	// for variables
-	size_t binded_register;
-
-	// for code generation
-	bool is_intermediate;
-	size_t stack_offset;
-	size_t aligned_size;	
+public:
+	const std::string& class_name(){
+		return clsname;
+	}
+protected:
+	symbol_info( std::string& cls ):
+		 clsname(cls)
+	{}
+	std::string clsname;
 };
+
+END_NS_SASL_SYNTAX_TREE()
 
 #endif

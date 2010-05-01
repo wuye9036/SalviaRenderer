@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp" />
+    <ClCompile Include="..\src\syntax_tree\symbol.cpp" />
     <ClCompile Include="..\test\function_entry_generator_test.cpp" />
     <ClCompile Include="..\test\llvm_test.cpp" />
   </ItemGroup>

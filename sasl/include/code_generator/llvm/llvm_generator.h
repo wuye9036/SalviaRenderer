@@ -65,6 +65,15 @@ private:
 		llvm::Value* created_value;
 	};
 
+	class symbol_info: public sasl::syntax_tree::symbol_info{
+	public:
+		typedef sasl::syntax_tree::symbol_info base_type;
+		symbol_info()£º base_type("llvm code generator symbol info"){
+		}
+	private:
+		llvm::Value* sym_value;
+	};
+
 	CodeGenerationContext cg_ctxt;
 };
 
