@@ -23,6 +23,10 @@ namespace efl{
 	struct vec3;
 	struct vec4;
 
+	struct int2;
+	struct int3;
+	struct int4;
+
 	struct vec2
 	{
 		float x, y;
@@ -636,5 +640,590 @@ namespace efl{
 	SWIZZLE_IMPL_FOR_VEC2();
 	SWIZZLE_IMPL_FOR_VEC3();
 	SWIZZLE_IMPL_FOR_VEC4();
+
+
+	struct int2
+	{
+		int x, y;
+
+		/////////////////////////////////////
+		//		标准迭代器
+		/////////////////////////////////////
+
+		typedef const int*  const_iterator;
+		typedef int* iterator;
+
+		const_iterator begin() const
+		{
+			return (const_iterator)this;
+		}
+
+		const_iterator end() const
+		{
+			return ((const_iterator)this) + 2;
+		}
+
+		iterator begin()
+		{
+			return (iterator)this;
+		}
+
+		iterator end()
+		{
+			return ((iterator)this) + 2;
+		}
+
+		///////////////////////////////////////
+		//	类型转换
+		///////////////////////////////////////
+		int* ptr()
+		{
+			return (int*)this;
+		}
+
+		const int* ptr() const
+		{
+			return (const int*)this;
+		}
+
+		///////////////////////////////////////////////
+		//	构造函数
+		///////////////////////////////////////////////
+		int2() : x(0), y(0){}
+		int2(int x, int y) : x(x), y(y){}
+		int2(const int2& v) : x(v.x), y(v.y){}
+
+		const int& operator [](size_t i) const
+		{
+			custom_assert(i < 1, "");
+			return ((int*)(this))[i];
+		}
+
+		int& operator [](size_t i)
+		{
+			custom_assert(i < 1, "");
+			return ((int*)(this))[i];
+		}
+
+		//////////////////////////////////////////////////
+		//	四则运算
+		/////////////////////////////////////////////////
+		int2 operator - () const
+		{
+			return int2(-x, -y);
+		}
+
+		int2& operator *= (int s)
+		{
+			x *= s;
+			y *= s;
+			return *this;
+		}
+
+		int2& operator /= (int s)
+		{
+			int invs = 1 / s;
+			return ((*this) *= invs);
+		}
+
+		int2& operator += (int s)
+		{
+			x += s;
+			y += s;
+			return *this;
+		}
+
+		int2& operator -= (int s)
+		{
+			x -= s;
+			y -= s;
+			return *this;
+		}
+
+		/////////////////////////////////////////////
+		//	其他运算
+		/////////////////////////////////////////////
+		int length_sqr() const
+		{
+			return x*x + y*y;
+		}
+
+		float length() const
+		{
+			return std::sqrt(static_cast<float>(length_sqr()));
+		}
+
+		void normalize()
+		{
+			int len = static_cast<int>(length());
+			(*this) /= len;
+		}
+
+	private:
+		bool operator == (const int2& rhs);
+		bool operator != (const int2& rhs);
+	};
+
+	struct int3
+	{
+		int x, y, z;
+
+		/////////////////////////////////////
+		//		标准迭代器
+		/////////////////////////////////////
+		typedef const int*  const_iterator;
+		typedef int* iterator;
+
+		const_iterator begin() const
+		{
+			return (const_iterator)this;
+		}
+
+		const_iterator end() const
+		{
+			return ((const_iterator)this) + 3;
+		}
+
+		iterator begin()
+		{
+			return (iterator)this;
+		}
+
+		iterator end()
+		{
+			return ((iterator)this) + 3;
+		}
+
+		///////////////////////////////////////
+		//	类型转换
+		///////////////////////////////////////
+		int* ptr()
+		{
+			return (int*)this;
+		}
+
+		const int* ptr() const
+		{
+			return (const int*)this;
+		}
+
+		const int& operator [](size_t i) const
+		{
+			custom_assert(i < 2, "");
+			return ((int*)(this))[i];
+		}
+
+		int& operator [](size_t i)
+		{
+			custom_assert(i < 2, "");
+			return ((int*)(this))[i];
+		}
+
+		///////////////////////////////////////////////
+		//	构造函数
+		///////////////////////////////////////////////
+		int3() : x(0), y(0), z(0){}
+		int3(int x, int y, int z) : x(x), y(y), z(z){}
+		int3(const int3& v) : x(v.x), y(v.y), z(v.z){}
+		//////////////////////////////////////////////////
+		//	四则运算
+		/////////////////////////////////////////////////
+		int3 operator - () const
+		{
+			return int3(-x, -y, -z);
+		}
+
+		int3& operator *= (int s)
+		{
+			x *= s;
+			y *= s;
+			z *= s;
+			return *this;
+		}
+
+		int3& operator /= (int s)
+		{
+			int invs = 1 / s;
+			return ((*this) *= invs);
+		}
+
+		int3& operator += (int s)
+		{
+			x += s;
+			y += s;
+			z += s;
+			return *this;
+		}
+
+		int3& operator -= (int s)
+		{
+			x -= s;
+			y -= s;
+			z -= s;
+			return *this;
+		}
+
+		/////////////////////////////////////////////
+		//	其他运算
+		/////////////////////////////////////////////
+		int length_sqr() const
+		{
+			return x*x + y*y + z*z;
+		}
+
+		float length() const
+		{
+			return std::sqrt(static_cast<float>(length_sqr()));
+		}
+
+		void normalize()
+		{
+			int len = static_cast<int>(length());
+			(*this) /= len;
+		}
+	private:
+		bool operator == (const int3& rhs);
+		bool operator != (const int3& rhs);
+	};
+
+	struct int4
+	{
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
+		union{
+			struct {
+				int x, y, z, w;
+			};
+			struct {
+				int s, t, r, q;
+			};
+		};
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
+
+		/////////////////////////////////////
+		//		标准迭代器
+		/////////////////////////////////////
+		typedef const int*  const_iterator;
+		typedef int* iterator;
+
+		const_iterator begin() const
+		{
+			return (const_iterator)this;
+		}
+
+		const_iterator end() const
+		{
+			return ((const_iterator)this) + 4;
+		}
+
+		iterator begin()
+		{
+			return (iterator)this;
+		}
+
+		iterator end()
+		{
+			return ((iterator)this) + 4;
+		}
+
+		///////////////////////////////////////
+		//	类型转换
+		///////////////////////////////////////
+		int* ptr()
+		{
+			return (int*)this;
+		}
+
+		const int* ptr() const
+		{
+			return (const int*)this;
+		}
+		
+		const int& operator [](size_t i) const
+		{
+			custom_assert(i < 3, "");
+			return ((int*)(this))[i];
+		}
+
+		int& operator [](size_t i)
+		{
+			custom_assert(i < 3, "");
+			return ((int*)(this))[i];
+		}
+		///////////////////////////////////////////////
+		//	构造函数
+		///////////////////////////////////////////////
+		int4():x(0), y(0), z(0), w(0){}
+
+		explicit int4(int x, int y = 0, int z = 0, int w = 0):x(x), y(y), z(z), w(w){}
+		
+		int4(const int4& v) : x(v.x), y(v.y), z(v.z), w(v.w){}
+		
+		int4(const int3& v, int w): x(v.x), y(v.y), z(v.z), w(w){}
+
+		int4(const int* fv, int sizefv)
+		{
+			int clamped_size = std::max(sizefv, 4);
+			for(int i = 0; i < clamped_size; ++i) 
+				(*this)[i] = fv[i];
+		}
+
+		//////////////////////////////////////////////////
+		//	四则运算。乘除为逐元素运算
+		/////////////////////////////////////////////////
+		int4 operator - () const
+		{
+			return int4(-x, -y, -z, -w);
+		}
+
+		int4& operator += (const int4& v)
+		{
+			x += v.x;
+			y += v.y;
+			z += v.z;
+			w += v.w;
+			return *this;
+		}
+
+		int4& operator -= (const int4& v)
+		{
+			x -= v.x;
+			y -= v.y;
+			z -= v.z;
+			w -= v.w;
+			return *this;
+		}
+
+		int4& operator *= (const int4& v)
+		{
+			x *= v.x;
+			y *= v.y;
+			z *= v.z;
+			w *= v.w;
+			return *this;
+		}
+
+		int4& operator /= (const int4& v)
+		{
+			x /= v.x;
+			y /= v.y;
+			z /= v.z;
+			w /= v.w;
+			return *this;
+		}
+
+		int4& operator *= (int s)
+		{
+			x *= s;
+			y *= s;
+			z *= s;
+			w *= s;
+			return *this;
+		}
+
+		int4& operator /= (int s)
+		{
+			int invs = 1 / s;
+			return ((*this) *= invs);
+		}
+
+		int4& operator += (int s)
+		{
+			x += s;
+			y += s;
+			z += s;
+			w += s;
+			return *this;
+		}
+
+		int4& operator -= (int s)
+		{
+			x -= s;
+			y -= s;
+			z -= s;
+			w -= s;
+			return *this;
+		}
+
+		/////////////////////////////////////////////
+		//	其他运算
+		/////////////////////////////////////////////
+		int length_sqr() const
+		{
+			return x*x + y*y + z*z + w*w;
+		}
+
+		float length() const
+		{
+			return std::sqrt(static_cast<float>(length_sqr()));
+		}
+
+		void normalize()
+		{
+			int len = static_cast<int>(length());
+			(*this) /= len;
+		}
+
+		//static function
+		static int4 zero(){
+			return int4(0, 0, 0, 0);
+		}
+
+		static int4 gen_coord(int x, int y, int z){
+			return int4(x, y, z, 1);
+		}
+
+		static int4 gen_vector(int x, int y, int z){
+			return int4(x, y, z, 0);
+		}
+
+	private:
+		bool operator == (const int4& rhs);
+		bool operator != (const int4& rhs);
+	};
+
+	//non-member non-friend
+
+	//int2
+	inline int2 operator + (const int2& lhs, const int2& rhs){
+		return int2(lhs.x+rhs.x, lhs.y+rhs.y);
+	}
+
+	inline int2 operator - (const int2& lhs, const int2& rhs){
+		return int2(lhs.x-rhs.x, lhs.y-rhs.y);
+	}
+
+	inline int2 operator + (const int2& lhs, int s){
+		return int2(lhs.x+s, lhs.y+s);
+	}
+
+	inline int2 operator + (int s, const int2& lhs){
+		return lhs + s;
+	}
+
+	inline int2 operator - (const int2& lhs, int s){
+		return int2(lhs.x-s, lhs.y-s);
+	}
+
+	inline int2 operator - (int s, const int2& lhs){
+		return lhs - s;
+	}
+
+	inline int2 operator * (const int2& lhs, int s){
+		return int2(lhs.x*s, lhs.y*s);
+	}
+
+	inline int2 operator * (int s, const int2& lhs){
+		return lhs * s;
+	}
+
+	inline int2 operator * (const int2& lhs, const int2& rhs){
+		return int2(lhs.x * rhs.x, lhs.y * rhs.y);
+	}
+
+	inline int2 operator / (const int2& lhs, int s){
+		int invs = 1 / s;
+		return lhs * invs;
+	}
+
+	inline int2 operator / (const int2& lhs, const int2& rhs){
+		return int2(lhs.x / rhs.x, lhs.y / rhs.y);
+	}
+
+	//int3
+	inline int3 operator + (const int3& lhs, const int3& rhs){
+		return int3(lhs.x+rhs.x, lhs.y+rhs.y, lhs.z+rhs.z);
+	}
+
+	inline int3 operator - (const int3& lhs, const int3& rhs){
+		return int3(lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z);
+	}
+
+	inline int3 operator + (const int3& lhs, int s){
+		return int3(lhs.x+s, lhs.y+s, lhs.z+s);
+	}
+
+	inline int3 operator + (int s, const int3& lhs){
+		return lhs + s;
+	}
+
+	inline int3 operator - (const int3& lhs, int s){
+		return int3(lhs.x-s, lhs.y-s, lhs.z-s);
+	}
+
+	inline int3 operator - (int s, const int3& lhs){
+		return lhs - s;
+	}
+
+	inline int3 operator * (const int3& lhs, int s){
+		return int3(lhs.x*s, lhs.y*s, lhs.z*s);
+	}
+
+	inline int3 operator * (int s, const int3& lhs){
+		return lhs * s;
+	}
+
+	inline int3 operator * (const int3& lhs, const int3& rhs){
+		return int3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+	}
+
+	inline int3 operator / (const int3& lhs, int s){
+		int invs = 1 / s;
+		return lhs * invs;
+	}
+
+	inline int3 operator / (const int3& lhs, const int3& rhs){
+		return int3(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z);
+	}
+
+	//int4
+	inline int4 operator + (const int4& lhs, const int4& rhs){
+		return int4(lhs.x+rhs.x, lhs.y+rhs.y, lhs.z+rhs.z, lhs.w+rhs.w);
+	}
+
+	inline int4 operator - (const int4& lhs, const int4& rhs){
+		return int4(lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z, lhs.w-rhs.w);
+	}
+
+	inline int4 operator + (const int4& lhs, int s){
+		return int4(lhs.x+s, lhs.y+s, lhs.z+s, lhs.w+s);
+	}
+
+	inline int4 operator + (int s, const int4& lhs){
+		return lhs + s;
+	}
+
+	inline int4 operator - (const int4& lhs, int s){
+		return int4(lhs.x-s, lhs.y-s, lhs.z-s, lhs.w-s);
+	}
+
+	inline int4 operator - (int s, const int4& lhs){
+		return lhs - s;
+	}
+
+	inline int4 operator * (const int4& lhs, int s){
+		return int4(lhs.x*s, lhs.y*s, lhs.z*s, lhs.w*s);
+	}
+
+	inline int4 operator * (int s, const int4& lhs){
+		return lhs * s;
+	}
+
+	inline int4 operator * (const int4& lhs, const int4& rhs){
+		return int4(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w);
+	}
+
+	inline int4 operator / (const int4& lhs, int s){
+		int invs = 1 / s;
+		return lhs * invs;
+	}
+
+	inline int4 operator / (const int4& lhs, const int4& rhs){
+		return int4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w);
+	}
 } //namespace
 #endif

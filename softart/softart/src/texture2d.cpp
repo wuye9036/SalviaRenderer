@@ -30,37 +30,21 @@ void  texture_2d::gen_mipmap(filter_type filter)
 
 	surfs_.resize(min_lod_ + 1);
 
+	int elem_size = color_infos[fmt_].size;
 	for(size_t iLevel = max_lod_ + 1; iLevel <= min_lod_; ++iLevel)
 	{
-		cur_sizex >>= 1;
-		cur_sizey >>= 1;
+		size_t last_sizex = cur_sizex;
+		size_t last_sizey = cur_sizey;
 
-		float len_per_pixel_x = 1.0f / float(cur_sizex);
-		float len_per_pixel_y = 1.0f / float(cur_sizey);
+		cur_sizex = (cur_sizex + 1) / 2;
+		cur_sizey = (cur_sizey + 1) / 2;
 
-		float half_pixel_size_x = len_per_pixel_x / 2.0f;
-		float half_pixel_size_y = len_per_pixel_y / 2.0f;
-
-		byte* pdata = NULL;
+		byte* dst_data = NULL;
+		byte* src_data = NULL;
 
 		surfs_[iLevel].rebuild(cur_sizex, cur_sizey, fmt_);
-		surfs_[iLevel].lock((void**)&pdata, rect<size_t>(0, 0, cur_sizex, cur_sizey), lock_write_only);
-
-		sampler_desc desc;
-		desc.min_filter = filter;
-		desc.mag_filter = filter;
-		desc.mip_filter = filter_point;
-		desc.addr_mode_u = address_clamp;
-		desc.addr_mode_v = address_clamp;
-		desc.addr_mode_w = address_clamp;
-		desc.mip_lod_bias = 0;
-		desc.max_anisotropy = 0;
-		desc.comparison_func = compare_function_always;
-		desc.border_color = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
-		desc.min_lod = -1e20f;
-		desc.max_lod = 1e20f;
-		sampler s(desc);
-		s.set_texture(this);
+		surfs_[iLevel].lock((void**)&dst_data, rect<size_t>(0, 0, cur_sizex, cur_sizey), lock_write_only);
+		surfs_[iLevel - 1].lock((void**)&src_data, rect<size_t>(0, 0, last_sizex, last_sizey), lock_read_only);
 
 #if 0
 		float r = iLevel % 3 == 0 ? 1.0f : 0.0f;
@@ -69,22 +53,61 @@ void  texture_2d::gen_mipmap(filter_type filter)
 		color_rgba32f c(r, g, b, 1.0f);
 #endif
 
-		for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely){
-			for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx){
+		switch (filter)
+		{
+		case filter_point:
+			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely){
+				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx){
+					color_rgba32f c;
+					pixel_format_convertor::convert(
+						pixel_format_color_rgba32f, fmt_, 
+						(void*)&c, (const void*)(src_data + ((iPixelx * 2) + (iPixely * 2) * last_sizex) * elem_size)
+						);
 
-				color_rgba32f c = s.sample(
-					len_per_pixel_x * iPixelx + half_pixel_size_x,
-					len_per_pixel_y * iPixely + half_pixel_size_y,
-					float(iLevel-1)
-					);
-				
-				pixel_format_convertor::convert(
-					fmt_, pixel_format_color_rgba32f, 
-					(void*)(pdata + (iPixelx + iPixely * cur_sizex)* color_infos[fmt_].size), (const void*)&c
-					);
+					pixel_format_convertor::convert(
+						fmt_, pixel_format_color_rgba32f, 
+						(void*)(dst_data + (iPixelx + iPixely * cur_sizex) * elem_size), (const void*)&c
+						);
+				}
 			}
+			break;
+
+		case filter_linear:
+			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely){
+				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx){
+					color_rgba32f c0, c1, c2, c3;
+					pixel_format_convertor::convert(
+						pixel_format_color_rgba32f, fmt_, 
+						(void*)&c0, (const void*)(src_data + ((iPixelx * 2 + 0) + (iPixely * 2 + 0) * last_sizex) * elem_size)
+						);
+					pixel_format_convertor::convert(
+						pixel_format_color_rgba32f, fmt_, 
+						(void*)&c1, (const void*)(src_data + ((iPixelx * 2 + 1) + (iPixely * 2 + 0) * last_sizex) * elem_size)
+						);
+					pixel_format_convertor::convert(
+						pixel_format_color_rgba32f, fmt_, 
+						(void*)&c2, (const void*)(src_data + ((iPixelx * 2 + 0) + (iPixely * 2 + 1) * last_sizex) * elem_size)
+						);
+					pixel_format_convertor::convert(
+						pixel_format_color_rgba32f, fmt_, 
+						(void*)&c3, (const void*)(src_data + ((iPixelx * 2 + 1) + (iPixely * 2 + 1) * last_sizex) * elem_size)
+						);
+
+					color_rgba32f c = (c0.get_vec4() + c1.get_vec4() + c2.get_vec4() + c3.get_vec4()) * 0.25f;
+
+					pixel_format_convertor::convert(
+						fmt_, pixel_format_color_rgba32f, 
+						(void*)(dst_data + (iPixelx + iPixely * cur_sizex) * elem_size), (const void*)&c
+						);
+				}
+			}
+			break;
+
+		default:
+			break;
 		}
 
+		surfs_[iLevel - 1].unlock();
 		surfs_[iLevel].unlock();
 	}
 }

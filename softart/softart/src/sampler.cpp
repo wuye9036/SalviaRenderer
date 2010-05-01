@@ -15,10 +15,46 @@ namespace addresser
 		{
 			return (coord - fast_floor(coord)) * size - 0.5f;
 		}
+		static vec2 op1(const vec2& coord, const int2& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128 mfcoord = _mm_set_ps(0, 0, coord.y, coord.x);
+			__m128i micoord = _mm_cvttps_epi32(mfcoord);
+			__m128 tmp = _mm_cvtepi32_ps(micoord);
+			tmp = _mm_sub_ps(mfcoord, tmp);
+			__m128 msize = _mm_set_ps(0, 0, static_cast<float>(size.y), static_cast<float>(size.x));
+			tmp = _mm_mul_ps(msize, tmp);
+			const __m128 mhalf = _mm_set1_ps(0.5f);
+			tmp = _mm_sub_ps(tmp, mhalf);
+			float f[4];
+			_mm_storeu_ps(f, tmp);
+			return vec2(f[0], f[1]);
+#else
+			return (coord - vec2(fast_floor(coord.x), fast_floor(coord.y))) * vec2(size.x, size.y) - 0.5f;
+#endif
+		}
 
 		static int op2(int coord, int size)
 		{
 			return (size * 8192 + coord) % size;
+		}
+		static int2 op2(int2 coord, int2 size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128i micoord = _mm_set_epi32(0, coord.y, 0, coord.x);
+			__m128i misize = _mm_set_epi32(0, size.y, 0, size.x);
+			micoord = _mm_add_epi32(micoord, _mm_slli_si128(misize, 2));
+			__m128 mfcoord = _mm_cvtepi32_ps(micoord);
+			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
+			__m128i mir = _mm_sub_epi32(micoord, _mm_mul_epu32(midiv, misize));
+			int i[4];
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(i), mir);
+			return int2(i[0], i[2]);
+#else
+			return int2((size.x * 8192 + coord.x) % size.x,
+				(size.y * 8192 + coord.y) % size.y);
+#endif
 		}
 	};
 
@@ -32,10 +68,38 @@ namespace addresser
 				? 1 + selection_coord - coord
 				: coord - selection_coord) * size - 0.5f;
 		}
+		static vec2 op1(const vec2& coord, const int2& size)
+		{
+			int selection_coord_x = fast_floori(coord.x);
+			int selection_coord_y = fast_floori(coord.y);
+			return 
+				vec2((selection_coord_x & 1 
+				? 1 + selection_coord_x - coord.x
+				: coord.x - selection_coord_x) * size.x - 0.5f,
+				(selection_coord_y & 1 
+				? 1 + selection_coord_y - coord.y
+				: coord.y - selection_coord_y) * size.y - 0.5f);
+		}
 
 		static int op2(int coord, int size)
 		{
 			return efl::clamp(coord, 0, size - 1);
+		}
+		static int2 op2(const int2& coord, const int2& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128i micoord = _mm_set_epi32(0, 0, coord.y, coord.x);
+			__m128i misize = _mm_set_epi32(0, 0, size.y, size.x);
+			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
+			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
+			tmp = _mm_min_epi16(tmp, misize);
+			int i[4];
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(i), tmp);
+			return int2(i[0], i[1]);
+#else
+			return int2(efl::clamp(coord.x, 0, size.x - 1),
+				efl::clamp(coord.y, 0, size.y - 1));
+#endif
 		}
 	};
 
@@ -45,10 +109,44 @@ namespace addresser
 		{
 			return efl::clamp(coord * size, 0.5f, size - 0.5f) - 0.5f;
 		}
+		static vec2 op1(const vec2& coord, const int2& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128 mfcoord = _mm_set_ps(0, 0, coord.y, coord.x);
+			__m128 mfsize = _mm_set_ps(0, 0, static_cast<float>(size.y), static_cast<float>(size.x));
+			const __m128 mhalf = _mm_set1_ps(0.5f);
+			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
+			tmp = _mm_max_ps(tmp, mhalf);
+			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mhalf));
+			tmp = _mm_sub_ps(tmp, mhalf);
+			float f[4];
+			_mm_storeu_ps(f, tmp);
+			return vec2(f[0], f[1]);
+#else
+			return vec2(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f);
+#endif
+		}
 
 		static int op2(int coord, int size)
 		{
 			return efl::clamp(coord, 0, size - 1);
+		}
+		static int2 op2(const int2& coord, const int2& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128i micoord = _mm_set_epi32(0, 0, coord.y, coord.x);
+			__m128i misize = _mm_set_epi32(0, 0, size.y, size.x);
+			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
+			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
+			tmp = _mm_min_epi16(tmp, misize);
+			int i[4];
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(i), tmp);
+			return int2(i[0], i[1]);
+#else
+			return int2(efl::clamp(coord.x, 0, size.x - 1),
+				efl::clamp(coord.y, 0, size.y - 1));
+#endif
 		}
 	};
 
@@ -58,10 +156,33 @@ namespace addresser
 		{
 			return efl::clamp(coord * size, -0.5f, size + 0.5f) - 0.5f;
 		}
+		static vec2 op1(const vec2& coord, const int2& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128 mfcoord = _mm_set_ps(0, 0, coord.y, coord.x);
+			__m128 mfsize = _mm_set_ps(0, 0, static_cast<float>(size.y), static_cast<float>(size.x));
+			const __m128 mneghalf = _mm_set1_ps(-0.5f);
+			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
+			tmp = _mm_max_ps(tmp, mneghalf);
+			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mneghalf));
+			tmp = _mm_add_ps(tmp, mneghalf);
+			float f[4];
+			_mm_storeu_ps(f, tmp);
+			return vec2(f[0], f[1]);
+#else
+			return vec2(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f);
+#endif
+		}
 
 		static int op2(int coord, int size)
 		{
 			return coord >= size ? -1 : coord;
+		}
+		static int2 op2(const int2& coord, const int2& size)
+		{
+			return int2(coord.x >= size.x ? -1 : coord.x,
+				coord.y >= size.y ? -1 : coord.y);
 		}
 	};
 };
@@ -81,103 +202,158 @@ namespace coord_calculator
 	{
 		float o_coord = addresser_type::op1(coord, size);
 		int coord_ipart = fast_floori(o_coord);
-
-		low = coord_ipart;
-		up = low + 1;
-
-		low = addresser_type::op2(low, size);
-		up = addresser_type::op2(up, size);
-
+		low = addresser_type::op2(coord_ipart, size);
+		up = addresser_type::op2(coord_ipart + 1, size);
 		frac = o_coord - coord_ipart;
+	}
+
+	template <typename addresser_type>
+	int2 nearest_cc(const vec2& coord, const int2& size)
+	{
+		vec2 o_coord = addresser_type::op1(coord, size);
+		int2 coord_ipart = int2(fast_roundi(o_coord.x), fast_roundi(o_coord.y));
+		return addresser_type::op2(coord_ipart, size);
+	}
+
+	template <typename addresser_type>
+	void linear_cc(int2& low, int2& up, vec2& frac, const vec2& coord, const int2& size)
+	{
+		vec2 o_coord = addresser_type::op1(coord, size);
+		int2 coord_ipart = int2(fast_floori(o_coord.x), fast_floori(o_coord.y));
+		low = addresser_type::op2(coord_ipart, size);
+		up = addresser_type::op2(coord_ipart + 1, size);
+		frac = o_coord - vec2(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y));
 	}
 };
 
 namespace surface_sampler
 {
 	template <typename addresser_type_u, typename addresser_type_v>
-	color_rgba32f nearest(const surface& surf, float x, float y, const color_rgba32f& border_color)
+	struct nearest
 	{
-		int ix = coord_calculator::nearest_cc<addresser_type_u>(x, int(surf.get_width()));
-		int iy = coord_calculator::nearest_cc<addresser_type_v>(y, int(surf.get_height()));
+		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
+		{
+			int ix = coord_calculator::nearest_cc<addresser_type_u>(x, int(surf.get_width()));
+			int iy = coord_calculator::nearest_cc<addresser_type_v>(y, int(surf.get_height()));
 
-		if(ix < 0 || iy < 0) return border_color;
-		return surf.get_texel(ix, iy);
-	}
+			if(ix < 0 || iy < 0) return border_color;
+			return surf.get_texel(ix, iy);
+		}
+	};
 
 	template <typename addresser_type_u, typename addresser_type_v>
-	color_rgba32f linear(const surface& surf, float x, float y, const color_rgba32f& /*border_color*/)
+	struct linear
 	{
-		int xpos0, ypos0, xpos1, ypos1;
-		float tx, ty;
+		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& /*border_color*/)
+		{
+			int xpos0, ypos0, xpos1, ypos1;
+			float tx, ty;
 
-		coord_calculator::linear_cc<addresser_type_u>(xpos0, xpos1, tx, x, int(surf.get_width()));
-		coord_calculator::linear_cc<addresser_type_v>(ypos0, ypos1, ty, y, int(surf.get_height()));
+			coord_calculator::linear_cc<addresser_type_u>(xpos0, xpos1, tx, x, int(surf.get_width()));
+			coord_calculator::linear_cc<addresser_type_v>(ypos0, ypos1, ty, y, int(surf.get_height()));
 
-		color_rgba32f c0, c1, c2, c3;
+			color_rgba32f c0, c1, c2, c3;
 
-		c0 = surf.get_texel(xpos0, ypos0);
-		c1 = surf.get_texel(xpos1, ypos0);
-		c2 = surf.get_texel(xpos0, ypos1);
-		c3 = surf.get_texel(xpos1, ypos1);
+			c0 = surf.get_texel(xpos0, ypos0);
+			c1 = surf.get_texel(xpos1, ypos0);
+			c2 = surf.get_texel(xpos0, ypos1);
+			c3 = surf.get_texel(xpos1, ypos1);
 
-		color_rgba32f c01 = lerp(c0, c1, tx);
-		color_rgba32f c23 = lerp(c2, c3, tx);
+			color_rgba32f c01 = lerp(c0, c1, tx);
+			color_rgba32f c23 = lerp(c2, c3, tx);
 
-		return lerp(c01, c23, ty);
-	}
+			return lerp(c01, c23, ty);
+		}
+	};
+
+	template <typename addresser_type_uv>
+	struct nearest<addresser_type_uv, addresser_type_uv>
+	{
+		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
+		{
+			int2 ixy = coord_calculator::nearest_cc<addresser_type_uv>(vec2(x, y), int2(surf.get_width(), surf.get_height()));
+
+			if(ixy.x < 0 || ixy.y < 0) return border_color;
+			return surf.get_texel(ixy.x, ixy.y);
+		}
+	};
+
+	template <typename addresser_type_uv>
+	struct linear<addresser_type_uv, addresser_type_uv>
+	{
+		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& /*border_color*/)
+		{
+			int2 pos0, pos1;
+			vec2 t;
+
+			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec2(x, y), int2(surf.get_width(), surf.get_height()));
+
+			color_rgba32f c0, c1, c2, c3;
+
+			c0 = surf.get_texel(pos0.x, pos0.y);
+			c1 = surf.get_texel(pos1.x, pos0.y);
+			c2 = surf.get_texel(pos0.x, pos1.y);
+			c3 = surf.get_texel(pos1.x, pos1.y);
+
+			color_rgba32f c01 = lerp(c0, c1, t.x);
+			color_rgba32f c23 = lerp(c2, c3, t.x);
+
+			return lerp(c01, c23, t.y);
+		}
+	};
 
 	const sampler::filter_op_type filter_table[filter_type_count][address_mode_count][address_mode_count] = 
 	{
 		{
 			{
-				nearest<addresser::wrap, addresser::wrap>,
-				nearest<addresser::wrap, addresser::mirror>,
-				nearest<addresser::wrap, addresser::clamp>,
-				nearest<addresser::wrap, addresser::border>
+				nearest<addresser::wrap, addresser::wrap>::op,
+				nearest<addresser::wrap, addresser::mirror>::op,
+				nearest<addresser::wrap, addresser::clamp>::op,
+				nearest<addresser::wrap, addresser::border>::op
 			},
 			{
-				nearest<addresser::mirror, addresser::wrap>,
-				nearest<addresser::mirror, addresser::mirror>,
-				nearest<addresser::mirror, addresser::clamp>,
-				nearest<addresser::mirror, addresser::border>
+				nearest<addresser::mirror, addresser::wrap>::op,
+				nearest<addresser::mirror, addresser::mirror>::op,
+				nearest<addresser::mirror, addresser::clamp>::op,
+				nearest<addresser::mirror, addresser::border>::op
 			},
 			{
-				nearest<addresser::clamp, addresser::wrap>,
-				nearest<addresser::clamp, addresser::mirror>,
-				nearest<addresser::clamp, addresser::clamp>,
-				nearest<addresser::clamp, addresser::border>
+				nearest<addresser::clamp, addresser::wrap>::op,
+				nearest<addresser::clamp, addresser::mirror>::op,
+				nearest<addresser::clamp, addresser::clamp>::op,
+				nearest<addresser::clamp, addresser::border>::op
 			},
 			{
-				nearest<addresser::border, addresser::wrap>,
-				nearest<addresser::border, addresser::mirror>,
-				nearest<addresser::border, addresser::clamp>,
-				nearest<addresser::border, addresser::border>
+				nearest<addresser::border, addresser::wrap>::op,
+				nearest<addresser::border, addresser::mirror>::op,
+				nearest<addresser::border, addresser::clamp>::op,
+				nearest<addresser::border, addresser::border>::op
 			}
 		},
 		{
 			{
-				linear<addresser::wrap, addresser::wrap>,
-				linear<addresser::wrap, addresser::mirror>,
-				linear<addresser::wrap, addresser::clamp>,
-				linear<addresser::wrap, addresser::border>
+				linear<addresser::wrap, addresser::wrap>::op,
+				linear<addresser::wrap, addresser::mirror>::op,
+				linear<addresser::wrap, addresser::clamp>::op,
+				linear<addresser::wrap, addresser::border>::op
 			},
 			{
-				linear<addresser::mirror, addresser::wrap>,
-				linear<addresser::mirror, addresser::mirror>,
-				linear<addresser::mirror, addresser::clamp>,
-				linear<addresser::mirror, addresser::border>
+				linear<addresser::mirror, addresser::wrap>::op,
+				linear<addresser::mirror, addresser::mirror>::op,
+				linear<addresser::mirror, addresser::clamp>::op,
+				linear<addresser::mirror, addresser::border>::op
 			},
 			{
-				linear<addresser::clamp, addresser::wrap>,
-				linear<addresser::clamp, addresser::mirror>,
-				linear<addresser::clamp, addresser::clamp>,
-				linear<addresser::clamp, addresser::border>
+				linear<addresser::clamp, addresser::wrap>::op,
+				linear<addresser::clamp, addresser::mirror>::op,
+				linear<addresser::clamp, addresser::clamp>::op,
+				linear<addresser::clamp, addresser::border>::op
 			},
 			{
-				linear<addresser::border, addresser::wrap>,
-				linear<addresser::border, addresser::mirror>,
-				linear<addresser::border, addresser::clamp>,
-				linear<addresser::border, addresser::border>
+				linear<addresser::border, addresser::wrap>::op,
+				linear<addresser::border, addresser::mirror>::op,
+				linear<addresser::border, addresser::clamp>::op,
+				linear<addresser::border, addresser::border>::op
 			}
 		}
 	};

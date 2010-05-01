@@ -170,14 +170,20 @@ namespace efl{
 
 	inline int fast_ceili(double d)
 	{
-		int i = fast_roundi(d);
-		return (i < d) ? i + 1 : i;
+		const double DOUBLE_MAGIC_ROUND_EPS = (0.5f - 1.5e-8);	//almost .5f = .5f - 1e^(number of exp bit)
+		return fast_roundi(d + DOUBLE_MAGIC_ROUND_EPS);
 	}
 
 	inline int fast_floori(double d)
 	{
-		int i = fast_roundi(d);
-		return (i > d) ? i - 1 : i;
+		const double DOUBLE_MAGIC_ROUND_EPS = (0.5f - 1.5e-8);	//almost .5f = .5f - 1e^(number of exp bit)
+		return fast_roundi(d - DOUBLE_MAGIC_ROUND_EPS);
+	}
+
+	inline int fast_ftol(double d)
+	{
+		const double DOUBLE_MAGIC_ROUND_EPS = (0.5f - 1.5e-8);	//almost .5f = .5f - 1e^(number of exp bit)
+		return fast_roundi(d < 0 ? d + DOUBLE_MAGIC_ROUND_EPS : d - DOUBLE_MAGIC_ROUND_EPS);
 	}
 
 	//////////////////////////////////////
