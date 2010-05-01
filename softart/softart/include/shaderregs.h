@@ -83,7 +83,9 @@ public:
 	uint32_t num_used_attribute;
 
 public:
-	vs_output(){}
+	vs_output()
+		:position(0, 0, 0, 0), wpos(0, 0, 0, 0), num_used_attribute(0)
+	{}
 	vs_output(
 		const efl::vec4& position, 
 		const efl::vec4& wpos,
@@ -96,17 +98,24 @@ public:
 
 	//拷贝构造与赋值
 	vs_output(const vs_output& rhs)
-		:position(rhs.position), wpos(rhs.wpos), attributes(rhs.attributes), attribute_modifiers(rhs.attribute_modifiers),
+		:position(rhs.position), wpos(rhs.wpos),
 			num_used_attribute(rhs.num_used_attribute)
-	{}
+	{
+		for (uint32_t i = 0; i < num_used_attribute; ++ i){
+			attributes[i] = rhs.attributes[i];
+			attribute_modifiers[i] = rhs.attribute_modifiers[i];
+		}
+	}
 
 	vs_output& operator = (const vs_output& rhs){
 		if(&rhs == this) return *this;
 		position = rhs.position;
 		wpos = rhs.wpos;
-		attributes = rhs.attributes;
-		attribute_modifiers = rhs.attribute_modifiers;
 		num_used_attribute = rhs.num_used_attribute;
+		for (uint32_t i = 0; i < num_used_attribute; ++ i){
+			attributes[i] = rhs.attributes[i];
+			attribute_modifiers[i] = rhs.attribute_modifiers[i];
+		}
 		return *this;
 	}
 

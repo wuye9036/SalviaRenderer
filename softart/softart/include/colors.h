@@ -20,7 +20,7 @@ struct color_rgba32f
 
 	float r, g, b, a;
 
-	color_rgba32f() : r(0.0f), g(0.0f), b(0.0f), a(0.0f){}
+	color_rgba32f(){}
 	color_rgba32f(float r, float g, float b, float a) : r(r), g(g), b(b), a(a){}
 	color_rgba32f(const float* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
 	color_rgba32f(const efl::vec4& v):r(v.x), g(v.y), b(v.z), a(v.w){}
@@ -67,7 +67,7 @@ struct color_rgb32f
 	typedef float comp_t;
 	comp_t r,g,b;
 
-	color_rgb32f():r(0.0f), g(0.0f), b(0.0f){}
+	color_rgb32f(){}
 	color_rgb32f(const comp_t* color):r(color[0]), g(color[1]), b(color[2]){}
 	color_rgb32f(comp_t r, comp_t g, comp_t b):r(r), g(g), b(b){}
 
@@ -110,7 +110,7 @@ struct color_r32f
 	typedef float comp_t;
 	comp_t r;
 
-	color_r32f():r(0.0f){}
+	color_r32f(){}
 	color_r32f(const comp_t* color):r(*color){}
 	color_r32f(comp_t r):r(r){}
 
@@ -149,7 +149,7 @@ struct color_rg32f
 	typedef float comp_t;
 	comp_t r, g;
 
-	color_rg32f():r(0.0f), g(0.0f){}
+	color_rg32f(){}
 	color_rg32f(const comp_t* color):r(color[0]), g(color[1]){}
 	color_rg32f(comp_t r, comp_t g):r(r), g(g){}
 
@@ -193,7 +193,7 @@ struct color_rgba8
 	typedef uint8_t comp_t;
 	comp_t r, g, b, a;
 
-	color_rgba8() : r(0), g(0), b(0), a(0){}
+	color_rgba8(){}
 	color_rgba8(const comp_t* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
 	color_rgba8(comp_t r, comp_t g, comp_t b, comp_t a):r(r), g(g), b(b), a(a){}
 
@@ -235,7 +235,7 @@ struct color_bgra8
 	typedef uint8_t comp_t;
 	comp_t b, g, r, a;
 
-	color_bgra8() : r(0), g(0), b(0), a(0){}
+	color_bgra8(){}
 	color_bgra8(const comp_t* color):b(color[0]), g(color[1]), r(color[2]), a(color[3]){}
 	color_bgra8(comp_t b, comp_t g, comp_t r, comp_t a):b(b), g(g), r(r), a(a){}
 
@@ -276,7 +276,7 @@ struct color_r32i
 	typedef int32_t comp_t;
 	comp_t r;
 
-	color_r32i():r(0){}
+	color_r32i(){}
 	color_r32i(const comp_t* color):r(*color){}
 	color_r32i(comp_t r):r(r){}
 
