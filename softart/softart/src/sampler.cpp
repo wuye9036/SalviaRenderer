@@ -15,22 +15,22 @@ namespace addresser
 		{
 			return (coord - fast_floor(coord)) * size - 0.5f;
 		}
-		static vec2 op1(const vec2& coord, const int2& size)
+		static vec4 op1(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128 mfcoord = _mm_set_ps(0, 0, coord.y, coord.x);
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
 			__m128i micoord = _mm_cvttps_epi32(mfcoord);
 			__m128 tmp = _mm_cvtepi32_ps(micoord);
 			tmp = _mm_sub_ps(mfcoord, tmp);
-			__m128 msize = _mm_set_ps(0, 0, static_cast<float>(size.y), static_cast<float>(size.x));
+			__m128 msize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
 			tmp = _mm_mul_ps(msize, tmp);
 			const __m128 mhalf = _mm_set1_ps(0.5f);
 			tmp = _mm_sub_ps(tmp, mhalf);
-			float f[4];
-			_mm_storeu_ps(f, tmp);
-			return vec2(f[0], f[1]);
+			vec4 ret;
+			_mm_storeu_ps(&ret.x, tmp);
+			return ret;
 #else
-			return (coord - vec2(fast_floor(coord.x), fast_floor(coord.y))) * vec2(size.x, size.y) - 0.5f;
+			return (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w) - 0.5f;
 #endif
 		}
 
@@ -38,22 +38,26 @@ namespace addresser
 		{
 			return (size * 8192 + coord) % size;
 		}
-		static int2 op2(int2 coord, int2 size)
+		static int4 op2(const int4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord = _mm_set_epi32(0, coord.y, 0, coord.x);
-			__m128i misize = _mm_set_epi32(0, size.y, 0, size.x);
+			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			micoord = _mm_shuffle_epi32(micoord, _MM_SHUFFLE(0, 1, 0, 0));
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(0, 1, 0, 0));
 			micoord = _mm_add_epi32(micoord, _mm_slli_si128(misize, 2));
 			__m128 mfcoord = _mm_cvtepi32_ps(micoord);
 			__m128 mfsize = _mm_cvtepi32_ps(misize);
 			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
 			__m128i mir = _mm_sub_epi32(micoord, _mm_mul_epu32(midiv, misize));
-			int i[4];
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(i), mir);
-			return int2(i[0], i[2]);
+			mir = _mm_shuffle_epi32(mir, _MM_SHUFFLE(3, 1, 2, 0));
+			int4 ret;
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), mir);
+			return ret;
 #else
-			return int2((size.x * 8192 + coord.x) % size.x,
-				(size.y * 8192 + coord.y) % size.y);
+			return int4((size.x * 8192 + coord.x) % size.x,
+				(size.y * 8192 + coord.y) % size.y,
+				0, 0);
 #endif
 		}
 	};
@@ -68,37 +72,39 @@ namespace addresser
 				? 1 + selection_coord - coord
 				: coord - selection_coord) * size - 0.5f;
 		}
-		static vec2 op1(const vec2& coord, const int2& size)
+		static vec4 op1(const vec4& coord, const int4& size)
 		{
 			int selection_coord_x = fast_floori(coord.x);
 			int selection_coord_y = fast_floori(coord.y);
 			return 
-				vec2((selection_coord_x & 1 
+				vec4((selection_coord_x & 1 
 				? 1 + selection_coord_x - coord.x
 				: coord.x - selection_coord_x) * size.x - 0.5f,
 				(selection_coord_y & 1 
 				? 1 + selection_coord_y - coord.y
-				: coord.y - selection_coord_y) * size.y - 0.5f);
+				: coord.y - selection_coord_y) * size.y - 0.5f,
+				0, 0);
 		}
 
 		static int op2(int coord, int size)
 		{
 			return efl::clamp(coord, 0, size - 1);
 		}
-		static int2 op2(const int2& coord, const int2& size)
+		static int4 op2(const int4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord = _mm_set_epi32(0, 0, coord.y, coord.x);
-			__m128i misize = _mm_set_epi32(0, 0, size.y, size.x);
+			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
 			tmp = _mm_min_epi16(tmp, misize);
-			int i[4];
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(i), tmp);
-			return int2(i[0], i[1]);
+			int4 ret;
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
+			return ret;
 #else
-			return int2(efl::clamp(coord.x, 0, size.x - 1),
-				efl::clamp(coord.y, 0, size.y - 1));
+			return int4(efl::clamp(coord.x, 0, size.x - 1),
+				efl::clamp(coord.y, 0, size.y - 1),
+				0, 0);
 #endif
 		}
 	};
@@ -109,22 +115,23 @@ namespace addresser
 		{
 			return efl::clamp(coord * size, 0.5f, size - 0.5f) - 0.5f;
 		}
-		static vec2 op1(const vec2& coord, const int2& size)
+		static vec4 op1(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128 mfcoord = _mm_set_ps(0, 0, coord.y, coord.x);
-			__m128 mfsize = _mm_set_ps(0, 0, static_cast<float>(size.y), static_cast<float>(size.x));
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
+			__m128 mfsize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
 			const __m128 mhalf = _mm_set1_ps(0.5f);
 			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
 			tmp = _mm_max_ps(tmp, mhalf);
 			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mhalf));
 			tmp = _mm_sub_ps(tmp, mhalf);
-			float f[4];
-			_mm_storeu_ps(f, tmp);
-			return vec2(f[0], f[1]);
+			vec4 ret;
+			_mm_storeu_ps(&ret.x, tmp);
+			return ret;
 #else
-			return vec2(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f);
+			return vec4(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
+				0, 0);
 #endif
 		}
 
@@ -132,20 +139,21 @@ namespace addresser
 		{
 			return efl::clamp(coord, 0, size - 1);
 		}
-		static int2 op2(const int2& coord, const int2& size)
+		static int4 op2(const int4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord = _mm_set_epi32(0, 0, coord.y, coord.x);
-			__m128i misize = _mm_set_epi32(0, 0, size.y, size.x);
+			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
 			tmp = _mm_min_epi16(tmp, misize);
-			int i[4];
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(i), tmp);
-			return int2(i[0], i[1]);
+			int4 ret;
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
+			return ret;
 #else
-			return int2(efl::clamp(coord.x, 0, size.x - 1),
-				efl::clamp(coord.y, 0, size.y - 1));
+			return int4(efl::clamp(coord.x, 0, size.x - 1),
+				efl::clamp(coord.y, 0, size.y - 1),
+				0, 0);
 #endif
 		}
 	};
@@ -156,22 +164,23 @@ namespace addresser
 		{
 			return efl::clamp(coord * size, -0.5f, size + 0.5f) - 0.5f;
 		}
-		static vec2 op1(const vec2& coord, const int2& size)
+		static vec4 op1(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128 mfcoord = _mm_set_ps(0, 0, coord.y, coord.x);
-			__m128 mfsize = _mm_set_ps(0, 0, static_cast<float>(size.y), static_cast<float>(size.x));
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
+			__m128 mfsize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
 			const __m128 mneghalf = _mm_set1_ps(-0.5f);
 			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
 			tmp = _mm_max_ps(tmp, mneghalf);
 			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mneghalf));
 			tmp = _mm_add_ps(tmp, mneghalf);
-			float f[4];
-			_mm_storeu_ps(f, tmp);
-			return vec2(f[0], f[1]);
+			vec4 ret;
+			_mm_storeu_ps(&ret.x, tmp);
+			return ret;
 #else
-			return vec2(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f);
+			return vec4(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
+				0, 0);
 #endif
 		}
 
@@ -179,10 +188,11 @@ namespace addresser
 		{
 			return coord >= size ? -1 : coord;
 		}
-		static int2 op2(const int2& coord, const int2& size)
+		static int4 op2(const int4& coord, const int4& size)
 		{
-			return int2(coord.x >= size.x ? -1 : coord.x,
-				coord.y >= size.y ? -1 : coord.y);
+			return int4(coord.x >= size.x ? -1 : coord.x,
+				coord.y >= size.y ? -1 : coord.y,
+				0, 0);
 		}
 	};
 };
@@ -208,21 +218,21 @@ namespace coord_calculator
 	}
 
 	template <typename addresser_type>
-	int2 nearest_cc(const vec2& coord, const int2& size)
+	int4 nearest_cc(const vec4& coord, const int4& size)
 	{
-		vec2 o_coord = addresser_type::op1(coord, size);
-		int2 coord_ipart = int2(fast_roundi(o_coord.x), fast_roundi(o_coord.y));
+		vec4 o_coord = addresser_type::op1(coord, size);
+		int4 coord_ipart = int4(fast_roundi(o_coord.x), fast_roundi(o_coord.y), 0, 0);
 		return addresser_type::op2(coord_ipart, size);
 	}
 
 	template <typename addresser_type>
-	void linear_cc(int2& low, int2& up, vec2& frac, const vec2& coord, const int2& size)
+	void linear_cc(int4& low, int4& up, vec4& frac, const vec4& coord, const int4& size)
 	{
-		vec2 o_coord = addresser_type::op1(coord, size);
-		int2 coord_ipart = int2(fast_floori(o_coord.x), fast_floori(o_coord.y));
+		vec4 o_coord = addresser_type::op1(coord, size);
+		int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 		low = addresser_type::op2(coord_ipart, size);
 		up = addresser_type::op2(coord_ipart + 1, size);
-		frac = o_coord - vec2(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y));
+		frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 	}
 };
 
@@ -271,7 +281,7 @@ namespace surface_sampler
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
 		{
-			int2 ixy = coord_calculator::nearest_cc<addresser_type_uv>(vec2(x, y), int2(surf.get_width(), surf.get_height()));
+			int4 ixy = coord_calculator::nearest_cc<addresser_type_uv>(vec4(x, y, 0, 0), int4(surf.get_width(), surf.get_height(), 0, 0));
 
 			if(ixy.x < 0 || ixy.y < 0) return border_color;
 			return surf.get_texel(ixy.x, ixy.y);
@@ -283,10 +293,10 @@ namespace surface_sampler
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& /*border_color*/)
 		{
-			int2 pos0, pos1;
-			vec2 t;
+			int4 pos0, pos1;
+			vec4 t;
 
-			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec2(x, y), int2(surf.get_width(), surf.get_height()));
+			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0), int4(surf.get_width(), surf.get_height(), 0, 0));
 
 			color_rgba32f c0, c1, c2, c3;
 

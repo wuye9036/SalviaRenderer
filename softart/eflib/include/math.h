@@ -7,6 +7,10 @@
 #include "detail/quaternion.h"
 #include "detail/collision_detection.h"
 
+#ifndef EFLIB_NO_SIMD
+#include <emmintrin.h>
+#endif
+
 #include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
 
@@ -180,11 +184,18 @@ namespace efl{
 		return fast_roundi(d - DOUBLE_MAGIC_ROUND_EPS);
 	}
 
+#ifndef EFLIB_NO_SIMD
+	inline int fast_ftol(float f)
+	{
+		return _mm_cvtt_ss2si(_mm_load_ss(&f));
+	}
+#else
 	inline int fast_ftol(double d)
 	{
 		const double DOUBLE_MAGIC_ROUND_EPS = (0.5f - 1.5e-8);	//almost .5f = .5f - 1e^(number of exp bit)
 		return fast_roundi(d < 0 ? d + DOUBLE_MAGIC_ROUND_EPS : d - DOUBLE_MAGIC_ROUND_EPS);
 	}
+#endif
 
 	//////////////////////////////////////
 	// base vector function
