@@ -27,6 +27,9 @@
     <ClCompile Include="..\src\syntax_tree\symbol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\semantic_analyser\symbol_infos.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h">
@@ -36,6 +39,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\syntax_tree\symbol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\semantic_analyser\symbol_infos.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\semantic_analyser\semantic_analyser_forward.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

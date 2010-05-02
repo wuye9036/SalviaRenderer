@@ -85,25 +85,28 @@
 		<Ortho />
 		<item value="0">none</item>
 		
-		<item value="0 * (2 ** 24)">_scalar</item>
-		<item value="1 * (2 ** 24)">_vector</item>
-		<item value="2 * (2 ** 24)">_matrix</item>
+		<item value="1 * (2 ** 24)">_scalar</item>
+		<item value="2 * (2 ** 24)">_vector</item>
+		<item value="4 * (2 ** 24)">_matrix</item>
 		
-		<item value="1 * (2 ** 16)">_unsigned</item>
-		<item value="0 * (2 ** 16)">_signed</item>
+		<item value="1 * (2 ** 16)">_real</item>
+		<item value="2 * (2 ** 16)">_integer</item>
 		
-		<item value="1 or $_signed$">_int8</item>
-		<item value="2 or $_signed$">_int16</item>
-		<item value="3 or $_signed$">_int32</item>
-		<item value="4 or $_signed$">_int64</item>
+		<item value="1 * (2 ** 8) + $_integer$">_unsigned</item>
+		<item value="2 * (2 ** 8) + $_integer$">_signed</item>
 		
-		<item value="1 or $_unsigned$">_uint8</item>
-		<item value="2 or $_unsigned$">_uint16</item>
-		<item value="3 or $_unsigned$">_uint32</item>
-		<item value="4 or $_unsigned$">_uint64</item>
+		<item value="1 + $_signed$">_int8</item>
+		<item value="2 + $_signed$">_int16</item>
+		<item value="3 + $_signed$">_int32</item>
+		<item value="4 + $_signed$">_int64</item>
 		
-		<item value="5">_float</item>
-		<item value="6">_double</item>
+		<item value="1 + $_unsigned$">_uint8</item>
+		<item value="2 + $_unsigned$">_uint16</item>
+		<item value="3 + $_unsigned$">_uint32</item>
+		<item value="4 + $_unsigned$">_uint64</item>
+		
+		<item value="1 + $_real$">_float</item>
+		<item value="2 + $_real$">_double</item>
 	</enum>
 	
 	<enum name="syntax_node_types" storage_type = "uint64_t">

@@ -44,7 +44,6 @@ struct member_initializer: public initializer{
 struct declaration: public node{
 	declaration(syntax_node_types type_id, boost::shared_ptr<token_attr> tok);
 	void accept( syntax_tree_visitor* v );
-	boost::weak_ptr<symbol> sym;
 };
 
 struct variable_declaration : public declaration{
@@ -57,7 +56,7 @@ struct variable_declaration : public declaration{
 
 struct type_definition: public declaration{
 	void accept( syntax_tree_visitor* v );
-	boost::shared_ptr< type_speficier > type_info;
+	boost::shared_ptr< type_specifier > type_info;
 	token_attr ident;
 };
 
@@ -102,9 +101,9 @@ struct struct_type: public type_specifier{
 	std::vector< boost::shared_ptr<declaration> > decls;
 };
 
-struct parameter{
+struct parameter: public declaration{
 	boost::shared_ptr<type_specifier> param_type;
-	boost::shared_ptr<identifier> ident;
+	boost::shared_ptr<token_attr> ident;
 	boost::shared_ptr<initializer> init;
 };
 
@@ -113,6 +112,7 @@ struct function_type: public type_specifier{
 	void accept( syntax_tree_visitor* v );
 
 	boost::shared_ptr< token_attr > name;
+	boost::shared_ptr< type_specifier > retval_type;
 	std::vector< boost::shared_ptr<parameter> > params;
 	std::vector< boost::shared_ptr<statement> > stmts;
 };

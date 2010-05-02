@@ -1,8 +1,9 @@
 #ifndef SASL_SYNTAX_TREE_EXPRESSION_H
 #define SASL_SYNTAX_TREE_EXPRESSION_H
 
-#include "syntax_tree_fwd.h"
-#include "node.h"
+#include <sasl/include/syntax_tree/syntax_tree_fwd.h>
+#include <sasl/include/syntax_tree/node.h>
+#include <sasl/enums/operators.h>
 #include <boost/smart_ptr.hpp>
 #include <string>
 
@@ -12,7 +13,7 @@ namespace sasl {
 	}
 }
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SYNTAX_TREE();
 
 using sasl::common::token_attr;
 class syntax_tree_visitor;
@@ -91,6 +92,6 @@ struct member_expression: public expression{
 	boost::shared_ptr<identifier> member_ident;
 };
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SYNTAX_TREE();
 
 #endif //SASL_SYNTAX_TREE_EXPRESSION_H

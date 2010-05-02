@@ -60,19 +60,31 @@ private:
 	struct CodeGenerationContext{
 		boost::shared_ptr<llvm::Module> mod;
 		boost::shared_ptr<llvm::IRBuilder<> > builder;
-
-		llvm::Function* created_function;
-		llvm::Value* created_value;
 	};
 
 	class symbol_info: public sasl::syntax_tree::symbol_info{
 	public:
 		typedef sasl::syntax_tree::symbol_info base_type;
-		symbol_info()£º base_type("llvm code generator symbol info"){
+		symbol_info()£º base_type("llvm code generator symbol info"),
+			llvm_value(NULL),
+			llvm_function(NULL),
+			llvm_type(NULL)
+		{
 		}
-	private:
-		llvm::Value* sym_value;
+
+		llvm::Value* llvm_value;
+		llvm::Function* llvm_function;
+		llvm::Type* llvm_type;
 	};
+
+	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Function* v);
+	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Value* v);
+	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Type* v);
+
+
+	boost::shared_ptr<symbol_info> extract_symbol_info( boost::shared_ptr<sasl::syntax_tree::node> pnode );
+
+	std::string generate_temporary_name();
 
 	CodeGenerationContext cg_ctxt;
 };

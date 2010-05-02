@@ -22,12 +22,26 @@ public:
 	boost::shared_ptr<symbol> add_child(const std::string& s, boost::shared_ptr<node> pnode);
 
 	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname );
-	template <typename T> boost::shared_ptr<T> symbol_info(){
-		BOOST_STATIC_ASSERT( std::tr1::is_base_of<symbol_info, T>::value );
-		static T instance;
-		return boost::static_pointer_cast<T>(instance.class_name());
-	}
 	void symbol_info( boost::shared_ptr<class symbol_info> syminfo );
+
+	template <typename T> boost::shared_ptr<T> symbol_info(){
+		BOOST_STATIC_ASSERT( std::tr1::is_base_of<struct symbol_info, T>::value );
+		static T instance;
+		return boost::shared_polymorphic_downcast<T>(instance.class_name());
+	}
+	template <typename T> void symbol_info( boost::shared_ptr<T> syminfo ){
+		BOOST_STATIC_ASSERT( std::tr1::is_base_of<class symbol_info, T>::value );
+		symbol_info( boost::shared_polymorphic_cast<T>(syminfo) );
+	}
+	template <typename T> boost::shared_ptr<T> get_or_create_symbol_info(){
+		BOOST_STATIC_ASSERT( std::tr1::is_base_of<class symbol_info, T>::value );
+		boost::shared_ptr<T> ret = symbol_info<T>();
+		if ( !ret ){
+			ret.reset( new T() );
+			symbol_info( ret );
+		}
+		return ret;
+	}
 
 	boost::shared_ptr<struct node> node();
 

@@ -5,19 +5,25 @@
 #include <sasl/include/common/token_attr.h>
 #include <sasl/enums/syntax_node_types.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 BEGIN_NS_SASL_SYNTAX_TREE()
 
 struct token_attr;
 class syntax_tree_visitor;
+class symbol;
 
 struct node{
-	syntax_node_types				type_id;
-	boost::shared_ptr<token_attr>	tok;
-
+	boost::shared_ptr<class symbol> symbol();
+	boost::shared_ptr<token_attr> token();
 	virtual void accept( syntax_tree_visitor* visitor ) = 0;
 protected:
 	node(syntax_node_types tid, boost::shared_ptr<token_attr> tok);
+
+	syntax_node_types				type_id;
+	boost::shared_ptr<token_attr>	tok;
+	boost::weak_ptr<symbol>			sym;
+
 	virtual ~node();
 };
 

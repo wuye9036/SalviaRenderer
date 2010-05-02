@@ -20,12 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp" />
+    <ClCompile Include="..\src\semantic_analyser\symbol_infos.cpp" />
     <ClCompile Include="..\src\syntax_tree\symbol.cpp" />
     <ClCompile Include="..\test\function_entry_generator_test.cpp" />
     <ClCompile Include="..\test\llvm_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h" />
+    <ClInclude Include="..\include\semantic_analyser\semantic_analyser_forward.h" />
+    <ClInclude Include="..\include\semantic_analyser\symbol_infos.h" />
     <ClInclude Include="..\include\syntax_tree\symbol.h" />
     <ClInclude Include="..\include\syntax_tree\symbol_info.h" />
   </ItemGroup>
