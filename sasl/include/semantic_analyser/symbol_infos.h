@@ -2,10 +2,9 @@
 #define SASL_SEMANTIC_ANALYSER_SYMBOL_INFOS_H
 
 #include <sasl/include/semantic_analyser/semantic_analyser_forward.h>
+#include <sasl/include/syntax_tree/symbol_info.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
-
-BEGIN_NS_SASL_SEMANTIC_ANALYSER();
 
 namespace sasl {
 	namespace syntax_tree{
@@ -14,6 +13,8 @@ namespace sasl {
 		class type_specifier;
 	}
 }
+
+BEGIN_NS_SASL_SEMANTIC_ANALYSER();
 
 using sasl::syntax_tree::constant;
 using sasl::syntax_tree::symbol_info;

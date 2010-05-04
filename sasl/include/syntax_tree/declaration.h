@@ -2,12 +2,10 @@
 #define SASL_SYNTAX_TREE_DECLARATION_H
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
-#include <sasl/include/syntax_tree/identifier.h>
 #include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/syntax_tree/visitor.h>
-#include <sasl/include/common/token_attr.h>
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/syntax_node_types.h>
+#include <sasl/enums/type_qualifiers.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
@@ -17,8 +15,9 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SYNTAX_TREE();
 
+class syntax_tree_visitor;
 struct type_specifier;
 struct statement;
 struct expression;
@@ -76,14 +75,14 @@ struct type_identifier: public type_specifier{
 	type_identifier( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* v );
 
-	boost::shared_ptr< type_speficier > inner_type;
+	boost::shared_ptr< type_specifier > inner_type;
 	std::string name;
 };
 
 struct qualified_type: public type_specifier{
 	qualified_type( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* v );
-	boost::shared_ptr< type_speficier > inner_type;
+	boost::shared_ptr< type_specifier > inner_type;
 	type_qualifiers qual;
 };
 

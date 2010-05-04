@@ -3,12 +3,14 @@
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/include/syntax_tree/symbol_info.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
 #include <boost/shared_ptr.hpp>
+#include <string>
 
-BEGIN_NS_SASL_CODE_GENERATOR()
+BEGIN_NS_SASL_CODE_GENERATOR();
 
 class llvm_code_generator: public sasl::syntax_tree::syntax_tree_visitor{
 	llvm_code_generator();
@@ -62,10 +64,11 @@ private:
 		boost::shared_ptr<llvm::IRBuilder<> > builder;
 	};
 
+	llvm::Value* allocate_local_variable( sasl::syntax_tree::variable_declaration& var );
 	class symbol_info: public sasl::syntax_tree::symbol_info{
 	public:
 		typedef sasl::syntax_tree::symbol_info base_type;
-		symbol_info()£º base_type("llvm code generator symbol info"),
+		symbol_info(): base_type("llvm code generator symbol info"),
 			llvm_value(NULL),
 			llvm_function(NULL),
 			llvm_type(NULL)
@@ -81,15 +84,10 @@ private:
 	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Value* v);
 	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Type* v);
 
-
-	boost::shared_ptr<symbol_info> extract_symbol_info( boost::shared_ptr<sasl::syntax_tree::node> pnode );
-
 	std::string generate_temporary_name();
 
 	CodeGenerationContext cg_ctxt;
 };
-
-
 
 END_NS_SASL_CODE_GENERATOR()
 

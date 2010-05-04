@@ -14,10 +14,10 @@ struct constant{
 	literal_constant_types valtype;
 	sasl::common::token_attr lit;
 
-	bool is_unsigned();
-	bool is_long();
-	bool is_double();
-	bool is_single();
+	bool is_unsigned() const;
+	bool is_long() const;
+	bool is_double() const;
+	bool is_single() const;
 
 	constant();
 protected:

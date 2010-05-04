@@ -39,8 +39,8 @@ void llvm_code_generator::visit( binary_expression& v ){
 
 	// generate code
 	if (v.op == operators::add){
-		if ( ltype->type_id_of_value == buildin_type_code::_int32 &&
-			ltype->type_id_of_value == buildin_type_code::_int32
+		if ( ltype->type_id_of_value == buildin_type_code::_sint32 &&
+			ltype->type_id_of_value == buildin_type_code::_sint32
 		){
 			llvm::Value* ret_val = cg_ctxt.builder->CreateAdd( 
 				lsym->symbol_info<class symbol_info>()->llvm_value,
@@ -75,7 +75,12 @@ void llvm_code_generator::visit( constant_expression& v ){
 		if ( v.value->is_unsigned() ){
 			ret_v = ConstantInt::get( Type::getInt64Ty(ctxt), val_syminfo->value<unsigned long>() );
 		} else {
-			ret_v = ConstantInt::get( Type::getInt64Ty(ctxt), reinterpret_cast<unsigned long>(val_syminfo->value<long>()) );
+			union {
+				unsigned long u;
+				signed long s;
+			} u_to_s;
+			u_to_s.s = val_syminfo->value<long>();
+			ret_v = ConstantInt::get( Type::getInt64Ty(ctxt), u_to_s.u, true );
 		}
 	}
 
@@ -113,16 +118,16 @@ void llvm_code_generator::visit( function_type& v ){
 
 	// get paramenter type
 	std::vector<const llvm::Type* > param_types;
-	for( vector<parameter>::iterator it = v.params.begin(); it != v.params.end(); ++it ){
-		it->accept( this );
+	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
+		(*it)->accept( this );
 		param_types.push_back( extract_symbol_info<class symbol_info>(*it)->llvm_type );
 	}
 
 	// create function info
-	FunctionType* funcType = FunctionType::get( ret_type, param_types );
+	FunctionType* funcType = FunctionType::get( ret_type, param_types, false );
 	
 	// create function and preparing parameters
-	Function* func = cg_ctxt.mod->getOrInsertFunction( v.name->lit, funcType );
+	Function* func = static_cast<Function*>( cg_ctxt.mod->getOrInsertFunction(v.name->lit, funcType) );
 	size_t arg_idx = 0;
 	for( Function::arg_iterator arg_it = func->arg_begin(); arg_it != func->arg_end(); ++arg_it, ++arg_idx){
 		arg_it->setName( v.params[arg_idx]->ident->lit );
@@ -153,8 +158,7 @@ void llvm_code_generator::visit( compound_statement& v ){}
 void llvm_code_generator::visit( expression_statement& v ){}
 void llvm_code_generator::visit( jump_statement& v ){}
 
-boost::shared_ptr<symbol_info> llvm_code_generator::extract_symbol_info( boost::shared_ptr<sasl::syntax_tree::node> pnode ){
-	return pnode->symbol()->symbol_info<class symbol_info>();
+llvm::Value* llvm_code_generator::allocate_local_variable( sasl::syntax_tree::variable_declaration& var ){
 }
 
 END_NS_SASL_CODE_GENERATOR()

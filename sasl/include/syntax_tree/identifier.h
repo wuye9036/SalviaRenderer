@@ -2,7 +2,7 @@
 #define SASL_SYNTAX_TREE_IDENTIFIER_H
 
 #include "node.h"
-#include "token.h"
+#include <sasl/include/common/token_attr.h>
 #include <string>
 
 struct identifier{

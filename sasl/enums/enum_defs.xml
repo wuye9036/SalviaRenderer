@@ -95,10 +95,10 @@
 		<item value="1 * (2 ** 8) + $_integer$">_unsigned</item>
 		<item value="2 * (2 ** 8) + $_integer$">_signed</item>
 		
-		<item value="1 + $_signed$">_int8</item>
-		<item value="2 + $_signed$">_int16</item>
-		<item value="3 + $_signed$">_int32</item>
-		<item value="4 + $_signed$">_int64</item>
+		<item value="1 + $_signed$">_sint8</item>
+		<item value="2 + $_signed$">_sint16</item>
+		<item value="3 + $_signed$">_sint32</item>
+		<item value="4 + $_signed$">_sint64</item>
 		
 		<item value="1 + $_unsigned$">_uint8</item>
 		<item value="2 + $_unsigned$">_uint16</item>
@@ -163,6 +163,15 @@
 		<item>constant</item>
 		<item>register_id</item>
 		<item>stack_based_address</item>
+	</enum>
+	
+	<enum name="type_qualifiers">
+		<HasName />
+		<Ortho/>
+		<Convertible/>
+		<AutoGen expression = "2 ** $index$"/>
+		<item>none</item>
+		<item>_uniform</item>
 	</enum>
 	
 	<enum name="jump_mode">
