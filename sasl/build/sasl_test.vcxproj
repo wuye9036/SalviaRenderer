@@ -19,14 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\enums\buildin_type_code.cpp" />
+    <ClCompile Include="..\enums\jump_mode.cpp" />
+    <ClCompile Include="..\enums\literal_constant_types.cpp" />
+    <ClCompile Include="..\enums\operators.cpp" />
+    <ClCompile Include="..\enums\storage_mode.cpp" />
+    <ClCompile Include="..\enums\syntax_node_types.cpp" />
+    <ClCompile Include="..\enums\token_types.cpp" />
+    <ClCompile Include="..\enums\type_qualifiers.cpp" />
     <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp" />
     <ClCompile Include="..\src\semantic_analyser\symbol_infos.cpp" />
+    <ClCompile Include="..\src\syntax_tree\constant.cpp" />
+    <ClCompile Include="..\src\syntax_tree\node.cpp" />
     <ClCompile Include="..\src\syntax_tree\symbol.cpp" />
     <ClCompile Include="..\test\function_entry_generator_test.cpp" />
     <ClCompile Include="..\test\llvm_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h" />
+    <ClInclude Include="..\include\code_generator\llvm\llvm_patch.h" />
     <ClInclude Include="..\include\semantic_analyser\semantic_analyser_forward.h" />
     <ClInclude Include="..\include\semantic_analyser\symbol_infos.h" />
     <ClInclude Include="..\include\syntax_tree\symbol.h" />

@@ -4,6 +4,7 @@
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
 #include <sasl/include/syntax_tree/symbol_info.h>
+#include <sasl/include/code_generator/llvm/llvm_patch.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>

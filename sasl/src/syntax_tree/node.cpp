@@ -2,12 +2,20 @@
 
 using namespace boost;
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SYNTAX_TREE();
 
 node::node(syntax_node_types tid, shared_ptr<token_attr> tok )
-: type_id(type), tok(tok)
+: type_id(tid), tok(tok)
 {
 	// DO NOTHING
+}
+
+boost::shared_ptr<class symbol> node::symbol(){
+	return sym.lock();
+}
+
+boost::shared_ptr<token_attr> node::token(){
+	return tok;
 }
 
 node::~node(){
@@ -15,4 +23,4 @@ node::~node(){
 }
 
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SYNTAX_TREE();

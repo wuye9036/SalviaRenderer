@@ -11,18 +11,18 @@ value_symbol_info::value_symbol_info(): value_symbol_info::base_type( "value sym
 value_symbol_info::value_symbol_info( const constant& c ): value_symbol_info::base_type( "value symbol info" ){
 	if (c.valtype == literal_constant_types::integer ){
 		if ( c.is_unsigned() ){
-			val = boost::lexical_cast<unsigned long>(c.lit);
+			val = boost::lexical_cast<unsigned long>(c.littok.lit);
 		} else {
-			val = boost::lexical_cast<long>(c.lit);
+			val = boost::lexical_cast<long>(c.littok.lit);
 		}
 	} else if( c.valtype == literal_constant_types::real ){
-		val = boost::lexical_cast<double>(c.lit);
+		val = boost::lexical_cast<double>(c.littok.lit);
 	} else if( c.valtype == literal_constant_types::boolean ){
-		val = (c.lit.lit == "true");
+		val = (c.littok.lit == "true");
 	} else if( c.valtype == literal_constant_types::character ){
-		val = c.lit.lit[0];
+		val = c.littok.lit[0];
 	} else if( c.valtype == literal_constant_types::string ){
-		val = c.lit;
+		val = c.littok.lit;
 	}
 }
 

@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SYNTAX_TREE();
 
 struct unary_expression;
 struct cast_expression;
@@ -78,16 +78,16 @@ public:
 	// statement
 	virtual void visit( statement& v ) = 0;
 	virtual void visit( declaration_statement& v ) = 0;
-	virtual void visit( if_statement& v );
-	virtual void visit( while_statement& v );
-	virtual void visit( dowhile_statement& v );
-	virtual void visit( case_label& v );
-	virtual void visit( switch_statement& v );
-	virtual void visit( compound_statement& v );
-	virtual void visit( expression_statement& v );
-	virtual void visit( jump_statement& v );
+	virtual void visit( if_statement& v ) = 0;
+	virtual void visit( while_statement& v ) = 0;
+	virtual void visit( dowhile_statement& v ) = 0;
+	virtual void visit( case_label& v ) = 0;
+	virtual void visit( switch_statement& v ) = 0;
+	virtual void visit( compound_statement& v ) = 0;
+	virtual void visit( expression_statement& v ) = 0;
+	virtual void visit( jump_statement& v ) = 0;
 };
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SYNTAX_TREE();
 
 #endif

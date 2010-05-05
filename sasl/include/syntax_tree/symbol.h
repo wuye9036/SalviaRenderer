@@ -25,9 +25,9 @@ public:
 	void symbol_info( boost::shared_ptr<class symbol_info> syminfo );
 
 	template <typename T> boost::shared_ptr<T> symbol_info(){
-		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<struct symbol_info, T>::value) );
+		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );
 		static T instance;
-		return boost::shared_polymorphic_downcast<T>(instance.class_name());
+		return boost::shared_polymorphic_downcast<T>( symbol_info(instance.class_name()) );
 	}
 	template <typename T> void symbol_info( boost::shared_ptr<T> syminfo ){
 		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );

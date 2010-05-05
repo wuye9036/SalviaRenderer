@@ -4,16 +4,20 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <boost/tr1/type_traits.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/static_assert.hpp>
 #include <string>
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SYNTAX_TREE();
 
 struct node;
 
 class symbol_info{
 public:
-	const std::string& class_name(){
+	const std::string& class_name() const{
 		return clsname;
+	}
+
+	virtual ~symbol_info(){
 	}
 protected:
 	symbol_info( const std::string& cls ):
@@ -23,26 +27,26 @@ protected:
 };
 
 template <typename SymbolInfoT, typename NodeU> boost::shared_ptr<SymbolInfoT> extract_symbol_info( boost::shared_ptr<NodeU> pnode ){
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<symbol_info, T>::value );
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<node, NodeU>::value );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<symbol_info, SymbolInfoT>::value) );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<node, NodeU>::value) );
 	return pnode->symbol()->symbol_info<SymbolInfoT>();
 }
 
 template <typename SymbolInfoT, typename NodeU> boost::shared_ptr<SymbolInfoT> extract_symbol_info( NodeU& nd ){
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<symbol_info, T>::value );
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<node, NodeU>::value );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<symbol_info, SymbolInfoT>::value) );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<node, NodeU>::value) );
 	return nd.symbol()->symbol_info<SymbolInfoT>();
 }
 
 template <typename SymbolInfoT, typename NodeU> boost::shared_ptr<SymbolInfoT> get_or_create_symbol_info( boost::shared_ptr<NodeU> pnode ){
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<symbol_info, T>::value );
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<node, NodeU>::value );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<symbol_info, SymbolInfoT>::value) );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<node, NodeU>::value) );
 	return pnode->symbol()->get_or_create_symbol_info<SymbolInfoT>();
 }
 
 template <typename SymbolInfoT, typename NodeU> boost::shared_ptr<SymbolInfoT> get_or_create_symbol_info( NodeU& nd ){
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<symbol_info, T>::value );
-	BOOST_STATIC_ASSERT( std::tr1::is_base_of<node, NodeU>::value );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<symbol_info, SymbolInfoT>::value) );
+	BOOST_STATIC_ASSERT( (std::tr1::is_base_of<node, NodeU>::value) );
 	return nd.symbol()->get_or_create_symbol_info<SymbolInfoT>();
 }
 

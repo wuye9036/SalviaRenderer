@@ -6,13 +6,13 @@
 #include <sasl/include/common/token_attr.h>
 #include <sasl/include/syntax_tree/node.h>
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SYNTAX_TREE();
 
 struct constant{
 	typedef constant this_type;
 
 	literal_constant_types valtype;
-	sasl::common::token_attr lit;
+	sasl::common::token_attr littok;
 
 	bool is_unsigned() const;
 	bool is_long() const;

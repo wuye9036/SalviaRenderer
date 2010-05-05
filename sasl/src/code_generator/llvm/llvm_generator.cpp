@@ -146,9 +146,7 @@ void llvm_code_generator::visit( function_type& v ){
 // statement
 void llvm_code_generator::visit( statement& v ){
 }
-
 void llvm_code_generator::visit( declaration_statement& v ){}
-
 void llvm_code_generator::visit( if_statement& v ){}
 void llvm_code_generator::visit( while_statement& v ){}
 void llvm_code_generator::visit( dowhile_statement& v ){}
@@ -159,6 +157,11 @@ void llvm_code_generator::visit( expression_statement& v ){}
 void llvm_code_generator::visit( jump_statement& v ){}
 
 llvm::Value* llvm_code_generator::allocate_local_variable( sasl::syntax_tree::variable_declaration& var ){
+	return NULL;
+}
+
+std::string llvm_code_generator::generate_temporary_name(){
+	return std::string();
 }
 
 END_NS_SASL_CODE_GENERATOR()
