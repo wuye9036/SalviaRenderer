@@ -326,7 +326,6 @@ public:
 		mat_lookat(view, camera, vec4::gen_coord(0.0f, 0.0f, 0.0f), vec4::gen_vector(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, HALF_PI, 1.0f, 0.1f, 100.0f);
 
-		hsr->set_cull_mode(cull_none);
 		//hsr->set_fill_mode(fill_wireframe);
 
 		for(float i = 0 ; i < 1 ; i ++)
@@ -334,12 +333,19 @@ public:
 			mat_translate(world , -0.5 + i * 0.5 , 0 , -0.5 + i * 0.5);
 			mat_mul(wvp, mat_mul(wvp, proj, view), world);
 
+			hsr->set_cull_mode(cull_back);
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_plane);
 			hsr->set_pixel_shader(pps_plane);
 			planar_mesh->render();
 			
+			hsr->set_cull_mode(cull_front);
 			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
+			hsr->set_vertex_shader(pvs_box);
+			hsr->set_pixel_shader(pps_box);
+			box_mesh->render();
+
+			hsr->set_cull_mode(cull_back);
 			hsr->set_vertex_shader(pvs_box);
 			hsr->set_pixel_shader(pps_box);
 			box_mesh->render();

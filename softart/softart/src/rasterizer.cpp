@@ -488,7 +488,10 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 	
 	//±³ÃæÌŞ³ı
 	if(cm_ != cull_none) {
-		float area = compute_area(v0, v1, v2);
+		const vec2 pv0 = v0.position.xy() * abs(v0.wpos.w);
+		const vec2 pv1 = v1.position.xy() * abs(v1.wpos.w);
+		const vec2 pv2 = v2.position.xy() * abs(v2.wpos.w);
+		const float area = cross_prod2(pv1 - pv0, pv2 - pv0);
 		if( (cm_ == cull_front) && (area > 0) ) {
 			return;
 		}
