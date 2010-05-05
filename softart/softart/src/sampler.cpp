@@ -42,17 +42,17 @@ namespace addresser
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
-			micoord = _mm_shuffle_epi32(micoord, _MM_SHUFFLE(0, 1, 0, 0));
+			micoord = _mm_shuffle_epi32(micoord, _MM_SHUFFLE(0, 0, 1, 0));
 			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(0, 1, 0, 0));
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(0, 0, 1, 0));
 			micoord = _mm_add_epi32(micoord, _mm_slli_si128(misize, 2));
 			__m128 mfcoord = _mm_cvtepi32_ps(micoord);
 			__m128 mfsize = _mm_cvtepi32_ps(misize);
 			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
-			__m128i mir = _mm_sub_epi32(micoord, _mm_mul_epu32(midiv, misize));
-			mir = _mm_shuffle_epi32(mir, _MM_SHUFFLE(3, 1, 2, 0));
+			__m128 mfdiv = _mm_cvtepi32_ps(midiv);
+			__m128i tmp = _mm_sub_epi32(micoord, _mm_cvttps_epi32(_mm_mul_ps(mfdiv, mfsize)));
 			int4 ret;
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), mir);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
 #else
 			return int4((size.x * 8192 + coord.x) % size.x,
@@ -455,6 +455,31 @@ namespace surface_sampler
 
 float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
 {
+#ifndef EFLIB_NO_SIMD
+	static const union
+	{
+		int maski;
+		float maskf;
+	} MASK = { 0x7FFFFFFF };
+	static const __m128 ABS_MASK = _mm_set1_ps(MASK.maskf);
+
+	__m128 mattr = _mm_loadu_ps(&attribute.x);
+	__m128 tmp = _mm_mul_ps(mattr, _mm_set1_ps(inv_w));
+	__m128 mddx2 = _mm_sub_ps(_mm_mul_ps(_mm_add_ps(mattr, _mm_loadu_ps(&ddx.x)), _mm_set1_ps(inv_x_w)), tmp);
+	__m128 mddy2 = _mm_sub_ps(_mm_mul_ps(_mm_add_ps(mattr, _mm_loadu_ps(&ddy.x)), _mm_set1_ps(inv_y_w)), tmp);
+	mddx2 = _mm_and_ps(mddx2, ABS_MASK);
+	mddy2 = _mm_and_ps(mddy2, ABS_MASK);
+	tmp = _mm_max_ps(mddx2, mddy2);
+	tmp = _mm_mul_ps(tmp, _mm_loadu_ps(&size.x));
+	vec4 maxD;
+	_mm_storeu_ps(&maxD.x, tmp);
+
+	float rho, lambda;
+	rho = max(max(maxD.x, maxD.y), maxD.z);
+	if(rho == 0.0f) rho = 0.000001f;
+	lambda = fast_log2(rho);
+	return lambda + bias;
+#else
 	efl::vec4 ddx2 = (attribute + ddx) * inv_x_w - attribute * inv_w;
 	efl::vec4 ddy2 = (attribute + ddy) * inv_y_w - attribute * inv_w;
 
@@ -471,6 +496,7 @@ float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx
 	if(rho == 0.0f) rho = 0.000001f;
 	lambda = fast_log2(rho);
 	return lambda + bias;
+#endif
 }
 
 color_rgba32f sampler::sample_surface(

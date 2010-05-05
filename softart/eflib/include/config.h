@@ -54,4 +54,26 @@
 #	endif
 #endif
 
+#if defined(EFLIB_MSVC)
+	#if defined(_M_X64)
+		#define EFLIB_CPU_X64
+		#define EFLIB_COMPILER_TARGET x64
+	#elif defined(_M_IX86)
+		#define EFLIB_CPU_X86
+		#define EFLIB_COMPILER_TARGET x86
+	#else
+		#error Unknown CPU type.
+	#endif
+#elif defined(EFLIB_GCC)
+	#if defined(__x86_64__)
+		#define EFLIB_CPU_X64
+		#define EFLIB_COMPILER_TARGET x64
+	#elif defined(__i386__)
+		#define EFLIB_CPU_X86
+		#define EFLIB_COMPILER_TARGET x86
+	#else
+		#error Unknown CPU type.
+	#endif
+#endif
+
 #endif

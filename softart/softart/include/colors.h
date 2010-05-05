@@ -217,14 +217,27 @@ struct color_rgba8
 	}
 
 	color_rgba32f to_rgba32f() const{
-		return color_rgba32f(r/255.0f, g / 255.0f, b/255.0f, a/255.0f);
+		const float inv_255 = 1.0f / 255;
+		return color_rgba32f(r * inv_255, g * inv_255, b * inv_255, a * inv_255);
 	}
 private:
 	color_rgba8& assign(const color_rgba32f& rhs){
+#ifndef EFLIB_NO_SIMD
+		const __m128 f255 = _mm_set_ps1(255.0f);
+		__m128 m4 = _mm_loadu_ps(&rhs.r);
+		m4 = _mm_mul_ps(m4, f255);
+		m4 = _mm_max_ps(m4, _mm_setzero_ps());
+		m4 = _mm_min_ps(m4, f255);
+		__m128i mi4 = _mm_cvtps_epi32(m4);
+		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 3));
+		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 6));
+		*reinterpret_cast<int*>(&r) = _mm_cvtsi128_si32(mi4);
+#else
 		r = comp_t( efl::clamp(rhs.r * 255.0f, 0.0f, 255.0f) );
 		g = comp_t( efl::clamp(rhs.g * 255.0f, 0.0f, 255.0f) );
 		b = comp_t( efl::clamp(rhs.b * 255.0f, 0.0f, 255.0f) );
 		a = comp_t( efl::clamp(rhs.a * 255.0f, 0.0f, 255.0f) );
+#endif
 
 		return *this;
 	}
@@ -259,14 +272,29 @@ struct color_bgra8
 	}
 
 	color_rgba32f to_rgba32f() const{
-		return color_rgba32f(r/255.0f, g / 255.0f, b/255.0f, a/255.0f);
+		const float inv_255 = 1.0f / 255;
+		return color_rgba32f(r * inv_255, g * inv_255, b * inv_255, a * inv_255);
 	}
 private:
 	color_bgra8& assign(const color_rgba32f& rhs){
+#ifndef EFLIB_NO_SIMD
+		const __m128 f255 = _mm_set_ps1(255.0f);
+		__m128 m4 = _mm_loadu_ps(&rhs.r);
+		m4 = _mm_mul_ps(m4, f255);
+		m4 = _mm_max_ps(m4, _mm_setzero_ps());
+		m4 = _mm_min_ps(m4, f255);
+		__m128i mi4 = _mm_cvtps_epi32(m4);
+		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 3));
+		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 6));
+		*reinterpret_cast<int*>(&b) = _mm_cvtsi128_si32(mi4);
+		std::swap(b, r);
+#else
 		r = comp_t( efl::clamp(rhs.r * 255.0f + 0.5f, 0.0f, 255.0f) );
 		g = comp_t( efl::clamp(rhs.g * 255.0f + 0.5f, 0.0f, 255.0f) );
 		b = comp_t( efl::clamp(rhs.b * 255.0f + 0.5f, 0.0f, 255.0f) );
 		a = comp_t( efl::clamp(rhs.a * 255.0f + 0.5f, 0.0f, 255.0f) );
+#endif
+
 		return *this;
 	}
 };
