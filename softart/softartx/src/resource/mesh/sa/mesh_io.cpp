@@ -193,12 +193,12 @@ h_mesh create_planar(
 		for(size_t j = 0; j < repeat_y; ++j)
 		{
 			quad[0] = uint16_t(i * (repeat_y + 1) + j);
-			quad[1] = uint16_t(quad[0] + repeat_y + 1);
-			quad[2] = uint16_t(quad[0] + 1);
+			quad[1] = uint16_t(quad[0] + 1);
+			quad[2] = uint16_t(quad[0] + repeat_y + 1 + 1);
 
-			quad[3] = uint16_t(quad[1]);
-			quad[4] = uint16_t(quad[1] + 1);
-			quad[5] = uint16_t(quad[0] + 1);
+			quad[3] = uint16_t(quad[2]);
+			quad[4] = uint16_t(quad[2] - 1);
+			quad[5] = uint16_t(quad[0]);
 
 			idxs->transfer(offset_i, &quad[0], sizeof(quad), sizeof(quad), sizeof(quad), 1);
 			offset_i += sizeof(quad);
