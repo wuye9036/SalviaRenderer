@@ -11,11 +11,11 @@ namespace addresser
 {
 	struct wrap
 	{
-		static float op1(float coord, int size)
+		static float do_coordf(float coord, int size)
 		{
 			return (coord - fast_floor(coord)) * size - 0.5f;
 		}
-		static vec4 op1(const vec4& coord, const int4& size)
+		static vec4 do_coordf(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128 mfcoord = _mm_loadu_ps(&coord.x);
@@ -34,11 +34,11 @@ namespace addresser
 #endif
 		}
 
-		static int op2(int coord, int size)
+		static int do_coordi_point_1d(int coord, int size)
 		{
 			return (size * 8192 + coord) % size;
 		}
-		static int4 op2(const int4& coord, const int4& size)
+		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
@@ -60,11 +60,38 @@ namespace addresser
 				0, 0);
 #endif
 		}
+
+		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128i micoord0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
+			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			micoord01 = _mm_add_epi32(micoord01, _mm_slli_si128(misize, 2));
+			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			__m128 mfcoord = _mm_cvtepi32_ps(micoord01);
+			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
+			__m128 mfdiv = _mm_cvtepi32_ps(midiv);
+			__m128i tmp = _mm_sub_epi32(micoord01, _mm_cvttps_epi32(_mm_mul_ps(mfdiv, mfsize)));
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
+			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
+#else
+			low = int4((size.x * 8192 + coord.x) % size.x,
+				(size.y * 8192 + coord.y) % size.y,
+				0, 0);
+			up = int4((size.x * 8192 + coord.x + 1) % size.x,
+				(size.y * 8192 + coord.y + 1) % size.y,
+				0, 0);
+#endif
+		}
 	};
 
 	struct mirror
 	{
-		static float op1(float coord, int size)
+		static float do_coordf(float coord, int size)
 		{
 			int selection_coord = fast_floori(coord);
 			return 
@@ -72,7 +99,7 @@ namespace addresser
 				? 1 + selection_coord - coord
 				: coord - selection_coord) * size - 0.5f;
 		}
-		static vec4 op1(const vec4& coord, const int4& size)
+		static vec4 do_coordf(const vec4& coord, const int4& size)
 		{
 			int selection_coord_x = fast_floori(coord.x);
 			int selection_coord_y = fast_floori(coord.y);
@@ -86,11 +113,11 @@ namespace addresser
 				0, 0);
 		}
 
-		static int op2(int coord, int size)
+		static int do_coordi_point_1d(int coord, int size)
 		{
 			return efl::clamp(coord, 0, size - 1);
 		}
-		static int4 op2(const int4& coord, const int4& size)
+		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
@@ -107,15 +134,39 @@ namespace addresser
 				0, 0);
 #endif
 		}
+
+		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128i micoord0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
+			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
+			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
+			tmp = _mm_min_epi16(tmp, misize);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
+			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
+#else
+			low = int4(efl::clamp(coord.x, 0, size.x - 1),
+				efl::clamp(coord.y, 0, size.y - 1),
+				0, 0);
+			up = int4(efl::clamp(coord.x + 1, 0, size.x - 1),
+				efl::clamp(coord.y + 1, 0, size.y - 1),
+				0, 0);
+#endif
+		}
 	};
 
 	struct clamp
 	{
-		static float op1(float coord, int size)
+		static float do_coordf(float coord, int size)
 		{
 			return efl::clamp(coord * size, 0.5f, size - 0.5f) - 0.5f;
 		}
-		static vec4 op1(const vec4& coord, const int4& size)
+		static vec4 do_coordf(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128 mfcoord = _mm_loadu_ps(&coord.x);
@@ -135,11 +186,11 @@ namespace addresser
 #endif
 		}
 
-		static int op2(int coord, int size)
+		static int do_coordi_point_1d(int coord, int size)
 		{
 			return efl::clamp(coord, 0, size - 1);
 		}
-		static int4 op2(const int4& coord, const int4& size)
+		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
@@ -156,15 +207,39 @@ namespace addresser
 				0, 0);
 #endif
 		}
+
+		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		{
+#ifndef EFLIB_NO_SIMD
+			__m128i micoord0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
+			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
+			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
+			tmp = _mm_min_epi16(tmp, misize);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
+			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
+#else
+			low = int4(efl::clamp(coord.x, 0, size.x - 1),
+				efl::clamp(coord.y, 0, size.y - 1),
+				0, 0);
+			up = int4(efl::clamp(coord.x + 1, 0, size.x - 1),
+				efl::clamp(coord.y + 1, 0, size.y - 1),
+				0, 0);
+#endif
+		}
 	};
 
 	struct border
 	{
-		static float op1(float coord, int size)
+		static float do_coordf(float coord, int size)
 		{
 			return efl::clamp(coord * size, -0.5f, size + 0.5f) - 0.5f;
 		}
-		static vec4 op1(const vec4& coord, const int4& size)
+		static vec4 do_coordf(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128 mfcoord = _mm_loadu_ps(&coord.x);
@@ -184,14 +259,24 @@ namespace addresser
 #endif
 		}
 
-		static int op2(int coord, int size)
+		static int do_coordi_point_1d(int coord, int size)
 		{
 			return coord >= size ? -1 : coord;
 		}
-		static int4 op2(const int4& coord, const int4& size)
+		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
 		{
 			return int4(coord.x >= size.x ? -1 : coord.x,
 				coord.y >= size.y ? -1 : coord.y,
+				0, 0);
+		}
+
+		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		{
+			low = int4(coord.x >= size.x ? -1 : coord.x,
+				coord.y >= size.y ? -1 : coord.y,
+				0, 0);
+			up = int4(coord.x + 1 >= size.x ? -1 : coord.x + 1,
+				coord.y + 1 >= size.y ? -1 : coord.y + 1,
 				0, 0);
 		}
 	};
@@ -200,38 +285,37 @@ namespace addresser
 namespace coord_calculator
 {
 	template <typename addresser_type>
-	int nearest_cc(float coord, int size)
+	int point_cc(float coord, int size)
 	{
-		float o_coord = addresser_type::op1(coord, size);
+		float o_coord = addresser_type::do_coordf(coord, size);
 		int coord_ipart = fast_floori(o_coord + 0.5f);
-		return addresser_type::op2(coord_ipart, size);
+		return addresser_type::do_coordi_point_1d(coord_ipart, size);
 	}
 
 	template <typename addresser_type>
 	void linear_cc(int& low, int& up, float& frac, float coord, int size)
 	{
-		float o_coord = addresser_type::op1(coord, size);
+		float o_coord = addresser_type::do_coordf(coord, size);
 		int coord_ipart = fast_floori(o_coord);
-		low = addresser_type::op2(coord_ipart, size);
-		up = addresser_type::op2(coord_ipart + 1, size);
+		low = addresser_type::do_coordi_point_1d(coord_ipart, size);
+		up = addresser_type::do_coordi_point_1d(coord_ipart + 1, size);
 		frac = o_coord - coord_ipart;
 	}
 
 	template <typename addresser_type>
-	int4 nearest_cc(const vec4& coord, const int4& size)
+	int4 point_cc(const vec4& coord, const int4& size)
 	{
-		vec4 o_coord = addresser_type::op1(coord, size);
+		vec4 o_coord = addresser_type::do_coordf(coord, size);
 		int4 coord_ipart = int4(fast_roundi(o_coord.x), fast_roundi(o_coord.y), 0, 0);
-		return addresser_type::op2(coord_ipart, size);
+		return addresser_type::do_coordi_point_2d(coord_ipart, size);
 	}
 
 	template <typename addresser_type>
 	void linear_cc(int4& low, int4& up, vec4& frac, const vec4& coord, const int4& size)
 	{
-		vec4 o_coord = addresser_type::op1(coord, size);
+		vec4 o_coord = addresser_type::do_coordf(coord, size);
 		int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
-		low = addresser_type::op2(coord_ipart, size);
-		up = addresser_type::op2(coord_ipart + 1, size);
+		addresser_type::do_coordi_linear_2d(low, up, coord_ipart, size);
 		frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 	}
 };
@@ -239,12 +323,12 @@ namespace coord_calculator
 namespace surface_sampler
 {
 	template <typename addresser_type_u, typename addresser_type_v>
-	struct nearest
+	struct point
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
 		{
-			int ix = coord_calculator::nearest_cc<addresser_type_u>(x, int(surf.get_width()));
-			int iy = coord_calculator::nearest_cc<addresser_type_v>(y, int(surf.get_height()));
+			int ix = coord_calculator::point_cc<addresser_type_u>(x, int(surf.get_width()));
+			int iy = coord_calculator::point_cc<addresser_type_v>(y, int(surf.get_height()));
 
 			if(ix < 0 || iy < 0) return border_color;
 			return surf.get_texel(ix, iy);
@@ -277,11 +361,11 @@ namespace surface_sampler
 	};
 
 	template <typename addresser_type_uv>
-	struct nearest<addresser_type_uv, addresser_type_uv>
+	struct point<addresser_type_uv, addresser_type_uv>
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
 		{
-			int4 ixy = coord_calculator::nearest_cc<addresser_type_uv>(vec4(x, y, 0, 0), int4(surf.get_width(), surf.get_height(), 0, 0));
+			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0), int4(surf.get_width(), surf.get_height(), 0, 0));
 
 			if(ixy.x < 0 || ixy.y < 0) return border_color;
 			return surf.get_texel(ixy.x, ixy.y);
@@ -316,28 +400,28 @@ namespace surface_sampler
 	{
 		{
 			{
-				nearest<addresser::wrap, addresser::wrap>::op,
-				nearest<addresser::wrap, addresser::mirror>::op,
-				nearest<addresser::wrap, addresser::clamp>::op,
-				nearest<addresser::wrap, addresser::border>::op
+				point<addresser::wrap, addresser::wrap>::op,
+				point<addresser::wrap, addresser::mirror>::op,
+				point<addresser::wrap, addresser::clamp>::op,
+				point<addresser::wrap, addresser::border>::op
 			},
 			{
-				nearest<addresser::mirror, addresser::wrap>::op,
-				nearest<addresser::mirror, addresser::mirror>::op,
-				nearest<addresser::mirror, addresser::clamp>::op,
-				nearest<addresser::mirror, addresser::border>::op
+				point<addresser::mirror, addresser::wrap>::op,
+				point<addresser::mirror, addresser::mirror>::op,
+				point<addresser::mirror, addresser::clamp>::op,
+				point<addresser::mirror, addresser::border>::op
 			},
 			{
-				nearest<addresser::clamp, addresser::wrap>::op,
-				nearest<addresser::clamp, addresser::mirror>::op,
-				nearest<addresser::clamp, addresser::clamp>::op,
-				nearest<addresser::clamp, addresser::border>::op
+				point<addresser::clamp, addresser::wrap>::op,
+				point<addresser::clamp, addresser::mirror>::op,
+				point<addresser::clamp, addresser::clamp>::op,
+				point<addresser::clamp, addresser::border>::op
 			},
 			{
-				nearest<addresser::border, addresser::wrap>::op,
-				nearest<addresser::border, addresser::mirror>::op,
-				nearest<addresser::border, addresser::clamp>::op,
-				nearest<addresser::border, addresser::border>::op
+				point<addresser::border, addresser::wrap>::op,
+				point<addresser::border, addresser::mirror>::op,
+				point<addresser::border, addresser::clamp>::op,
+				point<addresser::border, addresser::border>::op
 			}
 		},
 		{
