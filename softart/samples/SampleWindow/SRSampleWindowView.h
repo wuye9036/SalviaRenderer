@@ -318,19 +318,19 @@ public:
 		hsr->clear_depth(1.0f);
 
 		static float s_angle = 0;
-		s_angle += elapsed_time * 60.0f * (TWO_PI / 360.0f);
+		s_angle += elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
 		vec4 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f, 1.0f);
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
 		mat_lookat(view, camera, vec4::gen_coord(0.0f, 0.0f, 0.0f), vec4::gen_vector(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, HALF_PI, 1.0f, 0.1f, 100.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
 		//hsr->set_fill_mode(fill_wireframe);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
-			mat_translate(world , -0.5 + i * 0.5 , 0 , -0.5 + i * 0.5);
+			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, mat_mul(wvp, proj, view), world);
 
 			hsr->set_cull_mode(cull_back);

@@ -12,6 +12,15 @@ endmacro(config_output_paths)
 # create vcproj.user file for Visual Studio to set debug working directory
 function(ogre_create_vcproj_userfile TARGETNAME)
   if (MSVC)
+    set (SYSTEM_NAME $ENV{USERDOMAIN})
+    set (USER_NAME $ENV{USERNAME})
+
+    if (CMAKE_GENERATOR MATCHES "Win64")
+      set (USERFILE_PLATFORM "x64")
+    else ()
+      set (USERFILE_PLATFORM "Win32")
+    endif ()
+
     if (MSVC_VERSION EQUAL 1600)
       configure_file(
 	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2010UserFile.vcxproj.user.in
@@ -21,7 +30,7 @@ function(ogre_create_vcproj_userfile TARGETNAME)
     else (MSVC_VERSION EQUAL 1500)
       configure_file(
 	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2008UserFile.vcproj.user.in
-	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.user
+	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.${SYSTEM_NAME}.${USER_NAME}.user
 	  @ONLY
 	)
     endif ()

@@ -47,6 +47,7 @@ void default_vertex_cache::transform_vertex_impl(const std::vector<uint32_t>& in
 	while (local_working_index < index_count)
 	{
 		uint32_t id = indices[local_working_index];
+		used_verts_[id] = local_working_index;
 
 		custom_assert(used_verts_[id] == local_working_index, "");
 
@@ -64,10 +65,6 @@ void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indic
 	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
 	verts_.resize(unique_indices.size());
 	used_verts_.assign(psa_->num_vertices(), -1);
-	for (size_t i = 0; i < unique_indices.size(); ++ i)
-	{
-		used_verts_[unique_indices[i]] = static_cast<int32_t>(i);
-	}
 
 	atomic<int32_t> working_index(0);
 #ifdef SOFTART_MULTITHEADING_ENABLED

@@ -18,7 +18,6 @@ class rasterizer : public render_stage
 	cull_mode cm_;
 	fill_mode fm_;
 
-	h_pixel_shader hps_;
 	h_framebuffer hfb_;
 
 	//线光栅化。光栅化后的点将直接传到PS中处理。
@@ -30,8 +29,6 @@ class rasterizer : public render_stage
 public:
 	//inherited
 	void initialize(renderer_impl* pparent);
-
-	PROC_RS_UPDATED(pixel_shader)
 
 	//constructor
 	rasterizer();

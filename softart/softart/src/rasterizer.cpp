@@ -48,13 +48,6 @@ void rasterizer::initialize(renderer_impl* pparent)
 {
 	pparent_ = pparent;
 	hfb_ = pparent->get_framebuffer();
-	hps_ = pparent->get_pixel_shader();
-}
-
-IMPL_RS_UPDATED(rasterizer, pixel_shader)
-{
-	hps_ = pparent_->get_pixel_shader();
-	return result::ok;
 }
 
 /*************************************************
@@ -289,7 +282,6 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 
 	triangle_info info;
 	info.set(pvert[0]->wpos, ddx, ddy);
-	// TODO: This is not thread safe
 	pps->ptriangleinfo_ = &info;
 
 	/*************************************

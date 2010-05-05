@@ -108,7 +108,6 @@ fill_mode renderer_impl::get_fill_mode() const
 result renderer_impl::set_pixel_shader(h_pixel_shader hps)
 {
 	hps_ = hps;
-	hrast_->on_pixel_shader_updated();
 	return result::ok;
 }
 

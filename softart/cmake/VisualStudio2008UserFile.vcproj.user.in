@@ -6,7 +6,7 @@
 	>
 	<Configurations>
 		<Configuration
-			Name="Debug|Win32"
+			Name="Debug|@USERFILE_PLATFORM@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
@@ -34,7 +34,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
+			Name="Release|@USERFILE_PLATFORM@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
@@ -62,7 +62,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="RelWithDebInfo|Win32"
+			Name="RelWithDebInfo|@USERFILE_PLATFORM@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
@@ -90,7 +90,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="MinSizeRel|Win32"
+			Name="MinSizeRel|@USERFILE_PLATFORM@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
