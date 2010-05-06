@@ -42,7 +42,6 @@ struct member_initializer: public initializer{
 
 struct declaration: public node{
 	declaration(syntax_node_types type_id, boost::shared_ptr<token_attr> tok);
-	void accept( syntax_tree_visitor* v );
 };
 
 struct variable_declaration : public declaration{
@@ -54,9 +53,10 @@ struct variable_declaration : public declaration{
 };
 
 struct type_definition: public declaration{
+	type_definition( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* v );
 	boost::shared_ptr< type_specifier > type_info;
-	token_attr ident;
+	boost::shared_ptr<token_attr> ident;
 };
 
 struct type_specifier: public declaration{
@@ -69,14 +69,6 @@ struct buildin_type: public type_specifier{
 	buildin_type( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* v );
 	bool is_buildin() const;
-};
-
-struct type_identifier: public type_specifier{
-	type_identifier( boost::shared_ptr<token_attr> tok );
-	void accept( syntax_tree_visitor* v );
-
-	boost::shared_ptr< type_specifier > inner_type;
-	std::string name;
 };
 
 struct qualified_type: public type_specifier{
@@ -101,6 +93,9 @@ struct struct_type: public type_specifier{
 };
 
 struct parameter: public declaration{
+	parameter( boost::shared_ptr<token_attr> tok );
+	void accept( syntax_tree_visitor* v );
+
 	boost::shared_ptr<type_specifier> param_type;
 	boost::shared_ptr<token_attr> ident;
 	boost::shared_ptr<initializer> init;
@@ -116,6 +111,6 @@ struct function_type: public type_specifier{
 	std::vector< boost::shared_ptr<statement> > stmts;
 };
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SYNTAX_TREE();
 
 #endif

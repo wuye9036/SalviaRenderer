@@ -2,16 +2,20 @@
 #define SASL_SYNTAX_TREE_OPERATOR_TABLE_H
 
 #include "syntax_tree_fwd.h"
-#include "node.h"
-#include <sasl/include/common/token_attr.h>
 #include <sasl/enums/operators.h>
 #include <boost/tr1/unordered_map.hpp>
+
+struct enum_hasher{
+	size_t operator () ( const operators op ) const{
+		return (size_t)op.val_;
+	}
+};
 
 BEGIN_NS_SASL_SYNTAX_TREE()
 
 class operator_table{
 	std::tr1::unordered_map<std::string, operators> lit2op;
-	std::tr1::unordered_map<operators, std::string> op2lit;
+	std::tr1::unordered_map<operators, std::string, enum_hasher> op2lit;
 
 	operator_table();
 	operator_table& add( const std::string& lit, operators op );

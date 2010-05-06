@@ -17,7 +17,7 @@ struct statement: public node{
 struct declaration_statement: public statement{
 	declaration_statement( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* v );
-	declaration decl;
+	boost::shared_ptr<declaration> decl;
 };
 
 struct if_statement: public statement{

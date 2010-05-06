@@ -120,10 +120,12 @@
 		<item value = "2 * (2 ** 48)">expression</item>
 		<item value = "3 * (2 ** 48)">statement</item>
 		<item value = "4 * (2 ** 48)">initializer</item>
+		<item value = "5 * (2 ** 48)">identifier</item>
 		
 		<item value = "$declaration$ + 1 * (2 ** 32)">type_specifier</item>
 		<item value = "$declaration$ + 1">variable_declaration</item>
 		<item value = "$declaration$ + 2">typedef_definition</item>
+		<item value = "$declaration$ + 3">parameter</item>
 		
 		<item value = "$expression$ + 1">constant_expression</item>
 		<item value = "$expression$ + 2">unary_expression</item>
@@ -136,7 +138,7 @@
 		<item value = "$expression$ + 9">member_expression</item>
 		
 		<item value = "$type_specifier$ + 1">buildin_type</item>
-		<item value = "$type_specifier$ + 2">quanlified_type</item>
+		<item value = "$type_specifier$ + 2">qualified_type</item>
 		<item value = "$type_specifier$ + 3">array_type</item>
 		<item value = "$type_specifier$ + 4">struct_type</item>
 		<item value = "$type_specifier$ + 5">function_type</item>

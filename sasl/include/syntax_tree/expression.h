@@ -6,6 +6,7 @@
 #include <sasl/enums/operators.h>
 #include <boost/smart_ptr.hpp>
 #include <string>
+#include <vector>
 
 namespace sasl { 
 	namespace common {
@@ -16,6 +17,10 @@ namespace sasl {
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 using sasl::common::token_attr;
+
+struct constant;
+struct identifier;
+
 class syntax_tree_visitor;
 
 struct expression: public node{

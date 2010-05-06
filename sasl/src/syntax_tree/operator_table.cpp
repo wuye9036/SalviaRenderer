@@ -42,17 +42,19 @@ operator_table& operator_table::add( const std::string& lit, operators op )
 {
 	lit2op.insert( std::make_pair( lit, op ) );
 	op2lit.insert( std::make_pair( op, lit ) );
+	return *this;
 }
 
 operator_table& operator_table::instance()
 {
 	static operator_table op_tbl;
+	return op_tbl;
 }
 
 operators operator_table::find( const string& lit, bool is_unary /*= false*/, bool is_postfix /*= false*/ ) const
 {
 	return 
-		lit2op[lit] |
+		lit2op.at(lit) |
 		( is_unary ? operators::unary_op : operators::none ) |
 		( is_postfix ? operators::postfix_op : operators::none)
 		;
@@ -60,7 +62,7 @@ operators operator_table::find( const string& lit, bool is_unary /*= false*/, bo
 
 const string& operator_table::find( operators op ) const
 {
-	return op2lit[op];
+	return op2lit.at(op);
 }
 
 END_NS_SASL_SYNTAX_TREE()

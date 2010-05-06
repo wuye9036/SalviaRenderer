@@ -1,11 +1,8 @@
-#include "../../include/syntax_tree/expression.h"
-#include "../../include/syntax_tree/constant.h"
-#include "../../include/syntax_tree/operator_literal.h"
+#include <sasl/include/syntax_tree/expression.h>
+#include <sasl/include/syntax_tree/constant.h>
 
 using namespace boost;
-using namespace boost::fusion;
 
-binary_expression::binary_expression()
-: expression( syntax_node_types::node )
-{
-}
+BEGIN_NS_SASL_SYNTAX_TREE();
+
+END_NS_SASL_SYNTAX_TREE();

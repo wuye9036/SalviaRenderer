@@ -25,7 +25,6 @@ public:
 	const static this_type expression_statement;
 	const static this_type member_expression;
 	const static this_type unary_expression;
-	const static this_type for_statement;
 	const static this_type initializer;
 	const static this_type function_type;
 	const static this_type variable_declaration;
@@ -37,11 +36,13 @@ public:
 	const static this_type while_statement;
 	const static this_type switch_statement;
 	const static this_type statement;
+	const static this_type expression_initializer;
 	const static this_type cast_expression;
 	const static this_type if_statement;
+	const static this_type parameter;
 	const static this_type constant_expression;
 	const static this_type node;
-	const static this_type quanlified_type;
+	const static this_type for_statement;
 	const static this_type dowhile_statement;
 	const static this_type declaration;
 	const static this_type array_type;
@@ -52,7 +53,8 @@ public:
 	const static this_type member_initializer;
 	const static this_type declaration_statement;
 	const static this_type index_expression;
-	const static this_type expression_initializer;
+	const static this_type qualified_type;
+	const static this_type identifier;
 	const static this_type expression;
 	const static this_type call_expression;
 
