@@ -261,14 +261,14 @@ public:
 		pvs_plane.reset(new vs_plane());
 
 		{
-			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\Dirt.jpg") , softart::pixel_format_color_rgba8);
+			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , softart::pixel_format_color_rgba8);
 			tex->set_min_lod(8);
 			tex->gen_mipmap(filter_linear);
 			pps_box.reset(new ps_box(tex));
 		}
 
 		{
-			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("..\\resources\\chessboard.png") , softart::pixel_format_color_rgba8);
+			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , softart::pixel_format_color_rgba8);
 			tex->set_min_lod(5);
 			tex->gen_mipmap(filter_linear);
 			pps_plane.reset(new ps_plane(tex));

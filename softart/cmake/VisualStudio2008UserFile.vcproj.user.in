@@ -6,11 +6,11 @@
 	>
 	<Configurations>
 		<Configuration
-			Name="Debug|@USERFILE_PLATFORM@"
+			Name="Debug|@SOFTART_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
@@ -34,11 +34,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|@USERFILE_PLATFORM@"
+			Name="Release|@SOFTART_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
@@ -62,11 +62,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="RelWithDebInfo|@USERFILE_PLATFORM@"
+			Name="RelWithDebInfo|@SOFTART_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
@@ -90,11 +90,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="MinSizeRel|@USERFILE_PLATFORM@"
+			Name="MinSizeRel|@SOFTART_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"

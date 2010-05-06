@@ -1,53 +1,47 @@
-
 macro(config_output_paths TARGETNAME)
-	set_target_properties(${TARGETNAME}
-		PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin
-		 ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib
-		 LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib
-		 DEBUG_POSTFIX "_d"
-		)
+  set_target_properties(${TARGETNAME}
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin/${SOFTART_PLATFORM_NAME}
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib/${SOFTART_PLATFORM_NAME}
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib/${SOFTART_PLATFORM_NAME}
+    DEBUG_POSTFIX "_d"
+  )
 endmacro(config_output_paths)
 
 
 # create vcproj.user file for Visual Studio to set debug working directory
-function(ogre_create_vcproj_userfile TARGETNAME)
-  if (MSVC)
-    set (SYSTEM_NAME $ENV{USERDOMAIN})
-    set (USER_NAME $ENV{USERNAME})
+function(softart_create_vcproj_userfile TARGETNAME)
+  if(MSVC)
+    set(SYSTEM_NAME $ENV{USERDOMAIN})
+    set(USER_NAME $ENV{USERNAME})
 
-    if (CMAKE_GENERATOR MATCHES "Win64")
-      set (USERFILE_PLATFORM "x64")
-    else ()
-      set (USERFILE_PLATFORM "Win32")
-    endif ()
-
-    if (MSVC_VERSION EQUAL 1600)
+    if(MSVC_VERSION EQUAL 1600)
       configure_file(
 	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2010UserFile.vcxproj.user.in
 	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
 	  @ONLY
 	)
-    else (MSVC_VERSION EQUAL 1500)
+    endif()
+    if(MSVC_VERSION EQUAL 1500)
       configure_file(
 	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2008UserFile.vcproj.user.in
 	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.${SYSTEM_NAME}.${USER_NAME}.user
 	  @ONLY
 	)
-    endif ()
-  endif ()
-endfunction(ogre_create_vcproj_userfile)
+    endif()
+  endif()
+endfunction(softart_create_vcproj_userfile)
 
 macro(config_3rd_party)
-	set(3rd_party_path ${CMAKE_HOME_DIRECTORY}/../3rd_party)
-	set(3rd_party_includes
-		${3rd_party_path}/threadpool
-		${3rd_party_path}/FreeImage/include
-	)
-	if(CMAKE_CL_64)
-		set(3rd_party_libs ${3rd_party_path}/FreeImage/lib/x64)
-	else(CMAKE_CL_64)
-		set(3rd_party_libs ${3rd_party_path}/FreeImage/lib/win32)
-	endif(CMAKE_CL_64)
+  set(3rd_party_path ${CMAKE_HOME_DIRECTORY}/../3rd_party)
+  set(3rd_party_includes
+    ${3rd_party_path}/threadpool
+    ${3rd_party_path}/FreeImage/include
+  )
+  if(SOFTART_PLATFORM_NAME STREQUAL "x64")
+    set(3rd_party_libs ${3rd_party_path}/FreeImage/lib/x64)
+  else(SOFTART_PLATFORM_NAME STREQUAL "x64")
+    set(3rd_party_libs ${3rd_party_path}/FreeImage/lib/win32)
+  endif(SOFTART_PLATFORM_NAME STREQUAL "x64")
 endmacro(config_3rd_party)
 
 
