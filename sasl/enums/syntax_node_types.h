@@ -34,6 +34,7 @@ public:
 	const static this_type typedef_definition;
 	const static this_type struct_type;
 	const static this_type while_statement;
+	const static this_type program;
 	const static this_type switch_statement;
 	const static this_type statement;
 	const static this_type expression_initializer;

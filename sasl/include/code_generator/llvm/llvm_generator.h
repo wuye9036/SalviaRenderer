@@ -14,6 +14,7 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class llvm_code_generator: public sasl::syntax_tree::syntax_tree_visitor{
+public:
 	llvm_code_generator();
 
 	virtual void visit( sasl::syntax_tree::unary_expression& v );
@@ -56,7 +57,11 @@ class llvm_code_generator: public sasl::syntax_tree::syntax_tree_visitor{
 	virtual void visit( sasl::syntax_tree::compound_statement& v );
 	virtual void visit( sasl::syntax_tree::expression_statement& v );
 	virtual void visit( sasl::syntax_tree::jump_statement& v );
+	
+	// program
+	virtual void visit( sasl::syntax_tree::program& v );
 
+	boost::shared_ptr<llvm::Module> generated_module();
 private:
 	llvm::LLVMContext ctxt;
 

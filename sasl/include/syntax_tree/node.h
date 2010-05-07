@@ -18,6 +18,8 @@ using sasl::common::token_attr;
 struct node{
 	boost::shared_ptr<class symbol> symbol();
 	boost::shared_ptr<token_attr> token();
+	syntax_node_types node_class();
+
 	virtual void accept( syntax_tree_visitor* visitor ) = 0;
 
 protected:

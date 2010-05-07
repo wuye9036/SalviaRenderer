@@ -156,6 +156,12 @@ void llvm_code_generator::visit( compound_statement& v ){}
 void llvm_code_generator::visit( expression_statement& v ){}
 void llvm_code_generator::visit( jump_statement& v ){}
 
+void llvm_code_generator::visit( program& v ){}
+
+boost::shared_ptr<llvm::Module> llvm_code_generator::generated_module(){
+	return cg_ctxt.mod;
+}
+
 llvm::Value* llvm_code_generator::allocate_local_variable( sasl::syntax_tree::variable_declaration& var ){
 	return NULL;
 }

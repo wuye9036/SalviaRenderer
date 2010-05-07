@@ -121,6 +121,7 @@
 		<item value = "3 * (2 ** 48)">statement</item>
 		<item value = "4 * (2 ** 48)">initializer</item>
 		<item value = "5 * (2 ** 48)">identifier</item>
+		<item value = "6 * (2 ** 48)">program</item>
 		
 		<item value = "$declaration$ + 1 * (2 ** 32)">type_specifier</item>
 		<item value = "$declaration$ + 1">variable_declaration</item>

@@ -18,6 +18,10 @@ boost::shared_ptr<token_attr> node::token(){
 	return tok;
 }
 
+syntax_node_types node::node_class(){
+	return type_id;
+}
+
 node::~node(){
 	// DO NOTHING
 }

@@ -18,6 +18,7 @@ const syntax_node_types syntax_node_types::compound_statement ( 844424930131974 
 const syntax_node_types syntax_node_types::typedef_definition ( 281474976710658 );
 const syntax_node_types syntax_node_types::struct_type ( 281479271677956 );
 const syntax_node_types syntax_node_types::while_statement ( 844424930131971 );
+const syntax_node_types syntax_node_types::program ( 1688849860263936 );
 const syntax_node_types syntax_node_types::switch_statement ( 844424930131973 );
 const syntax_node_types syntax_node_types::statement ( 844424930131968 );
 const syntax_node_types syntax_node_types::expression_initializer ( 1125899906842625 );
@@ -68,6 +69,7 @@ public:
 		enum_to_name.insert( std::make_pair( syntax_node_types::typedef_definition, "typedef_definition" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::struct_type, "struct_type" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::while_statement, "while_statement" ) );
+		enum_to_name.insert( std::make_pair( syntax_node_types::program, "program" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::switch_statement, "switch_statement" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::statement, "statement" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::expression_initializer, "expression_initializer" ) );
@@ -104,6 +106,7 @@ public:
 		name_to_enum.insert( std::make_pair( "typedef_definition", syntax_node_types::typedef_definition ) );
 		name_to_enum.insert( std::make_pair( "struct_type", syntax_node_types::struct_type ) );
 		name_to_enum.insert( std::make_pair( "while_statement", syntax_node_types::while_statement ) );
+		name_to_enum.insert( std::make_pair( "program", syntax_node_types::program ) );
 		name_to_enum.insert( std::make_pair( "switch_statement", syntax_node_types::switch_statement ) );
 		name_to_enum.insert( std::make_pair( "statement", syntax_node_types::statement ) );
 		name_to_enum.insert( std::make_pair( "expression_initializer", syntax_node_types::expression_initializer ) );

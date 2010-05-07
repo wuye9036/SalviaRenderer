@@ -43,6 +43,8 @@ struct compound_statement;
 struct expression_statement;
 struct jump_statement;
 
+struct program;
+
 class syntax_tree_visitor{
 public:
 	// expression
@@ -86,6 +88,9 @@ public:
 	virtual void visit( compound_statement& v ) = 0;
 	virtual void visit( expression_statement& v ) = 0;
 	virtual void visit( jump_statement& v ) = 0;
+
+	// program
+	virtual void visit( program& v ) = 0;
 };
 
 END_NS_SASL_SYNTAX_TREE();

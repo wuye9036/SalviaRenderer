@@ -22,11 +22,6 @@
     <ClCompile Include="..\test\function_entry_generator_test.cpp" />
     <ClCompile Include="..\test\llvm_test.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="sasl_cgllvm.vcxproj">
-      <Project>{fdde307d-f5b9-4e26-9664-175e3fcae20d}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2E441DC7-83D4-473D-ABAB-8A7AF85180FE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -101,7 +96,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../3rd_party/llvm/bin/lib/win32_msvc10_release;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;sasl_cgllvm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;sasl_cgllvm.lib;sasl_syntaxtree.lib;sasl_enums.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
