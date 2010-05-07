@@ -27,7 +27,7 @@ protected:
 
 	syntax_node_types				type_id;
 	boost::shared_ptr<token_attr>	tok;
-	boost::weak_ptr<class symbol>			sym;
+	boost::weak_ptr<class symbol>	sym;
 
 	virtual ~node();
 };
