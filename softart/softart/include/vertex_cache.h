@@ -54,7 +54,7 @@ public:
 	void delete_vertex(vs_output* const pvert);
 
 private:
-	void transform_vertex_impl(const std::vector<uint32_t>& indices, atomic<int32_t>& working_index, int32_t index_count);
+	void transform_vertex_func(const std::vector<uint32_t>& indices, atomic<int32_t>& working_package, int32_t index_count);
 
 private:
 	vertex_shader* pvs_;

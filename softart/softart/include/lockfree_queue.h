@@ -110,6 +110,21 @@ public:
 		}
 	}
 
+	// Not thread safe
+	template <typename iter_type>
+	void dequeue_all(iter_type begin)
+	{
+		atomic<node_t*> head = head_;
+		atomic<node_t*> tail = tail_;
+		atomic<node_t*> next = head.value()->next;
+		while (next != NULL)
+		{
+			*begin = next.value()->value;
+			++ begin;
+			next = next.value()->next;
+		}
+	}
+
 private:
 	atomic<node_t*> head_, tail_;
 };

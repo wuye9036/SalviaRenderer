@@ -4,7 +4,7 @@
 #include "../include/cpuinfo.h"
 #ifdef EFLIB_MSVC
 #pragma warning(push)
-#pragma warning(disable: 4244 4512)
+#pragma warning(disable: 4244 4267 4512)
 #endif
 #include "../include/thread_pool.h"
 #ifdef EFLIB_MSVC

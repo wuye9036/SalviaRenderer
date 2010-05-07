@@ -42,9 +42,7 @@ namespace addresser
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
-			micoord = _mm_shuffle_epi32(micoord, _MM_SHUFFLE(0, 0, 1, 0));
 			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(0, 0, 1, 0));
 			micoord = _mm_add_epi32(micoord, _mm_slli_si128(misize, 2));
 			__m128 mfcoord = _mm_cvtepi32_ps(micoord);
 			__m128 mfsize = _mm_cvtepi32_ps(misize);
@@ -365,7 +363,8 @@ namespace surface_sampler
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
 		{
-			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0), int4(surf.get_width(), surf.get_height(), 0, 0));
+			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0),
+				int4(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0));
 
 			if(ixy.x < 0 || ixy.y < 0) return border_color;
 			return surf.get_texel(ixy.x, ixy.y);
@@ -380,7 +379,8 @@ namespace surface_sampler
 			int4 pos0, pos1;
 			vec4 t;
 
-			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0), int4(surf.get_width(), surf.get_height(), 0, 0));
+			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0),
+				int4(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0));
 
 			color_rgba32f c0, c1, c2, c3;
 

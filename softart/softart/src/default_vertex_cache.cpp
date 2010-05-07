@@ -9,7 +9,7 @@
 
 #ifdef EFLIB_MSVC
 #pragma warning(push)
-#pragma warning(disable: 4244 4512)
+#pragma warning(disable: 4244 4267 4512)
 #endif
 #include "../include/thread_pool.h"
 #ifdef EFLIB_MSVC
@@ -20,6 +20,8 @@
 
 BEGIN_NS_SOFTART()
 
+
+const int TRANSFORM_VERTEX_PACKAGE_SIZE = 1;
 
 const size_t invalid_id = 0xffffffff;
 
@@ -40,21 +42,28 @@ void default_vertex_cache::reset()
 	pvp_ = &(pparent_->get_viewport());
 }
 
-void default_vertex_cache::transform_vertex_impl(const std::vector<uint32_t>& indices, atomic<int32_t>& working_index, int32_t index_count)
+void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& indices, atomic<int32_t>& working_package, int32_t index_count)
 {
-	int32_t local_working_index = working_index ++;
+	const int32_t num_packages = (index_count + TRANSFORM_VERTEX_PACKAGE_SIZE - 1) / TRANSFORM_VERTEX_PACKAGE_SIZE;
 
-	while (local_working_index < index_count)
+	int32_t local_working_package = working_package ++;
+
+	while (local_working_package < num_packages)
 	{
-		uint32_t id = indices[local_working_index];
-		used_verts_[id] = local_working_index;
+		const int32_t start = local_working_package * TRANSFORM_VERTEX_PACKAGE_SIZE;
+		const int32_t end = min(index_count, start + TRANSFORM_VERTEX_PACKAGE_SIZE);
+		for (int32_t i = start; i < end; ++ i)
+		{
+			uint32_t id = indices[i];
+			used_verts_[id] = i;
 
-		custom_assert(used_verts_[id] == local_working_index, "");
+			custom_assert(used_verts_[id] == i, "");
 
-		pvs_->execute(psa_->fetch_vertex(id), verts_[local_working_index]);
-		update_wpos(verts_[local_working_index], *pvp_);
+			pvs_->execute(psa_->fetch_vertex(id), verts_[i]);
+			update_wpos(verts_[i], *pvp_);
+		}
 
-		local_working_index = working_index ++;
+		local_working_package = working_package ++;
 	}
 }
 
@@ -70,11 +79,11 @@ void default_vertex_cache::transform_vertices(const std::vector<uint32_t>& indic
 #ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_cpu_cores(); ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_impl, this, boost::ref(unique_indices), boost::ref(working_index), static_cast<int32_t>(unique_indices.size())));
+		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_func, this, boost::ref(unique_indices), boost::ref(working_index), static_cast<int32_t>(unique_indices.size())));
 	}
 	global_thread_pool().wait();
 #else
-	default_vertex_cache::transform_vertex_impl(boost::ref(unique_indices), boost::ref(working_index), unique_indices.size());
+	default_vertex_cache::transform_vertex_func(boost::ref(unique_indices), boost::ref(working_index), unique_indices.size());
 #endif
 }
 
