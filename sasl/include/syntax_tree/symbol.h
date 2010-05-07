@@ -31,7 +31,7 @@ public:
 	}
 	template <typename T> void symbol_info( boost::shared_ptr<T> syminfo ){
 		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );
-		symbol_info( boost::shared_polymorphic_cast<T>(syminfo) );
+		symbol_info( boost::shared_polymorphic_cast<class symbol_info>(syminfo) );
 	}
 	template <typename T> boost::shared_ptr<T> get_or_create_symbol_info(){
 		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );

@@ -15,10 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\test\function_entry_generator_test.cpp">
+    <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\code_generator\llvm\llvm_patch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\code_generator\forward.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\code_generator\llvm\cg_llvm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\test\llvm_test.cpp">
+    <ClCompile Include="..\src\code_generator\llvm\cg_llvm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,10 +17,8 @@ namespace sasl {
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 using sasl::common::token_attr;
-
 struct constant;
 struct identifier;
-
 class syntax_tree_visitor;
 
 struct expression: public node{
@@ -45,7 +43,7 @@ struct cast_expression: public expression{
 	cast_expression( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* visitor);
 
-	boost::shared_ptr<identifier> casted_type_name;
+	boost::shared_ptr<identifier> casted_type;
 	boost::shared_ptr<expression> expr;
 };
 

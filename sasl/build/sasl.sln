@@ -2,10 +2,17 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sasl_test", "sasl_test.vcxproj", "{2E441DC7-83D4-473D-ABAB-8A7AF85180FE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FDDE307D-F5B9-4E26-9664-175E3FCAE20D} = {FDDE307D-F5B9-4E26-9664-175E3FCAE20D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sasl_enums", "sasl_enums.vcxproj", "{392ED18C-B7BB-40F1-BBC4-551104F1EA77}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sasl_syntaxtree", "sasl_syntaxtree.vcxproj", "{65BC2EA4-B2C7-446A-A657-32C3D08DB0F6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sasl_semantic", "sasl_semantic.vcxproj", "{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sasl_cgllvm", "sasl_cgllvm.vcxproj", "{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +46,18 @@ Global
 		{65BC2EA4-B2C7-446A-A657-32C3D08DB0F6}.Release|Win32.Build.0 = Release|Win32
 		{65BC2EA4-B2C7-446A-A657-32C3D08DB0F6}.Release|x64.ActiveCfg = Release|x64
 		{65BC2EA4-B2C7-446A-A657-32C3D08DB0F6}.Release|x64.Build.0 = Release|x64
+		{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}.Debug|Win32.Build.0 = Debug|Win32
+		{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}.Debug|x64.ActiveCfg = Debug|Win32
+		{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}.Release|Win32.ActiveCfg = Release|Win32
+		{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}.Release|Win32.Build.0 = Release|Win32
+		{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}.Release|x64.ActiveCfg = Release|Win32
+		{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}.Debug|Win32.Build.0 = Debug|Win32
+		{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}.Debug|x64.ActiveCfg = Debug|Win32
+		{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}.Release|Win32.ActiveCfg = Release|Win32
+		{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}.Release|Win32.Build.0 = Release|Win32
+		{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
