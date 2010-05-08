@@ -33,6 +33,9 @@
     <ClInclude Include="..\include\code_generator\llvm\cgllvm_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\code_generator\llvm\llvm_symbol_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp">
@@ -42,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\code_generator\llvm\cgllvm_context.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\code_generator\llvm\llvm_symbol_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

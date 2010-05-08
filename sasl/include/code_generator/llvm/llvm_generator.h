@@ -69,28 +69,6 @@ public:
 	boost::shared_ptr<llvm::Module> generated_module();
 private:
 	boost::shared_ptr<cgllvm_context> ctxt;
-
-	llvm::Value* allocate_local_variable( sasl::syntax_tree::variable_declaration& var );
-	class symbol_info: public sasl::syntax_tree::symbol_info{
-	public:
-		typedef sasl::syntax_tree::symbol_info base_type;
-		symbol_info(): base_type("llvm code generator symbol info"),
-			llvm_value(NULL),
-			llvm_function(NULL),
-			llvm_type(NULL)
-		{
-		}
-
-		llvm::Value* llvm_value;
-		llvm::Function* llvm_function;
-		llvm::Type* llvm_type;
-	};
-
-	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Function* v);
-	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Value* v);
-	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Type* v);
-
-	std::string generate_temporary_name();
 };
 
 END_NS_SASL_CODE_GENERATOR()

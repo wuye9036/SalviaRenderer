@@ -169,12 +169,4 @@ boost::shared_ptr<llvm::Module> llvm_code_generator::generated_module(){
 	return ctxt->module();
 }
 
-llvm::Value* llvm_code_generator::allocate_local_variable( sasl::syntax_tree::variable_declaration& var ){
-	return NULL;
-}
-
-std::string llvm_code_generator::generate_temporary_name(){
-	return std::string();
-}
-
 END_NS_SASL_CODE_GENERATOR()

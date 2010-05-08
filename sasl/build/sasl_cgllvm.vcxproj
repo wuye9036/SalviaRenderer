@@ -25,11 +25,13 @@
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h" />
     <ClInclude Include="..\include\code_generator\llvm\llvm_patch_begin.h" />
     <ClInclude Include="..\include\code_generator\llvm\llvm_patch_end.h" />
+    <ClInclude Include="..\include\code_generator\llvm\llvm_symbol_info.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\code_generator\llvm\cgllvm_context.cpp" />
     <ClCompile Include="..\src\code_generator\llvm\cg_llvm.cpp" />
     <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp" />
+    <ClCompile Include="..\src\code_generator\llvm\llvm_symbol_info.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}</ProjectGuid>
