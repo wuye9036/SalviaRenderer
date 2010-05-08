@@ -1,7 +1,7 @@
-#ifndef SASL_SYNTAX_TREE_SYMBOL_H
-#define SASL_SYNTAX_TREE_SYMBOL_H
+#ifndef SASL_SEMANTIC_SYMBOL_H
+#define SASL_SEMANTIC_SYMBOL_H
 
-#include "syntax_tree_fwd.h"
+#include <sasl/include/semantic/semantic_forward.h>
 #include <boost/pointer_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -9,10 +9,16 @@
 #include <boost/tr1/type_traits.hpp>
 #include <string>
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+namespace sasl{
+	namespace syntax_tree{
+		struct node;
+	}
+}
 
-struct node;
+BEGIN_NS_SASL_SEMANTIC();
+
 class symbol_info;
+using sasl::syntax_tree::node;
 
 class symbol{
 public:
@@ -59,6 +65,6 @@ private:
 	symbol_infos_t syminfos;
 };
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SEMANTIC()
 
 #endif

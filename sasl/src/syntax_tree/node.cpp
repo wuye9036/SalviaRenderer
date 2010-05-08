@@ -10,7 +10,7 @@ node::node(syntax_node_types tid, shared_ptr<token_attr> tok )
 	// DO NOTHING
 }
 
-boost::shared_ptr<class symbol> node::symbol(){
+boost::shared_ptr<class sasl::semantic::symbol> node::symbol(){
 	return sym.lock();
 }
 

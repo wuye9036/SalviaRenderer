@@ -1,11 +1,10 @@
-#include <sasl/include/syntax_tree/symbol_info.h>
-#include <sasl/include/syntax_tree/symbol.h>
+#include <sasl/include/semantic/symbol_info.h>
+#include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/node.h>
 
 using namespace std;
-using namespace boost;
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SEMANTIC();
 
 boost::shared_ptr<symbol> symbol::create( boost::shared_ptr<struct node> correspond_node ){
 	return create( boost::shared_ptr<symbol>(), correspond_node );
@@ -74,4 +73,4 @@ boost::shared_ptr<node> symbol::node()
 	return correspond_node.lock();
 }
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SEMANTIC();

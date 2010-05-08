@@ -19,11 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\semantic_analyser\semantic_analyser_forward.h" />
-    <ClInclude Include="..\include\semantic_analyser\symbol_infos.h" />
+    <ClInclude Include="..\include\semantic\semantic_analyser.h" />
+    <ClInclude Include="..\include\semantic\semantic_forward.h" />
+    <ClInclude Include="..\include\semantic\symbol.h" />
+    <ClInclude Include="..\include\semantic\symbol_info.h" />
+    <ClInclude Include="..\include\semantic\symbol_infos.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\semantic_analyser\symbol_infos.cpp" />
+    <ClCompile Include="..\src\semantic\sematic_analyser.cpp" />
+    <ClCompile Include="..\src\semantic\symbol.cpp" />
+    <ClCompile Include="..\src\semantic\symbol_infos.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}</ProjectGuid>

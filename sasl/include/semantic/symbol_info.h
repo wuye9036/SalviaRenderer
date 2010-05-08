@@ -1,15 +1,21 @@
-#ifndef SASL_SYNTAX_TREE_SYMBOL_INFO_H
-#define SASL_SYNTAX_TREE_SYMBOL_INFO_H
+#ifndef SASL_SEMANTIC_SYMBOL_INFO_H
+#define SASL_SEMANTIC_SYMBOL_INFO_H
 
-#include <sasl/include/syntax_tree/syntax_tree_fwd.h>
+#include <sasl/include/semantic/semantic_forward.h>
 #include <boost/tr1/type_traits.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
 #include <string>
 
-BEGIN_NS_SASL_SYNTAX_TREE();
+namespace sasl {
+	namespace syntax_tree{
+		struct node;
+	}
+}
 
-struct node;
+BEGIN_NS_SASL_SEMANTIC();
+
+using sasl::syntax_tree::node;
 
 class symbol_info{
 public:
@@ -50,6 +56,6 @@ template <typename SymbolInfoT, typename NodeU> boost::shared_ptr<SymbolInfoT> g
 	return nd.symbol()->get_or_create_symbol_info<SymbolInfoT>();
 }
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SEMANTIC();
 
 #endif

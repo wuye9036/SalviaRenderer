@@ -33,12 +33,6 @@
     <ClInclude Include="..\include\syntax_tree\statement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\syntax_tree\symbol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\syntax_tree\symbol_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\syntax_tree\syntax_tree_fwd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -72,9 +66,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\syntax_tree\operator_table.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\syntax_tree\symbol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\syntax_tree\program.cpp">

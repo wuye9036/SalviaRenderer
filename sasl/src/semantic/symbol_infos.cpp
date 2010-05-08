@@ -1,9 +1,8 @@
-#include <sasl/include/semantic_analyser/symbol_infos.h>
+#include <sasl/include/semantic/symbol_infos.h>
 #include <sasl/include/syntax_tree/constant.h>
 #include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/symbol_info.h>
 
-BEGIN_NS_SASL_SEMANTIC_ANALYSER();
+BEGIN_NS_SASL_SEMANTIC();
 
 using sasl::syntax_tree::constant;
 
@@ -35,4 +34,4 @@ boost::shared_ptr<type_specifier> value_type_symbol_info::value_type(){
 	return valtype;
 }
 
-END_NS_SASL_SEMANTIC_ANALYSER();
+END_NS_SASL_SEMANTIC();

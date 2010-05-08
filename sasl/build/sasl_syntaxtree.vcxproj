@@ -27,8 +27,6 @@
     <ClInclude Include="..\include\syntax_tree\operator_table.h" />
     <ClInclude Include="..\include\syntax_tree\program.h" />
     <ClInclude Include="..\include\syntax_tree\statement.h" />
-    <ClInclude Include="..\include\syntax_tree\symbol.h" />
-    <ClInclude Include="..\include\syntax_tree\symbol_info.h" />
     <ClInclude Include="..\include\syntax_tree\syntax_tree_fwd.h" />
     <ClInclude Include="..\include\syntax_tree\syntax_tree_generator.h" />
     <ClInclude Include="..\include\syntax_tree\visitor.h" />
@@ -41,7 +39,6 @@
     <ClCompile Include="..\src\syntax_tree\node.cpp" />
     <ClCompile Include="..\src\syntax_tree\operator_table.cpp" />
     <ClCompile Include="..\src\syntax_tree\program.cpp" />
-    <ClCompile Include="..\src\syntax_tree\symbol.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{65BC2EA4-B2C7-446A-A657-32C3D08DB0F6}</ProjectGuid>

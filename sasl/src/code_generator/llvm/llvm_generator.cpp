@@ -1,11 +1,11 @@
 #include <sasl/include/code_generator/llvm/llvm_generator.h>
 #include <sasl/include/code_generator/llvm/cgllvm_context.h>
-#include <sasl/include/semantic_analyser/symbol_infos.h>
+#include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/constant.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/syntax_tree/symbol.h>
 #include <sasl/include/syntax_tree/program.h>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -13,7 +13,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 using namespace std;
 using namespace syntax_tree;
 using namespace llvm;
-using sasl::semantic_analyser::value_type_symbol_info;
+using sasl::semantic::value_type_symbol_info;
 
 llvm_code_generator::llvm_code_generator( )
 {
