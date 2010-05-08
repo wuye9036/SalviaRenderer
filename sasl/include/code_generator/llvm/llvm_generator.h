@@ -16,6 +16,8 @@
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
+class cgllvm_context;
+
 class llvm_code_generator: public sasl::syntax_tree::syntax_tree_visitor{
 public:
 	llvm_code_generator();
@@ -66,12 +68,7 @@ public:
 
 	boost::shared_ptr<llvm::Module> generated_module();
 private:
-	llvm::LLVMContext ctxt;
-
-	struct CodeGenerationContext{
-		boost::shared_ptr<llvm::Module> mod;
-		boost::shared_ptr<llvm::IRBuilder<> > builder;
-	};
+	boost::shared_ptr<cgllvm_context> ctxt;
 
 	llvm::Value* allocate_local_variable( sasl::syntax_tree::variable_declaration& var );
 	class symbol_info: public sasl::syntax_tree::symbol_info{
@@ -94,8 +91,6 @@ private:
 	boost::shared_ptr<symbol_info> create_llvm_syminfo(llvm::Type* v);
 
 	std::string generate_temporary_name();
-
-	CodeGenerationContext cg_ctxt;
 };
 
 END_NS_SASL_CODE_GENERATOR()

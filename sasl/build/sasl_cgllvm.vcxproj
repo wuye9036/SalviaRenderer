@@ -20,12 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\code_generator\forward.h" />
+    <ClInclude Include="..\include\code_generator\llvm\cgllvm_context.h" />
     <ClInclude Include="..\include\code_generator\llvm\cg_llvm.h" />
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h" />
     <ClInclude Include="..\include\code_generator\llvm\llvm_patch_begin.h" />
     <ClInclude Include="..\include\code_generator\llvm\llvm_patch_end.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\code_generator\llvm\cgllvm_context.cpp" />
     <ClCompile Include="..\src\code_generator\llvm\cg_llvm.cpp" />
     <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp" />
   </ItemGroup>
