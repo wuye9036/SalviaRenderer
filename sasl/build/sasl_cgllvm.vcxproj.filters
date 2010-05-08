@@ -18,13 +18,16 @@
     <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\code_generator\llvm\llvm_patch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\code_generator\forward.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\code_generator\llvm\cg_llvm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\code_generator\llvm\llvm_patch_begin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\code_generator\llvm\llvm_patch_end.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

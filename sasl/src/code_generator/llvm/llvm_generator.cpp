@@ -5,6 +5,7 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/symbol.h>
+#include <sasl/include/syntax_tree/program.h>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -156,7 +157,17 @@ void llvm_code_generator::visit( compound_statement& v ){}
 void llvm_code_generator::visit( expression_statement& v ){}
 void llvm_code_generator::visit( jump_statement& v ){}
 
-void llvm_code_generator::visit( program& v ){}
+void llvm_code_generator::visit( program& v ){
+	if (cg_ctxt.mod){
+		return;
+	}
+
+	cg_ctxt.mod.reset( new llvm::Module( v.name, ctxt ) );
+
+	for( size_t i = 0; i < v.decls.size(); ++i ){
+		v.decls[i]->accept( this );
+	}
+}
 
 boost::shared_ptr<llvm::Module> llvm_code_generator::generated_module(){
 	return cg_ctxt.mod;

@@ -18,3 +18,14 @@
 #endif
 
 #endif
+
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning( disable: 4800 4146 )
+#endif
+
+#if defined(LLVM_PATCH_BEGIN)
+#	error Including "llvm_patch_begin.h" without "llvm_patch_end.h" is invalid.
+#else
+#	define LLVM_PATCH_BEGIN
+#endif

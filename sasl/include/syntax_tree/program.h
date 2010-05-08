@@ -12,9 +12,10 @@ class syntax_tree_visitor;
 struct declaration_statement;
 
 struct program: public node{
-	program();
+	program(const std::string& name);
 	void accept( syntax_tree_visitor* v );
 
+	std::string name;
 	std::vector< boost::shared_ptr<declaration_statement> > decls;
 };
 

@@ -5,8 +5,8 @@
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-program::program()
-	: node( syntax_node_types::program, boost::shared_ptr<token_attr>() )
+program::program( const std::string& name)
+	: node( syntax_node_types::program, boost::shared_ptr<token_attr>() ), name(name)
 {
 }
 
