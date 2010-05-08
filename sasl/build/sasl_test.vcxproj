@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\test\function_entry_generator_test.cpp" />
     <ClCompile Include="..\test\llvm_test.cpp" />
+    <ClCompile Include="..\test\syntax_tree.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2E441DC7-83D4-473D-ABAB-8A7AF85180FE}</ProjectGuid>

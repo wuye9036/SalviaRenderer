@@ -30,6 +30,9 @@
     <ClInclude Include="..\include\semantic\symbol_infos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\semantic\semantic_analyser_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\semantic\sematic_analyser.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\semantic\symbol_infos.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\semantic\semantic_analyser_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

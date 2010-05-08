@@ -12,11 +12,16 @@ class syntax_tree_visitor;
 struct declaration_statement;
 
 struct program: public node{
-	program(const std::string& name);
-	void accept( syntax_tree_visitor* v );
 
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
 	std::string name;
 	std::vector< boost::shared_ptr<declaration_statement> > decls;
+protected:
+	program(const std::string& name);
+	program& operator = (const program&);
+	program( const program& );
 };
 
 END_NS_SASL_SYNTAX_TREE();

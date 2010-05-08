@@ -20,12 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\semantic\semantic_analyser.h" />
+    <ClInclude Include="..\include\semantic\semantic_analyser_impl.h" />
     <ClInclude Include="..\include\semantic\semantic_forward.h" />
     <ClInclude Include="..\include\semantic\symbol.h" />
     <ClInclude Include="..\include\semantic\symbol_info.h" />
     <ClInclude Include="..\include\semantic\symbol_infos.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\semantic\semantic_analyser_impl.cpp" />
     <ClCompile Include="..\src\semantic\sematic_analyser.cpp" />
     <ClCompile Include="..\src\semantic\symbol.cpp" />
     <ClCompile Include="..\src\semantic\symbol_infos.cpp" />

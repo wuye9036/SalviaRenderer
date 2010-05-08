@@ -9,6 +9,9 @@
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 struct constant{
+	template <typename R> friend void create_node();
+	template <typename R, typename P0> friend void create_node(P0);
+
 	typedef constant this_type;
 
 	literal_constant_types valtype;

@@ -24,6 +24,7 @@
     <ClInclude Include="..\include\syntax_tree\expression.h" />
     <ClInclude Include="..\include\syntax_tree\identifier.h" />
     <ClInclude Include="..\include\syntax_tree\node.h" />
+    <ClInclude Include="..\include\syntax_tree\node_creation.h" />
     <ClInclude Include="..\include\syntax_tree\operator_table.h" />
     <ClInclude Include="..\include\syntax_tree\program.h" />
     <ClInclude Include="..\include\syntax_tree\statement.h" />
@@ -36,6 +37,7 @@
     <ClCompile Include="..\src\syntax_tree\declaration.cpp" />
     <ClCompile Include="..\src\syntax_tree\expression.cpp" />
     <ClCompile Include="..\src\syntax_tree\identifier.cpp" />
+    <ClCompile Include="..\src\syntax_tree\instanciate.cpp" />
     <ClCompile Include="..\src\syntax_tree\node.cpp" />
     <ClCompile Include="..\src\syntax_tree\operator_table.cpp" />
     <ClCompile Include="..\src\syntax_tree\program.cpp" />

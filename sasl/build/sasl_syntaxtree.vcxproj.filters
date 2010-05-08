@@ -48,6 +48,9 @@
     <ClInclude Include="..\include\syntax_tree\program.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\syntax_tree\node_creation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\syntax_tree\constant.cpp">
@@ -69,6 +72,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\syntax_tree\program.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\syntax_tree\instanciate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
