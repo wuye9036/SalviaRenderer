@@ -6,13 +6,14 @@ using namespace std;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-boost::shared_ptr<symbol> symbol::create( boost::shared_ptr<struct node> correspond_node ){
-	return create( boost::shared_ptr<symbol>(), correspond_node );
+boost::shared_ptr<symbol> symbol::create_root( boost::shared_ptr<struct node> root_node ){
+	return create( boost::shared_ptr<symbol>(), root_node );
 }
 
 boost::shared_ptr<symbol> symbol::create( boost::shared_ptr<symbol> parent, boost::shared_ptr<struct node> correspond_node ){
 	boost::shared_ptr<symbol> ret( new symbol( parent, correspond_node ) );
 	ret->selfptr = ret;
+	correspond_node->symbol( ret );
 	return ret;
 }
 
@@ -41,13 +42,13 @@ boost::shared_ptr<symbol> symbol::find_all( const std::string& s )
 	return parent.lock()->find_all(s);
 }
 
-boost::shared_ptr<symbol> symbol::add_child( const std::string& s, boost::shared_ptr<struct node> pnode )
+boost::shared_ptr<symbol> symbol::add_child( const std::string& s, boost::shared_ptr<struct node> child_node )
 {
 	children_iterator_t ret_it = children.find(s);
 	if ( ret_it != children.end() ){
 		return boost::shared_ptr<symbol>();
 	}
-	boost::shared_ptr<symbol> ret = create( selfptr.lock(), node() );
+	boost::shared_ptr<symbol> ret = create( selfptr.lock(), child_node );
 	children.insert( std::make_pair( s, ret ) );
 	return ret;
 }

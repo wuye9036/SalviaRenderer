@@ -24,7 +24,9 @@ class syntax_tree_visitor;
 using ::sasl::common::token_attr;
 
 struct node{
+	boost::shared_ptr<node> handle() const;
 	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;
+	void symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym );
 	boost::shared_ptr<token_attr> token() const;
 	syntax_node_types node_class() const;
 

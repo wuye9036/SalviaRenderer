@@ -1,4 +1,7 @@
 #include <sasl/include/semantic/semantic_analyser_impl.h>
+#include <sasl/include/semantic/symbol.h>
+#include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/syntax_tree/statement.h>
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -44,6 +47,12 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_statement& v
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& v ){}
 
 // program
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::program& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::program& v ){
+	symbol::create_root( v.handle() );
+
+	for( size_t i = 0; i < v.decls.size(); ++i){
+		v.decls[i]->accept(this);
+	}
+}
 
 END_NS_SASL_SEMANTIC();

@@ -10,8 +10,16 @@ node::node(syntax_node_types tid, shared_ptr<token_attr> tok )
 	// DO NOTHING
 }
 
+boost::shared_ptr<node> node::handle() const{
+	return selfptr.lock();
+}
+
 boost::shared_ptr<class ::sasl::semantic::symbol> node::symbol() const{
 	return sym;
+}
+
+void node::symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym ){
+	this->sym = sym;
 }
 
 boost::shared_ptr<token_attr> node::token() const{

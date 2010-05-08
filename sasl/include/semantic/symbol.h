@@ -22,10 +22,10 @@ using sasl::syntax_tree::node;
 
 class symbol{
 public:
-	static boost::shared_ptr<symbol> create( boost::shared_ptr<struct node> correspond_node );
+	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node );
 	boost::shared_ptr<symbol> find_this(const std::string& s);
 	boost::shared_ptr<symbol> find_all(const std::string& s);
-	boost::shared_ptr<symbol> add_child(const std::string& s, boost::shared_ptr<node> pnode);
+	boost::shared_ptr<symbol> add_child(const std::string& s, boost::shared_ptr<node> child_node);
 
 	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname );
 	void symbol_info( boost::shared_ptr<class symbol_info> syminfo );

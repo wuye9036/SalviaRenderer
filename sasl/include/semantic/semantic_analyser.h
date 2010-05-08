@@ -12,9 +12,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-class symbol;
-
-boost::shared_ptr<symbol> symantic_analysis( boost::shared_ptr<sasl::syntax_tree::node> root );
+void semantic_analysis( boost::shared_ptr<::sasl::syntax_tree::node> root );
 
 END_NS_SASL_SEMANTIC();
 
