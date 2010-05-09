@@ -15,7 +15,6 @@ struct member_expression;
 struct identifier;
 struct constant_expression;
 struct binary_expression;
-struct constant;
 
 struct initializer;
 struct expression_initializer;

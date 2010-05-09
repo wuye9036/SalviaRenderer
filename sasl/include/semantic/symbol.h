@@ -24,9 +24,11 @@ using sasl::syntax_tree::node;
 class symbol{
 public:
 	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node );
+
 	boost::shared_ptr<symbol> find_this(const std::string& s);
 	boost::shared_ptr<symbol> find_all(const std::string& s);
 	boost::shared_ptr<symbol> add_child(const std::string& s, boost::shared_ptr<node> child_node);
+	boost::shared_ptr<symbol> parent();
 
 	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname );
 	void symbol_info( boost::shared_ptr<class symbol_info> syminfo );
@@ -60,7 +62,7 @@ private:
 	typedef children_t::iterator children_iterator_t;
 
 	boost::weak_ptr<struct node> correspond_node;
-	boost::weak_ptr<symbol> parent;
+	boost::weak_ptr<symbol> this_parent;
 	boost::weak_ptr<symbol> selfptr;
 	children_t children;
 	symbol_infos_t syminfos;

@@ -5,6 +5,7 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/jump_mode.h>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
@@ -12,15 +13,19 @@ using sasl::common::token_attr;
 
 struct expression;
 struct declaration;
+struct identifier;
 
 struct statement: public node{
 	statement( syntax_node_types type_id, boost::shared_ptr<token_attr> tok );
 };
 
 struct declaration_statement: public statement{
-	declaration_statement( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
 	void accept( syntax_tree_visitor* v );
 	boost::shared_ptr<declaration> decl;
+private:
+	declaration_statement( boost::shared_ptr<token_attr> tok );
+	declaration_statement();
 };
 
 struct if_statement: public statement{

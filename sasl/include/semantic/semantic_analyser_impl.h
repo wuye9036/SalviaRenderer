@@ -21,7 +21,6 @@ class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
 	virtual void visit( ::sasl::syntax_tree::member_expression& v );
 
 	virtual void visit( ::sasl::syntax_tree::constant_expression& v );
-	virtual void visit( ::sasl::syntax_tree::constant& v );
 	virtual void visit( ::sasl::syntax_tree::identifier& v );
 
 	// declaration & type specifier

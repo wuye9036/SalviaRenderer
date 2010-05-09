@@ -13,7 +13,6 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 using namespace std;
 using namespace syntax_tree;
 using namespace llvm;
-using sasl::semantic::value_type_symbol_info;
 
 llvm_code_generator::llvm_code_generator( )
 {

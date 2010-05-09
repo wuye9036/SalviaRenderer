@@ -92,6 +92,7 @@
 		
 		<item value="1 * (2 ** 16)">_real</item>
 		<item value="2 * (2 ** 16)">_integer</item>
+		<item value="3 * (2 ** 16)">_boolean</item>
 		
 		<item value="1 * (2 ** 8) + $_integer$">_unsigned</item>
 		<item value="2 * (2 ** 8) + $_integer$">_signed</item>

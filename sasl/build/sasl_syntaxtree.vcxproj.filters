@@ -71,5 +71,8 @@
     <ClCompile Include="..\src\syntax_tree\instanciate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\syntax_tree\statement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

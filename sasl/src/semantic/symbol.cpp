@@ -19,7 +19,7 @@ boost::shared_ptr<symbol> symbol::create( boost::shared_ptr<symbol> parent, boos
 
 symbol::symbol( boost::shared_ptr<symbol> parent,
 			   boost::shared_ptr<struct node> correspond_node )
-			   :parent(parent),
+			   :this_parent(parent),
 			   correspond_node(correspond_node)
 {
 }
@@ -38,8 +38,8 @@ boost::shared_ptr<symbol> symbol::find_all( const std::string& s )
 {
 	boost::shared_ptr<symbol> this_ret = find_this(s);
 	if (this_ret) {	return this_ret; }
-	if (parent.expired()) { return boost::shared_ptr<symbol>();	}
-	return parent.lock()->find_all(s);
+	if ( !parent() ) { return boost::shared_ptr<symbol>();	}
+	return parent()->find_all(s);
 }
 
 boost::shared_ptr<symbol> symbol::add_child( const std::string& s, boost::shared_ptr<struct node> child_node )
@@ -51,6 +51,10 @@ boost::shared_ptr<symbol> symbol::add_child( const std::string& s, boost::shared
 	boost::shared_ptr<symbol> ret = create( selfptr.lock(), child_node );
 	children.insert( std::make_pair( s, ret ) );
 	return ret;
+}
+
+boost::shared_ptr<symbol> symbol::parent(){
+	return this_parent.lock();
 }
 
 boost::shared_ptr<class symbol_info> symbol::symbol_info( const std::string& clsname ){

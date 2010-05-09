@@ -5,13 +5,13 @@
 #include <sasl/include/semantic/symbol_info.h>
 #include <sasl/enums/type_types.h>
 #include <sasl/enums/literal_constant_types.h>
+#include <sasl/enums/buildin_type_code.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
 #include <boost/weak_ptr.hpp>
 
 namespace sasl {
 	namespace syntax_tree{
-		struct constant;
 		struct type_specifier;
 		struct node;
 	}
@@ -19,32 +19,29 @@ namespace sasl {
 
 BEGIN_NS_SASL_SEMANTIC();
 
-using ::sasl::syntax_tree::constant;
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::node;
 
-class value_symbol_info: public symbol_info{
+class const_value_symbol_info: public symbol_info{
 public:
 	typedef symbol_info base_type;
-	value_symbol_info();
-	value_symbol_info( const std::string& vallit, literal_constant_types ctype );
-	template <typename T> T value(){
+	const_value_symbol_info();
+
+	void constant_value_literal( const std::string& litstr, literal_constant_types lctype);
+
+	template <typename T> T value() const{
 		return boost::get<T>(val);
 	}
+	template <typename T> void value( T val ){
+		this->val = val;
+	}
+
+	buildin_type_code value_type() const;
+	void value_type( buildin_type_code vtype );
 
 private:
 	boost::variant< unsigned long, long, double, std::string, bool, char > val;
-};
-
-class value_type_symbol_info: public symbol_info{
-public:
-	typedef symbol_info base_type;
-	value_type_symbol_info();
-	value_type_symbol_info( boost::shared_ptr<type_specifier> spec );
-
-	boost::shared_ptr<type_specifier> value_type();
-private:
-	boost::shared_ptr<type_specifier> valtype;
+	buildin_type_code valtype;
 };
 
 class type_symbol_info: public symbol_info{
@@ -52,8 +49,8 @@ public:
 	friend class symbol;
 	typedef symbol_info base_type;
 
-	type_symbol_info( type_types ttype );
 	type_types type_type() const;
+	void type_type( type_types ttype );
 
 	boost::shared_ptr<node> full_type() const;
 	void full_type( boost::shared_ptr<node> ftnode );
@@ -67,8 +64,9 @@ class variable_symbol_info: public symbol_info{
 public:
 	friend class symbol;
 	typedef symbol_info base_type;
-	variable_symbol_info( bool is_local );
+
 	bool is_local() const;
+	void is_local( bool isloc );
 private:
 	variable_symbol_info();
 	bool isloc;

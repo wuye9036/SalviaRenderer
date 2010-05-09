@@ -18,7 +18,6 @@ namespace sasl {
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 using sasl::common::token_attr;
-struct constant;
 struct identifier;
 class syntax_tree_visitor;
 

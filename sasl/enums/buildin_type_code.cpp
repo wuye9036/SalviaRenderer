@@ -19,6 +19,7 @@ const buildin_type_code buildin_type_code::_real ( 65536 );
 const buildin_type_code buildin_type_code::_uint64 ( 131332 );
 const buildin_type_code buildin_type_code::_uint16 ( 131330 );
 const buildin_type_code buildin_type_code::_double ( 65538 );
+const buildin_type_code buildin_type_code::_boolean ( 196608 );
 const buildin_type_code buildin_type_code::_integer ( 131072 );
 const buildin_type_code buildin_type_code::_signed ( 131584 );
 const buildin_type_code buildin_type_code::_vector ( 33554432 );
@@ -52,6 +53,7 @@ public:
 		enum_to_name.insert( std::make_pair( buildin_type_code::_uint64, "_uint64" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_uint16, "_uint16" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_double, "_double" ) );
+		enum_to_name.insert( std::make_pair( buildin_type_code::_boolean, "_boolean" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_integer, "_integer" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_signed, "_signed" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_vector, "_vector" ) );
@@ -71,6 +73,7 @@ public:
 		name_to_enum.insert( std::make_pair( "_uint64", buildin_type_code::_uint64 ) );
 		name_to_enum.insert( std::make_pair( "_uint16", buildin_type_code::_uint16 ) );
 		name_to_enum.insert( std::make_pair( "_double", buildin_type_code::_double ) );
+		name_to_enum.insert( std::make_pair( "_boolean", buildin_type_code::_boolean ) );
 		name_to_enum.insert( std::make_pair( "_integer", buildin_type_code::_integer ) );
 		name_to_enum.insert( std::make_pair( "_signed", buildin_type_code::_signed ) );
 		name_to_enum.insert( std::make_pair( "_vector", buildin_type_code::_vector ) );

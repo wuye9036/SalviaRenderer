@@ -14,7 +14,8 @@ struct token_attr{
 		: file_name("undefined"), column(0), line(0), lit("UNINITIALIZED_VALUE"){}
 	token_attr( const token_attr& rhs )
 		: file_name( rhs.file_name ), column(rhs.column), line(rhs.line), lit(rhs.lit){}
-	template< typename IteratorT > token_attr( const IteratorT& first, const IteratorT& last ){}
+	template< typename IteratorT > token_attr( const IteratorT& first, const IteratorT& last )
+		: file_name("undefined"), column(0), line(0), lit(first, last) {}
 
 	token_attr::handle_t make_copy() const{
 		return token_attr::handle_t( new token_attr(*this) );
