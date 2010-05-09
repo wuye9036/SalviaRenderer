@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/semantic/symbol_info.h>
 #include <sasl/enums/type_types.h>
+#include <sasl/enums/literal_constant_types.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
 #include <boost/weak_ptr.hpp>
@@ -26,7 +27,7 @@ class value_symbol_info: public symbol_info{
 public:
 	typedef symbol_info base_type;
 	value_symbol_info();
-	value_symbol_info( const constant& c );
+	value_symbol_info( const std::string& vallit, literal_constant_types ctype );
 	template <typename T> T value(){
 		return boost::get<T>(val);
 	}

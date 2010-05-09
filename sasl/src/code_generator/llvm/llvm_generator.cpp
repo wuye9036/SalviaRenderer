@@ -3,7 +3,6 @@
 #include <sasl/include/semantic/symbol_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/code_generator/llvm/llvm_symbol_info.h>
-#include <sasl/include/syntax_tree/constant.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
@@ -90,8 +89,6 @@ void llvm_code_generator::visit( constant_expression& v ){
 	//syminfo->llvm_value = ret_v;
 }
 
-void llvm_code_generator::visit( constant& v ){
-}
 void llvm_code_generator::visit( identifier& v ){
 
 }

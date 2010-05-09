@@ -58,7 +58,6 @@ public:
 	virtual void visit( member_expression& v ) = 0;
 
 	virtual void visit( constant_expression& v ) = 0;
-	virtual void visit( constant& v ) = 0;
 	virtual void visit( identifier& v ) = 0;
 
 	// declaration & type specifier

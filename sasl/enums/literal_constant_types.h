@@ -23,10 +23,11 @@ public:
 	}
 
 	const static this_type real;
-	const static this_type integer;
-	const static this_type boolean;
-	const static this_type character;
+	const static this_type none;
 	const static this_type string;
+	const static this_type character;
+	const static this_type boolean;
+	const static this_type integer;
 
 
 	static std::string to_name( const this_type& enum_val );

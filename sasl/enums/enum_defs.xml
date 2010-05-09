@@ -73,6 +73,7 @@
 	<enum name="literal_constant_types">
 		<HasName />
 		<AutoGen expression="$index$+1" />
+		<item>none</item>
 		<item>boolean</item>
 		<item>integer</item>
 		<item>real</item>

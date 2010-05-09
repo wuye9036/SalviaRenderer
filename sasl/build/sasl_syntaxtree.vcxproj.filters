@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\syntax_tree\constant.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\syntax_tree\declaration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -53,9 +50,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\syntax_tree\constant.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\syntax_tree\declaration.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

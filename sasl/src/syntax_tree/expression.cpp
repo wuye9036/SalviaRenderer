@@ -1,5 +1,4 @@
 #include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/constant.h>
 #include <sasl/include/syntax_tree/visitor.h>
 
 using namespace boost;
@@ -12,7 +11,7 @@ expression::expression( syntax_node_types ntype, boost::shared_ptr<token_attr> t
 }
 
 constant_expression::constant_expression( boost::shared_ptr<token_attr> tok )
-	: expression( syntax_node_types::constant_expression, tok ) { }
+	: expression( syntax_node_types::constant_expression, tok ), ctype( literal_constant_types::none) { }
 
 void constant_expression::accept( syntax_tree_visitor* v ){
 	v->visit( *this );

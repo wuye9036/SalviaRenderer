@@ -1,5 +1,5 @@
 #include <sasl/include/semantic/symbol_infos.h>
-#include <sasl/include/syntax_tree/constant.h>
+#include <sasl/enums/literal_constant_types.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
 BEGIN_NS_SASL_SEMANTIC();
@@ -7,21 +7,22 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::syntax_tree::constant;
 
 value_symbol_info::value_symbol_info(): value_symbol_info::base_type( "value symbol info" ){}
-value_symbol_info::value_symbol_info( const constant& c ): value_symbol_info::base_type( "value symbol info" ){
-	if (c.valtype == literal_constant_types::integer ){
-		if ( c.is_unsigned() ){
-			val = boost::lexical_cast<unsigned long>(c.littok.lit);
-		} else {
-			val = boost::lexical_cast<long>(c.littok.lit);
-		}
-	} else if( c.valtype == literal_constant_types::real ){
-		val = boost::lexical_cast<double>(c.littok.lit);
-	} else if( c.valtype == literal_constant_types::boolean ){
-		val = (c.littok.lit == "true");
-	} else if( c.valtype == literal_constant_types::character ){
-		val = c.littok.lit[0];
-	} else if( c.valtype == literal_constant_types::string ){
-		val = c.littok.lit;
+value_symbol_info::value_symbol_info( const std::string& vallit, literal_constant_types valtype )
+	: value_symbol_info::base_type( "value symbol info" ){
+	if (valtype == literal_constant_types::integer ){
+		//if ( c.is_unsigned() ){
+		//	val = boost::lexical_cast<unsigned long>(vallit);
+		//} else {
+		//	val = boost::lexical_cast<long>(vallit);
+		//}
+	} else if( valtype == literal_constant_types::real ){
+		val = boost::lexical_cast<double>(vallit);
+	} else if( valtype == literal_constant_types::boolean ){
+		val = (vallit == "true");
+	} else if( valtype == literal_constant_types::character ){
+		val = vallit[0];
+	} else if( valtype == literal_constant_types::string ){
+		val = vallit;
 	}
 }
 

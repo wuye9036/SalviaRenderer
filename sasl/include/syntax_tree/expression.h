@@ -4,6 +4,7 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/operators.h>
+#include <sasl/enums/literal_constant_types.h>
 #include <boost/smart_ptr.hpp>
 #include <string>
 #include <vector>
@@ -22,13 +23,19 @@ struct identifier;
 class syntax_tree_visitor;
 
 struct expression: public node{
+protected:
 	expression( syntax_node_types nodetype, boost::shared_ptr<token_attr> tok);
 };
 
 struct constant_expression: public expression{
-	constant_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor );
-	boost::shared_ptr<constant> value;
+
+	boost::shared_ptr<token_attr> value_tok;
+	literal_constant_types ctype;
+protected:
+	constant_expression( boost::shared_ptr<token_attr> tok );
 };
 
 struct unary_expression: public expression{
