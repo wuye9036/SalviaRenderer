@@ -2,6 +2,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_context.h>
 #include <sasl/include/semantic/symbol_infos.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/code_generator/llvm/llvm_symbol_info.h>
 #include <sasl/include/syntax_tree/constant.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
@@ -100,10 +101,45 @@ void llvm_code_generator::visit( initializer& v ){}
 void llvm_code_generator::visit( expression_initializer& v ){}
 void llvm_code_generator::visit( member_initializer& v ){}
 void llvm_code_generator::visit( declaration& v ){}
-void llvm_code_generator::visit( variable_declaration& v ){}
+void llvm_code_generator::visit( variable_declaration& v ){
+	using ::sasl::semantic::extract_symbol_info;
+	using ::sasl::semantic::variable_symbol_info;
+	using ::sasl::semantic::get_or_create_symbol_info;
+
+	v.type_info->accept( this );
+	boost::shared_ptr<variable_symbol_info> vsyminfo = extract_symbol_info<variable_symbol_info>(v);
+	boost::shared_ptr<llvm_symbol_info> lsyminfo = get_or_create_symbol_info<llvm_symbol_info>(v);
+	boost::shared_ptr<llvm_symbol_info> ltsyminfo = extract_symbol_info<llvm_symbol_info>(v.type_info);
+	
+	//TODO: GET VALUE OF INITIALIZER
+
+	if ( vsyminfo->is_local() ){
+		// TODO: GENERATE LOCAL VARIABLE	
+	} else {
+		// generate global variable
+		GlobalVariable* gv = cast<GlobalVariable>(ctxt->module()->getOrInsertGlobal( v.name->lit, ltsyminfo->llvm_type ));
+		// TODO: OTHER OPERATIONS. SUCH AS LINKAGE
+		// ...
+		lsyminfo->llvm_gvar = gv;
+	}
+}
+
 void llvm_code_generator::visit( type_definition& v ){}
-void llvm_code_generator::visit( type_specifier& v ){}
-void llvm_code_generator::visit( buildin_type& v ){}
+void llvm_code_generator::visit( type_specifier& v ){
+}
+void llvm_code_generator::visit( buildin_type& v ){
+	using ::sasl::semantic::get_or_create_symbol_info;
+
+	const llvm::Type* ltype = NULL;
+	
+	if (v.value_typecode == buildin_type_code::_sint32 ){
+		ltype = llvm::cast<const llvm::Type>( llvm::IntegerType::getInt32Ty(ctxt->context()) );
+	}
+	// TODO: other buildin types.
+
+	boost::shared_ptr<llvm_symbol_info> lsyminfo = get_or_create_symbol_info<llvm_symbol_info>(v.handle());
+	lsyminfo->llvm_type = ltype;
+}
 void llvm_code_generator::visit( type_identifier& v ){}
 void llvm_code_generator::visit( qualified_type& v ){}
 void llvm_code_generator::visit( array_type& v ){}
@@ -169,4 +205,4 @@ boost::shared_ptr<llvm::Module> llvm_code_generator::generated_module(){
 	return ctxt->module();
 }
 
-END_NS_SASL_CODE_GENERATOR()
+END_NS_SASL_CODE_GENERATOR();

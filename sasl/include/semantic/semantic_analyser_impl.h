@@ -3,8 +3,11 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
+#include <boost/shared_ptr.hpp>
 
 BEGIN_NS_SASL_SEMANTIC();
+
+class symbol;
 
 class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
 	// expression
@@ -53,7 +56,8 @@ class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
 	virtual void visit( ::sasl::syntax_tree::program& v );
 
 private:
-	// boost::shared_
+	boost::shared_ptr<symbol> cursym;
+	bool is_local;
 };
 
 END_NS_SASL_SEMANTIC();

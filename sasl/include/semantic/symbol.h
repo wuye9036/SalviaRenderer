@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <boost/pointer_cast.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/tr1/unordered_map.hpp>
 #include <boost/tr1/type_traits.hpp>

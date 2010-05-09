@@ -8,6 +8,7 @@ namespace llvm{
 	class Value;
 	class Function;
 	class Type;
+	class GlobalVariable;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -19,7 +20,8 @@ public:
 
 	llvm::Value* llvm_value;
 	llvm::Function* llvm_function;
-	llvm::Type* llvm_type;
+	const llvm::Type* llvm_type;
+	llvm::GlobalVariable* llvm_gvar;
 };
 
 END_NS_SASL_CODE_GENERATOR();

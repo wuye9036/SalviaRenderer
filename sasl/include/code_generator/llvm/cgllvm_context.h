@@ -18,7 +18,7 @@ public:
 
 	// attributes
 	boost::shared_ptr<llvm::Module> module() const;
-
+	llvm::LLVMContext& context();
 private:
 	llvm::LLVMContext lctxt;
 	boost::shared_ptr<llvm::Module> mod;

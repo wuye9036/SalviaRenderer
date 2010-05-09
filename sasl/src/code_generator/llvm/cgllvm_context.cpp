@@ -10,4 +10,9 @@ cgllvm_context::cgllvm_context( const std::string& mod_name)
 boost::shared_ptr<llvm::Module> cgllvm_context::module() const{
 	return mod;
 }
+
+llvm::LLVMContext& cgllvm_context::context(){
+	return lctxt;
+}
+
 END_NS_SASL_CODE_GENERATOR();

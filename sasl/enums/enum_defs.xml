@@ -158,6 +158,15 @@
 		<item value = "$initializer$ + 2">member_initializer</item>
 	</enum>
 	
+	<enum name="type_types">
+		<HasName/>
+		<Convertible/>
+		<AutoGen expression = "$index$"/>
+		<item>none</item>
+		<item>buildin</item>
+		<item>composited</item>
+		<item>alias</item>
+	</enum>
 	<enum name="storage_mode">
 		<HasName/>
 		<Convertible/>
