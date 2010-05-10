@@ -53,6 +53,20 @@ boost::shared_ptr<symbol> symbol::add_child( const std::string& s, boost::shared
 	return ret;
 }
 
+void symbol::remove_child( const std::string& s ){
+	children_iterator_t ret_it = children.find(s);
+	if ( ret_it == children.end() ){
+		return;
+	}
+	// remove symbol from corresponding node.
+	boost::shared_ptr<symbol> rmsym = ret_it->second;
+	if( rmsym->node() ){
+		rmsym->node()->symbol( boost::shared_ptr<symbol>() );
+	}
+	// remove itself.
+	children.erase( ret_it );
+}
+
 boost::shared_ptr<symbol> symbol::parent(){
 	return this_parent.lock();
 }

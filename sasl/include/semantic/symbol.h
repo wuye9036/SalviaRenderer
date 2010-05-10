@@ -28,6 +28,7 @@ public:
 	boost::shared_ptr<symbol> find_this(const std::string& s);
 	boost::shared_ptr<symbol> find_all(const std::string& s);
 	boost::shared_ptr<symbol> add_child(const std::string& s, boost::shared_ptr<node> child_node);
+	void remove_child( const std::string& s );
 	boost::shared_ptr<symbol> parent();
 
 	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname );

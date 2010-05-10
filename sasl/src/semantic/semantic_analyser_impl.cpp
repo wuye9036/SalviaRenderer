@@ -1,6 +1,7 @@
 #include <sasl/include/semantic/semantic_analyser_impl.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -62,7 +63,46 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 	cursym = cursym->parent();
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
+	using ::sasl::syntax_tree::type_definition;
+
+	const std::string& alias_str = v.ident->lit;
+	boost::shared_ptr<symbol> existed_sym = cursym->find_all( alias_str );
+	if ( existed_sym ){
+		// if the symbol is used and is not a type node, it must be redifinition.
+		// else compare the type.
+		if ( !existed_sym->node()->node_class().included( syntax_node_types::type_specifier ) ){
+			// TODO: REPORT SEMANTIC ERROR: SYMBOL REDEFINED.
+			return;
+		}
+	}
+
+	// process type node.
+	// remove old sym from symbol table.
+	cursym->remove_child( v.ident->lit );
+	cursym = cursym->add_child( v.ident->lit, v.handle() );
+	v.type_info->accept(this);
+
+	boost::shared_ptr<type_symbol_info> new_tsi = extract_symbol_info<type_symbol_info>(v);
+
+	// if this symbol is usable, process type node.
+	if ( existed_sym ){
+		boost::shared_ptr<type_symbol_info> existed_tsi = existed_sym->symbol_info<type_symbol_info>();
+		if ( !is_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
+			// if new symbol is different from the old, semantic error.
+			// The final effect is that the new definition overwrites the old one.
+
+			// TODO: REPORT SEMANTIC ERROR: SYMBOL REDEFINED.
+			// REMOVE ALL DEFINITIONS FROM SYMBOL TABLE.
+		} 
+	}
+	// else if the same. do not updated.
+	// NOTE:
+	//   MAYBE IT NEEDS COMBINE OLD AND NEW SYMBOL INFOS UNDER SOME CONDITIONS. 
+	//   BUT I CAN NOT FIND OUT ANY EXAMPLE.
+	cursym = cursym->parent();
+}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_specifier& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 	using ::sasl::semantic::get_or_create_symbol_info;
@@ -71,6 +111,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 	// for e.g. create type info onto a variable node.
 	boost::shared_ptr<type_symbol_info> tsyminfo = get_or_create_symbol_info<type_symbol_info>( cursym->node() );
 	tsyminfo->type_type( type_types::buildin );
+	tsyminfo->full_type( boost::shared_polymorphic_cast<type_specifier>(v.handle()) );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_identifier& v ){}

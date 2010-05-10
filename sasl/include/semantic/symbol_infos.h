@@ -52,12 +52,28 @@ public:
 	type_types type_type() const;
 	void type_type( type_types ttype );
 
-	boost::shared_ptr<node> full_type() const;
-	void full_type( boost::shared_ptr<node> ftnode );
+	// full_type returns back the raw type.
+	// it's behaviour decided by ttype.
+	//    for none, buildin and composited, return type_node.
+	//    for alias, return full_type().full_type().
+	boost::shared_ptr<type_specifier> full_type() const;
+
+	void full_type( boost::shared_ptr<type_specifier> ftnode );
 private:
 	type_symbol_info();
+
+	// ttype has 4-state: none, alias, buildin, composited.
+	// none:
+	//   it means is a null type that only declaration existed without definition.
+	//   type_node is point to first declaration of this type.
+	// alias:
+	//   alias is a type definition symbol. type_node point to reference.
+	// buildin:
+	//   it is a buildin type symbol. buildin type point to the node which this symbol belongs to.
+	// composited:
+	//   all same as buildin but the type of type_node referred.
 	type_types ttype;
-	boost::weak_ptr<node> type_node;
+	boost::weak_ptr<type_specifier> type_node;
 };
 
 class variable_symbol_info: public symbol_info{

@@ -25,12 +25,14 @@
     <ClInclude Include="..\include\semantic\symbol.h" />
     <ClInclude Include="..\include\semantic\symbol_info.h" />
     <ClInclude Include="..\include\semantic\symbol_infos.h" />
+    <ClInclude Include="..\include\semantic\type_checker.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\semantic\semantic_analyser_impl.cpp" />
     <ClCompile Include="..\src\semantic\sematic_analyser.cpp" />
     <ClCompile Include="..\src\semantic\symbol.cpp" />
     <ClCompile Include="..\src\semantic\symbol_infos.cpp" />
+    <ClCompile Include="..\src\semantic\type_checker.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}</ProjectGuid>

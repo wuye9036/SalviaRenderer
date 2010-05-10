@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	std::string prog_name("test");
 	std::string var_name("test_var");
 	
-	std::string var_intval("9987");
+	std::string var_intval("1.0f");
 
 	boost::shared_ptr<token_attr> nulltok;
 
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	boost::shared_ptr<token_attr> intval_tok( new token_attr(var_intval.begin(), var_intval.end()) );
 
 	// assemble
-	initexpr->ctype = literal_constant_types::integer;
+	initexpr->ctype = literal_constant_types::real;
 	initexpr->value_tok = intval_tok;
 	vartype->value_typecode = buildin_type_code::_sint32;
 	init->init_expr = initexpr;
@@ -72,10 +72,58 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 
 	// check
 	boost::shared_ptr<const_value_symbol_info> cvsi = extract_symbol_info<const_value_symbol_info>(decl);
-	long val = cvsi->value<long>();
+	double val = cvsi->value<double>();
 
-	BOOST_CHECK_EQUAL( (long)9987, val );
-	BOOST_CHECK( cvsi->value_type() == buildin_type_code::_sint32 );
+	BOOST_CHECK_EQUAL( (double)1.0f, val );
+	BOOST_CHECK( cvsi->value_type() == buildin_type_code::_float );
 }
 
+BOOST_AUTO_TEST_CASE( type_definition_semantic ){
+	using ::sasl::syntax_tree::program;
+	using ::sasl::syntax_tree::create_node;
+	using ::sasl::syntax_tree::type_definition;
+	using ::sasl::syntax_tree::buildin_type;
+	using ::sasl::syntax_tree::type_specifier;
+	using ::sasl::common::token_attr;
+	using ::sasl::semantic::type_symbol_info;
+	using ::sasl::semantic::semantic_analysis;
+	using ::sasl::syntax_tree::declaration;
+	using ::sasl::syntax_tree::declaration_statement;
+
+	boost::shared_ptr<token_attr> nulltok;
+
+	std::string var_name_0("var0");
+	std::string var_name_1("var1");
+
+	boost::shared_ptr<token_attr> var0_tok( new token_attr() );
+	var0_tok->lit = var_name_0;
+	boost::shared_ptr<token_attr> var1_tok( new token_attr() );
+	var1_tok->lit = var_name_1;
+	
+	boost::shared_ptr<program> prog = create_node<program>("test");
+	boost::shared_ptr<buildin_type> bti32 = create_node<buildin_type>(nulltok);
+	bti32->value_typecode = buildin_type_code::_sint32;
+	boost::shared_ptr<buildin_type> bti32_a = create_node<buildin_type>(nulltok);
+	bti32->value_typecode = buildin_type_code::_sint32;
+	boost::shared_ptr<buildin_type> bti64 = create_node<buildin_type>(nulltok);
+	bti64->value_typecode = buildin_type_code::_sint64;
+
+	boost::shared_ptr<type_definition> tdef0 = create_node<type_definition>(nulltok);
+	tdef0->ident = var0_tok;
+	tdef0->type_info = bti32;
+	boost::shared_ptr<type_definition> tdef1 = create_node<type_definition>(nulltok);
+	tdef1->ident = var1_tok;
+	tdef1->type_info = bti64;
+	boost::shared_ptr<declaration_statement> declstmt0 = create_node<declaration_statement>();
+	boost::shared_ptr<declaration_statement> declstmt1 = create_node<declaration_statement>();
+	declstmt0->decl = tdef0;
+	declstmt1->decl = tdef1;
+	prog->decls.push_back( declstmt0 );
+	prog->decls.push_back( declstmt1 );
+
+	semantic_analysis( prog );
+	BOOST_CHECK(
+		prog->symbol()->find_this( var_name_0 )->get_or_create_symbol_info<type_symbol_info>()->type_type() == type_types::buildin
+		);
+}
 BOOST_AUTO_TEST_SUITE_END();
