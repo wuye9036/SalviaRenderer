@@ -675,8 +675,7 @@ color_rgba32f sampler::sample_cube(
 		custom_assert(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
-	color_rgba32f rv = sample_impl(&pcube->get_face(major_dir) , s, t, miplevel);
-	return rv;
+	return sample_impl(&pcube->get_face(major_dir) , s, t, miplevel);
 }
 
 color_rgba32f sampler::sample_cube(

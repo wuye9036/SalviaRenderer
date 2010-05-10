@@ -10,7 +10,6 @@
 #include "enums.h"
 #include "handles.h"
 
-#include "atomic.h"
 #include "lockfree_queue.h"
 
 #include "index_fetcher.h"
@@ -31,9 +30,9 @@ class geometry_assembler : public render_stage
 	index_type	idxtype_;
 
 	void draw_index_impl(size_t prim_count);
-	void dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, atomic<int32_t>& working_package, int32_t prim_count, uint32_t stride);
-	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, atomic<int32_t>& working_package, const h_pixel_shader& pps);
-	void generate_indices_func(std::vector<uint32_t>& indices, atomic<int32_t>& working_package, int32_t prim_count, uint32_t stride);
+	void dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads);
+	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, const h_pixel_shader& pps, uint32_t thread_id, uint32_t num_threads);
+	void generate_indices_func(std::vector<uint32_t>& indices, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads);
 
 	stream_assembler sa_;
 	default_vertex_cache dvc_;
