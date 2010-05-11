@@ -1,6 +1,7 @@
 #include <sasl/include/semantic/semantic_analyser_impl.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/symbol_scope.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
@@ -36,7 +37,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_initializer&
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_initializer& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v ){
-	cursym = cursym->add_child( v.name->lit, v.handle() );
+	symbol_scope( v.name->lit, v.handle(), cursym );
 
 	// process variable type
 	boost::shared_ptr<type_specifier> vartype = v.type_info;
@@ -58,9 +59,6 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 
 	// process initializer
 	v.init->accept( this );
-
-	// recovery the parent node.
-	cursym = cursym->parent();
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
@@ -80,27 +78,28 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	// process type node.
 	// remove old sym from symbol table.
 	cursym->remove_child( v.ident->lit );
-	cursym = cursym->add_child( v.ident->lit, v.handle() );
-	v.type_info->accept(this);
+	{
+		symbol_scope sc( v.ident->lit, v.handle(), cursym );
 
-	boost::shared_ptr<type_symbol_info> new_tsi = extract_symbol_info<type_symbol_info>(v);
+		v.type_info->accept(this);
+		boost::shared_ptr<type_symbol_info> new_tsi = extract_symbol_info<type_symbol_info>(v);
 
-	// if this symbol is usable, process type node.
-	if ( existed_sym ){
-		boost::shared_ptr<type_symbol_info> existed_tsi = existed_sym->symbol_info<type_symbol_info>();
-		if ( !is_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
-			// if new symbol is different from the old, semantic error.
-			// The final effect is that the new definition overwrites the old one.
+		// if this symbol is usable, process type node.
+		if ( existed_sym ){
+			boost::shared_ptr<type_symbol_info> existed_tsi = existed_sym->symbol_info<type_symbol_info>();
+			if ( !is_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
+				// if new symbol is different from the old, semantic error.
+				// The final effect is that the new definition overwrites the old one.
 
-			// TODO: REPORT SEMANTIC ERROR: SYMBOL REDEFINED.
-			// REMOVE ALL DEFINITIONS FROM SYMBOL TABLE.
-		} 
+				// TODO: REPORT SEMANTIC ERROR: SYMBOL REDEFINED.
+				// REMOVE ALL DEFINITIONS FROM SYMBOL TABLE.
+			} 
+		}
+		// else if the same. do not updated.
+		// NOTE:
+		//   MAYBE IT NEEDS COMBINE OLD AND NEW SYMBOL INFOS UNDER SOME CONDITIONS. 
+		//   BUT I CAN NOT FIND OUT ANY EXAMPLE.
 	}
-	// else if the same. do not updated.
-	// NOTE:
-	//   MAYBE IT NEEDS COMBINE OLD AND NEW SYMBOL INFOS UNDER SOME CONDITIONS. 
-	//   BUT I CAN NOT FIND OUT ANY EXAMPLE.
-	cursym = cursym->parent();
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_specifier& v ){}
