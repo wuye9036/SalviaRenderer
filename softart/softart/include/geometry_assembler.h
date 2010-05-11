@@ -8,6 +8,7 @@
 #include "enums.h"
 #include "handles.h"
 
+#include "atomic.h"
 #include "lockfree_queue.h"
 
 #include <boost/array.hpp>
@@ -19,8 +20,8 @@ BEGIN_NS_SOFTART()
 
 class geometry_assembler : public render_stage
 {
-	void dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads);
-	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const h_pixel_shader& pps, uint32_t thread_id, uint32_t num_threads);
+	void dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size);
+	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size);
 
 	int num_tiles_x_, num_tiles_y_;
 

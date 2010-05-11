@@ -11,6 +11,7 @@
 #include "renderer.h"
 #include "render_stage.h"
 #include "index_fetcher.h"
+#include "atomic.h"
 
 #include <boost/pool/pool.hpp>
 
@@ -61,8 +62,8 @@ public:
 	void delete_vertex(vs_output* const pvert);
 
 private:
-	void transform_vertex_func(const std::vector<uint32_t>& indices, uint32_t index_count, uint32_t thread_id, uint32_t num_threads);
-	void generate_indices_func(std::vector<uint32_t>& indices, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads);
+	void generate_indices_func(std::vector<uint32_t>& indices, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size);
+	void transform_vertex_func(const std::vector<uint32_t>& indices, int32_t index_count, atomic<int32_t>& working_package, int32_t package_size);
 
 private:
 	vertex_shader* pvs_;
