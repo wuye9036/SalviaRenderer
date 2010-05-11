@@ -24,7 +24,6 @@ using namespace std;
 using namespace efl;
 
 const int TILE_SIZE = 64;
-const int GENERATE_INDICES_PACKAGE_SIZE = 1;
 const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 1;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 
@@ -33,57 +32,15 @@ void geometry_assembler::initialize(renderer_impl* pparent)
 	custom_assert(pparent, "初始化出现异常，传入的初始化指针为空！");
 
 	pparent_ = pparent;
-	dvc_.initialize(pparent);
 }
 
 geometry_assembler::geometry_assembler()
-:indexbuf_((buffer*)NULL),
-primtopo_(primitive_triangle_list), idxtype_(index_int16)
 {}
 
-void geometry_assembler::set_primitive_topology(primitive_topology prim_topo){
-	switch (prim_topo)
-	{
-	case primitive_line_list:
-	case primitive_line_strip:
-	case primitive_triangle_list:
-	case primitive_triangle_strip:
-		break;
-	default:
-		custom_assert(false, "枚举值无效：无效的图元拓扑枚举。");
-		return;
-	}
+void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads){
+	h_vertex_cache dvc = pparent_->get_vertex_cache();
 
-	primtopo_ = prim_topo;
-}
-
-void geometry_assembler::set_stream(size_t index, h_buffer hbuf){
-	sa_.set_stream(stream_index(index), hbuf);
-}
-
-void geometry_assembler::set_index_buffer(h_buffer hbuf, index_type idxtype){
-	switch (idxtype)
-	{
-	case index_int16:
-	case index_int32:
-		break;
-	default:
-		custom_assert(false, "枚举值无效：无效的索引类型");
-		return;
-	}
-
-	indexbuf_ = hbuf;
-	idxtype_ = idxtype;
-}
-
-void geometry_assembler::set_input_layout(const vector<input_element_decl>& elem_decl){
-	//layout_ 只能到运行期检测了...
-	sa_.set_input_layout(elem_decl);
-}
-
-void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads){
 	const uint32_t num_packages = (prim_count + DISPATCH_PRIMITIVE_PACKAGE_SIZE - 1) / DISPATCH_PRIMITIVE_PACKAGE_SIZE;
-
 	uint32_t local_working_package = thread_id;
 
 	float x_min;
@@ -97,7 +54,7 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 		for (uint32_t i = start; i < end; ++ i)
 		{
 			{
-				const vs_output& v0 = dvc_.fetch(indices[i * stride + 0]);
+				const vs_output& v0 = dvc->fetch(i * stride + 0);
 				const float sign_w = sign(v0.wpos.w);
 				const float x = v0.wpos.x * sign_w;
 				const float y = v0.wpos.y * sign_w;
@@ -108,7 +65,7 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 			}
 			for (size_t j = 1; j < stride; ++ j)
 			{
-				const vs_output& v = dvc_.fetch(indices[i * stride + j]);
+				const vs_output& v = dvc->fetch(i * stride + j);
 				const float sign_w = sign(v.wpos.w);
 				const float x = v.wpos.x * sign_w;
 				const float y = v.wpos.y * sign_w;
@@ -134,8 +91,11 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 	}
 }
 
-void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const std::vector<uint32_t>& indices, const h_pixel_shader& pps, uint32_t thread_id, uint32_t num_threads)
+void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const h_pixel_shader& pps, uint32_t thread_id, uint32_t num_threads)
 {
+	h_vertex_cache dvc = pparent_->get_vertex_cache();
+	primitive_topology primtopo = pparent_->get_primitive_topology();
+
 	const uint32_t num_tiles = static_cast<uint32_t>(tiles.size());
 	const uint32_t num_packages = (num_tiles + RASTERIZE_PRIMITIVE_PACKAGE_SIZE - 1) / RASTERIZE_PRIMITIVE_PACKAGE_SIZE;
 
@@ -166,19 +126,19 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 			tile_vp.y = static_cast<float>(y * TILE_SIZE);
 
 			uint32_t iprim;
-			switch(primtopo_){
+			switch(primtopo){
 			case primitive_line_list:
 			case primitive_line_strip:
 				for (size_t i = 0; i < sorted_prims.size(); ++ i){
 					iprim = sorted_prims[i];
-					hrast->rasterize_line(dvc_.fetch(indices[iprim * 2 + 0]), dvc_.fetch(indices[iprim * 2 + 1]), tile_vp, pps);
+					hrast->rasterize_line(dvc->fetch(iprim * 2 + 0), dvc->fetch(iprim * 2 + 1), tile_vp, pps);
 				}
 				break;
 			case primitive_triangle_list:
 			case primitive_triangle_strip:
 				for (size_t i = 0; i < sorted_prims.size(); ++ i){
 					iprim = sorted_prims[i];
-					hrast->rasterize_triangle(dvc_.fetch(indices[iprim * 3 + 0]), dvc_.fetch(indices[iprim * 3 + 1]), dvc_.fetch(indices[iprim * 3 + 2]), tile_vp, pps);
+					hrast->rasterize_triangle(dvc->fetch(iprim * 3 + 0), dvc->fetch(iprim * 3 + 1), dvc->fetch(iprim * 3 + 2), tile_vp, pps);
 				}
 				break;
 			}
@@ -188,30 +148,16 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 	}
 }
 
-void geometry_assembler::generate_indices_func(std::vector<uint32_t>& indices, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads)
-{
-	const uint32_t num_packages = (prim_count + GENERATE_INDICES_PACKAGE_SIZE - 1) / GENERATE_INDICES_PACKAGE_SIZE;
-
-	uint32_t local_working_package = thread_id;
-	while (local_working_package < num_packages){
-		const uint32_t start = local_working_package * GENERATE_INDICES_PACKAGE_SIZE;
-		const uint32_t end = min(prim_count, start + GENERATE_INDICES_PACKAGE_SIZE);
-		for (uint32_t i = start; i < end; ++ i){
-			ind_fetcher_.fetch_indices(&indices[i * stride], i);
-		}
-
-		local_working_package += num_threads;
-	}
-}
-
-void geometry_assembler::draw_index_impl(size_t prim_count){
+void geometry_assembler::draw(size_t prim_count){
 
 	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
 	if(!pparent_) return;
 
+	primitive_topology primtopo = pparent_->get_primitive_topology();
+
 	//计算索引数量
 	size_t index_count = 0;
-	switch(primtopo_)
+	switch(primtopo)
 	{
 	case primitive_line_list:
 		index_count = prim_count * 2;
@@ -240,7 +186,7 @@ void geometry_assembler::draw_index_impl(size_t prim_count){
 	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x_ * num_tiles_y_);
 
 	uint32_t prim_size = 0;
-	switch(primtopo_)
+	switch(primtopo)
 	{
 	case primitive_line_list:
 	case primitive_line_strip:
@@ -253,30 +199,19 @@ void geometry_assembler::draw_index_impl(size_t prim_count){
 		break;
 	}
 
-	std::vector<uint32_t> indices(prim_count * prim_size);
+	//变换顶点
+	pparent_->get_vertex_cache()->transform_vertices(static_cast<uint32_t>(prim_count));
 
 #ifdef SOFTART_MULTITHEADING_ENABLED
 	size_t num_threads = num_cpu_cores();
 
-	for (size_t i = 0; i < num_threads; ++ i){
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::generate_indices_func, this, boost::ref(indices), static_cast<uint32_t>(prim_count), prim_size, i, num_threads));
-	}
-	global_thread_pool().wait();
-#else
-	geometry_assembler::generate_indices_func(boost::ref(indices), static_cast<uint32_t>(prim_count), prim_size, 0, 1);
-#endif
-
-	//变换顶点
-	dvc_.transform_vertices(indices);
-
-#ifdef SOFTART_MULTITHEADING_ENABLED
 	for (size_t i = 0; i < num_threads; ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_func, this, boost::ref(tiles), boost::ref(indices), static_cast<uint32_t>(prim_count), prim_size, i, num_threads));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_func, this, boost::ref(tiles), static_cast<uint32_t>(prim_count), prim_size, i, num_threads));
 	}
 	global_thread_pool().wait();
 #else
-	geometry_assembler::dispatch_primitive_func(boost::ref(tiles), boost::ref(indices), static_cast<uint32_t>(prim_count), prim_size, 0, 1);
+	dispatch_primitive_func(boost::ref(tiles), static_cast<uint32_t>(prim_count), prim_size, 0, 1);
 #endif
 
 	h_pixel_shader hps = pparent_->get_pixel_shader();
@@ -286,7 +221,7 @@ void geometry_assembler::draw_index_impl(size_t prim_count){
 	{
 		// create pixel_shader clone per thread from hps
 		ppps[i] = hps->create_clone();
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func, this, boost::ref(tiles), boost::ref(indices), ppps[i], i, num_threads));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func, this, boost::ref(tiles), ppps[i], i, num_threads));
 	}
 	global_thread_pool().wait();
 	// destroy all pixel_shader clone
@@ -295,20 +230,8 @@ void geometry_assembler::draw_index_impl(size_t prim_count){
 		hps->destroy_clone(ppps[i]);
 	}
 #else
-	geometry_assembler::rasterize_primitive_func(boost::ref(tiles), boost::ref(indices), hps, 0, 1);
+	rasterize_primitive_func(boost::ref(tiles), hps, 0, 1);
 #endif
-}
-
-void geometry_assembler::draw(size_t startpos, size_t prim_count){
-	dvc_.reset();
-	ind_fetcher_.initialize(h_buffer(), idxtype_, primtopo_, static_cast<uint32_t>(startpos), 0);
-	draw_index_impl(prim_count);
-}
-
-void geometry_assembler::draw_index(size_t startpos, size_t prim_count, int basevert){
-	dvc_.reset();
-	ind_fetcher_.initialize(indexbuf_, idxtype_, primtopo_, static_cast<uint32_t>(startpos), basevert);
-	draw_index_impl(prim_count);
 }
 
 END_NS_SOFTART()

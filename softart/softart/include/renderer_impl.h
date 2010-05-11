@@ -22,13 +22,18 @@ class renderer_impl : public renderer
 	h_texture_manager			htexmgr_;
 	h_geometry_assembler		hga_;
 	h_vertex_shader				hvs_;
-	h_clipper						hclipper_;
-	h_rasterizer						hrast_;
+	h_clipper					hclipper_;
+	h_rasterizer				hrast_;
 	h_pixel_shader				hps_;
-	h_framebuffer					hfb_;
-	h_device						hdev_;
+	h_framebuffer				hfb_;
+	h_device					hdev_;
 	h_vertex_cache				hvertcache_;
 	h_blend_shader				hbs_;
+
+	h_buffer indexbuf_;
+	index_type idxtype_;
+
+	primitive_topology primtopo_;
 
 	void initialize();
 

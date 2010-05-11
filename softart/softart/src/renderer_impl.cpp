@@ -8,6 +8,7 @@
 #include "../include/framebuffer.h"
 #include "../include/stream.h"
 #include "../include/surface.h"
+#include "../include/vertex_cache.h"
 BEGIN_NS_SOFTART()
 
 
@@ -16,7 +17,8 @@ using namespace efl;
 //inherited
 result renderer_impl::set_input_layout(const input_layout_decl& layout)
 {
-	hga_->set_input_layout(layout);
+	//layout_ 只能到运行期检测了...
+	hvertcache_->set_input_layout(layout);
 	return result::ok;
 }
 
@@ -29,7 +31,7 @@ const input_layout_decl& renderer_impl::get_input_layout() const
 
 result renderer_impl::set_stream(stream_index sidx, h_buffer hbuf)
 {
-	hga_->set_stream(sidx, hbuf);
+	hvertcache_->set_stream(stream_index(sidx), hbuf);
 	return result::ok;
 }
 
@@ -41,33 +43,54 @@ h_buffer renderer_impl::get_stream(stream_index /*sidx*/) const
 
 result renderer_impl::set_index_buffer(h_buffer hbuf, index_type idxtype)
 {
-	hga_->set_index_buffer(hbuf, idxtype);
+	switch (idxtype)
+	{
+	case index_int16:
+	case index_int32:
+		break;
+	default:
+		custom_assert(false, "枚举值无效：无效的索引类型");
+		return result::failed;
+	}
+
+	indexbuf_ = hbuf;
+	idxtype_ = idxtype;
+
 	return result::ok;
 }
 
 h_buffer renderer_impl::get_index_buffer() const
 {
-	NO_IMPL();
-	return h_buffer();
+	return indexbuf_;
 }
 
 index_type renderer_impl::get_index_type() const
 {
-	NO_IMPL();
-	return index_int16;
+	return idxtype_;
 }
 
 //
 result renderer_impl::set_primitive_topology(primitive_topology primtopo)
 {
-	hga_->set_primitive_topology(primtopo);
+	switch (primtopo)
+	{
+	case primitive_line_list:
+	case primitive_line_strip:
+	case primitive_triangle_list:
+	case primitive_triangle_strip:
+		break;
+	default:
+		custom_assert(false, "枚举值无效：无效的图元拓扑枚举。");
+		return result::failed;
+	}
+
+	primtopo_ = primtopo;
 	return result::ok;
 }
 
 primitive_topology renderer_impl::get_primitive_topology() const
 {
-	NO_IMPL();
-	return primitive_triangle_list;
+	return primtopo_;
 }
 
 result renderer_impl::set_vertex_shader(h_vertex_shader hvs)
@@ -247,13 +270,15 @@ result renderer_impl::release_sampler(h_sampler& hsmp)
 
 result renderer_impl::draw(size_t startpos, size_t primcnt)
 {
-	hga_->draw(startpos, primcnt);
+	hvertcache_->reset(h_buffer(), idxtype_, primtopo_, static_cast<uint32_t>(startpos), 0);
+	hga_->draw(primcnt);
 	return result::ok;
 }
 
 result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
-	hga_->draw_index(startpos, primcnt, basevert);
+	hvertcache_->reset(indexbuf_, idxtype_, primtopo_, static_cast<uint32_t>(startpos), basevert);
+	hga_->draw(primcnt);
 	return result::ok;
 }
 
@@ -306,6 +331,7 @@ void renderer_impl::initialize(){
 }
 
 renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
+	: idxtype_(index_int16), primtopo_(primitive_triangle_list)
 {
 	hbufmgr_.reset(new buffer_manager());
 	htexmgr_.reset(new texture_manager());
@@ -321,6 +347,9 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 		)
 		);
 	hdev_ = hdev;
+
+	hvertcache_.reset(new default_vertex_cache);
+	hvertcache_->initialize(this);
 
 	vp_.minz = 0.0f;
 	vp_.maxz = 1.0f;

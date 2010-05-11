@@ -20,6 +20,7 @@ class pixel_shader;
 class blend_shader;
 class framebuffer;
 class index_fetcher;
+class stream_assembler;
 
 // resources
 class buffer_manager;
@@ -53,6 +54,7 @@ DECL_HANDLE(rasterizer, h_rasterizer);
 DECL_HANDLE(pixel_shader, h_pixel_shader);
 DECL_HANDLE(blend_shader, h_blend_shader);
 DECL_HANDLE(framebuffer, h_framebuffer);
+DECL_HANDLE(stream_assembler, h_stream_assembler);
 
 DECL_HANDLE(buffer_manager, h_buffer_manager);
 DECL_HANDLE(texture_manager, h_texture_manager);

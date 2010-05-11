@@ -8,7 +8,9 @@
 #include <vector>
 #include <utility>
 
+#include "renderer.h"
 #include "render_stage.h"
+#include "index_fetcher.h"
 
 #include <boost/pool/pool.hpp>
 
@@ -24,9 +26,12 @@ typedef size_t cache_entry_index;
 class vertex_cache : public render_stage
 {
 public:
-	virtual void reset() = 0;
+	virtual void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert) = 0;
 
-	virtual void transform_vertices(const std::vector<uint32_t>& indices) = 0;
+	virtual result set_input_layout(const input_layout_decl& layout) = 0;
+	virtual result set_stream(stream_index sidx, h_buffer hbuf) = 0;
+
+	virtual void transform_vertices(uint32_t prim_count) = 0;
 
 	virtual vs_output& fetch(cache_entry_index id) = 0;
 	virtual vs_output& fetch_for_write(cache_entry_index id) = 0;
@@ -42,9 +47,12 @@ public:
 
 	void initialize(renderer_impl* psr);
 
-	void reset();
+	void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
 
-	void transform_vertices(const std::vector<uint32_t>& indices);
+	result set_input_layout(const input_layout_decl& layout);
+	result set_stream(stream_index sidx, h_buffer hbuf);
+
+	void transform_vertices(uint32_t prim_count);
 
 	vs_output& fetch(cache_entry_index id);
 	vs_output& fetch_for_write(cache_entry_index id);
@@ -54,10 +62,15 @@ public:
 
 private:
 	void transform_vertex_func(const std::vector<uint32_t>& indices, uint32_t index_count, uint32_t thread_id, uint32_t num_threads);
+	void generate_indices_func(std::vector<uint32_t>& indices, uint32_t prim_count, uint32_t stride, uint32_t thread_id, uint32_t num_threads);
 
 private:
 	vertex_shader* pvs_;
-	stream_assembler* psa_;
+	h_stream_assembler hsa_;
+
+	primitive_topology primtopo_;
+	index_fetcher ind_fetcher_;
+	std::vector<uint32_t> indices_;
 
 	std::vector<vs_output> verts_;
 	std::vector<int32_t> used_verts_;
