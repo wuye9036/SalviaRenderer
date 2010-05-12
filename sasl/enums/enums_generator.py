@@ -1,6 +1,6 @@
 
 import sys, os
-from xml.dom.minidom import parse, parseString
+from xml.dom.minidom import parse, parseString, Node
 
 #typename, storage_typename, operator_list, constant_decl_list, enum_name_translator
 enum_decl_tmpl = \
@@ -104,9 +104,9 @@ std::string %(typename)s::to_name( const %(typename)s& enum_val){
 
 #typename, member_name
 enum_to_name_insert_item_tmpl = \
-"""enum_to_name.insert( std::make_pair( %(typename)s::%(member_name)s, "%(member_name)s" ) );"""
+"""enum_to_name.insert( std::make_pair( %(typename)s::%(member_name)s, "%(description)s" ) );"""
 name_to_enum_insert_item_tmpl = \
-"""name_to_enum.insert( std::make_pair( "%(member_name)s", %(typename)s::%(member_name)s ) );"""
+"""name_to_enum.insert( std::make_pair( "%(member_name)s", %(typename)s::%(description)s ) );"""
 
 #constant_def_list, hash_op, enum_name_translator_impl
 enum_def_tmpl = \
@@ -245,14 +245,20 @@ class enum_code_generator:
 	enum_name_attrname = "name"
 	enum_storage_type_attrname = "storage_type"
 	item_tag = "item"
-	item_name_attrname = "name"
+	item_desc_attrname = "desc"
 	item_val_attrname = "value"
+	letins_tag = "let"
+	lazyletins_tag = "lazylet"
+	letins_var_attrname = "var"
+	letins_value_attrname = "value"
 	
 	def __init__(self, enum_node):
 		self.items_ = {}
+		self.items_desc = {}
 		self.typename = ""
 		self.codes = None
 		self.storage_typename = "int"
+		self.expr_context = {}
 		
 		self.config_ = enum_configuration( enum_node )
 		self.typename = enum_node.getAttribute( self.enum_name_attrname )
@@ -266,31 +272,59 @@ class enum_code_generator:
 		
 	def _load_items(self, enum_node):
 		item_idx = 0
-		for item_node in enum_node.getElementsByTagName( self.item_tag ):
-			self._load_item( item_node, item_idx )
-			item_idx += 1
-			
+		for item_node in enum_node.childNodes:
+			self._update_global_expr(item_idx)
+			if item_node.nodeType != Node.ELEMENT_NODE:
+				continue
+			if item_node.tagName == self.item_tag:
+				print item_node.firstChild
+				self._load_item( item_node, item_idx )
+				item_idx += 1
+			if item_node.tagName == self.letins_tag:
+				name_str = item_node.getAttribute( self.letins_var_attrname )
+				value_str = item_node.getAttribute( self.letins_value_attrname )
+				self._set_expr_to_context(name_str, self._calculate_expr(value_str))
+			if item_node.tagName == self.lazyletins_tag:
+				name_str = item_node.getAttribute( self.letins_var_attrname )
+				value_str = item_node.getAttribute( self.letins_value_attrname )
+				self._set_expr_to_context(name_str, value_str)
 		self._generate_declare()
 		self._generate_definition()
+		
+	def _calculate_expr(self, expr):
+		while (True):
+			is_eval = False
+			for (varname, varval) in self.expr_context.iteritems():
+				if expr.find('$'+varname+'$') != -1:
+					is_eval = True
+					expr = expr.replace( '$'+varname+'$', str(varval) )
+					print expr
+			if not is_eval:
+				break
+		return str(eval(expr))
+		
+	def _set_expr_to_context(self, var_name, calculated_value):
+		self.expr_context[var_name] = calculated_value
+	
+	def _update_global_expr(self, item_idx):
+		self._set_expr_to_context( "index", item_idx )
+		self._set_expr_to_context( "global_expr", self._calculate_expr( self.config_.auto_gen_expr ) )
 		
 	def _load_item(self, item_node, item_idx):
 		item_name = item_node.firstChild.data
 		item_expr = item_node.getAttribute( self.item_val_attrname )
+		item_desc = item_node.getAttribute( self.item_desc_attrname )
+		  
 
 		if item_expr == None or len(item_expr) == 0:
 			item_expr = "$global_expr$"
-
-		expr_context = dict( self.items_.items() +  ({ "index":item_idx }).items() + self.config_.auto_gen_params.items() )
+		if item_desc == None or len(item_desc) == 0:
+			item_desc = item_name
 		
-		global_expr_str = self.config_.auto_gen_expr
-		for (parname, parvalstr) in expr_context.iteritems():
-			global_expr_str = global_expr_str.replace('$'+parname+'$', str(eval(str(parvalstr))) )
-
-		expr_context = dict( expr_context.items() + ({ "global_expr":eval(global_expr_str) }).items() )
-		for (varname, varval) in expr_context.iteritems():
-			item_expr = item_expr.replace( '$'+varname+'$', str(eval(str(varval))) )
-
-		self.items_[item_name] = str(eval(item_expr))
+		# cacluate "value"
+		self.items_[item_name] = self._calculate_expr( item_expr )
+		self._set_expr_to_context(item_name, self.items_[item_name])
+		self.items_desc[item_name] = item_desc
 		pass
 
 	def _generate_operator_list(self):
@@ -361,7 +395,8 @@ class enum_code_generator:
 			self.enum_to_name_insert_list_ += "\t\t"
 			self.enum_to_name_insert_list_ += enum_to_name_insert_item_tmpl % {
 				"typename" : self.typename,
-				"member_name" : enum_name
+				"member_name" : enum_name,
+				"description" : self.items_desc[enum_name]
 				}
 			self.enum_to_name_insert_list_ += "\n"
 
@@ -371,7 +406,8 @@ class enum_code_generator:
 			self.name_to_enum_insert_list_ += "\t\t"
 			self.name_to_enum_insert_list_ += name_to_enum_insert_item_tmpl % {
 				"typename" : self.typename,
-				"member_name" : enum_name
+				"member_name" : enum_name,
+				"description" : self.items_desc[enum_name]
 				}
 			self.name_to_enum_insert_list_ += "\n"
 

@@ -37,7 +37,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_initializer&
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_initializer& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v ){
-	symbol_scope( v.name->lit, v.handle(), cursym );
+	symbol_scope sc( v.name->lit, v.handle(), cursym );
 
 	// process variable type
 	boost::shared_ptr<type_specifier> vartype = v.type_info;

@@ -130,15 +130,17 @@
 		<item value = "$declaration$ + 2">typedef_definition</item>
 		<item value = "$declaration$ + 3">parameter</item>
 		
-		<item value = "$expression$ + 1">constant_expression</item>
-		<item value = "$expression$ + 2">unary_expression</item>
-		<item value = "$expression$ + 3">cast_expression</item>
-		<item value = "$expression$ + 4">binary_expression</item>
-		<item value = "$expression$ + 5">expression_list</item>
-		<item value = "$expression$ + 6">cond_expression</item>
-		<item value = "$expression$ + 7">index_expression</item>
-		<item value = "$expression$ + 8">call_expression</item>
-		<item value = "$expression$ + 9">member_expression</item>
+		<let var = "expression_start" value = "$index$-1"/>
+		<lazylet var = "expr_index" value = "$expression$ + $index$ - $expression_start$"/>
+		<item value = "$expr_index$">constant_expression</item>
+		<item value = "$expr_index$">unary_expression</item>
+		<item value = "$expr_index$">cast_expression</item>
+		<item value = "$expr_index$">binary_expression</item>
+		<item value = "$expr_index$">expression_list</item>
+		<item value = "$expr_index$">cond_expression</item>
+		<item value = "$expr_index$">index_expression</item>
+		<item value = "$expr_index$">call_expression</item>
+		<item value = "$expr_index$">member_expression</item>
 		
 		<item value = "$type_specifier$ + 1">buildin_type</item>
 		<item value = "$type_specifier$ + 2">qualified_type</item>
@@ -195,5 +197,14 @@
 		<item>_break</item>
 		<item>_continue</item>
 		<item>_return</item>
+	</enum>
+	
+	<enum name="compile_informations">
+		<HasName/>
+		<Ortho/>
+		<Convertible/>
+		<AutoGen expression = "$index$"/>
+		<let var="warning_index" value="$index$-1"></let>
+		<item value="$index$-$warning_index$">warning</item>
 	</enum>
 </enums>
