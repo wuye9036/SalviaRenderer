@@ -2,6 +2,9 @@
 #include "../include/cpuinfo.h"
 
 #ifdef EFLIB_WINDOWS
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
 #include <windows.h>
 #endif
 BEGIN_NS_SOFTART()
@@ -29,6 +32,15 @@ uint32_t num_cpu_cores()
 #endif
 
 	return num;
+}
+
+uint32_t num_available_threads()
+{
+#ifdef SOFTART_MAX_NUM_THREADS
+	return std::max(static_cast<uint32_t>(SOFTART_MAX_NUM_THREADS), num_cpu_cores());
+#else
+	return 1;
+#endif
 }
 
 END_NS_SOFTART()

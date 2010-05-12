@@ -46,7 +46,7 @@ void default_vertex_cache::generate_indices_func(std::vector<uint32_t>& indices,
 	int32_t local_working_package = working_package ++;
 	while (local_working_package < num_packages){
 		const int32_t start = local_working_package * package_size;
-		const int32_t end = min(prim_count, start + package_size);
+		const int32_t end = std::min(prim_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i){
 			ind_fetcher_.fetch_indices(&indices[i * stride], i);
 		}
@@ -63,7 +63,7 @@ void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& in
 	while (local_working_package < num_packages)
 	{
 		const int32_t start = local_working_package * package_size;
-		const int32_t end = min(index_count, start + package_size);
+		const int32_t end = std::min(index_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i){
 			uint32_t id = indices[i];
 			used_verts_[id] = i;
@@ -95,16 +95,13 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	indices_.resize(prim_count * prim_size);
 
 	atomic<int32_t> working_package(0);
-#ifdef SOFTART_MULTITHEADING_ENABLED
-	size_t num_threads = num_cpu_cores();
+	size_t num_threads = num_available_threads();
 
-	for (size_t i = 0; i < num_threads; ++ i){
+	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&default_vertex_cache::generate_indices_func, this, boost::ref(indices_), static_cast<int32_t>(prim_count), prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE));
 	}
-	global_thread_pool().wait();
-#else
 	generate_indices_func(boost::ref(indices_), static_cast<int32_t>(prim_count), prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE);
-#endif
+	global_thread_pool().wait();
 
 	std::vector<uint32_t> unique_indices = indices_;
 	std::sort(unique_indices.begin(), unique_indices.end());
@@ -113,15 +110,12 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	used_verts_.resize(hsa_->num_vertices());
 
 	working_package = 0;
-#ifdef SOFTART_MULTITHEADING_ENABLED
-	for (size_t i = 0; i < num_threads; ++ i)
+	for (size_t i = 0; i < num_threads - 1; ++ i)
 	{
 		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_func, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
 	}
-	global_thread_pool().wait();
-#else
 	transform_vertex_func(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
-#endif
+	global_thread_pool().wait();
 }
 
 vs_output& default_vertex_cache::fetch(cache_entry_index id)

@@ -1,3 +1,5 @@
+#include "eflib/include/util.h"
+
 #include "../include/texture.h"
 
 #include "../include/surface.h"
@@ -118,6 +120,7 @@ void  texture_2d::lock(void** pData, size_t miplevel, const rect<size_t>& lrc, l
 	custom_assert(z_slice == 0, "z_slice选项设定无效。");
 	custom_assert(pData != 0, "pData不可为NULL！");
 	custom_assert(!is_locked_, "试图重复锁定已锁定的纹理！");
+	UNREF_PARAM(z_slice);
 
 	*pData = NULL;
 
@@ -141,6 +144,7 @@ surface&  texture_2d::get_surface(size_t miplevel, size_t z_slice)
 {
 	custom_assert(max_lod_ <= miplevel && miplevel <= min_lod_, "Mipmap Level越界！");
 	custom_assert(z_slice == 0, "z_slice选项设定无效。");
+	UNREF_PARAM(z_slice);
 
 	return surfs_[miplevel];
 }
@@ -149,6 +153,7 @@ const surface&  texture_2d::get_surface(size_t miplevel, size_t z_slice) const
 {
 	custom_assert(max_lod_ <= miplevel && miplevel <= min_lod_, "Mipmap Level越界！");
 	custom_assert(z_slice == 0, "z_slice选项设定无效。");
+	UNREF_PARAM(z_slice);
 
 	return surfs_[miplevel];
 }
@@ -172,6 +177,7 @@ size_t  texture_2d::get_height(size_t mipmap) const
 size_t  texture_2d::get_depth(size_t mipmap) const
 {
 	custom_assert(max_lod_ <= mipmap && mipmap <= min_lod_, "Mipmap Level越界！");
+	UNREF_PARAM(mipmap);
 
 	return 1;
 }

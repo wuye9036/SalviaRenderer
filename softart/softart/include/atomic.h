@@ -3,8 +3,11 @@
 
 #include "eflib/include/eflib.h"
 
-#ifdef BOOST_WINDOWS
-#include <windows.h>
+#ifdef EFLIB_WINDOWS
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	include <windows.h>
 #endif
 
 template <typename T>

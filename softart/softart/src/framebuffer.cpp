@@ -16,6 +16,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#include "eflib/include/util.h"
+
 #include "../include/framebuffer.h"
 #include "../include/surface.h"
 #include "../include/renderer_impl.h"
@@ -75,6 +77,7 @@ void framebuffer::reset(size_t width, size_t height, pixel_format fmt)
 void framebuffer::set_render_target_disabled(render_target tar, size_t tar_id){
 	custom_assert(tar == render_target_color, "只能禁用颜色缓冲");
 	custom_assert(tar_id < cbufs_.size(), "颜色缓冲ID的设置错误");
+	UNREF_PARAM(tar);
 
 	//简单的设置为无效
 	buf_valids[tar_id] = false;
@@ -83,6 +86,7 @@ void framebuffer::set_render_target_disabled(render_target tar, size_t tar_id){
 void framebuffer::set_render_target_enabled(render_target tar, size_t tar_id){
 	custom_assert(tar == render_target_color, "只能启用颜色缓冲");
 	custom_assert(tar_id < cbufs_.size(), "颜色缓冲ID的设置错误");
+	UNREF_PARAM(tar);
 
 	//重分配后缓冲
 	if(back_cbufs_[tar_id] && check_buf(back_cbufs_[tar_id].get())){
@@ -109,6 +113,7 @@ void framebuffer::set_render_target(render_target tar, size_t tar_id, surface* p
 {
 	custom_assert(tar == render_target_color, "只能绑定颜色缓冲");
 	custom_assert(tar_id < cbufs_.size(), "颜色缓冲ID的绑定错误");
+	UNREF_PARAM(tar);
 
 	//如果传入的表面为空则恢复渲染目标为后备缓冲
 	if(!psurf){
@@ -124,6 +129,7 @@ surface* framebuffer::get_render_target(render_target tar, size_t tar_id) const
 {
 	custom_assert(tar == render_target_color, "只能获得颜色缓冲");
 	custom_assert(tar_id < cbufs_.size(), "颜色缓冲ID设置错误");
+	UNREF_PARAM(tar);
 
 	return cbufs_[tar_id];
 }
