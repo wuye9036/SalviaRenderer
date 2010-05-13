@@ -477,20 +477,6 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
 	//±ß½çÌÞ³ý
-	
-	//±³ÃæÌÞ³ý
-	if(cm_ != cull_none) {
-		const vec2 pv0 = v0.wpos.xy() * sign(v0.wpos.w);
-		const vec2 pv1 = v1.wpos.xy() * sign(v1.wpos.w);
-		const vec2 pv2 = v2.wpos.xy() * sign(v2.wpos.w);
-		const float area = cross_prod2(pv1 - pv0, pv2 - pv0);
-		if( (cm_ == cull_front) && (area > 0) ) {
-			return;
-		}
-		if( (cm_ == cull_back) && (area < 0) ) {
-			return;
-		}
-	}
 
 	//äÖÈ¾
 	if(fm_ == fill_wireframe)
@@ -521,4 +507,15 @@ void rasterizer::set_fill_mode(fill_mode fm)
 {
 	fm_ = fm;
 }
+
+cull_mode rasterizer::get_cull_mode() const
+{
+	return cm_;
+}
+
+fill_mode rasterizer::get_fill_mode() const
+{
+	return fm_;
+}
+
 END_NS_SOFTART()

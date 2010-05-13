@@ -37,8 +37,10 @@ void geometry_assembler::initialize(renderer_impl* pparent)
 geometry_assembler::geometry_assembler()
 {}
 
-void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size){
-	h_vertex_cache dvc = pparent_->get_vertex_cache();
+void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, int num_tiles_y, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size){
+	const h_vertex_cache& dvc = pparent_->get_vertex_cache();
+	const h_rasterizer& hrast = pparent_->get_rasterizer();
+	const cull_mode cm = hrast->get_cull_mode();
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 	
@@ -53,36 +55,46 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 		const int32_t end = min(prim_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i)
 		{
-			{
-				const vs_output& v0 = dvc->fetch(i * stride + 0);
-				const float sign_w = sign(v0.wpos.w);
-				const float x = v0.wpos.x * sign_w;
-				const float y = v0.wpos.y * sign_w;
-				x_min = x;
-				x_max = x;
-				y_min = y;
-				y_max = y;
-			}
-			for (size_t j = 1; j < stride; ++ j)
-			{
+			vec2 pv[3];
+			for (size_t j = 0; j < stride; ++ j){
 				const vs_output& v = dvc->fetch(i * stride + j);
 				const float sign_w = sign(v.wpos.w);
 				const float x = v.wpos.x * sign_w;
 				const float y = v.wpos.y * sign_w;
-				x_min = min(x_min, x);
-				x_max = max(x_max, x);
-				y_min = min(y_min, y);
-				y_max = max(y_max, y);
+				pv[j] = vec2(x, y);
 			}
 
-			const int sx = std::min(fast_floori(std::max(0.0f, x_min) / TILE_SIZE), num_tiles_x_);
-			const int sy = std::min(fast_floori(std::max(0.0f, y_min) / TILE_SIZE), num_tiles_y_);
-			const int ex = std::min(fast_ceili(std::max(0.0f, x_max) / TILE_SIZE) + 1, num_tiles_x_);
-			const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1, num_tiles_y_);
-			for (int y = sy; y < ey; ++ y){
-				for (int x = sx; x < ex; ++ x){
-					lockfree_queue<uint32_t>& tile = tiles[y * num_tiles_x_ + x];
-					tile.enqueue(i);
+			bool culled = false;
+			if ((3 == stride) && (cm != cull_none)){
+				//背面剔除
+				const float area = cross_prod2(pv[1] - pv[0], pv[2] - pv[0]);
+				if (((cm == cull_front) && (area > 0))
+						|| ((cm == cull_back) && (area < 0))){
+					culled = true;
+				}
+			}
+
+			if (!culled){
+				x_min = pv[0].x;
+				x_max = pv[0].x;
+				y_min = pv[0].y;
+				y_max = pv[0].y;
+				for (size_t j = 1; j < stride; ++ j){
+					x_min = min(x_min, pv[j].x);
+					x_max = max(x_max, pv[j].x);
+					y_min = min(y_min, pv[j].y);
+					y_max = max(y_max, pv[j].y);
+				}
+
+				const int sx = std::min(fast_floori(std::max(0.0f, x_min) / TILE_SIZE), num_tiles_x);
+				const int sy = std::min(fast_floori(std::max(0.0f, y_min) / TILE_SIZE), num_tiles_y);
+				const int ex = std::min(fast_ceili(std::max(0.0f, x_max) / TILE_SIZE) + 1, num_tiles_x);
+				const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1, num_tiles_y);
+				for (int y = sy; y < ey; ++ y){
+					for (int x = sx; x < ex; ++ x){
+						lockfree_queue<uint32_t>& tile = tiles[y * num_tiles_x + x];
+						tile.enqueue(i);
+					}
 				}
 			}
 		}
@@ -91,10 +103,9 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 	}
 }
 
-void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size)
+void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size)
 {
-	h_vertex_cache dvc = pparent_->get_vertex_cache();
-	primitive_topology primtopo = pparent_->get_primitive_topology();
+	const h_vertex_cache& dvc = pparent_->get_vertex_cache();
 
 	const int32_t num_tiles = static_cast<int32_t>(tiles.size());
 	const int32_t num_packages = (num_tiles + package_size - 1) / package_size;
@@ -112,39 +123,36 @@ void geometry_assembler::rasterize_primitive_func(std::vector<lockfree_queue<uin
 	while (local_working_package < num_packages){
 		const int32_t start = local_working_package * package_size;
 		const int32_t end = min(num_tiles, start + package_size);
-		for (int32_t i = start; i < end; ++ i)
-		{
+		for (int32_t i = start; i < end; ++ i){
 			lockfree_queue<uint32_t>& prims = tiles[i];
 
 			std::vector<uint32_t> sorted_prims;
 			prims.dequeue_all(std::back_insert_iterator<std::vector<uint32_t> >(sorted_prims));
 			std::sort(sorted_prims.begin(), sorted_prims.end());
 
-			int y = i / num_tiles_x_;
-			int x = i - y * num_tiles_x_;
+			int y = i / num_tiles_x;
+			int x = i - y * num_tiles_x;
 			tile_vp.x = static_cast<float>(x * TILE_SIZE);
 			tile_vp.y = static_cast<float>(y * TILE_SIZE);
 
-			uint32_t iprim;
-			switch(primtopo){
-			case primitive_line_list:
-			case primitive_line_strip:
-				for (size_t j = 0; j < sorted_prims.size(); ++ j){
-					iprim = sorted_prims[j];
-					hrast->rasterize_line(dvc->fetch(iprim * 2 + 0), dvc->fetch(iprim * 2 + 1), tile_vp, pps);
-				}
-				break;
-			case primitive_triangle_list:
-			case primitive_triangle_strip:
-				for (size_t j = 0; j < sorted_prims.size(); ++ j){
-					iprim = sorted_prims[j];
-					hrast->rasterize_triangle(dvc->fetch(iprim * 3 + 0), dvc->fetch(iprim * 3 + 1), dvc->fetch(iprim * 3 + 2), tile_vp, pps);
-				}
-				break;
-			}
+			rasterize_func_(this, dvc, hrast, sorted_prims, tile_vp, pps);
 		}
 
 		local_working_package = working_package ++;
+	}
+}
+
+void geometry_assembler::rasterize_line_func(const h_vertex_cache& dvc, const h_rasterizer& hrast, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
+	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
+		uint32_t iprim = *iter;
+		hrast->rasterize_line(dvc->fetch(iprim * 2 + 0), dvc->fetch(iprim * 2 + 1), tile_vp, pps);
+	}
+}
+
+void geometry_assembler::rasterize_triangle_func(const h_vertex_cache& dvc, const h_rasterizer& hrast, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
+	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
+		uint32_t iprim = *iter;
+		hrast->rasterize_triangle(dvc->fetch(iprim * 3 + 0), dvc->fetch(iprim * 3 + 1), dvc->fetch(iprim * 3 + 2), tile_vp, pps);
 	}
 }
 
@@ -152,6 +160,9 @@ void geometry_assembler::draw(size_t prim_count){
 
 	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
 	if(!pparent_) return;
+
+	const h_rasterizer& hrast = pparent_->get_rasterizer();
+	if(!hrast) return;
 
 	primitive_topology primtopo = pparent_->get_primitive_topology();
 
@@ -175,29 +186,29 @@ void geometry_assembler::draw(size_t prim_count){
 		custom_assert(false, "枚举值无效：无效的Primitive Topology");
 		return;
 	}
-
-	//组织索引并光栅化
-	const h_rasterizer& hrast = pparent_->get_rasterizer();
-	if(!hrast) return;
-
-	const viewport& vp = pparent_->get_viewport();
-	num_tiles_x_ = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
-	num_tiles_y_ = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
-	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x_ * num_tiles_y_);
-
+	
 	uint32_t prim_size = 0;
 	switch(primtopo)
 	{
 	case primitive_line_list:
 	case primitive_line_strip:
 		prim_size = 2;
+		rasterize_func_ = boost::mem_fn(&geometry_assembler::rasterize_line_func);
 		break;
-
 	case primitive_triangle_list:
 	case primitive_triangle_strip:
 		prim_size = 3;
+		rasterize_func_ = boost::mem_fn(&geometry_assembler::rasterize_triangle_func);
 		break;
+	default:
+		custom_assert(false, "枚举值无效：无效的Primitive Topology");
+		return;
 	}
+
+	const viewport& vp = pparent_->get_viewport();
+	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
+	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
+	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x * num_tiles_y);
 
 	//变换顶点
 	pparent_->get_vertex_cache()->transform_vertices(static_cast<uint32_t>(prim_count));
@@ -207,9 +218,12 @@ void geometry_assembler::draw(size_t prim_count){
 
 	for (size_t i = 0; i < num_threads - 1; ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_func, this, boost::ref(tiles), static_cast<int32_t>(prim_count), prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::dispatch_primitive_func, this, boost::ref(tiles),
+			num_tiles_x, num_tiles_y, static_cast<int32_t>(prim_count),
+			prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
 	}
-	dispatch_primitive_func(boost::ref(tiles), static_cast<int32_t>(prim_count), prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
+	dispatch_primitive_func(boost::ref(tiles), num_tiles_x, num_tiles_y, static_cast<int32_t>(prim_count),
+		prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
 	working_package = 0;
@@ -219,9 +233,10 @@ void geometry_assembler::draw(size_t prim_count){
 	{
 		// create pixel_shader clone per thread from hps
 		ppps[i] = hps->create_clone();
-		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func, this, boost::ref(tiles), ppps[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
+		global_thread_pool().schedule(boost::bind(&geometry_assembler::rasterize_primitive_func, this, boost::ref(tiles),
+			num_tiles_x, ppps[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
 	}
-	rasterize_primitive_func(boost::ref(tiles), hps, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
+	rasterize_primitive_func(boost::ref(tiles), num_tiles_x, hps, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 	// destroy all pixel_shader clone
 	for (size_t i = 0; i < num_threads - 1; ++ i)

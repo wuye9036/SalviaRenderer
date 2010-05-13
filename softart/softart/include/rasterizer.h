@@ -37,6 +37,8 @@ public:
 	//state_seter
 	void set_cull_mode(cull_mode cm);
 	void set_fill_mode(fill_mode fm);
+	cull_mode get_cull_mode() const;
+	fill_mode get_fill_mode() const;
 
 	//drawer
 	void rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps);
