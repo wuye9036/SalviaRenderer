@@ -19,10 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\test\compinfos.cpp" />
     <ClCompile Include="..\test\function_entry_generator_test.cpp" />
     <ClCompile Include="..\test\llvm_test.cpp" />
     <ClCompile Include="..\test\semantic.cpp" />
     <ClCompile Include="..\test\syntax_tree.cpp" />
+    <ClCompile Include="..\test\test_utility.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\test\test_utility.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2E441DC7-83D4-473D-ABAB-8A7AF85180FE}</ProjectGuid>
@@ -98,7 +103,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../3rd_party/llvm/bin/lib/win32_msvc10_debug;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;sasl_cgllvm.lib;sasl_syntaxtree.lib;sasl_enums.lib;sasl_semantic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;sasl_cgllvm.lib;sasl_syntaxtree.lib;sasl_enums.lib;sasl_semantic.lib;sasl_common.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

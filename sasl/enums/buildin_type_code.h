@@ -6,7 +6,7 @@
 
 struct buildin_type_code :
 	public enum_base< buildin_type_code, int >
-	, bitwise_op< buildin_type_code >, equal_op< buildin_type_code >
+	, public bitwise_op< buildin_type_code >, public equal_op< buildin_type_code >
 {
 	friend struct enum_hasher;
 private:

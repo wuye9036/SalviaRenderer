@@ -6,7 +6,7 @@
 
 struct storage_mode :
 	public enum_base< storage_mode, int >
-	, equal_op< storage_mode >, value_op< storage_mode, int >
+	, public equal_op< storage_mode >, public value_op< storage_mode, int >
 {
 	friend struct enum_hasher;
 private:

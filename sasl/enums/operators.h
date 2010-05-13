@@ -6,7 +6,7 @@
 
 struct operators :
 	public enum_base< operators, int >
-	, bitwise_op< operators >, equal_op< operators >
+	, public bitwise_op< operators >, public equal_op< operators >
 {
 	friend struct enum_hasher;
 private:

@@ -26,10 +26,10 @@ public:
 %(enum_name_translator)s
 };"""
 
-compare_op_tmpl = ", compare_op< %(typename)s >"
-bitwise_op_tmpl = ", bitwise_op< %(typename)s >"
-equal_op_tmpl = ", equal_op< %(typename)s >"
-value_op_tmpl = ", value_op< %(typename)s, %(storage_typename)s >"
+compare_op_tmpl = ", public compare_op< %(typename)s >"
+bitwise_op_tmpl = ", public bitwise_op< %(typename)s >"
+equal_op_tmpl = ", public equal_op< %(typename)s >"
+value_op_tmpl = ", public value_op< %(typename)s, %(storage_typename)s >"
 
 #member_name
 constant_decl_tmpl =\
@@ -106,7 +106,7 @@ std::string %(typename)s::to_name( const %(typename)s& enum_val){
 enum_to_name_insert_item_tmpl = \
 """enum_to_name.insert( std::make_pair( %(typename)s::%(member_name)s, "%(description)s" ) );"""
 name_to_enum_insert_item_tmpl = \
-"""name_to_enum.insert( std::make_pair( "%(member_name)s", %(typename)s::%(description)s ) );"""
+"""name_to_enum.insert( std::make_pair( "%(description)s", %(typename)s::%(member_name)s ) );"""
 
 #constant_def_list, hash_op, enum_name_translator_impl
 enum_def_tmpl = \
@@ -277,7 +277,6 @@ class enum_code_generator:
 			if item_node.nodeType != Node.ELEMENT_NODE:
 				continue
 			if item_node.tagName == self.item_tag:
-				print item_node.firstChild
 				self._load_item( item_node, item_idx )
 				item_idx += 1
 			if item_node.tagName == self.letins_tag:
@@ -298,7 +297,6 @@ class enum_code_generator:
 				if expr.find('$'+varname+'$') != -1:
 					is_eval = True
 					expr = expr.replace( '$'+varname+'$', str(varval) )
-					print expr
 			if not is_eval:
 				break
 		return str(eval(expr))
@@ -542,6 +540,7 @@ class enum_file_generator:
 			os.mkdir( self.config_.src_folder )
 			
 		for (enum_name, enum_codes) in codes.iteritems():
+			print enum_name + " calculated."
 			out_header_path = os.path.join( self.config_.header_folder, enum_name+".h" )
 			out_src_path = os.path.join( self.config_.src_folder, enum_name+".cpp" )
 			

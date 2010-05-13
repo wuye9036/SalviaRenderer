@@ -6,7 +6,7 @@
 
 struct type_qualifiers :
 	public enum_base< type_qualifiers, int >
-	, bitwise_op< type_qualifiers >, equal_op< type_qualifiers >, value_op< type_qualifiers, int >
+	, public bitwise_op< type_qualifiers >, public equal_op< type_qualifiers >, public value_op< type_qualifiers, int >
 {
 	friend struct enum_hasher;
 private:

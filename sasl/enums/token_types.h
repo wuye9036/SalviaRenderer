@@ -6,7 +6,7 @@
 
 struct token_types :
 	public enum_base< token_types, int >
-	, equal_op< token_types >, value_op< token_types, int >
+	, public equal_op< token_types >, public value_op< token_types, int >
 {
 	friend struct enum_hasher;
 private:

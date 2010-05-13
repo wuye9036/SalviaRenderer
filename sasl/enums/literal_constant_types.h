@@ -6,7 +6,7 @@
 
 struct literal_constant_types :
 	public enum_base< literal_constant_types, int >
-	, equal_op< literal_constant_types >
+	, public equal_op< literal_constant_types >
 {
 	friend struct enum_hasher;
 private:

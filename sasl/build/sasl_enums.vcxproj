@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\enums\buildin_type_code.cpp" />
+    <ClCompile Include="..\enums\compiler_informations.cpp" />
     <ClCompile Include="..\enums\jump_mode.cpp" />
     <ClCompile Include="..\enums\literal_constant_types.cpp" />
     <ClCompile Include="..\enums\operators.cpp" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\enums\buildin_type_code.h" />
+    <ClInclude Include="..\enums\compiler_informations.h" />
     <ClInclude Include="..\enums\enum_base.h" />
     <ClInclude Include="..\enums\jump_mode.h" />
     <ClInclude Include="..\enums\literal_constant_types.h" />

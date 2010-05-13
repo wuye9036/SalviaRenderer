@@ -6,7 +6,7 @@
 
 struct jump_mode :
 	public enum_base< jump_mode, int >
-	, equal_op< jump_mode >
+	, public equal_op< jump_mode >
 {
 	friend struct enum_hasher;
 private:

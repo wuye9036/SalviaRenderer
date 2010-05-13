@@ -42,6 +42,9 @@
     <ClCompile Include="..\enums\type_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\enums\compiler_informations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\enums\buildin_type_code.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\enums\type_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\enums\compiler_informations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

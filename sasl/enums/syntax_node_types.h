@@ -6,7 +6,7 @@
 
 struct syntax_node_types :
 	public enum_base< syntax_node_types, uint64_t >
-	, bitwise_op< syntax_node_types >, equal_op< syntax_node_types >, value_op< syntax_node_types, uint64_t >
+	, public bitwise_op< syntax_node_types >, public equal_op< syntax_node_types >, public value_op< syntax_node_types, uint64_t >
 {
 	friend struct enum_hasher;
 private:

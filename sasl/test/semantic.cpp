@@ -1,4 +1,5 @@
 #include <boost/test/unit_test.hpp>
+#include "test_utility.h"
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/symbol_infos.h>
@@ -89,6 +90,8 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	using ::sasl::semantic::semantic_analysis;
 	using ::sasl::syntax_tree::declaration;
 	using ::sasl::syntax_tree::declaration_statement;
+	using ::sasl::semantic::extract_symbol_info;
+	using ::sasl::semantic::symbol;
 
 	boost::shared_ptr<token_attr> nulltok;
 
@@ -122,8 +125,18 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	prog->decls.push_back( declstmt1 );
 
 	semantic_analysis( prog );
-	BOOST_CHECK(
-		prog->symbol()->find_this( var_name_0 )->get_or_create_symbol_info<type_symbol_info>()->type_type() == type_types::buildin
-		);
+
+	boost::shared_ptr<symbol> var0sym = prog->symbol()->find_this( var_name_0 );
+	boost::shared_ptr<symbol> var1sym = prog->symbol()->find_this( var_name_1 );
+
+	boost::shared_ptr<type_symbol_info> var0tsi = var0sym->symbol_info<type_symbol_info>();
+	boost::shared_ptr<type_symbol_info> var1tsi = var1sym->symbol_info<type_symbol_info>();
+	
+	BOOST_CHECK( var0tsi->type_type() == type_types::buildin );
+	BOOST_CHECK( var0tsi->full_type()->value_typecode == buildin_type_code::_sint32 );
+	BOOST_CHECK( var1tsi->type_type() == type_types::buildin );
+	BOOST_CHECK( var1tsi->full_type()->value_typecode == buildin_type_code::_sint64 );
+	//BOOST_CHECK(
+		
 }
 BOOST_AUTO_TEST_SUITE_END();
