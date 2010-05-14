@@ -48,7 +48,7 @@
 #	endif
 #endif
 
-#ifndef EFLIB_DEBUG
+#ifdef EFLIB_DEBUG
 #	ifndef SOFTART_MAX_NUM_THREADS
 #		define SOFTART_MAX_NUM_THREADS 1
 #	endif

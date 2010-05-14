@@ -37,9 +37,9 @@ uint32_t num_cpu_cores()
 uint32_t num_available_threads()
 {
 #ifdef SOFTART_MAX_NUM_THREADS
-	return std::max(static_cast<uint32_t>(SOFTART_MAX_NUM_THREADS), num_cpu_cores());
+	return std::min(static_cast<uint32_t>(SOFTART_MAX_NUM_THREADS), num_cpu_cores());
 #else
-	return 1;
+	return num_cpu_cores();
 #endif
 }
 

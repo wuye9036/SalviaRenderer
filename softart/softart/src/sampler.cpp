@@ -15,37 +15,29 @@ namespace addresser
 		{
 			return (coord - fast_floor(coord)) * size - 0.5f;
 		}
-		static vec4 do_coordf(const vec4& coord, const int4& size)
-		{
-#ifndef EFLIB_NO_SIMD
-			__m128 mfcoord = _mm_loadu_ps(&coord.x);
-			__m128i micoord = _mm_cvttps_epi32(mfcoord);
-			__m128 tmp = _mm_cvtepi32_ps(micoord);
-			tmp = _mm_sub_ps(mfcoord, tmp);
-			__m128 msize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
-			tmp = _mm_mul_ps(msize, tmp);
-			const __m128 mhalf = _mm_set1_ps(0.5f);
-			tmp = _mm_sub_ps(tmp, mhalf);
-			vec4 ret;
-			_mm_storeu_ps(&ret.x, tmp);
-			return ret;
-#else
-			return (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w) - 0.5f;
-#endif
-		}
 
 		static int do_coordi_point_1d(int coord, int size)
 		{
 			return (size * 8192 + coord) % size;
 		}
-		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
+		static int4 do_coordi_point_2d(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
 			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
-			micoord = _mm_add_epi32(micoord, _mm_slli_si128(misize, 2));
-			__m128 mfcoord = _mm_cvtepi32_ps(micoord);
+
+			mfcoord = _mm_sub_ps(mfcoord, _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord)));
 			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			mfcoord = _mm_mul_ps(mfsize, mfcoord);
+
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord);		// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+
+			__m128i micoord = _mm_cvttps_epi32(mfcoord_ipart);
+			micoord = _mm_add_epi32(micoord, _mm_slli_si128(misize, 2));
+			mfcoord = _mm_cvtepi32_ps(micoord);
 			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
 			__m128 mfdiv = _mm_cvtepi32_ps(midiv);
 			__m128i tmp = _mm_sub_epi32(micoord, _mm_cvttps_epi32(_mm_mul_ps(mfdiv, mfsize)));
@@ -53,23 +45,40 @@ namespace addresser
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
 #else
-			return int4((size.x * 8192 + coord.x) % size.x,
-				(size.y * 8192 + coord.y) % size.y,
+			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w);
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+
+			return int4((size.x * 8192 + coord_ipart.x) % size.x,
+				(size.y * 8192 + coord_ipart.y) % size.y,
 				0, 0);
 #endif
 		}
 
-		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		static void do_coordi_linear_2d(int4& low, int4& up, vec4& frac, const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
+
+			__m128 mfcoord0 = _mm_sub_ps(mfcoord, _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord)));
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			mfcoord0 = _mm_mul_ps(mfsize, mfcoord0);
+			const __m128 mhalf = _mm_set1_ps(0.5f);
+			mfcoord0 = _mm_sub_ps(mfcoord0, mhalf);
+			
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord0));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord0);	// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+			__m128 mffrac = _mm_sub_ps(mfcoord0, mfcoord_ipart);
+			_mm_storeu_ps(&frac.x, mffrac);
+
+			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
 			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
 			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
-			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
 			micoord01 = _mm_add_epi32(micoord01, _mm_slli_si128(misize, 2));
-			__m128 mfsize = _mm_cvtepi32_ps(misize);
-			__m128 mfcoord = _mm_cvtepi32_ps(micoord01);
+			mfcoord = _mm_cvtepi32_ps(micoord01);
 			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
 			__m128 mfdiv = _mm_cvtepi32_ps(midiv);
 			__m128i tmp = _mm_sub_epi32(micoord01, _mm_cvttps_epi32(_mm_mul_ps(mfdiv, mfsize)));
@@ -77,11 +86,14 @@ namespace addresser
 			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
-			low = int4((size.x * 8192 + coord.x) % size.x,
-				(size.y * 8192 + coord.y) % size.y,
+			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w) - 0.5f;
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+
+			low = int4((size.x * 8192 + coord_ipart.x) % size.x,
+				(size.y * 8192 + coord_ipart.y) % size.y,
 				0, 0);
-			up = int4((size.x * 8192 + coord.x + 1) % size.x,
-				(size.y * 8192 + coord.y + 1) % size.y,
+			up = int4((size.x * 8192 + coord_ipart.x + 1) % size.x,
+				(size.y * 8192 + coord_ipart.y + 1) % size.y,
 				0, 0);
 #endif
 		}
@@ -97,29 +109,33 @@ namespace addresser
 				? 1 + selection_coord - coord
 				: coord - selection_coord) * size - 0.5f;
 		}
-		static vec4 do_coordf(const vec4& coord, const int4& size)
+
+		static int do_coordi_point_1d(int coord, int size)
+		{
+			return efl::clamp(coord, 0, size - 1);
+		}
+		static int4 do_coordi_point_2d(const vec4& coord, const int4& size)
 		{
 			int selection_coord_x = fast_floori(coord.x);
 			int selection_coord_y = fast_floori(coord.y);
-			return 
-				vec4((selection_coord_x & 1 
+			vec4 o_coord((selection_coord_x & 1 
 				? 1 + selection_coord_x - coord.x
 				: coord.x - selection_coord_x) * size.x - 0.5f,
 				(selection_coord_y & 1 
 				? 1 + selection_coord_y - coord.y
 				: coord.y - selection_coord_y) * size.y - 0.5f,
 				0, 0);
-		}
 
-		static int do_coordi_point_1d(int coord, int size)
-		{
-			return efl::clamp(coord, 0, size - 1);
-		}
-		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
-		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
-			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
+			__m128 mfcoord = _mm_loadu_ps(&o_coord.x);
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
+
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord);		// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+
+			__m128i micoord = _mm_cvttps_epi32(mfcoord_ipart);
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
 			tmp = _mm_min_epi16(tmp, misize);
@@ -127,19 +143,40 @@ namespace addresser
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
 #else
-			return int4(efl::clamp(coord.x, 0, size.x - 1),
-				efl::clamp(coord.y, 0, size.y - 1),
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+
+			return int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
+				efl::clamp(coord_ipart.y, 0, size.y - 1),
 				0, 0);
 #endif
 		}
 
-		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		static void do_coordi_linear_2d(int4& low, int4& up, vec4& frac, const vec4& coord, const int4& size)
 		{
+			int selection_coord_x = fast_floori(coord.x);
+			int selection_coord_y = fast_floori(coord.y);
+			vec4 o_coord((selection_coord_x & 1 
+				? 1 + selection_coord_x - coord.x
+				: coord.x - selection_coord_x) * size.x - 0.5f,
+				(selection_coord_y & 1 
+				? 1 + selection_coord_y - coord.y
+				: coord.y - selection_coord_y) * size.y - 0.5f,
+				0, 0);
+
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128 mfcoord0 = _mm_loadu_ps(&o_coord.x);
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
+
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord0));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord0);	// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+			__m128 mffrac = _mm_sub_ps(mfcoord0, mfcoord_ipart);
+			_mm_storeu_ps(&frac.x, mffrac);
+
+			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
 			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
 			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
-			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
 			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
@@ -148,11 +185,13 @@ namespace addresser
 			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
-			low = int4(efl::clamp(coord.x, 0, size.x - 1),
-				efl::clamp(coord.y, 0, size.y - 1),
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+
+			low = int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
+				efl::clamp(coord_ipart.y, 0, size.y - 1),
 				0, 0);
-			up = int4(efl::clamp(coord.x + 1, 0, size.x - 1),
-				efl::clamp(coord.y + 1, 0, size.y - 1),
+			up = int4(efl::clamp(coord_ipart.x + 1, 0, size.x - 1),
+				efl::clamp(coord_ipart.y + 1, 0, size.y - 1),
 				0, 0);
 #endif
 		}
@@ -164,35 +203,30 @@ namespace addresser
 		{
 			return efl::clamp(coord * size, 0.5f, size - 0.5f) - 0.5f;
 		}
-		static vec4 do_coordf(const vec4& coord, const int4& size)
-		{
-#ifndef EFLIB_NO_SIMD
-			__m128 mfcoord = _mm_loadu_ps(&coord.x);
-			__m128 mfsize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
-			const __m128 mhalf = _mm_set1_ps(0.5f);
-			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
-			tmp = _mm_max_ps(tmp, mhalf);
-			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mhalf));
-			tmp = _mm_sub_ps(tmp, mhalf);
-			vec4 ret;
-			_mm_storeu_ps(&ret.x, tmp);
-			return ret;
-#else
-			return vec4(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
-				0, 0);
-#endif
-		}
 
 		static int do_coordi_point_1d(int coord, int size)
 		{
 			return efl::clamp(coord, 0, size - 1);
 		}
-		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
+		static int4 do_coordi_point_2d(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
-			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
+
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			const __m128 mhalf = _mm_set1_ps(0.5f);
+			__m128 mfcoord0 = _mm_mul_ps(mfcoord, mfsize);
+			mfcoord0 = _mm_max_ps(mfcoord0, mhalf);
+			mfcoord0 = _mm_min_ps(mfcoord0, _mm_sub_ps(mfsize, mhalf));
+
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord);		// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+
+			__m128i micoord = _mm_cvttps_epi32(mfcoord_ipart);
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
 			tmp = _mm_min_epi16(tmp, misize);
@@ -200,20 +234,41 @@ namespace addresser
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
 #else
-			return int4(efl::clamp(coord.x, 0, size.x - 1),
-				efl::clamp(coord.y, 0, size.y - 1),
+			vec4 o_coord(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
+				0, 0);
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+
+			return int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
+				efl::clamp(coord_ipart.y, 0, size.y - 1),
 				0, 0);
 #endif
 		}
 
-		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		static void do_coordi_linear_2d(int4& low, int4& up, vec4& frac, const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
-			__m128i micoord0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&coord.x));
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
+			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
+
+			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			const __m128 mhalf = _mm_set1_ps(0.5f);
+			__m128 mfcoord0 = _mm_mul_ps(mfcoord, mfsize);
+			mfcoord0 = _mm_max_ps(mfcoord0, mhalf);
+			mfcoord0 = _mm_min_ps(mfcoord0, _mm_sub_ps(mfsize, mhalf));
+			mfcoord0 = _mm_sub_ps(mfcoord0, mhalf);
+
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord0));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord0);	// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+			__m128 mffrac = _mm_sub_ps(mfcoord0, mfcoord_ipart);
+			_mm_storeu_ps(&frac.x, mffrac);
+
+			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
 			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
 			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
-			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size));
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
 			tmp = _mm_min_epi16(tmp, misize);
@@ -221,11 +276,16 @@ namespace addresser
 			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
-			low = int4(efl::clamp(coord.x, 0, size.x - 1),
-				efl::clamp(coord.y, 0, size.y - 1),
+			vec4 o_coord(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
 				0, 0);
-			up = int4(efl::clamp(coord.x + 1, 0, size.x - 1),
-				efl::clamp(coord.y + 1, 0, size.y - 1),
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+
+			low = int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
+				efl::clamp(coord_ipart.y, 0, size.y - 1),
+				0, 0);
+			up = int4(efl::clamp(coord_ipart.x + 1, 0, size.x - 1),
+				efl::clamp(coord_ipart.y + 1, 0, size.y - 1),
 				0, 0);
 #endif
 		}
@@ -237,44 +297,61 @@ namespace addresser
 		{
 			return efl::clamp(coord * size, -0.5f, size + 0.5f) - 0.5f;
 		}
-		static vec4 do_coordf(const vec4& coord, const int4& size)
-		{
-#ifndef EFLIB_NO_SIMD
-			__m128 mfcoord = _mm_loadu_ps(&coord.x);
-			__m128 mfsize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
-			const __m128 mneghalf = _mm_set1_ps(-0.5f);
-			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
-			tmp = _mm_max_ps(tmp, mneghalf);
-			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mneghalf));
-			tmp = _mm_add_ps(tmp, mneghalf);
-			vec4 ret;
-			_mm_storeu_ps(&ret.x, tmp);
-			return ret;
-#else
-			return vec4(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
-				0, 0);
-#endif
-		}
 
 		static int do_coordi_point_1d(int coord, int size)
 		{
 			return coord >= size ? -1 : coord;
 		}
-		static int4 do_coordi_point_2d(const int4& coord, const int4& size)
+		static int4 do_coordi_point_2d(const vec4& coord, const int4& size)
 		{
-			return int4(coord.x >= size.x ? -1 : coord.x,
-				coord.y >= size.y ? -1 : coord.y,
+#ifndef EFLIB_NO_SIMD
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
+			__m128 msize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
+
+			__m128 tmp = _mm_sub_ps(mfcoord, _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord)));
+			tmp = _mm_mul_ps(msize, tmp);
+			vec4 o_coord;
+			_mm_storeu_ps(&o_coord.x, tmp);
+#else
+			vec4 o_coord(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
+				0, 0);
+#endif
+
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+
+			return int4(coord_ipart.x >= size.x ? -1 : coord_ipart.x,
+				coord_ipart.y >= size.y ? -1 : coord_ipart.y,
 				0, 0);
 		}
 
-		static void do_coordi_linear_2d(int4& low, int4& up, const int4& coord, const int4& size)
+		static void do_coordi_linear_2d(int4& low, int4& up, vec4& frac, const vec4& coord, const int4& size)
 		{
-			low = int4(coord.x >= size.x ? -1 : coord.x,
-				coord.y >= size.y ? -1 : coord.y,
+#ifndef EFLIB_NO_SIMD
+			__m128 mfcoord = _mm_loadu_ps(&coord.x);
+			__m128 mfsize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
+
+			const __m128 mneghalf = _mm_set1_ps(-0.5f);
+			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
+			tmp = _mm_max_ps(tmp, mneghalf);
+			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mneghalf));
+			tmp = _mm_add_ps(tmp, mneghalf);
+			vec4 o_coord;
+			_mm_storeu_ps(&o_coord.x, tmp);
+#else
+			vec4 o_coord(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
+				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
 				0, 0);
-			up = int4(coord.x + 1 >= size.x ? -1 : coord.x + 1,
-				coord.y + 1 >= size.y ? -1 : coord.y + 1,
+#endif
+
+			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
+
+			low = int4(coord_ipart.x >= size.x ? -1 : coord_ipart.x,
+				coord_ipart.y >= size.y ? -1 : coord_ipart.y,
+				0, 0);
+			up = int4(coord_ipart.x + 1 >= size.x ? -1 : coord_ipart.x + 1,
+				coord_ipart.y + 1 >= size.y ? -1 : coord_ipart.y + 1,
 				0, 0);
 		}
 	};
@@ -303,18 +380,13 @@ namespace coord_calculator
 	template <typename addresser_type>
 	int4 point_cc(const vec4& coord, const int4& size)
 	{
-		vec4 o_coord = addresser_type::do_coordf(coord, size);
-		int4 coord_ipart = int4(fast_roundi(o_coord.x), fast_roundi(o_coord.y), 0, 0);
-		return addresser_type::do_coordi_point_2d(coord_ipart, size);
+		return addresser_type::do_coordi_point_2d(coord, size);
 	}
 
 	template <typename addresser_type>
 	void linear_cc(int4& low, int4& up, vec4& frac, const vec4& coord, const int4& size)
 	{
-		vec4 o_coord = addresser_type::do_coordf(coord, size);
-		int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
-		addresser_type::do_coordi_linear_2d(low, up, coord_ipart, size);
-		frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
+		addresser_type::do_coordi_linear_2d(low, up, frac, coord, size);
 	}
 };
 
