@@ -4,8 +4,11 @@
 
 BEGIN_NS_SASL_SEMANTIC();
 
-void semantic_analysis( boost::shared_ptr<::sasl::syntax_tree::node> root ){
-	semantic_analyser_impl saimpl;
+using ::sasl::syntax_tree::node;
+using ::sasl::common::compiler_info_manager;
+
+void semantic_analysis( boost::shared_ptr<node> root, boost::shared_ptr<compiler_info_manager> cinfo_mgr ){
+	semantic_analyser_impl saimpl( cinfo_mgr );
 	root->accept(&saimpl);
 }
 

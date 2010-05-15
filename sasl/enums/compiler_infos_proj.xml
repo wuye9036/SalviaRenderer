@@ -1,0 +1,17 @@
+<Config>	
+	<InputFiles>
+		<InputFile>compiler_infos.xml</InputFile>
+	</InputFiles>
+	
+	<BuildTarget>
+		<HeaderTarget>./</HeaderTarget>
+		<SrcTarget>./</SrcTarget>
+		<IncludePath>./</IncludePath>
+	</BuildTarget>
+
+	<SupportCode>
+		<PreInclude>../enums/enum_base.h</PreInclude>
+		<IncludeGuardPrefix>SASL_ENUMS</IncludeGuardPrefix>
+		<IncludeGuardPostfix>H</IncludeGuardPostfix>
+	</SupportCode>
+</Config>

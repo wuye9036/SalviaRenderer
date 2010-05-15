@@ -1,4 +1,6 @@
 #include <sasl/include/semantic/semantic_analyser_impl.h>
+#include <sasl/include/common/compiler_info_manager.h>
+#include <sasl/include/semantic/semantic_error.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/symbol_infos.h>
 #include <sasl/include/semantic/symbol_scope.h>
@@ -7,8 +9,15 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
+#include <boost/assign/list_of.hpp>
 
 BEGIN_NS_SASL_SEMANTIC();
+
+using ::sasl::semantic::errors::semantic_error;
+using ::sasl::common::compiler_info_manager;
+
+semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
+	: infomgr( infomgr ){}
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::unary_expression& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::cast_expression& v){}
@@ -63,14 +72,17 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	using ::sasl::syntax_tree::type_definition;
-
+	using ::boost::assign::list_of;
 	const std::string& alias_str = v.ident->lit;
 	boost::shared_ptr<symbol> existed_sym = cursym->find_all( alias_str );
 	if ( existed_sym ){
 		// if the symbol is used and is not a type node, it must be redifinition.
 		// else compare the type.
 		if ( !existed_sym->node()->node_class().included( syntax_node_types::type_specifier ) ){
-			// TODO: REPORT SEMANTIC ERROR: SYMBOL REDEFINED.
+			infomgr->add_info( 
+				semantic_error::create( compiler_informations::redef_cannot_overloaded,
+				v.handle(),	list_of(existed_sym->node()) )
+					);
 			return;
 		}
 	}
@@ -91,8 +103,10 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 				// if new symbol is different from the old, semantic error.
 				// The final effect is that the new definition overwrites the old one.
 
-				// TODO: REPORT SEMANTIC ERROR: SYMBOL REDEFINED.
-				// REMOVE ALL DEFINITIONS FROM SYMBOL TABLE.
+				infomgr->add_info( 
+					semantic_error::create( compiler_informations::redef_diff_basic_type,
+					v.handle(),	list_of(existed_sym->node()) )
+					);
 			} 
 		}
 		// else if the same. do not updated.

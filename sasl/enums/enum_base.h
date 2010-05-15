@@ -75,7 +75,7 @@ struct bitwise_op{
 	}
 	
 	bool included( const DerivedT& rhs ){
-		return ((DerivedT*)this)->val_ & rhs.val_ == rhs.val_;
+		return (((DerivedT*)this)->val_ & rhs.val_) == rhs.val_;
 	}
 	
 	bool excluded( const DerivedT& rhs ){

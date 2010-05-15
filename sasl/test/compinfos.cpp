@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_CASE( compiler_information ){
 	using ::sasl::semantic::errors::semantic_error;
 
 	boost::shared_ptr< compiler_info_manager > cim = compiler_info_manager::create();
-	cim->add_info( semantic_error::create( compiler_informations::w_typedef_redefinition ) );
+	cim->add_info( semantic_error::create( compiler_informations::redef_diff_basic_type ) );
 	compiler_info_manager::compiler_info_list cil_cw = cim->all_condition_infos( compiler_informations::_compile | compiler_informations::_warning );
 	compiler_info_manager::compiler_info_list cil_ce = cim->all_condition_infos( compiler_informations::_compile | compiler_informations::_error );
 	compiler_info_manager::compiler_info_list cil_lw = cim->all_condition_infos( compiler_informations::_link | compiler_informations::_warning );

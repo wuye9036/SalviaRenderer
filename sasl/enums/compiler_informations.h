@@ -24,13 +24,14 @@ public:
 
 	const static this_type none;
 	const static this_type _error;
-	const static this_type w_typedef_redefinition;
 	const static this_type _message;
+	const static this_type redef_diff_basic_type;
 	const static this_type _link;
 	const static this_type _info_level_mask;
 	const static this_type _stage_mask;
 	const static this_type _info_id_mask;
 	const static this_type _compile;
+	const static this_type redef_cannot_overloaded;
 	const static this_type _warning;
 
 

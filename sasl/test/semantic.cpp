@@ -9,6 +9,7 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/common/token_attr.h>
+#include <sasl/include/common/compiler_info_manager.h>
 #include <string>
 
 BOOST_AUTO_TEST_SUITE( semantic );
@@ -17,12 +18,15 @@ BOOST_AUTO_TEST_CASE( program_semantic ){
 	using ::sasl::syntax_tree::program;
 	using ::sasl::syntax_tree::create_node;
 	using ::sasl::semantic::semantic_analysis;
+	using ::sasl::common::compiler_info_manager;
+
+	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
 
 	std::string prog_name("test");
 	boost::shared_ptr<program> prog = create_node<program>( prog_name );
 	BOOST_CHECK( !prog->symbol() );
 
-	semantic_analysis( prog );
+	semantic_analysis( prog, cim );
 	BOOST_CHECK( prog->symbol() );
 }
 
@@ -39,6 +43,7 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	using ::sasl::common::token_attr;
 	using ::sasl::semantic::extract_symbol_info;
 	using ::sasl::semantic::const_value_symbol_info;
+	using ::sasl::common::compiler_info_manager;
 
 	std::string prog_name("test");
 	std::string var_name("test_var");
@@ -68,8 +73,10 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	declstmt->decl = decl;
 	prog->decls.push_back( declstmt );
 
+	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
+
 	// do semantic
-	semantic_analysis( prog );
+	semantic_analysis( prog, cim );
 
 	// check
 	boost::shared_ptr<const_value_symbol_info> cvsi = extract_symbol_info<const_value_symbol_info>(decl);
@@ -92,6 +99,9 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	using ::sasl::syntax_tree::declaration_statement;
 	using ::sasl::semantic::extract_symbol_info;
 	using ::sasl::semantic::symbol;
+	using ::sasl::common::compiler_info_manager;
+
+	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
 
 	boost::shared_ptr<token_attr> nulltok;
 
@@ -124,7 +134,7 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	prog->decls.push_back( declstmt0 );
 	prog->decls.push_back( declstmt1 );
 
-	semantic_analysis( prog );
+	semantic_analysis( prog, cim );
 
 	boost::shared_ptr<symbol> var0sym = prog->symbol()->find_this( var_name_0 );
 	boost::shared_ptr<symbol> var1sym = prog->symbol()->find_this( var_name_1 );
@@ -136,7 +146,8 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	BOOST_CHECK( var0tsi->full_type()->value_typecode == buildin_type_code::_sint32 );
 	BOOST_CHECK( var1tsi->type_type() == type_types::buildin );
 	BOOST_CHECK( var1tsi->full_type()->value_typecode == buildin_type_code::_sint64 );
-	//BOOST_CHECK(
+	
+	BOOST_CHECK_EQUAL( cim->all_condition_infos( compiler_informations::none ).size(), 0 );
 		
 }
 BOOST_AUTO_TEST_SUITE_END();

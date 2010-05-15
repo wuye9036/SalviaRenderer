@@ -5,12 +5,20 @@
 #include <sasl/include/syntax_tree/visitor.h>
 #include <boost/shared_ptr.hpp>
 
+namespace sasl{
+	namespace common{
+		class compiler_info_manager;
+	}
+}
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
 
 class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
-	// expression
+public:
+	semantic_analyser_impl( boost::shared_ptr<::sasl::common::compiler_info_manager> infomgr );
+
+	// expressio n
 	virtual void visit( ::sasl::syntax_tree::unary_expression& v );
 	virtual void visit( ::sasl::syntax_tree::cast_expression& v);
 	virtual void visit( ::sasl::syntax_tree::binary_expression& v );
@@ -55,6 +63,7 @@ class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
 	virtual void visit( ::sasl::syntax_tree::program& v );
 
 private:
+	boost::shared_ptr<::sasl::common::compiler_info_manager> infomgr;
 	boost::shared_ptr<symbol> cursym;
 	bool is_local;
 };

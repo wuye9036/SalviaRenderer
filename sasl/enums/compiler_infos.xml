@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<enums>
+	<enum name="compiler_informations">
+		<HasName/>
+		<Ortho/>
+		<Convertible/>
+		<AutoGen expression = "$index$"/>
+		
+		<item value="0">none</item>
+		
+		<item value="1 * (2 ** 24)" desc="Compile">_compile</item>
+		<item value="2 * (2 ** 24)" desc="Link">_link</item>
+		<item value="255*(2 ** 24)">_stage_mask</item> 
+		
+		<item value="1 * (2 ** 16)" desc="Warning">_warning</item>
+		<item value="2 * (2 ** 16)" desc="Error">_error</item>
+		<item value="4 * (2 ** 16)" desc="Message">_message</item>
+		<item value="255*(2 ** 16)">_info_level_mask</item>
+		
+		<item value="65535">_info_id_mask</item>
+		
+		<let var="error_index_base" value="$index$-1"></let>
+		<lazylet var="error_index" value = "$index$-$error_index_base$+$_error$+1000"/>
+		<item value="$error_index$+$_compile$" 
+			desc="$anchor:identifier$ : redefinition; different basic types."
+		>redef_diff_basic_type</item>
+		<item value="$error_index$+$_compile$" 
+			desc="$anchor:identifier$ : redefinition; symbol cannot be overloaded with a typedef."
+		>redef_cannot_overloaded</item>
+	</enum>
+</enums>

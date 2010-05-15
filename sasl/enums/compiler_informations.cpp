@@ -8,13 +8,14 @@ using namespace std;
 
 const compiler_informations compiler_informations::none ( 0 );
 const compiler_informations compiler_informations::_error ( 131072 );
-const compiler_informations compiler_informations::w_typedef_redefinition ( 16909289 );
 const compiler_informations compiler_informations::_message ( 262144 );
+const compiler_informations compiler_informations::redef_diff_basic_type ( 16909289 );
 const compiler_informations compiler_informations::_link ( 33554432 );
 const compiler_informations compiler_informations::_info_level_mask ( 16711680 );
 const compiler_informations compiler_informations::_stage_mask ( 4278190080 );
 const compiler_informations compiler_informations::_info_id_mask ( 65535 );
 const compiler_informations compiler_informations::_compile ( 16777216 );
+const compiler_informations compiler_informations::redef_cannot_overloaded ( 16909290 );
 const compiler_informations compiler_informations::_warning ( 65536 );
 
  
@@ -33,24 +34,26 @@ public:
 	dict_wrapper_compiler_informations(){
 		enum_to_name.insert( std::make_pair( compiler_informations::none, "none" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_error, "Error" ) );
-		enum_to_name.insert( std::make_pair( compiler_informations::w_typedef_redefinition, "Type is redefined." ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_message, "Message" ) );
+		enum_to_name.insert( std::make_pair( compiler_informations::redef_diff_basic_type, "$anchor:identifier$ : redefinition; different basic types." ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_link, "Link" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_info_level_mask, "_info_level_mask" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_stage_mask, "_stage_mask" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_info_id_mask, "_info_id_mask" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_compile, "Compile" ) );
+		enum_to_name.insert( std::make_pair( compiler_informations::redef_cannot_overloaded, "$anchor:identifier$ : redefinition; symbol cannot be overloaded with a typedef." ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_warning, "Warning" ) );
 
 		name_to_enum.insert( std::make_pair( "none", compiler_informations::none ) );
 		name_to_enum.insert( std::make_pair( "Error", compiler_informations::_error ) );
-		name_to_enum.insert( std::make_pair( "Type is redefined.", compiler_informations::w_typedef_redefinition ) );
 		name_to_enum.insert( std::make_pair( "Message", compiler_informations::_message ) );
+		name_to_enum.insert( std::make_pair( "$anchor:identifier$ : redefinition; different basic types.", compiler_informations::redef_diff_basic_type ) );
 		name_to_enum.insert( std::make_pair( "Link", compiler_informations::_link ) );
 		name_to_enum.insert( std::make_pair( "_info_level_mask", compiler_informations::_info_level_mask ) );
 		name_to_enum.insert( std::make_pair( "_stage_mask", compiler_informations::_stage_mask ) );
 		name_to_enum.insert( std::make_pair( "_info_id_mask", compiler_informations::_info_id_mask ) );
 		name_to_enum.insert( std::make_pair( "Compile", compiler_informations::_compile ) );
+		name_to_enum.insert( std::make_pair( "$anchor:identifier$ : redefinition; symbol cannot be overloaded with a typedef.", compiler_informations::redef_cannot_overloaded ) );
 		name_to_enum.insert( std::make_pair( "Warning", compiler_informations::_warning ) );
 
 	}
