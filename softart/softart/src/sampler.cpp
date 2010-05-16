@@ -88,6 +88,7 @@ namespace addresser
 #else
 			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w) - 0.5f;
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 
 			low = int4((size.x * 8192 + coord_ipart.x) % size.x,
 				(size.y * 8192 + coord_ipart.y) % size.y,
@@ -120,10 +121,10 @@ namespace addresser
 			int selection_coord_y = fast_floori(coord.y);
 			vec4 o_coord((selection_coord_x & 1 
 				? 1 + selection_coord_x - coord.x
-				: coord.x - selection_coord_x) * size.x - 0.5f,
+				: coord.x - selection_coord_x) * size.x,
 				(selection_coord_y & 1 
 				? 1 + selection_coord_y - coord.y
-				: coord.y - selection_coord_y) * size.y - 0.5f,
+				: coord.y - selection_coord_y) * size.y,
 				0, 0);
 
 #ifndef EFLIB_NO_SIMD
@@ -186,6 +187,7 @@ namespace addresser
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 
 			low = int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
 				efl::clamp(coord_ipart.y, 0, size.y - 1),
@@ -234,8 +236,8 @@ namespace addresser
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
 #else
-			vec4 o_coord(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
+			vec4 o_coord(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f),
+				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f),
 				0, 0);
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 
@@ -280,6 +282,7 @@ namespace addresser
 				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
 				0, 0);
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 
 			low = int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
 				efl::clamp(coord_ipart.y, 0, size.y - 1),
@@ -306,19 +309,26 @@ namespace addresser
 		{
 #ifndef EFLIB_NO_SIMD
 			__m128 mfcoord = _mm_loadu_ps(&coord.x);
-			__m128 msize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
+			__m128 mfsize = _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x)));
 
-			__m128 tmp = _mm_sub_ps(mfcoord, _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord)));
-			tmp = _mm_mul_ps(msize, tmp);
-			vec4 o_coord;
-			_mm_storeu_ps(&o_coord.x, tmp);
+			const __m128 mneghalf = _mm_set1_ps(-0.5f);
+			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
+			tmp = _mm_max_ps(tmp, mneghalf);
+			mfcoord = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mneghalf));
+
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord);		// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+			int4 coord_ipart;
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&coord_ipart.x), _mm_cvttps_epi32(mfcoord_ipart));
 #else
-			vec4 o_coord(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
+			vec4 o_coord(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f),
+				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f),
 				0, 0);
-#endif
 
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
+#endif
 
 			return int4(coord_ipart.x >= size.x ? -1 : coord_ipart.x,
 				coord_ipart.y >= size.y ? -1 : coord_ipart.y,
@@ -335,17 +345,23 @@ namespace addresser
 			__m128 tmp = _mm_mul_ps(mfcoord, mfsize);
 			tmp = _mm_max_ps(tmp, mneghalf);
 			tmp = _mm_min_ps(tmp, _mm_sub_ps(mfsize, mneghalf));
-			tmp = _mm_add_ps(tmp, mneghalf);
-			vec4 o_coord;
-			_mm_storeu_ps(&o_coord.x, tmp);
+			__m128 mfcoord0 = _mm_add_ps(tmp, mneghalf);
+
+			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord0));
+			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord0);	// if it increased (i.e. if it was negative...)
+			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
+			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+			__m128 mffrac = _mm_sub_ps(mfcoord0, mfcoord_ipart);
+			_mm_storeu_ps(&frac.x, mffrac);
+			int4 coord_ipart;
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&coord_ipart.x), _mm_cvttps_epi32(mfcoord_ipart));
 #else
 			vec4 o_coord(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
 				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
 				0, 0);
-#endif
-
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
+#endif
 
 			low = int4(coord_ipart.x >= size.x ? -1 : coord_ipart.x,
 				coord_ipart.y >= size.y ? -1 : coord_ipart.y,
@@ -412,21 +428,10 @@ namespace surface_sampler
 		{
 			int xpos0, ypos0, xpos1, ypos1;
 			float tx, ty;
-
 			coord_calculator::linear_cc<addresser_type_u>(xpos0, xpos1, tx, x, int(surf.get_width()));
 			coord_calculator::linear_cc<addresser_type_v>(ypos0, ypos1, ty, y, int(surf.get_height()));
 
-			color_rgba32f c0, c1, c2, c3;
-
-			c0 = surf.get_texel(xpos0, ypos0);
-			c1 = surf.get_texel(xpos1, ypos0);
-			c2 = surf.get_texel(xpos0, ypos1);
-			c3 = surf.get_texel(xpos1, ypos1);
-
-			color_rgba32f c01 = lerp(c0, c1, tx);
-			color_rgba32f c23 = lerp(c2, c3, tx);
-
-			return lerp(c01, c23, ty);
+			return surf.get_texel(xpos0, ypos0, xpos1, ypos1, tx, ty);
 		}
 	};
 
@@ -450,21 +455,10 @@ namespace surface_sampler
 		{
 			int4 pos0, pos1;
 			vec4 t;
-
 			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0),
 				int4(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0));
 
-			color_rgba32f c0, c1, c2, c3;
-
-			c0 = surf.get_texel(pos0.x, pos0.y);
-			c1 = surf.get_texel(pos1.x, pos0.y);
-			c2 = surf.get_texel(pos0.x, pos1.y);
-			c3 = surf.get_texel(pos1.x, pos1.y);
-
-			color_rgba32f c01 = lerp(c0, c1, t.x);
-			color_rgba32f c23 = lerp(c2, c3, t.x);
-
-			return lerp(c01, c23, t.y);
+			return surf.get_texel(pos0.x, pos0.y, pos1.x, pos1.y, t.x, t.y);
 		}
 	};
 

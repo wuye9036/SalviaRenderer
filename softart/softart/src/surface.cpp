@@ -11,6 +11,12 @@ surface::surface(size_t width, size_t height, pixel_format pxfmt)
 		pxfmt_(pxfmt), width_(width),	height_(height),
 		elem_size_(color_infos[pxfmt].size),is_locked_(false)
 {
+	to_rgba32_func_ = pixel_format_convertor::get_convertor_func(pixel_format_color_rgba32f, pxfmt_);
+	from_rgba32_func_ = pixel_format_convertor::get_convertor_func(pxfmt_, pixel_format_color_rgba32f);
+	to_rgba32_array_func_ = pixel_format_convertor::get_array_convertor_func(pixel_format_color_rgba32f, pxfmt_);
+	from_rgba32_array_func_ = pixel_format_convertor::get_array_convertor_func(pxfmt_, pixel_format_color_rgba32f);
+	lerp_1d_func_ = pixel_format_convertor::get_lerp_1d_func(pxfmt_);
+	lerp_2d_func_ = pixel_format_convertor::get_lerp_2d_func(pxfmt_);
 }
 
 surface::~surface()
@@ -98,13 +104,19 @@ void surface::unlock()
 color_rgba32f surface::get_texel(size_t x, size_t y) const
 {
 	color_rgba32f color;
-	pixel_format_convertor::convert(pixel_format_color_rgba32f, pxfmt_, (void*)(&color), (const void*)&datas_[(width_*y+x)*elem_size_]);
+	to_rgba32_func_(&color, &datas_[(width_*y+x)*elem_size_]);
 	return color;
 }
 
+color_rgba32f surface::get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty) const
+{
+	return lerp_2d_func_(&datas_[(width_*y0+x0)*elem_size_], &datas_[(width_*y0+x1)*elem_size_],
+		&datas_[(width_*y1+x0)*elem_size_], &datas_[(width_*y1+x1)*elem_size_], tx, ty);
+}
+	
 void surface::set_texel(size_t x, size_t y, const color_rgba32f& color)
 {
-	pixel_format_convertor::convert(pxfmt_, pixel_format_color_rgba32f, (void*)&datas_[(width_*y+x)*elem_size_], (const void*)(&color));
+	from_rgba32_func_(&datas_[(width_*y+x)*elem_size_], &color);
 }
 
 void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color)

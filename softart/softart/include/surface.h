@@ -2,6 +2,7 @@
 #define SOFTART_SURFACE_H
 
 #include "colors.h"
+#include "colors_convertors.h"
 #include "enums.h"
 
 #include "eflib/include/math.h"
@@ -32,6 +33,13 @@ private:
 	//lock mode judegement
 	bool is_read_mode(lock_mode lm){return ((int)lm & (int)lock_read_only) != 0;}
 	bool is_write_mode(lock_mode lm){return ((int)lm & (int)lock_write_only) != 0;}
+
+	pixel_format_convertor::pixel_convertor to_rgba32_func_;
+	pixel_format_convertor::pixel_convertor from_rgba32_func_;
+	pixel_format_convertor::pixel_array_convertor to_rgba32_array_func_;
+	pixel_format_convertor::pixel_array_convertor from_rgba32_array_func_;
+	pixel_format_convertor::pixel_lerp_1d lerp_1d_func_;
+	pixel_format_convertor::pixel_lerp_2d lerp_2d_func_;
 
 public:
 	surface();
@@ -70,6 +78,7 @@ public:
 	}
 
 	color_rgba32f get_texel(size_t x, size_t y) const;
+	color_rgba32f get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty) const;
 	void set_texel(size_t x, size_t y, const color_rgba32f& color);
 
 	void fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color);

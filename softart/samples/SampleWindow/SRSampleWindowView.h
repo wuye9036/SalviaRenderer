@@ -83,7 +83,7 @@ public:
 		sampler_.reset(new sampler(desc));
 		sampler_->set_texture(tex_.get());
 	}
-	bool shader_prog(const vs_output& in, ps_output& out)
+	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		
 		//out.color[0].xyz(in.attributes[0].xyz());
@@ -148,7 +148,7 @@ public:
 		sampler_.reset(new sampler(desc));
 		sampler_->set_texture(tex_.get());
 	}
-	bool shader_prog(const vs_output& in, ps_output& out)
+	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		color_rgba32f color = tex2d(*sampler_, 0);
 		color.a = 1;

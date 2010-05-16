@@ -338,16 +338,134 @@ private:
 	}
 };
 
-template<class T>
-inline T lerp(const T& c0, const T& c1, float t)
-{
-	return T(lerp(c0.to_rgba32f(), c1.to_rgba32f(), t));
-}
-
 inline color_rgba32f lerp(const color_rgba32f& c0, const color_rgba32f& c1, float t)
 {
+#ifndef EFLIB_NO_SIMD
+	__m128 mc0 = _mm_loadu_ps(&c0.r);
+	__m128 mc1 = _mm_loadu_ps(&c1.r);
+	__m128 mret = _mm_add_ps(mc0, _mm_mul_ps(_mm_sub_ps(mc1, mc0), _mm_set1_ps(t)));
+	color_rgba32f ret;
+	_mm_storeu_ps(&ret.r, mret);
+	return ret;
+#else
 	return color_rgba32f(c0.get_vec4() + (c1.get_vec4() - c0.get_vec4()) * t);
+#endif
 }
+inline color_rgba32f lerp(const color_rgb32f& c0, const color_rgb32f& c1, float t)
+{
+	return color_rgb32f(c0.r + (c1.r - c0.r) * t, c0.r + (c1.g - c0.g) * t, c0.r + (c1.b - c0.b) * t).to_rgba32f();
+}
+inline color_rgba32f lerp(const color_bgra8& c0, const color_bgra8& c1, float t)
+{
+	color_rgba32f ret = lerp(color_rgba32f(c0.r, c0.g, c0.b, c0.a), color_rgba32f(c1.r, c1.g, c1.b, c1.a), t);
+	ret.get_vec4() /= 255.0f;
+	return ret;
+}
+inline color_rgba32f lerp(const color_rgba8& c0, const color_rgba8& c1, float t)
+{
+	color_rgba32f ret = lerp(color_rgba32f(c0.r, c0.g, c0.b, c0.a), color_rgba32f(c1.r, c1.g, c1.b, c1.a), t);
+	ret.get_vec4() /= 255.0f;
+	return ret;
+}
+inline color_rgba32f lerp(const color_r32f& c0, const color_r32f& c1, float t)
+{
+	return color_r32f(c0.r + (c1.r - c0.r) * t).to_rgba32f();
+}
+inline color_rgba32f lerp(const color_rg32f& c0, const color_rg32f& c1, float t)
+{
+	return color_rg32f(c0.r + (c1.r - c0.r) * t, c0.r + (c1.g - c0.g) * t).to_rgba32f();
+}
+inline color_rgba32f lerp(const color_r32i& c0, const color_r32i& c1, float t)
+{
+	return color_r32i(static_cast<color_r32i::comp_t>(c0.r + (c1.r - c0.r) * t)).to_rgba32f();
+}
+
+inline color_rgba32f lerp(const color_rgba32f& c0, const color_rgba32f& c1, const color_rgba32f& c2, const color_rgba32f& c3, float tx, float ty)
+{
+#ifndef EFLIB_NO_SIMD
+	__m128 mc0 = _mm_loadu_ps(&c0.r);
+	__m128 mc1 = _mm_loadu_ps(&c1.r);
+	__m128 mc2 = _mm_loadu_ps(&c2.r);
+	__m128 mc3 = _mm_loadu_ps(&c3.r);
+	__m128 mc01 = _mm_add_ps(mc0, _mm_mul_ps(_mm_sub_ps(mc1, mc0), _mm_set1_ps(tx)));
+	__m128 mc23 = _mm_add_ps(mc2, _mm_mul_ps(_mm_sub_ps(mc3, mc2), _mm_set1_ps(tx)));
+	__m128 mret = _mm_add_ps(mc01, _mm_mul_ps(_mm_sub_ps(mc23, mc01), _mm_set1_ps(ty)));
+	color_rgba32f ret;
+	_mm_storeu_ps(&ret.r, mret);
+	return ret;
+#else
+	color_rgba32f c01(c0.get_vec4() + (c1.get_vec4() - c0.get_vec4()) * tx);
+	color_rgba32f c23(c2.get_vec4() + (c3.get_vec4() - c2.get_vec4()) * tx);
+	return color_rgba32f(c01.get_vec4() + (c23.get_vec4() - c01.get_vec4()) * ty);
+#endif
+}
+inline color_rgba32f lerp(const color_rgb32f& c0, const color_rgb32f& c1, const color_rgb32f& c2, const color_rgb32f& c3, float tx, float ty)
+{
+	color_rgb32f c01(c0.r + (c1.r - c0.r) * tx, c0.r + (c1.g - c0.g) * tx, c0.r + (c1.b - c0.b) * tx);
+	color_rgb32f c23(c2.r + (c3.r - c2.r) * tx, c2.r + (c3.g - c2.g) * tx, c2.r + (c3.b - c2.b) * tx);
+	return color_rgb32f(c01.r + (c23.r - c01.r) * ty, c01.r + (c23.g - c01.g) * ty, c01.r + (c23.b - c01.b) * ty).to_rgba32f();
+}
+inline color_rgba32f lerp(const color_bgra8& c0, const color_bgra8& c1, const color_bgra8& c2, const color_bgra8& c3, float tx, float ty)
+{
+#ifndef EFLIB_NO_SIMD
+	__m128 mc0 = _mm_set_ps(c0.a, c0.b, c0.g, c0.r);
+	__m128 mc1 = _mm_set_ps(c1.a, c1.b, c1.g, c1.r);
+	__m128 mc2 = _mm_set_ps(c2.a, c2.b, c2.g, c2.r);
+	__m128 mc3 = _mm_set_ps(c3.a, c3.b, c3.g, c3.r);
+	__m128 mc01 = _mm_add_ps(mc0, _mm_mul_ps(_mm_sub_ps(mc1, mc0), _mm_set1_ps(tx)));
+	__m128 mc23 = _mm_add_ps(mc2, _mm_mul_ps(_mm_sub_ps(mc3, mc2), _mm_set1_ps(tx)));
+	__m128 mret = _mm_add_ps(mc01, _mm_mul_ps(_mm_sub_ps(mc23, mc01), _mm_set1_ps(ty)));
+	mret = _mm_mul_ps(mret, _mm_set1_ps(1.0f / 255));
+	color_rgba32f ret;
+	_mm_storeu_ps(&ret.r, mret);
+	return ret;
+#else
+	color_rgba32f ret = lerp(color_rgba32f(c0.r, c0.g, c0.b, c0.a), color_rgba32f(c1.r, c1.g, c1.b, c1.a),
+							color_rgba32f(c2.r, c2.g, c2.b, c2.a), color_rgba32f(c3.r, c3.g, c3.b, c3.a), tx, ty);
+	ret.get_vec4() /= 255.0f;
+	return ret;
+#endif
+}
+inline color_rgba32f lerp(const color_rgba8& c0, const color_rgba8& c1, const color_rgba8& c2, const color_rgba8& c3, float tx, float ty)
+{
+#ifndef EFLIB_NO_SIMD
+	__m128 mc0 = _mm_set_ps(c0.a, c0.b, c0.g, c0.r);
+	__m128 mc1 = _mm_set_ps(c1.a, c1.b, c1.g, c1.r);
+	__m128 mc2 = _mm_set_ps(c2.a, c2.b, c2.g, c2.r);
+	__m128 mc3 = _mm_set_ps(c3.a, c3.b, c3.g, c3.r);
+	__m128 mc01 = _mm_add_ps(mc0, _mm_mul_ps(_mm_sub_ps(mc1, mc0), _mm_set1_ps(tx)));
+	__m128 mc23 = _mm_add_ps(mc2, _mm_mul_ps(_mm_sub_ps(mc3, mc2), _mm_set1_ps(tx)));
+	__m128 mret = _mm_add_ps(mc01, _mm_mul_ps(_mm_sub_ps(mc23, mc01), _mm_set1_ps(ty)));
+	mret = _mm_mul_ps(mret, _mm_set1_ps(1.0f / 255));
+	color_rgba32f ret;
+	_mm_storeu_ps(&ret.r, mret);
+	return ret;
+#else
+	color_rgba32f ret = lerp(color_rgba32f(c0.r, c0.g, c0.b, c0.a), color_rgba32f(c1.r, c1.g, c1.b, c1.a),
+							color_rgba32f(c2.r, c2.g, c2.b, c2.a), color_rgba32f(c3.r, c3.g, c3.b, c3.a), tx, ty);
+	ret.get_vec4() /= 255.0f;
+	return ret;
+#endif
+}
+inline color_rgba32f lerp(const color_r32f& c0, const color_r32f& c1, const color_r32f& c2, const color_r32f& c3, float tx, float ty)
+{
+	color_r32f c01(c0.r + (c1.r - c0.r) * tx);
+	color_r32f c23(c2.r + (c3.r - c2.r) * tx);
+	return color_r32f(c01.r + (c23.r - c01.r) * ty).to_rgba32f();
+}
+inline color_rgba32f lerp(const color_rg32f& c0, const color_rg32f& c1, const color_rg32f& c2, const color_rg32f& c3, float tx, float ty)
+{
+	color_rg32f c01(c0.r + (c1.r - c0.r) * tx, c0.r + (c1.g - c0.g) * tx);
+	color_rg32f c23(c2.r + (c3.r - c2.r) * tx, c2.r + (c3.g - c2.g) * tx);
+	return color_rg32f(c01.r + (c23.r - c01.r) * ty, c01.r + (c23.g - c01.g) * ty).to_rgba32f();
+}
+inline color_rgba32f lerp(const color_r32i& c0, const color_r32i& c1, const color_r32i& c2, const color_r32i& c3, float tx, float ty)
+{
+	color_r32f c01(c0.r + (c1.r - c0.r) * tx);
+	color_r32f c23(c2.r + (c3.r - c2.r) * tx);
+	return color_r32f(c01.r + (c23.r - c01.r) * ty).to_rgba32f();
+}
+
 END_NS_SOFTART()
 
 #include "colors_convertors.h"

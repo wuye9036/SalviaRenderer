@@ -86,7 +86,26 @@ public:
 	}
 
 	typedef void (*pixel_convertor)(void* outcolor, const void* incolor);
-	typedef void (*pixel_array_convertor)(void* outcolor, const void* incolor, int outstride, int instride, int count);
+	typedef void (*pixel_array_convertor)(void* outcolor, const void* incolor, int count, int outstride, int instride);
+	typedef color_rgba32f (*pixel_lerp_1d)(const void* incolor0, const void* incolor1, float t);
+	typedef color_rgba32f (*pixel_lerp_2d)(const void* incolor0, const void* incolor1, const void* incolor2, const void* incolor3, float tx, float ty);
+
+	static pixel_convertor get_convertor_func(pixel_format outfmt, pixel_format infmt)
+	{
+		return convertors[outfmt][infmt];
+	}
+	static pixel_array_convertor get_array_convertor_func(pixel_format outfmt, pixel_format infmt)
+	{
+		return array_convertors[outfmt][infmt];
+	}
+	static pixel_lerp_1d get_lerp_1d_func(pixel_format infmt)
+	{
+		return lerpers_1d[infmt];
+	}
+	static pixel_lerp_2d get_lerp_2d_func(pixel_format infmt)
+	{
+		return lerpers_2d[infmt];
+	}
 
 	pixel_format_convertor();
 
@@ -95,6 +114,8 @@ private:
 	//convertors[outfmt][infmt]
 	static pixel_convertor convertors[pixel_format_color_max][pixel_format_color_max];
 	static pixel_array_convertor array_convertors[pixel_format_color_max][pixel_format_color_max];
+	static pixel_lerp_1d lerpers_1d[pixel_format_color_max];
+	static pixel_lerp_2d lerpers_2d[pixel_format_color_max];
 
 	template<class OutColorType, class InColorType>
 	static void convert(OutColorType* outpixel, const InColorType* inpixel)
@@ -119,6 +140,18 @@ private:
 			o_pbytes += outstride;
 			i_pbytes += instride;
 		}
+	}
+
+	template<class InColorType>
+	static color_rgba32f lerp_1d_t(const void* incolor0, const void* incolor1, float t)
+	{
+		return lerp(*static_cast<const InColorType*>(incolor0), *static_cast<const InColorType*>(incolor1), t);
+	}
+	template<class InColorType>
+	static color_rgba32f lerp_2d_t(const void* incolor0, const void* incolor1, const void* incolor2, const void* incolor3, float tx, float ty)
+	{
+		return lerp(*static_cast<const InColorType*>(incolor0), *static_cast<const InColorType*>(incolor1),
+			*static_cast<const InColorType*>(incolor2), *static_cast<const InColorType*>(incolor3), tx, ty);
 	}
 };
 
