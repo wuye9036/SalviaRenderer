@@ -13,6 +13,7 @@ const compiler_informations compiler_informations::redef_diff_basic_type ( 16909
 const compiler_informations compiler_informations::_link ( 33554432 );
 const compiler_informations compiler_informations::_info_level_mask ( 16711680 );
 const compiler_informations compiler_informations::_stage_mask ( 4278190080 );
+const compiler_informations compiler_informations::uses_a_undef_type ( 16909291 );
 const compiler_informations compiler_informations::_info_id_mask ( 65535 );
 const compiler_informations compiler_informations::_compile ( 16777216 );
 const compiler_informations compiler_informations::redef_cannot_overloaded ( 16909290 );
@@ -39,6 +40,7 @@ public:
 		enum_to_name.insert( std::make_pair( compiler_informations::_link, "Link" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_info_level_mask, "_info_level_mask" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_stage_mask, "_stage_mask" ) );
+		enum_to_name.insert( std::make_pair( compiler_informations::uses_a_undef_type, "$anchor:identifier$ uses a undefined $anchor:type_alias$" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_info_id_mask, "_info_id_mask" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::_compile, "Compile" ) );
 		enum_to_name.insert( std::make_pair( compiler_informations::redef_cannot_overloaded, "$anchor:identifier$ : redefinition; symbol cannot be overloaded with a typedef." ) );
@@ -51,6 +53,7 @@ public:
 		name_to_enum.insert( std::make_pair( "Link", compiler_informations::_link ) );
 		name_to_enum.insert( std::make_pair( "_info_level_mask", compiler_informations::_info_level_mask ) );
 		name_to_enum.insert( std::make_pair( "_stage_mask", compiler_informations::_stage_mask ) );
+		name_to_enum.insert( std::make_pair( "$anchor:identifier$ uses a undefined $anchor:type_alias$", compiler_informations::uses_a_undef_type ) );
 		name_to_enum.insert( std::make_pair( "_info_id_mask", compiler_informations::_info_id_mask ) );
 		name_to_enum.insert( std::make_pair( "Compile", compiler_informations::_compile ) );
 		name_to_enum.insert( std::make_pair( "$anchor:identifier$ : redefinition; symbol cannot be overloaded with a typedef.", compiler_informations::redef_cannot_overloaded ) );

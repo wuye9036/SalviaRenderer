@@ -38,6 +38,10 @@
     <ClCompile Include="..\src\semantic\symbol_scope.cpp" />
     <ClCompile Include="..\src\semantic\type_checker.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\enums\compiler_infos.xml" />
+    <None Include="..\enums\enum_defs.xml" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

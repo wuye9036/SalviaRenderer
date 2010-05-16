@@ -46,6 +46,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_initializer&
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_initializer& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v ){
+	using ::boost::assign::list_of;
+
 	symbol_scope sc( v.name->lit, v.handle(), cursym );
 
 	// process variable type
@@ -55,14 +57,19 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 	
 	// check type.
 	if ( typesyminfo->type_type() == type_types::buildin ){
-		// do buildin
+		// TODO: ALLOCATE BUILD-IN TYPED VAR.
 	} else if ( typesyminfo->type_type() == type_types::composited ){
-		// do composited
+		// TODO: ALLOCATE COMPOSITED TYPED VAR.
 	} else if ( typesyminfo->type_type() == type_types::alias ){
 		if ( typesyminfo->full_type() ){
-			// do actual
+			// TODO: ALLOCATE ACTUAL
 		} else {
-			// semantic error: non definition.
+			infomgr->add_info( semantic_error::create( compiler_informations::uses_a_undef_type,
+				v.handle(), list_of( typesyminfo->full_type() ) )
+				);
+			// remove created symbol
+			cursym->remove_from_tree();
+			return;
 		}
 	}
 

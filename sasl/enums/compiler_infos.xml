@@ -27,5 +27,8 @@
 		<item value="$error_index$+$_compile$" 
 			desc="$anchor:identifier$ : redefinition; symbol cannot be overloaded with a typedef."
 		>redef_cannot_overloaded</item>
+		<item value="$error_index$+$_compile$"
+			desc = "$anchor:identifier$ uses a undefined $anchor:type_alias$"
+		>uses_a_undef_type</item>
 	</enum>
 </enums>

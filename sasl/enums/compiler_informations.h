@@ -29,6 +29,7 @@ public:
 	const static this_type _link;
 	const static this_type _info_level_mask;
 	const static this_type _stage_mask;
+	const static this_type uses_a_undef_type;
 	const static this_type _info_id_mask;
 	const static this_type _compile;
 	const static this_type redef_cannot_overloaded;

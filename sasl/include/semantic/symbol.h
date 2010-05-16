@@ -29,6 +29,7 @@ public:
 	boost::shared_ptr<symbol> find_all(const std::string& s);
 	boost::shared_ptr<symbol> add_child(const std::string& s, boost::shared_ptr<node> child_node);
 	void remove_child( const std::string& s );
+	void remove_from_tree();
 	boost::shared_ptr<symbol> parent();
 
 	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname );
@@ -54,10 +55,18 @@ public:
 	}
 
 	boost::shared_ptr<struct node> node();
-
+	const std::string& name() const;
 private:
-	static boost::shared_ptr<symbol> create( boost::shared_ptr<symbol> parent, boost::shared_ptr<struct node> correspond_node );
-	symbol(boost::shared_ptr<symbol> parent, boost::shared_ptr<struct node> correspond_node);
+	static boost::shared_ptr<symbol> create(
+		boost::shared_ptr<symbol> parent,
+		boost::shared_ptr<struct node> correspond_node,
+		const std::string& name
+		);
+	symbol(
+		boost::shared_ptr<symbol> parent,
+		boost::shared_ptr<struct node> correspond_node,
+		const std::string& name
+		);
 	typedef std::vector< boost::shared_ptr<class symbol_info> > symbol_infos_t;
 	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;
 	typedef children_t::iterator children_iterator_t;
@@ -67,6 +76,7 @@ private:
 	boost::weak_ptr<symbol> selfptr;
 	children_t children;
 	symbol_infos_t syminfos;
+	std::string symname;
 };
 
 END_NS_SASL_SEMANTIC()

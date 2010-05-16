@@ -66,4 +66,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\enums\compiler_infos.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\enums\enum_defs.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
