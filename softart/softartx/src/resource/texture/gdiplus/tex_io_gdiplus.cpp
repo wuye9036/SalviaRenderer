@@ -58,17 +58,17 @@ bool texture_io_gdiplus::copy_image_to_surface(softart::surface& surf, const rec
 
 	Rect rc((INT)src_region.x, (INT)src_region.y, (INT)src_region.w, (INT)src_region.h);
 	src_bmp->LockBits(&rc, ImageLockModeRead, PixelFormat32bppARGB, &bmp_data);
-	surf.lock(&ptexdata, dest_region, lock_write_only);
+	surf.map(&ptexdata, map_write);
 	for(size_t iy = 0; iy < src_region.h; ++iy){
 		pixel_format_convertor::convert_array(
 			surf.get_pixel_format(), 
 			pixel_format_color_bgra8, 
-			(byte*)ptexdata + dest_region.w*color_infos[surf.get_pixel_format()].size*iy,
+			(byte*)ptexdata + ((dest_region.y + iy) * surf.get_width() + dest_region.x) * color_infos[surf.get_pixel_format()].size,
 			(byte*)bmp_data.Scan0 + bmp_data.Stride * iy,
 			(int)src_region.w
 			);
 	}
-	surf.unlock();
+	surf.unmap();
 	src_bmp->UnlockBits(&bmp_data);
 
 	return true;

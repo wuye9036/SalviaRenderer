@@ -61,7 +61,7 @@ namespace addresser
 			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
 
 			__m128 mfcoord0 = _mm_sub_ps(mfcoord, _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord)));
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			misize = _mm_unpacklo_epi64(misize, misize);
 			__m128 mfsize = _mm_cvtepi32_ps(misize);
 			mfcoord0 = _mm_mul_ps(mfsize, mfcoord0);
 			const __m128 mhalf = _mm_set1_ps(0.5f);
@@ -75,7 +75,7 @@ namespace addresser
 			_mm_storeu_ps(&frac.x, mffrac);
 
 			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
-			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
+			__m128i micoord01 = _mm_unpacklo_epi64(micoord0, micoord0);
 			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
 			micoord01 = _mm_add_epi32(micoord01, _mm_slli_si128(misize, 2));
 			mfcoord = _mm_cvtepi32_ps(micoord01);
@@ -83,7 +83,7 @@ namespace addresser
 			__m128 mfdiv = _mm_cvtepi32_ps(midiv);
 			__m128i tmp = _mm_sub_epi32(micoord01, _mm_cvttps_epi32(_mm_mul_ps(mfdiv, mfsize)));
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
-			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
+			tmp = _mm_unpackhi_epi64(tmp, tmp);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
 			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w) - 0.5f;
@@ -176,14 +176,14 @@ namespace addresser
 			_mm_storeu_ps(&frac.x, mffrac);
 
 			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
-			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
+			__m128i micoord01 = _mm_unpacklo_epi64(micoord0, micoord0);
 			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			misize = _mm_unpacklo_epi64(misize, misize);
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
 			tmp = _mm_min_epi16(tmp, misize);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
-			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
+			tmp = _mm_unpackhi_epi64(tmp, tmp);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
@@ -216,7 +216,7 @@ namespace addresser
 			__m128 mfcoord = _mm_loadu_ps(&coord.x);
 			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
 
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			misize = _mm_unpacklo_epi64(misize, misize);
 			__m128 mfsize = _mm_cvtepi32_ps(misize);
 			const __m128 mhalf = _mm_set1_ps(0.5f);
 			__m128 mfcoord0 = _mm_mul_ps(mfcoord, mfsize);
@@ -253,7 +253,7 @@ namespace addresser
 			__m128 mfcoord = _mm_loadu_ps(&coord.x);
 			__m128i misize = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x));
 
-			misize = _mm_shuffle_epi32(misize, _MM_SHUFFLE(1, 0, 1, 0));
+			misize = _mm_unpacklo_epi64(misize, misize);
 			__m128 mfsize = _mm_cvtepi32_ps(misize);
 			const __m128 mhalf = _mm_set1_ps(0.5f);
 			__m128 mfcoord0 = _mm_mul_ps(mfcoord, mfsize);
@@ -269,13 +269,13 @@ namespace addresser
 			_mm_storeu_ps(&frac.x, mffrac);
 
 			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
-			__m128i micoord01 = _mm_shuffle_epi32(micoord0, _MM_SHUFFLE(1, 0, 1, 0));
+			__m128i micoord01 = _mm_unpacklo_epi64(micoord0, micoord0);
 			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
 			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
 			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
 			tmp = _mm_min_epi16(tmp, misize);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
-			tmp = _mm_shuffle_epi32(tmp, _MM_SHUFFLE(3, 2, 3, 2));
+			tmp = _mm_unpackhi_epi64(tmp, tmp);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
 			vec4 o_coord(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,

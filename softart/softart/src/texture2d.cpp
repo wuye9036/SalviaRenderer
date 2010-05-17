@@ -8,7 +8,7 @@ BEGIN_NS_SOFTART()
 
 using namespace efl;
 
-texture_2d::texture_2d(size_t width, size_t height, pixel_format format):is_locked_(false), locked_surface_(0)
+texture_2d::texture_2d(size_t width, size_t height, pixel_format format):is_mapped_(false), mapped_surface_(0)
 {
 	width_ = width;
 	height_ = height;
@@ -20,7 +20,7 @@ texture_2d::texture_2d(size_t width, size_t height, pixel_format format):is_lock
 
 void texture_2d::reset(size_t width, size_t height, pixel_format format)
 {
-	custom_assert(!is_locked_, "重置纹理时发现纹理已被锁定！");
+	custom_assert(!is_mapped_, "重置纹理时发现纹理已被锁定！");
 
 	new(this) texture_2d(width, height, format);
 }
@@ -36,7 +36,6 @@ void  texture_2d::gen_mipmap(filter_type filter)
 	for(size_t iLevel = max_lod_ + 1; iLevel <= min_lod_; ++iLevel)
 	{
 		size_t last_sizex = cur_sizex;
-		size_t last_sizey = cur_sizey;
 
 		cur_sizex = (cur_sizex + 1) / 2;
 		cur_sizey = (cur_sizey + 1) / 2;
@@ -45,8 +44,8 @@ void  texture_2d::gen_mipmap(filter_type filter)
 		byte* src_data = NULL;
 
 		surfs_[iLevel].rebuild(cur_sizex, cur_sizey, fmt_);
-		surfs_[iLevel].lock((void**)&dst_data, rect<size_t>(0, 0, cur_sizex, cur_sizey), lock_write_only);
-		surfs_[iLevel - 1].lock((void**)&src_data, rect<size_t>(0, 0, last_sizex, last_sizey), lock_read_only);
+		surfs_[iLevel].map((void**)&dst_data, map_write);
+		surfs_[iLevel - 1].map((void**)&src_data, map_read);
 
 #if 0
 		float r = iLevel % 3 == 0 ? 1.0f : 0.0f;
@@ -109,35 +108,35 @@ void  texture_2d::gen_mipmap(filter_type filter)
 			break;
 		}
 
-		surfs_[iLevel - 1].unlock();
-		surfs_[iLevel].unlock();
+		surfs_[iLevel - 1].unmap();
+		surfs_[iLevel].unmap();
 	}
 }
 
-void  texture_2d::lock(void** pData, size_t miplevel, const rect<size_t>& lrc, lock_mode lm, size_t z_slice)
+void  texture_2d::map(void** pData, size_t miplevel, map_mode mm, size_t z_slice)
 {
 	custom_assert(max_lod_ <= miplevel && miplevel <= min_lod_, "Mipmap Level越界！");
 	custom_assert(z_slice == 0, "z_slice选项设定无效。");
 	custom_assert(pData != 0, "pData不可为NULL！");
-	custom_assert(!is_locked_, "试图重复锁定已锁定的纹理！");
+	custom_assert(!is_mapped_, "试图重复锁定已锁定的纹理！");
 	UNREF_PARAM(z_slice);
 
 	*pData = NULL;
 
-	if(is_locked_) return;
-	locked_surface_ = miplevel;
-	surfs_[locked_surface_].lock(pData, lrc, lm);
+	if(is_mapped_) return;
+	mapped_surface_ = miplevel;
+	surfs_[mapped_surface_].map(pData, mm);
 	if(*pData == NULL){return;}
 
-	is_locked_ = true;
+	is_mapped_ = true;
 }
 
-void  texture_2d::unlock()
+void  texture_2d::unmap()
 {
-	custom_assert(is_locked_, "试图对未锁定的纹理解锁！");
-	if(! is_locked_) return;
-	surfs_[locked_surface_].unlock();
-	is_locked_ = false;
+	custom_assert(is_mapped_, "试图对未锁定的纹理解锁！");
+	if(! is_mapped_) return;
+	surfs_[mapped_surface_].unmap();
+	is_mapped_ = false;
 }
 
 surface&  texture_2d::get_surface(size_t miplevel, size_t z_slice)

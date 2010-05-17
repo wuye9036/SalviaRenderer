@@ -146,7 +146,7 @@ void dev_d3d9::present()
 		return;
 	}
 
-	prt->lock((void**)(&src_addr), pfb_->get_rect(), lock_read_only);
+	prt->map((void**)(&src_addr), map_read);
 	if( src_addr == NULL ) return;
 
 	for(size_t irow = 0; irow < pfb_->get_height(); ++irow)
@@ -160,7 +160,7 @@ void dev_d3d9::present()
 		src_addr += prt->get_pitch();
 	}
 
-	prt->unlock();
+	prt->unmap();
 	buftex_->UnlockRect(0);
 
 	IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();

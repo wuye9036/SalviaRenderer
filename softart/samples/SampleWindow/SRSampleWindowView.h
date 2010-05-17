@@ -166,7 +166,7 @@ public:
 	}
 };
 
-class ts : public blend_shader
+class ts_blend_on : public blend_shader
 {
 public:
 	bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in)
@@ -175,6 +175,20 @@ public:
 		{
 			color_rgba32f color = in.color[0];
 			inout.color(0, lerp(inout.color(0), color, color.a));
+			inout.depth(in.depth);
+		}
+		return true;
+	}
+};
+
+class ts_blend_off : public blend_shader
+{
+public:
+	bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in)
+	{
+		if(inout.depth() > in.depth)
+		{
+			inout.color(0, in.color[0]);
 			inout.depth(in.depth);
 		}
 		return true;
@@ -195,6 +209,8 @@ public:
 	h_pixel_shader pps_box;
 	h_vertex_shader pvs_plane;
 	h_pixel_shader pps_plane;
+	h_blend_shader pbs_box;
+	h_blend_shader pbs_plane;
 
 	uint32_t num_frames;
 	float accumulate_time;
@@ -275,8 +291,8 @@ public:
 			pps_plane.reset(new ps_plane(tex));
 		}
 
-		h_blend_shader pts(new ts());
-		hsr->set_blend_shader(pts);
+		pbs_box.reset(new ts_blend_on);
+		pbs_plane.reset(new ts_blend_off);
 
 		num_frames = 0;
 		accumulate_time = 0;
@@ -338,17 +354,20 @@ public:
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_plane);
 			hsr->set_pixel_shader(pps_plane);
+			hsr->set_blend_shader(pbs_plane);
 			planar_mesh->render();
 			
 			hsr->set_cull_mode(cull_front);
 			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_box);
 			hsr->set_pixel_shader(pps_box);
+			hsr->set_blend_shader(pbs_box);
 			box_mesh->render();
 
 			hsr->set_cull_mode(cull_back);
 			hsr->set_vertex_shader(pvs_box);
 			hsr->set_pixel_shader(pps_box);
+			hsr->set_blend_shader(pbs_box);
 			box_mesh->render();
 		}
 

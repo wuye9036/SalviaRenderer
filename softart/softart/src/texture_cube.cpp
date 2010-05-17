@@ -20,25 +20,25 @@ void texture_cube::gen_mipmap(filter_type filter){
 	}
 }
 
-void texture_cube::lock(void** pData, size_t miplevel, const rect<size_t>& lrc, lock_mode lm, size_t z_slice){
-	custom_assert(! is_locked_, "");
-	if(is_locked_){
+void texture_cube::map(void** pData, size_t miplevel, map_mode mm, size_t z_slice){
+	custom_assert(! is_mapped_, "");
+	if(is_mapped_){
 		*pData = NULL;
 		return;
 	}
 
-	subtexs_[z_slice].lock(pData, miplevel, lrc, lm);
-	is_locked_ = true;
-	locked_texture_ = z_slice;
+	subtexs_[z_slice].map(pData, miplevel, mm);
+	is_mapped_ = true;
+	mapped_texture_ = z_slice;
 }
 
-void texture_cube::unlock(){
-	custom_assert(is_locked_, "");
-	if(!is_locked_){
+void texture_cube::unmap(){
+	custom_assert(is_mapped_, "");
+	if(!is_mapped_){
 		return;
 	}
 
-	subtexs_[locked_texture_].unlock();
+	subtexs_[mapped_texture_].unmap();
 }
 
 surface& texture_cube::get_surface(size_t miplevel, size_t z_slice){

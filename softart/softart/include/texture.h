@@ -44,8 +44,8 @@ public:
 	size_t get_max_lod() const{return max_lod_;}
 	pixel_format get_pixel_format() const{return fmt_;}
 
-	virtual void lock(void** pData, size_t miplevel, const efl::rect<size_t>& lrc, lock_mode lm, size_t z_slice = 0) = 0;
-	virtual void unlock() = 0;
+	virtual void map(void** pData, size_t miplevel, map_mode mm, size_t z_slice = 0) = 0;
+	virtual void unmap() = 0;
 
 	virtual surface& get_surface(size_t miplevel, size_t z_slice = 0) = 0;
 	virtual const surface& get_surface(size_t miplevel, size_t z_slice = 0) const = 0;
@@ -63,8 +63,8 @@ public:
 class texture_2d : public texture
 {
 	std::vector<surface> surfs_;
-	size_t locked_surface_;
-	bool is_locked_;
+	size_t mapped_surface_;
+	bool is_mapped_;
 
 	size_t width_;
 	size_t height_;
@@ -79,8 +79,8 @@ public:
 
 	virtual void gen_mipmap(filter_type filter);
 
-	virtual void lock(void** pData, size_t miplevel, const efl::rect<size_t>& lrc, lock_mode lm, size_t z_slice = 0);
-	virtual void unlock();
+	virtual void map(void** pData, size_t miplevel, map_mode mm, size_t z_slice = 0);
+	virtual void unmap();
 
 	virtual surface& get_surface(size_t miplevel, size_t z_slice = 0);
 	virtual const surface& get_surface(size_t miplevel, size_t z_slice = 0) const;
@@ -96,8 +96,8 @@ public:
 class texture_cube : public texture
 {
 	std::vector<texture_2d> subtexs_;
-	size_t locked_texture_;
-	bool is_locked_;
+	size_t mapped_texture_;
+	bool is_mapped_;
 
 	size_t width_;
 	size_t height_;
@@ -111,8 +111,8 @@ public:
 	};
 	virtual void gen_mipmap(filter_type filter);
 
-	virtual void lock(void** pData, size_t miplevel, const efl::rect<size_t>& lrc, lock_mode lm, size_t z_slice = 0);
-	virtual void unlock();
+	virtual void map(void** pData, size_t miplevel, map_mode mm, size_t z_slice = 0);
+	virtual void unmap();
 
 	virtual surface& get_surface(size_t miplevel, size_t z_slice = 0);
 	virtual const surface& get_surface(size_t miplevel, size_t z_slice = 0) const;

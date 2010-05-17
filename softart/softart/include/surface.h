@@ -23,16 +23,24 @@ private:
 	size_t height_;
 	size_t elem_size_;
 	pixel_format pxfmt_;
+	size_t tile_width_;
+	size_t tile_height_;
+
+	bool tile_mode_;
 
 	//lock information
-	bool is_locked_;
-	efl::rect<size_t> locked_rect_;
-	std::vector<byte> locked_data_;
-	lock_mode lm_;
+	bool is_mapped_;
+	std::vector<byte> mapped_data_;
+	map_mode mm_;
 
 	//lock mode judegement
-	bool is_read_mode(lock_mode lm){return ((int)lm & (int)lock_read_only) != 0;}
-	bool is_write_mode(lock_mode lm){return ((int)lm & (int)lock_write_only) != 0;}
+	bool is_read_mode(map_mode lm){return (map_read == lm) || (map_read_write == lm);}
+	bool is_write_mode(map_mode lm){return (map_write == lm) || (map_read_write == lm) || (map_write_discard == lm) || (map_write_no_overwrite == lm);}
+
+	size_t get_texel_addr(size_t x, size_t y) const;
+
+	void tile(const std::vector<byte>& tile_data);
+	void untile(std::vector<byte>& untile_data);
 
 	pixel_format_convertor::pixel_convertor to_rgba32_func_;
 	pixel_format_convertor::pixel_convertor from_rgba32_func_;
@@ -50,10 +58,10 @@ public:
 
 	void rebuild(size_t width, size_t height, pixel_format pxfmt);
 
-	void lock_readonly(void** pdata, const efl::rect<size_t>& rc) const;
-	void lock(void** pdata, const efl::rect<size_t>& rc, lock_mode lm);
-	void unlock() const;
-	void unlock();
+	void map(void** pdata, map_mode mm) const;
+	void map(void** pdata, map_mode mm);
+	void unmap() const;
+	void unmap();
 
 	void transfer(pixel_format srcfmt, const efl::rect<size_t>& dest_rect, void* pdata);
 	void transfer(const efl::rect<size_t>& dest_rect, size_t src_start_x, size_t src_start_y, surface& src_surf);
@@ -73,8 +81,8 @@ public:
 	pixel_format get_pixel_format() const{
 		return pxfmt_;
 	}
-	bool is_locked() const{
-		return is_locked_;
+	bool is_mapped() const{
+		return is_mapped_;
 	}
 
 	color_rgba32f get_texel(size_t x, size_t y) const;

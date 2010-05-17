@@ -60,11 +60,13 @@ private:
 /**********************************
  *  Resources
  *********************************/
-enum lock_mode
+enum map_mode
 {
-	lock_read_only = 1,
-	lock_write_only = 2,
-	lock_read_write = 3,
+	map_read = 1,
+	map_write = 2,
+	map_read_write = 3,
+	map_write_discard = 4,
+	map_write_no_overwrite = 5
 };
 
 /***************************

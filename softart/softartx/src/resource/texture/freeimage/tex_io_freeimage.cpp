@@ -57,8 +57,10 @@ template<typename FIColorT> bool copy_image_to_surface(
 	}
 
 	byte* pdata = NULL;
-	surf.lock((void**)&pdata, dest_rect, lock_write_only);
+	surf.map((void**)&pdata, map_write);
 	if(!pdata) { return false;}
+
+	pdata += (dest_rect.y * surf.get_width() + dest_rect.x) * color_infos[surf.get_pixel_format()].size;
 
 	BYTE* image_data = FreeImage_GetBits(image);
 	size_t pitch = FreeImage_GetPitch(image);
@@ -77,16 +79,16 @@ template<typename FIColorT> bool copy_image_to_surface(
 			pixel_format_convertor::convert(
 				surf.get_pixel_format(),
 				softart_rgba_color_type<FIColorT>::fmt, 
-				pdata,
+				pdata + iwidth * color_infos[surf.get_pixel_format()].size,
 				&c);
 
 			ppixel += bpp;
-			pdata += color_infos[surf.get_pixel_format()].size;
 		}
+		pdata += surf.get_width() * color_infos[surf.get_pixel_format()].size;
 		image_data += pitch;
 	}
 
-	surf.unlock();
+	surf.unmap();
 	return true;
 }
 //将Image的局部拷贝到surface里的指定区域内。如果源区域和目标区域大小不同，则进行双线插值的缩放。
@@ -199,7 +201,7 @@ default:
 	}
 
 	byte* psurfdata = NULL;
-	surf.lock_readonly((void**)&psurfdata, rect<size_t>(0, 0, surf.get_width(), surf.get_height()));
+	surf.map((void**)&psurfdata, map_read);
 
 	byte* pimagedata = FreeImage_GetBits(image);
 
@@ -214,7 +216,7 @@ default:
 		pimagedata += FreeImage_GetPitch(image);
 	}
 
-	surf.unlock();
+	surf.unmap();
 
 	FreeImage_Save(fif, image, to_ansi_string(filename).c_str());
 	FreeImage_Unload(image);

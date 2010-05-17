@@ -70,7 +70,7 @@ void dev_gdiplus::present(){
 	void* pfbdata = NULL;
 	BitmapData bmpData;
 
-	rt->lock(&pfbdata, rect<size_t>(0, 0, fb_->get_width(), fb_->get_height()), lock_read_only);
+	rt->map(&pfbdata, map_read);
 	pbmp_->LockBits(&rcFramebuffer, ImageLockModeWrite, PixelFormat32bppRGB, &bmpData);
 
 	void* pixels = (void*)bmpData.Scan0;
@@ -88,7 +88,7 @@ void dev_gdiplus::present(){
 			);
 	}
 
-	rt->unlock();
+	rt->unmap();
 	pbmp_->UnlockBits(&bmpData);
 
 	//渲染到设备上

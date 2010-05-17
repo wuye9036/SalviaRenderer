@@ -24,11 +24,11 @@ public:
 	const uint8_t* raw_data(size_t offset) const {return &(bufdata_[offset]);}
 	uint8_t* raw_data(size_t offset) {return &(bufdata_[offset]);}
 
-	void lock(void** pdata, lock_mode lm, size_t offset, size_t size);
+	void map(void** pdata, map_mode mm, size_t offset, size_t size);
 	template <class T>
-	void lock(T** pdata, lock_mode lm, size_t offset, size_t size);
-	
-	void unlock();
+	void map(T** pdata, map_mode mm, size_t offset, size_t size);
+	void unmap();
+
 	void transfer(size_t offset, void* psrcdata, size_t stride_dest, size_t stride_src, size_t size, size_t count)
 	{
 		custom_assert(offset + stride_dest * (count - 1) + size <= get_size(), "");
