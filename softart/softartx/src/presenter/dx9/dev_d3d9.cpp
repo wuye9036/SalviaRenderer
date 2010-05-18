@@ -179,7 +179,7 @@ void dev_d3d9::present()
 
 END_NS_SOFTARTX_PRESENTER()
 
-void create_device(softart::h_device& dev, void* param)
+void softart_create_presenter_device(softart::h_device& dev, void* param)
 {
 	dev = softartx::presenter::dev_d3d9::create_device(static_cast<HWND>(param));
 }

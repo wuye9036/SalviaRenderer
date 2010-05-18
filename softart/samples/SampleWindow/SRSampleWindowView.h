@@ -16,7 +16,8 @@
 #include <boost/assign.hpp>
 #include <boost/timer.hpp>
 
-//#define USE_GDIPLUS
+//#define PRESENTER_NAME "gdiplus"
+#define PRESENTER_NAME "d3d9"
 
 using namespace efl;
 using namespace boost;
@@ -247,12 +248,7 @@ public:
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
 		std::_tstring dll_name = TEXT("SoftArtX_");
-#ifdef USE_GDIPLUS
-		dll_name += TEXT("gdiplus");
-#else
-		dll_name += TEXT("d3d9");
-#endif
-
+		dll_name += TEXT(PRESENTER_NAME);
 		dll_name += TEXT("_presenter");
 #ifdef EFLIB_DEBUG
 		dll_name += TEXT("_d");
@@ -260,8 +256,8 @@ public:
 		dll_name += TEXT(".dll");
 
 		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*presenter_create_device_func)(softart::h_device& dev, void* param);
-		presenter_create_device_func presenter_func = (presenter_create_device_func)GetProcAddress(presenter_dll, "create_device");
+		typedef void (*create_presenter_device_func)(softart::h_device& dev, void* param);
+		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "softart_create_presenter_device");
 		presenter_func(present_dev, static_cast<void*>(m_hWnd));
 
 		renderer_parameters render_params = {0};

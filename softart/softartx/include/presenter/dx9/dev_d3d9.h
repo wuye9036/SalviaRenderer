@@ -66,7 +66,7 @@ END_NS_SOFTARTX_PRESENTER()
 
 extern "C"
 {
-	SOFTARTX_API void create_device(softart::h_device& dev, void* param);
+	SOFTARTX_API void softart_create_presenter_device(softart::h_device& dev, void* param);
 }
 
 #endif //SOFTARTX_DEV_D3D9_H
