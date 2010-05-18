@@ -44,15 +44,15 @@ public:
 	size_t get_max_lod() const{return max_lod_;}
 	pixel_format get_pixel_format() const{return fmt_;}
 
-	virtual void map(void** pData, size_t miplevel, map_mode mm, size_t z_slice = 0) = 0;
-	virtual void unmap() = 0;
+	virtual void map(void** pData, size_t subresource, map_mode mm) = 0;
+	virtual void unmap(size_t subresource) = 0;
 
-	virtual surface& get_surface(size_t miplevel, size_t z_slice = 0) = 0;
-	virtual const surface& get_surface(size_t miplevel, size_t z_slice = 0) const = 0;
+	virtual surface& get_surface(size_t subresource) = 0;
+	virtual const surface& get_surface(size_t subresource) const = 0;
 
-	virtual size_t get_width(size_t miplevel) const= 0;
-	virtual size_t get_height(size_t miplevel) const= 0;
-	virtual size_t get_depth(size_t miplevel) const= 0;
+	virtual size_t get_width(size_t subresource) const= 0;
+	virtual size_t get_height(size_t subresource) const= 0;
+	virtual size_t get_depth(size_t subresource) const= 0;
 	
 	virtual void set_max_lod(size_t miplevel) = 0;
 	virtual void set_min_lod(size_t miplevel) = 0;
@@ -63,8 +63,6 @@ public:
 class texture_2d : public texture
 {
 	std::vector<surface> surfs_;
-	size_t mapped_surface_;
-	bool is_mapped_;
 
 	size_t width_;
 	size_t height_;
@@ -79,15 +77,15 @@ public:
 
 	virtual void gen_mipmap(filter_type filter);
 
-	virtual void map(void** pData, size_t miplevel, map_mode mm, size_t z_slice = 0);
-	virtual void unmap();
+	virtual void map(void** pData, size_t subresource, map_mode mm);
+	virtual void unmap(size_t subresource);
 
-	virtual surface& get_surface(size_t miplevel, size_t z_slice = 0);
-	virtual const surface& get_surface(size_t miplevel, size_t z_slice = 0) const;
+	virtual surface& get_surface(size_t subresource);
+	virtual const surface& get_surface(size_t subresource) const;
 
-	virtual size_t get_width(size_t mipmap = 0) const;
-	virtual size_t get_height(size_t mipmap = 0) const;
-	virtual size_t get_depth(size_t mipmap = 0) const;
+	virtual size_t get_width(size_t subresource) const;
+	virtual size_t get_height(size_t subresource) const;
+	virtual size_t get_depth(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);
@@ -96,8 +94,6 @@ public:
 class texture_cube : public texture
 {
 	std::vector<texture_2d> subtexs_;
-	size_t mapped_texture_;
-	bool is_mapped_;
 
 	size_t width_;
 	size_t height_;
@@ -111,21 +107,18 @@ public:
 	};
 	virtual void gen_mipmap(filter_type filter);
 
-	virtual void map(void** pData, size_t miplevel, map_mode mm, size_t z_slice = 0);
-	virtual void unmap();
+	virtual void map(void** pData, size_t subresource, map_mode mm);
+	virtual void unmap(size_t subresource);
 
-	virtual surface& get_surface(size_t miplevel, size_t z_slice = 0);
-	virtual const surface& get_surface(size_t miplevel, size_t z_slice = 0) const;
-
-	virtual surface& get_surface(size_t miplevel, cubemap_faces face);
-	virtual const surface& get_surface(size_t miplevel, cubemap_faces face) const;
+	virtual surface& get_surface(size_t subresource);
+	virtual const surface& get_surface(size_t subresource) const;
 
 	virtual texture& get_face(cubemap_faces face);
 	virtual const texture& get_face(cubemap_faces face) const;
 
-	virtual size_t get_width(size_t mipmap = 0) const;
-	virtual size_t get_height(size_t mipmap = 0) const;
-	virtual size_t get_depth(size_t mipmap = 0) const;
+	virtual size_t get_width(size_t subresource) const;
+	virtual size_t get_height(size_t subresource) const;
+	virtual size_t get_depth(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);

@@ -81,4 +81,15 @@ public:
 	}
 };
 
+#ifdef SoftArtX_gdiplus_presenter_EXPORTS
+	#define SOFTARTX_API __declspec(dllexport)
+#else
+	#define SOFTARTX_API __declspec(dllimport)
+#endif
+
+extern "C"
+{
+	SOFTARTX_API void create_device(softart::h_device& dev, void* param);
+}
+
 #endif //SOFTARTX_DEV_GDIPLUS_H

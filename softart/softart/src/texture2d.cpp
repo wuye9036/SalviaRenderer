@@ -8,7 +8,7 @@ BEGIN_NS_SOFTART()
 
 using namespace efl;
 
-texture_2d::texture_2d(size_t width, size_t height, pixel_format format):is_mapped_(false), mapped_surface_(0)
+texture_2d::texture_2d(size_t width, size_t height, pixel_format format)
 {
 	width_ = width;
 	height_ = height;
@@ -113,70 +113,53 @@ void  texture_2d::gen_mipmap(filter_type filter)
 	}
 }
 
-void  texture_2d::map(void** pData, size_t miplevel, map_mode mm, size_t z_slice)
+void  texture_2d::map(void** pData, size_t subresource, map_mode mm)
 {
-	custom_assert(max_lod_ <= miplevel && miplevel <= min_lod_, "Mipmap Level越界！");
-	custom_assert(z_slice == 0, "z_slice选项设定无效。");
+	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 	custom_assert(pData != 0, "pData不可为NULL！");
-	custom_assert(!is_mapped_, "试图重复锁定已锁定的纹理！");
-	UNREF_PARAM(z_slice);
 
 	*pData = NULL;
-
-	if(is_mapped_) return;
-	mapped_surface_ = miplevel;
-	surfs_[mapped_surface_].map(pData, mm);
-	if(*pData == NULL){return;}
-
-	is_mapped_ = true;
+	get_surface(subresource).map(pData, mm);
 }
 
-void  texture_2d::unmap()
+void  texture_2d::unmap(size_t subresource)
 {
-	custom_assert(is_mapped_, "试图对未锁定的纹理解锁！");
-	if(! is_mapped_) return;
-	surfs_[mapped_surface_].unmap();
-	is_mapped_ = false;
+	get_surface(subresource).unmap();
 }
 
-surface&  texture_2d::get_surface(size_t miplevel, size_t z_slice)
+surface&  texture_2d::get_surface(size_t subresource)
 {
-	custom_assert(max_lod_ <= miplevel && miplevel <= min_lod_, "Mipmap Level越界！");
+	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+
+	return surfs_[subresource];
+}
+
+const surface&  texture_2d::get_surface(size_t subresource) const
+{
+	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 	custom_assert(z_slice == 0, "z_slice选项设定无效。");
-	UNREF_PARAM(z_slice);
 
-	return surfs_[miplevel];
+	return surfs_[subresource];
 }
 
-const surface&  texture_2d::get_surface(size_t miplevel, size_t z_slice) const
+size_t  texture_2d::get_width(size_t subresource) const
 {
-	custom_assert(max_lod_ <= miplevel && miplevel <= min_lod_, "Mipmap Level越界！");
-	custom_assert(z_slice == 0, "z_slice选项设定无效。");
-	UNREF_PARAM(z_slice);
+	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
-	return surfs_[miplevel];
+	return get_surface(subresource).get_width();
 }
 
-size_t  texture_2d::get_width(size_t mipmap) const
+size_t  texture_2d::get_height(size_t subresource) const
 {
-	custom_assert(max_lod_ <= mipmap && mipmap <= min_lod_, "Mipmap Level越界！");
+	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
-	if(mipmap == 0) return width_;
-	return surfs_[mipmap].get_width();
+	return get_surface(subresource).get_width();
 }
 
-size_t  texture_2d::get_height(size_t mipmap) const
+size_t  texture_2d::get_depth(size_t subresource) const
 {
-	custom_assert(max_lod_ <= mipmap && mipmap <= min_lod_, "Mipmap Level越界！");
-
-	if(mipmap == 0) return height_;
-	return surfs_[mipmap].get_width();
-}
-
-size_t  texture_2d::get_depth(size_t mipmap) const
-{
-	custom_assert(max_lod_ <= mipmap && mipmap <= min_lod_, "Mipmap Level越界！");
-	UNREF_PARAM(mipmap);
+	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	UNREF_PARAM(subresource);
 
 	return 1;
 }

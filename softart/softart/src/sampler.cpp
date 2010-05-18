@@ -759,7 +759,7 @@ color_rgba32f sampler::sample_cube(
 		custom_assert(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
-	float lod = calc_lod(origin_coord, vec4(float(pcube->get_width()), float(pcube->get_height()), 0.0f, 0.0f), ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	float lod = calc_lod(origin_coord, vec4(float(pcube->get_width(0)), float(pcube->get_height(0)), 0.0f, 0.0f), ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 	//return color_rgba32f(vec4(coord.xyz(), 1.0f));
 	//return color_rgba32f(invlod, invlod, invlod, 1.0f);
 	return sample_cube(coord.x, coord.y, coord.z, lod);

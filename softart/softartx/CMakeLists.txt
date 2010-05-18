@@ -22,13 +22,9 @@ set (HEADER_FILES
 	include/utility/user_config.h
 	include/utility/utility_forward.h
 	include/presenter/sa/dev.h
-	include/presenter/dx9/dev_d3d9.h
-	include/presenter/gdiplus/dev_gdiplus.h
 )
 
 set (SOURCE_FILES
-	src/presenter/dx9/dev_d3d9.cpp
-	src/presenter/gdiplus/dev_gdiplus.cpp
 	src/resource/mesh/sa/mesh.cpp
 	src/resource/mesh/sa/mesh_io.cpp
 	src/resource/mesh/dx9/mesh_io_d3d9.cpp
@@ -49,11 +45,56 @@ EFLIB
 SoftArt
 )
 
-IF (WIN32) 
-	TARGET_LINK_LIBRARIES (SoftArtX "gdiplus") 
-ENDIF (WIN32) 
-
 TARGET_LINK_LIBRARIES (SoftArtX FreeImage) 
 
 
 config_output_paths(SoftArtX)
+
+
+set (HEADER_FILES
+	include/presenter/dx9/dev_d3d9.h
+)
+
+set (SOURCE_FILES
+	src/presenter/dx9/dev_d3d9.cpp
+)
+
+ADD_LIBRARY( SoftArtX_d3d9_presenter SHARED
+${HEADER_FILES}
+${SOURCE_FILES}
+)
+
+TARGET_LINK_LIBRARIES(SoftArtX_d3d9_presenter
+EFLIB
+SoftArt
+SoftArtX
+)
+
+config_output_paths(SoftArtX_d3d9_presenter)
+
+
+
+set (HEADER_FILES
+	include/presenter/gdiplus/dev_gdiplus.h
+)
+
+set (SOURCE_FILES
+	src/presenter/gdiplus/dev_gdiplus.cpp
+)
+
+ADD_LIBRARY( SoftArtX_gdiplus_presenter SHARED
+${HEADER_FILES}
+${SOURCE_FILES}
+)
+
+TARGET_LINK_LIBRARIES(SoftArtX_gdiplus_presenter
+EFLIB
+SoftArt
+SoftArtX
+)
+
+IF (WIN32) 
+	TARGET_LINK_LIBRARIES (SoftArtX_gdiplus_presenter "gdiplus") 
+ENDIF (WIN32) 
+
+config_output_paths(SoftArtX_gdiplus_presenter)

@@ -18,6 +18,11 @@ surface::surface(size_t width, size_t height, pixel_format pxfmt)
 		tile_mode_(true),
 		is_mapped_(false)
 {
+	if ((TILE_SIZE > width_) || (TILE_SIZE > height_))
+	{
+		tile_mode_ = false;
+	}
+
 	datas_.resize(tile_width_ * tile_height_ * TILE_SIZE * TILE_SIZE * elem_size_),
 
 	to_rgba32_func_ = pixel_format_convertor::get_convertor_func(pixel_format_color_rgba32f, pxfmt_);
@@ -53,11 +58,6 @@ void surface::map(void** pdata, map_mode mm) const{
 void surface::map(void** pdata, map_mode mm){
 	custom_assert(!is_mapped(), "不可重复锁定！");
 
-	if(is_mapped()){
-		*pdata = NULL;
-		return;
-	}
-
 	mapped_data_.resize(elem_size_ * width_ * height_);
 	*pdata = &mapped_data_[0];
 
@@ -77,15 +77,11 @@ void surface::unmap()
 {
 	custom_assert(is_mapped(), "对未锁定的surface解锁！");
 
-	if(!is_mapped()){
-		return;
-	}
-
 	if(is_write_mode(mm_)){
 		this->tile(mapped_data_);
 	}
 
-	std::vector<byte>().swap(mapped_data_);
+	mapped_data_.resize(0);
 	is_mapped_ = false;
 }
 
@@ -180,10 +176,10 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 size_t surface::get_texel_addr(size_t x, size_t y) const
 {
 	if (tile_mode_){
-		size_t tile_x = x >> TILE_BITS;
-		size_t tile_y = y >> TILE_BITS;
-		size_t x_in_tile = x & TILE_MASK;
-		size_t y_in_tile = y & TILE_MASK;
+		const size_t tile_x = x >> TILE_BITS;
+		const size_t tile_y = y >> TILE_BITS;
+		const size_t x_in_tile = x & TILE_MASK;
+		const size_t y_in_tile = y & TILE_MASK;
 		return ((tile_y * tile_width_ + tile_x) * TILE_SIZE * TILE_SIZE + (y_in_tile * TILE_SIZE + x_in_tile)) * elem_size_;
 	}
 	else
@@ -195,14 +191,18 @@ size_t surface::get_texel_addr(size_t x, size_t y) const
 void surface::tile(const std::vector<byte>& tile_data)
 {
 	if (tile_mode_){
-		for (size_t y = 0; y < height_; ++ y){
-			for (size_t x = 0; x < width_; ++ x){
-				size_t tile_x = x >> TILE_BITS;
-				size_t tile_y = y >> TILE_BITS;
-				size_t x_in_tile = x & TILE_MASK;
-				size_t y_in_tile = y & TILE_MASK;
-				memcpy(&datas_[((tile_y * tile_width_ + tile_x) * TILE_SIZE * TILE_SIZE + (y_in_tile * TILE_SIZE + x_in_tile)) * elem_size_],
-					&tile_data[(y * width_ + x) * elem_size_], elem_size_);
+		for (size_t ty = 0; ty < tile_height_; ++ ty){
+			const size_t by = ty << TILE_BITS;
+			const size_t rest_height = std::min(height_ - by, TILE_SIZE);
+			for (size_t tx = 0; tx < tile_width_; ++ tx){
+				const size_t bx = tx << TILE_BITS;
+				const size_t tile_id = ty * tile_width_ + tx;
+				const size_t rest_width = std::min(width_ - bx, TILE_SIZE);
+				for (size_t y = 0; y < rest_height; ++ y){
+					memcpy(&datas_[((tile_id * TILE_SIZE + y) * TILE_SIZE) * elem_size_],
+						&tile_data[((by + y) * width_ + bx) * elem_size_],
+						rest_width * elem_size_);
+				}
 			}
 		}
 	}
@@ -215,11 +215,16 @@ void surface::untile(std::vector<byte>& untile_data)
 {
 	if (tile_mode_){
 		for (size_t ty = 0; ty < tile_height_; ++ ty){
+			const size_t by = ty << TILE_BITS;
+			const size_t rest_height = std::min(height_ - by, TILE_SIZE);
 			for (size_t tx = 0; tx < tile_width_; ++ tx){
-				for (size_t y = 0; y < std::min(height_ - (ty << TILE_BITS), TILE_SIZE); ++ y){
-					memcpy(&untile_data[(((ty << TILE_BITS) + y) * width_ + (tx << TILE_BITS)) * elem_size_],
-						&datas_[((ty * tile_width_ + tx) * TILE_SIZE * TILE_SIZE + y * TILE_SIZE) * elem_size_],
-						std::min(width_ - (tx << TILE_BITS), TILE_SIZE) * elem_size_);
+				const size_t bx = tx << TILE_BITS;
+				const size_t tile_id = ty * tile_width_ + tx;
+				const size_t rest_width = std::min(width_ - bx, TILE_SIZE);
+				for (size_t y = 0; y < rest_height; ++ y){
+					memcpy(&untile_data[((by + y) * width_ + bx) * elem_size_],
+						&datas_[((tile_id * TILE_SIZE + y) * TILE_SIZE) * elem_size_],
+						rest_width * elem_size_);
 				}
 			}
 		}

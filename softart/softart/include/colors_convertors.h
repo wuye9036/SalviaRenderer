@@ -116,43 +116,6 @@ private:
 	static pixel_array_convertor array_convertors[pixel_format_color_max][pixel_format_color_max];
 	static pixel_lerp_1d lerpers_1d[pixel_format_color_max];
 	static pixel_lerp_2d lerpers_2d[pixel_format_color_max];
-
-	template<class OutColorType, class InColorType>
-	static void convert(OutColorType* outpixel, const InColorType* inpixel)
-	{
-		(*outpixel) = (*inpixel);
-	}
-
-	template<class OutColorType, class InColorType>
-	static void convert_t(void* outpixel, const void* inpixel)
-	{
-		(*(OutColorType*)outpixel) = (*(const InColorType*)inpixel);
-	}
-
-	template<class OutColorType, class InColorType>
-	static void convert_array_t(void* outpixel, const void* inpixel, int count, int outstride, int instride)
-	{
-		byte* o_pbytes = (byte*)outpixel;
-		const byte* i_pbytes = (const byte*)inpixel;
-		
-		for(int i = 0; i < count; ++i){
-			*(OutColorType*)(o_pbytes) = *(const InColorType*)(i_pbytes);
-			o_pbytes += outstride;
-			i_pbytes += instride;
-		}
-	}
-
-	template<class InColorType>
-	static color_rgba32f lerp_1d_t(const void* incolor0, const void* incolor1, float t)
-	{
-		return lerp(*static_cast<const InColorType*>(incolor0), *static_cast<const InColorType*>(incolor1), t);
-	}
-	template<class InColorType>
-	static color_rgba32f lerp_2d_t(const void* incolor0, const void* incolor1, const void* incolor2, const void* incolor3, float tx, float ty)
-	{
-		return lerp(*static_cast<const InColorType*>(incolor0), *static_cast<const InColorType*>(incolor1),
-			*static_cast<const InColorType*>(incolor2), *static_cast<const InColorType*>(incolor3), tx, ty);
-	}
 };
 
 END_NS_SOFTART()

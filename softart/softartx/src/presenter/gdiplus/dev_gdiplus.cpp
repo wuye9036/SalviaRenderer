@@ -96,3 +96,9 @@ void dev_gdiplus::present(){
 }
 
 END_NS_SOFTARTX_PRESENTER()
+
+void create_device(softart::h_device& dev, void* param)
+{
+	dev = softartx::presenter::dev_gdiplus::create_device(static_cast<HWND>(param));
+}
+

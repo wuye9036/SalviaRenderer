@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "softartx/include/presenter/dx9/dev_d3d9.h"
-#include "softartx/include/presenter/gdiplus/dev_gdiplus.h"
 #include "softartx/include/resource/mesh/sa/mesh_io.h"
 #include "softartx/include/resource/texture/gdiplus/tex_io_gdiplus.h"
 #include "softartx/include/resource/texture/freeimage/tex_io_freeimage.h"
@@ -27,7 +25,6 @@ using namespace std;
 using namespace softart;
 using namespace softartx;
 using namespace softartx::resource;
-using namespace softartx::presenter;
 using namespace Gdiplus;
 
 struct vert
@@ -249,11 +246,23 @@ public:
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
+		std::_tstring dll_name = TEXT("SoftArtX_");
 #ifdef USE_GDIPLUS
-		present_dev = dev_gdiplus::create_device( m_hWnd );
+		dll_name += TEXT("gdiplus");
 #else
-		present_dev = dev_d3d9::create_device( m_hWnd );
+		dll_name += TEXT("d3d9");
 #endif
+
+		dll_name += TEXT("_presenter");
+#ifdef EFLIB_DEBUG
+		dll_name += TEXT("_d");
+#endif
+		dll_name += TEXT(".dll");
+
+		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
+		typedef void (*presenter_create_device_func)(softart::h_device& dev, void* param);
+		presenter_create_device_func presenter_func = (presenter_create_device_func)GetProcAddress(presenter_dll, "create_device");
+		presenter_func(present_dev, static_cast<void*>(m_hWnd));
 
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;

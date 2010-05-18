@@ -58,4 +58,15 @@ private:
 
 END_NS_SOFTARTX_PRESENTER()
 
+#ifdef SoftArtX_d3d9_presenter_EXPORTS
+	#define SOFTARTX_API __declspec(dllexport)
+#else
+	#define SOFTARTX_API __declspec(dllimport)
+#endif
+
+extern "C"
+{
+	SOFTARTX_API void create_device(softart::h_device& dev, void* param);
+}
+
 #endif //SOFTARTX_DEV_D3D9_H
