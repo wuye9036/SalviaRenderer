@@ -73,6 +73,30 @@ SoftArtX
 config_output_paths(SoftArtX_d3d9_presenter)
 
 
+set (HEADER_FILES
+	include/presenter/d3d11/dev_d3d11.h
+)
+
+set (SOURCE_FILES
+	src/presenter/d3d11/dev_d3d11.cpp
+	src/presenter/d3d11/dev_d3d11.rc
+	src/presenter/d3d11/vs.hlsl
+	src/presenter/d3d11/ps.hlsl
+)
+
+ADD_LIBRARY( SoftArtX_d3d11_presenter SHARED
+${HEADER_FILES}
+${SOURCE_FILES}
+)
+
+TARGET_LINK_LIBRARIES(SoftArtX_d3d11_presenter
+EFLIB
+SoftArt
+SoftArtX
+)
+
+config_output_paths(SoftArtX_d3d11_presenter)
+
 
 set (HEADER_FILES
 	include/presenter/gdiplus/dev_gdiplus.h

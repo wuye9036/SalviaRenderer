@@ -20,8 +20,6 @@ texture_2d::texture_2d(size_t width, size_t height, pixel_format format)
 
 void texture_2d::reset(size_t width, size_t height, pixel_format format)
 {
-	custom_assert(!is_mapped_, "重置纹理时发现纹理已被锁定！");
-
 	new(this) texture_2d(width, height, format);
 }
 
@@ -137,7 +135,6 @@ surface&  texture_2d::get_surface(size_t subresource)
 const surface&  texture_2d::get_surface(size_t subresource) const
 {
 	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
-	custom_assert(z_slice == 0, "z_slice选项设定无效。");
 
 	return surfs_[subresource];
 }
