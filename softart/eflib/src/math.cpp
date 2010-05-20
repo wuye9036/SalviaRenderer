@@ -184,49 +184,49 @@ namespace efl{
 	//////////////////////////////////////////////
 	//  blas level 2: matrix - vector
 	//////////////////////////////////////////////
-	vec4& transform(vec4& out, const mat44& m, const vec4& v)
+	vec4& transform(vec4& out, const vec4& v, const mat44& m)
 	{
 		if(&out == & v)
 		{
 			vec4 tmpv(v);
-			return transform(out, m, tmpv);
+			return transform(out, tmpv, m);
 		}
 
-		out.x = dot_prod4(m.v0, v);
-		out.y = dot_prod4(m.v1, v);
-		out.z = dot_prod4(m.v2, v);
-		out.w = dot_prod4(m.v3, v);
+		out.x = dot_prod4(v, m.get_column(0));
+		out.y = dot_prod4(v, m.get_column(1));
+		out.z = dot_prod4(v, m.get_column(2));
+		out.w = dot_prod4(v, m.get_column(3));
 
 		return out;
 	}
 
-	vec4& transform_coord(vec4& out, const mat44& m, const vec4& v)
+	vec4& transform_coord(vec4& out, const vec4& v, const mat44& m)
 	{
 		vec4 coord = vec4(v.x, v.y, v.z, 1.0f);
-		transform(out, m, coord);
+		transform(out, coord, m);
 		if(out.w == 0.0f) out.w = 1.0f;
 		out /= out.w;
 		return out;
 	}
 
-	vec4& transform_normal(vec4& out, const mat44& m, const vec4& v)
+	vec4& transform_normal(vec4& out, const vec4& v, const mat44& m)
 	{
 		vec4 norm = vec4(v.x, v.y, v.z, 0.0f);
-		transform(out, m, norm);
+		transform(out, norm, m);
 		return out;
 	}
 
-	vec4& transform33(vec4& out, const mat44& m, const vec4& v)
+	vec4& transform33(vec4& out, const vec4& v, const mat44& m)
 	{
 		if(&out == & v)
 		{
 			vec4 tmpv(v);
-			return transform33(out, m, tmpv);
+			return transform33(out, tmpv, m);
 		}
 
-		out.x = dot_prod3(m.v0.xyz(), v.xyz());
-		out.y = dot_prod3(m.v1.xyz(), v.xyz());
-		out.z = dot_prod3(m.v2.xyz(), v.xyz());
+		out.x = dot_prod3(v.xyz(), m.get_column(0).xyz());
+		out.y = dot_prod3(v.xyz(), m.get_column(1).xyz());
+		out.z = dot_prod3(v.xyz(), m.get_column(2).xyz());
 		out.w = 0.0f;
 
 		return out;
@@ -371,23 +371,23 @@ namespace efl{
 		sincos(radians(delta), s, c);
 
 		out.f[0][0]  = axis.x * axis.x + ( 1 - axis.x * axis.x ) * c;
-		out.f[0][1]  = axis.x * axis.y * ( 1 - c ) - axis.z * s;
-		out.f[0][2]  = axis.x * axis.z * ( 1 - c ) + axis.y * s;
-		out.f[0][3]  = 0;
-
-		out.f[1][0]  = axis.x * axis.y * ( 1 - c ) + axis.z * s;
-		out.f[1][1]  = axis.y * axis.y + ( 1 - axis.y * axis.y ) * c;
-		out.f[1][2]  = axis.y * axis.z * ( 1 - c ) - axis.x * s;
-		out.f[1][3]  = 0;
-
-		out.f[2][0]  = axis.x * axis.z * ( 1 - c ) - axis.y * s;
-		out.f[2][1]  = axis.y * axis.z * ( 1 - c ) + axis.x * s;
-		out.f[2][2]  = axis.z * axis.z + ( 1 - axis.z * axis.z ) * c;
-		out.f[2][3]  = 0;
-
+		out.f[1][0]  = axis.x * axis.y * ( 1 - c ) - axis.z * s;
+		out.f[2][0]  = axis.x * axis.z * ( 1 - c ) + axis.y * s;
 		out.f[3][0]  = 0;
+
+		out.f[0][1]  = axis.x * axis.y * ( 1 - c ) + axis.z * s;
+		out.f[1][1]  = axis.y * axis.y + ( 1 - axis.y * axis.y ) * c;
+		out.f[2][1]  = axis.y * axis.z * ( 1 - c ) - axis.x * s;
 		out.f[3][1]  = 0;
+
+		out.f[0][2]  = axis.x * axis.z * ( 1 - c ) - axis.y * s;
+		out.f[1][2]  = axis.y * axis.z * ( 1 - c ) + axis.x * s;
+		out.f[2][2]  = axis.z * axis.z + ( 1 - axis.z * axis.z ) * c;
 		out.f[3][2]  = 0;
+
+		out.f[0][3]  = 0;
+		out.f[1][3]  = 0;
+		out.f[2][3]  = 0;
 		out.f[3][3]  = 1;
 
 		return out;
@@ -400,8 +400,8 @@ namespace efl{
 		mat_identity(out);
 
 		out.f[1][1] = c;
-		out.f[1][2] = -s;
-		out.f[2][1] = s;
+		out.f[2][1] = -s;
+		out.f[1][2] = s;
 		out.f[2][2] = c;
 
 		return out;
@@ -414,8 +414,8 @@ namespace efl{
 		mat_identity(out);
 
 		out.f[0][0] = c;
-		out.f[0][2] = s;
-		out.f[2][0] = -s;
+		out.f[2][0] = s;
+		out.f[0][2] = -s;
 		out.f[2][2] = c;
 
 		return out;
@@ -428,8 +428,8 @@ namespace efl{
 		mat_identity(out);
 
 		out.f[0][0] = c;
-		out.f[0][1] = -s;
-		out.f[1][0] = s;
+		out.f[1][0] = -s;
+		out.f[0][1] = s;
 		out.f[1][1] = c;
 
 		return out;
@@ -438,7 +438,7 @@ namespace efl{
 	mat44& mat_translate(mat44& out, float x, float y, float z)
 	{
 		mat_identity(out);
-		out.set_column(3, x, y, z, 1.0f);
+		out.v3 = vec4(x, y, z, 1.0f);
 		return out;
 	}
 
@@ -450,14 +450,13 @@ namespace efl{
 
 	mat44& mat_reflect(mat44& out, const vec4& plane);
 
-	// reference : GL Specification 2.1
 	mat44& mat_projection(mat44& out, float l, float r, float b, float t, float n, float f)
 	{
 		out = mat44(
-			2.0f*n/(r-l),	0.0f,				(r+l)/(r-l),		0.0f,
-			0.0f,				2.0f*n/(t-b),	(t+b)/(t-b),	0.0f,
-			0.0f,				0.0f,				-(f+n)/(f-n),	-2*f*n/(f-n),
-			0.0f,				0.0f,				-1.0f,				0.0f
+			2.0f*n/(r-l),	0.0f,				0.0f,	0.0f,
+			0.0f,				2.0f*n/(t-b),	0.0f,	0.0f,
+			-(r+l)/(r-l),		-(t+b)/(t-b),	-f/(f-n),	1.0f,
+			0.0f,				0.0f,			-n*f/(f-n),	0.0f
 			);
 
 		return out;
@@ -468,8 +467,8 @@ namespace efl{
 		out = mat44(
 			2*n/w,	0.0f,		0.0f,		0.0f,
 			0.0f,		2*n/h,	0.0f,		0.0f,
-			0.0f,		0.0f,		f/(n-f),	n*f/n-f,
-			0.0f,		0.0f,		1.0f,		0.0f
+			0.0f,		0.0f,		f/(f-n),	1.0f,
+			0.0f,		0.0f,		-n*f/(f-n),	0.0f
 			);
 		return out;
 	}
@@ -482,8 +481,8 @@ namespace efl{
 		out = mat44(
 			xs,			0.0f,		0.0f,		0.0f,
 			0.0f,		ys,			0.0f,		0.0f,
-			0.0f,		0.0f,		f/(n-f),	n*f/(n-f),
-			0.0f,		0.0f,		-1.0f,		0.0f
+			0.0f,		0.0f,		f/(f-n),	1.0f,
+			0.0f,		0.0f,		-n*f/(f-n),	0.0f
 			);
 
 		return out;
@@ -492,29 +491,28 @@ namespace efl{
 	mat44& mat_ortho(mat44& out, float l, float r, float b, float t, float n, float f)
 	{
 		out = mat44(
-			2.0f/(r-l),	0.0f,			0.0f,				(r+l)/(l-r),
-			0.0f,			2.0f/(t-b),	0.0f,				(t+b)/(b-t),
-			0.0f,			0.0f,			-2.0f/(f-n),		-(f+n)/(f-n),
-			0.0f,			0.0f,			-1.0f,				1.0f
+			2.0f/(r-l),		0.0f,			0.0f,			0.0f,
+			0.0f,			2.0f/(t-b),		0.0f,			0.0f,
+			0.0f,			0.0f,			-2.0f/(f-n),	-1.0f,
+			(r+l)/(l-r),	(t+b)/(b-t),	-(f+n)/(f-n),	1.0f
 			);
 
 		return out;
 	}
 
-	mat44& mat_lookat(mat44& out, const vec4& eye, const vec4& target, const vec4& up)
+	mat44& mat_lookat(mat44& out, const vec3& eye, const vec3& target, const vec3& up)
 	{
-		vec4 zdir = eye - target;
+		vec3 zdir = target - eye;
 		zdir.normalize();
-		vec4 xdir(cross_prod3(up.xyz(), zdir.xyz()), 0.0);
+		vec3 xdir = cross_prod3(up.xyz(), zdir.xyz());
 		xdir.normalize();
-		vec4 ydir(cross_prod3(zdir.xyz(), xdir.xyz()), 0.0);
+		vec3 ydir = cross_prod3(zdir.xyz(), xdir.xyz());
 
 		out = mat44(
-			vec4(xdir.xyz(), -dot_prod4(xdir, eye)),
-			vec4(ydir.xyz(), -dot_prod4(ydir, eye)),
-			vec4(zdir.xyz(), -dot_prod4(zdir, eye)),
-			vec4(0.0f, 0.0f, 0.0f, 1.0f)
-			);
+			xdir.x, ydir.x, zdir.x, 0.0f,
+			xdir.y, ydir.y, zdir.y, 0.0f,
+			xdir.z, ydir.z, zdir.z, 0.0f,
+			-dot_prod3(xdir, eye), -dot_prod3(ydir, eye), -dot_prod3(zdir, eye), 1.0f);
 
 		return out;
 	}

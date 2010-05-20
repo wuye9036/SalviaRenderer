@@ -16,16 +16,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#define INITGUID
 #include "softartx/include/presenter/d3d11/dev_d3d11.h"
 #include "softart/include/framebuffer.h"
 #include "softart/include/surface.h"
 #include <D3DX11.h>
-#include <D3DCompiler.h>
 #include <tchar.h>
 
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dcompiler.lib")
 #ifdef EFLIB_DEBUG
 #	pragma comment(lib, "d3dx11d.lib")
 #else
@@ -37,8 +34,7 @@ using namespace softart;
 
 struct Vertex
 {
-	float x, y, z;
-	float s, t;
+	float x, y;
 };
 
 BEGIN_NS_SOFTARTX_PRESENTER()
@@ -202,11 +198,11 @@ void dev_d3d11::attach_framebuffer(softart::framebuffer* pfb)
 
 		Vertex verts[] = 
 		{
-			/* x,  y, z, u, v */
-			{ 1.0f, -1.0f, 0.5f, 1.0f, 0.0f},
-			{-1.0f, -1.0f, 0.5f, 0.0f, 0.0f},
-			{ 1.0f,  1.0f, 0.5f, 1.0f, 1.0f},
-			{-1.0f,  1.0f, 0.5f, 0.0f, 1.0f}
+			/* x,  y */
+			{-1.0f, +1.0f},
+			{+1.0f, +1.0f},
+			{-1.0f, -1.0f},
+			{+1.0f, -1.0f}
 		};
 
 		D3D11_BUFFER_DESC buf_desc;
@@ -267,22 +263,14 @@ void dev_d3d11::attach_framebuffer(softart::framebuffer* pfb)
 
 		d3d_imm_ctx_->PSSetShader(ps_, NULL, 0);
 
-		D3D11_INPUT_ELEMENT_DESC elems[2];
+		D3D11_INPUT_ELEMENT_DESC elems[1];
 		elems[0].SemanticName = "POSITION";
 		elems[0].SemanticIndex = 0;
-		elems[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		elems[0].Format = DXGI_FORMAT_R32G32_FLOAT;
 		elems[0].InputSlot = 0;
 		elems[0].AlignedByteOffset = 0;
 		elems[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 		elems[0].InstanceDataStepRate = 0;
-		elems[1].SemanticName = "TEXCOORD";
-		elems[1].SemanticIndex = 0;
-		elems[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-		elems[1].InputSlot = 0;
-		elems[1].AlignedByteOffset = sizeof(float) * 3;
-		elems[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-		elems[1].InstanceDataStepRate = 0;
-
 		d3d_device_->CreateInputLayout(&elems[0], sizeof(elems) / sizeof(elems[0]), vs_code->GetBufferPointer(), vs_code->GetBufferSize(), &input_layout_);
 		vs_code->Release();
 

@@ -18,6 +18,7 @@
 
 //#define PRESENTER_NAME "gdiplus"
 #define PRESENTER_NAME "d3d9"
+//#define PRESENTER_NAME "d3d11"
 
 using namespace efl;
 using namespace boost;
@@ -45,7 +46,7 @@ public:
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in[0];
-		transform(out.position, wvp, pos);
+		transform(out.position, pos, wvp);
 		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
 		out.attributes[1] = in[1];
 		out.attributes[2] = in[2];
@@ -114,7 +115,7 @@ public:
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in[0];
-		transform(out.position, wvp, pos);
+		transform(out.position, pos, wvp);
 		out.attributes[0] = vec4(in[0].x, in[0].z, 0, 0);
 		out.attribute_modifiers[0] = softart::vs_output::am_linear;
 		out.num_used_attribute = 1;
@@ -340,12 +341,12 @@ public:
 		hsr->clear_depth(1.0f);
 
 		static float s_angle = 0;
-		s_angle += elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		vec4 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f, 1.0f);
+		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
+		vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
-		mat_lookat(view, camera, vec4::gen_coord(0.0f, 0.0f, 0.0f), vec4::gen_vector(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
 		//hsr->set_fill_mode(fill_wireframe);
@@ -353,7 +354,7 @@ public:
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
-			mat_mul(wvp, mat_mul(wvp, proj, view), world);
+			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
 			hsr->set_cull_mode(cull_back);
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);

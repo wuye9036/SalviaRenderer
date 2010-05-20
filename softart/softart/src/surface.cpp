@@ -2,9 +2,11 @@
 
 BEGIN_NS_SOFTART()
 
+#ifdef TILE_BASED_STORAGE
 const size_t TILE_BITS = 5;
 const size_t TILE_SIZE = 1UL << TILE_BITS;
 const size_t TILE_MASK = TILE_SIZE - 1;
+#endif
 
 surface::surface():is_mapped_(false)
 {
@@ -13,17 +15,26 @@ surface::surface():is_mapped_(false)
 surface::surface(size_t width, size_t height, pixel_format pxfmt)
 		:pxfmt_(pxfmt), width_(width), height_(height),
 		elem_size_(color_infos[pxfmt].size),
-		tile_width_((width + TILE_SIZE - 1) >> TILE_BITS),
-		tile_height_((height + TILE_SIZE - 1) >> TILE_BITS),
-		tile_mode_(true),
 		is_mapped_(false)
 {
-	if ((TILE_SIZE > width_) || (TILE_SIZE > height_))
-	{
+#ifdef TILE_BASED_STORAGE
+	tile_width_ = (width + TILE_SIZE - 1) >> TILE_BITS;
+	tile_height_ = (height + TILE_SIZE - 1) >> TILE_BITS;
+
+	tile_mode_ = true;
+	if ((TILE_SIZE > width_) || (TILE_SIZE > height_)){
 		tile_mode_ = false;
 	}
 
-	datas_.resize(tile_width_ * tile_height_ * TILE_SIZE * TILE_SIZE * elem_size_),
+	if (tile_mode_){
+		datas_.resize(tile_width_ * tile_height_ * TILE_SIZE * TILE_SIZE * elem_size_);
+	}
+	else{
+		datas_.resize(width_ * height_ * elem_size_);
+	}
+#else
+	datas_.resize(width_ * height_ * elem_size_);
+#endif
 
 	to_rgba32_func_ = pixel_format_convertor::get_convertor_func(pixel_format_color_rgba32f, pxfmt_);
 	from_rgba32_func_ = pixel_format_convertor::get_convertor_func(pxfmt_, pixel_format_color_rgba32f);
@@ -108,6 +119,7 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 	uint8_t pix_clr[4 * 4 * sizeof(float)];
 	from_rgba32_func_(pix_clr, &color);
 
+#ifdef TILE_BASED_STORAGE
 	if (tile_mode_){
 		if ((0 == sx) && (0 == sy) && (width == width_) && (height == height_)){
 			for (uint32_t x = 0; x < TILE_SIZE; ++ x){
@@ -171,10 +183,19 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 			memcpy(&datas_[(width_ * y + sx) * elem_size_], &datas_[(width_ * sy + sx) * elem_size_], elem_size_ * width);
 		}
 	}
+#else
+	for (size_t x = sx; x < sx + width; ++ x){
+		memcpy(&datas_[(width_ * sy + x) * elem_size_], pix_clr, elem_size_);
+	}
+	for (size_t y = sy + 1; y < sy + height; ++ y){
+		memcpy(&datas_[(width_ * y + sx) * elem_size_], &datas_[(width_ * sy + sx) * elem_size_], elem_size_ * width);
+	}
+#endif
 }
 
 size_t surface::get_texel_addr(size_t x, size_t y) const
 {
+#ifdef TILE_BASED_STORAGE
 	if (tile_mode_){
 		const size_t tile_x = x >> TILE_BITS;
 		const size_t tile_y = y >> TILE_BITS;
@@ -186,10 +207,14 @@ size_t surface::get_texel_addr(size_t x, size_t y) const
 	{
 		return (y * width_ + x) * elem_size_;
 	}
+#else
+	return (y * width_ + x) * elem_size_;
+#endif
 }
 
 void surface::tile(const std::vector<byte>& tile_data)
 {
+#ifdef TILE_BASED_STORAGE
 	if (tile_mode_){
 		for (size_t ty = 0; ty < tile_height_; ++ ty){
 			const size_t by = ty << TILE_BITS;
@@ -209,10 +234,14 @@ void surface::tile(const std::vector<byte>& tile_data)
 	else{
 		datas_ = tile_data;
 	}
+#else
+	datas_ = tile_data;
+#endif
 }
 
 void surface::untile(std::vector<byte>& untile_data)
 {
+#ifdef TILE_BASED_STORAGE
 	if (tile_mode_){
 		for (size_t ty = 0; ty < tile_height_; ++ ty){
 			const size_t by = ty << TILE_BITS;
@@ -232,6 +261,9 @@ void surface::untile(std::vector<byte>& untile_data)
 	else{
 		untile_data = datas_;
 	}
+#else
+	untile_data = datas_;
+#endif
 }
 
 END_NS_SOFTART()

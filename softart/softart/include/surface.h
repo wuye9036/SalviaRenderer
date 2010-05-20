@@ -11,6 +11,7 @@
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 
+//#define TILE_BASED_STORAGE
 
 class surface
 {	
@@ -23,10 +24,13 @@ private:
 	size_t height_;
 	size_t elem_size_;
 	pixel_format pxfmt_;
+
+#ifdef TILE_BASED_STORAGE
 	size_t tile_width_;
 	size_t tile_height_;
 
 	bool tile_mode_;
+#endif
 
 	//lock information
 	bool is_mapped_;

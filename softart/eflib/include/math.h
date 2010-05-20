@@ -243,10 +243,10 @@ namespace efl{
 	//////////////////////////////////////////////
 	//  blas level 2: matrix - vector
 	//////////////////////////////////////////////
-	vec4& transform(vec4& out, const mat44& m, const vec4& v); //v是一个列向量
-	vec4& transform_coord(vec4& out, const mat44& m, const vec4& v);
-	vec4& transform_normal(vec4& out, const mat44& m, const vec4& v);
-	vec4& transform33(vec4& out, const mat44& m, const vec4& v);
+	vec4& transform(vec4& out, const vec4& v, const mat44& m);
+	vec4& transform_coord(vec4& out, const vec4& v, const mat44& m);
+	vec4& transform_normal(vec4& out, const vec4& v, const mat44& m);
+	vec4& transform33(vec4& out, const vec4& v, const mat44& m);
 
 	//////////////////////////////////////////////
 	// blas level 3: matrix - matrix
@@ -269,7 +269,7 @@ namespace efl{
 	mat44& mat_scale(mat44& out, float sx, float sy, float sz);
 	mat44& mat_reflect(mat44& out, const vec4& plane);
 
-	mat44& mat_lookat(mat44& out, const vec4& eye, const vec4& target, const vec4& up);
+	mat44& mat_lookat(mat44& out, const vec3& eye, const vec3& target, const vec3& up);
 
 	mat44& mat_projection(mat44& out, float l, float r, float b, float t, float n, float f);
 	mat44& mat_perspective(mat44& out, float w, float h, float n, float f);

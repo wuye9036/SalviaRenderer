@@ -110,10 +110,10 @@ void dev_d3d9::attach_framebuffer(softart::framebuffer* pfb)
 	Vertex verts[] = 
 	{
 		/* x,  y, z, u, v */
-		{-1.0f - 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 0.0f},
-		{ 1.0f - 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 0.0f},
-		{-1.0f - 1.0f / pfb->get_width(),  1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 1.0f},
-		{ 1.0f - 1.0f / pfb->get_width(),  1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 1.0f}
+		{-1.0f - 1.0f / pfb->get_width(), +1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 0.0f},
+		{ 1.0f - 1.0f / pfb->get_width(), +1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 0.0f},
+		{-1.0f - 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 1.0f},
+		{ 1.0f - 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 1.0f}
 	};
 	Vertex* p;
 	vb_->Lock(0, 0, reinterpret_cast<void**>(&p), 0);

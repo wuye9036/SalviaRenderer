@@ -221,8 +221,8 @@ void update_wpos(vs_output& vso, const viewport& vp)
 	float oy = (vp.y + vp.h) * 0.5f;
 
 	vso.wpos.x = (float(vp.w) * 0.5f) * pos.x + ox;
-	vso.wpos.y = (float(vp.h) * 0.5f) * pos.y + oy;
-	vso.wpos.z = (vp.maxz - vp.minz) * 0.5f * pos.z + (vp.maxz + vp.minz) * 0.5f;
+	vso.wpos.y = (float(vp.h) * 0.5f) * -pos.y + oy;
+	vso.wpos.z = (vp.maxz - vp.minz) * 0.5f * pos.z + vp.minz;
 	vso.wpos.w = invw;
 }
 
