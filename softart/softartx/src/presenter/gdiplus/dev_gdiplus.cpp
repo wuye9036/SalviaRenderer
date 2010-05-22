@@ -46,7 +46,7 @@ void dev_gdiplus::attach_framebuffer(softart::framebuffer *pfb){
 	}
 	fb_ = pfb;
 
-	rc_ = Rect(0, 0, fb_->get_width(), fb_->get_height());
+	rc_ = Rect(0, 0, static_cast<UINT>(fb_->get_width()), static_cast<UINT>(fb_->get_height()));
 
 	if ( !pbmp_ || 
 		pbmp_->GetWidth() < (INT)fb_->get_width() || 
@@ -78,7 +78,7 @@ void dev_gdiplus::present(){
 	for(size_t iheight = 0; iheight < fb_->get_height(); ++iheight)
 	{
 		softart::pixel_format rt_pxfmt = rt->get_pixel_format();
-		byte* surface_scanline_addr = (byte*)pfbdata + (fb_->get_height() - iheight - 1)*get_color_info(rt_pxfmt).size*rt->get_width();
+		byte* surface_scanline_addr = (byte*)pfbdata + iheight*get_color_info(rt_pxfmt).size*rt->get_width();
 		byte* bmp_scanline_addr = ((uint8_t*)pixels) + bmpData.Stride * iheight;
 
 		pixel_format_convertor::convert_array(

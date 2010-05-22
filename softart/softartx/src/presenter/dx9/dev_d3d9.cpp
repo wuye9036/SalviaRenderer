@@ -79,8 +79,8 @@ void dev_d3d9::attach_framebuffer(softart::framebuffer* pfb)
 		std::memset(&d3dpp, 0, sizeof(d3dpp));
 		d3dpp.Windowed					= true;
 		d3dpp.BackBufferCount			= 1;
-		d3dpp.BackBufferWidth			= pfb->get_width();
-		d3dpp.BackBufferHeight			= pfb->get_height();
+		d3dpp.BackBufferWidth			= static_cast<UINT>(pfb->get_width());
+		d3dpp.BackBufferHeight			= static_cast<UINT>(pfb->get_height());
 		d3dpp.hDeviceWindow				= hwnd_;
 		d3dpp.SwapEffect				= D3DSWAPEFFECT_DISCARD;
 		d3dpp.PresentationInterval		= D3DPRESENT_INTERVAL_IMMEDIATE;

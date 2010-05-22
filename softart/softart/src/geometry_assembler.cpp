@@ -41,6 +41,9 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 	const h_vertex_cache& dvc = pparent_->get_vertex_cache();
 	const h_rasterizer& hrast = pparent_->get_rasterizer();
 	const cull_mode cm = hrast->get_cull_mode();
+	
+	const float inv_half_w = 2.0f / num_tiles_x;
+	const float inv_half_h = 2.0f / num_tiles_y;
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 	
@@ -56,21 +59,30 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 		for (int32_t i = start; i < end; ++ i)
 		{
 			vec2 pv[3];
+			vec4 pos[3];
 			for (size_t j = 0; j < stride; ++ j){
 				const vs_output& v = dvc->fetch(i * stride + j);
 				const float sign_w = sign(v.wpos.w);
 				const float x = v.wpos.x * sign_w;
 				const float y = v.wpos.y * sign_w;
 				pv[j] = vec2(x, y);
+				pos[j] = v.position;
 			}
 
 			bool culled = false;
-			if ((3 == stride) && (cm != cull_none)){
-				//±³ÃæÌÞ³ý
+			int flip = 1;
+			if (3 == stride){
 				const float area = cross_prod2(pv[1] - pv[0], pv[2] - pv[0]);
-				if (((cm == cull_front) && (area > 0))
-						|| ((cm == cull_back) && (area < 0))){
-					culled = true;
+				if (area > 0){
+					flip = -1;
+				}
+
+				if (cm != cull_none){
+					//±³ÃæÌÞ³ý
+					if (((cm == cull_front) && (area > 0))
+							|| ((cm == cull_back) && (area < 0))){
+						culled = true;
+					}
 				}
 			}
 
@@ -90,10 +102,57 @@ void geometry_assembler::dispatch_primitive_func(std::vector<lockfree_queue<uint
 				const int sy = std::min(fast_floori(std::max(0.0f, y_min) / TILE_SIZE), num_tiles_y);
 				const int ex = std::min(fast_ceili(std::max(0.0f, x_max) / TILE_SIZE) + 1, num_tiles_x);
 				const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1, num_tiles_y);
-				for (int y = sy; y < ey; ++ y){
-					for (int x = sx; x < ex; ++ x){
-						lockfree_queue<uint32_t>& tile = tiles[y * num_tiles_x + x];
-						tile.enqueue(i);
+				if ((sx + 1 == ex) && (sy + 1 == ey)){
+					// Small primitive
+					tiles[sy * num_tiles_x + sx].enqueue(i);
+				}
+				else{
+					if (3 == stride){
+						//x * (w0 * y1 - w1 * y0) - y * (w0 * x1 - w1 * x0) - w * (y1 * x0 - x1 * y0)
+						vec3 edge_factors[3];
+						for (int e = 0; e < 3; ++ e){
+							const int se = e;
+							const int ee = (e + 1) % 3;
+							edge_factors[e].x = pos[se].w * pos[ee].y - pos[ee].w * pos[se].y;
+							edge_factors[e].y = pos[se].w * pos[ee].x - pos[ee].w * pos[se].x;
+							edge_factors[e].z = pos[ee].y * pos[se].x - pos[ee].x * pos[se].y;
+						}
+
+						for (int y = sy; y < ey; ++ y){
+							for (int x = sx; x < ex; ++ x){
+								vec2 corners[] = {
+									vec2((x + 0) * inv_half_w - 1, 1 - (y + 0) * inv_half_h),
+									vec2((x + 1) * inv_half_w - 1, 1 - (y + 0) * inv_half_h),
+									vec2((x + 0) * inv_half_w - 1, 1 - (y + 1) * inv_half_h),
+									vec2((x + 1) * inv_half_w - 1, 1 - (y + 1) * inv_half_h)
+								};
+
+								bool intersect = true;
+								// Trival rejection
+								for (int e = 0; intersect && (e < 3); ++ e){
+									int min_c = (edge_factors[e].y > 0) * 2 + (edge_factors[e].x > 0);
+									if (flip > 0){
+										min_c = 3 - min_c;
+									}
+									if (flip * (corners[min_c].x * edge_factors[e].x
+											- corners[min_c].y * edge_factors[e].y
+											- edge_factors[e].z) > 0){
+										intersect = false;
+									}
+								}
+
+								if (intersect){
+									tiles[y * num_tiles_x + x].enqueue(i);
+								}
+							}
+						}
+					}
+					else{
+						for (int y = sy; y < ey; ++ y){
+							for (int x = sx; x < ex; ++ x){
+								tiles[y * num_tiles_x + x].enqueue(i);
+							}
+						}
 					}
 				}
 			}
