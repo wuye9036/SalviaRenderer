@@ -280,6 +280,7 @@ private:
 #ifndef EFLIB_NO_SIMD
 		const __m128 f255 = _mm_set_ps1(255.0f);
 		__m128 m4 = _mm_loadu_ps(&rhs.r);
+		m4 = _mm_shuffle_ps(m4, m4, _MM_SHUFFLE(3, 0, 1, 2));
 		m4 = _mm_mul_ps(m4, f255);
 		m4 = _mm_max_ps(m4, _mm_setzero_ps());
 		m4 = _mm_min_ps(m4, f255);
@@ -287,7 +288,6 @@ private:
 		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 3));
 		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 6));
 		*reinterpret_cast<int*>(&b) = _mm_cvtsi128_si32(mi4);
-		std::swap(b, r);
 #else
 		r = comp_t( efl::clamp(rhs.r * 255.0f + 0.5f, 0.0f, 255.0f) );
 		g = comp_t( efl::clamp(rhs.g * 255.0f + 0.5f, 0.0f, 255.0f) );
@@ -408,10 +408,24 @@ inline color_rgba32f lerp(const color_rgb32f& c0, const color_rgb32f& c1, const 
 inline color_rgba32f lerp(const color_bgra8& c0, const color_bgra8& c1, const color_bgra8& c2, const color_bgra8& c3, float tx, float ty)
 {
 #ifndef EFLIB_NO_SIMD
-	__m128 mc0 = _mm_set_ps(c0.a, c0.b, c0.g, c0.r);
-	__m128 mc1 = _mm_set_ps(c1.a, c1.b, c1.g, c1.r);
-	__m128 mc2 = _mm_set_ps(c2.a, c2.b, c2.g, c2.r);
-	__m128 mc3 = _mm_set_ps(c3.a, c3.b, c3.g, c3.r);
+	__m128i mzero = _mm_setzero_si128();
+	__m128i mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c0.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	mci = _mm_unpacklo_epi16(mci, mzero);
+	__m128 mc0 = _mm_cvtepi32_ps(_mm_shuffle_epi32(mci, _MM_SHUFFLE(3, 0, 1, 2)));
+	mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c1.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	mci = _mm_unpacklo_epi16(mci, mzero);
+	__m128 mc1 = _mm_cvtepi32_ps(_mm_shuffle_epi32(mci, _MM_SHUFFLE(3, 0, 1, 2)));
+	mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c2.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	mci = _mm_unpacklo_epi16(mci, mzero);
+	__m128 mc2 = _mm_cvtepi32_ps(_mm_shuffle_epi32(mci, _MM_SHUFFLE(3, 0, 1, 2)));
+	mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c3.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	mci = _mm_unpacklo_epi16(mci, mzero);
+	__m128 mc3 = _mm_cvtepi32_ps(_mm_shuffle_epi32(mci, _MM_SHUFFLE(3, 0, 1, 2)));
+
 	__m128 mc01 = _mm_add_ps(mc0, _mm_mul_ps(_mm_sub_ps(mc1, mc0), _mm_set1_ps(tx)));
 	__m128 mc23 = _mm_add_ps(mc2, _mm_mul_ps(_mm_sub_ps(mc3, mc2), _mm_set1_ps(tx)));
 	__m128 mret = _mm_add_ps(mc01, _mm_mul_ps(_mm_sub_ps(mc23, mc01), _mm_set1_ps(ty)));
@@ -429,10 +443,20 @@ inline color_rgba32f lerp(const color_bgra8& c0, const color_bgra8& c1, const co
 inline color_rgba32f lerp(const color_rgba8& c0, const color_rgba8& c1, const color_rgba8& c2, const color_rgba8& c3, float tx, float ty)
 {
 #ifndef EFLIB_NO_SIMD
-	__m128 mc0 = _mm_set_ps(c0.a, c0.b, c0.g, c0.r);
-	__m128 mc1 = _mm_set_ps(c1.a, c1.b, c1.g, c1.r);
-	__m128 mc2 = _mm_set_ps(c2.a, c2.b, c2.g, c2.r);
-	__m128 mc3 = _mm_set_ps(c3.a, c3.b, c3.g, c3.r);
+	__m128i mzero = _mm_setzero_si128();
+	__m128i mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c0.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	__m128 mc0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(mci, mzero));
+	mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c1.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	__m128 mc1 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(mci, mzero));
+	mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c2.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	__m128 mc2 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(mci, mzero));
+	mci = _mm_cvtsi32_si128(*reinterpret_cast<const int*>(&c3.r));
+	mci = _mm_unpacklo_epi8(mci, mzero);
+	__m128 mc3 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(mci, mzero));
+
 	__m128 mc01 = _mm_add_ps(mc0, _mm_mul_ps(_mm_sub_ps(mc1, mc0), _mm_set1_ps(tx)));
 	__m128 mc23 = _mm_add_ps(mc2, _mm_mul_ps(_mm_sub_ps(mc3, mc2), _mm_set1_ps(tx)));
 	__m128 mret = _mm_add_ps(mc01, _mm_mul_ps(_mm_sub_ps(mc23, mc01), _mm_set1_ps(ty)));

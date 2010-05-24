@@ -519,7 +519,7 @@ namespace surface_sampler
 	};
 }
 
-float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
+float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
 {
 #ifndef EFLIB_NO_SIMD
 	static const union
@@ -536,15 +536,27 @@ float sampler::calc_lod(const vec4& attribute, const vec4& size, const vec4& ddx
 	mddx2 = _mm_and_ps(mddx2, ABS_MASK);
 	mddy2 = _mm_and_ps(mddy2, ABS_MASK);
 	tmp = _mm_max_ps(mddx2, mddy2);
-	tmp = _mm_mul_ps(tmp, _mm_loadu_ps(&size.x));
-	vec4 maxD;
-	_mm_storeu_ps(&maxD.x, tmp);
+	tmp = _mm_mul_ps(tmp, _mm_cvtepi32_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&size.x))));
+	__m128 tmp2 = _mm_shuffle_ps(tmp, tmp, _MM_SHUFFLE(2, 2, 2, 2));
+	tmp = _mm_max_ps(tmp, tmp2);
+	tmp2 = _mm_shuffle_ps(tmp, tmp, _MM_SHUFFLE(1, 1, 1, 1));
+	tmp = _mm_max_ss(tmp, tmp2);
+	__m128 mrho = _mm_max_ss(tmp, _mm_set_ss(0.000001f));
 
-	float rho, lambda;
-	rho = max(max(maxD.x, maxD.y), maxD.z);
-	if(rho == 0.0f) rho = 0.000001f;
-	lambda = fast_log2(rho);
-	return lambda + bias;
+	// log 2
+	__m128i mx = _mm_castps_si128(mrho);
+	__m128 mlog2 = _mm_cvtepi32_ps(_mm_sub_epi32(_mm_and_si128(_mm_srli_epi32(mx, 23), _mm_set1_epi32(255)), _mm_set1_epi32(128)));
+	mx = _mm_and_si128(mx, _mm_set1_epi32(0x007FFFFF));
+	mx = _mm_or_si128(mx, _mm_set1_epi32(0x3F800000));
+	tmp = _mm_castsi128_ps(mx);
+	tmp = _mm_sub_ss(_mm_mul_ss(_mm_add_ss(_mm_mul_ss(tmp, _mm_set_ss(-1.0f / 3)), _mm_set_ss(2)), tmp), _mm_set_ss(2.0f / 3));
+	__m128 mlambda = _mm_add_ss(tmp, mlog2);
+
+	__m128 mlod = _mm_add_ss(mlambda, _mm_set_ss(bias));
+
+	float lod;
+	_mm_store_ss(&lod, mlod);
+	return lod;
 #else
 	efl::vec4 ddx2 = (attribute + ddx) * inv_x_w - attribute * inv_w;
 	efl::vec4 ddy2 = (attribute + ddy) * inv_y_w - attribute * inv_w;
@@ -644,7 +656,8 @@ color_rgba32f sampler::sample_2d_impl(const texture *tex ,
 {
 	float q = inv_w == 0 ? 1.0f : 1.0f / inv_w;
 	vec4 origin_coord(coord * q);
-	vec4 size((float)tex->get_width(0), (float)tex->get_height(0), (float)tex->get_depth(0), 0.0f);
+	int4 size(static_cast<int>(tex->get_width(0)), static_cast<int>(tex->get_height(0)),
+		static_cast<int>(tex->get_depth(0)), 0);
 
 	float lod = calc_lod(origin_coord, size, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 	return sample_impl(tex , coord.x, coord.y, lod);
@@ -759,7 +772,8 @@ color_rgba32f sampler::sample_cube(
 		custom_assert(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
-	float lod = calc_lod(origin_coord, vec4(float(pcube->get_width(0)), float(pcube->get_height(0)), 0.0f, 0.0f), ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	float lod = calc_lod(origin_coord, int4(static_cast<int>(pcube->get_width(0)),
+		static_cast<int>(pcube->get_height(0)), 0, 0), ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 	//return color_rgba32f(vec4(coord.xyz(), 1.0f));
 	//return color_rgba32f(invlod, invlod, invlod, 1.0f);
 	return sample_cube(coord.x, coord.y, coord.z, lod);

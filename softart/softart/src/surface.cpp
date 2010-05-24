@@ -98,6 +98,10 @@ void surface::unmap()
 
 color_rgba32f surface::get_texel(size_t x, size_t y) const
 {
+#ifndef EFLIB_NO_SIMD
+	_mm_prefetch(reinterpret_cast<const char*>(&datas_[0]) + this->get_texel_addr(x, y) + 64, _MM_HINT_NTA);
+#endif
+
 	color_rgba32f color;
 	to_rgba32_func_(&color, &datas_[this->get_texel_addr(x, y)]);
 	return color;
@@ -105,6 +109,10 @@ color_rgba32f surface::get_texel(size_t x, size_t y) const
 
 color_rgba32f surface::get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty) const
 {
+#ifndef EFLIB_NO_SIMD
+	_mm_prefetch(reinterpret_cast<const char*>(&datas_[0]) + this->get_texel_addr(x0, y0) + 64, _MM_HINT_NTA);
+#endif
+
 	return lerp_2d_func_(&datas_[this->get_texel_addr(x0, y0)], &datas_[this->get_texel_addr(x1, y0)],
 		&datas_[this->get_texel_addr(x0, y1)], &datas_[this->get_texel_addr(x1, y1)], tx, ty);
 }

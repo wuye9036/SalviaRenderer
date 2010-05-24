@@ -41,7 +41,7 @@ private:
 
 	float calc_lod(
 		const efl::vec4& attribute, 
-		const efl::vec4& size, 
+		const efl::int4& size, 
 		const efl::vec4& ddx, const efl::vec4& ddy, 
 		float inv_x_w, float inv_y_w, float inv_w, float bias) const;
 
