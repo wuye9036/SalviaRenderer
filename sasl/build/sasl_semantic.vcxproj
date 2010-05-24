@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\semantic\name_mangler.h" />
     <ClInclude Include="..\include\semantic\semantic_analyser.h" />
     <ClInclude Include="..\include\semantic\semantic_analyser_impl.h" />
     <ClInclude Include="..\include\semantic\semantic_error.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="..\include\semantic\type_checker.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\semantic\name_mangler.cpp" />
     <ClCompile Include="..\src\semantic\semantic_analyser_impl.cpp" />
     <ClCompile Include="..\src\semantic\semantic_error.cpp" />
     <ClCompile Include="..\src\semantic\sematic_analyser.cpp" />

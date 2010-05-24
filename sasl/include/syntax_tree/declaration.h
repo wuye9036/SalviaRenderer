@@ -160,6 +160,7 @@ struct function_type: public type_specifier{
 	std::vector< boost::shared_ptr<parameter> > params;
 	std::vector< boost::shared_ptr<statement> > stmts;
 
+	bool is_declaration;
 protected:
 	function_type( boost::shared_ptr<token_attr> tok );
 	function_type& operator = ( const function_type& );

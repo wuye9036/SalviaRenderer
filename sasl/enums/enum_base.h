@@ -90,6 +90,7 @@ public:
 	template <class T> friend struct bitwise_op;
 	template <class T> friend struct compare_op;
 	template <class T, typename StroageT> friend struct value_op;
+	friend struct enum_hasher;
 
 	typedef DerivedT this_type;
 	typedef StorageT storage_type;

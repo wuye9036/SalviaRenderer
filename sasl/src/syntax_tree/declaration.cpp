@@ -45,7 +45,7 @@ void type_definition::accept( syntax_tree_visitor* v ){
 }
 
 type_specifier::type_specifier( syntax_node_types type_id, boost::shared_ptr<token_attr> tok )
-	: declaration( syntax_node_types::type_specifier, tok ), value_typecode( buildin_type_code::none) { }
+	: declaration( type_id, tok ), value_typecode( buildin_type_code::none) { }
 
 bool type_specifier::is_buildin() const{
 	return node_class() == syntax_node_types::buildin_type;
@@ -88,7 +88,7 @@ void parameter::accept( syntax_tree_visitor* v ){
 }
 
 function_type::function_type( boost::shared_ptr<token_attr> tok )
-	: type_specifier( syntax_node_types::function_type, tok )
+	: type_specifier( syntax_node_types::function_type, tok ), is_declaration(false)
 {
 }
 

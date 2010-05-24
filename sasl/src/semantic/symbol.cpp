@@ -76,12 +76,12 @@ void symbol::remove_from_tree(){
 	}
 }
 
-boost::shared_ptr<symbol> symbol::parent(){
+boost::shared_ptr<symbol> symbol::parent() const{
 	return this_parent.lock();
 }
 
-boost::shared_ptr<class symbol_info> symbol::symbol_info( const std::string& clsname ){
-	for ( symbol_infos_t::iterator it = syminfos.begin(); it != syminfos.end(); ++it ){
+boost::shared_ptr<class symbol_info> symbol::symbol_info( const std::string& clsname ) const{
+	for ( symbol_infos_t::const_iterator it = syminfos.begin(); it != syminfos.end(); ++it ){
 		if ( (*it)->class_name() == clsname ){
 			return *it;
 		}
@@ -96,9 +96,13 @@ void symbol::symbol_info( boost::shared_ptr<class symbol_info> syminfo ){
 	syminfos.push_back( syminfo );
 }
 
-boost::shared_ptr<node> symbol::node()
+boost::shared_ptr<node> symbol::node() const
 {
 	return correspond_node.lock();
+}
+
+void symbol::relink( boost::shared_ptr<struct node> n ){
+	correspond_node = n;
 }
 
 const std::string& symbol::name() const{

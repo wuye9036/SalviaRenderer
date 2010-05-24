@@ -22,25 +22,29 @@ public:
 		return *this;
 	}
 
-	const static this_type _scalar;
-	const static this_type none;
 	const static this_type _unsigned;
 	const static this_type _sint32;
 	const static this_type _sint16;
+	const static this_type _sign_mask;
+	const static this_type _boolean;
+	const static this_type _generic_type_mask;
+	const static this_type _sint8;
+	const static this_type _scalar;
 	const static this_type _float;
-	const static this_type _uint8;
+	const static this_type _uint16;
+	const static this_type _uint32;
+	const static this_type _element_type_mask;
+	const static this_type _double;
 	const static this_type _matrix;
 	const static this_type _sint64;
 	const static this_type _real;
-	const static this_type _uint64;
-	const static this_type _uint16;
-	const static this_type _double;
-	const static this_type _boolean;
-	const static this_type _integer;
+	const static this_type _uint8;
 	const static this_type _signed;
 	const static this_type _vector;
-	const static this_type _uint32;
-	const static this_type _sint8;
+	const static this_type none;
+	const static this_type _dimension_mask;
+	const static this_type _uint64;
+	const static this_type _integer;
 
 
 	static std::string to_name( const this_type& enum_val );

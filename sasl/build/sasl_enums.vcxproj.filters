@@ -80,5 +80,8 @@
     <ClInclude Include="..\enums\compiler_informations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\enums\default_hasher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

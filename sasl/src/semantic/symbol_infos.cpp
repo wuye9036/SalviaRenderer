@@ -132,4 +132,17 @@ void variable_symbol_info::is_local( bool isloc ){
 	this->isloc = isloc;
 }
 
+// function symbol info
+function_symbol_info::function_symbol_info()
+: base_type( "function symbol info" )
+{
+}
+
+std::string function_symbol_info::mangled_name() const{
+	return mang_name;
+}
+
+void function_symbol_info::mangled_name( const std::string& mname ){
+	mang_name = mname;
+}
 END_NS_SASL_SEMANTIC();

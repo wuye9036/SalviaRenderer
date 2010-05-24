@@ -89,13 +89,16 @@
 		<item value="1 * (2 ** 24)">_scalar</item>
 		<item value="2 * (2 ** 24)">_vector</item>
 		<item value="4 * (2 ** 24)">_matrix</item>
+		<item value="255 * (2**24)">_dimension_mask</item>
 		
 		<item value="1 * (2 ** 16)">_real</item>
 		<item value="2 * (2 ** 16)">_integer</item>
-		<item value="3 * (2 ** 16)">_boolean</item>
+		<item value="4 * (2 ** 16)">_boolean</item>
+		<item value="255 * (2 ** 16)">_generic_type_mask</item>
 		
 		<item value="1 * (2 ** 8) + $_integer$">_unsigned</item>
 		<item value="2 * (2 ** 8) + $_integer$">_signed</item>
+		<item value="255 * (2 ** 8)">_sign_mask</item>
 		
 		<item value="1 + $_signed$">_sint8</item>
 		<item value="2 + $_signed$">_sint16</item>
@@ -109,6 +112,7 @@
 		
 		<item value="1 + $_real$">_float</item>
 		<item value="2 + $_real$">_double</item>
+		<item value="(2 ** 24) - 1">_element_type_mask</item>
 	</enum>
 	
 	<enum name="syntax_node_types" storage_type = "uint64_t">

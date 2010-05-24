@@ -87,6 +87,19 @@ private:
 	variable_symbol_info();
 	bool isloc;
 };
+
+class function_symbol_info: public symbol_info{
+public:
+	friend class symbol;
+	typedef symbol_info base_type;
+
+	std::string mangled_name() const;
+	void mangled_name( const std::string& mname );
+private:
+	function_symbol_info();
+	std::string mang_name;
+};
+
 END_NS_SASL_SEMANTIC();
 
 #endif

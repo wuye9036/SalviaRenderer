@@ -25,6 +25,9 @@ using ::sasl::common::token_attr;
 
 struct node{
 	boost::shared_ptr<node> handle() const;
+	template <typename T> boost::shared_ptr<T> typed_handle(  ) const{
+		return boost::shared_polymorphic_cast<T>( handle() );
+	}
 	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;
 	void symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym );
 	boost::shared_ptr<token_attr> token() const;

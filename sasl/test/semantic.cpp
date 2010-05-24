@@ -3,6 +3,7 @@
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/node_creation.h>
@@ -29,7 +30,6 @@ BOOST_AUTO_TEST_CASE( program_semantic ){
 	semantic_analysis( prog, cim );
 	BOOST_CHECK( prog->symbol() );
 }
-
 
 BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	using ::sasl::syntax_tree::program;
@@ -150,4 +150,35 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	BOOST_CHECK_EQUAL( cim->all_condition_infos( compiler_informations::none ).size(), 0 );
 		
 }
+
+BOOST_AUTO_TEST_CASE( name_mangling ){
+	using ::sasl::syntax_tree::program;
+	using ::sasl::syntax_tree::buildin_type;
+	using ::sasl::syntax_tree::create_node;
+	using ::sasl::syntax_tree::function_type;
+	using ::sasl::syntax_tree::declaration_statement;
+	using ::sasl::semantic::semantic_analysis;
+	using ::sasl::common::compiler_info_manager;
+	using ::sasl::semantic::name_mangler;
+
+	boost::shared_ptr<program> prog = create_node<program>("test");
+	
+	boost::shared_ptr<buildin_type> bt0 = create_node<buildin_type>( null_token() );
+	bt0->value_typecode = buildin_type_code::_sint32;
+	boost::shared_ptr<function_type> ft = create_node<function_type>( null_token() );
+	ft->is_declaration = true;
+	ft->retval_type = new_buildin_type( null_token(), buildin_type_code::_double );
+	ft->name = new_token( "foo" );
+	boost::shared_ptr<declaration_statement> declstmt = create_node<declaration_statement>( null_token() );
+	declstmt->decl = ft;
+	prog->decls.push_back( declstmt );
+
+	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
+
+	semantic_analysis( prog, cim );
+	name_mangler mang;
+
+	BOOST_CHECK_EQUAL( mang.mangle( ft ), std::string("Mfoo@@NNBD@Z") );
+}
+
 BOOST_AUTO_TEST_SUITE_END();

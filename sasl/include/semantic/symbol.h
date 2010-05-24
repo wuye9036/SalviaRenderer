@@ -30,12 +30,12 @@ public:
 	boost::shared_ptr<symbol> add_child(const std::string& s, boost::shared_ptr<node> child_node);
 	void remove_child( const std::string& s );
 	void remove_from_tree();
-	boost::shared_ptr<symbol> parent();
+	boost::shared_ptr<symbol> parent() const;
 
-	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname );
+	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname ) const;
 	void symbol_info( boost::shared_ptr<class symbol_info> syminfo );
 
-	template <typename T> boost::shared_ptr<T> symbol_info(){
+	template <typename T> boost::shared_ptr<T> symbol_info() const{
 		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );
 		static T instance;
 		return boost::shared_polymorphic_downcast<T>( symbol_info(instance.class_name()) );
@@ -54,7 +54,9 @@ public:
 		return ret;
 	}
 
-	boost::shared_ptr<struct node> node();
+	boost::shared_ptr<struct node> node() const;
+	void relink( boost::shared_ptr<struct node> n );
+
 	const std::string& name() const;
 private:
 	static boost::shared_ptr<symbol> create(

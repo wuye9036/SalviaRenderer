@@ -42,6 +42,9 @@
     <ClInclude Include="..\include\semantic\semantic_error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\semantic\name_mangler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\semantic\sematic_analyser.cpp">
@@ -63,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\semantic\semantic_error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\semantic\name_mangler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
