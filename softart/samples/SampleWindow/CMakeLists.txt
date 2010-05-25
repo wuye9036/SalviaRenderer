@@ -13,16 +13,13 @@ set (HEADER_FILES
 	resource.h
 	SRSampleWindow.h
 	SRSampleWindowView.h
+	Timer.h
 	stdafx.h
 )
 
 set (SOURCE_FILES
 	SRSampleWindow.cpp
-	stdafx.cpp
-)
-
-set (SOURCE_FILES
-	SRSampleWindow.cpp
+	Timer.cpp
 	stdafx.cpp
 )
 

@@ -35,17 +35,15 @@ namespace addresser
 			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
 			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
 
-			__m128i micoord = _mm_cvttps_epi32(mfcoord_ipart);
-			micoord = _mm_add_epi32(micoord, _mm_slli_si128(misize, 2));
-			mfcoord = _mm_cvtepi32_ps(micoord);
-			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
-			__m128 mfdiv = _mm_cvtepi32_ps(midiv);
-			__m128i tmp = _mm_sub_epi32(micoord, _mm_cvttps_epi32(_mm_mul_ps(mfdiv, mfsize)));
+			mfcoord = _mm_add_ps(mfcoord_ipart, _mm_mul_ps(mfsize, _mm_set1_ps(8192.0f)));
+			__m128 mfdiv = _mm_cvtepi32_ps(_mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize)));
+			__m128i tmp = _mm_cvttps_epi32(_mm_sub_ps(mfcoord, _mm_mul_ps(mfdiv, mfsize)));
 			int4 ret;
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
 #else
-			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w);
+			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w)))
+				* vec4(static_cast<float>(size.x), static_cast<float>(size.y), static_cast<float>(size.z), static_cast<float>(size.w));
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 
 			return int4((size.x * 8192 + coord_ipart.x) % size.x,
@@ -74,19 +72,17 @@ namespace addresser
 			__m128 mffrac = _mm_sub_ps(mfcoord0, mfcoord_ipart);
 			_mm_storeu_ps(&frac.x, mffrac);
 
-			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
-			__m128i micoord01 = _mm_unpacklo_epi64(micoord0, micoord0);
-			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
-			micoord01 = _mm_add_epi32(micoord01, _mm_slli_si128(misize, 2));
-			mfcoord = _mm_cvtepi32_ps(micoord01);
-			__m128i midiv = _mm_cvttps_epi32(_mm_div_ps(mfcoord, mfsize));
-			__m128 mfdiv = _mm_cvtepi32_ps(midiv);
-			__m128i tmp = _mm_sub_epi32(micoord01, _mm_cvttps_epi32(_mm_mul_ps(mfdiv, mfsize)));
+			__m128 mfcoord01 = _mm_movelh_ps(mfcoord_ipart, mfcoord_ipart);
+			mfcoord01 = _mm_add_ps(mfcoord01, _mm_set_ps(1.0f, 1.0f, 0.0f, 0.0f));
+			mfcoord01 = _mm_add_ps(mfcoord01, _mm_mul_ps(mfsize, _mm_set1_ps(8192.0f)));
+			__m128 mfdiv = _mm_cvtepi32_ps(_mm_cvttps_epi32(_mm_div_ps(mfcoord01, mfsize)));
+			__m128i tmp = _mm_cvttps_epi32(_mm_sub_ps(mfcoord01, _mm_mul_ps(mfdiv, mfsize)));
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
 			tmp = _mm_unpackhi_epi64(tmp, tmp);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
-			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w))) * vec4(size.x, size.y, size.z, size.w) - 0.5f;
+			vec4 o_coord = (coord - vec4(fast_floor(coord.x), fast_floor(coord.y), fast_floor(coord.z), fast_floor(coord.w)))
+				* vec4(static_cast<float>(size.x), static_cast<float>(size.y), static_cast<float>(size.z), static_cast<float>(size.w)) - 0.5f;
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 
@@ -136,10 +132,9 @@ namespace addresser
 			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
 			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
 
-			__m128i micoord = _mm_cvttps_epi32(mfcoord_ipart);
-			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
-			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
-			tmp = _mm_min_epi16(tmp, misize);
+			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			mfsize = _mm_sub_ps(mfsize, _mm_set1_ps(1.0f));
+			__m128i tmp = _mm_cvttps_epi32(_mm_min_ps(_mm_max_ps(mfcoord_ipart, _mm_setzero_ps()), mfsize));
 			int4 ret;
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
@@ -175,13 +170,12 @@ namespace addresser
 			__m128 mffrac = _mm_sub_ps(mfcoord0, mfcoord_ipart);
 			_mm_storeu_ps(&frac.x, mffrac);
 
-			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
-			__m128i micoord01 = _mm_unpacklo_epi64(micoord0, micoord0);
-			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
-			misize = _mm_unpacklo_epi64(misize, misize);
-			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
-			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
-			tmp = _mm_min_epi16(tmp, misize);
+			__m128 mfcoord01 = _mm_movelh_ps(mfcoord_ipart, mfcoord_ipart);
+			mfcoord01 = _mm_add_ps(mfcoord01, _mm_set_ps(1.0f, 1.0f, 0.0f, 0.0f));
+			__m128 mfsize = _mm_cvtepi32_ps(misize);
+			mfsize = _mm_movelh_ps(mfsize, mfsize);
+			mfsize = _mm_sub_ps(mfsize, _mm_set1_ps(1.0f));
+			__m128i tmp = _mm_cvttps_epi32(_mm_min_ps(_mm_max_ps(mfcoord01, _mm_setzero_ps()), mfsize));
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
 			tmp = _mm_unpackhi_epi64(tmp, tmp);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
@@ -228,10 +222,8 @@ namespace addresser
 			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
 			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
 
-			__m128i micoord = _mm_cvttps_epi32(mfcoord_ipart);
-			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
-			__m128i tmp = _mm_max_epi16(micoord, _mm_set1_epi32(0));
-			tmp = _mm_min_epi16(tmp, misize);
+			mfsize = _mm_sub_ps(mfsize, _mm_set1_ps(1));
+			__m128i tmp = _mm_cvttps_epi32(_mm_min_ps(_mm_max_ps(mfcoord_ipart, _mm_setzero_ps()), mfsize));
 			int4 ret;
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
@@ -268,12 +260,10 @@ namespace addresser
 			__m128 mffrac = _mm_sub_ps(mfcoord0, mfcoord_ipart);
 			_mm_storeu_ps(&frac.x, mffrac);
 
-			__m128i micoord0 = _mm_cvttps_epi32(mfcoord_ipart);
-			__m128i micoord01 = _mm_unpacklo_epi64(micoord0, micoord0);
-			micoord01 = _mm_add_epi32(micoord01, _mm_set_epi32(1, 1, 0, 0));
-			misize = _mm_sub_epi32(misize, _mm_set1_epi32(1));
-			__m128i tmp = _mm_max_epi16(micoord01, _mm_set1_epi32(0));
-			tmp = _mm_min_epi16(tmp, misize);
+			__m128 mfcoord01 = _mm_movelh_ps(mfcoord_ipart, mfcoord_ipart);
+			mfcoord01 = _mm_add_ps(mfcoord01, _mm_set_ps(1.0f, 1.0f, 0.0f, 0.0f));
+			mfsize = _mm_sub_ps(mfsize, _mm_set1_ps(1));
+			__m128i tmp = _mm_cvttps_epi32(_mm_min_ps(_mm_max_ps(mfcoord01, _mm_setzero_ps()), mfsize));
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&low.x), tmp);
 			tmp = _mm_unpackhi_epi64(tmp, tmp);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
@@ -568,7 +558,7 @@ float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx
 		max(abs(ddx2.y), abs(ddy2.y)), 
 		max(abs(ddx2.z), abs(ddy2.z)), 
 		0.0f);
-	maxD *= size;
+	maxD *= vec4(static_cast<float>(size.x), static_cast<float>(size.y), static_cast<float>(size.z), 0);
 
 	rho = max(max(maxD.x, maxD.y), maxD.z);
 	if(rho == 0.0f) rho = 0.000001f;

@@ -17,7 +17,7 @@ clipper::clipper(){
 	planes_[2] = vec4(0.0f, 0.0f, 1.0f, 1.0f);
 	planes_[3] = vec4(-1.0f, 0.0f, 0.0f, 1.0f);
 	planes_[4] = vec4(0.0f, -1.0f, 0.0f, 1.0f);
-	planes_[5] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
+	planes_[5] = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	std::fill(planes_enable_.begin(), planes_enable_.begin()+default_plane_num, true);
 	std::fill(planes_enable_.begin()+default_plane_num, planes_enable_.end(), false);

@@ -14,7 +14,7 @@
 #include "eflib/include/eflib.h"
 #include <iostream>
 #include <boost/assign.hpp>
-#include <boost/timer.hpp>
+#include "Timer.h"
 
 //#define PRESENTER_NAME "gdiplus"
 #define PRESENTER_NAME "d3d9"
@@ -215,7 +215,7 @@ public:
 	float accumulate_time;
 	float fps;
 
-	boost::timer timer;
+	Timer timer;
 
 	CSRSampleWindowView::CSRSampleWindowView()
 	{
