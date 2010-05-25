@@ -6,7 +6,7 @@ BEGIN_NS_SASL_SEMANTIC();
 symbol_scope::symbol_scope( const std::string& child_name, boost::shared_ptr<symbol>& sym )
 	: cursym( sym )
 {
-	sym = sym->find_this( child_name );
+	sym = sym->find_mangled_this( child_name );
 }
 
 symbol_scope::symbol_scope(

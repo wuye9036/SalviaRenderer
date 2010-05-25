@@ -44,6 +44,13 @@ private:
 	buildin_type_code valtype;
 };
 
+/*					
+						has symbol		symbol's node		referred type		actual type
+	buildin type		   no				N/A				   N/A				    this
+	declaration	only	   yes			 first decl			 first decl			 full type
+	definition             yes			 first decl			 first decl			 full type
+	type ref/alias		   yes			 first decl          first decl			 full type
+*/
 class type_symbol_info: public symbol_info{
 public:
 	friend class symbol;
@@ -53,9 +60,7 @@ public:
 	void type_type( type_types ttype );
 
 	// full_type returns back the raw type.
-	// it's behaviour decided by ttype.
-	//    for none, buildin and composited, return type_node.
-	//    for alias, return full_type().full_type().
+	// its behaviour is decided by ttype.
 	boost::shared_ptr<type_specifier> full_type() const;
 
 	void full_type( boost::shared_ptr<type_specifier> ftnode );

@@ -82,7 +82,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	using ::sasl::syntax_tree::type_definition;
 	using ::boost::assign::list_of;
 	const std::string& alias_str = v.ident->lit;
-	boost::shared_ptr<symbol> existed_sym = cursym->find_all( alias_str );
+	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( alias_str );
 	if ( existed_sym ){
 		// if the symbol is used and is not a type node, it must be redifinition.
 		// else compare the type.
@@ -154,11 +154,11 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 		v.params[i_param]->param_type->accept(this);
 	}
 
-	std::string mangled_name = mangle_function_name( v.typed_handle<function_type>(), false );
+	std::string mangled_name = mangle_function_name( v.typed_handle<function_type>() );
 
 	bool use_existed_node(false);
 
-	boost::shared_ptr<symbol> existed_sym = cursym->find_this( unmangled_name );
+	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
 	if ( existed_sym ) {
 		boost::shared_ptr<function_type> existed_node = existed_sym->node()->typed_handle<function_type>();
 		if ( !existed_node ){

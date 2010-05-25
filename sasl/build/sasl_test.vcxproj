@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\test\compinfos.cpp" />
-    <ClCompile Include="..\test\function_entry_generator_test.cpp" />
     <ClCompile Include="..\test\llvm_test.cpp" />
     <ClCompile Include="..\test\semantic.cpp" />
     <ClCompile Include="..\test\syntax_tree.cpp" />

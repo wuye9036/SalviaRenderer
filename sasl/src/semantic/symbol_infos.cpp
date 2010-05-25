@@ -1,5 +1,6 @@
 #include <sasl/include/semantic/symbol_infos.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/type_checker.h>
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <string>
@@ -103,12 +104,10 @@ void const_value_symbol_info::value_type( buildin_type_code vtype ){
 type_symbol_info::type_symbol_info(): base_type( "ref symbol info" ), ttype(type_types::none) { }
 
 boost::shared_ptr<type_specifier> type_symbol_info::full_type() const{
-	boost::shared_ptr<type_specifier> candidate_ret = type_node.lock();
-	if ( ttype == type_types::alias ){
-		return extract_symbol_info<type_symbol_info>(candidate_ret)->full_type();
-	}
-	return candidate_ret;
+	boost::shared_ptr<type_specifier> ret_type = type_node.lock();
+	return (ttype == type_types::alias) ? actual_type( ret_type ) : ret_type;
 }
+
 void type_symbol_info::full_type( boost::shared_ptr<type_specifier> ftnode ){
 	type_node = ftnode;
 }

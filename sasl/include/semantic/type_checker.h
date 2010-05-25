@@ -13,7 +13,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-std::string mangle_function_name( boost::shared_ptr<::sasl::syntax_tree::function_type> v, bool support_overload );
+std::string mangle_function_name( boost::shared_ptr<::sasl::syntax_tree::function_type> v );
 
 bool is_equal(
 	boost::shared_ptr<::sasl::syntax_tree::type_specifier> lhs,

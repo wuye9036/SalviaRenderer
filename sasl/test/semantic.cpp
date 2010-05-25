@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 
 	semantic_analysis( prog, cim );
 
-	boost::shared_ptr<symbol> var0sym = prog->symbol()->find_this( var_name_0 );
-	boost::shared_ptr<symbol> var1sym = prog->symbol()->find_this( var_name_1 );
+	boost::shared_ptr<symbol> var0sym = prog->symbol()->find_mangled_this( var_name_0 );
+	boost::shared_ptr<symbol> var1sym = prog->symbol()->find_mangled_this( var_name_1 );
 
 	boost::shared_ptr<type_symbol_info> var0tsi = var0sym->symbol_info<type_symbol_info>();
 	boost::shared_ptr<type_symbol_info> var1tsi = var1sym->symbol_info<type_symbol_info>();

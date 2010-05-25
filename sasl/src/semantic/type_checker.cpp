@@ -1,6 +1,7 @@
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <cassert>
 
@@ -10,13 +11,9 @@ using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::variable_declaration;
 
-std::string mangle_function_name( boost::shared_ptr<function_type> v, bool support_overload ){
-	if ( support_overload ){
-		// TODO: MANGLE NAME
-		assert( !"Unimplemented!" );
-	} else{
-		return v->name->lit;
-	}
+std::string mangle_function_name( boost::shared_ptr<function_type> v ){
+	name_mangler nm;
+	return nm.mangle( v );
 }
 
 boost::shared_ptr<type_specifier> actual_type( boost::shared_ptr<type_specifier> orgtype ){
