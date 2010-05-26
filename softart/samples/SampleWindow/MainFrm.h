@@ -71,11 +71,7 @@ public:
 	{
 		SetMenu(NULL);
 
-		m_hWndClient = m_view.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
-
-		RECT rc = { 0, 0, 512, 512 };
-		::AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
-		this->SetWindowPos(HWND_TOP, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOREPOSITION | SWP_NOZORDER);
+		m_hWndClient = m_view.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 
 		// register object for message filtering and idle updates
 		CMessageLoop* pLoop = _Module.GetMessageLoop();

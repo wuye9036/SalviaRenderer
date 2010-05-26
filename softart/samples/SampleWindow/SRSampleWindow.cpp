@@ -30,7 +30,12 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
 	CMainFrame wndMain;
 
-	if(wndMain.CreateEx() == NULL)
+	RECT rc = { 0, 0, 512, 512 };
+	::AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
+	rc.right -= rc.left;
+	rc.bottom -= rc.top;
+	rc.left = rc.top = 0;
+	if(wndMain.CreateEx(NULL, rc) == NULL)
 	{
 		ATLTRACE(_T("Main window creation failed!\n"));
 		return 0;
