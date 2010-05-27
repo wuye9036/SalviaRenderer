@@ -8,10 +8,6 @@
 #include "../debug_helper.h"
 #include <cmath>
 
-#ifdef EFLIB_MSVC
-#   include <xutility>
-#endif
-
 namespace efl{
 
 #ifndef EFLIB_NO_SIMD

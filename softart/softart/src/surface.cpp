@@ -69,15 +69,29 @@ void surface::map(void** pdata, map_mode mm) const{
 void surface::map(void** pdata, map_mode mm){
 	custom_assert(!is_mapped(), "不可重复锁定！");
 
-	mapped_data_.resize(elem_size_ * width_ * height_);
-	*pdata = &mapped_data_[0];
-
 	is_mapped_ = true;
 	mm_ = mm;
+
+#ifdef TILE_BASED_STORAGE
+	mapped_data_.resize(elem_size_ * width_ * height_);
+	*pdata = &mapped_data_[0];
 
 	if(is_read_mode(mm)){
 		this->untile(mapped_data_);
 	}
+#else
+	if (map_read == mm){
+		*pdata = &datas_[0];
+	}
+	else{
+		mapped_data_.resize(elem_size_ * width_ * height_);
+		*pdata = &mapped_data_[0];
+
+		if(is_read_mode(mm)){
+			this->untile(mapped_data_);
+		}
+	}
+#endif
 }
 
 void surface::unmap() const{
