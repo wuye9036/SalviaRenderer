@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title>SoftArt States</title>
+<style type="text/css">
+th
+{
+	background: #FFFFCC;
+}
+
+td.supported
+{
+	color: green;
+}
+
+td.unsupported
+{
+	color: red;
+}
+</style>
+</head>
+
+<body>
+<h1>Status of D3D11 support in SoftArt </h1>
+<h2>Pipeline Stages</h2>
+<table>
+	<tr>
+		<th>Feature</th>
+		<th>Available?</th>
+	</tr>
+	<tr>
+		<td>Input assembler</td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Vertex shader</td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Primitive setup </td>
+		<td class="unsupported">Triangle and line </td>
+	</tr>
+	<tr>
+		<td>Hull shader </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Tessellator</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Domain shader </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Geometry shader </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Rasterizer</td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Face culling </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Depth bias adjustment </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Depth clip </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Scissor</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Clipping</td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Homogenous division </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Viewport transformation </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Multisampling</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Pixel shader </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Stencil test </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Depth test </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Blending</td>
+		<td class="supported">Yes (via blend shader) </td>
+	</tr>
+</table>
+<h2>Resources</h2>
+<table>
+	<tr>
+		<th>Resource</th>
+		<th>Available?</th>
+	</tr>
+	<tr>
+		<td>Vertex buffer </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Index buffer </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Constant buffer </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Texture1D</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Texture2D</td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>TextureCube</td>
+		<td class="supported">Yes (untested) </td>
+	</tr>
+	<tr>
+		<td>Texture1D array</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Texture2D array</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Texture3D</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Texture2D MS</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>TextureCube MS</td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Render target view </td>
+		<td class="supported">Yes (via surface) </td>
+	</tr>
+	<tr>
+		<td>Depth stencil view </td>
+		<td class="supported">Yes (via surface) </td>
+	</tr>
+</table>
+<h2>Render Objects</h2>
+<table>
+	<tr>
+		<th>Object</th>
+		<th>Available?</th>
+	</tr>
+	<tr>
+		<td>Input element </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Sampler state </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Promitive topology </td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Rasterizer state </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Viewport</td>
+		<td class="supported">Yes</td>
+	</tr>
+	<tr>
+		<td>Depth stencil state </td>
+		<td class="unsupported">No</td>
+	</tr>
+	<tr>
+		<td>Blend state </td>
+		<td class="supported">Yes (via blend shader) </td>
+	</tr>
+</table>
+</body>
+</html>
