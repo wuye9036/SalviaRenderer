@@ -24,7 +24,7 @@ public:
 	void set_clip_plane(const efl::vec4& plane, size_t idx);
 	void set_clip_plane_enable(bool enable, size_t idx);
 
-	void clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2);
+	void clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2) const;
 
 };
 

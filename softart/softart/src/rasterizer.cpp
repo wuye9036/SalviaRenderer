@@ -1,7 +1,6 @@
 #include "../include/rasterizer.h"
 
 #include "../include/shaderregs_op.h"
-#include "../include/clipper.h"
 #include "../include/framebuffer.h"
 #include "../include/renderer_impl.h"
 #include "../include/cpuinfo.h"
@@ -486,15 +485,7 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 		rasterize_line(v0, v2, vp, pps);
 	} else
 	{
-		vector<vs_output> clipped_verts;
-
-		h_clipper clipper = pparent_->get_clipper();
-		clipper->clip(clipped_verts , pparent_->get_viewport() , v0, v1, v2);
-
-		for(int i_tri = 1; i_tri < int(clipped_verts.size()) - 1; ++i_tri)
-		{
-			rasterize_triangle_impl(clipped_verts[0], clipped_verts[i_tri], clipped_verts[i_tri+1], vp, pps);
-		}
+		rasterize_triangle_impl(v0, v1, v2, vp, pps);
 	}
 }
 

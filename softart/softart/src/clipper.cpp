@@ -42,16 +42,16 @@ void clipper::set_clip_plane_enable(bool /*enable*/, size_t idx)
 	planes_enable_[idx - default_plane_num] = false;
 }
 
-void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2)
+void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2) const
 {
 	efl::pool::stack_pool< vs_output, 20 > pool;
-	std::vector<const vs_output*> clipped_verts_[2];
-	clipped_verts_[0].clear();
+	std::vector<const vs_output*> clipped_verts[2];
+	clipped_verts[0].clear();
 
 	//¿ªÊ¼clip, Ping-Pong idioms
-	clipped_verts_[0].push_back(&v0);
-	clipped_verts_[0].push_back(&v1);
-	clipped_verts_[0].push_back(&v2);
+	clipped_verts[0].push_back(&v0);
+	clipped_verts[0].push_back(&v1);
+	clipped_verts[0].push_back(&v2);
 
 	float di, dj;
 	size_t src_stage = 0;
@@ -63,37 +63,37 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 			continue;
 		}
 
-		clipped_verts_[dest_stage].clear();
+		clipped_verts[dest_stage].clear();
 
-		for(size_t i = 0, j = 1; i < clipped_verts_[src_stage].size(); ++i, ++j)
+		for(size_t i = 0, j = 1; i < clipped_verts[src_stage].size(); ++i, ++j)
 		{
 			//wrap
-			j %= clipped_verts_[src_stage].size();
+			j %= clipped_verts[src_stage].size();
 
-			di = dot_prod4(planes_[i_plane], clipped_verts_[src_stage][i]->position);
-			dj = dot_prod4(planes_[i_plane], clipped_verts_[src_stage][j]->position);
+			di = dot_prod4(planes_[i_plane], clipped_verts[src_stage][i]->position);
+			dj = dot_prod4(planes_[i_plane], clipped_verts[src_stage][j]->position);
 
 			if(di >= 0.0f){
-				clipped_verts_[dest_stage].push_back(clipped_verts_[src_stage][i]);
+				clipped_verts[dest_stage].push_back(clipped_verts[src_stage][i]);
 
 				if(dj < 0.0f){
 					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
-					*pclipped = *clipped_verts_[src_stage][i] + (*clipped_verts_[src_stage][j] - *clipped_verts_[src_stage][i]) * ( di / (di - dj));
+					*pclipped = *clipped_verts[src_stage][i] + (*clipped_verts[src_stage][j] - *clipped_verts[src_stage][i]) * ( di / (di - dj));
 					update_wpos(*pclipped, vp);
 
-					clipped_verts_[dest_stage].push_back(pclipped);
+					clipped_verts[dest_stage].push_back(pclipped);
 				}
 			} else {
 				if(dj >= 0.0f){
 					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
-					*pclipped = *clipped_verts_[src_stage][j] + (*clipped_verts_[src_stage][i] - *clipped_verts_[src_stage][j]) * ( dj / (dj - di));
+					*pclipped = *clipped_verts[src_stage][j] + (*clipped_verts[src_stage][i] - *clipped_verts[src_stage][j]) * ( dj / (dj - di));
 					update_wpos(*pclipped, vp);
 
-					clipped_verts_[dest_stage].push_back(pclipped);
+					clipped_verts[dest_stage].push_back(pclipped);
 				}
 			}
 		}
@@ -105,9 +105,9 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 		dest_stage &= 1;
 	}
 	//·µ»Ø
-	clipped_verts_[dest_stage].clear();
+	clipped_verts[dest_stage].clear();
 
-	const std::vector<const vs_output*> &clipped_verts_ptrs = clipped_verts_[src_stage];
+	const std::vector<const vs_output*> &clipped_verts_ptrs = clipped_verts[src_stage];
 	out_clipped_verts.resize(clipped_verts_ptrs.size());
 	for(size_t i = 0; i < clipped_verts_ptrs.size(); ++i){
 		out_clipped_verts[i] = *clipped_verts_ptrs[i];
