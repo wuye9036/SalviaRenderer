@@ -42,7 +42,7 @@ void clipper::set_clip_plane_enable(bool /*enable*/, size_t idx)
 	planes_enable_[idx - default_plane_num] = false;
 }
 
-void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1) const
+void clipper::clip(std::vector<vs_output> &out_clipped_verts, const vs_output& v0, const vs_output& v1) const
 {
 	efl::pool::stack_pool< vs_output, 20 > pool;
 	std::vector<const vs_output*> clipped_verts[2];
@@ -80,7 +80,6 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 
 				//LERP
 				*pclipped = *clipped_verts[src_stage][j] + (*clipped_verts[src_stage][i] - *clipped_verts[src_stage][j]) * ( dj / (dj - di));
-				update_wpos(*pclipped, vp);
 
 				clipped_verts[dest_stage].push_back(pclipped);
 			}
@@ -92,7 +91,6 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 
 				//LERP
 				*pclipped = *clipped_verts[src_stage][i] + (*clipped_verts[src_stage][j] - *clipped_verts[src_stage][i]) * ( di / (di - dj));
-				update_wpos(*pclipped, vp);
 
 				clipped_verts[dest_stage].push_back(pclipped);
 			}
@@ -114,7 +112,7 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 	}
 }
 
-void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2) const
+void clipper::clip(std::vector<vs_output> &out_clipped_verts, const vs_output& v0, const vs_output& v1, const vs_output& v2) const
 {
 	efl::pool::stack_pool< vs_output, 20 > pool;
 	std::vector<const vs_output*> clipped_verts[2];
@@ -153,7 +151,6 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 
 					//LERP
 					*pclipped = *clipped_verts[src_stage][i] + (*clipped_verts[src_stage][j] - *clipped_verts[src_stage][i]) * ( di / (di - dj));
-					update_wpos(*pclipped, vp);
 
 					clipped_verts[dest_stage].push_back(pclipped);
 				}
@@ -163,7 +160,6 @@ void clipper::clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp
 
 					//LERP
 					*pclipped = *clipped_verts[src_stage][j] + (*clipped_verts[src_stage][i] - *clipped_verts[src_stage][j]) * ( dj / (dj - di));
-					update_wpos(*pclipped, vp);
 
 					clipped_verts[dest_stage].push_back(pclipped);
 				}

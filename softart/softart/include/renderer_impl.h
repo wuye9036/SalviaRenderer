@@ -35,6 +35,8 @@ class renderer_impl : public renderer
 
 	primitive_topology primtopo_;
 
+	h_rasterizer_state			hrs_;
+
 	void initialize();
 
 public:
@@ -55,11 +57,8 @@ public:
 	virtual result set_vertex_shader(h_vertex_shader hvs);
 	virtual h_vertex_shader get_vertex_shader() const;
 
-	virtual result set_cull_mode(cull_mode cm);
-	virtual cull_mode get_cull_mode() const;
-
-	virtual result set_fill_mode(fill_mode fm);
-	virtual fill_mode get_fill_mode() const;
+	virtual result set_rasterizer_state(const h_rasterizer_state& rs);
+	virtual const h_rasterizer_state& get_rasterizer_state() const;
 
 	virtual result set_pixel_shader(h_pixel_shader hps);
 	virtual h_pixel_shader get_pixel_shader() const;

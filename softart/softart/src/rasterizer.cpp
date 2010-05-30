@@ -4,6 +4,7 @@
 #include "../include/framebuffer.h"
 #include "../include/renderer_impl.h"
 #include "../include/cpuinfo.h"
+#include "../include/clipper.h"
 
 #include "eflib/include/slog.h"
 
@@ -41,6 +42,119 @@ struct scanline_info
 		base_y = rhs.base_y;
 	}
 };
+
+bool cull_mode_none(float /*area*/)
+{
+	return false;
+}
+
+bool cull_mode_ccw(float area)
+{
+	return area <= 0;
+}
+
+bool cull_mode_cw(float area)
+{
+	return area >= 0;
+}
+
+void fill_wireframe_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float /*area*/)
+{
+	num_clipped_prims = 0;
+	std::vector<vs_output> tmp_verts;
+
+	clipper->clip(tmp_verts, pv[0], pv[1]);
+	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
+	for (size_t j = 0; j < tmp_verts.size(); ++ j){
+		clipped_verts[0 * 2 + j] = tmp_verts[j];
+	}
+
+	clipper->clip(tmp_verts, pv[1], pv[2]);
+	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
+	for (size_t j = 0; j < tmp_verts.size(); ++ j){
+		clipped_verts[1 * 2 + j] = tmp_verts[j];
+	}
+						
+	clipper->clip(tmp_verts, pv[2], pv[0]);
+	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
+	for (size_t j = 0; j < tmp_verts.size(); ++ j){
+		clipped_verts[2 * 2 + j] = tmp_verts[j];
+	}
+}
+
+void fill_solid_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
+{
+	std::vector<vs_output> tmp_verts;
+	clipper->clip(tmp_verts, pv[0], pv[1], pv[2]);
+	custom_assert(tmp_verts.size() < 21, "");
+
+	num_clipped_prims = static_cast<uint32_t>(tmp_verts.size() - 2);
+
+	bool flip = (area < 0);
+	for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
+		clipped_verts[(i_tri - 1) * 3 + 0] = tmp_verts[0];
+		if (flip){
+			clipped_verts[(i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 1];
+			clipped_verts[(i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 0];
+		}
+		else{
+			clipped_verts[(i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 0];
+			clipped_verts[(i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 1];
+		}
+	}
+}
+
+rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
+	: desc_(desc)
+{
+	switch (desc.cm)
+	{
+	case cull_none:
+		cm_func_ = cull_mode_none;
+		break;
+
+	case cull_front:
+		cm_func_ = desc.front_ccw ? cull_mode_ccw : cull_mode_cw;
+		break;
+
+	case cull_back:
+		cm_func_ = desc.front_ccw ? cull_mode_cw : cull_mode_ccw;
+		break;
+
+	default:
+		custom_assert(false, "");
+		break;
+	}
+	switch (desc.fm)
+	{
+	case fill_wireframe:
+		clipping_func_ = fill_wireframe_clipping;
+		break;
+
+	case fill_solid:
+		clipping_func_ = fill_solid_clipping;
+		break;
+
+	default:
+		custom_assert(false, "");
+		break;
+	}
+}
+
+const rasterizer_desc& rasterizer_state::get_desc() const
+{
+	return desc_;
+}
+
+bool rasterizer_state::cull(float area) const
+{
+	return cm_func_(area);
+}
+
+void rasterizer_state::clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
+{
+	clipping_func_(num_clipped_prims, clipped_verts, clipper, pv, area);
+}
 
 //inherited
 void rasterizer::initialize(renderer_impl* pparent)
@@ -450,31 +564,20 @@ void rasterizer::rasterize_scanline_impl(const scanline_info& sl, const h_pixel_
 
 rasterizer::rasterizer()
 {
-	cm_ = cull_back;
-	fm_ = fill_solid;
+	state_.reset(new rasterizer_state(rasterizer_desc()));
 }
 rasterizer::~rasterizer()
 {
 }
 
-void rasterizer::set_cull_mode(cull_mode cm)
+void rasterizer::set_state(const h_rasterizer_state& state)
 {
-	cm_ = cm;
+	state_ = state;
 }
 
-void rasterizer::set_fill_mode(fill_mode fm)
+const h_rasterizer_state& rasterizer::get_state() const
 {
-	fm_ = fm;
-}
-
-cull_mode rasterizer::get_cull_mode() const
-{
-	return cm_;
-}
-
-fill_mode rasterizer::get_fill_mode() const
-{
-	return fm_;
+	return state_;
 }
 
 END_NS_SOFTART()

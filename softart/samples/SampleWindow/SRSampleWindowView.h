@@ -73,12 +73,6 @@ public:
 		desc.addr_mode_u = address_clamp;
 		desc.addr_mode_v = address_clamp;
 		desc.addr_mode_w = address_clamp;
-		desc.mip_lod_bias = 0;
-		desc.max_anisotropy = 0;
-		desc.comparison_func = compare_function_always;
-		desc.border_color = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
-		desc.min_lod = -1e20f;
-		desc.max_lod = 1e20f;
 		sampler_.reset(new sampler(desc));
 		sampler_->set_texture(tex_.get());
 	}
@@ -135,15 +129,6 @@ public:
 		desc.min_filter = filter_linear;
 		desc.mag_filter = filter_linear;
 		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_wrap;
-		desc.addr_mode_v = address_wrap;
-		desc.addr_mode_w = address_wrap;
-		desc.mip_lod_bias = 0;
-		desc.max_anisotropy = 0;
-		desc.comparison_func = compare_function_always;
-		desc.border_color = color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
-		desc.min_lod = -1e20f;
-		desc.max_lod = 1e20f;
 		sampler_.reset(new sampler(desc));
 		sampler_->set_texture(tex_.get());
 	}
@@ -210,6 +195,9 @@ public:
 	h_pixel_shader pps_plane;
 	h_blend_shader pbs_box;
 	h_blend_shader pbs_plane;
+
+	h_rasterizer_state rs_front;
+	h_rasterizer_state rs_back;
 
 	uint32_t num_frames;
 	float accumulate_time;
@@ -300,6 +288,12 @@ public:
 		pbs_box.reset(new ts_blend_on);
 		pbs_plane.reset(new ts_blend_off);
 
+		rasterizer_desc rs_desc;
+		rs_desc.cm = cull_front;
+		rs_front.reset(new rasterizer_state(rs_desc));
+		rs_desc.cm = cull_back;
+		rs_back.reset(new rasterizer_state(rs_desc));
+
 		num_frames = 0;
 		accumulate_time = 0;
 		fps = 0;
@@ -356,21 +350,21 @@ public:
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_cull_mode(cull_back);
+			hsr->set_rasterizer_state(rs_back);
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_plane);
 			hsr->set_pixel_shader(pps_plane);
 			hsr->set_blend_shader(pbs_plane);
 			planar_mesh->render();
 			
-			hsr->set_cull_mode(cull_front);
+			hsr->set_rasterizer_state(rs_front);
 			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_box);
 			hsr->set_pixel_shader(pps_box);
 			hsr->set_blend_shader(pbs_box);
 			box_mesh->render();
 
-			hsr->set_cull_mode(cull_back);
+			hsr->set_rasterizer_state(rs_back);
 			hsr->set_vertex_shader(pvs_box);
 			hsr->set_pixel_shader(pps_box);
 			hsr->set_blend_shader(pbs_box);

@@ -104,28 +104,15 @@ h_vertex_shader renderer_impl::get_vertex_shader() const
 	return hvs_;
 }
 
-result renderer_impl::set_cull_mode(cull_mode cm)
+result renderer_impl::set_rasterizer_state(const h_rasterizer_state& rs)
 {
-	hrast_->set_cull_mode(cm);
+	hrs_ = rs;
 	return result::ok;
 }
 
-cull_mode renderer_impl::get_cull_mode() const
+const h_rasterizer_state& renderer_impl::get_rasterizer_state() const
 {
-	NO_IMPL();
-	return cull_none;
-}
-
-result renderer_impl::set_fill_mode(fill_mode fm)
-{
-	hrast_->set_fill_mode(fm);
-	return result::ok;
-}
-
-fill_mode renderer_impl::get_fill_mode() const
-{
-	NO_IMPL();
-	return fill_solid;
+	return hrs_;
 }
 
 result renderer_impl::set_pixel_shader(h_pixel_shader hps)
@@ -270,14 +257,22 @@ result renderer_impl::release_sampler(h_sampler& hsmp)
 
 result renderer_impl::draw(size_t startpos, size_t primcnt)
 {
+	hrast_->set_state(hrs_);
+
 	hvertcache_->reset(h_buffer(), idxtype_, primtopo_, static_cast<uint32_t>(startpos), 0);
+	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
+	
 	hga_->draw(primcnt);
 	return result::ok;
 }
 
 result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
+	hrast_->set_state(hrs_);
+
 	hvertcache_->reset(indexbuf_, idxtype_, primtopo_, static_cast<uint32_t>(startpos), basevert);
+	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
+
 	hga_->draw(primcnt);
 	return result::ok;
 }

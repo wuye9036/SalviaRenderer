@@ -56,11 +56,8 @@ public:
 	virtual result set_vertex_shader(h_vertex_shader hvs) = 0;
 	virtual h_vertex_shader get_vertex_shader() const = 0;
 
-	virtual result set_cull_mode(cull_mode cm) = 0;
-	virtual cull_mode get_cull_mode() const = 0;
-
-	virtual result set_fill_mode(fill_mode fm) = 0;
-	virtual fill_mode get_fill_mode() const = 0;
+	virtual result set_rasterizer_state(const h_rasterizer_state& rs) = 0;
+	virtual const h_rasterizer_state& get_rasterizer_state() const = 0;
 
 	virtual result set_pixel_shader(h_pixel_shader hps) = 0;
 	virtual h_pixel_shader get_pixel_shader() const = 0;

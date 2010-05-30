@@ -44,10 +44,9 @@ void geometry_assembler::geometry_setup_func(std::vector<uint32_t>& num_clipped_
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 
-	const cull_mode cm = pparent_->get_rasterizer()->get_cull_mode();
-	const fill_mode fm = pparent_->get_rasterizer()->get_fill_mode();
+	const h_rasterizer_state& rs = pparent_->get_rasterizer()->get_state();
 	const h_vertex_cache& dvc = pparent_->get_vertex_cache();
-	h_clipper clipper = pparent_->get_clipper();
+	const h_clipper& clipper = pparent_->get_clipper();
 
 	int32_t local_working_package = working_package ++;
 	while (local_working_package < num_packages){
@@ -60,73 +59,31 @@ void geometry_assembler::geometry_setup_func(std::vector<uint32_t>& num_clipped_
 				for (size_t j = 0; j < 3; ++ j){
 					const vs_output& v = dvc->fetch(i * 3 + j);
 					pv[j] = v;
-					const float sign_w = sign(v.wpos.w);
-					const float x = v.wpos.x * sign_w;
-					const float y = v.wpos.y * sign_w;
+					const float abs_w = abs(v.position.w);
+					const float x = v.position.x / abs_w;
+					const float y = v.position.y / abs_w;
 					pv_2d[j] = vec2(x, y);
 				}
 
-				bool culled = false;
-				const float area = cross_prod2(pv_2d[1] - pv_2d[0], pv_2d[2] - pv_2d[0]);
-				if (cm != cull_none){
-					if (((cm == cull_front) && (area >= 0))
-							|| ((cm == cull_back) && (area <= 0))){
-						culled = true;
-					}
-				}
-
-				if (!culled){
-					if(fm == fill_wireframe){
-						num_clipped_prims[i] = 0;
-						vector<vs_output> tmp_verts;
-						
-						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[0], pv[1]);
-						num_clipped_prims[i] += static_cast<uint32_t>(tmp_verts.size() / 2);
-						for (size_t j = 0; j < tmp_verts.size(); ++ j){
-							clipped_verts[i * 21 + 0 * 2 + j] = tmp_verts[j];
-						};
-						
-						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[1], pv[2]);
-						num_clipped_prims[i] += static_cast<uint32_t>(tmp_verts.size() / 2);
-						for (size_t j = 0; j < tmp_verts.size(); ++ j){
-							clipped_verts[i * 21 + 1 * 2 + j] = tmp_verts[j];
-						};
-						
-						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[2], pv[0]);
-						num_clipped_prims[i] += static_cast<uint32_t>(tmp_verts.size() / 2);
-						for (size_t j = 0; j < tmp_verts.size(); ++ j){
-							clipped_verts[i * 21 + 2 * 2 + j] = tmp_verts[j];
-						};
-					}
-					else{
-						vector<vs_output> tmp_verts;
-						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[0], pv[1], pv[2]);
-						custom_assert(tmp_verts.size() < 21, "");
-
-						num_clipped_prims[i] = static_cast<uint32_t>(tmp_verts.size() - 2);
-
-						bool flip = (area < 0);
-						for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
-							clipped_verts[i * 21 + (i_tri - 1) * 3 + 0] = tmp_verts[0];
-							if (flip){
-								clipped_verts[i * 21 + (i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 1];
-								clipped_verts[i * 21 + (i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 0];
-							}
-							else{
-								clipped_verts[i * 21 + (i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 0];
-								clipped_verts[i * 21 + (i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 1];
-							}
-						}
-					}
+				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
+				if (!rs->cull(area)){
+					rs->clipping(num_clipped_prims[i], &clipped_verts[i * 21], clipper, pv, area);
 				}
 				else{
 					num_clipped_prims[i] = 0;
 				}
 			}
-			else{
-				num_clipped_prims[i] = 1;
+			else if (2 == stride){
+				vs_output pv[2];
 				for (size_t j = 0; j < stride; ++ j){
-					clipped_verts[i * 21 + j] = dvc->fetch(i * stride + j);
+					pv[j] = dvc->fetch(i * stride + j);
+				}
+
+				std::vector<vs_output> tmp_verts;
+				clipper->clip(tmp_verts, pv[0], pv[1]);
+				num_clipped_prims[i] = static_cast<uint32_t>(tmp_verts.size() / 2);
+				for (size_t j = 0; j < tmp_verts.size(); ++ j){
+					clipped_verts[i * 21 + j] = tmp_verts[j];
 				}
 			}
 		}
@@ -312,9 +269,6 @@ void geometry_assembler::draw(size_t prim_count){
 	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
 	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x * num_tiles_y);
 
-	// Vertex transform
-	pparent_->get_vertex_cache()->transform_vertices(static_cast<uint32_t>(prim_count));
-
 	atomic<int32_t> working_package(0);
 	size_t num_threads = num_available_threads();
 
@@ -330,7 +284,7 @@ void geometry_assembler::draw(size_t prim_count){
 		prim_size, working_package, GEOMETRY_SETUP_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
-	const fill_mode fm = pparent_->get_rasterizer()->get_fill_mode();
+	const fill_mode fm = pparent_->get_rasterizer()->get_state()->get_desc().fm;
 	if ((fm == fill_wireframe) && ((primitive_triangle_list == primtopo) || (primitive_triangle_strip == primtopo)))
 	{
 		prim_size = 2;
@@ -339,10 +293,9 @@ void geometry_assembler::draw(size_t prim_count){
 
 	std::vector<vs_output> clipped_verts;
 	for (size_t i = 0; i < prim_count; ++ i){
-		for (uint32_t j = 0; j < num_clipped_prims[i]; ++ j){
-			for (uint32_t k = 0; k < prim_size; ++ k){
-				clipped_verts.push_back(clipped_verts_full[i * 21 + j * prim_size + k]);
-			}
+		for (uint32_t j = 0; j < num_clipped_prims[i] * prim_size; ++ j){
+			update_wpos(clipped_verts_full[i * 21 + j], vp);
+			clipped_verts.push_back(clipped_verts_full[i * 21 + j]);
 		}
 	}
 

@@ -69,7 +69,6 @@ void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& in
 			used_verts_[id] = i;
 
 			pvs_->execute(hsa_->fetch_vertex(id), verts_[i]);
-			update_wpos(verts_[i], *pvp_);
 		}
 
 		local_working_package = working_package ++;
