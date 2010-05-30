@@ -21,8 +21,6 @@ class rasterizer : public render_stage
 	h_framebuffer hfb_;
 
 	//线光栅化。光栅化后的点将直接传到PS中处理。
-	void rasterize_line_impl(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps);
-	void rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps);
 	void rasterize_scanline_impl(const scanline_info& sl, const h_pixel_shader& pps);
 
 

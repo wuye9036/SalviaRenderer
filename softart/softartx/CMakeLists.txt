@@ -52,11 +52,11 @@ config_output_paths(SoftArtX)
 
 
 set (HEADER_FILES
-	include/presenter/dx9/dev_d3d9.h
+	include/presenter/d3d9/dev_d3d9.h
 )
 
 set (SOURCE_FILES
-	src/presenter/dx9/dev_d3d9.cpp
+	src/presenter/d3d9/dev_d3d9.cpp
 )
 
 ADD_LIBRARY( SoftArtX_d3d9_presenter SHARED
@@ -92,7 +92,6 @@ ${SOURCE_FILES}
 TARGET_LINK_LIBRARIES(SoftArtX_d3d11_presenter
 EFLIB
 SoftArt
-SoftArtX
 )
 
 config_output_paths(SoftArtX_d3d11_presenter)

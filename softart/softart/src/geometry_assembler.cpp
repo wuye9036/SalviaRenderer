@@ -45,6 +45,7 @@ void geometry_assembler::geometry_setup_func(std::vector<uint32_t>& num_clipped_
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 
 	const cull_mode cm = pparent_->get_rasterizer()->get_cull_mode();
+	const fill_mode fm = pparent_->get_rasterizer()->get_fill_mode();
 	const h_vertex_cache& dvc = pparent_->get_vertex_cache();
 	h_clipper clipper = pparent_->get_clipper();
 
@@ -75,22 +76,46 @@ void geometry_assembler::geometry_setup_func(std::vector<uint32_t>& num_clipped_
 				}
 
 				if (!culled){
-					vector<vs_output> tmp_verts;
-					clipper->clip(tmp_verts, pparent_->get_viewport(), pv[0], pv[1], pv[2]);
-					custom_assert(tmp_verts.size() < 21, "");
+					if(fm == fill_wireframe){
+						num_clipped_prims[i] = 0;
+						vector<vs_output> tmp_verts;
+						
+						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[0], pv[1]);
+						num_clipped_prims[i] += static_cast<uint32_t>(tmp_verts.size() / 2);
+						for (size_t j = 0; j < tmp_verts.size(); ++ j){
+							clipped_verts[i * 21 + 0 * 2 + j] = tmp_verts[j];
+						};
+						
+						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[1], pv[2]);
+						num_clipped_prims[i] += static_cast<uint32_t>(tmp_verts.size() / 2);
+						for (size_t j = 0; j < tmp_verts.size(); ++ j){
+							clipped_verts[i * 21 + 1 * 2 + j] = tmp_verts[j];
+						};
+						
+						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[2], pv[0]);
+						num_clipped_prims[i] += static_cast<uint32_t>(tmp_verts.size() / 2);
+						for (size_t j = 0; j < tmp_verts.size(); ++ j){
+							clipped_verts[i * 21 + 2 * 2 + j] = tmp_verts[j];
+						};
+					}
+					else{
+						vector<vs_output> tmp_verts;
+						clipper->clip(tmp_verts, pparent_->get_viewport(), pv[0], pv[1], pv[2]);
+						custom_assert(tmp_verts.size() < 21, "");
 
-					num_clipped_prims[i] = static_cast<uint32_t>(tmp_verts.size() - 2);
+						num_clipped_prims[i] = static_cast<uint32_t>(tmp_verts.size() - 2);
 
-					bool flip = (area < 0);
-					for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
-						clipped_verts[i * 21 + (i_tri - 1) * 3 + 0] = tmp_verts[0];
-						if (flip){
-							clipped_verts[i * 21 + (i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 1];
-							clipped_verts[i * 21 + (i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 0];
-						}
-						else{
-							clipped_verts[i * 21 + (i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 0];
-							clipped_verts[i * 21 + (i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 1];
+						bool flip = (area < 0);
+						for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
+							clipped_verts[i * 21 + (i_tri - 1) * 3 + 0] = tmp_verts[0];
+							if (flip){
+								clipped_verts[i * 21 + (i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 1];
+								clipped_verts[i * 21 + (i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 0];
+							}
+							else{
+								clipped_verts[i * 21 + (i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 0];
+								clipped_verts[i * 21 + (i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 1];
+							}
 						}
 					}
 				}
@@ -264,27 +289,6 @@ void geometry_assembler::draw(size_t prim_count){
 
 	primitive_topology primtopo = pparent_->get_primitive_topology();
 
-	//计算索引数量
-	size_t index_count = 0;
-	switch(primtopo)
-	{
-	case primitive_line_list:
-		index_count = prim_count * 2;
-		break;
-	case primitive_line_strip:
-		index_count = prim_count + 1;
-		break;
-	case primitive_triangle_list:
-		index_count = prim_count * 3;
-		break;
-	case primitive_triangle_strip:
-		index_count = prim_count + 2;
-		break;
-	default:
-		custom_assert(false, "枚举值无效：无效的Primitive Topology");
-		return;
-	}
-	
 	uint32_t prim_size = 0;
 	switch(primtopo)
 	{
@@ -325,6 +329,13 @@ void geometry_assembler::draw(size_t prim_count){
 	geometry_setup_func(boost::ref(num_clipped_prims), boost::ref(clipped_verts_full), static_cast<int32_t>(prim_count),
 		prim_size, working_package, GEOMETRY_SETUP_PACKAGE_SIZE);
 	global_thread_pool().wait();
+
+	const fill_mode fm = pparent_->get_rasterizer()->get_fill_mode();
+	if ((fm == fill_wireframe) && ((primitive_triangle_list == primtopo) || (primitive_triangle_strip == primtopo)))
+	{
+		prim_size = 2;
+		rasterize_func_ = boost::mem_fn(&geometry_assembler::rasterize_line_func);
+	}
 
 	std::vector<vs_output> clipped_verts;
 	for (size_t i = 0; i < prim_count; ++ i){

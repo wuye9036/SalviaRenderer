@@ -62,9 +62,8 @@ void rasterizer::initialize(renderer_impl* pparent)
  *			2 wpos的x y z分量已经除以了clip w
  *			3 positon.w为1.0f / clip w
  **************************************************/
-void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
+void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
-
 	vs_output diff = project(v1) - project(v0);
 	const efl::vec4& dir = diff.wpos;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
@@ -72,15 +71,13 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 	h_blend_shader hbs = pparent_->get_blend_shader();
 
 	//构造差分
-	vs_output derivation = diff;
-
 	vs_output ddx = diff * (diff.wpos.x / (diff.wpos.xy().length_sqr()));
 	vs_output ddy = diff * (diff.wpos.y / (diff.wpos.xy().length_sqr()));
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
-	int vpbottom = fast_floori(max(0.0f, vp.y));
+	int vptop = fast_floori(max(0.0f, vp.y));
 	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
-	int vptop = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
+	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
 
 	ps_output px_out;
 
@@ -93,6 +90,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 		if(dir.x < 0){
 			start = &v1;
 			end = &v0;
+			diff_dir = -diff_dir;
 		} else {
 			start = &v0;
 			end = &v1;
@@ -114,7 +112,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 		//设置起点的vs_output
 		vs_output px_start(project(*start));
 		vs_output px_end(project(*end));
-		float step = fsx + 0.5f - start->wpos.x;
+		float step = sx + 0.5f - start->wpos.x;
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
@@ -149,6 +147,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 		if(dir.y < 0){
 			start = &v1;
 			end = &v0;
+			diff_dir = -diff_dir;
 		} else {
 			start = &v0;
 			end = &v1;
@@ -170,8 +169,8 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 		//设置起点的vs_output
 		vs_output px_start(project(*start));
 		vs_output px_end(project(*end));
-		float step = fsy + 0.5f - start->wpos.y;
-		vs_output px_in = lerp(px_start, px_end, (fsy + 0.5f - start->wpos.y) / diff_dir);
+		float step = sy + 0.5f - start->wpos.y;
+		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
 		vs_output unprojed;
@@ -213,7 +212,7 @@ void rasterizer::rasterize_line_impl(const vs_output& v0, const vs_output& v1, c
 *			2 wpos的x y z分量已经除以了clip w
 *			3 positon.w为1.0f / clip w
 **************************************************/
-void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
+void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
 
 	//{
@@ -300,9 +299,9 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 	//const int top_part = 1;
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
-	int vpbottom = fast_floori(max(0.0f, vp.y));
+	int vptop = fast_floori(max(0.0f, vp.y));
 	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
-	int vptop = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
+	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
 
 	for(int iPart = 0; iPart < 2; ++iPart){
 
@@ -369,11 +368,11 @@ void rasterizer::rasterize_triangle_impl(const vs_output& v0, const vs_output& v
 		for(int iy = isy; iy <= iey; ++iy)
 		{	
 			//如果扫描线在view port的外面则跳过。	
-			if( iy >= vptop ){
+			if( iy >= vpbottom ){
 				break;
 			}
 
-			if( iy >= vpbottom ){
+			if( iy >= vptop ){
 				//扫描线在视口内的就做扫描线
 				int icx_s = 0;
 				int icx_e = 0;
@@ -456,37 +455,6 @@ rasterizer::rasterizer()
 }
 rasterizer::~rasterizer()
 {
-}
-void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
-{
-	//如果完全超过边界，则剔除
-
-	if(v0.wpos.x < 0 && v1.wpos.x < 0) return;
-	if(v0.wpos.y < 0 && v1.wpos.y < 0) return;
-	if(v0.wpos.z < vp.minz && v1.wpos.z < vp.minz) return;
-
-	if(v0.wpos.x >= vp.w && v1.wpos.x >= vp.w) return;
-	if(v0.wpos.y >= vp.w && v1.wpos.y >= vp.w) return;
-	if(v0.wpos.z >= vp.maxz && v1.wpos.z >= vp.maxz) return;
-
-	//render
-	rasterize_line_impl(v0, v1, vp, pps);
-}
-
-void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
-{
-	//边界剔除
-
-	//渲染
-	if(fm_ == fill_wireframe)
-	{
-		rasterize_line(v0, v1, vp, pps);
-		rasterize_line(v1, v2, vp, pps);
-		rasterize_line(v0, v2, vp, pps);
-	} else
-	{
-		rasterize_triangle_impl(v0, v1, v2, vp, pps);
-	}
 }
 
 void rasterizer::set_cull_mode(cull_mode cm)
