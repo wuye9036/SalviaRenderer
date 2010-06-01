@@ -33,7 +33,14 @@ Modify Log:
 #include "detail/typedefs.h"
 #include "detail/stringx.h"
 
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 #include <boost/smart_ptr.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 #include <boost/function.hpp>
 
 #include <vector>

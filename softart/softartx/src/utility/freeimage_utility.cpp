@@ -66,7 +66,7 @@ FIBITMAP* make_bitmap_copy(
 		return NULL;
 	}
 
-	FREE_IMAGE_TYPE img_type = FreeImage_GetImageType(image);
+	//FREE_IMAGE_TYPE img_type = FreeImage_GetImageType(image);
 	size_t img_w = FreeImage_GetWidth(image);
 	size_t img_h = FreeImage_GetHeight(image);
 

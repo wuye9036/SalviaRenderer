@@ -4,6 +4,8 @@
 
 #pragma once
 
+extern CAppModule _Module;
+
 class CGameLoop : public CMessageLoop
 {
 public:

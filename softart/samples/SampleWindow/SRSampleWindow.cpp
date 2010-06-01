@@ -4,16 +4,33 @@
 #include "stdafx.h"
 
 #include "eflib/include/slog.h"
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 #include <boost/smart_ptr.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 
 using namespace efl;
 using namespace std;
 using namespace boost;
 
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 6001 6011 6202 6225 6255 6309 6386 6387)
+#endif
+#include <atlbase.h>
+#include <atlapp.h>
+#include <atlwin.h>
 #include <atlframe.h>
 #include <atlctrls.h>
 #include <atldlgs.h>
 #include <atlctrlw.h>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 
 #include "resource.h"
 

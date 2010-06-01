@@ -12,19 +12,40 @@ using namespace efl;
 const efl::vec4& triangle_info::base_vert() const
 {
 	custom_assert(pbase_vert, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 	return *pbase_vert;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 }
 
 const vs_output& triangle_info::ddx() const
 {
 	custom_assert(pddx, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 	return *pddx;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 }
 
 const vs_output& triangle_info::ddy() const
 {
 	custom_assert(pddy, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 	return *pddy;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 }
 
 void triangle_info::set(const efl::vec4& base_vert, const vs_output& ddx, const vs_output& ddy)

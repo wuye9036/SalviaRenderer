@@ -30,7 +30,14 @@ Modify Log:
 #include "softartx/include/resource/resource_forward.h"
 #include "softart/include/decl.h"
 #include "softart/include/stream_assembler.h"
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 #include <boost/smart_ptr.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 #include <vector>
 
 BEGIN_NS_SOFTARTX_RESOURCE()

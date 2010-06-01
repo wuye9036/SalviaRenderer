@@ -57,16 +57,30 @@ namespace efl
 		vec4 get_column(size_t i) const
 		{
 			custom_assert(i < 4, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 6385 6386)
+#endif
 			return vec4(f[0][i], f[1][i], f[2][i], f[3][i]);
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 		}
 
 		void set_column(size_t i, float _1, float _2, float _3, float _4)
 		{
 			custom_assert(i < 4, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 6385 6386)
+#endif
 			f[0][i] = _1;
 			f[1][i] = _2;
 			f[2][i] = _3;
 			f[3][i] = _4;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 		}
 
 		//This route is from KlayGE (Author by GMM)

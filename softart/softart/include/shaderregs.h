@@ -8,7 +8,14 @@
 
 #include "eflib/include/math.h"
 
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6385)
+#endif
 #include <boost/array.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 

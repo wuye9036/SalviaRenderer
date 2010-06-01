@@ -9,7 +9,14 @@
 
 #include "eflib/include/eflib.h"
 
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 #include <boost/smart_ptr.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 #include <boost/array.hpp>
 
 #include <vector>

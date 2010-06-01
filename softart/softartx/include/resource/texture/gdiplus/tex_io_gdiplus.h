@@ -42,7 +42,7 @@ public:
 	virtual softart::h_texture load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt);
 	virtual softart::h_texture load_cube(softart::renderer* pr, const std::vector<std::_tstring>& filenames, softart::pixel_format fmt);
 
-	virtual void save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt){};
+	virtual void save(const softart::surface& /*surf*/, const std::_tstring& /*filename*/, softart::pixel_format /*pxfmt*/){};
 
 	static texture_io_gdiplus& instance();
 

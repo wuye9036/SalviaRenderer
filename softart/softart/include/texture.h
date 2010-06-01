@@ -7,7 +7,14 @@
 #include "enums.h"
 #include "decl.h"
 
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 #include <boost/smart_ptr.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 #include <vector>
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()

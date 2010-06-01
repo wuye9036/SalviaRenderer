@@ -231,9 +231,9 @@ void dev_d3d11::attach_framebuffer(softart::framebuffer* pfb)
 		DWORD rc_size;
 
 		rc = FindResource(hModule, TEXT("IDR_VS_HLSL"), TEXT("HLSL"));
-		global = LoadResource(hModule, rc);
-		rc_data = static_cast<LPCSTR>(LockResource(global));
-		rc_size = SizeofResource(hModule, rc);
+		global = rc ? LoadResource(hModule, rc) : NULL;
+		rc_data = global ? static_cast<LPCSTR>(LockResource(global)) : NULL;
+		rc_size = rc ? SizeofResource(hModule, rc) : 0;
 		ID3D10Blob* vs_code = NULL;
 		ID3D10Blob* err_msg = NULL;
 		D3DX11CompileFromMemory(rc_data, rc_size, NULL, NULL, NULL, "VSMain", "vs_4_0", 0, 0, NULL, &vs_code, &err_msg, NULL);
@@ -247,9 +247,9 @@ void dev_d3d11::attach_framebuffer(softart::framebuffer* pfb)
 		d3d_imm_ctx_->VSSetShader(vs_, NULL, 0);
 
 		rc = FindResource(hModule, TEXT("IDR_PS_HLSL"), TEXT("HLSL"));
-		global = LoadResource(hModule, rc);
-		rc_data = static_cast<LPCSTR>(LockResource(global));
-		rc_size = SizeofResource(hModule, rc);
+		global = rc ? LoadResource(hModule, rc) : NULL;
+		rc_data = global ? static_cast<LPCSTR>(LockResource(global)) : NULL;
+		rc_size = rc ? SizeofResource(hModule, rc) : 0;
 		ID3D10Blob* ps_code = NULL;
 		err_msg = NULL;
 		D3DX11CompileFromMemory(rc_data, rc_size, NULL, NULL, NULL, "PSMain", "ps_4_0", 0, 0, NULL, &ps_code, &err_msg, NULL);

@@ -116,7 +116,14 @@ void  texture_2d::map(void** pData, size_t subresource, map_mode mm)
 	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 	custom_assert(pData != 0, "pData不可为NULL！");
 
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 	*pData = NULL;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 	get_surface(subresource).map(pData, mm);
 }
 

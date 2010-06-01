@@ -10,7 +10,14 @@
 
 #include <boost/array.hpp>
 #include <boost/function.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
 #include <boost/smart_ptr.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
 #include <boost/function.hpp>
 
 #include "softart_fwd.h"

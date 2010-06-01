@@ -5,7 +5,14 @@
 #include <boost/type_traits.hpp>
 #include <boost/utility.hpp>
 #include <boost/mpl/if.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable : 6385)
+#endif
 #include <boost/array.hpp>
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#endif
 #include <cassert>
 #include <limits>
 #include <vector>

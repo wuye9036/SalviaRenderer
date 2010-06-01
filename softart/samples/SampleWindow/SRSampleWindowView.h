@@ -382,7 +382,11 @@ public:
 		{
 			color_rgba32f c = pfb->get_render_target(render_target_color, 0)->get_texel(pp->x, pfb->get_height() - 1 - pp->y);
 			TCHAR str[512];
+#ifdef EFLIB_MSVC
+			_stprintf_s(str, sizeof(str) / sizeof(str[0]), _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
+#else
 			_stprintf(str, _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
+#endif
 			this->GetParent().SetWindowText(str);
 		}
 		return 0;
