@@ -3,7 +3,6 @@
 #include "../include/shaderregs_op.h"
 #include "../include/clipper.h"
 #include "../include/resource_manager.h"
-#include "../include/geometry_assembler.h"
 #include "../include/rasterizer.h"
 #include "../include/framebuffer.h"
 #include "../include/stream.h"
@@ -262,7 +261,7 @@ result renderer_impl::draw(size_t startpos, size_t primcnt)
 	hvertcache_->reset(h_buffer(), idxtype_, primtopo_, static_cast<uint32_t>(startpos), 0);
 	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
 	
-	hga_->draw(primcnt);
+	hrast_->draw(primcnt);
 	return result::ok;
 }
 
@@ -273,7 +272,7 @@ result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 	hvertcache_->reset(indexbuf_, idxtype_, primtopo_, static_cast<uint32_t>(startpos), basevert);
 	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
 
-	hga_->draw(primcnt);
+	hrast_->draw(primcnt);
 	return result::ok;
 }
 
@@ -320,7 +319,6 @@ result renderer_impl::present()
 }
 
 void renderer_impl::initialize(){
-	hga_->initialize(this);
 	hrast_->initialize(this);
 	hfb_->initialize(this);
 }
@@ -331,7 +329,6 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 	hbufmgr_.reset(new buffer_manager());
 	htexmgr_.reset(new texture_manager());
 
-	hga_.reset(new geometry_assembler());
 	hclipper_.reset(new clipper());
 	hrast_.reset(new rasterizer());
 	hfb_.reset(
@@ -363,11 +360,6 @@ h_buffer_manager renderer_impl::get_buf_mgr()
 h_texture_manager renderer_impl::get_tex_mgr()
 {
 	return htexmgr_;
-}
-
-h_geometry_assembler renderer_impl::get_geometry_assembler()
-{
-	return hga_;
 }
 
 h_rasterizer renderer_impl::get_rasterizer()

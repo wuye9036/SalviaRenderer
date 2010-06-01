@@ -5,9 +5,14 @@
 #include "enums.h"
 #include "shader.h"
 #include "framebuffer.h"
+#include "atomic.h"
+#include "lockfree_queue.h"
 
+#include <boost/array.hpp>
+#include <boost/function.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/function.hpp>
+
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 
@@ -59,6 +64,17 @@ class rasterizer : public render_stage
 	//线光栅化。光栅化后的点将直接传到PS中处理。
 	void rasterize_scanline_impl(const scanline_info& sl, const h_pixel_shader& pps);
 
+	void geometry_setup_func(std::vector<uint32_t>& num_clipped_prims, std::vector<vs_output>& clipped_verts, int32_t prim_count, primitive_topology primtopo,
+		atomic<int32_t>& working_package, int32_t package_size);
+	void dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, int num_tiles_y,
+		const std::vector<vs_output>& clipped_verts, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size);
+	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, const std::vector<vs_output>& clipped_verts,
+		const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size);
+
+	void rasterize_line_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
+	void rasterize_triangle_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
+
+	boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
 public:
 	//inherited
@@ -75,6 +91,9 @@ public:
 	//drawer
 	void rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps);
 	void rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps);
+
+	//绘制函数
+	void draw(size_t prim_count);
 };
 
 //DECL_HANDLE(rasterizer, h_rasterizer);

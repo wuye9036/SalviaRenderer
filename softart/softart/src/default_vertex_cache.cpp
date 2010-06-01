@@ -5,7 +5,6 @@
 #include "../include/shaderregs_op.h"
 #include "../include/renderer_impl.h"
 #include "../include/stream_assembler.h"
-#include "../include/geometry_assembler.h"
 #include "../include/cpuinfo.h"
 #include "../include/thread_pool.h"
 

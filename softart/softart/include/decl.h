@@ -12,7 +12,6 @@ class renderer_mementor;
 class renderer;
 class renderer_impl;
 class vertex_cache;
-class geometry_assembler;
 class vertex_shader;
 class clipper;
 class rasterizer;
@@ -51,7 +50,6 @@ struct viewport;
 
 //handles
 DECL_HANDLE(vertex_cache, h_vertex_cache);
-DECL_HANDLE(geometry_assembler, h_geometry_assembler);
 DECL_HANDLE(vertex_shader, h_vertex_shader);
 DECL_HANDLE(rasterizer, h_rasterizer);
 DECL_HANDLE(pixel_shader, h_pixel_shader);

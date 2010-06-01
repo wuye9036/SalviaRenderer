@@ -15,7 +15,6 @@ set (HEADER_FILES
 	include/dev.h
 	include/enums.h
 	include/framebuffer.h
-	include/geometry_assembler.h
 	include/handles.h
 	include/index_fetcher.h
 	include/lockfree_queue.h
@@ -46,7 +45,6 @@ set (SOURCE_FILES
 	src/default_vertex_cache.cpp
 	src/enums.cpp
 	src/framebuffer.cpp
-	src/geometry_assembler.cpp
 	src/index_fetcher.cpp
 	src/pixel_shader.cpp
 	src/rasterizer.cpp

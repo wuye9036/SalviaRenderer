@@ -20,7 +20,6 @@ class renderer_impl : public renderer
 
 	h_buffer_manager			hbufmgr_;
 	h_texture_manager			htexmgr_;
-	h_geometry_assembler		hga_;
 	h_vertex_shader				hvs_;
 	h_clipper					hclipper_;
 	h_rasterizer				hrast_;
@@ -118,7 +117,6 @@ public:
 	h_buffer_manager get_buf_mgr();
 	h_texture_manager get_tex_mgr();
 
-	h_geometry_assembler get_geometry_assembler();
 	h_rasterizer get_rasterizer();
 	
 	h_device get_device();
