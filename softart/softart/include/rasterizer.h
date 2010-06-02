@@ -53,6 +53,7 @@ class rasterizer_state {
 
 	boost::function<bool (float)> cm_func_;
 	boost::function<void (uint32_t&, vs_output*, const h_clipper&, const vs_output*, float)> clipping_func_;
+	boost::function<void (uint32_t&, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>&)> triangle_rast_func_;
 
 public:
 	rasterizer_state(const rasterizer_desc& desc);
@@ -60,6 +61,7 @@ public:
 
 	bool cull(float area) const;
 	void clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area);
+	void triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func);
 };
 
 class rasterizer : public render_stage
@@ -78,9 +80,6 @@ class rasterizer : public render_stage
 	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, const std::vector<vs_output>& clipped_verts,
 		const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size);
 
-	void rasterize_line_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
-	void rasterize_triangle_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
-
 	boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
 public:
@@ -98,6 +97,9 @@ public:
 	//drawer
 	void rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps);
 	void rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps);
+
+	void rasterize_line_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
+	void rasterize_triangle_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
 
 	//»æÖÆº¯Êý
 	void draw(size_t prim_count);

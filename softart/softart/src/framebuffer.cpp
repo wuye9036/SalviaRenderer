@@ -159,8 +159,13 @@ void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, co
 	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
 	target_pixel.set_pos(x, y);
 
-	//execute target shader
-	hbs->execute(target_pixel, ps);
+	// TODO: depth stencil state object
+	if (ps.depth < target_pixel.depth())
+	{
+		//execute target shader
+		hbs->execute(target_pixel, ps);
+		target_pixel.depth(ps.depth);
+	}
 }
 
 void framebuffer::clear_color(size_t tar_id, const color_rgba32f& c){

@@ -155,12 +155,8 @@ class ts_blend_on : public blend_shader
 public:
 	bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in)
 	{
-		if(inout.depth() > in.depth)
-		{
-			color_rgba32f color = in.color[0];
-			inout.color(0, lerp(inout.color(0), color, color.a));
-			inout.depth(in.depth);
-		}
+		color_rgba32f color = in.color[0];
+		inout.color(0, lerp(inout.color(0), color, color.a));
 		return true;
 	}
 };
@@ -170,11 +166,7 @@ class ts_blend_off : public blend_shader
 public:
 	bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in)
 	{
-		if(inout.depth() > in.depth)
-		{
-			inout.color(0, in.color[0]);
-			inout.depth(in.depth);
-		}
+		inout.color(0, in.color[0]);
 		return true;
 	}
 };

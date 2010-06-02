@@ -112,6 +112,18 @@ void fill_solid_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, 
 	}
 }
 
+void fill_wireframe_triangle_rasterize_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
+{
+	prim_size = 2;
+	rasterize_func = boost::mem_fn(&rasterizer::rasterize_line_func);
+}
+
+void fill_solid_triangle_rasterize_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
+{
+	prim_size = 3;
+	rasterize_func = boost::mem_fn(&rasterizer::rasterize_triangle_func);
+}
+
 rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
 	: desc_(desc)
 {
@@ -137,10 +149,12 @@ rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
 	{
 	case fill_wireframe:
 		clipping_func_ = fill_wireframe_clipping;
+		triangle_rast_func_ = fill_wireframe_triangle_rasterize_func;
 		break;
 
 	case fill_solid:
 		clipping_func_ = fill_solid_clipping;
+		triangle_rast_func_ = fill_solid_triangle_rasterize_func;
 		break;
 
 	default:
@@ -162,6 +176,11 @@ bool rasterizer_state::cull(float area) const
 void rasterizer_state::clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
 {
 	clipping_func_(num_clipped_prims, clipped_verts, clipper, pv, area);
+}
+
+void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
+{
+	triangle_rast_func_(prim_size, rasterize_func);
 }
 
 //inherited
@@ -806,7 +825,6 @@ void rasterizer::draw(size_t prim_count){
 
 	primitive_topology primtopo = pparent_->get_primitive_topology();
 
-	const fill_mode fm = state_->get_desc().fm;
 	uint32_t prim_size = 0;
 	switch(primtopo)
 	{
@@ -817,14 +835,7 @@ void rasterizer::draw(size_t prim_count){
 		break;
 	case primitive_triangle_list:
 	case primitive_triangle_strip:
-		if (fm == fill_wireframe){
-			prim_size = 2;
-			rasterize_func_ = boost::mem_fn(&rasterizer::rasterize_line_func);
-		}
-		else{
-			prim_size = 3;
-			rasterize_func_ = boost::mem_fn(&rasterizer::rasterize_triangle_func);
-		}
+		state_->triangle_rast_func(prim_size, rasterize_func_);
 		break;
 	default:
 		custom_assert(false, "枚举值无效：无效的Primitive Topology");
