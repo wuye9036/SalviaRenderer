@@ -18,6 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include "eflib/include/util.h"
 
+#include <algorithm>
+
 #include "../include/framebuffer.h"
 #include "../include/surface.h"
 #include "../include/renderer_impl.h"
@@ -28,6 +30,17 @@ BEGIN_NS_SOFTART()
 
 using namespace efl;
 using namespace std;
+
+
+depth_stencil_state::depth_stencil_state(const depth_stencil_desc& desc)
+	: desc_(desc)
+{
+}
+
+const depth_stencil_desc& depth_stencil_state::get_desc() const
+{
+	return desc_;
+}
 
 /****************************************************
  *   Framebuffer
@@ -159,12 +172,136 @@ void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, co
 	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
 	target_pixel.set_pos(x, y);
 
-	// TODO: depth stencil state object
-	if (ps.depth < target_pixel.depth())
-	{
+	const depth_stencil_desc& desc = pparent_->get_depth_stencil_state()->get_desc();
+
+	const float cur_depth = target_pixel.depth();
+	const int32_t cur_stencil = target_pixel.stencil() & desc.stencil_read_mask;
+	const int32_t stencil_ref = pparent_->get_stencil_ref() & desc.stencil_read_mask;
+
+	bool depth_passed;
+	if (desc.depth_enable){
+		switch (desc.depth_func){
+		case compare_function_never:
+			depth_passed = false;
+			break;
+		case compare_function_less:
+			depth_passed = (ps.depth < cur_depth);
+			break;
+		case compare_function_equal:
+			depth_passed = (ps.depth == cur_depth);
+			break;
+		case compare_function_less_equal:
+			depth_passed = (ps.depth <= cur_depth);
+			break;
+		case compare_function_greater:
+			depth_passed = (ps.depth > cur_depth);
+			break;
+		case compare_function_not_equal:
+			depth_passed = (ps.depth != cur_depth);
+			break;
+		case compare_function_greater_equal:
+			depth_passed = (ps.depth >= cur_depth);
+			break;
+		case compare_function_always:
+			depth_passed = true;
+			break;
+		default:
+			custom_assert(false, "");
+			break;
+		}
+	}
+	else{
+		depth_passed = true;
+	}
+
+	bool stencil_passed;
+	const depth_stencil_op_desc& face_op = ps.front_face ? desc.front_face : desc.back_face;
+	if (desc.stencil_enable){
+		switch (face_op.stencil_func){
+		case compare_function_never:
+			stencil_passed = false;
+			break;
+		case compare_function_less:
+			stencil_passed = (stencil_ref < cur_stencil);
+			break;
+		case compare_function_equal:
+			stencil_passed = (stencil_ref == cur_stencil);
+			break;
+		case compare_function_less_equal:
+			stencil_passed = (stencil_ref <= cur_stencil);
+			break;
+		case compare_function_greater:
+			stencil_passed = (stencil_ref > cur_stencil);
+			break;
+		case compare_function_not_equal:
+			stencil_passed = (stencil_ref != cur_stencil);
+			break;
+		case compare_function_greater_equal:
+			stencil_passed = (stencil_ref >= cur_stencil);
+			break;
+		case compare_function_always:
+			stencil_passed = true;
+			break;
+		default:
+			custom_assert(false, "");
+			break;
+		}
+	}
+	else{
+		stencil_passed = true;
+	}
+
+	int32_t new_stencil;
+	stencil_op sop;
+	if (!stencil_passed){
+		sop = face_op.stencil_fail_op;
+	}
+	else{
+		if (!depth_passed){
+			sop = face_op.stencil_depth_fail_op;
+		}
+		else{
+			sop = face_op.stencil_pass_op;
+		}
+	}
+
+	switch (sop){
+	case stencil_op_keep:
+		new_stencil = cur_stencil;
+		break;
+	case stencil_op_zero:
+		new_stencil = 0;
+		break;
+	case stencil_op_replace:
+		new_stencil = stencil_ref;
+		break;
+	case stencil_op_incr_sat:
+		new_stencil = std::min<int32_t>(0xFF, cur_stencil + 1);
+		break;
+	case stencil_op_decr_sat:
+		new_stencil = std::max<int32_t>(0, cur_stencil - 1);
+		break;
+	case stencil_op_invert:
+		new_stencil = ~cur_stencil;
+		break;
+	case stencil_op_incr_wrap:
+		new_stencil = (cur_stencil + 1) & 0xFF;
+		break;
+	case stencil_op_decr_wrap:
+		new_stencil = (cur_stencil - 1 + 256) & 0xFF;
+		break;
+	}
+
+	if (depth_passed && stencil_passed){
 		//execute target shader
 		hbs->execute(target_pixel, ps);
-		target_pixel.depth(ps.depth);
+
+		if (desc.depth_write_mask){
+			target_pixel.depth(ps.depth);
+		}
+		if (desc.stencil_enable){
+			target_pixel.stencil(new_stencil & desc.stencil_write_mask);
+		}
 	}
 }
 

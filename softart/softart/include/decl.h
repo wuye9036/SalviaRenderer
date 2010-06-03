@@ -31,6 +31,10 @@ struct sampler_desc;
 struct rasterizer_desc;
 class rasterizer_state;
 
+struct depth_stencil_op_desc;
+struct depth_stencil_desc;
+class depth_stencil_state;
+
 class buffer;
 class surface;
 class texture;
@@ -73,6 +77,7 @@ DECL_HANDLE(clipper, h_clipper);
 DECL_HANDLE(renderer_mementor, h_renderer_mementor);
 
 DECL_HANDLE(rasterizer_state, h_rasterizer_state);
+DECL_HANDLE(depth_stencil_state, h_depth_stencil_state);
 
 END_NS_SOFTART()
 

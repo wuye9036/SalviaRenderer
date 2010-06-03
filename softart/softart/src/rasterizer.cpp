@@ -66,27 +66,32 @@ bool cull_mode_cw(float area)
 	return area >= 0;
 }
 
-void fill_wireframe_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float /*area*/)
+void fill_wireframe_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
 {
 	num_clipped_prims = 0;
 	std::vector<vs_output> tmp_verts;
+
+	const bool front_face = area > 0;
 
 	clipper->clip(tmp_verts, pv[0], pv[1]);
 	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
 		clipped_verts[0 * 2 + j] = tmp_verts[j];
+		clipped_verts[0 * 2 + j].front_face = front_face;
 	}
 
 	clipper->clip(tmp_verts, pv[1], pv[2]);
 	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
 		clipped_verts[1 * 2 + j] = tmp_verts[j];
+		clipped_verts[1 * 2 + j].front_face = front_face;
 	}
 						
 	clipper->clip(tmp_verts, pv[2], pv[0]);
 	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
 		clipped_verts[2 * 2 + j] = tmp_verts[j];
+		clipped_verts[2 * 2 + j].front_face = front_face;
 	}
 }
 
@@ -98,16 +103,21 @@ void fill_solid_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, 
 
 	num_clipped_prims = static_cast<uint32_t>(tmp_verts.size() - 2);
 
-	bool flip = (area < 0);
+	const bool front_face = area > 0;
 	for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
 		clipped_verts[(i_tri - 1) * 3 + 0] = tmp_verts[0];
-		if (flip){
-			clipped_verts[(i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 1];
-			clipped_verts[(i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 0];
-		}
-		else{
+		clipped_verts[(i_tri - 1) * 3 + 0].front_face = front_face;
+		if (front_face){
 			clipped_verts[(i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 0];
 			clipped_verts[(i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 1];
+			clipped_verts[(i_tri - 1) * 3 + 1].front_face = front_face;
+			clipped_verts[(i_tri - 1) * 3 + 2].front_face = front_face;
+		}
+		else{
+			clipped_verts[(i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 1];
+			clipped_verts[(i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 0];
+			clipped_verts[(i_tri - 1) * 3 + 1].front_face = front_face;
+			clipped_verts[(i_tri - 1) * 3 + 2].front_face = front_face;
 		}
 	}
 }

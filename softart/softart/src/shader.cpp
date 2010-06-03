@@ -101,7 +101,7 @@ vs_output project(const vs_output& in)
 			ret_attribs[i_attr] *= in.wpos.w;
 		}
 	}
-	return vs_output(in.position, in.wpos, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
+	return vs_output(in.position, in.wpos, in.front_face, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
 }
 
 vs_output& project(vs_output& out, const vs_output& in)
@@ -116,6 +116,7 @@ vs_output& project(vs_output& out, const vs_output& in)
 	out.num_used_attribute = in.num_used_attribute;
 	out.wpos = in.wpos;
 	out.position = in.position;
+	out.front_face = in.front_face;
 	return out;
 }
 
@@ -131,7 +132,7 @@ vs_output unproject(const vs_output& in)
 			ret_attribs[i_attr] *= inv_w;
 		}
 	}
-	return vs_output(in.position, in.wpos, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
+	return vs_output(in.position, in.wpos, in.front_face, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
 }
 
 vs_output& unproject(vs_output& out, const vs_output& in)
@@ -147,6 +148,7 @@ vs_output& unproject(vs_output& out, const vs_output& in)
 	out.num_used_attribute = in.num_used_attribute;
 	out.wpos = in.wpos;
 	out.position = in.position;
+	out.front_face = in.front_face;
 	return out;
 }
 
@@ -157,6 +159,7 @@ vs_output lerp(const vs_output& start, const vs_output& end, float step)
 	vs_output out;
 	out.position = start.position + (end.position - start.position) * step;
 	out.wpos = start.wpos + (end.wpos - start.wpos) * step;
+	out.front_face = start.front_face;
 	for(size_t i_attr = 0; i_attr < start.num_used_attribute; ++i_attr){
 		assert(start.attribute_modifiers[i_attr] == end.attribute_modifiers[i_attr]);
 

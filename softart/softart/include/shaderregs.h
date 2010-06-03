@@ -83,6 +83,7 @@ public:
 
 	efl::vec4 position;
 	efl::vec4 wpos;
+	bool front_face;
 
 	attrib_array_type attributes;
 	attrib_modifier_array_type attribute_modifiers;
@@ -91,21 +92,22 @@ public:
 
 public:
 	vs_output()
-		:position(0, 0, 0, 0), wpos(0, 0, 0, 0), num_used_attribute(0)
+		:position(0, 0, 0, 0), wpos(0, 0, 0, 0), front_face(true), num_used_attribute(0)
 	{}
 	vs_output(
 		const efl::vec4& position, 
 		const efl::vec4& wpos,
+		bool front_face,
 		const attrib_array_type& attribs,
 		const attrib_modifier_array_type& modifiers,
 		uint32_t num_used_attrib)
-		:position(position), wpos(wpos), attributes(attribs), attribute_modifiers(modifiers),
+		:position(position), wpos(wpos), front_face(front_face), attributes(attribs), attribute_modifiers(modifiers),
 			num_used_attribute(num_used_attrib)
 	{}
 
 	//拷贝构造与赋值
 	vs_output(const vs_output& rhs)
-		:position(rhs.position), wpos(rhs.wpos),
+		:position(rhs.position), wpos(rhs.wpos), front_face(rhs.front_face),
 			num_used_attribute(rhs.num_used_attribute)
 	{
 		for (uint32_t i = 0; i < num_used_attribute; ++ i){
@@ -118,6 +120,7 @@ public:
 		if(&rhs == this) return *this;
 		position = rhs.position;
 		wpos = rhs.wpos;
+		front_face = rhs.front_face;
 		num_used_attribute = rhs.num_used_attribute;
 		for (uint32_t i = 0; i < num_used_attribute; ++ i){
 			attributes[i] = rhs.attributes[i];
@@ -138,6 +141,7 @@ struct ps_output
 {
 	float depth;
 	boost::array<efl::vec4, pso_color_regcnt> color;
+	bool front_face;
 };
 
 struct backbuffer_pixel_out

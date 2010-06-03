@@ -11,6 +11,46 @@
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 
+struct depth_stencil_op_desc {
+    stencil_op stencil_fail_op;
+    stencil_op stencil_depth_fail_op;
+    stencil_op stencil_pass_op;
+    compare_function stencil_func;
+
+	depth_stencil_op_desc()
+		: stencil_fail_op(stencil_op_keep),
+			stencil_depth_fail_op(stencil_op_keep),
+			stencil_pass_op(stencil_op_keep),
+			stencil_func(compare_function_always){
+	}
+};
+
+struct depth_stencil_desc {
+    bool depth_enable;
+    bool depth_write_mask;
+    compare_function depth_func;
+    bool stencil_enable;
+    uint8_t stencil_read_mask;
+    uint8_t stencil_write_mask;
+    depth_stencil_op_desc front_face;
+    depth_stencil_op_desc back_face;
+
+	depth_stencil_desc()
+		: depth_enable(true),
+			depth_write_mask(true),
+			depth_func(compare_function_less),
+			stencil_enable(false),
+			stencil_read_mask(0xFF), stencil_write_mask(0xFF){
+	}
+};
+
+class depth_stencil_state {
+	depth_stencil_desc desc_;
+
+public:
+	depth_stencil_state(const depth_stencil_desc& desc);
+	const depth_stencil_desc& get_desc() const;
+};
 
 class framebuffer : public render_stage
 {

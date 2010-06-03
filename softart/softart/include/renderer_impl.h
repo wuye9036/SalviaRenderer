@@ -35,6 +35,8 @@ class renderer_impl : public renderer
 	primitive_topology primtopo_;
 
 	h_rasterizer_state			hrs_;
+	h_depth_stencil_state		hdss_;
+	int32_t						stencil_ref_;
 
 	void initialize();
 
@@ -58,6 +60,9 @@ public:
 
 	virtual result set_rasterizer_state(const h_rasterizer_state& rs);
 	virtual const h_rasterizer_state& get_rasterizer_state() const;
+	virtual result set_depth_stencil_state(const h_depth_stencil_state& dss, int32_t stencil_ref);
+	virtual const h_depth_stencil_state& get_depth_stencil_state() const;
+	virtual int32_t get_stencil_ref() const;
 
 	virtual result set_pixel_shader(h_pixel_shader hps);
 	virtual h_pixel_shader get_pixel_shader() const;

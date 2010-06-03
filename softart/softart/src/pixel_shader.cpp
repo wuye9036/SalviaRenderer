@@ -206,6 +206,7 @@ bool pixel_shader::execute(const vs_output& in, ps_output& out){
 	ppxin_ = &in;
 	bool rv = shader_prog(in, out);
 	out.depth = in.wpos.z;
+	out.front_face = in.front_face;
 	return rv;
 }
 END_NS_SOFTART()

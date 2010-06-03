@@ -114,6 +114,23 @@ const h_rasterizer_state& renderer_impl::get_rasterizer_state() const
 	return hrs_;
 }
 
+result renderer_impl::set_depth_stencil_state(const h_depth_stencil_state& dss, int32_t stencil_ref)
+{
+	hdss_ = dss;
+	stencil_ref_ = stencil_ref;
+	return result::ok;
+}
+
+const h_depth_stencil_state& renderer_impl::get_depth_stencil_state() const
+{
+	return hdss_;
+}
+
+int32_t renderer_impl::get_stencil_ref() const
+{
+	return stencil_ref_;
+}
+
 result renderer_impl::set_pixel_shader(h_pixel_shader hps)
 {
 	hps_ = hps;
@@ -342,6 +359,9 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 
 	hvertcache_.reset(new default_vertex_cache);
 	hvertcache_->initialize(this);
+
+	hrs_.reset(new rasterizer_state(rasterizer_desc()));
+	hdss_.reset(new depth_stencil_state(depth_stencil_desc()));
 
 	vp_.minz = 0.0f;
 	vp_.maxz = 1.0f;

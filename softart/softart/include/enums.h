@@ -213,6 +213,18 @@ enum compare_function
 	compare_function_always = 7	
 };
 
+enum stencil_op
+{
+    stencil_op_keep = 1,
+    stencil_op_zero = 2,
+    stencil_op_replace = 3,
+    stencil_op_incr_sat = 4,
+    stencil_op_decr_sat = 5,
+    stencil_op_invert = 6,
+    stencil_op_incr_wrap = 7,
+    stencil_op_decr_wrap = 8,
+};
+
 END_NS_SOFTART()
 
 #endif
