@@ -32,14 +32,257 @@ using namespace efl;
 using namespace std;
 
 
+template <typename T>
+bool cmp_func_never(T /*lhs*/, T /*rhs*/){
+	return false;
+}
+
+template <typename T>
+bool cmp_func_less(T lhs, T rhs){
+	return lhs < rhs;
+}
+
+template <typename T>
+bool cmp_func_equal(T lhs, T rhs){
+	return lhs == rhs;
+}
+
+template <typename T>
+bool cmp_func_less_equal(T lhs, T rhs){
+	return lhs <= rhs;
+}
+
+template <typename T>
+bool cmp_func_greater(T lhs, T rhs){
+	return lhs > rhs;
+}
+
+template <typename T>
+bool cmp_func_not_equal(T lhs, T rhs){
+	return lhs != rhs;
+}
+
+template <typename T>
+bool cmp_func_greater_equal(T lhs, T rhs){
+	return lhs >= rhs;
+}
+
+template <typename T>
+bool cmp_func_always(T /*lhs*/, T /*rhs*/){
+	return true;
+}
+
+int32_t sop_keep(int32_t /*ref*/, int32_t cur_stencil){
+	return cur_stencil;
+}
+
+int32_t sop_zero(int32_t /*ref*/, int32_t /*cur_stencil*/){
+	return 0;
+}
+
+int32_t sop_replace(int32_t ref, int32_t /*cur_stencil*/){
+	return ref;
+}
+
+int32_t sop_incr_sat(int32_t /*ref*/, int32_t cur_stencil){
+	return std::min<int32_t>(0xFF, cur_stencil + 1);
+}
+
+int32_t sop_decr_sat(int32_t /*ref*/, int32_t cur_stencil){
+	return std::max<int32_t>(0, cur_stencil - 1);
+}
+
+int32_t sop_invert(int32_t /*ref*/, int32_t cur_stencil){
+	return ~cur_stencil;
+}
+
+int32_t sop_incr_wrap(int32_t /*ref*/, int32_t cur_stencil){
+	return (cur_stencil + 1) & 0xFF;
+}
+
+int32_t sop_decr_wrap(int32_t /*ref*/, int32_t cur_stencil){
+	return (cur_stencil - 1 + 256) & 0xFF;
+}
+
+void write_depth_depth_mask_0(float /*depth*/, backbuffer_pixel_out& /*target_pixel*/){
+}
+
+void write_depth_depth_mask_1(float depth, backbuffer_pixel_out& target_pixel){
+	target_pixel.depth(depth);
+}
+
+void write_stencil_0(int32_t /*stencil*/, backbuffer_pixel_out& /*target_pixel*/){
+}
+
+void write_stencil_1(int32_t stencil, backbuffer_pixel_out& target_pixel){
+	target_pixel.stencil(stencil);
+}
+
 depth_stencil_state::depth_stencil_state(const depth_stencil_desc& desc)
 	: desc_(desc)
 {
+	if (desc.depth_enable){
+		switch (desc.depth_func){
+		case compare_function_never:
+			depth_test_func_ = cmp_func_never<float>;
+			break;
+		case compare_function_less:
+			depth_test_func_ = cmp_func_less<float>;
+			break;
+		case compare_function_equal:
+			depth_test_func_ = cmp_func_equal<float>;
+			break;
+		case compare_function_less_equal:
+			depth_test_func_ = cmp_func_less_equal<float>;
+			break;
+		case compare_function_greater:
+			depth_test_func_ = cmp_func_greater<float>;
+			break;
+		case compare_function_not_equal:
+			depth_test_func_ = cmp_func_not_equal<float>;
+			break;
+		case compare_function_greater_equal:
+			depth_test_func_ = cmp_func_greater_equal<float>;
+			break;
+		case compare_function_always:
+			depth_test_func_ = cmp_func_always<float>;
+			break;
+		default:
+			custom_assert(false, "");
+			break;
+		}
+	}
+	else{
+		depth_test_func_ = cmp_func_always<float>;
+	}
+
+	if (desc.stencil_enable){
+		compare_function stencil_funcs[2] = {
+			desc.front_face.stencil_func,
+			desc.back_face.stencil_func
+		};
+		for (int i = 0; i < 2; ++ i){
+			switch (stencil_funcs[i]){
+			case compare_function_never:
+				stencil_test_func_[i] = cmp_func_never<int32_t>;
+				break;
+			case compare_function_less:
+				stencil_test_func_[i] = cmp_func_less<int32_t>;
+				break;
+			case compare_function_equal:
+				stencil_test_func_[i] = cmp_func_equal<int32_t>;
+				break;
+			case compare_function_less_equal:
+				stencil_test_func_[i] = cmp_func_less_equal<int32_t>;
+				break;
+			case compare_function_greater:
+				stencil_test_func_[i] = cmp_func_greater<int32_t>;
+				break;
+			case compare_function_not_equal:
+				stencil_test_func_[i] = cmp_func_not_equal<int32_t>;
+				break;
+			case compare_function_greater_equal:
+				stencil_test_func_[i] = cmp_func_greater_equal<int32_t>;
+				break;
+			case compare_function_always:
+				stencil_test_func_[i] = cmp_func_always<int32_t>;
+				break;
+			default:
+				custom_assert(false, "");
+				break;
+			}
+		}
+
+		stencil_op sops[6] = {
+			desc.front_face.stencil_fail_op,
+			desc.front_face.stencil_pass_op,
+			desc.front_face.stencil_depth_fail_op,
+			desc.back_face.stencil_fail_op,
+			desc.back_face.stencil_pass_op,
+			desc.back_face.stencil_depth_fail_op
+		};
+		for (int i = 0; i < 6; ++ i){
+			switch (sops[i]){
+			case stencil_op_keep:
+				stencil_op_func_[i] = sop_keep;
+				break;
+			case stencil_op_zero:
+				stencil_op_func_[i] = sop_zero;
+				break;
+			case stencil_op_replace:
+				stencil_op_func_[i] = sop_replace;
+				break;
+			case stencil_op_incr_sat:
+				stencil_op_func_[i] = sop_incr_sat;
+				break;
+			case stencil_op_decr_sat:
+				stencil_op_func_[i] = sop_decr_sat;
+				break;
+			case stencil_op_invert:
+				stencil_op_func_[i] = sop_invert;
+				break;
+			case stencil_op_incr_wrap:
+				stencil_op_func_[i] = sop_incr_wrap;
+				break;
+			case stencil_op_decr_wrap:
+				stencil_op_func_[i] = sop_decr_wrap;
+				break;
+			default:
+				custom_assert(false, "");
+				break;
+			}
+		}
+	}
+	else{
+		for (int i = 0; i < 2; ++ i){
+			stencil_test_func_[i] = cmp_func_always<int32_t>;
+		}
+
+		for (int i = 0; i < 6; ++ i){
+			stencil_op_func_[i] = sop_keep;
+		}
+	}
+
+	if (desc.depth_write_mask){
+		write_depth_func_ = write_depth_depth_mask_1;
+	}
+	else{
+		write_depth_func_ = write_depth_depth_mask_0;
+	}
+	if (desc.stencil_enable){
+		write_stencil_func_ = write_stencil_1;
+	}
+	else{
+		write_stencil_func_ = write_stencil_0;
+	}
 }
 
-const depth_stencil_desc& depth_stencil_state::get_desc() const
-{
+const depth_stencil_desc& depth_stencil_state::get_desc() const{
 	return desc_;
+}
+
+bool depth_stencil_state::depth_test(float ps_depth, float cur_depth) const{
+	return depth_test_func_(ps_depth, cur_depth);
+}
+
+bool depth_stencil_state::stencil_test(bool front_face, int32_t ref, int32_t cur_stencil) const{
+	return stencil_test_func_[!front_face](ref, cur_stencil);
+}
+
+int32_t depth_stencil_state::stencil_operation(bool front_face, bool depth_pass, bool stencil_pass, int32_t ref, int32_t cur_stencil) const{
+	return stencil_op_func_[(!front_face) * 3 + (!depth_pass) + stencil_pass](ref, cur_stencil);
+}
+
+int32_t depth_stencil_state::stencil_read(int32_t stencil) const{
+	return stencil & desc_.stencil_read_mask;
+}
+
+void depth_stencil_state::write_depth(float depth, backbuffer_pixel_out& target_pixel) const{
+	write_depth_func_(depth, target_pixel);
+}
+
+void depth_stencil_state::write_stencil(int32_t stencil, backbuffer_pixel_out& target_pixel) const{
+	write_stencil_func_(stencil & desc_.stencil_write_mask, target_pixel);
 }
 
 /****************************************************
@@ -172,136 +415,23 @@ void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, co
 	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
 	target_pixel.set_pos(x, y);
 
-	const depth_stencil_desc& desc = pparent_->get_depth_stencil_state()->get_desc();
+	const h_depth_stencil_state& dss = pparent_->get_depth_stencil_state();
 
 	const float cur_depth = target_pixel.depth();
-	const int32_t cur_stencil = target_pixel.stencil() & desc.stencil_read_mask;
-	const int32_t stencil_ref = pparent_->get_stencil_ref() & desc.stencil_read_mask;
+	const int32_t cur_stencil = dss->stencil_read(target_pixel.stencil());
+	const int32_t stencil_ref = dss->stencil_read(pparent_->get_stencil_ref());
 
-	bool depth_passed;
-	if (desc.depth_enable){
-		switch (desc.depth_func){
-		case compare_function_never:
-			depth_passed = false;
-			break;
-		case compare_function_less:
-			depth_passed = (ps.depth < cur_depth);
-			break;
-		case compare_function_equal:
-			depth_passed = (ps.depth == cur_depth);
-			break;
-		case compare_function_less_equal:
-			depth_passed = (ps.depth <= cur_depth);
-			break;
-		case compare_function_greater:
-			depth_passed = (ps.depth > cur_depth);
-			break;
-		case compare_function_not_equal:
-			depth_passed = (ps.depth != cur_depth);
-			break;
-		case compare_function_greater_equal:
-			depth_passed = (ps.depth >= cur_depth);
-			break;
-		case compare_function_always:
-			depth_passed = true;
-			break;
-		default:
-			custom_assert(false, "");
-			break;
-		}
-	}
-	else{
-		depth_passed = true;
-	}
-
-	bool stencil_passed;
-	const depth_stencil_op_desc& face_op = ps.front_face ? desc.front_face : desc.back_face;
-	if (desc.stencil_enable){
-		switch (face_op.stencil_func){
-		case compare_function_never:
-			stencil_passed = false;
-			break;
-		case compare_function_less:
-			stencil_passed = (stencil_ref < cur_stencil);
-			break;
-		case compare_function_equal:
-			stencil_passed = (stencil_ref == cur_stencil);
-			break;
-		case compare_function_less_equal:
-			stencil_passed = (stencil_ref <= cur_stencil);
-			break;
-		case compare_function_greater:
-			stencil_passed = (stencil_ref > cur_stencil);
-			break;
-		case compare_function_not_equal:
-			stencil_passed = (stencil_ref != cur_stencil);
-			break;
-		case compare_function_greater_equal:
-			stencil_passed = (stencil_ref >= cur_stencil);
-			break;
-		case compare_function_always:
-			stencil_passed = true;
-			break;
-		default:
-			custom_assert(false, "");
-			break;
-		}
-	}
-	else{
-		stencil_passed = true;
-	}
-
-	int32_t new_stencil;
-	stencil_op sop;
-	if (!stencil_passed){
-		sop = face_op.stencil_fail_op;
-	}
-	else{
-		if (!depth_passed){
-			sop = face_op.stencil_depth_fail_op;
-		}
-		else{
-			sop = face_op.stencil_pass_op;
-		}
-	}
-
-	switch (sop){
-	case stencil_op_keep:
-		new_stencil = cur_stencil;
-		break;
-	case stencil_op_zero:
-		new_stencil = 0;
-		break;
-	case stencil_op_replace:
-		new_stencil = stencil_ref;
-		break;
-	case stencil_op_incr_sat:
-		new_stencil = std::min<int32_t>(0xFF, cur_stencil + 1);
-		break;
-	case stencil_op_decr_sat:
-		new_stencil = std::max<int32_t>(0, cur_stencil - 1);
-		break;
-	case stencil_op_invert:
-		new_stencil = ~cur_stencil;
-		break;
-	case stencil_op_incr_wrap:
-		new_stencil = (cur_stencil + 1) & 0xFF;
-		break;
-	case stencil_op_decr_wrap:
-		new_stencil = (cur_stencil - 1 + 256) & 0xFF;
-		break;
-	}
+	bool depth_passed = dss->depth_test(ps.depth, cur_depth);
+	bool stencil_passed = dss->stencil_test(ps.front_face, stencil_ref, cur_stencil);
 
 	if (depth_passed && stencil_passed){
+		int32_t new_stencil = dss->stencil_operation(ps.front_face, depth_passed, stencil_passed, stencil_ref, cur_stencil);
+
 		//execute target shader
 		hbs->execute(target_pixel, ps);
 
-		if (desc.depth_write_mask){
-			target_pixel.depth(ps.depth);
-		}
-		if (desc.stencil_enable){
-			target_pixel.stencil(new_stencil & desc.stencil_write_mask);
-		}
+		dss->write_depth(ps.depth, target_pixel);
+		dss->write_stencil(new_stencil, target_pixel);
 	}
 }
 

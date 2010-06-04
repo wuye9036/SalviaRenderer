@@ -47,9 +47,28 @@ struct depth_stencil_desc {
 class depth_stencil_state {
 	depth_stencil_desc desc_;
 
+	typedef bool (*depth_test_func_type)(float ps_depth, float cur_depth);
+	typedef bool (*stencil_test_func_type)(int32_t ref, int32_t cur_stencil);
+	typedef int32_t (*stencil_op_func_type)(int32_t ref, int32_t cur_stencil);
+	typedef void (*write_depth_func_type)(float depth, backbuffer_pixel_out& target_pixel);
+	typedef void (*write_stencil_func_type)(int32_t stencil, backbuffer_pixel_out& target_pixel);
+
+	depth_test_func_type depth_test_func_;
+	stencil_test_func_type stencil_test_func_[2];
+	stencil_op_func_type stencil_op_func_[6];
+	write_depth_func_type write_depth_func_;
+	write_stencil_func_type write_stencil_func_;
+
 public:
 	depth_stencil_state(const depth_stencil_desc& desc);
 	const depth_stencil_desc& get_desc() const;
+
+	bool depth_test(float ps_depth, float cur_depth) const;
+	bool stencil_test(bool front_face, int32_t ref, int32_t cur_stencil) const;
+	int32_t stencil_operation(bool front_face, bool depth_pass, bool stencil_pass, int32_t ref, int32_t cur_stencil) const;
+	int32_t stencil_read(int32_t stencil) const;
+	void write_depth(float depth, backbuffer_pixel_out& target_pixel) const;
+	void write_stencil(int32_t stencil, backbuffer_pixel_out& target_pixel) const;
 };
 
 class framebuffer : public render_stage

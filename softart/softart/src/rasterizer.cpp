@@ -183,12 +183,12 @@ bool rasterizer_state::cull(float area) const
 	return cm_func_(area);
 }
 
-void rasterizer_state::clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
+void rasterizer_state::clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area) const
 {
 	clipping_func_(num_clipped_prims, clipped_verts, clipper, pv, area);
 }
 
-void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
+void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const
 {
 	triangle_rast_func_(prim_size, rasterize_func);
 }

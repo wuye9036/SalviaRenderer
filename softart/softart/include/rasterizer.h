@@ -18,7 +18,6 @@
 #ifdef EFLIB_MSVC
 #pragma warning(pop)
 #endif
-#include <boost/function.hpp>
 
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
@@ -51,17 +50,21 @@ struct rasterizer_desc {
 class rasterizer_state {
 	rasterizer_desc desc_;
 
-	boost::function<bool (float)> cm_func_;
-	boost::function<void (uint32_t&, vs_output*, const h_clipper&, const vs_output*, float)> clipping_func_;
-	boost::function<void (uint32_t&, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>&)> triangle_rast_func_;
+	typedef bool (*cm_func_type)(float area);
+	typedef void (*clipping_func_type)(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area);
+	typedef void (*triangle_rast_func_type)(uint32_t&, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>&);
+
+	cm_func_type cm_func_;
+	clipping_func_type clipping_func_;
+	triangle_rast_func_type triangle_rast_func_;
 
 public:
 	rasterizer_state(const rasterizer_desc& desc);
 	const rasterizer_desc& get_desc() const;
 
 	bool cull(float area) const;
-	void clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area);
-	void triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func);
+	void clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area) const;
+	void triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const;
 };
 
 class rasterizer : public render_stage
