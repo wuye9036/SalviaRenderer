@@ -73,7 +73,7 @@ public:
 	virtual result set_viewport(const viewport& vp);
 	virtual const viewport& get_viewport() const;
 
-	virtual result set_framebuffer_size(size_t width, size_t height);
+	virtual result set_framebuffer_size(size_t width, size_t height, size_t num_samples);
 	virtual efl::rect<size_t> get_framebuffer_size() const;
 
 	virtual result set_framebuffer_format(pixel_format pxfmt);
@@ -97,8 +97,8 @@ public:
 	virtual h_buffer create_buffer(size_t size);
 	virtual result release_buffer(h_buffer& hbuf);
 
-	virtual h_texture create_tex2d(size_t width, size_t height, pixel_format fmt);
-	virtual h_texture create_texcube(size_t width, size_t height, pixel_format fmt);
+	virtual h_texture create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt);
+	virtual h_texture create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	virtual result release_texture(h_texture& htex);
 
 	virtual h_sampler create_sampler(const sampler_desc& desc);

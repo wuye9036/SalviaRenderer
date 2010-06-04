@@ -164,9 +164,9 @@ const viewport& renderer_impl::get_viewport() const
 	return vp_;
 }
 
-result renderer_impl::set_framebuffer_size(size_t width, size_t height)
+result renderer_impl::set_framebuffer_size(size_t width, size_t height, size_t num_samples)
 {
-	hfb_->reset(width, height, hfb_->get_buffer_format());
+	hfb_->reset(width, height, num_samples, hfb_->get_buffer_format());
 	return result::ok;
 }
 
@@ -178,7 +178,7 @@ efl::rect<size_t> renderer_impl::get_framebuffer_size() const
 //
 result renderer_impl::set_framebuffer_format(pixel_format pxfmt)
 {
-	hfb_->reset(hfb_->get_width(), hfb_->get_height(), pxfmt);
+	hfb_->reset(hfb_->get_width(), hfb_->get_height(), hfb_->get_num_samples(), pxfmt);
 	return result::ok;
 }
 
@@ -244,14 +244,14 @@ result renderer_impl::release_buffer(h_buffer& hbuf)
 	return result::ok;
 }
 
-h_texture renderer_impl::create_tex2d(size_t width, size_t height, pixel_format fmt)
+h_texture renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	return htexmgr_->create_texture_2d(width, height, fmt);
+	return htexmgr_->create_texture_2d(width, height, num_samples, fmt);
 }
 
-h_texture renderer_impl::create_texcube(size_t width, size_t height, pixel_format fmt)
+h_texture renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	return htexmgr_->create_texture_cube(width, height, fmt);
+	return htexmgr_->create_texture_cube(width, height, num_samples, fmt);
 }
 
 result renderer_impl::release_texture(h_texture& htex)
@@ -352,6 +352,7 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 		new framebuffer(
 		pparam->backbuffer_width,
 		pparam->backbuffer_height,
+		pparam->backbuffer_num_samples,
 		pparam->backbuffer_format
 		)
 		);

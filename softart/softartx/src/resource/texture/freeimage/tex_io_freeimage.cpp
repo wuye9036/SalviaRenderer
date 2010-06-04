@@ -142,7 +142,7 @@ softart::h_texture texture_io_fi::load(softart::renderer* pr,
 		softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height)
 {
 	softart::h_texture ret((texture*)NULL);
-	ret = pr->create_tex2d(src.w, src.h, tex_pxfmt);
+	ret = pr->create_tex2d(src.w, src.h, 1, tex_pxfmt);
 
 	if( !load(ret->get_surface(0), rect<size_t>(0, 0, dest_width, dest_height), img, src) ){
 		ret.reset();
@@ -166,7 +166,7 @@ softart::h_texture texture_io_fi::load_cube(softart::renderer* pr, const vector<
 			size_t img_w = FreeImage_GetWidth(cube_img);
 			size_t img_h = FreeImage_GetHeight(cube_img);
 
-			ret = pr->create_texcube( img_w, img_h, fmt );
+			ret = pr->create_texcube( img_w, img_h, 1, fmt );
 		}
 
 		texture_cube* ptexcube = (texture_cube*)(ret.get());

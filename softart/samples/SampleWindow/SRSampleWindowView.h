@@ -245,6 +245,7 @@ public:
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
+		render_params.backbuffer_num_samples = 1;
 
 		hsr = create_software_renderer(&render_params, present_dev);
 

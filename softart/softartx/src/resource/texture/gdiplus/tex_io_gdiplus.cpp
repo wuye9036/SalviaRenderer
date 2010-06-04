@@ -81,7 +81,7 @@ softart::h_texture texture_io_gdiplus::load(softart::renderer* pr, const std::_t
 	size_t src_h = (size_t)file_bmp.GetHeight();
 
 	rect<size_t> region(0, 0, src_w, src_h);
-	softart::h_texture ret(pr->create_tex2d(src_w, src_h, tex_pxfmt));
+	softart::h_texture ret(pr->create_tex2d(src_w, src_h, 1, tex_pxfmt));
 	load( ret->get_surface(0), region, &file_bmp, region);
 	return ret;
 }
@@ -100,7 +100,7 @@ softart::h_texture texture_io_gdiplus::load_cube(softart::renderer *pr, const ve
 		rect<size_t> src_region(0, 0, file_bmp.GetWidth(), file_bmp.GetHeight());
 		if (!ret){
 			dest_region = src_region;
-			ret = pr->create_texcube( dest_region.w, dest_region.h, fmt );
+			ret = pr->create_texcube( dest_region.w, dest_region.h, 1, fmt );
 		}
 		texture_cube* texcube = static_cast<texture_cube*>(ret.get());
 		softart::surface& cur_surf = texcube->get_face((cubemap_faces)i_file).get_surface(0);

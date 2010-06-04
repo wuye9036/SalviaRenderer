@@ -8,25 +8,26 @@ BEGIN_NS_SOFTART()
 
 using namespace efl;
 
-texture_2d::texture_2d(size_t width, size_t height, pixel_format format)
+texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format)
 {
 	width_ = width;
 	height_ = height;
 
 	fmt_ = format;
 	surfs_.resize(1);
-	surfs_[0].rebuild(width, height, format);
+	surfs_[0].rebuild(width, height, num_samples, format);
 }
 
-void texture_2d::reset(size_t width, size_t height, pixel_format format)
+void texture_2d::reset(size_t width, size_t height, size_t num_samples, pixel_format format)
 {
-	new(this) texture_2d(width, height, format);
+	new(this) texture_2d(width, height, num_samples, format);
 }
 
 void  texture_2d::gen_mipmap(filter_type filter)
 {
 	size_t cur_sizex = surfs_[max_lod_].get_width();
 	size_t cur_sizey = surfs_[max_lod_].get_height();
+	size_t num_samples = surfs_[max_lod_].get_num_samples();
 
 	surfs_.resize(min_lod_ + 1);
 
@@ -41,7 +42,7 @@ void  texture_2d::gen_mipmap(filter_type filter)
 		byte* dst_data = NULL;
 		byte* src_data = NULL;
 
-		surfs_[iLevel].rebuild(cur_sizex, cur_sizey, fmt_);
+		surfs_[iLevel].rebuild(cur_sizex, cur_sizey, num_samples, fmt_);
 		surfs_[iLevel].map((void**)&dst_data, map_write);
 		surfs_[iLevel - 1].map((void**)&src_data, map_read);
 
@@ -166,6 +167,13 @@ size_t  texture_2d::get_depth(size_t subresource) const
 	UNREF_PARAM(subresource);
 
 	return 1;
+}
+
+size_t texture_2d::get_num_samples(size_t subresource) const
+{
+	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap LevelԽ�磡");
+
+	return get_surface(subresource).get_num_samples();
 }
 
 void  texture_2d::set_max_lod(size_t miplevel)

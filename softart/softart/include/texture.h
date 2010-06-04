@@ -60,6 +60,7 @@ public:
 	virtual size_t get_width(size_t subresource) const= 0;
 	virtual size_t get_height(size_t subresource) const= 0;
 	virtual size_t get_depth(size_t subresource) const= 0;
+	virtual size_t get_num_samples(size_t subresource) const= 0;
 	
 	virtual void set_max_lod(size_t miplevel) = 0;
 	virtual void set_min_lod(size_t miplevel) = 0;
@@ -73,9 +74,11 @@ class texture_2d : public texture
 
 	size_t width_;
 	size_t height_;
+	size_t num_samples_;
+
 public:
-	texture_2d(size_t width, size_t height, pixel_format format);
-	void reset(size_t width, size_t height, pixel_format format);
+	texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format);
+	void reset(size_t width, size_t height, size_t num_samples, pixel_format format);
 
 	virtual texture_type get_texture_type()const
 	{
@@ -93,6 +96,7 @@ public:
 	virtual size_t get_width(size_t subresource) const;
 	virtual size_t get_height(size_t subresource) const;
 	virtual size_t get_depth(size_t subresource) const;
+	virtual size_t get_num_samples(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);
@@ -104,9 +108,11 @@ class texture_cube : public texture
 
 	size_t width_;
 	size_t height_;
+	size_t num_samples_;
+
 public:
-	texture_cube(size_t width, size_t height, pixel_format format);
-	void reset(size_t width, size_t height, pixel_format format);
+	texture_cube(size_t width, size_t height, size_t num_samples, pixel_format format);
+	void reset(size_t width, size_t height, size_t num_samples, pixel_format format);
 
 	virtual texture_type get_texture_type()const
 	{
@@ -126,6 +132,7 @@ public:
 	virtual size_t get_width(size_t subresource) const;
 	virtual size_t get_height(size_t subresource) const;
 	virtual size_t get_depth(size_t subresource) const;
+	virtual size_t get_num_samples(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);

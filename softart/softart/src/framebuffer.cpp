@@ -297,17 +297,17 @@ void framebuffer::initialize(renderer_impl* pparent)
 	pparent_ = pparent;
 }
 
-framebuffer::framebuffer(size_t width, size_t height, pixel_format fmt)
-:width_(width), height_(height), fmt_(fmt),
+framebuffer::framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+:width_(width), height_(height), num_samples_(num_samples), fmt_(fmt),
 back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_regcnt),
-dbuf_(new surface(width, height,  pixel_format_color_r32f)),
-sbuf_(new surface(width, height,  pixel_format_color_r32i))
+dbuf_(new surface(width, height, num_samples, pixel_format_color_r32f)),
+sbuf_(new surface(width, height, num_samples, pixel_format_color_r32i))
 {
 	for(size_t i = 0; i < back_cbufs_.size(); ++i){
 		back_cbufs_[i].reset();
 	}
 
-	back_cbufs_[0].reset(new surface(width, height, fmt));
+	back_cbufs_[0].reset(new surface(width, height, num_samples, fmt));
 
 	for(size_t i = 0; i < cbufs_.size(); ++i){
 		cbufs_[i] = back_cbufs_[i].get();
@@ -324,9 +324,9 @@ framebuffer::~framebuffer(void)
 }
 
 //重置，第一个RT将设置为帧缓冲表面，其它RT置空
-void framebuffer::reset(size_t width, size_t height, pixel_format fmt)
+void framebuffer::reset(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	new(this) framebuffer(width, height, fmt);
+	new(this) framebuffer(width, height, num_samples, fmt);
 }
 
 void framebuffer::set_render_target_disabled(render_target tar, size_t tar_id){
@@ -345,7 +345,7 @@ void framebuffer::set_render_target_enabled(render_target tar, size_t tar_id){
 
 	//重分配后缓冲
 	if(back_cbufs_[tar_id] && check_buf(back_cbufs_[tar_id].get())){
-		back_cbufs_[tar_id].reset(new surface(width_, height_, fmt_));
+		back_cbufs_[tar_id].reset(new surface(width_, height_, num_samples_, fmt_));
 	}
 
 	//如果渲染目标为空则自动挂接后缓冲
@@ -399,6 +399,10 @@ size_t framebuffer::get_width() const{
 
 size_t framebuffer::get_height() const{
 	return height_;
+}
+
+size_t framebuffer::get_num_samples() const{
+	return num_samples_;
 }
 
 pixel_format framebuffer::get_buffer_format() const{

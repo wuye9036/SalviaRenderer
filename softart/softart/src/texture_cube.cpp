@@ -4,14 +4,14 @@ BEGIN_NS_SOFTART()
 
 using namespace efl;
 
-texture_cube::texture_cube(size_t width, size_t height, pixel_format format):subtexs_(6, texture_2d(0, 0, format)){
+texture_cube::texture_cube(size_t width, size_t height, size_t num_samples, pixel_format format):subtexs_(6, texture_2d(0, 0, num_samples, format)){
 	for(size_t i = 0; i < 6; ++i){
-		subtexs_[i].reset(width, height, format);
+		subtexs_[i].reset(width, height, num_samples, format);
 	}
 }
 
-void texture_cube::reset(size_t width, size_t height, pixel_format format){
-	new (this) texture_cube(width, height, format);
+void texture_cube::reset(size_t width, size_t height, size_t num_samples, pixel_format format){
+	new (this) texture_cube(width, height, num_samples, format);
 }
 
 void texture_cube::gen_mipmap(filter_type filter){
@@ -52,6 +52,9 @@ size_t texture_cube::get_height(size_t subresource) const{
 }
 size_t texture_cube::get_depth(size_t /*subresource*/) const{
 	return 1;
+}
+size_t texture_cube::get_num_samples(size_t subresource) const{
+	return get_surface(subresource).get_num_samples();
 }
 
 void texture_cube::set_max_lod(size_t miplevel){

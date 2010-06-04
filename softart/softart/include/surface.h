@@ -24,6 +24,7 @@ private:
 	size_t height_;
 	size_t elem_size_;
 	pixel_format pxfmt_;
+	size_t num_samples_;
 
 #ifdef TILE_BASED_STORAGE
 	size_t tile_width_;
@@ -55,17 +56,19 @@ private:
 
 public:
 	surface();
-	surface(size_t width, size_t height, pixel_format pxfmt);
+	surface(size_t width, size_t height, size_t num_samples_, pixel_format pxfmt);
 	~surface();
 
 	void release();
 
-	void rebuild(size_t width, size_t height, pixel_format pxfmt);
+	void rebuild(size_t width, size_t height, size_t num_samples_, pixel_format pxfmt);
 
 	void map(void** pdata, map_mode mm) const;
 	void map(void** pdata, map_mode mm);
 	void unmap() const;
 	void unmap();
+
+	void resolve(surface& target);
 
 	void transfer(pixel_format srcfmt, const efl::rect<size_t>& dest_rect, void* pdata);
 	void transfer(const efl::rect<size_t>& dest_rect, size_t src_start_x, size_t src_start_y, surface& src_surf);
@@ -78,8 +81,12 @@ public:
 		return height_;
 	}
 
+	size_t get_num_samples() const{
+		return num_samples_;
+	}
+
 	size_t get_pitch() const{
-		return width_ * color_infos[pxfmt_].size;
+		return width_ * num_samples_ * color_infos[pxfmt_].size;
 	}
 
 	pixel_format get_pixel_format() const{

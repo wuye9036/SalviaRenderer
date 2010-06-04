@@ -82,6 +82,7 @@ private:
 	std::vector<surface* > cbufs_; //framebuffer没有释放surface的权力
 
 	size_t width_, height_;
+	size_t num_samples_;
 	pixel_format fmt_;
 
 	bool check_buf(surface* psurf);
@@ -90,11 +91,11 @@ public:
 	//inherited
 	void initialize(renderer_impl* pparent);
 
-	framebuffer(size_t width, size_t height, pixel_format fmt);
+	framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	~framebuffer(void);
 
 	//重置
-	void reset(size_t width, size_t height, pixel_format fmt);
+	void reset(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 
 	//渲染目标设置
 	void set_render_target_disabled(render_target tar, size_t tar_id);
@@ -107,6 +108,7 @@ public:
 	efl::rect<size_t> get_rect();
 	size_t get_width() const;
 	size_t get_height() const;
+	size_t get_num_samples() const;
 	pixel_format get_buffer_format() const;
 
 	//渲染

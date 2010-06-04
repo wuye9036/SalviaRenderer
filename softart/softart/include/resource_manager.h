@@ -26,11 +26,11 @@ public:
 class texture_manager
 {
 public:
-	h_texture create_texture_2d(size_t width, size_t height, pixel_format fmt){
-		return h_texture(new texture_2d(width, height, fmt));
+	h_texture create_texture_2d(size_t width, size_t height, size_t num_samples, pixel_format fmt){
+		return h_texture(new texture_2d(width, height, num_samples, fmt));
 	}
-	h_texture create_texture_cube(size_t width, size_t height, pixel_format fmt){
-		return h_texture(new texture_cube(width, height, fmt));
+	h_texture create_texture_cube(size_t width, size_t height, size_t num_samples, pixel_format fmt){
+		return h_texture(new texture_cube(width, height, num_samples, fmt));
 	}
 
 	void release_texture(h_texture& htex){
