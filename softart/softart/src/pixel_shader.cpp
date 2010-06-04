@@ -71,11 +71,11 @@ const efl::vec4 pixel_shader::ddx(size_t iReg)
 	vec4 attr_org_ddx = get_original_ddx(iReg);
 
 	vec4 attr = ppxin_->attributes[iReg];
-	vec4 unproj_attr = attr * ppxin_->wpos.w;
+	vec4 unproj_attr = attr * ppxin_->position.w;
 
 	unproj_attr += attr_org_ddx;
 
-	float new_pos_w = ppxin_->wpos.w + ptriangleinfo_->ddx().wpos.w;
+	float new_pos_w = ppxin_->position.w + ptriangleinfo_->ddx().position.w;
 	vec4 new_proj_attr = unproj_attr / new_pos_w;
 
 	return new_proj_attr - attr;
@@ -86,11 +86,11 @@ const efl::vec4 pixel_shader::ddy(size_t iReg)
 	vec4 attr_org_ddy = get_original_ddy(iReg);
 
 	vec4 attr = ppxin_->attributes[iReg];
-	vec4 unproj_attr = attr * ppxin_->wpos.w;
+	vec4 unproj_attr = attr * ppxin_->position.w;
 
 	unproj_attr += attr_org_ddy;
 
-	float new_pos_w = ppxin_->wpos.w + ptriangleinfo_->ddy().wpos.w;
+	float new_pos_w = ppxin_->position.w + ptriangleinfo_->ddy().position.w;
 	vec4 new_proj_attr = unproj_attr / new_pos_w;
 
 	return new_proj_attr - attr;
@@ -100,7 +100,7 @@ const efl::vec4 pixel_shader::ddy(size_t iReg)
  ****************************************/
 color_rgba32f pixel_shader::tex2d(const sampler& s, const vec4& coord, const vec4& ddx, const vec4& ddy, float /*bias*/){
 	return s.sample_2d(coord, ddx, ddy,
-		1.0f / (ppxin_->wpos.w + get_original_ddx(0).w), 1.0f / (ppxin_->wpos.w + get_original_ddy(0).w), 1.0f / ppxin_->wpos.w, 0.0f);
+		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), 1.0f / ppxin_->position.w, 0.0f);
 }
 
 color_rgba32f pixel_shader::tex2d(const sampler& s, size_t iReg)
@@ -133,7 +133,7 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 	projected_attr.w = attr.w;
 
 	return s.sample_2d(projected_attr, get_original_ddx(iReg), get_original_ddy(iReg),
-		1.0f / (ppxin_->wpos.w + get_original_ddx(0).w), 1.0f / (ppxin_->wpos.w + get_original_ddy(0).w), invq, 0.0f);
+		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
 }
 
 color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec4& ddx, const vec4& ddy){
@@ -149,12 +149,12 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec
 	projected_v.w = v.w;
 
 	return s.sample_2d(projected_v, ddx, ddy,
-		1.0f / (ppxin_->wpos.w + get_original_ddx(0).w), 1.0f / (ppxin_->wpos.w + get_original_ddy(0).w), invq, 0.0f);
+		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
 }
 
 color_rgba32f pixel_shader::texcube(const sampler& s, const efl::vec4& coord, const efl::vec4& ddx, const efl::vec4& ddy, float /*bias*/){
 	return s.sample_cube(coord, ddx, ddy,
-		1.0f / (ppxin_->wpos.w + get_original_ddx(0).w), 1.0f / (ppxin_->wpos.w + get_original_ddy(0).w), 1.0f / ppxin_->wpos.w, 0.0f);
+		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), 1.0f / ppxin_->position.w, 0.0f);
 }
 
 color_rgba32f pixel_shader::texcube(const sampler&s, size_t iReg){
@@ -178,24 +178,24 @@ color_rgba32f pixel_shader::texcubeproj(const sampler& s, size_t iReg){
 
 	//注意这里的透视纹理，不需要除以position.w回到纹理空间，但是由于在光栅化传递进入的时候
 	//执行了除法操作，因此需要再乘w回来。
-	float proj_factor = ppxin_->wpos.w * invq;
+	float proj_factor = ppxin_->position.w * invq;
 	efl::vec4 projected_attr;
 	projected_attr.xyz() = (attr * proj_factor).xyz();
 	projected_attr.w = attr.w;
 
 	return s.sample_cube(projected_attr, get_original_ddx(iReg), get_original_ddy(iReg),
-		1.0f / (ppxin_->wpos.w + get_original_ddx(0).w), 1.0f / (ppxin_->wpos.w + get_original_ddy(0).w), invq, 0.0f);
+		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
 }
 
 color_rgba32f pixel_shader::texcubeproj(const sampler&s, const efl::vec4& v, const efl::vec4& ddx, const efl::vec4& ddy){
 	float invq = (v.w == 0.0f) ? 1.0f : 1.0f / v.w;
-	float proj_factor = ppxin_->wpos.w * invq;
+	float proj_factor = ppxin_->position.w * invq;
 	efl::vec4 projected_v;
 	projected_v.xyz() = (v * proj_factor).xyz();
 	projected_v.w = v.w;
 
 	return s.sample_cube(projected_v, ddx, ddy,
-		1.0f / (ppxin_->wpos.w + get_original_ddx(0).w), 1.0f / (ppxin_->wpos.w + get_original_ddy(0).w), invq, 0.0f);
+		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
 }
 
 /******************************************
@@ -205,7 +205,7 @@ bool pixel_shader::execute(const vs_output& in, ps_output& out){
 	custom_assert(ptriangleinfo_, "");
 	ppxin_ = &in;
 	bool rv = shader_prog(in, out);
-	out.depth = in.wpos.z;
+	out.depth = in.position.z;
 	out.front_face = in.front_face;
 	return rv;
 }

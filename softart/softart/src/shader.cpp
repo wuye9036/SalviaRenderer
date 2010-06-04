@@ -22,7 +22,6 @@ vs_output& vs_output::operator+=(const vs_output& rhs)
 	assert(num_used_attribute == rhs.num_used_attribute);
 
 	position += rhs.position;
-	wpos += rhs.wpos;
 	for(size_t i_attr = 0; i_attr < num_used_attribute; ++i_attr){
 		assert(attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr]);
 		attributes[i_attr] += rhs.attributes[i_attr];
@@ -36,7 +35,6 @@ vs_output& vs_output::operator-=(const vs_output& rhs)
 	assert(num_used_attribute == rhs.num_used_attribute);
 
 	position -= rhs.position;
-	wpos -= rhs.wpos;
 	for(size_t i_attr = 0; i_attr < num_used_attribute; ++i_attr){
 		assert(attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr]);
 		attributes[i_attr] -= rhs.attributes[i_attr];
@@ -48,7 +46,6 @@ vs_output& vs_output::operator-=(const vs_output& rhs)
 vs_output& vs_output::operator*=(float f)
 {
 	position *= f;
-	wpos *= f;
 	for(size_t i_attr = 0; i_attr < num_used_attribute; ++i_attr){
 		attributes[i_attr] *= f;
 	}
@@ -98,10 +95,10 @@ vs_output project(const vs_output& in)
 		ret_attribs[i_attr] = in.attributes[i_attr];
 		ret_attrib_modifiers[i_attr] = in.attribute_modifiers[i_attr];
 		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			ret_attribs[i_attr] *= in.wpos.w;
+			ret_attribs[i_attr] *= in.position.w;
 		}
 	}
-	return vs_output(in.position, in.wpos, in.front_face, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
+	return vs_output(in.position, in.front_face, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
 }
 
 vs_output& project(vs_output& out, const vs_output& in)
@@ -110,11 +107,10 @@ vs_output& project(vs_output& out, const vs_output& in)
 		out.attributes[i_attr] = in.attributes[i_attr];
 		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
 		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			out.attributes[i_attr] *= in.wpos.w;
+			out.attributes[i_attr] *= in.position.w;
 		}
 	}
 	out.num_used_attribute = in.num_used_attribute;
-	out.wpos = in.wpos;
 	out.position = in.position;
 	out.front_face = in.front_face;
 	return out;
@@ -124,7 +120,7 @@ vs_output unproject(const vs_output& in)
 {
 	vs_output::attrib_array_type ret_attribs;
 	vs_output::attrib_modifier_array_type ret_attrib_modifiers;
-	float inv_w = 1.0f / in.wpos.w;
+	float inv_w = 1.0f / in.position.w;
 	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
 		ret_attribs[i_attr] = in.attributes[i_attr];
 		ret_attrib_modifiers[i_attr] = in.attribute_modifiers[i_attr];
@@ -132,12 +128,12 @@ vs_output unproject(const vs_output& in)
 			ret_attribs[i_attr] *= inv_w;
 		}
 	}
-	return vs_output(in.position, in.wpos, in.front_face, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
+	return vs_output(in.position, in.front_face, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
 }
 
 vs_output& unproject(vs_output& out, const vs_output& in)
 {
-	float inv_w = 1.0f / in.wpos.w;
+	float inv_w = 1.0f / in.position.w;
 	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
 		out.attributes[i_attr] = in.attributes[i_attr];
 		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
@@ -146,7 +142,6 @@ vs_output& unproject(vs_output& out, const vs_output& in)
 		}
 	}
 	out.num_used_attribute = in.num_used_attribute;
-	out.wpos = in.wpos;
 	out.position = in.position;
 	out.front_face = in.front_face;
 	return out;
@@ -158,7 +153,6 @@ vs_output lerp(const vs_output& start, const vs_output& end, float step)
 
 	vs_output out;
 	out.position = start.position + (end.position - start.position) * step;
-	out.wpos = start.wpos + (end.wpos - start.wpos) * step;
 	out.front_face = start.front_face;
 	for(size_t i_attr = 0; i_attr < start.num_used_attribute; ++i_attr){
 		assert(start.attribute_modifiers[i_attr] == end.attribute_modifiers[i_attr]);
@@ -179,7 +173,6 @@ vs_output& integral(vs_output& inout, float step, const vs_output& derivation)
 	assert(inout.num_used_attribute == derivation.num_used_attribute);
 
 	inout.position += (derivation.position * step);
-	inout.wpos += (derivation.wpos * step);
 	for(size_t i_attr = 0; i_attr < inout.num_used_attribute; ++i_attr){
 		assert(inout.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr]);
 		if (!(inout.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
@@ -194,9 +187,8 @@ vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, c
 	assert(in.num_used_attribute == derivation.num_used_attribute);
 
 	out.position = in.position + derivation.position * step;
-	out.wpos = in.wpos + derivation.wpos * step;
 
-	float inv_w = 1.0f / out.wpos.w;
+	float inv_w = 1.0f / out.position.w;
 
 	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
 		assert(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr]);
@@ -223,10 +215,10 @@ void update_wpos(vs_output& vso, const viewport& vp)
 	float ox = (vp.x + vp.w) * 0.5f;
 	float oy = (vp.y + vp.h) * 0.5f;
 
-	vso.wpos.x = (float(vp.w) * 0.5f) * pos.x + ox;
-	vso.wpos.y = (float(vp.h) * 0.5f) * -pos.y + oy;
-	vso.wpos.z = (vp.maxz - vp.minz) * 0.5f * pos.z + vp.minz;
-	vso.wpos.w = invw;
+	vso.position.x = (float(vp.w) * 0.5f) * pos.x + ox;
+	vso.position.y = (float(vp.h) * 0.5f) * -pos.y + oy;
+	vso.position.z = (vp.maxz - vp.minz) * 0.5f * pos.z + vp.minz;
+	vso.position.w = invw;
 }
 
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2)

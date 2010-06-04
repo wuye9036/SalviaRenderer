@@ -216,14 +216,14 @@ void rasterizer::initialize(renderer_impl* pparent)
 void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
 	vs_output diff = project(v1) - project(v0);
-	const efl::vec4& dir = diff.wpos;
+	const efl::vec4& dir = diff.position;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
 	h_blend_shader hbs = pparent_->get_blend_shader();
 
 	//构造差分
-	vs_output ddx = diff * (diff.wpos.x / (diff.wpos.xy().length_sqr()));
-	vs_output ddy = diff * (diff.wpos.y / (diff.wpos.xy().length_sqr()));
+	vs_output ddx = diff * (diff.position.x / (diff.position.xy().length_sqr()));
+	vs_output ddy = diff * (diff.position.y / (diff.position.xy().length_sqr()));
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
 	int vptop = fast_floori(max(0.0f, vp.y));
@@ -248,13 +248,13 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 		}
 
 		triangle_info info;
-		info.set(start->wpos, ddx, ddy);
+		info.set(start->position, ddx, ddy);
 		pps->ptriangleinfo_ = &info;
 
-		float fsx = fast_floor(start->wpos.x + 0.5f);
+		float fsx = fast_floor(start->position.x + 0.5f);
 
 		int sx = fast_floori(fsx);
-		int ex = fast_floori(end->wpos.x - 0.5f);
+		int ex = fast_floori(end->position.x - 0.5f);
 
 		//截取到屏幕内
 		sx = efl::clamp<int>(sx, vpleft, int(vpright - 1));
@@ -263,7 +263,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 		//设置起点的vs_output
 		vs_output px_start(project(*start));
 		vs_output px_end(project(*end));
-		float step = sx + 0.5f - start->wpos.x;
+		float step = sx + 0.5f - start->position.x;
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
@@ -271,11 +271,11 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 		for(int iPixel = sx; iPixel < ex; ++iPixel)
 		{
 			//忽略不在vp范围内的像素
-			if(px_in.wpos.y >= vpbottom){
+			if(px_in.position.y >= vpbottom){
 				if(dir.y > 0) break;
 				continue;
 			}
-			if(px_in.wpos.y < 0){
+			if(px_in.position.y < 0){
 				if(dir.y < 0) break;
 				continue;
 			}
@@ -283,7 +283,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.wpos.y), px_out);
+				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.position.y), px_out);
 			}
 
 			//差分递增
@@ -305,13 +305,13 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 		}
 
 		triangle_info info;
-		info.set(start->wpos, ddx, ddy);
+		info.set(start->position, ddx, ddy);
 		pps->ptriangleinfo_ = &info;
 
-		float fsy = fast_floor(start->wpos.y + 0.5f);
+		float fsy = fast_floor(start->position.y + 0.5f);
 
 		int sy = fast_floori(fsy);
-		int ey = fast_floori(end->wpos.y - 0.5f);
+		int ey = fast_floori(end->position.y - 0.5f);
 
 		//截取到屏幕内
 		sy = efl::clamp<int>(sy, vptop, int(vpbottom - 1));
@@ -320,7 +320,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 		//设置起点的vs_output
 		vs_output px_start(project(*start));
 		vs_output px_end(project(*end));
-		float step = sy + 0.5f - start->wpos.y;
+		float step = sy + 0.5f - start->position.y;
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
@@ -328,11 +328,11 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 		for(int iPixel = sy; iPixel < ey; ++iPixel)
 		{
 			//忽略不在vp范围内的像素
-			if(px_in.wpos.x >= vpright){
+			if(px_in.position.x >= vpright){
 				if(dir.x > 0) break;
 				continue;
 			}
-			if(px_in.wpos.x < 0){
+			if(px_in.position.x < 0){
 				if(dir.x < 0) break;
 				continue;
 			}
@@ -340,7 +340,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, fast_floori(px_in.wpos.x), iPixel, px_out);
+				hfb_->render_pixel(hbs, fast_floori(px_in.position.x), iPixel, px_out);
 			}
 
 			//差分递增
@@ -390,12 +390,12 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 	const vs_output* pvert[3] = {&v0, &v1, &v2};
 
 	//升序排列
-	if(pvert[0]->wpos.y > pvert[1]->wpos.y){
+	if(pvert[0]->position.y > pvert[1]->position.y){
 		swap(pvert[1], pvert[0]);
 	}
-	if(pvert[1]->wpos.y > pvert[2]->wpos.y){
+	if(pvert[1]->position.y > pvert[2]->position.y){
 		swap(pvert[2], pvert[1]);
-		if(pvert[0]->wpos.y > pvert[1]->wpos.y) 
+		if(pvert[0]->position.y > pvert[1]->position.y) 
 			swap(pvert[1], pvert[0]);
 	}
 
@@ -411,26 +411,26 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 
 
 	//初始化边上的各个分量差值。（只要算两条边就可以了。）
-	e12.wpos = pvert[2]->wpos - pvert[1]->wpos;
+	e12.position = pvert[2]->position - pvert[1]->position;
 
 	//初始化dxdy
-	float dxdy_01 = efl::equal<float>(e01.wpos.y, 0.0f) ? 0.0f: e01.wpos.x / e01.wpos.y;
-	float dxdy_02 = efl::equal<float>(e02.wpos.y, 0.0f) ? 0.0f: e02.wpos.x / e02.wpos.y;
-	float dxdy_12 = efl::equal<float>(e12.wpos.y, 0.0f) ? 0.0f: e12.wpos.x / e12.wpos.y;
+	float dxdy_01 = efl::equal<float>(e01.position.y, 0.0f) ? 0.0f: e01.position.x / e01.position.y;
+	float dxdy_02 = efl::equal<float>(e02.position.y, 0.0f) ? 0.0f: e02.position.x / e02.position.y;
+	float dxdy_12 = efl::equal<float>(e12.position.y, 0.0f) ? 0.0f: e12.position.x / e12.position.y;
 
 	//计算面积
-	float area = cross_prod2(e02.wpos.xy(), e01.wpos.xy());
+	float area = cross_prod2(e02.position.xy(), e01.position.xy());
 	float inv_area = 1.0f / area;
 	if(equal<float>(area, 0.0f)) return;
 
 	/**********************************************************
 	*  求解各个属性的差分式
 	*********************************************************/
-	vs_output ddx((e02 * e01.wpos.y - e02.wpos.y * e01)*inv_area);
-	vs_output ddy((e01 * e02.wpos.x - e01.wpos.x * e02)*inv_area);
+	vs_output ddx((e02 * e01.position.y - e02.position.y * e01)*inv_area);
+	vs_output ddy((e01 * e02.position.x - e01.position.x * e02)*inv_area);
 
 	triangle_info info;
-	info.set(pvert[0]->wpos, ddx, ddy);
+	info.set(pvert[0]->position, ddx, ddy);
 	pps->ptriangleinfo_ = &info;
 
 	/*************************************
@@ -488,25 +488,25 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 		}
 		dxdy1 = dxdy_02;
 
-		if(equal<float>(s_vert->wpos.y, e_vert->wpos.y)){
+		if(equal<float>(s_vert->position.y, e_vert->position.y)){
 			continue; // next part
 		}
 
-		fsy = fast_ceil(s_vert->wpos.y + 0.5f) - 1;
-		fey = fast_ceil(e_vert->wpos.y - 0.5f) - 1;
+		fsy = fast_ceil(s_vert->position.y + 0.5f) - 1;
+		fey = fast_ceil(e_vert->position.y - 0.5f) - 1;
 
 		isy = fast_floori(fsy);
 		iey = fast_floori(fey);
 
-		offsety = fsy + 0.5f - pvert[0]->wpos.y;
+		offsety = fsy + 0.5f - pvert[0]->position.y;
 
 		//起点的x计算由于三角形的不同而有所不同
 		if(iPart == bot_part){
-			fsx0 = pvert[0]->wpos.x + dxdy_01*(fsy + 0.5f - pvert[0]->wpos.y);
+			fsx0 = pvert[0]->position.x + dxdy_01*(fsy + 0.5f - pvert[0]->position.y);
 		} else {
-			fsx0 = pvert[1]->wpos.x + dxdy_12*(fsy + 0.5f - pvert[1]->wpos.y);
+			fsx0 = pvert[1]->position.x + dxdy_12*(fsy + 0.5f - pvert[1]->position.y);
 		}
-		fsx1 = pvert[0]->wpos.x + dxdy_02*(fsy + 0.5f - pvert[0]->wpos.y);
+		fsx1 = pvert[0]->position.x + dxdy_02*(fsy + 0.5f - pvert[0]->position.y);
 
 		//设置基准扫描线的属性
 		base_scanline.base_vert = projed_vert0;
@@ -554,7 +554,7 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 					icx_s = efl::clamp(icx_s, vpleft, vpright - 1);
 					icx_e = efl::clamp(icx_e, vpleft, vpright - 1);
 
-					float offsetx = icx_s + 0.5f - pvert[0]->wpos.x;
+					float offsetx = icx_s + 0.5f - pvert[0]->position.x;
 
 					//设置扫描线信息
 					scanline_info scanline(current_base_scanline);
@@ -703,7 +703,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 		{
 			vec2 pv[3];
 			for (size_t j = 0; j < stride; ++ j){
-				pv[j] = clipped_verts[i * stride + j].wpos.xy();
+				pv[j] = clipped_verts[i * stride + j].position.xy();
 			}
 
 			x_min = pv[0].x;
