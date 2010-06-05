@@ -47,12 +47,16 @@ struct depth_stencil_desc {
 class depth_stencil_state {
 	depth_stencil_desc desc_;
 
+	typedef int32_t (*mask_stencil_func_type)(int32_t stencil, int32_t mask);
+	typedef int32_t (*read_stencil_func_type)(const backbuffer_pixel_out& target_pixel, size_t sample, int32_t mask);
 	typedef bool (*depth_test_func_type)(float ps_depth, float cur_depth);
 	typedef bool (*stencil_test_func_type)(int32_t ref, int32_t cur_stencil);
 	typedef int32_t (*stencil_op_func_type)(int32_t ref, int32_t cur_stencil);
-	typedef void (*write_depth_func_type)(float depth, backbuffer_pixel_out& target_pixel);
-	typedef void (*write_stencil_func_type)(int32_t stencil, backbuffer_pixel_out& target_pixel);
+	typedef void (*write_depth_func_type)(size_t sample, float depth, backbuffer_pixel_out& target_pixel);
+	typedef void (*write_stencil_func_type)(size_t sample, int32_t stencil, int32_t mask, backbuffer_pixel_out& target_pixel);
 
+	mask_stencil_func_type mask_stencil_func_;
+	read_stencil_func_type read_stencil_func_;
 	depth_test_func_type depth_test_func_;
 	stencil_test_func_type stencil_test_func_[2];
 	stencil_op_func_type stencil_op_func_[6];
@@ -63,12 +67,13 @@ public:
 	depth_stencil_state(const depth_stencil_desc& desc);
 	const depth_stencil_desc& get_desc() const;
 
+	int32_t read_stencil(int32_t stencil) const;
+	int32_t read_stencil(const backbuffer_pixel_out& target_pixel, size_t sample) const;
 	bool depth_test(float ps_depth, float cur_depth) const;
 	bool stencil_test(bool front_face, int32_t ref, int32_t cur_stencil) const;
 	int32_t stencil_operation(bool front_face, bool depth_pass, bool stencil_pass, int32_t ref, int32_t cur_stencil) const;
-	int32_t stencil_read(int32_t stencil) const;
-	void write_depth(float depth, backbuffer_pixel_out& target_pixel) const;
-	void write_stencil(int32_t stencil, backbuffer_pixel_out& target_pixel) const;
+	void write_depth(size_t sample, float depth, backbuffer_pixel_out& target_pixel) const;
+	void write_stencil(size_t sample, int32_t stencil, backbuffer_pixel_out& target_pixel) const;
 };
 
 class framebuffer : public render_stage
@@ -112,7 +117,7 @@ public:
 	pixel_format get_buffer_format() const;
 
 	//‰÷»æ
-	void render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps);
+	void render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps, const float* depthes);
 
 	//«Â¿Ì
 	void clear_color(size_t tar_id, const color_rgba32f& c);

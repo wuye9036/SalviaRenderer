@@ -44,16 +44,13 @@ class dev_gdiplus: public softart::device{
 	dev_gdiplus(HWND hwnd);
 
 	HWND hwnd_;
-	Gdiplus::Rect rc_;
-	softart::framebuffer* fb_;
 	boost::shared_ptr<Gdiplus::Bitmap> pbmp_;
 
 public:
 	~dev_gdiplus();
 	static h_dev_gdiplus create_device(HWND hwnd);
 
-	virtual void attach_framebuffer(softart::framebuffer* pfb);
-	virtual void present();
+	virtual void present(const softart::surface& surf);
 };
 
 END_NS_SOFTARTX_PRESENTER()

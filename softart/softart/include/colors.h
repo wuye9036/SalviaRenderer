@@ -22,8 +22,8 @@ struct color_rgba32f
 
 	color_rgba32f(){}
 	color_rgba32f(float r, float g, float b, float a) : r(r), g(g), b(b), a(a){}
-	color_rgba32f(const float* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
-	color_rgba32f(const efl::vec4& v):r(v.x), g(v.y), b(v.z), a(v.w){}
+	explicit color_rgba32f(const float* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
+	explicit color_rgba32f(const efl::vec4& v):r(v.x), g(v.y), b(v.z), a(v.w){}
 
 	color_rgba32f& operator = (const color_rgba32f& c)
 	{
@@ -68,7 +68,7 @@ struct color_rgb32f
 	comp_t r,g,b;
 
 	color_rgb32f(){}
-	color_rgb32f(const comp_t* color):r(color[0]), g(color[1]), b(color[2]){}
+	explicit color_rgb32f(const comp_t* color):r(color[0]), g(color[1]), b(color[2]){}
 	color_rgb32f(comp_t r, comp_t g, comp_t b):r(r), g(g), b(b){}
 
 	template<class T>
@@ -111,8 +111,8 @@ struct color_r32f
 	comp_t r;
 
 	color_r32f(){}
-	color_r32f(const comp_t* color):r(*color){}
-	color_r32f(comp_t r):r(r){}
+	explicit color_r32f(const comp_t* color):r(*color){}
+	explicit color_r32f(comp_t r):r(r){}
 
 	template<class T>
 	color_r32f(const T& rhs){
@@ -150,7 +150,7 @@ struct color_rg32f
 	comp_t r, g;
 
 	color_rg32f(){}
-	color_rg32f(const comp_t* color):r(color[0]), g(color[1]){}
+	explicit color_rg32f(const comp_t* color):r(color[0]), g(color[1]){}
 	color_rg32f(comp_t r, comp_t g):r(r), g(g){}
 
 	template<class T>
@@ -194,7 +194,7 @@ struct color_rgba8
 	comp_t r, g, b, a;
 
 	color_rgba8(){}
-	color_rgba8(const comp_t* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
+	explicit color_rgba8(const comp_t* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
 	color_rgba8(comp_t r, comp_t g, comp_t b, comp_t a):r(r), g(g), b(b), a(a){}
 
 	template<class T>
@@ -249,7 +249,7 @@ struct color_bgra8
 	comp_t b, g, r, a;
 
 	color_bgra8(){}
-	color_bgra8(const comp_t* color):b(color[0]), g(color[1]), r(color[2]), a(color[3]){}
+	explicit color_bgra8(const comp_t* color):b(color[0]), g(color[1]), r(color[2]), a(color[3]){}
 	color_bgra8(comp_t b, comp_t g, comp_t r, comp_t a):b(b), g(g), r(r), a(a){}
 
 	template<class T>
@@ -305,7 +305,7 @@ struct color_r32i
 	comp_t r;
 
 	color_r32i(){}
-	color_r32i(const comp_t* color):r(*color){}
+	explicit color_r32i(const comp_t* color):r(*color){}
 	color_r32i(comp_t r):r(r){}
 
 	template<class T>

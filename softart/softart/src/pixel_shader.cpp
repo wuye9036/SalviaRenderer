@@ -58,15 +58,23 @@ void triangle_info::set(const efl::vec4& base_vert, const vs_output& ddx, const 
 /*****************************************
  *  Get Partial Derivation
  *****************************************/
-const efl::vec4& pixel_shader::get_original_ddx(size_t iReg){
+const efl::vec4& pixel_shader::get_pos_ddx() const{
+	return ptriangleinfo_->ddx().position;
+}
+
+const efl::vec4& pixel_shader::get_pos_ddy() const{
+	return ptriangleinfo_->ddy().position;
+}
+
+const efl::vec4& pixel_shader::get_original_ddx(size_t iReg) const{
 	return ptriangleinfo_->ddx().attributes[iReg];
 }
 
-const efl::vec4& pixel_shader::get_original_ddy(size_t iReg){
+const efl::vec4& pixel_shader::get_original_ddy(size_t iReg) const{
 	return ptriangleinfo_->ddy().attributes[iReg];
 }
 
-const efl::vec4 pixel_shader::ddx(size_t iReg)
+const efl::vec4 pixel_shader::ddx(size_t iReg) const
 {
 	vec4 attr_org_ddx = get_original_ddx(iReg);
 
@@ -81,7 +89,7 @@ const efl::vec4 pixel_shader::ddx(size_t iReg)
 	return new_proj_attr - attr;
 }
 
-const efl::vec4 pixel_shader::ddy(size_t iReg)
+const efl::vec4 pixel_shader::ddy(size_t iReg) const
 {
 	vec4 attr_org_ddy = get_original_ddy(iReg);
 

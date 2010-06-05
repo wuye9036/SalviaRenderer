@@ -71,7 +71,7 @@ h_dev_d3d9 dev_d3d9::create_device(HWND hwnd, h_d3d9_device dev){
 }
 
 //inherited
-void dev_d3d9::attach_framebuffer(softart::framebuffer* pfb)
+void dev_d3d9::present(const softart::surface& surf)
 {
 	if (!dev_)
 	{
@@ -79,8 +79,8 @@ void dev_d3d9::attach_framebuffer(softart::framebuffer* pfb)
 		std::memset(&d3dpp, 0, sizeof(d3dpp));
 		d3dpp.Windowed					= true;
 		d3dpp.BackBufferCount			= 1;
-		d3dpp.BackBufferWidth			= static_cast<UINT>(pfb->get_width());
-		d3dpp.BackBufferHeight			= static_cast<UINT>(pfb->get_height());
+		d3dpp.BackBufferWidth			= static_cast<UINT>(surf.get_width());
+		d3dpp.BackBufferHeight			= static_cast<UINT>(surf.get_height());
 		d3dpp.hDeviceWindow				= hwnd_;
 		d3dpp.SwapEffect				= D3DSWAPEFFECT_DISCARD;
 		d3dpp.PresentationInterval		= D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -95,72 +95,57 @@ void dev_d3d9::attach_framebuffer(softart::framebuffer* pfb)
 		dev_ = softartx::utility::d3d9_device::create(device_params, d3dpp);
 
 		init_device();
+	
+		IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
+
+		//设置渲染顶点
+		Vertex verts[] = 
+		{
+			/* x,  y, z, u, v */
+			{-1.0f - 1.0f / surf.get_width(), +1.0f + 1.0f / surf.get_height(), 0.5f, 0.0f, 0.0f},
+			{ 1.0f - 1.0f / surf.get_width(), +1.0f + 1.0f / surf.get_height(), 0.5f, 1.0f, 0.0f},
+			{-1.0f - 1.0f / surf.get_width(), -1.0f + 1.0f / surf.get_height(), 0.5f, 0.0f, 1.0f},
+			{ 1.0f - 1.0f / surf.get_width(), -1.0f + 1.0f / surf.get_height(), 0.5f, 1.0f, 1.0f}
+		};
+		Vertex* p;
+		vb_->Lock(0, 0, reinterpret_cast<void**>(&p), 0);
+		memcpy(p, verts, sizeof(verts));
+		vb_->Unlock();
+
+		HRESULT hr = pdxdev->CreateTexture(
+			static_cast<uint32_t>(surf.get_width()), static_cast<uint32_t>(surf.get_height()),
+			1, D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &buftex_, NULL);
+
+		if(FAILED(hr)){
+			buftex_ = NULL;
+		}
+
+		pdxdev->SetTexture(0, buftex_);
 	}
-
-	if(buftex_){
-		buftex_->Release();
-		buftex_ = NULL;
-	}
-
-	if(pfb == NULL) return;
-
-	IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
-
-	//设置渲染顶点
-	Vertex verts[] = 
-	{
-		/* x,  y, z, u, v */
-		{-1.0f - 1.0f / pfb->get_width(), +1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 0.0f},
-		{ 1.0f - 1.0f / pfb->get_width(), +1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 0.0f},
-		{-1.0f - 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 0.0f, 1.0f},
-		{ 1.0f - 1.0f / pfb->get_width(), -1.0f + 1.0f / pfb->get_height(), 0.5f, 1.0f, 1.0f}
-	};
-	Vertex* p;
-	vb_->Lock(0, 0, reinterpret_cast<void**>(&p), 0);
-	memcpy(p, verts, sizeof(verts));
-	vb_->Unlock();
-
-	pfb_ = pfb;
-	HRESULT hr = pdxdev->CreateTexture(
-		uint32_t(pfb->get_width()), uint32_t(pfb->get_height()),
-		1, D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &buftex_, NULL);
-
-	if(FAILED(hr)){
-		buftex_ = NULL; 
-		pfb_ = NULL;
-	}
-
-	pdxdev->SetTexture(0, buftex_);
-}
-
-void dev_d3d9::present()
-{
-	if(!buftex_) return;
 
 	//首先将framebuffer copy到纹理上
 	D3DLOCKED_RECT locked_rc;
 	byte* src_addr = NULL;
-	softart::surface* prt = pfb_->get_render_target(render_target_color, 0);
 
 	if( FAILED(buftex_->LockRect(0, &locked_rc, NULL, D3DLOCK_DISCARD)) ){
 		return;
 	}
 
-	prt->map((void**)(&src_addr), map_read);
+	surf.map((void**)(&src_addr), map_read);
 	if( src_addr == NULL ) return;
 
-	for(size_t irow = 0; irow < pfb_->get_height(); ++irow)
+	for(size_t irow = 0; irow < surf.get_height(); ++irow)
 	{
 		byte* dest_addr = ((byte*)(locked_rc.pBits)) + locked_rc.Pitch * irow;
 		pixel_format_convertor::convert_array(
-			pixel_format_color_bgra8, prt->get_pixel_format(),
+			pixel_format_color_bgra8, surf.get_pixel_format(),
 			dest_addr, src_addr,
-			int(prt->get_width())
+			int(surf.get_width())
 			);
-		src_addr += prt->get_pitch();
+		src_addr += surf.get_pitch();
 	}
 
-	prt->unmap();
+	surf.unmap();
 	buftex_->UnlockRect(0);
 
 	IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
@@ -172,8 +157,8 @@ void dev_d3d9::present()
 	RECT rc;
 	rc.left = 0;
 	rc.top = 0;
-	rc.right = (LONG)pfb_->get_width();
-	rc.bottom = (LONG)pfb_->get_height();
+	rc.right = static_cast<LONG>(surf.get_width());
+	rc.bottom = static_cast<LONG>(surf.get_height());
 	pdxdev->Present(NULL, &rc, NULL, NULL);
 }
 

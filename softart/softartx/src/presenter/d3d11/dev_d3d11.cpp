@@ -135,15 +135,15 @@ h_dev_d3d11 dev_d3d11::create_device(HWND hwnd){
 }
 
 //inherited
-void dev_d3d11::attach_framebuffer(softart::framebuffer* pfb)
+void dev_d3d11::present(const softart::surface& surf)
 {
 	if (!d3d_device_)
 	{
 		DXGI_SWAP_CHAIN_DESC sc_desc;
 		std::memset(&sc_desc, 0, sizeof(sc_desc));
 		sc_desc.BufferCount = 1;
-		sc_desc.BufferDesc.Width = static_cast<UINT>(pfb->get_width());
-		sc_desc.BufferDesc.Height = static_cast<UINT>(pfb->get_height());
+		sc_desc.BufferDesc.Width = static_cast<UINT>(surf.get_width());
+		sc_desc.BufferDesc.Height = static_cast<UINT>(surf.get_height());
 		sc_desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 		sc_desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		sc_desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
@@ -188,8 +188,8 @@ void dev_d3d11::attach_framebuffer(softart::framebuffer* pfb)
 
 		// Setup the viewport
 		D3D11_VIEWPORT vp;
-		vp.Width = static_cast<float>(pfb->get_width());
-		vp.Height = static_cast<float>(pfb->get_height());
+		vp.Width = static_cast<float>(surf.get_width());
+		vp.Height = static_cast<float>(surf.get_height());
 		vp.MinDepth = 0.0f;
 		vp.MaxDepth = 1.0f;
 		vp.TopLeftX = 0;
@@ -295,68 +295,54 @@ void dev_d3d11::attach_framebuffer(softart::framebuffer* pfb)
 		d3d_imm_ctx_->PSSetSamplers(0, 1, &point_sampler_state_);
 
 		d3d_imm_ctx_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+		D3D11_TEXTURE2D_DESC tex_desc;
+		tex_desc.Width = static_cast<UINT>(surf.get_width());
+		tex_desc.Height = static_cast<UINT>(surf.get_height());
+		tex_desc.MipLevels = 1;
+		tex_desc.ArraySize = 1;
+		tex_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		tex_desc.SampleDesc.Count = 1;
+		tex_desc.SampleDesc.Quality = 0;
+		tex_desc.Usage = D3D11_USAGE_DYNAMIC;
+		tex_desc.BindFlags = D3D10_BIND_SHADER_RESOURCE;
+		tex_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		tex_desc.MiscFlags = 0;
+		d3d_device_->CreateTexture2D(&tex_desc, NULL, &buftex_);
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC sr_desc;
+		sr_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		sr_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		sr_desc.Texture2D.MostDetailedMip = 0;
+		sr_desc.Texture2D.MipLevels = 1;
+		d3d_device_->CreateShaderResourceView(buftex_, &sr_desc, &buftex_srv_);
+
+		d3d_imm_ctx_->PSSetShaderResources(0, 1, &buftex_srv_);
 	}
-
-	if(buftex_){
-		buftex_->Release();
-		buftex_ = NULL;
-	}
-
-	if(pfb == NULL) return;
-
-	pfb_ = pfb;
-	D3D11_TEXTURE2D_DESC tex_desc;
-	tex_desc.Width = static_cast<UINT>(pfb->get_width());
-    tex_desc.Height = static_cast<UINT>(pfb->get_height());
-    tex_desc.MipLevels = 1;
-    tex_desc.ArraySize = 1;
-    tex_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	tex_desc.SampleDesc.Count = 1;
-	tex_desc.SampleDesc.Quality = 0;
-    tex_desc.Usage = D3D11_USAGE_DYNAMIC;
-    tex_desc.BindFlags = D3D10_BIND_SHADER_RESOURCE;
-    tex_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    tex_desc.MiscFlags = 0;
-	d3d_device_->CreateTexture2D(&tex_desc, NULL, &buftex_);
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC sr_desc;
-	sr_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	sr_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	sr_desc.Texture2D.MostDetailedMip = 0;
-	sr_desc.Texture2D.MipLevels = 1;
-	d3d_device_->CreateShaderResourceView(buftex_, &sr_desc, &buftex_srv_);
-
-	d3d_imm_ctx_->PSSetShaderResources(0, 1, &buftex_srv_);
-}
-
-void dev_d3d11::present()
-{
-	if(!buftex_) return;
 
 	D3D11_MAPPED_SUBRESOURCE mapped;
 	byte* src_addr = NULL;
-	softart::surface* prt = pfb_->get_render_target(render_target_color, 0);
 
 	d3d_imm_ctx_->Map(buftex_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 
-	prt->map((void**)(&src_addr), map_read);
+	surf.map((void**)(&src_addr), map_read);
 	if( src_addr == NULL ){
 		d3d_imm_ctx_->Unmap(buftex_, 0);
 		return;
 	}
 
-	for(size_t irow = 0; irow < pfb_->get_height(); ++irow)
+	for(size_t irow = 0; irow < surf.get_height(); ++irow)
 	{
 		byte* dest_addr = ((byte*)(mapped.pData)) + mapped.RowPitch * irow;
 		pixel_format_convertor::convert_array(
-			pixel_format_color_bgra8, prt->get_pixel_format(),
+			pixel_format_color_bgra8, surf.get_pixel_format(),
 			dest_addr, src_addr,
-			int(prt->get_width())
+			static_cast<int>(surf.get_width())
 			);
-		src_addr += prt->get_pitch();
+		src_addr += surf.get_pitch();
 	}
 
-	prt->unmap();
+	surf.unmap();
 	d3d_imm_ctx_->Unmap(buftex_, 0);
 
 	d3d_imm_ctx_->Draw(4, 0);

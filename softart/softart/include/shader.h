@@ -105,13 +105,16 @@ class pixel_shader : public shader_impl
 	const vs_output* ppxin_;
 
 protected:
+	const efl::vec4& get_pos_ddx() const;
+	const efl::vec4& get_pos_ddy() const;
+
 	//获得乘以投影系数之后的ddx与ddy，可以用它计算投影纠正后的ddx和ddy。
-	const efl::vec4& get_original_ddx(size_t iReg);
-	const efl::vec4& get_original_ddy(size_t iReg);
+	const efl::vec4& get_original_ddx(size_t iReg) const;
+	const efl::vec4& get_original_ddy(size_t iReg) const;
 
 	//获得投影纠正以后的ddx与ddy
-	const efl::vec4 ddx(size_t iReg);
-	const efl::vec4 ddy(size_t iReg);
+	const efl::vec4 ddx(size_t iReg) const;
+	const efl::vec4 ddy(size_t iReg) const;
 
 	color_rgba32f tex2d(const sampler& s, const efl::vec4& coord, const efl::vec4& ddx, const efl::vec4& ddy, float bias = 0);
 	color_rgba32f tex2d(const sampler& s, size_t iReg);
@@ -136,8 +139,8 @@ public:
 class blend_shader : public shader_impl
 {
 public:
-	void execute(backbuffer_pixel_out& inout, const ps_output& in);
-	virtual bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in) = 0;
+	void execute(size_t sample, backbuffer_pixel_out& inout, const ps_output& in);
+	virtual bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in) = 0;
 };
 
 END_NS_SOFTART()

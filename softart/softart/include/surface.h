@@ -42,7 +42,7 @@ private:
 	bool is_read_mode(map_mode lm){return (map_read == lm) || (map_read_write == lm);}
 	bool is_write_mode(map_mode lm){return (map_write == lm) || (map_read_write == lm) || (map_write_discard == lm) || (map_write_no_overwrite == lm);}
 
-	size_t get_texel_addr(size_t x, size_t y) const;
+	size_t get_texel_addr(size_t x, size_t y, size_t sample) const;
 
 	void tile(const std::vector<byte>& tile_data);
 	void untile(std::vector<byte>& untile_data);
@@ -96,9 +96,11 @@ public:
 		return is_mapped_;
 	}
 
-	color_rgba32f get_texel(size_t x, size_t y) const;
-	color_rgba32f get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty) const;
-	void set_texel(size_t x, size_t y, const color_rgba32f& color);
+	color_rgba32f get_texel(size_t x, size_t y, size_t sample) const;
+	void get_texel(void* color, size_t x, size_t y, size_t sample) const;
+	color_rgba32f get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty, size_t sample) const;
+	void set_texel(size_t x, size_t y, size_t sample, const color_rgba32f& color);
+	void set_texel(size_t x, size_t y, size_t sample, const void* color);
 
 	void fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color);
 };

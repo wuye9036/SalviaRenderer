@@ -37,8 +37,7 @@ public:
 	static h_dev_d3d11 create_device(HWND hwnd);
 
 	//inherited
-	virtual void attach_framebuffer(softart::framebuffer* pfb);
-	virtual void present();
+	virtual void present(const softart::surface& surf);
 
 	~dev_d3d11();
 
@@ -72,8 +71,6 @@ private:
 	ID3D11InputLayout* input_layout_;
 	ID3D11VertexShader* vs_;
 	ID3D11PixelShader* ps_;
-
-	softart::framebuffer* pfb_;
 };
 
 END_NS_SOFTARTX_PRESENTER()

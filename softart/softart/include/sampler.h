@@ -48,7 +48,7 @@ struct sampler_desc {
 class sampler
 {
 public:
-	typedef color_rgba32f (*filter_op_type)(const surface& surf, float x, float y, const color_rgba32f& border_color);
+	typedef color_rgba32f (*filter_op_type)(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color);
 
 private:
 	sampler_desc desc_;
@@ -63,18 +63,18 @@ private:
 
 	color_rgba32f sample_surface(
 		const surface& surf,
-		float x, float y,
+		float x, float y, size_t sample,
 		sampler_state ss) const;
 
-	color_rgba32f sample_impl(const texture *tex , float coordx, float coordy, float miplevel) const;
+	color_rgba32f sample_impl(const texture *tex , float coordx, float coordy, size_t sample, float miplevel) const;
 
 	color_rgba32f sample_impl(const texture *tex , 
-		float coordx, float coordy, 
+		float coordx, float coordy, size_t sample, 
 		const efl::vec4& ddx, const efl::vec4& ddy, 
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_2d_impl(const texture *tex , 
-		const efl::vec4& coord,
+		const efl::vec4& coord, size_t sample,
 		const efl::vec4& ddx, const efl::vec4& ddy,
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 

@@ -153,10 +153,10 @@ public:
 class ts_blend_on : public blend_shader
 {
 public:
-	bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in)
+	bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in)
 	{
-		color_rgba32f color = in.color[0];
-		inout.color(0, lerp(inout.color(0), color, color.a));
+		color_rgba32f color(in.color[0]);
+		inout.color(0, sample, lerp(inout.color(0, 0), color, color.a));
 		return true;
 	}
 };
@@ -164,9 +164,9 @@ public:
 class ts_blend_off : public blend_shader
 {
 public:
-	bool shader_prog(backbuffer_pixel_out& inout, const ps_output& in)
+	bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in)
 	{
-		inout.color(0, in.color[0]);
+		inout.color(0, sample, color_rgba32f(in.color[0]));
 		return true;
 	}
 };
@@ -190,6 +190,9 @@ public:
 
 	h_rasterizer_state rs_front;
 	h_rasterizer_state rs_back;
+
+	h_surface display_surf;
+	surface* pdsurf;
 
 	uint32_t num_frames;
 	float accumulate_time;
@@ -245,11 +248,20 @@ public:
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
+		render_params.backbuffer_num_samples = 2;
 
 		hsr = create_software_renderer(&render_params, present_dev);
 
-		present_dev->attach_framebuffer( hsr->get_framebuffer().get() );
+		const h_framebuffer& fb = hsr->get_framebuffer();
+		if (fb->get_num_samples() > 1){
+			display_surf.reset(new surface(fb->get_width(),
+				fb->get_height(), 1, fb->get_buffer_format()));
+			pdsurf = display_surf.get();
+		}
+		else{
+			display_surf.reset();
+			pdsurf = fb->get_render_target(render_target_color, 0);
+		}
 
 		planar_mesh = create_planar(
 			hsr.get(), 
@@ -299,7 +311,7 @@ public:
 		CPaintDC dc(m_hWnd);
 		//TODO: Add your drawing code here
 
-		present_dev->present();
+		present_dev->present(*pdsurf);
 		return 0;
 	}
 
@@ -364,6 +376,10 @@ public:
 			box_mesh->render();
 		}
 
+		if (hsr->get_framebuffer()->get_num_samples() > 1){
+			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
+		}
+
 		InvalidateRect(NULL);
 	}
 
@@ -373,7 +389,7 @@ public:
 		PPOINTS pp = (PPOINTS)(&lParam);
 		if(pfb && size_t(pp->x) < pfb->get_width() && size_t(pp->y) < pfb->get_height())
 		{
-			color_rgba32f c = pfb->get_render_target(render_target_color, 0)->get_texel(pp->x, pfb->get_height() - 1 - pp->y);
+			color_rgba32f c = pfb->get_render_target(render_target_color, 0)->get_texel(pp->x, pfb->get_height() - 1 - pp->y, 0);
 			TCHAR str[512];
 #ifdef EFLIB_MSVC
 			_stprintf_s(str, sizeof(str) / sizeof(str[0]), _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);

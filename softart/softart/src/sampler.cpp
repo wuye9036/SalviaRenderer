@@ -401,54 +401,54 @@ namespace surface_sampler
 	template <typename addresser_type_u, typename addresser_type_v>
 	struct point
 	{
-		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
+		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color)
 		{
 			int ix = coord_calculator::point_cc<addresser_type_u>(x, int(surf.get_width()));
 			int iy = coord_calculator::point_cc<addresser_type_v>(y, int(surf.get_height()));
 
 			if(ix < 0 || iy < 0) return border_color;
-			return surf.get_texel(ix, iy);
+			return surf.get_texel(ix, iy, sample);
 		}
 	};
 
 	template <typename addresser_type_u, typename addresser_type_v>
 	struct linear
 	{
-		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& /*border_color*/)
+		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& /*border_color*/)
 		{
 			int xpos0, ypos0, xpos1, ypos1;
 			float tx, ty;
 			coord_calculator::linear_cc<addresser_type_u>(xpos0, xpos1, tx, x, int(surf.get_width()));
 			coord_calculator::linear_cc<addresser_type_v>(ypos0, ypos1, ty, y, int(surf.get_height()));
 
-			return surf.get_texel(xpos0, ypos0, xpos1, ypos1, tx, ty);
+			return surf.get_texel(xpos0, ypos0, xpos1, ypos1, tx, ty, sample);
 		}
 	};
 
 	template <typename addresser_type_uv>
 	struct point<addresser_type_uv, addresser_type_uv>
 	{
-		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& border_color)
+		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color)
 		{
 			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0),
 				int4(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0));
 
 			if(ixy.x < 0 || ixy.y < 0) return border_color;
-			return surf.get_texel(ixy.x, ixy.y);
+			return surf.get_texel(ixy.x, ixy.y, sample);
 		}
 	};
 
 	template <typename addresser_type_uv>
 	struct linear<addresser_type_uv, addresser_type_uv>
 	{
-		static color_rgba32f op(const surface& surf, float x, float y, const color_rgba32f& /*border_color*/)
+		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& /*border_color*/)
 		{
 			int4 pos0, pos1;
 			vec4 t;
 			coord_calculator::linear_cc<addresser_type_uv>(pos0, pos1, t, vec4(x, y, 0, 0),
 				int4(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0));
 
-			return surf.get_texel(pos0.x, pos0.y, pos1.x, pos1.y, t.x, t.y);
+			return surf.get_texel(pos0.x, pos0.y, pos1.x, pos1.y, t.x, t.y, sample);
 		}
 	};
 
@@ -569,12 +569,12 @@ float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx
 
 color_rgba32f sampler::sample_surface(
 	const surface& surf,
-	float x, float y,
+	float x, float y, size_t sample, 
 	sampler_state ss) const
 {
 	return filters_[ss](
 			surf, 
-			x, y,
+			x, y, sample,
 			desc_.border_color
 			);
 }
@@ -587,7 +587,7 @@ sampler::sampler(const sampler_desc& desc)
 	filters_[sampler_state_mip] = surface_sampler::filter_table[desc_.mip_filter][desc_.addr_mode_u][desc.addr_mode_v];
 }
 
-color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coordy, float miplevel) const
+color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coordy, size_t sample, float miplevel) const
 {
 	bool is_mag = true;
 
@@ -599,14 +599,14 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 
 	//·Å´ó
 	if(is_mag){
-		return sample_surface(tex->get_surface(tex->get_max_lod()), coordx, coordy, sampler_state_mag);
+		return sample_surface(tex->get_surface(tex->get_max_lod()), coordx, coordy, sample, sampler_state_mag);
 	}
 
 	if(desc_.mip_filter == filter_point){
 		size_t ml = fast_floori(miplevel + 0.5f);
 		ml = clamp(ml, tex->get_max_lod(), tex->get_min_lod());
 
-		return sample_surface(tex->get_surface(ml), coordx, coordy, sampler_state_min);
+		return sample_surface(tex->get_surface(ml), coordx, coordy, sample, sampler_state_min);
 	}
 
 	if(desc_.mip_filter == filter_linear){
@@ -618,8 +618,8 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
 		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());
 
-		color_rgba32f c0 = sample_surface(tex->get_surface(low), coordx, coordy, sampler_state_min);
-		color_rgba32f c1 = sample_surface(tex->get_surface(up), coordx, coordy, sampler_state_min);
+		color_rgba32f c0 = sample_surface(tex->get_surface(low), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c1 = sample_surface(tex->get_surface(up), coordx, coordy, sample, sampler_state_min);
 	
 		return lerp(c0, c1, frac);
 	}
@@ -629,18 +629,18 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 }
 
 color_rgba32f sampler::sample_impl(const texture *tex , 
-								 float coordx, float coordy,
+								 float coordx, float coordy, size_t sample,
 								 const vec4& ddx, const vec4& ddy,
 								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_2d_impl(tex ,
-		vec4(coordx, coordy, 0.0f, 1.0f / inv_w),
+	return sample_2d_impl(tex,
+		vec4(coordx, coordy, 0.0f, 1.0f / inv_w), sample,
 		ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias
 		);
 }
 
 color_rgba32f sampler::sample_2d_impl(const texture *tex , 
-								 const vec4& coord,
+								 const vec4& coord, size_t sample,
 								 const vec4& ddx, const vec4& ddy,
 								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
@@ -650,13 +650,13 @@ color_rgba32f sampler::sample_2d_impl(const texture *tex ,
 		static_cast<int>(tex->get_depth(0)), 0);
 
 	float lod = calc_lod(origin_coord, size, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
-	return sample_impl(tex , coord.x, coord.y, lod);
+	return sample_impl(tex, coord.x, coord.y, sample, lod);
 }
 
 
 color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 {
-	return sample_impl(ptex_, coordx, coordy, miplevel);
+	return sample_impl(ptex_, coordx, coordy, 0, miplevel);
 }
 
 color_rgba32f sampler::sample(
@@ -664,7 +664,7 @@ color_rgba32f sampler::sample(
 					 const efl::vec4& ddx, const efl::vec4& ddy, 
 					 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_impl(ptex_, coordx, coordy, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	return sample_impl(ptex_, coordx, coordy, 0, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 }
 
 
@@ -673,7 +673,7 @@ color_rgba32f sampler::sample_2d(
 						const efl::vec4& ddx, const efl::vec4& ddy,
 						float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_2d_impl(ptex_, coord, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	return sample_2d_impl(ptex_, coord, 0, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 }
 
 
@@ -744,7 +744,7 @@ color_rgba32f sampler::sample_cube(
 		custom_assert(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
-	return sample_impl(&pcube->get_face(major_dir) , s, t, miplevel);
+	return sample_impl(&pcube->get_face(major_dir), s, t, 0, miplevel);
 }
 
 color_rgba32f sampler::sample_cube(

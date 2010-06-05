@@ -24,6 +24,7 @@ const int TILE_SIZE = 64;
 const int GEOMETRY_SETUP_PACKAGE_SIZE = 1;
 const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 1;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
+const int MAX_NUM_MULTI_SAMPLES = 4;
 
 struct scanline_info
 {
@@ -283,7 +284,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.position.y), px_out);
+				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.position.y), px_out, &px_out.depth);
 			}
 
 			//差分递增
@@ -340,7 +341,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, fast_floori(px_in.position.x), iPixel, px_out);
+				hfb_->render_pixel(hbs, fast_floori(px_in.position.x), iPixel, px_out, &px_out.depth);
 			}
 
 			//差分递增
@@ -388,6 +389,19 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 	*        将顶点按照y大小排序，求出三角形面积与边
 	**********************************************************/
 	const vs_output* pvert[3] = {&v0, &v1, &v2};
+
+	vec2 pv[3];
+	for (size_t j = 0; j < 3; ++ j){
+		pv[j] = pvert[j]->position.xy();
+	}
+	vec3 edge_factors[3];
+	for (int e = 0; e < 3; ++ e){
+		const int se = e;
+		const int ee = (e + 1) % 3;
+		edge_factors[e].x = pv[ee].y - pv[se].y;
+		edge_factors[e].y = pv[ee].x - pv[se].x;
+		edge_factors[e].z = pv[ee].y * pv[se].x - pv[ee].x * pv[se].y;
+	}
 
 	//升序排列
 	if(pvert[0]->position.y > pvert[1]->position.y){
@@ -565,7 +579,7 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 					scanline.scanline_width = icx_e - icx_s + 1;
 
 					//光栅化
-					rasterize_scanline_impl(scanline, pps);
+					rasterize_scanline_impl(scanline, pps, &edge_factors[0]);
 				}
 			}
 
@@ -577,7 +591,7 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 
 //扫描线光栅化程序，将对扫描线依据差分信息进行光栅化并将光栅化的片段传递到像素着色器中.
 //Note:传入的像素将w乘回到attribute上.
-void rasterizer::rasterize_scanline_impl(const scanline_info& sl, const h_pixel_shader& pps)
+void rasterizer::rasterize_scanline_impl(const scanline_info& sl, const h_pixel_shader& pps, const vec3* edge_factors)
 {
 
 	h_blend_shader hbs = pparent_->get_blend_shader();
@@ -587,12 +601,61 @@ void rasterizer::rasterize_scanline_impl(const scanline_info& sl, const h_pixel_
 	vs_output unprojed;
 	for(size_t i_pixel = 0; i_pixel < sl.scanline_width; ++i_pixel)
 	{
-		//if(px_in.wpos.z <= 0.0f)
-			//continue;
- 
 		unproject(unprojed, px_in);
 		if(pps->execute(unprojed, px_out)){
-			hfb_->render_pixel(hbs, sl.base_x + i_pixel, sl.base_y, px_out);
+			const size_t num_samples = hfb_->get_num_samples();
+			/*if (1 == num_samples){
+				hfb_->render_pixel(hbs, sl.base_x + i_pixel, sl.base_y, px_out, &px_out.depth);
+			}
+			else*/{
+				vec2 samples_pattern[MAX_NUM_MULTI_SAMPLES];
+				switch (num_samples){
+				case 1:
+					samples_pattern[0] = vec2(0.5f, 0.5f);
+					break;
+
+				case 2:
+					samples_pattern[0] = vec2(0.25f, 0.25f);
+					samples_pattern[1] = vec2(0.75f, 0.75f);
+					break;
+
+				case 4:
+					samples_pattern[0] = vec2(0.375f, 0.125f);
+					samples_pattern[1] = vec2(0.875f, 0.375f);
+					samples_pattern[2] = vec2(0.125f, 0.625f);
+					samples_pattern[3] = vec2(0.625f, 0.875f);
+					break;
+
+				default:
+					break;
+				}
+
+				float samples_depth[MAX_NUM_MULTI_SAMPLES];
+				for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+					const vec2& sp = samples_pattern[i_sample];
+					bool intersect = true;
+					for (int e = 0; intersect && (e < 3); ++ e){
+						if ((sl.base_x + i_pixel + sp.x) * edge_factors[e].x
+								- (sl.base_y + sp.y) * edge_factors[e].y
+								- edge_factors[e].z > 0){
+							intersect = false;
+						}
+					}
+					if (intersect){
+						float ddx = (sp.x - 0.5f) * pps->get_pos_ddx().w;
+						float ddy = (sp.y - 0.5f) * pps->get_pos_ddy().w;
+						float ddxz = ddx * pps->get_pos_ddx().z;
+						float ddyz = ddy * pps->get_pos_ddy().z;
+						samples_depth[i_sample] = (px_in.position.z * px_in.position.w + std::sqrt(ddxz * ddxz + ddyz * ddyz))
+							/ (px_in.position.w + std::sqrt(ddx * ddx + ddy * ddy));
+					}
+					else{
+						samples_depth[i_sample] = 1;
+					}
+				}
+
+				hfb_->render_pixel(hbs, sl.base_x + i_pixel, sl.base_y, px_out, samples_depth);
+			}
 		}
 
 		integral(px_in, 1.0f, sl.ddx);

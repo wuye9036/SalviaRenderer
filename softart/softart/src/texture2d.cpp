@@ -93,7 +93,7 @@ void  texture_2d::gen_mipmap(filter_type filter)
 						(void*)&c3, (const void*)(src_data + ((iPixelx * 2 + 1) + (iPixely * 2 + 1) * last_sizex) * elem_size)
 						);
 
-					color_rgba32f c = (c0.get_vec4() + c1.get_vec4() + c2.get_vec4() + c3.get_vec4()) * 0.25f;
+					color_rgba32f c((c0.get_vec4() + c1.get_vec4() + c2.get_vec4() + c3.get_vec4()) * 0.25f);
 
 					pixel_format_convertor::convert(
 						fmt_, pixel_format_color_rgba32f, 

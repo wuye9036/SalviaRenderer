@@ -30,7 +30,7 @@ BEGIN_NS_SOFTARTX_PRESENTER()
 gdiplus_initializer gdiplus_initer;
 
 
-dev_gdiplus::dev_gdiplus(HWND hwnd): hwnd_(hwnd), fb_(NULL){
+dev_gdiplus::dev_gdiplus(HWND hwnd): hwnd_(hwnd){
 }
 
 dev_gdiplus::~dev_gdiplus(){
@@ -40,59 +40,46 @@ h_dev_gdiplus dev_gdiplus::create_device(HWND hwnd){
 	return h_dev_gdiplus( new dev_gdiplus( hwnd ) );
 }
 
-void dev_gdiplus::attach_framebuffer(softart::framebuffer *pfb){
-	if (fb_ == pfb) {
-		return;
-	}
-	fb_ = pfb;
-
-	rc_ = Rect(0, 0, static_cast<UINT>(fb_->get_width()), static_cast<UINT>(fb_->get_height()));
-
+void dev_gdiplus::present(const softart::surface& surf){
 	if ( !pbmp_ || 
-		pbmp_->GetWidth() < (INT)fb_->get_width() || 
-		pbmp_->GetHeight() < (INT)fb_->get_height() )
+		pbmp_->GetWidth() < (INT)surf.get_width() || 
+		pbmp_->GetHeight() < (INT)surf.get_height() )
 	{
-		pbmp_.reset( new Bitmap( (INT)fb_->get_width(), (INT)fb_->get_height(), PixelFormat32bppRGB) );
-	}
-}
-
-void dev_gdiplus::present(){
-	if (fb_ == NULL){
-		return;
+		pbmp_.reset( new Bitmap( (INT)surf.get_width(), (INT)surf.get_height(), PixelFormat32bppRGB) );
 	}
 
 	Gdiplus::Graphics g(::GetDC(hwnd_));
 
 	//将framebuffer的surface拷贝到bitmap中
-	Rect rcFramebuffer(0, 0, (INT)fb_->get_width(), (INT)fb_->get_height());
-	softart::surface* rt = fb_->get_render_target(render_target_color, 0);
+	Rect rcFramebuffer(0, 0, (INT)surf.get_width(), (INT)surf.get_height());
 
 	void* pfbdata = NULL;
 	BitmapData bmpData;
 
-	rt->map(&pfbdata, map_read);
+	surf.map(&pfbdata, map_read);
 	pbmp_->LockBits(&rcFramebuffer, ImageLockModeWrite, PixelFormat32bppRGB, &bmpData);
 
 	void* pixels = (void*)bmpData.Scan0;
 	
-	for(size_t iheight = 0; iheight < fb_->get_height(); ++iheight)
+	for(size_t iheight = 0; iheight < surf.get_height(); ++iheight)
 	{
-		softart::pixel_format rt_pxfmt = rt->get_pixel_format();
-		byte* surface_scanline_addr = (byte*)pfbdata + iheight*get_color_info(rt_pxfmt).size*rt->get_width();
+		softart::pixel_format rt_pxfmt = surf.get_pixel_format();
+		byte* surface_scanline_addr = (byte*)pfbdata + iheight*get_color_info(rt_pxfmt).size*surf.get_width();
 		byte* bmp_scanline_addr = ((uint8_t*)pixels) + bmpData.Stride * iheight;
 
 		pixel_format_convertor::convert_array(
 			pixel_format_color_bgra8, rt_pxfmt, 
 			bmp_scanline_addr, surface_scanline_addr,
-			int(fb_->get_width())
+			int(surf.get_width())
 			);
 	}
 
-	rt->unmap();
+	surf.unmap();
 	pbmp_->UnlockBits(&bmpData);
 
 	//渲染到设备上
-	g.DrawImage(pbmp_.get(), rc_);
+	g.DrawImage(pbmp_.get(),
+		Rect(0, 0, static_cast<UINT>(surf.get_width()), static_cast<UINT>(surf.get_height())));
 }
 
 END_NS_SOFTARTX_PRESENTER()

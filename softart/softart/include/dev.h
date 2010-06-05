@@ -15,8 +15,7 @@ class device
 {
 public:
 	virtual ~device(){};
-	virtual void attach_framebuffer(framebuffer* pfb) = 0;
-	virtual void present() = 0;
+	virtual void present(const softart::surface& surf) = 0;
 };
 
 END_NS_SOFTART()
