@@ -102,7 +102,7 @@ void fill_solid_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, 
 	clipper->clip(tmp_verts, pv[0], pv[1], pv[2]);
 	custom_assert(tmp_verts.size() < 21, "");
 
-	num_clipped_prims = static_cast<uint32_t>(tmp_verts.size() - 2);
+	num_clipped_prims = (0 == tmp_verts.size()) ? 0 : static_cast<uint32_t>(tmp_verts.size() - 2);
 
 	const bool front_face = area > 0;
 	for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
