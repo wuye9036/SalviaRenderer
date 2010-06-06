@@ -206,19 +206,19 @@ vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, c
 	return out;
 }
 
-void update_wpos(vs_output& vso, const viewport& vp)
+void viewport_transform(vec4& position, const viewport& vp)
 {
-	float invw = (efl::equal<float>(vso.position.w, 0.0f)) ? 1.0f : 1.0f / vso.position.w;
-	vec4 pos = vso.position * invw;
+	float invw = (efl::equal<float>(position.w, 0.0f)) ? 1.0f : 1.0f / position.w;
+	vec4 pos = position * invw;
 
 	//viewport ±ä»»
 	float ox = (vp.x + vp.w) * 0.5f;
 	float oy = (vp.y + vp.h) * 0.5f;
 
-	vso.position.x = (float(vp.w) * 0.5f) * pos.x + ox;
-	vso.position.y = (float(vp.h) * 0.5f) * -pos.y + oy;
-	vso.position.z = (vp.maxz - vp.minz) * 0.5f * pos.z + vp.minz;
-	vso.position.w = invw;
+	position.x = (float(vp.w) * 0.5f) * pos.x + ox;
+	position.y = (float(vp.h) * 0.5f) * -pos.y + oy;
+	position.z = (vp.maxz - vp.minz) * 0.5f * pos.z + vp.minz;
+	position.w = invw;
 }
 
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2)

@@ -24,6 +24,7 @@ const int TILE_SIZE = 64;
 const int GEOMETRY_SETUP_PACKAGE_SIZE = 1;
 const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 1;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
+const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 1;
 const int MAX_NUM_MULTI_SAMPLES = 4;
 
 struct scanline_info
@@ -67,42 +68,42 @@ bool cull_mode_cw(float area)
 	return area >= 0;
 }
 
-void fill_wireframe_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
+void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
 {
-	num_clipped_prims = 0;
+	num_clipped_verts = 0;
 	std::vector<vs_output> tmp_verts;
 
 	const bool front_face = area > 0;
 
 	clipper->clip(tmp_verts, pv[0], pv[1]);
-	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
+	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
 		clipped_verts[0 * 2 + j] = tmp_verts[j];
 		clipped_verts[0 * 2 + j].front_face = front_face;
 	}
 
 	clipper->clip(tmp_verts, pv[1], pv[2]);
-	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
+	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
 		clipped_verts[1 * 2 + j] = tmp_verts[j];
 		clipped_verts[1 * 2 + j].front_face = front_face;
 	}
 						
 	clipper->clip(tmp_verts, pv[2], pv[0]);
-	num_clipped_prims += static_cast<uint32_t>(tmp_verts.size() / 2);
+	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
 		clipped_verts[2 * 2 + j] = tmp_verts[j];
 		clipped_verts[2 * 2 + j].front_face = front_face;
 	}
 }
 
-void fill_solid_clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
+void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area)
 {
 	std::vector<vs_output> tmp_verts;
 	clipper->clip(tmp_verts, pv[0], pv[1], pv[2]);
-	custom_assert(tmp_verts.size() < 21, "");
+	custom_assert(tmp_verts.size() < 15, "");
 
-	num_clipped_prims = (0 == tmp_verts.size()) ? 0 : static_cast<uint32_t>(tmp_verts.size() - 2);
+	num_clipped_verts = (0 == tmp_verts.size()) ? 0 : static_cast<uint32_t>(tmp_verts.size() - 2) * 3;
 
 	const bool front_face = area > 0;
 	for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
@@ -184,9 +185,9 @@ bool rasterizer_state::cull(float area) const
 	return cm_func_(area);
 }
 
-void rasterizer_state::clipping(uint32_t& num_clipped_prims, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area) const
+void rasterizer_state::clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, const h_clipper& clipper, const vs_output* pv, float area) const
 {
-	clipping_func_(num_clipped_prims, clipped_verts, clipper, pv, area);
+	clipping_func_(num_clipped_verts, clipped_verts, clipper, pv, area);
 }
 
 void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const
@@ -680,7 +681,7 @@ const h_rasterizer_state& rasterizer::get_state() const
 	return state_;
 }
 
-void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_prims, std::vector<vs_output>& clipped_verts, int32_t prim_count, primitive_topology primtopo,
+void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, std::vector<vs_output>& clipped_verts, int32_t prim_count, primitive_topology primtopo,
 		atomic<int32_t>& working_package, int32_t package_size){
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
@@ -723,10 +724,10 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_prims, s
 
 				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
 				if (!state_->cull(area)){
-					state_->clipping(num_clipped_prims[i], &clipped_verts[i * 21], clipper, pv, area);
+					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 15], clipper, pv, area);
 				}
 				else{
-					num_clipped_prims[i] = 0;
+					num_clipped_verts[i] = 0;
 				}
 			}
 			else if (2 == prim_size){
@@ -737,9 +738,9 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_prims, s
 
 				std::vector<vs_output> tmp_verts;
 				clipper->clip(tmp_verts, pv[0], pv[1]);
-				num_clipped_prims[i] = static_cast<uint32_t>(tmp_verts.size() / 2);
+				num_clipped_verts[i] = static_cast<uint32_t>(tmp_verts.size());
 				for (size_t j = 0; j < tmp_verts.size(); ++ j){
-					clipped_verts[i * 21 + j] = tmp_verts[j];
+					clipped_verts[i * 15 + j] = tmp_verts[j];
 				}
 			}
 		}
@@ -891,6 +892,33 @@ void rasterizer::rasterize_triangle_func(const std::vector<vs_output>& clipped_v
 	}
 }
 
+void rasterizer::compact_clipped_verts_func(std::vector<vs_output>& clipped_verts, const std::vector<vs_output>& clipped_verts_full,
+		const std::vector<uint32_t>& addresses, const std::vector<uint32_t>& num_clipped_verts, int32_t prim_count,
+		atomic<int32_t>& working_package, int32_t package_size){
+	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
+	const viewport& vp = pparent_->get_viewport();
+	
+	int32_t local_working_package = working_package ++;
+	while (local_working_package < num_packages)
+	{
+		const int32_t start = local_working_package * package_size;
+		const int32_t end = min(prim_count, start + package_size);
+		for (int32_t i = start; i < end; ++ i)
+		{
+			const uint32_t addr = addresses[i];
+			for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
+				const vs_output& vert = clipped_verts_full[i * 15 + j];
+				clipped_verts[addr + j] = vert;
+				vec4 p = vert.position;
+				viewport_transform(p, vp);
+				clipped_verts[addr + j].position = p;
+			}
+		}
+
+		local_working_package = working_package ++;
+	}
+}
+
 void rasterizer::draw(size_t prim_count){
 
 	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
@@ -924,24 +952,33 @@ void rasterizer::draw(size_t prim_count){
 	size_t num_threads = num_available_threads();
 
 	// Culling, Clipping, Geometry setup
-	std::vector<uint32_t> num_clipped_prims(prim_count);
-	std::vector<vs_output> clipped_verts_full(prim_count * 21);
+	std::vector<uint32_t> num_clipped_verts(prim_count);
+	std::vector<vs_output> clipped_verts_full(prim_count * 15);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
-		global_thread_pool().schedule(boost::bind(&rasterizer::geometry_setup_func, this, boost::ref(num_clipped_prims),
+		global_thread_pool().schedule(boost::bind(&rasterizer::geometry_setup_func, this, boost::ref(num_clipped_verts),
 			boost::ref(clipped_verts_full), static_cast<int32_t>(prim_count), primtopo,
 			working_package, GEOMETRY_SETUP_PACKAGE_SIZE));
 	}
-	geometry_setup_func(boost::ref(num_clipped_prims), boost::ref(clipped_verts_full), static_cast<int32_t>(prim_count),
+	geometry_setup_func(boost::ref(num_clipped_verts), boost::ref(clipped_verts_full), static_cast<int32_t>(prim_count),
 		primtopo, working_package, GEOMETRY_SETUP_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
-	std::vector<vs_output> clipped_verts;
-	for (size_t i = 0; i < prim_count; ++ i){
-		for (uint32_t j = 0; j < num_clipped_prims[i] * prim_size; ++ j){
-			update_wpos(clipped_verts_full[i * 21 + j], vp);
-			clipped_verts.push_back(clipped_verts_full[i * 21 + j]);
-		}
+	std::vector<uint32_t> addresses(prim_count);
+	addresses[0] = 0;
+	for (size_t i = 1; i < prim_count; ++ i){
+		addresses[i] = addresses[i - 1] + num_clipped_verts[i - 1];
 	}
+
+	std::vector<vs_output> clipped_verts(addresses.back() + num_clipped_verts.back());
+	working_package = 0;
+	for (size_t i = 0; i < num_threads - 1; ++ i){
+		global_thread_pool().schedule(boost::bind(&rasterizer::compact_clipped_verts_func, this, boost::ref(clipped_verts),
+			boost::ref(clipped_verts_full), boost::ref(addresses),
+			boost::ref(num_clipped_verts), prim_count, working_package, COMPACT_CLIPPED_VERTS_PACKAGE_SIZE));
+	}
+	compact_clipped_verts_func(boost::ref(clipped_verts), boost::ref(clipped_verts_full), boost::ref(addresses),
+			boost::ref(num_clipped_verts), static_cast<int32_t>(prim_count), working_package, COMPACT_CLIPPED_VERTS_PACKAGE_SIZE);
+	global_thread_pool().wait();
 
 	working_package = 0;
 	for (size_t i = 0; i < num_threads - 1; ++ i){

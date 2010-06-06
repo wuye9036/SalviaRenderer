@@ -82,6 +82,8 @@ class rasterizer : public render_stage
 		const std::vector<vs_output>& clipped_verts, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size);
 	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, const std::vector<vs_output>& clipped_verts,
 		const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size);
+	void compact_clipped_verts_func(std::vector<vs_output>& clipped_verts, const std::vector<vs_output>& clipped_verts_full, const std::vector<uint32_t>& addresses,
+		const std::vector<uint32_t>& num_clipped_prims, int32_t prim_count, atomic<int32_t>& working_package, int32_t package_size);
 
 	boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 

@@ -64,8 +64,6 @@ class vs_output
 	friend vs_output& integral(vs_output& inout, float step, const vs_output& derivation);
 	friend vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
 
-	friend void update_wpos(vs_output& vso, const viewport& vp);
-
 	friend float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
 
 public:
@@ -91,7 +89,7 @@ public:
 
 public:
 	vs_output()
-		:position(0, 0, 0, 0), front_face(true), num_used_attribute(0)
+		: num_used_attribute(0)
 	{}
 	vs_output(
 		const efl::vec4& position, 
@@ -108,10 +106,8 @@ public:
 		:position(rhs.position), front_face(rhs.front_face),
 			num_used_attribute(rhs.num_used_attribute)
 	{
-		for (uint32_t i = 0; i < num_used_attribute; ++ i){
-			attributes[i] = rhs.attributes[i];
-			attribute_modifiers[i] = rhs.attribute_modifiers[i];
-		}
+		memcpy(&attributes[0], &rhs.attributes[0], num_used_attribute * sizeof(attributes[0]));
+		memcpy(&attribute_modifiers[0], &rhs.attribute_modifiers[0], num_used_attribute * sizeof(attribute_modifiers[0]));
 	}
 
 	vs_output& operator = (const vs_output& rhs){
@@ -119,10 +115,8 @@ public:
 		position = rhs.position;
 		front_face = rhs.front_face;
 		num_used_attribute = rhs.num_used_attribute;
-		for (uint32_t i = 0; i < num_used_attribute; ++ i){
-			attributes[i] = rhs.attributes[i];
-			attribute_modifiers[i] = rhs.attribute_modifiers[i];
-		}
+		memcpy(&attributes[0], &rhs.attributes[0], num_used_attribute * sizeof(attributes[0]));
+		memcpy(&attribute_modifiers[0], &rhs.attribute_modifiers[0], num_used_attribute * sizeof(attribute_modifiers[0]));
 		return *this;
 	}
 
@@ -132,6 +126,8 @@ public:
 	vs_output& operator*=(float f);
 	vs_output& operator/=(float f);
 };
+
+void viewport_transform(efl::vec4& position, const viewport& vp);
 
 //vs_output compute_derivate
 struct ps_output
