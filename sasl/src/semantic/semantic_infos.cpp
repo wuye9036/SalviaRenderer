@@ -1,4 +1,4 @@
-#include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/enums/literal_constant_types.h>
@@ -58,10 +58,10 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 }
 ////////////////////////////////
 
-const_value_symbol_info::const_value_symbol_info()
-	: const_value_symbol_info::base_type( "value symbol info" ), valtype( buildin_type_code::none ){}
+const_value_semantic_info::const_value_semantic_info()
+	: const_value_semantic_info::base_type( "value symbol info" ), valtype( buildin_type_code::none ){}
 
-void const_value_symbol_info::constant_value_literal(
+void const_value_semantic_info::constant_value_literal(
 	const std::string& litstr,
 	literal_constant_types lctype)
 {
@@ -94,54 +94,41 @@ void const_value_symbol_info::constant_value_literal(
 	}
 }
 
-buildin_type_code const_value_symbol_info::value_type() const{
+buildin_type_code const_value_semantic_info::value_type() const{
 	return valtype;
 }
-void const_value_symbol_info::value_type( buildin_type_code vtype ){
+void const_value_semantic_info::value_type( buildin_type_code vtype ){
 	valtype = vtype;
 }
 
-type_symbol_info::type_symbol_info(): base_type( "ref symbol info" ), ttype(type_types::none) { }
+type_semantic_info::type_semantic_info(): base_type( "ref symbol info" ), ttype(type_types::none) { }
 
-boost::shared_ptr<type_specifier> type_symbol_info::full_type() const{
+boost::shared_ptr<type_specifier> type_semantic_info::full_type() const{
 	boost::shared_ptr<type_specifier> ret_type = type_node.lock();
 	return (ttype == type_types::alias) ? actual_type( ret_type ) : ret_type;
 }
 
-void type_symbol_info::full_type( boost::shared_ptr<type_specifier> ftnode ){
+void type_semantic_info::full_type( boost::shared_ptr<type_specifier> ftnode ){
 	type_node = ftnode;
 }
-type_types type_symbol_info::type_type() const{
+type_types type_semantic_info::type_type() const{
 	return ttype;
 }
 
-void type_symbol_info::type_type( type_types ttype ){
+void type_semantic_info::type_type( type_types ttype ){
 	this->ttype = ttype;
 }
 
-variable_symbol_info::variable_symbol_info()
+variable_semantic_info::variable_semantic_info()
 	: isloc(false), base_type( "variable symbol info" )
 {
 }
-bool variable_symbol_info::is_local() const{
+bool variable_semantic_info::is_local() const{
 	return isloc;
 }
 
-void variable_symbol_info::is_local( bool isloc ){
+void variable_semantic_info::is_local( bool isloc ){
 	this->isloc = isloc;
 }
 
-// function symbol info
-function_symbol_info::function_symbol_info()
-: base_type( "function symbol info" )
-{
-}
-
-std::string function_symbol_info::mangled_name() const{
-	return mang_name;
-}
-
-void function_symbol_info::mangled_name( const std::string& mname ){
-	mang_name = mname;
-}
 END_NS_SASL_SEMANTIC();

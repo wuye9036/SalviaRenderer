@@ -20,7 +20,7 @@ array_class_typecode = 'A' type_code size '@@'
 *********************/
 
 #include <sasl/include/semantic/name_mangler.h>
-#include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/type_checker.h>

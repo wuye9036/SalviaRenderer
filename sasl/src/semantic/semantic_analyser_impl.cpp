@@ -2,7 +2,7 @@
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/semantic_error.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol_scope.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -33,8 +33,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::constant_expression& v 
 	using ::sasl::syntax_tree::constant_expression;
 
 	// add value symbol info to current node.
-	boost::shared_ptr<const_value_symbol_info> vsyminfo = get_or_create_symbol_info<const_value_symbol_info>(cursym->node());
-	vsyminfo->constant_value_literal( v.value_tok->lit, v.ctype );
+	boost::shared_ptr<const_value_semantic_info> vseminfo = get_or_create_semantic_info<const_value_semantic_info>(cursym->node());
+	vseminfo->constant_value_literal( v.value_tok->lit, v.ctype );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::identifier& v ){}
@@ -54,19 +54,19 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 	// process variable type
 	boost::shared_ptr<type_specifier> vartype = v.type_info;
 	vartype->accept( this );
-	boost::shared_ptr<type_symbol_info> typesyminfo = extract_symbol_info<type_symbol_info>(v);
+	boost::shared_ptr<type_semantic_info> typeseminfo = extract_semantic_info<type_semantic_info>(v);
 	
 	// check type.
-	if ( typesyminfo->type_type() == type_types::buildin ){
+	if ( typeseminfo->type_type() == type_types::buildin ){
 		// TODO: ALLOCATE BUILD-IN TYPED VAR.
-	} else if ( typesyminfo->type_type() == type_types::composited ){
+	} else if ( typeseminfo->type_type() == type_types::composited ){
 		// TODO: ALLOCATE COMPOSITED TYPED VAR.
-	} else if ( typesyminfo->type_type() == type_types::alias ){
-		if ( typesyminfo->full_type() ){
+	} else if ( typeseminfo->type_type() == type_types::alias ){
+		if ( typeseminfo->full_type() ){
 			// TODO: ALLOCATE ACTUAL
 		} else {
 			infomgr->add_info( semantic_error::create( compiler_informations::uses_a_undef_type,
-				v.handle(), list_of( typesyminfo->full_type() ) )
+				v.handle(), list_of( typeseminfo->full_type() ) )
 				);
 			// remove created symbol
 			cursym->remove_from_tree();
@@ -102,11 +102,11 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 		symbol_scope sc( v.ident->lit, v.handle(), cursym );
 
 		v.type_info->accept(this);
-		boost::shared_ptr<type_symbol_info> new_tsi = extract_symbol_info<type_symbol_info>(v);
+		boost::shared_ptr<type_semantic_info> new_tsi = extract_semantic_info<type_semantic_info>(v);
 
 		// if this symbol is usable, process type node.
 		if ( existed_sym ){
-			boost::shared_ptr<type_symbol_info> existed_tsi = existed_sym->symbol_info<type_symbol_info>();
+			boost::shared_ptr<type_semantic_info> existed_tsi = extract_semantic_info<type_semantic_info>( existed_sym->node() );
 			if ( !is_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
 				// if new symbol is different from the old, semantic error.
 				// The final effect is that the new definition overwrites the old one.
@@ -126,13 +126,13 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_specifier& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
-	using ::sasl::semantic::get_or_create_symbol_info;
+	using ::sasl::semantic::get_or_create_semantic_info;
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	boost::shared_ptr<type_symbol_info> tsyminfo = get_or_create_symbol_info<type_symbol_info>( cursym->node() );
-	tsyminfo->type_type( type_types::buildin );
-	tsyminfo->full_type( boost::shared_polymorphic_cast<type_specifier>(v.handle()) );
+	boost::shared_ptr<type_semantic_info> tseminfo = get_or_create_semantic_info<type_semantic_info>( cursym->node() );
+	tseminfo->type_type( type_types::buildin );
+	tseminfo->full_type( boost::shared_polymorphic_cast<type_specifier>(v.handle()) );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_identifier& v ){}
@@ -143,6 +143,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	using ::sasl::semantic::symbol;
 	using ::sasl::syntax_tree::function_type;
+	using ::sasl::semantic::get_or_create_semantic_info;
+	using ::sasl::semantic::extract_semantic_info;
 
 	// if it is only declaration.
 	std::string symbol_name;
@@ -166,10 +168,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 			// TODO: SEMANTIC ERROR: TYPE REDEFINITION.
 		} else {
 			// symbol was used, and the older is a function.
-			boost::shared_ptr<function_symbol_info> existed_syminfo = 
-				existed_sym->symbol_info<function_symbol_info>();
-
-			if ( existed_syminfo->mangled_name() == mangled_name ){
+			existed_node = cursym->find_mangled_this(mangled_name)->node()->typed_handle<function_type>();
+			if ( existed_node ){
 				if ( !is_equal( existed_node, v.typed_handle<function_type>() ) ){
 					// TODO: BUG ON OVERLOAD SUPPORTING
 					// TODO: SEMANTIC ERROR ON OVERLOAD UNSUPPORTED.
@@ -195,13 +195,11 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	}
 
 	boost::scoped_ptr<symbol_scope> sc(
-		use_existed_node ? new symbol_scope(mangled_name, cursym) : new symbol_scope( mangled_name, v.handle(), cursym )
+		use_existed_node ? new symbol_scope(mangled_name, cursym) : new symbol_scope( mangled_name, unmangled_name, v.handle(), cursym )
 		);
 
 	v.symbol( cursym );
 	if ( !use_existed_node ){
-		// set mangled name.
-		cursym->get_or_create_symbol_info<function_symbol_info>()->mangled_name( mangled_name );
 		// replace old node via new node.
 		cursym->relink( v.handle() );
 		
@@ -222,7 +220,10 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 }
 
 // statement
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::statement& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::statement& v ){
+
+}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration_statement& v ){
 	v.decl->accept(this);
 }

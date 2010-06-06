@@ -1,4 +1,3 @@
-#include <sasl/include/semantic/symbol_info.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <algorithm>
@@ -130,22 +129,6 @@ void symbol::remove_from_tree(){
 
 boost::shared_ptr<symbol> symbol::parent() const{
 	return this_parent.lock();
-}
-
-boost::shared_ptr<class symbol_info> symbol::symbol_info( const std::string& clsname ) const{
-	for ( symbol_infos_t::const_iterator it = syminfos.begin(); it != syminfos.end(); ++it ){
-		if ( (*it)->class_name() == clsname ){
-			return *it;
-		}
-	}
-	return boost::shared_ptr<class symbol_info>();
-}
-
-void symbol::symbol_info( boost::shared_ptr<class symbol_info> syminfo ){
-	if ( symbol_info(syminfo->class_name()) ){
-		return;
-	}
-	syminfos.push_back( syminfo );
 }
 
 boost::shared_ptr<node> symbol::node() const

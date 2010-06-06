@@ -2,7 +2,7 @@
 #include "test_utility.h"
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	using ::sasl::syntax_tree::expression_initializer;
 	using ::sasl::semantic::semantic_analysis;
 	using ::sasl::common::token_attr;
-	using ::sasl::semantic::extract_symbol_info;
-	using ::sasl::semantic::const_value_symbol_info;
+	using ::sasl::semantic::extract_semantic_info;
+	using ::sasl::semantic::const_value_semantic_info;
 	using ::sasl::common::compiler_info_manager;
 
 	std::string prog_name("test");
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	semantic_analysis( prog, cim );
 
 	// check
-	boost::shared_ptr<const_value_symbol_info> cvsi = extract_symbol_info<const_value_symbol_info>(decl);
+	boost::shared_ptr<const_value_semantic_info> cvsi = extract_semantic_info<const_value_semantic_info>(decl);
 	double val = cvsi->value<double>();
 
 	BOOST_CHECK_EQUAL( (double)1.0f, val );
@@ -93,11 +93,11 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	using ::sasl::syntax_tree::buildin_type;
 	using ::sasl::syntax_tree::type_specifier;
 	using ::sasl::common::token_attr;
-	using ::sasl::semantic::type_symbol_info;
+	using ::sasl::semantic::type_semantic_info;
 	using ::sasl::semantic::semantic_analysis;
 	using ::sasl::syntax_tree::declaration;
 	using ::sasl::syntax_tree::declaration_statement;
-	using ::sasl::semantic::extract_symbol_info;
+	using ::sasl::semantic::extract_semantic_info;
 	using ::sasl::semantic::symbol;
 	using ::sasl::common::compiler_info_manager;
 
@@ -139,8 +139,8 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	boost::shared_ptr<symbol> var0sym = prog->symbol()->find_mangled_this( var_name_0 );
 	boost::shared_ptr<symbol> var1sym = prog->symbol()->find_mangled_this( var_name_1 );
 
-	boost::shared_ptr<type_symbol_info> var0tsi = var0sym->symbol_info<type_symbol_info>();
-	boost::shared_ptr<type_symbol_info> var1tsi = var1sym->symbol_info<type_symbol_info>();
+	boost::shared_ptr<type_semantic_info> var0tsi = extract_semantic_info<type_semantic_info>( var0sym->node() );
+	boost::shared_ptr<type_semantic_info> var1tsi = extract_semantic_info<type_semantic_info>( var1sym->node() );
 	
 	BOOST_CHECK( var0tsi->type_type() == type_types::buildin );
 	BOOST_CHECK( var0tsi->full_type()->value_typecode == buildin_type_code::_sint32 );

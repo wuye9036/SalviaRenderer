@@ -82,7 +82,6 @@ private:
 		const std::string& name
 		);
 
-	typedef std::vector< boost::shared_ptr<class symbol_info> > symbol_infos_t;
 	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;
 	typedef std::tr1::unordered_map< std::string, ::std::vector< const ::std::string > > mangling_table_t;
 	typedef children_t::iterator children_iterator_t;
@@ -94,7 +93,7 @@ private:
 	children_t children;
 	mangling_table_t mangles;
 	::std::vector< const ::std::string > null_mt;
-	symbol_infos_t syminfos;
+
 	// mangled name.
 	std::string symname;
 	

@@ -1,6 +1,6 @@
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <cassert>
@@ -20,7 +20,7 @@ boost::shared_ptr<type_specifier> actual_type( boost::shared_ptr<type_specifier>
 	if ( orgtype->node_class() == syntax_node_types::buildin_type ){
 		return orgtype;
 	}
-	return extract_symbol_info<type_symbol_info>(orgtype)->full_type();
+	return extract_semantic_info<type_semantic_info>(orgtype)->full_type();
 }
 
 bool is_equal( boost::shared_ptr<buildin_type> type0, boost::shared_ptr<buildin_type> type1 ){

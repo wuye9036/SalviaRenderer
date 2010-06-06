@@ -1,8 +1,8 @@
 #include <sasl/include/code_generator/llvm/llvm_generator.h>
 #include <sasl/include/code_generator/llvm/cgllvm_context.h>
-#include <sasl/include/semantic/symbol_infos.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/code_generator/llvm/llvm_symbol_info.h>
+#include <sasl/include/code_generator/llvm/llvm_semantic_info.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
@@ -32,10 +32,10 @@ void llvm_code_generator::visit( binary_expression& v ){
 	//boost::shared_ptr<symbol> lsym = v.left_expr->symbol();
 	//boost::shared_ptr<symbol> rsym = v.right_expr->symbol();
 
-	//boost::shared_ptr<type_specifier> ltype = lsym->symbol_info<value_type_symbol_info>()->value_type();
-	//boost::shared_ptr<type_specifier> rtype = rsym->symbol_info<value_type_symbol_info>()->value_type();
+	//boost::shared_ptr<type_specifier> ltype = lsym->semantic_info<value_type_semantic_info>()->value_type();
+	//boost::shared_ptr<type_specifier> rtype = rsym->semantic_info<value_type_semantic_info>()->value_type();
 
-	//boost::shared_ptr<class symbol_info> ret_syminfo = v.symbol()->get_or_create_symbol_info<class symbol_info>();
+	//boost::shared_ptr<class semantic_info> ret_syminfo = v.symbol()->get_or_create_semantic_info<class semantic_info>();
 
 	//// generate code
 	//if (v.op == operators::add){
@@ -43,8 +43,8 @@ void llvm_code_generator::visit( binary_expression& v ){
 	//		ltype->type_id_of_value == buildin_type_code::_sint32
 	//	){
 	//		llvm::Value* ret_val = cg_ctxt.builder->CreateAdd( 
-	//			lsym->symbol_info<class symbol_info>()->llvm_value,
-	//			rsym->symbol_info<class symbol_info>()->llvm_value,
+	//			lsym->semantic_info<class semantic_info>()->llvm_value,
+	//			rsym->semantic_info<class semantic_info>()->llvm_value,
 	//			generate_temporary_name()
 	//			);
 	//		ret_syminfo->llvm_value = ret_val;
@@ -60,9 +60,9 @@ void llvm_code_generator::visit( call_expression& v ){}
 void llvm_code_generator::visit( member_expression& v ){}
 
 void llvm_code_generator::visit( constant_expression& v ){
-	//using sasl::semantic_analyser::value_symbol_info;
-	//boost::shared_ptr<value_symbol_info> val_syminfo
-	//	= get_or_create_symbol_info<value_symbol_info>(v);
+	//using sasl::semantic_analyser::value_semantic_info;
+	//boost::shared_ptr<value_semantic_info> val_syminfo
+	//	= get_or_create_semantic_info<value_semantic_info>(v);
 	//Value* ret_v = NULL;
 
 	//if ( v.value->valtype == literal_constant_types::real ){
@@ -84,7 +84,7 @@ void llvm_code_generator::visit( constant_expression& v ){
 	//	}
 	//}
 
-	//boost::shared_ptr< class symbol_info > syminfo = get_or_create_symbol_info<class symbol_info>(v);
+	//boost::shared_ptr< class semantic_info > syminfo = get_or_create_semantic_info<class semantic_info>(v);
 	//syminfo->llvm_value = ret_v;
 }
 
@@ -98,14 +98,14 @@ void llvm_code_generator::visit( expression_initializer& v ){}
 void llvm_code_generator::visit( member_initializer& v ){}
 void llvm_code_generator::visit( declaration& v ){}
 void llvm_code_generator::visit( variable_declaration& v ){
-	using ::sasl::semantic::extract_symbol_info;
-	using ::sasl::semantic::variable_symbol_info;
-	using ::sasl::semantic::get_or_create_symbol_info;
+	using ::sasl::semantic::extract_semantic_info;
+	using ::sasl::semantic::variable_semantic_info;
+	using ::sasl::semantic::get_or_create_semantic_info;
 
 	v.type_info->accept( this );
-	boost::shared_ptr<variable_symbol_info> vsyminfo = extract_symbol_info<variable_symbol_info>(v);
-	boost::shared_ptr<llvm_symbol_info> lsyminfo = get_or_create_symbol_info<llvm_symbol_info>(v);
-	boost::shared_ptr<llvm_symbol_info> ltsyminfo = extract_symbol_info<llvm_symbol_info>(v.type_info);
+	boost::shared_ptr<variable_semantic_info> vsyminfo = extract_semantic_info<variable_semantic_info>(v);
+	boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v);
+	boost::shared_ptr<llvm_semantic_info> ltsyminfo = extract_semantic_info<llvm_semantic_info>(v.type_info);
 	
 	//TODO: GET VALUE OF INITIALIZER
 
@@ -124,7 +124,7 @@ void llvm_code_generator::visit( type_definition& v ){}
 void llvm_code_generator::visit( type_specifier& v ){
 }
 void llvm_code_generator::visit( buildin_type& v ){
-	using ::sasl::semantic::get_or_create_symbol_info;
+	using ::sasl::semantic::get_or_create_semantic_info;
 
 	const llvm::Type* ltype = NULL;
 	
@@ -133,7 +133,7 @@ void llvm_code_generator::visit( buildin_type& v ){
 	}
 	// TODO: other buildin types.
 
-	boost::shared_ptr<llvm_symbol_info> lsyminfo = get_or_create_symbol_info<llvm_symbol_info>(v.handle());
+	boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v.handle());
 	lsyminfo->llvm_type = ltype;
 }
 void llvm_code_generator::visit( type_identifier& v ){}
@@ -147,13 +147,13 @@ void llvm_code_generator::visit( parameter& v ){
 void llvm_code_generator::visit( function_type& v ){
 	//// get return type
 	//v.retval_type->accept( this );
-	//llvm::Type* ret_type = extract_symbol_info<class symbol_info>(v.retval_type)->llvm_type;
+	//llvm::Type* ret_type = extract_semantic_info<class semantic_info>(v.retval_type)->llvm_type;
 
 	//// get paramenter type
 	//std::vector<const llvm::Type* > param_types;
 	//for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
 	//	(*it)->accept( this );
-	//	param_types.push_back( extract_symbol_info<class symbol_info>(*it)->llvm_type );
+	//	param_types.push_back( extract_semantic_info<class semantic_info>(*it)->llvm_type );
 	//}
 
 	//// create function info
@@ -164,7 +164,7 @@ void llvm_code_generator::visit( function_type& v ){
 	//size_t arg_idx = 0;
 	//for( Function::arg_iterator arg_it = func->arg_begin(); arg_it != func->arg_end(); ++arg_it, ++arg_idx){
 	//	arg_it->setName( v.params[arg_idx]->ident->lit );
-	//	get_or_create_symbol_info<class symbol_info>( v.params[arg_idx] )->llvm_value = arg_it;
+	//	get_or_create_semantic_info<class semantic_info>( v.params[arg_idx] )->llvm_value = arg_it;
 	//}
 
 	//// generate function code

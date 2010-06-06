@@ -1,8 +1,8 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_LLVM_SYMBOL_INFO_H
-#define SASL_CODE_GENERATOR_LLVM_LLVM_SYMBOL_INFO_H
+#ifndef SASL_CODE_GENERATOR_LLVM_LLVM_SEMANTIC_INFO_H
+#define SASL_CODE_GENERATOR_LLVM_LLVM_SEMANTIC_INFO_H
 
 #include <sasl/include/code_generator/forward.h>
-#include <sasl/include/semantic/symbol_info.h>
+#include <sasl/include/semantic/semantic_info.h>
 
 namespace llvm{
 	class Value;
@@ -13,10 +13,10 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class llvm_symbol_info: public sasl::semantic::symbol_info{
+class llvm_semantic_info: public sasl::semantic::semantic_info{
 public:
-	typedef sasl::semantic::symbol_info base_type;
-	llvm_symbol_info();
+	typedef sasl::semantic::semantic_info base_type;
+	llvm_semantic_info();
 
 	llvm::Value* llvm_value;
 	llvm::Function* llvm_function;

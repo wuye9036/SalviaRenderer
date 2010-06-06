@@ -1,18 +1,20 @@
-#ifndef SASL_SEMANTIC_ANALYSER_SYMBOL_INFOS_H
-#define SASL_SEMANTIC_ANALYSER_SYMBOL_INFOS_H
+#ifndef SASL_SEMANTIC_ANALYSER_SEMANTIC_INFOS_H
+#define SASL_SEMANTIC_ANALYSER_SEMANTIC_INFOS_H
 
 #include <sasl/include/semantic/semantic_forward.h>
-#include <sasl/include/semantic/symbol_info.h>
+#include <sasl/include/semantic/semantic_info.h>
 #include <sasl/enums/type_types.h>
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/enums/buildin_type_code.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
 #include <boost/weak_ptr.hpp>
+#include <vector>
 
 namespace sasl {
 	namespace syntax_tree{
 		struct type_specifier;
+		struct statement;
 		struct node;
 	}
 }
@@ -21,11 +23,12 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::node;
+using ::sasl::syntax_tree::statement;
 
-class const_value_symbol_info: public symbol_info{
+class const_value_semantic_info: public semantic_info{
 public:
-	typedef symbol_info base_type;
-	const_value_symbol_info();
+	typedef semantic_info base_type;
+	const_value_semantic_info();
 
 	void constant_value_literal( const std::string& litstr, literal_constant_types lctype);
 
@@ -51,10 +54,10 @@ private:
 	definition             yes			 first decl			 first decl			 full type
 	type ref/alias		   yes			 first decl          first decl			 full type
 */
-class type_symbol_info: public symbol_info{
+class type_semantic_info: public semantic_info{
 public:
-	friend class symbol;
-	typedef symbol_info base_type;
+	friend class semantic_info_collection;
+	typedef semantic_info base_type;
 
 	type_types type_type() const;
 	void type_type( type_types ttype );
@@ -65,7 +68,7 @@ public:
 
 	void full_type( boost::shared_ptr<type_specifier> ftnode );
 private:
-	type_symbol_info();
+	type_semantic_info();
 
 	// ttype has 4-state: none, alias, buildin, composited.
 	// none:
@@ -81,29 +84,36 @@ private:
 	boost::weak_ptr<type_specifier> type_node;
 };
 
-class variable_symbol_info: public symbol_info{
+class variable_semantic_info: public semantic_info{
 public:
-	friend class symbol;
-	typedef symbol_info base_type;
+	friend class semantic_info_collection;
+	typedef semantic_info base_type;
 
 	bool is_local() const;
 	void is_local( bool isloc );
 private:
-	variable_symbol_info();
+	variable_semantic_info();
 	bool isloc;
 };
 
-class function_symbol_info: public symbol_info{
-public:
-	friend class symbol;
-	typedef symbol_info base_type;
-
-	std::string mangled_name() const;
-	void mangled_name( const std::string& mname );
-private:
-	function_symbol_info();
-	std::string mang_name;
-};
+//class statement_block_semantic_info{
+//public:
+//	boost::shared_ptr<statement> statement( size_t id ) const;
+//	void append( boost::shared_ptr<struct statement> stmt );
+//private:
+//	std::vector< boost::weak_ptr<struct statement> > stmts;
+//};
+//
+//class statement_semantic_info{
+//public:
+//	void id( size_t stmt_id );
+//	size_t id();
+//
+//	boost::shared_ptr<statement> statement() const;
+//private:
+//	size_t stmt_id; // tag of statement, for jumping.
+//	boost::weak_ptr< statement_block_semantic_info > root;
+//};
 
 END_NS_SASL_SEMANTIC();
 

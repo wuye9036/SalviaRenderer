@@ -29,6 +29,13 @@ public:
 		boost::shared_ptr<symbol>& sym
 		);
 	
+	symbol_scope(
+		const ::std::string& mangled_child_name,
+		const ::std::string& unmangled_child_name,
+		boost::shared_ptr<node> child_node,
+		boost::shared_ptr<symbol>& sym
+		);
+
 	~symbol_scope();
 
 private:

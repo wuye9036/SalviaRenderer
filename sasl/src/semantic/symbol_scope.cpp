@@ -18,6 +18,15 @@ symbol_scope::symbol_scope(
 	sym = sym->add_child( child_name, child_node );
 }
 
+symbol_scope::symbol_scope(
+		const ::std::string& mangled_child_name,
+		const ::std::string& unmangled_child_name,
+		boost::shared_ptr<node> child_node,
+		boost::shared_ptr<symbol>& sym
+		): cursym(sym){
+	sym = sym->add_mangled_child( unmangled_child_name, mangled_child_name, child_node );
+}
+
 symbol_scope::~symbol_scope(){
 	cursym = cursym->parent();
 }
