@@ -101,7 +101,7 @@ void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, 
 {
 	std::vector<vs_output> tmp_verts;
 	clipper->clip(tmp_verts, vp, pv[0], pv[1], pv[2]);
-	custom_assert(tmp_verts.size() < 15, "");
+	custom_assert(tmp_verts.size() < 12, "");
 
 	num_clipped_verts = (0 == tmp_verts.size()) ? 0 : static_cast<uint32_t>(tmp_verts.size() - 2) * 3;
 
@@ -215,7 +215,7 @@ void rasterizer::initialize(renderer_impl* pparent)
  *			2 wpos的x y z分量已经除以了clip w
  *			3 positon.w为1.0f / clip w
  **************************************************/
-void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
+void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
 	vs_output diff = project(v1) - project(v0);
 	const efl::vec4& dir = diff.position;
@@ -365,7 +365,7 @@ void rasterizer::rasterize_line(const vs_output& v0, const vs_output& v1, const 
 *			2 wpos的x y z分量已经除以了clip w
 *			3 positon.w为1.0f / clip w
 **************************************************/
-void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
+void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
 
 	//{
@@ -390,19 +390,6 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 	*        将顶点按照y大小排序，求出三角形面积与边
 	**********************************************************/
 	const vs_output* pvert[3] = {&v0, &v1, &v2};
-
-	vec2 pv[3];
-	for (size_t j = 0; j < 3; ++ j){
-		pv[j] = pvert[j]->position.xy();
-	}
-	vec3 edge_factors[3];
-	for (int e = 0; e < 3; ++ e){
-		const int se = e;
-		const int ee = (e + 1) % 3;
-		edge_factors[e].x = pv[ee].y - pv[se].y;
-		edge_factors[e].y = pv[ee].x - pv[se].x;
-		edge_factors[e].z = pv[ee].y * pv[se].x - pv[ee].x * pv[se].y;
-	}
 
 	//升序排列
 	if(pvert[0]->position.y > pvert[1]->position.y){
@@ -580,7 +567,7 @@ void rasterizer::rasterize_triangle(const vs_output& v0, const vs_output& v1, co
 					scanline.scanline_width = icx_e - icx_s + 1;
 
 					//光栅化
-					rasterize_scanline_impl(scanline, pps, &edge_factors[0]);
+					rasterize_scanline_impl(scanline, pps, &edge_factors_[prim_id * 3]);
 				}
 			}
 
@@ -725,7 +712,7 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, s
 
 				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
 				if (!state_->cull(area)){
-					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 15], clipper, vp, pv, area);
+					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 12], clipper, vp, pv, area);
 				}
 				else{
 					num_clipped_verts[i] = 0;
@@ -741,7 +728,7 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, s
 				clipper->clip(tmp_verts, vp, pv[0], pv[1]);
 				num_clipped_verts[i] = static_cast<uint32_t>(tmp_verts.size());
 				for (size_t j = 0; j < tmp_verts.size(); ++ j){
-					clipped_verts[i * 15 + j] = tmp_verts[j];
+					clipped_verts[i * 12 + j] = tmp_verts[j];
 				}
 			}
 		}
@@ -793,7 +780,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 			else{
 				if (3 == stride){
 					// x * (y1 - y0) - y * (x1 - x0) - (y1 * x0 - x1 * y0)
-					vec3 edge_factors[3];
+					vec3* edge_factors = &edge_factors_[i * 3];
 					for (int e = 0; e < 3; ++ e){
 						const int se = e;
 						const int ee = (e + 1) % 3;
@@ -882,14 +869,14 @@ void rasterizer::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >
 void rasterizer::rasterize_line_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter;
-		this->rasterize_line(clipped_verts[iprim * 2 + 0], clipped_verts[iprim * 2 + 1], tile_vp, pps);
+		this->rasterize_line(iprim, clipped_verts[iprim * 2 + 0], clipped_verts[iprim * 2 + 1], tile_vp, pps);
 	}
 }
 
 void rasterizer::rasterize_triangle_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter;
-		this->rasterize_triangle(clipped_verts[iprim * 3 + 0], clipped_verts[iprim * 3 + 1], clipped_verts[iprim * 3 + 2], tile_vp, pps);
+		this->rasterize_triangle(iprim, clipped_verts[iprim * 3 + 0], clipped_verts[iprim * 3 + 1], clipped_verts[iprim * 3 + 2], tile_vp, pps);
 	}
 }
 
@@ -907,7 +894,7 @@ void rasterizer::compact_clipped_verts_func(std::vector<vs_output>& clipped_vert
 		{
 			const uint32_t addr = addresses[i];
 			for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
-				clipped_verts[addr + j] = clipped_verts_full[i * 15 + j];
+				clipped_verts[addr + j] = clipped_verts_full[i * 12 + j];
 			}
 		}
 
@@ -949,7 +936,7 @@ void rasterizer::draw(size_t prim_count){
 
 	// Culling, Clipping, Geometry setup
 	std::vector<uint32_t> num_clipped_verts(prim_count);
-	std::vector<vs_output> clipped_verts_full(prim_count * 15);
+	std::vector<vs_output> clipped_verts_full(prim_count * 12);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&rasterizer::geometry_setup_func, this, boost::ref(num_clipped_verts),
 			boost::ref(clipped_verts_full), static_cast<int32_t>(prim_count), primtopo,
@@ -977,6 +964,7 @@ void rasterizer::draw(size_t prim_count){
 	global_thread_pool().wait();
 
 	working_package = 0;
+	edge_factors_.resize(clipped_verts.size() / prim_size * 3);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&rasterizer::dispatch_primitive_func, this, boost::ref(tiles),
 			num_tiles_x, num_tiles_y, boost::ref(clipped_verts), static_cast<int32_t>(clipped_verts.size() / prim_size),

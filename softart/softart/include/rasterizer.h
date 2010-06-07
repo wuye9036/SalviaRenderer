@@ -73,6 +73,8 @@ class rasterizer : public render_stage
 
 	h_framebuffer hfb_;
 
+	std::vector<efl::vec3> edge_factors_;
+
 	//线光栅化。光栅化后的点将直接传到PS中处理。
 	void rasterize_scanline_impl(const scanline_info& sl, const h_pixel_shader& pps, const efl::vec3* edge_factors);
 
@@ -100,8 +102,8 @@ public:
 	const h_rasterizer_state& get_state() const;
 
 	//drawer
-	void rasterize_line(const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps);
-	void rasterize_triangle(const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps);
+	void rasterize_line(uint32_t prim_id, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps);
+	void rasterize_triangle(uint32_t prim_id, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps);
 
 	void rasterize_line_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
 	void rasterize_triangle_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
