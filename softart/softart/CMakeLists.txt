@@ -12,12 +12,12 @@ set (HEADER_FILES
 	include/colors_convertors.h
 	include/cpuinfo.h
 	include/decl.h
-	include/dev.h
 	include/enums.h
 	include/framebuffer.h
 	include/handles.h
 	include/index_fetcher.h
 	include/lockfree_queue.h
+	include/presenter_dev.h
 	include/rasterizer.h
 	include/render_stage.h
 	include/renderer.h

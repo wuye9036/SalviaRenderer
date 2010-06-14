@@ -26,7 +26,7 @@ Modify Log:
 #ifndef SOFTARTX_DEV_GDIPLUS_H
 #define SOFTARTX_DEV_GDIPLUS_H
 
-#include "softartx/include/presenter/sa/dev.h"
+#include "softart/include/presenter_dev.h"
 #include "softartx/include/utility/inc_gdiplus.h"
 #include "softart/include/framebuffer.h"
 #include "eflib/include/platform.h"
@@ -34,6 +34,9 @@ Modify Log:
 #include <boost/smart_ptr.hpp>
 #include <algorithm>
 #include <stdio.h>
+
+#define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SOFTARTX_PRESENTER() }}
 
 BEGIN_NS_SOFTARTX_PRESENTER()
 

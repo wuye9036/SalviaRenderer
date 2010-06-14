@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #ifndef SOFTARTX_DEV_D3D9_H
 #define SOFTARTX_DEV_D3D9_H
 
-#include "softartx/include/presenter/sa/dev.h"
+#include "softart/include/presenter_dev.h"
 #include "softartx/include/utility/d3d9_utilities.h"
 #include "eflib/include/math.h"
 #include "eflib/include/platform.h"
@@ -27,6 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
+
+#define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SOFTARTX_PRESENTER() }}
 
 BEGIN_NS_SOFTARTX_PRESENTER()
 

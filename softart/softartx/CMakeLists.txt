@@ -21,7 +21,6 @@ set (HEADER_FILES
 	include/utility/inc_windows.h
 	include/utility/user_config.h
 	include/utility/utility_forward.h
-	include/presenter/sa/dev.h
 )
 
 set (SOURCE_FILES

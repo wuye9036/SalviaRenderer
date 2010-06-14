@@ -27,7 +27,6 @@ Modify Log:
 #ifndef SOFTARTX_TEX_IO_GDIPLUS_H
 #define SOFTARTX_TEX_IO_GDIPLUS_H
 
-#include "softartx/include/presenter/sa/dev.h"
 #include "softartx/include/utility/inc_gdiplus.h"
 #include "softartx/include/resource/texture/sa/tex_io.h"
 #include "softart/include/surface.h"

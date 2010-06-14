@@ -7,6 +7,7 @@
 #include "softartx/include/resource/mesh/sa/mesh_io.h"
 #include "softartx/include/resource/texture/gdiplus/tex_io_gdiplus.h"
 #include "softartx/include/resource/texture/freeimage/tex_io_freeimage.h"
+#include "softart/include/presenter_dev.h"
 #include "softart/include/shader.h"
 #include "softart/include/renderer_impl.h"
 #include "softart/include/resource_manager.h"
