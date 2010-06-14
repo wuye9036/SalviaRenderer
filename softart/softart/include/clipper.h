@@ -10,8 +10,7 @@
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 
-const size_t plane_num = 10;
-const size_t default_plane_num = 6;
+const size_t plane_num = 6;
 
 class clipper
 {
@@ -21,7 +20,6 @@ class clipper
 public:
 	clipper();
 
-	void set_clip_plane(const efl::vec4& plane, size_t idx);
 	void set_clip_plane_enable(bool enable, size_t idx);
 
 	void clip(std::vector<vs_output> &out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1) const;

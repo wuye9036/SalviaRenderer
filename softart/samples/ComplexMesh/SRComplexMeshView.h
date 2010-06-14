@@ -190,35 +190,48 @@ h_mesh LoadModel(softart::h_renderer hsr, std::string const & mesh_name)
 
 class vs_mesh : public vertex_shader
 {
-	mat44 wvp;
+	mat44 wv;
+	mat44 proj;
 public:
-	vs_mesh():wvp(mat44::identity()){
-		register_var(_T("WorldViewProjMat"), wvp);
+	vs_mesh():wv(mat44::identity()), proj(mat44::identity()){
+		register_var(_T("WorldViewMat"), wv);
+		register_var(_T("ProjMat"), proj);
 	}
 
-	vs_mesh(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in[0];
-		transform(out.position, pos, wvp);
-		out.attributes[0] = in[1];
+		vec4 pos_es, normal_es;
+		transform(pos_es, pos, wv);
+		transform33(normal_es, in[1], wv);
+		transform(out.position, pos_es, proj);
+		out.attributes[0] = pos_es;
+		out.attributes[1] = normal_es;
 		out.attribute_modifiers[0] = softart::vs_output::am_linear;
-		out.num_used_attribute = 1;
+		out.attribute_modifiers[1] = softart::vs_output::am_linear;
+		out.num_used_attribute = 2;
 	}
 };
 
 class ps_mesh : public pixel_shader
 {
-	vec3 light_dir;
+	vec3 light_pos;
+	vec3 eye_pos;
 public:
 	ps_mesh()
 	{
-		register_var(_T("LightDir"), light_dir);
+		register_var(_T("LightPos"), light_pos);
+		register_var(_T("EyePos"), eye_pos);
 	}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		float l = dot_prod3(-light_dir, in.attributes[0].xyz()) / std::sqrt(light_dir.length_sqr() * in.attributes[0].length_sqr()) * 1.5f;
-		out.color[0] = vec4(l, l, l, 1);
+		vec3 l = normalize3(light_pos - in.attributes[0].xyz());
+		vec3 e = normalize3(eye_pos - in.attributes[0].xyz());
+		vec3 n = normalize3(in.attributes[1].xyz());
+		float diff = dot_prod3(l, n);
+		float spec = pow(max(dot_prod3(normalize3(l + e), n), 0.0f), 20.0f);
+		float clr = diff * 0.8f + spec * 0.6f;
+		out.color[0] = vec4(clr, clr, clr, 1);
 		return true;
 	}
 	virtual h_pixel_shader create_clone()
@@ -380,20 +393,23 @@ public:
 		//s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
 		vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
 
-		mat44 world(mat44::identity()), view, proj, wvp;
+		mat44 world(mat44::identity()), view, proj, wv;
 		
-		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		vec3 eye(0.0f, 0.0f, 0.0f);
+		mat_lookat(view, camera, eye, vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_identity(world);
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
+			mat_mul(wv, world, view);
 
 			hsr->set_rasterizer_state(rs_back);
-			pvs_mesh->set_constant(_T("WorldViewProjMat"), &wvp);
-			vec3 light_dir(vec3(-1, -2, -1));
-			pps_mesh->set_constant(_T("LightDir"), &light_dir);
+			pvs_mesh->set_constant(_T("WorldViewMat"), &wv);
+			pvs_mesh->set_constant(_T("ProjMat"), &proj);
+			vec3 light_pos(vec3(-4, 2, 0));
+			pps_mesh->set_constant(_T("LightPos"), &light_pos);
+			pps_mesh->set_constant(_T("EyePos"), &eye);
 
 			hsr->set_vertex_shader(pvs_mesh);
 			hsr->set_pixel_shader(pps_mesh);

@@ -76,25 +76,25 @@ void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_ver
 	const bool front_face = area > 0;
 
 	clipper->clip(tmp_verts, vp, pv[0], pv[1]);
-	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
-		clipped_verts[0 * 2 + j] = tmp_verts[j];
-		clipped_verts[0 * 2 + j].front_face = front_face;
+		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
+		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
+	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 
 	clipper->clip(tmp_verts, vp, pv[1], pv[2]);
-	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
-		clipped_verts[1 * 2 + j] = tmp_verts[j];
-		clipped_verts[1 * 2 + j].front_face = front_face;
+		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
+		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
+	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 						
 	clipper->clip(tmp_verts, vp, pv[2], pv[0]);
-	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 	for (size_t j = 0; j < tmp_verts.size(); ++ j){
-		clipped_verts[2 * 2 + j] = tmp_verts[j];
-		clipped_verts[2 * 2 + j].front_face = front_face;
+		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
+		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
+	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
 }
 
 void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, const h_clipper& clipper, const viewport& vp, const vs_output* pv, float area)
@@ -592,16 +592,12 @@ void rasterizer::rasterize_scanline_impl(const scanline_info& sl, const h_pixel_
 		unproject(unprojed, px_in);
 		if(pps->execute(unprojed, px_out)){
 			const size_t num_samples = hfb_->get_num_samples();
-			/*if (1 == num_samples){
+			if (1 == num_samples){
 				hfb_->render_pixel(hbs, sl.base_x + i_pixel, sl.base_y, px_out, &px_out.depth);
 			}
-			else*/{
+			else{
 				vec2 samples_pattern[MAX_NUM_MULTI_SAMPLES];
 				switch (num_samples){
-				case 1:
-					samples_pattern[0] = vec2(0.5f, 0.5f);
-					break;
-
 				case 2:
 					samples_pattern[0] = vec2(0.25f, 0.25f);
 					samples_pattern[1] = vec2(0.75f, 0.75f);
