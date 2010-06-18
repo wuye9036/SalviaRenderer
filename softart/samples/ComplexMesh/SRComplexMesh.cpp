@@ -19,7 +19,7 @@ using namespace boost;
 
 #ifdef EFLIB_MSVC
 #pragma warning(push)
-#pragma warning(disable: 6001 6011 6202 6225 6255 6309 6386 6387)
+#pragma warning(disable: 4996 6001 6011 6202 6225 6255 6309 6386 6387)
 #endif
 #include <atlbase.h>
 #include <atlapp.h>
