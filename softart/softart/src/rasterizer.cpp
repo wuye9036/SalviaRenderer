@@ -68,69 +68,75 @@ bool cull_mode_cw(float area)
 	return area >= 0;
 }
 
-void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, const h_clipper& clipper, const viewport& vp, const vs_output* pv, float area)
+void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area)
 {
 	num_clipped_verts = 0;
-	std::vector<vs_output> tmp_verts;
+	vs_output tmp_verts[6];
+	uint32_t num_out_clipped_verts;
 
 	const bool front_face = area > 0;
 
-	clipper->clip(tmp_verts, vp, pv[0], pv[1]);
-	for (size_t j = 0; j < tmp_verts.size(); ++ j){
+	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[0], *pv[1]);
+	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
+		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
 		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
 		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
-	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
+	num_clipped_verts += num_out_clipped_verts;
 
-	clipper->clip(tmp_verts, vp, pv[1], pv[2]);
-	for (size_t j = 0; j < tmp_verts.size(); ++ j){
+	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[1], *pv[2]);
+	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
+		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
 		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
 		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
-	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
+	num_clipped_verts += num_out_clipped_verts;
 						
-	clipper->clip(tmp_verts, vp, pv[2], pv[0]);
-	for (size_t j = 0; j < tmp_verts.size(); ++ j){
+	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[2], *pv[0]);
+	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
+		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
 		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
 		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
-	num_clipped_verts += static_cast<uint32_t>(tmp_verts.size());
+	num_clipped_verts += num_out_clipped_verts;
 }
 
-void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, const h_clipper& clipper, const viewport& vp, const vs_output* pv, float area)
+void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area)
 {
-	std::vector<vs_output> tmp_verts;
-	clipper->clip(tmp_verts, vp, pv[0], pv[1], pv[2]);
-	custom_assert(tmp_verts.size() < 12, "");
+	vs_output tmp_verts[6];
+	uint32_t num_out_clipped_verts;
+	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[0], *pv[1], *pv[2]);
+	custom_assert(num_out_clipped_verts <= 6, "");
 
-	num_clipped_verts = (0 == tmp_verts.size()) ? 0 : static_cast<uint32_t>(tmp_verts.size() - 2) * 3;
+	num_clipped_verts = (0 == num_out_clipped_verts) ? 0 : (num_out_clipped_verts - 2) * 3;
 
 	const bool front_face = area > 0;
-	for(int i_tri = 1; i_tri < static_cast<int>(tmp_verts.size()) - 1; ++ i_tri){
-		clipped_verts[(i_tri - 1) * 3 + 0] = tmp_verts[0];
-		clipped_verts[(i_tri - 1) * 3 + 0].front_face = front_face;
+
+	for (uint32_t i = 0; i < num_out_clipped_verts; ++ i){
+		clipped_verts[i] = tmp_verts[i];
+		clipped_verts[i].front_face = front_face;
+	}
+
+	for(int i_tri = 1; i_tri < static_cast<int>(num_out_clipped_verts) - 1; ++ i_tri){
+		clipped_indices[(i_tri - 1) * 3 + 0] = base_vertex + 0;
 		if (front_face){
-			clipped_verts[(i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 0];
-			clipped_verts[(i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 1];
-			clipped_verts[(i_tri - 1) * 3 + 1].front_face = front_face;
-			clipped_verts[(i_tri - 1) * 3 + 2].front_face = front_face;
+			clipped_indices[(i_tri - 1) * 3 + 1] = base_vertex + i_tri + 0;
+			clipped_indices[(i_tri - 1) * 3 + 2] = base_vertex + i_tri + 1;
 		}
 		else{
-			clipped_verts[(i_tri - 1) * 3 + 1] = tmp_verts[i_tri + 1];
-			clipped_verts[(i_tri - 1) * 3 + 2] = tmp_verts[i_tri + 0];
-			clipped_verts[(i_tri - 1) * 3 + 1].front_face = front_face;
-			clipped_verts[(i_tri - 1) * 3 + 2].front_face = front_face;
+			clipped_indices[(i_tri - 1) * 3 + 1] = base_vertex + i_tri + 1;
+			clipped_indices[(i_tri - 1) * 3 + 2] = base_vertex + i_tri + 0;
 		}
 	}
 }
 
-void fill_wireframe_triangle_rasterize_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
+void fill_wireframe_triangle_rasterize_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<uint32_t>&, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
 {
 	prim_size = 2;
 	rasterize_func = boost::mem_fn(&rasterizer::rasterize_line_func);
 }
 
-void fill_solid_triangle_rasterize_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
+void fill_solid_triangle_rasterize_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<uint32_t>&, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func)
 {
 	prim_size = 3;
 	rasterize_func = boost::mem_fn(&rasterizer::rasterize_triangle_func);
@@ -185,12 +191,12 @@ bool rasterizer_state::cull(float area) const
 	return cm_func_(area);
 }
 
-void rasterizer_state::clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, const h_clipper& clipper, const viewport& vp, const vs_output* pv, float area) const
+void rasterizer_state::clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area) const
 {
-	clipping_func_(num_clipped_verts, clipped_verts, clipper, vp, pv, area);
+	clipping_func_(num_clipped_verts, clipped_verts, clipped_indices, base_vertex, clipper, vp, pv, area);
 }
 
-void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const
+void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const std::vector<uint32_t>&, const std::vector<vs_output>&, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const
 {
 	triangle_rast_func_(prim_size, rasterize_func);
 }
@@ -664,8 +670,8 @@ const h_rasterizer_state& rasterizer::get_state() const
 	return state_;
 }
 
-void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, std::vector<vs_output>& clipped_verts, int32_t prim_count, primitive_topology primtopo,
-		atomic<int32_t>& working_package, int32_t package_size){
+void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, std::vector<vs_output>& clipped_verts, std::vector<uint32_t>& cliped_indices,
+		int32_t prim_count, primitive_topology primtopo, atomic<int32_t>& working_package, int32_t package_size){
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 
@@ -695,11 +701,11 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, s
 		const int32_t end = min(prim_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i){
 			if (3 == prim_size){
-				vs_output pv[3];
+				const vs_output* pv[3];
 				vec2 pv_2d[3];
 				for (size_t j = 0; j < 3; ++ j){
 					const vs_output& v = dvc->fetch(i * 3 + j);
-					pv[j] = v;
+					pv[j] = &v;
 					const float abs_w = abs(v.position.w);
 					const float x = v.position.x / abs_w;
 					const float y = v.position.y / abs_w;
@@ -708,7 +714,7 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, s
 
 				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
 				if (!state_->cull(area)){
-					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 12], clipper, vp, pv, area);
+					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area);
 				}
 				else{
 					num_clipped_verts[i] = 0;
@@ -720,11 +726,13 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, s
 					pv[j] = dvc->fetch(i * prim_size + j);
 				}
 
-				std::vector<vs_output> tmp_verts;
-				clipper->clip(tmp_verts, vp, pv[0], pv[1]);
-				num_clipped_verts[i] = static_cast<uint32_t>(tmp_verts.size());
-				for (size_t j = 0; j < tmp_verts.size(); ++ j){
-					clipped_verts[i * 12 + j] = tmp_verts[j];
+				vs_output tmp_verts[6];
+				uint32_t num_out_clipped_verts;
+				clipper->clip(tmp_verts, num_out_clipped_verts, vp, pv[0], pv[1]);
+				num_clipped_verts[i] = num_out_clipped_verts;
+				for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
+					clipped_verts[i * 6 + j] = tmp_verts[j];
+					cliped_indices[i * 12 + j] = static_cast<uint32_t>(i * 6 + j);
 				}
 			}
 		}
@@ -733,8 +741,12 @@ void rasterizer::geometry_setup_func(std::vector<uint32_t>& num_clipped_verts, s
 	}
 }
 
-void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, int num_tiles_y,
-		const std::vector<vs_output>& clipped_verts, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size){
+void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles,
+		const std::vector<uint32_t>& clipped_indices, const std::vector<vs_output>& clipped_verts_full, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size){
+
+	const viewport& vp = pparent_->get_viewport();
+	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
+	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 	
@@ -751,7 +763,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 		{
 			vec2 pv[3];
 			for (size_t j = 0; j < stride; ++ j){
-				pv[j] = clipped_verts[i * stride + j].position.xy();
+				pv[j] = clipped_verts_full[clipped_indices[i * stride + j]].position.xy();
 			}
 
 			x_min = pv[0].x;
@@ -826,7 +838,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 }
 
 void rasterizer::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x,
-		const std::vector<vs_output>& clipped_verts, const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size)
+		const std::vector<uint32_t>& clipped_indices, const std::vector<vs_output>& clipped_verts_full, const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size)
 {
 	const int32_t num_tiles = static_cast<int32_t>(tiles.size());
 	const int32_t num_packages = (num_tiles + package_size - 1) / package_size;
@@ -855,28 +867,28 @@ void rasterizer::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >
 			tile_vp.x = static_cast<float>(x * TILE_SIZE);
 			tile_vp.y = static_cast<float>(y * TILE_SIZE);
 
-			rasterize_func_(this, clipped_verts, sorted_prims, tile_vp, pps);
+			rasterize_func_(this, clipped_indices, clipped_verts_full, sorted_prims, tile_vp, pps);
 		}
 
 		local_working_package = working_package ++;
 	}
 }
 
-void rasterizer::rasterize_line_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
+void rasterizer::rasterize_line_func(const std::vector<uint32_t>& clipped_indices, const std::vector<vs_output>& clipped_verts_full, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter;
-		this->rasterize_line(iprim, clipped_verts[iprim * 2 + 0], clipped_verts[iprim * 2 + 1], tile_vp, pps);
+		this->rasterize_line(iprim, clipped_verts_full[clipped_indices[iprim * 2 + 0]], clipped_verts_full[clipped_indices[iprim * 2 + 1]], tile_vp, pps);
 	}
 }
 
-void rasterizer::rasterize_triangle_func(const std::vector<vs_output>& clipped_verts, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
+void rasterizer::rasterize_triangle_func(const std::vector<uint32_t>& clipped_indices, const std::vector<vs_output>& clipped_verts_full, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter;
-		this->rasterize_triangle(iprim, clipped_verts[iprim * 3 + 0], clipped_verts[iprim * 3 + 1], clipped_verts[iprim * 3 + 2], tile_vp, pps);
+		this->rasterize_triangle(iprim, clipped_verts_full[clipped_indices[iprim * 3 + 0]], clipped_verts_full[clipped_indices[iprim * 3 + 1]], clipped_verts_full[clipped_indices[iprim * 3 + 2]], tile_vp, pps);
 	}
 }
 
-void rasterizer::compact_clipped_verts_func(std::vector<vs_output>& clipped_verts, const std::vector<vs_output>& clipped_verts_full,
+void rasterizer::compact_clipped_verts_func(std::vector<uint32_t>& clipped_indicess, const std::vector<uint32_t>& clipped_indices_full,
 		const std::vector<uint32_t>& addresses, const std::vector<uint32_t>& num_clipped_verts, int32_t prim_count,
 		atomic<int32_t>& working_package, int32_t package_size){
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
@@ -890,7 +902,7 @@ void rasterizer::compact_clipped_verts_func(std::vector<vs_output>& clipped_vert
 		{
 			const uint32_t addr = addresses[i];
 			for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
-				clipped_verts[addr + j] = clipped_verts_full[i * 12 + j];
+				clipped_indicess[addr + j] = clipped_indices_full[i * 12 + j];
 			}
 		}
 
@@ -932,14 +944,15 @@ void rasterizer::draw(size_t prim_count){
 
 	// Culling, Clipping, Geometry setup
 	std::vector<uint32_t> num_clipped_verts(prim_count);
-	std::vector<vs_output> clipped_verts_full(prim_count * 12);
+	std::vector<vs_output> clipped_verts_full(prim_count * 6);
+	std::vector<uint32_t> clipped_indices_full(prim_count * 12);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&rasterizer::geometry_setup_func, this, boost::ref(num_clipped_verts),
-			boost::ref(clipped_verts_full), static_cast<int32_t>(prim_count), primtopo,
+			boost::ref(clipped_verts_full), boost::ref(clipped_indices_full), static_cast<int32_t>(prim_count), primtopo,
 			working_package, GEOMETRY_SETUP_PACKAGE_SIZE));
 	}
-	geometry_setup_func(boost::ref(num_clipped_verts), boost::ref(clipped_verts_full), static_cast<int32_t>(prim_count),
-		primtopo, working_package, GEOMETRY_SETUP_PACKAGE_SIZE);
+	geometry_setup_func(boost::ref(num_clipped_verts), boost::ref(clipped_verts_full), boost::ref(clipped_indices_full),
+		static_cast<int32_t>(prim_count), primtopo, working_package, GEOMETRY_SETUP_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
 	std::vector<uint32_t> addresses(prim_count);
@@ -948,26 +961,26 @@ void rasterizer::draw(size_t prim_count){
 		addresses[i] = addresses[i - 1] + num_clipped_verts[i - 1];
 	}
 
-	std::vector<vs_output> clipped_verts(addresses.back() + num_clipped_verts.back());
+	std::vector<uint32_t> clipped_indices(addresses.back() + num_clipped_verts.back());
 	working_package = 0;
 	for (size_t i = 0; i < num_threads - 1; ++ i){
-		global_thread_pool().schedule(boost::bind(&rasterizer::compact_clipped_verts_func, this, boost::ref(clipped_verts),
-			boost::ref(clipped_verts_full), boost::ref(addresses),
+		global_thread_pool().schedule(boost::bind(&rasterizer::compact_clipped_verts_func, this, boost::ref(clipped_indices),
+			boost::ref(clipped_indices_full), boost::ref(addresses),
 			boost::ref(num_clipped_verts), prim_count, working_package, COMPACT_CLIPPED_VERTS_PACKAGE_SIZE));
 	}
-	compact_clipped_verts_func(boost::ref(clipped_verts), boost::ref(clipped_verts_full), boost::ref(addresses),
+	compact_clipped_verts_func(boost::ref(clipped_indices), boost::ref(clipped_indices_full), boost::ref(addresses),
 			boost::ref(num_clipped_verts), static_cast<int32_t>(prim_count), working_package, COMPACT_CLIPPED_VERTS_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
 	working_package = 0;
-	edge_factors_.resize(clipped_verts.size() / prim_size * 3);
+	edge_factors_.resize(clipped_indices.size() / prim_size * 3);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&rasterizer::dispatch_primitive_func, this, boost::ref(tiles),
-			num_tiles_x, num_tiles_y, boost::ref(clipped_verts), static_cast<int32_t>(clipped_verts.size() / prim_size),
+			boost::ref(clipped_indices), boost::ref(clipped_verts_full), static_cast<int32_t>(clipped_indices.size() / prim_size),
 			prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
 	}
-	dispatch_primitive_func(boost::ref(tiles), num_tiles_x, num_tiles_y,
-		boost::ref(clipped_verts), static_cast<int32_t>(clipped_verts.size() / prim_size),
+	dispatch_primitive_func(boost::ref(tiles),
+		boost::ref(clipped_indices), boost::ref(clipped_verts_full), static_cast<int32_t>(clipped_indices.size() / prim_size),
 		prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
@@ -978,9 +991,9 @@ void rasterizer::draw(size_t prim_count){
 		// create pixel_shader clone per thread from hps
 		ppps[i] = hps->create_clone();
 		global_thread_pool().schedule(boost::bind(&rasterizer::rasterize_primitive_func, this, boost::ref(tiles),
-			num_tiles_x, boost::ref(clipped_verts), ppps[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
+			num_tiles_x, boost::ref(clipped_indices), boost::ref(clipped_verts_full), ppps[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
 	}
-	rasterize_primitive_func(boost::ref(tiles), num_tiles_x, boost::ref(clipped_verts), hps, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
+	rasterize_primitive_func(boost::ref(tiles), num_tiles_x, boost::ref(clipped_indices), boost::ref(clipped_verts_full), hps, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 	// destroy all pixel_shader clone
 	for (size_t i = 0; i < num_threads - 1; ++ i){
