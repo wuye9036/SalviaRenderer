@@ -75,9 +75,6 @@ class rasterizer : public render_stage
 
 	std::vector<efl::vec3> edge_factors_;
 
-	//线光栅化。光栅化后的点将直接传到PS中处理。
-	void rasterize_scanline_impl(const scanline_info& sl, const h_pixel_shader& pps, const efl::vec3* edge_factors);
-
 	void geometry_setup_func(std::vector<uint32_t>& num_clipped_prims, std::vector<vs_output>& clipped_verts, std::vector<uint32_t>& cliped_indices,
 		int32_t prim_count, primitive_topology primtopo, atomic<int32_t>& working_package, int32_t package_size);
 	void dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles,
