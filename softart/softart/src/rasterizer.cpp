@@ -26,27 +26,6 @@ const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 1;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 1;
 
-struct scanline_info
-{
-	size_t scanline_width;
-
-	vs_output base_vert;
-	size_t base_x;
-
-	scanline_info()
-	{}
-
-	scanline_info(const scanline_info& rhs)
-		:base_vert(rhs.base_vert), scanline_width(scanline_width),
-		base_x(rhs.base_x)
-	{}
-
-	scanline_info& operator = (const scanline_info& rhs){
-		base_vert = rhs.base_vert;
-		base_x = rhs.base_x;
-	}
-};
-
 bool cull_mode_none(float /*area*/)
 {
 	return false;
@@ -397,6 +376,18 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		(edge_factors[2].y > 0) * 2 + (edge_factors[2].x <= 0)
 	};
 
+#ifndef EFLIB_NO_SIMD
+	__m128 mefx[3] = { _mm_set_ps1(edge_factors[0].x), _mm_set_ps1(edge_factors[1].x), _mm_set_ps1(edge_factors[2].x) };
+	__m128 mefy[3] = { _mm_set_ps1(edge_factors[0].y), _mm_set_ps1(edge_factors[1].y), _mm_set_ps1(edge_factors[2].y) };
+	__m128 mefz[3] = { _mm_set_ps1(edge_factors[0].z), _mm_set_ps1(edge_factors[1].z), _mm_set_ps1(edge_factors[2].z) };
+
+	__m128 mfbw = _mm_set1_ps(static_cast<float>(hfb_->get_width()));
+	__m128 mfbh = _mm_set1_ps(static_cast<float>(hfb_->get_height()));
+
+	__m128 mvppos_x = _mm_set1_ps(vp.x);
+	__m128 mvppos_y = _mm_set1_ps(vp.y);
+#endif
+
 	//升序排列
 	if(pvert[0]->position.y > pvert[1]->position.y){
 		swap(pvert[1], pvert[0]);
@@ -436,12 +427,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	info.set(pvert[0]->position, ddx, ddy);
 	pps->ptriangleinfo_ = &info;
 
-	/*************************************
-	*   设置基本的scanline属性。
-	*   这些属性将在多个扫描行中保持相同
-	************************************/
-	scanline_info scanline;
-
 	/*************************************************
 	*   开始绘制多边形。经典的上-下分割绘制算法
 	*   对扫描线光栅化保证是自左向右的。
@@ -451,14 +436,58 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	enum TRI_VS_TILE {
 		TVT_ALL,
 		TVT_PART,
-		TVT_NONE
+		TVT_NONE,
+		TVT_PIXEL
 	};
+
+	TRI_VS_TILE intersect = TVT_ALL;
+	{
+		const int vpleft = fast_floori(max(0.0f, vp.x));
+		const int vptop = fast_floori(max(0.0f, vp.y));
+		const int vpright = fast_floori(min(vp.x + vp.w, static_cast<float>(hfb_->get_width())));
+		const int vpbottom = fast_floori(min(vp.y + vp.h, static_cast<float>(hfb_->get_height())));
+
+		const int2 corners[] = {
+			int2(vpleft, vptop),
+			int2(vpright, vptop),
+			int2(vpleft, vpbottom),
+			int2(vpright, vpbottom)
+		};
+
+		// Trival rejection
+		for (int e = 0; e < 3; ++ e){
+			int min_c = min_corner[e];
+			if (corners[min_c].x * edge_factors[e].x
+					- corners[min_c].y * edge_factors[e].y
+					- edge_factors[e].z > 0){
+				intersect = TVT_NONE;
+				break;
+			}
+		}
+
+		// Trival acception
+		if (intersect != TVT_NONE){
+			for (int e = 0; e < 3; ++ e){
+				int min_c = 3 - min_corner[e];
+				if (corners[min_c].x * edge_factors[e].x
+						- corners[min_c].y * edge_factors[e].y
+						- edge_factors[e].z > 0){
+					intersect = TVT_PART;
+					break;
+				}
+			}
+		}
+	}
+
+	if (TVT_NONE == intersect){
+		return;
+	}
 
 	const h_blend_shader& hbs = pparent_->get_blend_shader();
 	const size_t num_samples = hfb_->get_num_samples();
 
-	std::vector<efl::rect<uint8_t> > test_regions[2];
-	test_regions[0].push_back(efl::rect<uint8_t>(0, 0, static_cast<uint8_t>(vp.w), static_cast<uint8_t>(vp.h)));
+	std::vector<std::pair<efl::rect<uint8_t>, bool> > test_regions[2];
+	test_regions[0].push_back(std::make_pair(efl::rect<uint8_t>(0, 0, static_cast<uint8_t>(vp.w), static_cast<uint8_t>(vp.h)), TVT_ALL == intersect));
 	int src_stage = 0;
 	int dst_stage = !src_stage;
 
@@ -466,49 +495,17 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		test_regions[dst_stage].clear();
 
 		for (size_t ivp = 0; ivp < test_regions[src_stage].size(); ++ ivp){
-			const efl::rect<uint8_t>& cur_region = test_regions[src_stage][ivp];
+			const efl::rect<uint8_t>& cur_region = test_regions[src_stage][ivp].first;
+			TRI_VS_TILE intersect = test_regions[src_stage][ivp].second ? TVT_ALL : TVT_PART;
 
 			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
 			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));
 			const int vpright = fast_floori(min(vp.x + cur_region.x + cur_region.w, static_cast<float>(hfb_->get_width())));
 			const int vpbottom = fast_floori(min(vp.y + cur_region.y + cur_region.h, static_cast<float>(hfb_->get_height())));
 
-			const int2 corners[] = {
-				int2(vpleft, vptop),
-				int2(vpright, vptop),
-				int2(vpleft, vpbottom),
-				int2(vpright, vpbottom)
-			};
-
-			TRI_VS_TILE intersect = TVT_ALL;
-			
-			// Trival rejection
-			for (int e = 0; e < 3; ++ e){
-				int min_c = min_corner[e];
-				if (min_c != (ivp & 3)){
-					if (corners[min_c].x * edge_factors[e].x
-							- corners[min_c].y * edge_factors[e].y
-							- edge_factors[e].z > 0){
-						intersect = TVT_NONE;
-						break;
-					}
-				}
-			}
-			// Trival acception
-			if (intersect != TVT_NONE){
-				for (int e = 0; e < 3; ++ e){
-					int min_c = 3 - min_corner[e];
-					if (corners[min_c].x * edge_factors[e].x
-							- corners[min_c].y * edge_factors[e].y
-							- edge_factors[e].z > 0){
-						intersect = TVT_PART;
-						break;
-					}
-				}
-			}
 			// For one pixel region
-			if ((TVT_PART == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1)){
-				intersect = TVT_ALL;
+			if ((TVT_PART == intersect) && (cur_region.w <= 2) && (cur_region.h <= 2)){
+				intersect = TVT_PIXEL;
 			}
 
 			switch (intersect)
@@ -522,25 +519,58 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					const float offsety = vptop + 0.5f - pvert[0]->position.y;
 
 					//设置基准扫描线的属性
-					scanline.base_vert = projed_vert0;
-					integral(scanline.base_vert, offsety, ddy);
-					integral(scanline.base_vert, offsetx, ddx);
-
-					//当前的基准扫描线，起点在(base_vert.x, scanline.y)处。
-					//在传递到rasterize_scanline之前需要将基础点调整到扫描线的最左端。
-					scanline.base_x = vpleft;
-					scanline.scanline_width = vpright - vpleft;
+					vs_output base_vert = projed_vert0;
+					integral(base_vert, offsety, ddy);
+					integral(base_vert, offsetx, ddx);
 
 					for(int iy = vptop; iy < vpbottom; ++iy)
-					{	
+					{
 						//光栅化
-						vs_output px_in(scanline.base_vert);
+						vs_output px_in(base_vert);
 						ps_output px_out;
 						vs_output unprojed;
-						for(size_t i_pixel = 0; i_pixel < scanline.scanline_width; ++i_pixel)
+						for(size_t ix = vpleft; ix < vpright; ++ix)
 						{
-							const size_t ix = scanline.base_x + i_pixel;
+							unproject(unprojed, px_in);
+							if(pps->execute(unprojed, px_out)){
+								float samples_depth[MAX_NUM_MULTI_SAMPLES];
+								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+									const vec2& sp = samples_pattern_[i_sample];
+									const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+									const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+									samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
+								}
 
+								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth);
+							}
+
+							integral(px_in, 1.0f, ddx);
+						}
+
+						//差分递增
+						integral(base_vert, 1.0f, ddy);
+					}
+				}
+				break;
+
+			case TVT_PIXEL:
+				{
+					const float offsetx = vpleft + 0.5f - pvert[0]->position.x;
+					const float offsety = vptop + 0.5f - pvert[0]->position.y;
+
+					//设置基准扫描线的属性
+					vs_output base_vert = projed_vert0;
+					integral(base_vert, offsety, ddy);
+					integral(base_vert, offsetx, ddx);
+
+					for(int iy = vptop; iy < vpbottom; ++iy)
+					{
+						//光栅化
+						vs_output px_in(base_vert);
+						ps_output px_out;
+						vs_output unprojed;
+						for(size_t ix = vpleft; ix < vpright; ++ix)
+						{
 							unproject(unprojed, px_in);
 							if(pps->execute(unprojed, px_out)){
 								float samples_depth[MAX_NUM_MULTI_SAMPLES];
@@ -574,7 +604,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 						}
 
 						//差分递增
-						integral(scanline.base_vert, 1.0f, ddy);
+						integral(base_vert, 1.0f, ddy);
 					}
 				}
 				break;
@@ -585,30 +615,113 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					const uint8_t new_h = std::max<uint8_t>(1, cur_region.h / 2);
 
 					efl::rect<uint8_t> tmp_region;
-
-					tmp_region.x = cur_region.x;
-					tmp_region.y = cur_region.y;
 					tmp_region.w = new_w;
 					tmp_region.h = new_h;
-					test_regions[dst_stage].push_back(tmp_region);
+#ifndef EFLIB_NO_SIMD
+					__m128 mask_rej = _mm_setzero_ps();
+					__m128 mask_acc = _mm_setzero_ps();
+					// Trival rejection
+					for (int e = 0; e < 3; ++ e){
+						__m128 mcx = _mm_set_ps(cur_region.x + new_w, cur_region.x, cur_region.x + new_w, cur_region.x);
+						__m128 mcy = _mm_set_ps(cur_region.y + new_h, cur_region.y + new_h, cur_region.y, cur_region.y);
 
-					tmp_region.x = cur_region.x + new_w;
-					tmp_region.y = cur_region.y;
-					tmp_region.w = new_w;
-					tmp_region.h = new_h;
-					test_regions[dst_stage].push_back(tmp_region);
+						__m128i mminc = _mm_set1_epi32(min_corner[e]);
+						__m128i mmaxc = _mm_sub_epi32(_mm_set1_epi32(3), mminc);
+						__m128i mminaddx = _mm_and_si128(mminc, _mm_set1_epi32(1));
+						__m128i mminaddy = _mm_and_si128(mminc, _mm_set1_epi32(2));
+						__m128i mmaxaddx = _mm_and_si128(mmaxc, _mm_set1_epi32(1));
+						__m128i mmaxaddy = _mm_and_si128(mmaxc, _mm_set1_epi32(2));
+						__m128 mmincx = _mm_add_ps(mcx, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mminaddx, _mm_set1_epi32(0)), _mm_set1_epi32(new_w))));
+						__m128 mmincy = _mm_add_ps(mcy, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mminaddy, _mm_set1_epi32(0)), _mm_set1_epi32(new_h))));
+						__m128 mmaxcx = _mm_add_ps(mcx, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mmaxaddx, _mm_set1_epi32(0)), _mm_set1_epi32(new_w))));
+						__m128 mmaxcy = _mm_add_ps(mcy, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mmaxaddy, _mm_set1_epi32(0)), _mm_set1_epi32(new_h))));
 
-					tmp_region.x = cur_region.x;
-					tmp_region.y = cur_region.y + new_h;
-					tmp_region.w = new_w;
-					tmp_region.h = new_h;
-					test_regions[dst_stage].push_back(tmp_region);
+						mmincx = _mm_add_ps(mmincx, mvppos_x);
+						mmincy = _mm_add_ps(mmincy, mvppos_y);
+						mmincx = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmincx));
+						mmincy = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmincy));
+						mmincx = _mm_max_ps(mmincx, _mm_setzero_ps());
+						mmincy = _mm_max_ps(mmincy, _mm_setzero_ps());
+						mmincx = _mm_min_ps(mmincx, mfbw);
+						mmincy = _mm_min_ps(mmincy, mfbh);
 
-					tmp_region.x = cur_region.x + new_w;
-					tmp_region.y = cur_region.y + new_h;
-					tmp_region.w = new_w;
-					tmp_region.h = new_h;
-					test_regions[dst_stage].push_back(tmp_region);
+						mmaxcx = _mm_add_ps(mmaxcx, mvppos_x);
+						mmaxcy = _mm_add_ps(mmaxcy, mvppos_y);
+						mmaxcx = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmaxcx));
+						mmaxcy = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmaxcy));
+						mmaxcx = _mm_max_ps(mmaxcx, _mm_setzero_ps());
+						mmaxcy = _mm_max_ps(mmaxcy, _mm_setzero_ps());
+						mmaxcx = _mm_min_ps(mmaxcx, mfbw);
+						mmaxcy = _mm_min_ps(mmaxcy, mfbh);
+
+						__m128 tmp = _mm_sub_ps(_mm_sub_ps(_mm_mul_ps(mmincx, mefx[e]), _mm_mul_ps(mmincy, mefy[e])), mefz[e]);
+						mask_rej = _mm_or_ps(mask_rej, _mm_cmpgt_ps(tmp, _mm_setzero_ps()));
+
+						tmp = _mm_sub_ps(_mm_sub_ps(_mm_mul_ps(mmaxcx, mefx[e]), _mm_mul_ps(mmaxcy, mefy[e])), mefz[e]);
+						mask_acc = _mm_or_ps(mask_acc, _mm_cmpgt_ps(tmp, _mm_setzero_ps()));
+					}
+
+					int rejections = _mm_movemask_ps(mask_rej);
+					int accpetions = _mm_movemask_ps(mask_acc);
+					for (int ty = 0; ty < 2; ++ ty){
+						tmp_region.y = static_cast<uint8_t>(cur_region.y + new_h * ty);
+						for (int tx = 0; tx < 2; ++ tx){
+							tmp_region.x = static_cast<uint8_t>(cur_region.x + new_w * tx);
+							if (!((rejections >> (ty * 2 + tx)) & 1)){
+								test_regions[dst_stage].push_back(std::make_pair(tmp_region, !((accpetions >> (ty * 2 + tx)) & 1)));
+							}
+						}
+					}
+#else
+					for (int ty = 0; ty < 2; ++ ty){
+						tmp_region.y = static_cast<uint8_t>(cur_region.y + new_h * ty);
+						for (int tx = 0; tx < 2; ++ tx){
+							tmp_region.x = static_cast<uint8_t>(cur_region.x + new_w * tx);
+
+							const int vpleft = fast_floori(max(0.0f, vp.x + tmp_region.x));
+							const int vptop = fast_floori(max(0.0f, vp.y + tmp_region.y));
+							const int vpright = fast_floori(min(vp.x + tmp_region.x + tmp_region.w, static_cast<float>(hfb_->get_width())));
+							const int vpbottom = fast_floori(min(vp.y + tmp_region.y + tmp_region.h, static_cast<float>(hfb_->get_height())));
+
+							const int2 corners[] = {
+								int2(vpleft, vptop),
+								int2(vpright, vptop),
+								int2(vpleft, vpbottom),
+								int2(vpright, vpbottom)
+							};
+
+							TRI_VS_TILE intersect = TVT_ALL;
+
+							// Trival rejection
+							for (int e = 0; e < 3; ++ e){
+								int min_c = min_corner[e];
+								if (corners[min_c].x * edge_factors[e].x
+										- corners[min_c].y * edge_factors[e].y
+										- edge_factors[e].z > 0){
+									intersect = TVT_NONE;
+									break;
+								}
+							}
+
+							// Trival acception
+							if (intersect != TVT_NONE){
+								for (int e = 0; e < 3; ++ e){
+									int max_c = 3 - min_corner[e];
+									if (corners[max_c].x * edge_factors[e].x
+											- corners[max_c].y * edge_factors[e].y
+											- edge_factors[e].z > 0){
+										intersect = TVT_PART;
+										break;
+									}
+								}
+							}
+
+							if (intersect != TVT_NONE){
+								test_regions[dst_stage].push_back(std::make_pair(tmp_region, TVT_ALL == intersect));
+							}
+						}
+					}
+#endif
 				}
 				break;
 			}
