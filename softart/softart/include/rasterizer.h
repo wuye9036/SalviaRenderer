@@ -69,11 +69,14 @@ public:
 
 class rasterizer : public render_stage
 {
+	const static int MAX_NUM_MULTI_SAMPLES = 4;
+
 	h_rasterizer_state state_;
 
 	h_framebuffer hfb_;
 
 	std::vector<efl::vec3> edge_factors_;
+	efl::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
 
 	void geometry_setup_func(std::vector<uint32_t>& num_clipped_prims, std::vector<vs_output>& clipped_verts, std::vector<uint32_t>& cliped_indices,
 		int32_t prim_count, primitive_topology primtopo, atomic<int32_t>& working_package, int32_t package_size);

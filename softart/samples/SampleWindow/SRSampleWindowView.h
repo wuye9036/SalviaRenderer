@@ -157,7 +157,7 @@ public:
 	bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in)
 	{
 		color_rgba32f color(in.color[0]);
-		inout.color(0, sample, lerp(inout.color(0, 0), color, color.a));
+		inout.color(0, sample, lerp(inout.color(0, sample), color, color.a));
 		return true;
 	}
 };

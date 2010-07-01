@@ -25,7 +25,6 @@ const int GEOMETRY_SETUP_PACKAGE_SIZE = 1;
 const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 1;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 1;
-const int MAX_NUM_MULTI_SAMPLES = 4;
 
 struct scanline_info
 {
@@ -33,20 +32,18 @@ struct scanline_info
 
 	vs_output base_vert;
 	size_t base_x;
-	size_t base_y;
 
 	scanline_info()
 	{}
 
 	scanline_info(const scanline_info& rhs)
 		:base_vert(rhs.base_vert), scanline_width(scanline_width),
-		base_x(rhs.base_x), base_y(rhs.base_y)
+		base_x(rhs.base_x)
 	{}
 
 	scanline_info& operator = (const scanline_info& rhs){
 		base_vert = rhs.base_vert;
 		base_x = rhs.base_x;
-		base_y = rhs.base_y;
 	}
 };
 
@@ -394,6 +391,11 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	**********************************************************/
 	const vs_output* pvert[3] = {&v0, &v1, &v2};
 	const vec3* edge_factors = &edge_factors_[prim_id * 3];
+	const int min_corner[3] = {
+		(edge_factors[0].y > 0) * 2 + (edge_factors[0].x <= 0),
+		(edge_factors[1].y > 0) * 2 + (edge_factors[1].x <= 0),
+		(edge_factors[2].y > 0) * 2 + (edge_factors[2].x <= 0)
+	};
 
 	//升序排列
 	if(pvert[0]->position.y > pvert[1]->position.y){
@@ -453,9 +455,10 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	};
 
 	const h_blend_shader& hbs = pparent_->get_blend_shader();
+	const size_t num_samples = hfb_->get_num_samples();
 
-	std::vector<efl::rect<float> > test_regions[2];
-	test_regions[0].push_back(efl::rect<float>(vp.x, vp.y, vp.w, vp.h));
+	std::vector<efl::rect<uint8_t> > test_regions[2];
+	test_regions[0].push_back(efl::rect<uint8_t>(0, 0, static_cast<uint8_t>(vp.w), static_cast<uint8_t>(vp.h)));
 	int src_stage = 0;
 	int dst_stage = !src_stage;
 
@@ -463,12 +466,12 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		test_regions[dst_stage].clear();
 
 		for (size_t ivp = 0; ivp < test_regions[src_stage].size(); ++ ivp){
-			const efl::rect<float>& cur_region = test_regions[src_stage][ivp];
+			const efl::rect<uint8_t>& cur_region = test_regions[src_stage][ivp];
 
-			const int vpleft = fast_floori(max(0.0f, cur_region.x));
-			const int vptop = fast_floori(max(0.0f, cur_region.y));
-			const int vpright = fast_floori(min(cur_region.x + cur_region.w, static_cast<float>(hfb_->get_width())));
-			const int vpbottom = fast_floori(min(cur_region.y + cur_region.h, static_cast<float>(hfb_->get_height())));
+			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
+			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));
+			const int vpright = fast_floori(min(vp.x + cur_region.x + cur_region.w, static_cast<float>(hfb_->get_width())));
+			const int vpbottom = fast_floori(min(vp.y + cur_region.y + cur_region.h, static_cast<float>(hfb_->get_height())));
 
 			const int2 corners[] = {
 				int2(vpleft, vptop),
@@ -481,18 +484,20 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 			
 			// Trival rejection
 			for (int e = 0; e < 3; ++ e){
-				int min_c = (edge_factors[e].y > 0) * 2 + (edge_factors[e].x <= 0);
-				if (corners[min_c].x * edge_factors[e].x
-						- corners[min_c].y * edge_factors[e].y
-						- edge_factors[e].z > 0){
-					intersect = TVT_NONE;
-					break;
+				int min_c = min_corner[e];
+				if (min_c != (ivp & 3)){
+					if (corners[min_c].x * edge_factors[e].x
+							- corners[min_c].y * edge_factors[e].y
+							- edge_factors[e].z > 0){
+						intersect = TVT_NONE;
+						break;
+					}
 				}
 			}
 			// Trival acception
 			if (intersect != TVT_NONE){
 				for (int e = 0; e < 3; ++ e){
-					int min_c = 3 - ((edge_factors[e].y > 0) * 2 + (edge_factors[e].x <= 0));
+					int min_c = 3 - min_corner[e];
 					if (corners[min_c].x * edge_factors[e].x
 							- corners[min_c].y * edge_factors[e].y
 							- edge_factors[e].z > 0){
@@ -501,11 +506,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					}
 				}
 			}
-			// For a pixel
-			if (TVT_PART == intersect){
-				if ((cur_region.w <= 1) && (cur_region.h <= 1)){
-					intersect = TVT_ALL;
-				}
+			// For one pixel region
+			if ((TVT_PART == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1)){
+				intersect = TVT_ALL;
 			}
 
 			switch (intersect)
@@ -530,71 +533,41 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 					for(int iy = vptop; iy < vpbottom; ++iy)
 					{	
-						scanline.base_y = iy;
-
 						//光栅化
 						vs_output px_in(scanline.base_vert);
 						ps_output px_out;
 						vs_output unprojed;
 						for(size_t i_pixel = 0; i_pixel < scanline.scanline_width; ++i_pixel)
 						{
+							const size_t ix = scanline.base_x + i_pixel;
+
 							unproject(unprojed, px_in);
 							if(pps->execute(unprojed, px_out)){
-								const size_t num_samples = hfb_->get_num_samples();
-			
-								vec2 samples_pattern[MAX_NUM_MULTI_SAMPLES];
-								switch (num_samples){
-								case 1:
-									samples_pattern[0] = vec2(0.5f, 0.5f);
-									break;
-
-								case 2:
-									samples_pattern[0] = vec2(0.25f, 0.25f);
-									samples_pattern[1] = vec2(0.75f, 0.75f);
-									break;
-
-								case 4:
-									samples_pattern[0] = vec2(0.375f, 0.125f);
-									samples_pattern[1] = vec2(0.875f, 0.375f);
-									samples_pattern[2] = vec2(0.125f, 0.625f);
-									samples_pattern[3] = vec2(0.625f, 0.875f);
-									break;
-
-								default:
-									break;
-								}
-
 								float samples_depth[MAX_NUM_MULTI_SAMPLES];
 								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-									const vec2& sp = samples_pattern[i_sample];
-									bool intersect = true;
+									const vec2& sp = samples_pattern_[i_sample];
+									const float fx = ix + sp.x;
+									const float fy = iy + sp.y;
+									bool inside = true;
 									for (int e = 0; e < 3; ++ e){
-										if ((scanline.base_x + i_pixel + sp.x) * edge_factors[e].x
-												- (scanline.base_y + sp.y) * edge_factors[e].y
+										if (fx * edge_factors[e].x
+												- fy * edge_factors[e].y
 												- edge_factors[e].z > 0){
-											intersect = false;
+											inside = false;
 											break;
 										}
 									}
-									if (intersect){
-										if (1 == num_samples){
-											samples_depth[i_sample] = px_in.position.z;
-										}
-										else{
-											float ddxw = (sp.x - 0.5f) * ddx.position.w;
-											float ddyw = (sp.y - 0.5f) * ddy.position.w;
-											float ddxz = ddxw * ddx.position.z;
-											float ddyz = ddyw * ddy.position.z;
-											samples_depth[i_sample] = (px_in.position.z * px_in.position.w + std::sqrt(ddxz * ddxz + ddyz * ddyz))
-												/ (px_in.position.w + std::sqrt(ddxw * ddxw + ddyw * ddyw));
-										}
+									if (inside){
+										const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+										const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+										samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
 									}
 									else{
 										samples_depth[i_sample] = 1;
 									}
 								}
 
-								hfb_->render_pixel(hbs, scanline.base_x + i_pixel, scanline.base_y, px_out, samples_depth);
+								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth);
 							}
 
 							integral(px_in, 1.0f, ddx);
@@ -608,10 +581,10 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 			default:
 				{
-					float new_w = std::max(1.0f, cur_region.w / 2);
-					float new_h = std::max(1.0f, cur_region.h / 2);
+					const uint8_t new_w = std::max<uint8_t>(1, cur_region.w / 2);
+					const uint8_t new_h = std::max<uint8_t>(1, cur_region.h / 2);
 
-					efl::rect<float> tmp_region;
+					efl::rect<uint8_t> tmp_region;
 
 					tmp_region.x = cur_region.x;
 					tmp_region.y = cur_region.y;
@@ -875,6 +848,28 @@ void rasterizer::draw(size_t prim_count){
 
 	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
 	if(!pparent_) return;
+
+	const size_t num_samples = hfb_->get_num_samples();
+	switch (num_samples){
+	case 1:
+		samples_pattern_[0] = vec2(0.5f, 0.5f);
+		break;
+
+	case 2:
+		samples_pattern_[0] = vec2(0.25f, 0.25f);
+		samples_pattern_[1] = vec2(0.75f, 0.75f);
+		break;
+
+	case 4:
+		samples_pattern_[0] = vec2(0.375f, 0.125f);
+		samples_pattern_[1] = vec2(0.875f, 0.375f);
+		samples_pattern_[2] = vec2(0.125f, 0.625f);
+		samples_pattern_[3] = vec2(0.625f, 0.875f);
+		break;
+
+	default:
+		break;
+	}
 
 	primitive_topology primtopo = pparent_->get_primitive_topology();
 
