@@ -117,7 +117,7 @@ public:
 	pixel_format get_buffer_format() const;
 
 	//‰÷»æ
-	void render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps, const float* depthes);
+	void render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps, const float* depthes, size_t depth_stride);
 
 	//«Â¿Ì
 	void clear_color(size_t tar_id, const color_rgba32f& c);

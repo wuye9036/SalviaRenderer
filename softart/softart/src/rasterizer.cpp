@@ -264,7 +264,7 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.position.y), px_out, &px_out.depth);
+				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.position.y), px_out, &px_out.depth, 1);
 			}
 
 			//差分递增
@@ -321,7 +321,7 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, fast_floori(px_in.position.x), iPixel, px_out, &px_out.depth);
+				hfb_->render_pixel(hbs, fast_floori(px_in.position.x), iPixel, px_out, &px_out.depth, 1);
 			}
 
 			//差分递增
@@ -371,21 +371,22 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	const vs_output* pvert[3] = {&v0, &v1, &v2};
 	const vec3* edge_factors = &edge_factors_[prim_id * 3];
 	const int min_corner[3] = {
-		(edge_factors[0].y > 0) * 2 + (edge_factors[0].x <= 0),
-		(edge_factors[1].y > 0) * 2 + (edge_factors[1].x <= 0),
-		(edge_factors[2].y > 0) * 2 + (edge_factors[2].x <= 0)
+		(edge_factors[0].y > 0) * 2 + (edge_factors[0].x > 0),
+		(edge_factors[1].y > 0) * 2 + (edge_factors[1].x > 0),
+		(edge_factors[2].y > 0) * 2 + (edge_factors[2].x > 0)
 	};
 
 #ifndef EFLIB_NO_SIMD
-	__m128 mefx[3] = { _mm_set_ps1(edge_factors[0].x), _mm_set_ps1(edge_factors[1].x), _mm_set_ps1(edge_factors[2].x) };
-	__m128 mefy[3] = { _mm_set_ps1(edge_factors[0].y), _mm_set_ps1(edge_factors[1].y), _mm_set_ps1(edge_factors[2].y) };
+	__m128 mefxy[3] = {
+		_mm_set_ps(edge_factors[0].y, edge_factors[0].y, edge_factors[0].x, edge_factors[0].x),
+		_mm_set_ps(edge_factors[1].y, edge_factors[1].y, edge_factors[1].x, edge_factors[1].x),
+		_mm_set_ps(edge_factors[2].y, edge_factors[2].y, edge_factors[2].x, edge_factors[2].x)
+	};
 	__m128 mefz[3] = { _mm_set_ps1(edge_factors[0].z), _mm_set_ps1(edge_factors[1].z), _mm_set_ps1(edge_factors[2].z) };
 
-	__m128 mfbw = _mm_set1_ps(static_cast<float>(hfb_->get_width()));
-	__m128 mfbh = _mm_set1_ps(static_cast<float>(hfb_->get_height()));
+	__m128 mfbsize = _mm_set_ps(static_cast<float>(hfb_->get_height()), static_cast<float>(hfb_->get_height()), static_cast<float>(hfb_->get_width()), static_cast<float>(hfb_->get_width()));
 
-	__m128 mvppos_x = _mm_set1_ps(vp.x);
-	__m128 mvppos_y = _mm_set1_ps(vp.y);
+	__m128 mvppos = _mm_set_ps(vp.y, vp.y, vp.x, vp.x);
 #endif
 
 	//升序排列
@@ -458,8 +459,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		for (int e = 0; e < 3; ++ e){
 			int min_c = min_corner[e];
 			if (corners[min_c].x * edge_factors[e].x
-					- corners[min_c].y * edge_factors[e].y
-					- edge_factors[e].z > 0){
+					+ corners[min_c].y * edge_factors[e].y
+					< edge_factors[e].z){
 				intersect = TVT_NONE;
 				break;
 			}
@@ -470,8 +471,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 			for (int e = 0; e < 3; ++ e){
 				int min_c = 3 - min_corner[e];
 				if (corners[min_c].x * edge_factors[e].x
-						- corners[min_c].y * edge_factors[e].y
-						- edge_factors[e].z > 0){
+						+ corners[min_c].y * edge_factors[e].y
+						< edge_factors[e].z){
 					intersect = TVT_PART;
 					break;
 				}
@@ -541,14 +542,14 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 									samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
 								}
 
-								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth);
+								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth, 1);
 							}
 
-							integral(px_in, 1.0f, ddx);
+							integral(px_in, ddx);
 						}
 
 						//差分递增
-						integral(base_vert, 1.0f, ddy);
+						integral(base_vert, ddy);
 					}
 				}
 				break;
@@ -563,6 +564,60 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					integral(base_vert, offsety, ddy);
 					integral(base_vert, offsetx, ddx);
 
+#ifndef EFLIB_NO_SIMD
+					vs_output px_ins[4];
+					px_ins[0] = base_vert;
+					px_ins[1] = px_ins[0];
+					integral(px_ins[1], ddx);
+					px_ins[2] = base_vert;
+					integral(px_ins[2], ddy);
+					px_ins[3] = px_ins[2];
+					integral(px_ins[3], ddx);
+					ps_output px_outs[4];
+					vs_output unprojed;
+					for(int i = 0; i < 4; ++ i){
+						unproject(unprojed, px_ins[i]);
+						pps->execute(unprojed, px_outs[i]);
+					}
+
+					const __m128 mbasexy = _mm_set_ps(vptop + 1, vptop, vpleft + 1, vpleft);
+					const __m128 mdepth = _mm_set_ps(px_ins[3].position.z, px_ins[2].position.z, px_ins[1].position.z, px_ins[0].position.z);
+					const __m128 mbaseddxyz = _mm_set_ps(ddy.position.z, ddy.position.z, ddx.position.z, ddx.position.z);
+					float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
+					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+						const vec2& sp = samples_pattern_[i_sample];
+						__m128 msp = _mm_set_ps(sp.y, sp.y, sp.x, sp.x);
+
+						__m128 mask_rej = _mm_setzero_ps();
+						for (int e = 0; e < 3; ++ e){
+							__m128 mxy = _mm_add_ps(mbasexy, msp);
+							__m128 mt = _mm_mul_ps(mxy, mefxy[e]);
+							__m128 mtx = _mm_movelh_ps(mt, mt);
+							__m128 mty = _mm_unpackhi_ps(mt, mt);
+							mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_add_ps(mtx, mty), mefz[e]));
+						}
+
+						msp = _mm_sub_ps(msp, _mm_set1_ps(0.5f));
+						__m128 mddxyz = _mm_mul_ps(msp, mbaseddxyz);
+						__m128 mddxz = _mm_movelh_ps(mddxyz, mddxyz);
+						__m128 mddyz = _mm_unpackhi_ps(mddxyz, mddxyz);
+						__m128 mdz = _mm_add_ps(mddxz, mddyz);
+						mdz = _mm_add_ps(mdepth, mdz);
+						__m128 mmax = _mm_and_ps(mask_rej, _mm_set1_ps(1.0f));
+						mdz = _mm_max_ps(mdz, mmax);
+
+						_mm_storeu_ps(&samples_depth[i_sample * 4], mdz);
+					}
+					for(int dy = 0; dy < 2; ++dy)
+					{
+						size_t iy = vptop + dy;
+						for(size_t dx = 0; dx < 2; ++dx)
+						{
+							size_t ix = vpleft + dx;
+							hfb_->render_pixel(hbs, ix, iy, px_outs[dy * 2 + dx], &samples_depth[dy * 2 + dx], 4);
+						}
+					}
+#else
 					for(int iy = vptop; iy < vpbottom; ++iy)
 					{
 						//光栅化
@@ -581,8 +636,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 									bool inside = true;
 									for (int e = 0; e < 3; ++ e){
 										if (fx * edge_factors[e].x
-												- fy * edge_factors[e].y
-												- edge_factors[e].z > 0){
+												+ fy * edge_factors[e].y
+												< edge_factors[e].z){
 											inside = false;
 											break;
 										}
@@ -597,15 +652,16 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 									}
 								}
 
-								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth);
+								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth, 1);
 							}
 
-							integral(px_in, 1.0f, ddx);
+							integral(px_in, ddx);
 						}
 
 						//差分递增
-						integral(base_vert, 1.0f, ddy);
+						integral(base_vert, ddy);
 					}
+#endif
 				}
 				break;
 
@@ -617,48 +673,38 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					efl::rect<uint8_t> tmp_region;
 					tmp_region.w = new_w;
 					tmp_region.h = new_h;
+
 #ifndef EFLIB_NO_SIMD
+					__m128 mnewwh = _mm_set_ps(new_h, new_h, new_w, new_w);
+
+					__m128 mbasecxy = _mm_add_ps(_mm_set_ps(cur_region.y, cur_region.y, cur_region.x, cur_region.x), _mm_set_ps(new_h, 0, new_w, 0));
+					mbasecxy = _mm_add_ps(mbasecxy, mvppos);
+					mbasecxy = _mm_cvtepi32_ps(_mm_cvttps_epi32(mbasecxy));
+
 					__m128 mask_rej = _mm_setzero_ps();
 					__m128 mask_acc = _mm_setzero_ps();
 					// Trival rejection
 					for (int e = 0; e < 3; ++ e){
-						__m128 mcx = _mm_set_ps(cur_region.x + new_w, cur_region.x, cur_region.x + new_w, cur_region.x);
-						__m128 mcy = _mm_set_ps(cur_region.y + new_h, cur_region.y + new_h, cur_region.y, cur_region.y);
+						__m128 maddxymask = _mm_cmpgt_ps(mefxy[e], _mm_setzero_ps());
+						__m128 mmindxy = _mm_and_ps(maddxymask, mnewwh);
+						__m128 mmaxdxy = _mm_andnot_ps(maddxymask, mnewwh);
+						__m128 mmincxy = _mm_add_ps(mbasecxy, mmindxy);
+						__m128 mmaxcxy = _mm_add_ps(mbasecxy, mmaxdxy);
 
-						__m128i mminc = _mm_set1_epi32(min_corner[e]);
-						__m128i mmaxc = _mm_sub_epi32(_mm_set1_epi32(3), mminc);
-						__m128i mminaddx = _mm_and_si128(mminc, _mm_set1_epi32(1));
-						__m128i mminaddy = _mm_and_si128(mminc, _mm_set1_epi32(2));
-						__m128i mmaxaddx = _mm_and_si128(mmaxc, _mm_set1_epi32(1));
-						__m128i mmaxaddy = _mm_and_si128(mmaxc, _mm_set1_epi32(2));
-						__m128 mmincx = _mm_add_ps(mcx, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mminaddx, _mm_set1_epi32(0)), _mm_set1_epi32(new_w))));
-						__m128 mmincy = _mm_add_ps(mcy, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mminaddy, _mm_set1_epi32(0)), _mm_set1_epi32(new_h))));
-						__m128 mmaxcx = _mm_add_ps(mcx, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mmaxaddx, _mm_set1_epi32(0)), _mm_set1_epi32(new_w))));
-						__m128 mmaxcy = _mm_add_ps(mcy, _mm_cvtepi32_ps(_mm_and_si128(_mm_cmpgt_epi32(mmaxaddy, _mm_set1_epi32(0)), _mm_set1_epi32(new_h))));
+						mmincxy = _mm_max_ps(mmincxy, _mm_setzero_ps());
+						mmaxcxy = _mm_max_ps(mmaxcxy, _mm_setzero_ps());
+						mmincxy = _mm_min_ps(mmincxy, mfbsize);
+						mmaxcxy = _mm_min_ps(mmaxcxy, mfbsize);
 
-						mmincx = _mm_add_ps(mmincx, mvppos_x);
-						mmincy = _mm_add_ps(mmincy, mvppos_y);
-						mmincx = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmincx));
-						mmincy = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmincy));
-						mmincx = _mm_max_ps(mmincx, _mm_setzero_ps());
-						mmincy = _mm_max_ps(mmincy, _mm_setzero_ps());
-						mmincx = _mm_min_ps(mmincx, mfbw);
-						mmincy = _mm_min_ps(mmincy, mfbh);
+						__m128 mtmin = _mm_mul_ps(mmincxy, mefxy[e]);
+						__m128 mtmax = _mm_mul_ps(mmaxcxy, mefxy[e]);
+						__m128 mtminx = _mm_movelh_ps(mtmin, mtmin);
+						__m128 mtminy = _mm_unpackhi_ps(mtmin, mtmin);
+						__m128 mtmaxx = _mm_movelh_ps(mtmax, mtmax);
+						__m128 mtmaxy = _mm_unpackhi_ps(mtmax, mtmax);
 
-						mmaxcx = _mm_add_ps(mmaxcx, mvppos_x);
-						mmaxcy = _mm_add_ps(mmaxcy, mvppos_y);
-						mmaxcx = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmaxcx));
-						mmaxcy = _mm_cvtepi32_ps(_mm_cvttps_epi32(mmaxcy));
-						mmaxcx = _mm_max_ps(mmaxcx, _mm_setzero_ps());
-						mmaxcy = _mm_max_ps(mmaxcy, _mm_setzero_ps());
-						mmaxcx = _mm_min_ps(mmaxcx, mfbw);
-						mmaxcy = _mm_min_ps(mmaxcy, mfbh);
-
-						__m128 tmp = _mm_sub_ps(_mm_sub_ps(_mm_mul_ps(mmincx, mefx[e]), _mm_mul_ps(mmincy, mefy[e])), mefz[e]);
-						mask_rej = _mm_or_ps(mask_rej, _mm_cmpgt_ps(tmp, _mm_setzero_ps()));
-
-						tmp = _mm_sub_ps(_mm_sub_ps(_mm_mul_ps(mmaxcx, mefx[e]), _mm_mul_ps(mmaxcy, mefy[e])), mefz[e]);
-						mask_acc = _mm_or_ps(mask_acc, _mm_cmpgt_ps(tmp, _mm_setzero_ps()));
+						mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_add_ps(mtminx, mtminy), mefz[e]));
+						mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(_mm_add_ps(mtmaxx, mtmaxy), mefz[e]));
 					}
 
 					int rejections = _mm_movemask_ps(mask_rej);
@@ -696,8 +742,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 							for (int e = 0; e < 3; ++ e){
 								int min_c = min_corner[e];
 								if (corners[min_c].x * edge_factors[e].x
-										- corners[min_c].y * edge_factors[e].y
-										- edge_factors[e].z > 0){
+										+ corners[min_c].y * edge_factors[e].y
+										< edge_factors[e].z){
 									intersect = TVT_NONE;
 									break;
 								}
@@ -708,8 +754,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 								for (int e = 0; e < 3; ++ e){
 									int max_c = 3 - min_corner[e];
 									if (corners[max_c].x * edge_factors[e].x
-											- corners[max_c].y * edge_factors[e].y
-											- edge_factors[e].z > 0){
+											+ corners[max_c].y * edge_factors[e].y
+											< edge_factors[e].z){
 										intersect = TVT_PART;
 										break;
 									}
@@ -852,9 +898,9 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 				for (int e = 0; e < 3; ++ e){
 					const int se = e;
 					const int ee = (e + 1) % 3;
-					edge_factors[e].x = pv[ee].y - pv[se].y;
+					edge_factors[e].x = pv[se].y - pv[ee].y;
 					edge_factors[e].y = pv[ee].x - pv[se].x;
-					edge_factors[e].z = pv[ee].y * pv[se].x - pv[ee].x * pv[se].y;
+					edge_factors[e].z = pv[ee].x * pv[se].y - pv[ee].y * pv[se].x;
 				}
 			}
 

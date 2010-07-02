@@ -436,7 +436,7 @@ pixel_format framebuffer::get_buffer_format() const{
 }
 
 //äÖÈ¾
-void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps, const float* depthes)
+void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps, const float* depthes, size_t depth_stride)
 {
 	custom_assert(hbs, "Î´ÉèÖÃTarget Shader!");
 	if(! hbs) return;
@@ -452,7 +452,7 @@ void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, co
 		const float cur_depth = target_pixel.depth(i_sample);
 		const int32_t cur_stencil = dss->read_stencil(target_pixel, i_sample);
 
-		bool depth_passed = dss->depth_test(depthes[i_sample], cur_depth);
+		bool depth_passed = dss->depth_test(depthes[i_sample * depth_stride], cur_depth);
 		bool stencil_passed = dss->stencil_test(ps.front_face, stencil_ref, cur_stencil);
 
 		if (depth_passed && stencil_passed){
@@ -461,7 +461,7 @@ void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, co
 			//execute target shader
 			hbs->execute(i_sample, target_pixel, ps);
 
-			dss->write_depth(i_sample, depthes[i_sample], target_pixel);
+			dss->write_depth(i_sample, depthes[i_sample * depth_stride], target_pixel);
 			dss->write_stencil(i_sample, new_stencil, target_pixel);
 		}
 	}

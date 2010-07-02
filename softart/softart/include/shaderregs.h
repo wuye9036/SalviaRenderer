@@ -61,6 +61,7 @@ class vs_output
 	friend vs_output& unproject(vs_output& out, const vs_output& in);
 
 	friend vs_output lerp(const vs_output& start, const vs_output& end, float step);
+	friend vs_output& integral(vs_output& inout, const vs_output& derivation);
 	friend vs_output& integral(vs_output& inout, float step, const vs_output& derivation);
 	friend vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
 

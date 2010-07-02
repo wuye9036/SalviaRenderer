@@ -168,6 +168,20 @@ vs_output lerp(const vs_output& start, const vs_output& end, float step)
 	return out;
 }
 
+vs_output& integral(vs_output& inout, const vs_output& derivation)
+{
+	assert(inout.num_used_attribute == derivation.num_used_attribute);
+
+	inout.position += derivation.position;
+	for(size_t i_attr = 0; i_attr < inout.num_used_attribute; ++i_attr){
+		assert(inout.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr]);
+		if (!(inout.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			inout.attributes[i_attr] += derivation.attributes[i_attr];
+		}
+	}
+	return inout;
+}
+
 vs_output& integral(vs_output& inout, float step, const vs_output& derivation)
 {
 	assert(inout.num_used_attribute == derivation.num_used_attribute);
