@@ -436,7 +436,7 @@ pixel_format framebuffer::get_buffer_format() const{
 }
 
 //äÖÈ¾
-void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, const ps_output& ps, const float* depthes, size_t depth_stride)
+void framebuffer::render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
 {
 	custom_assert(hbs, "Î´ÉèÖÃTarget Shader!");
 	if(! hbs) return;
@@ -448,22 +448,21 @@ void framebuffer::render_pixel(const h_blend_shader& hbs, size_t x, size_t y, co
 	const h_depth_stencil_state& dss = pparent_->get_depth_stencil_state();
 
 	const int32_t stencil_ref = dss->read_stencil(pparent_->get_stencil_ref());
-	for (int i_sample = 0; i_sample < num_samples_; ++ i_sample){
-		const float cur_depth = target_pixel.depth(i_sample);
-		const int32_t cur_stencil = dss->read_stencil(target_pixel, i_sample);
+	
+	const float cur_depth = target_pixel.depth(i_sample);
+	const int32_t cur_stencil = dss->read_stencil(target_pixel, i_sample);
 
-		bool depth_passed = dss->depth_test(depthes[i_sample * depth_stride], cur_depth);
-		bool stencil_passed = dss->stencil_test(ps.front_face, stencil_ref, cur_stencil);
+	bool depth_passed = dss->depth_test(depth, cur_depth);
+	bool stencil_passed = dss->stencil_test(ps.front_face, stencil_ref, cur_stencil);
 
-		if (depth_passed && stencil_passed){
-			int32_t new_stencil = dss->stencil_operation(ps.front_face, depth_passed, stencil_passed, stencil_ref, cur_stencil);
+	if (depth_passed && stencil_passed){
+		int32_t new_stencil = dss->stencil_operation(ps.front_face, depth_passed, stencil_passed, stencil_ref, cur_stencil);
 
-			//execute target shader
-			hbs->execute(i_sample, target_pixel, ps);
+		//execute target shader
+		hbs->execute(i_sample, target_pixel, ps);
 
-			dss->write_depth(i_sample, depthes[i_sample * depth_stride], target_pixel);
-			dss->write_stencil(i_sample, new_stencil, target_pixel);
-		}
+		dss->write_depth(i_sample, depth, target_pixel);
+		dss->write_stencil(i_sample, new_stencil, target_pixel);
 	}
 }
 

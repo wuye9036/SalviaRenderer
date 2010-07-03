@@ -264,7 +264,7 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, iPixel, fast_floori(px_in.position.y), px_out, &px_out.depth, 1);
+				hfb_->render_sample(hbs, iPixel, fast_floori(px_in.position.y), 0, px_out, px_out.depth);
 			}
 
 			//差分递增
@@ -321,7 +321,7 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 			//进行像素渲染
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_pixel(hbs, fast_floori(px_in.position.x), iPixel, px_out, &px_out.depth, 1);
+				hfb_->render_sample(hbs, fast_floori(px_in.position.x), iPixel, 0, px_out, px_out.depth);
 			}
 
 			//差分递增
@@ -506,15 +506,18 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 						{
 							unproject(unprojed, px_in);
 							if(pps->execute(unprojed, px_out)){
-								float samples_depth[MAX_NUM_MULTI_SAMPLES];
-								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-									const vec2& sp = samples_pattern_[i_sample];
-									const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-									const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-									samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
+								if (1 == num_samples){
+									hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
 								}
-
-								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth, 1);
+								else{
+									for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+										const vec2& sp = samples_pattern_[i_sample];
+										const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+										const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+										float sample_depth = px_in.position.z + ddxz + ddyz;
+										hfb_->render_sample(hbs, ix, iy, i_sample, px_out, sample_depth);
+									}
+								}
 							}
 
 							integral(px_in, ddx);
@@ -579,15 +582,21 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 						any_sample_inside |= ~_mm_movemask_ps(mask_rej);
 
-						__m128 mhalf = _mm_set1_ps(0.5f);
-						mspx = _mm_sub_ps(mspx, mhalf);
-						mspy = _mm_sub_ps(mspy, mhalf);
-						__m128 mddxz = _mm_mul_ps(mspx, mbaseddxz);
-						__m128 mddyz = _mm_mul_ps(mspy, mbaseddyz);
-						__m128 mdz = _mm_add_ps(mddxz, mddyz);
-						mdz = _mm_add_ps(mdepth, mdz);
-						__m128 mmax = _mm_and_ps(mask_rej, _mm_set1_ps(1.0f));
-						mdz = _mm_max_ps(mdz, mmax);
+						__m128 mdz;
+						if (1 == num_samples){
+							mdz = mdepth;
+						}
+						else{
+							__m128 mhalf = _mm_set1_ps(0.5f);
+							mspx = _mm_sub_ps(mspx, mhalf);
+							mspy = _mm_sub_ps(mspy, mhalf);
+							__m128 mddxz = _mm_mul_ps(mspx, mbaseddxz);
+							__m128 mddyz = _mm_mul_ps(mspy, mbaseddyz);
+							mdz = _mm_add_ps(mddxz, mddyz);
+							mdz = _mm_add_ps(mdepth, mdz);
+							__m128 mmax = _mm_and_ps(mask_rej, _mm_set1_ps(1.0f));
+							mdz = _mm_max_ps(mdz, mmax);
+						}
 
 						_mm_storeu_ps(&samples_depth[i_sample * 4], mdz);
 					}
@@ -600,7 +609,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 							unproject(unprojed, px_ins[t]);
 							if (pps->execute(unprojed, px_out)){
-								hfb_->render_pixel(hbs, ix, iy, px_out, &samples_depth[t], 4);
+								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+									hfb_->render_sample(hbs, ix, iy, i_sample, px_out, samples_depth[i_sample * 4 + t]);
+								}
 							}
 						}
 					}
