@@ -376,19 +376,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		(edge_factors[2].y > 0) * 2 + (edge_factors[2].x > 0)
 	};
 
-#ifndef EFLIB_NO_SIMD
-	__m128 mefxy[3] = {
-		_mm_set_ps(edge_factors[0].y, edge_factors[0].y, edge_factors[0].x, edge_factors[0].x),
-		_mm_set_ps(edge_factors[1].y, edge_factors[1].y, edge_factors[1].x, edge_factors[1].x),
-		_mm_set_ps(edge_factors[2].y, edge_factors[2].y, edge_factors[2].x, edge_factors[2].x)
-	};
-	__m128 mefz[3] = { _mm_set_ps1(edge_factors[0].z), _mm_set_ps1(edge_factors[1].z), _mm_set_ps1(edge_factors[2].z) };
-
-	__m128 mfbsize = _mm_set_ps(static_cast<float>(hfb_->get_height()), static_cast<float>(hfb_->get_height()), static_cast<float>(hfb_->get_width()), static_cast<float>(hfb_->get_width()));
-
-	__m128 mvppos = _mm_set_ps(vp.y, vp.y, vp.x, vp.x);
-#endif
-
 	//ÉýÐòÅÅÁÐ
 	if(pvert[0]->position.y > pvert[1]->position.y){
 		swap(pvert[1], pvert[0]);
@@ -469,9 +456,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		// Trival acception
 		if (intersect != TVT_NONE){
 			for (int e = 0; e < 3; ++ e){
-				int min_c = 3 - min_corner[e];
-				if (corners[min_c].x * edge_factors[e].x
-						+ corners[min_c].y * edge_factors[e].y
+				int max_c = 3 - min_corner[e];
+				if (corners[max_c].x * edge_factors[e].x
+						+ corners[max_c].y * edge_factors[e].y
 						< edge_factors[e].z){
 					intersect = TVT_PART;
 					break;
@@ -487,17 +474,20 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	const h_blend_shader& hbs = pparent_->get_blend_shader();
 	const size_t num_samples = hfb_->get_num_samples();
 
-	std::vector<std::pair<efl::rect<uint8_t>, bool> > test_regions[2];
-	test_regions[0].push_back(std::make_pair(efl::rect<uint8_t>(0, 0, static_cast<uint8_t>(vp.w), static_cast<uint8_t>(vp.h)), TVT_ALL == intersect));
+	std::vector<efl::rect<uint8_t> > test_regions[2];
+	std::vector<uint8_t> is_region_all[2];
+	test_regions[0].push_back(efl::rect<uint8_t>(0, 0, static_cast<uint8_t>(vp.w), static_cast<uint8_t>(vp.h)));
+	is_region_all[0].push_back(TVT_ALL == intersect);
 	int src_stage = 0;
 	int dst_stage = !src_stage;
 
 	while (!test_regions[src_stage].empty()){
 		test_regions[dst_stage].clear();
+		is_region_all[dst_stage].clear();
 
 		for (size_t ivp = 0; ivp < test_regions[src_stage].size(); ++ ivp){
-			const efl::rect<uint8_t>& cur_region = test_regions[src_stage][ivp].first;
-			TRI_VS_TILE intersect = test_regions[src_stage][ivp].second ? TVT_ALL : TVT_PART;
+			const efl::rect<uint8_t>& cur_region = test_regions[src_stage][ivp];
+			TRI_VS_TILE intersect = is_region_all[src_stage][ivp] ? TVT_ALL : TVT_PART;
 
 			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
 			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));
@@ -564,6 +554,11 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					integral(base_vert, offsety, ddy);
 					integral(base_vert, offsetx, ddx);
 
+					float evalue[3];
+					for (int e = 0; e < 3; ++ e){
+						evalue[e] = edge_factors[e].z - (vpleft * edge_factors[e].x + vptop * edge_factors[e].y);
+					}
+
 #ifndef EFLIB_NO_SIMD
 					vs_output px_ins[4];
 					px_ins[0] = base_vert;
@@ -580,27 +575,36 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 						pps->execute(unprojed, px_outs[i]);
 					}
 
-					const __m128 mbasexy = _mm_set_ps(vptop + 1, vptop, vpleft + 1, vpleft);
+					const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
+					const __m128 mty = _mm_set_ps(1, 1, 0, 0);
+
 					const __m128 mdepth = _mm_set_ps(px_ins[3].position.z, px_ins[2].position.z, px_ins[1].position.z, px_ins[0].position.z);
-					const __m128 mbaseddxyz = _mm_set_ps(ddy.position.z, ddy.position.z, ddx.position.z, ddx.position.z);
+					const __m128 mbaseddxz = _mm_set1_ps(ddx.position.z);
+					const __m128 mbaseddyz = _mm_set1_ps(ddy.position.z);
 					float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
 					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
 						const vec2& sp = samples_pattern_[i_sample];
-						__m128 msp = _mm_set_ps(sp.y, sp.y, sp.x, sp.x);
+						__m128 mspx = _mm_set1_ps(sp.x);
+						__m128 mspy = _mm_set1_ps(sp.y);
 
 						__m128 mask_rej = _mm_setzero_ps();
 						for (int e = 0; e < 3; ++ e){
-							__m128 mxy = _mm_add_ps(mbasexy, msp);
-							__m128 mt = _mm_mul_ps(mxy, mefxy[e]);
-							__m128 mtx = _mm_movelh_ps(mt, mt);
-							__m128 mty = _mm_unpackhi_ps(mt, mt);
-							mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_add_ps(mtx, mty), mefz[e]));
+							__m128 mstepx = _mm_set_ps1(edge_factors[e].x);
+							__m128 mstepy = _mm_set_ps1(edge_factors[e].y);
+							__m128 mx = _mm_add_ps(mtx, mspx);
+							__m128 my = _mm_add_ps(mty, mspy);
+							__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
+
+							__m128 mevalue = _mm_set1_ps(evalue[e]);
+
+							mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
 						}
 
-						msp = _mm_sub_ps(msp, _mm_set1_ps(0.5f));
-						__m128 mddxyz = _mm_mul_ps(msp, mbaseddxyz);
-						__m128 mddxz = _mm_movelh_ps(mddxyz, mddxyz);
-						__m128 mddyz = _mm_unpackhi_ps(mddxyz, mddxyz);
+						__m128 mhalf = _mm_set1_ps(0.5f);
+						mspx = _mm_sub_ps(mspx, mhalf);
+						mspy = _mm_sub_ps(mspy, mhalf);
+						__m128 mddxz = _mm_mul_ps(mspx, mbaseddxz);
+						__m128 mddyz = _mm_mul_ps(mspy, mbaseddyz);
 						__m128 mdz = _mm_add_ps(mddxz, mddyz);
 						mdz = _mm_add_ps(mdepth, mdz);
 						__m128 mmax = _mm_and_ps(mask_rej, _mm_set1_ps(1.0f));
@@ -618,13 +622,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 						}
 					}
 #else
-					for(int iy = vptop; iy < vpbottom; ++iy)
+					for(int iy = 0; iy < 2; ++iy)
 					{
 						//¹âÕ¤»¯
 						vs_output px_in(base_vert);
 						ps_output px_out;
 						vs_output unprojed;
-						for(size_t ix = vpleft; ix < vpright; ++ix)
+						for(size_t ix = 0; ix < 2; ++ix)
 						{
 							unproject(unprojed, px_in);
 							if(pps->execute(unprojed, px_out)){
@@ -635,9 +639,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 									const float fy = iy + sp.y;
 									bool inside = true;
 									for (int e = 0; e < 3; ++ e){
-										if (fx * edge_factors[e].x
-												+ fy * edge_factors[e].y
-												< edge_factors[e].z){
+										if (fx * edge_factors[e].x + fy * edge_factors[e].y < evalue[e]){
 											inside = false;
 											break;
 										}
@@ -652,7 +654,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 									}
 								}
 
-								hfb_->render_pixel(hbs, ix, iy, px_out, samples_depth, 1);
+								hfb_->render_pixel(hbs, ix + vpleft, iy + vptop, px_out, samples_depth, 1);
 							}
 
 							integral(px_in, ddx);
@@ -674,48 +676,50 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					tmp_region.w = new_w;
 					tmp_region.h = new_h;
 
-#ifndef EFLIB_NO_SIMD
-					__m128 mnewwh = _mm_set_ps(new_h, new_h, new_w, new_w);
+					int2 base_corner[3];
+					float evalue[3];
+					float step_x[3];
+					float step_y[3];
+					float rej_to_acc[3];
+					for (int e = 0; e < 3; ++ e){
+						bool mark_x = edge_factors[e].x > 0;
+						bool mark_y = edge_factors[e].y > 0;
+						base_corner[e] = int2(vpleft + mark_x * new_w, vptop + mark_y * new_h);
+						evalue[e] = edge_factors[e].z - (base_corner[e].x * edge_factors[e].x + base_corner[e].y * edge_factors[e].y);
+						step_x[e] = new_w * edge_factors[e].x;
+						step_y[e] = new_h * edge_factors[e].y;
+						rej_to_acc[e] = (mark_x ? -step_x[e] : step_x[e]) + (mark_y ? -step_y[e] : step_y[e]);
+					}
 
-					__m128 mbasecxy = _mm_add_ps(_mm_set_ps(cur_region.y, cur_region.y, cur_region.x, cur_region.x), _mm_set_ps(new_h, 0, new_w, 0));
-					mbasecxy = _mm_add_ps(mbasecxy, mvppos);
-					mbasecxy = _mm_cvtepi32_ps(_mm_cvttps_epi32(mbasecxy));
+#ifndef EFLIB_NO_SIMD
+					const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
+					const __m128 mty = _mm_set_ps(1, 1, 0, 0);
 
 					__m128 mask_rej = _mm_setzero_ps();
 					__m128 mask_acc = _mm_setzero_ps();
 					// Trival rejection
 					for (int e = 0; e < 3; ++ e){
-						__m128 maddxymask = _mm_cmpgt_ps(mefxy[e], _mm_setzero_ps());
-						__m128 mmindxy = _mm_and_ps(maddxymask, mnewwh);
-						__m128 mmaxdxy = _mm_andnot_ps(maddxymask, mnewwh);
-						__m128 mmincxy = _mm_add_ps(mbasecxy, mmindxy);
-						__m128 mmaxcxy = _mm_add_ps(mbasecxy, mmaxdxy);
+						__m128 mstepx = _mm_set1_ps(step_x[e]);
+						__m128 mstepy = _mm_set1_ps(step_y[e]);
 
-						mmincxy = _mm_max_ps(mmincxy, _mm_setzero_ps());
-						mmaxcxy = _mm_max_ps(mmaxcxy, _mm_setzero_ps());
-						mmincxy = _mm_min_ps(mmincxy, mfbsize);
-						mmaxcxy = _mm_min_ps(mmaxcxy, mfbsize);
+						__m128 msteprej = _mm_add_ps(_mm_mul_ps(mtx, mstepx), _mm_mul_ps(mty, mstepy));
+						__m128 mstepacc = _mm_add_ps(msteprej, _mm_set1_ps(rej_to_acc[e]));
 
-						__m128 mtmin = _mm_mul_ps(mmincxy, mefxy[e]);
-						__m128 mtmax = _mm_mul_ps(mmaxcxy, mefxy[e]);
-						__m128 mtminx = _mm_movelh_ps(mtmin, mtmin);
-						__m128 mtminy = _mm_unpackhi_ps(mtmin, mtmin);
-						__m128 mtmaxx = _mm_movelh_ps(mtmax, mtmax);
-						__m128 mtmaxy = _mm_unpackhi_ps(mtmax, mtmax);
+						__m128 mevalue = _mm_set1_ps(evalue[e]);
 
-						mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_add_ps(mtminx, mtminy), mefz[e]));
-						mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(_mm_add_ps(mtmaxx, mtmaxy), mefz[e]));
+						mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+						mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
 					}
 
 					int rejections = _mm_movemask_ps(mask_rej);
-					int accpetions = _mm_movemask_ps(mask_acc);
-					for (int ty = 0; ty < 2; ++ ty){
-						tmp_region.y = static_cast<uint8_t>(cur_region.y + new_h * ty);
-						for (int tx = 0; tx < 2; ++ tx){
-							tmp_region.x = static_cast<uint8_t>(cur_region.x + new_w * tx);
-							if (!((rejections >> (ty * 2 + tx)) & 1)){
-								test_regions[dst_stage].push_back(std::make_pair(tmp_region, !((accpetions >> (ty * 2 + tx)) & 1)));
-							}
+					int accpetions = ~_mm_movemask_ps(mask_acc);
+					for (int t = 0; t < 4; ++ t){
+						if (!((rejections >> t) & 1)){
+							tmp_region.y = static_cast<uint8_t>(cur_region.y + new_h * (t >> 1));
+							tmp_region.x = static_cast<uint8_t>(cur_region.x + new_w * (t & 1));
+
+							test_regions[dst_stage].push_back(tmp_region);
+							is_region_all[dst_stage].push_back((accpetions >> t) & 1);
 						}
 					}
 #else
@@ -724,46 +728,19 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 						for (int tx = 0; tx < 2; ++ tx){
 							tmp_region.x = static_cast<uint8_t>(cur_region.x + new_w * tx);
 
-							const int vpleft = fast_floori(max(0.0f, vp.x + tmp_region.x));
-							const int vptop = fast_floori(max(0.0f, vp.y + tmp_region.y));
-							const int vpright = fast_floori(min(vp.x + tmp_region.x + tmp_region.w, static_cast<float>(hfb_->get_width())));
-							const int vpbottom = fast_floori(min(vp.y + tmp_region.y + tmp_region.h, static_cast<float>(hfb_->get_height())));
+							int rejection = 0;
+							int acception = 1;
 
-							const int2 corners[] = {
-								int2(vpleft, vptop),
-								int2(vpright, vptop),
-								int2(vpleft, vpbottom),
-								int2(vpright, vpbottom)
-							};
-
-							TRI_VS_TILE intersect = TVT_ALL;
-
-							// Trival rejection
+							// Trival rejection & acception
 							for (int e = 0; e < 3; ++ e){
-								int min_c = min_corner[e];
-								if (corners[min_c].x * edge_factors[e].x
-										+ corners[min_c].y * edge_factors[e].y
-										< edge_factors[e].z){
-									intersect = TVT_NONE;
-									break;
-								}
+								float step = tx * step_x[e] + ty * step_y[e];
+								rejection |= (step < evalue[e]);
+								acception &= (step + rej_to_acc[e] >= evalue[e]);
 							}
 
-							// Trival acception
-							if (intersect != TVT_NONE){
-								for (int e = 0; e < 3; ++ e){
-									int max_c = 3 - min_corner[e];
-									if (corners[max_c].x * edge_factors[e].x
-											+ corners[max_c].y * edge_factors[e].y
-											< edge_factors[e].z){
-										intersect = TVT_PART;
-										break;
-									}
-								}
-							}
-
-							if (intersect != TVT_NONE){
-								test_regions[dst_stage].push_back(std::make_pair(tmp_region, TVT_ALL == intersect));
+							if (!rejection){
+								test_regions[dst_stage].push_back(tmp_region);
+								is_region_all[dst_stage].push_back(acception);
 							}
 						}
 					}
