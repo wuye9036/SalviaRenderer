@@ -370,57 +370,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	**********************************************************/
 	const vs_output* pvert[3] = {&v0, &v1, &v2};
 	const vec3* edge_factors = &edge_factors_[prim_id * 3];
-	const int min_corner[3] = {
-		(edge_factors[0].y > 0) * 2 + (edge_factors[0].x > 0),
-		(edge_factors[1].y > 0) * 2 + (edge_factors[1].x > 0),
-		(edge_factors[2].y > 0) * 2 + (edge_factors[2].x > 0)
-	};
-
-	//升序排列
-	if(pvert[0]->position.y > pvert[1]->position.y){
-		swap(pvert[1], pvert[0]);
-	}
-	if(pvert[1]->position.y > pvert[2]->position.y){
-		swap(pvert[2], pvert[1]);
-		if(pvert[0]->position.y > pvert[1]->position.y) 
-			swap(pvert[1], pvert[0]);
-	}
-
-	vs_output projed_vert0 = project(*(pvert[0]));
-
-	//初始化边及边上属性的差
-	vs_output e01 = project(*(pvert[1])) - projed_vert0;
-	//float watch_x = e01.attributes[2].x;
 	
-	vs_output e02 = project(*(pvert[2])) - projed_vert0;
-	vs_output e12;
-
-
-
-	//初始化边上的各个分量差值。（只要算两条边就可以了。）
-	e12.position = pvert[2]->position - pvert[1]->position;
-
-	//计算面积
-	float area = cross_prod2(e02.position.xy(), e01.position.xy());
-	float inv_area = 1.0f / area;
-	if(equal<float>(area, 0.0f)) return;
-
-	/**********************************************************
-	*  求解各个属性的差分式
-	*********************************************************/
-	vs_output ddx((e02 * e01.position.y - e02.position.y * e01)*inv_area);
-	vs_output ddy((e01 * e02.position.x - e01.position.x * e02)*inv_area);
-
-	triangle_info info;
-	info.set(pvert[0]->position, ddx, ddy);
-	pps->ptriangleinfo_ = &info;
-
-	/*************************************************
-	*   开始绘制多边形。经典的上-下分割绘制算法
-	*   对扫描线光栅化保证是自左向右的。
-	*   所以不需要考虑major edge是在左或者右边。
-	*************************************************/
-
 	enum TRI_VS_TILE {
 		TVT_ALL,
 		TVT_PART,
@@ -430,6 +380,12 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 	TRI_VS_TILE intersect = TVT_ALL;
 	{
+		const int min_corner[3] = {
+			(edge_factors[0].y > 0) * 2 + (edge_factors[0].x > 0),
+			(edge_factors[1].y > 0) * 2 + (edge_factors[1].x > 0),
+			(edge_factors[2].y > 0) * 2 + (edge_factors[2].x > 0)
+		};
+
 		const int vpleft = fast_floori(max(0.0f, vp.x));
 		const int vptop = fast_floori(max(0.0f, vp.y));
 		const int vpright = fast_floori(min(vp.x + vp.w, static_cast<float>(hfb_->get_width())));
@@ -465,29 +421,55 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 				}
 			}
 		}
+		else{
+			return;
+		}
 	}
 
-	if (TVT_NONE == intersect){
-		return;
-	}
+	vs_output projed_vert0 = project(*(pvert[0]));
+
+	//初始化边及边上属性的差
+	vs_output e01 = project(*(pvert[1])) - projed_vert0;
+	vs_output e02 = project(*(pvert[2])) - projed_vert0;
+
+	//计算面积
+	float area = cross_prod2(e02.position.xy(), e01.position.xy());
+	float inv_area = 1.0f / area;
+	if(equal<float>(area, 0.0f)) return;
+
+	/**********************************************************
+	*  求解各个属性的差分式
+	*********************************************************/
+	vs_output ddx((e02 * e01.position.y - e02.position.y * e01)*inv_area);
+	vs_output ddy((e01 * e02.position.x - e01.position.x * e02)*inv_area);
+
+	triangle_info info;
+	info.set(pvert[0]->position, ddx, ddy);
+	pps->ptriangleinfo_ = &info;
+
+	/*************************************************
+	*   开始绘制多边形。
+	*	The algorithm is from Larrabee
+	*************************************************/
 
 	const h_blend_shader& hbs = pparent_->get_blend_shader();
 	const size_t num_samples = hfb_->get_num_samples();
 
-	std::vector<efl::rect<uint8_t> > test_regions[2];
-	std::vector<uint8_t> is_region_all[2];
-	test_regions[0].push_back(efl::rect<uint8_t>(0, 0, static_cast<uint8_t>(vp.w), static_cast<uint8_t>(vp.h)));
-	is_region_all[0].push_back(TVT_ALL == intersect);
+	uint32_t test_regions[2][TILE_SIZE / 2 * TILE_SIZE / 2];
+	uint32_t test_region_size[2] = { 0, 0 };
+	test_regions[0][0] = (fast_floori(vp.w) << 16) + (fast_floori(vp.h) << 24) + ((TVT_ALL == intersect) << 31);
+	test_region_size[0] = 1;
 	int src_stage = 0;
 	int dst_stage = !src_stage;
 
-	while (!test_regions[src_stage].empty()){
-		test_regions[dst_stage].clear();
-		is_region_all[dst_stage].clear();
+	while (test_region_size[src_stage] > 0){
+		test_region_size[dst_stage] = 0;
 
-		for (size_t ivp = 0; ivp < test_regions[src_stage].size(); ++ ivp){
-			const efl::rect<uint8_t>& cur_region = test_regions[src_stage][ivp];
-			TRI_VS_TILE intersect = is_region_all[src_stage][ivp] ? TVT_ALL : TVT_PART;
+		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp){
+			uint32_t packed_region = test_regions[src_stage][ivp];
+			efl::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
+				(packed_region >> 16) & 0xFF, (packed_region >> 24) & 0x7F);
+			TRI_VS_TILE intersect = (test_regions[src_stage][ivp] >> 31) ? TVT_ALL : TVT_PART;
 
 			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
 			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));
@@ -568,12 +550,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					integral(px_ins[2], ddy);
 					px_ins[3] = px_ins[2];
 					integral(px_ins[3], ddx);
-					ps_output px_outs[4];
-					vs_output unprojed;
-					for(int i = 0; i < 4; ++ i){
-						unproject(unprojed, px_ins[i]);
-						pps->execute(unprojed, px_outs[i]);
-					}
 
 					const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 					const __m128 mty = _mm_set_ps(1, 1, 0, 0);
@@ -582,6 +558,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 					const __m128 mbaseddxz = _mm_set1_ps(ddx.position.z);
 					const __m128 mbaseddyz = _mm_set1_ps(ddy.position.z);
 					float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
+					int any_sample_inside = 0;
 					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
 						const vec2& sp = samples_pattern_[i_sample];
 						__m128 mspx = _mm_set1_ps(sp.x);
@@ -600,6 +577,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 							mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
 						}
 
+						any_sample_inside |= ~_mm_movemask_ps(mask_rej);
+
 						__m128 mhalf = _mm_set1_ps(0.5f);
 						mspx = _mm_sub_ps(mspx, mhalf);
 						mspy = _mm_sub_ps(mspy, mhalf);
@@ -612,13 +591,17 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 						_mm_storeu_ps(&samples_depth[i_sample * 4], mdz);
 					}
-					for(int dy = 0; dy < 2; ++dy)
-					{
-						size_t iy = vptop + dy;
-						for(size_t dx = 0; dx < 2; ++dx)
-						{
-							size_t ix = vpleft + dx;
-							hfb_->render_pixel(hbs, ix, iy, px_outs[dy * 2 + dx], &samples_depth[dy * 2 + dx], 4);
+					ps_output px_out;
+					vs_output unprojed;
+					for(int t = 0; t < 4; ++ t){
+						if ((any_sample_inside >> t) & 1){
+							size_t iy = vptop + (t >> 1);
+							size_t ix = vpleft + (t & 1);
+
+							unproject(unprojed, px_ins[t]);
+							if (pps->execute(unprojed, px_out)){
+								hfb_->render_pixel(hbs, ix, iy, px_out, &samples_depth[t], 4);
+							}
 						}
 					}
 #else
@@ -630,31 +613,35 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 						vs_output unprojed;
 						for(size_t ix = 0; ix < 2; ++ix)
 						{
-							unproject(unprojed, px_in);
-							if(pps->execute(unprojed, px_out)){
-								float samples_depth[MAX_NUM_MULTI_SAMPLES];
-								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-									const vec2& sp = samples_pattern_[i_sample];
-									const float fx = ix + sp.x;
-									const float fy = iy + sp.y;
-									bool inside = true;
-									for (int e = 0; e < 3; ++ e){
-										if (fx * edge_factors[e].x + fy * edge_factors[e].y < evalue[e]){
-											inside = false;
-											break;
-										}
-									}
-									if (inside){
-										const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-										const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-										samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
-									}
-									else{
-										samples_depth[i_sample] = 1;
+							float samples_depth[MAX_NUM_MULTI_SAMPLES];
+							bool any_sample_inside = false;
+							for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+								const vec2& sp = samples_pattern_[i_sample];
+								const float fx = ix + sp.x;
+								const float fy = iy + sp.y;
+								bool inside = true;
+								for (int e = 0; e < 3; ++ e){
+									if (fx * edge_factors[e].x + fy * edge_factors[e].y < evalue[e]){
+										inside = false;
+										break;
 									}
 								}
+								if (inside){
+									any_sample_inside = true;
+									const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+									const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+									samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
+								}
+								else{
+									samples_depth[i_sample] = 1;
+								}
+							}
 
-								hfb_->render_pixel(hbs, ix + vpleft, iy + vptop, px_out, samples_depth, 1);
+							if (any_sample_inside){
+								unproject(unprojed, px_in);
+								if(pps->execute(unprojed, px_out)){
+									hfb_->render_pixel(hbs, ix + vpleft, iy + vptop, px_out, samples_depth, 1);
+								}
 							}
 
 							integral(px_in, ddx);
@@ -669,12 +656,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 			default:
 				{
-					const uint8_t new_w = std::max<uint8_t>(1, cur_region.w / 2);
-					const uint8_t new_h = std::max<uint8_t>(1, cur_region.h / 2);
-
-					efl::rect<uint8_t> tmp_region;
-					tmp_region.w = new_w;
-					tmp_region.h = new_h;
+					const uint32_t new_w = std::max<uint32_t>(1, cur_region.w / 2);
+					const uint32_t new_h = std::max<uint32_t>(1, cur_region.h / 2);
 
 					int2 base_corner[3];
 					float evalue[3];
@@ -711,22 +694,22 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 						mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
 					}
 
-					int rejections = _mm_movemask_ps(mask_rej);
+					int rejections = ~_mm_movemask_ps(mask_rej);
 					int accpetions = ~_mm_movemask_ps(mask_acc);
 					for (int t = 0; t < 4; ++ t){
-						if (!((rejections >> t) & 1)){
-							tmp_region.y = static_cast<uint8_t>(cur_region.y + new_h * (t >> 1));
-							tmp_region.x = static_cast<uint8_t>(cur_region.x + new_w * (t & 1));
+						if ((rejections >> t) & 1){
+							uint32_t y = cur_region.y + new_h * (t >> 1);
+							uint32_t x = cur_region.x + new_w * (t & 1);
 
-							test_regions[dst_stage].push_back(tmp_region);
-							is_region_all[dst_stage].push_back((accpetions >> t) & 1);
+							test_regions[dst_stage][test_region_size[dst_stage]] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (((accpetions >> t) & 1) << 31);
+							++ test_region_size[dst_stage];
 						}
 					}
 #else
 					for (int ty = 0; ty < 2; ++ ty){
-						tmp_region.y = static_cast<uint8_t>(cur_region.y + new_h * ty);
+						uint32_t y = cur_region.y + new_h * ty;
 						for (int tx = 0; tx < 2; ++ tx){
-							tmp_region.x = static_cast<uint8_t>(cur_region.x + new_w * tx);
+							uint32_t x = cur_region.x + new_w * tx;
 
 							int rejection = 0;
 							int acception = 1;
@@ -739,8 +722,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 							}
 
 							if (!rejection){
-								test_regions[dst_stage].push_back(tmp_region);
-								is_region_all[dst_stage].push_back(acception);
+								test_regions[dst_stage][test_region_size[dst_stage]] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (acception << 31);
+								++ test_region_size[dst_stage];
 							}
 						}
 					}
