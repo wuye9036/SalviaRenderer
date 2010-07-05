@@ -331,6 +331,262 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 	}
 }
 
+void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, const vs_output& v0, const vs_output& projed_v0,
+		const vs_output& ddx, const vs_output& ddy, const h_pixel_shader& pps, const h_blend_shader& hbs, size_t num_samples){
+	const float offsetx = left + 0.5f - v0.position.x;
+	const float offsety = top + 0.5f - v0.position.y;
+
+	//设置基准扫描线的属性
+	vs_output base_vert = projed_v0;
+	integral(base_vert, offsety, ddy);
+	integral(base_vert, offsetx, ddx);
+
+	for(int iy = top; iy < bottom; ++iy)
+	{
+		//光栅化
+		vs_output px_in(base_vert);
+		ps_output px_out;
+		vs_output unprojed;
+		for(size_t ix = left; ix < right; ++ix)
+		{
+			unproject(unprojed, px_in);
+			if(pps->execute(unprojed, px_out)){
+				if (1 == num_samples){
+					hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
+				}
+				else{
+					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+						const vec2& sp = samples_pattern_[i_sample];
+						const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+						const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+						float sample_depth = px_in.position.z + ddxz + ddyz;
+						hfb_->render_sample(hbs, ix, iy, i_sample, px_out, sample_depth);
+					}
+				}
+			}
+
+			integral(px_in, ddx);
+		}
+
+		//差分递增
+		integral(base_vert, ddy);
+	}
+}
+
+void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_output& projed_v0,
+		const vs_output& ddx, const vs_output& ddy, const efl::vec3* edge_factors, const h_pixel_shader& pps, const h_blend_shader& hbs, size_t num_samples){
+	const float offsetx = left + 0.5f - v0.position.x;
+	const float offsety = top + 0.5f - v0.position.y;
+
+	//设置基准扫描线的属性
+	vs_output base_vert = projed_v0;
+	integral(base_vert, offsety, ddy);
+	integral(base_vert, offsetx, ddx);
+
+	float evalue[3];
+	for (int e = 0; e < 3; ++ e){
+		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
+	}
+
+#ifndef EFLIB_NO_SIMD
+	vs_output px_ins[4];
+	px_ins[0] = base_vert;
+	px_ins[1] = px_ins[0];
+	integral(px_ins[1], ddx);
+	px_ins[2] = base_vert;
+	integral(px_ins[2], ddy);
+	px_ins[3] = px_ins[2];
+	integral(px_ins[3], ddx);
+
+	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
+	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
+
+	const __m128 mdepth = _mm_set_ps(px_ins[3].position.z, px_ins[2].position.z, px_ins[1].position.z, px_ins[0].position.z);
+	const __m128 mbaseddxz = _mm_set1_ps(ddx.position.z);
+	const __m128 mbaseddyz = _mm_set1_ps(ddy.position.z);
+	float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
+	int samples_inside[MAX_NUM_MULTI_SAMPLES];
+	int any_sample_inside = 0;
+	for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+		const vec2& sp = samples_pattern_[i_sample];
+		__m128 mspx = _mm_set1_ps(sp.x);
+		__m128 mspy = _mm_set1_ps(sp.y);
+
+		__m128 mask_rej = _mm_setzero_ps();
+		for (int e = 0; e < 3; ++ e){
+			__m128 mstepx = _mm_set_ps1(edge_factors[e].x);
+			__m128 mstepy = _mm_set_ps1(edge_factors[e].y);
+			__m128 mx = _mm_add_ps(mtx, mspx);
+			__m128 my = _mm_add_ps(mty, mspy);
+			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
+
+			__m128 mevalue = _mm_set1_ps(evalue[e]);
+
+			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+		}
+
+		samples_inside[i_sample] = ~_mm_movemask_ps(mask_rej);
+		any_sample_inside |= samples_inside[i_sample];
+
+		__m128 mdz;
+		if (1 == num_samples){
+			mdz = mdepth;
+		}
+		else{
+			__m128 mhalf = _mm_set1_ps(0.5f);
+			mspx = _mm_sub_ps(mspx, mhalf);
+			mspy = _mm_sub_ps(mspy, mhalf);
+			__m128 mddxz = _mm_mul_ps(mspx, mbaseddxz);
+			__m128 mddyz = _mm_mul_ps(mspy, mbaseddyz);
+			mdz = _mm_add_ps(mddxz, mddyz);
+			mdz = _mm_add_ps(mdepth, mdz);
+		}
+
+		_mm_storeu_ps(&samples_depth[i_sample * 4], mdz);
+	}
+	ps_output px_out;
+	vs_output unprojed;
+	for(int t = 0; t < 4; ++ t){
+		if ((any_sample_inside >> t) & 1){
+			size_t ix = left + (t & 1);
+			size_t iy = top + (t >> 1);
+
+			unproject(unprojed, px_ins[t]);
+			if (pps->execute(unprojed, px_out)){
+				for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+					if ((samples_inside[i_sample] >> t) & 1){
+						hfb_->render_sample(hbs, ix, iy, i_sample, px_out, samples_depth[i_sample * 4 + t]);
+					}
+				}
+			}
+		}
+	}
+#else
+	for(int iy = 0; iy < 2; ++iy)
+	{
+		//光栅化
+		vs_output px_in(base_vert);
+		ps_output px_out;
+		vs_output unprojed;
+		for(size_t ix = 0; ix < 2; ++ix)
+		{
+			float samples_depth[MAX_NUM_MULTI_SAMPLES];
+			bool samples_inside[MAX_NUM_MULTI_SAMPLES];
+			bool any_sample_inside = false;
+			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+				const vec2& sp = samples_pattern_[i_sample];
+				const float fx = ix + sp.x;
+				const float fy = iy + sp.y;
+				bool inside = true;
+				for (int e = 0; e < 3; ++ e){
+					if (fx * edge_factors[e].x + fy * edge_factors[e].y < evalue[e]){
+						inside = false;
+						break;
+					}
+				}
+				if (inside){
+					samples_inside[i_sample] = true;
+					any_sample_inside = true;
+					const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+					const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+					samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
+				}
+			}
+
+			if (any_sample_inside){
+				unproject(unprojed, px_in);
+				if(pps->execute(unprojed, px_out)){
+					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+						if (samples_inside[i_sample]){
+							hfb_->render_sample(hbs, ix + vpleft, iy + vptop, i_sample, px_out, samples_depth[i_sample]);
+						}
+					}
+				}
+			}
+
+			integral(px_in, ddx);
+		}
+
+		//差分递增
+		integral(base_vert, ddy);
+	}
+#endif
+}
+
+void rasterizer::subdivide_tile(int left, int top, const efl::rect<uint32_t>& cur_region, const vec3* edge_factors, const bool* mark_x, const bool* mark_y,
+		uint32_t* test_regions, uint32_t& test_region_size){
+	const uint32_t new_w = std::max<uint32_t>(1, cur_region.w / 2);
+	const uint32_t new_h = std::max<uint32_t>(1, cur_region.h / 2);
+
+	int2 base_corner[3];
+	float evalue[3];
+	float step_x[3];
+	float step_y[3];
+	float rej_to_acc[3];
+	for (int e = 0; e < 3; ++ e){
+		base_corner[e] = int2(left + mark_x[e] * new_w, top + mark_y[e] * new_h);
+		evalue[e] = edge_factors[e].z - (base_corner[e].x * edge_factors[e].x + base_corner[e].y * edge_factors[e].y);
+		step_x[e] = new_w * edge_factors[e].x;
+		step_y[e] = new_h * edge_factors[e].y;
+		rej_to_acc[e] = (mark_x[e] ? -step_x[e] : step_x[e]) + (mark_y[e] ? -step_y[e] : step_y[e]);
+	}
+
+#ifndef EFLIB_NO_SIMD
+	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
+	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
+
+	__m128 mask_rej = _mm_setzero_ps();
+	__m128 mask_acc = _mm_setzero_ps();
+	// Trival rejection & acception
+	for (int e = 0; e < 3; ++ e){
+		__m128 mstepx = _mm_set1_ps(step_x[e]);
+		__m128 mstepy = _mm_set1_ps(step_y[e]);
+
+		__m128 msteprej = _mm_add_ps(_mm_mul_ps(mtx, mstepx), _mm_mul_ps(mty, mstepy));
+		__m128 mstepacc = _mm_add_ps(msteprej, _mm_set1_ps(rej_to_acc[e]));
+
+		__m128 mevalue = _mm_set1_ps(evalue[e]);
+
+		mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
+	}
+
+	int rejections = ~_mm_movemask_ps(mask_rej);
+	int accpetions = ~_mm_movemask_ps(mask_acc);
+	for (int t = 0; t < 4; ++ t){
+		if ((rejections >> t) & 1){
+			uint32_t x = cur_region.x + new_w * (t & 1);
+			uint32_t y = cur_region.y + new_h * (t >> 1);
+
+			test_regions[test_region_size] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (((accpetions >> t) & 1) << 31);
+			++ test_region_size;
+		}
+	}
+#else
+	for (int ty = 0; ty < 2; ++ ty){
+		uint32_t y = cur_region.y + new_h * ty;
+		for (int tx = 0; tx < 2; ++ tx){
+			uint32_t x = cur_region.x + new_w * tx;
+
+			int rejection = 0;
+			int acception = 1;
+
+			// Trival rejection & acception
+			for (int e = 0; e < 3; ++ e){
+				float step = tx * step_x[e] + ty * step_y[e];
+				rejection |= (step < evalue[e]);
+				acception &= (step + rej_to_acc[e] >= evalue[e]);
+			}
+
+			if (!rejection){
+				test_regions[dst_stage][test_region_size[dst_stage]] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (acception << 31);
+				++ test_region_size[dst_stage];
+			}
+		}
+	}
+#endif
+}
+
 /*************************************************
 *   三角形的光栅化步骤：
 *			1 光栅化生成扫描线及扫描线差分信息
@@ -370,20 +626,26 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	**********************************************************/
 	const vs_output* pvert[3] = {&v0, &v1, &v2};
 	const vec3* edge_factors = &edge_factors_[prim_id * 3];
+	const bool mark_x[3] = {
+		edge_factors[0].x > 0, edge_factors[1].x > 0, edge_factors[2].x > 0
+	};
+	const bool mark_y[3] = {
+		edge_factors[0].y > 0, edge_factors[1].y > 0, edge_factors[2].y > 0
+	};		
 	
 	enum TRI_VS_TILE {
-		TVT_ALL,
-		TVT_PART,
-		TVT_NONE,
+		TVT_FULL,
+		TVT_PARTIAL,
+		TVT_EMPTY,
 		TVT_PIXEL
 	};
 
-	TRI_VS_TILE intersect = TVT_ALL;
+	TRI_VS_TILE intersect = TVT_FULL;
 	{
 		const int min_corner[3] = {
-			(edge_factors[0].y > 0) * 2 + (edge_factors[0].x > 0),
-			(edge_factors[1].y > 0) * 2 + (edge_factors[1].x > 0),
-			(edge_factors[2].y > 0) * 2 + (edge_factors[2].x > 0)
+			mark_y[0] * 2 + mark_x[0],
+			mark_y[1] * 2 + mark_x[1],
+			mark_y[2] * 2 + mark_x[2]
 		};
 
 		const int vpleft = fast_floori(max(0.0f, vp.x));
@@ -404,19 +666,19 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 			if (corners[min_c].x * edge_factors[e].x
 					+ corners[min_c].y * edge_factors[e].y
 					< edge_factors[e].z){
-				intersect = TVT_NONE;
+				intersect = TVT_EMPTY;
 				break;
 			}
 		}
 
 		// Trival acception
-		if (intersect != TVT_NONE){
+		if (intersect != TVT_EMPTY){
 			for (int e = 0; e < 3; ++ e){
 				int max_c = 3 - min_corner[e];
 				if (corners[max_c].x * edge_factors[e].x
 						+ corners[max_c].y * edge_factors[e].y
 						< edge_factors[e].z){
-					intersect = TVT_PART;
+					intersect = TVT_PARTIAL;
 					break;
 				}
 			}
@@ -457,7 +719,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 	uint32_t test_regions[2][TILE_SIZE / 2 * TILE_SIZE / 2];
 	uint32_t test_region_size[2] = { 0, 0 };
-	test_regions[0][0] = (fast_floori(vp.w) << 16) + (fast_floori(vp.h) << 24) + ((TVT_ALL == intersect) << 31);
+	test_regions[0][0] = (fast_floori(vp.w) << 16) + (fast_floori(vp.h) << 24) + ((TVT_FULL == intersect) << 31);
 	test_region_size[0] = 1;
 	int src_stage = 0;
 	int dst_stage = !src_stage;
@@ -466,10 +728,10 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		test_region_size[dst_stage] = 0;
 
 		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp){
-			uint32_t packed_region = test_regions[src_stage][ivp];
+			const uint32_t packed_region = test_regions[src_stage][ivp];
 			efl::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
 				(packed_region >> 16) & 0xFF, (packed_region >> 24) & 0x7F);
-			TRI_VS_TILE intersect = (test_regions[src_stage][ivp] >> 31) ? TVT_ALL : TVT_PART;
+			TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
 			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
 			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));
@@ -477,269 +739,25 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 			const int vpbottom = fast_floori(min(vp.y + cur_region.y + cur_region.h, static_cast<float>(hfb_->get_height())));
 
 			// For one pixel region
-			if ((TVT_PART == intersect) && (cur_region.w <= 2) && (cur_region.h <= 2)){
+			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 2) && (cur_region.h <= 2)){
 				intersect = TVT_PIXEL;
 			}
 
 			switch (intersect)
 			{
-			case TVT_NONE:
+			case TVT_EMPTY:
 				break;
 
-			case TVT_ALL: 
-				{
-					const float offsetx = vpleft + 0.5f - pvert[0]->position.x;
-					const float offsety = vptop + 0.5f - pvert[0]->position.y;
-
-					//设置基准扫描线的属性
-					vs_output base_vert = projed_vert0;
-					integral(base_vert, offsety, ddy);
-					integral(base_vert, offsetx, ddx);
-
-					for(int iy = vptop; iy < vpbottom; ++iy)
-					{
-						//光栅化
-						vs_output px_in(base_vert);
-						ps_output px_out;
-						vs_output unprojed;
-						for(size_t ix = vpleft; ix < vpright; ++ix)
-						{
-							unproject(unprojed, px_in);
-							if(pps->execute(unprojed, px_out)){
-								if (1 == num_samples){
-									hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
-								}
-								else{
-									for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-										const vec2& sp = samples_pattern_[i_sample];
-										const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-										const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-										float sample_depth = px_in.position.z + ddxz + ddyz;
-										hfb_->render_sample(hbs, ix, iy, i_sample, px_out, sample_depth);
-									}
-								}
-							}
-
-							integral(px_in, ddx);
-						}
-
-						//差分递增
-						integral(base_vert, ddy);
-					}
-				}
+			case TVT_FULL: 
+				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, *pvert[0], projed_vert0, ddx, ddy, pps, hbs, num_samples);
 				break;
 
 			case TVT_PIXEL:
-				{
-					const float offsetx = vpleft + 0.5f - pvert[0]->position.x;
-					const float offsety = vptop + 0.5f - pvert[0]->position.y;
-
-					//设置基准扫描线的属性
-					vs_output base_vert = projed_vert0;
-					integral(base_vert, offsety, ddy);
-					integral(base_vert, offsetx, ddx);
-
-					float evalue[3];
-					for (int e = 0; e < 3; ++ e){
-						evalue[e] = edge_factors[e].z - (vpleft * edge_factors[e].x + vptop * edge_factors[e].y);
-					}
-
-#ifndef EFLIB_NO_SIMD
-					vs_output px_ins[4];
-					px_ins[0] = base_vert;
-					px_ins[1] = px_ins[0];
-					integral(px_ins[1], ddx);
-					px_ins[2] = base_vert;
-					integral(px_ins[2], ddy);
-					px_ins[3] = px_ins[2];
-					integral(px_ins[3], ddx);
-
-					const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
-					const __m128 mty = _mm_set_ps(1, 1, 0, 0);
-
-					const __m128 mdepth = _mm_set_ps(px_ins[3].position.z, px_ins[2].position.z, px_ins[1].position.z, px_ins[0].position.z);
-					const __m128 mbaseddxz = _mm_set1_ps(ddx.position.z);
-					const __m128 mbaseddyz = _mm_set1_ps(ddy.position.z);
-					float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
-					int any_sample_inside = 0;
-					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-						const vec2& sp = samples_pattern_[i_sample];
-						__m128 mspx = _mm_set1_ps(sp.x);
-						__m128 mspy = _mm_set1_ps(sp.y);
-
-						__m128 mask_rej = _mm_setzero_ps();
-						for (int e = 0; e < 3; ++ e){
-							__m128 mstepx = _mm_set_ps1(edge_factors[e].x);
-							__m128 mstepy = _mm_set_ps1(edge_factors[e].y);
-							__m128 mx = _mm_add_ps(mtx, mspx);
-							__m128 my = _mm_add_ps(mty, mspy);
-							__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
-
-							__m128 mevalue = _mm_set1_ps(evalue[e]);
-
-							mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
-						}
-
-						any_sample_inside |= ~_mm_movemask_ps(mask_rej);
-
-						__m128 mdz;
-						if (1 == num_samples){
-							mdz = mdepth;
-						}
-						else{
-							__m128 mhalf = _mm_set1_ps(0.5f);
-							mspx = _mm_sub_ps(mspx, mhalf);
-							mspy = _mm_sub_ps(mspy, mhalf);
-							__m128 mddxz = _mm_mul_ps(mspx, mbaseddxz);
-							__m128 mddyz = _mm_mul_ps(mspy, mbaseddyz);
-							mdz = _mm_add_ps(mddxz, mddyz);
-							mdz = _mm_add_ps(mdepth, mdz);
-							__m128 mmax = _mm_and_ps(mask_rej, _mm_set1_ps(1.0f));
-							mdz = _mm_max_ps(mdz, mmax);
-						}
-
-						_mm_storeu_ps(&samples_depth[i_sample * 4], mdz);
-					}
-					ps_output px_out;
-					vs_output unprojed;
-					for(int t = 0; t < 4; ++ t){
-						if ((any_sample_inside >> t) & 1){
-							size_t iy = vptop + (t >> 1);
-							size_t ix = vpleft + (t & 1);
-
-							unproject(unprojed, px_ins[t]);
-							if (pps->execute(unprojed, px_out)){
-								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-									hfb_->render_sample(hbs, ix, iy, i_sample, px_out, samples_depth[i_sample * 4 + t]);
-								}
-							}
-						}
-					}
-#else
-					for(int iy = 0; iy < 2; ++iy)
-					{
-						//光栅化
-						vs_output px_in(base_vert);
-						ps_output px_out;
-						vs_output unprojed;
-						for(size_t ix = 0; ix < 2; ++ix)
-						{
-							float samples_depth[MAX_NUM_MULTI_SAMPLES];
-							bool any_sample_inside = false;
-							for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-								const vec2& sp = samples_pattern_[i_sample];
-								const float fx = ix + sp.x;
-								const float fy = iy + sp.y;
-								bool inside = true;
-								for (int e = 0; e < 3; ++ e){
-									if (fx * edge_factors[e].x + fy * edge_factors[e].y < evalue[e]){
-										inside = false;
-										break;
-									}
-								}
-								if (inside){
-									any_sample_inside = true;
-									const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-									const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-									samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
-								}
-								else{
-									samples_depth[i_sample] = 1;
-								}
-							}
-
-							if (any_sample_inside){
-								unproject(unprojed, px_in);
-								if(pps->execute(unprojed, px_out)){
-									hfb_->render_pixel(hbs, ix + vpleft, iy + vptop, px_out, samples_depth, 1);
-								}
-							}
-
-							integral(px_in, ddx);
-						}
-
-						//差分递增
-						integral(base_vert, ddy);
-					}
-#endif
-				}
+				this->draw_pixels(vpleft, vptop, *pvert[0], projed_vert0, ddx, ddy, edge_factors, pps, hbs, num_samples);
 				break;
 
 			default:
-				{
-					const uint32_t new_w = std::max<uint32_t>(1, cur_region.w / 2);
-					const uint32_t new_h = std::max<uint32_t>(1, cur_region.h / 2);
-
-					int2 base_corner[3];
-					float evalue[3];
-					float step_x[3];
-					float step_y[3];
-					float rej_to_acc[3];
-					for (int e = 0; e < 3; ++ e){
-						bool mark_x = edge_factors[e].x > 0;
-						bool mark_y = edge_factors[e].y > 0;
-						base_corner[e] = int2(vpleft + mark_x * new_w, vptop + mark_y * new_h);
-						evalue[e] = edge_factors[e].z - (base_corner[e].x * edge_factors[e].x + base_corner[e].y * edge_factors[e].y);
-						step_x[e] = new_w * edge_factors[e].x;
-						step_y[e] = new_h * edge_factors[e].y;
-						rej_to_acc[e] = (mark_x ? -step_x[e] : step_x[e]) + (mark_y ? -step_y[e] : step_y[e]);
-					}
-
-#ifndef EFLIB_NO_SIMD
-					const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
-					const __m128 mty = _mm_set_ps(1, 1, 0, 0);
-
-					__m128 mask_rej = _mm_setzero_ps();
-					__m128 mask_acc = _mm_setzero_ps();
-					// Trival rejection
-					for (int e = 0; e < 3; ++ e){
-						__m128 mstepx = _mm_set1_ps(step_x[e]);
-						__m128 mstepy = _mm_set1_ps(step_y[e]);
-
-						__m128 msteprej = _mm_add_ps(_mm_mul_ps(mtx, mstepx), _mm_mul_ps(mty, mstepy));
-						__m128 mstepacc = _mm_add_ps(msteprej, _mm_set1_ps(rej_to_acc[e]));
-
-						__m128 mevalue = _mm_set1_ps(evalue[e]);
-
-						mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
-						mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
-					}
-
-					int rejections = ~_mm_movemask_ps(mask_rej);
-					int accpetions = ~_mm_movemask_ps(mask_acc);
-					for (int t = 0; t < 4; ++ t){
-						if ((rejections >> t) & 1){
-							uint32_t y = cur_region.y + new_h * (t >> 1);
-							uint32_t x = cur_region.x + new_w * (t & 1);
-
-							test_regions[dst_stage][test_region_size[dst_stage]] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (((accpetions >> t) & 1) << 31);
-							++ test_region_size[dst_stage];
-						}
-					}
-#else
-					for (int ty = 0; ty < 2; ++ ty){
-						uint32_t y = cur_region.y + new_h * ty;
-						for (int tx = 0; tx < 2; ++ tx){
-							uint32_t x = cur_region.x + new_w * tx;
-
-							int rejection = 0;
-							int acception = 1;
-
-							// Trival rejection & acception
-							for (int e = 0; e < 3; ++ e){
-								float step = tx * step_x[e] + ty * step_y[e];
-								rejection |= (step < evalue[e]);
-								acception &= (step + rej_to_acc[e] >= evalue[e]);
-							}
-
-							if (!rejection){
-								test_regions[dst_stage][test_region_size[dst_stage]] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (acception << 31);
-								++ test_region_size[dst_stage];
-							}
-						}
-					}
-#endif
-				}
+				this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, mark_x, mark_y, test_regions[dst_stage], test_region_size[dst_stage]);
 				break;
 			}
 		}
