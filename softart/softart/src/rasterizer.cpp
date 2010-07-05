@@ -44,31 +44,27 @@ bool cull_mode_cw(float area)
 void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area)
 {
 	num_clipped_verts = 0;
-	vs_output tmp_verts[6];
 	uint32_t num_out_clipped_verts;
 
 	const bool front_face = area > 0;
 
-	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[0], *pv[1]);
+	clipper->clip(&clipped_verts[num_clipped_verts], num_out_clipped_verts, vp, *pv[0], *pv[1]);
 	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
 		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
-		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
 		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
 	num_clipped_verts += num_out_clipped_verts;
 
-	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[1], *pv[2]);
+	clipper->clip(&clipped_verts[num_clipped_verts], num_out_clipped_verts, vp, *pv[1], *pv[2]);
 	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
 		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
-		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
 		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
 	num_clipped_verts += num_out_clipped_verts;
 						
-	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[2], *pv[0]);
+	clipper->clip(&clipped_verts[num_clipped_verts], num_out_clipped_verts, vp, *pv[2], *pv[0]);
 	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
 		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
-		clipped_verts[num_clipped_verts + j] = tmp_verts[j];
 		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
 	num_clipped_verts += num_out_clipped_verts;
@@ -76,9 +72,8 @@ void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_ver
 
 void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area)
 {
-	vs_output tmp_verts[6];
 	uint32_t num_out_clipped_verts;
-	clipper->clip(tmp_verts, num_out_clipped_verts, vp, *pv[0], *pv[1], *pv[2]);
+	clipper->clip(clipped_verts, num_out_clipped_verts, vp, *pv[0], *pv[1], *pv[2]);
 	custom_assert(num_out_clipped_verts <= 6, "");
 
 	num_clipped_verts = (0 == num_out_clipped_verts) ? 0 : (num_out_clipped_verts - 2) * 3;
@@ -86,7 +81,6 @@ void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, 
 	const bool front_face = area > 0;
 
 	for (uint32_t i = 0; i < num_out_clipped_verts; ++ i){
-		clipped_verts[i] = tmp_verts[i];
 		clipped_verts[i].front_face = front_face;
 	}
 
@@ -391,12 +385,9 @@ void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_ou
 #ifndef EFLIB_NO_SIMD
 	vs_output px_ins[4];
 	px_ins[0] = base_vert;
-	px_ins[1] = px_ins[0];
-	integral(px_ins[1], ddx);
-	px_ins[2] = base_vert;
-	integral(px_ins[2], ddy);
-	px_ins[3] = px_ins[2];
-	integral(px_ins[3], ddx);
+	integral(px_ins[1], px_ins[0], ddx);
+	integral(px_ins[2], base_vert, ddy);
+	integral(px_ins[3], px_ins[2], ddx);
 
 	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
@@ -404,7 +395,7 @@ void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_ou
 	const __m128 mdepth = _mm_set_ps(px_ins[3].position.z, px_ins[2].position.z, px_ins[1].position.z, px_ins[0].position.z);
 	const __m128 mbaseddxz = _mm_set1_ps(ddx.position.z);
 	const __m128 mbaseddyz = _mm_set1_ps(ddy.position.z);
-	float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
+	ALIGN16 float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
 	int samples_inside[MAX_NUM_MULTI_SAMPLES];
 	int any_sample_inside = 0;
 	for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
@@ -442,24 +433,29 @@ void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_ou
 			mdz = _mm_add_ps(mdepth, mdz);
 		}
 
-		_mm_storeu_ps(&samples_depth[i_sample * 4], mdz);
+		_mm_store_ps(&samples_depth[i_sample * 4], mdz);
 	}
+	any_sample_inside &= 0xF;
+
 	ps_output px_out;
 	vs_output unprojed;
-	for(int t = 0; t < 4; ++ t){
-		if ((any_sample_inside >> t) & 1){
-			size_t ix = left + (t & 1);
-			size_t iy = top + (t >> 1);
+	unsigned long t;
+	while (_BitScanForward(&t, any_sample_inside)){
+		custom_assert(t < 4, "");
 
-			unproject(unprojed, px_ins[t]);
-			if (pps->execute(unprojed, px_out)){
-				for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-					if ((samples_inside[i_sample] >> t) & 1){
-						hfb_->render_sample(hbs, ix, iy, i_sample, px_out, samples_depth[i_sample * 4 + t]);
-					}
+		size_t ix = left + (t & 1);
+		size_t iy = top + (t >> 1);
+
+		unproject(unprojed, px_ins[t]);
+		if (pps->execute(unprojed, px_out)){
+			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+				if ((samples_inside[i_sample] >> t) & 1){
+					hfb_->render_sample(hbs, ix, iy, i_sample, px_out, samples_depth[i_sample * 4 + t]);
 				}
 			}
 		}
+
+		any_sample_inside &= any_sample_inside - 1;
 	}
 #else
 	for(int iy = 0; iy < 2; ++iy)
@@ -551,16 +547,19 @@ void rasterizer::subdivide_tile(int left, int top, const efl::rect<uint32_t>& cu
 		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
 	}
 
-	int rejections = ~_mm_movemask_ps(mask_rej);
-	int accpetions = ~_mm_movemask_ps(mask_acc);
-	for (int t = 0; t < 4; ++ t){
-		if ((rejections >> t) & 1){
-			uint32_t x = cur_region.x + new_w * (t & 1);
-			uint32_t y = cur_region.y + new_h * (t >> 1);
+	int rejections = ~_mm_movemask_ps(mask_rej) & 0xF;
+	int accpetions = ~_mm_movemask_ps(mask_acc) & 0xF;
+	unsigned long t;
+	while (_BitScanForward(&t, rejections)){
+		custom_assert(t < 4, "");
 
-			test_regions[test_region_size] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (((accpetions >> t) & 1) << 31);
-			++ test_region_size;
-		}
+		uint32_t x = cur_region.x + new_w * (t & 1);
+		uint32_t y = cur_region.y + new_h * (t >> 1);
+
+		test_regions[test_region_size] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (((accpetions >> t) & 1) << 31);
+		++ test_region_size;
+
+		rejections &= rejections - 1;
 	}
 #else
 	for (int ty = 0; ty < 2; ++ ty){
@@ -1053,10 +1052,10 @@ void rasterizer::draw(size_t prim_count){
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&rasterizer::geometry_setup_func, this, boost::ref(num_clipped_verts),
 			boost::ref(clipped_verts_full), boost::ref(clipped_indices_full), static_cast<int32_t>(prim_count), primtopo,
-			working_package, GEOMETRY_SETUP_PACKAGE_SIZE));
+			boost::ref(working_package), GEOMETRY_SETUP_PACKAGE_SIZE));
 	}
 	geometry_setup_func(boost::ref(num_clipped_verts), boost::ref(clipped_verts_full), boost::ref(clipped_indices_full),
-		static_cast<int32_t>(prim_count), primtopo, working_package, GEOMETRY_SETUP_PACKAGE_SIZE);
+		static_cast<int32_t>(prim_count), primtopo, boost::ref(working_package), GEOMETRY_SETUP_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
 	std::vector<uint32_t> addresses(prim_count);
@@ -1070,10 +1069,10 @@ void rasterizer::draw(size_t prim_count){
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&rasterizer::compact_clipped_verts_func, this, boost::ref(clipped_indices),
 			boost::ref(clipped_indices_full), boost::ref(addresses),
-			boost::ref(num_clipped_verts), prim_count, working_package, COMPACT_CLIPPED_VERTS_PACKAGE_SIZE));
+			boost::ref(num_clipped_verts), prim_count, boost::ref(working_package), COMPACT_CLIPPED_VERTS_PACKAGE_SIZE));
 	}
 	compact_clipped_verts_func(boost::ref(clipped_indices), boost::ref(clipped_indices_full), boost::ref(addresses),
-			boost::ref(num_clipped_verts), static_cast<int32_t>(prim_count), working_package, COMPACT_CLIPPED_VERTS_PACKAGE_SIZE);
+			boost::ref(num_clipped_verts), static_cast<int32_t>(prim_count), boost::ref(working_package), COMPACT_CLIPPED_VERTS_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
 	working_package = 0;

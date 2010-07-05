@@ -196,6 +196,46 @@ vs_output& integral(vs_output& inout, float step, const vs_output& derivation)
 	return inout;
 }
 
+vs_output& integral(vs_output& out, const vs_output& in, const vs_output& derivation)
+{
+	assert(in.num_used_attribute == derivation.num_used_attribute);
+
+	out.position = in.position + derivation.position;
+	out.num_used_attribute = in.num_used_attribute;
+	out.front_face = in.front_face;
+	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
+		assert(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr]);
+		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		if (!(in.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] = in.attributes[i_attr] + derivation.attributes[i_attr];
+		}
+		else{
+			out.attributes[i_attr] = in.attributes[i_attr];
+		}
+	}
+	return out;
+}
+
+vs_output& integral(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
+{
+	assert(in.num_used_attribute == derivation.num_used_attribute);
+
+	out.position = in.position + (derivation.position * step);
+	out.num_used_attribute = in.num_used_attribute;
+	out.front_face = in.front_face;
+	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
+		assert(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr]);
+		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		if (!(in.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] = in.attributes[i_attr] + (derivation.attributes[i_attr] * step);
+		}
+		else{
+			out.attributes[i_attr] = in.attributes[i_attr];
+		}
+	}
+	return out;
+}	
+
 vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
 {
 	assert(in.num_used_attribute == derivation.num_used_attribute);
