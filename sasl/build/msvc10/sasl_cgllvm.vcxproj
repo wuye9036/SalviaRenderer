@@ -19,19 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\code_generator\forward.h" />
-    <ClInclude Include="..\include\code_generator\llvm\cgllvm_context.h" />
-    <ClInclude Include="..\include\code_generator\llvm\cg_llvm.h" />
-    <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h" />
-    <ClInclude Include="..\include\code_generator\llvm\llvm_patch_begin.h" />
-    <ClInclude Include="..\include\code_generator\llvm\llvm_patch_end.h" />
-    <ClInclude Include="..\include\code_generator\llvm\llvm_semantic_info.h" />
+    <ClInclude Include="..\..\include\code_generator\forward.h" />
+    <ClInclude Include="..\..\include\code_generator\llvm\cgllvm_context.h" />
+    <ClInclude Include="..\..\include\code_generator\llvm\cg_llvm.h" />
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_generator.h" />
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_patch_begin.h" />
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_patch_end.h" />
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_semantic_info.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\code_generator\llvm\cgllvm_context.cpp" />
-    <ClCompile Include="..\src\code_generator\llvm\cg_llvm.cpp" />
-    <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp" />
-    <ClCompile Include="..\src\code_generator\llvm\llvm_semantic_info.cpp" />
+    <ClCompile Include="..\..\src\code_generator\llvm\cgllvm_context.cpp" />
+    <ClCompile Include="..\..\src\code_generator\llvm\cg_llvm.cpp" />
+    <ClCompile Include="..\..\src\code_generator\llvm\llvm_generator.cpp" />
+    <ClCompile Include="..\..\src\code_generator\llvm\llvm_semantic_info.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FDDE307D-F5B9-4E26-9664-175E3FCAE20D}</ProjectGuid>
@@ -85,7 +85,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../;../../softart;../../3rd_party/llvm/include;../../3rd_party/llvm/bin/include/win32_msvc10/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../;../../../softart;../../../3rd_party/llvm/include;../../../3rd_party/llvm/bin/include/win32_msvc10/</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

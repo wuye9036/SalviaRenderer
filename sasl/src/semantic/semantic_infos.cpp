@@ -131,4 +131,9 @@ void variable_semantic_info::is_local( bool isloc ){
 	this->isloc = isloc;
 }
 
+execution_block_semantic_info::execution_block_semantic_info()
+	: semantic_info( "execution block semantic info" )
+{
+}
+
 END_NS_SASL_SEMANTIC();

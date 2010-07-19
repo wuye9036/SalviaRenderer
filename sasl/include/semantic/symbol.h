@@ -9,6 +9,7 @@
 #include <boost/tr1/unordered_map.hpp>
 #include <boost/tr1/type_traits.hpp>
 #include <string>
+#include <vector>
 
 namespace sasl{
 	namespace syntax_tree{

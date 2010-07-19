@@ -15,39 +15,39 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\code_generator\llvm\llvm_generator.h">
+    <ClInclude Include="..\..\include\code_generator\llvm\cg_llvm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\code_generator\forward.h">
+    <ClInclude Include="..\..\include\code_generator\llvm\cgllvm_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\code_generator\llvm\cg_llvm.h">
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_generator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\code_generator\llvm\llvm_patch_begin.h">
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_patch_begin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\code_generator\llvm\llvm_patch_end.h">
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_patch_end.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\code_generator\llvm\cgllvm_context.h">
+    <ClInclude Include="..\..\include\code_generator\llvm\llvm_semantic_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\code_generator\llvm\llvm_semantic_info.h">
+    <ClInclude Include="..\..\include\code_generator\forward.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\code_generator\llvm\llvm_generator.cpp">
+    <ClCompile Include="..\..\src\code_generator\llvm\cg_llvm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\code_generator\llvm\cg_llvm.cpp">
+    <ClCompile Include="..\..\src\code_generator\llvm\cgllvm_context.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\code_generator\llvm\cgllvm_context.cpp">
+    <ClCompile Include="..\..\src\code_generator\llvm\llvm_generator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\code_generator\llvm\llvm_semantic_info.cpp">
+    <ClCompile Include="..\..\src\code_generator\llvm\llvm_semantic_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

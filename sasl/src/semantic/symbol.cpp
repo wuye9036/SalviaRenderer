@@ -114,7 +114,7 @@ void symbol::remove_child( const std::string& s ){
 	//remove mangled_name from mangling table.
 	if ( mangles.count( unmangled_name ) > 0){
 		mangling_table_t::mapped_type& mt = mangles[unmangled_name];
-		mangling_table_t::mapped_type::const_iterator mt_it
+		mangling_table_t::mapped_type::iterator mt_it
 			= ::std::find( mt.begin(), mt.end(), symname );
 		mt.erase( mt_it );
 		if ( mt.empty() ) { mangles.erase( unmangled_name ); }

@@ -19,35 +19,37 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\enums\buildin_type_code.cpp" />
-    <ClCompile Include="..\enums\compiler_informations.cpp" />
-    <ClCompile Include="..\enums\jump_mode.cpp" />
-    <ClCompile Include="..\enums\literal_constant_types.cpp" />
-    <ClCompile Include="..\enums\operators.cpp" />
-    <ClCompile Include="..\enums\storage_mode.cpp" />
-    <ClCompile Include="..\enums\syntax_node_types.cpp" />
-    <ClCompile Include="..\enums\token_types.cpp" />
-    <ClCompile Include="..\enums\type_qualifiers.cpp" />
-    <ClCompile Include="..\enums\type_types.cpp" />
+    <ClInclude Include="..\..\include\semantic\name_mangler.h" />
+    <ClInclude Include="..\..\include\semantic\semantic_analyser.h" />
+    <ClInclude Include="..\..\include\semantic\semantic_analyser_impl.h" />
+    <ClInclude Include="..\..\include\semantic\semantic_error.h" />
+    <ClInclude Include="..\..\include\semantic\semantic_forward.h" />
+    <ClInclude Include="..\..\include\semantic\semantic_info.h" />
+    <ClInclude Include="..\..\include\semantic\semantic_infos.h" />
+    <ClInclude Include="..\..\include\semantic\symbol.h" />
+    <ClInclude Include="..\..\include\semantic\symbol_scope.h" />
+    <ClInclude Include="..\..\include\semantic\type_checker.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\enums\buildin_type_code.h" />
-    <ClInclude Include="..\enums\compiler_informations.h" />
-    <ClInclude Include="..\enums\default_hasher.h" />
-    <ClInclude Include="..\enums\enum_base.h" />
-    <ClInclude Include="..\enums\jump_mode.h" />
-    <ClInclude Include="..\enums\literal_constant_types.h" />
-    <ClInclude Include="..\enums\operators.h" />
-    <ClInclude Include="..\enums\storage_mode.h" />
-    <ClInclude Include="..\enums\syntax_node_types.h" />
-    <ClInclude Include="..\enums\token_types.h" />
-    <ClInclude Include="..\enums\type_qualifiers.h" />
-    <ClInclude Include="..\enums\type_types.h" />
+    <ClCompile Include="..\..\src\semantic\name_mangler.cpp" />
+    <ClCompile Include="..\..\src\semantic\semantic_analyser_impl.cpp" />
+    <ClCompile Include="..\..\src\semantic\semantic_error.cpp" />
+    <ClCompile Include="..\..\src\semantic\semantic_infos.cpp" />
+    <ClCompile Include="..\..\src\semantic\sematic_analyser.cpp" />
+    <ClCompile Include="..\..\src\semantic\symbol.cpp" />
+    <ClCompile Include="..\..\src\semantic\symbol_scope.cpp" />
+    <ClCompile Include="..\..\src\semantic\type_checker.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\enums\compiler_infos.xml">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\enums\enum_defs.xml" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{392ED18C-B7BB-40F1-BBC4-551104F1EA77}</ProjectGuid>
+    <ProjectGuid>{092B1B4B-81A3-4C3E-8AEB-3C742FB17AF7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>sasl_enums</RootNamespace>
+    <RootNamespace>sasl_semantic</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -96,7 +98,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../;../../softart</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../;../../../softart</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

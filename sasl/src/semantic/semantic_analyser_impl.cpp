@@ -221,19 +221,31 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 
 // statement
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::statement& v ){
-
+	assert( !"can not reach this point!" );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration_statement& v ){
 	v.decl->accept(this);
 }
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::if_statement& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::while_statement& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::dowhile_statement& v ){}
+
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::if_statement& v ){
+}
+
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::while_statement& v ){
+
+}
+
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::dowhile_statement& v ){
+}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::case_label& v ){}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::switch_statement& v ){}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& v ){}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_statement& v ){}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& v ){}
 
 // program

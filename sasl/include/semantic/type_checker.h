@@ -3,6 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <boost/shared_ptr.hpp>
+#include <string>
 
 namespace sasl{
 	namespace syntax_tree{

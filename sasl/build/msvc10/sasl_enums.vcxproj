@@ -19,40 +19,55 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\test\compinfos.cpp" />
-    <ClCompile Include="..\test\llvm_test.cpp" />
-    <ClCompile Include="..\test\semantic.cpp" />
-    <ClCompile Include="..\test\syntax_tree.cpp" />
-    <ClCompile Include="..\test\test_utility.cpp" />
+    <ClCompile Include="..\..\enums\buildin_type_code.cpp" />
+    <ClCompile Include="..\..\enums\compiler_informations.cpp" />
+    <ClCompile Include="..\..\enums\jump_mode.cpp" />
+    <ClCompile Include="..\..\enums\literal_constant_types.cpp" />
+    <ClCompile Include="..\..\enums\operators.cpp" />
+    <ClCompile Include="..\..\enums\storage_mode.cpp" />
+    <ClCompile Include="..\..\enums\syntax_node_types.cpp" />
+    <ClCompile Include="..\..\enums\token_types.cpp" />
+    <ClCompile Include="..\..\enums\type_qualifiers.cpp" />
+    <ClCompile Include="..\..\enums\type_types.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\test\test_utility.h" />
+    <ClInclude Include="..\..\enums\buildin_type_code.h" />
+    <ClInclude Include="..\..\enums\compiler_informations.h" />
+    <ClInclude Include="..\..\enums\default_hasher.h" />
+    <ClInclude Include="..\..\enums\enum_base.h" />
+    <ClInclude Include="..\..\enums\jump_mode.h" />
+    <ClInclude Include="..\..\enums\literal_constant_types.h" />
+    <ClInclude Include="..\..\enums\operators.h" />
+    <ClInclude Include="..\..\enums\storage_mode.h" />
+    <ClInclude Include="..\..\enums\syntax_node_types.h" />
+    <ClInclude Include="..\..\enums\token_types.h" />
+    <ClInclude Include="..\..\enums\type_qualifiers.h" />
+    <ClInclude Include="..\..\enums\type_types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2E441DC7-83D4-473D-ABAB-8A7AF85180FE}</ProjectGuid>
+    <ProjectGuid>{392ED18C-B7BB-40F1-BBC4-551104F1EA77}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>llvm_test</RootNamespace>
-    <ProjectName>sasl_test</ProjectName>
+    <RootNamespace>sasl_enums</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
@@ -73,36 +88,19 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../../3rd_party/llvm/bin/include/win32_msvc10;../../3rd_party/llvm/include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../../3rd_party/llvm/bin/include/win32_msvc10;../../3rd_party/llvm/include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IncludePath>../../3rd_party/llvm/bin/include/win32_msvc10;../../3rd_party/llvm/include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <IncludePath>../../3rd_party/llvm/bin/include/win32_msvc10;../../3rd_party/llvm/include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;BOOST_ALL_DYN_LINK</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../;%(AdditionalIncludeDirectories);../../softart/</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../;../../../softart</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../../3rd_party/llvm/bin/lib/win32_msvc10_debug;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;sasl_cgllvm.lib;sasl_syntaxtree.lib;sasl_enums.lib;sasl_semantic.lib;sasl_common.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -111,14 +109,12 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_ITERATOR_DEBUG_LEVEL = 0;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;BOOST_ALL_DYN_LINK</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../;%(AdditionalIncludeDirectories);../../softart/</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../;../../softart</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../../3rd_party/llvm/bin/lib/win32_msvc10_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -129,16 +125,14 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_ITERATOR_DEBUG_LEVEL = 0;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;BOOST_ALL_DYN_LINK</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../;%(AdditionalIncludeDirectories);../../softart/</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../;../../softart</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../../3rd_party/llvm/bin/lib/win32_msvc10_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,16 +143,14 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_ITERATOR_DEBUG_LEVEL = 0;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;BOOST_ALL_DYN_LINK</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../;%(AdditionalIncludeDirectories);../../softart/</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../;../../softart</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../../3rd_party/llvm/bin/lib/win32_msvc10_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMCore.lib;LLVMSupport.lib;LLVMSystem.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

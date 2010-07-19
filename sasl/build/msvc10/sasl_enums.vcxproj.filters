@@ -15,72 +15,72 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\enums\buildin_type_code.cpp">
+    <ClCompile Include="..\..\enums\buildin_type_code.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\jump_mode.cpp">
+    <ClCompile Include="..\..\enums\compiler_informations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\literal_constant_types.cpp">
+    <ClCompile Include="..\..\enums\jump_mode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\operators.cpp">
+    <ClCompile Include="..\..\enums\literal_constant_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\storage_mode.cpp">
+    <ClCompile Include="..\..\enums\operators.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\syntax_node_types.cpp">
+    <ClCompile Include="..\..\enums\storage_mode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\token_types.cpp">
+    <ClCompile Include="..\..\enums\syntax_node_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\type_qualifiers.cpp">
+    <ClCompile Include="..\..\enums\token_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\type_types.cpp">
+    <ClCompile Include="..\..\enums\type_qualifiers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\enums\compiler_informations.cpp">
+    <ClCompile Include="..\..\enums\type_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\enums\buildin_type_code.h">
+    <ClInclude Include="..\..\enums\buildin_type_code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\enum_base.h">
+    <ClInclude Include="..\..\enums\compiler_informations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\jump_mode.h">
+    <ClInclude Include="..\..\enums\default_hasher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\literal_constant_types.h">
+    <ClInclude Include="..\..\enums\enum_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\operators.h">
+    <ClInclude Include="..\..\enums\jump_mode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\storage_mode.h">
+    <ClInclude Include="..\..\enums\literal_constant_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\syntax_node_types.h">
+    <ClInclude Include="..\..\enums\operators.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\token_types.h">
+    <ClInclude Include="..\..\enums\storage_mode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\type_qualifiers.h">
+    <ClInclude Include="..\..\enums\syntax_node_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\type_types.h">
+    <ClInclude Include="..\..\enums\token_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\compiler_informations.h">
+    <ClInclude Include="..\..\enums\type_qualifiers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\enums\default_hasher.h">
+    <ClInclude Include="..\..\enums\type_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

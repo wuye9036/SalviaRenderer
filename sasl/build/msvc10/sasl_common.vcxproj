@@ -11,15 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\common\common_fwd.h" />
-    <ClInclude Include="..\include\common\compiler_information.h" />
-    <ClInclude Include="..\include\common\compiler_info_manager.h" />
-    <ClInclude Include="..\include\common\lex_context.h" />
-    <ClInclude Include="..\include\common\token_attr.h" />
+    <ClInclude Include="..\..\include\common\common_fwd.h" />
+    <ClInclude Include="..\..\include\common\compiler_information.h" />
+    <ClInclude Include="..\..\include\common\compiler_info_manager.h" />
+    <ClInclude Include="..\..\include\common\lex_context.h" />
+    <ClInclude Include="..\..\include\common\token_attr.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\common\compiler_information_impl.cpp" />
-    <ClCompile Include="..\src\common\compiler_info_manager.cpp" />
+    <ClCompile Include="..\..\src\common\compiler_information_impl.cpp" />
+    <ClCompile Include="..\..\src\common\compiler_info_manager.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{30113C57-FDAE-449D-98A9-B0C436319C39}</ProjectGuid>
@@ -56,7 +56,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../;../../softart</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../;../../../softart</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
