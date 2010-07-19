@@ -2,13 +2,12 @@
 #define EFLIB_CONFIG_H
 
 #include "user_config.h"
-#include <boost/config.hpp>
 
 #if defined(DEBUG) | defined(_DEBUG)
 #	define EFLIB_DEBUG
 #endif
 
-#ifdef BOOST_MSVC
+#ifdef _MSC_VER
 #	define EFLIB_MSVC
 #	define EFILB_COMPILE_VER _MSC_VER
 #	ifdef _UNICODE
@@ -38,7 +37,7 @@
 
 #endif
 
-#ifdef BOOST_WINDOWS
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 #	define EFLIB_WINDOWS
 #endif
 

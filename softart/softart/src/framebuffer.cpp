@@ -16,6 +16,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#include "eflib/include/eflib.h"
 #include "eflib/include/util.h"
 
 #include <algorithm>
@@ -300,7 +301,7 @@ bool depth_stencil_state::stencil_test(bool front_face, int32_t ref, int32_t cur
 }
 
 int32_t depth_stencil_state::stencil_operation(bool front_face, bool depth_pass, bool stencil_pass, int32_t ref, int32_t cur_stencil) const{
-	return stencil_op_func_[(!front_face) * 3 + (!depth_pass) + stencil_pass](ref, cur_stencil);
+	return stencil_op_func_[(!front_face) * 3 + (!depth_pass) + static_cast<int>(stencil_pass)](ref, cur_stencil);
 }
 
 void depth_stencil_state::write_depth(size_t sample, float depth, backbuffer_pixel_out& target_pixel) const{

@@ -341,7 +341,7 @@ void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, const
 		vs_output px_in(base_vert);
 		ps_output px_out;
 		vs_output unprojed;
-		for(size_t ix = left; ix < right; ++ix)
+		for(int ix = left; ix < right; ++ix)
 		{
 			unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
@@ -349,7 +349,7 @@ void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, const
 					hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
 				}
 				else{
-					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+					for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
 						const vec2& sp = samples_pattern_[i_sample];
 						const float ddxz = (sp.x - 0.5f) * ddx.position.z;
 						const float ddyz = (sp.y - 0.5f) * ddy.position.z;
@@ -398,7 +398,7 @@ void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_ou
 	ALIGN16 float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
 	int samples_inside[MAX_NUM_MULTI_SAMPLES];
 	int any_sample_inside = 0;
-	for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+	for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
 		const vec2& sp = samples_pattern_[i_sample];
 		__m128 mspx = _mm_set1_ps(sp.x);
 		__m128 mspy = _mm_set1_ps(sp.y);
@@ -448,7 +448,7 @@ void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_ou
 
 		unproject(unprojed, px_ins[t]);
 		if (pps->execute(unprojed, px_out)){
-			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+			for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
 				if ((samples_inside[i_sample] >> t) & 1){
 					hfb_->render_sample(hbs, ix, iy, i_sample, px_out, samples_depth[i_sample * 4 + t]);
 				}
@@ -730,7 +730,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 			const uint32_t packed_region = test_regions[src_stage][ivp];
 			efl::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
 				(packed_region >> 16) & 0xFF, (packed_region >> 24) & 0x7F);
-			TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
+			intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
 			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
 			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));

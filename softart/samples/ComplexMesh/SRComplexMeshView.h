@@ -76,7 +76,7 @@ h_mesh LoadModel(softart::h_renderer hsr, std::string const & mesh_name)
 
 	pmesh->set_buffer_count(id_count);
 
-	std::ifstream file(mesh_name, std::ios::binary);
+	std::ifstream file(mesh_name.c_str(), std::ios::binary);
 	uint32_t fourcc;
 	file.read(reinterpret_cast<char*>(&fourcc), sizeof(fourcc));
 

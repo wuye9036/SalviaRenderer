@@ -1,9 +1,9 @@
 #ifndef EFLIB_DEBUG_HELPER_H
 #define EFLIB_DEBUG_HELPER_H
 
-#include <iostream>
-
 #include "config.h"
+
+#include <iostream>
 
 #ifdef _DEBUG
 #	define custom_assert(exp, desc) \
