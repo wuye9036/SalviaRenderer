@@ -32,6 +32,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_expression& v ){
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::constant_expression& v ){
 	using ::sasl::syntax_tree::constant_expression;
 
+
 	// add value symbol info to current node.
 	boost::shared_ptr<const_value_semantic_info> vseminfo = get_or_create_semantic_info<const_value_semantic_info>(cursym->node());
 	vseminfo->constant_value_literal( v.value_tok->lit, v.ctype );
@@ -158,6 +159,9 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 
 	std::string mangled_name = mangle_function_name( v.typed_handle<function_type>() );
 
+	if( is_redefine_to_diff_type() ){
+	}
+
 	bool use_existed_node(false);
 
 	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
@@ -229,10 +233,14 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration_statement& 
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::if_statement& v ){
+	v.cond->accept( this );
+	v.yes_stmt->accept( this );
+	v.no_stmt->accept(this);
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::while_statement& v ){
-
+	v.cond->accept( this );
+	v.body->accept( this );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::dowhile_statement& v ){
