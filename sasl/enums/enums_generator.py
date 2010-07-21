@@ -1,5 +1,5 @@
 
-import sys, os
+import sys, os, __future__
 from xml.dom.minidom import parse, parseString, Node
 
 #typename, storage_typename, operator_list, constant_decl_list, enum_name_translator
@@ -144,6 +144,19 @@ using namespace std;
 
 %(enum_type_definition)s
 """
+
+library_files_cmake_tmpl = \
+"""
+set( HEADER_FILES
+${HEADER_FILES}
+%(header_files)s )
+
+set( SOURCE_FILES
+${SOURCE_FILES}
+%(source_files)s )
+"""
+
+library_files_cmake_file = "build_files.cmake"
 
 class enum_configuration:
 	type_unique = 0
@@ -434,6 +447,7 @@ class enum_code_generator:
 
 class configuration:
 	config_tag = "Config"
+	config_name_tag = "Name"
 	input_files_tag = "InputFiles"
 	input_file_tag = "InputFile"
 	build_target_tag = "BuildTarget"
@@ -447,6 +461,7 @@ class configuration:
 	
 	def __init__(self, conf_filename):
 		self.dom_ = parse(conf_filename)
+		self.config_name = os.path.splitext( os.path.split( conf_filename )[1] )[0]
 		self._load_configuration()
 
 	def _load_build_targets(self, build_target_elem):
@@ -479,7 +494,6 @@ class configuration:
 		
 	def _load_configuration(self):
 		self.config_elem = None
-		
 		self.input_files_elem = None
 		
 		self.build_target_elem = None
@@ -500,6 +514,10 @@ class configuration:
 			return
 		self.config_elem = config_elems[0]
 
+		config_name_elems = self.config_elem.getElementsByTagName( configuration.config_name_tag )
+		if len( config_name_elems ) > 0:
+			self.config_name = config_name_elem[0].firstChild.data
+
 		input_files_elems = self.config_elem.getElementsByTagName( configuration.input_files_tag )
 		if len(input_files_elems) > 0:
 			self.input_files_elem = input_files_elems[0]
@@ -519,6 +537,7 @@ class configuration:
 class enum_file_generator:
 	def __init__(self, config_file):
 		self.config_ = configuration(config_file)
+		self.config_dir_ = os.path.dirname( config_file )
 	
 	def _generate_pre_includes(self):
 		self.pre_includes = ""
@@ -538,11 +557,21 @@ class enum_file_generator:
 		
 		if not os.path.exists( self.config_.src_folder ):
 			os.mkdir( self.config_.src_folder )
-			
+		
+		header_files = ""
+		source_files = ""
+		
 		for (enum_name, enum_codes) in codes.iteritems():
 			print enum_name + " calculated."
-			out_header_path = os.path.join( self.config_.header_folder, enum_name+".h" )
-			out_src_path = os.path.join( self.config_.src_folder, enum_name+".cpp" )
+			
+			header_file_name = enum_name+".h"
+			source_file_name = enum_name+".cpp"
+			
+			out_header_path = os.path.join( self.config_.header_folder, header_file_name )
+			out_src_path = os.path.join( self.config_.src_folder, source_file_name )
+			
+			header_files = header_files + "\t" + out_header_path + "\n"
+			source_files = source_files + "\t" + out_src_path + "\n"
 			
 			header_path_in_src = os.path.join( self.config_.include_path, enum_name+".h" )
 			
@@ -572,6 +601,11 @@ class enum_file_generator:
 			src_file.write(src_code)
 			src_file.close()
 	
+		library_files_cmake_file_path = os.path.join( self.config_dir_, self.config_.config_name+".cmake" )
+		cmake_file_code = library_files_cmake_tmpl % { "header_files": header_files, "source_files": source_files }
+		cmake_file = open( library_files_cmake_file_path, "w" )
+		cmake_file.write( cmake_file_code )
+		
 	def generate(self):
 		self._generate_pre_includes()
 		self._generate_files()
@@ -579,8 +613,8 @@ class enum_file_generator:
 		
 if __name__ == "__main__":
 	if len(sys.argv) != 2:
-		print "Parameter Error."
-		print "enums_gen.py config_file_path"
+		print("Parameter Error.")
+		print("enums_gen.py config_file_path")
 	
 	gen = enum_file_generator(sys.argv[1])
 	gen.generate()

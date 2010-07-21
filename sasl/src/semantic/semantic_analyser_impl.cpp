@@ -159,9 +159,6 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 
 	std::string mangled_name = mangle_function_name( v.typed_handle<function_type>() );
 
-	if( is_redefine_to_diff_type() ){
-	}
-
 	bool use_existed_node(false);
 
 	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
