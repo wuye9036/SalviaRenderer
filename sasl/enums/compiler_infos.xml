@@ -21,6 +21,7 @@
 		
 		<let var="error_index_base" value="$index$-1"></let>
 		<lazylet var="error_index" value = "$index$-$error_index_base$+$_error$+1000"/>
+		<item value="$error_index$+$_compile$" desc="unknown compiler error.">unknown_compile_error</item>
 		<item value="$error_index$+$_compile$" 
 			desc="$anchor:identifier$ : redefinition; different basic types."
 		>redef_diff_basic_type</item>
