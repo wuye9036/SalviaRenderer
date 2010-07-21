@@ -12,6 +12,7 @@ LINK_DIRECTORIES(
 
 set( HEADER_FILES
 	test_utility.h
+	make_tree.h
 )
 
 set( SOURCE_FILES
@@ -20,6 +21,7 @@ set( SOURCE_FILES
 	syntax_tree.cpp
 	test_utility.cpp
 	compinfos.cpp
+	make_tree.cpp
 )
 
 ADD_EXECUTABLE( sasl_test ${HEADER_FILES} ${SOURCE_FILES} )

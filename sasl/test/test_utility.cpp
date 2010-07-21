@@ -6,9 +6,6 @@
 
 using ::sasl::syntax_tree::create_node;
 
-boost::shared_ptr<token_attr> null_token(){
-	return boost::shared_ptr<token_attr>();
-}
 
 boost::shared_ptr<token_attr> new_token( const std::string& lit ){
 	return boost::shared_ptr<token_attr>( new token_attr(lit.begin(), lit.end()) );
