@@ -1,6 +1,6 @@
 <Config>
 	<InputFiles>
-		<InputFile>compiler_infos.xml</InputFile>
+		<InputFile>compiler_infos.xgt</InputFile>
 	</InputFiles>
 	
 	<BuildTarget>

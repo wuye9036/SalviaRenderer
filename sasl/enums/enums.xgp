@@ -1,6 +1,6 @@
 <Config>	
 	<InputFiles>
-		<InputFile>enum_defs.xml</InputFile>
+		<InputFile>enums.xgt</InputFile>
 	</InputFiles>
 	
 	<BuildTarget>
