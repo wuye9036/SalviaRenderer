@@ -48,6 +48,8 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	using ::sasl::semantic::const_value_semantic_info;
 	using ::sasl::common::compiler_info_manager;
 
+	using ::sasl::syntax_tree::make_tree;
+
 	std::string prog_name("test");
 	std::string var_name("test_var");
 	
@@ -57,7 +59,8 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 
 	// create
 	boost::shared_ptr<program> prog = create_node<program>( prog_name );
-	boost::shared_ptr<variable_declaration> decl = create_node<variable_declaration>( nulltok );
+
+	
 	boost::shared_ptr<buildin_type> vartype = create_node<buildin_type>( nulltok );
 	boost::shared_ptr<token_attr> name_tok( new token_attr(var_name.begin(), var_name.end()) );
 	boost::shared_ptr<constant_expression> initexpr = create_node<constant_expression>( nulltok );
@@ -69,10 +72,8 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	initexpr->value_tok = intval_tok;
 	vartype->value_typecode = buildin_type_code::_sint32;
 	init->init_expr = initexpr;
-	decl->init = init;
-	decl->name = name_tok;
-	decl->type_info = vartype;
 
+	boost::shared_ptr<variable_declaration> decl = make_tree( vartype, name_tok, init );
 	prog->d( decl );
 
 	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();

@@ -20,7 +20,7 @@ struct program: public node{
 
 	program& d( boost::shared_ptr<declaration> );
 	template < typename T >
-	program& d( boost::shared_ptr<T> decl, EFLIB_ENABLE_IF( is_base_of, declaration, T, 0 ) ){
+	program& d( boost::shared_ptr<T> decl, EFLIB_ENABLE_IF_PRED2( is_base_of, declaration, T, 0 ) ){
 		return d( boost::shared_polymorphic_cast<declaration>(decl) );
 	}
 

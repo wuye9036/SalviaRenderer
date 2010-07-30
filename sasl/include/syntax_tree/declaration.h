@@ -184,7 +184,7 @@ struct function_type: public type_specifier{
 	function_type& p( boost::shared_ptr<variable_declaration> );
 	function_type& s( boost::shared_ptr<statement> );
 
-	template <typename T> function_type& s( boost::shared_ptr<T> stmt, EFLIB_ENABLE_IF( is_base_of, statement, T, 0 ) ){
+	template <typename T> function_type& s( boost::shared_ptr<T> stmt, EFLIB_ENABLE_IF_PRED2( is_base_of, statement, T, 0 ) ){
 		return s( ::boost::shared_polymorphic_cast<statement>(stmt) );
 	}
 

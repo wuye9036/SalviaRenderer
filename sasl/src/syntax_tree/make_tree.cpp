@@ -43,12 +43,12 @@ no_matched make_tree( ... ){
 }
 
 template<typename U, typename T>
-bool is_same_type( T, EFLIB_ENABLE_IF( is_same, U, T, 0 ) ){
+bool is_same_type( T, EFLIB_ENABLE_IF_PRED2( is_same, U, T, 0 ) ){
 	return true;
 }
 
 template<typename U, typename T>
-bool is_same_type( T, EFLIB_DISABLE_IF( is_same, U, T, 0 ) ){
+bool is_same_type( T, EFLIB_DISABLE_IF_PRED2( is_same, U, T, 0 ) ){
 	return false;
 }
 
