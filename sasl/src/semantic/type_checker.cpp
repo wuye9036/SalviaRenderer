@@ -47,7 +47,7 @@ bool is_equal( boost::shared_ptr<type_specifier> type0, boost::shared_ptr<type_s
 bool is_equal( boost::shared_ptr<function_type> lhs, boost::shared_ptr<function_type> rhs ){
 	if ( lhs == rhs ) return true;
 	if ( lhs == NULL || rhs == NULL ) return false;
-	if ( lhs->name->lit != rhs->name->lit ) return false;
+	if ( lhs->name->str != rhs->name->str ) return false;
 	if ( lhs->params.size() != rhs->params.size() ){ return false; }
 	for ( size_t i_param = 0; i_param < lhs->params.size(); ++i_param ){
 		boost::shared_ptr<variable_declaration> lhs_param = 

@@ -1,7 +1,8 @@
-#include <boost/test/unit_test.hpp>
 #include <sasl/enums/compiler_informations.h>
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/semantic_error.h>
+
+#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE( compiler_information_test )
 

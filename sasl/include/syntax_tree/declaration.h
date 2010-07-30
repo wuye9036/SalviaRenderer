@@ -6,6 +6,7 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/syntax_node_types.h>
 #include <sasl/enums/type_qualifiers.h>
+#include <eflib/include/boostext.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
@@ -154,6 +155,38 @@ protected:
 struct function_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
 	void accept( syntax_tree_visitor* v );
+
+	// help for constuction parameter
+	template<typename T>
+	function_type& p(
+		boost::shared_ptr<type_specifier> param_type,
+		boost::shared_ptr<::sasl::common::token_attr> name_tok = boost::shared_ptr<::sasl::common::token_attr>()
+		)
+	{
+		return p( param_type, name_tok, boost::shared_ptr<initializer>() );
+	}
+
+	template<typename T>
+	function_type& p(
+		boost::shared_ptr<type_specifier> param_type,
+		boost::shared_ptr<::sasl::common::token_attr> name_tok,
+		boost::shared_ptr<T> init
+		)
+	{
+		boost::shared_ptr<parameter> par = create_node<parameter>( boost::shared_ptr<::sasl::common::token_attr>() );
+		par->param_type = param_type;
+		par->ident = name_tok;
+		par->init = init;
+		params.push_back( par );
+		return *this;
+	}
+
+	function_type& p( boost::shared_ptr<variable_declaration> );
+	function_type& s( boost::shared_ptr<statement> );
+
+	template <typename T> function_type& s( boost::shared_ptr<T> stmt, EFLIB_ENABLE_IF( is_base_of, statement, T, 0 ) ){
+		return s( ::boost::shared_polymorphic_cast<statement>(stmt) );
+	}
 
 	boost::shared_ptr< token_attr > name;
 	boost::shared_ptr< type_specifier > retval_type;

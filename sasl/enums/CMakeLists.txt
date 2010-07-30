@@ -49,6 +49,11 @@ SET_SOURCE_FILES_PROPERTIES(
 	PROPERTIES GENERATED 1
 )
 
-ADD_LIBRARY( sasl_enums STATIC enum_base.h default_hasher.h proxy.cpp enums.cmake compiler_infos.cmake ${code_fullpath} )
+ADD_LIBRARY( sasl_enums STATIC 
+	enum_base.h default_hasher.h proxy.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/enums.cmake 
+	${CMAKE_CURRENT_SOURCE_DIR}/compiler_infos.cmake 
+	${code_fullpath}
+)
 
 config_output_paths(sasl_enums)

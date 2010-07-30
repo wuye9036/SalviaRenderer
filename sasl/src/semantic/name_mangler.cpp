@@ -61,7 +61,7 @@ name_mangler::name_mangler(){
 
 std::string name_mangler::mangle( boost::shared_ptr<function_type> mangling_function ){
 	mangled_name = "M";
-	mangle_basic_name( mangling_function->name->lit );
+	mangle_basic_name( mangling_function->name->str );
 	mangled_name += '@';
 	mangle_type( actual_type(mangling_function->retval_type) );
 	for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
@@ -103,7 +103,7 @@ void name_mangler::mangle_type( boost::shared_ptr<::sasl::syntax_tree::type_spec
 		} else if ( mtype->node_class() == syntax_node_types::struct_type ){
 			boost::shared_ptr< struct_type > stype = mtype->typed_handle<struct_type>();
 			mangled_name += "S";
-			mangled_name += stype->name->lit;
+			mangled_name += stype->name->str;
 			mangled_name += "@@";
 		} else {
 			assert( !"Unimplemented!" );

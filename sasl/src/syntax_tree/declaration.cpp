@@ -88,11 +88,27 @@ void parameter::accept( syntax_tree_visitor* v ){
 }
 
 function_type::function_type( boost::shared_ptr<token_attr> tok )
-	: type_specifier( syntax_node_types::function_type, tok ), is_declaration(false)
+	: type_specifier( syntax_node_types::function_type, tok ), is_declaration(true)
 {
 }
 
 void function_type::accept( syntax_tree_visitor* v ){
 	v->visit( *this );
+}
+
+function_type& function_type::p( boost::shared_ptr<variable_declaration> par ){
+	if (par){
+		return p( par->type_info, par->name, par->init );
+	}else{
+		return *this;
+	}
+}
+
+function_type& function_type::s( boost::shared_ptr<statement> stmt ){
+	if ( stmt ){
+		stmts.push_back( stmt );
+		is_declaration = false;
+	}
+	return *this;
 }
 END_NS_SASL_SYNTAX_TREE();

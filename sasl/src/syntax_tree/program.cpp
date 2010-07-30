@@ -14,4 +14,8 @@ void program::accept( syntax_tree_visitor* v ){
 	v->visit( *this );
 }
 
+program& program::d( boost::shared_ptr<declaration> decl ){
+	decls.push_back( decl );
+	return *this;
+}
 END_NS_SASL_SYNTAX_TREE();

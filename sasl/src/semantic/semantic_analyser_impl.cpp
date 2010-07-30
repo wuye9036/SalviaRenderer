@@ -35,7 +35,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::constant_expression& v 
 
 	// add value symbol info to current node.
 	boost::shared_ptr<const_value_semantic_info> vseminfo = get_or_create_semantic_info<const_value_semantic_info>(cursym->node());
-	vseminfo->constant_value_literal( v.value_tok->lit, v.ctype );
+	vseminfo->constant_value_literal( v.value_tok->str, v.ctype );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::identifier& v ){}
@@ -50,7 +50,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration& v ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v ){
 	using ::boost::assign::list_of;
 
-	symbol_scope sc( v.name->lit, v.handle(), cursym );
+	symbol_scope sc( v.name->str, v.handle(), cursym );
 
 	// process variable type
 	boost::shared_ptr<type_specifier> vartype = v.type_info;
@@ -82,7 +82,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	using ::sasl::syntax_tree::type_definition;
 	using ::boost::assign::list_of;
-	const std::string& alias_str = v.ident->lit;
+	const std::string& alias_str = v.ident->str;
 	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( alias_str );
 	if ( existed_sym ){
 		// if the symbol is used and is not a type node, it must be redifinition.
@@ -98,9 +98,9 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 
 	// process type node.
 	// remove old sym from symbol table.
-	cursym->remove_child( v.ident->lit );
+	cursym->remove_child( v.ident->str );
 	{
-		symbol_scope sc( v.ident->lit, v.handle(), cursym );
+		symbol_scope sc( v.ident->str, v.handle(), cursym );
 
 		v.type_info->accept(this);
 		boost::shared_ptr<type_semantic_info> new_tsi = extract_semantic_info<type_semantic_info>(v);
@@ -149,7 +149,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 
 	// if it is only declaration.
 	std::string symbol_name;
-	std::string unmangled_name = v.name->lit;
+	std::string unmangled_name = v.name->str;
 
 	// process parameter types for name mangling.
 	v.retval_type->accept( this );

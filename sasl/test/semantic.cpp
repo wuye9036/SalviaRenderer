@@ -6,12 +6,15 @@
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/common/token_attr.h>
 #include <sasl/include/common/compiler_info_manager.h>
 #include <string>
+
+using ::sasl::syntax_tree::make_tree;
 
 BOOST_AUTO_TEST_SUITE( semantic );
 
@@ -54,7 +57,6 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 
 	// create
 	boost::shared_ptr<program> prog = create_node<program>( prog_name );
-	boost::shared_ptr<declaration_statement> declstmt = create_node<declaration_statement>();
 	boost::shared_ptr<variable_declaration> decl = create_node<variable_declaration>( nulltok );
 	boost::shared_ptr<buildin_type> vartype = create_node<buildin_type>( nulltok );
 	boost::shared_ptr<token_attr> name_tok( new token_attr(var_name.begin(), var_name.end()) );
@@ -70,8 +72,8 @@ BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 	decl->init = init;
 	decl->name = name_tok;
 	decl->type_info = vartype;
-	declstmt->decl = decl;
-	prog->decls.push_back( declstmt );
+
+	prog->d( decl );
 
 	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
 
@@ -109,9 +111,9 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	std::string var_name_1("var1");
 
 	boost::shared_ptr<token_attr> var0_tok( new token_attr() );
-	var0_tok->lit = var_name_0;
+	var0_tok->str = var_name_0;
 	boost::shared_ptr<token_attr> var1_tok( new token_attr() );
-	var1_tok->lit = var_name_1;
+	var1_tok->str = var_name_1;
 	
 	boost::shared_ptr<program> prog = create_node<program>("test");
 	boost::shared_ptr<buildin_type> bti32 = create_node<buildin_type>(nulltok);
@@ -127,12 +129,10 @@ BOOST_AUTO_TEST_CASE( type_definition_semantic ){
 	boost::shared_ptr<type_definition> tdef1 = create_node<type_definition>(nulltok);
 	tdef1->ident = var1_tok;
 	tdef1->type_info = bti64;
-	boost::shared_ptr<declaration_statement> declstmt0 = create_node<declaration_statement>();
-	boost::shared_ptr<declaration_statement> declstmt1 = create_node<declaration_statement>();
-	declstmt0->decl = tdef0;
-	declstmt1->decl = tdef1;
-	prog->decls.push_back( declstmt0 );
-	prog->decls.push_back( declstmt1 );
+
+	prog->
+		d( tdef0 )
+		.d( tdef1 );
 
 	semantic_analysis( prog, cim );
 
@@ -157,21 +157,24 @@ BOOST_AUTO_TEST_CASE( name_mangling ){
 	using ::sasl::syntax_tree::create_node;
 	using ::sasl::syntax_tree::function_type;
 	using ::sasl::syntax_tree::declaration_statement;
+
+	using ::sasl::syntax_tree::function_tag;
+
 	using ::sasl::semantic::semantic_analysis;
 	using ::sasl::common::compiler_info_manager;
 	using ::sasl::semantic::name_mangler;
 
 	boost::shared_ptr<program> prog = create_node<program>("test");
 	
-	boost::shared_ptr<buildin_type> bt0 = create_node<buildin_type>( null_token() );
-	bt0->value_typecode = buildin_type_code::_sint32;
-	boost::shared_ptr<function_type> ft = create_node<function_type>( null_token() );
-	ft->is_declaration = true;
-	ft->retval_type = new_buildin_type( null_token(), buildin_type_code::_double );
-	ft->name = new_token( "foo" );
-	boost::shared_ptr<declaration_statement> declstmt = create_node<declaration_statement>( null_token() );
-	declstmt->decl = ft;
-	prog->decls.push_back( declstmt );
+	boost::shared_ptr<buildin_type> bt0 = make_tree( buildin_type_code::_sint32 );
+	boost::shared_ptr<function_type> ft = 
+		make_tree( 
+			make_tree( buildin_type_code::_double ),
+			make_tree( "foo" ),
+			function_tag()
+			); // double foo()
+
+	prog->d( ft );
 
 	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
 

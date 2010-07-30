@@ -7,7 +7,7 @@ LIST( APPEND depends_fullpath "${CMAKE_CURRENT_SOURCE_DIR}/${depend_item}" )
 endforeach( depend_item )
 
 ADD_CUSTOM_COMMAND(
-	OUTPUT ${output_list_file}
+	OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/${output_list_file}"
 	COMMAND cd
 	ARGS \"${CMAKE_CURRENT_SOURCE_DIR}\"
 	COMMAND python

@@ -8,31 +8,33 @@
 BEGIN_NS_SASL_COMMON()
 
 struct token_attr{
-	typedef boost::shared_ptr<token_attr> handle_t;
-
 	token_attr()
-		: file_name("undefined"), column(0), line(0), lit("UNINITIALIZED_VALUE"){}
+		: file_name("undefined"), column(0), line(0), str("UNINITIALIZED_VALUE"){}
 	token_attr( const token_attr& rhs )
-		: file_name( rhs.file_name ), column(rhs.column), line(rhs.line), lit(rhs.lit){}
+		: file_name( rhs.file_name ), column(rhs.column), line(rhs.line), str(rhs.str){}
 	template< typename IteratorT > token_attr( const IteratorT& first, const IteratorT& last )
-		: file_name("undefined"), column(0), line(0), lit(first, last) {}
+		: file_name("undefined"), column(0), line(0), str(first, last) {}
 
-	token_attr::handle_t make_copy() const{
-		return token_attr::handle_t( new token_attr(*this) );
+	boost::shared_ptr<token_attr> make_copy() const{
+		return boost::shared_ptr<token_attr>( new token_attr(*this) );
 	}
 
 	token_attr& operator = ( const token_attr& rhs){
 		file_name = rhs.file_name;
 		column = rhs.column;
 		line = rhs.line;
-		lit = rhs.lit;	
+		str = rhs.str;	
 		return *this;
 	}
 
-	std::string lit;
+	std::string str;
 	std::size_t line;
 	std::size_t column;
 	std::string file_name;
+	
+	static boost::shared_ptr<token_attr> null(){
+		return boost::shared_ptr<token_attr>();
+	}
 };
 
 END_NS_SASL_COMMON()
