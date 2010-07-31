@@ -19,6 +19,7 @@ set( HEADER_FILES
 	${sasl_home_dir}/sasl/include/syntax_tree/syntax_tree_fwd.h
 	${sasl_home_dir}/sasl/include/syntax_tree/syntax_tree_generator.h
 	${sasl_home_dir}/sasl/include/syntax_tree/visitor.h
+	${sasl_home_dir}/sasl/include/syntax_tree/make_tree.h
 )
 
 set( SOURCE_FILES
@@ -30,6 +31,7 @@ set( SOURCE_FILES
 	operator_table.cpp
 	program.cpp
 	statement.cpp
+	make_tree.cpp
 )
 
 ADD_LIBRARY( sasl_syntaxtree STATIC

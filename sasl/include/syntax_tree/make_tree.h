@@ -24,6 +24,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 boost::shared_ptr<::sasl::common::token_attr> null_token();
 
 struct buildin_type;
+struct constant_expression;
 struct declaration;
 struct declaration_statement;
 struct expression;
@@ -82,17 +83,17 @@ boost::shared_ptr<declaration_statement> make_tree( boost::shared_ptr<T> decl, E
 	boost::shared_ptr<declaration_statement> ret = create_node<declaration_statement>( null_token );
 }
 
-template <typename T>
-boost::shared_ptr<constant_expression> make_tree( buildin_type_code btc, T val, EFLIB_ENABLE_IF_PRED1( is_arithmetic, T, 0 ) ){
-}
-
-template <typename T>
-boost::shared_ptr<constant_expression> make_tree( T val, EFLIB_ENABLE_IF_PRED1( is_arithmetic, T, 0 ) ){
-}
-
-template <typename T>
-boost::shared_ptr<constant_expression> make_tree( const std::string& str, constant_tag ){
-}
+//template <typename T>
+//boost::shared_ptr<constant_expression> make_tree( buildin_type_code btc, T val, EFLIB_ENABLE_IF_PRED1( is_arithmetic, T, 0 ) ){
+//}
+//
+//template <typename T>
+//boost::shared_ptr<constant_expression> make_tree( T val, EFLIB_ENABLE_IF_PRED1( is_arithmetic, T, 0 ) ){
+//}
+//
+//template <typename T>
+//boost::shared_ptr<constant_expression> make_tree( const std::string& str, constant_tag ){
+//}
 
 //template <typename T, typename U> boost::shared_ptr<binary_expression> make_node(
 //	boost::shared_ptr<T> lexpr, operators op, boost::shared_ptr<U> rexpr,
