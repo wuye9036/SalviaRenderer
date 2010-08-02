@@ -4,9 +4,11 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
 #include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/literal_constant_types.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <eflib/include/boostext.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/mpl/find.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/vector.hpp>
@@ -30,32 +32,19 @@ typedef boost::mpl::vector<
 	float, double
 > cpptypes;
 
-buildin_type_code type_codes[] =
-{
-	buildin_type_code::_boolean,
-	buildin_type_code::_sint8,
-	buildin_type_code::_uint8,
-	buildin_type_code::_sint16;
-	buildin_type_code::_uint16;
-	buildin_type_code::_sint32;
-	buildin_type_code::_uint32;
-	buildin_type_code::_sint64;
-	buildin_type_code::_uint64;
-	buildin_type_code::_float;
-	buildin_type_code::_double;
-};
+extern literal_constant_types type_codes[];
 
 template<typename T>
-struct is_sasl_buildin_type : public not_< 
-	is_same<
+struct is_sasl_buildin_type : public boost::mpl::not_< 
+	boost::is_same<
 		typename boost::mpl::find<cpptypes, T>::type,
-		typename end<cpptypes>::type 
+		typename boost::mpl::end<cpptypes>::type 
 	>
 >::type{};
 
 template <typename T>
 buildin_type_code cpptype_to_typecode( 
-	EFLIB_DISABLE_IF_PRED1( is_sasl_buildin_type, T, 0 )
+	EFLIB_DISABLE_IF_COND( is_sasl_buildin_type<T>, 0 )
 	)
 {
 	return type_codes[boost::mpl::find<cpptypes, T>::type::pos];
@@ -68,10 +57,10 @@ struct constant_expression;
 struct declaration;
 struct declaration_statement;
 struct expression;
+struct function_type;
 struct initializer;
 struct type_specifier;
 struct variable_declaration;
-struct function_type;
 
 struct function_tag{};
 struct constant_tag{};
@@ -125,15 +114,10 @@ boost::shared_ptr<declaration_statement> make_tree( boost::shared_ptr<T> decl, E
 	return ret;
 }
 
-boost::shared_ptr<constant_expression> make_tree( buildin_type_code btc, const ::std::string& val){
-	boost::shared_ptr<constant_expression> ret = create_node<constant_expression>( null_token() );
-	ret->ctype = btc;
-	ret->value_tok = make_tree( val );
-	return ret;
-}
+boost::shared_ptr<constant_expression> make_tree( literal_constant_types btc, const ::std::string& val);
 
 template <typename T>
-boost::shared_ptr<constant_expression> make_tree( T val, EFLIB_ENABLE_IF_PRED1( is_sasl_buildin_type, T, 0 ) ){
+boost::shared_ptr<constant_expression> make_tree( T val, EFLIB_ENABLE_IF_COND( is_sasl_buildin_type<T>, 0 ) ){
 	return make_tree(
 		cpptype_to_typecode<T>(), boost::lexical_cast<string>(T)
 	);

@@ -3,7 +3,7 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/include/common/token_attr.h>
 #include <sasl/include/syntax_tree/declaration.h>
-
+#include <sasl/include/syntax_tree/expression.h>
 #include <boost/static_assert.hpp>
 //#include <boost/test/unit_test.hpp>
 #include <boost/type_traits/is_base_of.hpp>
@@ -12,6 +12,21 @@
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 using ::sasl::common::token_attr;
+
+extern literal_constant_types type_codes[] =
+{
+	literal_constant_types::boolean,
+	literal_constant_types::integer,
+	literal_constant_types::integer,
+	literal_constant_types::integer,
+	literal_constant_types::integer,
+	literal_constant_types::integer,
+	literal_constant_types::integer,
+	literal_constant_types::integer,
+	literal_constant_types::integer,
+	literal_constant_types::real,
+	literal_constant_types::real
+};
 
 boost::shared_ptr<token_attr> null_token(){
 	return boost::shared_ptr<token_attr>();
@@ -27,6 +42,12 @@ boost::shared_ptr<buildin_type> make_tree( const buildin_type_code btc ){
 	return ret;
 }
 
+boost::shared_ptr<constant_expression> make_tree( literal_constant_types btc, const ::std::string& val){
+	boost::shared_ptr<constant_expression> ret = create_node<constant_expression>( null_token() );
+	ret->ctype = btc;
+	ret->value_tok = make_tree( val );
+	return ret;
+}
 END_NS_SASL_SYNTAX_TREE();
 
 struct empty_type{
