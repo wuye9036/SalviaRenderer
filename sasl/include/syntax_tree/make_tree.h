@@ -6,6 +6,10 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <eflib/include/boostext.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/mpl/not.hpp>
+#include <boost/mpl/or.hpp>
+#include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
@@ -20,6 +24,42 @@ namespace sasl{
 }
 
 BEGIN_NS_SASL_SYNTAX_TREE();
+
+typedef boost::mpl::vector<
+	bool, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t,
+	float, double
+> cpptypes;
+
+buildin_type_code type_codes[] =
+{
+	buildin_type_code::_boolean,
+	buildin_type_code::_sint8,
+	buildin_type_code::_uint8,
+	buildin_type_code::_sint16;
+	buildin_type_code::_uint16;
+	buildin_type_code::_sint32;
+	buildin_type_code::_uint32;
+	buildin_type_code::_sint64;
+	buildin_type_code::_uint64;
+	buildin_type_code::_float;
+	buildin_type_code::_double;
+};
+
+template<typename T>
+struct is_sasl_buildin_type : public not_< 
+	is_same<
+		typename boost::mpl::find<cpptypes, T>::type,
+		typename end<cpptypes>::type 
+	>
+>::type{};
+
+template <typename T>
+buildin_type_code cpptype_to_typecode( 
+	EFLIB_DISABLE_IF_PRED1( is_sasl_buildin_type, T, 0 )
+	)
+{
+	return type_codes[boost::mpl::find<cpptypes, T>::type::pos];
+}
 
 boost::shared_ptr<::sasl::common::token_attr> null_token();
 
@@ -80,20 +120,24 @@ boost::shared_ptr<function_type> make_tree(
 
 template <typename T>
 boost::shared_ptr<declaration_statement> make_tree( boost::shared_ptr<T> decl, EFLIB_ENABLE_IF_PRED2( is_base_of, declaration, T, 0) ){
-	boost::shared_ptr<declaration_statement> ret = create_node<declaration_statement>( null_token );
+	boost::shared_ptr<declaration_statement> ret = create_node<declaration_statement>( null_token() );
+	ret->decl = decl;
+	return ret;
 }
 
-//template <typename T>
-//boost::shared_ptr<constant_expression> make_tree( buildin_type_code btc, T val, EFLIB_ENABLE_IF_PRED1( is_arithmetic, T, 0 ) ){
-//}
-//
-//template <typename T>
-//boost::shared_ptr<constant_expression> make_tree( T val, EFLIB_ENABLE_IF_PRED1( is_arithmetic, T, 0 ) ){
-//}
-//
-//template <typename T>
-//boost::shared_ptr<constant_expression> make_tree( const std::string& str, constant_tag ){
-//}
+boost::shared_ptr<constant_expression> make_tree( buildin_type_code btc, const ::std::string& val){
+	boost::shared_ptr<constant_expression> ret = create_node<constant_expression>( null_token() );
+	ret->ctype = btc;
+	ret->value_tok = make_tree( val );
+	return ret;
+}
+
+template <typename T>
+boost::shared_ptr<constant_expression> make_tree( T val, EFLIB_ENABLE_IF_PRED1( is_sasl_buildin_type, T, 0 ) ){
+	return make_tree(
+		cpptype_to_typecode<T>(), boost::lexical_cast<string>(T)
+	);
+}
 
 //template <typename T, typename U> boost::shared_ptr<binary_expression> make_node(
 //	boost::shared_ptr<T> lexpr, operators op, boost::shared_ptr<U> rexpr,
