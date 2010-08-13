@@ -89,10 +89,8 @@ class rasterizer : public render_stage
 
 	boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
-	void draw_whole_tile(int left, int top, int right, int bottom, const vs_output& v0, const vs_output& projed_v0,
-		const vs_output& ddx, const vs_output& ddy, const h_pixel_shader& pps, const h_blend_shader& hbs, size_t num_samples);
-	void draw_pixels(int left, int top, const vs_output& v0, const vs_output& projed_v0,
-		const vs_output& ddx, const vs_output& ddy, const efl::vec3* edge_factors, const h_pixel_shader& pps, const h_blend_shader& hbs, size_t num_samples);
+	void draw_whole_tile(uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask);
+	void draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples);
 	void subdivide_tile(int left, int top, const efl::rect<uint32_t>& cur_region, const efl::vec3* edge_factors, const bool* mark_x, const bool* mark_y,
 		uint32_t* test_regions, uint32_t& test_region_size);
 

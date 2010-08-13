@@ -325,79 +325,29 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 	}
 }
 
-void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, const vs_output& v0, const vs_output& projed_v0,
-		const vs_output& ddx, const vs_output& ddy, const h_pixel_shader& pps, const h_blend_shader& hbs, size_t num_samples){
-	const float offsetx = left + 0.5f - v0.position.x;
-	const float offsety = top + 0.5f - v0.position.y;
-
-	//设置基准扫描线的属性
-	vs_output base_vert = projed_v0;
-	integral(base_vert, offsety, ddy);
-	integral(base_vert, offsetx, ddx);
-
+void rasterizer::draw_whole_tile(uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask){
 	for(int iy = top; iy < bottom; ++iy)
 	{
-		//光栅化
-		vs_output px_in(base_vert);
-		ps_output px_out;
-		vs_output unprojed;
 		for(int ix = left; ix < right; ++ix)
 		{
-			unproject(unprojed, px_in);
-			if(pps->execute(unprojed, px_out)){
-				if (1 == num_samples){
-					hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
-				}
-				else{
-					for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
-						const vec2& sp = samples_pattern_[i_sample];
-						const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-						const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-						float sample_depth = px_in.position.z + ddxz + ddyz;
-						hfb_->render_sample(hbs, ix, iy, i_sample, px_out, sample_depth);
-					}
-				}
-			}
-
-			integral(px_in, ddx);
+			pixel_mask[iy * TILE_SIZE + ix] = full_mask;
 		}
-
-		//差分递增
-		integral(base_vert, ddy);
 	}
 }
 
-void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_output& projed_v0,
-		const vs_output& ddx, const vs_output& ddy, const efl::vec3* edge_factors, const h_pixel_shader& pps, const h_blend_shader& hbs, size_t num_samples){
-	const float offsetx = left + 0.5f - v0.position.x;
-	const float offsety = top + 0.5f - v0.position.y;
-
-	//设置基准扫描线的属性
-	vs_output base_vert = projed_v0;
-	integral(base_vert, offsety, ddy);
-	integral(base_vert, offsetx, ddx);
-
+void rasterizer::draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples){
 	float evalue[3];
 	for (int e = 0; e < 3; ++ e){
 		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
 	}
 
-#ifndef EFLIB_NO_SIMD
-	vs_output px_ins[4];
-	px_ins[0] = base_vert;
-	integral(px_ins[1], px_ins[0], ddx);
-	integral(px_ins[2], base_vert, ddy);
-	integral(px_ins[3], px_ins[2], ddx);
+	size_t sx = left - left0;
+	size_t sy = top - top0;
 
+#ifndef EFLIB_NO_SIMD
 	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
 
-	const __m128 mdepth = _mm_set_ps(px_ins[3].position.z, px_ins[2].position.z, px_ins[1].position.z, px_ins[0].position.z);
-	const __m128 mbaseddxz = _mm_set1_ps(ddx.position.z);
-	const __m128 mbaseddyz = _mm_set1_ps(ddy.position.z);
-	ALIGN16 float samples_depth[MAX_NUM_MULTI_SAMPLES * 4];
-	int samples_inside[MAX_NUM_MULTI_SAMPLES];
-	int any_sample_inside = 0;
 	for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
 		const vec2& sp = samples_pattern_[i_sample];
 		__m128 mspx = _mm_set1_ps(sp.x);
@@ -416,59 +366,20 @@ void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_ou
 			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
 		}
 
-		samples_inside[i_sample] = ~_mm_movemask_ps(mask_rej);
-		any_sample_inside |= samples_inside[i_sample];
+		int sample_inside = ~_mm_movemask_ps(mask_rej);
 
-		__m128 mdz;
-		if (1 == num_samples){
-			mdz = mdepth;
-		}
-		else{
-			__m128 mhalf = _mm_set1_ps(0.5f);
-			mspx = _mm_sub_ps(mspx, mhalf);
-			mspy = _mm_sub_ps(mspy, mhalf);
-			__m128 mddxz = _mm_mul_ps(mspx, mbaseddxz);
-			__m128 mddyz = _mm_mul_ps(mspy, mbaseddyz);
-			mdz = _mm_add_ps(mddxz, mddyz);
-			mdz = _mm_add_ps(mdepth, mdz);
-		}
-
-		_mm_store_ps(&samples_depth[i_sample * 4], mdz);
-	}
-	any_sample_inside &= 0xF;
-
-	ps_output px_out;
-	vs_output unprojed;
-	unsigned long t;
-	while (_BitScanForward(&t, any_sample_inside)){
-		custom_assert(t < 4, "");
-
-		size_t ix = left + (t & 1);
-		size_t iy = top + (t >> 1);
-
-		unproject(unprojed, px_ins[t]);
-		if (pps->execute(unprojed, px_out)){
-			for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
-				if ((samples_inside[i_sample] >> t) & 1){
-					hfb_->render_sample(hbs, ix, iy, i_sample, px_out, samples_depth[i_sample * 4 + t]);
-				}
+		for (int t = 0; t < 4; ++ t){
+			if ((sample_inside >> t) & 1){
+				pixel_mask[(sy + (t >> 1)) * TILE_SIZE + (sx + (t & 1))] |= 1UL << i_sample;
 			}
 		}
-
-		any_sample_inside &= any_sample_inside - 1;
 	}
 #else
 	for(int iy = 0; iy < 2; ++iy)
 	{
 		//光栅化
-		vs_output px_in(base_vert);
-		ps_output px_out;
-		vs_output unprojed;
 		for(size_t ix = 0; ix < 2; ++ix)
 		{
-			float samples_depth[MAX_NUM_MULTI_SAMPLES];
-			bool samples_inside[MAX_NUM_MULTI_SAMPLES];
-			bool any_sample_inside = false;
 			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
 				const vec2& sp = samples_pattern_[i_sample];
 				const float fx = ix + sp.x;
@@ -481,30 +392,10 @@ void rasterizer::draw_pixels(int left, int top, const vs_output& v0, const vs_ou
 					}
 				}
 				if (inside){
-					samples_inside[i_sample] = true;
-					any_sample_inside = true;
-					const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-					const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-					samples_depth[i_sample] = px_in.position.z + ddxz + ddyz;
+					pixel_mask[(iy + sy) * TILE_SIZE + (ix + sx)] |= 1UL << i_sample;
 				}
 			}
-
-			if (any_sample_inside){
-				unproject(unprojed, px_in);
-				if(pps->execute(unprojed, px_out)){
-					for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-						if (samples_inside[i_sample]){
-							hfb_->render_sample(hbs, ix + vpleft, iy + vptop, i_sample, px_out, samples_depth[i_sample]);
-						}
-					}
-				}
-			}
-
-			integral(px_in, ddx);
 		}
-
-		//差分递增
-		integral(base_vert, ddy);
 	}
 #endif
 }
@@ -722,6 +613,16 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	int src_stage = 0;
 	int dst_stage = !src_stage;
 
+	uint32_t pixel_mask[TILE_SIZE * TILE_SIZE];
+	memset(pixel_mask, 0, sizeof(pixel_mask));
+
+	const uint32_t full_mask = (1UL << num_samples) - 1;
+
+	const int vpleft0 = fast_floori(vp.x);
+	const int vptop0 = fast_floori(vp.y);
+	const int vpright0 = fast_floori(vp.x + vp.w);
+	const int vpbottom0 = fast_floori(vp.y + vp.h);
+
 	while (test_region_size[src_stage] > 0){
 		test_region_size[dst_stage] = 0;
 
@@ -747,11 +648,11 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 				break;
 
 			case TVT_FULL: 
-				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, v0, projed_vert0, ddx, ddy, pps, hbs, num_samples);
+				this->draw_whole_tile(pixel_mask, vpleft - vpleft0, vptop - vptop0, vpright - vpleft0, vpbottom - vptop0, full_mask);
 				break;
 
 			case TVT_PIXEL:
-				this->draw_pixels(vpleft, vptop, v0, projed_vert0, ddx, ddy, edge_factors, pps, hbs, num_samples);
+				this->draw_pixels(pixel_mask, vpleft0, vptop0, vpleft, vptop, edge_factors, num_samples);
 				break;
 
 			default:
@@ -762,6 +663,71 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 		src_stage = (src_stage + 1) & 1;
 		dst_stage = !src_stage;
+	}
+
+	const float offsetx = vpleft0 + 0.5f - v0.position.x;
+	const float offsety = vptop0 + 0.5f - v0.position.y;
+
+	//设置基准扫描线的属性
+	vs_output base_vert = projed_vert0;
+	integral(base_vert, offsety, ddy);
+	integral(base_vert, offsetx, ddx);
+
+	for(int iy = vptop0; iy < vpbottom0; ++iy)
+	{
+		//光栅化
+		vs_output px_in(base_vert);
+		ps_output px_out;
+		vs_output unprojed;
+
+		int ix = vpleft0;
+		while ((ix < vpright0) && (0 == pixel_mask[(iy - vptop0) * TILE_SIZE + (ix - vpleft0)])){
+			++ ix;
+		}
+		if (ix < vpright0){
+			integral(px_in, static_cast<float>(ix - vpleft0), ddx);
+		}
+
+		for(; ix < vpright0; ++ix){
+			uint32_t mask = pixel_mask[(iy - vptop0) * TILE_SIZE + (ix - vpleft0)];
+			if (0 == mask)
+			{
+				break;
+			}
+
+			unproject(unprojed, px_in);
+			if(pps->execute(unprojed, px_out)){
+				if (1 == num_samples){
+					hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
+				}
+				else{
+					if (full_mask == mask){
+						for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
+							const vec2& sp = samples_pattern_[i_sample];
+							const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+							const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+							hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
+						}
+					}
+					else{
+						unsigned long i_sample;
+						while (_BitScanForward(&i_sample, mask)){
+							const vec2& sp = samples_pattern_[i_sample];
+							const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+							const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+							hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
+
+							mask &= mask - 1;
+						}
+					}
+				}
+			}
+
+			integral(px_in, ddx);
+		}
+
+		//差分递增
+		integral(base_vert, ddy);
 	}
 }
 
