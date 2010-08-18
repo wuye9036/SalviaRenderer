@@ -62,82 +62,67 @@ struct initializer;
 struct type_specifier;
 struct variable_declaration;
 
-struct function_tag{};
-struct constant_tag{};
-
-boost::shared_ptr<::sasl::common::token_attr> make_tree( const ::std::string& lit );
-boost::shared_ptr<buildin_type> make_tree( const buildin_type_code btc );
-
-template <typename T> boost::shared_ptr<variable_declaration> make_tree( 
-	boost::shared_ptr<T> typespec,
-	boost::shared_ptr<::sasl::common::token_attr> ident,
-	EFLIB_ENABLE_IF_PRED2( is_base_of, type_specifier, T, 0 )
-	)
+class tree_combinator
 {
-	boost::shared_ptr<variable_declaration> ret = create_node<variable_declaration>( null_token() );
-	ret->name = ident;
-	ret->type_info = typespec;
-	return ret;
-}
+	virtual tree_combinator& dvar( const std::string& var_name ){
+		syntax_error();
+		return *this;
+	}
+	virtual tree_combinator& dstruct( const std::string& struct_name ){
+		syntax_error();
+		return *this;
+	}
+	virtual tree_combinator& dfunction( const std::string& func_name ){
+		syntax_error();
+		return *this;
+	}
+	virtual tree_combinator& dtypedef( const std::string& alias ){
+		syntax_error();
+		return *this;
+	}
 
-template <typename T, typename U > boost::shared_ptr<variable_declaration> make_tree( 
-	boost::shared_ptr<T> typespec,
-	boost::shared_ptr<::sasl::common::token_attr> ident,
-	boost::shared_ptr<U> init,
-	EFLIB_ENABLE_IF_PRED2( is_base_of, type_specifier, T, 0 ),
-	EFLIB_ENABLE_IF_PRED2( is_base_of, initializer, U, 1 )
-	)
-{
-	boost::shared_ptr<variable_declaration> ret = create_node<variable_declaration>( null_token() );
-	ret->name = ident;
-	ret->type_info = typespec;
-	ret->init = init;
-	return ret;
-}
+	virtual tree_combinator& end(){ return parent; }
+	
+	template <typename T>
+	tree_combinator& end( boost::shared_ptr<T>& result )
+	{
+		result = boost::shared_polymorphic_cast<T>( curnode );
+	}
+protected:
+	tree_combinator( const tree_combinator& );
+	tree_combinator& operator = ( const tree_combinator& );
 
-template< typename ReturnT >
-boost::shared_ptr<function_type> make_tree(
-	boost::shared_ptr<ReturnT> ret_type, boost::shared_ptr<::sasl::common::token_attr> name, function_tag, 
-	EFLIB_ENABLE_IF_PRED2(is_base_of, type_specifier, ReturnT, 0)
-	)
-{
-	boost::shared_ptr<function_type> ret = create_node< function_type >( null_token() );
-	ret->retval_type = boost::shared_polymorphic_cast<type_specifier>(ret_type);
-	ret->name = name;
-	return ret;
-}
+	tree_combinator( tree_combinator& parent ): parent( parent ){}
 
-template <typename T>
-boost::shared_ptr<declaration_statement> make_tree( boost::shared_ptr<T> decl, EFLIB_ENABLE_IF_PRED2( is_base_of, declaration, T, 0) ){
-	boost::shared_ptr<declaration_statement> ret = create_node<declaration_statement>( null_token() );
-	ret->decl = decl;
-	return ret;
-}
+private:
+	void syntax_error(){
+		assert( !"Fuck!" );
+	}
 
-boost::shared_ptr<constant_expression> make_tree( literal_constant_types btc, const ::std::string& val);
+protected:
+	boost::shared_ptr<node> curnode;
+	tree_combinator& parent;
+};
 
-template <typename T>
-boost::shared_ptr<constant_expression> make_tree( T val, EFLIB_ENABLE_IF_COND( is_sasl_buildin_type<T>, 0 ) ){
-	return make_tree(
-		cpptype_to_typecode<T>(), boost::lexical_cast<string>(T)
-	);
-}
+class dprog_combinator: public tree_combinator{
+public:
+	dprog_combinator();
 
-//template <typename T, typename U> boost::shared_ptr<binary_expression> make_node(
-//	boost::shared_ptr<T> lexpr, operators op, boost::shared_ptr<U> rexpr,
-//	EFLIB_ENABLE_IF_PRED2( is_base_of, expression, T, 0 ),
-//	EFLIB_ENABLE_IF_PRED2( is_base_of, expression, U, 1 )
-//	)
-//{
-//}
-//
-//template <typename T>
-//boost::shared_ptr<declaration_statement> make_node(
-//	boost::shared_ptr<T> decl,
-//	EFLIB_ENABLE_IF_IS_BASE_OF(T, declaration)
-//	)
-//{
-//}
+	virtual tree_combinator& dvar( const std::string& var_name );
+	virtual tree_combinator& dstruct( const std::string& struct_name );
+	virtual tree_combinator& dfunction( const std::string& func_name );
+	virtual tree_combinator& dtypedef( const std::string& alias );
 
+	virtual tree_combinator& end();
+private:
+	boost::shared_ptr<program> typed_node;
+};
+
+class dvar_combinator: public tree_combinator{
+public:
+	dvar_combinator( const std::string& var_name );
+
+	// virtual tree_combinator&
+};
 END_NS_SASL_SYNTAX_TREE()
 #endif

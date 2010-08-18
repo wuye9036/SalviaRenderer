@@ -28,6 +28,16 @@ extern literal_constant_types type_codes[] =
 	literal_constant_types::real
 };
 
+dprog_combinator::dprog_combinator():
+	parent(*this), typed_node( create_node(null_token()) )
+{
+	curnode = typed_node;
+}
+
+tree_combinator& dprog_combinator::dvar( const std::string& var_name )
+{
+
+}
 boost::shared_ptr<token_attr> null_token(){
 	return boost::shared_ptr<token_attr>();
 }

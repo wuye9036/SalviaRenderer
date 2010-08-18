@@ -11,12 +11,6 @@ boost::shared_ptr<token_attr> new_token( const std::string& lit ){
 	return boost::shared_ptr<token_attr>( new token_attr(lit.begin(), lit.end()) );
 }
 
-boost::shared_ptr<buildin_type> new_buildin_type( boost::shared_ptr<token_attr> tok, buildin_type_code btc ){
-	boost::shared_ptr<buildin_type> ret( create_node<buildin_type>( tok ) );
-	ret->value_typecode = btc;
-	return ret;
-}
-
 template <typename SymbolInfoT>
 void extract_symbol_info( boost::shared_ptr<SymbolInfoT>& syminfo, boost::shared_ptr<symbol> sym ){
 	syminfo = sym->symbol_info<SymbolInfoT>();
