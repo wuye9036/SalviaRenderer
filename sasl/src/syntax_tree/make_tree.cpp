@@ -28,36 +28,58 @@ extern literal_constant_types type_codes[] =
 	literal_constant_types::real
 };
 
+/////////////////////////////////
+// program combinator
 dprog_combinator::dprog_combinator():
-	parent(*this), typed_node( create_node(null_token()) )
+	parent(*this)
 {
-	curnode = typed_node;
+	typed_node( create_node<program>(null_token()) );
 }
 
 tree_combinator& dprog_combinator::dvar( const std::string& var_name )
 {
+	var_comb.reset( new dvar_combinator(var_name) );
+	variable_declaration vardecl = create_node<variable_declaration>( null_token() );
+	typed_node()->decls.push_back( vardecl );
+	var_comb->typed_node( typed_node()->decls.back() );
 
-}
-boost::shared_ptr<token_attr> null_token(){
-	return boost::shared_ptr<token_attr>();
-}
-
-boost::shared_ptr<token_attr> make_tree( const ::std::string& lit ){
-	return boost::shared_ptr<token_attr>( new token_attr( lit.begin(), lit.end() ) );
+	return *var_comb;
 }
 
-boost::shared_ptr<buildin_type> make_tree( const buildin_type_code btc ){
-	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( null_token() );
-	ret->value_typecode = btc;
-	return ret;
+dtype_combinator::dtype_combinator()
+{
+
 }
 
-boost::shared_ptr<constant_expression> make_tree( literal_constant_types btc, const ::std::string& val){
-	boost::shared_ptr<constant_expression> ret = create_node<constant_expression>( null_token() );
-	ret->ctype = btc;
-	ret->value_tok = make_tree( val );
-	return ret;
+tree_combinator& dtype_combinator::dbuildin( buildin_type_code btc )
+{
+	if( cur_node ){
+		syntax_error();
+		return *this;
+	}
+	
+	typed_node( create_node<buildin_type>(btc) );
+	return *this;
 }
+
+
+tree_combinator& dvar_combinator::child_ended()
+{
+	switch( e_state ){
+e_none:
+		syntax_error();
+		break;
+e_type:
+		typed_node()->type_info = type_comb->typed_node();
+		break;
+e_init:
+		// typed_node()->init = init_comb->typed_node();
+		break;
+	}
+	e_state = e_none;
+	return *this;
+}
+
 END_NS_SASL_SYNTAX_TREE();
 
 struct empty_type{
