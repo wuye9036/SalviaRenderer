@@ -5,6 +5,7 @@
 
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/literal_constant_types.h>
+#include <sasl/enums/type_qualifiers.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <eflib/include/boostext.h>
 #include <boost/lexical_cast.hpp>
@@ -51,8 +52,6 @@ buildin_type_code cpptype_to_typecode(
 	return type_codes[boost::mpl::find<cpptypes, T>::type::pos];
 }
 
-boost::shared_ptr<::sasl::common::token_attr> null_token();
-
 struct buildin_type;
 struct constant_expression;
 struct declaration;
@@ -60,34 +59,53 @@ struct declaration_statement;
 struct expression;
 struct function_type;
 struct initializer;
+struct node;
+struct program;
 struct type_specifier;
 struct variable_declaration;
 
-#define SASL_TYPED_NODE_ACCESSORS( type )					\
-	boost::shared_ptr< type > typed_node() { return boost::shared_polymorphic_cast< type >( cur_node ); }	\
-	void typed_node( boost::shared_ptr< type > typed_ptr ) \
-	{ cur_node = boost::shared_polymorphic_cast< node >( typed_ptr ); } \
-	template<typename T> boost::shared_ptr<T> typed_node2{ return boost::shared_polymorphic_cast< T >( cur_node ); }
+class dvar_combinator;
+class dtype_combinator;
+
+#define SASL_TYPED_NODE_ACCESSORS_DECL( node_type )					\
+	boost::shared_ptr< node_type > typed_node();	\
+	template <typename T>	\
+	boost::shared_ptr< node_type > typed_node( boost::shared_ptr< T > typed_ptr )  \
+	{	\
+		cur_node = boost::shared_polymorphic_cast< node >( typed_ptr ); \
+		return typed_node();	\
+	}	\
+	template<typename T> boost::shared_ptr<T> typed_node2(){ return boost::shared_polymorphic_cast< T >( cur_node ); }
+
+#define SASL_TYPED_NODE_ACCESSORS_IMPL( class_name, node_type ) \
+	boost::shared_ptr< node_type > class_name##::typed_node() { return boost::shared_polymorphic_cast< node_type >( cur_node ); }
 
 class tree_combinator
 {
-	virtual tree_combinator& dvar( const std::string& var_name ){ default_proc(); }
-	virtual tree_combinator& dstruct( const std::string& struct_name ){ default_proc(); }
-	virtual tree_combinator& dfunction( const std::string& func_name ){ default_proc(); }
-	virtual tree_combinator& dtypedef( const std::string& alias ){ default_proc(); }
+public:
+	virtual tree_combinator& dvar( const std::string& /*var_name*/ ){ return default_proc(); }
+	virtual tree_combinator& dstruct( const std::string& /*struct_name*/ ){ return default_proc(); }
+	virtual tree_combinator& dfunction( const std::string& /*func_name*/ ){ return default_proc(); }
+	virtual tree_combinator& dtypedef( const std::string& /*alias*/ ){ return default_proc(); }
 
-	virtual tree_combinator& end(){ parent.child_ended(); return parent; }
+	virtual tree_combinator& end(){
+		if( parent ){
+			parent->child_ended();
+			return *parent;
+		}
+		return *this;
+	}
 	
-	virtual tree_combinator& dtype(){ default_proc(); }
-	virtual tree_combinator& dinit(){ default_proc(); }
+	virtual tree_combinator& dtype(){ return default_proc(); }
+	virtual tree_combinator& dinit(){ return default_proc(); }
 
 	// types
-	virtual tree_combinator& dbuildin( buildin_type_code btc ){ default_proc(); }
-	virtual tree_combinator& dvec( buildin_type_code comp_btc, size_t size ){ default_proc(); }
-	virtual tree_combinator& dmat( buildin_type_code comp_btc, size_t s0, size_t s1 ){ default_proc(); }
-	virtual tree_combinator& dalias( const std::string& alias ){ default_proc(); }
-	virtual tree_combinator& darray(){ default_proc(); }
-	virtual tree_combinator& dtypequal( type_qualifiers qual ){ default_proc(); }
+	virtual tree_combinator& dbuildin( buildin_type_code /*btc*/ ){ return default_proc(); }
+	virtual tree_combinator& dvec( buildin_type_code /*comp_btc*/, size_t /*size*/ ){ return default_proc(); }
+	virtual tree_combinator& dmat( buildin_type_code /*comp_btc*/, size_t /*s0*/, size_t /*s1*/ ){ return default_proc(); }
+	virtual tree_combinator& dalias( const std::string& /*alias*/ ){ return default_proc(); }
+	virtual tree_combinator& darray(){ return default_proc(); }
+	virtual tree_combinator& dtypequal( type_qualifiers /*qual*/ ){ return default_proc(); }
 
 	template <typename T>
 	tree_combinator& end( boost::shared_ptr<T>& result )
@@ -95,11 +113,14 @@ class tree_combinator
 		result = boost::shared_polymorphic_cast<T>( cur_node );
 		return end();
 	}
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( node );
 protected:
-	tree_combinator( tree_combinator& parent ): parent( parent ){}
+	tree_combinator( tree_combinator* parent ): parent( parent ){}
 	tree_combinator& default_proc(){ syntax_error(); return *this; }
 
 	virtual void child_ended(){}
+	virtual ~tree_combinator(){}
 private:
 	tree_combinator( const tree_combinator& );
 	tree_combinator& operator = ( const tree_combinator& );
@@ -110,21 +131,19 @@ private:
 
 protected:
 	boost::shared_ptr<node> cur_node;
-	tree_combinator& parent;
+	tree_combinator* parent;
 };
 
 class dprog_combinator: public tree_combinator{
 public:
-	dprog_combinator();
+	dprog_combinator( const std::string& prog_name );
 
 	virtual tree_combinator& dvar( const std::string& var_name );
 	//virtual tree_combinator& dstruct( const std::string& struct_name );
 	//virtual tree_combinator& dfunction( const std::string& func_name );
 	//virtual tree_combinator& dtypedef( const std::string& alias );
 
-	virtual tree_combinator& child_ended();
-
-	SASL_TYPED_NODE_ACCESSORS( program );
+	SASL_TYPED_NODE_ACCESSORS_DECL( program );
 
 private:
 	boost::shared_ptr<program> prog_node;
@@ -133,13 +152,13 @@ private:
 
 class dvar_combinator: public tree_combinator{
 public:
-	explicit dvar_combinator( const std::string& var_name );
+	explicit dvar_combinator( tree_combinator& parent );
+	virtual tree_combinator& dname(const std::string& );
 	virtual tree_combinator& dtype();
 	//virtual tree_combinator& dinit();
 
-	virtual tree_combinator& end();
-
-	SASL_TYPED_NODE_ACCESSORS( variable_declaration );
+	virtual void child_ended();
+	SASL_TYPED_NODE_ACCESSORS_DECL( variable_declaration );
 protected:
 	enum child_state_t{
 		e_none,
@@ -157,16 +176,16 @@ private:
 class dtype_combinator : public tree_combinator
 {
 public:
-	dtype_combinator();
-	~dtype_combinator();
+	dtype_combinator( tree_combinator& parent );
+	~dtype_combinator(){}
 	virtual tree_combinator& dbuildin( buildin_type_code btc );
-	/*virtual tree_combinator& dvec( buildin_type_code comp_btc, size_t size );
-	virtual tree_combinator& dmat( buildin_type_code comp_btc, size_t s0, size_t s1 );
-	virtual tree_combinator& dalias( const std::string& alias );
-	virtual tree_combinator& darray();
-	virtual tree_combinator& dtypequal( type_qualifiers qual );*/
+	virtual tree_combinator& dvec( buildin_type_code comp_btc, size_t size );
+	//virtual tree_combinator& dmat( buildin_type_code comp_btc, size_t s0, size_t s1 );
+	//virtual tree_combinator& dalias( const std::string& alias );
+	//virtual tree_combinator& darray();
+	//virtual tree_combinator& dtypequal( type_qualifiers qual );
 
-	SASL_TYPED_NODE_ACCESSORS( type_specifier );
+	SASL_TYPED_NODE_ACCESSORS_DECL( type_specifier );
 protected:
 	dtype_combinator( const dtype_combinator& rhs);
 	dtype_combinator& operator = ( const dtype_combinator& rhs );

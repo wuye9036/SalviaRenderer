@@ -2,6 +2,7 @@
 #define SASL_COMMON_TOKEN_ATTR_H
 
 #include <sasl/include/common/common_fwd.h>
+#include <boost/make_shared.hpp>
 #include <boost/smart_ptr.hpp>
 #include <string>
 
@@ -34,6 +35,10 @@ struct token_attr{
 	
 	static boost::shared_ptr<token_attr> null(){
 		return boost::shared_ptr<token_attr>();
+	}
+
+	static boost::shared_ptr<token_attr> from_string( const std::string& str ){
+		return boost::make_shared<token_attr>(str.begin(), str.end());
 	}
 };
 

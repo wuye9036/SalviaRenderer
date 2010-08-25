@@ -9,8 +9,8 @@ using sasl::common::token_attr;
 
 void instantiate(){
 	create_node<program>( (const char*)0 );
-	create_node<variable_declaration>( null_token() );
-	create_node<parameter>( null_token() );
+	create_node<variable_declaration>( token_attr::null() );
+	create_node<parameter>( token_attr::null() );
 }
 
 END_NS_SASL_SYNTAX_TREE();

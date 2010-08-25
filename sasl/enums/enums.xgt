@@ -81,38 +81,50 @@
 		<item>character</item>
 	</enum>	
 	
-	<enum name="buildin_type_code">
+	<enum name="buildin_type_code" storage_type = "uint32_t">
 		<HasName />
+		<Convertible/>
 		<Ortho />
 		<item value="0">none</item>
+
+		<item value="28">_dimension_field_shift</item>
+		<item value="24">_generic_type_field_shift</item>
+		<item value="20">_sign_field_shift</item>
+		<item value="16">_precision_field_shift</item>
+		<item value="16">_scalar_field_shift</item>
+		<item value="8">_dim0_field_shift</item>
+		<item value="0">_dim1_field_shift</item>
 		
-		<item value="1 * (2 ** 24)">_scalar</item>
-		<item value="2 * (2 ** 24)">_vector</item>
-		<item value="4 * (2 ** 24)">_matrix</item>
-		<item value="255 * (2**24)">_dimension_mask</item>
+		<item value="0 * (2 ** $_dimension_field_shift$)">_scalar</item>
+		<item value="1 * (2 ** $_dimension_field_shift$)">_vector</item>
+		<item value="2 * (2 ** $_dimension_field_shift$)">_matrix</item>
+		<item value="15 * (2**$_dimension_field_shift$)">_dimension_mask</item>
 		
-		<item value="1 * (2 ** 16)">_real</item>
-		<item value="2 * (2 ** 16)">_integer</item>
-		<item value="4 * (2 ** 16)">_boolean</item>
-		<item value="255 * (2 ** 16)">_generic_type_mask</item>
+		<item value="1 * (2 ** $_generic_type_field_shift$)">_real</item>
+		<item value="2 * (2 ** $_generic_type_field_shift$)">_integer</item>
+		<item value="3 * (2 ** $_generic_type_field_shift$)">_boolean</item>
+		<item value="15 * (2 ** $_generic_type_field_shift$)">_generic_type_mask</item>
 		
-		<item value="1 * (2 ** 8) + $_integer$">_unsigned</item>
-		<item value="2 * (2 ** 8) + $_integer$">_signed</item>
-		<item value="255 * (2 ** 8)">_sign_mask</item>
+		<item value="1 * (2 ** $_sign_field_shift$) + $_integer$">_unsigned</item>
+		<item value="2 * (2 ** $_sign_field_shift$) + $_integer$">_signed</item>
+		<item value="15 * (2 ** $_sign_field_shift$)">_sign_mask</item>
 		
-		<item value="1 + $_signed$">_sint8</item>
-		<item value="2 + $_signed$">_sint16</item>
-		<item value="3 + $_signed$">_sint32</item>
-		<item value="4 + $_signed$">_sint64</item>
+		<item value="1 * (2 ** $_scalar_field_shift$) + $_signed$">_sint8</item>
+		<item value="2 * (2 ** $_scalar_field_shift$) + $_signed$">_sint16</item>
+		<item value="3 * (2 ** $_scalar_field_shift$) + $_signed$">_sint32</item>
+		<item value="4 * (2 ** $_scalar_field_shift$) + $_signed$">_sint64</item>
 		
-		<item value="1 + $_unsigned$">_uint8</item>
-		<item value="2 + $_unsigned$">_uint16</item>
-		<item value="3 + $_unsigned$">_uint32</item>
-		<item value="4 + $_unsigned$">_uint64</item>
+		<item value="1 * (2 ** $_scalar_field_shift$) + $_unsigned$">_uint8</item>
+		<item value="2 * (2 ** $_scalar_field_shift$) + $_unsigned$">_uint16</item>
+		<item value="3 * (2 ** $_scalar_field_shift$) + $_unsigned$">_uint32</item>
+		<item value="4 * (2 ** $_scalar_field_shift$) + $_unsigned$">_uint64</item>
 		
-		<item value="1 + $_real$">_float</item>
-		<item value="2 + $_real$">_double</item>
-		<item value="(2 ** 24) - 1">_element_type_mask</item>
+		<item value="1 * (2 ** $_scalar_field_shift$) + $_real$">_float</item>
+		<item value="2 * (2 ** $_scalar_field_shift$) + $_real$">_double</item>
+		<item value="(2 ** $_dimension_field_shift$) - (2**$_scalar_field_shift$)">_scalar_type_mask</item>
+		
+		<item value="(2**$_scalar_field_shift$) - (2**$_dim0_field_shift$)">_dim0_mask</item>
+		<item value="(2**$_dim0_field_shift$) - 1">_dim1_mask</item>
 	</enum>
 	
 	<enum name="syntax_node_types" storage_type = "uint64_t">

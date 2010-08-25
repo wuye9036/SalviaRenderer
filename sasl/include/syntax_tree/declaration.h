@@ -23,6 +23,18 @@ struct type_specifier;
 struct statement;
 struct expression;
 
+class btc_helper
+{
+public:
+	static buildin_type_code vector_of( buildin_type_code scalar_tc, size_t dim );
+	static buildin_type_code matrix_of( buildin_type_code scalar_tc, size_t dim0, size_t dim1 );
+	static size_t dim0_len( buildin_type_code btc );
+	static size_t dim1_len( buildin_type_code btc );
+	static bool is_scalar( buildin_type_code btc );
+	static bool is_vector( buildin_type_code btc );
+	static bool is_matrix( buildin_type_code btc );
+	static buildin_type_code scalar_of( buildin_type_code btc );
+};
 using sasl::common::token_attr;
 
 struct initializer: public node{

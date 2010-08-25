@@ -111,4 +111,76 @@ function_type& function_type::s( boost::shared_ptr<statement> stmt ){
 	}
 	return *this;
 }
+
+buildin_type_code btc_helper::vector_of( buildin_type_code scalar_tc, size_t dim )
+{
+	assert( is_scalar(scalar_tc) );
+	assert( 1 <= dim && dim <= 4 );
+
+	buildin_type_code ret( scalar_tc | buildin_type_code::_vector );
+	ret.from_value( ret.to_value() | ( dim << ret._dim0_field_shift.to_value() ) );
+	return ret;
+}
+
+buildin_type_code btc_helper::matrix_of( buildin_type_code scalar_tc, size_t dim0, size_t dim1 )
+{
+	assert( is_scalar(scalar_tc) );
+	assert( 1 <= dim0 && dim0 <= 4 && 1 <= dim1 && dim1 <= 4 );
+
+	buildin_type_code ret( scalar_tc | buildin_type_code::_matrix );
+	ret.from_value(
+		ret.to_value()
+		| ( dim0 << ret._dim0_field_shift.to_value() )
+		| ( dim1 << ret._dim1_field_shift.to_value() )
+		);
+
+	return ret;
+}
+
+size_t btc_helper::dim0_len( buildin_type_code btc )
+{
+	if( is_scalar(btc) )
+	{
+		return 0;
+	}
+	return (size_t)
+		(
+		(btc & buildin_type_code::_dim0_mask).to_value()
+		>> buildin_type_code::_dim0_field_shift.to_value()
+		);
+}
+
+size_t btc_helper::dim1_len( buildin_type_code btc )
+{
+	if( is_scalar(btc) || is_vector(btc) )
+	{
+		return 0;
+	}
+	return (size_t)
+		(
+		(btc & buildin_type_code::_dim1_mask).to_value()
+		>> buildin_type_code::_dim1_field_shift.to_value()
+		);
+}
+
+bool btc_helper::is_scalar( buildin_type_code btc )
+{
+	return ( btc & buildin_type_code::_dimension_mask ) == buildin_type_code::_scalar;
+}
+
+bool btc_helper::is_vector( buildin_type_code btc )
+{
+	return ( btc & buildin_type_code::_dimension_mask ) == buildin_type_code::_vector;
+}
+
+bool btc_helper::is_matrix( buildin_type_code btc )
+{
+	return ( btc & buildin_type_code::_dimension_mask ) == buildin_type_code::_matrix;
+}
+
+buildin_type_code btc_helper::scalar_of( buildin_type_code btc )
+{
+	return btc & buildin_type_code::_scalar_type_mask;
+}
+
 END_NS_SASL_SYNTAX_TREE();

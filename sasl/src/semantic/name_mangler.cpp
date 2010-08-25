@@ -99,7 +99,7 @@ void name_mangler::mangle_type( boost::shared_ptr<::sasl::syntax_tree::type_spec
 			} else {
 				mangled_name += "B";
 			}
-			mangled_name += btc_decorators[btc & buildin_type_code::_element_type_mask];
+			mangled_name += btc_decorators[btc & buildin_type_code::_scalar_type_mask];
 		} else if ( mtype->node_class() == syntax_node_types::struct_type ){
 			boost::shared_ptr< struct_type > stype = mtype->typed_handle<struct_type>();
 			mangled_name += "S";

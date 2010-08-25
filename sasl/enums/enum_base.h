@@ -7,6 +7,9 @@
 
 template<typename DerivedT, typename StorageT>
 struct value_op{
+	void from_value( StorageT val ){
+		((DerivedT*)this)->val_ = val;
+	}
 	StorageT to_value() const{
 		return ((DerivedT*)this)->val_;
 	}
