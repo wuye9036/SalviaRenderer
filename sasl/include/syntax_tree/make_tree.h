@@ -64,6 +64,7 @@ struct program;
 struct type_specifier;
 struct variable_declaration;
 
+class dexpr_combinator;
 class dvar_combinator;
 class dtype_combinator;
 
@@ -72,13 +73,22 @@ class dtype_combinator;
 	template <typename T>	\
 	boost::shared_ptr< node_type > typed_node( boost::shared_ptr< T > typed_ptr )  \
 	{	\
-		cur_node = boost::shared_polymorphic_cast< node >( typed_ptr ); \
-		return typed_node();	\
+		if ( typed_ptr ){ \
+			cur_node = boost::shared_polymorphic_cast< node >( typed_ptr ); \
+		} else { \
+			cur_node.reset();\
+		} \
+		return typed_node(); \
 	}	\
-	template<typename T> boost::shared_ptr<T> typed_node2(){ return boost::shared_polymorphic_cast< T >( cur_node ); }
+	template<typename T> boost::shared_ptr<T> typed_node2(){ \
+		if ( cur_node )	return boost::shared_polymorphic_cast< T >( cur_node ); \
+		return boost::shared_ptr<T>(); \
+	}
 
 #define SASL_TYPED_NODE_ACCESSORS_IMPL( class_name, node_type ) \
-	boost::shared_ptr< node_type > class_name##::typed_node() { return boost::shared_polymorphic_cast< node_type >( cur_node ); }
+	boost::shared_ptr< node_type > class_name##::typed_node() { \
+		return typed_node2< node_type >(); \
+	}
 
 class tree_combinator
 {
@@ -152,7 +162,7 @@ private:
 
 class dvar_combinator: public tree_combinator{
 public:
-	explicit dvar_combinator( tree_combinator& parent );
+	explicit dvar_combinator( tree_combinator* parent );
 	virtual tree_combinator& dname(const std::string& );
 	virtual tree_combinator& dtype();
 	//virtual tree_combinator& dinit();
@@ -176,20 +186,41 @@ private:
 class dtype_combinator : public tree_combinator
 {
 public:
-	dtype_combinator( tree_combinator& parent );
+
+	dtype_combinator( tree_combinator* parent );
 	~dtype_combinator(){}
 	virtual tree_combinator& dbuildin( buildin_type_code btc );
 	virtual tree_combinator& dvec( buildin_type_code comp_btc, size_t size );
-	//virtual tree_combinator& dmat( buildin_type_code comp_btc, size_t s0, size_t s1 );
-	//virtual tree_combinator& dalias( const std::string& alias );
-	//virtual tree_combinator& darray();
-	//virtual tree_combinator& dtypequal( type_qualifiers qual );
+	virtual tree_combinator& dmat( buildin_type_code comp_btc, size_t s0, size_t s1 );
+	virtual tree_combinator& dalias( const std::string& alias );
+	virtual tree_combinator& darray();
+	virtual tree_combinator& dtypequal( type_qualifiers qual );
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( type_specifier );
 protected:
 	dtype_combinator( const dtype_combinator& rhs);
 	dtype_combinator& operator = ( const dtype_combinator& rhs );
+
+	virtual void child_ended();
+private:
+	boost::shared_ptr<dexpr_combinator> expr_comb;
+	enum state_t{
+		e_none,
+		e_array
+	} e_state;
+};
+
+class dexpr_combinator: public tree_combinator
+{
+public:
+	dexpr_combinator( tree_combinator* parent );
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( expression );
+protected:
+	dexpr_combinator( const dexpr_combinator& rhs);
+	dexpr_combinator& operator = ( const dexpr_combinator& rhs );
 private:
 };
+
 END_NS_SASL_SYNTAX_TREE()
 #endif

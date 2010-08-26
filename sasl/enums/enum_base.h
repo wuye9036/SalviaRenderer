@@ -47,41 +47,50 @@ struct compare_op{
 
 template<class DerivedT>
 struct bitwise_op{
+private:
+	template<typename ValueT>
+	static DerivedT derived_obj( ValueT val )
+	{
+		enum_base<DerivedT, DerivedT::storage_type> tmp_obj( val );
+		return *(static_cast<DerivedT*>(&tmp_obj));
+	}
+public:
 	DerivedT operator & (const DerivedT& rhs) const{
 		DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ & rhs.val_;
-		return static_cast<DerivedT&>( enum_base<DerivedT, DerivedT::storage_type>( ret_val ) );
+
+		return derived_obj(ret_val);
 	}
 
 	DerivedT operator | (const DerivedT& rhs) const{
 		DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ | rhs.val_;
-		return static_cast<DerivedT&>( enum_base<DerivedT, DerivedT::storage_type>( ret_val ) );
+		return derived_obj(ret_val);
 	}
 
 	DerivedT operator ^ (const DerivedT& rhs) const{
 		DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ ^ rhs.val_;
-		return static_cast<DerivedT&>( enum_base<DerivedT, DerivedT::storage_type>( ret_val ) );
+		return derived_obj(ret_val);
 	}
 
 	DerivedT& operator &= ( const DerivedT& rhs) {
 		((DerivedT*)this)->val_ &= rhs.val_;
-		return static_cast<DerivedT&>(*this);
+		return *(static_cast<DerivedT* const>(this));
 	}
 
 	DerivedT& operator |= ( const DerivedT& rhs) {
 		((DerivedT*)this)->val_ |= rhs.val_;
-		return static_cast<DerivedT&>(*this);
+		return *(static_cast<DerivedT* const>(this));
 	}
 
 	DerivedT& operator ^= ( const DerivedT& rhs) {
 		((DerivedT*)this)->val_ ^= rhs.val_;
-		return static_cast<DerivedT&>(*this);
+		return *(static_cast<DerivedT* const>(this));
 	}
 	
-	bool included( const DerivedT& rhs ){
+	bool included( const DerivedT& rhs ) const{
 		return (((DerivedT*)this)->val_ & rhs.val_) == rhs.val_;
 	}
 	
-	bool excluded( const DerivedT& rhs ){
+	bool excluded( const DerivedT& rhs ) const{
 		return ((DerivedT*)this)->val_ & rhs.val_ == (typename Derived::storage_type)0;
 	}
 };

@@ -43,7 +43,7 @@ dprog_combinator::dprog_combinator( const std::string& prog_name ):
 
 tree_combinator& dprog_combinator::dvar( const std::string& var_name )
 {
-	var_comb = boost::shared_ptr<dvar_combinator>( new dvar_combinator(*this) );
+	var_comb = boost::make_shared<dvar_combinator>(this);
 
 	boost::shared_ptr<variable_declaration> vardecl = create_node<variable_declaration>( token_attr::null() );
 	typed_node()->decls.push_back( vardecl );
@@ -55,8 +55,9 @@ tree_combinator& dprog_combinator::dvar( const std::string& var_name )
 /////////////////////////////////
 // type combinator
 SASL_TYPED_NODE_ACCESSORS_IMPL( dtype_combinator, type_specifier );
-dtype_combinator::dtype_combinator( tree_combinator& parent )
-: tree_combinator( boost::addressof(parent) )
+
+dtype_combinator::dtype_combinator( tree_combinator* parent )
+: tree_combinator( parent ), e_state(e_none)
 {
 }
 
@@ -78,14 +79,64 @@ tree_combinator& dtype_combinator::dvec( buildin_type_code comp_btc, size_t size
 
 	typed_node( create_node<buildin_type>(token_attr::null()) );
 	typed_node()->value_typecode = btc_helper::vector_of( comp_btc, size );
+	return *this;
+}
+
+tree_combinator& dtype_combinator::dmat( buildin_type_code comp_btc, size_t s0, size_t s1 )
+{
+	if( cur_node ){
+		return default_proc();
+	}
+	typed_node( create_node<buildin_type>(token_attr::null() ) );
+	typed_node()->value_typecode = btc_helper::matrix_of(comp_btc, s0, s1);
+	return *this;
+}
+
+tree_combinator& dtype_combinator::dalias( const std::string& alias )
+{
+	if( cur_node ){
+		return default_proc();
+	}
+	typed_node( create_node<struct_type>( token_attr::null() ) );
+	typed_node2<struct_type>()->name = token_attr::from_string(alias);
+	return *this;
+}
+
+tree_combinator& dtype_combinator::dtypequal( type_qualifiers qual )
+{
+	if( !cur_node || typed_node()->qual != type_qualifiers::none )
+	{
+		return default_proc();
+	}
+	typed_node()->qual = qual;
+	return *this;
+}
+
+tree_combinator& dtype_combinator::darray()
+{
+	if ( !cur_node ) { return default_proc(); }
+	e_state = e_array;
+	expr_comb = boost::make_shared<dexpr_combinator>(this);
+	return *expr_comb;
+}
+
+void dtype_combinator::child_ended()
+{
+	if( e_state == e_array ){
+		boost::shared_ptr<array_type> outter_type = create_node<array_type>( token_attr::null() );
+		outter_type->array_lens.push_back( expr_comb->typed_node() );
+		outter_type->elem_type = typed_node();
+		typed_node( outter_type );
+		e_state = e_none;
+	}
 }
 
 /////////////////////////////////////
 // variable combinator
 SASL_TYPED_NODE_ACCESSORS_IMPL( dvar_combinator, variable_declaration );
 
-dvar_combinator::dvar_combinator( tree_combinator& parent )
-: tree_combinator( boost::addressof(parent) )
+dvar_combinator::dvar_combinator( tree_combinator* parent )
+: tree_combinator( parent )
 {
 }
 
@@ -97,7 +148,7 @@ tree_combinator& dvar_combinator::dname( const std::string& name )
 
 tree_combinator& dvar_combinator::dtype()
 {
-	type_comb = boost::shared_ptr<dtype_combinator>( new dtype_combinator(*this) );
+	type_comb = boost::make_shared<dtype_combinator>(this);
 	e_state = e_type;
 	return *type_comb;
 }
@@ -120,6 +171,15 @@ void dvar_combinator::child_ended()
 }
 
 
+/////////////////////////////////////////////////////////////////
+// expression combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dexpr_combinator, expression );
+
+dexpr_combinator::dexpr_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+}
 
 END_NS_SASL_SYNTAX_TREE();
 
@@ -150,25 +210,3 @@ template <typename T>
 T& null_instance(){
 	return *((T*)NULL);
 }
-
-
-
-//BOOST_AUTO_TEST_SUITE( tree_maker )
-//
-//BOOST_AUTO_TEST_CASE( make_tree_test ){
-//	::std::string litstr("_test_case_only_");
-//	BOOST_CHECK_EQUAL( make_tree( litstr )->lit, litstr );
-//
-//	buildin_type_code dbltc( buildin_type_code::_double );
-//	boost::shared_ptr<sasl::syntax_tree::buildin_type> dbltype = make_tree( dbltc );
-//	BOOST_CHECK( dbltype->value_typecode == dbltc );
-//	
-//	boost::shared_ptr<sasl::syntax_tree::variable_declaration> dblvar = make_tree( dbltype, litstr );
-//	BOOST_CHECK( !dblvar->init );
-//	BOOST_CHECK( dblvar->name->lit == litstr );
-//	BOOST_CHECK( dblvar->type_info->value_typecode == dbltc );	
-//
-//	BOOST_CHECK( is_same_type<no_matched>( make_tree( empty_type::null(), litstr ) ) );
-//}
-//
-//BOOST_AUTO_TEST_SUITE_END()

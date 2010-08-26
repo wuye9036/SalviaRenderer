@@ -101,7 +101,10 @@ protected:
 
 struct type_specifier: public declaration{
 	buildin_type_code value_typecode;
+	type_qualifiers qual;
+
 	bool is_buildin() const;
+	bool is_uniform() const;
 protected:
 	type_specifier(syntax_node_types type_id, boost::shared_ptr<token_attr> tok);
 };
@@ -116,20 +119,12 @@ protected:
 	buildin_type( const buildin_type& );
 };
 
-struct qualified_type: public type_specifier{
-	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
-	boost::shared_ptr< type_specifier > inner_type;
-	type_qualifiers qual;
-
-protected:
-	qualified_type( boost::shared_ptr<token_attr> tok );
-	qualified_type& operator = ( const qualified_type& );
-	qualified_type( const qualified_type& );
-};
 
 struct array_type: public type_specifier{
+	SASL_SYNTAX_NODE_CREATORS();
+	
 	void accept( syntax_tree_visitor* v );
+
 	std::vector< boost::shared_ptr<expression> > array_lens;
 	boost::shared_ptr< type_specifier > elem_type;
 protected:

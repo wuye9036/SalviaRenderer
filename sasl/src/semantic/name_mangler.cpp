@@ -35,7 +35,6 @@ using ::sasl::syntax_tree::array_type;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::buildin_type;
-using ::sasl::syntax_tree::qualified_type;
 
 name_mangler::name_mangler(){
 	boost::assign::insert( btc_decorators )
@@ -79,35 +78,35 @@ void name_mangler::mangle_basic_name( const std::string& str ){
 }
 
 void name_mangler::mangle_type( boost::shared_ptr<::sasl::syntax_tree::type_specifier> mtype ){
-	if ( mtype->node_class() == syntax_node_types::qualified_type ){
-		boost::shared_ptr<qualified_type> qtype = mtype->typed_handle<qualified_type>();
-		if( qtype->qual.included( type_qualifiers::_uniform ) ){
-			mangled_name += "UN";
-		} else {
-			mangled_name += "NN";
-		}
-		mangle_type( actual_type(qtype->inner_type) );
-	} else {
-		mangled_name += "NN";
+	//if ( mtype->node_class() == syntax_node_types::qualified_type ){
+	//	boost::shared_ptr<qualified_type> qtype = mtype->typed_handle<qualified_type>();
+	//	if( qtype->qual.included( type_qualifiers::_uniform ) ){
+	//		mangled_name += "UN";
+	//	} else {
+	//		mangled_name += "NN";
+	//	}
+	//	mangle_type( actual_type(qtype->inner_type) );
+	//} else {
+	//	mangled_name += "NN";
 
-		if ( mtype->node_class() == syntax_node_types::buildin_type ){
-			buildin_type_code btc = mtype->typed_handle<buildin_type>()->value_typecode;
-			if ( btc.included( buildin_type_code::_vector ) ) {
-				assert( !"Unimplemented!" );
-			} else if ( btc.included( buildin_type_code::_matrix ) ) {
-				assert( !"Unimplemented!" );
-			} else {
-				mangled_name += "B";
-			}
-			mangled_name += btc_decorators[btc & buildin_type_code::_scalar_type_mask];
-		} else if ( mtype->node_class() == syntax_node_types::struct_type ){
-			boost::shared_ptr< struct_type > stype = mtype->typed_handle<struct_type>();
-			mangled_name += "S";
-			mangled_name += stype->name->str;
-			mangled_name += "@@";
-		} else {
-			assert( !"Unimplemented!" );
-		}
-	}
+	//	if ( mtype->node_class() == syntax_node_types::buildin_type ){
+	//		buildin_type_code btc = mtype->typed_handle<buildin_type>()->value_typecode;
+	//		if ( btc.included( buildin_type_code::_vector ) ) {
+	//			assert( !"Unimplemented!" );
+	//		} else if ( btc.included( buildin_type_code::_matrix ) ) {
+	//			assert( !"Unimplemented!" );
+	//		} else {
+	//			mangled_name += "B";
+	//		}
+	//		mangled_name += btc_decorators[btc & buildin_type_code::_scalar_type_mask];
+	//	} else if ( mtype->node_class() == syntax_node_types::struct_type ){
+	//		boost::shared_ptr< struct_type > stype = mtype->typed_handle<struct_type>();
+	//		mangled_name += "S";
+	//		mangled_name += stype->name->str;
+	//		mangled_name += "@@";
+	//	} else {
+	//		assert( !"Unimplemented!" );
+	//	}
+	//}
 }
 END_NS_SASL_SEMANTIC();
