@@ -20,14 +20,14 @@ using ::sasl::common::compiler_info_manager;
 semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
 	: infomgr( infomgr ){}
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::unary_expression& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::cast_expression& v){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_list& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::cond_expression& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::index_expression& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::call_expression& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_expression& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::unary_expression& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::cast_expression& /*v*/){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_list& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::cond_expression& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::index_expression& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::call_expression& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_expression& /*v*/ ){}
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::constant_expression& v ){
 	using ::sasl::syntax_tree::constant_expression;
@@ -37,16 +37,17 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::constant_expression& v 
 	boost::shared_ptr<const_value_semantic_info> vseminfo = get_or_create_semantic_info<const_value_semantic_info>(cursym->node());
 	vseminfo->constant_value_literal( v.value_tok->str, v.ctype );
 }
-
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::identifier& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_expression& /*v*/ )
+{
+}
 
 // declaration & type specifier
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::initializer& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::initializer& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_initializer& v ){
 	v.init_expr->accept(this);
 }
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_initializer& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_initializer& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v ){
 	using ::boost::assign::list_of;
 
@@ -125,7 +126,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	}
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_specifier& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_specifier& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 	using ::sasl::semantic::get_or_create_semantic_info;
 
@@ -136,11 +137,9 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 	tseminfo->full_type( boost::shared_polymorphic_cast<type_specifier>(v.handle()) );
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_identifier& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::qualified_type& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::array_type& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::struct_type& v ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::array_type& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::struct_type& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	using ::sasl::semantic::symbol;
 	using ::sasl::syntax_tree::function_type;
@@ -240,18 +239,18 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::while_statement& v ){
 	v.body->accept( this );
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::dowhile_statement& v ){
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::dowhile_statement& /*v*/ ){
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::case_label& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::case_label& /*v */){}
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::switch_statement& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::switch_statement& /*v*/ ){}
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& /*v*/ ){}
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_statement& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_statement& /*v*/ ){}
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& v ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& /*v*/ ){}
 
 // program
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::program& v ){

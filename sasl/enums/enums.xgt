@@ -149,6 +149,7 @@
 		<let var = "expression_start" value = "$index$-1"/>
 		<lazylet var = "expr_index" value = "$expression$ + $index$ - $expression_start$"/>
 		<item value = "$expr_index$">constant_expression</item>
+		<item value = "$expr_index$">variable_expression</item>
 		<item value = "$expr_index$">unary_expression</item>
 		<item value = "$expr_index$">cast_expression</item>
 		<item value = "$expr_index$">binary_expression</item>
@@ -159,10 +160,9 @@
 		<item value = "$expr_index$">member_expression</item>
 		
 		<item value = "$type_specifier$ + 1">buildin_type</item>
-		<item value = "$type_specifier$ + 2">qualified_type</item>
-		<item value = "$type_specifier$ + 3">array_type</item>
-		<item value = "$type_specifier$ + 4">struct_type</item>
-		<item value = "$type_specifier$ + 5">function_type</item>
+		<item value = "$type_specifier$ + 2">array_type</item>
+		<item value = "$type_specifier$ + 3">struct_type</item>
+		<item value = "$type_specifier$ + 4">function_type</item>
 
 		<item value = "$statement$ + 1">declaration_statement</item>
 		<item value = "$statement$ + 2">if_statement</item>

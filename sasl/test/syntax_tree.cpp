@@ -1,5 +1,6 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/make_tree.h>
 
 #include <boost/test/unit_test.hpp>
@@ -123,18 +124,65 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 			.dtype()
 				.dbuildin( buildin_type_code::_float )
 				.darray().end()
+				.darray().dconstant2( (int32_t)186 ).end()
 			.end( var4type )
 		.end()
 	.end( prog );
 
+	BOOST_CHECK( var0type->node_class() == syntax_node_types::buildin_type );
 	BOOST_CHECK( var0type && var0type->value_typecode == buildin_type_code::_float );
 	BOOST_CHECK( var1type && var1type->value_typecode == btc_helper::vector_of(buildin_type_code::_uint64, 2) );
 	BOOST_CHECK( var2type && var2type->value_typecode == btc_helper::matrix_of(buildin_type_code::_double, 4, 3) );
+	BOOST_CHECK( var2type->node_class() == syntax_node_types::buildin_type );
 	BOOST_CHECK( !var2type->is_uniform() );
 	BOOST_CHECK( var3type && var3type->name->str == struct_name );
 	BOOST_CHECK( var3type->is_uniform() );
+	BOOST_CHECK( var3type->node_class() == syntax_node_types::struct_type );
 	BOOST_CHECK( var4type );
+	BOOST_CHECK( var4type->node_class() == syntax_node_types::array_type );
 	BOOST_CHECK( var4type->elem_type->value_typecode == buildin_type_code::_float );
+	BOOST_CHECK( var4type->array_lens.size() == 2);
 	BOOST_CHECK( !var4type->array_lens[0] );
+	BOOST_CHECK( var4type->array_lens[1]->node_class() == syntax_node_types::constant_expression );
+}
+
+BOOST_AUTO_TEST_CASE( expr_combinator_test ){
+	using ::sasl::syntax_tree::tree_combinator;
+	using ::sasl::syntax_tree::dexpr_combinator;
+
+	using ::sasl::syntax_tree::constant_expression;
+	using ::sasl::syntax_tree::variable_expression;
+
+	{
+		boost::shared_ptr<constant_expression> expr_c;
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dconstant2( 0.1f )
+		.end( expr_c );
+		BOOST_CHECK( expr_c->node_class() == syntax_node_types::constant_expression );
+		BOOST_CHECK( expr_c->ctype == literal_constant_types::real );
+		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.1f) );
+	}
+	
+	{
+		boost::shared_ptr<constant_expression> expr_c;
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dconstant2( true )
+			.end( expr_c );
+		BOOST_CHECK( expr_c->ctype == literal_constant_types::boolean );
+		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(true) );
+	}
+
+	{
+		std::string var_name("var0_name");
+		boost::shared_ptr<variable_expression> expr;
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dvar( var_name )
+		.end(expr);
+		BOOST_CHECK( expr && expr->node_class() == syntax_node_types::variable_expression );
+		BOOST_CHECK( expr->var_name->str == var_name );
+	}
 }
 BOOST_AUTO_TEST_SUITE_END();

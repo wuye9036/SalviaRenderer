@@ -39,6 +39,7 @@ public:
 	~symbol_scope();
 
 private:
+	symbol_scope& operator = (const symbol_scope& );
 	boost::shared_ptr<symbol>& cursym;
 };
 

@@ -29,7 +29,7 @@ public:
 	virtual void visit( ::sasl::syntax_tree::member_expression& v );
 
 	virtual void visit( ::sasl::syntax_tree::constant_expression& v );
-	virtual void visit( ::sasl::syntax_tree::identifier& v );
+	virtual void visit( ::sasl::syntax_tree::variable_expression& v );
 
 	// declaration & type specifier
 	virtual void visit( ::sasl::syntax_tree::initializer& v );
@@ -41,7 +41,6 @@ public:
 	virtual void visit( ::sasl::syntax_tree::type_specifier& v );
 	virtual void visit( ::sasl::syntax_tree::buildin_type& v );
 	virtual void visit( ::sasl::syntax_tree::type_identifier& v );
-	virtual void visit( ::sasl::syntax_tree::qualified_type& v );
 	virtual void visit( ::sasl::syntax_tree::array_type& v );
 	virtual void visit( ::sasl::syntax_tree::struct_type& v );
 	virtual void visit( ::sasl::syntax_tree::parameter& v );

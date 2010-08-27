@@ -80,4 +80,15 @@ member_expression::member_expression( boost::shared_ptr<token_attr> tok )
 void member_expression::accept( syntax_tree_visitor* v ){
 	v->visit( *this );
 }
+
+variable_expression::variable_expression( boost::shared_ptr<token_attr> tok )
+: expression( syntax_node_types::variable_expression, tok )
+{	
+}
+
+void variable_expression::accept( syntax_tree_visitor* v )
+{
+	v->visit( *this );
+}
+
 END_NS_SASL_SYNTAX_TREE();

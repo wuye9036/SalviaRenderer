@@ -12,6 +12,7 @@ struct cond_expression;
 struct index_expression;
 struct call_expression;
 struct member_expression;
+struct variable_expression;
 struct identifier;
 struct constant_expression;
 struct binary_expression;
@@ -25,7 +26,6 @@ struct type_definition;
 struct type_specifier;
 struct buildin_type;
 struct type_identifier;
-struct qualified_type;
 struct array_type;
 struct struct_type;
 struct parameter;
@@ -57,7 +57,7 @@ public:
 	virtual void visit( member_expression& v ) = 0;
 
 	virtual void visit( constant_expression& v ) = 0;
-	virtual void visit( identifier& v ) = 0;
+	virtual void visit( variable_expression& v ) = 0;
 
 	// declaration & type specifier
 	virtual void visit( initializer& v ) = 0;
@@ -69,7 +69,6 @@ public:
 	virtual void visit( type_specifier& v ) = 0;
 	virtual void visit( buildin_type& v ) = 0;
 	virtual void visit( type_identifier& v ) = 0;
-	virtual void visit( qualified_type& v ) = 0;
 	virtual void visit( array_type& v ) = 0;
 	virtual void visit( struct_type& v ) = 0;
 	virtual void visit( parameter& v ) = 0;

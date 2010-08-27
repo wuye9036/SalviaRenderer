@@ -8,10 +8,12 @@
 #include <sasl/enums/type_qualifiers.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <eflib/include/boostext.h>
+#include <boost/any.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/find.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/or.hpp>
+#include <boost/mpl/set.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/ref.hpp>
@@ -29,28 +31,33 @@ namespace sasl{
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-typedef boost::mpl::vector<
-	bool, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t,
-	float, double
-> cpptypes;
+struct typecode_map
+{
+	typedef boost::mpl::vector<
+		bool, 
+		int8_t, uint8_t, 
+		int16_t, uint16_t,
+		int32_t, uint32_t,
+		int64_t, uint64_t,
+		float, double
+	> cpptypes;
 
-extern literal_constant_types type_codes[];
+	static literal_constant_types type_codes[];
 
-template<typename T>
-struct is_sasl_buildin_type : public boost::mpl::not_< 
-	boost::is_same<
+	template<typename T>
+	struct is_sasl_buildin_type: public boost::mpl::not_< 
+		boost::is_same<
 		typename boost::mpl::find<cpptypes, T>::type,
 		typename boost::mpl::end<cpptypes>::type 
-	>
->::type{};
+		>
+	>::type{};
 
-template <typename T>
-buildin_type_code cpptype_to_typecode( 
-	EFLIB_DISABLE_IF_COND( is_sasl_buildin_type<T>, 0 )
-	)
-{
-	return type_codes[boost::mpl::find<cpptypes, T>::type::pos];
-}
+	template <typename T>
+	static literal_constant_types lookup( EFLIB_ENABLE_IF_COND( is_sasl_buildin_type<T>, 0 ) )
+	{
+		return type_codes[boost::mpl::find<cpptypes, T>::type::pos::value];
+	}
+};
 
 struct buildin_type;
 struct constant_expression;
@@ -117,6 +124,23 @@ public:
 	virtual tree_combinator& darray(){ return default_proc(); }
 	virtual tree_combinator& dtypequal( type_qualifiers /*qual*/ ){ return default_proc(); }
 
+	// expressions
+	virtual tree_combinator& dconstant( literal_constant_types /*lct*/, const std::string& /*v*/ ){
+		return default_proc();
+	}
+	/* impl by expression ... */
+	template <typename T> tree_combinator& dconstant2(
+		const T& v,
+		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T>, 0 ) 
+		)
+	{
+		return dconstant( typecode_map::lookup<T>(), boost::lexical_cast<std::string>(v) );
+	}
+
+	//tree_combinator& dconstant2( ... ){
+	//	return default_proc();
+	//}
+
 	template <typename T>
 	tree_combinator& end( boost::shared_ptr<T>& result )
 	{
@@ -126,12 +150,55 @@ public:
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( node );
 protected:
-	tree_combinator( tree_combinator* parent ): parent( parent ){}
+	enum state_t{
+		e_none,
+
+		e_type,
+		e_init,
+
+		e_array,
+
+		e_other = UINT_MAX
+	};
+
+	void enter( state_t s ){
+		assert( s != e_none );
+		assert( e_state == e_none );
+		e_state = s;
+	}
+	state_t leave(){
+		assert( e_state != e_none );
+		state_t ret = e_state;
+		e_state = e_none;
+		return ret;
+	}
+	bool is_state( state_t s){
+		return e_state == s;
+	}
+
+	class state_scope
+	{
+	public:
+		state_scope( tree_combinator* owner, state_t s ):owner(owner){
+			owner->enter( s );
+		}
+		~state_scope(){
+			owner->leave();
+		}
+	private:
+		tree_combinator* owner;
+		state_scope( const state_scope& rhs);
+		state_scope& operator = ( const state_scope& rhs );
+	};
+
+	tree_combinator( tree_combinator* parent ): parent( parent ), e_state( e_none ){}
 	tree_combinator& default_proc(){ syntax_error(); return *this; }
 
 	virtual void child_ended(){}
-	virtual ~tree_combinator(){}
+	virtual ~tree_combinator(){ assert( is_state(e_none) );}
 private:
+	state_t e_state;
+
 	tree_combinator( const tree_combinator& );
 	tree_combinator& operator = ( const tree_combinator& );
 
@@ -170,15 +237,9 @@ public:
 	virtual void child_ended();
 	SASL_TYPED_NODE_ACCESSORS_DECL( variable_declaration );
 protected:
-	enum child_state_t{
-		e_none,
-		e_type,
-		e_init
-	};
 	dvar_combinator( const dvar_combinator& );
 	dvar_combinator& operator = ( const dvar_combinator& );
 private:
-	child_state_t e_state;
 	boost::shared_ptr<dtype_combinator> type_comb;
 	// boost::shared_ptr<dinit_combinator> init_comb;
 };
@@ -204,10 +265,6 @@ protected:
 	virtual void child_ended();
 private:
 	boost::shared_ptr<dexpr_combinator> expr_comb;
-	enum state_t{
-		e_none,
-		e_array
-	} e_state;
 };
 
 class dexpr_combinator: public tree_combinator
@@ -215,11 +272,30 @@ class dexpr_combinator: public tree_combinator
 public:
 	dexpr_combinator( tree_combinator* parent );
 
+	virtual tree_combinator& dconstant( literal_constant_types /*lct*/, const std::string& /*v*/ );
+	virtual tree_combinator& dvar( const std::string& /*v*/);
+
+	// virtual tree_combinator& dpre( const std::string& op );
+	// virtual tree_combinator& dbinary();
+	// virtual tree_combinator& dop( operators /*op*/);
+	// virtual tree_combinator& dcond();
+	// virtual tree_combinator& dyes();
+	// virtual tree_combinator& dno();
+	// virtual tree_combinator& dpost();
+	// virtual tree_combinator& dmember( const std::string& /*m*/);
+	// virtual tree_combinator& dcall();
+	// virtual tree_combinator& dparam();
+	// virtual tree_combinator& dindex();
+
+
 	SASL_TYPED_NODE_ACCESSORS_DECL( expression );
 protected:
 	dexpr_combinator( const dexpr_combinator& rhs);
 	dexpr_combinator& operator = ( const dexpr_combinator& rhs );
+	
+	// virtual void child_ended();
 private:
+	boost::shared_ptr<dexpr_combinator> expr_comb;
 };
 
 END_NS_SASL_SYNTAX_TREE()

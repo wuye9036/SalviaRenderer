@@ -37,12 +37,25 @@ protected:
 	constant_expression( boost::shared_ptr<token_attr> tok );
 };
 
+struct variable_expression: public expression{
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* visitor );
+
+	boost::shared_ptr< token_attr > var_name;
+protected:
+	variable_expression( boost::shared_ptr<token_attr> tok );
+};
+
 struct unary_expression: public expression{
-	unary_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor );
 
 	boost::shared_ptr<expression> expr;
 	operators op;
+protected:
+	unary_expression( boost::shared_ptr<token_attr> tok );
 };
 
 struct cast_expression: public expression{

@@ -15,7 +15,6 @@ using sasl::common::token_attr;
 
 struct identifier: public node{
 	identifier( boost::shared_ptr<token_attr> tok );
-	void accept( syntax_tree_visitor* v );
 	std::string name;
 };
 
