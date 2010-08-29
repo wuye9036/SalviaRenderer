@@ -214,7 +214,7 @@ tree_combinator& dexpr_combinator::dconstant( literal_constant_types lct, const 
 	return *this;
 }
 
-tree_combinator& dexpr_combinator::dvar( const std::string& v)
+tree_combinator& dexpr_combinator::dvarexpr( const std::string& v)
 {
 	DEFAULT_STATE_SCOPE();
 
@@ -224,5 +224,92 @@ tree_combinator& dexpr_combinator::dvar( const std::string& v)
 	typed_node( ret );
 	return *this;
 }
+
+tree_combinator& dexpr_combinator::dpre( operators op )
+{
+	assert( operators_helper::instance().is_prefix(op) );
+	assert( !typed_node() );
+
+	enter(e_preexpr);
+
+	boost::shared_ptr< unary_expression > ret = create_node<unary_expression>( token_attr::null() );
+	ret->op = op;
+	typed_node( ret );
+	expr_comb = boost::make_shared<dexpr_combinator>( this );
+
+	return *expr_comb;
+}
+
+tree_combinator& dexpr_combinator::dcast()
+{
+	assert( !typed_node() );
+	enter( e_cast );
+	cast_comb = boost::make_shared<dcast_combinator>( this );
+	return *cast_comb;
+}
+
+void dexpr_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_preexpr:
+			typed_node2<unary_expression>()->expr = expr_comb->typed_node();
+			return;
+
+		case e_cast:
+			assert( cast_comb->typed_node() );
+			typed_node( cast_comb->typed_node() );
+			return;
+
+		default:
+			assert( !"unknown state." );
+			return;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// cast combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dcast_combinator, cast_expression );
+
+dcast_combinator::dcast_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<cast_expression>( token_attr::null() ) );
+}
+
+tree_combinator& dcast_combinator::dtype()
+{
+	assert( !type_comb );
+	enter( e_type );
+	type_comb = boost::make_shared<dtype_combinator>(this);
+	return *type_comb;
+}
+
+tree_combinator& dcast_combinator::dexpr()
+{
+	assert( !expr_comb );
+	enter( e_expr );
+	expr_comb = boost::make_shared<dexpr_combinator>(this);
+	return *expr_comb;
+}
+
+void dcast_combinator::child_ended()
+{
+	switch ( leave() ){
+		case e_type:
+			assert( type_comb->typed_node() );
+			typed_node()->casted_type = type_comb->typed_node();
+			return;
+		case e_expr:
+			assert( expr_comb->typed_node() );
+			typed_node()->expr = expr_comb->typed_node();
+			return;
+		default:
+			assert( !"invalid state." );
+			return;
+	}
+}
+
+
 
 END_NS_SASL_SYNTAX_TREE();

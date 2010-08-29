@@ -1,8 +1,9 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/visitor.h>
+#include <boost/assign/std/vector.hpp>
 
 using namespace boost;
-
+using namespace boost::assign;
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 expression::expression( syntax_node_types ntype, boost::shared_ptr<token_attr> tok )
@@ -89,6 +90,27 @@ variable_expression::variable_expression( boost::shared_ptr<token_attr> tok )
 void variable_expression::accept( syntax_tree_visitor* v )
 {
 	v->visit( *this );
+}
+
+
+operators_helper::operators_helper()
+{
+	prefix_ops +=
+		operators::positive, operators::negative,
+		operators::bit_not, operators::logic_not,
+		operators::prefix_incr, operators::prefix_decr
+		;
+}
+
+bool operators_helper::is_prefix( operators op )
+{
+	return std::find( prefix_ops.begin(), prefix_ops.end(), op ) != prefix_ops.end();
+}
+
+operators_helper& operators_helper::instance()
+{
+	static operators_helper op_helper;
+	return op_helper;
 }
 
 END_NS_SASL_SYNTAX_TREE();

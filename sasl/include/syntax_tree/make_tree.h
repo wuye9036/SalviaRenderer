@@ -5,6 +5,7 @@
 
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/literal_constant_types.h>
+#include <sasl/enums/operators.h>
 #include <sasl/enums/type_qualifiers.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <eflib/include/boostext.h>
@@ -60,6 +61,7 @@ struct typecode_map
 };
 
 struct buildin_type;
+struct cast_expression;
 struct constant_expression;
 struct declaration;
 struct declaration_statement;
@@ -71,6 +73,7 @@ struct program;
 struct type_specifier;
 struct variable_declaration;
 
+class dcast_combinator;
 class dexpr_combinator;
 class dvar_combinator;
 class dtype_combinator;
@@ -125,10 +128,11 @@ public:
 	virtual tree_combinator& dtypequal( type_qualifiers /*qual*/ ){ return default_proc(); }
 
 	// expressions
+	virtual tree_combinator& dexpr(){ return default_proc(); }
 	virtual tree_combinator& dconstant( literal_constant_types /*lct*/, const std::string& /*v*/ ){
 		return default_proc();
 	}
-	/* impl by expression ... */
+	// impl by expression
 	template <typename T> tree_combinator& dconstant2(
 		const T& v,
 		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T>, 0 ) 
@@ -136,16 +140,23 @@ public:
 	{
 		return dconstant( typecode_map::lookup<T>(), boost::lexical_cast<std::string>(v) );
 	}
-
-	//tree_combinator& dconstant2( ... ){
-	//	return default_proc();
-	//}
+	virtual tree_combinator& dvarexpr( const std::string& /*v*/){ return default_proc(); }
+	virtual tree_combinator& dpre( operators /*op*/ ){ return default_proc(); };
 
 	template <typename T>
 	tree_combinator& end( boost::shared_ptr<T>& result )
 	{
 		result = boost::shared_polymorphic_cast<T>( cur_node );
 		return end();
+	}
+
+	template <typename T>
+	tree_combinator& dnode( boost::shared_ptr<T> node )
+	{
+		enter( e_other );
+		typed_node( node );
+		leave();
+		return *this;
 	}
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( node );
@@ -157,6 +168,10 @@ protected:
 		e_init,
 
 		e_array,
+
+		e_expr,
+		e_preexpr,
+		e_cast,
 
 		e_other = UINT_MAX
 	};
@@ -273,9 +288,10 @@ public:
 	dexpr_combinator( tree_combinator* parent );
 
 	virtual tree_combinator& dconstant( literal_constant_types /*lct*/, const std::string& /*v*/ );
-	virtual tree_combinator& dvar( const std::string& /*v*/);
+	virtual tree_combinator& dvarexpr( const std::string& /*v*/);
+	virtual tree_combinator& dpre( operators op );
+	virtual tree_combinator& dcast();
 
-	// virtual tree_combinator& dpre( const std::string& op );
 	// virtual tree_combinator& dbinary();
 	// virtual tree_combinator& dop( operators /*op*/);
 	// virtual tree_combinator& dcond();
@@ -287,16 +303,33 @@ public:
 	// virtual tree_combinator& dparam();
 	// virtual tree_combinator& dindex();
 
-
 	SASL_TYPED_NODE_ACCESSORS_DECL( expression );
 protected:
 	dexpr_combinator( const dexpr_combinator& rhs);
 	dexpr_combinator& operator = ( const dexpr_combinator& rhs );
 	
-	// virtual void child_ended();
+	virtual void child_ended();
 private:
+	boost::shared_ptr<dcast_combinator> cast_comb;
 	boost::shared_ptr<dexpr_combinator> expr_comb;
 };
 
+class dcast_combinator: public tree_combinator{
+public:
+	dcast_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dtype();
+	virtual tree_combinator& dexpr();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( cast_expression );
+protected:
+	dcast_combinator( const dcast_combinator& rhs);
+	dcast_combinator& operator = ( const dcast_combinator& rhs );
+
+	virtual void child_ended();
+private:
+	boost::shared_ptr<dexpr_combinator> expr_comb;
+	boost::shared_ptr<dtype_combinator> type_comb;
+};
 END_NS_SASL_SYNTAX_TREE()
 #endif

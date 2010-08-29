@@ -149,8 +149,11 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 	using ::sasl::syntax_tree::tree_combinator;
 	using ::sasl::syntax_tree::dexpr_combinator;
+	using ::sasl::syntax_tree::dcast_combinator;
 
+	using ::sasl::syntax_tree::cast_expression;
 	using ::sasl::syntax_tree::constant_expression;
+	using ::sasl::syntax_tree::unary_expression;
 	using ::sasl::syntax_tree::variable_expression;
 
 	{
@@ -164,25 +167,59 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.1f) );
 	}
 	
+	boost::shared_ptr<constant_expression> cexpr;
 	{
-		boost::shared_ptr<constant_expression> expr_c;
 		dexpr_combinator expr_comb(NULL);
 		expr_comb
 			.dconstant2( true )
-			.end( expr_c );
-		BOOST_CHECK( expr_c->ctype == literal_constant_types::boolean );
-		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(true) );
+		.end( cexpr );
+		BOOST_CHECK( cexpr->ctype == literal_constant_types::boolean );
+		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(true) );
 	}
 
+	boost::shared_ptr<variable_expression> varexpr;
 	{
 		std::string var_name("var0_name");
-		boost::shared_ptr<variable_expression> expr;
 		dexpr_combinator expr_comb(NULL);
 		expr_comb
-			.dvar( var_name )
-		.end(expr);
-		BOOST_CHECK( expr && expr->node_class() == syntax_node_types::variable_expression );
-		BOOST_CHECK( expr->var_name->str == var_name );
+			.dvarexpr( var_name )
+		.end(varexpr);
+		BOOST_CHECK( varexpr && varexpr->node_class() == syntax_node_types::variable_expression );
+		BOOST_CHECK( varexpr->var_name->str == var_name );
+	}
+
+	boost::shared_ptr<unary_expression> unaryexpr;
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dpre( operators::negative )
+				.dnode( varexpr )
+			.end()
+		.end(unaryexpr);
+		BOOST_CHECK( unaryexpr );
+		BOOST_CHECK( unaryexpr->node_class() == syntax_node_types::unary_expression );
+		BOOST_CHECK( unaryexpr->op == operators::negative );
+		BOOST_CHECK( unaryexpr->expr == varexpr );
+	}
+
+	boost::shared_ptr<cast_expression> castexpr;
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dcast()
+				.dtype()
+					.dbuildin( buildin_type_code::_float )
+				.end()
+				.dexpr()
+					.dnode( varexpr )
+				.end()
+			.end()
+		.end(castexpr);
+		BOOST_CHECK( castexpr );
+		BOOST_CHECK( castexpr->node_class() == syntax_node_types::cast_expression );
+		BOOST_CHECK( castexpr->casted_type->value_typecode == buildin_type_code::_float );
+		BOOST_CHECK( castexpr->expr == varexpr );
 	}
 }
+
 BOOST_AUTO_TEST_SUITE_END();

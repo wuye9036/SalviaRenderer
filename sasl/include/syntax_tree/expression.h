@@ -17,8 +17,19 @@ namespace sasl {
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
+class operators_helper{
+public:
+	static operators_helper& instance();
+	bool is_prefix( operators op );
+private:
+	operators_helper();
+	typedef ::std::vector<operators> oplist_t;
+	oplist_t
+		prefix_ops;
+};
+
 using sasl::common::token_attr;
-struct identifier;
+struct type_specifier;
 class syntax_tree_visitor;
 
 struct expression: public node{
@@ -59,11 +70,14 @@ protected:
 };
 
 struct cast_expression: public expression{
-	cast_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor);
 
-	boost::shared_ptr<identifier> casted_type;
+	boost::shared_ptr<type_specifier> casted_type;
 	boost::shared_ptr<expression> expr;
+protected:
+	cast_expression( boost::shared_ptr<token_attr> tok );
 };
 
 struct binary_expression: public expression {
@@ -111,7 +125,7 @@ struct member_expression: public expression{
 	member_expression( boost::shared_ptr<token_attr> tok );
 	void accept( syntax_tree_visitor* visitor );
 	boost::shared_ptr<expression> expr;
-	boost::shared_ptr<identifier> member_ident;
+	// boost::shared_ptr<identifier> member_ident;
 };
 
 END_NS_SASL_SYNTAX_TREE();
