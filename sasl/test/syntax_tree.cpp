@@ -152,9 +152,11 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 	using ::sasl::syntax_tree::dcast_combinator;
 
 	using ::sasl::syntax_tree::binary_expression;
+	using ::sasl::syntax_tree::call_expression;
 	using ::sasl::syntax_tree::cast_expression;
 	using ::sasl::syntax_tree::cond_expression;
 	using ::sasl::syntax_tree::constant_expression;
+	using ::sasl::syntax_tree::member_expression;
 	using ::sasl::syntax_tree::unary_expression;
 	using ::sasl::syntax_tree::variable_expression;
 
@@ -261,6 +263,45 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		BOOST_CHECK( branchexpr->cond_expr == varexpr );
 		BOOST_CHECK( branchexpr->yes_expr == unaryexpr );
 		BOOST_CHECK( branchexpr->no_expr == binexpr );
+	}
+
+	boost::shared_ptr<member_expression> mem0expr;
+	boost::shared_ptr<member_expression> mem1expr;
+	{
+		std::string m0("member0"), m1("member1");
+		
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dnode(branchexpr)
+			.dmember(m0).get_node(mem0expr)
+			.dmember(m1)
+		.end(mem1expr);
+
+		BOOST_CHECK( mem1expr );
+		BOOST_CHECK( mem1expr->node_class() == syntax_node_types::member_expression );
+		BOOST_CHECK( mem1expr->member->str == m1 );
+		BOOST_CHECK( mem1expr->expr->node_class() == syntax_node_types::member_expression );
+
+		BOOST_CHECK( mem0expr->member->str == m0 );
+		BOOST_CHECK( mem0expr->expr == branchexpr );
+	}
+
+	boost::shared_ptr<call_expression> callexpr;
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dnode( mem0expr )
+			.dcall()
+				.dargument().dnode(varexpr).end()
+				.dargument().dnode(castexpr).end()
+			.end()
+		.end(callexpr);
+					
+		BOOST_CHECK( callexpr );
+		BOOST_CHECK( callexpr->node_class() == syntax_node_types::call_expression );
+		BOOST_CHECK( callexpr->expr == mem0expr );
+		BOOST_CHECK( callexpr->args[0] == varexpr );
+		BOOST_CHECK( callexpr->args[1] == castexpr );
 	}
 }
 

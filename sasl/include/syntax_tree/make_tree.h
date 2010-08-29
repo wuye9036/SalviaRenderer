@@ -62,6 +62,7 @@ struct typecode_map
 
 struct binary_expression;
 struct buildin_type;
+struct call_expression;
 struct cast_expression;
 struct cond_expression;
 struct constant_expression;
@@ -78,6 +79,7 @@ struct variable_declaration;
 class dbinexpr_combinator;
 class dbranchexpr_combinator;
 class dcast_combinator;
+class dcallexpr_combinator;
 class dexpr_combinator;
 class dvar_combinator;
 class dtype_combinator;
@@ -153,11 +155,14 @@ public:
 	virtual tree_combinator& dcond(){ return default_proc(); }
 	virtual tree_combinator& dyes(){ return default_proc(); }
 	virtual tree_combinator& dno(){ return default_proc(); }
+	virtual tree_combinator& dmember( const std::string& /*m*/){ return default_proc(); }
+	virtual tree_combinator& dcall(){ return default_proc(); }
+	virtual tree_combinator& dargument(){ return default_proc(); }
 
 	template <typename T>
 	tree_combinator& end( boost::shared_ptr<T>& result )
 	{
-		result = boost::shared_polymorphic_cast<T>( cur_node );
+		get_node<T>(result);
 		return end();
 	}
 
@@ -169,7 +174,11 @@ public:
 		leave();
 		return *this;
 	}
-
+	template<typename T>
+	tree_combinator& get_node( boost::shared_ptr<T>& result ){
+		result = typed_node2<T>();
+		return *this;
+	}
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( node );
 protected:
@@ -192,6 +201,8 @@ protected:
 		e_cond,
 		e_yes,
 		e_no,
+		e_callexpr,
+		e_argument,
 
 		e_other = UINT_MAX
 	};
@@ -321,9 +332,8 @@ public:
 	virtual tree_combinator& dcast();
 	virtual tree_combinator& dbinary();
 	virtual tree_combinator& dbranchexpr();
-	// virtual tree_combinator& dmember( const std::string& /*m*/);
-	// virtual tree_combinator& dcall();
-	// virtual tree_combinator& dparam();
+	virtual tree_combinator& dmember( const std::string& /*m*/);
+	virtual tree_combinator& dcall();
 	// virtual tree_combinator& dindex();
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( expression );
@@ -337,6 +347,7 @@ private:
 	boost::shared_ptr<dexpr_combinator>			expr_comb;
 	boost::shared_ptr<dbinexpr_combinator>		binexpr_comb;
 	boost::shared_ptr<dbranchexpr_combinator>	branch_comb;
+	boost::shared_ptr<dcallexpr_combinator>		call_comb;
 };
 
 class dcast_combinator: public tree_combinator{
@@ -395,6 +406,23 @@ protected:
 private:
 	boost::shared_ptr<dexpr_combinator>
 		cond_comb, yes_comb, no_comb;
+};
+
+class dcallexpr_combinator : public tree_combinator
+{
+public:
+	dcallexpr_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dargument();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( call_expression );
+protected:
+	dcallexpr_combinator( const dcallexpr_combinator& rhs);
+	dcallexpr_combinator& operator = ( const dcallexpr_combinator& rhs );
+
+	virtual void child_ended();
+private:
+	boost::shared_ptr<dexpr_combinator> argexpr;
 };
 END_NS_SASL_SYNTAX_TREE()
 #endif

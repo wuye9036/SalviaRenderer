@@ -124,18 +124,26 @@ struct index_expression: public expression{
 };
 
 struct call_expression: public expression{
-	call_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor );
 
 	boost::shared_ptr<expression> expr;
 	std::vector<boost::shared_ptr<expression> > args;
+
+protected:
+	call_expression( boost::shared_ptr<token_attr> tok );
 };
 
 struct member_expression: public expression{
-	member_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor );
+
 	boost::shared_ptr<expression> expr;
-	// boost::shared_ptr<identifier> member_ident;
+	boost::shared_ptr<token_attr> member;
+protected:
+	member_expression( boost::shared_ptr<token_attr> tok );
 };
 
 END_NS_SASL_SYNTAX_TREE();

@@ -255,6 +255,24 @@ tree_combinator& dexpr_combinator::dbranchexpr()
 	return enter_child( e_branchexpr, branch_comb );
 }
 
+tree_combinator& dexpr_combinator::dmember( const std::string& m )
+{
+	DEFAULT_STATE_SCOPE();
+
+	assert( typed_node() );
+	boost::shared_ptr<member_expression> mexpr = create_node<member_expression>( token_attr::null() );
+	mexpr->expr = typed_node();
+	mexpr->member = token_attr::from_string(m);
+	typed_node(mexpr);
+
+	return *this;
+}
+
+tree_combinator& dexpr_combinator::dcall()
+{
+	return enter_child( e_callexpr, call_comb );
+}
+
 void dexpr_combinator::child_ended()
 {
 	switch( leave() ){
@@ -275,6 +293,11 @@ void dexpr_combinator::child_ended()
 		case e_branchexpr:
 			assert( branch_comb->typed_node() );
 			typed_node( branch_comb->typed_node() );
+			return;
+
+		case e_callexpr:
+			assert( call_comb->typed_node() );
+			typed_node( call_comb->typed_node() );
 			return;
 
 		default:
@@ -416,8 +439,36 @@ void dbranchexpr_combinator::child_ended()
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+// call expression combinator
 
+SASL_TYPED_NODE_ACCESSORS_IMPL( dcallexpr_combinator, call_expression );
 
+dcallexpr_combinator::dcallexpr_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<call_expression>( token_attr::null() ) );
+	
+	assert( parent->typed_node() );
+	parent->get_node( typed_node()->expr );
+}
 
+tree_combinator& dcallexpr_combinator::dargument()
+{
+	return enter_child( e_argument, argexpr, true );
+}
+
+void dcallexpr_combinator::child_ended()
+{
+	switch ( leave() ){
+		case e_argument:
+			assert( argexpr->typed_node() );
+			typed_node()->args.push_back( argexpr->typed_node2<expression>() );
+			return;
+		default:
+			assert( !"invalid state." );
+			return;
+	}
+}
 
 END_NS_SASL_SYNTAX_TREE();
