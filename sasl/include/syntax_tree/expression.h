@@ -21,11 +21,15 @@ class operators_helper{
 public:
 	static operators_helper& instance();
 	bool is_prefix( operators op );
+	bool is_binary( operators op );
+	bool is_postfix( operators op );
+	bool is_unary( operators op );
 private:
+	bool include( const std::vector<operators>&, operators );
 	operators_helper();
 	typedef ::std::vector<operators> oplist_t;
 	oplist_t
-		prefix_ops;
+		prefix_ops, postfix_ops, binary_ops;
 };
 
 using sasl::common::token_attr;
@@ -81,12 +85,15 @@ protected:
 };
 
 struct binary_expression: public expression {
-	binary_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor );
 
 	operators op;
 	boost::shared_ptr<expression> left_expr;
 	boost::shared_ptr<expression> right_expr;
+protected:
+	binary_expression( boost::shared_ptr<token_attr> tok );
 };
 
 struct expression_list: public expression{
@@ -97,12 +104,15 @@ struct expression_list: public expression{
 };
 
 struct cond_expression: public expression{
-	cond_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor );
 
 	boost::shared_ptr<expression> cond_expr;
 	boost::shared_ptr<expression> yes_expr;
 	boost::shared_ptr<expression> no_expr;
+protected:
+	cond_expression( boost::shared_ptr<token_attr> tok );
 };
 
 struct index_expression: public expression{

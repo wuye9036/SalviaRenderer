@@ -225,12 +225,12 @@ tree_combinator& dexpr_combinator::dvarexpr( const std::string& v)
 	return *this;
 }
 
-tree_combinator& dexpr_combinator::dpre( operators op )
+tree_combinator& dexpr_combinator::dunary( operators op )
 {
-	assert( operators_helper::instance().is_prefix(op) );
+	assert( operators_helper::instance().is_unary(op) );
 	assert( !typed_node() );
 
-	enter(e_preexpr);
+	enter(e_unary);
 
 	boost::shared_ptr< unary_expression > ret = create_node<unary_expression>( token_attr::null() );
 	ret->op = op;
@@ -242,22 +242,39 @@ tree_combinator& dexpr_combinator::dpre( operators op )
 
 tree_combinator& dexpr_combinator::dcast()
 {
-	assert( !typed_node() );
-	enter( e_cast );
-	cast_comb = boost::make_shared<dcast_combinator>( this );
-	return *cast_comb;
+	return enter_child( e_cast, cast_comb );
+}
+
+tree_combinator& dexpr_combinator::dbinary()
+{
+	return enter_child( e_binexpr, binexpr_comb );
+}
+
+tree_combinator& dexpr_combinator::dbranchexpr()
+{
+	return enter_child( e_branchexpr, branch_comb );
 }
 
 void dexpr_combinator::child_ended()
 {
 	switch( leave() ){
-		case e_preexpr:
+		case e_unary:
 			typed_node2<unary_expression>()->expr = expr_comb->typed_node();
 			return;
 
 		case e_cast:
 			assert( cast_comb->typed_node() );
 			typed_node( cast_comb->typed_node() );
+			return;
+
+		case e_binexpr:
+			assert( binexpr_comb->typed_node() );
+			typed_node( binexpr_comb->typed_node() );
+			return;
+
+		case e_branchexpr:
+			assert( branch_comb->typed_node() );
+			typed_node( branch_comb->typed_node() );
 			return;
 
 		default:
@@ -279,18 +296,12 @@ dcast_combinator::dcast_combinator( tree_combinator* parent )
 
 tree_combinator& dcast_combinator::dtype()
 {
-	assert( !type_comb );
-	enter( e_type );
-	type_comb = boost::make_shared<dtype_combinator>(this);
-	return *type_comb;
+	return enter_child( e_type, type_comb );
 }
 
 tree_combinator& dcast_combinator::dexpr()
 {
-	assert( !expr_comb );
-	enter( e_expr );
-	expr_comb = boost::make_shared<dexpr_combinator>(this);
-	return *expr_comb;
+	return enter_child( e_expr, expr_comb );
 }
 
 void dcast_combinator::child_ended()
@@ -309,6 +320,103 @@ void dcast_combinator::child_ended()
 			return;
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+// binary expression combinator
+SASL_TYPED_NODE_ACCESSORS_IMPL( dbinexpr_combinator, binary_expression );
+
+dbinexpr_combinator::dbinexpr_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<binary_expression>( token_attr::null() ) );
+}
+
+tree_combinator& dbinexpr_combinator::dlexpr()
+{
+	return enter_child( e_lexpr, lexpr_comb );
+}
+
+tree_combinator& dbinexpr_combinator::dop( operators op )
+{
+	DEFAULT_STATE_SCOPE();
+
+	assert( typed_node()->op == operators::none );
+	assert( operators_helper::instance().is_binary(op) );
+	typed_node()->op = op;
+
+	return *this;
+}
+
+tree_combinator& dbinexpr_combinator::drexpr()
+{
+	return enter_child( e_rexpr, rexpr_comb );
+}
+
+void dbinexpr_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_lexpr:
+			assert( lexpr_comb->typed_node() );
+			typed_node()->left_expr = lexpr_comb->typed_node();
+			return;
+		case e_rexpr:
+			assert( rexpr_comb->typed_node() );
+			typed_node()->right_expr = rexpr_comb->typed_node();
+			return;
+		default:
+			assert( !"invalid state" );
+			return;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+//  conditional expression
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dbranchexpr_combinator, cond_expression );
+
+dbranchexpr_combinator::dbranchexpr_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<cond_expression>( token_attr::null() ) );
+}
+
+tree_combinator& dbranchexpr_combinator::dcond()
+{
+	return enter_child( e_cond, cond_comb );
+}
+
+tree_combinator& dbranchexpr_combinator::dyes()
+{
+	return enter_child( e_yes, yes_comb );
+}
+
+tree_combinator& dbranchexpr_combinator::dno()
+{
+	return enter_child( e_no, no_comb );
+}
+
+void dbranchexpr_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_cond:
+			assert( cond_comb->typed_node() );
+			typed_node()->cond_expr = cond_comb->typed_node();
+			return;
+		case e_yes:
+			assert( yes_comb->typed_node() );
+			typed_node()->yes_expr = yes_comb->typed_node();
+			return;
+		case e_no:
+			assert( no_comb->typed_node() );
+			typed_node()->no_expr = no_comb->typed_node();
+			return;
+		default:
+			assert(!"invalid state.");
+			return;
+	}
+}
+
+
 
 
 

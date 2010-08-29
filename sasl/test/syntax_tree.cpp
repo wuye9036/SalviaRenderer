@@ -151,7 +151,9 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 	using ::sasl::syntax_tree::dexpr_combinator;
 	using ::sasl::syntax_tree::dcast_combinator;
 
+	using ::sasl::syntax_tree::binary_expression;
 	using ::sasl::syntax_tree::cast_expression;
+	using ::sasl::syntax_tree::cond_expression;
 	using ::sasl::syntax_tree::constant_expression;
 	using ::sasl::syntax_tree::unary_expression;
 	using ::sasl::syntax_tree::variable_expression;
@@ -192,7 +194,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 	{
 		dexpr_combinator expr_comb(NULL);
 		expr_comb
-			.dpre( operators::negative )
+			.dunary( operators::negative )
 				.dnode( varexpr )
 			.end()
 		.end(unaryexpr);
@@ -219,6 +221,46 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		BOOST_CHECK( castexpr->node_class() == syntax_node_types::cast_expression );
 		BOOST_CHECK( castexpr->casted_type->value_typecode == buildin_type_code::_float );
 		BOOST_CHECK( castexpr->expr == varexpr );
+	}
+
+	boost::shared_ptr<binary_expression> binexpr;
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dbinary()
+				.dlexpr()
+					.dnode( castexpr )
+				.end()
+				.dop( operators::add )
+				.drexpr()
+					.dnode( varexpr )
+				.end()
+			.end()
+		.end(binexpr);
+
+		BOOST_CHECK( binexpr );
+		BOOST_CHECK( binexpr->node_class() == syntax_node_types::binary_expression );
+		BOOST_CHECK( binexpr->left_expr == castexpr );
+		BOOST_CHECK( binexpr->right_expr == varexpr );
+		BOOST_CHECK( binexpr->op == operators::add );
+	}
+
+	boost::shared_ptr<cond_expression> branchexpr;
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dbranchexpr()
+				.dcond().dnode( varexpr ).end()
+				.dyes().dnode( unaryexpr ).end()
+				.dno().dnode( binexpr ).end()
+			.end()
+		.end( branchexpr );
+
+		BOOST_CHECK( branchexpr );
+		BOOST_CHECK( branchexpr->node_class() == syntax_node_types::cond_expression );
+		BOOST_CHECK( branchexpr->cond_expr == varexpr );
+		BOOST_CHECK( branchexpr->yes_expr == unaryexpr );
+		BOOST_CHECK( branchexpr->no_expr == binexpr );
 	}
 }
 

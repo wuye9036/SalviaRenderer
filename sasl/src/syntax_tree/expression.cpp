@@ -100,17 +100,56 @@ operators_helper::operators_helper()
 		operators::bit_not, operators::logic_not,
 		operators::prefix_incr, operators::prefix_decr
 		;
+	postfix_ops +=
+		operators::postfix_incr, operators::postfix_decr
+		;
+	binary_ops +=
+		operators::add, operators::sub,
+		operators::mul, operators::div, operators::mod,
+		operators::assign,
+		operators::add_assign, operators::sub_assign,
+		operators::mul_assign, operators::div_assign, operators::mod_assign,
+		operators::bit_and, operators::bit_or, operators::bit_xor,
+		operators::bit_and_assign, operators::bit_or_assign, operators::bit_xor_assign,
+		operators::logic_and, operators::logic_or,
+		operators::equal, operators::not_equal,
+		operators::greater, operators::greater_equal,
+		operators::less, operators::less_equal,
+		operators::left_shift, operators::right_shift,
+		operators::lshift_assign, operators::rshift_assign
+		;
+
 }
 
 bool operators_helper::is_prefix( operators op )
 {
-	return std::find( prefix_ops.begin(), prefix_ops.end(), op ) != prefix_ops.end();
+	return include( prefix_ops, op );
+}
+
+bool operators_helper::is_binary( operators op )
+{
+	return include( binary_ops, op );
+}
+
+bool operators_helper::is_postfix( operators op )
+{
+	return include( postfix_ops, op );
+}
+
+bool operators_helper::is_unary( operators op )
+{
+	return is_prefix(op) || is_postfix(op);
 }
 
 operators_helper& operators_helper::instance()
 {
 	static operators_helper op_helper;
 	return op_helper;
+}
+
+bool operators_helper::include( const std::vector<operators>& c, operators op)
+{
+	return std::find( c.begin(), c.end(), op) != c.end();
 }
 
 END_NS_SASL_SYNTAX_TREE();
