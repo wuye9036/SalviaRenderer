@@ -156,6 +156,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 	using ::sasl::syntax_tree::cast_expression;
 	using ::sasl::syntax_tree::cond_expression;
 	using ::sasl::syntax_tree::constant_expression;
+	using ::sasl::syntax_tree::index_expression;
 	using ::sasl::syntax_tree::member_expression;
 	using ::sasl::syntax_tree::unary_expression;
 	using ::sasl::syntax_tree::variable_expression;
@@ -302,6 +303,26 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		BOOST_CHECK( callexpr->expr == mem0expr );
 		BOOST_CHECK( callexpr->args[0] == varexpr );
 		BOOST_CHECK( callexpr->args[1] == castexpr );
+	}
+
+	boost::shared_ptr<index_expression> indexexpr0, indexexpr1;
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dnode( callexpr )
+			.dindex().dnode(mem1expr).end()
+			.get_node( indexexpr0 )
+			.dindex().dnode(mem0expr).end()
+		.end(indexexpr1);
+
+		BOOST_CHECK( indexexpr1 );
+		BOOST_CHECK( indexexpr1->node_class() == syntax_node_types::index_expression );
+		BOOST_CHECK( indexexpr1->index_expr == mem0expr );
+		BOOST_CHECK( indexexpr1->expr == indexexpr0 );
+		BOOST_CHECK( indexexpr0 );
+		BOOST_CHECK( indexexpr0->node_class() == syntax_node_types::index_expression );
+		BOOST_CHECK( indexexpr0->index_expr == mem1expr );
+		BOOST_CHECK( indexexpr0->expr == callexpr );
 	}
 }
 

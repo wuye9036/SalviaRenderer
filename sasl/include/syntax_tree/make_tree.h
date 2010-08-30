@@ -158,6 +158,7 @@ public:
 	virtual tree_combinator& dmember( const std::string& /*m*/){ return default_proc(); }
 	virtual tree_combinator& dcall(){ return default_proc(); }
 	virtual tree_combinator& dargument(){ return default_proc(); }
+	virtual tree_combinator& dindex(){ return default_proc(); }
 
 	template <typename T>
 	tree_combinator& end( boost::shared_ptr<T>& result )
@@ -203,6 +204,7 @@ protected:
 		e_no,
 		e_callexpr,
 		e_argument,
+		e_indexexpr,
 
 		e_other = UINT_MAX
 	};
@@ -334,7 +336,7 @@ public:
 	virtual tree_combinator& dbranchexpr();
 	virtual tree_combinator& dmember( const std::string& /*m*/);
 	virtual tree_combinator& dcall();
-	// virtual tree_combinator& dindex();
+	virtual tree_combinator& dindex();
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( expression );
 protected:

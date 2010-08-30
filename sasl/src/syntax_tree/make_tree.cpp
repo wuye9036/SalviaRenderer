@@ -273,6 +273,17 @@ tree_combinator& dexpr_combinator::dcall()
 	return enter_child( e_callexpr, call_comb );
 }
 
+tree_combinator& dexpr_combinator::dindex()
+{
+	assert ( typed_node() );
+	boost::shared_ptr<index_expression> indexexpr = create_node<index_expression>( token_attr::null() );
+	indexexpr->expr = typed_node();
+	typed_node( indexexpr );
+	enter( e_indexexpr );
+	expr_comb = boost::make_shared<dexpr_combinator>(this);
+	return *expr_comb;
+}
+
 void dexpr_combinator::child_ended()
 {
 	switch( leave() ){
@@ -298,6 +309,11 @@ void dexpr_combinator::child_ended()
 		case e_callexpr:
 			assert( call_comb->typed_node() );
 			typed_node( call_comb->typed_node() );
+			return;
+
+		case e_indexexpr:
+			assert( expr_comb->typed_node() );
+			typed_node2<index_expression>()->index_expr = expr_comb->typed_node();
 			return;
 
 		default:

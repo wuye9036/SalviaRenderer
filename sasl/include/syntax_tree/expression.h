@@ -116,11 +116,14 @@ protected:
 };
 
 struct index_expression: public expression{
-	index_expression( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* visitor );
 
 	boost::shared_ptr<expression> expr;
 	boost::shared_ptr<expression> index_expr;
+protected:
+	index_expression( boost::shared_ptr<token_attr> tok );
 };
 
 struct call_expression: public expression{
