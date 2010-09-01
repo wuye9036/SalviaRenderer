@@ -73,6 +73,7 @@ struct function_type;
 struct initializer;
 struct node;
 struct program;
+struct struct_type;
 struct type_specifier;
 struct variable_declaration;
 
@@ -81,8 +82,9 @@ class dbranchexpr_combinator;
 class dcast_combinator;
 class dcallexpr_combinator;
 class dexpr_combinator;
-class dvar_combinator;
+class dstruct_combinator;
 class dtype_combinator;
+class dvar_combinator;
 
 #define SASL_TYPED_NODE_ACCESSORS_DECL( node_type )					\
 	boost::shared_ptr< node_type > typed_node();	\
@@ -186,6 +188,9 @@ protected:
 	enum state_t{
 		e_none,
 
+		e_vardecl,
+		e_struct,
+
 		e_type,
 		e_init,
 
@@ -271,16 +276,19 @@ class dprog_combinator: public tree_combinator{
 public:
 	dprog_combinator( const std::string& prog_name );
 
-	virtual tree_combinator& dvar( const std::string& var_name );
-	//virtual tree_combinator& dstruct( const std::string& struct_name );
+	virtual tree_combinator& dvar( const std::string& /*var_name*/ );
+	virtual tree_combinator& dstruct( const std::string& /*struct_name*/ );
 	//virtual tree_combinator& dfunction( const std::string& func_name );
 	//virtual tree_combinator& dtypedef( const std::string& alias );
+
+	virtual void child_ended();
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( program );
 
 private:
 	boost::shared_ptr<program> prog_node;
 	boost::shared_ptr<dvar_combinator> var_comb;
+	boost::shared_ptr<dstruct_combinator> struct_comb;
 };
 
 class dvar_combinator: public tree_combinator{
@@ -425,6 +433,25 @@ protected:
 	virtual void child_ended();
 private:
 	boost::shared_ptr<dexpr_combinator> argexpr;
+};
+
+// struct combinator
+class dstruct_combinator: public tree_combinator
+{
+public:
+	dstruct_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dname( const std::string& /*struct name*/);
+	virtual tree_combinator& dmember( const std::string& /*var name*/);
+
+	virtual void child_ended();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( struct_type );
+protected:
+	dstruct_combinator( const dstruct_combinator& rhs);
+	dstruct_combinator& operator = ( const dstruct_combinator& rhs );
+private:
+	boost::shared_ptr<dvar_combinator> var_comb;
 };
 END_NS_SASL_SYNTAX_TREE()
 #endif

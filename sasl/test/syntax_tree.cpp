@@ -87,6 +87,8 @@ BOOST_AUTO_TEST_CASE( var_combinator_test )
 BOOST_AUTO_TEST_CASE( type_combinator_test )
 {
 	using ::sasl::syntax_tree::dprog_combinator;
+	using ::sasl::syntax_tree::dtype_combinator;
+	using ::sasl::syntax_tree::dvar_combinator;
 
 	using ::sasl::syntax_tree::array_type;
 	using ::sasl::syntax_tree::program;
@@ -103,14 +105,72 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	boost::shared_ptr<struct variable_declaration> vardecl1;
 	dprog_combinator prog_comb("hello");
 
+	boost::shared_ptr<variable_declaration> fltvar;
+	boost::shared_ptr<type_specifier> flt;
+	{
+		dvar_combinator var_comb( NULL );
+		var_comb
+				.dname("What's")
+				.dtype().dbuildin( buildin_type_code::_float ).end(flt)
+		.end( fltvar );
+
+		BOOST_CHECK( flt );
+		BOOST_CHECK( flt->node_class() == syntax_node_types::buildin_type );
+		BOOST_CHECK( flt->value_typecode == buildin_type_code::_float );
+
+		BOOST_CHECK( fltvar );
+		BOOST_CHECK( fltvar->name->str == "What's" );
+		BOOST_CHECK( fltvar->type_info == flt );
+		BOOST_CHECK( fltvar->node_class() == syntax_node_types::variable_declaration );
+	}
+	
+	boost::shared_ptr<array_type> arrtype;
+	{
+		dtype_combinator type_comb( NULL );
+		type_comb
+			.dnode( flt )
+			.darray().end()
+			.darray().dconstant2( (int32_t)186 ).end()
+		.end(arrtype);
+
+		BOOST_CHECK( arrtype );
+		BOOST_CHECK( arrtype->node_class() == syntax_node_types::array_type );
+		BOOST_CHECK( arrtype->elem_type->value_typecode == buildin_type_code::_float );
+		BOOST_CHECK( arrtype->array_lens.size() == 2);
+		BOOST_CHECK( !arrtype->array_lens[0] );
+		BOOST_CHECK( arrtype->array_lens[1]->node_class() == syntax_node_types::constant_expression );
+	}
+
+	boost::shared_ptr<struct_type> stype;
+	{
+		boost::shared_ptr<variable_declaration> member0, member1;
+		dprog_combinator prog_comb( std::string("Hello") );
+		prog_comb.dstruct("struct_name")
+			.dmember("struct_member_a")
+				.dtype().dnode(flt).end()
+			.end( member0 )
+			.dmember("struct_member_b")
+				.dtype().dnode(arrtype).end()
+			.end( member1 )
+		.end(stype).end();
+
+		BOOST_CHECK( stype );
+		BOOST_CHECK( stype->node_class() == syntax_node_types::struct_type );
+		BOOST_CHECK( stype->name->str == "struct_name" );
+		BOOST_CHECK( stype->decls.size() == 2 );
+		BOOST_CHECK( stype->decls[0] == member0 );
+		BOOST_CHECK( stype->decls[1] == member1 );
+		BOOST_CHECK( member0->name->str == "struct_member_a" );
+		BOOST_CHECK( member0->type_info == flt );
+		BOOST_CHECK( member1->name->str == "struct_member_b" );
+		BOOST_CHECK( member1->type_info == arrtype );
+	}
+
 	boost::shared_ptr<type_specifier>
 		var0type, var1type, var2type;
 	boost::shared_ptr<struct_type> var3type;
 	boost::shared_ptr<array_type> var4type;
 	prog_comb
-		.dvar( var0_name )
-			.dtype().dbuildin( buildin_type_code::_float ).end( var0type )
-		.end()
 		.dvar( var0_name )
 			.dtype().dvec( buildin_type_code::_uint64, 2 ).end( var1type )
 		.end()
@@ -120,17 +180,8 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.dvar( var0_name )
 			.dtype().dalias( struct_name ).dtypequal( type_qualifiers::_uniform ).end( var3type )
 		.end()
-		.dvar( var0_name )
-			.dtype()
-				.dbuildin( buildin_type_code::_float )
-				.darray().end()
-				.darray().dconstant2( (int32_t)186 ).end()
-			.end( var4type )
-		.end()
 	.end( prog );
 
-	BOOST_CHECK( var0type->node_class() == syntax_node_types::buildin_type );
-	BOOST_CHECK( var0type && var0type->value_typecode == buildin_type_code::_float );
 	BOOST_CHECK( var1type && var1type->value_typecode == btc_helper::vector_of(buildin_type_code::_uint64, 2) );
 	BOOST_CHECK( var2type && var2type->value_typecode == btc_helper::matrix_of(buildin_type_code::_double, 4, 3) );
 	BOOST_CHECK( var2type->node_class() == syntax_node_types::buildin_type );
@@ -138,12 +189,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	BOOST_CHECK( var3type && var3type->name->str == struct_name );
 	BOOST_CHECK( var3type->is_uniform() );
 	BOOST_CHECK( var3type->node_class() == syntax_node_types::struct_type );
-	BOOST_CHECK( var4type );
-	BOOST_CHECK( var4type->node_class() == syntax_node_types::array_type );
-	BOOST_CHECK( var4type->elem_type->value_typecode == buildin_type_code::_float );
-	BOOST_CHECK( var4type->array_lens.size() == 2);
-	BOOST_CHECK( !var4type->array_lens[0] );
-	BOOST_CHECK( var4type->array_lens[1]->node_class() == syntax_node_types::constant_expression );
+
 }
 
 BOOST_AUTO_TEST_CASE( expr_combinator_test ){
@@ -165,11 +211,11 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		boost::shared_ptr<constant_expression> expr_c;
 		dexpr_combinator expr_comb(NULL);
 		expr_comb
-			.dconstant2( 0.1f )
+			.dconstant2( 0.25868f )
 		.end( expr_c );
 		BOOST_CHECK( expr_c->node_class() == syntax_node_types::constant_expression );
 		BOOST_CHECK( expr_c->ctype == literal_constant_types::real );
-		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.1f) );
+		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.25868f) );
 	}
 	
 	boost::shared_ptr<constant_expression> cexpr;
@@ -180,6 +226,15 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end( cexpr );
 		BOOST_CHECK( cexpr->ctype == literal_constant_types::boolean );
 		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(true) );
+	}
+
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dconstant2( (uint16_t)107 )
+		.end( cexpr );
+		BOOST_CHECK( cexpr->ctype == literal_constant_types::integer );
+		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(107) );
 	}
 
 	boost::shared_ptr<variable_expression> varexpr;

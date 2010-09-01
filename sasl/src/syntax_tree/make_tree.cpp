@@ -45,17 +45,35 @@ dprog_combinator::dprog_combinator( const std::string& prog_name ):
 
 tree_combinator& dprog_combinator::dvar( const std::string& var_name )
 {
-	DEFAULT_STATE_SCOPE();
-
-	var_comb = boost::make_shared<dvar_combinator>(this);
-
-	boost::shared_ptr<variable_declaration> vardecl = create_node<variable_declaration>( token_attr::null() );
-	typed_node()->decls.push_back( vardecl );
-	var_comb->typed_node( vardecl );
-	var_comb->dname( var_name );
-
+	enter_child( e_vardecl, var_comb, true );
+	var_comb->typed_node()->name = token_attr::from_string(var_name);
 	return *var_comb;
 }
+
+tree_combinator& dprog_combinator::dstruct( const std::string& struct_name )
+{
+	enter_child( e_struct, struct_comb, true );
+	struct_comb->typed_node()->name = token_attr::from_string( struct_name );
+	return *struct_comb;
+}
+
+void dprog_combinator::child_ended()
+{
+	switch ( leave() ){
+		case e_vardecl:
+			assert( var_comb->typed_node() );
+			typed_node()->decls.push_back( var_comb->typed_node2<declaration>() );
+			return;
+		case e_struct:
+			assert( struct_comb->typed_node() );
+			typed_node()->decls.push_back( struct_comb->typed_node2<declaration>() );
+			return;
+		default:
+			assert(!"invalid state.");
+			return;
+	}
+}
+
 /////////////////////////////////
 // type combinator
 SASL_TYPED_NODE_ACCESSORS_IMPL( dtype_combinator, type_specifier );
@@ -161,6 +179,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dvar_combinator, variable_declaration );
 dvar_combinator::dvar_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
+	typed_node( create_node<variable_declaration>( token_attr::null() ) );
 }
 
 tree_combinator& dvar_combinator::dname( const std::string& name )
@@ -486,5 +505,46 @@ void dcallexpr_combinator::child_ended()
 			return;
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+//  struct combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dstruct_combinator, struct_type );
+
+dstruct_combinator::dstruct_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<struct_type>( token_attr::null() ) );
+}
+
+tree_combinator& dstruct_combinator::dname( const std::string& name )
+{
+	assert( !typed_node()->name );
+	typed_node()->name = token_attr::from_string( name );
+	return *this;
+}
+
+tree_combinator& dstruct_combinator::dmember( const std::string& var_name )
+{
+	enter_child(e_vardecl, var_comb, true);
+	var_comb->typed_node()->name = token_attr::from_string(var_name);
+	return *var_comb;
+}
+
+void dstruct_combinator::child_ended()
+{
+	switch( leave() )
+	{
+	case e_vardecl:
+		assert( var_comb->typed_node() );
+		typed_node()->decls.push_back( var_comb->typed_node2<declaration>() );
+		return;
+	default:
+		assert("invalid state.");
+		return;
+	}
+}
+
+
 
 END_NS_SASL_SYNTAX_TREE();
