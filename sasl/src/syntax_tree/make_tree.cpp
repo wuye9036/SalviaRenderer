@@ -5,8 +5,9 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/syntax_tree/statement.h>
+
 #include <boost/static_assert.hpp>
-//#include <boost/test/unit_test.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/type_traits/is_same.hpp>
 
@@ -545,6 +546,15 @@ void dstruct_combinator::child_ended()
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+// compound statements
 
+//SASL_TYPED_NODE_ACCESSORS_IMPL( dstatements_combinator, compound_statement );
+//
+//dstatements_combinator::dstatements_combinator( tree_combinator* parent )
+//: tree_combinator( parent )
+//{
+//
+//}
 
 END_NS_SASL_SYNTAX_TREE();

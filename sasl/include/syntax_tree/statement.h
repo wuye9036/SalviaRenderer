@@ -21,11 +21,14 @@ struct statement: public node{
 
 struct declaration_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
+
 	void accept( syntax_tree_visitor* v );
+
 	boost::shared_ptr<declaration> decl;
 private:
 	declaration_statement( boost::shared_ptr<token_attr> tok );
-	declaration_statement();
+	declaration_statement& operator = ( const declaration_statement& );
+	declaration_statement( const declaration_statement& );
 };
 
 struct if_statement: public statement{
@@ -34,7 +37,7 @@ struct if_statement: public statement{
 		yes_stmt, no_stmt;
 };
 
-struct while_statement{
+struct while_statement: public statement{
 	boost::shared_ptr<expression> cond;
 	boost::shared_ptr<statement> body;
 };
@@ -55,13 +58,21 @@ struct switch_statement{
 	std::vector< boost::shared_ptr<case_label> > case_labels;
 };
 
-struct compound_statement{
+struct compound_statement: public statement{
 	std::vector< boost::shared_ptr<statement> > stmts;
 	std::vector< boost::shared_ptr<identifier> > jump_labels;
 };
 
-struct expression_statement{
+struct expression_statement: public statement{
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
+
 	boost::shared_ptr<expression> expr;
+private:
+	expression_statement( boost::shared_ptr<token_attr> tok );
+	expression_statement& operator = ( const expression_statement& );
+	expression_statement( const expression_statement& );
 };
 
 struct jump_statement{

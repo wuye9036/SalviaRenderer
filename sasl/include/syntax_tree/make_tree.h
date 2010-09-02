@@ -64,6 +64,7 @@ struct binary_expression;
 struct buildin_type;
 struct call_expression;
 struct cast_expression;
+struct compound_statement;
 struct cond_expression;
 struct constant_expression;
 struct declaration;
@@ -453,5 +454,34 @@ protected:
 private:
 	boost::shared_ptr<dvar_combinator> var_comb;
 };
+
+// statement combinators
+//class dstatements_combinator: public tree_combinator
+//{
+//public:
+//	dstatements_combinator( tree_combinator* parent );
+//
+//	virtual tree_combinator& dvarstmt();
+//	virtual tree_combinator& dexpr();
+//
+//	virtual tree_combinator& dif();
+//
+//	virtual tree_combinator& ddo();
+//	virtual tree_combinator& dwhile();
+//	virtual tree_combinator& dswitch();
+//	virtual tree_combinator& dfor();
+//
+//	virtual tree_combinator& dbreak();
+//	virtual tree_combinator& dcontinue();
+//	virtual tree_combinator& dreturn();
+//
+//	SASL_TYPED_NODE_ACCESSORS_DECL( compound_statement );
+//
+//protected:
+//	dstatements_combinator( const dstatements_combinator& rhs);
+//	dstatements_combinator& operator = ( const dstatements_combinator& rhs );
+//private:
+//};
+
 END_NS_SASL_SYNTAX_TREE()
 #endif
