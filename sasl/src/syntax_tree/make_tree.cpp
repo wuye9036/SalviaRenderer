@@ -34,6 +34,36 @@ literal_constant_types typecode_map::type_codes[] =
 
 SASL_TYPED_NODE_ACCESSORS_IMPL( tree_combinator, node );
 
+tree_combinator& tree_combinator::do_end()
+{
+	// parent may release it, so reserve what we need for using later.
+	tree_combinator* ret_p = parent;
+
+	if( ret_p ){
+		ret_p->child_ended();
+		return *ret_p;
+	}
+
+	return *this;
+}
+
+tree_combinator::~tree_combinator()
+{
+	assert( is_state(e_none) );
+}
+
+void tree_combinator::syntax_error()
+{
+	assert( !"Fuck!" );
+}
+
+void tree_combinator::enter( state_t s )
+{
+	assert( s != e_none );
+	assert( e_state == e_none );
+	e_state = s;
+}
+
 /////////////////////////////////
 // program combinator
 SASL_TYPED_NODE_ACCESSORS_IMPL( dprog_combinator, program );
@@ -538,7 +568,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dstatements_combinator, compound_statement );
 dstatements_combinator::dstatements_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-
+	typed_node( create_node<compound_statement>( token_attr::null() ) );
 }
 
 tree_combinator& dstatements_combinator::dvarstmt()

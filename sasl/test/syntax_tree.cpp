@@ -1,6 +1,7 @@
-#include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/make_tree.h>
 
 #include <boost/test/unit_test.hpp>
@@ -382,5 +383,26 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 }
 
 BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
+	using ::sasl::syntax_tree::dvar_combinator;
+	using ::sasl::syntax_tree::dstatements_combinator;
+
+	using ::sasl::syntax_tree::variable_declaration;
+
+	using ::sasl::syntax_tree::compound_statement;
+	using ::sasl::syntax_tree::declaration_statement;
+
+	boost::shared_ptr<variable_declaration> vardecl;
+	dvar_combinator( NULL ).dname("var0").dtype().dbuildin( buildin_type_code::_float ).end().end(vardecl);
+	BOOST_CHECK( vardecl );
+
+	boost::shared_ptr<compound_statement> stmts;
+	dstatements_combinator( NULL ).dvarstmt().dnode(vardecl).end().end( stmts );
+
+	BOOST_CHECK( stmts );
+	BOOST_CHECK( stmts->node_class() == syntax_node_types::compound_statement );
+	BOOST_CHECK( stmts->stmts.size() == 1 );
+	boost::shared_ptr<declaration_statement> varstmt = boost::shared_polymorphic_cast<declaration_statement>(stmts->stmts[0]);
+	BOOST_CHECK( varstmt->node_class() == syntax_node_types::declaration_statement );
+	BOOST_CHECK( varstmt->decl == vardecl );
 }
 BOOST_AUTO_TEST_SUITE_END();

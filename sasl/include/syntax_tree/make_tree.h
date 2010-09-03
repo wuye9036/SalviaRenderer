@@ -118,17 +118,6 @@ public:
 	virtual tree_combinator& dfunction( const std::string& /*func_name*/ ){ return default_proc(); }
 	virtual tree_combinator& dtypedef( const std::string& /*alias*/ ){ return default_proc(); }
 
-	virtual tree_combinator& end(){
-		// parent may release it, so reserve what we need for using later.
-		tree_combinator* ret_p = parent;
-
-		if( ret_p ){
-			ret_p->child_ended();
-			return *ret_p;
-		}
-
-		return *this;
-	}
 	
 	virtual tree_combinator& dtype(){ return default_proc(); }
 	virtual tree_combinator& dinit(){ return default_proc(); }
@@ -168,13 +157,22 @@ public:
 	virtual tree_combinator& dargument(){ return default_proc(); }
 	virtual tree_combinator& dindex(){ return default_proc(); }
 
+	virtual tree_combinator& dvarstmt(){ return default_proc(); }
+	virtual tree_combinator& dexprstmt(){ return default_proc(); }
+
+	//////////////////////////////////////////////////////////////////////////
+	// end of node
+	virtual tree_combinator& end(){	before_end(); return do_end(); }
 	template <typename T>
 	tree_combinator& end( boost::shared_ptr<T>& result )
 	{
+		before_end();
 		get_node<T>(result);
-		return end();
+		return do_end();
 	}
 
+	//////////////////////////////////////////////////////////////////////////
+	// accessors
 	template <typename T>
 	tree_combinator& dnode( boost::shared_ptr<T> node )
 	{
@@ -235,11 +233,7 @@ protected:
 		e_other = UINT_MAX
 	};
 
-	void enter( state_t s ){
-		assert( s != e_none );
-		assert( e_state == e_none );
-		e_state = s;
-	}
+	void enter( state_t s );
 	state_t leave(){
 		assert( e_state != e_none );
 		state_t ret = e_state;
@@ -295,16 +289,16 @@ protected:
 	}
 
 	virtual void child_ended(){}
-	virtual ~tree_combinator(){ assert( is_state(e_none) );}
+	virtual void before_end(){}
+	virtual tree_combinator& do_end();
+	virtual ~tree_combinator();
 private:
 	state_t e_state;
 
 	tree_combinator( const tree_combinator& );
 	tree_combinator& operator = ( const tree_combinator& );
 
-	void syntax_error(){
-		assert( !"Fuck!" );
-	}
+	void syntax_error();
 
 protected:
 	boost::shared_ptr<node> cur_node;

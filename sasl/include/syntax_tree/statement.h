@@ -59,8 +59,16 @@ struct switch_statement{
 };
 
 struct compound_statement: public statement{
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
+
 	std::vector< boost::shared_ptr<statement> > stmts;
 	std::vector< boost::shared_ptr<identifier> > jump_labels;
+private:
+	compound_statement( boost::shared_ptr<token_attr> tok );
+	compound_statement& operator = ( const compound_statement& );
+	compound_statement( const compound_statement& );
 };
 
 struct expression_statement: public statement{

@@ -25,6 +25,14 @@ void expression_statement::accept( syntax_tree_visitor* v )
 	v->visit(*this);
 }
 
+void compound_statement::accept( syntax_tree_visitor* v )
+{
+	v->visit(*this);
+}
 
+compound_statement::compound_statement( boost::shared_ptr<token_attr> tok )
+: statement( syntax_node_types::compound_statement, tok )
+{
+}
 
 END_NS_SASL_SYNTAX_TREE();
