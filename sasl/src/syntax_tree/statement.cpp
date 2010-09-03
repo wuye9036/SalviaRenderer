@@ -20,6 +20,11 @@ expression_statement::expression_statement( boost::shared_ptr<token_attr> tok )
 : statement( syntax_node_types::expression_statement, tok ){
 }
 
+void expression_statement::accept( syntax_tree_visitor* v )
+{
+	v->visit(*this);
+}
+
 
 
 END_NS_SASL_SYNTAX_TREE();

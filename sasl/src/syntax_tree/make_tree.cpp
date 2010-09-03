@@ -46,14 +46,14 @@ dprog_combinator::dprog_combinator( const std::string& prog_name ):
 
 tree_combinator& dprog_combinator::dvar( const std::string& var_name )
 {
-	enter_child( e_vardecl, var_comb, true );
+	enter_child( e_vardecl, var_comb );
 	var_comb->typed_node()->name = token_attr::from_string(var_name);
 	return *var_comb;
 }
 
 tree_combinator& dprog_combinator::dstruct( const std::string& struct_name )
 {
-	enter_child( e_struct, struct_comb, true );
+	enter_child( e_struct, struct_comb );
 	struct_comb->typed_node()->name = token_attr::from_string( struct_name );
 	return *struct_comb;
 }
@@ -62,12 +62,10 @@ void dprog_combinator::child_ended()
 {
 	switch ( leave() ){
 		case e_vardecl:
-			assert( var_comb->typed_node() );
-			typed_node()->decls.push_back( var_comb->typed_node2<declaration>() );
+			typed_node()->decls.push_back( move_node2<declaration>(var_comb) );
 			return;
 		case e_struct:
-			assert( struct_comb->typed_node() );
-			typed_node()->decls.push_back( struct_comb->typed_node2<declaration>() );
+			typed_node()->decls.push_back( move_node2<declaration>(struct_comb) );
 			return;
 		default:
 			assert(!"invalid state.");
@@ -148,28 +146,27 @@ tree_combinator& dtype_combinator::dtypequal( type_qualifiers qual )
 tree_combinator& dtype_combinator::darray()
 {
 	if ( !cur_node ) { return default_proc(); }
-	enter( e_array );
-	expr_comb = boost::make_shared<dexpr_combinator>(this);
-	return *expr_comb;
+	return enter_child( e_array, expr_comb );
 }
 
 void dtype_combinator::child_ended()
 {
-	if( is_state( e_array ) ){
-		if ( !typed_node() ){
-			default_proc();
-		}
-		boost::shared_ptr<array_type> outter_type;
-		if ( typed_node()->node_class() != syntax_node_types::array_type ){
-			outter_type = create_node<array_type>( token_attr::null() );
-			outter_type->elem_type = typed_node();
-			typed_node( outter_type );
-		} else {
-			outter_type = typed_node2<array_type>();
-		}
-		
-		outter_type->array_lens.push_back( expr_comb->typed_node() );
-		leave();
+	boost::shared_ptr<array_type> outter_type;
+	switch ( leave() ){
+		case e_array:
+			assert ( typed_node() );
+			if ( typed_node()->node_class() != syntax_node_types::array_type ){
+				outter_type = create_node<array_type>( token_attr::null() );
+				outter_type->elem_type = typed_node();
+				typed_node( outter_type );
+			} else {
+				outter_type = typed_node2<array_type>();
+			}
+			outter_type->array_lens.push_back( move_node(expr_comb) );
+			return;
+		default:
+			assert( !"invalid state." );
+			return;
 	}
 }
 
@@ -193,9 +190,7 @@ tree_combinator& dvar_combinator::dname( const std::string& name )
 
 tree_combinator& dvar_combinator::dtype()
 {
-	type_comb = boost::make_shared<dtype_combinator>(this);
-	enter( e_type );
-	return *type_comb;
+	return enter_child( e_type, type_comb );
 }
 
 void dvar_combinator::child_ended()
@@ -203,7 +198,7 @@ void dvar_combinator::child_ended()
 	switch( leave() )
 	{
 	case e_type:
-		typed_node()->type_info = type_comb->typed_node();
+		typed_node()->type_info = move_node( type_comb );
 		break;
 	default:
 		default_proc();
@@ -308,32 +303,27 @@ void dexpr_combinator::child_ended()
 {
 	switch( leave() ){
 		case e_unary:
-			typed_node2<unary_expression>()->expr = expr_comb->typed_node();
+			typed_node2<unary_expression>()->expr = move_node( expr_comb );
 			return;
 
 		case e_cast:
-			assert( cast_comb->typed_node() );
-			typed_node( cast_comb->typed_node() );
+			typed_node( move_node( cast_comb ) );
 			return;
 
 		case e_binexpr:
-			assert( binexpr_comb->typed_node() );
-			typed_node( binexpr_comb->typed_node() );
+			typed_node( move_node( binexpr_comb ) );
 			return;
 
 		case e_branchexpr:
-			assert( branch_comb->typed_node() );
-			typed_node( branch_comb->typed_node() );
+			typed_node( move_node( branch_comb ) );
 			return;
 
 		case e_callexpr:
-			assert( call_comb->typed_node() );
-			typed_node( call_comb->typed_node() );
+			typed_node( move_node( call_comb ) );
 			return;
 
 		case e_indexexpr:
-			assert( expr_comb->typed_node() );
-			typed_node2<index_expression>()->index_expr = expr_comb->typed_node();
+			typed_node2<index_expression>()->index_expr = move_node( expr_comb );
 			return;
 
 		default:
@@ -367,12 +357,10 @@ void dcast_combinator::child_ended()
 {
 	switch ( leave() ){
 		case e_type:
-			assert( type_comb->typed_node() );
-			typed_node()->casted_type = type_comb->typed_node();
+			typed_node()->casted_type = move_node( type_comb );
 			return;
 		case e_expr:
-			assert( expr_comb->typed_node() );
-			typed_node()->expr = expr_comb->typed_node();
+			typed_node()->expr = move_node( expr_comb );
 			return;
 		default:
 			assert( !"invalid state." );
@@ -415,12 +403,11 @@ void dbinexpr_combinator::child_ended()
 {
 	switch( leave() ){
 		case e_lexpr:
-			assert( lexpr_comb->typed_node() );
-			typed_node()->left_expr = lexpr_comb->typed_node();
+			typed_node()->left_expr = move_node( lexpr_comb );
 			return;
 		case e_rexpr:
 			assert( rexpr_comb->typed_node() );
-			typed_node()->right_expr = rexpr_comb->typed_node();
+			typed_node()->right_expr = move_node( rexpr_comb );
 			return;
 		default:
 			assert( !"invalid state" );
@@ -458,8 +445,7 @@ void dbranchexpr_combinator::child_ended()
 {
 	switch( leave() ){
 		case e_cond:
-			assert( cond_comb->typed_node() );
-			typed_node()->cond_expr = cond_comb->typed_node();
+			typed_node()->cond_expr = move_node( cond_comb );
 			return;
 		case e_yes:
 			assert( yes_comb->typed_node() );
@@ -491,15 +477,14 @@ dcallexpr_combinator::dcallexpr_combinator( tree_combinator* parent )
 
 tree_combinator& dcallexpr_combinator::dargument()
 {
-	return enter_child( e_argument, argexpr, true );
+	return enter_child( e_argument, argexpr );
 }
 
 void dcallexpr_combinator::child_ended()
 {
 	switch ( leave() ){
 		case e_argument:
-			assert( argexpr->typed_node() );
-			typed_node()->args.push_back( argexpr->typed_node2<expression>() );
+			typed_node()->args.push_back( move_node2<expression>(argexpr) );
 			return;
 		default:
 			assert( !"invalid state." );
@@ -527,7 +512,7 @@ tree_combinator& dstruct_combinator::dname( const std::string& name )
 
 tree_combinator& dstruct_combinator::dmember( const std::string& var_name )
 {
-	enter_child(e_vardecl, var_comb, true);
+	enter_child(e_vardecl, var_comb);
 	var_comb->typed_node()->name = token_attr::from_string(var_name);
 	return *var_comb;
 }
@@ -537,8 +522,7 @@ void dstruct_combinator::child_ended()
 	switch( leave() )
 	{
 	case e_vardecl:
-		assert( var_comb->typed_node() );
-		typed_node()->decls.push_back( var_comb->typed_node2<declaration>() );
+		typed_node()->decls.push_back( move_node2<declaration>(var_comb) );
 		return;
 	default:
 		assert("invalid state.");
@@ -549,12 +533,39 @@ void dstruct_combinator::child_ended()
 //////////////////////////////////////////////////////////////////////////
 // compound statements
 
-//SASL_TYPED_NODE_ACCESSORS_IMPL( dstatements_combinator, compound_statement );
-//
-//dstatements_combinator::dstatements_combinator( tree_combinator* parent )
-//: tree_combinator( parent )
-//{
-//
-//}
+SASL_TYPED_NODE_ACCESSORS_IMPL( dstatements_combinator, compound_statement );
+
+dstatements_combinator::dstatements_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+
+}
+
+tree_combinator& dstatements_combinator::dvarstmt()
+{
+	return enter_child( e_varstmt, var_comb );
+}
+
+tree_combinator& dstatements_combinator::dexprstmt()
+{
+	return enter_child( e_exprstmt, expr_comb );
+}
+
+void dstatements_combinator::child_ended()
+{
+	boost::shared_ptr<declaration_statement> declstmt;
+	switch( leave() ){
+		case e_varstmt:
+			declstmt = create_node<declaration_statement>( token_attr::null() );
+			declstmt->decl = move_node2<declaration>( var_comb );
+			typed_node()->stmts.push_back( 
+				boost::shared_polymorphic_cast<statement>(declstmt)
+				);
+			break;
+		default:
+			assert(!"invalid state.");
+	}
+}
+
 
 END_NS_SASL_SYNTAX_TREE();

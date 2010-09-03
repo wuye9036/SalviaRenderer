@@ -88,6 +88,7 @@ class dtype_combinator;
 class dvar_combinator;
 
 #define SASL_TYPED_NODE_ACCESSORS_DECL( node_type )					\
+	typedef node_type node_t;	\
 	boost::shared_ptr< node_type > typed_node();	\
 	template <typename T>	\
 	boost::shared_ptr< node_type > typed_node( boost::shared_ptr< T > typed_ptr )  \
@@ -118,10 +119,14 @@ public:
 	virtual tree_combinator& dtypedef( const std::string& /*alias*/ ){ return default_proc(); }
 
 	virtual tree_combinator& end(){
-		if( parent ){
-			parent->child_ended();
-			return *parent;
+		// parent may release it, so reserve what we need for using later.
+		tree_combinator* ret_p = parent;
+
+		if( ret_p ){
+			ret_p->child_ended();
+			return *ret_p;
 		}
+
 		return *this;
 	}
 	
@@ -212,6 +217,21 @@ protected:
 		e_argument,
 		e_indexexpr,
 
+		e_varstmt,
+		e_exprstmt,
+		e_if,
+		e_then,
+		e_else,
+		e_switch,
+		e_case,
+		e_default,
+		e_for,
+		e_forinit,
+		e_step,
+		e_do,
+		e_while,
+
+
 		e_other = UINT_MAX
 	};
 
@@ -249,11 +269,29 @@ protected:
 	tree_combinator& default_proc(){ syntax_error(); return *this; }
 	
 	template< typename T >
-	tree_combinator& enter_child( state_t s, boost::shared_ptr<T>& child_comb, bool comb_reusable = false ){
-		assert( comb_reusable || !child_comb );
+	tree_combinator& enter_child( state_t s, boost::shared_ptr<T>& child_comb ){
+		assert( !child_comb );
 		enter(s);
 		child_comb = boost::make_shared<T>(this);
 		return *child_comb;
+	}
+
+	template<typename T, typename U>
+	static boost::shared_ptr<T> move_node2( boost::shared_ptr<U>& comb, bool enable_null = true ){
+		assert( comb );
+		boost::shared_ptr<T> ret = comb->typed_node2<T>();
+		assert( ret || enable_null );
+		comb.reset();
+		return ret;
+	}
+
+	template<typename T>
+	static boost::shared_ptr< typename T::node_t > move_node( boost::shared_ptr<T>& comb, bool enable_null = true ){
+		assert( comb );
+		boost::shared_ptr<typename T::node_t> ret = comb->typed_node2<typename T::node_t>();
+		assert( ret || enable_null );
+		comb.reset();
+		return ret;
 	}
 
 	virtual void child_ended(){}
@@ -456,32 +494,92 @@ private:
 };
 
 // statement combinators
-//class dstatements_combinator: public tree_combinator
+class dstatements_combinator: public tree_combinator
+{
+public:
+	dstatements_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dvarstmt();
+	virtual tree_combinator& dexprstmt();
+
+	//virtual tree_combinator& dif();
+
+	//virtual tree_combinator& ddo();
+	//virtual tree_combinator& dwhile();
+
+	//virtual tree_combinator& dswitch();
+	//virtual tree_combinator& dfor();
+
+	//virtual tree_combinator& dbreak();
+	//virtual tree_combinator& dcontinue();
+	//virtual tree_combinator& dreturn();
+
+	virtual void child_ended();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( compound_statement );
+
+protected:
+	dstatements_combinator( const dstatements_combinator& rhs);
+	dstatements_combinator& operator = ( const dstatements_combinator& rhs );
+private:
+	boost::shared_ptr<dvar_combinator> var_comb;
+	boost::shared_ptr<dexpr_combinator> expr_comb;
+};
+
+//class dif_combinator: public tree_combinator
 //{
 //public:
-//	dstatements_combinator( tree_combinator* parent );
+//	dif_combinator( tree_combinator* parent );
 //
-//	virtual tree_combinator& dvarstmt();
-//	virtual tree_combinator& dexpr();
-//
-//	virtual tree_combinator& dif();
-//
-//	virtual tree_combinator& ddo();
-//	virtual tree_combinator& dwhile();
-//	virtual tree_combinator& dswitch();
-//	virtual tree_combinator& dfor();
-//
-//	virtual tree_combinator& dbreak();
-//	virtual tree_combinator& dcontinue();
-//	virtual tree_combinator& dreturn();
-//
-//	SASL_TYPED_NODE_ACCESSORS_DECL( compound_statement );
+//	virtual tree_combinator dcond();
+//	virtual tree_combinator dthen();
+//	virtual tree_combinator delse();
 //
 //protected:
-//	dstatements_combinator( const dstatements_combinator& rhs);
-//	dstatements_combinator& operator = ( const dstatements_combinator& rhs );
+//	dif_combinator( const dif_combinator& rhs);
+//	dif_combinator& operator = ( const dif_combinator& rhs );
 //private:
 //};
-
+//
+//class ddowhile_combinator
+//{
+//public:
+//	ddowhile_combinator( tree_combinator* parent );
+//protected:
+//	ddowhile_combinator( const ddowhile_combinator& rhs);
+//	ddowhile_combinator& operator = ( const ddowhile_combinator& rhs );
+//private:
+//};
+//
+//class dwhiledo_combinator
+//{
+//public:
+//	dwhiledo_combinator( tree_combinator* parent );
+//protected:
+//	dwhiledo_combinator( const dwhiledo_combinator& rhs);
+//	dwhiledo_combinator& operator = ( const dwhiledo_combinator& rhs );
+//private:
+//};
+//
+//class dswitch_combinator
+//{
+//public:
+//	dswitch_combinator( tree_combinator* parent );
+//protected:
+//	dswitch_combinator( const dswitch_combinator& rhs);
+//	dswitch_combinator& operator = ( const dswitch_combinator& rhs );
+//private:
+//};
+//
+//class dfor_combinator
+//{
+//public:
+//	dfor_combinator( tree_combinator* parent );
+//
+//protected:
+//	dfor_combinator( const dfor_combinator& rhs);
+//	dfor_combinator& operator = ( const dfor_combinator& rhs );
+//private:
+//};
 END_NS_SASL_SYNTAX_TREE()
 #endif

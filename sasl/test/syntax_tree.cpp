@@ -381,4 +381,6 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 	}
 }
 
+BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
+}
 BOOST_AUTO_TEST_SUITE_END();
