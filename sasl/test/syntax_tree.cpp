@@ -388,32 +388,103 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 	using ::sasl::syntax_tree::dstatements_combinator;
 
 	using ::sasl::syntax_tree::variable_declaration;
+	using ::sasl::syntax_tree::constant_expression;
 
 	using ::sasl::syntax_tree::compound_statement;
 	using ::sasl::syntax_tree::declaration_statement;
+	using ::sasl::syntax_tree::dowhile_statement;
 	using ::sasl::syntax_tree::expression_statement;
-
-	boost::shared_ptr<variable_declaration> vardecl;
-	dvar_combinator( NULL ).dname("var0").dtype().dbuildin( buildin_type_code::_float ).end().end(vardecl);
-	BOOST_CHECK( vardecl );
+	using ::sasl::syntax_tree::if_statement;
+	using ::sasl::syntax_tree::while_statement;
 
 	boost::shared_ptr<expression_statement> exprstmt;
-
 	boost::shared_ptr<declaration_statement> varstmt;
 	boost::shared_ptr<compound_statement> stmts;
-	dstatements_combinator( NULL )
-		.dvarstmt().dnode(vardecl).end(varstmt)
-		.dexprstmt().dconstant2( 1.0f ).end(exprstmt)
-	.end( stmts );
-	BOOST_CHECK( stmts );
-	BOOST_CHECK( stmts->node_class() == syntax_node_types::compound_statement );
-	BOOST_CHECK( stmts->stmts.size() == 2 );
-	BOOST_CHECK( stmts->stmts[0] == varstmt);
-	BOOST_CHECK( varstmt->node_class() == syntax_node_types::declaration_statement );
-	BOOST_CHECK( varstmt->decl == vardecl );
-	BOOST_CHECK( stmts->stmts[1] == exprstmt );
-	BOOST_CHECK( exprstmt->node_class() == syntax_node_types::expression_statement );
-	BOOST_CHECK( exprstmt->expr );
-	BOOST_CHECK( exprstmt->expr->node_class() == syntax_node_types::constant_expression );
+	{
+		boost::shared_ptr<variable_declaration> vardecl;
+		dvar_combinator( NULL ).dname("var0").dtype().dbuildin( buildin_type_code::_float ).end().end(vardecl);
+		BOOST_CHECK( vardecl );
+	
+		dstatements_combinator( NULL )
+			.dvarstmt().dnode(vardecl).end(varstmt)
+			.dexprstmt().dconstant2( 1.0f ).end(exprstmt)
+		.end( stmts );
+		BOOST_CHECK( stmts );
+		BOOST_CHECK( stmts->node_class() == syntax_node_types::compound_statement );
+		BOOST_CHECK( stmts->stmts.size() == 2 );
+		BOOST_CHECK( stmts->stmts[0] == varstmt);
+		BOOST_CHECK( varstmt->node_class() == syntax_node_types::declaration_statement );
+		BOOST_CHECK( varstmt->decl == vardecl );
+		BOOST_CHECK( stmts->stmts[1] == exprstmt );
+		BOOST_CHECK( exprstmt->node_class() == syntax_node_types::expression_statement );
+		BOOST_CHECK( exprstmt->expr );
+		BOOST_CHECK( exprstmt->expr->node_class() == syntax_node_types::constant_expression );
+	}
+	
+	boost::shared_ptr<compound_statement> stmts2;
+	boost::shared_ptr<if_statement> ifstmt;
+	{
+		boost::shared_ptr<constant_expression> condexpr;
+		boost::shared_ptr<compound_statement> yesstmts;
+		boost::shared_ptr<compound_statement> elsestmts;
+		dstatements_combinator(NULL)
+			.dif()
+				.dcond().dconstant2( 1.0f ).end( condexpr )
+				.dthen().dvarstmt().dnode(varstmt).end().end(yesstmts)
+				.delse().dnode(stmts).end(elsestmts)
+			.end(ifstmt)
+		.end(stmts2)
+		;
+
+		BOOST_CHECK( stmts2 );
+		BOOST_CHECK( stmts2->stmts.size() == 1 );
+		BOOST_CHECK( ifstmt );
+		BOOST_CHECK( stmts2->stmts[0] == ifstmt );
+		BOOST_CHECK( ifstmt->node_class() == syntax_node_types::if_statement );
+		BOOST_CHECK( ifstmt->cond == condexpr );
+		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) );
+		BOOST_CHECK( ifstmt->yes_stmt == yesstmts );
+		BOOST_CHECK( yesstmts->stmts[0] == varstmt );
+		BOOST_CHECK( ifstmt->no_stmt == elsestmts );
+		BOOST_CHECK( elsestmts == stmts );
+	}
+
+	boost::shared_ptr<dowhile_statement> dwstmt;
+	boost::shared_ptr<compound_statement> stmts3;
+	{
+		boost::shared_ptr<constant_expression> condexpr;
+		dstatements_combinator(NULL)
+			.ddowhile()
+				.ddo().dnode(stmts).end(stmts3)
+				.dwhile().dconstant2( 1.0f ).end( condexpr )
+			.end(dwstmt)
+		.end();
+
+		BOOST_CHECK( dwstmt );
+		BOOST_CHECK( dwstmt->node_class() == syntax_node_types::dowhile_statement );
+		BOOST_CHECK( dwstmt->cond == condexpr );
+		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) );
+		BOOST_CHECK( dwstmt->body = stmts3 );
+		BOOST_CHECK( stmts3 == stmts );
+	}
+
+	boost::shared_ptr<while_statement> whilestmt;
+	boost::shared_ptr<compound_statement> stmts4;
+	{
+		boost::shared_ptr<constant_expression> condexpr;
+		dstatements_combinator(NULL)
+			.dwhiledo()
+				.dwhile().dconstant2( 1.0f ).end( condexpr )
+				.ddo().dnode(stmts).end(stmts4)
+			.end(whilestmt)
+		.end();
+
+		BOOST_CHECK( whilestmt );
+		BOOST_CHECK( whilestmt->node_class() == syntax_node_types::while_statement );
+		BOOST_CHECK( whilestmt->cond == condexpr );
+		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) );
+		BOOST_CHECK( whilestmt->body = stmts4 );
+		BOOST_CHECK( stmts4 == stmts );
+	}
 }
 BOOST_AUTO_TEST_SUITE_END();

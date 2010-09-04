@@ -69,25 +69,31 @@ struct cond_expression;
 struct constant_expression;
 struct declaration;
 struct declaration_statement;
+struct dowhile_statement;
 struct expression;
 struct function_type;
+struct if_statement;
 struct initializer;
 struct node;
 struct program;
 struct struct_type;
 struct type_specifier;
 struct variable_declaration;
+struct while_statement;
 
 class dbinexpr_combinator;
 class dbranchexpr_combinator;
 class dcast_combinator;
 class dcallexpr_combinator;
+class ddowhile_combinator;
 class dexpr_combinator;
 class dexprstmt_combinator;
+class dif_combinator;
 class dstruct_combinator;
 class dtype_combinator;
 class dvar_combinator;
 class dvarstmt_combinator;
+class dwhiledo_combinator;
 
 #define SASL_TYPED_NODE_ACCESSORS_DECL( node_type )					\
 	typedef node_type node_t;	\
@@ -172,6 +178,14 @@ public:
 
 	virtual tree_combinator& dvarstmt(){ return default_proc(); }
 	virtual tree_combinator& dexprstmt(){ return default_proc(); }
+	virtual tree_combinator& dif(){return default_proc();}
+	virtual tree_combinator& dthen(){return default_proc();}
+	virtual tree_combinator& delse(){return default_proc();}
+
+	virtual tree_combinator& ddowhile(){ return default_proc(); }
+	virtual tree_combinator& dwhiledo(){ return default_proc(); }
+	virtual tree_combinator& ddo(){ return default_proc(); }
+	virtual tree_combinator& dwhile(){ return default_proc(); }
 
 	//////////////////////////////////////////////////////////////////////////
 	// end of node
@@ -241,6 +255,8 @@ protected:
 		e_step,
 		e_do,
 		e_while,
+		e_whiledo,
+		e_dowhile,
 
 
 		e_other = UINT_MAX
@@ -508,11 +524,10 @@ public:
 
 	virtual tree_combinator& dvarstmt();
 	virtual tree_combinator& dexprstmt();
+	virtual tree_combinator& dif();
 
-	//virtual tree_combinator& dif();
-
-	//virtual tree_combinator& ddo();
-	//virtual tree_combinator& dwhile();
+	virtual tree_combinator& ddowhile();
+	virtual tree_combinator& dwhiledo();
 
 	//virtual tree_combinator& dswitch();
 	//virtual tree_combinator& dfor();
@@ -531,6 +546,9 @@ protected:
 private:
 	boost::shared_ptr<dvarstmt_combinator> var_comb;
 	boost::shared_ptr<dexprstmt_combinator> expr_comb;
+	boost::shared_ptr<dif_combinator> if_comb;
+	boost::shared_ptr<ddowhile_combinator> dowhile_comb;
+	boost::shared_ptr<dwhiledo_combinator> whiledo_comb;
 };
 
 class dvarstmt_combinator: public dvar_combinator{
@@ -552,40 +570,71 @@ public:
 protected:
 	virtual void before_end();
 };
-//class dif_combinator: public tree_combinator
-//{
-//public:
-//	dif_combinator( tree_combinator* parent );
-//
-//	virtual tree_combinator dcond();
-//	virtual tree_combinator dthen();
-//	virtual tree_combinator delse();
-//
-//protected:
-//	dif_combinator( const dif_combinator& rhs);
-//	dif_combinator& operator = ( const dif_combinator& rhs );
-//private:
-//};
-//
-//class ddowhile_combinator
-//{
-//public:
-//	ddowhile_combinator( tree_combinator* parent );
-//protected:
-//	ddowhile_combinator( const ddowhile_combinator& rhs);
-//	ddowhile_combinator& operator = ( const ddowhile_combinator& rhs );
-//private:
-//};
-//
-//class dwhiledo_combinator
-//{
-//public:
-//	dwhiledo_combinator( tree_combinator* parent );
-//protected:
-//	dwhiledo_combinator( const dwhiledo_combinator& rhs);
-//	dwhiledo_combinator& operator = ( const dwhiledo_combinator& rhs );
-//private:
-//};
+
+class dif_combinator: public tree_combinator
+{
+public:
+	dif_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dcond();
+	virtual tree_combinator& dthen();
+	virtual tree_combinator& delse();
+
+	virtual void child_ended();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( if_statement );
+protected:
+	dif_combinator( const dif_combinator& rhs);
+	dif_combinator& operator = ( const dif_combinator& rhs );
+
+private:
+	boost::shared_ptr<dexpr_combinator> expr_comb;
+	boost::shared_ptr<dstatements_combinator> then_stmt_comb;
+	boost::shared_ptr<dstatements_combinator> else_stmt_comb;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// do while combinator.
+class ddowhile_combinator: public tree_combinator
+{
+public:
+	ddowhile_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& ddo();
+	virtual tree_combinator& dwhile();
+
+	virtual void child_ended();
+
+	// supply type-specified node accessors.
+	SASL_TYPED_NODE_ACCESSORS_DECL( dowhile_statement );
+protected:
+	ddowhile_combinator( const ddowhile_combinator& rhs);
+	ddowhile_combinator& operator = ( const ddowhile_combinator& rhs );
+private:
+	boost::shared_ptr<dstatements_combinator> do_comb;
+	boost::shared_ptr<dexpr_combinator> cond_comb;
+};
+
+class dwhiledo_combinator: public tree_combinator
+{
+public:
+	dwhiledo_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& ddo();
+	virtual tree_combinator& dwhile();
+
+	virtual void child_ended();
+
+	// supply type-specified node accessors.
+	SASL_TYPED_NODE_ACCESSORS_DECL( while_statement );
+protected:
+	dwhiledo_combinator( const dwhiledo_combinator& rhs);
+	dwhiledo_combinator& operator = ( const dwhiledo_combinator& rhs );
+private:
+	boost::shared_ptr<dstatements_combinator> do_comb;
+	boost::shared_ptr<dexpr_combinator> cond_comb;
+};
+
 //
 //class dswitch_combinator
 //{

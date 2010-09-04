@@ -582,6 +582,21 @@ tree_combinator& dstatements_combinator::dexprstmt()
 	return enter_child( e_exprstmt, expr_comb );
 }
 
+tree_combinator& dstatements_combinator::dif()
+{
+	return enter_child( e_if, if_comb );
+}
+
+tree_combinator& dstatements_combinator::ddowhile()
+{
+	return enter_child( e_dowhile, dowhile_comb );
+}
+
+tree_combinator& dstatements_combinator::dwhiledo()
+{
+	return enter_child( e_whiledo, whiledo_comb );
+}
+
 void dstatements_combinator::child_ended()
 {
 	boost::shared_ptr<declaration_statement> declstmt;
@@ -593,6 +608,15 @@ void dstatements_combinator::child_ended()
 		case e_exprstmt:
 			typed_node()->stmts.push_back(
 				move_node2<expression_statement>( expr_comb ) );
+			return;
+		case e_if:
+			typed_node()->stmts.push_back( move_node2<if_statement>( if_comb ) );
+			return;
+		case e_dowhile:
+			typed_node()->stmts.push_back( move_node2<dowhile_statement>(dowhile_comb) );
+			return;
+		case e_whiledo:
+			typed_node()->stmts.push_back( move_node2<while_statement>(whiledo_comb) );
 			return;
 		default:
 			assert(!"invalid state.");
@@ -608,6 +632,10 @@ dvarstmt_combinator::dvarstmt_combinator( tree_combinator* parent )
 
 void dvarstmt_combinator::before_end()
 {
+	if( typed_node2<node>()->node_class() == syntax_node_types::declaration_statement ){
+		// this node may be set by dnode() function. 
+		return;
+	}
 	assert( typed_node() );
 	boost::shared_ptr<declaration_statement> instead_node = create_node<declaration_statement>( token_attr::null() );
 	instead_node->decl = typed_node();
@@ -624,9 +652,130 @@ dexprstmt_combinator::dexprstmt_combinator( tree_combinator* parent )
 
 void dexprstmt_combinator::before_end()
 {
+	if( typed_node2<node>()->node_class() == syntax_node_types::expression_statement ){
+		// this node may be set by dnode() function. 
+		return;
+	}
 	assert( typed_node() );
 	boost::shared_ptr<expression_statement> instead_node = create_node<expression_statement>( token_attr::null() );
 	instead_node->expr = typed_node();
 	typed_node( instead_node );
 }
+
+//////////////////////////////////////////////////////////////////////////
+// if statement combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dif_combinator, if_statement );
+
+dif_combinator::dif_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<if_statement>( token_attr::null() ) );
+}
+
+tree_combinator& dif_combinator::dcond()
+{
+	return enter_child( e_cond, expr_comb );
+}
+
+tree_combinator& dif_combinator::dthen()
+{
+	return enter_child( e_then, then_stmt_comb );
+}
+
+tree_combinator& dif_combinator::delse()
+{
+	return enter_child( e_else, else_stmt_comb );
+}
+
+void dif_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_cond:
+			typed_node()->cond = move_node2<expression>( expr_comb );
+			return;
+		case e_then:
+			typed_node()->yes_stmt = move_node2<statement>( then_stmt_comb );
+			return;
+		case e_else:
+			typed_node()->no_stmt = move_node2<statement>( else_stmt_comb );
+			return;
+		default:
+			assert(!"invalid state.");
+			return;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// do-while statement combinator.
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( ddowhile_combinator, dowhile_statement );
+
+ddowhile_combinator::ddowhile_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<dowhile_statement>( token_attr::null() ) );
+}
+
+tree_combinator& ddowhile_combinator::ddo()
+{
+	return enter_child( e_do, do_comb );
+}
+
+tree_combinator& ddowhile_combinator::dwhile()
+{
+	return enter_child( e_while, cond_comb );
+}
+
+void ddowhile_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_do:
+			typed_node()->body = move_node2<statement>(do_comb);
+			return;
+		case e_while:
+			typed_node()->cond = move_node2<expression>(cond_comb);
+			return;
+		default:
+			assert( !"invalid state" );
+			return;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// while-do statement combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dwhiledo_combinator, while_statement );
+
+dwhiledo_combinator::dwhiledo_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<while_statement>( token_attr::null() ) );
+}
+
+tree_combinator& dwhiledo_combinator::ddo()
+{
+	return enter_child( e_do, do_comb );
+}
+
+tree_combinator& dwhiledo_combinator::dwhile()
+{
+	return enter_child( e_while, cond_comb );
+}
+
+void dwhiledo_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_do:
+			typed_node()->body = move_node2<statement>(do_comb);
+			return;
+		case e_while:
+			typed_node()->cond = move_node2<expression>(cond_comb);
+			return;
+		default:
+			assert( !"invalid state" );
+			return;
+	}
+}
+
 END_NS_SASL_SYNTAX_TREE();
