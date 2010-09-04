@@ -32,7 +32,6 @@ public:
 	const static this_type postfix_incr;
 	const static this_type lshift_assign;
 	const static this_type mul_assign;
-	const static this_type unary_op;
 	const static this_type prefix_decr;
 	const static this_type bit_xor_assign;
 	const static this_type sub;
@@ -58,7 +57,6 @@ public:
 	const static this_type left_shift;
 	const static this_type equal;
 	const static this_type postfix_decr;
-	const static this_type postfix_op;
 	const static this_type div_assign;
 	const static this_type less_equal;
 	const static this_type div;

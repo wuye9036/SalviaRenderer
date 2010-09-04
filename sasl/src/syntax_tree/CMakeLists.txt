@@ -13,7 +13,6 @@ set( HEADER_FILES
 	${sasl_home_dir}/sasl/include/syntax_tree/identifier.h
 	${sasl_home_dir}/sasl/include/syntax_tree/node.h
 	${sasl_home_dir}/sasl/include/syntax_tree/node_creation.h
-	${sasl_home_dir}/sasl/include/syntax_tree/operator_table.h
 	${sasl_home_dir}/sasl/include/syntax_tree/program.h
 	${sasl_home_dir}/sasl/include/syntax_tree/statement.h
 	${sasl_home_dir}/sasl/include/syntax_tree/syntax_tree_fwd.h
@@ -28,7 +27,6 @@ set( SOURCE_FILES
 	identifier.cpp
 	instanciate.cpp
 	node.cpp
-	operator_table.cpp
 	program.cpp
 	statement.cpp
 	make_tree.cpp

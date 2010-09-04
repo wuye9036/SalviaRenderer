@@ -83,22 +83,23 @@ class dbranchexpr_combinator;
 class dcast_combinator;
 class dcallexpr_combinator;
 class dexpr_combinator;
+class dexprstmt_combinator;
 class dstruct_combinator;
 class dtype_combinator;
 class dvar_combinator;
+class dvarstmt_combinator;
 
 #define SASL_TYPED_NODE_ACCESSORS_DECL( node_type )					\
 	typedef node_type node_t;	\
 	boost::shared_ptr< node_type > typed_node();	\
 	template <typename T>	\
-	boost::shared_ptr< node_type > typed_node( boost::shared_ptr< T > typed_ptr )  \
+	void typed_node( boost::shared_ptr< T > typed_ptr )  \
 	{	\
 		if ( typed_ptr ){ \
 			cur_node = boost::shared_polymorphic_cast< node >( typed_ptr ); \
 		} else { \
 			cur_node.reset();\
 		} \
-		return typed_node(); \
 	}	\
 	template<typename T> boost::shared_ptr<T> typed_node2(){ \
 		if ( cur_node )	return boost::shared_polymorphic_cast< T >( cur_node ); \
@@ -110,6 +111,18 @@ class dvar_combinator;
 		return typed_node2< node_type >(); \
 	}
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Tree combinator is a helper class for syntax tree generation.
+// 1. Motion
+//   Combinator is a good method for creating a compisite tree. 
+//   In our design, each combinator will generate a type of syntax tree node.
+//   These combinators inherit from a root class, tree_combinator, which supports
+//   the interface of all combinators.
+//   Others, the concreted combinators implement specified nodes creation.
+
+//   We use function prefix with "d" character for changing the type of combinator and
+//   do the code generation. And the returned value is a reference of tree_combinator referred
+//   to this or any combinator instance. So the combinator can be used as sequence.
 class tree_combinator
 {
 public:
@@ -516,10 +529,29 @@ protected:
 	dstatements_combinator( const dstatements_combinator& rhs);
 	dstatements_combinator& operator = ( const dstatements_combinator& rhs );
 private:
-	boost::shared_ptr<dvar_combinator> var_comb;
-	boost::shared_ptr<dexpr_combinator> expr_comb;
+	boost::shared_ptr<dvarstmt_combinator> var_comb;
+	boost::shared_ptr<dexprstmt_combinator> expr_comb;
 };
 
+class dvarstmt_combinator: public dvar_combinator{
+public:
+	dvarstmt_combinator( tree_combinator* parent );
+protected:
+	//////////////////////////////////////////////////////////////////////////
+	// before_end is called before end() method invoked.
+	// it will wrap the variable_declaration node to variable statement node.
+	// so typed_node() cannot be invoked here.
+	// typed_node2() could be executed only for specifying node type explicit.
+	virtual void before_end();
+private:
+};
+
+class dexprstmt_combinator: public dexpr_combinator{
+public:
+	dexprstmt_combinator( tree_combinator* parent );
+protected:
+	virtual void before_end();
+};
 //class dif_combinator: public tree_combinator
 //{
 //public:

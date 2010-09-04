@@ -42,6 +42,7 @@ bool is_equal( boost::shared_ptr<type_specifier> type0, boost::shared_ptr<type_s
 			);
 	}
 	assert( !"Not Implemented." );
+	return false;
 }
 
 bool is_equal( boost::shared_ptr<function_type> lhs, boost::shared_ptr<function_type> rhs ){

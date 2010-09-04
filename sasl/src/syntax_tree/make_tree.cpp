@@ -120,7 +120,8 @@ tree_combinator& dtype_combinator::dbuildin( buildin_type_code btc )
 		return default_proc();
 	}
 	
-	typed_node( create_node<buildin_type>(token_attr::null()) )->value_typecode = btc;
+	typed_node( create_node<buildin_type>(token_attr::null()) );
+	typed_node()->value_typecode = btc;
 	return *this;
 }
 
@@ -586,16 +587,46 @@ void dstatements_combinator::child_ended()
 	boost::shared_ptr<declaration_statement> declstmt;
 	switch( leave() ){
 		case e_varstmt:
-			declstmt = create_node<declaration_statement>( token_attr::null() );
-			declstmt->decl = move_node2<declaration>( var_comb );
-			typed_node()->stmts.push_back( 
-				boost::shared_polymorphic_cast<statement>(declstmt)
-				);
+			typed_node()->stmts.push_back(
+				move_node2<declaration_statement>( var_comb ) );
 			break;
+		case e_exprstmt:
+			typed_node()->stmts.push_back(
+				move_node2<expression_statement>( expr_comb ) );
+			return;
 		default:
 			assert(!"invalid state.");
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+// declaration statement combinator
 
+dvarstmt_combinator::dvarstmt_combinator( tree_combinator* parent )
+: dvar_combinator( parent ){
+}
+
+void dvarstmt_combinator::before_end()
+{
+	assert( typed_node() );
+	boost::shared_ptr<declaration_statement> instead_node = create_node<declaration_statement>( token_attr::null() );
+	instead_node->decl = typed_node();
+	typed_node( instead_node );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// expression statement combinator
+
+dexprstmt_combinator::dexprstmt_combinator( tree_combinator* parent )
+: dexpr_combinator( parent )
+{
+}
+
+void dexprstmt_combinator::before_end()
+{
+	assert( typed_node() );
+	boost::shared_ptr<expression_statement> instead_node = create_node<expression_statement>( token_attr::null() );
+	instead_node->expr = typed_node();
+	typed_node( instead_node );
+}
 END_NS_SASL_SYNTAX_TREE();

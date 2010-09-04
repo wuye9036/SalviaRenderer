@@ -220,7 +220,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 }
 
 // statement
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::statement& v ){
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::statement& /*v*/ ){
 	assert( !"can not reach this point!" );
 }
 

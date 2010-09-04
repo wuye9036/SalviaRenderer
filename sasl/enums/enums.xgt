@@ -37,14 +37,12 @@
 		<item>left_shift</item>
 		<item>right_shift</item>
 		
-		<item value = "1 * (2 ** 16)">unary_op</item>
-		<item value = "1 * (2 ** 24) + $unary_op$">postfix_op</item>
 		<item>prefix_incr</item>
 		<item>prefix_decr</item>
-		<item value = "$postfix_op$ + $prefix_incr$">postfix_incr</item>
-		<item value = "$postfix_op$ + $prefix_decr$">postfix_decr</item>
-		<item value = "$add$ + $unary_op$">positive</item>
-		<item value = "$sub$ + $unary_op$">negative</item>
+		<item>postfix_incr</item>
+		<item>postfix_decr</item>
+		<item>positive</item>
+		<item>negative</item>
 		
 		<item>logic_or</item>
 		<item>logic_and</item>
