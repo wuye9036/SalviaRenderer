@@ -138,6 +138,7 @@
 		<item value = "4 * (2 ** 48)">initializer</item>
 		<item value = "5 * (2 ** 48)">identifier</item>
 		<item value = "6 * (2 ** 48)">program</item>
+		<item value = "7 * (2 ** 48)">label</item>
 		
 		<item value = "$declaration$ + 1 * (2 ** 32)">type_specifier</item>
 		<item value = "$declaration$ + 1">variable_declaration</item>
@@ -174,6 +175,9 @@
 
 		<item value = "$initializer$ + 1">expression_initializer</item>
 		<item value = "$initializer$ + 2">member_initializer</item>
+		
+		<item value = "$label$ + 1">ident_label</item>
+		<item value = "$label$ + 2">case_label</item><!-- include default label -->
 	</enum>
 	
 	<enum name="type_types">

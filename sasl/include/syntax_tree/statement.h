@@ -19,12 +19,14 @@ struct label;
 
 struct statement: public node{
 	statement( syntax_node_types type_id, boost::shared_ptr<token_attr> tok );
-	boost::shared_ptr<struct label> label() const;
-	template <typename T> void label( boost::shared_ptr<T> lbl ){
-		this->lbl = boost::shared_polymorphic_cast<struct label>(lbl);
+
+	boost::shared_ptr<struct label> pop_label();
+	template <typename T> void push_label( boost::shared_ptr<T> lbl ){
+		this->labels.push_back( boost::shared_polymorphic_cast<struct label>(lbl) );
 	}
+
+	std::vector<boost::shared_ptr<struct label> > labels;
 private:
-	boost::shared_ptr<struct label> lbl;
 };
 
 struct declaration_statement: public statement{
@@ -78,22 +80,46 @@ private:
 	dowhile_statement( const dowhile_statement& );
 };
 
-//struct label: public node{
-//};
-//
-//struct case_label : public label{
-//	// if expr is null pointer, it means default.
-//	boost::shared_ptr<expression> expr;
-//	size_t entry_index;
-//};
-//
-//struct jump_label: public label{
-//	boost::shared_ptr<token_attr> label_tok;
-//};
+struct label: public node{
+	label( syntax_node_types type_id, boost::shared_ptr<token_attr> tok );
+};
 
-struct switch_statement{
+struct case_label : public label{
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
+
+	// if expr is null pointer, it means default.
+	boost::shared_ptr<expression> expr;
+private:
+	case_label( boost::shared_ptr<token_attr> tok );
+	case_label& operator = ( const case_label& );
+	case_label( const case_label& );
+};
+
+struct ident_label: public label{
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
+
+	boost::shared_ptr<token_attr> label_tok;
+private:
+	ident_label( boost::shared_ptr<token_attr> tok );
+	ident_label& operator = ( const ident_label& );
+	ident_label( const ident_label& );
+};
+
+struct switch_statement: public statement{
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
+
 	boost::shared_ptr<expression> cond;
 	boost::shared_ptr<compound_statement> stmts;
+private:
+	switch_statement( boost::shared_ptr<token_attr> tok );
+	switch_statement& operator = ( const switch_statement& );
+	switch_statement( const switch_statement& );
 };
 
 struct compound_statement: public statement{
@@ -120,9 +146,17 @@ private:
 	expression_statement( const expression_statement& );
 };
 
-struct jump_statement{
+struct jump_statement: public statement{
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
+
 	jump_mode code;
 	boost::shared_ptr<expression> jump_expr;
+private:
+	jump_statement( boost::shared_ptr<token_attr> tok );
+	jump_statement& operator = ( const jump_statement& );
+	jump_statement( const jump_statement& );
 };
 
 END_NS_SASL_SYNTAX_TREE()

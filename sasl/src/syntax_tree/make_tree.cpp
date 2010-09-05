@@ -338,22 +338,27 @@ void dexpr_combinator::child_ended()
 			return;
 
 		case e_cast:
+			assert( !typed_node() );
 			typed_node( move_node( cast_comb ) );
 			return;
 
 		case e_binexpr:
+			assert( !typed_node() );
 			typed_node( move_node( binexpr_comb ) );
 			return;
 
 		case e_branchexpr:
+			assert( !typed_node() );
 			typed_node( move_node( branch_comb ) );
 			return;
 
 		case e_callexpr:
+			assert( !typed_node() );
 			typed_node( move_node( call_comb ) );
 			return;
 
 		case e_indexexpr:
+			assert( typed_node() );
 			typed_node2<index_expression>()->index_expr = move_node( expr_comb );
 			return;
 
@@ -504,6 +509,7 @@ dcallexpr_combinator::dcallexpr_combinator( tree_combinator* parent )
 	
 	assert( parent->typed_node() );
 	parent->get_node( typed_node()->expr );
+	parent->typed_node( boost::shared_ptr<node>() );
 }
 
 tree_combinator& dcallexpr_combinator::dargument()
@@ -572,6 +578,16 @@ dstatements_combinator::dstatements_combinator( tree_combinator* parent )
 	typed_node( create_node<compound_statement>( token_attr::null() ) );
 }
 
+
+tree_combinator& dstatements_combinator::dlabel( const std::string& lbl_str )
+{
+	boost::shared_ptr<ident_label> lbl = create_node<ident_label>( token_attr::null() );
+	lbl->label_tok = token_attr::from_string( lbl_str );
+	push_label(lbl);
+
+	return *this;
+}
+
 tree_combinator& dstatements_combinator::dvarstmt()
 {
 	return enter_child( e_varstmt, var_comb );
@@ -597,9 +613,13 @@ tree_combinator& dstatements_combinator::dwhiledo()
 	return enter_child( e_whiledo, whiledo_comb );
 }
 
+tree_combinator& dstatements_combinator::dswitch()
+{
+	return enter_child( e_switch, switch_comb );
+}
+
 void dstatements_combinator::child_ended()
 {
-	boost::shared_ptr<declaration_statement> declstmt;
 	switch( leave() ){
 		case e_varstmt:
 			typed_node()->stmts.push_back(
@@ -608,19 +628,26 @@ void dstatements_combinator::child_ended()
 		case e_exprstmt:
 			typed_node()->stmts.push_back(
 				move_node2<expression_statement>( expr_comb ) );
-			return;
+			break;
 		case e_if:
 			typed_node()->stmts.push_back( move_node2<if_statement>( if_comb ) );
-			return;
+			break;
 		case e_dowhile:
 			typed_node()->stmts.push_back( move_node2<dowhile_statement>(dowhile_comb) );
-			return;
+			break;
 		case e_whiledo:
 			typed_node()->stmts.push_back( move_node2<while_statement>(whiledo_comb) );
-			return;
+			break;
+		case e_switch:
+			typed_node()->stmts.push_back( move_node2<switch_statement>(switch_comb) );
+			break;
 		default:
 			assert(!"invalid state.");
+			return;
 	}
+
+	typed_node()->stmts.back()->labels = lbls;
+	lbls.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -776,6 +803,82 @@ void dwhiledo_combinator::child_ended()
 			assert( !"invalid state" );
 			return;
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// switch combinator
+SASL_TYPED_NODE_ACCESSORS_IMPL( dswitch_combinator, switch_statement );
+
+dswitch_combinator::dswitch_combinator( tree_combinator* parent )
+: tree_combinator( parent ){
+	typed_node( create_node<switch_statement>( token_attr::null() ) );
+}
+
+tree_combinator& dswitch_combinator::dexpr(){
+	return enter_child( e_case, expr_comb );
+}
+
+tree_combinator& dswitch_combinator::dbody(){
+	return enter_child( e_switchbody, body_comb );
+}
+
+void dswitch_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_case:
+			typed_node()->cond = move_node2<expression>(expr_comb);
+			return;
+		case e_switchbody:
+			typed_node()->stmts = move_node2<compound_statement>(body_comb);
+			return;
+		default:
+			assert( !"invalid state.");
+			return;
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+// switch body combinator
+
+dswitchbody_combinator::dswitchbody_combinator( tree_combinator* parent )
+: dstatements_combinator( parent ){
+}
+
+tree_combinator& dswitchbody_combinator::dcase(){
+	return enter_child( e_case, case_comb );
+}
+
+tree_combinator& dswitchbody_combinator::ddefault()
+{
+	return dcase().dnode( boost::shared_ptr<node>() ).end();
+}
+
+void dswitchbody_combinator::child_ended()
+{
+	state_t stat = leave();
+	switch( stat ){
+	case e_case:
+		push_label( move_node2<label>( case_comb ) );
+		return;
+	default:
+		// reset the state and dispatch to parent to process.
+		enter( stat );
+		dstatements_combinator::child_ended();
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+// case expression combinator
+dcase_combinator::dcase_combinator( tree_combinator* parent )
+: dexpr_combinator( parent ){
+}
+
+void dcase_combinator::before_end(){
+	if ( typed_node2<node>() && typed_node2<node>()->node_class() == syntax_node_types::case_label ){
+		return;
+	}
+
+	boost::shared_ptr<case_label> instead_node = create_node<case_label>( token_attr::null() );
+	instead_node->expr = typed_node2<expression>();
+	typed_node( instead_node );
 }
 
 END_NS_SASL_SYNTAX_TREE();

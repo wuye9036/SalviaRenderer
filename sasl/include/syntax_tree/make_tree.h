@@ -23,6 +23,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <string>
+#include <vector>
 
 namespace sasl{
 	namespace common{
@@ -63,6 +64,7 @@ struct typecode_map
 struct binary_expression;
 struct buildin_type;
 struct call_expression;
+struct case_label;
 struct cast_expression;
 struct compound_statement;
 struct cond_expression;
@@ -73,16 +75,20 @@ struct dowhile_statement;
 struct expression;
 struct function_type;
 struct if_statement;
+struct ident_label;
 struct initializer;
+struct label;
 struct node;
 struct program;
 struct struct_type;
+struct switch_statement;
 struct type_specifier;
 struct variable_declaration;
 struct while_statement;
 
 class dbinexpr_combinator;
 class dbranchexpr_combinator;
+class dcase_combinator;
 class dcast_combinator;
 class dcallexpr_combinator;
 class ddowhile_combinator;
@@ -90,6 +96,8 @@ class dexpr_combinator;
 class dexprstmt_combinator;
 class dif_combinator;
 class dstruct_combinator;
+class dswitch_combinator;
+class dswitchbody_combinator;
 class dtype_combinator;
 class dvar_combinator;
 class dvarstmt_combinator;
@@ -176,6 +184,7 @@ public:
 	virtual tree_combinator& dargument(){ return default_proc(); }
 	virtual tree_combinator& dindex(){ return default_proc(); }
 
+	virtual tree_combinator& dlabel( const std::string& /*v*/ ){ return default_proc(); }
 	virtual tree_combinator& dvarstmt(){ return default_proc(); }
 	virtual tree_combinator& dexprstmt(){ return default_proc(); }
 	virtual tree_combinator& dif(){return default_proc();}
@@ -186,6 +195,10 @@ public:
 	virtual tree_combinator& dwhiledo(){ return default_proc(); }
 	virtual tree_combinator& ddo(){ return default_proc(); }
 	virtual tree_combinator& dwhile(){ return default_proc(); }
+	virtual tree_combinator& dswitch(){ return default_proc(); }
+	virtual tree_combinator& dbody(){ return default_proc(); }
+	virtual tree_combinator& dcase(){ return default_proc(); }
+	virtual tree_combinator& ddefault(){ return default_proc(); }
 
 	//////////////////////////////////////////////////////////////////////////
 	// end of node
@@ -248,6 +261,7 @@ protected:
 		e_then,
 		e_else,
 		e_switch,
+		e_switchbody,
 		e_case,
 		e_default,
 		e_for,
@@ -257,7 +271,6 @@ protected:
 		e_while,
 		e_whiledo,
 		e_dowhile,
-
 
 		e_other = UINT_MAX
 	};
@@ -522,6 +535,8 @@ class dstatements_combinator: public tree_combinator
 public:
 	dstatements_combinator( tree_combinator* parent );
 
+	virtual tree_combinator& dlabel( const std::string& /*lbl*/ );
+
 	virtual tree_combinator& dvarstmt();
 	virtual tree_combinator& dexprstmt();
 	virtual tree_combinator& dif();
@@ -529,9 +544,8 @@ public:
 	virtual tree_combinator& ddowhile();
 	virtual tree_combinator& dwhiledo();
 
-	//virtual tree_combinator& dswitch();
+	virtual tree_combinator& dswitch();
 	//virtual tree_combinator& dfor();
-
 	//virtual tree_combinator& dbreak();
 	//virtual tree_combinator& dcontinue();
 	//virtual tree_combinator& dreturn();
@@ -543,12 +557,20 @@ public:
 protected:
 	dstatements_combinator( const dstatements_combinator& rhs);
 	dstatements_combinator& operator = ( const dstatements_combinator& rhs );
+
+	template <typename T> void push_label( boost::shared_ptr<T> lbl ){
+		lbls.push_back( boost::shared_polymorphic_cast<label>(lbl) );
+	}
+
 private:
 	boost::shared_ptr<dvarstmt_combinator> var_comb;
 	boost::shared_ptr<dexprstmt_combinator> expr_comb;
 	boost::shared_ptr<dif_combinator> if_comb;
 	boost::shared_ptr<ddowhile_combinator> dowhile_comb;
 	boost::shared_ptr<dwhiledo_combinator> whiledo_comb;
+	boost::shared_ptr<dswitch_combinator> switch_comb;
+
+	std::vector< boost::shared_ptr<label> > lbls;
 };
 
 class dvarstmt_combinator: public dvar_combinator{
@@ -635,16 +657,53 @@ private:
 	boost::shared_ptr<dexpr_combinator> cond_comb;
 };
 
-//
-//class dswitch_combinator
-//{
-//public:
-//	dswitch_combinator( tree_combinator* parent );
-//protected:
-//	dswitch_combinator( const dswitch_combinator& rhs);
-//	dswitch_combinator& operator = ( const dswitch_combinator& rhs );
-//private:
-//};
+
+class dswitch_combinator : public tree_combinator
+{
+public:
+	dswitch_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dexpr();
+	virtual tree_combinator& dbody();
+
+	virtual void child_ended();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( switch_statement );
+protected:
+	dswitch_combinator( const dswitch_combinator& rhs);
+	dswitch_combinator& operator = ( const dswitch_combinator& rhs );
+private:
+	boost::shared_ptr<dexpr_combinator> expr_comb;
+	boost::shared_ptr<dswitchbody_combinator> body_comb;
+};
+
+class dswitchbody_combinator: public dstatements_combinator
+{
+public:
+	dswitchbody_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dcase();
+	virtual tree_combinator& ddefault();
+
+	virtual void child_ended();
+
+protected:
+	dswitchbody_combinator( const dswitchbody_combinator& /*rhs*/ );
+	dswitchbody_combinator& operator = ( const dswitchbody_combinator& /*rhs*/ );
+private:
+	boost::shared_ptr<dcase_combinator> case_comb;
+};
+
+class dcase_combinator: public dexpr_combinator
+{
+public:
+	dcase_combinator( tree_combinator* parent );
+	virtual void before_end();
+protected:
+private:
+	dcase_combinator( const dcase_combinator& /*rhs*/ );
+	dcase_combinator& operator = ( const dcase_combinator& /*rhs*/ );
+};
 //
 //class dfor_combinator
 //{

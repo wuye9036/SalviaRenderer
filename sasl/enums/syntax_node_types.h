@@ -30,10 +30,12 @@ public:
 	const static this_type function_type;
 	const static this_type variable_declaration;
 	const static this_type cond_expression;
+	const static this_type case_label;
 	const static this_type type_specifier;
 	const static this_type compound_statement;
 	const static this_type typedef_definition;
 	const static this_type struct_type;
+	const static this_type label;
 	const static this_type while_statement;
 	const static this_type program;
 	const static this_type switch_statement;
@@ -45,6 +47,7 @@ public:
 	const static this_type node;
 	const static this_type variable_expression;
 	const static this_type dowhile_statement;
+	const static this_type ident_label;
 	const static this_type declaration;
 	const static this_type array_type;
 	const static this_type jump_statement;

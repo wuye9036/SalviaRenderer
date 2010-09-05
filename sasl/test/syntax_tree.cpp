@@ -388,13 +388,16 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 	using ::sasl::syntax_tree::dstatements_combinator;
 
 	using ::sasl::syntax_tree::variable_declaration;
+	using ::sasl::syntax_tree::variable_expression;
 	using ::sasl::syntax_tree::constant_expression;
 
+	using ::sasl::syntax_tree::case_label;
 	using ::sasl::syntax_tree::compound_statement;
 	using ::sasl::syntax_tree::declaration_statement;
 	using ::sasl::syntax_tree::dowhile_statement;
 	using ::sasl::syntax_tree::expression_statement;
 	using ::sasl::syntax_tree::if_statement;
+	using ::sasl::syntax_tree::switch_statement;
 	using ::sasl::syntax_tree::while_statement;
 
 	boost::shared_ptr<expression_statement> exprstmt;
@@ -485,6 +488,46 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) );
 		BOOST_CHECK( whilestmt->body = stmts4 );
 		BOOST_CHECK( stmts4 == stmts );
+	}
+
+	boost::shared_ptr<switch_statement> switchstmt;
+	boost::shared_ptr<compound_statement> stmts5, stmts6;
+	{
+		boost::shared_ptr<case_label> clbl;
+		boost::shared_ptr<case_label> clbl2;
+		boost::shared_ptr<variable_expression> expr;
+		dstatements_combinator( NULL )
+			.dswitch()
+				.dexpr().dvarexpr( "hello" ).end( expr )
+				.dbody()
+					.dcase().dconstant2( 1.0f ).end( clbl )
+					.dcase().dconstant2( 2.0f ).end( clbl2 )
+					.dwhiledo().dnode(whilestmt).end()
+					.dif().dnode( ifstmt ).end()
+					.ddefault()
+					.dvarstmt().dnode( varstmt ).end()
+				.end( stmts5 )
+			.end(switchstmt)
+		.end( stmts6 );
+
+		BOOST_CHECK( stmts6 );
+		BOOST_CHECK( stmts6->stmts[0] == switchstmt );
+		BOOST_CHECK( switchstmt->node_class() == syntax_node_types::switch_statement );
+		BOOST_CHECK( switchstmt->cond == expr );
+		BOOST_CHECK( expr->var_name->str == std::string("hello") );
+		BOOST_CHECK( switchstmt->stmts == stmts5 );
+		BOOST_CHECK( stmts5->stmts.size() == 3 );
+		BOOST_CHECK( stmts5->stmts[0] == whilestmt );
+		BOOST_CHECK( stmts5->stmts[1] == ifstmt );
+		BOOST_CHECK( stmts5->stmts[2] == varstmt );
+		BOOST_CHECK( whilestmt->labels.size() == 2 );
+		BOOST_CHECK( whilestmt->labels[0] == clbl );
+		BOOST_CHECK( whilestmt->labels[1] == clbl2 );
+		BOOST_CHECK( clbl->node_class() == syntax_node_types::case_label );
+		BOOST_CHECK( clbl->expr->node_class() == syntax_node_types::constant_expression );
+		BOOST_CHECK( ifstmt->labels.size() == 0 );
+		BOOST_CHECK( varstmt->labels.size() == 1 );
+		BOOST_CHECK( !boost::shared_polymorphic_cast<case_label>(varstmt->labels[0])->expr );
 	}
 }
 BOOST_AUTO_TEST_SUITE_END();

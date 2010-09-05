@@ -244,6 +244,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::dowhile_statement& /*v*
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::case_label& /*v */){}
 
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::ident_label& /*v*/ ){}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::switch_statement& /*v*/ ){}
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& /*v*/ ){}
