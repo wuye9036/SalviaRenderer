@@ -77,6 +77,7 @@ struct function_type;
 struct if_statement;
 struct ident_label;
 struct initializer;
+struct jump_statement;
 struct label;
 struct node;
 struct program;
@@ -95,6 +96,7 @@ class ddowhile_combinator;
 class dexpr_combinator;
 class dexprstmt_combinator;
 class dif_combinator;
+class dreturn_combinator;
 class dstruct_combinator;
 class dswitch_combinator;
 class dswitchbody_combinator;
@@ -190,7 +192,6 @@ public:
 	virtual tree_combinator& dif(){return default_proc();}
 	virtual tree_combinator& dthen(){return default_proc();}
 	virtual tree_combinator& delse(){return default_proc();}
-
 	virtual tree_combinator& ddowhile(){ return default_proc(); }
 	virtual tree_combinator& dwhiledo(){ return default_proc(); }
 	virtual tree_combinator& ddo(){ return default_proc(); }
@@ -199,6 +200,11 @@ public:
 	virtual tree_combinator& dbody(){ return default_proc(); }
 	virtual tree_combinator& dcase(){ return default_proc(); }
 	virtual tree_combinator& ddefault(){ return default_proc(); }
+	// virtual tree_combinator& dfor(){ return default_proc(); }
+	virtual tree_combinator& dbreak(){ return default_proc(); }
+	virtual tree_combinator& dcontinue(){ return default_proc(); }
+	virtual tree_combinator& dreturn_expr(){ return default_proc(); }
+	virtual tree_combinator& dreturn_void(){ return default_proc(); }
 
 	//////////////////////////////////////////////////////////////////////////
 	// end of node
@@ -271,6 +277,7 @@ protected:
 		e_while,
 		e_whiledo,
 		e_dowhile,
+		e_return,
 
 		e_other = UINT_MAX
 	};
@@ -546,9 +553,10 @@ public:
 
 	virtual tree_combinator& dswitch();
 	//virtual tree_combinator& dfor();
-	//virtual tree_combinator& dbreak();
-	//virtual tree_combinator& dcontinue();
-	//virtual tree_combinator& dreturn();
+	virtual tree_combinator& dbreak();
+	virtual tree_combinator& dcontinue();
+	virtual tree_combinator& dreturn_expr();
+	virtual tree_combinator& dreturn_void();
 
 	virtual void child_ended();
 
@@ -569,6 +577,7 @@ private:
 	boost::shared_ptr<ddowhile_combinator> dowhile_comb;
 	boost::shared_ptr<dwhiledo_combinator> whiledo_comb;
 	boost::shared_ptr<dswitch_combinator> switch_comb;
+	boost::shared_ptr<dreturn_combinator> ret_comb;
 
 	std::vector< boost::shared_ptr<label> > lbls;
 };
@@ -698,12 +707,24 @@ class dcase_combinator: public dexpr_combinator
 {
 public:
 	dcase_combinator( tree_combinator* parent );
-	virtual void before_end();
 protected:
+	virtual void before_end();
 private:
 	dcase_combinator( const dcase_combinator& /*rhs*/ );
 	dcase_combinator& operator = ( const dcase_combinator& /*rhs*/ );
 };
+
+class dreturn_combinator : public dexpr_combinator
+{
+public:
+	dreturn_combinator( tree_combinator* parent );
+protected:
+	virtual void before_end();
+private:
+	dreturn_combinator( const dreturn_combinator& rhs);
+	dreturn_combinator& operator = ( const dreturn_combinator& rhs );
+};
+
 //
 //class dfor_combinator
 //{

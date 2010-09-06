@@ -397,6 +397,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 	using ::sasl::syntax_tree::dowhile_statement;
 	using ::sasl::syntax_tree::expression_statement;
 	using ::sasl::syntax_tree::if_statement;
+	using ::sasl::syntax_tree::jump_statement;
 	using ::sasl::syntax_tree::switch_statement;
 	using ::sasl::syntax_tree::while_statement;
 
@@ -528,6 +529,30 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( ifstmt->labels.size() == 0 );
 		BOOST_CHECK( varstmt->labels.size() == 1 );
 		BOOST_CHECK( !boost::shared_polymorphic_cast<case_label>(varstmt->labels[0])->expr );
+	}
+
+	boost::shared_ptr<compound_statement> stmts7;
+	boost::shared_ptr<jump_statement> jmpstmt;
+	{
+		boost::shared_ptr<variable_expression> expr;
+		dstatements_combinator( NULL )
+			.dbreak()
+			.dcontinue()
+			.dreturn_expr().dvarexpr( "hello" ).end(jmpstmt)
+			.dreturn_void()
+		.end(stmts7);
+
+		BOOST_CHECK( stmts7 );
+		BOOST_CHECK( stmts7->stmts.size() == 4 );
+		BOOST_CHECK( stmts7->stmts[0]->node_class() == syntax_node_types::jump_statement );
+		BOOST_CHECK( boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[0])->code == jump_mode::_break );
+		BOOST_CHECK( boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[1])->code == jump_mode::_continue );
+		BOOST_CHECK( stmts7->stmts[2] == jmpstmt );
+		BOOST_CHECK( jmpstmt->code == jump_mode::_return );
+		BOOST_CHECK( jmpstmt->jump_expr );
+		BOOST_CHECK( jmpstmt->jump_expr->node_class() == syntax_node_types::variable_expression );
+		BOOST_CHECK( boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[3])->code == jump_mode::_return );
+		BOOST_CHECK( ! boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[3])->jump_expr );
 	}
 }
 BOOST_AUTO_TEST_SUITE_END();

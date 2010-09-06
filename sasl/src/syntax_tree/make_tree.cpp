@@ -618,28 +618,64 @@ tree_combinator& dstatements_combinator::dswitch()
 	return enter_child( e_switch, switch_comb );
 }
 
+
+tree_combinator& dstatements_combinator::dbreak()
+{
+	DEFAULT_STATE_SCOPE();
+
+	boost::shared_ptr<jump_statement> jumpstmt = create_node<jump_statement>( token_attr::null() );
+	jumpstmt->code = jump_mode::_break;
+	typed_node()->stmts.push_back( boost::shared_polymorphic_downcast<statement>(jumpstmt) );
+
+	return *this;
+}
+
+tree_combinator& dstatements_combinator::dcontinue()
+{
+	DEFAULT_STATE_SCOPE();
+
+	boost::shared_ptr<jump_statement> jumpstmt = create_node<jump_statement>( token_attr::null() );
+	jumpstmt->code = jump_mode::_continue;
+	typed_node()->stmts.push_back( boost::shared_polymorphic_downcast<statement>(jumpstmt) );
+
+	return *this;
+}
+
+tree_combinator& dstatements_combinator::dreturn_expr()
+{
+	return enter_child( e_return, ret_comb );
+}
+
+tree_combinator& dstatements_combinator::dreturn_void()
+{
+	return dreturn_expr().dnode( boost::shared_ptr<node>() ).end();
+}
+
 void dstatements_combinator::child_ended()
 {
 	switch( leave() ){
 		case e_varstmt:
 			typed_node()->stmts.push_back(
-				move_node2<declaration_statement>( var_comb ) );
+				move_node2<statement>( var_comb ) );
 			break;
 		case e_exprstmt:
 			typed_node()->stmts.push_back(
-				move_node2<expression_statement>( expr_comb ) );
+				move_node2<statement>( expr_comb ) );
 			break;
 		case e_if:
-			typed_node()->stmts.push_back( move_node2<if_statement>( if_comb ) );
+			typed_node()->stmts.push_back( move_node2<statement>( if_comb ) );
 			break;
 		case e_dowhile:
-			typed_node()->stmts.push_back( move_node2<dowhile_statement>(dowhile_comb) );
+			typed_node()->stmts.push_back( move_node2<statement>(dowhile_comb) );
 			break;
 		case e_whiledo:
-			typed_node()->stmts.push_back( move_node2<while_statement>(whiledo_comb) );
+			typed_node()->stmts.push_back( move_node2<statement>(whiledo_comb) );
 			break;
 		case e_switch:
-			typed_node()->stmts.push_back( move_node2<switch_statement>(switch_comb) );
+			typed_node()->stmts.push_back( move_node2<statement>(switch_comb) );
+			break;
+		case e_return:
+			typed_node()->stmts.push_back( move_node2<statement>(ret_comb) );
 			break;
 		default:
 			assert(!"invalid state.");
@@ -649,6 +685,7 @@ void dstatements_combinator::child_ended()
 	typed_node()->stmts.back()->labels = lbls;
 	lbls.clear();
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 // declaration statement combinator
@@ -673,9 +710,7 @@ void dvarstmt_combinator::before_end()
 // expression statement combinator
 
 dexprstmt_combinator::dexprstmt_combinator( tree_combinator* parent )
-: dexpr_combinator( parent )
-{
-}
+: dexpr_combinator( parent ){}
 
 void dexprstmt_combinator::before_end()
 {
@@ -700,18 +735,15 @@ dif_combinator::dif_combinator( tree_combinator* parent )
 	typed_node( create_node<if_statement>( token_attr::null() ) );
 }
 
-tree_combinator& dif_combinator::dcond()
-{
+tree_combinator& dif_combinator::dcond(){
 	return enter_child( e_cond, expr_comb );
 }
 
-tree_combinator& dif_combinator::dthen()
-{
+tree_combinator& dif_combinator::dthen(){
 	return enter_child( e_then, then_stmt_comb );
 }
 
-tree_combinator& dif_combinator::delse()
-{
+tree_combinator& dif_combinator::delse(){
 	return enter_child( e_else, else_stmt_comb );
 }
 
@@ -878,6 +910,24 @@ void dcase_combinator::before_end(){
 
 	boost::shared_ptr<case_label> instead_node = create_node<case_label>( token_attr::null() );
 	instead_node->expr = typed_node2<expression>();
+	typed_node( instead_node );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// return combinator
+dreturn_combinator::dreturn_combinator( tree_combinator* parent )
+: dexpr_combinator( parent )
+{
+}
+
+void dreturn_combinator::before_end(){
+	if ( typed_node2<node>() 
+		&& typed_node2<node>()->node_class() == syntax_node_types::jump_statement ){
+		return;
+	}
+	boost::shared_ptr<jump_statement> instead_node = create_node<jump_statement>( token_attr::null() );
+	instead_node->jump_expr = typed_node2<expression>();
+	instead_node->code = jump_mode::_return;
 	typed_node( instead_node );
 }
 

@@ -152,7 +152,7 @@ struct jump_statement: public statement{
 	void accept( syntax_tree_visitor* v );
 
 	jump_mode code;
-	boost::shared_ptr<expression> jump_expr;
+	boost::shared_ptr<expression> jump_expr; // for return only
 private:
 	jump_statement( boost::shared_ptr<token_attr> tok );
 	jump_statement& operator = ( const jump_statement& );
