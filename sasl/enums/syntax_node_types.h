@@ -58,6 +58,7 @@ public:
 	const static this_type declaration_statement;
 	const static this_type index_expression;
 	const static this_type expression_initializer;
+	const static this_type null_declaration;
 	const static this_type identifier;
 	const static this_type expression;
 	const static this_type call_expression;

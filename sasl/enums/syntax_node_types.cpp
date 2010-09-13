@@ -42,6 +42,7 @@ const syntax_node_types syntax_node_types::member_initializer ( 1125899906842626
 const syntax_node_types syntax_node_types::declaration_statement ( 844424930131969 );
 const syntax_node_types syntax_node_types::index_expression ( 562949953421320 );
 const syntax_node_types syntax_node_types::expression_initializer ( 1125899906842625 );
+const syntax_node_types syntax_node_types::null_declaration ( 281474976710660 );
 const syntax_node_types syntax_node_types::identifier ( 1407374883553280 );
 const syntax_node_types syntax_node_types::expression ( 562949953421312 );
 const syntax_node_types syntax_node_types::call_expression ( 562949953421321 );
@@ -96,6 +97,7 @@ public:
 		enum_to_name.insert( std::make_pair( syntax_node_types::declaration_statement, "declaration_statement" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::index_expression, "index_expression" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::expression_initializer, "expression_initializer" ) );
+		enum_to_name.insert( std::make_pair( syntax_node_types::null_declaration, "null_declaration" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::identifier, "identifier" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::expression, "expression" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::call_expression, "call_expression" ) );
@@ -136,6 +138,7 @@ public:
 		name_to_enum.insert( std::make_pair( "declaration_statement", syntax_node_types::declaration_statement ) );
 		name_to_enum.insert( std::make_pair( "index_expression", syntax_node_types::index_expression ) );
 		name_to_enum.insert( std::make_pair( "expression_initializer", syntax_node_types::expression_initializer ) );
+		name_to_enum.insert( std::make_pair( "null_declaration", syntax_node_types::null_declaration ) );
 		name_to_enum.insert( std::make_pair( "identifier", syntax_node_types::identifier ) );
 		name_to_enum.insert( std::make_pair( "expression", syntax_node_types::expression ) );
 		name_to_enum.insert( std::make_pair( "call_expression", syntax_node_types::call_expression ) );

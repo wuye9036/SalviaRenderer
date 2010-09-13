@@ -84,6 +84,7 @@ struct node;
 struct program;
 struct struct_type;
 struct switch_statement;
+struct type_definition;
 struct type_specifier;
 struct variable_declaration;
 struct while_statement;
@@ -97,12 +98,15 @@ class ddowhile_combinator;
 class dexpr_combinator;
 class dexprstmt_combinator;
 class dfor_combinator;
+class dfunction_combinator;
 class dif_combinator;
+class dparameter_combinator;
 class dreturn_combinator;
 class dstruct_combinator;
 class dswitch_combinator;
 class dswitchbody_combinator;
 class dtype_combinator;
+class dtypedef_combinator;
 class dvar_combinator;
 class dvarstmt_combinator;
 class dwhiledo_combinator;
@@ -144,10 +148,15 @@ class dwhiledo_combinator;
 class tree_combinator
 {
 public:
+	virtual tree_combinator& dname( const std::string& /*name*/){ return default_proc(); }
+
 	virtual tree_combinator& dvar( const std::string& /*var_name*/ ){ return default_proc(); }
 	virtual tree_combinator& dstruct( const std::string& /*struct_name*/ ){ return default_proc(); }
 	virtual tree_combinator& dfunction( const std::string& /*func_name*/ ){ return default_proc(); }
-	virtual tree_combinator& dtypedef( const std::string& /*alias*/ ){ return default_proc(); }
+	virtual tree_combinator& dreturntype(){ return default_proc(); }
+	virtual tree_combinator& dparam(){ return default_proc(); }
+
+	virtual tree_combinator& dtypedef(){ return default_proc(); }
 
 	
 	virtual tree_combinator& dtype(){ return default_proc(); }
@@ -202,6 +211,7 @@ public:
 	virtual tree_combinator& dbody(){ return default_proc(); }
 	virtual tree_combinator& dcase(){ return default_proc(); }
 	virtual tree_combinator& ddefault(){ return default_proc(); }
+	virtual tree_combinator& dstmts(){ return default_proc(); }
 	
 	virtual tree_combinator& dfor(){ return default_proc(); }
 	virtual tree_combinator& dinit_expr(){ return default_proc(); }
@@ -247,6 +257,9 @@ protected:
 
 		e_vardecl,
 		e_struct,
+		e_function,
+		e_param,
+		e_typedef,
 
 		e_type,
 		e_init,
@@ -268,6 +281,7 @@ protected:
 		e_argument,
 		e_indexexpr,
 
+		e_compound,
 		e_varstmt,
 		e_exprstmt,
 		e_if,
@@ -367,8 +381,8 @@ public:
 
 	virtual tree_combinator& dvar( const std::string& /*var_name*/ );
 	virtual tree_combinator& dstruct( const std::string& /*struct_name*/ );
-	//virtual tree_combinator& dfunction( const std::string& func_name );
-	//virtual tree_combinator& dtypedef( const std::string& alias );
+	virtual tree_combinator& dfunction( const std::string& func_name );
+	virtual tree_combinator& dtypedef( );
 
 	virtual void child_ended();
 
@@ -378,6 +392,8 @@ private:
 	boost::shared_ptr<program> prog_node;
 	boost::shared_ptr<dvar_combinator> var_comb;
 	boost::shared_ptr<dstruct_combinator> struct_comb;
+	boost::shared_ptr<dfunction_combinator> func_comb;
+	boost::shared_ptr<dtypedef_combinator> typedef_comb;
 };
 
 class dvar_combinator: public tree_combinator{
@@ -565,6 +581,8 @@ public:
 	virtual tree_combinator& dreturn_expr();
 	virtual tree_combinator& dreturn_void();
 
+	virtual tree_combinator& dstmts();
+
 	virtual void child_ended();
 
 	SASL_TYPED_NODE_ACCESSORS_DECL( compound_statement );
@@ -586,6 +604,7 @@ private:
 	boost::shared_ptr<dswitch_combinator> switch_comb;
 	boost::shared_ptr<dreturn_combinator> ret_comb;
 	boost::shared_ptr<dfor_combinator> for_comb;
+	boost::shared_ptr<dstatements_combinator> compound_comb;
 
 	std::vector< boost::shared_ptr<label> > lbls;
 };
@@ -757,6 +776,59 @@ private:
 	boost::shared_ptr<dexpr_combinator> cond_comb;
 	boost::shared_ptr<dexpr_combinator> iter_comb;
 	boost::shared_ptr<dstatements_combinator> body_comb;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// function combinator
+class dfunction_combinator: public tree_combinator
+{
+public:
+	SASL_TYPED_NODE_ACCESSORS_DECL( function_type );
+
+	dfunction_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dname( const std::string& str );
+	virtual tree_combinator& dreturntype();
+	virtual tree_combinator& dparam();
+	virtual tree_combinator& dbody();
+
+	virtual void child_ended();
+protected:
+	dfunction_combinator( const dfunction_combinator& rhs);
+	dfunction_combinator& operator = ( const dfunction_combinator& rhs );	
+private:
+	boost::shared_ptr<dtype_combinator> rettype_comb;
+	boost::shared_ptr<dparameter_combinator> par_comb;
+	boost::shared_ptr<dstatements_combinator> body_comb;
+};
+
+class dparameter_combinator: public dvar_combinator
+{
+public:
+	dparameter_combinator( tree_combinator* parent );
+protected:
+	dparameter_combinator( const dparameter_combinator& rhs);
+	dparameter_combinator& operator = ( const dparameter_combinator& rhs );
+
+	virtual void before_end();
+};
+
+class dtypedef_combinator: public tree_combinator
+{
+public:
+	dtypedef_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dname( const std::string& /*name*/ );
+	virtual tree_combinator& dtype();
+
+	virtual void child_ended();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( type_definition );
+protected:
+	dtypedef_combinator( const dtypedef_combinator& rhs);
+	dtypedef_combinator& operator = ( const dtypedef_combinator& rhs );
+private:
+	boost::shared_ptr<dtype_combinator> type_comb;
 };
 
 END_NS_SASL_SYNTAX_TREE()

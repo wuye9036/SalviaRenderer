@@ -88,6 +88,16 @@ tree_combinator& dprog_combinator::dstruct( const std::string& struct_name )
 	return *struct_comb;
 }
 
+tree_combinator& dprog_combinator::dfunction( const std::string& func_name ){
+	enter_child( e_function, func_comb );
+	func_comb->dname( func_name );
+	return *func_comb;
+}
+
+tree_combinator& dprog_combinator::dtypedef(){
+	return enter_child( e_typedef, typedef_comb );
+}
+
 void dprog_combinator::child_ended()
 {
 	switch ( leave() ){
@@ -97,6 +107,12 @@ void dprog_combinator::child_ended()
 		case e_struct:
 			typed_node()->decls.push_back( move_node2<declaration>(struct_comb) );
 			return;
+		case e_function:
+			typed_node()->decls.push_back( move_node2<declaration>(func_comb) );
+			return;
+		case e_typedef:
+			typed_node()->decls.push_back( move_node2<declaration>(typedef_comb) );
+			break;
 		default:
 			assert(!"invalid state.");
 			return;
@@ -655,6 +671,10 @@ tree_combinator& dstatements_combinator::dreturn_void()
 	return dreturn_expr().dnode( boost::shared_ptr<node>() ).end();
 }
 
+tree_combinator& dstatements_combinator::dstmts(){
+	return enter_child( e_compound, compound_comb );
+}
+
 void dstatements_combinator::child_ended()
 {
 	switch( leave() ){
@@ -683,6 +703,9 @@ void dstatements_combinator::child_ended()
 			break;
 		case e_return:
 			typed_node()->stmts.push_back( move_node2<statement>(ret_comb) );
+			break;
+		case e_compound:
+			typed_node()->stmts.push_back( move_node2<statement>( compound_comb ) );
 			break;
 		default:
 			assert(!"invalid state.");
@@ -993,6 +1016,90 @@ void dfor_combinator::child_ended()
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+// function combinator
 
+SASL_TYPED_NODE_ACCESSORS_IMPL( dfunction_combinator, function_type );
+
+dfunction_combinator::dfunction_combinator( tree_combinator* parent )
+: tree_combinator( parent ){
+	typed_node( create_node<function_type>( token_attr::null() ) );
+}
+
+tree_combinator& dfunction_combinator::dname( const std::string& str ){
+	typed_node()->name = token_attr::from_string(str);
+	return *this;
+}
+
+tree_combinator& dfunction_combinator::dreturntype(){
+	return enter_child( e_type, rettype_comb );
+}
+
+tree_combinator& dfunction_combinator::dparam(){
+	return enter_child( e_param, par_comb );
+}
+
+tree_combinator& dfunction_combinator::dbody(){
+	return enter_child( e_body, body_comb );
+}
+
+void dfunction_combinator::child_ended(){
+	switch( leave() ){
+		case e_type:
+			typed_node()->retval_type = move_node2<type_specifier>( rettype_comb );
+			break;
+		case e_param:
+			typed_node()->params.push_back( move_node2<parameter>(par_comb) );
+			break;
+		case e_body:
+			typed_node()->body = move_node2<compound_statement>( body_comb );
+			break;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// parameter combinator
+dparameter_combinator::dparameter_combinator( tree_combinator* parent )
+: dvar_combinator( parent ){
+}
+
+void dparameter_combinator::before_end(){
+	if( typed_node2<node>()->node_class() == syntax_node_types::parameter ){
+		return;
+	}
+	assert( typed_node() );
+	boost::shared_ptr<parameter> instead_node = create_node<parameter>( typed_node2<variable_declaration>() );
+	typed_node( instead_node );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// typedef combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dtypedef_combinator, type_definition )
+
+dtypedef_combinator::dtypedef_combinator( tree_combinator* parent )
+: tree_combinator( parent ){
+	typed_node( create_node<type_definition>( token_attr::null() ) );
+}
+
+tree_combinator& dtypedef_combinator::dname( const std::string& name ){
+	typed_node()->name = token_attr::from_string(name);
+	return *this;
+}
+
+tree_combinator& dtypedef_combinator::dtype(){
+	return enter_child( e_type, type_comb );
+}
+
+void dtypedef_combinator::child_ended(){
+	switch( leave() ){
+		case e_type:
+			typed_node()->type_info = move_node2<type_specifier>( type_comb );
+			break;
+		default:
+			assert( !"invalid state." );
+			break;
+	}
+}
 
 END_NS_SASL_SYNTAX_TREE();

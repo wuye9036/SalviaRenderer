@@ -1,4 +1,5 @@
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/visitor.h>
 
@@ -84,12 +85,18 @@ parameter::parameter( boost::shared_ptr<token_attr> tok )
 	: declaration( syntax_node_types::parameter, tok ) {
 }
 
+parameter::parameter( boost::shared_ptr<variable_declaration> decl )
+: declaration( syntax_node_types::parameter, decl->token() ),
+param_type( decl->type_info ), name( decl->name ), init( decl->init )
+{
+}
+
 void parameter::accept( syntax_tree_visitor* v ){
 	v->visit( *this );
 }
 
 function_type::function_type( boost::shared_ptr<token_attr> tok )
-	: type_specifier( syntax_node_types::function_type, tok ), is_declaration(true)
+	: type_specifier( syntax_node_types::function_type, tok )
 {
 }
 
@@ -97,20 +104,8 @@ void function_type::accept( syntax_tree_visitor* v ){
 	v->visit( *this );
 }
 
-function_type& function_type::p( boost::shared_ptr<variable_declaration> par ){
-	if (par){
-		return p( par->type_info, par->name, par->init );
-	}else{
-		return *this;
-	}
-}
-
-function_type& function_type::s( boost::shared_ptr<statement> stmt ){
-	if ( stmt ){
-		stmts.push_back( stmt );
-		is_declaration = false;
-	}
-	return *this;
+bool function_type::declaration_only(){
+	return body || body->stmts.empty();
 }
 
 buildin_type_code btc_helper::vector_of( buildin_type_code scalar_tc, size_t dim )
@@ -182,6 +177,15 @@ bool btc_helper::is_matrix( buildin_type_code btc )
 buildin_type_code btc_helper::scalar_of( buildin_type_code btc )
 {
 	return btc & buildin_type_code::_scalar_type_mask;
+}
+
+
+null_declaration::null_declaration( boost::shared_ptr<token_attr> tok )
+: declaration( syntax_node_types::null_declaration, tok ){
+}
+
+void null_declaration::accept( syntax_tree_visitor* v ){
+	v->visit( *this );
 }
 
 END_NS_SASL_SYNTAX_TREE();

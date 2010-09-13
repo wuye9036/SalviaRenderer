@@ -83,7 +83,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	using ::sasl::syntax_tree::type_definition;
 	using ::boost::assign::list_of;
-	const std::string& alias_str = v.ident->str;
+	const std::string& alias_str = v.name->str;
 	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( alias_str );
 	if ( existed_sym ){
 		// if the symbol is used and is not a type node, it must be redifinition.
@@ -99,9 +99,9 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 
 	// process type node.
 	// remove old sym from symbol table.
-	cursym->remove_child( v.ident->str );
+	cursym->remove_child( v.name->str );
 	{
-		symbol_scope sc( v.ident->str, v.handle(), cursym );
+		symbol_scope sc( v.name->str, v.handle(), cursym );
 
 		v.type_info->accept(this);
 		boost::shared_ptr<type_semantic_info> new_tsi = extract_semantic_info<type_semantic_info>(v);
@@ -174,11 +174,11 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 					// TODO: BUG ON OVERLOAD SUPPORTING
 					// TODO: SEMANTIC ERROR ON OVERLOAD UNSUPPORTED.
 				}
-				if ( v.is_declaration ){
+				if ( v.declaration_only() ){
 					// it was had a definition/declaration, and now is a declaration only
 					use_existed_node = true;
 				} else {
-					if ( existed_node->is_declaration ){
+					if ( existed_node->declaration_only() ){
 						// the older is a declaration, and whatever now is, that's OK.
 						use_existed_node = true;
 					} else {
@@ -204,7 +204,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 		cursym->relink( v.handle() );
 		
 		// definition
-		if ( !v.is_declaration ){
+		if ( !v.declaration_only() ){
 			// process parameters
 			for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
 				v.params[i_param]->accept( this );
@@ -212,8 +212,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 
 			// process statements
 			is_local = true;
-			for( size_t i_stmt = 0; i_stmt < v.stmts.size(); ++i_stmt ){
-				v.stmts[i_stmt]->accept( this );
+			for( size_t i_stmt = 0; i_stmt < v.body->stmts.size(); ++i_stmt ){
+				v.body->stmts[i_stmt]->accept( this );
 			}
 		}
 	}
