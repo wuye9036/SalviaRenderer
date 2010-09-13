@@ -240,12 +240,28 @@ tree_combinator& dvar_combinator::dtype()
 	return enter_child( e_type, type_comb );
 }
 
+tree_combinator& dvar_combinator::dinit_expr()
+{
+	return enter_child( e_initexpr, exprinit_comb );
+}
+
+tree_combinator& dvar_combinator::dinit_list()
+{
+	return enter_child( e_initlist, listinit_comb );
+}
+
 void dvar_combinator::child_ended()
 {
 	switch( leave() )
 	{
 	case e_type:
 		typed_node()->type_info = move_node( type_comb );
+		break;
+	case e_initexpr:
+		typed_node()->init = move_node2<initializer>( exprinit_comb );
+		break;
+	case e_initlist:
+		typed_node()->init = move_node2<initializer>( listinit_comb );
 		break;
 	default:
 		default_proc();
@@ -1098,6 +1114,58 @@ void dtypedef_combinator::child_ended(){
 			break;
 		default:
 			assert( !"invalid state." );
+			break;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// expression initializer combinator
+dinitexpr_combinator::dinitexpr_combinator( tree_combinator* parent )
+: dexpr_combinator( parent ){
+}
+
+void dinitexpr_combinator::before_end()
+{
+	if ( !typed_node2<node>() ) { return; }
+	if (typed_node2<node>()->node_class() == syntax_node_types::expression_initializer){
+		return;
+	}
+	boost::shared_ptr<expression_initializer> instead_node
+		= create_node<expression_initializer>( token_attr::null() );
+	instead_node->init_expr = typed_node2<expression>();
+	typed_node( instead_node );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// initilaizer list combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dinitlist_combinator, member_initializer );
+
+dinitlist_combinator::dinitlist_combinator( tree_combinator* parent )
+: tree_combinator( parent ){
+	typed_node( create_node<member_initializer>( token_attr::null() ) );
+}
+
+tree_combinator& dinitlist_combinator::dinit_expr(){
+	return enter_child( e_initexpr, expr_comb );
+}
+
+tree_combinator& dinitlist_combinator::dinit_list()
+{
+	return enter_child( e_initlist, list_comb );
+}
+
+void dinitlist_combinator::child_ended()
+{
+	switch ( leave() ){
+		case e_initexpr:
+			typed_node()->sub_inits.push_back( move_node2<initializer>(expr_comb) );
+			break;
+		case e_initlist:
+			typed_node()->sub_inits.push_back( move_node2<initializer>(list_comb) );
+			break;
+		default:
+			assert(!"invalid state" );
 			break;
 	}
 }

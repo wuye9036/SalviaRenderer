@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	using ::sasl::syntax_tree::dvar_combinator;
 
 	using ::sasl::syntax_tree::compound_statement;
+	using ::sasl::syntax_tree::expression_initializer;
 	using ::sasl::syntax_tree::function_type;
 	using ::sasl::syntax_tree::parameter;
 	using ::sasl::syntax_tree::type_definition;
@@ -81,9 +82,11 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	boost::shared_ptr<function_type> func;
 	boost::shared_ptr<compound_statement> body;
 	boost::shared_ptr<type_definition> tdef;
+	boost::shared_ptr<expression_initializer> exprinit;
 	prog_comb
 		.dvar( var0_name )
 			.dtype().dbuildin( buildin_type_code::_float ).end( var0type )
+			.dinit_expr().dconstant2( 3.0f ).end(exprinit)
 		.end( var0decl )
 		.dfunction( "what" )
 			.dreturntype().dbuildin( buildin_type_code::_sint32 ).end( funcrettype )
@@ -104,6 +107,11 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( var0decl->name->str == var0_name );
 	BOOST_CHECK( var0decl->type_info->value_typecode == buildin_type_code::_float );
 	BOOST_CHECK( var0type->value_typecode == buildin_type_code::_float );
+	BOOST_CHECK( exprinit );
+	BOOST_CHECK( exprinit->node_class() == syntax_node_types::expression_initializer );
+	BOOST_CHECK( var0decl->init == exprinit );
+	BOOST_CHECK( exprinit->init_expr );
+	BOOST_CHECK( exprinit->init_expr->node_class() == syntax_node_types::constant_expression );
 
 	BOOST_CHECK( prog->decls[1] == func );
 	BOOST_CHECK( func->node_class() == syntax_node_types::function_type );
@@ -136,6 +144,8 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	using ::sasl::syntax_tree::dvar_combinator;
 
 	using ::sasl::syntax_tree::array_type;
+	using ::sasl::syntax_tree::expression_initializer;
+	using ::sasl::syntax_tree::member_initializer;
 	using ::sasl::syntax_tree::program;
 	using ::sasl::syntax_tree::struct_type;
 	using ::sasl::syntax_tree::type_specifier;
@@ -152,11 +162,22 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 
 	boost::shared_ptr<variable_declaration> fltvar;
 	boost::shared_ptr<type_specifier> flt;
+	boost::shared_ptr<member_initializer> meminit0, meminit1;
+	boost::shared_ptr<expression_initializer>
+		exprinit0, exprinit1, exprinit2, exprinit3;
 	{
 		dvar_combinator var_comb( NULL );
 		var_comb
 				.dname("What's")
 				.dtype().dbuildin( buildin_type_code::_float ).end(flt)
+				.dinit_list()
+					.dinit_expr().dconstant2( (int32_t)2 ).end(exprinit0)
+					.dinit_list()
+						.dinit_expr().dvarexpr("expr1").end(exprinit1)
+						.dinit_expr().dvarexpr("expr2").end(exprinit2)
+					.end( meminit0 )
+					.dinit_expr().dvarexpr( "expr0" ).end(exprinit3)
+				.end( meminit1 )
 		.end( fltvar );
 
 		BOOST_CHECK( flt );
@@ -167,6 +188,21 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		BOOST_CHECK( fltvar->name->str == "What's" );
 		BOOST_CHECK( fltvar->type_info == flt );
 		BOOST_CHECK( fltvar->node_class() == syntax_node_types::variable_declaration );
+		BOOST_CHECK( fltvar->init == meminit1 );
+		BOOST_CHECK( meminit1 );
+		BOOST_CHECK( meminit1->node_class() == syntax_node_types::member_initializer );
+		BOOST_CHECK( meminit1->sub_inits.size() == 3 );
+		BOOST_CHECK( meminit1->sub_inits[0] == exprinit0 );
+		BOOST_CHECK( exprinit0 && exprinit0->node_class() == syntax_node_types::expression_initializer );
+		BOOST_CHECK( meminit1->sub_inits[2] == exprinit3 );
+		BOOST_CHECK( exprinit3 && exprinit3->node_class() == syntax_node_types::expression_initializer );
+
+		BOOST_CHECK( meminit1->sub_inits[1] == meminit0 );
+		BOOST_CHECK( meminit0 && meminit0->node_class() == syntax_node_types::member_initializer );
+		BOOST_CHECK( meminit0->sub_inits.size() == 2 );
+		BOOST_CHECK( meminit0->sub_inits[0] == exprinit1 );
+		BOOST_CHECK( meminit0->sub_inits[1] == exprinit2 );
+		BOOST_CHECK( exprinit2 && exprinit3 );
 	}
 	
 	boost::shared_ptr<array_type> arrtype;

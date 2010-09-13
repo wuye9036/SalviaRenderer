@@ -80,6 +80,7 @@ struct ident_label;
 struct initializer;
 struct jump_statement;
 struct label;
+struct member_initializer;
 struct node;
 struct program;
 struct struct_type;
@@ -100,6 +101,8 @@ class dexprstmt_combinator;
 class dfor_combinator;
 class dfunction_combinator;
 class dif_combinator;
+class dinitexpr_combinator;
+class dinitlist_combinator;
 class dparameter_combinator;
 class dreturn_combinator;
 class dstruct_combinator;
@@ -160,7 +163,8 @@ public:
 
 	
 	virtual tree_combinator& dtype(){ return default_proc(); }
-	virtual tree_combinator& dinit(){ return default_proc(); }
+	virtual tree_combinator& dinit_expr(){ return default_proc(); }
+	virtual tree_combinator& dinit_list(){ return default_proc(); }
 
 	// types
 	virtual tree_combinator& dbuildin( buildin_type_code /*btc*/ ){ return default_proc(); }
@@ -214,7 +218,6 @@ public:
 	virtual tree_combinator& dstmts(){ return default_proc(); }
 	
 	virtual tree_combinator& dfor(){ return default_proc(); }
-	virtual tree_combinator& dinit_expr(){ return default_proc(); }
 	virtual tree_combinator& dinit_var(){ return default_proc(); }
 	virtual tree_combinator& diter(){ return default_proc(); }
 
@@ -263,6 +266,8 @@ protected:
 
 		e_type,
 		e_init,
+		e_initexpr,
+		e_initlist,
 
 		e_array,
 
@@ -401,7 +406,8 @@ public:
 	explicit dvar_combinator( tree_combinator* parent );
 	virtual tree_combinator& dname(const std::string& );
 	virtual tree_combinator& dtype();
-	//virtual tree_combinator& dinit();
+	virtual tree_combinator& dinit_expr();
+	virtual tree_combinator& dinit_list();
 
 	virtual void child_ended();
 	SASL_TYPED_NODE_ACCESSORS_DECL( variable_declaration );
@@ -410,7 +416,8 @@ protected:
 	dvar_combinator& operator = ( const dvar_combinator& );
 private:
 	boost::shared_ptr<dtype_combinator> type_comb;
-	// boost::shared_ptr<dinit_combinator> init_comb;
+	boost::shared_ptr<dinitexpr_combinator> exprinit_comb;
+	boost::shared_ptr<dinitlist_combinator> listinit_comb;
 };
 
 class dtype_combinator : public tree_combinator
@@ -829,6 +836,37 @@ protected:
 	dtypedef_combinator& operator = ( const dtypedef_combinator& rhs );
 private:
 	boost::shared_ptr<dtype_combinator> type_comb;
+};
+
+class dinitexpr_combinator : public dexpr_combinator
+{
+public:
+	dinitexpr_combinator( tree_combinator* parent );
+
+	virtual void before_end();
+protected:
+	dinitexpr_combinator( const dinitexpr_combinator& rhs);
+	dinitexpr_combinator& operator = ( const dinitexpr_combinator& rhs );
+};
+
+class dinitlist_combinator: public tree_combinator
+{
+public:
+	dinitlist_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dinit_expr();
+	virtual tree_combinator& dinit_list();
+
+	virtual void child_ended();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( member_initializer );
+
+protected:
+	dinitlist_combinator( const dinitlist_combinator& rhs);
+	dinitlist_combinator& operator = ( const dinitlist_combinator& rhs );
+private:
+	boost::shared_ptr<dinitlist_combinator> list_comb;
+	boost::shared_ptr<dinitexpr_combinator> expr_comb;
 };
 
 END_NS_SASL_SYNTAX_TREE()
