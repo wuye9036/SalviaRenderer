@@ -80,6 +80,22 @@ private:
 	dowhile_statement( const dowhile_statement& );
 };
 
+struct for_statement: public statement
+{
+public:
+	SASL_SYNTAX_NODE_CREATORS();
+
+	void accept( syntax_tree_visitor* v );
+
+	boost::shared_ptr<statement> init;
+	boost::shared_ptr<expression> cond;
+	boost::shared_ptr<expression> iter;
+	boost::shared_ptr<compound_statement> body;
+private:
+	for_statement( boost::shared_ptr<token_attr> tok );
+	for_statement( const for_statement& rhs);
+	for_statement& operator = ( const for_statement& rhs );
+};
 struct label: public node{
 	label( syntax_node_types type_id, boost::shared_ptr<token_attr> tok );
 };

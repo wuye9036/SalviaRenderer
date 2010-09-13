@@ -396,6 +396,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 	using ::sasl::syntax_tree::declaration_statement;
 	using ::sasl::syntax_tree::dowhile_statement;
 	using ::sasl::syntax_tree::expression_statement;
+	using ::sasl::syntax_tree::for_statement;
 	using ::sasl::syntax_tree::if_statement;
 	using ::sasl::syntax_tree::jump_statement;
 	using ::sasl::syntax_tree::switch_statement;
@@ -554,5 +555,28 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[3])->code == jump_mode::_return );
 		BOOST_CHECK( ! boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[3])->jump_expr );
 	}
+
+	boost::shared_ptr<compound_statement> stmts8;
+	boost::shared_ptr<for_statement> forstmt;
+	{
+		dstatements_combinator( NULL )
+			.dfor()
+				.dinit_expr().dnode( exprstmt ).end()
+				.dcond().dvarexpr( "hello" ).end()
+				.diter().dconstant2( 1.0f ).end()
+				.dbody().dnode( stmts7 ).end()
+			.end(forstmt)
+		.end( stmts8 );
+	}
+
+	BOOST_CHECK( stmts8 );
+	BOOST_CHECK( stmts8->stmts.size() == 1 );
+	BOOST_CHECK( stmts8->stmts[0] == forstmt );
+	BOOST_CHECK( forstmt );
+	BOOST_CHECK( forstmt->init );
+	BOOST_CHECK( forstmt->init == exprstmt );
+	BOOST_CHECK( forstmt->cond->node_class() == syntax_node_types::variable_expression );
+	BOOST_CHECK( forstmt->iter->node_class() == syntax_node_types::constant_expression );
+	BOOST_CHECK( forstmt->body == stmts7 );
 }
 BOOST_AUTO_TEST_SUITE_END();

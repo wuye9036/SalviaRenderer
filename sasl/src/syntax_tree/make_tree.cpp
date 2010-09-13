@@ -618,6 +618,10 @@ tree_combinator& dstatements_combinator::dswitch()
 	return enter_child( e_switch, switch_comb );
 }
 
+tree_combinator& dstatements_combinator::dfor()
+{
+	return enter_child( e_for, for_comb );
+}
 
 tree_combinator& dstatements_combinator::dbreak()
 {
@@ -674,6 +678,9 @@ void dstatements_combinator::child_ended()
 		case e_switch:
 			typed_node()->stmts.push_back( move_node2<statement>(switch_comb) );
 			break;
+		case e_for:
+			typed_node()->stmts.push_back( move_node2<statement>(for_comb) );
+			break;
 		case e_return:
 			typed_node()->stmts.push_back( move_node2<statement>(ret_comb) );
 			break;
@@ -685,7 +692,6 @@ void dstatements_combinator::child_ended()
 	typed_node()->stmts.back()->labels = lbls;
 	lbls.clear();
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 // declaration statement combinator
@@ -930,5 +936,63 @@ void dreturn_combinator::before_end(){
 	instead_node->code = jump_mode::_return;
 	typed_node( instead_node );
 }
+
+//////////////////////////////////////////////////////////////////////////
+// for combinator
+
+SASL_TYPED_NODE_ACCESSORS_IMPL( dfor_combinator, for_statement );
+
+dfor_combinator::dfor_combinator( tree_combinator* parent )
+: tree_combinator( parent ){
+	typed_node( create_node<for_statement>( token_attr::null() ) );
+}
+
+tree_combinator& dfor_combinator::dinit_expr(){
+	return enter_child( e_init, initexpr_comb );
+}
+
+tree_combinator& dfor_combinator::dinit_var(){
+	return enter_child( e_init, initvar_comb );
+}
+
+tree_combinator& dfor_combinator::dcond(){
+	return enter_child( e_cond, cond_comb );
+}
+
+tree_combinator& dfor_combinator::diter(){
+	return enter_child( e_iter, iter_comb );
+}
+
+tree_combinator& dfor_combinator::dbody(){
+	return enter_child( e_body, body_comb );
+}
+
+void dfor_combinator::child_ended()
+{
+	switch( leave() ){
+		case e_init:
+			if ( initexpr_comb ){
+				typed_node()->init = move_node2<statement>( initexpr_comb );
+			}
+			if ( initvar_comb ){
+				typed_node()->init = move_node2<statement>( initvar_comb );
+			}
+			return;
+		case e_cond:
+			typed_node()->cond = move_node( cond_comb );
+			return;
+		case e_iter:
+			typed_node()->iter = move_node( iter_comb );
+			return;
+		case e_body:
+			typed_node()->body = move_node( body_comb );
+			return;
+		default:
+			assert( !"invalid state." );
+			return;
+	}
+}
+
+
 
 END_NS_SASL_SYNTAX_TREE();

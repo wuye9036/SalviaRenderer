@@ -74,6 +74,7 @@ struct declaration_statement;
 struct dowhile_statement;
 struct expression;
 struct function_type;
+struct for_statement;
 struct if_statement;
 struct ident_label;
 struct initializer;
@@ -95,6 +96,7 @@ class dcallexpr_combinator;
 class ddowhile_combinator;
 class dexpr_combinator;
 class dexprstmt_combinator;
+class dfor_combinator;
 class dif_combinator;
 class dreturn_combinator;
 class dstruct_combinator;
@@ -200,7 +202,12 @@ public:
 	virtual tree_combinator& dbody(){ return default_proc(); }
 	virtual tree_combinator& dcase(){ return default_proc(); }
 	virtual tree_combinator& ddefault(){ return default_proc(); }
-	// virtual tree_combinator& dfor(){ return default_proc(); }
+	
+	virtual tree_combinator& dfor(){ return default_proc(); }
+	virtual tree_combinator& dinit_expr(){ return default_proc(); }
+	virtual tree_combinator& dinit_var(){ return default_proc(); }
+	virtual tree_combinator& diter(){ return default_proc(); }
+
 	virtual tree_combinator& dbreak(){ return default_proc(); }
 	virtual tree_combinator& dcontinue(){ return default_proc(); }
 	virtual tree_combinator& dreturn_expr(){ return default_proc(); }
@@ -271,8 +278,8 @@ protected:
 		e_case,
 		e_default,
 		e_for,
-		e_forinit,
-		e_step,
+		e_iter,
+		e_body,
 		e_do,
 		e_while,
 		e_whiledo,
@@ -552,7 +559,7 @@ public:
 	virtual tree_combinator& dwhiledo();
 
 	virtual tree_combinator& dswitch();
-	//virtual tree_combinator& dfor();
+	virtual tree_combinator& dfor();
 	virtual tree_combinator& dbreak();
 	virtual tree_combinator& dcontinue();
 	virtual tree_combinator& dreturn_expr();
@@ -578,6 +585,7 @@ private:
 	boost::shared_ptr<dwhiledo_combinator> whiledo_comb;
 	boost::shared_ptr<dswitch_combinator> switch_comb;
 	boost::shared_ptr<dreturn_combinator> ret_comb;
+	boost::shared_ptr<dfor_combinator> for_comb;
 
 	std::vector< boost::shared_ptr<label> > lbls;
 };
@@ -588,7 +596,7 @@ public:
 protected:
 	//////////////////////////////////////////////////////////////////////////
 	// before_end is called before end() method invoked.
-	// it will wrap the variable_declaration node to variable statement node.
+	// it wraps the variable_declaration node to variable statement node.
 	// so typed_node() cannot be invoked here.
 	// typed_node2() could be executed only for specifying node type explicit.
 	virtual void before_end();
@@ -725,16 +733,31 @@ private:
 	dreturn_combinator& operator = ( const dreturn_combinator& rhs );
 };
 
-//
-//class dfor_combinator
-//{
-//public:
-//	dfor_combinator( tree_combinator* parent );
-//
-//protected:
-//	dfor_combinator( const dfor_combinator& rhs);
-//	dfor_combinator& operator = ( const dfor_combinator& rhs );
-//private:
-//};
+
+class dfor_combinator : public tree_combinator
+{
+public:
+	SASL_TYPED_NODE_ACCESSORS_DECL( for_statement );
+
+	dfor_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dinit_expr();
+	virtual tree_combinator& dinit_var();
+	virtual tree_combinator& dcond();
+	virtual tree_combinator& diter();
+	virtual tree_combinator& dbody();
+
+	virtual void child_ended();
+protected:
+	dfor_combinator( const dfor_combinator& rhs);
+	dfor_combinator& operator = ( const dfor_combinator& rhs );
+private:
+	boost::shared_ptr<dexprstmt_combinator> initexpr_comb;
+	boost::shared_ptr<dvarstmt_combinator> initvar_comb;
+	boost::shared_ptr<dexpr_combinator> cond_comb;
+	boost::shared_ptr<dexpr_combinator> iter_comb;
+	boost::shared_ptr<dstatements_combinator> body_comb;
+};
+
 END_NS_SASL_SYNTAX_TREE()
 #endif

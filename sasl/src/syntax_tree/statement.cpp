@@ -64,7 +64,6 @@ void dowhile_statement::accept( syntax_tree_visitor* v ){
 	v->visit(*this);
 }
 
-
 label::label( syntax_node_types type_id, boost::shared_ptr<token_attr> tok )
 : node(type_id, tok){
 }
@@ -100,4 +99,12 @@ ident_label::ident_label( boost::shared_ptr<token_attr> tok )
 void ident_label::accept( syntax_tree_visitor* v ){
 	v->visit(*this);
 }
+
+for_statement::for_statement( boost::shared_ptr<token_attr> tok )
+: statement( syntax_node_types::for_statement, tok ){}
+
+void for_statement::accept( syntax_tree_visitor* v ){
+	v->visit(*this);
+}
+
 END_NS_SASL_SYNTAX_TREE();
