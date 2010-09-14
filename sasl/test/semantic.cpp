@@ -1,38 +1,49 @@
 #include <boost/test/unit_test.hpp>
 #include "test_utility.h"
-#include <sasl/include/semantic/semantic_analyser.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantic_infos.h>
-#include <sasl/include/semantic/name_mangler.h>
-#include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/make_tree.h>
-#include <sasl/include/syntax_tree/node_creation.h>
-#include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/common/token_attr.h>
 #include <sasl/include/common/compiler_info_manager.h>
+#include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/syntax_tree/make_tree.h>
+#include <sasl/include/semantic/semantic_analyser.h>
+#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
+
+//#include <sasl/include/semantic/name_mangler.h>
+//#include <sasl/include/syntax_tree/declaration.h>
+//#include <sasl/include/syntax_tree/expression.h>
+//#include <sasl/include/syntax_tree/make_tree.h>
+//#include <sasl/include/syntax_tree/node_creation.h>
+//#include <sasl/include/syntax_tree/statement.h>
+//#include <sasl/include/common/token_attr.h>
 #include <string>
 
-// using ::sasl::syntax_tree::make_tree;
+using ::sasl::common::compiler_info_manager;
+
+using ::sasl::syntax_tree::program;
+
+using ::sasl::syntax_tree::dprog_combinator;
+
+using ::sasl::semantic::semantic_analysis;
+using ::sasl::semantic::program_si;
+using ::sasl::semantic::extract_semantic_info;
 
 BOOST_AUTO_TEST_SUITE( semantic );
 
-//BOOST_AUTO_TEST_CASE( program_semantic ){
-//	using ::sasl::syntax_tree::program;
-//	using ::sasl::syntax_tree::create_node;
-//	using ::sasl::semantic::semantic_analysis;
-//	using ::sasl::common::compiler_info_manager;
-//
-//	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
-//
-//	std::string prog_name("test");
-//	boost::shared_ptr<program> prog = create_node<program>( prog_name );
-//	BOOST_CHECK( !prog->symbol() );
-//
-//	semantic_analysis( prog, cim );
-//	BOOST_CHECK( prog->symbol() );
-//}
+BOOST_AUTO_TEST_CASE( program_si_test ){
+	boost::shared_ptr<compiler_info_manager> cim = compiler_info_manager::create();
+
+	std::string prog_name("test");
+	boost::shared_ptr<program> prog;
+
+	dprog_combinator( prog_name ).end( prog );
+
+	BOOST_CHECK( !prog->symbol() );
+
+	semantic_analysis( prog, cim );
+
+	BOOST_CHECK( prog->symbol() );
+	BOOST_CHECK( prog->semantic_info() );
+	BOOST_CHECK( extract_semantic_info<program_si>(prog)->name() == prog_name );
+}
 //
 //BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 //	using ::sasl::syntax_tree::program;

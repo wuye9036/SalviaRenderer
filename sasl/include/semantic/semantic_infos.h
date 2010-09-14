@@ -29,6 +29,7 @@ using ::sasl::syntax_tree::statement;
 //  program semantic infos.
 
 class program_si : public semantic_info{
+public:
 	typedef semantic_info base_type;
 	program_si( );
 

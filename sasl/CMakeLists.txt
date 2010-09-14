@@ -3,6 +3,7 @@ PROJECT( SASL )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
 option( SOFTART_BUILD_WITH_UNICODE "Build with unicode(wide-byte) or ansi(multi-byte)." TRUE )
+option( SOFTART_BUILD_WITH_LLVM "Build llvm code generator & llvm test." TRUE )
 
 include(${CMAKE_HOME_DIRECTORY}/build/cmake/SystemInfo.cmake)
 if(MSVC)
@@ -18,5 +19,5 @@ ADD_DEFINITIONS(
 ADD_SUBDIRECTORY( build/cmake )
 
 ADD_SUBDIRECTORY( enums )
-ADD_SUBDIRECTORY( test )
 ADD_SUBDIRECTORY( src )
+ADD_SUBDIRECTORY( test )

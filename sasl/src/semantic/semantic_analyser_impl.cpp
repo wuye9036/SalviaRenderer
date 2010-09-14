@@ -17,6 +17,13 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::semantic::errors::semantic_error;
 using ::sasl::common::compiler_info_manager;
 
+using ::sasl::syntax_tree::program;
+
+using ::sasl::semantic::get_or_create_semantic_info;
+using ::sasl::semantic::symbol;
+
+using ::sasl::semantic::program_si;
+
 semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
 	: infomgr( infomgr ){}
 
@@ -255,13 +262,13 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_statement& /
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& /*v*/ ){}
 
 // program
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::program& v ){
-	is_local = false;
-	cursym = symbol::create_root( v.handle() );
-
-	for( size_t i = 0; i < v.decls.size(); ++i){
-		v.decls[i]->accept(this);
-	}
+void semantic_analyser_impl::visit( program& v ){
+	// create semantic info
+	boost::shared_ptr<program_si> sem = get_or_create_semantic_info<program_si>(v);
+	sem->name( v.name );
+	
+	// create root symbol
+	v.symbol( symbol::create_root( v.handle() ) );
 }
 
 END_NS_SASL_SEMANTIC();

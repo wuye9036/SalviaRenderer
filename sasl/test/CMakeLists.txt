@@ -1,3 +1,4 @@
+check_build_with_unicode()
 set_environment()
 
 INCLUDE_DIRECTORIES(
@@ -15,7 +16,7 @@ set( HEADER_FILES
 )
 
 set( SOURCE_FILES
-	llvm_test.cpp
+	test_main.cpp
 	semantic.cpp
 	syntax_tree.cpp
 	test_utility.cpp
@@ -28,3 +29,7 @@ TARGET_LINK_LIBRARIES( sasl_test
 )
 
 config_output_paths( sasl_test )
+
+if( SOFTART_BUILD_WITH_LLVM )
+ADD_SUBDIRECTORY( cgllvm_test )
+endif( SOFTART_BUILD_WITH_LLVM )

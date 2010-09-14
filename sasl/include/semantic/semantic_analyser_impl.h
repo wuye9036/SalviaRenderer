@@ -40,7 +40,6 @@ public:
 	virtual void visit( ::sasl::syntax_tree::type_definition& v );
 	virtual void visit( ::sasl::syntax_tree::type_specifier& v );
 	virtual void visit( ::sasl::syntax_tree::buildin_type& v );
-	virtual void visit( ::sasl::syntax_tree::type_identifier& v );
 	virtual void visit( ::sasl::syntax_tree::array_type& v );
 	virtual void visit( ::sasl::syntax_tree::struct_type& v );
 	virtual void visit( ::sasl::syntax_tree::parameter& v );

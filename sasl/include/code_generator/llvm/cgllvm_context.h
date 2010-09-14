@@ -2,11 +2,9 @@
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_CONTEXT_H
 
 #include <sasl/include/code_generator/forward.h>
-#include <sasl/include/code_generator/llvm/llvm_patch_begin.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
-#include <sasl/include/code_generator/llvm/llvm_patch_end.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
 

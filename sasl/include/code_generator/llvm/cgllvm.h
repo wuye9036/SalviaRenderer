@@ -1,14 +1,12 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_LLVM_GENERATOR_H
-#define SASL_CODE_GENERATOR_LLVM_LLVM_GENERATOR_H
+#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_H
+#define SASL_CODE_GENERATOR_LLVM_CGLLVM_H
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
 
-#include <sasl/include/code_generator/llvm/llvm_patch_begin.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
-#include <sasl/include/code_generator/llvm/llvm_patch_end.h>
 
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -31,6 +29,7 @@ public:
 	virtual void visit( sasl::syntax_tree::member_expression& v );
 
 	virtual void visit( sasl::syntax_tree::constant_expression& v );
+	virtual void visit( sasl::syntax_tree::variable_expression& v );
 	virtual void visit( sasl::syntax_tree::identifier& v );
 
 	// declaration & type specifier
@@ -42,8 +41,6 @@ public:
 	virtual void visit( sasl::syntax_tree::type_definition& v );
 	virtual void visit( sasl::syntax_tree::type_specifier& v );
 	virtual void visit( sasl::syntax_tree::buildin_type& v );
-	virtual void visit( sasl::syntax_tree::type_identifier& v );
-	virtual void visit( sasl::syntax_tree::qualified_type& v );
 	virtual void visit( sasl::syntax_tree::array_type& v );
 	virtual void visit( sasl::syntax_tree::struct_type& v );
 	virtual void visit( sasl::syntax_tree::parameter& v );
@@ -56,6 +53,7 @@ public:
 	virtual void visit( sasl::syntax_tree::while_statement& v );
 	virtual void visit( sasl::syntax_tree::dowhile_statement& v );
 	virtual void visit( sasl::syntax_tree::case_label& v );
+	virtual void visit( sasl::syntax_tree::ident_label& v );
 	virtual void visit( sasl::syntax_tree::switch_statement& v );
 	virtual void visit( sasl::syntax_tree::compound_statement& v );
 	virtual void visit( sasl::syntax_tree::expression_statement& v );

@@ -1,5 +1,5 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_CG_LLVM_H
-#define SASL_CODE_GENERATOR_LLVM_CG_LLVM_H
+#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_API_H
+#define SASL_CODE_GENERATOR_LLVM_CGLLVM_API_H
 
 #include <sasl/include/code_generator/forward.h>
 #include <boost/shared_ptr.hpp>

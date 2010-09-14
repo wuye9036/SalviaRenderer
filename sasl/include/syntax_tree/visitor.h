@@ -25,7 +25,6 @@ struct variable_declaration;
 struct type_definition;
 struct type_specifier;
 struct buildin_type;
-struct type_identifier;
 struct array_type;
 struct struct_type;
 struct parameter;
@@ -69,7 +68,6 @@ public:
 	virtual void visit( type_definition& v ) = 0;
 	virtual void visit( type_specifier& v ) = 0;
 	virtual void visit( buildin_type& v ) = 0;
-	virtual void visit( type_identifier& v ) = 0;
 	virtual void visit( array_type& v ) = 0;
 	virtual void visit( struct_type& v ) = 0;
 	virtual void visit( parameter& v ) = 0;

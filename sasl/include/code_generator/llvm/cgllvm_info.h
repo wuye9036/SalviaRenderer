@@ -1,5 +1,5 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_LLVM_SEMANTIC_INFO_H
-#define SASL_CODE_GENERATOR_LLVM_LLVM_SEMANTIC_INFO_H
+#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_INFO_H
+#define SASL_CODE_GENERATOR_LLVM_CGLLVM_INFO_H
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/semantic/semantic_info.h>

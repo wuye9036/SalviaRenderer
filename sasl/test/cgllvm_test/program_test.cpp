@@ -1,9 +1,5 @@
-#include <sasl/include/code_generator/llvm/cg_llvm.h>
-
-#include <sasl/include/code_generator/llvm/llvm_patch_begin.h>
+#include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <llvm/Module.h>
-#include <sasl/include/code_generator/llvm/llvm_patch_end.h>
-
 #include <sasl/include/syntax_tree/program.h>
 #include <boost/test/unit_test.hpp>
 

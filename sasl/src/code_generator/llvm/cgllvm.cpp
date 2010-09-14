@@ -1,8 +1,8 @@
-#include <sasl/include/code_generator/llvm/llvm_generator.h>
+#include <sasl/include/code_generator/llvm/cgllvm.h>
 #include <sasl/include/code_generator/llvm/cgllvm_context.h>
+#include <sasl/include/code_generator/llvm/cgllvm_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/code_generator/llvm/llvm_semantic_info.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
@@ -91,53 +91,53 @@ void llvm_code_generator::visit( constant_expression& v ){
 void llvm_code_generator::visit( identifier& v ){
 
 }
+void llvm_code_generator::visit( variable_expression& v ){
 
+}
 // declaration & type specifier
 void llvm_code_generator::visit( initializer& v ){}
 void llvm_code_generator::visit( expression_initializer& v ){}
 void llvm_code_generator::visit( member_initializer& v ){}
 void llvm_code_generator::visit( declaration& v ){}
 void llvm_code_generator::visit( variable_declaration& v ){
-	using ::sasl::semantic::extract_semantic_info;
-	using ::sasl::semantic::variable_semantic_info;
-	using ::sasl::semantic::get_or_create_semantic_info;
+	//using ::sasl::semantic::extract_semantic_info;
+	//using ::sasl::semantic::variable_semantic_info;
+	//using ::sasl::semantic::get_or_create_semantic_info;
 
-	v.type_info->accept( this );
-	boost::shared_ptr<variable_semantic_info> vsyminfo = extract_semantic_info<variable_semantic_info>(v);
-	boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v);
-	boost::shared_ptr<llvm_semantic_info> ltsyminfo = extract_semantic_info<llvm_semantic_info>(v.type_info);
-	
-	//TODO: GET VALUE OF INITIALIZER
+	//v.type_info->accept( this );
+	//boost::shared_ptr<variable_semantic_info> vsyminfo = extract_semantic_info<variable_semantic_info>(v);
+	//boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v);
+	//boost::shared_ptr<llvm_semantic_info> ltsyminfo = extract_semantic_info<llvm_semantic_info>(v.type_info);
+	//
+	////TODO: GET VALUE OF INITIALIZER
 
-	if ( vsyminfo->is_local() ){
-		// TODO: GENERATE LOCAL VARIABLE	
-	} else {
-		// generate global variable
-		GlobalVariable* gv = cast<GlobalVariable>(ctxt->module()->getOrInsertGlobal( v.name->lit, ltsyminfo->llvm_type ));
-		// TODO: OTHER OPERATIONS. SUCH AS LINKAGE
-		// ...
-		lsyminfo->llvm_gvar = gv;
-	}
+	//if ( vsyminfo->is_local() ){
+	//	// TODO: GENERATE LOCAL VARIABLE	
+	//} else {
+	//	// generate global variable
+	//	GlobalVariable* gv = cast<GlobalVariable>(ctxt->module()->getOrInsertGlobal( v.name->str, ltsyminfo->llvm_type ));
+	//	// TODO: OTHER OPERATIONS. SUCH AS LINKAGE
+	//	// ...
+	//	lsyminfo->llvm_gvar = gv;
+	//}
 }
 
 void llvm_code_generator::visit( type_definition& v ){}
 void llvm_code_generator::visit( type_specifier& v ){
 }
 void llvm_code_generator::visit( buildin_type& v ){
-	using ::sasl::semantic::get_or_create_semantic_info;
+	//using ::sasl::semantic::get_or_create_semantic_info;
 
-	const llvm::Type* ltype = NULL;
-	
-	if (v.value_typecode == buildin_type_code::_sint32 ){
-		ltype = llvm::cast<const llvm::Type>( llvm::IntegerType::getInt32Ty(ctxt->context()) );
-	}
-	// TODO: other buildin types.
+	//const llvm::Type* ltype = NULL;
+	//
+	//if (v.value_typecode == buildin_type_code::_sint32 ){
+	//	ltype = llvm::cast<const llvm::Type>( llvm::IntegerType::getInt32Ty(ctxt->context()) );
+	//}
+	//// TODO: other buildin types.
 
-	boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v.handle());
-	lsyminfo->llvm_type = ltype;
+	//boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v.handle());
+	//lsyminfo->llvm_type = ltype;
 }
-void llvm_code_generator::visit( type_identifier& v ){}
-void llvm_code_generator::visit( qualified_type& v ){}
 void llvm_code_generator::visit( array_type& v ){}
 void llvm_code_generator::visit( struct_type& v ){}
 void llvm_code_generator::visit( parameter& v ){
@@ -189,12 +189,14 @@ void llvm_code_generator::visit( compound_statement& v ){}
 void llvm_code_generator::visit( expression_statement& v ){}
 void llvm_code_generator::visit( jump_statement& v ){}
 
+void llvm_code_generator::visit( ident_label& ){ }
+
 void llvm_code_generator::visit( program& v ){
-	if ( ctxt ){
-		return;
-	} else {
-		ctxt.reset( new cgllvm_context(v.name) );
-	}
+	//if ( ctxt ){
+	//	return;
+	//} else {
+	//	ctxt.reset( new cgllvm_context(v.name) );
+	//}
 }
 
 boost::shared_ptr<llvm::Module> llvm_code_generator::generated_module(){
