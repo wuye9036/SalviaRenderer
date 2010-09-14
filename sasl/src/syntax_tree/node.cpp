@@ -5,7 +5,7 @@ using namespace boost;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-using ::sasl::semantic::semantic_info_collection;
+using ::sasl::semantic::semantic_info;
 
 node::node(syntax_node_types tid, shared_ptr<token_attr> tok )
 : type_id(tid), tok(tok)
@@ -25,11 +25,12 @@ void node::symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym ){
 	this->sym = sym;
 }
 
-boost::shared_ptr<class ::sasl::semantic::semantic_info_collection> node::semantic_infos() const {
-	if ( !seminfos ){
-		seminfos.reset( new semantic_info_collection() );
-	}
-	return seminfos;
+boost::shared_ptr<class semantic_info> node::semantic_info() const {
+	return seminfo;
+}
+
+void node::semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_info> si ) const{
+	const_cast<node*>(this)->seminfo = si;
 }
 
 boost::shared_ptr<token_attr> node::token() const{
@@ -43,6 +44,5 @@ syntax_node_types node::node_class() const{
 node::~node(){
 	// DO NOTHING
 }
-
 
 END_NS_SASL_SYNTAX_TREE();

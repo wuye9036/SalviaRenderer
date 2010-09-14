@@ -25,6 +25,23 @@ using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::statement;
 
+//////////////////////////////////////
+//  program semantic infos.
+
+class program_si : public semantic_info{
+	typedef semantic_info base_type;
+	program_si( );
+
+	const std::string& name() const;
+	void name( const std::string& );
+
+private:
+	program_si( const program_si& );
+	program_si& operator = (const program_si& );
+
+	std::string prog_name;
+};
+
 class const_value_semantic_info: public semantic_info{
 public:
 	typedef semantic_info base_type;
@@ -56,6 +73,8 @@ private:
 */
 class type_semantic_info: public semantic_info{
 public:
+	type_semantic_info();
+
 	friend class semantic_info_collection;
 	typedef semantic_info base_type;
 
@@ -68,8 +87,6 @@ public:
 
 	void full_type( boost::shared_ptr<type_specifier> ftnode );
 private:
-	type_semantic_info();
-
 	// ttype has 4-state: none, alias, buildin, composited.
 	// none:
 	//   it means is a null type that only declaration existed without definition.

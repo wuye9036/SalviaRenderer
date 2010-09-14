@@ -58,8 +58,19 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 }
 ////////////////////////////////
 
+//////////////////////
+// program semantics
+
+program_si::program_si(): prog_name("######undefined######"){}
+const std::string& program_si::name() const {
+	return prog_name;
+}
+void program_si::name( const std::string& str ){
+	prog_name = str;
+}
+
 const_value_semantic_info::const_value_semantic_info()
-	: const_value_semantic_info::base_type( "value symbol info" ), valtype( buildin_type_code::none ){}
+	: valtype( buildin_type_code::none ){}
 
 void const_value_semantic_info::constant_value_literal(
 	const std::string& litstr,
@@ -101,7 +112,7 @@ void const_value_semantic_info::value_type( buildin_type_code vtype ){
 	valtype = vtype;
 }
 
-type_semantic_info::type_semantic_info(): base_type( "ref symbol info" ), ttype(type_types::none) { }
+type_semantic_info::type_semantic_info(): ttype(type_types::none) { }
 
 boost::shared_ptr<type_specifier> type_semantic_info::full_type() const{
 	boost::shared_ptr<type_specifier> ret_type = type_node.lock();
@@ -120,7 +131,7 @@ void type_semantic_info::type_type( type_types ttype ){
 }
 
 variable_semantic_info::variable_semantic_info()
-	: isloc(false), base_type( "variable symbol info" )
+	: isloc(false)
 {
 }
 bool variable_semantic_info::is_local() const{
@@ -132,7 +143,6 @@ void variable_semantic_info::is_local( bool isloc ){
 }
 
 execution_block_semantic_info::execution_block_semantic_info()
-	: semantic_info( "execution block semantic info" )
 {
 }
 

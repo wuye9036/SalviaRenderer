@@ -15,7 +15,7 @@ namespace sasl{
 
 	namespace semantic{
 		class symbol;
-		class semantic_info_collection;
+		class semantic_info;
 	}
 }
 BEGIN_NS_SASL_SYNTAX_TREE();
@@ -33,8 +33,8 @@ struct node{
 	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;
 	void symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym );
 
-	boost::shared_ptr<class ::sasl::semantic::semantic_info_collection> semantic_infos() const;
-	
+	boost::shared_ptr<class ::sasl::semantic::semantic_info> semantic_info() const;
+	void semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_info> ) const;
 	boost::shared_ptr<token_attr> token() const;
 	syntax_node_types node_class() const;
 
@@ -48,7 +48,7 @@ protected:
 	syntax_node_types				type_id;
 	boost::shared_ptr<token_attr>	tok;
 	boost::shared_ptr<class ::sasl::semantic::symbol>	sym;
-	mutable boost::shared_ptr<class ::sasl::semantic::semantic_info_collection> seminfos;
+	boost::shared_ptr<class ::sasl::semantic::semantic_info> seminfo;
 	boost::weak_ptr<node> selfptr;
 	virtual ~node();
 };
