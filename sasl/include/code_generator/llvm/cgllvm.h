@@ -14,6 +14,7 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_context;
+class llvm_code;
 
 class llvm_code_generator: public sasl::syntax_tree::syntax_tree_visitor{
 public:
@@ -62,7 +63,7 @@ public:
 	// program
 	virtual void visit( sasl::syntax_tree::program& v );
 
-	boost::shared_ptr<llvm::Module> generated_module();
+	boost::shared_ptr<llvm_code> generated_module();
 private:
 	boost::shared_ptr<cgllvm_context> ctxt;
 };

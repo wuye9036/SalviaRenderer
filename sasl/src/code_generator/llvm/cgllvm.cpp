@@ -192,15 +192,15 @@ void llvm_code_generator::visit( jump_statement& v ){}
 void llvm_code_generator::visit( ident_label& ){ }
 
 void llvm_code_generator::visit( program& v ){
-	//if ( ctxt ){
-	//	return;
-	//} else {
-	//	ctxt.reset( new cgllvm_context(v.name) );
-	//}
+	if ( ctxt ){
+		return;
+	} else {
+		ctxt.reset( new cgllvm_context(v.name) );
+	}
 }
 
-boost::shared_ptr<llvm::Module> llvm_code_generator::generated_module(){
-	return ctxt->module();
+boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
+	return ctxt;
 }
 
 END_NS_SASL_CODE_GENERATOR();

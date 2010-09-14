@@ -3,8 +3,9 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 cgllvm_context::cgllvm_context( const std::string& mod_name)
-	: lctxt(), mod( new llvm::Module( mod_name, lctxt ) )
 {
+	lctxt.reset( new llvm::LLVMContext() );
+	mod.reset( new llvm::Module( mod_name, context() ) );
 }
 
 boost::shared_ptr<llvm::Module> cgllvm_context::module() const{
@@ -12,7 +13,10 @@ boost::shared_ptr<llvm::Module> cgllvm_context::module() const{
 }
 
 llvm::LLVMContext& cgllvm_context::context(){
-	return lctxt;
+	return *lctxt;
+}
+
+cgllvm_context::~cgllvm_context(){
 }
 
 END_NS_SASL_CODE_GENERATOR();

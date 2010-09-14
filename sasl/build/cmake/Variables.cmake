@@ -1,5 +1,5 @@
 if( MSVC )
-set( SOFTART_BUILD_TYPE "$(Configuration)" )
+set( SOFTART_BUILD_TYPE "$(ConfigurationName)" )
 endif()
 
 set( SOFTART_ENV_WITHOUT_BUILD_TYPE "${SOFTART_PLATFORM_NAME}_${SOFTART_COMPILER_SHOWNAME}" )
