@@ -6,7 +6,7 @@ INCLUDE_DIRECTORIES(
 	${boost_home_dir}
 	${softart_home_dir}
 )
-	
+MESSAGE( STATUS "FUCK ${softart_home_dir}" )
 set( HEADER_FILES
 	${sasl_home_dir}/sasl/include/common/common_fwd.h
 	${sasl_home_dir}/sasl/include/common/compiler_info_manager.h

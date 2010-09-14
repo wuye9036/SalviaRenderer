@@ -17,3 +17,4 @@ macro(check_build_with_unicode)
 endmacro(check_build_with_unicode)
 
 include( Environment.cmake )
+
