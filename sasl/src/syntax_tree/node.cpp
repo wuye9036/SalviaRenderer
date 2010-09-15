@@ -33,6 +33,15 @@ void node::semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_inf
 	const_cast<node*>(this)->seminfo = si;
 }
 
+boost::shared_ptr<class ::sasl::code_generator::cgdata> node::cgdata() const{
+	return code_data;
+}
+
+void node::cgdata( boost::shared_ptr<class ::sasl::code_generator::cgdata> cgd ) const{
+	const_cast<node*>(this)->code_data = cgd;
+}
+
+
 boost::shared_ptr<token_attr> node::token() const{
 	return tok;
 }

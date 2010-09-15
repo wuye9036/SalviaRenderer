@@ -18,12 +18,12 @@ llvm_code_generator::llvm_code_generator( )
 {
 }
 
-void llvm_code_generator::visit( unary_expression& v ){
+void llvm_code_generator::visit( unary_expression& ){
 	
 }
 
-void llvm_code_generator::visit( cast_expression& v){}
-void llvm_code_generator::visit( binary_expression& v ){
+void llvm_code_generator::visit( cast_expression& ){}
+void llvm_code_generator::visit( binary_expression& ){
 	//// generate left and right expr.
 	//v.left_expr->accept(this);
 	//v.right_expr->accept(this);
@@ -53,13 +53,13 @@ void llvm_code_generator::visit( binary_expression& v ){
 	//	throw "cannot support yet";
 	//}
 }
-void llvm_code_generator::visit( expression_list& v ){}
-void llvm_code_generator::visit( cond_expression& v ){}
-void llvm_code_generator::visit( index_expression& v ){}
-void llvm_code_generator::visit( call_expression& v ){}
-void llvm_code_generator::visit( member_expression& v ){}
+void llvm_code_generator::visit( expression_list& ){}
+void llvm_code_generator::visit( cond_expression& ){}
+void llvm_code_generator::visit( index_expression& ){}
+void llvm_code_generator::visit( call_expression& ){}
+void llvm_code_generator::visit( member_expression& ){}
 
-void llvm_code_generator::visit( constant_expression& v ){
+void llvm_code_generator::visit( constant_expression& ){
 	//using sasl::semantic_analyser::value_semantic_info;
 	//boost::shared_ptr<value_semantic_info> val_syminfo
 	//	= get_or_create_semantic_info<value_semantic_info>(v);
@@ -88,18 +88,18 @@ void llvm_code_generator::visit( constant_expression& v ){
 	//syminfo->llvm_value = ret_v;
 }
 
-void llvm_code_generator::visit( identifier& v ){
+void llvm_code_generator::visit( identifier& ){
 
 }
-void llvm_code_generator::visit( variable_expression& v ){
+void llvm_code_generator::visit( variable_expression& ){
 
 }
 // declaration & type specifier
-void llvm_code_generator::visit( initializer& v ){}
-void llvm_code_generator::visit( expression_initializer& v ){}
-void llvm_code_generator::visit( member_initializer& v ){}
-void llvm_code_generator::visit( declaration& v ){}
-void llvm_code_generator::visit( variable_declaration& v ){
+void llvm_code_generator::visit( initializer& ){}
+void llvm_code_generator::visit( expression_initializer& ){}
+void llvm_code_generator::visit( member_initializer& ){}
+void llvm_code_generator::visit( declaration& ){}
+void llvm_code_generator::visit( variable_declaration& ){
 	//using ::sasl::semantic::extract_semantic_info;
 	//using ::sasl::semantic::variable_semantic_info;
 	//using ::sasl::semantic::get_or_create_semantic_info;
@@ -122,10 +122,10 @@ void llvm_code_generator::visit( variable_declaration& v ){
 	//}
 }
 
-void llvm_code_generator::visit( type_definition& v ){}
-void llvm_code_generator::visit( type_specifier& v ){
+void llvm_code_generator::visit( type_definition& ){}
+void llvm_code_generator::visit( type_specifier& ){
 }
-void llvm_code_generator::visit( buildin_type& v ){
+void llvm_code_generator::visit( buildin_type& ){
 	//using ::sasl::semantic::get_or_create_semantic_info;
 
 	//const llvm::Type* ltype = NULL;
@@ -138,13 +138,13 @@ void llvm_code_generator::visit( buildin_type& v ){
 	//boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v.handle());
 	//lsyminfo->llvm_type = ltype;
 }
-void llvm_code_generator::visit( array_type& v ){}
-void llvm_code_generator::visit( struct_type& v ){}
-void llvm_code_generator::visit( parameter& v ){
+void llvm_code_generator::visit( array_type& ){}
+void llvm_code_generator::visit( struct_type& ){}
+void llvm_code_generator::visit( parameter& ){
 
 }
 
-void llvm_code_generator::visit( function_type& v ){
+void llvm_code_generator::visit( function_type& ){
 	//// get return type
 	//v.retval_type->accept( this );
 	//llvm::Type* ret_type = extract_semantic_info<class semantic_info>(v.retval_type)->llvm_type;
@@ -177,17 +177,17 @@ void llvm_code_generator::visit( function_type& v ){
 }
 
 // statement
-void llvm_code_generator::visit( statement& v ){
+void llvm_code_generator::visit( statement& ){
 }
-void llvm_code_generator::visit( declaration_statement& v ){}
-void llvm_code_generator::visit( if_statement& v ){}
-void llvm_code_generator::visit( while_statement& v ){}
-void llvm_code_generator::visit( dowhile_statement& v ){}
-void llvm_code_generator::visit( case_label& v ){}
-void llvm_code_generator::visit( switch_statement& v ){}
-void llvm_code_generator::visit( compound_statement& v ){}
-void llvm_code_generator::visit( expression_statement& v ){}
-void llvm_code_generator::visit( jump_statement& v ){}
+void llvm_code_generator::visit( declaration_statement& ){}
+void llvm_code_generator::visit( if_statement& ){}
+void llvm_code_generator::visit( while_statement& ){}
+void llvm_code_generator::visit( dowhile_statement& ){}
+void llvm_code_generator::visit( case_label& ){}
+void llvm_code_generator::visit( switch_statement& ){}
+void llvm_code_generator::visit( compound_statement& ){}
+void llvm_code_generator::visit( expression_statement& ){}
+void llvm_code_generator::visit( jump_statement& ){}
 
 void llvm_code_generator::visit( ident_label& ){ }
 

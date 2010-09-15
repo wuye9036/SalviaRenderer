@@ -3,9 +3,13 @@
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
+
+#include <eflib/include/disable_warnings.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
+#include <eflib/include/enable_warnings.h>
+
 #include <boost/shared_ptr.hpp>
 #include <string>
 

@@ -17,6 +17,10 @@ namespace sasl{
 		class symbol;
 		class semantic_info;
 	}
+
+	namespace code_generator{
+		class cgdata;
+	}
 }
 BEGIN_NS_SASL_SYNTAX_TREE();
 
@@ -35,6 +39,10 @@ struct node{
 
 	boost::shared_ptr<class ::sasl::semantic::semantic_info> semantic_info() const;
 	void semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_info> ) const;
+
+	boost::shared_ptr<class ::sasl::code_generator::cgdata> cgdata() const;
+	void cgdata( boost::shared_ptr<class ::sasl::code_generator::cgdata> ) const;
+
 	boost::shared_ptr<token_attr> token() const;
 	syntax_node_types node_class() const;
 
@@ -49,6 +57,7 @@ protected:
 	boost::shared_ptr<token_attr>	tok;
 	boost::shared_ptr<class ::sasl::semantic::symbol>	sym;
 	boost::shared_ptr<class ::sasl::semantic::semantic_info> seminfo;
+	boost::shared_ptr<class ::sasl::code_generator::cgdata> code_data;
 	boost::weak_ptr<node> selfptr;
 	virtual ~node();
 };

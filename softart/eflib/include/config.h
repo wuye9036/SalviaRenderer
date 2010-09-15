@@ -32,6 +32,7 @@
 #		endif
 #		ifndef _SCL_SECURE_NO_DEPRECATE
 #			define _SCL_SECURE_NO_DEPRECATE
+#			define _SCL_SECURE_NO_WARNINGS
 #		endif
 #	endif
 
