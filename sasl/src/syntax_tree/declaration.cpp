@@ -114,7 +114,11 @@ buildin_type_code btc_helper::vector_of( buildin_type_code scalar_tc, size_t dim
 	assert( 1 <= dim && dim <= 4 );
 
 	buildin_type_code ret( scalar_tc | buildin_type_code::_vector );
-	ret.from_value( ret.to_value() | ( dim << ret._dim0_field_shift.to_value() ) );
+	ret.from_value(
+		buildin_type_code::storage_type(
+			ret.to_value() | ( dim << ret._dim0_field_shift.to_value() )
+			) 
+		);
 	return ret;
 }
 
@@ -125,10 +129,12 @@ buildin_type_code btc_helper::matrix_of( buildin_type_code scalar_tc, size_t dim
 
 	buildin_type_code ret( scalar_tc | buildin_type_code::_matrix );
 	ret.from_value(
-		ret.to_value()
-		| ( dim0 << ret._dim0_field_shift.to_value() )
-		| ( dim1 << ret._dim1_field_shift.to_value() )
-		);
+		buildin_type_code::storage_type(
+			ret.to_value()
+			| ( dim0 << ret._dim0_field_shift.to_value() )
+			| ( dim1 << ret._dim1_field_shift.to_value() )
+		)
+	);
 
 	return ret;
 }

@@ -1,8 +1,8 @@
-#include <sasl/include/code_generator/llvm/cgllvm_info.h>
+#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-llvm_semantic_info::llvm_semantic_info()
+cgllvm_common_context::cgllvm_common_context()
 	: llvm_value(NULL),
 	llvm_function(NULL),
 	llvm_type(NULL)

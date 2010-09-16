@@ -1,5 +1,5 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_H
-#define SASL_CODE_GENERATOR_LLVM_CGLLVM_H
+#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_IMPL_H
+#define SASL_CODE_GENERATOR_LLVM_CGLLVM_IMPL_H
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
@@ -15,7 +15,7 @@
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class cgllvm_context;
+class cgllvm_global_context;
 class llvm_code;
 
 class llvm_code_generator: public sasl::syntax_tree::syntax_tree_visitor{
@@ -67,7 +67,7 @@ public:
 
 	boost::shared_ptr<llvm_code> generated_module();
 private:
-	boost::shared_ptr<cgllvm_context> ctxt;
+	boost::shared_ptr<cgllvm_global_context> ctxt;
 };
 
 END_NS_SASL_CODE_GENERATOR()

@@ -2,6 +2,7 @@
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_API_H
 
 #include <sasl/include/code_generator/forward.h>
+#include <sasl/include/code_generator/codegen_context.h>
 #include <boost/shared_ptr.hpp>
 
 namespace llvm {
@@ -17,7 +18,7 @@ namespace sasl {
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class llvm_code{
+class llvm_code: public codegen_context{
 public:
 	virtual boost::shared_ptr<llvm::Module> module() const = 0;
 	virtual llvm::LLVMContext& context() = 0;

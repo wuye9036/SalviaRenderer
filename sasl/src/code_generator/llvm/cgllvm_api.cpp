@@ -1,5 +1,5 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm.h>
+#include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 #include <sasl/include/syntax_tree/node.h>
 
 BEGIN_NS_SASL_CODE_GENERATOR();

@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_CASE( module_generation_test ){
 	boost::shared_ptr<node> root( create_node<program>("test") );
 	mod = sasl::code_generator::generate_llvm_code( root );
 	BOOST_CHECK( mod );
+	BOOST_CHECK( root->codegen_ctxt() == mod );
 	BOOST_CHECK( mod->module() );
 	BOOST_CHECK( mod->module()->getModuleIdentifier() == "test" );
 }

@@ -33,12 +33,12 @@ void node::semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_inf
 	const_cast<node*>(this)->seminfo = si;
 }
 
-boost::shared_ptr<class ::sasl::code_generator::cgdata> node::cgdata() const{
-	return code_data;
+boost::shared_ptr<class ::sasl::code_generator::codegen_context> node::codegen_ctxt() const{
+	return cgctxt;
 }
 
-void node::cgdata( boost::shared_ptr<class ::sasl::code_generator::cgdata> cgd ) const{
-	const_cast<node*>(this)->code_data = cgd;
+void node::codegen_ctxt( boost::shared_ptr<class ::sasl::code_generator::codegen_context> ctxt ) const{
+	const_cast<node*>(this)->cgctxt = ctxt;
 }
 
 

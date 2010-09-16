@@ -1,6 +1,6 @@
-#include <sasl/include/code_generator/llvm/cgllvm.h>
-#include <sasl/include/code_generator/llvm/cgllvm_context.h>
-#include <sasl/include/code_generator/llvm/cgllvm_info.h>
+#include <sasl/include/code_generator/llvm/cgllvm_impl.h>
+#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -195,12 +195,13 @@ void llvm_code_generator::visit( program& v ){
 	if ( ctxt ){
 		return;
 	} else {
-		ctxt.reset( new cgllvm_context(v.name) );
+		ctxt = create_codegen_context<cgllvm_global_context>(v.handle());
+		ctxt->create_module( v.name );
 	}
 }
 
 boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
-	return ctxt;
+	return boost::shared_polymorphic_cast<llvm_code>(ctxt);
 }
 
 END_NS_SASL_CODE_GENERATOR();
