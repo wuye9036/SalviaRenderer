@@ -144,4 +144,15 @@ const std::string& symbol::name() const{
 	return symname;
 }
 
+std::string symbol::get_fullpath_name( const std::string& str ){
+	return fullpath() + std::string("$") + str;
+}
+
+std::string symbol::fullpath(){
+	if ( parent() ){
+		parent()->get_fullpath_name( name() );
+	} else {
+		return std::string("$") + name();
+	}
+}
 END_NS_SASL_SEMANTIC();

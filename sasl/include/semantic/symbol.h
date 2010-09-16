@@ -71,6 +71,19 @@ public:
 	void relink( boost::shared_ptr<struct node> n );
 
 	const std::string& name() const;
+	// modify a name with full path.
+	// it can generate unique name in an module.
+	// e.g.:
+	//
+	//	/* module x_mod; */
+	//	void foo(){
+	//		{
+	//			label: ====> full path of it is @x_mod$$0$label <- label name
+	//				;                              ^   ^ $0 is anonymous block 0
+	//		}                                     module name
+	//	}
+	std::string get_fullpath_name( const std::string& );
+	std::string fullpath();
 private:
 	static boost::shared_ptr<symbol> create(
 		boost::shared_ptr<symbol> parent,
@@ -97,7 +110,6 @@ private:
 
 	// mangled name.
 	std::string symname;
-	
 	std::string unmangled_name;
 };
 

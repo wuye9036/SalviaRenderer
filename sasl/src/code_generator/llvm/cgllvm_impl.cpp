@@ -16,7 +16,12 @@ using namespace std;
 using namespace syntax_tree;
 using namespace llvm;
 
+using semantic::symbol;
+
 typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
+
+//////////////////////////////////////////////////////////////////////////
+// utility functions.
 
 template< typename NodeT >
 static common_ctxt_handle extract_common_ctxt( NodeT& v ){
@@ -35,6 +40,16 @@ static common_ctxt_handle get_common_ctxt( boost::shared_ptr<NodeT> v ){
 	return get_or_create_codegen_context<cgllvm_common_context>(v);
 }
 
+template<typename NodeT>
+static common_ctxt_handle parent_ctxt( boost::shared_ptr<NodeT> v ){
+	boost::shared_ptr<symbol> parent_sym = v->symbol()->parent();
+	if( parent_sym ){
+		return extract_codegen_context<cgllvm_common_context>( parent_sym->node() );
+	}
+	return common_ctxt_handle();
+}
+//////////////////////////////////////////////////////////////////////////
+//
 llvm_code_generator::llvm_code_generator( )
 {
 }
@@ -144,7 +159,7 @@ void llvm_code_generator::visit( variable_declaration& ){
 }
 
 void llvm_code_generator::visit( type_definition& ){}
-void llvm_code_generator::visit( type_specifier& v ){
+void llvm_code_generator::visit( type_specifier& ){
 }
 void llvm_code_generator::visit( buildin_type& v ){
 	if ( v.codegen_ctxt() ){ return; }
@@ -167,44 +182,35 @@ void llvm_code_generator::visit( function_type& v ){
 	if ( v.codegen_ctxt() ) { return; }
 	common_ctxt_handle fctxt = get_common_ctxt( v );
 
+	// Generate return types.
 	v.retval_type->accept( this );
 	const llvm::Type* ret_type = extract_common_ctxt(v.retval_type)->type;
 
+	// Generate paramenter types.
 	vector< const llvm::Type*> param_types;
-	// TODO: parser types.
+	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
+		(*it)->accept(this);
+		common_ctxt_handle par_ctxt = get_common_ctxt( (*it)->param_type );
+		param_types.push_back( par_ctxt->type );
+	}
 
+	// Create function.
 	fctxt->func_type = llvm::FunctionType::get( ret_type, param_types, false );
 	fctxt->func = Function::Create( fctxt->func_type, Function::ExternalLinkage, v.name->str, ctxt->module().get() );
 
-	//// get return type
-	//v.retval_type->accept( this );
-	//llvm::Type* ret_type = extract_semantic_info<class semantic_info>(v.retval_type)->llvm_type;
+	// Register parameter names.
+	llvm::Function::arg_iterator arg_it = fctxt->func->arg_begin();
+	for( int arg_idx = 0; arg_idx < fctxt->func->arg_size(); ++arg_idx, ++arg_it){
+		boost::shared_ptr<parameter> par = v.params[arg_idx];
+		arg_it->setName( par->symbol()->name() );
+		common_ctxt_handle par_ctxt = get_common_ctxt( par->param_type );
+		par_ctxt->arg = boost::addressof( *arg_it );
+	}
 
-	//// get paramenter type
-	//std::vector<const llvm::Type* > param_types;
-	//for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
-	//	(*it)->accept( this );
-	//	param_types.push_back( extract_semantic_info<class semantic_info>(*it)->llvm_type );
-	//}
-
-	//// create function info
-	//FunctionType* funcType = FunctionType::get( ret_type, param_types, false );
-	//
-	//// create function and preparing parameters
-	//Function* func = static_cast<Function*>( cg_ctxt.mod->getOrInsertFunction(v.name->lit, funcType) );
-	//size_t arg_idx = 0;
-	//for( Function::arg_iterator arg_it = func->arg_begin(); arg_it != func->arg_end(); ++arg_it, ++arg_idx){
-	//	arg_it->setName( v.params[arg_idx]->ident->lit );
-	//	get_or_create_semantic_info<class semantic_info>( v.params[arg_idx] )->llvm_value = arg_it;
-	//}
-
-	//// generate function code
-	//BasicBlock* funcCodeBlock = BasicBlock::Create( ctxt, "entry", func );
-	//cg_ctxt.builder->SetInsertPoint(funcCodeBlock);
-	//for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
-	//	it != v.stmts.end(); ++it ){
-	//	(*it)->accept( this );
-	//}
+	// Create function body.
+	if ( v.body ){
+		v.body->accept( this );
+	}
 }
 
 // statement
@@ -216,7 +222,15 @@ void llvm_code_generator::visit( while_statement& ){}
 void llvm_code_generator::visit( dowhile_statement& ){}
 void llvm_code_generator::visit( case_label& ){}
 void llvm_code_generator::visit( switch_statement& ){}
-void llvm_code_generator::visit( compound_statement& ){}
+void llvm_code_generator::visit( compound_statement& ){
+	// generate function code
+	//BasicBlock* funcCodeBlock = BasicBlock::Create( ctxt, "entry", func );
+	//cg_ctxt.builder->SetInsertPoint(funcCodeBlock);
+	//for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+	//	it != v.stmts.end(); ++it ){
+	//	(*it)->accept( this );
+	//}
+}
 void llvm_code_generator::visit( expression_statement& ){}
 void llvm_code_generator::visit( jump_statement& ){}
 

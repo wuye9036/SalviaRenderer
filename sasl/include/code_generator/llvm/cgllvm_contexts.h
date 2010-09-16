@@ -5,10 +5,13 @@
 #include <sasl/include/code_generator/codegen_context.h>
 
 namespace llvm{
-	class Value;
+	// Node
+	class Argument;
 	class Function;
 	class GlobalVariable;
+	class Value;
 	
+	// Type
 	class FunctionType;
 	class Type;
 }
@@ -25,6 +28,7 @@ public:
 
 	llvm::Value* val;
 	llvm::Function* func;
+	llvm::Argument* arg;
 
 	const llvm::Type* type;
 	const llvm::FunctionType* func_type;
