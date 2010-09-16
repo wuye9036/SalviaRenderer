@@ -36,6 +36,7 @@ public:
 	const static this_type _sign_field_shift;
 	const static this_type _float;
 	const static this_type _dim0_field_shift;
+	const static this_type _void;
 	const static this_type _uint16;
 	const static this_type _dimension_mask;
 	const static this_type _dim1_field_shift;

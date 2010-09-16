@@ -3,10 +3,16 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 cgllvm_common_context::cgllvm_common_context()
-	: llvm_value(NULL),
-	llvm_function(NULL),
-	llvm_type(NULL)
+	: val(NULL),
+	func(NULL),
+	type(NULL),
+	gvar(NULL)
 {
+}
+
+// llvm context for type specifier
+cgllvm_type_context::cgllvm_type_context()
+	:basic_type(NULL){
 }
 
 END_NS_SASL_CODE_GENERATOR();

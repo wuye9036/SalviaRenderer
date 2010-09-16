@@ -19,6 +19,7 @@ set( HEADER_FILES
 set( SOURCE_FILES
 	llvm_test.cpp
 	program_test.cpp
+	function_test_basic.cpp
 )
 
 ADD_EXECUTABLE( sasl_test_cgllvm ${HEADER_FILES} ${SOURCE_FILES} )

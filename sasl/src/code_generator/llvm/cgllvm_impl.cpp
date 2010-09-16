@@ -10,9 +10,30 @@
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
+#define UNIMPLEMENTED() assert(!"Unimplemented!");
+
 using namespace std;
 using namespace syntax_tree;
 using namespace llvm;
+
+typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
+
+template< typename NodeT >
+static common_ctxt_handle extract_common_ctxt( NodeT& v ){
+	return extract_codegen_context<cgllvm_common_context>(v);
+}
+template< typename NodeT >
+static common_ctxt_handle extract_common_ctxt( boost::shared_ptr<NodeT> v ){
+	return extract_codegen_context<cgllvm_common_context>(v);
+}
+template< typename NodeT >
+static common_ctxt_handle get_common_ctxt( NodeT& v ){
+	return get_or_create_codegen_context<cgllvm_common_context>(v);
+}
+template< typename NodeT >
+static common_ctxt_handle get_common_ctxt( boost::shared_ptr<NodeT> v ){
+	return get_or_create_codegen_context<cgllvm_common_context>(v);
+}
 
 llvm_code_generator::llvm_code_generator( )
 {
@@ -123,20 +144,16 @@ void llvm_code_generator::visit( variable_declaration& ){
 }
 
 void llvm_code_generator::visit( type_definition& ){}
-void llvm_code_generator::visit( type_specifier& ){
+void llvm_code_generator::visit( type_specifier& v ){
 }
-void llvm_code_generator::visit( buildin_type& ){
-	//using ::sasl::semantic::get_or_create_semantic_info;
-
-	//const llvm::Type* ltype = NULL;
-	//
-	//if (v.value_typecode == buildin_type_code::_sint32 ){
-	//	ltype = llvm::cast<const llvm::Type>( llvm::IntegerType::getInt32Ty(ctxt->context()) );
-	//}
-	//// TODO: other buildin types.
-
-	//boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v.handle());
-	//lsyminfo->llvm_type = ltype;
+void llvm_code_generator::visit( buildin_type& v ){
+	if ( v.codegen_ctxt() ){ return; }
+	common_ctxt_handle type_ctxt = get_common_ctxt(v);
+	if ( v.value_typecode == buildin_type_code::_void ){
+		type_ctxt->type = llvm::Type::getVoidTy( ctxt->context() );
+		return;
+	}
+	UNIMPLEMENTED();
 }
 void llvm_code_generator::visit( array_type& ){}
 void llvm_code_generator::visit( struct_type& ){}
@@ -144,7 +161,21 @@ void llvm_code_generator::visit( parameter& ){
 
 }
 
-void llvm_code_generator::visit( function_type& ){
+void llvm_code_generator::visit( function_type& v ){
+
+	// skip if context existed.
+	if ( v.codegen_ctxt() ) { return; }
+	common_ctxt_handle fctxt = get_common_ctxt( v );
+
+	v.retval_type->accept( this );
+	const llvm::Type* ret_type = extract_common_ctxt(v.retval_type)->type;
+
+	vector< const llvm::Type*> param_types;
+	// TODO: parser types.
+
+	fctxt->func_type = llvm::FunctionType::get( ret_type, param_types, false );
+	fctxt->func = Function::Create( fctxt->func_type, Function::ExternalLinkage, v.name->str, ctxt->module().get() );
+
 	//// get return type
 	//v.retval_type->accept( this );
 	//llvm::Type* ret_type = extract_semantic_info<class semantic_info>(v.retval_type)->llvm_type;
@@ -194,9 +225,14 @@ void llvm_code_generator::visit( ident_label& ){ }
 void llvm_code_generator::visit( program& v ){
 	if ( ctxt ){
 		return;
-	} else {
-		ctxt = create_codegen_context<cgllvm_global_context>(v.handle());
-		ctxt->create_module( v.name );
+	}
+
+	ctxt = create_codegen_context<cgllvm_global_context>(v.handle());
+	ctxt->create_module( v.name );
+
+	for( vector< boost::shared_ptr<declaration> >::iterator
+		it = v.decls.begin(); it != v.decls.end(); ++it ){
+		(*it)->accept( this );
 	}
 }
 

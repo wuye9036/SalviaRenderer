@@ -20,6 +20,7 @@ const buildin_type_code buildin_type_code::_scalar ( 0 );
 const buildin_type_code buildin_type_code::_sign_field_shift ( 20 );
 const buildin_type_code buildin_type_code::_float ( 16842752 );
 const buildin_type_code buildin_type_code::_dim0_field_shift ( 8 );
+const buildin_type_code buildin_type_code::_void ( 67108864 );
 const buildin_type_code buildin_type_code::_uint16 ( 34734080 );
 const buildin_type_code buildin_type_code::_dimension_mask ( 4026531840 );
 const buildin_type_code buildin_type_code::_dim1_field_shift ( 0 );
@@ -67,6 +68,7 @@ public:
 		enum_to_name.insert( std::make_pair( buildin_type_code::_sign_field_shift, "_sign_field_shift" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_float, "_float" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_dim0_field_shift, "_dim0_field_shift" ) );
+		enum_to_name.insert( std::make_pair( buildin_type_code::_void, "_void" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_uint16, "_uint16" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_dimension_mask, "_dimension_mask" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_dim1_field_shift, "_dim1_field_shift" ) );
@@ -100,6 +102,7 @@ public:
 		name_to_enum.insert( std::make_pair( "_sign_field_shift", buildin_type_code::_sign_field_shift ) );
 		name_to_enum.insert( std::make_pair( "_float", buildin_type_code::_float ) );
 		name_to_enum.insert( std::make_pair( "_dim0_field_shift", buildin_type_code::_dim0_field_shift ) );
+		name_to_enum.insert( std::make_pair( "_void", buildin_type_code::_void ) );
 		name_to_enum.insert( std::make_pair( "_uint16", buildin_type_code::_uint16 ) );
 		name_to_enum.insert( std::make_pair( "_dimension_mask", buildin_type_code::_dimension_mask ) );
 		name_to_enum.insert( std::make_pair( "_dim1_field_shift", buildin_type_code::_dim1_field_shift ) );

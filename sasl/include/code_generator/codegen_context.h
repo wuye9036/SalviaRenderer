@@ -24,14 +24,45 @@ protected:
 	boost::weak_ptr<struct ::sasl::syntax_tree::node> owner;
 };
 
-template <typename T>
-boost::shared_ptr<T> create_codegen_context( boost::shared_ptr<struct ::sasl::syntax_tree::node> nd ){
+template <typename T, typename NodeT>
+boost::shared_ptr<T> create_codegen_context( boost::shared_ptr<NodeT> nd ){
 	boost::shared_ptr<T> ret = boost::make_shared<T>();
 	ret->node( nd );
 	nd->codegen_ctxt( ret );
 	return ret;
 }
 
+template <typename CodegenContextT, typename NodeU>
+boost::shared_ptr<CodegenContextT> extract_codegen_context( boost::shared_ptr<NodeU> pnode ){
+	assert( pnode );
+	if ( pnode->codegen_ctxt() ){
+		return boost::shared_polymorphic_cast<CodegenContextT>( pnode->codegen_ctxt() );
+	}
+	return boost::shared_ptr<CodegenContextT>();
+}
+
+template <typename CodegenContextT, typename NodeU> boost::shared_ptr<CodegenContextT> extract_codegen_context( NodeU& nd ){
+	if ( nd.codegen_ctxt() ){
+		return boost::shared_polymorphic_cast<CodegenContextT>( nd.codegen_ctxt() );
+	}
+	return boost::shared_ptr<CodegenContextT>();
+}
+
+template <typename CodegenContextT, typename NodeU>
+boost::shared_ptr<CodegenContextT> get_or_create_codegen_context( boost::shared_ptr<NodeU> pnode ){
+	assert( pnode );
+	if ( !pnode->codegen_ctxt() ){
+		create_codegen_context<CodegenContextT>( pnode );
+	}
+	return extract_codegen_context<CodegenContextT>(pnode);
+}
+
+template <typename CodegenContextT, typename NodeU> boost::shared_ptr<CodegenContextT> get_or_create_codegen_context( NodeU& nd ){
+	if ( !nd.codegen_ctxt() ){
+		create_codegen_context<CodegenContextT>( nd.handle() );
+	}
+	return extract_codegen_context<CodegenContextT>(nd);
+}
 END_NS_SASL_CODE_GENERATOR();
 
-#endif // SASL_CODE_GENERATOR_CGDATA_H
+#endif // SASL_CODE_GENERATOR_CODEGEN_CONTEXT_H

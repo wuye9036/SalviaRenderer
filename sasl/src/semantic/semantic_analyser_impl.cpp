@@ -17,6 +17,7 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::semantic::errors::semantic_error;
 using ::sasl::common::compiler_info_manager;
 
+using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::program;
 
 using ::sasl::semantic::get_or_create_semantic_info;
@@ -148,82 +149,87 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::array_type& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::struct_type& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
-	using ::sasl::semantic::symbol;
-	using ::sasl::syntax_tree::function_type;
-	using ::sasl::semantic::get_or_create_semantic_info;
-	using ::sasl::semantic::extract_semantic_info;
+	
+	std::string name = v.name->str;
+	symbol_scope ss( name, v.handle(), cursym );
 
-	// if it is only declaration.
-	std::string symbol_name;
-	std::string unmangled_name = v.name->str;
+	// TODO : It's doing nothing now.
 
-	// process parameter types for name mangling.
-	v.retval_type->accept( this );
-	for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
-		v.params[i_param]->param_type->accept(this);
-	}
+	//using ::sasl::semantic::symbol;
+	//using ::sasl::semantic::get_or_create_semantic_info;
+	//using ::sasl::semantic::extract_semantic_info;
 
-	std::string mangled_name = mangle_function_name( v.typed_handle<function_type>() );
+	//// if it is only declaration.
+	//std::string symbol_name;
+	//std::string unmangled_name = v.name->str;
 
-	bool use_existed_node(false);
+	//// process parameter types for name mangling.
+	//v.retval_type->accept( this );
+	//for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
+	//	v.params[i_param]->param_type->accept(this);
+	//}
 
-	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
-	if ( existed_sym ) {
-		boost::shared_ptr<function_type> existed_node = existed_sym->node()->typed_handle<function_type>();
-		if ( !existed_node ){
-			// symbol was used, and it is not a function. error.
-			// TODO: SEMANTIC ERROR: TYPE REDEFINITION.
-		} else {
-			// symbol was used, and the older is a function.
-			existed_node = cursym->find_mangled_this(mangled_name)->node()->typed_handle<function_type>();
-			if ( existed_node ){
-				if ( !is_equal( existed_node, v.typed_handle<function_type>() ) ){
-					// TODO: BUG ON OVERLOAD SUPPORTING
-					// TODO: SEMANTIC ERROR ON OVERLOAD UNSUPPORTED.
-				}
-				if ( v.declaration_only() ){
-					// it was had a definition/declaration, and now is a declaration only
-					use_existed_node = true;
-				} else {
-					if ( existed_node->declaration_only() ){
-						// the older is a declaration, and whatever now is, that's OK.
-						use_existed_node = true;
-					} else {
-						// older function definition v.s. new function definition, conflict...
-						// TODO:  SEMANTIC ERROR REDEFINE A FUNCTION.
-					}
-				}
-			} else {
-				use_existed_node = false;
-			}
-		}
-	} else {
-		use_existed_node = false;
-	}
+	//std::string mangled_name = mangle_function_name( v.typed_handle<function_type>() );
 
-	boost::scoped_ptr<symbol_scope> sc(
-		use_existed_node ? new symbol_scope(mangled_name, cursym) : new symbol_scope( mangled_name, unmangled_name, v.handle(), cursym )
-		);
+	//bool use_existed_node(false);
 
-	v.symbol( cursym );
-	if ( !use_existed_node ){
-		// replace old node via new node.
-		cursym->relink( v.handle() );
-		
-		// definition
-		if ( !v.declaration_only() ){
-			// process parameters
-			for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
-				v.params[i_param]->accept( this );
-			}
+	//boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
+	//if ( existed_sym ) {
+	//	boost::shared_ptr<function_type> existed_node = existed_sym->node()->typed_handle<function_type>();
+	//	if ( !existed_node ){
+	//		// symbol was used, and it is not a function. error.
+	//		// TODO: SEMANTIC ERROR: TYPE REDEFINITION.
+	//	} else {
+	//		// symbol was used, and the older is a function.
+	//		existed_node = cursym->find_mangled_this(mangled_name)->node()->typed_handle<function_type>();
+	//		if ( existed_node ){
+	//			if ( !is_equal( existed_node, v.typed_handle<function_type>() ) ){
+	//				// TODO: BUG ON OVERLOAD SUPPORTING
+	//				// TODO: SEMANTIC ERROR ON OVERLOAD UNSUPPORTED.
+	//			}
+	//			if ( v.declaration_only() ){
+	//				// it was had a definition/declaration, and now is a declaration only
+	//				use_existed_node = true;
+	//			} else {
+	//				if ( existed_node->declaration_only() ){
+	//					// the older is a declaration, and whatever now is, that's OK.
+	//					use_existed_node = true;
+	//				} else {
+	//					// older function definition v.s. new function definition, conflict...
+	//					// TODO:  SEMANTIC ERROR REDEFINE A FUNCTION.
+	//				}
+	//			}
+	//		} else {
+	//			use_existed_node = false;
+	//		}
+	//	}
+	//} else {
+	//	use_existed_node = false;
+	//}
 
-			// process statements
-			is_local = true;
-			for( size_t i_stmt = 0; i_stmt < v.body->stmts.size(); ++i_stmt ){
-				v.body->stmts[i_stmt]->accept( this );
-			}
-		}
-	}
+	//boost::scoped_ptr<symbol_scope> sc(
+	//	use_existed_node ? new symbol_scope(mangled_name, cursym) : new symbol_scope( mangled_name, unmangled_name, v.handle(), cursym )
+	//	);
+
+	//v.symbol( cursym );
+	//if ( !use_existed_node ){
+	//	// replace old node via new node.
+	//	cursym->relink( v.handle() );
+	//	
+	//	// definition
+	//	if ( !v.declaration_only() ){
+	//		// process parameters
+	//		for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
+	//			v.params[i_param]->accept( this );
+	//		}
+
+	//		// process statements
+	//		is_local = true;
+	//		for( size_t i_stmt = 0; i_stmt < v.body->stmts.size(); ++i_stmt ){
+	//			v.body->stmts[i_stmt]->accept( this );
+	//		}
+	//	}
+	//}
 }
 
 // statement

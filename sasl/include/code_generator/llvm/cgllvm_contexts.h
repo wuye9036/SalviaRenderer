@@ -7,8 +7,10 @@
 namespace llvm{
 	class Value;
 	class Function;
-	class Type;
 	class GlobalVariable;
+	
+	class FunctionType;
+	class Type;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -21,12 +23,22 @@ public:
 	typedef codegen_context base_type;
 	cgllvm_common_context();
 
-	llvm::Value* llvm_value;
-	llvm::Function* llvm_function;
-	const llvm::Type* llvm_type;
-	llvm::GlobalVariable* llvm_gvar;
+	llvm::Value* val;
+	llvm::Function* func;
+
+	const llvm::Type* type;
+	const llvm::FunctionType* func_type;
+
+	llvm::GlobalVariable* gvar;
 };
 
+class cgllvm_type_context: public codegen_context{
+public:
+	typedef codegen_context base_type;
+	cgllvm_type_context();
+
+	const llvm::Type* basic_type;
+};
 END_NS_SASL_CODE_GENERATOR();
 
 #endif
