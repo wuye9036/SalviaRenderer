@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE Code Generator Test
+#define BOOST_TEST_MODULE @SASL_TEST_PROJECT_NAME@
 #define BOOST_TEST_NO_MAIN
 #include <boost/test/unit_test.hpp>
 

@@ -4,6 +4,7 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
 option( SOFTART_BUILD_WITH_UNICODE "Build with unicode(wide-byte) or ansi(multi-byte)." TRUE )
 option( SOFTART_BUILD_WITH_LLVM "Build llvm code generator & llvm test." TRUE )
+option( SOFTART_ENABLE_SASL_REGRESSION_TEST "Regression test will combine all test to one test module." FALSE )
 
 include(${CMAKE_HOME_DIRECTORY}/build/cmake/SystemInfo.cmake)
 if(MSVC)

@@ -4,30 +4,21 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/make_tree.h>
 
+#include <sasl/test/test_cases/syntax_cases.h>
+
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE( program_test );
-
-BOOST_AUTO_TEST_CASE( create_program ){
-	using ::sasl::syntax_tree::create_node;
-	using ::sasl::syntax_tree::program;
-
-	create_node<program>( "test" );
-}
 
 BOOST_AUTO_TEST_CASE( prog_combinator_test )
 {
 	using ::sasl::syntax_tree::program;
 	using ::sasl::syntax_tree::dprog_combinator;
 
-	boost::shared_ptr<struct program> prog;
-	
-	dprog_combinator prog_comb("hello");
+	boost::shared_ptr<struct program> prog = syntax_cases::instance().empty_prog();
 
-	prog_comb.end( prog );
-
-	BOOST_CHECK( prog.get() != NULL );
-	BOOST_CHECK( prog->name == std::string( "hello" ) );
+	BOOST_CHECK( prog );
+	BOOST_CHECK( prog->name == syntax_cases::instance().prog_name() );
 }
 
 BOOST_AUTO_TEST_CASE( btc_test )

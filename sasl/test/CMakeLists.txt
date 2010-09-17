@@ -1,34 +1,14 @@
 check_build_with_unicode()
 set_environment()
 
-INCLUDE_DIRECTORIES(
-	${boost_home_dir}
-	${softart_home_dir}
-	${sasl_home_dir}
-)
+ADD_SUBDIRECTORY( test_cases )
+ADD_SUBDIRECTORY( st_combinator_test )
+# ADD_SUBDIRECTORY( feedback_test )
+# ADD_SUBDIRECTORY( semantic_test )
 
-LINK_DIRECTORIES(
-	${boost_lib_dir}
-)
-
-set( HEADER_FILES
-	test_utility.h
-)
-
-set( SOURCE_FILES
-	test_main.cpp
-	semantic.cpp
-	syntax_tree.cpp
-	test_utility.cpp
-	compinfos.cpp
-)
-
-ADD_EXECUTABLE( sasl_test ${HEADER_FILES} ${SOURCE_FILES} )
-TARGET_LINK_LIBRARIES( sasl_test
-	sasl_enums sasl_common sasl_semantic sasl_syntaxtree
-)
-
-config_output_paths( sasl_test )
+if( SOFTART_ENABLE_SASL_REGRESSION_TEST )
+ADD_SUBDIRECTORY( regression_test )
+endif( SOFTART_ENABLE_SASL_REGRESSION_TEST )
 
 if( SOFTART_BUILD_WITH_LLVM )
 ADD_SUBDIRECTORY( cgllvm_test )

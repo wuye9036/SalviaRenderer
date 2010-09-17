@@ -18,12 +18,15 @@ using ::sasl::semantic::errors::semantic_error;
 using ::sasl::common::compiler_info_manager;
 
 using ::sasl::syntax_tree::function_type;
+using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
 
 using ::sasl::semantic::get_or_create_semantic_info;
 using ::sasl::semantic::symbol;
 
 using ::sasl::semantic::program_si;
+
+using namespace std;
 
 semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
 	: infomgr( infomgr ){}
@@ -153,6 +156,14 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	std::string name = v.name->str;
 	symbol_scope ss( name, v.handle(), cursym );
 
+	v.retval_type->accept( this );
+	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin();
+		it != v.params.end(); ++it )
+	{
+		(*it)->accept( this );
+	}
+
+	v.body->accept( this );
 	// TODO : It's doing nothing now.
 
 	//using ::sasl::semantic::symbol;

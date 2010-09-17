@@ -24,7 +24,7 @@ set( SOURCE_FILES
 
 ADD_EXECUTABLE( sasl_test_cgllvm ${HEADER_FILES} ${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES( sasl_test_cgllvm
-	sasl_enums sasl_common sasl_semantic sasl_syntaxtree sasl_cgllvm LLVMCore LLVMSystem LLVMSupport sasl_test_cases
+	sasl_enums sasl_common sasl_semantic sasl_syntaxtree sasl_cgllvm LLVMCore LLVMSystem LLVMSupport
 )
 
 config_output_paths( sasl_test_cgllvm )

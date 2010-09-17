@@ -166,9 +166,11 @@ void llvm_code_generator::visit( buildin_type& v ){
 	common_ctxt_handle type_ctxt = get_common_ctxt(v);
 	if ( v.value_typecode == buildin_type_code::_void ){
 		type_ctxt->type = llvm::Type::getVoidTy( ctxt->context() );
-		return;
+	} else if ( v.value_typecode == buildin_type_code::_sint8 ){
+		type_ctxt->type = llvm::Type::getInt8Ty( ctxt->context() );
+	} else {
+		UNIMPLEMENTED();
 	}
-	UNIMPLEMENTED();
 }
 void llvm_code_generator::visit( array_type& ){}
 void llvm_code_generator::visit( struct_type& ){}
