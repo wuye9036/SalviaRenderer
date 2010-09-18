@@ -8,30 +8,28 @@
 
 #include <boost/test/unit_test.hpp>
 
+#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
+#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
+
 BOOST_AUTO_TEST_SUITE( program_test );
 
 BOOST_AUTO_TEST_CASE( prog_combinator_test )
 {
-	using ::sasl::syntax_tree::program;
-	using ::sasl::syntax_tree::dprog_combinator;
-
-	boost::shared_ptr<struct program> prog = syntax_cases::instance().empty_prog();
-
-	BOOST_CHECK( prog );
-	BOOST_CHECK( prog->name == syntax_cases::instance().prog_name() );
+	BOOST_CHECK( SYNCASE_(empty_prog) );
+	BOOST_CHECK( SYNCASE_(empty_prog)->name == SYNCASE_(prog_name) );
 }
 
 BOOST_AUTO_TEST_CASE( btc_test )
 {
 	using ::sasl::syntax_tree::btc_helper;
 
-	buildin_type_code btc_float( buildin_type_code::_float );
-	BOOST_CHECK( btc_float == buildin_type_code::_float );
-	BOOST_CHECK( btc_helper::is_scalar( btc_float ) );
-	BOOST_CHECK( !btc_helper::is_vector(btc_float) );
-	BOOST_CHECK( !btc_helper::is_matrix(btc_float) );
+	buildin_type_code btc_double( syntax_cases::instance().btc_double() );
+	BOOST_CHECK( btc_double == buildin_type_code::_double );
+	BOOST_CHECK( btc_helper::is_scalar( btc_double ) );
+	BOOST_CHECK( !btc_helper::is_vector(btc_double) );
+	BOOST_CHECK( !btc_helper::is_matrix(btc_double) );
 
-	buildin_type_code btc_float3( btc_helper::vector_of( buildin_type_code::_float, 3) );
+	buildin_type_code btc_float3( syntax_cases::instance().btc_float3() );
 	BOOST_CHECK( btc_float3 != buildin_type_code::_float );
 	BOOST_CHECK( !btc_helper::is_scalar( btc_float3 ) );
 	BOOST_CHECK( btc_helper::is_vector(btc_float3) );
@@ -39,13 +37,13 @@ BOOST_AUTO_TEST_CASE( btc_test )
 	BOOST_CHECK( btc_helper::scalar_of(btc_float3) == buildin_type_code::_float );
 	BOOST_CHECK( btc_helper::dim0_len(btc_float3) == 3 );
 
-	buildin_type_code btc_sint34( btc_helper::matrix_of( buildin_type_code::_sint32, 3, 4) );
-	BOOST_CHECK( !btc_helper::is_scalar( btc_sint34 ) );
-	BOOST_CHECK( !btc_helper::is_vector(btc_sint34) );
-	BOOST_CHECK( btc_helper::is_matrix(btc_sint34) );
-	BOOST_CHECK( btc_helper::scalar_of(btc_sint34) == buildin_type_code::_sint32 );
-	BOOST_CHECK( btc_helper::dim0_len(btc_sint34) == 3 );
-	BOOST_CHECK( btc_helper::dim1_len(btc_sint34) == 4 );
+	buildin_type_code btc_ulong3x2( syntax_cases::instance().btc_ulong3x2() );
+	BOOST_CHECK( !btc_helper::is_scalar( btc_ulong3x2 ) );
+	BOOST_CHECK( !btc_helper::is_vector(btc_ulong3x2) );
+	BOOST_CHECK( btc_helper::is_matrix(btc_ulong3x2) );
+	BOOST_CHECK( btc_helper::scalar_of(btc_ulong3x2) == buildin_type_code::_uint64 );
+	BOOST_CHECK( btc_helper::dim0_len(btc_ulong3x2) == 3 );
+	BOOST_CHECK( btc_helper::dim1_len(btc_ulong3x2) == 2 );
 }
 
 BOOST_AUTO_TEST_CASE( decl_combinator_test )
@@ -62,23 +60,18 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	using ::sasl::syntax_tree::type_specifier;
 	using ::sasl::syntax_tree::variable_declaration;
 
-	std::string var0_name( "var0_name" );
-
 	boost::shared_ptr<struct program> prog;
 	dprog_combinator prog_comb("hello");
 
-	boost::shared_ptr<variable_declaration> var0decl;
 	boost::shared_ptr<type_specifier> var0type, funcrettype;
 	boost::shared_ptr<parameter> par0, par1;
 	boost::shared_ptr<function_type> func;
 	boost::shared_ptr<compound_statement> body;
 	boost::shared_ptr<type_definition> tdef;
-	boost::shared_ptr<expression_initializer> exprinit;
 	prog_comb
-		.dvar( var0_name )
-			.dtype().dbuildin( buildin_type_code::_float ).end( var0type )
-			.dinit_expr().dconstant2( 3.0f ).end(exprinit)
-		.end( var0decl )
+		.dvar( SYNCASENAME_(var_float_3p25f) )
+			.dnode(SYNCASE_(var_float_3p25f) )
+		.end()
 		.dfunction( "what" )
 			.dreturntype().dbuildin( buildin_type_code::_sint32 ).end( funcrettype )
 			.dparam().dname("p0").dtype().dnode(var0type).end().end(par0)
@@ -93,16 +86,15 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( prog );
 	BOOST_CHECK( prog->decls.size() == 3 );
 
-	BOOST_CHECK( prog->decls[0] == var0decl );
-	BOOST_CHECK( var0decl );
-	BOOST_CHECK( var0decl->name->str == var0_name );
-	BOOST_CHECK( var0decl->type_info->value_typecode == buildin_type_code::_float );
-	BOOST_CHECK( var0type->value_typecode == buildin_type_code::_float );
-	BOOST_CHECK( exprinit );
-	BOOST_CHECK( exprinit->node_class() == syntax_node_types::expression_initializer );
-	BOOST_CHECK( var0decl->init == exprinit );
-	BOOST_CHECK( exprinit->init_expr );
-	BOOST_CHECK( exprinit->init_expr->node_class() == syntax_node_types::constant_expression );
+	BOOST_CHECK( prog->decls[0] == SYNCASE_(var_float_3p25f) );
+	BOOST_CHECK( SYNCASE_(var_float_3p25f) );
+	BOOST_CHECK( SYNCASE_(var_float_3p25f)->name->str == SYNCASENAME_(var_float_3p25f) );
+	BOOST_CHECK( SYNCASE_(var_float_3p25f)->type_info->value_typecode == SYNCASE_(btc_float) );
+	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f) );
+	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->node_class() == syntax_node_types::expression_initializer );
+	BOOST_CHECK( SYNCASE_(var_float_3p25f)->init == SYNCASE_(exprinit_cexpr_3p25f) );
+	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->init_expr == SYNCASE_( cexpr_3p25f ) );
+	BOOST_CHECK( SYNCASE_(cexpr_3p25f)->node_class() == syntax_node_types::constant_expression );
 
 	BOOST_CHECK( prog->decls[1] == func );
 	BOOST_CHECK( func->node_class() == syntax_node_types::function_type );
