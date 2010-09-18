@@ -83,8 +83,8 @@ void syntax_cases::initialize(){
 	.end( LOCVAR_(var_float_3p25f) );
 
 	//create functions
-	dvar_combinator(NULL)
+	dfunction_combinator(NULL)
 		.dname( NAME_(func_nnn) )
-		.dreturntype().dnode( type_void ).end()
+		.dreturntype().dnode( type_void() ).end()
 	.end( LOCVAR_(func_nnn) ) ;
 }
