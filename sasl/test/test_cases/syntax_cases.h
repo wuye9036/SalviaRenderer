@@ -50,10 +50,22 @@ public:
 	// variables
 	TEST_CASE_SP_VARIABLE( SYNTAX_(variable_declaration), var_int8 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(variable_declaration), var_float_3p25f );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(type_definition), tdef0_double2x4 );
 
 	// functions
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_nnn );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_norm0 );
 
+	// paramters
+	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p1_fn0 );
+
+	// statements
+	TEST_CASE_SP_VARIABLE( SYNTAX_(compound_statement), fn0_body );
+
+	// prog
+	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_main );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_for_gen );
 private:
 	syntax_cases();
 	void initialize();

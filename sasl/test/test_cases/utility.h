@@ -18,7 +18,8 @@ public:		\
 	std::string var_name##_name(){ return std::string( BOOST_PP_STRINGIZE(var_name) ); } \
 private:	\
 	type_name LOCVAR_(var_name);
-	
+
+#define COMMON_( type_name ) ::sasl::common::##type_name
 #define SYNTAX_( type_name ) ::sasl::syntax_tree::##type_name
 #define SEMANTIC_( type_name ) ::sasl::semantic::##type_name
 

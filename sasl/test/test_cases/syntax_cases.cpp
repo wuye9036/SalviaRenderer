@@ -1,6 +1,7 @@
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/include/syntax_tree/make_tree.h>
+#include <sasl/include/syntax_tree/statement.h>
 #include <boost/thread.hpp>
 
 using namespace ::sasl::syntax_tree;
@@ -72,6 +73,8 @@ void syntax_cases::initialize(){
 	dexpr_combinator(NULL).dconstant2( val_17ushort() ).end( LOCVAR_(cexpr_17ushort) );
 
 	// create variables
+	// int8_t var_int8;
+	// float var_float_3p25f = 3.25f;
 	dvar_combinator(NULL)
 		.dname( NAME_(var_int8) )
 		.dtype().dnode( type_sint8() ).end()
@@ -82,9 +85,51 @@ void syntax_cases::initialize(){
 		.dinit_expr().dnode( cexpr_3p25f() ).end( LOCVAR_(exprinit_cexpr_3p25f) )
 	.end( LOCVAR_(var_float_3p25f) );
 
-	//create functions
+	//////////////////////////////////////
+	// create functions
+
+	/*
+		void func_nnn_name();
+	*/
 	dfunction_combinator(NULL)
 		.dname( NAME_(func_nnn) )
 		.dreturntype().dnode( type_void() ).end()
 	.end( LOCVAR_(func_nnn) ) ;
+
+	/*
+		uint64_t func_norm0_name( uint64_t p0_fn0_name, int8_t p1_fn0_name ){
+			p0_fn0_name;
+		}
+	*/
+	dfunction_combinator(NULL)
+		.dname( NAME_(func_norm0) )
+		.dreturntype().dnode( type_uint64() ).end()
+		.dparam()
+			.dname( NAME_(p0_fn0) )
+			.dtype().dnode( type_uint64() ).end()
+		.end( LOCVAR_(p0_fn0) )
+		.dparam()
+			.dname( NAME_(p1_fn0) )
+			.dtype().dnode( type_sint8() ).end()
+		.end( LOCVAR_(p1_fn0) )
+		.dbody()
+			.dexprstmt().dvarexpr(NAME_(p0_fn0)).end()
+		.end( LOCVAR_(fn0_body) )
+	.end( LOCVAR_(func_norm0) );
+	
+	// typedef tdef0_double2x4 double2x4;
+	dtypedef_combinator(NULL)
+		.dname( NAME_(tdef0_double2x4) )
+		.dtype().dnode( type_double2x4() ).end()
+	.end( LOCVAR_(tdef0_double2x4) );
+
+	dprog_combinator( NAME_(prog_main).c_str() )
+		.dvar("").dnode( var_float_3p25f() ).end()
+		.dfunction("").dnode( func_norm0() ).end()
+		.dtypedef().dnode( tdef0_double2x4() ).end()
+	.end( LOCVAR_(prog_main) );
+
+	dprog_combinator( NAME_(prog_for_gen).c_str() )
+		.dfunction("").dnode( func_nnn() ).end()
+	.end( LOCVAR_(prog_for_gen) );
 }

@@ -48,45 +48,12 @@ BOOST_AUTO_TEST_CASE( btc_test )
 
 BOOST_AUTO_TEST_CASE( decl_combinator_test )
 {
-	using ::sasl::syntax_tree::program;
-	using ::sasl::syntax_tree::dprog_combinator;
-	using ::sasl::syntax_tree::dvar_combinator;
+	BOOST_CHECK( SYNCASENAME_(var_float_3p25f) == std::string("var_float_3p25f") );
 
-	using ::sasl::syntax_tree::compound_statement;
-	using ::sasl::syntax_tree::expression_initializer;
-	using ::sasl::syntax_tree::function_type;
-	using ::sasl::syntax_tree::parameter;
-	using ::sasl::syntax_tree::type_definition;
-	using ::sasl::syntax_tree::type_specifier;
-	using ::sasl::syntax_tree::variable_declaration;
+	BOOST_CHECK( SYNCASE_(prog_main) );
+	BOOST_CHECK( SYNCASE_(prog_main)->decls.size() == 3 );
 
-	boost::shared_ptr<struct program> prog;
-	dprog_combinator prog_comb("hello");
-
-	boost::shared_ptr<type_specifier> var0type, funcrettype;
-	boost::shared_ptr<parameter> par0, par1;
-	boost::shared_ptr<function_type> func;
-	boost::shared_ptr<compound_statement> body;
-	boost::shared_ptr<type_definition> tdef;
-	prog_comb
-		.dvar( SYNCASENAME_(var_float_3p25f) )
-			.dnode(SYNCASE_(var_float_3p25f) )
-		.end()
-		.dfunction( "what" )
-			.dreturntype().dbuildin( buildin_type_code::_sint32 ).end( funcrettype )
-			.dparam().dname("p0").dtype().dnode(var0type).end().end(par0)
-			.dparam().dname("p1").end(par1)
-			.dbody()
-				.dexprstmt().dvarexpr( "local_var" ).end()
-			.end( body )
-		.end(func)
-		.dtypedef().dname("alias").dtype().dnode(var0type).end().end(tdef)
-	.end( prog );
-
-	BOOST_CHECK( prog );
-	BOOST_CHECK( prog->decls.size() == 3 );
-
-	BOOST_CHECK( prog->decls[0] == SYNCASE_(var_float_3p25f) );
+	BOOST_CHECK( SYNCASE_(prog_main)->decls[0] == SYNCASE_(var_float_3p25f) );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f) );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->name->str == SYNCASENAME_(var_float_3p25f) );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->type_info->value_typecode == SYNCASE_(btc_float) );
@@ -96,28 +63,27 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->init_expr == SYNCASE_( cexpr_3p25f ) );
 	BOOST_CHECK( SYNCASE_(cexpr_3p25f)->node_class() == syntax_node_types::constant_expression );
 
-	BOOST_CHECK( prog->decls[1] == func );
-	BOOST_CHECK( func->node_class() == syntax_node_types::function_type );
-	BOOST_CHECK( func->name->str == "what" );
-	BOOST_CHECK( func->retval_type );
-	BOOST_CHECK( func->retval_type == funcrettype );
-	BOOST_CHECK( funcrettype->node_class() == syntax_node_types::buildin_type );
-	BOOST_CHECK( func->params.size() == 2 );
-	BOOST_CHECK( func->params[0] == par0 );
-	BOOST_CHECK( par0->name->str == std::string("p0") );
-	BOOST_CHECK( par0->param_type == var0type );
-	BOOST_CHECK( func->params[1] == par1 );
-	BOOST_CHECK( par1->name->str == std::string("p1") );
-	BOOST_CHECK( func->body == body );
-	BOOST_CHECK( body );
-	BOOST_CHECK( body->stmts.size() == 1 );
-	BOOST_CHECK( body->stmts[0]->node_class() == syntax_node_types::expression_statement );
+	BOOST_CHECK( SYNCASE_(prog_main)->decls[1] == SYNCASE_(func_norm0) );
+	BOOST_CHECK( SYNCASE_(func_norm0)->node_class() == syntax_node_types::function_type );
+	BOOST_CHECK( SYNCASE_(func_norm0)->name->str == SYNCASENAME_(func_norm0) );
+	BOOST_CHECK( SYNCASE_(func_norm0)->retval_type );
+	BOOST_CHECK( SYNCASE_(func_norm0)->retval_type == SYNCASE_(type_uint64) );
+	BOOST_CHECK( SYNCASE_(func_norm0)->params.size() == 2 );
+	BOOST_CHECK( SYNCASE_(func_norm0)->params[0] == SYNCASE_(p0_fn0) );
+	BOOST_CHECK( SYNCASE_(p0_fn0)->name->str == SYNCASENAME_(p0_fn0) );
+	BOOST_CHECK( SYNCASE_(p0_fn0)->param_type == SYNCASE_(type_uint64) );
+	BOOST_CHECK( SYNCASE_(func_norm0)->params[1] == SYNCASE_(p1_fn0) );
+	BOOST_CHECK( SYNCASE_(p1_fn0)->name->str == SYNCASENAME_(p1_fn0) );
+	BOOST_CHECK( SYNCASE_(func_norm0)->body == SYNCASE_(fn0_body) );
+	BOOST_CHECK( SYNCASE_(fn0_body) );
+	BOOST_CHECK( SYNCASE_(fn0_body)->stmts.size() == 1 );
+	BOOST_CHECK( SYNCASE_(fn0_body)->stmts[0]->node_class() == syntax_node_types::expression_statement );
 
-	BOOST_CHECK( prog->decls[2] == tdef );
-	BOOST_CHECK( tdef );
-	BOOST_CHECK( tdef->node_class() == syntax_node_types::typedef_definition );
-	BOOST_CHECK( tdef->name->str == "alias" );
-	BOOST_CHECK( tdef->type_info == var0type );
+	BOOST_CHECK( SYNCASE_(prog_main)->decls[2] == SYNCASE_(tdef0_double2x4) );
+	BOOST_CHECK( SYNCASE_(tdef0_double2x4) );
+	BOOST_CHECK( SYNCASE_(tdef0_double2x4)->node_class() == syntax_node_types::typedef_definition );
+	BOOST_CHECK( SYNCASE_(tdef0_double2x4)->name->str == SYNCASENAME_(tdef0_double2x4) );
+	BOOST_CHECK( SYNCASE_(tdef0_double2x4)->type_info == SYNCASE_(type_double2x4) );
 }
 
 BOOST_AUTO_TEST_CASE( type_combinator_test )

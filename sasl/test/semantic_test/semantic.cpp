@@ -1,73 +1,36 @@
 #include <boost/test/unit_test.hpp>
-#include "test_utility.h"
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/syntax_tree/make_tree.h>
-#include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
-
-//#include <sasl/include/semantic/name_mangler.h>
-//#include <sasl/include/syntax_tree/declaration.h>
-//#include <sasl/include/syntax_tree/expression.h>
-//#include <sasl/include/syntax_tree/make_tree.h>
-//#include <sasl/include/syntax_tree/node_creation.h>
-//#include <sasl/include/syntax_tree/statement.h>
-//#include <sasl/include/common/token_attr.h>
+#include <sasl/test/test_cases/syntax_cases.h>
+#include <sasl/test/test_cases/semantic_cases.h>
 #include <string>
 
 using ::sasl::common::compiler_info_manager;
 
 using ::sasl::syntax_tree::program;
 
-using ::sasl::syntax_tree::dfunction_combinator;
-using ::sasl::syntax_tree::dprog_combinator;
-
-using ::sasl::semantic::semantic_analysis;
 using ::sasl::semantic::program_si;
 using ::sasl::semantic::extract_semantic_info;
 
-/////////////////////////////////////////////////
-// support functions
-#define COMPILER_INFO_MGR( name ) \
-	boost::shared_ptr<compiler_info_manager> name = compiler_info_manager::create();
-
-static boost::shared_ptr<program> create_program_0(){
-	std::string prog_name("test");
-	boost::shared_ptr<program> prog;
-	dprog_combinator( prog_name ).end( prog );
-	return prog;
-}
-#define CREATE_NODE( node_type, node_name, id ) \
-	boost::shared_ptr< node_type > node_name = create_##node_type##_##id();
+#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
+#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
+#define SEMCASE_(case_name) semantic_cases::instance().##case_name##()
+#define SEMCASENAME_( case_name ) semantic_cases::instance().##case_name##_name()
 
 BOOST_AUTO_TEST_SUITE( semantic );
 
 BOOST_AUTO_TEST_CASE( program_si_test ){
-	COMPILER_INFO_MGR( cim );
+	semantic_cases::instance();
 
-	// test program symbols
-	CREATE_NODE( program, prog, 0 );
-	BOOST_CHECK( !prog->symbol() );
-
-	// test program semantic infos.
-	semantic_analysis( prog, cim );
-	BOOST_CHECK( prog->symbol() );
-	BOOST_CHECK( prog->semantic_info() );
-	BOOST_CHECK( extract_semantic_info<program_si>(prog)->name() == "test" );
+	BOOST_CHECK( SYNCASE_(prog_for_gen)->symbol() );
+	BOOST_CHECK( SYNCASE_(prog_for_gen)->semantic_info() );
+	BOOST_CHECK( extract_semantic_info<program_si>(SYNCASE_(prog_for_gen))->name()
+		== SYNCASENAME_(prog_for_gen) );
 }
 
 BOOST_AUTO_TEST_CASE( function_si_test ){
-	COMPILER_INFO_MGR( cim );
-
-	CREATE_NODE( program, prog, 0 );
-	BOOST_CHECK( !prog->symbol() );
-
-	semantic_analysis( prog, cim );
-
-	BOOST_CHECK( prog->symbol() );
-	BOOST_CHECK( prog->semantic_info() );
-	BOOST_CHECK( extract_semantic_info<program_si>(prog)->name() == prog_name );
 }
 //
 //BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
