@@ -11,6 +11,8 @@ LINK_DIRECTORIES(
 	${boost_lib_dir}
 )
 
+include ( tests.cmake )
+
 set( SASL_TEST_PROJECT_DIR st_combinator_test )
 set( SASL_TEST_PROJECT_NAME sasl_test_syntax_tree_combinator )
 
@@ -25,8 +27,8 @@ set( HEADER_FILES
 )
 
 set( SOURCE_FILES
-	syntax_tree.cpp
 	test_main.cpp
+	${SASL_ST_COMBINATOR_TEST_SOURCES}
 )
 
 ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
