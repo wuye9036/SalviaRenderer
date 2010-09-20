@@ -7,6 +7,7 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
+#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
@@ -17,6 +18,8 @@ public:
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), root );
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), null_root );
+
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), type_void );
 private:
 	cgllvm_cases();
 	void initialize();
