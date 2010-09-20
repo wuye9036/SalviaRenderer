@@ -82,3 +82,9 @@ token_types token_types::from_name( const std::string& name){
 	return s_dict.from_name(name);
 }
 
+std::string token_types::name() const{
+	return to_name( * this );
+}
+
+
+

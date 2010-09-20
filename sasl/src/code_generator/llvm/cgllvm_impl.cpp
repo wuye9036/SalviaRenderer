@@ -7,10 +7,12 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
+#include <eflib/include/debug_helper.h>
+#include <string>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-#define UNIMPLEMENTED() assert(!"Unimplemented!");
+#define UNIMPLEMENTED(exp, desc) custom_assert( exp, desc )
 
 using namespace std;
 using namespace syntax_tree;
@@ -169,7 +171,7 @@ void llvm_code_generator::visit( buildin_type& v ){
 	} else if ( v.value_typecode == buildin_type_code::_sint8 ){
 		type_ctxt->type = llvm::Type::getInt8Ty( ctxt->context() );
 	} else {
-		UNIMPLEMENTED();
+		UNIMPLEMENTED( false, v.value_typecode.name().c_str() );
 	}
 }
 void llvm_code_generator::visit( array_type& ){}

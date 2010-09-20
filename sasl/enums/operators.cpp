@@ -175,3 +175,9 @@ operators operators::from_name( const std::string& name){
 	return s_dict.from_name(name);
 }
 
+std::string operators::name() const{
+	return to_name( * this );
+}
+
+
+

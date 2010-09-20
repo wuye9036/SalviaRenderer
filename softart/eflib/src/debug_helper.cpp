@@ -3,7 +3,7 @@
 #include "../include/detail/initialize.h"
 #include "../include/config.h"
 
-#ifdef EFLIB_CONFIG_MSVC
+#ifdef EFLIB_WINDOWS
 #	define EFLIB_INCLUDE_WINDOWS_H
 #	include "../include/platform.h"
 #endif
@@ -12,30 +12,23 @@
 
 namespace efl{
 	namespace detail{
-		bool (*ProcPreAssert)(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore) = 
+		bool (*ProcPreAssert)(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore) = 
 			&ProcPreAssert_Init;
 
-		bool ProcPreAssert_Init(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore)
+		bool ProcPreAssert_Init(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore)
 		{
 			efl::detail::do_init();
 			return (*ProcPreAssert)(exp, expstr, desc, line, file, func, ignore);
 		}
 
-		bool ProcPreAssert_Defalut(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore)
+		bool ProcPreAssert_Defalut(bool exp, const char* /*expstr*/, const char* /* desc */, int /* line */, const char* /* file */, const char* /* func */, bool* /* ignore */)
 		{
-			UNREF_PARAM(expstr);
-			UNREF_PARAM(desc);
-			UNREF_PARAM(line);
-			UNREF_PARAM(file);
-			UNREF_PARAM(func);
-			UNREF_PARAM(ignore);
-
 			if(exp) return false;
 			return true;
 		}
 		
-		#ifdef EFLIB_CONFIG_MSVC
-		bool ProcPreAssert_MsgBox(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore)
+		#ifdef EFLIB_WINDOWS
+		bool ProcPreAssert_MsgBox(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore)
 		{
 			if(exp) return false;
 			static char buf[1024];

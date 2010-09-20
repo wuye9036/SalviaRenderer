@@ -70,3 +70,9 @@ storage_mode storage_mode::from_name( const std::string& name){
 	return s_dict.from_name(name);
 }
 
+std::string storage_mode::name() const{
+	return to_name( * this );
+}
+
+
+

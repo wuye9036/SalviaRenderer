@@ -6,22 +6,22 @@ include ( ../st_combinator_test/tests.cmake )
 include ( ../semantic_test/tests.cmake )
 
 INCLUDE_DIRECTORIES(
-	${boost_home_dir}
-	${softart_home_dir}
-	${sasl_home_dir}
+	${BOOST_HOME_DIR}
+	${SOFTART_HOME_DIR}
+	${SASL_HOME_DIR}
 	${3rd_party_llvm_include_path}
 )
 
 LINK_DIRECTORIES(
-	${boost_lib_dir}
+	${BOOST_LIB_DIR}
 	${3rd_party_llvm_lib_path}
 )
 
 set( SASL_TEST_PROJECT_DIR regression_test )
 set( SASL_TEST_PROJECT_NAME sasl_test_regression )
 configure_file(
-	${sasl_home_dir}/sasl/test/test_resources/test_main.cpp.in
-	${sasl_home_dir}/sasl/test/${SASL_TEST_PROJECT_DIR}/test_main.cpp
+	${SASL_HOME_DIR}/sasl/test/test_resources/test_main.cpp.in
+	${SASL_HOME_DIR}/sasl/test/${SASL_TEST_PROJECT_DIR}/test_main.cpp
 	@ONLY
 )
 

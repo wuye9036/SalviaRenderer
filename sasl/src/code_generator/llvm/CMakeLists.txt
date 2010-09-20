@@ -2,17 +2,17 @@ check_build_with_unicode()
 set_environment()
 
 INCLUDE_DIRECTORIES(
-	${sasl_home_dir}
-	${boost_home_dir}
-	${softart_home_dir}
+	${SASL_HOME_DIR}
+	${BOOST_HOME_DIR}
+	${SOFTART_HOME_DIR}
 	${3rd_party_llvm_include_path}
 )
 	
 set( HEADER_FILES
-	${sasl_home_dir}/sasl/include/code_generator/llvm/cgllvm_api.h
-	${sasl_home_dir}/sasl/include/code_generator/llvm/cgllvm_contexts.h
-	${sasl_home_dir}/sasl/include/code_generator/llvm/cgllvm_globalctxt.h
-	${sasl_home_dir}/sasl/include/code_generator/llvm/cgllvm_impl.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_api.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_contexts.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_globalctxt.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_impl.h
 )
 
 set( SOURCE_FILES

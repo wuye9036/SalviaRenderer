@@ -97,3 +97,9 @@ compiler_informations compiler_informations::from_name( const std::string& name)
 	return s_dict.from_name(name);
 }
 
+std::string compiler_informations::name() const{
+	return to_name( * this );
+}
+
+
+

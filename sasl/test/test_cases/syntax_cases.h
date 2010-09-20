@@ -54,7 +54,7 @@ public:
 
 	// functions
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_nnn );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_norm0 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_flt_2p_n_gen );
 
 	// paramters
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );

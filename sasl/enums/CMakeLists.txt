@@ -4,8 +4,8 @@ set_environment()
 include (generate_enum.cmake)
 
 INCLUDE_DIRECTORIES(../
-	${boost_home_dir}
-	${softart_home_dir}
+	${BOOST_HOME_DIR}
+	${SOFTART_HOME_DIR}
 )
 
 LIST(APPEND enum_confs enums.xgt )

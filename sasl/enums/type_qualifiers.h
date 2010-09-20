@@ -28,6 +28,7 @@ public:
 
 	static std::string to_name( const this_type& enum_val );
 	static this_type from_name( const std::string& name );
+	std::string name() const;
 
 };
 #endif

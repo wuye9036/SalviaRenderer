@@ -178,3 +178,9 @@ syntax_node_types syntax_node_types::from_name( const std::string& name){
 	return s_dict.from_name(name);
 }
 
+std::string syntax_node_types::name() const{
+	return to_name( * this );
+}
+
+
+

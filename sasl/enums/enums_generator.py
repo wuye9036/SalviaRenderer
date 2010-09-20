@@ -53,6 +53,7 @@ enum_name_translator_tmpl = \
 """
 	static std::string to_name( const this_type& enum_val );
 	static this_type from_name( const std::string& name );
+	std::string name() const;
 """
 
 #typename, enum_to_name_insert_list, name_to_enum_insert_list
@@ -100,7 +101,13 @@ std::string %(typename)s::to_name( const %(typename)s& enum_val){
 
 %(typename)s %(typename)s::from_name( const std::string& name){
 	return s_dict.from_name(name);
-}"""
+}
+
+std::string %(typename)s::name() const{
+	return to_name( * this );
+}
+
+"""
 
 #typename, member_name
 enum_to_name_insert_item_tmpl = \

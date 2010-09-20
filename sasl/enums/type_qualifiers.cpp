@@ -64,3 +64,9 @@ type_qualifiers type_qualifiers::from_name( const std::string& name){
 	return s_dict.from_name(name);
 }
 
+std::string type_qualifiers::name() const{
+	return to_name( * this );
+}
+
+
+

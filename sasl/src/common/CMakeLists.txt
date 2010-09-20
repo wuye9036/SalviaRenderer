@@ -2,17 +2,17 @@ check_build_with_unicode()
 set_environment()
 
 INCLUDE_DIRECTORIES(
-	${sasl_home_dir}
-	${boost_home_dir}
-	${softart_home_dir}
+	${SASL_HOME_DIR}
+	${BOOST_HOME_DIR}
+	${SOFTART_HOME_DIR}
 )
-MESSAGE( STATUS "FUCK ${softart_home_dir}" )
+
 set( HEADER_FILES
-	${sasl_home_dir}/sasl/include/common/common_fwd.h
-	${sasl_home_dir}/sasl/include/common/compiler_info_manager.h
-	${sasl_home_dir}/sasl/include/common/compiler_information.h
-	${sasl_home_dir}/sasl/include/common/lex_context.h
-	${sasl_home_dir}/sasl/include/common/token_attr.h
+	${SASL_HOME_DIR}/sasl/include/common/common_fwd.h
+	${SASL_HOME_DIR}/sasl/include/common/compiler_info_manager.h
+	${SASL_HOME_DIR}/sasl/include/common/compiler_information.h
+	${SASL_HOME_DIR}/sasl/include/common/lex_context.h
+	${SASL_HOME_DIR}/sasl/include/common/token_attr.h
 )
 
 set( SOURCE_FILES

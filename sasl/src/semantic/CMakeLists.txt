@@ -2,22 +2,22 @@ check_build_with_unicode()
 set_environment()
 
 INCLUDE_DIRECTORIES(
-	${sasl_home_dir}
-	${boost_home_dir}
-	${softart_home_dir}
+	${SASL_HOME_DIR}
+	${BOOST_HOME_DIR}
+	${SOFTART_HOME_DIR}
 )
 	
 set( HEADER_FILES
-	${sasl_home_dir}/sasl/include/semantic/semantic_forward.h
-	${sasl_home_dir}/sasl/include/semantic/name_mangler.h
-	${sasl_home_dir}/sasl/include/semantic/semantic_analyser.h
-	${sasl_home_dir}/sasl/include/semantic/semantic_analyser_impl.h
-	${sasl_home_dir}/sasl/include/semantic/semantic_error.h
-	${sasl_home_dir}/sasl/include/semantic/semantic_info.h
-	${sasl_home_dir}/sasl/include/semantic/semantic_infos.h
-	${sasl_home_dir}/sasl/include/semantic/symbol.h
-	${sasl_home_dir}/sasl/include/semantic/symbol_scope.h
-	${sasl_home_dir}/sasl/include/semantic/type_checker.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_forward.h
+	${SASL_HOME_DIR}/sasl/include/semantic/name_mangler.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser_impl.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_error.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_info.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.h
+	${SASL_HOME_DIR}/sasl/include/semantic/symbol.h
+	${SASL_HOME_DIR}/sasl/include/semantic/symbol_scope.h
+	${SASL_HOME_DIR}/sasl/include/semantic/type_checker.h
 )
 
 set( SOURCE_FILES

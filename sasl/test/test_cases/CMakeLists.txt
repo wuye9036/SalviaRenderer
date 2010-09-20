@@ -4,13 +4,9 @@ set_environment()
 include ( llvm_test_cases.cmake )
 
 INCLUDE_DIRECTORIES(
-	${boost_home_dir}
-	${softart_home_dir}
-	${sasl_home_dir}
-)
-
-LINK_DIRECTORIES(
-	${boost_lib_dir}
+	${BOOST_HOME_DIR}
+	${SOFTART_HOME_DIR}
+	${SASL_HOME_DIR}
 )
 
 set( HEADER_FILES

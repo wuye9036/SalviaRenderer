@@ -102,7 +102,7 @@ void syntax_cases::initialize(){
 		}
 	*/
 	dfunction_combinator(NULL)
-		.dname( NAME_(func_norm0) )
+		.dname( NAME_(func_flt_2p_n_gen) )
 		.dreturntype().dnode( type_uint64() ).end()
 		.dparam()
 			.dname( NAME_(p0_fn0) )
@@ -115,7 +115,7 @@ void syntax_cases::initialize(){
 		.dbody()
 			.dexprstmt().dvarexpr(NAME_(p0_fn0)).end()
 		.end( LOCVAR_(fn0_body) )
-	.end( LOCVAR_(func_norm0) );
+	.end( LOCVAR_(func_flt_2p_n_gen) );
 	
 	// typedef tdef0_double2x4 double2x4;
 	dtypedef_combinator(NULL)
@@ -127,11 +127,12 @@ void syntax_cases::initialize(){
 
 	dprog_combinator( NAME_(prog_main).c_str() )
 		.dvar("").dnode( var_float_3p25f() ).end()
-		.dfunction("").dnode( func_norm0() ).end()
+		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
 		.dtypedef().dnode( tdef0_double2x4() ).end()
 	.end( LOCVAR_(prog_main) );
 
 	dprog_combinator( NAME_(prog_for_gen).c_str() )
 		.dfunction("").dnode( func_nnn() ).end()
+		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
 	.end( LOCVAR_(prog_for_gen) );
 }

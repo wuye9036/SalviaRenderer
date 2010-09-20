@@ -14,12 +14,15 @@ endif(MSVC)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/Variables.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigurePath.cmake)
 
+include (${CMAKE_HOME_DIRECTORY}/build/cmake/Environment.cmake)
+set_environment()
+
 ADD_DEFINITIONS(
 	-DBOOST_ALL_DYN_LINK
 )
 
 ADD_SUBDIRECTORY( build/cmake )
-
+ADD_SUBDIRECTORY( "${SOFTART_HOME_DIR}/eflib" "${CMAKE_CURRENT_BINARY_DIR}/eflib" )
 ADD_SUBDIRECTORY( enums )
 ADD_SUBDIRECTORY( src )
 ADD_SUBDIRECTORY( test )

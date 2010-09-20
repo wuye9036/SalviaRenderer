@@ -76,3 +76,9 @@ literal_constant_types literal_constant_types::from_name( const std::string& nam
 	return s_dict.from_name(name);
 }
 
+std::string literal_constant_types::name() const{
+	return to_name( * this );
+}
+
+
+

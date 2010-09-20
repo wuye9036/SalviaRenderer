@@ -1,5 +1,9 @@
 check_build_with_unicode()
 
+INCLUDE_DIRECTORIES(
+	${BOOST_HOME_DIR}
+)
+
 set (HEADER_FILES
 	include/config.h
 	include/debug_helper.h

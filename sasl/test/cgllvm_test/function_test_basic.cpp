@@ -21,4 +21,7 @@ BOOST_AUTO_TEST_CASE( function_generation_test ){
 	BOOST_CHECK( func->getFunctionType()->getReturnType()->isVoidTy() );
 }
 
+BOOST_AUTO_TEST_CASE( function_param_test ){
+
+}
 BOOST_AUTO_TEST_SUITE_END()

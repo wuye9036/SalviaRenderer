@@ -157,3 +157,9 @@ buildin_type_code buildin_type_code::from_name( const std::string& name){
 	return s_dict.from_name(name);
 }
 
+std::string buildin_type_code::name() const{
+	return to_name( * this );
+}
+
+
+

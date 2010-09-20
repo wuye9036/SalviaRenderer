@@ -26,11 +26,11 @@ namespace efl{
 
 namespace efl{
 	namespace detail{
-		extern bool (*ProcPreAssert)(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore);
+		extern bool (*ProcPreAssert)(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore);
 
-		bool ProcPreAssert_Init(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore);
-		bool ProcPreAssert_Defalut(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore);
-		bool ProcPreAssert_MsgBox(bool exp, char* expstr, char* desc, int line, char* file, char* func, bool* ignore);
+		bool ProcPreAssert_Init(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore);
+		bool ProcPreAssert_Defalut(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore);
+		bool ProcPreAssert_MsgBox(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore);
 	}
 
 	template<class T>

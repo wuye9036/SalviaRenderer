@@ -70,3 +70,9 @@ jump_mode jump_mode::from_name( const std::string& name){
 	return s_dict.from_name(name);
 }
 
+std::string jump_mode::name() const{
+	return to_name( * this );
+}
+
+
+
