@@ -31,6 +31,9 @@ public:
 	llvm::Argument* arg;
 
 	const llvm::Type* type;
+	// for integral only
+	bool is_signed;
+
 	const llvm::FunctionType* func_type;
 
 	llvm::GlobalVariable* gvar;

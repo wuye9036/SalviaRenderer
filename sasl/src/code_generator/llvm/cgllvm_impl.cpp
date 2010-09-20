@@ -170,6 +170,12 @@ void llvm_code_generator::visit( buildin_type& v ){
 		type_ctxt->type = llvm::Type::getVoidTy( ctxt->context() );
 	} else if ( v.value_typecode == buildin_type_code::_sint8 ){
 		type_ctxt->type = llvm::Type::getInt8Ty( ctxt->context() );
+	} else if ( v.value_typecode == buildin_type_code::_uint8 ){
+		type_ctxt->type = llvm::Type::getInt8Ty( ctxt->context() );
+	} else if ( v.value_typecode == buildin_type_code::_sint16 ){
+		type_ctxt->type = llvm::Type::getInt16Ty( ctxt->context() );
+	} else if ( v.value_typecode == buildin_type_code::_uint16 ){
+		type_ctxt->type = llvm::Type::getInt16Ty( ctxt->context() );
 	} else {
 		UNIMPLEMENTED( false, v.value_typecode.name().c_str() );
 	}
