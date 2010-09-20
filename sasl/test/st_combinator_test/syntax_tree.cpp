@@ -1,3 +1,4 @@
+#include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -21,29 +22,54 @@ BOOST_AUTO_TEST_CASE( prog_combinator_test )
 
 BOOST_AUTO_TEST_CASE( btc_test )
 {
-	using ::sasl::syntax_tree::btc_helper;
-
 	buildin_type_code btc_double( syntax_cases::instance().btc_double() );
 	BOOST_CHECK( btc_double == buildin_type_code::_double );
-	BOOST_CHECK( btc_helper::is_scalar( btc_double ) );
-	BOOST_CHECK( !btc_helper::is_vector(btc_double) );
-	BOOST_CHECK( !btc_helper::is_matrix(btc_double) );
+	BOOST_CHECK( sasl_ehelper::is_scalar( btc_double ) );
+	BOOST_CHECK( !sasl_ehelper::is_vector(btc_double) );
+	BOOST_CHECK( !sasl_ehelper::is_matrix(btc_double) );
+	BOOST_CHECK( sasl_ehelper::is_real(btc_double) );
+	BOOST_CHECK( !sasl_ehelper::is_real( SYNCASE_(btc_sint8) ));
+	BOOST_CHECK( sasl_ehelper::len_0( SYNCASE_(btc_sint8) ) == 1 );
+	BOOST_CHECK( sasl_ehelper::len_1( SYNCASE_(btc_sint8) ) == 1 );
+	BOOST_CHECK( sasl_ehelper::is_integer( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !sasl_ehelper::is_integer( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( !sasl_ehelper::is_integer( SYNCASE_(btc_void) ) );
+
+	BOOST_CHECK( sasl_ehelper::is_signed( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !sasl_ehelper::is_signed( SYNCASE_(btc_uint64) ) );
+	BOOST_CHECK( sasl_ehelper::is_unsigned( SYNCASE_(btc_uint64) ) );
+	BOOST_CHECK( !sasl_ehelper::is_unsigned( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !sasl_ehelper::is_signed( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( !sasl_ehelper::is_unsigned( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( !sasl_ehelper::is_signed( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( !sasl_ehelper::is_unsigned( SYNCASE_(btc_void) ) );
 
 	buildin_type_code btc_float3( syntax_cases::instance().btc_float3() );
 	BOOST_CHECK( btc_float3 != buildin_type_code::_float );
-	BOOST_CHECK( !btc_helper::is_scalar( btc_float3 ) );
-	BOOST_CHECK( btc_helper::is_vector(btc_float3) );
-	BOOST_CHECK( !btc_helper::is_matrix(btc_float3) );
-	BOOST_CHECK( btc_helper::scalar_of(btc_float3) == buildin_type_code::_float );
-	BOOST_CHECK( btc_helper::dim0_len(btc_float3) == 3 );
+	BOOST_CHECK( !sasl_ehelper::is_scalar( btc_float3 ) );
+	BOOST_CHECK( sasl_ehelper::is_vector(btc_float3) );
+	BOOST_CHECK( !sasl_ehelper::is_matrix(btc_float3) );
+	BOOST_CHECK( sasl_ehelper::scalar_of(btc_float3) == buildin_type_code::_float );
+	BOOST_CHECK( sasl_ehelper::len_0(btc_float3) == 3 );
 
 	buildin_type_code btc_ulong3x2( syntax_cases::instance().btc_ulong3x2() );
-	BOOST_CHECK( !btc_helper::is_scalar( btc_ulong3x2 ) );
-	BOOST_CHECK( !btc_helper::is_vector(btc_ulong3x2) );
-	BOOST_CHECK( btc_helper::is_matrix(btc_ulong3x2) );
-	BOOST_CHECK( btc_helper::scalar_of(btc_ulong3x2) == buildin_type_code::_uint64 );
-	BOOST_CHECK( btc_helper::dim0_len(btc_ulong3x2) == 3 );
-	BOOST_CHECK( btc_helper::dim1_len(btc_ulong3x2) == 2 );
+	BOOST_CHECK( !sasl_ehelper::is_scalar( btc_ulong3x2 ) );
+	BOOST_CHECK( !sasl_ehelper::is_vector(btc_ulong3x2) );
+	BOOST_CHECK( sasl_ehelper::is_matrix(btc_ulong3x2) );
+	BOOST_CHECK( sasl_ehelper::scalar_of(btc_ulong3x2) == buildin_type_code::_uint64 );
+	BOOST_CHECK( sasl_ehelper::len_0(btc_ulong3x2) == 3 );
+	BOOST_CHECK( sasl_ehelper::len_1(btc_ulong3x2) == 2 );
+
+	BOOST_CHECK( !sasl_ehelper::is_scalar( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( !sasl_ehelper::is_scalar( SYNCASE_(btc_none) ) );
+	
+	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_void)) == 0 );
+	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_none)) == 0 );
+	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_sint8)) == 1 );
+	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_short2)) == 4 );
+	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_float3)) == 12 );
+	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_ulong3x2)) == 48 );
+	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_double2x4)) == 64 );
 }
 
 BOOST_AUTO_TEST_CASE( decl_combinator_test )
@@ -99,8 +125,6 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	using ::sasl::syntax_tree::struct_type;
 	using ::sasl::syntax_tree::type_specifier;
 	using ::sasl::syntax_tree::variable_declaration;
-
-	using ::sasl::syntax_tree::btc_helper;
 
 	std::string var0_name( "var0_name" );
 	std::string struct_name( "struct0_name" );
@@ -212,8 +236,8 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end()
 	.end( prog );
 
-	BOOST_CHECK( var1type && var1type->value_typecode == btc_helper::vector_of(buildin_type_code::_uint64, 2) );
-	BOOST_CHECK( var2type && var2type->value_typecode == btc_helper::matrix_of(buildin_type_code::_double, 4, 3) );
+	BOOST_CHECK( var1type && var1type->value_typecode == sasl_ehelper::vector_of(buildin_type_code::_uint64, 2) );
+	BOOST_CHECK( var2type && var2type->value_typecode == sasl_ehelper::matrix_of(buildin_type_code::_double, 4, 3) );
 	BOOST_CHECK( var2type->node_class() == syntax_node_types::buildin_type );
 	BOOST_CHECK( !var2type->is_uniform() );
 	BOOST_CHECK( var3type && var3type->name->str == struct_name );

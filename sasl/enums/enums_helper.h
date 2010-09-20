@@ -4,12 +4,14 @@
 struct buildin_type_code;
 
 class sasl_ehelper{
+public:
 	// buildin type code
 	static bool is_none( const buildin_type_code& /*btc*/ );
 	static bool is_void( const buildin_type_code& /*btc*/ );
 	static bool is_integer( const buildin_type_code& /*btc*/ );
 	static bool is_real( const buildin_type_code& /*btc*/ );
 	static bool is_signed( const buildin_type_code& /*btc*/ );
+	static bool is_unsigned( const buildin_type_code& /*btc*/ );
 	static bool is_scalar( const buildin_type_code& /*btc*/ );
 	static bool is_vector( const buildin_type_code& /*btc*/ );
 	static bool is_matrix( const buildin_type_code& /*btc*/ );

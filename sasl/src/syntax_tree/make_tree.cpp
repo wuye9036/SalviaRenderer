@@ -1,6 +1,8 @@
 #include <sasl/include/syntax_tree/make_tree.h>
 
 #include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/enums_helper.h>
+
 #include <sasl/include/common/token_attr.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
@@ -150,7 +152,7 @@ tree_combinator& dtype_combinator::dvec( buildin_type_code comp_btc, size_t size
 	}
 
 	typed_node( create_node<buildin_type>(token_attr::null()) );
-	typed_node()->value_typecode = btc_helper::vector_of( comp_btc, size );
+	typed_node()->value_typecode = sasl_ehelper::vector_of( comp_btc, size );
 	return *this;
 }
 
@@ -162,7 +164,7 @@ tree_combinator& dtype_combinator::dmat( buildin_type_code comp_btc, size_t s0, 
 		return default_proc();
 	}
 	typed_node( create_node<buildin_type>(token_attr::null() ) );
-	typed_node()->value_typecode = btc_helper::matrix_of(comp_btc, s0, s1);
+	typed_node()->value_typecode = sasl_ehelper::matrix_of(comp_btc, s0, s1);
 	return *this;
 }
 

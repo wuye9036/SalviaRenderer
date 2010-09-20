@@ -11,7 +11,7 @@ const buildin_type_code buildin_type_code::_sint32 ( 35848192 );
 const buildin_type_code buildin_type_code::_sint16 ( 35782656 );
 const buildin_type_code buildin_type_code::_generic_type_field_shift ( 24 );
 const buildin_type_code buildin_type_code::_scalar_type_mask ( 268369920 );
-const buildin_type_code buildin_type_code::_sign_mask ( 15728640 );
+const buildin_type_code buildin_type_code::_sign_mask ( 267386880 );
 const buildin_type_code buildin_type_code::_dim1_mask ( 255 );
 const buildin_type_code buildin_type_code::_boolean ( 50331648 );
 const buildin_type_code buildin_type_code::_generic_type_mask ( 251658240 );

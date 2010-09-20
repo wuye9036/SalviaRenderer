@@ -106,7 +106,7 @@
 		
 		<item value="1 * (2 ** $_sign_field_shift$) + $_integer$">_unsigned</item>
 		<item value="2 * (2 ** $_sign_field_shift$) + $_integer$">_signed</item>
-		<item value="15 * (2 ** $_sign_field_shift$)">_sign_mask</item>
+		<item value="255 * (2 ** $_sign_field_shift$)">_sign_mask</item>
 		
 		<item value="1 * (2 ** $_scalar_field_shift$) + $_signed$">_sint8</item>
 		<item value="2 * (2 ** $_scalar_field_shift$) + $_signed$">_sint16</item>

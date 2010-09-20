@@ -1,3 +1,4 @@
+#include <sasl/enums/enums_helper.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
@@ -166,19 +167,17 @@ void llvm_code_generator::visit( type_specifier& ){
 void llvm_code_generator::visit( buildin_type& v ){
 	if ( v.codegen_ctxt() ){ return; }
 	common_ctxt_handle type_ctxt = get_common_ctxt(v);
-	if ( v.value_typecode == buildin_type_code::_void ){
-		type_ctxt->type = llvm::Type::getVoidTy( ctxt->context() );
-	} else if ( v.value_typecode == buildin_type_code::_sint8 ){
-		type_ctxt->type = llvm::Type::getInt8Ty( ctxt->context() );
-	} else if ( v.value_typecode == buildin_type_code::_uint8 ){
-		type_ctxt->type = llvm::Type::getInt8Ty( ctxt->context() );
-	} else if ( v.value_typecode == buildin_type_code::_sint16 ){
-		type_ctxt->type = llvm::Type::getInt16Ty( ctxt->context() );
-	} else if ( v.value_typecode == buildin_type_code::_uint16 ){
-		type_ctxt->type = llvm::Type::getInt16Ty( ctxt->context() );
-	} else {
-		UNIMPLEMENTED( false, v.value_typecode.name().c_str() );
+	if ( sasl_ehelper::is_void( v.value_typecode ) ){
+		type_ctxt->type = Type::getVoidTy( ctxt->context() );
+	} else if( sasl_ehelper::is_scalar(v.value_typecode) ){
+		if( sasl_ehelper::is_integer(v.value_typecode) ){
+			type_ctxt->type = IntegerType::get( ctxt->context(), (unsigned int)sasl_ehelper::storage_size( v.value_typecode ) << 3 );
+		}
+		type_ctxt->is_signed = sasl_ehelper::is_signed( v.value_typecode );
 	}
+
+	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
+	UNIMPLEMENTED( type_ctxt->type, tips.c_str() );
 }
 void llvm_code_generator::visit( array_type& ){}
 void llvm_code_generator::visit( struct_type& ){}
@@ -195,13 +194,20 @@ void llvm_code_generator::visit( function_type& v ){
 	// Generate return types.
 	v.retval_type->accept( this );
 	const llvm::Type* ret_type = extract_common_ctxt(v.retval_type)->type;
+	
+	UNIMPLEMENTED( ret_type, "ret_type" );
+	if( !ret_type ){ return; }
 
 	// Generate paramenter types.
 	vector< const llvm::Type*> param_types;
 	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
 		(*it)->accept(this);
 		common_ctxt_handle par_ctxt = get_common_ctxt( (*it)->param_type );
-		param_types.push_back( par_ctxt->type );
+		if ( par_ctxt->type ){
+			param_types.push_back( par_ctxt->type );
+		} else {
+			UNIMPLEMENTED( ret_type, "Error occurs while parameter parsing." );
+		}
 	}
 
 	// Create function.

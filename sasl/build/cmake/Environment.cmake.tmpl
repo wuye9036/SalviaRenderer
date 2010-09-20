@@ -3,17 +3,11 @@ macro ( set_environment )
 set ( BOOST_HOME_DIR 
 	"C:/code/library/boost_1_43_0/"
 )
-set ( SOFTART_HOME_DIR
-	"${CMAKE_HOME_DIRECTORY}/../softart/"
-)
-set ( SASL_HOME_DIR
-	"${CMAKE_HOME_DIRECTORY}/../"
-)
 
 if(SOFTART_PLATFORM_NAME STREQUAL "x64")
-	set( boost_lib_dir ${boost_home_dir}/bin/x64)
+	set( BOOST_LIB_DIR ${BOOST_HOME_DIR}/bin/x64)
 else(SOFTART_PLATFORM_NAME STREQUAL "x64")
-	set( boost_lib_dir ${boost_home_dir}/bin/x86)
+	set( BOOST_LIB_DIR ${BOOST_HOME_DIR}/bin/x86)
 endif(SOFTART_PLATFORM_NAME STREQUAL "x64")
 
 endmacro( set_environment )

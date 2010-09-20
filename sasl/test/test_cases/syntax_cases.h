@@ -30,6 +30,7 @@ public:
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_float3 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_double2x4 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_ulong3x2 );
+	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_none );
 
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_3p25f );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_17ushort );

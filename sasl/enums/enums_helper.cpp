@@ -24,11 +24,15 @@ bool sasl_ehelper::is_signed( const buildin_type_code& btc )
 	return ( btc & buildin_type_code::_sign_mask ) == buildin_type_code::_signed;
 }
 
+bool sasl_ehelper::is_unsigned( const buildin_type_code& btc )
+{
+	return ( btc & buildin_type_code::_sign_mask ) == buildin_type_code::_unsigned;
+}
+
 bool sasl_ehelper::is_scalar( const buildin_type_code& btc )
 {
-	return 
-		( ( btc & buildin_type_code::_scalar_type_mask ) == buildin_type_code::_scalar )
-		&& !is_void(btc) && !is_none(btc) ;
+	bool scalar = ( ( btc & buildin_type_code::_dimension_mask ) == buildin_type_code::_scalar );
+	return scalar && !is_void(btc) && !is_none(btc) ;
 }
 
 bool sasl_ehelper::is_vector( const buildin_type_code& btc )
@@ -47,7 +51,7 @@ buildin_type_code sasl_ehelper::scalar_of( const buildin_type_code& btc ){
 
 buildin_type_code sasl_ehelper::vector_of( const buildin_type_code& btc, size_t len )
 {
-	if ( !is_scalar(btc) || is_void(btc) ){
+	if ( !is_scalar(btc) ){
 		return buildin_type_code::none;
 	}
 	buildin_type_code ret = ( btc | buildin_type_code::_vector );
@@ -78,8 +82,7 @@ buildin_type_code sasl_ehelper::matrix_of( const buildin_type_code& btc, size_t 
 
 size_t sasl_ehelper::len_0( const buildin_type_code& btc )
 {
-	if( is_scalar(btc) )
-	{
+	if( is_scalar(btc) ){
 		return 1;
 	}
 	return (size_t)
@@ -91,8 +94,7 @@ size_t sasl_ehelper::len_0( const buildin_type_code& btc )
 
 size_t sasl_ehelper::len_1( const buildin_type_code& btc )
 {
-	if( !is_matrix(btc) )
-	{
+	if( is_scalar(btc) || is_vector(btc) ){
 		return 1;
 	}
 	return (size_t)

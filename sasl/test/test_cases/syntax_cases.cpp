@@ -1,5 +1,6 @@
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <boost/thread.hpp>
@@ -30,10 +31,11 @@ LOCVAR_(btc_double)( buildin_type_code::_double ),
 LOCVAR_(btc_float)( buildin_type_code::_float ),
 LOCVAR_(btc_boolean)( buildin_type_code::_boolean ),
 LOCVAR_(btc_void)( buildin_type_code::_void ),
-LOCVAR_(btc_short2)( btc_helper::vector_of(buildin_type_code::_sint16, 2) ),
-LOCVAR_(btc_float3)( btc_helper::vector_of(buildin_type_code::_float, 3) ),
-LOCVAR_(btc_double2x4)( btc_helper::matrix_of(buildin_type_code::_double, 2, 4) ),
-LOCVAR_(btc_ulong3x2)( btc_helper::matrix_of(buildin_type_code::_uint64, 3, 2) )
+LOCVAR_(btc_short2)( sasl_ehelper::vector_of(buildin_type_code::_sint16, 2) ),
+LOCVAR_(btc_float3)( sasl_ehelper::vector_of(buildin_type_code::_float, 3) ),
+LOCVAR_(btc_double2x4)( sasl_ehelper::matrix_of(buildin_type_code::_double, 2, 4) ),
+LOCVAR_(btc_ulong3x2)( sasl_ehelper::matrix_of(buildin_type_code::_uint64, 3, 2) ),
+LOCVAR_(btc_none)( buildin_type_code::none )
 {}
 
 void syntax_cases::initialize(){
@@ -133,6 +135,6 @@ void syntax_cases::initialize(){
 
 	dprog_combinator( NAME_(prog_for_gen).c_str() )
 		.dfunction("").dnode( func_nnn() ).end()
-		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
+		// .dfunction("").dnode( func_flt_2p_n_gen() ).end()
 	.end( LOCVAR_(prog_for_gen) );
 }
