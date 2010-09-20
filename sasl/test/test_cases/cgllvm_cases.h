@@ -16,7 +16,7 @@ public:
 	static void release();
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), root );
-
+	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), null_root );
 private:
 	cgllvm_cases();
 	void initialize();

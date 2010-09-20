@@ -30,4 +30,5 @@ void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
 	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( SYNCASE_( prog_for_gen ) );
+	LOCVAR_(null_root) = CODEGEN_(generate_llvm_code)( SYNCASE_( null_prog ) );
 }

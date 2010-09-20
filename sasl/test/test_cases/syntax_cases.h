@@ -64,6 +64,7 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(compound_statement), fn0_body );
 
 	// prog
+	TEST_CASE_SP_VARIABLE( SYNTAX_(program), null_prog );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_main );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_for_gen );
 private:

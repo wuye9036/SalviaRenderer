@@ -123,6 +123,8 @@ void syntax_cases::initialize(){
 		.dtype().dnode( type_double2x4() ).end()
 	.end( LOCVAR_(tdef0_double2x4) );
 
+	LOCVAR_(null_prog).reset();
+
 	dprog_combinator( NAME_(prog_main).c_str() )
 		.dvar("").dnode( var_float_3p25f() ).end()
 		.dfunction("").dnode( func_norm0() ).end()
