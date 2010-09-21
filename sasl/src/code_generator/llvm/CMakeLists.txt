@@ -10,6 +10,7 @@ INCLUDE_DIRECTORIES(
 	
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_api.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_jit.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_contexts.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_globalctxt.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_impl.h
@@ -17,6 +18,7 @@ set( HEADER_FILES
 
 set( SOURCE_FILES
 	cgllvm_api.cpp
+	cgllvm_jit.cpp
 	cgllvm_contexts.cpp
 	cgllvm_globalctxt.cpp
 	cgllvm_impl.cpp
