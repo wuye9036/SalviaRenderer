@@ -36,4 +36,9 @@ void cgllvm_cases::initialize(){
 	LOCVAR_(null_root) = CODEGEN_(generate_llvm_code)( SYNCASE_( null_prog ) );
 
 	LOCVAR_(type_void) = CONTEXT_OF( type_void );
+	LOCVAR_(type_float) = CONTEXT_OF( type_float );
+
+	LOCVAR_(func_flt_2p_n_gen) = CONTEXT_OF( func_flt_2p_n_gen );
+	LOCVAR_(func_flt_2p_n_gen_p0) = CONTEXT_OF( p0_fn0 );
+	LOCVAR_(func_flt_2p_n_gen_p1) = CONTEXT_OF( p1_fn0 );
 }

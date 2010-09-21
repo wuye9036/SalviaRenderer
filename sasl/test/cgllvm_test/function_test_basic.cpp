@@ -19,6 +19,17 @@ BOOST_AUTO_TEST_CASE( function_generation_test ){
 	BOOST_CHECK( func );
 	BOOST_CHECK( func->getFunctionType()->getReturnType() );
 	BOOST_CHECK( func->getFunctionType()->getReturnType()->isVoidTy() );
+	BOOST_CHECK( LLVMCASE_(root)->module()->getFunction( SYNCASENAME_(func_flt_2p_n_gen) ) );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen) );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen_p1) );
+	BOOST_CHECK( !LLVMCASE_(func_flt_2p_n_gen_p0)->is_signed );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen_p1)->is_signed );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen)->func_type );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen)->func_type->getParamType(0)->isIntegerTy() );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen)->func_type->getReturnType()->isFloatTy() );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen)->func );
+	BOOST_CHECK( !LLVMCASE_(func_flt_2p_n_gen)->func->isVarArg() );
+	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen)->func->arg_begin()->getName() == SYNCASENAME_(p0_fn0) );
 }
 
 BOOST_AUTO_TEST_CASE( function_param_test ){

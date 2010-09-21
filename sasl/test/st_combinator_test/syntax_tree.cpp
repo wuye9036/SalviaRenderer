@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->node_class() == syntax_node_types::function_type );
 	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->name->str == SYNCASENAME_(func_flt_2p_n_gen) );
 	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->retval_type );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->retval_type == SYNCASE_(type_uint64) );
+	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->retval_type == SYNCASE_(type_float) );
 	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->params.size() == 2 );
 	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->params[0] == SYNCASE_(p0_fn0) );
 	BOOST_CHECK( SYNCASE_(p0_fn0)->name->str == SYNCASENAME_(p0_fn0) );

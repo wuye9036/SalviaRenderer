@@ -99,13 +99,13 @@ void syntax_cases::initialize(){
 	.end( LOCVAR_(func_nnn) ) ;
 
 	/*
-		uint64_t func_norm0_name( uint64_t p0_fn0_name, int8_t p1_fn0_name ){
-			p0_fn0_name;
+		uint64_t func_flt_2p_n_gen( uint64_t p0_fn0, int8_t p1_fn0 ){
+			p0_fn0;
 		}
 	*/
 	dfunction_combinator(NULL)
 		.dname( NAME_(func_flt_2p_n_gen) )
-		.dreturntype().dnode( type_uint64() ).end()
+		.dreturntype().dnode( type_float() ).end()
 		.dparam()
 			.dname( NAME_(p0_fn0) )
 			.dtype().dnode( type_uint64() ).end()
@@ -135,6 +135,6 @@ void syntax_cases::initialize(){
 
 	dprog_combinator( NAME_(prog_for_gen).c_str() )
 		.dfunction("").dnode( func_nnn() ).end()
-		// .dfunction("").dnode( func_flt_2p_n_gen() ).end()
+		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
 	.end( LOCVAR_(prog_for_gen) );
 }

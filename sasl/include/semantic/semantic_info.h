@@ -40,7 +40,7 @@ template <typename SemanticInfoT, typename NodeU> boost::shared_ptr<SemanticInfo
 
 template <typename SemanticInfoT, typename NodeU>
 boost::shared_ptr<SemanticInfoT> get_or_create_semantic_info( boost::shared_ptr<NodeU> pnode ){
-	assert( !pnode );
+	assert( pnode );
 	if ( !pnode->semantic_info() ){
 		pnode->semantic_info( boost::make_shared<SemanticInfoT>() );	
 	}

@@ -20,6 +20,11 @@ public:
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), null_root );
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), type_void );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), type_float );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), func_flt_2p_n_gen );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), func_flt_2p_n_gen_p0 );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), func_flt_2p_n_gen_p1 );
+
 private:
 	cgllvm_cases();
 	void initialize();

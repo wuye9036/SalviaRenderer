@@ -172,8 +172,12 @@ void llvm_code_generator::visit( buildin_type& v ){
 	} else if( sasl_ehelper::is_scalar(v.value_typecode) ){
 		if( sasl_ehelper::is_integer(v.value_typecode) ){
 			type_ctxt->type = IntegerType::get( ctxt->context(), (unsigned int)sasl_ehelper::storage_size( v.value_typecode ) << 3 );
+			type_ctxt->is_signed = sasl_ehelper::is_signed( v.value_typecode );
+		} else if ( v.value_typecode == buildin_type_code::_float ){
+			type_ctxt->type = Type::getFloatTy( ctxt->context() );
+		} else if ( v.value_typecode == buildin_type_code::_double ){
+			type_ctxt->type = Type::getDoubleTy( ctxt->context() );
 		}
-		type_ctxt->is_signed = sasl_ehelper::is_signed( v.value_typecode );
 	}
 
 	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
@@ -181,8 +185,13 @@ void llvm_code_generator::visit( buildin_type& v ){
 }
 void llvm_code_generator::visit( array_type& ){}
 void llvm_code_generator::visit( struct_type& ){}
-void llvm_code_generator::visit( parameter& ){
-
+void llvm_code_generator::visit( parameter& v ){
+	v.param_type->accept( this );
+	if (v.init){
+		v.init->accept( this );
+	}
+	get_common_ctxt(v)->type = get_common_ctxt(v.param_type)->type;
+	get_common_ctxt(v)->is_signed = get_common_ctxt(v.param_type)->is_signed;
 }
 
 void llvm_code_generator::visit( function_type& v ){
@@ -202,7 +211,7 @@ void llvm_code_generator::visit( function_type& v ){
 	vector< const llvm::Type*> param_types;
 	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
 		(*it)->accept(this);
-		common_ctxt_handle par_ctxt = get_common_ctxt( (*it)->param_type );
+		common_ctxt_handle par_ctxt = get_common_ctxt( (*it) );
 		if ( par_ctxt->type ){
 			param_types.push_back( par_ctxt->type );
 		} else {

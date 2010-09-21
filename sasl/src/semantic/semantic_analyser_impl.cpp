@@ -17,6 +17,7 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::semantic::errors::semantic_error;
 using ::sasl::common::compiler_info_manager;
 
+using ::sasl::syntax_tree::declaration;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
@@ -150,7 +151,14 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::array_type& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::struct_type& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& v ){
+	symbol_scope ss( v.name->str, v.handle(), cursym );
+	v.param_type->accept( this );
+	if ( v.init ){
+		v.init->accept( this );
+	}
+}
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	
 	std::string name = v.name->str;
@@ -163,7 +171,9 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 		(*it)->accept( this );
 	}
 
-	v.body->accept( this );
+	if ( v.body ){
+		v.body->accept( this );
+	}
 	// TODO : It's doing nothing now.
 
 	//using ::sasl::semantic::symbol;
@@ -286,6 +296,12 @@ void semantic_analyser_impl::visit( program& v ){
 	
 	// create root symbol
 	v.symbol( symbol::create_root( v.handle() ) );
+	cursym = v.symbol();
+
+	// analysis decalarations.
+	for( vector< boost::shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
+		(*it)->accept( this );
+	}
 }
 
 END_NS_SASL_SEMANTIC();
