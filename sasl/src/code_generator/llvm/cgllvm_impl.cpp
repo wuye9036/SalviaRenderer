@@ -221,7 +221,7 @@ void llvm_code_generator::visit( function_type& v ){
 
 	// Create function.
 	fctxt->func_type = llvm::FunctionType::get( ret_type, param_types, false );
-	fctxt->func = Function::Create( fctxt->func_type, Function::ExternalLinkage, v.name->str, ctxt->module().get() );
+	fctxt->func = Function::Create( fctxt->func_type, Function::ExternalLinkage, v.name->str, ctxt->module() );
 
 	// Register parameter names.
 	llvm::Function::arg_iterator arg_it = fctxt->func->arg_begin();

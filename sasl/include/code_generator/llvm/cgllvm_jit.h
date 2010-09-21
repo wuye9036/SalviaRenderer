@@ -3,23 +3,37 @@
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/jit_api.h>
-namespace llvm{ class Function; }
+#include <string>
+
+namespace llvm{
+	class Function; 
+	class ExecutionEngine;
+}
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_global_context;
 class cgllvm_common_context;
 
-void* cgllvm_jit( llvm::Function* func );
+class cgllvm_jit_engine:public jit_engine{
+public:
+	virtual void* get_function( const std::string& /*func_name*/ );
+	static boost::shared_ptr<cgllvm_jit_engine> create( boost::shared_ptr<cgllvm_global_context>, std::string& error );
+	virtual ~cgllvm_jit_engine(){}
+protected:
+	cgllvm_jit_engine( boost::shared_ptr<cgllvm_global_context> );
+	void build();
+	bool is_valid();
+	std::string error();
+	
+private:
+	cgllvm_jit_engine( const cgllvm_jit_engine& );
+	cgllvm_jit_engine& operator = (const cgllvm_jit_engine& );
 
-template <typename FunctionT>
-FunctionT* cgllvm_jit( const cgllvm_global_context& /*ctxt*/, const std::string& func_name );
-template <typename FunctionT>
-FunctionT* cgllvm_jit( FunctionT*& out, const cgllvm_global_context& /*ctxt*/, const std::string& func_name );
-template <typename FunctionT>
-FunctionT* cgllvm_jit( const cgllvm_common_context& /*ctxt*/ );
-template <typename FunctionT>
-FunctionT* cgllvm_jit( FunctionT*& out, const cgllvm_common_context& /*ctxt*/ );
+	boost::shared_ptr<cgllvm_global_context> global_ctxt;
+	boost::shared_ptr<llvm::ExecutionEngine> engine;
+	std::string err;
+};
 
 END_NS_SASL_CODE_GENERATOR();
 

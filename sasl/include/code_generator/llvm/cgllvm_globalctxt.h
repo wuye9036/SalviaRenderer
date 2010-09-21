@@ -23,14 +23,17 @@ public:
 	cgllvm_global_context();
 	void create_module( const std::string& modname );
 
-	virtual boost::shared_ptr<llvm::Module> module() const;
+	virtual llvm::Module* module() const;
+	virtual llvm::Module* get_ownership() const;
+
 	virtual llvm::LLVMContext& context();
 
 	~cgllvm_global_context();
 private:
 	boost::shared_ptr<llvm::LLVMContext> lctxt;
-	boost::shared_ptr<llvm::Module> mod;
 	boost::shared_ptr<llvm::IRBuilder<> > irbuilder;
+	llvm::Module* mod;
+	mutable bool have_mod;
 };
 
 END_NS_SASL_CODE_GENERATOR();

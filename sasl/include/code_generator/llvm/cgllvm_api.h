@@ -20,7 +20,8 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class llvm_code: public codegen_context{
 public:
-	virtual boost::shared_ptr<llvm::Module> module() const = 0;
+	virtual llvm::Module* module() const = 0;
+	virtual llvm::Module* get_ownership() const = 0;
 	virtual llvm::LLVMContext& context() = 0;
 	virtual ~llvm_code(){};
 };
