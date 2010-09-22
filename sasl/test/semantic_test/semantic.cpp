@@ -32,6 +32,12 @@ BOOST_AUTO_TEST_CASE( program_si_test ){
 
 BOOST_AUTO_TEST_CASE( function_si_test ){
 }
+
+BOOST_AUTO_TEST_CASE( expression_si_test ){
+	BOOST_CHECK( SEMCASE_(cexpr_776uint) );
+	BOOST_CHECK( SEMCASE_(cexpr_776uint)->value<uint32_t>() == 776 );
+}
+
 //
 //BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 //	using ::sasl::syntax_tree::program;

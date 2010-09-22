@@ -27,6 +27,7 @@ void syntax_cases::release(){
 
 syntax_cases::syntax_cases():
 LOCVAR_(btc_sint8)( buildin_type_code::_sint8 ),
+LOCVAR_(btc_uint32)( buildin_type_code::_uint32 ),
 LOCVAR_(btc_uint64)( buildin_type_code::_uint64 ),
 LOCVAR_(btc_double)( buildin_type_code::_double ),
 LOCVAR_(btc_float)( buildin_type_code::_float ),
@@ -44,12 +45,17 @@ void syntax_cases::initialize(){
 	LOCVAR_(prog_name) = std::string( "_this_is_empty_prog_test_" );
 	LOCVAR_(val_3p25f) = 3.25f;
 	LOCVAR_(val_17ushort) = (uint16_t)17;
+	LOCVAR_(val_776uint) = 776;
+	LOCVAR_(val_874uint) = 874;
+	LOCVAR_(val_21uint) = 21;
 
 	dprog_combinator( prog_name().c_str() ).end( LOCVAR_(empty_prog) );
 
 	// create scalar types.
 	dtype_combinator(NULL)
 		.dbuildin(btc_sint8()) .end( LOCVAR_(type_sint8));
+	dtype_combinator(NULL)
+		.dbuildin(btc_uint32()).end(LOCVAR_(type_uint32));
 	dtype_combinator(NULL)
 		.dbuildin(btc_uint64()) .end( LOCVAR_(type_uint64));
 	dtype_combinator(NULL)
@@ -74,6 +80,9 @@ void syntax_cases::initialize(){
 	// create expressions
 	dexpr_combinator(NULL).dconstant2( val_3p25f() ).end( LOCVAR_(cexpr_3p25f) );
 	dexpr_combinator(NULL).dconstant2( val_17ushort() ).end( LOCVAR_(cexpr_17ushort) );
+	dexpr_combinator(NULL).dconstant2( val_776uint() ).end( LOCVAR_(cexpr_776uint) );
+	dexpr_combinator(NULL).dconstant2( val_874uint() ).end( LOCVAR_(cexpr_874uint) );
+	dexpr_combinator(NULL).dconstant2( val_21uint() ).end( LOCVAR_(cexpr_21uint) );
 	dexpr_combinator(NULL).dbinary()
 		.dlexpr()
 			.dnode( cexpr_17ushort() )
@@ -82,7 +91,12 @@ void syntax_cases::initialize(){
 		.drexpr()
 			.dnode( cexpr_3p25f() )
 		.end()
-	.end( LOCVAR_(cexpr_add) );
+	.end( LOCVAR_(expr0_add) );
+	dexpr_combinator(NULL).dbinary()
+		.dlexpr().dnode( cexpr_776uint() ).end()
+		.dop( operators::add )
+		.drexpr().dnode( cexpr_21uint() ).end()
+	.end( LOCVAR_(expr1_add) );
 
 	// create variables
 	// int8_t var_int8;
@@ -129,6 +143,15 @@ void syntax_cases::initialize(){
 		.end( LOCVAR_(fn0_body) )
 	.end( LOCVAR_(func_flt_2p_n_gen) );
 	
+	dfunction_combinator(NULL)
+		.dname( NAME_(func0_cexpr) )
+		.dreturntype().dnode(type_uint32()).end()
+		.dbody()
+			.dreturn_expr().dnode( expr1_add() ).end()
+		.end()
+	.end( LOCVAR_(func0_cexpr) );
+				
+
 	// typedef tdef0_double2x4 double2x4;
 	dtypedef_combinator(NULL)
 		.dname( NAME_(tdef0_double2x4) )
@@ -143,8 +166,10 @@ void syntax_cases::initialize(){
 		.dtypedef().dnode( tdef0_double2x4() ).end()
 	.end( LOCVAR_(prog_main) );
 
+
 	dprog_combinator( NAME_(prog_for_gen).c_str() )
 		.dfunction("").dnode( func_nnn() ).end()
 		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
+		.dfunction("").dnode( func0_cexpr() ).end()
 	.end( LOCVAR_(prog_for_gen) );
 }

@@ -18,9 +18,13 @@ public:
 	TEST_CASE_CREF_VARIABLE( float, val_3p25f );
 	TEST_CASE_CREF_VARIABLE( float, val_3p08f );
 	TEST_CASE_CREF_VARIABLE( float, val_17ushort );
+	TEST_CASE_CREF_VARIABLE( uint32_t, val_776uint );
+	TEST_CASE_CREF_VARIABLE( uint32_t, val_874uint );
+	TEST_CASE_CREF_VARIABLE( uint32_t, val_21uint );
 
 	// buildin type codes.
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_sint8 );
+	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint32 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint64 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_float );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_double );
@@ -34,10 +38,14 @@ public:
 
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_3p25f );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_17ushort );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_776uint );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_874uint );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_21uint );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(expression_initializer), exprinit_cexpr_3p25f );
 
 	// buildin types
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_sint8 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_uint32 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_uint64 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_float );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_double );
@@ -56,13 +64,14 @@ public:
 	// functions
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_nnn );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_flt_2p_n_gen );
-
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func0_cexpr );
 	// paramters
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p1_fn0 );
 
 	// expressions
-	TEST_CASE_SP_VARIABLE( SYNTAX_(expression), cexpr_add );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(expression), expr0_add );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(expression), expr1_add );
 
 	// statements
 	TEST_CASE_SP_VARIABLE( SYNTAX_(compound_statement), fn0_body );

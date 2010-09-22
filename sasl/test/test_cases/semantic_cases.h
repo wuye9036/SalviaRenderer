@@ -6,6 +6,7 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
@@ -13,6 +14,7 @@ class semantic_cases{
 public:
 	static semantic_cases& instance();
 	static void release();
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(const_value_si), cexpr_776uint );
 private:
 	semantic_cases();
 	void initialize();

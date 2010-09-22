@@ -8,6 +8,8 @@
 boost::mutex semantic_cases::mtx;
 boost::shared_ptr<semantic_cases> semantic_cases::tcase;
 
+using namespace ::sasl::semantic;
+
 semantic_cases& semantic_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
@@ -28,4 +30,5 @@ semantic_cases::semantic_cases(){
 void semantic_cases::initialize(){
 	cim = COMMON_(compiler_info_manager)::create();
 	SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_gen), cim );
+	LOCVAR_( cexpr_776uint ) = extract_semantic_info<const_value_si>( SYNCASE_(cexpr_776uint) );
 }
