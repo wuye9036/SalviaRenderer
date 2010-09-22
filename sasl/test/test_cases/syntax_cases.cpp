@@ -3,6 +3,7 @@
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/statement.h>
+#include <sasl/include/syntax_tree/expression.h>
 #include <boost/thread.hpp>
 
 using namespace ::sasl::syntax_tree;
@@ -73,6 +74,15 @@ void syntax_cases::initialize(){
 	// create expressions
 	dexpr_combinator(NULL).dconstant2( val_3p25f() ).end( LOCVAR_(cexpr_3p25f) );
 	dexpr_combinator(NULL).dconstant2( val_17ushort() ).end( LOCVAR_(cexpr_17ushort) );
+	dexpr_combinator(NULL).dbinary()
+		.dlexpr()
+			.dnode( cexpr_17ushort() )
+		.end()
+		.dop( operators::add )
+		.drexpr()
+			.dnode( cexpr_3p25f() )
+		.end()
+	.end( LOCVAR_(cexpr_add) );
 
 	// create variables
 	// int8_t var_int8;

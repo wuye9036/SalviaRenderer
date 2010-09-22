@@ -61,6 +61,9 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p1_fn0 );
 
+	// expressions
+	TEST_CASE_SP_VARIABLE( SYNTAX_(expression), cexpr_add );
+
 	// statements
 	TEST_CASE_SP_VARIABLE( SYNTAX_(compound_statement), fn0_body );
 
