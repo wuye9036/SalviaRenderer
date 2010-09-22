@@ -291,6 +291,23 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(107) );
 	}
 
+	boost::shared_ptr<expression> expr;
+	{
+		dexpr_combinator expr_comb(NULL);
+		expr_comb
+			.dbinary()
+			.dlexpr().dconstant(literal_constant_types::integer, "100" ).end()
+			.dop( operators::add )
+			.drexpr().dconstant(literal_constant_types::integer, "23").end()
+			.end()
+		.end(expr);
+
+		expr->get_value();
+
+		BOOST_CHECK( expr->ctype == literal_constant_types::integer );
+		BOOST_CHECK( expr->value_tok->str == boost::lexical_cast<std::string>(123) );
+	}
+
 	boost::shared_ptr<variable_expression> varexpr;
 	{
 		std::string var_name("var0_name");
