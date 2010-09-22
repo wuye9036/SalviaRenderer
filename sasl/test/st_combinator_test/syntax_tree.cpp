@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 			.end()
 		.end(expr);
 
-		expr->get_value();
+		//expr->get_value();
 
 		BOOST_CHECK( expr->ctype == literal_constant_types::integer );
 		BOOST_CHECK( expr->value_tok->str == boost::lexical_cast<std::string>(123) );
