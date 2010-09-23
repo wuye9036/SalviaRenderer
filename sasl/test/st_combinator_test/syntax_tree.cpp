@@ -118,6 +118,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	using ::sasl::syntax_tree::dtype_combinator;
 	using ::sasl::syntax_tree::dvar_combinator;
 
+	using ::sasl::syntax_tree::alias_type;
 	using ::sasl::syntax_tree::array_type;
 	using ::sasl::syntax_tree::expression_initializer;
 	using ::sasl::syntax_tree::member_initializer;
@@ -222,7 +223,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 
 	boost::shared_ptr<type_specifier>
 		var0type, var1type, var2type;
-	boost::shared_ptr<struct_type> var3type;
+	boost::shared_ptr<alias_type> var3type;
 	boost::shared_ptr<array_type> var4type;
 	prog_comb
 		.dvar( var0_name )
@@ -240,9 +241,9 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	BOOST_CHECK( var2type && var2type->value_typecode == sasl_ehelper::matrix_of(buildin_type_code::_double, 4, 3) );
 	BOOST_CHECK( var2type->node_class() == syntax_node_types::buildin_type );
 	BOOST_CHECK( !var2type->is_uniform() );
-	BOOST_CHECK( var3type && var3type->name->str == struct_name );
+	BOOST_CHECK( var3type && var3type->alias->str == struct_name );
 	BOOST_CHECK( var3type->is_uniform() );
-	BOOST_CHECK( var3type->node_class() == syntax_node_types::struct_type );
+	BOOST_CHECK( var3type->node_class() == syntax_node_types::alias_type );
 
 }
 

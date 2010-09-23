@@ -98,6 +98,16 @@ protected:
 	type_specifier(syntax_node_types type_id, boost::shared_ptr<token_attr> tok);
 };
 
+struct alias_type: public type_specifier{
+	SASL_SYNTAX_NODE_CREATORS();
+	void accept( syntax_tree_visitor* v );
+	boost::shared_ptr<token_attr> alias;
+protected:
+	alias_type( boost::shared_ptr<token_attr> tok );
+	alias_type& operator = ( const alias_type& );
+	alias_type( const alias_type& );
+};
+
 struct buildin_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
 	void accept( syntax_tree_visitor* v );

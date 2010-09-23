@@ -122,7 +122,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 		// if this symbol is usable, process type node.
 		if ( existed_sym ){
 			boost::shared_ptr<type_semantic_info> existed_tsi = extract_semantic_info<type_semantic_info>( existed_sym->node() );
-			if ( !is_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
+			if ( !type_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
 				// if new symbol is different from the old, semantic error.
 				// The final effect is that the new definition overwrites the old one.
 

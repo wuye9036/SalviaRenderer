@@ -60,15 +60,15 @@ name_mangler::name_mangler(){
 
 std::string name_mangler::mangle( boost::shared_ptr<function_type> mangling_function ){
 	mangled_name = "M";
-	mangle_basic_name( mangling_function->name->str );
-	mangled_name += '@';
-	mangle_type( actual_type(mangling_function->retval_type) );
-	for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
-		boost::shared_ptr<type_specifier> par_type
-			= actual_type( mangling_function->params[i_param]->typed_handle<variable_declaration>()->type_info );
-		mangle_type( par_type );
-	}
-	mangled_name += "@Z";
+	//mangle_basic_name( mangling_function->name->str );
+	//mangled_name += '@';
+	//mangle_type( actual_type(mangling_function->retval_type) );
+	//for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
+	//	boost::shared_ptr<type_specifier> par_type
+	//		= actual_type( mangling_function->params[i_param]->typed_handle<variable_declaration>()->type_info );
+	//	mangle_type( par_type );
+	//}
+	//mangled_name += "@Z";
 	return mangled_name;
 }
 

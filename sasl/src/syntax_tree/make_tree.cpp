@@ -175,8 +175,8 @@ tree_combinator& dtype_combinator::dalias( const std::string& alias )
 	if( cur_node ){
 		return default_proc();
 	}
-	typed_node( create_node<struct_type>( token_attr::null() ) );
-	typed_node2<struct_type>()->name = token_attr::from_string(alias);
+	typed_node( create_node<alias_type>( token_attr::null() ) );
+	typed_node2<alias_type>()->alias = token_attr::from_string(alias);
 	return *this;
 }
 

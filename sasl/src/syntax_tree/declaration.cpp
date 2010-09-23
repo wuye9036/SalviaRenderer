@@ -116,4 +116,13 @@ void null_declaration::accept( syntax_tree_visitor* v ){
 	v->visit( *this );
 }
 
+
+void alias_type::accept( syntax_tree_visitor* v )
+{
+	v->visit( *this );
+}
+
+alias_type::alias_type( boost::shared_ptr<token_attr> tok )
+: type_specifier( syntax_node_types::alias_type, tok ){
+}
 END_NS_SASL_SYNTAX_TREE();

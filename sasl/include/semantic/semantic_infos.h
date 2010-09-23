@@ -78,6 +78,10 @@ private:
 	buildin_type_code valtype;
 };
 
+class type_info_si: public semantic_info{
+public:
+	virtual boost::shared_ptr<type_specifier> type_info() = 0;
+};
 /*					
 						has symbol		symbol's node		referred type		actual type
 	buildin type		   no				N/A				   N/A				    this

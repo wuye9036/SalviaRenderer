@@ -116,7 +116,7 @@ type_semantic_info::type_semantic_info(): ttype(type_types::none) { }
 
 boost::shared_ptr<type_specifier> type_semantic_info::full_type() const{
 	boost::shared_ptr<type_specifier> ret_type = type_node.lock();
-	return (ttype == type_types::alias) ? actual_type( ret_type ) : ret_type;
+	return /*(ttype == type_types::alias) ? actual_type( ret_type ) :*/ ret_type;
 }
 
 void type_semantic_info::full_type( boost::shared_ptr<type_specifier> ftnode ){

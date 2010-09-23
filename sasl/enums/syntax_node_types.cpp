@@ -35,6 +35,7 @@ const syntax_node_types syntax_node_types::ident_label ( 1970324836974593 );
 const syntax_node_types syntax_node_types::declaration ( 281474976710656 );
 const syntax_node_types syntax_node_types::array_type ( 281479271677954 );
 const syntax_node_types syntax_node_types::jump_statement ( 844424930131976 );
+const syntax_node_types syntax_node_types::alias_type ( 281479271677957 );
 const syntax_node_types syntax_node_types::buildin_type ( 281479271677953 );
 const syntax_node_types syntax_node_types::binary_expression ( 562949953421317 );
 const syntax_node_types syntax_node_types::expression_list ( 562949953421318 );
@@ -90,6 +91,7 @@ public:
 		enum_to_name.insert( std::make_pair( syntax_node_types::declaration, "declaration" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::array_type, "array_type" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::jump_statement, "jump_statement" ) );
+		enum_to_name.insert( std::make_pair( syntax_node_types::alias_type, "alias_type" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::buildin_type, "buildin_type" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::binary_expression, "binary_expression" ) );
 		enum_to_name.insert( std::make_pair( syntax_node_types::expression_list, "expression_list" ) );
@@ -131,6 +133,7 @@ public:
 		name_to_enum.insert( std::make_pair( "declaration", syntax_node_types::declaration ) );
 		name_to_enum.insert( std::make_pair( "array_type", syntax_node_types::array_type ) );
 		name_to_enum.insert( std::make_pair( "jump_statement", syntax_node_types::jump_statement ) );
+		name_to_enum.insert( std::make_pair( "alias_type", syntax_node_types::alias_type ) );
 		name_to_enum.insert( std::make_pair( "buildin_type", syntax_node_types::buildin_type ) );
 		name_to_enum.insert( std::make_pair( "binary_expression", syntax_node_types::binary_expression ) );
 		name_to_enum.insert( std::make_pair( "expression_list", syntax_node_types::expression_list ) );

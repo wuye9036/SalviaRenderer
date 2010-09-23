@@ -164,6 +164,7 @@
 		<item value = "$type_specifier$ + 2">array_type</item>
 		<item value = "$type_specifier$ + 3">struct_type</item>
 		<item value = "$type_specifier$ + 4">function_type</item>
+		<item value = "$type_specifier$ + 5">alias_type</item>
 
 		<item value = "$statement$ + 1">declaration_statement</item>
 		<item value = "$statement$ + 2">if_statement</item>
