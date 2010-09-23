@@ -6,6 +6,7 @@
 #include <sasl/enums/type_types.h>
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/enums_helper.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
 #include <boost/weak_ptr.hpp>
@@ -43,15 +44,27 @@ private:
 	std::string prog_name;
 };
 
-class const_value_semantic_info: public semantic_info{
+class const_value_si: public semantic_info{
 public:
 	typedef semantic_info base_type;
-	const_value_semantic_info();
+	const_value_si();
 
-	void constant_value_literal( const std::string& litstr, literal_constant_types lctype);
+	void set_literal( const std::string& litstr, literal_constant_types lctype);
 
 	template <typename T> T value() const{
-		return boost::get<T>(val);
+		if ( sasl_ehelper::is_integer( valtype ) ){
+			if ( valtype == buildin_type_code::_uint64 ){
+				return (T)boost::get<uint64_t>(val);
+			}
+			return (T)boost::get<int64_t>(val);
+		}
+		if( sasl_ehelper::is_real( valtype ) ){
+			return (T)boost::get<double>(val);
+		}
+		if ( valtype == buildin_type_code::_boolean ){
+			return (T)boost::get<bool>(val);
+		}
+		return T();
 	}
 	template <typename T> void value( T val ){
 		this->val = val;
@@ -61,7 +74,7 @@ public:
 	void value_type( buildin_type_code vtype );
 
 private:
-	boost::variant< unsigned long, long, double, std::string, bool, char > val;
+	boost::variant< uint64_t, int64_t, double, std::string, bool, char > val;
 	buildin_type_code valtype;
 };
 

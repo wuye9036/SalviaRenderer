@@ -34,7 +34,10 @@ semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::unary_expression& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::cast_expression& /*v*/){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& v ){
+	v.left_expr->accept(this);
+	v.right_expr->accept(this);
+}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_list& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::cond_expression& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::index_expression& /*v*/ ){}
@@ -44,10 +47,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_expression& /*v*
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::constant_expression& v ){
 	using ::sasl::syntax_tree::constant_expression;
 
-
-	// add value symbol info to current node.
-	boost::shared_ptr<const_value_semantic_info> vseminfo = get_or_create_semantic_info<const_value_semantic_info>(cursym->node());
-	vseminfo->constant_value_literal( v.value_tok->str, v.ctype );
+	boost::shared_ptr<const_value_si> vseminfo = get_or_create_semantic_info<const_value_si>(v);
+	vseminfo->set_literal( v.value_tok->str, v.ctype );
 }
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_expression& /*v*/ )
 {
@@ -282,11 +283,23 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::ident_label& /*v*/ ){}
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::switch_statement& /*v*/ ){}
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& v ){
+	for( vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+		it != v.stmts.end(); ++it)
+	{
+		(*it)->accept(this);
+	}
+}
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_statement& /*v*/ ){}
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& /*v*/ ){}
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& v ){
+	if (v.code == jump_mode::_return){
+		if( v.jump_expr ){
+			v.jump_expr->accept(this);
+		}
+	}
+}
 
 // program
 void semantic_analyser_impl::visit( program& v ){

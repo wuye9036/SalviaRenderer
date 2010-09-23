@@ -69,10 +69,10 @@ void program_si::name( const std::string& str ){
 	prog_name = str;
 }
 
-const_value_semantic_info::const_value_semantic_info()
+const_value_si::const_value_si()
 	: valtype( buildin_type_code::none ){}
 
-void const_value_semantic_info::constant_value_literal(
+void const_value_si::set_literal(
 	const std::string& litstr,
 	literal_constant_types lctype)
 {
@@ -82,10 +82,10 @@ void const_value_semantic_info::constant_value_literal(
 		bool is_long(false);
 		nosuffix_litstr = integer_literal_suffix( litstr, is_unsigned, is_long );
 		if ( is_unsigned ){
-			val = boost::lexical_cast<unsigned long>(nosuffix_litstr);
+			val = boost::lexical_cast<uint64_t>(nosuffix_litstr);
 			this->valtype = ( is_long ? buildin_type_code::_uint64 : buildin_type_code::_uint32 );
 		} else {
-			val = boost::lexical_cast<long>(nosuffix_litstr);
+			val = boost::lexical_cast<int64_t>(nosuffix_litstr);
 			this->valtype = ( is_long ? buildin_type_code::_sint64 : buildin_type_code::_sint32 );
 		}
 	} else if( lctype == literal_constant_types::real ){
@@ -105,10 +105,10 @@ void const_value_semantic_info::constant_value_literal(
 	}
 }
 
-buildin_type_code const_value_semantic_info::value_type() const{
+buildin_type_code const_value_si::value_type() const{
 	return valtype;
 }
-void const_value_semantic_info::value_type( buildin_type_code vtype ){
+void const_value_si::value_type( buildin_type_code vtype ){
 	valtype = vtype;
 }
 
