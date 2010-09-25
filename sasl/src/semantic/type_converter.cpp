@@ -28,10 +28,15 @@ type_converter::conv_type type_converter::convert( boost::shared_ptr<node> dest,
 		if ( type_equal( dst_type, it->get<2>() ) && type_equal( src_type, it->get<1>() ) ){
 			ret_ct = it->get<0>();
 			// do conversation.
-			it->get<3>()( dest, src );
+			if( !it->get<3>().empty() ){
+				it->get<3>()( dest, src );
+			}
 		}
 	}
 	return ret_ct;
+}
+
+type_converter::type_converter(){
 }
 
 END_NS_SASL_SEMANTIC();

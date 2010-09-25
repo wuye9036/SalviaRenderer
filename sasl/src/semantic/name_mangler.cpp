@@ -20,21 +20,22 @@ array_class_typecode = 'A' type_code size '@@'
 *********************/
 
 #include <sasl/include/semantic/name_mangler.h>
+#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <boost/assign/list_inserter.hpp>
 #include <cassert>
 
 BEGIN_NS_SASL_SEMANTIC();
 
-using ::sasl::syntax_tree::type_specifier;
-using ::sasl::syntax_tree::struct_type;
 using ::sasl::syntax_tree::array_type;
-using ::sasl::syntax_tree::function_type;
-using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::buildin_type;
+using ::sasl::syntax_tree::function_type;
+using ::sasl::syntax_tree::node;
+using ::sasl::syntax_tree::struct_type;
+using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::variable_declaration;
 
 name_mangler::name_mangler(){
 	boost::assign::insert( btc_decorators )
@@ -60,15 +61,15 @@ name_mangler::name_mangler(){
 
 std::string name_mangler::mangle( boost::shared_ptr<function_type> mangling_function ){
 	mangled_name = "M";
-	//mangle_basic_name( mangling_function->name->str );
-	//mangled_name += '@';
-	//mangle_type( actual_type(mangling_function->retval_type) );
-	//for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
-	//	boost::shared_ptr<type_specifier> par_type
-	//		= actual_type( mangling_function->params[i_param]->typed_handle<variable_declaration>()->type_info );
-	//	mangle_type( par_type );
-	//}
-	//mangled_name += "@Z";
+	mangle_basic_name( mangling_function->name->str );
+	mangled_name += '@';
+	mangle_type( type_info_si::from_node(mangling_function->retval_type) );
+	for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
+		boost::shared_ptr<type_specifier> par_type
+			= type_info_si::from_node( mangling_function->params[i_param] );
+		mangle_type( par_type );
+	}
+	mangled_name += "@Z";
 	return mangled_name;
 }
 

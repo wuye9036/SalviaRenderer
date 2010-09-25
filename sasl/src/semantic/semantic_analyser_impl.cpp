@@ -5,39 +5,66 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol_scope.h>
 #include <sasl/include/semantic/type_checker.h>
+#include <sasl/include/semantic/type_converter.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <boost/assign/list_of.hpp>
+#include <boost/bind.hpp>
+#include <boost/bind/apply.hpp>
 #include <boost/scoped_ptr.hpp>
 
 BEGIN_NS_SASL_SEMANTIC();
 
-using ::sasl::semantic::errors::semantic_error;
 using ::sasl::common::compiler_info_manager;
+using ::sasl::common::token_attr;
 
+using ::sasl::syntax_tree::buildin_type;
+using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::declaration;
 using ::sasl::syntax_tree::function_type;
+using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
 
-using ::sasl::semantic::get_or_create_semantic_info;
-using ::sasl::semantic::symbol;
-
-using ::sasl::semantic::program_si;
+using ::sasl::semantic::errors::semantic_error;
 
 using namespace std;
 
+// utility functions
+boost::shared_ptr<buildin_type> create_buildin_type( buildin_type_code btc ){
+	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
+	ret->value_typecode = btc;
+	return ret;
+}
+
+boost::shared_ptr<type_specifier> type_info_of( boost::shared_ptr<node> n ){
+	boost::shared_ptr<type_info_si> typesi = extract_semantic_info<type_info_si>( n );
+	if ( typesi ){
+		return typesi->type_info();
+	}
+	return boost::shared_ptr<type_specifier>();
+}
+
+// class semantic_analyser_impl;
+
 semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
-	: infomgr( infomgr ){}
+	: infomgr( infomgr )
+{
+	typeconv.reset( new type_converter() );
+	register_type_converter();
+}
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::unary_expression& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::cast_expression& /*v*/){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& v ){
 	v.left_expr->accept(this);
 	v.right_expr->accept(this);
+
+	// TODO: look up operator prototype.
 }
+
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_list& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::cond_expression& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::index_expression& /*v*/ ){}
@@ -315,6 +342,167 @@ void semantic_analyser_impl::visit( program& v ){
 	for( vector< boost::shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
 		(*it)->accept( this );
 	}
+}
+
+void semantic_analyser_impl::buildin_type_convert( boost::shared_ptr<node> lhs, boost::shared_ptr<node> rhs ){
+	// do nothing
+}
+
+void semantic_analyser_impl::register_type_converter(){
+	// register default type converter
+	boost::shared_ptr<type_specifier> sint8_ts = create_buildin_type( buildin_type_code::_sint8 );
+	boost::shared_ptr<type_specifier> sint16_ts = create_buildin_type( buildin_type_code::_sint16 );
+	boost::shared_ptr<type_specifier> sint32_ts = create_buildin_type( buildin_type_code::_sint32 );
+	boost::shared_ptr<type_specifier> sint64_ts = create_buildin_type( buildin_type_code::_sint64 );
+
+	boost::shared_ptr<type_specifier> uint8_ts = create_buildin_type( buildin_type_code::_uint8 );
+	boost::shared_ptr<type_specifier> uint16_ts = create_buildin_type( buildin_type_code::_uint16 );
+	boost::shared_ptr<type_specifier> uint32_ts = create_buildin_type( buildin_type_code::_uint32 );
+	boost::shared_ptr<type_specifier> uint64_ts = create_buildin_type( buildin_type_code::_uint64 );
+
+	boost::shared_ptr<type_specifier> float_ts = create_buildin_type( buildin_type_code::_float );
+	boost::shared_ptr<type_specifier> double_ts = create_buildin_type( buildin_type_code::_double );
+
+	boost::shared_ptr<type_specifier> bool_ts = create_buildin_type( buildin_type_code::_boolean );
+
+	// default conversation will do nothing.
+	type_converter::converter_t default_conv = boost::bind(&semantic_analyser_impl::buildin_type_convert, this, _1, _2);
+
+	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint8_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint8_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint8_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint8_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, sint16_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint16_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint16_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint16_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint16_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint16_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint16_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint16_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint16_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint16_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, sint32_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint32_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint32_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint32_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint32_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint32_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint32_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, sint32_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint32_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint32_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, sint64_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint64_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint64_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint64_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint64_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint64_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, sint64_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, sint64_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, sint64_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, sint64_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, uint8_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint8_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, uint16_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint16_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint16_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint16_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint16_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint16_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint16_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint16_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint16_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint16_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint32_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint32_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, uint32_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint32_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint32_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, uint64_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint64_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint64_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint64_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint64_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint64_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, uint64_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, uint64_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, uint64_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, uint64_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, float_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::implicit_conv, float_ts, double_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, float_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, double_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, double_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::warning_conv, double_ts, bool_ts, default_conv );
+
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, sint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, sint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, sint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, uint8_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, uint16_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, uint32_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, uint64_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, float_ts, default_conv );
+	typeconv->register_converter( type_converter::explicit_conv, bool_ts, double_ts, default_conv );
+	
+}
+
+void semantic_analyser_impl::register_buildin_function(){
 }
 
 END_NS_SASL_SEMANTIC();

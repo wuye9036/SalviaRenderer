@@ -9,10 +9,14 @@ namespace sasl{
 	namespace common{
 		class compiler_info_manager;
 	}
+	namespace syntax_tree{
+		struct node;
+	}
 }
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
+class type_converter;
 
 class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
 public:
@@ -61,7 +65,15 @@ public:
 	// program
 	virtual void visit( ::sasl::syntax_tree::program& v );
 
+	void buildin_type_convert(
+		boost::shared_ptr<::sasl::syntax_tree::node>,
+		boost::shared_ptr<::sasl::syntax_tree::node>
+		);
+
+	void register_type_converter();
+	void register_buildin_function();
 private:
+	boost::shared_ptr<type_converter> typeconv;
 	boost::shared_ptr<::sasl::common::compiler_info_manager> infomgr;
 	boost::shared_ptr<symbol> cursym;
 	bool is_local;

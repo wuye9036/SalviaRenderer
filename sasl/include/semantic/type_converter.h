@@ -29,6 +29,7 @@ public:
 		void ( boost::shared_ptr<::sasl::syntax_tree::node>,  boost::shared_ptr<::sasl::syntax_tree::node>)
 	> converter_t;
 
+	type_converter();
 	void register_converter( conv_type ct,
 		boost::shared_ptr<::sasl::syntax_tree::type_specifier> /*src*/,
 		boost::shared_ptr<::sasl::syntax_tree::type_specifier> /*dest*/,
@@ -43,7 +44,6 @@ private:
 		boost::shared_ptr<::sasl::syntax_tree::type_specifier>,
 		boost::shared_ptr<::sasl::syntax_tree::type_specifier>,
 		converter_t	> conv_info;
-	type_converter();
 	std::vector< conv_info > convinfos;
 };
 

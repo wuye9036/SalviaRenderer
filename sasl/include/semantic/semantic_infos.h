@@ -44,12 +44,19 @@ private:
 	std::string prog_name;
 };
 
-class const_value_si: public semantic_info{
+class type_info_si: public semantic_info{
+public:
+	virtual boost::shared_ptr<type_specifier> type_info() = 0;
+	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
+};
+
+class const_value_si: public type_info_si{
 public:
 	typedef semantic_info base_type;
 	const_value_si();
 
 	void set_literal( const std::string& litstr, literal_constant_types lctype);
+	boost::shared_ptr<type_specifier> type_info();
 
 	template <typename T> T value() const{
 		if ( sasl_ehelper::is_integer( valtype ) ){
@@ -78,10 +85,7 @@ private:
 	buildin_type_code valtype;
 };
 
-class type_info_si: public semantic_info{
-public:
-	virtual boost::shared_ptr<type_specifier> type_info() = 0;
-};
+
 /*					
 						has symbol		symbol's node		referred type		actual type
 	buildin type		   no				N/A				   N/A				    this

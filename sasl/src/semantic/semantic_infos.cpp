@@ -1,9 +1,15 @@
 #include <sasl/include/semantic/semantic_infos.h>
+
+#include <sasl/enums/literal_constant_types.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/enums/literal_constant_types.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/node_creation.h>
 #include <string>
+
+using ::sasl::common::token_attr;
+using ::sasl::syntax_tree::create_node;
+using ::sasl::syntax_tree::buildin_type;
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -112,6 +118,12 @@ void const_value_si::value_type( buildin_type_code vtype ){
 	valtype = vtype;
 }
 
+boost::shared_ptr<type_specifier> const_value_si::type_info(){
+	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
+	ret->value_typecode = value_type();
+	return ret;
+}
+
 type_semantic_info::type_semantic_info(): ttype(type_types::none) { }
 
 boost::shared_ptr<type_specifier> type_semantic_info::full_type() const{
@@ -144,6 +156,15 @@ void variable_semantic_info::is_local( bool isloc ){
 
 execution_block_semantic_info::execution_block_semantic_info()
 {
+}
+
+
+boost::shared_ptr<type_specifier> type_info_si::from_node( ::boost::shared_ptr<node> n )
+{
+	boost::shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
+	if ( tisi ){
+		return tisi->type_info();
+	}
 }
 
 END_NS_SASL_SEMANTIC();
