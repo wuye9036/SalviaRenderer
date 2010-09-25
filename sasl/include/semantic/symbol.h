@@ -19,9 +19,24 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-class symbol_info;
 using sasl::syntax_tree::node;
 
+//////////////////////////////////////////////////////////////////////////
+/*
+	In sasl, symbol can assigned to any syntax node. But in fact, only some
+	sorts of node make senses, such as variable declaration, function and
+	struct declaration/definition, type re-definition, statement.
+
+	Every symbol has three names.
+	* THE FIRST NAME is "unmangled name". It means
+	  the literal name of syntax node. For a example, a variable name or a label.
+	* THE SECOND NAME is "mangled name". It is useful for function overloading.
+	  There is a document describing its details.
+	* THE THIRD NAME is "full path name". It is a compile unit unique name or
+	  a target unique name, even a global unique name. Some external interface
+	  may use it.
+*/
+//////////////////////////////////////////////////////////////////////////
 class symbol{
 public:
 	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node );
@@ -44,28 +59,6 @@ public:
 	
 	void remove_from_tree();
 	boost::shared_ptr<symbol> parent() const;
-
-	boost::shared_ptr<symbol_info> symbol_info( const std::string& clsname ) const;
-	void symbol_info( boost::shared_ptr<class symbol_info> syminfo );
-
-	template <typename T> boost::shared_ptr<T> symbol_info() const{
-		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );
-		static T instance;
-		return boost::shared_polymorphic_downcast<T>( symbol_info(instance.class_name()) );
-	}
-	template <typename T> void symbol_info( boost::shared_ptr<T> syminfo ){
-		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );
-		symbol_info( boost::shared_polymorphic_cast<class symbol_info>(syminfo) );
-	}
-	template <typename T> boost::shared_ptr<T> get_or_create_symbol_info(){
-		BOOST_STATIC_ASSERT( (std::tr1::is_base_of<class symbol_info, T>::value) );
-		boost::shared_ptr<T> ret = symbol_info<T>();
-		if ( !ret ){
-			ret.reset( new T() );
-			symbol_info( ret );
-		}
-		return ret;
-	}
 
 	boost::shared_ptr<struct node> node() const;
 	void relink( boost::shared_ptr<struct node> n );
