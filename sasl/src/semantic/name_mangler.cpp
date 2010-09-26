@@ -49,8 +49,8 @@ name_mangler::name_mangler(){
 		( buildin_type_code::_uint16, "U2" )
 		( buildin_type_code::_uint32, "U4" )
 		( buildin_type_code::_uint64, "U8" )
-		( buildin_type_code::_float, "F" )
-		( buildin_type_code::_double, "D" )
+		( buildin_type_code::_float, "F0" )
+		( buildin_type_code::_double, "D0" )
 		;
 
 	boost::assign::insert( qual_decorators )
