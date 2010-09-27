@@ -47,6 +47,8 @@ private:
 class type_info_si: public semantic_info{
 public:
 	virtual boost::shared_ptr<type_specifier> type_info() = 0;
+	virtual void type_info( boost::shared_ptr<type_specifier> type ) = 0;
+
 	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
 };
 
@@ -56,35 +58,61 @@ public:
 	const_value_si();
 
 	void set_literal( const std::string& litstr, literal_constant_types lctype);
-	boost::shared_ptr<type_specifier> type_info();
 
+	boost::shared_ptr<type_specifier> type_info();
+	void type_info( boost::shared_ptr<type_specifier>  );
+	
 	template <typename T> T value() const{
-		if ( sasl_ehelper::is_integer( valtype ) ){
-			if ( valtype == buildin_type_code::_uint64 ){
+		if ( sasl_ehelper::is_integer( value_type()  ) ){
+			if ( value_type() == buildin_type_code::_uint64 ){
 				return (T)boost::get<uint64_t>(val);
 			}
 			return (T)boost::get<int64_t>(val);
 		}
-		if( sasl_ehelper::is_real( valtype ) ){
+		if( sasl_ehelper::is_real( value_type() ) ){
 			return (T)boost::get<double>(val);
 		}
-		if ( valtype == buildin_type_code::_boolean ){
+		if ( value_type() == buildin_type_code::_boolean ){
 			return (T)boost::get<bool>(val);
 		}
 		return T();
 	}
 	template <typename T> void value( T val ){
 		this->val = val;
+		type_info()->value_typecode = buildin_type_code::none;
 	}
 
 	buildin_type_code value_type() const;
-	void value_type( buildin_type_code vtype );
-
 private:
 	boost::variant< uint64_t, int64_t, double, std::string, bool, char > val;
-	buildin_type_code valtype;
+	boost::shared_ptr<type_specifier> valtype;
 };
 
+class type_si : public type_info_si{
+public:
+	type_si();
+
+	virtual boost::shared_ptr<type_specifier> type_info();
+	virtual void type_info( boost::shared_ptr<type_specifier> val );
+	virtual void set_copy( boost::shared_ptr<type_specifier> val );
+
+private:
+	boost::shared_ptr<type_specifier> copy;
+	boost::weak_ptr<type_specifier> holder;
+};
+
+class storage_si: public type_info_si{
+public:
+	storage_si();
+
+	virtual boost::shared_ptr<type_specifier> type_info();
+	virtual void type_info( boost::shared_ptr<type_specifier> val );
+	virtual void set_copy( boost::shared_ptr<type_specifier> val );
+
+private:
+	boost::shared_ptr<type_specifier> copy;
+	boost::weak_ptr<type_specifier> holder;
+};
 
 /*					
 						has symbol		symbol's node		referred type		actual type

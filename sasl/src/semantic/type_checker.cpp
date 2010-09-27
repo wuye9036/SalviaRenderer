@@ -11,11 +11,6 @@ using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::variable_declaration;
 
-std::string mangle_function_name( boost::shared_ptr<function_type> v ){
-	name_mangler nm;
-	return nm.mangle( v );
-}
-
 bool type_equal( boost::shared_ptr<buildin_type> lhs, boost::shared_ptr<buildin_type> rhs ){
 	return lhs->value_typecode == rhs->value_typecode;
 }

@@ -21,18 +21,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-class name_mangler{
-public:
-	name_mangler();
-	std::string mangle( boost::shared_ptr<::sasl::syntax_tree::function_type> node );
-private:
-	boost::unordered_map< buildin_type_code, std::string > btc_decorators;
-	boost::unordered_map< type_qualifiers, std::string > qual_decorators;
-	std::string mangled_name;
-	
-	void mangle_basic_name( const std::string& );
-	void mangle_type( boost::shared_ptr<::sasl::syntax_tree::type_specifier> );
-};
+std::string mangle( boost::shared_ptr<::sasl::syntax_tree::function_type> node );
 
 END_NS_SASL_SEMANTIC();
 #endif

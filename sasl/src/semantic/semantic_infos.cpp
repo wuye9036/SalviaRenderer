@@ -75,8 +75,7 @@ void program_si::name( const std::string& str ){
 	prog_name = str;
 }
 
-const_value_si::const_value_si()
-	: valtype( buildin_type_code::none ){}
+const_value_si::const_value_si(){}
 
 void const_value_si::set_literal(
 	const std::string& litstr,
@@ -89,39 +88,43 @@ void const_value_si::set_literal(
 		nosuffix_litstr = integer_literal_suffix( litstr, is_unsigned, is_long );
 		if ( is_unsigned ){
 			val = boost::lexical_cast<uint64_t>(nosuffix_litstr);
-			this->valtype = ( is_long ? buildin_type_code::_uint64 : buildin_type_code::_uint32 );
+			type_info()->value_typecode = ( is_long ? buildin_type_code::_uint64 : buildin_type_code::_uint32 );
 		} else {
 			val = boost::lexical_cast<int64_t>(nosuffix_litstr);
-			this->valtype = ( is_long ? buildin_type_code::_sint64 : buildin_type_code::_sint32 );
+			type_info()->value_typecode = ( is_long ? buildin_type_code::_sint64 : buildin_type_code::_sint32 );
 		}
 	} else if( lctype == literal_constant_types::real ){
 		bool is_single(false);
 		nosuffix_litstr = real_literal_suffix( litstr, is_single );
 		val = boost::lexical_cast<double>(nosuffix_litstr);
-		this->valtype = (is_single ? buildin_type_code::_float : buildin_type_code::_double);
+		type_info()->value_typecode = (is_single ? buildin_type_code::_float : buildin_type_code::_double);
 	} else if( lctype == literal_constant_types::boolean ){
 		val = (litstr == "true");
-		this->valtype = buildin_type_code::_boolean;
+		type_info()->value_typecode = buildin_type_code::_boolean;
 	} else if( lctype == literal_constant_types::character ){
 		val = litstr[0];
-		this->valtype = buildin_type_code::_sint8;
+		type_info()->value_typecode = buildin_type_code::_sint8;
 	} else if( lctype == literal_constant_types::string ){
 		val = litstr;
-		this->valtype = buildin_type_code::none;
+		type_info()->value_typecode = buildin_type_code::none;
 	}
 }
 
 buildin_type_code const_value_si::value_type() const{
-	return valtype;
-}
-void const_value_si::value_type( buildin_type_code vtype ){
-	valtype = vtype;
+	if( !valtype ) return buildin_type_code::none;
+	return valtype->value_typecode;
 }
 
 boost::shared_ptr<type_specifier> const_value_si::type_info(){
-	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
-	ret->value_typecode = value_type();
-	return ret;
+	if ( !valtype ){
+		valtype = create_node<buildin_type>( token_attr::null() );
+		valtype->value_typecode = buildin_type_code::none;
+	}
+	return valtype;
+}
+
+void const_value_si::type_info( boost::shared_ptr<type_specifier> type_ptr ){
+	return;
 }
 
 type_semantic_info::type_semantic_info(): ttype(type_types::none) { }
@@ -165,6 +168,37 @@ boost::shared_ptr<type_specifier> type_info_si::from_node( ::boost::shared_ptr<n
 	if ( tisi ){
 		return tisi->type_info();
 	}
+	return boost::shared_ptr<type_specifier>();
+}
+
+storage_si::storage_si(){
+}
+
+boost::shared_ptr<type_specifier> storage_si::type_info(){
+	return holder.lock();
+}
+
+void storage_si::type_info( boost::shared_ptr<type_specifier> val ){
+	holder = val;
+}
+
+void storage_si::set_copy( boost::shared_ptr<type_specifier> val ){
+	assert(!"Unimplemented!");
+}
+
+boost::shared_ptr<type_specifier> type_si::type_info(){
+	return holder.lock();
+}
+
+void type_si::type_info( boost::shared_ptr<type_specifier> val ){
+	holder = val;
+}
+
+void type_si::set_copy( boost::shared_ptr<type_specifier> val ){
+	assert(!"Unimplemented!");
+}
+
+type_si::type_si(){
 }
 
 END_NS_SASL_SEMANTIC();

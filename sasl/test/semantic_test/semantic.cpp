@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/test/test_cases/syntax_cases.h>
@@ -11,6 +12,7 @@ using ::sasl::common::compiler_info_manager;
 
 using ::sasl::syntax_tree::program;
 
+using ::sasl::semantic::mangle;
 using ::sasl::semantic::program_si;
 using ::sasl::semantic::extract_semantic_info;
 
@@ -38,6 +40,12 @@ BOOST_AUTO_TEST_CASE( expression_si_test ){
 	BOOST_CHECK( SEMCASE_(cexpr_776uint)->value<uint32_t>() == 776 );
 }
 
+BOOST_AUTO_TEST_CASE( mangling_test ){
+	semantic_cases::instance();
+
+	BOOST_CHECK_EQUAL( mangle( SYNCASE_(func_nnn) ), std::string("M") + SYNCASENAME_(func_nnn) + std::string("@@") );
+	BOOST_CHECK_EQUAL( mangle( SYNCASE_(func_flt_2p_n_gen) ), std::string("M") + SYNCASENAME_(func_flt_2p_n_gen) + std::string("@@QBU8@@") + std::string("QBS1@@") );
+}
 //
 //BOOST_AUTO_TEST_CASE( constant_expr_semantic ){
 //	using ::sasl::syntax_tree::program;

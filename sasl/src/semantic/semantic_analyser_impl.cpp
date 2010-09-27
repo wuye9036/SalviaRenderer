@@ -172,9 +172,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	boost::shared_ptr<type_semantic_info> tseminfo = get_or_create_semantic_info<type_semantic_info>( cursym->node() );
-	tseminfo->type_type( type_types::buildin );
-	tseminfo->full_type( boost::shared_polymorphic_cast<type_specifier>(v.handle()) );
+	boost::shared_ptr<type_si> tsi = get_or_create_semantic_info<type_si>( v.handle() );
+	tsi->type_info( v.typed_handle<type_specifier>() );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::array_type& /*v*/ ){}
@@ -185,6 +184,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& v ){
 	if ( v.init ){
 		v.init->accept( this );
 	}
+	get_or_create_semantic_info<storage_si>(v)->type_info( type_info_si::from_node(v.param_type) );
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){

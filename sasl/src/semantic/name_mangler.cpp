@@ -1,33 +1,18 @@
 /*********************
 Name Mangling Grammar:
-mangled_name = 'M' basic_name '@' return_value_type parameter_type_list '@' 'Z'
-basic_name = string '@'
-return_value_type = value_type
-parameter_type_list = ( value_type )*
-value_type = qualifier_code type_code
-qualifier_code = "UN" | "CN" | "NN" | "UC"
-type_code = buildin_typecode | struct_class_typecode | array_type_code
-buildin_typecode = dimension_code basic_type
-dimension_code = scalar | vector | matrix
-scalar = 'B'
-vector = 'V' (1|2|3|4)
-matrix = 'M' (1|2|3|4){2}
-basic_type = 
-  'S1' | 'U1' | 'S2' | 'U2' | 'S4' | 'U4' | 'S8' | 'U8' | 'F' | 'D' | 'V' | 'B'
-struct_class_typecode = 'S' string '@@'
-array_class_typecode = 'A' type_code size '@@'
-
+Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 *********************/
 
 #include <sasl/include/semantic/name_mangler.h>
+
+#include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <boost/assign/list_inserter.hpp>
+#include <boost/thread.hpp>
 #include <cassert>
-
-BEGIN_NS_SASL_SEMANTIC();
 
 using ::sasl::syntax_tree::array_type;
 using ::sasl::syntax_tree::buildin_type;
@@ -37,10 +22,22 @@ using ::sasl::syntax_tree::struct_type;
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::variable_declaration;
 
-name_mangler::name_mangler(){
+//////////////////////////////////////////////////////////////////////////
+// lookup table for translating enumerations to string.
+static boost::mutex lookup_table_mtx;
+
+static std::string mangling_tag("M");
+static boost::unordered_map< buildin_type_code, std::string > btc_decorators;
+static bool is_initialized(false);
+
+static void initialize_lookup_table(){
+	boost::mutex::scoped_lock locker(lookup_table_mtx);
+
+	if ( is_initialized ){ return; }
+
 	boost::assign::insert( btc_decorators )
-		( buildin_type_code::none, "V0" )
-		( buildin_type_code::_boolean, "B0" )
+		( buildin_type_code::_void, "O" )
+		( buildin_type_code::_boolean, "B" )
 		( buildin_type_code::_sint8, "S1" )
 		( buildin_type_code::_sint16, "S2" )
 		( buildin_type_code::_sint32, "S4" )
@@ -49,59 +46,102 @@ name_mangler::name_mangler(){
 		( buildin_type_code::_uint16, "U2" )
 		( buildin_type_code::_uint32, "U4" )
 		( buildin_type_code::_uint64, "U8" )
-		( buildin_type_code::_float, "F0" )
-		( buildin_type_code::_double, "D0" )
+		( buildin_type_code::_float, "F" )
+		( buildin_type_code::_double, "D" )
 		;
 
-	boost::assign::insert( qual_decorators )
-		( type_qualifiers::none, std::string("NN") )
-		( type_qualifiers::_uniform, std::string("UN") )
-		;
+	is_initialized = true;
 }
 
-std::string name_mangler::mangle( boost::shared_ptr<function_type> mangling_function ){
-	mangled_name = "M";
-	mangle_basic_name( mangling_function->name->str );
-	mangled_name += '@';
-	mangle_type( type_info_si::from_node(mangling_function->retval_type) );
+//////////////////////////////////////////////////////////////////////////
+// some free function for manging
+
+static void append( std::string& str, buildin_type_code btc, bool is_component = false ){
+	if ( sasl_ehelper::is_scalar( btc ) ) {
+		if ( !is_component ){
+			// if it is not a component of a vector or matrix,
+			// add a lead char 'B' since is a BaseTypeName of a buildin scalar type.
+			str.append("B");
+		}
+		str.append( btc_decorators[btc] );
+	} else if( sasl_ehelper::is_vector( btc ) ) {
+		char vector_len_buf[2];
+		str.append("V");
+		str.append( _itoa( sasl_ehelper::len_0( btc ), vector_len_buf, 10 ) );
+		append( str, sasl_ehelper::scalar_of(btc), true );
+	} else if ( sasl_ehelper::is_matrix(btc) ) {
+		char matrix_len_buf[2];
+		str.append("M");
+		str.append( _itoa( sasl_ehelper::len_0( btc ), matrix_len_buf, 10 ) );
+		str.append( _itoa( sasl_ehelper::len_1( btc ), matrix_len_buf, 10 ) );
+		append( str, sasl_ehelper::scalar_of(btc), true );
+	}
+}
+
+static void append( std::string& str, type_qualifiers qual ){
+	if ( qual.included( type_qualifiers::_uniform ) ){
+		str.append("U");
+	}
+	str.append("Q");
+}
+
+static void append( std::string& str, boost::shared_ptr<type_specifier> typespec ){
+	append(str, typespec->qual);
+	// append (str, scope_qualifier(typespec) );
+	if ( typespec->node_class() == syntax_node_types::buildin_type ){
+		append( str, typespec->value_typecode );
+	} else if ( typespec->node_class() == syntax_node_types::struct_type ) {
+		append( str, boost::shared_polymorphic_cast<struct_type>( typespec ) );
+	} else if( typespec->node_class() == syntax_node_types::array_type ){
+		append( str, boost::shared_polymorphic_cast<array_type>(typespec) );
+	} else if ( typespec->node_class() == syntax_node_types::function_type ){
+		// append( str, boost::shared_polymorphic_cast<function_type>(typespec) );
+	}
+}
+
+static void append( std::string& str, boost::shared_ptr<struct_type> stype ){
+	str.append("S");
+	str.append( stype->name->str );
+}
+
+static void append( std::string& str, boost::shared_ptr<array_type> atype ){
+	for ( size_t i_dim = 0; i_dim < atype->array_lens.size(); ++i_dim ){
+		str.append("A");
+		// str.append( atype->array_lens[i_dim] );
+		// if ( i_dim < atype->array_lens.size() - 1 ){
+		//	str.append("Q");
+		// }
+	}
+	append( str, atype->elem_type );
+}
+
+BEGIN_NS_SASL_SEMANTIC();
+
+std::string mangle( boost::shared_ptr<function_type> mangling_function ){
+	initialize_lookup_table();
+
+	// start char
+	std::string mangled_name = "M";
+
+	// qualified name
+	// append( str, scope_qualifier( mangling_function ) );
+	mangled_name += mangling_function->name->str;
+
+	// splitter
+	mangled_name.append("@@");
+
+	// parameter types
 	for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
 		boost::shared_ptr<type_specifier> par_type
 			= type_info_si::from_node( mangling_function->params[i_param] );
-		mangle_type( par_type );
+		append( mangled_name, par_type );
+		mangled_name.append( "@@" );
 	}
-	mangled_name += "@Z";
+
+	// calling convention
+	// append( str, callingconv( mangling_function ) );
+
 	return mangled_name;
 }
 
-void name_mangler::mangle_basic_name( const std::string& str ){
-	mangled_name += str;
-	mangled_name += "@";
-}
-
-void name_mangler::mangle_type( boost::shared_ptr<::sasl::syntax_tree::type_specifier> mtype ){
-	if( mtype->qual.included( type_qualifiers::_uniform ) ){
-		mangled_name += "UN";
-	} else {
-		mangled_name += "NN";
-	}
-
-	if ( mtype->node_class() == syntax_node_types::buildin_type ){
-		buildin_type_code btc = mtype->typed_handle<buildin_type>()->value_typecode;
-		if ( btc.included( buildin_type_code::_vector ) ) {
-			assert( !"Unimplemented!" );
-		} else if ( btc.included( buildin_type_code::_matrix ) ) {
-			assert( !"Unimplemented!" );
-		} else {
-			mangled_name += "B";
-		}
-		mangled_name += btc_decorators[btc & buildin_type_code::_scalar_type_mask];
-	} else if ( mtype->node_class() == syntax_node_types::struct_type ){
-		boost::shared_ptr< struct_type > stype = mtype->typed_handle<struct_type>();
-		mangled_name += "S";
-		mangled_name += stype->name->str;
-		mangled_name += "@@";
-	} else {
-		assert( !"Unimplemented!" );
-	}
-}
 END_NS_SASL_SEMANTIC();
