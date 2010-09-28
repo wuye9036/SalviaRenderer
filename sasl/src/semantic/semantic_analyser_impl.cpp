@@ -1,5 +1,6 @@
 #include <sasl/include/semantic/semantic_analyser_impl.h>
 #include <sasl/include/common/compiler_info_manager.h>
+#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_error.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -111,7 +112,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 				v.handle(), list_of( typeseminfo->full_type() ) )
 				);
 			// remove created symbol
-			cursym->remove_from_tree();
+			cursym->remove();
 			return;
 		}
 	}
@@ -124,7 +125,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	using ::sasl::syntax_tree::type_definition;
 	using ::boost::assign::list_of;
 	const std::string& alias_str = v.name->str;
-	boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( alias_str );
+	boost::shared_ptr<symbol> existed_sym = cursym->find( alias_str );
 	if ( existed_sym ){
 		// if the symbol is used and is not a type node, it must be redifinition.
 		// else compare the type.
@@ -188,7 +189,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& v ){
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
-	
+	// TODO: add document for explaining why we need add_mangling().
 	std::string name = v.name->str;
 	symbol_scope ss( name, v.handle(), cursym );
 
@@ -198,6 +199,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	{
 		(*it)->accept( this );
 	}
+	cursym->add_mangling( mangle( v.typed_handle<function_type>() ) );
 
 	if ( v.body ){
 		v.body->accept( this );

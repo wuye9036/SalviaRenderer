@@ -1,6 +1,8 @@
 #ifndef SASL_TEST_TEST_CASES_UTILITY_H
 #define SASL_TEST_TEST_CASES_UTILITY_H
 
+#include <eflib/include/config.h>
+
 #include <boost/preprocessor/stringize.hpp>
 
 #define SASL_TEST_CHECK_RETURN( shared_pointer ) if( !( shared_pointer ) ) return;

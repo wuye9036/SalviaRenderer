@@ -1,6 +1,8 @@
 #ifndef SASL_SEMANTIC_NAME_MANGLER_H
 #define SASL_SEMANTIC_NAME_MANGLER_H
 
+#include <eflib/include/config.h>
+
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/enums/default_hasher.h>
 #include <sasl/enums/buildin_type_code.h>

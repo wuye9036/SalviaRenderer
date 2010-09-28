@@ -1,12 +1,16 @@
 #ifndef SASL_TEST_TEST_CASES_SYNTAX_CASES_H
 #define SASL_TEST_TEST_CASES_SYNTAX_CASES_H
 
+#include <eflib/include/config.h>
+
 #include <sasl/test/test_cases/utility.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <boost/shared_ptr.hpp>
+#include <eflib/include/disable_warnings.h>
 #include <boost/thread.hpp>
+#include <eflib/include/enable_warnings.h>
 
 class syntax_cases{
 public:

@@ -6,12 +6,19 @@ using namespace std;
 
 BEGIN_NS_SASL_SEMANTIC();
 
+static boost::shared_ptr<symbol> nullsym;
+static vector< boost::shared_ptr<symbol> > empty_syms;
+
 boost::shared_ptr<symbol> symbol::create_root( boost::shared_ptr<struct node> root_node ){
 	return create( boost::shared_ptr<symbol>(), root_node, std::string("") );
 }
 
-boost::shared_ptr<symbol> symbol::create( boost::shared_ptr<symbol> parent, boost::shared_ptr<struct node> correspond_node, const std::string& name ){
-	boost::shared_ptr<symbol> ret( new symbol( parent, correspond_node, name ) );
+boost::shared_ptr<symbol> symbol::create(
+	boost::shared_ptr<symbol> parent,
+	boost::shared_ptr<struct node> correspond_node,
+	const std::string& mangled )
+{
+	boost::shared_ptr<symbol> ret( new symbol( parent, correspond_node, mangled ) );
 	ret->selfptr = ret;
 	correspond_node->symbol( ret );
 	return ret;
@@ -19,87 +26,85 @@ boost::shared_ptr<symbol> symbol::create( boost::shared_ptr<symbol> parent, boos
 
 symbol::symbol( boost::shared_ptr<symbol> parent,
 			   boost::shared_ptr<struct node> correspond_node,
-			   const string& name
+			   const string& mangled
 			   )
 			   :this_parent(parent),
 			   correspond_node(correspond_node),
-			   symname( name )
+			   umgl_name( mangled ),
+			   mgl_name( mangled )
 {
 }
 
-boost::shared_ptr<symbol> symbol::find_mangled_this( const std::string& s ) const
+boost::shared_ptr<symbol> symbol::find_this( const std::string& mangled ) const
 {
-	children_t::const_iterator ret_it = children.find(s);
+	children_t::const_iterator ret_it = children.find(mangled);
 	if (ret_it == children.end()){
-		return boost::shared_ptr<symbol>();
+		return nullsym;
 	} else {
 		return ret_it->second;
 	}
 }
 
-boost::shared_ptr<symbol> symbol::find_mangled_all( const std::string& s ) const
+boost::shared_ptr<symbol> symbol::find( const std::string& mangled ) const
 {
-	boost::shared_ptr<symbol> this_ret = find_mangled_this(s);
-	if (this_ret) {	return this_ret; }
-	if ( !parent() ) { return boost::shared_ptr<symbol>();	}
-	return parent()->find_mangled_all(s);
+	boost::shared_ptr<symbol> ret = find_this(mangled);
+	if (ret) {	return ret; }
+	if ( !parent() ) { return nullsym;	}
+	return parent()->find(mangled);
 }
 
-const std::vector<const ::std::string>& symbol::find_mangles_this( const ::std::string& unmangled_name ) const
+const std::vector<const ::std::string>& symbol::get_overloads( const ::std::string& unmangled_name ) const
 {
-	mangling_table_t::const_iterator found_it = mangles.find( unmangled_name );
-	if ( found_it == mangles.end() ){
+	overload_table_t::const_iterator found_it = overloads.find( unmangled_name );
+	if ( found_it == overloads.end() ){
 		return null_mt;
 	}
 	return found_it->second;
 }
 
-const std::vector<const ::std::string>& symbol::find_mangles_all( const ::std::string& unmangled_name ) const{
-	const std::vector<const ::std::string>& this_ret = find_mangles_this( unmangled_name );
-	if ( !this_ret.empty() ) { return this_ret; }
-	if ( !parent() ) { return null_mt; }
-	return parent()->find_mangles_all( unmangled_name );
+std::vector< boost::shared_ptr<symbol> > symbol::find_overloads( const ::std::string& unmangled ) const{
+	vector< boost::shared_ptr<symbol> > ret;
+	const std::vector<const ::std::string>& name_of_ret = get_overloads( unmangled );
+	if ( !name_of_ret.empty() ) {
+		for( int i_name = 0; i_name < name_of_ret.size(); ++i_name ){
+			ret.push_back( find( name_of_ret[i_name] ) ); 
+		}
+		return ret;
+	}
+	if ( !parent() ) { return empty_syms; }
+	return parent()->find_overloads( unmangled );
 }
 
-bool symbol::contains_symbol_this( const ::std::string& str ) const{
-	return (!find_mangles_this(str).empty()) || find_mangled_this(str);
-}
-
-bool symbol::contains_symbol_all( const ::std::string& str ) const{
-	return (!find_mangles_all(str).empty()) || find_mangled_all(str);
-}
-
-boost::shared_ptr<symbol> symbol::add_child( const std::string& s, boost::shared_ptr<struct node> child_node )
+boost::shared_ptr<symbol> symbol::add_child( const std::string& mangled, boost::shared_ptr<struct node> child_node )
 {
-	children_iterator_t ret_it = children.find(s);
+	children_iterator_t ret_it = children.find(mangled);
 	if ( ret_it != children.end() ){
 		return boost::shared_ptr<symbol>();
 	}
-	boost::shared_ptr<symbol> ret = create( selfptr.lock(), child_node, s );
-	children.insert( std::make_pair( s, ret ) );
+	boost::shared_ptr<symbol> ret = create( selfptr.lock(), child_node, mangled );
+	children.insert( std::make_pair( mangled, ret ) );
 	return ret;
 }
 
-boost::shared_ptr<symbol> symbol::add_mangled_child(
-	const std::string& unmangled_name,
-	const std::string& mangled_name,
+boost::shared_ptr<symbol> symbol::add_overloaded_child(
+	const std::string& unmangled,
+	const std::string& mangled,
 	boost::shared_ptr<struct node> child_node
 	)
 {
-	boost::shared_ptr<symbol> added_sym = add_child( mangled_name, child_node );
+	boost::shared_ptr<symbol> added_sym = add_child( mangled, child_node );
 	if ( added_sym ){
-		const std::vector<const ::std::string>& mangled_names = find_mangles_this( unmangled_name );
-		if ( mangled_names.empty() ){
-			mangles[unmangled_name] = std::vector< const ::std::string>();
+		if( overloads.count( unmangled ) == 0 ){
+			overloads[ unmangled ] = std::vector< const ::std::string>();
 		}
-		mangles[unmangled_name].push_back( mangled_name );
-		added_sym->unmangled_name = unmangled_name;
+		overloads[ unmangled ].push_back( mangled );
+		added_sym->umgl_name = unmangled;
 	}
 	return added_sym;
 }
 
-void symbol::remove_child( const std::string& s ){
-	children_iterator_t ret_it = children.find(s);
+void symbol::remove_child( const std::string& mangled ){
+	children_iterator_t ret_it = children.find( mangled );
 	if ( ret_it == children.end() ){
 		return;
 	}
@@ -111,19 +116,19 @@ void symbol::remove_child( const std::string& s ){
 	// remove itself.
 	children.erase( ret_it );
 
-	//remove mangled_name from mangling table.
-	if ( mangles.count( unmangled_name ) > 0){
-		mangling_table_t::mapped_type& mt = mangles[unmangled_name];
-		mangling_table_t::mapped_type::iterator mt_it
-			= ::std::find( mt.begin(), mt.end(), symname );
+	//remove mangled item from overloaded items table.
+	if ( overloads.count( rmsym->unmangled_name() ) > 0){
+		overload_table_t::mapped_type& mt = overloads[umgl_name];
+		overload_table_t::mapped_type::iterator mt_it
+			= ::std::find( mt.begin(), mt.end(), mgl_name );
 		mt.erase( mt_it );
-		if ( mt.empty() ) { mangles.erase( unmangled_name ); }
+		if ( mt.empty() ) { overloads.erase( umgl_name ); }
 	}
 }
 
-void symbol::remove_from_tree(){
+void symbol::remove(){
 	if ( parent() ){
-		parent()->remove_child( name() );
+		parent()->remove_child( mangled_name() );
 	}
 }
 
@@ -140,19 +145,30 @@ void symbol::relink( boost::shared_ptr<struct node> n ){
 	correspond_node = n;
 }
 
-const std::string& symbol::name() const{
-	return symname;
+const std::string& symbol::mangled_name() const{
+	return mgl_name;
 }
 
-std::string symbol::get_fullpath_name( const std::string& str ){
-	return fullpath() + std::string("$") + str;
+const std::string& symbol::unmangled_name() const{
+	return umgl_name;
 }
 
-std::string symbol::fullpath(){
-	if ( parent() ){
-		parent()->get_fullpath_name( name() );
-	} else {
-		return std::string("$") + name();
+void symbol::add_mangling( const std::string& mangled ){
+	mgl_name = mangled;
+
+	if( !parent() ){
+		return;
+	}
+
+	// add new name and remove old name
+	this_parent.lock()->children.insert( make_pair( mangled, node()->symbol() ) );
+	this_parent.lock()->children.erase( umgl_name );
+
+	// add to overloaded items table
+	if ( this_parent.lock()->get_overloads(umgl_name).empty() ){
+		this_parent.lock()->overloads[umgl_name] = overload_table_t::mapped_type();
+		this_parent.lock()->overloads[umgl_name].push_back( mangled );
 	}
 }
+
 END_NS_SASL_SEMANTIC();

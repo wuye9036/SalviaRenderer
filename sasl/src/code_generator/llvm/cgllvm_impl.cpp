@@ -227,7 +227,7 @@ void llvm_code_generator::visit( function_type& v ){
 	llvm::Function::arg_iterator arg_it = fctxt->func->arg_begin();
 	for( int arg_idx = 0; arg_idx < fctxt->func->arg_size(); ++arg_idx, ++arg_it){
 		boost::shared_ptr<parameter> par = v.params[arg_idx];
-		arg_it->setName( par->symbol()->name() );
+		arg_it->setName( par->symbol()->unmangled_name() );
 		common_ctxt_handle par_ctxt = get_common_ctxt( par->param_type );
 		par_ctxt->arg = boost::addressof( *arg_it );
 	}

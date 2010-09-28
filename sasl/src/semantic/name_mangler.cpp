@@ -10,8 +10,12 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
+
+#include <eflib/include/disable_warnings.h>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/thread.hpp>
+#include <eflib/include/enable_warnings.h>
+
 #include <cassert>
 
 using ::sasl::syntax_tree::array_type;
@@ -55,6 +59,7 @@ static void initialize_lookup_table(){
 
 //////////////////////////////////////////////////////////////////////////
 // some free function for manging
+static void append( std::string& str, boost::shared_ptr<type_specifier> typespec );
 
 static void append( std::string& str, buildin_type_code btc, bool is_component = false ){
 	if ( sasl_ehelper::is_scalar( btc ) ) {
@@ -67,13 +72,13 @@ static void append( std::string& str, buildin_type_code btc, bool is_component =
 	} else if( sasl_ehelper::is_vector( btc ) ) {
 		char vector_len_buf[2];
 		str.append("V");
-		str.append( _itoa( sasl_ehelper::len_0( btc ), vector_len_buf, 10 ) );
+		str.append( _ui64toa( sasl_ehelper::len_0( btc ), vector_len_buf, 10 ) );
 		append( str, sasl_ehelper::scalar_of(btc), true );
 	} else if ( sasl_ehelper::is_matrix(btc) ) {
 		char matrix_len_buf[2];
 		str.append("M");
-		str.append( _itoa( sasl_ehelper::len_0( btc ), matrix_len_buf, 10 ) );
-		str.append( _itoa( sasl_ehelper::len_1( btc ), matrix_len_buf, 10 ) );
+		str.append( _ui64toa( sasl_ehelper::len_0( btc ), matrix_len_buf, 10 ) );
+		str.append( _ui64toa( sasl_ehelper::len_1( btc ), matrix_len_buf, 10 ) );
 		append( str, sasl_ehelper::scalar_of(btc), true );
 	}
 }
@@ -83,20 +88,6 @@ static void append( std::string& str, type_qualifiers qual ){
 		str.append("U");
 	}
 	str.append("Q");
-}
-
-static void append( std::string& str, boost::shared_ptr<type_specifier> typespec ){
-	append(str, typespec->qual);
-	// append (str, scope_qualifier(typespec) );
-	if ( typespec->node_class() == syntax_node_types::buildin_type ){
-		append( str, typespec->value_typecode );
-	} else if ( typespec->node_class() == syntax_node_types::struct_type ) {
-		append( str, boost::shared_polymorphic_cast<struct_type>( typespec ) );
-	} else if( typespec->node_class() == syntax_node_types::array_type ){
-		append( str, boost::shared_polymorphic_cast<array_type>(typespec) );
-	} else if ( typespec->node_class() == syntax_node_types::function_type ){
-		// append( str, boost::shared_polymorphic_cast<function_type>(typespec) );
-	}
 }
 
 static void append( std::string& str, boost::shared_ptr<struct_type> stype ){
@@ -114,6 +105,21 @@ static void append( std::string& str, boost::shared_ptr<array_type> atype ){
 	}
 	append( str, atype->elem_type );
 }
+
+static void append( std::string& str, boost::shared_ptr<type_specifier> typespec ){
+	append(str, typespec->qual);
+	// append (str, scope_qualifier(typespec) );
+	if ( typespec->node_class() == syntax_node_types::buildin_type ){
+		append( str, typespec->value_typecode );
+	} else if ( typespec->node_class() == syntax_node_types::struct_type ) {
+		append( str, boost::shared_polymorphic_cast<struct_type>( typespec ) );
+	} else if( typespec->node_class() == syntax_node_types::array_type ){
+		append( str, boost::shared_polymorphic_cast<array_type>(typespec) );
+	} else if ( typespec->node_class() == syntax_node_types::function_type ){
+		// append( str, boost::shared_polymorphic_cast<function_type>(typespec) );
+	}
+}
+
 
 BEGIN_NS_SASL_SEMANTIC();
 

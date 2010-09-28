@@ -4,7 +4,9 @@
 #include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <eflib/include/disable_warnings.h>
 #include <boost/thread.hpp>
+#include <eflib/include/enable_warnings.h>
 
 using namespace ::sasl::syntax_tree;
 

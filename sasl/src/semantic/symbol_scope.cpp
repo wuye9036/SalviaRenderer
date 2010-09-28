@@ -3,28 +3,13 @@
 
 BEGIN_NS_SASL_SEMANTIC();
 
-symbol_scope::symbol_scope( const std::string& child_name, boost::shared_ptr<symbol>& sym )
-	: cursym( sym )
-{
-	sym = sym->find_mangled_this( child_name );
-}
-
 symbol_scope::symbol_scope(
-		const std::string& child_name,
+		const std::string& unmangled,
 		boost::shared_ptr<node> child_node,
 		boost::shared_ptr<symbol>& sym
 		): cursym( sym )
 {
-	sym = sym->add_child( child_name, child_node );
-}
-
-symbol_scope::symbol_scope(
-		const ::std::string& mangled_child_name,
-		const ::std::string& unmangled_child_name,
-		boost::shared_ptr<node> child_node,
-		boost::shared_ptr<symbol>& sym
-		): cursym(sym){
-	sym = sym->add_mangled_child( unmangled_child_name, mangled_child_name, child_node );
+	sym = sym->add_child( unmangled, child_node );
 }
 
 symbol_scope::~symbol_scope(){
