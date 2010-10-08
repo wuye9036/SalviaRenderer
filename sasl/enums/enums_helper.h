@@ -1,7 +1,9 @@
 #ifndef SASL_ENUMS_ENUMS_HELPER_H
 #define SASL_ENUMS_ENUMS_HELPER_H
 
+#include <eflib/include/disable_warnings.h>
 #include <boost/thread/mutex.hpp>
+#include <eflib/include/enable_warnings.h>
 #include <string>
 #include <vector>
 
@@ -22,6 +24,7 @@ public:
 	static bool is_matrix( const buildin_type_code& /*btc*/ );
 
 	static bool is_storagable( const buildin_type_code& /*btc*/ );
+	static bool is_standard( const buildin_type_code& /*btc*/ );
 
 	static buildin_type_code scalar_of( const buildin_type_code& /*btc*/ );
 	static buildin_type_code vector_of( const buildin_type_code& /*btc*/, size_t len );

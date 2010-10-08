@@ -1,4 +1,6 @@
 #include <sasl/include/semantic/semantic_analyser_impl.h>
+
+#include <sasl/enums/operators.h>
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_error.h>
@@ -13,6 +15,7 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/utility.h>
+
 #include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/bind.hpp>
@@ -189,7 +192,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::array_type& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::struct_type& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& v ){
-	symbol_scope ss( v.name->str, v.handle(), cursym );
+	symbol_scope ss( v.name ? v.name->str : std::string(), v.handle(), cursym );
 	v.param_type->accept( this );
 	if ( v.init ){
 		v.init->accept( this );
@@ -516,9 +519,15 @@ void semantic_analyser_impl::register_type_converter(){
 }
 
 void semantic_analyser_impl::register_buildin_function(){
+	// 
 	typedef boost::unordered_map<buildin_type_code, boost::shared_ptr<buildin_type> > bt_table_t;
-	bt_table_t bttbl;
-	map_of_buildin_type( bttbl, &sasl_ehelper::is_storagable );
+	bt_table_t standard_bttbl;
+	bt_table_t storage_bttbl;
+	map_of_buildin_type( standard_bttbl, &sasl_ehelper::is_standard );
+	map_of_buildin_type( storage_bttbl, &sasl_ehelper::is_storagable );
+
+	boost::shared_ptr<buildin_type> bt_bool = storage_bttbl[ buildin_type_code::_boolean ];
+	boost::shared_ptr<buildin_type> bt_i32 = storage_bttbl[ buildin_type_code::_sint32 ];
 
 	boost::shared_ptr<function_type> tmpft;
 
@@ -527,16 +536,115 @@ void semantic_analyser_impl::register_buildin_function(){
 	const vector<operators>& oplist = sasl_ehelper::list_of_operators();
 
 	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
-		if ( sasl_ehelper::is_arithmetic(oplist[i_op]) ){
-			dfunction_combinator(NULL).dname("0add")
-				.dreturntype().dnode( bttbl[buildin_type_code::_sint32] ).end()
-				.dparam().dtype().dnode(bttbl[buildin_type_code::_sint32]).end().end()
-				.dparam().dtype().dnode(bttbl[buildin_type_code::_sint32]).end().end()
+		operators op = oplist[i_op];
+		std::string op_name( operator_name(op) );
+
+		if ( sasl_ehelper::is_arithmetic(op) ){
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				dfunction_combinator(NULL).dname( op_name )
+					.dreturntype().dnode( it_type->second ).end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+				.end( tmpft );
+			}
+		}
+
+		if( sasl_ehelper::is_arith_assign(op) ){
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				dfunction_combinator(NULL).dname( op_name )
+					.dreturntype().dnode( it_type->second ).end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+					.end( tmpft );
+			}
+		}
+
+		if( sasl_ehelper::is_relationship(op) ){
+			
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				dfunction_combinator(NULL).dname( op_name )
+					.dreturntype().dnode( bt_bool ).end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+					.end( tmpft );
+			}
+		}
+
+		if( sasl_ehelper::is_bit(op) || sasl_ehelper::is_bit_assign(op) ){
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				if ( sasl_ehelper::is_integer(it_type->first) ){
+					dfunction_combinator(NULL).dname( op_name )
+						.dreturntype().dnode( it_type->second ).end()
+						.dparam().dtype().dnode( it_type->second ).end().end()
+						.dparam().dtype().dnode( it_type->second ).end().end()
+					.end( tmpft );
+				}
+			}
+		}
+
+		if( sasl_ehelper::is_shift(op) || sasl_ehelper::is_shift_assign(op) ){
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				if ( sasl_ehelper::is_integer(it_type->first) ){
+					dfunction_combinator(NULL).dname( op_name )
+						.dreturntype().dnode( it_type->second ).end()
+						.dparam().dtype().dnode( it_type->second ).end().end()
+						.dparam().dtype().dnode( bt_i32 ).end().end()
+						.end( tmpft );
+				}
+			}
+		}
+
+		if( sasl_ehelper::is_bool_arith(op) ){
+			dfunction_combinator(NULL).dname( op_name )
+				.dreturntype().dnode( bt_bool ).end()
+				.dparam().dtype().dnode( bt_bool ).end().end()
+				.dparam().dtype().dnode( bt_bool ).end().end()
 			.end( tmpft );
+		}
+
+		if( sasl_ehelper::is_prefix(op) || sasl_ehelper::is_postfix(op) ){
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				if ( sasl_ehelper::is_integer(it_type->first) ){
+					dfunction_combinator(NULL).dname( op_name )
+						.dreturntype().dnode( it_type->second ).end()
+						.dparam().dtype().dnode( it_type->second ).end().end()
+						.end( tmpft );
+				}
+			}
+		}
+
+		if( op == operators::bit_not ){
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				if ( sasl_ehelper::is_integer(it_type->first) ){
+					dfunction_combinator(NULL).dname( op_name )
+						.dreturntype().dnode( it_type->second ).end()
+						.dparam().dtype().dnode( it_type->second ).end().end()
+						.end( tmpft );
+				}
+			}
+		}
+
+		if( op == operators::logic_not ){
+			dfunction_combinator(NULL).dname( op_name )
+				.dreturntype().dnode( bt_bool ).end()
+				.dparam().dtype().dnode( bt_bool ).end().end()
+			.end( tmpft );
+		}
+
+		if( op == operators::negative ){
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				if ( it_type->first != buildin_type_code::_uint64 ){
+					dfunction_combinator(NULL).dname( op_name )
+						.dreturntype().dnode( it_type->second ).end()
+						.dparam().dtype().dnode( it_type->second ).end().end()
+					.end( tmpft );
+				}
+			}
 		}
 
 		// end of for loop
 		if ( tmpft ){
+			tmpft->accept(this);
 			buildin_functions.push_back( tmpft );
 		}
 	}

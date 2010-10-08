@@ -182,7 +182,7 @@ void storage_si::type_info( boost::shared_ptr<type_specifier> val ){
 	holder = val;
 }
 
-void storage_si::set_copy( boost::shared_ptr<type_specifier> val ){
+void storage_si::set_and_hold_type_info( boost::shared_ptr<type_specifier> val ){
 	assert(!"Unimplemented!");
 }
 
@@ -194,7 +194,7 @@ void type_si::type_info( boost::shared_ptr<type_specifier> val ){
 	holder = val;
 }
 
-void type_si::set_copy( boost::shared_ptr<type_specifier> val ){
+void type_si::set_and_hold_type_info( boost::shared_ptr<type_specifier> val ){
 	assert(!"Unimplemented!");
 }
 

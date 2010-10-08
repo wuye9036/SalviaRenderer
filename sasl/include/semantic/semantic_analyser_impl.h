@@ -82,7 +82,7 @@ private:
 
 	//////////////////////////////////////////////////////////////////////////
 	// buildin functions for build-in types.
-	std::vector< boost::shared_ptr<function_type> > buildin_functions;
+	std::vector< boost::shared_ptr<::sasl::syntax_tree::function_type> > buildin_functions;
 };
 
 END_NS_SASL_SEMANTIC();

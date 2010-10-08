@@ -5,8 +5,10 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <eflib/include/disable_warnings.h>
 #include <boost/assign/list_inserter.hpp>
-
+#include <eflib/include/enable_warnings.h>
+#include <vector>
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 //////////////////////////////////////////////////////////////////////////
@@ -25,13 +27,13 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 template<typename ContainerT, typename PredT>
 void map_of_buildin_type( ContainerT& cont, const PredT& pred){
 	cont.clear();
-	typedef const vector<buildin_type_code>& btc_list_t;
-	btc_list_t btclst( sasl_ehelper::list_of_buildin_type_codes() );
-	for( btc_list_t::iterator it = btclst.begin(); it != btclst.end(); ++it ){
+	typedef std::vector<buildin_type_code> btc_list_t;
+	const btc_list_t& btclst( sasl_ehelper::list_of_buildin_type_codes() );
+	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
 			boost::shared_ptr<buildin_type> bt = create_node<buildin_type>( token_attr::null() );
 			bt->value_typecode = *it;
-			insert( cont )(*it, bt );
+			boost::assign::insert( cont )(*it, bt );
 		}
 	}
 }
@@ -52,9 +54,9 @@ void map_of_buildin_type( ContainerT& cont, const PredT& pred){
 template<typename ContainerT, typename PredT>
 void list_of_buildin_type( ContainerT& cont, const PredT& pred ){
 	cont.clear();
-	typedef const vector<buildin_type_code>& btc_list_t;
-	btc_list_t btclst( sasl_ehelper::list_of_buildin_type_codes() );
-	for( btc_list_t::iterator it = btclst.begin(); it != btclst.end(); ++it ){
+	typedef std::vector<buildin_type_code> btc_list_t;
+	const btc_list_t& btclst( sasl_ehelper::list_of_buildin_type_codes() );
+	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
 			cont += *it;
 		}

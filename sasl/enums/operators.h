@@ -23,7 +23,6 @@ public:
 	}
 
 	const static this_type sub_assign;
-	const static this_type bit_not_assign;
 	const static this_type less;
 	const static this_type bit_and;
 	const static this_type bit_or_assign;

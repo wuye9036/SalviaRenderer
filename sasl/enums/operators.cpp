@@ -7,42 +7,41 @@ using namespace std;
 
 
 const operators operators::sub_assign ( 8 );
-const operators operators::bit_not_assign ( 12 );
-const operators operators::less ( 20 );
-const operators operators::bit_and ( 35 );
-const operators operators::bit_or_assign ( 14 );
-const operators operators::prefix_incr ( 26 );
-const operators operators::logic_and ( 33 );
-const operators operators::postfix_incr ( 28 );
-const operators operators::lshift_assign ( 16 );
+const operators operators::less ( 19 );
+const operators operators::bit_and ( 34 );
+const operators operators::bit_or_assign ( 13 );
+const operators operators::prefix_incr ( 25 );
+const operators operators::logic_and ( 32 );
+const operators operators::postfix_incr ( 27 );
+const operators operators::lshift_assign ( 15 );
 const operators operators::mul_assign ( 9 );
-const operators operators::prefix_decr ( 27 );
-const operators operators::bit_xor_assign ( 15 );
+const operators operators::prefix_decr ( 26 );
+const operators operators::bit_xor_assign ( 14 );
 const operators operators::sub ( 2 );
-const operators operators::positive ( 30 );
-const operators operators::rshift_assign ( 17 );
-const operators operators::negative ( 31 );
-const operators operators::logic_not ( 34 );
+const operators operators::positive ( 29 );
+const operators operators::rshift_assign ( 16 );
+const operators operators::negative ( 30 );
+const operators operators::logic_not ( 33 );
 const operators operators::add ( 1 );
-const operators operators::right_shift ( 25 );
+const operators operators::right_shift ( 24 );
 const operators operators::mul ( 3 );
-const operators operators::bit_and_assign ( 13 );
+const operators operators::bit_and_assign ( 12 );
 const operators operators::mod_assign ( 11 );
-const operators operators::greater ( 22 );
-const operators operators::bit_or ( 36 );
-const operators operators::bit_not ( 38 );
-const operators operators::bit_xor ( 37 );
+const operators operators::greater ( 21 );
+const operators operators::bit_or ( 35 );
+const operators operators::bit_not ( 37 );
+const operators operators::bit_xor ( 36 );
 const operators operators::add_assign ( 7 );
 const operators operators::mod ( 5 );
 const operators operators::none ( 0 );
-const operators operators::not_equal ( 19 );
-const operators operators::logic_or ( 32 );
-const operators operators::greater_equal ( 23 );
-const operators operators::left_shift ( 24 );
-const operators operators::equal ( 18 );
-const operators operators::postfix_decr ( 29 );
+const operators operators::not_equal ( 18 );
+const operators operators::logic_or ( 31 );
+const operators operators::greater_equal ( 22 );
+const operators operators::left_shift ( 23 );
+const operators operators::equal ( 17 );
+const operators operators::postfix_decr ( 28 );
 const operators operators::div_assign ( 10 );
-const operators operators::less_equal ( 21 );
+const operators operators::less_equal ( 20 );
 const operators operators::div ( 4 );
 const operators operators::assign ( 6 );
 
@@ -61,7 +60,6 @@ private:
 public:
 	dict_wrapper_operators(){
 		enum_to_name.insert( std::make_pair( operators::sub_assign, "sub_assign" ) );
-		enum_to_name.insert( std::make_pair( operators::bit_not_assign, "bit_not_assign" ) );
 		enum_to_name.insert( std::make_pair( operators::less, "less" ) );
 		enum_to_name.insert( std::make_pair( operators::bit_and, "bit_and" ) );
 		enum_to_name.insert( std::make_pair( operators::bit_or_assign, "bit_or_assign" ) );
@@ -101,7 +99,6 @@ public:
 		enum_to_name.insert( std::make_pair( operators::assign, "assign" ) );
 
 		name_to_enum.insert( std::make_pair( "sub_assign", operators::sub_assign ) );
-		name_to_enum.insert( std::make_pair( "bit_not_assign", operators::bit_not_assign ) );
 		name_to_enum.insert( std::make_pair( "less", operators::less ) );
 		name_to_enum.insert( std::make_pair( "bit_and", operators::bit_and ) );
 		name_to_enum.insert( std::make_pair( "bit_or_assign", operators::bit_or_assign ) );

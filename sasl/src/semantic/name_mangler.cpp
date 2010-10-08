@@ -153,7 +153,7 @@ std::string mangle( boost::shared_ptr<function_type> mangling_function ){
 	return mangled_name;
 }
 
-std::string mangle( boost::shared_ptr<expression> expr ){
-
+std::string operator_name( const operators& op ){
+	return std::string("0") + op.name();
 }
 END_NS_SASL_SEMANTIC();

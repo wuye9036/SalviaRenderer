@@ -1,7 +1,9 @@
 #include <sasl/enums/enums_helper.h>
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/operators.h>
+#include <eflib/include/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
+#include <eflib/include/enable_warnings.h>
 
 bool sasl_ehelper::is_none( const buildin_type_code& btc ){
 	return btc == buildin_type_code::none;
@@ -166,17 +168,13 @@ const std::vector<buildin_type_code>& sasl_ehelper::list_of_buildin_type_codes()
 			;
 
 		// add vectors & matrixs
-		typedef std::vector<buildin_type_code>::iterator 
-			btc_list_iter_t;
-		btc_list_iter_t beg = btc_list.begin();
-		btc_list_iter_t end = btc_list.end();
-
-		for(btc_list_iter_t it = beg; it != end; ++it ){
+		size_t scalar_count = btc_list.size();
+		for( size_t i_scalar = 0; i_scalar < scalar_count; ++i_scalar){
 			for( int i = 1; i <= 4; ++i ){
 				for( int j = 1; j <=4; ++j ){
-					btc_list += matrix_of( *it, i, j );
+					btc_list += matrix_of( btc_list[i_scalar], i, j );
 				}
-				btc_list += vector_of( *it, i );
+				btc_list += vector_of( btc_list[i_scalar], i );
 			}
 		}
 
@@ -315,3 +313,19 @@ const std::vector<operators>& sasl_ehelper::list_of_operators(){
 	return op_list;
 }
 
+bool sasl_ehelper::is_standard( const buildin_type_code& btc ){
+	if (btc == buildin_type_code::_sint32 ||
+		btc == buildin_type_code::_sint64 ||
+		btc == buildin_type_code::_uint64 ||
+		btc == buildin_type_code::_float ||
+		btc == buildin_type_code::_double) 
+	{
+			return true;
+	}
+
+	if ( is_vector(btc) || is_matrix(btc) ){
+		return is_standard(scalar_of(btc));
+	}
+
+	return false;
+}

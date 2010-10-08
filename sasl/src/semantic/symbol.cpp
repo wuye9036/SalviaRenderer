@@ -1,5 +1,11 @@
 #include <sasl/include/semantic/symbol.h>
+
 #include <sasl/include/syntax_tree/node.h>
+
+#include <eflib/include/disable_warnings.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/thread/mutex.hpp>
+#include <eflib/include/enable_warnings.h>
 #include <algorithm>
 
 using namespace std;
@@ -66,7 +72,7 @@ std::vector< boost::shared_ptr<symbol> > symbol::find_overloads( const ::std::st
 	vector< boost::shared_ptr<symbol> > ret;
 	const std::vector<const ::std::string>& name_of_ret = get_overloads( unmangled );
 	if ( !name_of_ret.empty() ) {
-		for( int i_name = 0; i_name < name_of_ret.size(); ++i_name ){
+		for( size_t i_name = 0; i_name < name_of_ret.size(); ++i_name ){
 			ret.push_back( find( name_of_ret[i_name] ) ); 
 		}
 		return ret;
@@ -169,6 +175,17 @@ void symbol::add_mangling( const std::string& mangled ){
 		this_parent.lock()->overloads[umgl_name] = overload_table_t::mapped_type();
 		this_parent.lock()->overloads[umgl_name].push_back( mangled );
 	}
+}
+
+int anonymous_name_count = 0;
+boost::mutex mtx;
+std::string anonymous_name(){
+	boost::mutex::scoped_lock locker(mtx);
+	return std::string("__sasl__anonymous__name__66EE3DF2AC1746aaA963B98C7F1985E1_") + boost::lexical_cast<std::string>(++anonymous_name_count);
+}
+
+boost::shared_ptr<symbol> symbol::add_anonymous_child( boost::shared_ptr<struct node> child_node ){
+	return add_child( anonymous_name(), child_node );
 }
 
 END_NS_SASL_SEMANTIC();

@@ -9,7 +9,11 @@ symbol_scope::symbol_scope(
 		boost::shared_ptr<symbol>& sym
 		): cursym( sym )
 {
-	sym = sym->add_child( unmangled, child_node );
+	if( !unmangled.empty() ){
+		sym = sym->add_child( unmangled, child_node );
+	} else {
+		sym = sym->add_anonymous_child( child_node );
+	}
 }
 
 symbol_scope::~symbol_scope(){
