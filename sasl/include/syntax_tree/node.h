@@ -34,6 +34,9 @@ struct node{
 		return boost::shared_polymorphic_cast<T>( handle() );
 	}
 
+	boost::shared_ptr<node> dup() const;
+	boost::shared_ptr<node> deep_dup() const;
+
 	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;
 	void symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym );
 
@@ -53,6 +56,9 @@ protected:
 	node& operator = ( const node& );
 	node( const node& );
 	
+	virtual boost::shared_ptr<node> dup_impl() const;
+	virtual boost::shared_ptr<node> deep_dup_impl() const;
+
 	syntax_node_types				type_id;
 	boost::shared_ptr<token_attr>	tok;
 	boost::shared_ptr<class ::sasl::semantic::symbol>	sym;

@@ -19,7 +19,6 @@
 		<item>div_assign</item>
 		<item>mod_assign</item>
 		
-		<item>bit_not_assign</item>
 		<item>bit_and_assign</item>
 		<item>bit_or_assign</item>
 		<item>bit_xor_assign</item>

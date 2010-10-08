@@ -94,7 +94,7 @@ public:
 
 	virtual boost::shared_ptr<type_specifier> type_info();
 	virtual void type_info( boost::shared_ptr<type_specifier> val );
-	virtual void set_copy( boost::shared_ptr<type_specifier> val );
+	virtual void set_and_hold_type_info( boost::shared_ptr<type_specifier> val );
 
 private:
 	boost::shared_ptr<type_specifier> copy;
@@ -107,7 +107,7 @@ public:
 
 	virtual boost::shared_ptr<type_specifier> type_info();
 	virtual void type_info( boost::shared_ptr<type_specifier> val );
-	virtual void set_copy( boost::shared_ptr<type_specifier> val );
+	virtual void set_and_hold_type_info( boost::shared_ptr<type_specifier> val );
 
 private:
 	boost::shared_ptr<type_specifier> copy;

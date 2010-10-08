@@ -112,6 +112,7 @@ struct buildin_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
 	void accept( syntax_tree_visitor* v );
 	bool is_buildin() const;
+
 protected:
 	buildin_type( boost::shared_ptr<token_attr> tok );
 	buildin_type& operator = ( const buildin_type& );

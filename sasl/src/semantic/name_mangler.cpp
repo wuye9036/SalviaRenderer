@@ -6,7 +6,9 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <sasl/include/semantic/name_mangler.h>
 
 #include <sasl/enums/enums_helper.h>
+#include <sasl/enums/operators.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
@@ -20,6 +22,7 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 
 using ::sasl::syntax_tree::array_type;
 using ::sasl::syntax_tree::buildin_type;
+using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::struct_type;
@@ -150,4 +153,7 @@ std::string mangle( boost::shared_ptr<function_type> mangling_function ){
 	return mangled_name;
 }
 
+std::string mangle( boost::shared_ptr<expression> expr ){
+
+}
 END_NS_SASL_SEMANTIC();

@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 namespace sasl{
 	namespace common{
@@ -11,6 +12,7 @@ namespace sasl{
 	}
 	namespace syntax_tree{
 		struct node;
+		struct function_type;
 	}
 }
 BEGIN_NS_SASL_SEMANTIC();
@@ -77,6 +79,10 @@ private:
 	boost::shared_ptr<::sasl::common::compiler_info_manager> infomgr;
 	boost::shared_ptr<symbol> cursym;
 	bool is_local;
+
+	//////////////////////////////////////////////////////////////////////////
+	// buildin functions for build-in types.
+	std::vector< boost::shared_ptr<function_type> > buildin_functions;
 };
 
 END_NS_SASL_SEMANTIC();

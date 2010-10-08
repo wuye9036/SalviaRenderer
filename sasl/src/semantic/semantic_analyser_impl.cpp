@@ -9,9 +9,12 @@
 #include <sasl/include/semantic/type_converter.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
+#include <sasl/include/syntax_tree/utility.h>
 #include <boost/assign/list_of.hpp>
+#include <boost/assign/list_inserter.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/apply.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -28,8 +31,14 @@ using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
+using ::sasl::syntax_tree::statement;
+using ::sasl::syntax_tree::type_specifier;
+
+using ::sasl::syntax_tree::dfunction_combinator;
 
 using ::sasl::semantic::errors::semantic_error;
+
+using ::sasl::semantic::program_si;
 
 using namespace std;
 
@@ -340,6 +349,8 @@ void semantic_analyser_impl::visit( program& v ){
 	v.symbol( symbol::create_root( v.handle() ) );
 	cursym = v.symbol();
 
+	register_buildin_function();
+
 	// analysis decalarations.
 	for( vector< boost::shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
 		(*it)->accept( this );
@@ -505,6 +516,30 @@ void semantic_analyser_impl::register_type_converter(){
 }
 
 void semantic_analyser_impl::register_buildin_function(){
+	typedef boost::unordered_map<buildin_type_code, boost::shared_ptr<buildin_type> > bt_table_t;
+	bt_table_t bttbl;
+	map_of_buildin_type( bttbl, &sasl_ehelper::is_storagable );
+
+	boost::shared_ptr<function_type> tmpft;
+
+	// arithmetic operators
+	vector<std::string> op_tbl;
+	const vector<operators>& oplist = sasl_ehelper::list_of_operators();
+
+	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
+		if ( sasl_ehelper::is_arithmetic(oplist[i_op]) ){
+			dfunction_combinator(NULL).dname("0add")
+				.dreturntype().dnode( bttbl[buildin_type_code::_sint32] ).end()
+				.dparam().dtype().dnode(bttbl[buildin_type_code::_sint32]).end().end()
+				.dparam().dtype().dnode(bttbl[buildin_type_code::_sint32]).end().end()
+			.end( tmpft );
+		}
+
+		// end of for loop
+		if ( tmpft ){
+			buildin_functions.push_back( tmpft );
+		}
+	}
 }
 
 END_NS_SASL_SEMANTIC();
