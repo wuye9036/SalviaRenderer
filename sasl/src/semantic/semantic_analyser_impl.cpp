@@ -602,7 +602,7 @@ void semantic_analyser_impl::register_buildin_function(){
 			.end( tmpft );
 		}
 
-		if( sasl_ehelper::is_prefix(op) || sasl_ehelper::is_postfix(op) ){
+		if( sasl_ehelper::is_prefix(op) || sasl_ehelper::is_postfix(op) || op == operators::positive ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				if ( sasl_ehelper::is_integer(it_type->first) ){
 					dfunction_combinator(NULL).dname( op_name )
@@ -639,6 +639,16 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
 				}
+			}
+		}
+
+		if ( op == operators::assign ){
+			for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type ){
+				dfunction_combinator(NULL).dname( op_name )
+					.dreturntype().dnode( it_type->second ).end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+					.dparam().dtype().dnode( it_type->second ).end().end()
+				.end( tmpft );
 			}
 		}
 
