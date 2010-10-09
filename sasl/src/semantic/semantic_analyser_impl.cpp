@@ -78,6 +78,58 @@ vector< boost::shared_ptr<symbol> > get_overloaded(
 		if( !all_parameter_success ){ continue;	}
 
 		// if all parameter could be matched, we will find does it better than others.
+		bool is_better = false;
+		bool is_worse = false;
+		for( vector< boost::shared_ptr<symbol> >::iterator it = candidates.begin(); it != candidates.end(); ++it ){
+			
+			boost::shared_ptr<function_type> a_matched_func = (*it)->node()->typed_handle<function_type>();
+
+			// match functions.
+			size_t better_param_count = 0;
+			size_t worse_param_count = 0;
+
+			for( size_t i_param = 0; i_param < args.size(); ++i_param ){
+				boost::shared_ptr<type_specifier> arg_type = extract_semantic_info<type_info_si>( args[i_param] )->type_info();
+				boost::shared_ptr<type_specifier> matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->type_info();
+				boost::shared_ptr<type_specifier> matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->type_info();
+
+				if( type_equal( matched_par_type, arg_type ) ){
+					if ( !type_equal( matching_par_type, arg_type ) ){
+						++worse_param_count;
+					}
+				} else {
+					if ( type_equal( matching_par_type, arg_type ) ){
+						++better_param_count;
+					} else if (
+						conv->convert( matching_par_type, matched_par_type ) == type_converter::implicit_conv 
+						&& conv->convert( matched_par_type, matching_par_type ) != type_converter::implicit_conv
+						)
+					{
+						++better_param_count;
+					} else if (
+						conv->convert( matching_par_type, matched_par_type ) != type_converter::implicit_conv 
+						&& conv->convert( matched_par_type, matching_par_type ) == type_converter::implicit_conv
+						)
+					{
+						++worse_param_count;
+					}
+				}
+			}
+
+			if ( better_param_count > 0 && worse_param_count == 0 ) {
+				is_better = true;
+			}
+			if ( better_param_count == 0 && worse_param_count > 0 ){
+				is_worse = true;
+			}
+
+			// if current function is better than matched function, remove matched function.
+			if( is_better ){
+				candidates.erase( it );
+			}
+		}
+		// if current function is worse than matched function, discard it.
+		if (is_worse) { continue; }
 	}
 	return candidates;
 }
