@@ -27,9 +27,11 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::common::compiler_info_manager;
 using ::sasl::common::token_attr;
 
+using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::buildin_type;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::declaration;
+using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
@@ -40,11 +42,45 @@ using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::dfunction_combinator;
 
 using ::sasl::semantic::errors::semantic_error;
-
+using ::sasl::semantic::extract_semantic_info;
 using ::sasl::semantic::program_si;
+using ::sasl::semantic::symbol;
 
 using namespace std;
 
+vector< boost::shared_ptr<symbol> > get_overloaded(
+	const std::string& unmangled,
+	boost::shared_ptr<symbol> sym,
+	boost::shared_ptr<type_converter> conv,
+	std::vector< boost::shared_ptr<expression> > args
+	)
+{
+	vector< boost::shared_ptr<symbol> > overloads = sym->find_overloads( unmangled );
+	if( overloads.empty() ) { return overloads; }
+
+	vector< boost::shared_ptr<symbol> > candidates;
+	for( size_t i_func = 0; i_func < overloads.size(); ++i_func ){
+		boost::shared_ptr<function_type> matching_func = sym->node()->typed_handle<function_type>();
+
+		// could not matched.
+		if ( matching_func->params.size() != args.size() ){ continue; }
+
+		// try to match all parameters.
+		bool all_parameter_success = true;
+		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
+			boost::shared_ptr<type_specifier> arg_type = extract_semantic_info<type_info_si>( args[i_param] )->type_info();
+			boost::shared_ptr<type_specifier> par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->type_info();
+			if ( !( type_equal( arg_type, par_type) || conv->convert(matching_func->params[i_param], args[i_param]) ) ){
+				all_parameter_success = false;
+				break;
+			}
+		}
+		if( !all_parameter_success ){ continue;	}
+
+		// if all parameter could be matched, we will find does it better than others.
+	}
+	return candidates;
+}
 // utility functions
 boost::shared_ptr<buildin_type> create_buildin_type( buildin_type_code btc ){
 	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
