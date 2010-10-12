@@ -29,6 +29,7 @@ void syntax_cases::release(){
 
 syntax_cases::syntax_cases():
 LOCVAR_(btc_sint8)( buildin_type_code::_sint8 ),
+LOCVAR_(btc_int32)( buildin_type_code::_sint32),
 LOCVAR_(btc_uint32)( buildin_type_code::_uint32 ),
 LOCVAR_(btc_uint64)( buildin_type_code::_uint64 ),
 LOCVAR_(btc_double)( buildin_type_code::_double ),

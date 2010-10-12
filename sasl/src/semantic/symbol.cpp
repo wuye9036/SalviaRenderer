@@ -173,8 +173,8 @@ void symbol::add_mangling( const std::string& mangled ){
 	// add to overloaded items table
 	if ( this_parent.lock()->get_overloads(umgl_name).empty() ){
 		this_parent.lock()->overloads[umgl_name] = overload_table_t::mapped_type();
-		this_parent.lock()->overloads[umgl_name].push_back( mangled );
 	}
+	this_parent.lock()->overloads[umgl_name].push_back( mangled );
 }
 
 int anonymous_name_count = 0;

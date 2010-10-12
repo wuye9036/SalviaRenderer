@@ -24,6 +24,7 @@ public:
 
 	const static this_type _unsigned;
 	const static this_type _sint32;
+	const static this_type _c_int;
 	const static this_type _sint16;
 	const static this_type _generic_type_field_shift;
 	const static this_type _scalar_type_mask;

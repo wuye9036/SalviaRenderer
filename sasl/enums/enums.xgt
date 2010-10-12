@@ -117,6 +117,13 @@
 		<item value="3 * (2 ** $_scalar_field_shift$) + $_unsigned$">_uint32</item>
 		<item value="4 * (2 ** $_scalar_field_shift$) + $_unsigned$">_uint64</item>
 		
+		<!--
+			Integer for literal constant.
+			This type is a flag and can be convert to any integer type, 
+			but could not be converted from any type.
+		-->
+		<item value="5 * (2 ** $_scalar_field_shift$) + $_signed$">_c_int</item>
+		
 		<item value="1 * (2 ** $_scalar_field_shift$) + $_real$">_float</item>
 		<item value="2 * (2 ** $_scalar_field_shift$) + $_real$">_double</item>
 		<item value="(2 ** $_dimension_field_shift$) - (2**$_scalar_field_shift$)">_scalar_type_mask</item>

@@ -70,6 +70,14 @@ BOOST_AUTO_TEST_CASE( btc_test )
 	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_float3)) == 12 );
 	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_ulong3x2)) == 48 );
 	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_double2x4)) == 64 );
+
+	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_float) ) );
+	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_double2x4) ) );
+	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_float3) ) );
+	BOOST_CHECK( !sasl_ehelper::is_standard( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !sasl_ehelper::is_standard( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_float) ) );
 }
 
 BOOST_AUTO_TEST_CASE( decl_combinator_test )

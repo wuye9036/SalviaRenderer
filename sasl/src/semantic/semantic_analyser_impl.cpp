@@ -18,6 +18,7 @@
 
 #include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>
+#include <boost/assign/std/vector.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/apply.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -47,6 +48,7 @@ using ::sasl::semantic::program_si;
 using ::sasl::semantic::symbol;
 
 using namespace std;
+using namespace boost::assign;
 
 vector< boost::shared_ptr<symbol> > get_overloaded(
 	const std::string& unmangled,
@@ -55,12 +57,26 @@ vector< boost::shared_ptr<symbol> > get_overloaded(
 	std::vector< boost::shared_ptr<expression> > args
 	)
 {
+	// find all overloads
 	vector< boost::shared_ptr<symbol> > overloads = sym->find_overloads( unmangled );
 	if( overloads.empty() ) { return overloads; }
 
+	// Find candidates.
+	// Following steps could impl function overloading :
+	//
+	//	for each candidate in overloads
+	//		if candidate is a valid overload
+	//			compare this candidate to evaluated candidates
+	//				if candidate is better than evaluated, discard evaluated.
+	//				if candidate is worse than evaluated, discard current candidate
+	//			after all comparison done, if candidate have not be discarded, add it into candidates.
+	//	now the candidates is result.
+	//
+	// better & worse judgement is as same as C#.
 	vector< boost::shared_ptr<symbol> > candidates;
 	for( size_t i_func = 0; i_func < overloads.size(); ++i_func ){
-		boost::shared_ptr<function_type> matching_func = sym->node()->typed_handle<function_type>();
+		boost::shared_ptr<function_type> matching_func = overloads[i_func]->node()->typed_handle<function_type>();
+		printf( "%s\n", matching_func->symbol()->mangled_name().c_str() );
 
 		// could not matched.
 		if ( matching_func->params.size() != args.size() ){ continue; }
@@ -80,7 +96,7 @@ vector< boost::shared_ptr<symbol> > get_overloaded(
 		// if all parameter could be matched, we will find does it better than others.
 		bool is_better = false;
 		bool is_worse = false;
-		for( vector< boost::shared_ptr<symbol> >::iterator it = candidates.begin(); it != candidates.end(); ++it ){
+		for( vector< boost::shared_ptr<symbol> >::iterator it = candidates.begin(); it != candidates.end();  ){
 			
 			boost::shared_ptr<function_type> a_matched_func = (*it)->node()->typed_handle<function_type>();
 
@@ -121,18 +137,24 @@ vector< boost::shared_ptr<symbol> > get_overloaded(
 			}
 			if ( better_param_count == 0 && worse_param_count > 0 ){
 				is_worse = true;
+				break;
 			}
 
 			// if current function is better than matched function, remove matched function.
 			if( is_better ){
-				candidates.erase( it );
+				it = candidates.erase( it );
+			} else {
+				++it;
 			}
 		}
 		// if current function is worse than matched function, discard it.
-		if (is_worse) { continue; }
+		if ( !is_worse ) {
+			candidates.push_back(matching_func->symbol());
+		}
 	}
 	return candidates;
 }
+
 // utility functions
 boost::shared_ptr<buildin_type> create_buildin_type( buildin_type_code btc ){
 	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
@@ -148,8 +170,6 @@ boost::shared_ptr<type_specifier> type_info_of( boost::shared_ptr<node> n ){
 	return boost::shared_ptr<type_specifier>();
 }
 
-// class semantic_analyser_impl;
-
 semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
 	: infomgr( infomgr )
 {
@@ -164,6 +184,18 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& v ){
 	v.right_expr->accept(this);
 
 	// TODO: look up operator prototype.
+	std::string opname = operator_name( v.op );
+	vector< boost::shared_ptr<expression> > exprs;
+	exprs += v.left_expr, v.right_expr;
+	vector< boost::shared_ptr<symbol> > overloads = get_overloaded( opname, cursym, typeconv, exprs );
+
+	if ( overloads.empty() ){
+		assert( !"Need to report a compiler error. No overloading." );
+	} else if ( overloads.size() == 1 ){
+		// This is the right match.
+	} else {
+		assert( !"Need to report a compiler error. Ambigous overloading." );
+	}
 }
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_list& /*v*/ ){}
@@ -634,6 +666,11 @@ void semantic_analyser_impl::register_buildin_function(){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.dparam().dtype().dnode( it_type->second ).end().end()
 				.end( tmpft );
+
+				if ( tmpft ){
+					tmpft->accept(this);
+					buildin_functions.push_back( tmpft );
+				}
 			}
 		}
 
@@ -644,6 +681,10 @@ void semantic_analyser_impl::register_buildin_function(){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
+				if ( tmpft ){
+					tmpft->accept(this);
+					buildin_functions.push_back( tmpft );
+				}
 			}
 		}
 
@@ -655,6 +696,10 @@ void semantic_analyser_impl::register_buildin_function(){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
+				if ( tmpft ){
+					tmpft->accept(this);
+					buildin_functions.push_back( tmpft );
+				}
 			}
 		}
 
@@ -666,6 +711,10 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
+					if ( tmpft ){
+						tmpft->accept(this);
+						buildin_functions.push_back( tmpft );
+					}
 				}
 			}
 		}
@@ -678,6 +727,10 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.dparam().dtype().dnode( bt_i32 ).end().end()
 						.end( tmpft );
+					if ( tmpft ){
+						tmpft->accept(this);
+						buildin_functions.push_back( tmpft );
+					}
 				}
 			}
 		}
@@ -688,6 +741,10 @@ void semantic_analyser_impl::register_buildin_function(){
 				.dparam().dtype().dnode( bt_bool ).end().end()
 				.dparam().dtype().dnode( bt_bool ).end().end()
 			.end( tmpft );
+			if ( tmpft ){
+				tmpft->accept(this);
+				buildin_functions.push_back( tmpft );
+			}
 		}
 
 		if( sasl_ehelper::is_prefix(op) || sasl_ehelper::is_postfix(op) || op == operators::positive ){
@@ -697,6 +754,11 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.end( tmpft );
+
+					if ( tmpft ){
+						tmpft->accept(this);
+						buildin_functions.push_back( tmpft );
+					}
 				}
 			}
 		}
@@ -708,6 +770,11 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.end( tmpft );
+
+					if ( tmpft ){
+						tmpft->accept(this);
+						buildin_functions.push_back( tmpft );
+					}
 				}
 			}
 		}
@@ -717,6 +784,11 @@ void semantic_analyser_impl::register_buildin_function(){
 				.dreturntype().dnode( bt_bool ).end()
 				.dparam().dtype().dnode( bt_bool ).end().end()
 			.end( tmpft );
+
+			if ( tmpft ){
+				tmpft->accept(this);
+				buildin_functions.push_back( tmpft );
+			}
 		}
 
 		if( op == operators::negative ){
@@ -726,6 +798,11 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
+
+					if ( tmpft ){
+						tmpft->accept(this);
+						buildin_functions.push_back( tmpft );
+					}
 				}
 			}
 		}
@@ -737,13 +814,12 @@ void semantic_analyser_impl::register_buildin_function(){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.dparam().dtype().dnode( it_type->second ).end().end()
 				.end( tmpft );
-			}
-		}
 
-		// end of for loop
-		if ( tmpft ){
-			tmpft->accept(this);
-			buildin_functions.push_back( tmpft );
+				if ( tmpft ){
+					tmpft->accept(this);
+					buildin_functions.push_back( tmpft );
+				}
+			}
 		}
 	}
 }

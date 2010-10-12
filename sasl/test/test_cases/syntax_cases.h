@@ -28,6 +28,7 @@ public:
 
 	// buildin type codes.
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_sint8 );
+	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_int32 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint32 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint64 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_float );
@@ -69,6 +70,7 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_nnn );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_flt_2p_n_gen );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func0_cexpr );
+
 	// paramters
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p1_fn0 );

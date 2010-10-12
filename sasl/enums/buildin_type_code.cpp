@@ -8,6 +8,7 @@ using namespace std;
 
 const buildin_type_code buildin_type_code::_unsigned ( 34603008 );
 const buildin_type_code buildin_type_code::_sint32 ( 35848192 );
+const buildin_type_code buildin_type_code::_c_int ( 35979264 );
 const buildin_type_code buildin_type_code::_sint16 ( 35782656 );
 const buildin_type_code buildin_type_code::_generic_type_field_shift ( 24 );
 const buildin_type_code buildin_type_code::_scalar_type_mask ( 268369920 );
@@ -56,6 +57,7 @@ public:
 	dict_wrapper_buildin_type_code(){
 		enum_to_name.insert( std::make_pair( buildin_type_code::_unsigned, "_unsigned" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_sint32, "_sint32" ) );
+		enum_to_name.insert( std::make_pair( buildin_type_code::_c_int, "_c_int" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_sint16, "_sint16" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_generic_type_field_shift, "_generic_type_field_shift" ) );
 		enum_to_name.insert( std::make_pair( buildin_type_code::_scalar_type_mask, "_scalar_type_mask" ) );
@@ -90,6 +92,7 @@ public:
 
 		name_to_enum.insert( std::make_pair( "_unsigned", buildin_type_code::_unsigned ) );
 		name_to_enum.insert( std::make_pair( "_sint32", buildin_type_code::_sint32 ) );
+		name_to_enum.insert( std::make_pair( "_c_int", buildin_type_code::_c_int ) );
 		name_to_enum.insert( std::make_pair( "_sint16", buildin_type_code::_sint16 ) );
 		name_to_enum.insert( std::make_pair( "_generic_type_field_shift", buildin_type_code::_generic_type_field_shift ) );
 		name_to_enum.insert( std::make_pair( "_scalar_type_mask", buildin_type_code::_scalar_type_mask ) );
