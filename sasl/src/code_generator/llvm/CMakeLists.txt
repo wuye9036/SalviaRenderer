@@ -14,6 +14,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_contexts.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_globalctxt.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_impl.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_type_converters.h
 )
 
 set( SOURCE_FILES
@@ -22,6 +23,7 @@ set( SOURCE_FILES
 	cgllvm_contexts.cpp
 	cgllvm_globalctxt.cpp
 	cgllvm_impl.cpp
+	cgllvm_type_converters.cpp
 )
 
 ADD_LIBRARY( sasl_cgllvm STATIC	${HEADER_FILES} ${SOURCE_FILES} )
