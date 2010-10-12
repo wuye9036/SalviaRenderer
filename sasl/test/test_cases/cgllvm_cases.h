@@ -10,6 +10,7 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
+#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/disable_warnings.h>
 #include <boost/thread.hpp>
@@ -19,6 +20,8 @@ class cgllvm_cases{
 public:
 	static cgllvm_cases& instance();
 	static void release();
+
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_jit_engine), jit );
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), root );
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), null_root );

@@ -1,5 +1,7 @@
 #include <eflib/include/disable_warnings.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/Module.h>
+#include <llvm/Target/TargetSelect.h>
 #include <eflib/include/enable_warnings.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
@@ -37,6 +39,8 @@ cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<cgllvm_global_context> c
 }
 
 void cgllvm_jit_engine::build(){
+	llvm::InitializeNativeTarget();
+
 	if ( !global_ctxt || !global_ctxt->module() ){
 		engine.reset();
 	}

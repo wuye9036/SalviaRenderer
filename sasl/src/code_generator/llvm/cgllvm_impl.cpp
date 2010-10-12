@@ -19,7 +19,10 @@ using namespace std;
 using namespace syntax_tree;
 using namespace llvm;
 
+using semantic::const_value_si;
+using semantic::extract_semantic_info;
 using semantic::symbol;
+using semantic::type_info_si;
 
 typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
 
@@ -62,35 +65,24 @@ void llvm_code_generator::visit( unary_expression& ){
 }
 
 void llvm_code_generator::visit( cast_expression& ){}
-void llvm_code_generator::visit( binary_expression& ){
+void llvm_code_generator::visit( binary_expression& v){
 	//// generate left and right expr.
-	//v.left_expr->accept(this);
-	//v.right_expr->accept(this);
+	v.left_expr->accept(this);
+	v.right_expr->accept(this);
 
-	////
-	//boost::shared_ptr<symbol> lsym = v.left_expr->symbol();
-	//boost::shared_ptr<symbol> rsym = v.right_expr->symbol();
+	boost::shared_ptr<type_specifier> ltype = extract_semantic_info<type_info_si>(v.left_expr)->type_info();
+	boost::shared_ptr<type_specifier> rtype = extract_semantic_info<type_info_si>(v.right_expr)->type_info();
 
-	//boost::shared_ptr<type_specifier> ltype = lsym->semantic_info<value_type_semantic_info>()->value_type();
-	//boost::shared_ptr<type_specifier> rtype = rsym->semantic_info<value_type_semantic_info>()->value_type();
+	Value* lval = extract_common_ctxt( v.left_expr )->val;
+	Value* rval = extract_common_ctxt( v.right_expr )->val;
 
-	//boost::shared_ptr<class semantic_info> ret_syminfo = v.symbol()->get_or_create_semantic_info<class semantic_info>();
-
-	//// generate code
-	//if (v.op == operators::add){
-	//	if ( ltype->type_id_of_value == buildin_type_code::_sint32 &&
-	//		ltype->type_id_of_value == buildin_type_code::_sint32
-	//	){
-	//		llvm::Value* ret_val = cg_ctxt.builder->CreateAdd( 
-	//			lsym->semantic_info<class semantic_info>()->llvm_value,
-	//			rsym->semantic_info<class semantic_info>()->llvm_value,
-	//			generate_temporary_name()
-	//			);
-	//		ret_syminfo->llvm_value = ret_val;
-	//	}
-	//} else {
-	//	throw "cannot support yet";
-	//}
+	// generate code
+	if ( !( ltype->node_class() == syntax_node_types::buildin_type && ltype->node_class() == syntax_node_types::buildin_type ) ){
+		assert( !"Not be supportted yet" );
+	}
+	if (v.op == operators::add){
+		get_common_ctxt(v)->val = ctxt->builder()->CreateAdd( lval, rval, "fuck" );
+	}
 }
 void llvm_code_generator::visit( expression_list& ){}
 void llvm_code_generator::visit( cond_expression& ){}
@@ -98,31 +90,15 @@ void llvm_code_generator::visit( index_expression& ){}
 void llvm_code_generator::visit( call_expression& ){}
 void llvm_code_generator::visit( member_expression& ){}
 
-void llvm_code_generator::visit( constant_expression& ){
-	//using sasl::semantic_analyser::value_semantic_info;
-	//boost::shared_ptr<value_semantic_info> val_syminfo
-	//	= get_or_create_semantic_info<value_semantic_info>(v);
-	//Value* ret_v = NULL;
+void llvm_code_generator::visit( constant_expression& v ){
+	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
+	c_si->type_info()->accept( this );
 
-	//if ( v.value->valtype == literal_constant_types::real ){
-	//	if ( v.value->is_single() ){
-	//		ret_v = ConstantFP::get( ctxt, APFloat( (float)val_syminfo->value<double>() ) );
-	//	} else {
-	//		ret_v = ConstantFP::get( ctxt, APFloat(val_syminfo->value<double>()) );
-	//	}
-	//} else if ( v.value->valtype == literal_constant_types::integer ){
-	//	if ( v.value->is_unsigned() ){
-	//		ret_v = ConstantInt::get( Type::getInt64Ty(ctxt), val_syminfo->value<unsigned long>() );
-	//	} else {
-	//		union {
-	//			unsigned long u;
-	//			signed long s;
-	//		} u_to_s;
-	//		u_to_s.s = val_syminfo->value<long>();
-	//		ret_v = ConstantInt::get( Type::getInt64Ty(ctxt), u_to_s.u, true );
-	//	}
-	//}
-
+	if( c_si->value_type() == buildin_type_code::_sint32 ){
+		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
+	} else {
+		assert( !"Not implemented yet.");
+	}
 	//boost::shared_ptr< class semantic_info > syminfo = get_or_create_semantic_info<class semantic_info>(v);
 	//syminfo->llvm_value = ret_v;
 }
@@ -247,17 +223,41 @@ void llvm_code_generator::visit( while_statement& ){}
 void llvm_code_generator::visit( dowhile_statement& ){}
 void llvm_code_generator::visit( case_label& ){}
 void llvm_code_generator::visit( switch_statement& ){}
-void llvm_code_generator::visit( compound_statement& ){
-	// generate function code
-	//BasicBlock* funcCodeBlock = BasicBlock::Create( ctxt, "entry", func );
-	//cg_ctxt.builder->SetInsertPoint(funcCodeBlock);
-	//for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
-	//	it != v.stmts.end(); ++it ){
-	//	(*it)->accept( this );
-	//}
+
+void llvm_code_generator::visit( compound_statement& v ){
+	
+	BasicBlock* bb = BasicBlock::Create(
+		ctxt->context(),
+		v.symbol()->mangled_name(),
+		extract_common_ctxt( v.symbol()->parent()->node() )->func 
+		);
+	get_common_ctxt(v.handle())->block = bb;
+
+	ctxt->builder()->SetInsertPoint(bb);
+	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+		it != v.stmts.end(); ++it){
+		(*it)->accept( this );
+	}
 }
-void llvm_code_generator::visit( expression_statement& ){}
-void llvm_code_generator::visit( jump_statement& ){}
+
+void llvm_code_generator::visit( expression_statement& v ){
+	v.expr->accept( this );
+}
+
+void llvm_code_generator::visit( jump_statement& v ){
+	if (v.jump_expr){
+		v.jump_expr->accept( this );
+	}
+	ReturnInst* ret_ins = NULL;
+	if ( v.code == jump_mode::_return ){
+		if ( !v.jump_expr ){
+			ret_ins = ctxt->builder()->CreateRetVoid();
+		} else {
+			ret_ins = ctxt->builder()->CreateRet( extract_common_ctxt(v.jump_expr)->val );
+		}
+	}
+	get_common_ctxt(v)->ret_ins = ret_ins;
+}
 
 void llvm_code_generator::visit( ident_label& ){ }
 

@@ -5,7 +5,8 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 cgllvm_common_context::cgllvm_common_context():
 val(NULL), func(NULL), arg(NULL),
 type(NULL), is_signed(false),
-func_type(NULL), gvar(NULL)
+func_type(NULL), gvar(NULL),
+block(NULL), ret_ins(NULL)
 {
 }
 

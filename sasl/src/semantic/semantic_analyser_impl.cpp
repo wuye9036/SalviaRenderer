@@ -445,6 +445,12 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::ident_label& /*v*/ ){}
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::switch_statement& /*v*/ ){}
 
 void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& v ){
+
+	{
+		// add symbol to v. it can used by code block name.
+		symbol_scope( std::string(""), v.handle(), cursym );
+	}
+
 	for( vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{

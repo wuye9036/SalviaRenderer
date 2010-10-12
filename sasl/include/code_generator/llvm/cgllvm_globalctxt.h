@@ -4,11 +4,17 @@
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 
-#include <eflib/include/disable_warnings.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/Support/IRBuilder.h>
-#include <eflib/include/enable_warnings.h>
+namespace llvm{
+	class LLVMContext;
+	class Module;
+	class ConstantFolder;
+	template <bool preserveNames> class IRBuilderDefaultInserter;
+	template<
+		bool preserveNames = true,
+		typename T = ConstantFolder,
+		typename Inserter = IRBuilderDefaultInserter<preserveNames> >
+	class IRBuilder;
+}
 
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -24,6 +30,7 @@ public:
 	void create_module( const std::string& modname );
 
 	virtual llvm::Module* module() const;
+	virtual boost::shared_ptr<llvm::IRBuilder<> > builder() const;
 	virtual llvm::Module* get_ownership() const;
 
 	virtual llvm::LLVMContext& context();

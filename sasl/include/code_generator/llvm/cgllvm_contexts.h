@@ -10,10 +10,14 @@ namespace llvm{
 	class Function;
 	class GlobalVariable;
 	class Value;
+	class BasicBlock;
 	
 	// Type
 	class FunctionType;
 	class Type;
+
+	// Instructions
+	class ReturnInst;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -29,14 +33,16 @@ public:
 	llvm::Value* val;
 	llvm::Function* func;
 	llvm::Argument* arg;
+	llvm::BasicBlock* block;
 
 	const llvm::Type* type;
-	// for integral only
 	bool is_signed;
-
 	const llvm::FunctionType* func_type;
 
 	llvm::GlobalVariable* gvar;
+
+	// Instructions
+	llvm::ReturnInst* ret_ins;
 };
 
 class cgllvm_type_context: public codegen_context{

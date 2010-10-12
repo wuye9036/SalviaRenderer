@@ -3,6 +3,7 @@
 #include <sasl/test/test_cases/semantic_cases.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
+#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
@@ -41,4 +42,7 @@ void cgllvm_cases::initialize(){
 	LOCVAR_(func_flt_2p_n_gen) = CONTEXT_OF( func_flt_2p_n_gen );
 	LOCVAR_(func_flt_2p_n_gen_p0) = CONTEXT_OF( p0_fn0 );
 	LOCVAR_(func_flt_2p_n_gen_p1) = CONTEXT_OF( p1_fn0 );
+
+	std::string err;
+	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(root) ), err);
 }

@@ -2,9 +2,13 @@
 #define SASL_CODE_GENERATOR_JIT_API_H
 
 #include <sasl/include/code_generator/forward.h>
+
+#include <eflib/include/disable_warnings.h>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
+#include <eflib/include/enable_warnings.h>
+
 #include <vector>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -15,7 +19,7 @@ class jit_engine{
 public:
 	virtual void* get_function( const std::string& func_name ) = 0;
 protected:
-	jit_engine();
+	jit_engine(){}
 	virtual ~jit_engine(){}
 private:
 	jit_engine( const jit_engine& );
