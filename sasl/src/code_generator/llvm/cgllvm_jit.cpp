@@ -1,5 +1,6 @@
 #include <eflib/include/disable_warnings.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Module.h>
 #include <llvm/Target/TargetSelect.h>
 #include <eflib/include/enable_warnings.h>

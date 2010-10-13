@@ -76,7 +76,6 @@ vector< boost::shared_ptr<symbol> > get_overloaded(
 	vector< boost::shared_ptr<symbol> > candidates;
 	for( size_t i_func = 0; i_func < overloads.size(); ++i_func ){
 		boost::shared_ptr<function_type> matching_func = overloads[i_func]->node()->typed_handle<function_type>();
-		printf( "%s\n", matching_func->symbol()->mangled_name().c_str() );
 
 		// could not matched.
 		if ( matching_func->params.size() != args.size() ){ continue; }
