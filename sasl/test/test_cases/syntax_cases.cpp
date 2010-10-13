@@ -29,7 +29,7 @@ void syntax_cases::release(){
 
 syntax_cases::syntax_cases():
 LOCVAR_(btc_sint8)( buildin_type_code::_sint8 ),
-LOCVAR_(btc_int32)( buildin_type_code::_sint32),
+LOCVAR_(btc_sint32)( buildin_type_code::_sint32),
 LOCVAR_(btc_uint32)( buildin_type_code::_uint32 ),
 LOCVAR_(btc_uint64)( buildin_type_code::_uint64 ),
 LOCVAR_(btc_double)( buildin_type_code::_double ),
@@ -57,6 +57,8 @@ void syntax_cases::initialize(){
 	// create scalar types.
 	dtype_combinator(NULL)
 		.dbuildin(btc_sint8()) .end( LOCVAR_(type_sint8));
+	dtype_combinator(NULL)
+		.dbuildin(btc_sint32()) .end( LOCVAR_(type_sint32));
 	dtype_combinator(NULL)
 		.dbuildin(btc_uint32()).end(LOCVAR_(type_uint32));
 	dtype_combinator(NULL)
@@ -175,4 +177,18 @@ void syntax_cases::initialize(){
 		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
 		.dfunction("").dnode( func0_cexpr() ).end()
 	.end( LOCVAR_(prog_for_gen) );
+
+	dprog_combinator( NAME_(jit_prog).c_str() )
+		.dfunction( "foo" )
+			/*.dreturntype().dnode( type_sint32() ).end()
+			.dbody()
+				.dreturn_expr().dconstant2( int32_t(5) ).end()
+			.end()*/
+			.dreturntype().dnode( type_void() ).end()
+			.dbody()
+			.dreturn_void()
+			.end()
+		.end()
+	.end( LOCVAR_(jit_prog) )
+	;
 }

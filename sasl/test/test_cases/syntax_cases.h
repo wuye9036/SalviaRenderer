@@ -28,7 +28,7 @@ public:
 
 	// buildin type codes.
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_sint8 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_int32 );
+	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_sint32 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint32 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint64 );
 	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_float );
@@ -50,6 +50,7 @@ public:
 
 	// buildin types
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_sint8 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_sint32 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_uint32 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_uint64 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_float );
@@ -86,6 +87,7 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), null_prog );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_main );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_for_gen );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(program), jit_prog );
 private:
 	syntax_cases();
 	void initialize();

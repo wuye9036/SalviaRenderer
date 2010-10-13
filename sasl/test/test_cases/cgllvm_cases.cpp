@@ -35,6 +35,7 @@ void cgllvm_cases::initialize(){
 
 	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( SYNCASE_( prog_for_gen ) );
 	LOCVAR_(null_root) = CODEGEN_(generate_llvm_code)( SYNCASE_( null_prog ) );
+	LOCVAR_(jit_prog) = CODEGEN_(generate_llvm_code)( SYNCASE_(jit_prog) );
 
 	LOCVAR_(type_void) = CONTEXT_OF( type_void );
 	LOCVAR_(type_float) = CONTEXT_OF( type_float );
@@ -44,5 +45,5 @@ void cgllvm_cases::initialize(){
 	LOCVAR_(func_flt_2p_n_gen_p1) = CONTEXT_OF( p1_fn0 );
 
 	std::string err;
-	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(root) ), err);
+	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(jit_prog) ), err);
 }

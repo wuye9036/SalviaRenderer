@@ -30,6 +30,8 @@ semantic_cases::semantic_cases(){
 void semantic_cases::initialize(){
 	cim = COMMON_(compiler_info_manager)::create();
 	SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_gen), cim );
+	SEMANTIC_(semantic_analysis)( SYNCASE_(jit_prog), cim );
+
 	LOCVAR_( cexpr_776uint ) = extract_semantic_info<const_value_si>( SYNCASE_(cexpr_776uint) );
 	LOCVAR_( sym_f0 ) = SYNCASE_(func_flt_2p_n_gen)->symbol();
 	LOCVAR_( sym_p0 ) = SYNCASE_(p0_fn0)->symbol();
