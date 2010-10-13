@@ -2,7 +2,7 @@
 #define EFLIB_STRINGX_H
 
 #include "../config.h"
-	
+
 #include <string>
 namespace std{
 	#ifdef EFLIB_UNICODE
@@ -14,13 +14,11 @@ namespace std{
 	#endif
 }
 
-#ifdef EFLIB_MSVC
-	#define _EFLIB_U(str) L#str
-	#ifdef EFLIB_UNICODE
-		#define _EFLIB_T(str) L##str
-	#else
-		#define _EFLIB_T(str) str
-	#endif
+#define _EFLIB_U(str) L#str
+#ifdef EFLIB_UNICODE
+	#define _EFLIB_T(str) L##str
+#else
+	#define _EFLIB_T(str) str
 #endif
 
 namespace std{

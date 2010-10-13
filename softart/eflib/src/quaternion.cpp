@@ -57,14 +57,14 @@ quaternion quaternion::from_mat44( const mat44& mat )
 
 	switch(i_biggest){
 		case 0:
-			return quaternion( 
+			return quaternion(
 				(mat.f[1][2] - mat.f[2][1]) * m,
 				(mat.f[2][0] - mat.f[0][2]) * m,
 				(mat.f[0][1] - mat.f[1][0]) * m,
 				biggest_val
 				);
 		case 1:
-			return quaternion( 
+			return quaternion(
 				biggest_val,
 				(mat.f[0][1] + mat.f[1][0]) * m,
 				(mat.f[2][0] + mat.f[0][2]) * m,
@@ -72,13 +72,13 @@ quaternion quaternion::from_mat44( const mat44& mat )
 				);
 		case 2:
 			return quaternion(
-				(mat.f[0][1] + mat.f[1][0]) * m, 
+				(mat.f[0][1] + mat.f[1][0]) * m,
 				biggest_val,
 				(mat.f[1][2] + mat.f[2][1]) * m,
 				(mat.f[2][0] - mat.f[0][2]) * m
 				);
 		default:
-			return quaternion( 
+			return quaternion(
 				(mat.f[2][0] + mat.f[0][2]) * m,
 				(mat.f[1][2] + mat.f[2][1]) * m,
 				biggest_val,
@@ -173,7 +173,7 @@ quaternion pow( const quaternion& lhs, float t ){
 
 quaternion log( const quaternion& lhs ){
 	float alpha = acos(lhs.w);
-	if( equal( abs(alpha), 1.0f ) ){
+	if( equal( std::abs(alpha), 1.0f ) ){
 		return lhs;
 	}
 	vec3 new_v = normalize3( lhs.comps().xyz() );
@@ -221,7 +221,7 @@ quaternion slerp( const quaternion& src, const quaternion& dest, float t )
 	float cos_omega = dot_prod4(src.comps(), dest.comps());
 	vec4 near_dest_v = dest.comps() * sign(cos_omega);
 	cos_omega = abs(cos_omega);
-	
+
 	float k0(0.0f), k1(0.0f);
 	if( equal(cos_omega, 1.0f) ){
 		k0 = 1.0f - t;

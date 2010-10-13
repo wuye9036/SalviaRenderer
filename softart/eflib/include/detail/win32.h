@@ -9,7 +9,9 @@
 #ifdef EFLIB_WINDOWS
 
 #ifdef EFLIB_INCLUDE_WINDOWS_H
-	#define NOMINMAX
+	#ifndef NOMINMAX
+		#define NOMINMAX
+	#endif
 	#include <windows.h>
 	#ifndef EFLIB_USE_STD_MINMAX
 		#include <algorithm>
@@ -26,7 +28,7 @@
 		using ::std::max;
 		#define EFLIB_USE_STD_MINMAX
 	#endif
-	#include <gdiplus.h> 
+	#include <gdiplus.h>
 #endif
 
 #ifdef EFLIB_INCLUDE_D3D9_H
@@ -36,7 +38,7 @@
 		using ::std::max;
 		#define EFLIB_USE_STD_MINMAX
 	#endif
-	#include <d3d9.h> 
+	#include <d3d9.h>
 #endif
 
 #ifdef EFLIB_INCLUDE_D3DX9_H
@@ -46,7 +48,7 @@
 		using ::std::max;
 		#define EFLIB_USE_STD_MINMAX
 	#endif
-	#include <d3dx9.h> 
+	#include <d3dx9.h>
 #endif
 
 #endif //config windows

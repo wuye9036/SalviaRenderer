@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 created:	2008/05/30
 author:		Ye Wu
 
-purpose:	
+purpose:
 slog是一个轻量级的日志系统。
 
 Modify Log:
@@ -225,7 +225,7 @@ namespace efl{
 			h_logserializer->write(key, val);
 			return true;
 		}
-		
+
 		template<class T>
 		bool write(const T& val, const uint32_t cur_log_level)
 		{
@@ -242,7 +242,7 @@ namespace efl{
 			return true;
 		}
 
-	private: 
+	private:
 		uint32_t ref_log_level_;
 		boost::function<bool (uint32_t, uint32_t)> loglvlcmp_;
 		boost::shared_ptr<SerializerType> h_logserializer;
@@ -321,7 +321,7 @@ namespace efl{
 			{
 				h_serializer hsrl;
 				if (hos){
-					hsrl = h_serializer(new slog_type::serializer_type(*hos, _EFLIB_T("\t"), _EFLIB_T("\n"), _EFLIB_T("=")));
+					hsrl = h_serializer(new (typename slog_type::serializer_type)(*hos, _EFLIB_T("\t"), _EFLIB_T("\n"), _EFLIB_T("=")));
 				}
 				slog.set_serializer(hsrl);
 				is_first_run = false;

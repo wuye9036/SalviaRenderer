@@ -13,14 +13,7 @@ namespace efl
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #endif
-		union
-		{
-			struct 
-			{
-				vec4 v0, v1, v2, v3;
-			};
-			float f[4][4];
-		};
+		float f[4][4];
 #ifdef EFLIB_MSVC
 #pragma warning(pop)
 #endif
@@ -83,6 +76,67 @@ namespace efl
 #endif
 		}
 
+		void set_column(size_t i, const vec4& v)
+		{
+			custom_assert(i < 4, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 6385 6386)
+#endif
+			f[0][i] = v.x;
+			f[1][i] = v.y;
+			f[2][i] = v.z;
+			f[3][i] = v.w;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
+		}
+
+		vec4 get_row(size_t i) const
+		{
+			custom_assert(i < 4, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 6385 6386)
+#endif
+			return vec4(f[i][0], f[i][1], f[i][2], f[i][3]);
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
+		}
+
+		void set_row(size_t i, float _1, float _2, float _3, float _4)
+		{
+			custom_assert(i < 4, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 6385 6386)
+#endif
+			f[i][0] = _1;
+			f[i][1] = _2;
+			f[i][2] = _3;
+			f[i][3] = _4;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
+		}
+
+		void set_row(size_t i, const vec4& v)
+		{
+			custom_assert(i < 4, "");
+#ifdef EFLIB_MSVC
+#pragma warning(push)
+#pragma warning(disable: 6385 6386)
+#endif
+			f[i][0] = v.x;
+			f[i][1] = v.y;
+			f[i][2] = v.z;
+			f[i][3] = v.w;
+#ifdef EFLIB_MSVC
+#pragma warning(pop)
+#endif
+		}
+
 		//This route is from KlayGE (Author by GMM)
 		float det() const
 		{
@@ -93,7 +147,7 @@ namespace efl
 			float _3244_3442(this->f[2][1] * this->f[3][3] - this->f[2][3] * this->f[3][1]);
 			float _3344_3443(this->f[2][2] * this->f[3][3] - this->f[2][3] * this->f[3][2]);
 
-			return 
+			return
 				this->f[0][0] * (this->f[1][1] * _3344_3443 - this->f[1][2] * _3244_3442 + this->f[1][3] * _3243_3342)
 				- this->f[0][1] * (this->f[1][0] * _3344_3443 - this->f[1][2] * _3144_3441 + this->f[1][3] * _3143_3341)
 				+ this->f[0][2] * (this->f[1][0] * _3244_3442 - this->f[1][1] * _3144_3441 + this->f[1][3] * _3142_3241)
@@ -111,34 +165,66 @@ namespace efl
 			float _31, float _32, float _33, float _34,
 			float _41, float _42, float _43, float _44
 			)
-			: v0(_11, _12, _13, _14),
-			v1(_21, _22, _23, _24),
-			v2(_31, _32, _33, _34),
-			v3(_41, _42, _43, _44)
 		{
+			f[0][0] = _11;
+			f[0][1] = _12;
+			f[0][2] = _13;
+			f[0][3] = _14;
+
+			f[1][0] = _21;
+			f[1][1] = _22;
+			f[1][2] = _23;
+			f[1][3] = _24;
+
+			f[2][0] = _31;
+			f[2][1] = _32;
+			f[2][2] = _33;
+			f[2][3] = _34;
+
+			f[3][0] = _41;
+			f[3][1] = _42;
+			f[3][2] = _43;
+			f[3][3] = _44;
 		}
 
 		mat44(const vec4& v0, const vec4& v1, const vec4& v2, const vec4& v3)
-			: v0(v0), v1(v1), v2(v2), v3(v3)
 		{
+			f[0][0] = v0.x;
+			f[0][1] = v0.y;
+			f[0][2] = v0.z;
+			f[0][3] = v0.w;
+
+			f[1][0] = v1.x;
+			f[1][1] = v1.y;
+			f[1][2] = v1.z;
+			f[1][3] = v1.w;
+
+			f[2][0] = v2.x;
+			f[2][1] = v2.y;
+			f[2][2] = v2.z;
+			f[2][3] = v2.w;
+
+			f[3][0] = v3.x;
+			f[3][1] = v3.y;
+			f[3][2] = v3.z;
+			f[3][3] = v3.w;
 		}
 
-		mat44(const float* f){
-			memcpy((void*)this, (const void*)f, sizeof(mat44));
+		mat44(const float* _f){
+			memcpy(f, _f, sizeof(mat44));
 		}
 
 		/******************************************
 		*  赋值与拷贝构造
 		*
 		*****************************************/
-		mat44(const mat44& m) : v0(m.v0), v1(m.v1), v2(m.v2), v3(m.v3){}
+		mat44(const mat44& m){
+			memcpy(f, m.f, sizeof(mat44));
+		}
 
 		mat44& operator = (const mat44& m)
 		{
-			v0 = m.v0;
-			v1 = m.v1;
-			v2 = m.v2;
-			v3 = m.v3;
+			memcpy(f, m.f, sizeof(mat44));
 			return *this;
 		}
 
@@ -163,39 +249,127 @@ namespace efl
 		mat44 operator + (const mat44& m)
 		{
 			return mat44(
-				v0+m.v0, v1+m.v1, v2+m.v2, v3+m.v3
+				f[0][0] + m.f[0][0],
+				f[0][1] + m.f[0][1],
+				f[0][2] + m.f[0][2],
+				f[0][3] + m.f[0][3],
+
+				f[1][0] + m.f[1][0],
+				f[1][1] + m.f[1][1],
+				f[1][2] + m.f[1][2],
+				f[1][3] + m.f[1][3],
+
+				f[2][0] + m.f[2][0],
+				f[2][1] + m.f[2][1],
+				f[2][2] + m.f[2][2],
+				f[2][3] + m.f[2][3],
+
+				f[3][0] + m.f[3][0],
+				f[3][1] + m.f[3][1],
+				f[3][2] + m.f[3][2],
+				f[3][3] + m.f[3][3]
 				);
 		}
 
 		mat44 operator - (const mat44& m)
 		{
 			return mat44(
-				v0-m.v0, v1-m.v1, v2-m.v2, v3-m.v3
+				f[0][0] - m.f[0][0],
+				f[0][1] - m.f[0][1],
+				f[0][2] - m.f[0][2],
+				f[0][3] - m.f[0][3],
+
+				f[1][0] - m.f[1][0],
+				f[1][1] - m.f[1][1],
+				f[1][2] - m.f[1][2],
+				f[1][3] - m.f[1][3],
+
+				f[2][0] - m.f[2][0],
+				f[2][1] - m.f[2][1],
+				f[2][2] - m.f[2][2],
+				f[2][3] - m.f[2][3],
+
+				f[3][0] - m.f[3][0],
+				f[3][1] - m.f[3][1],
+				f[3][2] - m.f[3][2],
+				f[3][3] - m.f[3][3]
 				);
 		}
 
 		mat44& operator += (const mat44& m)
 		{
-			v0 += m.v0;
-			v1 += m.v1;
-			v2 += m.v2;
-			v3 += m.v3;
+			f[0][0] += m.f[0][0];
+			f[0][1] += m.f[0][1];
+			f[0][2] += m.f[0][2];
+			f[0][3] += m.f[0][3];
+
+			f[1][0] += m.f[1][0];
+			f[1][1] += m.f[1][1];
+			f[1][2] += m.f[1][2];
+			f[1][3] += m.f[1][3];
+
+			f[2][0] += m.f[2][0];
+			f[2][1] += m.f[2][1];
+			f[2][2] += m.f[2][2];
+			f[2][3] += m.f[2][3];
+
+			f[3][0] += m.f[3][0];
+			f[3][1] += m.f[3][1];
+			f[3][2] += m.f[3][2];
+			f[3][3] += m.f[3][3];
+
 			return *this;
 		}
 
 		mat44& operator -= (const mat44& m)
 		{
-			v0 -= m.v0;
-			v1 -= m.v1;
-			v2 -= m.v2;
-			v3 -= m.v3;
+			f[0][0] -= m.f[0][0];
+			f[0][1] -= m.f[0][1];
+			f[0][2] -= m.f[0][2];
+			f[0][3] -= m.f[0][3];
+
+			f[1][0] -= m.f[1][0];
+			f[1][1] -= m.f[1][1];
+			f[1][2] -= m.f[1][2];
+			f[1][3] -= m.f[1][3];
+
+			f[2][0] -= m.f[2][0];
+			f[2][1] -= m.f[2][1];
+			f[2][2] -= m.f[2][2];
+			f[2][3] -= m.f[2][3];
+
+			f[3][0] -= m.f[3][0];
+			f[3][1] -= m.f[3][1];
+			f[3][2] -= m.f[3][2];
+			f[3][3] -= m.f[3][3];
+
 			return *this;
 		}
 
 		/********数vs矩阵，只提供乘除*********/
 		mat44 operator * (float s)
 		{
-			return mat44(v0*s, v1*s, v2*s, v3*s);
+			return mat44(
+				f[0][0] * s,
+				f[0][1] * s,
+				f[0][2] * s,
+				f[0][3] * s,
+
+				f[1][0] * s,
+				f[1][1] * s,
+				f[1][2] * s,
+				f[1][3] * s,
+
+				f[2][0] * s,
+				f[2][1] * s,
+				f[2][2] * s,
+				f[2][3] * s,
+
+				f[3][0] * s,
+				f[3][1] * s,
+				f[3][2] * s,
+				f[3][3] * s
+			);
 		}
 
 		mat44 operator / (float s)
@@ -206,7 +380,26 @@ namespace efl
 
 		mat44& operator *= (float s)
 		{
-			v0*=s; v1*=s; v2*=s; v3*=s;
+			f[0][0] *= s;
+			f[0][1] *= s;
+			f[0][2] *= s;
+			f[0][3] *= s;
+
+			f[1][0] *= s;
+			f[1][1] *= s;
+			f[1][2] *= s;
+			f[1][3] *= s;
+
+			f[2][0] *= s;
+			f[2][1] *= s;
+			f[2][2] *= s;
+			f[2][3] *= s;
+
+			f[3][0] *= s;
+			f[3][1] *= s;
+			f[3][2] *= s;
+			f[3][3] *= s;
+
 			return *this;
 		}
 

@@ -11,7 +11,7 @@ namespace efl{
 		float inv_length = 1.0f / length;
 		return v * inv_length;
 	}
-	
+
 	vec3 normalize3(const vec3& v)
 	{
 		float length = v.length();
@@ -114,7 +114,7 @@ namespace efl{
 			clamp(v.w, min, max)
 			);
 	}
-	
+
 	vec3 reflect3(const vec3& i, const vec3& n)
 	{
 		return i - n * (2.0f * dot_prod3(i, n));
@@ -131,7 +131,7 @@ namespace efl{
 		float k = 1.0f - eta * eta * (1.0f - IdotN * IdotN);
 		if( k < 0 ){
 			return n * (2.0f * IdotN) - i;
-		} else {	
+		} else {
 			return n * (sqrt(k) - eta * IdotN) - i * eta;
 		}
 	}
@@ -248,25 +248,25 @@ namespace efl{
 			return mat_mul(out, m1, tmpm);
 		}
 
-		out.f[0][0] = dot_prod4(m1.v0, m2.get_column(0));
-		out.f[0][1] = dot_prod4(m1.v0, m2.get_column(1));
-		out.f[0][2] = dot_prod4(m1.v0, m2.get_column(2));
-		out.f[0][3] = dot_prod4(m1.v0, m2.get_column(3));
+		out.f[0][0] = dot_prod4(m1.get_row(0), m2.get_column(0));
+		out.f[0][1] = dot_prod4(m1.get_row(0), m2.get_column(1));
+		out.f[0][2] = dot_prod4(m1.get_row(0), m2.get_column(2));
+		out.f[0][3] = dot_prod4(m1.get_row(0), m2.get_column(3));
 
-		out.f[1][0] = dot_prod4(m1.v1, m2.get_column(0));
-		out.f[1][1] = dot_prod4(m1.v1, m2.get_column(1));
-		out.f[1][2] = dot_prod4(m1.v1, m2.get_column(2));
-		out.f[1][3] = dot_prod4(m1.v1, m2.get_column(3));
+		out.f[1][0] = dot_prod4(m1.get_row(1), m2.get_column(0));
+		out.f[1][1] = dot_prod4(m1.get_row(1), m2.get_column(1));
+		out.f[1][2] = dot_prod4(m1.get_row(1), m2.get_column(2));
+		out.f[1][3] = dot_prod4(m1.get_row(1), m2.get_column(3));
 
-		out.f[2][0] = dot_prod4(m1.v2, m2.get_column(0));
-		out.f[2][1] = dot_prod4(m1.v2, m2.get_column(1));
-		out.f[2][2] = dot_prod4(m1.v2, m2.get_column(2));
-		out.f[2][3] = dot_prod4(m1.v2, m2.get_column(3));
+		out.f[2][0] = dot_prod4(m1.get_row(2), m2.get_column(0));
+		out.f[2][1] = dot_prod4(m1.get_row(2), m2.get_column(1));
+		out.f[2][2] = dot_prod4(m1.get_row(2), m2.get_column(2));
+		out.f[2][3] = dot_prod4(m1.get_row(2), m2.get_column(3));
 
-		out.f[3][0] = dot_prod4(m1.v3, m2.get_column(0));
-		out.f[3][1] = dot_prod4(m1.v3, m2.get_column(1));
-		out.f[3][2] = dot_prod4(m1.v3, m2.get_column(2));
-		out.f[3][3] = dot_prod4(m1.v3, m2.get_column(3));
+		out.f[3][0] = dot_prod4(m1.get_row(3), m2.get_column(0));
+		out.f[3][1] = dot_prod4(m1.get_row(3), m2.get_column(1));
+		out.f[3][2] = dot_prod4(m1.get_row(3), m2.get_column(2));
+		out.f[3][3] = dot_prod4(m1.get_row(3), m2.get_column(3));
 
 		return out;
 	}
@@ -287,10 +287,10 @@ namespace efl{
 			return out;
 		}
 
-		out.v0 = m1.get_column(0);
-		out.v1 = m1.get_column(1);
-		out.v2 = m1.get_column(2);
-		out.v3 = m1.get_column(3);
+		out.set_row(0, m1.get_column(0));
+		out.set_row(1, m1.get_column(1));
+		out.set_row(2, m1.get_column(2));
+		out.set_row(3, m1.get_column(3));
 
 		return out;
 	}
@@ -438,7 +438,7 @@ namespace efl{
 	mat44& mat_translate(mat44& out, float x, float y, float z)
 	{
 		mat_identity(out);
-		out.v3 = vec4(x, y, z, 1.0f);
+		out.set_row(3, x, y, z, 1.0f);
 		return out;
 	}
 
