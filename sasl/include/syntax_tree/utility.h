@@ -7,6 +7,7 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <eflib/include/disable_warnings.h>
 #include <boost/assign/list_inserter.hpp>
+#include <boost/function.hpp>
 #include <eflib/include/enable_warnings.h>
 #include <vector>
 BEGIN_NS_SASL_SYNTAX_TREE();
@@ -62,6 +63,13 @@ void list_of_buildin_type( ContainerT& cont, const PredT& pred ){
 		}
 	}
 }
+
+void follow_up_traversal(
+	boost::shared_ptr<node> root,
+	boost::function<void( node& )> on_visit
+	);
+
+
 END_NS_SASL_SYNTAX_TREE();
 
 #endif
