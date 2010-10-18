@@ -120,3 +120,24 @@ IF (WIN32)
 ENDIF (WIN32) 
 
 config_output_paths(SoftArtX_gdiplus_presenter)
+
+
+set (HEADER_FILES
+	include/presenter/opengl/dev_opengl.h
+)
+
+set (SOURCE_FILES
+	src/presenter/opengl/dev_opengl.cpp
+)
+
+ADD_LIBRARY( SoftArtX_opengl_presenter SHARED
+${HEADER_FILES}
+${SOURCE_FILES}
+)
+
+TARGET_LINK_LIBRARIES(SoftArtX_opengl_presenter
+EFLIB
+SoftArt
+)
+
+config_output_paths(SoftArtX_opengl_presenter)
