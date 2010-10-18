@@ -27,8 +27,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <windows.h>
 #include <GL/GL.h>
 
-#pragma comment(lib, "opengl32.lib")
-
 #define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{
 #define END_NS_SOFTARTX_PRESENTER() }}
 

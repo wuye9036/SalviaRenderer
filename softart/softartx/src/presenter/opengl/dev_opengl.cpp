@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "softart/include/surface.h"
 #include <tchar.h>
 
+#pragma comment(lib, "opengl32.lib")
+
 using namespace efl;
 using namespace softart;
 
@@ -58,6 +60,16 @@ void dev_opengl::init_device()
 	hrc_ = ::wglCreateContext(hdc_);
 	::wglMakeCurrent(hdc_, hrc_);
 
+	{
+		std::string ext_str(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
+		if (ext_str.find("WGL_EXT_swap_control") != std::string::npos)
+		{
+			typedef BOOL (APIENTRY *wglSwapIntervalEXTFUNC)(int interval);
+			wglSwapIntervalEXTFUNC wglSwapIntervalEXT = static_cast<wglSwapIntervalEXTFUNC>((void*)(::wglGetProcAddress("wglSwapIntervalEXT")));
+			wglSwapIntervalEXT(0);
+		}
+	}
+
 	glDisable(GL_LIGHTING);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_TEXTURE_2D);
@@ -77,6 +89,11 @@ h_dev_opengl dev_opengl::create_device(HWND hwnd){
 //inherited
 void dev_opengl::present(const softart::surface& surf)
 {
+	uint32_t surf_width = static_cast<uint32_t>(surf.get_width());
+	uint32_t surf_height = static_cast<uint32_t>(surf.get_height());
+
+	glViewport(0, 0, surf_width, surf_height);
+
 	byte* src_addr = NULL;
 	surf.map((void**)(&src_addr), map_read);
 	if( src_addr == NULL ) return;
@@ -92,11 +109,8 @@ void dev_opengl::present(const softart::surface& surf)
 			);
 		src_addr += surf.get_pitch();
 	}
-
-	uint32_t surf_width = static_cast<uint32_t>(surf.get_width());
-	uint32_t surf_height = static_cast<uint32_t>(surf.get_height());
-
-	glViewport(0, 0, surf_width, surf_height);
+	
+	surf.unmap();
 
 	glBindTexture(GL_TEXTURE_2D, buftex_);
 	if ((width_ < surf_width) || (height_ < surf_height))
@@ -111,8 +125,6 @@ void dev_opengl::present(const softart::surface& surf)
 	{
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, surf_width, surf_height, GL_RGBA, GL_UNSIGNED_BYTE, &dest[0]);
 	}
-
-	surf.unmap();
 
 	float fw = static_cast<float>(surf_width) / width_;
 	float fh = static_cast<float>(surf_height) / height_;
