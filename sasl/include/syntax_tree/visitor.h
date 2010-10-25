@@ -35,6 +35,7 @@ struct declaration_statement;
 struct if_statement;
 struct while_statement;
 struct dowhile_statement;
+struct for_statement;
 struct case_label;
 struct ident_label;
 struct switch_statement;
@@ -79,6 +80,7 @@ public:
 	virtual void visit( if_statement& v ) = 0;
 	virtual void visit( while_statement& v ) = 0;
 	virtual void visit( dowhile_statement& v ) = 0;
+	virtual void visit( for_statement& v ) = 0;
 	virtual void visit( case_label& v ) = 0;
 	virtual void visit( ident_label& v ) = 0;
 	virtual void visit( switch_statement& v ) = 0;

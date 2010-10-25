@@ -57,6 +57,7 @@ public:
 	virtual void visit( ::sasl::syntax_tree::if_statement& v );
 	virtual void visit( ::sasl::syntax_tree::while_statement& v );
 	virtual void visit( ::sasl::syntax_tree::dowhile_statement& v );
+	virtual void visit( ::sasl::syntax_tree::for_statement& v );
 	virtual void visit( ::sasl::syntax_tree::case_label& v );
 	virtual void visit( ::sasl::syntax_tree::ident_label& v );
 	virtual void visit( ::sasl::syntax_tree::switch_statement& v );

@@ -4,12 +4,17 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/syntax_tree/utility.h>
 
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
 
 boost::mutex cgllvm_cases::mtx;
 boost::shared_ptr<cgllvm_cases> cgllvm_cases::tcase;
+
+void clear_cgctxt( SYNTAX_(node)& nd ){
+	nd.codegen_ctxt( boost::shared_ptr<CODEGEN_(codegen_context)>() );
+}
 
 #define CONTEXT_OF( node_name ) sasl::code_generator::extract_codegen_context<sasl::code_generator::cgllvm_common_context>( SYNCASE_(node_name) )
 
@@ -24,7 +29,13 @@ cgllvm_cases& cgllvm_cases::instance(){
 
 void cgllvm_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
-	if ( tcase ){ tcase.reset(); }
+	if ( tcase ){ 
+		tcase->LOCVAR_(jit).reset();
+		SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_gen ), clear_cgctxt );
+		SYNTAX_(follow_up_traversal)( SYNCASE_( null_prog ), clear_cgctxt );
+		SYNTAX_(follow_up_traversal)( SYNCASE_( jit_prog ), clear_cgctxt );
+		tcase.reset();
+	}
 }
 
 cgllvm_cases::cgllvm_cases(){

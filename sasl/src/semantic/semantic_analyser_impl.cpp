@@ -485,6 +485,9 @@ void semantic_analyser_impl::visit( program& v ){
 	}
 }
 
+void semantic_analyser_impl::visit( ::sasl::syntax_tree::for_statement& /*v*/ ){
+}
+
 void semantic_analyser_impl::buildin_type_convert( boost::shared_ptr<node> lhs, boost::shared_ptr<node> rhs ){
 	// do nothing
 }

@@ -180,13 +180,9 @@ void syntax_cases::initialize(){
 
 	dprog_combinator( NAME_(jit_prog).c_str() )
 		.dfunction( "foo" )
-			/*.dreturntype().dnode( type_sint32() ).end()
+			.dreturntype().dnode( type_sint32() ).end()
 			.dbody()
-				.dreturn_expr().dconstant2( int32_t(5) ).end()
-			.end()*/
-			.dreturntype().dnode( type_void() ).end()
-			.dbody()
-			.dreturn_void()
+				.dreturn_expr().dnode( expr1_add() ).end()
 			.end()
 		.end()
 	.end( LOCVAR_(jit_prog) )

@@ -275,6 +275,9 @@ void llvm_code_generator::visit( program& v ){
 	}
 }
 
+void llvm_code_generator::visit( sasl::syntax_tree::for_statement& /*v*/ ){
+}
+
 boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
 	return boost::shared_polymorphic_cast<llvm_code>(ctxt);
 }
