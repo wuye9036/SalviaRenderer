@@ -1,6 +1,7 @@
 #include <sasl/test/test_cases/semantic_cases.h>
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <sasl/include/semantic/semantic_analyser.h>
+#include <sasl/include/syntax_tree/utility.h>
 
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
@@ -9,6 +10,10 @@ boost::mutex semantic_cases::mtx;
 boost::shared_ptr<semantic_cases> semantic_cases::tcase;
 
 using namespace ::sasl::semantic;
+
+void clear_semantic( SYNTAX_(node)& nd ){
+	nd.semantic_info( boost::shared_ptr<SEMANTIC_(semantic_info)>() );
+}
 
 semantic_cases& semantic_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
@@ -21,7 +26,11 @@ semantic_cases& semantic_cases::instance(){
 
 void semantic_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
-	if ( tcase ){ tcase.reset(); }
+	if ( tcase ){
+		follow_up_traversal( SYNCASE_(prog_for_gen), clear_semantic );
+		follow_up_traversal( SYNCASE_(jit_prog), clear_semantic );
+		tcase.reset();
+	}
 }
 
 semantic_cases::semantic_cases(){

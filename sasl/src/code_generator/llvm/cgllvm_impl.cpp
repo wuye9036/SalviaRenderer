@@ -99,8 +99,6 @@ void llvm_code_generator::visit( constant_expression& v ){
 	} else {
 		assert( !"Not implemented yet.");
 	}
-	//boost::shared_ptr< class semantic_info > syminfo = get_or_create_semantic_info<class semantic_info>(v);
-	//syminfo->llvm_value = ret_v;
 }
 
 void llvm_code_generator::visit( identifier& ){
@@ -115,26 +113,6 @@ void llvm_code_generator::visit( expression_initializer& ){}
 void llvm_code_generator::visit( member_initializer& ){}
 void llvm_code_generator::visit( declaration& ){}
 void llvm_code_generator::visit( variable_declaration& ){
-	//using ::sasl::semantic::extract_semantic_info;
-	//using ::sasl::semantic::variable_semantic_info;
-	//using ::sasl::semantic::get_or_create_semantic_info;
-
-	//v.type_info->accept( this );
-	//boost::shared_ptr<variable_semantic_info> vsyminfo = extract_semantic_info<variable_semantic_info>(v);
-	//boost::shared_ptr<llvm_semantic_info> lsyminfo = get_or_create_semantic_info<llvm_semantic_info>(v);
-	//boost::shared_ptr<llvm_semantic_info> ltsyminfo = extract_semantic_info<llvm_semantic_info>(v.type_info);
-	//
-	////TODO: GET VALUE OF INITIALIZER
-
-	//if ( vsyminfo->is_local() ){
-	//	// TODO: GENERATE LOCAL VARIABLE	
-	//} else {
-	//	// generate global variable
-	//	GlobalVariable* gv = cast<GlobalVariable>(ctxt->module()->getOrInsertGlobal( v.name->str, ltsyminfo->llvm_type ));
-	//	// TODO: OTHER OPERATIONS. SUCH AS LINKAGE
-	//	// ...
-	//	lsyminfo->llvm_gvar = gv;
-	//}
 }
 
 void llvm_code_generator::visit( type_definition& ){}

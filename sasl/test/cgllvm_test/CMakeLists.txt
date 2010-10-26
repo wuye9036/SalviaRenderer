@@ -34,4 +34,5 @@ TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	${SASL_CGLLVM_TEST_LIBS}
 )
 
-config_output_paths( sasl_test_cgllvm )
+config_output_paths( ${SASL_TEST_PROJECT_NAME} )
+sasl_test_create_vcproj_userfile( ${SASL_TEST_PROJECT_NAME} )
