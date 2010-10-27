@@ -31,9 +31,6 @@ BOOST_AUTO_TEST_CASE( function_generation_test ){
 	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen)->func );
 	BOOST_CHECK( !LLVMCASE_(func_flt_2p_n_gen)->func->isVarArg() );
 	BOOST_CHECK( LLVMCASE_(func_flt_2p_n_gen)->func->arg_begin()->getName() == SYNCASENAME_(p0_fn0) );
-
-	semantic_cases::release();
-	cgllvm_cases::release();
 }
 
 BOOST_AUTO_TEST_CASE( function_param_test ){

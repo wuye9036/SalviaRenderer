@@ -5,6 +5,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/syntax_tree/utility.h>
+#include <eflib/include/detail/memory.h>
 
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
@@ -21,19 +22,28 @@ void clear_cgctxt( SYNTAX_(node)& nd ){
 cgllvm_cases& cgllvm_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
+		efl::lifetime_manager::at_main_exit( cgllvm_cases::release );
 		tcase.reset( new cgllvm_cases() );
 		tcase->initialize();
 	}
 	return *tcase;
 }
 
+bool cgllvm_cases::is_avaliable()
+{
+	boost::mutex::scoped_lock lg(mtx);
+	return tcase;
+}
+
 void cgllvm_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( tcase ){ 
 		tcase->LOCVAR_(jit).reset();
-		SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_gen ), clear_cgctxt );
-		SYNTAX_(follow_up_traversal)( SYNCASE_( null_prog ), clear_cgctxt );
-		SYNTAX_(follow_up_traversal)( SYNCASE_( jit_prog ), clear_cgctxt );
+		if( syntax_cases::is_avaliable() ){
+			SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_gen ), clear_cgctxt );
+			SYNTAX_(follow_up_traversal)( SYNCASE_( null_prog ), clear_cgctxt );
+			SYNTAX_(follow_up_traversal)( SYNCASE_( jit_prog ), clear_cgctxt );
+		}
 		tcase.reset();
 	}
 }

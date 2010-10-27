@@ -15,6 +15,7 @@
 class syntax_cases{
 public:
 	static syntax_cases& instance();
+	static bool is_avaliable();
 	static void release();
 	
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), empty_prog );

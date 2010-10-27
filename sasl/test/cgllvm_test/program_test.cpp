@@ -29,9 +29,6 @@ BOOST_AUTO_TEST_CASE( module_generation_test ){
 	BOOST_CHECK( LLVMCASE_(root)->module() );
 	BOOST_CHECK( LLVMCASE_(root)->module()->getModuleIdentifier() == SYNCASENAME_(prog_for_gen) );
 	LLVMCASE_(root)->module()->dump();
-
-	semantic_cases::release();
-	cgllvm_cases::release();
 }
 
 BOOST_AUTO_TEST_CASE( jit_test ){
@@ -40,9 +37,6 @@ BOOST_AUTO_TEST_CASE( jit_test ){
 	LLVMCASE_(root)->module()->dump();
 	BOOST_CHECK( pfunc );
 	BOOST_CHECK_EQUAL( ((uint32_t(*)())(intptr_t)pfunc)(), 797u ); 
-
-	semantic_cases::release();
-	cgllvm_cases::release();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -2,6 +2,7 @@
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/utility.h>
+#include <eflib/include/detail/memory.h>
 
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
@@ -18,17 +19,26 @@ void clear_semantic( SYNTAX_(node)& nd ){
 semantic_cases& semantic_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
+		efl::lifetime_manager::at_main_exit( semantic_cases::release );
 		tcase.reset( new semantic_cases() );
 		tcase->initialize();
 	}
 	return *tcase;
 }
 
+bool semantic_cases::is_avaliable()
+{
+	boost::mutex::scoped_lock lg(mtx);
+	return tcase;
+}
+
 void semantic_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( tcase ){
-		follow_up_traversal( SYNCASE_(prog_for_gen), clear_semantic );
-		follow_up_traversal( SYNCASE_(jit_prog), clear_semantic );
+		if( syntax_cases::is_avaliable() ){
+			follow_up_traversal( SYNCASE_(prog_for_gen), clear_semantic );
+			follow_up_traversal( SYNCASE_(jit_prog), clear_semantic );
+		}
 		tcase.reset();
 	}
 }

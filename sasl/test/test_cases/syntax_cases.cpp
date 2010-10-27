@@ -4,6 +4,7 @@
 #include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <eflib/include/detail/memory.h>
 #include <eflib/include/disable_warnings.h>
 #include <boost/thread.hpp>
 #include <eflib/include/enable_warnings.h>
@@ -16,10 +17,17 @@ boost::shared_ptr<syntax_cases> syntax_cases::tcase;
 syntax_cases& syntax_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
+		efl::lifetime_manager::at_main_exit( syntax_cases::release );
 		tcase.reset( new syntax_cases() );
 		tcase->initialize();
 	}
 	return *tcase;
+}
+
+bool syntax_cases::is_avaliable()
+{
+	boost::mutex::scoped_lock lg(mtx);
+	return tcase;
 }
 
 void syntax_cases::release(){

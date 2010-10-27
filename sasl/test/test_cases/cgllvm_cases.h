@@ -19,6 +19,7 @@
 class cgllvm_cases{
 public:
 	static cgllvm_cases& instance();
+	static bool is_avaliable();
 	static void release();
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_jit_engine), jit );

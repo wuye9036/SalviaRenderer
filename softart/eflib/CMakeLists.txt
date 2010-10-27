@@ -43,6 +43,7 @@ set (SOURCE_FILES
 	src/quaternion.cpp
 	src/slog.cpp
 	src/stringx.cpp
+	src/memory.cpp
 )
 
 ADD_LIBRARY( EFLIB STATIC
