@@ -92,7 +92,7 @@ class rasterizer : public render_stage
 	void draw_whole_tile(uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask);
 	void draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples);
 	void subdivide_tile(int left, int top, const efl::rect<uint32_t>& cur_region, const efl::vec3* edge_factors, const bool* mark_x, const bool* mark_y,
-		uint32_t* test_regions, uint32_t& test_region_size);
+		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max);
 
 public:
 	//inherited
