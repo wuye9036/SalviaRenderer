@@ -193,10 +193,14 @@ class vs_mesh : public vertex_shader
 {
 	mat44 wv;
 	mat44 proj;
+	vec3 light_pos;
+	vec3 eye_pos;
 public:
 	vs_mesh():wv(mat44::identity()), proj(mat44::identity()){
 		register_var(_T("WorldViewMat"), wv);
 		register_var(_T("ProjMat"), proj);
+		register_var(_T("LightPos"), light_pos);
+		register_var(_T("EyePos"), eye_pos);
 	}
 
 	void shader_prog(const vs_input& in, vs_output& out)
@@ -206,32 +210,31 @@ public:
 		transform(pos_es, pos, wv);
 		transform33(normal_es, in[1], wv);
 		transform(out.position, pos_es, proj);
-		out.attributes[0] = pos_es;
-		out.attributes[1] = normal_es;
+		out.attributes[0] = vec4(light_pos - pos_es.xyz(), 1);
+		out.attributes[1] = vec4(eye_pos - pos_es.xyz(), 1);
+		out.attributes[2] = normal_es;
 		out.attribute_modifiers[0] = softart::vs_output::am_linear;
 		out.attribute_modifiers[1] = softart::vs_output::am_linear;
-		out.num_used_attribute = 2;
+		out.attribute_modifiers[2] = softart::vs_output::am_linear;
+		out.num_used_attribute = 3;
 	}
 };
 
 class ps_mesh : public pixel_shader
 {
-	vec3 light_pos;
-	vec3 eye_pos;
 public:
 	ps_mesh()
 	{
-		register_var(_T("LightPos"), light_pos);
-		register_var(_T("EyePos"), eye_pos);
 	}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		vec3 l = normalize3(light_pos - in.attributes[0].xyz());
-		vec3 e = normalize3(eye_pos - in.attributes[0].xyz());
-		vec3 n = normalize3(in.attributes[1].xyz());
-		float diff = dot_prod3(l, n);
-		float spec = pow(max(dot_prod3(normalize3(l + e), n), 0.0f), 20.0f);
-		float clr = diff * 0.8f + spec * 0.6f;
+		vec3 l = normalize3(in.attributes[0].xyz());
+		vec3 e = normalize3(in.attributes[1].xyz());
+		vec3 n = normalize3(in.attributes[2].xyz());
+		float n_dot_l = dot_prod3(n, l);
+		float roughness = 80;
+		float spec = (roughness + 2) / 2 * pow(max(dot_prod3(normalize3(l + e), n), 0.0f), roughness);
+		float clr = n_dot_l * (0.8f + spec * 0.4f);
 		out.color[0] = vec4(clr, clr, clr, 1);
 		return true;
 	}
@@ -409,8 +412,8 @@ public:
 			pvs_mesh->set_constant(_T("WorldViewMat"), &wv);
 			pvs_mesh->set_constant(_T("ProjMat"), &proj);
 			vec3 light_pos(vec3(-4, 2, 0));
-			pps_mesh->set_constant(_T("LightPos"), &light_pos);
-			pps_mesh->set_constant(_T("EyePos"), &eye);
+			pvs_mesh->set_constant(_T("LightPos"), &light_pos);
+			pvs_mesh->set_constant(_T("EyePos"), &eye);
 
 			hsr->set_vertex_shader(pvs_mesh);
 			hsr->set_pixel_shader(pps_mesh);
