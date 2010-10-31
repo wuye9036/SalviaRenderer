@@ -89,8 +89,8 @@ class rasterizer : public render_stage
 
 	boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
-	void draw_whole_tile(uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask);
-	void draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples);
+	void draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask);
+	void draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples);
 	void subdivide_tile(int left, int top, const efl::rect<uint32_t>& cur_region, const efl::vec3* edge_factors, const bool* mark_x, const bool* mark_y,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max);
 
@@ -108,7 +108,7 @@ public:
 
 	//drawer
 	void rasterize_line(uint32_t prim_id, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps);
-	void rasterize_triangle(uint32_t prim_id, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps);
+	void rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps);
 
 	void rasterize_line_func(const uint32_t* clipped_indices, const vs_output* clipped_verts_full, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);
 	void rasterize_triangle_func(const uint32_t* clipped_indices, const vs_output* clipped_verts_full, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps);

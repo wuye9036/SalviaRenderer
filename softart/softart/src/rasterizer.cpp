@@ -15,6 +15,7 @@
 #include <boost/bind.hpp>
 BEGIN_NS_SOFTART()
 
+//#define USE_TRADITIONAL_RASTERIZER
 
 using namespace std;
 using namespace efl;
@@ -325,9 +326,11 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 	}
 }
 
-void rasterizer::draw_whole_tile(uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask){
+void rasterizer::draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask){
 	for(int iy = top; iy < bottom; ++iy)
 	{
+		pixel_begin[iy] = static_cast<uint8_t>(min(static_cast<int>(pixel_begin[iy]), left));
+		pixel_end[iy] = static_cast<uint8_t>(max(static_cast<int>(pixel_end[iy]), right));
 		for(int ix = left; ix < right; ++ix)
 		{
 			pixel_mask[iy * TILE_SIZE + ix] = full_mask;
@@ -335,7 +338,7 @@ void rasterizer::draw_whole_tile(uint32_t* pixel_mask, int left, int top, int ri
 	}
 }
 
-void rasterizer::draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples){
+void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples){
 	float evalue[3];
 	for (int e = 0; e < 3; ++ e){
 		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
@@ -369,7 +372,11 @@ void rasterizer::draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left
 		int sample_inside = ~_mm_movemask_ps(mask_rej);
 
 		for (int t = 0; t < 4; ++ t){
+			pixel_mask[(sy + (t >> 1)) * TILE_SIZE + (sx + (t & 1))] = 0;
 			if ((sample_inside >> t) & 1){
+				pixel_begin[sy + (t >> 1)] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[sy + (t >> 1)]), sx + (t & 1)));
+				pixel_end[sy + (t >> 1)] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[sy + (t >> 1)]), sx + (t & 1) + 1));
+
 				pixel_mask[(sy + (t >> 1)) * TILE_SIZE + (sx + (t & 1))] |= 1UL << i_sample;
 			}
 		}
@@ -380,6 +387,7 @@ void rasterizer::draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left
 		//光栅化
 		for(size_t ix = 0; ix < 2; ++ix)
 		{
+			pixel_mask[(iy + sy) * TILE_SIZE + (ix + sx)] = 0;
 			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
 				const vec2& sp = samples_pattern_[i_sample];
 				const float fx = ix + sp.x;
@@ -392,6 +400,9 @@ void rasterizer::draw_pixels(uint32_t* pixel_mask, int left0, int top0, int left
 					}
 				}
 				if (inside){
+					pixel_begin[iy + sy] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[iy + sy]), ix + sx));
+					pixel_end[iy + sy] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[iy + sy]), ix + sx + 1));
+
 					pixel_mask[(iy + sy) * TILE_SIZE + (ix + sx)] |= 1UL << i_sample;
 				}
 			}
@@ -498,9 +509,8 @@ void rasterizer::subdivide_tile(int left, int top, const efl::rect<uint32_t>& cu
 *			2 wpos的x y z分量已经除以了clip w
 *			3 positon.w为1.0f / clip w
 **************************************************/
-void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
+void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
-
 	//{
 	//	boost::mutex::scoped_lock lock(logger_mutex_);
 	//
@@ -519,9 +529,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	//		);
 	//}
 
-	/**********************************************************
-	*        将顶点按照y大小排序，求出三角形面积与边
-	**********************************************************/
+#ifndef USE_TRADITIONAL_RASTERIZER
 	const vec3* edge_factors = &edge_factors_[prim_id * 3];
 	const bool mark_x[3] = {
 		edge_factors[0].x > 0, edge_factors[1].x > 0, edge_factors[2].x > 0
@@ -537,57 +545,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		TVT_PIXEL
 	};
 
-	TRI_VS_TILE intersect = TVT_FULL;
-	{
-		const int min_corner[3] = {
-			mark_y[0] * 2 + mark_x[0],
-			mark_y[1] * 2 + mark_x[1],
-			mark_y[2] * 2 + mark_x[2]
-		};
-
-		const int vpleft = fast_floori(max(0.0f, vp.x));
-		const int vptop = fast_floori(max(0.0f, vp.y));
-		const int vpright = fast_floori(min(vp.x + vp.w, static_cast<float>(hfb_->get_width())));
-		const int vpbottom = fast_floori(min(vp.y + vp.h, static_cast<float>(hfb_->get_height())));
-
-		const int2 corners[] = {
-			int2(vpleft, vptop),
-			int2(vpright, vptop),
-			int2(vpleft, vpbottom),
-			int2(vpright, vpbottom)
-		};
-
-		// Trival rejection
-		for (int e = 0; e < 3; ++ e){
-			int min_c = min_corner[e];
-			if (corners[min_c].x * edge_factors[e].x
-					+ corners[min_c].y * edge_factors[e].y
-					< edge_factors[e].z){
-				intersect = TVT_EMPTY;
-				break;
-			}
-		}
-
-		// Trival acception
-		if (intersect != TVT_EMPTY){
-			for (int e = 0; e < 3; ++ e){
-				int max_c = 3 - min_corner[e];
-				if (corners[max_c].x * edge_factors[e].x
-						+ corners[max_c].y * edge_factors[e].y
-						< edge_factors[e].z){
-					intersect = TVT_PARTIAL;
-					break;
-				}
-			}
-		}
-		else{
-			return;
-		}
-	}
-
-	vs_output projed_vert0 = project(v0);
-	vs_output projed_vert1 = project(v1);
-	vs_output projed_vert2 = project(v2);
+	const vs_output projed_vert0 = project(v0);
+	const vs_output projed_vert1 = project(v1);
+	const vs_output projed_vert2 = project(v2);
 
 	//初始化边及边上属性的差
 	vs_output e01 = projed_vert1 - projed_vert0;
@@ -608,10 +568,10 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 	info.set(v0.position, ddx, ddy);
 	pps->ptriangleinfo_ = &info;
 
-	float x_min = min(projed_vert0.position.x, min(projed_vert1.position.x, projed_vert2.position.x));
-	float x_max = max(projed_vert0.position.x, max(projed_vert1.position.x, projed_vert2.position.x));
-	float y_min = min(projed_vert0.position.y, min(projed_vert1.position.y, projed_vert2.position.y));
-	float y_max = max(projed_vert0.position.y, max(projed_vert1.position.y, projed_vert2.position.y));
+	const float x_min = min(projed_vert0.position.x, min(projed_vert1.position.x, projed_vert2.position.x));
+	const float x_max = max(projed_vert0.position.x, max(projed_vert1.position.x, projed_vert2.position.x));
+	const float y_min = min(projed_vert0.position.y, min(projed_vert1.position.y, projed_vert2.position.y));
+	const float y_max = max(projed_vert0.position.y, max(projed_vert1.position.y, projed_vert2.position.y));
 
 	/*************************************************
 	*   开始绘制多边形。
@@ -623,19 +583,21 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 
 	uint32_t test_regions[2][TILE_SIZE / 2 * TILE_SIZE / 2];
 	uint32_t test_region_size[2] = { 0, 0 };
-	test_regions[0][0] = (fast_floori(vp.w) << 16) + (fast_floori(vp.h) << 24) + ((TVT_FULL == intersect) << 31);
+	test_regions[0][0] = (fast_floori(vp.w) << 16) + (fast_floori(vp.h) << 24) + (full << 31);
 	test_region_size[0] = 1;
 	int src_stage = 0;
 	int dst_stage = !src_stage;
 
 	uint32_t pixel_mask[TILE_SIZE * TILE_SIZE];
-	memset(pixel_mask, 0, sizeof(pixel_mask));
+	uint8_t pixel_begin[TILE_SIZE];
+	memset(pixel_begin, TILE_SIZE, sizeof(pixel_begin));
+	uint8_t pixel_end[TILE_SIZE];
+	memset(pixel_end, 0, sizeof(pixel_end));
 
 	const uint32_t full_mask = (1UL << num_samples) - 1;
 
 	const int vpleft0 = fast_floori(vp.x);
 	const int vptop0 = fast_floori(vp.y);
-	const int vpright0 = fast_floori(vp.x + vp.w);
 	const int vpbottom0 = fast_floori(vp.y + vp.h);
 
 	while (test_region_size[src_stage] > 0){
@@ -645,7 +607,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 			const uint32_t packed_region = test_regions[src_stage][ivp];
 			efl::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
 				(packed_region >> 16) & 0xFF, (packed_region >> 24) & 0x7F);
-			intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
+			TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
 			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
 			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));
@@ -663,11 +625,11 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 				break;
 
 			case TVT_FULL: 
-				this->draw_whole_tile(pixel_mask, vpleft - vpleft0, vptop - vptop0, vpright - vpleft0, vpbottom - vptop0, full_mask);
+				this->draw_whole_tile(pixel_begin, pixel_end, pixel_mask, vpleft - vpleft0, vptop - vptop0, vpright - vpleft0, vpbottom - vptop0, full_mask);
 				break;
 
 			case TVT_PIXEL:
-				this->draw_pixels(pixel_mask, vpleft0, vptop0, vpleft, vptop, edge_factors, num_samples);
+				this->draw_pixels(pixel_begin, pixel_end, pixel_mask, vpleft0, vptop0, vpleft, vptop, edge_factors, num_samples);
 				break;
 
 			default:
@@ -681,73 +643,332 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, const vs_output& v0, const
 		dst_stage = !src_stage;
 	}
 
+	const int y_begin = max(vptop0, fast_floori(y_min));
+	const int y_end = min(vpbottom0, fast_ceili(y_max) + 1);
+
 	const float offsetx = vpleft0 + 0.5f - v0.position.x;
-	const float offsety = vptop0 + 0.5f - v0.position.y;
+	const float offsety = y_begin + 0.5f - v0.position.y;
 
 	//设置基准扫描线的属性
 	vs_output base_vert = projed_vert0;
 	integral(base_vert, offsety, ddy);
 	integral(base_vert, offsetx, ddx);
 
-	for(int iy = vptop0; iy < vpbottom0; ++iy)
+	for(int iy = y_begin; iy < y_end; ++iy)
 	{
 		//光栅化
 		vs_output px_in(base_vert);
 		ps_output px_out;
 		vs_output unprojed;
 
-		const int w = vpright0 - vpleft0;
 		const int dy = iy - vptop0;
-		int dx = 0;
-		while ((dx < w) && (0 == pixel_mask[dy * TILE_SIZE + dx])){
-			++ dx;
-		}
-		if (dx < w){
-			integral(px_in, static_cast<float>(dx), ddx);
-		}
+		if (pixel_end[dy] > pixel_begin[dy])
+		{
+			integral(px_in, static_cast<float>(pixel_begin[dy]), ddx);
 
-		for(; dx < w; ++dx){
-			uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
-			if (0 == mask)
-			{
-				break;
-			}
+			for(int dx = pixel_begin[dy], end = pixel_end[dy]; dx < end; ++dx){
+				uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
 
-			unproject(unprojed, px_in);
-			if(pps->execute(unprojed, px_out)){
-				const int ix = dx + vpleft0;
-				if (1 == num_samples){
-					hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
-				}
-				else{
-					if (full_mask == mask){
-						for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-							const vec2& sp = samples_pattern_[i_sample];
-							const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-							const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-							hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
-						}
+				unproject(unprojed, px_in);
+				if(pps->execute(unprojed, px_out)){
+					const int ix = dx + vpleft0;
+					if (1 == num_samples){
+						hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
 					}
 					else{
-						unsigned long i_sample;
-						while (_BitScanForward(&i_sample, mask)){
-							const vec2& sp = samples_pattern_[i_sample];
-							const float ddxz = (sp.x - 0.5f) * ddx.position.z;
-							const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-							hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
+						if (full_mask == mask){
+							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
+								const vec2& sp = samples_pattern_[i_sample];
+								const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+								const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+								hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
+							}
+						}
+						else{
+							unsigned long i_sample;
+							while (_BitScanForward(&i_sample, mask)){
+								const vec2& sp = samples_pattern_[i_sample];
+								const float ddxz = (sp.x - 0.5f) * ddx.position.z;
+								const float ddyz = (sp.y - 0.5f) * ddy.position.z;
+								hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
 
-							mask &= mask - 1;
+								mask &= mask - 1;
+							}
 						}
 					}
 				}
-			}
 
-			integral(px_in, ddx);
+				integral(px_in, ddx);
+			}
 		}
 
 		//差分递增
 		integral(base_vert, ddy);
 	}
+#else
+	UNREF_PARAM(full);
+
+	struct scanline_info
+	{
+		size_t scanline_width;
+
+		vs_output ddx;
+
+		vs_output base_vert;
+		size_t base_x;
+		size_t base_y;
+
+		scanline_info()
+		{}
+
+		scanline_info(const scanline_info& rhs)
+			:ddx(rhs.ddx), base_vert(rhs.base_vert), scanline_width(scanline_width),
+			base_x(rhs.base_x), base_y(rhs.base_y)
+		{}
+
+		scanline_info& operator = (const scanline_info& rhs){
+			ddx = rhs.ddx;
+			base_vert = rhs.base_vert;
+			base_x = rhs.base_x;
+			base_y = rhs.base_y;
+		}
+	};
+
+		/**********************************************************
+	*        将顶点按照y大小排序，求出三角形面积与边
+	**********************************************************/
+	const vs_output* pvert[3] = {&v0, &v1, &v2};
+
+	//升序排列
+	if(pvert[0]->position.y > pvert[1]->position.y){
+		swap(pvert[1], pvert[0]);
+	}
+	if(pvert[1]->position.y > pvert[2]->position.y){
+		swap(pvert[2], pvert[1]);
+		if(pvert[0]->position.y > pvert[1]->position.y) 
+			swap(pvert[1], pvert[0]);
+	}
+
+	vs_output projed_vert0 = project(*(pvert[0]));
+
+	//初始化边及边上属性的差
+	vs_output e01 = project(*(pvert[1])) - projed_vert0;
+	//float watch_x = e01.attributes[2].x;
+	
+	vs_output e02 = project(*(pvert[2])) - projed_vert0;
+	vs_output e12;
+
+
+
+	//初始化边上的各个分量差值。（只要算两条边就可以了。）
+	e12.position = pvert[2]->position - pvert[1]->position;
+
+	//初始化dxdy
+	float dxdy_01 = efl::equal<float>(e01.position.y, 0.0f) ? 0.0f: e01.position.x / e01.position.y;
+	float dxdy_02 = efl::equal<float>(e02.position.y, 0.0f) ? 0.0f: e02.position.x / e02.position.y;
+	float dxdy_12 = efl::equal<float>(e12.position.y, 0.0f) ? 0.0f: e12.position.x / e12.position.y;
+
+	//计算面积
+	float area = cross_prod2(e02.position.xy(), e01.position.xy());
+	if(equal<float>(area, 0.0f)) return;
+	float inv_area = 1.0f / area;
+
+	/**********************************************************
+	*  求解各个属性的差分式
+	*********************************************************/
+	vs_output ddx((e02 * e01.position.y - e02.position.y * e01)*inv_area);
+	vs_output ddy((e01 * e02.position.x - e01.position.x * e02)*inv_area);
+
+	triangle_info info;
+	info.set(v0.position, ddx, ddy);
+	pps->ptriangleinfo_ = &info;
+
+	/*************************************
+	*   设置基本的scanline属性。
+	*   这些属性将在多个扫描行中保持相同
+	************************************/
+	scanline_info base_scanline;
+	base_scanline.ddx = ddx;
+
+	/*************************************************
+	*   开始绘制多边形。经典的上-下分割绘制算法
+	*   对扫描线光栅化保证是自左向右的。
+	*   所以不需要考虑major edge是在左或者右边。
+	*************************************************/
+
+	const int bot_part = 0;
+	//const int top_part = 1;
+
+	int vpleft = fast_floori(max(0.0f, vp.x));
+	int vptop = fast_floori(max(0.0f, vp.y));
+	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
+	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
+
+	const h_blend_shader& hbs = pparent_->get_blend_shader();
+
+	for(int iPart = 0; iPart < 2; ++iPart){
+
+		//两条边的dxdy
+		float dxdy0 = 0.0f;
+		float dxdy1 = 0.0f;
+
+		//起始/终止的x与y坐标; 
+		//到三角形基准点位移,用于计算顶点属性
+		float
+			fsx0(0.0f), fsx1(0.0f), // 基准点的起止x坐标
+			fsy(0.0f), fey(0.0f),	// Part的起止扫描线y坐标
+			fcx0(0.0f), fcx1(0.0f), // 单根扫描线的起止点坐标
+			offsety(0.0f);
+
+		int isy(0), iey(0);	//Part的起止扫描线号
+
+		//扫描线的起止顶点
+		const vs_output* s_vert = NULL;
+		const vs_output* e_vert = NULL;
+
+		//依据片段设置起始参数
+		if(iPart == bot_part){
+			s_vert = pvert[0];
+			e_vert = pvert[1];
+
+			dxdy0 = dxdy_01;
+		} else {
+			s_vert = pvert[1];
+			e_vert = pvert[2];
+
+			dxdy0 = dxdy_12;
+		}
+		dxdy1 = dxdy_02;
+
+		if(equal<float>(s_vert->position.y, e_vert->position.y)){
+			continue; // next part
+		}
+
+		fsy = fast_ceil(s_vert->position.y + 0.5f) - 1;
+		fey = fast_ceil(e_vert->position.y - 0.5f) - 1;
+
+		isy = fast_floori(fsy);
+		iey = fast_floori(fey);
+
+		offsety = fsy + 0.5f - pvert[0]->position.y;
+
+		//起点的x计算由于三角形的不同而有所不同
+		if(iPart == bot_part){
+			fsx0 = pvert[0]->position.x + dxdy_01*(fsy + 0.5f - pvert[0]->position.y);
+		} else {
+			fsx0 = pvert[1]->position.x + dxdy_12*(fsy + 0.5f - pvert[1]->position.y);
+		}
+		fsx1 = pvert[0]->position.x + dxdy_02*(fsy + 0.5f - pvert[0]->position.y);
+
+		//设置基准扫描线的属性
+		base_scanline.base_vert = projed_vert0;
+		integral(base_scanline.base_vert, offsety, ddy);
+
+		//当前的基准扫描线，起点在(base_vert.x, scanline.y)处。
+		//在传递到rasterize_scanline之前需要将基础点调整到扫描线的最左端。
+		scanline_info current_base_scanline(base_scanline);
+
+		for(int iy = isy; iy <= iey; ++iy)
+		{	
+			//如果扫描线在view port的外面则跳过。	
+			if( iy >= vpbottom ){
+				break;
+			}
+
+			if( iy >= vptop ){
+				//扫描线在视口内的就做扫描线
+				int icx_s = 0;
+				int icx_e = 0;
+
+				fcx0 = dxdy0 * (iy - isy) + fsx0;
+				fcx1 = dxdy1 * (iy - isy) + fsx1;
+
+				//LOG: 记录扫描线的起止点。版本
+				//if (fcx0 > 256.0 && iy == 222)
+				//{
+				//	log_serializer_indent_scope<log_system<slog_type>::slog_type> scope(&log_system<slog_type>::instance());
+				//	log_system<slog_type>::instance().write(
+				//		to_tstring(str(format("%1%") % iy)), 
+				//		to_tstring(str(format("%1$8.5f, %2$8.5f") % fcx0 % fcx1)), LOGLEVEL_MESSAGE
+				//		);
+				//}
+
+				if(fcx0 < fcx1){
+					icx_s = fast_ceili(fcx0 + 0.5f) - 1;
+					icx_e = fast_ceili(fcx1 - 0.5f) - 1;
+				} else {
+					icx_s = fast_ceili(fcx1 + 0.5f) - 1;
+					icx_e = fast_ceili(fcx0 - 0.5f) - 1;
+				}
+
+				//如果起点大于终点说明scanline中不包含任何像素中心，直接跳过。
+				if ((icx_s <= icx_e) && (icx_s < vpright) && (icx_e >= vpleft)) {
+					icx_s = efl::clamp(icx_s, vpleft, vpright - 1);
+					icx_e = efl::clamp(icx_e, vpleft, vpright - 1);
+
+					float offsetx = icx_s + 0.5f - pvert[0]->position.x;
+
+					//设置扫描线信息
+					scanline_info scanline(current_base_scanline);
+					integral(scanline.base_vert, offsetx, ddx);
+
+					scanline.base_x = icx_s;
+					scanline.base_y = iy;
+					scanline.scanline_width = icx_e - icx_s + 1;
+
+					//光栅化
+					vec3* edge_factors = &edge_factors_[prim_id * 3];
+
+					vs_output px_in(scanline.base_vert);
+					ps_output px_out;
+					vs_output unprojed;
+					for(size_t i_pixel = 0; i_pixel < scanline.scanline_width; ++i_pixel)
+					{
+						unproject(unprojed, px_in);
+						if(pps->execute(unprojed, px_out)){
+							const size_t num_samples = hfb_->get_num_samples();
+							if (1 == num_samples){
+								hfb_->render_sample(hbs, scanline.base_x + i_pixel, scanline.base_y, 0, px_out, px_out.depth);
+							}
+							else{
+								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
+									const vec2& sp = samples_pattern_[i_sample];
+									bool intersect = true;
+									for (int e = 0; intersect && (e < 3); ++ e){
+										if ((scanline.base_x + i_pixel + sp.x) * edge_factors[e].x
+												- (scanline.base_y + sp.y) * edge_factors[e].y
+												- edge_factors[e].z > 0){
+											intersect = false;
+										}
+									}
+									float samples_depth;
+									if (intersect){
+										float ddx = (sp.x - 0.5f) * pps->get_pos_ddx().w;
+										float ddy = (sp.y - 0.5f) * pps->get_pos_ddy().w;
+										float ddxz = ddx * pps->get_pos_ddx().z;
+										float ddyz = ddy * pps->get_pos_ddy().z;
+										samples_depth = (px_in.position.z * px_in.position.w + std::sqrt(ddxz * ddxz + ddyz * ddyz))
+											/ (px_in.position.w + std::sqrt(ddx * ddx + ddy * ddy));
+									}
+									else{
+										samples_depth = 1;
+									}
+
+									hfb_->render_sample(hbs, scanline.base_x + i_pixel, scanline.base_y, i_sample, px_out, samples_depth);
+								}
+							}
+						}
+
+						integral(px_in, scanline.ddx);
+					}
+				}
+			}
+
+			//差分递增
+			integral(current_base_scanline.base_vert, ddy);
+		}
+	}
+#endif
 }
 
 rasterizer::rasterizer()
@@ -891,9 +1112,62 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 			const int sy = std::min(fast_floori(std::max(0.0f, y_min) / TILE_SIZE), num_tiles_y);
 			const int ex = std::min(fast_ceili(std::max(0.0f, x_max) / TILE_SIZE) + 1, num_tiles_x);
 			const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1, num_tiles_y);
-			for (int y = sy; y < ey; ++ y){
-				for (int x = sx; x < ex; ++ x){
-					tiles[y * num_tiles_x + x].enqueue(i);
+			if ((sx + 1 == ex) && (sy + 1 == ey)){
+				// Small primitive
+				tiles[sy * num_tiles_x + sx].enqueue(i << 1);
+			}
+			else{
+				if (3 == stride){
+					vec3* edge_factors = &edge_factors_[i * 3];
+					for (int y = sy; y < ey; ++ y){
+						for (int x = sx; x < ex; ++ x){
+							int2 corners[] = {
+								int2((x + 0) * TILE_SIZE, (y + 0) * TILE_SIZE),
+								int2((x + 1) * TILE_SIZE, (y + 0) * TILE_SIZE),
+								int2((x + 0) * TILE_SIZE, (y + 1) * TILE_SIZE),
+								int2((x + 1) * TILE_SIZE, (y + 1) * TILE_SIZE)
+							};
+							int min_corner[3] = {
+								(edge_factors[0].y > 0) * 2 + (edge_factors[0].x > 0),
+								(edge_factors[1].y > 0) * 2 + (edge_factors[1].x > 0),
+								(edge_factors[2].y > 0) * 2 + (edge_factors[2].x > 0)
+							};
+
+							bool intersect = true;
+							// Trival rejection
+							for (int e = 0; e < 3; ++ e){
+								int min_c = min_corner[e];
+								if (corners[min_c].x * edge_factors[e].x
+										+ corners[min_c].y * edge_factors[e].y
+										< edge_factors[e].z){
+									intersect = false;
+									break;
+								}
+							}
+
+							if (intersect){
+								int32_t full = 1;
+								// Trival acception
+								for (int e = 0; e < 3; ++ e){
+									int max_c = 3 - min_corner[e];
+									if (corners[max_c].x * edge_factors[e].x
+											+ corners[max_c].y * edge_factors[e].y
+											< edge_factors[e].z){
+										full = 0;
+										break;
+									}
+								}
+								tiles[y * num_tiles_x + x].enqueue((i << 1) | full);
+							}
+						}
+					}
+				}
+				else{
+					for (int y = sy; y < ey; ++ y){
+						for (int x = sx; x < ex; ++ x){
+							tiles[y * num_tiles_x + x].enqueue(i << 1);
+						}
+					}
 				}
 			}
 		}
@@ -941,15 +1215,16 @@ void rasterizer::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >
 
 void rasterizer::rasterize_line_func(const uint32_t* clipped_indices, const vs_output* clipped_verts_full, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
-		uint32_t iprim = *iter;
+		uint32_t iprim = *iter >> 1;
 		this->rasterize_line(iprim, clipped_verts_full[clipped_indices[iprim * 2 + 0]], clipped_verts_full[clipped_indices[iprim * 2 + 1]], tile_vp, pps);
 	}
 }
 
 void rasterizer::rasterize_triangle_func(const uint32_t* clipped_indices, const vs_output* clipped_verts_full, const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp, const h_pixel_shader& pps){
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
-		uint32_t iprim = *iter;
-		this->rasterize_triangle(iprim, clipped_verts_full[clipped_indices[iprim * 3 + 0]], clipped_verts_full[clipped_indices[iprim * 3 + 1]], clipped_verts_full[clipped_indices[iprim * 3 + 2]], tile_vp, pps);
+		uint32_t iprim = *iter >> 1;
+		uint32_t full = *iter & 1;
+		this->rasterize_triangle(iprim, full, clipped_verts_full[clipped_indices[iprim * 3 + 0]], clipped_verts_full[clipped_indices[iprim * 3 + 1]], clipped_verts_full[clipped_indices[iprim * 3 + 2]], tile_vp, pps);
 	}
 }
 
