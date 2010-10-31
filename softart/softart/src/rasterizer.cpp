@@ -372,12 +372,14 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 		int sample_inside = ~_mm_movemask_ps(mask_rej);
 
 		for (int t = 0; t < 4; ++ t){
-			pixel_mask[(sy + (t >> 1)) * TILE_SIZE + (sx + (t & 1))] = 0;
+			const size_t x = sx + (t & 1);
+			const size_t y = sy + (t >> 1);
+			pixel_mask[y * TILE_SIZE + x] = 0;
 			if ((sample_inside >> t) & 1){
-				pixel_begin[sy + (t >> 1)] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[sy + (t >> 1)]), sx + (t & 1)));
-				pixel_end[sy + (t >> 1)] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[sy + (t >> 1)]), sx + (t & 1) + 1));
+				pixel_begin[y] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[y]), x));
+				pixel_end[y] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[y]), x + 1));
 
-				pixel_mask[(sy + (t >> 1)) * TILE_SIZE + (sx + (t & 1))] |= 1UL << i_sample;
+				pixel_mask[y * TILE_SIZE + x] |= 1UL << i_sample;
 			}
 		}
 	}
@@ -400,10 +402,12 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 					}
 				}
 				if (inside){
-					pixel_begin[iy + sy] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[iy + sy]), ix + sx));
-					pixel_end[iy + sy] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[iy + sy]), ix + sx + 1));
+					const size_t x = ix + sx;
+					const size_t y = iy + sy;
+					pixel_begin[y] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[y]), x));
+					pixel_end[y] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[y]), x + 1));
 
-					pixel_mask[(iy + sy) * TILE_SIZE + (ix + sx)] |= 1UL << i_sample;
+					pixel_mask[y * TILE_SIZE + x] |= 1UL << i_sample;
 				}
 			}
 		}
@@ -487,8 +491,8 @@ void rasterizer::subdivide_tile(int left, int top, const efl::rect<uint32_t>& cu
 				}
 
 				if (!rejection){
-					test_regions[dst_stage][test_region_size[dst_stage]] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (acception << 31);
-					++ test_region_size[dst_stage];
+					test_regions[test_region_size] = x + (y << 8) + (new_w << 16) + (new_h << 24) + (acception << 31);
+					++ test_region_size;
 				}
 			}
 		}
@@ -568,10 +572,10 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	info.set(v0.position, ddx, ddy);
 	pps->ptriangleinfo_ = &info;
 
-	const float x_min = min(projed_vert0.position.x, min(projed_vert1.position.x, projed_vert2.position.x));
-	const float x_max = max(projed_vert0.position.x, max(projed_vert1.position.x, projed_vert2.position.x));
-	const float y_min = min(projed_vert0.position.y, min(projed_vert1.position.y, projed_vert2.position.y));
-	const float y_max = max(projed_vert0.position.y, max(projed_vert1.position.y, projed_vert2.position.y));
+	const float x_min = min(v0.position.x, min(v1.position.x, v2.position.x)) - vp.x;
+	const float x_max = max(v0.position.x, max(v1.position.x, v2.position.x)) - vp.x;
+	const float y_min = min(v0.position.y, min(v1.position.y, v2.position.y)) - vp.y;
+	const float y_max = max(v0.position.y, max(v1.position.y, v2.position.y)) - vp.y;
 
 	/*************************************************
 	*   开始绘制多边形。
@@ -634,7 +638,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 			default:
 				this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, mark_x, mark_y, test_regions[dst_stage], test_region_size[dst_stage],
-					x_min - vp.x, x_max - vp.x, y_min - vp.y, y_max - vp.y);
+					x_min, x_max, y_min, y_max);
 				break;
 			}
 		}
@@ -643,8 +647,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		dst_stage = !src_stage;
 	}
 
-	const int y_begin = max(vptop0, fast_floori(y_min));
-	const int y_end = min(vpbottom0, fast_ceili(y_max) + 1);
+	const int y_begin = max(vptop0, fast_floori(y_min + vp.y));
+	const int y_end = min(vpbottom0, fast_ceili(y_max + vp.y) + 1);
 
 	const float offsetx = vpleft0 + 0.5f - v0.position.x;
 	const float offsety = y_begin + 0.5f - v0.position.y;
@@ -1025,9 +1029,9 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 				for (size_t j = 0; j < 3; ++ j){
 					const vs_output& v = dvc->fetch(i * 3 + j);
 					pv[j] = &v;
-					const float abs_w = abs(v.position.w);
-					const float x = v.position.x / abs_w;
-					const float y = v.position.y / abs_w;
+					const float inv_abs_w = 1 / abs(v.position.w);
+					const float x = v.position.x * inv_abs_w;
+					const float y = v.position.y * inv_abs_w;
 					pv_2d[j] = vec2(x, y);
 				}
 
@@ -1228,7 +1232,7 @@ void rasterizer::rasterize_triangle_func(const uint32_t* clipped_indices, const 
 	}
 }
 
-void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indicess, const uint32_t* clipped_indices_full,
+void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uint32_t* clipped_indices_full,
 		const uint32_t* addresses, const uint32_t* num_clipped_verts, int32_t prim_count,
 		atomic<int32_t>& working_package, int32_t package_size){
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
@@ -1239,7 +1243,7 @@ void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indicess, const ui
 		const int32_t start = local_working_package * package_size;
 		const int32_t end = min(prim_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i){
-			memcpy(&clipped_indicess[addresses[i]], &clipped_indices_full[i * 12], num_clipped_verts[i] * sizeof(*clipped_indicess));
+			memcpy(&clipped_indices[addresses[i]], &clipped_indices_full[i * 12], num_clipped_verts[i] * sizeof(*clipped_indices));
 		}
 
 		local_working_package = working_package ++;

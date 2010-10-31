@@ -100,9 +100,12 @@ public:
 		const attrib_array_type& attribs,
 		const attrib_modifier_array_type& modifiers,
 		uint32_t num_used_attrib)
-		:position(position), front_face(front_face), attributes(attribs), attribute_modifiers(modifiers),
+		:position(position), front_face(front_face),
 			num_used_attribute(num_used_attrib)
-	{}
+	{
+		memcpy(&attributes[0], &attribs[0], num_used_attribute * sizeof(attributes[0]));
+		memcpy(&attribute_modifiers[0], &modifiers[0], num_used_attribute * sizeof(attribute_modifiers[0]));
+	}
 
 	//拷贝构造与赋值
 	vs_output(const vs_output& rhs)
