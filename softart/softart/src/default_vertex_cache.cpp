@@ -13,8 +13,8 @@
 BEGIN_NS_SOFTART()
 
 
-const int GENERATE_INDICES_PACKAGE_SIZE = 1;
-const int TRANSFORM_VERTEX_PACKAGE_SIZE = 1;
+const int GENERATE_INDICES_PACKAGE_SIZE = 8;
+const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
 
 const size_t invalid_id = 0xffffffff;
 

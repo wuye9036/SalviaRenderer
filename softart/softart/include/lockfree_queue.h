@@ -24,16 +24,7 @@ public:
 
 	lockfree_queue(const lockfree_queue& rhs)
 	{
-		node_t* node = new node_t;
-		node->next = NULL;
-		head_ = tail_ = atomic<node_t*>(node);
-
-		atomic<node_t*> rhs_node = rhs.head_.value()->next;
-		while (rhs_node.value() != NULL)
-		{
-			this->enqueue(rhs_node.value()->value);
-			rhs_node = rhs_node.value()->next;
-		}
+		this->copy_from(rhs);
 	}
 
 	~lockfree_queue()
@@ -44,6 +35,30 @@ public:
 			atomic<node_t*> next = node.value()->next;
 			delete node.value();
 			node = next;
+		}
+	}
+
+	lockfree_queue& operator=(const lockfree_queue& rhs)
+	{
+		if (this != &rhs)
+		{
+			this->copy_from(rhs);
+		}
+
+		return *this;
+	}
+
+	void copy_from(const lockfree_queue& rhs)
+	{
+		node_t* node = new node_t;
+		node->next = NULL;
+		head_ = tail_ = atomic<node_t*>(node);
+
+		atomic<node_t*> rhs_node = rhs.head_.value()->next;
+		while (rhs_node.value() != NULL)
+		{
+			this->enqueue(rhs_node.value()->value);
+			rhs_node = rhs_node.value()->next;
 		}
 	}
 

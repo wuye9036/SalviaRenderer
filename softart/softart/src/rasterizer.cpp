@@ -22,10 +22,10 @@ using namespace eflib;
 using namespace boost;
 
 const int TILE_SIZE = 64;
-const int GEOMETRY_SETUP_PACKAGE_SIZE = 1;
-const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 1;
+const int GEOMETRY_SETUP_PACKAGE_SIZE = 8;
+const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 4;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
-const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 1;
+const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
 
 bool cull_mode_none(float /*area*/)
 {
@@ -540,7 +540,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	};
 	const bool mark_y[3] = {
 		edge_factors[0].y > 0, edge_factors[1].y > 0, edge_factors[2].y > 0
-	};		
+	};
 	
 	enum TRI_VS_TILE {
 		TVT_FULL,
@@ -1084,9 +1084,9 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 		const int32_t end = min(prim_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i)
 		{
-			vec2 pv[3];
+			const vec4* pv[3];
 			for (size_t j = 0; j < stride; ++ j){
-				pv[j] = clipped_verts_full[clipped_indices[i * stride + j]].position.xy();
+				pv[j] = &clipped_verts_full[clipped_indices[i * stride + j]].position;
 			}
 
 			if (3 == stride){
@@ -1095,21 +1095,21 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 				for (int e = 0; e < 3; ++ e){
 					const int se = e;
 					const int ee = (e + 1) % 3;
-					edge_factors[e].x = pv[se].y - pv[ee].y;
-					edge_factors[e].y = pv[ee].x - pv[se].x;
-					edge_factors[e].z = pv[ee].x * pv[se].y - pv[ee].y * pv[se].x;
+					edge_factors[e].x = pv[se]->y - pv[ee]->y;
+					edge_factors[e].y = pv[ee]->x - pv[se]->x;
+					edge_factors[e].z = pv[ee]->x * pv[se]->y - pv[ee]->y * pv[se]->x;
 				}
 			}
 
-			x_min = pv[0].x;
-			x_max = pv[0].x;
-			y_min = pv[0].y;
-			y_max = pv[0].y;
+			x_min = pv[0]->x;
+			x_max = pv[0]->x;
+			y_min = pv[0]->y;
+			y_max = pv[0]->y;
 			for (size_t j = 1; j < stride; ++ j){
-				x_min = min(x_min, pv[j].x);
-				x_max = max(x_max, pv[j].x);
-				y_min = min(y_min, pv[j].y);
-				y_max = max(y_max, pv[j].y);
+				x_min = min(x_min, pv[j]->x);
+				x_max = max(x_max, pv[j]->x);
+				y_min = min(y_min, pv[j]->y);
+				y_max = max(y_max, pv[j]->y);
 			}
 
 			const int sx = std::min(fast_floori(std::max(0.0f, x_min) / TILE_SIZE), num_tiles_x);
@@ -1123,45 +1123,38 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 			else{
 				if (3 == stride){
 					vec3* edge_factors = &edge_factors_[i * 3];
+
+					const bool mark_x[3] = {
+						edge_factors[0].x > 0, edge_factors[1].x > 0, edge_factors[2].x > 0
+					};
+					const bool mark_y[3] = {
+						edge_factors[0].y > 0, edge_factors[1].y > 0, edge_factors[2].y > 0
+					};
+					
+					float step_x[3];
+					float step_y[3];
+					float rej_to_acc[3];
+					for (int e = 0; e < 3; ++ e){
+						step_x[e] = TILE_SIZE * edge_factors[e].x;
+						step_y[e] = TILE_SIZE * edge_factors[e].y;
+						rej_to_acc[e] = (mark_x[e] ? -step_x[e] : step_x[e]) + (mark_y[e] ? -step_y[e] : step_y[e]);
+					}
+
 					for (int y = sy; y < ey; ++ y){
 						for (int x = sx; x < ex; ++ x){
-							int2 corners[] = {
-								int2((x + 0) * TILE_SIZE, (y + 0) * TILE_SIZE),
-								int2((x + 1) * TILE_SIZE, (y + 0) * TILE_SIZE),
-								int2((x + 0) * TILE_SIZE, (y + 1) * TILE_SIZE),
-								int2((x + 1) * TILE_SIZE, (y + 1) * TILE_SIZE)
-							};
-							int min_corner[3] = {
-								(edge_factors[0].y > 0) * 2 + (edge_factors[0].x > 0),
-								(edge_factors[1].y > 0) * 2 + (edge_factors[1].x > 0),
-								(edge_factors[2].y > 0) * 2 + (edge_factors[2].x > 0)
-							};
+							int rejection = 0;
+							int acception = 1;
 
-							bool intersect = true;
-							// Trival rejection
+							// Trival rejection & acception
 							for (int e = 0; e < 3; ++ e){
-								int min_c = min_corner[e];
-								if (corners[min_c].x * edge_factors[e].x
-										+ corners[min_c].y * edge_factors[e].y
-										< edge_factors[e].z){
-									intersect = false;
-									break;
-								}
+								int2 base_corner = int2((x + mark_x[e]) * TILE_SIZE, (y + mark_y[e]) * TILE_SIZE);
+								float evalue = edge_factors[e].z - (base_corner.x * edge_factors[e].x + base_corner.y * edge_factors[e].y);
+								rejection |= (0 < evalue);
+								acception &= (rej_to_acc[e] >= evalue);
 							}
 
-							if (intersect){
-								int32_t full = 1;
-								// Trival acception
-								for (int e = 0; e < 3; ++ e){
-									int max_c = 3 - min_corner[e];
-									if (corners[max_c].x * edge_factors[e].x
-											+ corners[max_c].y * edge_factors[e].y
-											< edge_factors[e].z){
-										full = 0;
-										break;
-									}
-								}
-								tiles[y * num_tiles_x + x].enqueue((i << 1) | full);
+							if (!rejection){
+								tiles[y * num_tiles_x + x].enqueue((i << 1) | acception);
 							}
 						}
 					}
