@@ -10,14 +10,14 @@
 
 #include <stdio.h>
 
-namespace efl{
+namespace eflib{
 	namespace detail{
 		bool (*ProcPreAssert)(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore) = 
 			&ProcPreAssert_Init;
 
 		bool ProcPreAssert_Init(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore)
 		{
-			efl::detail::do_init();
+			eflib::detail::do_init();
 			return (*ProcPreAssert)(exp, expstr, desc, line, file, func, ignore);
 		}
 

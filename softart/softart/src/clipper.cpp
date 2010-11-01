@@ -7,7 +7,7 @@
 BEGIN_NS_SOFTART()
 
 
-using namespace efl;
+using namespace eflib;
 using namespace std;
 
 clipper::clipper(){
@@ -24,7 +24,7 @@ clipper::clipper(){
 void clipper::set_clip_plane_enable(bool enable, size_t idx)
 {
 	if(idx >= plane_num){
-		custom_assert(false, "");
+		EFLIB_ASSERT(false, "");
 	}
 
 	planes_enable_[idx] = enable;
@@ -32,7 +32,7 @@ void clipper::set_clip_plane_enable(bool enable, size_t idx)
 
 void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1) const
 {
-	efl::pool::stack_pool< vs_output, 12 > pool;
+	eflib::pool::stack_pool< vs_output, 12 > pool;
 	const vs_output* clipped_verts[2][2];
 	uint32_t num_clipped_verts[2];
 
@@ -107,7 +107,7 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 
 void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2) const
 {
-	efl::pool::stack_pool< vs_output, 12 > pool;
+	eflib::pool::stack_pool< vs_output, 12 > pool;
 	const vs_output* clipped_verts[2][6];
 	uint32_t num_clipped_verts[2];
 

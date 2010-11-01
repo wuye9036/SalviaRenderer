@@ -75,8 +75,8 @@ class rasterizer : public render_stage
 
 	h_framebuffer hfb_;
 
-	std::vector<efl::vec3> edge_factors_;
-	efl::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
+	std::vector<eflib::vec3> edge_factors_;
+	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
 
 	void geometry_setup_func(uint32_t* num_clipped_prims, vs_output* clipped_verts, uint32_t* cliped_indices,
 		int32_t prim_count, primitive_topology primtopo, atomic<int32_t>& working_package, int32_t package_size);
@@ -90,8 +90,8 @@ class rasterizer : public render_stage
 	boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
 	void draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask);
-	void draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples);
-	void subdivide_tile(int left, int top, const efl::rect<uint32_t>& cur_region, const efl::vec3* edge_factors, const bool* mark_x, const bool* mark_y,
+	void draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec3* edge_factors, size_t num_samples);
+	void subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const eflib::vec3* edge_factors, const bool* mark_x, const bool* mark_y,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max);
 
 public:

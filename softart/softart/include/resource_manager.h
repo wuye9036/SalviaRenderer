@@ -19,7 +19,7 @@ public:
 			hbuf.reset();
 			return;
 		}
-		custom_assert(false, "");
+		EFLIB_ASSERT(false, "");
 	}
 };
 
@@ -38,7 +38,7 @@ public:
 			htex.reset();
 			return;
 		}
-		custom_assert(false, "");
+		EFLIB_ASSERT(false, "");
 	}
 };
 

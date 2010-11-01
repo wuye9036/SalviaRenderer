@@ -6,7 +6,7 @@
 
 #include "eflib/include/eflib.h"
 BEGIN_NS_SOFTART()
-using namespace efl;
+using namespace eflib;
 
 vec4 get_vec4(input_type type, input_register_usage_decl usage, const void* data)
 {
@@ -16,9 +16,9 @@ vec4 get_vec4(input_type type, input_register_usage_decl usage, const void* data
 		(0 <= usage && usage < input_register_usage_decl_count);
 	bool is_valid_data = (data != NULL);
 
-	custom_assert(is_valid_type, "");
-	custom_assert(is_valid_usage, "");
-	custom_assert(is_valid_data, "");
+	EFLIB_ASSERT(is_valid_type, "");
+	EFLIB_ASSERT(is_valid_usage, "");
+	EFLIB_ASSERT(is_valid_data, "");
 
 	if( ! (is_valid_type && is_valid_usage && is_valid_data) ){
 		return vec4::zero();
@@ -57,15 +57,15 @@ vs_input stream_assembler::fetch_vertex(size_t idx)
 		size_t sidx = ied.stream_idx;
 		size_t ridx = ied.regidx;
 		
-		custom_assert(sidx < streams_.size(), "");
-		custom_assert(ridx < vsi_attrib_regcnt, "");
+		EFLIB_ASSERT(sidx < streams_.size(), "");
+		EFLIB_ASSERT(ridx < vsi_attrib_regcnt, "");
 		
 		if(sidx >= streams_.size() || ridx >= vsi_attrib_regcnt){
 			return rv;
 		}
 		
 		h_buffer hb = streams_[sidx];
-		custom_assert(hb, "");
+		EFLIB_ASSERT(hb, "");
 		if(!hb) return rv;
 
 		const uint8_t* pdata = hb->raw_data(ied.offset + ied.stride * idx);
@@ -77,7 +77,7 @@ vs_input stream_assembler::fetch_vertex(size_t idx)
 
 void stream_assembler::set_stream(stream_index stridx, h_buffer hbuf)
 {
-	custom_assert(0 <= stridx && stridx < stream_index_count, "");
+	EFLIB_ASSERT(0 <= stridx && stridx < stream_index_count, "");
 	
 	if(size_t(stridx) >= streams_.size()){
 		streams_.resize(stridx+1);
@@ -90,7 +90,7 @@ size_t stream_assembler::num_vertices() const
 {
 	const input_element_decl& ied = layout_[0];
 	h_buffer hb = streams_[ied.stream_idx];
-	custom_assert(hb, "");
+	EFLIB_ASSERT(hb, "");
 
 	return hb->get_size() / ied.stride;
 }

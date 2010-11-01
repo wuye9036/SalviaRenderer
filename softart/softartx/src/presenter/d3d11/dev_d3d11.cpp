@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #	pragma comment(lib, "d3dx11.lib")
 #endif
 
-using namespace efl;
+using namespace eflib;
 using namespace softart;
 
 struct Vertex

@@ -14,16 +14,16 @@ class triangle_info
 {
 	friend class pixel_shader;
 
-	const efl::vec4* pbase_vert;
+	const eflib::vec4* pbase_vert;
 	const vs_output* pddx;
 	const vs_output* pddy;
 
-	const efl::vec4& base_vert() const;
+	const eflib::vec4& base_vert() const;
 	const vs_output& ddx() const;
 	const vs_output& ddy() const;
 
 public:
-	void set(const efl::vec4& base_vert, const vs_output& ddx, const vs_output& ddy);
+	void set(const eflib::vec4& base_vert, const vs_output& ddx, const vs_output& ddy);
 };
 
 END_NS_SOFTART()

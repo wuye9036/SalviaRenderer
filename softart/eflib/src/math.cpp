@@ -1,7 +1,7 @@
 #include "../include/util.h"
 #include "../include/math.h"
 
-namespace efl{
+namespace eflib{
 	vec2 normalize2(const vec2& v)
 	{
 		float length = v.length();
@@ -157,27 +157,15 @@ namespace efl{
 		return out;
 	}
 
-	vec4& hermite(vec4& out, const vec4& v0, const vec4& v1, const vec4& v2, const vec4& v3)
+	vec4& hermite(vec4& out, const vec4& /*v0*/, const vec4& /*v1*/, const vec4& /*v2*/, const vec4& /*v3*/)
 	{
-		UNREF_PARAM(out);
-		UNREF_PARAM(v0);
-		UNREF_PARAM(v1);
-		UNREF_PARAM(v2);
-		UNREF_PARAM(v3);
-
-		NO_IMPL();
+		EFLIB_ASSERT_UNIMPLEMENTED();
 		return out;
 	}
 
-	vec4& cutmull_rom(vec4& out, const vec4& v0, const vec4& v1, const vec4& v2, const vec4& v3)
+	vec4& cutmull_rom(vec4& out, const vec4& /*v0*/, const vec4& /*v1*/, const vec4& /*v2*/, const vec4& /*v3*/)
 	{
-		UNREF_PARAM(out);
-		UNREF_PARAM(v0);
-		UNREF_PARAM(v1);
-		UNREF_PARAM(v2);
-		UNREF_PARAM(v3);
-
-		NO_IMPL();
+		EFLIB_ASSERT_UNIMPLEMENTED();
 		return out;
 	}
 

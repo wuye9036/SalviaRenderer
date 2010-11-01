@@ -51,8 +51,8 @@ public:
 		return ins;
 	}
 private:
-	bool load( softart::surface& surf, const efl::rect<size_t>& dest_region, FIBITMAP* img, const efl::rect<size_t>& src_region );
-	softart::h_texture load(softart::renderer* pr, FIBITMAP* img, const efl::rect<size_t>& src, softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height);
+	bool load( softart::surface& surf, const eflib::rect<size_t>& dest_region, FIBITMAP* img, const eflib::rect<size_t>& src_region );
+	softart::h_texture load(softart::renderer* pr, FIBITMAP* img, const eflib::rect<size_t>& src, softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height);
 
 	texture_io_fi(){}
 };

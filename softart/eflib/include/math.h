@@ -16,7 +16,7 @@
 
 #include <limits>
 
-namespace efl{
+namespace eflib{
 	template <class T>
 	T sign(const T& in)
 	{
@@ -74,7 +74,7 @@ namespace efl{
 	T clamp(T v, T minv, T maxv)
 	{
 		BOOST_STATIC_ASSERT(boost::is_arithmetic<T>::value);
-		custom_assert(minv <= maxv, "");
+		EFLIB_ASSERT(minv <= maxv, "");
 
 		if(v < minv) return minv;
 		if(v > maxv) return maxv;
@@ -102,7 +102,7 @@ namespace efl{
 	// From http://www.musicdsp.org/showone.php?id=63 & http://www.flipcode.com/archives/Fast_log_Function.shtml
 	inline float fast_log2(float val)
 	{
-		custom_assert(val > 0, "");
+		EFLIB_ASSERT(val > 0, "");
 
 		union INTORFLOAT
 		{

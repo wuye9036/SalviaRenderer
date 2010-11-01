@@ -1,6 +1,6 @@
 #include "../include/detail/memory.h"
 
-namespace efl{
+namespace eflib{
 	lifetime_manager* lifetime_manager::inst = NULL;
 
 	lifetime_manager::lifetime_manager(){

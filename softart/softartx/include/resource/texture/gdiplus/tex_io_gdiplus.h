@@ -46,14 +46,14 @@ public:
 	static texture_io_gdiplus& instance();
 
 private:
-	bool load(softart::surface& surf, const efl::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const efl::rect<size_t>& src_region);
-	bool copy_image_to_surface(softart::surface& surf, const efl::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const efl::rect<size_t>& src_region);
+	bool load(softart::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region);
+	bool copy_image_to_surface(softart::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region);
 	texture_io_gdiplus();
 	~texture_io_gdiplus();
 };
 
 template< typename T >
-Gdiplus::Rect efl_rect_to_gdiplus_rect(const efl::rect<T>& src){
+Gdiplus::Rect efl_rect_to_gdiplus_rect(const eflib::rect<T>& src){
 	return Gdiplus::Rect((INT)src.x, (INT)src.y, (INT)src.w, (INT)src.h);
 }
 

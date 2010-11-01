@@ -123,19 +123,19 @@ vs_output& default_vertex_cache::fetch(cache_entry_index id)
 	id = indices_[id];
 
 	if((id > used_verts_.size()) || (-1 == used_verts_[id])){
-		custom_assert(false, "");
+		EFLIB_ASSERT(false, "");
 		return null_obj;
 	}
 
 	return verts_[used_verts_[id]];
 
-	//custom_assert(false, "");
+	//EFLIB_ASSERT(false, "");
 	//return null_obj;
 }
 
 vs_output& default_vertex_cache::fetch_for_write(cache_entry_index /*id*/)
 {
-	custom_assert(false, "Deprecated!");
+	EFLIB_ASSERT(false, "Deprecated!");
 	return verts_[0];
 }
 
@@ -147,7 +147,7 @@ vs_output* default_vertex_cache::new_vertex()
 void default_vertex_cache::delete_vertex(vs_output* const pvert)
 {
 	bool isfrom = verts_pool_.is_from(pvert);
-	custom_assert(isfrom, "");
+	EFLIB_ASSERT(isfrom, "");
 
 	if(isfrom)
 	{

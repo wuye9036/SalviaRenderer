@@ -21,9 +21,9 @@ FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 bool check_image_type_support(FIBITMAP* image);
 
 // 将位图的指定区域缩放拷贝成指定大小的副本。
-FIBITMAP* make_bitmap_copy( efl::rect<size_t>& out_region,
+FIBITMAP* make_bitmap_copy( eflib::rect<size_t>& out_region,
 						   size_t dest_width, size_t dest_height,
-						   FIBITMAP* image, const efl::rect<size_t>& src_region );
+						   FIBITMAP* image, const eflib::rect<size_t>& src_region );
 
 // 统一颜色的字节序列访问。
 // 将不同字节序列表示的颜色，通过适配器转换成统一的访问接口。

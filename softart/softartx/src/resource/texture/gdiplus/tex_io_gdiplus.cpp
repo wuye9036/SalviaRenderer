@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <algorithm>
 
 using namespace Gdiplus;
-using namespace efl;
+using namespace eflib;
 using namespace std;
 using namespace softart;
 BEGIN_NS_SOFTARTX_RESOURCE()
@@ -110,7 +110,7 @@ softart::h_texture texture_io_gdiplus::load_cube(softart::renderer *pr, const ve
 	return ret;
 }
 
-bool texture_io_gdiplus::load(softart::surface& surf, const efl::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const efl::rect<size_t>& src_region){
+bool texture_io_gdiplus::load(softart::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region){
 	if(src_bmp->GetPixelFormat() == PixelFormat32bppARGB && src_region.w == dest_region.w && src_region.h == src_region.h){
 		return copy_image_to_surface( surf, dest_region, src_bmp, src_region);
 	} else {

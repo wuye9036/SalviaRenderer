@@ -5,14 +5,14 @@ BEGIN_NS_SOFTART()
 
 
 using namespace boost;
-using namespace efl;
+using namespace eflib;
 
-const efl::vec4& vs_input::operator [](size_t i) const
+const eflib::vec4& vs_input::operator [](size_t i) const
 {
 	return attributes_[i];
 }
 
-efl::vec4& vs_input::operator[](size_t i)
+eflib::vec4& vs_input::operator[](size_t i)
 {
 	return attributes_[i];
 }
@@ -55,7 +55,7 @@ vs_output& vs_output::operator*=(float f)
 
 vs_output& vs_output::operator/=(float f)
 {
-	custom_assert(!efl::equal<float>(f, 0.0f), "");
+	EFLIB_ASSERT(!eflib::equal<float>(f, 0.0f), "");
 	return operator*=(1.0f / f);
 }
 
@@ -262,7 +262,7 @@ vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, c
 
 void viewport_transform(vec4& position, const viewport& vp)
 {
-	float invw = (efl::equal<float>(position.w, 0.0f)) ? 1.0f : 1.0f / position.w;
+	float invw = (eflib::equal<float>(position.w, 0.0f)) ? 1.0f : 1.0f / position.w;
 	vec4 pos = position * invw;
 
 	//viewport ±ä»»

@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "softart/include/resource_manager.h"
 
 using namespace std;
-using namespace efl;
+using namespace eflib;
 using namespace softart;
 BEGIN_NS_SOFTARTX_RESOURCE()
 
@@ -146,8 +146,8 @@ h_mesh create_box(softart::renderer* psr)
 
 h_mesh create_planar(
 					 softart::renderer* psr,
-					 const efl::vec3& start_pos,
-					 const efl::vec3& x_dir,	 const efl::vec3& y_dir,
+					 const eflib::vec3& start_pos,
+					 const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
 					 size_t repeat_x, size_t repeat_y,
 					 bool positive_normal
 					 )

@@ -6,25 +6,37 @@
 #include <iostream>
 
 #ifdef _DEBUG
-#	define custom_assert(exp, desc) \
+#	define EFLIB_ASSERT(exp, desc) \
 				{\
 					static bool isIgnoreAlways = false;\
 					if(!isIgnoreAlways) {\
-					if((*efl::detail::ProcPreAssert)(exp?true:false, #exp, desc, __LINE__, __FILE__, __FUNCTION__, &isIgnoreAlways))\
+					if((*eflib::detail::ProcPreAssert)(exp?true:false, #exp, desc, __LINE__, __FILE__, __FUNCTION__, &isIgnoreAlways))\
 						{ abort(); }\
 					}\
 				}
+
+// e.g. EFLIB_ASSERT_AND_IF( false, "Assert!" ){
+//			return 0;
+//		}
+#	define EFLIB_ASSERT_AND_IF( expr, desc ) \
+	EFLIB_ASSERT( expr, desc );	\
+	if ( !(expr) ) /* jump statement */
+
 #else
-#	define custom_assert(exp, desc)
+#	define EFLIB_ASSERT(exp, desc)
+#	define EFLIB_ASSERT_AND_IF( expr, desc ) \
+	if ( !(expr) ) /* jump statement */
 #endif
-namespace efl{
-	const bool Debug_Interupt = false;
+namespace eflib{
+	const bool Interrupted = false;
+	const bool Unimplemented = false;
 }
 
-#define NO_IMPL() custom_assert(false, "该函数目前尚未实现！");
-#define interupt(desc) custom_assert(efl::Debug_Interupt, desc)
+#define EFLIB_ASSERT_UNIMPLEMENTED0( desc ) EFLIB_ASSERT( eflib::Unimplemented, desc );
+#define EFLIB_ASSERT_UNIMPLEMENTED() EFLIB_ASSERT_UNIMPLEMENTED0( " An unimplemented code block was invoked! " );
+#define EFLIB_INTERRUPT(desc) EFLIB_ASSERT(eflib::Interrupted, desc)
 
-namespace efl{
+namespace eflib{
 	namespace detail{
 		extern bool (*ProcPreAssert)(bool exp, const char* expstr, const char* desc, int line, const char* file, const char* func, bool* ignore);
 

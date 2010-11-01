@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 using namespace boost;
 using namespace std;
 using namespace Gdiplus;
-using namespace efl;
+using namespace eflib;
 using namespace softart;
 
 BEGIN_NS_SOFTARTX_PRESENTER()

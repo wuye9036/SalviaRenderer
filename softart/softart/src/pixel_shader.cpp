@@ -4,14 +4,14 @@ BEGIN_NS_SOFTART()
 
 
 using namespace boost;
-using namespace efl;
+using namespace eflib;
 
 /*****************************************
  * Triangle Info
  ****************************************/
-const efl::vec4& triangle_info::base_vert() const
+const eflib::vec4& triangle_info::base_vert() const
 {
-	custom_assert(pbase_vert, "");
+	EFLIB_ASSERT(pbase_vert, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)
@@ -24,7 +24,7 @@ const efl::vec4& triangle_info::base_vert() const
 
 const vs_output& triangle_info::ddx() const
 {
-	custom_assert(pddx, "");
+	EFLIB_ASSERT(pddx, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)
@@ -37,7 +37,7 @@ const vs_output& triangle_info::ddx() const
 
 const vs_output& triangle_info::ddy() const
 {
-	custom_assert(pddy, "");
+	EFLIB_ASSERT(pddy, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)
@@ -48,7 +48,7 @@ const vs_output& triangle_info::ddy() const
 #endif
 }
 
-void triangle_info::set(const efl::vec4& base_vert, const vs_output& ddx, const vs_output& ddy)
+void triangle_info::set(const eflib::vec4& base_vert, const vs_output& ddx, const vs_output& ddy)
 {
 	pddx = &ddx;
 	pddy = &ddy;
@@ -58,23 +58,23 @@ void triangle_info::set(const efl::vec4& base_vert, const vs_output& ddx, const 
 /*****************************************
  *  Get Partial Derivation
  *****************************************/
-const efl::vec4& pixel_shader::get_pos_ddx() const{
+const eflib::vec4& pixel_shader::get_pos_ddx() const{
 	return ptriangleinfo_->ddx().position;
 }
 
-const efl::vec4& pixel_shader::get_pos_ddy() const{
+const eflib::vec4& pixel_shader::get_pos_ddy() const{
 	return ptriangleinfo_->ddy().position;
 }
 
-const efl::vec4& pixel_shader::get_original_ddx(size_t iReg) const{
+const eflib::vec4& pixel_shader::get_original_ddx(size_t iReg) const{
 	return ptriangleinfo_->ddx().attributes[iReg];
 }
 
-const efl::vec4& pixel_shader::get_original_ddy(size_t iReg) const{
+const eflib::vec4& pixel_shader::get_original_ddy(size_t iReg) const{
 	return ptriangleinfo_->ddy().attributes[iReg];
 }
 
-const efl::vec4 pixel_shader::ddx(size_t iReg) const
+const eflib::vec4 pixel_shader::ddx(size_t iReg) const
 {
 	vec4 attr_org_ddx = get_original_ddx(iReg);
 
@@ -89,7 +89,7 @@ const efl::vec4 pixel_shader::ddx(size_t iReg) const
 	return new_proj_attr - attr;
 }
 
-const efl::vec4 pixel_shader::ddy(size_t iReg) const
+const eflib::vec4 pixel_shader::ddy(size_t iReg) const
 {
 	vec4 attr_org_ddy = get_original_ddy(iReg);
 
@@ -127,14 +127,14 @@ color_rgba32f pixel_shader::tex2dlod(const sampler& s, size_t iReg)
 
 color_rgba32f pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 {
-	const efl::vec4& attr = ppxin_->attributes[iReg];
+	const eflib::vec4& attr = ppxin_->attributes[iReg];
 
 	float invq = (attr.w == 0.0f) ? 1.0f : 1.0f / attr.w;
 
 	//注意这里的透视纹理，不需要除以position.w回到纹理空间，但是由于在光栅化传递进入的时候
 	//执行了除法操作，因此需要再乘w回来。
 	//float proj_factor = ppxin_->wpos.w * invq;
-	efl::vec4 projected_attr;
+	eflib::vec4 projected_attr;
 	projected_attr.xyz() = (attr * invq).xyz();
 	projected_attr  += vec4(1.0f, 1.0f, 0.0f, 0.0f);
 	projected_attr /= 2.0f;
@@ -148,7 +148,7 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec
 
 	float invq = (v.w == 0.0f) ? 1.0f : 1.0f / v.w;
 	//float proj_factor = ppxin_->wpos.w * invq;
-	efl::vec4 projected_v;
+	eflib::vec4 projected_v;
 
 	projected_v.xyz() = (v * invq).xyz();
 	projected_v  += vec4(1.0f, 1.0f, 0.0f, 0.0f);
@@ -160,7 +160,7 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec
 		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
 }
 
-color_rgba32f pixel_shader::texcube(const sampler& s, const efl::vec4& coord, const efl::vec4& ddx, const efl::vec4& ddy, float /*bias*/){
+color_rgba32f pixel_shader::texcube(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float /*bias*/){
 	return s.sample_cube(coord, ddx, ddy,
 		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), 1.0f / ppxin_->position.w, 0.0f);
 }
@@ -180,14 +180,14 @@ color_rgba32f pixel_shader::texcubelod(const sampler& s, size_t iReg){
 }
 
 color_rgba32f pixel_shader::texcubeproj(const sampler& s, size_t iReg){
-	const efl::vec4& attr = ppxin_->attributes[iReg];
+	const eflib::vec4& attr = ppxin_->attributes[iReg];
 
 	float invq = (attr.w == 0.0f) ? 1.0f : 1.0f / attr.w;
 
 	//注意这里的透视纹理，不需要除以position.w回到纹理空间，但是由于在光栅化传递进入的时候
 	//执行了除法操作，因此需要再乘w回来。
 	float proj_factor = ppxin_->position.w * invq;
-	efl::vec4 projected_attr;
+	eflib::vec4 projected_attr;
 	projected_attr.xyz() = (attr * proj_factor).xyz();
 	projected_attr.w = attr.w;
 
@@ -195,10 +195,10 @@ color_rgba32f pixel_shader::texcubeproj(const sampler& s, size_t iReg){
 		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
 }
 
-color_rgba32f pixel_shader::texcubeproj(const sampler&s, const efl::vec4& v, const efl::vec4& ddx, const efl::vec4& ddy){
+color_rgba32f pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy){
 	float invq = (v.w == 0.0f) ? 1.0f : 1.0f / v.w;
 	float proj_factor = ppxin_->position.w * invq;
-	efl::vec4 projected_v;
+	eflib::vec4 projected_v;
 	projected_v.xyz() = (v * proj_factor).xyz();
 	projected_v.w = v.w;
 
@@ -210,7 +210,7 @@ color_rgba32f pixel_shader::texcubeproj(const sampler&s, const efl::vec4& v, con
  * Execution
  *****************************************/
 bool pixel_shader::execute(const vs_output& in, ps_output& out){
-	custom_assert(ptriangleinfo_, "");
+	EFLIB_ASSERT(ptriangleinfo_, "");
 	ppxin_ = &in;
 	bool rv = shader_prog(in, out);
 	out.depth = in.position.z;

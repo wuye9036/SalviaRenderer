@@ -74,7 +74,7 @@ public:
 	virtual const viewport& get_viewport() const;
 
 	virtual result set_framebuffer_size(size_t width, size_t height, size_t num_samples);
-	virtual efl::rect<size_t> get_framebuffer_size() const;
+	virtual eflib::rect<size_t> get_framebuffer_size() const;
 
 	virtual result set_framebuffer_format(pixel_format pxfmt);
 	virtual pixel_format get_framebuffer_format(pixel_format pxfmt) const;
@@ -110,9 +110,9 @@ public:
 	virtual result clear_color(size_t tar_id, const color_rgba32f& c);
 	virtual result clear_depth(float d);
 	virtual result clear_stencil(uint32_t s);
-	virtual result clear_color(size_t tar_id, const efl::rect<size_t>& rc, const color_rgba32f& c);
-	virtual result clear_depth(const efl::rect<size_t>& rc, float d);
-	virtual result clear_stencil(const efl::rect<size_t>& rc, uint32_t s);
+	virtual result clear_color(size_t tar_id, const eflib::rect<size_t>& rc, const color_rgba32f& c);
+	virtual result clear_depth(const eflib::rect<size_t>& rc, float d);
+	virtual result clear_stencil(const eflib::rect<size_t>& rc, uint32_t s);
 
 	virtual result present();
 

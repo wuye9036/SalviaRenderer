@@ -4,7 +4,7 @@
 #include "vector.h"
 #include "matrix.h"
 
-namespace efl{
+namespace eflib{
 
 class eular_angle{
 private:

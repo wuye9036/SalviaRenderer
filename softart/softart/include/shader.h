@@ -105,28 +105,28 @@ class pixel_shader : public shader_impl
 	const vs_output* ppxin_;
 
 protected:
-	const efl::vec4& get_pos_ddx() const;
-	const efl::vec4& get_pos_ddy() const;
+	const eflib::vec4& get_pos_ddx() const;
+	const eflib::vec4& get_pos_ddy() const;
 
 	//获得乘以投影系数之后的ddx与ddy，可以用它计算投影纠正后的ddx和ddy。
-	const efl::vec4& get_original_ddx(size_t iReg) const;
-	const efl::vec4& get_original_ddy(size_t iReg) const;
+	const eflib::vec4& get_original_ddx(size_t iReg) const;
+	const eflib::vec4& get_original_ddy(size_t iReg) const;
 
 	//获得投影纠正以后的ddx与ddy
-	const efl::vec4 ddx(size_t iReg) const;
-	const efl::vec4 ddy(size_t iReg) const;
+	const eflib::vec4 ddx(size_t iReg) const;
+	const eflib::vec4 ddy(size_t iReg) const;
 
-	color_rgba32f tex2d(const sampler& s, const efl::vec4& coord, const efl::vec4& ddx, const efl::vec4& ddy, float bias = 0);
+	color_rgba32f tex2d(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float bias = 0);
 	color_rgba32f tex2d(const sampler& s, size_t iReg);
 	color_rgba32f tex2dlod(const sampler& s, size_t iReg);
 	color_rgba32f tex2dproj(const sampler& s, size_t iReg);
-	color_rgba32f tex2dproj(const sampler& s, const efl::vec4& v, const efl::vec4& ddx, const efl::vec4& ddy);
+	color_rgba32f tex2dproj(const sampler& s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy);
 
-	color_rgba32f texcube(const sampler& s, const efl::vec4& coord, const efl::vec4& ddx, const efl::vec4& ddy, float bias = 0);
+	color_rgba32f texcube(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float bias = 0);
 	color_rgba32f texcube(const sampler&s, size_t iReg);
 	color_rgba32f texcubelod(const sampler& s, size_t iReg);
 	color_rgba32f texcubeproj(const sampler& s, size_t iReg);
-	color_rgba32f texcubeproj(const sampler&s, const efl::vec4& v, const efl::vec4& ddx, const efl::vec4& ddy);
+	color_rgba32f texcubeproj(const sampler&s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy);
 public:
 	bool execute(const vs_output& in, ps_output& out);
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;

@@ -19,7 +19,7 @@ namespace shader_constant
 				(bool)\
 				(int8_t)(uint8_t)(int16_t)(uint16_t)(int32_t)(uint32_t)(int64_t)(uint64_t)\
 				(std::string)(std::wstring)\
-				(efl::vec2)(efl::vec3)(efl::vec4)(efl::mat44)\
+				(eflib::vec2)(eflib::vec3)(eflib::vec4)(eflib::mat44)\
 				/*END REGISTER*/
 
 	#include END_REGISTER_TYPE()

@@ -4,7 +4,7 @@
 #include "../include/texture.h"
 BEGIN_NS_SOFTART()
 
-using namespace efl;
+using namespace eflib;
 using namespace std;
 
 namespace addresser
@@ -109,7 +109,7 @@ namespace addresser
 
 		static int do_coordi_point_1d(int coord, int size)
 		{
-			return efl::clamp(coord, 0, size - 1);
+			return eflib::clamp(coord, 0, size - 1);
 		}
 		static int4 do_coordi_point_2d(const vec4& coord, const int4& size)
 		{
@@ -141,8 +141,8 @@ namespace addresser
 #else
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 
-			return int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
-				efl::clamp(coord_ipart.y, 0, size.y - 1),
+			return int4(eflib::clamp(coord_ipart.x, 0, size.x - 1),
+				eflib::clamp(coord_ipart.y, 0, size.y - 1),
 				0, 0);
 #endif
 		}
@@ -183,11 +183,11 @@ namespace addresser
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 
-			low = int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
-				efl::clamp(coord_ipart.y, 0, size.y - 1),
+			low = int4(eflib::clamp(coord_ipart.x, 0, size.x - 1),
+				eflib::clamp(coord_ipart.y, 0, size.y - 1),
 				0, 0);
-			up = int4(efl::clamp(coord_ipart.x + 1, 0, size.x - 1),
-				efl::clamp(coord_ipart.y + 1, 0, size.y - 1),
+			up = int4(eflib::clamp(coord_ipart.x + 1, 0, size.x - 1),
+				eflib::clamp(coord_ipart.y + 1, 0, size.y - 1),
 				0, 0);
 #endif
 		}
@@ -197,12 +197,12 @@ namespace addresser
 	{
 		static float do_coordf(float coord, int size)
 		{
-			return efl::clamp(coord * size, 0.5f, size - 0.5f) - 0.5f;
+			return eflib::clamp(coord * size, 0.5f, size - 0.5f) - 0.5f;
 		}
 
 		static int do_coordi_point_1d(int coord, int size)
 		{
-			return efl::clamp(coord, 0, size - 1);
+			return eflib::clamp(coord, 0, size - 1);
 		}
 		static int4 do_coordi_point_2d(const vec4& coord, const int4& size)
 		{
@@ -228,13 +228,13 @@ namespace addresser
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret.x), tmp);
 			return ret;
 #else
-			vec4 o_coord(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f),
-				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f),
+			vec4 o_coord(eflib::clamp(coord.x * size.x, 0.5f, size.x - 0.5f),
+				eflib::clamp(coord.y * size.y, 0.5f, size.y - 0.5f),
 				0, 0);
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 
-			return int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
-				efl::clamp(coord_ipart.y, 0, size.y - 1),
+			return int4(eflib::clamp(coord_ipart.x, 0, size.x - 1),
+				eflib::clamp(coord_ipart.y, 0, size.y - 1),
 				0, 0);
 #endif
 		}
@@ -268,17 +268,17 @@ namespace addresser
 			tmp = _mm_unpackhi_epi64(tmp, tmp);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&up.x), tmp);
 #else
-			vec4 o_coord(efl::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
+			vec4 o_coord(eflib::clamp(coord.x * size.x, 0.5f, size.x - 0.5f) - 0.5f,
+				eflib::clamp(coord.y * size.y, 0.5f, size.y - 0.5f) - 0.5f,
 				0, 0);
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
 
-			low = int4(efl::clamp(coord_ipart.x, 0, size.x - 1),
-				efl::clamp(coord_ipart.y, 0, size.y - 1),
+			low = int4(eflib::clamp(coord_ipart.x, 0, size.x - 1),
+				eflib::clamp(coord_ipart.y, 0, size.y - 1),
 				0, 0);
-			up = int4(efl::clamp(coord_ipart.x + 1, 0, size.x - 1),
-				efl::clamp(coord_ipart.y + 1, 0, size.y - 1),
+			up = int4(eflib::clamp(coord_ipart.x + 1, 0, size.x - 1),
+				eflib::clamp(coord_ipart.y + 1, 0, size.y - 1),
 				0, 0);
 #endif
 		}
@@ -288,7 +288,7 @@ namespace addresser
 	{
 		static float do_coordf(float coord, int size)
 		{
-			return efl::clamp(coord * size, -0.5f, size + 0.5f) - 0.5f;
+			return eflib::clamp(coord * size, -0.5f, size + 0.5f) - 0.5f;
 		}
 
 		static int do_coordi_point_1d(int coord, int size)
@@ -313,8 +313,8 @@ namespace addresser
 			int4 coord_ipart;
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&coord_ipart.x), _mm_cvttps_epi32(mfcoord_ipart));
 #else
-			vec4 o_coord(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f),
-				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f),
+			vec4 o_coord(eflib::clamp(coord.x * size.x, -0.5f, size.x + 0.5f),
+				eflib::clamp(coord.y * size.y, -0.5f, size.y + 0.5f),
 				0, 0);
 
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
@@ -346,8 +346,8 @@ namespace addresser
 			int4 coord_ipart;
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&coord_ipart.x), _mm_cvttps_epi32(mfcoord_ipart));
 #else
-			vec4 o_coord(efl::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
-				efl::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
+			vec4 o_coord(eflib::clamp(coord.x * size.x, -0.5f, size.x + 0.5f) - 0.5f,
+				eflib::clamp(coord.y * size.y, -0.5f, size.y + 0.5f) - 0.5f,
 				0, 0);
 			int4 coord_ipart = int4(fast_floori(o_coord.x), fast_floori(o_coord.y), 0, 0);
 			frac = o_coord - vec4(static_cast<float>(coord_ipart.x), static_cast<float>(coord_ipart.y), 0, 0);
@@ -548,8 +548,8 @@ float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx
 	_mm_store_ss(&lod, mlod);
 	return lod;
 #else
-	efl::vec4 ddx2 = (attribute + ddx) * inv_x_w - attribute * inv_w;
-	efl::vec4 ddy2 = (attribute + ddy) * inv_y_w - attribute * inv_w;
+	eflib::vec4 ddx2 = (attribute + ddx) * inv_x_w - attribute * inv_w;
+	eflib::vec4 ddy2 = (attribute + ddy) * inv_y_w - attribute * inv_w;
 
 	float rho, lambda;
 
@@ -624,7 +624,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		return lerp(c0, c1, frac);
 	}
 
-	custom_assert(false, "出现了错误的mip filters参数");
+	EFLIB_ASSERT(false, "出现了错误的mip filters参数");
 	return desc_.border_color;
 }
 
@@ -661,7 +661,7 @@ color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 
 color_rgba32f sampler::sample(
 					 float coordx, float coordy, 
-					 const efl::vec4& ddx, const efl::vec4& ddy, 
+					 const eflib::vec4& ddx, const eflib::vec4& ddy, 
 					 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
 	return sample_impl(ptex_, coordx, coordy, 0, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
@@ -669,8 +669,8 @@ color_rgba32f sampler::sample(
 
 
 color_rgba32f sampler::sample_2d(
-						const efl::vec4& coord,
-						const efl::vec4& ddx, const efl::vec4& ddy,
+						const eflib::vec4& coord,
+						const eflib::vec4& ddx, const eflib::vec4& ddy,
 						float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
 	return sample_2d_impl(ptex_, coord, 0, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
@@ -741,16 +741,16 @@ color_rgba32f sampler::sample_cube(
 	//暂时先不算ddx ddy
 	if(ptex_->get_texture_type() != texture_type_cube)
 	{
-		custom_assert(false , "texture type not texture_type_cube.");
+		EFLIB_ASSERT(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
 	return sample_impl(&pcube->get_face(major_dir), s, t, 0, miplevel);
 }
 
 color_rgba32f sampler::sample_cube(
-	const efl::vec4& coord,
-	const efl::vec4& ddx,
-	const efl::vec4& ddy,
+	const eflib::vec4& coord,
+	const eflib::vec4& ddx,
+	const eflib::vec4& ddy,
 	float inv_x_w, float inv_y_w, float inv_w, float lod_bias
 	) const
 {
@@ -759,7 +759,7 @@ color_rgba32f sampler::sample_cube(
 
 	if(ptex_->get_texture_type() != texture_type_cube)
 	{
-		custom_assert(false , "texture type not texture_type_cube.");
+		EFLIB_ASSERT(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
 	float lod = calc_lod(origin_coord, int4(static_cast<int>(pcube->get_width(0)),

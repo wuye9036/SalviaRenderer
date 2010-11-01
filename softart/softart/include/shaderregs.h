@@ -23,10 +23,10 @@ BEGIN_NS_SOFTART()
 class vs_input
 {
 public:
-	typedef boost::array<efl::vec4, vsi_attrib_regcnt> vsinput_attributes_t;
+	typedef boost::array<eflib::vec4, vsi_attrib_regcnt> vsinput_attributes_t;
 
-	const efl::vec4& operator [](size_t i) const;
-	efl::vec4& operator[](size_t i);
+	const eflib::vec4& operator [](size_t i) const;
+	eflib::vec4& operator[](size_t i);
 
 	vs_input(){}
 	
@@ -79,10 +79,10 @@ public:
 	};
 
 public:
-	typedef boost::array<efl::vec4, vso_attrib_regcnt> attrib_array_type;
+	typedef boost::array<eflib::vec4, vso_attrib_regcnt> attrib_array_type;
 	typedef boost::array<uint32_t, vso_attrib_regcnt> attrib_modifier_array_type;
 
-	efl::vec4 position;
+	eflib::vec4 position;
 	bool front_face;
 
 	attrib_array_type attributes;
@@ -95,7 +95,7 @@ public:
 		: num_used_attribute(0)
 	{}
 	vs_output(
-		const efl::vec4& position, 
+		const eflib::vec4& position, 
 		bool front_face,
 		const attrib_array_type& attribs,
 		const attrib_modifier_array_type& modifiers,
@@ -133,13 +133,13 @@ public:
 	vs_output& operator/=(float f);
 };
 
-void viewport_transform(efl::vec4& position, const viewport& vp);
+void viewport_transform(eflib::vec4& position, const viewport& vp);
 
 //vs_output compute_derivate
 struct ps_output
 {
 	float depth;
-	boost::array<efl::vec4, pso_color_regcnt> color;
+	boost::array<eflib::vec4, pso_color_regcnt> color;
 	bool front_face;
 };
 

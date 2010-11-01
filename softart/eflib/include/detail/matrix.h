@@ -4,7 +4,7 @@
 #include "vector.h"
 #include <memory.h>
 
-namespace efl
+namespace eflib
 {
 	class mat44
 	{
@@ -49,7 +49,7 @@ namespace efl
 		******************************************/
 		vec4 get_column(size_t i) const
 		{
-			custom_assert(i < 4, "");
+			EFLIB_ASSERT(i < 4, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable: 6385 6386)
@@ -62,7 +62,7 @@ namespace efl
 
 		void set_column(size_t i, float _1, float _2, float _3, float _4)
 		{
-			custom_assert(i < 4, "");
+			EFLIB_ASSERT(i < 4, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable: 6385 6386)
@@ -78,7 +78,7 @@ namespace efl
 
 		void set_column(size_t i, const vec4& v)
 		{
-			custom_assert(i < 4, "");
+			EFLIB_ASSERT(i < 4, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable: 6385 6386)
@@ -94,7 +94,7 @@ namespace efl
 
 		vec4 get_row(size_t i) const
 		{
-			custom_assert(i < 4, "");
+			EFLIB_ASSERT(i < 4, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable: 6385 6386)
@@ -107,7 +107,7 @@ namespace efl
 
 		void set_row(size_t i, float _1, float _2, float _3, float _4)
 		{
-			custom_assert(i < 4, "");
+			EFLIB_ASSERT(i < 4, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable: 6385 6386)
@@ -123,7 +123,7 @@ namespace efl
 
 		void set_row(size_t i, const vec4& v)
 		{
-			custom_assert(i < 4, "");
+			EFLIB_ASSERT(i < 4, "");
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable: 6385 6386)

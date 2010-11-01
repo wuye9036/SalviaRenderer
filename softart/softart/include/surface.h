@@ -70,8 +70,8 @@ public:
 
 	void resolve(surface& target);
 
-	void transfer(pixel_format srcfmt, const efl::rect<size_t>& dest_rect, void* pdata);
-	void transfer(const efl::rect<size_t>& dest_rect, size_t src_start_x, size_t src_start_y, surface& src_surf);
+	void transfer(pixel_format srcfmt, const eflib::rect<size_t>& dest_rect, void* pdata);
+	void transfer(const eflib::rect<size_t>& dest_rect, size_t src_start_x, size_t src_start_y, surface& src_surf);
 
 	size_t get_width() const{
 		return width_;

@@ -2,7 +2,7 @@
 #include "../include/texture.h"
 BEGIN_NS_SOFTART()
 
-using namespace efl;
+using namespace eflib;
 
 texture_cube::texture_cube(size_t width, size_t height, size_t num_samples, pixel_format format):subtexs_(6, texture_2d(0, 0, num_samples, format)){
 	for(size_t i = 0; i < 6; ++i){

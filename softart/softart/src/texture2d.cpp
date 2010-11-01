@@ -6,7 +6,7 @@
 #include "../include/sampler.h"
 BEGIN_NS_SOFTART()
 
-using namespace efl;
+using namespace eflib;
 
 texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format)
 {
@@ -114,8 +114,8 @@ void  texture_2d::gen_mipmap(filter_type filter)
 
 void  texture_2d::map(void** pData, size_t subresource, map_mode mm)
 {
-	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
-	custom_assert(pData != 0, "pData不可为NULL！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(pData != 0, "pData不可为NULL！");
 
 #ifdef EFLIB_MSVC
 #pragma warning(push)
@@ -135,35 +135,35 @@ void  texture_2d::unmap(size_t subresource)
 
 surface&  texture_2d::get_surface(size_t subresource)
 {
-	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return surfs_[subresource];
 }
 
 const surface&  texture_2d::get_surface(size_t subresource) const
 {
-	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return surfs_[subresource];
 }
 
 size_t  texture_2d::get_width(size_t subresource) const
 {
-	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return get_surface(subresource).get_width();
 }
 
 size_t  texture_2d::get_height(size_t subresource) const
 {
-	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return get_surface(subresource).get_width();
 }
 
 size_t  texture_2d::get_depth(size_t subresource) const
 {
-	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 	UNREF_PARAM(subresource);
 
 	return 1;
@@ -171,14 +171,14 @@ size_t  texture_2d::get_depth(size_t subresource) const
 
 size_t texture_2d::get_num_samples(size_t subresource) const
 {
-	custom_assert(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return get_surface(subresource).get_num_samples();
 }
 
 void  texture_2d::set_max_lod(size_t miplevel)
 {
-	custom_assert(max_lod_ <= min_lod_, "最低细节的Mip等级设置错误！");
+	EFLIB_ASSERT(max_lod_ <= min_lod_, "最低细节的Mip等级设置错误！");
 
 	if(! (max_lod_ <= min_lod_)) return;
 	max_lod_ = miplevel;
@@ -187,7 +187,7 @@ void  texture_2d::set_max_lod(size_t miplevel)
 void  texture_2d::set_min_lod(size_t miplevel)
 {
 	size_t ml_limit = calc_lod_limit(surfs_[0].get_width());
-	custom_assert(max_lod_ <= miplevel && miplevel < ml_limit, "最低细节的Mip等级设置错误！");
+	EFLIB_ASSERT(max_lod_ <= miplevel && miplevel < ml_limit, "最低细节的Mip等级设置错误！");
 
 	if(! (max_lod_ <= miplevel && miplevel < ml_limit)) return;
 	min_lod_ = miplevel;

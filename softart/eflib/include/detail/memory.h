@@ -12,7 +12,7 @@
 #	undef min
 #endif
 
-namespace efl{
+namespace eflib{
 
 //¶ÔÆëºê
 #ifdef _MSC_VER
@@ -184,7 +184,7 @@ namespace efl{
 		}
 	};
 
-#define  is_aligned(pointer, aligned_size) (efl::is_aligned<aligned_size>().check(pointer))
+#define  is_aligned(pointer, aligned_size) (eflib::is_aligned<aligned_size>().check(pointer))
 
 	// This class will used as following:
 	//	int main(){

@@ -8,7 +8,7 @@
 #include "../debug_helper.h"
 #include <cmath>
 
-namespace efl{
+namespace eflib{
 
 #ifndef EFLIB_NO_SIMD
 	typedef ALIGN16 float float4[4];
@@ -79,13 +79,13 @@ namespace efl{
 
 		const float& operator [](size_t i) const
 		{
-			custom_assert(i < 1, "");
+			EFLIB_ASSERT(i < 1, "");
 			return ((float*)(this))[i];
 		}
 
 		float& operator [](size_t i)
 		{
-			custom_assert(i < 1, "");
+			EFLIB_ASSERT(i < 1, "");
 			return ((float*)(this))[i];
 		}
 
@@ -193,13 +193,13 @@ namespace efl{
 
 		const float& operator [](size_t i) const
 		{
-			custom_assert(i < 2, "");
+			EFLIB_ASSERT(i < 2, "");
 			return ((float*)(this))[i];
 		}
 
 		float& operator [](size_t i)
 		{
-			custom_assert(i < 2, "");
+			EFLIB_ASSERT(i < 2, "");
 			return ((float*)(this))[i];
 		}
 
@@ -335,13 +335,13 @@ namespace efl{
 
 		const float& operator [](size_t i) const
 		{
-			custom_assert(i < 3, "");
+			EFLIB_ASSERT(i < 3, "");
 			return ((float*)(this))[i];
 		}
 
 		float& operator [](size_t i)
 		{
-			custom_assert(i < 3, "");
+			EFLIB_ASSERT(i < 3, "");
 			return ((float*)(this))[i];
 		}
 		///////////////////////////////////////////////
@@ -691,13 +691,13 @@ namespace efl{
 
 		const int& operator [](size_t i) const
 		{
-			custom_assert(i < 1, "");
+			EFLIB_ASSERT(i < 1, "");
 			return ((int*)(this))[i];
 		}
 
 		int& operator [](size_t i)
 		{
-			custom_assert(i < 1, "");
+			EFLIB_ASSERT(i < 1, "");
 			return ((int*)(this))[i];
 		}
 
@@ -805,13 +805,13 @@ namespace efl{
 
 		const int& operator [](size_t i) const
 		{
-			custom_assert(i < 2, "");
+			EFLIB_ASSERT(i < 2, "");
 			return ((int*)(this))[i];
 		}
 
 		int& operator [](size_t i)
 		{
-			custom_assert(i < 2, "");
+			EFLIB_ASSERT(i < 2, "");
 			return ((int*)(this))[i];
 		}
 
@@ -941,13 +941,13 @@ namespace efl{
 		
 		const int& operator [](size_t i) const
 		{
-			custom_assert(i < 3, "");
+			EFLIB_ASSERT(i < 3, "");
 			return ((int*)(this))[i];
 		}
 
 		int& operator [](size_t i)
 		{
-			custom_assert(i < 3, "");
+			EFLIB_ASSERT(i < 3, "");
 			return ((int*)(this))[i];
 		}
 		///////////////////////////////////////////////

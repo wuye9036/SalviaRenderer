@@ -110,7 +110,7 @@ public:
 	surface* get_render_target(render_target tar, size_t tar_id) const;
 
 	//ªÒµ√‰÷»æ◊¥Ã¨	
-	efl::rect<size_t> get_rect();
+	eflib::rect<size_t> get_rect();
 	size_t get_width() const;
 	size_t get_height() const;
 	size_t get_num_samples() const;
@@ -123,9 +123,9 @@ public:
 	void clear_color(size_t tar_id, const color_rgba32f& c);
 	void clear_depth(float d);
 	void clear_stencil(int32_t s);
-	void clear_color(size_t tar_id, const efl::rect<size_t>& rc, const color_rgba32f& c);
-	void clear_depth(const efl::rect<size_t>& rc, float d);
-	void clear_stencil(const efl::rect<size_t>& rc, int32_t s);
+	void clear_color(size_t tar_id, const eflib::rect<size_t>& rc, const color_rgba32f& c);
+	void clear_depth(const eflib::rect<size_t>& rc, float d);
+	void clear_stencil(const eflib::rect<size_t>& rc, int32_t s);
 };
 
 //DECL_HANDLE(framebuffer, h_framebuffer);

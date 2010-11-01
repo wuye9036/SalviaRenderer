@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "softart/include/surface.h"
 #include <tchar.h>
 
-using namespace efl;
+using namespace eflib;
 using namespace softartx::utility;
 using namespace softart;
 #define FVF (D3DFVF_XYZ | D3DFVF_TEX1)

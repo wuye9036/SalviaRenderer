@@ -8,10 +8,10 @@
 #include "../include/stream.h"
 #include "../include/surface.h"
 #include "../include/vertex_cache.h"
-BEGIN_NS_SOFTART()
 
+BEGIN_NS_SOFTART();
 
-using namespace efl;
+using namespace eflib;
 
 //inherited
 result renderer_impl::set_input_layout(const input_layout_decl& layout)
@@ -23,7 +23,7 @@ result renderer_impl::set_input_layout(const input_layout_decl& layout)
 
 const input_layout_decl& renderer_impl::get_input_layout() const
 {
-	NO_IMPL();
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	static input_layout_decl ret;
 	return ret;
 }
@@ -36,7 +36,7 @@ result renderer_impl::set_stream(stream_index sidx, h_buffer hbuf)
 
 h_buffer renderer_impl::get_stream(stream_index /*sidx*/) const
 {
-	NO_IMPL();
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return h_buffer();
 }
 
@@ -48,7 +48,7 @@ result renderer_impl::set_index_buffer(h_buffer hbuf, index_type idxtype)
 	case index_int32:
 		break;
 	default:
-		custom_assert(false, "枚举值无效：无效的索引类型");
+		EFLIB_ASSERT(false, "枚举值无效：无效的索引类型");
 		return result::failed;
 	}
 
@@ -79,7 +79,7 @@ result renderer_impl::set_primitive_topology(primitive_topology primtopo)
 	case primitive_triangle_strip:
 		break;
 	default:
-		custom_assert(false, "枚举值无效：无效的图元拓扑枚举。");
+		EFLIB_ASSERT(false, "枚举值无效：无效的图元拓扑枚举。");
 		return result::failed;
 	}
 
@@ -170,7 +170,7 @@ result renderer_impl::set_framebuffer_size(size_t width, size_t height, size_t n
 	return result::ok;
 }
 
-efl::rect<size_t> renderer_impl::get_framebuffer_size() const
+eflib::rect<size_t> renderer_impl::get_framebuffer_size() const
 {
 	return hfb_->get_rect();
 }
@@ -200,7 +200,7 @@ result renderer_impl::set_render_target_available(render_target tar, size_t tar_
 
 bool renderer_impl::get_render_target_available(render_target /*tar*/, size_t /*tar_id*/) const
 {
-	NO_IMPL();
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return false;
 }
 
@@ -218,7 +218,7 @@ h_renderer_mementor renderer_impl::create_mementor()
 
 result renderer_impl::release_mementor(h_renderer_mementor& /*mementor*/)
 {
-	NO_IMPL();
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return result::ok;
 }
 
@@ -311,19 +311,19 @@ result renderer_impl::clear_stencil(uint32_t s)
 	return result::ok;
 }
 
-result renderer_impl::clear_color(size_t tar_id, const efl::rect<size_t>& rc, const color_rgba32f& c)
+result renderer_impl::clear_color(size_t tar_id, const eflib::rect<size_t>& rc, const color_rgba32f& c)
 {
 	hfb_->clear_color(tar_id, rc, c);
 	return result::ok;
 }
 
-result renderer_impl::clear_depth(const efl::rect<size_t>& rc, float d)
+result renderer_impl::clear_depth(const eflib::rect<size_t>& rc, float d)
 {
 	hfb_->clear_depth(rc, d);
 	return result::ok;
 }
 
-result renderer_impl::clear_stencil(const efl::rect<size_t>& rc, uint32_t s)
+result renderer_impl::clear_stencil(const eflib::rect<size_t>& rc, uint32_t s)
 {
 	hfb_->clear_stencil(rc, s);
 	return result::ok;
@@ -331,7 +331,7 @@ result renderer_impl::clear_stencil(const efl::rect<size_t>& rc, uint32_t s)
 
 result renderer_impl::present()
 {
-	NO_IMPL();
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return result::ok;
 }
 

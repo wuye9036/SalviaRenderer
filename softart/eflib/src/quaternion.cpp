@@ -1,6 +1,6 @@
 #include "../include/math.h"
 
-namespace efl{
+namespace eflib{
 
 quaternion::quaternion(){
 }

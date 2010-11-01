@@ -17,7 +17,7 @@ boost::shared_ptr<syntax_cases> syntax_cases::tcase;
 syntax_cases& syntax_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
-		efl::lifetime_manager::at_main_exit( syntax_cases::release );
+		eflib::lifetime_manager::at_main_exit( syntax_cases::release );
 		tcase.reset( new syntax_cases() );
 		tcase->initialize();
 	}

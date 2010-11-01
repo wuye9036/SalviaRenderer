@@ -14,7 +14,7 @@ const size_t plane_num = 6;
 
 class clipper
 {
-	boost::array<efl::vec4, plane_num>				planes_;
+	boost::array<eflib::vec4, plane_num>				planes_;
 	boost::array<bool, plane_num>					planes_enable_;
 
 public:

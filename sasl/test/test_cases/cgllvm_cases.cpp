@@ -22,7 +22,7 @@ void clear_cgctxt( SYNTAX_(node)& nd ){
 cgllvm_cases& cgllvm_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
-		efl::lifetime_manager::at_main_exit( cgllvm_cases::release );
+		eflib::lifetime_manager::at_main_exit( cgllvm_cases::release );
 		tcase.reset( new cgllvm_cases() );
 		tcase->initialize();
 	}

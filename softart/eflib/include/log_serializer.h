@@ -10,7 +10,7 @@
 #include <fstream>
 #include <ostream>
 
-namespace efl{
+namespace eflib{
 	//实际的log序列化工作
 	//输出格式：
 	//output ::= items

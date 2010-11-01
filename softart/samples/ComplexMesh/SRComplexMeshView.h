@@ -23,7 +23,7 @@
 #define PRESENTER_NAME "d3d9"
 //#define PRESENTER_NAME "d3d11"
 
-using namespace efl;
+using namespace eflib;
 using namespace boost;
 using namespace boost::assign;
 using namespace std;

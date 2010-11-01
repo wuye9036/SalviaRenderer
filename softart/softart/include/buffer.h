@@ -38,7 +38,7 @@ public:
 
 	void transfer(size_t offset, void* psrcdata, size_t stride_dest, size_t stride_src, size_t size, size_t count)
 	{
-		custom_assert(offset + stride_dest * (count - 1) + size <= get_size(), "");
+		EFLIB_ASSERT(offset + stride_dest * (count - 1) + size <= get_size(), "");
 		if( offset + stride_dest * (count - 1) + size > get_size() ) return;
 
 		byte* dest = raw_data(offset);

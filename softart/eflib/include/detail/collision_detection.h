@@ -4,7 +4,7 @@
 #include "../debug_helper.h"
 #include "../math.h"
 
-namespace efl{
+namespace eflib{
 
 	template<class T>
 	struct rect
@@ -15,7 +15,7 @@ namespace efl{
 		}
 
 		rect(T x, T y, T w, T h):x(x), y(y), w(w), h(h){
-			//custom_assert(w > 0 && h > 0, "");
+			//EFLIB_ASSERT(w > 0 && h > 0, "");
 		}
 
 		template<class U>
@@ -31,27 +31,27 @@ namespace efl{
 			return *this;
 		}
 
-		void set_min(efl::vec4& min)
+		void set_min(eflib::vec4& min)
 		{
 			x = (T)(min.x);
 			y = (T)(min.y);
 		}
 
-		void set_max(efl::vec4& max)
+		void set_max(eflib::vec4& max)
 		{
-			custom_assert(max.x > x && max.y > y, "");
+			EFLIB_ASSERT(max.x > x && max.y > y, "");
 			w = (T)(max.x) - x;
 			h = (T)(max.y) - y;
 		}
 
-		efl::vec4 get_min()
+		eflib::vec4 get_min()
 		{
-			return efl::vec4((float)x, (float)y, 0.0f, 0.0f);
+			return eflib::vec4((float)x, (float)y, 0.0f, 0.0f);
 		}
 
-		efl::vec4 get_max()
+		eflib::vec4 get_max()
 		{
-			return efl::vec4(float(x + w), float(y + h), 0.0f, 0.0f);
+			return eflib::vec4(float(x + w), float(y + h), 0.0f, 0.0f);
 		}
 
 		template<class U>

@@ -13,7 +13,7 @@
 #pragma warning(pop)
 #endif
 
-using namespace efl;
+using namespace eflib;
 using namespace std;
 using namespace boost;
 

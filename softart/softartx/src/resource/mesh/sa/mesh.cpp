@@ -23,13 +23,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "eflib/include/debug_helper.h"
 
 using namespace std;
-using namespace efl;
+using namespace eflib;
 using namespace softart;
 BEGIN_NS_SOFTARTX_RESOURCE()
 
 mesh::mesh(softart::renderer* psr)
 {
-	custom_assert(psr, "");
+	EFLIB_ASSERT(psr, "");
 
 	pdev_ = psr;
 }
@@ -49,7 +49,7 @@ size_t mesh::get_face_count()
 
 softart::h_buffer mesh::get_buffer(size_t buf_id)
 {
-	custom_assert(buf_id < get_buffer_count(), "");
+	EFLIB_ASSERT(buf_id < get_buffer_count(), "");
 	
 	if(buf_id < get_buffer_count()){return bufs_[buf_id];}
 	return softart::h_buffer();
@@ -66,12 +66,12 @@ softart::h_buffer mesh::get_vertex_buffer()
 }
 
 void mesh::gen_adjancency(){
-	NO_IMPL();
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 void mesh::render(const softart::input_layout_decl& layout)
 {
-	custom_assert(pdev_, "");
+	EFLIB_ASSERT(pdev_, "");
 	if(!pdev_) return;
 
 	for(size_t i = 0; i < bufs_.size(); ++i){
@@ -100,8 +100,8 @@ void mesh::set_buffer_count(size_t bufcount)
 
 softart::h_buffer mesh::create_buffer(size_t bufid, size_t size)
 {
-	custom_assert(bufid < bufs_.size(), "");
-	custom_assert(pdev_, "");
+	EFLIB_ASSERT(bufid < bufs_.size(), "");
+	EFLIB_ASSERT(pdev_, "");
 
 	if(bufid < bufs_.size() && pdev_){
 		bufs_[bufid] = pdev_->create_buffer(size);
@@ -134,7 +134,7 @@ void mesh::set_index_type(softart::index_type idxtype)
 			idxtype_ = idxtype;
 			break;
 		default:
-			custom_assert(false, "");
+			EFLIB_ASSERT(false, "");
 	}
 }
 

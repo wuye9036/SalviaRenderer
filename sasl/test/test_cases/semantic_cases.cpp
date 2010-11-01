@@ -19,7 +19,7 @@ void clear_semantic( SYNTAX_(node)& nd ){
 semantic_cases& semantic_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
-		efl::lifetime_manager::at_main_exit( semantic_cases::release );
+		eflib::lifetime_manager::at_main_exit( semantic_cases::release );
 		tcase.reset( new semantic_cases() );
 		tcase->initialize();
 	}

@@ -8,12 +8,11 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
+
 #include <eflib/include/debug_helper.h>
 #include <string>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
-
-#define UNIMPLEMENTED(exp, desc) custom_assert( exp, desc )
 
 using namespace std;
 using namespace syntax_tree;
@@ -135,7 +134,7 @@ void llvm_code_generator::visit( buildin_type& v ){
 	}
 
 	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
-	UNIMPLEMENTED( type_ctxt->type, tips.c_str() );
+	EFLIB_ASSERT( type_ctxt->type, tips.c_str() );
 }
 void llvm_code_generator::visit( array_type& ){}
 void llvm_code_generator::visit( struct_type& ){}
@@ -158,8 +157,9 @@ void llvm_code_generator::visit( function_type& v ){
 	v.retval_type->accept( this );
 	const llvm::Type* ret_type = extract_common_ctxt(v.retval_type)->type;
 	
-	UNIMPLEMENTED( ret_type, "ret_type" );
-	if( !ret_type ){ return; }
+	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){
+		return;
+	}
 
 	// Generate paramenter types.
 	vector< const llvm::Type*> param_types;
@@ -169,7 +169,9 @@ void llvm_code_generator::visit( function_type& v ){
 		if ( par_ctxt->type ){
 			param_types.push_back( par_ctxt->type );
 		} else {
-			UNIMPLEMENTED( ret_type, "Error occurs while parameter parsing." );
+			EFLIB_ASSERT_AND_IF( ret_type, "Error occurs while parameter parsing." ){
+				return;
+			}
 		}
 	}
 

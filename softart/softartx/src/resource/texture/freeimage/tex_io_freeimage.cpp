@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <softartx/include/utility/freeimage_utilities.h>
 #include <softart/include/renderer_impl.h>
 #include <softart/include/resource_manager.h>
-#include "eflib/include/eflib.h"
+#include <eflib/include/eflib.h>
 #include <FreeImage.h>
 #include <tchar.h>
 #include <boost/static_assert.hpp>
@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #pragma comment(lib, "freeimage.lib")
 
-using namespace efl;
+using namespace eflib;
 using namespace std;
 using namespace softart;
 using namespace softartx::utility;
@@ -138,7 +138,7 @@ softart::h_texture texture_io_fi::load(softart::renderer* pr, const std::_tstrin
 
 //选取图像的一部分创建纹理。
 softart::h_texture texture_io_fi::load(softart::renderer* pr,
-		FIBITMAP* img, const efl::rect<size_t>& src,
+		FIBITMAP* img, const eflib::rect<size_t>& src,
 		softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height)
 {
 	softart::h_texture ret((texture*)NULL);
@@ -177,7 +177,8 @@ softart::h_texture texture_io_fi::load_cube(softart::renderer* pr, const vector<
 
 	return ret;
 }
-//将表面按照PNG或者HDR格式保存为文件。
+
+// Save surface as PNG or HRD formatted file.
 void texture_io_fi::save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt){
 	FREE_IMAGE_TYPE fit = FIT_UNKNOWN;
 	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
@@ -196,7 +197,7 @@ case pixel_format_color_rgb32f:
 	image = FreeImage_AllocateT(fit, int(surf.get_width()), int(surf.get_height()), 96);
 	break;
 default:
-	custom_assert(false, "暂不支持该格式！");
+	EFLIB_ASSERT(false, "Unsupport format was used！");
 	return;
 	}
 

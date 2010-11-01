@@ -2,7 +2,7 @@
 #include "../include/detail/initialize.h"
 #include "../include/config.h"
 
-namespace efl{
+namespace eflib{
 	namespace detail{
 		void do_init()
 		{
@@ -10,9 +10,9 @@ namespace efl{
 
 			//initialize debug helper
 			#ifndef EFLIB_WINDOWS
-			efl::detail::ProcPreAssert = &efl::detail::ProcPreAssert_Defalut;
+			eflib::detail::ProcPreAssert = &eflib::detail::ProcPreAssert_Defalut;
 			#else
-			efl::detail::ProcPreAssert = &efl::detail::ProcPreAssert_MsgBox;
+			eflib::detail::ProcPreAssert = &eflib::detail::ProcPreAssert_MsgBox;
 			#endif
 		}
 	}

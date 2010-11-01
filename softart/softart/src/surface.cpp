@@ -50,7 +50,7 @@ surface::~surface()
 }
 
 void surface::release(){
-	custom_assert(!is_mapped_, "");
+	EFLIB_ASSERT(!is_mapped_, "");
 	if(is_mapped()){
 		std::vector<byte>().swap(mapped_data_);
 	}
@@ -67,8 +67,8 @@ void surface::map(void** pdata, map_mode mm) const{
 }
 
 void surface::map(void** pdata, map_mode mm){
-	custom_assert(!is_mapped(), "不可重复锁定！");
-	custom_assert(1 == num_samples_, "Can't map a multi-sample surface!");
+	EFLIB_ASSERT(!is_mapped(), "不可重复锁定！");
+	EFLIB_ASSERT(1 == num_samples_, "Can't map a multi-sample surface!");
 
 	if (num_samples_ > 1){
 		*pdata = NULL;
@@ -106,7 +106,7 @@ void surface::unmap() const{
 
 void surface::unmap()
 {
-	custom_assert(is_mapped(), "对未锁定的surface解锁！");
+	EFLIB_ASSERT(is_mapped(), "对未锁定的surface解锁！");
 
 	if(is_write_mode(mm_)){
 		this->tile(mapped_data_);
@@ -118,7 +118,7 @@ void surface::unmap()
 
 void surface::resolve(surface& target)
 {
-	custom_assert(1 == target.get_num_samples(), "Resolve's target can't be a multi-sample surface");
+	EFLIB_ASSERT(1 == target.get_num_samples(), "Resolve's target can't be a multi-sample surface");
 
 	color_rgba32f clr;
 	color_rgba32f tmp;

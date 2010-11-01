@@ -17,7 +17,7 @@
 #include <limits>
 #include <vector>
 
-namespace efl{
+namespace eflib{
 	namespace pool{
 		template <typename ObjectT, int MaxCount, bool IsFreeTogether = true>
 		class stack_pool{

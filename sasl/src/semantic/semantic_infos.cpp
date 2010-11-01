@@ -5,6 +5,8 @@
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node_creation.h>
+
+#include <eflib/include/debug_helper.h>
 #include <string>
 
 using ::sasl::common::token_attr;
@@ -183,7 +185,7 @@ void storage_si::type_info( boost::shared_ptr<type_specifier> val ){
 }
 
 void storage_si::set_and_hold_type_info( boost::shared_ptr<type_specifier> val ){
-	assert(!"Unimplemented!");
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 boost::shared_ptr<type_specifier> type_si::type_info(){
@@ -195,7 +197,7 @@ void type_si::type_info( boost::shared_ptr<type_specifier> val ){
 }
 
 void type_si::set_and_hold_type_info( boost::shared_ptr<type_specifier> val ){
-	assert(!"Unimplemented!");
+	assert(!"EFLIB_ASSERT_UNIMPLEMENTED!");
 }
 
 type_si::type_si(){

@@ -3,7 +3,7 @@
 #ifdef SOFTARTX_FREEIMAGE_ENABLED
 
 using namespace std;
-using namespace efl;
+using namespace eflib;
 using namespace softart;
 
 BEGIN_NS_SOFTARTX_UTILITY()

@@ -43,7 +43,6 @@ set (SOURCE_FILES
 	src/color_convertors.cpp
 	src/cpuinfo.cpp
 	src/default_vertex_cache.cpp
-	src/enums.cpp
 	src/framebuffer.cpp
 	src/index_fetcher.cpp
 	src/pixel_shader.cpp

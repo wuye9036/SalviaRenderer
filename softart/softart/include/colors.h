@@ -10,7 +10,7 @@
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 
-using efl::round;
+using eflib::round;
 
 //内部使用的标准颜色类型，实质上是rgba32f。色彩范围没有归一化。
 struct color_rgba32f
@@ -23,7 +23,7 @@ struct color_rgba32f
 	color_rgba32f(){}
 	color_rgba32f(float r, float g, float b, float a) : r(r), g(g), b(b), a(a){}
 	explicit color_rgba32f(const float* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
-	explicit color_rgba32f(const efl::vec4& v):r(v.x), g(v.y), b(v.z), a(v.w){}
+	explicit color_rgba32f(const eflib::vec4& v):r(v.x), g(v.y), b(v.z), a(v.w){}
 
 	color_rgba32f& operator = (const color_rgba32f& c)
 	{
@@ -39,26 +39,26 @@ struct color_rgba32f
 		return *this;
 	}
 
-	efl::float4* get_pointer()
+	eflib::float4* get_pointer()
 	{
-		custom_assert(is_aligned(this, 16), "");
-		return (efl::float4*)this;
+		EFLIB_ASSERT(is_aligned(this, 16), "");
+		return (eflib::float4*)this;
 	}
 
-	const efl::float4* get_pointer() const
+	const eflib::float4* get_pointer() const
 	{
-		custom_assert(is_aligned(this, 16), "");
-		return (const efl::float4*)this;
+		EFLIB_ASSERT(is_aligned(this, 16), "");
+		return (const eflib::float4*)this;
 	}
 
-	efl::vec4& get_vec4()
+	eflib::vec4& get_vec4()
 	{
-		return (efl::vec4&)(*this);
+		return (eflib::vec4&)(*this);
 	}
 
-	const efl::vec4& get_vec4() const
+	const eflib::vec4& get_vec4() const
 	{
-		return (const efl::vec4&)(*this);
+		return (const eflib::vec4&)(*this);
 	}
 };
 
@@ -233,10 +233,10 @@ private:
 		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 6));
 		*reinterpret_cast<int*>(&r) = _mm_cvtsi128_si32(mi4);
 #else
-		r = comp_t( efl::clamp(rhs.r * 255.0f, 0.0f, 255.0f) );
-		g = comp_t( efl::clamp(rhs.g * 255.0f, 0.0f, 255.0f) );
-		b = comp_t( efl::clamp(rhs.b * 255.0f, 0.0f, 255.0f) );
-		a = comp_t( efl::clamp(rhs.a * 255.0f, 0.0f, 255.0f) );
+		r = comp_t( eflib::clamp(rhs.r * 255.0f, 0.0f, 255.0f) );
+		g = comp_t( eflib::clamp(rhs.g * 255.0f, 0.0f, 255.0f) );
+		b = comp_t( eflib::clamp(rhs.b * 255.0f, 0.0f, 255.0f) );
+		a = comp_t( eflib::clamp(rhs.a * 255.0f, 0.0f, 255.0f) );
 #endif
 
 		return *this;
@@ -289,10 +289,10 @@ private:
 		mi4 = _mm_or_si128(mi4, _mm_srli_si128(mi4, 6));
 		*reinterpret_cast<int*>(&b) = _mm_cvtsi128_si32(mi4);
 #else
-		r = comp_t( efl::clamp(rhs.r * 255.0f + 0.5f, 0.0f, 255.0f) );
-		g = comp_t( efl::clamp(rhs.g * 255.0f + 0.5f, 0.0f, 255.0f) );
-		b = comp_t( efl::clamp(rhs.b * 255.0f + 0.5f, 0.0f, 255.0f) );
-		a = comp_t( efl::clamp(rhs.a * 255.0f + 0.5f, 0.0f, 255.0f) );
+		r = comp_t( eflib::clamp(rhs.r * 255.0f + 0.5f, 0.0f, 255.0f) );
+		g = comp_t( eflib::clamp(rhs.g * 255.0f + 0.5f, 0.0f, 255.0f) );
+		b = comp_t( eflib::clamp(rhs.b * 255.0f + 0.5f, 0.0f, 255.0f) );
+		a = comp_t( eflib::clamp(rhs.a * 255.0f + 0.5f, 0.0f, 255.0f) );
 #endif
 
 		return *this;

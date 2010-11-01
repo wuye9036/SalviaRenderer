@@ -18,7 +18,7 @@ BEGIN_NS_SOFTART()
 //#define USE_TRADITIONAL_RASTERIZER
 
 using namespace std;
-using namespace efl;
+using namespace eflib;
 using namespace boost;
 
 const int TILE_SIZE = 64;
@@ -75,7 +75,7 @@ void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, 
 {
 	uint32_t num_out_clipped_verts;
 	clipper->clip(clipped_verts, num_out_clipped_verts, vp, *pv[0], *pv[1], *pv[2]);
-	custom_assert(num_out_clipped_verts <= 6, "");
+	EFLIB_ASSERT(num_out_clipped_verts <= 6, "");
 
 	num_clipped_verts = (0 == num_out_clipped_verts) ? 0 : (num_out_clipped_verts - 2) * 3;
 
@@ -128,7 +128,7 @@ rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
 		break;
 
 	default:
-		custom_assert(false, "");
+		EFLIB_ASSERT(false, "");
 		break;
 	}
 	switch (desc.fm)
@@ -144,7 +144,7 @@ rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
 		break;
 
 	default:
-		custom_assert(false, "");
+		EFLIB_ASSERT(false, "");
 		break;
 	}
 }
@@ -192,7 +192,7 @@ void rasterizer::initialize(renderer_impl* pparent)
 void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
 	vs_output diff = project(v1) - project(v0);
-	const efl::vec4& dir = diff.position;
+	const eflib::vec4& dir = diff.position;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
 	h_blend_shader hbs = pparent_->get_blend_shader();
@@ -233,8 +233,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		int ex = fast_floori(end->position.x - 0.5f);
 
 		//截取到屏幕内
-		sx = efl::clamp<int>(sx, vpleft, int(vpright - 1));
-		ex = efl::clamp<int>(ex, vpleft, int(vpright));
+		sx = eflib::clamp<int>(sx, vpleft, int(vpright - 1));
+		ex = eflib::clamp<int>(ex, vpleft, int(vpright));
 
 		//设置起点的vs_output
 		vs_output px_start(project(*start));
@@ -290,8 +290,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		int ey = fast_floori(end->position.y - 0.5f);
 
 		//截取到屏幕内
-		sy = efl::clamp<int>(sy, vptop, int(vpbottom - 1));
-		ey = efl::clamp<int>(ey, vptop, int(vpbottom));
+		sy = eflib::clamp<int>(sy, vptop, int(vpbottom - 1));
+		ey = eflib::clamp<int>(ey, vptop, int(vpbottom));
 
 		//设置起点的vs_output
 		vs_output px_start(project(*start));
@@ -338,7 +338,7 @@ void rasterizer::draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint3
 	}
 }
 
-void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const efl::vec3* edge_factors, size_t num_samples){
+void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec3* edge_factors, size_t num_samples){
 	float evalue[3];
 	for (int e = 0; e < 3; ++ e){
 		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
@@ -415,7 +415,7 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 #endif
 }
 
-void rasterizer::subdivide_tile(int left, int top, const efl::rect<uint32_t>& cur_region, const vec3* edge_factors, const bool* mark_x, const bool* mark_y,
+void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const vec3* edge_factors, const bool* mark_x, const bool* mark_y,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max){
 	const uint32_t new_w = std::max<uint32_t>(1, cur_region.w / 2);
 	const uint32_t new_h = std::max<uint32_t>(1, cur_region.h / 2);
@@ -457,7 +457,7 @@ void rasterizer::subdivide_tile(int left, int top, const efl::rect<uint32_t>& cu
 	int accpetions = ~_mm_movemask_ps(mask_acc) & 0xF;
 	unsigned long t;
 	while (_BitScanForward(&t, rejections)){
-		custom_assert(t < 4, "");
+		EFLIB_ASSERT(t < 4, "");
 
 		uint32_t x = cur_region.x + new_w * (t & 1);
 		uint32_t y = cur_region.y + new_h * (t >> 1);
@@ -609,7 +609,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp){
 			const uint32_t packed_region = test_regions[src_stage][ivp];
-			efl::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
+			eflib::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
 				(packed_region >> 16) & 0xFF, (packed_region >> 24) & 0x7F);
 			TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
@@ -768,9 +768,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	e12.position = pvert[2]->position - pvert[1]->position;
 
 	//初始化dxdy
-	float dxdy_01 = efl::equal<float>(e01.position.y, 0.0f) ? 0.0f: e01.position.x / e01.position.y;
-	float dxdy_02 = efl::equal<float>(e02.position.y, 0.0f) ? 0.0f: e02.position.x / e02.position.y;
-	float dxdy_12 = efl::equal<float>(e12.position.y, 0.0f) ? 0.0f: e12.position.x / e12.position.y;
+	float dxdy_01 = eflib::equal<float>(e01.position.y, 0.0f) ? 0.0f: e01.position.x / e01.position.y;
+	float dxdy_02 = eflib::equal<float>(e02.position.y, 0.0f) ? 0.0f: e02.position.x / e02.position.y;
+	float dxdy_12 = eflib::equal<float>(e12.position.y, 0.0f) ? 0.0f: e12.position.x / e12.position.y;
 
 	//计算面积
 	float area = cross_prod2(e02.position.xy(), e01.position.xy());
@@ -907,8 +907,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 				//如果起点大于终点说明scanline中不包含任何像素中心，直接跳过。
 				if ((icx_s <= icx_e) && (icx_s < vpright) && (icx_e >= vpleft)) {
-					icx_s = efl::clamp(icx_s, vpleft, vpright - 1);
-					icx_e = efl::clamp(icx_e, vpleft, vpright - 1);
+					icx_s = eflib::clamp(icx_s, vpleft, vpright - 1);
+					icx_e = eflib::clamp(icx_e, vpleft, vpright - 1);
 
 					float offsetx = icx_s + 0.5f - pvert[0]->position.x;
 
@@ -1014,7 +1014,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 		prim_size = 3;
 		break;
 	default:
-		custom_assert(false, "枚举值无效：无效的Primitive Topology");
+		EFLIB_ASSERT(false, "枚举值无效：无效的Primitive Topology");
 		return;
 	}
 
@@ -1252,7 +1252,7 @@ void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uin
 
 void rasterizer::draw(size_t prim_count){
 
-	custom_assert(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
+	EFLIB_ASSERT(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
 	if(!pparent_) return;
 
 	const size_t num_samples = hfb_->get_num_samples();
@@ -1292,7 +1292,7 @@ void rasterizer::draw(size_t prim_count){
 		state_->triangle_rast_func(prim_size, rasterize_func_);
 		break;
 	default:
-		custom_assert(false, "枚举值无效：无效的Primitive Topology");
+		EFLIB_ASSERT(false, "枚举值无效：无效的Primitive Topology");
 		return;
 	}
 
