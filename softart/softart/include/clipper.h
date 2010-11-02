@@ -2,12 +2,12 @@
 #define SOFTART_CLIPPER_H
 
 #include "decl.h"
-#include "eflib/include/eflib.h"
-
-#include <boost/array.hpp>
-
-#include <vector>
 #include "softart_fwd.h"
+
+#include <eflib/include/math/math.h>
+#include <boost/array.hpp>
+#include <vector>
+
 BEGIN_NS_SOFTART()
 
 const size_t plane_num = 6;

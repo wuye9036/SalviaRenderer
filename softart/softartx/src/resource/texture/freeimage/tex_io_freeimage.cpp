@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <softartx/include/utility/freeimage_utilities.h>
 #include <softart/include/renderer_impl.h>
 #include <softart/include/resource_manager.h>
-#include <eflib/include/eflib.h>
 #include <FreeImage.h>
 #include <tchar.h>
 #include <boost/static_assert.hpp>

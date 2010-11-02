@@ -4,8 +4,8 @@
 #include "../include/buffer.h"
 #include "../include/shader.h"
 
-#include "eflib/include/eflib.h"
-BEGIN_NS_SOFTART()
+BEGIN_NS_SOFTART();
+
 using namespace eflib;
 
 vec4 get_vec4(input_type type, input_register_usage_decl usage, const void* data)

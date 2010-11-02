@@ -5,7 +5,7 @@
 #include "colors_convertors.h"
 #include "enums.h"
 
-#include "eflib/include/math.h"
+#include <eflib/include/math/collision_detection.h>
 
 #include <vector>
 #include "softart_fwd.h"

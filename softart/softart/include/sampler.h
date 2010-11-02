@@ -4,7 +4,7 @@
 #include "../include/colors.h"
 #include "../include/enums.h"
 
-#include "eflib/include/eflib.h"
+#include <eflib/include/platform/typedefs.h>
 #include "softart_fwd.h"
 #include "texture.h"
 BEGIN_NS_SOFTART()

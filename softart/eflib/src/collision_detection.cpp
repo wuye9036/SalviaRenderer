@@ -1,4 +1,6 @@
-#include "../include/detail/collision_detection.h"
+#include <eflib/include/math/collision_detection.h>
+#include <eflib/include/math/math.h>
+
 namespace eflib{
 	template<class T>
 	void min_max(const T& _1, const T& _2, const T& _3, T& min, T& max)

@@ -1,4 +1,4 @@
-#include "eflib/include/util.h"
+#include <eflib/include/metaprog/util.h>
 
 #include "../include/texture.h"
 

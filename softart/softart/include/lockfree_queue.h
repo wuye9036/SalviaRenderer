@@ -1,7 +1,6 @@
 #ifndef SOFTART_LOCKFREE_QUEUE_H
 #define SOFTART_LOCKFREE_QUEUE_H
 
-#include "eflib/include/eflib.h"
 #include "softart/include/atomic.h"
 
 template <typename T>

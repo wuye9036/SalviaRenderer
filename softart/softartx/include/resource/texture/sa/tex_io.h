@@ -31,7 +31,7 @@ Modify Log:
 #include "softart/include/surface.h"
 #include "softart/include/texture.h"
 #include "softart/include/decl.h"
-#include "eflib/include/math.h"
+#include <eflib/include/math/math.h>
 
 BEGIN_NS_SOFTARTX_RESOURCE()
 

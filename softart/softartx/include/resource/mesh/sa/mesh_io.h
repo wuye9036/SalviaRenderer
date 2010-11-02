@@ -28,7 +28,7 @@ Modify Log:
 #define SOFTARTX_MESH_IO_H
 
 #include "mesh.h"
-#include "eflib/include/eflib.h"
+#include <eflib/include/math/vector.h>
 #include <vector>
 
 BEGIN_NS_SOFTARTX_RESOURCE()

@@ -1,7 +1,8 @@
-#include <boost/preprocessor/seq/for_each_i.hpp>
-
 #ifndef SOFTART_TYPE_REGISTER_H
 #define SOFTART_TYPE_REGISTER_H
+
+#include <eflib/include/math/math.h>
+#include <boost/preprocessor/seq/for_each_i.hpp>
 
 	#define BEGIN_REGISTER_TYPE() "type_register.h"
 

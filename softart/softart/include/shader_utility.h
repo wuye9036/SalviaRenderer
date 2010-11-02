@@ -1,9 +1,10 @@
 #ifndef SOFTART_SHADER_UTILITY_H
 #define SOFTART_SHADER_UTILITY_H
 
+#include <eflib/include/platform/typedefs.h>
+
 #include "type_register.h"
 #include "functions_tblhelper.h"
-#include "eflib/include/eflib.h"
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 

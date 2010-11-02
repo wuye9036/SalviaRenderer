@@ -1,6 +1,4 @@
-#include "../include/debug_helper.h"
-#include "../include/detail/initialize.h"
-#include "../include/config.h"
+#include <eflib/include/diagnostics/assert.h>
 
 namespace eflib{
 	namespace detail{

@@ -12,7 +12,7 @@
 #include "softart/include/renderer_impl.h"
 #include "softart/include/resource_manager.h"
 #include "softart/include/rasterizer.h"
-#include "eflib/include/eflib.h"
+#include <eflib/include/metaprog/util.h>
 #include <iostream>
 #include <boost/assign.hpp>
 #include "Timer.h"

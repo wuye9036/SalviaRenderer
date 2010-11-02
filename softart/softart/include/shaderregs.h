@@ -6,7 +6,7 @@
 #include "surface.h"
 #include "renderer_capacity.h"
 
-#include "eflib/include/math.h"
+#include <eflib/include/math/math.h>
 
 #ifdef EFLIB_MSVC
 #pragma warning(push)

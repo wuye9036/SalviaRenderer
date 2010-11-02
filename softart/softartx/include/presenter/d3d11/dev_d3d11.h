@@ -19,11 +19,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #ifndef SOFTARTX_DEV_D3D11_H
 #define SOFTARTX_DEV_D3D11_H
 
+#ifndef NOMINMAX
+#	define NOMINMAX
+#endif
+
 #include <DXGI.h>
 #include <D3D11.h>
 #include "softart/include/presenter_dev.h"
-#include "eflib/include/math.h"
-#include "eflib/include/platform.h"
+#include <eflib/include/math/math.h>
 #include <boost/smart_ptr.hpp>
 
 #define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{

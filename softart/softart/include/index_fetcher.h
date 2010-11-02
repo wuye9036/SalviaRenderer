@@ -3,10 +3,12 @@
 
 #include "decl.h"
 #include "enums.h"
-#include "eflib/include/platform.h"
+
+#include <eflib/include/platform/typedefs.h>
+
 #include "softart_fwd.h"
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SOFTART();
 
 class index_fetcher
 {
@@ -23,6 +25,6 @@ private:
 	uint32_t stride_;
 };
 
-END_NS_SOFTART()
+END_NS_SOFTART();
 
 #endif

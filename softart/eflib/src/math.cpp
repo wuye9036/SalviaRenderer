@@ -1,5 +1,4 @@
-#include "../include/util.h"
-#include "../include/math.h"
+#include <eflib/include/math/math.h>
 
 namespace eflib{
 	vec2 normalize2(const vec2& v)

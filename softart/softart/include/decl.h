@@ -1,7 +1,7 @@
 #ifndef SOFTART_DECL_H
 #define SOFTART_DECL_H
 
-#include "eflib/include/eflib.h"
+#include <eflib/include/platform/config.h>
 #include "handles.h"
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()

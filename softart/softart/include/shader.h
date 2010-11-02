@@ -7,23 +7,16 @@
 #include "renderer_capacity.h"
 #include "enums.h"
 
-#include "eflib/include/eflib.h"
-
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/smart_ptr.hpp>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
 #include <boost/array.hpp>
+#include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
 #include <map>
 #include "softart_fwd.h"
-BEGIN_NS_SOFTART()
 
+BEGIN_NS_SOFTART();
 
 struct viewport;
 struct scanline_info;

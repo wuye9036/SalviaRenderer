@@ -1,5 +1,0 @@
-6. 完成内置运算符的类型匹配
-4. 完成ast_node的等价性测试
-2. 修正parser和ast_node_generator的编译错误
-3. 完成deduction
-5. 完成类型推导

@@ -8,7 +8,7 @@
 #include "../include/vertex_cache.h"
 #include "../include/thread_pool.h"
 
-#include "eflib/include/slog.h"
+#include <eflib/include/diagnostics/log.h>
 
 #include <algorithm>
 #include <boost/format.hpp>

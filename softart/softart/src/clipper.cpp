@@ -3,9 +3,11 @@
 #include "../include/shaderregs_op.h"
 #include "../include/shader.h"
 
-#include <algorithm>
-BEGIN_NS_SOFTART()
+#include <eflib/include/memory/pool.h>
 
+#include <algorithm>
+
+BEGIN_NS_SOFTART();
 
 using namespace eflib;
 using namespace std;

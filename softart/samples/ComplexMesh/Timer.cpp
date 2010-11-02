@@ -1,4 +1,4 @@
-#include "eflib/include/eflib.h"
+#include <eflib/include/platform/typedefs.h>
 
 #include "Timer.h"
 

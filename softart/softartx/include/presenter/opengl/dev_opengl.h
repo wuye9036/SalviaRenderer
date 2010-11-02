@@ -19,9 +19,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #ifndef SOFTARTX_DEV_OPENGL_H
 #define SOFTARTX_DEV_OPENGL_H
 
-#include "softart/include/presenter_dev.h"
-#include "eflib/include/math.h"
-#include "eflib/include/platform.h"
+#include <eflib/include/platform/config.h>
+
+#include <softart/include/presenter_dev.h>
+#include <eflib/include/math/math.h>
 #include <boost/smart_ptr.hpp>
 
 #include <windows.h>

@@ -3,24 +3,12 @@
 
 #include "stdafx.h"
 
-#include "eflib/include/slog.h"
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
+#include <eflib/include/diagnostics/log.h>
+
+#include <eflib/include/platform/disable_warnings.h>
+
 #include <boost/smart_ptr.hpp>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
 
-using namespace eflib;
-using namespace std;
-using namespace boost;
-
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable: 4996 6001 6011 6202 6225 6255 6309 6386 6387)
-#endif
 #include <atlbase.h>
 #include <atlapp.h>
 #include <atlwin.h>
@@ -28,9 +16,12 @@ using namespace boost;
 #include <atlctrls.h>
 #include <atldlgs.h>
 #include <atlctrlw.h>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
+
+#include <eflib/include/platform/enable_warnings.h>
+
+using namespace eflib;
+using namespace std;
+using namespace boost;
 
 #include "resource.h"
 
@@ -69,10 +60,10 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 int main()
 {
 	boost::shared_ptr<_tfstream> hf(new _tfstream("log.txt", ios::out));
-	typedef slog<text_log_serializer> slog_type;
-	log_system<slog_type>::slog_type slog = log_system<slog_type>::instance(hf);
-	slog.begin_log();
-	slog.end_log();
+	typedef eflib::log<text_log_serializer> log_t;
+	log_system<log_t>::log_t logsys = log_system<log_t>::instance(hf);
+	logsys.begin_log();
+	logsys.end_log();
 
 	HRESULT hRes = ::CoInitialize(NULL);
 // If you are running on NT 4.0 or higher you can use the following call instead to 

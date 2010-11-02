@@ -29,7 +29,6 @@ Modify Log:
 #include "softart/include/presenter_dev.h"
 #include "softartx/include/utility/inc_gdiplus.h"
 #include "softart/include/framebuffer.h"
-#include "eflib/include/platform.h"
 #include <tchar.h>
 #include <boost/smart_ptr.hpp>
 #include <algorithm>

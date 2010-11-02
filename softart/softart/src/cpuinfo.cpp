@@ -1,4 +1,4 @@
-#include "eflib/include/eflib.h"
+#include <eflib/include/platform/config.h>
 #include "../include/cpuinfo.h"
 
 #ifdef EFLIB_WINDOWS
@@ -7,8 +7,10 @@
 #	endif
 #include <windows.h>
 #endif
-BEGIN_NS_SOFTART()
 
+#include <algorithm>
+
+BEGIN_NS_SOFTART()
 
 uint32_t num_cpu_cores()
 {

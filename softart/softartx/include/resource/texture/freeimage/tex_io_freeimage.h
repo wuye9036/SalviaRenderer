@@ -32,7 +32,7 @@ Modify Log:
 #include <softartx/include/resource/texture/sa/tex_io.h>
 #include <softart/include/colors.h>
 #include <softart/include/decl.h>
-#include <eflib/include/math.h>
+#include <eflib/include/math/math.h>
 #include <vector>
 
 struct FIBITMAP;

@@ -1,23 +1,16 @@
 #ifndef SOFTART_THREAD_POOL_H
 #define SOFTART_THREAD_POOL_H
 
-#include "eflib/include/platform.h"
+#include <eflib/include/platform/config.h>
 
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable: 4244 4267 4512)
-#endif
+#include <eflib/include/platform/disable_warnings.h>
 #include "boost/threadpool.hpp"
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
+#include <eflib/include/platform/disable_warnings.h>
 
 #include "softart_fwd.h"
-BEGIN_NS_SOFTART()
 
-
+BEGIN_NS_SOFTART();
 boost::threadpool::pool& global_thread_pool();
-
-END_NS_SOFTART()
+END_NS_SOFTART();
 
 #endif

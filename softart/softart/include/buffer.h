@@ -1,22 +1,20 @@
 #ifndef SOFTART_BUFFER_H
 #define SOFTART_BUFFER_H
 
-#include "eflib/include/eflib.h"
 #include "enums.h"
 
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
+#include <eflib/include/platform/typedefs.h>
+#include <eflib/include/diagnostics/assert.h>
+
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/shared_ptr.hpp>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
+#include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
 
 #include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+
+BEGIN_NS_SOFTART();
 
 class buffer
 {

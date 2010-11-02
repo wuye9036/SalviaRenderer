@@ -32,7 +32,6 @@ Modify Log:
 #include "softartx/include/resource/mesh/sa/mesh.h"
 #include "softartx/include/utility/d3d9_utilities.h"
 #include "softart/include/decl.h"
-#include "eflib/include/stl_utilities.h"
 
 BEGIN_NS_SOFTARTX_RESOURCE()
 

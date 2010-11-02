@@ -1,7 +1,7 @@
 #ifndef SOFTART_ATOMIC_H
 #define SOFTART_ATOMIC_H
 
-#include "eflib/include/eflib.h"
+#include <eflib/include/platform/config.h>
 
 #ifdef EFLIB_WINDOWS
 #	ifndef NOMINMAX

@@ -8,7 +8,7 @@ option(SOFTART_BUILD_WITH_UNICODE "Build with unicode(wide-byte) or ansi(multi-b
 #set(CMAKE_USE_RELATIVE_PATHS TRUE)
 
 set( SOFTART_HOME_PATH ${CMAKE_HOME_DIRECTORY} )
-
+set( EFLIB_HOME_PATH ${SOFTART_HOME_PATH} )
 include(${CMAKE_HOME_DIRECTORY}/cmake/SystemInfo.cmake)
 
 if(MSVC)

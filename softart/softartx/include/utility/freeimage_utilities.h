@@ -7,7 +7,8 @@
 
 #include "utility_forward.h"
 #include "softart/include/colors.h"
-#include "eflib/include/eflib.h"
+#include <eflib/include/string/string.h>
+#include <eflib/include/math/collision_detection.h>
 #include <FreeImage.h>
 #include <boost/static_assert.hpp>
 #include <algorithm>

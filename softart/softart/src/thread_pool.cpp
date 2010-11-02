@@ -1,15 +1,11 @@
-#include "eflib/include/eflib.h"
-
+#include <eflib/include/platform/config.h>
 #include "../include/cpuinfo.h"
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
+
+#include <eflib/include/platform/disable_warnings.h>
 #include "../include/thread_pool.h"
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
-BEGIN_NS_SOFTART()
+#include <eflib/include/platform/enable_warnings.h>
+
+BEGIN_NS_SOFTART();
 
 boost::threadpool::pool& global_thread_pool()
 {
@@ -17,4 +13,4 @@ boost::threadpool::pool& global_thread_pool()
 	return tp;
 }
 
-END_NS_SOFTART()
+END_NS_SOFTART();

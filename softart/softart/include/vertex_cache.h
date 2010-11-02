@@ -3,11 +3,6 @@
 
 #include "decl.h"
 
-#include "eflib/include/eflib.h"
-
-#include <vector>
-#include <utility>
-
 #include "renderer.h"
 #include "render_stage.h"
 #include "index_fetcher.h"
@@ -15,9 +10,12 @@
 
 #include <boost/pool/pool.hpp>
 
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <vector>
+#include <utility>
 
+#include "softart_fwd.h"
+
+BEGIN_NS_SOFTART();
 
 class stream_assembler;
 

@@ -21,9 +21,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include "softart/include/presenter_dev.h"
 #include "softartx/include/utility/d3d9_utilities.h"
-#include "eflib/include/math.h"
-#include "eflib/include/platform.h"
-#include <boost/smart_ptr.hpp>
+#include <eflib/include/math/math.h>
+#include <boost/shared_ptr.hpp>
 
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")

@@ -5,22 +5,17 @@
 #include "../include/enums.h"
 #include "../include/colors.h"
 
-#include "eflib/include/eflib.h"
+#include <eflib/include/math/collision_detection.h>
 
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/smart_ptr.hpp>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
 #include <boost/any.hpp>
+#include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
 #include "softart_fwd.h"
-BEGIN_NS_SOFTART()
 
+BEGIN_NS_SOFTART();
 
 struct viewport{
 	float x;

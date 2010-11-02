@@ -4,12 +4,9 @@
 
 #include "stdafx.h"
 
-#include "eflib/include/eflib.h"
+#include <eflib/include/platform/config.h>
 
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable: 6001 6011 6202 6225 6255 6309 6386 6387)
-#endif
+#include <eflib/include/platform/disable_warnings.h>
 #include <atlbase.h>
 #include <atlapp.h>
 #include <atlwin.h>
@@ -17,9 +14,7 @@
 #include <atlctrls.h>
 #include <atldlgs.h>
 #include <atlctrlw.h>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
+#include <eflib/include/platform/enable_warnings.h>
 
 #if (_ATL_VER < 0x0700)
 #include <atlimpl.cpp>

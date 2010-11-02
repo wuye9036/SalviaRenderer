@@ -5,7 +5,8 @@
 *  该文件定义了颜色类与基本的颜色变换、分量获取等操作。
 *****************************************************************/
 
-#include "eflib/include/eflib.h"
+#include <eflib/include/math/math.h>
+#include <eflib/include/math/vector.h>
 #include <boost/type_traits.hpp>
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()

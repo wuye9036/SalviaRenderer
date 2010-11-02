@@ -3,7 +3,7 @@
 
 #include "softart/include/decl.h"
 
-#include "eflib/include/math.h"
+#include <eflib/include/math/math.h>
 #include "softart_fwd.h"
 BEGIN_NS_SOFTART()
 
