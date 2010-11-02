@@ -1,10 +1,10 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 

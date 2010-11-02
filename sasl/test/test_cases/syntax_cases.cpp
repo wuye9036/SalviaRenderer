@@ -4,10 +4,10 @@
 #include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>
-#include <eflib/include/detail/memory.h>
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/memory/lifetime_manager.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/thread.hpp>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 using namespace ::sasl::syntax_tree;
 

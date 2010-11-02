@@ -8,7 +8,7 @@
 #include <sasl/enums/operators.h>
 #include <sasl/enums/type_qualifiers.h>
 #include <sasl/include/syntax_tree/node_creation.h>
-#include <eflib/include/boostext.h>
+#include <eflib/include/metaprog/enable_if.h>
 #include <boost/any.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/find.hpp>

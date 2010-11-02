@@ -1,7 +1,7 @@
 #ifndef SASL_TEST_TEST_CASES_CGLLVM_CASES_H
 #define SASL_TEST_TEST_CASES_CGLLVM_CASES_H
 
-#include <eflib/include/config.h>
+#include <eflib/include/platform/config.h>
 
 #include <sasl/test/test_cases/utility.h>
 #include <sasl/include/common/compiler_info_manager.h>
@@ -12,9 +12,9 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <boost/shared_ptr.hpp>
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/thread.hpp>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 class cgllvm_cases{
 public:

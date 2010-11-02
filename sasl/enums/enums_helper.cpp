@@ -1,9 +1,9 @@
 #include <sasl/enums/enums_helper.h>
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/operators.h>
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 bool sasl_ehelper::is_none( const buildin_type_code& btc ){
 	return btc == buildin_type_code::none;

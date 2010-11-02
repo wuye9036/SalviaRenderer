@@ -1,9 +1,9 @@
 #ifndef SASL_ENUMS_ENUMS_HELPER_H
 #define SASL_ENUMS_ENUMS_HELPER_H
 
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/thread/mutex.hpp>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 #include <string>
 #include <vector>
 

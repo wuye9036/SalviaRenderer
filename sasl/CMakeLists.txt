@@ -16,7 +16,7 @@ include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigurePath.cmake)
 
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/Environment.cmake)
 set_environment()
-
+set ( EFLIB_HOME_PATH ${SOFTART_HOME_DIR} )
 ADD_DEFINITIONS(
 	-DBOOST_ALL_DYN_LINK
 )

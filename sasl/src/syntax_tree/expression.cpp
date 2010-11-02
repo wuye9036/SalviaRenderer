@@ -1,8 +1,8 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/visitor.h>
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 using namespace boost;
 using namespace boost::assign;

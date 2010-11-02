@@ -3,8 +3,9 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
-#include <eflib/include/boostext.h>
+#include <eflib/include/metaprog/enable_if.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/type_traits.hpp>
 #include <vector>
 
 BEGIN_NS_SASL_SYNTAX_TREE();

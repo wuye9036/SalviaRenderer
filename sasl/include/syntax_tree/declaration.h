@@ -6,7 +6,7 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/syntax_node_types.h>
 #include <sasl/enums/type_qualifiers.h>
-#include <eflib/include/boostext.h>
+#include <eflib/include/metaprog/enable_if.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 

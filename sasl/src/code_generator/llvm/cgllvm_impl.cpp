@@ -9,7 +9,7 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
 
-#include <eflib/include/debug_helper.h>
+#include <eflib/include/diagnostics/assert.h>
 #include <string>
 
 BEGIN_NS_SASL_CODE_GENERATOR();

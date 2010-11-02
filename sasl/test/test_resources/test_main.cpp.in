@@ -7,14 +7,14 @@
 #	include <llvm/Support/ManagedStatic.h>
 #endif
 
-#include <eflib/include/detail/memory.h>
+#include <eflib/include/memory/lifetime_manager.h>
 
 int BOOST_TEST_CALL_DECL
 main( int argc, char* argv[] )
 {
 	int ret = 0;
 	{
-		efl::lifetime_manager lfmgr;
+		eflib::lifetime_manager lfmgr;
 		ret = ::boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
 	}
 	system("pause");

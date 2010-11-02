@@ -3,7 +3,7 @@
 
 #include <functional>
 #include <string>
-#include <eflib/include/platform.h>
+#include <eflib/include/platform/typedefs.h>
 
 template<typename DerivedT, typename StorageT>
 struct value_op{
@@ -85,11 +85,11 @@ public:
 		((DerivedT*)this)->val_ ^= rhs.val_;
 		return *(static_cast<DerivedT* const>(this));
 	}
-	
+
 	bool included( const DerivedT& rhs ) const{
 		return (((DerivedT*)this)->val_ & rhs.val_) == rhs.val_;
 	}
-	
+
 	bool excluded( const DerivedT& rhs ) const{
 		return ((DerivedT*)this)->val_ & rhs.val_ == (typename Derived::storage_type)0;
 	}
@@ -107,7 +107,7 @@ public:
 	typedef DerivedT this_type;
 	typedef StorageT storage_type;
 	typedef enum_base<DerivedT, StorageT> base_type;
-	
+
 protected:
 	StorageT val_;
 	enum_base( const StorageT& val):val_(val){

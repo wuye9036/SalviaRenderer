@@ -1,6 +1,6 @@
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Module.h>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/test/test_cases/cgllvm_cases.h>

@@ -13,10 +13,10 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
 
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/thread.hpp>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 #include <cassert>
 

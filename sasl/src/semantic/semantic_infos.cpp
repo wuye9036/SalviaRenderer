@@ -6,7 +6,7 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 
-#include <eflib/include/debug_helper.h>
+#include <eflib/include/diagnostics/assert.h>
 #include <string>
 
 using ::sasl::common::token_attr;

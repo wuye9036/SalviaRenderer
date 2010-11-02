@@ -1,8 +1,8 @@
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Module.h>
 #include <llvm/Function.h>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 #include <sasl/test/test_cases/cgllvm_cases.h>
 #include <sasl/test/test_cases/semantic_cases.h>
 #include <sasl/test/test_cases/syntax_cases.h>

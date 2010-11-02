@@ -1,6 +1,6 @@
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <LLVM/Support/IRBuilder.h>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
 

@@ -2,10 +2,10 @@
 
 #include <sasl/include/syntax_tree/node.h>
 
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 #include <algorithm>
 
 using namespace std;

@@ -4,11 +4,11 @@
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
 
-#include <eflib/include/disable_warnings.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
-#include <eflib/include/enable_warnings.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 #include <boost/shared_ptr.hpp>
 #include <string>

@@ -2,7 +2,7 @@
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/utility.h>
-#include <eflib/include/detail/memory.h>
+#include <eflib/include/memory/lifetime_manager.h>
 
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
