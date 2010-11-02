@@ -34,12 +34,9 @@ set (SOURCE_FILES
 	src/assert.cpp
 	src/lifetime_manager.cpp
 	src/initialize.cpp
-	src/log_serializer.cpp
 	src/math.cpp
 	src/quaternion.cpp
-	src/log.cpp
 	src/string.cpp
-	src/memory.cpp
 )
 
 ADD_LIBRARY( EFLIB STATIC
