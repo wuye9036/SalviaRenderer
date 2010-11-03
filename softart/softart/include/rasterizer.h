@@ -6,7 +6,6 @@
 #include "shader.h"
 #include "framebuffer.h"
 #include "atomic.h"
-#include "lockfree_queue.h"
 
 #include <boost/array.hpp>
 #include <boost/function.hpp>
@@ -80,9 +79,9 @@ class rasterizer : public render_stage
 
 	void geometry_setup_func(uint32_t* num_clipped_prims, vs_output* clipped_verts, uint32_t* cliped_indices,
 		int32_t prim_count, primitive_topology primtopo, atomic<int32_t>& working_package, int32_t package_size);
-	void dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, const uint32_t* clipped_indices,
+	void dispatch_primitive_func(std::vector<std::vector<uint32_t> >& tiles, const uint32_t* clipped_indices,
 		const vs_output* clipped_verts_full, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size);
-	void rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x, const uint32_t* clipped_indices, const vs_output* clipped_verts_full,
+	void rasterize_primitive_func(std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x, const uint32_t* clipped_indices, const vs_output* clipped_verts_full,
 		const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size);
 	void compact_clipped_verts_func(uint32_t* clipped_indices, const uint32_t* cliiped_indices_full,
 		const uint32_t* addresses, const uint32_t* num_clipped_prims, int32_t prim_count, atomic<int32_t>& working_package, int32_t package_size);

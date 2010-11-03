@@ -1128,7 +1128,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 	}
 }
 
-void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles,
+void rasterizer::dispatch_primitive_func(std::vector<std::vector<uint32_t> >& tiles,
 		const uint32_t* clipped_indices, const vs_output* clipped_verts_full, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size){
 
 	const viewport& vp = pparent_->get_viewport();
@@ -1136,7 +1136,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
-	
+
 	float x_min;
 	float x_max;
 	float y_min;
@@ -1182,7 +1182,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 			const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1, num_tiles_y);
 			if ((sx + 1 == ex) && (sy + 1 == ey)){
 				// Small primitive
-				tiles[sy * num_tiles_x + sx].enqueue(i << 1);
+				tiles[sy * num_tiles_x + sx].push_back(i << 1);
 			}
 			else{
 				if (3 == stride){
@@ -1217,7 +1217,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 							}
 
 							if (!rejection){
-								tiles[y * num_tiles_x + x].enqueue((i << 1) | acception);
+								tiles[y * num_tiles_x + x].push_back((i << 1) | acception);
 							}
 						}
 					}
@@ -1225,7 +1225,7 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 				else{
 					for (int y = sy; y < ey; ++ y){
 						for (int x = sx; x < ex; ++ x){
-							tiles[y * num_tiles_x + x].enqueue(i << 1);
+							tiles[y * num_tiles_x + x].push_back(i << 1);
 						}
 					}
 				}
@@ -1236,10 +1236,10 @@ void rasterizer::dispatch_primitive_func(std::vector<lockfree_queue<uint32_t> >&
 	}
 }
 
-void rasterizer::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >& tiles, int num_tiles_x,
+void rasterizer::rasterize_primitive_func(std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x,
 		const uint32_t* clipped_indices, const vs_output* clipped_verts_full, const h_pixel_shader& pps, atomic<int32_t>& working_package, int32_t package_size)
 {
-	const int32_t num_tiles = static_cast<int32_t>(tiles.size());
+	const int32_t num_tiles = static_cast<int32_t>(thread_tiles[0].size());
 	const int32_t num_packages = (num_tiles + package_size - 1) / package_size;
 
 	const viewport& vp = pparent_->get_viewport();
@@ -1255,18 +1255,18 @@ void rasterizer::rasterize_primitive_func(std::vector<lockfree_queue<uint32_t> >
 		const int32_t start = local_working_package * package_size;
 		const int32_t end = min(num_tiles, start + package_size);
 		for (int32_t i = start; i < end; ++ i){
-			lockfree_queue<uint32_t>& prims = tiles[i];
-
-			std::vector<uint32_t> sorted_prims;
-			prims.dequeue_all(std::back_insert_iterator<std::vector<uint32_t> >(sorted_prims));
-			std::sort(sorted_prims.begin(), sorted_prims.end());
+			std::vector<uint32_t> prims;
+			for (size_t j = 0; j < thread_tiles.size(); ++ j){
+				prims.insert(prims.end(), thread_tiles[j][i].begin(), thread_tiles[j][i].end());
+			}
+			std::sort(prims.begin(), prims.end());
 
 			int y = i / num_tiles_x;
 			int x = i - y * num_tiles_x;
 			tile_vp.x = static_cast<float>(x * TILE_SIZE);
 			tile_vp.y = static_cast<float>(y * TILE_SIZE);
 
-			rasterize_func_(this, clipped_indices, clipped_verts_full, sorted_prims, tile_vp, pps);
+			rasterize_func_(this, clipped_indices, clipped_verts_full, prims, tile_vp, pps);
 		}
 
 		local_working_package = working_package ++;
@@ -1355,7 +1355,6 @@ void rasterizer::draw(size_t prim_count){
 	const viewport& vp = pparent_->get_viewport();
 	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
 	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
-	std::vector<lockfree_queue<uint32_t> > tiles(num_tiles_x * num_tiles_y);
 
 	atomic<int32_t> working_package(0);
 	size_t num_threads = num_available_threads();
@@ -1391,14 +1390,17 @@ void rasterizer::draw(size_t prim_count){
 			&num_clipped_verts[0], static_cast<int32_t>(prim_count), boost::ref(working_package), COMPACT_CLIPPED_VERTS_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
+	std::vector<std::vector<std::vector<uint32_t> > > thread_tiles(num_threads);
 	working_package = 0;
 	edge_factors_.resize(num_clipped_indices / prim_size * 3);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
-		global_thread_pool().schedule(boost::bind(&rasterizer::dispatch_primitive_func, this, boost::ref(tiles),
+		thread_tiles[i].resize(num_tiles_x * num_tiles_y);
+		global_thread_pool().schedule(boost::bind(&rasterizer::dispatch_primitive_func, this, boost::ref(thread_tiles[i]),
 			&clipped_indices[0], &clipped_verts_full[0], static_cast<int32_t>(num_clipped_indices / prim_size),
 			prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
 	}
-	dispatch_primitive_func(boost::ref(tiles),
+	thread_tiles[num_threads - 1].resize(num_tiles_x * num_tiles_y);
+	dispatch_primitive_func(boost::ref(thread_tiles[num_threads - 1]),
 		&clipped_indices[0], &clipped_verts_full[0], static_cast<int32_t>(num_clipped_indices / prim_size),
 		prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
@@ -1409,10 +1411,10 @@ void rasterizer::draw(size_t prim_count){
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		// create pixel_shader clone per thread from hps
 		ppps[i] = hps->create_clone();
-		global_thread_pool().schedule(boost::bind(&rasterizer::rasterize_primitive_func, this, boost::ref(tiles),
+		global_thread_pool().schedule(boost::bind(&rasterizer::rasterize_primitive_func, this, boost::ref(thread_tiles),
 			num_tiles_x, &clipped_indices[0], &clipped_verts_full[0], ppps[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
 	}
-	rasterize_primitive_func(boost::ref(tiles), num_tiles_x, &clipped_indices[0], &clipped_verts_full[0], hps, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
+	rasterize_primitive_func(boost::ref(thread_tiles), num_tiles_x, &clipped_indices[0], &clipped_verts_full[0], hps, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 	// destroy all pixel_shader clone
 	for (size_t i = 0; i < num_threads - 1; ++ i){
