@@ -14,6 +14,11 @@ const eflib::vec4& vs_input::operator [](size_t i) const
 
 eflib::vec4& vs_input::operator[](size_t i)
 {
+	if (num_used_attribute_ < i + 1)
+	{
+		num_used_attribute_ = static_cast<uint32_t>(i + 1);
+	}
+
 	return attributes_[i];
 }
 

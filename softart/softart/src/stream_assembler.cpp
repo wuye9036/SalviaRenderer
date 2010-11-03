@@ -64,7 +64,7 @@ vs_input stream_assembler::fetch_vertex(size_t idx)
 			return rv;
 		}
 		
-		h_buffer hb = streams_[sidx];
+		const h_buffer& hb = streams_[sidx];
 		EFLIB_ASSERT(hb, "");
 		if(!hb) return rv;
 

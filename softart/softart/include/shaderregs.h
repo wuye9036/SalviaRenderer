@@ -28,23 +28,31 @@ public:
 	const eflib::vec4& operator [](size_t i) const;
 	eflib::vec4& operator[](size_t i);
 
-	vs_input(){}
-	
-	vs_input(vsinput_attributes_t& attrs)
-		:attributes_(attrs)
+	vs_input()
+		: num_used_attribute_(0)
 	{}
+	
+	vs_input(vsinput_attributes_t& attrs, uint32_t num_used_attribute)
+		: num_used_attribute_(num_used_attribute)
+	{
+		memcpy(&attributes_[0], &attrs[0], num_used_attribute_ * sizeof(attributes_[0]));
+	}
 
 	vs_input(const vs_input& rhs)
-		:attributes_(rhs.attributes_)
-	{}
+		: num_used_attribute_(rhs.num_used_attribute_)
+	{
+		memcpy(&attributes_[0], &rhs.attributes_[0], num_used_attribute_ * sizeof(attributes_[0]));
+	}
 
 	vs_input& operator = (const vs_input& rhs)
 	{
-		attributes_ = rhs.attributes_;
+		num_used_attribute_ = rhs.num_used_attribute_;
+		memcpy(&attributes_[0], &rhs.attributes_[0], num_used_attribute_ * sizeof(attributes_[0]));
 	}
 
 protected:
 	vsinput_attributes_t attributes_;
+	uint32_t num_used_attribute_;
 };
 
 class vs_output
