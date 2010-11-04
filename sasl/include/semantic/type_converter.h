@@ -37,6 +37,8 @@ public:
 
 	conv_type convert( boost::shared_ptr<::sasl::syntax_tree::node> dest,
 		boost::shared_ptr<::sasl::syntax_tree::node> src );
+	conv_type convert( boost::shared_ptr<::sasl::syntax_tree::type_specifier> desttype,
+		boost::shared_ptr<::sasl::syntax_tree::node> src );
 
 private:
 	typedef boost::tuples::tuple<

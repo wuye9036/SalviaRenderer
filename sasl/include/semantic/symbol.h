@@ -41,6 +41,9 @@ class type_converter;
 //////////////////////////////////////////////////////////////////////////
 class symbol{
 public:
+	typedef std::vector< boost::shared_ptr<symbol> > overloads_t;
+	typedef overloads_t::iterator overloads_iterator_t;
+
 	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node );
 
 	boost::shared_ptr<symbol> find( const std::string& name ) const;

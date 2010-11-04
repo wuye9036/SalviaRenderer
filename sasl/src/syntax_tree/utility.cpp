@@ -189,4 +189,11 @@ void follow_up_traversal( boost::shared_ptr<node> root, boost::function<void( no
 	}
 }
 
+boost::shared_ptr<buildin_type> create_buildin_type( const buildin_type_code& btc )
+{
+	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
+	ret->value_typecode = btc;
+	return ret;
+}
+
 END_NS_SASL_SYNTAX_TREE();

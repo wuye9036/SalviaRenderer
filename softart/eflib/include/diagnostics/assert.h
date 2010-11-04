@@ -15,7 +15,13 @@
 					}\
 				}
 
-// e.g. EFLIB_ASSERT_AND_IF( false, "Assert!" ){
+//	e.g.
+//		EFLIB_ASSERT_AND_IF( expr, "Assert!" ){
+//			return 0;
+//		}
+//	means
+//		assert( expr && !"Assert!" );
+//		if( !expr ){
 //			return 0;
 //		}
 #	define EFLIB_ASSERT_AND_IF( expr, desc ) \

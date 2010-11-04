@@ -10,6 +10,7 @@
 #include <boost/function.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 #include <vector>
+
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 //////////////////////////////////////////////////////////////////////////
@@ -69,6 +70,8 @@ void follow_up_traversal(
 	boost::function<void( node& )> on_visit
 	);
 
+// node creators
+boost::shared_ptr<buildin_type> create_buildin_type( const buildin_type_code& btc );
 
 END_NS_SASL_SYNTAX_TREE();
 

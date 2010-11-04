@@ -1,29 +1,40 @@
-#include <sasl/enums/enums_helper.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
-#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+
+#include <sasl/enums/enums_helper.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
+#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
+#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/type_checker.h>
+#include <sasl/include/semantic/type_converter.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <boost/assign/std/vector.hpp>
 #include <string>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 using namespace std;
 using namespace syntax_tree;
+using namespace boost::assign;
 using namespace llvm;
 
 using semantic::const_value_si;
 using semantic::extract_semantic_info;
 using semantic::symbol;
+using semantic::type_equal;
+using semantic::operator_name;
 using semantic::type_info_si;
 
 typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
+
+#define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::##typecode )
 
 //////////////////////////////////////////////////////////////////////////
 // utility functions.
@@ -53,6 +64,7 @@ static common_ctxt_handle parent_ctxt( boost::shared_ptr<NodeT> v ){
 	}
 	return common_ctxt_handle();
 }
+
 //////////////////////////////////////////////////////////////////////////
 //
 llvm_code_generator::llvm_code_generator( )
@@ -72,15 +84,52 @@ void llvm_code_generator::visit( binary_expression& v){
 	boost::shared_ptr<type_specifier> ltype = extract_semantic_info<type_info_si>(v.left_expr)->type_info();
 	boost::shared_ptr<type_specifier> rtype = extract_semantic_info<type_info_si>(v.right_expr)->type_info();
 
+	EFLIB_ASSERT_AND_IF( 
+		( is_node_class(ltype, buildin_type ) && is_node_class(rtype, buildin_type ) ),
+		"Operators of buildin type are supported only." )
+	{
+		return;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// type conversation for matching the operator prototype
+
+	// get an overloadable prototype.
+	std::vector< boost::shared_ptr<expression> > args;
+	args += v.left_expr, v.right_expr;
+
+	symbol::overloads_t overloads 
+		= v.symbol()->find_overloads( operator_name( v.op ), typeconv, args );
+	
+	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
+		return;
+	}
+	EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
+		return;
+	}
+
+	boost::shared_ptr<function_type> op_proto = overloads[0]->node()->typed_handle<function_type>();
+
+	// convert value type to match proto type.
+	if( ! type_equal( op_proto->params[0]->param_type, ltype ) ){
+		typeconv->convert( op_proto->params[0]->param_type, v.left_expr );
+	}
+	if( ! type_equal( op_proto->params[0]->param_type, rtype ) ){
+		typeconv->convert( op_proto->params[0]->param_type, v.right_expr );
+	}
+
+	// use type-converted value to generate code.
 	Value* lval = extract_common_ctxt( v.left_expr )->val;
 	Value* rval = extract_common_ctxt( v.right_expr )->val;
 
-	// generate code
-	if ( !( ltype->node_class() == syntax_node_types::buildin_type && ltype->node_class() == syntax_node_types::buildin_type ) ){
-		assert( !"Not be supportted yet" );
-	}
 	if (v.op == operators::add){
-		get_common_ctxt(v)->val = ctxt->builder()->CreateAdd( lval, rval, "fuck" );
+		get_common_ctxt(v)->val = ctxt->builder()->CreateAdd( lval, rval, "" );
+	} else if ( v.op == operators::sub ){
+		get_common_ctxt(v)->val = ctxt->builder()->CreateSub( lval, rval, "" );
+	} else if ( v.op == operators::mul ){
+		get_common_ctxt(v)->val = ctxt->builder()->CreateMul( lval, rval, "" );
+	} else if ( v.op == operators::div ){
+		EFLIB_INTERRUPT( "Division is not supported yet." );
 	}
 }
 void llvm_code_generator::visit( expression_list& ){}
@@ -96,7 +145,7 @@ void llvm_code_generator::visit( constant_expression& v ){
 	if( c_si->value_type() == buildin_type_code::_sint32 ){
 		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
 	} else {
-		assert( !"Not implemented yet.");
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 }
 
@@ -248,6 +297,7 @@ void llvm_code_generator::visit( program& v ){
 
 	ctxt = create_codegen_context<cgllvm_global_context>(v.handle());
 	ctxt->create_module( v.name );
+	typeconv = create_type_converter( ctxt->builder() );
 
 	for( vector< boost::shared_ptr<declaration> >::iterator
 		it = v.decls.begin(); it != v.decls.end(); ++it ){

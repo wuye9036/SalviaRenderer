@@ -13,6 +13,12 @@
 #include <boost/shared_ptr.hpp>
 #include <string>
 
+namespace sasl{
+	namespace semantic{
+		class type_converter;
+	}
+}
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_global_context;
@@ -69,6 +75,7 @@ public:
 	boost::shared_ptr<llvm_code> generated_module();
 private:
 	boost::shared_ptr<cgllvm_global_context> ctxt;
+	boost::shared_ptr<::sasl::semantic::type_converter> typeconv;
 };
 
 END_NS_SASL_CODE_GENERATOR()

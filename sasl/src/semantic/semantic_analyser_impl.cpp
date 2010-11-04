@@ -32,6 +32,7 @@ using ::sasl::common::token_attr;
 
 using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::buildin_type;
+using ::sasl::syntax_tree::create_buildin_type;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::declaration;
 using ::sasl::syntax_tree::expression;
@@ -53,11 +54,6 @@ using namespace std;
 using namespace boost::assign;
 
 // utility functions
-boost::shared_ptr<buildin_type> create_buildin_type( buildin_type_code btc ){
-	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
-	ret->value_typecode = btc;
-	return ret;
-}
 
 boost::shared_ptr<type_specifier> type_info_of( boost::shared_ptr<node> n ){
 	boost::shared_ptr<type_info_si> typesi = extract_semantic_info<type_info_si>( n );
