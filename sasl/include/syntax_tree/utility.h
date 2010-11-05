@@ -6,6 +6,7 @@
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <eflib/include/platform/disable_warnings.h>
+#include <boost/any.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/function.hpp>
 #include <eflib/include/platform/enable_warnings.h>
@@ -67,7 +68,7 @@ void list_of_buildin_type( ContainerT& cont, const PredT& pred ){
 
 void follow_up_traversal(
 	boost::shared_ptr<node> root,
-	boost::function<void( node& )> on_visit
+	boost::function<void( node&, ::boost::any* )> on_visit
 	);
 
 // node creators

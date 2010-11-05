@@ -9,7 +9,7 @@ using sasl::syntax_tree::node;
 boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr<node> root ){
 	if ( root && root->node_class() == syntax_node_types::program ){
 		llvm_code_generator cg;
-		root->accept(&cg);
+		root->accept(&cg, NULL);
 		return cg.generated_module();
 	}
 	return boost::shared_ptr<llvm_code>();

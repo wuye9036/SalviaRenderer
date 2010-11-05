@@ -9,7 +9,7 @@ using ::sasl::common::compiler_info_manager;
 
 void semantic_analysis( boost::shared_ptr<node> root, boost::shared_ptr<compiler_info_manager> cinfo_mgr ){
 	semantic_analyser_impl saimpl( cinfo_mgr );
-	root->accept(&saimpl);
+	root->accept(&saimpl, NULL);
 }
 
 END_NS_SASL_SEMANTIC();

@@ -7,13 +7,15 @@
 #include <sasl/include/syntax_tree/utility.h>
 #include <eflib/include/memory/lifetime_manager.h>
 
+#include <boost/any.hpp>
+
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
 
 boost::mutex cgllvm_cases::mtx;
 boost::shared_ptr<cgllvm_cases> cgllvm_cases::tcase;
 
-void clear_cgctxt( SYNTAX_(node)& nd ){
+void clear_cgctxt( SYNTAX_(node)& nd, ::boost::any* ){
 	nd.codegen_ctxt( boost::shared_ptr<CODEGEN_(codegen_context)>() );
 }
 

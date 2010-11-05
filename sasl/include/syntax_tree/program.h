@@ -25,7 +25,7 @@ struct program: public node{
 		return d( boost::shared_polymorphic_cast<declaration>(decl) );
 	}
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	std::string name;
 	std::vector< boost::shared_ptr<declaration> > decls;
 

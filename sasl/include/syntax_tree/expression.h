@@ -44,7 +44,7 @@ protected:
 struct constant_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<token_attr> value_tok;
 	literal_constant_types ctype;
@@ -55,7 +55,7 @@ protected:
 struct variable_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr< token_attr > var_name;
 protected:
@@ -65,7 +65,7 @@ protected:
 struct unary_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> expr;
 	operators op;
@@ -76,7 +76,7 @@ protected:
 struct cast_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor);
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<type_specifier> casted_type;
 	boost::shared_ptr<expression> expr;
@@ -87,7 +87,7 @@ protected:
 struct binary_expression: public expression {
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	operators op;
 	boost::shared_ptr<expression> left_expr;
@@ -98,7 +98,7 @@ protected:
 
 struct expression_list: public expression{
 	expression_list( boost::shared_ptr<token_attr> tok );
-	void accept( syntax_tree_visitor* visitor);
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	std::vector< boost::shared_ptr<expression> > exprs;
 };
@@ -106,7 +106,7 @@ struct expression_list: public expression{
 struct cond_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> cond_expr;
 	boost::shared_ptr<expression> yes_expr;
@@ -118,7 +118,7 @@ protected:
 struct index_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> expr;
 	boost::shared_ptr<expression> index_expr;
@@ -129,7 +129,7 @@ protected:
 struct call_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> expr;
 	std::vector<boost::shared_ptr<expression> > args;
@@ -141,7 +141,7 @@ protected:
 struct member_expression: public expression{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* visitor );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> expr;
 	boost::shared_ptr<token_attr> member;

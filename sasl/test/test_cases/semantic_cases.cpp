@@ -12,7 +12,7 @@ boost::shared_ptr<semantic_cases> semantic_cases::tcase;
 
 using namespace ::sasl::semantic;
 
-void clear_semantic( SYNTAX_(node)& nd ){
+void clear_semantic( SYNTAX_(node)& nd, ::boost::any* ){
 	nd.semantic_info( boost::shared_ptr<SEMANTIC_(semantic_info)>() );
 }
 

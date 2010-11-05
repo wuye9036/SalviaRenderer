@@ -70,11 +70,14 @@ semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_
 	register_type_converter();
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::unary_expression& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::cast_expression& /*v*/){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& v ){
-	v.left_expr->accept(this);
-	v.right_expr->accept(this);
+#define SASL_VISITOR_TYPE_NAME semantic_analyser_impl
+
+SASL_VISIT_NOIMPL( unary_expression );
+SASL_VISIT_NOIMPL( cast_expression );
+SASL_VISIT_DEF( binary_expression )
+{
+	v.left_expr->accept(this, data);
+	v.right_expr->accept(this, data);
 
 	// TODO: look up operator prototype.
 	std::string opname = operator_name( v.op );
@@ -90,37 +93,41 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::binary_expression& v ){
 	}
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_list& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::cond_expression& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::index_expression& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::call_expression& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_expression& /*v*/ ){}
+SASL_VISIT_NOIMPL( expression_list );
+SASL_VISIT_NOIMPL( cond_expression );
+SASL_VISIT_NOIMPL( index_expression );
+SASL_VISIT_NOIMPL( call_expression );
+SASL_VISIT_NOIMPL( member_expression );
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::constant_expression& v ){
+SASL_VISIT_DEF( constant_expression )
+{
 	using ::sasl::syntax_tree::constant_expression;
 
 	boost::shared_ptr<const_value_si> vseminfo = get_or_create_semantic_info<const_value_si>(v);
 	vseminfo->set_literal( v.value_tok->str, v.ctype );
 }
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_expression& /*v*/ )
-{
-}
+
+SASL_VISIT_NOIMPL( variable_expression );
 
 // declaration & type specifier
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::initializer& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_initializer& v ){
-	v.init_expr->accept(this);
+SASL_VISIT_NOIMPL( initializer );
+SASL_VISIT_DEF( expression_initializer )
+{
+	v.init_expr->accept(this, data);
 }
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::member_initializer& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v ){
+
+SASL_VISIT_NOIMPL( member_initializer );
+SASL_VISIT_NOIMPL( declaration );
+
+SASL_VISIT_DEF( variable_declaration )
+{
 	using ::boost::assign::list_of;
 
 	symbol_scope sc( v.name->str, v.handle(), cursym );
 
 	// process variable type
 	boost::shared_ptr<type_specifier> vartype = v.type_info;
-	vartype->accept( this );
+	vartype->accept( this, data );
 	boost::shared_ptr<type_semantic_info> typeseminfo = extract_semantic_info<type_semantic_info>(v);
 	
 	// check type.
@@ -142,10 +149,10 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::variable_declaration& v
 	}
 
 	// process initializer
-	v.init->accept( this );
+	v.init->accept( this, data );;
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
+SASL_VISIT_DEF( type_definition ){
 	using ::sasl::syntax_tree::type_definition;
 	using ::boost::assign::list_of;
 	const std::string& alias_str = v.name->str;
@@ -168,7 +175,7 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	{
 		symbol_scope sc( v.name->str, v.handle(), cursym );
 
-		v.type_info->accept(this);
+		v.type_info->accept(this, data);
 		boost::shared_ptr<type_semantic_info> new_tsi = extract_semantic_info<type_semantic_info>(v);
 
 		// if this symbol is usable, process type node.
@@ -191,8 +198,8 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_definition& v ){
 	}
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::type_specifier& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
+SASL_VISIT_NOIMPL( type_specifier );
+SASL_VISIT_DEF( buildin_type ){
 	using ::sasl::semantic::get_or_create_semantic_info;
 
 	// create type information on current symbol.
@@ -201,32 +208,35 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::buildin_type& v ){
 	tsi->type_info( v.typed_handle<type_specifier>() );
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::array_type& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::struct_type& /*v*/ ){}
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::parameter& v ){
+SASL_VISIT_NOIMPL( array_type );
+SASL_VISIT_NOIMPL( struct_type );
+
+SASL_VISIT_DEF( parameter )
+{
 	symbol_scope ss( v.name ? v.name->str : std::string(), v.handle(), cursym );
-	v.param_type->accept( this );
+	v.param_type->accept( this, data );;
 	if ( v.init ){
-		v.init->accept( this );
+		v.init->accept( this, data );;
 	}
 	get_or_create_semantic_info<storage_si>(v)->type_info( type_info_si::from_node(v.param_type) );
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
+SASL_VISIT_DEF( function_type )
+{
 	// TODO: add document for explaining why we need add_mangling().
 	std::string name = v.name->str;
 	symbol_scope ss( name, v.handle(), cursym );
 
-	v.retval_type->accept( this );
+	v.retval_type->accept( this, data );;
 	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )
 	{
-		(*it)->accept( this );
+		(*it)->accept( this, data );;
 	}
 	cursym->add_mangling( mangle( v.typed_handle<function_type>() ) );
 
 	if ( v.body ){
-		v.body->accept( this );
+		v.body->accept( this, data );;
 	}
 	// TODO : It's doing nothing now.
 
@@ -239,9 +249,9 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	//std::string unmangled_name = v.name->str;
 
 	//// process parameter types for name mangling.
-	//v.retval_type->accept( this );
+	//v.retval_type->accept( this, data );;
 	//for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
-	//	v.params[i_param]->param_type->accept(this);
+	//	v.params[i_param]->param_type->accept(this, data);
 	//}
 
 	//std::string mangled_name = mangle_function_name( v.typed_handle<function_type>() );
@@ -295,49 +305,45 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::function_type& v ){
 	//	if ( !v.declaration_only() ){
 	//		// process parameters
 	//		for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
-	//			v.params[i_param]->accept( this );
+	//			v.params[i_param]->accept( this, data );;
 	//		}
 
 	//		// process statements
 	//		is_local = true;
 	//		for( size_t i_stmt = 0; i_stmt < v.body->stmts.size(); ++i_stmt ){
-	//			v.body->stmts[i_stmt]->accept( this );
+	//			v.body->stmts[i_stmt]->accept( this, data );;
 	//		}
 	//	}
 	//}
 }
 
 // statement
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::statement& /*v*/ ){
-	assert( !"can not reach this point!" );
+SASL_VISIT_NOIMPL( statement );
+
+SASL_VISIT_DEF( declaration_statement )
+{
+	v.decl->accept(this, data);
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::declaration_statement& v ){
-	v.decl->accept(this);
+SASL_VISIT_DEF( if_statement )
+{
+	v.cond->accept( this, data );;
+	v.yes_stmt->accept( this, data );;
+	v.no_stmt->accept(this, data);
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::if_statement& v ){
-	v.cond->accept( this );
-	v.yes_stmt->accept( this );
-	v.no_stmt->accept(this);
+SASL_VISIT_DEF( while_statement ){
+	v.cond->accept( this, data );;
+	v.body->accept( this, data );;
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::while_statement& v ){
-	v.cond->accept( this );
-	v.body->accept( this );
-}
+SASL_VISIT_NOIMPL( dowhile_statement );
+SASL_VISIT_NOIMPL( case_label );
+SASL_VISIT_NOIMPL( ident_label );
+SASL_VISIT_NOIMPL( switch_statement );
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::dowhile_statement& /*v*/ ){
-}
-
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::case_label& /*v */){}
-
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::ident_label& /*v*/ ){}
-
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::switch_statement& /*v*/ ){}
-
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& v ){
-
+SASL_VISIT_DEF( compound_statement )
+{
 	{
 		// add symbol to v. it can used by code block name.
 		symbol_scope( std::string(""), v.handle(), cursym );
@@ -346,22 +352,23 @@ void semantic_analyser_impl::visit( ::sasl::syntax_tree::compound_statement& v )
 	for( vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{
-		(*it)->accept(this);
+		(*it)->accept(this, data);
 	}
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::expression_statement& /*v*/ ){}
+SASL_VISIT_NOIMPL( expression_statement );
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::jump_statement& v ){
+SASL_VISIT_DEF( jump_statement )
+{
 	if (v.code == jump_mode::_return){
 		if( v.jump_expr ){
-			v.jump_expr->accept(this);
+			v.jump_expr->accept(this, data);
 		}
 	}
 }
 
 // program
-void semantic_analyser_impl::visit( program& v ){
+SASL_VISIT_DEF( program ){
 	// create semantic info
 	boost::shared_ptr<program_si> sem = get_or_create_semantic_info<program_si>(v);
 	sem->name( v.name );
@@ -374,12 +381,11 @@ void semantic_analyser_impl::visit( program& v ){
 
 	// analysis decalarations.
 	for( vector< boost::shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
-		(*it)->accept( this );
+		(*it)->accept( this, data );;
 	}
 }
 
-void semantic_analyser_impl::visit( ::sasl::syntax_tree::for_statement& /*v*/ ){
-}
+SASL_VISIT_NOIMPL( for_statement );
 
 void semantic_analyser_impl::buildin_type_convert( boost::shared_ptr<node> lhs, boost::shared_ptr<node> rhs ){
 	// do nothing
@@ -541,6 +547,8 @@ void semantic_analyser_impl::register_type_converter(){
 
 void semantic_analyser_impl::register_buildin_function(){
 	// 
+	::boost::any* data = NULL;
+
 	typedef boost::unordered_map<buildin_type_code, boost::shared_ptr<buildin_type> > bt_table_t;
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
@@ -569,7 +577,7 @@ void semantic_analyser_impl::register_buildin_function(){
 				.end( tmpft );
 
 				if ( tmpft ){
-					tmpft->accept(this);
+					tmpft->accept(this, data);
 					buildin_functions.push_back( tmpft );
 				}
 			}
@@ -583,7 +591,7 @@ void semantic_analyser_impl::register_buildin_function(){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
 				if ( tmpft ){
-					tmpft->accept(this);
+					tmpft->accept(this, data);
 					buildin_functions.push_back( tmpft );
 				}
 			}
@@ -598,7 +606,7 @@ void semantic_analyser_impl::register_buildin_function(){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
 				if ( tmpft ){
-					tmpft->accept(this);
+					tmpft->accept(this, data);
 					buildin_functions.push_back( tmpft );
 				}
 			}
@@ -613,7 +621,7 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
 					if ( tmpft ){
-						tmpft->accept(this);
+						tmpft->accept(this, data);
 						buildin_functions.push_back( tmpft );
 					}
 				}
@@ -629,7 +637,7 @@ void semantic_analyser_impl::register_buildin_function(){
 						.dparam().dtype().dnode( bt_i32 ).end().end()
 						.end( tmpft );
 					if ( tmpft ){
-						tmpft->accept(this);
+						tmpft->accept(this, data);
 						buildin_functions.push_back( tmpft );
 					}
 				}
@@ -643,7 +651,7 @@ void semantic_analyser_impl::register_buildin_function(){
 				.dparam().dtype().dnode( bt_bool ).end().end()
 			.end( tmpft );
 			if ( tmpft ){
-				tmpft->accept(this);
+				tmpft->accept(this, data);
 				buildin_functions.push_back( tmpft );
 			}
 		}
@@ -657,7 +665,7 @@ void semantic_analyser_impl::register_buildin_function(){
 						.end( tmpft );
 
 					if ( tmpft ){
-						tmpft->accept(this);
+						tmpft->accept(this, data);
 						buildin_functions.push_back( tmpft );
 					}
 				}
@@ -673,7 +681,7 @@ void semantic_analyser_impl::register_buildin_function(){
 						.end( tmpft );
 
 					if ( tmpft ){
-						tmpft->accept(this);
+						tmpft->accept(this, data);
 						buildin_functions.push_back( tmpft );
 					}
 				}
@@ -687,7 +695,7 @@ void semantic_analyser_impl::register_buildin_function(){
 			.end( tmpft );
 
 			if ( tmpft ){
-				tmpft->accept(this);
+				tmpft->accept(this, data);
 				buildin_functions.push_back( tmpft );
 			}
 		}
@@ -701,7 +709,7 @@ void semantic_analyser_impl::register_buildin_function(){
 					.end( tmpft );
 
 					if ( tmpft ){
-						tmpft->accept(this);
+						tmpft->accept(this, data);
 						buildin_functions.push_back( tmpft );
 					}
 				}
@@ -717,7 +725,7 @@ void semantic_analyser_impl::register_buildin_function(){
 				.end( tmpft );
 
 				if ( tmpft ){
-					tmpft->accept(this);
+					tmpft->accept(this, data);
 					buildin_functions.push_back( tmpft );
 				}
 			}

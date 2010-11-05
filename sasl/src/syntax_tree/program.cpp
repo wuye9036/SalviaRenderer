@@ -10,9 +10,7 @@ program::program( const std::string& name)
 {
 }
 
-void program::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( program );
 
 program& program::d( boost::shared_ptr<declaration> decl ){
 	decls.push_back( decl );

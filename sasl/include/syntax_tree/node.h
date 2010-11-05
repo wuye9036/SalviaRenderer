@@ -4,9 +4,9 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/common/token_attr.h>
 #include <sasl/enums/syntax_node_types.h>
+#include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
-
 
 namespace sasl{ 
 	namespace common{ 
@@ -21,6 +21,12 @@ namespace sasl{
 	namespace code_generator{
 		class codegen_context;
 	}
+}
+#define SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() void accept( syntax_tree_visitor*, ::boost::any* data )
+#define SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( node_class_name ) \
+	void BOOST_PP_CAT(node_class_name, ::accept) ( syntax_tree_visitor* v, ::boost::any* data ) \
+{	\
+	v->visit( *this, data );\
 }
 BEGIN_NS_SASL_SYNTAX_TREE();
 
@@ -49,7 +55,7 @@ struct node{
 	boost::shared_ptr<token_attr> token() const;
 	syntax_node_types node_class() const;
 
-	virtual void accept( syntax_tree_visitor* visitor ) = 0;
+	virtual SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() = 0;
 
 protected:
 	node(syntax_node_types tid, boost::shared_ptr<token_attr> tok);

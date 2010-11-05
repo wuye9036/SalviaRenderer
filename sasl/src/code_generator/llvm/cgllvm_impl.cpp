@@ -15,7 +15,9 @@
 #include <sasl/include/syntax_tree/program.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
+#include <eflib/include/platform/enable_warnings.h>
 #include <string>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -71,15 +73,15 @@ llvm_code_generator::llvm_code_generator( )
 {
 }
 
-void llvm_code_generator::visit( unary_expression& ){
-	
-}
+#define SASL_VISITOR_TYPE_NAME llvm_code_generator
 
-void llvm_code_generator::visit( cast_expression& ){}
-void llvm_code_generator::visit( binary_expression& v){
+SASL_VISIT_NOIMPL( unary_expression );
+SASL_VISIT_NOIMPL( cast_expression );
+
+SASL_VISIT_DEF( binary_expression ){
 	//// generate left and right expr.
-	v.left_expr->accept(this);
-	v.right_expr->accept(this);
+	v.left_expr->accept( this, data );
+	v.right_expr->accept( this, data );
 
 	boost::shared_ptr<type_specifier> ltype = extract_semantic_info<type_info_si>(v.left_expr)->type_info();
 	boost::shared_ptr<type_specifier> rtype = extract_semantic_info<type_info_si>(v.right_expr)->type_info();
@@ -132,15 +134,15 @@ void llvm_code_generator::visit( binary_expression& v){
 		EFLIB_INTERRUPT( "Division is not supported yet." );
 	}
 }
-void llvm_code_generator::visit( expression_list& ){}
-void llvm_code_generator::visit( cond_expression& ){}
-void llvm_code_generator::visit( index_expression& ){}
-void llvm_code_generator::visit( call_expression& ){}
-void llvm_code_generator::visit( member_expression& ){}
+SASL_VISIT_NOIMPL( expression_list );
+SASL_VISIT_NOIMPL( cond_expression );
+SASL_VISIT_NOIMPL( index_expression );
+SASL_VISIT_NOIMPL( call_expression );
+SASL_VISIT_NOIMPL( member_expression );
 
-void llvm_code_generator::visit( constant_expression& v ){
+SASL_VISIT_DEF( constant_expression ){
 	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
-	c_si->type_info()->accept( this );
+	c_si->type_info()->accept( this, data );
 
 	if( c_si->value_type() == buildin_type_code::_sint32 ){
 		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
@@ -149,24 +151,19 @@ void llvm_code_generator::visit( constant_expression& v ){
 	}
 }
 
-void llvm_code_generator::visit( identifier& ){
+SASL_VISIT_NOIMPL( identifier );
+SASL_VISIT_NOIMPL( variable_expression );
 
-}
-void llvm_code_generator::visit( variable_expression& ){
-
-}
 // declaration & type specifier
-void llvm_code_generator::visit( initializer& ){}
-void llvm_code_generator::visit( expression_initializer& ){}
-void llvm_code_generator::visit( member_initializer& ){}
-void llvm_code_generator::visit( declaration& ){}
-void llvm_code_generator::visit( variable_declaration& ){
-}
+SASL_VISIT_NOIMPL( initializer );
+SASL_VISIT_NOIMPL( expression_initializer );
+SASL_VISIT_NOIMPL( member_initializer );
+SASL_VISIT_NOIMPL( declaration );
+SASL_VISIT_NOIMPL( variable_declaration );
 
-void llvm_code_generator::visit( type_definition& ){}
-void llvm_code_generator::visit( type_specifier& ){
-}
-void llvm_code_generator::visit( buildin_type& v ){
+SASL_VISIT_NOIMPL( type_definition );
+SASL_VISIT_NOIMPL( type_specifier );
+SASL_VISIT_DEF( buildin_type ){
 	if ( v.codegen_ctxt() ){ return; }
 	common_ctxt_handle type_ctxt = get_common_ctxt(v);
 	if ( sasl_ehelper::is_void( v.value_typecode ) ){
@@ -185,25 +182,25 @@ void llvm_code_generator::visit( buildin_type& v ){
 	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
 	EFLIB_ASSERT( type_ctxt->type, tips.c_str() );
 }
-void llvm_code_generator::visit( array_type& ){}
-void llvm_code_generator::visit( struct_type& ){}
-void llvm_code_generator::visit( parameter& v ){
-	v.param_type->accept( this );
+SASL_VISIT_NOIMPL( array_type );
+SASL_VISIT_NOIMPL( struct_type );
+SASL_VISIT_DEF( parameter ){
+	v.param_type->accept( this, data );
 	if (v.init){
-		v.init->accept( this );
+		v.init->accept( this, data );
 	}
 	get_common_ctxt(v)->type = get_common_ctxt(v.param_type)->type;
 	get_common_ctxt(v)->is_signed = get_common_ctxt(v.param_type)->is_signed;
 }
 
-void llvm_code_generator::visit( function_type& v ){
+SASL_VISIT_DEF( function_type ){
 
 	// skip if context existed.
 	if ( v.codegen_ctxt() ) { return; }
 	common_ctxt_handle fctxt = get_common_ctxt( v );
 
 	// Generate return types.
-	v.retval_type->accept( this );
+	v.retval_type->accept( this, data );
 	const llvm::Type* ret_type = extract_common_ctxt(v.retval_type)->type;
 	
 	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){
@@ -213,7 +210,7 @@ void llvm_code_generator::visit( function_type& v ){
 	// Generate paramenter types.
 	vector< const llvm::Type*> param_types;
 	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
-		(*it)->accept(this);
+		(*it)->accept( this, data );
 		common_ctxt_handle par_ctxt = get_common_ctxt( (*it) );
 		if ( par_ctxt->type ){
 			param_types.push_back( par_ctxt->type );
@@ -239,21 +236,20 @@ void llvm_code_generator::visit( function_type& v ){
 
 	// Create function body.
 	if ( v.body ){
-		v.body->accept( this );
+		v.body->accept( this, data );
 	}
 }
 
 // statement
-void llvm_code_generator::visit( statement& ){
-}
-void llvm_code_generator::visit( declaration_statement& ){}
-void llvm_code_generator::visit( if_statement& ){}
-void llvm_code_generator::visit( while_statement& ){}
-void llvm_code_generator::visit( dowhile_statement& ){}
-void llvm_code_generator::visit( case_label& ){}
-void llvm_code_generator::visit( switch_statement& ){}
+SASL_VISIT_NOIMPL( statement );
+SASL_VISIT_NOIMPL( declaration_statement );
+SASL_VISIT_NOIMPL( if_statement );
+SASL_VISIT_NOIMPL( while_statement );
+SASL_VISIT_NOIMPL( dowhile_statement );
+SASL_VISIT_NOIMPL( case_label );
+SASL_VISIT_NOIMPL( switch_statement );
 
-void llvm_code_generator::visit( compound_statement& v ){
+SASL_VISIT_DEF( compound_statement ){
 	
 	BasicBlock* bb = BasicBlock::Create(
 		ctxt->context(),
@@ -265,17 +261,17 @@ void llvm_code_generator::visit( compound_statement& v ){
 	ctxt->builder()->SetInsertPoint(bb);
 	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it){
-		(*it)->accept( this );
+		(*it)->accept( this, data );
 	}
 }
 
-void llvm_code_generator::visit( expression_statement& v ){
-	v.expr->accept( this );
+SASL_VISIT_DEF( expression_statement ){
+	v.expr->accept( this, data );
 }
 
-void llvm_code_generator::visit( jump_statement& v ){
+SASL_VISIT_DEF( jump_statement ){
 	if (v.jump_expr){
-		v.jump_expr->accept( this );
+		v.jump_expr->accept( this, data );
 	}
 	ReturnInst* ret_ins = NULL;
 	if ( v.code == jump_mode::_return ){
@@ -288,9 +284,9 @@ void llvm_code_generator::visit( jump_statement& v ){
 	get_common_ctxt(v)->ret_ins = ret_ins;
 }
 
-void llvm_code_generator::visit( ident_label& ){ }
+SASL_VISIT_NOIMPL( ident_label );
 
-void llvm_code_generator::visit( program& v ){
+SASL_VISIT_DEF( program ){
 	if ( ctxt ){
 		return;
 	}
@@ -301,12 +297,11 @@ void llvm_code_generator::visit( program& v ){
 
 	for( vector< boost::shared_ptr<declaration> >::iterator
 		it = v.decls.begin(); it != v.decls.end(); ++it ){
-		(*it)->accept( this );
+		(*it)->accept( this, data );
 	}
 }
 
-void llvm_code_generator::visit( sasl::syntax_tree::for_statement& /*v*/ ){
-}
+SASL_VISIT_NOIMPL( for_statement );
 
 boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
 	return boost::shared_polymorphic_cast<llvm_code>(ctxt);

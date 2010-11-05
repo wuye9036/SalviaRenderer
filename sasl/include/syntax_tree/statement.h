@@ -32,7 +32,7 @@ private:
 struct declaration_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<declaration> decl;
 private:
@@ -44,7 +44,7 @@ private:
 struct if_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	
 	boost::shared_ptr< expression > cond;
 	boost::shared_ptr< statement > yes_stmt, no_stmt;
@@ -57,7 +57,7 @@ private:
 struct while_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> cond;
 	boost::shared_ptr<statement> body;
@@ -70,7 +70,7 @@ private:
 struct dowhile_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<statement> body;
 	boost::shared_ptr<expression> cond;
@@ -85,7 +85,7 @@ struct for_statement: public statement
 public:
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<statement> init;
 	boost::shared_ptr<expression> cond;
@@ -103,7 +103,7 @@ struct label: public node{
 struct case_label : public label{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	// if expr is null pointer, it means default.
 	boost::shared_ptr<expression> expr;
@@ -116,7 +116,7 @@ private:
 struct ident_label: public label{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<token_attr> label_tok;
 private:
@@ -128,7 +128,7 @@ private:
 struct switch_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> cond;
 	boost::shared_ptr<compound_statement> stmts;
@@ -141,7 +141,7 @@ private:
 struct compound_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	std::vector< boost::shared_ptr<statement> > stmts;
 private:
@@ -153,7 +153,7 @@ private:
 struct expression_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> expr;
 private:
@@ -165,7 +165,7 @@ private:
 struct jump_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	jump_mode code;
 	boost::shared_ptr<expression> jump_expr; // for return only

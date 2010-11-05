@@ -37,7 +37,7 @@ struct expression_initializer: public initializer{
 	
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr< expression > init_expr;
 private:
 	expression_initializer( boost::shared_ptr<token_attr> tok );
@@ -48,7 +48,7 @@ private:
 struct member_initializer: public initializer{	
 	SASL_SYNTAX_NODE_CREATORS();
 
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	std::vector< boost::shared_ptr<initializer> > sub_inits;
 private:
 	member_initializer( boost::shared_ptr<token_attr> tok );
@@ -65,7 +65,7 @@ protected:
 
 struct variable_declaration : public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr<type_specifier>	type_info;
 	boost::shared_ptr<token_attr>		name;
 	boost::shared_ptr<initializer>		init;
@@ -78,7 +78,7 @@ protected:
 
 struct type_definition: public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr< type_specifier > type_info;
 	boost::shared_ptr<token_attr> name;
 
@@ -100,7 +100,7 @@ protected:
 
 struct alias_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr<token_attr> alias;
 protected:
 	alias_type( boost::shared_ptr<token_attr> tok );
@@ -110,7 +110,7 @@ protected:
 
 struct buildin_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	bool is_buildin() const;
 
 protected:
@@ -123,7 +123,7 @@ protected:
 struct array_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
 	
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	std::vector< boost::shared_ptr<expression> > array_lens;
 	boost::shared_ptr< type_specifier > elem_type;
@@ -135,7 +135,7 @@ protected:
 
 struct struct_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr< token_attr > name;
 	std::vector< boost::shared_ptr<declaration> > decls;
 
@@ -147,7 +147,7 @@ protected:
 
 struct parameter: public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<type_specifier> param_type;
 	boost::shared_ptr<token_attr> name;
@@ -162,7 +162,7 @@ protected:
 
 struct function_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr< token_attr > name;
 	boost::shared_ptr< type_specifier > retval_type;
@@ -178,7 +178,7 @@ protected:
 
 struct null_declaration: public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
-	void accept( syntax_tree_visitor* v );
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 protected:
 	null_declaration( boost::shared_ptr<token_attr> tok );
 };

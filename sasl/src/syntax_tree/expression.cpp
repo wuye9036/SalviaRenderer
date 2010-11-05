@@ -16,83 +16,62 @@ expression::expression( syntax_node_types ntype, boost::shared_ptr<token_attr> t
 constant_expression::constant_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::constant_expression, tok ), ctype( literal_constant_types::none) { }
 
-void constant_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( constant_expression );
 
 unary_expression::unary_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::unary_expression, tok ), op( operators::none ) { }
 
-void unary_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( unary_expression );
 
 cast_expression::cast_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::cast_expression, tok ){
 }
 
-void cast_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( cast_expression );
 
 binary_expression::binary_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::binary_expression, tok ), op( operators::none) { }
 
-void binary_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( binary_expression );
 
 expression_list::expression_list( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::expression_list, tok )
 {
 }
 
-void expression_list::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( expression_list );
 
 cond_expression::cond_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::cond_expression, tok ){
 }
 
-void cond_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( cond_expression );
 
 index_expression::index_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::index_expression, tok ){
 }
 
-void index_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( index_expression );
 
 call_expression::call_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::call_expression, tok ){
 }
 
-void call_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( call_expression );
 
 member_expression::member_expression( boost::shared_ptr<token_attr> tok )
 	: expression( syntax_node_types::member_expression, tok )
 {
 }
 
-void member_expression::accept( syntax_tree_visitor* v ){
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( member_expression );
 
 variable_expression::variable_expression( boost::shared_ptr<token_attr> tok )
 : expression( syntax_node_types::variable_expression, tok )
 {	
 }
 
-void variable_expression::accept( syntax_tree_visitor* v )
-{
-	v->visit( *this );
-}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( variable_expression );
 
 
 operators_helper::operators_helper()
