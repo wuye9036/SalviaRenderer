@@ -192,7 +192,7 @@ void rasterizer::initialize(renderer_impl* pparent)
  **************************************************/
 void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
-	vs_output diff = project(v1) - project(v0);
+	vs_output diff = v1 - v0;
 	const eflib::vec4& dir = diff.position;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
@@ -238,8 +238,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		ex = eflib::clamp<int>(ex, vpleft, int(vpright));
 
 		//设置起点的vs_output
-		vs_output px_start(project(*start));
-		vs_output px_end(project(*end));
+		vs_output px_start(*start);
+		vs_output px_end(*end);
 		float step = sx + 0.5f - start->position.x;
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
@@ -295,8 +295,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		ey = eflib::clamp<int>(ey, vptop, int(vpbottom));
 
 		//设置起点的vs_output
-		vs_output px_start(project(*start));
-		vs_output px_end(project(*end));
+		vs_output px_start(*start);
+		vs_output px_end(*end);
 		float step = sy + 0.5f - start->position.y;
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
@@ -332,19 +332,17 @@ void rasterizer::draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint3
 	{
 		pixel_begin[iy] = static_cast<uint8_t>(min(static_cast<int>(pixel_begin[iy]), left));
 		pixel_end[iy] = static_cast<uint8_t>(max(static_cast<int>(pixel_end[iy]), right));
-		for(int ix = left; ix < right; ++ix)
+		if (full_mask > 1)
 		{
-			pixel_mask[iy * TILE_SIZE + ix] = full_mask;
+			for(int ix = left; ix < right; ++ix)
+			{
+				pixel_mask[iy * TILE_SIZE + ix] = full_mask;
+			}
 		}
 	}
 }
 
 void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec3* edge_factors, size_t num_samples){
-	float evalue[3];
-	for (int e = 0; e < 3; ++ e){
-		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
-	}
-
 	size_t sx = left - left0;
 	size_t sy = top - top0;
 
@@ -352,39 +350,80 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
 
+	__m128 medgex = _mm_set_ps(0, edge_factors[2].x, edge_factors[1].x, edge_factors[0].x);
+	__m128 medgey = _mm_set_ps(0, edge_factors[2].y, edge_factors[1].y, edge_factors[0].y);
+	__m128 medgez = _mm_set_ps(0, edge_factors[2].z, edge_factors[1].z, edge_factors[0].z);
+
+	__m128 mleft = _mm_set1_ps(left);
+	__m128 mtop = _mm_set1_ps(top);
+	__m128 mevalue3 = _mm_sub_ps(medgez, _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
+
+	for(int iy = 0; iy < 2; ++iy){
+		for(size_t ix = 0; ix < 2; ++ix){
+			pixel_mask[(sy + iy) * TILE_SIZE + (sx + ix)] = 0;
+		}
+	}
+
 	for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
 		const vec2& sp = samples_pattern_[i_sample];
 		__m128 mspx = _mm_set1_ps(sp.x);
 		__m128 mspy = _mm_set1_ps(sp.y);
 
 		__m128 mask_rej = _mm_setzero_ps();
-		for (int e = 0; e < 3; ++ e){
-			__m128 mstepx = _mm_set_ps1(edge_factors[e].x);
-			__m128 mstepy = _mm_set_ps1(edge_factors[e].y);
+		{
+			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(0, 0, 0, 0));
+			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(0, 0, 0, 0));
 			__m128 mx = _mm_add_ps(mtx, mspx);
 			__m128 my = _mm_add_ps(mty, mspy);
 			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
 
-			__m128 mevalue = _mm_set1_ps(evalue[e]);
+			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(0, 0, 0, 0));
+
+			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+		}
+		{
+			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(1, 1, 1, 1));
+			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(1, 1, 1, 1));
+			__m128 mx = _mm_add_ps(mtx, mspx);
+			__m128 my = _mm_add_ps(mty, mspy);
+			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
+
+			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(1, 1, 1, 1));
+
+			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+		}
+		{
+			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(2, 2, 2, 2));
+			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(2, 2, 2, 2));
+			__m128 mx = _mm_add_ps(mtx, mspx);
+			__m128 my = _mm_add_ps(mty, mspy);
+			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
+
+			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(2, 2, 2, 2));
 
 			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
 		}
 
-		int sample_inside = ~_mm_movemask_ps(mask_rej);
-
-		for (int t = 0; t < 4; ++ t){
+		int sample_inside = ~_mm_movemask_ps(mask_rej) & 0xF;
+		unsigned long t;
+		while (_BitScanForward(&t, sample_inside)){
 			const size_t x = sx + (t & 1);
 			const size_t y = sy + (t >> 1);
-			pixel_mask[y * TILE_SIZE + x] = 0;
-			if ((sample_inside >> t) & 1){
-				pixel_begin[y] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[y]), x));
-				pixel_end[y] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[y]), x + 1));
 
-				pixel_mask[y * TILE_SIZE + x] |= 1UL << i_sample;
-			}
+			pixel_begin[y] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[y]), x));
+			pixel_end[y] = static_cast<uint8_t>(max(static_cast<size_t>(pixel_end[y]), x + 1));
+
+			pixel_mask[y * TILE_SIZE + x] |= 1UL << i_sample;
+
+			sample_inside &= sample_inside - 1;
 		}
 	}
 #else
+	float evalue[3];
+	for (int e = 0; e < 3; ++ e){
+		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
+	}
+
 	for(int iy = 0; iy < 2; ++iy)
 	{
 		//光栅化
@@ -613,9 +652,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		TVT_PIXEL
 	};
 
-	const vs_output projed_vert0 = project(v0);
-	const vs_output projed_vert1 = project(v1);
-	const vs_output projed_vert2 = project(v2);
+	const vs_output& projed_vert0 = v0;
+	const vs_output& projed_vert1 = v1;
+	const vs_output& projed_vert2 = v2;
 
 	//初始化边及边上属性的差
 	vs_output e01 = projed_vert1 - projed_vert0;
@@ -690,17 +729,21 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			switch (intersect)
 			{
 			case TVT_EMPTY:
+				// Empty tile. Do nothing.
 				break;
 
-			case TVT_FULL: 
+			case TVT_FULL:
+				// The whole tile is inside a triangle.
 				this->draw_whole_tile(pixel_begin, pixel_end, pixel_mask, vpleft - vpleft0, vptop - vptop0, vpright - vpleft0, vpbottom - vptop0, full_mask);
 				break;
 
 			case TVT_PIXEL:
+				// The tile is small enough for pixel level matching.
 				this->draw_pixels(pixel_begin, pixel_end, pixel_mask, vpleft0, vptop0, vpleft, vptop, edge_factors, num_samples);
 				break;
 
 			default:
+				// Only a part of the triangle is inside the tile. So subdivide the tile into small ones.
 				this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, mark_x, mark_y, test_regions[dst_stage], test_region_size[dst_stage],
 					x_min, x_max, y_min, y_max);
 				break;
@@ -735,8 +778,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			integral(px_in, static_cast<float>(pixel_begin[dy]), ddx);
 
 			for(int dx = pixel_begin[dy], end = pixel_end[dy]; dx < end; ++dx){
-				uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
-
 				unproject(unprojed, px_in);
 				if(pps->execute(unprojed, px_out)){
 					const int ix = dx + vpleft0;
@@ -744,6 +785,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 						hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
 					}
 					else{
+						uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
+
 						if (full_mask == mask){
 							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
 								const vec2& sp = samples_pattern_[i_sample];
@@ -817,13 +860,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			swap(pvert[1], pvert[0]);
 	}
 
-	vs_output projed_vert0 = project(*(pvert[0]));
+	vs_output projed_vert0 = *(pvert[0]);
 
 	//初始化边及边上属性的差
-	vs_output e01 = project(*(pvert[1])) - projed_vert0;
+	vs_output e01 = *(pvert[1]) - projed_vert0;
 	//float watch_x = e01.attributes[2].x;
 	
-	vs_output e02 = project(*(pvert[2])) - projed_vert0;
+	vs_output e02 = *(pvert[2]) - projed_vert0;
 	vs_output e12;
 
 
@@ -1102,6 +1145,9 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
 				if (!state_->cull(area)){
 					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area);
+					for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
+						project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
+					}
 				}
 				else{
 					num_clipped_verts[i] = 0;
@@ -1118,7 +1164,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 				clipper->clip(tmp_verts, num_out_clipped_verts, vp, pv[0], pv[1]);
 				num_clipped_verts[i] = num_out_clipped_verts;
 				for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-					clipped_verts[i * 6 + j] = tmp_verts[j];
+					project(clipped_verts[i * 6 + j], tmp_verts[j]);
 					cliped_indices[i * 12 + j] = static_cast<uint32_t>(i * 6 + j);
 				}
 			}
@@ -1390,6 +1436,7 @@ void rasterizer::draw(size_t prim_count){
 			&num_clipped_verts[0], static_cast<int32_t>(prim_count), boost::ref(working_package), COMPACT_CLIPPED_VERTS_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
+	// Dispatch primitives into tiles' bucket
 	std::vector<std::vector<std::vector<uint32_t> > > thread_tiles(num_threads);
 	working_package = 0;
 	edge_factors_.resize(num_clipped_indices / prim_size * 3);
@@ -1405,6 +1452,7 @@ void rasterizer::draw(size_t prim_count){
 		prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
+	// Rasterize tiles
 	working_package = 0;
 	h_pixel_shader hps = pparent_->get_pixel_shader();
 	std::vector<h_pixel_shader> ppps(num_threads - 1);
