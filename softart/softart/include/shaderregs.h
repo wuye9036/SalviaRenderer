@@ -107,38 +107,38 @@ public:
 		bool front_face,
 		const attrib_array_type& attribs,
 		const attrib_modifier_array_type& modifiers,
-		uint32_t num_used_attrib)
-		:position(position), front_face(front_face),
-			num_used_attribute(num_used_attrib)
-	{
-		memcpy(&attributes[0], &attribs[0], num_used_attribute * sizeof(attributes[0]));
-		memcpy(&attribute_modifiers[0], &modifiers[0], num_used_attribute * sizeof(attribute_modifiers[0]));
-	}
+		uint32_t num_used_attrib);
 
 	//拷贝构造与赋值
-	vs_output(const vs_output& rhs)
-		:position(rhs.position), front_face(rhs.front_face),
-			num_used_attribute(rhs.num_used_attribute)
-	{
-		memcpy(&attributes[0], &rhs.attributes[0], num_used_attribute * sizeof(attributes[0]));
-		memcpy(&attribute_modifiers[0], &rhs.attribute_modifiers[0], num_used_attribute * sizeof(attribute_modifiers[0]));
-	}
+	vs_output(const vs_output& rhs);
 
-	vs_output& operator = (const vs_output& rhs){
-		if(&rhs == this) return *this;
-		position = rhs.position;
-		front_face = rhs.front_face;
-		num_used_attribute = rhs.num_used_attribute;
-		memcpy(&attributes[0], &rhs.attributes[0], num_used_attribute * sizeof(attributes[0]));
-		memcpy(&attribute_modifiers[0], &rhs.attribute_modifiers[0], num_used_attribute * sizeof(attribute_modifiers[0]));
-		return *this;
-	}
+	vs_output& operator = (const vs_output& rhs);
 
 public:
 	vs_output& operator+=(const vs_output& rhs);
 	vs_output& operator-=(const vs_output& rhs);
 	vs_output& operator*=(float f);
 	vs_output& operator/=(float f);
+};
+
+struct vs_output_op
+{
+	typedef void (*vs_output_construct)(vs_output& out,
+		const eflib::vec4& position, bool front_face,
+		const vs_output::attrib_array_type& attribs,
+		const vs_output::attrib_modifier_array_type& modifiers);
+	typedef void (*vs_output_copy)(vs_output& out, const vs_output& in);
+	typedef vs_output (*vs_output_project1)(const vs_output& in);
+	typedef vs_output& (*vs_output_project2)(vs_output& out, const vs_output& in);
+	typedef vs_output (*vs_output_operator_sub)(const vs_output& vso0, const vs_output& vso1);
+
+	static vs_output_construct construct[vso_attrib_regcnt];
+	static vs_output_copy copy[vso_attrib_regcnt];
+
+	static vs_output_project1 project1[vso_attrib_regcnt];
+	static vs_output_project2 project2[vso_attrib_regcnt];
+
+	static vs_output_operator_sub operator_sub[vso_attrib_regcnt];
 };
 
 void viewport_transform(eflib::vec4& position, const viewport& vp);

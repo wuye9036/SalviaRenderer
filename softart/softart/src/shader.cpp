@@ -74,7 +74,8 @@ vs_output operator + (const vs_output& vso0, const vs_output& vso1)
 
 vs_output operator - (const vs_output& vso0, const vs_output& vso1)
 {
-	return vs_output(vso0) -= vso1;
+	EFLIB_ASSERT(vso0.num_used_attribute == vso1.num_used_attribute, "");
+	return vs_output_op::operator_sub[vso0.num_used_attribute](vso0, vso1);
 }
 
 vs_output operator * (const vs_output& vso0, float f)
@@ -94,31 +95,12 @@ vs_output operator / (const vs_output& vso0, float f)
 
 vs_output project(const vs_output& in)
 {
-	vs_output::attrib_array_type ret_attribs;
-	vs_output::attrib_modifier_array_type ret_attrib_modifiers;
-	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
-		ret_attribs[i_attr] = in.attributes[i_attr];
-		ret_attrib_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			ret_attribs[i_attr] *= in.position.w;
-		}
-	}
-	return vs_output(in.position, in.front_face, ret_attribs, ret_attrib_modifiers, in.num_used_attribute);
+	return vs_output_op::project1[in.num_used_attribute](in);
 }
 
 vs_output& project(vs_output& out, const vs_output& in)
 {
-	for(size_t i_attr = 0; i_attr < in.num_used_attribute; ++i_attr){
-		out.attributes[i_attr] = in.attributes[i_attr];
-		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			out.attributes[i_attr] *= in.position.w;
-		}
-	}
-	out.num_used_attribute = in.num_used_attribute;
-	out.position = in.position;
-	out.front_face = in.front_face;
-	return out;
+	return vs_output_op::project2[in.num_used_attribute](out, in);
 }
 
 vs_output unproject(const vs_output& in)
@@ -285,6 +267,29 @@ float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2
 	return cross_prod2( (v1.position - v0.position).xy(), (v2.position - v0.position).xy() );
 }
 
+
+vs_output::vs_output(
+	const eflib::vec4& position, 
+	bool front_face,
+	const attrib_array_type& attribs,
+	const attrib_modifier_array_type& modifiers,
+	uint32_t num_used_attrib)
+{
+	vs_output_op::construct[num_used_attrib](*this, position, front_face, attribs, modifiers);
+}
+
+vs_output::vs_output(const vs_output& rhs)
+{
+	vs_output_op::copy[rhs.num_used_attribute](*this, rhs);
+}
+
+vs_output& vs_output::operator = (const vs_output& rhs){
+	if(&rhs != this){
+		vs_output_op::copy[rhs.num_used_attribute](*this, rhs);
+	}
+	return *this;
+}
+
 /*****************************************
  *  Vertex Shader
  ****************************************/
@@ -295,4 +300,283 @@ void vertex_shader::execute(const vs_input& in, vs_output& out){
 void blend_shader::execute(size_t sample, backbuffer_pixel_out& out, const ps_output& in){
 	shader_prog(sample, out, in);
 }
+
+template <int N>
+void construct_n(vs_output& out,
+		const eflib::vec4& position, bool front_face,
+		const vs_output::attrib_array_type& attribs,
+		const vs_output::attrib_modifier_array_type& modifiers)
+{
+	out.position = position;
+	out.front_face = front_face;
+	out.num_used_attribute = N;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = attribs[i_attr];
+		out.attribute_modifiers[i_attr] = modifiers[i_attr];
+	}
+}
+template <>
+void construct_n<0>(vs_output& out,
+		const eflib::vec4& /*position*/, bool /*front_face*/,
+		const vs_output::attrib_array_type& /*attribs*/,
+		const vs_output::attrib_modifier_array_type& /*modifiers*/)
+{
+	out.num_used_attribute = 0;
+}
+template <int N>
+void copy_n(vs_output& out, const vs_output& in)
+{
+	out.position = in.position;
+	out.front_face = in.front_face;
+	out.num_used_attribute = N;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = in.attributes[i_attr];
+		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+	}
+}
+template <>
+void copy_n<0>(vs_output& out, const vs_output& /*in*/)
+{
+	out.num_used_attribute = 0;
+}
+template <int N>
+vs_output project1_n(const vs_output& in)
+{
+	vs_output::attrib_array_type ret_attribs;
+	vs_output::attrib_modifier_array_type ret_attrib_modifiers;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		ret_attribs[i_attr] = in.attributes[i_attr];
+		ret_attrib_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+			ret_attribs[i_attr] *= in.position.w;
+		}
+	}
+	return vs_output(in.position, in.front_face, ret_attribs, ret_attrib_modifiers, N);
+}
+template <>
+vs_output project1_n<0>(const vs_output& /*in*/)
+{
+	return vs_output();
+}
+template <int N>
+vs_output& project2_n(vs_output& out, const vs_output& in)
+{
+	if (&out != &in){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+			out.attributes[i_attr] = in.attributes[i_attr];
+			out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+			if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+				out.attributes[i_attr] *= in.position.w;
+			}
+		}
+		out.num_used_attribute = N;
+		out.position = in.position;
+		out.front_face = in.front_face;
+	}
+	else{
+		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+			if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+				out.attributes[i_attr] *= in.position.w;
+			}
+		}
+	}
+	return out;
+}
+template <>
+vs_output& project2_n<0>(vs_output& out, const vs_output& /*in*/)
+{
+	out.num_used_attribute = 0;
+	return out;
+}
+template <int N>
+vs_output operator_sub_n(const vs_output& vso0, const vs_output& vso1)
+{
+	vs_output::attrib_array_type ret_attribs;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
+		ret_attribs[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
+	}
+
+	return vs_output(vso0.position - vso1.position, vso0.front_face, ret_attribs, vso0.attribute_modifiers, N);
+}
+template <>
+vs_output operator_sub_n<0>(const vs_output& /*vso0*/, const vs_output& /*vso1*/)
+{
+	return vs_output();
+}
+
+vs_output_op::vs_output_construct vs_output_op::construct[vso_attrib_regcnt] = {
+	construct_n<0>,
+	construct_n<1>,
+	construct_n<2>,
+	construct_n<3>,
+	construct_n<4>,
+	construct_n<5>,
+	construct_n<6>,
+	construct_n<7>,
+	construct_n<8>,
+	construct_n<9>,
+	construct_n<10>,
+	construct_n<11>,
+	construct_n<12>,
+	construct_n<13>,
+	construct_n<14>,
+	construct_n<15>,
+	construct_n<16>,
+	construct_n<17>,
+	construct_n<18>,
+	construct_n<19>,
+	construct_n<20>,
+	construct_n<21>,
+	construct_n<22>,
+	construct_n<23>,
+	construct_n<24>,
+	construct_n<25>,
+	construct_n<26>,
+	construct_n<27>,
+	construct_n<28>,
+	construct_n<29>,
+	construct_n<30>,
+	construct_n<31>
+};
+
+vs_output_op::vs_output_copy vs_output_op::copy[vso_attrib_regcnt] = {
+	copy_n<0>,
+	copy_n<1>,
+	copy_n<2>,
+	copy_n<3>,
+	copy_n<4>,
+	copy_n<5>,
+	copy_n<6>,
+	copy_n<7>,
+	copy_n<8>,
+	copy_n<9>,
+	copy_n<10>,
+	copy_n<11>,
+	copy_n<12>,
+	copy_n<13>,
+	copy_n<14>,
+	copy_n<15>,
+	copy_n<16>,
+	copy_n<17>,
+	copy_n<18>,
+	copy_n<19>,
+	copy_n<20>,
+	copy_n<21>,
+	copy_n<22>,
+	copy_n<23>,
+	copy_n<24>,
+	copy_n<25>,
+	copy_n<26>,
+	copy_n<27>,
+	copy_n<28>,
+	copy_n<29>,
+	copy_n<30>,
+	copy_n<31>
+};
+
+vs_output_op::vs_output_project1 vs_output_op::project1[vso_attrib_regcnt] = {
+	project1_n<0>,
+	project1_n<1>,
+	project1_n<2>,
+	project1_n<3>,
+	project1_n<4>,
+	project1_n<5>,
+	project1_n<6>,
+	project1_n<7>,
+	project1_n<8>,
+	project1_n<9>,
+	project1_n<10>,
+	project1_n<11>,
+	project1_n<12>,
+	project1_n<13>,
+	project1_n<14>,
+	project1_n<15>,
+	project1_n<16>,
+	project1_n<17>,
+	project1_n<18>,
+	project1_n<19>,
+	project1_n<20>,
+	project1_n<21>,
+	project1_n<22>,
+	project1_n<23>,
+	project1_n<24>,
+	project1_n<25>,
+	project1_n<26>,
+	project1_n<27>,
+	project1_n<28>,
+	project1_n<29>,
+	project1_n<30>,
+	project1_n<31>
+};
+vs_output_op::vs_output_project2 vs_output_op::project2[vso_attrib_regcnt] = {
+	project2_n<0>,
+	project2_n<1>,
+	project2_n<2>,
+	project2_n<3>,
+	project2_n<4>,
+	project2_n<5>,
+	project2_n<6>,
+	project2_n<7>,
+	project2_n<8>,
+	project2_n<9>,
+	project2_n<10>,
+	project2_n<11>,
+	project2_n<12>,
+	project2_n<13>,
+	project2_n<14>,
+	project2_n<15>,
+	project2_n<16>,
+	project2_n<17>,
+	project2_n<18>,
+	project2_n<19>,
+	project2_n<20>,
+	project2_n<21>,
+	project2_n<22>,
+	project2_n<23>,
+	project2_n<24>,
+	project2_n<25>,
+	project2_n<26>,
+	project2_n<27>,
+	project2_n<28>,
+	project2_n<29>,
+	project2_n<30>,
+	project2_n<31>
+};
+
+vs_output_op::vs_output_operator_sub vs_output_op::operator_sub[vso_attrib_regcnt] = {
+	operator_sub_n<0>,
+	operator_sub_n<1>,
+	operator_sub_n<2>,
+	operator_sub_n<3>,
+	operator_sub_n<4>,
+	operator_sub_n<5>,
+	operator_sub_n<6>,
+	operator_sub_n<7>,
+	operator_sub_n<8>,
+	operator_sub_n<9>,
+	operator_sub_n<10>,
+	operator_sub_n<11>,
+	operator_sub_n<12>,
+	operator_sub_n<13>,
+	operator_sub_n<14>,
+	operator_sub_n<15>,
+	operator_sub_n<16>,
+	operator_sub_n<17>,
+	operator_sub_n<18>,
+	operator_sub_n<19>,
+	operator_sub_n<20>,
+	operator_sub_n<21>,
+	operator_sub_n<22>,
+	operator_sub_n<23>,
+	operator_sub_n<24>,
+	operator_sub_n<25>,
+	operator_sub_n<26>,
+	operator_sub_n<27>,
+	operator_sub_n<28>,
+	operator_sub_n<29>,
+	operator_sub_n<30>,
+	operator_sub_n<31>
+};
+
 END_NS_SOFTART()

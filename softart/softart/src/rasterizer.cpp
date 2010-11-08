@@ -192,7 +192,7 @@ void rasterizer::initialize(renderer_impl* pparent)
  **************************************************/
 void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
-	vs_output diff = v1 - v0;
+	vs_output diff = project(v1) - project(v0);
 	const eflib::vec4& dir = diff.position;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
@@ -238,8 +238,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		ex = eflib::clamp<int>(ex, vpleft, int(vpright));
 
 		//设置起点的vs_output
-		vs_output px_start(*start);
-		vs_output px_end(*end);
+		vs_output px_start(project(*start));
+		vs_output px_end(project(*end));
 		float step = sx + 0.5f - start->position.x;
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
@@ -295,8 +295,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		ey = eflib::clamp<int>(ey, vptop, int(vpbottom));
 
 		//设置起点的vs_output
-		vs_output px_start(*start);
-		vs_output px_end(*end);
+		vs_output px_start(project(*start));
+		vs_output px_end(project(*end));
 		float step = sy + 0.5f - start->position.y;
 		vs_output px_in = lerp(px_start, px_end, step / diff_dir);
 
@@ -652,9 +652,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		TVT_PIXEL
 	};
 
-	const vs_output& projed_vert0 = v0;
-	const vs_output& projed_vert1 = v1;
-	const vs_output& projed_vert2 = v2;
+	const vs_output projed_vert0 = project(v0);
+	const vs_output projed_vert1 = project(v1);
+	const vs_output projed_vert2 = project(v2);
 
 	//初始化边及边上属性的差
 	vs_output e01 = projed_vert1 - projed_vert0;
@@ -860,13 +860,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			swap(pvert[1], pvert[0]);
 	}
 
-	vs_output projed_vert0 = *(pvert[0]);
+	vs_output projed_vert0 = project(*(pvert[0]));
 
 	//初始化边及边上属性的差
-	vs_output e01 = *(pvert[1]) - projed_vert0;
+	vs_output e01 = project(*(pvert[1])) - projed_vert0;
 	//float watch_x = e01.attributes[2].x;
 	
-	vs_output e02 = *(pvert[2]) - projed_vert0;
+	vs_output e02 = project(*(pvert[2])) - projed_vert0;
 	vs_output e12;
 
 
@@ -1145,26 +1145,20 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
 				if (!state_->cull(area)){
 					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area);
-					for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
-						project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
-					}
 				}
 				else{
 					num_clipped_verts[i] = 0;
 				}
 			}
 			else if (2 == prim_size){
-				vs_output pv[2];
+				const vs_output* pv[2];
 				for (size_t j = 0; j < prim_size; ++ j){
-					pv[j] = dvc->fetch(i * prim_size + j);
+					const vs_output& v = dvc->fetch(i * prim_size + j);
+					pv[j] = &v;
 				}
 
-				vs_output tmp_verts[6];
-				uint32_t num_out_clipped_verts;
-				clipper->clip(tmp_verts, num_out_clipped_verts, vp, pv[0], pv[1]);
-				num_clipped_verts[i] = num_out_clipped_verts;
-				for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-					project(clipped_verts[i * 6 + j], tmp_verts[j]);
+				clipper->clip(&clipped_verts[i * 6], num_clipped_verts[i], vp, *pv[0], *pv[1]);
+				for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
 					cliped_indices[i * 12 + j] = static_cast<uint32_t>(i * 6 + j);
 				}
 			}
