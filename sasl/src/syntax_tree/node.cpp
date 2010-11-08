@@ -79,4 +79,12 @@ boost::shared_ptr<node> node::deep_dup_impl() const
 	return boost::shared_ptr<node>();
 }
 
+const ::std::vector< ::boost::shared_ptr< node > >& node::additionals() const{
+	return adds;
+}
+
+::std::vector< ::boost::shared_ptr< node > >& node::additionals(){
+	return adds;
+}
+
 END_NS_SASL_SYNTAX_TREE();

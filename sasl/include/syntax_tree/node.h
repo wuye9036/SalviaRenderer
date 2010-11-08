@@ -7,6 +7,7 @@
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
+#include <vector>
 
 namespace sasl{ 
 	namespace common{ 
@@ -57,6 +58,9 @@ struct node{
 
 	virtual SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() = 0;
 
+	const ::std::vector< ::boost::shared_ptr< node > >& additionals() const;
+	::std::vector< ::boost::shared_ptr< node > >& additionals();
+
 protected:
 	node(syntax_node_types tid, boost::shared_ptr<token_attr> tok);
 	node& operator = ( const node& );
@@ -71,6 +75,14 @@ protected:
 	boost::shared_ptr<class ::sasl::semantic::semantic_info> seminfo;
 	boost::shared_ptr<class ::sasl::code_generator::codegen_context> cgctxt;
 	boost::weak_ptr<node> selfptr;
+
+	//	additional syntax nodes.
+	//		It makes no sense in original syntax tree,
+	//		but could use when evaluate syntax tree processing.
+	//		It only hold life time of syntax node utility, and
+	//		without any processing during the syntax tree is visited.
+	::std::vector< ::boost::shared_ptr< node > > adds;
+
 	virtual ~node();
 };
 

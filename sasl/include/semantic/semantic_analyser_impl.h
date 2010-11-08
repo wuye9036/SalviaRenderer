@@ -73,16 +73,12 @@ public:
 		);
 
 	void register_type_converter();
-	void register_buildin_function();
+	void register_buildin_function( ::sasl::syntax_tree::node& );
 private:
 	boost::shared_ptr<type_converter> typeconv;
 	boost::shared_ptr<::sasl::common::compiler_info_manager> infomgr;
 	boost::shared_ptr<symbol> cursym;
 	bool is_local;
-
-	//////////////////////////////////////////////////////////////////////////
-	// buildin functions for build-in types.
-	std::vector< boost::shared_ptr<::sasl::syntax_tree::function_type> > buildin_functions;
 };
 
 END_NS_SASL_SEMANTIC();

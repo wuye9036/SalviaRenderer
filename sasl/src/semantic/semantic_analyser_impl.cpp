@@ -377,7 +377,7 @@ SASL_VISIT_DEF( program ){
 	v.symbol( symbol::create_root( v.handle() ) );
 	cursym = v.symbol();
 
-	register_buildin_function();
+	register_buildin_function( v );
 
 	// analysis decalarations.
 	for( vector< boost::shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
@@ -545,9 +545,10 @@ void semantic_analyser_impl::register_type_converter(){
 	
 }
 
-void semantic_analyser_impl::register_buildin_function(){
+void semantic_analyser_impl::register_buildin_function( node& v ){
 	// 
 	::boost::any* data = NULL;
+	::std::vector< ::boost::shared_ptr<node> >& buildin_functions( v.additionals() );
 
 	typedef boost::unordered_map<buildin_type_code, boost::shared_ptr<buildin_type> > bt_table_t;
 	bt_table_t standard_bttbl;
