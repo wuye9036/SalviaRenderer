@@ -17,6 +17,7 @@
 #include <sasl/include/syntax_tree/utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/metaprog/util.h>
 
 #include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>
@@ -101,13 +102,19 @@ SASL_VISIT_NOIMPL( member_expression );
 
 SASL_VISIT_DEF( constant_expression )
 {
+	UNREF_PARAM( data );
 	using ::sasl::syntax_tree::constant_expression;
 
 	boost::shared_ptr<const_value_si> vseminfo = get_or_create_semantic_info<const_value_si>(v);
 	vseminfo->set_literal( v.value_tok->str, v.ctype );
 }
 
-SASL_VISIT_NOIMPL( variable_expression );
+SASL_VISIT_DEF( variable_expression ){
+	UNREF_PARAM( v );
+	UNREF_PARAM( data );
+
+	// do nothing
+}
 
 // declaration & type specifier
 SASL_VISIT_NOIMPL( initializer );
@@ -200,6 +207,7 @@ SASL_VISIT_DEF( type_definition ){
 
 SASL_VISIT_NOIMPL( type_specifier );
 SASL_VISIT_DEF( buildin_type ){
+	UNREF_PARAM( data );
 	using ::sasl::semantic::get_or_create_semantic_info;
 
 	// create type information on current symbol.
@@ -356,7 +364,9 @@ SASL_VISIT_DEF( compound_statement )
 	}
 }
 
-SASL_VISIT_NOIMPL( expression_statement );
+SASL_VISIT_DEF( expression_statement ){
+	v.expr->accept( this, data );
+}
 
 SASL_VISIT_DEF( jump_statement )
 {

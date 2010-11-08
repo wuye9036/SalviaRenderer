@@ -15,6 +15,7 @@
 #include <sasl/include/syntax_tree/program.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
 #include <eflib/include/platform/enable_warnings.h>
@@ -37,6 +38,10 @@ using semantic::type_info_si;
 typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
 
 #define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::##typecode )
+
+#define SASL_REWRITE_DATA_AS_SYMBOL()	\
+	::boost::any sym_data( v.symbol() );	\
+	data = v.symbol() ? &sym_data : data;
 
 //////////////////////////////////////////////////////////////////////////
 // utility functions.
@@ -79,6 +84,8 @@ SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_NOIMPL( cast_expression );
 
 SASL_VISIT_DEF( binary_expression ){
+	SASL_REWRITE_DATA_AS_SYMBOL();
+
 	//// generate left and right expr.
 	v.left_expr->accept( this, data );
 	v.right_expr->accept( this, data );
@@ -101,7 +108,7 @@ SASL_VISIT_DEF( binary_expression ){
 	args += v.left_expr, v.right_expr;
 
 	symbol::overloads_t overloads 
-		= v.symbol()->find_overloads( operator_name( v.op ), typeconv, args );
+		= ::boost::any_cast< ::boost::shared_ptr<symbol> >( *data )->find_overloads( operator_name( v.op ), typeconv, args );
 	
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
 		return;
@@ -141,6 +148,8 @@ SASL_VISIT_NOIMPL( call_expression );
 SASL_VISIT_NOIMPL( member_expression );
 
 SASL_VISIT_DEF( constant_expression ){
+	SASL_REWRITE_DATA_AS_SYMBOL();
+
 	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
 	c_si->type_info()->accept( this, data );
 
@@ -152,7 +161,13 @@ SASL_VISIT_DEF( constant_expression ){
 }
 
 SASL_VISIT_NOIMPL( identifier );
-SASL_VISIT_NOIMPL( variable_expression );
+SASL_VISIT_DEF( variable_expression )
+{
+	UNREF_PARAM( v );
+	UNREF_PARAM( data );
+
+	// do nothing
+}
 
 // declaration & type specifier
 SASL_VISIT_NOIMPL( initializer );
@@ -164,6 +179,8 @@ SASL_VISIT_NOIMPL( variable_declaration );
 SASL_VISIT_NOIMPL( type_definition );
 SASL_VISIT_NOIMPL( type_specifier );
 SASL_VISIT_DEF( buildin_type ){
+	SASL_REWRITE_DATA_AS_SYMBOL();
+
 	if ( v.codegen_ctxt() ){ return; }
 	common_ctxt_handle type_ctxt = get_common_ctxt(v);
 	if ( sasl_ehelper::is_void( v.value_typecode ) ){
@@ -185,6 +202,9 @@ SASL_VISIT_DEF( buildin_type ){
 SASL_VISIT_NOIMPL( array_type );
 SASL_VISIT_NOIMPL( struct_type );
 SASL_VISIT_DEF( parameter ){
+
+	SASL_REWRITE_DATA_AS_SYMBOL();
+	
 	v.param_type->accept( this, data );
 	if (v.init){
 		v.init->accept( this, data );
@@ -194,6 +214,7 @@ SASL_VISIT_DEF( parameter ){
 }
 
 SASL_VISIT_DEF( function_type ){
+	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	// skip if context existed.
 	if ( v.codegen_ctxt() ) { return; }
@@ -251,6 +272,8 @@ SASL_VISIT_NOIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement ){
 	
+	SASL_REWRITE_DATA_AS_SYMBOL();
+
 	BasicBlock* bb = BasicBlock::Create(
 		ctxt->context(),
 		v.symbol()->mangled_name(),
@@ -266,10 +289,14 @@ SASL_VISIT_DEF( compound_statement ){
 }
 
 SASL_VISIT_DEF( expression_statement ){
+	SASL_REWRITE_DATA_AS_SYMBOL();
 	v.expr->accept( this, data );
 }
 
 SASL_VISIT_DEF( jump_statement ){
+
+	SASL_REWRITE_DATA_AS_SYMBOL();
+
 	if (v.jump_expr){
 		v.jump_expr->accept( this, data );
 	}
@@ -295,9 +322,11 @@ SASL_VISIT_DEF( program ){
 	ctxt->create_module( v.name );
 	typeconv = create_type_converter( ctxt->builder() );
 
+	::boost::any sym_data( v.symbol() );
+
 	for( vector< boost::shared_ptr<declaration> >::iterator
 		it = v.decls.begin(); it != v.decls.end(); ++it ){
-		(*it)->accept( this, data );
+		(*it)->accept( this, &sym_data );
 	}
 }
 
