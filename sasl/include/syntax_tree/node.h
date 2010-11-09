@@ -36,13 +36,13 @@ class syntax_tree_visitor;
 using ::sasl::common::token_attr;
 
 struct node{
+	friend class swallow_duplicator;
+	friend class deep_duplicator;
+
 	boost::shared_ptr<node> handle() const;
 	template <typename T> boost::shared_ptr<T> typed_handle(  ) const{
 		return boost::shared_polymorphic_cast<T>( handle() );
 	}
-
-	boost::shared_ptr<node> dup() const;
-	boost::shared_ptr<node> deep_dup() const;
 
 	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;
 	void symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym );
@@ -65,9 +65,6 @@ protected:
 	node(syntax_node_types tid, boost::shared_ptr<token_attr> tok);
 	node& operator = ( const node& );
 	node( const node& );
-	
-	virtual boost::shared_ptr<node> dup_impl() const;
-	virtual boost::shared_ptr<node> deep_dup_impl() const;
 
 	syntax_node_types				type_id;
 	boost::shared_ptr<token_attr>	tok;

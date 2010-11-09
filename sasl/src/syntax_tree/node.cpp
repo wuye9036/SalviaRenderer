@@ -54,31 +54,6 @@ node::~node(){
 	// DO NOTHING
 }
 
-boost::shared_ptr<node> node::dup() const{
-	if( !this ){
-		return boost::shared_ptr<node>();
-	}
-	return dup_impl();
-}
-
-boost::shared_ptr<node> node::deep_dup() const{
-	if( !this ){
-		return boost::shared_ptr<node>();
-	}
-	return deep_dup_impl();
-}
-
-boost::shared_ptr<node> node::dup_impl() const{
-	assert( !"Shallow duplication of this type can not be defined.");
-	return boost::shared_ptr<node>();
-}
-
-boost::shared_ptr<node> node::deep_dup_impl() const
-{
-	assert( !"Deep duplication of this type can not be defined.");
-	return boost::shared_ptr<node>();
-}
-
 const ::std::vector< ::boost::shared_ptr< node > >& node::additionals() const{
 	return adds;
 }

@@ -72,6 +72,9 @@ void follow_up_traversal(
 	);
 
 // node creators
+boost::shared_ptr<node> duplicate( ::boost::shared_ptr<node> src );
+boost::shared_ptr<node> deep_duplicate( ::boost::shared_ptr<node> src );
+
 boost::shared_ptr<buildin_type> create_buildin_type( const buildin_type_code& btc );
 
 END_NS_SASL_SYNTAX_TREE();

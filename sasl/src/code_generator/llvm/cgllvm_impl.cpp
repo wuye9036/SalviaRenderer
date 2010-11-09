@@ -314,6 +314,7 @@ SASL_VISIT_DEF( jump_statement ){
 SASL_VISIT_NOIMPL( ident_label );
 
 SASL_VISIT_DEF( program ){
+	UNREF_PARAM( data );
 	if ( ctxt ){
 		return;
 	}
