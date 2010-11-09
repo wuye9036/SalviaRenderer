@@ -657,8 +657,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	const vs_output projed_vert2 = project(v2);
 
 	//初始化边及边上属性的差
-	vs_output e01 = projed_vert1 - projed_vert0;
-	vs_output e02 = projed_vert2 - projed_vert0;
+	const vs_output e01 = projed_vert1 - projed_vert0;
+	const vs_output e02 = projed_vert2 - projed_vert0;
 
 	//计算面积
 	float area = cross_prod2(e02.position.xy(), e01.position.xy());
@@ -668,8 +668,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	/**********************************************************
 	*  求解各个属性的差分式
 	*********************************************************/
-	vs_output ddx((e02 * e01.position.y - e02.position.y * e01)*inv_area);
-	vs_output ddy((e01 * e02.position.x - e01.position.x * e02)*inv_area);
+	const vs_output ddx((e02 * e01.position.y - e02.position.y * e01)*inv_area);
+	const vs_output ddy((e01 * e02.position.x - e01.position.x * e02)*inv_area);
 
 	triangle_info info;
 	info.set(v0.position, ddx, ddy);
@@ -754,8 +754,24 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		dst_stage = !src_stage;
 	}
 
-	const int y_begin = max(vptop0, fast_floori(y_min + vp.y));
-	const int y_end = min(vpbottom0, fast_ceili(y_max + vp.y) + 1);
+	int y_begin = max(vptop0, fast_floori(y_min + vp.y));
+	int y_end = min(vpbottom0, fast_ceili(y_max + vp.y) + 1);
+	for(int iy = y_begin - vptop0; iy < y_end - vptop0; ++iy){
+		if (pixel_end[iy] <= pixel_begin[iy]){
+			++ y_begin;
+		}
+		else{
+			break;
+		}
+	}
+	for(int iy = y_end - vptop0 - 1; iy >= y_begin - vptop0; --iy){
+		if (pixel_end[iy] <= pixel_begin[iy]){
+			-- y_end;
+		}
+		else{
+			break;
+		}
+	}
 
 	const float offsetx = vpleft0 + 0.5f - v0.position.x;
 	const float offsety = y_begin + 0.5f - v0.position.y;
@@ -782,7 +798,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 				if(pps->execute(unprojed, px_out)){
 					const int ix = dx + vpleft0;
 					if (1 == num_samples){
-						hfb_->render_sample(hbs, ix, iy, 0, px_out, px_in.position.z);
+						hfb_->render_sample(hbs, ix, iy, 0, px_out, px_out.depth);
 					}
 					else{
 						uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
@@ -792,7 +808,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 								const vec2& sp = samples_pattern_[i_sample];
 								const float ddxz = (sp.x - 0.5f) * ddx.position.z;
 								const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-								hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
+								hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_out.depth + ddxz + ddyz);
 							}
 						}
 						else{
@@ -801,7 +817,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 								const vec2& sp = samples_pattern_[i_sample];
 								const float ddxz = (sp.x - 0.5f) * ddx.position.z;
 								const float ddyz = (sp.y - 0.5f) * ddy.position.z;
-								hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_in.position.z + ddxz + ddyz);
+								hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_out.depth + ddxz + ddyz);
 
 								mask &= mask - 1;
 							}
@@ -1045,27 +1061,19 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
 									const vec2& sp = samples_pattern_[i_sample];
 									bool intersect = true;
-									for (int e = 0; intersect && (e < 3); ++ e){
+									for (int e = 0; e < 3; ++ e){
 										if ((scanline.base_x + i_pixel + sp.x) * edge_factors[e].x
-												- (scanline.base_y + sp.y) * edge_factors[e].y
-												- edge_factors[e].z > 0){
+												+ (scanline.base_y + sp.y) * edge_factors[e].y
+												< edge_factors[e].z){
 											intersect = false;
+											break;
 										}
 									}
-									float samples_depth;
 									if (intersect){
-										float ddx = (sp.x - 0.5f) * pps->get_pos_ddx().w;
-										float ddy = (sp.y - 0.5f) * pps->get_pos_ddy().w;
-										float ddxz = ddx * pps->get_pos_ddx().z;
-										float ddyz = ddy * pps->get_pos_ddy().z;
-										samples_depth = (px_in.position.z * px_in.position.w + std::sqrt(ddxz * ddxz + ddyz * ddyz))
-											/ (px_in.position.w + std::sqrt(ddx * ddx + ddy * ddy));
+										float ddxz = (sp.x - 0.5f) * ddx.position.z;
+										float ddyz = (sp.y - 0.5f) * ddy.position.z;
+										hfb_->render_sample(hbs, scanline.base_x + i_pixel, scanline.base_y, i_sample, px_out, px_out.depth + ddxz + ddyz);
 									}
-									else{
-										samples_depth = 1;
-									}
-
-									hfb_->render_sample(hbs, scanline.base_x + i_pixel, scanline.base_y, i_sample, px_out, samples_depth);
 								}
 							}
 						}
