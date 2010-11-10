@@ -73,7 +73,6 @@ class vs_output
 	friend vs_output& integral(vs_output& inout, float step, const vs_output& derivation);
 	friend vs_output& integral(vs_output& out, const vs_output& in, const vs_output& derivation);
 	friend vs_output& integral(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
-	friend vs_output& integral_unproject(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
 
 	friend float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
 
@@ -120,26 +119,6 @@ public:
 	vs_output& operator-=(const vs_output& rhs);
 	vs_output& operator*=(float f);
 	vs_output& operator/=(float f);
-};
-
-struct vs_output_op
-{
-	typedef void (*vs_output_construct)(vs_output& out,
-		const eflib::vec4& position, bool front_face,
-		const vs_output::attrib_array_type& attribs,
-		const vs_output::attrib_modifier_array_type& modifiers);
-	typedef void (*vs_output_copy)(vs_output& out, const vs_output& in);
-	typedef vs_output (*vs_output_project1)(const vs_output& in);
-	typedef vs_output& (*vs_output_project2)(vs_output& out, const vs_output& in);
-	typedef vs_output (*vs_output_operator_sub)(const vs_output& vso0, const vs_output& vso1);
-
-	static vs_output_construct construct[vso_attrib_regcnt];
-	static vs_output_copy copy[vso_attrib_regcnt];
-
-	static vs_output_project1 project1[vso_attrib_regcnt];
-	static vs_output_project2 project2[vso_attrib_regcnt];
-
-	static vs_output_operator_sub operator_sub[vso_attrib_regcnt];
 };
 
 void viewport_transform(eflib::vec4& position, const viewport& vp);
