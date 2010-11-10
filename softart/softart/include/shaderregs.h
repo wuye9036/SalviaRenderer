@@ -81,9 +81,10 @@ public:
 	enum attrib_modifier_type
 	{
 		am_linear = 1UL << 0,
-		am_nointerpolation = 1UL << 1,
-		am_noperspective = 1UL << 2,
-		am_sample = 1UL << 3
+		am_centroid = 1UL << 1,
+		am_nointerpolation = 1UL << 2,
+		am_noperspective = 1UL << 3,
+		am_sample = 1UL << 4
 	};
 
 public:

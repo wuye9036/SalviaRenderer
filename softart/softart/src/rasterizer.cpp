@@ -342,7 +342,7 @@ void rasterizer::draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint3
 	}
 }
 
-void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec3* edge_factors, size_t num_samples){
+void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec4* edge_factors, size_t num_samples){
 	size_t sx = left - left0;
 	size_t sy = top - top0;
 
@@ -350,9 +350,15 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
 
-	__m128 medgex = _mm_set_ps(0, edge_factors[2].x, edge_factors[1].x, edge_factors[0].x);
-	__m128 medgey = _mm_set_ps(0, edge_factors[2].y, edge_factors[1].y, edge_factors[0].y);
-	__m128 medgez = _mm_set_ps(0, edge_factors[2].z, edge_factors[1].z, edge_factors[0].z);
+	__m128 medge0 = _mm_loadu_ps(&edge_factors[0].x);
+	__m128 medge1 = _mm_loadu_ps(&edge_factors[1].x);
+	__m128 medge2 = _mm_loadu_ps(&edge_factors[2].x);
+
+	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
+	__m128 medgex = _mm_movelh_ps(mtmp, medge2);
+	__m128 medgey = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 1, 3, 2));
+	mtmp = _mm_unpackhi_ps(medge0, medge1);
+	__m128 medgez = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 2, 1, 0));
 
 	__m128 mleft = _mm_set1_ps(left);
 	__m128 mtop = _mm_set1_ps(top);
@@ -455,7 +461,7 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 #endif
 }
 
-void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const vec3* edge_factors, const bool* mark_x, const bool* mark_y,
+void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const vec4* edge_factors, const bool* mark_x, const bool* mark_y,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max){
 	const uint32_t new_w = std::max<uint32_t>(1, cur_region.w / 2);
 	const uint32_t new_h = std::max<uint32_t>(1, cur_region.h / 2);
@@ -471,14 +477,20 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 	} MASK = { 0x80000000 };
 	static const __m128 SIGN_MASK = _mm_set1_ps(MASK.maskf);
 
+	__m128 medge0 = _mm_loadu_ps(&edge_factors[0].x);
+	__m128 medge1 = _mm_loadu_ps(&edge_factors[1].x);
+	__m128 medge2 = _mm_loadu_ps(&edge_factors[2].x);
+
+	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
+	__m128 medgex = _mm_movelh_ps(mtmp, medge2);
+	__m128 medgey = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 1, 3, 2));
+	mtmp = _mm_unpackhi_ps(medge0, medge1);
+	__m128 medgez = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 2, 1, 0));
+
 	__m128i mineww = _mm_set1_epi32(new_w);
 	__m128i minewh = _mm_set1_epi32(new_h);
 	__m128 mneww = _mm_cvtepi32_ps(mineww);
 	__m128 mnewh = _mm_cvtepi32_ps(minewh);
-
-	__m128 medgex = _mm_set_ps(0, edge_factors[2].x, edge_factors[1].x, edge_factors[0].x);
-	__m128 medgey = _mm_set_ps(0, edge_factors[2].y, edge_factors[1].y, edge_factors[0].y);
-	__m128 medgez = _mm_set_ps(0, edge_factors[2].z, edge_factors[1].z, edge_factors[0].z);
 
 	__m128 mstepx3 = _mm_mul_ps(mneww, medgex);
 	__m128 mstepy3 = _mm_mul_ps(mnewh, medgey);
@@ -535,22 +547,21 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 		mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
 		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
 	}
+	mask_acc = _mm_andnot_ps(mask_acc, SIGN_MASK);
 
 	__m128i mix = _mm_add_epi32(_mm_set1_epi32(cur_region.x), _mm_unpacklo_epi32(_mm_setzero_si128(), mineww));
 	__m128i miy = _mm_add_epi32(_mm_set1_epi32(cur_region.y), _mm_unpacklo_epi64(_mm_setzero_si128(), minewh));
 	__m128i miregion = _mm_or_si128(_mm_or_si128(_mm_or_si128(mix, _mm_slli_epi32(miy, 8)), _mm_slli_epi32(mineww, 16)), _mm_slli_epi32(minewh, 24));
-	__m128i mimask_acc = _mm_castps_si128(mask_acc);
-	mimask_acc = _mm_andnot_si128(mimask_acc, _mm_set1_epi32(0x80000000));
-	miregion = _mm_or_si128(miregion, mimask_acc);
+	miregion = _mm_or_si128(miregion, _mm_castps_si128(mask_acc));
 
 	uint32_t region_code[4];
 	_mm_storeu_si128(reinterpret_cast<__m128i*>(&region_code[0]), miregion);
 
 	__m128 mx = _mm_cvtepi32_ps(mix);
 	__m128 my = _mm_cvtepi32_ps(miy);
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(x_min), _mm_add_ps(mx, _mm_cvtepi32_ps(mineww))));
+	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(x_min), _mm_add_ps(mx, mneww)));
 	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(x_max), mx));
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(y_min), _mm_add_ps(my, _mm_cvtepi32_ps(minewh))));
+	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(y_min), _mm_add_ps(my, mnewh)));
 	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(y_max), my));
 
 	int rejections = ~_mm_movemask_ps(mask_rej) & 0xF;
@@ -637,7 +648,11 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	//}
 
 #ifndef USE_TRADITIONAL_RASTERIZER
-	const vec3* edge_factors = &edge_factors_[prim_id * 3];
+	const vec4 edge_factors[3] = {
+		vec4(edge_factors_[prim_id * 3 + 0], 0),
+		vec4(edge_factors_[prim_id * 3 + 1], 0),
+		vec4(edge_factors_[prim_id * 3 + 2], 0)
+	};
 	const bool mark_x[3] = {
 		edge_factors[0].x > 0, edge_factors[1].x > 0, edge_factors[2].x > 0
 	};
@@ -781,6 +796,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	integral(base_vert, offsety, ddy);
 	integral(base_vert, offsetx, ddx);
 
+	bool has_centroid = false;
+	for(size_t i_attr = 0; i_attr < v0.num_used_attribute; ++i_attr){
+		if (v0.attribute_modifiers[i_attr] & vs_output::am_centroid){
+			has_centroid = true;
+		}
+	}
+
 	for(int iy = y_begin; iy < y_end; ++iy)
 	{
 		//¹âÕ¤»¯
@@ -794,14 +816,44 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			integral(px_in, static_cast<float>(pixel_begin[dy]), ddx);
 
 			for(int dx = pixel_begin[dy], end = pixel_end[dy]; dx < end; ++dx){
-				unproject(unprojed, px_in);
+				uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
+
+				if (has_centroid && (mask != full_mask)){
+					vs_output projed = px_in;
+
+					// centroid interpolate
+					vec2 sp_centroid(0, 0);
+					int n = 0;
+					unsigned long i_sample;
+					while (_BitScanForward(&i_sample, mask)){
+						const vec2& sp = samples_pattern_[i_sample];
+						sp_centroid.x += sp.x - 0.5f;
+						sp_centroid.y += sp.y - 0.5f;
+						++ n;
+
+						mask &= mask - 1;
+					}
+					sp_centroid /= n;
+
+					for(size_t i_attr = 0; i_attr < projed.num_used_attribute; ++i_attr){
+						if (projed.attribute_modifiers[i_attr] & vs_output::am_centroid){
+							projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
+						}
+					}
+
+					unproject(unprojed, projed);
+				}
+				else{
+					unproject(unprojed, px_in);
+				}
+
 				if(pps->execute(unprojed, px_out)){
 					const int ix = dx + vpleft0;
 					if (1 == num_samples){
 						hfb_->render_sample(hbs, ix, iy, 0, px_out, px_out.depth);
 					}
 					else{
-						uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
+						mask = pixel_mask[dy * TILE_SIZE + dx];
 
 						if (full_mask == mask){
 							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
