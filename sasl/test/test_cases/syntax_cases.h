@@ -71,8 +71,8 @@ public:
 	// functions
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_nnn );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_flt_2p_n_gen );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func0_cexpr );
-
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func0 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func1 );
 	// paramters
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p1_fn0 );

@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_SUITE( main_suite )
 BOOST_AUTO_TEST_CASE( module_generation_test ){
 	using sasl::syntax_tree::program;
 	using sasl::syntax_tree::create_node;
+	cgllvm_cases::instance();
 
 	BOOST_CHECK( !LLVMCASE_(null_root) );
 	BOOST_CHECK( LLVMCASE_(root) );
@@ -32,6 +33,8 @@ BOOST_AUTO_TEST_CASE( module_generation_test ){
 }
 
 BOOST_AUTO_TEST_CASE( jit_test ){
+	cgllvm_cases::instance();
+
 	BOOST_CHECK( LLVMCASE_(jit) );
 	void* pfunc = LLVMCASE_(jit)->get_function( "foo" );
 	LLVMCASE_(root)->module()->dump();

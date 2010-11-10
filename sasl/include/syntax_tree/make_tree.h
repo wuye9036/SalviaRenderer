@@ -189,6 +189,7 @@ public:
 	}
 	virtual tree_combinator& dvarexpr( const std::string& /*v*/){ return default_proc(); }
 	virtual tree_combinator& dunary( operators /*op*/ ){ return default_proc(); };
+	virtual tree_combinator& dbinary(){ return default_proc(); }
 	virtual tree_combinator& dlexpr(){ return default_proc(); }
 	virtual tree_combinator& dop( operators /*op*/){ return default_proc(); }
 	virtual tree_combinator& drexpr(){ return default_proc(); }

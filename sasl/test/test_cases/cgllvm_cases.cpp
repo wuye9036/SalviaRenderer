@@ -6,7 +6,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/syntax_tree/utility.h>
 #include <eflib/include/memory/lifetime_manager.h>
-
+#include <eflib/include/diagnostics/assert.h>
 #include <boost/any.hpp>
 
 #define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
@@ -69,4 +69,5 @@ void cgllvm_cases::initialize(){
 
 	std::string err;
 	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(jit_prog) ), err);
+	EFLIB_ASSERT( LOCVAR_(jit), err.c_str() );
 }
