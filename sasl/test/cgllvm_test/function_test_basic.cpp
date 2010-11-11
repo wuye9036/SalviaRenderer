@@ -16,6 +16,8 @@
 BOOST_AUTO_TEST_SUITE( main_suite )
 
 BOOST_AUTO_TEST_CASE( function_generation_test ){
+	cgllvm_cases::instance();
+
 	llvm::Function* func = LLVMCASE_(root)->module()->getFunction( SYNCASENAME_(func_nnn) );
 	BOOST_CHECK( func );
 	BOOST_CHECK( func->getFunctionType()->getReturnType() );

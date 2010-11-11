@@ -56,6 +56,8 @@ public:
 	int count( std::string name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
+	boost::shared_ptr<symbol> add_type_node( const std::string& mangled, boost::shared_ptr<type_specifier> tnode );
+
 	boost::shared_ptr<symbol> add_anonymous_child( boost::shared_ptr<node> child_node );
 	boost::shared_ptr<symbol> add_overloaded_child(
 		const std::string& umangled,
@@ -101,7 +103,6 @@ private:
 	children_t children;
 	overload_table_t overloads;
 	::std::vector< const ::std::string > null_mt;
-
 	// name
 	std::string mgl_name;
 	std::string umgl_name;

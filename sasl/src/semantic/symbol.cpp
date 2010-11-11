@@ -299,4 +299,11 @@ boost::shared_ptr<symbol> symbol::add_anonymous_child( boost::shared_ptr<struct 
 	return add_child( anonymous_name(), child_node );
 }
 
+boost::shared_ptr<symbol> symbol::add_type_node( const std::string& mangled, boost::shared_ptr<type_specifier> tnode )
+{
+	if( tnode->node_class() == syntax_node_types::buildin_type ){
+
+	}
+}
+
 END_NS_SASL_SEMANTIC();

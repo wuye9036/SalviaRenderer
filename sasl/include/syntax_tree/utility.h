@@ -71,6 +71,8 @@ void follow_up_traversal(
 	boost::function<void( node&, ::boost::any* )> on_visit
 	);
 
+#define SASL_SYNTAX_NODE_IS_A( node, node_type ) ( (node)->node_class() == BOOST_PP_CAT(syntax_node_types::, node_type) )
+
 // node creators
 boost::shared_ptr<node> duplicate( ::boost::shared_ptr<node> src );
 boost::shared_ptr<node> deep_duplicate( ::boost::shared_ptr<node> src );
