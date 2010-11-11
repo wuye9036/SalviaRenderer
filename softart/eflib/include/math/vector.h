@@ -127,6 +127,16 @@ namespace eflib{
 		/////////////////////////////////////////////
 		//	其他运算
 		/////////////////////////////////////////////
+		vec2& operator = (const vec2& rhs)
+		{
+			if (this != &rhs)
+			{
+				x = rhs.x;
+				y = rhs.y;
+			}
+			return *this;
+		}
+
 		float length_sqr() const
 		{
 			return x*x + y*y;
@@ -253,6 +263,17 @@ namespace eflib{
 		/////////////////////////////////////////////
 		//	其他运算
 		/////////////////////////////////////////////
+		vec3& operator = (const vec3& rhs)
+		{
+			if (this != &rhs)
+			{
+				x = rhs.x;
+				y = rhs.y;
+				z = rhs.z;
+			}
+			return *this;
+		}
+
 		float length_sqr() const
 		{
 			return x*x + y*y + z*z;
@@ -442,6 +463,18 @@ namespace eflib{
 		/////////////////////////////////////////////
 		//	其他运算
 		/////////////////////////////////////////////
+		vec4& operator = (const vec4& rhs)
+		{
+			if (this != &rhs)
+			{
+				x = rhs.x;
+				y = rhs.y;
+				z = rhs.z;
+				w = rhs.w;
+			}
+			return *this;
+		}
+
 		float length_sqr() const
 		{
 			return x*x + y*y + z*z + w*w;
@@ -739,6 +772,16 @@ namespace eflib{
 		/////////////////////////////////////////////
 		//	其他运算
 		/////////////////////////////////////////////
+		int2& operator = (const int2& rhs)
+		{
+			if (this != &rhs)
+			{
+				x = rhs.x;
+				y = rhs.y;
+			}
+			return *this;
+		}
+
 		int length_sqr() const
 		{
 			return x*x + y*y;
@@ -862,6 +905,17 @@ namespace eflib{
 		/////////////////////////////////////////////
 		//	其他运算
 		/////////////////////////////////////////////
+		int3& operator = (const int3& rhs)
+		{
+			if (this != &rhs)
+			{
+				x = rhs.x;
+				y = rhs.y;
+				z = rhs.z;
+			}
+			return *this;
+		}
+
 		int length_sqr() const
 		{
 			return x*x + y*y + z*z;
@@ -1048,6 +1102,18 @@ namespace eflib{
 		/////////////////////////////////////////////
 		//	其他运算
 		/////////////////////////////////////////////
+		int4& operator = (const int4& rhs)
+		{
+			if (this != &rhs)
+			{
+				x = rhs.x;
+				y = rhs.y;
+				z = rhs.z;
+				w = rhs.w;
+			}
+			return *this;
+		}
+
 		int length_sqr() const
 		{
 			return x*x + y*y + z*z + w*w;

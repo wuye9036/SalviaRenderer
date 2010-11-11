@@ -36,16 +36,18 @@ void copy_n(vs_output& out, const vs_output& in)
 template <int N>
 vs_output project1_n(const vs_output& in)
 {
-	vs_output::attrib_array_type ret_attribs;
-	vs_output::attrib_modifier_array_type ret_attrib_modifiers;
+	vs_output ret;
+	ret.position = in.position;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		ret_attribs[i_attr] = in.attributes[i_attr];
-		ret_attrib_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		ret.attributes[i_attr] = in.attributes[i_attr];
+		ret.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
 		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			ret_attribs[i_attr] *= in.position.w;
+			ret.attributes[i_attr] *= in.position.w;
 		}
 	}
-	return vs_output(in.position, in.front_face, ret_attribs, ret_attrib_modifiers, N);
+	ret.front_face = in.front_face;
+	ret.num_used_attribute = N;
+	return ret;
 }
 template <int N>
 vs_output& project2_n(vs_output& out, const vs_output& in)
@@ -75,17 +77,19 @@ vs_output& project2_n(vs_output& out, const vs_output& in)
 template <int N>
 vs_output unproject1_n(const vs_output& in)
 {
-	vs_output::attrib_array_type ret_attribs;
-	vs_output::attrib_modifier_array_type ret_attrib_modifiers;
+	vs_output ret;
+	ret.position = in.position;
 	const float inv_w = 1.0f / in.position.w;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		ret_attribs[i_attr] = in.attributes[i_attr];
-		ret_attrib_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		ret.attributes[i_attr] = in.attributes[i_attr];
+		ret.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
 		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			ret_attribs[i_attr] *= inv_w;
+			ret.attributes[i_attr] *= inv_w;
 		}
 	}
-	return vs_output(in.position, in.front_face, ret_attribs, ret_attrib_modifiers, N);
+	ret.front_face = in.front_face;
+	ret.num_used_attribute = N;
+	return ret;
 }
 template <int N>
 vs_output& unproject2_n(vs_output& out, const vs_output& in)
@@ -207,34 +211,44 @@ vs_output& operator_selfdiv_n(vs_output& lhs, float f)
 template <int N>
 vs_output operator_add_n(const vs_output& vso0, const vs_output& vso1)
 {
-	vs_output::attrib_array_type ret_attribs;
+	vs_output ret;
+	ret.position = vso0.position + vso1.position;
+	ret.front_face = vso0.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
-		ret_attribs[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
+		ret.attributes[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
+		ret.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
 	}
-
-	return vs_output(vso0.position + vso1.position, vso0.front_face, ret_attribs, vso0.attribute_modifiers, N);
+	ret.num_used_attribute = N;
+	return ret;
 }
 template <int N>
 vs_output operator_sub_n(const vs_output& vso0, const vs_output& vso1)
 {
-	vs_output::attrib_array_type ret_attribs;
+	vs_output ret;
+	ret.position = vso0.position - vso1.position;
+	ret.front_face = vso0.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
-		ret_attribs[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
+		ret.attributes[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
+		ret.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
 	}
-
-	return vs_output(vso0.position - vso1.position, vso0.front_face, ret_attribs, vso0.attribute_modifiers, N);
+	ret.num_used_attribute = N;
+	return ret;
 }
 template <int N>
 vs_output operator_mul1_n(const vs_output& vso0, float f)
 {
-	vs_output::attrib_array_type ret_attribs;
+	vs_output ret;
+	ret.position = vso0.position * f;
+	ret.front_face = vso0.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		ret_attribs[i_attr] = vso0.attributes[i_attr] * f;
+		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
+		ret.attributes[i_attr] = vso0.attributes[i_attr] * f;
+		ret.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
 	}
-
-	return vs_output(vso0.position * f, vso0.front_face, ret_attribs, vso0.attribute_modifiers, N);
+	ret.num_used_attribute = N;
+	return ret;
 }
 template <int N>
 vs_output operator_mul2_n(float f, const vs_output& vso0)
