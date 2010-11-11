@@ -32,7 +32,7 @@ void clipper::set_clip_plane_enable(bool enable, size_t idx)
 	planes_enable_[idx] = enable;
 }
 
-void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1) const
+void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output_op& vs_output_ops) const
 {
 	eflib::pool::stack_pool< vs_output, 12 > pool;
 	const vs_output* clipped_verts[2][2];
@@ -69,7 +69,7 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
-					*pclipped = *clipped_verts[src_stage][0] + (*clipped_verts[src_stage][1] - *clipped_verts[src_stage][0]) * (di / (di - dj));
+					*pclipped = vs_output_ops.lerp(*clipped_verts[src_stage][0], *clipped_verts[src_stage][1], di / (di - dj));
 					clipped_verts[dest_stage][1] = pclipped;
 				}
 				else {
@@ -83,7 +83,7 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
-					*pclipped = *clipped_verts[src_stage][1] + (*clipped_verts[src_stage][0] - *clipped_verts[src_stage][1]) * (dj / (dj - di));
+					*pclipped = vs_output_ops.lerp(*clipped_verts[src_stage][1], *clipped_verts[src_stage][0], dj / (dj - di));
 
 					clipped_verts[dest_stage][0] = pclipped;
 
@@ -107,7 +107,7 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 	}
 }
 
-void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2) const
+void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2, const vs_output_op& vs_output_ops) const
 {
 	eflib::pool::stack_pool< vs_output, 12 > pool;
 	const vs_output* clipped_verts[2][6];
@@ -149,7 +149,7 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
-					*pclipped = *clipped_verts[src_stage][i] + (*clipped_verts[src_stage][j] - *clipped_verts[src_stage][i]) * (d[0] / (d[0] - d[1]));
+					*pclipped = vs_output_ops.lerp(*clipped_verts[src_stage][i], *clipped_verts[src_stage][j], d[0] / (d[0] - d[1]));
 
 					clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
 					++ num_clipped_verts[dest_stage];
@@ -160,7 +160,7 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 					vs_output* pclipped = (vs_output*)(pool.malloc());
 
 					//LERP
-					*pclipped = *clipped_verts[src_stage][j] + (*clipped_verts[src_stage][i] - *clipped_verts[src_stage][j]) * (d[1] / (d[1] - d[0]));
+					*pclipped = vs_output_ops.lerp(*clipped_verts[src_stage][j], *clipped_verts[src_stage][i], d[1] / (d[1] - d[0]));
 
 					clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
 					++ num_clipped_verts[dest_stage];
