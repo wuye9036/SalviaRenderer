@@ -100,7 +100,33 @@ vs_output& lerp_n(vs_output& out, const vs_output& start, const vs_output& end, 
 }
 
 template <int N>
-vs_output& integral1_n(vs_output& inout, const vs_output& derivation)
+vs_output& integral1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
+{
+	out.position = in.position + derivation.position;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		EFLIB_ASSERT(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
+		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		if (!(in.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] = in.attributes[i_attr] + derivation.attributes[i_attr];
+		}
+	}
+	return out;
+}
+template <int N>
+vs_output& integral2_n(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
+{
+	out.position = in.position + (derivation.position * step);
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		EFLIB_ASSERT(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
+		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
+		if (!(in.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] = in.attributes[i_attr] + (derivation.attributes[i_attr] * step);
+		}
+	}
+	return out;
+}
+template <int N>
+vs_output& selfintegral1_n(vs_output& inout, const vs_output& derivation)
 {
 	inout.position += derivation.position;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -112,7 +138,7 @@ vs_output& integral1_n(vs_output& inout, const vs_output& derivation)
 	return inout;
 }
 template <int N>
-vs_output& integral2_n(vs_output& inout, float step, const vs_output& derivation)
+vs_output& selfintegral2_n(vs_output& inout, float step, const vs_output& derivation)
 {
 	inout.position += (derivation.position * step);
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -226,6 +252,8 @@ vs_output_op gen_vs_output_op_n()
 	
 	ret.integral1 = integral1_n<N>;
 	ret.integral2 = integral2_n<N>;
+	ret.selfintegral1 = selfintegral1_n<N>;
+	ret.selfintegral2 = selfintegral2_n<N>;
 
 	return ret;
 }

@@ -108,8 +108,10 @@ struct vs_output_op
 
 	typedef vs_output& (*vs_output_lerp_n)(vs_output& out, const vs_output& start, const vs_output& end, float step);
 
-	typedef vs_output& (*vs_output_integral1)(vs_output& inout, const vs_output& derivation);
-	typedef vs_output& (*vs_output_integral2)(vs_output& inout, float step, const vs_output& derivation);
+	typedef vs_output& (*vs_output_integral1)(vs_output& out, const vs_output& in, const vs_output& derivation);
+	typedef vs_output& (*vs_output_integral2)(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
+	typedef vs_output& (*vs_output_selfintegral1)(vs_output& inout, const vs_output& derivation);
+	typedef vs_output& (*vs_output_selfintegral2)(vs_output& inout, float step, const vs_output& derivation);
 
 	vs_output_construct construct;
 	vs_output_copy copy;
@@ -131,6 +133,8 @@ struct vs_output_op
 
 	vs_output_integral1 integral1;
 	vs_output_integral2 integral2;
+	vs_output_selfintegral1 selfintegral1;
+	vs_output_selfintegral2 selfintegral2;
 };
 
 const vs_output_op& get_vs_output_op(uint32_t n);

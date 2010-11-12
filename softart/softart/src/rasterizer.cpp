@@ -43,10 +43,9 @@ bool cull_mode_cw(float area)
 	return area >= 0;
 }
 
-void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops)
+void fill_wireframe_clipping(uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops)
 {
 	num_clipped_verts = 0;
-	uint32_t num_out_clipped_verts;
 
 	const bool front_face = area > 0;
 
@@ -70,11 +69,12 @@ void fill_wireframe_clipping(uint32_t& num_clipped_verts, vs_output* clipped_ver
 		clipped_verts[num_clipped_verts + j].front_face = front_face;
 	}
 	num_clipped_verts += num_out_clipped_verts;
+
+	num_out_clipped_verts = num_clipped_verts;
 }
 
-void fill_solid_clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops)
+void fill_solid_clipping(uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops)
 {
-	uint32_t num_out_clipped_verts;
 	clipper->clip(clipped_verts, num_out_clipped_verts, vp, *pv[0], *pv[1], *pv[2], vs_output_ops);
 	EFLIB_ASSERT(num_out_clipped_verts <= 6, "");
 
@@ -160,9 +160,9 @@ bool rasterizer_state::cull(float area) const
 	return cm_func_(area);
 }
 
-void rasterizer_state::clipping(uint32_t& num_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops) const
+void rasterizer_state::clipping(uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops) const
 {
-	clipping_func_(num_clipped_verts, clipped_verts, clipped_indices, base_vertex, clipper, vp, pv, area, vs_output_ops);
+	clipping_func_(num_clipped_verts, num_out_clipped_verts, clipped_verts, clipped_indices, base_vertex, clipper, vp, pv, area, vs_output_ops);
 }
 
 void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const
@@ -194,8 +194,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 {
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 
-	vs_output projed_v0, projed_v1, diff;
-	vs_output_ops->operator_sub(diff, vs_output_ops->project(projed_v0, v1), vs_output_ops->project(projed_v1, v0));
+	vs_output diff;
+	vs_output_ops->operator_sub(diff, v1, v0);
 	const eflib::vec4& dir = diff.position;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
@@ -243,8 +243,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 
 		//设置起点的vs_output
 		vs_output px_start, px_end;
-		vs_output_ops->project(px_start, *start);
-		vs_output_ops->project(px_end, *end);
+		vs_output_ops->copy(px_start, *start);
+		vs_output_ops->copy(px_end, *end);
 		float step = sx + 0.5f - start->position.x;
 		vs_output px_in;
 		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
@@ -302,8 +302,8 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 
 		//设置起点的vs_output
 		vs_output px_start, px_end;
-		vs_output_ops->project(px_start, *start);
-		vs_output_ops->project(px_end, *end);
+		vs_output_ops->copy(px_start, *start);
+		vs_output_ops->copy(px_end, *end);
 		float step = sy + 0.5f - start->position.y;
 		vs_output px_in;
 		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
@@ -646,7 +646,6 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
-	const uint32_t num_vs_output_attributes = pparent_->get_vertex_shader()->num_output_attributes();
 
 	//{
 	//	boost::mutex::scoped_lock lock(logger_mutex_);
@@ -686,15 +685,10 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		TVT_PIXEL
 	};
 
-	vs_output projed_vert0, projed_vert1, projed_vert2;
-	vs_output_ops->project(projed_vert0, v0);
-	vs_output_ops->project(projed_vert1, v1);
-	vs_output_ops->project(projed_vert2, v2);
-
 	//初始化边及边上属性的差
 	vs_output e01, e02;
-	vs_output_ops->operator_sub(e01, projed_vert1, projed_vert0);
-	vs_output_ops->operator_sub(e02, projed_vert2, projed_vert0);
+	vs_output_ops->operator_sub(e01, v1, v0);
+	vs_output_ops->operator_sub(e02, v2, v0);
 
 	//计算面积
 	float area = cross_prod2(e02.position.xy(), e01.position.xy());
@@ -824,12 +818,11 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 	//设置基准扫描线的属性
 	vs_output base_vert;
-	vs_output_ops->copy(base_vert, projed_vert0);
-	vs_output_ops->integral2(base_vert, offsety, ddy);
-	vs_output_ops->integral2(base_vert, offsetx, ddx);
+	vs_output_ops->integral2(base_vert, v0, offsety, ddy);
+	vs_output_ops->selfintegral2(base_vert, offsetx, ddx);
 
 	bool has_centroid = false;
-	for(size_t i_attr = 0; i_attr < num_vs_output_attributes; ++i_attr){
+	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
 		if (v0.attribute_modifiers[i_attr] & vs_output::am_centroid){
 			has_centroid = true;
 		}
@@ -847,14 +840,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	{
 		//光栅化
 		vs_output px_in;
-		vs_output_ops->copy(px_in, base_vert);
 		ps_output px_out;
 		vs_output unprojed;
 
 		const int dy = iy - vptop0;
 		if (pixel_end[dy] > pixel_begin[dy])
 		{
-			vs_output_ops->integral2(px_in, static_cast<float>(pixel_begin[dy]), ddx);
+			vs_output_ops->integral2(px_in, base_vert, static_cast<float>(pixel_begin[dy]), ddx);
 
 			for(int dx = pixel_begin[dy], end = pixel_end[dy]; dx < end; ++dx){
 				uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
@@ -877,7 +869,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					}
 					sp_centroid /= n;
 
-					for(size_t i_attr = 0; i_attr < num_vs_output_attributes; ++i_attr){
+					for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
 						if (projed.attribute_modifiers[i_attr] & vs_output::am_centroid){
 							projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
 						}
@@ -912,12 +904,12 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					}
 				}
 
-				vs_output_ops->integral1(px_in, ddx);
+				vs_output_ops->selfintegral1(px_in, ddx);
 			}
 		}
 
 		//差分递增
-		vs_output_ops->integral1(base_vert, ddy);
+		vs_output_ops->selfintegral1(base_vert, ddy);
 	}
 #else
 	UNREF_PARAM(full);
@@ -935,17 +927,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		scanline_info()
 		{}
 
-		scanline_info(const scanline_info& rhs)
-			:ddx(rhs.ddx), base_vert(rhs.base_vert), scanline_width(scanline_width),
-			base_x(rhs.base_x), base_y(rhs.base_y)
-		{}
-
-		scanline_info& operator = (const scanline_info& rhs){
-			ddx = rhs.ddx;
-			base_vert = rhs.base_vert;
-			base_x = rhs.base_x;
-			base_y = rhs.base_y;
-		}
+	private:
+		scanline_info(const scanline_info& rhs);
+		scanline_info& operator=(const scanline_info& rhs);
 	};
 
 		/**********************************************************
@@ -963,13 +947,18 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			swap(pvert[1], pvert[0]);
 	}
 
-	vs_output projed_vert0 = vs_output_ops->project1(*(pvert[0]));
+	vs_output projed_vert0, projed_vert1, projed_vert2;
+	vs_output_ops->copy(projed_vert0, *(pvert[0]));
+	vs_output_ops->copy(projed_vert1, *(pvert[1]));
+	vs_output_ops->copy(projed_vert2, *(pvert[2]));
 
 	//初始化边及边上属性的差
-	vs_output e01 = vs_output_ops->operator_sub(vs_output_ops->project1(*(pvert[1])), projed_vert0);
+	vs_output e01;
+	vs_output_ops->operator_sub(e01, projed_vert1, projed_vert0);
 	//float watch_x = e01.attributes[2].x;
 	
-	vs_output e02 = vs_output_ops->operator_sub(vs_output_ops->project1(*(pvert[2])), projed_vert0);
+	vs_output e02;
+	vs_output_ops->operator_sub(e02, projed_vert2, projed_vert0);
 	vs_output e12;
 
 
@@ -990,8 +979,12 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	/**********************************************************
 	*  求解各个属性的差分式
 	*********************************************************/
-	vs_output ddx(vs_output_ops_->operator_mul1(vs_output_ops_->operator_sub(vs_output_ops_->operator_mul1(e02, e01.position.y), vs_output_ops_->operator_mul2(e02.position.y, e01)), inv_area));
-	vs_output ddy(vs_output_ops_->operator_mul1(vs_output_ops_->operator_sub(vs_output_ops_->operator_mul1(e01, e02.position.x), vs_output_ops_->operator_mul2(e01.position.x, e02)), inv_area));
+	vs_output ddx, ddy;
+	{
+		vs_output tmp0, tmp1, tmp2;
+		vs_output_ops->operator_mul(ddx, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e02, e01.position.y), vs_output_ops->operator_mul(tmp1, e01, e02.position.y)), inv_area);
+		vs_output_ops->operator_mul(ddy, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e01, e02.position.x), vs_output_ops->operator_mul(tmp1, e02, e01.position.x)), inv_area);
+	}
 
 	triangle_info info;
 	info.set(v0.position, ddx, ddy);
@@ -1002,7 +995,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	*   这些属性将在多个扫描行中保持相同
 	************************************/
 	scanline_info base_scanline;
-	base_scanline.ddx = ddx;
+	vs_output_ops->copy(base_scanline.ddx, ddx);
 
 	/*************************************************
 	*   开始绘制多边形。经典的上-下分割绘制算法
@@ -1075,12 +1068,16 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		fsx1 = pvert[0]->position.x + dxdy_02*(fsy + 0.5f - pvert[0]->position.y);
 
 		//设置基准扫描线的属性
-		base_scanline.base_vert = projed_vert0;
-		vs_output_ops_->integral2(base_scanline.base_vert, offsety, ddy);
+		vs_output_ops->integral2(base_scanline.base_vert, projed_vert0, offsety, ddy);
 
 		//当前的基准扫描线，起点在(base_vert.x, scanline.y)处。
 		//在传递到rasterize_scanline之前需要将基础点调整到扫描线的最左端。
-		scanline_info current_base_scanline(base_scanline);
+		scanline_info current_base_scanline;
+		current_base_scanline.scanline_width = base_scanline.scanline_width;
+		vs_output_ops->copy(current_base_scanline.ddx, base_scanline.ddx);
+		vs_output_ops->copy(current_base_scanline.base_vert, base_scanline.base_vert);
+		current_base_scanline.base_x = base_scanline.base_x;
+		current_base_scanline.base_y = base_scanline.base_y;
 
 		for(int iy = isy; iy <= iey; ++iy)
 		{	
@@ -1123,8 +1120,12 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					float offsetx = icx_s + 0.5f - pvert[0]->position.x;
 
 					//设置扫描线信息
-					scanline_info scanline(current_base_scanline);
-					vs_output_ops_->integral2(scanline.base_vert, offsetx, ddx);
+					scanline_info scanline;
+					scanline.scanline_width = current_base_scanline.scanline_width;
+					vs_output_ops->copy(scanline.ddx, current_base_scanline.ddx);
+					scanline.base_x = current_base_scanline.base_x;
+					scanline.base_y = current_base_scanline.base_y;
+					vs_output_ops->integral2(scanline.base_vert, current_base_scanline.base_vert, offsetx, ddx);
 
 					scanline.base_x = icx_s;
 					scanline.base_y = iy;
@@ -1133,12 +1134,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					//光栅化
 					vec3* edge_factors = &edge_factors_[prim_id * 3];
 
-					vs_output px_in(scanline.base_vert);
+					vs_output px_in;
+					vs_output_ops->copy(px_in, scanline.base_vert);
 					ps_output px_out;
 					vs_output unprojed;
 					for(size_t i_pixel = 0; i_pixel < scanline.scanline_width; ++i_pixel)
 					{
-						vs_output_ops->unproject2(unprojed, px_in);
+						vs_output_ops->unproject(unprojed, px_in);
 						if(pps->execute(unprojed, px_out)){
 							const size_t num_samples = hfb_->get_num_samples();
 							if (1 == num_samples){
@@ -1165,13 +1167,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 							}
 						}
 
-						vs_output_ops->integral1(px_in, scanline.ddx);
+						vs_output_ops->selfintegral1(px_in, scanline.ddx);
 					}
 				}
 			}
 
 			//差分递增
-			vs_output_ops->integral1(current_base_scanline.base_vert, ddy);
+			vs_output_ops->selfintegral1(current_base_scanline.base_vert, ddy);
 		}
 	}
 #endif
@@ -1240,7 +1242,11 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 
 				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
 				if (!state_->cull(area)){
-					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area, *vs_output_ops);
+					uint32_t num_out_clipped_verts;
+					state_->clipping(num_clipped_verts[i], num_out_clipped_verts, &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area, *vs_output_ops);
+					for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
+						vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
+					}
 				}
 				else{
 					num_clipped_verts[i] = 0;
@@ -1255,6 +1261,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 
 				clipper->clip(&clipped_verts[i * 6], num_clipped_verts[i], vp, *pv[0], *pv[1], *vs_output_ops);
 				for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
+					vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
 					cliped_indices[i * 12 + j] = static_cast<uint32_t>(i * 6 + j);
 				}
 			}
@@ -1488,6 +1495,7 @@ void rasterizer::draw(size_t prim_count){
 		return;
 	}
 
+	num_vs_output_attributes_ = pparent_->get_vertex_shader()->num_output_attributes();
 	const viewport& vp = pparent_->get_viewport();
 	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
 	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
