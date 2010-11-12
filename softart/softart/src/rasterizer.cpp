@@ -192,15 +192,19 @@ void rasterizer::initialize(renderer_impl* pparent)
  **************************************************/
 void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
-	vs_output diff = vs_output_ops_->operator_sub(vs_output_ops_->project1(v1), vs_output_ops_->project1(v0));
+	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
+
+	vs_output projed_v0, projed_v1, diff;
+	vs_output_ops->operator_sub(diff, vs_output_ops->project(projed_v0, v1), vs_output_ops->project(projed_v1, v0));
 	const eflib::vec4& dir = diff.position;
 	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
 
 	h_blend_shader hbs = pparent_->get_blend_shader();
 
 	//构造差分
-	vs_output ddx = vs_output_ops_->operator_mul1(diff, (diff.position.x / (diff.position.xy().length_sqr())));
-	vs_output ddy = vs_output_ops_->operator_mul1(diff, (diff.position.y / (diff.position.xy().length_sqr())));
+	vs_output ddx, ddy;
+	vs_output_ops->operator_mul(ddx, diff, (diff.position.x / (diff.position.xy().length_sqr())));
+	vs_output_ops->operator_mul(ddy, diff, (diff.position.y / (diff.position.xy().length_sqr())));
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
 	int vptop = fast_floori(max(0.0f, vp.y));
@@ -238,10 +242,12 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		ex = eflib::clamp<int>(ex, vpleft, int(vpright));
 
 		//设置起点的vs_output
-		vs_output px_start(vs_output_ops_->project1(*start));
-		vs_output px_end(vs_output_ops_->project1(*end));
+		vs_output px_start, px_end;
+		vs_output_ops->project(px_start, *start);
+		vs_output_ops->project(px_end, *end);
 		float step = sx + 0.5f - start->position.x;
-		vs_output px_in = vs_output_ops_->lerp(px_start, px_end, step / diff_dir);
+		vs_output px_in;
+		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
 		vs_output unprojed;
@@ -258,14 +264,14 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 			}
 
 			//进行像素渲染
-			vs_output_ops_->unproject2(unprojed, px_in);
+			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
 				hfb_->render_sample(hbs, iPixel, fast_floori(px_in.position.y), 0, px_out, px_out.depth);
 			}
 
 			//差分递增
 			++ step;
-			px_in = vs_output_ops_->lerp(px_start, px_end, step / diff_dir);
+			vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
 	}
 	else //y major
@@ -295,10 +301,12 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		ey = eflib::clamp<int>(ey, vptop, int(vpbottom));
 
 		//设置起点的vs_output
-		vs_output px_start(vs_output_ops_->project1(*start));
-		vs_output px_end(vs_output_ops_->project1(*end));
+		vs_output px_start, px_end;
+		vs_output_ops->project(px_start, *start);
+		vs_output_ops->project(px_end, *end);
 		float step = sy + 0.5f - start->position.y;
-		vs_output px_in = vs_output_ops_->lerp(px_start, px_end, step / diff_dir);
+		vs_output px_in;
+		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 
 		//x-major 的线绘制
 		vs_output unprojed;
@@ -315,14 +323,14 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 			}
 
 			//进行像素渲染
-			vs_output_ops_->unproject2(unprojed, px_in);
+			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
 				hfb_->render_sample(hbs, fast_floori(px_in.position.x), iPixel, 0, px_out, px_out.depth);
 			}
 
 			//差分递增
 			++ step;
-			px_in = vs_output_ops_->lerp(px_start, px_end, step / diff_dir);
+			vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
 	}
 }
@@ -637,6 +645,9 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 **************************************************/
 void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
+	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
+	const uint32_t num_vs_output_attributes = pparent_->get_vertex_shader()->num_output_attributes();
+
 	//{
 	//	boost::mutex::scoped_lock lock(logger_mutex_);
 	//
@@ -675,13 +686,15 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		TVT_PIXEL
 	};
 
-	const vs_output projed_vert0 = vs_output_ops_->project1(v0);
-	const vs_output projed_vert1 = vs_output_ops_->project1(v1);
-	const vs_output projed_vert2 = vs_output_ops_->project1(v2);
+	vs_output projed_vert0, projed_vert1, projed_vert2;
+	vs_output_ops->project(projed_vert0, v0);
+	vs_output_ops->project(projed_vert1, v1);
+	vs_output_ops->project(projed_vert2, v2);
 
 	//初始化边及边上属性的差
-	const vs_output e01 = vs_output_ops_->operator_sub(projed_vert1, projed_vert0);
-	const vs_output e02 = vs_output_ops_->operator_sub(projed_vert2, projed_vert0);
+	vs_output e01, e02;
+	vs_output_ops->operator_sub(e01, projed_vert1, projed_vert0);
+	vs_output_ops->operator_sub(e02, projed_vert2, projed_vert0);
 
 	//计算面积
 	float area = cross_prod2(e02.position.xy(), e01.position.xy());
@@ -691,8 +704,12 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	/**********************************************************
 	*  求解各个属性的差分式
 	*********************************************************/
-	const vs_output ddx(vs_output_ops_->operator_mul1(vs_output_ops_->operator_sub(vs_output_ops_->operator_mul1(e02, e01.position.y), vs_output_ops_->operator_mul2(e02.position.y, e01)), inv_area));
-	const vs_output ddy(vs_output_ops_->operator_mul1(vs_output_ops_->operator_sub(vs_output_ops_->operator_mul1(e01, e02.position.x), vs_output_ops_->operator_mul2(e01.position.x, e02)), inv_area));
+	vs_output ddx, ddy;
+	{
+		vs_output tmp0, tmp1, tmp2;
+		vs_output_ops->operator_mul(ddx, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e02, e01.position.y), vs_output_ops->operator_mul(tmp1, e01, e02.position.y)), inv_area);
+		vs_output_ops->operator_mul(ddy, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e01, e02.position.x), vs_output_ops->operator_mul(tmp1, e02, e01.position.x)), inv_area);
+	}
 
 	triangle_info info;
 	info.set(v0.position, ddx, ddy);
@@ -806,12 +823,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	const float offsety = y_begin + 0.5f - v0.position.y;
 
 	//设置基准扫描线的属性
-	vs_output base_vert = projed_vert0;
-	vs_output_ops_->integral2(base_vert, offsety, ddy);
-	vs_output_ops_->integral2(base_vert, offsetx, ddx);
+	vs_output base_vert;
+	vs_output_ops->copy(base_vert, projed_vert0);
+	vs_output_ops->integral2(base_vert, offsety, ddy);
+	vs_output_ops->integral2(base_vert, offsetx, ddx);
 
 	bool has_centroid = false;
-	for(size_t i_attr = 0; i_attr < v0.num_used_attribute; ++i_attr){
+	for(size_t i_attr = 0; i_attr < num_vs_output_attributes; ++i_attr){
 		if (v0.attribute_modifiers[i_attr] & vs_output::am_centroid){
 			has_centroid = true;
 		}
@@ -828,20 +846,22 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	for(int iy = y_begin; iy < y_end; ++iy)
 	{
 		//光栅化
-		vs_output px_in(base_vert);
+		vs_output px_in;
+		vs_output_ops->copy(px_in, base_vert);
 		ps_output px_out;
 		vs_output unprojed;
 
 		const int dy = iy - vptop0;
 		if (pixel_end[dy] > pixel_begin[dy])
 		{
-			vs_output_ops_->integral2(px_in, static_cast<float>(pixel_begin[dy]), ddx);
+			vs_output_ops->integral2(px_in, static_cast<float>(pixel_begin[dy]), ddx);
 
 			for(int dx = pixel_begin[dy], end = pixel_end[dy]; dx < end; ++dx){
 				uint32_t mask = pixel_mask[dy * TILE_SIZE + dx];
 
 				if (has_centroid && (mask != full_mask)){
-					vs_output projed = px_in;
+					vs_output projed;
+					vs_output_ops->copy(projed, px_in);
 
 					// centroid interpolate
 					vec2 sp_centroid(0, 0);
@@ -857,16 +877,16 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					}
 					sp_centroid /= n;
 
-					for(size_t i_attr = 0; i_attr < projed.num_used_attribute; ++i_attr){
+					for(size_t i_attr = 0; i_attr < num_vs_output_attributes; ++i_attr){
 						if (projed.attribute_modifiers[i_attr] & vs_output::am_centroid){
 							projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
 						}
 					}
 
-					vs_output_ops_->unproject2(unprojed, projed);
+					vs_output_ops->unproject(unprojed, projed);
 				}
 				else{
-					vs_output_ops_->unproject2(unprojed, px_in);
+					vs_output_ops->unproject(unprojed, px_in);
 				}
 
 				if(pps->execute(unprojed, px_out)){
@@ -892,12 +912,12 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					}
 				}
 
-				vs_output_ops_->integral1(px_in, ddx);
+				vs_output_ops->integral1(px_in, ddx);
 			}
 		}
 
 		//差分递增
-		vs_output_ops_->integral1(base_vert, ddy);
+		vs_output_ops->integral1(base_vert, ddy);
 	}
 #else
 	UNREF_PARAM(full);
@@ -943,13 +963,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			swap(pvert[1], pvert[0]);
 	}
 
-	vs_output projed_vert0 = vs_output_ops_->project1(*(pvert[0]));
+	vs_output projed_vert0 = vs_output_ops->project1(*(pvert[0]));
 
 	//初始化边及边上属性的差
-	vs_output e01 = vs_output_ops_->operator_sub(vs_output_ops_->project1(*(pvert[1])), projed_vert0);
+	vs_output e01 = vs_output_ops->operator_sub(vs_output_ops->project1(*(pvert[1])), projed_vert0);
 	//float watch_x = e01.attributes[2].x;
 	
-	vs_output e02 = vs_output_ops_->operator_sub(vs_output_ops_->project1(*(pvert[2])), projed_vert0);
+	vs_output e02 = vs_output_ops->operator_sub(vs_output_ops->project1(*(pvert[2])), projed_vert0);
 	vs_output e12;
 
 
@@ -1118,7 +1138,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					vs_output unprojed;
 					for(size_t i_pixel = 0; i_pixel < scanline.scanline_width; ++i_pixel)
 					{
-						vs_output_ops_->unproject2(unprojed, px_in);
+						vs_output_ops->unproject2(unprojed, px_in);
 						if(pps->execute(unprojed, px_out)){
 							const size_t num_samples = hfb_->get_num_samples();
 							if (1 == num_samples){
@@ -1145,13 +1165,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 							}
 						}
 
-						vs_output_ops_->integral1(px_in, scanline.ddx);
+						vs_output_ops->integral1(px_in, scanline.ddx);
 					}
 				}
 			}
 
 			//差分递增
-			vs_output_ops_->integral1(current_base_scanline.base_vert, ddy);
+			vs_output_ops->integral1(current_base_scanline.base_vert, ddy);
 		}
 	}
 #endif
@@ -1180,6 +1200,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 
+	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 	const h_vertex_cache& dvc = pparent_->get_vertex_cache();
 	const h_clipper& clipper = pparent_->get_clipper();
 	const viewport& vp = pparent_->get_viewport();
@@ -1219,7 +1240,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 
 				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
 				if (!state_->cull(area)){
-					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area, *vs_output_ops_);
+					state_->clipping(num_clipped_verts[i], &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area, *vs_output_ops);
 				}
 				else{
 					num_clipped_verts[i] = 0;
@@ -1232,7 +1253,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 					pv[j] = &v;
 				}
 
-				clipper->clip(&clipped_verts[i * 6], num_clipped_verts[i], vp, *pv[0], *pv[1], *vs_output_ops_);
+				clipper->clip(&clipped_verts[i * 6], num_clipped_verts[i], vp, *pv[0], *pv[1], *vs_output_ops);
 				for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
 					cliped_indices[i * 12 + j] = static_cast<uint32_t>(i * 6 + j);
 				}
@@ -1422,8 +1443,6 @@ void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uin
 }
 
 void rasterizer::draw(size_t prim_count){
-
-	vs_output_ops_ = &get_vs_output_op(pparent_->get_vertex_cache()->fetch(0));
 
 	EFLIB_ASSERT(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
 	if(!pparent_) return;

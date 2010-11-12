@@ -71,7 +71,7 @@ private:
 	index_fetcher ind_fetcher_;
 	std::vector<uint32_t> indices_;
 
-	std::vector<vs_output> verts_;
+	boost::shared_array<vs_output> verts_;
 	std::vector<int32_t> used_verts_;
 
 	boost::pool<> verts_pool_;

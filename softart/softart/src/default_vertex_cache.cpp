@@ -29,7 +29,7 @@ void default_vertex_cache::initialize(renderer_impl* psr){
 
 void default_vertex_cache::reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
 {
-	verts_.clear();
+	verts_.reset();
 
 	pvs_ = get_weak_handle(pparent_->get_vertex_shader());
 	pvp_ = &(pparent_->get_viewport());
@@ -104,7 +104,7 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	std::vector<uint32_t> unique_indices = indices_;
 	std::sort(unique_indices.begin(), unique_indices.end());
 	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
-	verts_.resize(unique_indices.size());
+	verts_.reset(new vs_output[unique_indices.size()]);
 	used_verts_.resize(hsa_->num_vertices());
 
 	working_package = 0;

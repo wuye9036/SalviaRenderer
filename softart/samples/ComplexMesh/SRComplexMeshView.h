@@ -216,7 +216,11 @@ public:
 		out.attribute_modifiers[0] = softart::vs_output::am_linear;
 		out.attribute_modifiers[1] = softart::vs_output::am_linear;
 		out.attribute_modifiers[2] = softart::vs_output::am_linear;
-		out.num_used_attribute = 3;
+	}
+
+	uint32_t num_output_attributes() const
+	{
+		return 3;
 	}
 };
 

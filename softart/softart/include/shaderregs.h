@@ -77,51 +77,36 @@ public:
 	attrib_array_type attributes;
 	attrib_modifier_array_type attribute_modifiers;
 
-	uint32_t num_used_attribute;
-
-public:
 	vs_output()
-		: num_used_attribute(0)
 	{}
-	vs_output(
-		const eflib::vec4& position, 
-		bool front_face,
-		const attrib_array_type& attribs,
-		const attrib_modifier_array_type& modifiers,
-		uint32_t num_used_attrib);
 
-	//拷贝构造与赋值
+private:
 	vs_output(const vs_output& rhs);
-
-	vs_output& operator = (const vs_output& rhs);
+	vs_output& operator=(const vs_output& rhs);
 };
 
 struct vs_output_op
 {
-	typedef void (*vs_output_construct)(vs_output& out,
+	typedef vs_output& (*vs_output_construct)(vs_output& out,
 		const eflib::vec4& position, bool front_face,
 		const vs_output::attrib_array_type& attribs,
 		const vs_output::attrib_modifier_array_type& modifiers);
-	typedef void (*vs_output_copy)(vs_output& out, const vs_output& in);
+	typedef vs_output& (*vs_output_copy)(vs_output& out, const vs_output& in);
 	
-	typedef vs_output (*vs_output_project1)(const vs_output& in);
-	typedef vs_output& (*vs_output_project2)(vs_output& out, const vs_output& in);
-	
-	typedef vs_output (*vs_output_unproject1)(const vs_output& in);
-	typedef vs_output& (*vs_output_unproject2)(vs_output& out, const vs_output& in);
+	typedef vs_output& (*vs_output_project)(vs_output& out, const vs_output& in);
+	typedef vs_output& (*vs_output_unproject)(vs_output& out, const vs_output& in);
 
 	typedef vs_output& (*vs_output_operator_selfadd)(vs_output& lhs, const vs_output& rhs);
 	typedef vs_output& (*vs_output_operator_selfsub)(vs_output& lhs, const vs_output& rhs);
 	typedef vs_output& (*vs_output_operator_selfmul)(vs_output& lhs, float f);
 	typedef vs_output& (*vs_output_operator_selfdiv)(vs_output& lhs, float f);
 
-	typedef vs_output (*vs_output_operator_add)(const vs_output& vso0, const vs_output& vso1);
-	typedef vs_output (*vs_output_operator_sub)(const vs_output& vso0, const vs_output& vso1);
-	typedef vs_output (*vs_output_operator_mul1)(const vs_output& vso0, float f);
-	typedef vs_output (*vs_output_operator_mul2)(float f, const vs_output& vso0);
-	typedef vs_output (*vs_output_operator_div)(const vs_output& vso0, float f);
+	typedef vs_output& (*vs_output_operator_add)(vs_output& out, const vs_output& vso0, const vs_output& vso1);
+	typedef vs_output& (*vs_output_operator_sub)(vs_output& out, const vs_output& vso0, const vs_output& vso1);
+	typedef vs_output& (*vs_output_operator_mul)(vs_output& out, const vs_output& vso0, float f);
+	typedef vs_output& (*vs_output_operator_div)(vs_output& out, const vs_output& vso0, float f);
 
-	typedef vs_output (*vs_output_lerp_n)(const vs_output& start, const vs_output& end, float step);
+	typedef vs_output& (*vs_output_lerp_n)(vs_output& out, const vs_output& start, const vs_output& end, float step);
 
 	typedef vs_output& (*vs_output_integral1)(vs_output& inout, const vs_output& derivation);
 	typedef vs_output& (*vs_output_integral2)(vs_output& inout, float step, const vs_output& derivation);
@@ -129,11 +114,8 @@ struct vs_output_op
 	vs_output_construct construct;
 	vs_output_copy copy;
 
-	vs_output_project1 project1;
-	vs_output_project2 project2;
-
-	vs_output_unproject1 unproject1;
-	vs_output_unproject2 unproject2;
+	vs_output_project project;
+	vs_output_unproject unproject;
 
 	vs_output_operator_selfadd operator_selfadd;
 	vs_output_operator_selfsub operator_selfsub;
@@ -142,8 +124,7 @@ struct vs_output_op
 
 	vs_output_operator_add operator_add;
 	vs_output_operator_sub operator_sub;
-	vs_output_operator_mul1 operator_mul1;
-	vs_output_operator_mul2 operator_mul2;
+	vs_output_operator_mul operator_mul;
 	vs_output_operator_div operator_div;
 
 	vs_output_lerp_n lerp;
@@ -152,7 +133,7 @@ struct vs_output_op
 	vs_output_integral2 integral2;
 };
 
-const vs_output_op& get_vs_output_op(const vs_output& vso);
+const vs_output_op& get_vs_output_op(uint32_t n);
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
 void viewport_transform(eflib::vec4& position, const viewport& vp);
 

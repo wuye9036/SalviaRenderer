@@ -95,12 +95,18 @@ primitive_topology renderer_impl::get_primitive_topology() const
 result renderer_impl::set_vertex_shader(h_vertex_shader hvs)
 {
 	hvs_ = hvs;
+	vs_output_ops_ = &get_vs_output_op(hvs_->num_output_attributes());
 	return result::ok;
 }
 
 h_vertex_shader renderer_impl::get_vertex_shader() const
 {
 	return hvs_;
+}
+
+const vs_output_op* renderer_impl::get_vs_output_ops() const
+{
+	return vs_output_ops_;
 }
 
 result renderer_impl::set_rasterizer_state(const h_rasterizer_state& rs)

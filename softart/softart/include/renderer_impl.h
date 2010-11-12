@@ -38,6 +38,8 @@ class renderer_impl : public renderer
 	h_depth_stencil_state		hdss_;
 	int32_t						stencil_ref_;
 
+	const vs_output_op*			vs_output_ops_;
+
 	void initialize();
 
 public:
@@ -57,6 +59,7 @@ public:
 
 	virtual result set_vertex_shader(h_vertex_shader hvs);
 	virtual h_vertex_shader get_vertex_shader() const;
+	virtual const vs_output_op* get_vs_output_ops() const;
 
 	virtual result set_rasterizer_state(const h_rasterizer_state& rs);
 	virtual const h_rasterizer_state& get_rasterizer_state() const;

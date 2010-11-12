@@ -8,49 +8,33 @@ using namespace boost;
 using namespace eflib;
 
 template <int N>
-void construct_n(vs_output& out,
+vs_output& construct_n(vs_output& out,
 		const eflib::vec4& position, bool front_face,
 		const vs_output::attrib_array_type& attribs,
 		const vs_output::attrib_modifier_array_type& modifiers)
 {
 	out.position = position;
 	out.front_face = front_face;
-	out.num_used_attribute = N;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		out.attributes[i_attr] = attribs[i_attr];
 		out.attribute_modifiers[i_attr] = modifiers[i_attr];
 	}
+	return out;
 }
 template <int N>
-void copy_n(vs_output& out, const vs_output& in)
+vs_output& copy_n(vs_output& out, const vs_output& in)
 {
 	out.position = in.position;
 	out.front_face = in.front_face;
-	out.num_used_attribute = N;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		out.attributes[i_attr] = in.attributes[i_attr];
 		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
 	}
+	return out;
 }
 
 template <int N>
-vs_output project1_n(const vs_output& in)
-{
-	vs_output ret;
-	ret.position = in.position;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		ret.attributes[i_attr] = in.attributes[i_attr];
-		ret.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			ret.attributes[i_attr] *= in.position.w;
-		}
-	}
-	ret.front_face = in.front_face;
-	ret.num_used_attribute = N;
-	return ret;
-}
-template <int N>
-vs_output& project2_n(vs_output& out, const vs_output& in)
+vs_output& project_n(vs_output& out, const vs_output& in)
 {
 	if (&out != &in){
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -60,7 +44,6 @@ vs_output& project2_n(vs_output& out, const vs_output& in)
 				out.attributes[i_attr] *= in.position.w;
 			}
 		}
-		out.num_used_attribute = N;
 		out.position = in.position;
 		out.front_face = in.front_face;
 	}
@@ -75,24 +58,7 @@ vs_output& project2_n(vs_output& out, const vs_output& in)
 }
 
 template <int N>
-vs_output unproject1_n(const vs_output& in)
-{
-	vs_output ret;
-	ret.position = in.position;
-	const float inv_w = 1.0f / in.position.w;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		ret.attributes[i_attr] = in.attributes[i_attr];
-		ret.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-		if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-			ret.attributes[i_attr] *= inv_w;
-		}
-	}
-	ret.front_face = in.front_face;
-	ret.num_used_attribute = N;
-	return ret;
-}
-template <int N>
-vs_output& unproject2_n(vs_output& out, const vs_output& in)
+vs_output& unproject_n(vs_output& out, const vs_output& in)
 {
 	const float inv_w = 1.0f / in.position.w;
 	if (&out != &in){
@@ -103,7 +69,6 @@ vs_output& unproject2_n(vs_output& out, const vs_output& in)
 				out.attributes[i_attr] *= inv_w;
 			}
 		}
-		out.num_used_attribute = N;
 		out.position = in.position;
 		out.front_face = in.front_face;
 	}
@@ -118,11 +83,8 @@ vs_output& unproject2_n(vs_output& out, const vs_output& in)
 }
 
 template <int N>
-vs_output lerp_n(const vs_output& start, const vs_output& end, float step)
+vs_output& lerp_n(vs_output& out, const vs_output& start, const vs_output& end, float step)
 {
-	EFLIB_ASSERT(start.num_used_attribute == end.num_used_attribute, "");
-
-	vs_output out;
 	out.position = start.position + (end.position - start.position) * step;
 	out.front_face = start.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -134,16 +96,12 @@ vs_output lerp_n(const vs_output& start, const vs_output& end, float step)
 			out.attributes[i_attr] += (end.attributes[i_attr] - start.attributes[i_attr]) * step;
 		}
 	}
-	out.num_used_attribute = N;
-
 	return out;
 }
 
 template <int N>
 vs_output& integral1_n(vs_output& inout, const vs_output& derivation)
 {
-	EFLIB_ASSERT(inout.num_used_attribute == derivation.num_used_attribute, "");
-
 	inout.position += derivation.position;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(inout.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
@@ -156,8 +114,6 @@ vs_output& integral1_n(vs_output& inout, const vs_output& derivation)
 template <int N>
 vs_output& integral2_n(vs_output& inout, float step, const vs_output& derivation)
 {
-	EFLIB_ASSERT(inout.num_used_attribute == derivation.num_used_attribute, "");
-
 	inout.position += (derivation.position * step);
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(inout.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
@@ -171,8 +127,6 @@ vs_output& integral2_n(vs_output& inout, float step, const vs_output& derivation
 template <int N>
 vs_output& operator_selfadd_n(vs_output& lhs, const vs_output& rhs)
 {
-	EFLIB_ASSERT(lhs.num_used_attribute == rhs.num_used_attribute, "");
-
 	lhs.position += rhs.position;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(lhs.attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr], "");
@@ -183,8 +137,6 @@ vs_output& operator_selfadd_n(vs_output& lhs, const vs_output& rhs)
 template <int N>
 vs_output& operator_selfsub_n(vs_output& lhs, const vs_output& rhs)
 {
-	EFLIB_ASSERT(lhs.num_used_attribute == rhs.num_used_attribute, "");
-
 	lhs.position -= rhs.position;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(lhs.attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr], "");
@@ -209,55 +161,44 @@ vs_output& operator_selfdiv_n(vs_output& lhs, float f)
 }
 
 template <int N>
-vs_output operator_add_n(const vs_output& vso0, const vs_output& vso1)
+vs_output& operator_add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 {
-	vs_output ret;
-	ret.position = vso0.position + vso1.position;
-	ret.front_face = vso0.front_face;
+	out.position = vso0.position + vso1.position;
+	out.front_face = vso0.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
-		ret.attributes[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
-		ret.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
+		out.attributes[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
+		out.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
 	}
-	ret.num_used_attribute = N;
-	return ret;
+	return out;
 }
 template <int N>
-vs_output operator_sub_n(const vs_output& vso0, const vs_output& vso1)
+vs_output& operator_sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 {
-	vs_output ret;
-	ret.position = vso0.position - vso1.position;
-	ret.front_face = vso0.front_face;
+	out.position = vso0.position - vso1.position;
+	out.front_face = vso0.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
 		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
-		ret.attributes[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
-		ret.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
+		out.attributes[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
+		out.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
 	}
-	ret.num_used_attribute = N;
-	return ret;
+	return out;
 }
 template <int N>
-vs_output operator_mul1_n(const vs_output& vso0, float f)
+vs_output& operator_mul_n(vs_output& out, const vs_output& vso0, float f)
 {
-	vs_output ret;
-	ret.position = vso0.position * f;
-	ret.front_face = vso0.front_face;
+	out.position = vso0.position * f;
+	out.front_face = vso0.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		ret.attributes[i_attr] = vso0.attributes[i_attr] * f;
-		ret.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
+		out.attributes[i_attr] = vso0.attributes[i_attr] * f;
+		out.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
 	}
-	ret.num_used_attribute = N;
-	return ret;
+	return out;
 }
 template <int N>
-vs_output operator_mul2_n(float f, const vs_output& vso0)
+vs_output& operator_div_n(vs_output& out, const vs_output& vso0, float f)
 {
-	return operator_mul1_n<N>(vso0, f);
-}
-template <int N>
-vs_output operator_div_n(const vs_output& vso0, float f)
-{
-	return operator_mul1_n<N>(vso0, 1 / f);
+	return operator_mul_n<N>(out, vso0, 1 / f);
 }
 
 template <int N>
@@ -268,11 +209,8 @@ vs_output_op gen_vs_output_op_n()
 	ret.construct = construct_n<N>;
 	ret.copy = copy_n<N>;
 	
-	ret.project1 = project1_n<N>;
-	ret.project2 = project2_n<N>;
-	
-	ret.unproject1 = unproject1_n<N>;
-	ret.unproject2 = unproject2_n<N>;
+	ret.project = project_n<N>;
+	ret.unproject = unproject_n<N>;
 
 	ret.operator_selfadd = operator_selfadd_n<N>;
 	ret.operator_selfsub = operator_selfsub_n<N>;
@@ -281,8 +219,7 @@ vs_output_op gen_vs_output_op_n()
 	
 	ret.operator_add = operator_add_n<N>;
 	ret.operator_sub = operator_sub_n<N>;
-	ret.operator_mul1 = operator_mul1_n<N>;
-	ret.operator_mul2 = operator_mul2_n<N>;
+	ret.operator_mul = operator_mul_n<N>;
 	ret.operator_div = operator_div_n<N>;
 
 	ret.lerp = lerp_n<N>;
@@ -328,9 +265,9 @@ vs_output_op vs_output_ops[vso_attrib_regcnt] = {
 	gen_vs_output_op_n<31>()
 };
 
-const vs_output_op& get_vs_output_op(const vs_output& vso)
+const vs_output_op& get_vs_output_op(uint32_t n)
 {
-	return vs_output_ops[vso.num_used_attribute];
+	return vs_output_ops[n];
 }
 
 const eflib::vec4& vs_input::operator [](size_t i) const
@@ -366,29 +303,6 @@ void viewport_transform(vec4& position, const viewport& vp)
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2)
 {
 	return cross_prod2( (v1.position - v0.position).xy(), (v2.position - v0.position).xy() );
-}
-
-
-vs_output::vs_output(
-	const eflib::vec4& position, 
-	bool front_face,
-	const attrib_array_type& attribs,
-	const attrib_modifier_array_type& modifiers,
-	uint32_t num_used_attrib)
-{
-	vs_output_ops[num_used_attrib].construct(*this, position, front_face, attribs, modifiers);
-}
-
-vs_output::vs_output(const vs_output& rhs)
-{
-	vs_output_ops[rhs.num_used_attribute].copy(*this, rhs);
-}
-
-vs_output& vs_output::operator = (const vs_output& rhs){
-	if(&rhs != this){
-		vs_output_ops[rhs.num_used_attribute].copy(*this, rhs);
-	}
-	return *this;
 }
 
 /*****************************************

@@ -74,8 +74,6 @@ class rasterizer : public render_stage
 
 	h_framebuffer hfb_;
 
-	const vs_output_op* vs_output_ops_;
-
 	std::vector<eflib::vec3> edge_factors_;
 	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
 
