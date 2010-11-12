@@ -243,7 +243,6 @@ vs_output operator_mul1_n(const vs_output& vso0, float f)
 	ret.position = vso0.position * f;
 	ret.front_face = vso0.front_face;
 	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
 		ret.attributes[i_attr] = vso0.attributes[i_attr] * f;
 		ret.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
 	}
