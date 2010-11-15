@@ -363,7 +363,7 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 	__m128 medge2 = _mm_loadu_ps(&edge_factors[2].x);
 
 	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
-	__m128 medgex = _mm_movelh_ps(mtmp, medge2);
+	__m128 medgex = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 0, 1, 0));
 	__m128 medgey = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 1, 3, 2));
 	mtmp = _mm_unpackhi_ps(medge0, medge1);
 	__m128 medgez = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 2, 1, 0));
@@ -383,12 +383,13 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 		__m128 mspx = _mm_set1_ps(sp.x);
 		__m128 mspy = _mm_set1_ps(sp.y);
 
+		__m128 mx = _mm_add_ps(mtx, mspx);
+		__m128 my = _mm_add_ps(mty, mspy);
+
 		__m128 mask_rej = _mm_setzero_ps();
 		{
 			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(0, 0, 0, 0));
 			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(0, 0, 0, 0));
-			__m128 mx = _mm_add_ps(mtx, mspx);
-			__m128 my = _mm_add_ps(mty, mspy);
 			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
 
 			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(0, 0, 0, 0));
@@ -398,8 +399,6 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 		{
 			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(1, 1, 1, 1));
 			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(1, 1, 1, 1));
-			__m128 mx = _mm_add_ps(mtx, mspx);
-			__m128 my = _mm_add_ps(mty, mspy);
 			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
 
 			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(1, 1, 1, 1));
@@ -409,8 +408,6 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 		{
 			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(2, 2, 2, 2));
 			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(2, 2, 2, 2));
-			__m128 mx = _mm_add_ps(mtx, mspx);
-			__m128 my = _mm_add_ps(mty, mspy);
 			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
 
 			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(2, 2, 2, 2));
@@ -498,7 +495,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 	__m128 medge2 = _mm_loadu_ps(&edge_factors[2].x);
 
 	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
-	__m128 medgex = _mm_movelh_ps(mtmp, medge2);
+	__m128 medgex = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 0, 1, 0));
 	__m128 medgey = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 1, 3, 2));
 	mtmp = _mm_unpackhi_ps(medge0, medge1);
 	__m128 medgez = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 2, 1, 0));
@@ -520,12 +517,12 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 	__m128 mask_acc = _mm_setzero_ps();
 	// Trival rejection & acception
 	{
-		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(0, 0, 0, 0));
-		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(0, 0, 0, 0));
+		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(0, 3, 0, 3));
+		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(0, 0, 3, 3));
 
 		__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(0, 0, 0, 0));
 
-		__m128 msteprej = _mm_add_ps(_mm_unpacklo_ps(_mm_setzero_ps(), mstepx), _mm_movelh_ps(_mm_setzero_ps(), mstepy));
+		__m128 msteprej = _mm_add_ps(mstepx, mstepy);
 		__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
 
 		__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(0, 0, 0, 0));
@@ -534,12 +531,12 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
 	}
 	{
-		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(1, 1, 1, 1));
-		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(1, 1, 1, 1));
+		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(1, 3, 1, 3));
+		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(1, 1, 3, 3));
 
 		__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(1, 1, 1, 1));
 
-		__m128 msteprej = _mm_add_ps(_mm_unpacklo_ps(_mm_setzero_ps(), mstepx), _mm_movelh_ps(_mm_setzero_ps(), mstepy));
+		__m128 msteprej = _mm_add_ps(mstepx, mstepy);
 		__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
 
 		__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(1, 1, 1, 1));
@@ -548,12 +545,12 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
 	}
 	{
-		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(2, 2, 2, 2));
-		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(2, 2, 2, 2));
+		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(2, 3, 2, 3));
+		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(2, 2, 3, 3));
 
 		__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(2, 2, 2, 2));
 
-		__m128 msteprej = _mm_add_ps(_mm_unpacklo_ps(_mm_setzero_ps(), mstepx), _mm_movelh_ps(_mm_setzero_ps(), mstepy));
+		__m128 msteprej = _mm_add_ps(mstepx, mstepy);
 		__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
 
 		__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(2, 2, 2, 2));
