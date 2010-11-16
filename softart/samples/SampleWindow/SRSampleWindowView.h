@@ -51,14 +51,29 @@ public:
 		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
 		out.attributes[1] = in[1];
 		out.attributes[2] = in[2];
-		out.attribute_modifiers[0] = softart::vs_output::am_linear;
-		out.attribute_modifiers[1] = softart::vs_output::am_linear;
-		out.attribute_modifiers[2] = softart::vs_output::am_linear;
 	}
 
 	uint32_t num_output_attributes() const
 	{
 		return 3;
+	}
+
+	uint32_t output_attribute_modifiers(uint32_t index) const
+	{
+		switch (index)
+		{
+		case 0:
+			return softart::vs_output::am_linear;
+
+		case 1:
+			return softart::vs_output::am_linear;
+
+		case 2:
+			return softart::vs_output::am_linear;
+
+		default:
+			return softart::vs_output::am_linear;
+		}
 	}
 };
 
@@ -116,12 +131,23 @@ public:
 		vec4 pos = in[0];
 		transform(out.position, pos, wvp);
 		out.attributes[0] = vec4(in[0].x, in[0].z, 0, 0);
-		out.attribute_modifiers[0] = softart::vs_output::am_linear;
 	}
 
 	uint32_t num_output_attributes() const
 	{
 		return 1;
+	}
+
+	uint32_t output_attribute_modifiers(uint32_t index) const
+	{
+		switch (index)
+		{
+		case 0:
+			return softart::vs_output::am_linear;
+
+		default:
+			return softart::vs_output::am_linear;
+		}
 	}
 };
 

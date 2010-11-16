@@ -38,7 +38,7 @@ class renderer_impl : public renderer
 	h_depth_stencil_state		hdss_;
 	int32_t						stencil_ref_;
 
-	const vs_output_op*			vs_output_ops_;
+	vs_output_op*				vs_output_ops_;
 
 	void initialize();
 

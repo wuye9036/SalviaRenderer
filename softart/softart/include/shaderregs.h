@@ -69,13 +69,11 @@ public:
 
 public:
 	typedef boost::array<eflib::vec4, vso_attrib_regcnt> attrib_array_type;
-	typedef boost::array<uint32_t, vso_attrib_regcnt> attrib_modifier_array_type;
 
 	eflib::vec4 position;
 	bool front_face;
 
 	attrib_array_type attributes;
-	attrib_modifier_array_type attribute_modifiers;
 
 	vs_output()
 	{}
@@ -89,8 +87,7 @@ struct vs_output_op
 {
 	typedef vs_output& (*vs_output_construct)(vs_output& out,
 		const eflib::vec4& position, bool front_face,
-		const vs_output::attrib_array_type& attribs,
-		const vs_output::attrib_modifier_array_type& modifiers);
+		const vs_output::attrib_array_type& attribs);
 	typedef vs_output& (*vs_output_copy)(vs_output& out, const vs_output& in);
 	
 	typedef vs_output& (*vs_output_project)(vs_output& out, const vs_output& in);
@@ -112,6 +109,9 @@ struct vs_output_op
 	typedef vs_output& (*vs_output_integral2)(vs_output& out, const vs_output& in, float step, const vs_output& derivation);
 	typedef vs_output& (*vs_output_selfintegral1)(vs_output& inout, const vs_output& derivation);
 	typedef vs_output& (*vs_output_selfintegral2)(vs_output& inout, float step, const vs_output& derivation);
+
+	typedef boost::array<uint32_t, vso_attrib_regcnt> attrib_modifier_array_type;
+
 
 	vs_output_construct construct;
 	vs_output_copy copy;
@@ -135,9 +135,11 @@ struct vs_output_op
 	vs_output_integral2 integral2;
 	vs_output_selfintegral1 selfintegral1;
 	vs_output_selfintegral2 selfintegral2;
+
+	attrib_modifier_array_type attribute_modifiers;
 };
 
-const vs_output_op& get_vs_output_op(uint32_t n);
+vs_output_op& get_vs_output_op(uint32_t n);
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
 void viewport_transform(eflib::vec4& position, const viewport& vp);
 

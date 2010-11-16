@@ -213,14 +213,29 @@ public:
 		out.attributes[0] = vec4(light_pos - pos_es.xyz(), 1);
 		out.attributes[1] = vec4(eye_pos - pos_es.xyz(), 1);
 		out.attributes[2] = normal_es;
-		out.attribute_modifiers[0] = softart::vs_output::am_linear;
-		out.attribute_modifiers[1] = softart::vs_output::am_linear;
-		out.attribute_modifiers[2] = softart::vs_output::am_linear;
 	}
 
 	uint32_t num_output_attributes() const
 	{
 		return 3;
+	}
+
+	uint32_t output_attribute_modifiers(uint32_t index) const
+	{
+		switch (index)
+		{
+		case 0:
+			return softart::vs_output::am_linear;
+
+		case 1:
+			return softart::vs_output::am_linear;
+
+		case 2:
+			return softart::vs_output::am_linear;
+
+		default:
+			return softart::vs_output::am_linear;
+		}
 	}
 };
 

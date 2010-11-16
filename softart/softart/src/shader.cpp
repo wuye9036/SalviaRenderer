@@ -8,226 +8,6 @@ using namespace boost;
 using namespace eflib;
 
 template <int N>
-vs_output& construct_n(vs_output& out,
-		const eflib::vec4& position, bool front_face,
-		const vs_output::attrib_array_type& attribs,
-		const vs_output::attrib_modifier_array_type& modifiers)
-{
-	out.position = position;
-	out.front_face = front_face;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		out.attributes[i_attr] = attribs[i_attr];
-		out.attribute_modifiers[i_attr] = modifiers[i_attr];
-	}
-	return out;
-}
-template <int N>
-vs_output& copy_n(vs_output& out, const vs_output& in)
-{
-	out.position = in.position;
-	out.front_face = in.front_face;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		out.attributes[i_attr] = in.attributes[i_attr];
-		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-	}
-	return out;
-}
-
-template <int N>
-vs_output& project_n(vs_output& out, const vs_output& in)
-{
-	if (&out != &in){
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = in.attributes[i_attr];
-			out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-			if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-				out.attributes[i_attr] *= in.position.w;
-			}
-		}
-		out.position = in.position;
-		out.front_face = in.front_face;
-	}
-	else{
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-				out.attributes[i_attr] *= in.position.w;
-			}
-		}
-	}
-	return out;
-}
-
-template <int N>
-vs_output& unproject_n(vs_output& out, const vs_output& in)
-{
-	const float inv_w = 1.0f / in.position.w;
-	if (&out != &in){
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = in.attributes[i_attr];
-			out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-			if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-				out.attributes[i_attr] *= inv_w;
-			}
-		}
-		out.position = in.position;
-		out.front_face = in.front_face;
-	}
-	else{
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			if (!(in.attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-				out.attributes[i_attr] *= inv_w;
-			}
-		}
-	}
-	return out;
-}
-
-template <int N>
-vs_output& lerp_n(vs_output& out, const vs_output& start, const vs_output& end, float step)
-{
-	out.position = start.position + (end.position - start.position) * step;
-	out.front_face = start.front_face;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(start.attribute_modifiers[i_attr] == end.attribute_modifiers[i_attr], "");
-
-		out.attributes[i_attr] = start.attributes[i_attr];
-		out.attribute_modifiers[i_attr] = start.attribute_modifiers[i_attr];
-		if (!(start.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-			out.attributes[i_attr] += (end.attributes[i_attr] - start.attributes[i_attr]) * step;
-		}
-	}
-	return out;
-}
-
-template <int N>
-vs_output& integral1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
-{
-	out.position = in.position + derivation.position;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
-		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-		if (!(in.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-			out.attributes[i_attr] = in.attributes[i_attr] + derivation.attributes[i_attr];
-		}
-	}
-	return out;
-}
-template <int N>
-vs_output& integral2_n(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
-{
-	out.position = in.position + (derivation.position * step);
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(in.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
-		out.attribute_modifiers[i_attr] = in.attribute_modifiers[i_attr];
-		if (!(in.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-			out.attributes[i_attr] = in.attributes[i_attr] + (derivation.attributes[i_attr] * step);
-		}
-	}
-	return out;
-}
-template <int N>
-vs_output& selfintegral1_n(vs_output& inout, const vs_output& derivation)
-{
-	inout.position += derivation.position;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(inout.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
-		if (!(inout.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-			inout.attributes[i_attr] += derivation.attributes[i_attr];
-		}
-	}
-	return inout;
-}
-template <int N>
-vs_output& selfintegral2_n(vs_output& inout, float step, const vs_output& derivation)
-{
-	inout.position += (derivation.position * step);
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(inout.attribute_modifiers[i_attr] == derivation.attribute_modifiers[i_attr], "");
-		if (!(inout.attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-			inout.attributes[i_attr] += (derivation.attributes[i_attr] * step);
-		}
-	}
-	return inout;
-}
-
-template <int N>
-vs_output& operator_selfadd_n(vs_output& lhs, const vs_output& rhs)
-{
-	lhs.position += rhs.position;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(lhs.attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr], "");
-		lhs.attributes[i_attr] += rhs.attributes[i_attr];
-	}
-	return lhs;
-}
-template <int N>
-vs_output& operator_selfsub_n(vs_output& lhs, const vs_output& rhs)
-{
-	lhs.position -= rhs.position;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(lhs.attribute_modifiers[i_attr] == rhs.attribute_modifiers[i_attr], "");
-		lhs.attributes[i_attr] -= rhs.attributes[i_attr];
-	}
-	return lhs;
-}
-template <int N>
-vs_output& operator_selfmul_n(vs_output& lhs, float f)
-{
-	lhs.position *= f;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		lhs.attributes[i_attr] *= f;
-	}
-	return lhs;
-}
-template <int N>
-vs_output& operator_selfdiv_n(vs_output& lhs, float f)
-{
-	EFLIB_ASSERT(!eflib::equal<float>(f, 0.0f), "");
-	return operator_selfmul_n<N>(lhs, 1 / f);
-}
-
-template <int N>
-vs_output& operator_add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
-{
-	out.position = vso0.position + vso1.position;
-	out.front_face = vso0.front_face;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
-		out.attributes[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
-		out.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
-	}
-	return out;
-}
-template <int N>
-vs_output& operator_sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
-{
-	out.position = vso0.position - vso1.position;
-	out.front_face = vso0.front_face;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		EFLIB_ASSERT(vso0.attribute_modifiers[i_attr] == vso1.attribute_modifiers[i_attr], "");
-		out.attributes[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
-		out.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
-	}
-	return out;
-}
-template <int N>
-vs_output& operator_mul_n(vs_output& out, const vs_output& vso0, float f)
-{
-	out.position = vso0.position * f;
-	out.front_face = vso0.front_face;
-	for(size_t i_attr = 0; i_attr < N; ++i_attr){
-		out.attributes[i_attr] = vso0.attributes[i_attr] * f;
-		out.attribute_modifiers[i_attr] = vso0.attribute_modifiers[i_attr];
-	}
-	return out;
-}
-template <int N>
-vs_output& operator_div_n(vs_output& out, const vs_output& vso0, float f)
-{
-	return operator_mul_n<N>(out, vso0, 1 / f);
-}
-
-template <int N>
 vs_output_op gen_vs_output_op_n()
 {
 	vs_output_op ret;
@@ -293,7 +73,207 @@ vs_output_op vs_output_ops[vso_attrib_regcnt] = {
 	gen_vs_output_op_n<31>()
 };
 
-const vs_output_op& get_vs_output_op(uint32_t n)
+template <int N>
+vs_output& construct_n(vs_output& out,
+		const eflib::vec4& position, bool front_face,
+		const vs_output::attrib_array_type& attribs)
+{
+	out.position = position;
+	out.front_face = front_face;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = attribs[i_attr];
+	}
+	return out;
+}
+template <int N>
+vs_output& copy_n(vs_output& out, const vs_output& in)
+{
+	out.position = in.position;
+	out.front_face = in.front_face;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = in.attributes[i_attr];
+	}
+	return out;
+}
+
+template <int N>
+vs_output& project_n(vs_output& out, const vs_output& in)
+{
+	if (&out != &in){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+			out.attributes[i_attr] = in.attributes[i_attr];
+			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+				out.attributes[i_attr] *= in.position.w;
+			}
+		}
+		out.position = in.position;
+		out.front_face = in.front_face;
+	}
+	else{
+		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+				out.attributes[i_attr] *= in.position.w;
+			}
+		}
+	}
+	return out;
+}
+
+template <int N>
+vs_output& unproject_n(vs_output& out, const vs_output& in)
+{
+	const float inv_w = 1.0f / in.position.w;
+	if (&out != &in){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+			out.attributes[i_attr] = in.attributes[i_attr];
+			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+				out.attributes[i_attr] *= inv_w;
+			}
+		}
+		out.position = in.position;
+		out.front_face = in.front_face;
+	}
+	else{
+		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
+				out.attributes[i_attr] *= inv_w;
+			}
+		}
+	}
+	return out;
+}
+
+template <int N>
+vs_output& lerp_n(vs_output& out, const vs_output& start, const vs_output& end, float step)
+{
+	out.position = start.position + (end.position - start.position) * step;
+	out.front_face = start.front_face;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = start.attributes[i_attr];
+		if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] += (end.attributes[i_attr] - start.attributes[i_attr]) * step;
+		}
+	}
+	return out;
+}
+
+template <int N>
+vs_output& integral1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
+{
+	out.position = in.position + derivation.position;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] = in.attributes[i_attr] + derivation.attributes[i_attr];
+		}
+	}
+	return out;
+}
+template <int N>
+vs_output& integral2_n(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
+{
+	out.position = in.position + (derivation.position * step);
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			out.attributes[i_attr] = in.attributes[i_attr] + (derivation.attributes[i_attr] * step);
+		}
+	}
+	return out;
+}
+template <int N>
+vs_output& selfintegral1_n(vs_output& inout, const vs_output& derivation)
+{
+	inout.position += derivation.position;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			inout.attributes[i_attr] += derivation.attributes[i_attr];
+		}
+	}
+	return inout;
+}
+template <int N>
+vs_output& selfintegral2_n(vs_output& inout, float step, const vs_output& derivation)
+{
+	inout.position += (derivation.position * step);
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+			inout.attributes[i_attr] += (derivation.attributes[i_attr] * step);
+		}
+	}
+	return inout;
+}
+
+template <int N>
+vs_output& operator_selfadd_n(vs_output& lhs, const vs_output& rhs)
+{
+	lhs.position += rhs.position;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		lhs.attributes[i_attr] += rhs.attributes[i_attr];
+	}
+	return lhs;
+}
+template <int N>
+vs_output& operator_selfsub_n(vs_output& lhs, const vs_output& rhs)
+{
+	lhs.position -= rhs.position;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		lhs.attributes[i_attr] -= rhs.attributes[i_attr];
+	}
+	return lhs;
+}
+template <int N>
+vs_output& operator_selfmul_n(vs_output& lhs, float f)
+{
+	lhs.position *= f;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		lhs.attributes[i_attr] *= f;
+	}
+	return lhs;
+}
+template <int N>
+vs_output& operator_selfdiv_n(vs_output& lhs, float f)
+{
+	EFLIB_ASSERT(!eflib::equal<float>(f, 0.0f), "");
+	return operator_selfmul_n<N>(lhs, 1 / f);
+}
+
+template <int N>
+vs_output& operator_add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
+{
+	out.position = vso0.position + vso1.position;
+	out.front_face = vso0.front_face;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
+	}
+	return out;
+}
+template <int N>
+vs_output& operator_sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
+{
+	out.position = vso0.position - vso1.position;
+	out.front_face = vso0.front_face;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
+	}
+	return out;
+}
+template <int N>
+vs_output& operator_mul_n(vs_output& out, const vs_output& vso0, float f)
+{
+	out.position = vso0.position * f;
+	out.front_face = vso0.front_face;
+	for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		out.attributes[i_attr] = vso0.attributes[i_attr] * f;
+	}
+	return out;
+}
+template <int N>
+vs_output& operator_div_n(vs_output& out, const vs_output& vso0, float f)
+{
+	return operator_mul_n<N>(out, vso0, 1 / f);
+}
+
+
+vs_output_op& get_vs_output_op(uint32_t n)
 {
 	return vs_output_ops[n];
 }

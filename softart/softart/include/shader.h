@@ -89,6 +89,7 @@ public:
 	void execute(const vs_input& in, vs_output& out);
 	virtual void shader_prog(const vs_input& in, vs_output& out) = 0;
 	virtual uint32_t num_output_attributes() const = 0;
+	virtual uint32_t output_attribute_modifiers(uint32_t index) const = 0;
 };
 
 class pixel_shader : public shader_impl

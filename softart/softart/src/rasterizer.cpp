@@ -820,7 +820,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 	bool has_centroid = false;
 	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
-		if (v0.attribute_modifiers[i_attr] & vs_output::am_centroid){
+		if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
 			has_centroid = true;
 		}
 	}
@@ -867,7 +867,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					sp_centroid /= n;
 
 					for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
-						if (projed.attribute_modifiers[i_attr] & vs_output::am_centroid){
+						if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
 							projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
 						}
 					}

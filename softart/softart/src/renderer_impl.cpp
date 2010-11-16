@@ -95,7 +95,14 @@ primitive_topology renderer_impl::get_primitive_topology() const
 result renderer_impl::set_vertex_shader(h_vertex_shader hvs)
 {
 	hvs_ = hvs;
-	vs_output_ops_ = &get_vs_output_op(hvs_->num_output_attributes());
+
+	uint32_t n = hvs_->num_output_attributes();
+	vs_output_ops_ = &get_vs_output_op(n);
+	for (uint32_t i = 0; i < n; ++ i)
+	{
+		vs_output_ops_->attribute_modifiers[i] = hvs_->output_attribute_modifiers(i);
+	}
+
 	return result::ok;
 }
 
