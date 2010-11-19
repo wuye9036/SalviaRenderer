@@ -24,7 +24,7 @@ using namespace boost;
 
 const int TILE_SIZE = 64;
 const int GEOMETRY_SETUP_PACKAGE_SIZE = 8;
-const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 4;
+const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
 
@@ -697,6 +697,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	*********************************************************/
 	vs_output ddx, ddy;
 	{
+		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
+		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
 		vs_output tmp0, tmp1, tmp2;
 		vs_output_ops->operator_mul(ddx, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e02, e01.position.y), vs_output_ops->operator_mul(tmp1, e01, e02.position.y)), inv_area);
 		vs_output_ops->operator_mul(ddy, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e01, e02.position.x), vs_output_ops->operator_mul(tmp1, e02, e01.position.x)), inv_area);

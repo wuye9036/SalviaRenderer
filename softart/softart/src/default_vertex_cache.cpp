@@ -67,7 +67,9 @@ void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& in
 			uint32_t id = indices[i];
 			used_verts_[id] = i;
 
-			pvs_->execute(hsa_->fetch_vertex(id), verts_[i]);
+			vs_input vertex;
+			hsa_->fetch_vertex(vertex, id);
+			pvs_->execute(vertex, verts_[i]);
 		}
 
 		local_working_package = working_package ++;

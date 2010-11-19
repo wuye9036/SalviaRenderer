@@ -16,6 +16,17 @@ using namespace eflib;
 //inherited
 result renderer_impl::set_input_layout(const input_layout_decl& layout)
 {
+	uint32_t n = 0;
+	for(size_t i_elemdecl = 0; i_elemdecl < layout.size(); ++i_elemdecl){
+		const input_element_decl& ied = layout[i_elemdecl];
+		uint32_t sidx = static_cast<uint32_t>(ied.stream_idx);
+		if (n < sidx + 1)
+		{
+			n = sidx + 1;
+		}
+	}
+	vs_input_ops_ = &get_vs_input_op(n);
+
 	//layout_ 只能到运行期检测了...
 	hvertcache_->set_input_layout(layout);
 	return result::ok;
@@ -109,6 +120,11 @@ result renderer_impl::set_vertex_shader(h_vertex_shader hvs)
 h_vertex_shader renderer_impl::get_vertex_shader() const
 {
 	return hvs_;
+}
+
+const vs_input_op* renderer_impl::get_vs_input_ops() const
+{
+	return vs_input_ops_;
 }
 
 const vs_output_op* renderer_impl::get_vs_output_ops() const

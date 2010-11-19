@@ -205,10 +205,10 @@ public:
 
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in[0];
+		vec4 pos = in.attributes[0];
 		vec4 pos_es, normal_es;
 		transform(pos_es, pos, wv);
-		transform33(normal_es, in[1], wv);
+		transform33(normal_es, in.attributes[1], wv);
 		transform(out.position, pos_es, proj);
 		out.attributes[0] = vec4(light_pos - pos_es.xyz(), 1);
 		out.attributes[1] = vec4(eye_pos - pos_es.xyz(), 1);

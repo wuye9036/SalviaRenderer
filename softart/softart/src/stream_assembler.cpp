@@ -48,10 +48,8 @@ void stream_assembler::set_input_layout(const input_layout_decl& layout)
 	layout_ = layout;
 }
 
-vs_input stream_assembler::fetch_vertex(size_t idx)
+void stream_assembler::fetch_vertex(vs_input& rv, size_t idx)
 {
-	vs_input rv;
-
 	for(size_t i_elemdecl = 0; i_elemdecl < layout_.size(); ++i_elemdecl){
 		const input_element_decl& ied = layout_[i_elemdecl];
 		size_t sidx = ied.stream_idx;
@@ -61,18 +59,16 @@ vs_input stream_assembler::fetch_vertex(size_t idx)
 		EFLIB_ASSERT(ridx < vsi_attrib_regcnt, "");
 		
 		if(sidx >= streams_.size() || ridx >= vsi_attrib_regcnt){
-			return rv;
+			return;
 		}
 		
 		const h_buffer& hb = streams_[sidx];
 		EFLIB_ASSERT(hb, "");
-		if(!hb) return rv;
+		if(!hb) return;
 
 		const uint8_t* pdata = hb->raw_data(ied.offset + ied.stride * idx);
-		rv[sidx] = get_vec4(ied.type, ied.usage, pdata);
+		rv.attributes[sidx] = get_vec4(ied.type, ied.usage, pdata);
 	}
-
-	return rv;
 }
 
 void stream_assembler::set_stream(stream_index stridx, h_buffer hbuf)

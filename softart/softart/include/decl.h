@@ -47,6 +47,7 @@ struct device_info;
 //internal structures of pipeline
 class vs_input;
 class vs_output;
+struct vs_input_op;
 struct vs_output_op;
 struct ps_output;
 

@@ -25,34 +25,14 @@ class vs_input
 public:
 	typedef boost::array<eflib::vec4, vsi_attrib_regcnt> vsinput_attributes_t;
 
-	const eflib::vec4& operator [](size_t i) const;
-	eflib::vec4& operator[](size_t i);
-
 	vs_input()
-		: num_used_attribute_(0)
 	{}
-	
-	vs_input(vsinput_attributes_t& attrs, uint32_t num_used_attribute)
-		: num_used_attribute_(num_used_attribute)
-	{
-		memcpy(&attributes_[0], &attrs[0], num_used_attribute_ * sizeof(attributes_[0]));
-	}
 
-	vs_input(const vs_input& rhs)
-		: num_used_attribute_(rhs.num_used_attribute_)
-	{
-		memcpy(&attributes_[0], &rhs.attributes_[0], num_used_attribute_ * sizeof(attributes_[0]));
-	}
+	vsinput_attributes_t attributes;
 
-	vs_input& operator = (const vs_input& rhs)
-	{
-		num_used_attribute_ = rhs.num_used_attribute_;
-		memcpy(&attributes_[0], &rhs.attributes_[0], num_used_attribute_ * sizeof(attributes_[0]));
-	}
-
-protected:
-	vsinput_attributes_t attributes_;
-	uint32_t num_used_attribute_;
+private:
+	vs_input(const vs_input& rhs);
+	vs_input& operator=(const vs_input& rhs);
 };
 
 class vs_output
@@ -81,6 +61,16 @@ public:
 private:
 	vs_output(const vs_output& rhs);
 	vs_output& operator=(const vs_output& rhs);
+};
+
+struct vs_input_op
+{
+	typedef vs_input& (*vs_input_construct)(vs_input& out,
+		const vs_input::vsinput_attributes_t& attrs);
+	typedef vs_input& (*vs_input_copy)(vs_input& out, const vs_input& in);
+
+	vs_input_construct construct;
+	vs_input_copy copy;
 };
 
 struct vs_output_op
@@ -139,6 +129,7 @@ struct vs_output_op
 	attrib_modifier_array_type attribute_modifiers;
 };
 
+vs_input_op& get_vs_input_op(uint32_t n);
 vs_output_op& get_vs_output_op(uint32_t n);
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
 void viewport_transform(eflib::vec4& position, const viewport& vp);

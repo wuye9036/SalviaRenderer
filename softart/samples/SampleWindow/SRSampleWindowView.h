@@ -46,11 +46,11 @@ public:
 	vs_box(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in[0];
+		vec4 pos = in.attributes[0];
 		transform(out.position, pos, wvp);
-		out.attributes[0] = in[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
-		out.attributes[1] = in[1];
-		out.attributes[2] = in[2];
+		out.attributes[0] = in.attributes[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
+		out.attributes[1] = in.attributes[1];
+		out.attributes[2] = in.attributes[2];
 	}
 
 	uint32_t num_output_attributes() const
@@ -128,9 +128,9 @@ public:
 	vs_plane(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in[0];
+		vec4 pos = in.attributes[0];
 		transform(out.position, pos, wvp);
-		out.attributes[0] = vec4(in[0].x, in[0].z, 0, 0);
+		out.attributes[0] = vec4(in.attributes[0].x, in.attributes[0].z, 0, 0);
 	}
 
 	uint32_t num_output_attributes() const

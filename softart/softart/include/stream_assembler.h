@@ -17,7 +17,7 @@ public:
 	void set_input_layout(const input_layout_decl& layout);
 	void set_stream(stream_index stridx, h_buffer hbuf);
 
-	vs_input fetch_vertex(size_t idx);
+	void fetch_vertex(vs_input& vertex, size_t idx);
 	size_t num_vertices() const;
 };
 
