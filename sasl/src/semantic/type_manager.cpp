@@ -12,7 +12,23 @@ BEGIN_NS_SASL_SEMANTIC();
 
 // some utility functions
 std::string buildin_type_name( buildin_type_codes btc ){
-	// TODO: translate buildin type name to a symbol name
+	if( sasl_ehelper::is_vector(btc) ) {
+		return buildin_type_name( sasl_ehelper::scalar_of(btc) ) 
+			+ std::string( "_" ) 
+			+ boost::lexical_cast<std::string>( sasl_ehelper::len_0( btc ) );
+	}
+	
+	if( sasl_ehelper::is_matrix(btc) ) {
+		return buildin_type_name( sasl_ehelper::scalar_of(btc) ) 
+			+ std::string( "_" ) 
+			+ boost::lexical_cast<std::string>( sasl_ehelper::len_0( btc ) )
+			+ std::string( "x" )
+			+ boost::lexical_cast<std::string>( sasl_ehelper::len_1( btc ) )
+			;
+
+	}
+	
+	return std::string("0") + btc.name(); 
 }
 
 std::string unqualified_type_symbol_name( shared_ptr<type_specifier> node ){
@@ -29,6 +45,25 @@ std::string unqualified_type_symbol_name( shared_ptr<type_specifier> node ){
 	} else if ( actual_node_type == syntax_node_types::array_type ){
 		return unqualified_type_symbol_name( node->typed_handle<array_type>()->elem_type );
 	}
+}
+
+typedef type_entry::id_t type_entry::*qual_id_mem_ptr_t;
+
+//	description:
+//		remove qualifier from type. 
+//	return:
+//		means does the peeling was executed actually.
+//		If the src is unqualfied type, it returns 'false',
+//		naked was assgined from src, and qual return a null ptr.
+bool peel_qualifier(
+	boost::shared_ptr< type_specifier > src,
+	boost::shared_ptr<type_specifier>& naked,
+	qual_id_mem_ptr_t& qual
+	)
+{
+	naked = src;
+	qual = qual_id_mem_ptr_t();
+	return false;
 }
 
 // type_entry

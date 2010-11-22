@@ -19,6 +19,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol_scope.h
 	${SASL_HOME_DIR}/sasl/include/semantic/type_checker.h
 	${SASL_HOME_DIR}/sasl/include/semantic/type_converter.h
+	${SASL_HOME_DIR}/sasl/include/semantic/type_manager.h
 )
 
 set( SOURCE_FILES
@@ -31,6 +32,7 @@ set( SOURCE_FILES
 	symbol_scope.cpp
 	type_checker.cpp
 	type_converter.cpp
+	type_manager.cpp
 )
 
 ADD_LIBRARY( sasl_semantic STATIC
