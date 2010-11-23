@@ -350,7 +350,7 @@ void rasterizer::draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint3
 	}
 }
 
-void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec4* edge_factors, size_t num_samples){
+void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const ALIGN16 eflib::vec4* edge_factors, size_t num_samples){
 	size_t sx = left - left0;
 	size_t sy = top - top0;
 
@@ -358,9 +358,9 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
 
-	__m128 medge0 = _mm_loadu_ps(&edge_factors[0].x);
-	__m128 medge1 = _mm_loadu_ps(&edge_factors[1].x);
-	__m128 medge2 = _mm_loadu_ps(&edge_factors[2].x);
+	__m128 medge0 = _mm_load_ps(&edge_factors[0].x);
+	__m128 medge1 = _mm_load_ps(&edge_factors[1].x);
+	__m128 medge2 = _mm_load_ps(&edge_factors[2].x);
 
 	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
 	__m128 medgex = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 0, 1, 0));
@@ -418,8 +418,8 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 		__m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1UL << i_sample));
 		sample_mask = _mm_andnot_ps(mask_rej, sample_mask);
 
-		uint32_t store[4];
-		_mm_storeu_ps(reinterpret_cast<float*>(store), sample_mask);
+		ALIGN16 uint32_t store[4];
+		_mm_store_ps(reinterpret_cast<float*>(store), sample_mask);
 		pixel_mask[(sy + 0) * TILE_SIZE + (sx + 0)] |= store[0];
 		pixel_mask[(sy + 0) * TILE_SIZE + (sx + 1)] |= store[1];
 		pixel_mask[(sy + 1) * TILE_SIZE + (sx + 0)] |= store[2];
@@ -474,15 +474,12 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 }
 
 void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region,
-		const vec4* edge_factors, const bool* mark_x, const bool* mark_y,
-		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max){
+		const ALIGN16 vec4* edge_factors, uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
+		const ALIGN16 float* rej_to_acc, const ALIGN16 float* evalue, const ALIGN16 float* step_x, const ALIGN16 float* step_y){
 	const uint32_t new_w = cur_region.w;
 	const uint32_t new_h = cur_region.h;
 
 #ifndef EFLIB_NO_SIMD
-	UNREF_PARAM(mark_x);
-	UNREF_PARAM(mark_y);
-
 	static const union
 	{
 		int maski;
@@ -490,28 +487,22 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 	} MASK = { 0x80000000 };
 	static const __m128 SIGN_MASK = _mm_set1_ps(MASK.maskf);
 
-	__m128 medge0 = _mm_loadu_ps(&edge_factors[0].x);
-	__m128 medge1 = _mm_loadu_ps(&edge_factors[1].x);
-	__m128 medge2 = _mm_loadu_ps(&edge_factors[2].x);
+	__m128 medge0 = _mm_load_ps(&edge_factors[0].x);
+	__m128 medge1 = _mm_load_ps(&edge_factors[1].x);
+	__m128 medge2 = _mm_load_ps(&edge_factors[2].x);
 
 	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
 	__m128 medgex = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 0, 1, 0));
 	__m128 medgey = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 1, 3, 2));
 	mtmp = _mm_unpackhi_ps(medge0, medge1);
-	__m128 medgez = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 2, 1, 0));
 
-	__m128 mneww = _mm_set1_ps(new_w);
-	__m128 mnewh = _mm_set1_ps(new_h);
-
-	__m128 mstepx3 = _mm_mul_ps(mneww, medgex);
-	__m128 mstepy3 = _mm_mul_ps(mnewh, medgey);
-	__m128 mrej2acc3 = _mm_add_ps(_mm_or_ps(mstepx3, SIGN_MASK), _mm_or_ps(mstepy3, SIGN_MASK));
+	__m128 mstepx3 = _mm_load_ps(step_x);
+	__m128 mstepy3 = _mm_load_ps(step_y);
+	__m128 mrej2acc3 = _mm_load_ps(rej_to_acc);
 
 	__m128 mleft = _mm_set1_ps(left);
 	__m128 mtop = _mm_set1_ps(top);
-	__m128 mmarkx = _mm_and_ps(_mm_cmpgt_ps(medgex, _mm_setzero_ps()), mneww);
-	__m128 mmarky = _mm_and_ps(_mm_cmpgt_ps(medgey, _mm_setzero_ps()), mnewh);
-	__m128 mevalue3 = _mm_sub_ps(medgez, _mm_add_ps(_mm_mul_ps(_mm_add_ps(mleft, mmarkx), medgex), _mm_mul_ps(_mm_add_ps(mtop, mmarky), medgey)));
+	__m128 mevalue3 = _mm_sub_ps(_mm_load_ps(evalue), _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
 
 	__m128 mask_rej = _mm_setzero_ps();
 	__m128 mask_acc = _mm_setzero_ps();
@@ -560,22 +551,20 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 	}
 	mask_acc = _mm_andnot_ps(mask_acc, SIGN_MASK);
 
-	__m128i mineww = _mm_cvtps_epi32(mneww);
-	__m128i minewh = _mm_cvtps_epi32(mnewh);
+	__m128i mineww = _mm_set1_epi32(new_w);
+	__m128i minewh = _mm_set1_epi32(new_h);
 	__m128i mix = _mm_add_epi32(_mm_set1_epi32(cur_region.x), _mm_unpacklo_epi32(_mm_setzero_si128(), mineww));
 	__m128i miy = _mm_add_epi32(_mm_set1_epi32(cur_region.y), _mm_unpacklo_epi64(_mm_setzero_si128(), minewh));
 	__m128i miregion = _mm_or_si128(mix, _mm_slli_epi32(miy, 8));
 	miregion = _mm_or_si128(miregion, _mm_castps_si128(mask_acc));
 
-	uint32_t region_code[4];
-	_mm_storeu_si128(reinterpret_cast<__m128i*>(&region_code[0]), miregion);
+	ALIGN16 uint32_t region_code[4];
+	_mm_store_si128(reinterpret_cast<__m128i*>(&region_code[0]), miregion);
 
-	__m128 mx = _mm_cvtepi32_ps(mix);
-	__m128 my = _mm_cvtepi32_ps(miy);
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(x_min), _mm_add_ps(mx, mneww)));
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(x_max), mx));
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(y_min), _mm_add_ps(my, mnewh)));
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(y_max), my));
+	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(x_min), _mm_cvtepi32_ps(_mm_add_epi32(mix, mineww))));
+	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(x_max), _mm_cvtepi32_ps(mix)));
+	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(y_min), _mm_cvtepi32_ps(_mm_add_epi32(miy, minewh))));
+	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(y_max), _mm_cvtepi32_ps(miy)));
 
 	int rejections = ~_mm_movemask_ps(mask_rej) & 0xF;
 	unsigned long t;
@@ -588,15 +577,9 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 		rejections &= rejections - 1;
 	}
 #else
-	float evalue[3];
-	float step_x[3];
-	float step_y[3];
-	float rej_to_acc[3];
+	float evalue1[3];
 	for (int e = 0; e < 3; ++ e){
-		evalue[e] = edge_factors[e].z - ((left + mark_x[e] * new_w) * edge_factors[e].x + (top + mark_y[e] * new_h) * edge_factors[e].y);
-		step_x[e] = new_w * edge_factors[e].x;
-		step_y[e] = new_h * edge_factors[e].y;
-		rej_to_acc[e] = -abs(step_x[e]) - abs(step_y[e]);
+		evalue1[e] = evalue[e] - (left * edge_factors[e].x + top * edge_factors[e].y);
 	}
 
 	for (int ty = 0; ty < 2; ++ ty){
@@ -613,8 +596,8 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 				// Trival rejection & acception
 				for (int e = 0; e < 3; ++ e){
 					float step = tx * step_x[e] + ty * step_y[e];
-					rejection |= (step < evalue[e]);
-					acception &= (step + rej_to_acc[e] >= evalue[e]);
+					rejection |= (step < evalue1[e]);
+					acception &= (step + rej_to_acc[e] >= evalue1[e]);
 				}
 
 				if (!rejection){
@@ -642,6 +625,8 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 **************************************************/
 void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, const h_pixel_shader& pps)
 {
+	const h_blend_shader& hbs = pparent_->get_blend_shader();
+	const size_t num_samples = hfb_->get_num_samples();
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 
 	//{
@@ -663,7 +648,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	//}
 
 #ifndef USE_TRADITIONAL_RASTERIZER
-	const vec4 edge_factors[3] = {
+	const ALIGN16 vec4 edge_factors[3] = {
 		vec4(edge_factors_[prim_id * 3 + 0], 0),
 		vec4(edge_factors_[prim_id * 3 + 1], 0),
 		vec4(edge_factors_[prim_id * 3 + 2], 0)
@@ -718,9 +703,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	*	The algorithm is from Larrabee
 	*************************************************/
 
-	const h_blend_shader& hbs = pparent_->get_blend_shader();
-	const size_t num_samples = hfb_->get_num_samples();
-
 	uint32_t test_regions[2][TILE_SIZE / 2 * TILE_SIZE / 2];
 	uint32_t test_region_size[2] = { 0, 0 };
 	test_regions[0][0] = (full << 31);
@@ -737,11 +719,26 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	const uint32_t full_mask = (1UL << num_samples) - 1;
 
 	const int vpleft0 = fast_floori(vp.x);
+	const int vpright0 = fast_floori(vp.x + vp.w);
 	const int vptop0 = fast_floori(vp.y);
 	const int vpbottom0 = fast_floori(vp.y + vp.h);
 
 	uint32_t subtile_w = fast_floori(vp.w);
 	uint32_t subtile_h = fast_floori(vp.h);
+
+	ALIGN16 float step_x[4];
+	ALIGN16 float step_y[4];
+	ALIGN16 float rej_to_acc[4];
+	ALIGN16 float evalue[4];
+	float part_evalue[4];
+	for (int e = 0; e < 3; ++ e){
+		step_x[e] = TILE_SIZE * edge_factors[e].x;
+		step_y[e] = TILE_SIZE * edge_factors[e].y;
+		rej_to_acc[e] = -abs(step_x[e]) - abs(step_y[e]);
+		part_evalue[e] = mark_x[e] * TILE_SIZE * edge_factors[e].x + mark_y[e] * TILE_SIZE * edge_factors[e].y;
+		evalue[e] = edge_factors[e].z - part_evalue[e];
+	}
+	step_x[3] = step_y[3] = 0;
 
 	while (test_region_size[src_stage] > 0){
 		test_region_size[dst_stage] = 0;
@@ -749,16 +746,24 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		subtile_w /= 2;
 		subtile_h /= 2;
 
+		for (int e = 0; e < 3; ++ e){
+			step_x[e] *= 0.5f;
+			step_y[e] *= 0.5f;
+			rej_to_acc[e] *= 0.5f;
+			part_evalue[e] *= 0.5f;
+			evalue[e] += part_evalue[e];
+		}
+
 		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp){
 			const uint32_t packed_region = test_regions[src_stage][ivp];
 			eflib::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
 				subtile_w, subtile_h);
 			TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
-			const int vpleft = fast_floori(max(0.0f, vp.x + cur_region.x));
-			const int vptop = fast_floori(max(0.0f, vp.y + cur_region.y));
-			const int vpright = fast_floori(min(vp.x + cur_region.x + cur_region.w * 2, static_cast<float>(hfb_->get_width())));
-			const int vpbottom = fast_floori(min(vp.y + cur_region.y + cur_region.h * 2, static_cast<float>(hfb_->get_height())));
+			const int vpleft = max(0U, vpleft0 + cur_region.x);
+			const int vptop = max(0U, vptop0 + cur_region.y);
+			const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 2, static_cast<uint32_t>(hfb_->get_width()));
+			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 2, static_cast<uint32_t>(hfb_->get_height()));
 
 			// For one pixel region
 			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1)){
@@ -783,8 +788,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 			default:
 				// Only a part of the triangle is inside the tile. So subdivide the tile into small ones.
-				this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, mark_x, mark_y, test_regions[dst_stage], test_region_size[dst_stage],
-					x_min, x_max, y_min, y_max);
+				this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, test_regions[dst_stage], test_region_size[dst_stage],
+					x_min, x_max, y_min, y_max, rej_to_acc, evalue, step_x, step_y);
 				break;
 			}
 		}
@@ -946,10 +951,9 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			swap(pvert[1], pvert[0]);
 	}
 
-	vs_output projed_vert0, projed_vert1, projed_vert2;
-	vs_output_ops->copy(projed_vert0, *(pvert[0]));
-	vs_output_ops->copy(projed_vert1, *(pvert[1]));
-	vs_output_ops->copy(projed_vert2, *(pvert[2]));
+	const vs_output& projed_vert0 = *(pvert[0]);
+	const vs_output& projed_vert1 = *(pvert[1]);
+	const vs_output& projed_vert2 = *(pvert[2]);
 
 	//初始化边及边上属性的差
 	vs_output e01;
@@ -1009,8 +1013,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	int vptop = fast_floori(max(0.0f, vp.y));
 	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
 	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
-
-	const h_blend_shader& hbs = pparent_->get_blend_shader();
 
 	for(int iPart = 0; iPart < 2; ++iPart){
 
@@ -1141,7 +1143,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 					{
 						vs_output_ops->unproject(unprojed, px_in);
 						if(pps->execute(unprojed, px_out)){
-							const size_t num_samples = hfb_->get_num_samples();
 							if (1 == num_samples){
 								hfb_->render_sample(hbs, scanline.base_x + i_pixel, scanline.base_y, 0, px_out, px_out.depth);
 							}
