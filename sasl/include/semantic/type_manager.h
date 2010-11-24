@@ -11,12 +11,12 @@ BEGIN_NS_SASL_SEMANTIC();
 class type_entry{
 public:
 	typedef int32_t id_t;
-	
+	typedef type_entry::*id_t id_ptr_t;
+
 	type_entry();
 	
 	::boost::shared_ptr< type_specifier > stored;
 	
-	id_t c_qual;
 	id_t u_qual;
 	/*
 	id_t v_qual;
@@ -33,6 +33,7 @@ public:
 		);
 	
 private:
+	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr<type_specifier> node );
 	::std::vector< type_entry > entries;
 };
 

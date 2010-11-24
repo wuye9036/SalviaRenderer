@@ -46,8 +46,8 @@ private:
 
 class type_info_si: public semantic_info{
 public:
-	virtual boost::shared_ptr<type_specifier> type_info() = 0;
-	virtual void type_info( boost::shared_ptr<type_specifier> type ) = 0;
+	virtual type_entry::id_t entry_id() = 0;
+	virtual void entry_id( type_entry::id_t id ) = 0;
 
 	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
 };
