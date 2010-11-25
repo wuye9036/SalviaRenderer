@@ -2,7 +2,7 @@
 #define SASL_SEMANTIC_TYPE_MANAGER_H
 
 #include <sasl/include/semantic/semantic_forward.h>
-
+#include <eflib/include/platform/typedefs.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
@@ -14,7 +14,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-struct symbol;
+class symbol;
 
 class type_entry{
 public:
