@@ -16,13 +16,13 @@ namespace sasl{
 BEGIN_NS_SASL_SEMANTIC();
 
 bool type_equal(
-	boost::shared_ptr<::sasl::syntax_tree::type_specifier> lhs,
-	boost::shared_ptr<::sasl::syntax_tree::type_specifier> rhs
+	boost::shared_ptr< ::sasl::syntax_tree::type_specifier > lhs,
+	boost::shared_ptr< ::sasl::syntax_tree::type_specifier > rhs
 );
 
 bool type_equal(
-	boost::shared_ptr<::sasl::syntax_tree::buildin_type> lhs,
-	boost::shared_ptr<::sasl::syntax_tree::buildin_type> rhs
+	boost::shared_ptr< ::sasl::syntax_tree::buildin_type > lhs,
+	boost::shared_ptr< ::sasl::syntax_tree::buildin_type > rhs
 );
 
 // boost::shared_ptr<::sasl::syntax_tree::type_specifier> actual_type( boost::shared_ptr<::sasl::syntax_tree::type_specifier> );

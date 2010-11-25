@@ -5,6 +5,8 @@
 #include <string>
 #include <eflib/include/platform/typedefs.h>
 
+template <typename DerivedT, typename StorageT> class enum_base;
+
 template<typename DerivedT, typename StorageT>
 struct value_op{
 	void from_value( StorageT val ){
@@ -51,23 +53,23 @@ private:
 	template<typename ValueT>
 	static DerivedT derived_obj( ValueT val )
 	{
-		enum_base<DerivedT, DerivedT::storage_type> tmp_obj( val );
+		enum_base<DerivedT, typename DerivedT::storage_type> tmp_obj( val );
 		return *(static_cast<DerivedT*>(&tmp_obj));
 	}
 public:
 	DerivedT operator & (const DerivedT& rhs) const{
-		DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ & rhs.val_;
+		typename DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ & rhs.val_;
 
 		return derived_obj(ret_val);
 	}
 
 	DerivedT operator | (const DerivedT& rhs) const{
-		DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ | rhs.val_;
+		typename DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ | rhs.val_;
 		return derived_obj(ret_val);
 	}
 
 	DerivedT operator ^ (const DerivedT& rhs) const{
-		DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ ^ rhs.val_;
+		typename DerivedT::storage_type ret_val = ((DerivedT*)this)->val_ ^ rhs.val_;
 		return derived_obj(ret_val);
 	}
 
@@ -91,7 +93,7 @@ public:
 	}
 
 	bool excluded( const DerivedT& rhs ) const{
-		return ((DerivedT*)this)->val_ & rhs.val_ == (typename Derived::storage_type)0;
+		return ((DerivedT*)this)->val_ & rhs.val_ == (typename DerivedT::storage_type)0;
 	}
 };
 

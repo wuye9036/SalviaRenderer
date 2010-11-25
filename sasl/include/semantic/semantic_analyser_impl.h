@@ -22,7 +22,7 @@ class type_converter;
 
 class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
 public:
-	semantic_analyser_impl( boost::shared_ptr<::sasl::common::compiler_info_manager> infomgr );
+	semantic_analyser_impl( boost::shared_ptr< ::sasl::common::compiler_info_manager > infomgr );
 
 	// expression
 	SASL_VISIT_DCL( unary_expression );
@@ -68,15 +68,15 @@ public:
 	SASL_VISIT_DCL( program );
 
 	void buildin_type_convert(
-		boost::shared_ptr<::sasl::syntax_tree::node>,
-		boost::shared_ptr<::sasl::syntax_tree::node>
+		boost::shared_ptr< ::sasl::syntax_tree::node >,
+		boost::shared_ptr< ::sasl::syntax_tree::node >
 		);
 
 	void register_type_converter();
 	void register_buildin_function( ::sasl::syntax_tree::node& );
 private:
 	boost::shared_ptr<type_converter> typeconv;
-	boost::shared_ptr<::sasl::common::compiler_info_manager> infomgr;
+	boost::shared_ptr< ::sasl::common::compiler_info_manager > infomgr;
 	boost::shared_ptr<symbol> cursym;
 	bool is_local;
 };

@@ -3,6 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/semantic/semantic_info.h>
+#include <sasl/include/semantic/type_manager.h>
 #include <sasl/enums/type_types.h>
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/enums/buildin_type_code.h>

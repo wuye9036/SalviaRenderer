@@ -15,12 +15,14 @@ namespace sasl{
 	namespace syntax_tree{
 		struct node;
 		struct expression;
+		struct type_specifier;
 	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
 
 using sasl::syntax_tree::node;
+using sasl::syntax_tree::type_specifier;
 class type_converter;
 
 //////////////////////////////////////////////////////////////////////////
@@ -51,7 +53,7 @@ public:
 	std::vector< boost::shared_ptr<symbol> > find_overloads(
 		const std::string& name,
 		boost::shared_ptr<type_converter> conv,
-		std::vector< boost::shared_ptr<::sasl::syntax_tree::expression> > args
+		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > args
 		) const;
 	int count( std::string name ) const;
 
@@ -67,7 +69,7 @@ public:
 
 	void remove_child( const std::string& mangled );
 	void remove();
-	
+
 	boost::shared_ptr<symbol> parent() const;
 
 	boost::shared_ptr<struct node> node() const;
@@ -90,10 +92,10 @@ private:
 		);
 
 	boost::shared_ptr<symbol> find_this(const std::string& mangled) const;
-	const std::vector<const ::std::string>& get_overloads( const ::std::string& umnalged ) const;
+	const std::vector< ::std::string >& get_overloads( const ::std::string& umnalged ) const;
 
 	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;
-	typedef std::tr1::unordered_map< std::string, ::std::vector< const ::std::string > > overload_table_t;
+	typedef std::tr1::unordered_map< std::string, ::std::vector< ::std::string > > overload_table_t;
 	typedef children_t::iterator children_iterator_t;
 
 	boost::weak_ptr<struct node> correspond_node;
@@ -102,7 +104,7 @@ private:
 
 	children_t children;
 	overload_table_t overloads;
-	::std::vector< const ::std::string > null_mt;
+	::std::vector< ::std::string > null_mt;
 	// name
 	std::string mgl_name;
 	std::string umgl_name;

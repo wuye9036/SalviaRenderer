@@ -26,25 +26,25 @@ public:
 		cannot_conv = 0xFFFFFFFF
 	};
 	typedef boost::function<
-		void ( boost::shared_ptr<::sasl::syntax_tree::node>,  boost::shared_ptr<::sasl::syntax_tree::node>)
+		void ( boost::shared_ptr< ::sasl::syntax_tree::node >,  boost::shared_ptr< ::sasl::syntax_tree::node >)
 	> converter_t;
 
 	type_converter();
 	void register_converter( conv_type ct,
-		boost::shared_ptr<::sasl::syntax_tree::type_specifier> /*src*/,
-		boost::shared_ptr<::sasl::syntax_tree::type_specifier> /*dest*/,
+		boost::shared_ptr< ::sasl::syntax_tree::type_specifier > /*src*/,
+		boost::shared_ptr< ::sasl::syntax_tree::type_specifier > /*dest*/,
 		converter_t conv );
 
-	conv_type convert( boost::shared_ptr<::sasl::syntax_tree::node> dest,
-		boost::shared_ptr<::sasl::syntax_tree::node> src );
-	conv_type convert( boost::shared_ptr<::sasl::syntax_tree::type_specifier> desttype,
-		boost::shared_ptr<::sasl::syntax_tree::node> src );
+	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
+		boost::shared_ptr< ::sasl::syntax_tree::node > src );
+	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::type_specifier > desttype,
+		boost::shared_ptr< ::sasl::syntax_tree::node > src );
 
 private:
 	typedef boost::tuples::tuple<
 		conv_type,
-		boost::shared_ptr<::sasl::syntax_tree::type_specifier>,
-		boost::shared_ptr<::sasl::syntax_tree::type_specifier>,
+		boost::shared_ptr< ::sasl::syntax_tree::type_specifier >,
+		boost::shared_ptr< ::sasl::syntax_tree::type_specifier >,
 		converter_t	> conv_info;
 	std::vector< conv_info > convinfos;
 };

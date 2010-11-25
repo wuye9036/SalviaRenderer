@@ -4,7 +4,7 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 *********************/
 
 #include <sasl/include/semantic/name_mangler.h>
-
+#include <sasl/enums/default_hasher.h>
 #include <sasl/enums/enums_helper.h>
 #include <sasl/enums/operators.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -34,7 +34,7 @@ using ::sasl::syntax_tree::variable_declaration;
 static boost::mutex lookup_table_mtx;
 
 static std::string mangling_tag("M");
-static boost::unordered_map< buildin_type_code, std::string > btc_decorators;
+static boost::unordered_map< buildin_type_code, std::string, enum_hasher > btc_decorators;
 static bool is_initialized(false);
 
 static void initialize_lookup_table(){

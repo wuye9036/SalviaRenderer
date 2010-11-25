@@ -59,19 +59,18 @@ struct program;
 //		EFLIB_ASSERT_UNIMPLEMENTED0( "XXX::visit was not implemented yet." );
 //	}
 #define SASL_VISIT_NOIMPL( node_type_name )	\
-	void BOOST_PP_CAT( SASL_VISITOR_TYPE_NAME, ::visit) ( BOOST_PP_CAT( ::sasl::syntax_tree::, node_type_name ) &, ::boost::any* ){ \
+	void SASL_VISITOR_TYPE_NAME::visit( ::sasl::syntax_tree::node_type_name &, ::boost::any* ){ \
 		EFLIB_ASSERT_UNIMPLEMENTED0( \
-			(::std::string( BOOST_PP_STRINGIZE(	\
-				BOOST_PP_CAT( BOOST_PP_CAT(SASL_VISITOR_TYPE_NAME, ::),	node_type_name ) \
-				) ) + ::std::string( "was not implemented yet." )).c_str()	\
+			( ::std::string( BOOST_PP_STRINGIZE(	SASL_VISITOR_TYPE_NAME::node_type_name ) ) \
+			+ ::std::string( "was not implemented yet." ) ).c_str()	\
 		); \
 	}
 
 #define SASL_VISIT_DEF( node_type_name )	\
-	void BOOST_PP_CAT(SASL_VISITOR_TYPE_NAME, ::visit) ( BOOST_PP_CAT( ::sasl::syntax_tree::, node_type_name ) & v, ::boost::any* data )
+	void SASL_VISITOR_TYPE_NAME::visit ( ::sasl::syntax_tree::node_type_name& v, ::boost::any* data )
 
 #define SASL_VISIT_DCL( node_type_name )	\
-	virtual void visit( BOOST_PP_CAT( ::sasl::syntax_tree::, node_type_name ) & v, ::boost::any* data = NULL )
+	virtual void visit( ::sasl::syntax_tree::node_type_name & v, ::boost::any* data = NULL )
 
 class syntax_tree_visitor{
 public:

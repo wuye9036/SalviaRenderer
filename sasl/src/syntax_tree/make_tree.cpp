@@ -9,9 +9,11 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <eflib/include/platform/enable_warnings.h>
 
 #define DEFAULT_STATE_SCOPE() state_scope ss(this, e_other);
 
@@ -137,7 +139,7 @@ tree_combinator& dtype_combinator::dbuildin( buildin_type_code btc )
 	if( cur_node ){
 		return default_proc();
 	}
-	
+
 	typed_node( create_node<buildin_type>(token_attr::null()) );
 	typed_node()->value_typecode = btc;
 	return *this;
@@ -300,7 +302,7 @@ tree_combinator& dexpr_combinator::dvarexpr( const std::string& v)
 
 	boost::shared_ptr< variable_expression > ret = create_node<variable_expression>( token_attr::null() );
 	ret->var_name = token_attr::from_string( v );
-	
+
 	typed_node( ret );
 	return *this;
 }
@@ -540,7 +542,7 @@ dcallexpr_combinator::dcallexpr_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
 	typed_node( create_node<call_expression>( token_attr::null() ) );
-	
+
 	assert( parent->typed_node() );
 	parent->get_node( typed_node()->expr );
 	parent->typed_node( boost::shared_ptr<node>() );
@@ -744,7 +746,7 @@ dvarstmt_combinator::dvarstmt_combinator( tree_combinator* parent )
 void dvarstmt_combinator::before_end()
 {
 	if( typed_node2<node>()->node_class() == syntax_node_types::declaration_statement ){
-		// this node may be set by dnode() function. 
+		// this node may be set by dnode() function.
 		return;
 	}
 	assert( typed_node() );
@@ -762,7 +764,7 @@ dexprstmt_combinator::dexprstmt_combinator( tree_combinator* parent )
 void dexprstmt_combinator::before_end()
 {
 	if( typed_node2<node>()->node_class() == syntax_node_types::expression_statement ){
-		// this node may be set by dnode() function. 
+		// this node may be set by dnode() function.
 		return;
 	}
 	assert( typed_node() );
@@ -968,7 +970,7 @@ dreturn_combinator::dreturn_combinator( tree_combinator* parent )
 }
 
 void dreturn_combinator::before_end(){
-	if ( typed_node2<node>() 
+	if ( typed_node2<node>()
 		&& typed_node2<node>()->node_class() == syntax_node_types::jump_statement ){
 		return;
 	}

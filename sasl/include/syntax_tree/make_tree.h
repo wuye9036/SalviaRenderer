@@ -9,8 +9,11 @@
 #include <sasl/enums/type_qualifiers.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <eflib/include/metaprog/enable_if.h>
+
+#include <eflib/include/platform/disable_warnings.h>
 #include <boost/any.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/mpl/find.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/or.hpp>
@@ -22,6 +25,8 @@
 #include <boost/type_traits/is_arithmetic.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
+#include <eflib/include/platform/enable_warnings.h>
+
 #include <string>
 #include <vector>
 
@@ -36,8 +41,8 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 struct typecode_map
 {
 	typedef boost::mpl::vector<
-		bool, 
-		int8_t, uint8_t, 
+		bool,
+		int8_t, uint8_t,
 		int16_t, uint16_t,
 		int32_t, uint32_t,
 		int64_t, uint64_t,
@@ -47,10 +52,10 @@ struct typecode_map
 	static literal_constant_types type_codes[];
 
 	template<typename T>
-	struct is_sasl_buildin_type: public boost::mpl::not_< 
+	struct is_sasl_buildin_type: public boost::mpl::not_<
 		boost::is_same<
 		typename boost::mpl::find<cpptypes, T>::type,
-		typename boost::mpl::end<cpptypes>::type 
+		typename boost::mpl::end<cpptypes>::type
 		>
 	>::type{};
 
@@ -132,14 +137,14 @@ class dwhiledo_combinator;
 	}
 
 #define SASL_TYPED_NODE_ACCESSORS_IMPL( class_name, node_type ) \
-	boost::shared_ptr< node_type > class_name##::typed_node() { \
+	boost::shared_ptr< node_type > class_name::typed_node() { \
 		return typed_node2< node_type >(); \
 	}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Tree combinator is a helper class for syntax tree generation.
 // 1. Motion
-//   Combinator is a good method for creating a compisite tree. 
+//   Combinator is a good method for creating a compisite tree.
 //   In our design, each combinator will generate a type of syntax tree node.
 //   These combinators inherit from a root class, tree_combinator, which supports
 //   the interface of all combinators.
@@ -161,7 +166,7 @@ public:
 
 	virtual tree_combinator& dtypedef(){ return default_proc(); }
 
-	
+
 	virtual tree_combinator& dtype(){ return default_proc(); }
 	virtual tree_combinator& dinit_expr(){ return default_proc(); }
 	virtual tree_combinator& dinit_list(){ return default_proc(); }
@@ -182,7 +187,7 @@ public:
 	// impl by expression
 	template <typename T> tree_combinator& dconstant2(
 		const T& v,
-		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T>, 0 ) 
+		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T>, 0 )
 		)
 	{
 		return dconstant( typecode_map::lookup<T>(), boost::lexical_cast<std::string>(v) );
@@ -217,7 +222,7 @@ public:
 	virtual tree_combinator& dcase(){ return default_proc(); }
 	virtual tree_combinator& ddefault(){ return default_proc(); }
 	virtual tree_combinator& dstmts(){ return default_proc(); }
-	
+
 	virtual tree_combinator& dfor(){ return default_proc(); }
 	virtual tree_combinator& dinit_var(){ return default_proc(); }
 	virtual tree_combinator& diter(){ return default_proc(); }
@@ -337,7 +342,7 @@ protected:
 
 	tree_combinator( tree_combinator* parent ): parent( parent ), e_state( e_none ){}
 	tree_combinator& default_proc(){ syntax_error(); return *this; }
-	
+
 	template< typename T >
 	tree_combinator& enter_child( state_t s, boost::shared_ptr<T>& child_comb ){
 		assert( !child_comb );
@@ -463,7 +468,7 @@ public:
 protected:
 	dexpr_combinator( const dexpr_combinator& rhs);
 	dexpr_combinator& operator = ( const dexpr_combinator& rhs );
-	
+
 	virtual void child_ended();
 private:
 	boost::shared_ptr<dcast_combinator>			cast_comb;
@@ -508,14 +513,14 @@ protected:
 	virtual void child_ended();
 private:
 	boost::shared_ptr<dexpr_combinator> lexpr_comb;
-	boost::shared_ptr<dexpr_combinator> rexpr_comb;	
+	boost::shared_ptr<dexpr_combinator> rexpr_comb;
 };
 
 class dbranchexpr_combinator: public tree_combinator
 {
 public:
 	dbranchexpr_combinator( tree_combinator* parent );
-	
+
 	virtual tree_combinator& dcond();
 	virtual tree_combinator& dyes();
 	virtual tree_combinator& dno();
@@ -803,7 +808,7 @@ public:
 	virtual void child_ended();
 protected:
 	dfunction_combinator( const dfunction_combinator& rhs);
-	dfunction_combinator& operator = ( const dfunction_combinator& rhs );	
+	dfunction_combinator& operator = ( const dfunction_combinator& rhs );
 private:
 	boost::shared_ptr<dtype_combinator> rettype_comb;
 	boost::shared_ptr<dparameter_combinator> par_comb;

@@ -8,6 +8,8 @@
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
+struct node;
+
 template <typename NodeT> boost::shared_ptr<NodeT> create_node(){
 	BOOST_STATIC_ASSERT( ( std::tr1::is_base_of<node, NodeT>::value ) );
 	boost::shared_ptr<NodeT> ret( new NodeT() );

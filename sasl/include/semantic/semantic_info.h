@@ -2,6 +2,7 @@
 #define SASL_SEMANTIC_SEMANTIC_INFO_H
 
 #include <sasl/include/semantic/semantic_forward.h>
+#include <boost/make_shared.hpp>
 #include <boost/tr1/type_traits.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
@@ -42,14 +43,14 @@ template <typename SemanticInfoT, typename NodeU>
 boost::shared_ptr<SemanticInfoT> get_or_create_semantic_info( boost::shared_ptr<NodeU> pnode ){
 	assert( pnode );
 	if ( !pnode->semantic_info() ){
-		pnode->semantic_info( boost::make_shared<SemanticInfoT>() );	
+		pnode->semantic_info( boost::make_shared<SemanticInfoT>() );
 	}
 	return extract_semantic_info<SemanticInfoT>(pnode);
 }
 
 template <typename SemanticInfoT, typename NodeU> boost::shared_ptr<SemanticInfoT> get_or_create_semantic_info( NodeU& nd ){
 	if ( !nd.semantic_info() ){
-		nd.semantic_info( boost::make_shared<SemanticInfoT>() );	
+		nd.semantic_info( boost::make_shared<SemanticInfoT>() );
 	}
 	return extract_semantic_info<SemanticInfoT>(nd);
 }

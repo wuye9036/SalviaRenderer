@@ -25,7 +25,7 @@ namespace sasl{
 }
 #define SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() void accept( syntax_tree_visitor*, ::boost::any* data )
 #define SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( node_class_name ) \
-	void BOOST_PP_CAT(node_class_name, ::accept) ( syntax_tree_visitor* v, ::boost::any* data ) \
+	void node_class_name ::accept ( syntax_tree_visitor* v, ::boost::any* data ) \
 {	\
 	v->visit( *this, data );\
 }

@@ -33,7 +33,10 @@
 #			define _SCL_SECURE_NO_WARNINGS
 #		endif
 #	endif
+#endif
 
+#if defined( __GNUC__ )
+#   define EFLIB_GCC
 #endif
 
 #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
