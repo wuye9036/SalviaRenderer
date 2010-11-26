@@ -16,7 +16,7 @@ struct enum_hasher{
 };
 
 namespace boost{
-	template <typename D, typename S> size_t hash_value( const enum_base<D, S>& e ){
+	template <typename D, typename S> ::std::size_t hash_value( enum_base<D, S> const& e ){
 		return enum_hasher().val(e);
 	}
 }

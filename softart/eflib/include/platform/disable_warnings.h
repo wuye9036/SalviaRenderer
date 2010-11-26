@@ -5,5 +5,6 @@
 #endif
 
 #if defined( EFLIB_GCC )
-#   pragma Warnings (Off)
+#	pragma GCC push_options
+#	pragma GCC diagnostic ignored "-Wall"
 #endif

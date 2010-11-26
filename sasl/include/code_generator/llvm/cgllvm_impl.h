@@ -5,6 +5,7 @@
 #include <sasl/include/syntax_tree/visitor.h>
 
 #include <eflib/include/platform/disable_warnings.h>
+#define __STDC_CONSTANT_MACROS
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
@@ -68,14 +69,14 @@ public:
 	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( jump_statement );
-	
+
 	// program
 	SASL_VISIT_DCL( program );
 
 	boost::shared_ptr<llvm_code> generated_module();
 private:
 	boost::shared_ptr<cgllvm_global_context> ctxt;
-	boost::shared_ptr<::sasl::semantic::type_converter> typeconv;
+	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 };
 
 END_NS_SASL_CODE_GENERATOR()

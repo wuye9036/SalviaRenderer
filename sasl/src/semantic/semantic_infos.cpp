@@ -13,6 +13,8 @@ using ::sasl::common::token_attr;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::buildin_type;
 
+using ::boost::shared_ptr;
+
 BEGIN_NS_SASL_SEMANTIC();
 
 // some free functions.
@@ -51,7 +53,7 @@ std::string integer_literal_suffix( const std::string& str, bool& is_unsigned, b
 }
 std::string real_literal_suffix( const std::string& str, bool& is_single){
 	is_single = false;
-	
+
 	std::string::const_reverse_iterator ch_it = str.rbegin();
 	if ( *ch_it == 'F' || *ch_it == 'f' ){
 		is_single = true;
@@ -113,30 +115,18 @@ void const_value_si::set_literal(
 }
 
 buildin_type_code const_value_si::value_type() const{
-	if( !valtype ) return buildin_type_code::none;
-	return valtype->value_typecode;
-}
-
-boost::shared_ptr<type_specifier> const_value_si::type_info(){
-	if ( !valtype ){
-		valtype = create_node<buildin_type>( token_attr::null() );
-		valtype->value_typecode = buildin_type_code::none;
-	}
-	return valtype;
-}
-
-void const_value_si::type_info( boost::shared_ptr<type_specifier> type_ptr ){
-	return;
+	if( !type_info() ) return buildin_type_code::none;
+	return type_info()->value_typecode;
 }
 
 type_semantic_info::type_semantic_info(): ttype(type_types::none) { }
 
-boost::shared_ptr<type_specifier> type_semantic_info::full_type() const{
-	boost::shared_ptr<type_specifier> ret_type = type_node.lock();
+shared_ptr<type_specifier> type_semantic_info::full_type() const{
+	shared_ptr<type_specifier> ret_type = type_node.lock();
 	return /*(ttype == type_types::alias) ? actual_type( ret_type ) :*/ ret_type;
 }
 
-void type_semantic_info::full_type( boost::shared_ptr<type_specifier> ftnode ){
+void type_semantic_info::full_type( shared_ptr<type_specifier> ftnode ){
 	type_node = ftnode;
 }
 type_types type_semantic_info::type_type() const{
@@ -164,40 +154,16 @@ execution_block_semantic_info::execution_block_semantic_info()
 }
 
 
-boost::shared_ptr<type_specifier> type_info_si::from_node( ::boost::shared_ptr<node> n )
+shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 {
-	boost::shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
+	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
 	if ( tisi ){
 		return tisi->type_info();
 	}
-	return boost::shared_ptr<type_specifier>();
+	return shared_ptr<type_specifier>();
 }
 
 storage_si::storage_si(){
-}
-
-boost::shared_ptr<type_specifier> storage_si::type_info(){
-	return holder.lock();
-}
-
-void storage_si::type_info( boost::shared_ptr<type_specifier> val ){
-	holder = val;
-}
-
-void storage_si::set_and_hold_type_info( boost::shared_ptr<type_specifier> val ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
-
-boost::shared_ptr<type_specifier> type_si::type_info(){
-	return holder.lock();
-}
-
-void type_si::type_info( boost::shared_ptr<type_specifier> val ){
-	holder = val;
-}
-
-void type_si::set_and_hold_type_info( boost::shared_ptr<type_specifier> val ){
-	assert(!"EFLIB_ASSERT_UNIMPLEMENTED!");
 }
 
 type_si::type_si(){

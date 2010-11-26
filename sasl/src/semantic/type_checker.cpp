@@ -11,11 +11,14 @@ using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::variable_declaration;
 
-bool type_equal( boost::shared_ptr<buildin_type> lhs, boost::shared_ptr<buildin_type> rhs ){
+using ::boost::shared_ptr;
+using ::boost::shared_polymorphic_cast;
+
+bool type_equal( shared_ptr<buildin_type> lhs, shared_ptr<buildin_type> rhs ){
 	return lhs->value_typecode == rhs->value_typecode;
 }
 
-bool type_equal( boost::shared_ptr<::sasl::syntax_tree::type_specifier> lhs, boost::shared_ptr<::sasl::syntax_tree::type_specifier> rhs ){
+bool type_equal( shared_ptr<type_specifier> lhs, shared_ptr<type_specifier> rhs ){
 	// if lhs or rhs is an alias of type, get its actual type for comparison.
 	if(lhs->node_class() == syntax_node_types::alias_type ){
 		assert(!"need to be implemented!");
@@ -32,8 +35,8 @@ bool type_equal( boost::shared_ptr<::sasl::syntax_tree::type_specifier> lhs, boo
 	}
 	if( lhs->node_class() == syntax_node_types::buildin_type ){
 		return type_equal(
-			boost::shared_polymorphic_cast<buildin_type>(lhs),
-			boost::shared_polymorphic_cast<buildin_type>(rhs)
+			shared_polymorphic_cast<buildin_type>(lhs),
+			shared_polymorphic_cast<buildin_type>(rhs)
 			);
 	}
 	assert(!"need to be implemented!");

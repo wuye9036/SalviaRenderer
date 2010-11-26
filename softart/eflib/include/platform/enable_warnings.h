@@ -5,5 +5,5 @@
 #endif
 
 #if defined(EFLIB_GCC)
-#   pragma Warnings (On)
+#   pragma GCC pop_options
 #endif

@@ -1,6 +1,7 @@
 #include <sasl/include/semantic/semantic_analyser_impl.h>
 
 #include <sasl/enums/operators.h>
+
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_error.h>
@@ -136,7 +137,7 @@ SASL_VISIT_DEF( variable_declaration )
 	boost::shared_ptr<type_specifier> vartype = v.type_info;
 	vartype->accept( this, data );
 	boost::shared_ptr<type_semantic_info> typeseminfo = extract_semantic_info<type_semantic_info>(v);
-	
+
 	// check type.
 	if ( typeseminfo->type_type() == type_types::buildin ){
 		// TODO: ALLOCATE BUILD-IN TYPED VAR.
@@ -168,7 +169,7 @@ SASL_VISIT_DEF( type_definition ){
 		// if the symbol is used and is not a type node, it must be redifinition.
 		// else compare the type.
 		if ( !existed_sym->node()->node_class().included( syntax_node_types::type_specifier ) ){
-			infomgr->add_info( 
+			infomgr->add_info(
 				semantic_error::create( compiler_informations::redef_cannot_overloaded,
 				v.handle(),	list_of(existed_sym->node()) )
 					);
@@ -192,15 +193,15 @@ SASL_VISIT_DEF( type_definition ){
 				// if new symbol is different from the old, semantic error.
 				// The final effect is that the new definition overwrites the old one.
 
-				infomgr->add_info( 
+				infomgr->add_info(
 					semantic_error::create( compiler_informations::redef_diff_basic_type,
 					v.handle(),	list_of(existed_sym->node()) )
 					);
-			} 
+			}
 		}
 		// else if the same. do not updated.
 		// NOTE:
-		//   MAYBE IT NEEDS COMBINE OLD AND NEW SYMBOL INFOS UNDER SOME CONDITIONS. 
+		//   MAYBE IT NEEDS COMBINE OLD AND NEW SYMBOL INFOS UNDER SOME CONDITIONS.
 		//   BUT I CAN NOT FIND OUT ANY EXAMPLE.
 	}
 }
@@ -308,7 +309,7 @@ SASL_VISIT_DEF( function_type )
 	//if ( !use_existed_node ){
 	//	// replace old node via new node.
 	//	cursym->relink( v.handle() );
-	//	
+	//
 	//	// definition
 	//	if ( !v.declaration_only() ){
 	//		// process parameters
@@ -382,7 +383,7 @@ SASL_VISIT_DEF( program ){
 	// create semantic info
 	boost::shared_ptr<program_si> sem = get_or_create_semantic_info<program_si>(v);
 	sem->name( v.name );
-	
+
 	// create root symbol
 	v.symbol( symbol::create_root( v.handle() ) );
 	cursym = v.symbol();
@@ -552,15 +553,17 @@ void semantic_analyser_impl::register_type_converter(){
 	typeconv->register_converter( type_converter::explicit_conv, bool_ts, uint64_ts, default_conv );
 	typeconv->register_converter( type_converter::explicit_conv, bool_ts, float_ts, default_conv );
 	typeconv->register_converter( type_converter::explicit_conv, bool_ts, double_ts, default_conv );
-	
+
 }
 
 void semantic_analyser_impl::register_buildin_function( node& v ){
-	// 
+	//
 	::boost::any* data = NULL;
 	::std::vector< ::boost::shared_ptr<node> >& buildin_functions( v.additionals() );
 
-	typedef boost::unordered_map<buildin_type_code, boost::shared_ptr<buildin_type> > bt_table_t;
+	typedef boost::unordered_map<
+		buildin_type_code, boost::shared_ptr<buildin_type>, enum_hasher
+		> bt_table_t;
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
 	map_of_buildin_type( standard_bttbl, &sasl_ehelper::is_standard );
@@ -609,7 +612,7 @@ void semantic_analyser_impl::register_buildin_function( node& v ){
 		}
 
 		if( sasl_ehelper::is_relationship(op) ){
-			
+
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				dfunction_combinator(NULL).dname( op_name )
 					.dreturntype().dnode( bt_bool ).end()
