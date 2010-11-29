@@ -9,11 +9,10 @@ namespace llvm{
 	class Module;
 	class ConstantFolder;
 	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template<
-		bool preserveNames = true,
-		typename T = ConstantFolder,
-		typename Inserter = IRBuilderDefaultInserter<preserveNames> >
-	class IRBuilder;
+	template< bool preserveNames, typename T, typename Inserter
+        > class IRBuilder;
+    typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
+        DefaultIRBuilder;
 }
 
 #include <boost/shared_ptr.hpp>
@@ -30,7 +29,7 @@ public:
 	void create_module( const std::string& modname );
 
 	virtual llvm::Module* module() const;
-	virtual boost::shared_ptr<llvm::IRBuilder<> > builder() const;
+	virtual boost::shared_ptr<llvm::DefaultIRBuilder> builder() const;
 	virtual llvm::Module* get_ownership() const;
 
 	virtual llvm::LLVMContext& context();
@@ -38,7 +37,7 @@ public:
 	~cgllvm_global_context();
 private:
 	boost::shared_ptr<llvm::LLVMContext> lctxt;
-	boost::shared_ptr<llvm::IRBuilder<> > irbuilder;
+	boost::shared_ptr<llvm::DefaultIRBuilder> irbuilder;
 	llvm::Module* mod;
 	mutable bool have_mod;
 };

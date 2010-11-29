@@ -9,8 +9,8 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <boost/any.hpp>
 
-#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
-#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
+#define SYNCASE_(case_name) syntax_cases::instance().case_name ()
+#define SYNCASENAME_( case_name ) syntax_cases::instance(). case_name##_name()
 
 boost::mutex cgllvm_cases::mtx;
 boost::shared_ptr<cgllvm_cases> cgllvm_cases::tcase;
@@ -39,7 +39,7 @@ bool cgllvm_cases::is_avaliable()
 
 void cgllvm_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
-	if ( tcase ){ 
+	if ( tcase ){
 		tcase->LOCVAR_(jit).reset();
 		if( syntax_cases::is_avaliable() ){
 			SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_gen ), clear_cgctxt );

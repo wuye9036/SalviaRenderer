@@ -4,8 +4,8 @@
 #include <sasl/include/syntax_tree/utility.h>
 #include <eflib/include/memory/lifetime_manager.h>
 
-#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
-#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
+#define SYNCASE_(case_name) syntax_cases::instance().case_name ()
+#define SYNCASENAME_(case_name) syntax_cases::instance().case_name##_name()
 
 boost::mutex semantic_cases::mtx;
 boost::shared_ptr<semantic_cases> semantic_cases::tcase;

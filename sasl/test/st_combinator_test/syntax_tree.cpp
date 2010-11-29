@@ -9,8 +9,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
-#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
+#define SYNCASE_(case_name) syntax_cases::instance().case_name()
+#define SYNCASENAME_( case_name ) syntax_cases::instance().case_name##_name()
 
 BOOST_AUTO_TEST_SUITE( program_test );
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( btc_test )
 
 	BOOST_CHECK( !sasl_ehelper::is_scalar( SYNCASE_(btc_void) ) );
 	BOOST_CHECK( !sasl_ehelper::is_scalar( SYNCASE_(btc_none) ) );
-	
+
 	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_void)) == 0 );
 	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_none)) == 0 );
 	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_sint8)) == 1 );
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		BOOST_CHECK( meminit0->sub_inits[1] == exprinit2 );
 		BOOST_CHECK( exprinit2 && exprinit3 );
 	}
-	
+
 	boost::shared_ptr<array_type> arrtype;
 	{
 		dtype_combinator type_comb( NULL );
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		BOOST_CHECK( expr_c->ctype == literal_constant_types::real );
 		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.25868f) );
 	}
-	
+
 	boost::shared_ptr<constant_expression> cexpr;
 	{
 		dexpr_combinator expr_comb(NULL);
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 	boost::shared_ptr<member_expression> mem1expr;
 	{
 		std::string m0("member0"), m1("member1");
-		
+
 		dexpr_combinator expr_comb(NULL);
 		expr_comb
 			.dnode(branchexpr)
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 				.dargument().dnode(castexpr).end()
 			.end()
 		.end(callexpr);
-					
+
 		BOOST_CHECK( callexpr );
 		BOOST_CHECK( callexpr->node_class() == syntax_node_types::call_expression );
 		BOOST_CHECK( callexpr->expr == mem0expr );
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		boost::shared_ptr<variable_declaration> vardecl;
 		dvar_combinator( NULL ).dname("var0").dtype().dbuildin( buildin_type_code::_float ).end().end(vardecl);
 		BOOST_CHECK( vardecl );
-	
+
 		dstatements_combinator( NULL )
 			.dvarstmt().dnode(vardecl).end(varstmt)
 			.dexprstmt().dconstant2( 1.0f ).end(exprstmt)
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( stmts->stmts[2] );
 		BOOST_CHECK( stmts->stmts[2]->node_class() == syntax_node_types::compound_statement );
 	}
-	
+
 	boost::shared_ptr<compound_statement> stmts2;
 	boost::shared_ptr<if_statement> ifstmt;
 	{

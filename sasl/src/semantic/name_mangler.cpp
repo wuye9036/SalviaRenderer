@@ -19,6 +19,7 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <cassert>
+#include <stdio.h>
 
 using ::sasl::syntax_tree::array_type;
 using ::sasl::syntax_tree::buildin_type;
@@ -75,13 +76,16 @@ static void append( std::string& str, buildin_type_code btc, bool is_component =
 	} else if( sasl_ehelper::is_vector( btc ) ) {
 		char vector_len_buf[2];
 		str.append("V");
-		str.append( _ui64toa( sasl_ehelper::len_0( btc ), vector_len_buf, 10 ) );
+		sprintf( vector_len_buf, "%ld", sasl_ehelper::len_0( btc ) );
+		str.append( vector_len_buf );
 		append( str, sasl_ehelper::scalar_of(btc), true );
 	} else if ( sasl_ehelper::is_matrix(btc) ) {
-		char matrix_len_buf[2];
+		char matrix_len_buf[2] = {0};
 		str.append("M");
-		str.append( _ui64toa( sasl_ehelper::len_0( btc ), matrix_len_buf, 10 ) );
-		str.append( _ui64toa( sasl_ehelper::len_1( btc ), matrix_len_buf, 10 ) );
+		sprintf( matrix_len_buf, "%ld", sasl_ehelper::len_0( btc ) );
+		str.append( matrix_len_buf );
+		sprintf( matrix_len_buf, "%ld", sasl_ehelper::len_1( btc ) );
+		str.append( matrix_len_buf );
 		append( str, sasl_ehelper::scalar_of(btc), true );
 	}
 }

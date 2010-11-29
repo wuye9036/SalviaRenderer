@@ -8,10 +8,10 @@
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <boost/test/unit_test.hpp>
 
-#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
-#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
+#define SYNCASE_(case_name) syntax_cases::instance().case_name ()
+#define SYNCASENAME_( case_name ) syntax_cases::instance().case_name##_name()
 
-#define LLVMCASE_( case_name ) cgllvm_cases::instance().##case_name##()
+#define LLVMCASE_( case_name ) cgllvm_cases::instance().case_name ()
 
 BOOST_AUTO_TEST_SUITE( main_suite )
 

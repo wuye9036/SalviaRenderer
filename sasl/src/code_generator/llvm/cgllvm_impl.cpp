@@ -37,7 +37,7 @@ using semantic::type_info_si;
 
 typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
 
-#define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::##typecode )
+#define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::typecode )
 
 #define SASL_REWRITE_DATA_AS_SYMBOL()	\
 	::boost::any sym_data( v.symbol() );	\
@@ -93,7 +93,7 @@ SASL_VISIT_DEF( binary_expression ){
 	boost::shared_ptr<type_specifier> ltype = extract_semantic_info<type_info_si>(v.left_expr)->type_info();
 	boost::shared_ptr<type_specifier> rtype = extract_semantic_info<type_info_si>(v.right_expr)->type_info();
 
-	EFLIB_ASSERT_AND_IF( 
+	EFLIB_ASSERT_AND_IF(
 		( is_node_class(ltype, buildin_type ) && is_node_class(rtype, buildin_type ) ),
 		"Operators of buildin type are supported only." )
 	{
@@ -107,9 +107,9 @@ SASL_VISIT_DEF( binary_expression ){
 	std::vector< boost::shared_ptr<expression> > args;
 	args += v.left_expr, v.right_expr;
 
-	symbol::overloads_t overloads 
+	symbol::overloads_t overloads
 		= ::boost::any_cast< ::boost::shared_ptr<symbol> >( *data )->find_overloads( operator_name( v.op ), typeconv, args );
-	
+
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
 		return;
 	}
@@ -204,7 +204,7 @@ SASL_VISIT_NOIMPL( struct_type );
 SASL_VISIT_DEF( parameter ){
 
 	SASL_REWRITE_DATA_AS_SYMBOL();
-	
+
 	v.param_type->accept( this, data );
 	if (v.init){
 		v.init->accept( this, data );
@@ -223,7 +223,7 @@ SASL_VISIT_DEF( function_type ){
 	// Generate return types.
 	v.retval_type->accept( this, data );
 	const llvm::Type* ret_type = extract_common_ctxt(v.retval_type)->type;
-	
+
 	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){
 		return;
 	}
@@ -271,13 +271,13 @@ SASL_VISIT_NOIMPL( case_label );
 SASL_VISIT_NOIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement ){
-	
+
 	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	BasicBlock* bb = BasicBlock::Create(
 		ctxt->context(),
 		v.symbol()->mangled_name(),
-		extract_common_ctxt( v.symbol()->parent()->node() )->func 
+		extract_common_ctxt( v.symbol()->parent()->node() )->func
 		);
 	get_common_ctxt(v.handle())->block = bb;
 
