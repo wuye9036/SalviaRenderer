@@ -39,7 +39,7 @@ public:
 		::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > node,
 		::boost::shared_ptr<symbol> parent
 		);
-	
+	::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > get( type_entry::id_t id );
 private:
 	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > node );
 	::std::vector< type_entry > entries;

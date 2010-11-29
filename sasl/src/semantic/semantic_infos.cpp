@@ -79,6 +79,31 @@ void program_si::name( const std::string& str ){
 	prog_name = str;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// type info semantic info impl
+
+type_entry::id_t type_info_si_impl::entry_id() const{
+	return tid;
+}
+
+void type_info_si_impl::entry_id( type_entry::id_t id ){
+	tid = id;
+}
+
+shared_ptr<type_specifier> type_info_si_impl::type_info() const{
+	return typemgr.lock()->get( tid );
+}
+
+void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec){
+	tid = typemgr.lock()->get( typespec, typespec->symbol() );
+}
+
+void type_info_si_impl::type_manager( boost::shared_ptr< class type_manager > typemgr ){
+	this->typemgr = typemgr;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// constant value semantic info
 const_value_si::const_value_si(){}
 
 void const_value_si::set_literal(

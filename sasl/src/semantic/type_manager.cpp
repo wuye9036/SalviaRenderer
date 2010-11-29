@@ -243,6 +243,13 @@ type_entry::id_t type_manager::get( shared_ptr<type_specifier> node, shared_ptr<
 //	return decorated_id;
 }
 
+shared_ptr< type_specifier > type_manager::get( type_entry::id_t id ){
+	if( id < 0 ){
+		return shared_ptr<type_specifier>();
+	}
+	return entries[id].stored;
+}
+
 void assign_entry_id( shared_ptr<type_specifier> node, type_entry::id_t id ){
 	get_or_create_semantic_info<type_si>(node)->entry_id( id );
 }

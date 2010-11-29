@@ -1,21 +1,8 @@
 #ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_IMPL_H
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_IMPL_H
 
-#define __STDC_LIMIT_MACROS
-#define __STDC_CONSTANT_MACROS
-
-#if !defined(__STDC_CONSTANT_MACROS)
-#error "Fuck"
-#endif
-
-// #include <boost/config.hpp>
-#include <boost/cstdint.hpp>
-int32_t f = INT32_C(1);
-
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
-
-
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>

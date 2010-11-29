@@ -58,7 +58,6 @@ public:
 	int count( std::string name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
-	boost::shared_ptr<symbol> add_type_node( const std::string& mangled, boost::shared_ptr<type_specifier> tnode );
 
 	boost::shared_ptr<symbol> add_anonymous_child( boost::shared_ptr<node> child_node );
 	boost::shared_ptr<symbol> add_overloaded_child(

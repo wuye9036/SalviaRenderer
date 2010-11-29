@@ -301,9 +301,4 @@ shared_ptr<symbol> symbol::add_anonymous_child( shared_ptr<struct node> child_no
 	return add_child( anonymous_name(), child_node );
 }
 
-shared_ptr<symbol> symbol::add_type_node( const string& mangled, shared_ptr<type_specifier> tnode )
-{
-	return shared_ptr<symbol>();
-}
-
 END_NS_SASL_SEMANTIC();

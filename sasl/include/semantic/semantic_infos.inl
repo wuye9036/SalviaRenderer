@@ -83,6 +83,7 @@ public:
 	virtual void type_manager( boost::shared_ptr< class type_manager > typemgr );
 
 private:
+	type_entry::id_t tid;
 	::boost::weak_ptr< class type_manager > typemgr;
 };
 
