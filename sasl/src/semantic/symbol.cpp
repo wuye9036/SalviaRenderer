@@ -303,9 +303,7 @@ shared_ptr<symbol> symbol::add_anonymous_child( shared_ptr<struct node> child_no
 
 shared_ptr<symbol> symbol::add_type_node( const string& mangled, shared_ptr<type_specifier> tnode )
 {
-	if( tnode->node_class() == syntax_node_types::buildin_type ){
-
-	}
+	return shared_ptr<symbol>();
 }
 
 END_NS_SASL_SEMANTIC();

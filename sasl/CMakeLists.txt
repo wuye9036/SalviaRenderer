@@ -11,6 +11,10 @@ include(${CMAKE_HOME_DIRECTORY}/build/cmake/SystemInfo.cmake)
 if(MSVC)
 	include(${CMAKE_HOME_DIRECTORY}/build/cmake/MSVC.cmake)
 endif(MSVC)
+if(MINGW)
+	include(${CMAKE_HOME_DIRECTORY}/build/cmake/GCC.cmake)
+endif(MINGW)
+
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/Variables.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigurePath.cmake)
 

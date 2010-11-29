@@ -54,12 +54,12 @@ public:
 	virtual ::boost::shared_ptr< type_specifier > type_info() const = 0;
 	virtual void type_info( ::boost::shared_ptr< type_specifier > ) = 0;
 
-	virtual void type_manager( boost::shared_ptr< struct type_manager > typemgr ) = 0;
+	virtual void type_manager( boost::shared_ptr< class type_manager > typemgr ) = 0;
 
 	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
 
 private:
-	::boost::weak_ptr< struct type_manager > typemgr;
+	::boost::weak_ptr< class type_manager > typemgr;
 };
 
 #define SASL_TYPE_INFO_PROXY()	\
@@ -70,7 +70,7 @@ private:
 		virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
 		virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
 		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec ) { type_info_proxy.type_info( typespec ); }	\
-		virtual void type_manager( boost::shared_ptr< struct type_manager > typemgr ) { type_info_proxy.type_manager( typemgr ); };
+		virtual void type_manager( boost::shared_ptr< class type_manager > typemgr ) { type_info_proxy.type_manager( typemgr ); };
 
 class type_info_si_impl: public type_info_si{
 public:
@@ -80,10 +80,10 @@ public:
 	virtual ::boost::shared_ptr< type_specifier > type_info() const;
 	virtual void type_info( ::boost::shared_ptr< type_specifier > );
 
-	virtual void type_manager( boost::shared_ptr< struct type_manager > typemgr );
+	virtual void type_manager( boost::shared_ptr< class type_manager > typemgr );
 
 private:
-	::boost::weak_ptr< struct type_manager > typemgr;
+	::boost::weak_ptr< class type_manager > typemgr;
 };
 
 class const_value_si: public type_info_si{
