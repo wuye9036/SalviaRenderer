@@ -5,8 +5,8 @@
 #include "../enums/enum_base.h" 
 
 struct type_types :
-	public enum_base< type_types, int >
-	, public equal_op< type_types >, public value_op< type_types, int >
+	public enum_base< type_types, uint32_t >
+	, public equal_op< type_types >, public value_op< type_types, uint32_t >
 {
 	friend struct enum_hasher;
 private:
@@ -33,4 +33,11 @@ public:
 	std::string name() const;
 
 };
+
+const type_types type_types::alias ( UINT32_C( 3 ) );
+const type_types type_types::none ( UINT32_C( 0 ) );
+const type_types type_types::buildin ( UINT32_C( 1 ) );
+const type_types type_types::composited ( UINT32_C( 2 ) );
+
+
 #endif

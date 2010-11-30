@@ -6,11 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const jump_mode jump_mode::_return ( 3 );
-const jump_mode jump_mode::none ( 0 );
-const jump_mode jump_mode::_continue ( 2 );
-const jump_mode jump_mode::_break ( 1 );
-
  
 struct enum_hasher: public std::unary_function< jump_mode, std::size_t> {
 	std::size_t operator()( jump_mode const& val) const{

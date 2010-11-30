@@ -5,7 +5,7 @@
 #include "../enums/enum_base.h" 
 
 struct literal_constant_types :
-	public enum_base< literal_constant_types, int >
+	public enum_base< literal_constant_types, uint32_t >
 	, public equal_op< literal_constant_types >
 {
 	friend struct enum_hasher;
@@ -35,4 +35,13 @@ public:
 	std::string name() const;
 
 };
+
+const literal_constant_types literal_constant_types::real ( UINT32_C( 4 ) );
+const literal_constant_types literal_constant_types::none ( UINT32_C( 1 ) );
+const literal_constant_types literal_constant_types::string ( UINT32_C( 5 ) );
+const literal_constant_types literal_constant_types::character ( UINT32_C( 6 ) );
+const literal_constant_types literal_constant_types::boolean ( UINT32_C( 2 ) );
+const literal_constant_types literal_constant_types::integer ( UINT32_C( 3 ) );
+
+
 #endif

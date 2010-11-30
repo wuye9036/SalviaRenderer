@@ -32,6 +32,7 @@ TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	sasl_semantic sasl_syntaxtree
 	sasl_test_cases
 	${SASL_CGLLVM_TEST_LIBS}
+	${SOFTART_BOOST_LIBS}
 )
 
 config_output_paths( ${SASL_TEST_PROJECT_NAME} )

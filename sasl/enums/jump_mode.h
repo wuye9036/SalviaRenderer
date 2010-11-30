@@ -5,7 +5,7 @@
 #include "../enums/enum_base.h" 
 
 struct jump_mode :
-	public enum_base< jump_mode, int >
+	public enum_base< jump_mode, uint32_t >
 	, public equal_op< jump_mode >
 {
 	friend struct enum_hasher;
@@ -33,4 +33,11 @@ public:
 	std::string name() const;
 
 };
+
+const jump_mode jump_mode::_return ( UINT32_C( 3 ) );
+const jump_mode jump_mode::none ( UINT32_C( 0 ) );
+const jump_mode jump_mode::_continue ( UINT32_C( 2 ) );
+const jump_mode jump_mode::_break ( UINT32_C( 1 ) );
+
+
 #endif

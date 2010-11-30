@@ -37,6 +37,7 @@ TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	sasl_enums
 	sasl_common sasl_syntaxtree 
 	sasl_test_cases
+	${SOFTART_BOOST_LIBS}
 )
 
 config_output_paths( ${SASL_TEST_PROJECT_NAME} )

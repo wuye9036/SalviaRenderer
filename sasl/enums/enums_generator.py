@@ -2,7 +2,7 @@
 import sys, os, __future__
 from xml.dom.minidom import parse, parseString, Node
 
-#typename, storage_typename, operator_list, constant_decl_list, enum_name_translator
+#typename, storage_typename, operator_list, constant_decl_list, enum_name_translator, constant_def_list
 enum_decl_tmpl = \
 """struct %(typename)s :
 	public enum_base< %(typename)s, %(storage_typename)s >
@@ -24,7 +24,10 @@ public:
 
 %(constant_decl_list)s
 %(enum_name_translator)s
-};"""
+};
+
+%(constant_def_list)s
+"""
 
 compare_op_tmpl = ", public compare_op< %(typename)s >"
 bitwise_op_tmpl = ", public bitwise_op< %(typename)s >"
@@ -37,7 +40,7 @@ constant_decl_tmpl =\
 
 #typename, member_name, value
 constant_def_tmpl = \
-	"const %(typename)s %(typename)s::%(member_name)s ( %(value)s );"
+	"const %(typename)s %(typename)s::%(member_name)s ( %(constant_macro)s( %(value)s ) );"
 
 #typename
 hash_op_tmpl = \
@@ -115,10 +118,9 @@ enum_to_name_insert_item_tmpl = \
 name_to_enum_insert_item_tmpl = \
 """name_to_enum.insert( std::make_pair( "%(description)s", %(typename)s::%(member_name)s ) );"""
 
-#constant_def_list, hash_op, enum_name_translator_impl
+#hash_op, enum_name_translator_impl
 enum_def_tmpl = \
 """
-%(constant_def_list)s
 %(hash_op)s
 %(enum_name_translator_impl)s
 """
@@ -264,6 +266,7 @@ class enum_file_loader:
 class enum_code_generator:
 	enum_name_attrname = "name"
 	enum_storage_type_attrname = "storage_type"
+	enum_constant_macro_attrname = "constant_macro"
 	item_tag = "item"
 	item_desc_attrname = "desc"
 	item_val_attrname = "value"
@@ -277,7 +280,8 @@ class enum_code_generator:
 		self.items_desc = {}
 		self.typename = ""
 		self.codes = None
-		self.storage_typename = "int"
+		self.storage_typename = "uint32_t"
+		self.constant_macro = "UINT32_C"
 		self.expr_context = {}
 		
 		self.config_ = enum_configuration( enum_node )
@@ -285,6 +289,10 @@ class enum_code_generator:
 		
 		if enum_node.hasAttribute( self.enum_storage_type_attrname ):
 			self.storage_typename = enum_node.getAttribute( self.enum_storage_type_attrname )
+			self.constant_macro = self.storage_typename
+			
+		if enum_node.hasAttribute( self.enum_constant_macro_attrname ):
+			self.constant_macro = enum_node.getAttribute( self.enum_constant_macro_attrname )
 			
 		self._load_items(enum_node)
 		
@@ -381,13 +389,15 @@ class enum_code_generator:
 		self._generate_operator_list()
 		self._generate_constant_list()
 		self._generate_enum_name_translator()
+		self._generate_constant_def_list()
 		
 		self.declare_ = enum_decl_tmpl % {
 			"typename" : self.typename,
 			"storage_typename" : self.storage_typename,
 			"operator_list":self.operator_list_,
 			"constant_decl_list":self.constant_list_,
-			"enum_name_translator":self.enum_name_translator_
+			"enum_name_translator":self.enum_name_translator_,
+			"constant_def_list":self.constant_def_list_
 			}
 		
 	def _generate_constant_def_list(self):
@@ -396,7 +406,8 @@ class enum_code_generator:
 			self.constant_def_list_ += constant_def_tmpl % {
 				"typename" : self.typename,
 				"member_name" : enum_name,
-				"value" : enum_val
+				"value" : enum_val,
+				"constant_macro" : self.constant_macro
 				}
 			self.constant_def_list_ += "\n"
 
@@ -446,7 +457,6 @@ class enum_code_generator:
 		self._generate_enum_name_translator_impl()
 
 		self.definition_ = enum_def_tmpl % {
-			"constant_def_list" : self.constant_def_list_,
 			"hash_op" : self.hash_op_,
 			"enum_name_translator_impl" : self.enum_name_translator_impl_
 			}

@@ -6,15 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const token_types token_types::_comment ( 7 );
-const token_types token_types::_preprocessor ( 6 );
-const token_types token_types::_operator ( 4 );
-const token_types token_types::_whitespace ( 5 );
-const token_types token_types::_constant ( 3 );
-const token_types token_types::_newline ( 8 );
-const token_types token_types::_identifier ( 2 );
-const token_types token_types::_keyword ( 1 );
-
  
 struct enum_hasher: public std::unary_function< token_types, std::size_t> {
 	std::size_t operator()( token_types const& val) const{

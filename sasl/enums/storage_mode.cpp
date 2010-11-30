@@ -6,11 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const storage_mode storage_mode::none ( 0 );
-const storage_mode storage_mode::constant ( 1 );
-const storage_mode storage_mode::stack_based_address ( 3 );
-const storage_mode storage_mode::register_id ( 2 );
-
  
 struct enum_hasher: public std::unary_function< storage_mode, std::size_t> {
 	std::size_t operator()( storage_mode const& val) const{

@@ -6,9 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const type_qualifiers type_qualifiers::_uniform ( 2 );
-const type_qualifiers type_qualifiers::none ( 1 );
-
  
 struct enum_hasher: public std::unary_function< type_qualifiers, std::size_t> {
 	std::size_t operator()( type_qualifiers const& val) const{

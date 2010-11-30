@@ -17,13 +17,16 @@ function(sasl_test_create_vcproj_userfile TARGETNAME)
 endfunction(sasl_test_create_vcproj_userfile)
 
 if( ( NOT SOFTART_ENABLE_SASL_REGRESSION_TEST ) OR SOFTART_ENABLE_SASL_SEPERATED_TESTS_ALWAYS )
+	
 	ADD_SUBDIRECTORY( test_cases )
 	ADD_SUBDIRECTORY( st_combinator_test )
 	# ADD_SUBDIRECTORY( feedback_test )
 	ADD_SUBDIRECTORY( semantic_test )
+	
 	if( SOFTART_BUILD_WITH_LLVM )
 		ADD_SUBDIRECTORY( cgllvm_test )
 	endif( SOFTART_BUILD_WITH_LLVM )
+	
 endif( ( NOT SOFTART_ENABLE_SASL_REGRESSION_TEST ) OR SOFTART_ENABLE_SASL_SEPERATED_TESTS_ALWAYS )
 
 if( SOFTART_ENABLE_SASL_REGRESSION_TEST )

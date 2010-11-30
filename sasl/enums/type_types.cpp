@@ -6,11 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const type_types type_types::alias ( 3 );
-const type_types type_types::none ( 0 );
-const type_types type_types::buildin ( 1 );
-const type_types type_types::composited ( 2 );
-
  
 struct enum_hasher: public std::unary_function< type_types, std::size_t> {
 	std::size_t operator()( type_types const& val) const{

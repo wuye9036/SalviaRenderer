@@ -5,8 +5,8 @@
 #include "../enums/enum_base.h" 
 
 struct type_qualifiers :
-	public enum_base< type_qualifiers, int >
-	, public bitwise_op< type_qualifiers >, public equal_op< type_qualifiers >, public value_op< type_qualifiers, int >
+	public enum_base< type_qualifiers, uint32_t >
+	, public bitwise_op< type_qualifiers >, public equal_op< type_qualifiers >, public value_op< type_qualifiers, uint32_t >
 {
 	friend struct enum_hasher;
 private:
@@ -31,4 +31,9 @@ public:
 	std::string name() const;
 
 };
+
+const type_qualifiers type_qualifiers::_uniform ( UINT32_C( 2 ) );
+const type_qualifiers type_qualifiers::none ( UINT32_C( 1 ) );
+
+
 #endif

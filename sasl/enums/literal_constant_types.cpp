@@ -6,13 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const literal_constant_types literal_constant_types::real ( 4 );
-const literal_constant_types literal_constant_types::none ( 1 );
-const literal_constant_types literal_constant_types::string ( 5 );
-const literal_constant_types literal_constant_types::character ( 6 );
-const literal_constant_types literal_constant_types::boolean ( 2 );
-const literal_constant_types literal_constant_types::integer ( 3 );
-
  
 struct enum_hasher: public std::unary_function< literal_constant_types, std::size_t> {
 	std::size_t operator()( literal_constant_types const& val) const{

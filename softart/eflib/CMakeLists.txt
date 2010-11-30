@@ -24,6 +24,8 @@ set (HEADER_FILES
 	include/platform/constant.h
 	include/platform/disable_warnings.h
 	include/platform/enable_warnings.h
+	include/platform/boost_begin.h
+	include/platform/boost_end.h
 	include/platform/typedefs.h
 	include/platform/win32.h
 	include/string/string.h

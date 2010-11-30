@@ -20,10 +20,10 @@ using ::sasl::semantic::operator_name;
 using ::sasl::semantic::program_si;
 using ::sasl::semantic::symbol;
 
-#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
-#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
-#define SEMCASE_(case_name) semantic_cases::instance().##case_name##()
-#define SEMCASENAME_( case_name ) semantic_cases::instance().##case_name##_name()
+#define SYNCASE_(case_name) syntax_cases::instance().case_name()
+#define SYNCASENAME_( case_name ) syntax_cases::instance().case_name##_name()
+#define SEMCASE_(case_name) semantic_cases::instance().case_name()
+#define SEMCASENAME_( case_name ) semantic_cases::instance().case_name##_name()
 
 BOOST_AUTO_TEST_SUITE( semantic );
 
@@ -104,10 +104,10 @@ BOOST_AUTO_TEST_CASE( symbol_test ){
 				BOOST_TEST_MESSAGE( opname );
 			}
 		}
-		
+
 		BOOST_CHECK_EQUAL_COLLECTIONS( op_in_global.begin(), op_in_global.end(), op_in_func.begin(), op_in_func.end() );
 	}
-	
+
 }
 
 BOOST_AUTO_TEST_SUITE_END();

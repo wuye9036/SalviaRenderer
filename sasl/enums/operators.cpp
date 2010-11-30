@@ -6,45 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const operators operators::sub_assign ( 8 );
-const operators operators::less ( 19 );
-const operators operators::bit_and ( 34 );
-const operators operators::bit_or_assign ( 13 );
-const operators operators::prefix_incr ( 25 );
-const operators operators::logic_and ( 32 );
-const operators operators::postfix_incr ( 27 );
-const operators operators::lshift_assign ( 15 );
-const operators operators::mul_assign ( 9 );
-const operators operators::prefix_decr ( 26 );
-const operators operators::bit_xor_assign ( 14 );
-const operators operators::sub ( 2 );
-const operators operators::positive ( 29 );
-const operators operators::rshift_assign ( 16 );
-const operators operators::negative ( 30 );
-const operators operators::logic_not ( 33 );
-const operators operators::add ( 1 );
-const operators operators::right_shift ( 24 );
-const operators operators::mul ( 3 );
-const operators operators::bit_and_assign ( 12 );
-const operators operators::mod_assign ( 11 );
-const operators operators::greater ( 21 );
-const operators operators::bit_or ( 35 );
-const operators operators::bit_not ( 37 );
-const operators operators::bit_xor ( 36 );
-const operators operators::add_assign ( 7 );
-const operators operators::mod ( 5 );
-const operators operators::none ( 0 );
-const operators operators::not_equal ( 18 );
-const operators operators::logic_or ( 31 );
-const operators operators::greater_equal ( 22 );
-const operators operators::left_shift ( 23 );
-const operators operators::equal ( 17 );
-const operators operators::postfix_decr ( 28 );
-const operators operators::div_assign ( 10 );
-const operators operators::less_equal ( 20 );
-const operators operators::div ( 4 );
-const operators operators::assign ( 6 );
-
  
 struct enum_hasher: public std::unary_function< operators, std::size_t> {
 	std::size_t operator()( operators const& val) const{

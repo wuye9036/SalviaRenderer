@@ -7,23 +7,14 @@ option( SOFTART_BUILD_WITH_LLVM "Build llvm code generator & llvm test." TRUE )
 option( SOFTART_ENABLE_SASL_REGRESSION_TEST "Regression test will combine all test to one test module." FALSE )
 option( SOFTART_ENABLE_SASL_SEPERATED_TESTS_ALWAYS "Seperated tests are enabled when regression test is used if set to true, otherwise seperated tests were disabled." FALSE )
 
-include(${CMAKE_HOME_DIRECTORY}/build/cmake/SystemInfo.cmake)
-if(MSVC)
-	include(${CMAKE_HOME_DIRECTORY}/build/cmake/MSVC.cmake)
-endif(MSVC)
-if(MINGW)
-	include(${CMAKE_HOME_DIRECTORY}/build/cmake/GCC.cmake)
-endif(MINGW)
-
+include (${CMAKE_HOME_DIRECTORY}/build/cmake/SystemInfo.cmake)
+include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigCompiler.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/Variables.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigurePath.cmake)
-
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/Environment.cmake)
-set_environment()
+include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigBoostLibs.cmake)
+
 set ( EFLIB_HOME_PATH ${SOFTART_HOME_DIR} )
-ADD_DEFINITIONS(
-	-DBOOST_ALL_DYN_LINK
-)
 
 ADD_SUBDIRECTORY( build/cmake )
 ADD_SUBDIRECTORY( "${SOFTART_HOME_DIR}/eflib" "${CMAKE_CURRENT_BINARY_DIR}/eflib" )

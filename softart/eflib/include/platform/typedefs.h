@@ -6,7 +6,9 @@
 #if !defined(HAVE_STDINT_H) || HAVE_STDINT_H == 0
 
 	#if !defined(SUPPORT_DATATYPES_H) // Patch for LLVM
+		#include <eflib/include/platform/boost_begin.h>
 		#include <boost/cstdint.hpp>
+		#include <eflib/include/platform/boost_end.h>
 
 		using boost::int8_t;
 		using boost::int16_t;

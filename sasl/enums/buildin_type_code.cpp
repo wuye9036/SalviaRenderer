@@ -6,41 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const buildin_type_code buildin_type_code::_unsigned ( 34603008 );
-const buildin_type_code buildin_type_code::_sint32 ( 35848192 );
-const buildin_type_code buildin_type_code::_c_int ( 35979264 );
-const buildin_type_code buildin_type_code::_sint16 ( 35782656 );
-const buildin_type_code buildin_type_code::_generic_type_field_shift ( 24 );
-const buildin_type_code buildin_type_code::_scalar_type_mask ( 268369920 );
-const buildin_type_code buildin_type_code::_sign_mask ( 267386880 );
-const buildin_type_code buildin_type_code::_dim1_mask ( 255 );
-const buildin_type_code buildin_type_code::_boolean ( 50331648 );
-const buildin_type_code buildin_type_code::_generic_type_mask ( 251658240 );
-const buildin_type_code buildin_type_code::_sint8 ( 35717120 );
-const buildin_type_code buildin_type_code::_scalar ( 0 );
-const buildin_type_code buildin_type_code::_sign_field_shift ( 20 );
-const buildin_type_code buildin_type_code::_float ( 16842752 );
-const buildin_type_code buildin_type_code::_dim0_field_shift ( 8 );
-const buildin_type_code buildin_type_code::_void ( 67108864 );
-const buildin_type_code buildin_type_code::_uint16 ( 34734080 );
-const buildin_type_code buildin_type_code::_dimension_mask ( 4026531840 );
-const buildin_type_code buildin_type_code::_dim1_field_shift ( 0 );
-const buildin_type_code buildin_type_code::_dimension_field_shift ( 28 );
-const buildin_type_code buildin_type_code::_double ( 16908288 );
-const buildin_type_code buildin_type_code::_matrix ( 536870912 );
-const buildin_type_code buildin_type_code::_sint64 ( 35913728 );
-const buildin_type_code buildin_type_code::_real ( 16777216 );
-const buildin_type_code buildin_type_code::_scalar_field_shift ( 16 );
-const buildin_type_code buildin_type_code::_uint8 ( 34668544 );
-const buildin_type_code buildin_type_code::_signed ( 35651584 );
-const buildin_type_code buildin_type_code::_vector ( 268435456 );
-const buildin_type_code buildin_type_code::none ( 0 );
-const buildin_type_code buildin_type_code::_uint32 ( 34799616 );
-const buildin_type_code buildin_type_code::_precision_field_shift ( 16 );
-const buildin_type_code buildin_type_code::_uint64 ( 34865152 );
-const buildin_type_code buildin_type_code::_dim0_mask ( 65280 );
-const buildin_type_code buildin_type_code::_integer ( 33554432 );
-
  
 struct enum_hasher: public std::unary_function< buildin_type_code, std::size_t> {
 	std::size_t operator()( buildin_type_code const& val) const{

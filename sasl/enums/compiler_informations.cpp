@@ -6,20 +6,6 @@ using namespace boost;
 using namespace std;
 
 
-const compiler_informations compiler_informations::none ( 0 );
-const compiler_informations compiler_informations::_error ( 131072 );
-const compiler_informations compiler_informations::_message ( 262144 );
-const compiler_informations compiler_informations::redef_diff_basic_type ( 16909290 );
-const compiler_informations compiler_informations::_link ( 33554432 );
-const compiler_informations compiler_informations::_info_level_mask ( 16711680 );
-const compiler_informations compiler_informations::_stage_mask ( 4278190080 );
-const compiler_informations compiler_informations::unknown_compile_error ( 16909289 );
-const compiler_informations compiler_informations::uses_a_undef_type ( 16909292 );
-const compiler_informations compiler_informations::_info_id_mask ( 65535 );
-const compiler_informations compiler_informations::_compile ( 16777216 );
-const compiler_informations compiler_informations::redef_cannot_overloaded ( 16909291 );
-const compiler_informations compiler_informations::_warning ( 65536 );
-
  
 struct enum_hasher: public std::unary_function< compiler_informations, std::size_t> {
 	std::size_t operator()( compiler_informations const& val) const{
