@@ -138,4 +138,43 @@ std::string operators::name() const{
 }
 
 
+const operators operators::sub_assign ( UINT32_C( 8 ) );
+const operators operators::less ( UINT32_C( 19 ) );
+const operators operators::bit_and ( UINT32_C( 34 ) );
+const operators operators::bit_or_assign ( UINT32_C( 13 ) );
+const operators operators::prefix_incr ( UINT32_C( 25 ) );
+const operators operators::logic_and ( UINT32_C( 32 ) );
+const operators operators::postfix_incr ( UINT32_C( 27 ) );
+const operators operators::lshift_assign ( UINT32_C( 15 ) );
+const operators operators::mul_assign ( UINT32_C( 9 ) );
+const operators operators::prefix_decr ( UINT32_C( 26 ) );
+const operators operators::bit_xor_assign ( UINT32_C( 14 ) );
+const operators operators::sub ( UINT32_C( 2 ) );
+const operators operators::positive ( UINT32_C( 29 ) );
+const operators operators::rshift_assign ( UINT32_C( 16 ) );
+const operators operators::negative ( UINT32_C( 30 ) );
+const operators operators::logic_not ( UINT32_C( 33 ) );
+const operators operators::add ( UINT32_C( 1 ) );
+const operators operators::right_shift ( UINT32_C( 24 ) );
+const operators operators::mul ( UINT32_C( 3 ) );
+const operators operators::bit_and_assign ( UINT32_C( 12 ) );
+const operators operators::mod_assign ( UINT32_C( 11 ) );
+const operators operators::greater ( UINT32_C( 21 ) );
+const operators operators::bit_or ( UINT32_C( 35 ) );
+const operators operators::bit_not ( UINT32_C( 37 ) );
+const operators operators::bit_xor ( UINT32_C( 36 ) );
+const operators operators::add_assign ( UINT32_C( 7 ) );
+const operators operators::mod ( UINT32_C( 5 ) );
+const operators operators::none ( UINT32_C( 0 ) );
+const operators operators::not_equal ( UINT32_C( 18 ) );
+const operators operators::logic_or ( UINT32_C( 31 ) );
+const operators operators::greater_equal ( UINT32_C( 22 ) );
+const operators operators::left_shift ( UINT32_C( 23 ) );
+const operators operators::equal ( UINT32_C( 17 ) );
+const operators operators::postfix_decr ( UINT32_C( 28 ) );
+const operators operators::div_assign ( UINT32_C( 10 ) );
+const operators operators::less_equal ( UINT32_C( 20 ) );
+const operators operators::div ( UINT32_C( 4 ) );
+const operators operators::assign ( UINT32_C( 6 ) );
+
 

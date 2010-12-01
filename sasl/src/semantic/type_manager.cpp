@@ -10,11 +10,10 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <string>
 
-using namespace ::std;
-using namespace ::boost;
 using namespace ::sasl::syntax_tree;
 
 using ::boost::shared_ptr; // prevent conflicting with std::tr1.
+using ::boost::shared_polymorphic_cast;
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -263,7 +262,7 @@ type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<type
 	type_entry ret_entry;
 	ret_entry.stored = dup_node;
 	entries.push_back( ret_entry );
-	type_entry::id_t ret_id = entries.size() - 1;
+	type_entry::id_t ret_id = (type_entry::id_t)( entries.size() - 1 );
 
 	// assign id to source node and duplicated node.
 	assign_entry_id(node, ret_id);

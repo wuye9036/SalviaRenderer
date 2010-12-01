@@ -12,10 +12,10 @@
 using sasl::syntax_tree::node;
 using sasl::code_generator::llvm_code;
 
-#define SYNCASE_(case_name) syntax_cases::instance().##case_name##()
-#define SYNCASENAME_( case_name ) syntax_cases::instance().##case_name##_name()
+#define SYNCASE_(case_name) syntax_cases::instance().case_name()
+#define SYNCASENAME_( case_name ) syntax_cases::instance().case_name##_name()
 
-#define LLVMCASE_( case_name ) cgllvm_cases::instance().##case_name##()
+#define LLVMCASE_( case_name ) cgllvm_cases::instance().case_name()
 
 BOOST_AUTO_TEST_SUITE( main_suite )
 
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( jit_test ){
 	void* pfunc = LLVMCASE_(jit)->get_function( "foo" );
 	LLVMCASE_(root)->module()->dump();
 	BOOST_CHECK( pfunc );
-	BOOST_CHECK_EQUAL( ((uint32_t(*)())(intptr_t)pfunc)(), 797u ); 
+	BOOST_CHECK_EQUAL( ((uint32_t(*)())(intptr_t)pfunc)(), 797u );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

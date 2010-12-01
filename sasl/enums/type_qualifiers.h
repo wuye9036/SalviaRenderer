@@ -32,8 +32,4 @@ public:
 
 };
 
-const type_qualifiers type_qualifiers::_uniform ( UINT32_C( 2 ) );
-const type_qualifiers type_qualifiers::none ( UINT32_C( 1 ) );
-
-
 #endif

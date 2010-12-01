@@ -144,4 +144,46 @@ std::string syntax_node_types::name() const{
 }
 
 
+const syntax_node_types syntax_node_types::expression_statement ( UINT64_C( 844424930131975 ) );
+const syntax_node_types syntax_node_types::member_expression ( UINT64_C( 562949953421322 ) );
+const syntax_node_types syntax_node_types::unary_expression ( UINT64_C( 562949953421315 ) );
+const syntax_node_types syntax_node_types::for_statement ( UINT64_C( 844424930131977 ) );
+const syntax_node_types syntax_node_types::initializer ( UINT64_C( 1125899906842624 ) );
+const syntax_node_types syntax_node_types::function_type ( UINT64_C( 281479271677956 ) );
+const syntax_node_types syntax_node_types::variable_declaration ( UINT64_C( 281474976710657 ) );
+const syntax_node_types syntax_node_types::cond_expression ( UINT64_C( 562949953421319 ) );
+const syntax_node_types syntax_node_types::case_label ( UINT64_C( 1970324836974594 ) );
+const syntax_node_types syntax_node_types::type_specifier ( UINT64_C( 281479271677952 ) );
+const syntax_node_types syntax_node_types::compound_statement ( UINT64_C( 844424930131974 ) );
+const syntax_node_types syntax_node_types::typedef_definition ( UINT64_C( 281474976710658 ) );
+const syntax_node_types syntax_node_types::struct_type ( UINT64_C( 281479271677955 ) );
+const syntax_node_types syntax_node_types::label ( UINT64_C( 1970324836974592 ) );
+const syntax_node_types syntax_node_types::while_statement ( UINT64_C( 844424930131971 ) );
+const syntax_node_types syntax_node_types::program ( UINT64_C( 1688849860263936 ) );
+const syntax_node_types syntax_node_types::switch_statement ( UINT64_C( 844424930131973 ) );
+const syntax_node_types syntax_node_types::statement ( UINT64_C( 844424930131968 ) );
+const syntax_node_types syntax_node_types::cast_expression ( UINT64_C( 562949953421316 ) );
+const syntax_node_types syntax_node_types::if_statement ( UINT64_C( 844424930131970 ) );
+const syntax_node_types syntax_node_types::parameter ( UINT64_C( 281474976710659 ) );
+const syntax_node_types syntax_node_types::constant_expression ( UINT64_C( 562949953421313 ) );
+const syntax_node_types syntax_node_types::node ( UINT64_C( 0 ) );
+const syntax_node_types syntax_node_types::variable_expression ( UINT64_C( 562949953421314 ) );
+const syntax_node_types syntax_node_types::dowhile_statement ( UINT64_C( 844424930131972 ) );
+const syntax_node_types syntax_node_types::ident_label ( UINT64_C( 1970324836974593 ) );
+const syntax_node_types syntax_node_types::declaration ( UINT64_C( 281474976710656 ) );
+const syntax_node_types syntax_node_types::array_type ( UINT64_C( 281479271677954 ) );
+const syntax_node_types syntax_node_types::jump_statement ( UINT64_C( 844424930131976 ) );
+const syntax_node_types syntax_node_types::alias_type ( UINT64_C( 281479271677957 ) );
+const syntax_node_types syntax_node_types::buildin_type ( UINT64_C( 281479271677953 ) );
+const syntax_node_types syntax_node_types::binary_expression ( UINT64_C( 562949953421317 ) );
+const syntax_node_types syntax_node_types::expression_list ( UINT64_C( 562949953421318 ) );
+const syntax_node_types syntax_node_types::member_initializer ( UINT64_C( 1125899906842626 ) );
+const syntax_node_types syntax_node_types::declaration_statement ( UINT64_C( 844424930131969 ) );
+const syntax_node_types syntax_node_types::index_expression ( UINT64_C( 562949953421320 ) );
+const syntax_node_types syntax_node_types::expression_initializer ( UINT64_C( 1125899906842625 ) );
+const syntax_node_types syntax_node_types::null_declaration ( UINT64_C( 281474976710660 ) );
+const syntax_node_types syntax_node_types::identifier ( UINT64_C( 1407374883553280 ) );
+const syntax_node_types syntax_node_types::expression ( UINT64_C( 562949953421312 ) );
+const syntax_node_types syntax_node_types::call_expression ( UINT64_C( 562949953421321 ) );
+
 

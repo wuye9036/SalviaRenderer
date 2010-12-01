@@ -130,4 +130,39 @@ std::string buildin_type_code::name() const{
 }
 
 
+const buildin_type_code buildin_type_code::_unsigned ( UINT32_C( 34603008 ) );
+const buildin_type_code buildin_type_code::_sint32 ( UINT32_C( 35848192 ) );
+const buildin_type_code buildin_type_code::_c_int ( UINT32_C( 35979264 ) );
+const buildin_type_code buildin_type_code::_sint16 ( UINT32_C( 35782656 ) );
+const buildin_type_code buildin_type_code::_generic_type_field_shift ( UINT32_C( 24 ) );
+const buildin_type_code buildin_type_code::_scalar_type_mask ( UINT32_C( 268369920 ) );
+const buildin_type_code buildin_type_code::_sign_mask ( UINT32_C( 267386880 ) );
+const buildin_type_code buildin_type_code::_dim1_mask ( UINT32_C( 255 ) );
+const buildin_type_code buildin_type_code::_boolean ( UINT32_C( 50331648 ) );
+const buildin_type_code buildin_type_code::_generic_type_mask ( UINT32_C( 251658240 ) );
+const buildin_type_code buildin_type_code::_sint8 ( UINT32_C( 35717120 ) );
+const buildin_type_code buildin_type_code::_scalar ( UINT32_C( 0 ) );
+const buildin_type_code buildin_type_code::_sign_field_shift ( UINT32_C( 20 ) );
+const buildin_type_code buildin_type_code::_float ( UINT32_C( 16842752 ) );
+const buildin_type_code buildin_type_code::_dim0_field_shift ( UINT32_C( 8 ) );
+const buildin_type_code buildin_type_code::_void ( UINT32_C( 67108864 ) );
+const buildin_type_code buildin_type_code::_uint16 ( UINT32_C( 34734080 ) );
+const buildin_type_code buildin_type_code::_dimension_mask ( UINT32_C( 4026531840 ) );
+const buildin_type_code buildin_type_code::_dim1_field_shift ( UINT32_C( 0 ) );
+const buildin_type_code buildin_type_code::_dimension_field_shift ( UINT32_C( 28 ) );
+const buildin_type_code buildin_type_code::_double ( UINT32_C( 16908288 ) );
+const buildin_type_code buildin_type_code::_matrix ( UINT32_C( 536870912 ) );
+const buildin_type_code buildin_type_code::_sint64 ( UINT32_C( 35913728 ) );
+const buildin_type_code buildin_type_code::_real ( UINT32_C( 16777216 ) );
+const buildin_type_code buildin_type_code::_scalar_field_shift ( UINT32_C( 16 ) );
+const buildin_type_code buildin_type_code::_uint8 ( UINT32_C( 34668544 ) );
+const buildin_type_code buildin_type_code::_signed ( UINT32_C( 35651584 ) );
+const buildin_type_code buildin_type_code::_vector ( UINT32_C( 268435456 ) );
+const buildin_type_code buildin_type_code::none ( UINT32_C( 0 ) );
+const buildin_type_code buildin_type_code::_uint32 ( UINT32_C( 34799616 ) );
+const buildin_type_code buildin_type_code::_precision_field_shift ( UINT32_C( 16 ) );
+const buildin_type_code buildin_type_code::_uint64 ( UINT32_C( 34865152 ) );
+const buildin_type_code buildin_type_code::_dim0_mask ( UINT32_C( 65280 ) );
+const buildin_type_code buildin_type_code::_integer ( UINT32_C( 33554432 ) );
+
 

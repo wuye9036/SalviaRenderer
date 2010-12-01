@@ -2,7 +2,7 @@
 import sys, os, __future__
 from xml.dom.minidom import parse, parseString, Node
 
-#typename, storage_typename, operator_list, constant_decl_list, enum_name_translator, constant_def_list
+#typename, storage_typename, operator_list, constant_decl_list, enum_name_translator
 enum_decl_tmpl = \
 """struct %(typename)s :
 	public enum_base< %(typename)s, %(storage_typename)s >
@@ -25,8 +25,6 @@ public:
 %(constant_decl_list)s
 %(enum_name_translator)s
 };
-
-%(constant_def_list)s
 """
 
 compare_op_tmpl = ", public compare_op< %(typename)s >"
@@ -118,11 +116,12 @@ enum_to_name_insert_item_tmpl = \
 name_to_enum_insert_item_tmpl = \
 """name_to_enum.insert( std::make_pair( "%(description)s", %(typename)s::%(member_name)s ) );"""
 
-#hash_op, enum_name_translator_impl
+#hash_op, enum_name_translator_impl, constant_def_list
 enum_def_tmpl = \
 """
 %(hash_op)s
 %(enum_name_translator_impl)s
+%(constant_def_list)s
 """
 
 #include_guard_prefix, typename_upper, include_guard_postfix
@@ -389,15 +388,13 @@ class enum_code_generator:
 		self._generate_operator_list()
 		self._generate_constant_list()
 		self._generate_enum_name_translator()
-		self._generate_constant_def_list()
 		
 		self.declare_ = enum_decl_tmpl % {
 			"typename" : self.typename,
 			"storage_typename" : self.storage_typename,
 			"operator_list":self.operator_list_,
 			"constant_decl_list":self.constant_list_,
-			"enum_name_translator":self.enum_name_translator_,
-			"constant_def_list":self.constant_def_list_
+			"enum_name_translator":self.enum_name_translator_
 			}
 		
 	def _generate_constant_def_list(self):
@@ -455,10 +452,12 @@ class enum_code_generator:
 		self._generate_constant_def_list()
 		self._generate_hash_op()
 		self._generate_enum_name_translator_impl()
-
+		self._generate_constant_def_list()
+		
 		self.definition_ = enum_def_tmpl % {
 			"hash_op" : self.hash_op_,
-			"enum_name_translator_impl" : self.enum_name_translator_impl_
+			"enum_name_translator_impl" : self.enum_name_translator_impl_,
+			"constant_def_list" : self.constant_def_list_
 			}
 		pass
 

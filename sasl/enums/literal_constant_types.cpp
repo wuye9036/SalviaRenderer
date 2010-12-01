@@ -74,4 +74,11 @@ std::string literal_constant_types::name() const{
 }
 
 
+const literal_constant_types literal_constant_types::real ( UINT32_C( 4 ) );
+const literal_constant_types literal_constant_types::none ( UINT32_C( 1 ) );
+const literal_constant_types literal_constant_types::string ( UINT32_C( 5 ) );
+const literal_constant_types literal_constant_types::character ( UINT32_C( 6 ) );
+const literal_constant_types literal_constant_types::boolean ( UINT32_C( 2 ) );
+const literal_constant_types literal_constant_types::integer ( UINT32_C( 3 ) );
+
 

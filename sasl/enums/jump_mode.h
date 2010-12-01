@@ -34,10 +34,4 @@ public:
 
 };
 
-const jump_mode jump_mode::_return ( UINT32_C( 3 ) );
-const jump_mode jump_mode::none ( UINT32_C( 0 ) );
-const jump_mode jump_mode::_continue ( UINT32_C( 2 ) );
-const jump_mode jump_mode::_break ( UINT32_C( 1 ) );
-
-
 #endif

@@ -38,14 +38,4 @@ public:
 
 };
 
-const token_types token_types::_comment ( UINT32_C( 7 ) );
-const token_types token_types::_preprocessor ( UINT32_C( 6 ) );
-const token_types token_types::_operator ( UINT32_C( 4 ) );
-const token_types token_types::_whitespace ( UINT32_C( 5 ) );
-const token_types token_types::_constant ( UINT32_C( 3 ) );
-const token_types token_types::_newline ( UINT32_C( 8 ) );
-const token_types token_types::_identifier ( UINT32_C( 2 ) );
-const token_types token_types::_keyword ( UINT32_C( 1 ) );
-
-
 #endif

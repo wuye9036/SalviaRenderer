@@ -43,19 +43,4 @@ public:
 
 };
 
-const compiler_informations compiler_informations::none ( UINT32_C( 0 ) );
-const compiler_informations compiler_informations::_error ( UINT32_C( 131072 ) );
-const compiler_informations compiler_informations::_message ( UINT32_C( 262144 ) );
-const compiler_informations compiler_informations::redef_diff_basic_type ( UINT32_C( 16909290 ) );
-const compiler_informations compiler_informations::_link ( UINT32_C( 33554432 ) );
-const compiler_informations compiler_informations::_info_level_mask ( UINT32_C( 16711680 ) );
-const compiler_informations compiler_informations::_stage_mask ( UINT32_C( 4278190080 ) );
-const compiler_informations compiler_informations::unknown_compile_error ( UINT32_C( 16909289 ) );
-const compiler_informations compiler_informations::uses_a_undef_type ( UINT32_C( 16909292 ) );
-const compiler_informations compiler_informations::_info_id_mask ( UINT32_C( 65535 ) );
-const compiler_informations compiler_informations::_compile ( UINT32_C( 16777216 ) );
-const compiler_informations compiler_informations::redef_cannot_overloaded ( UINT32_C( 16909291 ) );
-const compiler_informations compiler_informations::_warning ( UINT32_C( 65536 ) );
-
-
 #endif

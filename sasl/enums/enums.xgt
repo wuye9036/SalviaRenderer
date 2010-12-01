@@ -78,7 +78,7 @@
 		<item>character</item>
 	</enum>	
 	
-	<enum name="buildin_type_code" storage_type = "uint32_t" constant_macro = "UINT32_C">
+	<enum name="buildin_type_code">
 		<HasName />
 		<Convertible/>
 		<Ortho />
@@ -132,7 +132,7 @@
 		<item value="(2**$_dim0_field_shift$) - 1">_dim1_mask</item>
 	</enum>
 	
-	<enum name="syntax_node_types" storage_type = "uint64_t" constant_marco = "UINT64_C">
+	<enum name="syntax_node_types" storage_type = "uint64_t" constant_macro = "UINT64_C">
 		<HasName/>
 		<Convertible/>
 		<Ortho/>

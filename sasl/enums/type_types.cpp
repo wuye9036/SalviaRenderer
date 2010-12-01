@@ -70,4 +70,9 @@ std::string type_types::name() const{
 }
 
 
+const type_types type_types::alias ( UINT32_C( 3 ) );
+const type_types type_types::none ( UINT32_C( 0 ) );
+const type_types type_types::buildin ( UINT32_C( 1 ) );
+const type_types type_types::composited ( UINT32_C( 2 ) );
+
 

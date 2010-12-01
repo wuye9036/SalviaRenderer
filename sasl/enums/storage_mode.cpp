@@ -70,4 +70,9 @@ std::string storage_mode::name() const{
 }
 
 
+const storage_mode storage_mode::none ( UINT32_C( 0 ) );
+const storage_mode storage_mode::constant ( UINT32_C( 1 ) );
+const storage_mode storage_mode::stack_based_address ( UINT32_C( 3 ) );
+const storage_mode storage_mode::register_id ( UINT32_C( 2 ) );
+
 

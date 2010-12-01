@@ -28,9 +28,9 @@ set( SOURCE_FILES test_main.cpp ${SASL_CGLLVM_TEST_SOURCES} )
 
 ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
-	sasl_enums sasl_common
-	sasl_semantic sasl_syntaxtree
 	sasl_test_cases
+	sasl_semantic sasl_syntaxtree
+	sasl_enums sasl_common
 	${SASL_CGLLVM_TEST_LIBS}
 	${SOFTART_BOOST_LIBS}
 )
