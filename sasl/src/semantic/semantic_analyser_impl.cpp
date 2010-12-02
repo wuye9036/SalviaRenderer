@@ -55,6 +55,11 @@ using ::sasl::semantic::symbol;
 using namespace std;
 using namespace boost::assign;
 
+#define SASL_GET_OR_CREATE_SI( si_type, si_var, node ) boost::shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>(node);
+#define SASL_GET_OR_CREATE_SI_P( si_type, si_var, node, param ) boost::shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>( node, param );
+
+#define SASL_EXTRACT_SI( si_type, si_var, node ) boost::shared_ptr<si_type> si_var = extract_semantic_info<si_type>(node);
+
 // utility functions
 
 boost::shared_ptr<type_specifier> type_info_of( boost::shared_ptr<node> n ){
@@ -66,7 +71,6 @@ boost::shared_ptr<type_specifier> type_info_of( boost::shared_ptr<node> n ){
 }
 
 semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
-	: infomgr( infomgr )
 {
 	typeconv.reset( new type_converter() );
 	register_type_converter();
@@ -106,8 +110,9 @@ SASL_VISIT_DEF( constant_expression )
 	UNREF_PARAM( data );
 	using ::sasl::syntax_tree::constant_expression;
 
-	boost::shared_ptr<const_value_si> vseminfo = get_or_create_semantic_info<const_value_si>(v);
-	vseminfo->set_literal( v.value_tok->str, v.ctype );
+	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, v, ctxt->type_manager() );
+
+	vsi->set_literal( v.value_tok->str, v.ctype );
 }
 
 SASL_VISIT_DEF( variable_expression ){
@@ -136,25 +141,25 @@ SASL_VISIT_DEF( variable_declaration )
 	// process variable type
 	boost::shared_ptr<type_specifier> vartype = v.type_info;
 	vartype->accept( this, data );
-	boost::shared_ptr<type_semantic_info> typeseminfo = extract_semantic_info<type_semantic_info>(v);
+	boost::shared_ptr<type_si> tsi = extract_semantic_info<type_si>(v);
 
-	// check type.
-	if ( typeseminfo->type_type() == type_types::buildin ){
-		// TODO: ALLOCATE BUILD-IN TYPED VAR.
-	} else if ( typeseminfo->type_type() == type_types::composited ){
-		// TODO: ALLOCATE COMPOSITED TYPED VAR.
-	} else if ( typeseminfo->type_type() == type_types::alias ){
-		if ( typeseminfo->full_type() ){
-			// TODO: ALLOCATE ACTUAL
-		} else {
-			infomgr->add_info( semantic_error::create( compiler_informations::uses_a_undef_type,
-				v.handle(), list_of( typeseminfo->full_type() ) )
-				);
-			// remove created symbol
-			cursym->remove();
-			return;
-		}
-	}
+	//// check type.
+	//if ( tsi->type_type() == type_types::buildin ){
+	//	// TODO: ALLOCATE BUILD-IN TYPED VAR.
+	//} else if ( tsi->type_type() == type_types::composited ){
+	//	// TODO: ALLOCATE COMPOSITED TYPED VAR.
+	//} else if ( tsi->type_type() == type_types::alias ){
+	//	if ( typeseminfo->full_type() ){
+	//		// TODO: ALLOCATE ACTUAL
+	//	} else {
+	//		infomgr->add_info( semantic_error::create( compiler_informations::uses_a_undef_type,
+	//			v.handle(), list_of( typeseminfo->full_type() ) )
+	//			);
+	//		// remove created symbol
+	//		cursym->remove();
+	//		return;
+	//	}
+	//}
 
 	// process initializer
 	v.init->accept( this, data );;
@@ -169,7 +174,7 @@ SASL_VISIT_DEF( type_definition ){
 		// if the symbol is used and is not a type node, it must be redifinition.
 		// else compare the type.
 		if ( !existed_sym->node()->node_class().included( syntax_node_types::type_specifier ) ){
-			infomgr->add_info(
+			ctxt->compiler_infos()->add_info(
 				semantic_error::create( compiler_informations::redef_cannot_overloaded,
 				v.handle(),	list_of(existed_sym->node()) )
 					);
@@ -184,20 +189,20 @@ SASL_VISIT_DEF( type_definition ){
 		symbol_scope sc( v.name->str, v.handle(), cursym );
 
 		v.type_info->accept(this, data);
-		boost::shared_ptr<type_semantic_info> new_tsi = extract_semantic_info<type_semantic_info>(v);
+		boost::shared_ptr<type_si> new_tsi = extract_semantic_info<type_si>(v);
 
 		// if this symbol is usable, process type node.
 		if ( existed_sym ){
-			boost::shared_ptr<type_semantic_info> existed_tsi = extract_semantic_info<type_semantic_info>( existed_sym->node() );
-			if ( !type_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
-				// if new symbol is different from the old, semantic error.
-				// The final effect is that the new definition overwrites the old one.
+			//boost::shared_ptr<type_semantic_info> existed_tsi = extract_semantic_info<type_semantic_info>( existed_sym->node() );
+			//if ( !type_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
+			//	// if new symbol is different from the old, semantic error.
+			//	// The final effect is that the new definition overwrites the old one.
 
-				infomgr->add_info(
-					semantic_error::create( compiler_informations::redef_diff_basic_type,
-					v.handle(),	list_of(existed_sym->node()) )
-					);
-			}
+			//	infomgr->add_info(
+			//		semantic_error::create( compiler_informations::redef_diff_basic_type,
+			//		v.handle(),	list_of(existed_sym->node()) )
+			//		);
+			//}
 		}
 		// else if the same. do not updated.
 		// NOTE:
@@ -213,7 +218,7 @@ SASL_VISIT_DEF( buildin_type ){
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	boost::shared_ptr<type_si> tsi = get_or_create_semantic_info<type_si>( v.handle() );
+	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, ctxt->type_manager() );
 	tsi->type_info( v.typed_handle<type_specifier>() );
 }
 
@@ -227,7 +232,7 @@ SASL_VISIT_DEF( parameter )
 	if ( v.init ){
 		v.init->accept( this, data );;
 	}
-	get_or_create_semantic_info<storage_si>(v)->type_info( type_info_si::from_node(v.param_type) );
+	get_or_create_semantic_info<storage_si>( v, ctxt->type_manager() )->type_info( type_info_si::from_node(v.param_type) );
 }
 
 SASL_VISIT_DEF( function_type )
@@ -381,8 +386,10 @@ SASL_VISIT_DEF( jump_statement )
 // program
 SASL_VISIT_DEF( program ){
 	// create semantic info
-	boost::shared_ptr<program_si> sem = get_or_create_semantic_info<program_si>(v);
-	sem->name( v.name );
+	ctxt.reset( new global_si(v.handle()) );
+
+	SASL_GET_OR_CREATE_SI( program_si, psi, v );
+	psi->name( v.name );
 
 	// create root symbol
 	v.symbol( symbol::create_root( v.handle() ) );

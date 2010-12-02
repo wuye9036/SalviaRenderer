@@ -8,10 +8,17 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/buildin_type_code.h>
 #include <eflib/include/diagnostics/assert.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/format.hpp>
+#include <boost/make_shared.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <string>
 
 using namespace ::sasl::syntax_tree;
 
+using ::boost::make_shared;
 using ::boost::shared_ptr; // prevent conflicting with std::tr1.
 using ::boost::shared_polymorphic_cast;
 
@@ -32,22 +39,23 @@ type_entry::id_t type_entry_id_of_symbol( shared_ptr<symbol> sym ){
 // some utility functions
 std::string buildin_type_name( buildin_type_code btc ){
 	if( sasl_ehelper::is_vector(btc) ) {
-		return buildin_type_name( sasl_ehelper::scalar_of(btc) )
-			+ std::string( "_" )
-			+ boost::lexical_cast<std::string>( sasl_ehelper::len_0( btc ) );
+		return 
+			( boost::format("%1%_%2%") 
+			% buildin_type_name( sasl_ehelper::scalar_of(btc) )
+			% sasl_ehelper::len_0( btc )
+			).str();
 	}
 
 	if( sasl_ehelper::is_matrix(btc) ) {
-		return buildin_type_name( sasl_ehelper::scalar_of(btc) )
-			+ std::string( "_" )
-			+ boost::lexical_cast<std::string>( sasl_ehelper::len_0( btc ) )
-			+ std::string( "x" )
-			+ boost::lexical_cast<std::string>( sasl_ehelper::len_1( btc ) )
-			;
-
+		return 
+			( boost::format("%1%_%2%x%3%") 
+			% buildin_type_name( sasl_ehelper::scalar_of(btc) )
+			% sasl_ehelper::len_0( btc )
+			% sasl_ehelper::len_1( btc )
+			).str();
 	}
 
-	return std::string("0") + btc.name();
+	return ( boost::format("0%1%") % btc.name() ).str();
 }
 
 //	description:
@@ -113,6 +121,10 @@ type_entry::type_entry()
 }
 
 // type_manager
+
+shared_ptr<type_manager> type_manager::handle() const{
+	return self_handle.lock();
+}
 
 type_entry::id_t type_manager::get( shared_ptr<type_specifier> node, shared_ptr<symbol> parent ){
 	/////////////////////////////////////////////////////
@@ -249,8 +261,14 @@ shared_ptr< type_specifier > type_manager::get( type_entry::id_t id ){
 	return entries[id].stored;
 }
 
-void assign_entry_id( shared_ptr<type_specifier> node, type_entry::id_t id ){
-	get_or_create_semantic_info<type_si>(node)->entry_id( id );
+boost::shared_ptr< type_manager > type_manager::create(){
+	boost::shared_ptr<type_manager> ret = make_shared<type_manager>();
+	ret->self_handle = ret;
+	return ret;
+}
+
+void assign_entry_id( shared_ptr<type_specifier> node, shared_ptr<type_manager> typemgr, type_entry::id_t id ){
+	get_or_create_semantic_info<type_si>( node, typemgr )->entry_id( id );
 }
 
 type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<type_specifier> node  ){
@@ -265,8 +283,8 @@ type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<type
 	type_entry::id_t ret_id = (type_entry::id_t)( entries.size() - 1 );
 
 	// assign id to source node and duplicated node.
-	assign_entry_id(node, ret_id);
-	assign_entry_id(dup_node, ret_id);
+	assign_entry_id(node, handle(), ret_id);
+	assign_entry_id(dup_node, handle(), ret_id);
 	return ret_id;
 }
 END_NS_SASL_SEMANTIC();

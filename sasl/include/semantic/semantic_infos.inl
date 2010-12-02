@@ -20,6 +20,9 @@ namespace sasl {
 		struct statement;
 		struct node;
 	}
+	namespace common{
+		class compiler_info_manager;
+	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
@@ -28,9 +31,28 @@ using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::statement;
 
+//////////////////////////////////////////////////////////////////////////
+// Global semantic infos
+
+class global_si: public semantic_info{
+public:
+	typedef semantic_info base_type;
+
+	global_si( boost::shared_ptr< ::sasl::syntax_tree::node > root );
+
+	boost::shared_ptr<class type_manager> type_manager() const;
+	boost::shared_ptr< ::sasl::syntax_tree::node > root_node() const;
+	boost::shared_ptr< symbol > root_symbol() const;
+	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
+
+private:
+	boost::shared_ptr<class type_manager> typemgr;
+	boost::shared_ptr<node> root;
+	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;
+};
+
 //////////////////////////////////////
 //  program semantic infos.
-
 class program_si : public semantic_info{
 public:
 	typedef semantic_info base_type;
@@ -54,12 +76,7 @@ public:
 	virtual ::boost::shared_ptr< type_specifier > type_info() const = 0;
 	virtual void type_info( ::boost::shared_ptr< type_specifier > ) = 0;
 
-	virtual void type_manager( boost::shared_ptr< class type_manager > typemgr ) = 0;
-
 	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
-
-private:
-	::boost::weak_ptr< class type_manager > typemgr;
 };
 
 #define SASL_TYPE_INFO_PROXY()	\
@@ -69,18 +86,17 @@ private:
 		virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
 		virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
 		virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
-		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec ) { type_info_proxy.type_info( typespec ); }	\
-		virtual void type_manager( boost::shared_ptr< class type_manager > typemgr ) { type_info_proxy.type_manager( typemgr ); };
+		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec ) { type_info_proxy.type_info( typespec ); }
 
 class type_info_si_impl: public type_info_si{
 public:
+	type_info_si_impl( boost::shared_ptr<type_manager> typemgr );
+
 	virtual type_entry::id_t entry_id() const;
 	virtual void entry_id( type_entry::id_t id );
 
 	virtual ::boost::shared_ptr< type_specifier > type_info() const;
 	virtual void type_info( ::boost::shared_ptr< type_specifier > );
-
-	virtual void type_manager( boost::shared_ptr< class type_manager > typemgr );
 
 private:
 	type_entry::id_t tid;
@@ -90,7 +106,7 @@ private:
 class const_value_si: public type_info_si{
 public:
 	typedef semantic_info base_type;
-	const_value_si();
+	const_value_si( boost::shared_ptr<type_manager> typemgr );
 
 	void set_literal( const std::string& litstr, literal_constant_types lctype);
 
@@ -106,53 +122,16 @@ private:
 
 class type_si : public type_info_si{
 public:
-	type_si();
+	type_si( boost::shared_ptr<type_manager> typemgr );
 
 	SASL_TYPE_INFO_PROXY();
 };
 
 class storage_si: public type_info_si{
 public:
-	storage_si();
+	storage_si( boost::shared_ptr<type_manager> typemgr );
 
 	SASL_TYPE_INFO_PROXY();
-};
-
-/*
-						has symbol		symbol's node		referred type		actual type
-	buildin type		   no				N/A				   N/A				    this
-	declaration	only	   yes			 first decl			 first decl			 full type
-	definition             yes			 first decl			 first decl			 full type
-	type ref/alias		   yes			 first decl          first decl			 full type
-*/
-class type_semantic_info: public semantic_info{
-public:
-	type_semantic_info();
-
-	friend class semantic_info_collection;
-	typedef semantic_info base_type;
-
-	type_types type_type() const;
-	void type_type( type_types ttype );
-
-	// full_type returns back the raw type.
-	// its behaviour is decided by ttype.
-	boost::shared_ptr<type_specifier> full_type() const;
-
-	void full_type( boost::shared_ptr<type_specifier> ftnode );
-private:
-	// ttype has 4-state: none, alias, buildin, composited.
-	// none:
-	//   it means is a null type that only declaration existed without definition.
-	//   type_node is point to first declaration of this type.
-	// alias:
-	//   alias is a type definition symbol. type_node point to reference.
-	// buildin:
-	//   it is a buildin type symbol. buildin type point to the node which this symbol belongs to.
-	// composited:
-	//   all same as buildin but the type of type_node referred.
-	type_types ttype;
-	boost::weak_ptr<type_specifier> type_node;
 };
 
 class variable_semantic_info: public semantic_info{

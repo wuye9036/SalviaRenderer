@@ -1,19 +1,25 @@
 #include <sasl/include/semantic/semantic_infos.h>
 
 #include <sasl/enums/literal_constant_types.h>
+#include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
+#include <sasl/include/semantic/type_manager.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 
 #include <eflib/include/diagnostics/assert.h>
+
 #include <string>
 
+using ::sasl::common::compiler_info_manager;
 using ::sasl::common::token_attr;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::buildin_type;
 
 using ::boost::shared_ptr;
+
+#define SASL_INIT_TYPE_INFO_PROXY( typemgr ) type_info_proxy(typemgr)
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -67,6 +73,31 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 	}
 }
 ////////////////////////////////
+// global semantic
+
+global_si::global_si( shared_ptr<node> root ): root(root){
+	compinfo = compiler_info_manager::create();
+	typemgr = type_manager::create();
+}
+
+shared_ptr<class type_manager> global_si::type_manager() const{
+	return typemgr;
+}
+
+shared_ptr<node> global_si::root_node() const{
+	return root;
+}
+
+shared_ptr<symbol> global_si::root_symbol() const{
+	if(root){
+		return root->symbol();
+	}
+	return shared_ptr<symbol>();
+}
+
+shared_ptr<compiler_info_manager> global_si::compiler_infos() const{
+	return compinfo;
+}
 
 //////////////////////
 // program semantics
@@ -80,7 +111,12 @@ void program_si::name( const std::string& str ){
 }
 
 //////////////////////////////////////////////////////////////////////////
-// type info semantic info impl
+// type info semantic info implementation
+
+type_info_si_impl::type_info_si_impl( boost::shared_ptr<type_manager> typemgr )
+	: typemgr(typemgr)
+{
+}
 
 type_entry::id_t type_info_si_impl::entry_id() const{
 	return tid;
@@ -98,13 +134,11 @@ void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec){
 	tid = typemgr.lock()->get( typespec, typespec->symbol() );
 }
 
-void type_info_si_impl::type_manager( boost::shared_ptr< class type_manager > typemgr ){
-	this->typemgr = typemgr;
-}
-
 //////////////////////////////////////////////////////////////////////////
 // constant value semantic info
-const_value_si::const_value_si(){}
+const_value_si::const_value_si( shared_ptr<type_manager> typemgr )
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
+{}
 
 void const_value_si::set_literal(
 	const std::string& litstr,
@@ -144,24 +178,6 @@ buildin_type_code const_value_si::value_type() const{
 	return type_info()->value_typecode;
 }
 
-type_semantic_info::type_semantic_info(): ttype(type_types::none) { }
-
-shared_ptr<type_specifier> type_semantic_info::full_type() const{
-	shared_ptr<type_specifier> ret_type = type_node.lock();
-	return /*(ttype == type_types::alias) ? actual_type( ret_type ) :*/ ret_type;
-}
-
-void type_semantic_info::full_type( shared_ptr<type_specifier> ftnode ){
-	type_node = ftnode;
-}
-type_types type_semantic_info::type_type() const{
-	return ttype;
-}
-
-void type_semantic_info::type_type( type_types ttype ){
-	this->ttype = ttype;
-}
-
 variable_semantic_info::variable_semantic_info()
 	: isloc(false)
 {
@@ -178,7 +194,6 @@ execution_block_semantic_info::execution_block_semantic_info()
 {
 }
 
-
 shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 {
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
@@ -188,10 +203,14 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 	return shared_ptr<type_specifier>();
 }
 
-storage_si::storage_si(){
+storage_si::storage_si( shared_ptr<type_manager> typemgr )
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
+{
 }
 
-type_si::type_si(){
+type_si::type_si( shared_ptr<type_manager> typemgr )
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
+{
 }
 
 END_NS_SASL_SEMANTIC();

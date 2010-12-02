@@ -3,7 +3,12 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <eflib/include/platform/typedefs.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 namespace sasl{
@@ -35,6 +40,9 @@ public:
 
 class type_manager{
 public:
+	static boost::shared_ptr< type_manager > create();
+
+	boost::shared_ptr<type_manager> handle() const;
 	type_entry::id_t get(
 		::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > node,
 		::boost::shared_ptr<symbol> parent
@@ -43,6 +51,7 @@ public:
 private:
 	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > node );
 	::std::vector< type_entry > entries;
+	boost::weak_ptr<type_manager> self_handle;
 };
 
 END_NS_SASL_SEMANTIC();
