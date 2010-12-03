@@ -114,7 +114,7 @@ void program_si::name( const std::string& str ){
 // type info semantic info implementation
 
 type_info_si_impl::type_info_si_impl( boost::shared_ptr<type_manager> typemgr )
-	: typemgr(typemgr)
+	: typemgr(typemgr), tid(-1)
 {
 }
 
