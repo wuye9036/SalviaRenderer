@@ -12,34 +12,22 @@ struct enum_hasher: public std::unary_function< token_types, std::size_t> {
 		return hash_value(val.val_);
 	}
 };
-
+		
 struct dict_wrapper_token_types {
 private:
 	boost::unordered_map< token_types, std::string, enum_hasher > enum_to_name;
 	boost::unordered_map< std::string, token_types > name_to_enum;
 
+	dict_wrapper_token_types(){}
+	
 public:
-	dict_wrapper_token_types(){
-		enum_to_name.insert( std::make_pair( token_types::_comment, "_comment" ) );
-		enum_to_name.insert( std::make_pair( token_types::_preprocessor, "_preprocessor" ) );
-		enum_to_name.insert( std::make_pair( token_types::_operator, "_operator" ) );
-		enum_to_name.insert( std::make_pair( token_types::_whitespace, "_whitespace" ) );
-		enum_to_name.insert( std::make_pair( token_types::_constant, "_constant" ) );
-		enum_to_name.insert( std::make_pair( token_types::_newline, "_newline" ) );
-		enum_to_name.insert( std::make_pair( token_types::_identifier, "_identifier" ) );
-		enum_to_name.insert( std::make_pair( token_types::_keyword, "_keyword" ) );
-
-		name_to_enum.insert( std::make_pair( "_comment", token_types::_comment ) );
-		name_to_enum.insert( std::make_pair( "_preprocessor", token_types::_preprocessor ) );
-		name_to_enum.insert( std::make_pair( "_operator", token_types::_operator ) );
-		name_to_enum.insert( std::make_pair( "_whitespace", token_types::_whitespace ) );
-		name_to_enum.insert( std::make_pair( "_constant", token_types::_constant ) );
-		name_to_enum.insert( std::make_pair( "_newline", token_types::_newline ) );
-		name_to_enum.insert( std::make_pair( "_identifier", token_types::_identifier ) );
-		name_to_enum.insert( std::make_pair( "_keyword", token_types::_keyword ) );
-
+	static dict_wrapper_token_types& instance();
+	
+	void insert( token_types const& val, const std::string& name ){
+		enum_to_name.insert( std::make_pair( val, name ) );
+		name_to_enum.insert( std::make_pair( name, val ) );
 	}
-
+	
 	std::string to_name( token_types const& val ){
 		boost::unordered_map< token_types, std::string >::const_iterator
 			find_result_it = enum_to_name.find(val);
@@ -63,14 +51,17 @@ public:
 	}
 };
 
-static dict_wrapper_token_types s_dict;
+dict_wrapper_token_types& dict_wrapper_token_types::instance(){
+	static dict_wrapper_token_types inst;
+	return inst;
+}
 
 std::string token_types::to_name( const token_types& enum_val){
-	return s_dict.to_name(enum_val);
+	return dict_wrapper_token_types::instance().to_name(enum_val);
 }
 
 token_types token_types::from_name( const std::string& name){
-	return s_dict.from_name(name);
+	return dict_wrapper_token_types::instance().from_name(name);
 }
 
 std::string token_types::name() const{
@@ -78,13 +69,20 @@ std::string token_types::name() const{
 }
 
 
-const token_types token_types::_comment ( UINT32_C( 7 ) );
-const token_types token_types::_preprocessor ( UINT32_C( 6 ) );
-const token_types token_types::_operator ( UINT32_C( 4 ) );
-const token_types token_types::_whitespace ( UINT32_C( 5 ) );
-const token_types token_types::_constant ( UINT32_C( 3 ) );
-const token_types token_types::_newline ( UINT32_C( 8 ) );
-const token_types token_types::_identifier ( UINT32_C( 2 ) );
-const token_types token_types::_keyword ( UINT32_C( 1 ) );
+
+		
+token_types::token_types( const storage_type& val, const std::string& name ): token_types::base_type(val){
+	token_types tmp(val);
+	dict_wrapper_token_types::instance().insert( tmp, name );
+}
+
+const token_types token_types::_comment ( UINT32_C( 7 ), "_comment" );
+const token_types token_types::_preprocessor ( UINT32_C( 6 ), "_preprocessor" );
+const token_types token_types::_operator ( UINT32_C( 4 ), "_operator" );
+const token_types token_types::_whitespace ( UINT32_C( 5 ), "_whitespace" );
+const token_types token_types::_constant ( UINT32_C( 3 ), "_constant" );
+const token_types token_types::_newline ( UINT32_C( 8 ), "_newline" );
+const token_types token_types::_identifier ( UINT32_C( 2 ), "_identifier" );
+const token_types token_types::_keyword ( UINT32_C( 1 ), "_keyword" );
 
 

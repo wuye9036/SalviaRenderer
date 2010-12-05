@@ -10,8 +10,8 @@ struct literal_constant_types :
 {
 	friend struct enum_hasher;
 private:
-	literal_constant_types( const storage_type& val ): base_type( val ){}
-	
+	literal_constant_types( const storage_type& val, const std::string& name );
+	literal_constant_types( const storage_type& val ): base_type(val){}
 public:
 	literal_constant_types( const this_type& rhs )
 		:base_type(rhs.val_)

@@ -130,8 +130,8 @@ shared_ptr<type_specifier> type_info_si_impl::type_info() const{
 	return typemgr.lock()->get( tid );
 }
 
-void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec){
-	tid = typemgr.lock()->get( typespec, typespec->symbol() );
+void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec, shared_ptr<symbol> sym ){
+	tid = typemgr.lock()->get( typespec, sym );
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -10,8 +10,8 @@ struct jump_mode :
 {
 	friend struct enum_hasher;
 private:
-	jump_mode( const storage_type& val ): base_type( val ){}
-	
+	jump_mode( const storage_type& val, const std::string& name );
+	jump_mode( const storage_type& val ): base_type(val){}
 public:
 	jump_mode( const this_type& rhs )
 		:base_type(rhs.val_)

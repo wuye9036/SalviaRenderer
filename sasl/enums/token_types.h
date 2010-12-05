@@ -10,8 +10,8 @@ struct token_types :
 {
 	friend struct enum_hasher;
 private:
-	token_types( const storage_type& val ): base_type( val ){}
-	
+	token_types( const storage_type& val, const std::string& name );
+	token_types( const storage_type& val ): base_type(val){}
 public:
 	token_types( const this_type& rhs )
 		:base_type(rhs.val_)

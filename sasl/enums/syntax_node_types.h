@@ -10,8 +10,8 @@ struct syntax_node_types :
 {
 	friend struct enum_hasher;
 private:
-	syntax_node_types( const storage_type& val ): base_type( val ){}
-	
+	syntax_node_types( const storage_type& val, const std::string& name );
+	syntax_node_types( const storage_type& val ): base_type(val){}
 public:
 	syntax_node_types( const this_type& rhs )
 		:base_type(rhs.val_)

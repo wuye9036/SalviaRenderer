@@ -12,26 +12,22 @@ struct enum_hasher: public std::unary_function< jump_mode, std::size_t> {
 		return hash_value(val.val_);
 	}
 };
-
+		
 struct dict_wrapper_jump_mode {
 private:
 	boost::unordered_map< jump_mode, std::string, enum_hasher > enum_to_name;
 	boost::unordered_map< std::string, jump_mode > name_to_enum;
 
+	dict_wrapper_jump_mode(){}
+	
 public:
-	dict_wrapper_jump_mode(){
-		enum_to_name.insert( std::make_pair( jump_mode::_return, "_return" ) );
-		enum_to_name.insert( std::make_pair( jump_mode::none, "none" ) );
-		enum_to_name.insert( std::make_pair( jump_mode::_continue, "_continue" ) );
-		enum_to_name.insert( std::make_pair( jump_mode::_break, "_break" ) );
-
-		name_to_enum.insert( std::make_pair( "_return", jump_mode::_return ) );
-		name_to_enum.insert( std::make_pair( "none", jump_mode::none ) );
-		name_to_enum.insert( std::make_pair( "_continue", jump_mode::_continue ) );
-		name_to_enum.insert( std::make_pair( "_break", jump_mode::_break ) );
-
+	static dict_wrapper_jump_mode& instance();
+	
+	void insert( jump_mode const& val, const std::string& name ){
+		enum_to_name.insert( std::make_pair( val, name ) );
+		name_to_enum.insert( std::make_pair( name, val ) );
 	}
-
+	
 	std::string to_name( jump_mode const& val ){
 		boost::unordered_map< jump_mode, std::string >::const_iterator
 			find_result_it = enum_to_name.find(val);
@@ -55,14 +51,17 @@ public:
 	}
 };
 
-static dict_wrapper_jump_mode s_dict;
+dict_wrapper_jump_mode& dict_wrapper_jump_mode::instance(){
+	static dict_wrapper_jump_mode inst;
+	return inst;
+}
 
 std::string jump_mode::to_name( const jump_mode& enum_val){
-	return s_dict.to_name(enum_val);
+	return dict_wrapper_jump_mode::instance().to_name(enum_val);
 }
 
 jump_mode jump_mode::from_name( const std::string& name){
-	return s_dict.from_name(name);
+	return dict_wrapper_jump_mode::instance().from_name(name);
 }
 
 std::string jump_mode::name() const{
@@ -70,9 +69,16 @@ std::string jump_mode::name() const{
 }
 
 
-const jump_mode jump_mode::_return ( UINT32_C( 3 ) );
-const jump_mode jump_mode::none ( UINT32_C( 0 ) );
-const jump_mode jump_mode::_continue ( UINT32_C( 2 ) );
-const jump_mode jump_mode::_break ( UINT32_C( 1 ) );
+
+		
+jump_mode::jump_mode( const storage_type& val, const std::string& name ): jump_mode::base_type(val){
+	jump_mode tmp(val);
+	dict_wrapper_jump_mode::instance().insert( tmp, name );
+}
+
+const jump_mode jump_mode::_return ( UINT32_C( 3 ), "_return" );
+const jump_mode jump_mode::none ( UINT32_C( 0 ), "none" );
+const jump_mode jump_mode::_continue ( UINT32_C( 2 ), "_continue" );
+const jump_mode jump_mode::_break ( UINT32_C( 1 ), "_break" );
 
 

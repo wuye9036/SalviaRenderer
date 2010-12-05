@@ -10,8 +10,8 @@ struct storage_mode :
 {
 	friend struct enum_hasher;
 private:
-	storage_mode( const storage_type& val ): base_type( val ){}
-	
+	storage_mode( const storage_type& val, const std::string& name );
+	storage_mode( const storage_type& val ): base_type(val){}
 public:
 	storage_mode( const this_type& rhs )
 		:base_type(rhs.val_)

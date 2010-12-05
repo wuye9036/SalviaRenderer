@@ -74,7 +74,7 @@ public:
 	virtual void entry_id( type_entry::id_t id ) = 0;
 
 	virtual ::boost::shared_ptr< type_specifier > type_info() const = 0;
-	virtual void type_info( ::boost::shared_ptr< type_specifier > ) = 0;
+	virtual void type_info( ::boost::shared_ptr< type_specifier >, ::boost::shared_ptr<symbol> sym ) = 0;
 
 	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
 };
@@ -86,7 +86,7 @@ public:
 		virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
 		virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
 		virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
-		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec ) { type_info_proxy.type_info( typespec ); }
+		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); }
 
 class type_info_si_impl: public type_info_si{
 public:
@@ -96,7 +96,7 @@ public:
 	virtual void entry_id( type_entry::id_t id );
 
 	virtual ::boost::shared_ptr< type_specifier > type_info() const;
-	virtual void type_info( ::boost::shared_ptr< type_specifier > );
+	virtual void type_info( ::boost::shared_ptr< type_specifier >, boost::shared_ptr<symbol> );
 
 private:
 	type_entry::id_t tid;

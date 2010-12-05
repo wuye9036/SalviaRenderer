@@ -12,100 +12,22 @@ struct enum_hasher: public std::unary_function< syntax_node_types, std::size_t> 
 		return hash_value(val.val_);
 	}
 };
-
+		
 struct dict_wrapper_syntax_node_types {
 private:
 	boost::unordered_map< syntax_node_types, std::string, enum_hasher > enum_to_name;
 	boost::unordered_map< std::string, syntax_node_types > name_to_enum;
 
+	dict_wrapper_syntax_node_types(){}
+	
 public:
-	dict_wrapper_syntax_node_types(){
-		enum_to_name.insert( std::make_pair( syntax_node_types::expression_statement, "expression_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::member_expression, "member_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::unary_expression, "unary_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::for_statement, "for_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::initializer, "initializer" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::function_type, "function_type" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::variable_declaration, "variable_declaration" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::cond_expression, "cond_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::case_label, "case_label" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::type_specifier, "type_specifier" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::compound_statement, "compound_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::typedef_definition, "typedef_definition" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::struct_type, "struct_type" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::label, "label" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::while_statement, "while_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::program, "program" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::switch_statement, "switch_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::statement, "statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::cast_expression, "cast_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::if_statement, "if_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::parameter, "parameter" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::constant_expression, "constant_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::node, "node" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::variable_expression, "variable_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::dowhile_statement, "dowhile_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::ident_label, "ident_label" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::declaration, "declaration" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::array_type, "array_type" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::jump_statement, "jump_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::alias_type, "alias_type" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::buildin_type, "buildin_type" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::binary_expression, "binary_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::expression_list, "expression_list" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::member_initializer, "member_initializer" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::declaration_statement, "declaration_statement" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::index_expression, "index_expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::expression_initializer, "expression_initializer" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::null_declaration, "null_declaration" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::identifier, "identifier" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::expression, "expression" ) );
-		enum_to_name.insert( std::make_pair( syntax_node_types::call_expression, "call_expression" ) );
-
-		name_to_enum.insert( std::make_pair( "expression_statement", syntax_node_types::expression_statement ) );
-		name_to_enum.insert( std::make_pair( "member_expression", syntax_node_types::member_expression ) );
-		name_to_enum.insert( std::make_pair( "unary_expression", syntax_node_types::unary_expression ) );
-		name_to_enum.insert( std::make_pair( "for_statement", syntax_node_types::for_statement ) );
-		name_to_enum.insert( std::make_pair( "initializer", syntax_node_types::initializer ) );
-		name_to_enum.insert( std::make_pair( "function_type", syntax_node_types::function_type ) );
-		name_to_enum.insert( std::make_pair( "variable_declaration", syntax_node_types::variable_declaration ) );
-		name_to_enum.insert( std::make_pair( "cond_expression", syntax_node_types::cond_expression ) );
-		name_to_enum.insert( std::make_pair( "case_label", syntax_node_types::case_label ) );
-		name_to_enum.insert( std::make_pair( "type_specifier", syntax_node_types::type_specifier ) );
-		name_to_enum.insert( std::make_pair( "compound_statement", syntax_node_types::compound_statement ) );
-		name_to_enum.insert( std::make_pair( "typedef_definition", syntax_node_types::typedef_definition ) );
-		name_to_enum.insert( std::make_pair( "struct_type", syntax_node_types::struct_type ) );
-		name_to_enum.insert( std::make_pair( "label", syntax_node_types::label ) );
-		name_to_enum.insert( std::make_pair( "while_statement", syntax_node_types::while_statement ) );
-		name_to_enum.insert( std::make_pair( "program", syntax_node_types::program ) );
-		name_to_enum.insert( std::make_pair( "switch_statement", syntax_node_types::switch_statement ) );
-		name_to_enum.insert( std::make_pair( "statement", syntax_node_types::statement ) );
-		name_to_enum.insert( std::make_pair( "cast_expression", syntax_node_types::cast_expression ) );
-		name_to_enum.insert( std::make_pair( "if_statement", syntax_node_types::if_statement ) );
-		name_to_enum.insert( std::make_pair( "parameter", syntax_node_types::parameter ) );
-		name_to_enum.insert( std::make_pair( "constant_expression", syntax_node_types::constant_expression ) );
-		name_to_enum.insert( std::make_pair( "node", syntax_node_types::node ) );
-		name_to_enum.insert( std::make_pair( "variable_expression", syntax_node_types::variable_expression ) );
-		name_to_enum.insert( std::make_pair( "dowhile_statement", syntax_node_types::dowhile_statement ) );
-		name_to_enum.insert( std::make_pair( "ident_label", syntax_node_types::ident_label ) );
-		name_to_enum.insert( std::make_pair( "declaration", syntax_node_types::declaration ) );
-		name_to_enum.insert( std::make_pair( "array_type", syntax_node_types::array_type ) );
-		name_to_enum.insert( std::make_pair( "jump_statement", syntax_node_types::jump_statement ) );
-		name_to_enum.insert( std::make_pair( "alias_type", syntax_node_types::alias_type ) );
-		name_to_enum.insert( std::make_pair( "buildin_type", syntax_node_types::buildin_type ) );
-		name_to_enum.insert( std::make_pair( "binary_expression", syntax_node_types::binary_expression ) );
-		name_to_enum.insert( std::make_pair( "expression_list", syntax_node_types::expression_list ) );
-		name_to_enum.insert( std::make_pair( "member_initializer", syntax_node_types::member_initializer ) );
-		name_to_enum.insert( std::make_pair( "declaration_statement", syntax_node_types::declaration_statement ) );
-		name_to_enum.insert( std::make_pair( "index_expression", syntax_node_types::index_expression ) );
-		name_to_enum.insert( std::make_pair( "expression_initializer", syntax_node_types::expression_initializer ) );
-		name_to_enum.insert( std::make_pair( "null_declaration", syntax_node_types::null_declaration ) );
-		name_to_enum.insert( std::make_pair( "identifier", syntax_node_types::identifier ) );
-		name_to_enum.insert( std::make_pair( "expression", syntax_node_types::expression ) );
-		name_to_enum.insert( std::make_pair( "call_expression", syntax_node_types::call_expression ) );
-
+	static dict_wrapper_syntax_node_types& instance();
+	
+	void insert( syntax_node_types const& val, const std::string& name ){
+		enum_to_name.insert( std::make_pair( val, name ) );
+		name_to_enum.insert( std::make_pair( name, val ) );
 	}
-
+	
 	std::string to_name( syntax_node_types const& val ){
 		boost::unordered_map< syntax_node_types, std::string >::const_iterator
 			find_result_it = enum_to_name.find(val);
@@ -129,14 +51,17 @@ public:
 	}
 };
 
-static dict_wrapper_syntax_node_types s_dict;
+dict_wrapper_syntax_node_types& dict_wrapper_syntax_node_types::instance(){
+	static dict_wrapper_syntax_node_types inst;
+	return inst;
+}
 
 std::string syntax_node_types::to_name( const syntax_node_types& enum_val){
-	return s_dict.to_name(enum_val);
+	return dict_wrapper_syntax_node_types::instance().to_name(enum_val);
 }
 
 syntax_node_types syntax_node_types::from_name( const std::string& name){
-	return s_dict.from_name(name);
+	return dict_wrapper_syntax_node_types::instance().from_name(name);
 }
 
 std::string syntax_node_types::name() const{
@@ -144,46 +69,53 @@ std::string syntax_node_types::name() const{
 }
 
 
-const syntax_node_types syntax_node_types::expression_statement ( UINT64_C( 844424930131975 ) );
-const syntax_node_types syntax_node_types::member_expression ( UINT64_C( 562949953421322 ) );
-const syntax_node_types syntax_node_types::unary_expression ( UINT64_C( 562949953421315 ) );
-const syntax_node_types syntax_node_types::for_statement ( UINT64_C( 844424930131977 ) );
-const syntax_node_types syntax_node_types::initializer ( UINT64_C( 1125899906842624 ) );
-const syntax_node_types syntax_node_types::function_type ( UINT64_C( 281479271677956 ) );
-const syntax_node_types syntax_node_types::variable_declaration ( UINT64_C( 281474976710657 ) );
-const syntax_node_types syntax_node_types::cond_expression ( UINT64_C( 562949953421319 ) );
-const syntax_node_types syntax_node_types::case_label ( UINT64_C( 1970324836974594 ) );
-const syntax_node_types syntax_node_types::type_specifier ( UINT64_C( 281479271677952 ) );
-const syntax_node_types syntax_node_types::compound_statement ( UINT64_C( 844424930131974 ) );
-const syntax_node_types syntax_node_types::typedef_definition ( UINT64_C( 281474976710658 ) );
-const syntax_node_types syntax_node_types::struct_type ( UINT64_C( 281479271677955 ) );
-const syntax_node_types syntax_node_types::label ( UINT64_C( 1970324836974592 ) );
-const syntax_node_types syntax_node_types::while_statement ( UINT64_C( 844424930131971 ) );
-const syntax_node_types syntax_node_types::program ( UINT64_C( 1688849860263936 ) );
-const syntax_node_types syntax_node_types::switch_statement ( UINT64_C( 844424930131973 ) );
-const syntax_node_types syntax_node_types::statement ( UINT64_C( 844424930131968 ) );
-const syntax_node_types syntax_node_types::cast_expression ( UINT64_C( 562949953421316 ) );
-const syntax_node_types syntax_node_types::if_statement ( UINT64_C( 844424930131970 ) );
-const syntax_node_types syntax_node_types::parameter ( UINT64_C( 281474976710659 ) );
-const syntax_node_types syntax_node_types::constant_expression ( UINT64_C( 562949953421313 ) );
-const syntax_node_types syntax_node_types::node ( UINT64_C( 0 ) );
-const syntax_node_types syntax_node_types::variable_expression ( UINT64_C( 562949953421314 ) );
-const syntax_node_types syntax_node_types::dowhile_statement ( UINT64_C( 844424930131972 ) );
-const syntax_node_types syntax_node_types::ident_label ( UINT64_C( 1970324836974593 ) );
-const syntax_node_types syntax_node_types::declaration ( UINT64_C( 281474976710656 ) );
-const syntax_node_types syntax_node_types::array_type ( UINT64_C( 281479271677954 ) );
-const syntax_node_types syntax_node_types::jump_statement ( UINT64_C( 844424930131976 ) );
-const syntax_node_types syntax_node_types::alias_type ( UINT64_C( 281479271677957 ) );
-const syntax_node_types syntax_node_types::buildin_type ( UINT64_C( 281479271677953 ) );
-const syntax_node_types syntax_node_types::binary_expression ( UINT64_C( 562949953421317 ) );
-const syntax_node_types syntax_node_types::expression_list ( UINT64_C( 562949953421318 ) );
-const syntax_node_types syntax_node_types::member_initializer ( UINT64_C( 1125899906842626 ) );
-const syntax_node_types syntax_node_types::declaration_statement ( UINT64_C( 844424930131969 ) );
-const syntax_node_types syntax_node_types::index_expression ( UINT64_C( 562949953421320 ) );
-const syntax_node_types syntax_node_types::expression_initializer ( UINT64_C( 1125899906842625 ) );
-const syntax_node_types syntax_node_types::null_declaration ( UINT64_C( 281474976710660 ) );
-const syntax_node_types syntax_node_types::identifier ( UINT64_C( 1407374883553280 ) );
-const syntax_node_types syntax_node_types::expression ( UINT64_C( 562949953421312 ) );
-const syntax_node_types syntax_node_types::call_expression ( UINT64_C( 562949953421321 ) );
+
+		
+syntax_node_types::syntax_node_types( const storage_type& val, const std::string& name ): syntax_node_types::base_type(val){
+	syntax_node_types tmp(val);
+	dict_wrapper_syntax_node_types::instance().insert( tmp, name );
+}
+
+const syntax_node_types syntax_node_types::expression_statement ( UINT64_C( 844424930131975 ), "expression_statement" );
+const syntax_node_types syntax_node_types::member_expression ( UINT64_C( 562949953421322 ), "member_expression" );
+const syntax_node_types syntax_node_types::unary_expression ( UINT64_C( 562949953421315 ), "unary_expression" );
+const syntax_node_types syntax_node_types::for_statement ( UINT64_C( 844424930131977 ), "for_statement" );
+const syntax_node_types syntax_node_types::initializer ( UINT64_C( 1125899906842624 ), "initializer" );
+const syntax_node_types syntax_node_types::function_type ( UINT64_C( 281479271677956 ), "function_type" );
+const syntax_node_types syntax_node_types::variable_declaration ( UINT64_C( 281474976710657 ), "variable_declaration" );
+const syntax_node_types syntax_node_types::cond_expression ( UINT64_C( 562949953421319 ), "cond_expression" );
+const syntax_node_types syntax_node_types::case_label ( UINT64_C( 1970324836974594 ), "case_label" );
+const syntax_node_types syntax_node_types::type_specifier ( UINT64_C( 281479271677952 ), "type_specifier" );
+const syntax_node_types syntax_node_types::compound_statement ( UINT64_C( 844424930131974 ), "compound_statement" );
+const syntax_node_types syntax_node_types::typedef_definition ( UINT64_C( 281474976710658 ), "typedef_definition" );
+const syntax_node_types syntax_node_types::struct_type ( UINT64_C( 281479271677955 ), "struct_type" );
+const syntax_node_types syntax_node_types::label ( UINT64_C( 1970324836974592 ), "label" );
+const syntax_node_types syntax_node_types::while_statement ( UINT64_C( 844424930131971 ), "while_statement" );
+const syntax_node_types syntax_node_types::program ( UINT64_C( 1688849860263936 ), "program" );
+const syntax_node_types syntax_node_types::switch_statement ( UINT64_C( 844424930131973 ), "switch_statement" );
+const syntax_node_types syntax_node_types::statement ( UINT64_C( 844424930131968 ), "statement" );
+const syntax_node_types syntax_node_types::cast_expression ( UINT64_C( 562949953421316 ), "cast_expression" );
+const syntax_node_types syntax_node_types::if_statement ( UINT64_C( 844424930131970 ), "if_statement" );
+const syntax_node_types syntax_node_types::parameter ( UINT64_C( 281474976710659 ), "parameter" );
+const syntax_node_types syntax_node_types::constant_expression ( UINT64_C( 562949953421313 ), "constant_expression" );
+const syntax_node_types syntax_node_types::node ( UINT64_C( 0 ), "node" );
+const syntax_node_types syntax_node_types::variable_expression ( UINT64_C( 562949953421314 ), "variable_expression" );
+const syntax_node_types syntax_node_types::dowhile_statement ( UINT64_C( 844424930131972 ), "dowhile_statement" );
+const syntax_node_types syntax_node_types::ident_label ( UINT64_C( 1970324836974593 ), "ident_label" );
+const syntax_node_types syntax_node_types::declaration ( UINT64_C( 281474976710656 ), "declaration" );
+const syntax_node_types syntax_node_types::array_type ( UINT64_C( 281479271677954 ), "array_type" );
+const syntax_node_types syntax_node_types::jump_statement ( UINT64_C( 844424930131976 ), "jump_statement" );
+const syntax_node_types syntax_node_types::alias_type ( UINT64_C( 281479271677957 ), "alias_type" );
+const syntax_node_types syntax_node_types::buildin_type ( UINT64_C( 281479271677953 ), "buildin_type" );
+const syntax_node_types syntax_node_types::binary_expression ( UINT64_C( 562949953421317 ), "binary_expression" );
+const syntax_node_types syntax_node_types::expression_list ( UINT64_C( 562949953421318 ), "expression_list" );
+const syntax_node_types syntax_node_types::member_initializer ( UINT64_C( 1125899906842626 ), "member_initializer" );
+const syntax_node_types syntax_node_types::declaration_statement ( UINT64_C( 844424930131969 ), "declaration_statement" );
+const syntax_node_types syntax_node_types::index_expression ( UINT64_C( 562949953421320 ), "index_expression" );
+const syntax_node_types syntax_node_types::expression_initializer ( UINT64_C( 1125899906842625 ), "expression_initializer" );
+const syntax_node_types syntax_node_types::null_declaration ( UINT64_C( 281474976710660 ), "null_declaration" );
+const syntax_node_types syntax_node_types::identifier ( UINT64_C( 1407374883553280 ), "identifier" );
+const syntax_node_types syntax_node_types::expression ( UINT64_C( 562949953421312 ), "expression" );
+const syntax_node_types syntax_node_types::call_expression ( UINT64_C( 562949953421321 ), "call_expression" );
 
 

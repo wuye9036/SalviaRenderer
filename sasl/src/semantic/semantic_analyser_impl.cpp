@@ -60,6 +60,14 @@ using namespace boost::assign;
 
 #define SASL_EXTRACT_SI( si_type, si_var, node ) boost::shared_ptr<si_type> si_var = extract_semantic_info<si_type>(node);
 
+// semantic analysis context
+struct sacontext{
+	::boost::shared_ptr<symbol> parent_sym;
+};
+
+#define context() (boost::any_cast<sacontext>(data))
+#define set_context( ctxt ) ( data = (ctxt) )
+
 // utility functions
 
 boost::shared_ptr<type_specifier> type_info_of( boost::shared_ptr<node> n ){
@@ -219,7 +227,7 @@ SASL_VISIT_DEF( buildin_type ){
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
 	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, ctxt->type_manager() );
-	tsi->type_info( v.typed_handle<type_specifier>() );
+	tsi->type_info( v.typed_handle<type_specifier>(), cursym );
 }
 
 SASL_VISIT_NOIMPL( array_type );
@@ -232,7 +240,7 @@ SASL_VISIT_DEF( parameter )
 	if ( v.init ){
 		v.init->accept( this, data );;
 	}
-	get_or_create_semantic_info<storage_si>( v, ctxt->type_manager() )->type_info( type_info_si::from_node(v.param_type) );
+	get_or_create_semantic_info<storage_si>( v, ctxt->type_manager() )->type_info( type_info_si::from_node(v.param_type), cursym );
 }
 
 SASL_VISIT_DEF( function_type )

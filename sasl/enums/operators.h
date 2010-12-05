@@ -10,8 +10,8 @@ struct operators :
 {
 	friend struct enum_hasher;
 private:
-	operators( const storage_type& val ): base_type( val ){}
-	
+	operators( const storage_type& val, const std::string& name );
+	operators( const storage_type& val ): base_type(val){}
 public:
 	operators( const this_type& rhs )
 		:base_type(rhs.val_)

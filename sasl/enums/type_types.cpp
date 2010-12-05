@@ -12,26 +12,22 @@ struct enum_hasher: public std::unary_function< type_types, std::size_t> {
 		return hash_value(val.val_);
 	}
 };
-
+		
 struct dict_wrapper_type_types {
 private:
 	boost::unordered_map< type_types, std::string, enum_hasher > enum_to_name;
 	boost::unordered_map< std::string, type_types > name_to_enum;
 
+	dict_wrapper_type_types(){}
+	
 public:
-	dict_wrapper_type_types(){
-		enum_to_name.insert( std::make_pair( type_types::alias, "alias" ) );
-		enum_to_name.insert( std::make_pair( type_types::none, "none" ) );
-		enum_to_name.insert( std::make_pair( type_types::buildin, "buildin" ) );
-		enum_to_name.insert( std::make_pair( type_types::composited, "composited" ) );
-
-		name_to_enum.insert( std::make_pair( "alias", type_types::alias ) );
-		name_to_enum.insert( std::make_pair( "none", type_types::none ) );
-		name_to_enum.insert( std::make_pair( "buildin", type_types::buildin ) );
-		name_to_enum.insert( std::make_pair( "composited", type_types::composited ) );
-
+	static dict_wrapper_type_types& instance();
+	
+	void insert( type_types const& val, const std::string& name ){
+		enum_to_name.insert( std::make_pair( val, name ) );
+		name_to_enum.insert( std::make_pair( name, val ) );
 	}
-
+	
 	std::string to_name( type_types const& val ){
 		boost::unordered_map< type_types, std::string >::const_iterator
 			find_result_it = enum_to_name.find(val);
@@ -55,14 +51,17 @@ public:
 	}
 };
 
-static dict_wrapper_type_types s_dict;
+dict_wrapper_type_types& dict_wrapper_type_types::instance(){
+	static dict_wrapper_type_types inst;
+	return inst;
+}
 
 std::string type_types::to_name( const type_types& enum_val){
-	return s_dict.to_name(enum_val);
+	return dict_wrapper_type_types::instance().to_name(enum_val);
 }
 
 type_types type_types::from_name( const std::string& name){
-	return s_dict.from_name(name);
+	return dict_wrapper_type_types::instance().from_name(name);
 }
 
 std::string type_types::name() const{
@@ -70,9 +69,16 @@ std::string type_types::name() const{
 }
 
 
-const type_types type_types::alias ( UINT32_C( 3 ) );
-const type_types type_types::none ( UINT32_C( 0 ) );
-const type_types type_types::buildin ( UINT32_C( 1 ) );
-const type_types type_types::composited ( UINT32_C( 2 ) );
+
+		
+type_types::type_types( const storage_type& val, const std::string& name ): type_types::base_type(val){
+	type_types tmp(val);
+	dict_wrapper_type_types::instance().insert( tmp, name );
+}
+
+const type_types type_types::alias ( UINT32_C( 3 ), "alias" );
+const type_types type_types::none ( UINT32_C( 0 ), "none" );
+const type_types type_types::buildin ( UINT32_C( 1 ), "buildin" );
+const type_types type_types::composited ( UINT32_C( 2 ), "composited" );
 
 

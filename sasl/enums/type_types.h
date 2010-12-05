@@ -10,8 +10,8 @@ struct type_types :
 {
 	friend struct enum_hasher;
 private:
-	type_types( const storage_type& val ): base_type( val ){}
-	
+	type_types( const storage_type& val, const std::string& name );
+	type_types( const storage_type& val ): base_type(val){}
 public:
 	type_types( const this_type& rhs )
 		:base_type(rhs.val_)

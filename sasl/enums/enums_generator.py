@@ -10,8 +10,8 @@ enum_decl_tmpl = \
 {
 	friend struct enum_hasher;
 private:
-	%(typename)s( const storage_type& val ): base_type( val ){}
-	
+	%(typename)s( const storage_type& val, const std::string& name );
+	%(typename)s( const storage_type& val ): base_type(val){}
 public:
 	%(typename)s( const this_type& rhs )
 		:base_type(rhs.val_)
@@ -36,9 +36,9 @@ value_op_tmpl = ", public value_op< %(typename)s, %(storage_typename)s >"
 constant_decl_tmpl =\
 	"const static this_type %(member_name)s;"
 
-#typename, member_name, value
+#typename, member_name, value, description
 constant_def_tmpl = \
-	"const %(typename)s %(typename)s::%(member_name)s ( %(constant_macro)s( %(value)s ) );"
+	"const %(typename)s %(typename)s::%(member_name)s ( %(constant_macro)s( %(value)s ), \"%(description)s\" );"
 
 #typename
 hash_op_tmpl = \
@@ -57,7 +57,7 @@ enum_name_translator_tmpl = \
 	std::string name() const;
 """
 
-#typename, enum_to_name_insert_list, name_to_enum_insert_list
+#typename
 enum_name_translator_impl_tmpl = \
 """
 struct dict_wrapper_%(typename)s {
@@ -65,12 +65,16 @@ private:
 	boost::unordered_map< %(typename)s, std::string, enum_hasher > enum_to_name;
 	boost::unordered_map< std::string, %(typename)s > name_to_enum;
 
+	dict_wrapper_%(typename)s(){}
+	
 public:
-	dict_wrapper_%(typename)s(){
-%(enum_to_name_insert_list)s
-%(name_to_enum_insert_list)s
+	static dict_wrapper_%(typename)s& instance();
+	
+	void insert( %(typename)s const& val, const std::string& name ){
+		enum_to_name.insert( std::make_pair( val, name ) );
+		name_to_enum.insert( std::make_pair( name, val ) );
 	}
-
+	
 	std::string to_name( %(typename)s const& val ){
 		boost::unordered_map< %(typename)s, std::string >::const_iterator
 			find_result_it = enum_to_name.find(val);
@@ -94,14 +98,17 @@ public:
 	}
 };
 
-static dict_wrapper_%(typename)s s_dict;
+dict_wrapper_%(typename)s& dict_wrapper_%(typename)s::instance(){
+	static dict_wrapper_%(typename)s inst;
+	return inst;
+}
 
 std::string %(typename)s::to_name( const %(typename)s& enum_val){
-	return s_dict.to_name(enum_val);
+	return dict_wrapper_%(typename)s::instance().to_name(enum_val);
 }
 
 %(typename)s %(typename)s::from_name( const std::string& name){
-	return s_dict.from_name(name);
+	return dict_wrapper_%(typename)s::instance().from_name(name);
 }
 
 std::string %(typename)s::name() const{
@@ -111,16 +118,19 @@ std::string %(typename)s::name() const{
 """
 
 #typename, member_name
-enum_to_name_insert_item_tmpl = \
-"""enum_to_name.insert( std::make_pair( %(typename)s::%(member_name)s, "%(description)s" ) );"""
-name_to_enum_insert_item_tmpl = \
-"""name_to_enum.insert( std::make_pair( "%(description)s", %(typename)s::%(member_name)s ) );"""
+enum_constructor_tmpl = \
+"""
+%(typename)s::%(typename)s( const storage_type& val, const std::string& name ): %(typename)s::base_type(val){
+	%(typename)s tmp(val);
+	dict_wrapper_%(typename)s::instance().insert( tmp, name );
+}"""
 
 #hash_op, enum_name_translator_impl, constant_def_list
 enum_def_tmpl = \
 """
 %(hash_op)s
 %(enum_name_translator_impl)s
+%(enum_constructor)s
 %(constant_def_list)s
 """
 
@@ -381,9 +391,15 @@ class enum_code_generator:
 	def _generate_enum_name_translator(self):
 		if self.config_.has_enum_name_translator:
 			self.enum_name_translator_ = enum_name_translator_tmpl
+			self.enum_name_translator_impl_ = "\t\t"
+			self.enum_name_translator_impl_ += enum_name_translator_impl_tmpl % {
+				"typename" : self.typename
+			}
+			self.enum_name_translator_impl_ += "\n"
 		else:
 			self.enum_name_translator_ = ""
-		
+			self.enum_name_translator_impl_ = ""
+			
 	def _generate_declare(self):
 		self._generate_operator_list()
 		self._generate_constant_list()
@@ -404,7 +420,8 @@ class enum_code_generator:
 				"typename" : self.typename,
 				"member_name" : enum_name,
 				"value" : enum_val,
-				"constant_macro" : self.constant_macro
+				"constant_macro" : self.constant_macro,
+				"description" : self.items_desc[enum_name]
 				}
 			self.constant_def_list_ += "\n"
 
@@ -414,48 +431,24 @@ class enum_code_generator:
 			self.hash_op_ = hash_op_tmpl % {
 				"typename" : self.typename
 			}
+		
+	def _generate_enum_constructor(self):
+		self.enum_constructor_ = ""
+		self.enum_constructor_ += "\t\t"
+		self.enum_constructor_ += enum_constructor_tmpl % {
+			"typename" : self.typename
+			}
+		self.enum_constructor_ += "\n"
 
-	def _generate_enum_to_name_insert_list(self):
-		self.enum_to_name_insert_list_ = ""
-		for (enum_name, enum_val) in self.items_.iteritems():
-			self.enum_to_name_insert_list_ += "\t\t"
-			self.enum_to_name_insert_list_ += enum_to_name_insert_item_tmpl % {
-				"typename" : self.typename,
-				"member_name" : enum_name,
-				"description" : self.items_desc[enum_name]
-				}
-			self.enum_to_name_insert_list_ += "\n"
-
-	def _generate_name_to_enum_insert_list(self):
-		self.name_to_enum_insert_list_ = ""
-		for (enum_name, enum_val) in self.items_.iteritems():
-			self.name_to_enum_insert_list_ += "\t\t"
-			self.name_to_enum_insert_list_ += name_to_enum_insert_item_tmpl % {
-				"typename" : self.typename,
-				"member_name" : enum_name,
-				"description" : self.items_desc[enum_name]
-				}
-			self.name_to_enum_insert_list_ += "\n"
-
-	def _generate_enum_name_translator_impl(self):
-		self.enum_name_translator_impl_ = ""
-		if self.config_.has_enum_name_translator:
-			self._generate_enum_to_name_insert_list()
-			self._generate_name_to_enum_insert_list()
-			self.enum_name_translator_impl_ = enum_name_translator_impl_tmpl % {
-				"typename": self.typename,
-				"enum_to_name_insert_list" : self.enum_to_name_insert_list_,
-				"name_to_enum_insert_list" : self.name_to_enum_insert_list_
-				}
-	
 	def _generate_definition(self):
 		self._generate_constant_def_list()
 		self._generate_hash_op()
-		self._generate_enum_name_translator_impl()
+		self._generate_enum_constructor()
 		self._generate_constant_def_list()
 		
 		self.definition_ = enum_def_tmpl % {
 			"hash_op" : self.hash_op_,
+			"enum_constructor" : self.enum_constructor_,
 			"enum_name_translator_impl" : self.enum_name_translator_impl_,
 			"constant_def_list" : self.constant_def_list_
 			}

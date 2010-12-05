@@ -10,8 +10,8 @@ struct compiler_informations :
 {
 	friend struct enum_hasher;
 private:
-	compiler_informations( const storage_type& val ): base_type( val ){}
-	
+	compiler_informations( const storage_type& val, const std::string& name );
+	compiler_informations( const storage_type& val ): base_type(val){}
 public:
 	compiler_informations( const this_type& rhs )
 		:base_type(rhs.val_)

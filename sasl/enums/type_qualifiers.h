@@ -10,8 +10,8 @@ struct type_qualifiers :
 {
 	friend struct enum_hasher;
 private:
-	type_qualifiers( const storage_type& val ): base_type( val ){}
-	
+	type_qualifiers( const storage_type& val, const std::string& name );
+	type_qualifiers( const storage_type& val ): base_type(val){}
 public:
 	type_qualifiers( const this_type& rhs )
 		:base_type(rhs.val_)
