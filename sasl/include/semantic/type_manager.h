@@ -17,6 +17,8 @@ namespace sasl{
 	}
 }
 
+struct buildin_type_code;
+
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
@@ -42,16 +44,23 @@ class type_manager{
 public:
 	static boost::shared_ptr< type_manager > create();
 
+	void root_symbol( boost::shared_ptr<symbol> sym );
+
 	boost::shared_ptr<type_manager> handle() const;
+	
 	type_entry::id_t get(
 		::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > node,
 		::boost::shared_ptr<symbol> parent
 		);
+	type_entry::id_t get( const buildin_type_code& btc, ::boost::shared_ptr<symbol> parent );
+
 	::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > get( type_entry::id_t id );
+	
 private:
 	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > node );
 	::std::vector< type_entry > entries;
 	boost::weak_ptr<type_manager> self_handle;
+	boost::weak_ptr<symbol> rootsym;
 };
 
 END_NS_SASL_SEMANTIC();

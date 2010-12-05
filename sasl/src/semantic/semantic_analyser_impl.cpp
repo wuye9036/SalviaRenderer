@@ -403,7 +403,7 @@ SASL_VISIT_DEF( program ){
 	v.symbol( symbol::create_root( v.handle() ) );
 	cursym = v.symbol();
 
-	register_buildin_function( v );
+	register_buildin_functions( v );
 
 	// analysis decalarations.
 	for( vector< boost::shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
@@ -571,7 +571,7 @@ void semantic_analyser_impl::register_type_converter(){
 
 }
 
-void semantic_analyser_impl::register_buildin_function( node& v ){
+void semantic_analyser_impl::register_buildin_functions( node& v ){
 	//
 	::boost::any* data = NULL;
 	::std::vector< ::boost::shared_ptr<node> >& buildin_functions( v.additionals() );
@@ -762,4 +762,8 @@ void semantic_analyser_impl::register_buildin_function( node& v ){
 	}
 }
 
+void semantic_analyser_impl::register_buildin_types()
+{
+
+}
 END_NS_SASL_SEMANTIC();

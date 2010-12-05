@@ -8,6 +8,18 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/foreach.hpp>
+#include <boost/preprocessor.hpp>
+#include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <vector>
+
+using std::vector;
+using boost::shared_ptr;
+using boost::any_cast;
+
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 #define SAFE_ACCEPT( node_handle ) if( node_handle ) { (node_handle)->accept(this, data); }
@@ -197,22 +209,37 @@ boost::shared_ptr<buildin_type> create_buildin_type( const buildin_type_code& bt
 	return ret;
 }
 
-#define SASL_A_SWALLOW_CLONE_NODE( node_type ) \
-	::boost::shared_ptr< node_type > cloned	\
-			= create_node< node_type >( token_attr::null() );
+#define COPY_VALUE_ITEM( r, dest_src, member ) \
+	BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member = BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member;
+
+#define SASL_SWALLOW_CLONE_NODE( output, v, node_type, member_seq ) \
+	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_attr::null() ); \
+	BOOST_PP_SEQ_FOR_EACH( COPY_VALUE_ITEM, (cloned, v), member_seq ); \
+	*(output) = cloned;
+
+template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
+	lhs = any_cast<T>(rhs);
+}
+
+#define DEEPCOPY_VALUE_ITEM( r, dest_src, member )	\
+	visit( BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member, &member_dup );	\
+	copy_from_any( BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member, member_dup );
+	
+#define SASL_DEEP_CLONE_NODE( dest_any_ptr, src_v_ref, node_type, member_seq )	\
+	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_attr::null() ); \
+	boost::any member_dup; \
+	BOOST_PP_SEQ_FOR_EACH( DEEPCOPY_VALUE_ITEM, (cloned, src_v_ref), member_seq ); \
+	*(dest_any_ptr) = cloned;
+
+#define SASL_CLONE_NODE_FUNCTION_DEF( clone_mode, node_type, member_seq )	\
+	SASL_VISIT_DCL( node_type ){	\
+		EFLIB_ASSERT( data, "Data parameter must not be NULL, it is used to feedback cloned node." );	\
+		SASL_##clone_mode##_CLONE_NODE( data, v, node_type, member_seq, (tok)(qual) );	\
+	}
 
 class swallow_duplicator: public syntax_tree_visitor{
 public:
-	SASL_VISIT_DCL( unary_expression ) {
-		EFLIB_ASSERT( data, "Data parameter must not be NULL, it is used to feedback cloned node." );
-		SASL_A_SWALLOW_CLONE_NODE( unary_expression );
-
-		cloned->tok = v.tok;
-		cloned->expr = v.expr;
-		cloned->op = v.op;
-
-		*data = cloned;
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, unary_expression, (op)(expr) );
 
 	SASL_VISIT_DCL( cast_expression ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -266,7 +293,8 @@ public:
 		EFLIB_INTERRUPT( "type_specifier is an abstract class. This function could not be executed." );
 	}
 	SASL_VISIT_DCL( buildin_type ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		EFLIB_ASSERT( data, "Data parameter must not be NULL, it is used to feedback cloned node." );
+		SASL_SWALLOW_CLONE_NODE( data, v, buildin_type,	(value_typecode) );
 	}
 	SASL_VISIT_DCL( array_type ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -328,9 +356,7 @@ public:
 
 class deep_duplicator: public syntax_tree_visitor{
 public:
-	SASL_VISIT_DCL( unary_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, unary_expression, (op)(expr) );
 
 	SASL_VISIT_DCL( cast_expression ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -441,6 +467,22 @@ public:
 	// program
 	SASL_VISIT_DCL( program ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	// If value is "value semantic", copy it as raw data.
+	template <typename ValueT> void visit( ValueT& v, boost::any* data ){
+		*data = v;
+	}
+
+	// If value is "value semantic", copy it as raw data.
+	template <typename NodeT> void visit( vector< shared_ptr<NodeT> > & v, boost::any* data ){
+		vector< shared_ptr<NodeT> > out_v(v.size());
+		BOOST_FOREACH( shared_ptr<NodeT> item, v ){
+			boost::any cloned;
+			visit( item, &cloned );
+			out_v.push_back( boost::any_cast< shared_ptr<NodeT> > (cloned) );
+		}
+		*data = out_v;
 	}
 };
 

@@ -88,8 +88,7 @@ bool peel_qualifier(
 }
 
 shared_ptr<type_specifier> duplicate_type_specifier( shared_ptr<type_specifier> typespec ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<type_specifier>();
+	return duplicate(typespec)->typed_handle<type_specifier>();
 }
 
 std::string name_of_unqualified_type( shared_ptr<type_specifier> typespec ){
@@ -261,10 +260,19 @@ shared_ptr< type_specifier > type_manager::get( type_entry::id_t id ){
 	return entries[id].stored;
 }
 
+type_entry::id_t type_manager::get( const buildin_type_code& btc, shared_ptr<symbol> sym ){
+	return type_entry_id_of_symbol( sym->find( buildin_type_name( btc ) ) );
+}
+
 boost::shared_ptr< type_manager > type_manager::create(){
 	boost::shared_ptr<type_manager> ret = make_shared<type_manager>();
 	ret->self_handle = ret;
 	return ret;
+}
+
+void type_manager::root_symbol( boost::shared_ptr<symbol> sym )
+{
+	rootsym = sym;
 }
 
 void assign_entry_id( shared_ptr<type_specifier> node, shared_ptr<type_manager> typemgr, type_entry::id_t id ){

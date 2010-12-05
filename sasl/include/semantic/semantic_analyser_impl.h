@@ -74,7 +74,8 @@ public:
 		);
 
 	void register_type_converter();
-	void register_buildin_function( ::sasl::syntax_tree::node& );
+	void register_buildin_functions( ::sasl::syntax_tree::node& );
+	void register_buildin_types();
 private:
 	boost::shared_ptr<global_si> ctxt;
 
