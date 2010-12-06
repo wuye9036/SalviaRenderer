@@ -292,10 +292,7 @@ public:
 	SASL_VISIT_DCL( type_specifier ){
 		EFLIB_INTERRUPT( "type_specifier is an abstract class. This function could not be executed." );
 	}
-	SASL_VISIT_DCL( buildin_type ){
-		EFLIB_ASSERT( data, "Data parameter must not be NULL, it is used to feedback cloned node." );
-		SASL_SWALLOW_CLONE_NODE( data, v, buildin_type,	(value_typecode) );
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, buildin_type, (value_typecode)(qual)(tok) );
 	SASL_VISIT_DCL( array_type ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -356,7 +353,7 @@ public:
 
 class deep_duplicator: public syntax_tree_visitor{
 public:
-	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, unary_expression, (op)(expr) );
+	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, unary_expression, (op)(expr)(tok) );
 
 	SASL_VISIT_DCL( cast_expression ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -409,9 +406,9 @@ public:
 	SASL_VISIT_DCL( type_specifier ){
 		EFLIB_INTERRUPT( "type_specifier is an abstract class. This function could not be executed." );
 	}
-	SASL_VISIT_DCL( buildin_type ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+
+	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, buildin_type, (value_typecode)(qual)(tok) );
+
 	SASL_VISIT_DCL( array_type ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}

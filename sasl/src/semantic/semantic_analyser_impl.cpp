@@ -20,12 +20,15 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/metaprog/util.h>
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/apply.hpp>
+#include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -762,8 +765,9 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 	}
 }
 
-void semantic_analyser_impl::register_buildin_types()
-{
-
+void semantic_analyser_impl::register_buildin_types(){
+	BOOST_FOREACH( buildin_type_code const & btc, sasl_ehelper::list_of_buildin_type_codes() ){
+		EFLIB_ASSERT( ctxt->type_manager()->get( btc, ctxt->root_symbol() ) > -1, "Register buildin type failed!" );
+	}
 }
 END_NS_SASL_SEMANTIC();

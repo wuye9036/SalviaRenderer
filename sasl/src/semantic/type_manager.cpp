@@ -260,8 +260,18 @@ shared_ptr< type_specifier > type_manager::get( type_entry::id_t id ){
 	return entries[id].stored;
 }
 
+// Get type id by an buildin type code
 type_entry::id_t type_manager::get( const buildin_type_code& btc, shared_ptr<symbol> sym ){
-	return type_entry_id_of_symbol( sym->find( buildin_type_name( btc ) ) );
+	// If it existed in symbol, return it.
+	// Otherwise create a new type and push into type manager.
+	type_entry::id_t ret_id = type_entry_id_of_symbol( sym->find( buildin_type_name( btc ) ) );
+	if ( ret_id == -1 ){
+		shared_ptr< buildin_type > bt = create_node<buildin_type>( token_attr::null() );
+		bt->value_typecode = btc;
+		return get( bt, sym );
+	} else {
+		return ret_id;
+	}
 }
 
 boost::shared_ptr< type_manager > type_manager::create(){
