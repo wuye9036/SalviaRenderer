@@ -21,6 +21,7 @@
 #include <eflib/include/metaprog/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/any.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/std/vector.hpp>
@@ -55,33 +56,41 @@ using ::sasl::semantic::extract_semantic_info;
 using ::sasl::semantic::program_si;
 using ::sasl::semantic::symbol;
 
-using namespace std;
 using namespace boost::assign;
 
-#define SASL_GET_OR_CREATE_SI( si_type, si_var, node ) boost::shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>(node);
-#define SASL_GET_OR_CREATE_SI_P( si_type, si_var, node, param ) boost::shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>( node, param );
+using boost::any;
+using boost::shared_ptr;
+using boost::unordered_map;
 
-#define SASL_EXTRACT_SI( si_type, si_var, node ) boost::shared_ptr<si_type> si_var = extract_semantic_info<si_type>(node);
+using std::vector;
+
+#define SASL_GET_OR_CREATE_SI( si_type, si_var, node ) shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>(node);
+#define SASL_GET_OR_CREATE_SI_P( si_type, si_var, node, param ) shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>( node, param );
+
+#define SASL_EXTRACT_SI( si_type, si_var, node ) shared_ptr<si_type> si_var = extract_semantic_info<si_type>(node);
 
 // semantic analysis context
 struct sacontext{
-	::boost::shared_ptr<symbol> parent_sym;
+	shared_ptr<global_si> gsi;
+	shared_ptr<symbol> parent_sym;
+
+	shared_ptr<node> generated_node;
 };
 
-#define context() (boost::any_cast<sacontext>(data))
+#define context() (any_cast<sacontext>(data))
 #define set_context( ctxt ) ( data = (ctxt) )
 
 // utility functions
 
-boost::shared_ptr<type_specifier> type_info_of( boost::shared_ptr<node> n ){
-	boost::shared_ptr<type_info_si> typesi = extract_semantic_info<type_info_si>( n );
+shared_ptr<type_specifier> type_info_of( shared_ptr<node> n ){
+	shared_ptr<type_info_si> typesi = extract_semantic_info<type_info_si>( n );
 	if ( typesi ){
 		return typesi->type_info();
 	}
-	return boost::shared_ptr<type_specifier>();
+	return shared_ptr<type_specifier>();
 }
 
-semantic_analyser_impl::semantic_analyser_impl( boost::shared_ptr<compiler_info_manager> infomgr )
+semantic_analyser_impl::semantic_analyser_impl( shared_ptr<compiler_info_manager> infomgr )
 {
 	typeconv.reset( new type_converter() );
 	register_type_converter();
@@ -98,9 +107,9 @@ SASL_VISIT_DEF( binary_expression )
 
 	// TODO: look up operator prototype.
 	std::string opname = operator_name( v.op );
-	vector< boost::shared_ptr<expression> > exprs;
+	vector< shared_ptr<expression> > exprs;
 	exprs += v.left_expr, v.right_expr;
-	vector< boost::shared_ptr<symbol> > overloads = cursym->find_overloads( opname, typeconv, exprs );
+	vector< shared_ptr<symbol> > overloads = cursym->find_overloads( opname, typeconv, exprs );
 
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
 		return;
@@ -121,7 +130,7 @@ SASL_VISIT_DEF( constant_expression )
 	UNREF_PARAM( data );
 	using ::sasl::syntax_tree::constant_expression;
 
-	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, v, ctxt->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, v, gctxt->type_manager() );
 
 	vsi->set_literal( v.value_tok->str, v.ctype );
 }
@@ -145,14 +154,12 @@ SASL_VISIT_NOIMPL( declaration );
 
 SASL_VISIT_DEF( variable_declaration )
 {
-	using ::boost::assign::list_of;
-
 	symbol_scope sc( v.name->str, v.handle(), cursym );
 
 	// process variable type
-	boost::shared_ptr<type_specifier> vartype = v.type_info;
+	shared_ptr<type_specifier> vartype = v.type_info;
 	vartype->accept( this, data );
-	boost::shared_ptr<type_si> tsi = extract_semantic_info<type_si>(v);
+	shared_ptr<type_si> tsi = extract_semantic_info<type_si>(v);
 
 	//// check type.
 	//if ( tsi->type_type() == type_types::buildin ){
@@ -177,15 +184,13 @@ SASL_VISIT_DEF( variable_declaration )
 }
 
 SASL_VISIT_DEF( type_definition ){
-	using ::sasl::syntax_tree::type_definition;
-	using ::boost::assign::list_of;
 	const std::string& alias_str = v.name->str;
-	boost::shared_ptr<symbol> existed_sym = cursym->find( alias_str );
+	shared_ptr<symbol> existed_sym = cursym->find( alias_str );
 	if ( existed_sym ){
 		// if the symbol is used and is not a type node, it must be redifinition.
 		// else compare the type.
 		if ( !existed_sym->node()->node_class().included( syntax_node_types::type_specifier ) ){
-			ctxt->compiler_infos()->add_info(
+			gctxt->compiler_infos()->add_info(
 				semantic_error::create( compiler_informations::redef_cannot_overloaded,
 				v.handle(),	list_of(existed_sym->node()) )
 					);
@@ -200,11 +205,11 @@ SASL_VISIT_DEF( type_definition ){
 		symbol_scope sc( v.name->str, v.handle(), cursym );
 
 		v.type_info->accept(this, data);
-		boost::shared_ptr<type_si> new_tsi = extract_semantic_info<type_si>(v);
+		shared_ptr<type_si> new_tsi = extract_semantic_info<type_si>(v);
 
 		// if this symbol is usable, process type node.
 		if ( existed_sym ){
-			//boost::shared_ptr<type_semantic_info> existed_tsi = extract_semantic_info<type_semantic_info>( existed_sym->node() );
+			//shared_ptr<type_semantic_info> existed_tsi = extract_semantic_info<type_semantic_info>( existed_sym->node() );
 			//if ( !type_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
 			//	// if new symbol is different from the old, semantic error.
 			//	// The final effect is that the new definition overwrites the old one.
@@ -229,7 +234,7 @@ SASL_VISIT_DEF( buildin_type ){
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, ctxt->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, gctxt->type_manager() );
 	tsi->type_info( v.typed_handle<type_specifier>(), cursym );
 }
 
@@ -243,7 +248,7 @@ SASL_VISIT_DEF( parameter )
 	if ( v.init ){
 		v.init->accept( this, data );;
 	}
-	get_or_create_semantic_info<storage_si>( v, ctxt->type_manager() )->type_info( type_info_si::from_node(v.param_type), cursym );
+	get_or_create_semantic_info<storage_si>( v, gctxt->type_manager() )->type_info( type_info_si::from_node(v.param_type), cursym );
 }
 
 SASL_VISIT_DEF( function_type )
@@ -253,7 +258,7 @@ SASL_VISIT_DEF( function_type )
 	symbol_scope ss( name, v.handle(), cursym );
 
 	v.retval_type->accept( this, data );;
-	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin();
+	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )
 	{
 		(*it)->accept( this, data );;
@@ -283,9 +288,9 @@ SASL_VISIT_DEF( function_type )
 
 	//bool use_existed_node(false);
 
-	//boost::shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
+	//shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
 	//if ( existed_sym ) {
-	//	boost::shared_ptr<function_type> existed_node = existed_sym->node()->typed_handle<function_type>();
+	//	shared_ptr<function_type> existed_node = existed_sym->node()->typed_handle<function_type>();
 	//	if ( !existed_node ){
 	//		// symbol was used, and it is not a function. error.
 	//		// TODO: SEMANTIC ERROR: TYPE REDEFINITION.
@@ -317,7 +322,7 @@ SASL_VISIT_DEF( function_type )
 	//	use_existed_node = false;
 	//}
 
-	//boost::scoped_ptr<symbol_scope> sc(
+	//scoped_ptr<symbol_scope> sc(
 	//	use_existed_node ? new symbol_scope(mangled_name, cursym) : new symbol_scope( mangled_name, unmangled_name, v.handle(), cursym )
 	//	);
 
@@ -374,7 +379,7 @@ SASL_VISIT_DEF( compound_statement )
 		symbol_scope( std::string(""), v.handle(), cursym );
 	}
 
-	for( vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+	for( vector< shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{
 		(*it)->accept(this, data);
@@ -397,48 +402,50 @@ SASL_VISIT_DEF( jump_statement )
 // program
 SASL_VISIT_DEF( program ){
 	// create semantic info
-	ctxt.reset( new global_si(v.handle()) );
+	gctxt.reset( new global_si() );
 
-	SASL_GET_OR_CREATE_SI( program_si, psi, v );
-	psi->name( v.name );
-
-	// create root symbol
-	v.symbol( symbol::create_root( v.handle() ) );
-	cursym = v.symbol();
-
+	register_buildin_types();
 	register_buildin_functions( v );
 
+	sacontext sactxt;
+	sactxt.gsi = gctxt;
+	sactxt.parent_sym = gctxt->root();
+
+	any ctxt = sactxt;
+
 	// analysis decalarations.
-	for( vector< boost::shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
-		(*it)->accept( this, data );;
+	for( vector< shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
+		(*it)->accept( this, &ctxt );
 	}
+
+	*data = ctxt;
 }
 
 SASL_VISIT_NOIMPL( for_statement );
 
-void semantic_analyser_impl::buildin_type_convert( boost::shared_ptr<node> lhs, boost::shared_ptr<node> rhs ){
+void semantic_analyser_impl::buildin_type_convert( shared_ptr<node> lhs, shared_ptr<node> rhs ){
 	// do nothing
 }
 
 void semantic_analyser_impl::register_type_converter(){
 	// register default type converter
-	boost::shared_ptr<type_specifier> sint8_ts = create_buildin_type( buildin_type_code::_sint8 );
-	boost::shared_ptr<type_specifier> sint16_ts = create_buildin_type( buildin_type_code::_sint16 );
-	boost::shared_ptr<type_specifier> sint32_ts = create_buildin_type( buildin_type_code::_sint32 );
-	boost::shared_ptr<type_specifier> sint64_ts = create_buildin_type( buildin_type_code::_sint64 );
+	shared_ptr<type_specifier> sint8_ts = create_buildin_type( buildin_type_code::_sint8 );
+	shared_ptr<type_specifier> sint16_ts = create_buildin_type( buildin_type_code::_sint16 );
+	shared_ptr<type_specifier> sint32_ts = create_buildin_type( buildin_type_code::_sint32 );
+	shared_ptr<type_specifier> sint64_ts = create_buildin_type( buildin_type_code::_sint64 );
 
-	boost::shared_ptr<type_specifier> uint8_ts = create_buildin_type( buildin_type_code::_uint8 );
-	boost::shared_ptr<type_specifier> uint16_ts = create_buildin_type( buildin_type_code::_uint16 );
-	boost::shared_ptr<type_specifier> uint32_ts = create_buildin_type( buildin_type_code::_uint32 );
-	boost::shared_ptr<type_specifier> uint64_ts = create_buildin_type( buildin_type_code::_uint64 );
+	shared_ptr<type_specifier> uint8_ts = create_buildin_type( buildin_type_code::_uint8 );
+	shared_ptr<type_specifier> uint16_ts = create_buildin_type( buildin_type_code::_uint16 );
+	shared_ptr<type_specifier> uint32_ts = create_buildin_type( buildin_type_code::_uint32 );
+	shared_ptr<type_specifier> uint64_ts = create_buildin_type( buildin_type_code::_uint64 );
 
-	boost::shared_ptr<type_specifier> float_ts = create_buildin_type( buildin_type_code::_float );
-	boost::shared_ptr<type_specifier> double_ts = create_buildin_type( buildin_type_code::_double );
+	shared_ptr<type_specifier> float_ts = create_buildin_type( buildin_type_code::_float );
+	shared_ptr<type_specifier> double_ts = create_buildin_type( buildin_type_code::_double );
 
-	boost::shared_ptr<type_specifier> bool_ts = create_buildin_type( buildin_type_code::_boolean );
+	shared_ptr<type_specifier> bool_ts = create_buildin_type( buildin_type_code::_boolean );
 
 	// default conversation will do nothing.
-	type_converter::converter_t default_conv = boost::bind(&semantic_analyser_impl::buildin_type_convert, this, _1, _2);
+	type_converter::converter_t default_conv = bind(&semantic_analyser_impl::buildin_type_convert, this, _1, _2);
 
 	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint16_ts, default_conv );
 	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint32_ts, default_conv );
@@ -576,21 +583,21 @@ void semantic_analyser_impl::register_type_converter(){
 
 void semantic_analyser_impl::register_buildin_functions( node& v ){
 	//
-	::boost::any* data = NULL;
-	::std::vector< ::boost::shared_ptr<node> >& buildin_functions( v.additionals() );
+	any* data = NULL;
+	::std::vector< shared_ptr<node> >& buildin_functions( v.additionals() );
 
-	typedef boost::unordered_map<
-		buildin_type_code, boost::shared_ptr<buildin_type>, enum_hasher
+	typedef unordered_map<
+		buildin_type_code, shared_ptr<buildin_type>, enum_hasher
 		> bt_table_t;
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
 	map_of_buildin_type( standard_bttbl, &sasl_ehelper::is_standard );
 	map_of_buildin_type( storage_bttbl, &sasl_ehelper::is_storagable );
 
-	boost::shared_ptr<buildin_type> bt_bool = storage_bttbl[ buildin_type_code::_boolean ];
-	boost::shared_ptr<buildin_type> bt_i32 = storage_bttbl[ buildin_type_code::_sint32 ];
+	shared_ptr<buildin_type> bt_bool = storage_bttbl[ buildin_type_code::_boolean ];
+	shared_ptr<buildin_type> bt_i32 = storage_bttbl[ buildin_type_code::_sint32 ];
 
-	boost::shared_ptr<function_type> tmpft;
+	shared_ptr<function_type> tmpft;
 
 	// arithmetic operators
 	vector<std::string> op_tbl;
@@ -767,7 +774,7 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 
 void semantic_analyser_impl::register_buildin_types(){
 	BOOST_FOREACH( buildin_type_code const & btc, sasl_ehelper::list_of_buildin_type_codes() ){
-		EFLIB_ASSERT( ctxt->type_manager()->get( btc, ctxt->root_symbol() ) > -1, "Register buildin type failed!" );
+		EFLIB_ASSERT( gctxt->type_manager()->get( btc, gctxt->root() ) > -1, "Register buildin type failed!" );
 	}
 }
 END_NS_SASL_SEMANTIC();

@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE( function_si_test ){
 BOOST_AUTO_TEST_CASE( expression_si_test ){
 	semantic_cases::instance();
 
-	BOOST_CHECK( SEMCASE_(cexpr_776uint) );
+	BOOST_REQUIRE( SEMCASE_(cexpr_776uint) );
 	BOOST_CHECK( SEMCASE_(cexpr_776uint)->value<uint32_t>() == 776 );
 }
 
@@ -70,16 +70,16 @@ BOOST_AUTO_TEST_CASE( operators_classifier_test ){
 
 BOOST_AUTO_TEST_CASE( symbol_test ){
 	semantic_cases::instance();
-	BOOST_CHECK( SEMCASE_(sym_root) );
+	BOOST_REQUIRE( SEMCASE_(sym_root) );
 	BOOST_CHECK( SEMCASE_(sym_root)->find_overloads( SYNCASENAME_(func_flt_2p_n_gen) ).size() == 1 );
-	BOOST_CHECK( SEMCASE_(sym_f0) );
+	BOOST_REQUIRE( SEMCASE_(sym_f0) );
 	BOOST_CHECK( SEMCASE_(sym_root)->find( mangle( SYNCASE_(func_flt_2p_n_gen) ) ) == SEMCASE_(sym_f0) );
 	BOOST_CHECK( SEMCASE_(sym_f0)->mangled_name() == mangle( SYNCASE_(func_flt_2p_n_gen) ) );
 	BOOST_CHECK( SEMCASE_(sym_f0)->unmangled_name() == SYNCASENAME_(func_flt_2p_n_gen) );
 	BOOST_CHECK( SEMCASE_(sym_f0)->parent() == SEMCASE_(sym_root) );
 	BOOST_CHECK( !SEMCASE_(sym_root)->find( SYNCASENAME_(p0_fn0) ) );
 	BOOST_CHECK( SEMCASE_(sym_root)->find_overloads( SYNCASENAME_(p0_fn0) ).empty() );
-	BOOST_CHECK( SEMCASE_(sym_p0) );
+	BOOST_REQUIRE( SEMCASE_(sym_p0) );
 	BOOST_CHECK( SEMCASE_(sym_f0)->find( SYNCASENAME_(p0_fn0) ) == SEMCASE_(sym_p0) );
 	BOOST_CHECK( SEMCASE_(sym_f0)->find_overloads( SYNCASENAME_(p0_fn0) ).empty() );
 	BOOST_CHECK( SEMCASE_(sym_p0)->find_overloads( SYNCASENAME_(func_flt_2p_n_gen) )[0] == SEMCASE_(sym_f0) );

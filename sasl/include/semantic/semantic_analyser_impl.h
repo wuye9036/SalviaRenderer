@@ -77,7 +77,7 @@ public:
 	void register_buildin_functions( ::sasl::syntax_tree::node& );
 	void register_buildin_types();
 private:
-	boost::shared_ptr<global_si> ctxt;
+	boost::shared_ptr<global_si> gctxt;
 
 	boost::shared_ptr<type_converter> typeconv;
 	boost::shared_ptr<symbol> cursym;

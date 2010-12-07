@@ -68,9 +68,11 @@ protected:
 
 	syntax_node_types				type_id;
 	boost::shared_ptr<token_attr>	tok;
-	boost::shared_ptr<class ::sasl::semantic::symbol>	sym;
+	boost::weak_ptr<class ::sasl::semantic::symbol>	sym;
+
 	boost::shared_ptr<class ::sasl::semantic::semantic_info> seminfo;
 	boost::shared_ptr<class ::sasl::code_generator::codegen_context> cgctxt;
+
 	boost::weak_ptr<node> selfptr;
 
 	//	additional syntax nodes.

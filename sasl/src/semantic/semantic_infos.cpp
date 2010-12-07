@@ -75,24 +75,18 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 ////////////////////////////////
 // global semantic
 
-global_si::global_si( shared_ptr<node> root ): root(root){
+global_si::global_si(){
 	compinfo = compiler_info_manager::create();
 	typemgr = type_manager::create();
+	rootsym = symbol::create_root( boost::shared_ptr<node>() );
 }
 
 shared_ptr<class type_manager> global_si::type_manager() const{
 	return typemgr;
 }
 
-shared_ptr<node> global_si::root_node() const{
-	return root;
-}
-
-shared_ptr<symbol> global_si::root_symbol() const{
-	if(root){
-		return root->symbol();
-	}
-	return shared_ptr<symbol>();
+shared_ptr<symbol> global_si::root() const{
+	return rootsym;
 }
 
 shared_ptr<compiler_info_manager> global_si::compiler_infos() const{

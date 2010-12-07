@@ -46,7 +46,7 @@ public:
 	typedef std::vector< boost::shared_ptr<symbol> > overloads_t;
 	typedef overloads_t::iterator overloads_iterator_t;
 
-	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node );
+	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node = boost::shared_ptr<struct node>() );
 
 	boost::shared_ptr<symbol> find( const std::string& name ) const;
 	std::vector< boost::shared_ptr<symbol> > find_overloads( const std::string& name ) const;
@@ -97,7 +97,7 @@ private:
 	typedef std::tr1::unordered_map< std::string, ::std::vector< ::std::string > > overload_table_t;
 	typedef children_t::iterator children_iterator_t;
 
-	boost::weak_ptr<struct node> correspond_node;
+	boost::shared_ptr<struct node> correspond_node;
 	boost::weak_ptr<symbol> this_parent;
 	boost::weak_ptr<symbol> selfptr;
 

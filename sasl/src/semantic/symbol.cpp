@@ -37,7 +37,9 @@ shared_ptr<symbol> symbol::create(
 {
 	shared_ptr<symbol> ret( new symbol( parent, correspond_node, mangled ) );
 	ret->selfptr = ret;
-	correspond_node->symbol( ret );
+	if( correspond_node ){
+		correspond_node->symbol( ret );
+	}
 	return ret;
 }
 
@@ -257,7 +259,7 @@ shared_ptr<symbol> symbol::parent() const{
 
 shared_ptr<node> symbol::node() const
 {
-	return correspond_node.lock();
+	return correspond_node;
 }
 
 void symbol::relink( shared_ptr<struct node> n ){

@@ -18,7 +18,7 @@ boost::shared_ptr<node> node::handle() const{
 }
 
 boost::shared_ptr<class ::sasl::semantic::symbol> node::symbol() const{
-	return sym;
+	return sym.lock();
 }
 
 void node::symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym ){

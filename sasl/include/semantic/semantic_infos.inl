@@ -38,16 +38,15 @@ class global_si: public semantic_info{
 public:
 	typedef semantic_info base_type;
 
-	global_si( boost::shared_ptr< ::sasl::syntax_tree::node > root );
+	global_si();
 
 	boost::shared_ptr<class type_manager> type_manager() const;
-	boost::shared_ptr< ::sasl::syntax_tree::node > root_node() const;
-	boost::shared_ptr< symbol > root_symbol() const;
+	boost::shared_ptr<symbol> root() const;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
 
 private:
 	boost::shared_ptr<class type_manager> typemgr;
-	boost::shared_ptr<node> root;
+	boost::shared_ptr<symbol> rootsym;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;
 };
 
