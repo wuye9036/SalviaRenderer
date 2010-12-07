@@ -7,9 +7,12 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::syntax_tree::node;
 using ::sasl::common::compiler_info_manager;
 
-void semantic_analysis( boost::shared_ptr<node> root, boost::shared_ptr<compiler_info_manager> cinfo_mgr ){
-	semantic_analyser_impl saimpl( cinfo_mgr );
+using boost::shared_ptr;
+
+shared_ptr<global_si> semantic_analysis( shared_ptr<node> root ){
+	semantic_analyser_impl saimpl;
 	root->accept(&saimpl, NULL);
+	return saimpl.global_semantic_info();
 }
 
 END_NS_SASL_SEMANTIC();

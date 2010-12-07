@@ -90,7 +90,7 @@ shared_ptr<type_specifier> type_info_of( shared_ptr<node> n ){
 	return shared_ptr<type_specifier>();
 }
 
-semantic_analyser_impl::semantic_analyser_impl( shared_ptr<compiler_info_manager> infomgr )
+semantic_analyser_impl::semantic_analyser_impl()
 {
 	typeconv.reset( new type_converter() );
 	register_type_converter();
@@ -777,4 +777,9 @@ void semantic_analyser_impl::register_buildin_types(){
 		EFLIB_ASSERT( gctxt->type_manager()->get( btc, gctxt->root() ) > -1, "Register buildin type failed!" );
 	}
 }
+
+boost::shared_ptr<global_si> semantic_analyser_impl::global_semantic_info() const{
+	return gctxt;
+}
+
 END_NS_SASL_SEMANTIC();

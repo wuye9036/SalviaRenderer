@@ -224,7 +224,7 @@ template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
 #define DEEPCOPY_VALUE_ITEM( r, dest_src, member )	\
 	visit( BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member, &member_dup );	\
 	copy_from_any( BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member, member_dup );
-	
+
 #define SASL_DEEP_CLONE_NODE( dest_any_ptr, src_v_ref, node_type, member_seq )	\
 	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_attr::null() ); \
 	boost::any member_dup; \
@@ -234,7 +234,7 @@ template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
 #define SASL_CLONE_NODE_FUNCTION_DEF( clone_mode, node_type, member_seq )	\
 	SASL_VISIT_DCL( node_type ){	\
 		EFLIB_ASSERT( data, "Data parameter must not be NULL, it is used to feedback cloned node." );	\
-		SASL_##clone_mode##_CLONE_NODE( data, v, node_type, member_seq, (tok)(qual) );	\
+		SASL_##clone_mode##_CLONE_NODE( data, v, node_type, member_seq );	\
 	}
 
 class swallow_duplicator: public syntax_tree_visitor{
