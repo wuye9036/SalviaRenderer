@@ -1,6 +1,7 @@
 
-import sys, os, __future__
+from __future__ import print_function
 from xml.dom.minidom import parse, parseString, Node
+import sys, os
 
 #typename, storage_typename, operator_list, constant_decl_list, enum_name_translator
 enum_decl_tmpl = \
@@ -231,10 +232,10 @@ class enum_configuration:
 		if len(order_nodes) > 0:
 			self.type_ = self.type_order
 
-                convertible_nodes = xml_node.getElementsByTagName( self.type_convertible_tag )
-                if len(convertible_nodes) > 0:
-                    self.has_value_op = True
-                    
+		convertible_nodes = xml_node.getElementsByTagName( self.type_convertible_tag )
+		if len(convertible_nodes) > 0:
+			self.has_value_op = True
+
 		#value auto gen expression
 		auto_gen_nodes = xml_node.getElementsByTagName( self.auto_gen_tag )
 		if len(auto_gen_nodes) > 0:
@@ -571,7 +572,7 @@ class enum_file_generator:
 		source_files = ""
 		
 		for (enum_name, enum_codes) in codes.iteritems():
-			print enum_name + " calculated."
+			print(enum_name + " calculated.")
 			
 			header_file_name = enum_name+".h"
 			source_file_name = enum_name+".cpp"
@@ -623,7 +624,7 @@ class enum_file_generator:
 if __name__ == "__main__":
 	if len(sys.argv) != 2:
 		print("Parameter Error.")
-		print("enums_gen.py config_file_path")
+		print("enums_generator.py config_file_path")
 	
 	gen = enum_file_generator(sys.argv[1])
 	gen.generate()
