@@ -7,6 +7,11 @@ option( SOFTART_BUILD_WITH_LLVM "Build llvm code generator & llvm test." TRUE )
 option( SOFTART_ENABLE_SASL_REGRESSION_TEST "Regression test will combine all test to one test module." FALSE )
 option( SOFTART_ENABLE_SASL_SEPERATED_TESTS_ALWAYS "Seperated tests are enabled when regression test is used if set to true, otherwise seperated tests were disabled." FALSE )
 
+if ( NOT MSVC AND NOT CMAKE_BUILD_TYPE )
+	MESSAGE( WARNING "Please input a build type.( one of Debug, Release, MinSizeRel, RelWithDbgInfo)" )
+	set( CMAKE_BUILD_TYPE "Debug" )
+endif( )
+
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/SystemInfo.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigCompiler.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/Variables.cmake)
