@@ -38,11 +38,19 @@ public:
 // some utility functions
 template <typename SemanticInfoT, typename NodeU>
 boost::shared_ptr<SemanticInfoT> extract_semantic_info( boost::shared_ptr<NodeU> pnode ){
-	return boost::shared_polymorphic_cast<SemanticInfoT>( pnode->semantic_info() );
+	if( pnode->semantic_info() ){
+		return boost::shared_polymorphic_cast<SemanticInfoT>( pnode->semantic_info() );
+	} else {
+		return boost::shared_ptr<SemanticInfoT>();
+	}
 }
 
 template <typename SemanticInfoT, typename NodeU> boost::shared_ptr<SemanticInfoT> extract_semantic_info( NodeU& nd ){
-	return boost::shared_polymorphic_cast<SemanticInfoT>( nd.semantic_info() );
+	if( nd.semantic_info() ){
+		return boost::shared_polymorphic_cast<SemanticInfoT>( nd.semantic_info() );
+	} else {
+		return boost::shared_ptr<SemanticInfoT>();
+	}
 }
 
 template <typename SemanticInfoT, typename NodeU>
