@@ -7,17 +7,18 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/disable_warnings.h>
 #include <boost/thread.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/include/platform/boost_end.h>
 
 class syntax_cases{
 public:
 	static syntax_cases& instance();
 	static bool is_avaliable();
 	static void release();
-	
+
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), empty_prog );
 	TEST_CASE_CREF_VARIABLE( std::string, prog_name );
 	TEST_CASE_CREF_VARIABLE( float, val_3p25f );

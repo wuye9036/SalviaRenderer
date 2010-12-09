@@ -2,8 +2,12 @@
 #define SASL_COMMON_TOKEN_ATTR_H
 
 #include <sasl/include/common/common_fwd.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/make_shared.hpp>
 #include <boost/smart_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <string>
 
 BEGIN_NS_SASL_COMMON()
@@ -24,7 +28,7 @@ struct token_attr{
 		file_name = rhs.file_name;
 		column = rhs.column;
 		line = rhs.line;
-		str = rhs.str;	
+		str = rhs.str;
 		return *this;
 	}
 
@@ -32,7 +36,7 @@ struct token_attr{
 	std::size_t line;
 	std::size_t column;
 	std::string file_name;
-	
+
 	static boost::shared_ptr<token_attr> null(){
 		return boost::shared_ptr<token_attr>();
 	}

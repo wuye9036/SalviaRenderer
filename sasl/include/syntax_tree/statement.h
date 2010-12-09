@@ -4,7 +4,11 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/jump_mode.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 BEGIN_NS_SASL_SYNTAX_TREE();
@@ -45,7 +49,7 @@ struct if_statement: public statement{
 	SASL_SYNTAX_NODE_CREATORS();
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
-	
+
 	boost::shared_ptr< expression > cond;
 	boost::shared_ptr< statement > yes_stmt, no_stmt;
 private:

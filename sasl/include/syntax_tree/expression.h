@@ -5,11 +5,15 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/operators.h>
 #include <sasl/enums/literal_constant_types.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/smart_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <string>
 #include <vector>
 
-namespace sasl { 
+namespace sasl {
 	namespace common {
 		struct token_attr;
 	}

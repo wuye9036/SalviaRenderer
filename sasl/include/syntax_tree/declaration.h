@@ -6,8 +6,13 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/syntax_node_types.h>
 #include <sasl/enums/type_qualifiers.h>
+
 #include <eflib/include/metaprog/enable_if.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 namespace sasl{
@@ -34,7 +39,7 @@ protected:
 };
 
 struct expression_initializer: public initializer{
-	
+
 	SASL_SYNTAX_NODE_CREATORS();
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
@@ -45,7 +50,7 @@ private:
 	expression_initializer( const expression_initializer& );
 };
 
-struct member_initializer: public initializer{	
+struct member_initializer: public initializer{
 	SASL_SYNTAX_NODE_CREATORS();
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
@@ -122,7 +127,7 @@ protected:
 
 struct array_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
-	
+
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	std::vector< boost::shared_ptr<expression> > array_lens;

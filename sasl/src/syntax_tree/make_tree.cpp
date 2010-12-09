@@ -21,7 +21,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 using ::sasl::common::token_attr;
 
-literal_constant_types typecode_map::type_codes[] =
+literal_constant_types typecode_map::type_codes[11] =
 {
 	literal_constant_types::boolean,
 	literal_constant_types::integer,

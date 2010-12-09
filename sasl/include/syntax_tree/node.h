@@ -4,14 +4,18 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/common/token_attr.h>
 #include <sasl/enums/syntax_node_types.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
-namespace sasl{ 
-	namespace common{ 
-		struct token_attr; 
+namespace sasl{
+	namespace common{
+		struct token_attr;
 	}
 
 	namespace semantic{

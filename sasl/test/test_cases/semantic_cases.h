@@ -9,10 +9,11 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/semantic/semantic_infos.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
-#include <eflib/include/platform/disable_warnings.h>
 #include <boost/thread.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/include/platform/boost_end.h>
 
 class semantic_cases{
 public:

@@ -2,11 +2,15 @@
 #define SASL_SEMANTIC_SEMANTIC_INFO_H
 
 #include <sasl/include/semantic/semantic_forward.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/make_shared.hpp>
 #include <boost/tr1/type_traits.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/unordered_map.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <string>
 
 namespace sasl {

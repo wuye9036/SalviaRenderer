@@ -49,7 +49,7 @@ struct typecode_map
 		float, double
 	> cpptypes;
 
-	static literal_constant_types type_codes[];
+	static literal_constant_types type_codes[11];
 
 	template<typename T>
 	struct is_sasl_buildin_type: public boost::mpl::not_<

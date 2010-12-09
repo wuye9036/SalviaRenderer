@@ -3,8 +3,10 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/preprocessor/cat.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 

@@ -3,7 +3,11 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 namespace sasl{

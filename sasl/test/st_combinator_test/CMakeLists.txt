@@ -33,10 +33,8 @@ set( SOURCE_FILES
 
 ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
-	EFLIB
-	sasl_enums
-	sasl_common sasl_syntaxtree 
-	sasl_test_cases
+	sasl_syntaxtree sasl_common
+	sasl_test_cases sasl_enums EFLIB
 	${SOFTART_BOOST_LIBS}
 )
 

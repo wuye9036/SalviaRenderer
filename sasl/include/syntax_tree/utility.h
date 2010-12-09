@@ -5,11 +5,13 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/declaration.h>
-#include <eflib/include/platform/disable_warnings.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/function.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 BEGIN_NS_SASL_SYNTAX_TREE();

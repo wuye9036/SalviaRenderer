@@ -1,4 +1,7 @@
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <sasl/enums/enums_helper.h>
 #include <sasl/enums/operators.h>
 #include <sasl/include/common/compiler_info_manager.h>

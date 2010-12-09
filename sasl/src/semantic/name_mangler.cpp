@@ -32,14 +32,14 @@ using ::sasl::syntax_tree::variable_declaration;
 
 //////////////////////////////////////////////////////////////////////////
 // lookup table for translating enumerations to string.
-static boost::mutex lookup_table_mtx;
+// static boost::mutex lookup_table_mtx;
 
 static std::string mangling_tag("M");
 static boost::unordered_map< buildin_type_code, std::string, enum_hasher > btc_decorators;
 static bool is_initialized(false);
 
 static void initialize_lookup_table(){
-	boost::mutex::scoped_lock locker(lookup_table_mtx);
+	// boost::mutex::scoped_lock locker(lookup_table_mtx);
 
 	if ( is_initialized ){ return; }
 
