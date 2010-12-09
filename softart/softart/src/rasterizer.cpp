@@ -372,8 +372,8 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 	__m128 mtop = _mm_set1_ps(top);
 	__m128 mevalue3 = _mm_sub_ps(medgez, _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
 
-	for(int iy = 0; iy < 2; ++iy){
-		for(size_t ix = 0; ix < 2; ++ix){
+	for(int iy = 0; iy < 4; ++iy){
+		for(size_t ix = 0; ix < 4; ++ix){
 			pixel_mask[(sy + iy) * TILE_SIZE + (sx + ix)] = 0;
 		}
 	}
@@ -383,52 +383,59 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 		__m128 mspx = _mm_set1_ps(sp.x);
 		__m128 mspy = _mm_set1_ps(sp.y);
 
-		__m128 mx = _mm_add_ps(mtx, mspx);
-		__m128 my = _mm_add_ps(mty, mspy);
+		for(int iy = 0; iy < 4; iy += 2){
+			__m128 my = _mm_add_ps(mty, mspy);
+			my = _mm_add_ps(my, _mm_set1_ps(iy));
 
-		__m128 mask_rej = _mm_setzero_ps();
-		{
-			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(0, 0, 0, 0));
-			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(0, 0, 0, 0));
-			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
+			for(size_t ix = 0; ix < 4; ix += 2){
+				__m128 mx = _mm_add_ps(mtx, mspx);
+				mx = _mm_add_ps(mx, _mm_set1_ps(ix));
 
-			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(0, 0, 0, 0));
+				__m128 mask_rej = _mm_setzero_ps();
+				{
+					__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(0, 0, 0, 0));
+					__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(0, 0, 0, 0));
+					__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
 
-			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+					__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(0, 0, 0, 0));
+
+					mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+				}
+				{
+					__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(1, 1, 1, 1));
+					__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(1, 1, 1, 1));
+					__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
+
+					__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(1, 1, 1, 1));
+
+					mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+				}
+				{
+					__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(2, 2, 2, 2));
+					__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(2, 2, 2, 2));
+					__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
+
+					__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(2, 2, 2, 2));
+
+					mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+				}
+
+				__m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1UL << i_sample));
+				sample_mask = _mm_andnot_ps(mask_rej, sample_mask);
+
+				ALIGN16 uint32_t store[4];
+				_mm_store_ps(reinterpret_cast<float*>(store), sample_mask);
+				pixel_mask[(sy + iy + 0) * TILE_SIZE + (sx + ix + 0)] |= store[0];
+				pixel_mask[(sy + iy + 0) * TILE_SIZE + (sx + ix + 1)] |= store[1];
+				pixel_mask[(sy + iy + 1) * TILE_SIZE + (sx + ix + 0)] |= store[2];
+				pixel_mask[(sy + iy + 1) * TILE_SIZE + (sx + ix + 1)] |= store[3];
+			}
 		}
-		{
-			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(1, 1, 1, 1));
-			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(1, 1, 1, 1));
-			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
-
-			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(1, 1, 1, 1));
-
-			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
-		}
-		{
-			__m128 mstepx = _mm_shuffle_ps(medgex, medgex, _MM_SHUFFLE(2, 2, 2, 2));
-			__m128 mstepy = _mm_shuffle_ps(medgey, medgey, _MM_SHUFFLE(2, 2, 2, 2));
-			__m128 msteprej = _mm_add_ps(_mm_mul_ps(mx, mstepx), _mm_mul_ps(my, mstepy));
-
-			__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(2, 2, 2, 2));
-
-			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
-		}
-
-		__m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1UL << i_sample));
-		sample_mask = _mm_andnot_ps(mask_rej, sample_mask);
-
-		ALIGN16 uint32_t store[4];
-		_mm_store_ps(reinterpret_cast<float*>(store), sample_mask);
-		pixel_mask[(sy + 0) * TILE_SIZE + (sx + 0)] |= store[0];
-		pixel_mask[(sy + 0) * TILE_SIZE + (sx + 1)] |= store[1];
-		pixel_mask[(sy + 1) * TILE_SIZE + (sx + 0)] |= store[2];
-		pixel_mask[(sy + 1) * TILE_SIZE + (sx + 1)] |= store[3];
 	}
 
-	for(int iy = 0; iy < 2; ++iy){
+	for(int iy = 0; iy < 4; ++iy){
 		size_t y = sy + iy;
-		for(size_t ix = 0; ix < 2; ++ix){
+		for(size_t ix = 0; ix < 4; ++ix){
 			size_t x = sx + ix;
 			if (pixel_mask[y * TILE_SIZE + x] != 0){
 				pixel_begin[y] = static_cast<uint8_t>(min(static_cast<size_t>(pixel_begin[y]), x));
@@ -442,10 +449,10 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
 	}
 
-	for(int iy = 0; iy < 2; ++iy)
+	for(int iy = 0; iy < 4; ++iy)
 	{
 		//¹âÕ¤»¯
-		for(size_t ix = 0; ix < 2; ++ix)
+		for(size_t ix = 0; ix < 4; ++ix)
 		{
 			pixel_mask[(iy + sy) * TILE_SIZE + (ix + sx)] = 0;
 			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
@@ -504,77 +511,89 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 	__m128 mtop = _mm_set1_ps(top);
 	__m128 mevalue3 = _mm_sub_ps(_mm_load_ps(evalue), _mm_add_ps(_mm_mul_ps(mleft, medgex), _mm_mul_ps(mtop, medgey)));
 
-	__m128 mask_rej = _mm_setzero_ps();
-	__m128 mask_acc = _mm_setzero_ps();
-	// Trival rejection & acception
-	{
-		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(0, 3, 0, 3));
-		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(0, 0, 3, 3));
+	for(int iy = 0; iy < 4; iy += 2){
+		__m128 msy = _mm_mul_ps(mstepy3, _mm_set1_ps(iy));
+		for(size_t ix = 0; ix < 4; ix += 2){
+			__m128 msx = _mm_mul_ps(mstepx3, _mm_set1_ps(ix));
 
-		__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(0, 0, 0, 0));
+			__m128 msbase = _mm_add_ps(msx, msy);
 
-		__m128 msteprej = _mm_add_ps(mstepx, mstepy);
-		__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
+			__m128 mask_rej = _mm_setzero_ps();
+			__m128 mask_acc = _mm_setzero_ps();
 
-		__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(0, 0, 0, 0));
+			// Trival rejection & acception
+			{
+				__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(0, 3, 0, 3));
+				__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(0, 0, 3, 3));
 
-		mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
-		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
-	}
-	{
-		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(1, 3, 1, 3));
-		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(1, 1, 3, 3));
+				__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(0, 0, 0, 0));
 
-		__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(1, 1, 1, 1));
+				__m128 msteprej = _mm_add_ps(_mm_add_ps(mstepx, mstepy), _mm_shuffle_ps(msbase, msbase, _MM_SHUFFLE(0, 0, 0, 0)));
+				__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
 
-		__m128 msteprej = _mm_add_ps(mstepx, mstepy);
-		__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
+				__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(0, 0, 0, 0));
 
-		__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(1, 1, 1, 1));
+				mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+				mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
+			}
+			{
+				__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(1, 3, 1, 3));
+				__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(1, 1, 3, 3));
 
-		mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
-		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
-	}
-	{
-		__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(2, 3, 2, 3));
-		__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(2, 2, 3, 3));
+				__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(1, 1, 1, 1));
 
-		__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(2, 2, 2, 2));
+				__m128 msteprej = _mm_add_ps(_mm_add_ps(mstepx, mstepy), _mm_shuffle_ps(msbase, msbase, _MM_SHUFFLE(1, 1, 1, 1)));
+				__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
 
-		__m128 msteprej = _mm_add_ps(mstepx, mstepy);
-		__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
+				__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(1, 1, 1, 1));
 
-		__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(2, 2, 2, 2));
+				mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+				mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
+			}
+			{
+				__m128 mstepx = _mm_shuffle_ps(mstepx3, mstepx3, _MM_SHUFFLE(2, 3, 2, 3));
+				__m128 mstepy = _mm_shuffle_ps(mstepy3, mstepy3, _MM_SHUFFLE(2, 2, 3, 3));
 
-		mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
-		mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
-	}
-	mask_acc = _mm_andnot_ps(mask_acc, SIGN_MASK);
+				__m128 mrej2acc = _mm_shuffle_ps(mrej2acc3, mrej2acc3, _MM_SHUFFLE(2, 2, 2, 2));
 
-	__m128i mineww = _mm_set1_epi32(new_w);
-	__m128i minewh = _mm_set1_epi32(new_h);
-	__m128i mix = _mm_add_epi32(_mm_set1_epi32(cur_region.x), _mm_unpacklo_epi32(_mm_setzero_si128(), mineww));
-	__m128i miy = _mm_add_epi32(_mm_set1_epi32(cur_region.y), _mm_unpacklo_epi64(_mm_setzero_si128(), minewh));
-	__m128i miregion = _mm_or_si128(mix, _mm_slli_epi32(miy, 8));
-	miregion = _mm_or_si128(miregion, _mm_castps_si128(mask_acc));
+				__m128 msteprej = _mm_add_ps(_mm_add_ps(mstepx, mstepy), _mm_shuffle_ps(msbase, msbase, _MM_SHUFFLE(2, 2, 2, 2)));
+				__m128 mstepacc = _mm_add_ps(msteprej, mrej2acc);
 
-	ALIGN16 uint32_t region_code[4];
-	_mm_store_si128(reinterpret_cast<__m128i*>(&region_code[0]), miregion);
+				__m128 mevalue = _mm_shuffle_ps(mevalue3, mevalue3, _MM_SHUFFLE(2, 2, 2, 2));
 
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(x_min), _mm_cvtepi32_ps(_mm_add_epi32(mix, mineww))));
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(x_max), _mm_cvtepi32_ps(mix)));
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(y_min), _mm_cvtepi32_ps(_mm_add_epi32(miy, minewh))));
-	mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(y_max), _mm_cvtepi32_ps(miy)));
+				mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
+				mask_acc = _mm_or_ps(mask_acc, _mm_cmplt_ps(mstepacc, mevalue));
+			}
+			mask_acc = _mm_andnot_ps(mask_acc, SIGN_MASK);
 
-	int rejections = ~_mm_movemask_ps(mask_rej) & 0xF;
-	unsigned long t;
-	while (_BitScanForward(&t, rejections)){
-		EFLIB_ASSERT(t < 4, "");
+			__m128i mineww = _mm_set1_epi32(new_w);
+			__m128i minewh = _mm_set1_epi32(new_h);
+			__m128i mix = _mm_add_epi32(_mm_unpacklo_epi32(_mm_setzero_si128(), mineww), _mm_set1_epi32(ix * new_w));
+			__m128i miy = _mm_add_epi32(_mm_unpacklo_epi64(_mm_setzero_si128(), minewh), _mm_set1_epi32(iy * new_h));
+			mix = _mm_add_epi32(mix, _mm_set1_epi32(cur_region.x));
+			miy = _mm_add_epi32(miy, _mm_set1_epi32(cur_region.y));
+			__m128i miregion = _mm_or_si128(mix, _mm_slli_epi32(miy, 8));
+			miregion = _mm_or_si128(miregion, _mm_castps_si128(mask_acc));
 
-		test_regions[test_region_size] = region_code[t];
-		++ test_region_size;
+			ALIGN16 uint32_t region_code[4];
+			_mm_store_si128(reinterpret_cast<__m128i*>(&region_code[0]), miregion);
 
-		rejections &= rejections - 1;
+			mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(x_min), _mm_cvtepi32_ps(_mm_add_epi32(mix, mineww))));
+			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(x_max), _mm_cvtepi32_ps(mix)));
+			mask_rej = _mm_or_ps(mask_rej, _mm_cmpge_ps(_mm_set1_ps(y_min), _mm_cvtepi32_ps(_mm_add_epi32(miy, minewh))));
+			mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(_mm_set1_ps(y_max), _mm_cvtepi32_ps(miy)));
+
+			int rejections = ~_mm_movemask_ps(mask_rej) & 0xF;
+			unsigned long t;
+			while (_BitScanForward(&t, rejections)){
+				EFLIB_ASSERT(t < 4, "");
+
+				test_regions[test_region_size] = region_code[t];
+				++ test_region_size;
+
+				rejections &= rejections - 1;
+			}
+		}
 	}
 #else
 	float evalue1[3];
@@ -582,9 +601,9 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 		evalue1[e] = evalue[e] - (left * edge_factors[e].x + top * edge_factors[e].y);
 	}
 
-	for (int ty = 0; ty < 2; ++ ty){
+	for (int ty = 0; ty < 4; ++ ty){
 		uint32_t y = cur_region.y + new_h * ty;
-		for (int tx = 0; tx < 2; ++ tx){
+		for (int tx = 0; tx < 4; ++ tx){
 			uint32_t x = cur_region.x + new_w * tx;
 
 			if ((x_min < x + new_w) && (x_max >= x)
@@ -743,15 +762,15 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	while (test_region_size[src_stage] > 0){
 		test_region_size[dst_stage] = 0;
 		
-		subtile_w /= 2;
-		subtile_h /= 2;
+		subtile_w /= 4;
+		subtile_h /= 4;
 
 		for (int e = 0; e < 3; ++ e){
-			step_x[e] *= 0.5f;
-			step_y[e] *= 0.5f;
-			rej_to_acc[e] *= 0.5f;
-			part_evalue[e] *= 0.5f;
-			evalue[e] += part_evalue[e];
+			step_x[e] *= 0.25f;
+			step_y[e] *= 0.25f;
+			rej_to_acc[e] *= 0.25f;
+			part_evalue[e] *= 0.25f;
+			evalue[e] = edge_factors[e].z - part_evalue[e];
 		}
 
 		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp){
@@ -762,8 +781,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 			const int vpleft = max(0U, vpleft0 + cur_region.x);
 			const int vptop = max(0U, vptop0 + cur_region.y);
-			const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 2, static_cast<uint32_t>(hfb_->get_width()));
-			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 2, static_cast<uint32_t>(hfb_->get_height()));
+			const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(hfb_->get_width()));
+			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(hfb_->get_height()));
 
 			// For one pixel region
 			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1)){
