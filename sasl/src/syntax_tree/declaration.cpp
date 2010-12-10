@@ -96,7 +96,6 @@ null_declaration::null_declaration( boost::shared_ptr<token_attr> tok )
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( null_declaration );
 
-
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( alias_type );
 
 alias_type::alias_type( boost::shared_ptr<token_attr> tok )

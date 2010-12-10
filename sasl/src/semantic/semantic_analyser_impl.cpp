@@ -59,6 +59,7 @@ using ::sasl::semantic::symbol;
 using namespace boost::assign;
 
 using boost::any;
+using boost::any_cast;
 using boost::shared_ptr;
 using boost::unordered_map;
 
@@ -77,7 +78,7 @@ struct sacontext{
 	shared_ptr<node> generated_node;
 };
 
-#define context() (any_cast<sacontext>(data))
+#define context() (*any_cast<sacontext>(data))
 #define set_context( ctxt ) ( data = (ctxt) )
 
 // utility functions
@@ -97,6 +98,19 @@ semantic_analyser_impl::semantic_analyser_impl()
 }
 
 #define SASL_VISITOR_TYPE_NAME semantic_analyser_impl
+
+template <typename NodeT> sacontext& semantic_analyser_impl::visit_child( sacontext& child_ctxt, const sacontext& init_data, shared_ptr<NodeT> child )
+{
+	any child_data = init_data;
+	child->accept( this, &child_data );
+	child_ctxt = any_cast<sacontext>(child_data);
+	return child_ctxt;
+}
+
+template <typename NodeT> sacontext& semantic_analyser_impl::visit_child( sacontext& child_ctxt, shared_ptr<NodeT> child )
+{
+	return visit_child( child_ctxt, child_ctxt, child );
+}
 
 SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_NOIMPL( cast_expression );
@@ -253,98 +267,42 @@ SASL_VISIT_DEF( parameter )
 
 SASL_VISIT_DEF( function_type )
 {
-	// TODO: add document for explaining why we need add_mangling().
-	std::string name = v.name->str;
-	symbol_scope ss( name, v.handle(), cursym );
+	sacontext ctxt = context();
 
-	v.retval_type->accept( this, data );;
+	// Copy node
+	shared_ptr<node> dup_node = duplicate( v.handle() );
+	EFLIB_ASSERT_AND_IF( dup_node, "Node swallow duplicated error !"){
+		return;
+	}
+	shared_ptr<function_type> dup_fn = dup_node->typed_handle<function_type>();
+	dup_fn->params.clear();
+
+	shared_ptr<symbol> sym = context().parent_sym->add_function_begin( dup_fn );
+
+	sacontext child_ctxt_init = ctxt;
+	sacontext child_ctxt;
+
+	dup_fn->retval_type
+		= visit_child( child_ctxt, child_ctxt_init, v.retval_type ).generated_node->typed_handle<type_specifier>();
+
 	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )
 	{
-		(*it)->accept( this, data );;
+		child_ctxt = child_common_ctxt;
+		dup_fn->params.push_back( 
+			visit_child(child_ctxt, child_ctxt_init, *it).generated_node->typed_handle<parameter>()
+			);
 	}
-	cursym->add_mangling( mangle( v.typed_handle<function_type>() ) );
+
+	context().parent_sym->add_function_end( sym );
 
 	if ( v.body ){
-		v.body->accept( this, data );;
+		child_data = child_common_ctxt;
+		v.body->accept( this, &child_data );
 	}
-	// TODO : It's doing nothing now.
 
-	//using ::sasl::semantic::symbol;
-	//using ::sasl::semantic::get_or_create_semantic_info;
-	//using ::sasl::semantic::extract_semantic_info;
-
-	//// if it is only declaration.
-	//std::string symbol_name;
-	//std::string unmangled_name = v.name->str;
-
-	//// process parameter types for name mangling.
-	//v.retval_type->accept( this, data );;
-	//for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
-	//	v.params[i_param]->param_type->accept(this, data);
-	//}
-
-	//std::string mangled_name = mangle_function_name( v.typed_handle<function_type>() );
-
-	//bool use_existed_node(false);
-
-	//shared_ptr<symbol> existed_sym = cursym->find_mangled_this( unmangled_name );
-	//if ( existed_sym ) {
-	//	shared_ptr<function_type> existed_node = existed_sym->node()->typed_handle<function_type>();
-	//	if ( !existed_node ){
-	//		// symbol was used, and it is not a function. error.
-	//		// TODO: SEMANTIC ERROR: TYPE REDEFINITION.
-	//	} else {
-	//		// symbol was used, and the older is a function.
-	//		existed_node = cursym->find_mangled_this(mangled_name)->node()->typed_handle<function_type>();
-	//		if ( existed_node ){
-	//			if ( !is_equal( existed_node, v.typed_handle<function_type>() ) ){
-	//				// TODO: BUG ON OVERLOAD SUPPORTING
-	//				// TODO: SEMANTIC ERROR ON OVERLOAD UNSUPPORTED.
-	//			}
-	//			if ( v.declaration_only() ){
-	//				// it was had a definition/declaration, and now is a declaration only
-	//				use_existed_node = true;
-	//			} else {
-	//				if ( existed_node->declaration_only() ){
-	//					// the older is a declaration, and whatever now is, that's OK.
-	//					use_existed_node = true;
-	//				} else {
-	//					// older function definition v.s. new function definition, conflict...
-	//					// TODO:  SEMANTIC ERROR REDEFINE A FUNCTION.
-	//				}
-	//			}
-	//		} else {
-	//			use_existed_node = false;
-	//		}
-	//	}
-	//} else {
-	//	use_existed_node = false;
-	//}
-
-	//scoped_ptr<symbol_scope> sc(
-	//	use_existed_node ? new symbol_scope(mangled_name, cursym) : new symbol_scope( mangled_name, unmangled_name, v.handle(), cursym )
-	//	);
-
-	//v.symbol( cursym );
-	//if ( !use_existed_node ){
-	//	// replace old node via new node.
-	//	cursym->relink( v.handle() );
-	//
-	//	// definition
-	//	if ( !v.declaration_only() ){
-	//		// process parameters
-	//		for( size_t i_param = 0; i_param < v.params.size(); ++i_param ){
-	//			v.params[i_param]->accept( this, data );;
-	//		}
-
-	//		// process statements
-	//		is_local = true;
-	//		for( size_t i_stmt = 0; i_stmt < v.body->stmts.size(); ++i_stmt ){
-	//			v.body->stmts[i_stmt]->accept( this, data );;
-	//		}
-	//	}
-	//}
+	ctxt.generated_node = dup_fn;
+	set_context(ctxt);
 }
 
 // statement

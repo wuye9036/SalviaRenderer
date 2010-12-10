@@ -62,13 +62,10 @@ public:
 	int count( std::string name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
-
 	boost::shared_ptr<symbol> add_anonymous_child( boost::shared_ptr<node> child_node );
-	boost::shared_ptr<symbol> add_overloaded_child(
-		const std::string& umangled,
-		const std::string& mangled,
-		boost::shared_ptr<struct node> child_node
-		);
+
+	boost::shared_ptr<symbol> add_function_begin( boost::shared_ptr<node> child_fn );
+	bool add_function_end( boost::shared_ptr<symbol> sym );
 
 	void remove_child( const std::string& mangled );
 	void remove();
@@ -80,7 +77,7 @@ public:
 
 	const std::string& unmangled_name() const;
 	const std::string& mangled_name() const;
-	void add_mangling( const std::string& mangled );
+
 	// std::string fullpath();
 private:
 	static boost::shared_ptr<symbol> create(

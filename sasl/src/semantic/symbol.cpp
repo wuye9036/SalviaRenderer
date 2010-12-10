@@ -207,21 +207,24 @@ shared_ptr<symbol> symbol::add_child( const string& mangled, shared_ptr<struct n
 	return ret;
 }
 
-shared_ptr<symbol> symbol::add_overloaded_child(
-	const string& unmangled,
-	const string& mangled,
-	shared_ptr<struct node> child_node
-	)
-{
-	shared_ptr<symbol> added_sym = add_child( mangled, child_node );
-	if ( added_sym ){
-		if( overloads.count( unmangled ) == 0 ){
-			overloads[ unmangled ] = vector<string>();
-		}
-		overloads[ unmangled ].push_back( mangled );
-		added_sym->umgl_name = unmangled;
+boost::shared_ptr<symbol> symbol::add_function_begin( boost::shared_ptr<node> child_fn ){
+	return create( selfptr.lock(), child_fn, child_fn->name->str );
+}
+
+bool symbol::add_function_end( boost::shared_ptr<symbol> sym ){
+	sym->mgl_name = mangle( sym->node() );
+
+	children_iterator_t ret_it = children.find(mangled);
+	if ( ret_it != children.end() ){
+		return false;
 	}
-	return added_sym;
+
+	children.insert( make_pair( sym->mgl_name, sym ) );
+	if( overloads.count( sym->umgl_name ) == 0 ){
+		overloads[ sym->umgl_name ] = vector<string>();
+	}
+	overloads[ sym->umgl_name ].push_back( sym->mgl_name );
+	return true;
 }
 
 void symbol::remove_child( const string& mangled ){
@@ -272,24 +275,6 @@ const string& symbol::mangled_name() const{
 
 const string& symbol::unmangled_name() const{
 	return umgl_name;
-}
-
-void symbol::add_mangling( const string& mangled ){
-	mgl_name = mangled;
-
-	if( !parent() ){
-		return;
-	}
-
-	// add new name and remove old name
-	this_parent.lock()->children.insert( make_pair( mangled, node()->symbol() ) );
-	this_parent.lock()->children.erase( umgl_name );
-
-	// add to overloaded items table
-	if ( this_parent.lock()->get_overloads(umgl_name).empty() ){
-		this_parent.lock()->overloads[umgl_name] = overload_table_t::mapped_type();
-	}
-	this_parent.lock()->overloads[umgl_name].push_back( mangled );
 }
 
 int anonymous_name_count = 0;

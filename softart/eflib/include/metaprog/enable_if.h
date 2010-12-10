@@ -17,7 +17,7 @@
 	typename ::boost::disable_if< BOOST_PP_CAT(::boost::,pred) <T> >::type* BOOST_PP_CAT(dummy, ID) = NULL
 
 #define EFLIB_ENABLE_IF_PRED2( pred, U, T, ID ) \
-	typename ::boost::enable_if< ::boost:: pred <U, T> >::type* BOOST_PP_CAT(dummy, ID) = NULL
+	typename ::boost::enable_if< ::boost:: pred <U, T> >::type* /*BOOST_PP_CAT(dummy, ID)*/ = NULL
 
 #define EFLIB_DISABLE_IF_PRED2( pred, U, T, ID ) \
 	typename ::boost::disable_if< BOOST_PP_CAT(::boost::,pred) <U, T> >::type* BOOST_PP_CAT(dummy, ID) = NULL

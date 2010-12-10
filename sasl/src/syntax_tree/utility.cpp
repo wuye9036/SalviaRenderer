@@ -7,18 +7,24 @@
 #include <sasl/include/syntax_tree/visitor.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/metaprog/enable_if.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
 #include <boost/preprocessor.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/type_traits/is_base_of.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
 
 using std::vector;
-using boost::shared_ptr;
+
+using boost::any;
 using boost::any_cast;
+using boost::is_base_of;
+using boost::shared_polymorphic_cast;
+using boost::shared_ptr;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
@@ -209,16 +215,34 @@ boost::shared_ptr<buildin_type> create_buildin_type( const buildin_type_code& bt
 	return ret;
 }
 
+template< typename NodeT >
+void store_node_to_data( any* lhs, shared_ptr< NodeT > rhs ){
+	if( rhs ){
+		*lhs = shared_polymorphic_cast<node>( rhs );
+	} else {
+		*lhs = shared_ptr<node>();
+	}
+}
+
 #define COPY_VALUE_ITEM( r, dest_src, member ) \
 	BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member = BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member;
 
 #define SASL_SWALLOW_CLONE_NODE( output, v, node_type, member_seq ) \
 	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_attr::null() ); \
 	BOOST_PP_SEQ_FOR_EACH( COPY_VALUE_ITEM, (cloned, v), member_seq ); \
-	*(output) = cloned;
+	store_node_to_data( (output), cloned );
 
 template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
 	lhs = any_cast<T>(rhs);
+}
+
+template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& rhs, EFLIB_ENABLE_IF_PRED2(is_base_of, node, NodeT, 0) ){
+	shared_ptr<node> any_v = any_cast< shared_ptr<node> >( rhs );
+	if ( any_v ){
+		lhs = shared_polymorphic_cast<NodeT>(any_v);
+	} else {
+		lhs.reset();
+	}
 }
 
 #define DEEPCOPY_VALUE_ITEM( r, dest_src, member )	\
@@ -229,7 +253,7 @@ template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
 	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_attr::null() ); \
 	boost::any member_dup; \
 	BOOST_PP_SEQ_FOR_EACH( DEEPCOPY_VALUE_ITEM, (cloned, src_v_ref), member_seq ); \
-	*(dest_any_ptr) = cloned;
+	store_node_to_data( (dest_any_ptr), cloned );
 
 #define SASL_CLONE_NODE_FUNCTION_DEF( clone_mode, node_type, member_seq )	\
 	SASL_VISIT_DCL( node_type ){	\
@@ -477,7 +501,7 @@ public:
 		BOOST_FOREACH( shared_ptr<NodeT> item, v ){
 			boost::any cloned;
 			visit( item, &cloned );
-			out_v.push_back( boost::any_cast< shared_ptr<NodeT> > (cloned) );
+			out_v.push_back( shared_polymorphic_cast<NodeT>( boost::any_cast< shared_ptr<node> > (cloned) ) );
 		}
 		*data = out_v;
 	}

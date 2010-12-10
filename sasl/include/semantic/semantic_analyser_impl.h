@@ -19,11 +19,13 @@ namespace sasl{
 		struct function_type;
 	}
 }
+
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
 class type_converter;
 class global_si;
+struct sacontext;
 
 class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
 public:
@@ -75,6 +77,9 @@ public:
 	boost::shared_ptr<global_si> global_semantic_info() const;
 
 private:
+	template <typename NodeT> sacontext& visit_child( sacontext& child_ctxt, boost::shared_ptr<NodeT> child );
+	template <typename NodeT> sacontext& visit_child( sacontext& child_ctxt, const sacontext& init_data, boost::shared_ptr<NodeT> child );
+
 	void register_type_converter();
 	void register_buildin_functions( ::sasl::syntax_tree::node& );
 	void register_buildin_types();
