@@ -1,5 +1,6 @@
 #include <sasl/include/semantic/symbol.h>
 
+#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/type_converter.h>
@@ -7,10 +8,14 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/node.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/include/diagnostics/assert.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/include/platform/boost_end.h>
+
 #include <algorithm>
 
 using namespace std;
@@ -111,7 +116,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 	//			compare this candidate to evaluated candidates
 	//				if candidate is better than evaluated, discard evaluated.
 	//				if candidate is worse than evaluated, discard current candidate
-	//			after all comparison done, if candidate have not be discarded, add it into candidates.
+	//			after all comparison done, if candidate have not been discarded, add it into candidates.
 	//	now the candidates is result.
 	//
 	// better & worse judgement is as same as C#.
@@ -125,9 +130,14 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 		// try to match all parameters.
 		bool all_parameter_success = true;
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-			shared_ptr<type_specifier> arg_type = extract_semantic_info<type_info_si>( args[i_param] )->type_info();
-			shared_ptr<type_specifier> par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->type_info();
-			if ( !( type_equal( arg_type, par_type) || conv->convert(matching_func->params[i_param], args[i_param]) ) ){
+			type_entry::id_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
+			type_entry::id_t par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
+			if( arg_type == -1 || par_type == -1 ){
+				// TODO: Here is syntax error. Need to be processed.
+				all_parameter_success = false;
+				break;
+			}
+			if ( !( arg_type == par_type || conv->convert(matching_func->params[i_param], args[i_param]) ) ){
 				all_parameter_success = false;
 				break;
 			}
@@ -207,14 +217,25 @@ shared_ptr<symbol> symbol::add_child( const string& mangled, shared_ptr<struct n
 	return ret;
 }
 
-boost::shared_ptr<symbol> symbol::add_function_begin( boost::shared_ptr<node> child_fn ){
-	return create( selfptr.lock(), child_fn, child_fn->name->str );
+shared_ptr<symbol> symbol::add_function_begin( shared_ptr<function_type> child_fn ){
+	shared_ptr<symbol> ret;
+	if( !child_fn ){ return ret; }
+
+	return create( selfptr.lock(), child_fn->handle(), child_fn->name->str );
 }
 
 bool symbol::add_function_end( boost::shared_ptr<symbol> sym ){
-	sym->mgl_name = mangle( sym->node() );
+	EFLIB_ASSERT_AND_IF( sym, "Input symbol is NULL." ){
+		return false;
+	}
 
-	children_iterator_t ret_it = children.find(mangled);
+	EFLIB_ASSERT_AND_IF( sym->node(), "Node of input symbol is NULL. Maybe the symbol is not created by add_function_begin()." ){
+		return false;
+	}
+
+	sym->mgl_name = mangle( sym->node()->typed_handle<function_type>() );
+
+	children_iterator_t ret_it = children.find(sym->mgl_name);
 	if ( ret_it != children.end() ){
 		return false;
 	}

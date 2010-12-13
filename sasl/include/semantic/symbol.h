@@ -19,12 +19,14 @@ namespace sasl{
 	namespace syntax_tree{
 		struct node;
 		struct expression;
+		struct function_type;
 		struct type_specifier;
 	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
 
+using sasl::syntax_tree::function_type;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::type_specifier;
 class type_converter;
@@ -64,7 +66,7 @@ public:
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
 	boost::shared_ptr<symbol> add_anonymous_child( boost::shared_ptr<node> child_node );
 
-	boost::shared_ptr<symbol> add_function_begin( boost::shared_ptr<node> child_fn );
+	boost::shared_ptr<symbol> add_function_begin( boost::shared_ptr<function_type> child_fn );
 	bool add_function_end( boost::shared_ptr<symbol> sym );
 
 	void remove_child( const std::string& mangled );

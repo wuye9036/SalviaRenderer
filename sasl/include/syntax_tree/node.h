@@ -44,7 +44,7 @@ struct node{
 	friend class deep_duplicator;
 
 	boost::shared_ptr<node> handle() const;
-	template <typename T> boost::shared_ptr<T> typed_handle(  ) const{
+	template <typename T> boost::shared_ptr<T> typed_handle() const{
 		return boost::shared_polymorphic_cast<T>( handle() );
 	}
 

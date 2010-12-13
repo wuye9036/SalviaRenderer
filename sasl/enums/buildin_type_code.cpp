@@ -68,6 +68,47 @@ std::string buildin_type_code::name() const{
 	return to_name( * this );
 }
 
+void buildin_type_code::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<buildin_type_code*>(&_unsigned) ) buildin_type_code ( UINT32_C( 34603008 ), "_unsigned" );
+	new ( const_cast<buildin_type_code*>(&_sint32) ) buildin_type_code ( UINT32_C( 35848192 ), "_sint32" );
+	new ( const_cast<buildin_type_code*>(&_c_int) ) buildin_type_code ( UINT32_C( 35979264 ), "_c_int" );
+	new ( const_cast<buildin_type_code*>(&_sint16) ) buildin_type_code ( UINT32_C( 35782656 ), "_sint16" );
+	new ( const_cast<buildin_type_code*>(&_generic_type_field_shift) ) buildin_type_code ( UINT32_C( 24 ), "_generic_type_field_shift" );
+	new ( const_cast<buildin_type_code*>(&_scalar_type_mask) ) buildin_type_code ( UINT32_C( 268369920 ), "_scalar_type_mask" );
+	new ( const_cast<buildin_type_code*>(&_sign_mask) ) buildin_type_code ( UINT32_C( 267386880 ), "_sign_mask" );
+	new ( const_cast<buildin_type_code*>(&_dim1_mask) ) buildin_type_code ( UINT32_C( 255 ), "_dim1_mask" );
+	new ( const_cast<buildin_type_code*>(&_boolean) ) buildin_type_code ( UINT32_C( 50331648 ), "_boolean" );
+	new ( const_cast<buildin_type_code*>(&_generic_type_mask) ) buildin_type_code ( UINT32_C( 251658240 ), "_generic_type_mask" );
+	new ( const_cast<buildin_type_code*>(&_sint8) ) buildin_type_code ( UINT32_C( 35717120 ), "_sint8" );
+	new ( const_cast<buildin_type_code*>(&_scalar) ) buildin_type_code ( UINT32_C( 0 ), "_scalar" );
+	new ( const_cast<buildin_type_code*>(&_sign_field_shift) ) buildin_type_code ( UINT32_C( 20 ), "_sign_field_shift" );
+	new ( const_cast<buildin_type_code*>(&_float) ) buildin_type_code ( UINT32_C( 16842752 ), "_float" );
+	new ( const_cast<buildin_type_code*>(&_dim0_field_shift) ) buildin_type_code ( UINT32_C( 8 ), "_dim0_field_shift" );
+	new ( const_cast<buildin_type_code*>(&_void) ) buildin_type_code ( UINT32_C( 67108864 ), "_void" );
+	new ( const_cast<buildin_type_code*>(&_uint16) ) buildin_type_code ( UINT32_C( 34734080 ), "_uint16" );
+	new ( const_cast<buildin_type_code*>(&_dimension_mask) ) buildin_type_code ( UINT32_C( 4026531840 ), "_dimension_mask" );
+	new ( const_cast<buildin_type_code*>(&_dim1_field_shift) ) buildin_type_code ( UINT32_C( 0 ), "_dim1_field_shift" );
+	new ( const_cast<buildin_type_code*>(&_dimension_field_shift) ) buildin_type_code ( UINT32_C( 28 ), "_dimension_field_shift" );
+	new ( const_cast<buildin_type_code*>(&_double) ) buildin_type_code ( UINT32_C( 16908288 ), "_double" );
+	new ( const_cast<buildin_type_code*>(&_matrix) ) buildin_type_code ( UINT32_C( 536870912 ), "_matrix" );
+	new ( const_cast<buildin_type_code*>(&_sint64) ) buildin_type_code ( UINT32_C( 35913728 ), "_sint64" );
+	new ( const_cast<buildin_type_code*>(&_real) ) buildin_type_code ( UINT32_C( 16777216 ), "_real" );
+	new ( const_cast<buildin_type_code*>(&_scalar_field_shift) ) buildin_type_code ( UINT32_C( 16 ), "_scalar_field_shift" );
+	new ( const_cast<buildin_type_code*>(&_uint8) ) buildin_type_code ( UINT32_C( 34668544 ), "_uint8" );
+	new ( const_cast<buildin_type_code*>(&_signed) ) buildin_type_code ( UINT32_C( 35651584 ), "_signed" );
+	new ( const_cast<buildin_type_code*>(&_vector) ) buildin_type_code ( UINT32_C( 268435456 ), "_vector" );
+	new ( const_cast<buildin_type_code*>(&none) ) buildin_type_code ( UINT32_C( 0 ), "none" );
+	new ( const_cast<buildin_type_code*>(&_uint32) ) buildin_type_code ( UINT32_C( 34799616 ), "_uint32" );
+	new ( const_cast<buildin_type_code*>(&_precision_field_shift) ) buildin_type_code ( UINT32_C( 16 ), "_precision_field_shift" );
+	new ( const_cast<buildin_type_code*>(&_uint64) ) buildin_type_code ( UINT32_C( 34865152 ), "_uint64" );
+	new ( const_cast<buildin_type_code*>(&_dim0_mask) ) buildin_type_code ( UINT32_C( 65280 ), "_dim0_mask" );
+	new ( const_cast<buildin_type_code*>(&_integer) ) buildin_type_code ( UINT32_C( 33554432 ), "_integer" );
+
+}
 
 
 		

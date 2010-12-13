@@ -13,6 +13,8 @@ private:
 	compiler_informations( const storage_type& val, const std::string& name );
 	compiler_informations( const storage_type& val ): base_type(val){}
 public:
+	static void force_initialize();
+	
 	compiler_informations( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}

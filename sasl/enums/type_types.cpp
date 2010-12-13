@@ -68,6 +68,17 @@ std::string type_types::name() const{
 	return to_name( * this );
 }
 
+void type_types::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<type_types*>(&alias) ) type_types ( UINT32_C( 3 ), "alias" );
+	new ( const_cast<type_types*>(&none) ) type_types ( UINT32_C( 0 ), "none" );
+	new ( const_cast<type_types*>(&buildin) ) type_types ( UINT32_C( 1 ), "buildin" );
+	new ( const_cast<type_types*>(&composited) ) type_types ( UINT32_C( 2 ), "composited" );
+
+}
 
 
 		

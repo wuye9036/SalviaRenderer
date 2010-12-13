@@ -68,6 +68,51 @@ std::string operators::name() const{
 	return to_name( * this );
 }
 
+void operators::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<operators*>(&sub_assign) ) operators ( UINT32_C( 8 ), "sub_assign" );
+	new ( const_cast<operators*>(&less) ) operators ( UINT32_C( 19 ), "less" );
+	new ( const_cast<operators*>(&bit_and) ) operators ( UINT32_C( 34 ), "bit_and" );
+	new ( const_cast<operators*>(&bit_or_assign) ) operators ( UINT32_C( 13 ), "bit_or_assign" );
+	new ( const_cast<operators*>(&prefix_incr) ) operators ( UINT32_C( 25 ), "prefix_incr" );
+	new ( const_cast<operators*>(&logic_and) ) operators ( UINT32_C( 32 ), "logic_and" );
+	new ( const_cast<operators*>(&postfix_incr) ) operators ( UINT32_C( 27 ), "postfix_incr" );
+	new ( const_cast<operators*>(&lshift_assign) ) operators ( UINT32_C( 15 ), "lshift_assign" );
+	new ( const_cast<operators*>(&mul_assign) ) operators ( UINT32_C( 9 ), "mul_assign" );
+	new ( const_cast<operators*>(&prefix_decr) ) operators ( UINT32_C( 26 ), "prefix_decr" );
+	new ( const_cast<operators*>(&bit_xor_assign) ) operators ( UINT32_C( 14 ), "bit_xor_assign" );
+	new ( const_cast<operators*>(&sub) ) operators ( UINT32_C( 2 ), "sub" );
+	new ( const_cast<operators*>(&positive) ) operators ( UINT32_C( 29 ), "positive" );
+	new ( const_cast<operators*>(&rshift_assign) ) operators ( UINT32_C( 16 ), "rshift_assign" );
+	new ( const_cast<operators*>(&negative) ) operators ( UINT32_C( 30 ), "negative" );
+	new ( const_cast<operators*>(&logic_not) ) operators ( UINT32_C( 33 ), "logic_not" );
+	new ( const_cast<operators*>(&add) ) operators ( UINT32_C( 1 ), "add" );
+	new ( const_cast<operators*>(&right_shift) ) operators ( UINT32_C( 24 ), "right_shift" );
+	new ( const_cast<operators*>(&mul) ) operators ( UINT32_C( 3 ), "mul" );
+	new ( const_cast<operators*>(&bit_and_assign) ) operators ( UINT32_C( 12 ), "bit_and_assign" );
+	new ( const_cast<operators*>(&mod_assign) ) operators ( UINT32_C( 11 ), "mod_assign" );
+	new ( const_cast<operators*>(&greater) ) operators ( UINT32_C( 21 ), "greater" );
+	new ( const_cast<operators*>(&bit_or) ) operators ( UINT32_C( 35 ), "bit_or" );
+	new ( const_cast<operators*>(&bit_not) ) operators ( UINT32_C( 37 ), "bit_not" );
+	new ( const_cast<operators*>(&bit_xor) ) operators ( UINT32_C( 36 ), "bit_xor" );
+	new ( const_cast<operators*>(&add_assign) ) operators ( UINT32_C( 7 ), "add_assign" );
+	new ( const_cast<operators*>(&mod) ) operators ( UINT32_C( 5 ), "mod" );
+	new ( const_cast<operators*>(&none) ) operators ( UINT32_C( 0 ), "none" );
+	new ( const_cast<operators*>(&not_equal) ) operators ( UINT32_C( 18 ), "not_equal" );
+	new ( const_cast<operators*>(&logic_or) ) operators ( UINT32_C( 31 ), "logic_or" );
+	new ( const_cast<operators*>(&greater_equal) ) operators ( UINT32_C( 22 ), "greater_equal" );
+	new ( const_cast<operators*>(&left_shift) ) operators ( UINT32_C( 23 ), "left_shift" );
+	new ( const_cast<operators*>(&equal) ) operators ( UINT32_C( 17 ), "equal" );
+	new ( const_cast<operators*>(&postfix_decr) ) operators ( UINT32_C( 28 ), "postfix_decr" );
+	new ( const_cast<operators*>(&div_assign) ) operators ( UINT32_C( 10 ), "div_assign" );
+	new ( const_cast<operators*>(&less_equal) ) operators ( UINT32_C( 20 ), "less_equal" );
+	new ( const_cast<operators*>(&div) ) operators ( UINT32_C( 4 ), "div" );
+	new ( const_cast<operators*>(&assign) ) operators ( UINT32_C( 6 ), "assign" );
+
+}
 
 
 		

@@ -68,6 +68,17 @@ std::string storage_mode::name() const{
 	return to_name( * this );
 }
 
+void storage_mode::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<storage_mode*>(&none) ) storage_mode ( UINT32_C( 0 ), "none" );
+	new ( const_cast<storage_mode*>(&constant) ) storage_mode ( UINT32_C( 1 ), "constant" );
+	new ( const_cast<storage_mode*>(&stack_based_address) ) storage_mode ( UINT32_C( 3 ), "stack_based_address" );
+	new ( const_cast<storage_mode*>(&register_id) ) storage_mode ( UINT32_C( 2 ), "register_id" );
+
+}
 
 
 		

@@ -15,26 +15,46 @@
 #include <boost/type_traits/is_same.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <vector>
+
 #define DEFAULT_STATE_SCOPE() state_scope ss(this, e_other);
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 using ::sasl::common::token_attr;
+using ::std::vector;
 
-literal_constant_types typecode_map::type_codes[11] =
-{
-	literal_constant_types::boolean,
-	literal_constant_types::integer,
-	literal_constant_types::integer,
-	literal_constant_types::integer,
-	literal_constant_types::integer,
-	literal_constant_types::integer,
-	literal_constant_types::integer,
-	literal_constant_types::integer,
-	literal_constant_types::integer,
-	literal_constant_types::real,
-	literal_constant_types::real
+struct lct_list{
+	static lct_list instance_;
+	vector<literal_constant_types> lst;
+
+	lct_list(){
+
+		literal_constant_types::force_initialize();
+		lst.resize(11, literal_constant_types::none);
+
+		lst[0] = literal_constant_types::boolean;
+		lst[1] = literal_constant_types::integer;
+		lst[2] = literal_constant_types::integer;
+		lst[3] = literal_constant_types::integer;
+		lst[4] = literal_constant_types::integer;
+		lst[5] = literal_constant_types::integer;
+		lst[6] = literal_constant_types::integer;
+		lst[7] = literal_constant_types::integer;
+		lst[8] = literal_constant_types::integer;
+
+		lst[9] = literal_constant_types::real;
+		lst[10] = literal_constant_types::real;
+
+	}
 };
+
+lct_list lct_list::instance_;
+
+const literal_constant_types* const typecode_map::type_codes(){
+	const literal_constant_types* ret_ptr =  &(lct_list::instance_.lst[0]);
+	return ret_ptr;
+}
 
 SASL_TYPED_NODE_ACCESSORS_IMPL( tree_combinator, node );
 

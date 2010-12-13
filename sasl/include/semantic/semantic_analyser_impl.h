@@ -5,6 +5,7 @@
 #include <sasl/include/syntax_tree/visitor.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -79,9 +80,12 @@ public:
 private:
 	template <typename NodeT> sacontext& visit_child( sacontext& child_ctxt, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> sacontext& visit_child( sacontext& child_ctxt, const sacontext& init_data, boost::shared_ptr<NodeT> child );
-
+	template <typename NodeT> sacontext& visit_child(
+		sacontext& child_ctxt, const sacontext& init_data,
+		boost::shared_ptr<NodeT> child, boost::shared_ptr<NodeT>& generated_node 
+		);
 	void register_type_converter();
-	void register_buildin_functions( ::sasl::syntax_tree::node& );
+	void register_buildin_functions( boost::any* );
 	void register_buildin_types();
 
 	void buildin_type_convert(

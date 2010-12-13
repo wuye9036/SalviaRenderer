@@ -13,6 +13,8 @@ private:
 	operators( const storage_type& val, const std::string& name );
 	operators( const storage_type& val ): base_type(val){}
 public:
+	static void force_initialize();
+	
 	operators( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}

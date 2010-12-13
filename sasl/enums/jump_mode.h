@@ -13,6 +13,8 @@ private:
 	jump_mode( const storage_type& val, const std::string& name );
 	jump_mode( const storage_type& val ): base_type(val){}
 public:
+	static void force_initialize();
+	
 	jump_mode( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}

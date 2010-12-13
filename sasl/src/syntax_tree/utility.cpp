@@ -268,9 +268,7 @@ public:
 	SASL_VISIT_DCL( cast_expression ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-	SASL_VISIT_DCL( binary_expression ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, binary_expression, (op)(left_expr)(right_expr) );
 	SASL_VISIT_DCL( expression_list ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -323,12 +321,8 @@ public:
 	SASL_VISIT_DCL( struct_type ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-	SASL_VISIT_DCL( parameter ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( function_type ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter, (param_type)(name)(init) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, function_type, (name)(retval_type)(params)(body)(value_typecode)(qual) );
 
 	// statement
 	SASL_VISIT_DCL( statement ){
@@ -359,9 +353,7 @@ public:
 	SASL_VISIT_DCL( switch_statement ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-	SASL_VISIT_DCL( compound_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, compound_statement, (stmts) );
 	SASL_VISIT_DCL( expression_statement ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}

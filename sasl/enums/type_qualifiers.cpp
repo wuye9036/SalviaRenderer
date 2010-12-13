@@ -68,6 +68,15 @@ std::string type_qualifiers::name() const{
 	return to_name( * this );
 }
 
+void type_qualifiers::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<type_qualifiers*>(&_uniform) ) type_qualifiers ( UINT32_C( 2 ), "_uniform" );
+	new ( const_cast<type_qualifiers*>(&none) ) type_qualifiers ( UINT32_C( 1 ), "none" );
+
+}
 
 
 		

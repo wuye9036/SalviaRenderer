@@ -40,6 +40,7 @@ using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::buildin_type;
 using ::sasl::syntax_tree::create_buildin_type;
 using ::sasl::syntax_tree::create_node;
+using ::sasl::syntax_tree::compound_statement;
 using ::sasl::syntax_tree::declaration;
 using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::function_type;
@@ -53,6 +54,7 @@ using ::sasl::syntax_tree::dfunction_combinator;
 
 using ::sasl::semantic::errors::semantic_error;
 using ::sasl::semantic::extract_semantic_info;
+using ::sasl::semantic::get_or_create_semantic_info;
 using ::sasl::semantic::program_si;
 using ::sasl::semantic::symbol;
 
@@ -79,7 +81,7 @@ struct sacontext{
 };
 
 #define context() (*any_cast<sacontext>(data))
-#define set_context( ctxt ) ( data = (ctxt) )
+#define set_context( ctxt ) ( *data = (ctxt) )
 
 // utility functions
 
@@ -112,18 +114,35 @@ template <typename NodeT> sacontext& semantic_analyser_impl::visit_child( sacont
 	return visit_child( child_ctxt, child_ctxt, child );
 }
 
+template <typename NodeT> sacontext& semantic_analyser_impl::visit_child(
+	sacontext& child_ctxt, const sacontext& init_data,
+	shared_ptr<NodeT> child, shared_ptr<NodeT>& generated_node )
+{
+	visit_child( child_ctxt, init_data, child );
+	if( child_ctxt.generated_node ){
+		generated_node = child_ctxt.generated_node->typed_handle<NodeT>();
+	}
+	return child_ctxt;
+}
+
 SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_NOIMPL( cast_expression );
 SASL_VISIT_DEF( binary_expression )
 {
-	v.left_expr->accept(this, data);
-	v.right_expr->accept(this, data);
+	sacontext child_ctxt_init = context();
+	child_ctxt_init.generated_node.reset();
+
+	shared_ptr<binary_expression> dup_expr = duplicate( v.handle() )->typed_handle<binary_expression>();
+
+	sacontext child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.left_expr, dup_expr->left_expr );
+	visit_child( child_ctxt, child_ctxt_init, v.right_expr, dup_expr->right_expr );
 
 	// TODO: look up operator prototype.
 	std::string opname = operator_name( v.op );
 	vector< shared_ptr<expression> > exprs;
-	exprs += v.left_expr, v.right_expr;
-	vector< shared_ptr<symbol> > overloads = cursym->find_overloads( opname, typeconv, exprs );
+	exprs += dup_expr->left_expr, dup_expr->right_expr;
+	vector< shared_ptr<symbol> > overloads = context().parent_sym->find_overloads( opname, typeconv, exprs );
 
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
 		return;
@@ -131,6 +150,8 @@ SASL_VISIT_DEF( binary_expression )
 	EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Need to report a compiler error. Ambigous overloading." ){
 		return;
 	}
+
+	context().generated_node = dup_expr->handle();
 }
 
 SASL_VISIT_NOIMPL( expression_list );
@@ -243,13 +264,12 @@ SASL_VISIT_DEF( type_definition ){
 
 SASL_VISIT_NOIMPL( type_specifier );
 SASL_VISIT_DEF( buildin_type ){
-	UNREF_PARAM( data );
-	using ::sasl::semantic::get_or_create_semantic_info;
-
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
 	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, gctxt->type_manager() );
-	tsi->type_info( v.typed_handle<type_specifier>(), cursym );
+	tsi->type_info( v.typed_handle<type_specifier>(), context().parent_sym );
+
+	context().generated_node = tsi->type_info()->handle();
 }
 
 SASL_VISIT_NOIMPL( array_type );
@@ -257,12 +277,19 @@ SASL_VISIT_NOIMPL( struct_type );
 
 SASL_VISIT_DEF( parameter )
 {
-	symbol_scope ss( v.name ? v.name->str : std::string(), v.handle(), cursym );
-	v.param_type->accept( this, data );;
+	shared_ptr<parameter> dup_par = duplicate( v.handle() )->typed_handle<parameter>();
+	context().parent_sym->add_child( v.name ? v.name->str : std::string(), dup_par );
+
+	sacontext child_ctxt;
+	visit_child( child_ctxt, context(), v.param_type, dup_par->param_type );
 	if ( v.init ){
-		v.init->accept( this, data );;
+		visit_child( child_ctxt, context(), v.init, dup_par->init );
 	}
-	get_or_create_semantic_info<storage_si>( v, gctxt->type_manager() )->type_info( type_info_si::from_node(v.param_type), cursym );
+
+	type_entry::id_t tid = extract_semantic_info<type_info_si>(dup_par->param_type)->entry_id();
+	get_or_create_semantic_info<storage_si>( dup_par, gctxt->type_manager() )->entry_id( tid );
+
+	context().generated_node = dup_par->handle();
 }
 
 SASL_VISIT_DEF( function_type )
@@ -288,7 +315,6 @@ SASL_VISIT_DEF( function_type )
 	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )
 	{
-		child_ctxt = child_common_ctxt;
 		dup_fn->params.push_back( 
 			visit_child(child_ctxt, child_ctxt_init, *it).generated_node->typed_handle<parameter>()
 			);
@@ -297,8 +323,7 @@ SASL_VISIT_DEF( function_type )
 	context().parent_sym->add_function_end( sym );
 
 	if ( v.body ){
-		child_data = child_common_ctxt;
-		v.body->accept( this, &child_data );
+		visit_child( child_ctxt, child_ctxt_init, v.body ).generated_node->typed_handle<statement>();
 	}
 
 	ctxt.generated_node = dup_fn;
@@ -332,16 +357,23 @@ SASL_VISIT_NOIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement )
 {
-	{
-		// add symbol to v. it can used by code block name.
-		symbol_scope( std::string(""), v.handle(), cursym );
-	}
+	shared_ptr<compound_statement> dup_stmt = duplicate(v.handle())->typed_handle<compound_statement>();
+	dup_stmt->stmts.clear();
 
+	sacontext child_ctxt_init = context();
+	child_ctxt_init.parent_sym = context().parent_sym->add_anonymous_child( dup_stmt );
+	child_ctxt_init.generated_node.reset();
+
+	sacontext child_ctxt;
 	for( vector< shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{
-		(*it)->accept(this, data);
+		shared_ptr<statement> child_gen;
+		visit_child( child_ctxt, child_ctxt_init, (*it), child_gen );
+		dup_stmt->stmts.push_back(child_gen);
 	}
+
+	context().generated_node = dup_stmt->handle();
 }
 
 SASL_VISIT_DEF( expression_statement ){
@@ -362,14 +394,14 @@ SASL_VISIT_DEF( program ){
 	// create semantic info
 	gctxt.reset( new global_si() );
 
-	register_buildin_types();
-	register_buildin_functions( v );
-
 	sacontext sactxt;
 	sactxt.gsi = gctxt;
 	sactxt.parent_sym = gctxt->root();
 
 	any ctxt = sactxt;
+
+	register_buildin_types();
+	register_buildin_functions( &ctxt );
 
 	// analysis decalarations.
 	for( vector< shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
@@ -539,11 +571,7 @@ void semantic_analyser_impl::register_type_converter(){
 
 }
 
-void semantic_analyser_impl::register_buildin_functions( node& v ){
-	//
-	any* data = NULL;
-	::std::vector< shared_ptr<node> >& buildin_functions( v.additionals() );
-
+void semantic_analyser_impl::register_buildin_functions( any* data ){
 	typedef unordered_map<
 		buildin_type_code, shared_ptr<buildin_type>, enum_hasher
 		> bt_table_t;
@@ -575,7 +603,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 
 				if ( tmpft ){
 					tmpft->accept(this, data);
-					buildin_functions.push_back( tmpft );
 				}
 			}
 		}
@@ -589,7 +616,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 					.end( tmpft );
 				if ( tmpft ){
 					tmpft->accept(this, data);
-					buildin_functions.push_back( tmpft );
 				}
 			}
 		}
@@ -604,7 +630,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 					.end( tmpft );
 				if ( tmpft ){
 					tmpft->accept(this, data);
-					buildin_functions.push_back( tmpft );
 				}
 			}
 		}
@@ -619,7 +644,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 					.end( tmpft );
 					if ( tmpft ){
 						tmpft->accept(this, data);
-						buildin_functions.push_back( tmpft );
 					}
 				}
 			}
@@ -635,7 +659,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 						.end( tmpft );
 					if ( tmpft ){
 						tmpft->accept(this, data);
-						buildin_functions.push_back( tmpft );
 					}
 				}
 			}
@@ -649,7 +672,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 			.end( tmpft );
 			if ( tmpft ){
 				tmpft->accept(this, data);
-				buildin_functions.push_back( tmpft );
 			}
 		}
 
@@ -663,7 +685,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 
 					if ( tmpft ){
 						tmpft->accept(this, data);
-						buildin_functions.push_back( tmpft );
 					}
 				}
 			}
@@ -679,7 +700,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 
 					if ( tmpft ){
 						tmpft->accept(this, data);
-						buildin_functions.push_back( tmpft );
 					}
 				}
 			}
@@ -693,7 +713,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 
 			if ( tmpft ){
 				tmpft->accept(this, data);
-				buildin_functions.push_back( tmpft );
 			}
 		}
 
@@ -707,7 +726,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 
 					if ( tmpft ){
 						tmpft->accept(this, data);
-						buildin_functions.push_back( tmpft );
 					}
 				}
 			}
@@ -723,7 +741,6 @@ void semantic_analyser_impl::register_buildin_functions( node& v ){
 
 				if ( tmpft ){
 					tmpft->accept(this, data);
-					buildin_functions.push_back( tmpft );
 				}
 			}
 		}

@@ -13,6 +13,8 @@ private:
 	buildin_type_code( const storage_type& val, const std::string& name );
 	buildin_type_code( const storage_type& val ): base_type(val){}
 public:
+	static void force_initialize();
+	
 	buildin_type_code( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}

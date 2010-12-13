@@ -68,6 +68,19 @@ std::string literal_constant_types::name() const{
 	return to_name( * this );
 }
 
+void literal_constant_types::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<literal_constant_types*>(&real) ) literal_constant_types ( UINT32_C( 4 ), "real" );
+	new ( const_cast<literal_constant_types*>(&none) ) literal_constant_types ( UINT32_C( 1 ), "none" );
+	new ( const_cast<literal_constant_types*>(&string) ) literal_constant_types ( UINT32_C( 5 ), "string" );
+	new ( const_cast<literal_constant_types*>(&character) ) literal_constant_types ( UINT32_C( 6 ), "character" );
+	new ( const_cast<literal_constant_types*>(&boolean) ) literal_constant_types ( UINT32_C( 2 ), "boolean" );
+	new ( const_cast<literal_constant_types*>(&integer) ) literal_constant_types ( UINT32_C( 3 ), "integer" );
+
+}
 
 
 		

@@ -49,7 +49,7 @@ struct typecode_map
 		float, double
 	> cpptypes;
 
-	static literal_constant_types type_codes[11];
+	static const literal_constant_types* const type_codes();
 
 	template<typename T>
 	struct is_sasl_buildin_type: public boost::mpl::not_<
@@ -62,7 +62,7 @@ struct typecode_map
 	template <typename T>
 	static literal_constant_types lookup( EFLIB_ENABLE_IF_COND( is_sasl_buildin_type<T>, 0 ) )
 	{
-		return type_codes[boost::mpl::find<cpptypes, T>::type::pos::value];
+		return type_codes()[boost::mpl::find<cpptypes, T>::type::pos::value];
 	}
 };
 
@@ -190,7 +190,8 @@ public:
 		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T>, 0 )
 		)
 	{
-		return dconstant( typecode_map::lookup<T>(), boost::lexical_cast<std::string>(v) );
+		literal_constant_types lct = typecode_map::lookup<T>();
+		return dconstant( lct, boost::lexical_cast<std::string>(v) );
 	}
 	virtual tree_combinator& dvarexpr( const std::string& /*v*/){ return default_proc(); }
 	virtual tree_combinator& dunary( operators /*op*/ ){ return default_proc(); };

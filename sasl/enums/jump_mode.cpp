@@ -68,6 +68,17 @@ std::string jump_mode::name() const{
 	return to_name( * this );
 }
 
+void jump_mode::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<jump_mode*>(&_return) ) jump_mode ( UINT32_C( 3 ), "_return" );
+	new ( const_cast<jump_mode*>(&none) ) jump_mode ( UINT32_C( 0 ), "none" );
+	new ( const_cast<jump_mode*>(&_continue) ) jump_mode ( UINT32_C( 2 ), "_continue" );
+	new ( const_cast<jump_mode*>(&_break) ) jump_mode ( UINT32_C( 1 ), "_break" );
+
+}
 
 
 		

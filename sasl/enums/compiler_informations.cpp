@@ -68,6 +68,26 @@ std::string compiler_informations::name() const{
 	return to_name( * this );
 }
 
+void compiler_informations::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<compiler_informations*>(&none) ) compiler_informations ( UINT32_C( 0 ), "none" );
+	new ( const_cast<compiler_informations*>(&_error) ) compiler_informations ( UINT32_C( 131072 ), "Error" );
+	new ( const_cast<compiler_informations*>(&_message) ) compiler_informations ( UINT32_C( 262144 ), "Message" );
+	new ( const_cast<compiler_informations*>(&redef_diff_basic_type) ) compiler_informations ( UINT32_C( 16909290 ), "$anchor:identifier$ : redefinition; different basic types." );
+	new ( const_cast<compiler_informations*>(&_link) ) compiler_informations ( UINT32_C( 33554432 ), "Link" );
+	new ( const_cast<compiler_informations*>(&_info_level_mask) ) compiler_informations ( UINT32_C( 16711680 ), "_info_level_mask" );
+	new ( const_cast<compiler_informations*>(&_stage_mask) ) compiler_informations ( UINT32_C( 4278190080 ), "_stage_mask" );
+	new ( const_cast<compiler_informations*>(&unknown_compile_error) ) compiler_informations ( UINT32_C( 16909289 ), "unknown compiler error." );
+	new ( const_cast<compiler_informations*>(&uses_a_undef_type) ) compiler_informations ( UINT32_C( 16909292 ), "$anchor:identifier$ uses a undefined $anchor:type_alias$" );
+	new ( const_cast<compiler_informations*>(&_info_id_mask) ) compiler_informations ( UINT32_C( 65535 ), "_info_id_mask" );
+	new ( const_cast<compiler_informations*>(&_compile) ) compiler_informations ( UINT32_C( 16777216 ), "Compile" );
+	new ( const_cast<compiler_informations*>(&redef_cannot_overloaded) ) compiler_informations ( UINT32_C( 16909291 ), "$anchor:identifier$ : redefinition; symbol cannot be overloaded with a typedef." );
+	new ( const_cast<compiler_informations*>(&_warning) ) compiler_informations ( UINT32_C( 65536 ), "Warning" );
+
+}
 
 
 		

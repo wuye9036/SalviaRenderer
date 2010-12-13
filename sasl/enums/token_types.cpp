@@ -68,6 +68,21 @@ std::string token_types::name() const{
 	return to_name( * this );
 }
 
+void token_types::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+	new ( const_cast<token_types*>(&_comment) ) token_types ( UINT32_C( 7 ), "_comment" );
+	new ( const_cast<token_types*>(&_preprocessor) ) token_types ( UINT32_C( 6 ), "_preprocessor" );
+	new ( const_cast<token_types*>(&_operator) ) token_types ( UINT32_C( 4 ), "_operator" );
+	new ( const_cast<token_types*>(&_whitespace) ) token_types ( UINT32_C( 5 ), "_whitespace" );
+	new ( const_cast<token_types*>(&_constant) ) token_types ( UINT32_C( 3 ), "_constant" );
+	new ( const_cast<token_types*>(&_newline) ) token_types ( UINT32_C( 8 ), "_newline" );
+	new ( const_cast<token_types*>(&_identifier) ) token_types ( UINT32_C( 2 ), "_identifier" );
+	new ( const_cast<token_types*>(&_keyword) ) token_types ( UINT32_C( 1 ), "_keyword" );
+
+}
 
 
 		

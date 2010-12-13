@@ -13,6 +13,8 @@ private:
 	type_types( const storage_type& val, const std::string& name );
 	type_types( const storage_type& val ): base_type(val){}
 public:
+	static void force_initialize();
+	
 	type_types( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}

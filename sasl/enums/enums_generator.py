@@ -14,6 +14,8 @@ private:
 	%(typename)s( const storage_type& val, const std::string& name );
 	%(typename)s( const storage_type& val ): base_type(val){}
 public:
+	static void force_initialize();
+	
 	%(typename)s( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}
@@ -41,6 +43,9 @@ constant_decl_tmpl =\
 constant_def_tmpl = \
 	"const %(typename)s %(typename)s::%(member_name)s ( %(constant_macro)s( %(value)s ), \"%(description)s\" );"
 
+item_force_init_tmpl = \
+	"\tnew ( const_cast<%(typename)s*>(&%(member_name)s) ) %(typename)s ( %(constant_macro)s( %(value)s ), \"%(description)s\" );"
+	
 #typename
 hash_op_tmpl = \
 """ 
@@ -58,7 +63,7 @@ enum_name_translator_tmpl = \
 	std::string name() const;
 """
 
-#typename
+#typename, force_init_list
 enum_name_translator_impl_tmpl = \
 """
 struct dict_wrapper_%(typename)s {
@@ -116,6 +121,13 @@ std::string %(typename)s::name() const{
 	return to_name( * this );
 }
 
+void %(typename)s::force_initialize(){
+
+	static bool is_initialized = false;
+	if ( is_initialized ) return;
+	is_initialized = true;
+%(force_init_list)s
+}
 """
 
 #typename, member_name
@@ -388,13 +400,15 @@ class enum_code_generator:
 			self.constant_list_ += "\t"
 			self.constant_list_ += constant_decl_tmpl % { "member_name" : enum_name }
 			self.constant_list_ += "\n"
-
+	
 	def _generate_enum_name_translator(self):
+		self._generate_force_init_list()
 		if self.config_.has_enum_name_translator:
 			self.enum_name_translator_ = enum_name_translator_tmpl
 			self.enum_name_translator_impl_ = "\t\t"
 			self.enum_name_translator_impl_ += enum_name_translator_impl_tmpl % {
-				"typename" : self.typename
+				"typename" : self.typename,
+				"force_init_list" : self.force_init_list_
 			}
 			self.enum_name_translator_impl_ += "\n"
 		else:
@@ -426,6 +440,18 @@ class enum_code_generator:
 				}
 			self.constant_def_list_ += "\n"
 
+	def _generate_force_init_list(self):
+		self.force_init_list_ = ""
+		for (enum_name, enum_val) in self.items_.iteritems():
+			self.force_init_list_ += item_force_init_tmpl % {
+				"typename" : self.typename,
+				"member_name" : enum_name,
+				"value" : enum_val,
+				"constant_macro" : self.constant_macro,
+				"description" : self.items_desc[enum_name]
+				}
+			self.force_init_list_ += "\n"
+			
 	def _generate_hash_op(self):
 		self.hash_op_ = ""
 		if self.config_.has_enum_name_translator:
