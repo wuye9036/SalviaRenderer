@@ -52,7 +52,7 @@ public:
 		::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > node,
 		::boost::shared_ptr<symbol> parent
 		);
-	type_entry::id_t get( const buildin_type_code& btc, ::boost::shared_ptr<symbol> parent );
+	type_entry::id_t get( const buildin_type_code& btc );
 
 	::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > get( type_entry::id_t id );
 	

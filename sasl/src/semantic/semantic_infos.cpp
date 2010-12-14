@@ -79,6 +79,7 @@ global_si::global_si(){
 	compinfo = compiler_info_manager::create();
 	typemgr = type_manager::create();
 	rootsym = symbol::create_root( boost::shared_ptr<node>() );
+	typemgr->root_symbol(rootsym);
 }
 
 shared_ptr<class type_manager> global_si::type_manager() const{
@@ -128,6 +129,12 @@ void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec, shared_p
 	tid = typemgr.lock()->get( typespec, sym );
 }
 
+
+void type_info_si_impl::type_info( buildin_type_code btc )
+{
+	tid = typemgr.lock()->get( btc ); 
+}
+
 //////////////////////////////////////////////////////////////////////////
 // constant value semantic info
 const_value_si::const_value_si( shared_ptr<type_manager> typemgr )
@@ -145,25 +152,25 @@ void const_value_si::set_literal(
 		nosuffix_litstr = integer_literal_suffix( litstr, is_unsigned, is_long );
 		if ( is_unsigned ){
 			val = boost::lexical_cast<uint64_t>(nosuffix_litstr);
-			type_info()->value_typecode = ( is_long ? buildin_type_code::_uint64 : buildin_type_code::_uint32 );
+			type_info( is_long ? buildin_type_code::_uint64 : buildin_type_code::_uint32 );
 		} else {
 			val = boost::lexical_cast<int64_t>(nosuffix_litstr);
-			type_info()->value_typecode = ( is_long ? buildin_type_code::_sint64 : buildin_type_code::_sint32 );
+			type_info( is_long ? buildin_type_code::_sint64 : buildin_type_code::_sint32 );
 		}
 	} else if( lctype == literal_constant_types::real ){
 		bool is_single(false);
 		nosuffix_litstr = real_literal_suffix( litstr, is_single );
 		val = boost::lexical_cast<double>(nosuffix_litstr);
-		type_info()->value_typecode = (is_single ? buildin_type_code::_float : buildin_type_code::_double);
+		type_info( is_single ? buildin_type_code::_float : buildin_type_code::_double);
 	} else if( lctype == literal_constant_types::boolean ){
 		val = (litstr == "true");
-		type_info()->value_typecode = buildin_type_code::_boolean;
+		type_info( buildin_type_code::_boolean );
 	} else if( lctype == literal_constant_types::character ){
 		val = litstr[0];
-		type_info()->value_typecode = buildin_type_code::_sint8;
+		type_info( buildin_type_code::_sint8 );
 	} else if( lctype == literal_constant_types::string ){
 		val = litstr;
-		type_info()->value_typecode = buildin_type_code::none;
+		type_info( buildin_type_code::none );
 	}
 }
 

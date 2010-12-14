@@ -85,7 +85,7 @@ private:
 		boost::shared_ptr<NodeT> child, boost::shared_ptr<NodeT>& generated_node 
 		);
 	void register_type_converter();
-	void register_buildin_functions( boost::any* );
+	void register_buildin_functions( const sacontext& child_ctxt_init );
 	void register_buildin_types();
 
 	void buildin_type_convert(

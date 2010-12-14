@@ -41,9 +41,11 @@ using ::sasl::syntax_tree::buildin_type;
 using ::sasl::syntax_tree::create_buildin_type;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::compound_statement;
+using ::sasl::syntax_tree::constant_expression;
 using ::sasl::syntax_tree::declaration;
 using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::function_type;
+using ::sasl::syntax_tree::jump_statement;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
@@ -151,6 +153,10 @@ SASL_VISIT_DEF( binary_expression )
 		return;
 	}
 
+	// update semantic information of binary expression
+	type_entry::id_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
+	get_or_create_semantic_info<storage_si>( dup_expr, context().gsi->type_manager() )->entry_id( result_tid );
+
 	context().generated_node = dup_expr->handle();
 }
 
@@ -162,12 +168,12 @@ SASL_VISIT_NOIMPL( member_expression );
 
 SASL_VISIT_DEF( constant_expression )
 {
-	UNREF_PARAM( data );
-	using ::sasl::syntax_tree::constant_expression;
-
-	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, v, gctxt->type_manager() );
-
+	shared_ptr<constant_expression> dup_cexpr = duplicate( v.handle() )->typed_handle<constant_expression>();
+	
+	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, dup_cexpr, gctxt->type_manager() );
 	vsi->set_literal( v.value_tok->str, v.ctype );
+
+	context().generated_node = dup_cexpr->handle();	
 }
 
 SASL_VISIT_DEF( variable_expression ){
@@ -321,6 +327,9 @@ SASL_VISIT_DEF( function_type )
 	}
 
 	context().parent_sym->add_function_end( sym );
+	
+	type_entry::id_t ret_tid = extract_semantic_info<type_info_si>( dup_fn->retval_type )->entry_id();
+	get_or_create_semantic_info<storage_si>( dup_fn, context().gsi->type_manager() )->entry_id( ret_tid );
 
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body ).generated_node->typed_handle<statement>();
@@ -382,11 +391,19 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_VISIT_DEF( jump_statement )
 {
+	shared_ptr<jump_statement> dup_jump = duplicate(v.handle())->typed_handle<jump_statement>();
+
+	sacontext child_ctxt_init = context();
+	child_ctxt_init.generated_node.reset();
+
 	if (v.code == jump_mode::_return){
 		if( v.jump_expr ){
-			v.jump_expr->accept(this, data);
+			sacontext child_ctxt;
+			visit_child( child_ctxt, child_ctxt_init, v.jump_expr, dup_jump->jump_expr );
 		}
 	}
+
+	context().generated_node = dup_jump;
 }
 
 // program
@@ -394,21 +411,26 @@ SASL_VISIT_DEF( program ){
 	// create semantic info
 	gctxt.reset( new global_si() );
 
-	sacontext sactxt;
-	sactxt.gsi = gctxt;
-	sactxt.parent_sym = gctxt->root();
+	sacontext child_ctxt_init;
+	child_ctxt_init.gsi = gctxt;
+	child_ctxt_init.parent_sym = gctxt->root();
 
-	any ctxt = sactxt;
+	sacontext child_ctxt = child_ctxt_init;
 
 	register_buildin_types();
-	register_buildin_functions( &ctxt );
+	register_buildin_functions( child_ctxt_init );
+
+	shared_ptr<program> dup_prog = duplicate( v.handle() )->typed_handle<program>();
+	dup_prog->decls.clear();
 
 	// analysis decalarations.
 	for( vector< shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
-		(*it)->accept( this, &ctxt );
+		shared_ptr<declaration> node_gen;
+		visit_child( child_ctxt, child_ctxt_init, (*it), node_gen );
+		dup_prog->decls.push_back( node_gen );
 	}
 
-	*data = ctxt;
+	gctxt->root()->relink( dup_prog->handle() );
 }
 
 SASL_VISIT_NOIMPL( for_statement );
@@ -571,7 +593,9 @@ void semantic_analyser_impl::register_type_converter(){
 
 }
 
-void semantic_analyser_impl::register_buildin_functions( any* data ){
+void semantic_analyser_impl::register_buildin_functions( const sacontext& child_ctxt_init ){
+	sacontext child_ctxt;
+
 	typedef unordered_map<
 		buildin_type_code, shared_ptr<buildin_type>, enum_hasher
 		> bt_table_t;
@@ -601,9 +625,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 				.end( tmpft );
 
-				if ( tmpft ){
-					tmpft->accept(this, data);
-				}
+				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 			}
 		}
 
@@ -614,9 +636,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
-				if ( tmpft ){
-					tmpft->accept(this, data);
-				}
+				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 			}
 		}
 
@@ -628,9 +648,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
-				if ( tmpft ){
-					tmpft->accept(this, data);
-				}
+				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 			}
 		}
 
@@ -642,9 +660,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
-					if ( tmpft ){
-						tmpft->accept(this, data);
-					}
+					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 				}
 			}
 		}
@@ -657,9 +673,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.dparam().dtype().dnode( bt_i32 ).end().end()
 						.end( tmpft );
-					if ( tmpft ){
-						tmpft->accept(this, data);
-					}
+					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 				}
 			}
 		}
@@ -670,9 +684,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 				.dparam().dtype().dnode( bt_bool ).end().end()
 				.dparam().dtype().dnode( bt_bool ).end().end()
 			.end( tmpft );
-			if ( tmpft ){
-				tmpft->accept(this, data);
-			}
+			if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 		}
 
 		if( sasl_ehelper::is_prefix(op) || sasl_ehelper::is_postfix(op) || op == operators::positive ){
@@ -683,9 +695,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.end( tmpft );
 
-					if ( tmpft ){
-						tmpft->accept(this, data);
-					}
+					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 				}
 			}
 		}
@@ -698,9 +708,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 						.end( tmpft );
 
-					if ( tmpft ){
-						tmpft->accept(this, data);
-					}
+					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 				}
 			}
 		}
@@ -711,9 +719,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 				.dparam().dtype().dnode( bt_bool ).end().end()
 			.end( tmpft );
 
-			if ( tmpft ){
-				tmpft->accept(this, data);
-			}
+			if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 		}
 
 		if( op == operators::negative ){
@@ -724,9 +730,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 						.dparam().dtype().dnode( it_type->second ).end().end()
 					.end( tmpft );
 
-					if ( tmpft ){
-						tmpft->accept(this, data);
-					}
+					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 				}
 			}
 		}
@@ -739,9 +743,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 					.dparam().dtype().dnode( it_type->second ).end().end()
 				.end( tmpft );
 
-				if ( tmpft ){
-					tmpft->accept(this, data);
-				}
+				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 			}
 		}
 	}
@@ -749,7 +751,7 @@ void semantic_analyser_impl::register_buildin_functions( any* data ){
 
 void semantic_analyser_impl::register_buildin_types(){
 	BOOST_FOREACH( buildin_type_code const & btc, sasl_ehelper::list_of_buildin_type_codes() ){
-		EFLIB_ASSERT( gctxt->type_manager()->get( btc, gctxt->root() ) > -1, "Register buildin type failed!" );
+		EFLIB_ASSERT( gctxt->type_manager()->get( btc ) > -1, "Register buildin type failed!" );
 	}
 }
 

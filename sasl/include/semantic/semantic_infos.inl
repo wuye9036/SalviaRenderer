@@ -74,6 +74,7 @@ public:
 
 	virtual ::boost::shared_ptr< type_specifier > type_info() const = 0;
 	virtual void type_info( ::boost::shared_ptr< type_specifier >, ::boost::shared_ptr<symbol> sym ) = 0;
+	virtual void type_info( buildin_type_code btc ) = 0;
 
 	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
 };
@@ -85,7 +86,8 @@ public:
 		virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
 		virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
 		virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
-		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); }
+		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); } \
+		virtual void type_info( buildin_type_code btc ){ type_info_proxy.type_info(btc); }
 
 class type_info_si_impl: public type_info_si{
 public:
@@ -96,7 +98,7 @@ public:
 
 	virtual ::boost::shared_ptr< type_specifier > type_info() const;
 	virtual void type_info( ::boost::shared_ptr< type_specifier >, boost::shared_ptr<symbol> );
-
+	virtual void type_info( buildin_type_code btc );
 private:
 	type_entry::id_t tid;
 	::boost::weak_ptr< class type_manager > typemgr;
@@ -107,7 +109,7 @@ public:
 	typedef semantic_info base_type;
 	const_value_si( boost::shared_ptr<type_manager> typemgr );
 
-	void set_literal( const std::string& litstr, literal_constant_types lctype);
+	void set_literal( const std::string& litstr, literal_constant_types lctype );
 
 	SASL_TYPE_INFO_PROXY();
 

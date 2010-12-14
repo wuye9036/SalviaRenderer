@@ -2,6 +2,7 @@
 
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <sasl/include/syntax_tree/node_creation.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/visitor.h>
@@ -284,9 +285,7 @@ public:
 	SASL_VISIT_DCL( member_expression ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-	SASL_VISIT_DCL( constant_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, constant_expression, (value_tok)(ctype) );
 	SASL_VISIT_DCL( variable_expression ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -357,14 +356,10 @@ public:
 	SASL_VISIT_DCL( expression_statement ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-	SASL_VISIT_DCL( jump_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, jump_statement, (code)(jump_expr) );
 
 	// program
-	SASL_VISIT_DCL( program ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, program, (decls)(name) );
 };
 
 class deep_duplicator: public syntax_tree_visitor{

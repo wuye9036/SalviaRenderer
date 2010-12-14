@@ -10,10 +10,11 @@ program::program( const std::string& name)
 {
 }
 
+program::program( boost::shared_ptr<token_attr> )
+	: node( syntax_node_types::program, boost::shared_ptr<token_attr>() )
+{
+}
+
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( program );
 
-program& program::d( boost::shared_ptr<declaration> decl ){
-	decls.push_back( decl );
-	return *this;
-}
 END_NS_SASL_SYNTAX_TREE();
