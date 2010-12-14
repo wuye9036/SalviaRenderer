@@ -12,8 +12,8 @@ using ::boost::shared_ptr;
 
 void type_converter::register_converter(
 	conv_type ct,
-	shared_ptr<type_specifier> src_type,
-	shared_ptr<type_specifier> dest_type,
+	type_entry::id_t src_type,
+	type_entry::id_t dest_type,
 	converter_t conv
 	)
 {
@@ -21,12 +21,12 @@ void type_converter::register_converter(
 }
 
 type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared_ptr<node> src ){
-	shared_ptr<type_specifier> dst_type = extract_semantic_info<type_info_si>( dest )->type_info();
-	shared_ptr<type_specifier> src_type = extract_semantic_info<type_info_si>( src )->type_info();
+	type_entry::id_t dst_tid = extract_semantic_info<type_info_si>( dest )->entry_id();
+	type_entry::id_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
 
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
-		if ( type_equal( dst_type, it->get<2>() ) && type_equal( src_type, it->get<1>() ) ){
+		if ( dst_tid == it->get<2>() && src_tid == it->get<1>() ){
 			ret_ct = it->get<0>();
 			// do conversation.
 			if( !it->get<3>().empty() ){
@@ -39,12 +39,12 @@ type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared
 
 type_converter::conv_type type_converter::convert( shared_ptr<type_specifier> desttype, shared_ptr<node> src )
 {
-	shared_ptr<type_specifier> dst_type = desttype;
-	shared_ptr<type_specifier> src_type = extract_semantic_info<type_info_si>( src )->type_info();
+	type_entry::id_t dst_tid = extract_semantic_info<type_info_si>( desttype )->entry_id();
+	type_entry::id_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
 
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
-		if ( type_equal( dst_type, it->get<2>() ) && type_equal( src_type, it->get<1>() ) ){
+		if ( dst_tid == it->get<2>() && src_tid == it->get<1>() ){
 			ret_ct = it->get<0>();
 
 			// do conversation.

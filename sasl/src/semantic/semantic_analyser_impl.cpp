@@ -28,6 +28,7 @@
 #include <boost/bind.hpp>
 #include <boost/bind/apply.hpp>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -64,6 +65,7 @@ using namespace boost::assign;
 
 using boost::any;
 using boost::any_cast;
+using boost::format;
 using boost::shared_ptr;
 using boost::unordered_map;
 
@@ -98,7 +100,6 @@ shared_ptr<type_specifier> type_info_of( shared_ptr<node> n ){
 semantic_analyser_impl::semantic_analyser_impl()
 {
 	typeconv.reset( new type_converter() );
-	register_type_converter();
 }
 
 #define SASL_VISITOR_TYPE_NAME semantic_analyser_impl
@@ -149,7 +150,13 @@ SASL_VISIT_DEF( binary_expression )
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
 		return;
 	}
-	EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Need to report a compiler error. Ambigous overloading." ){
+	EFLIB_ASSERT_AND_IF( overloads.size() == 1,	( format(
+		"Need to report a compiler error. Ambigous overloading. \r\n"
+		"operator is %1%, left expression type is %2%, right expression type is %3%. \r\n" 
+		) % v.op.name() % type_info_of( dup_expr->left_expr )->value_typecode.name()
+		% type_info_of( dup_expr->right_expr )->value_typecode.name() ).str().c_str()
+		)
+	{
 		return;
 	}
 
@@ -418,6 +425,7 @@ SASL_VISIT_DEF( program ){
 	sacontext child_ctxt = child_ctxt_init;
 
 	register_buildin_types();
+	register_type_converter( child_ctxt_init );
 	register_buildin_functions( child_ctxt_init );
 
 	shared_ptr<program> dup_prog = duplicate( v.handle() )->typed_handle<program>();
@@ -439,22 +447,24 @@ void semantic_analyser_impl::buildin_type_convert( shared_ptr<node> lhs, shared_
 	// do nothing
 }
 
-void semantic_analyser_impl::register_type_converter(){
+void semantic_analyser_impl::register_type_converter( const sacontext& ctxt ){
 	// register default type converter
-	shared_ptr<type_specifier> sint8_ts = create_buildin_type( buildin_type_code::_sint8 );
-	shared_ptr<type_specifier> sint16_ts = create_buildin_type( buildin_type_code::_sint16 );
-	shared_ptr<type_specifier> sint32_ts = create_buildin_type( buildin_type_code::_sint32 );
-	shared_ptr<type_specifier> sint64_ts = create_buildin_type( buildin_type_code::_sint64 );
+	type_manager* typemgr = ctxt.gsi->type_manager().get();
 
-	shared_ptr<type_specifier> uint8_ts = create_buildin_type( buildin_type_code::_uint8 );
-	shared_ptr<type_specifier> uint16_ts = create_buildin_type( buildin_type_code::_uint16 );
-	shared_ptr<type_specifier> uint32_ts = create_buildin_type( buildin_type_code::_uint32 );
-	shared_ptr<type_specifier> uint64_ts = create_buildin_type( buildin_type_code::_uint64 );
+	type_entry::id_t sint8_ts = typemgr->get( buildin_type_code::_sint8 );
+	type_entry::id_t sint16_ts = typemgr->get( buildin_type_code::_sint16 );
+	type_entry::id_t sint32_ts = typemgr->get( buildin_type_code::_sint32 );
+	type_entry::id_t sint64_ts = typemgr->get( buildin_type_code::_sint64 );
 
-	shared_ptr<type_specifier> float_ts = create_buildin_type( buildin_type_code::_float );
-	shared_ptr<type_specifier> double_ts = create_buildin_type( buildin_type_code::_double );
+	type_entry::id_t uint8_ts = typemgr->get( buildin_type_code::_uint8 );
+	type_entry::id_t uint16_ts = typemgr->get( buildin_type_code::_uint16 );
+	type_entry::id_t uint32_ts = typemgr->get( buildin_type_code::_uint32 );
+	type_entry::id_t uint64_ts = typemgr->get( buildin_type_code::_uint64 );
 
-	shared_ptr<type_specifier> bool_ts = create_buildin_type( buildin_type_code::_boolean );
+	type_entry::id_t float_ts = typemgr->get( buildin_type_code::_float );
+	type_entry::id_t double_ts = typemgr->get( buildin_type_code::_double );
+
+	type_entry::id_t bool_ts = typemgr->get( buildin_type_code::_boolean );
 
 	// default conversation will do nothing.
 	type_converter::converter_t default_conv = bind(&semantic_analyser_impl::buildin_type_convert, this, _1, _2);
