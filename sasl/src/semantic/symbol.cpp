@@ -156,16 +156,16 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 			size_t worse_param_count = 0;
 
 			for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-				shared_ptr<type_specifier> arg_type = extract_semantic_info<type_info_si>( args[i_param] )->type_info();
-				shared_ptr<type_specifier> matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->type_info();
-				shared_ptr<type_specifier> matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->type_info();
+				type_entry::id_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
+				type_entry::id_t matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
+				type_entry::id_t matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->entry_id();
 
-				if( type_equal( matched_par_type, arg_type ) ){
-					if ( !type_equal( matching_par_type, arg_type ) ){
+				if( matched_par_type == arg_type ){
+					if ( matching_par_type != arg_type ){
 						++worse_param_count;
 					}
 				} else {
-					if ( type_equal( matching_par_type, arg_type ) ){
+					if ( matching_par_type == arg_type ){
 						++better_param_count;
 					} else if (
 						conv->convert( matching_par_type, matched_par_type ) == type_converter::implicit_conv
@@ -203,6 +203,8 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 			candidates.push_back(matching_func->symbol());
 		}
 	}
+	size_t candidate_size = candidates.size();
+
 	return candidates;
 }
 

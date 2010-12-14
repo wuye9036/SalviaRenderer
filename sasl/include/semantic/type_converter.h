@@ -40,6 +40,8 @@ public:
 		type_entry::id_t /*dest*/,
 		converter_t conv );
 
+	conv_type convert( type_entry::id_t dest, type_entry::id_t src );
+
 	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );\
 

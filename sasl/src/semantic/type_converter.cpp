@@ -20,6 +20,17 @@ void type_converter::register_converter(
 	convinfos.push_back( make_tuple( ct, src_type, dest_type, conv ) );
 }
 
+type_converter::conv_type type_converter::convert( type_entry::id_t dest, type_entry::id_t src ){
+	conv_type ret_ct = cannot_conv;
+	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
+		if ( dest == it->get<2>() && src == it->get<1>() ){
+			ret_ct = it->get<0>();
+			break;
+		}
+	}
+	return ret_ct;
+}
+
 type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared_ptr<node> src ){
 	type_entry::id_t dst_tid = extract_semantic_info<type_info_si>( dest )->entry_id();
 	type_entry::id_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
@@ -32,6 +43,7 @@ type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared
 			if( !it->get<3>().empty() ){
 				it->get<3>()( dest, src );
 			}
+			break;
 		}
 	}
 	return ret_ct;
