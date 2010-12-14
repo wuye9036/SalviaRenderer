@@ -20,7 +20,7 @@ void type_converter::register_converter(
 	convinfos.push_back( make_tuple( ct, src_type, dest_type, conv ) );
 }
 
-type_converter::conv_type type_converter::convert( type_entry::id_t dest, type_entry::id_t src ){
+type_converter::conv_type type_converter::convertible( type_entry::id_t dest, type_entry::id_t src ){
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
 		if ( dest == it->get<2>() && src == it->get<1>() ){
@@ -29,6 +29,17 @@ type_converter::conv_type type_converter::convert( type_entry::id_t dest, type_e
 		}
 	}
 	return ret_ct;
+}
+
+bool type_converter::implicit_convertible( type_entry::id_t dest, type_entry::id_t src ){
+	conv_type ret_ct = cannot_conv;
+	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
+		if ( dest == it->get<2>() && src == it->get<1>() ){
+			ret_ct = it->get<0>();
+			break;
+		}
+	}
+	return ret_ct == better || ret_ct == implicit_conv;
 }
 
 type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared_ptr<node> src ){

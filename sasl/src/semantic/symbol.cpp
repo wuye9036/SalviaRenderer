@@ -129,6 +129,12 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 
 		// try to match all parameters.
 		bool all_parameter_success = true;
+		if( args.size() == 2 
+			&& extract_semantic_info<type_info_si>( args[0] )->entry_id() == 10
+			&& extract_semantic_info<type_info_si>( args[1] )->entry_id() == 2 )
+		{
+			int a = 0;//break here
+		}
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
 			type_entry::id_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
 			type_entry::id_t par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
@@ -137,7 +143,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 				all_parameter_success = false;
 				break;
 			}
-			if ( !( arg_type == par_type || conv->convert(matching_func->params[i_param], args[i_param]) ) ){
+			if ( !( arg_type == par_type || conv->implicit_convertible(par_type, arg_type) ) ){
 				all_parameter_success = false;
 				break;
 			}
@@ -168,14 +174,14 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 					if ( matching_par_type == arg_type ){
 						++better_param_count;
 					} else if (
-						conv->convert( matching_par_type, matched_par_type ) == type_converter::implicit_conv
-						&& conv->convert( matched_par_type, matching_par_type ) != type_converter::implicit_conv
+						conv->convertible( matching_par_type, matched_par_type ) == type_converter::implicit_conv
+						&& conv->convertible( matched_par_type, matching_par_type ) != type_converter::implicit_conv
 						)
 					{
 						++better_param_count;
 					} else if (
-						conv->convert( matching_par_type, matched_par_type ) != type_converter::implicit_conv
-						&& conv->convert( matched_par_type, matching_par_type ) == type_converter::implicit_conv
+						conv->convertible( matching_par_type, matched_par_type ) != type_converter::implicit_conv
+						&& conv->convertible( matched_par_type, matching_par_type ) == type_converter::implicit_conv
 						)
 					{
 						++worse_param_count;

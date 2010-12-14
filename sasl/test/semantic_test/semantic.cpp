@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE( program_si_test ){
 	semantic_cases::instance();
 
 	BOOST_CHECK( SYNCASE_(prog_for_gen)->symbol() );
-	BOOST_CHECK( SYNCASE_(prog_for_gen)->semantic_info() );
+	BOOST_REQUIRE( SYNCASE_(prog_for_gen)->semantic_info() );
 	BOOST_CHECK( extract_semantic_info<program_si>(SYNCASE_(prog_for_gen))->name()
 		== SYNCASENAME_(prog_for_gen) );
 }
@@ -53,6 +53,7 @@ BOOST_AUTO_TEST_CASE( expression_si_test ){
 BOOST_AUTO_TEST_CASE( mangling_test ){
 	semantic_cases::instance();
 
+	BOOST_REQUIRE( SYNCASE_(func_nnn) && SYNCASE_(func_flt_2p_n_gen) );
 	BOOST_CHECK_EQUAL( mangle( SYNCASE_(func_nnn) ), std::string("M") + SYNCASENAME_(func_nnn) + std::string("@@") );
 	BOOST_CHECK_EQUAL( mangle( SYNCASE_(func_flt_2p_n_gen) ), std::string("M") + SYNCASENAME_(func_flt_2p_n_gen) + std::string("@@QBU8@@") + std::string("QBS1@@") );
 
