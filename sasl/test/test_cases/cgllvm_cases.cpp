@@ -42,9 +42,9 @@ void cgllvm_cases::release(){
 	if ( tcase ){
 		tcase->LOCVAR_(jit).reset();
 		if( syntax_cases::is_avaliable() ){
-			SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_gen ), clear_cgctxt );
+			SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_semantic_test ), clear_cgctxt );
 			SYNTAX_(follow_up_traversal)( SYNCASE_( null_prog ), clear_cgctxt );
-			SYNTAX_(follow_up_traversal)( SYNCASE_( jit_prog ), clear_cgctxt );
+			SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_jit_test ), clear_cgctxt );
 		}
 		tcase.reset();
 	}
@@ -56,9 +56,9 @@ cgllvm_cases::cgllvm_cases(){
 void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
-	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( SYNCASE_( prog_for_gen ) );
+	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( SYNCASE_( prog_for_semantic_test ) );
 	LOCVAR_(null_root) = CODEGEN_(generate_llvm_code)( SYNCASE_( null_prog ) );
-	LOCVAR_(jit_prog) = CODEGEN_(generate_llvm_code)( SYNCASE_(jit_prog) );
+	LOCVAR_(prog_for_jit_test) = CODEGEN_(generate_llvm_code)( SYNCASE_(prog_for_jit_test) );
 
 	LOCVAR_(type_void) = CONTEXT_OF( type_void );
 	LOCVAR_(type_float) = CONTEXT_OF( type_float );
@@ -68,6 +68,6 @@ void cgllvm_cases::initialize(){
 	LOCVAR_(func_flt_2p_n_gen_p1) = CONTEXT_OF( p1_fn0 );
 
 	std::string err;
-	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(jit_prog) ), err);
+	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(prog_for_jit_test) ), err);
 	EFLIB_ASSERT( LOCVAR_(jit), err.c_str() );
 }

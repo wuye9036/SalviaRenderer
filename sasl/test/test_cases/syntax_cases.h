@@ -87,9 +87,9 @@ public:
 
 	// prog
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), null_prog );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_main );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_for_gen );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(program), jit_prog );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_for_syntax_test );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_for_semantic_test );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(program), prog_for_jit_test );
 private:
 	syntax_cases();
 	void initialize();

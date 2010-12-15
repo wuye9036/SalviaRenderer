@@ -36,8 +36,8 @@ void semantic_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( tcase ){
 		if( syntax_cases::is_avaliable() ){
-			follow_up_traversal( SYNCASE_(prog_for_gen), clear_semantic );
-			follow_up_traversal( SYNCASE_(jit_prog), clear_semantic );
+			follow_up_traversal( SYNCASE_(prog_for_semantic_test), clear_semantic );
+			follow_up_traversal( SYNCASE_(prog_for_jit_test), clear_semantic );
 		}
 		tcase.reset();
 	}
@@ -47,12 +47,14 @@ semantic_cases::semantic_cases(){
 }
 
 void semantic_cases::initialize(){
-	LOCVAR_(si_root) = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_gen) );
-	SEMANTIC_(semantic_analysis)( SYNCASE_(jit_prog) );
+	LOCVAR_(si_root) = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_semantic_test) );
+	LOCVAR_(sym_root) = LOCVAR_(si_root)->root();
+
+	SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test) );
 
 	LOCVAR_( cexpr_776uint ) = extract_semantic_info<const_value_si>( SYNCASE_(cexpr_776uint) );
 	LOCVAR_( sym_f0 ) = SYNCASE_(func_flt_2p_n_gen)->symbol();
 	LOCVAR_( sym_p0 ) = SYNCASE_(p0_fn0)->symbol();
 	LOCVAR_( sym_p1 ) = SYNCASE_(p1_fn0)->symbol();
-	LOCVAR_( sym_root ) = SYNCASE_( prog_for_gen )->symbol();
+	
 }

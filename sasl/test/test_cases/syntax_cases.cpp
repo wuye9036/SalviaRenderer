@@ -186,20 +186,20 @@ void syntax_cases::initialize(){
 
 	LOCVAR_(null_prog).reset();
 
-	dprog_combinator( NAME_(prog_main).c_str() )
+	dprog_combinator( NAME_(prog_for_syntax_test).c_str() )
 		.dvar("").dnode( var_float_3p25f() ).end()
 		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
 		.dtypedef().dnode( tdef0_double2x4() ).end()
-	.end( LOCVAR_(prog_main) );
+	.end( LOCVAR_(prog_for_syntax_test) );
 
 
-	dprog_combinator( NAME_(prog_for_gen).c_str() )
+	dprog_combinator( NAME_(prog_for_semantic_test).c_str() )
 		.dfunction("").dnode( func_nnn() ).end()
 		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
 		.dfunction("").dnode( func0() ).end()
-	.end( LOCVAR_(prog_for_gen) );
+	.end( LOCVAR_(prog_for_semantic_test) );
 
-	dprog_combinator( NAME_(jit_prog).c_str() )
+	dprog_combinator( NAME_(prog_for_jit_test).c_str() )
 		.dfunction( "foo" )
 			.dreturntype().dnode( type_sint32() ).end()
 			.dbody()
@@ -209,6 +209,6 @@ void syntax_cases::initialize(){
 		.dfunction( NAME_(func1) )
 			.dnode( func1() )
 		.end()
-	.end( LOCVAR_(jit_prog) )
+	.end( LOCVAR_(prog_for_jit_test) )
 	;
 }

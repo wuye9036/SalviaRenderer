@@ -28,15 +28,30 @@ using ::sasl::semantic::symbol;
 #define SEMCASE_(case_name) semantic_cases::instance().case_name()
 #define SEMCASENAME_( case_name ) semantic_cases::instance().case_name##_name()
 
-BOOST_AUTO_TEST_SUITE( semantic );
+void test_global_si(){
+	semantic_cases::instance();
+	BOOST_REQUIRE( SEMCASE_( si_root ) );
+}
 
-BOOST_AUTO_TEST_CASE( program_si_test ){
+void test_program_si(){
 	semantic_cases::instance();
 
-	BOOST_CHECK( SYNCASE_(prog_for_gen)->symbol() );
-	BOOST_REQUIRE( SYNCASE_(prog_for_gen)->semantic_info() );
-	BOOST_CHECK( extract_semantic_info<program_si>(SYNCASE_(prog_for_gen))->name()
-		== SYNCASENAME_(prog_for_gen) );
+	BOOST_REQUIRE( SEMCASE_(sym_root) );
+	/*BOOST_CHECK( SYNCASE_(prog_for_semantic_test)->symbol() );
+	BOOST_REQUIRE( SYNCASE_(prog_for_semantic_test)->semantic_info() );
+	BOOST_CHECK( extract_semantic_info<program_si>(SYNCASE_(prog_for_semantic_test))->name()
+		== SYNCASENAME_(prog_for_semantic_test) );*/
+}
+
+BOOST_AUTO_TEST_SUITE( semantic );
+
+BOOST_AUTO_TEST_CASE( semantic_tests ){
+	test_global_si();
+	test_program_si();
+}
+
+BOOST_AUTO_TEST_CASE( program_si_test ){
+
 }
 
 BOOST_AUTO_TEST_CASE( function_si_test ){
@@ -91,13 +106,13 @@ BOOST_AUTO_TEST_CASE( symbol_test ){
 	BOOST_CHECK( SEMCASE_(sym_p0)->mangled_name() == SYNCASENAME_(p0_fn0) );
 
 	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
-	BOOST_CHECK( SYNCASE_(prog_for_gen)->symbol()->find_overloads( operator_name(operators::none) ).size() == 0 );
+	BOOST_CHECK( SYNCASE_(prog_for_semantic_test)->symbol()->find_overloads( operator_name(operators::none) ).size() == 0 );
 
 	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
 		operators op = oplist[i_op];
 		std::string opname = operator_name(op);
 
-		const std::vector< boost::shared_ptr<symbol> >& op_in_func = SYNCASE_(prog_for_gen)->symbol()->find_overloads( opname );
+		const std::vector< boost::shared_ptr<symbol> >& op_in_func = SYNCASE_(prog_for_semantic_test)->symbol()->find_overloads( opname );
 		const std::vector< boost::shared_ptr<symbol> >& op_in_global = SYNCASE_(func_flt_2p_n_gen)->symbol()->find_overloads( opname );
 
 		if ( oplist[i_op] == operators::none ){

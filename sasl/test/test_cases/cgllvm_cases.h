@@ -26,7 +26,7 @@ public:
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), root );
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), null_root );
-	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), jit_prog );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), prog_for_jit_test );
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), type_void );
 	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), type_float );
