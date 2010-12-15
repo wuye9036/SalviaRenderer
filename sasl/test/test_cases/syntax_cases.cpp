@@ -128,20 +128,20 @@ void syntax_cases::initialize(){
 	// create functions
 
 	/*
-		void func_nnn_name();
+		void fn0_sem_name();
 	*/
 	dfunction_combinator(NULL)
-		.dname( NAME_(func_nnn) )
+		.dname( NAME_(fn0_sem) )
 		.dreturntype().dnode( type_void() ).end()
-	.end( LOCVAR_(func_nnn) ) ;
+	.end( LOCVAR_(fn0_sem) ) ;
 
 	/*
-		uint64_t func_flt_2p_n_gen( uint64_t p0_fn0, int8_t p1_fn0 ){
+		uint64_t fn1_sem( uint64_t p0_fn0, int8_t p1_fn0 ){
 			p0_fn0;
 		}
 	*/
 	dfunction_combinator(NULL)
-		.dname( NAME_(func_flt_2p_n_gen) )
+		.dname( NAME_(fn1_sem) )
 		.dreturntype().dnode( type_float() ).end()
 		.dparam()
 			.dname( NAME_(p0_fn0) )
@@ -154,18 +154,18 @@ void syntax_cases::initialize(){
 		.dbody()
 			.dexprstmt().dvarexpr(NAME_(p0_fn0)).end()
 		.end( LOCVAR_(fn0_body) )
-	.end( LOCVAR_(func_flt_2p_n_gen) );
+	.end( LOCVAR_(fn1_sem) );
 	
 	dfunction_combinator(NULL)
-		.dname( NAME_(func0) )
+		.dname( NAME_(fn2_sem) )
 		.dreturntype().dnode(type_uint32()).end()
 		.dbody()
 			.dreturn_expr().dnode( expr1_add() ).end()
 		.end()
-	.end( LOCVAR_(func0) );
+	.end( LOCVAR_(fn2_sem) );
 				
 	dfunction_combinator(NULL)
-		.dname( NAME_(func1) )
+		.dname( NAME_(fn3_jit) )
 		.dreturntype().dnode( type_double() ).end()
 		.dbody()
 			.dreturn_expr()
@@ -176,7 +176,7 @@ void syntax_cases::initialize(){
 				.end()
 			.end()
 		.end()
-	.end( LOCVAR_(func1) );
+	.end( LOCVAR_(fn3_jit) );
 
 	// typedef tdef0_double2x4 double2x4;
 	dtypedef_combinator(NULL)
@@ -188,15 +188,15 @@ void syntax_cases::initialize(){
 
 	dprog_combinator( NAME_(prog_for_syntax_test).c_str() )
 		.dvar("").dnode( var_float_3p25f() ).end()
-		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
+		.dfunction("").dnode( fn1_sem() ).end()
 		.dtypedef().dnode( tdef0_double2x4() ).end()
 	.end( LOCVAR_(prog_for_syntax_test) );
 
 
 	dprog_combinator( NAME_(prog_for_semantic_test).c_str() )
-		.dfunction("").dnode( func_nnn() ).end()
-		.dfunction("").dnode( func_flt_2p_n_gen() ).end()
-		.dfunction("").dnode( func0() ).end()
+		.dfunction("").dnode( fn0_sem() ).end()
+		.dfunction("").dnode( fn1_sem() ).end()
+		.dfunction("").dnode( fn2_sem() ).end()
 	.end( LOCVAR_(prog_for_semantic_test) );
 
 	dprog_combinator( NAME_(prog_for_jit_test).c_str() )
@@ -206,8 +206,8 @@ void syntax_cases::initialize(){
 				.dreturn_expr().dnode( expr1_add() ).end()
 			.end()
 		.end()
-		.dfunction( NAME_(func1) )
-			.dnode( func1() )
+		.dfunction( NAME_(fn3_jit) )
+			.dnode( fn3_jit() )
 		.end()
 	.end( LOCVAR_(prog_for_jit_test) )
 	;

@@ -97,18 +97,18 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->init_expr == SYNCASE_( cexpr_3p25f ) );
 	BOOST_CHECK( SYNCASE_(cexpr_3p25f)->node_class() == syntax_node_types::constant_expression );
 
-	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[1] == SYNCASE_(func_flt_2p_n_gen) );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->node_class() == syntax_node_types::function_type );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->name->str == SYNCASENAME_(func_flt_2p_n_gen) );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->retval_type );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->retval_type == SYNCASE_(type_float) );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->params.size() == 2 );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->params[0] == SYNCASE_(p0_fn0) );
+	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[1] == SYNCASE_(fn1_sem) );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->node_class() == syntax_node_types::function_type );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->name->str == SYNCASENAME_(fn1_sem) );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->retval_type );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->retval_type == SYNCASE_(type_float) );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->params.size() == 2 );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->params[0] == SYNCASE_(p0_fn0) );
 	BOOST_CHECK( SYNCASE_(p0_fn0)->name->str == SYNCASENAME_(p0_fn0) );
 	BOOST_CHECK( SYNCASE_(p0_fn0)->param_type == SYNCASE_(type_uint64) );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->params[1] == SYNCASE_(p1_fn0) );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->params[1] == SYNCASE_(p1_fn0) );
 	BOOST_CHECK( SYNCASE_(p1_fn0)->name->str == SYNCASENAME_(p1_fn0) );
-	BOOST_CHECK( SYNCASE_(func_flt_2p_n_gen)->body == SYNCASE_(fn0_body) );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->body == SYNCASE_(fn0_body) );
 	BOOST_CHECK( SYNCASE_(fn0_body) );
 	BOOST_CHECK( SYNCASE_(fn0_body)->stmts.size() == 1 );
 	BOOST_CHECK( SYNCASE_(fn0_body)->stmts[0]->node_class() == syntax_node_types::expression_statement );

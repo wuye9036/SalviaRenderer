@@ -63,9 +63,9 @@ void cgllvm_cases::initialize(){
 	LOCVAR_(type_void) = CONTEXT_OF( type_void );
 	LOCVAR_(type_float) = CONTEXT_OF( type_float );
 
-	LOCVAR_(func_flt_2p_n_gen) = CONTEXT_OF( func_flt_2p_n_gen );
-	LOCVAR_(func_flt_2p_n_gen_p0) = CONTEXT_OF( p0_fn0 );
-	LOCVAR_(func_flt_2p_n_gen_p1) = CONTEXT_OF( p1_fn0 );
+	LOCVAR_(fn1_sem) = CONTEXT_OF( fn1_sem );
+	LOCVAR_(fn1_sem_p0) = CONTEXT_OF( p0_fn0 );
+	LOCVAR_(fn1_sem_p1) = CONTEXT_OF( p1_fn0 );
 
 	std::string err;
 	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(prog_for_jit_test) ), err);

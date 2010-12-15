@@ -70,10 +70,10 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(type_definition), tdef0_double2x4 );
 
 	// functions
-	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_nnn );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func_flt_2p_n_gen );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func0 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), func1 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn0_sem );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn1_sem );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn2_sem );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn3_jit );
 	// paramters
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p1_fn0 );
