@@ -20,8 +20,13 @@ public:
 	static semantic_cases& instance();
 	static bool is_avaliable();
 	static void release();
+
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(global_si), si_root );
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_root );
+
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn0_sem );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(type_info_si), si_fn0_sem );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn1_sem );
 private:
 	semantic_cases();
 	void initialize();

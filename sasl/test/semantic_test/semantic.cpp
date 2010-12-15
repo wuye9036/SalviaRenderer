@@ -44,11 +44,18 @@ void test_program_si(){
 		== SYNCASENAME_(prog_for_semantic_test) );*/
 }
 
+void test_function_si(){
+	semantic_cases::instance();
+	BOOST_REQUIRE( SEMCASE_(sym_fn0_sem) );
+	BOOST_REQUIRE( SEMCASE_(sym_fn1_sem) );
+}
+
 BOOST_AUTO_TEST_SUITE( semantic );
 
 BOOST_AUTO_TEST_CASE( semantic_tests ){
 	test_global_si();
 	test_program_si();
+	test_function_si();
 }
 
 BOOST_AUTO_TEST_CASE( program_si_test ){
