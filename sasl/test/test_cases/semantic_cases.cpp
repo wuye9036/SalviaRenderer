@@ -47,7 +47,7 @@ semantic_cases::semantic_cases(){
 }
 
 void semantic_cases::initialize(){
-	SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_gen) );
+	LOCVAR_(si_root) = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_gen) );
 	SEMANTIC_(semantic_analysis)( SYNCASE_(jit_prog) );
 
 	LOCVAR_( cexpr_776uint ) = extract_semantic_info<const_value_si>( SYNCASE_(cexpr_776uint) );

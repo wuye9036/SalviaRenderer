@@ -129,12 +129,6 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 
 		// try to match all parameters.
 		bool all_parameter_success = true;
-		if( args.size() == 2 
-			&& extract_semantic_info<type_info_si>( args[0] )->entry_id() == 10
-			&& extract_semantic_info<type_info_si>( args[1] )->entry_id() == 2 )
-		{
-			int a = 0;//break here
-		}
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
 			type_entry::id_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
 			type_entry::id_t par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
@@ -209,7 +203,6 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 			candidates.push_back(matching_func->symbol());
 		}
 	}
-	size_t candidate_size = candidates.size();
 
 	return candidates;
 }
@@ -310,7 +303,7 @@ int anonymous_name_count = 0;
 boost::mutex mtx;
 string anonymous_name(){
 	boost::mutex::scoped_lock locker(mtx);
-	return string("__sasl__anonymous__name__66EE3DF2AC1746aaA963B98C7F1985E1_") + boost::lexical_cast<string>(++anonymous_name_count);
+	return string("1_") + boost::lexical_cast<string>(++anonymous_name_count);
 }
 
 shared_ptr<symbol> symbol::add_anonymous_child( shared_ptr<struct node> child_node ){

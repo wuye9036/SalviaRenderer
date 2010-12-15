@@ -20,6 +20,7 @@ public:
 	static semantic_cases& instance();
 	static bool is_avaliable();
 	static void release();
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(global_si), si_root );
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(const_value_si), cexpr_776uint );
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_root )
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_f0 );
