@@ -339,7 +339,7 @@ SASL_VISIT_DEF( function_type )
 	get_or_create_semantic_info<storage_si>( dup_fn, context().gsi->type_manager() )->entry_id( ret_tid );
 
 	if ( v.body ){
-		visit_child( child_ctxt, child_ctxt_init, v.body ).generated_node->typed_handle<statement>();
+		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
 	}
 
 	ctxt.generated_node = dup_fn;

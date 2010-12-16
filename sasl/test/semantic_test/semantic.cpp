@@ -44,6 +44,24 @@ void test_function_si(){
 	BOOST_REQUIRE( SEMCASE_(sym_fn0_sem) );
 	BOOST_REQUIRE( SEMCASE_(sym_fn1_sem) );
 }
+void test_statement_si(){
+	semantic_cases::instance();
+
+	BOOST_REQUIRE( SEMCASE_(body_fn2) );
+	BOOST_CHECK_EQUAL( SEMCASE_(body_fn2)->stmts.size(), 1 );
+	BOOST_REQUIRE( SEMCASE_(jstmt0_0_fn2) );
+}
+
+void test_expression_si(){
+	semantic_cases::instance();
+
+	BOOST_REQUIRE( SEMCASE_(bexpr0_0_jstmts0) );
+	BOOST_REQUIRE( SEMCASE_(cexpr0_l_bexpr0) );
+	BOOST_REQUIRE( SEMCASE_(si_cexpr0) );
+	BOOST_CHECK( SEMCASE_(op_bexpr0) == operators::add );
+	BOOST_CHECK( SEMCASE_(si_cexpr0)->value<uint32_t>() == 776 );
+	BOOST_CHECK( SEMCASE_(si_cexpr0)->value_type() == buildin_type_code::_uint32 );
+}
 
 void test_mangle(){
 	semantic_cases::instance();
@@ -76,6 +94,9 @@ void test_symbol(){
 
 	BOOST_CHECK( SEMCASE_(fn1_sem)->params[0] == SEMCASE_(par0_0_fn1) );
 	BOOST_CHECK( SEMCASE_(fn1_sem)->params[1] == SEMCASE_(par1_1_fn1) );
+
+	BOOST_CHECK_EQUAL( SEMCASE_(sym_par0_0_fn1)->mangled_name(), SYNCASENAME_(par0_0_fn1) );
+	BOOST_CHECK_EQUAL( SEMCASE_(sym_par0_0_fn1)->unmangled_name(), SYNCASENAME_(par0_0_fn1) );
 }
 
 BOOST_AUTO_TEST_SUITE( semantic );
@@ -85,7 +106,10 @@ BOOST_AUTO_TEST_CASE( semantic_tests ){
 	test_program_si();
 	test_function_si();
 	test_mangle();
+	test_unmangle();
 	test_symbol();
+	test_statement_si();
+	test_expression_si();
 }
 
 BOOST_AUTO_TEST_CASE( expression_si_test ){

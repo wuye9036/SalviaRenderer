@@ -55,7 +55,8 @@ void semantic_cases::release(){
 	}
 }
 
-semantic_cases::semantic_cases(){
+semantic_cases::semantic_cases() : LOCVAR_(op_bexpr0)( operators::none )
+{
 }
 
 void semantic_cases::initialize(){
@@ -72,6 +73,11 @@ void semantic_cases::initialize(){
 	CHECK_RET( sym_fn1_sem_ol.size() == 1 );
 	CHECK_RET( LOCVAR_(sym_fn1_sem) = sym_fn1_sem_ol[0] );
 
+	vector< shared_ptr<symbol> > sym_fn2_sem_ol = LOCVAR_(sym_root)->find_overloads( SYNCASENAME_(fn2_sem) );
+	CHECK_RET( sym_fn2_sem_ol.size() == 1 );
+	CHECK_RET( LOCVAR_(sym_fn2_sem) = sym_fn2_sem_ol[0] );
+	CHECK_RET( LOCVAR_(fn2_sem) = sym_fn2_sem()->node()->typed_handle<function_type>() );
+
 	CHECK_RET( LOCVAR_(fn0_sem) = sym_fn0_sem()->node()->typed_handle< SYNTAX_(function_type) >() );
 	CHECK_RET( LOCVAR_(fn1_sem) = sym_fn1_sem()->node()->typed_handle< SYNTAX_(function_type) >() );
 
@@ -80,4 +86,10 @@ void semantic_cases::initialize(){
 	CHECK_RET( LOCVAR_(par0_0_fn1) = LOCVAR_(sym_par0_0_fn1)->node()->typed_handle< SYNTAX_(parameter) >() );
 	CHECK_RET( LOCVAR_(par1_1_fn1) = LOCVAR_(sym_par1_1_fn1)->node()->typed_handle< SYNTAX_(parameter) >() );
 
+	CHECK_RET( LOCVAR_(body_fn2) = fn2_sem()->body );
+	CHECK_RET( LOCVAR_(jstmt0_0_fn2) = body_fn2()->stmts[0]->typed_handle< SYNTAX_(jump_statement) >() );
+	CHECK_RET( LOCVAR_(bexpr0_0_jstmts0) = jstmt0_0_fn2()->jump_expr->typed_handle< SYNTAX_(binary_expression) >() );
+	CHECK_RET( LOCVAR_(cexpr0_l_bexpr0) = bexpr0_0_jstmts0()->left_expr->typed_handle< SYNTAX_(constant_expression) >() );
+	CHECK_RET( LOCVAR_(si_cexpr0) = SEMANTIC_(extract_semantic_info)< SEMANTIC_(const_value_si) >( cexpr0_l_bexpr0() ) );
+	LOCVAR_(op_bexpr0) = bexpr0_0_jstmts0()->op;
 }
