@@ -10,18 +10,18 @@ INCLUDE_DIRECTORIES(../
 )
 
 LIST(APPEND enum_confs enums.xgt )
-sasl_generate_enum( 
-	enums.cmake 
-	enums.xgp
-	${enum_confs}
-)
+# sasl_generate_enum( 
+	# enums.cmake 
+	# enums.xgp
+	# ${enum_confs}
+# )
 
-LIST(APPEND ci_confs compiler_infos.xgt)
-sasl_generate_enum( 
-	compiler_infos.cmake 
-	compiler_infos.xgp
-	${ci_confs}
-)
+# LIST(APPEND ci_confs compiler_infos.xgt)
+# sasl_generate_enum( 
+	# compiler_infos.cmake 
+	# compiler_infos.xgp
+	# ${ci_confs}
+# )
 
 SET_SOURCE_FILES_PROPERTIES( enums.cmake compiler_infos.cmake
 	PROPERTIES GENERATED 1

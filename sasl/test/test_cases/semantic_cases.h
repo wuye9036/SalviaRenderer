@@ -25,8 +25,18 @@ public:
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_root );
 
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn0_sem );
+	TEST_CASE_CREF_VARIABLE( std::string, mangled_fn0_name );
+	TEST_CASE_CREF_VARIABLE( std::string, mangled_fn1_name );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(node), fn0_sem );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn1_sem );
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(type_info_si), si_fn0_sem );
+	
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn1_sem );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(type_info_si), si_fn1_sem );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), par0_0_fn1 );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_par0_0_fn1 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), par1_1_fn1 );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_par1_1_fn1 );
 private:
 	semantic_cases();
 	void initialize();

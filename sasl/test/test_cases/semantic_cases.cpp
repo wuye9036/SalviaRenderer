@@ -20,6 +20,7 @@ using std::vector;
 #define SYNCASE_(case_name) syntax_cases::instance().case_name ()
 #define SYNCASENAME_(case_name) syntax_cases::instance().case_name##_name()
 
+#define CHECK_RET( expr ) if( !(expr) ) return;
 boost::mutex semantic_cases::mtx;
 boost::shared_ptr<semantic_cases> semantic_cases::tcase;
 
@@ -58,14 +59,25 @@ semantic_cases::semantic_cases(){
 }
 
 void semantic_cases::initialize(){
-	LOCVAR_(si_root) = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_semantic_test) );
-	LOCVAR_(sym_root) = LOCVAR_(si_root)->root();
-
+	CHECK_RET( LOCVAR_(si_root) = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_semantic_test) ) );
+	CHECK_RET( LOCVAR_(sym_root) = LOCVAR_(si_root)->root() );
+	
 	vector< shared_ptr<symbol> > sym_fn0_sem_ol = LOCVAR_(sym_root)->find_overloads( SYNCASENAME_(fn0_sem) );
-	EFLIB_ASSERT( sym_fn0_sem_ol.size() == 1, "error." );
-	LOCVAR_(sym_fn0_sem) = sym_fn0_sem_ol[0];
+	CHECK_RET( sym_fn0_sem_ol.size() == 1 );
+	CHECK_RET( LOCVAR_(sym_fn0_sem) = sym_fn0_sem_ol[0] );
+	LOCVAR_(mangled_fn0_name) = std::string("M") + SYNCASENAME_(fn0_sem) + std::string("@@");
+	LOCVAR_(mangled_fn1_name) = std::string("M") + SYNCASENAME_(fn1_sem) + std::string("@@QBU8@@") + std::string("QBS1@@");
 
 	vector< shared_ptr<symbol> > sym_fn1_sem_ol = LOCVAR_(sym_root)->find_overloads( SYNCASENAME_(fn1_sem) );
-	EFLIB_ASSERT( sym_fn1_sem_ol.size() == 1,  "error." );
-	LOCVAR_(sym_fn1_sem) = sym_fn1_sem_ol[0];
+	CHECK_RET( sym_fn1_sem_ol.size() == 1 );
+	CHECK_RET( LOCVAR_(sym_fn1_sem) = sym_fn1_sem_ol[0] );
+
+	CHECK_RET( LOCVAR_(fn0_sem) = sym_fn0_sem()->node()->typed_handle< SYNTAX_(function_type) >() );
+	CHECK_RET( LOCVAR_(fn1_sem) = sym_fn1_sem()->node()->typed_handle< SYNTAX_(function_type) >() );
+
+	CHECK_RET( LOCVAR_(sym_par0_0_fn1) = LOCVAR_(sym_fn1_sem)->find( SYNCASENAME_(par0_0_fn1) ) );
+	CHECK_RET( LOCVAR_(sym_par1_1_fn1) = LOCVAR_(sym_fn1_sem)->find( SYNCASENAME_(par1_1_fn1) ) );
+	CHECK_RET( LOCVAR_(par0_0_fn1) = LOCVAR_(sym_par0_0_fn1)->node()->typed_handle< SYNTAX_(parameter) >() );
+	CHECK_RET( LOCVAR_(par1_1_fn1) = LOCVAR_(sym_par1_1_fn1)->node()->typed_handle< SYNTAX_(parameter) >() );
+
 }

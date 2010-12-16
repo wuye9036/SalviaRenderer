@@ -26,9 +26,9 @@ BOOST_AUTO_TEST_CASE( module_generation_test ){
 
 	BOOST_CHECK( !LLVMCASE_(null_root) );
 	BOOST_CHECK( LLVMCASE_(root) );
-	BOOST_CHECK( SYNCASE_(prog_for_gen)->codegen_ctxt() == LLVMCASE_(root) );
+	BOOST_CHECK( SYNCASE_(prog_for_semantic_test)->codegen_ctxt() == LLVMCASE_(root) );
 	BOOST_CHECK( LLVMCASE_(root)->module() );
-	BOOST_CHECK( LLVMCASE_(root)->module()->getModuleIdentifier() == SYNCASENAME_(prog_for_gen) );
+	BOOST_CHECK( LLVMCASE_(root)->module()->getModuleIdentifier() == SYNCASENAME_(prog_for_semantic_test) );
 	LLVMCASE_(root)->module()->dump();
 }
 

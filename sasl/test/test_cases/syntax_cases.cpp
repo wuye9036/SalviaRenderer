@@ -136,24 +136,24 @@ void syntax_cases::initialize(){
 	.end( LOCVAR_(fn0_sem) ) ;
 
 	/*
-		uint64_t fn1_sem( uint64_t p0_fn0, int8_t p1_fn0 ){
-			p0_fn0;
+		uint64_t fn1_sem( uint64_t par0_0_fn1, int8_t par1_1_fn1 ){
+			par0_0_fn1;
 		}
 	*/
 	dfunction_combinator(NULL)
 		.dname( NAME_(fn1_sem) )
 		.dreturntype().dnode( type_float() ).end()
 		.dparam()
-			.dname( NAME_(p0_fn0) )
+			.dname( NAME_(par0_0_fn1) )
 			.dtype().dnode( type_uint64() ).end()
-		.end( LOCVAR_(p0_fn0) )
+		.end( LOCVAR_(par0_0_fn1) )
 		.dparam()
-			.dname( NAME_(p1_fn0) )
+			.dname( NAME_(par1_1_fn1) )
 			.dtype().dnode( type_sint8() ).end()
-		.end( LOCVAR_(p1_fn0) )
+		.end( LOCVAR_(par1_1_fn1) )
 		.dbody()
-			.dexprstmt().dvarexpr(NAME_(p0_fn0)).end()
-		.end( LOCVAR_(fn0_body) )
+			.dexprstmt().dvarexpr(NAME_(par0_0_fn1)).end()
+		.end( LOCVAR_(fn1_body) )
 	.end( LOCVAR_(fn1_sem) );
 	
 	dfunction_combinator(NULL)

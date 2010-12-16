@@ -64,8 +64,8 @@ void cgllvm_cases::initialize(){
 	LOCVAR_(type_float) = CONTEXT_OF( type_float );
 
 	LOCVAR_(fn1_sem) = CONTEXT_OF( fn1_sem );
-	LOCVAR_(fn1_sem_p0) = CONTEXT_OF( p0_fn0 );
-	LOCVAR_(fn1_sem_p1) = CONTEXT_OF( p1_fn0 );
+	LOCVAR_(fn1_sem_p0) = CONTEXT_OF( par0_0_fn1 );
+	LOCVAR_(fn1_sem_p1) = CONTEXT_OF( par1_1_fn1 );
 
 	std::string err;
 	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(prog_for_jit_test) ), err);

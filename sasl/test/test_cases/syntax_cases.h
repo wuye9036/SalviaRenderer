@@ -75,15 +75,15 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn2_sem );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn3_jit );
 	// paramters
-	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p0_fn0 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), p1_fn0 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), par0_0_fn1 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), par1_1_fn1 );
 
 	// expressions
 	TEST_CASE_SP_VARIABLE( SYNTAX_(expression), expr0_add );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(expression), expr1_add );
 
 	// statements
-	TEST_CASE_SP_VARIABLE( SYNTAX_(compound_statement), fn0_body );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(compound_statement), fn1_body );
 
 	// prog
 	TEST_CASE_SP_VARIABLE( SYNTAX_(program), null_prog );

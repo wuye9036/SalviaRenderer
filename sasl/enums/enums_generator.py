@@ -641,6 +641,7 @@ class enum_file_generator:
 		cmake_file_code = library_files_cmake_tmpl % { "header_files": header_files, "source_files": source_files }
 		cmake_file = open( library_files_cmake_file_path, "w" )
 		cmake_file.write( cmake_file_code )
+		cmake_file.close()
 		
 	def generate(self):
 		self._generate_pre_includes()

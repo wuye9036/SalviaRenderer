@@ -37,11 +37,6 @@ void test_program_si(){
 	semantic_cases::instance();
 
 	BOOST_REQUIRE( SEMCASE_(sym_root) );
-
-	/*BOOST_CHECK( SYNCASE_(prog_for_semantic_test)->symbol() );
-	BOOST_REQUIRE( SYNCASE_(prog_for_semantic_test)->semantic_info() );
-	BOOST_CHECK( extract_semantic_info<program_si>(SYNCASE_(prog_for_semantic_test))->name()
-		== SYNCASENAME_(prog_for_semantic_test) );*/
 }
 
 void test_function_si(){
@@ -50,20 +45,47 @@ void test_function_si(){
 	BOOST_REQUIRE( SEMCASE_(sym_fn1_sem) );
 }
 
+void test_mangle(){
+	semantic_cases::instance();
+	BOOST_CHECK_EQUAL( SEMCASE_(sym_fn0_sem)->mangled_name(), SEMCASE_(mangled_fn0_name) );
+	BOOST_CHECK_EQUAL( SEMCASE_(sym_fn1_sem)->mangled_name(), SEMCASE_(mangled_fn1_name) );
+}
+
+void test_unmangle(){
+	semantic_cases::instance();
+	BOOST_CHECK_EQUAL( SEMCASE_(sym_fn0_sem)->unmangled_name(), SYNCASENAME_(fn0_sem) );
+}
+
+void test_symbol(){
+	semantic_cases::instance();
+
+	// function in module
+	BOOST_CHECK_EQUAL( SEMCASE_(sym_root)->find_overloads( SYNCASENAME_(fn1_sem) ).size(), 1 );
+	BOOST_CHECK( SEMCASE_(sym_root)->find( SEMCASE_(mangled_fn0_name) ) == SEMCASE_(sym_fn0_sem) );
+
+	// symbol and node
+	BOOST_CHECK( SEMCASE_(fn0_sem)->symbol() == SEMCASE_(sym_fn0_sem) );
+	
+	// parent and sibling
+	BOOST_CHECK( SEMCASE_(sym_fn0_sem)->parent() == SEMCASE_(sym_root) );
+	BOOST_CHECK( SEMCASE_(sym_fn1_sem)->find( SEMCASE_(mangled_fn0_name) ) == SEMCASE_(sym_fn0_sem) );
+
+	// parameter in function
+	BOOST_REQUIRE( SEMCASE_(sym_par0_0_fn1) );
+	BOOST_REQUIRE( SEMCASE_(par1_1_fn1) );
+
+	BOOST_CHECK( SEMCASE_(fn1_sem)->params[0] == SEMCASE_(par0_0_fn1) );
+	BOOST_CHECK( SEMCASE_(fn1_sem)->params[1] == SEMCASE_(par1_1_fn1) );
+}
+
 BOOST_AUTO_TEST_SUITE( semantic );
 
 BOOST_AUTO_TEST_CASE( semantic_tests ){
 	test_global_si();
 	test_program_si();
 	test_function_si();
-}
-
-BOOST_AUTO_TEST_CASE( program_si_test ){
-
-}
-
-BOOST_AUTO_TEST_CASE( function_si_test ){
-	semantic_cases::instance();
+	test_mangle();
+	test_symbol();
 }
 
 BOOST_AUTO_TEST_CASE( expression_si_test ){
@@ -75,11 +97,7 @@ BOOST_AUTO_TEST_CASE( expression_si_test ){
 
 //BOOST_AUTO_TEST_CASE( mangling_test ){
 //	semantic_cases::instance();
-//
-//	BOOST_REQUIRE( SYNCASE_(fn0_sem) && SYNCASE_(fn1_sem) );
-//	BOOST_CHECK_EQUAL( mangle( SYNCASE_(fn0_sem) ), std::string("M") + SYNCASENAME_(fn0_sem) + std::string("@@") );
-//	BOOST_CHECK_EQUAL( mangle( SYNCASE_(fn1_sem) ), std::string("M") + SYNCASENAME_(fn1_sem) + std::string("@@QBU8@@") + std::string("QBS1@@") );
-//
+
 //	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
 //	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
 //		BOOST_CHECK_EQUAL( operator_name( oplist[i_op] ), std::string("0") + oplist[i_op].name() );
@@ -97,21 +115,12 @@ BOOST_AUTO_TEST_CASE( expression_si_test ){
 //
 //BOOST_AUTO_TEST_CASE( symbol_test ){
 //	semantic_cases::instance();
-//	BOOST_REQUIRE( SEMCASE_(sym_root) );
-//	BOOST_CHECK( SEMCASE_(sym_root)->find_overloads( SYNCASENAME_(fn1_sem) ).size() == 1 );
-//	BOOST_REQUIRE( SEMCASE_(sym_f0) );
-//	BOOST_CHECK( SEMCASE_(sym_root)->find( mangle( SYNCASE_(fn1_sem) ) ) == SEMCASE_(sym_f0) );
-//	BOOST_CHECK( SEMCASE_(sym_f0)->mangled_name() == mangle( SYNCASE_(fn1_sem) ) );
-//	BOOST_CHECK( SEMCASE_(sym_f0)->unmangled_name() == SYNCASENAME_(fn1_sem) );
-//	BOOST_CHECK( SEMCASE_(sym_f0)->parent() == SEMCASE_(sym_root) );
-//	BOOST_CHECK( !SEMCASE_(sym_root)->find( SYNCASENAME_(p0_fn0) ) );
-//	BOOST_CHECK( SEMCASE_(sym_root)->find_overloads( SYNCASENAME_(p0_fn0) ).empty() );
 //	BOOST_REQUIRE( SEMCASE_(sym_p0) );
-//	BOOST_CHECK( SEMCASE_(sym_f0)->find( SYNCASENAME_(p0_fn0) ) == SEMCASE_(sym_p0) );
-//	BOOST_CHECK( SEMCASE_(sym_f0)->find_overloads( SYNCASENAME_(p0_fn0) ).empty() );
+//	BOOST_CHECK( SEMCASE_(sym_f0)->find( SYNCASENAME_(par0_0_fn1) ) == SEMCASE_(sym_p0) );
+//	BOOST_CHECK( SEMCASE_(sym_f0)->find_overloads( SYNCASENAME_(par0_0_fn1) ).empty() );
 //	BOOST_CHECK( SEMCASE_(sym_p0)->find_overloads( SYNCASENAME_(fn1_sem) )[0] == SEMCASE_(sym_f0) );
-//	BOOST_CHECK( SEMCASE_(sym_p0)->unmangled_name() == SYNCASENAME_(p0_fn0) );
-//	BOOST_CHECK( SEMCASE_(sym_p0)->mangled_name() == SYNCASENAME_(p0_fn0) );
+//	BOOST_CHECK( SEMCASE_(sym_p0)->unmangled_name() == SYNCASENAME_(par0_0_fn1) );
+//	BOOST_CHECK( SEMCASE_(sym_p0)->mangled_name() == SYNCASENAME_(par0_0_fn1) );
 //
 //	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
 //	BOOST_CHECK( SYNCASE_(prog_for_semantic_test)->symbol()->find_overloads( operator_name(operators::none) ).size() == 0 );
