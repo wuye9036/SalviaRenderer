@@ -160,27 +160,11 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 				type_entry::id_t matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
 				type_entry::id_t matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->entry_id();
 
-				if( matched_par_type == arg_type ){
-					if ( matching_par_type != arg_type ){
-						++worse_param_count;
-					}
-				} else {
-					if ( matching_par_type == arg_type ){
-						++better_param_count;
-					} else if (
-						conv->convertible( matching_par_type, matched_par_type ) == type_converter::implicit_conv
-						&& conv->convertible( matched_par_type, matching_par_type ) != type_converter::implicit_conv
-						)
-					{
-						++better_param_count;
-					} else if (
-						conv->convertible( matching_par_type, matched_par_type ) != type_converter::implicit_conv
-						&& conv->convertible( matched_par_type, matching_par_type ) == type_converter::implicit_conv
-						)
-					{
-						++worse_param_count;
-					}
-				}
+				bool par_is_better = false;
+				bool par_is_worse = false;
+				conv->better_or_worse_convertible( matched_par_type, matching_par_type, arg_type, par_is_better, par_is_worse );
+				if( par_is_better ){ ++better_param_count; }
+				if( par_is_worse ){ ++worse_param_count; }
 			}
 
 			if ( better_param_count > 0 && worse_param_count == 0 ) {

@@ -24,7 +24,7 @@ BEGIN_NS_SASL_SEMANTIC();
 class type_converter{
 public:
 	enum conv_type{
-		better = 0,
+		better_conv = 0,
 		implicit_conv,
 		warning_conv,
 		explicit_conv,
@@ -42,6 +42,8 @@ public:
 
 	conv_type convertible( type_entry::id_t dest, type_entry::id_t src );
 	bool implicit_convertible( type_entry::id_t dest, type_entry::id_t src );
+
+	void better_or_worse_convertible( type_entry::id_t matched, type_entry::id_t matching, type_entry::id_t src, bool& better, bool& worse );
 
 	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );\

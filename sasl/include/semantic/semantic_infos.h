@@ -3,13 +3,14 @@
 
 #include <sasl/include/semantic/semantic_infos.inl>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/enums/enums_helper.h>
 
 BEGIN_NS_SASL_SEMANTIC();
 
 template <typename T> T const_value_si::value() const {
 
     if ( sasl_ehelper::is_integer( value_type()  ) ) {
-        if ( value_type() == buildin_type_code::_uint64 ) {
+        if ( sasl_ehelper::is_unsigned( value_type() ) ) {
             return (T)boost::get<uint64_t>(val);
         }
         return (T)boost::get<int64_t>(val);

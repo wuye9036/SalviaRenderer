@@ -538,7 +538,7 @@ void semantic_analyser_impl::register_type_converter( const sacontext& ctxt ){
 	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, sint8_ts, default_conv );
 	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, sint16_ts, default_conv );
 	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, sint32_ts, default_conv );
-	typeconv->register_converter( type_converter::implicit_conv, uint32_ts, sint64_ts, default_conv );
+	typeconv->register_converter( type_converter::better_conv, uint32_ts, sint64_ts, default_conv );
 	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, uint8_ts, default_conv );
 	typeconv->register_converter( type_converter::explicit_conv, uint32_ts, uint16_ts, default_conv );
 	typeconv->register_converter( type_converter::implicit_conv, uint32_ts, uint64_ts, default_conv );

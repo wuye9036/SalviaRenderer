@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end( expr_c );
 		BOOST_CHECK( expr_c->node_class() == syntax_node_types::constant_expression );
 		BOOST_CHECK( expr_c->ctype == literal_constant_types::real );
-		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.25868f) );
+		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.25868f) + std::string("f") );
 	}
 
 	boost::shared_ptr<constant_expression> cexpr;
@@ -295,9 +295,9 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		dexpr_combinator expr_comb(NULL);
 		expr_comb
 			.dconstant2( (uint16_t)107 )
-		.end( cexpr );
+			.end( cexpr );
 		BOOST_CHECK( cexpr->ctype == literal_constant_types::integer );
-		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(107) );
+		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(107) + std::string("u") );
 	}
 
 	boost::shared_ptr<variable_expression> varexpr;
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( stmts2->stmts[0] == ifstmt );
 		BOOST_CHECK( ifstmt->node_class() == syntax_node_types::if_statement );
 		BOOST_CHECK( ifstmt->cond == condexpr );
-		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) );
+		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) + std::string("f") );
 		BOOST_CHECK( ifstmt->yes_stmt == yesstmts );
 		BOOST_CHECK( yesstmts->stmts[0] == varstmt );
 		BOOST_CHECK( ifstmt->no_stmt == elsestmts );
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( dwstmt );
 		BOOST_CHECK( dwstmt->node_class() == syntax_node_types::dowhile_statement );
 		BOOST_CHECK( dwstmt->cond == condexpr );
-		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) );
+		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) + std::string("f") );
 		BOOST_CHECK( dwstmt->body = stmts3 );
 		BOOST_CHECK( stmts3 == stmts );
 	}
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( whilestmt );
 		BOOST_CHECK( whilestmt->node_class() == syntax_node_types::while_statement );
 		BOOST_CHECK( whilestmt->cond == condexpr );
-		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) );
+		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) + std::string("f") );
 		BOOST_CHECK( whilestmt->body = stmts4 );
 		BOOST_CHECK( stmts4 == stmts );
 	}

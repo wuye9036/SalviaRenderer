@@ -67,6 +67,11 @@ void test_mangle(){
 	semantic_cases::instance();
 	BOOST_CHECK_EQUAL( SEMCASE_(sym_fn0_sem)->mangled_name(), SEMCASE_(mangled_fn0_name) );
 	BOOST_CHECK_EQUAL( SEMCASE_(sym_fn1_sem)->mangled_name(), SEMCASE_(mangled_fn1_name) );
+
+	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
+	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
+		BOOST_CHECK_EQUAL( operator_name( oplist[i_op] ), std::string("0") + oplist[i_op].name() );
+	}
 }
 
 void test_unmangle(){
@@ -110,13 +115,6 @@ BOOST_AUTO_TEST_CASE( semantic_tests ){
 	test_symbol();
 	test_statement_si();
 	test_expression_si();
-}
-
-BOOST_AUTO_TEST_CASE( expression_si_test ){
-	semantic_cases::instance();
-
-	//BOOST_REQUIRE( SEMCASE_(cexpr_776uint) );
-	//BOOST_CHECK( SEMCASE_(cexpr_776uint)->value<uint32_t>() == 776 );
 }
 
 //BOOST_AUTO_TEST_CASE( mangling_test ){

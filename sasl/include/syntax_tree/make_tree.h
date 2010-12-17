@@ -21,8 +21,9 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/ref.hpp>
-#include <boost/type_traits/is_base_of.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
+#include <boost/type_traits/is_base_of.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <eflib/include/platform/enable_warnings.h>
@@ -190,8 +191,22 @@ public:
 		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T>, 0 )
 		)
 	{
+		std::string suffix;
+		if( ! boost::is_same<T, bool>::value ){
+			if( boost::is_integral<T>::value ){
+				if( boost::is_unsigned<T>::value ){
+					suffix += "u";
+				}
+				if( sizeof(T) == sizeof(int64_t) ){
+					suffix += "l";
+				}
+			} else if( boost::is_same<T, float>::value ){
+				suffix += "f";
+			}
+		}
+
 		literal_constant_types lct = typecode_map::lookup<T>();
-		return dconstant( lct, boost::lexical_cast<std::string>(v) );
+		return dconstant( lct, boost::lexical_cast<std::string>(v) + suffix );
 	}
 	virtual tree_combinator& dvarexpr( const std::string& /*v*/){ return default_proc(); }
 	virtual tree_combinator& dunary( operators /*op*/ ){ return default_proc(); };

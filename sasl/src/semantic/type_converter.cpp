@@ -39,7 +39,7 @@ bool type_converter::implicit_convertible( type_entry::id_t dest, type_entry::id
 			break;
 		}
 	}
-	return ret_ct == better || ret_ct == implicit_conv;
+	return ret_ct == better_conv || ret_ct == implicit_conv || ret_ct == warning_conv;
 }
 
 type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -80,6 +80,48 @@ type_converter::conv_type type_converter::convert( shared_ptr<type_specifier> de
 }
 
 type_converter::type_converter(){
+}
+
+void type_converter::better_or_worse_convertible( type_entry::id_t matched, type_entry::id_t matching, type_entry::id_t src, bool& better, bool& worse )
+{
+	better = false;
+	worse = false;
+
+	if( matching == matched ){
+		better = false;
+		worse = false;
+		return;
+	}
+
+	if( src == matching ){
+		better = true;
+		return;
+	}
+
+	if( src == matched ){
+		worse = true;
+		return;
+	}
+
+	if( convertible( matched, matching ) <= implicit_conv && convertible( matching, src ) <= implicit_conv ){
+		better = true;
+		return;
+	}
+
+	if( convertible(matching, matched)  <= implicit_conv && convertible(matched, src) <= implicit_conv ){
+		worse = true;
+		return;
+	}
+
+	if( convertible(matching, src) < convertible(matched, src) ){
+		better = true;
+		return;
+	}
+
+	if( convertible(matched, src) < convertible(matching, src) ){
+		worse = true;
+		return;
+	}
 }
 
 END_NS_SASL_SEMANTIC();
