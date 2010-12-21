@@ -129,7 +129,6 @@ void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec, shared_p
 	tid = typemgr.lock()->get( typespec, sym );
 }
 
-
 void type_info_si_impl::type_info( buildin_type_code btc )
 {
 	tid = typemgr.lock()->get( btc ); 

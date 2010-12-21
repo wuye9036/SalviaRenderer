@@ -44,6 +44,7 @@ void test_function_si(){
 	BOOST_REQUIRE( SEMCASE_(sym_fn0_sem) );
 	BOOST_REQUIRE( SEMCASE_(sym_fn1_sem) );
 }
+
 void test_statement_si(){
 	semantic_cases::instance();
 
@@ -104,6 +105,41 @@ void test_symbol(){
 	BOOST_CHECK_EQUAL( SEMCASE_(sym_par0_0_fn1)->unmangled_name(), SYNCASENAME_(par0_0_fn1) );
 }
 
+void test_default_operators(){
+	semantic_cases::instance();
+
+	// Test operator classification functions.
+	BOOST_CHECK( sasl_ehelper::is_arithmetic(operators::add) );
+	BOOST_CHECK( !sasl_ehelper::is_assign(operators::add) );
+
+	BOOST_CHECK( sasl_ehelper::is_bit_assign( operators::bit_and_assign ) );
+	BOOST_CHECK( !sasl_ehelper::is_bool_arith( operators::bit_and_assign ) );
+
+	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
+	BOOST_CHECK_EQUAL( SEMCASE_(sym_root)->find_overloads( operator_name(operators::none) ).size(), 0 );
+
+	// Test could operators be accessed globally.
+	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
+		operators op = oplist[i_op];
+		std::string opname = operator_name(op);
+
+		const std::vector< boost::shared_ptr<symbol> >& op_in_func = SEMCASE_(sym_root)->find_overloads( opname );
+		const std::vector< boost::shared_ptr<symbol> >& op_in_global = SEMCASE_(sym_fn1_sem)->find_overloads( opname );
+
+		if ( oplist[i_op] == operators::none ){
+			BOOST_CHECK( op_in_global.empty() );
+		} else {
+			BOOST_CHECK( !op_in_global.empty() );
+			if ( op_in_global.empty() ){
+				BOOST_TEST_MESSAGE( opname );
+			}
+		}
+
+		BOOST_CHECK_EQUAL_COLLECTIONS( op_in_global.begin(), op_in_global.end(), op_in_func.begin(), op_in_func.end() );
+	}
+
+}
+
 BOOST_AUTO_TEST_SUITE( semantic );
 
 BOOST_AUTO_TEST_CASE( semantic_tests ){
@@ -115,57 +151,7 @@ BOOST_AUTO_TEST_CASE( semantic_tests ){
 	test_symbol();
 	test_statement_si();
 	test_expression_si();
+	test_default_operators();
 }
-
-//BOOST_AUTO_TEST_CASE( mangling_test ){
-//	semantic_cases::instance();
-
-//	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
-//	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
-//		BOOST_CHECK_EQUAL( operator_name( oplist[i_op] ), std::string("0") + oplist[i_op].name() );
-//	}
-//}
-//
-//BOOST_AUTO_TEST_CASE( operators_classifier_test ){
-//	BOOST_CHECK( sasl_ehelper::is_arithmetic(operators::add) );
-//	BOOST_CHECK( !sasl_ehelper::is_assign(operators::add) );
-//	BOOST_CHECK( sasl_ehelper::is_bit_assign( operators::bit_and_assign ) );
-//	BOOST_CHECK( !sasl_ehelper::is_bool_arith( operators::bit_and_assign ) );
-//
-//	// Add other tests if any error occurs in regression test.
-//}
-//
-//BOOST_AUTO_TEST_CASE( symbol_test ){
-//	semantic_cases::instance();
-//	BOOST_REQUIRE( SEMCASE_(sym_p0) );
-//	BOOST_CHECK( SEMCASE_(sym_f0)->find( SYNCASENAME_(par0_0_fn1) ) == SEMCASE_(sym_p0) );
-//	BOOST_CHECK( SEMCASE_(sym_f0)->find_overloads( SYNCASENAME_(par0_0_fn1) ).empty() );
-//	BOOST_CHECK( SEMCASE_(sym_p0)->find_overloads( SYNCASENAME_(fn1_sem) )[0] == SEMCASE_(sym_f0) );
-//	BOOST_CHECK( SEMCASE_(sym_p0)->unmangled_name() == SYNCASENAME_(par0_0_fn1) );
-//	BOOST_CHECK( SEMCASE_(sym_p0)->mangled_name() == SYNCASENAME_(par0_0_fn1) );
-//
-//	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
-//	BOOST_CHECK( SYNCASE_(prog_for_semantic_test)->symbol()->find_overloads( operator_name(operators::none) ).size() == 0 );
-//
-//	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
-//		operators op = oplist[i_op];
-//		std::string opname = operator_name(op);
-//
-//		const std::vector< boost::shared_ptr<symbol> >& op_in_func = SYNCASE_(prog_for_semantic_test)->symbol()->find_overloads( opname );
-//		const std::vector< boost::shared_ptr<symbol> >& op_in_global = SYNCASE_(fn1_sem)->symbol()->find_overloads( opname );
-//
-//		if ( oplist[i_op] == operators::none ){
-//			BOOST_CHECK( op_in_global.empty() );
-//		} else {
-//			BOOST_CHECK( !op_in_global.empty() );
-//			if ( op_in_global.empty() ){
-//				BOOST_TEST_MESSAGE( opname );
-//			}
-//		}
-//
-//		BOOST_CHECK_EQUAL_COLLECTIONS( op_in_global.begin(), op_in_global.end(), op_in_func.begin(), op_in_func.end() );
-//	}
-//
-//}
 
 BOOST_AUTO_TEST_SUITE_END();
