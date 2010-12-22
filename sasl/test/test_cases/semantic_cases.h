@@ -35,6 +35,7 @@ public:
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn2_sem );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn2_sem );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(compound_statement), body_fn2 );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_body_fn2 );
 
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn1_sem );
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(type_info_si), si_fn1_sem );

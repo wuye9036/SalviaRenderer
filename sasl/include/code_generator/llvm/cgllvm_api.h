@@ -11,8 +11,8 @@ namespace llvm {
 }
 
 namespace sasl {
-	namespace syntax_tree{
-		struct node;
+	namespace semantic{
+		class symbol;
 	}
 }
 
@@ -26,7 +26,7 @@ public:
 	virtual ~llvm_code(){};
 };
 
-boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr<sasl::syntax_tree::node> root );
+boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr<sasl::semantic::symbol> root );
 END_NS_SASL_CODE_GENERATOR();
 
 #endif

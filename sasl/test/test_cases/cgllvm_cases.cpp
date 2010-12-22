@@ -4,13 +4,23 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/utility.h>
+
 #include <eflib/include/memory/lifetime_manager.h>
 #include <eflib/include/diagnostics/assert.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+using boost::shared_ptr;
 
 #define SYNCASE_(case_name) syntax_cases::instance().case_name ()
 #define SYNCASENAME_( case_name ) syntax_cases::instance(). case_name##_name()
+
+#define SEMCASE_(case_name) semantic_cases::instance().case_name ()
+#define SEMCASENAME_( case_name ) semantic_cases::instance(). case_name##_name()
 
 boost::mutex cgllvm_cases::mtx;
 boost::shared_ptr<cgllvm_cases> cgllvm_cases::tcase;
@@ -19,7 +29,7 @@ void clear_cgctxt( SYNTAX_(node)& nd, ::boost::any* ){
 	nd.codegen_ctxt( boost::shared_ptr<CODEGEN_(codegen_context)>() );
 }
 
-#define CONTEXT_OF( node_name ) sasl::code_generator::extract_codegen_context<sasl::code_generator::cgllvm_common_context>( SYNCASE_(node_name) )
+#define CONTEXT_OF( node_name ) sasl::code_generator::extract_codegen_context<sasl::code_generator::cgllvm_common_context>( SEMCASE_(node_name)->codegen() )
 
 cgllvm_cases& cgllvm_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
@@ -56,18 +66,10 @@ cgllvm_cases::cgllvm_cases(){
 void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
-	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( SYNCASE_( prog_for_semantic_test ) );
-	LOCVAR_(null_root) = CODEGEN_(generate_llvm_code)( SYNCASE_( null_prog ) );
-	LOCVAR_(prog_for_jit_test) = CODEGEN_(generate_llvm_code)( SYNCASE_(prog_for_jit_test) );
-
-	LOCVAR_(type_void) = CONTEXT_OF( type_void );
-	LOCVAR_(type_float) = CONTEXT_OF( type_float );
-
-	LOCVAR_(fn1_sem) = CONTEXT_OF( fn1_sem );
-	LOCVAR_(fn1_sem_p0) = CONTEXT_OF( par0_0_fn1 );
-	LOCVAR_(fn1_sem_p1) = CONTEXT_OF( par1_1_fn1 );
+	shared_ptr< SEMANTIC_(global_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test) );
+	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root->root() );
 
 	std::string err;
-	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(prog_for_jit_test) ), err);
+	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(root) ), err);
 	EFLIB_ASSERT( LOCVAR_(jit), err.c_str() );
 }

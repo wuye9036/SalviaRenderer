@@ -202,12 +202,12 @@ SASL_VISIT_NOIMPL( declaration );
 
 SASL_VISIT_DEF( variable_declaration )
 {
-	symbol_scope sc( v.name->str, v.handle(), cursym );
+	//symbol_scope sc( v.name->str, v.handle(), cursym );
 
-	// process variable type
-	shared_ptr<type_specifier> vartype = v.type_info;
-	vartype->accept( this, data );
-	shared_ptr<type_si> tsi = extract_semantic_info<type_si>(v);
+	//// process variable type
+	//shared_ptr<type_specifier> vartype = v.type_info;
+	//vartype->accept( this, data );
+	//shared_ptr<type_si> tsi = extract_semantic_info<type_si>(v);
 
 	//// check type.
 	//if ( tsi->type_type() == type_types::buildin ){
@@ -228,35 +228,35 @@ SASL_VISIT_DEF( variable_declaration )
 	//}
 
 	// process initializer
-	v.init->accept( this, data );;
+	// v.init->accept( this, data );;
 }
 
 SASL_VISIT_DEF( type_definition ){
-	const std::string& alias_str = v.name->str;
-	shared_ptr<symbol> existed_sym = cursym->find( alias_str );
-	if ( existed_sym ){
-		// if the symbol is used and is not a type node, it must be redifinition.
-		// else compare the type.
-		if ( !existed_sym->node()->node_class().included( syntax_node_types::type_specifier ) ){
-			gctxt->compiler_infos()->add_info(
-				semantic_error::create( compiler_informations::redef_cannot_overloaded,
-				v.handle(),	list_of(existed_sym->node()) )
-					);
-			return;
-		}
-	}
+	//const std::string& alias_str = v.name->str;
+	//shared_ptr<symbol> existed_sym = cursym->find( alias_str );
+	//if ( existed_sym ){
+	//	// if the symbol is used and is not a type node, it must be redifinition.
+	//	// else compare the type.
+	//	if ( !existed_sym->node()->node_class().included( syntax_node_types::type_specifier ) ){
+	//		gctxt->compiler_infos()->add_info(
+	//			semantic_error::create( compiler_informations::redef_cannot_overloaded,
+	//			v.handle(),	list_of(existed_sym->node()) )
+	//				);
+	//		return;
+	//	}
+	//}
 
-	// process type node.
-	// remove old sym from symbol table.
-	cursym->remove_child( v.name->str );
-	{
-		symbol_scope sc( v.name->str, v.handle(), cursym );
+	//// process type node.
+	//// remove old sym from symbol table.
+	//cursym->remove_child( v.name->str );
+	//{
+	//	symbol_scope sc( v.name->str, v.handle(), cursym );
 
-		v.type_info->accept(this, data);
-		shared_ptr<type_si> new_tsi = extract_semantic_info<type_si>(v);
+	//	v.type_info->accept(this, data);
+	//	shared_ptr<type_si> new_tsi = extract_semantic_info<type_si>(v);
 
-		// if this symbol is usable, process type node.
-		if ( existed_sym ){
+	//	// if this symbol is usable, process type node.
+	//	if ( existed_sym ){
 			//shared_ptr<type_semantic_info> existed_tsi = extract_semantic_info<type_semantic_info>( existed_sym->node() );
 			//if ( !type_equal(existed_tsi->full_type(), new_tsi->full_type()) ){
 			//	// if new symbol is different from the old, semantic error.
@@ -267,12 +267,12 @@ SASL_VISIT_DEF( type_definition ){
 			//		v.handle(),	list_of(existed_sym->node()) )
 			//		);
 			//}
-		}
+		//}
 		// else if the same. do not updated.
 		// NOTE:
 		//   MAYBE IT NEEDS COMBINE OLD AND NEW SYMBOL INFOS UNDER SOME CONDITIONS.
 		//   BUT I CAN NOT FIND OUT ANY EXAMPLE.
-	}
+	//}
 }
 
 SASL_VISIT_NOIMPL( type_specifier );
@@ -320,6 +320,8 @@ SASL_VISIT_DEF( function_type )
 	shared_ptr<symbol> sym = context().parent_sym->add_function_begin( dup_fn );
 
 	sacontext child_ctxt_init = ctxt;
+	child_ctxt_init.parent_sym = sym;
+
 	sacontext child_ctxt;
 
 	dup_fn->retval_type
@@ -378,6 +380,7 @@ SASL_VISIT_DEF( compound_statement )
 
 	sacontext child_ctxt_init = context();
 	child_ctxt_init.parent_sym = context().parent_sym->add_anonymous_child( dup_stmt );
+	assert( dup_stmt->symbol()->parent() == context().parent_sym );
 	child_ctxt_init.generated_node.reset();
 
 	sacontext child_ctxt;

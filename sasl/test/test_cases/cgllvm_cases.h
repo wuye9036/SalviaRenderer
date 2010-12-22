@@ -25,15 +25,6 @@ public:
 	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_jit_engine), jit );
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), root );
-	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), null_root );
-	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), prog_for_jit_test );
-
-	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), type_void );
-	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), type_float );
-	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), fn1_sem );
-	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), fn1_sem_p0 );
-	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_common_context), fn1_sem_p1 );
-
 private:
 	cgllvm_cases();
 	void initialize();

@@ -23,7 +23,7 @@
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-using namespace std;
+
 using namespace syntax_tree;
 using namespace boost::assign;
 using namespace llvm;
@@ -34,6 +34,10 @@ using semantic::symbol;
 using semantic::type_equal;
 using semantic::operator_name;
 using semantic::type_info_si;
+
+using boost::shared_ptr;
+
+using std::vector;
 
 typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
 
@@ -274,16 +278,20 @@ SASL_VISIT_DEF( compound_statement ){
 
 	SASL_REWRITE_DATA_AS_SYMBOL();
 
+	shared_ptr<symbol> parent_sym = v.symbol()->node()->node_class() == syntax_node_types::function_type ? v.symbol() : v.symbol()->parent();
+
 	BasicBlock* bb = BasicBlock::Create(
 		ctxt->context(),
 		v.symbol()->mangled_name(),
-		extract_common_ctxt( v.symbol()->parent()->node() )->func
+		extract_common_ctxt( parent_sym->node() )->func
 		);
+
 	get_common_ctxt(v.handle())->block = bb;
 
 	ctxt->builder()->SetInsertPoint(bb);
 	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
-		it != v.stmts.end(); ++it){
+		it != v.stmts.end(); ++it)
+	{
 		(*it)->accept( this, data );
 	}
 }
@@ -326,7 +334,8 @@ SASL_VISIT_DEF( program ){
 	::boost::any sym_data( v.symbol() );
 
 	for( vector< boost::shared_ptr<declaration> >::iterator
-		it = v.decls.begin(); it != v.decls.end(); ++it ){
+		it = v.decls.begin(); it != v.decls.end(); ++it )
+	{
 		(*it)->accept( this, &sym_data );
 	}
 }

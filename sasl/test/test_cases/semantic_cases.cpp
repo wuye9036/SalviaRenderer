@@ -87,6 +87,7 @@ void semantic_cases::initialize(){
 	CHECK_RET( LOCVAR_(par1_1_fn1) = LOCVAR_(sym_par1_1_fn1)->node()->typed_handle< SYNTAX_(parameter) >() );
 
 	CHECK_RET( LOCVAR_(body_fn2) = fn2_sem()->body );
+	CHECK_RET( LOCVAR_(sym_body_fn2) = body_fn2()->symbol() );
 	CHECK_RET( LOCVAR_(jstmt0_0_fn2) = body_fn2()->stmts[0]->typed_handle< SYNTAX_(jump_statement) >() );
 	CHECK_RET( LOCVAR_(bexpr0_0_jstmts0) = jstmt0_0_fn2()->jump_expr->typed_handle< SYNTAX_(binary_expression) >() );
 	CHECK_RET( LOCVAR_(cexpr0_l_bexpr0) = bexpr0_0_jstmts0()->left_expr->typed_handle< SYNTAX_(constant_expression) >() );

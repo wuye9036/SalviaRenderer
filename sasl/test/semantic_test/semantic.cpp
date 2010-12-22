@@ -48,7 +48,13 @@ void test_function_si(){
 void test_statement_si(){
 	semantic_cases::instance();
 
+	BOOST_REQUIRE( SEMCASE_(sym_fn1_sem) );
+	BOOST_CHECK( SEMCASE_(fn1_sem)->body->symbol()->parent() =  SEMCASE_(sym_fn1_sem) );
+	BOOST_REQUIRE( SEMCASE_(sym_fn2_sem) );
 	BOOST_REQUIRE( SEMCASE_(body_fn2) );
+	BOOST_REQUIRE( SEMCASE_(sym_body_fn2) );
+	BOOST_CHECK( SEMCASE_(sym_body_fn2)->parent() != SEMCASE_(sym_root) );
+	BOOST_CHECK( SEMCASE_(sym_body_fn2)->parent() == SEMCASE_(sym_fn2_sem) );
 	BOOST_CHECK_EQUAL( SEMCASE_(body_fn2)->stmts.size(), 1 );
 	BOOST_REQUIRE( SEMCASE_(jstmt0_0_fn2) );
 }

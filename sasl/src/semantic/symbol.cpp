@@ -272,7 +272,15 @@ shared_ptr<node> symbol::node() const
 }
 
 void symbol::relink( shared_ptr<struct node> n ){
+	if ( correspond_node == n ){
+		return;
+	}
+	if( n->symbol() ){
+		n->symbol()->remove();
+	}
+
 	correspond_node = n;
+	n->symbol( selfptr.lock() );
 }
 
 const string& symbol::mangled_name() const{

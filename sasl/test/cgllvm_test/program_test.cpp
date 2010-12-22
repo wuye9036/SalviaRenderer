@@ -19,19 +19,6 @@ using sasl::code_generator::llvm_code;
 
 BOOST_AUTO_TEST_SUITE( main_suite )
 
-BOOST_AUTO_TEST_CASE( module_generation_test ){
-	using sasl::syntax_tree::program;
-	using sasl::syntax_tree::create_node;
-	cgllvm_cases::instance();
-
-	BOOST_CHECK( !LLVMCASE_(null_root) );
-	BOOST_CHECK( LLVMCASE_(root) );
-	BOOST_CHECK( SYNCASE_(prog_for_semantic_test)->codegen_ctxt() == LLVMCASE_(root) );
-	BOOST_CHECK( LLVMCASE_(root)->module() );
-	BOOST_CHECK( LLVMCASE_(root)->module()->getModuleIdentifier() == SYNCASENAME_(prog_for_semantic_test) );
-	LLVMCASE_(root)->module()->dump();
-}
-
 BOOST_AUTO_TEST_CASE( jit_test ){
 	cgllvm_cases::instance();
 

@@ -96,8 +96,6 @@ private:
 	boost::shared_ptr<global_si> gctxt;
 
 	boost::shared_ptr<type_converter> typeconv;
-	boost::shared_ptr<symbol> cursym;
-	bool is_local;
 };
 
 END_NS_SASL_SEMANTIC();
