@@ -43,9 +43,9 @@ typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
 
 #define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::typecode )
 
-#define SASL_REWRITE_DATA_AS_SYMBOL()	\
-	::boost::any sym_data( v.symbol() );	\
-	data = v.symbol() ? &sym_data : data;
+// #define context() any_cast< shared_ptr<cgllvm_common_context> >( *data );
+
+// #define new_context( var, init_data ) 
 
 //////////////////////////////////////////////////////////////////////////
 // utility functions.
@@ -88,7 +88,7 @@ SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_NOIMPL( cast_expression );
 
 SASL_VISIT_DEF( binary_expression ){
-	SASL_REWRITE_DATA_AS_SYMBOL();
+	// SASL_REWRITE_DATA_AS_SYMBOL();
 
 	//// generate left and right expr.
 	v.left_expr->accept( this, data );
@@ -152,13 +152,15 @@ SASL_VISIT_NOIMPL( call_expression );
 SASL_VISIT_NOIMPL( member_expression );
 
 SASL_VISIT_DEF( constant_expression ){
-	SASL_REWRITE_DATA_AS_SYMBOL();
+//	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
 	c_si->type_info()->accept( this, data );
 
 	if( c_si->value_type() == buildin_type_code::_sint32 ){
 		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
+	} else if ( c_si->value_type() == buildin_type_code::_uint32 ) {
+		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<uint32_t>() ), true );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -183,7 +185,7 @@ SASL_VISIT_NOIMPL( variable_declaration );
 SASL_VISIT_NOIMPL( type_definition );
 SASL_VISIT_NOIMPL( type_specifier );
 SASL_VISIT_DEF( buildin_type ){
-	SASL_REWRITE_DATA_AS_SYMBOL();
+//	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	if ( v.codegen_ctxt() ){ return; }
 	common_ctxt_handle type_ctxt = get_common_ctxt(v);
@@ -207,7 +209,7 @@ SASL_VISIT_NOIMPL( array_type );
 SASL_VISIT_NOIMPL( struct_type );
 SASL_VISIT_DEF( parameter ){
 
-	SASL_REWRITE_DATA_AS_SYMBOL();
+//	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	v.param_type->accept( this, data );
 	if (v.init){
@@ -218,7 +220,7 @@ SASL_VISIT_DEF( parameter ){
 }
 
 SASL_VISIT_DEF( function_type ){
-	SASL_REWRITE_DATA_AS_SYMBOL();
+//	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	// skip if context existed.
 	if ( v.codegen_ctxt() ) { return; }
@@ -276,7 +278,7 @@ SASL_VISIT_NOIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement ){
 
-	SASL_REWRITE_DATA_AS_SYMBOL();
+//	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	shared_ptr<symbol> parent_sym = v.symbol()->node()->node_class() == syntax_node_types::function_type ? v.symbol() : v.symbol()->parent();
 
@@ -297,13 +299,13 @@ SASL_VISIT_DEF( compound_statement ){
 }
 
 SASL_VISIT_DEF( expression_statement ){
-	SASL_REWRITE_DATA_AS_SYMBOL();
+//	SASL_REWRITE_DATA_AS_SYMBOL();
 	v.expr->accept( this, data );
 }
 
 SASL_VISIT_DEF( jump_statement ){
 
-	SASL_REWRITE_DATA_AS_SYMBOL();
+//	SASL_REWRITE_DATA_AS_SYMBOL();
 
 	if (v.jump_expr){
 		v.jump_expr->accept( this, data );

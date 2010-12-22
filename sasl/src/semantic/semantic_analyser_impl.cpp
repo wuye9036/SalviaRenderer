@@ -84,8 +84,16 @@ struct sacontext{
 	shared_ptr<node> generated_node;
 };
 
-#define context() (*any_cast<sacontext>(data))
-#define set_context( ctxt ) ( *data = (ctxt) )
+
+sacontext* any_to_ctxt_ptr( any& any_val ){
+	return any_cast<sacontext>(&any_val);
+}
+
+sacontext const * any_to_ctxt_ptr( const any& any_val ){
+	return any_cast<sacontext>(&any_val);
+}
+
+#define data_as_ctxt_ptr() ( any_to_ctxt_ptr(*data) )
 
 // utility functions
 
@@ -104,26 +112,25 @@ semantic_analyser_impl::semantic_analyser_impl()
 
 #define SASL_VISITOR_TYPE_NAME semantic_analyser_impl
 
-template <typename NodeT> sacontext& semantic_analyser_impl::visit_child( sacontext& child_ctxt, const sacontext& init_data, shared_ptr<NodeT> child )
+template <typename NodeT> any& semantic_analyser_impl::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
 {
-	any child_data = init_data;
-	child->accept( this, &child_data );
-	child_ctxt = any_cast<sacontext>(child_data);
+	child_ctxt = init_data;
+	child->accept( this, &child_ctxt );
 	return child_ctxt;
 }
 
-template <typename NodeT> sacontext& semantic_analyser_impl::visit_child( sacontext& child_ctxt, shared_ptr<NodeT> child )
+template <typename NodeT> any& semantic_analyser_impl::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
 {
 	return visit_child( child_ctxt, child_ctxt, child );
 }
 
-template <typename NodeT> sacontext& semantic_analyser_impl::visit_child(
-	sacontext& child_ctxt, const sacontext& init_data,
+template <typename NodeT> any& semantic_analyser_impl::visit_child(
+	any& child_ctxt, const any& init_data,
 	shared_ptr<NodeT> child, shared_ptr<NodeT>& generated_node )
 {
 	visit_child( child_ctxt, init_data, child );
-	if( child_ctxt.generated_node ){
-		generated_node = child_ctxt.generated_node->typed_handle<NodeT>();
+	if( any_to_ctxt_ptr( child_ctxt )->generated_node ){
+		generated_node = any_to_ctxt_ptr(child_ctxt)->generated_node->typed_handle<NodeT>();
 	}
 	return child_ctxt;
 }
@@ -132,12 +139,12 @@ SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_NOIMPL( cast_expression );
 SASL_VISIT_DEF( binary_expression )
 {
-	sacontext child_ctxt_init = context();
-	child_ctxt_init.generated_node.reset();
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
 
 	shared_ptr<binary_expression> dup_expr = duplicate( v.handle() )->typed_handle<binary_expression>();
 
-	sacontext child_ctxt;
+	any child_ctxt;
 	visit_child( child_ctxt, child_ctxt_init, v.left_expr, dup_expr->left_expr );
 	visit_child( child_ctxt, child_ctxt_init, v.right_expr, dup_expr->right_expr );
 
@@ -145,7 +152,7 @@ SASL_VISIT_DEF( binary_expression )
 	std::string opname = operator_name( v.op );
 	vector< shared_ptr<expression> > exprs;
 	exprs += dup_expr->left_expr, dup_expr->right_expr;
-	vector< shared_ptr<symbol> > overloads = context().parent_sym->find_overloads( opname, typeconv, exprs );
+	vector< shared_ptr<symbol> > overloads = data_as_ctxt_ptr()->parent_sym->find_overloads( opname, typeconv, exprs );
 
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
 		return;
@@ -162,9 +169,9 @@ SASL_VISIT_DEF( binary_expression )
 
 	// update semantic information of binary expression
 	type_entry::id_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
-	get_or_create_semantic_info<storage_si>( dup_expr, context().gsi->type_manager() )->entry_id( result_tid );
+	get_or_create_semantic_info<storage_si>( dup_expr, data_as_ctxt_ptr()->gsi->type_manager() )->entry_id( result_tid );
 
-	context().generated_node = dup_expr->handle();
+	data_as_ctxt_ptr()->generated_node = dup_expr->handle();
 }
 
 SASL_VISIT_NOIMPL( expression_list );
@@ -180,7 +187,7 @@ SASL_VISIT_DEF( constant_expression )
 	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, dup_cexpr, gctxt->type_manager() );
 	vsi->set_literal( v.value_tok->str, v.ctype );
 
-	context().generated_node = dup_cexpr->handle();	
+	data_as_ctxt_ptr()->generated_node = dup_cexpr->handle();	
 }
 
 SASL_VISIT_DEF( variable_expression ){
@@ -280,9 +287,9 @@ SASL_VISIT_DEF( buildin_type ){
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
 	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, gctxt->type_manager() );
-	tsi->type_info( v.typed_handle<type_specifier>(), context().parent_sym );
+	tsi->type_info( v.typed_handle<type_specifier>(), data_as_ctxt_ptr()->parent_sym );
 
-	context().generated_node = tsi->type_info()->handle();
+	data_as_ctxt_ptr()->generated_node = tsi->type_info()->handle();
 }
 
 SASL_VISIT_NOIMPL( array_type );
@@ -291,24 +298,22 @@ SASL_VISIT_NOIMPL( struct_type );
 SASL_VISIT_DEF( parameter )
 {
 	shared_ptr<parameter> dup_par = duplicate( v.handle() )->typed_handle<parameter>();
-	context().parent_sym->add_child( v.name ? v.name->str : std::string(), dup_par );
+	data_as_ctxt_ptr()->parent_sym->add_child( v.name ? v.name->str : std::string(), dup_par );
 
-	sacontext child_ctxt;
-	visit_child( child_ctxt, context(), v.param_type, dup_par->param_type );
+	any child_ctxt;
+	visit_child( child_ctxt, *data, v.param_type, dup_par->param_type );
 	if ( v.init ){
-		visit_child( child_ctxt, context(), v.init, dup_par->init );
+		visit_child( child_ctxt, *data, v.init, dup_par->init );
 	}
 
 	type_entry::id_t tid = extract_semantic_info<type_info_si>(dup_par->param_type)->entry_id();
 	get_or_create_semantic_info<storage_si>( dup_par, gctxt->type_manager() )->entry_id( tid );
 
-	context().generated_node = dup_par->handle();
+	data_as_ctxt_ptr()->generated_node = dup_par->handle();
 }
 
 SASL_VISIT_DEF( function_type )
 {
-	sacontext ctxt = context();
-
 	// Copy node
 	shared_ptr<node> dup_node = duplicate( v.handle() );
 	EFLIB_ASSERT_AND_IF( dup_node, "Node swallow duplicated error !"){
@@ -317,35 +322,34 @@ SASL_VISIT_DEF( function_type )
 	shared_ptr<function_type> dup_fn = dup_node->typed_handle<function_type>();
 	dup_fn->params.clear();
 
-	shared_ptr<symbol> sym = context().parent_sym->add_function_begin( dup_fn );
+	shared_ptr<symbol> sym = data_as_ctxt_ptr()->parent_sym->add_function_begin( dup_fn );
 
-	sacontext child_ctxt_init = ctxt;
-	child_ctxt_init.parent_sym = sym;
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = sym;
 
-	sacontext child_ctxt;
+	any child_ctxt;
 
 	dup_fn->retval_type
-		= visit_child( child_ctxt, child_ctxt_init, v.retval_type ).generated_node->typed_handle<type_specifier>();
+		= any_to_ctxt_ptr( visit_child( child_ctxt, child_ctxt_init, v.retval_type ) )->generated_node->typed_handle<type_specifier>();
 
 	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )
 	{
 		dup_fn->params.push_back( 
-			visit_child(child_ctxt, child_ctxt_init, *it).generated_node->typed_handle<parameter>()
+			any_to_ctxt_ptr( visit_child(child_ctxt, child_ctxt_init, *it) )->generated_node->typed_handle<parameter>()
 			);
 	}
 
-	context().parent_sym->add_function_end( sym );
+	data_as_ctxt_ptr()->parent_sym->add_function_end( sym );
 	
 	type_entry::id_t ret_tid = extract_semantic_info<type_info_si>( dup_fn->retval_type )->entry_id();
-	get_or_create_semantic_info<storage_si>( dup_fn, context().gsi->type_manager() )->entry_id( ret_tid );
+	get_or_create_semantic_info<storage_si>( dup_fn, data_as_ctxt_ptr()->gsi->type_manager() )->entry_id( ret_tid );
 
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
 	}
 
-	ctxt.generated_node = dup_fn;
-	set_context(ctxt);
+	data_as_ctxt_ptr()->generated_node = dup_fn;
 }
 
 // statement
@@ -378,12 +382,11 @@ SASL_VISIT_DEF( compound_statement )
 	shared_ptr<compound_statement> dup_stmt = duplicate(v.handle())->typed_handle<compound_statement>();
 	dup_stmt->stmts.clear();
 
-	sacontext child_ctxt_init = context();
-	child_ctxt_init.parent_sym = context().parent_sym->add_anonymous_child( dup_stmt );
-	assert( dup_stmt->symbol()->parent() == context().parent_sym );
-	child_ctxt_init.generated_node.reset();
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = data_as_ctxt_ptr()->parent_sym->add_anonymous_child( dup_stmt );
+	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
 
-	sacontext child_ctxt;
+	any child_ctxt;
 	for( vector< shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{
@@ -392,7 +395,7 @@ SASL_VISIT_DEF( compound_statement )
 		dup_stmt->stmts.push_back(child_gen);
 	}
 
-	context().generated_node = dup_stmt->handle();
+	data_as_ctxt_ptr()->generated_node = dup_stmt->handle();
 }
 
 SASL_VISIT_DEF( expression_statement ){
@@ -403,17 +406,17 @@ SASL_VISIT_DEF( jump_statement )
 {
 	shared_ptr<jump_statement> dup_jump = duplicate(v.handle())->typed_handle<jump_statement>();
 
-	sacontext child_ctxt_init = context();
-	child_ctxt_init.generated_node.reset();
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr( child_ctxt_init )->generated_node.reset();
 
 	if (v.code == jump_mode::_return){
 		if( v.jump_expr ){
-			sacontext child_ctxt;
+			any child_ctxt;
 			visit_child( child_ctxt, child_ctxt_init, v.jump_expr, dup_jump->jump_expr );
 		}
 	}
 
-	context().generated_node = dup_jump;
+	data_as_ctxt_ptr()->generated_node = dup_jump;
 }
 
 // program
@@ -421,11 +424,11 @@ SASL_VISIT_DEF( program ){
 	// create semantic info
 	gctxt.reset( new global_si() );
 
-	sacontext child_ctxt_init;
-	child_ctxt_init.gsi = gctxt;
-	child_ctxt_init.parent_sym = gctxt->root();
+	any child_ctxt_init = sacontext();
+	any_to_ctxt_ptr(child_ctxt_init)->gsi = gctxt;
+	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = gctxt->root();
 
-	sacontext child_ctxt = child_ctxt_init;
+	any child_ctxt = child_ctxt_init;
 
 	register_buildin_types();
 	register_type_converter( child_ctxt_init );
@@ -450,9 +453,9 @@ void semantic_analyser_impl::buildin_type_convert( shared_ptr<node> lhs, shared_
 	// do nothing
 }
 
-void semantic_analyser_impl::register_type_converter( const sacontext& ctxt ){
+void semantic_analyser_impl::register_type_converter( const boost::any& ctxt ){
 	// register default type converter
-	type_manager* typemgr = ctxt.gsi->type_manager().get();
+	type_manager* typemgr = any_to_ctxt_ptr(ctxt)->gsi->type_manager().get();
 
 	type_entry::id_t sint8_ts = typemgr->get( buildin_type_code::_sint8 );
 	type_entry::id_t sint16_ts = typemgr->get( buildin_type_code::_sint16 );
@@ -606,8 +609,8 @@ void semantic_analyser_impl::register_type_converter( const sacontext& ctxt ){
 
 }
 
-void semantic_analyser_impl::register_buildin_functions( const sacontext& child_ctxt_init ){
-	sacontext child_ctxt;
+void semantic_analyser_impl::register_buildin_functions( const boost::any& child_ctxt_init ){
+	any child_ctxt;
 
 	typedef unordered_map<
 		buildin_type_code, shared_ptr<buildin_type>, enum_hasher

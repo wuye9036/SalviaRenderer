@@ -20,6 +20,12 @@ namespace llvm{
 	class ReturnInst;
 }
 
+namespace sasl{
+	namespace semantic{
+		class symbol;
+	}
+}
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 //////////////////////////////////////////////////////////
@@ -29,6 +35,8 @@ class cgllvm_common_context: public codegen_context{
 public:
 	typedef codegen_context base_type;
 	cgllvm_common_context();
+
+	boost::weak_ptr< sasl::semantic::symbol > sym;
 
 	llvm::Value* val;
 	llvm::Function* func;

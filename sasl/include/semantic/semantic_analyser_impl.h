@@ -78,14 +78,14 @@ public:
 	boost::shared_ptr<global_si> global_semantic_info() const;
 
 private:
-	template <typename NodeT> sacontext& visit_child( sacontext& child_ctxt, boost::shared_ptr<NodeT> child );
-	template <typename NodeT> sacontext& visit_child( sacontext& child_ctxt, const sacontext& init_data, boost::shared_ptr<NodeT> child );
-	template <typename NodeT> sacontext& visit_child(
-		sacontext& child_ctxt, const sacontext& init_data,
+	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
+	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& init_data, boost::shared_ptr<NodeT> child );
+	template <typename NodeT> boost::any& visit_child(
+		boost::any& child_ctxt, const boost::any& init_data,
 		boost::shared_ptr<NodeT> child, boost::shared_ptr<NodeT>& generated_node 
 		);
-	void register_type_converter( const sacontext& ctxt );
-	void register_buildin_functions( const sacontext& child_ctxt_init );
+	void register_type_converter( const boost::any& ctxt );
+	void register_buildin_functions( const boost::any& child_ctxt_init );
 	void register_buildin_types();
 
 	void buildin_type_convert(
