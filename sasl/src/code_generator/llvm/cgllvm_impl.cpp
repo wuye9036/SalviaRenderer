@@ -36,16 +36,24 @@ using semantic::operator_name;
 using semantic::type_info_si;
 
 using boost::shared_ptr;
+using boost::any;
+using boost::any_cast;
 
 using std::vector;
 
-typedef boost::shared_ptr<cgllvm_common_context> common_ctxt_handle;
+typedef shared_ptr<cgllvm_common_context> common_ctxt_handle;
 
 #define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::typecode )
 
-// #define context() any_cast< shared_ptr<cgllvm_common_context> >( *data );
+cgllvm_common_context const * any_to_cgctxt_ptr( const any& any_val  ){
+	return any_cast<cgllvm_common_context>(any_val);
+}
 
-// #define new_context( var, init_data ) 
+cgllvm_common_context* any_to_cgctxt_ptr( any& any_val ){
+	return any_cast<cgllvm_common_context>(any_val);
+}
+
+#define data_as_cgctxt_ptr() ( any_to_cgctxt_ptr(*data) )
 
 //////////////////////////////////////////////////////////////////////////
 // utility functions.
@@ -333,12 +341,12 @@ SASL_VISIT_DEF( program ){
 	ctxt->create_module( v.name );
 	typeconv = create_type_converter( ctxt->builder() );
 
-	::boost::any sym_data( v.symbol() );
+	any child_ctxt = cgllvm_common_context();
 
 	for( vector< boost::shared_ptr<declaration> >::iterator
 		it = v.decls.begin(); it != v.decls.end(); ++it )
 	{
-		(*it)->accept( this, &sym_data );
+		(*it)->accept( this, &child_ctxt );
 	}
 }
 
