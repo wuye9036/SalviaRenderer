@@ -3,13 +3,18 @@
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <string>
 
 namespace sasl{
@@ -72,6 +77,10 @@ public:
 	SASL_VISIT_DCL( program );
 
 	boost::shared_ptr<llvm_code> generated_module();
+
+	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> child );
+	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
+
 private:
 	boost::shared_ptr<cgllvm_global_context> ctxt;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;

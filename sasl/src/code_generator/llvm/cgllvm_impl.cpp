@@ -46,11 +46,11 @@ typedef shared_ptr<cgllvm_common_context> common_ctxt_handle;
 #define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::typecode )
 
 cgllvm_common_context const * any_to_cgctxt_ptr( const any& any_val  ){
-	return any_cast<cgllvm_common_context>(any_val);
+	return any_cast<cgllvm_common_context>(&any_val);
 }
 
 cgllvm_common_context* any_to_cgctxt_ptr( any& any_val ){
-	return any_cast<cgllvm_common_context>(any_val);
+	return any_cast<cgllvm_common_context>(&any_val);
 }
 
 #define data_as_cgctxt_ptr() ( any_to_cgctxt_ptr(*data) )
@@ -86,19 +86,29 @@ static common_ctxt_handle parent_ctxt( boost::shared_ptr<NodeT> v ){
 
 //////////////////////////////////////////////////////////////////////////
 //
+#define SASL_VISITOR_TYPE_NAME llvm_code_generator
+
 llvm_code_generator::llvm_code_generator( )
 {
 }
 
-#define SASL_VISITOR_TYPE_NAME llvm_code_generator
+template <typename NodeT> any& llvm_code_generator::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
+{
+	child_ctxt = init_data;
+	return visit_child( child_ctxt, child );
+}
+
+template <typename NodeT> any& llvm_code_generator::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
+{
+	child->accept( this, &child_ctxt );
+	return child_ctxt;
+}
 
 SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_NOIMPL( cast_expression );
 
 SASL_VISIT_DEF( binary_expression ){
-	// SASL_REWRITE_DATA_AS_SYMBOL();
-
-	//// generate left and right expr.
+	// generate left and right expr.
 	v.left_expr->accept( this, data );
 	v.right_expr->accept( this, data );
 
@@ -313,8 +323,6 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_VISIT_DEF( jump_statement ){
 
-//	SASL_REWRITE_DATA_AS_SYMBOL();
-
 	if (v.jump_expr){
 		v.jump_expr->accept( this, data );
 	}
@@ -346,7 +354,7 @@ SASL_VISIT_DEF( program ){
 	for( vector< boost::shared_ptr<declaration> >::iterator
 		it = v.decls.begin(); it != v.decls.end(); ++it )
 	{
-		(*it)->accept( this, &child_ctxt );
+		visit_child( child_ctxt, (*it) );
 	}
 }
 

@@ -115,13 +115,13 @@ semantic_analyser_impl::semantic_analyser_impl()
 template <typename NodeT> any& semantic_analyser_impl::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
 {
 	child_ctxt = init_data;
-	child->accept( this, &child_ctxt );
-	return child_ctxt;
+	return visit_child( child_ctxt, child );
 }
 
 template <typename NodeT> any& semantic_analyser_impl::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
 {
-	return visit_child( child_ctxt, child_ctxt, child );
+	child->accept( this, &child_ctxt );
+	return child_ctxt;
 }
 
 template <typename NodeT> any& semantic_analyser_impl::visit_child(
