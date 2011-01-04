@@ -350,7 +350,7 @@ void rasterizer::draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint3
 	}
 }
 
-void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const ALIGN16 eflib::vec4* edge_factors, size_t num_samples){
+void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec4* edge_factors, size_t num_samples){
 	size_t sx = left - left0;
 	size_t sy = top - top0;
 
@@ -476,8 +476,8 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 }
 
 void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region,
-		const ALIGN16 vec4* edge_factors, uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
-		const ALIGN16 float* rej_to_acc, const ALIGN16 float* evalue, const ALIGN16 float* step_x, const ALIGN16 float* step_y){
+		const vec4* edge_factors, uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
+		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y){
 	const uint32_t new_w = cur_region.w;
 	const uint32_t new_h = cur_region.h;
 

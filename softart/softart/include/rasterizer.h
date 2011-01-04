@@ -90,10 +90,10 @@ class rasterizer : public render_stage
 	boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
 	void draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask);
-	void draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const ALIGN16 eflib::vec4* edge_factors, size_t num_samples);
-	void subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const ALIGN16 eflib::vec4* edge_factors,
+	void draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec4* edge_factors, size_t num_samples);
+	void subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const eflib::vec4* edge_factors,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
-		const ALIGN16 float* rej_to_acc, const ALIGN16 float* evalue, const ALIGN16 float* step_x, const ALIGN16 float* step_y);
+		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y);
 
 public:
 	//inherited
