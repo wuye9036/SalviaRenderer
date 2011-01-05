@@ -23,16 +23,16 @@
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-
 using namespace syntax_tree;
 using namespace boost::assign;
 using namespace llvm;
 
 using semantic::const_value_si;
 using semantic::extract_semantic_info;
+using semantic::global_si;
+using semantic::operator_name;
 using semantic::symbol;
 using semantic::type_equal;
-using semantic::operator_name;
 using semantic::type_info_si;
 
 using boost::shared_ptr;
@@ -109,9 +109,12 @@ SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_NOIMPL( cast_expression );
 
 SASL_VISIT_DEF( binary_expression ){
-	// generate left and right expr.
-	v.left_expr->accept( this, data );
-	v.right_expr->accept( this, data );
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.left_expr );
+	visit_child( child_ctxt, child_ctxt_init, v.left_expr );
 
 	boost::shared_ptr<type_specifier> ltype = extract_semantic_info<type_info_si>(v.left_expr)->type_info();
 	boost::shared_ptr<type_specifier> rtype = extract_semantic_info<type_info_si>(v.right_expr)->type_info();
@@ -125,7 +128,7 @@ SASL_VISIT_DEF( binary_expression ){
 
 	//////////////////////////////////////////////////////////////////////////
 	// type conversation for matching the operator prototype
-
+;
 	// get an overloadable prototype.
 	std::vector< boost::shared_ptr<expression> > args;
 	args += v.left_expr, v.right_expr;
@@ -172,10 +175,14 @@ SASL_VISIT_NOIMPL( call_expression );
 SASL_VISIT_NOIMPL( member_expression );
 
 SASL_VISIT_DEF( constant_expression ){
-//	SASL_REWRITE_DATA_AS_SYMBOL();
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
 
 	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
-	c_si->type_info()->accept( this, data );
+	if( !c_si->type_info()->codegen_ctxt() ){
+		visit_child( child_ctxt, child_ctxt_init, c_si->type_info() );
+	}
 
 	if( c_si->value_type() == buildin_type_code::_sint32 ){
 		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
@@ -354,18 +361,22 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_VISIT_DEF( jump_statement ){
 
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
 	if (v.jump_expr){
-		v.jump_expr->accept( this, data );
+		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
 	}
-	ReturnInst* ret_ins = NULL;
+
 	if ( v.code == jump_mode::_return ){
 		if ( !v.jump_expr ){
-			ret_ins = ctxt->builder()->CreateRetVoid();
+			data_as_cgctxt_ptr()->return_inst = ctxt->builder()->CreateRetVoid();
 		} else {
-			ret_ins = ctxt->builder()->CreateRet( extract_common_ctxt(v.jump_expr)->val );
+			data_as_cgctxt_ptr()->return_inst = ctxt->builder()->CreateRet( any_to_cgctxt_ptr(child_ctxt)->val );
 		}
 	}
-	get_common_ctxt(v)->ret_ins = ret_ins;
+
+	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
 SASL_VISIT_NOIMPL( ident_label );
@@ -378,7 +389,9 @@ SASL_VISIT_DEF( program ){
 
 	ctxt = create_codegen_context<cgllvm_global_context>(v.handle());
 	ctxt->create_module( v.name );
+
 	typeconv = create_type_converter( ctxt->builder() );
+	register_buildin_typeconv( typeconv, gsi->type_manager() );
 
 	any child_ctxt = cgllvm_common_context();
 
@@ -395,4 +408,8 @@ boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
 	return boost::shared_polymorphic_cast<llvm_code>(ctxt);
 }
 
+void llvm_code_generator::global_semantic_info( boost::shared_ptr< sasl::semantic::global_si > v )
+{
+	gsi = v;
+}
 END_NS_SASL_CODE_GENERATOR();

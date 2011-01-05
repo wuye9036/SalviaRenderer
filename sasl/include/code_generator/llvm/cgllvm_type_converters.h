@@ -7,6 +7,7 @@
 namespace sasl{
 	namespace semantic{
 		class type_converter;
+		class type_manager;
 		class symbol;
 	}
 }
@@ -17,11 +18,13 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter( boost::shared_ptr<llvm::IRBuilderBase> builder );
+boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter(
+		boost::shared_ptr<llvm::IRBuilderBase> builder
+		);
 
 void register_buildin_typeconv(
-	boost::shared_ptr< ::sasl::semantic::symbol> global_sym,
-	boost::shared_ptr< ::sasl::semantic::type_converter> typeconv
+	boost::shared_ptr< ::sasl::semantic::type_converter> typeconv,
+	boost::shared_ptr< sasl::semantic::type_manager> typemgr
 	);
 
 END_NS_SASL_CODE_GENERATOR();

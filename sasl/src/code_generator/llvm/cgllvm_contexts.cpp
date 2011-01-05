@@ -6,7 +6,7 @@ cgllvm_common_context::cgllvm_common_context():
 val(NULL), func(NULL), parent_func(NULL), arg(NULL),
 type(NULL), is_signed(false),
 func_type(NULL), gvar(NULL),
-block(NULL), ret_ins(NULL)
+block(NULL), return_inst(NULL)
 {
 }
 

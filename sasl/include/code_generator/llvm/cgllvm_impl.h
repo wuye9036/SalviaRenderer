@@ -20,6 +20,7 @@
 namespace sasl{
 	namespace semantic{
 		class type_converter;
+		class global_si;
 	}
 }
 
@@ -81,7 +82,9 @@ public:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
 
+	void global_semantic_info( boost::shared_ptr< sasl::semantic::global_si > );
 private:
+	boost::shared_ptr< sasl::semantic::global_si > gsi;
 	boost::shared_ptr<cgllvm_global_context> ctxt;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 };

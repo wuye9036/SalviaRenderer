@@ -46,11 +46,12 @@ public:
 	void better_or_worse_convertible( type_entry::id_t matched, type_entry::id_t matching, type_entry::id_t src, bool& better, bool& worse );
 
 	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
-		boost::shared_ptr< ::sasl::syntax_tree::node > src );\
+		boost::shared_ptr< ::sasl::syntax_tree::node > src );
 
 	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::type_specifier > desttype,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );
 
+	virtual ~type_converter(){}
 private:
 	typedef boost::tuples::tuple<
 		conv_type,

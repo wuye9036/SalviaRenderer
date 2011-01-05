@@ -12,7 +12,7 @@ namespace llvm {
 
 namespace sasl {
 	namespace semantic{
-		class symbol;
+		class global_si;
 	}
 }
 
@@ -26,7 +26,7 @@ public:
 	virtual ~llvm_code(){};
 };
 
-boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr<sasl::semantic::symbol> root );
+boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr< sasl::semantic::global_si > );
 END_NS_SASL_CODE_GENERATOR();
 
 #endif

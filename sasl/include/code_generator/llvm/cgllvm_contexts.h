@@ -51,7 +51,7 @@ public:
 	llvm::GlobalVariable* gvar;
 
 	// Instructions
-	llvm::ReturnInst* ret_ins;
+	llvm::ReturnInst* return_inst;
 };
 
 class cgllvm_type_context: public codegen_context{

@@ -67,7 +67,7 @@ void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
 	shared_ptr< SEMANTIC_(global_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test) );
-	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root->root() );
+	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root );
 
 	std::string err;
 	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(root) ), err);

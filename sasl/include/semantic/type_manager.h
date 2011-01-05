@@ -25,7 +25,7 @@ class symbol;
 
 class type_entry{
 public:
-	typedef int32_t id_t;
+	typedef int id_t;
 	typedef id_t type_entry::*id_ptr_t;
 
 	type_entry();
