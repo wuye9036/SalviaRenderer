@@ -40,6 +40,7 @@ public:
 
 	llvm::Value* val;
 	llvm::Function* func;
+	llvm::Function* parent_func; // For inserting statement code into function .
 	llvm::Argument* arg;
 	llvm::BasicBlock* block;
 
