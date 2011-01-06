@@ -75,14 +75,6 @@ static common_ctxt_handle get_common_ctxt( boost::shared_ptr<NodeT> v ){
 	return get_or_create_codegen_context<cgllvm_common_context>(v);
 }
 
-template<typename NodeT>
-static common_ctxt_handle parent_ctxt( boost::shared_ptr<NodeT> v ){
-	boost::shared_ptr<symbol> parent_sym = v->symbol()->parent();
-	if( parent_sym ){
-		return extract_codegen_context<cgllvm_common_context>( parent_sym->node() );
-	}
-	return common_ctxt_handle();
-}
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -114,21 +106,14 @@ SASL_VISIT_DEF( binary_expression ){
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.left_expr );
-	visit_child( child_ctxt, child_ctxt_init, v.left_expr );
+	visit_child( child_ctxt, child_ctxt_init, v.right_expr );
 
-	boost::shared_ptr<type_specifier> ltype = extract_semantic_info<type_info_si>(v.left_expr)->type_info();
-	boost::shared_ptr<type_specifier> rtype = extract_semantic_info<type_info_si>(v.right_expr)->type_info();
-
-	EFLIB_ASSERT_AND_IF(
-		( is_node_class(ltype, buildin_type ) && is_node_class(rtype, buildin_type ) ),
-		"Operators of buildin type are supported only." )
-	{
-		return;
-	}
+	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
+	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
 	//////////////////////////////////////////////////////////////////////////
 	// type conversation for matching the operator prototype
-;
+
 	// get an overloadable prototype.
 	std::vector< boost::shared_ptr<expression> > args;
 	args += v.left_expr, v.right_expr;
@@ -145,27 +130,44 @@ SASL_VISIT_DEF( binary_expression ){
 
 	boost::shared_ptr<function_type> op_proto = overloads[0]->node()->typed_handle<function_type>();
 
+	shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
+	shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
+
 	// convert value type to match proto type.
-	if( ! type_equal( op_proto->params[0]->param_type, ltype ) ){
-		typeconv->convert( op_proto->params[0]->param_type, v.left_expr );
+	if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
+		if( !p0_tsi->type_info()->codegen_ctxt() ){
+			visit_child( child_ctxt, child_ctxt_init,  op_proto->params[0]->param_type );
+		}
+		extract_common_ctxt(v.left_expr)->type = extract_common_ctxt( p0_tsi->type_info() )->type;
+		typeconv->convert( p0_tsi->type_info(), v.left_expr );
 	}
-	if( ! type_equal( op_proto->params[0]->param_type, rtype ) ){
-		typeconv->convert( op_proto->params[0]->param_type, v.right_expr );
+	if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
+		if( !p1_tsi->type_info()->codegen_ctxt() ){
+			visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
+		}
+		extract_common_ctxt(v.right_expr)->type = extract_common_ctxt( p1_tsi->type_info() )->type;
+		typeconv->convert( p1_tsi->type_info(), v.right_expr );
 	}
 
 	// use type-converted value to generate code.
 	Value* lval = extract_common_ctxt( v.left_expr )->val;
 	Value* rval = extract_common_ctxt( v.right_expr )->val;
 
-	if (v.op == operators::add){
-		get_common_ctxt(v)->val = ctxt->builder()->CreateAdd( lval, rval, "" );
-	} else if ( v.op == operators::sub ){
-		get_common_ctxt(v)->val = ctxt->builder()->CreateSub( lval, rval, "" );
-	} else if ( v.op == operators::mul ){
-		get_common_ctxt(v)->val = ctxt->builder()->CreateMul( lval, rval, "" );
-	} else if ( v.op == operators::div ){
-		EFLIB_INTERRUPT( "Division is not supported yet." );
+	Value* retval = NULL;
+	if( lval && rval ){
+		if (v.op == operators::add){
+			retval = ctxt->builder()->CreateAdd( lval, rval, "" );
+		} else if ( v.op == operators::sub ){
+			retval = ctxt->builder()->CreateSub( lval, rval, "" );
+		} else if ( v.op == operators::mul ){
+			retval = ctxt->builder()->CreateMul( lval, rval, "" );
+		} else if ( v.op == operators::div ){
+			EFLIB_INTERRUPT( "Division is not supported yet." );
+		}
 	}
+
+	data_as_cgctxt_ptr()->val = retval;
+	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
 SASL_VISIT_NOIMPL( expression_list );
@@ -184,13 +186,17 @@ SASL_VISIT_DEF( constant_expression ){
 		visit_child( child_ctxt, child_ctxt_init, c_si->type_info() );
 	}
 
+	Value* retval = NULL;
 	if( c_si->value_type() == buildin_type_code::_sint32 ){
-		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
+		retval = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
 	} else if ( c_si->value_type() == buildin_type_code::_uint32 ) {
-		get_common_ctxt(v)->val = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<uint32_t>() ), true );
+		retval = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<uint32_t>() ), true );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
+
+	data_as_cgctxt_ptr()->val = retval;
+	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
 SASL_VISIT_NOIMPL( identifier );
@@ -212,12 +218,11 @@ SASL_VISIT_NOIMPL( variable_declaration );
 SASL_VISIT_NOIMPL( type_definition );
 SASL_VISIT_NOIMPL( type_specifier );
 SASL_VISIT_DEF( buildin_type ){
-	EFLIB_ASSERT_AND_IF( !data_as_cgctxt_ptr()->sym.expired(), "Null symbol." ){
-		return;
-	}
 
-	if ( v.codegen_ctxt() ){
-		*data = *( v.codegen_ctxt() );
+	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
+
+	if ( tisi->type_info()->codegen_ctxt() ){
+		*data = *( tisi->type_info()->codegen_ctxt() );
 		return;
 	}
 	
@@ -245,7 +250,7 @@ SASL_VISIT_DEF( buildin_type ){
 	data_as_cgctxt_ptr()->type = ret_type;
 	data_as_cgctxt_ptr()->is_signed = sign;
 
-	*get_common_ctxt(v) = *(data_as_cgctxt_ptr());
+	*get_common_ctxt( tisi->type_info() ) = *(data_as_cgctxt_ptr());
 }
 
 SASL_VISIT_NOIMPL( array_type );
