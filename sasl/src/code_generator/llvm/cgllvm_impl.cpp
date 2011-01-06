@@ -156,7 +156,11 @@ SASL_VISIT_DEF( binary_expression ){
 	Value* retval = NULL;
 	if( lval && rval ){
 		if (v.op == operators::add){
-			retval = ctxt->builder()->CreateAdd( lval, rval, "" );
+			if( sasl_ehelper::is_real( p0_tsi->type_info()->value_typecode ) ){
+				retval = ctxt->builder()->CreateFAdd( lval, rval, "" );
+			} else if( sasl_ehelper::is_integer(p0_tsi->type_info()->value_typecode ) ){
+				retval = ctxt->builder()->CreateAdd( lval, rval, "" );
+			}
 		} else if ( v.op == operators::sub ){
 			retval = ctxt->builder()->CreateSub( lval, rval, "" );
 		} else if ( v.op == operators::mul ){
@@ -190,7 +194,9 @@ SASL_VISIT_DEF( constant_expression ){
 	if( c_si->value_type() == buildin_type_code::_sint32 ){
 		retval = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
 	} else if ( c_si->value_type() == buildin_type_code::_uint32 ) {
-		retval = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<uint32_t>() ), true );
+		retval = ConstantInt::get( extract_common_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<uint32_t>() ), false );
+	} else if ( c_si->value_type() == buildin_type_code::_float ) {
+		retval = ConstantFP::get( extract_common_ctxt( c_si->type_info() )->type, c_si->value<double>() );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -359,10 +365,7 @@ SASL_VISIT_DEF( compound_statement ){
 	*get_common_ctxt(v) = *( data_as_cgctxt_ptr() );
 }
 
-SASL_VISIT_DEF( expression_statement ){
-//	SASL_REWRITE_DATA_AS_SYMBOL();
-	v.expr->accept( this, data );
-}
+SASL_VISIT_NOIMPL( expression_statement );
 
 SASL_VISIT_DEF( jump_statement ){
 
