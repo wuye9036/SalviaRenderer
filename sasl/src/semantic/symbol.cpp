@@ -133,6 +133,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 			type_entry::id_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
 			type_entry::id_t par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
 			if( arg_type == -1 || par_type == -1 ){
+				assert( !"Argument type or parameter type is invalid." );
 				// TODO: Here is syntax error. Need to be processed.
 				all_parameter_success = false;
 				break;

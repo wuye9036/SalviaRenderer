@@ -286,27 +286,20 @@ public:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, constant_expression, (value_tok)(ctype) );
-	SASL_VISIT_DCL( variable_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_expression, (var_name) );
 
 	// declaration & type specifier
 	SASL_VISIT_DCL( initializer ){
 		EFLIB_INTERRUPT( "initializer is an abstract class. This function could not be executed." );
 	}
-
-	SASL_VISIT_DCL( expression_initializer ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, expression_initializer, (init_expr) );
 	SASL_VISIT_DCL( member_initializer ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 	SASL_VISIT_DCL( declaration ) {
 		EFLIB_INTERRUPT( "declaration is an abstract class. This function could not be executed." );
 	}
-	SASL_VISIT_DCL( variable_declaration ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_declaration, (type_info)(name)(init) );
 	SASL_VISIT_DCL( type_definition ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -328,9 +321,7 @@ public:
 		EFLIB_INTERRUPT( "statement is an abstract class. This function could not be executed." );
 	}
 
-	SASL_VISIT_DCL( declaration_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement, (decl) );
 	SASL_VISIT_DCL( if_statement ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -353,9 +344,7 @@ public:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, compound_statement, (stmts) );
-	SASL_VISIT_DCL( expression_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, expression_statement, (expr) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, jump_statement, (code)(jump_expr) );
 
 	// program

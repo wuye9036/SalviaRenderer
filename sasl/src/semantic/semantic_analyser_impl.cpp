@@ -44,7 +44,10 @@ using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::compound_statement;
 using ::sasl::syntax_tree::constant_expression;
 using ::sasl::syntax_tree::declaration;
+using ::sasl::syntax_tree::declaration_statement;
 using ::sasl::syntax_tree::expression;
+using ::sasl::syntax_tree::expression_initializer;
+using ::sasl::syntax_tree::expression_statement;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::jump_statement;
 using ::sasl::syntax_tree::node;
@@ -52,6 +55,8 @@ using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
 using ::sasl::syntax_tree::statement;
 using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::variable_declaration;
+using ::sasl::syntax_tree::variable_expression;
 
 using ::sasl::syntax_tree::dfunction_combinator;
 
@@ -82,6 +87,8 @@ struct sacontext{
 	shared_ptr<symbol> parent_sym;
 
 	shared_ptr<node> generated_node;
+
+	shared_ptr<node> variable_to_fill; // for initializer only.
 };
 
 
@@ -191,17 +198,35 @@ SASL_VISIT_DEF( constant_expression )
 }
 
 SASL_VISIT_DEF( variable_expression ){
-	UNREF_PARAM( v );
-	UNREF_PARAM( data );
 
-	// do nothing
+	shared_ptr<symbol> vdecl = data_as_ctxt_ptr()->parent_sym->find( v.var_name->str );
+	shared_ptr<variable_expression> dup_vexpr = duplicate( v.handle() )->typed_handle<variable_expression>();
+	
+	dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
+	data_as_ctxt_ptr()->generated_node = dup_vexpr->handle();
 }
 
 // declaration & type specifier
 SASL_VISIT_NOIMPL( initializer );
 SASL_VISIT_DEF( expression_initializer )
 {
-	v.init_expr->accept(this, data);
+	shared_ptr<expression_initializer> dup_exprinit = duplicate( v.handle() )->typed_handle<expression_initializer>();
+
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.init_expr, dup_exprinit->init_expr );
+
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_exprinit, gctxt->type_manager() );
+	ssi->entry_id( extract_semantic_info<type_info_si>(dup_exprinit->init_expr)->entry_id() );
+
+	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>( data_as_ctxt_ptr()->variable_to_fill );
+	if ( var_tsi->entry_id() != ssi->entry_id() ){
+		assert( typeconv->implicit_convertible( var_tsi->entry_id(), ssi->entry_id() ) );
+	}
+
+	data_as_ctxt_ptr()->generated_node = dup_exprinit->handle();
 }
 
 SASL_VISIT_NOIMPL( member_initializer );
@@ -209,33 +234,22 @@ SASL_VISIT_NOIMPL( declaration );
 
 SASL_VISIT_DEF( variable_declaration )
 {
-	//symbol_scope sc( v.name->str, v.handle(), cursym );
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	any child_ctxt;
 
-	//// process variable type
-	//shared_ptr<type_specifier> vartype = v.type_info;
-	//vartype->accept( this, data );
-	//shared_ptr<type_si> tsi = extract_semantic_info<type_si>(v);
+	shared_ptr<variable_declaration> dup_vdecl = duplicate( v.handle() )->typed_handle<variable_declaration>();
 
-	//// check type.
-	//if ( tsi->type_type() == type_types::buildin ){
-	//	// TODO: ALLOCATE BUILD-IN TYPED VAR.
-	//} else if ( tsi->type_type() == type_types::composited ){
-	//	// TODO: ALLOCATE COMPOSITED TYPED VAR.
-	//} else if ( tsi->type_type() == type_types::alias ){
-	//	if ( typeseminfo->full_type() ){
-	//		// TODO: ALLOCATE ACTUAL
-	//	} else {
-	//		infomgr->add_info( semantic_error::create( compiler_informations::uses_a_undef_type,
-	//			v.handle(), list_of( typeseminfo->full_type() ) )
-	//			);
-	//		// remove created symbol
-	//		cursym->remove();
-	//		return;
-	//	}
-	//}
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_vdecl, gctxt->type_manager() );
+	
+	visit_child( child_ctxt, child_ctxt_init, v.type_info, dup_vdecl->type_info );
+	ssi->entry_id( extract_semantic_info<type_info_si>( dup_vdecl->type_info )->entry_id() );
 
-	// process initializer
-	// v.init->accept( this, data );;
+	any_to_ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_vdecl;
+	visit_child( child_ctxt, child_ctxt_init, v.init, dup_vdecl->init );
+
+	data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_vdecl );
+	data_as_ctxt_ptr()->generated_node = dup_vdecl->handle();
 }
 
 SASL_VISIT_DEF( type_definition ){
@@ -357,7 +371,15 @@ SASL_VISIT_NOIMPL( statement );
 
 SASL_VISIT_DEF( declaration_statement )
 {
-	v.decl->accept(this, data);
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	any child_ctxt;
+
+	shared_ptr<declaration_statement> dup_declstmt = duplicate( v.handle() )->typed_handle<declaration_statement>();
+
+	visit_child( child_ctxt, child_ctxt_init, v.decl, dup_declstmt->decl );
+
+	data_as_ctxt_ptr()->generated_node = dup_declstmt;
 }
 
 SASL_VISIT_DEF( if_statement )
@@ -399,7 +421,17 @@ SASL_VISIT_DEF( compound_statement )
 }
 
 SASL_VISIT_DEF( expression_statement ){
-	v.expr->accept( this, data );
+	
+	shared_ptr<expression_statement> dup_exprstmt = duplicate( v.handle() )->typed_handle<expression_statement>();
+	
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_exprstmt->expr );
+
+	data_as_ctxt_ptr()->generated_node = dup_exprstmt->handle();
+
 }
 
 SASL_VISIT_DEF( jump_statement )

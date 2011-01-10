@@ -6,6 +6,7 @@
 
 namespace llvm{
 	// Node
+	class AllocaInst;
 	class Argument;
 	class Function;
 	class GlobalVariable;
@@ -37,6 +38,7 @@ public:
 	cgllvm_common_context();
 
 	boost::weak_ptr< sasl::semantic::symbol > sym;
+	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
 
 	llvm::Value* val;
 	llvm::Function* func;
@@ -49,6 +51,7 @@ public:
 	const llvm::FunctionType* func_type;
 
 	llvm::GlobalVariable* gvar;
+	llvm::AllocaInst* lvar;
 
 	// Instructions
 	llvm::ReturnInst* return_inst;

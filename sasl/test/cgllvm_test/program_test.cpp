@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE( jit_test ){
 	void* pfunc = LLVMCASE_(jit)->get_function( "foo" );
 	LLVMCASE_(root)->module()->dump();
 	BOOST_CHECK( pfunc );
-	BOOST_CHECK_EQUAL( ((uint32_t(*)())(intptr_t)pfunc)(), 797u );
+	BOOST_CHECK_EQUAL( ((uint32_t(*)())(intptr_t)pfunc)(), 782u );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
