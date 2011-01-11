@@ -39,6 +39,7 @@ using ::sasl::common::token_attr;
 
 using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::buildin_type;
+using ::sasl::syntax_tree::cast_expression;
 using ::sasl::syntax_tree::create_buildin_type;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::compound_statement;
@@ -143,7 +144,33 @@ template <typename NodeT> any& semantic_analyser_impl::visit_child(
 }
 
 SASL_VISIT_NOIMPL( unary_expression );
-SASL_VISIT_NOIMPL( cast_expression );
+SASL_VISIT_DEF( cast_expression ){
+	any child_ctxt_init = *data;
+	
+	shared_ptr<cast_expression> dup_cexpr = duplicate(v.handle())->typed_handle<cast_expression>();
+	
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.casted_type, dup_cexpr->casted_type );
+	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_cexpr->expr );
+
+	shared_ptr<type_info_si> src_tsi = extract_semantic_info<type_info_si>( dup_cexpr->expr );
+	shared_ptr<type_info_si> casted_tsi = extract_semantic_info<type_info_si>( dup_cexpr->casted_type );
+
+	if( src_tsi->entry_id() != casted_tsi->entry_id() ){
+		if( typeconv->convertible( casted_tsi->entry_id(), src_tsi->entry_id() ) == type_converter::cannot_conv ){
+			// Here is code error. Compiler should report it.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return;
+		}
+	}
+
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_cexpr, gctxt->type_manager() );
+	ssi->entry_id( casted_tsi->entry_id() );
+
+	data_as_ctxt_ptr()->generated_node = dup_cexpr->handle();
+}
+
 SASL_VISIT_DEF( binary_expression )
 {
 	any child_ctxt_init = *data;

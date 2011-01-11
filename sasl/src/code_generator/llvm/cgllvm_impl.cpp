@@ -32,6 +32,7 @@ using semantic::extract_semantic_info;
 using semantic::global_si;
 using semantic::operator_name;
 using semantic::symbol;
+using semantic::type_converter;
 using semantic::type_equal;
 using semantic::type_info_si;
 
@@ -75,7 +76,6 @@ static common_ctxt_handle get_common_ctxt( boost::shared_ptr<NodeT> v ){
 	return get_or_create_codegen_context<cgllvm_common_context>(v);
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 //
 #define SASL_VISITOR_TYPE_NAME llvm_code_generator
@@ -97,80 +97,130 @@ template <typename NodeT> any& llvm_code_generator::visit_child( any& child_ctxt
 	return child_ctxt;
 }
 
+// Process assign
+void llvm_code_generator::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
+{
+	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(lexpr);
+	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(rexpr);
+
+	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
+		if( typeconv->implicit_convertible( larg_tsi->entry_id(), rarg_tsi->entry_id() ) ){
+			typeconv->convert( larg_tsi->type_info(), rexpr );
+		} else {
+			assert( !"Expression could not converted to storage type." );
+		}
+	}
+
+	Value* addr = extract_common_ctxt(lexpr)->addr;
+	Value* val = extract_common_ctxt(rexpr)->val;
+
+	ctxt->builder()->CreateStore( val, addr );
+
+	data_as_cgctxt_ptr()->type = extract_common_ctxt(lexpr)->type;
+	data_as_cgctxt_ptr()->addr = addr;
+	data_as_cgctxt_ptr()->val = val;
+}
+
+
 SASL_VISIT_NOIMPL( unary_expression );
-SASL_VISIT_NOIMPL( cast_expression );
+SASL_VISIT_DEF( cast_expression ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.casted_type );
+	visit_child( child_ctxt, child_ctxt_init, v.expr );
+
+	shared_ptr<type_info_si> src_tsi = extract_semantic_info<type_info_si>( v.expr );
+	shared_ptr<type_info_si> casted_tsi = extract_semantic_info<type_info_si>( v.casted_type );
+
+	if( src_tsi->entry_id() != casted_tsi->entry_id() ){
+		if( typeconv->convertible( casted_tsi->entry_id(), src_tsi->entry_id() ) == type_converter::cannot_conv ){
+			// Here is code error. Compiler should report it.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		get_common_ctxt(v)->type = extract_common_ctxt(v.casted_type)->type;
+		typeconv->convert( v.handle(), v.expr );
+	}
+
+	data_as_cgctxt_ptr()->type = get_common_ctxt(v)->type;
+	data_as_cgctxt_ptr()->val = get_common_ctxt(v)->val;
+}
 
 SASL_VISIT_DEF( binary_expression ){
-
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.left_expr );
 	visit_child( child_ctxt, child_ctxt_init, v.right_expr );
 
-	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
-	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
+	if( v.op == operators::assign ){
+		do_assign( data, v.left_expr, v.right_expr );
+	} else {
+		shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
+		shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
-	//////////////////////////////////////////////////////////////////////////
-	// type conversation for matching the operator prototype
+		//////////////////////////////////////////////////////////////////////////
+		// type conversation for matching the operator prototype
 
-	// get an overloadable prototype.
-	std::vector< boost::shared_ptr<expression> > args;
-	args += v.left_expr, v.right_expr;
+		// get an overloadable prototype.
+		std::vector< shared_ptr<expression> > args;
+		args += v.left_expr, v.right_expr;
 
-	symbol::overloads_t overloads
-		= data_as_cgctxt_ptr()->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
+		symbol::overloads_t overloads
+			= data_as_cgctxt_ptr()->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
 
-	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
-		return;
-	}
-	EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
-		return;
-	}
-
-	boost::shared_ptr<function_type> op_proto = overloads[0]->node()->typed_handle<function_type>();
-
-	shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
-	shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
-
-	// convert value type to match proto type.
-	if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
-		if( !p0_tsi->type_info()->codegen_ctxt() ){
-			visit_child( child_ctxt, child_ctxt_init,  op_proto->params[0]->param_type );
+		EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
+			return;
 		}
-		extract_common_ctxt(v.left_expr)->type = extract_common_ctxt( p0_tsi->type_info() )->type;
-		typeconv->convert( p0_tsi->type_info(), v.left_expr );
-	}
-	if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
-		if( !p1_tsi->type_info()->codegen_ctxt() ){
-			visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
+		EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
+			return;
 		}
-		extract_common_ctxt(v.right_expr)->type = extract_common_ctxt( p1_tsi->type_info() )->type;
-		typeconv->convert( p1_tsi->type_info(), v.right_expr );
-	}
 
-	// use type-converted value to generate code.
-	Value* lval = extract_common_ctxt( v.left_expr )->val;
-	Value* rval = extract_common_ctxt( v.right_expr )->val;
+		boost::shared_ptr<function_type> op_proto = overloads[0]->node()->typed_handle<function_type>();
 
-	Value* retval = NULL;
-	if( lval && rval ){
-		if (v.op == operators::add){
-			if( sasl_ehelper::is_real( p0_tsi->type_info()->value_typecode ) ){
-				retval = ctxt->builder()->CreateFAdd( lval, rval, "" );
-			} else if( sasl_ehelper::is_integer(p0_tsi->type_info()->value_typecode ) ){
-				retval = ctxt->builder()->CreateAdd( lval, rval, "" );
+		shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
+		shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
+
+		// convert value type to match proto type.
+		if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
+			if( !p0_tsi->type_info()->codegen_ctxt() ){
+				visit_child( child_ctxt, child_ctxt_init,  op_proto->params[0]->param_type );
 			}
-		} else if ( v.op == operators::sub ){
-			retval = ctxt->builder()->CreateSub( lval, rval, "" );
-		} else if ( v.op == operators::mul ){
-			retval = ctxt->builder()->CreateMul( lval, rval, "" );
-		} else if ( v.op == operators::div ){
-			EFLIB_INTERRUPT( "Division is not supported yet." );
+			extract_common_ctxt(v.left_expr)->type = extract_common_ctxt( p0_tsi->type_info() )->type;
+			typeconv->convert( p0_tsi->type_info(), v.left_expr );
 		}
+		if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
+			if( !p1_tsi->type_info()->codegen_ctxt() ){
+				visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
+			}
+			extract_common_ctxt(v.right_expr)->type = extract_common_ctxt( p1_tsi->type_info() )->type;
+			typeconv->convert( p1_tsi->type_info(), v.right_expr );
+		}
+
+		// use type-converted value to generate code.
+		Value* lval = extract_common_ctxt( v.left_expr )->val;
+		Value* rval = extract_common_ctxt( v.right_expr )->val;
+
+		Value* retval = NULL;
+		if( lval && rval ){
+			if (v.op == operators::add){
+				if( sasl_ehelper::is_real( p0_tsi->type_info()->value_typecode ) ){
+					retval = ctxt->builder()->CreateFAdd( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(p0_tsi->type_info()->value_typecode ) ){
+					retval = ctxt->builder()->CreateAdd( lval, rval, "" );
+				}
+			} else if ( v.op == operators::sub ){
+				retval = ctxt->builder()->CreateSub( lval, rval, "" );
+			} else if ( v.op == operators::mul ){
+				retval = ctxt->builder()->CreateMul( lval, rval, "" );
+			} else if ( v.op == operators::div ){
+				EFLIB_INTERRUPT( "Division is not supported yet." );
+			}
+		}
+
+		data_as_cgctxt_ptr()->val = retval;
 	}
 
-	data_as_cgctxt_ptr()->val = retval;
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
@@ -211,12 +261,11 @@ SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> declsym = data_as_cgctxt_ptr()->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
 
-	data_as_cgctxt_ptr()->lvar = extract_common_ctxt( declsym->node() )->lvar;
+	data_as_cgctxt_ptr()->addr = extract_common_ctxt( declsym->node() )->addr;
 	data_as_cgctxt_ptr()->type = extract_common_ctxt( declsym->node() )->type;
-	data_as_cgctxt_ptr()->val = ctxt->builder()->CreateLoad( data_as_cgctxt_ptr()->lvar, v.var_name->str.c_str() );
+	data_as_cgctxt_ptr()->val = ctxt->builder()->CreateLoad( data_as_cgctxt_ptr()->addr, v.var_name->str.c_str() );
 
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
-
 }
 
 // declaration & type specifier
@@ -256,7 +305,7 @@ SASL_VISIT_DEF( variable_declaration ){
 
 	if( data_as_cgctxt_ptr()->parent_func ){
 		
-		data_as_cgctxt_ptr()->lvar 
+		data_as_cgctxt_ptr()->addr 
 			= vardecl_builder.CreateAlloca( any_to_cgctxt_ptr(child_ctxt)->type, 0, v.name->str.c_str() );
 	}
 
@@ -264,7 +313,7 @@ SASL_VISIT_DEF( variable_declaration ){
 		visit_child( child_ctxt, child_ctxt_init, v.init );
 
 		assert( any_to_cgctxt_ptr(child_ctxt)->val );
-		vardecl_builder.CreateStore( any_to_cgctxt_ptr(child_ctxt)->val, data_as_cgctxt_ptr()->lvar );
+		vardecl_builder.CreateStore( any_to_cgctxt_ptr(child_ctxt)->val, data_as_cgctxt_ptr()->addr );
 	}
 
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
@@ -421,7 +470,14 @@ SASL_VISIT_DEF( compound_statement ){
 	*get_common_ctxt(v) = *( data_as_cgctxt_ptr() );
 }
 
-SASL_VISIT_NOIMPL( expression_statement );
+SASL_VISIT_DEF( expression_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.expr );
+
+	*get_common_ctxt(v) = *( data_as_cgctxt_ptr() );
+}
 
 SASL_VISIT_DEF( jump_statement ){
 

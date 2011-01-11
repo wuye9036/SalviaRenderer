@@ -22,6 +22,9 @@ namespace sasl{
 		class type_converter;
 		class global_si;
 	}
+	namespace syntax_tree{
+		struct expression;
+	}
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -84,6 +87,13 @@ public:
 
 	void global_semantic_info( boost::shared_ptr< sasl::semantic::global_si > );
 private:
+
+	void do_assign(
+		boost::any* data,
+		boost::shared_ptr<sasl::syntax_tree::expression> lexpr,
+		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
+		);
+
 	boost::shared_ptr< sasl::semantic::global_si > gsi;
 	boost::shared_ptr<cgllvm_global_context> ctxt;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;

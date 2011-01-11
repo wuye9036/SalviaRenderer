@@ -209,7 +209,8 @@ public:
 		return dconstant( lct, boost::lexical_cast<std::string>(v) + suffix );
 	}
 	virtual tree_combinator& dvarexpr( const std::string& /*v*/){ return default_proc(); }
-	virtual tree_combinator& dunary( operators /*op*/ ){ return default_proc(); };
+	virtual tree_combinator& dcast(){ return default_proc(); }
+	virtual tree_combinator& dunary( operators /*op*/ ){ return default_proc(); }
 	virtual tree_combinator& dbinary(){ return default_proc(); }
 	virtual tree_combinator& dlexpr(){ return default_proc(); }
 	virtual tree_combinator& dop( operators /*op*/){ return default_proc(); }
@@ -222,6 +223,7 @@ public:
 	virtual tree_combinator& dcall(){ return default_proc(); }
 	virtual tree_combinator& dargument(){ return default_proc(); }
 	virtual tree_combinator& dindex(){ return default_proc(); }
+	
 
 	virtual tree_combinator& dlabel( const std::string& /*v*/ ){ return default_proc(); }
 	virtual tree_combinator& dvarstmt(){ return default_proc(); }

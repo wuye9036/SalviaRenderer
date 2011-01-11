@@ -266,9 +266,7 @@ class swallow_duplicator: public syntax_tree_visitor{
 public:
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, unary_expression, (op)(expr) );
 
-	SASL_VISIT_DCL( cast_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, cast_expression, (casted_type)(expr) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, binary_expression, (op)(left_expr)(right_expr) );
 	SASL_VISIT_DCL( expression_list ) {
 		EFLIB_ASSERT_UNIMPLEMENTED();

@@ -50,8 +50,7 @@ public:
 	bool is_signed;
 	const llvm::FunctionType* func_type;
 
-	llvm::GlobalVariable* gvar;
-	llvm::AllocaInst* lvar;
+	llvm::Value* addr;
 
 	// Instructions
 	llvm::ReturnInst* return_inst;
