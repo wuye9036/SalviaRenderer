@@ -50,6 +50,7 @@ using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::expression_initializer;
 using ::sasl::syntax_tree::expression_statement;
 using ::sasl::syntax_tree::function_type;
+using ::sasl::syntax_tree::if_statement;
 using ::sasl::syntax_tree::jump_statement;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
@@ -84,6 +85,7 @@ using std::vector;
 
 // semantic analysis context
 struct sacontext{
+
 	shared_ptr<global_si> gsi;
 	shared_ptr<symbol> parent_sym;
 
@@ -406,14 +408,42 @@ SASL_VISIT_DEF( declaration_statement )
 
 	visit_child( child_ctxt, child_ctxt_init, v.decl, dup_declstmt->decl );
 
+	get_or_create_semantic_info<statement_si>(dup_declstmt);
+
 	data_as_ctxt_ptr()->generated_node = dup_declstmt;
 }
 
 SASL_VISIT_DEF( if_statement )
 {
-	v.cond->accept( this, data );;
-	v.yes_stmt->accept( this, data );;
-	v.no_stmt->accept(this, data);
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<if_statement> dup_ifstmt = duplicate(v.handle())->typed_handle<if_statement>();
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_ifstmt->cond );
+	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_ifstmt->cond);
+	assert( cond_tsi );
+	type_entry::id_t bool_tid = gctxt->type_manager()->get( buildin_type_code::_boolean );
+	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
+
+	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt, dup_ifstmt->yes_stmt );
+	visit_child( child_ctxt, child_ctxt_init, v.no_stmt, dup_ifstmt->no_stmt );
+
+	extract_semantic_info<statement_si>(dup_ifstmt->yes_stmt)->parent_block( dup_ifstmt );
+	extract_semantic_info<statement_si>(dup_ifstmt->no_stmt)->parent_block( dup_ifstmt );
+
+	if( !dup_ifstmt->yes_stmt->symbol() ){
+		data_as_ctxt_ptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+	}
+
+	if( !dup_ifstmt->no_stmt->symbol() ){
+		data_as_ctxt_ptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+	}
+
+	SASL_GET_OR_CREATE_SI( statement_si, si, dup_ifstmt);
+	si->exit_point( symbol::unique_name() );
+
+	data_as_ctxt_ptr()->generated_node = dup_ifstmt;
 }
 
 SASL_VISIT_DEF( while_statement ){
@@ -444,6 +474,7 @@ SASL_VISIT_DEF( compound_statement )
 		dup_stmt->stmts.push_back(child_gen);
 	}
 
+	get_or_create_semantic_info<statement_si>(dup_stmt);
 	data_as_ctxt_ptr()->generated_node = dup_stmt->handle();
 }
 
@@ -456,6 +487,8 @@ SASL_VISIT_DEF( expression_statement ){
 
 	any child_ctxt;
 	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_exprstmt->expr );
+
+	get_or_create_semantic_info<statement_si>(dup_exprstmt);
 
 	data_as_ctxt_ptr()->generated_node = dup_exprstmt->handle();
 

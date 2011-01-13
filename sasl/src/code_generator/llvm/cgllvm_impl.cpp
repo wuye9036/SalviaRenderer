@@ -16,9 +16,10 @@
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/metaprog/util.h>
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/assign/std/vector.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <boost/format.hpp>
+#include <eflib/include/platform/boost_end.h>
 #include <string>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -31,8 +32,10 @@ using semantic::const_value_si;
 using semantic::extract_semantic_info;
 using semantic::global_si;
 using semantic::operator_name;
+using semantic::statement_si;
 using semantic::symbol;
 using semantic::type_converter;
+using semantic::type_entry;
 using semantic::type_equal;
 using semantic::type_info_si;
 
@@ -203,10 +206,14 @@ SASL_VISIT_DEF( binary_expression ){
 
 		Value* retval = NULL;
 		if( lval && rval ){
+
+			buildin_type_code lbtc = p0_tsi->type_info()->value_typecode;
+			buildin_type_code rbtc = p1_tsi->type_info()->value_typecode;
+
 			if (v.op == operators::add){
-				if( sasl_ehelper::is_real( p0_tsi->type_info()->value_typecode ) ){
+				if( sasl_ehelper::is_real(lbtc) ){
 					retval = ctxt->builder()->CreateFAdd( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(p0_tsi->type_info()->value_typecode ) ){
+				} else if( sasl_ehelper::is_integer(lbtc) ){
 					retval = ctxt->builder()->CreateAdd( lval, rval, "" );
 				}
 			} else if ( v.op == operators::sub ){
@@ -215,6 +222,19 @@ SASL_VISIT_DEF( binary_expression ){
 				retval = ctxt->builder()->CreateMul( lval, rval, "" );
 			} else if ( v.op == operators::div ){
 				EFLIB_INTERRUPT( "Division is not supported yet." );
+			} else if ( v.op == operators::less ){
+				if(sasl_ehelper::is_real(lbtc)){
+					retval = ctxt->builder()->CreateFCmpULT( lval, rval );
+				} else if ( sasl_ehelper::is_integer(lbtc) ){
+					if( sasl_ehelper::is_signed(lbtc) ){
+						retval = ctxt->builder()->CreateICmpSLT(lval, rval);
+					}
+					if( sasl_ehelper::is_unsigned(lbtc) ){
+						retval = ctxt->builder()->CreateICmpULT(lval, rval);
+					}
+				}
+			} else {
+				EFLIB_INTERRUPT( (boost::format("Operator %s is not supported yet.") % v.op.name() ).str().c_str() );
 			}
 		}
 
@@ -263,8 +283,12 @@ SASL_VISIT_DEF( variable_expression ){
 
 	data_as_cgctxt_ptr()->addr = extract_common_ctxt( declsym->node() )->addr;
 	data_as_cgctxt_ptr()->type = extract_common_ctxt( declsym->node() )->type;
-	data_as_cgctxt_ptr()->val = ctxt->builder()->CreateLoad( data_as_cgctxt_ptr()->addr, v.var_name->str.c_str() );
-
+	if ( data_as_cgctxt_ptr()->addr ){
+		data_as_cgctxt_ptr()->val = ctxt->builder()->CreateLoad( data_as_cgctxt_ptr()->addr, v.var_name->str.c_str() );
+	} else {
+		data_as_cgctxt_ptr()->val = extract_common_ctxt( declsym->node() )->val;
+	}
+	
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
@@ -336,7 +360,9 @@ SASL_VISIT_DEF( buildin_type ){
 	if ( sasl_ehelper::is_void( v.value_typecode ) ){
 		ret_type = Type::getVoidTy( ctxt->context() );
 	} else if( sasl_ehelper::is_scalar(v.value_typecode) ){
-		if( sasl_ehelper::is_integer(v.value_typecode) ){
+		if( v.value_typecode == buildin_type_code::_boolean ){
+			ret_type = IntegerType::get( ctxt->context(), 1 );
+		} else if( sasl_ehelper::is_integer(v.value_typecode) ){
 			ret_type = IntegerType::get( ctxt->context(), (unsigned int)sasl_ehelper::storage_size( v.value_typecode ) << 3 );
 			sign = sasl_ehelper::is_signed( v.value_typecode );
 		} else if ( v.value_typecode == buildin_type_code::_float ){
@@ -395,7 +421,7 @@ SASL_VISIT_DEF( function_type ){
 	// Generate paramenter types.
 	vector< const llvm::Type*> param_types;
 	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
-		visit_child( child_ctxt, child_ctxt_init, v.retval_type );
+		visit_child( child_ctxt, child_ctxt_init, *it );
 		if ( any_to_cgctxt_ptr(child_ctxt)->type ){
 			param_types.push_back( any_to_cgctxt_ptr(child_ctxt)->type );
 		} else {
@@ -418,8 +444,8 @@ SASL_VISIT_DEF( function_type ){
 	for( size_t arg_idx = 0; arg_idx < fn->arg_size(); ++arg_idx, ++arg_it){
 		boost::shared_ptr<parameter> par = v.params[arg_idx];
 		arg_it->setName( par->symbol()->unmangled_name() );
-		common_ctxt_handle par_ctxt = extract_common_ctxt( par->param_type );
-		par_ctxt->arg = boost::addressof( *arg_it );
+		common_ctxt_handle par_ctxt = extract_common_ctxt( par );
+		par_ctxt->val = arg_it;
 	}
 
 
@@ -441,7 +467,57 @@ SASL_VISIT_DEF( declaration_statement ){
 
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
-SASL_VISIT_NOIMPL( if_statement );
+SASL_VISIT_DEF( if_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	type_entry::id_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	type_entry::id_t bool_tid = gsi->type_manager()->get( buildin_type_code::_boolean );
+	if( cond_tid != bool_tid ){
+		typeconv->convert( gsi->type_manager()->get(bool_tid), v.cond );
+	}
+	BasicBlock* cond_block = ctxt->builder()->GetInsertBlock();
+
+	// Generate 'then' branch code.
+	BasicBlock* yes_block = BasicBlock::Create( ctxt->context(), v.yes_stmt->symbol()->mangled_name(), data_as_cgctxt_ptr()->parent_func );
+	ctxt->builder()->SetInsertPoint( yes_block );
+	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
+	BasicBlock* after_yes_block = ctxt->builder()->GetInsertBlock();
+	
+	// Generate 'else' branch code.
+	BasicBlock* no_block = NULL;
+	if( v.no_stmt ){
+		no_block = BasicBlock::Create( ctxt->context(), v.no_stmt->symbol()->mangled_name(), data_as_cgctxt_ptr()->parent_func );
+		ctxt->builder()->SetInsertPoint( no_block );
+		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
+	}
+	BasicBlock* after_no_block = ctxt->builder()->GetInsertBlock();
+
+	// Generate aggragate block
+	BasicBlock* aggregate_block = BasicBlock::Create(
+			ctxt->context(),
+			extract_semantic_info<statement_si>(v)->exit_point().c_str(),
+			data_as_cgctxt_ptr()->parent_func
+		);
+	
+	// Fill back if-jump instruction
+	ctxt->builder()->SetInsertPoint( cond_block );
+	ctxt->builder()->CreateCondBr( extract_common_ctxt(v.cond)->val, yes_block, no_block ? no_block : aggregate_block );
+
+	// Fill back jump out instruct of each branch.
+	ctxt->builder()->SetInsertPoint( after_yes_block );
+	ctxt->builder()->CreateBr( aggregate_block );
+	
+	ctxt->builder()->SetInsertPoint( after_no_block );
+	ctxt->builder()->CreateBr( aggregate_block );
+
+	// Set insert point to end of code.
+	ctxt->builder()->SetInsertPoint( aggregate_block );
+
+	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
+}
+
 SASL_VISIT_NOIMPL( while_statement );
 SASL_VISIT_NOIMPL( dowhile_statement );
 SASL_VISIT_NOIMPL( case_label );
@@ -452,11 +528,12 @@ SASL_VISIT_DEF( compound_statement ){
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
+
 	BasicBlock* bb = BasicBlock::Create(
-		ctxt->context(),
-		v.symbol()->mangled_name(),
-		data_as_cgctxt_ptr()->parent_func
-		);
+			ctxt->context(),
+			v.symbol()->mangled_name(),
+			data_as_cgctxt_ptr()->parent_func
+			);
 
 	data_as_cgctxt_ptr()->block = bb;
 

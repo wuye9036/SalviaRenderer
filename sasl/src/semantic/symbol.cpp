@@ -294,13 +294,13 @@ const string& symbol::unmangled_name() const{
 
 int anonymous_name_count = 0;
 boost::mutex mtx;
-string anonymous_name(){
+string symbol::unique_name(){
 	boost::mutex::scoped_lock locker(mtx);
 	return string("1_") + boost::lexical_cast<string>(++anonymous_name_count);
 }
 
 shared_ptr<symbol> symbol::add_anonymous_child( shared_ptr<struct node> child_node ){
-	return add_child( anonymous_name(), child_node );
+	return add_child( unique_name(), child_node );
 }
 
 END_NS_SASL_SEMANTIC();

@@ -190,10 +190,6 @@ void variable_semantic_info::is_local( bool isloc ){
 	this->isloc = isloc;
 }
 
-execution_block_semantic_info::execution_block_semantic_info()
-{
-}
-
 shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 {
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
@@ -211,6 +207,38 @@ storage_si::storage_si( shared_ptr<type_manager> typemgr )
 type_si::type_si( shared_ptr<type_manager> typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 {
+}
+
+statement_si::statement_si():has_lp(false){}
+
+const std::string& statement_si::exit_point() const{
+	return exit_pt;
+}
+
+void statement_si::exit_point( const std::string& v ){
+	exit_pt = v;
+}
+
+const std::string& statement_si::loop_point() const{
+	return loop_pt;
+}
+
+void statement_si::loop_point( const std::string& v ){
+	loop_pt = v;
+}
+
+bool statement_si::has_loop() const{
+	return has_lp;
+}
+void statement_si::has_loop( bool v ){
+	has_lp = v;
+}
+
+shared_ptr<node> statement_si::parent_block() const{
+	return parent.lock();
+}
+void statement_si::parent_block( shared_ptr<node> v ){
+	parent = v;
 }
 
 END_NS_SASL_SEMANTIC();

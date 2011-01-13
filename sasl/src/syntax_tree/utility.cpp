@@ -320,9 +320,7 @@ public:
 	}
 
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement, (decl) );
-	SASL_VISIT_DCL( if_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, if_statement, (cond)(yes_stmt)(no_stmt) );
 	SASL_VISIT_DCL( while_statement ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}

@@ -64,6 +64,7 @@ public:
 	int count( std::string name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
+	static std::string unique_name();
 	boost::shared_ptr<symbol> add_anonymous_child( boost::shared_ptr<node> child_node );
 
 	boost::shared_ptr<symbol> add_function_begin( boost::shared_ptr<function_type> child_fn );

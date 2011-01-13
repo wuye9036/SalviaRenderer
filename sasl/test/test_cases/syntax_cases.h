@@ -74,6 +74,8 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn1_sem );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn2_sem );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn3_jit );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(function_type), fn4_jit ); // Test for if-statement
+
 	// paramters
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), par0_0_fn1 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(parameter), par1_1_fn1 );

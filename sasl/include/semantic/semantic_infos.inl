@@ -147,29 +147,30 @@ private:
 	bool isloc;
 };
 
-class execution_block_semantic_info: public semantic_info{
+class statement_si: public semantic_info{
+
 public:
-	friend class semantic_info_collection;
-	boost::shared_ptr<struct node> execute_point( size_t id ) const;
-	void append( boost::shared_ptr<struct node> execute_point );
 
+	statement_si();
+	
+	const std::string& exit_point() const;
+	void exit_point( const std::string& );
+
+	const std::string& loop_point() const;
+	void loop_point( const std::string& );
+
+	bool has_loop() const;
+	void has_loop( bool v );
+
+	boost::shared_ptr<node> parent_block() const;
+	void parent_block( boost::shared_ptr<node> );
 private:
-	execution_block_semantic_info();
-	std::vector< boost::weak_ptr<struct node> > execute_points;
-};
+	bool has_lp;
 
-class execute_point_semantic_info: public semantic_info{
-public:
-	void id( size_t stmt_id );
-	size_t id();
-	::std::string execute_point_name();
+	std::string loop_pt;
+	std::string exit_pt; // for if, while, for do-while.
 
-	boost::shared_ptr<struct node> execute_point() const;
-
-private:
-	execute_point_semantic_info();
-	size_t stmt_id; // tag of statement, for jumping.
-	boost::weak_ptr< execution_block_semantic_info > root;
+	boost::weak_ptr<node> parent;
 };
 
 END_NS_SASL_SEMANTIC();
