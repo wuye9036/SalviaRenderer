@@ -24,7 +24,12 @@ namespace sasl{
 	}
 	namespace syntax_tree{
 		struct expression;
+		struct type_specifier;
 	}
+}
+
+namespace llvm{
+	class Constant;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -93,6 +98,8 @@ private:
 		boost::shared_ptr<sasl::syntax_tree::expression> lexpr,
 		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
 		);
+
+	llvm::Constant* get_zero_filled_constant( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
 
 	boost::shared_ptr< sasl::semantic::global_si > gsi;
 	boost::shared_ptr<cgllvm_global_context> ctxt;

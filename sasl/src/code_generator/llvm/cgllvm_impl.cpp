@@ -1,3 +1,9 @@
+#include <eflib/include/platform/disable_warnings.h>
+#include <llvm/Analysis/Verifier.h>
+#include <llvm/Analysis/Passes.h>
+#include <llvm/Support/StandardPasses.h>
+#include <llvm/PassManager.h>
+#include <eflib/include/platform/enable_warnings.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
 #include <sasl/enums/enums_helper.h>
@@ -18,6 +24,7 @@
 #include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign/std/vector.hpp>
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
 #include <string>
@@ -124,6 +131,21 @@ void llvm_code_generator::do_assign( any* data, shared_ptr<expression> lexpr, sh
 	data_as_cgctxt_ptr()->val = val;
 }
 
+Constant* llvm_code_generator::get_zero_filled_constant( boost::shared_ptr<type_specifier> typespec )
+{
+	if( typespec->node_class() == syntax_node_types::buildin_type ){
+		buildin_type_code btc = typespec->value_typecode;
+		if( sasl_ehelper::is_integer( btc ) ){
+			return ConstantInt::get( extract_common_ctxt(typespec)->type, 0, sasl_ehelper::is_signed(btc) );
+		}
+		if( sasl_ehelper::is_real( btc ) ){
+			return ConstantFP::get( extract_common_ctxt(typespec)->type, 0.0 );
+		}
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
 
 SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_DEF( cast_expression ){
@@ -452,6 +474,27 @@ SASL_VISIT_DEF( function_type ){
 	// Create function body.
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body );
+
+		//////////////////////////////////////////////////////////////////////////
+		// Process empty block.
+
+		// Inner empty block, insert an br instruction for jumping to next block.
+		for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin();
+			it != fn->getBasicBlockList().end(); ++it
+			)
+		{
+			if( it->empty() ){
+				Function::BasicBlockListType::iterator next_it = it;
+				++next_it;
+
+				if( next_it != fn->getBasicBlockList().end() ){
+					ctxt->builder()->CreateBr( &(*next_it) );
+				} else {
+					Value* val = get_zero_filled_constant( v.retval_type );
+					ctxt->builder()->CreateRet(val);
+				}
+			}
+		}
 	}
 
 	*get_common_ctxt(v) = *( data_as_cgctxt_ptr() );
@@ -529,15 +572,22 @@ SASL_VISIT_DEF( compound_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
-	BasicBlock* bb = BasicBlock::Create(
-			ctxt->context(),
-			v.symbol()->mangled_name(),
-			data_as_cgctxt_ptr()->parent_func
-			);
+	BasicBlock* bb = NULL;
+	// If instruction block is the first block of function, we must create it.
+	if ( data_as_cgctxt_ptr()->parent_func->getBasicBlockList().empty() ){
+		bb = BasicBlock::Create(
+				ctxt->context(),
+				v.symbol()->mangled_name(),
+				data_as_cgctxt_ptr()->parent_func
+				);
+	}
 
 	data_as_cgctxt_ptr()->block = bb;
 
-	ctxt->builder()->SetInsertPoint(bb);
+	if(bb){
+		ctxt->builder()->SetInsertPoint(bb);
+	}
+
 	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
 	{
@@ -571,6 +621,10 @@ SASL_VISIT_DEF( jump_statement ){
 		} else {
 			data_as_cgctxt_ptr()->return_inst = ctxt->builder()->CreateRet( any_to_cgctxt_ptr(child_ctxt)->val );
 		}
+
+		// Restart a new block for sealing the returned block.
+		BasicBlock* block_for_restart = BasicBlock::Create( ctxt->context(), "", data_as_cgctxt_ptr()->parent_func );
+		ctxt->builder()->SetInsertPoint(block_for_restart);
 	}
 
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
@@ -592,10 +646,27 @@ SASL_VISIT_DEF( program ){
 
 	any child_ctxt = cgllvm_common_context();
 
+	vector<Function*> proc_fns;
+
 	for( vector< boost::shared_ptr<declaration> >::iterator
 		it = v.decls.begin(); it != v.decls.end(); ++it )
 	{
 		visit_child( child_ctxt, (*it) );
+		if( (*it)->node_class() == syntax_node_types::function_type
+			&& (*it)->typed_handle<function_type>()->body
+			){
+			proc_fns.push_back( extract_common_ctxt(*it)->func );
+		}
+	}
+
+	FunctionPassManager fpm(ctxt->module());
+	createStandardFunctionPasses( &fpm, 1 );
+	
+	fpm.doInitialization();
+
+	BOOST_FOREACH( Function* f, proc_fns ){
+		verifyFunction(*f, PrintMessageAction);
+		fpm.run(*f);
 	}
 }
 
