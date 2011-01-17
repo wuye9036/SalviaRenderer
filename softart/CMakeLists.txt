@@ -18,6 +18,7 @@ endif(MSVC)
 ADD_SUBDIRECTORY( cmake )
 
 ADD_SUBDIRECTORY( eflib )
+ADD_SUBDIRECTORY( logrout )
 ADD_SUBDIRECTORY( softart )
 ADD_SUBDIRECTORY( softartx )
 ADD_SUBDIRECTORY( samples )

@@ -33,5 +33,7 @@ TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	${SOFTART_BOOST_LIBS}
 )
 
+ADD_DEPENDENCIES( ${SASL_TEST_PROJECT_NAME} logrout )
+
 config_output_paths( ${SASL_TEST_PROJECT_NAME} )
 sasl_test_create_vcproj_userfile( ${SASL_TEST_PROJECT_NAME} )

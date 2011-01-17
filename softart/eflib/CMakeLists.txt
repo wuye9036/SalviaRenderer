@@ -10,6 +10,7 @@ set (HEADER_FILES
 	include/diagnostics/assert.h
 	include/diagnostics/log.h
 	include/diagnostics/log_serializer.h
+	include/diagnostics/logrout.h
 	include/io/stream.h
 	include/math/math.h
 	include/math/matrix.h
@@ -39,6 +40,7 @@ set (SOURCE_FILES
 	src/math.cpp
 	src/quaternion.cpp
 	src/string.cpp
+	src/logrout.cpp
 )
 
 ADD_LIBRARY( EFLIB STATIC

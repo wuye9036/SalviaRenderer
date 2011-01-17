@@ -23,8 +23,6 @@ BOOST_AUTO_TEST_CASE( jit_test ){
 	cgllvm_cases::instance();
 
 	BOOST_REQUIRE( LLVMCASE_(jit) );
-	LLVMCASE_(root)->module()->dump();
-
 	void* pfunc = LLVMCASE_(jit)->get_function( "foo" );
 	void* pfn4_jit = LLVMCASE_(jit)->get_function(SYNCASENAME_(fn4_jit).c_str());
 	

@@ -24,6 +24,7 @@ set( SOURCE_FILES
 	cgllvm_globalctxt.cpp
 	cgllvm_impl.cpp
 	cgllvm_type_converters.cpp
+	cgllvm_opt.cpp
 )
 
 ADD_LIBRARY( sasl_cgllvm STATIC	${HEADER_FILES} ${SOURCE_FILES} )

@@ -11,7 +11,10 @@
 
 int BOOST_TEST_CALL_DECL
 main( int argc, char* argv[] )
-{
+{	
+	setvbuf( stdout, NULL, _IONBF, 0 );
+	setvbuf( stderr, NULL, _IONBF, 0 );
+	
 	int ret = 0;
 	{
 		eflib::lifetime_manager lfmgr;

@@ -7,8 +7,9 @@
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/utility.h>
 
-#include <eflib/include/memory/lifetime_manager.h>
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/diagnostics/logrout.h>
+#include <eflib/include/memory/lifetime_manager.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
@@ -68,6 +69,31 @@ void cgllvm_cases::initialize(){
 
 	shared_ptr< SEMANTIC_(global_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test) );
 	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root );
+
+	fputs("\n======================================================\r\n", stderr);
+	fputs("Verify generated code: \r\n", stderr);
+
+	std::vector<CODEGEN_(optimization_options)> ops;
+	ops.push_back( CODEGEN_(opt_verify) );
+	CODEGEN_(optimize) ( root(), ops );
+
+	eflib::logrout::write_state( eflib::logrout::screen(), eflib::logrout::off() );
+
+	fputs("\n======================================================\n", stderr);
+	fputs("Generated LLVM IR (before optimized): \r\n", stderr);
+	CODEGEN_(dump)(root());
+	fputs("======================================================\n", stderr);
+
+	ops.clear();
+	ops.push_back( CODEGEN_(opt_preset_std_for_function) );
+	CODEGEN_(optimize) ( root(), ops );
+
+	fputs("\n======================================================\n", stderr);
+	fputs("Generated LLVM IR (after optimized): \r\n", stderr);
+	CODEGEN_(dump)(root());
+	fputs("======================================================\n", stderr);
+	
+	eflib::logrout::write_state( eflib::logrout::screen(), eflib::logrout::on() );
 
 	std::string err;
 	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_global_context)>( LOCVAR_(root) ), err);

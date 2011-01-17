@@ -1,9 +1,3 @@
-#include <eflib/include/platform/disable_warnings.h>
-#include <llvm/Analysis/Verifier.h>
-#include <llvm/Analysis/Passes.h>
-#include <llvm/Support/StandardPasses.h>
-#include <llvm/PassManager.h>
-#include <eflib/include/platform/enable_warnings.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
 #include <sasl/enums/enums_helper.h>
@@ -27,6 +21,7 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
+
 #include <string>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -652,21 +647,6 @@ SASL_VISIT_DEF( program ){
 		it = v.decls.begin(); it != v.decls.end(); ++it )
 	{
 		visit_child( child_ctxt, (*it) );
-		if( (*it)->node_class() == syntax_node_types::function_type
-			&& (*it)->typed_handle<function_type>()->body
-			){
-			proc_fns.push_back( extract_common_ctxt(*it)->func );
-		}
-	}
-
-	FunctionPassManager fpm(ctxt->module());
-	createStandardFunctionPasses( &fpm, 1 );
-	
-	fpm.doInitialization();
-
-	BOOST_FOREACH( Function* f, proc_fns ){
-		verifyFunction(*f, PrintMessageAction);
-		fpm.run(*f);
 	}
 }
 
