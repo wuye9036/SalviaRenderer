@@ -100,6 +100,7 @@ private:
 		);
 
 	llvm::Constant* get_zero_filled_constant( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
+	void restart_block( boost::any* data );
 
 	boost::shared_ptr< sasl::semantic::global_si > gsi;
 	boost::shared_ptr<cgllvm_global_context> ctxt;

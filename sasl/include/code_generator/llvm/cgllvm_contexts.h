@@ -46,6 +46,9 @@ public:
 	llvm::Argument* arg;
 	llvm::BasicBlock* block;
 
+	llvm::BasicBlock* continue_to;
+	llvm::BasicBlock* break_to;
+
 	const llvm::Type* type;
 	bool is_signed;
 	const llvm::FunctionType* func_type;

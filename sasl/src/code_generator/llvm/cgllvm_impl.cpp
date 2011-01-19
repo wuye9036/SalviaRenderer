@@ -142,6 +142,11 @@ Constant* llvm_code_generator::get_zero_filled_constant( boost::shared_ptr<type_
 	return NULL;
 }
 
+void llvm_code_generator::restart_block( boost::any* data ){
+	BasicBlock* restart = BasicBlock::Create( ctxt->context(), "", data_as_cgctxt_ptr()->parent_func );
+	ctxt->builder()->SetInsertPoint(restart);
+}
+
 SASL_VISIT_NOIMPL( unary_expression );
 SASL_VISIT_DEF( cast_expression ){
 	any child_ctxt_init = *data;
@@ -616,11 +621,16 @@ SASL_VISIT_DEF( jump_statement ){
 		} else {
 			data_as_cgctxt_ptr()->return_inst = ctxt->builder()->CreateRet( any_to_cgctxt_ptr(child_ctxt)->val );
 		}
-
-		// Restart a new block for sealing the returned block.
-		BasicBlock* block_for_restart = BasicBlock::Create( ctxt->context(), "", data_as_cgctxt_ptr()->parent_func );
-		ctxt->builder()->SetInsertPoint(block_for_restart);
+	} else if ( v.code == jump_mode::_continue ){
+		assert( data_as_cgctxt_ptr()->continue_to );
+		ctxt->builder()->CreateBr( data_as_cgctxt_ptr()->continue_to );
+	} else if ( v.code == jump_mode::_break ){
+		assert( data_as_cgctxt_ptr()->break_to );
+		ctxt->builder()->CreateBr( data_as_cgctxt_ptr()->break_to );
 	}
+
+	// Restart a new block for sealing the old block.
+	restart_block(data);
 
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
