@@ -1,7 +1,7 @@
 #ifndef SASL_PARSER_DETAIL_EXPRESSION_H
 #define SASL_PARSER_DETAIL_EXPRESSION_H
 
-#include "../grammars/expression.h"
+#include <sasl/include/parser/grammars/expression.h>
 #include <boost/spirit/include/lex_lexertl.hpp>
 
 template <typename IteratorT, typename LexerT>

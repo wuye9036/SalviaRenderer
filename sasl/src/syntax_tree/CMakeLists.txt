@@ -32,6 +32,7 @@ set( SOURCE_FILES
 	statement.cpp
 	make_tree.cpp
 	utility.cpp
+	syntax_tree_generator.cpp
 )
 
 ADD_LIBRARY( sasl_syntaxtree STATIC

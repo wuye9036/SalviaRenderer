@@ -1,8 +1,8 @@
 #ifndef SASL_PARSER_DETAIL_INITIALIZER_H
 #define SASL_PARSER_DETAIL_INITIALIZER_H
 
-#include "../grammars/initializer.h"
-#include "../grammars/expression.h"
+#include <sasl/include/parser/grammars/initializer.h>
+#include <sasl/include/parser/grammars/expression.h>
 #include <boost/spirit/include/lex_lexertl.hpp>
 
 template<typename IteratorT, typename LexerT>

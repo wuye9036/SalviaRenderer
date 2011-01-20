@@ -1,15 +1,22 @@
 #ifndef SASL_PARSER_TREE_EXPRESSION_H
 #define SASL_PARSER_TREE_EXPRESSION_H
 
-#include "parser_tree_forward.h"
+#include <sasl/include/parser_tree/parser_tree_forward.h>
+
 #include <sasl/include/common/token_attr.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/variant.hpp>
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/tuple.hpp>
 #include <boost/optional.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 BEGIN_NS_SASL_PARSER_TREE()
+
+using ::sasl::common::token_attr;
 
 struct paren_expression;
 struct idx_expression;
@@ -80,7 +87,7 @@ struct post_expression{
 };
 
 struct cond_expression{
-	typedef boost::fusion::vector<operator_literal, expression, operator_literal, assign_expression> branches_t;
+	typedef boost::fusion::vector<token_attr, expression, token_attr, assign_expression> branches_t;
 	lor_expression	condexpr;
 	branches_t		branchexprs;
 };

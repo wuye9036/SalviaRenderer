@@ -1,10 +1,15 @@
 #ifndef SASL_PARSER_TREE_DECLARATION_SPECIFIER_H
 #define SASL_PARSER_TREE_DECLARATION_SPECIFIER_H
 
-#include "parser_tree_forward.h"
-#include "expression.h"
+#include <sasl/include/parser_tree/parser_tree_forward.h>
+
+#include <sasl/include/parser_tree/expression.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/fusion/adapted.hpp>
 #include <boost/variant.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 BEGIN_NS_SASL_PARSER_TREE()
@@ -84,14 +89,14 @@ BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::parameter_type_qualifier,
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::function_type_qualifier,
-						  (token_attr, lparen)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::function_type_qualifier::param_quals_t, params)
-						  (token_attr, rparen)
+						  (sasl::common::token_attr, rparen)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::array_type_qualifier,
-						  (token_attr, lsbracket)
+						  (sasl::common::token_attr, lsbracket)
 						  (sasl::parser_tree::array_type_qualifier::array_size_expr_t, size_expr)
-						  (token_attr, rsbracket)
+						  (sasl::common::token_attr, rsbracket)
 						  );
 #endif

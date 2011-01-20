@@ -1,12 +1,18 @@
 #ifndef SASL_PARSER_TREE_INITIALIZER_H
 #define SASL_PARSER_TREE_INITIALIZER_H
 
-#include "parser_tree_forward.h"
-#include "expression.h"
-#include <boost/variant.hpp>
+#include <sasl/include/parser_tree/parser_tree_forward.h>
+
+#include <sasl/include/parser_tree/expression.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/tuple.hpp>
+#include <boost/variant.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
+
 BEGIN_NS_SASL_PARSER_TREE();
 
 struct paren_initializer;
@@ -50,14 +56,14 @@ BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::initializer_list,
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::paren_initializer,
-						  (token_attr, lparen)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::paren_initializer::exprs_t, exprs)
-						  (token_attr, rparen)
+						  (sasl::common::token_attr, rparen)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::nullable_initializer_list,
-						  (token_attr, lbrace)
+						  (sasl::common::token_attr, lbrace)
 						  (sasl::parser_tree::nullable_initializer_list::inits_t, inits)
-						  (token_attr, rbrace)
+						  (sasl::common::token_attr, rbrace)
 						  );
 #endif

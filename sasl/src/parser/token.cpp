@@ -1,5 +1,6 @@
 #include "../../include/parser/detail/token.h"
 
 void instantiate_token(){
-	sasl_tokenizer tok;
+	boost::shared_ptr<sasl::common::lex_context> pctxt;
+	sasl_tokenizer tok( pctxt );
 }

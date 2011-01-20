@@ -1,10 +1,15 @@
 #ifndef SASL_PARSER_TREE_DECLARATOR_H
 #define SASL_PARSER_TREE_DECLARATOR_H
 
-#include "parser_tree_forward.h"
-#include "initializer.h"
+#include <sasl/include/parser_tree/parser_tree_forward.h>
+
+#include <sasl/include/parser_tree/initializer.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/tuple.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 BEGIN_NS_SASL_PARSER_TREE()
@@ -27,7 +32,7 @@ struct initialized_declarator_list{
 END_NS_SASL_PARSER_TREE()
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::initialized_declarator,
-						  (token_attr, ident)
+						  (sasl::common::token_attr, ident)
 						  (sasl::parser_tree::initialized_declarator::initializer_t, init)
 						  );
 

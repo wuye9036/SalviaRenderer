@@ -1,12 +1,16 @@
 #ifndef SASL_PARSER_GRAMMARS_TOKEN_H
 #define SASL_PARSER_GRAMMARS_TOKEN_H
 
-#include "../parser_forward.h"
-#include "../../syntax_tree/token.h"
-#include <boost/shared_ptr.hpp>
+#include <sasl/include/parser/parser_forward.h>
+
+#include <sasl/include/common/token_attr.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/mpl/vector.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/spirit/include/lex.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #define SASL_PARSER_SKIPPER( TOKENIZER ) ( boost::spirit::qi::in_state("SKIPPED")[ TOKENIZER .self] )
 
@@ -19,13 +23,13 @@ namespace sasl{
 
 struct token_attribute_setter;
 
-typedef boost::mpl::vector< token_attr > sasl_token_attr_type;
+typedef boost::mpl::vector< sasl::common::token_attr > sasl_token_attr_type;
 typedef boost::spirit::lex::lexertl::token< const char*, sasl_token_attr_type > sasl_token_type;
 typedef boost::spirit::lex::lexertl::actor_lexer< sasl_token_type > sasl_lexer_base;
 
 template <typename BaseLexerT>
 struct sasl_tokens : public boost::spirit::lex::lexer< BaseLexerT > {
-	sasl_tokens();
+	sasl_tokens( boost::shared_ptr<sasl::common::lex_context> );
 
 	boost::spirit::lex::token_def<sasl::common::token_attr> 
 		littok_int,

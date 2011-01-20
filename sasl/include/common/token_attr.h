@@ -24,6 +24,23 @@ struct token_attr{
 		return boost::shared_ptr<token_attr>( new token_attr(*this) );
 	}
 
+	// For iterator copy used by spirit attribute transform.
+	bool empty() const{
+		return (str.empty() || str == "UNINITIALIZED_VALUE");
+	}
+
+	std::string::iterator end() {
+		return str.end();
+	}
+	
+	std::string::const_iterator end() const{
+		return str.end();
+	}
+
+	std::string::iterator insert( std::string::iterator iter, char val ) {
+		return str.insert(iter, val);
+	}
+
 	token_attr& operator = ( const token_attr& rhs){
 		file_name = rhs.file_name;
 		column = rhs.column;

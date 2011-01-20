@@ -1,11 +1,15 @@
 #ifndef SASL_PARSER_GRAMMARS_VARIABLE_DECLARATION_H
 #define SASL_PARSER_GRAMMARS_VARIABLE_DECLARATION_H
 
-#include "../parser_forward.h"
-#include "../../parser_tree/declaration.h"
-#include "../../syntax_tree/token.h"
-#include <boost/spirit/include/qi.hpp>
+#include <sasl/include/parser/parser_forward.h>
+
+#include <sasl/include/common/token_attr.h>
+#include <sasl/include/parser_tree/declaration.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/lex.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 SASL_DEFINE_GRAMMAR( variable_declaration_grammar, sasl::parser_tree::variable_declaration() )
 {
@@ -15,7 +19,7 @@ SASL_DEFINE_GRAMMAR( variable_declaration_grammar, sasl::parser_tree::variable_d
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
 	typename rule<sasl::parser_tree::variable_declaration()>::type vardecl;
-	typename rule<token_attr()>::type
+	typename rule<sasl::common::token_attr()>::type
 		semicolon
 		;
 };
@@ -34,7 +38,7 @@ SASL_DEFINE_GRAMMAR( declaration_grammar, sasl::parser_tree::declaration() ){
 	typename rule<sasl::parser_tree::typedef_declaration()>::type typedef_decl;
 	typename rule<sasl::parser_tree::function_parameter()>::type param;
 	
-	typename rule<token_attr()>::type 
+	typename rule<sasl::common::token_attr()>::type 
 		semicolon, lbrace, rbrace, kw_typedef, lparen, rparen, ident
 		;
 };
@@ -48,7 +52,7 @@ SASL_DEFINE_GRAMMAR( struct_declaration_grammar, sasl::parser_tree::struct_decla
 	typename rule<sasl::parser_tree::struct_declaration()>::type struct_decl;
 	typename rule<sasl::parser_tree::nonamed_struct_body()>::type struct_body;
 	typename rule<sasl::parser_tree::named_struct_body()>::type named_struct_body;
-	typename rule<token_attr()>::type
+	typename rule<sasl::common::token_attr()>::type
 		kw_struct, ident, lbrace, rbrace
 		;
 };

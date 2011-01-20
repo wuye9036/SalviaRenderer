@@ -1,12 +1,16 @@
 #ifndef SASL_PARSER_TREE_DECLARATION_H
 #define SASL_PARSER_TREE_DECLARATION_H
 
-#include "parser_tree_forward.h"
-#include "declaration_specifier.h"
-#include "declarator.h"
-#include "statement.h"
+#include <sasl/include/parser_tree/parser_tree_forward.h>
+
+#include <sasl/include/parser_tree/declaration_specifier.h>
+#include <sasl/include/parser_tree/declarator.h>
+#include <sasl/include/parser_tree/statement.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 BEGIN_NS_SASL_PARSER_TREE()
 
@@ -100,12 +104,12 @@ END_NS_SASL_PARSER_TREE()
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::basic_declaration,
 						  ( sasl::parser_tree::basic_declaration::decl_body_t, decl_body )
-						  ( token_attr, semicolon )
+						  ( sasl::common::token_attr, semicolon )
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::function_declaration,
 						  ( sasl::parser_tree::declaration_specifier, return_type )
-						  ( sasl::parser_tree::identifier_literal, ident )
+						  ( sasl::parser_tree::token_attr, ident )
 						  ( sasl::parser_tree::function_declaration::parameters_t, params )
 						  );
 
@@ -115,25 +119,25 @@ BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::function_definition,
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::struct_declaration,
-						  ( token_attr, struct_keyword )
+						  ( sasl::common::token_attr, struct_keyword )
 						  ( sasl::parser_tree::struct_declaration::body_t, body )
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::typedef_declaration,
-						  ( token_attr, typedef_keyword )
+						  ( sasl::common::token_attr, typedef_keyword )
 						  ( sasl::parser_tree::declaration_specifier, def )
-						  ( token_attr, ident )
+						  ( sasl::common::token_attr, ident )
 						  // ( token_attr, semicolon )
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::nonamed_struct_body,
-						  ( token_attr, lbrace )
+						  ( sasl::common::token_attr, lbrace )
 						  ( sasl::parser_tree::nonamed_struct_body::declarations_t, decls )
-						  ( token_attr, rbrace )
+						  ( sasl::common::token_attr, rbrace )
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::named_struct_body,
-						  ( token_attr, ident )
+						  ( sasl::common::token_attr, ident )
 						  ( sasl::parser_tree::named_struct_body::body_t, body )
 						  );
 
@@ -143,9 +147,9 @@ BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::function_parameter,
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::function_body,
-						  ( token_attr, lbrace )
+						  ( sasl::common::token_attr, lbrace )
 						  ( sasl::parser_tree::function_body::statements_t, stmt )
-						  ( token_attr, rbrace )
+						  ( sasl::common::token_attr, rbrace )
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::variable_declaration,

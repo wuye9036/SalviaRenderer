@@ -1,8 +1,8 @@
 #ifndef SASL_PARSER_DETAIL_PROGRAM_H
 #define SASL_PARSER_DETAIL_PROGRAM_H
 
-#include "../grammars/program.h"
-#include "../grammars/declaration.h"
+#include <sasl/include/parser/grammars/program.h>
+#include <sasl/include/parser/grammars/declaration.h>
 #include <boost/spirit/include/lex_lexertl.hpp>
 
 template <typename IteratorT, typename LexerT>

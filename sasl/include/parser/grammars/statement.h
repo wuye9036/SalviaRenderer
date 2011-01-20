@@ -1,11 +1,15 @@
 #ifndef SASL_PARSER_GRAMMARS_STATEMENT_H
 #define SASL_PARSER_GRAMMARS_STATEMENT_H
 
-#include "../parser_forward.h"
-#include "../../parser_tree/statement.h"
-#include "../../syntax_tree/token.h"
+#include <sasl/include/parser/parser_forward.h>
+
+#include <sasl/include/parser_tree/statement.h>
+#include <sasl/include/common/token_attr.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/lex.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 SASL_DEFINE_GRAMMAR( statement_grammar, sasl::parser_tree::statement())
 {
@@ -29,7 +33,7 @@ SASL_DEFINE_GRAMMAR( statement_grammar, sasl::parser_tree::statement())
 	typename rule<sasl::parser_tree::labeled_statement()>::type labeled_stmt;
 	typename rule<sasl::parser_tree::for_initializer()>::type for_init_decl;
 
-	typename rule<token_attr()>::type
+	typename rule<sasl::common::token_attr()>::type
 		kw_break,
 		kw_continue,
 		kw_case,

@@ -1,4 +1,5 @@
 ADD_SUBDIRECTORY( common )
+ADD_SUBDIRECTORY( parser )
 ADD_SUBDIRECTORY( syntax_tree )
 ADD_SUBDIRECTORY( semantic )
 ADD_SUBDIRECTORY( code_generator )

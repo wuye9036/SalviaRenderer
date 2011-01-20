@@ -1,11 +1,16 @@
 #ifndef SASL_PARSER_TREE_STATEMENT_H
 #define SASL_PARSER_TREE_STATEMENT_H
 
-#include "parser_tree_forward.h"
-#include <boost/variant.hpp>
+#include <sasl/include/parser_tree/parser_tree_forward.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/tuple.hpp>
+#include <boost/variant.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
+
 BEGIN_NS_SASL_PARSER_TREE()
 
 struct basic_declaration;
@@ -143,81 +148,81 @@ struct switch_statement{
 END_NS_SASL_PARSER_TREE()
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::if_statement,
-						  (token_attr, if_keyword)
-						  (token_attr, lparen)
+						  (sasl::common::token_attr, if_keyword)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::expression, cond)
-						  (token_attr, rparen)
+						  (sasl::common::token_attr, rparen)
 						  (sasl::parser_tree::statement, stmt)
 						  (sasl::parser_tree::if_statement::optional_else_t, else_part)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::for_loop_header,
-						  (token_attr, lparen)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::for_initializer, for_init)
 						  (sasl::parser_tree::for_loop_header::condition_t, cond)
-						  (token_attr, semicolon)
+						  (sasl::common::token_attr, semicolon)
 						  (sasl::parser_tree::for_loop_header::step_t, step)
-						  (token_attr, rparen)
+						  (sasl::common::token_attr, rparen)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::for_statement,
-						  (token_attr, for_keyword)
+						  (sasl::common::token_attr, for_keyword)
 						  (sasl::parser_tree::for_loop_header, looper)
 						  (sasl::parser_tree::statement, stmt)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::while_statement,
-						  (token_attr, while_keyword)
-						  (token_attr, lparen)
+						  (sasl::common::token_attr, while_keyword)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::expression, cond)
-						  (token_attr, rparen)
+						  (sasl::common::token_attr, rparen)
 						  (sasl::parser_tree::statement, stmt)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::dowhile_statement,
-						  (token_attr, do_keyword)
+						  (sasl::common::token_attr, do_keyword)
 						  (sasl::parser_tree::statement, stmt)
-						  (token_attr, while_keyword)
-						  (token_attr, lparen)
+						  (sasl::common::token_attr, while_keyword)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::expression, cond)
-						  (token_attr, rparen)
+						  (sasl::common::token_attr, rparen)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::expression_statement,
 						  (sasl::parser_tree::expression, expr)
-						  (token_attr, semicolon)
+						  (sasl::common::token_attr, semicolon)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::compound_statement,
-						  (token_attr, lbrace)
+						  (sasl::common::token_attr, lbrace)
 						  (sasl::parser_tree::compound_statement::stmts_t, stmts)
-						  (token_attr, rbrace)
+						  (sasl::common::token_attr, rbrace)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::jump_statement,
-						  (token_attr, break_or_continue_keyword)
-						  (token_attr, semicolon)
+						  (sasl::common::token_attr, break_or_continue_keyword)
+						  (sasl::common::token_attr, semicolon)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::return_statement,
-						  (token_attr, return_keyword)
+						  (sasl::common::token_attr, return_keyword)
 						  (sasl::parser_tree::return_statement::return_expression_t, retexpr)
-						  (token_attr, semicolon)
+						  (sasl::common::token_attr, semicolon)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::labeled_statement,
 						  (sasl::parser_tree::labeled_statement::label_t, label)
-						  (token_attr, colon)
+						  (sasl::common::token_attr, colon)
 						  (sasl::parser_tree::statement, stmt)
 						  );
 
 BOOST_FUSION_ADAPT_STRUCT( sasl::parser_tree::switch_statement,
-						  (token_attr, switch_keyword)
-						  (token_attr, lparen)
+						  (sasl::common::token_attr, switch_keyword)
+						  (sasl::common::token_attr, lparen)
 						  (sasl::parser_tree::expression, expr)
-						  (token_attr, rparen)
-						  (token_attr, lbrace)
+						  (sasl::common::token_attr, rparen)
+						  (sasl::common::token_attr, lbrace)
 						  (sasl::parser_tree::switch_statement::stmts_t, stmts)
-						  (token_attr, rbrace)
+						  (sasl::common::token_attr, rbrace)
 						  );
 #endif

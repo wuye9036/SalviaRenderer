@@ -1,11 +1,15 @@
 #ifndef SASL_PARSER_GRAMMARS_DECLARATION_SPECIFIER_H
 #define SASL_PARSER_GRAMMARS_DECLARATION_SPECIFIER_H
 
-#include "../parser_forward.h"
-#include "../../parser_tree/declaration_specifier.h"
-#include "../../parser_tree/literal.h"
+#include <sasl/include/parser/parser_forward.h>
+
+#include <sasl/include/common/token_attr.h>
+#include <sasl/include/parser_tree/declaration_specifier.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/lex.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 SASL_DEFINE_GRAMMAR( declaration_specifier_grammar, sasl::parser_tree::declaration_specifier() )
 {
@@ -28,7 +32,7 @@ SASL_DEFINE_GRAMMAR( declaration_specifier_grammar, sasl::parser_tree::declarati
 
 	typename rule<sasl::parser_tree::parameter_type_qualifier()>::type param_typequal;
 
-	typename rule<token_attr()>::type 
+	typename rule<sasl::common::token_attr()>::type 
 		lparen, rparen, 
 		lsbracket, rsbracket,
 		keyword_typequal,

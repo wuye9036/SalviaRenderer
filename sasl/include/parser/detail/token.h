@@ -1,16 +1,17 @@
 #ifndef SASL_PARSER_DETAIL_TOKEN_H
 #define SASL_PARSER_DETAIL_TOKEN_H
 
-#include "../grammars/token.h"
-#include "../../parser_tree/literal.h"
-#include "../../enums/token_types.h"
-#include "../../common/token_attr.h"
-#include "../../common/lex_context.h"
+#include <sasl/include/parser/grammars/token.h>
+#include <sasl/enums/token_types.h>
+
+#include <sasl/include/common/lex_context.h>
+#include <sasl/include/common/token_attr.h>
+
 #include <string>
 #include <iostream>
 
 struct token_attribute_setter{
-	token_attribute_setter( lex_context& ctxt ): lex_ctxt( ctxt ){
+	token_attribute_setter( sasl::common::lex_context& ctxt ): lex_ctxt( ctxt ){
 	}
 	token_attribute_setter( const token_attribute_setter& rhs ): lex_ctxt( rhs.lex_ctxt ){
 	}
@@ -21,21 +22,22 @@ struct token_attribute_setter{
 		using sasl::common::lex_context;
 
 		token_attr attr;
-		attr.lit.assign(start, end);
+		attr.str.assign(start, end);
 		attr.column = lex_ctxt.column();
 		attr.file_name = lex_ctxt.file_name();
 		attr.line = lex_ctxt.line();
-		lex_ctxt.next( attr.lit );
+		lex_ctxt.next( attr.str );
 
 		ctx.set_value( attr );
 	}
 
-	lex_context& lex_ctxt;
+	sasl::common::lex_context& lex_ctxt;
 };
 
 template <typename BaseLexerT>
-sasl_tokens<BaseLexerT>::sasl_tokens(){
-	ctxt.reset( new lex_context() );
+sasl_tokens<BaseLexerT>::sasl_tokens( boost::shared_ptr<sasl::common::lex_context> c )
+	:ctxt(c)
+{
 	attr_setter.reset(new token_attribute_setter(*ctxt));
 
 	this->self.add_pattern

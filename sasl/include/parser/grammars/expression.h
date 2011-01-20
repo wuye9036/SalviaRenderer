@@ -1,11 +1,16 @@
 #ifndef SASL_PARSER_GRAMMARS_EXPRESSION_H
 #define SASL_PARSER_GRAMMARS_EXPRESSION_H
 
-#include "../parser_forward.h"
-#include "../../parser_tree/expression.h"
-#include "../../parser_tree/literal.h"
+#include <sasl/include/parser/parser_forward.h>
+
+#include <sasl/include/common/token_attr.h>
+
+#include <sasl/include/parser_tree/expression.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/lex.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 SASL_DEFINE_GRAMMAR( primary_expression_grammar, sasl::parser_tree::pm_expression() ){
 	template <typename TokenDefT, typename SASLGrammarT>
@@ -13,10 +18,10 @@ SASL_DEFINE_GRAMMAR( primary_expression_grammar, sasl::parser_tree::pm_expressio
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
-	typename rule<sasl::parser_tree::pm_expression()>::type			pmexpr;
-	typename rule<sasl::parser_tree::paren_expression()>::type		parenexpr;
-	typename rule<sasl::parser_tree::identifier_literal()>::type	ident;
-	typename rule<sasl::parser_tree::operator_literal()>::type		lparen, rparen;
+	typename rule<sasl::parser_tree::pm_expression()>::type		pmexpr;
+	typename rule<sasl::parser_tree::paren_expression()>::type	parenexpr;
+	typename rule<sasl::common::token_attr()>::type				ident;
+	typename rule<sasl::common::token_attr()>::type				lparen, rparen;
 };
 
 SASL_DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression()){
@@ -36,7 +41,7 @@ SASL_DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression
 	typename rule<sasl::parser_tree::call_expression()>::type		callexpr;
 	typename rule<sasl::parser_tree::mem_expression()>::type		memexpr;
 
-	typename rule<token_attr()>::type
+	typename rule<sasl::common::token_attr()>::type
 		ident,
 		opinc,
 		opmember,
@@ -63,7 +68,7 @@ SASL_DEFINE_GRAMMAR( binary_expression_grammar, sasl::parser_tree::lor_expressio
 	typename rule<sasl::parser_tree::add_expression()>::type	addexpr;
 	typename rule<sasl::parser_tree::mul_expression()>::type	mulexpr;
 
-	typename rule<token_attr()>::type
+	typename rule<sasl::common::token_attr()>::type
 		opadd,
 		opmul,
 		oprel,
@@ -88,7 +93,7 @@ SASL_DEFINE_GRAMMAR( expression_grammar, sasl::parser_tree::expression() ){
 	typename rule<sasl::parser_tree::rhs_expression()>::type	rhsexpr;
 	typename rule<sasl::parser_tree::cond_expression()>::type	condexpr;
 
-	typename rule<token_attr()>::type
+	typename rule<sasl::common::token_attr()>::type
 		opassign,
 		comma, question, colon
 		;
@@ -105,7 +110,7 @@ SASL_DEFINE_GRAMMAR( assignment_expression_grammar, sasl::parser_tree::assign_ex
 	typename rule<sasl::parser_tree::rhs_expression()>::type	rhsexpr;
 	typename rule<sasl::parser_tree::cond_expression()>::type	condexpr;
 
-	typename rule<token_attr()>::type
+	typename rule<sasl::common::token_attr()>::type
 		opassign,
 		question, colon
 		;
@@ -119,7 +124,7 @@ SASL_DEFINE_GRAMMAR( expression_list_grammar, sasl::parser_tree::expression_lst(
 
 	typename rule<sasl::parser_tree::expression_lst()>::type exprlst;
 
-	typename rule<token_attr()>::type comma;
+	typename rule<sasl::common::token_attr()>::type comma;
 };
 
 #endif

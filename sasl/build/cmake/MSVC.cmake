@@ -1,6 +1,6 @@
 # set compile flags for MSVC
 
-set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /W4 /EHsc /GR")
+set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /W4 /wd4503 /EHsc /GR") #C4503: decorated name length exceeded, name was truncated
 set(CMAKE_C_FLAGS ${CMAKE_CXX_FLAGS})
 
 if(SOFTART_PLATFORM_BITNESS EQUAL 32)

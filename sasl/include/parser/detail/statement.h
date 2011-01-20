@@ -1,10 +1,10 @@
 #ifndef SASL_PARSER_DETAIL_STATEMENT_H
 #define SASL_PARSER_DETAIL_STATEMENT_H
 
-#include "../grammars/statement.h"
-#include "../grammars/expression.h"
-#include "../grammars/declaration.h"
-#include "../grammars/token.h"
+#include <sasl/include/parser/grammars/statement.h>
+#include <sasl/include/parser/grammars/expression.h>
+#include <sasl/include/parser/grammars/declaration.h>
+#include <sasl/include/parser/grammars/token.h>
 #include <boost/spirit/include/lex_lexertl.hpp>
 
 template<typename IteratorT, typename LexerT>
