@@ -18,6 +18,7 @@ endfunction(sasl_test_create_vcproj_userfile)
 
 if( ( NOT SOFTART_ENABLE_SASL_REGRESSION_TEST ) OR SOFTART_ENABLE_SASL_SEPERATED_TESTS_ALWAYS )
 	
+	ADD_SUBDIRECTORY( parser_test )
 	ADD_SUBDIRECTORY( test_cases )
 	ADD_SUBDIRECTORY( st_combinator_test )
 	# ADD_SUBDIRECTORY( feedback_test )
