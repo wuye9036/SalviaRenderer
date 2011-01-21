@@ -101,10 +101,13 @@ protected:
 };
 
 struct expression_list: public expression{
-	expression_list( boost::shared_ptr<token_attr> tok );
+	SASL_SYNTAX_NODE_CREATORS();
+
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	std::vector< boost::shared_ptr<expression> > exprs;
+protected:
+	expression_list( boost::shared_ptr<token_attr> tok );
 };
 
 struct cond_expression: public expression{

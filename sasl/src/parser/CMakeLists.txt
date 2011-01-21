@@ -11,6 +11,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/parser/grammars.h
 	${SASL_HOME_DIR}/sasl/include/parser/instancing.h
 	${SASL_HOME_DIR}/sasl/include/parser/parser_forward.h
+	${SASL_HOME_DIR}/sasl/include/parser/parse_api.h
 	${SASL_HOME_DIR}/sasl/include/parser/grammars/declaration.h
 	${SASL_HOME_DIR}/sasl/include/parser/grammars/declaration_specifier.h
 	${SASL_HOME_DIR}/sasl/include/parser/grammars/expression.h
@@ -64,6 +65,7 @@ set( SOURCE_FILES
 	struct_declaration.cpp
 	token.cpp
 	variable_declaration.cpp
+	parse_api.cpp
 )
 
 ADD_LIBRARY( sasl_parser STATIC
