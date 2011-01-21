@@ -65,6 +65,9 @@ public:
 	SASL_GRAMMAR_INSTANCE_ACCESSORS( SASL_GRAMMAR_TYPE_NAME_TUPLE_SEQ() )
 
 private:
+	sasl_grammar( const sasl_grammar& );
+	sasl_grammar& operator = ( const sasl_grammar& );
+
 	template<typename GrammarT> GrammarT& get(GrammarT*& ptr){
 		if( !ptr ){
 			ptr = new GrammarT( tok, *this );

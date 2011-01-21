@@ -11,6 +11,8 @@
 #include <boost/spirit/include/lex.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+struct grammar_impl_base_t;
+
 SASL_DEFINE_GRAMMAR( declaration_specifier_grammar, sasl::parser_tree::declaration_specifier() )
 {
 	template< typename TokenDefT, typename SASLGrammarT >
@@ -18,26 +20,9 @@ SASL_DEFINE_GRAMMAR( declaration_specifier_grammar, sasl::parser_tree::declarati
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
+	boost::shared_ptr< grammar_impl_base_t > pimpl;
+
 	typename rule<sasl::parser_tree::declaration_specifier()>::type start;
-
-	typename rule<sasl::parser_tree::unqualified_type()>::type unqualed_type;
-	typename rule<sasl::parser_tree::prefix_qualified_type()>::type prequaled_type;
-	typename rule<sasl::parser_tree::postfix_qualified_type()>::type postqualed_type;
-
-	typename rule<sasl::parser_tree::prefix_type_qualifier()>::type prefix_typequal;
-	typename rule<sasl::parser_tree::postfix_type_qualifier()>::type postfix_typequal;
-
-	typename rule<sasl::parser_tree::function_type_qualifier()>::type func_typequal;
-	typename rule<sasl::parser_tree::array_type_qualifier()>::type array_typequal;
-
-	typename rule<sasl::parser_tree::parameter_type_qualifier()>::type param_typequal;
-
-	typename rule<sasl::common::token_attr()>::type 
-		lparen, rparen, 
-		lsbracket, rsbracket,
-		keyword_typequal,
-		ident
-		;
 };
 
 #endif

@@ -12,16 +12,17 @@
 #include <boost/spirit/include/lex.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+struct grammar_impl_base_t;
+
 SASL_DEFINE_GRAMMAR( primary_expression_grammar, sasl::parser_tree::pm_expression() ){
 	template <typename TokenDefT, typename SASLGrammarT>
 	primary_expression_grammar( const TokenDefT& tok, SASLGrammarT& g );
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
+	boost::scoped_ptr< grammar_impl_base_t > pimpl;
+
 	typename rule<sasl::parser_tree::pm_expression()>::type		pmexpr;
-	typename rule<sasl::parser_tree::paren_expression()>::type	parenexpr;
-	typename rule<sasl::common::token_attr()>::type				ident;
-	typename rule<sasl::common::token_attr()>::type				lparen, rparen;
 };
 
 SASL_DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression()){
@@ -29,6 +30,8 @@ SASL_DEFINE_GRAMMAR( cast_expression_grammar, sasl::parser_tree::cast_expression
 	cast_expression_grammar(const TokenDefT& tok, SASLGrammarT& g);
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
+
+	// boost::scoped_ptr< grammar_impl_base_t > pimpl;
 
 	typename rule<sasl::parser_tree::cast_expression()>::type		castexpr;
 	typename rule<sasl::parser_tree::typecast_expression()>::type	typecastedexpr;
@@ -56,6 +59,8 @@ SASL_DEFINE_GRAMMAR( binary_expression_grammar, sasl::parser_tree::lor_expressio
 	binary_expression_grammar(const TokenDefT& tok, SASLGrammarT& g);
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
+
+	// boost::scoped_ptr< grammar_impl_base_t > pimpl;
 
 	typename rule<sasl::parser_tree::lor_expression()>::type	lorexpr;
 	typename rule<sasl::parser_tree::land_expression()>::type	landexpr;
@@ -86,6 +91,8 @@ SASL_DEFINE_GRAMMAR( expression_grammar, sasl::parser_tree::expression() ){
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
+	// boost::scoped_ptr< grammar_impl_base_t > pimpl;
+
 	typename rule<sasl::parser_tree::expression()>::type expr;
 
 	typename rule<sasl::parser_tree::expression_lst()>::type exprlst;
@@ -106,6 +113,8 @@ SASL_DEFINE_GRAMMAR( assignment_expression_grammar, sasl::parser_tree::assign_ex
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
+	// boost::scoped_ptr< grammar_impl_base_t > pimpl;
+
 	typename rule<sasl::parser_tree::assign_expression()>::type	assignexpr;
 	typename rule<sasl::parser_tree::rhs_expression()>::type	rhsexpr;
 	typename rule<sasl::parser_tree::cond_expression()>::type	condexpr;
@@ -121,6 +130,8 @@ SASL_DEFINE_GRAMMAR( expression_list_grammar, sasl::parser_tree::expression_lst(
 	expression_list_grammar(const TokenDefT& tok, SASLGrammarT& g);
 	
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
+
+	// boost::scoped_ptr< grammar_impl_base_t > pimpl;
 
 	typename rule<sasl::parser_tree::expression_lst()>::type exprlst;
 

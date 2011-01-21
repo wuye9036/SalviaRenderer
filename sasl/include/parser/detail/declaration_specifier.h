@@ -2,12 +2,39 @@
 #define SASL_PARSER_DETAIL_DECLARATION_SPECIFIER_H
 
 #include <sasl/include/parser/grammars/declaration_specifier.h>
+
+#include <sasl/include/parser/detail/grammar_impl_base.h>
 #include <sasl/include/parser/grammars/expression.h>
 #include <sasl/include/parser/grammars/declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/lex_lexertl.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+template <typename IteratorT, typename LexerT>
+struct grammar_impl: public grammar_impl_base_t{
+
+	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
+
+	typename rule<sasl::parser_tree::unqualified_type()>::type unqualed_type;
+	typename rule<sasl::parser_tree::prefix_qualified_type()>::type prequaled_type;
+	typename rule<sasl::parser_tree::postfix_qualified_type()>::type postqualed_type;
+
+	typename rule<sasl::parser_tree::prefix_type_qualifier()>::type prefix_typequal;
+	typename rule<sasl::parser_tree::postfix_type_qualifier()>::type postfix_typequal;
+
+	typename rule<sasl::parser_tree::function_type_qualifier()>::type func_typequal;
+	typename rule<sasl::parser_tree::array_type_qualifier()>::type array_typequal;
+
+	typename rule<sasl::parser_tree::parameter_type_qualifier()>::type param_typequal;
+
+	typename rule<sasl::common::token_attr()>::type 
+		lparen, rparen, 
+		lsbracket, rsbracket,
+		keyword_typequal,
+		ident
+		;
+};
 
 template <typename IteratorT, typename LexerT>
 template <typename TokenDefT, typename SASLGrammarT>
@@ -17,59 +44,63 @@ declaration_specifier_grammar<IteratorT, LexerT>::declaration_specifier_grammar(
 	// init
 	g.decl_spec(*this);
 
+	pimpl.reset( new grammar_impl<IteratorT, LexerT>() );
+	grammar_impl<IteratorT, LexerT>& impl = * ( boost::shared_polymorphic_cast< grammar_impl<IteratorT, LexerT> >(pimpl) );
+
 	// grammar
 	struct_declaration_grammar<IteratorT, LexerT>& struct_decl = g.struct_decl();
 	expression_grammar<IteratorT, LexerT>& expr = g.expr();
 
+
 	// non-terminators
-	start %= postqualed_type.alias();
+	start %= impl.postqualed_type.alias();
 	
-	postqualed_type %= prequaled_type >> (* postfix_typequal );
-	prequaled_type %= ( *prefix_typequal ) >> unqualed_type;
+	impl.postqualed_type %= impl.prequaled_type >> (* impl.postfix_typequal );
+	impl.prequaled_type %= ( *impl.prefix_typequal ) >> impl.unqualed_type;
 
-	unqualed_type %= 
-		( lparen >> postqualed_type >> rparen )
+	impl.unqualed_type %= 
+		( impl.lparen >> impl.postqualed_type >> impl.rparen )
 		| struct_decl
-		| ident
+		| impl.ident
 		;
 
-	prefix_typequal %= keyword_typequal;
-	postfix_typequal %= 
-		keyword_typequal
-		| func_typequal
-		| array_typequal
+	impl.prefix_typequal %= impl.keyword_typequal;
+	impl.postfix_typequal %= 
+		impl.keyword_typequal
+		| impl.func_typequal
+		| impl.array_typequal
 		;
 
-	func_typequal %= lparen >> (*param_typequal) >> rparen;
-	array_typequal %= lsbracket > -expr > rsbracket;
+	impl.func_typequal %= impl.lparen >> (*impl.param_typequal) >> impl.rparen;
+	impl.array_typequal %= impl.lsbracket > -expr > impl.rsbracket;
 
-	param_typequal %= start >> -ident;
+	impl.param_typequal %= start >> -impl.ident;
 
 	// terminators
-	lparen %= tok.marktok_lparen;
-	rparen %= tok.marktok_rparen;
-	lsbracket %= tok.marktok_lsbracket;
-	rsbracket %= tok.marktok_rsbracket;
-	keyword_typequal %= tok.kwtok_uniform | tok.kwtok_shared;
-	ident %= tok.littok_ident;
+	impl.lparen %= tok.marktok_lparen;
+	impl.rparen %= tok.marktok_rparen;
+	impl.lsbracket %= tok.marktok_lsbracket;
+	impl.rsbracket %= tok.marktok_rsbracket;
+	impl.keyword_typequal %= tok.kwtok_uniform | tok.kwtok_shared;
+	impl.ident %= tok.littok_ident;
 
 	// for debug
 	start.name("declaration specifier");
-	unqualed_type.name("unqualified type");
-	prequaled_type.name("prefix-qualified type");
-	postqualed_type.name("postfix-qualified type");
-	prefix_typequal.name("prefix type qualifier");
-	postfix_typequal.name("postfix type qualifier");
-	func_typequal.name("function type qualifier");
-	array_typequal.name("array type qualifier");
-	param_typequal.name("parameter of function type");
+	impl.unqualed_type.name("unqualified type");
+	impl.prequaled_type.name("prefix-qualified type");
+	impl.postqualed_type.name("postfix-qualified type");
+	impl.prefix_typequal.name("prefix type qualifier");
+	impl.postfix_typequal.name("postfix type qualifier");
+	impl.func_typequal.name("function type qualifier");
+	impl.array_typequal.name("array type qualifier");
+	impl.param_typequal.name("parameter of function type");
 	
-	lparen.name("(");
-	rparen.name(")");
-	lsbracket.name("[");
-	rsbracket.name("]");
-	keyword_typequal.name("type_qualifier_keyword");
-	ident.name("identifier");
+	impl.lparen.name("(");
+	impl.rparen.name(")");
+	impl.lsbracket.name("[");
+	impl.rsbracket.name("]");
+	impl.keyword_typequal.name("type_qualifier_keyword");
+	impl.ident.name("identifier");
 }
 
 #endif
