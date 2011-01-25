@@ -249,6 +249,8 @@ public:
 	template <typename T>
 	tree_combinator& end( boost::shared_ptr<T>& result )
 	{
+		// If assertion at here
+		// please confirm that the type of "result" is as same as type of node.
 		before_end();
 		get_node<T>(result);
 		return do_end();
@@ -395,12 +397,13 @@ private:
 
 	template <typename T>
 	class suffix_traits{
+		typedef boost::mpl::and_< boost::is_integral<T>, boost::mpl::not_< boost::is_same<T, bool> > > is_int;
 		typedef boost::mpl::and_<
-			boost::is_integral<T>,
+			is_int,
 			boost::is_unsigned<T>
 		> u;
 		typedef boost::mpl::and_<
-			boost::is_integral<T>,
+			is_int,
 			boost::mpl::bool_<sizeof(T) == sizeof(int64_t)>
 		> l;
 		typedef	boost::is_same< T, float > f;

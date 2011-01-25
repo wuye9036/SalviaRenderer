@@ -82,6 +82,9 @@ BOOST_AUTO_TEST_CASE( btc_test )
 
 BOOST_AUTO_TEST_CASE( decl_combinator_test )
 {
+	using sasl::syntax_tree::expression_initializer;
+	using sasl::syntax_tree::member_initializer;
+
 	BOOST_CHECK( SYNCASENAME_(var_float_3p25f) == std::string("var_float_3p25f") );
 
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test) );
@@ -97,7 +100,20 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->declarators[0]->init == SYNCASE_(exprinit_cexpr_3p25f) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->init_expr == SYNCASE_( cexpr_3p25f ) );
 	BOOST_CHECK( SYNCASE_(cexpr_3p25f)->node_class() == syntax_node_types::constant_expression );
-
+	BOOST_REQUIRE( SYNCASE_(var_3_float) );
+	BOOST_REQUIRE( SYNCASE_(var_3_float)->declarators.size() == 3 );
+	BOOST_REQUIRE( SYNCASE_(var_3_0) );
+	BOOST_CHECK( SYNCASE_(var_3_float)->declarators[0] == SYNCASE_(var_3_0) );
+	BOOST_CHECK( SYNCASE_(var_3_0)->node_class() == syntax_node_types::declarator );
+	BOOST_CHECK( SYNCASE_(var_3_0)->name->str == SYNCASENAME_(var_3_0) );
+	BOOST_CHECK( ! SYNCASE_(var_3_0)->init );
+	BOOST_REQUIRE( SYNCASE_(var_3_1_with_init) );
+	BOOST_CHECK( SYNCASE_(var_3_1_with_init)->init );
+	BOOST_CHECK( SYNCASE_(var_3_1_with_init)->init->typed_handle<expression_initializer>()->init_expr = SYNCASE_(cexpr_3p25f) );
+	BOOST_REQUIRE( SYNCASE_(var_3_2_with_nullinit) );
+	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit) == SYNCASE_(var_3_float)->declarators[2] );
+	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->node_class() == syntax_node_types::member_initializer );
+	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->typed_handle<member_initializer>()->sub_inits.empty() );
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[1] == SYNCASE_(fn1_sem) );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->node_class() == syntax_node_types::function_type );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->name->str == SYNCASENAME_(fn1_sem) );
@@ -153,14 +169,15 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		var_comb
 				.dtype().dbuildin( buildin_type_code::_float ).end(flt)
 				.dname("What's")
-				.dinit_list()
-					.dinit_expr().dconstant2( (int32_t)2 ).end(exprinit0)
 					.dinit_list()
-						.dinit_expr().dvarexpr("expr1").end(exprinit1)
-						.dinit_expr().dvarexpr("expr2").end(exprinit2)
-					.end( meminit0 )
-					.dinit_expr().dvarexpr( "expr0" ).end(exprinit3)
-				.end( meminit1 )
+						.dinit_expr().dconstant2( (int32_t)2 ).end(exprinit0)
+						.dinit_list()
+							.dinit_expr().dvarexpr("expr1").end(exprinit1)
+							.dinit_expr().dvarexpr("expr2").end(exprinit2)
+						.end( meminit0 )
+						.dinit_expr().dvarexpr( "expr0" ).end(exprinit3)
+					.end( meminit1 )
+				.end()
 		.end( fltvar );
 
 		BOOST_CHECK( flt );
@@ -211,11 +228,13 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		boost::shared_ptr<variable_declaration> member0, member1;
 		dprog_combinator prog_comb( std::string("Hello") );
 		prog_comb.dstruct("struct_name")
-			.dmember("struct_member_a")
+			.dmember()
 				.dtype().dnode(flt).end()
+				.dname("struct_member_a").end()
 			.end( member0 )
-			.dmember("struct_member_b")
+			.dmember()
 				.dtype().dnode(arrtype).end()
+				.dname("struct_member_b").end()
 			.end( member1 )
 		.end(stype).end();
 
@@ -473,7 +492,10 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 	boost::shared_ptr<compound_statement> stmts;
 	{
 		boost::shared_ptr<variable_declaration> vardecl;
-		dvar_combinator( NULL ).dname("var0").dtype().dbuildin( buildin_type_code::_float ).end().end(vardecl);
+		dvar_combinator( NULL )
+			.dtype().dbuildin( buildin_type_code::_float ).end()
+			.dname("var0").end()
+		.end(vardecl);
 		BOOST_CHECK( vardecl );
 
 		dstatements_combinator( NULL )

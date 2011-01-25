@@ -114,6 +114,7 @@ void syntax_cases::initialize(){
 	// create variables
 	// int8_t var_int8;
 	// float var_float_3p25f = 3.25f;
+	// float var_3_0, var_3_1_with_init = 3.25f, var_3_2_with_nullinit;
 	dvar_combinator(NULL)
 		.dtype().dnode( type_sint8() ).end()
 		.dname( NAME_(var_int8) ).end()
@@ -124,7 +125,16 @@ void syntax_cases::initialize(){
 		.dinit_expr().dnode( cexpr_3p25f() ).end( LOCVAR_(exprinit_cexpr_3p25f) )
 		.end()
 	.end( LOCVAR_(var_float_3p25f) );
-
+	dvar_combinator(NULL)
+		.dtype().dnode( type_sint8() ).end()
+		.dname( NAME_(var_3_0) ).end( LOCVAR_(var_3_0) )
+		.dname( NAME_(var_3_1_with_init) )
+			.dinit_expr().dnode( cexpr_3p25f() ).end()
+		.end( LOCVAR_(var_3_1_with_init) )
+		.dname( NAME_(var_3_2_with_nullinit) )
+			.dinit_list().end()
+		.end( LOCVAR_(var_3_2_with_nullinit) )
+	.end( LOCVAR_(var_3_float) );
 	//////////////////////////////////////
 	// create functions
 
@@ -239,6 +249,7 @@ void syntax_cases::initialize(){
 					.dtype().dnode(type_sint32()).end()
 					.dname("v0")
 					.dinit_expr().dconstant2( (int)15 ).end()
+					.end()
 				.end()
 				.dexprstmt()
 					.dbinary()

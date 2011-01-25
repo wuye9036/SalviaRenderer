@@ -67,6 +67,11 @@ public:
 	// variables
 	TEST_CASE_SP_VARIABLE( SYNTAX_(variable_declaration), var_int8 );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(variable_declaration), var_float_3p25f );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(variable_declaration), var_3_float );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(declarator), var_3_0 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(declarator), var_3_1_with_init );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(declarator), var_3_2_with_nullinit );
+
 	TEST_CASE_SP_VARIABLE( SYNTAX_(type_definition), tdef0_double2x4 );
 
 	// functions

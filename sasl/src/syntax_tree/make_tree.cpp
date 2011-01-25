@@ -1132,7 +1132,15 @@ void dparameter_combinator::before_end(){
 		return;
 	}
 	assert( typed_node() );
+	assert( typed_node()->declarators.size() <= 1 );
+
 	boost::shared_ptr<parameter> instead_node = create_node<parameter>( token_attr::null() );
+	instead_node->param_type = typed_node()->type_info;
+	if( ! typed_node()->declarators.empty() ){
+		instead_node->name = typed_node()->declarators[0]->name;
+		instead_node->init = typed_node()->declarators[0]->init;
+	}
+
 	typed_node( instead_node );
 }
 
