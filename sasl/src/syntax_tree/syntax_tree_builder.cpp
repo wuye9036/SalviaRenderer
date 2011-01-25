@@ -311,10 +311,20 @@ boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tr
 	return shared_ptr<declaration>();
 }
 
-boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::variable_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
+boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::variable_declaration& v, ast_builder_context& ctxt )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<declaration>();
+	shared_ptr<variable_declaration> ret = create_node<variable_declaration>( token_attr::null() );
+	ret->type_info = build( v.declspec, ctxt );
+	
+	// build declarators
+	ret->declarators.push_back( build( v.decllist.first, ctxt ) );
+	typedef boost::fusion::vector< token_attr, sasl::parser_tree::initialized_declarator > following_pair_t;
+	BOOST_FOREACH( following_pair_t const & follow_pair, v.decllist.follows	)
+	{
+		ret->declarators.push_back( build( boost::fusion::at_c<1>( follow_pair), ctxt ) );
+	}
+
+	return ret;
 }
 
 boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::function_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
@@ -339,6 +349,12 @@ boost::shared_ptr<type_specifier> syntax_tree_builder::build( const sasl::parser
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return shared_ptr<type_specifier>();
+}
+
+boost::shared_ptr<declarator> syntax_tree_builder::build( const sasl::parser_tree::initialized_declarator& v, ast_builder_context& ctxt )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<declarator>();
 }
 
 END_NS_SASL_SYNTAX_TREE()

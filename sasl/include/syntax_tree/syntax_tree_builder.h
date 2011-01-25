@@ -166,6 +166,7 @@ struct syntax_tree_builder{
 	boost::shared_ptr<declaration> build( const sasl::parser_tree::variable_declaration& v, ast_builder_context& ctxt );
 	boost::shared_ptr<declaration> build( const sasl::parser_tree::function_declaration& v, ast_builder_context& ctxt );
 	boost::shared_ptr<declaration> build( const sasl::parser_tree::typedef_declaration& v, ast_builder_context& ctxt );
+	boost::shared_ptr<declarator> build( const sasl::parser_tree::initialized_declarator& v, ast_builder_context& ctxt );
 	
 	// build type specifier & declaration specifier
 	boost::shared_ptr<type_specifier> build( const sasl::parser_tree::declaration_specifier& v, ast_builder_context& ctxt );
