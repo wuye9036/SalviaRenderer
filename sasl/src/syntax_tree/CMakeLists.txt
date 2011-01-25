@@ -32,7 +32,7 @@ set( SOURCE_FILES
 	parse_api.cpp
 	program.cpp
 	statement.cpp
-	syntax_tree_builder_impl.cpp
+	syntax_tree_builder.cpp
 	make_tree.cpp
 	utility.cpp
 )

@@ -42,6 +42,7 @@ public:
 	const static this_type program;
 	const static this_type switch_statement;
 	const static this_type statement;
+	const static this_type expression_initializer;
 	const static this_type cast_expression;
 	const static this_type if_statement;
 	const static this_type parameter;
@@ -60,7 +61,7 @@ public:
 	const static this_type member_initializer;
 	const static this_type declaration_statement;
 	const static this_type index_expression;
-	const static this_type expression_initializer;
+	const static this_type declarator;
 	const static this_type null_declaration;
 	const static this_type identifier;
 	const static this_type expression;

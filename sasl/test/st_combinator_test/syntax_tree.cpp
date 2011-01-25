@@ -88,12 +88,13 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls.size() == 3 );
 
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[0] == SYNCASE_(var_float_3p25f) );
-	BOOST_CHECK( SYNCASE_(var_float_3p25f) );
-	BOOST_CHECK( SYNCASE_(var_float_3p25f)->name->str == SYNCASENAME_(var_float_3p25f) );
+	BOOST_REQUIRE( SYNCASE_(var_float_3p25f) );
+	BOOST_REQUIRE( SYNCASE_(var_float_3p25f)->declarators.size() == 1 );
+	BOOST_CHECK( SYNCASE_(var_float_3p25f)->declarators[0]->name->str == SYNCASENAME_(var_float_3p25f) );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->type_info->value_typecode == SYNCASE_(btc_float) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->node_class() == syntax_node_types::expression_initializer );
-	BOOST_CHECK( SYNCASE_(var_float_3p25f)->init == SYNCASE_(exprinit_cexpr_3p25f) );
+	BOOST_CHECK( SYNCASE_(var_float_3p25f)->declarators[0]->init == SYNCASE_(exprinit_cexpr_3p25f) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->init_expr == SYNCASE_( cexpr_3p25f ) );
 	BOOST_CHECK( SYNCASE_(cexpr_3p25f)->node_class() == syntax_node_types::constant_expression );
 
@@ -150,8 +151,8 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	{
 		dvar_combinator var_comb( NULL );
 		var_comb
-				.dname("What's")
 				.dtype().dbuildin( buildin_type_code::_float ).end(flt)
+				.dname("What's")
 				.dinit_list()
 					.dinit_expr().dconstant2( (int32_t)2 ).end(exprinit0)
 					.dinit_list()
@@ -167,10 +168,11 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		BOOST_CHECK( flt->value_typecode == buildin_type_code::_float );
 
 		BOOST_CHECK( fltvar );
-		BOOST_CHECK( fltvar->name->str == "What's" );
 		BOOST_CHECK( fltvar->type_info == flt );
 		BOOST_CHECK( fltvar->node_class() == syntax_node_types::variable_declaration );
-		BOOST_CHECK( fltvar->init == meminit1 );
+		BOOST_REQUIRE( fltvar->declarators.size() == 1 );
+		BOOST_CHECK( fltvar->declarators[0]->name->str == "What's" );
+		BOOST_CHECK( fltvar->declarators[0]->init == meminit1 );
 		BOOST_CHECK( meminit1 );
 		BOOST_CHECK( meminit1->node_class() == syntax_node_types::member_initializer );
 		BOOST_CHECK( meminit1->sub_inits.size() == 3 );
@@ -223,9 +225,9 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		BOOST_CHECK( stype->decls.size() == 2 );
 		BOOST_CHECK( stype->decls[0] == member0 );
 		BOOST_CHECK( stype->decls[1] == member1 );
-		BOOST_CHECK( member0->name->str == "struct_member_a" );
+		BOOST_CHECK( member0->declarators[0]->name->str == "struct_member_a" );
 		BOOST_CHECK( member0->type_info == flt );
-		BOOST_CHECK( member1->name->str == "struct_member_b" );
+		BOOST_CHECK( member1->declarators[0]->name->str == "struct_member_b" );
 		BOOST_CHECK( member1->type_info == arrtype );
 	}
 
@@ -234,14 +236,17 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	boost::shared_ptr<alias_type> var3type;
 	boost::shared_ptr<array_type> var4type;
 	prog_comb
-		.dvar( var0_name )
+		.dvar()
 			.dtype().dvec( buildin_type_code::_uint64, 2 ).end( var1type )
+			.dname(var0_name).end()
 		.end()
-		.dvar( var0_name )
+		.dvar()
 			.dtype().dmat( buildin_type_code::_double, 4, 3 ).end( var2type )
+			.dname(var0_name).end()
 		.end()
-		.dvar( var0_name )
+		.dvar()
 			.dtype().dalias( struct_name ).dtypequal( type_qualifiers::_uniform ).end( var3type )
+			.dname(var0_name).end()
 		.end()
 	.end( prog );
 

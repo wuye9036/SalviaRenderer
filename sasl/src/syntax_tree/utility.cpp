@@ -81,8 +81,7 @@ public:
 	}
 
 	// declaration & type specifier
-	SASL_VISIT_DCL( initializer ){
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( initializer );
 
 	SASL_VISIT_DCL( expression_initializer ) {
 		SAFE_ACCEPT( v.init_expr );
@@ -92,11 +91,13 @@ public:
 		visit( v.sub_inits, data );
 		applied( v, data );
 	}
-	SASL_VISIT_DCL( declaration ) {
-		// do nothing
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( declaration );
 	SASL_VISIT_DCL( variable_declaration ){
 		SAFE_ACCEPT( v.type_info );
+		visit( v.declarators, data );
+		applied( v, data );
+	}
+	SASL_VISIT_DCL( declarator ){
 		SAFE_ACCEPT( v.init );
 		applied( v, data );
 	}
@@ -104,9 +105,7 @@ public:
 		SAFE_ACCEPT( v.type_info );
 		applied( v, data );
 	}
-	SASL_VISIT_DCL( type_specifier ){
-		// do nothing
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
 	SASL_VISIT_DCL( buildin_type ){
 		applied( v, data );
 	}
@@ -132,7 +131,7 @@ public:
 	}
 
 	// statement
-	SASL_VISIT_DCL( statement ){}
+	SASL_VISIT_INLINE_DEF_UNIMPL( statement );
 
 	SASL_VISIT_DCL( declaration_statement ){
 		SAFE_ACCEPT( v.decl );
@@ -237,7 +236,7 @@ template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
 	lhs = any_cast<T>(rhs);
 }
 
-template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& rhs, EFLIB_ENABLE_IF_PRED2(is_base_of, node, NodeT, 0) ){
+template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& rhs, EFLIB_ENABLE_IF_PRED2(is_base_of, node, NodeT) ){
 	shared_ptr<node> any_v = any_cast< shared_ptr<node> >( rhs );
 	if ( any_v ){
 		lhs = shared_polymorphic_cast<NodeT>(any_v);
@@ -268,77 +267,40 @@ public:
 
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, cast_expression, (casted_type)(expr) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, binary_expression, (op)(left_expr)(right_expr) );
-	SASL_VISIT_DCL( expression_list ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( cond_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( index_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( call_expression ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( member_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( expression_list );
+	SASL_VISIT_INLINE_DEF_UNIMPL( cond_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( index_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( call_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( member_expression );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, constant_expression, (value_tok)(ctype) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_expression, (var_name) );
 
 	// declaration & type specifier
-	SASL_VISIT_DCL( initializer ){
-		EFLIB_INTERRUPT( "initializer is an abstract class. This function could not be executed." );
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( initializer );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, expression_initializer, (init_expr) );
-	SASL_VISIT_DCL( member_initializer ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( declaration ) {
-		EFLIB_INTERRUPT( "declaration is an abstract class. This function could not be executed." );
-	}
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_declaration, (type_info)(name)(init) );
-	SASL_VISIT_DCL( type_definition ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( type_specifier ){
-		EFLIB_INTERRUPT( "type_specifier is an abstract class. This function could not be executed." );
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( member_initializer );
+	SASL_VISIT_INLINE_DEF_UNIMPL( declaration );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_declaration, (type_info)(declarators) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator, (name)(init) );
+	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
+	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, buildin_type, (value_typecode)(qual)(tok) );
-	SASL_VISIT_DCL( array_type ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( struct_type ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
+	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter, (param_type)(name)(init) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, function_type, (name)(retval_type)(params)(body)(value_typecode)(qual) );
 
 	// statement
-	SASL_VISIT_DCL( statement ){
-		EFLIB_INTERRUPT( "statement is an abstract class. This function could not be executed." );
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( statement );
 
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement, (decl) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, if_statement, (cond)(yes_stmt)(no_stmt) );
-	SASL_VISIT_DCL( while_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( dowhile_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( for_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( case_label ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( ident_label ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( switch_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( while_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( dowhile_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( for_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( case_label );
+	SASL_VISIT_INLINE_DEF_UNIMPL( ident_label );
+	SASL_VISIT_INLINE_DEF_UNIMPL( switch_statement );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, compound_statement, (stmts) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, expression_statement, (expr) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, jump_statement, (code)(jump_expr) );
@@ -351,116 +313,50 @@ class deep_duplicator: public syntax_tree_visitor{
 public:
 	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, unary_expression, (op)(expr)(tok) );
 
-	SASL_VISIT_DCL( cast_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( binary_expression ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( expression_list ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( cond_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( index_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( call_expression ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( member_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( constant_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( variable_expression ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( cast_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( binary_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( expression_list );
+	SASL_VISIT_INLINE_DEF_UNIMPL( cond_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( index_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( call_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( member_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( constant_expression );
+	SASL_VISIT_INLINE_DEF_UNIMPL( variable_expression );
 
 	// declaration & type specifier
-	SASL_VISIT_DCL( initializer ){
-		EFLIB_INTERRUPT( "initializer is an abstract class. This function could not be executed." );
-	}
-
-	SASL_VISIT_DCL( expression_initializer ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( member_initializer ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( declaration ) {
-		EFLIB_INTERRUPT( "declaration is an abstract class. This function could not be executed." );
-	}
-	SASL_VISIT_DCL( variable_declaration ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( type_definition ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( type_specifier ){
-		EFLIB_INTERRUPT( "type_specifier is an abstract class. This function could not be executed." );
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( initializer );
+	SASL_VISIT_INLINE_DEF_UNIMPL( expression_initializer );
+	SASL_VISIT_INLINE_DEF_UNIMPL( member_initializer );
+	SASL_VISIT_INLINE_DEF_UNIMPL( declaration );
+	SASL_VISIT_INLINE_DEF_UNIMPL( variable_declaration );
+	SASL_VISIT_INLINE_DEF_UNIMPL( declarator );
+	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
+	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
 
 	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, buildin_type, (value_typecode)(qual)(tok) );
 
-	SASL_VISIT_DCL( array_type ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( struct_type ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( parameter ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( function_type ) {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
+	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );
+	SASL_VISIT_INLINE_DEF_UNIMPL( parameter );
+	SASL_VISIT_INLINE_DEF_UNIMPL( function_type );
 
 	// statement
-	SASL_VISIT_DCL( statement ){
-		EFLIB_INTERRUPT( "statement is an abstract class. This function could not be executed." );
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( statement );
 
-	SASL_VISIT_DCL( declaration_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( if_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( while_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( dowhile_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( for_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( case_label ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( ident_label ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( switch_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( compound_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( expression_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	SASL_VISIT_DCL( jump_statement ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( declaration_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( if_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( while_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( dowhile_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( for_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( case_label );
+	SASL_VISIT_INLINE_DEF_UNIMPL( ident_label );
+	SASL_VISIT_INLINE_DEF_UNIMPL( switch_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( compound_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( expression_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( jump_statement );
 
 	// program
-	SASL_VISIT_DCL( program ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	SASL_VISIT_INLINE_DEF_UNIMPL( program );
 
 	// If value is "value semantic", copy it as raw data.
 	template <typename ValueT> void visit( ValueT& v, boost::any* data ){

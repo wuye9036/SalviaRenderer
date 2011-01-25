@@ -14,8 +14,7 @@ shared_ptr<program> pt_to_ast(
 	)
 {
 	syntax_tree_builder builder;
-	return shared_ptr<program>();
-	// return builder.build( pt_prog );
+	return builder.build( pt_prog );
 }
 
 boost::shared_ptr<program> parse(

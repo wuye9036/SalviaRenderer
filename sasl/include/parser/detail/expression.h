@@ -11,7 +11,7 @@ expression_grammar<IteratorT, LexerT>::expression_grammar( const TokenDefT& tok,
 {
 	// init
 	g.expr(*this);
-
+	
 	// grammar
 	expression_list_grammar<IteratorT, LexerT>& exprlst = g.expr_list();
 
@@ -22,6 +22,7 @@ expression_grammar<IteratorT, LexerT>::expression_grammar( const TokenDefT& tok,
 
 	//for debug
 	expr.name("expression");
+
 }
 
 #endif

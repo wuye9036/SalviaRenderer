@@ -10,8 +10,8 @@
 #include <boost/spirit/include/lex_lexertl.hpp>
 
 template <typename IteratorT, typename LexerT>
-struct grammar_impl: public grammar_impl_base_t{
-	
+struct pmexpr_impl: public grammar_impl_base_t{
+
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
 	typename rule<sasl::parser_tree::paren_expression()>::type	parenexpr;
@@ -29,7 +29,8 @@ primary_expression_grammar<IteratorT, LexerT>::primary_expression_grammar(
 	// init
 	g.primary_expr(*this);
 
-	grammar_impl<IteratorT, LexerT>& impl = *( static_cast< grammar_impl<IteratorT, LexerT>* >(pimpl.get()) );
+	pimpl.reset( new pmexpr_impl<IteratorT, LexerT>() );
+	pmexpr_impl<IteratorT, LexerT>& impl = *( static_cast< pmexpr_impl<IteratorT, LexerT>* >(pimpl.get()) );
 
 	// grammar
 	literal_constant_grammar<IteratorT, LexerT>& lit_const = g.lit_const();

@@ -147,7 +147,7 @@ void llvm_code_generator::restart_block( boost::any* data ){
 	ctxt->builder()->SetInsertPoint(restart);
 }
 
-SASL_VISIT_NOIMPL( unary_expression );
+SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF( cast_expression ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -266,11 +266,11 @@ SASL_VISIT_DEF( binary_expression ){
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
-SASL_VISIT_NOIMPL( expression_list );
-SASL_VISIT_NOIMPL( cond_expression );
-SASL_VISIT_NOIMPL( index_expression );
-SASL_VISIT_NOIMPL( call_expression );
-SASL_VISIT_NOIMPL( member_expression );
+SASL_VISIT_DEF_UNIMPL( expression_list );
+SASL_VISIT_DEF_UNIMPL( cond_expression );
+SASL_VISIT_DEF_UNIMPL( index_expression );
+SASL_VISIT_DEF_UNIMPL( call_expression );
+SASL_VISIT_DEF_UNIMPL( member_expression );
 
 SASL_VISIT_DEF( constant_expression ){
 
@@ -297,7 +297,7 @@ SASL_VISIT_DEF( constant_expression ){
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
-SASL_VISIT_NOIMPL( identifier );
+SASL_VISIT_DEF_UNIMPL( identifier );
 SASL_VISIT_DEF( variable_expression ){
 
 	shared_ptr<symbol> declsym = data_as_cgctxt_ptr()->sym.lock()->find( v.var_name->str );
@@ -315,7 +315,7 @@ SASL_VISIT_DEF( variable_expression ){
 }
 
 // declaration & type specifier
-SASL_VISIT_NOIMPL( initializer );
+SASL_VISIT_DEF_UNIMPL( initializer );
 SASL_VISIT_DEF( expression_initializer ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -335,24 +335,19 @@ SASL_VISIT_DEF( expression_initializer ){
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
-SASL_VISIT_NOIMPL( member_initializer );
-SASL_VISIT_NOIMPL( declaration );
-SASL_VISIT_DEF( variable_declaration ){
+SASL_VISIT_DEF_UNIMPL( member_initializer );
+SASL_VISIT_DEF_UNIMPL( declaration );
+SASL_VISIT_DEF( declarator ){
 	any child_ctxt_init = *data;
 	any_to_cgctxt_ptr( child_ctxt_init )->variable_to_fill = v.handle();
 	any child_ctxt;
-	
-	visit_child( child_ctxt, child_ctxt_init, v.type_info );
-	assert( any_to_cgctxt_ptr(child_ctxt)->type );
 
 	Function* parent_func = data_as_cgctxt_ptr()->parent_func;
-
 	IRBuilder<> vardecl_builder( &parent_func->getEntryBlock(), parent_func->getEntryBlock().begin() );
 
 	if( data_as_cgctxt_ptr()->parent_func ){
-		
 		data_as_cgctxt_ptr()->addr 
-			= vardecl_builder.CreateAlloca( any_to_cgctxt_ptr(child_ctxt)->type, 0, v.name->str.c_str() );
+			= vardecl_builder.CreateAlloca( data_as_cgctxt_ptr()->type, 0, v.name->str.c_str() );
 	}
 
 	if ( v.init ){
@@ -364,9 +359,24 @@ SASL_VISIT_DEF( variable_declaration ){
 
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
+SASL_VISIT_DEF( variable_declaration ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
 
-SASL_VISIT_NOIMPL( type_definition );
-SASL_VISIT_NOIMPL( type_specifier );
+	visit_child( child_ctxt, child_ctxt_init, v.type_info );
+	assert( any_to_cgctxt_ptr(child_ctxt)->type );
+
+	any_to_cgctxt_ptr(child_ctxt_init)->type = any_to_cgctxt_ptr(child_ctxt)->type;
+
+	BOOST_FOREACH( shared_ptr<declarator> decl, v.declarators ){
+		visit_child( child_ctxt, child_ctxt_init, decl );
+	}
+
+	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
+}
+
+SASL_VISIT_DEF_UNIMPL( type_definition );
+SASL_VISIT_DEF_UNIMPL( type_specifier );
 SASL_VISIT_DEF( buildin_type ){
 
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
@@ -405,8 +415,8 @@ SASL_VISIT_DEF( buildin_type ){
 	*get_common_ctxt( tisi->type_info() ) = *(data_as_cgctxt_ptr());
 }
 
-SASL_VISIT_NOIMPL( array_type );
-SASL_VISIT_NOIMPL( struct_type );
+SASL_VISIT_DEF_UNIMPL( array_type );
+SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF( parameter ){
 
 	data_as_cgctxt_ptr()->sym = v.symbol();
@@ -501,7 +511,7 @@ SASL_VISIT_DEF( function_type ){
 }
 
 // statement
-SASL_VISIT_NOIMPL( statement );
+SASL_VISIT_DEF_UNIMPL( statement );
 SASL_VISIT_DEF( declaration_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -561,10 +571,10 @@ SASL_VISIT_DEF( if_statement ){
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
-SASL_VISIT_NOIMPL( while_statement );
-SASL_VISIT_NOIMPL( dowhile_statement );
-SASL_VISIT_NOIMPL( case_label );
-SASL_VISIT_NOIMPL( switch_statement );
+SASL_VISIT_DEF_UNIMPL( while_statement );
+SASL_VISIT_DEF_UNIMPL( dowhile_statement );
+SASL_VISIT_DEF_UNIMPL( case_label );
+SASL_VISIT_DEF_UNIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement ){
 	data_as_cgctxt_ptr()->sym = v.symbol();
@@ -635,7 +645,7 @@ SASL_VISIT_DEF( jump_statement ){
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();
 }
 
-SASL_VISIT_NOIMPL( ident_label );
+SASL_VISIT_DEF_UNIMPL( ident_label );
 
 SASL_VISIT_DEF( program ){
 	UNREF_PARAM( data );
@@ -660,7 +670,7 @@ SASL_VISIT_DEF( program ){
 	}
 }
 
-SASL_VISIT_NOIMPL( for_statement );
+SASL_VISIT_DEF_UNIMPL( for_statement );
 
 boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
 	return boost::shared_polymorphic_cast<llvm_code>(ctxt);

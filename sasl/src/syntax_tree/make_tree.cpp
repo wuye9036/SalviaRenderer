@@ -98,10 +98,9 @@ dprog_combinator::dprog_combinator( const std::string& prog_name ):
 	typed_node( create_node<program>( prog_name ) );
 }
 
-tree_combinator& dprog_combinator::dvar( const std::string& var_name )
+tree_combinator& dprog_combinator::dvar()
 {
 	enter_child( e_vardecl, var_comb );
-	var_comb->typed_node()->name = token_attr::from_string(var_name);
 	return *var_comb;
 }
 
@@ -240,6 +239,49 @@ void dtype_combinator::child_ended()
 			return;
 	}
 }
+/////////////////////////////////////
+// declarator combinator
+SASL_TYPED_NODE_ACCESSORS_IMPL( ddeclarator_combinator, declarator );
+
+ddeclarator_combinator::ddeclarator_combinator( tree_combinator* parent )
+: tree_combinator( parent )
+{
+	typed_node( create_node<declarator>( token_attr::null() ) );
+}
+
+tree_combinator& ddeclarator_combinator::dname( const std::string& name )
+{
+	DEFAULT_STATE_SCOPE();
+
+	typed_node()->name = token_attr::from_string(name);
+	return *this;
+}
+
+tree_combinator& ddeclarator_combinator::dinit_expr()
+{
+	return enter_child( e_initexpr, exprinit_comb );
+}
+
+tree_combinator& ddeclarator_combinator::dinit_list()
+{
+	return enter_child( e_initlist, listinit_comb );
+}
+
+void ddeclarator_combinator::child_ended()
+{
+	switch( leave() )
+	{
+	case e_initexpr:
+		typed_node()->init = move_node2<initializer>( exprinit_comb );
+		break;
+	case e_initlist:
+		typed_node()->init = move_node2<initializer>( listinit_comb );
+		break;
+	default:
+		default_proc();
+		break;
+	}
+}
 
 /////////////////////////////////////
 // variable combinator
@@ -251,27 +293,13 @@ dvar_combinator::dvar_combinator( tree_combinator* parent )
 	typed_node( create_node<variable_declaration>( token_attr::null() ) );
 }
 
-tree_combinator& dvar_combinator::dname( const std::string& name )
-{
-	DEFAULT_STATE_SCOPE();
-
-	typed_node()->name = token_attr::from_string(name);
-	return *this;
+tree_combinator& dvar_combinator::dname( std::string const& str ){
+	return enter_child( e_declarator, declarator_comb ).dname(str);
 }
 
 tree_combinator& dvar_combinator::dtype()
 {
 	return enter_child( e_type, type_comb );
-}
-
-tree_combinator& dvar_combinator::dinit_expr()
-{
-	return enter_child( e_initexpr, exprinit_comb );
-}
-
-tree_combinator& dvar_combinator::dinit_list()
-{
-	return enter_child( e_initlist, listinit_comb );
 }
 
 void dvar_combinator::child_ended()
@@ -281,11 +309,8 @@ void dvar_combinator::child_ended()
 	case e_type:
 		typed_node()->type_info = move_node( type_comb );
 		break;
-	case e_initexpr:
-		typed_node()->init = move_node2<initializer>( exprinit_comb );
-		break;
-	case e_initlist:
-		typed_node()->init = move_node2<initializer>( listinit_comb );
+	case e_declarator:
+		typed_node()->declarators.push_back( move_node2<declarator>( declarator_comb ) );
 		break;
 	default:
 		default_proc();
@@ -357,7 +382,7 @@ tree_combinator& dexpr_combinator::dbranchexpr()
 	return enter_child( e_branchexpr, branch_comb );
 }
 
-tree_combinator& dexpr_combinator::dmember( const std::string& m )
+tree_combinator& dexpr_combinator::dmember( std::string const& m )
 {
 	DEFAULT_STATE_SCOPE();
 
@@ -603,10 +628,9 @@ tree_combinator& dstruct_combinator::dname( const std::string& name )
 	return *this;
 }
 
-tree_combinator& dstruct_combinator::dmember( const std::string& var_name )
+tree_combinator& dstruct_combinator::dmember()
 {
 	enter_child(e_vardecl, var_comb);
-	var_comb->typed_node()->name = token_attr::from_string(var_name);
 	return *var_comb;
 }
 
@@ -1108,7 +1132,7 @@ void dparameter_combinator::before_end(){
 		return;
 	}
 	assert( typed_node() );
-	boost::shared_ptr<parameter> instead_node = create_node<parameter>( typed_node2<variable_declaration>() );
+	boost::shared_ptr<parameter> instead_node = create_node<parameter>( token_attr::null() );
 	typed_node( instead_node );
 }
 

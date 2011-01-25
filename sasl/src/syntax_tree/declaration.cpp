@@ -25,6 +25,10 @@ declaration::declaration( syntax_node_types type_id, boost::shared_ptr<token_att
 {
 }
 
+declarator::declarator( boost::shared_ptr<token_attr> tok ): node(syntax_node_types::declarator, tok) {}
+
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( declarator );
+
 variable_declaration::variable_declaration( boost::shared_ptr<token_attr> tok )
 	: declaration(syntax_node_types::variable_declaration, tok ) {
 }
@@ -69,12 +73,6 @@ SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( struct_type );
 
 parameter::parameter( boost::shared_ptr<token_attr> tok )
 	: declaration( syntax_node_types::parameter, tok ) {
-}
-
-parameter::parameter( boost::shared_ptr<variable_declaration> decl )
-: declaration( syntax_node_types::parameter, decl->token() ),
-param_type( decl->type_info ), name( decl->name ), init( decl->init )
-{
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( parameter );

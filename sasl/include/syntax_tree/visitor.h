@@ -26,6 +26,7 @@ struct initializer;
 struct expression_initializer;
 struct member_initializer;
 struct declaration;
+struct declarator;
 struct variable_declaration;
 struct type_definition;
 struct type_specifier;
@@ -52,7 +53,7 @@ struct program;
 
 // Macros for making define visitor shortly.
 
-// For expand SASL_VISIT_NOIMPL_ and SASL_VISIT_DEF
+// For expand SASL_VISIT_DEF_UNIMPL_ and SASL_VISIT_DEF
 // #define SASL_VISITOR_TYPE_NAME
 //
 
@@ -60,11 +61,11 @@ struct program;
 //	void visit ( ... ){
 //		EFLIB_ASSERT_UNIMPLEMENTED0( "XXX::visit was not implemented yet." );
 //	}
-#define SASL_VISIT_NOIMPL( node_type_name )	\
+#define SASL_VISIT_DEF_UNIMPL( node_type_name )	\
 	void SASL_VISITOR_TYPE_NAME::visit( ::sasl::syntax_tree::node_type_name &, ::boost::any* ){ \
 		EFLIB_ASSERT_UNIMPLEMENTED0( \
-			( ::std::string( BOOST_PP_STRINGIZE(	SASL_VISITOR_TYPE_NAME::node_type_name ) ) \
-			+ ::std::string( "was not implemented yet." ) ).c_str()	\
+			( ::std::string( BOOST_PP_STRINGIZE( SASL_VISITOR_TYPE_NAME::node_type_name ) ) \
+			+ ::std::string( " was not implemented yet." ) ).c_str()	\
 		); \
 	}
 
@@ -73,6 +74,14 @@ struct program;
 
 #define SASL_VISIT_DCL( node_type_name )	\
 	virtual void visit( ::sasl::syntax_tree::node_type_name & v, ::boost::any* data = NULL )
+
+#define SASL_VISIT_INLINE_DEF_UNIMPL( node_type_name )	\
+	virtual void visit( ::sasl::syntax_tree::node_type_name &, ::boost::any* = NULL ){	\
+		EFLIB_ASSERT_UNIMPLEMENTED0( \
+			( ::std::string( BOOST_PP_STRINGIZE( node_type_name ) ) \
+			+ ::std::string( " was not implemented yet." ) ).c_str()	\
+		); \
+	}
 
 class syntax_tree_visitor{
 public:
@@ -93,6 +102,7 @@ public:
 	SASL_VISIT_DCL( expression_initializer ) = 0;
 	SASL_VISIT_DCL( member_initializer ) = 0;
 	SASL_VISIT_DCL( declaration ) = 0;
+	SASL_VISIT_DCL( declarator ) = 0;
 	SASL_VISIT_DCL( variable_declaration ) = 0;
 	SASL_VISIT_DCL( type_definition ) = 0;
 	SASL_VISIT_DCL( type_specifier ) = 0;

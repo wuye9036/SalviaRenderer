@@ -17,7 +17,7 @@ struct token_attribute_setter{
 	}
 
 	template <typename IteratorT, typename PassFlagT, typename IdtypeT, typename ContextT>
-	void operator () (IteratorT& start, IteratorT& end, PassFlagT& matched, IdtypeT& id, ContextT& ctx){
+	void operator () (IteratorT& start, IteratorT& end, PassFlagT& /*matched*/, IdtypeT& /*id*/, ContextT& ctx){
 		using sasl::common::token_attr;
 		using sasl::common::lex_context;
 
@@ -30,7 +30,8 @@ struct token_attribute_setter{
 
 		ctx.set_value( attr );
 	}
-
+private:
+	token_attribute_setter& operator = ( const token_attribute_setter& );
 	sasl::common::lex_context& lex_ctxt;
 };
 

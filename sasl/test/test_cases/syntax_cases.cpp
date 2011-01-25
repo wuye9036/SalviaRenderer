@@ -115,13 +115,14 @@ void syntax_cases::initialize(){
 	// int8_t var_int8;
 	// float var_float_3p25f = 3.25f;
 	dvar_combinator(NULL)
-		.dname( NAME_(var_int8) )
 		.dtype().dnode( type_sint8() ).end()
+		.dname( NAME_(var_int8) ).end()
 	.end( LOCVAR_(var_int8) );
 	dvar_combinator(NULL)
-		.dname( NAME_(var_float_3p25f) )
 		.dtype().dnode(type_float()).end()
+		.dname( NAME_(var_float_3p25f) )
 		.dinit_expr().dnode( cexpr_3p25f() ).end( LOCVAR_(exprinit_cexpr_3p25f) )
+		.end()
 	.end( LOCVAR_(var_float_3p25f) );
 
 	//////////////////////////////////////
@@ -144,12 +145,13 @@ void syntax_cases::initialize(){
 		.dname( NAME_(fn1_sem) )
 		.dreturntype().dnode( type_float() ).end()
 		.dparam()
-			.dname( NAME_(par0_0_fn1) )
 			.dtype().dnode( type_uint64() ).end()
+			.dname( NAME_(par0_0_fn1) )
+			.end()
 		.end( LOCVAR_(par0_0_fn1) )
 		.dparam()
-			.dname( NAME_(par1_1_fn1) )
 			.dtype().dnode( type_sint8() ).end()
+			.dname( NAME_(par1_1_fn1) ).end()
 		.end( LOCVAR_(par1_1_fn1) )
 		.dbody()
 			.dexprstmt().dvarexpr(NAME_(par0_0_fn1)).end()
@@ -187,7 +189,7 @@ void syntax_cases::initialize(){
 	LOCVAR_(null_prog).reset();
 
 	dprog_combinator( NAME_(prog_for_syntax_test).c_str() )
-		.dvar("").dnode( var_float_3p25f() ).end()
+		.dvar().dnode( var_float_3p25f() ).end()
 		.dfunction("").dnode( fn1_sem() ).end()
 		.dtypedef().dnode( tdef0_double2x4() ).end()
 	.end( LOCVAR_(prog_for_syntax_test) );
@@ -204,11 +206,11 @@ void syntax_cases::initialize(){
 		.dreturntype().dbuildin( buildin_type_code::_sint32 ).end()
 		.dparam()
 			.dtype().dbuildin( buildin_type_code::_sint32 ).end()
-			.dname( "v0" )
+			.dname( "v0" ).end()
 		.end()
 		.dparam()
 			.dtype().dbuildin( buildin_type_code::_sint32 ).end()
-			.dname( "v1" )
+			.dname( "v1" ).end()
 		.end()
 		.dbody()
 			.dif()

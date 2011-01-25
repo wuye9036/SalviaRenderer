@@ -26,8 +26,37 @@ void sasl::parser::detail::parser<ParserTreeT>::parse(
 
 	try{
 		try{
-			bool tokenize_succeed = tokenize( lex_first, lex_last, tok );
-			if( tokenize_succeed && (lex_first == lex_last) ){
+			// Try to use all lex state for tokenize character sequence.
+
+			const size_t tok_states_count = 2;
+			const char* tok_states[tok_states_count] = {NULL, "SKIPPED"};
+
+			int toked_state = 0; // 0 is no result, 1 is succeed, 2 is failed.
+			int i_state = 0;
+			while( lex_first != lex_last && toked_state == 0 ){
+
+				const char* next_lex_first = lex_first;
+
+				tokenize( next_lex_first, lex_last, tok, tok_states[i_state] );
+				
+				// next state.
+				i_state = (++i_state) % tok_states_count;
+
+				if( next_lex_first == lex_last ){
+					toked_state = 1;
+					break;
+				}
+
+				if( next_lex_first == lex_first ){
+					toked_state = 2;
+					break;
+				}
+
+				lex_first = next_lex_first;
+			}
+			
+			bool tokenize_succeed = (toked_state == 1);
+			if( tokenize_succeed ){
 				// do nothing
 			} else {
 				throw std::runtime_error( "tokenization failed!" );

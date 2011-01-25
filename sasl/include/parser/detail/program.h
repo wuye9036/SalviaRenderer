@@ -7,7 +7,7 @@
 
 template <typename IteratorT, typename LexerT>
 template <typename TokenDefT, typename SASLGrammarT>
-program_grammar<IteratorT, LexerT>::program_grammar( const TokenDefT& tok, SASLGrammarT& g)
+program_grammar<IteratorT, LexerT>::program_grammar( const TokenDefT& /*tok*/, SASLGrammarT& g)
 :base_type(prog){
 	// init
 	g.prog(*this);

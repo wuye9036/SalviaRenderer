@@ -1,23 +1,24 @@
 #ifndef SASL_PARSER_GRAMMARS_H
 #define SASL_PARSER_GRAMMARS_H
 
-#include "grammars/declaration.h"
-#include "grammars/declaration_specifier.h"
-#include "grammars/expression.h"
-#include "grammars/initialized_declarator_list.h"
-#include "grammars/initializer.h"
-#include "grammars/literal_constant.h"
-#include "grammars/program.h"
-#include "grammars/statement.h"
-#include "grammars/token.h"
+#include <sasl/include/parser/grammars/declaration.h>
+#include <sasl/include/parser/grammars/declaration_specifier.h>
+#include <sasl/include/parser/grammars/expression.h>
+#include <sasl/include/parser/grammars/initialized_declarator_list.h>
+#include <sasl/include/parser/grammars/initializer.h>
+#include <sasl/include/parser/grammars/literal_constant.h>
+#include <sasl/include/parser/grammars/program.h>
+#include <sasl/include/parser/grammars/statement.h>
+#include <sasl/include/parser/grammars/token.h>
 
-#include <boost/utility.hpp>
 #include <boost/preprocessor.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 
 #define SASL_SPECIALIZED_GRAMMAR_T( grammar_template_type ) grammar_template_type <IteratorT, LexerT>
 
 #define SASL_GRAMMAR_INSTANCE_ACCESSOR( grammar_type, grammar_name ) \
-	private: grammar_type * BOOST_PP_CAT(grammar_name,_); \
+	private: boost::shared_ptr< grammar_type > BOOST_PP_CAT(grammar_name,_); \
 	public: grammar_type & grammar_name () { return get( BOOST_PP_CAT(grammar_name,_) ); } \
 	public: void grammar_name ( grammar_type& g ) { set( g , BOOST_PP_CAT(grammar_name,_) ); }
 
@@ -31,7 +32,7 @@
 	BOOST_PP_SEQ_FOR_EACH( SASL_GRAMMAR_INSTANCE_ACCESSOR_I, 0, grammar_type_name_tuple_seq )
 
 #define SASL_GRAMMAR_INSTANCE_INITIALIZATION_I( r, data, grammar_type_name_tuple ) \
-	BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM( 2, 1, grammar_type_name_tuple ), _) = NULL;
+	BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM( 2, 1, grammar_type_name_tuple ), _).reset();
 
 #define SASL_GRAMMAR_INSTANCE_INITIALIZATIONS( grammar_type_name_tuple_seq ) \
 	BOOST_PP_SEQ_FOR_EACH( SASL_GRAMMAR_INSTANCE_INITIALIZATION_I, 0, grammar_type_name_tuple_seq )
@@ -68,15 +69,15 @@ private:
 	sasl_grammar( const sasl_grammar& );
 	sasl_grammar& operator = ( const sasl_grammar& );
 
-	template<typename GrammarT> GrammarT& get(GrammarT*& ptr){
+	template<typename GrammarT> GrammarT& get( boost::shared_ptr<GrammarT>& ptr){
 		if( !ptr ){
-			ptr = new GrammarT( tok, *this );
+			new GrammarT( tok, *this );
 		}
 		return *ptr;
 	}
 
-	template<typename GrammarT> void set(GrammarT& val, GrammarT*& ptr){
-		ptr = boost::addressof(val);
+	template<typename GrammarT> void set(GrammarT& val, boost::shared_ptr<GrammarT>& ptr){
+		ptr.reset( boost::addressof(val) );
 	}
 
 	TokenDefT const & tok;

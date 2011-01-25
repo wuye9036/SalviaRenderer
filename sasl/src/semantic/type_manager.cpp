@@ -107,9 +107,8 @@ std::string name_of_unqualified_type( shared_ptr<type_specifier> typespec ){
 		return typespec->typed_handle<struct_type>()->name->str;
 	}
 
-	EFLIB_ASSERT_AND_IF( false, "Type type code is unrecgonized!" ){
-		return std::string("!undefined!");
-	}
+	assert( !"Type type code is unrecgonized!" );
+	return std::string("!undefined!");
 }
 
 // type_entry

@@ -119,7 +119,7 @@ void register_buildin_typeconv(
 	type_entry::id_t float_ts = typemgr->get( buildin_type_code::_float );
 	type_entry::id_t double_ts = typemgr->get( buildin_type_code::_double );
 
-	type_entry::id_t bool_ts = typemgr->get( buildin_type_code::_boolean );
+	// type_entry::id_t bool_ts = typemgr->get( buildin_type_code::_boolean );
 
 	cg_typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint16_ts, int2int_pfn );
 	cg_typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint32_ts, int2int_pfn );

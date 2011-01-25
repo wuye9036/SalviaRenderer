@@ -14,6 +14,7 @@
 #include <boost/any.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/mpl/and.hpp>
 #include <boost/mpl/find.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/or.hpp>
@@ -61,7 +62,7 @@ struct typecode_map
 	>::type{};
 
 	template <typename T>
-	static literal_constant_types lookup( EFLIB_ENABLE_IF_COND( is_sasl_buildin_type<T>, 0 ) )
+	static literal_constant_types lookup( EFLIB_ENABLE_IF_COND( is_sasl_buildin_type<T> ) )
 	{
 		return type_codes()[boost::mpl::find<cpptypes, T>::type::pos::value];
 	}
@@ -77,6 +78,7 @@ struct cond_expression;
 struct constant_expression;
 struct declaration;
 struct declaration_statement;
+struct declarator;
 struct dowhile_statement;
 struct expression;
 struct function_type;
@@ -101,6 +103,7 @@ class dbranchexpr_combinator;
 class dcase_combinator;
 class dcast_combinator;
 class dcallexpr_combinator;
+class ddeclarator_combinator;
 class ddowhile_combinator;
 class dexpr_combinator;
 class dexprstmt_combinator;
@@ -159,7 +162,7 @@ class tree_combinator
 public:
 	virtual tree_combinator& dname( const std::string& /*name*/){ return default_proc(); }
 
-	virtual tree_combinator& dvar( const std::string& /*var_name*/ ){ return default_proc(); }
+	virtual tree_combinator& dvar(){ return default_proc(); }
 	virtual tree_combinator& dstruct( const std::string& /*struct_name*/ ){ return default_proc(); }
 	virtual tree_combinator& dfunction( const std::string& /*func_name*/ ){ return default_proc(); }
 	virtual tree_combinator& dreturntype(){ return default_proc(); }
@@ -188,22 +191,11 @@ public:
 	// impl by expression
 	template <typename T> tree_combinator& dconstant2(
 		const T& v,
-		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T>, 0 )
+		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T> )
 		)
 	{
 		std::string suffix;
-		if( ! boost::is_same<T, bool>::value ){
-			if( boost::is_integral<T>::value ){
-				if( boost::is_unsigned<T>::value ){
-					suffix += "u";
-				}
-				if( sizeof(T) == sizeof(int64_t) ){
-					suffix += "l";
-				}
-			} else if( boost::is_same<T, float>::value ){
-				suffix += "f";
-			}
-		}
+		append_suffix<T>(suffix);
 
 		literal_constant_types lct = typecode_map::lookup<T>();
 		return dconstant( lct, boost::lexical_cast<std::string>(v) + suffix );
@@ -219,7 +211,8 @@ public:
 	virtual tree_combinator& dcond(){ return default_proc(); }
 	virtual tree_combinator& dyes(){ return default_proc(); }
 	virtual tree_combinator& dno(){ return default_proc(); }
-	virtual tree_combinator& dmember( const std::string& /*m*/){ return default_proc(); }
+	virtual tree_combinator& dmember(){ return default_proc(); } // For struct definition only.
+	virtual tree_combinator& dmember( std::string const & /*m*/ ){ return default_proc(); } // For member-expr only.
 	virtual tree_combinator& dcall(){ return default_proc(); }
 	virtual tree_combinator& dargument(){ return default_proc(); }
 	virtual tree_combinator& dindex(){ return default_proc(); }
@@ -283,6 +276,7 @@ protected:
 		e_none,
 
 		e_vardecl,
+		e_declarator,
 		e_struct,
 		e_function,
 		e_param,
@@ -399,6 +393,67 @@ private:
 
 	void syntax_error();
 
+	template <typename T>
+	class suffix_traits{
+		typedef boost::mpl::and_<
+			boost::is_integral<T>,
+			boost::is_unsigned<T>
+		> u;
+		typedef boost::mpl::and_<
+			boost::is_integral<T>,
+			boost::mpl::bool_<sizeof(T) == sizeof(int64_t)>
+		> l;
+		typedef	boost::is_same< T, float > f;
+	};
+
+	template <typename T>
+	void append_suffix(
+		std::string& out,
+		EFLIB_ENABLE_IF_COND(typename suffix_traits<T>::u),
+		EFLIB_DISABLE_IF_COND(typename suffix_traits<T>::l)
+		)
+	{
+		out += "u";
+	}
+	
+	template <typename T>
+	void append_suffix(
+		std::string& out,
+		EFLIB_DISABLE_IF_COND(typename suffix_traits<T>::u),
+		EFLIB_ENABLE_IF_COND(typename suffix_traits<T>::l)
+		)
+	{
+		out += "l";
+	}
+
+	template <typename T>
+	void append_suffix(
+		std::string& out,
+		EFLIB_ENABLE_IF_COND(typename suffix_traits<T>::u),
+		EFLIB_ENABLE_IF_COND(typename suffix_traits<T>::l)
+		)
+	{
+		out += "ul";
+	}
+
+	template <typename T>
+	void append_suffix(
+		std::string& out,
+		EFLIB_ENABLE_IF_COND(typename suffix_traits<T>::f)
+		)
+	{
+		out += "f";
+	}
+
+	template <typename T>
+	void append_suffix( std::string& /*out*/,
+		EFLIB_DISABLE_IF_COND(typename suffix_traits<T>::u),
+		EFLIB_DISABLE_IF_COND(typename suffix_traits<T>::l),
+		EFLIB_DISABLE_IF_COND(typename suffix_traits<T>::f)
+		)
+	{
+		// do nothing.
+	}
 protected:
 	boost::shared_ptr<node> cur_node;
 	tree_combinator* parent;
@@ -408,7 +463,7 @@ class dprog_combinator: public tree_combinator{
 public:
 	dprog_combinator( const std::string& prog_name );
 
-	virtual tree_combinator& dvar( const std::string& /*var_name*/ );
+	virtual tree_combinator& dvar();
 	virtual tree_combinator& dstruct( const std::string& /*struct_name*/ );
 	virtual tree_combinator& dfunction( const std::string& func_name );
 	virtual tree_combinator& dtypedef( );
@@ -428,18 +483,34 @@ private:
 class dvar_combinator: public tree_combinator{
 public:
 	explicit dvar_combinator( tree_combinator* parent );
-	virtual tree_combinator& dname(const std::string& );
+	
 	virtual tree_combinator& dtype();
-	virtual tree_combinator& dinit_expr();
-	virtual tree_combinator& dinit_list();
-
+	virtual tree_combinator& dname( const std::string& );
 	virtual void child_ended();
+
 	SASL_TYPED_NODE_ACCESSORS_DECL( variable_declaration );
 protected:
 	dvar_combinator( const dvar_combinator& );
 	dvar_combinator& operator = ( const dvar_combinator& );
 private:
 	boost::shared_ptr<dtype_combinator> type_comb;
+	boost::shared_ptr<ddeclarator_combinator> declarator_comb;
+};
+
+class ddeclarator_combinator: public tree_combinator{
+public:
+	explicit ddeclarator_combinator( tree_combinator* parent );
+
+	virtual tree_combinator& dname(const std::string& );
+	virtual tree_combinator& dinit_expr();
+	virtual tree_combinator& dinit_list();
+	virtual void child_ended();
+
+	SASL_TYPED_NODE_ACCESSORS_DECL( declarator );
+protected:
+	ddeclarator_combinator( const dvar_combinator& );
+	ddeclarator_combinator& operator = ( const dvar_combinator& );
+private:
 	boost::shared_ptr<dinitexpr_combinator> exprinit_comb;
 	boost::shared_ptr<dinitlist_combinator> listinit_comb;
 };
@@ -478,7 +549,7 @@ public:
 	virtual tree_combinator& dcast();
 	virtual tree_combinator& dbinary();
 	virtual tree_combinator& dbranchexpr();
-	virtual tree_combinator& dmember( const std::string& /*m*/);
+	virtual tree_combinator& dmember( std::string const & m );
 	virtual tree_combinator& dcall();
 	virtual tree_combinator& dindex();
 
@@ -578,7 +649,7 @@ public:
 	dstruct_combinator( tree_combinator* parent );
 
 	virtual tree_combinator& dname( const std::string& /*struct name*/);
-	virtual tree_combinator& dmember( const std::string& /*var name*/);
+	virtual tree_combinator& dmember();
 
 	virtual void child_ended();
 

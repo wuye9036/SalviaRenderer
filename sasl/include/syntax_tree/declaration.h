@@ -68,12 +68,25 @@ protected:
 	declaration( const declaration& );
 };
 
+struct declarator: public node{
+	SASL_SYNTAX_NODE_CREATORS();
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
+
+	boost::shared_ptr<token_attr> name;
+	boost::shared_ptr<initializer> init;
+
+protected:
+	declarator( boost::shared_ptr<token_attr> tok );
+	declarator& operator = ( const declarator& );
+	declarator( const declarator& );
+};
+
 struct variable_declaration : public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
-	boost::shared_ptr<type_specifier>	type_info;
-	boost::shared_ptr<token_attr>		name;
-	boost::shared_ptr<initializer>		init;
+
+	boost::shared_ptr<type_specifier>				type_info;
+	std::vector< boost::shared_ptr<declarator> >	declarators;
 
 protected:
 	variable_declaration(boost::shared_ptr<token_attr> tok);
@@ -160,9 +173,8 @@ struct parameter: public declaration{
 
 protected:
 	parameter( boost::shared_ptr<token_attr> tok );
-	parameter( boost::shared_ptr<variable_declaration> decl );
-	parameter& operator = ( const parameter& );
-	parameter( const parameter& );
+	parameter& operator = ( parameter const & );
+	parameter( parameter const & );
 };
 
 struct function_type: public type_specifier{

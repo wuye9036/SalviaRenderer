@@ -59,6 +59,7 @@ public:
 	SASL_VISIT_DCL( expression_initializer );
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
+	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );

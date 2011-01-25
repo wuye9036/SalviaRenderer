@@ -12,7 +12,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 template <typename IteratorT, typename LexerT>
-struct grammar_impl: public grammar_impl_base_t{
+struct declspec_impl: public grammar_impl_base_t{
 
 	SASL_GRAMMAR_RULE_DEFINITION_HELPER();
 
@@ -44,8 +44,8 @@ declaration_specifier_grammar<IteratorT, LexerT>::declaration_specifier_grammar(
 	// init
 	g.decl_spec(*this);
 
-	pimpl.reset( new grammar_impl<IteratorT, LexerT>() );
-	grammar_impl<IteratorT, LexerT>& impl = * ( boost::shared_polymorphic_cast< grammar_impl<IteratorT, LexerT> >(pimpl) );
+	pimpl.reset( new declspec_impl<IteratorT, LexerT>() );
+	declspec_impl<IteratorT, LexerT>& impl = * ( boost::shared_polymorphic_cast< declspec_impl<IteratorT, LexerT> >(pimpl) );
 
 	// grammar
 	struct_declaration_grammar<IteratorT, LexerT>& struct_decl = g.struct_decl();
