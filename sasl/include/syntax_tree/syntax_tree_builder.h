@@ -13,6 +13,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/variant.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -34,6 +35,7 @@ struct ast_builder_context{
 	{
 	}
 
+	boost::shared_ptr<node> unqual_type;
 	boost::shared_ptr<node> parent;
 	boost::shared_ptr<node> gen_node;
 
@@ -114,7 +116,22 @@ struct statement_visitor: public parser_tree_variant_visitor< boost::shared_ptr<
 	}
 
 	boost::shared_ptr<statement> operator() ( const ::sasl::parser_tree::declaration_statement& v );
-}; 
+};
+
+struct type_visitor : public parser_tree_variant_visitor< boost::shared_ptr<type_specifier> >
+{
+	type_visitor( syntax_tree_builder* builder, ast_builder_context& ctxt )
+		: base_visitor( builder, ctxt ){}
+
+	template<typename T>
+	boost::shared_ptr<type_specifier> operator() ( T const& v ){
+		return builder->build(v, ctxt)->typed_handle<type_specifier>();
+	}
+
+	boost::shared_ptr<type_specifier> operator() ( token_attr const& v );
+private:
+	static boost::unordered_map< std::string, boost::shared_ptr<buildin_type> > typemap;
+};
 
 struct syntax_tree_builder{
 	/*******************/
@@ -168,8 +185,14 @@ struct syntax_tree_builder{
 	boost::shared_ptr<declaration> build( const sasl::parser_tree::typedef_declaration& v, ast_builder_context& ctxt );
 	boost::shared_ptr<declarator> build( const sasl::parser_tree::initialized_declarator& v, ast_builder_context& ctxt );
 	
+	// build initialzier
+	boost::shared_ptr<initializer> build( sasl::parser_tree::initializer const & v, ast_builder_context& ctxt );
+
 	// build type specifier & declaration specifier
 	boost::shared_ptr<type_specifier> build( const sasl::parser_tree::declaration_specifier& v, ast_builder_context& ctxt );
+	boost::shared_ptr<type_specifier> build( sasl::parser_tree::prefix_qualified_type const & v, ast_builder_context& ctxt );
+	boost::shared_ptr<type_specifier> build( sasl::parser_tree::unqualified_type const & v, ast_builder_context& ctxt );
+	boost::shared_ptr<type_specifier> build( sasl::parser_tree::paren_post_qualified_type const & v, ast_builder_context& ctxt );
 
 	// build program
 	boost::shared_ptr<program> build( const sasl::parser_tree::program& v);
@@ -254,6 +277,9 @@ private:
 	boost::shared_ptr<statement> build_for_initializer( const sasl::parser_tree::for_initializer& /*v*/, for_statement* /*for_stmt*/ ){
 		// for_stmt->looper.for_init
 	}
+
+	boost::shared_ptr<type_specifier> qualify( sasl::parser_tree::postfix_qualified_type::qualifiers_t const & quals, boost::shared_ptr<type_specifier> inner );
+	boost::shared_ptr<type_specifier> qualify( sasl::parser_tree::prefix_qualified_type::qualifiers_t const & quals, boost::shared_ptr<type_specifier> inner );
 };
 
 END_NS_SASL_SYNTAX_TREE()

@@ -5,6 +5,7 @@
 #include <sasl/include/common/lex_context.h>
 #include <sasl/include/parser/parse_api.h>
 #include <sasl/include/parser_tree/program.h>
+#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
 
@@ -43,8 +44,19 @@ BOOST_AUTO_TEST_CASE( program_test ){
 	::sasl::parser::parse( pt_prog, code, lexctxt );
 	BOOST_REQUIRE( pt_prog.size() == 1 );
 
-	boost::shared_ptr< ::sasl::syntax_tree::program > prog = ::sasl::syntax_tree::parse( code, lexctxt );
+	shared_ptr< ::sasl::syntax_tree::program > prog = ::sasl::syntax_tree::parse( code, lexctxt );
 	BOOST_REQUIRE( prog );
+	BOOST_REQUIRE( prog->decls.size() == 1 );
+	BOOST_REQUIRE( prog->decls[0] );
+
+	using ::sasl::syntax_tree::variable_declaration;
+	shared_ptr<variable_declaration > vdecl = prog->decls[0]->typed_handle<variable_declaration>();
+	BOOST_REQUIRE( vdecl );
+	BOOST_REQUIRE( vdecl->type_info );
+	BOOST_CHECK( vdecl->type_info->value_typecode == buildin_type_code::_sint32 );
+	BOOST_REQUIRE( vdecl->declarators.size() == 1 );
+	BOOST_CHECK( vdecl->declarators[0]->name->str == "a" );
+	BOOST_CHECK( !vdecl->declarators[0]->init );
 }
 
 BOOST_AUTO_TEST_SUITE_END();

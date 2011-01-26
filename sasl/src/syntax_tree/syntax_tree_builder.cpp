@@ -9,6 +9,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 using boost::shared_ptr;
+using boost::unordered_map;
 using sasl::common::token_attr;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
@@ -65,15 +66,62 @@ shared_ptr<expression> postfix_qualified_expression_visitor::operator()( const t
 		.end().typed_node2<expression>();
 }
 
-boost::shared_ptr<statement> statement_visitor::operator()( const ::sasl::parser_tree::declaration_statement& v )
+shared_ptr<statement> statement_visitor::operator()( const ::sasl::parser_tree::declaration_statement& v )
 {
-	boost::shared_ptr<declaration_statement> ret;
-	boost::shared_ptr<declaration> decl = builder->build(v, ctxt);
+	shared_ptr<declaration_statement> ret;
+	shared_ptr<declaration> decl = builder->build(v, ctxt);
 	if( decl ){
 		ret = create_node<declaration_statement>( token_attr::null() );
 		ret->decl = decl;
 	}
 	return ret;
+}
+
+#define INSERT_INTO_TYPEMAP( litname, enum_code ) \
+	{	\
+		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_attr::null() );	\
+		bt->value_typecode = buildin_type_code::enum_code;	\
+		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
+	}
+
+unordered_map< std::string, shared_ptr<buildin_type> > type_visitor::typemap;
+shared_ptr<type_specifier> type_visitor::operator()( token_attr const& v )
+{
+	// Initialize code
+	if( typemap.empty() ){
+		INSERT_INTO_TYPEMAP( sbyte,    _sint8   );
+		INSERT_INTO_TYPEMAP( int8_t,   _sint8   );
+		INSERT_INTO_TYPEMAP( ubyte,    _uint8   );
+		INSERT_INTO_TYPEMAP( uint8_t,  _uint8   );
+		INSERT_INTO_TYPEMAP( short,    _sint16  );
+		INSERT_INTO_TYPEMAP( int16_t,  _sint16  );
+		INSERT_INTO_TYPEMAP( ushort,   _uint16  );
+		INSERT_INTO_TYPEMAP( uint16_t, _uint16  );
+		INSERT_INTO_TYPEMAP( int,      _sint32  );
+		INSERT_INTO_TYPEMAP( int32_t,  _sint32  );
+		INSERT_INTO_TYPEMAP( uint,     _uint32  );
+		INSERT_INTO_TYPEMAP( uint32_t, _uint32  );
+		INSERT_INTO_TYPEMAP( long,     _uint32  );
+		INSERT_INTO_TYPEMAP( int64_t,  _sint64  );
+		INSERT_INTO_TYPEMAP( ulong,    _sint64  );
+		INSERT_INTO_TYPEMAP( uint64_t, _uint64  );
+
+		INSERT_INTO_TYPEMAP( float,    _float   );
+		INSERT_INTO_TYPEMAP( double,   _double  );
+		INSERT_INTO_TYPEMAP( bool,     _boolean );
+		INSERT_INTO_TYPEMAP( void,     _void    );
+	}
+
+	// Type identifier.
+	assert( !v.empty() );
+	if ( typemap.count(v.str) > 0 ){
+		return typemap[v.str];
+	}
+
+	shared_ptr<alias_type> type_ident = create_node<alias_type>( token_attr::null() );
+	type_ident->alias = v.make_copy();
+
+	return type_ident;
 }
 
 template< typename STPostExpressionT, typename ExpressionPostT  >
@@ -302,7 +350,7 @@ shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::fun
 	return shared_ptr<declaration>();
 }
 
-boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::basic_declaration& v, ast_builder_context& ctxt )
+shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::basic_declaration& v, ast_builder_context& ctxt )
 {
 	if (v.decl_body){
 		dispatch_visitor< shared_ptr<declaration> > visitor(this, ctxt);
@@ -311,7 +359,7 @@ boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tr
 	return shared_ptr<declaration>();
 }
 
-boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::variable_declaration& v, ast_builder_context& ctxt )
+shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::variable_declaration& v, ast_builder_context& ctxt )
 {
 	shared_ptr<variable_declaration> ret = create_node<variable_declaration>( token_attr::null() );
 	ret->type_info = build( v.declspec, ctxt );
@@ -327,34 +375,79 @@ boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tr
 	return ret;
 }
 
-boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::function_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
+shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::function_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return shared_ptr<declaration>();
 }
 
-boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::typedef_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
+shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::typedef_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return shared_ptr<declaration>();
 }
 
-boost::shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::struct_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
+shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::struct_declaration& /*v*/, ast_builder_context& /*ctxt*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return shared_ptr<declaration>();
 }
 
-boost::shared_ptr<type_specifier> syntax_tree_builder::build( const sasl::parser_tree::declaration_specifier& /*v*/, ast_builder_context& /*ctxt*/ )
+shared_ptr<type_specifier> syntax_tree_builder::build( const sasl::parser_tree::declaration_specifier& v, ast_builder_context& ctxt )
+{
+	shared_ptr<type_specifier> inner = build( v.unqual_type, ctxt );
+	return qualify( v.quals, inner );
+}
+
+shared_ptr<declarator> syntax_tree_builder::build( const sasl::parser_tree::initialized_declarator& v, ast_builder_context& ctxt )
+{
+	shared_ptr<declarator> ret = create_node<declarator>( token_attr::null() );
+	if( !v.ident.empty() ){
+		ret->name = v.ident.make_copy();
+	}
+	if( v.init ){
+		ret->init = build( *(v.init), ctxt );
+	}
+	return ret;
+}
+
+shared_ptr<initializer> syntax_tree_builder::build( sasl::parser_tree::initializer const & v, ast_builder_context& ctxt ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<initializer>();
+}
+
+boost::shared_ptr<type_specifier> syntax_tree_builder::build( sasl::parser_tree::prefix_qualified_type const & v, ast_builder_context& ctxt )
+{
+	shared_ptr<type_specifier> inner = build( v.unqual_type, ctxt );
+	return qualify( v.quals, inner );
+}
+
+boost::shared_ptr<type_specifier> syntax_tree_builder::build( sasl::parser_tree::unqualified_type const & v, ast_builder_context& ctxt )
+{
+	type_visitor visitor( this, ctxt );
+	return boost::apply_visitor( visitor, v );
+}
+
+boost::shared_ptr<type_specifier> syntax_tree_builder::build( sasl::parser_tree::paren_post_qualified_type const & v, ast_builder_context& ctxt )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return shared_ptr<type_specifier>();
 }
 
-boost::shared_ptr<declarator> syntax_tree_builder::build( const sasl::parser_tree::initialized_declarator& v, ast_builder_context& ctxt )
+boost::shared_ptr<type_specifier> syntax_tree_builder::qualify( sasl::parser_tree::postfix_qualified_type::qualifiers_t const & quals, boost::shared_ptr<type_specifier> inner )
 {
+	if( quals.empty() ) return inner;
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<declarator>();
+	return shared_ptr<type_specifier>();
+}
+
+boost::shared_ptr<type_specifier> syntax_tree_builder::qualify( sasl::parser_tree::prefix_qualified_type::qualifiers_t const & quals, boost::shared_ptr<type_specifier> inner )
+{
+	if( quals.empty() ) return inner;
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<type_specifier>();
 }
 
 END_NS_SASL_SYNTAX_TREE()
