@@ -18,6 +18,7 @@ include (${CMAKE_HOME_DIRECTORY}/build/cmake/Variables.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigurePath.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/Environment.cmake)
 include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigBoostLibs.cmake)
+include (${CMAKE_HOME_DIRECTORY}/build/cmake/ConfigLLVMLibs.cmake)
 
 set ( EFLIB_HOME_PATH ${SOFTART_HOME_DIR} )
 
