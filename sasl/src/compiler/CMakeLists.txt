@@ -18,10 +18,13 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/syntax_tree/parse_api.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_api.h
+	${SASL_HOME_DIR}/sasl/include/compiler/options.h
+	${SASL_HOME_DIR}/sasl/include/compiler/compiler_forward.h
 )
 
 set( SOURCE_FILES
 	compiler.cpp
+	options.cpp
 )
 
 ADD_EXECUTABLE( sasl_compiler ${HEADER_FILES} ${SOURCE_FILES} )
