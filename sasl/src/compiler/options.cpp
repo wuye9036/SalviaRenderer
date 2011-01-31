@@ -8,6 +8,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <iostream>
+#include <fstream>
 
 using sasl::syntax_tree::parse;
 
@@ -15,6 +16,7 @@ using boost::to_lower;
 
 using std::cout;
 using std::endl;
+using std::ifstream;
 using std::string;
 using std::vector;
 
@@ -205,6 +207,17 @@ void options_io::process( bool& abort )
 		BOOST_FOREACH( string const & fname, in_names ){
 			cout << "Compile " << fname << "..." << endl;
 			
+			std::ifstream in(fname, std::ios_base::in);
+			if (!in){
+				cout << "Fatal error: Could not open input file: " << fname << endl;
+			} else {
+				string code;
+				in.unsetf(std::ios::skipws);
+				std::copy(
+					std::istream_iterator<char>(in), std::istream_iterator<char>(),
+					std::back_inserter(code)
+					);
+			}
 			
 		}
 	}
