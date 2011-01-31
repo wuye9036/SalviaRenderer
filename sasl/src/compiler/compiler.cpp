@@ -1,12 +1,14 @@
 #include <sasl/include/compiler/options.h>
 
+using sasl::compiler::options_manager;
+using sasl::compiler::options_io;
+
 int main (int argc, char **argv){
 
 	bool aborted = false;
 
-	sasl::compiler::options_manager::instance().parse(argc, argv);
-	sasl::compiler::options_manager::instance().process( aborted );
+	options_manager::instance().parse(argc, argv);
+	options_manager::instance().process( aborted );
 
 	return 0;
-
 }

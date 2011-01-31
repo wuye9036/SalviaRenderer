@@ -9,7 +9,6 @@
 
 #include <string>
 
-
 namespace sasl{
 	namespace common{
 		class lex_context;

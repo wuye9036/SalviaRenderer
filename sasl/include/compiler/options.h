@@ -2,6 +2,7 @@
 #define SASL_COMPILER_OPTIONS_H
 
 #include <sasl/include/compiler/compiler_forward.h>
+#include <sasl/include/syntax_tree/parse_api.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
@@ -18,6 +19,28 @@ public:
 	virtual void fill_desc( po::options_description& desc ) = 0;
 	virtual void filterate( po::variables_map const& vm ) = 0;
 	virtual void process( bool& abort ) = 0;
+};
+
+class options_global: public options_filter{
+public:
+	void fill_desc( po::options_description& desc );
+	void filterate( po::variables_map const & vm );
+	void process( bool& abort );
+
+	enum detail_level{
+		none,
+		quite,
+		brief,
+		normal,
+		verbose,
+		debug
+	};
+
+	detail_level detail() const;
+
+private:
+	detail_level detail_lvl;
+	std::string detail_lvl_str;
 };
 
 class options_display_info: public options_filter{
@@ -45,9 +68,9 @@ private:
 	bool v;
 };
 
-class options_output: public options_filter{
+class options_io: public options_filter{
 public:
-	options_output();
+	options_io();
 
 	void fill_desc( po::options_description& desc );
 	void filterate( po::variables_map const & vm );
@@ -63,6 +86,7 @@ public:
 
 private:
 	export_format fmt;
+	std::string fmt_str;
 	std::string fname;
 
 	static const char* out_tag;
@@ -82,11 +106,12 @@ public:
 
 	po::variables_map const & variables() const;
 	options_display_info const & display_info() const;
-	options_output const & output_info() const;
+	options_io const & io_info() const;
 
 private:
-	options_display_info disp_info;
-	options_output out_info;
+	options_global opt_global;
+	options_display_info opt_disp;
+	options_io opt_io;
 	
 	po::options_description desc;
 	po::variables_map vm;

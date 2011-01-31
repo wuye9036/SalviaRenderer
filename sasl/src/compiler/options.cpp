@@ -1,13 +1,18 @@
 #include <sasl/include/compiler/options.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <iostream>
 
+using boost::to_lower;
+
 using std::cout;
 using std::endl;
+using std::string;
+using std::vector;
 
 BEGIN_NS_SASL_COMPILER();
 
@@ -34,24 +39,28 @@ void options_manager::parse( int argc, char** argv )
 	po::store( parsed, vm );
 	po::notify(vm);
 
-	disp_info.filterate(vm);
-	out_info.filterate(vm);
+	opt_disp.filterate(vm);
+	opt_io.filterate(vm);
 }
 
 options_manager::options_manager()
 {
-	disp_info.fill_desc(desc);
-	out_info.fill_desc(desc);
+	opt_disp.fill_desc(desc);
+	opt_global.fill_desc(desc);
+	opt_io.fill_desc(desc);
 }
 
 void options_manager::process( bool& abort )
 {
 	abort = false;
 
-	disp_info.process(abort);
+	opt_disp.process(abort);
 	if( abort ){ return; }
 
-	out_info.process(abort);
+	opt_global.process(abort);
+	if( abort ){ return; }
+
+	opt_io.process(abort);
 	if( abort ){ return; }
 }
 
@@ -62,12 +71,12 @@ po::variables_map const & options_manager::variables() const
 
 options_display_info const & options_manager::display_info() const
 {
-	return disp_info;
+	return opt_disp;
 }
 
-options_output const & options_manager::output_info() const
+options_io const & options_manager::io_info() const
 {
-	return out_info;
+	return opt_io;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -129,40 +138,103 @@ bool options_display_info::version_enabled() const
 //////////////////////////////////////////////////////////////////////////
 // output
 
-const char* options_output::out_tag = "out,o";
-const char* options_output::out_desc = "File name of output.";
+const char* options_io::out_tag = "out,o";
+const char* options_io::out_desc = "File name of output.";
 
-const char* options_output::export_as_tag = "export-as";
-const char* options_output::export_as_desc = "Specifies the content of output file that the compiler should generate.";
+const char* options_io::export_as_tag = "export-as";
+const char* options_io::export_as_desc = "Specifies the content of output file that the compiler should generate.";
 
-options_output::options_output() : fmt(none)
+options_io::options_io() : fmt(none)
 {
 }
 
-void options_output::fill_desc( po::options_description& desc )
+void options_io::fill_desc( po::options_description& desc )
 {
 	desc.add_options()
-		( out_tag, out_desc )
-		( export_as_tag, export_as_desc)
+		( out_tag, po::value< string >(&fname), out_desc )
+		( export_as_tag, po::value< string >(&fmt_str), export_as_desc )
 		;
 }
 
-void options_output::filterate( po::variables_map const & vm )
+void options_io::filterate( po::variables_map const & vm )
 {
+	if( !vm.count("out") ){
+		// Guess output from input.
+	}
+
+	if( !vm.count("export-as") ){
+		fmt = llvm_ir;
+	} else {
+		to_lower(fmt_str);
+		if( fmt_str == "llvm" || fmt_str == "llvm_ir" ){
+			fmt = llvm_ir;
+		}
+	}
 }
 
-void options_output::process( bool& abort )
+void options_io::process( bool& abort )
 {
+	if( fmt == llvm_ir ){
+		cout << "Output format is: LLVM IR" << endl;
+	}
 }
 
-options_output::export_format options_output::format() const
+options_io::export_format options_io::format() const
 {
 	return fmt;
 }
 
-std::string options_output::file_name() const
+std::string options_io::file_name() const
 {
 	return fname;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// options global
+void options_global::fill_desc( po::options_description& desc )
+{
+	desc.add_options()
+		(
+		"detail-level", po::value<string>(&detail_lvl_str),
+		"Specify the detail level of compiler output."
+		"The optional items are: quite(q), brief(b), normal(n), verbose(v)."
+		"Default is normal"
+		);
+}
+
+void options_global::filterate( po::variables_map const & vm )
+{
+	if( vm.count("detail-level") ){
+
+		to_lower( detail_lvl_str );
+
+		detail_lvl = none;
+		if( detail_lvl_str == "quite" || detail_lvl_str == "q" ){
+			detail_lvl = quite;
+		} else if( detail_lvl_str == "brief" || detail_lvl_str == "b" ){
+			detail_lvl = brief;
+		} else if( detail_lvl_str == "normal" || detail_lvl_str == "n" ){
+			detail_lvl = normal;
+		} else if( detail_lvl_str == "verbose" || detail_lvl_str == "v" ){
+			detail_lvl = verbose;
+		} else if( detail_lvl_str == "debug" || detail_lvl_str == "d" ){
+			detail_lvl = debug;
+		}
+
+	}
+}
+
+void options_global::process( bool& abort )
+{
+	abort = true;
+	if( detail_lvl == none ){
+		cout << "Detail level is an invalid value. Ignore it." << endl;
+	}
+}
+
+options_global::detail_level options_global::detail() const
+{
+	return detail_lvl;
 }
 
 END_NS_SASL_COMPILER();
