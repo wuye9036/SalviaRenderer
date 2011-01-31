@@ -9,6 +9,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
+#include <vector>
 
 BEGIN_NS_SASL_COMPILER();
 
@@ -82,12 +83,17 @@ public:
 	};
 	
 	export_format format() const;
-	std::string file_name() const;
+	std::vector<std::string> inputs() const;
+	std::string output() const;
 
 private:
 	export_format fmt;
 	std::string fmt_str;
-	std::string fname;
+	std::vector< std::string > in_names;
+	std::string out_name;
+
+	static const char* in_tag;
+	static const char* in_desc;
 
 	static const char* out_tag;
 	static const char* out_desc;
@@ -101,7 +107,7 @@ public:
 	options_manager();
 	static options_manager& instance();
 	
-	void parse( int argc, char** argv );
+	bool parse( int argc, char** argv );
 	void process( bool& abort );
 
 	po::variables_map const & variables() const;

@@ -1,4 +1,6 @@
 #include <sasl/include/compiler/options.h>
+#include <sasl/include/syntax_tree/parse_api.h>
+#include <sasl/include/code_generator/llvm/cgllvm_api.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -6,6 +8,8 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <iostream>
+
+using sasl::syntax_tree::parse;
 
 using boost::to_lower;
 
@@ -23,24 +27,34 @@ options_manager& options_manager::instance()
 	return inst;
 }
 
-void options_manager::parse( int argc, char** argv )
+bool options_manager::parse( int argc, char** argv )
 {
-	po::parsed_options parsed = po::command_line_parser(argc, argv).options( desc ).allow_unregistered().run();
-	std::vector<std::string> unrecg = po::collect_unrecognized( parsed.options, po::include_positional );
+	try{
 
-	if( !unrecg.empty() ){
-		cout << "Warning: options ";
-		BOOST_FOREACH( std::string const & str, unrecg ){
-			cout << str << " ";
+		po::parsed_options parsed = po::command_line_parser(argc, argv).options( desc ).allow_unregistered().run();
+
+		std::vector<std::string> unrecg = po::collect_unrecognized( parsed.options, po::include_positional );
+
+		if( !unrecg.empty() ){
+			cout << "Warning: options ";
+			BOOST_FOREACH( std::string const & str, unrecg ){
+				cout << str << " ";
+			}
+			cout << "are invalid. They were ignored." << endl;
 		}
-		cout << "are invalid. They were ignored." << endl;
+		
+		
+		po::store( parsed, vm );
+		po::notify(vm);
+
+	} catch ( boost::program_options::invalid_command_line_syntax const & e ) {
+		cout << "Fatal error occurs: " << e.what() << endl;
+		return false;
+	} catch ( std::exception const & e ){
+		cout << "Unprocessed error: " << e.what() << endl;
 	}
 
-	po::store( parsed, vm );
-	po::notify(vm);
-
-	opt_disp.filterate(vm);
-	opt_io.filterate(vm);
+	return true;
 }
 
 options_manager::options_manager()
@@ -53,6 +67,10 @@ options_manager::options_manager()
 void options_manager::process( bool& abort )
 {
 	abort = false;
+
+	opt_disp.filterate(vm);
+	opt_global.filterate(vm);
+	opt_io.filterate(vm);
 
 	opt_disp.process(abort);
 	if( abort ){ return; }
@@ -136,7 +154,10 @@ bool options_display_info::version_enabled() const
 }
 
 //////////////////////////////////////////////////////////////////////////
-// output
+// input & output
+
+const char* options_io::in_tag = "input,i";
+const char* options_io::in_desc = "Specify input files.";
 
 const char* options_io::out_tag = "out,o";
 const char* options_io::out_desc = "File name of output.";
@@ -151,7 +172,8 @@ options_io::options_io() : fmt(none)
 void options_io::fill_desc( po::options_description& desc )
 {
 	desc.add_options()
-		( out_tag, po::value< string >(&fname), out_desc )
+		( in_tag, po::value< std::vector<string> >(&in_names), in_desc )
+		( out_tag, po::value< string >(&out_name), out_desc )
 		( export_as_tag, po::value< string >(&fmt_str), export_as_desc )
 		;
 }
@@ -174,8 +196,17 @@ void options_io::filterate( po::variables_map const & vm )
 
 void options_io::process( bool& abort )
 {
+	if( in_names.empty() ){
+		cout << "No input files." << endl;
+		abort = true;
+		return;
+	}
 	if( fmt == llvm_ir ){
-		cout << "Output format is: LLVM IR" << endl;
+		BOOST_FOREACH( string const & fname, in_names ){
+			cout << "Compile " << fname << "..." << endl;
+			
+			
+		}
 	}
 }
 
@@ -184,9 +215,9 @@ options_io::export_format options_io::format() const
 	return fmt;
 }
 
-std::string options_io::file_name() const
+std::string options_io::output() const
 {
-	return fname;
+	return out_name;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -204,11 +235,11 @@ void options_global::fill_desc( po::options_description& desc )
 
 void options_global::filterate( po::variables_map const & vm )
 {
+	detail_lvl = normal;
 	if( vm.count("detail-level") ){
 
 		to_lower( detail_lvl_str );
 
-		detail_lvl = none;
 		if( detail_lvl_str == "quite" || detail_lvl_str == "q" ){
 			detail_lvl = quite;
 		} else if( detail_lvl_str == "brief" || detail_lvl_str == "b" ){
@@ -226,7 +257,7 @@ void options_global::filterate( po::variables_map const & vm )
 
 void options_global::process( bool& abort )
 {
-	abort = true;
+	abort = false;
 	if( detail_lvl == none ){
 		cout << "Detail level is an invalid value. Ignore it." << endl;
 	}
