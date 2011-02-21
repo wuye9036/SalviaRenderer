@@ -4,7 +4,6 @@
 
 #include <sasl/include/common/lex_context.h>
 #include <sasl/include/parser/parse_api.h>
-#include <sasl/include/parser_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -35,14 +34,14 @@ private:
 BOOST_AUTO_TEST_SUITE( parser );
 
 BOOST_AUTO_TEST_CASE( program_test ){
-	::sasl::parser_tree::program pt_prog;
+	shared_ptr<sasl::parser::attribute> pt_prog;
 	shared_ptr<lex_context> lexctxt( new lex_context_test_impl() );
 	std::string code(
 		"int a;"
 		);
 
 	::sasl::parser::parse( pt_prog, code, lexctxt );
-	BOOST_REQUIRE( pt_prog.size() == 1 );
+	BOOST_REQUIRE( pt_prog );
 
 	shared_ptr< ::sasl::syntax_tree::program > prog = ::sasl::syntax_tree::parse( code, lexctxt );
 	BOOST_REQUIRE( prog );

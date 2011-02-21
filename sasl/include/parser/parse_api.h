@@ -14,27 +14,12 @@ namespace sasl{
 		class lex_context;
 	}
 	namespace parser{
-	
-		namespace detail{
-			template <typename ParserTreeT> class parser{
-			public:
-				void parse(
-					ParserTreeT& pt_root,
-					const std::string& code,
-					boost::shared_ptr< ::sasl::common::lex_context > ctxt
-					);	
-			};
-		}
-		
-		template <typename ParserTreeT> void parse(
-			ParserTreeT& pt_root,
+		class attribute;
+		void parse(
+			boost::shared_ptr<attribute>& pt_root,
 			const std::string& code,
 			boost::shared_ptr< ::sasl::common::lex_context > ctxt
-			)
-		{
-			detail::parser<ParserTreeT> parser_instance;
-			parser_instance.parse( pt_root, code, ctxt );
-		}
+			);
 	}
 }
 
