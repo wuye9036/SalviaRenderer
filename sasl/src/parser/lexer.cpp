@@ -17,6 +17,7 @@ using boost::unordered_set;
 
 using std::cout;
 using std::endl;
+using std::vector;
 
 BEGIN_NS_SASL_PARSER();
 
@@ -40,12 +41,33 @@ public:
 		attr_processor& proc;
 	};
 
-	attr_processor( token_seq& attrs, std::vector<std::string> skippers, shared_ptr<lex_context> lex_ctxt )
+	class skipper_adder{
+	public:
+		skipper_adder( attr_processor& proc )
+			: proc(proc){}
+
+		skipper_adder( skipper_adder const & rhs )
+			: proc( rhs.proc ){}
+
+		skipper_adder& operator()( std::string const& s ){
+			proc.skippers.insert(s);
+			return *this;
+		}
+	private:
+		attr_processor& proc;
+	};
+
+	attr_processor( token_seq& attrs, shared_ptr<lex_context> lex_ctxt )
 		:attrs(attrs), ctxt(lex_ctxt)
 	{
-		BOOST_FOREACH( std::string const& skipper, skippers ){
-			this->skippers.insert( skipper );
-		}
+	}
+
+	skipper_adder add_skipper( std::string const& s ){
+		return skipper_adder(*this)(s);
+	}
+	
+	vector<std::string> get_skippers() const{
+		return vector<std::string>( skippers.begin(), skippers.end() );
 	}
 
 	template <typename TokenDefT>
@@ -89,154 +111,135 @@ typedef boost::mpl::vector< std::string > token_attr_types;
 typedef splex::lexertl::token< char const*, token_attr_types > token_t;
 typedef splex::lexertl::actor_lexer< token_t > base_lexer_t;
 
-struct lexer: public splex::lexer<base_lexer_t>{
-	lexer( shared_ptr<token_def_table> defs, shared_ptr<attr_processor> proc );
+struct lexer_impl: public splex::lexer<base_lexer_t>{
+	lexer_impl( shared_ptr<attr_processor> proc );
 
-	splex::token_def< std::string >
-		lit_int, lit_float, lit_bool,
-		
-		kw_struct, kw_typedef,
-		kw_break, kw_case, kw_continue, kw_return,
-		kw_switch, kw_if, kw_else, kw_for, kw_while, kw_do,
-
-		plus, minus, asterisk, slash,
-		backslash, caret, ampersand, percent, equal, comma, colon, semicolon,
-		dot, exclamation, question, squote, dquote, vertical, tilde,
-		lparen, rparen, lbrace, rbrace, lsbracket, rsbracket, labracket, rabracket,
-
-		ident,
-
-		any_char,
-
-		space,
-		newline
-		;
-
-private:
-	// unordered_map< std::string, splex::token_def<std::string> > defs;
-	shared_ptr<token_def_table> defs;
+	unordered_map< std::string, splex::token_def<std::string> > defs;
+	unordered_map< size_t, std::string > ids;
+	shared_ptr<attr_processor> proc;
 };
 
-#define TOKEN_DEF_EXPR( tok, match_rule ) \
-	token_def_table::lazy_adder tok##_def_lazy_adder = defs->lazy_add( tok, std::string( #tok ) ); \
-	tok = match_rule;
-
-#define TOKEN_DEFS_I( r, data, i, elem ) BOOST_PP_IF( i, |, BOOST_PP_EMPTY() ) elem[*proc] 
-#define TOKEN_DEFS( defs ) BOOST_PP_SEQ_FOR_EACH_I ( TOKEN_DEFS_I, 0, defs )
-
-lexer::lexer( shared_ptr<token_def_table> defs, shared_ptr<attr_processor> proc ): defs(defs){
-	this->self.add_pattern
-		("SPACE", "[ \\t\\v\\f]+")
-		("NEWLINE", "((\\r\\n?)|\\n)+")
-		("NON_ZERO_DIGIT", "[1-9]")
-		("DIGIT", "[0-9]")
-		("SIGN", "[\\+\\-]")
-		("DIGIT_SEQ", "([0-9]+)")
-		("HEX_DIGIT", "[0-9a-fA-F]")
-		("EXPONENT_PART", "((e|E)[+-]?[0-9]+)")
-		("REAL_TYPE_SUFFIX", "[fFdD]")
-		("INT_TYPE_SUFFIX", "([uULl]|([Uu][Ll)|([Ll][Uu]))")
-		("PLUS", "\\+")
-		("MINUS", "\\-")
-		("ASTERISK", "\\*")
-		("SLASH", "\\/")
-		("DOT", "\\.")
-		("BACKSLASH", "\\\\")
-		("AMPERSAND", "\\^")
-		("QUESTION", "\\?")
-		("DQUOTE", "\\\"")
-		("VERTICAL", "\\|")
-		("LPAREN", "\\(")
-		("RPAREN", "\\)")
-		("LBRACE", "\\{")
-		("RBRACE", "\\}")
-		("LSBRACKET", "\\[")
-		("RSBRACKET", "\\]")
-		("LABRACKET", "\\<")
-		("RABRACKET", "\\>")
-		;
-
-	TOKEN_DEF_EXPR( lit_int, "({DIGIT}+{INT_TYPE_SUFFIX}?)|(0x{HEX_DIGIT}+{INT_TYPE_SUFFIX}?)" );
-	TOKEN_DEF_EXPR( lit_float, "({DIGIT_SEQ}?{DOT}{DIGIT_SEQ}{EXPONENT_PART}?{REAL_TYPE_SUFFIX}?)|({DIGIT_SEQ}{EXPONENT_PART}{REAL_TYPE_SUFFIX}?)|({DIGIT_SEQ}{REAL_TYPE_SUFFIX})" );
-	TOKEN_DEF_EXPR( lit_bool, "(true)|(false)" );
-	TOKEN_DEF_EXPR( ident, "[a-zA-Z_][0-9a-zA-Z_]*");
-
-	TOKEN_DEF_EXPR( kw_struct, "struct" );
-	TOKEN_DEF_EXPR( kw_typedef, "typedef" );
-	TOKEN_DEF_EXPR( kw_break, "break" );
-	TOKEN_DEF_EXPR( kw_continue, "continue" );
-	TOKEN_DEF_EXPR( kw_case, "case" );
-	TOKEN_DEF_EXPR( kw_return, "return" );
-	TOKEN_DEF_EXPR( kw_switch, "switch" );
-	TOKEN_DEF_EXPR( kw_else, "else" );
-	TOKEN_DEF_EXPR( kw_for, "for" );
-	TOKEN_DEF_EXPR( kw_if, "if" );
-	TOKEN_DEF_EXPR( kw_while, "while" );
-	TOKEN_DEF_EXPR( kw_do, "do" );
-
-	TOKEN_DEF_EXPR( plus, "{PLUS}" );
-	TOKEN_DEF_EXPR( minus, "{MINUS}" );
-	TOKEN_DEF_EXPR( asterisk, "{ASTERISK}" );
-	TOKEN_DEF_EXPR( slash, "{SLASH}");
-	TOKEN_DEF_EXPR( backslash, "{BACKSLASH}" );
-	TOKEN_DEF_EXPR( caret, "{AMPERSAND}" );
-	TOKEN_DEF_EXPR( ampersand, "&" );
-	TOKEN_DEF_EXPR( percent, "%" );
-	TOKEN_DEF_EXPR( equal, "=" );
-	TOKEN_DEF_EXPR( comma, "," );
-	TOKEN_DEF_EXPR( colon, ":" );
-	TOKEN_DEF_EXPR( semicolon, ";" );
-	TOKEN_DEF_EXPR( dot, "{DOT}" );
-	TOKEN_DEF_EXPR( exclamation, "!" );
-	TOKEN_DEF_EXPR( question, "{QUESTION}" );
-	TOKEN_DEF_EXPR( squote, "'" );
-	TOKEN_DEF_EXPR( dquote, "{DQUOTE}" );
-	TOKEN_DEF_EXPR( vertical, "{VERTICAL}" );
-	TOKEN_DEF_EXPR( tilde, "~" );
-
-	TOKEN_DEF_EXPR( lparen, "{LPAREN}" );
-	TOKEN_DEF_EXPR( rparen, "{RPAREN}" );
-	TOKEN_DEF_EXPR( lbrace, "{LBRACE}" );
-	TOKEN_DEF_EXPR( rbrace, "{RBRACE}" );
-	TOKEN_DEF_EXPR( lsbracket, "{LSBRACKET}" );
-	TOKEN_DEF_EXPR( rsbracket, "{RSBRACKET}" );
-	TOKEN_DEF_EXPR( labracket, "{LABRACKET}" );
-	TOKEN_DEF_EXPR( rabracket, "{RABRACKET}" );
-
-	TOKEN_DEF_EXPR( any_char, "." );
-
-	TOKEN_DEF_EXPR( space, "{SPACE}" );
-	TOKEN_DEF_EXPR( newline, "{NEWLINE}" );
-	
-	this->self = TOKEN_DEFS(
-		(lit_int)(lit_float)(lit_bool)
-		(kw_struct) (kw_typedef)
-		(kw_break) (kw_case) (kw_continue) (kw_return)
-		(kw_if) (kw_else) (kw_for) (kw_switch) (kw_while) (kw_do)
-		(semicolon)
-		(ident)
-		);
-
-	this->self("SKIPPED") = TOKEN_DEFS( (space) (newline) );
+lexer_impl::lexer_impl( shared_ptr<attr_processor> proc ): proc(proc){
 }
+
+//////////////////////////////////////////////////////////////////////////
+// adders
+lexer::token_definer::token_definer( lexer& owner ):owner(owner)
+{
+}
+
+lexer::token_definer::token_definer( token_definer const& rhs ):owner(rhs.owner)
+{
+}
+
+lexer::token_definer const& lexer::token_definer::operator()( std::string const& name, std::string const& patterndef ) const
+{
+	owner.get_impl()->defs[name] = patterndef;
+	return *this;
+}
+
+lexer::pattern_adder::pattern_adder( lexer& owner ):owner(owner)
+{
+}
+
+lexer::pattern_adder::pattern_adder( pattern_adder const& rhs ):owner(rhs.owner)
+{
+}
+
+lexer::pattern_adder const& lexer::pattern_adder::operator()( std::string const& name, std::string const& patterndef ) const
+{
+	owner.get_impl()->self.add_pattern( name, patterndef );
+	return *this;
+}
+
+lexer::token_adder::token_adder( lexer& owner, char const* state ): owner(owner), state(state)
+{
+}
+
+lexer::token_adder::token_adder( token_adder const& rhs ):owner(rhs.owner), state(rhs.state)
+{
+}
+
+lexer::token_adder const& lexer::token_adder::operator()( std::string const& name ) const
+{
+	owner.get_impl()->self(state) += (owner.get_impl()->defs[name])[*(owner.get_impl()->proc)];
+	owner.get_impl()->ids.insert( make_pair( owner.get_impl()->defs[name].id(), name ) );
+	return *this;
+}
+
+
+lexer::skippers_adder::skippers_adder( lexer& owner ) : owner(owner)
+{
+}
+
+lexer::skippers_adder::skippers_adder( skippers_adder const& rhs ):owner(rhs.owner)
+{
+}
+
+lexer::skippers_adder const& lexer::skippers_adder::operator()( std::string const& name ) const
+{
+	owner.get_impl()->proc->add_skipper(name);
+	return *this;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// lexer members
+lexer::lexer( token_seq& seq, shared_ptr<sasl::common::lex_context> ctxt )
+{
+	shared_ptr<attr_processor> proc( new attr_processor(seq, ctxt) );
+	impl = boost::make_shared<lexer_impl>( proc );
+}
+
+lexer::token_definer lexer::define_tokens( std::string const& name, std::string const& patterndef )
+{
+	return token_definer(*this)(name, patterndef);
+}
+
+lexer::pattern_adder lexer::add_pattern( std::string const& name, std::string const& patterndef )
+{
+	return pattern_adder(*this)(name, patterndef);
+}
+
+lexer::token_adder lexer::add_token( const char* state )
+{
+	return token_adder(*this, state);
+}
+
+lexer::skippers_adder lexer::skippers( std::string const& s )
+{
+	return skippers_adder(*this)(s);
+}
+
+std::string const& lexer::get_name( size_t id ){
+	return impl->ids[id];
+}
+
+size_t lexer::get_id( std::string const& name ){
+	return impl->defs[name].id();
+}
+
+shared_ptr<lexer_impl> lexer::get_impl() const
+{
+	return impl;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// tokenize API
 
 bool tokenize(
 	/*IN*/ std::string const& code,
-	/*IN*/ shared_ptr< sasl::common::lex_context > ctxt,
-	/*IN*/ std::vector<std::string> skippers,
-	/*OUT*/ shared_ptr<token_def_table> defs,
+	/*IN*/ lexer const& lxr,
 	/*OUT*/ token_seq& cont
 	)
 {
 	const char* lex_first = &code[0];
 	const char* lex_last = &code[0] + code.size();
 
-	shared_ptr<attr_processor> proc( new attr_processor(cont, skippers, ctxt) );
-	lexer lxr( defs, proc );
-
 	// Try to use all lex state for tokenize character sequence.
-	const size_t tok_states_count = 2;
-	const char* tok_states[tok_states_count] = {NULL, "SKIPPED"};
+	std::vector<std::string> tok_states = lxr.get_impl()->proc->get_skippers();
+	tok_states.push_back( std::string("INITIAL") );
+
+	size_t tok_states_count = tok_states.size();
 
 	int toked_state = 0; // 0 is no result, 1 is succeed, 2 is failed.
 	int i_state = 0;
@@ -244,7 +247,7 @@ bool tokenize(
 
 		const char* next_lex_first = lex_first;
 
-		tokenize( next_lex_first, lex_last, lxr, tok_states[i_state] );
+		splex::tokenize( next_lex_first, lex_last, *(lxr.get_impl()), tok_states[i_state].c_str() );
 
 		// next state.
 		i_state = (++i_state) % tok_states_count;

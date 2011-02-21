@@ -17,89 +17,72 @@
 
 BEGIN_NS_SASL_PARSER();
 
-class token_def_table{
-public:
-	class lazy_adder{
-	public:
-		lazy_adder( token_def_table& tbl, size_t const* id, std::string const& name )
-			: p_id(id), name(name), tbl(tbl){}
-
-		lazy_adder( lazy_adder const& rhs )
-			: p_id(rhs.p_id), name(rhs.name), tbl(rhs.tbl){}
-
-		~lazy_adder(){
-			tbl.add( *p_id, name );
-		}
-	private:
-		token_def_table& tbl;
-		size_t const * p_id;
-		std::string name;
-	};
-
-	template <typename TokenDefT>
-	lazy_adder lazy_add( TokenDefT const& def, std::string const& name ){
-		return lazy_adder(*this, &def.id(), name);
-	}
-
-	template <typename TokenDefT>
-	void add( TokenDefT const& def, std::string const& name ){
-		add( def.id(), name );
-	}
-
-	void add( size_t id, std::string const& name ){
-		id_to_name.insert( make_pair(id, name) );
-		name_to_id.insert( make_pair(name, id) );
-	}
-
-	std::string const & operator []( size_t id ) const{
-		return id_to_name.at(id);
-	}
-
-	size_t operator []( std::string const& name ) const{
-		return name_to_id.at(name);
-	}
-
-private:
-	boost::unordered_map< size_t, std::string > id_to_name;
-	boost::unordered_map< std::string, size_t > name_to_id;
-};
-
 class token;
 typedef boost::shared_ptr<token> token_ptr;
 typedef std::vector< token_ptr > token_seq;
 typedef token_seq::iterator token_iterator;
 
-//class lexer_impl;
-//class attr_processor;
-//
-//class lexer{
-//	lexer( boost::shared_ptr<attr_processor> proc );
-//
-//	class token_definer{
-//		token_definer( lexer_impl& owner );
-//	private:
-//		lexer& owner;
-//	};
-//
-//	class pattern_adder{
-//		pattern_adder( lexer_impl& owner );
-//	private:
-//		lexer& owner;
-//	};
-//
-//	class token_adder{
-//		token_adder( lexer_impl& owner, char const* state );
-//	private:
-//		lexer& owner;
-//	};
-//
-//	void add_token_definition( std::string const& name, std::string const& patterndef );
-//	void add_pattern( std::string const& name, std::string const& patterndef );
-//	void add_token( const char* state, std::string const& name );
-//
-//private:
-//	shared_ptr<lexer_impl> impl;
-//};
+struct lexer_impl;
+
+class lexer{
+public:
+	lexer( token_seq& seq, boost::shared_ptr<sasl::common::lex_context> ctxt );
+
+	class token_definer{
+	public:
+		token_definer( lexer& owner );
+		token_definer( token_definer const& rhs );
+		token_definer const& operator()( std::string const& name, std::string const& patterndef ) const;
+	private:
+		token_definer& operator = ( token_definer const& rhs );
+		lexer& owner;
+	};
+
+	class pattern_adder{
+	public:
+		pattern_adder( lexer& owner );
+		pattern_adder( pattern_adder const& rhs );
+		pattern_adder const& operator()( std::string const& name, std::string const& patterndef ) const;
+	private:
+		pattern_adder& operator = ( pattern_adder const& rhs );
+		lexer& owner;
+	};
+
+	class token_adder{
+	public:
+		token_adder( lexer& owner, char const* state );
+		token_adder( token_adder const& rhs );
+		token_adder const& operator()( std::string const& name ) const;
+	private:
+		token_adder& operator = ( token_adder const& rhs );
+		lexer& owner;
+		char const* state;
+	};
+
+	class skippers_adder{
+	public:
+		skippers_adder( lexer& owner );
+		skippers_adder( skippers_adder const& rhs );
+		skippers_adder const& operator()( std::string const& name ) const;
+	private:
+		skippers_adder& operator = ( skippers_adder const& rhs );
+		lexer& owner;
+	};
+
+	token_definer define_tokens( std::string const& name, std::string const& patterndef );
+	pattern_adder add_pattern( std::string const& name, std::string const& patterndef );
+	token_adder add_token( const char* state );
+
+	skippers_adder skippers( std::string const& s );
+
+	std::string const& get_name( size_t id );
+	size_t get_id( std::string const& name );
+
+	boost::shared_ptr<lexer_impl> get_impl() const;
+
+private:
+	boost::shared_ptr<lexer_impl> impl;
+};
 
 class token{
 public:	
@@ -135,9 +118,7 @@ private:
 
 bool tokenize(
 	/*IN*/ std::string const& code,
-	/*IN*/ boost::shared_ptr< ::sasl::common::lex_context > ctxt,
-	/*IN*/ std::vector<std::string> skippers,
-	/*OUT*/ boost::shared_ptr<token_def_table> defs,
+	/*IN*/ lexer const& lxr,
 	/*OUT*/ token_seq& cont
 	);
 
