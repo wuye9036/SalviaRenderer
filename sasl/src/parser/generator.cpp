@@ -9,9 +9,15 @@
 #include <boost/preprocessor.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <iostream>
+
 using boost::shared_ptr;
 using boost::make_shared;
+
 using std::vector;
+
+using std::cout;
+using std::endl;
 
 BEGIN_NS_SASL_PARSER();
 
@@ -160,10 +166,11 @@ bool queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribu
 {
 	token_iterator stored = iter;
 
-	shared_ptr<attribute> out;
 	shared_ptr<queuer_attribute> ret = make_shared<queuer_attribute>();
 
+	shared_ptr<attribute> out;
 	BOOST_FOREACH( shared_ptr<parser> p, exprlst ){
+		out.reset();	
 		if( ! p->parse(iter, end, out ) ){
 			iter = stored;
 			return false;
@@ -207,10 +214,13 @@ bool rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute
 	if( !expr ){
 		return false;
 	}
+	cout << "Enter rule " << rule_name << endl;
 	if( expr->parse(iter, end, attr) ){
 		attr->rule_id( id() );
+		cout << "Rule " << rule_name << " matched succeed!"<< endl;
 		return true;
 	}
+	cout << "Rule " << rule_name << " matched failed!"<< endl;
 	return false;
 }
 
@@ -219,13 +229,15 @@ shared_ptr<parser> rule::clone() const{
 }
 
 rule& rule::operator=( parser const& rhs ){
-	if( &rhs == this ){
-		return *this;
-	}
 	expr = rhs.clone();
 	return *this;
 }
 
+rule& rule::operator=( rule const& rhs )
+{
+	expr = rhs.clone();
+	return *this;
+}
 
 rule_wrapper::rule_wrapper( rule_wrapper const& rhs ) : r(rhs.r){}
 
@@ -246,7 +258,7 @@ repeater operator * ( parser const & expr ){
 	return repeater( 0, repeater::unlimited, expr.clone() );
 }
 
-repeater operator ! ( parser const& expr ){
+repeater operator - ( parser const& expr ){
 	return repeater( 0, 1, expr.clone() );
 }
 
@@ -278,6 +290,22 @@ queuer operator >> ( queuer const& expr0, parser const& expr1 ){
 }
 
 queuer operator >> ( queuer const& expr0, queuer const& expr1 ){
+	queuer ret(expr0);
+	BOOST_FOREACH( shared_ptr<parser> expr, expr1.exprs() ){
+		ret.append(expr);
+	}
+	return ret;
+}
+
+queuer operator > ( parser const& expr0, parser const& expr1 ){
+	return queuer().append(expr0.clone()).append(expr1.clone());
+}
+
+queuer operator > ( queuer const& expr0, parser const& expr1 ){
+	return queuer(expr0).append(expr1.clone());
+}
+
+queuer operator > ( queuer const& expr0, queuer const& expr1 ){
 	queuer ret(expr0);
 	BOOST_FOREACH( shared_ptr<parser> expr, expr1.exprs() ){
 		ret.append(expr);

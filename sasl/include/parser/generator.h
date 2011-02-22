@@ -139,6 +139,7 @@ public:
 	rule( rule const& rhs );
 	rule( parser const& rhs);
 	rule& operator = ( parser const& rhs );
+	rule& operator = ( rule const& rhs );
 
 	intptr_t id() const;
 	std::string const& name() const;
@@ -166,13 +167,16 @@ private:
 //////////////////////////////////////////////////////////////////////////
 // Operators for building parser combinator.
 repeater operator * ( parser const & expr );
-repeater operator ! ( parser const& expr );
+repeater operator - ( parser const& expr );
 selector operator | ( parser const & expr0, parser const& expr1 );
 selector operator | ( selector const & expr0, parser const& expr1 );
 selector operator | ( selector const & expr0, selector const & expr1 );
 queuer operator >> ( parser const& expr0, parser const& expr1 );
 queuer operator >> ( queuer const& expr0, parser const& expr1 );
 queuer operator >> ( queuer const& expr0, queuer const& expr1 );
+queuer operator > ( parser const& expr0, parser const& expr1 );
+queuer operator > ( queuer const& expr0, parser const& expr1 );
+queuer operator > ( queuer const& expr0, queuer const& expr1 );
 
 END_NS_SASL_PARSER();
 
