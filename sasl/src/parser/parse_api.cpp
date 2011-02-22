@@ -18,7 +18,7 @@ void sasl::parser::parse(
 {
 	sasl::parser::token_seq toks;
 	
-	lexer l( toks, ctxt );
+	lexer l;
 
 	l.add_pattern
 		("SPACE", "[ \\t\\v\\f]+")
@@ -113,8 +113,12 @@ void sasl::parser::parse(
 		("space")("newline")
 		;
 
-	sasl::parser::tokenize(code, l );
+	l.skippers( "SKIPPED" );
+
+	l.tokenize(code, ctxt, toks );
+
 	grammars g(l);
+	
 	token_iterator it = toks.begin();
 	g.prog.parse( it, toks.end(), pt_root );
 }

@@ -31,7 +31,7 @@ struct lexer_impl;
 
 class lexer{
 public:
-	lexer( token_seq& seq, boost::shared_ptr<sasl::common::lex_context> ctxt );
+	lexer();
 
 	class token_definer{
 	public:
@@ -85,14 +85,13 @@ public:
 
 	boost::shared_ptr<lexer_impl> get_impl() const;
 
+	bool tokenize(
+		/*INPUTS*/ std::string const& code, boost::shared_ptr<sasl::common::lex_context> ctxt,
+		/*OUTPUT*/ token_seq& seq
+		);
 private:
 	boost::shared_ptr<lexer_impl> impl;
 };
-
-bool tokenize(
-	/*IN*/ std::string const& code,
-	/*IN*/ lexer const& lxr
-	);
 
 END_NS_SASL_PARSER();
 

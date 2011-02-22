@@ -24,6 +24,15 @@ using std::vector;
 
 BEGIN_NS_SASL_PARSER();
 
+class shared_data{
+public:
+	shared_data(): attrs(NULL){}
+	boost::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
+	unordered_set< std::string > skippers;
+	token_seq* attrs;
+	shared_ptr<lex_context> ctxt;
+};
+
 class attr_processor{
 public:
 	class state_translation_rule_adder{
@@ -54,7 +63,7 @@ public:
 			: proc( rhs.proc ){}
 
 		skipper_adder& operator()( std::string const& s ){
-			proc.skippers.insert(s);
+			proc.data->skippers.insert(s);
 			return *this;
 		}
 	private:
@@ -62,9 +71,19 @@ public:
 		attr_processor& proc;
 	};
 
-	attr_processor( token_seq& attrs, shared_ptr<lex_context> lex_ctxt )
-		:attrs(attrs), ctxt(lex_ctxt)
-	{
+	attr_processor(){
+		data = make_shared<shared_data>();
+	}
+
+	attr_processor( attr_processor const& rhs ): data(rhs.data){
+	}
+
+	void output( token_seq& seq ){
+		data->attrs = &seq;
+	}
+
+	void context( shared_ptr< lex_context > ctxt ){
+		data->ctxt = ctxt;
 	}
 
 	skipper_adder add_skipper( std::string const& s ){
@@ -72,13 +91,13 @@ public:
 	}
 	
 	vector<std::string> get_skippers() const{
-		return vector<std::string>( skippers.begin(), skippers.end() );
+		return vector<std::string>( data->skippers.begin(), data->skippers.end() );
 	}
 
 	template <typename TokenDefT>
 	void add_state_translation_rule( TokenDefT const & tok_def, std::string const& on_state, std::string const& jump_to ){
-		assert( state_translations.count( tok_def.id() ) == 0 );
-		state_translations.insert(
+		assert( data->state_translations.count( tok_def.id() ) == 0 );
+		data->state_translations.insert(
 			make_pair( make_pair(tok_def.id(), on_state), jump_to )
 			);
 	}
@@ -94,23 +113,20 @@ public:
 
 		// do skip
 		std::string splexer_state( splexer_ctxt.get_state_name() );
-		if( skippers.count( splexer_state ) == 0 ){
-			ctxt->next( str );
-			attrs.push_back( token_t::make(id, str, ctxt->line(), ctxt->column(), ctxt->file_name() ) );
+		if( data->skippers.count( splexer_state ) == 0 ){
+			data->ctxt->next( str );
+			data->attrs->push_back( token_t::make(id, str, data->ctxt->line(), data->ctxt->column(), data->ctxt->file_name() ) );
 		}
 
 		// change state
-		if( state_translations.count( make_pair( id, splexer_state ) ) > 0 ){
-			splexer_ctxt.set_state_name( state_translations[ make_pair(id, splexer_state) ].c_str() );
+		if( data->state_translations.count( make_pair( id, splexer_state ) ) > 0 ){
+			splexer_ctxt.set_state_name( data->state_translations[ make_pair(id, splexer_state) ].c_str() );
 		}
 	}
 
 private:
 	attr_processor& operator = ( attr_processor const & );
-	boost::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
-	unordered_set< std::string > skippers;
-	token_seq& attrs;
-	shared_ptr<lex_context> ctxt;
+	shared_ptr<shared_data> data;
 };
 
 typedef boost::mpl::vector< std::string > token_types;
@@ -192,9 +208,9 @@ lexer::skippers_adder const& lexer::skippers_adder::operator()( std::string cons
 
 //////////////////////////////////////////////////////////////////////////
 // lexer members
-lexer::lexer( token_seq& seq, shared_ptr<sasl::common::lex_context> ctxt )
+lexer::lexer()
 {
-	shared_ptr<attr_processor> proc( new attr_processor(seq, ctxt) );
+	shared_ptr<attr_processor> proc( new attr_processor() );
 	impl = boost::make_shared<lexer_impl>( proc );
 }
 
@@ -226,54 +242,60 @@ size_t lexer::get_id( std::string const& name ){
 	return impl->defs[name].id();
 }
 
-shared_ptr<lexer_impl> lexer::get_impl() const
+bool lexer::tokenize( /*INPUTS*/ std::string const& code, shared_ptr<lex_context> ctxt, /*OUTPUT*/ token_seq& seq )
 {
-	return impl;
-}
+	impl->proc->output( seq );
+	impl->proc->context( ctxt );
 
-//////////////////////////////////////////////////////////////////////////
-// tokenize API
-
-bool tokenize(
-	/*IN*/ std::string const& code,
-	/*IN*/ lexer const& lxr
-	)
-{
 	const char* lex_first = &code[0];
 	const char* lex_last = &code[0] + code.size();
 
 	// Try to use all lex state for tokenize character sequence.
-	std::vector<std::string> tok_states = lxr.get_impl()->proc->get_skippers();
+	std::vector<std::string> tok_states = impl->proc->get_skippers();
 	tok_states.push_back( std::string("INITIAL") );
 
 	size_t tok_states_count = tok_states.size();
 
 	int toked_state = 0; // 0 is no result, 1 is succeed, 2 is failed.
 	int i_state = 0;
+	int failed_count = 0;
 	while( lex_first != lex_last && toked_state == 0 ){
-
+		// Use current state, and match as long as possible.
 		const char* next_lex_first = lex_first;
+		splex::tokenize( next_lex_first, lex_last, *impl, tok_states[i_state].c_str() );
 
-		splex::tokenize( next_lex_first, lex_last, *(lxr.get_impl()), tok_states[i_state].c_str() );
-
-		// next state.
-		i_state = (++i_state) % tok_states_count;
-
+		// All was matched, return success(1).
 		if( next_lex_first == lex_last ){
 			toked_state = 1;
 			break;
 		}
 
+		// If failed, add failed count.
 		if( next_lex_first == lex_first ){
+			++failed_count;
+		} else {
+			failed_count = 0;
+		}
+
+		// If all states was tried and failed, it is really failed.
+		if( failed_count == tok_states_count ){
 			toked_state = 2;
 			break;
 		}
+
+		// Otherwise, try next state.
+		i_state = (++i_state) % tok_states_count;
 
 		lex_first = next_lex_first;
 	}
 
 	bool tokenize_succeed = (toked_state == 1);
 	return tokenize_succeed;
+}
+
+shared_ptr<lexer_impl> lexer::get_impl() const
+{
+	return impl;
 }
 
 END_NS_SASL_PARSER();
