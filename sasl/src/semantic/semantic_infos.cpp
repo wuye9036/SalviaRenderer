@@ -13,7 +13,7 @@
 #include <string>
 
 using ::sasl::common::compiler_info_manager;
-using ::sasl::common::token_attr;
+using ::sasl::common::token_t;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::buildin_type;
 

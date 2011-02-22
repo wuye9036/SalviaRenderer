@@ -21,9 +21,11 @@ boost::shared_ptr<program> parse(
 	boost::shared_ptr<lex_context> ctxt
 	)
 {
+	
+	shared_ptr<sasl::parser::attribute> pt_prog;
+	sasl::parser::parse( pt_prog, code_text, ctxt );
 	return shared_ptr<program>();
 	/*sasl::parser_tree::program pt_prog;
-	sasl::parser::parse( pt_prog, code_text, ctxt );
 	return pt_to_ast( pt_prog );*/
 }
 

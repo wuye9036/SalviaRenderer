@@ -1,5 +1,7 @@
 #include <sasl/include/parser/lexer.h>
 
+#include <sasl/include/common/token.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/spirit/include/lex.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
@@ -9,6 +11,7 @@
 namespace splex = boost::spirit::lex;
 
 using sasl::common::lex_context;
+using sasl::common::token_t;
 
 using boost::make_shared;
 using boost::shared_ptr;
@@ -38,6 +41,7 @@ public:
 		}
 
 	private:
+		state_translation_rule_adder& operator = ( state_translation_rule_adder const & );
 		attr_processor& proc;
 	};
 
@@ -54,6 +58,7 @@ public:
 			return *this;
 		}
 	private:
+		skipper_adder& operator = ( skipper_adder const & );
 		attr_processor& proc;
 	};
 
@@ -83,7 +88,7 @@ public:
 	}
 
 	template <typename IteratorT, typename PassFlagT, typename IdT, typename ContextT>
-	void operator ()(IteratorT& beg, IteratorT& end, PassFlagT& flag, IdT& id, ContextT& splexer_ctxt ){
+	void operator ()(IteratorT& beg, IteratorT& end, PassFlagT& /*flag*/, IdT& id, ContextT& splexer_ctxt ){
 		// process token
 		std::string str(beg, end);
 
@@ -91,7 +96,7 @@ public:
 		std::string splexer_state( splexer_ctxt.get_state_name() );
 		if( skippers.count( splexer_state ) == 0 ){
 			ctxt->next( str );
-			attrs.push_back( token::make(id, str, ctxt->line(), ctxt->column(), ctxt->file_name() ) );
+			attrs.push_back( token_t::make(id, str, ctxt->line(), ctxt->column(), ctxt->file_name() ) );
 		}
 
 		// change state
@@ -101,15 +106,16 @@ public:
 	}
 
 private:
+	attr_processor& operator = ( attr_processor const & );
 	boost::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
 	unordered_set< std::string > skippers;
 	token_seq& attrs;
 	shared_ptr<lex_context> ctxt;
 };
 
-typedef boost::mpl::vector< std::string > token_attr_types;
-typedef splex::lexertl::token< char const*, token_attr_types > token_t;
-typedef splex::lexertl::actor_lexer< token_t > base_lexer_t;
+typedef boost::mpl::vector< std::string > token_types;
+typedef splex::lexertl::token< char const*, token_types > splex_token;
+typedef splex::lexertl::actor_lexer< splex_token > base_lexer_t;
 
 struct lexer_impl: public splex::lexer<base_lexer_t>{
 	lexer_impl( shared_ptr<attr_processor> proc );
@@ -162,8 +168,10 @@ lexer::token_adder::token_adder( token_adder const& rhs ):owner(rhs.owner), stat
 
 lexer::token_adder const& lexer::token_adder::operator()( std::string const& name ) const
 {
-	owner.get_impl()->self(state) += (owner.get_impl()->defs[name])[*(owner.get_impl()->proc)];
-	owner.get_impl()->ids.insert( make_pair( owner.get_impl()->defs[name].id(), name ) );
+	shared_ptr<lexer_impl> impl = owner.get_impl();
+	splex::token_def< std::string >& def = impl->defs[name];
+	impl->self(state).define(def[*(impl->proc)]);
+	impl->ids.insert( make_pair( def.id(), name ) );
 	return *this;
 }
 
@@ -228,8 +236,7 @@ shared_ptr<lexer_impl> lexer::get_impl() const
 
 bool tokenize(
 	/*IN*/ std::string const& code,
-	/*IN*/ lexer const& lxr,
-	/*OUT*/ token_seq& cont
+	/*IN*/ lexer const& lxr
 	)
 {
 	const char* lex_first = &code[0];

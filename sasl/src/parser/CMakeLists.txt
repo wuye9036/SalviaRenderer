@@ -17,6 +17,7 @@ set( HEADER_FILES
 
 set( SOURCE_FILES
 	lexer.cpp
+	generator.cpp
 	grammars.cpp
 	parse_api.cpp
 )

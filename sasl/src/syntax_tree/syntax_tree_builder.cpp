@@ -10,7 +10,7 @@
 //
 //using boost::shared_ptr;
 //using boost::unordered_map;
-//using sasl::common::token_attr;
+//using sasl::common::token;
 //
 //BEGIN_NS_SASL_SYNTAX_TREE();
 //
@@ -57,7 +57,7 @@
 //	return composite<member_expression>(v);
 //}
 //
-//shared_ptr<expression> postfix_qualified_expression_visitor::operator()( const token_attr& v )
+//shared_ptr<expression> postfix_qualified_expression_visitor::operator()( const token& v )
 //{
 //	return 
 //		dexpr_combinator(NULL)
@@ -71,7 +71,7 @@
 //	shared_ptr<declaration_statement> ret;
 //	shared_ptr<declaration> decl = builder->build(v, ctxt);
 //	if( decl ){
-//		ret = create_node<declaration_statement>( token_attr::null() );
+//		ret = create_node<declaration_statement>( token::null() );
 //		ret->decl = decl;
 //	}
 //	return ret;
@@ -79,13 +79,13 @@
 //
 //#define INSERT_INTO_TYPEMAP( litname, enum_code ) \
 //	{	\
-//		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_attr::null() );	\
+//		shared_ptr<buildin_type> bt = create_node<buildin_type>( token::null() );	\
 //		bt->value_typecode = buildin_type_code::enum_code;	\
 //		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
 //	}
 //
 //unordered_map< std::string, shared_ptr<buildin_type> > type_visitor::typemap;
-//shared_ptr<type_specifier> type_visitor::operator()( token_attr const& v )
+//shared_ptr<type_specifier> type_visitor::operator()( token const& v )
 //{
 //	// Initialize code
 //	if( typemap.empty() ){
@@ -118,7 +118,7 @@
 //		return typemap[v.str];
 //	}
 //
-//	shared_ptr<alias_type> type_ident = create_node<alias_type>( token_attr::null() );
+//	shared_ptr<alias_type> type_ident = create_node<alias_type>( token::null() );
 //	type_ident->alias = v.make_copy();
 //
 //	return type_ident;
@@ -132,13 +132,13 @@
 //	return parent_node;
 //}
 //
-//operators syntax_tree_builder::build_operator( const sasl::parser_tree::token_attr& /*v*/, operators /*modifier*/ )
+//operators syntax_tree_builder::build_operator( const sasl::parser_tree::token& /*v*/, operators /*modifier*/ )
 //{
 //	EFLIB_ASSERT_UNIMPLEMENTED();
 //	return operators::none;
 //}
 //
-//shared_ptr<constant_expression> syntax_tree_builder::build_constant( const token_attr& /*v*/ )
+//shared_ptr<constant_expression> syntax_tree_builder::build_constant( const token& /*v*/ )
 //{
 //	EFLIB_ASSERT_UNIMPLEMENTED();
 //	return shared_ptr<constant_expression>();
@@ -220,7 +220,7 @@
 //		return build( v.first_expr, ctxt );
 //	}
 //
-//	shared_ptr<expression_list> ret = create_node<expression_list>( token_attr::null() );
+//	shared_ptr<expression_list> ret = create_node<expression_list>( token::null() );
 //	ret->exprs.push_back( build(v.first_expr, ctxt) );
 //
 //	for( sasl::parser_tree::expression_lst::expr_list_t::const_iterator it = v.follow_exprs.begin(); it != v.follow_exprs.end(); ++it ){
@@ -258,7 +258,7 @@
 //
 //shared_ptr<expression> syntax_tree_builder::build( const sasl::parser_tree::cond_expression& v, ast_builder_context& ctxt )
 //{
-//	shared_ptr<cond_expression> ret = create_node<cond_expression>( token_attr::null() );
+//	shared_ptr<cond_expression> ret = create_node<cond_expression>( token::null() );
 //	ret->cond_expr = build( v.condexpr, ctxt );
 //	ret->yes_expr = build( boost::fusion::at_c<1>(v.branchexprs), ctxt );
 //	ret->no_expr = build( boost::fusion::at_c<3>(v.branchexprs), ctxt );
@@ -267,14 +267,14 @@
 //
 //shared_ptr<expression> syntax_tree_builder::build( const sasl::parser_tree::idx_expression& v, ast_builder_context& ctxt )
 //{
-//	shared_ptr<index_expression> ret = create_node<index_expression>( token_attr::null() );
+//	shared_ptr<index_expression> ret = create_node<index_expression>( token::null() );
 //	ret->index_expr = build(v.expr, ctxt);
 //	return shared_ptr<expression>( ret );
 //}
 //
 //shared_ptr<expression> syntax_tree_builder::build( const sasl::parser_tree::call_expression& v, ast_builder_context& ctxt )
 //{
-//	shared_ptr<call_expression> ret = create_node<call_expression>( token_attr::null() );
+//	shared_ptr<call_expression> ret = create_node<call_expression>( token::null() );
 //	if( v.args ){
 //		shared_ptr<expression> arg_exprs = build( *(v.args), ctxt );
 //		ret->args = arg_exprs->typed_handle<expression_list>()->exprs;
@@ -284,14 +284,14 @@
 //
 //shared_ptr<expression> syntax_tree_builder::build( const sasl::parser_tree::mem_expression& v, ast_builder_context& /*ctxt*/ )
 //{
-//	shared_ptr<member_expression> ret = create_node<member_expression>( token_attr::null() );
+//	shared_ptr<member_expression> ret = create_node<member_expression>( token::null() );
 //	ret->member = v.ident.make_copy();
 //	return ret;
 //}
 //
 //shared_ptr<expression> syntax_tree_builder::build( const sasl::parser_tree::unaried_expression& v, ast_builder_context& ctxt )
 //{
-//	shared_ptr<unary_expression> ret = create_node<unary_expression>( token_attr::null() );
+//	shared_ptr<unary_expression> ret = create_node<unary_expression>( token::null() );
 //	ret->expr = build( v.expr, ctxt );
 //	ret->op = build_operator( v.preop, operators::none );
 //	return shared_ptr<expression>(ret);
@@ -361,12 +361,12 @@
 //
 //shared_ptr<declaration> syntax_tree_builder::build( const sasl::parser_tree::variable_declaration& v, ast_builder_context& ctxt )
 //{
-//	shared_ptr<variable_declaration> ret = create_node<variable_declaration>( token_attr::null() );
+//	shared_ptr<variable_declaration> ret = create_node<variable_declaration>( token::null() );
 //	ret->type_info = build( v.declspec, ctxt );
 //	
 //	// build declarators
 //	ret->declarators.push_back( build( v.decllist.first, ctxt ) );
-//	typedef boost::fusion::vector< token_attr, sasl::parser_tree::initialized_declarator > following_pair_t;
+//	typedef boost::fusion::vector< token, sasl::parser_tree::initialized_declarator > following_pair_t;
 //	BOOST_FOREACH( following_pair_t const & follow_pair, v.decllist.follows	)
 //	{
 //		ret->declarators.push_back( build( boost::fusion::at_c<1>( follow_pair), ctxt ) );
@@ -401,7 +401,7 @@
 //
 //shared_ptr<declarator> syntax_tree_builder::build( const sasl::parser_tree::initialized_declarator& v, ast_builder_context& ctxt )
 //{
-//	shared_ptr<declarator> ret = create_node<declarator>( token_attr::null() );
+//	shared_ptr<declarator> ret = create_node<declarator>( token::null() );
 //	if( !v.ident.empty() ){
 //		ret->name = v.ident.make_copy();
 //	}

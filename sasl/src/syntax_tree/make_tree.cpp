@@ -3,7 +3,7 @@
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/enums_helper.h>
 
-#include <sasl/include/common/token_attr.h>
+#include <sasl/include/common/token.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -21,7 +21,7 @@
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-using ::sasl::common::token_attr;
+using ::sasl::common::token_t;
 using ::std::vector;
 
 struct lct_list{
@@ -107,7 +107,7 @@ tree_combinator& dprog_combinator::dvar()
 tree_combinator& dprog_combinator::dstruct( const std::string& struct_name )
 {
 	enter_child( e_struct, struct_comb );
-	struct_comb->typed_node()->name = token_attr::from_string( struct_name );
+	struct_comb->typed_node()->name = token_t::from_string( struct_name );
 	return *struct_comb;
 }
 
@@ -159,7 +159,7 @@ tree_combinator& dtype_combinator::dbuildin( buildin_type_code btc )
 		return default_proc();
 	}
 
-	typed_node( create_node<buildin_type>(token_attr::null()) );
+	typed_node( create_node<buildin_type>(token_t::null()) );
 	typed_node()->value_typecode = btc;
 	return *this;
 }
@@ -172,7 +172,7 @@ tree_combinator& dtype_combinator::dvec( buildin_type_code comp_btc, size_t size
 		return default_proc();
 	}
 
-	typed_node( create_node<buildin_type>(token_attr::null()) );
+	typed_node( create_node<buildin_type>(token_t::null()) );
 	typed_node()->value_typecode = sasl_ehelper::vector_of( comp_btc, size );
 	return *this;
 }
@@ -184,7 +184,7 @@ tree_combinator& dtype_combinator::dmat( buildin_type_code comp_btc, size_t s0, 
 	if( cur_node ){
 		return default_proc();
 	}
-	typed_node( create_node<buildin_type>(token_attr::null() ) );
+	typed_node( create_node<buildin_type>(token_t::null() ) );
 	typed_node()->value_typecode = sasl_ehelper::matrix_of(comp_btc, s0, s1);
 	return *this;
 }
@@ -196,8 +196,8 @@ tree_combinator& dtype_combinator::dalias( const std::string& alias )
 	if( cur_node ){
 		return default_proc();
 	}
-	typed_node( create_node<alias_type>( token_attr::null() ) );
-	typed_node2<alias_type>()->alias = token_attr::from_string(alias);
+	typed_node( create_node<alias_type>( token_t::null() ) );
+	typed_node2<alias_type>()->alias = token_t::from_string(alias);
 	return *this;
 }
 
@@ -226,7 +226,7 @@ void dtype_combinator::child_ended()
 		case e_array:
 			assert ( typed_node() );
 			if ( typed_node()->node_class() != syntax_node_types::array_type ){
-				outter_type = create_node<array_type>( token_attr::null() );
+				outter_type = create_node<array_type>( token_t::null() );
 				outter_type->elem_type = typed_node();
 				typed_node( outter_type );
 			} else {
@@ -246,14 +246,14 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( ddeclarator_combinator, declarator );
 ddeclarator_combinator::ddeclarator_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<declarator>( token_attr::null() ) );
+	typed_node( create_node<declarator>( token_t::null() ) );
 }
 
 tree_combinator& ddeclarator_combinator::dname( const std::string& name )
 {
 	DEFAULT_STATE_SCOPE();
 
-	typed_node()->name = token_attr::from_string(name);
+	typed_node()->name = token_t::from_string(name);
 	return *this;
 }
 
@@ -290,7 +290,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dvar_combinator, variable_declaration );
 dvar_combinator::dvar_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<variable_declaration>( token_attr::null() ) );
+	typed_node( create_node<variable_declaration>( token_t::null() ) );
 }
 
 tree_combinator& dvar_combinator::dname( std::string const& str ){
@@ -333,8 +333,8 @@ tree_combinator& dexpr_combinator::dconstant( literal_constant_types lct, const 
 	DEFAULT_STATE_SCOPE();
 
 	boost::shared_ptr< constant_expression > ret
-		= create_node<constant_expression>( token_attr::null() );
-	ret->value_tok = token_attr::from_string( v );
+		= create_node<constant_expression>( token_t::null() );
+	ret->value_tok = token_t::from_string( v );
 	ret->ctype = lct;
 
 	typed_node( ret );
@@ -345,8 +345,8 @@ tree_combinator& dexpr_combinator::dvarexpr( const std::string& v)
 {
 	DEFAULT_STATE_SCOPE();
 
-	boost::shared_ptr< variable_expression > ret = create_node<variable_expression>( token_attr::null() );
-	ret->var_name = token_attr::from_string( v );
+	boost::shared_ptr< variable_expression > ret = create_node<variable_expression>( token_t::null() );
+	ret->var_name = token_t::from_string( v );
 
 	typed_node( ret );
 	return *this;
@@ -359,7 +359,7 @@ tree_combinator& dexpr_combinator::dunary( operators op )
 
 	enter(e_unary);
 
-	boost::shared_ptr< unary_expression > ret = create_node<unary_expression>( token_attr::null() );
+	boost::shared_ptr< unary_expression > ret = create_node<unary_expression>( token_t::null() );
 	ret->op = op;
 	typed_node( ret );
 	expr_comb = boost::make_shared<dexpr_combinator>( this );
@@ -387,9 +387,9 @@ tree_combinator& dexpr_combinator::dmember( std::string const& m )
 	DEFAULT_STATE_SCOPE();
 
 	assert( typed_node() );
-	boost::shared_ptr<member_expression> mexpr = create_node<member_expression>( token_attr::null() );
+	boost::shared_ptr<member_expression> mexpr = create_node<member_expression>( token_t::null() );
 	mexpr->expr = typed_node();
-	mexpr->member = token_attr::from_string(m);
+	mexpr->member = token_t::from_string(m);
 	typed_node(mexpr);
 
 	return *this;
@@ -403,7 +403,7 @@ tree_combinator& dexpr_combinator::dcall()
 tree_combinator& dexpr_combinator::dindex()
 {
 	assert ( typed_node() );
-	boost::shared_ptr<index_expression> indexexpr = create_node<index_expression>( token_attr::null() );
+	boost::shared_ptr<index_expression> indexexpr = create_node<index_expression>( token_t::null() );
 	indexexpr->expr = typed_node();
 	typed_node( indexexpr );
 	enter( e_indexexpr );
@@ -457,7 +457,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dcast_combinator, cast_expression );
 dcast_combinator::dcast_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<cast_expression>( token_attr::null() ) );
+	typed_node( create_node<cast_expression>( token_t::null() ) );
 }
 
 tree_combinator& dcast_combinator::dtype()
@@ -492,7 +492,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dbinexpr_combinator, binary_expression );
 dbinexpr_combinator::dbinexpr_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<binary_expression>( token_attr::null() ) );
+	typed_node( create_node<binary_expression>( token_t::null() ) );
 }
 
 tree_combinator& dbinexpr_combinator::dlexpr()
@@ -540,7 +540,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dbranchexpr_combinator, cond_expression );
 dbranchexpr_combinator::dbranchexpr_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<cond_expression>( token_attr::null() ) );
+	typed_node( create_node<cond_expression>( token_t::null() ) );
 }
 
 tree_combinator& dbranchexpr_combinator::dcond()
@@ -586,7 +586,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dcallexpr_combinator, call_expression );
 dcallexpr_combinator::dcallexpr_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<call_expression>( token_attr::null() ) );
+	typed_node( create_node<call_expression>( token_t::null() ) );
 
 	assert( parent->typed_node() );
 	parent->get_node( typed_node()->expr );
@@ -618,13 +618,13 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dstruct_combinator, struct_type );
 dstruct_combinator::dstruct_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<struct_type>( token_attr::null() ) );
+	typed_node( create_node<struct_type>( token_t::null() ) );
 }
 
 tree_combinator& dstruct_combinator::dname( const std::string& name )
 {
 	assert( !typed_node()->name );
-	typed_node()->name = token_attr::from_string( name );
+	typed_node()->name = token_t::from_string( name );
 	return *this;
 }
 
@@ -655,14 +655,14 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dstatements_combinator, compound_statement );
 dstatements_combinator::dstatements_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<compound_statement>( token_attr::null() ) );
+	typed_node( create_node<compound_statement>( token_t::null() ) );
 }
 
 
 tree_combinator& dstatements_combinator::dlabel( const std::string& lbl_str )
 {
-	boost::shared_ptr<ident_label> lbl = create_node<ident_label>( token_attr::null() );
-	lbl->label_tok = token_attr::from_string( lbl_str );
+	boost::shared_ptr<ident_label> lbl = create_node<ident_label>( token_t::null() );
+	lbl->label_tok = token_t::from_string( lbl_str );
 	push_label(lbl);
 
 	return *this;
@@ -707,7 +707,7 @@ tree_combinator& dstatements_combinator::dbreak()
 {
 	DEFAULT_STATE_SCOPE();
 
-	boost::shared_ptr<jump_statement> jumpstmt = create_node<jump_statement>( token_attr::null() );
+	boost::shared_ptr<jump_statement> jumpstmt = create_node<jump_statement>( token_t::null() );
 	jumpstmt->code = jump_mode::_break;
 	typed_node()->stmts.push_back( boost::shared_polymorphic_downcast<statement>(jumpstmt) );
 
@@ -718,7 +718,7 @@ tree_combinator& dstatements_combinator::dcontinue()
 {
 	DEFAULT_STATE_SCOPE();
 
-	boost::shared_ptr<jump_statement> jumpstmt = create_node<jump_statement>( token_attr::null() );
+	boost::shared_ptr<jump_statement> jumpstmt = create_node<jump_statement>( token_t::null() );
 	jumpstmt->code = jump_mode::_continue;
 	typed_node()->stmts.push_back( boost::shared_polymorphic_downcast<statement>(jumpstmt) );
 
@@ -794,7 +794,7 @@ void dvarstmt_combinator::before_end()
 		return;
 	}
 	assert( typed_node() );
-	boost::shared_ptr<declaration_statement> instead_node = create_node<declaration_statement>( token_attr::null() );
+	boost::shared_ptr<declaration_statement> instead_node = create_node<declaration_statement>( token_t::null() );
 	instead_node->decl = typed_node();
 	typed_node( instead_node );
 }
@@ -812,7 +812,7 @@ void dexprstmt_combinator::before_end()
 		return;
 	}
 	assert( typed_node() );
-	boost::shared_ptr<expression_statement> instead_node = create_node<expression_statement>( token_attr::null() );
+	boost::shared_ptr<expression_statement> instead_node = create_node<expression_statement>( token_t::null() );
 	instead_node->expr = typed_node();
 	typed_node( instead_node );
 }
@@ -825,7 +825,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dif_combinator, if_statement );
 dif_combinator::dif_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<if_statement>( token_attr::null() ) );
+	typed_node( create_node<if_statement>( token_t::null() ) );
 }
 
 tree_combinator& dif_combinator::dcond(){
@@ -866,7 +866,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( ddowhile_combinator, dowhile_statement );
 ddowhile_combinator::ddowhile_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<dowhile_statement>( token_attr::null() ) );
+	typed_node( create_node<dowhile_statement>( token_t::null() ) );
 }
 
 tree_combinator& ddowhile_combinator::ddo()
@@ -902,7 +902,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dwhiledo_combinator, while_statement );
 dwhiledo_combinator::dwhiledo_combinator( tree_combinator* parent )
 : tree_combinator( parent )
 {
-	typed_node( create_node<while_statement>( token_attr::null() ) );
+	typed_node( create_node<while_statement>( token_t::null() ) );
 }
 
 tree_combinator& dwhiledo_combinator::ddo()
@@ -936,7 +936,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dswitch_combinator, switch_statement );
 
 dswitch_combinator::dswitch_combinator( tree_combinator* parent )
 : tree_combinator( parent ){
-	typed_node( create_node<switch_statement>( token_attr::null() ) );
+	typed_node( create_node<switch_statement>( token_t::null() ) );
 }
 
 tree_combinator& dswitch_combinator::dexpr(){
@@ -1001,7 +1001,7 @@ void dcase_combinator::before_end(){
 		return;
 	}
 
-	boost::shared_ptr<case_label> instead_node = create_node<case_label>( token_attr::null() );
+	boost::shared_ptr<case_label> instead_node = create_node<case_label>( token_t::null() );
 	instead_node->expr = typed_node2<expression>();
 	typed_node( instead_node );
 }
@@ -1018,7 +1018,7 @@ void dreturn_combinator::before_end(){
 		&& typed_node2<node>()->node_class() == syntax_node_types::jump_statement ){
 		return;
 	}
-	boost::shared_ptr<jump_statement> instead_node = create_node<jump_statement>( token_attr::null() );
+	boost::shared_ptr<jump_statement> instead_node = create_node<jump_statement>( token_t::null() );
 	instead_node->jump_expr = typed_node2<expression>();
 	instead_node->code = jump_mode::_return;
 	typed_node( instead_node );
@@ -1031,7 +1031,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dfor_combinator, for_statement );
 
 dfor_combinator::dfor_combinator( tree_combinator* parent )
 : tree_combinator( parent ){
-	typed_node( create_node<for_statement>( token_attr::null() ) );
+	typed_node( create_node<for_statement>( token_t::null() ) );
 }
 
 tree_combinator& dfor_combinator::dinit_expr(){
@@ -1087,11 +1087,11 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dfunction_combinator, function_type );
 
 dfunction_combinator::dfunction_combinator( tree_combinator* parent )
 : tree_combinator( parent ){
-	typed_node( create_node<function_type>( token_attr::null() ) );
+	typed_node( create_node<function_type>( token_t::null() ) );
 }
 
 tree_combinator& dfunction_combinator::dname( const std::string& str ){
-	typed_node()->name = token_attr::from_string(str);
+	typed_node()->name = token_t::from_string(str);
 	return *this;
 }
 
@@ -1134,7 +1134,7 @@ void dparameter_combinator::before_end(){
 	assert( typed_node() );
 	assert( typed_node()->declarators.size() <= 1 );
 
-	boost::shared_ptr<parameter> instead_node = create_node<parameter>( token_attr::null() );
+	boost::shared_ptr<parameter> instead_node = create_node<parameter>( token_t::null() );
 	instead_node->param_type = typed_node()->type_info;
 	if( ! typed_node()->declarators.empty() ){
 		instead_node->name = typed_node()->declarators[0]->name;
@@ -1151,11 +1151,11 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dtypedef_combinator, type_definition )
 
 dtypedef_combinator::dtypedef_combinator( tree_combinator* parent )
 : tree_combinator( parent ){
-	typed_node( create_node<type_definition>( token_attr::null() ) );
+	typed_node( create_node<type_definition>( token_t::null() ) );
 }
 
 tree_combinator& dtypedef_combinator::dname( const std::string& name ){
-	typed_node()->name = token_attr::from_string(name);
+	typed_node()->name = token_t::from_string(name);
 	return *this;
 }
 
@@ -1187,7 +1187,7 @@ void dinitexpr_combinator::before_end()
 		return;
 	}
 	boost::shared_ptr<expression_initializer> instead_node
-		= create_node<expression_initializer>( token_attr::null() );
+		= create_node<expression_initializer>( token_t::null() );
 	instead_node->init_expr = typed_node2<expression>();
 	typed_node( instead_node );
 }
@@ -1199,7 +1199,7 @@ SASL_TYPED_NODE_ACCESSORS_IMPL( dinitlist_combinator, member_initializer );
 
 dinitlist_combinator::dinitlist_combinator( tree_combinator* parent )
 : tree_combinator( parent ){
-	typed_node( create_node<member_initializer>( token_attr::null() ) );
+	typed_node( create_node<member_initializer>( token_t::null() ) );
 }
 
 tree_combinator& dinitlist_combinator::dinit_expr(){

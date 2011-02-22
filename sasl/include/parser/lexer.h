@@ -15,10 +15,15 @@
 #include <string>
 #include <vector>
 
+namespace sasl{
+	namespace common{
+		struct token_t;
+	}
+}
+
 BEGIN_NS_SASL_PARSER();
 
-class token;
-typedef boost::shared_ptr<token> token_ptr;
+typedef boost::shared_ptr< sasl::common::token_t > token_ptr;
 typedef std::vector< token_ptr > token_seq;
 typedef token_seq::iterator token_iterator;
 
@@ -84,42 +89,9 @@ private:
 	boost::shared_ptr<lexer_impl> impl;
 };
 
-class token{
-public:	
-	static token_ptr make( size_t id, std::string const & lit, size_t line, size_t col, std::string const& fname ){
-		return token_ptr( new token(id, lit, line, col, fname) );
-	}
-
-	size_t id() const{
-		return tok_id;
-	}
-
-	size_t line() const;
-	size_t col() const;
-	std::string const& file_name() const;
-	std::string const& str() const{
-		return tok_lit;
-	}
-private:
-	token& operator = ( token const& );
-	token( const token& );
-
-	token( size_t id, std::string const & lit, size_t line, size_t col, std::string const& fname ):
-	tok_id(id), tok_line(line), tok_col(col), tok_fname(fname), tok_lit(lit)
-	{
-	}
-
-	size_t tok_id;
-	size_t tok_line;
-	size_t tok_col;
-	std::string tok_fname;
-	std::string tok_lit;
-};
-
 bool tokenize(
 	/*IN*/ std::string const& code,
-	/*IN*/ lexer const& lxr,
-	/*OUT*/ token_seq& cont
+	/*IN*/ lexer const& lxr
 	);
 
 END_NS_SASL_PARSER();

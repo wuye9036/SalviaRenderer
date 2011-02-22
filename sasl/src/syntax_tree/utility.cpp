@@ -210,7 +210,7 @@ void follow_up_traversal( boost::shared_ptr<node> root, boost::function<void( no
 
 boost::shared_ptr<buildin_type> create_buildin_type( const buildin_type_code& btc )
 {
-	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_attr::null() );
+	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_t::null() );
 	ret->value_typecode = btc;
 	return ret;
 }
@@ -228,7 +228,7 @@ void store_node_to_data( any* lhs, shared_ptr< NodeT > rhs ){
 	BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member = BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member;
 
 #define SASL_SWALLOW_CLONE_NODE( output, v, node_type, member_seq ) \
-	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_attr::null() ); \
+	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_t::null() ); \
 	BOOST_PP_SEQ_FOR_EACH( COPY_VALUE_ITEM, (cloned, v), member_seq ); \
 	store_node_to_data( (output), cloned );
 
@@ -250,7 +250,7 @@ template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& 
 	copy_from_any( BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member, member_dup );
 
 #define SASL_DEEP_CLONE_NODE( dest_any_ptr, src_v_ref, node_type, member_seq )	\
-	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_attr::null() ); \
+	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_t::null() ); \
 	boost::any member_dup; \
 	BOOST_PP_SEQ_FOR_EACH( DEEPCOPY_VALUE_ITEM, (cloned, src_v_ref), member_seq ); \
 	store_node_to_data( (dest_any_ptr), cloned );

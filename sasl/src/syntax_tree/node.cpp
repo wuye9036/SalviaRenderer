@@ -7,7 +7,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 using ::sasl::semantic::semantic_info;
 
-node::node(syntax_node_types tid, shared_ptr<token_attr> tok )
+node::node(syntax_node_types tid, shared_ptr<token_t> tok )
 : type_id(tid), tok(tok)
 {
 	// DO NOTHING
@@ -42,7 +42,7 @@ void node::codegen_ctxt( boost::shared_ptr<class ::sasl::code_generator::codegen
 }
 
 
-boost::shared_ptr<token_attr> node::token() const{
+boost::shared_ptr<token_t> node::token() const{
 	return tok;
 }
 

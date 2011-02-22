@@ -2,7 +2,7 @@
 #define SASL_SYNTAX_TREE_NODE_H
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
-#include <sasl/include/common/token_attr.h>
+#include <sasl/include/common/token.h>
 #include <sasl/enums/syntax_node_types.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -15,7 +15,7 @@
 
 namespace sasl{
 	namespace common{
-		struct token_attr;
+		struct token_t;
 	}
 
 	namespace semantic{
@@ -37,7 +37,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 class syntax_tree_visitor;
 
-using ::sasl::common::token_attr;
+using ::sasl::common::token_t;
 
 struct node{
 	friend class swallow_duplicator;
@@ -57,7 +57,7 @@ struct node{
 	boost::shared_ptr<class ::sasl::code_generator::codegen_context> codegen_ctxt() const;
 	void codegen_ctxt( boost::shared_ptr<class ::sasl::code_generator::codegen_context> ) const;
 
-	boost::shared_ptr<token_attr> token() const;
+	boost::shared_ptr<token_t> token() const;
 	syntax_node_types node_class() const;
 
 	virtual SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() = 0;
@@ -66,12 +66,12 @@ struct node{
 	::std::vector< ::boost::shared_ptr< node > >& additionals();
 
 protected:
-	node(syntax_node_types tid, boost::shared_ptr<token_attr> tok);
+	node(syntax_node_types tid, boost::shared_ptr<token_t> tok);
 	node& operator = ( const node& );
 	node( const node& );
 
-	syntax_node_types				type_id;
-	boost::shared_ptr<token_attr>	tok;
+	syntax_node_types			type_id;
+	boost::shared_ptr<token_t>	tok;
 	boost::weak_ptr<class ::sasl::semantic::symbol>	sym;
 
 	boost::shared_ptr<class ::sasl::semantic::semantic_info> seminfo;

@@ -34,7 +34,7 @@
 
 namespace sasl{
 	namespace common{
-		struct token_attr;
+		struct token_t;
 	}
 }
 

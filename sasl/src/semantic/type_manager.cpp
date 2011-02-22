@@ -265,7 +265,7 @@ type_entry::id_t type_manager::get( const buildin_type_code& btc ){
 	// Otherwise create a new type and push into type manager.
 	type_entry::id_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( buildin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
-		shared_ptr< buildin_type > bt = create_node<buildin_type>( token_attr::null() );
+		shared_ptr< buildin_type > bt = create_node<buildin_type>( token_t::null() );
 		bt->value_typecode = btc;
 		return get( bt, rootsym.lock() );
 	} else {

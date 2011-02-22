@@ -5,12 +5,12 @@
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-using sasl::common::token_attr;
+using sasl::common::token_t;
 
 void instantiate(){
 	create_node<program>( (const char*)0 );
-	create_node<variable_declaration>( token_attr::null() );
-	create_node<parameter>( token_attr::null() );
+	create_node<variable_declaration>( token_t::null() );
+	create_node<parameter>( token_t::null() );
 }
 
 END_NS_SASL_SYNTAX_TREE();

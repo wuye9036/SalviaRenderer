@@ -6,15 +6,15 @@
 #include <string>
 
 namespace sasl{ namespace common{
-	struct token_attr;
+	struct token_t;
 } }
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-using sasl::common::token_attr;
+using sasl::common::token_t;
 
 struct identifier: public node{
-	identifier( boost::shared_ptr<token_attr> tok );
+	identifier( boost::shared_ptr<token_t> tok );
 	std::string name;
 };
 

@@ -35,7 +35,7 @@
 BEGIN_NS_SASL_SEMANTIC();
 
 using ::sasl::common::compiler_info_manager;
-using ::sasl::common::token_attr;
+using ::sasl::common::token_t;
 
 using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::buildin_type;

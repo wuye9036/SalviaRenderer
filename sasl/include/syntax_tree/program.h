@@ -12,7 +12,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 class syntax_tree_visitor;
 struct declaration;
-struct token_attr;
+struct token_t;
 
 struct program: public node{
 
@@ -25,7 +25,7 @@ struct program: public node{
 
 protected:
 	program(const std::string& name);
-	program( boost::shared_ptr<token_attr> );
+	program( boost::shared_ptr<token_t> );
 	program& operator = (const program&);
 	program( const program& );
 };

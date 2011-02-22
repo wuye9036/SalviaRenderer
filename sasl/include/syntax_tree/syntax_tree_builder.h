@@ -74,7 +74,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //
 //// normal expression variant extractor
 //struct expression_variant_visitor: public parser_tree_variant_visitor< boost::shared_ptr<expression> >{
-//	typedef token_attr constant_t;
+//	typedef token constant_t;
 //
 //	expression_variant_visitor( syntax_tree_builder* builder, ast_builder_context& ctxt );
 //
@@ -94,7 +94,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //	boost::shared_ptr<expression> operator()( const sasl::parser_tree::idx_expression& v );
 //	boost::shared_ptr<expression> operator()( const sasl::parser_tree::call_expression& v);
 //	boost::shared_ptr<expression> operator()( const sasl::parser_tree::mem_expression& v);
-//	boost::shared_ptr<expression> operator()( const token_attr& v);
+//	boost::shared_ptr<expression> operator()( const token& v);
 //
 //private:
 //	template< typename STPostExpressionT, typename ExpressionPostT  >
@@ -127,7 +127,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //		return builder->build(v, ctxt)->typed_handle<type_specifier>();
 //	}
 //
-//	boost::shared_ptr<type_specifier> operator() ( token_attr const& v );
+//	boost::shared_ptr<type_specifier> operator() ( token const& v );
 //private:
 //	static boost::unordered_map< std::string, boost::shared_ptr<buildin_type> > typemap;
 //};
@@ -136,8 +136,8 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //	/*******************/
 //	/* terminals build */
 //	/*******************/
-//	operators build_operator( const sasl::common::token_attr& v, operators modifier = operators::none );
-//	boost::shared_ptr<constant_expression> build_constant( const sasl::common::token_attr& v );
+//	operators build_operator( const sasl::common::token& v, operators modifier = operators::none );
+//	boost::shared_ptr<constant_expression> build_constant( const sasl::common::token& v );
 //
 //	/*************************/
 //	/* non-terminals builder */
@@ -249,7 +249,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //
 //	boost::shared_ptr<expression> composite_binary_expression(
 //		const boost::shared_ptr<expression>& lexpr,
-//		const boost::shared_ptr<token_attr>& op,
+//		const boost::shared_ptr<token>& op,
 //		const boost::shared_ptr<expression>& rexpr,
 //		ast_builder_context& /*ctxt*/
 //		)

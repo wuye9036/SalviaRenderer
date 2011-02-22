@@ -12,7 +12,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/common/compiler_info_manager.h
 	${SASL_HOME_DIR}/sasl/include/common/compiler_information.h
 	${SASL_HOME_DIR}/sasl/include/common/lex_context.h
-	${SASL_HOME_DIR}/sasl/include/common/token_attr.h
+	${SASL_HOME_DIR}/sasl/include/common/token.h
 )
 
 set( SOURCE_FILES

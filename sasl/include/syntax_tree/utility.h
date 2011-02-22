@@ -36,7 +36,7 @@ void map_of_buildin_type( ContainerT& cont, const PredT& pred){
 	const btc_list_t& btclst( sasl_ehelper::list_of_buildin_type_codes() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
-			boost::shared_ptr<buildin_type> bt = create_node<buildin_type>( token_attr::null() );
+			boost::shared_ptr<buildin_type> bt = create_node<buildin_type>( token_t::null() );
 			bt->value_typecode = *it;
 			boost::assign::insert( cont )(*it, bt );
 		}
