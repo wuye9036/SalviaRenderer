@@ -6,6 +6,7 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <exception>
 #include <vector>
 
 #include <sasl/include/parser/parser_forward.h>
@@ -18,7 +19,23 @@ namespace sasl{
 
 BEGIN_NS_SASL_PARSER();
 
+typedef boost::shared_ptr< sasl::common::token_t > token_ptr;
+typedef std::vector< token_ptr > token_seq;
+typedef token_seq::iterator token_iterator;
+
 class attribute_visitor{
+};
+
+class parser;
+class expectation_failure: public std::exception{
+public:
+	expectation_failure( token_iterator iter, parser const* p  );
+	parser const* get_parser();
+	virtual const char* what() const;
+private:
+	token_iterator iter;
+	parser const* p;
+	std::string what_str;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -61,17 +78,19 @@ public:
 	std::vector< boost::shared_ptr<attribute> > attrs;
 };
 
-typedef boost::shared_ptr< sasl::common::token_t > token_ptr;
-typedef std::vector< token_ptr > token_seq;
-typedef token_seq::iterator token_iterator;
-
 //////////////////////////////////////////////////////////////////////////
 // Parser combinators.
 class parser{
 public:
+	parser();
 	virtual bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const = 0;
+	bool is_expected() const;
+	void is_expected( bool v );
+
 	virtual boost::shared_ptr<parser> clone() const = 0;
 	virtual ~parser(){}
+private:
+	bool expected;
 };
 
 class terminal: public parser{
@@ -121,8 +140,7 @@ public:
 	queuer();
 	queuer( queuer const& rhs );
 
-	queuer& append( boost::shared_ptr<parser> p );
-
+	queuer& append( boost::shared_ptr<parser> p, bool is_expected = false );
 	std::vector< boost::shared_ptr<parser> > const& exprs() const;
 
 	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
@@ -159,6 +177,7 @@ public:
 	rule_wrapper( rule const & rhs );
 	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
 	boost::shared_ptr<parser> clone() const;
+	std::string const& name() const;
 private:
 	rule_wrapper& operator = ( rule_wrapper const & );
 	rule const& r;
@@ -173,10 +192,8 @@ selector operator | ( selector const & expr0, parser const& expr1 );
 selector operator | ( selector const & expr0, selector const & expr1 );
 queuer operator >> ( parser const& expr0, parser const& expr1 );
 queuer operator >> ( queuer const& expr0, parser const& expr1 );
-queuer operator >> ( queuer const& expr0, queuer const& expr1 );
 queuer operator > ( parser const& expr0, parser const& expr1 );
 queuer operator > ( queuer const& expr0, parser const& expr1 );
-queuer operator > ( queuer const& expr0, queuer const& expr1 );
 
 END_NS_SASL_PARSER();
 

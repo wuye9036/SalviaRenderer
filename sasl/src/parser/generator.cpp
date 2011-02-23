@@ -5,6 +5,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/preprocessor.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -20,6 +21,32 @@ using std::cout;
 using std::endl;
 
 BEGIN_NS_SASL_PARSER();
+//////////////////////////////////////////////////////////////////////////
+// Exceptions
+expectation_failure::expectation_failure( token_iterator iter, parser const* p ): iter(iter), p(p)
+{
+	rule_wrapper const* r = dynamic_cast<rule_wrapper const*>(p);
+	if( r ){
+		what_str = str(
+			boost::format("can't match expected rule \"%s\"") % r->name()
+			);
+	} else {
+		// TODO: For token & default
+
+#if	defined( EFLIB_CPU_X64 )
+		what_str = str(
+			boost::format( "can't match unknown parser at 0x%016p") % p
+			);
+#else
+		what_str = str(
+			boost::format( "can't match unknown parser at 0x%08p") % p
+			);
+#endif
+	}
+}
+
+parser const* expectation_failure::get_parser(){ return p; }
+const char* expectation_failure::what() const {	return what_str.c_str(); }
 
 //////////////////////////////////////////////////////////////////////////
 // Attributes.
@@ -40,6 +67,9 @@ void queuer_attribute::accept( attribute_visitor& v, boost::any& ctxt ){}
 //////////////////////////////////////////////////////////////////////////
 // Parsers
 
+parser::parser(): expected(false){}
+bool parser::is_expected() const{ return expected; }
+void parser::is_expected( bool v ){ expected = v; }
 
 terminal::terminal( size_t tok_id ) :tok_id(tok_id){}
 
@@ -102,7 +132,6 @@ shared_ptr<parser> repeater::clone() const
 	return make_shared<repeater>(*this);
 }
 
-
 selector::selector(){}
 
 selector::selector( selector const& rhs ) : slc_branches(rhs.slc_branches){}
@@ -151,8 +180,9 @@ queuer::queuer(){}
 
 queuer::queuer( queuer const& rhs ) :exprlst(rhs.exprlst){}
 
-queuer& queuer::append( shared_ptr<parser> p )
+queuer& queuer::append( shared_ptr<parser> p, bool is_expected )
 {
+	p->is_expected(is_expected);
 	exprlst.push_back(p);
 	return *this;
 }
@@ -170,9 +200,12 @@ bool queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribu
 
 	shared_ptr<attribute> out;
 	BOOST_FOREACH( shared_ptr<parser> p, exprlst ){
-		out.reset();	
+		out.reset();
 		if( ! p->parse(iter, end, out ) ){
 			iter = stored;
+			if( p->is_expected() ){
+				throw expectation_failure(iter, p.get() );
+			}
 			return false;
 		}
 		ret->attrs.push_back(out);
@@ -254,6 +287,10 @@ shared_ptr<parser> rule_wrapper::clone() const{
 	return make_shared<rule_wrapper>(*this);
 }
 
+std::string const& rule_wrapper::name() const{
+	return r.name();
+}
+
 repeater operator * ( parser const & expr ){
 	return repeater( 0, repeater::unlimited, expr.clone() );
 }
@@ -289,28 +326,12 @@ queuer operator >> ( queuer const& expr0, parser const& expr1 ){
 	return queuer(expr0).append(expr1.clone());
 }
 
-queuer operator >> ( queuer const& expr0, queuer const& expr1 ){
-	queuer ret(expr0);
-	BOOST_FOREACH( shared_ptr<parser> expr, expr1.exprs() ){
-		ret.append(expr);
-	}
-	return ret;
-}
-
 queuer operator > ( parser const& expr0, parser const& expr1 ){
-	return queuer().append(expr0.clone()).append(expr1.clone());
+	return queuer().append(expr0.clone()).append(expr1.clone(), true);
 }
 
 queuer operator > ( queuer const& expr0, parser const& expr1 ){
-	return queuer(expr0).append(expr1.clone());
-}
-
-queuer operator > ( queuer const& expr0, queuer const& expr1 ){
-	queuer ret(expr0);
-	BOOST_FOREACH( shared_ptr<parser> expr, expr1.exprs() ){
-		ret.append(expr);
-	}
-	return ret;
+	return queuer(expr0).append(expr1.clone(), true);
 }
 
 END_NS_SASL_PARSER();

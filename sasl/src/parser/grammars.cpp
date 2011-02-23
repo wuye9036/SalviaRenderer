@@ -37,7 +37,7 @@ void grammars::set_decls()
 			| function_decl
 			| struct_decl
 			| typedef_decl
-		) >> STERM(semicolon)
+		) > STERM(semicolon)
 		);
 	SRULE( function_def, function_decl >> function_body	);
 	SRULE( vardecl, declspec >> decllist );
@@ -76,7 +76,7 @@ void grammars::set_exprs()
 	SRULE( postexpr, pmexpr >> *(idxexpr | callexpr | memexpr | opinc) );
 	SRULE( idxexpr, lsbracket >> expr > rsbracket );
 	SRULE( callexpr, lparen >> -expr > rparen );
-	SRULE( memexpr, STERM(dot) > ident );
+	SRULE( memexpr, opmember > ident );
 	SRULE( pmexpr, lit_const | ident | parenexpr );
 	SRULE( parenexpr, lparen >> expr > rparen );
 }
