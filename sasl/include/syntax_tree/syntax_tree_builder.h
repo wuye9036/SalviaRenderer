@@ -16,7 +16,25 @@
 #include <boost/variant.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+namespace sasl{
+	namespace parser{
+		class attribute;
+		class lexer;
+		class grammars;
+	}
+}
+
 BEGIN_NS_SASL_SYNTAX_TREE();
+
+class syntax_tree_builder{
+public:
+	syntax_tree_builder( sasl::parser::lexer& l, sasl::parser::grammars& g );
+	boost::shared_ptr<program> build_prog( boost::shared_ptr< sasl::parser::attribute > attr );
+private:
+	syntax_tree_builder& operator = ( syntax_tree_builder const& );
+	sasl::parser::lexer& l;
+	sasl::parser::grammars& g;
+};
 //
 //struct syntax_tree_builder;
 //

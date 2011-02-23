@@ -15,10 +15,13 @@ namespace sasl{
 	}
 	namespace parser{
 		class attribute;
+		class lexer;
+		class grammars;
 		void parse(
 			boost::shared_ptr<attribute>& pt_root,
 			const std::string& code,
-			boost::shared_ptr< ::sasl::common::lex_context > ctxt
+			boost::shared_ptr< ::sasl::common::lex_context > ctxt,
+			lexer& l, grammars& g
 			);
 	}
 }

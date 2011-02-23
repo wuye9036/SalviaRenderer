@@ -1,18 +1,27 @@
-//#include <sasl/include/syntax_tree/syntax_tree_builder.h>
-//
-//#include <sasl/include/syntax_tree/make_tree.h>
-//
-//#include <eflib/include/diagnostics/assert.h>
-//
-//#include <eflib/include/platform/boost_begin.h>
-//#include <boost/foreach.hpp>
-//#include <eflib/include/platform/boost_end.h>
-//
-//using boost::shared_ptr;
-//using boost::unordered_map;
-//using sasl::common::token;
-//
-//BEGIN_NS_SASL_SYNTAX_TREE();
+#include <sasl/include/syntax_tree/syntax_tree_builder.h>
+
+#include <sasl/include/parser/lexer.h>
+#include <sasl/include/parser/generator.h>
+#include <sasl/include/parser/grammars.h>
+
+// #include <eflib/include/diagnostics/assert.h>
+
+#include <eflib/include/platform/boost_begin.h>
+// #include <boost/foreach.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+using sasl::common::token_t;
+
+using sasl::parser::attribute;
+using sasl::parser::grammars;
+using sasl::parser::lexer;
+using sasl::parser::sequence_attribute;
+
+using boost::shared_polymorphic_cast;
+using boost::shared_ptr;
+
+
+BEGIN_NS_SASL_SYNTAX_TREE();
 //
 //expression_variant_visitor::expression_variant_visitor( syntax_tree_builder* builder, ast_builder_context& ctxt )
 //: base_visitor(builder, ctxt){
@@ -449,5 +458,25 @@
 //	EFLIB_ASSERT_UNIMPLEMENTED();
 //	return shared_ptr<type_specifier>();
 //}
-//
-//END_NS_SASL_SYNTAX_TREE()
+#define SASL_TYPED_ATTRIBUTE( type, dest, src ) \
+	shared_ptr< type > dest = shared_polymorphic_cast<type>(src);
+
+syntax_tree_builder::syntax_tree_builder( lexer& l, grammars& g ): l(l), g(g){}
+
+shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > attr )
+{
+	shared_ptr<program> ret;
+	
+	SASL_TYPED_ATTRIBUTE(sequence_attribute, typed_attr, attr);
+
+	if( typed_attr ){
+		ret = create_node<program>("prog");
+
+		// TODO: Declarations
+	}
+	return ret;
+}
+
+END_NS_SASL_SYNTAX_TREE()
+
+

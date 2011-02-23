@@ -37,11 +37,8 @@ BOOST_AUTO_TEST_CASE( program_test ){
 	shared_ptr<sasl::parser::attribute> pt_prog;
 	shared_ptr<lex_context> lexctxt( new lex_context_test_impl() );
 	std::string code(
-		"int a"
+		"int a;"
 		);
-
-	::sasl::parser::parse( pt_prog, code, lexctxt );
-	BOOST_REQUIRE( pt_prog );
 
 	shared_ptr< ::sasl::syntax_tree::program > prog = ::sasl::syntax_tree::parse( code, lexctxt );
 	BOOST_REQUIRE( prog );
