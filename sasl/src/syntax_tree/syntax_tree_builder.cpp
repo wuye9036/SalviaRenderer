@@ -18,9 +18,11 @@ using sasl::parser::lexer;
 using sasl::parser::queuer_attribute;
 using sasl::parser::selector_attribute;
 using sasl::parser::sequence_attribute;
+using sasl::parser::terminal_attribute;
 
 using boost::shared_polymorphic_cast;
 using boost::shared_ptr;
+using boost::unordered_map;
 
 using std::vector;
 
@@ -89,14 +91,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //	return ret;
 //}
 //
-//#define INSERT_INTO_TYPEMAP( litname, enum_code ) \
-//	{	\
-//		shared_ptr<buildin_type> bt = create_node<buildin_type>( token::null() );	\
-//		bt->value_typecode = buildin_type_code::enum_code;	\
-//		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
-//	}
-//
-//unordered_map< std::string, shared_ptr<buildin_type> > type_visitor::typemap;
+
 //shared_ptr<type_specifier> type_visitor::operator()( token const& v )
 //{
 //	// Initialize code
@@ -478,6 +473,44 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 #define SASL_DEFAULT() else
 #define SASL_END_SWITCH_RULE() }
 
+
+#define INSERT_INTO_TYPEMAP( litname, enum_code ) \
+	{	\
+		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_t::null() );	\
+		bt->value_typecode = buildin_type_code::enum_code;	\
+		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
+	}
+
+namespace builder_details{
+	unordered_map< std::string, shared_ptr<buildin_type> > typemap;
+	void initialize_typemap(){
+		if( typemap.empty() ){
+			INSERT_INTO_TYPEMAP( sbyte,    _sint8   );
+			INSERT_INTO_TYPEMAP( int8_t,   _sint8   );
+			INSERT_INTO_TYPEMAP( ubyte,    _uint8   );
+			INSERT_INTO_TYPEMAP( uint8_t,  _uint8   );
+			INSERT_INTO_TYPEMAP( short,    _sint16  );
+			INSERT_INTO_TYPEMAP( int16_t,  _sint16  );
+			INSERT_INTO_TYPEMAP( ushort,   _uint16  );
+			INSERT_INTO_TYPEMAP( uint16_t, _uint16  );
+			INSERT_INTO_TYPEMAP( int,      _sint32  );
+			INSERT_INTO_TYPEMAP( int32_t,  _sint32  );
+			INSERT_INTO_TYPEMAP( uint,     _uint32  );
+			INSERT_INTO_TYPEMAP( uint32_t, _uint32  );
+			INSERT_INTO_TYPEMAP( long,     _uint32  );
+			INSERT_INTO_TYPEMAP( int64_t,  _sint64  );
+			INSERT_INTO_TYPEMAP( ulong,    _sint64  );
+			INSERT_INTO_TYPEMAP( uint64_t, _uint64  );
+
+			INSERT_INTO_TYPEMAP( float,    _float   );
+			INSERT_INTO_TYPEMAP( double,   _double  );
+			INSERT_INTO_TYPEMAP( bool,     _boolean );
+			INSERT_INTO_TYPEMAP( void,     _void    );
+		}
+	}
+}
+using builder_details::typemap;
+
 syntax_tree_builder::syntax_tree_builder( lexer& l, grammars& g ): l(l), g(g){}
 
 shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > attr )
@@ -576,16 +609,74 @@ shared_ptr<type_specifier> syntax_tree_builder::build_typespec( shared_ptr<attri
 	return build_postqualedtype( attr );
 }
 
-vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators( shared_ptr<attribute> attr )
-{
+vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators( shared_ptr<attribute> attr ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return vector< shared_ptr<declarator> >();
 }
 
+shared_ptr<type_specifier> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute> attr ){
+	shared_ptr<type_specifier> ret;
+
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+
+	SASL_SWITCH_RULE( typed_attr->attr )
+		SASL_CASE_RULE( ident ){
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, typed_attr->attr );
+			builder_details::initialize_typemap();
+			if ( typemap.count(ident_attr->tok->str) > 0 ){
+				return typemap[ident_attr->tok->str];
+			}
+
+			shared_ptr<alias_type> type_ident = create_node<alias_type>( token_t::null() );
+			type_ident->alias = ident_attr->tok->make_copy();
+
+			return type_ident;
+		}
+		SASL_CASE_RULE( struct_decl ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return ret;
+		}
+		SASL_DEFAULT(){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	SASL_END_SWITCH_RULE();
+
+	return ret;
+}
+
+shared_ptr<type_specifier> syntax_tree_builder::build_prequaledtype( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	shared_ptr<type_specifier> ret_type = build_unqualedtype( typed_attr->attrs[1] );
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[0] );
+	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
+		ret_type = bind_typequal( attr, ret_type );
+	}
+
+	return ret_type;
+}
+
 shared_ptr<type_specifier> syntax_tree_builder::build_postqualedtype( shared_ptr<attribute> attr )
 {
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	shared_ptr<type_specifier> ret_type = build_prequaledtype( typed_attr->attrs[0] );
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
+		ret_type = bind_typequal( ret_type, attr );
+	}
+
+	return ret_type;
+}
+
+shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<type_specifier> unqual, shared_ptr<attribute> qual ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<type_specifier>();
+	return unqual;
+}
+
+shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<attribute> qual, shared_ptr<type_specifier> unqual ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return unqual;
 }
 
 END_NS_SASL_SYNTAX_TREE()
