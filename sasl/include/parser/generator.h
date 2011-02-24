@@ -149,6 +149,17 @@ private:
 	std::vector< boost::shared_ptr<parser> > exprlst;
 };
 
+class negnativer: public parser{
+public:
+	negnativer( boost::shared_ptr<parser> );
+	negnativer( negnativer const& rhs );
+
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	boost::shared_ptr<parser> clone() const;
+private:
+	boost::shared_ptr<parser> expr;
+};
+
 class rule : public parser{
 public:
 	rule();
@@ -183,6 +194,13 @@ private:
 	rule const& r;
 };
 
+class endholder: public parser{
+public:
+	endholder();
+	endholder ( endholder const & );
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	boost::shared_ptr<parser> clone() const;
+};
 //////////////////////////////////////////////////////////////////////////
 // Operators for building parser combinator.
 repeater operator * ( parser const & expr );
@@ -194,6 +212,7 @@ queuer operator >> ( parser const& expr0, parser const& expr1 );
 queuer operator >> ( queuer const& expr0, parser const& expr1 );
 queuer operator > ( parser const& expr0, parser const& expr1 );
 queuer operator > ( queuer const& expr0, parser const& expr1 );
+negnativer operator !( parser const& expr1 );
 
 END_NS_SASL_PARSER();
 

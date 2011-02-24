@@ -4,10 +4,10 @@
 #include <sasl/include/parser/generator.h>
 #include <sasl/include/parser/grammars.h>
 
-// #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
-// #include <boost/foreach.hpp>
+#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using sasl::common::token_t;
@@ -15,11 +15,14 @@ using sasl::common::token_t;
 using sasl::parser::attribute;
 using sasl::parser::grammars;
 using sasl::parser::lexer;
+using sasl::parser::queuer_attribute;
+using sasl::parser::selector_attribute;
 using sasl::parser::sequence_attribute;
 
 using boost::shared_polymorphic_cast;
 using boost::shared_ptr;
 
+using std::vector;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 //
@@ -461,6 +464,20 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 #define SASL_TYPED_ATTRIBUTE( type, dest, src ) \
 	shared_ptr< type > dest = shared_polymorphic_cast<type>(src);
 
+#define SASL_DYNCAST_ATTRIBUTE( type, dest, src ) \
+	shared_ptr< type > dest = shared_dynamic_cast<type>(src);
+
+#define SASL_SWITCH_RULE( attr ) \
+	{ \
+		intptr_t rule_attr_id = attr->rule_id(); \
+		if( rule_attr_id < -1 ) { \
+			EFLIB_ASSERT( rule_attr_id >= -1, "Rule ID must be in [-1, 2^31-1]" ); \
+		}
+
+#define SASL_CASE_RULE( rule ) else if ( rule_attr_id == g.rule.id() )
+#define SASL_DEFAULT() else
+#define SASL_END_SWITCH_RULE() }
+
 syntax_tree_builder::syntax_tree_builder( lexer& l, grammars& g ): l(l), g(g){}
 
 shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > attr )
@@ -472,9 +489,103 @@ shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > att
 	if( typed_attr ){
 		ret = create_node<program>("prog");
 
-		// TODO: Declarations
+		BOOST_FOREACH( shared_ptr<attribute> decl_attr, typed_attr->attrs ){
+			shared_ptr<declaration> decl = build_decl( decl_attr );
+			if(decl){
+				ret->decls.push_back(decl);
+			}
+		}
 	}
+
 	return ret;
+}
+
+boost::shared_ptr<declaration> syntax_tree_builder::build_decl( shared_ptr<attribute> attr )
+{
+	shared_ptr<declaration> ret;
+	
+	SASL_TYPED_ATTRIBUTE(selector_attribute, typed_attr, attr);
+	EFLIB_ASSERT_AND_IF( typed_attr->selected_idx >= 0, "Attribute error: least one branch was selected." ){
+		return ret;
+	}
+	
+	SASL_SWITCH_RULE( typed_attr->attr )
+		SASL_CASE_RULE( basic_decl ){
+			return build_basic_decl( typed_attr->attr );
+		}
+		SASL_CASE_RULE( function_def ){
+			return ret;
+		}
+	SASL_END_SWITCH_RULE();
+
+	return ret;
+}
+
+shared_ptr<declaration> syntax_tree_builder::build_basic_decl( shared_ptr<attribute> attr ){
+	shared_ptr<declaration> ret;
+
+	SASL_TYPED_ATTRIBUTE(queuer_attribute, typed_attr, attr);
+	EFLIB_ASSERT_AND_IF( typed_attr->attrs.size() == 3, "Basic declaration must not a empty queuer." ){
+		return ret;
+	}
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, decl_attr, typed_attr->attrs[1] );
+	if( decl_attr->attrs.empty() ){
+		// Null declaration. ";" only.
+		return ret;
+	}
+
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_decl_attr, decl_attr->attrs[0] );
+	
+	SASL_SWITCH_RULE( typed_decl_attr->attr )
+		SASL_CASE_RULE( vardecl ){
+			return build_vardecl(typed_decl_attr->attr);
+		}
+		SASL_CASE_RULE( function_decl ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		SASL_CASE_RULE( struct_decl ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		SASL_CASE_RULE( typedef_decl ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		SASL_DEFAULT(){
+			assert(!"Unknown declaration!");
+		}
+	SASL_END_SWITCH_RULE();
+
+	return ret;
+}
+
+shared_ptr<variable_declaration> syntax_tree_builder::build_vardecl( shared_ptr<attribute> attr ){
+	shared_ptr<variable_declaration> ret;
+
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+
+	assert( typed_attr->attrs.size() == 2 );
+
+	ret = create_node<variable_declaration>( token_t::null() );
+	ret->type_info = build_typespec( typed_attr->attrs[0] );
+	ret->declarators = build_declarators( typed_attr->attrs[1] );
+	
+	return ret;
+}
+
+shared_ptr<type_specifier> syntax_tree_builder::build_typespec( shared_ptr<attribute> attr ){
+	return build_postqualedtype( attr );
+}
+
+vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators( shared_ptr<attribute> attr )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return vector< shared_ptr<declarator> >();
+}
+
+shared_ptr<type_specifier> syntax_tree_builder::build_postqualedtype( shared_ptr<attribute> attr )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<type_specifier>();
 }
 
 END_NS_SASL_SYNTAX_TREE()

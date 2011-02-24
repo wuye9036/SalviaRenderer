@@ -31,13 +31,12 @@ void grammars::set_decls()
 	SRULE( decl, basic_decl | function_def );
 	SRULE(
 		basic_decl,
-		STERM(semicolon) 
-		| ( 
-			vardecl
-			| function_decl
-			| struct_decl
-			| typedef_decl
-		) > STERM(semicolon)
+		!eof >
+		-(vardecl
+		| function_decl
+		| struct_decl
+		| typedef_decl ) >
+		STERM(semicolon)
 		);
 	SRULE( function_def, function_decl >> function_body	);
 	SRULE( vardecl, declspec >> decllist );
@@ -186,6 +185,7 @@ void grammars::set_terms()
 	SRULE( semicolon,	STERM(semicolon) );
 
 	SRULE( ident,		STERM(ident) );
+	SRULE( eof,			endholder() );
 }
 
 END_NS_SASL_PARSER();

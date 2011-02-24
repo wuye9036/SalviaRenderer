@@ -76,7 +76,8 @@ public:
 		question,
 		colon, comma, semicolon,
 
-		ident
+		ident,
+		eof
 		;
 private:
 	grammars& operator = ( grammars const & );

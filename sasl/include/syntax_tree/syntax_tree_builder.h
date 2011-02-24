@@ -26,10 +26,36 @@ namespace sasl{
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
+class builder_context{
+	builder_context( const builder_context& rhs, bool reset_gen_node = true )
+		: parent(rhs.parent), gen_node( reset_gen_node ? boost::shared_ptr<node>() : rhs.gen_node )
+	{
+	}
+
+	builder_context(
+		boost::shared_ptr<node> parent = boost::shared_ptr<node>(),
+		boost::shared_ptr<node> gen_node = boost::shared_ptr<node>()
+		): parent( parent ), gen_node( gen_node )
+	{
+	}
+
+	boost::shared_ptr<node> unqual_type;
+	boost::shared_ptr<node> parent;
+	boost::shared_ptr<node> gen_node;
+
+};
 class syntax_tree_builder{
 public:
 	syntax_tree_builder( sasl::parser::lexer& l, sasl::parser::grammars& g );
 	boost::shared_ptr<program> build_prog( boost::shared_ptr< sasl::parser::attribute > attr );
+	boost::shared_ptr<declaration> build_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<declaration> build_basic_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<variable_declaration> build_vardecl( boost::shared_ptr<sasl::parser::attribute> attr );
+
+	boost::shared_ptr<type_specifier> build_typespec( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<type_specifier> build_postqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
+
+	std::vector< boost::shared_ptr<declarator> > build_declarators( boost::shared_ptr<sasl::parser::attribute> attr );
 private:
 	syntax_tree_builder& operator = ( syntax_tree_builder const& );
 	sasl::parser::lexer& l;
@@ -40,22 +66,7 @@ private:
 //
 //struct ast_builder_context{
 //
-//	ast_builder_context( const ast_builder_context& rhs, bool reset_gen_node = true )
-//		: parent(rhs.parent), gen_node( reset_gen_node ? boost::shared_ptr<node>() : rhs.gen_node )
-//	{
-//	}
-//
-//	ast_builder_context(
-//		boost::shared_ptr<node> parent = boost::shared_ptr<node>(),
-//		boost::shared_ptr<node> gen_node = boost::shared_ptr<node>()
-//		): parent( parent ), gen_node( gen_node )
-//	{
-//	}
-//
-//	boost::shared_ptr<node> unqual_type;
-//	boost::shared_ptr<node> parent;
-//	boost::shared_ptr<node> gen_node;
-//
+
 //};
 //
 //template<typename ResultT>

@@ -154,9 +154,9 @@ bool selector::parse( token_iterator& iter, token_iterator end, shared_ptr<attri
 	int idx = 0;
 	BOOST_FOREACH( shared_ptr<parser> p, branches() )
 	{
-		if( p->parse(iter, end, attr) ){
-			slc_attr->attr = attr;
+		if( p->parse(iter, end, slc_attr->attr) ){
 			slc_attr->selected_idx = idx;
+			attr = slc_attr;
 			return true;
 		}
 		++idx;
@@ -218,6 +218,18 @@ bool queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribu
 shared_ptr<parser> queuer::clone() const
 {
 	return make_shared<queuer>( *this );
+}
+
+negnativer::negnativer( boost::shared_ptr<parser> p ): expr(p){}
+negnativer::negnativer( negnativer const& rhs ): expr(rhs.expr){}
+
+bool negnativer::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const{
+	if ( !expr ) {return false;}
+	return !expr->parse(iter, end, attr);
+}
+
+boost::shared_ptr<parser> negnativer::clone() const{
+	return make_shared<negnativer>( *this );
 }
 
 rule::rule() : preset_id(-1){}
@@ -291,6 +303,19 @@ std::string const& rule_wrapper::name() const{
 	return r.name();
 }
 
+endholder::endholder(){}
+endholder::endholder( endholder const & ){}
+bool endholder::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const{
+	if( iter == end ){
+		attr = make_shared<terminal_attribute>();
+		return true;
+	}
+	return false;
+}
+boost::shared_ptr<parser> endholder::clone() const{
+	return make_shared<endholder>();
+}
+
 repeater operator * ( parser const & expr ){
 	return repeater( 0, repeater::unlimited, expr.clone() );
 }
@@ -332,6 +357,10 @@ queuer operator > ( parser const& expr0, parser const& expr1 ){
 
 queuer operator > ( queuer const& expr0, parser const& expr1 ){
 	return queuer(expr0).append(expr1.clone(), true);
+}
+
+negnativer operator!( parser const& expr1 ){
+	return negnativer( expr1.clone() );
 }
 
 END_NS_SASL_PARSER();
