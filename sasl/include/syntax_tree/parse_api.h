@@ -15,7 +15,7 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_SYNTAX_TREE()
+BEGIN_NS_SASL_SYNTAX_TREE();
 
 struct program;
 
@@ -24,6 +24,6 @@ boost::shared_ptr<program> parse(
 	boost::shared_ptr< ::sasl::common::lex_context > ctxt
 	);
 
-END_NS_SASL_SYNTAX_TREE()
+END_NS_SASL_SYNTAX_TREE();
 
 #endif

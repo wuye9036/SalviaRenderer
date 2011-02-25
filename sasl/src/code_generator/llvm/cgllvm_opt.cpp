@@ -4,6 +4,7 @@
 #include <llvm/Module.h>
 #include <llvm/PassManager.h>
 #include <llvm/Support/StandardPasses.h>
+#include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
@@ -19,11 +20,17 @@ using llvm::Function;
 using llvm::FunctionPassManager;
 using llvm::Module;
 using llvm::PrintMessageAction;
+using llvm::raw_os_ostream;
 using llvm::verifyFunction;
+
+using boost::shared_ptr;
+
+using std::vector;
+using std::ostream;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-void optimize( boost::shared_ptr<llvm_code> code, std::vector<optimization_options> opt_options )
+void optimize( shared_ptr<llvm_code> code, vector<optimization_options> opt_options )
 {
 	Module* mod = code->module();
 
@@ -53,9 +60,15 @@ void optimize( boost::shared_ptr<llvm_code> code, std::vector<optimization_optio
 	}
 }
 
-void dump( boost::shared_ptr<llvm_code> code )
+void dump( shared_ptr<llvm_code> code )
 {
 	code->module()->dump();
+}
+
+void dump( shared_ptr<llvm_code> code, ostream& o ){
+	raw_os_ostream raw_os(o);
+	code->module()->print( raw_os, NULL );
+	raw_os.flush();
 }
 
 END_NS_SASL_CODE_GENERATOR();

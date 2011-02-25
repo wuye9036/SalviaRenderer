@@ -1,6 +1,11 @@
 #include <sasl/include/compiler/options.h>
-#include <sasl/include/syntax_tree/parse_api.h>
+
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
+#include <sasl/include/common/lex_context.h>
+#include <sasl/include/semantic/semantic_analyser.h>
+#include <sasl/include/syntax_tree/node.h>
+#include <sasl/include/syntax_tree/parse_api.h>
+#include <sasl/include/syntax_tree/program.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -10,15 +15,46 @@
 #include <iostream>
 #include <fstream>
 
+using sasl::code_generator::llvm_code;
+using sasl::code_generator::generate_llvm_code;
+using sasl::common::lex_context;
+using sasl::semantic::global_si;
+using sasl::semantic::semantic_analysis;
+using sasl::syntax_tree::node;
 using sasl::syntax_tree::parse;
+using sasl::syntax_tree::program;
 
+using boost::make_shared;
+using boost::shared_polymorphic_cast;
+using boost::shared_ptr;
 using boost::to_lower;
 
 using std::cout;
 using std::endl;
 using std::ifstream;
+using std::ofstream;
 using std::string;
 using std::vector;
+
+class lex_context_test_impl: public lex_context{
+public:
+	virtual const std::string& file_name() const{
+		return filename;
+	}
+	virtual size_t column() const{
+		return 0;
+	}
+	virtual size_t line() const{
+		return 0;
+	}
+
+	virtual void next( const std::string& /*lit*/ ){
+		return;
+	}
+
+private:
+	std::string filename;
+};
 
 BEGIN_NS_SASL_COMPILER();
 
@@ -217,6 +253,25 @@ void options_io::process( bool& abort )
 					std::istream_iterator<char>(in), std::istream_iterator<char>(),
 					std::back_inserter(code)
 					);
+				
+				shared_ptr<node> prog = parse( code, make_shared<lex_context_test_impl>() );
+				if( !prog ){
+					cout << "Syntax error happened!" << endl;
+					return;
+				}
+				shared_ptr<global_si> gsi = semantic_analysis( prog );
+				if( !gsi ){
+					cout << "Semantic error happened!" << endl;
+				}
+				shared_ptr<llvm_code> llvmcode = generate_llvm_code( gsi );
+				if( !llvmcode ){
+					cout << "Code generation error happened!" << endl;
+				}
+
+				if( !output().empty() ){
+					ofstream out_file( output(), std::ios_base::out );
+					dump( llvmcode, out_file );
+				}
 			}
 			
 		}

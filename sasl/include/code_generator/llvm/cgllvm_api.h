@@ -8,6 +8,7 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,7 @@ enum optimization_options{
 boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr< sasl::semantic::global_si > );
 void optimize( boost::shared_ptr<llvm_code>, std::vector<optimization_options> opt_options );
 void dump( boost::shared_ptr<llvm_code> );
+void dump( boost::shared_ptr<llvm_code>, std::ostream& o );
 // void optimize( boost::shared_ptr<llvm_code>, const std::string& params );
 
 END_NS_SASL_CODE_GENERATOR();
