@@ -1,6 +1,9 @@
 set ( SOFTART_HOME_DIR "${CMAKE_HOME_DIRECTORY}/../softart/" )
 set ( SASL_HOME_DIR	"${CMAKE_HOME_DIRECTORY}/../" )
 
+set( SOFTART_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_HOME_DIRECTORY}/bin/${SOFTART_PLATFORM_NAME}" )
+set( SOFTART_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_HOME_DIRECTORY}/lib/${SOFTART_PLATFORM_NAME}" )
+
 ################ configurate 3rd party library paths ###############
 set( 3rd_party_path "${SOFTART_HOME_DIR}/../3rd_party/" )
 	
