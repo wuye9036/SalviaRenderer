@@ -610,8 +610,18 @@ shared_ptr<type_specifier> syntax_tree_builder::build_typespec( shared_ptr<attri
 }
 
 vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators( shared_ptr<attribute> attr ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return vector< shared_ptr<declarator> >();
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+
+	vector< shared_ptr<declarator> > ret;
+	ret.push_back( build_initdecl(typed_attr->attrs[0]) );
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> follow_attr, follows->attrs ){
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, follow_pair, follow_attr );
+		ret.push_back( build_initdecl(follow_pair->attrs[1]) );
+	}
+
+	return ret;
 }
 
 shared_ptr<type_specifier> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute> attr ){
@@ -677,6 +687,22 @@ shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<type_s
 shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<attribute> qual, shared_ptr<type_specifier> unqual ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return unqual;
+}
+
+shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute> attr ){
+	shared_ptr<declarator> ret = create_node<declarator>( token_t::null() ) ;
+
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[0] );
+	ret->name = name_attr->tok->make_copy();
+	
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_init_attr, typed_attr->attrs[1] );
+	if( !optional_init_attr->attrs.empty() ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return ret;
 }
 
 END_NS_SASL_SYNTAX_TREE()

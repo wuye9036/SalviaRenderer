@@ -58,6 +58,7 @@ public:
 	boost::shared_ptr<type_specifier> build_postqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	std::vector< boost::shared_ptr<declarator> > build_declarators( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<declarator> build_initdecl( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<type_specifier> bind_typequal(
 		boost::shared_ptr<type_specifier> unqual,
