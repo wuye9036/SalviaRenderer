@@ -12,8 +12,17 @@ question_root = ""
 answer_root = None
 
 mode = None
+update_existed_file = None
 
 report_file = None
+
+kept_items = set([])
+updated_items = set([])
+created_items = set([])
+
+passed_items = set([])
+failed_items = set([])
+ignored_items = set([])
 
 def file_signature( path ):
 	hasher = hashlib.md5()
@@ -75,7 +84,8 @@ def test_directory( dir ):
 			
 def test_file( path ):
 	global question_root, answer_root, mode, report_file
-	
+	global kept_items, updated_items, created_items
+	global update_existed_file
 	report_str = "Test file: " + path
 	q_path = os.path.join( question_root, path )
 	a_path = os.path.join( answer_root, path )
@@ -88,22 +98,47 @@ def test_file( path ):
 	# Execute sasl_compiler to generate llvm code
 	os.system( get_compiler_executable() + " -i \"" + q_path + "\" -o \"" + tmpfile_name )
 	
+	# Generate answers
 	if mode == "g":
+		need_copy = True
 		if os.path.isfile( tmpfile_name ):
-			shutil.copyfile( tmpfile_name, a_path )
-			report_str += " ... CREATED"
+			if os.path.isfile( a_path ):
+				if file_signature(tmpfile_name) == file_signature(a_path):
+					report_str = " ... IGNORED, File needn't to be updated."
+					kept_items.add( path )
+					need_copy = False
+				else:
+					if update_existed_file == 'y':
+						updated_items.add( path )
+						report_str = " ... UPDATED"
+					else:
+						report_str = " ... IGNORED, File is diff, but update was disabled."
+						kept_items.add( path )
+			else:
+				created_items.add( path )
+				report_str = " ... CREATED"
+				
+			if need_copy:
+				shutil.copyfile( tmpfile_name, a_path )
 			os.remove( tmpfile_name )
 		else:
+			failed_items.add( path )
 			report_str += " ... FAILED, Some error occur when compiler executed."
+	
+	# Verify answers	
 	if mode == "v":
 		if not os.path.isfile( a_path ):
+			ignored_items.add( path )
 			report_str += " ... IGNORED, answer is not exists."
 		elif not os.path.isfile( tmpfile_name ):
+			failed_items.add( path )
 			report_str += " ... FAILED, Some error occur when compiler executed."
 		else:
 			if file_signature(tmpfile_name) == file_signature(a_path):
+				passed_items.add(path)
 				report_str += " ... PASSED"
 			else:
+				failed.add(path)
 				report_str += " ... FAILED, Result is not matched."
 			os.remove( tmpfile_name )
 	report_file.write(report_str + "\n")
@@ -116,11 +151,31 @@ if __name__ == "__main__":
 	while mode != 'g' and mode != 'v':
 		mode = raw_input( "Input mode('g' or 'v'):" )
 	
+	if mode == 'g':
+		while update_existed_file != 'y' and update_existed_file != 'n':
+			update_existed_file = raw_input( "Update if file existed? ('y' or 'n'):" )
+			
 	report_file = open( datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".log", "w" )
 	if mode == 'g':
 		report_file.write( "Generate auto test cases.\n" )
 	if mode == 'v':
 		report_file.write( "Verify auto test cases.\n" )
 	test_all( mode )
+	
+	repstr = ''
+	if mode == 'g':
+		repstr = "\nGenerate: "
+		repstr += str(len(created_items)) + " created, "
+		repstr += str(len(updated_items)) + " updated, "
+		repstr += str(len(kept_items)) + " skipped"
+		
+	if mode == 'v':
+		repstr = "\nTest: "
+		repstr += str(len(passed_items)) + " passed, "
+		repstr += str(len(failed_items)) + " failed, "
+		repstr += str(len(ignored_items)) + " skipped"
+		
+	report_file.write( repstr + '\n' )
 	report_file.close()
-	print( "All tested was executed!" )
+	
+	print( repstr )

@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(par1_1_fn1)->name->str == SYNCASENAME_(par1_1_fn1) );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->body == SYNCASE_(fn1_body) );
 	BOOST_CHECK( SYNCASE_(fn1_body) );
-	BOOST_CHECK( SYNCASE_(fn1_body)->stmts.size() == 1 );
-	BOOST_CHECK( SYNCASE_(fn1_body)->stmts[0]->node_class() == syntax_node_types::expression_statement );
+	BOOST_CHECK( SYNCASE_(fn1_body)->stmts.size() == 2 );
+	BOOST_CHECK( SYNCASE_(fn1_body)->stmts[1]->node_class() == syntax_node_types::expression_statement );
 
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[2] == SYNCASE_(tdef0_double2x4) );
 	BOOST_CHECK( SYNCASE_(tdef0_double2x4) );

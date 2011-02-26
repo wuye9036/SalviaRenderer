@@ -164,6 +164,12 @@ void syntax_cases::initialize(){
 			.dname( NAME_(par1_1_fn1) ).end()
 		.end( LOCVAR_(par1_1_fn1) )
 		.dbody()
+			// For no initializer variable decalration.
+			.dvarstmt()
+				.dtype().dnode(type_sint32()).end()
+				.dname("v3")
+				.end()
+			.end()
 			.dexprstmt().dvarexpr(NAME_(par0_0_fn1)).end()
 		.end( LOCVAR_(fn1_body) )
 	.end( LOCVAR_(fn1_sem) );

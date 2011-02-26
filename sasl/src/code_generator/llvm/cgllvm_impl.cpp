@@ -343,18 +343,28 @@ SASL_VISIT_DEF( declarator ){
 	any child_ctxt;
 
 	Function* parent_func = data_as_cgctxt_ptr()->parent_func;
-	IRBuilder<> vardecl_builder( &parent_func->getEntryBlock(), parent_func->getEntryBlock().begin() );
 
-	if( data_as_cgctxt_ptr()->parent_func ){
+	IRBuilder<> vardecl_builder( ctxt->context() ) ;
+
+	if( parent_func ){
+		vardecl_builder.SetInsertPoint( &parent_func->getEntryBlock(), parent_func->getEntryBlock().begin() );
 		data_as_cgctxt_ptr()->addr 
 			= vardecl_builder.CreateAlloca( data_as_cgctxt_ptr()->type, 0, v.name->str.c_str() );
+	} else {
+		data_as_cgctxt_ptr()->addr
+			= ctxt->module()->getOrInsertGlobal( v.name->str.c_str(), data_as_cgctxt_ptr()->type );
 	}
 
 	if ( v.init ){
-		visit_child( child_ctxt, child_ctxt_init, v.init );
+		if (parent_func){
+			visit_child( child_ctxt, child_ctxt_init, v.init );
 
-		assert( any_to_cgctxt_ptr(child_ctxt)->val );
-		vardecl_builder.CreateStore( any_to_cgctxt_ptr(child_ctxt)->val, data_as_cgctxt_ptr()->addr );
+			assert( any_to_cgctxt_ptr(child_ctxt)->val );
+			vardecl_builder.CreateStore( any_to_cgctxt_ptr(child_ctxt)->val, data_as_cgctxt_ptr()->addr );
+		} else {
+			// Here is global variable initialization.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 
 	*get_common_ctxt(v) = *data_as_cgctxt_ptr();

@@ -276,7 +276,9 @@ SASL_VISIT_DEF( declarator ){
 	ssi->entry_id( data_as_ctxt_ptr()->declarator_type_id );
 
 	any_to_ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_decl;
-	visit_child( child_ctxt, child_ctxt_init, v.init, dup_decl->init );
+	if ( v.init ){
+		visit_child( child_ctxt, child_ctxt_init, v.init, dup_decl->init );
+	}
 
 	data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_decl );
 	data_as_ctxt_ptr()->generated_node = dup_decl->handle();
