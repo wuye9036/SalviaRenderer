@@ -289,7 +289,7 @@ bool lexer::tokenize( /*INPUTS*/ std::string const& code, shared_ptr<lex_context
 		lex_first = next_lex_first;
 	}
 
-	bool tokenize_succeed = (toked_state == 1);
+	bool tokenize_succeed = (toked_state != 2);
 	return tokenize_succeed;
 }
 

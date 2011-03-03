@@ -201,10 +201,11 @@ bool queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribu
 	shared_ptr<attribute> out;
 	BOOST_FOREACH( shared_ptr<parser> p, exprlst ){
 		out.reset();
+		token_iterator cur_iter = iter;
 		if( ! p->parse(iter, end, out ) ){
 			iter = stored;
 			if( p->is_expected() ){
-				throw expectation_failure(iter, p.get() );
+				throw expectation_failure(cur_iter, p.get() );
 			}
 			return false;
 		}
@@ -256,16 +257,38 @@ void rule::name( std::string const & v ){
 }
 
 bool rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr ) const{
+	static size_t indent = 0;
 	if( !expr ){
 		return false;
 	}
-	cout << "Enter rule " << rule_name << endl;
+
+	for ( size_t i = 0; i < indent; ++i ){
+		cout << "  ";
+	}
+	++indent;
+
+	if(rule_name == "kw_return"){
+		cout << "";
+	}
+
+	cout << "<" << rule_name << ">" << endl;
 	if( expr->parse(iter, end, attr) ){
 		attr->rule_id( id() );
-		cout << "Rule " << rule_name << " matched succeed!"<< endl;
+
+		--indent;
+		for ( size_t i = 0; i < indent; ++i ){
+			cout << "  ";
+		}
+		
+		cout << "</" << rule_name << ">" << endl;
 		return true;
 	}
-	cout << "Rule " << rule_name << " matched failed!"<< endl;
+
+	--indent;
+	for ( size_t i = 0; i < indent; ++i ){
+			cout << "  ";
+	}
+	cout << "<-" << rule_name << ">" << endl;
 	return false;
 }
 

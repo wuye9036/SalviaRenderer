@@ -20,6 +20,7 @@ using sasl::parser::selector_attribute;
 using sasl::parser::sequence_attribute;
 using sasl::parser::terminal_attribute;
 
+using boost::shared_dynamic_cast;
 using boost::shared_polymorphic_cast;
 using boost::shared_ptr;
 using boost::unordered_map;
@@ -557,18 +558,20 @@ boost::shared_ptr<declaration> syntax_tree_builder::build_decl( shared_ptr<attri
 shared_ptr<declaration> syntax_tree_builder::build_basic_decl( shared_ptr<attribute> attr ){
 	shared_ptr<declaration> ret;
 
-	SASL_TYPED_ATTRIBUTE(queuer_attribute, typed_attr, attr);
-	EFLIB_ASSERT_AND_IF( typed_attr->attrs.size() == 3, "Basic declaration must not a empty queuer." ){
+	SASL_TYPED_ATTRIBUTE(selector_attribute, typed_attr, attr);
+
+	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, semicolon_attr, typed_attr->attr );
+	if( semicolon_attr ){
+		// ";" only
 		return ret;
 	}
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, decl_attr, typed_attr->attrs[1] );
-	if( decl_attr->attrs.empty() ){
-		// Null declaration. ";" only.
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, not_empty_typed_attr, typed_attr->attr );
+	EFLIB_ASSERT_AND_IF( not_empty_typed_attr->attrs.size() == 2, "Basic declaration must not a empty queuer." ){
 		return ret;
 	}
 
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_decl_attr, decl_attr->attrs[0] );
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_decl_attr, not_empty_typed_attr->attrs[0] );
 	
 	SASL_SWITCH_RULE( typed_decl_attr->attr )
 		SASL_CASE_RULE( vardecl ){

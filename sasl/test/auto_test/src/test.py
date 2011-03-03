@@ -113,6 +113,7 @@ def test_file( path ):
 						report_str = " ... UPDATED"
 					else:
 						report_str = " ... IGNORED, File is diff, but update was disabled."
+						need_copy = False
 						kept_items.add( path )
 			else:
 				created_items.add( path )
@@ -120,7 +121,6 @@ def test_file( path ):
 				
 			if need_copy:
 				shutil.copyfile( tmpfile_name, a_path )
-			os.remove( tmpfile_name )
 		else:
 			failed_items.add( path )
 			report_str += " ... FAILED, Some error occur when compiler executed."
@@ -140,7 +140,9 @@ def test_file( path ):
 			else:
 				failed.add(path)
 				report_str += " ... FAILED, Result is not matched."
-			os.remove( tmpfile_name )
+	
+	if os.path.isfile( tmpfile_name ):
+		os.remove(tmpfile_name)
 	report_file.write(report_str + "\n")
 	print( report_str )
 	

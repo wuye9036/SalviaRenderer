@@ -28,15 +28,17 @@ void grammars::set_prog(){
 
 void grammars::set_decls()
 {
-	SRULE( decl, basic_decl | function_def );
+	SRULE( decl, function_def | basic_decl );
 	SRULE(
 		basic_decl,
-		!eof >
-		-(vardecl
-		| function_decl
-		| struct_decl
-		| typedef_decl ) >
-		STERM(semicolon)
+		STERM(semicolon) | 
+		(
+			( function_decl
+			| struct_decl
+			| typedef_decl
+			| vardecl 
+			) > STERM(semicolon)
+		)
 		);
 	SRULE( function_def, function_decl >> function_body	);
 	SRULE( vardecl, declspec >> decllist );
@@ -111,7 +113,7 @@ void grammars::set_stmts()
 {
 	SRULE(
 		stmt,
-		stmt_decl | stmt_expr
+		stmt_expr
 		| stmt_if
 		| stmt_while | stmt_dowhile
 		| stmt_for
@@ -119,6 +121,7 @@ void grammars::set_stmts()
 		| stmt_compound
 		| stmt_flowctrl
 		| labeled_stmt
+		| stmt_decl
 		);
 	SRULE( stmt_if, kw_if > lparen > expr > rparen > stmt > -(kw_else > stmt) );
 	SRULE( stmt_while, kw_while > lparen > expr > rparen > stmt );
