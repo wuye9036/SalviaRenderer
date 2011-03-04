@@ -617,9 +617,213 @@ shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> at
 }
 
 shared_ptr<expression> syntax_tree_builder::build_expr( shared_ptr<attribute> attr ){
-	shared_ptr<expression> ret;
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	shared_ptr<expression_list> ret = build_exprlst( attr );
+	if ( ret->exprs.size() == 1 ){
+		return ret->exprs[0];
+	}
 	return ret;
+}
+
+shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attribute> attr ){
+	shared_ptr<expression_list> ret = create_node<expression_list>( token_t::null() );
+
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	ret->exprs.push_back( build_assignexpr( typed_attr->attrs[0] ) );
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
+		ret->exprs.push_back( build_assignexpr( typed_follow_pair->attrs[1] ) );
+	}
+
+	return ret;
+}
+
+shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	shared_ptr<expression> root;
+		
+	shared_ptr<expression> rexpr = build_rhsexpr( typed_attr->attrs[0] );
+
+	shared_ptr<binary_expression> binexpr;
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
+
+		shared_ptr<expression> rexpr = binexpr->left_expr;
+		binexpr = create_node<binary_expression>( token_t::null() );
+		binexpr->left_expr = build_rhsexpr(typed_follow_pair->attrs[1]);;
+		binexpr->op = build_binop(typed_follow_pair->attrs[0]);
+		binexpr->right_expr = rexpr;
+
+		if( !root ){ root = binexpr; }
+	}
+
+	return root ? root : rexpr;
+}
+
+shared_ptr<expression> syntax_tree_builder::build_lcomb_expr( shared_ptr<attribute> attr ){
+
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	shared_ptr<expression> lexpr = dispatch_lcomb_expr( typed_attr->attrs[0] );
+
+	shared_ptr<binary_expression> binexpr;
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
+		binexpr = create_node<binary_expression>( token_t::null() );
+		binexpr->left_expr = lexpr;
+		binexpr->op = build_binop(typed_follow_pair->attrs[0]);
+		binexpr->right_expr = dispatch_lcomb_expr(typed_follow_pair->attrs[1]);
+		lexpr = binexpr;
+	}
+
+	return lexpr;
+}
+
+shared_ptr<expression> syntax_tree_builder::dispatch_lcomb_expr( shared_ptr<attribute> attr ){
+	shared_ptr<expression> ret;
+	SASL_SWITCH_RULE( attr )
+		SASL_CASE_RULE( lorexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( landexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( borexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( bxorexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( bandexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( eqlexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( relexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( shfexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( addexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( mulexpr ){
+			return build_lcomb_expr(attr);
+		}
+		SASL_CASE_RULE( castexpr ){
+			return build_castexpr(attr);
+		}
+		SASL_DEFAULT(){
+			assert( !"Wrong rule was invoked!" );
+		}
+	SASL_END_SWITCH_RULE();
+
+	return ret;
+}
+
+shared_ptr<expression> syntax_tree_builder::build_rhsexpr( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_SWITCH_RULE( typed_attr->attr )
+		SASL_CASE_RULE( condexpr ){
+			return build_condexpr( typed_attr->attr );
+		}
+		SASL_CASE_RULE( lorexpr ){
+			return build_lcomb_expr( typed_attr->attr );
+		}
+		SASL_DEFAULT(){
+			assert( !"Error was happened!" );
+		}
+	SASL_END_SWITCH_RULE();
+
+	return shared_ptr<expression>();
+}
+
+shared_ptr<expression> syntax_tree_builder::build_condexpr( shared_ptr<attribute> attr ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<expression>();
+}
+
+shared_ptr<expression> syntax_tree_builder::build_castexpr( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_SWITCH_RULE( typed_attr->attr )
+		SASL_CASE_RULE( unaryexpr ){
+			return build_unaryexpr( typed_attr->attr );
+		}
+		SASL_CASE_RULE( typecastedexpr ){
+			return build_typecastedexpr( typed_attr->attr );
+		}
+		SASL_DEFAULT(){
+			assert( !"Error was happened!" );
+		}
+	SASL_END_SWITCH_RULE();
+
+	return shared_ptr<expression>();
+}
+
+shared_ptr<expression> syntax_tree_builder::build_unaryexpr( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_SWITCH_RULE( typed_attr->attr )
+		SASL_CASE_RULE( unariedexpr ){
+			return build_unariedexpr( typed_attr->attr );
+		}
+		SASL_CASE_RULE( postexpr ){
+			return build_postexpr( typed_attr->attr );
+		}
+		SASL_DEFAULT(){
+			assert( !"Error was happened!" );
+		}
+	SASL_END_SWITCH_RULE();
+
+	return shared_ptr<expression>();
+}
+
+shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<attribute> attr ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<unary_expression>();
+}
+
+shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+
+	shared_ptr<expression> ret = build_pmexpr( typed_attr->attrs[0] );
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, postfix_attrs, typed_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> postfix_attr, postfix_attrs->attrs ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return ret;
+}
+
+shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_SWITCH_RULE( typed_attr->attr )
+		SASL_CASE_RULE( lit_const ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return shared_ptr<expression>();
+		}
+		SASL_CASE_RULE( ident ){
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, var_attr, typed_attr->attr );
+			shared_ptr<variable_expression> varexpr = create_node<variable_expression>( var_attr->tok );
+			varexpr->var_name = var_attr->tok;
+			return varexpr;
+		}
+		SASL_CASE_RULE( parenexpr ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return shared_ptr<expression>();
+		}
+	SASL_END_SWITCH_RULE();
+
+	return shared_ptr<expression>();
+}
+
+shared_ptr<cast_expression> syntax_tree_builder::build_typecastedexpr( shared_ptr<attribute> attr ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<cast_expression>();
 }
 
 shared_ptr<type_specifier> syntax_tree_builder::build_typespec( shared_ptr<attribute> attr ){
@@ -781,6 +985,11 @@ shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute
 	return ret;
 }
 
+operators syntax_tree_builder::build_binop( boost::shared_ptr<sasl::parser::attribute> attr ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return operators::none;
+}
+
+
+
 END_NS_SASL_SYNTAX_TREE()
-
-
