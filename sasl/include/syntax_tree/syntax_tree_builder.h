@@ -49,16 +49,26 @@ public:
 	syntax_tree_builder( sasl::parser::lexer& l, sasl::parser::grammars& g );
 	boost::shared_ptr<program> build_prog( boost::shared_ptr< sasl::parser::attribute > attr );
 	boost::shared_ptr<declaration> build_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<function_type> build_fndef( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<declaration> build_basic_decl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<variable_declaration> build_vardecl( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< boost::shared_ptr<declarator> > build_declarators( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<declarator> build_initdecl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<function_type> build_fndecl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<parameter> build_param( boost::shared_ptr<sasl::parser::attribute> attr );
+
+	boost::shared_ptr<expression> build_expr( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<type_specifier> build_typespec( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<type_specifier> build_unqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<type_specifier> build_prequaledtype( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<type_specifier> build_postqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
 
-	std::vector< boost::shared_ptr<declarator> > build_declarators( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<declarator> build_initdecl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<initializer> build_init( boost::shared_ptr<sasl::parser::attribute> attr );
+	
+	boost::shared_ptr<statement> build_stmt( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<compound_statement> build_stmt_compound( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<jump_statement> build_flowctrl( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<type_specifier> bind_typequal(
 		boost::shared_ptr<type_specifier> unqual,
@@ -69,6 +79,7 @@ public:
 		boost::shared_ptr<sasl::parser::attribute> qual,
 		boost::shared_ptr<type_specifier> unqual
 		);
+
 private:
 	syntax_tree_builder& operator = ( syntax_tree_builder const& );
 	sasl::parser::lexer& l;

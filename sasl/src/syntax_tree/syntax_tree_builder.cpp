@@ -92,45 +92,6 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //	return ret;
 //}
 //
-
-//shared_ptr<type_specifier> type_visitor::operator()( token const& v )
-//{
-//	// Initialize code
-//	if( typemap.empty() ){
-//		INSERT_INTO_TYPEMAP( sbyte,    _sint8   );
-//		INSERT_INTO_TYPEMAP( int8_t,   _sint8   );
-//		INSERT_INTO_TYPEMAP( ubyte,    _uint8   );
-//		INSERT_INTO_TYPEMAP( uint8_t,  _uint8   );
-//		INSERT_INTO_TYPEMAP( short,    _sint16  );
-//		INSERT_INTO_TYPEMAP( int16_t,  _sint16  );
-//		INSERT_INTO_TYPEMAP( ushort,   _uint16  );
-//		INSERT_INTO_TYPEMAP( uint16_t, _uint16  );
-//		INSERT_INTO_TYPEMAP( int,      _sint32  );
-//		INSERT_INTO_TYPEMAP( int32_t,  _sint32  );
-//		INSERT_INTO_TYPEMAP( uint,     _uint32  );
-//		INSERT_INTO_TYPEMAP( uint32_t, _uint32  );
-//		INSERT_INTO_TYPEMAP( long,     _uint32  );
-//		INSERT_INTO_TYPEMAP( int64_t,  _sint64  );
-//		INSERT_INTO_TYPEMAP( ulong,    _sint64  );
-//		INSERT_INTO_TYPEMAP( uint64_t, _uint64  );
-//
-//		INSERT_INTO_TYPEMAP( float,    _float   );
-//		INSERT_INTO_TYPEMAP( double,   _double  );
-//		INSERT_INTO_TYPEMAP( bool,     _boolean );
-//		INSERT_INTO_TYPEMAP( void,     _void    );
-//	}
-//
-//	// Type identifier.
-//	assert( !v.empty() );
-//	if ( typemap.count(v.str) > 0 ){
-//		return typemap[v.str];
-//	}
-//
-//	shared_ptr<alias_type> type_ident = create_node<alias_type>( token::null() );
-//	type_ident->alias = v.make_copy();
-//
-//	return type_ident;
-//}
 //
 //template< typename STPostExpressionT, typename ExpressionPostT  >
 //shared_ptr<expression> postfix_qualified_expression_visitor::composite( const ExpressionPostT& v )
@@ -465,7 +426,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 #define SASL_SWITCH_RULE( attr ) \
 	{ \
-		intptr_t rule_attr_id = attr->rule_id(); \
+		intptr_t rule_attr_id = (attr)->rule_id(); \
 		if( rule_attr_id < -1 ) { \
 			EFLIB_ASSERT( rule_attr_id >= -1, "Rule ID must be in [-1, 2^31-1]" ); \
 		}
@@ -548,9 +509,17 @@ boost::shared_ptr<declaration> syntax_tree_builder::build_decl( shared_ptr<attri
 			return build_basic_decl( typed_attr->attr );
 		}
 		SASL_CASE_RULE( function_def ){
-			return ret;
+			return build_fndef( typed_attr->attr );
 		}
 	SASL_END_SWITCH_RULE();
+
+	return ret;
+}
+
+shared_ptr<function_type> syntax_tree_builder::build_fndef( shared_ptr<attribute> attr ){
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	shared_ptr<function_type> ret = build_fndecl(typed_attr->attrs[0]);
+	ret->body = build_stmt_compound( typed_attr->attrs[1] );
 
 	return ret;
 }
@@ -605,6 +574,51 @@ shared_ptr<variable_declaration> syntax_tree_builder::build_vardecl( shared_ptr<
 	ret->type_info = build_typespec( typed_attr->attrs[0] );
 	ret->declarators = build_declarators( typed_attr->attrs[1] );
 	
+	return ret;
+}
+
+shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribute> attr ){
+	shared_ptr<function_type> ret = create_node<function_type>( token_t::null() );
+
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	ret->retval_type = build_typespec( typed_attr->attrs[0] );
+
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[1] );
+	ret->name = name_attr->tok;
+	
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, paren_params_attr, typed_attr->attrs[2] );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, params_attr, paren_params_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> param_attr, params_attr->attrs ){
+		ret->params.push_back( build_param(param_attr) );
+	}
+	
+	return ret;
+}
+
+shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> attr ){
+	shared_ptr<parameter> ret = create_node<parameter>( token_t::null() );
+	
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	ret->param_type = build_typespec( typed_attr->attrs[0] );
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_ident, typed_attr->attrs[1] );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_init, typed_attr->attrs[2] );
+
+	if( !optional_ident->attrs.empty() ){
+		SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, optional_ident->attrs[0] );
+		ret->name = ident_attr->tok;
+	}
+
+	if( !optional_init->attrs.empty() ){
+		ret->init = build_init( optional_init->attrs[0] );
+	}
+
+	return ret;
+}
+
+shared_ptr<expression> syntax_tree_builder::build_expr( shared_ptr<attribute> attr ){
+	shared_ptr<expression> ret;
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return ret;
 }
 
@@ -680,6 +694,65 @@ shared_ptr<type_specifier> syntax_tree_builder::build_postqualedtype( shared_ptr
 	}
 
 	return ret_type;
+}
+
+shared_ptr<initializer> syntax_tree_builder::build_init( shared_ptr<attribute> attr ){
+	shared_ptr<initializer> ret;
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return ret;
+}
+
+shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> attr ){
+	shared_ptr<statement> ret;
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	
+	SASL_SWITCH_RULE( typed_attr->attr )
+		SASL_CASE_RULE( stmt_flowctrl ){
+			return build_flowctrl( typed_attr->attr );
+		}
+		SASL_DEFAULT(){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return ret;
+		}
+	SASL_END_SWITCH_RULE();
+
+	return ret;
+}
+
+shared_ptr<compound_statement> syntax_tree_builder::build_stmt_compound( shared_ptr<attribute> attr ){
+	shared_ptr<compound_statement> ret = create_node<compound_statement>( token_t::null() );
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, stmts_attr, typed_attr->attrs[1] );
+	BOOST_FOREACH( shared_ptr<attribute> stmt_attr, stmts_attr->attrs ){
+		ret->stmts.push_back( build_stmt(stmt_attr) );
+	}
+	return ret;
+}
+
+shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl( shared_ptr<attribute> attr ){
+	shared_ptr<jump_statement> ret = create_node<jump_statement>( token_t::null() );
+
+	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	shared_ptr<attribute> stmt_attr = typed_attr->attr;
+
+	SASL_SWITCH_RULE( stmt_attr )
+		SASL_CASE_RULE( stmt_break ){
+			ret->code = jump_mode::_break;
+		}
+		SASL_CASE_RULE( stmt_continue ){
+			ret->code = jump_mode::_continue;
+		}
+		SASL_CASE_RULE( stmt_return ){
+			ret->code = jump_mode::_return;
+			SASL_TYPED_ATTRIBUTE( queuer_attribute, ret_expr_attr, stmt_attr );
+			SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_expr_attr, ret_expr_attr->attrs[1] );
+			if( !optional_expr_attr->attrs.empty() ){
+				ret->jump_expr = build_expr( optional_expr_attr->attrs[0] );
+			}
+		}
+	SASL_END_SWITCH_RULE();
+
+	return ret;
 }
 
 shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<type_specifier> unqual, shared_ptr<attribute> qual ){

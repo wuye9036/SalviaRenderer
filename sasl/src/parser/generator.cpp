@@ -256,39 +256,45 @@ void rule::name( std::string const & v ){
 	rule_name = v;
 }
 
+#define SASL_PARSER_LOG_ENABLED 0
 bool rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr ) const{
+#if SASL_PARSER_LOG_ENABLED
 	static size_t indent = 0;
+#endif // SASL_PARSER_LOG_ENABLED
 	if( !expr ){
 		return false;
 	}
 
+#if SASL_PARSER_LOG_ENABLED
 	for ( size_t i = 0; i < indent; ++i ){
 		cout << "  ";
 	}
 	++indent;
-
-	if(rule_name == "kw_return"){
-		cout << "";
-	}
-
 	cout << "<" << rule_name << ">" << endl;
+#endif // SASL_PARSER_LOG_ENABLED
+	
 	if( expr->parse(iter, end, attr) ){
 		attr->rule_id( id() );
 
+#if SASL_PARSER_LOG_ENABLED
 		--indent;
 		for ( size_t i = 0; i < indent; ++i ){
 			cout << "  ";
 		}
 		
 		cout << "</" << rule_name << ">" << endl;
+#endif // SASL_PARSER_LOG_ENABLED
 		return true;
 	}
 
+#if SASL_PARSER_LOG_ENABLED
 	--indent;
 	for ( size_t i = 0; i < indent; ++i ){
-			cout << "  ";
+		cout << "  ";
 	}
 	cout << "<-" << rule_name << ">" << endl;
+#endif // SASL_PARSER_LOG_ENABLED
+
 	return false;
 }
 
