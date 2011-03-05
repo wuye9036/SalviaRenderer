@@ -19,7 +19,7 @@ public:
 		basic_decl, function_def,
 		vardecl, function_decl, struct_decl, typedef_decl,
 		param, function_body,
-		decllist, init_declarator,
+		decllist, init_declarator, sem, anno,
 		named_struct_body, struct_body,
 		
 		/* Type specifiers */
@@ -63,7 +63,7 @@ public:
 		opassign,
 		opmember,
 
-		lparen, rparen, lsbracket, rsbracket, lbrace, rbrace,
+		lparen, rparen, lsbracket, rsbracket, labracket, rabracket, lbrace, rbrace,
 		opinc, opunary,
 		
 		kw_typedef, kw_struct,
@@ -74,7 +74,7 @@ public:
 		kw_for, kw_do, kw_while,
 
 		question,
-		colon, comma, semicolon,
+		colon, comma, semicolon, equal,
 
 		ident,
 		eof

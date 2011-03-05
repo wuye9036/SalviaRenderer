@@ -19,5 +19,5 @@ ADD_LIBRARY( sasl_host STATIC
 	${HEADER_FILES} ${SOURCE_FILES}
 )
 
-config_output_paths( sasl_common )
+config_output_paths( sasl_host )
 

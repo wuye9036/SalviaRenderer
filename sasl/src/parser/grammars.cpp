@@ -48,7 +48,9 @@ void grammars::set_decls()
 	SRULE( param, declspec >> -ident >> -init );
 	SRULE( function_body, stmt_compound );
 	SRULE( decllist, init_declarator >> *(comma > init_declarator) );
-	SRULE( init_declarator, ident >> -init );
+	SRULE( init_declarator, ident >> -sem >> -anno >> -init );
+	SRULE( sem, colon > ident );
+	SRULE( anno, labracket >> *(ident > ident > equal > expr > semicolon ) > rsbracket );
 	SRULE( named_struct_body, ident >> -struct_body );
 	SRULE( struct_body, lbrace >> *decl > rbrace );
 }
@@ -160,6 +162,8 @@ void grammars::set_terms()
 	SRULE( rparen,		STERM(rparen) );
 	SRULE( lsbracket,	STERM(lsbracket) );
 	SRULE( rsbracket,	STERM(rsbracket) );
+	SRULE( labracket,	STERM(labracket) );
+	SRULE( rabracket,	STERM(rabracket) );
 	SRULE( lbrace,		STERM(lbrace) );
 	SRULE( rbrace,		STERM(rbrace) );
 	SRULE( opinc,		STERM(self_incr) );
