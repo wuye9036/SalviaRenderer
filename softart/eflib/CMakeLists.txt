@@ -17,6 +17,7 @@ set (HEADER_FILES
 	include/math/quaternion.h
 	include/math/vector.h
 	include/memory/allocator.h
+	include/memory/atomic.h
 	include/memory/lifetime_manager.h
 	include/memory/pool.h
 	include/metaprog/enable_if.h
@@ -30,6 +31,7 @@ set (HEADER_FILES
 	include/platform/typedefs.h
 	include/platform/win32.h
 	include/string/string.h
+	include/string/ustring.h
 )
 
 set (SOURCE_FILES

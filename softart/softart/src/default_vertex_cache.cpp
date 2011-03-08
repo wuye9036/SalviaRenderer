@@ -14,6 +14,7 @@
 #include <boost/ref.hpp>
 
 using eflib::num_available_threads;
+using eflib::atomic;
 
 BEGIN_NS_SOFTART()
 
