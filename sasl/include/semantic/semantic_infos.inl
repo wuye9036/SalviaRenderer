@@ -9,6 +9,9 @@
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/enums/buildin_type_code.h>
 #include <sasl/enums/enums_helper.h>
+
+#include <softart/include/enums.h>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
 #include <boost/weak_ptr.hpp>
@@ -34,6 +37,7 @@ using ::sasl::syntax_tree::statement;
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
 
+
 class global_si: public semantic_info{
 public:
 	typedef semantic_info base_type;
@@ -44,7 +48,23 @@ public:
 	boost::shared_ptr<symbol> root() const;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
 
+	// Referenced by host.
+	std::vector< boost::shared_ptr<symbol> > const& externals() const;
+	void add_external( boost::shared_ptr<symbol> );
+
+	// Entry.
+	std::vector< boost::shared_ptr<symbol> > const& entries() const;
+	void add_entry( boost::shared_ptr<symbol> );
+
+	// Semantics
+	std::vector<softart::semantic> const& used_semantics() const;
+	void mark_semantic( softart::semantic const& s );
+
 private:
+	std::vector< boost::shared_ptr<symbol> > external_syms;
+	std::vector< boost::shared_ptr<symbol> > fns;
+	std::vector<softart::semantic> used_sems;
+
 	boost::shared_ptr<class type_manager> typemgr;
 	boost::shared_ptr<symbol> rootsym;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;

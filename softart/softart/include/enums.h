@@ -179,9 +179,9 @@ enum cubemap_faces
 /****************************
  * Shader
  ***************************/
-// 该项指示在所给数据不足float4的时候补全方式：
-// Position补齐为(0, 0, 0, 1)的形式；
-// Attrib 补齐为(0,0,0,0)的形式
+// Usage describes the default component value will be filled to unfilled component if source data isn't a 4-components vector.
+// Position means fill to (0, 0, 0, 1)
+// Attrib means fill to (0,0,0,0)
 enum input_register_usage_decl
 {
 	input_register_usage_position = 0,
@@ -222,6 +222,20 @@ enum stencil_op
     stencil_op_invert = 6,
     stencil_op_incr_wrap = 7,
     stencil_op_decr_wrap = 8,
+};
+
+enum semantic{
+	SV_None = 0,
+	SV_Position = 1,
+	semantic_count = 2
+};
+
+union indexed_semantic{
+	semantic packed;
+	struct {
+		int16_t index;
+		int16_t sem;
+	} unpacked;
 };
 
 END_NS_SOFTART()

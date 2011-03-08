@@ -17,7 +17,12 @@ using ::sasl::common::token_t;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::buildin_type;
 
+using softart::semantic;
+
 using ::boost::shared_ptr;
+
+using std::string;
+using std::vector;
 
 #define SASL_INIT_TYPE_INFO_PROXY( typemgr ) type_info_proxy(typemgr)
 
@@ -74,8 +79,8 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 }
 ////////////////////////////////
 // global semantic
-
-global_si::global_si(){
+global_si::global_si()
+{
 	compinfo = compiler_info_manager::create();
 	typemgr = type_manager::create();
 	rootsym = symbol::create_root( boost::shared_ptr<node>() );
@@ -92,6 +97,34 @@ shared_ptr<symbol> global_si::root() const{
 
 shared_ptr<compiler_info_manager> global_si::compiler_infos() const{
 	return compinfo;
+}
+
+vector< shared_ptr<symbol> > const& global_si::externals() const{
+	return external_syms;
+}
+
+void global_si::add_external( shared_ptr<symbol> v ){
+	fns.push_back(v);
+}
+
+vector< shared_ptr<symbol> > const& global_si::entries() const{
+	return fns;
+}
+
+void global_si::add_entry( shared_ptr<symbol> v ){
+	fns.push_back(v);
+}
+
+std::vector<softart::semantic> const& global_si::used_semantics() const{
+	return used_sems;
+}
+
+void global_si::mark_semantic( softart::semantic const& s ){
+	vector<softart::semantic>::iterator it = lower_bound( used_sems.begin(), used_sems.end(), s );
+
+	if( *it != s ){
+		used_sems.insert( it, s );
+	}
 }
 
 //////////////////////

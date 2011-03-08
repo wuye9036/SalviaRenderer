@@ -14,6 +14,12 @@ class shader_variable{
 class host_shader{
 };
 
+class vertex_shader{
+};
+
+class pixel_shader{
+};
+
 class host{
 public:
 	shader_variable variable( std::string const& name );
