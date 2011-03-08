@@ -3,17 +3,21 @@
 #include "../include/shaderregs_op.h"
 #include "../include/framebuffer.h"
 #include "../include/renderer_impl.h"
-#include "../include/cpuinfo.h"
+
 #include "../include/clipper.h"
 #include "../include/vertex_cache.h"
 #include "../include/thread_pool.h"
 
 #include <eflib/include/diagnostics/log.h>
 #include <eflib/include/metaprog/util.h>
+#include <eflib/include/platform/cpuinfo.h>
 
 #include <algorithm>
 #include <boost/format.hpp>
 #include <boost/bind.hpp>
+
+using eflib::num_available_threads;
+
 BEGIN_NS_SOFTART()
 
 //#define USE_TRADITIONAL_RASTERIZER

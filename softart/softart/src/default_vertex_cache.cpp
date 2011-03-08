@@ -1,17 +1,21 @@
 #include "../include/vertex_cache.h"
 #include "../include/stream_assembler.h"
 
+#include <eflib/include/platform/config.h>
+
 #include "../include/shader.h"
 #include "../include/shaderregs_op.h"
 #include "../include/renderer_impl.h"
 #include "../include/stream_assembler.h"
-#include "../include/cpuinfo.h"
 #include "../include/thread_pool.h"
+
+#include <eflib/include/platform/cpuinfo.h>
 
 #include <boost/ref.hpp>
 
-BEGIN_NS_SOFTART()
+using eflib::num_available_threads;
 
+BEGIN_NS_SOFTART()
 
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
 const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
@@ -95,7 +99,7 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	indices_.resize(prim_count * prim_size);
 
 	atomic<int32_t> working_package(0);
-	size_t num_threads = num_available_threads();
+	size_t num_threads = num_available_threads( );
 
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&default_vertex_cache::generate_indices_func, this, boost::ref(indices_), static_cast<int32_t>(prim_count), prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE));

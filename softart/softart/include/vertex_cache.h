@@ -6,7 +6,7 @@
 #include "renderer.h"
 #include "render_stage.h"
 #include "index_fetcher.h"
-#include "atomic.h"
+#include <eflib/include/memory/atomic.h>
 
 #include <boost/pool/pool.hpp>
 

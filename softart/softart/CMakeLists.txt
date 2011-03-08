@@ -5,12 +5,10 @@ ${3rd_party_includes}
 )
 LINK_DIRECTORIES(${3rd_party_libs})
 set (HEADER_FILES
-	include/atomic.h
 	include/buffer.h
 	include/clipper.h
 	include/colors.h
 	include/colors_convertors.h
-	include/cpuinfo.h
 	include/decl.h
 	include/enums.h
 	include/framebuffer.h
@@ -41,7 +39,6 @@ set (HEADER_FILES
 set (SOURCE_FILES
 	src/clipper.cpp
 	src/color_convertors.cpp
-	src/cpuinfo.cpp
 	src/default_vertex_cache.cpp
 	src/framebuffer.cpp
 	src/index_fetcher.cpp

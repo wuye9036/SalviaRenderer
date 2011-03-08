@@ -1,5 +1,5 @@
-#ifndef SOFTART_ATOMIC_H
-#define SOFTART_ATOMIC_H
+#ifndef EFLIB_MEMORY_ATOMIC_H
+#define EFLIB_MEMORY_ATOMIC_H
 
 #include <eflib/include/platform/config.h>
 
@@ -226,7 +226,7 @@ public:
 	}
 	atomic& operator-=(atomic const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), -rhs.value_);
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, -rhs.value_);
@@ -318,7 +318,7 @@ public:
 
 	int32_t const & operator++()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedIncrement(reinterpret_cast<long*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, 1);
@@ -332,7 +332,7 @@ public:
 
 	int32_t const & operator--()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedDecrement(reinterpret_cast<long*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_sub_and_fetch(&value_, 1);
@@ -369,7 +369,7 @@ public:
 	}
 
 private:
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 	mutable int32_t value_;
 #elif (__GNUC__ >= 4)
 	mutable int32_t value_;
@@ -397,7 +397,7 @@ public:
 
 	int64_t value() const
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		return value_;
 #elif (__GNUC__ >= 4)
 		return __sync_fetch_and_add(&value_, 0);
@@ -408,7 +408,7 @@ public:
 
 	void value(int64_t const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchange64(reinterpret_cast<__int64*>(&value_), rhs);
 #elif (__GNUC__ >= 4)
 		value_ = rhs;
@@ -431,7 +431,7 @@ public:
 
 	bool cas(int64_t const & old_val, int64_t const & new_val)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		return old_val == _InterlockedCompareExchange64(reinterpret_cast<__int64*>(&value_), new_val, old_val);
 #elif (__GNUC__ >= 4)
 		return __sync_bool_compare_and_swap(&value_, old_val, new_val);
@@ -493,7 +493,7 @@ public:
 
 	atomic& operator+=(int64_t const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), rhs);
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, rhs);
@@ -512,7 +512,7 @@ public:
 	}
 	atomic& operator+=(atomic const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), rhs.value_);
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, rhs.value_);
@@ -532,7 +532,7 @@ public:
 
 	atomic& operator-=(int64_t const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), -rhs);
 #elif (__GNUC__ >= 4)
 		__sync_sub_and_fetch(&value_, rhs);
@@ -551,7 +551,7 @@ public:
 	}
 	atomic& operator-=(atomic const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), -rhs.value_);
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, -rhs.value_);
@@ -643,7 +643,7 @@ public:
 
 	atomic const & operator++()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedIncrement64(reinterpret_cast<__int64*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, 1);
@@ -657,7 +657,7 @@ public:
 
 	atomic const & operator--()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedDecrement64(reinterpret_cast<__int64*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_sub_and_fetch(&value_, 1);
@@ -684,7 +684,7 @@ public:
 	}
 
 private:
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 	mutable int64_t value_;
 #elif (__GNUC__ >= 4)
 	mutable int64_t value_;
@@ -710,7 +710,7 @@ public:
 
 	T* value() const
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		return value_;
 #elif (__GNUC__ >= 4)
 		return __sync_fetch_and_add(&value_, 0);
@@ -721,7 +721,7 @@ public:
 
 	void value(T* const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchange64(reinterpret_cast<__int64*>(&value_), reinterpret_cast<__int64>(rhs));
 #elif (__GNUC__ >= 4)
 		value_ = rhs;
@@ -744,7 +744,7 @@ public:
 
 	bool cas(T* const & old_val, T* const & new_val)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		return reinterpret_cast<__int64>(old_val) == _InterlockedCompareExchange64(reinterpret_cast<__int64*>(&value_), reinterpret_cast<__int64>(new_val), reinterpret_cast<__int64>(old_val));
 #elif (__GNUC__ >= 4)
 		return __sync_bool_compare_and_swap(&value_, old_val, new_val);
@@ -806,7 +806,7 @@ public:
 
 	atomic& operator+=(T* const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), reinterpret_cast<__int64>(rhs));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, rhs);
@@ -825,7 +825,7 @@ public:
 	}
 	atomic& operator+=(atomic const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), reinterpret_cast<__int64>(rhs.value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, rhs.value_);
@@ -845,7 +845,7 @@ public:
 
 	atomic& operator-=(T* const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), reinterpret_cast<__int64>(-rhs));
 #elif (__GNUC__ >= 4)
 		__sync_sub_and_fetch(&value_, rhs);
@@ -864,7 +864,7 @@ public:
 	}
 	atomic& operator-=(atomic const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedExchangeAdd64(reinterpret_cast<__int64*>(&value_), reinterpret_cast<__int64>(-rhs.value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, -rhs.value_);
@@ -956,7 +956,7 @@ public:
 
 	atomic const & operator++()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedIncrement64(reinterpret_cast<__int64*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, 1);
@@ -970,7 +970,7 @@ public:
 
 	atomic const & operator--()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		_InterlockedDecrement64(reinterpret_cast<__int64*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_sub_and_fetch(&value_, 1);
@@ -997,7 +997,7 @@ public:
 	}
 
 private:
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 	mutable T* value_;
 #elif (__GNUC__ >= 4)
 	mutable T* value_;
@@ -1025,7 +1025,7 @@ public:
 
 	T* value() const
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		return value_;
 #elif (__GNUC__ >= 4)
 		return __sync_fetch_and_add(&value_, 0);
@@ -1036,7 +1036,7 @@ public:
 
 	void value(T* const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedExchange(reinterpret_cast<long*>(&value_), reinterpret_cast<long>(rhs));
 #elif (__GNUC__ >= 4)
 		value_ = rhs;
@@ -1059,7 +1059,7 @@ public:
 
 	bool cas(T* const & old_val, T* const & new_val)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		return reinterpret_cast<long>(old_val) == InterlockedCompareExchange(reinterpret_cast<long*>(&value_), reinterpret_cast<long>(new_val), reinterpret_cast<long>(old_val));
 #elif (__GNUC__ >= 4)
 		return __sync_bool_compare_and_swap(&value_, old_val, new_val);
@@ -1121,7 +1121,7 @@ public:
 
 	atomic& operator+=(T* const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), reinterpret_cast<long>(rhs));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, rhs);
@@ -1140,7 +1140,7 @@ public:
 	}
 	atomic& operator+=(atomic const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), reinterpret_cast<long>(rhs.value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, rhs.value_);
@@ -1160,7 +1160,7 @@ public:
 
 	atomic& operator-=(T* const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), reinterpret_cast<long>(-rhs));
 #elif (__GNUC__ >= 4)
 		__sync_sub_and_fetch(&value_, rhs);
@@ -1179,7 +1179,7 @@ public:
 	}
 	atomic& operator-=(atomic const & rhs)
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedExchangeAdd(reinterpret_cast<long*>(&value_), reinterpret_cast<long>(-rhs.value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, -rhs.value_);
@@ -1271,7 +1271,7 @@ public:
 
 	atomic const & operator++()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedIncrement(reinterpret_cast<long*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_add_and_fetch(&value_, 1);
@@ -1285,7 +1285,7 @@ public:
 
 	atomic const & operator--()
 	{
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 		InterlockedDecrement(reinterpret_cast<long*>(&value_));
 #elif (__GNUC__ >= 4)
 		__sync_sub_and_fetch(&value_, 1);
@@ -1312,7 +1312,7 @@ public:
 	}
 
 private:
-#ifdef BOOST_WINDOWS
+#ifdef EFLIB_WINDOWS
 	mutable T* value_;
 #elif (__GNUC__ >= 4)
 	mutable T* value_;

@@ -41,6 +41,7 @@ set (SOURCE_FILES
 	src/quaternion.cpp
 	src/string.cpp
 	src/logrout.cpp
+	src/cpuinfo.cpp
 )
 
 ADD_LIBRARY( EFLIB STATIC

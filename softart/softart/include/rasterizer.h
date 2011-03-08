@@ -5,7 +5,7 @@
 #include "enums.h"
 #include "shader.h"
 #include "framebuffer.h"
-#include "atomic.h"
+#include <eflib/include/memory/atomic.h>
 
 #include <boost/array.hpp>
 #include <boost/function.hpp>
