@@ -1440,7 +1440,7 @@ void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uin
 
 void rasterizer::draw(size_t prim_count){
 
-	EFLIB_ASSERT(pparent_, "Renderer 指针为空！可能该对象没有经过正确的初始化！");
+	EFLIB_ASSERT(pparent_, "pparent_ != NULL");
 	if(!pparent_) return;
 
 	const size_t num_samples = hfb_->get_num_samples();
