@@ -105,15 +105,16 @@ shared_ptr<program> parse(
 		( "newline", "{NEWLINE}" )
 		;
 	l.add_token( "INITIAL" )
+		("lit_int")("lit_float")("lit_bool")
 		("lparen")("rparen")("lbrace")("rbrace")
-
+		
 		("kw_struct")("kw_typedef")
 		("kw_break")("kw_continue")("kw_case")("kw_return")
 		("kw_switch")("kw_else")("kw_for")("kw_if")
 		("kw_while")("kw_do")
 
 		("ident")
-		("semicolon")
+		("comma")("colon")("semicolon")
 		;
 	l.add_token( "SKIPPED" )
 		("space")("newline")

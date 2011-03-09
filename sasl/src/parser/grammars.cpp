@@ -49,7 +49,7 @@ void grammars::set_decls()
 	SRULE( function_body, stmt_compound );
 	SRULE( decllist, init_declarator >> *(comma > init_declarator) );
 	SRULE( init_declarator, ident >> -sem >> -anno >> -init );
-	SRULE( sem, colon > ident );
+	SRULE( sem, colon > ident >> -( lparen > lit_int > rparen ) );
 	SRULE( anno, labracket >> *(ident > ident > equal > expr > semicolon ) > rsbracket );
 	SRULE( named_struct_body, ident >> -struct_body );
 	SRULE( struct_body, lbrace >> *decl > rbrace );
@@ -144,7 +144,11 @@ void grammars::set_stmts()
 
 void grammars::set_terms()
 {
-	SRULE( lit_const,	STERM(lit_int) | STERM(lit_float) | STERM(lit_bool) );
+	SRULE( lit_const,	lit_int | lit_float | lit_bool );
+	
+	SRULE( lit_int,		STERM(lit_int) );
+	SRULE( lit_float,	STERM(lit_float) );
+	SRULE( lit_bool,	STERM(lit_bool) );
 
 	SRULE( opadd,		STERM(plus) | STERM(minus) );
 	SRULE( opmul,		STERM(asterisk) | STERM(slash) | STERM(percent) );

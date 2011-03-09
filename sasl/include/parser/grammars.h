@@ -54,7 +54,7 @@ public:
 		for_init_decl, for_looper,
 
 		/* Terminators */
-		lit_const,
+		lit_const, lit_int, lit_float, lit_bool,
 
 		opadd, opmul, opshift,
 		oprel, opequal,
