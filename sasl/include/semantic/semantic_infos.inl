@@ -36,8 +36,6 @@ using ::sasl::syntax_tree::statement;
 
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
-
-
 class global_si: public semantic_info{
 public:
 	typedef semantic_info base_type;

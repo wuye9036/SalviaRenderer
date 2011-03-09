@@ -183,17 +183,17 @@ void rasterizer::initialize(renderer_impl* pparent)
 }
 
 /*************************************************
- *   线段的光栅化步骤：
- *			1 寻找主方向，获得主方向距离分量并求得主方向上的差分
- *			2 计算ddx与ddy（用于mip的选择）
- *			3 利用主方向及主方向差分计算像素位置及vs_output
- *			4 执行pixel shader
- *			5 将像素渲染到framebuffer中
+ *   Steps for line rasterization：
+ *			1 Find major direction and computing distance and differental on major direction.
+ *			2 Calculate ddx and ddy for mipmapping.
+ *			3 Computing pixel position and interpolated attribute by DDA with major direction and differental.
+ *			4 Executing pixel shader
+ *			5 Render pixel into framebuffer.
  *
  *   Note: 
- *			1 参数的postion将位于窗口坐标系下
- *			2 wpos的x y z分量已经除以了clip w
- *			3 positon.w为1.0f / clip w
+ *			1 Position is in window coordinate.
+ *			2 x y z compnents of wpos have been devided by w component.
+ *			3 positon.w = 1.0f / clip w
  **************************************************/
 void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps)
 {
@@ -206,7 +206,7 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 
 	h_blend_shader hbs = pparent_->get_blend_shader();
 
-	//构造差分
+	// Computing differental.
 	vs_output ddx, ddy;
 	vs_output_ops->operator_mul(ddx, diff, (diff.position.x / (diff.position.xy().length_sqr())));
 	vs_output_ops->operator_mul(ddy, diff, (diff.position.y / (diff.position.xy().length_sqr())));
@@ -218,11 +218,11 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 
 	ps_output px_out;
 
-	//分为x major和y major使用DDA绘制线
+	// Divided drawing to x major DDA method and y major DDA method.
 	if( abs(dir.x) > abs(dir.y))
 	{
 
-		//调换起终点，使方向递增
+		//Swap start and end to make diff is positive.
 		const vs_output *start, *end;
 		if(dir.x < 0){
 			start = &v1;
@@ -242,11 +242,11 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		int sx = fast_floori(fsx);
 		int ex = fast_floori(end->position.x - 0.5f);
 
-		//截取到屏幕内
+		// Clamp to visible screen.
 		sx = eflib::clamp<int>(sx, vpleft, int(vpright - 1));
 		ex = eflib::clamp<int>(ex, vpleft, int(vpright));
 
-		//设置起点的vs_output
+		// Set attributes of start point.
 		vs_output px_start, px_end;
 		vs_output_ops->copy(px_start, *start);
 		vs_output_ops->copy(px_end, *end);
@@ -254,11 +254,11 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		vs_output px_in;
 		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 
-		//x-major 的线绘制
+		// Draw line with x major DDA.
 		vs_output unprojed;
 		for(int iPixel = sx; iPixel < ex; ++iPixel)
 		{
-			//忽略不在vp范围内的像素
+			// Ingore pixels which are outside of viewport.
 			if(px_in.position.y >= vpbottom){
 				if(dir.y > 0) break;
 				continue;
@@ -268,20 +268,19 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 				continue;
 			}
 
-			//进行像素渲染
+			// Render pixel.
 			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
 				hfb_->render_sample(hbs, iPixel, fast_floori(px_in.position.y), 0, px_out, px_out.depth);
 			}
 
-			//差分递增
+			// Increment ddx
 			++ step;
 			vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
 	}
 	else //y major
 	{
-		//调换序列依据方向
 		const vs_output *start, *end;
 		if(dir.y < 0){
 			start = &v1;
@@ -301,11 +300,9 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		int sy = fast_floori(fsy);
 		int ey = fast_floori(end->position.y - 0.5f);
 
-		//截取到屏幕内
 		sy = eflib::clamp<int>(sy, vptop, int(vpbottom - 1));
 		ey = eflib::clamp<int>(ey, vptop, int(vpbottom));
 
-		//设置起点的vs_output
 		vs_output px_start, px_end;
 		vs_output_ops->copy(px_start, *start);
 		vs_output_ops->copy(px_end, *end);
@@ -313,11 +310,9 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 		vs_output px_in;
 		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 
-		//x-major 的线绘制
 		vs_output unprojed;
 		for(int iPixel = sy; iPixel < ey; ++iPixel)
 		{
-			//忽略不在vp范围内的像素
 			if(px_in.position.x >= vpright){
 				if(dir.x > 0) break;
 				continue;
@@ -327,13 +322,11 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 				continue;
 			}
 
-			//进行像素渲染
 			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
 				hfb_->render_sample(hbs, fast_floori(px_in.position.x), iPixel, 0, px_out, px_out.depth);
 			}
 
-			//差分递增
 			++ step;
 			vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
@@ -451,7 +444,7 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 
 	for(int iy = 0; iy < 4; ++iy)
 	{
-		//光栅化
+		// Rasterizer.
 		for(size_t ix = 0; ix < 4; ++ix)
 		{
 			pixel_mask[(iy + sy) * TILE_SIZE + (ix + sx)] = 0;
@@ -642,24 +635,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	const h_blend_shader& hbs = pparent_->get_blend_shader();
 	const size_t num_samples = hfb_->get_num_samples();
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
-
-	//{
-	//	boost::mutex::scoped_lock lock(logger_mutex_);
-	//
-	//	typedef slog<text_log_serializer> slog_type;
-	//	log_serializer_indent_scope<log_system<slog_type>::slog_type> scope(&log_system<slog_type>::instance());
-
-	//	//记录三角形的屏幕坐标系顶点。
-	//	log_system<slog_type>::instance().write(_EFLIB_T("wv0"),
-	//		to_tstring(str(format("( %1%, %2%, %3%)") % v0.wpos.x % v0.wpos.y % v0.wpos.z)), LOGLEVEL_MESSAGE
-	//		);
-	//	log_system<slog_type>::instance().write(_EFLIB_T("wv1"), 
-	//		to_tstring(str(format("( %1%, %2%, %3%)") % v1.wpos.x % v1.wpos.y % v1.wpos.z)), LOGLEVEL_MESSAGE
-	//		);
-	//	log_system<slog_type>::instance().write(_EFLIB_T("wv2"), 
-	//		to_tstring(str(format("( %1%, %2%, %3%)") % v2.wpos.x % v2.wpos.y % v2.wpos.z)), LOGLEVEL_MESSAGE
-	//		);
-	//}
 
 #ifndef USE_TRADITIONAL_RASTERIZER
 	const ALIGN16 vec4 edge_factors[3] = {
