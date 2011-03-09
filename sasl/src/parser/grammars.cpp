@@ -49,7 +49,7 @@ void grammars::set_decls()
 	SRULE( function_body, stmt_compound );
 	SRULE( decllist, init_declarator >> *(comma > init_declarator) );
 	SRULE( init_declarator, ident >> -sem >> -anno >> -init );
-	SRULE( sem, colon > ident >> -( lparen > lit_int > rparen ) );
+	SRULE( sem, ( colon > ident ) >> -( lparen > lit_int > rparen ) );
 	SRULE( anno, labracket >> *(ident > ident > equal > expr > semicolon ) > rsbracket );
 	SRULE( named_struct_body, ident >> -struct_body );
 	SRULE( struct_body, lbrace >> *decl > rbrace );

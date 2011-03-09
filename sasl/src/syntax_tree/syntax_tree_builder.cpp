@@ -979,7 +979,15 @@ shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute
 	
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_sem_attr, typed_attr->attrs[1] );
 	if( !optional_sem_attr->attrs.empty() ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, sem_attr, optional_sem_attr->attrs[0] );
+		SASL_TYPED_ATTRIBUTE( terminal_attribute, sem_name_attr, sem_attr->attrs[1] );
+		ret->semantic = sem_name_attr->tok;
+		SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_semindex_attr, sem_attr->attrs[2] );
+		if( !optional_semindex_attr->attrs.empty() ){
+			SASL_TYPED_ATTRIBUTE( queuer_attribute, parened_semindex_attr, optional_semindex_attr->attrs[0] );
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, index_attr, parened_semindex_attr->attrs[1] );
+			ret->semantic_index = index_attr->tok;
+		}
 	}
 
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_anno_attr, typed_attr->attrs[2] );

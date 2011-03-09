@@ -74,8 +74,8 @@ struct declarator: public node{
 
 	boost::shared_ptr<token_t>		name;
 	boost::shared_ptr<initializer>	init;
-	boost::shared_ptr<std::string>	semantic;
-	int32_t							semantic_index;
+	boost::shared_ptr<token_t>		semantic;
+	boost::shared_ptr<token_t>		semantic_index;
 
 protected:
 	declarator( boost::shared_ptr<token_t> tok );
