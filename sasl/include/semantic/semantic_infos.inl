@@ -150,7 +150,13 @@ class storage_si: public type_info_si{
 public:
 	storage_si( boost::shared_ptr<type_manager> typemgr );
 
+	softart::semantic get_semantic() const;
+	void set_semantic( softart::semantic v );
+
 	SASL_TYPE_INFO_PROXY();
+
+private:
+	softart::semantic sem;
 };
 
 class variable_semantic_info: public semantic_info{

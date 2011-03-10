@@ -17,6 +17,8 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/utility.h>
 
+#include <softart/include/enums.h>
+
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/metaprog/util.h>
 
@@ -60,14 +62,9 @@ using ::sasl::syntax_tree::statement;
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::variable_expression;
-
 using ::sasl::syntax_tree::dfunction_combinator;
 
-using ::sasl::semantic::errors::semantic_error;
-using ::sasl::semantic::extract_semantic_info;
-using ::sasl::semantic::get_or_create_semantic_info;
-using ::sasl::semantic::program_si;
-using ::sasl::semantic::symbol;
+using ::softart::indexed_semantic;
 
 using namespace boost::assign;
 
@@ -78,6 +75,7 @@ using boost::shared_ptr;
 using boost::unordered_map;
 
 using std::vector;
+using std::string;
 
 #define SASL_GET_OR_CREATE_SI( si_type, si_var, node ) shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>(node);
 #define SASL_GET_OR_CREATE_SI_P( si_type, si_var, node, param ) shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>( node, param );
@@ -97,7 +95,6 @@ struct sacontext{
 	shared_ptr<node> variable_to_fill; // for initializer only.
 	type_entry::id_t declarator_type_id;
 };
-
 
 sacontext* any_to_ctxt_ptr( any& any_val ){
 	return any_cast<sacontext>(&any_val);
@@ -280,7 +277,27 @@ SASL_VISIT_DEF( declarator ){
 		visit_child( child_ctxt, child_ctxt_init, v.init, dup_decl->init );
 	}
 
-	data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_decl );
+	shared_ptr<symbol> nodesym = data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_decl );
+
+	if( v.semantic ){
+		string const& semstr = v.semantic->str;
+		if( semstr == "SV_Position" ){
+			ssi->set_semantic( softart::SV_Position );
+		} else if( semstr == "SV_Texcoord" ){
+			indexed_semantic idxsem;
+			idxsem.unpacked.sem = softart::SV_Texcoord;
+			idxsem.unpacked.index = 0;
+
+			if( v.semantic_index ){
+				idxsem.unpacked.index = boost::lexical_cast<int16_t>(v.semantic_index->str);
+			}
+
+			ssi->set_semantic( idxsem.packed );
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
 	data_as_ctxt_ptr()->generated_node = dup_decl->handle();
 }
 

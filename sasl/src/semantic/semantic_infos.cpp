@@ -237,6 +237,14 @@ storage_si::storage_si( shared_ptr<type_manager> typemgr )
 {
 }
 
+softart::semantic storage_si::get_semantic() const{
+	return sem;
+}
+
+void storage_si::set_semantic( softart::semantic v ){
+	sem = v;
+}
+
 type_si::type_si( shared_ptr<type_manager> typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 {

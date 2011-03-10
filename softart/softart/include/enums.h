@@ -3,6 +3,7 @@
 
 #include "softart_fwd.h"
 
+#include <eflib/include/platform/typedefs.h>
 #include <eflib/include/string/string.h>
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -226,8 +227,9 @@ enum stencil_op
 
 enum semantic{
 	SV_None = 0,
-	SV_Position = 1,
-	semantic_count = 2
+	SV_Position,
+	SV_Texcoord,
+	semantic_count
 };
 
 union indexed_semantic{
