@@ -4,6 +4,8 @@
 #include <sasl/include/parser/generator.h>
 #include <sasl/include/parser/grammars.h>
 
+#include <sasl/enums/enums_helper.h>
+
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -25,6 +27,8 @@ using boost::shared_polymorphic_cast;
 using boost::shared_ptr;
 using boost::unordered_map;
 
+using std::make_pair;
+using std::string;
 using std::vector;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
@@ -443,10 +447,27 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
 	}
 
+#define INSERT_VECTOR_INTO_TYPEMAP( component_type, dim, enum_code ) \
+	{	\
+		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_t::null() );	\
+		bt->value_typecode = sasl_ehelper::vector_of( buildin_type_code::enum_code, dim );	\
+		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
+	}
+
+#define INSERT_MATRIX_INTO_TYPEMAP( component_type, dim0, dim1, enum_code ) \
+	{	\
+		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_t::null() );	\
+		bt->value_typecode = sasl_ehelper::matrix_of( buildin_type_code::enum_code, dim0, dim1 );	\
+		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
+	}
+
 namespace builder_details{
 	unordered_map< std::string, shared_ptr<buildin_type> > typemap;
 	void initialize_typemap(){
 		if( typemap.empty() ){
+
+			char const char_tbl[] = { '0', '1', '2', '3', '4' };
+
 			INSERT_INTO_TYPEMAP( sbyte,    _sint8   );
 			INSERT_INTO_TYPEMAP( int8_t,   _sint8   );
 			INSERT_INTO_TYPEMAP( ubyte,    _uint8   );
@@ -468,6 +489,20 @@ namespace builder_details{
 			INSERT_INTO_TYPEMAP( double,   _double  );
 			INSERT_INTO_TYPEMAP( bool,     _boolean );
 			INSERT_INTO_TYPEMAP( void,     _void    );
+
+			for( int dim0 = 1; dim0 <= 4; ++dim0 ){
+				INSERT_VECTOR_INTO_TYPEMAP( int, dim0, _sint32  );
+				INSERT_VECTOR_INTO_TYPEMAP( long, dim0, _sint64  );
+				INSERT_VECTOR_INTO_TYPEMAP( float, dim0, _float  );
+				INSERT_VECTOR_INTO_TYPEMAP( double, dim0, _double  );
+
+				for( int dim1 = 1; dim1 <= 4; ++dim1 ){
+					INSERT_MATRIX_INTO_TYPEMAP( int, dim0, dim1, _sint32  );
+					INSERT_MATRIX_INTO_TYPEMAP( long, dim0, dim1, _sint64  );
+					INSERT_MATRIX_INTO_TYPEMAP( float, dim0, dim1, _float  );
+					INSERT_MATRIX_INTO_TYPEMAP( double, dim0, dim1, _double  );
+				}
+			}
 		}
 	}
 }
@@ -592,6 +627,8 @@ shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribut
 		ret->params.push_back( build_param(param_attr) );
 	}
 	
+	build_semantic( typed_attr->attrs[3], ret->semantic, ret->semantic_index );
+
 	return ret;
 }
 

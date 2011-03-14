@@ -94,6 +94,14 @@ private:
 		boost::shared_ptr<storage_si> const& ssi
 		);
 
+	bool has_semantic(
+		boost::shared_ptr<sasl::syntax_tree::parameter> const& par
+		);
+	bool all_member_has_semantic(
+		boost::shared_ptr<sasl::syntax_tree::struct_type> const& par_type
+		);
+	bool is_entrant( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn );
+
 	void register_type_converter( const boost::any& ctxt );
 	void register_buildin_functions( const boost::any& child_ctxt_init );
 	void register_buildin_types();

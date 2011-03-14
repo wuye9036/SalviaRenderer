@@ -188,6 +188,8 @@ struct function_type: public type_specifier{
 	boost::shared_ptr< token_t > name;
 	boost::shared_ptr< type_specifier > retval_type;
 	std::vector< boost::shared_ptr<parameter> > params;
+	boost::shared_ptr< token_t > semantic;
+	boost::shared_ptr< token_t > semantic_index;
 	boost::shared_ptr<compound_statement> body;
 
 	bool declaration_only();

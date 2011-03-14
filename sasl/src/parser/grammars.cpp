@@ -42,7 +42,7 @@ void grammars::set_decls()
 		);
 	SRULE( function_def, function_decl >> function_body	);
 	SRULE( vardecl, declspec >> decllist );
-	SRULE( function_decl, declspec >> ident >> ( lparen >> *param > rparen ) );
+	SRULE( function_decl, declspec >> ident >> ( lparen >> *param > rparen ) >> -sem );
 	SRULE( struct_decl, kw_struct > ( struct_body | named_struct_body ) );
 	SRULE( typedef_decl, kw_typedef > declspec > ident );
 	SRULE( param, declspec >> -ident >> -sem >> -init );

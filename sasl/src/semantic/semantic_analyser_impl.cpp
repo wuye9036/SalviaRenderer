@@ -59,6 +59,7 @@ using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
 using ::sasl::syntax_tree::statement;
+using ::sasl::syntax_tree::struct_type;
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::variable_expression;
@@ -171,6 +172,45 @@ void semantic_analyser_impl::parse_semantic( shared_ptr<token_t> const& sem_tok,
 		ssi->set_semantic( idxsem.packed );
 		gctxt->mark_semantic( idxsem.packed );
 	}
+}
+
+bool semantic_analyser_impl::has_semantic( shared_ptr<parameter> const& par ){
+	SASL_EXTRACT_SI( type_info_si, tsi, par );
+
+	if( tsi->type_info()->is_buildin() ){
+		SASL_EXTRACT_SI( storage_si, ssi, par );
+		assert( ssi );
+
+		return ssi->get_semantic() != softart::SV_None;
+	}
+
+	if( tsi->type_info()->node_class() == syntax_node_types::struct_type ){
+		return all_member_has_semantic( tsi->type_info()->typed_handle<struct_type>() );
+	}
+
+	return false;
+}
+
+bool semantic_analyser_impl::all_member_has_semantic( shared_ptr<struct_type> const& par_type ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return false;
+}
+
+bool semantic_analyser_impl::is_entrant( shared_ptr<function_type> const& fn ){
+	BOOST_FOREACH( shared_ptr<parameter> const& par, fn->params ){
+		if( !has_semantic( par) ) return false;
+	}
+
+	SASL_EXTRACT_SI( storage_si, ssi, fn );
+	if ( ssi->type_info()->is_buildin() ){
+		return ssi->get_semantic() != softart::SV_None;
+	}
+
+	if( ssi->type_info()->node_class() == syntax_node_types::struct_type ){
+		return all_member_has_semantic( ssi->type_info()->typed_handle<struct_type>() );
+	}
+
+	return false;
 }
 
 SASL_VISIT_DEF_UNIMPL( unary_expression );
@@ -409,6 +449,10 @@ SASL_VISIT_DEF( function_type )
 	get_or_create_semantic_info<storage_si>( dup_fn, data_as_ctxt_ptr()->gsi->type_manager() )->entry_id( ret_tid );
 
 	any_to_ctxt_ptr(child_ctxt_init)->is_global = false;
+
+	if( is_entrant(dup_fn) ){
+		gctxt->add_entry( sym );
+	}
 
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
