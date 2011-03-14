@@ -84,7 +84,7 @@ using std::string;
 
 // semantic analysis context
 struct sacontext{
-	sacontext(): declarator_type_id(-1){
+	sacontext(): declarator_type_id(-1), is_global(true){
 	}
 
 	shared_ptr<global_si> gsi;
@@ -94,6 +94,8 @@ struct sacontext{
 
 	shared_ptr<node> variable_to_fill; // for initializer only.
 	type_entry::id_t declarator_type_id;
+
+	bool is_global;
 };
 
 sacontext* any_to_ctxt_ptr( any& any_val ){
@@ -279,10 +281,17 @@ SASL_VISIT_DEF( declarator ){
 
 	shared_ptr<symbol> nodesym = data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_decl );
 
+	if( data_as_ctxt_ptr()->is_global ){
+		gctxt->add_external( nodesym );
+	}
+
 	if( v.semantic ){
 		string const& semstr = v.semantic->str;
+		indexed_semantic idxsem;
+		idxsem.packed = softart::SV_None;
+
 		if( semstr == "SV_Position" ){
-			ssi->set_semantic( softart::SV_Position );
+			idxsem.packed = softart::SV_Position;
 		} else if( semstr == "SV_Texcoord" ){
 			indexed_semantic idxsem;
 			idxsem.unpacked.sem = softart::SV_Texcoord;
@@ -291,11 +300,12 @@ SASL_VISIT_DEF( declarator ){
 			if( v.semantic_index ){
 				idxsem.unpacked.index = boost::lexical_cast<int16_t>(v.semantic_index->str);
 			}
-
-			ssi->set_semantic( idxsem.packed );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
+
+		ssi->set_semantic( idxsem.packed );
+		gctxt->mark_semantic( idxsem.packed );
 	}
 
 	data_as_ctxt_ptr()->generated_node = dup_decl->handle();
@@ -389,6 +399,8 @@ SASL_VISIT_DEF( function_type )
 	
 	type_entry::id_t ret_tid = extract_semantic_info<type_info_si>( dup_fn->retval_type )->entry_id();
 	get_or_create_semantic_info<storage_si>( dup_fn, data_as_ctxt_ptr()->gsi->type_manager() )->entry_id( ret_tid );
+
+	any_to_ctxt_ptr(child_ctxt_init)->is_global = false;
 
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );

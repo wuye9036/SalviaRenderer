@@ -122,7 +122,7 @@ std::vector<softart::semantic> const& global_si::used_semantics() const{
 void global_si::mark_semantic( softart::semantic const& s ){
 	vector<softart::semantic>::iterator it = lower_bound( used_sems.begin(), used_sems.end(), s );
 
-	if( *it != s ){
+	if( it == used_sems.end() || *it != s ){
 		used_sems.insert( it, s );
 	}
 }
