@@ -602,8 +602,9 @@ shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> at
 	ret->param_type = build_typespec( typed_attr->attrs[0] );
 
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_ident, typed_attr->attrs[1] );
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_init, typed_attr->attrs[2] );
+	build_semantic( typed_attr->attrs[2], ret->semantic, ret->semantic_index );
 
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_init, typed_attr->attrs[3] );
 	if( !optional_ident->attrs.empty() ){
 		SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, optional_ident->attrs[0] );
 		ret->name = ident_attr->tok;
@@ -977,19 +978,8 @@ shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute
 	SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[0] );
 	ret->name = name_attr->tok->make_copy();
 	
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_sem_attr, typed_attr->attrs[1] );
-	if( !optional_sem_attr->attrs.empty() ){
-		SASL_TYPED_ATTRIBUTE( queuer_attribute, sem_attr, optional_sem_attr->attrs[0] );
-		SASL_TYPED_ATTRIBUTE( terminal_attribute, sem_name_attr, sem_attr->attrs[1] );
-		ret->semantic = sem_name_attr->tok;
-		SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_semindex_attr, sem_attr->attrs[2] );
-		if( !optional_semindex_attr->attrs.empty() ){
-			SASL_TYPED_ATTRIBUTE( queuer_attribute, parened_semindex_attr, optional_semindex_attr->attrs[0] );
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, index_attr, parened_semindex_attr->attrs[1] );
-			ret->semantic_index = index_attr->tok;
-		}
-	}
-
+	build_semantic( typed_attr->attrs[1], ret->semantic, ret->semantic_index );
+	
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_anno_attr, typed_attr->attrs[2] );
 	if( !optional_anno_attr->attrs.empty() ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -1006,6 +996,25 @@ shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute
 operators syntax_tree_builder::build_binop( boost::shared_ptr<sasl::parser::attribute> attr ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return operators::none;
+}
+
+void syntax_tree_builder::build_semantic(
+	shared_ptr<attribute> const& attr,
+	shared_ptr<token_t>& out_semantic, shared_ptr<token_t>& out_semantic_index
+	)
+{
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, typed_attr, attr );
+	if( !typed_attr->attrs.empty() ){
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, sem_attr, typed_attr->attrs[0] );
+		SASL_TYPED_ATTRIBUTE( terminal_attribute, sem_name_attr, sem_attr->attrs[1] );
+		out_semantic = sem_name_attr->tok;
+		SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_semindex_attr, sem_attr->attrs[2] );
+		if( !optional_semindex_attr->attrs.empty() ){
+			SASL_TYPED_ATTRIBUTE( queuer_attribute, parened_semindex_attr, optional_semindex_attr->attrs[0] );
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, index_attr, parened_semindex_attr->attrs[1] );
+			out_semantic_index = index_attr->tok;
+		}
+	}
 }
 
 

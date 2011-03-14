@@ -14,6 +14,7 @@
 namespace sasl{
 	namespace common{
 		class compiler_info_manager;
+		struct token_t;
 	}
 	namespace syntax_tree{
 		struct node;
@@ -26,6 +27,7 @@ BEGIN_NS_SASL_SEMANTIC();
 class symbol;
 class type_converter;
 class global_si;
+class storage_si;
 struct sacontext;
 
 class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
@@ -85,6 +87,13 @@ private:
 		boost::any& child_ctxt, const boost::any& init_data,
 		boost::shared_ptr<NodeT> child, boost::shared_ptr<NodeT>& generated_node 
 		);
+
+	void parse_semantic(
+		boost::shared_ptr<sasl::common::token_t> const& sem_tok,
+		boost::shared_ptr<sasl::common::token_t> const& sem_idx_tok,
+		boost::shared_ptr<storage_si> const& ssi
+		);
+
 	void register_type_converter( const boost::any& ctxt );
 	void register_buildin_functions( const boost::any& child_ctxt_init );
 	void register_buildin_types();

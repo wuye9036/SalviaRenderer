@@ -45,7 +45,7 @@ void grammars::set_decls()
 	SRULE( function_decl, declspec >> ident >> ( lparen >> *param > rparen ) );
 	SRULE( struct_decl, kw_struct > ( struct_body | named_struct_body ) );
 	SRULE( typedef_decl, kw_typedef > declspec > ident );
-	SRULE( param, declspec >> -ident >> -init );
+	SRULE( param, declspec >> -ident >> -sem >> -init );
 	SRULE( function_body, stmt_compound );
 	SRULE( decllist, init_declarator >> *(comma > init_declarator) );
 	SRULE( init_declarator, ident >> -sem >> -anno >> -init );

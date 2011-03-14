@@ -172,6 +172,8 @@ struct parameter: public declaration{
 	boost::shared_ptr<type_specifier> param_type;
 	boost::shared_ptr<token_t> name;
 	boost::shared_ptr<initializer> init;
+	boost::shared_ptr<token_t> semantic;
+	boost::shared_ptr<token_t> semantic_index;
 
 protected:
 	parameter( boost::shared_ptr<token_t> tok );

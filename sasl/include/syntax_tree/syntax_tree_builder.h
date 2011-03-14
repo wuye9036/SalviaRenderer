@@ -93,6 +93,11 @@ public:
 		);
 
 	operators build_binop( boost::shared_ptr<sasl::parser::attribute> attr );
+	void build_semantic(
+		boost::shared_ptr<sasl::parser::attribute> const& attr,
+		boost::shared_ptr<sasl::common::token_t>& out_semantic,
+		boost::shared_ptr<sasl::common::token_t>& out_semantic_index
+		);
 private:
 	syntax_tree_builder& operator = ( syntax_tree_builder const& );
 	sasl::parser::lexer& l;

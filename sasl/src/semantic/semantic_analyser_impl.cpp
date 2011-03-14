@@ -148,6 +148,31 @@ template <typename NodeT> any& semantic_analyser_impl::visit_child(
 	return child_ctxt;
 }
 
+void semantic_analyser_impl::parse_semantic( shared_ptr<token_t> const& sem_tok, shared_ptr<token_t> const& sem_idx_tok, shared_ptr<storage_si> const& ssi ){
+	if( sem_tok ){
+		string const& semstr = sem_tok->str;
+		indexed_semantic idxsem;
+		idxsem.packed = softart::SV_None;
+
+		if( semstr == "SV_Position" ){
+			idxsem.packed = softart::SV_Position;
+		} else if( semstr == "SV_Texcoord" ){
+			indexed_semantic idxsem;
+			idxsem.unpacked.sem = softart::SV_Texcoord;
+			idxsem.unpacked.index = 0;
+
+			if( sem_idx_tok ){
+				idxsem.unpacked.index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
+			}
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+
+		ssi->set_semantic( idxsem.packed );
+		gctxt->mark_semantic( idxsem.packed );
+	}
+}
+
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF( cast_expression ){
 	any child_ctxt_init = *data;
@@ -285,28 +310,7 @@ SASL_VISIT_DEF( declarator ){
 		gctxt->add_external( nodesym );
 	}
 
-	if( v.semantic ){
-		string const& semstr = v.semantic->str;
-		indexed_semantic idxsem;
-		idxsem.packed = softart::SV_None;
-
-		if( semstr == "SV_Position" ){
-			idxsem.packed = softart::SV_Position;
-		} else if( semstr == "SV_Texcoord" ){
-			indexed_semantic idxsem;
-			idxsem.unpacked.sem = softart::SV_Texcoord;
-			idxsem.unpacked.index = 0;
-
-			if( v.semantic_index ){
-				idxsem.unpacked.index = boost::lexical_cast<int16_t>(v.semantic_index->str);
-			}
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-
-		ssi->set_semantic( idxsem.packed );
-		gctxt->mark_semantic( idxsem.packed );
-	}
+	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	data_as_ctxt_ptr()->generated_node = dup_decl->handle();
 }
@@ -357,12 +361,16 @@ SASL_VISIT_DEF( parameter )
 
 	any child_ctxt;
 	visit_child( child_ctxt, *data, v.param_type, dup_par->param_type );
+
 	if ( v.init ){
 		visit_child( child_ctxt, *data, v.init, dup_par->init );
 	}
 
 	type_entry::id_t tid = extract_semantic_info<type_info_si>(dup_par->param_type)->entry_id();
-	get_or_create_semantic_info<storage_si>( dup_par, gctxt->type_manager() )->entry_id( tid );
+	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, gctxt->type_manager() );
+	ssi->entry_id( tid );
+
+	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	data_as_ctxt_ptr()->generated_node = dup_par->handle();
 }
