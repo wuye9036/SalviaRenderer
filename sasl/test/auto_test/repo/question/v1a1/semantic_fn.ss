@@ -1,6 +1,6 @@
-int a: SV_Position;
+float a: SV_Position;
 
-float4 fn(): SV_Position
+float fn(): SV_Position
 {
 	return a;
 }
