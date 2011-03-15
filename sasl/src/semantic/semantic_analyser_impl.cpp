@@ -347,7 +347,7 @@ SASL_VISIT_DEF( declarator ){
 	shared_ptr<symbol> nodesym = data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_decl );
 
 	if( data_as_ctxt_ptr()->is_global ){
-		gctxt->add_external( nodesym );
+		gctxt->add_global( nodesym );
 	}
 
 	parse_semantic( v.semantic, v.semantic_index, ssi );
@@ -513,8 +513,8 @@ SASL_VISIT_DEF( if_statement )
 }
 
 SASL_VISIT_DEF( while_statement ){
-	v.cond->accept( this, data );;
-	v.body->accept( this, data );;
+	v.cond->accept( this, data );
+	v.body->accept( this, data );
 }
 
 SASL_VISIT_DEF_UNIMPL( dowhile_statement );

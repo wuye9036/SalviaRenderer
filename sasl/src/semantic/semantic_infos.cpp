@@ -77,6 +77,11 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 		return str;
 	}
 }
+
+storage_info::storage_info()
+	: index(-1), offset(0), size(0), storage(none)
+{}
+
 ////////////////////////////////
 // global semantic
 global_si::global_si()
@@ -99,11 +104,11 @@ shared_ptr<compiler_info_manager> global_si::compiler_infos() const{
 	return compinfo;
 }
 
-vector< shared_ptr<symbol> > const& global_si::externals() const{
+vector< shared_ptr<symbol> > const& global_si::globals() const{
 	return external_syms;
 }
 
-void global_si::add_external( shared_ptr<symbol> v ){
+void global_si::add_global( shared_ptr<symbol> v ){
 	fns.push_back(v);
 }
 
@@ -243,6 +248,14 @@ softart::semantic storage_si::get_semantic() const{
 
 void storage_si::set_semantic( softart::semantic v ){
 	sem = v;
+}
+
+storage_info const& storage_si::storage() const{
+	return sem_storage;
+}
+
+storage_info& storage_si::storage(){
+	return sem_storage;
 }
 
 type_si::type_si( shared_ptr<type_manager> typemgr )

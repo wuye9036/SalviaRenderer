@@ -395,7 +395,7 @@ SASL_VISIT_DEF( buildin_type ){
 		*data = *extract_common_ctxt( tisi->type_info() );
 		return;
 	}
-	
+
 	const Type* ret_type = NULL;
 	bool sign = false;
 
@@ -412,6 +412,21 @@ SASL_VISIT_DEF( buildin_type ){
 		} else if ( v.value_typecode == buildin_type_code::_double ){
 			ret_type = Type::getDoubleTy( ctxt->context() );
 		}
+	} else if( sasl_ehelper::is_vector( v.value_typecode) ){
+		buildin_type_code btc = sasl_ehelper::scalar_of( v.value_typecode );
+		any child_ctxt = *data_as_cgctxt_ptr();
+		type_entry::id_t inner_typeid = gsi->type_manager()->get( btc );
+		visit_child( child_ctxt, gsi->type_manager()->get(inner_typeid) );
+		Type const* inner_type = any_to_cgctxt_ptr(child_ctxt)->type;
+		ret_type = VectorType::get( inner_type, sasl_ehelper::len_0(v.value_typecode) );
+	} else if( sasl_ehelper::is_matrix( v.value_typecode ) ){
+		buildin_type_code btc = sasl_ehelper::scalar_of( v.value_typecode );
+		any child_ctxt = *data_as_cgctxt_ptr();
+		type_entry::id_t inner_typeid = gsi->type_manager()->get( btc );
+		visit_child( child_ctxt, gsi->type_manager()->get(inner_typeid) );
+		Type const* inner_type = any_to_cgctxt_ptr(child_ctxt)->type;
+		Type const* row_type = VectorType::get( inner_type,sasl_ehelper::len_1(v.value_typecode) );
+		ret_type = ArrayType::get( inner_type, sasl_ehelper::len_0(v.value_typecode) );
 	}
 
 	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
@@ -439,7 +454,7 @@ SASL_VISIT_DEF( parameter ){
 	data_as_cgctxt_ptr()->is_signed = any_to_cgctxt_ptr(child_ctxt)->is_signed;
 	if (v.init){
 		visit_child( child_ctxt, child_ctxt_init, v.init );
-	}
+	} 
 
 	*get_common_ctxt(v) = *(data_as_cgctxt_ptr());
 
