@@ -32,6 +32,8 @@ namespace llvm{
 	class Constant;
 }
 
+struct buildin_type_code;
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_global_context;
@@ -101,6 +103,8 @@ private:
 		);
 
 	llvm::Constant* get_zero_filled_constant( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
+	llvm::Type const* create_buildin_type( buildin_type_code const& btc, bool& sign );
+
 	void restart_block( boost::any* data );
 
 	boost::shared_ptr< sasl::semantic::global_si > gsi;

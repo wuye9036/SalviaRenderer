@@ -142,6 +142,44 @@ Constant* llvm_code_generator::get_zero_filled_constant( boost::shared_ptr<type_
 	return NULL;
 }
 
+llvm::Type const* llvm_code_generator::create_buildin_type( buildin_type_code const& btc, bool& sign ){
+
+	if ( sasl_ehelper::is_void( btc ) ){
+		return Type::getVoidTy( ctxt->context() );
+	}
+	
+	if( sasl_ehelper::is_scalar(btc) ){
+		if( btc == buildin_type_code::_boolean ){
+			return IntegerType::get( ctxt->context(), 1 );
+		}
+		if( sasl_ehelper::is_integer(btc) ){
+			sign = sasl_ehelper::is_signed( btc );
+			return IntegerType::get( ctxt->context(), (unsigned int)sasl_ehelper::storage_size( btc ) << 3 );
+		}
+		if ( btc == buildin_type_code::_float ){
+			return Type::getFloatTy( ctxt->context() );
+		}
+		if ( btc == buildin_type_code::_double ){
+			return Type::getDoubleTy( ctxt->context() );
+		}
+	} 
+	
+	if( sasl_ehelper::is_vector( btc) ){
+		buildin_type_code scalar_btc = sasl_ehelper::scalar_of( btc );
+		Type const* inner_type = create_buildin_type(scalar_btc, sign);
+		return VectorType::get( inner_type, static_cast<uint32_t>(sasl_ehelper::len_0(btc)) );
+	}
+	
+	if( sasl_ehelper::is_matrix( btc ) ){
+		buildin_type_code scalar_btc = sasl_ehelper::scalar_of( btc );
+		Type const* row_type =
+			create_buildin_type( sasl_ehelper::vector_of(scalar_btc, sasl_ehelper::len_1(btc)), sign );
+		return ArrayType::get( row_type, sasl_ehelper::len_0(btc) );
+	}
+
+	return NULL;
+}
+
 void llvm_code_generator::restart_block( boost::any* data ){
 	BasicBlock* restart = BasicBlock::Create( ctxt->context(), "", data_as_cgctxt_ptr()->parent_func );
 	ctxt->builder()->SetInsertPoint(restart);
@@ -396,38 +434,8 @@ SASL_VISIT_DEF( buildin_type ){
 		return;
 	}
 
-	const Type* ret_type = NULL;
 	bool sign = false;
-
-	if ( sasl_ehelper::is_void( v.value_typecode ) ){
-		ret_type = Type::getVoidTy( ctxt->context() );
-	} else if( sasl_ehelper::is_scalar(v.value_typecode) ){
-		if( v.value_typecode == buildin_type_code::_boolean ){
-			ret_type = IntegerType::get( ctxt->context(), 1 );
-		} else if( sasl_ehelper::is_integer(v.value_typecode) ){
-			ret_type = IntegerType::get( ctxt->context(), (unsigned int)sasl_ehelper::storage_size( v.value_typecode ) << 3 );
-			sign = sasl_ehelper::is_signed( v.value_typecode );
-		} else if ( v.value_typecode == buildin_type_code::_float ){
-			ret_type = Type::getFloatTy( ctxt->context() );
-		} else if ( v.value_typecode == buildin_type_code::_double ){
-			ret_type = Type::getDoubleTy( ctxt->context() );
-		}
-	} else if( sasl_ehelper::is_vector( v.value_typecode) ){
-		buildin_type_code btc = sasl_ehelper::scalar_of( v.value_typecode );
-		any child_ctxt = *data_as_cgctxt_ptr();
-		type_entry::id_t inner_typeid = gsi->type_manager()->get( btc );
-		visit_child( child_ctxt, gsi->type_manager()->get(inner_typeid) );
-		Type const* inner_type = any_to_cgctxt_ptr(child_ctxt)->type;
-		ret_type = VectorType::get( inner_type, sasl_ehelper::len_0(v.value_typecode) );
-	} else if( sasl_ehelper::is_matrix( v.value_typecode ) ){
-		buildin_type_code btc = sasl_ehelper::scalar_of( v.value_typecode );
-		any child_ctxt = *data_as_cgctxt_ptr();
-		type_entry::id_t inner_typeid = gsi->type_manager()->get( btc );
-		visit_child( child_ctxt, gsi->type_manager()->get(inner_typeid) );
-		Type const* inner_type = any_to_cgctxt_ptr(child_ctxt)->type;
-		Type const* row_type = VectorType::get( inner_type,sasl_ehelper::len_1(v.value_typecode) );
-		ret_type = ArrayType::get( inner_type, sasl_ehelper::len_0(v.value_typecode) );
-	}
+	Type const* ret_type = create_buildin_type(v.value_typecode, sign);
 
 	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
 	EFLIB_ASSERT_AND_IF( ret_type, tips.c_str() ){
