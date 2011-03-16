@@ -22,6 +22,10 @@ namespace sasl{
 	}
 }
 
+namespace softart{
+	enum languages;
+}
+
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
@@ -78,6 +82,7 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
+	softart::languages language( softart::languages lang );
 	boost::shared_ptr<global_si> global_semantic_info() const;
 
 private:
@@ -111,6 +116,7 @@ private:
 		boost::shared_ptr< ::sasl::syntax_tree::node >
 		);
 
+	softart::languages lang;
 	boost::shared_ptr<global_si> gctxt;
 
 	boost::shared_ptr<type_converter> typeconv;

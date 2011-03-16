@@ -7,6 +7,8 @@
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/utility.h>
 
+#include <softart/include/enums.h>
+
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/diagnostics/logrout.h>
 #include <eflib/include/memory/lifetime_manager.h>
@@ -67,7 +69,7 @@ cgllvm_cases::cgllvm_cases(){
 void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
-	shared_ptr< SEMANTIC_(global_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test) );
+	shared_ptr< SEMANTIC_(global_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test), softart::lang_vertex_sl );
 	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root );
 
 	fputs("\n======================================================\r\n", stderr);

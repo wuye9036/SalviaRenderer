@@ -16,11 +16,15 @@ namespace sasl{
 	}
 }
 
+namespace softart{
+	enum languages;
+};
+
 BEGIN_NS_SASL_SEMANTIC();
 
 class global_si;
 
-boost::shared_ptr<global_si> semantic_analysis( boost::shared_ptr< ::sasl::syntax_tree::node > root );
+boost::shared_ptr<global_si> semantic_analysis( boost::shared_ptr< ::sasl::syntax_tree::node > root, softart::languages lang );
 
 END_NS_SASL_SEMANTIC();
 

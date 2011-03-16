@@ -227,8 +227,17 @@ enum stencil_op
 
 enum semantic{
 	SV_None = 0,
+
+	// Semantic for input.
 	SV_Position,
 	SV_Texcoord,
+
+	// Semantic for rasterizer.
+	SV_RTexcoord,
+	SV_RPosition,
+
+	// Semantic for pixel
+
 	semantic_count
 };
 
@@ -238,6 +247,14 @@ union indexed_semantic{
 		int16_t index;
 		int16_t sem;
 	} unpacked;
+};
+
+enum languages{
+	lang_none = 0,
+	lang_common,
+	lang_vertex_sl,
+	lang_pixel_sl,
+	lang_blend_sl
 };
 
 END_NS_SOFTART()

@@ -8,7 +8,13 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 
+#include <softart/include/enums.h>
+
 #include <eflib/include/diagnostics/assert.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/foreach.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #include <string>
 
@@ -19,7 +25,9 @@ using ::sasl::syntax_tree::buildin_type;
 
 using softart::semantic;
 
+using ::boost::addressof;
 using ::boost::shared_ptr;
+using ::boost::unordered_map;
 
 using std::string;
 using std::vector;
@@ -105,11 +113,11 @@ shared_ptr<compiler_info_manager> global_si::compiler_infos() const{
 }
 
 vector< shared_ptr<symbol> > const& global_si::globals() const{
-	return external_syms;
+	return global_syms;
 }
 
 void global_si::add_global( shared_ptr<symbol> v ){
-	fns.push_back(v);
+	global_syms.push_back(v);
 }
 
 vector< shared_ptr<symbol> > const& global_si::entries() const{
@@ -130,6 +138,93 @@ void global_si::mark_semantic( softart::semantic const& s ){
 	if( it == used_sems.end() || *it != s ){
 		used_sems.insert( it, s );
 	}
+}
+
+storage_info const* global_si::storage( softart::semantic sem ) const{
+	unordered_map< softart::semantic, storage_info >::const_iterator it = sem_storages.find( sem );
+	return it == sem_storages.end() ? NULL : addressof( it->second );
+}
+
+storage_info const* global_si::storage( shared_ptr<symbol> const& g_var ) const{
+	shared_ptr<storage_si> ssi = extract_semantic_info<storage_si>( g_var->node() );
+	return ssi ? addressof( ssi->storage() ) : NULL;
+}
+
+void global_si::calculate_storage( softart::languages lang ){
+	if( lang == softart::lang_none ){ return; }
+
+	if( lang == softart::lang_vertex_sl ){
+		// Did not process memory alignment.
+		// It is correspond packed structure in LLVM.
+
+		int sin_idx = 0;
+		// int sout_idx = 0;
+		int rin_idx = 0;
+		int rout_idx = 0;
+
+		int sin_offset = 0;
+		// int sout_offset = 0;
+		int rin_offset = 0;
+		int rout_offset = 0;
+
+		int storage_size = 0;
+
+		// Calculate semantics
+		BOOST_FOREACH( softart::semantic sem, used_sems )
+		{
+			softart::indexed_semantic idxsem;
+			idxsem.packed = sem;
+
+			switch( static_cast<softart::semantic>( idxsem.unpacked.sem ) ){
+			case softart::SV_Position:
+				storage_size = sizeof(float*);
+				sem_storages[sem].index = sin_idx++;
+				sem_storages[sem].offset = sin_offset;
+				sem_storages[sem].size = storage_size;
+				sin_offset += storage_size;
+				break;
+
+			case softart::SV_Texcoord:
+				storage_size = sizeof(float*);
+				sem_storages[sem].index = sin_idx++;
+				sem_storages[sem].offset = sin_offset;
+				sem_storages[sem].size = storage_size;
+				sin_offset += storage_size;
+				break;
+
+			case softart::SV_RPosition:
+				storage_size = sizeof(float) * 4;
+				sem_storages[sem].index = rout_idx++;
+				sem_storages[sem].offset = rout_offset;
+				sem_storages[sem].size = storage_size;
+				rout_offset += storage_size;
+				break;
+			default:
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} // switch
+
+		} //BOOST_FOREACH
+
+		// Calculate globals
+		BOOST_FOREACH( shared_ptr<symbol> sym, global_syms ){
+			shared_ptr<storage_si> ssi = extract_semantic_info<storage_si>( sym->node() );
+			shared_ptr<type_specifier> ti = ssi->type_info();
+			assert(ti);
+
+			if( ti->is_buildin() ){
+				storage_size = static_cast<int>( sasl_ehelper::storage_size( ti->value_typecode ) );
+
+				ssi->storage().index = rin_idx++;
+				ssi->storage().offset = rin_offset;
+				ssi->storage().size = storage_size;
+				rin_offset += storage_size;
+			} else {
+				EFLIB_ASSERT_UNIMPLEMENTED0( "Don't support un-build-in type as global yet.");
+			}
+		}
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 //////////////////////

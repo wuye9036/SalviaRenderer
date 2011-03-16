@@ -28,6 +28,10 @@ namespace sasl {
 	}
 }
 
+namespace softart{
+	enum languages;
+}
+
 BEGIN_NS_SASL_SEMANTIC();
 
 using ::sasl::syntax_tree::type_specifier;
@@ -37,6 +41,7 @@ using ::sasl::syntax_tree::statement;
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
 struct storage_info{
+
 	enum types{
 		none = 0,
 		stream_in,
@@ -47,7 +52,6 @@ struct storage_info{
 	};
 
 	storage_info();
-
 	int index;
 	int offset;
 	int size;
@@ -76,11 +80,16 @@ public:
 	std::vector<softart::semantic> const& used_semantics() const;
 	void mark_semantic( softart::semantic const& s );
 
+	// Get storage informations.
+	// Pointer for null return.
+	storage_info const* storage( softart::semantic sem ) const;
+	storage_info const* storage( boost::shared_ptr<symbol> const& g_var ) const;
+
+	// Collect storage information and generate code.
+	void calculate_storage( softart::languages lang );
 private:
 
-	void fill_storage();
-
-	std::vector< boost::shared_ptr<symbol> > external_syms;
+	std::vector< boost::shared_ptr<symbol> > global_syms;
 	std::vector< boost::shared_ptr<symbol> > fns;
 	std::vector<softart::semantic> used_sems;
 

@@ -119,7 +119,7 @@ shared_ptr<type_specifier> type_info_of( shared_ptr<node> n ){
 	return shared_ptr<type_specifier>();
 }
 
-semantic_analyser_impl::semantic_analyser_impl()
+semantic_analyser_impl::semantic_analyser_impl(): lang( softart::lang_none )
 {
 	typeconv.reset( new type_converter() );
 }
@@ -149,7 +149,12 @@ template <typename NodeT> any& semantic_analyser_impl::visit_child(
 	return child_ctxt;
 }
 
-void semantic_analyser_impl::parse_semantic( shared_ptr<token_t> const& sem_tok, shared_ptr<token_t> const& sem_idx_tok, shared_ptr<storage_si> const& ssi ){
+void semantic_analyser_impl::parse_semantic(
+	shared_ptr<token_t> const& sem_tok,
+	shared_ptr<token_t> const& sem_idx_tok,
+	shared_ptr<storage_si> const& ssi
+	)
+{
 	if( sem_tok ){
 		string const& semstr = sem_tok->str;
 		indexed_semantic idxsem;
@@ -157,6 +162,8 @@ void semantic_analyser_impl::parse_semantic( shared_ptr<token_t> const& sem_tok,
 
 		if( semstr == "SV_Position" ){
 			idxsem.packed = softart::SV_Position;
+		} else if ( semstr == "SV_RPosition" ){
+			idxsem.packed = softart::SV_RPosition;
 		} else if( semstr == "SV_Texcoord" ){
 			indexed_semantic idxsem;
 			idxsem.unpacked.sem = softart::SV_Texcoord;
@@ -605,6 +612,7 @@ SASL_VISIT_DEF( program ){
 	}
 
 	gctxt->root()->relink( dup_prog->handle() );
+	gctxt->calculate_storage( lang );
 }
 
 SASL_VISIT_DEF_UNIMPL( for_statement );

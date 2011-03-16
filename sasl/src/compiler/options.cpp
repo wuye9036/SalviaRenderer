@@ -7,6 +7,8 @@
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
 
+#include <softart/include/enums.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
@@ -259,7 +261,8 @@ void options_io::process( bool& abort )
 					cout << "Syntax error happened!" << endl;
 					return;
 				}
-				shared_ptr<global_si> gsi = semantic_analysis( prog );
+				// TODO: For test only.
+				shared_ptr<global_si> gsi = semantic_analysis( prog, softart::lang_vertex_sl );
 				if( !gsi ){
 					cout << "Semantic error happened!" << endl;
 				}
