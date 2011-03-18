@@ -5,7 +5,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
 #include <sasl/include/semantic/name_mangler.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/type_converter.h>

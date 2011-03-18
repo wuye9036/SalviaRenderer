@@ -15,6 +15,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_error.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_info.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.imp.h
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol.h
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol_scope.h
 	${SASL_HOME_DIR}/sasl/include/semantic/type_checker.h
@@ -26,7 +27,8 @@ set( SOURCE_FILES
 	name_mangler.cpp
 	semantic_analyser_impl.cpp
 	semantic_error.cpp
-	semantic_infos.cpp
+	semantic_infos/module_si.cpp
+	semantic_infos/semantic_infos.cpp
 	semantic_analyser.cpp
 	symbol.cpp
 	symbol_scope.cpp

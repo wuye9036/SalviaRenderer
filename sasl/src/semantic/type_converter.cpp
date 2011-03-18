@@ -1,6 +1,6 @@
 #include <sasl/include/semantic/type_converter.h>
 
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/syntax_tree/node.h>
 
