@@ -20,7 +20,7 @@
 namespace sasl{
 	namespace semantic{
 		class type_converter;
-		class global_si;
+		class module_si;
 	}
 	namespace syntax_tree{
 		struct expression;
@@ -93,7 +93,7 @@ public:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
 
-	void global_semantic_info( boost::shared_ptr< sasl::semantic::global_si > );
+	void global_semantic_info( boost::shared_ptr< sasl::semantic::module_si > );
 private:
 
 	void do_assign(
@@ -105,9 +105,13 @@ private:
 	llvm::Constant* get_zero_filled_constant( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
 	llvm::Type const* create_buildin_type( buildin_type_code const& btc, bool& sign );
 
+	llvm::Type const* get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
+
+	void create_param_type();
+	
 	void restart_block( boost::any* data );
 
-	boost::shared_ptr< sasl::semantic::global_si > gsi;
+	boost::shared_ptr< sasl::semantic::module_si > gsi;
 	boost::shared_ptr<cgllvm_global_context> ctxt;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 };

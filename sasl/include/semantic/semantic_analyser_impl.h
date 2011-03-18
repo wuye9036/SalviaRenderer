@@ -30,7 +30,7 @@ BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
 class type_converter;
-class global_si;
+class module_si;
 class storage_si;
 struct sacontext;
 
@@ -82,8 +82,8 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
-	softart::languages language( softart::languages lang );
-	boost::shared_ptr<global_si> global_semantic_info() const;
+	void language( softart::languages lang );
+	boost::shared_ptr<module_si> global_semantic_info() const;
 
 private:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
@@ -117,7 +117,7 @@ private:
 		);
 
 	softart::languages lang;
-	boost::shared_ptr<global_si> gctxt;
+	boost::shared_ptr<module_si> gctxt;
 
 	boost::shared_ptr<type_converter> typeconv;
 };

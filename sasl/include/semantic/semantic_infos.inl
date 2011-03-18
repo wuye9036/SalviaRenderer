@@ -40,29 +40,29 @@ using ::sasl::syntax_tree::statement;
 
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
+
+enum storage_types{
+	storage_none = 0,
+	stream_in,
+	stream_out,
+	buffer_in,
+	buffer_out,
+	storage_types_count
+};
+
 struct storage_info{
-
-	enum types{
-		none = 0,
-		stream_in,
-		stream_out,
-		register_in,
-		register_out,
-		type_count
-	};
-
 	storage_info();
 	int index;
 	int offset;
 	int size;
-	types storage;
+	storage_types storage;
 };
 
-class global_si: public semantic_info{
+class module_si: public semantic_info{
 public:
 	typedef semantic_info base_type;
 
-	global_si();
+	module_si();
 
 	boost::shared_ptr<class type_manager> type_manager() const;
 	boost::shared_ptr<symbol> root() const;
@@ -75,6 +75,8 @@ public:
 	// Entry.
 	std::vector< boost::shared_ptr<symbol> > const& entries() const;
 	void add_entry( boost::shared_ptr<symbol> );
+
+	void mark_as_entry( boost::shared_ptr<symbol> const&, softart::languages ) const;
 
 	// Semantics
 	std::vector<softart::semantic> const& used_semantics() const;

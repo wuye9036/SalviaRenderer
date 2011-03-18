@@ -87,12 +87,12 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 }
 
 storage_info::storage_info()
-	: index(-1), offset(0), size(0), storage(none)
+	: index(-1), offset(0), size(0), storage(storage_none)
 {}
 
 ////////////////////////////////
 // global semantic
-global_si::global_si()
+module_si::module_si()
 {
 	compinfo = compiler_info_manager::create();
 	typemgr = type_manager::create();
@@ -100,39 +100,39 @@ global_si::global_si()
 	typemgr->root_symbol(rootsym);
 }
 
-shared_ptr<class type_manager> global_si::type_manager() const{
+shared_ptr<class type_manager> module_si::type_manager() const{
 	return typemgr;
 }
 
-shared_ptr<symbol> global_si::root() const{
+shared_ptr<symbol> module_si::root() const{
 	return rootsym;
 }
 
-shared_ptr<compiler_info_manager> global_si::compiler_infos() const{
+shared_ptr<compiler_info_manager> module_si::compiler_infos() const{
 	return compinfo;
 }
 
-vector< shared_ptr<symbol> > const& global_si::globals() const{
+vector< shared_ptr<symbol> > const& module_si::globals() const{
 	return global_syms;
 }
 
-void global_si::add_global( shared_ptr<symbol> v ){
+void module_si::add_global( shared_ptr<symbol> v ){
 	global_syms.push_back(v);
 }
 
-vector< shared_ptr<symbol> > const& global_si::entries() const{
+vector< shared_ptr<symbol> > const& module_si::entries() const{
 	return fns;
 }
 
-void global_si::add_entry( shared_ptr<symbol> v ){
+void module_si::add_entry( shared_ptr<symbol> v ){
 	fns.push_back(v);
 }
 
-std::vector<softart::semantic> const& global_si::used_semantics() const{
+std::vector<softart::semantic> const& module_si::used_semantics() const{
 	return used_sems;
 }
 
-void global_si::mark_semantic( softart::semantic const& s ){
+void module_si::mark_semantic( softart::semantic const& s ){
 	vector<softart::semantic>::iterator it = lower_bound( used_sems.begin(), used_sems.end(), s );
 
 	if( it == used_sems.end() || *it != s ){
@@ -140,17 +140,17 @@ void global_si::mark_semantic( softart::semantic const& s ){
 	}
 }
 
-storage_info const* global_si::storage( softart::semantic sem ) const{
+storage_info const* module_si::storage( softart::semantic sem ) const{
 	unordered_map< softart::semantic, storage_info >::const_iterator it = sem_storages.find( sem );
 	return it == sem_storages.end() ? NULL : addressof( it->second );
 }
 
-storage_info const* global_si::storage( shared_ptr<symbol> const& g_var ) const{
+storage_info const* module_si::storage( shared_ptr<symbol> const& g_var ) const{
 	shared_ptr<storage_si> ssi = extract_semantic_info<storage_si>( g_var->node() );
 	return ssi ? addressof( ssi->storage() ) : NULL;
 }
 
-void global_si::calculate_storage( softart::languages lang ){
+void module_si::calculate_storage( softart::languages lang ){
 	if( lang == softart::lang_none ){ return; }
 
 	if( lang == softart::lang_vertex_sl ){
@@ -172,10 +172,7 @@ void global_si::calculate_storage( softart::languages lang ){
 		// Calculate semantics
 		BOOST_FOREACH( softart::semantic sem, used_sems )
 		{
-			softart::indexed_semantic idxsem;
-			idxsem.packed = sem;
-
-			switch( static_cast<softart::semantic>( idxsem.unpacked.sem ) ){
+			switch( static_cast<softart::semantic>( softart::semantic_base(sem) ) ){
 			case softart::SV_Position:
 				storage_size = sizeof(float*);
 				sem_storages[sem].index = sin_idx++;
@@ -222,9 +219,9 @@ void global_si::calculate_storage( softart::languages lang ){
 				EFLIB_ASSERT_UNIMPLEMENTED0( "Don't support un-build-in type as global yet.");
 			}
 		}
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 //////////////////////

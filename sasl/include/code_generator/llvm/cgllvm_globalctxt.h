@@ -4,10 +4,17 @@
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 
+namespace sasl{
+	namespace semantic{
+		enum storage_types;
+	}
+}
+
 namespace llvm{
 	class LLVMContext;
 	class Module;
 	class ConstantFolder;
+	class Type;
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
         > class IRBuilder;
@@ -34,11 +41,20 @@ public:
 
 	virtual llvm::LLVMContext& context();
 
+	llvm::Type const* get_type( sasl::semantic::storage_types storage );
+	void set_type( sasl::semantic::storage_types, llvm::Type const* );
 	~cgllvm_global_context();
 private:
 	boost::shared_ptr<llvm::LLVMContext> lctxt;
 	boost::shared_ptr<llvm::DefaultIRBuilder> irbuilder;
+	
 	llvm::Module* mod;
+
+	llvm::Type const* str_in_struct;
+	llvm::Type const* str_out_struct;
+	llvm::Type const* buf_in_struct;
+	llvm::Type const* buf_out_struct;
+
 	mutable bool have_mod;
 };
 

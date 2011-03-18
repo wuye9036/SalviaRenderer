@@ -23,7 +23,7 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using ::sasl::syntax_tree::node;
 
-class global_si;
+class module_si;
 
 /////////////////////////////////////////////////
 // storage the semantic of node.

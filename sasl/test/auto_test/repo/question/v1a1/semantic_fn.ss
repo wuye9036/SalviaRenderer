@@ -1,6 +1,7 @@
 float a: SV_Position;
+float b;
 
-float fn(): SV_Position
+float fn(): SV_RPosition
 {
-	return a;
+	return b;
 }

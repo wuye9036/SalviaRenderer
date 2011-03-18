@@ -23,7 +23,7 @@ public:
 	static bool is_avaliable();
 	static void release();
 
-	TEST_CASE_SP_VARIABLE( SEMANTIC_(global_si), si_root );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(module_si), si_root );
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_root );
 
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn0_sem );

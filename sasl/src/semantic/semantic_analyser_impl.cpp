@@ -65,8 +65,6 @@ using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::variable_expression;
 using ::sasl::syntax_tree::dfunction_combinator;
 
-using ::softart::indexed_semantic;
-
 using namespace boost::assign;
 
 using boost::any;
@@ -88,7 +86,7 @@ struct sacontext{
 	sacontext(): declarator_type_id(-1), is_global(true){
 	}
 
-	shared_ptr<global_si> gsi;
+	shared_ptr<module_si> gsi;
 	shared_ptr<symbol> parent_sym;
 
 	shared_ptr<node> generated_node;
@@ -156,28 +154,25 @@ void semantic_analyser_impl::parse_semantic(
 	)
 {
 	if( sem_tok ){
+		softart::semantic sem;
 		string const& semstr = sem_tok->str;
-		indexed_semantic idxsem;
-		idxsem.packed = softart::SV_None;
 
 		if( semstr == "SV_Position" ){
-			idxsem.packed = softart::SV_Position;
+			sem = softart::SV_Position;
 		} else if ( semstr == "SV_RPosition" ){
-			idxsem.packed = softart::SV_RPosition;
+			sem = softart::SV_RPosition;
 		} else if( semstr == "SV_Texcoord" ){
-			indexed_semantic idxsem;
-			idxsem.unpacked.sem = softart::SV_Texcoord;
-			idxsem.unpacked.index = 0;
-
+			int index = 0;
 			if( sem_idx_tok ){
-				idxsem.unpacked.index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
+				index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
 			}
+			sem = pack_semantic( sem, index );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 
-		ssi->set_semantic( idxsem.packed );
-		gctxt->mark_semantic( idxsem.packed );
+		ssi->set_semantic( sem );
+		gctxt->mark_semantic( sem );
 	}
 }
 
@@ -353,11 +348,13 @@ SASL_VISIT_DEF( declarator ){
 
 	shared_ptr<symbol> nodesym = data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_decl );
 
-	if( data_as_ctxt_ptr()->is_global ){
+	parse_semantic( v.semantic, v.semantic_index, ssi );
+
+	if(	data_as_ctxt_ptr()->is_global
+		&& ssi->get_semantic() == softart::SV_None )
+	{
 		gctxt->add_global( nodesym );
 	}
-
-	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	data_as_ctxt_ptr()->generated_node = dup_decl->handle();
 }
@@ -589,7 +586,7 @@ SASL_VISIT_DEF( program ){
 	data = data;
 
 	// create semantic info
-	gctxt.reset( new global_si() );
+	gctxt.reset( new module_si() );
 
 	any child_ctxt_init = sacontext();
 	any_to_ctxt_ptr(child_ctxt_init)->gsi = gctxt;
@@ -939,7 +936,11 @@ void semantic_analyser_impl::register_buildin_types(){
 	}
 }
 
-boost::shared_ptr<global_si> semantic_analyser_impl::global_semantic_info() const{
+void semantic_analyser_impl::language( softart::languages lang ){
+	this->lang = lang;
+}
+
+boost::shared_ptr<module_si> semantic_analyser_impl::global_semantic_info() const{
 	return gctxt;
 }
 

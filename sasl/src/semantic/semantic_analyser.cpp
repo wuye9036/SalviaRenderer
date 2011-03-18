@@ -9,8 +9,9 @@ using ::sasl::common::compiler_info_manager;
 
 using boost::shared_ptr;
 
-shared_ptr<global_si> semantic_analysis( shared_ptr<node> root, softart::languages lang ){
+shared_ptr<module_si> semantic_analysis( shared_ptr<node> root, softart::languages lang ){
 	semantic_analyser_impl saimpl;
+	saimpl.language( lang );
 	root->accept(&saimpl, NULL);
 	return saimpl.global_semantic_info();
 }

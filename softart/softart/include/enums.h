@@ -241,13 +241,9 @@ enum semantic{
 	semantic_count
 };
 
-union indexed_semantic{
-	semantic packed;
-	struct {
-		int16_t index;
-		int16_t sem;
-	} unpacked;
-};
+inline semantic pack_semantic( semantic sem, int index ){ return static_cast<semantic>( ( index << 16 ) + static_cast<int>(sem) ); }
+inline int semantic_index( semantic sem ){ return sem >> 16; }
+inline semantic semantic_base( semantic sem ){ return static_cast<semantic>(sem & 65535); }
 
 enum languages{
 	lang_none = 0,

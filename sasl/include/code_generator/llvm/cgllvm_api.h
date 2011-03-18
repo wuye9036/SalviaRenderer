@@ -19,7 +19,7 @@ namespace llvm {
 
 namespace sasl {
 	namespace semantic{
-		class global_si;
+		class module_si;
 	}
 }
 
@@ -38,7 +38,7 @@ enum optimization_options{
 	opt_preset_std_for_function
 };
 
-boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr< sasl::semantic::global_si > );
+boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr< sasl::semantic::module_si > );
 void optimize( boost::shared_ptr<llvm_code>, std::vector<optimization_options> opt_options );
 void dump( boost::shared_ptr<llvm_code> );
 void dump( boost::shared_ptr<llvm_code>, std::ostream& o );

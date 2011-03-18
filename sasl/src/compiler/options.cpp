@@ -20,7 +20,7 @@
 using sasl::code_generator::llvm_code;
 using sasl::code_generator::generate_llvm_code;
 using sasl::common::lex_context;
-using sasl::semantic::global_si;
+using sasl::semantic::module_si;
 using sasl::semantic::semantic_analysis;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::parse;
@@ -262,7 +262,7 @@ void options_io::process( bool& abort )
 					return;
 				}
 				// TODO: For test only.
-				shared_ptr<global_si> gsi = semantic_analysis( prog, softart::lang_vertex_sl );
+				shared_ptr<module_si> gsi = semantic_analysis( prog, softart::lang_vertex_sl );
 				if( !gsi ){
 					cout << "Semantic error happened!" << endl;
 				}

@@ -14,6 +14,8 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
 
+#include <softart/include/enums.h>
+
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/boost_begin.h>
@@ -32,7 +34,8 @@ using namespace llvm;
 
 using semantic::const_value_si;
 using semantic::extract_semantic_info;
-using semantic::global_si;
+using semantic::module_si;
+using semantic::storage_si;
 using semantic::operator_name;
 using semantic::statement_si;
 using semantic::symbol;
@@ -178,6 +181,80 @@ llvm::Type const* llvm_code_generator::create_buildin_type( buildin_type_code co
 	}
 
 	return NULL;
+}
+
+llvm::Type const* llvm_code_generator::get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& v )
+{
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
+
+void llvm_code_generator::create_param_type(){
+	// gather type informations
+
+	vector<Type const*> si_members;
+	vector<Type const*> so_members;
+	vector<Type const*> bi_members;
+	vector<Type const*> bo_members;
+
+	BOOST_FOREACH( shared_ptr<symbol> const& gvar, gsi->globals() ){
+		shared_ptr<storage_si> ssi = extract_semantic_info<storage_si>( gvar->node() );
+		assert( ssi );
+
+		bi_members.resize( ssi->storage().index + 1 );
+		bi_members[ ssi->storage().index ] = get_llvm_type( ssi->type_info() );
+	}
+
+
+	// Initialize types
+	bool sign = false;
+	
+	Type const* f4 = create_buildin_type( sasl_ehelper::vector_of( buildin_type_code::_float, 4 ), sign );
+	Type const* pf4 = PointerType::getUnqual( f4 );
+	Type const* pvoid = Type::getInt8PtrTy(ctxt->context());
+
+	BOOST_FOREACH( softart::semantic sem, gsi->used_semantics() ){
+
+		int index = gsi->storage(sem)->index;
+
+		switch( semantic_base(sem) ){
+		case softart::SV_Position:
+			si_members.resize( index+1 );
+			si_members[index] = pf4;
+			return;
+		case softart::SV_RPosition:
+			so_members.resize( index+1 );
+			so_members[index] = pf4;
+			return;
+		default:
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	if ( si_members.empty() ){
+		ctxt->set_type( sasl::semantic::stream_in, pvoid );
+	} else {
+		ctxt->set_type( sasl::semantic::stream_in, StructType::get( ctxt->context(), si_members, true ) );
+	}
+
+	if ( so_members.empty() ){
+		ctxt->set_type( sasl::semantic::stream_out, pvoid );
+	} else {
+		ctxt->set_type( sasl::semantic::stream_out, StructType::get( ctxt->context(), so_members, true ) );
+	}
+
+	if ( bi_members.empty() ){
+		ctxt->set_type( sasl::semantic::buffer_in, pvoid );
+	} else {
+		ctxt->set_type( sasl::semantic::buffer_in, StructType::get( ctxt->context(), bi_members, true ) );
+	}
+
+	if ( bo_members.empty() ){
+		ctxt->set_type( sasl::semantic::buffer_out, pvoid );
+	} else {
+		ctxt->set_type( sasl::semantic::buffer_out, StructType::get( ctxt->context(), bo_members, true ) );
+	}
 }
 
 void llvm_code_generator::restart_block( boost::any* data ){
@@ -692,6 +769,9 @@ SASL_VISIT_DEF( program ){
 	typeconv = create_type_converter( ctxt->builder() );
 	register_buildin_typeconv( typeconv, gsi->type_manager() );
 
+	// Initialize entry parameters.
+	create_param_type();
+
 	any child_ctxt = cgllvm_common_context();
 
 	vector<Function*> proc_fns;
@@ -709,8 +789,8 @@ boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
 	return boost::shared_polymorphic_cast<llvm_code>(ctxt);
 }
 
-void llvm_code_generator::global_semantic_info( boost::shared_ptr< sasl::semantic::global_si > v )
-{
+void llvm_code_generator::global_semantic_info( boost::shared_ptr< sasl::semantic::module_si > v ){
 	gsi = v;
 }
+
 END_NS_SASL_CODE_GENERATOR();

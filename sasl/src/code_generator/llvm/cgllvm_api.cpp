@@ -6,10 +6,10 @@
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-using sasl::semantic::global_si;
+using sasl::semantic::module_si;
 using sasl::semantic::symbol;
 
-boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr<global_si> gsi ){
+boost::shared_ptr<llvm_code> generate_llvm_code( boost::shared_ptr<module_si> gsi ){
 	boost::shared_ptr<symbol> root = gsi->root();
 	if ( root && root->node() && root->node()->node_class() == syntax_node_types::program ){
 		llvm_code_generator cg;

@@ -69,7 +69,7 @@ cgllvm_cases::cgllvm_cases(){
 void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
-	shared_ptr< SEMANTIC_(global_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test), softart::lang_vertex_sl );
+	shared_ptr< SEMANTIC_(module_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test), softart::lang_vertex_sl );
 	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root );
 
 	fputs("\n======================================================\r\n", stderr);
