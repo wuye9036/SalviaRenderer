@@ -54,14 +54,6 @@ void module_si::add_global( shared_ptr<symbol> v ){
 	global_syms.push_back(v);
 }
 
-vector< shared_ptr<symbol> > const& module_si::entries() const{
-	return fns;
-}
-
-void module_si::add_entry( shared_ptr<symbol> v ){
-	fns.push_back(v);
-}
-
 std::vector<softart::semantic> const& module_si::used_semantics() const{
 	return used_sems;
 }

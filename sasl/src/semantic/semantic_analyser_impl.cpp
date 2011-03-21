@@ -117,7 +117,7 @@ shared_ptr<type_specifier> type_info_of( shared_ptr<node> n ){
 	return shared_ptr<type_specifier>();
 }
 
-semantic_analyser_impl::semantic_analyser_impl(): lang( softart::lang_none )
+semantic_analyser_impl::semantic_analyser_impl()
 {
 	typeconv.reset( new type_converter() );
 }
@@ -154,7 +154,7 @@ void semantic_analyser_impl::parse_semantic(
 	)
 {
 	if( sem_tok ){
-		softart::semantic sem;
+		softart::semantic sem( softart::SV_None );
 		string const& semstr = sem_tok->str;
 
 		if( semstr == "SV_Position" ){
@@ -166,7 +166,7 @@ void semantic_analyser_impl::parse_semantic(
 			if( sem_idx_tok ){
 				index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
 			}
-			sem = pack_semantic( sem, index );
+			sem = pack_semantic( softart::SV_Texcoord, index );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
@@ -174,45 +174,6 @@ void semantic_analyser_impl::parse_semantic(
 		ssi->set_semantic( sem );
 		gctxt->mark_semantic( sem );
 	}
-}
-
-bool semantic_analyser_impl::has_semantic( shared_ptr<parameter> const& par ){
-	SASL_EXTRACT_SI( type_info_si, tsi, par );
-
-	if( tsi->type_info()->is_buildin() ){
-		SASL_EXTRACT_SI( storage_si, ssi, par );
-		assert( ssi );
-
-		return ssi->get_semantic() != softart::SV_None;
-	}
-
-	if( tsi->type_info()->node_class() == syntax_node_types::struct_type ){
-		return all_member_has_semantic( tsi->type_info()->typed_handle<struct_type>() );
-	}
-
-	return false;
-}
-
-bool semantic_analyser_impl::all_member_has_semantic( shared_ptr<struct_type> const& par_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return false;
-}
-
-bool semantic_analyser_impl::is_entrant( shared_ptr<function_type> const& fn ){
-	BOOST_FOREACH( shared_ptr<parameter> const& par, fn->params ){
-		if( !has_semantic( par) ) return false;
-	}
-
-	SASL_EXTRACT_SI( storage_si, ssi, fn );
-	if ( ssi->type_info()->is_buildin() ){
-		return ssi->get_semantic() != softart::SV_None;
-	}
-
-	if( ssi->type_info()->node_class() == syntax_node_types::struct_type ){
-		return all_member_has_semantic( ssi->type_info()->typed_handle<struct_type>() );
-	}
-
-	return false;
 }
 
 SASL_VISIT_DEF_UNIMPL( unary_expression );
@@ -454,10 +415,6 @@ SASL_VISIT_DEF( function_type )
 
 	any_to_ctxt_ptr(child_ctxt_init)->is_global = false;
 
-	if( is_entrant(dup_fn) ){
-		gctxt->add_entry( sym );
-	}
-
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
 	}
@@ -609,7 +566,6 @@ SASL_VISIT_DEF( program ){
 	}
 
 	gctxt->root()->relink( dup_prog->handle() );
-	gctxt->calculate_storage( lang );
 }
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
@@ -936,11 +892,7 @@ void semantic_analyser_impl::register_buildin_types(){
 	}
 }
 
-void semantic_analyser_impl::language( softart::languages lang ){
-	this->lang = lang;
-}
-
-boost::shared_ptr<module_si> semantic_analyser_impl::global_semantic_info() const{
+boost::shared_ptr<module_si> const& semantic_analyser_impl::module_semantic_info() const{
 	return gctxt;
 }
 

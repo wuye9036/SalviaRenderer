@@ -7,7 +7,7 @@
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/semantic/name_mangler.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <sasl/test/test_cases/semantic_cases.h>
@@ -49,6 +49,7 @@ void test_statement_si(){
 	semantic_cases::instance();
 
 	BOOST_REQUIRE( SEMCASE_(sym_fn1_sem) );
+	BOOST_REQUIRE( SEMCASE_(fn1_sem)->body );
 	BOOST_CHECK( SEMCASE_(fn1_sem)->body->symbol()->parent() =  SEMCASE_(sym_fn1_sem) );
 	BOOST_REQUIRE( SEMCASE_(sym_fn2_sem) );
 	BOOST_REQUIRE( SEMCASE_(body_fn2) );

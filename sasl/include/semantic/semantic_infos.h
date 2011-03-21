@@ -72,11 +72,8 @@ public:
 	std::vector< boost::shared_ptr<symbol> > const& globals() const;
 	void add_global( boost::shared_ptr<symbol> );
 
-	// Entry.
-	std::vector< boost::shared_ptr<symbol> > const& entries() const;
-	void add_entry( boost::shared_ptr<symbol> );
+	// Entries.
 
-	void mark_as_entry( boost::shared_ptr<symbol> const&, softart::languages ) const;
 
 	// Semantics
 	std::vector<softart::semantic> const& used_semantics() const;
@@ -89,6 +86,7 @@ public:
 
 	// Collect storage information and generate code.
 	void calculate_storage( softart::languages lang );
+
 private:
 
 	std::vector< boost::shared_ptr<symbol> > global_syms;

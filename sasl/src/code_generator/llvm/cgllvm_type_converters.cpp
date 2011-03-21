@@ -35,22 +35,24 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_type_converter : public type_converter{
 public:
-	cgllvm_type_converter( shared_ptr<IRBuilderBase> builder )
-		: builder( shared_static_cast<IRBuilder<> >(builder) )
+	cgllvm_type_converter(
+		shared_ptr<IRBuilderBase> const& builder,
+		boost::function<cgllvm_common_context*( boost::shared_ptr<node> const& )> const& ctxt_getter
+		) : builder( shared_static_cast<IRBuilder<> >(builder) ), get_ctxt( ctxt_getter )
 	{
 	}
 
 	void int2int( shared_ptr<node> dest, shared_ptr<node> src ){
-		shared_ptr<cgllvm_common_context> dest_ctxt = extract_codegen_context<cgllvm_common_context>(dest);
-		shared_ptr<cgllvm_common_context> src_ctxt = extract_codegen_context<cgllvm_common_context>(src);
+		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
+		cgllvm_common_context* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = builder->CreateIntCast( src_ctxt->val, dest_ctxt->type, dest_ctxt->is_signed );
 		dest_ctxt->val = dest_v;
 	}
 
 	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
-		shared_ptr<cgllvm_common_context> dest_ctxt = extract_codegen_context<cgllvm_common_context>(dest);
-		shared_ptr<cgllvm_common_context> src_ctxt = extract_codegen_context<cgllvm_common_context>(src);
+		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
+		cgllvm_common_context* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = NULL;
 		if ( src_ctxt->is_signed ){
@@ -62,8 +64,8 @@ public:
 	}
 
 	void float2int( shared_ptr<node> dest, shared_ptr<node> src ){
-		shared_ptr<cgllvm_common_context> dest_ctxt = extract_codegen_context<cgllvm_common_context>(dest);
-		shared_ptr<cgllvm_common_context> src_ctxt = extract_codegen_context<cgllvm_common_context>(src);
+		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
+		cgllvm_common_context* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = NULL;
 		if ( dest_ctxt->is_signed ){
@@ -75,8 +77,8 @@ public:
 	}
 
 	void float2float( shared_ptr<node> dest, shared_ptr<node> src ){
-		shared_ptr<cgllvm_common_context> dest_ctxt = extract_codegen_context<cgllvm_common_context>(dest);
-		shared_ptr<cgllvm_common_context> src_ctxt = extract_codegen_context<cgllvm_common_context>(src);
+		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
+		cgllvm_common_context* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = NULL;
 		dest_v = builder->CreateFPCast( src_ctxt->val, dest_ctxt->type );
@@ -84,6 +86,7 @@ public:
 	}
 private:
 	shared_ptr< IRBuilder<> > builder;
+	boost::function<cgllvm_common_context*( boost::shared_ptr<node> const& )> get_ctxt;
 };
 
 void register_buildin_typeconv(
@@ -243,8 +246,14 @@ void register_buildin_typeconv(
 	//cg_typeconv->register_converter( type_converter::explicit_conv, bool_ts, double_ts, default_conv );
 }
 
-shared_ptr<type_converter> create_type_converter( shared_ptr<IRBuilderBase> builder ){
-	return make_shared<cgllvm_type_converter>( builder );
+shared_ptr<type_converter> create_type_converter(
+	boost::shared_ptr<llvm::IRBuilderBase> const& builder,
+	boost::function<
+		cgllvm_common_context* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
+	> const& ctxt_lookup
+	)
+{
+	return make_shared<cgllvm_type_converter>( builder, ctxt_lookup );
 }
 
 END_NS_SASL_CODE_GENERATOR();

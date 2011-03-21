@@ -28,12 +28,6 @@ using boost::shared_ptr;
 boost::mutex cgllvm_cases::mtx;
 boost::shared_ptr<cgllvm_cases> cgllvm_cases::tcase;
 
-void clear_cgctxt( SYNTAX_(node)& nd, ::boost::any* ){
-	nd.codegen_ctxt( boost::shared_ptr<CODEGEN_(codegen_context)>() );
-}
-
-#define CONTEXT_OF( node_name ) sasl::code_generator::extract_codegen_context<sasl::code_generator::cgllvm_common_context>( SEMCASE_(node_name)->codegen() )
-
 cgllvm_cases& cgllvm_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
@@ -54,11 +48,6 @@ void cgllvm_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( tcase ){
 		tcase->LOCVAR_(jit).reset();
-		if( syntax_cases::is_avaliable() ){
-			SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_semantic_test ), clear_cgctxt );
-			SYNTAX_(follow_up_traversal)( SYNCASE_( null_prog ), clear_cgctxt );
-			SYNTAX_(follow_up_traversal)( SYNCASE_( prog_for_jit_test ), clear_cgctxt );
-		}
 		tcase.reset();
 	}
 }

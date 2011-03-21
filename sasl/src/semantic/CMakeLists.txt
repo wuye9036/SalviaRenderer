@@ -9,6 +9,7 @@ INCLUDE_DIRECTORIES(
 	
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_forward.h
+	${SASL_HOME_DIR}/sasl/include/semantic/abi_analyser.h
 	${SASL_HOME_DIR}/sasl/include/semantic/name_mangler.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser_impl.h
@@ -24,6 +25,7 @@ set( HEADER_FILES
 )
 
 set( SOURCE_FILES
+	abi_analyser.cpp
 	name_mangler.cpp
 	semantic_analyser_impl.cpp
 	semantic_error.cpp

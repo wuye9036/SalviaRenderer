@@ -54,9 +54,6 @@ struct node{
 	boost::shared_ptr<class ::sasl::semantic::semantic_info> semantic_info() const;
 	void semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_info> ) const;
 
-	boost::shared_ptr<class ::sasl::code_generator::codegen_context> codegen_ctxt() const;
-	void codegen_ctxt( boost::shared_ptr<class ::sasl::code_generator::codegen_context> ) const;
-
 	boost::shared_ptr<token_t> token() const;
 	syntax_node_types node_class() const;
 

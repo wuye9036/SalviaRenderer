@@ -82,8 +82,7 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
-	void language( softart::languages lang );
-	boost::shared_ptr<module_si> global_semantic_info() const;
+	boost::shared_ptr<module_si> const& module_semantic_info() const;
 
 private:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
@@ -99,14 +98,6 @@ private:
 		boost::shared_ptr<storage_si> const& ssi
 		);
 
-	bool has_semantic(
-		boost::shared_ptr<sasl::syntax_tree::parameter> const& par
-		);
-	bool all_member_has_semantic(
-		boost::shared_ptr<sasl::syntax_tree::struct_type> const& par_type
-		);
-	bool is_entrant( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn );
-
 	void register_type_converter( const boost::any& ctxt );
 	void register_buildin_functions( const boost::any& child_ctxt_init );
 	void register_buildin_types();
@@ -116,9 +107,7 @@ private:
 		boost::shared_ptr< ::sasl::syntax_tree::node >
 		);
 
-	softart::languages lang;
 	boost::shared_ptr<module_si> gctxt;
-
 	boost::shared_ptr<type_converter> typeconv;
 };
 
