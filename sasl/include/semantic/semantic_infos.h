@@ -52,7 +52,10 @@ public:
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
 
 	std::vector< boost::shared_ptr<symbol> > const& globals() const;
+	std::vector< boost::shared_ptr<symbol> >& globals();
+
 	std::vector< boost::shared_ptr<symbol> > const& functions() const;
+	std::vector< boost::shared_ptr<symbol> >& functions();
 
 private:
 	boost::shared_ptr<class type_manager> typemgr;

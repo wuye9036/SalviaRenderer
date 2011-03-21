@@ -310,10 +310,9 @@ SASL_VISIT_DEF( declarator ){
 
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
-	if(	data_as_ctxt_ptr()->is_global
-		&& ssi->get_semantic() == softart::SV_None )
+	if(	data_as_ctxt_ptr()->is_global )
 	{
-		// gctxt->add_global( nodesym );
+		gctxt->globals().push_back( nodesym );
 	}
 
 	data_as_ctxt_ptr()->generated_node = dup_decl->handle();
@@ -416,6 +415,7 @@ SASL_VISIT_DEF( function_type )
 
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
+		gctxt->functions().push_back( sym );
 	}
 
 	data_as_ctxt_ptr()->generated_node = dup_fn;

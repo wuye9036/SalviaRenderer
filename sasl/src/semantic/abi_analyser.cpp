@@ -1,7 +1,12 @@
 #include <sasl/include/semantic/abi_analyser.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/utility/addressof.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <algorithm>
 
+using boost::addressof;
 using boost::shared_ptr;
 
 using std::lower_bound;
@@ -56,16 +61,46 @@ bool abi_info::add_output_semantic( softart::semantic sem ){
 	return true;
 }
 
-//storage_info const* module_si::storage( softart::semantic sem ) const{
-//	unordered_map< softart::semantic, storage_info >::const_iterator it = sem_storages.find( sem );
-//	return it == sem_storages.end() ? NULL : addressof( it->second );
-//}
-//
-//storage_info const* module_si::storage( shared_ptr<symbol> const& g_var ) const{
-//	shared_ptr<storage_si> ssi = extract_semantic_info<storage_si>( g_var->node() );
-//	return ssi ? addressof( ssi->storage() ) : NULL;
-//}
-//
+void abi_info::add_global_var( shared_ptr<symbol> const& v ){
+	syms_in.push_back( v.get() );
+}
+
+storage_info* abi_info::input_storage( softart::semantic sem ){
+	sem_storages_t::iterator it = semin_storages.find( sem );
+	if ( it == semin_storages.end() ){
+		return NULL;
+	}
+	return addressof( it->second );
+}
+
+storage_info* abi_info::alloc_input_storage( softart::semantic sem ){
+	return addressof( semin_storages[sem] );
+}
+
+storage_info* abi_info::input_storage( boost::shared_ptr<symbol> const& v ){
+	sym_storages_t::iterator it = symin_storages.find( v.get() );
+	if ( it == symin_storages.end() ){
+		return NULL;
+	}
+	return addressof( it->second );
+}
+
+storage_info* abi_info::alloc_input_storage( boost::shared_ptr<symbol> const& v ){
+	return addressof( symin_storages[v.get()] );
+}
+
+storage_info* abi_info::output_storage( softart::semantic sem ){
+	sem_storages_t::iterator it = semout_storages.find( sem );
+	if ( it == semout_storages.end() ){
+		return NULL;
+	}
+	return addressof( it->second );
+}
+
+storage_info* abi_info::alloc_output_storage( softart::semantic sem ){
+	return addressof( semout_storages[sem] );
+}
+
 //void module_si::calculate_storage( softart::languages lang ){
 //	if( lang == softart::lang_none ){ return; }
 //

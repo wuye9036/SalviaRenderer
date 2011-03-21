@@ -54,11 +54,14 @@ public:
 	bool add_output_semantic( softart::semantic sem );
 	void add_global_var( boost::shared_ptr<symbol> const& );
 
-	storage_info* storage( softart::semantic );
-	storage_info* alloc_storage( softart::semantic );
+	storage_info* input_storage( softart::semantic );
+	storage_info* alloc_input_storage( softart::semantic );
 
-	storage_info* storage( boost::shared_ptr<symbol> const& );
-	storage_info* alloc_storage( boost::shared_ptr<symbol> const& );
+	storage_info* input_storage( boost::shared_ptr<symbol> const& );
+	storage_info* alloc_input_storage( boost::shared_ptr<symbol> const& );
+
+	storage_info* output_storage( softart::semantic );
+	storage_info* alloc_output_storage( softart::semantic );
 
 private:
 	void update_abii();
@@ -67,9 +70,12 @@ private:
 	symbol* entry_point;
 
 	std::vector< softart::semantic > sems_in;
-	boost::unordered_map< softart::semantic, storage_info > semin_storages;
+	typedef boost::unordered_map< softart::semantic, storage_info > sem_storages_t;
+	sem_storages_t semin_storages;
+
 	std::vector< symbol* > syms_in;
-	boost::unordered_map< symbol* ,storage_info > syms_in_storages;
+	typedef boost::unordered_map< symbol*, storage_info > sym_storages_t;
+	sym_storages_t symin_storages;
 
 	std::vector< softart::semantic > sems_out;
 	boost::unordered_map< softart::semantic, storage_info > semout_storages;

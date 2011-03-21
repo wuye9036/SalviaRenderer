@@ -50,7 +50,15 @@ vector< shared_ptr<symbol> > const& module_si::globals() const{
 	return gvars;
 }
 
+vector< shared_ptr<symbol> >& module_si::globals(){
+	return gvars;
+}
+
 vector< shared_ptr<symbol> > const&  module_si::functions() const{
+	return fns;
+}
+
+vector< shared_ptr<symbol> >&  module_si::functions(){
 	return fns;
 }
 
