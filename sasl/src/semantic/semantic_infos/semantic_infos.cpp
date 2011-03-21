@@ -86,10 +86,6 @@ std::string real_literal_suffix( const std::string& str, bool& is_single){
 	}
 }
 
-storage_info::storage_info()
-	: index(-1), offset(0), size(0), storage(storage_none)
-{}
-
 //////////////////////
 // program semantics
 
@@ -206,14 +202,6 @@ softart::semantic storage_si::get_semantic() const{
 
 void storage_si::set_semantic( softart::semantic v ){
 	sem = v;
-}
-
-storage_info const& storage_si::storage() const{
-	return sem_storage;
-}
-
-storage_info& storage_si::storage(){
-	return sem_storage;
 }
 
 type_si::type_si( shared_ptr<type_manager> typemgr )

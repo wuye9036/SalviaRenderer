@@ -41,23 +41,6 @@ using ::sasl::syntax_tree::statement;
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
 
-enum storage_types{
-	storage_none = 0,
-	stream_in,
-	stream_out,
-	buffer_in,
-	buffer_out,
-	storage_types_count
-};
-
-struct storage_info{
-	storage_info();
-	int index;
-	int offset;
-	int size;
-	storage_types storage;
-};
-
 class module_si: public semantic_info{
 public:
 	typedef semantic_info base_type;
@@ -68,36 +51,16 @@ public:
 	boost::shared_ptr<symbol> root() const;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
 
-	// Referenced by host.
 	std::vector< boost::shared_ptr<symbol> > const& globals() const;
-	void add_global( boost::shared_ptr<symbol> );
-
-	// Entries.
-
-
-	// Semantics
-	std::vector<softart::semantic> const& used_semantics() const;
-	void mark_semantic( softart::semantic const& s );
-
-	// Get storage informations.
-	// Pointer for null return.
-	storage_info const* storage( softart::semantic sem ) const;
-	storage_info const* storage( boost::shared_ptr<symbol> const& g_var ) const;
-
-	// Collect storage information and generate code.
-	void calculate_storage( softart::languages lang );
+	std::vector< boost::shared_ptr<symbol> > const& functions() const;
 
 private:
-
-	std::vector< boost::shared_ptr<symbol> > global_syms;
-	std::vector< boost::shared_ptr<symbol> > fns;
-	std::vector<softart::semantic> used_sems;
-
-	boost::unordered_map< softart::semantic, storage_info > sem_storages;
-
 	boost::shared_ptr<class type_manager> typemgr;
 	boost::shared_ptr<symbol> rootsym;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;
+
+	std::vector< boost::shared_ptr<symbol> > gvars;
+	std::vector< boost::shared_ptr<symbol> > fns;
 };
 
 //////////////////////////////////////
@@ -186,14 +149,10 @@ public:
 	softart::semantic get_semantic() const;
 	void set_semantic( softart::semantic v );
 
-	storage_info const& storage() const;
-	storage_info& storage();
-
 	SASL_TYPE_INFO_PROXY();
 
 private:
 	softart::semantic sem;
-	storage_info sem_storage;
 };
 
 class variable_semantic_info: public semantic_info{

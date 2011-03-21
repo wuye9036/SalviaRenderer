@@ -172,7 +172,6 @@ void semantic_analyser_impl::parse_semantic(
 		}
 
 		ssi->set_semantic( sem );
-		gctxt->mark_semantic( sem );
 	}
 }
 
@@ -314,7 +313,7 @@ SASL_VISIT_DEF( declarator ){
 	if(	data_as_ctxt_ptr()->is_global
 		&& ssi->get_semantic() == softart::SV_None )
 	{
-		gctxt->add_global( nodesym );
+		// gctxt->add_global( nodesym );
 	}
 
 	data_as_ctxt_ptr()->generated_node = dup_decl->handle();

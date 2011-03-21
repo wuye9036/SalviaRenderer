@@ -1,5 +1,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 
+#include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_infos.h>
 
 #include <eflib/include/platform/disable_warnings.h>
