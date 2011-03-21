@@ -53,7 +53,7 @@ public:
 	boost::shared_ptr<declaration> build_basic_decl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<variable_declaration> build_vardecl( boost::shared_ptr<sasl::parser::attribute> attr );
 	std::vector< boost::shared_ptr<declarator> > build_declarators( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<declarator> build_initdecl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<declarator> builtinitdecl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<function_type> build_fndecl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<parameter> build_param( boost::shared_ptr<sasl::parser::attribute> attr );
 
@@ -76,7 +76,7 @@ public:
 	boost::shared_ptr<type_specifier> build_prequaledtype( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<type_specifier> build_postqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
 
-	boost::shared_ptr<initializer> build_init( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<initializer> builtinit( boost::shared_ptr<sasl::parser::attribute> attr );
 	
 	boost::shared_ptr<statement> build_stmt( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<compound_statement> build_stmt_compound( boost::shared_ptr<sasl::parser::attribute> attr );

@@ -22,7 +22,7 @@ using ::sasl::semantic::type_entry;
 using ::sasl::semantic::type_info_si;
 using ::sasl::semantic::type_manager;
 
-using ::sasl::syntax_tree::create_buildin_type;
+using ::sasl::syntax_tree::create_builtin_type;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::type_specifier;
 
@@ -89,7 +89,7 @@ private:
 	boost::function<cgllvm_common_context*( boost::shared_ptr<node> const& )> get_ctxt;
 };
 
-void register_buildin_typeconv(
+void register_builtin_typeconv(
 	shared_ptr<type_converter> typeconv,
 	shared_ptr<type_manager> typemgr
 	)
@@ -109,20 +109,20 @@ void register_buildin_typeconv(
 		void ( shared_ptr<node>, shared_ptr<node> ) 
 	> float2float_pfn = ::boost::bind( &cgllvm_type_converter::float2float, cg_typeconv.get(), _1, _2 ) ;
 
-	type_entry::id_t sint8_ts = typemgr->get( buildin_type_code::_sint8 );
-	type_entry::id_t sint16_ts = typemgr->get( buildin_type_code::_sint16 );
-	type_entry::id_t sint32_ts = typemgr->get( buildin_type_code::_sint32 );
-	type_entry::id_t sint64_ts = typemgr->get( buildin_type_code::_sint64 );
+	type_entry::id_t sint8_ts = typemgr->get( builtin_type_code::_sint8 );
+	type_entry::id_t sint16_ts = typemgr->get( builtin_type_code::_sint16 );
+	type_entry::id_t sint32_ts = typemgr->get( builtin_type_code::_sint32 );
+	type_entry::id_t sint64_ts = typemgr->get( builtin_type_code::_sint64 );
 
-	type_entry::id_t uint8_ts = typemgr->get( buildin_type_code::_uint8 );
-	type_entry::id_t uint16_ts = typemgr->get( buildin_type_code::_uint16 );
-	type_entry::id_t uint32_ts = typemgr->get( buildin_type_code::_uint32 );
-	type_entry::id_t uint64_ts = typemgr->get( buildin_type_code::_uint64 );
+	type_entry::id_t uint8_ts = typemgr->get( builtin_type_code::_uint8 );
+	type_entry::id_t uint16_ts = typemgr->get( builtin_type_code::_uint16 );
+	type_entry::id_t uint32_ts = typemgr->get( builtin_type_code::_uint32 );
+	type_entry::id_t uint64_ts = typemgr->get( builtin_type_code::_uint64 );
 
-	type_entry::id_t float_ts = typemgr->get( buildin_type_code::_float );
-	type_entry::id_t double_ts = typemgr->get( buildin_type_code::_double );
+	type_entry::id_t float_ts = typemgr->get( builtin_type_code::_float );
+	type_entry::id_t double_ts = typemgr->get( builtin_type_code::_double );
 
-	// type_entry::id_t bool_ts = typemgr->get( buildin_type_code::_boolean );
+	// type_entry::id_t bool_ts = typemgr->get( builtin_type_code::_boolean );
 
 	cg_typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint16_ts, int2int_pfn );
 	cg_typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint32_ts, int2int_pfn );

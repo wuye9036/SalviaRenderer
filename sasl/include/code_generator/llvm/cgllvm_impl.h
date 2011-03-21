@@ -35,7 +35,7 @@ namespace llvm{
 	class Constant;
 }
 
-struct buildin_type_code;
+struct builtin_type_code;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -69,7 +69,7 @@ public:
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );
-	SASL_VISIT_DCL( buildin_type );
+	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( parameter );
@@ -113,7 +113,7 @@ private:
 		);
 
 	llvm::Constant* get_zero_filled_constant( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
-	llvm::Type const* create_buildin_type( buildin_type_code const& btc, bool& sign );
+	llvm::Type const* create_builtin_type( builtin_type_code const& btc, bool& sign );
 
 	llvm::Type const* get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
 

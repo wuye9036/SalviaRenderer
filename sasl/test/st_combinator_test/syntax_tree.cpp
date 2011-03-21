@@ -22,8 +22,8 @@ BOOST_AUTO_TEST_CASE( prog_combinator_test )
 
 BOOST_AUTO_TEST_CASE( btc_test )
 {
-	buildin_type_code btc_double( syntax_cases::instance().btc_double() );
-	BOOST_CHECK( btc_double == buildin_type_code::_double );
+	builtin_type_code btc_double( syntax_cases::instance().btc_double() );
+	BOOST_CHECK( btc_double == builtin_type_code::_double );
 	BOOST_CHECK( sasl_ehelper::is_scalar( btc_double ) );
 	BOOST_CHECK( !sasl_ehelper::is_vector(btc_double) );
 	BOOST_CHECK( !sasl_ehelper::is_matrix(btc_double) );
@@ -44,19 +44,19 @@ BOOST_AUTO_TEST_CASE( btc_test )
 	BOOST_CHECK( !sasl_ehelper::is_signed( SYNCASE_(btc_void) ) );
 	BOOST_CHECK( !sasl_ehelper::is_unsigned( SYNCASE_(btc_void) ) );
 
-	buildin_type_code btc_float3( syntax_cases::instance().btc_float3() );
-	BOOST_CHECK( btc_float3 != buildin_type_code::_float );
+	builtin_type_code btc_float3( syntax_cases::instance().btc_float3() );
+	BOOST_CHECK( btc_float3 != builtin_type_code::_float );
 	BOOST_CHECK( !sasl_ehelper::is_scalar( btc_float3 ) );
 	BOOST_CHECK( sasl_ehelper::is_vector(btc_float3) );
 	BOOST_CHECK( !sasl_ehelper::is_matrix(btc_float3) );
-	BOOST_CHECK( sasl_ehelper::scalar_of(btc_float3) == buildin_type_code::_float );
+	BOOST_CHECK( sasl_ehelper::scalar_of(btc_float3) == builtin_type_code::_float );
 	BOOST_CHECK( sasl_ehelper::len_0(btc_float3) == 3 );
 
-	buildin_type_code btc_ulong3x2( syntax_cases::instance().btc_ulong3x2() );
+	builtin_type_code btc_ulong3x2( syntax_cases::instance().btc_ulong3x2() );
 	BOOST_CHECK( !sasl_ehelper::is_scalar( btc_ulong3x2 ) );
 	BOOST_CHECK( !sasl_ehelper::is_vector(btc_ulong3x2) );
 	BOOST_CHECK( sasl_ehelper::is_matrix(btc_ulong3x2) );
-	BOOST_CHECK( sasl_ehelper::scalar_of(btc_ulong3x2) == buildin_type_code::_uint64 );
+	BOOST_CHECK( sasl_ehelper::scalar_of(btc_ulong3x2) == builtin_type_code::_uint64 );
 	BOOST_CHECK( sasl_ehelper::len_0(btc_ulong3x2) == 3 );
 	BOOST_CHECK( sasl_ehelper::len_1(btc_ulong3x2) == 2 );
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	{
 		dvar_combinator var_comb( NULL );
 		var_comb
-				.dtype().dbuildin( buildin_type_code::_float ).end(flt)
+				.dtype().dbuiltin( builtin_type_code::_float ).end(flt)
 				.dname("What's")
 					.dinit_list()
 						.dinit_expr().dconstant2( (int32_t)2 ).end(exprinit0)
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end( fltvar );
 
 		BOOST_CHECK( flt );
-		BOOST_CHECK( flt->node_class() == syntax_node_types::buildin_type );
-		BOOST_CHECK( flt->value_typecode == buildin_type_code::_float );
+		BOOST_CHECK( flt->node_class() == syntax_node_types::builtin_type );
+		BOOST_CHECK( flt->value_typecode == builtin_type_code::_float );
 
 		BOOST_CHECK( fltvar );
 		BOOST_CHECK( fltvar->type_info == flt );
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 
 		BOOST_CHECK( arrtype );
 		BOOST_CHECK( arrtype->node_class() == syntax_node_types::array_type );
-		BOOST_CHECK( arrtype->elem_type->value_typecode == buildin_type_code::_float );
+		BOOST_CHECK( arrtype->elem_type->value_typecode == builtin_type_code::_float );
 		BOOST_CHECK( arrtype->array_lens.size() == 2);
 		BOOST_CHECK( !arrtype->array_lens[0] );
 		BOOST_CHECK( arrtype->array_lens[1]->node_class() == syntax_node_types::constant_expression );
@@ -256,11 +256,11 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	boost::shared_ptr<array_type> var4type;
 	prog_comb
 		.dvar()
-			.dtype().dvec( buildin_type_code::_uint64, 2 ).end( var1type )
+			.dtype().dvec( builtin_type_code::_uint64, 2 ).end( var1type )
 			.dname(var0_name).end()
 		.end()
 		.dvar()
-			.dtype().dmat( buildin_type_code::_double, 4, 3 ).end( var2type )
+			.dtype().dmat( builtin_type_code::_double, 4, 3 ).end( var2type )
 			.dname(var0_name).end()
 		.end()
 		.dvar()
@@ -269,9 +269,9 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end()
 	.end( prog );
 
-	BOOST_CHECK( var1type && var1type->value_typecode == sasl_ehelper::vector_of(buildin_type_code::_uint64, 2) );
-	BOOST_CHECK( var2type && var2type->value_typecode == sasl_ehelper::matrix_of(buildin_type_code::_double, 4, 3) );
-	BOOST_CHECK( var2type->node_class() == syntax_node_types::buildin_type );
+	BOOST_CHECK( var1type && var1type->value_typecode == sasl_ehelper::vector_of(builtin_type_code::_uint64, 2) );
+	BOOST_CHECK( var2type && var2type->value_typecode == sasl_ehelper::matrix_of(builtin_type_code::_double, 4, 3) );
+	BOOST_CHECK( var2type->node_class() == syntax_node_types::builtin_type );
 	BOOST_CHECK( !var2type->is_uniform() );
 	BOOST_CHECK( var3type && var3type->alias->str == struct_name );
 	BOOST_CHECK( var3type->is_uniform() );
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		expr_comb
 			.dcast()
 				.dtype()
-					.dbuildin( buildin_type_code::_float )
+					.dbuiltin( builtin_type_code::_float )
 				.end()
 				.dexpr()
 					.dnode( varexpr )
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end(castexpr);
 		BOOST_CHECK( castexpr );
 		BOOST_CHECK( castexpr->node_class() == syntax_node_types::cast_expression );
-		BOOST_CHECK( castexpr->casted_type->value_typecode == buildin_type_code::_float );
+		BOOST_CHECK( castexpr->casted_type->value_typecode == builtin_type_code::_float );
 		BOOST_CHECK( castexpr->expr == varexpr );
 	}
 
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 	{
 		boost::shared_ptr<variable_declaration> vardecl;
 		dvar_combinator( NULL )
-			.dtype().dbuildin( buildin_type_code::_float ).end()
+			.dtype().dbuiltin( builtin_type_code::_float ).end()
 			.dname("var0").end()
 		.end(vardecl);
 		BOOST_CHECK( vardecl );

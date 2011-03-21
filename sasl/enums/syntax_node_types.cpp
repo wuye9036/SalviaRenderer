@@ -89,6 +89,7 @@ void syntax_node_types::force_initialize(){
 	new ( const_cast<syntax_node_types*>(&label) ) syntax_node_types ( UINT64_C( 1970324836974592 ), "label" );
 	new ( const_cast<syntax_node_types*>(&while_statement) ) syntax_node_types ( UINT64_C( 844424930131971 ), "while_statement" );
 	new ( const_cast<syntax_node_types*>(&program) ) syntax_node_types ( UINT64_C( 1688849860263936 ), "program" );
+	new ( const_cast<syntax_node_types*>(&builtin_type) ) syntax_node_types ( UINT64_C( 281479271677953 ), "builtin_type" );
 	new ( const_cast<syntax_node_types*>(&switch_statement) ) syntax_node_types ( UINT64_C( 844424930131973 ), "switch_statement" );
 	new ( const_cast<syntax_node_types*>(&statement) ) syntax_node_types ( UINT64_C( 844424930131968 ), "statement" );
 	new ( const_cast<syntax_node_types*>(&expression_initializer) ) syntax_node_types ( UINT64_C( 1125899906842625 ), "expression_initializer" );
@@ -104,7 +105,6 @@ void syntax_node_types::force_initialize(){
 	new ( const_cast<syntax_node_types*>(&array_type) ) syntax_node_types ( UINT64_C( 281479271677954 ), "array_type" );
 	new ( const_cast<syntax_node_types*>(&jump_statement) ) syntax_node_types ( UINT64_C( 844424930131976 ), "jump_statement" );
 	new ( const_cast<syntax_node_types*>(&alias_type) ) syntax_node_types ( UINT64_C( 281479271677957 ), "alias_type" );
-	new ( const_cast<syntax_node_types*>(&buildin_type) ) syntax_node_types ( UINT64_C( 281479271677953 ), "buildin_type" );
 	new ( const_cast<syntax_node_types*>(&binary_expression) ) syntax_node_types ( UINT64_C( 562949953421317 ), "binary_expression" );
 	new ( const_cast<syntax_node_types*>(&expression_list) ) syntax_node_types ( UINT64_C( 562949953421318 ), "expression_list" );
 	new ( const_cast<syntax_node_types*>(&member_initializer) ) syntax_node_types ( UINT64_C( 1125899906842626 ), "member_initializer" );
@@ -141,6 +141,7 @@ const syntax_node_types syntax_node_types::struct_type ( UINT64_C( 2814792716779
 const syntax_node_types syntax_node_types::label ( UINT64_C( 1970324836974592 ), "label" );
 const syntax_node_types syntax_node_types::while_statement ( UINT64_C( 844424930131971 ), "while_statement" );
 const syntax_node_types syntax_node_types::program ( UINT64_C( 1688849860263936 ), "program" );
+const syntax_node_types syntax_node_types::builtin_type ( UINT64_C( 281479271677953 ), "builtin_type" );
 const syntax_node_types syntax_node_types::switch_statement ( UINT64_C( 844424930131973 ), "switch_statement" );
 const syntax_node_types syntax_node_types::statement ( UINT64_C( 844424930131968 ), "statement" );
 const syntax_node_types syntax_node_types::expression_initializer ( UINT64_C( 1125899906842625 ), "expression_initializer" );
@@ -156,7 +157,6 @@ const syntax_node_types syntax_node_types::declaration ( UINT64_C( 2814749767106
 const syntax_node_types syntax_node_types::array_type ( UINT64_C( 281479271677954 ), "array_type" );
 const syntax_node_types syntax_node_types::jump_statement ( UINT64_C( 844424930131976 ), "jump_statement" );
 const syntax_node_types syntax_node_types::alias_type ( UINT64_C( 281479271677957 ), "alias_type" );
-const syntax_node_types syntax_node_types::buildin_type ( UINT64_C( 281479271677953 ), "buildin_type" );
 const syntax_node_types syntax_node_types::binary_expression ( UINT64_C( 562949953421317 ), "binary_expression" );
 const syntax_node_types syntax_node_types::expression_list ( UINT64_C( 562949953421318 ), "expression_list" );
 const syntax_node_types syntax_node_types::member_initializer ( UINT64_C( 1125899906842626 ), "member_initializer" );

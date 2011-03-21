@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
-#include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/builtin_type_code.h>
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/enums/operators.h>
 #include <sasl/enums/type_qualifiers.h>
@@ -54,7 +54,7 @@ struct typecode_map
 	static const literal_constant_types* const type_codes();
 
 	template<typename T>
-	struct is_sasl_buildin_type: public boost::mpl::not_<
+	struct is_sasl_builtin_type: public boost::mpl::not_<
 		boost::is_same<
 		typename boost::mpl::find<cpptypes, T>::type,
 		typename boost::mpl::end<cpptypes>::type
@@ -62,14 +62,14 @@ struct typecode_map
 	>::type{};
 
 	template <typename T>
-	static literal_constant_types lookup( EFLIB_ENABLE_IF_COND( is_sasl_buildin_type<T> ) )
+	static literal_constant_types lookup( EFLIB_ENABLE_IF_COND( is_sasl_builtin_type<T> ) )
 	{
 		return type_codes()[boost::mpl::find<cpptypes, T>::type::pos::value];
 	}
 };
 
 struct binary_expression;
-struct buildin_type;
+struct builtin_type;
 struct call_expression;
 struct case_label;
 struct cast_expression;
@@ -176,9 +176,9 @@ public:
 	virtual tree_combinator& dinit_list(){ return default_proc(); }
 
 	// types
-	virtual tree_combinator& dbuildin( buildin_type_code /*btc*/ ){ return default_proc(); }
-	virtual tree_combinator& dvec( buildin_type_code /*comp_btc*/, size_t /*size*/ ){ return default_proc(); }
-	virtual tree_combinator& dmat( buildin_type_code /*comp_btc*/, size_t /*s0*/, size_t /*s1*/ ){ return default_proc(); }
+	virtual tree_combinator& dbuiltin( builtin_type_code /*btc*/ ){ return default_proc(); }
+	virtual tree_combinator& dvec( builtin_type_code /*comp_btc*/, size_t /*size*/ ){ return default_proc(); }
+	virtual tree_combinator& dmat( builtin_type_code /*comp_btc*/, size_t /*s0*/, size_t /*s1*/ ){ return default_proc(); }
 	virtual tree_combinator& dalias( const std::string& /*alias*/ ){ return default_proc(); }
 	virtual tree_combinator& darray(){ return default_proc(); }
 	virtual tree_combinator& dtypequal( type_qualifiers /*qual*/ ){ return default_proc(); }
@@ -191,7 +191,7 @@ public:
 	// impl by expression
 	template <typename T> tree_combinator& dconstant2(
 		const T& v,
-		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_buildin_type<T> )
+		EFLIB_ENABLE_IF_COND( typecode_map::is_sasl_builtin_type<T> )
 		)
 	{
 		std::string suffix;
@@ -524,9 +524,9 @@ public:
 
 	dtype_combinator( tree_combinator* parent );
 	~dtype_combinator(){}
-	virtual tree_combinator& dbuildin( buildin_type_code btc );
-	virtual tree_combinator& dvec( buildin_type_code comp_btc, size_t size );
-	virtual tree_combinator& dmat( buildin_type_code comp_btc, size_t s0, size_t s1 );
+	virtual tree_combinator& dbuiltin( builtin_type_code btc );
+	virtual tree_combinator& dvec( builtin_type_code comp_btc, size_t size );
+	virtual tree_combinator& dmat( builtin_type_code comp_btc, size_t s0, size_t s1 );
 	virtual tree_combinator& dalias( const std::string& alias );
 	virtual tree_combinator& darray();
 	virtual tree_combinator& dtypequal( type_qualifiers qual );

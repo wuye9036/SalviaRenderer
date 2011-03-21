@@ -7,35 +7,35 @@
 #include <string>
 #include <vector>
 
-struct buildin_type_code;
+struct builtin_type_code;
 struct operators;
 
 class sasl_ehelper{
 public:
-	// buildin type code
-	static bool is_none( const buildin_type_code& /*btc*/ );
-	static bool is_void( const buildin_type_code& /*btc*/ );
-	static bool is_integer( const buildin_type_code& /*btc*/ );
-	static bool is_real( const buildin_type_code& /*btc*/ );
-	static bool is_signed( const buildin_type_code& /*btc*/ );
-	static bool is_unsigned( const buildin_type_code& /*btc*/ );
-	static bool is_scalar( const buildin_type_code& /*btc*/ );
-	static bool is_vector( const buildin_type_code& /*btc*/ );
-	static bool is_matrix( const buildin_type_code& /*btc*/ );
+	// builtin type code
+	static bool is_none( const builtin_type_code& /*btc*/ );
+	static bool is_void( const builtin_type_code& /*btc*/ );
+	static bool is_integer( const builtin_type_code& /*btc*/ );
+	static bool is_real( const builtin_type_code& /*btc*/ );
+	static bool is_signed( const builtin_type_code& /*btc*/ );
+	static bool is_unsigned( const builtin_type_code& /*btc*/ );
+	static bool is_scalar( const builtin_type_code& /*btc*/ );
+	static bool is_vector( const builtin_type_code& /*btc*/ );
+	static bool is_matrix( const builtin_type_code& /*btc*/ );
 
-	static bool is_storagable( const buildin_type_code& /*btc*/ );
-	static bool is_standard( const buildin_type_code& /*btc*/ );
+	static bool is_storagable( const builtin_type_code& /*btc*/ );
+	static bool is_standard( const builtin_type_code& /*btc*/ );
 
-	static buildin_type_code scalar_of( const buildin_type_code& /*btc*/ );
-	static buildin_type_code vector_of( const buildin_type_code& /*btc*/, size_t len );
-	static buildin_type_code matrix_of( const buildin_type_code& /*btc*/, size_t len_0, size_t len_1 );
+	static builtin_type_code scalar_of( const builtin_type_code& /*btc*/ );
+	static builtin_type_code vector_of( const builtin_type_code& /*btc*/, size_t len );
+	static builtin_type_code matrix_of( const builtin_type_code& /*btc*/, size_t len_0, size_t len_1 );
 
-	static size_t len_0( const buildin_type_code& /*btc*/);
-	static size_t len_1( const buildin_type_code& /*btc*/);
+	static size_t len_0( const builtin_type_code& /*btc*/);
+	static size_t len_1( const builtin_type_code& /*btc*/);
 
-	static size_t storage_size( const buildin_type_code& /*btc*/ );
+	static size_t storage_size( const builtin_type_code& /*btc*/ );
 
-	static const std::vector<buildin_type_code>& list_of_buildin_type_codes();
+	static const std::vector<builtin_type_code>& list_of_builtin_type_codes();
 
 	//////////////////////////////////////////////////////////////////////////
 	// operators
@@ -60,7 +60,7 @@ public:
 	static const std::vector<operators>& list_of_operators();
 
 private:
-	static std::vector<buildin_type_code> btc_list;
+	static std::vector<builtin_type_code> btc_list;
 	static boost::mutex mtx_btlist_init;
 
 	static std::vector<operators> op_list;

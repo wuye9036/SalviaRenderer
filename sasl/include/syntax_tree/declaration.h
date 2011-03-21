@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
-#include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/builtin_type_code.h>
 #include <sasl/enums/syntax_node_types.h>
 #include <sasl/enums/type_qualifiers.h>
 
@@ -109,10 +109,10 @@ protected:
 };
 
 struct type_specifier: public declaration{
-	buildin_type_code value_typecode;
+	builtin_type_code value_typecode;
 	type_qualifiers qual;
 
-	bool is_buildin() const;
+	bool is_builtin() const;
 	bool is_uniform() const;
 protected:
 	type_specifier(syntax_node_types type_id, boost::shared_ptr<token_t> tok);
@@ -128,15 +128,15 @@ protected:
 	alias_type( const alias_type& );
 };
 
-struct buildin_type: public type_specifier{
+struct builtin_type: public type_specifier{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
-	bool is_buildin() const;
+	bool is_builtin() const;
 
 protected:
-	buildin_type( boost::shared_ptr<token_t> tok );
-	buildin_type& operator = ( const buildin_type& );
-	buildin_type( const buildin_type& );
+	builtin_type( boost::shared_ptr<token_t> tok );
+	builtin_type& operator = ( const builtin_type& );
+	builtin_type( const builtin_type& );
 };
 
 

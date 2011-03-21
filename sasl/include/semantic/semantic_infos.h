@@ -7,7 +7,7 @@
 #include <sasl/enums/default_hasher.h>
 #include <sasl/enums/type_types.h>
 #include <sasl/enums/literal_constant_types.h>
-#include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/builtin_type_code.h>
 #include <sasl/enums/enums_helper.h>
 
 #include <softart/include/enums.h>
@@ -124,7 +124,7 @@ public:
 
 	virtual ::boost::shared_ptr< type_specifier > type_info() const = 0;
 	virtual void type_info( ::boost::shared_ptr< type_specifier >, ::boost::shared_ptr<symbol> sym ) = 0;
-	virtual void type_info( buildin_type_code btc ) = 0;
+	virtual void type_info( builtin_type_code btc ) = 0;
 
 	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
 };
@@ -137,7 +137,7 @@ public:
 		virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
 		virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
 		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); } \
-		virtual void type_info( buildin_type_code btc ){ type_info_proxy.type_info(btc); }
+		virtual void type_info( builtin_type_code btc ){ type_info_proxy.type_info(btc); }
 
 class type_info_si_impl: public type_info_si{
 public:
@@ -148,7 +148,7 @@ public:
 
 	virtual ::boost::shared_ptr< type_specifier > type_info() const;
 	virtual void type_info( ::boost::shared_ptr< type_specifier >, boost::shared_ptr<symbol> );
-	virtual void type_info( buildin_type_code btc );
+	virtual void type_info( builtin_type_code btc );
 private:
 	type_entry::id_t tid;
 	::boost::weak_ptr< class type_manager > typemgr;
@@ -166,7 +166,7 @@ public:
 	template <typename T> T value() const;
 	template <typename T> void value( T val );
 
-	buildin_type_code value_type() const;
+	builtin_type_code value_type() const;
 private:
 	boost::variant< uint64_t, int64_t, double, std::string, bool, char > val;
 };

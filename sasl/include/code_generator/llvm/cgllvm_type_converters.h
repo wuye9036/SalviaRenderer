@@ -34,7 +34,7 @@ boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter(
 		> const& ctxt_lookup
 		);
 
-void register_buildin_typeconv(
+void register_builtin_typeconv(
 	boost::shared_ptr< ::sasl::semantic::type_converter> typeconv,
 	boost::shared_ptr< sasl::semantic::type_manager> typemgr
 	);

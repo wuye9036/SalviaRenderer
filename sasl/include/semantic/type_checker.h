@@ -9,7 +9,7 @@ namespace sasl{
 	namespace syntax_tree{
 		struct type_specifier;
 		struct function_type;
-		struct buildin_type;
+		struct builtin_type;
 	}
 }
 
@@ -21,8 +21,8 @@ bool type_equal(
 );
 
 bool type_equal(
-	boost::shared_ptr< ::sasl::syntax_tree::buildin_type > lhs,
-	boost::shared_ptr< ::sasl::syntax_tree::buildin_type > rhs
+	boost::shared_ptr< ::sasl::syntax_tree::builtin_type > lhs,
+	boost::shared_ptr< ::sasl::syntax_tree::builtin_type > rhs
 );
 
 // boost::shared_ptr<::sasl::syntax_tree::type_specifier> actual_type( boost::shared_ptr<::sasl::syntax_tree::type_specifier> );

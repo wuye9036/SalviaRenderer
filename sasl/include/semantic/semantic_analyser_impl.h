@@ -59,7 +59,7 @@ public:
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );
-	SASL_VISIT_DCL( buildin_type );
+	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( parameter );
@@ -99,10 +99,10 @@ private:
 		);
 
 	void register_type_converter( const boost::any& ctxt );
-	void register_buildin_functions( const boost::any& child_ctxt_init );
-	void register_buildin_types();
+	void register_builtin_functions( const boost::any& child_ctxt_init );
+	void register_builtin_types();
 
-	void buildin_type_convert(
+	void builtin_type_convert(
 		boost::shared_ptr< ::sasl::syntax_tree::node >,
 		boost::shared_ptr< ::sasl::syntax_tree::node >
 		);

@@ -134,7 +134,7 @@ void module_si::calculate_storage( softart::languages lang ){
 			shared_ptr<type_specifier> ti = ssi->type_info();
 			assert(ti);
 
-			if( ti->is_buildin() ){
+			if( ti->is_builtin() ){
 				storage_size = static_cast<int>( sasl_ehelper::storage_size( ti->value_typecode ) );
 
 				ssi->storage().index = rin_idx++;

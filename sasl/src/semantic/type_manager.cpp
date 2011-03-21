@@ -6,7 +6,7 @@
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/builtin_type_code.h>
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -37,11 +37,11 @@ type_entry::id_t type_entry_id_of_symbol( shared_ptr<symbol> sym ){
 }
 
 // some utility functions
-std::string buildin_type_name( buildin_type_code btc ){
+std::string builtin_type_name( builtin_type_code btc ){
 	if( sasl_ehelper::is_vector(btc) ) {
 		return 
 			( boost::format("%1%_%2%") 
-			% buildin_type_name( sasl_ehelper::scalar_of(btc) )
+			% builtin_type_name( sasl_ehelper::scalar_of(btc) )
 			% sasl_ehelper::len_0( btc )
 			).str();
 	}
@@ -49,7 +49,7 @@ std::string buildin_type_name( buildin_type_code btc ){
 	if( sasl_ehelper::is_matrix(btc) ) {
 		return 
 			( boost::format("%1%_%2%x%3%") 
-			% buildin_type_name( sasl_ehelper::scalar_of(btc) )
+			% builtin_type_name( sasl_ehelper::scalar_of(btc) )
 			% sasl_ehelper::len_0( btc )
 			% sasl_ehelper::len_1( btc )
 			).str();
@@ -71,7 +71,7 @@ bool peel_qualifier(
 	)
 {
 	syntax_node_types tnode = src->node_class();
-	if ( tnode == syntax_node_types::buildin_type
+	if ( tnode == syntax_node_types::builtin_type
 		|| tnode == syntax_node_types::struct_type )
 	{
 		if( src->is_uniform() ){
@@ -99,8 +99,8 @@ std::string name_of_unqualified_type( shared_ptr<type_specifier> typespec ){
 
 	if( actual_node_type == syntax_node_types::alias_type ){
 		return typespec->typed_handle<alias_type>()->alias->str;
-	} else if( actual_node_type == syntax_node_types::buildin_type ){
-		return buildin_type_name( typespec->value_typecode );
+	} else if( actual_node_type == syntax_node_types::builtin_type ){
+		return builtin_type_name( typespec->value_typecode );
 	} else if ( actual_node_type == syntax_node_types::function_type ){
 		return mangle( typespec->typed_handle<function_type>() );
 	} else if ( actual_node_type == syntax_node_types::struct_type ){
@@ -193,7 +193,7 @@ type_entry::id_t type_manager::get( shared_ptr<type_specifier> node, shared_ptr<
 //	shared_ptr<type_specifier> dup_node;
 //	if ( decoratee_id == -1 ){
 //		// Type is not existed in pool, add a shallow copy into.
-//		if ( actual_node_type == syntax_node_types::buildin_type ||
+//		if ( actual_node_type == syntax_node_types::builtin_type ||
 //			actual_node_type == syntax_node_types::struct_type )
 //		{
 //
@@ -216,7 +216,7 @@ type_entry::id_t type_manager::get( shared_ptr<type_specifier> node, shared_ptr<
 //	shared_ptr<type_specifier> decorated_node;
 //	type_entry::id_t type_entry::*qual_ptr;
 //
-//	if( actual_node_type == syntax_node_types::buildin_type ||
+//	if( actual_node_type == syntax_node_types::builtin_type ||
 //		actual_node_type == syntax_node_types::struct_type )
 //	{
 //		if( node->is_const() ){
@@ -259,13 +259,13 @@ shared_ptr< type_specifier > type_manager::get( type_entry::id_t id ){
 	return entries[id].stored;
 }
 
-// Get type id by an buildin type code
-type_entry::id_t type_manager::get( const buildin_type_code& btc ){
+// Get type id by an builtin type code
+type_entry::id_t type_manager::get( const builtin_type_code& btc ){
 	// If it existed in symbol, return it.
 	// Otherwise create a new type and push into type manager.
-	type_entry::id_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( buildin_type_name( btc ) ) );
+	type_entry::id_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
-		shared_ptr< buildin_type > bt = create_node<buildin_type>( token_t::null() );
+		shared_ptr< builtin_type > bt = create_node<builtin_type>( token_t::null() );
 		bt->value_typecode = btc;
 		return get( bt, rootsym.lock() );
 	} else {

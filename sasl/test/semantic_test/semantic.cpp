@@ -68,7 +68,7 @@ void test_expression_si(){
 	BOOST_REQUIRE( SEMCASE_(si_cexpr0) );
 	BOOST_CHECK( SEMCASE_(op_bexpr0) == operators::add );
 	BOOST_CHECK( SEMCASE_(si_cexpr0)->value<uint32_t>() == 776 );
-	BOOST_CHECK( SEMCASE_(si_cexpr0)->value_type() == buildin_type_code::_uint32 );
+	BOOST_CHECK( SEMCASE_(si_cexpr0)->value_type() == builtin_type_code::_uint32 );
 }
 
 void test_mangle(){

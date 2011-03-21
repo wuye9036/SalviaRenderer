@@ -442,27 +442,27 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 #define INSERT_INTO_TYPEMAP( litname, enum_code ) \
 	{	\
-		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_t::null() );	\
-		bt->value_typecode = buildin_type_code::enum_code;	\
+		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
+		bt->value_typecode = builtin_type_code::enum_code;	\
 		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
 	}
 
 #define INSERT_VECTOR_INTO_TYPEMAP( component_type, dim, enum_code ) \
 	{	\
-		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_t::null() );	\
-		bt->value_typecode = sasl_ehelper::vector_of( buildin_type_code::enum_code, dim );	\
+		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
+		bt->value_typecode = sasl_ehelper::vector_of( builtin_type_code::enum_code, dim );	\
 		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
 	}
 
 #define INSERT_MATRIX_INTO_TYPEMAP( component_type, dim0, dim1, enum_code ) \
 	{	\
-		shared_ptr<buildin_type> bt = create_node<buildin_type>( token_t::null() );	\
-		bt->value_typecode = sasl_ehelper::matrix_of( buildin_type_code::enum_code, dim0, dim1 );	\
+		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
+		bt->value_typecode = sasl_ehelper::matrix_of( builtin_type_code::enum_code, dim0, dim1 );	\
 		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
 	}
 
 namespace builder_details{
-	unordered_map< std::string, shared_ptr<buildin_type> > typemap;
+	unordered_map< std::string, shared_ptr<builtin_type> > typemap;
 	void initialize_typemap(){
 		if( typemap.empty() ){
 
@@ -648,7 +648,7 @@ shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> at
 	}
 
 	if( !optional_init->attrs.empty() ){
-		ret->init = build_init( optional_init->attrs[0] );
+		ret->init = builtinit( optional_init->attrs[0] );
 	}
 
 	return ret;
@@ -872,12 +872,12 @@ vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators( shared_
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 
 	vector< shared_ptr<declarator> > ret;
-	ret.push_back( build_initdecl(typed_attr->attrs[0]) );
+	ret.push_back( builtinitdecl(typed_attr->attrs[0]) );
 
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> follow_attr, follows->attrs ){
 		SASL_TYPED_ATTRIBUTE( queuer_attribute, follow_pair, follow_attr );
-		ret.push_back( build_initdecl(follow_pair->attrs[1]) );
+		ret.push_back( builtinitdecl(follow_pair->attrs[1]) );
 	}
 
 	return ret;
@@ -938,7 +938,7 @@ shared_ptr<type_specifier> syntax_tree_builder::build_postqualedtype( shared_ptr
 	return ret_type;
 }
 
-shared_ptr<initializer> syntax_tree_builder::build_init( shared_ptr<attribute> attr ){
+shared_ptr<initializer> syntax_tree_builder::builtinit( shared_ptr<attribute> attr ){
 	shared_ptr<initializer> ret;
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return ret;
@@ -1007,7 +1007,7 @@ shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<attrib
 	return unqual;
 }
 
-shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute> attr ){
+shared_ptr<declarator> syntax_tree_builder::builtinitdecl( shared_ptr<attribute> attr ){
 	shared_ptr<declarator> ret = create_node<declarator>( token_t::null() ) ;
 
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );

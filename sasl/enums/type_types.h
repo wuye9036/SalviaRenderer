@@ -26,7 +26,7 @@ public:
 
 	const static this_type alias;
 	const static this_type none;
-	const static this_type buildin;
+	const static this_type builtin;
 	const static this_type composited;
 
 

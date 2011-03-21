@@ -22,7 +22,7 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <stdio.h>
 
 using ::sasl::syntax_tree::array_type;
-using ::sasl::syntax_tree::buildin_type;
+using ::sasl::syntax_tree::builtin_type;
 using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::node;
@@ -35,7 +35,7 @@ using ::sasl::syntax_tree::variable_declaration;
 // static boost::mutex lookup_table_mtx;
 
 static std::string mangling_tag("M");
-static boost::unordered_map< buildin_type_code, std::string, enum_hasher > btc_decorators;
+static boost::unordered_map< builtin_type_code, std::string, enum_hasher > btc_decorators;
 static bool is_initialized(false);
 
 static void initialize_lookup_table(){
@@ -44,18 +44,18 @@ static void initialize_lookup_table(){
 	if ( is_initialized ){ return; }
 
 	boost::assign::insert( btc_decorators )
-		( buildin_type_code::_void, "O" )
-		( buildin_type_code::_boolean, "B" )
-		( buildin_type_code::_sint8, "S1" )
-		( buildin_type_code::_sint16, "S2" )
-		( buildin_type_code::_sint32, "S4" )
-		( buildin_type_code::_sint64, "S8" )
-		( buildin_type_code::_uint8, "U1" )
-		( buildin_type_code::_uint16, "U2" )
-		( buildin_type_code::_uint32, "U4" )
-		( buildin_type_code::_uint64, "U8" )
-		( buildin_type_code::_float, "F" )
-		( buildin_type_code::_double, "D" )
+		( builtin_type_code::_void, "O" )
+		( builtin_type_code::_boolean, "B" )
+		( builtin_type_code::_sint8, "S1" )
+		( builtin_type_code::_sint16, "S2" )
+		( builtin_type_code::_sint32, "S4" )
+		( builtin_type_code::_sint64, "S8" )
+		( builtin_type_code::_uint8, "U1" )
+		( builtin_type_code::_uint16, "U2" )
+		( builtin_type_code::_uint32, "U4" )
+		( builtin_type_code::_uint64, "U8" )
+		( builtin_type_code::_float, "F" )
+		( builtin_type_code::_double, "D" )
 		;
 
 	is_initialized = true;
@@ -65,11 +65,11 @@ static void initialize_lookup_table(){
 // some free function for manging
 static void append( std::string& str, boost::shared_ptr<type_specifier> typespec );
 
-static void append( std::string& str, buildin_type_code btc, bool is_component = false ){
+static void append( std::string& str, builtin_type_code btc, bool is_component = false ){
 	if ( sasl_ehelper::is_scalar( btc ) ) {
 		if ( !is_component ){
 			// if it is not a component of a vector or matrix,
-			// add a lead char 'B' since is a BaseTypeName of a buildin scalar type.
+			// add a lead char 'B' since is a BaseTypeName of a builtin scalar type.
 			str.append("B");
 		}
 		str.append( btc_decorators[btc] );
@@ -116,7 +116,7 @@ static void append( std::string& str, boost::shared_ptr<array_type> atype ){
 static void append( std::string& str, boost::shared_ptr<type_specifier> typespec ){
 	append(str, typespec->qual);
 	// append (str, scope_qualifier(typespec) );
-	if ( typespec->node_class() == syntax_node_types::buildin_type ){
+	if ( typespec->node_class() == syntax_node_types::builtin_type ){
 		append( str, typespec->value_typecode );
 	} else if ( typespec->node_class() == syntax_node_types::struct_type ) {
 		append( str, boost::shared_polymorphic_cast<struct_type>( typespec ) );

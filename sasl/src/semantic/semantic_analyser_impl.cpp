@@ -40,9 +40,9 @@ using ::sasl::common::compiler_info_manager;
 using ::sasl::common::token_t;
 
 using ::sasl::syntax_tree::binary_expression;
-using ::sasl::syntax_tree::buildin_type;
+using ::sasl::syntax_tree::builtin_type;
 using ::sasl::syntax_tree::cast_expression;
-using ::sasl::syntax_tree::create_buildin_type;
+using ::sasl::syntax_tree::create_builtin_type;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::compound_statement;
 using ::sasl::syntax_tree::constant_expression;
@@ -347,7 +347,7 @@ SASL_VISIT_DEF( variable_declaration )
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
-SASL_VISIT_DEF( buildin_type ){
+SASL_VISIT_DEF( builtin_type ){
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
 	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, gctxt->type_manager() );
@@ -450,7 +450,7 @@ SASL_VISIT_DEF( if_statement )
 	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_ifstmt->cond );
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_ifstmt->cond);
 	assert( cond_tsi );
-	type_entry::id_t bool_tid = gctxt->type_manager()->get( buildin_type_code::_boolean );
+	type_entry::id_t bool_tid = gctxt->type_manager()->get( builtin_type_code::_boolean );
 	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
 
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt, dup_ifstmt->yes_stmt );
@@ -551,9 +551,9 @@ SASL_VISIT_DEF( program ){
 
 	any child_ctxt = child_ctxt_init;
 
-	register_buildin_types();
+	register_builtin_types();
 	register_type_converter( child_ctxt_init );
-	register_buildin_functions( child_ctxt_init );
+	register_builtin_functions( child_ctxt_init );
 
 	shared_ptr<program> dup_prog = duplicate( v.handle() )->typed_handle<program>();
 	dup_prog->decls.clear();
@@ -570,7 +570,7 @@ SASL_VISIT_DEF( program ){
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
 
-void semantic_analyser_impl::buildin_type_convert( shared_ptr<node> lhs, shared_ptr<node> rhs ){
+void semantic_analyser_impl::builtin_type_convert( shared_ptr<node> lhs, shared_ptr<node> rhs ){
 	// do nothing
 }
 
@@ -578,23 +578,23 @@ void semantic_analyser_impl::register_type_converter( const boost::any& ctxt ){
 	// register default type converter
 	type_manager* typemgr = any_to_ctxt_ptr(ctxt)->gsi->type_manager().get();
 
-	type_entry::id_t sint8_ts = typemgr->get( buildin_type_code::_sint8 );
-	type_entry::id_t sint16_ts = typemgr->get( buildin_type_code::_sint16 );
-	type_entry::id_t sint32_ts = typemgr->get( buildin_type_code::_sint32 );
-	type_entry::id_t sint64_ts = typemgr->get( buildin_type_code::_sint64 );
+	type_entry::id_t sint8_ts = typemgr->get( builtin_type_code::_sint8 );
+	type_entry::id_t sint16_ts = typemgr->get( builtin_type_code::_sint16 );
+	type_entry::id_t sint32_ts = typemgr->get( builtin_type_code::_sint32 );
+	type_entry::id_t sint64_ts = typemgr->get( builtin_type_code::_sint64 );
 
-	type_entry::id_t uint8_ts = typemgr->get( buildin_type_code::_uint8 );
-	type_entry::id_t uint16_ts = typemgr->get( buildin_type_code::_uint16 );
-	type_entry::id_t uint32_ts = typemgr->get( buildin_type_code::_uint32 );
-	type_entry::id_t uint64_ts = typemgr->get( buildin_type_code::_uint64 );
+	type_entry::id_t uint8_ts = typemgr->get( builtin_type_code::_uint8 );
+	type_entry::id_t uint16_ts = typemgr->get( builtin_type_code::_uint16 );
+	type_entry::id_t uint32_ts = typemgr->get( builtin_type_code::_uint32 );
+	type_entry::id_t uint64_ts = typemgr->get( builtin_type_code::_uint64 );
 
-	type_entry::id_t float_ts = typemgr->get( buildin_type_code::_float );
-	type_entry::id_t double_ts = typemgr->get( buildin_type_code::_double );
+	type_entry::id_t float_ts = typemgr->get( builtin_type_code::_float );
+	type_entry::id_t double_ts = typemgr->get( builtin_type_code::_double );
 
-	type_entry::id_t bool_ts = typemgr->get( buildin_type_code::_boolean );
+	type_entry::id_t bool_ts = typemgr->get( builtin_type_code::_boolean );
 
 	// default conversation will do nothing.
-	type_converter::converter_t default_conv = bind(&semantic_analyser_impl::buildin_type_convert, this, _1, _2);
+	type_converter::converter_t default_conv = bind(&semantic_analyser_impl::builtin_type_convert, this, _1, _2);
 
 	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint16_ts, default_conv );
 	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint32_ts, default_conv );
@@ -730,19 +730,19 @@ void semantic_analyser_impl::register_type_converter( const boost::any& ctxt ){
 
 }
 
-void semantic_analyser_impl::register_buildin_functions( const boost::any& child_ctxt_init ){
+void semantic_analyser_impl::register_builtin_functions( const boost::any& child_ctxt_init ){
 	any child_ctxt;
 
 	typedef unordered_map<
-		buildin_type_code, shared_ptr<buildin_type>, enum_hasher
+		builtin_type_code, shared_ptr<builtin_type>, enum_hasher
 		> bt_table_t;
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
-	map_of_buildin_type( standard_bttbl, &sasl_ehelper::is_standard );
-	map_of_buildin_type( storage_bttbl, &sasl_ehelper::is_storagable );
+	map_of_builtin_type( standard_bttbl, &sasl_ehelper::is_standard );
+	map_of_builtin_type( storage_bttbl, &sasl_ehelper::is_storagable );
 
-	shared_ptr<buildin_type> bt_bool = storage_bttbl[ buildin_type_code::_boolean ];
-	shared_ptr<buildin_type> bt_i32 = storage_bttbl[ buildin_type_code::_sint32 ];
+	shared_ptr<builtin_type> bt_bool = storage_bttbl[ builtin_type_code::_boolean ];
+	shared_ptr<builtin_type> bt_i32 = storage_bttbl[ builtin_type_code::_sint32 ];
 
 	shared_ptr<function_type> tmpft;
 
@@ -861,7 +861,7 @@ void semantic_analyser_impl::register_buildin_functions( const boost::any& child
 
 		if( op == operators::negative ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( it_type->first != buildin_type_code::_uint64 ){
+				if ( it_type->first != builtin_type_code::_uint64 ){
 					dfunction_combinator(NULL).dname( op_name )
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
@@ -886,9 +886,9 @@ void semantic_analyser_impl::register_buildin_functions( const boost::any& child
 	}
 }
 
-void semantic_analyser_impl::register_buildin_types(){
-	BOOST_FOREACH( buildin_type_code const & btc, sasl_ehelper::list_of_buildin_type_codes() ){
-		EFLIB_ASSERT( gctxt->type_manager()->get( btc ) > -1, "Register buildin type failed!" );
+void semantic_analyser_impl::register_builtin_types(){
+	BOOST_FOREACH( builtin_type_code const & btc, sasl_ehelper::list_of_builtin_type_codes() ){
+		EFLIB_ASSERT( gctxt->type_manager()->get( btc ) > -1, "Register builtin type failed!" );
 	}
 }
 

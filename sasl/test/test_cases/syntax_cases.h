@@ -28,20 +28,20 @@ public:
 	TEST_CASE_CREF_VARIABLE( uint32_t, val_874uint );
 	TEST_CASE_CREF_VARIABLE( uint32_t, val_21uint );
 
-	// buildin type codes.
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_sint8 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_sint32 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint32 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_uint64 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_float );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_double );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_boolean );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_void );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_short2 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_float3 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_double2x4 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_ulong3x2 );
-	TEST_CASE_CREF_VARIABLE( buildin_type_code, btc_none );
+	// builtin type codes.
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_sint8 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_sint32 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_uint32 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_uint64 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_float );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_double );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_boolean );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_void );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_short2 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_float3 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_double2x4 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_ulong3x2 );
+	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_none );
 
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_3p25f );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_17ushort );
@@ -50,19 +50,19 @@ public:
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_21uint );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(expression_initializer), exprinit_cexpr_3p25f );
 
-	// buildin types
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_sint8 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_sint32 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_uint32 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_uint64 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_float );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_double );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_boolean );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_void );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_short2 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_float3 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_double2x4 );
-	TEST_CASE_SP_VARIABLE( SYNTAX_(buildin_type), type_ulong3x2 );
+	// builtin types
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_sint8 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_sint32 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_uint32 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_uint64 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_float );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_double );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_boolean );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_void );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_short2 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_float3 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_double2x4 );
+	TEST_CASE_SP_VARIABLE( SYNTAX_(builtin_type), type_ulong3x2 );
 
 	// variables
 	TEST_CASE_SP_VARIABLE( SYNTAX_(variable_declaration), var_int8 );

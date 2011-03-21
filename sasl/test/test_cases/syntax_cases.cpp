@@ -1,5 +1,5 @@
 #include <sasl/test/test_cases/syntax_cases.h>
-#include <sasl/enums/buildin_type_code.h>
+#include <sasl/enums/builtin_type_code.h>
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/statement.h>
@@ -36,19 +36,19 @@ void syntax_cases::release(){
 }
 
 syntax_cases::syntax_cases():
-LOCVAR_(btc_sint8)( buildin_type_code::_sint8 ),
-LOCVAR_(btc_sint32)( buildin_type_code::_sint32),
-LOCVAR_(btc_uint32)( buildin_type_code::_uint32 ),
-LOCVAR_(btc_uint64)( buildin_type_code::_uint64 ),
-LOCVAR_(btc_double)( buildin_type_code::_double ),
-LOCVAR_(btc_float)( buildin_type_code::_float ),
-LOCVAR_(btc_boolean)( buildin_type_code::_boolean ),
-LOCVAR_(btc_void)( buildin_type_code::_void ),
-LOCVAR_(btc_short2)( sasl_ehelper::vector_of(buildin_type_code::_sint16, 2) ),
-LOCVAR_(btc_float3)( sasl_ehelper::vector_of(buildin_type_code::_float, 3) ),
-LOCVAR_(btc_double2x4)( sasl_ehelper::matrix_of(buildin_type_code::_double, 2, 4) ),
-LOCVAR_(btc_ulong3x2)( sasl_ehelper::matrix_of(buildin_type_code::_uint64, 3, 2) ),
-LOCVAR_(btc_none)( buildin_type_code::none )
+LOCVAR_(btc_sint8)( builtin_type_code::_sint8 ),
+LOCVAR_(btc_sint32)( builtin_type_code::_sint32),
+LOCVAR_(btc_uint32)( builtin_type_code::_uint32 ),
+LOCVAR_(btc_uint64)( builtin_type_code::_uint64 ),
+LOCVAR_(btc_double)( builtin_type_code::_double ),
+LOCVAR_(btc_float)( builtin_type_code::_float ),
+LOCVAR_(btc_boolean)( builtin_type_code::_boolean ),
+LOCVAR_(btc_void)( builtin_type_code::_void ),
+LOCVAR_(btc_short2)( sasl_ehelper::vector_of(builtin_type_code::_sint16, 2) ),
+LOCVAR_(btc_float3)( sasl_ehelper::vector_of(builtin_type_code::_float, 3) ),
+LOCVAR_(btc_double2x4)( sasl_ehelper::matrix_of(builtin_type_code::_double, 2, 4) ),
+LOCVAR_(btc_ulong3x2)( sasl_ehelper::matrix_of(builtin_type_code::_uint64, 3, 2) ),
+LOCVAR_(btc_none)( builtin_type_code::none )
 {}
 
 void syntax_cases::initialize(){
@@ -64,31 +64,31 @@ void syntax_cases::initialize(){
 
 	// create scalar types.
 	dtype_combinator(NULL)
-		.dbuildin(btc_sint8()) .end( LOCVAR_(type_sint8));
+		.dbuiltin(btc_sint8()) .end( LOCVAR_(type_sint8));
 	dtype_combinator(NULL)
-		.dbuildin(btc_sint32()) .end( LOCVAR_(type_sint32));
+		.dbuiltin(btc_sint32()) .end( LOCVAR_(type_sint32));
 	dtype_combinator(NULL)
-		.dbuildin(btc_uint32()).end(LOCVAR_(type_uint32));
+		.dbuiltin(btc_uint32()).end(LOCVAR_(type_uint32));
 	dtype_combinator(NULL)
-		.dbuildin(btc_uint64()) .end( LOCVAR_(type_uint64));
+		.dbuiltin(btc_uint64()) .end( LOCVAR_(type_uint64));
 	dtype_combinator(NULL)
-		.dbuildin(btc_boolean()).end( LOCVAR_(type_boolean));
+		.dbuiltin(btc_boolean()).end( LOCVAR_(type_boolean));
 	dtype_combinator(NULL)
-		.dbuildin(btc_float()) .end( LOCVAR_(type_float));
+		.dbuiltin(btc_float()) .end( LOCVAR_(type_float));
 	dtype_combinator(NULL)
-		.dbuildin(btc_double()) .end( LOCVAR_(type_double));
+		.dbuiltin(btc_double()) .end( LOCVAR_(type_double));
 	dtype_combinator(NULL)
-		.dbuildin(btc_void()) .end( LOCVAR_(type_void));
+		.dbuiltin(btc_void()) .end( LOCVAR_(type_void));
 
 	// create vector and matrix types
 	dtype_combinator(NULL)
-		.dbuildin(btc_short2()).end( LOCVAR_(type_short2) );
+		.dbuiltin(btc_short2()).end( LOCVAR_(type_short2) );
 	dtype_combinator(NULL)
-		.dbuildin(btc_float3()).end( LOCVAR_(type_float3) );
+		.dbuiltin(btc_float3()).end( LOCVAR_(type_float3) );
 	dtype_combinator(NULL)
-		.dbuildin(btc_double2x4()).end(LOCVAR_(type_double2x4));
+		.dbuiltin(btc_double2x4()).end(LOCVAR_(type_double2x4));
 	dtype_combinator(NULL)
-		.dbuildin(btc_ulong3x2()).end(LOCVAR_(type_ulong3x2));
+		.dbuiltin(btc_ulong3x2()).end(LOCVAR_(type_ulong3x2));
 
 	// create expressions
 	dexpr_combinator(NULL).dconstant2( val_3p25f() ).end( LOCVAR_(cexpr_3p25f) );
@@ -219,13 +219,13 @@ void syntax_cases::initialize(){
 
 	dfunction_combinator(NULL)
 		.dname(NAME_(fn4_jit))
-		.dreturntype().dbuildin( buildin_type_code::_sint32 ).end()
+		.dreturntype().dbuiltin( builtin_type_code::_sint32 ).end()
 		.dparam()
-			.dtype().dbuildin( buildin_type_code::_sint32 ).end()
+			.dtype().dbuiltin( builtin_type_code::_sint32 ).end()
 			.dname( "v0" ).end()
 		.end()
 		.dparam()
-			.dtype().dbuildin( buildin_type_code::_sint32 ).end()
+			.dtype().dbuiltin( builtin_type_code::_sint32 ).end()
 			.dname( "v1" ).end()
 		.end()
 		.dbody()
@@ -263,7 +263,7 @@ void syntax_cases::initialize(){
 						.dop( operators::assign )
 						.drexpr()
 							.dcast()
-								.dtype().dbuildin( buildin_type_code::_sint32 ).end()
+								.dtype().dbuiltin( builtin_type_code::_sint32 ).end()
 								.dexpr()
 									.dbinary()
 										.dlexpr().dnode( expr1_add() ).end()

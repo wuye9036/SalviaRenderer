@@ -106,7 +106,7 @@ public:
 		applied( v, data );
 	}
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
-	SASL_VISIT_DCL( buildin_type ){
+	SASL_VISIT_DCL( builtin_type ){
 		applied( v, data );
 	}
 	SASL_VISIT_DCL( array_type ){
@@ -208,9 +208,9 @@ void follow_up_traversal( boost::shared_ptr<node> root, boost::function<void( no
 	}
 }
 
-boost::shared_ptr<buildin_type> create_buildin_type( const buildin_type_code& btc )
+boost::shared_ptr<builtin_type> create_builtin_type( const builtin_type_code& btc )
 {
-	boost::shared_ptr<buildin_type> ret = create_node<buildin_type>( token_t::null() );
+	boost::shared_ptr<builtin_type> ret = create_node<builtin_type>( token_t::null() );
 	ret->value_typecode = btc;
 	return ret;
 }
@@ -284,7 +284,7 @@ public:
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator, (name)(init)(semantic)(semantic_index) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, buildin_type, (value_typecode)(qual)(tok) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (value_typecode)(qual)(tok) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter, (param_type)(name)(init) );
@@ -333,7 +333,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
 
-	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, buildin_type, (value_typecode)(qual)(tok) );
+	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, builtin_type, (value_typecode)(qual)(tok) );
 
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );

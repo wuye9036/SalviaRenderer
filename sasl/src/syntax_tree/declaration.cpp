@@ -43,12 +43,12 @@ SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( type_definition );
 
 type_specifier::type_specifier( syntax_node_types type_id, boost::shared_ptr<token_t> tok )
 	: declaration( type_id, tok ),
-	value_typecode( buildin_type_code::none),
+	value_typecode( builtin_type_code::none),
 	qual( type_qualifiers::none )
 { }
 
-bool type_specifier::is_buildin() const{
-	return node_class() == syntax_node_types::buildin_type;
+bool type_specifier::is_builtin() const{
+	return node_class() == syntax_node_types::builtin_type;
 }
 
 bool type_specifier::is_uniform() const
@@ -56,10 +56,10 @@ bool type_specifier::is_uniform() const
 	return qual.included( type_qualifiers::_uniform );
 }
 
-buildin_type::buildin_type( boost::shared_ptr<token_t> tok )
-	: type_specifier( syntax_node_types::buildin_type, tok ){ }
+builtin_type::builtin_type( boost::shared_ptr<token_t> tok )
+	: type_specifier( syntax_node_types::builtin_type, tok ){ }
 
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( buildin_type );
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( builtin_type );
 
 array_type::array_type( boost::shared_ptr<token_t> tok )
 	: type_specifier( syntax_node_types::array_type, tok ) { }

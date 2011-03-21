@@ -75,7 +75,7 @@ void type_types::force_initialize(){
 	is_initialized = true;
 	new ( const_cast<type_types*>(&alias) ) type_types ( UINT32_C( 3 ), "alias" );
 	new ( const_cast<type_types*>(&none) ) type_types ( UINT32_C( 0 ), "none" );
-	new ( const_cast<type_types*>(&buildin) ) type_types ( UINT32_C( 1 ), "buildin" );
+	new ( const_cast<type_types*>(&builtin) ) type_types ( UINT32_C( 1 ), "builtin" );
 	new ( const_cast<type_types*>(&composited) ) type_types ( UINT32_C( 2 ), "composited" );
 
 }
@@ -89,7 +89,7 @@ type_types::type_types( const storage_type& val, const std::string& name ): type
 
 const type_types type_types::alias ( UINT32_C( 3 ), "alias" );
 const type_types type_types::none ( UINT32_C( 0 ), "none" );
-const type_types type_types::buildin ( UINT32_C( 1 ), "buildin" );
+const type_types type_types::builtin ( UINT32_C( 1 ), "builtin" );
 const type_types type_types::composited ( UINT32_C( 2 ), "composited" );
 
 

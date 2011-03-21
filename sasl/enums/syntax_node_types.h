@@ -40,6 +40,7 @@ public:
 	const static this_type label;
 	const static this_type while_statement;
 	const static this_type program;
+	const static this_type builtin_type;
 	const static this_type switch_statement;
 	const static this_type statement;
 	const static this_type expression_initializer;
@@ -55,7 +56,6 @@ public:
 	const static this_type array_type;
 	const static this_type jump_statement;
 	const static this_type alias_type;
-	const static this_type buildin_type;
 	const static this_type binary_expression;
 	const static this_type expression_list;
 	const static this_type member_initializer;

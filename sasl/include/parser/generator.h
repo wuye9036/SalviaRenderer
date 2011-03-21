@@ -202,7 +202,7 @@ public:
 	boost::shared_ptr<parser> clone() const;
 };
 //////////////////////////////////////////////////////////////////////////
-// Operators for building parser combinator.
+// Operators for builting parser combinator.
 repeater operator * ( parser const & expr );
 repeater operator - ( parser const& expr );
 selector operator | ( parser const & expr0, parser const& expr1 );

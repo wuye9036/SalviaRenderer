@@ -131,8 +131,8 @@ void llvm_code_generator::do_assign( any* data, shared_ptr<expression> lexpr, sh
 
 Constant* llvm_code_generator::get_zero_filled_constant( boost::shared_ptr<type_specifier> typespec )
 {
-	if( typespec->node_class() == syntax_node_types::buildin_type ){
-		buildin_type_code btc = typespec->value_typecode;
+	if( typespec->node_class() == syntax_node_types::builtin_type ){
+		builtin_type_code btc = typespec->value_typecode;
 		if( sasl_ehelper::is_integer( btc ) ){
 			return ConstantInt::get( node_ctxt(typespec)->type, 0, sasl_ehelper::is_signed(btc) );
 		}
@@ -145,38 +145,38 @@ Constant* llvm_code_generator::get_zero_filled_constant( boost::shared_ptr<type_
 	return NULL;
 }
 
-llvm::Type const* llvm_code_generator::create_buildin_type( buildin_type_code const& btc, bool& sign ){
+llvm::Type const* llvm_code_generator::create_builtin_type( builtin_type_code const& btc, bool& sign ){
 
 	if ( sasl_ehelper::is_void( btc ) ){
 		return Type::getVoidTy( mctxt->context() );
 	}
 	
 	if( sasl_ehelper::is_scalar(btc) ){
-		if( btc == buildin_type_code::_boolean ){
+		if( btc == builtin_type_code::_boolean ){
 			return IntegerType::get( mctxt->context(), 1 );
 		}
 		if( sasl_ehelper::is_integer(btc) ){
 			sign = sasl_ehelper::is_signed( btc );
 			return IntegerType::get( mctxt->context(), (unsigned int)sasl_ehelper::storage_size( btc ) << 3 );
 		}
-		if ( btc == buildin_type_code::_float ){
+		if ( btc == builtin_type_code::_float ){
 			return Type::getFloatTy( mctxt->context() );
 		}
-		if ( btc == buildin_type_code::_double ){
+		if ( btc == builtin_type_code::_double ){
 			return Type::getDoubleTy( mctxt->context() );
 		}
 	} 
 	
 	if( sasl_ehelper::is_vector( btc) ){
-		buildin_type_code scalar_btc = sasl_ehelper::scalar_of( btc );
-		Type const* inner_type = create_buildin_type(scalar_btc, sign);
+		builtin_type_code scalar_btc = sasl_ehelper::scalar_of( btc );
+		Type const* inner_type = create_builtin_type(scalar_btc, sign);
 		return VectorType::get( inner_type, static_cast<uint32_t>(sasl_ehelper::len_0(btc)) );
 	}
 	
 	if( sasl_ehelper::is_matrix( btc ) ){
-		buildin_type_code scalar_btc = sasl_ehelper::scalar_of( btc );
+		builtin_type_code scalar_btc = sasl_ehelper::scalar_of( btc );
 		Type const* row_type =
-			create_buildin_type( sasl_ehelper::vector_of(scalar_btc, sasl_ehelper::len_1(btc)), sign );
+			create_builtin_type( sasl_ehelper::vector_of(scalar_btc, sasl_ehelper::len_1(btc)), sign );
 		return ArrayType::get( row_type, sasl_ehelper::len_0(btc) );
 	}
 
@@ -210,7 +210,7 @@ void llvm_code_generator::create_param_type(){
 	//// Initialize types
 	//bool sign = false;
 	//
-	//Type const* f4 = create_buildin_type( sasl_ehelper::vector_of( buildin_type_code::_float, 4 ), sign );
+	//Type const* f4 = create_builtin_type( sasl_ehelper::vector_of( builtin_type_code::_float, 4 ), sign );
 	//Type const* pf4 = PointerType::getUnqual( f4 );
 	//Type const* pvoid = Type::getInt8PtrTy(mctxt->context());
 
@@ -344,8 +344,8 @@ SASL_VISIT_DEF( binary_expression ){
 		Value* retval = NULL;
 		if( lval && rval ){
 
-			buildin_type_code lbtc = p0_tsi->type_info()->value_typecode;
-			buildin_type_code rbtc = p1_tsi->type_info()->value_typecode;
+			builtin_type_code lbtc = p0_tsi->type_info()->value_typecode;
+			builtin_type_code rbtc = p1_tsi->type_info()->value_typecode;
 
 			if (v.op == operators::add){
 				if( sasl_ehelper::is_real(lbtc) ){
@@ -398,11 +398,11 @@ SASL_VISIT_DEF( constant_expression ){
 	}
 
 	Value* retval = NULL;
-	if( c_si->value_type() == buildin_type_code::_sint32 ){
+	if( c_si->value_type() == builtin_type_code::_sint32 ){
 		retval = ConstantInt::get( node_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<int32_t>() ), true );
-	} else if ( c_si->value_type() == buildin_type_code::_uint32 ) {
+	} else if ( c_si->value_type() == builtin_type_code::_uint32 ) {
 		retval = ConstantInt::get( node_ctxt( c_si->type_info() )->type, uint64_t( c_si->value<uint32_t>() ), false );
-	} else if ( c_si->value_type() == buildin_type_code::_float ) {
+	} else if ( c_si->value_type() == builtin_type_code::_float ) {
 		retval = ConstantFP::get( node_ctxt( c_si->type_info() )->type, c_si->value<double>() );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -502,7 +502,7 @@ SASL_VISIT_DEF( variable_declaration ){
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
-SASL_VISIT_DEF( buildin_type ){
+SASL_VISIT_DEF( builtin_type ){
 
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
 
@@ -512,7 +512,7 @@ SASL_VISIT_DEF( buildin_type ){
 	}
 
 	bool sign = false;
-	Type const* ret_type = create_buildin_type(v.value_typecode, sign);
+	Type const* ret_type = create_builtin_type(v.value_typecode, sign);
 
 	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
 	EFLIB_ASSERT_AND_IF( ret_type, tips.c_str() ){
@@ -636,7 +636,7 @@ SASL_VISIT_DEF( if_statement ){
 
 	visit_child( child_ctxt, child_ctxt_init, v.cond );
 	type_entry::id_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
-	type_entry::id_t bool_tid = msi->type_manager()->get( buildin_type_code::_boolean );
+	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_type_code::_boolean );
 	if( cond_tid != bool_tid ){
 		typeconv->convert( msi->type_manager()->get(bool_tid), v.cond );
 	}
@@ -768,7 +768,7 @@ SASL_VISIT_DEF( program ){
 
 	ctxt_getter = boost::bind( &llvm_code_generator::node_ctxt<node>, this, _1, false );
 	typeconv = create_type_converter( mctxt->builder(), ctxt_getter );
-	register_buildin_typeconv( typeconv, msi->type_manager() );
+	register_builtin_typeconv( typeconv, msi->type_manager() );
 
 	// Initialize entry parameters.
 	create_param_type();

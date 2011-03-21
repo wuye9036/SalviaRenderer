@@ -78,7 +78,7 @@
 		<item>character</item>
 	</enum>	
 	
-	<enum name="buildin_type_code">
+	<enum name="builtin_type_code">
 		<HasName />
 		<Convertible/>
 		<Ortho />
@@ -167,7 +167,7 @@
 		<item value = "$expr_index$">call_expression</item>
 		<item value = "$expr_index$">member_expression</item>
 		
-		<item value = "$type_specifier$ + 1">buildin_type</item>
+		<item value = "$type_specifier$ + 1">builtin_type</item>
 		<item value = "$type_specifier$ + 2">array_type</item>
 		<item value = "$type_specifier$ + 3">struct_type</item>
 		<item value = "$type_specifier$ + 4">function_type</item>
@@ -195,7 +195,7 @@
 		<Convertible/>
 		<AutoGen expression = "$index$"/>
 		<item>none</item>
-		<item>buildin</item>
+		<item>builtin</item>
 		<item>composited</item>
 		<item>alias</item>
 	</enum>
