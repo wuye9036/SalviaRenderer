@@ -250,7 +250,8 @@ enum languages{
 	lang_common,
 	lang_vertex_sl,
 	lang_pixel_sl,
-	lang_blend_sl
+	lang_blend_sl,
+	lang_count
 };
 
 END_NS_SOFTART()

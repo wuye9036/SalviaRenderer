@@ -1,5 +1,12 @@
 #include <sasl/include/semantic/abi_analyser.h>
 
+#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/enums_helper.h>
+#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
+
+#include <eflib/include/diagnostics/assert.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/utility/addressof.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -15,17 +22,17 @@ using std::vector;
 BEGIN_NS_SASL_SEMANTIC();
 
 storage_info::storage_info()
-	: index(-1), offset(0), size(0), storage(storage_none)
+	: index(-1), offset(0), size(0), storage(storage_none), sv_type( builtin_type_code::none )
 {}
 
-abi_info::abi_info() : mod(NULL), entry_point(NULL)
+abi_info::abi_info() : mod(NULL), entry_point(NULL), lang(softart::lang_none)
 {}
 
 void abi_info::module( shared_ptr<module_si> const& v ){
 	mod = v.get();
 }
 
-bool abi_info::is_module( boost::shared_ptr<module_si> const& v ){
+bool abi_info::is_module( boost::shared_ptr<module_si> const& v ) const{
 	return mod == v.get();
 }
 
@@ -33,7 +40,7 @@ void abi_info::entry( boost::shared_ptr<symbol> const& v ){
 	entry_point = v.get();
 }
 
-bool abi_info::is_entry( boost::shared_ptr<symbol> const& v ){
+bool abi_info::is_entry( boost::shared_ptr<symbol> const& v ) const{
 	return entry_point == v.get();
 }
 
@@ -101,77 +108,96 @@ storage_info* abi_info::alloc_output_storage( softart::semantic sem ){
 	return addressof( semout_storages[sem] );
 }
 
-//void module_si::calculate_storage( softart::languages lang ){
-//	if( lang == softart::lang_none ){ return; }
-//
-//	if( lang == softart::lang_vertex_sl ){
-//		// Did not process memory alignment.
-//		// It is correspond packed structure in LLVM.
-//
-//		int sin_idx = 0;
-//		// int sout_idx = 0;
-//		int rin_idx = 0;
-//		int rout_idx = 0;
-//
-//		int sin_offset = 0;
-//		// int sout_offset = 0;
-//		int rin_offset = 0;
-//		int rout_offset = 0;
-//
-//		int storage_size = 0;
-//
-//		// Calculate semantics
-//		BOOST_FOREACH( softart::semantic sem, used_sems )
-//		{
-//			switch( static_cast<softart::semantic>( softart::semantic_base(sem) ) ){
-//			case softart::SV_Position:
-//				storage_size = sizeof(float*);
-//				sem_storages[sem].index = sin_idx++;
-//				sem_storages[sem].offset = sin_offset;
-//				sem_storages[sem].size = storage_size;
-//				sin_offset += storage_size;
-//				break;
-//
-//			case softart::SV_Texcoord:
-//				storage_size = sizeof(float*);
-//				sem_storages[sem].index = sin_idx++;
-//				sem_storages[sem].offset = sin_offset;
-//				sem_storages[sem].size = storage_size;
-//				sin_offset += storage_size;
-//				break;
-//
-//			case softart::SV_RPosition:
-//				storage_size = sizeof(float) * 4;
-//				sem_storages[sem].index = rout_idx++;
-//				sem_storages[sem].offset = rout_offset;
-//				sem_storages[sem].size = storage_size;
-//				rout_offset += storage_size;
-//				break;
-//			default:
-//				EFLIB_ASSERT_UNIMPLEMENTED();
-//			} // switch
-//
-//		} //BOOST_FOREACH
-//
-//		// Calculate globals
-//		BOOST_FOREACH( shared_ptr<symbol> sym, global_syms ){
-//			shared_ptr<storage_si> ssi = extract_semantic_info<storage_si>( sym->node() );
-//			shared_ptr<type_specifier> ti = ssi->type_info();
-//			assert(ti);
-//
-//			if( ti->is_builtin() ){
-//				storage_size = static_cast<int>( sasl_ehelper::storage_size( ti->value_typecode ) );
-//
-//				ssi->storage().index = rin_idx++;
-//				ssi->storage().offset = rin_offset;
-//				ssi->storage().size = storage_size;
-//				rin_offset += storage_size;
-//			} else {
-//				EFLIB_ASSERT_UNIMPLEMENTED0( "Don't support un-build-in type as global yet.");
-//			}
-//		}
-//	} else {
-//		EFLIB_ASSERT_UNIMPLEMENTED();
-//	}
-//}
+// Update ABI Information
+void abi_info::update_abii(){
+	if ( !mod || !entry_point ) return;
+
+	update_input_semantics_abii();
+	update_input_stream_abii();
+	update_output_semantics_abii();
+	update_output_stream_abii();
+}
+
+void abi_info::update_input_semantics_abii(){
+	int offset = 0;
+	for ( size_t index = 0; index < sems_in.size(); ++index ){
+		storage_info* pstorage = alloc_input_storage( sems_in[index] );
+		pstorage->storage = buffer_in;
+		pstorage->index = static_cast<int>( index );
+		pstorage->offset = offset;
+		int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
+		pstorage->size = size;
+		offset += size;
+	}
+}
+
+void abi_info::update_input_stream_abii(){
+	int const ptr_size = static_cast<int>( sizeof( void* ) );
+	for ( size_t index = 0; index < sems_in.size(); ++index ){
+		storage_info* pstorage = alloc_input_storage( sems_in[index] );
+		pstorage->storage = stream_in;
+		pstorage->index =  static_cast<int>( index );
+		pstorage->offset = static_cast<int>( index ) * ptr_size;
+		pstorage->size = ptr_size;
+	}
+}
+
+void abi_info::update_output_semantics_abii(){
+	int offset = 0;
+	for ( size_t index = 0; index < sems_in.size(); ++index ){
+		storage_info* pstorage = alloc_output_storage( sems_in[index] );
+		pstorage->storage = buffer_out;
+		pstorage->index =  static_cast<int>( index );
+		pstorage->offset = offset;
+		int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
+		pstorage->size = size;
+		offset += size;
+	}
+}
+
+void abi_info::update_output_stream_abii()
+{
+	// Do nothing.
+}
+
+
+void abi_analyser::reset( softart::languages lang ){
+	assert( lang < softart::lang_count );
+	
+	mods[lang].reset();
+	entries[lang].reset();
+	abiis[lang].reset();
+}
+
+
+void abi_analyser::reset_all(){
+	for( int i = 0; i < softart::lang_count; ++i ){
+		reset( static_cast<softart::languages>(i) );
+	}
+}
+
+bool abi_analyser::entry( boost::shared_ptr<module_si>& mod, std::string const& name, softart::languages lang ){
+	assert( lang < softart::lang_count );
+
+	mods[lang] = mod;
+	vector< shared_ptr<symbol> > const& overloads = mod->root()->find_overloads( name );
+	if ( overloads.size() != 1 ){
+		return false;
+	}
+
+	entries[lang] = overloads[0];
+	abiis[lang].reset();
+	return true;
+}
+
+boost::shared_ptr<symbol> const& abi_analyser::entry( softart::languages lang ) const{
+	return entries[lang];
+}
+
+bool abi_analyser::update_abiis()
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return false;
+}
+
 END_NS_SASL_SEMANTIC();

@@ -3,6 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
+#include <sasl/enums/builtin_type_code.h>
 #include <softart/include/enums.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -32,6 +33,7 @@ struct storage_info{
 	int offset;
 	int size;
 	storage_types storage;
+	builtin_type_code sv_type;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -45,10 +47,10 @@ public:
 	softart::languages lang;
 
 	void module( boost::shared_ptr<module_si> const& );
-	bool is_module( boost::shared_ptr<module_si> const& );
+	bool is_module( boost::shared_ptr<module_si> const& ) const;
 
 	void entry( boost::shared_ptr<symbol> const& );
-	bool is_entry( boost::shared_ptr<symbol> const& );
+	bool is_entry( boost::shared_ptr<symbol> const& ) const;
 
 	bool add_input_semantic( softart::semantic sem );
 	bool add_output_semantic( softart::semantic sem );
@@ -65,6 +67,11 @@ public:
 
 private:
 	void update_abii();
+
+	void update_input_semantics_abii();
+	void update_output_semantics_abii();
+	void update_input_stream_abii();
+	void update_output_stream_abii();
 
 	module_si* mod;
 	symbol* entry_point;
@@ -84,31 +91,20 @@ private:
 // If entry of VS and PS was set, match the ABIs to generate interpolating code.
 class abi_analyser{
 public:
-	void entry( boost::shared_ptr<module_si>& mod, std::string const& name, softart::languages lang );
+	bool entry( boost::shared_ptr<module_si>& mod, std::string const& name, softart::languages lang );
 	boost::shared_ptr<symbol> const& entry( softart::languages lang ) const;
 
-	void reset();
-	bool update_abi();
+	void reset( softart::languages lang );
+	void reset_all();
+
+	bool update_abiis();
 
 	abi_info const* abii( softart::languages lang );
 
 private:
-
-	bool update_vs();
-	bool update_ps();
-	bool update_bs();
-
-	boost::shared_ptr<module_si> vs_mod;
-	boost::shared_ptr<symbol> vs_entry;
-	boost::shared_ptr<abi_info> vs_abii;
-
-	boost::shared_ptr<module_si> ps_mod;
-	boost::shared_ptr<symbol> ps_entry;
-	boost::shared_ptr<abi_info> ps_abii;
-
-	boost::shared_ptr<module_si> bs_mod;
-	boost::shared_ptr<symbol> bs_entry;
-	boost::shared_ptr<abi_info> bs_abii;
+	boost::shared_ptr<module_si> mods[softart::lang_count];
+	boost::shared_ptr<symbol> entries[softart::lang_count];
+	boost::shared_ptr<abi_info> abiis[softart::lang_count];
 };
 
 END_NS_SASL_SEMANTIC();
