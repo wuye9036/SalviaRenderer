@@ -98,10 +98,18 @@ public:
 	void reset_all();
 
 	bool update_abiis();
+	bool verify_abiis();
 
 	abi_info const* abii( softart::languages lang );
 
 private:
+	bool update_vs();
+	bool update_ps();
+	bool update_bs();
+
+	bool verify_vs_ps();
+	bool verify_ps_bs();
+
 	boost::shared_ptr<module_si> mods[softart::lang_count];
 	boost::shared_ptr<symbol> entries[softart::lang_count];
 	boost::shared_ptr<abi_info> abiis[softart::lang_count];

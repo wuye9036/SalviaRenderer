@@ -2,8 +2,10 @@
 
 #include <sasl/enums/builtin_type_code.h>
 #include <sasl/enums/enums_helper.h>
+
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/syntax_tree/declaration.h>
 
 #include <eflib/include/diagnostics/assert.h>
 
@@ -13,13 +15,33 @@
 
 #include <algorithm>
 
+using namespace sasl::syntax_tree;
+
 using boost::addressof;
+using boost::make_shared;
 using boost::shared_ptr;
 
 using std::lower_bound;
 using std::vector;
 
+
 BEGIN_NS_SASL_SEMANTIC();
+
+bool verify_semantic( builtin_type_code btc, softart::semantic sem ){
+	switch( semantic_base(sem) ){
+
+	case softart::SV_None:
+		return false;
+
+	case softart::SV_Position:
+	case softart::SV_Texcoord:
+		return 
+			( sasl_ehelper::is_scalar(btc) || sasl_ehelper::is_vector(btc) )
+			&& sasl_ehelper::scalar_of(btc) == builtin_type_code::_float;
+	}
+
+	return false;
+}
 
 storage_info::storage_info()
 	: index(-1), offset(0), size(0), storage(storage_none), sv_type( builtin_type_code::none )
@@ -187,15 +209,48 @@ bool abi_analyser::entry( boost::shared_ptr<module_si>& mod, std::string const& 
 
 	entries[lang] = overloads[0];
 	abiis[lang].reset();
-	return true;
+
+	return update_abiis();
 }
 
 boost::shared_ptr<symbol> const& abi_analyser::entry( softart::languages lang ) const{
 	return entries[lang];
 }
 
-bool abi_analyser::update_abiis()
-{
+bool abi_analyser::update_abiis(){
+	return update_vs() && update_ps() && update_bs();
+}
+
+bool abi_analyser::verify_abiis(){
+	return verify_vs_ps() && verify_ps_bs();
+}
+
+bool abi_analyser::update_vs(){
+	softart::languages const lang = softart::lang_vertex_sl;
+
+	if ( abiis[lang] ){
+		return true;
+	}
+
+	if( ! (mods[lang] && entries[lang]) ){
+		return false;
+	}
+
+	abiis[lang] = make_shared<abi_info>();
+
+	shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
+
+	shared_ptr<type_specifier> ret_type = entry_fn->retval_type;
+	shared_ptr<storage_si> ssi = extract_semantic_info<storage_si>(ret_type);
+	shared_ptr<type_specifier> real_type = ssi->type_info();
+
+	if( real_type->is_builtin() ){
+		// Verify built-in semantics.
+		verify_semantic( real_type->value_typecode, ssi->get_semantic() );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return false;
 }
