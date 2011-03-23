@@ -13,6 +13,11 @@
 
 #include <vector>
 
+namespace sasl{
+	namespace syntax_tree{
+		struct node;
+	}
+}
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
@@ -52,8 +57,8 @@ public:
 	void entry( boost::shared_ptr<symbol> const& );
 	bool is_entry( boost::shared_ptr<symbol> const& ) const;
 
-	bool add_input_semantic( softart::semantic sem );
-	bool add_output_semantic( softart::semantic sem );
+	bool add_input_semantic( softart::semantic sem, builtin_type_code btc );
+	bool add_output_semantic( softart::semantic sem, builtin_type_code btc );
 	void add_global_var( boost::shared_ptr<symbol> const& );
 
 	storage_info* input_storage( softart::semantic );
@@ -100,12 +105,17 @@ public:
 	bool update_abiis();
 	bool verify_abiis();
 
-	abi_info const* abii( softart::languages lang );
+	abi_info const* abii( softart::languages lang ) const;
 
 private:
-	bool update_vs();
-	bool update_ps();
-	bool update_bs();
+	abi_info* abii( softart::languages lang );
+	bool add_semantic(
+		boost::shared_ptr<sasl::syntax_tree::node> const& v,
+		bool is_member, bool enable_nested,
+		softart::languages lang, bool is_output_semantic
+		);
+
+	bool update( softart::languages lang );
 
 	bool verify_vs_ps();
 	bool verify_ps_bs();
