@@ -5,6 +5,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
 #include <sasl/include/semantic/name_mangler.h>
+#include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
@@ -33,6 +34,7 @@ using namespace syntax_tree;
 using namespace boost::assign;
 using namespace llvm;
 
+using semantic::abi_info;
 using semantic::const_value_si;
 using semantic::extract_semantic_info;
 using semantic::module_si;
@@ -67,25 +69,43 @@ cgllvm_common_context* any_to_cgctxt_ptr( any& any_val ){
 
 //////////////////////////////////////////////////////////////////////////
 //
-#define SASL_VISITOR_TYPE_NAME llvm_code_generator
+#define SASL_VISITOR_TYPE_NAME llvm_vscg
 
-llvm_code_generator::llvm_code_generator(){}
+llvm_vscg::llvm_vscg()
+	: msi( NULL ), abii( NULL )
+{}
 
-template <typename NodeT> any& llvm_code_generator::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
+bool llvm_vscg::generate(
+	module_si* mod,
+	abi_info const* abii
+	)
+{
+	this->msi = mod;
+	this->abii = abii;
+
+	if ( msi && this->abii ){
+		msi->root()->node()->accept( this, NULL );
+		return true;
+	}
+
+	return false;
+}
+
+template <typename NodeT> any& llvm_vscg::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
 {
 	child_ctxt = init_data;
 	EFLIB_ASSERT( !child_ctxt.empty(), "" );
 	return visit_child( child_ctxt, child );
 }
 
-template <typename NodeT> any& llvm_code_generator::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
+template <typename NodeT> any& llvm_vscg::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
 {
 	child->accept( this, &child_ctxt );
 	return child_ctxt;
 }
 
 template<typename NodeT>
-common_ctxt_handle llvm_code_generator::node_ctxt( boost::shared_ptr<NodeT> const& nd, bool create_if_need ){
+common_ctxt_handle llvm_vscg::node_ctxt( boost::shared_ptr<NodeT> const& nd, bool create_if_need ){
 	if ( !nd ){ return NULL; }
 
 	node* ptr = static_cast<node*>(nd.get());
@@ -101,12 +121,12 @@ common_ctxt_handle llvm_code_generator::node_ctxt( boost::shared_ptr<NodeT> cons
 	return (it->second).get();
 }
 
-common_ctxt_handle llvm_code_generator::node_ctxt( node& nd, bool create_if_need ){
+common_ctxt_handle llvm_vscg::node_ctxt( node& nd, bool create_if_need ){
 	return node_ctxt(nd.handle(), create_if_need);
 }
 
 // Process assign
-void llvm_code_generator::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
+void llvm_vscg::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
 {
 	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(lexpr);
 	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(rexpr);
@@ -129,7 +149,7 @@ void llvm_code_generator::do_assign( any* data, shared_ptr<expression> lexpr, sh
 	data_as_cgctxt_ptr()->val = val;
 }
 
-Constant* llvm_code_generator::get_zero_filled_constant( boost::shared_ptr<type_specifier> typespec )
+Constant* llvm_vscg::get_zero_filled_constant( boost::shared_ptr<type_specifier> typespec )
 {
 	if( typespec->node_class() == syntax_node_types::builtin_type ){
 		builtin_type_code btc = typespec->value_typecode;
@@ -145,7 +165,7 @@ Constant* llvm_code_generator::get_zero_filled_constant( boost::shared_ptr<type_
 	return NULL;
 }
 
-llvm::Type const* llvm_code_generator::create_builtin_type( builtin_type_code const& btc, bool& sign ){
+llvm::Type const* llvm_vscg::create_builtin_type( builtin_type_code const& btc, bool& sign ){
 
 	if ( sasl_ehelper::is_void( btc ) ){
 		return Type::getVoidTy( mctxt->context() );
@@ -183,14 +203,14 @@ llvm::Type const* llvm_code_generator::create_builtin_type( builtin_type_code co
 	return NULL;
 }
 
-llvm::Type const* llvm_code_generator::get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& v )
+llvm::Type const* llvm_vscg::get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& v )
 {
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return NULL;
 }
 
-void llvm_code_generator::create_param_type(){
+void llvm_vscg::create_param_type(){
 	// gather type informations
 
 	//vector<Type const*> si_members;
@@ -257,7 +277,7 @@ void llvm_code_generator::create_param_type(){
 	//}
 }
 
-void llvm_code_generator::restart_block( boost::any* data ){
+void llvm_vscg::restart_block( boost::any* data ){
 	BasicBlock* restart = BasicBlock::Create( mctxt->context(), "", data_as_cgctxt_ptr()->parent_func );
 	mctxt->builder()->SetInsertPoint(restart);
 }
@@ -766,7 +786,7 @@ SASL_VISIT_DEF( program ){
 	mctxt = create_codegen_context<cgllvm_global_context>( v.handle() );
 	mctxt->create_module( v.name );
 
-	ctxt_getter = boost::bind( &llvm_code_generator::node_ctxt<node>, this, _1, false );
+	ctxt_getter = boost::bind( &llvm_vscg::node_ctxt<node>, this, _1, false );
 	typeconv = create_type_converter( mctxt->builder(), ctxt_getter );
 	register_builtin_typeconv( typeconv, msi->type_manager() );
 
@@ -786,12 +806,8 @@ SASL_VISIT_DEF( program ){
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
 
-boost::shared_ptr<llvm_code> llvm_code_generator::generated_module(){
+boost::shared_ptr<llvm_code> llvm_vscg::generated_module(){
 	return boost::shared_polymorphic_cast<llvm_code>(mctxt);
-}
-
-void llvm_code_generator::global_semantic_info( boost::shared_ptr< sasl::semantic::module_si > v ){
-	msi = v;
 }
 
 END_NS_SASL_CODE_GENERATOR();

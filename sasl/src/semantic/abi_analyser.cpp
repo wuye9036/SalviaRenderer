@@ -23,6 +23,7 @@ using boost::make_shared;
 using boost::shared_ptr;
 
 using std::lower_bound;
+using std::string;
 using std::vector;
 
 
@@ -236,26 +237,54 @@ void abi_analyser::reset( softart::languages lang ){
 	abiis[lang].reset();
 }
 
-
 void abi_analyser::reset_all(){
 	for( int i = 0; i < softart::lang_count; ++i ){
 		reset( static_cast<softart::languages>(i) );
 	}
 }
 
-bool abi_analyser::entry( boost::shared_ptr<module_si>& mod, std::string const& name, softart::languages lang ){
-	assert( lang < softart::lang_count );
-
-	mods[lang] = mod;
+bool abi_analyser::entry( shared_ptr<module_si> const& mod, string const& name, softart::languages lang ){
 	vector< shared_ptr<symbol> > const& overloads = mod->root()->find_overloads( name );
 	if ( overloads.size() != 1 ){
 		return false;
 	}
 
-	entries[lang] = overloads[0];
+	return entry( mod, overloads[0], lang );
+}
+
+bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> const& fnsym, softart::languages lang ){
+	assert( lang < softart::lang_count );
+
+	mods[lang] = mod;
+	entries[lang] = fnsym;
 	abiis[lang].reset();
 
 	return update_abiis();
+}
+
+bool abi_analyser::auto_entry( shared_ptr<module_si> const& mod, softart::languages lang ){
+	shared_ptr<symbol> candidate;
+	shared_ptr<abi_info> candidate_abii;
+	BOOST_FOREACH( shared_ptr<symbol> const& fnsym, mod->functions() ){
+		if( entry(mod, fnsym, lang) ){
+			if( candidate ){
+				// TODO More than one mactched. conflict error.
+				reset(lang);
+				return false;
+			}
+			candidate = fnsym;
+			candidate_abii = abiis[lang];
+		}
+	}
+
+	if( candidate ){
+		mods[lang] = mod;
+		entries[lang] = candidate;
+		abiis[lang] = candidate_abii;
+		return true;
+	}
+
+	return false;
 }
 
 boost::shared_ptr<symbol> const& abi_analyser::entry( softart::languages lang ) const{
@@ -371,6 +400,14 @@ bool abi_analyser::add_semantic(
 	return false;
 }
 
+bool abi_analyser::verify_vs_ps(){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return false;
+}
 
+bool abi_analyser::verify_ps_bs(){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return false;
+}
 
 END_NS_SASL_SEMANTIC();

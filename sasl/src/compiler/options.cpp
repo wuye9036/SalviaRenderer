@@ -2,6 +2,7 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/common/lex_context.h>
+#include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/parse_api.h>
@@ -20,8 +21,9 @@
 using sasl::code_generator::llvm_code;
 using sasl::code_generator::generate_llvm_code;
 using sasl::common::lex_context;
+using sasl::semantic::abi_analyser;
 using sasl::semantic::module_si;
-using sasl::semantic::semantic_analysis;
+using sasl::semantic::analysis_semantic;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::parse;
 using sasl::syntax_tree::program;
@@ -262,11 +264,15 @@ void options_io::process( bool& abort )
 					return;
 				}
 				// TODO: For test only.
-				shared_ptr<module_si> gsi = semantic_analysis( prog, softart::lang_vertex_sl );
-				if( !gsi ){
+				shared_ptr<module_si> msi = analysis_semantic( prog );
+				if( !msi ){
 					cout << "Semantic error happened!" << endl;
 				}
-				shared_ptr<llvm_code> llvmcode = generate_llvm_code( gsi );
+				
+				abi_analyser aa;
+				aa.auto_entry( msi, softart::lang_vertex_sl );
+
+				shared_ptr<llvm_code> llvmcode = generate_llvm_code( msi.get(), aa.abii(softart::lang_vertex_sl) );
 				if( !llvmcode ){
 					cout << "Code generation error happened!" << endl;
 				}

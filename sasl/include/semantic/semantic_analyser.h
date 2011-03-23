@@ -24,7 +24,7 @@ BEGIN_NS_SASL_SEMANTIC();
 
 class module_si;
 
-boost::shared_ptr<module_si> semantic_analysis( boost::shared_ptr< ::sasl::syntax_tree::node > root, softart::languages lang );
+boost::shared_ptr<module_si> analysis_semantic( boost::shared_ptr< ::sasl::syntax_tree::node > const& root );
 
 END_NS_SASL_SEMANTIC();
 

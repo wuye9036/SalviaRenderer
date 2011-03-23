@@ -117,26 +117,26 @@ shared_ptr<type_specifier> type_info_of( shared_ptr<node> n ){
 	return shared_ptr<type_specifier>();
 }
 
-semantic_analyser_impl::semantic_analyser_impl()
+semantic_analyser::semantic_analyser()
 {
 	typeconv.reset( new type_converter() );
 }
 
-#define SASL_VISITOR_TYPE_NAME semantic_analyser_impl
+#define SASL_VISITOR_TYPE_NAME semantic_analyser
 
-template <typename NodeT> any& semantic_analyser_impl::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
+template <typename NodeT> any& semantic_analyser::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
 {
 	child_ctxt = init_data;
 	return visit_child( child_ctxt, child );
 }
 
-template <typename NodeT> any& semantic_analyser_impl::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
+template <typename NodeT> any& semantic_analyser::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
 {
 	child->accept( this, &child_ctxt );
 	return child_ctxt;
 }
 
-template <typename NodeT> any& semantic_analyser_impl::visit_child(
+template <typename NodeT> any& semantic_analyser::visit_child(
 	any& child_ctxt, const any& init_data,
 	shared_ptr<NodeT> child, shared_ptr<NodeT>& generated_node )
 {
@@ -147,7 +147,7 @@ template <typename NodeT> any& semantic_analyser_impl::visit_child(
 	return child_ctxt;
 }
 
-void semantic_analyser_impl::parse_semantic(
+void semantic_analyser::parse_semantic(
 	shared_ptr<token_t> const& sem_tok,
 	shared_ptr<token_t> const& sem_idx_tok,
 	shared_ptr<storage_si> const& ssi
@@ -569,11 +569,11 @@ SASL_VISIT_DEF( program ){
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
 
-void semantic_analyser_impl::builtin_type_convert( shared_ptr<node> lhs, shared_ptr<node> rhs ){
+void semantic_analyser::builtin_type_convert( shared_ptr<node> lhs, shared_ptr<node> rhs ){
 	// do nothing
 }
 
-void semantic_analyser_impl::register_type_converter( const boost::any& ctxt ){
+void semantic_analyser::register_type_converter( const boost::any& ctxt ){
 	// register default type converter
 	type_manager* typemgr = any_to_ctxt_ptr(ctxt)->gsi->type_manager().get();
 
@@ -593,7 +593,7 @@ void semantic_analyser_impl::register_type_converter( const boost::any& ctxt ){
 	type_entry::id_t bool_ts = typemgr->get( builtin_type_code::_boolean );
 
 	// default conversation will do nothing.
-	type_converter::converter_t default_conv = bind(&semantic_analyser_impl::builtin_type_convert, this, _1, _2);
+	type_converter::converter_t default_conv = bind(&semantic_analyser::builtin_type_convert, this, _1, _2);
 
 	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint16_ts, default_conv );
 	typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint32_ts, default_conv );
@@ -729,7 +729,7 @@ void semantic_analyser_impl::register_type_converter( const boost::any& ctxt ){
 
 }
 
-void semantic_analyser_impl::register_builtin_functions( const boost::any& child_ctxt_init ){
+void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt_init ){
 	any child_ctxt;
 
 	typedef unordered_map<
@@ -885,13 +885,13 @@ void semantic_analyser_impl::register_builtin_functions( const boost::any& child
 	}
 }
 
-void semantic_analyser_impl::register_builtin_types(){
+void semantic_analyser::register_builtin_types(){
 	BOOST_FOREACH( builtin_type_code const & btc, sasl_ehelper::list_of_builtin_type_codes() ){
 		EFLIB_ASSERT( gctxt->type_manager()->get( btc ) > -1, "Register builtin type failed!" );
 	}
 }
 
-boost::shared_ptr<module_si> const& semantic_analyser_impl::module_semantic_info() const{
+boost::shared_ptr<module_si> const& semantic_analyser::module_semantic_info() const{
 	return gctxt;
 }
 

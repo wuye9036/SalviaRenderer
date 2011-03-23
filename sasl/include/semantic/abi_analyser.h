@@ -96,7 +96,9 @@ private:
 // If entry of VS and PS was set, match the ABIs to generate interpolating code.
 class abi_analyser{
 public:
-	bool entry( boost::shared_ptr<module_si>& mod, std::string const& name, softart::languages lang );
+	bool entry( boost::shared_ptr<module_si> const& mod, std::string const& name, softart::languages lang );
+	bool auto_entry( boost::shared_ptr<module_si> const& mod, softart::languages lang );
+
 	boost::shared_ptr<symbol> const& entry( softart::languages lang ) const;
 
 	void reset( softart::languages lang );
@@ -106,9 +108,13 @@ public:
 	bool verify_abiis();
 
 	abi_info const* abii( softart::languages lang ) const;
+	abi_info* abii( softart::languages lang );
 
 private:
-	abi_info* abii( softart::languages lang );
+	bool entry(
+		boost::shared_ptr<module_si> const& mod, boost::shared_ptr<symbol> const& fnsym,
+		softart::languages lang );
+
 	bool add_semantic(
 		boost::shared_ptr<sasl::syntax_tree::node> const& v,
 		bool is_member, bool enable_nested,

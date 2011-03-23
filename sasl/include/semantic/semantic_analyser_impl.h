@@ -34,9 +34,9 @@ class module_si;
 class storage_si;
 struct sacontext;
 
-class semantic_analyser_impl: public ::sasl::syntax_tree::syntax_tree_visitor{
+class semantic_analyser: public ::sasl::syntax_tree::syntax_tree_visitor{
 public:
-	semantic_analyser_impl();
+	semantic_analyser();
 
 	// expression
 	SASL_VISIT_DCL( unary_expression );

@@ -2,7 +2,9 @@
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_IMPL_H
 
 #include <sasl/include/code_generator/forward.h>
+
 #include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/include/semantic/abi_analyser.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/LLVMContext.h>
@@ -43,9 +45,14 @@ class cgllvm_common_context;
 class cgllvm_global_context;
 class llvm_code;
 
-class llvm_code_generator: public sasl::syntax_tree::syntax_tree_visitor{
+class llvm_vscg: public sasl::syntax_tree::syntax_tree_visitor{
 public:
-	llvm_code_generator();
+	llvm_vscg();
+
+	bool generate(
+		sasl::semantic::module_si* mod,
+		sasl::semantic::abi_info const* abii
+		);
 
 	SASL_VISIT_DCL( unary_expression );
 	SASL_VISIT_DCL( cast_expression );
@@ -97,8 +104,6 @@ public:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
 
-	void global_semantic_info( boost::shared_ptr< sasl::semantic::module_si > );
-
 private:
 	template <typename NodeT>
 	cgllvm_common_context* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
@@ -114,14 +119,16 @@ private:
 
 	llvm::Constant* get_zero_filled_constant( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
 	llvm::Type const* create_builtin_type( builtin_type_code const& btc, bool& sign );
-
 	llvm::Type const* get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
+
+	void create_entry();
 
 	void create_param_type();
 	
 	void restart_block( boost::any* data );
 
-	boost::shared_ptr< sasl::semantic::module_si > msi;
+	sasl::semantic::module_si* msi;
+	sasl::semantic::abi_info const* abii;
 	boost::shared_ptr<cgllvm_global_context> mctxt;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 

@@ -4,6 +4,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/utility.h>
 
@@ -58,8 +59,11 @@ cgllvm_cases::cgllvm_cases(){
 void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
-	shared_ptr< SEMANTIC_(module_si) > si_jit_root = SEMANTIC_(semantic_analysis)( SYNCASE_(prog_for_jit_test), softart::lang_vertex_sl );
-	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root );
+	shared_ptr< SEMANTIC_(module_si) > si_jit_root = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_jit_test) );
+	SEMANTIC_(abi_analyser) aa;
+	aa.auto_entry( si_jit_root, softart::lang_vertex_sl );
+
+	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root.get(), aa.abii(softart::lang_vertex_sl) );
 
 	fputs("\n======================================================\r\n", stderr);
 	fputs("Verify generated code: \r\n", stderr);
