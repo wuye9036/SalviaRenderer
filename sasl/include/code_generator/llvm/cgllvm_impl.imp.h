@@ -5,13 +5,13 @@ using boost::shared_ptr;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-template <typename NodeT> any& cgllvm_impl::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
+template <typename NodeT> any& cgllvm_impl::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> const& child )
 {
 	child_ctxt = init_data;
 	return visit_child( child_ctxt, child );
 }
 
-template <typename NodeT> any& cgllvm_impl::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
+template <typename NodeT> any& cgllvm_impl::visit_child( any& child_ctxt, shared_ptr<NodeT> const& child )
 {
 	child->accept( this, &child_ctxt );
 	return child_ctxt;
