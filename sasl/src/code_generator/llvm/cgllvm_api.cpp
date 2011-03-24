@@ -23,9 +23,9 @@ boost::shared_ptr<llvm_code> generate_llvm_code( sasl::semantic::module_si* mod,
 	boost::shared_ptr<symbol> root = mod->root();
 	if ( root && root->node() && root->node()->node_class() == syntax_node_types::program ){
 		if( abii->lang == softart::lang_vertex_sl ){
-			llvm_vscg cg;
+			cgllvm_vs cg;
 			if( cg.generate(mod, abii) ){
-				return cg.generated_module();
+				return cg.module();
 			}
 		}
 		EFLIB_ASSERT_UNIMPLEMENTED();

@@ -45,9 +45,18 @@ class cgllvm_common_context;
 class cgllvm_global_context;
 class llvm_code;
 
-class llvm_vscg: public sasl::syntax_tree::syntax_tree_visitor{
+class cgllvm : public sasl::syntax_tree::syntax_tree_visitor{
+	virtual bool generate(
+		sasl::semantic::module_si* mod,
+		sasl::semantic::abi_info const* abii
+		) = 0;
+
+	virtual boost::shared_ptr<llvm_code> module() = 0;
+};
+
+class cgllvm_vs: public cgllvm{
 public:
-	llvm_vscg();
+	cgllvm_vs();
 
 	bool generate(
 		sasl::semantic::module_si* mod,
@@ -99,7 +108,7 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
-	boost::shared_ptr<llvm_code> generated_module();
+	boost::shared_ptr<llvm_code> module();
 
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
