@@ -46,7 +46,7 @@ class cgllvm_common_context;
 class cgllvm_global_context;
 class llvm_code;
 
-class cgllvm_general: public cgllvm{
+class cgllvm_general: public cgllvm_impl{
 public:
 	cgllvm_general();
 
@@ -101,10 +101,6 @@ public:
 	SASL_VISIT_DCL( program );
 
 	boost::shared_ptr<llvm_code> module();
-
-	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> child );
-	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
-
 private:
 	template <typename NodeT>
 	cgllvm_common_context* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );

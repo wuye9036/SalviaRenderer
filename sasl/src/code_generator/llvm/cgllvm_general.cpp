@@ -2,6 +2,7 @@
 
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
+#include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
 #include <sasl/include/semantic/name_mangler.h>
@@ -89,19 +90,6 @@ bool cgllvm_general::generate(
 	}
 
 	return false;
-}
-
-template <typename NodeT> any& cgllvm_general::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
-{
-	child_ctxt = init_data;
-	EFLIB_ASSERT( !child_ctxt.empty(), "" );
-	return visit_child( child_ctxt, child );
-}
-
-template <typename NodeT> any& cgllvm_general::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
-{
-	child->accept( this, &child_ctxt );
-	return child_ctxt;
 }
 
 template<typename NodeT>
