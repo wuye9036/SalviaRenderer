@@ -1,6 +1,6 @@
 #include <sasl/test/test_cases/semantic_cases.h>
 #include <sasl/test/test_cases/syntax_cases.h>
-#include <sasl/include/semantic/semantic_analyser.h>
+#include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/utility.h>
 

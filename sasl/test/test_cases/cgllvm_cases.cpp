@@ -5,7 +5,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/semantic/abi_analyser.h>
-#include <sasl/include/semantic/semantic_analyser.h>
+#include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/syntax_tree/utility.h>
 
 #include <softart/include/enums.h>

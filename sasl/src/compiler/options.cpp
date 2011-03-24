@@ -3,7 +3,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/common/lex_context.h>
 #include <sasl/include/semantic/abi_analyser.h>
-#include <sasl/include/semantic/semantic_analyser.h>
+#include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
