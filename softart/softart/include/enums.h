@@ -247,7 +247,7 @@ inline semantic semantic_base( semantic sem ){ return static_cast<semantic>(sem 
 
 enum languages{
 	lang_none = 0,
-	lang_common,
+	lang_general,	// general-purpose programming language.
 	lang_vertex_sl,
 	lang_pixel_sl,
 	lang_blend_sl,

@@ -1,5 +1,5 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_COMMON_H
-#define SASL_CODE_GENERATOR_LLVM_CGLLVM_COMMON_H
+#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_GENERAL_H
+#define SASL_CODE_GENERATOR_LLVM_CGLLVM_GENERAL_H
 
 #include <sasl/include/code_generator/forward.h>
 
@@ -46,9 +46,9 @@ class cgllvm_common_context;
 class cgllvm_global_context;
 class llvm_code;
 
-class cgllvm_common: public cgllvm{
+class cgllvm_general: public cgllvm{
 public:
-	cgllvm_common();
+	cgllvm_general();
 
 	bool generate(
 		sasl::semantic::module_si* mod,

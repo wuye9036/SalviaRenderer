@@ -1,4 +1,4 @@
-#include <sasl/include/code_generator/llvm/cgllvm_common.h>
+#include <sasl/include/code_generator/llvm/cgllvm_general.h>
 
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
@@ -69,13 +69,13 @@ cgllvm_common_context* any_to_cgctxt_ptr( any& any_val ){
 
 //////////////////////////////////////////////////////////////////////////
 //
-#define SASL_VISITOR_TYPE_NAME cgllvm_common
+#define SASL_VISITOR_TYPE_NAME cgllvm_general
 
-cgllvm_common::cgllvm_common()
+cgllvm_general::cgllvm_general()
 	: msi( NULL ), abii( NULL )
 {}
 
-bool cgllvm_common::generate(
+bool cgllvm_general::generate(
 	module_si* mod,
 	abi_info const* abii
 	)
@@ -91,21 +91,21 @@ bool cgllvm_common::generate(
 	return false;
 }
 
-template <typename NodeT> any& cgllvm_common::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
+template <typename NodeT> any& cgllvm_general::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> child )
 {
 	child_ctxt = init_data;
 	EFLIB_ASSERT( !child_ctxt.empty(), "" );
 	return visit_child( child_ctxt, child );
 }
 
-template <typename NodeT> any& cgllvm_common::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
+template <typename NodeT> any& cgllvm_general::visit_child( any& child_ctxt, shared_ptr<NodeT> child )
 {
 	child->accept( this, &child_ctxt );
 	return child_ctxt;
 }
 
 template<typename NodeT>
-common_ctxt_handle cgllvm_common::node_ctxt( boost::shared_ptr<NodeT> const& nd, bool create_if_need ){
+common_ctxt_handle cgllvm_general::node_ctxt( boost::shared_ptr<NodeT> const& nd, bool create_if_need ){
 	if ( !nd ){ return NULL; }
 
 	node* ptr = static_cast<node*>(nd.get());
@@ -121,12 +121,12 @@ common_ctxt_handle cgllvm_common::node_ctxt( boost::shared_ptr<NodeT> const& nd,
 	return (it->second).get();
 }
 
-common_ctxt_handle cgllvm_common::node_ctxt( node& nd, bool create_if_need ){
+common_ctxt_handle cgllvm_general::node_ctxt( node& nd, bool create_if_need ){
 	return node_ctxt(nd.handle(), create_if_need);
 }
 
 // Process assign
-void cgllvm_common::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
+void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
 {
 	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(lexpr);
 	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(rexpr);
@@ -149,7 +149,7 @@ void cgllvm_common::do_assign( any* data, shared_ptr<expression> lexpr, shared_p
 	data_as_cgctxt_ptr()->val = val;
 }
 
-Constant* cgllvm_common::get_zero_filled_constant( boost::shared_ptr<type_specifier> typespec )
+Constant* cgllvm_general::get_zero_filled_constant( boost::shared_ptr<type_specifier> typespec )
 {
 	if( typespec->node_class() == syntax_node_types::builtin_type ){
 		builtin_type_code btc = typespec->value_typecode;
@@ -165,7 +165,7 @@ Constant* cgllvm_common::get_zero_filled_constant( boost::shared_ptr<type_specif
 	return NULL;
 }
 
-llvm::Type const* cgllvm_common::create_builtin_type( builtin_type_code const& btc, bool& sign ){
+llvm::Type const* cgllvm_general::create_builtin_type( builtin_type_code const& btc, bool& sign ){
 
 	if ( sasl_ehelper::is_void( btc ) ){
 		return Type::getVoidTy( mctxt->context() );
@@ -203,7 +203,7 @@ llvm::Type const* cgllvm_common::create_builtin_type( builtin_type_code const& b
 	return NULL;
 }
 
-void cgllvm_common::restart_block( boost::any* data ){
+void cgllvm_general::restart_block( boost::any* data ){
 	BasicBlock* restart = BasicBlock::Create( mctxt->context(), "", data_as_cgctxt_ptr()->parent_func );
 	mctxt->builder()->SetInsertPoint(restart);
 }
@@ -712,7 +712,7 @@ SASL_VISIT_DEF( program ){
 	mctxt = create_codegen_context<cgllvm_global_context>( v.handle() );
 	mctxt->create_module( v.name );
 
-	ctxt_getter = boost::bind( &cgllvm_common::node_ctxt<node>, this, _1, false );
+	ctxt_getter = boost::bind( &cgllvm_general::node_ctxt<node>, this, _1, false );
 	typeconv = create_type_converter( mctxt->builder(), ctxt_getter );
 	register_builtin_typeconv( typeconv, msi->type_manager() );
 
@@ -729,7 +729,7 @@ SASL_VISIT_DEF( program ){
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
 
-boost::shared_ptr<llvm_code> cgllvm_common::module(){
+boost::shared_ptr<llvm_code> cgllvm_general::module(){
 	return boost::shared_polymorphic_cast<llvm_code>(mctxt);
 }
 
