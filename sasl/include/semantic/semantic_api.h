@@ -1,5 +1,5 @@
-#ifndef SASL_SEMANTIC_SEMANTIC_ANALYSER_H
-#define SASL_SEMANTIC_SEMANTIC_ANALYSER_H
+#ifndef SASL_SEMANTIC_SEMANTIC_API_H
+#define SASL_SEMANTIC_SEMANTIC_API_H
 
 #include <sasl/include/semantic/semantic_forward.h>
 

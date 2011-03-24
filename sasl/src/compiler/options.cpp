@@ -270,9 +270,9 @@ void options_io::process( bool& abort )
 				}
 				
 				abi_analyser aa;
-				aa.auto_entry( msi, softart::lang_vertex_sl );
+				aa.auto_entry( msi, softart::lang_common );
 
-				shared_ptr<llvm_code> llvmcode = generate_llvm_code( msi.get(), aa.abii(softart::lang_vertex_sl) );
+				shared_ptr<llvm_code> llvmcode = generate_llvm_code( msi.get(), aa.abii(softart::lang_common) );
 				if( !llvmcode ){
 					cout << "Code generation error happened!" << endl;
 				}

@@ -61,9 +61,9 @@ void cgllvm_cases::initialize(){
 
 	shared_ptr< SEMANTIC_(module_si) > si_jit_root = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_jit_test) );
 	SEMANTIC_(abi_analyser) aa;
-	aa.auto_entry( si_jit_root, softart::lang_vertex_sl );
+	aa.auto_entry( si_jit_root, softart::lang_common );
 
-	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root.get(), aa.abii(softart::lang_vertex_sl) );
+	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root.get(), aa.abii(softart::lang_common) );
 
 	fputs("\n======================================================\r\n", stderr);
 	fputs("Verify generated code: \r\n", stderr);
