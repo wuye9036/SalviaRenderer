@@ -3,7 +3,7 @@
 
 #include <sasl/include/code_generator/forward.h>
 
-#include <sasl/include/code_generator/llvm/cgllvm_impl.h>
+#include <sasl/include/code_generator/llvm/cgllvm_sisd.h>
 #include <sasl/include/syntax_tree/visitor.h>
 #include <sasl/include/semantic/abi_analyser.h>
 
@@ -42,11 +42,11 @@ struct builtin_type_code;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class cgllvm_common_context;
+class cgllvm_sctxt;
 class cgllvm_global_context;
 class llvm_code;
 
-class cgllvm_general: public cgllvm_impl{
+class cgllvm_general: public cgllvm_sisd{
 public:
 	cgllvm_general();
 
@@ -102,11 +102,8 @@ public:
 
 	boost::shared_ptr<llvm_code> module();
 private:
-	template <typename NodeT>
-	cgllvm_common_context* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
-	cgllvm_common_context* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 	
-	boost::function<cgllvm_common_context*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
+	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
 
 	void do_assign(
 		boost::any* data,
@@ -114,7 +111,6 @@ private:
 		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
 		);
 
-	llvm::Constant* get_zero_filled_constant( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
 	llvm::Type const* create_builtin_type( builtin_type_code const& btc, bool& sign );
 	llvm::Type const* get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
 	
@@ -124,9 +120,6 @@ private:
 	sasl::semantic::abi_info const* abii;
 	boost::shared_ptr<cgllvm_global_context> mctxt;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
-
-	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_common_context> > ctxts_t;
-	ctxts_t ctxts ;
 };
 
 END_NS_SASL_CODE_GENERATOR()

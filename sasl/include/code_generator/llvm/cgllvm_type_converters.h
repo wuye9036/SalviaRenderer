@@ -25,12 +25,12 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class cgllvm_common_context;
+class cgllvm_sctxt;
 
 boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter(
 		boost::shared_ptr<llvm::IRBuilderBase> const& builder,
 		boost::function<
-			cgllvm_common_context* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
+			cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
 		> const& ctxt_lookup
 		);
 

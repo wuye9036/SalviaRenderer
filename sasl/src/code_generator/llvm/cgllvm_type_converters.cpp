@@ -37,22 +37,22 @@ class cgllvm_type_converter : public type_converter{
 public:
 	cgllvm_type_converter(
 		shared_ptr<IRBuilderBase> const& builder,
-		boost::function<cgllvm_common_context*( boost::shared_ptr<node> const& )> const& ctxt_getter
+		boost::function<cgllvm_sctxt*( boost::shared_ptr<node> const& )> const& ctxt_getter
 		) : builder( shared_static_cast<IRBuilder<> >(builder) ), get_ctxt( ctxt_getter )
 	{
 	}
 
 	void int2int( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
-		cgllvm_common_context* src_ctxt = get_ctxt(src);
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = builder->CreateIntCast( src_ctxt->val, dest_ctxt->type, dest_ctxt->is_signed );
 		dest_ctxt->val = dest_v;
 	}
 
 	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
-		cgllvm_common_context* src_ctxt = get_ctxt(src);
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = NULL;
 		if ( src_ctxt->is_signed ){
@@ -64,8 +64,8 @@ public:
 	}
 
 	void float2int( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
-		cgllvm_common_context* src_ctxt = get_ctxt(src);
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = NULL;
 		if ( dest_ctxt->is_signed ){
@@ -77,8 +77,8 @@ public:
 	}
 
 	void float2float( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_common_context* dest_ctxt = get_ctxt(dest);
-		cgllvm_common_context* src_ctxt = get_ctxt(src);
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = NULL;
 		dest_v = builder->CreateFPCast( src_ctxt->val, dest_ctxt->type );
@@ -86,7 +86,7 @@ public:
 	}
 private:
 	shared_ptr< IRBuilder<> > builder;
-	boost::function<cgllvm_common_context*( boost::shared_ptr<node> const& )> get_ctxt;
+	boost::function<cgllvm_sctxt*( boost::shared_ptr<node> const& )> get_ctxt;
 };
 
 void register_builtin_typeconv(
@@ -249,7 +249,7 @@ void register_builtin_typeconv(
 shared_ptr<type_converter> create_type_converter(
 	boost::shared_ptr<llvm::IRBuilderBase> const& builder,
 	boost::function<
-		cgllvm_common_context* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
+		cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
 	> const& ctxt_lookup
 	)
 {

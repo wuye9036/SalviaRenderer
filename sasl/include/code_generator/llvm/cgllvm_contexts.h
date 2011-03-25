@@ -30,12 +30,11 @@ namespace sasl{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 //////////////////////////////////////////////////////////
-// used by a lot of node for common information storage
-
-class cgllvm_common_context: public codegen_context{
+// Context for SISD.
+class cgllvm_sctxt: public codegen_context{
 public:
 	typedef codegen_context base_type;
-	cgllvm_common_context();
+	cgllvm_sctxt();
 
 	boost::weak_ptr< sasl::semantic::symbol > sym;
 	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
@@ -59,13 +58,6 @@ public:
 	llvm::ReturnInst* return_inst;
 };
 
-class cgllvm_type_context: public codegen_context{
-public:
-	typedef codegen_context base_type;
-	cgllvm_type_context();
-
-	const llvm::Type* basic_type;
-};
 END_NS_SASL_CODE_GENERATOR();
 
 #endif

@@ -13,7 +13,7 @@ namespace llvm{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_global_context;
-class cgllvm_common_context;
+class cgllvm_sctxt;
 
 class cgllvm_jit_engine:public jit_engine{
 public:

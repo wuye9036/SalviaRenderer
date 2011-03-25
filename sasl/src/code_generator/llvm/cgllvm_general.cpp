@@ -54,19 +54,19 @@ using boost::any_cast;
 
 using std::vector;
 
-typedef cgllvm_common_context* common_ctxt_handle;
+typedef cgllvm_sctxt* sctxt_handle;
 
 #define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::typecode )
 
-cgllvm_common_context const * any_to_cgctxt_ptr( const any& any_val  ){
-	return any_cast<cgllvm_common_context>(&any_val);
+cgllvm_sctxt const * sc_ptr( const any& any_val  ){
+	return any_cast<cgllvm_sctxt>(&any_val);
 }
 
-cgllvm_common_context* any_to_cgctxt_ptr( any& any_val ){
-	return any_cast<cgllvm_common_context>(&any_val);
+cgllvm_sctxt* sc_ptr( any& any_val ){
+	return any_cast<cgllvm_sctxt>(&any_val);
 }
 
-#define data_as_cgctxt_ptr() ( any_to_cgctxt_ptr(*data) )
+#define data_as_sc_ptr() ( sc_ptr(*data) )
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -92,27 +92,6 @@ bool cgllvm_general::generate(
 	return false;
 }
 
-template<typename NodeT>
-common_ctxt_handle cgllvm_general::node_ctxt( boost::shared_ptr<NodeT> const& nd, bool create_if_need ){
-	if ( !nd ){ return NULL; }
-
-	node* ptr = static_cast<node*>(nd.get());
-	ctxts_t::iterator it = ctxts.find( ptr );
-	if ( it == ctxts.end() ){
-		if( create_if_need ){
-			shared_ptr<cgllvm_common_context> const& ret = ctxts[ptr] = create_codegen_context<cgllvm_common_context>( nd->handle() );
-			return ret.get();
-		}
-		return NULL;
-	}
-
-	return (it->second).get();
-}
-
-common_ctxt_handle cgllvm_general::node_ctxt( node& nd, bool create_if_need ){
-	return node_ctxt(nd.handle(), create_if_need);
-}
-
 // Process assign
 void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
 {
@@ -132,25 +111,9 @@ void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_
 
 	mctxt->builder()->CreateStore( val, addr );
 
-	data_as_cgctxt_ptr()->type = node_ctxt(lexpr)->type;
-	data_as_cgctxt_ptr()->addr = addr;
-	data_as_cgctxt_ptr()->val = val;
-}
-
-Constant* cgllvm_general::get_zero_filled_constant( boost::shared_ptr<type_specifier> typespec )
-{
-	if( typespec->node_class() == syntax_node_types::builtin_type ){
-		builtin_type_code btc = typespec->value_typecode;
-		if( sasl_ehelper::is_integer( btc ) ){
-			return ConstantInt::get( node_ctxt(typespec)->type, 0, sasl_ehelper::is_signed(btc) );
-		}
-		if( sasl_ehelper::is_real( btc ) ){
-			return ConstantFP::get( node_ctxt(typespec)->type, 0.0 );
-		}
-	}
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	data_as_sc_ptr()->type = node_ctxt(lexpr)->type;
+	data_as_sc_ptr()->addr = addr;
+	data_as_sc_ptr()->val = val;
 }
 
 llvm::Type const* cgllvm_general::create_builtin_type( builtin_type_code const& btc, bool& sign ){
@@ -192,7 +155,7 @@ llvm::Type const* cgllvm_general::create_builtin_type( builtin_type_code const& 
 }
 
 void cgllvm_general::restart_block( boost::any* data ){
-	BasicBlock* restart = BasicBlock::Create( mctxt->context(), "", data_as_cgctxt_ptr()->parent_func );
+	BasicBlock* restart = BasicBlock::Create( mctxt->context(), "", data_as_sc_ptr()->parent_func );
 	mctxt->builder()->SetInsertPoint(restart);
 }
 
@@ -216,8 +179,8 @@ SASL_VISIT_DEF( cast_expression ){
 		typeconv->convert( v.handle(), v.expr );
 	}
 
-	data_as_cgctxt_ptr()->type = node_ctxt(v, true)->type;
-	data_as_cgctxt_ptr()->val = node_ctxt(v, true)->val;
+	data_as_sc_ptr()->type = node_ctxt(v, true)->type;
+	data_as_sc_ptr()->val = node_ctxt(v, true)->val;
 }
 
 SASL_VISIT_DEF( binary_expression ){
@@ -241,7 +204,7 @@ SASL_VISIT_DEF( binary_expression ){
 		args += v.left_expr, v.right_expr;
 
 		symbol::overloads_t overloads
-			= data_as_cgctxt_ptr()->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
+			= data_as_sc_ptr()->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
 
 		EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
 			return;
@@ -309,10 +272,10 @@ SASL_VISIT_DEF( binary_expression ){
 			}
 		}
 
-		data_as_cgctxt_ptr()->val = retval;
+		data_as_sc_ptr()->val = retval;
 	}
 
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 
 SASL_VISIT_DEF_UNIMPL( expression_list );
@@ -342,25 +305,25 @@ SASL_VISIT_DEF( constant_expression ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	data_as_cgctxt_ptr()->val = retval;
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	data_as_sc_ptr()->val = retval;
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 
 SASL_VISIT_DEF_UNIMPL( identifier );
 SASL_VISIT_DEF( variable_expression ){
 
-	shared_ptr<symbol> declsym = data_as_cgctxt_ptr()->sym.lock()->find( v.var_name->str );
+	shared_ptr<symbol> declsym = data_as_sc_ptr()->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
 
-	data_as_cgctxt_ptr()->addr = node_ctxt( declsym->node() )->addr;
-	data_as_cgctxt_ptr()->type = node_ctxt( declsym->node() )->type;
-	if ( data_as_cgctxt_ptr()->addr ){
-		data_as_cgctxt_ptr()->val = mctxt->builder()->CreateLoad( data_as_cgctxt_ptr()->addr, v.var_name->str.c_str() );
+	data_as_sc_ptr()->addr = node_ctxt( declsym->node() )->addr;
+	data_as_sc_ptr()->type = node_ctxt( declsym->node() )->type;
+	if ( data_as_sc_ptr()->addr ){
+		data_as_sc_ptr()->val = mctxt->builder()->CreateLoad( data_as_sc_ptr()->addr, v.var_name->str.c_str() );
 	} else {
-		data_as_cgctxt_ptr()->val = node_ctxt( declsym->node() )->val;
+		data_as_sc_ptr()->val = node_ctxt( declsym->node() )->val;
 	}
 	
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 
 // declaration & type specifier
@@ -372,66 +335,66 @@ SASL_VISIT_DEF( expression_initializer ){
 	visit_child( child_ctxt, child_ctxt_init, v.init_expr );
 
 	shared_ptr<type_info_si> init_tsi = extract_semantic_info<type_info_si>(v.handle());
-	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(data_as_cgctxt_ptr()->variable_to_fill.lock());
+	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(data_as_sc_ptr()->variable_to_fill.lock());
 
 	if( init_tsi->entry_id() != var_tsi->entry_id() ){
 		typeconv->convert( var_tsi->type_info(), v.init_expr );
 	}
 
-	data_as_cgctxt_ptr()->type = any_to_cgctxt_ptr( child_ctxt )->type;
-	data_as_cgctxt_ptr()->val = any_to_cgctxt_ptr( child_ctxt )->val;
+	data_as_sc_ptr()->type = sc_ptr( child_ctxt )->type;
+	data_as_sc_ptr()->val = sc_ptr( child_ctxt )->val;
 
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF( declarator ){
 	any child_ctxt_init = *data;
-	any_to_cgctxt_ptr( child_ctxt_init )->variable_to_fill = v.handle();
+	sc_ptr( child_ctxt_init )->variable_to_fill = v.handle();
 	any child_ctxt;
 
-	Function* parent_func = data_as_cgctxt_ptr()->parent_func;
+	Function* parent_func = data_as_sc_ptr()->parent_func;
 
 	IRBuilder<> vardecl_builder( mctxt->context() ) ;
 
 	if( parent_func ){
 		vardecl_builder.SetInsertPoint( &parent_func->getEntryBlock(), parent_func->getEntryBlock().begin() );
-		data_as_cgctxt_ptr()->addr 
-			= vardecl_builder.CreateAlloca( data_as_cgctxt_ptr()->type, 0, v.name->str.c_str() );
+		data_as_sc_ptr()->addr 
+			= vardecl_builder.CreateAlloca( data_as_sc_ptr()->type, 0, v.name->str.c_str() );
 	} else {
-		data_as_cgctxt_ptr()->addr
-			= mctxt->module()->getOrInsertGlobal( v.name->str.c_str(), data_as_cgctxt_ptr()->type );
+		data_as_sc_ptr()->addr
+			= mctxt->module()->getOrInsertGlobal( v.name->str.c_str(), data_as_sc_ptr()->type );
 	}
 
 	if ( v.init ){
 		if (parent_func){
 			visit_child( child_ctxt, child_ctxt_init, v.init );
 
-			assert( any_to_cgctxt_ptr(child_ctxt)->val );
-			vardecl_builder.CreateStore( any_to_cgctxt_ptr(child_ctxt)->val, data_as_cgctxt_ptr()->addr );
+			assert( sc_ptr(child_ctxt)->val );
+			vardecl_builder.CreateStore( sc_ptr(child_ctxt)->val, data_as_sc_ptr()->addr );
 		} else {
 			// Here is global variable initialization.
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	}
 
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 SASL_VISIT_DEF( variable_declaration ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.type_info );
-	assert( any_to_cgctxt_ptr(child_ctxt)->type );
+	assert( sc_ptr(child_ctxt)->type );
 
-	any_to_cgctxt_ptr(child_ctxt_init)->type = any_to_cgctxt_ptr(child_ctxt)->type;
+	sc_ptr(child_ctxt_init)->type = sc_ptr(child_ctxt)->type;
 
 	BOOST_FOREACH( shared_ptr<declarator> decl, v.declarators ){
 		visit_child( child_ctxt, child_ctxt_init, decl );
 	}
 
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
@@ -453,42 +416,42 @@ SASL_VISIT_DEF( builtin_type ){
 		return;
 	}
 
-	data_as_cgctxt_ptr()->type = ret_type;
-	data_as_cgctxt_ptr()->is_signed = sign;
+	data_as_sc_ptr()->type = ret_type;
+	data_as_sc_ptr()->is_signed = sign;
 
-	*node_ctxt( tisi->type_info(), true ) = *(data_as_cgctxt_ptr());
+	*node_ctxt( tisi->type_info(), true ) = *(data_as_sc_ptr());
 }
 
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF( parameter ){
 
-	data_as_cgctxt_ptr()->sym = v.symbol();
+	data_as_sc_ptr()->sym = v.symbol();
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.param_type );
-	data_as_cgctxt_ptr()->type = any_to_cgctxt_ptr(child_ctxt)->type;
-	data_as_cgctxt_ptr()->is_signed = any_to_cgctxt_ptr(child_ctxt)->is_signed;
+	data_as_sc_ptr()->type = sc_ptr(child_ctxt)->type;
+	data_as_sc_ptr()->is_signed = sc_ptr(child_ctxt)->is_signed;
 	if (v.init){
 		visit_child( child_ctxt, child_ctxt_init, v.init );
 	} 
 
-	*node_ctxt(v, true) = *(data_as_cgctxt_ptr());
+	*node_ctxt(v, true) = *(data_as_sc_ptr());
 
 }
 
 SASL_VISIT_DEF( function_type ){
 	
-	data_as_cgctxt_ptr()->sym = v.symbol();
+	data_as_sc_ptr()->sym = v.symbol();
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
 	// Generate return types.
 	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
-	const llvm::Type* ret_type = any_to_cgctxt_ptr(child_ctxt)->type;
+	const llvm::Type* ret_type = sc_ptr(child_ctxt)->type;
 
 	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){
 		return;
@@ -498,8 +461,8 @@ SASL_VISIT_DEF( function_type ){
 	vector< const llvm::Type*> param_types;
 	for( vector< boost::shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
 		visit_child( child_ctxt, child_ctxt_init, *it );
-		if ( any_to_cgctxt_ptr(child_ctxt)->type ){
-			param_types.push_back( any_to_cgctxt_ptr(child_ctxt)->type );
+		if ( sc_ptr(child_ctxt)->type ){
+			param_types.push_back( sc_ptr(child_ctxt)->type );
 		} else {
 			EFLIB_ASSERT_AND_IF( ret_type, "Error occurs while parameter parsing." ){
 				return;
@@ -509,18 +472,18 @@ SASL_VISIT_DEF( function_type ){
 
 	// Create function.
 	llvm::FunctionType* ftype = llvm::FunctionType::get( ret_type, param_types, false );
-	data_as_cgctxt_ptr()->func_type = ftype;
+	data_as_sc_ptr()->func_type = ftype;
 	llvm::Function* fn = 
 		Function::Create( ftype, Function::ExternalLinkage, v.name->str, mctxt->module() );
-	data_as_cgctxt_ptr()->func = fn;
-	any_to_cgctxt_ptr(child_ctxt_init)->parent_func = fn;
+	data_as_sc_ptr()->func = fn;
+	sc_ptr(child_ctxt_init)->parent_func = fn;
 
 	// Register parameter names.
 	llvm::Function::arg_iterator arg_it = fn->arg_begin();
 	for( size_t arg_idx = 0; arg_idx < fn->arg_size(); ++arg_idx, ++arg_it){
 		boost::shared_ptr<parameter> par = v.params[arg_idx];
 		arg_it->setName( par->symbol()->unmangled_name() );
-		common_ctxt_handle par_ctxt = node_ctxt( par );
+		sctxt_handle par_ctxt = node_ctxt( par );
 		par_ctxt->val = arg_it;
 	}
 
@@ -544,14 +507,14 @@ SASL_VISIT_DEF( function_type ){
 				if( next_it != fn->getBasicBlockList().end() ){
 					mctxt->builder()->CreateBr( &(*next_it) );
 				} else {
-					Value* val = get_zero_filled_constant( v.retval_type );
+					Value* val = zero_value( v.retval_type );
 					mctxt->builder()->CreateRet(val);
 				}
 			}
 		}
 	}
 
-	*node_ctxt(v, true) = *( data_as_cgctxt_ptr() );
+	*node_ctxt(v, true) = *( data_as_sc_ptr() );
 }
 
 // statement
@@ -562,7 +525,7 @@ SASL_VISIT_DEF( declaration_statement ){
 
 	visit_child( child_ctxt, child_ctxt_init, v.decl );
 
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 SASL_VISIT_DEF( if_statement ){
 	any child_ctxt_init = *data;
@@ -577,7 +540,7 @@ SASL_VISIT_DEF( if_statement ){
 	BasicBlock* cond_block = mctxt->builder()->GetInsertBlock();
 
 	// Generate 'then' branch code.
-	BasicBlock* yes_block = BasicBlock::Create( mctxt->context(), v.yes_stmt->symbol()->mangled_name(), data_as_cgctxt_ptr()->parent_func );
+	BasicBlock* yes_block = BasicBlock::Create( mctxt->context(), v.yes_stmt->symbol()->mangled_name(), data_as_sc_ptr()->parent_func );
 	mctxt->builder()->SetInsertPoint( yes_block );
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
 	BasicBlock* after_yes_block = mctxt->builder()->GetInsertBlock();
@@ -585,7 +548,7 @@ SASL_VISIT_DEF( if_statement ){
 	// Generate 'else' branch code.
 	BasicBlock* no_block = NULL;
 	if( v.no_stmt ){
-		no_block = BasicBlock::Create( mctxt->context(), v.no_stmt->symbol()->mangled_name(), data_as_cgctxt_ptr()->parent_func );
+		no_block = BasicBlock::Create( mctxt->context(), v.no_stmt->symbol()->mangled_name(), data_as_sc_ptr()->parent_func );
 		mctxt->builder()->SetInsertPoint( no_block );
 		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
 	}
@@ -595,7 +558,7 @@ SASL_VISIT_DEF( if_statement ){
 	BasicBlock* aggregate_block = BasicBlock::Create(
 			mctxt->context(),
 			extract_semantic_info<statement_si>(v)->exit_point().c_str(),
-			data_as_cgctxt_ptr()->parent_func
+			data_as_sc_ptr()->parent_func
 		);
 	
 	// Fill back if-jump instruction
@@ -612,7 +575,7 @@ SASL_VISIT_DEF( if_statement ){
 	// Set insert point to end of code.
 	mctxt->builder()->SetInsertPoint( aggregate_block );
 
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 
 SASL_VISIT_DEF_UNIMPL( while_statement );
@@ -621,22 +584,22 @@ SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement ){
-	data_as_cgctxt_ptr()->sym = v.symbol();
+	data_as_sc_ptr()->sym = v.symbol();
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
 	BasicBlock* bb = NULL;
 	// If instruction block is the first block of function, we must create it.
-	if ( data_as_cgctxt_ptr()->parent_func->getBasicBlockList().empty() ){
+	if ( data_as_sc_ptr()->parent_func->getBasicBlockList().empty() ){
 		bb = BasicBlock::Create(
 				mctxt->context(),
 				v.symbol()->mangled_name(),
-				data_as_cgctxt_ptr()->parent_func
+				data_as_sc_ptr()->parent_func
 				);
 	}
 
-	data_as_cgctxt_ptr()->block = bb;
+	data_as_sc_ptr()->block = bb;
 
 	if(bb){
 		mctxt->builder()->SetInsertPoint(bb);
@@ -648,7 +611,7 @@ SASL_VISIT_DEF( compound_statement ){
 		visit_child( child_ctxt, child_ctxt_init, *it );
 	}
 
-	*node_ctxt(v, true) = *( data_as_cgctxt_ptr() );
+	*node_ctxt(v, true) = *( data_as_sc_ptr() );
 }
 
 SASL_VISIT_DEF( expression_statement ){
@@ -657,7 +620,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 	visit_child( child_ctxt, child_ctxt_init, v.expr );
 
-	*node_ctxt(v, true) = *( data_as_cgctxt_ptr() );
+	*node_ctxt(v, true) = *( data_as_sc_ptr() );
 }
 
 SASL_VISIT_DEF( jump_statement ){
@@ -671,22 +634,22 @@ SASL_VISIT_DEF( jump_statement ){
 
 	if ( v.code == jump_mode::_return ){
 		if ( !v.jump_expr ){
-			data_as_cgctxt_ptr()->return_inst = mctxt->builder()->CreateRetVoid();
+			data_as_sc_ptr()->return_inst = mctxt->builder()->CreateRetVoid();
 		} else {
-			data_as_cgctxt_ptr()->return_inst = mctxt->builder()->CreateRet( any_to_cgctxt_ptr(child_ctxt)->val );
+			data_as_sc_ptr()->return_inst = mctxt->builder()->CreateRet( sc_ptr(child_ctxt)->val );
 		}
 	} else if ( v.code == jump_mode::_continue ){
-		assert( data_as_cgctxt_ptr()->continue_to );
-		mctxt->builder()->CreateBr( data_as_cgctxt_ptr()->continue_to );
+		assert( data_as_sc_ptr()->continue_to );
+		mctxt->builder()->CreateBr( data_as_sc_ptr()->continue_to );
 	} else if ( v.code == jump_mode::_break ){
-		assert( data_as_cgctxt_ptr()->break_to );
-		mctxt->builder()->CreateBr( data_as_cgctxt_ptr()->break_to );
+		assert( data_as_sc_ptr()->break_to );
+		mctxt->builder()->CreateBr( data_as_sc_ptr()->break_to );
 	}
 
 	// Restart a new block for sealing the old block.
 	restart_block(data);
 
-	*node_ctxt(v, true) = *data_as_cgctxt_ptr();
+	*node_ctxt(v, true) = *data_as_sc_ptr();
 }
 
 SASL_VISIT_DEF_UNIMPL( ident_label );
@@ -704,7 +667,7 @@ SASL_VISIT_DEF( program ){
 	typeconv = create_type_converter( mctxt->builder(), ctxt_getter );
 	register_builtin_typeconv( typeconv, msi->type_manager() );
 
-	any child_ctxt = cgllvm_common_context();
+	any child_ctxt = cgllvm_sctxt();
 
 	vector<Function*> proc_fns;
 

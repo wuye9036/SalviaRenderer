@@ -7,11 +7,15 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
 
 namespace sasl{
+	namespace syntax_tree{
+		struct node;
+	}
 	namespace semantic{
 		class module_si;
 		class abi_info;
@@ -21,6 +25,8 @@ namespace sasl{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class llvm_code;
+class cgllvm_sctxt;
+typedef cgllvm_sctxt* sctxt_handle;
 
 class cgllvm : public sasl::syntax_tree::syntax_tree_visitor{
 public:
@@ -39,6 +45,14 @@ protected:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );
 
+	// Get context by node.
+	template <typename NodeT>
+	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
+	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
+
+	// Store contexts.
+	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;
+	ctxts_t ctxts ;
 };
 
 END_NS_SASL_CODE_GENERATOR()
