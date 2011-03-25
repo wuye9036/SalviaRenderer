@@ -43,8 +43,8 @@ struct builtin_type_code;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
-class cgllvm_global_context;
-class llvm_code;
+class cgllvm_gmod;
+class llvm_module;
 
 class cgllvm_general: public cgllvm_sisd{
 public:
@@ -100,9 +100,10 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
-	boost::shared_ptr<llvm_code> module();
+	boost::shared_ptr<llvm_module> module();
+
 private:
-	
+	cgllvm_gmod* mod_ptr();
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
 
 	void do_assign(
@@ -111,14 +112,10 @@ private:
 		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
 		);
 
-	llvm::Type const* create_builtin_type( builtin_type_code const& btc, bool& sign );
-	llvm::Type const* get_llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
-	
 	void restart_block( boost::any* data );
 
 	sasl::semantic::module_si* msi;
 	sasl::semantic::abi_info const* abii;
-	boost::shared_ptr<cgllvm_global_context> mctxt;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 };
 

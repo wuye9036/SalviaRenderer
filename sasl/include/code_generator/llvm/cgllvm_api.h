@@ -26,12 +26,12 @@ namespace sasl {
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class llvm_code: public codegen_context{
+class llvm_module: public codegen_context{
 public:
 	virtual llvm::Module* module() const = 0;
 	virtual llvm::Module* get_ownership() const = 0;
 	virtual llvm::LLVMContext& context() = 0;
-	virtual ~llvm_code(){};
+	virtual ~llvm_module(){};
 };
 
 enum optimization_options{
@@ -39,11 +39,11 @@ enum optimization_options{
 	opt_preset_std_for_function
 };
 
-boost::shared_ptr<llvm_code> generate_llvm_code( sasl::semantic::module_si*, sasl::semantic::abi_info const* );
-void optimize( boost::shared_ptr<llvm_code>, std::vector<optimization_options> opt_options );
-void dump( boost::shared_ptr<llvm_code> );
-void dump( boost::shared_ptr<llvm_code>, std::ostream& o );
-// void optimize( boost::shared_ptr<llvm_code>, const std::string& params );
+boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_si*, sasl::semantic::abi_info const* );
+void optimize( boost::shared_ptr<llvm_module>, std::vector<optimization_options> opt_options );
+void dump( boost::shared_ptr<llvm_module> );
+void dump( boost::shared_ptr<llvm_module>, std::ostream& o );
+// void optimize( boost::shared_ptr<llvm_module>, const std::string& params );
 
 END_NS_SASL_CODE_GENERATOR();
 

@@ -30,7 +30,7 @@ using std::ostream;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-void optimize( shared_ptr<llvm_code> code, vector<optimization_options> opt_options )
+void optimize( shared_ptr<llvm_module> code, vector<optimization_options> opt_options )
 {
 	Module* mod = code->module();
 
@@ -60,12 +60,12 @@ void optimize( shared_ptr<llvm_code> code, vector<optimization_options> opt_opti
 	}
 }
 
-void dump( shared_ptr<llvm_code> code )
+void dump( shared_ptr<llvm_module> code )
 {
 	code->module()->dump();
 }
 
-void dump( shared_ptr<llvm_code> code, ostream& o ){
+void dump( shared_ptr<llvm_module> code, ostream& o ){
 	raw_os_ostream raw_os(o);
 	code->module()->print( raw_os, NULL );
 	raw_os.flush();

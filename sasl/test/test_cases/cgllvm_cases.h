@@ -24,7 +24,7 @@ public:
 
 	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_jit_engine), jit );
 
-	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_code), root );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(llvm_module), root );
 private:
 	cgllvm_cases();
 	void initialize();

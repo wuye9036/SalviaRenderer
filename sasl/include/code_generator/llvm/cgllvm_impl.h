@@ -22,9 +22,15 @@ namespace sasl{
 	}
 }
 
+namespace llvm{
+	class Type;
+}
+
+struct builtin_type_code;
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class llvm_code;
+class llvm_module;
 class cgllvm_sctxt;
 typedef cgllvm_sctxt* sctxt_handle;
 
@@ -35,13 +41,16 @@ public:
 		sasl::semantic::abi_info const* abii
 		) = 0;
 
-	virtual boost::shared_ptr<llvm_code> module() = 0;
+	virtual boost::shared_ptr<llvm_module> module() = 0;
 };
 
 class cgllvm_impl: public cgllvm{
 public:
-
+	
 protected:
+	cgllvm_impl();
+
+	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );
 
@@ -49,6 +58,17 @@ protected:
 	template <typename NodeT>
 	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
 	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
+
+	// Fetching and caching type information.
+	llvm::Type const* llvm_type( builtin_type_code const& btc, bool& sign );
+	// llvm::Type const* llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
+
+protected:
+	// ---------------Data Members-----------------
+
+	// Store global informations
+	boost::shared_ptr< sasl::semantic::module_si > msi;
+	boost::shared_ptr< llvm_module > mod;
 
 	// Store contexts.
 	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;

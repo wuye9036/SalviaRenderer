@@ -18,7 +18,7 @@
 #include <iostream>
 #include <fstream>
 
-using sasl::code_generator::llvm_code;
+using sasl::code_generator::llvm_module;
 using sasl::code_generator::generate_llvm_code;
 using sasl::common::lex_context;
 using sasl::semantic::abi_analyser;
@@ -272,7 +272,7 @@ void options_io::process( bool& abort )
 				abi_analyser aa;
 				aa.auto_entry( msi, softart::lang_general );
 
-				shared_ptr<llvm_code> llvmcode = generate_llvm_code( msi.get(), aa.abii(softart::lang_general) );
+				shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(softart::lang_general) );
 				if( !llvmcode ){
 					cout << "Code generation error happened!" << endl;
 				}

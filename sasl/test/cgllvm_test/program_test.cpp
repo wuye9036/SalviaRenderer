@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 using sasl::syntax_tree::node;
-using sasl::code_generator::llvm_code;
+using sasl::code_generator::llvm_module;
 
 #define SYNCASE_(case_name) syntax_cases::instance().case_name()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().case_name##_name()

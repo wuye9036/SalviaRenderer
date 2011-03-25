@@ -37,4 +37,5 @@ sctxt_handle cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if
 	return (it->second).get();
 }
 
+
 END_NS_SASL_CODE_GENERATOR();
