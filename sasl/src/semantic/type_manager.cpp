@@ -24,14 +24,14 @@ using ::boost::shared_polymorphic_cast;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-type_entry::id_t type_entry_id_of_node( shared_ptr<node> nd ){
+type_entry::id_t type_entry_id_of_node( shared_ptr<node> const& nd ){
 	if( !nd ) { return -1; }
 	shared_ptr<type_info_si> tinfo = extract_semantic_info<type_info_si>( nd );
 	if( !tinfo ) { return -1; }
 	return tinfo->entry_id();
 }
 
-type_entry::id_t type_entry_id_of_symbol( shared_ptr<symbol> sym ){
+type_entry::id_t type_entry_id_of_symbol( shared_ptr<symbol> const& sym ){
 	if( !sym ) { return -1; }
 	return type_entry_id_of_node( sym->node() );
 }
@@ -65,7 +65,7 @@ std::string builtin_type_name( builtin_type_code btc ){
 //		If the src is unqualfied type, it returns 'false',
 //		naked was assgined from src, and qual return a null ptr.
 bool peel_qualifier(
-	shared_ptr<type_specifier> src,
+	shared_ptr<type_specifier> const& src,
 	shared_ptr<type_specifier>& naked,
 	type_entry::id_ptr_t& qual
 	)
@@ -87,11 +87,11 @@ bool peel_qualifier(
 	return false;
 }
 
-shared_ptr<type_specifier> duplicate_type_specifier( shared_ptr<type_specifier> typespec ){
+shared_ptr<type_specifier> duplicate_type_specifier( shared_ptr<type_specifier> const& typespec ){
 	return duplicate(typespec)->typed_handle<type_specifier>();
 }
 
-std::string name_of_unqualified_type( shared_ptr<type_specifier> typespec ){
+std::string name_of_unqualified_type( shared_ptr<type_specifier> const& typespec ){
 	// Only build in, struct and function are potential unqualified type.
 	// Array type is qualified type.
 
@@ -124,7 +124,7 @@ shared_ptr<type_manager> type_manager::handle() const{
 	return self_handle.lock();
 }
 
-type_entry::id_t type_manager::get( shared_ptr<type_specifier> node, shared_ptr<symbol> parent ){
+type_entry::id_t type_manager::get( shared_ptr<type_specifier> const& node, shared_ptr<symbol> const& parent ){
 	/////////////////////////////////////////////////////
 	// if node has id yet, return it.
 	type_entry::id_t ret = type_entry_id_of_node( node );
@@ -194,16 +194,16 @@ boost::shared_ptr< type_manager > type_manager::create(){
 	return ret;
 }
 
-void type_manager::root_symbol( boost::shared_ptr<symbol> sym )
+void type_manager::root_symbol( boost::shared_ptr<symbol> const& sym )
 {
 	rootsym = sym;
 }
 
-void assign_entry_id( shared_ptr<type_specifier> node, shared_ptr<type_manager> typemgr, type_entry::id_t id ){
+void assign_entry_id( shared_ptr<type_specifier> const& node, shared_ptr<type_manager> const& typemgr, type_entry::id_t id ){
 	get_or_create_semantic_info<type_si>( node, typemgr )->entry_id( id );
 }
 
-type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<type_specifier> node  ){
+type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<type_specifier> const& node  ){
 	// Get a duplication from node.
 	// It assures that the node storaged in pool is always avaliable.
 	shared_ptr<type_specifier> dup_node = duplicate_type_specifier( node );
