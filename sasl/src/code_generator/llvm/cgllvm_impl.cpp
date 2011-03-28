@@ -17,10 +17,6 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 cgllvm_impl::cgllvm_impl(){
 }
 
-sctxt_handle cgllvm_impl::node_ctxt( node& nd, bool create_if_need ){
-	return node_ctxt(nd.handle(), create_if_need);
-}
-
 Type const* cgllvm_impl::llvm_type( builtin_type_code const& btc, bool& sign ){
 
 	if ( sasl_ehelper::is_void( btc ) ){

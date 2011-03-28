@@ -62,9 +62,10 @@ protected:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );
 
 	// Get context by node.
-	template <typename NodeT>
-	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
-	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
+	template <typename NodeT, typename ContextT >
+	ContextT* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
+	template<typename ContextT>
+	ContextT* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 
 	// Fetching and caching type information.
 	llvm::Type const* llvm_type( builtin_type_code const& btc, bool& sign );

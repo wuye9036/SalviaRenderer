@@ -13,6 +13,14 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 class cgllvm_sisd: public cgllvm_impl{
 
 protected:
+	// Override node_ctxt of cgllvm_impl
+	template <typename NodeT >
+	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const& v, bool create_if_need = false ){
+		return cgllvm_impl::node_ctxt<NodeT, cgllvm_sctxt>(v, create_if_need);
+	}
+	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
+
+	// Get zero filled value of any type.
 	llvm::Constant* zero_value( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
 };
 

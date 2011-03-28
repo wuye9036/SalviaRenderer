@@ -31,4 +31,9 @@ Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
 	return NULL;
 }
 
+cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if_need /*= false */ )
+{
+	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
+}
+
 END_NS_SASL_CODE_GENERATOR();
