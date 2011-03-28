@@ -85,6 +85,10 @@ bool cgllvm_general::generate(
 	this->abii = abii;
 
 	if ( msi ){
+
+		assert( msi->root() );
+		assert( msi->root()->node() );
+
 		msi->root()->node()->accept( this, NULL );
 		return true;
 	}
@@ -623,7 +627,7 @@ SASL_VISIT_DEF( program ){
 		return;
 	}
 
-	mod = create_codegen_context<cgllvm_gmod>( v.handle() );
+	mod = create_codegen_context<cgllvm_modimpl>( v.handle() );
 
 	mod_ptr()->create_module( v.name );
 
@@ -648,9 +652,9 @@ boost::shared_ptr<llvm_module> cgllvm_general::module(){
 	return mod;
 }
 
-cgllvm_gmod* cgllvm_general::mod_ptr(){
-	assert( dynamic_cast<cgllvm_gmod*>( mod.get() ) );
-	return static_cast<cgllvm_gmod*>( mod.get() );
+cgllvm_modimpl* cgllvm_general::mod_ptr(){
+	assert( dynamic_cast<cgllvm_modimpl*>( mod.get() ) );
+	return static_cast<cgllvm_modimpl*>( mod.get() );
 }
 
 END_NS_SASL_CODE_GENERATOR();

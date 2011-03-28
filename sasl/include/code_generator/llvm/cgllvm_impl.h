@@ -24,6 +24,12 @@ namespace sasl{
 
 namespace llvm{
 	class Type;
+	class ConstantFolder;
+	template <bool preserveNames> class IRBuilderDefaultInserter;
+	template< bool preserveNames, typename T, typename Inserter
+        > class IRBuilder;
+    typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
+        DefaultIRBuilder;
 }
 
 struct builtin_type_code;
@@ -31,6 +37,7 @@ struct builtin_type_code;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class llvm_module;
+class cgllvm_modimpl;
 class cgllvm_sctxt;
 typedef cgllvm_sctxt* sctxt_handle;
 
@@ -63,14 +70,17 @@ protected:
 	llvm::Type const* llvm_type( builtin_type_code const& btc, bool& sign );
 	// llvm::Type const* llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
 
+	// Direct access member from module.
+	boost::shared_ptr<llvm_module> module();
+	llvm::DefaultIRBuilder* builder();
 protected:
 	// ---------------Data Members-----------------
 
 	// Store global informations
 	boost::shared_ptr< sasl::semantic::module_si > msi;
-	boost::shared_ptr< llvm_module > mod;
+	boost::shared_ptr< cgllvm_modimpl > mod;
 
-	// Store contexts.
+	// Store node-context pairs.
 	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;
 	ctxts_t ctxts ;
 };

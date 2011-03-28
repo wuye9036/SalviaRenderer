@@ -30,9 +30,9 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 /////////////////////////////////////////
 // support LLVMContext, Module, IRBuilder and other data use by code generator.
 // General module created by llvm code generator.
-class cgllvm_gmod: public llvm_module{
+class cgllvm_modimpl: public llvm_module{
 public:
-	cgllvm_gmod();
+	cgllvm_modimpl();
 	void create_module( const std::string& modname );
 
 	virtual llvm::Module* module() const;
@@ -43,7 +43,7 @@ public:
 
 	llvm::Type const* get_type( sasl::semantic::storage_types storage );
 	void set_type( sasl::semantic::storage_types, llvm::Type const* );
-	~cgllvm_gmod();
+	~cgllvm_modimpl();
 private:
 	boost::shared_ptr<llvm::LLVMContext> lctxt;
 	boost::shared_ptr<llvm::DefaultIRBuilder> irbuilder;

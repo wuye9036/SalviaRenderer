@@ -16,27 +16,27 @@ using sasl::semantic::stream_out;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-cgllvm_gmod::cgllvm_gmod()
+cgllvm_modimpl::cgllvm_modimpl()
 : mod(NULL), have_mod(true)
 {
 	lctxt.reset( new llvm::LLVMContext() );
 	irbuilder.reset( new llvm::IRBuilder<>( *lctxt ) );
 }
 
-void cgllvm_gmod::create_module( const std::string& modname ){
+void cgllvm_modimpl::create_module( const std::string& modname ){
 	mod = new llvm::Module( modname, *lctxt );
 	have_mod = true;
 }
 
-llvm::Module* cgllvm_gmod::module() const{
+llvm::Module* cgllvm_modimpl::module() const{
 	return mod;
 }
 
-llvm::LLVMContext& cgllvm_gmod::context(){
+llvm::LLVMContext& cgllvm_modimpl::context(){
 	return *lctxt;
 }
 
-cgllvm_gmod::~cgllvm_gmod(){
+cgllvm_modimpl::~cgllvm_modimpl(){
 	if( have_mod && mod ){
 		delete mod;
 		mod = NULL;
@@ -44,7 +44,7 @@ cgllvm_gmod::~cgllvm_gmod(){
 	}
 }
 
-llvm::Module* cgllvm_gmod::get_ownership() const{
+llvm::Module* cgllvm_modimpl::get_ownership() const{
 	if ( have_mod ){
 		have_mod = false;
 		return mod;
@@ -52,11 +52,11 @@ llvm::Module* cgllvm_gmod::get_ownership() const{
 	return NULL;
 }
 
-boost::shared_ptr<llvm::IRBuilder<> > cgllvm_gmod::builder() const{
+boost::shared_ptr<llvm::IRBuilder<> > cgllvm_modimpl::builder() const{
 	return irbuilder;
 }
 
-llvm::Type const* cgllvm_gmod::get_type( sasl::semantic::storage_types storage ){
+llvm::Type const* cgllvm_modimpl::get_type( sasl::semantic::storage_types storage ){
 
 	switch( storage ){
 
@@ -73,7 +73,7 @@ llvm::Type const* cgllvm_gmod::get_type( sasl::semantic::storage_types storage )
 	return NULL;
 }
 
-void cgllvm_gmod::set_type( sasl::semantic::storage_types storage, llvm::Type const* ptype ){
+void cgllvm_modimpl::set_type( sasl::semantic::storage_types storage, llvm::Type const* ptype ){
 	switch( storage ){
 
 	case stream_in:

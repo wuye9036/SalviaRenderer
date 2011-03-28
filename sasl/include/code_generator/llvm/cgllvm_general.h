@@ -43,7 +43,7 @@ struct builtin_type_code;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
-class cgllvm_gmod;
+class cgllvm_modimpl;
 class llvm_module;
 
 class cgllvm_general: public cgllvm_sisd{
@@ -103,7 +103,7 @@ public:
 	boost::shared_ptr<llvm_module> module();
 
 private:
-	cgllvm_gmod* mod_ptr();
+	cgllvm_modimpl* mod_ptr();
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
 
 	void do_assign(

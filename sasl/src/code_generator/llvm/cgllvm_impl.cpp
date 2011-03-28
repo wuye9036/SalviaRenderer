@@ -59,4 +59,13 @@ Type const* cgllvm_impl::llvm_type( builtin_type_code const& btc, bool& sign ){
 	return NULL;
 }
 
+llvm::DefaultIRBuilder* cgllvm_impl::builder(){
+	return mod->builder().get();
+}
+
+boost::shared_ptr<llvm_module> cgllvm_impl::module()
+{
+	return mod;
+}
+
 END_NS_SASL_CODE_GENERATOR();
