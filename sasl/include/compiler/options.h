@@ -4,6 +4,8 @@
 #include <sasl/include/compiler/compiler_forward.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 
+#include <softart/include/enums.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -84,16 +86,22 @@ public:
 	
 	export_format format() const;
 	std::vector<std::string> inputs() const;
+	softart::languages language() const;
 	std::string output() const;
 
 private:
 	export_format fmt;
 	std::string fmt_str;
+	softart::languages lang;
+	std::string lang_str;
 	std::vector< std::string > in_names;
 	std::string out_name;
 
 	static const char* in_tag;
 	static const char* in_desc;
+
+	static const char* lang_tag;
+	static const char* lang_desc;
 
 	static const char* out_tag;
 	static const char* out_desc;

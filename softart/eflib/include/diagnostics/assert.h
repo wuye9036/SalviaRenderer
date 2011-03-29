@@ -11,7 +11,7 @@
 					static bool isIgnoreAlways = false;\
 					if(!isIgnoreAlways) {\
 					if((*eflib::detail::ProcPreAssert)(exp?true:false, #exp, desc, __LINE__, __FILE__, __FUNCTION__, &isIgnoreAlways))\
-						{ abort(); }\
+						{ ::abort(); }\
 					}\
 				}
 

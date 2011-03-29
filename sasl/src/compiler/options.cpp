@@ -10,6 +10,7 @@
 
 #include <softart/include/enums.h>
 
+#include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
@@ -145,8 +146,8 @@ options_io const & options_manager::io_info() const
 const char* options_display_info::version_tag = "version,v";
 const char* options_display_info::version_desc = "Show version and copyright information";
 const char* options_display_info::version_info = 
-	"SoftArt/Salvia Shading Language Compiler(sac) 1.0 pre-alpha\r\n"
-	"Copyright (C) 2010 SoftArt/Salvia Development Group."
+	"SoftArt/SALVIA Shading Language Compiler(sac) 1.0 pre-alpha\r\n"
+	"Copyright (C) 2010 SoftArt/SALVIA Development Group."
 	"This software and its full source code copyright is GPLv2.";
 
 const char* options_display_info::help_tag = "help,h";
@@ -169,6 +170,7 @@ void options_display_info::filterate( po::variables_map const & vm )
 {
 	h = ( vm.empty() || vm.count("help") > 0 );
 	v = ( vm.count("version") > 0 );
+	
 }
 
 void options_display_info::process( bool& abort )
@@ -207,7 +209,10 @@ const char* options_io::out_desc = "File name of output.";
 const char* options_io::export_as_tag = "export-as";
 const char* options_io::export_as_desc = "Specifies the content of output file that the compiler should generate.";
 
-options_io::options_io() : fmt(none)
+const char* options_io::lang_tag = "lang";
+const char* options_io::lang_desc = "Specifies language the input file was treated as.'general(g)','vertex_shader(vs)','pixel_shader(ps)','blend_shader(bs)' are available. ";
+
+options_io::options_io() : fmt(none), lang(softart::lang_none)
 {
 }
 
@@ -217,13 +222,14 @@ void options_io::fill_desc( po::options_description& desc )
 		( in_tag, po::value< std::vector<string> >(&in_names), in_desc )
 		( out_tag, po::value< string >(&out_name), out_desc )
 		( export_as_tag, po::value< string >(&fmt_str), export_as_desc )
+		( lang_tag, po::value< string >(&lang_str), lang_desc )
 		;
 }
 
 void options_io::filterate( po::variables_map const & vm )
 {
 	if( !vm.count("out") ){
-		// Guess output from input.
+		// TODO Guess output from input.
 	}
 
 	if( !vm.count("export-as") ){
@@ -232,6 +238,21 @@ void options_io::filterate( po::variables_map const & vm )
 		to_lower(fmt_str);
 		if( fmt_str == "llvm" || fmt_str == "llvm_ir" ){
 			fmt = llvm_ir;
+		}
+	}
+
+	if ( !vm.count("lang") ){
+		lang = softart::lang_none;
+	} else {
+		to_lower( lang_str );
+		if ( lang_str == "general" || lang_str == "g" ){
+			lang = softart::lang_general;
+		} else if ( lang_str == "vertex_shader" || lang_str == "vs" ){
+			lang = softart::lang_vertex_sl;
+		} else if ( lang_str == "pixel_shader" || lang_str == "ps" ){
+			lang = softart::lang_pixel_sl;
+		} else if ( lang_str == "blend_shader" || lang_str == "bs" ){
+			lang = softart::lang_blend_sl;
 		}
 	}
 }
@@ -243,6 +264,9 @@ void options_io::process( bool& abort )
 		abort = true;
 		return;
 	}
+
+	// TODO
+
 	if( fmt == llvm_ir ){
 		BOOST_FOREACH( string const & fname, in_names ){
 			cout << "Compile " << fname << "..." << endl;
@@ -260,19 +284,19 @@ void options_io::process( bool& abort )
 				
 				shared_ptr<node> prog = parse( code, make_shared<lex_context_test_impl>() );
 				if( !prog ){
-					cout << "Syntax error happened!" << endl;
+					cout << "Syntax error occurs!" << endl;
 					return;
 				}
-				// TODO: For test only.
+
 				shared_ptr<module_si> msi = analysis_semantic( prog );
 				if( !msi ){
-					cout << "Semantic error happened!" << endl;
+					cout << "Semantic error occurs!" << endl;
 				}
 				
 				abi_analyser aa;
-				aa.auto_entry( msi, softart::lang_general );
+				aa.auto_entry( msi, lang );
 
-				shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(softart::lang_general) );
+				shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
 				if( !llvmcode ){
 					cout << "Code generation error happened!" << endl;
 				}
@@ -285,6 +309,10 @@ void options_io::process( bool& abort )
 			
 		}
 	}
+}
+
+softart::languages options_io::language() const{
+	return lang;
 }
 
 options_io::export_format options_io::format() const
