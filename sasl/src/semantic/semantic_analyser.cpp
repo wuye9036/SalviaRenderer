@@ -408,7 +408,10 @@ SASL_VISIT_DEF( function_type )
 	data_as_ctxt_ptr()->parent_sym->add_function_end( sym );
 	
 	type_entry::id_t ret_tid = extract_semantic_info<type_info_si>( dup_fn->retval_type )->entry_id();
-	get_or_create_semantic_info<storage_si>( dup_fn, msi->type_manager() )->entry_id( ret_tid );
+
+	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_fn, msi->type_manager() );
+	ssi->entry_id( ret_tid );
+	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	any_to_ctxt_ptr(child_ctxt_init)->is_global = false;
 

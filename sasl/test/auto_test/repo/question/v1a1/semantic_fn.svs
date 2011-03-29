@@ -1,7 +1,7 @@
 float a: SV_Position;
 float b;
 
-float fn(): SV_RPosition
+float fn(): SV_Position
 {
 	return b;
 }

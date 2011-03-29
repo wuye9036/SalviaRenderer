@@ -192,7 +192,7 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 }
 
 storage_si::storage_si( shared_ptr<type_manager> typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None)
 {
 }
 

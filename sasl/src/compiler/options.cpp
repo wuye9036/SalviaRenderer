@@ -266,6 +266,10 @@ void options_io::process( bool& abort )
 	}
 
 	// TODO
+	EFLIB_ASSERT_AND_IF( lang != softart::lang_none, "Can not support language guessing by file extension yet." ){
+		abort = true;
+		return;
+	}
 
 	if( fmt == llvm_ir ){
 		BOOST_FOREACH( string const & fname, in_names ){
@@ -285,20 +289,32 @@ void options_io::process( bool& abort )
 				shared_ptr<node> prog = parse( code, make_shared<lex_context_test_impl>() );
 				if( !prog ){
 					cout << "Syntax error occurs!" << endl;
+					abort = true;
 					return;
 				}
 
 				shared_ptr<module_si> msi = analysis_semantic( prog );
 				if( !msi ){
 					cout << "Semantic error occurs!" << endl;
+					abort = true;
+					return;
 				}
 				
 				abi_analyser aa;
-				aa.auto_entry( msi, lang );
+
+				if( !aa.auto_entry( msi, lang ) ){
+					if ( lang != softart::lang_general ){
+						cout << "ABI analysis error occurs!" << endl;
+						abort = true;
+						return;
+					}
+				}
 
 				shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
 				if( !llvmcode ){
-					cout << "Code generation error happened!" << endl;
+					cout << "Code generation error occurs!" << endl;
+					abort = true;
+					return;
 				}
 
 				if( !output().empty() ){
