@@ -7,13 +7,28 @@
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/disable_warnings.h>
+#include <llvm/BasicBlock.h>
 #include <llvm/Constants.h>
+#include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
+
+using boost::any_cast;
 
 using namespace llvm;
 using namespace sasl::syntax_tree;
 
+
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){
+	return any_cast<cgllvm_sctxt>(&any_val);
+}
+
+cgllvm_sctxt* sc_ptr( boost::any& any_val ){
+	return any_cast<cgllvm_sctxt>(&any_val);
+}
+
+#define data_as_sc_ptr() ( sc_ptr(*data) )
 
 Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
 {
@@ -36,4 +51,8 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
 }
 
+void cgllvm_sisd::restart_block( boost::any* data ){
+	BasicBlock* restart = BasicBlock::Create( llcontext(), "", data_as_sc_ptr()->parent_func );
+	builder()->SetInsertPoint(restart);
+}
 END_NS_SASL_CODE_GENERATOR();

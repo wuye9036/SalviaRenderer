@@ -64,4 +64,8 @@ boost::shared_ptr<llvm_module> cgllvm_impl::module()
 	return mod;
 }
 
+llvm::LLVMContext& cgllvm_impl::llcontext(){
+	return mod->context();
+}
+
 END_NS_SASL_CODE_GENERATOR();

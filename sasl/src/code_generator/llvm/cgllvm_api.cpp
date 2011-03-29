@@ -1,7 +1,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 
-#include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 #include <sasl/include/code_generator/llvm/cgllvm_general.h>
+#include <sasl/include/code_generator/llvm/cgllvm_vs.h>
 
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -24,12 +24,21 @@ boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_si* mo
 {
 	boost::shared_ptr<symbol> root = mod->root();
 	if ( root && root->node() && root->node()->node_class() == syntax_node_types::program ){
+		
 		if( !abii || abii->lang == softart::lang_general ){
 			cgllvm_general cg;
 			if( cg.generate(mod, abii) ){
 				return cg.module();
 			}
 		}
+		
+		if ( abii->lang == softart::lang_vertex_sl ){
+			cgllvm_vs cg;
+			if( cg.generate(mod, abii) ){
+				return cg.module();
+			}
+		}
+
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 	return boost::shared_ptr<llvm_module>();

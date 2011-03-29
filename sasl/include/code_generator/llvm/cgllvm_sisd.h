@@ -3,6 +3,10 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/any.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 namespace llvm{
 	class Constant;
 }
@@ -22,7 +26,13 @@ protected:
 
 	// Get zero filled value of any type.
 	llvm::Constant* zero_value( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
+
+	// LLVM code generator Utilities
+	void restart_block( boost::any* data );
 };
+
+cgllvm_sctxt const * sc_ptr( const boost::any& any_val  );
+cgllvm_sctxt* sc_ptr( boost::any& any_val );
 
 END_NS_SASL_CODE_GENERATOR();
 

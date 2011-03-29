@@ -57,15 +57,6 @@ using std::vector;
 typedef cgllvm_sctxt* sctxt_handle;
 
 #define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::typecode )
-
-cgllvm_sctxt const * sc_ptr( const any& any_val  ){
-	return any_cast<cgllvm_sctxt>(&any_val);
-}
-
-cgllvm_sctxt* sc_ptr( any& any_val ){
-	return any_cast<cgllvm_sctxt>(&any_val);
-}
-
 #define data_as_sc_ptr() ( sc_ptr(*data) )
 
 //////////////////////////////////////////////////////////////////////////
@@ -118,12 +109,6 @@ void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_
 	data_as_sc_ptr()->type = node_ctxt(lexpr)->type;
 	data_as_sc_ptr()->addr = addr;
 	data_as_sc_ptr()->val = val;
-}
-
-
-void cgllvm_general::restart_block( boost::any* data ){
-	BasicBlock* restart = BasicBlock::Create( mod_ptr()->context(), "", data_as_sc_ptr()->parent_func );
-	mod_ptr()->builder()->SetInsertPoint(restart);
 }
 
 SASL_VISIT_DEF_UNIMPL( unary_expression );
@@ -647,10 +632,6 @@ SASL_VISIT_DEF( program ){
 }
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
-
-boost::shared_ptr<llvm_module> cgllvm_general::module(){
-	return mod;
-}
 
 cgllvm_modimpl* cgllvm_general::mod_ptr(){
 	assert( dynamic_cast<cgllvm_modimpl*>( mod.get() ) );

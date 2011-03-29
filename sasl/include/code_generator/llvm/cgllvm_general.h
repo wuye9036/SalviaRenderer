@@ -100,8 +100,6 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
-	boost::shared_ptr<llvm_module> module();
-
 private:
 	cgllvm_modimpl* mod_ptr();
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
@@ -111,8 +109,6 @@ private:
 		boost::shared_ptr<sasl::syntax_tree::expression> lexpr,
 		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
 		);
-
-	void restart_block( boost::any* data );
 
 	sasl::semantic::module_si* msi;
 	sasl::semantic::abi_info const* abii;

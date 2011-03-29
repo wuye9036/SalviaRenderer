@@ -23,6 +23,7 @@ namespace sasl{
 }
 
 namespace llvm{
+	class LLVMContext;
 	class Type;
 	class ConstantFolder;
 	template <bool preserveNames> class IRBuilderDefaultInserter;
@@ -53,7 +54,8 @@ public:
 
 class cgllvm_impl: public cgllvm{
 public:
-	
+	boost::shared_ptr<llvm_module> module();
+
 protected:
 	cgllvm_impl();
 
@@ -72,8 +74,9 @@ protected:
 	// llvm::Type const* llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
 
 	// Direct access member from module.
-	boost::shared_ptr<llvm_module> module();
 	llvm::DefaultIRBuilder* builder();
+	llvm::LLVMContext& llcontext();
+
 protected:
 	// ---------------Data Members-----------------
 
