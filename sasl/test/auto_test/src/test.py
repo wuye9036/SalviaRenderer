@@ -87,8 +87,20 @@ def test_file( path ):
 	global kept_items, updated_items, created_items
 	global update_existed_file
 	report_str = "Test file: " + path
+	
 	q_path = os.path.join( question_root, path )
 	a_path = os.path.join( answer_root, path )
+	
+	ext = os.path.splitext(path)[1]
+	lang = None
+	if ext == ".svs":
+		lang = "vs"
+	elif ext == ".sps":
+		lang = "ps"
+	elif ext == "sbs":
+		lang = "bs"
+	else:
+		lang = "g"
 	
 	tmp_gen = hashlib.md5()
 	dt = datetime.datetime.now();
@@ -96,7 +108,7 @@ def test_file( path ):
 	tmpfile_name = tmp_gen.hexdigest()
 	
 	# Execute sasl_compiler to generate llvm code
-	os.system( get_compiler_executable() + " -i \"" + q_path + "\" -o \"" + tmpfile_name )
+	os.system( get_compiler_executable() + " -i \"" + q_path + "\" -o \"" + tmpfile_name + "\"" + " --lang=" + lang )
 	
 	# Generate answers
 	if mode == "g":
