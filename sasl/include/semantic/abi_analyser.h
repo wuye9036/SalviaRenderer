@@ -44,9 +44,12 @@ struct storage_info{
 //////////////////////////////////////////////////////////////////////////
 // Application binary interface information.
 // Used by host and interpolator / rasterizer.
+class abi_analyser;
 
 class abi_info{
 public:
+	// Friend for abi_analyser could call compute_layout();
+	friend class abi_analyser;
 	abi_info();
 
 	softart::languages lang;
@@ -62,21 +65,23 @@ public:
 	void add_global_var( boost::shared_ptr<symbol> const& );
 
 	storage_info* input_storage( softart::semantic );
-	storage_info* alloc_input_storage( softart::semantic );
-
 	storage_info* input_storage( boost::shared_ptr<symbol> const& );
-	storage_info* alloc_input_storage( boost::shared_ptr<symbol> const& );
-
 	storage_info* output_storage( softart::semantic );
+	
+private:
+	storage_info* alloc_input_storage( softart::semantic );
+	storage_info* alloc_input_storage( boost::shared_ptr<symbol> const& );
 	storage_info* alloc_output_storage( softart::semantic );
 
-private:
-	void update_abii();
+	// Called by abi_analyser after all semantic and global var was set.
+	// This function will compute the data layout.
+	void compute_layout();
 
 	void update_input_semantics_abii();
 	void update_output_semantics_abii();
 	void update_input_stream_abii();
 	void update_output_stream_abii();
+	void update_input_constant_abii();
 
 	module_si* mod;
 	symbol* entry_point;

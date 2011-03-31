@@ -177,13 +177,14 @@ storage_info* abi_info::alloc_output_storage( softart::semantic sem ){
 }
 
 // Update ABI Information
-void abi_info::update_abii(){
+void abi_info::compute_layout(){
 	if ( !mod || !entry_point ) return;
 
 	update_input_semantics_abii();
 	update_input_stream_abii();
 	update_output_semantics_abii();
 	update_output_stream_abii();
+	update_input_constant_abii();
 }
 
 void abi_info::update_input_semantics_abii(){
@@ -228,6 +229,10 @@ void abi_info::update_output_stream_abii()
 	// Do nothing.
 }
 
+void abi_info::update_input_constant_abii()
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
 
 void abi_analyser::reset( softart::languages lang ){
 	assert( lang < softart::lang_count );
@@ -259,7 +264,7 @@ bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> c
 	entries[lang] = fnsym;
 	abiis[lang].reset();
 
-	return update_abiis();
+	return update(lang);
 }
 
 bool abi_analyser::auto_entry( shared_ptr<module_si> const& mod, softart::languages lang ){
@@ -313,6 +318,7 @@ bool abi_analyser::update( softart::languages lang ){
 
 	abiis[lang] = make_shared<abi_info>();
 
+	// Process entry function.
 	shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
 	assert( entry_fn );
 
@@ -329,10 +335,30 @@ bool abi_analyser::update( softart::languages lang ){
 		}
 	}
 
-	// TODO processes global variables.
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	// Process global variables.
+	BOOST_FOREACH( shared_ptr<symbol> const& gvar_sym, mods[lang]->globals() ){
+		shared_ptr<declarator> gvar = gvar_sym->node()->typed_handle<declarator>();
+		assert(gvar);
 
-	return false;
+		// is_member is set to true for preventing aggregated variable.
+		// And global variable only be treated as input.
+		if( !add_semantic( gvar, true, false, lang, false ) ){
+			// If it is not attached to an valid semantic, it should be uniform variable.
+			
+			// Check the data type of global. Now global variables only support built-in types.
+			storage_si* psi = dynamic_cast<storage_si*>( gvar->semantic_info().get() );
+			if( !psi->type_info()->is_builtin() ){
+				//TODO It an semantic error need to be reported.
+				return false;
+			}
+
+			abiis[lang]->add_global_var(gvar_sym);
+		}
+	}
+
+	abiis[lang]->compute_layout();
+
+	return true;
 }
 
 abi_info const* abi_analyser::abii( softart::languages lang ) const{
