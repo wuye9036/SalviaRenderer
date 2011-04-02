@@ -58,7 +58,7 @@ public:
 
 	bool add_input_semantic( softart::semantic sem, builtin_type_code btc );
 	bool add_output_semantic( softart::semantic sem, builtin_type_code btc );
-	void add_global_var( boost::shared_ptr<symbol> const& );
+	void add_global_var( boost::shared_ptr<symbol> const&, builtin_type_code btc );
 
 	storage_info* input_storage( softart::semantic );
 	storage_info* input_storage( boost::shared_ptr<symbol> const& );
@@ -92,6 +92,8 @@ private:
 
 	std::vector< softart::semantic > sems_out;
 	boost::unordered_map< softart::semantic, storage_info > semout_storages;
+
+	int sems_in_size;
 };
 
 END_NS_SASL_SEMANTIC();

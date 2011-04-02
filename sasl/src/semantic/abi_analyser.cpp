@@ -201,7 +201,7 @@ bool abi_analyser::update( softart::languages lang ){
 				return false;
 			}
 
-			abiis[lang]->add_global_var(gvar_sym);
+			abiis[lang]->add_global_var(gvar_sym, psi->type_info()->value_typecode );
 		}
 	}
 
