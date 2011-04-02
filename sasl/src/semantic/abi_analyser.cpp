@@ -229,8 +229,7 @@ void abi_info::update_output_stream_abii()
 	// Do nothing.
 }
 
-void abi_info::update_input_constant_abii()
-{
+void abi_info::update_input_constant_abii(){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
@@ -316,7 +315,11 @@ bool abi_analyser::update( softart::languages lang ){
 		return false;
 	}
 
+	// Initialize language ABI information.
 	abiis[lang] = make_shared<abi_info>();
+	abiis[lang]->lang = lang;
+	abiis[lang]->mod = mods[lang].get();
+	abiis[lang]->entry_point = entries[lang].get();
 
 	// Process entry function.
 	shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
@@ -356,6 +359,7 @@ bool abi_analyser::update( softart::languages lang ){
 		}
 	}
 
+	// Compute ABI memory layout.
 	abiis[lang]->compute_layout();
 
 	return true;

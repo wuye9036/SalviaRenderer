@@ -50,6 +50,7 @@ class abi_info{
 public:
 	// Friend for abi_analyser could call compute_layout();
 	friend class abi_analyser;
+
 	abi_info();
 
 	softart::languages lang;
