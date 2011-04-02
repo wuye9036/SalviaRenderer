@@ -3,7 +3,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_general.h>
 #include <sasl/include/code_generator/llvm/cgllvm_vs.h>
 
-#include <sasl/include/semantic/abi_analyser.h>
+#include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/node.h>
