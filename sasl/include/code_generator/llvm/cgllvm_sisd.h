@@ -5,7 +5,18 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
+#include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+namespace sasl{
+	namespace semantic{
+		class type_converter;
+	}
+	namespace syntax_tree{
+		struct type_specifier;
+		struct node;	
+	}
+}
 
 namespace llvm{
 	class Constant;
@@ -22,6 +33,10 @@ public:
 	);
 
 protected:
+	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
+
+	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
+
 	// Override node_ctxt of cgllvm_impl
 	template <typename NodeT >
 	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const& v, bool create_if_need = false ){
@@ -34,6 +49,11 @@ protected:
 
 	// LLVM code generator Utilities
 	void restart_block( boost::any* data );
+
+	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
+	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
+
+	cgllvm_modimpl* mod_ptr();
 };
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val  );

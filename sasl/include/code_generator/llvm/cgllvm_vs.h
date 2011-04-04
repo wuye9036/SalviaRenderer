@@ -23,7 +23,6 @@ class cgllvm_vs: public cgllvm_sisd
 {
 public:
 	cgllvm_vs();
-	bool generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii );
 
 	// expressions
 	SASL_VISIT_DCL( unary_expression );
@@ -72,6 +71,7 @@ public:
 	SASL_VISIT_DCL( program );
 
 private:
+	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modvs* mod_ptr();
 
 	void create_entry();

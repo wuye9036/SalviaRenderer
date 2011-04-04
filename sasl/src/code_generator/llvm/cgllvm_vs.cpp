@@ -1,5 +1,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_vs.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/syntax_tree/program.h>
 #include <eflib/include/diagnostics/assert.h>
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_vs
@@ -59,22 +60,22 @@ SASL_VISIT_DEF_UNIMPL( expression_statement );
 SASL_VISIT_DEF_UNIMPL( jump_statement );
 
 // program
-SASL_VISIT_DEF( program ){
-
-}
+SASL_VISIT_DEF_UNIMPL( program );
 
 cgllvm_vs::cgllvm_vs(){
 	// Nothing
 }
 
-bool cgllvm_vs::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii ){
-
-	return false;
-}
-
 cgllvm_modvs* cgllvm_vs::mod_ptr(){
 	assert( dynamic_cast<cgllvm_modvs*>( mod.get() ) );
 	return static_cast<cgllvm_modvs*>( mod.get() );
+}
+
+bool cgllvm_vs::create_mod( sasl::syntax_tree::program& v )
+{
+	if ( mod ){ return false; }
+	mod = create_codegen_context<cgllvm_modvs>( v.handle() );
+	return true;
 }
 
 END_NS_SASL_CODE_GENERATOR();

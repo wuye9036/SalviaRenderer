@@ -587,22 +587,15 @@ SASL_VISIT_DEF_UNIMPL( ident_label );
 
 SASL_VISIT_DEF( program ){
 	UNREF_PARAM( data );
-	if ( mod ){
+	
+	if( !create_mod( v ) ){
 		return;
 	}
 
-	mod = create_codegen_context<cgllvm_modimpl>( v.handle() );
+	before_decls_visit( v, data );
 
-	mod_ptr()->create_module( v.name );
-
-	ctxt_getter = boost::bind( &cgllvm_general::node_ctxt<node>, this, _1, false );
-	typeconv = create_type_converter( mod_ptr()->builder(), ctxt_getter );
-	register_builtin_typeconv( typeconv, msi->type_manager() );
-
+	// Visit child
 	any child_ctxt = cgllvm_sctxt();
-
-	vector<Function*> proc_fns;
-
 	for( vector< boost::shared_ptr<declaration> >::iterator
 		it = v.decls.begin(); it != v.decls.end(); ++it )
 	{
@@ -615,6 +608,12 @@ SASL_VISIT_DEF_UNIMPL( for_statement );
 cgllvm_modimpl* cgllvm_general::mod_ptr(){
 	assert( dynamic_cast<cgllvm_modimpl*>( mod.get() ) );
 	return static_cast<cgllvm_modimpl*>( mod.get() );
+}
+
+bool cgllvm_general::create_mod( sasl::syntax_tree::program& v ){
+	if ( mod ){ return false; }
+	mod = create_codegen_context<cgllvm_modimpl>( v.handle() );
+	return true;
 }
 
 END_NS_SASL_CODE_GENERATOR();

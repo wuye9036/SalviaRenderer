@@ -96,16 +96,14 @@ public:
 	SASL_VISIT_DCL( program );
 
 private:
+	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modimpl* mod_ptr();
-	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
-
+	
 	void do_assign(
 		boost::any* data,
 		boost::shared_ptr<sasl::syntax_tree::expression> lexpr,
 		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
 		);
-
-	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 };
 
 END_NS_SASL_CODE_GENERATOR()

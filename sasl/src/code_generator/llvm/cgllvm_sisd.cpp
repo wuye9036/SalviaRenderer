@@ -1,9 +1,14 @@
 #include <sasl/include/code_generator/llvm/cgllvm_sisd.h>
+
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
+#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
 
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/program.h>
+
 #include <sasl/enums/enums_helper.h>
 
 #include <eflib/include/diagnostics/assert.h>
@@ -14,11 +19,16 @@
 #include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/bind.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 using boost::any_cast;
 
 using namespace llvm;
 using namespace sasl::syntax_tree;
 
+#define SASL_VISITOR_TYPE_NAME cgllvm_sisd
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -35,6 +45,14 @@ bool cgllvm_sisd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_
 	}
 
 	return false;
+}
+
+SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
+	mod_ptr()->create_module( v.name );
+
+	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
+	typeconv = create_type_converter( mod_ptr()->builder(), ctxt_getter );
+	register_builtin_typeconv( typeconv, msi->type_manager() );
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){
@@ -71,6 +89,11 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 void cgllvm_sisd::restart_block( boost::any* data ){
 	BasicBlock* restart = BasicBlock::Create( llcontext(), "", data_as_sc_ptr()->parent_func );
 	builder()->SetInsertPoint(restart);
+}
+
+cgllvm_modimpl* cgllvm_sisd::mod_ptr(){
+	assert( dynamic_cast<cgllvm_modimpl*>( mod.get() ) );
+	return static_cast<cgllvm_modimpl*>( mod.get() );
 }
 
 END_NS_SASL_CODE_GENERATOR();
