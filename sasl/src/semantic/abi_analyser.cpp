@@ -167,43 +167,50 @@ bool abi_analyser::update( softart::languages lang ){
 	abiis[lang]->mod = mods[lang].get();
 	abiis[lang]->entry_point = entries[lang].get();
 
-	// Process entry function.
-	shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
-	assert( entry_fn );
-
-	if( !add_semantic( entry_fn, false, false, softart::lang_vertex_sl, true ) ){
-		reset(lang);
-		return false;
-	}
-
-	BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
+	if( lang == softart::lang_vertex_sl
+		|| lang == softart::lang_pixel_sl
+		|| lang == softart::lang_blend_sl
+		)
 	{
-		if( !add_semantic( param, false, false, softart::lang_vertex_sl, false ) ){
+		// Process entry function.
+		shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
+		assert( entry_fn );
+
+		if( !add_semantic( entry_fn, false, false, softart::lang_vertex_sl, true ) ){
 			reset(lang);
 			return false;
 		}
-	}
 
-	// Process global variables.
-	BOOST_FOREACH( shared_ptr<symbol> const& gvar_sym, mods[lang]->globals() ){
-		shared_ptr<declarator> gvar = gvar_sym->node()->typed_handle<declarator>();
-		assert(gvar);
-
-		// is_member is set to true for preventing aggregated variable.
-		// And global variable only be treated as input.
-		if( !add_semantic( gvar, true, false, lang, false ) ){
-			// If it is not attached to an valid semantic, it should be uniform variable.
-			
-			// Check the data type of global. Now global variables only support built-in types.
-			storage_si* psi = dynamic_cast<storage_si*>( gvar->semantic_info().get() );
-			if( !psi->type_info()->is_builtin() ){
-				//TODO It an semantic error need to be reported.
+		BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
+		{
+			if( !add_semantic( param, false, false, lang, false ) ){
+				reset(lang);
 				return false;
 			}
+		}
 
-			abiis[lang]->add_global_var(gvar_sym, psi->type_info()->value_typecode );
+		// Process global variables.
+		BOOST_FOREACH( shared_ptr<symbol> const& gvar_sym, mods[lang]->globals() ){
+			shared_ptr<declarator> gvar = gvar_sym->node()->typed_handle<declarator>();
+			assert(gvar);
+
+			// is_member is set to true for preventing aggregated variable.
+			// And global variable only be treated as input.
+			if( !add_semantic( gvar, true, false, lang, false ) ){
+				// If it is not attached to an valid semantic, it should be uniform variable.
+
+				// Check the data type of global. Now global variables only support built-in types.
+				storage_si* psi = dynamic_cast<storage_si*>( gvar->semantic_info().get() );
+				if( !psi->type_info()->is_builtin() ){
+					//TODO It an semantic error need to be reported.
+					return false;
+				}
+
+				abiis[lang]->add_global_var(gvar_sym, psi->type_info()->value_typecode );
+			}
 		}
 	}
+	
 
 	// Compute ABI memory layout.
 	abiis[lang]->compute_layout();

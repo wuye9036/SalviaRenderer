@@ -116,6 +116,10 @@ storage_info* abi_info::alloc_output_storage( softart::semantic sem ){
 void abi_info::compute_layout(){
 	if ( !mod || !entry_point ) return;
 
+	if ( lang == softart::lang_general ){
+		return;
+	}
+
 	compute_input_semantics_layout();
 	compute_input_stream_layout();
 	compute_output_semantics_layout();
