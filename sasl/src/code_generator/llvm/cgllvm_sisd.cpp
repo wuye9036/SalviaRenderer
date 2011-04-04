@@ -1,6 +1,8 @@
 #include <sasl/include/code_generator/llvm/cgllvm_sisd.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 
+#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/enums/enums_helper.h>
 
@@ -19,6 +21,21 @@ using namespace sasl::syntax_tree;
 
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+bool cgllvm_sisd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii ){
+	this->msi = mod;
+	this->abii = abii;
+
+	if ( msi ){
+		assert( msi->root() );
+		assert( msi->root()->node() );
+
+		msi->root()->node()->accept( this, NULL );
+		return true;
+	}
+
+	return false;
+}
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){
 	return any_cast<cgllvm_sctxt>(&any_val);
@@ -55,4 +72,5 @@ void cgllvm_sisd::restart_block( boost::any* data ){
 	BasicBlock* restart = BasicBlock::Create( llcontext(), "", data_as_sc_ptr()->parent_func );
 	builder()->SetInsertPoint(restart);
 }
+
 END_NS_SASL_CODE_GENERATOR();

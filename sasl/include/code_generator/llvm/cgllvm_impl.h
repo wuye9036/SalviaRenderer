@@ -81,9 +81,11 @@ protected:
 	// ---------------Data Members-----------------
 
 	// Store global informations
-	boost::shared_ptr< sasl::semantic::module_si > msi;
-	boost::shared_ptr< cgllvm_modimpl > mod;
+	sasl::semantic::module_si* msi;
+	sasl::semantic::abi_info const* abii;
 
+	boost::shared_ptr<cgllvm_modimpl> mod;
+	
 	// Store node-context pairs.
 	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;
 	ctxts_t ctxts ;

@@ -1,10 +1,19 @@
 #include <sasl/include/code_generator/llvm/cgllvm_vs.h>
-
+#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <eflib/include/diagnostics/assert.h>
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_vs
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+void cgllvm_vs::create_entry(){
+
+}
+
+void cgllvm_vs::create_entry_param()
+{
+
+}
 
 // expressions
 SASL_VISIT_DEF_UNIMPL( unary_expression );
@@ -50,15 +59,22 @@ SASL_VISIT_DEF_UNIMPL( expression_statement );
 SASL_VISIT_DEF_UNIMPL( jump_statement );
 
 // program
-SASL_VISIT_DEF_UNIMPL( program );
+SASL_VISIT_DEF( program ){
+
+}
 
 cgllvm_vs::cgllvm_vs(){
 	// Nothing
 }
 
 bool cgllvm_vs::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+
 	return false;
+}
+
+cgllvm_modvs* cgllvm_vs::mod_ptr(){
+	assert( dynamic_cast<cgllvm_modvs*>( mod.get() ) );
+	return static_cast<cgllvm_modvs*>( mod.get() );
 }
 
 END_NS_SASL_CODE_GENERATOR();

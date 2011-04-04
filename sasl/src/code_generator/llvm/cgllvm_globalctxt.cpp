@@ -56,41 +56,4 @@ boost::shared_ptr<llvm::IRBuilder<> > cgllvm_modimpl::builder() const{
 	return irbuilder;
 }
 
-llvm::Type const* cgllvm_modimpl::get_type( sasl::semantic::storage_types storage ){
-
-	switch( storage ){
-
-	case stream_in:
-		return str_in_struct;
-	case stream_out:
-		return str_out_struct;
-	case buffer_in:
-		return buf_in_struct;
-	case buffer_out:
-		return buf_out_struct;
-	}
-
-	return NULL;
-}
-
-void cgllvm_modimpl::set_type( sasl::semantic::storage_types storage, llvm::Type const* ptype ){
-	switch( storage ){
-
-	case stream_in:
-		str_in_struct = ptype;
-		return;
-	case stream_out:
-		str_out_struct = ptype;
-		return;
-	case buffer_in:
-		buf_in_struct = ptype;
-		return;
-	case buffer_out:
-		buf_out_struct = ptype;
-		return;
-	}
-
-	return;
-}
-
 END_NS_SASL_CODE_GENERATOR();

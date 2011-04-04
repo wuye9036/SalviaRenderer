@@ -64,28 +64,7 @@ typedef cgllvm_sctxt* sctxt_handle;
 #define SASL_VISITOR_TYPE_NAME cgllvm_general
 
 cgllvm_general::cgllvm_general()
-	: msi( NULL ), abii( NULL )
 {}
-
-bool cgllvm_general::generate(
-	module_si* mod,
-	abi_info const* abii
-	)
-{
-	this->msi = mod;
-	this->abii = abii;
-
-	if ( msi ){
-
-		assert( msi->root() );
-		assert( msi->root()->node() );
-
-		msi->root()->node()->accept( this, NULL );
-		return true;
-	}
-
-	return false;
-}
 
 // Process assign
 void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )

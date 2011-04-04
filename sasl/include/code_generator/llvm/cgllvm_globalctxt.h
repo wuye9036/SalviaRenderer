@@ -3,12 +3,7 @@
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
-
-namespace sasl{
-	namespace semantic{
-		enum storage_types;
-	}
-}
+#include <sasl/include/semantic/abi_info.h>
 
 namespace llvm{
 	class LLVMContext;
@@ -41,21 +36,24 @@ public:
 
 	virtual llvm::LLVMContext& context();
 
-	llvm::Type const* get_type( sasl::semantic::storage_types storage );
-	void set_type( sasl::semantic::storage_types, llvm::Type const* );
 	~cgllvm_modimpl();
-private:
+
+protected:
 	boost::shared_ptr<llvm::LLVMContext> lctxt;
 	boost::shared_ptr<llvm::DefaultIRBuilder> irbuilder;
 	
 	llvm::Module* mod;
 
-	llvm::Type const* str_in_struct;
-	llvm::Type const* str_out_struct;
-	llvm::Type const* buf_in_struct;
-	llvm::Type const* buf_out_struct;
-
 	mutable bool have_mod;
+};
+
+class cgllvm_modvs: public cgllvm_modimpl{
+public:
+	llvm::Type* entry_param_type( sasl::semantic::storage_types st ) const;
+	void entry_param_type( sasl::semantic::storage_types st, llvm::Type* t );
+
+protected:
+	llvm::Type* param_types[sasl::semantic::storage_types_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();

@@ -50,11 +50,6 @@ class cgllvm_general: public cgllvm_sisd{
 public:
 	cgllvm_general();
 
-	bool generate(
-		sasl::semantic::module_si* mod,
-		sasl::semantic::abi_info const* abii
-		);
-
 	SASL_VISIT_DCL( unary_expression );
 	SASL_VISIT_DCL( cast_expression );
 	SASL_VISIT_DCL( binary_expression );
@@ -110,8 +105,6 @@ private:
 		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
 		);
 
-	sasl::semantic::module_si* msi;
-	sasl::semantic::abi_info const* abii;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 };
 

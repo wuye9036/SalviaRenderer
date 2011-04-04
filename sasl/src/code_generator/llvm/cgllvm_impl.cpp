@@ -14,7 +14,7 @@ using namespace llvm;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-cgllvm_impl::cgllvm_impl(){
+cgllvm_impl::cgllvm_impl(): abii(NULL), msi(NULL){
 }
 
 Type const* cgllvm_impl::llvm_type( builtin_type_code const& btc, bool& sign ){

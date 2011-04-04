@@ -3,7 +3,21 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_sisd.h>
 
+namespace sasl{
+	namespace semantic{
+		class type_converter;
+		class module_si;
+	}
+	namespace syntax_tree{
+		struct expression;
+		struct type_specifier;
+		struct node;
+	}
+}
+
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+class cgllvm_modvs;
 
 class cgllvm_vs: public cgllvm_sisd
 {
@@ -58,6 +72,8 @@ public:
 	SASL_VISIT_DCL( program );
 
 private:
+	cgllvm_modvs* mod_ptr();
+
 	void create_entry();
 	void create_entry_param();
 };

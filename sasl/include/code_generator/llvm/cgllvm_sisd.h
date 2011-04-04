@@ -15,6 +15,11 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 // Code generation for SISD( Single Instruction Single Data )
 class cgllvm_sisd: public cgllvm_impl{
+public:
+	bool generate(
+		sasl::semantic::module_si* mod,
+		sasl::semantic::abi_info const* abii
+	);
 
 protected:
 	// Override node_ctxt of cgllvm_impl
