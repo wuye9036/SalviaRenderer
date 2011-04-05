@@ -211,7 +211,6 @@ bool abi_analyser::update( softart::languages lang ){
 		}
 	}
 	
-
 	// Compute ABI memory layout.
 	abiis[lang]->compute_layout();
 
@@ -247,8 +246,9 @@ bool abi_analyser::add_semantic(
 			switch( sem_s ){
 
 			case stream_in:
+				return ai->add_input_semantic( node_sem, btc, true );
 			case buffer_in:
-				return ai->add_input_semantic( node_sem, btc );
+				return ai->add_input_semantic( node_sem, btc, false );
 
 			case buffer_out:
 			case stream_out:

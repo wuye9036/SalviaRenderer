@@ -22,6 +22,8 @@ class cgllvm_modvs;
 class cgllvm_vs: public cgllvm_sisd
 {
 public:
+	typedef cgllvm_sisd parent_class;
+
 	cgllvm_vs();
 
 	// expressions
@@ -67,15 +69,14 @@ public:
 	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( jump_statement );
 
-	// program
-	SASL_VISIT_DCL( program );
-
 private:
+	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
+
 	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modvs* mod_ptr();
 
 	void create_entry();
-	void create_entry_param();
+	void create_entry_params();
 };
 
 END_NS_SASL_CODE_GENERATOR();

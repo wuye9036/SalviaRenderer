@@ -585,23 +585,7 @@ SASL_VISIT_DEF( jump_statement ){
 
 SASL_VISIT_DEF_UNIMPL( ident_label );
 
-SASL_VISIT_DEF( program ){
-	UNREF_PARAM( data );
-	
-	if( !create_mod( v ) ){
-		return;
-	}
 
-	before_decls_visit( v, data );
-
-	// Visit child
-	any child_ctxt = cgllvm_sctxt();
-	for( vector< boost::shared_ptr<declaration> >::iterator
-		it = v.decls.begin(); it != v.decls.end(); ++it )
-	{
-		visit_child( child_ctxt, (*it) );
-	}
-}
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
 

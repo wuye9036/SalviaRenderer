@@ -32,7 +32,12 @@ public:
 		sasl::semantic::abi_info const* abii
 	);
 
+	SASL_VISIT_DCL( program );
+
 protected:
+	// It is called in program visitor BEFORE declaration was visited.
+	// If any additional initialization you want to add before visit, override it.
+	// DONT FORGET call parent function before your code.
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 
 	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;

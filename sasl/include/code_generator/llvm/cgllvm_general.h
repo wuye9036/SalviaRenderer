@@ -92,9 +92,6 @@ public:
 	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( jump_statement );
 
-	// program
-	SASL_VISIT_DCL( program );
-
 private:
 	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modimpl* mod_ptr();

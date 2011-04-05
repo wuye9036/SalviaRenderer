@@ -8,12 +8,11 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 void cgllvm_vs::create_entry(){
-
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
-void cgllvm_vs::create_entry_param()
-{
-
+void cgllvm_vs::create_entry_params(){
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 // expressions
@@ -59,12 +58,16 @@ SASL_VISIT_DEF_UNIMPL( compound_statement );
 SASL_VISIT_DEF_UNIMPL( expression_statement );
 SASL_VISIT_DEF_UNIMPL( jump_statement );
 
-// program
-SASL_VISIT_DEF_UNIMPL( program );
+// In cgllvm_vs, you would initialize entry function before call
+SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
+	// Call parent for initialization
+	parent_class::before_decls_visit( v, data );
 
-cgllvm_vs::cgllvm_vs(){
-	// Nothing
+	// Create entry function
+	create_entry_params();
 }
+
+cgllvm_vs::cgllvm_vs(){}
 
 cgllvm_modvs* cgllvm_vs::mod_ptr(){
 	assert( dynamic_cast<cgllvm_modvs*>( mod.get() ) );

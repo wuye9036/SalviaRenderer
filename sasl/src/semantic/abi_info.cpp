@@ -3,6 +3,10 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <eflib/include/diagnostics/assert.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/foreach.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 using boost::addressof;
 using boost::shared_ptr;
 using std::vector;
@@ -34,12 +38,13 @@ bool abi_info::is_entry( shared_ptr<symbol> const& v ) const{
 	return entry_point == v.get();
 }
 
-bool abi_info::add_input_semantic( softart::semantic sem, builtin_type_code btc )
+bool abi_info::add_input_semantic( softart::semantic sem, builtin_type_code btc, bool is_stream )
 {
 	vector<softart::semantic>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
 	if( it != sems_in.end() ){
 		if( *it == sem ){
-			storage_info* si = alloc_input_storage( sem );
+			storage_info* si = input_storage( sem );
+			assert(si);
 			if( si->sv_type == btc || si->sv_type == builtin_type_code::none ){
 				si->sv_type = btc;
 				return true;
@@ -48,6 +53,9 @@ bool abi_info::add_input_semantic( softart::semantic sem, builtin_type_code btc 
 		}
 	}
 
+	storage_info* si = alloc_input_storage( sem );
+	si->sv_type = btc;
+	si->storage = is_stream ? stream_in : buffer_in;
 	sems_in.insert( it, sem );
 	return true;
 }
@@ -74,6 +82,7 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_type_
 	syms_in.push_back( v.get() );
 	storage_info* si = alloc_input_storage( v );
 	si->sv_type = btc;
+	si->storage = buffer_in;
 }
 
 storage_info* abi_info::input_storage( softart::semantic sem ){
@@ -127,28 +136,69 @@ void abi_info::compute_layout(){
 	compute_input_constant_layout();
 }
 
+std::vector<storage_info*> abi_info::storage_infos( storage_types st ){
+	std::vector<storage_info*> ret;
+
+	// Process output
+	if( st == buffer_out ){
+		BOOST_FOREACH( softart::semantic sem, sems_out ){
+			ret.push_back( output_storage(sem) );
+		}
+		return ret;
+	}
+
+	// Process input
+	for ( size_t index = 0; index < sems_in.size(); ++index ){
+		storage_info* pstorage = input_storage( sems_in[index] );
+		if ( pstorage->storage == st ){
+			ret.push_back( pstorage );
+		}
+	}
+
+	if ( st == buffer_in ){
+		BOOST_FOREACH( symbol* sym, syms_in ){
+			ret.push_back( addressof(symin_storages[sym]) );
+		}
+	}
+
+	return ret;
+}
+
 void abi_info::compute_input_semantics_layout(){
 	int offset = 0;
+	int valid_semantic_index = 0;
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
-		storage_info* pstorage = alloc_input_storage( sems_in[index] );
-		pstorage->storage = buffer_in;
-		pstorage->index = static_cast<int>( index );
-		pstorage->offset = offset;
-		int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
-		pstorage->size = size;
-		offset += size;
+
+		storage_info* pstorage = input_storage( sems_in[index] );
+		assert( pstorage );
+		if ( pstorage->storage == buffer_in ){
+			
+			pstorage->index = valid_semantic_index++;
+			pstorage->offset = offset;
+			int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
+			pstorage->size = size;
+			offset += size;
+
+		}
+
 	}
 	sems_in_size = offset;
 }
 
 void abi_info::compute_input_stream_layout(){
 	int const ptr_size = static_cast<int>( sizeof( void* ) );
+	int valid_semantic_index = 0;
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
-		storage_info* pstorage = alloc_input_storage( sems_in[index] );
-		pstorage->storage = stream_in;
-		pstorage->index =  static_cast<int>( index );
-		pstorage->offset = static_cast<int>( index ) * ptr_size;
-		pstorage->size = ptr_size;
+
+		storage_info* pstorage = input_storage( sems_in[index] );
+		assert( pstorage );
+
+		if( pstorage->storage == stream_in ){
+			pstorage->index =  valid_semantic_index;
+			pstorage->offset = ( valid_semantic_index++ ) * ptr_size;
+			pstorage->size = ptr_size;
+		}
+
 	}
 }
 

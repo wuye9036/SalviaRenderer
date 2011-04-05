@@ -23,10 +23,11 @@
 #include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-using boost::any_cast;
-
 using namespace llvm;
 using namespace sasl::syntax_tree;
+
+using boost::any_cast;
+using std::vector;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_sisd
 
@@ -45,6 +46,24 @@ bool cgllvm_sisd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_
 	}
 
 	return false;
+}
+
+SASL_VISIT_DEF( program ){
+	// Create module.
+	if( !create_mod( v ) ){
+		return;
+	}
+
+	// Initialization.
+	before_decls_visit( v, data );
+
+	// visit declarations
+	any child_ctxt = cgllvm_sctxt();
+	for( vector< boost::shared_ptr<declaration> >::iterator
+		it = v.decls.begin(); it != v.decls.end(); ++it )
+	{
+		visit_child( child_ctxt, (*it) );
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
