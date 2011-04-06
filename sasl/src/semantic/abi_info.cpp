@@ -85,36 +85,36 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_type_
 	si->storage = buffer_in;
 }
 
-storage_info* abi_info::input_storage( softart::semantic sem ){
-	sem_storages_t::iterator it = semin_storages.find( sem );
+storage_info* abi_info::input_storage( softart::semantic sem ) const {
+	sem_storages_t::const_iterator it = semin_storages.find( sem );
 	if ( it == semin_storages.end() ){
 		return NULL;
 	}
-	return addressof( it->second );
+	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
 storage_info* abi_info::alloc_input_storage( softart::semantic sem ){
 	return addressof( semin_storages[sem] );
 }
 
-storage_info* abi_info::input_storage( boost::shared_ptr<symbol> const& v ){
-	sym_storages_t::iterator it = symin_storages.find( v.get() );
+storage_info* abi_info::input_storage( boost::shared_ptr<symbol> const& v ) const {
+	sym_storages_t::const_iterator it = symin_storages.find( v.get() );
 	if ( it == symin_storages.end() ){
 		return NULL;
 	}
-	return addressof( it->second );
+	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
 storage_info* abi_info::alloc_input_storage( boost::shared_ptr<symbol> const& v ){
 	return addressof( symin_storages[v.get()] );
 }
 
-storage_info* abi_info::output_storage( softart::semantic sem ){
-	sem_storages_t::iterator it = semout_storages.find( sem );
+storage_info* abi_info::output_storage( softart::semantic sem ) const{
+	sem_storages_t::const_iterator it = semout_storages.find( sem );
 	if ( it == semout_storages.end() ){
 		return NULL;
 	}
-	return addressof( it->second );
+	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
 storage_info* abi_info::alloc_output_storage( softart::semantic sem ){
@@ -136,7 +136,7 @@ void abi_info::compute_layout(){
 	compute_input_constant_layout();
 }
 
-std::vector<storage_info*> abi_info::storage_infos( storage_types st ){
+std::vector<storage_info*> abi_info::storage_infos( storage_types st ) const{
 	std::vector<storage_info*> ret;
 
 	// Process output
@@ -157,7 +157,7 @@ std::vector<storage_info*> abi_info::storage_infos( storage_types st ){
 
 	if ( st == buffer_in ){
 		BOOST_FOREACH( symbol* sym, syms_in ){
-			ret.push_back( addressof(symin_storages[sym]) );
+			ret.push_back( const_cast<storage_info*>( addressof( symin_storages.find(sym)->second ) ) );
 		}
 	}
 

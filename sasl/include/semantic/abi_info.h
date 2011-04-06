@@ -60,11 +60,11 @@ public:
 	bool add_output_semantic( softart::semantic sem, builtin_type_code btc );
 	void add_global_var( boost::shared_ptr<symbol> const&, builtin_type_code btc );
 
-	storage_info* input_storage( softart::semantic );
-	storage_info* input_storage( boost::shared_ptr<symbol> const& );
-	storage_info* output_storage( softart::semantic );
+	storage_info* input_storage( softart::semantic ) const;
+	storage_info* input_storage( boost::shared_ptr<symbol> const& ) const;
+	storage_info* output_storage( softart::semantic ) const;
 	
-	std::vector<storage_info*> storage_infos( storage_types st );
+	std::vector<storage_info*> storage_infos( storage_types st ) const;
 
 private:
 	storage_info* alloc_input_storage( softart::semantic );

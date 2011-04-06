@@ -3,16 +3,53 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <eflib/include/diagnostics/assert.h>
 
+#include <eflib/include/platform/disable_warnings.h>
+#include <llvm/DerivedTypes.h>
+#include <eflib/include/platform/enable_warnings.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/foreach.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #define SASL_VISITOR_TYPE_NAME cgllvm_vs
 
+using sasl::semantic::buffer_in;
+using sasl::semantic::buffer_out;
+using sasl::semantic::stream_in;
+using sasl::semantic::stream_out;
+using sasl::semantic::storage_info;
+using sasl::semantic::storage_types;
+
+using namespace llvm;
+
+using std::vector;
+
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
+	vector<storage_info*> sis = abii->storage_infos( st );
+	BOOST_FOREACH( storage_info* si, sis ){
+		bool sign(false);
+		Type const* storage_llvm_type = llvm_type(si->sv_type, sign );
+		if( stream_in == st ){
+			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
+		} else {
+			entry_params_types[st].push_back( storage_llvm_type );
+		}
+	}
+	
+	entry_params_structs[st].data() = StructType::get( mod_ptr()->context(), entry_params_types[st] );
+}
 
 void cgllvm_vs::create_entry(){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 void cgllvm_vs::create_entry_params(){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	fill_llvm_type_from_si ( buffer_in );
+	fill_llvm_type_from_si ( buffer_out );
+	fill_llvm_type_from_si ( stream_in );
+	fill_llvm_type_from_si ( stream_out );
 }
 
 // expressions
@@ -67,7 +104,9 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	create_entry_params();
 }
 
-cgllvm_vs::cgllvm_vs(){}
+cgllvm_vs::cgllvm_vs(){
+
+}
 
 cgllvm_modvs* cgllvm_vs::mod_ptr(){
 	assert( dynamic_cast<cgllvm_modvs*>( mod.get() ) );

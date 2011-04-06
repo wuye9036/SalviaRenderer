@@ -2,6 +2,11 @@
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_VS_H
 
 #include <sasl/include/code_generator/llvm/cgllvm_sisd.h>
+#include <sasl/include/semantic/abi_info.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/utility/value_init.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 namespace sasl{
 	namespace semantic{
@@ -13,6 +18,10 @@ namespace sasl{
 		struct type_specifier;
 		struct node;
 	}
+}
+
+namespace llvm{
+	class StructType;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -77,6 +86,11 @@ private:
 
 	void create_entry();
 	void create_entry_params();
+
+	void fill_llvm_type_from_si( sasl::semantic::storage_types st );
+
+	std::vector< llvm::Type const* > entry_params_types[sasl::semantic::storage_types_count];
+	boost::value_initialized<llvm::StructType*> entry_params_structs[sasl::semantic::storage_types_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();
