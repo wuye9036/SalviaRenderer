@@ -33,7 +33,7 @@ public:
 	);
 
 	SASL_VISIT_DCL( program );
-
+	SASL_VISIT_DCL( function_type );
 protected:
 	// It is called in program visitor BEFORE declaration was visited.
 	// If any additional initialization you want to add before visit, override it.
@@ -64,6 +64,8 @@ protected:
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val  );
 cgllvm_sctxt* sc_ptr( boost::any& any_val );
 
+cgllvm_sctxt const * sc_ptr( const boost::any* any_val  );
+cgllvm_sctxt* sc_ptr( boost::any* any_val );
 END_NS_SASL_CODE_GENERATOR();
 
 #endif

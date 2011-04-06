@@ -1,6 +1,8 @@
 #include <sasl/include/code_generator/llvm/cgllvm_vs.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/program.h>
+
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -31,6 +33,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
 	BOOST_FOREACH( storage_info* si, sis ){
 		bool sign(false);
 		Type const* storage_llvm_type = llvm_type(si->sv_type, sign );
+		assert(storage_llvm_type);
 		if( stream_in == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
 		} else {
@@ -38,11 +41,10 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
 		}
 	}
 	
-	entry_params_structs[st].data() = StructType::get( mod_ptr()->context(), entry_params_types[st] );
-}
-
-void cgllvm_vs::create_entry(){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	// Here we create packed data.
+	// It is easy to compute struct layout.
+	// TODO support aligned and packed layout in future.
+	entry_params_structs[st].data() = StructType::get( mod_ptr()->context(), entry_params_types[st], true );
 }
 
 void cgllvm_vs::create_entry_params(){
@@ -79,7 +81,13 @@ SASL_VISIT_DEF_UNIMPL( builtin_type );
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF_UNIMPL( parameter );
-SASL_VISIT_DEF_UNIMPL( function_type );
+
+SASL_VISIT_DEF( function_type ){
+	if( abii->is_entry( v.symbol() ) ){
+		create_entry( v, data );
+	}
+	return parent_class::visit(v, data);
+}
 
 // statement
 SASL_VISIT_DEF_UNIMPL( statement );
@@ -102,6 +110,10 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 
 	// Create entry function
 	create_entry_params();
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_entry, function_type ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 cgllvm_vs::cgllvm_vs(){

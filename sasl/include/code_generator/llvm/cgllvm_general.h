@@ -48,6 +48,8 @@ class llvm_module;
 
 class cgllvm_general: public cgllvm_sisd{
 public:
+	typedef cgllvm_sisd parent_class;
+
 	cgllvm_general();
 
 	SASL_VISIT_DCL( unary_expression );

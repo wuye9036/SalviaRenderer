@@ -65,7 +65,7 @@ bool abi_info::add_output_semantic( softart::semantic sem, builtin_type_code btc
 	if( it != sems_out.end() ){
 		if( *it == sem ){
 			storage_info* si = alloc_output_storage( sem );
-			if( si->sv_type == btc || si->sv_type == builtin_type_code::none ){
+			if( si->sv_type != btc && si->sv_type == builtin_type_code::none ){
 				si->sv_type = btc;
 				return true;
 			}
@@ -73,6 +73,9 @@ bool abi_info::add_output_semantic( softart::semantic sem, builtin_type_code btc
 		}
 	}
 
+	storage_info* si = alloc_output_storage( sem );
+	si->sv_type = btc;
+	si->storage = buffer_out;
 	sems_out.insert( it, sem );
 	return true;
 }
