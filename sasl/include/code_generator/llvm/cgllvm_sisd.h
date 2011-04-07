@@ -20,9 +20,13 @@ namespace sasl{
 
 namespace llvm{
 	class Constant;
+	class Function;
+	class Value;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+struct cgllvm_sctxt_data;
 
 // Code generation for SISD( Single Instruction Single Data )
 class cgllvm_sisd: public cgllvm_impl{
@@ -51,10 +55,21 @@ protected:
 
 	// Get zero filled value of any type.
 	llvm::Constant* zero_value( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
+	llvm::Constant* zero_value( llvm::Type const* );
 
 	// LLVM code generator Utilities
-	void restart_block( boost::any* data );
+	llvm::Value* load( boost::any* data );
+	llvm::Value* load( cgllvm_sctxt* data );
+	
+	void store( llvm::Value*, boost::any* data );
+	void store( llvm::Value*, cgllvm_sctxt* data );
+	
+	void create_alloca( cgllvm_sctxt* data, std::string const& name );
 
+	void restart_block( boost::any* data );
+	void clear_empty_blocks( llvm::Function* fn );
+
+	// For type conversation.
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;
 
@@ -66,6 +81,10 @@ cgllvm_sctxt* sc_ptr( boost::any& any_val );
 
 cgllvm_sctxt const * sc_ptr( const boost::any* any_val  );
 cgllvm_sctxt* sc_ptr( boost::any* any_val );
+
+cgllvm_sctxt_data* sc_inner_ptr( boost::any* any_val );
+cgllvm_sctxt_data const* sc_inner_ptr( boost::any const* any_val );
+
 END_NS_SASL_CODE_GENERATOR();
 
 #endif
