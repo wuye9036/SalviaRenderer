@@ -23,11 +23,16 @@ cgllvm_sctxt_data const& cgllvm_sctxt::data() const{
 }
 
 void cgllvm_sctxt::set_storage( cgllvm_sctxt const* rhs ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	data().is_ref = rhs->data().is_ref;
+	data().val = rhs->data().val;
+	data().global = rhs->data().global;
+	data().local = rhs->data().local;
+	data().agg = rhs->data().agg;
 }
 
 void cgllvm_sctxt::set_type( cgllvm_sctxt const* rhs ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	data().val_type = rhs->data().val_type;
+	data().is_signed = rhs->data().is_signed;
 }
 
 void cgllvm_sctxt::set_storage_and_type( cgllvm_sctxt* rhs ){

@@ -68,4 +68,8 @@ llvm::LLVMContext& cgllvm_impl::llcontext(){
 	return mod->context();
 }
 
+llvm::Module* cgllvm_impl::llmodule() const{
+	return mod->module();
+}
+
 END_NS_SASL_CODE_GENERATOR();

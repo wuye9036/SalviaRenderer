@@ -23,9 +23,12 @@ namespace sasl{
 }
 
 namespace llvm{
-	class LLVMContext;
-	class Type;
+
 	class ConstantFolder;
+	class LLVMContext;
+	class Module;
+	class Type;
+	
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
         > class IRBuilder;
@@ -76,6 +79,7 @@ protected:
 	// Direct access member from module.
 	llvm::DefaultIRBuilder* builder();
 	llvm::LLVMContext& llcontext();
+	llvm::Module* llmodule() const;
 
 protected:
 	// ---------------Data Members-----------------

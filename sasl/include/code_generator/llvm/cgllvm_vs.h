@@ -82,14 +82,16 @@ private:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 	SASL_SPECIFIC_VISIT_DCL( create_entry, function_type );
 
+	bool is_entry( llvm::Function* ) const;
+
 	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modvs* mod_ptr();
 
-	
 	void create_entry_params();
 
 	void fill_llvm_type_from_si( sasl::semantic::storage_types st );
 
+	llvm::Function* entry_fn;
 	std::vector< llvm::Type const* > entry_params_types[sasl::semantic::storage_types_count];
 	boost::value_initialized<llvm::StructType*> entry_params_structs[sasl::semantic::storage_types_count];
 };

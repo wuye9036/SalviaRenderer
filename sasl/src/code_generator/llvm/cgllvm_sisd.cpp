@@ -126,12 +126,28 @@ SASL_VISIT_DEF( function_type ){
 	*node_ctxt(v, true) = *( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( variable_declaration ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 	typeconv = create_type_converter( mod_ptr()->builder(), ctxt_getter );
 	register_builtin_typeconv( typeconv, msi->type_manager() );
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

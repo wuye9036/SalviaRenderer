@@ -32,12 +32,26 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 //////////////////////////////////////////////////////////
 // Context for SISD.
 // It must be an PODs structure.
+//
+// Remarks:
 struct cgllvm_sctxt_data{
 	cgllvm_sctxt_data();
 
 	// Storage
 	// Only one of them is avaliable
-	bool is_ref;						// Treated as reference
+
+	// Treated as reference
+	// If it is true,
+	// Value must stored the address of value of val_type.
+	// e.g.
+	//  val_type = int
+	//	value = 0xDEADBEEF
+	//  is_ref = true
+	// load() = *(int*)value;
+	// *(int*)value = store()
+	bool is_ref;						
+	
+
 	llvm::Value* val;					// Argument and constant
 	llvm::GlobalVariable* global;
 	llvm::AllocaInst* local;

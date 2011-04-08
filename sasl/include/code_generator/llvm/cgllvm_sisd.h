@@ -38,11 +38,18 @@ public:
 
 	SASL_VISIT_DCL( program );
 	SASL_VISIT_DCL( function_type );
+	SASL_VISIT_DCL( variable_declaration );
+
 protected:
 	// It is called in program visitor BEFORE declaration was visited.
 	// If any additional initialization you want to add before visit, override it.
 	// DONT FORGET call parent function before your code.
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
+
+	// Called by function_type visitor.
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_type );
 
 	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
 

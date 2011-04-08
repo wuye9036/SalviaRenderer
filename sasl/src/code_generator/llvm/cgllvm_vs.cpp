@@ -1,5 +1,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_vs.h>
+#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/program.h>
 
@@ -20,6 +22,7 @@ using sasl::semantic::buffer_out;
 using sasl::semantic::stream_in;
 using sasl::semantic::stream_out;
 using sasl::semantic::storage_info;
+using sasl::semantic::storage_si;
 using sasl::semantic::storage_types;
 
 using namespace llvm;
@@ -74,7 +77,33 @@ SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF_UNIMPL( declarator );
-SASL_VISIT_DEF_UNIMPL( variable_declaration );
+
+SASL_VISIT_DEF( variable_declaration ){
+	storage_si* pssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
+
+	// Local variable will call parent version.
+	if( sc_inner_ptr(data)->parent_fn ){
+		parent_class::visit( v, data );
+	}
+
+	// Global is filled by offset value with null parent.
+	// The parent is filled when it is referred.
+	storage_info* psi = NULL;
+	if( pssi->get_semantic() == softart::SV_None ){
+		psi = abii->input_storage( v.symbol() );
+	} else {
+		psi = abii->input_storage( pssi->get_semantic() );
+	}
+
+	sc_ptr(data)->data().val_type = llvm_type( psi->sv_type, sc_ptr(data)->data().is_signed );
+	sc_ptr(data)->data().agg.index = psi->index;
+	if( psi->storage == stream_in || psi->storage == stream_out ){
+		sc_ptr(data)->data().is_ref = true;
+	}
+
+	*node_ctxt(v, true) = *sc_ptr(data);
+}
+
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
 SASL_VISIT_DEF_UNIMPL( builtin_type );
@@ -83,10 +112,19 @@ SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF_UNIMPL( parameter );
 
 SASL_VISIT_DEF( function_type ){
-	if( abii->is_entry( v.symbol() ) ){
-		create_entry( v, data );
-	}
-	return parent_class::visit(v, data);
+	// TODO Write correct implementation.
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	//if( abii->is_entry( v.symbol() ) ){
+	//	create_entry( v, data );
+	//	if ( v.body ){
+	//		// 
+	//		visit_child( child_ctxt, child_ctxt_init, v.body );
+	//		clear_empty_blocks( fn );
+	//	}
+	//	return;
+	//}
+
+	// parent_class::visit(v, data);
 }
 
 // statement
@@ -116,8 +154,10 @@ SASL_SPECIFIC_VISIT_DEF( create_entry, function_type ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
-cgllvm_vs::cgllvm_vs(){
+cgllvm_vs::cgllvm_vs(){}
 
+bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
+	return fn && fn == entry_fn;
 }
 
 cgllvm_modvs* cgllvm_vs::mod_ptr(){
