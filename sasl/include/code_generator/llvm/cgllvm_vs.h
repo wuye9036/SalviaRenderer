@@ -62,7 +62,6 @@ public:
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( parameter );
-	SASL_VISIT_DCL( function_type );
 
 	// statement
 	SASL_VISIT_DCL( statement );
@@ -80,8 +79,11 @@ public:
 
 private:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
-	SASL_SPECIFIC_VISIT_DCL( create_entry, function_type );
 
+	// Overrides them for generating entry function if need.
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
+	
 	bool is_entry( llvm::Function* ) const;
 
 	virtual bool create_mod( sasl::syntax_tree::program& v );

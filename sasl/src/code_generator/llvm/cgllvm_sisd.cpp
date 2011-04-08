@@ -24,6 +24,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace llvm;
@@ -75,52 +76,10 @@ SASL_VISIT_DEF( program ){
 SASL_VISIT_DEF( function_type ){
 	sc_ptr(data)->sym = v.symbol();
 
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	// Generate return types.
-	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
-	Type const* ret_type = sc_inner_ptr(data)->val_type;
-
-	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){
-		return;
-	}
-
-	// Generate paramenter types.
-	vector<Type const*> param_types;
-	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin(); it != v.params.end(); ++it ){
-		visit_child( child_ctxt, child_ctxt_init, *it );
-		if ( sc_inner_ptr(&child_ctxt)->val_type ){
-			param_types.push_back( sc_inner_ptr(&child_ctxt)->val_type );
-		} else {
-			EFLIB_ASSERT_AND_IF( ret_type, "Error occurs while parameter parsing." ){
-				return;
-			}
-		}
-	}
-
-	// Create function.
-	FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
-	sc_inner_ptr(data)->val_type = ftype;
-
-	Function* fn = 
-		Function::Create( ftype, Function::ExternalLinkage, v.name->str, mod_ptr()->module() );
-	sc_inner_ptr(data)->self_fn = fn;
-	sc_inner_ptr(&child_ctxt_init)->parent_fn = fn;
-
-	// Register parameter names.
-	Function::arg_iterator arg_it = fn->arg_begin();
-	for( size_t arg_idx = 0; arg_idx < fn->arg_size(); ++arg_idx, ++arg_it){
-		shared_ptr<parameter> par = v.params[arg_idx];
-		arg_it->setName( par->symbol()->unmangled_name() );
-		sctxt_handle par_ctxt = node_ctxt( par );
-		par_ctxt->data().val = arg_it;
-	}
-
-	// Create function body.
+	create_fnsig( v, data );
 	if ( v.body ){
-		visit_child( child_ctxt, child_ctxt_init, v.body );
-		clear_empty_blocks( fn );
+		create_fnargs( v, data );
+		create_fnbody( v, data );
 	}
 
 	*node_ctxt(v, true) = *( sc_ptr(data) );
@@ -139,15 +98,66 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	// Generate return types.
+	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
+	Type const* ret_type = sc_inner_ptr(data)->val_type;
+	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){ return; }
+
+	// Generate paramenter types.
+	vector<Type const*> param_types;
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
+		visit_child( child_ctxt, child_ctxt_init, par );
+		Type const* par_lltype = sc_inner_ptr(&child_ctxt)->val_type;
+		if ( par_lltype ){
+			param_types.push_back( par_lltype );
+		} else {
+			EFLIB_ASSERT_AND_IF( ret_type, "Error occurs while parameter parsing." ){ return; }
+		}
+	}
+
+	// Create function.
+	FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
+	sc_inner_ptr(data)->val_type = ftype;
+
+	Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.name->str, llmodule() );
+	sc_inner_ptr(data)->self_fn = fn;
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	Function* fn = sc_inner_ptr(data)->self_fn;
+
+	any child_ctxt_init = *data;
+	sc_inner_ptr(&child_ctxt_init)->parent_fn = fn;
+
+	any child_ctxt;
+
+	// Register arguments names.
+	Function::arg_iterator arg_it = fn->arg_begin();
+	for( size_t arg_idx = 0; arg_idx < fn->arg_size(); ++arg_idx, ++arg_it){
+		shared_ptr<parameter> par = v.params[arg_idx];
+		sctxt_handle par_ctxt = node_ctxt( par );
+
+		arg_it->setName( par->symbol()->unmangled_name() );
+		par_ctxt->data().val = arg_it;
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	Function* fn = sc_inner_ptr(data)->self_fn;
+
+	any child_ctxt_init = *data;
+	sc_inner_ptr(&child_ctxt_init)->parent_fn = fn;
+
+	any child_ctxt;
+
+	// Create function body.
+	if ( v.body ){
+		visit_child( child_ctxt, child_ctxt_init, v.body );
+		clear_empty_blocks( fn );
+	}
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

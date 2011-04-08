@@ -111,22 +111,6 @@ SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF_UNIMPL( parameter );
 
-SASL_VISIT_DEF( function_type ){
-	// TODO Write correct implementation.
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//if( abii->is_entry( v.symbol() ) ){
-	//	create_entry( v, data );
-	//	if ( v.body ){
-	//		// 
-	//		visit_child( child_ctxt, child_ctxt_init, v.body );
-	//		clear_empty_blocks( fn );
-	//	}
-	//	return;
-	//}
-
-	// parent_class::visit(v, data);
-}
-
 // statement
 SASL_VISIT_DEF_UNIMPL( statement );
 SASL_VISIT_DEF_UNIMPL( declaration_statement );
@@ -150,7 +134,11 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	create_entry_params();
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_entry, function_type ){
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 

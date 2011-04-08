@@ -51,7 +51,6 @@ struct cgllvm_sctxt_data{
 	// *(int*)value = store()
 	bool is_ref;						
 	
-
 	llvm::Value* val;					// Argument and constant
 	llvm::GlobalVariable* global;
 	llvm::AllocaInst* local;
