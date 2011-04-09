@@ -24,6 +24,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -85,15 +86,26 @@ SASL_VISIT_DEF( function_type ){
 	*node_ctxt(v, true) = *( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF( variable_declaration ){
+SASL_VISIT_DEF( declarator ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_VISIT_DEF( variable_declaration ){
+	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
+		visit_child( *data, dclr );
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
-	typeconv = create_type_converter( mod_ptr()->builder(), ctxt_getter );
+	boost::function<Value* (cgllvm_sctxt*)> loader
+		= boost::bind( static_cast< Value* (cgllvm_sisd::*) (cgllvm_sctxt*)>( &cgllvm_sisd::load ), this, _1 );
+	boost::function<void(Value*, cgllvm_sctxt*)> storer
+		= boost::bind( static_cast<void (cgllvm_sisd::*) (Value*, cgllvm_sctxt*)>( &cgllvm_sisd::store ), this, _1, _2 );
+
+	typeconv = create_type_converter( mod_ptr()->builder(), ctxt_getter, loader, storer );
 	register_builtin_typeconv( typeconv, msi->type_manager() );
 }
 

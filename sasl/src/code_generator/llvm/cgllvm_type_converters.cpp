@@ -14,6 +14,7 @@
 
 using ::llvm::IRBuilderBase;
 using ::llvm::IRBuilder;
+using ::llvm::Type;
 using ::llvm::Value;
 
 using ::sasl::semantic::symbol;
@@ -26,6 +27,7 @@ using ::sasl::syntax_tree::create_builtin_type;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::type_specifier;
 
+using ::boost::function;
 using ::boost::make_shared;
 using ::boost::shared_polymorphic_cast;
 using ::boost::shared_ptr;
@@ -37,8 +39,12 @@ class cgllvm_type_converter : public type_converter{
 public:
 	cgllvm_type_converter(
 		shared_ptr<IRBuilderBase> const& builder,
-		boost::function<cgllvm_sctxt*( boost::shared_ptr<node> const& )> const& ctxt_getter
-		) : builder( shared_static_cast<IRBuilder<> >(builder) ), get_ctxt( ctxt_getter )
+		boost::function<cgllvm_sctxt*( boost::shared_ptr<node> const& )> const& ctxt_getter,
+		boost::function< llvm::Value* ( cgllvm_sctxt* ) > const& loader,
+		boost::function< void (llvm::Value*, cgllvm_sctxt*) > const& storer
+		)
+		: builder( shared_static_cast<IRBuilder<> >(builder) ),
+		get_ctxt( ctxt_getter ), load(loader), store(storer)
 	{
 	}
 
@@ -46,34 +52,42 @@ public:
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
-		Value* dest_v = builder->CreateIntCast( src_ctxt->val, dest_ctxt->type, dest_ctxt->is_signed );
-		dest_ctxt->val = dest_v;
+		Value* dest_v = builder->CreateIntCast(
+			load( src_ctxt ),
+			dest_ctxt->data().val_type,
+			dest_ctxt->data().is_signed
+			);
+		store( dest_v, dest_ctxt );
 	}
 
 	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
+		Value* src_v = load( src_ctxt );
+		Type const* dest_type = dest_ctxt->data().val_type;
 		Value* dest_v = NULL;
-		if ( src_ctxt->is_signed ){
-			dest_v = builder->CreateSIToFP( src_ctxt->val, dest_ctxt->type );
+		if ( src_ctxt->data().is_signed ){
+			dest_v = builder->CreateSIToFP( src_v, dest_type );
 		} else {
-			dest_v = builder->CreateUIToFP( src_ctxt->val, dest_ctxt->type );
+			dest_v = builder->CreateUIToFP( src_v, dest_type );
 		}
-		dest_ctxt->val = dest_v;
+		store( dest_v, dest_ctxt );
 	}
 
 	void float2int( shared_ptr<node> dest, shared_ptr<node> src ){
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
+		Value* src_v = load( src_ctxt );
+		Type const* dest_type = dest_ctxt->data().val_type;
 		Value* dest_v = NULL;
-		if ( dest_ctxt->is_signed ){
-			dest_v = builder->CreateFPToSI( src_ctxt->val, dest_ctxt->type );
+		if ( dest_ctxt->data().is_signed ){
+			dest_v = builder->CreateFPToSI( src_v, dest_type );
 		} else {
-			dest_v = builder->CreateFPToUI( src_ctxt->val, dest_ctxt->type );
+			dest_v = builder->CreateFPToUI( src_v, dest_type );
 		}
-		dest_ctxt->val = dest_v;
+		store( dest_v, dest_ctxt );
 	}
 
 	void float2float( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -81,12 +95,15 @@ public:
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
 		Value* dest_v = NULL;
-		dest_v = builder->CreateFPCast( src_ctxt->val, dest_ctxt->type );
-		dest_ctxt->val = dest_v;
+		Type const* dest_type = dest_ctxt->data().val_type;
+		dest_v = builder->CreateFPCast( load(src_ctxt), dest_type );
+		store(dest_v, dest_ctxt);
 	}
 private:
 	shared_ptr< IRBuilder<> > builder;
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<node> const& )> get_ctxt;
+	boost::function< Value* ( cgllvm_sctxt* ) > load;
+	boost::function< void (Value*, cgllvm_sctxt*) > store;
 };
 
 void register_builtin_typeconv(
@@ -250,10 +267,12 @@ shared_ptr<type_converter> create_type_converter(
 	boost::shared_ptr<llvm::IRBuilderBase> const& builder,
 	boost::function<
 		cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
-	> const& ctxt_lookup
+	> const& ctxt_lookup,
+	boost::function< llvm::Value* ( cgllvm_sctxt* ) > const& loader,
+	boost::function< void (llvm::Value*, cgllvm_sctxt*) > const& storer
 	)
 {
-	return make_shared<cgllvm_type_converter>( builder, ctxt_lookup );
+	return make_shared<cgllvm_type_converter>( builder, ctxt_lookup, loader, storer );
 }
 
 END_NS_SASL_CODE_GENERATOR();

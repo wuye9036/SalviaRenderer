@@ -70,6 +70,7 @@ struct cgllvm_sctxt_data{
 	llvm::BasicBlock* break_to;
 
 	// Types
+	llvm::Type const* ref_type;				// Pointer qualified val_type. Enabled when is_ref is true.
 	llvm::Type const* val_type;
 	bool is_signed;							// For integral only.
 

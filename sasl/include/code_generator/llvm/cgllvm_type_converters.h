@@ -21,6 +21,7 @@ namespace sasl{
 
 namespace llvm{
 	class IRBuilderBase;
+	class Value;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -31,7 +32,9 @@ boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter(
 		boost::shared_ptr<llvm::IRBuilderBase> const& builder,
 		boost::function<
 			cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
-		> const& ctxt_lookup
+		> const& ctxt_lookup,
+		boost::function< llvm::Value* (cgllvm_sctxt*) > const& loader,
+		boost::function< void (llvm::Value*, cgllvm_sctxt*) > const& storer
 		);
 
 void register_builtin_typeconv(

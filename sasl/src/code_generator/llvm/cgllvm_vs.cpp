@@ -9,6 +9,7 @@
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/DerivedTypes.h>
+#include <llvm/Function.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -57,6 +58,22 @@ void cgllvm_vs::create_entry_params(){
 	fill_llvm_type_from_si ( stream_out );
 }
 
+void cgllvm_vs::add_entry_param_type( boost::any* data, storage_types st, vector<Type const*>& par_types ){
+	StructType* par_type = entry_params_structs[st].data();
+	PointerType* parref_type = PointerType::getUnqual( par_type );
+
+	cgllvm_sctxt* ctxt = new cgllvm_sctxt();
+	*ctxt = *sc_ptr(data);
+
+	ctxt->data().val_type = par_type;
+	ctxt->data().ref_type = parref_type;
+	ctxt->data().is_ref = true;
+
+	param_ctxts[st].reset(ctxt);
+
+	par_types.push_back(parref_type);
+}
+
 // expressions
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF_UNIMPL( cast_expression );
@@ -76,9 +93,9 @@ SASL_VISIT_DEF_UNIMPL( initializer );
 SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
-SASL_VISIT_DEF_UNIMPL( declarator );
+SASL_VISIT_DEF( declarator ){
+	sc_ptr(data)->sym = v.symbol();
 
-SASL_VISIT_DEF( variable_declaration ){
 	storage_si* pssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
 
 	// Local variable will call parent version.
@@ -99,6 +116,10 @@ SASL_VISIT_DEF( variable_declaration ){
 	sc_ptr(data)->data().agg.index = psi->index;
 	if( psi->storage == stream_in || psi->storage == stream_out ){
 		sc_ptr(data)->data().is_ref = true;
+	}
+
+	if (v.init){
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
 	*node_ctxt(v, true) = *sc_ptr(data);
@@ -135,11 +156,29 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	if( abii->is_entry( v.symbol() ) ){
+
+		vector<Type const*> param_types;
+		add_entry_param_type( data, stream_in, param_types );
+		add_entry_param_type( data, buffer_in, param_types );
+		add_entry_param_type( data, stream_out, param_types );
+		add_entry_param_type( data, buffer_out, param_types );
+
+		FunctionType* fntype = FunctionType::get( Type::getVoidTy(llcontext()), param_types, false );
+		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.name->str, llmodule() );
+
+		sc_inner_ptr(data)->val_type = fntype;
+		sc_inner_ptr(data)->self_fn = fn;
+	} else {
+		parent_class::create_fnsig(v, data);
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	if( abii->is_entry( v.symbol() ) ){
+	} else {
+		parent_class::create_fnargs(v, data);
+	}
 }
 
 cgllvm_vs::cgllvm_vs(){}

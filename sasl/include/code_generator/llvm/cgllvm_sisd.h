@@ -38,6 +38,7 @@ public:
 
 	SASL_VISIT_DCL( program );
 	SASL_VISIT_DCL( function_type );
+	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
 
 protected:

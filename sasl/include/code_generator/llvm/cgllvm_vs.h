@@ -6,6 +6,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/utility/value_init.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 namespace sasl{
@@ -21,6 +22,7 @@ namespace sasl{
 }
 
 namespace llvm{
+	class PointerType;
 	class StructType;
 }
 
@@ -55,7 +57,6 @@ public:
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
 	SASL_VISIT_DCL( declarator );
-	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );
 	SASL_VISIT_DCL( builtin_type );
@@ -90,10 +91,14 @@ private:
 	cgllvm_modvs* mod_ptr();
 
 	void create_entry_params();
+	void add_entry_param_type( boost::any* data, sasl::semantic::storage_types st, std::vector< llvm::Type const* >& par_types );
 
 	void fill_llvm_type_from_si( sasl::semantic::storage_types st );
 
 	llvm::Function* entry_fn;
+	
+	boost::shared_ptr<cgllvm_sctxt> param_ctxts[sasl::semantic::storage_types_count];
+
 	std::vector< llvm::Type const* > entry_params_types[sasl::semantic::storage_types_count];
 	boost::value_initialized<llvm::StructType*> entry_params_structs[sasl::semantic::storage_types_count];
 };
