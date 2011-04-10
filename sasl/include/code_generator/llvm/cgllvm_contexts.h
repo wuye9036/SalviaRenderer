@@ -34,6 +34,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 // It must be an PODs structure.
 //
 // Remarks:
+class cgllvm_sctxt;
 struct cgllvm_sctxt_data{
 	cgllvm_sctxt_data();
 
@@ -55,7 +56,7 @@ struct cgllvm_sctxt_data{
 	llvm::GlobalVariable* global;
 	llvm::AllocaInst* local;
 	struct aggregated_data{
-		cgllvm_sctxt_data* parent_data;
+		cgllvm_sctxt* parent;
 		int index;
 	} agg;
 

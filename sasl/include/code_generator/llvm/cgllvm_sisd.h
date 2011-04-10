@@ -37,9 +37,14 @@ public:
 	);
 
 	SASL_VISIT_DCL( program );
+	SASL_VISIT_DCL( variable_expression );
+
 	SASL_VISIT_DCL( function_type );
 	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
+
+	SASL_VISIT_DCL( compound_statement );
+	SASL_VISIT_DCL( jump_statement );
 
 protected:
 	// It is called in program visitor BEFORE declaration was visited.
@@ -51,6 +56,8 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_type );
+
+	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
 
 	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
 

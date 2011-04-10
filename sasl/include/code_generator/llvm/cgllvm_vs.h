@@ -74,9 +74,7 @@ public:
 	SASL_VISIT_DCL( case_label );
 	SASL_VISIT_DCL( ident_label );
 	SASL_VISIT_DCL( switch_statement );
-	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( expression_statement );
-	SASL_VISIT_DCL( jump_statement );
 
 private:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
@@ -85,10 +83,14 @@ private:
 	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
 	
+	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
+
 	bool is_entry( llvm::Function* ) const;
 
 	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modvs* mod_ptr();
+
+	boost::shared_ptr<sasl::semantic::symbol> find_symbol( cgllvm_sctxt* data, std::string const& str );
 
 	void create_entry_params();
 	void add_entry_param_type( boost::any* data, sasl::semantic::storage_types st, std::vector< llvm::Type const* >& par_types );

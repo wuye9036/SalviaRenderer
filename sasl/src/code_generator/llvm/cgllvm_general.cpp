@@ -237,13 +237,6 @@ SASL_VISIT_DEF( constant_expression ){
 }
 
 SASL_VISIT_DEF_UNIMPL( identifier );
-SASL_VISIT_DEF( variable_expression ){
-	shared_ptr<symbol> declsym = sc_ptr(data)->sym.lock()->find( v.var_name->str );
-	assert( declsym && declsym->node() );
-
-	sc_ptr(data)->set_storage_and_type( node_ctxt( declsym->node() ) );
-	*node_ctxt(v, true) = *sc_ptr(data);
-}
 
 // declaration & type specifier
 SASL_VISIT_DEF_UNIMPL( initializer );
@@ -417,37 +410,6 @@ SASL_VISIT_DEF_UNIMPL( dowhile_statement );
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
 
-SASL_VISIT_DEF( compound_statement ){
-	sc_ptr(data)->sym = v.symbol();
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	BasicBlock* bb = NULL;
-	// If instruction block is the first block of function, we must create it.
-	if ( sc_inner_ptr(data)->parent_fn->getBasicBlockList().empty() ){
-		bb = BasicBlock::Create(
-				mod_ptr()->context(),
-				v.symbol()->mangled_name(),
-				sc_inner_ptr(data)->parent_fn
-				);
-	}
-
-	sc_ptr(data)->data().block = bb;
-
-	if(bb){
-		mod_ptr()->builder()->SetInsertPoint(bb);
-	}
-
-	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
-		it != v.stmts.end(); ++it)
-	{
-		visit_child( child_ctxt, child_ctxt_init, *it );
-	}
-
-	*node_ctxt(v, true) = *( sc_ptr(data) );
-}
-
 SASL_VISIT_DEF( expression_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -457,38 +419,7 @@ SASL_VISIT_DEF( expression_statement ){
 	*node_ctxt(v, true) = *( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF( jump_statement ){
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	if (v.jump_expr){
-		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
-	}
-
-	if ( v.code == jump_mode::_return ){
-		if ( !v.jump_expr ){
-			sc_ptr(data)->data().return_inst = builder()->CreateRetVoid();
-		} else {
-			sc_ptr(data)->data().return_inst = builder()->CreateRet( load( sc_ptr(child_ctxt) ) );
-		}
-	} else if ( v.code == jump_mode::_continue ){
-		assert( sc_inner_ptr(data)->continue_to );
-		mod_ptr()->builder()->CreateBr( sc_inner_ptr(data)->continue_to );
-	} else if ( v.code == jump_mode::_break ){
-		assert( sc_inner_ptr(data)->continue_to );
-		mod_ptr()->builder()->CreateBr( sc_inner_ptr(data)->break_to );
-	}
-
-	// Restart a new block for sealing the old block.
-	restart_block(data);
-
-	*node_ctxt(v, true) = *sc_ptr(data);
-}
-
 SASL_VISIT_DEF_UNIMPL( ident_label );
-
-
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
 

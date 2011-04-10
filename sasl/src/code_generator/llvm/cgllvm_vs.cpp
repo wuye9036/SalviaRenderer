@@ -2,7 +2,9 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
 
 #include <eflib/include/diagnostics/assert.h>
@@ -25,9 +27,11 @@ using sasl::semantic::stream_out;
 using sasl::semantic::storage_info;
 using sasl::semantic::storage_si;
 using sasl::semantic::storage_types;
+using sasl::semantic::symbol;
 
 using namespace llvm;
 
+using boost::shared_ptr;
 using std::vector;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -85,7 +89,37 @@ SASL_VISIT_DEF_UNIMPL( call_expression );
 SASL_VISIT_DEF_UNIMPL( member_expression );
 
 SASL_VISIT_DEF_UNIMPL( constant_expression );
-SASL_VISIT_DEF_UNIMPL( variable_expression );
+
+SASL_VISIT_DEF( variable_expression ){
+	// TODO Referenced symbol must be evaluated in semantic analysis stages.
+	shared_ptr<symbol> sym = find_symbol( sc_ptr(data), v.var_name->str );
+	assert(sym);
+
+	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
+	storage_si* var_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
+
+	if ( is_entry( sc_inner_ptr(data)->self_fn ) ){
+
+		if( var_ssi->get_semantic() == softart::SV_None ){
+			// If non semantic, it must be local variable.
+			// Use normal data loader.
+			sc_inner_ptr(data)->val = load( varctxt );
+			sc_ptr(data)->set_type( varctxt );
+		} else {
+			// Else the expression is stored as an offsetted space in argument.
+			storage_info* var_si = abii->input_storage( var_ssi->get_semantic() );
+			sc_ptr(data)->set_storage_and_type( varctxt );
+			sc_inner_ptr(data)->agg.parent = param_ctxts[var_si->storage].get();
+			sc_inner_ptr(data)->val = load( sc_ptr(data) );
+		}
+
+		*node_ctxt(v, true) = *sc_ptr(data);
+
+	} else {
+		parent_class::visit( v, data );
+	}
+}
+
 SASL_VISIT_DEF_UNIMPL( identifier );
 
 // declaration & type specifier
@@ -142,9 +176,7 @@ SASL_VISIT_DEF_UNIMPL( for_statement );
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
-SASL_VISIT_DEF_UNIMPL( compound_statement );
 SASL_VISIT_DEF_UNIMPL( expression_statement );
-SASL_VISIT_DEF_UNIMPL( jump_statement );
 
 // In cgllvm_vs, you would initialize entry function before call
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
@@ -166,6 +198,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy(llcontext()), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.name->str, llmodule() );
+		entry_fn = fn;
 
 		sc_inner_ptr(data)->val_type = fntype;
 		sc_inner_ptr(data)->self_fn = fn;
@@ -181,9 +214,19 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	}
 }
 
-cgllvm_vs::cgllvm_vs(){}
+SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
+	assert( sc_inner_ptr(data)->parent_fn );
+	if( is_entry( sc_inner_ptr(data)->parent_fn ) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		parent_class::return_statement(v, data);
+	}
+}
+
+cgllvm_vs::cgllvm_vs(): entry_fn(NULL){}
 
 bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
+	assert(fn && entry_fn);
 	return fn && fn == entry_fn;
 }
 
@@ -197,6 +240,10 @@ bool cgllvm_vs::create_mod( sasl::syntax_tree::program& v )
 	if ( mod ){ return false; }
 	mod = create_codegen_context<cgllvm_modvs>( v.handle() );
 	return true;
+}
+
+boost::shared_ptr<sasl::semantic::symbol> cgllvm_vs::find_symbol( cgllvm_sctxt* data, std::string const& str ){
+	return data->sym.lock()->find( str );
 }
 
 END_NS_SASL_CODE_GENERATOR();

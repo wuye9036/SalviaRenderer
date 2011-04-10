@@ -62,7 +62,6 @@ public:
 	SASL_VISIT_DCL( member_expression );
 
 	SASL_VISIT_DCL( constant_expression );
-	SASL_VISIT_DCL( variable_expression );
 	SASL_VISIT_DCL( identifier );
 
 	// declaration & type specifier
@@ -90,9 +89,7 @@ public:
 	SASL_VISIT_DCL( case_label );
 	SASL_VISIT_DCL( ident_label );
 	SASL_VISIT_DCL( switch_statement );
-	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( expression_statement );
-	SASL_VISIT_DCL( jump_statement );
 
 private:
 	virtual bool create_mod( sasl::syntax_tree::program& v );

@@ -7,6 +7,7 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 
@@ -30,6 +31,7 @@
 
 using namespace llvm;
 using namespace sasl::syntax_tree;
+using sasl::semantic::symbol;
 
 using boost::addressof;
 using boost::any_cast;
@@ -73,6 +75,14 @@ SASL_VISIT_DEF( program ){
 	}
 }
 
+SASL_VISIT_DEF( variable_expression ){
+	shared_ptr<symbol> declsym = sc_ptr(data)->sym.lock()->find( v.var_name->str );
+	assert( declsym && declsym->node() );
+
+	sc_ptr(data)->set_storage_and_type( node_ctxt( declsym->node() ) );
+	*node_ctxt(v, true) = *sc_ptr(data);
+}
+
 // Generate normal function code.
 SASL_VISIT_DEF( function_type ){
 	sc_ptr(data)->sym = v.symbol();
@@ -94,6 +104,59 @@ SASL_VISIT_DEF( variable_declaration ){
 	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
 		visit_child( *data, dclr );
 	}
+}
+
+SASL_VISIT_DEF( compound_statement ){
+	sc_ptr(data)->sym = v.symbol();
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	BasicBlock* bb = NULL;
+	// If instruction block is the first block of function, we must create it.
+	if ( sc_inner_ptr(data)->parent_fn->getBasicBlockList().empty() ){
+		bb = BasicBlock::Create(
+				mod_ptr()->context(),
+				v.symbol()->mangled_name(),
+				sc_inner_ptr(data)->parent_fn
+				);
+	}
+	sc_ptr(data)->data().block = bb;
+
+	if(bb){	builder()->SetInsertPoint(bb); }
+
+	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+		it != v.stmts.end(); ++it)
+	{
+		visit_child( child_ctxt, child_ctxt_init, *it );
+	}
+
+	*node_ctxt(v, true) = *( sc_ptr(data) );
+}
+
+SASL_VISIT_DEF( jump_statement ){
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	if (v.jump_expr){
+		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
+	}
+
+	if ( v.code == jump_mode::_return ){
+		return_statement(v, data);
+	} else if ( v.code == jump_mode::_continue ){
+		assert( sc_inner_ptr(data)->continue_to );
+		mod_ptr()->builder()->CreateBr( sc_inner_ptr(data)->continue_to );
+	} else if ( v.code == jump_mode::_break ){
+		assert( sc_inner_ptr(data)->break_to );
+		mod_ptr()->builder()->CreateBr( sc_inner_ptr(data)->break_to );
+	}
+
+	// Restart a new block for sealing the old block.
+	restart_block(data);
+
+	*node_ctxt(v, true) = *sc_ptr(data);
 }
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
@@ -169,6 +232,14 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body );
 		clear_empty_blocks( fn );
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
+	if ( !v.jump_expr ){
+		sc_inner_ptr(data)->return_inst = builder()->CreateRetVoid();
+	} else {
+		sc_inner_ptr(data)->return_inst = builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
 	}
 }
 
