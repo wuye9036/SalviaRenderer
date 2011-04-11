@@ -99,15 +99,21 @@ SASL_VISIT_DEF( variable_expression ){
 	storage_si* var_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
 
 	if ( is_entry( sc_inner_ptr(data)->self_fn ) ){
+		storage_info* var_si = abii->input_storage( sym );
 
-		if( var_ssi->get_semantic() == softart::SV_None ){
-			// If non semantic, it must be local variable.
+		if( var_ssi->get_semantic() == softart::SV_None && !var_si ){
+			// If non semantic and not have abii, it must be local variable.
 			// Use normal data loader.
 			sc_inner_ptr(data)->val = load( varctxt );
 			sc_ptr(data)->set_type( varctxt );
 		} else {
 			// Else the expression is stored as an offsetted space in argument.
-			storage_info* var_si = abii->input_storage( var_ssi->get_semantic() );
+			if( !var_si ){
+				// If it is not global. It must be parameter of entry function.
+				var_si = abii->input_storage( var_ssi->get_semantic() );
+			}
+			assert(var_si);
+
 			sc_ptr(data)->set_storage_and_type( varctxt );
 			sc_inner_ptr(data)->agg.parent = param_ctxts[var_si->storage].get();
 			sc_inner_ptr(data)->val = load( sc_ptr(data) );
@@ -209,6 +215,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	if( abii->is_entry( v.symbol() ) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	} else {
 		parent_class::create_fnargs(v, data);
 	}

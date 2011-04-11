@@ -389,18 +389,18 @@ SASL_VISIT_DEF( if_statement ){
 		);
 	
 	// Fill back if-jump instruction
-	mod_ptr()->builder()->SetInsertPoint( cond_block );
-	mod_ptr()->builder()->CreateCondBr( load( node_ctxt(v.cond) ), yes_block, no_block ? no_block : aggregate_block );
+	builder()->SetInsertPoint( cond_block );
+	builder()->CreateCondBr( load( node_ctxt(v.cond) ), yes_block, no_block ? no_block : aggregate_block );
 
 	// Fill back jump out instruct of each branch.
-	mod_ptr()->builder()->SetInsertPoint( after_yes_block );
-	mod_ptr()->builder()->CreateBr( aggregate_block );
+	builder()->SetInsertPoint( after_yes_block );
+	builder()->CreateBr( aggregate_block );
 	
-	mod_ptr()->builder()->SetInsertPoint( after_no_block );
-	mod_ptr()->builder()->CreateBr( aggregate_block );
+	builder()->SetInsertPoint( after_no_block );
+	builder()->CreateBr( aggregate_block );
 
 	// Set insert point to end of code.
-	mod_ptr()->builder()->SetInsertPoint( aggregate_block );
+	builder()->SetInsertPoint( aggregate_block );
 
 	*node_ctxt(v, true) = *sc_ptr(data);
 }

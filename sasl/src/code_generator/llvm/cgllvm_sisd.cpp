@@ -306,17 +306,41 @@ cgllvm_modimpl* cgllvm_sisd::mod_ptr(){
 }
 
 llvm::Value* cgllvm_sisd::load( boost::any* data ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return load( sc_ptr(data) );
 }
 
 llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	assert(data);
+	Value* val = data->data().val;
+	do{
+
+		if( val ){ break; }
+		if( data->data().local ){
+			val = builder()->CreateLoad( data->data().local );
+			break;
+		}
+		if( data->data().global ){
+			val = builder()->CreateLoad( data->data().global );
+			break;
+		}
+		if( data->data().agg.parent ){
+			val = load( data->data().agg.parent );
+			val = builder()->CreateExtractValue( val, data->data().agg.index );
+			break;
+		}
+		
+		assert(!"Here is an invalid path!");
+	} while(0);
+
+	if( data->data().is_ref ){
+		val = builder()->CreateLoad( val );
+	}
+
+	return val;
 }
 
-void cgllvm_sisd::store( llvm::Value*, boost::any* data ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+void cgllvm_sisd::store( llvm::Value* v, boost::any* data ){
+	store(v, sc_ptr(data) );
 }
 
 void cgllvm_sisd::store( llvm::Value*, cgllvm_sctxt* data ){
