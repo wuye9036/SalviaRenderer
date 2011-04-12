@@ -98,7 +98,8 @@ private:
 	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
 
 	llvm::Function* entry_fn;
-	
+	sasl::semantic::symbol* entry_sym;
+
 	boost::shared_ptr<cgllvm_sctxt> param_ctxts[sasl::semantic::storage_types_count];
 
 	std::vector< llvm::Type const* > entry_params_types[sasl::semantic::storage_types_count];

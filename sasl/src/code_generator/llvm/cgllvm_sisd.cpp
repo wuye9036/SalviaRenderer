@@ -93,7 +93,8 @@ SASL_VISIT_DEF( function_type ){
 		create_fnbody( v, data );
 	}
 
-	*node_ctxt(v, true) = *( sc_ptr(data) );
+	// Here use the definition node.
+	*node_ctxt(v.symbol()->node(), true) = *( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( declarator ){
@@ -334,12 +335,45 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	return val;
 }
 
+
+llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
+	cgllvm_sctxt_data* inner_data = &data->data();
+
+	Value* addr = NULL;
+	if( inner_data->val ){ addr = NULL; }
+	if( inner_data->local ){
+		addr = inner_data->local;
+	}
+	if( inner_data->global ){
+		addr = inner_data->global;
+	}
+	if( inner_data->agg.parent ){
+		Value* indexes[2];
+		indexes[0] = ConstantInt::get( Type::getInt32Ty(llcontext()), 0 );
+		indexes[1] = ConstantInt::get( Type::getInt32Ty(llcontext()), inner_data->agg.index );
+		addr = builder()->CreateGEP(
+			load_ptr( inner_data->agg.parent ), indexes, indexes + 2
+			);
+	}
+
+	if( inner_data->is_ref ){
+		if( !addr ){
+			addr = inner_data->val;
+		} else {
+			addr = builder()->CreateLoad( addr );
+		}
+	}
+
+	return addr;
+}
+
 void cgllvm_sisd::store( llvm::Value* v, boost::any* data ){
 	store(v, sc_ptr(data) );
 }
 
-void cgllvm_sisd::store( llvm::Value*, cgllvm_sctxt* data ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
+	Value* addr = load_ptr( data );
+	builder()->CreateStore( v, addr );
 }
 
 
@@ -374,11 +408,16 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 			if( next_it != fn->getBasicBlockList().end() ){
 				mod_ptr()->builder()->CreateBr( &(*next_it) );
 			} else {
-				Value* val = zero_value( fn->getReturnType() );
-				mod_ptr()->builder()->CreateRet(val);
+				if( !fn->getReturnType()->isVoidTy() ){
+					Value* val = zero_value( fn->getReturnType() );
+					builder()->CreateRet(val);
+				} else {
+					builder()->CreateRetVoid();
+				}
 			}
 		}
 	}
 }
+
 
 END_NS_SASL_CODE_GENERATOR();

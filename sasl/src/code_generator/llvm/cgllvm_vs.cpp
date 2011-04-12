@@ -13,6 +13,8 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Function.h>
+#include <llvm/Module.h>
+#include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -54,6 +56,25 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
 	// It is easy to compute struct layout.
 	// TODO support aligned and unpacked layout in future.
 	entry_params_structs[st].data() = StructType::get( mod_ptr()->context(), entry_params_types[st], true );
+
+	char const* struct_name = NULL;
+	switch( st ){
+	case stream_in:
+		struct_name = "0.struct.stri";
+		break;
+	case buffer_in:
+		struct_name = "0.struct.bufi";
+		break;
+	case stream_out:
+		struct_name = "0.struct.stro";
+		break;
+	case buffer_out:
+		struct_name = "0.struct.bufo";
+		break;
+	}
+	assert( struct_name );
+
+	llmodule()->addTypeName( struct_name, entry_params_structs[st].data() );
 }
 
 void cgllvm_vs::create_entry_params(){
@@ -81,6 +102,9 @@ void cgllvm_vs::add_entry_param_type( boost::any* data, storage_types st, vector
 
 void cgllvm_vs::copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& v ){
 	cgllvm_sctxt* expr_ctxt = node_ctxt(v);
+	cgllvm_sctxt* ret_ctxt = node_ctxt( entry_sym->node(), false );
+
+	store( load(expr_ctxt), ret_ctxt );
 }
 
 // expressions
@@ -201,7 +225,7 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
-	if( abii->is_entry( v.symbol() ) ){
+	if( !entry_fn && abii->is_entry( v.symbol() ) ){
 
 		boost::any child_ctxt;
 
@@ -214,9 +238,11 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy(llcontext()), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.name->str, llmodule() );
 		entry_fn = fn;
+		entry_sym = v.symbol().get();
 
 		sc_inner_ptr(data)->val_type = fntype;
 		sc_inner_ptr(data)->self_fn = fn;
+
 	} else {
 		parent_class::create_fnsig(v, data);
 	}
@@ -231,25 +257,44 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 
 		cgllvm_sctxt* psctxt = new cgllvm_sctxt();
 		param_ctxts[stream_in].reset( psctxt );
+		arg_it->setName( "0.arg.stri" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[stream_in].data();
 
+		psctxt = new cgllvm_sctxt();
 		param_ctxts[buffer_in].reset( psctxt );
+		arg_it->setName( "0.arg.bufi" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[buffer_in].data();
 
+		psctxt = new cgllvm_sctxt();
 		param_ctxts[stream_out].reset( psctxt );
+		arg_it->setName( "0.arg.stro" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[stream_out].data();
 
+		psctxt = new cgllvm_sctxt();
 		param_ctxts[buffer_out].reset( psctxt );
+		arg_it->setName( "0.arg.bufo" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[buffer_out].data();
 
+		psctxt = node_ctxt(v.symbol()->node(), true );
+		storage_si* fn_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
+		if( fn_ssi->get_semantic() != softart::SV_None ){
+			storage_info* si = abii->output_storage( fn_ssi->get_semantic() );
+			if( si->storage == stream_out ){
+				psctxt->data().is_ref = true;
+			} else {
+				psctxt->data().is_ref = false;
+			}
+			psctxt->data().agg.index = si->index;
+			psctxt->data().agg.parent = param_ctxts[si->storage].get();
+		}
 	} else {
 		parent_class::create_fnargs(v, data);
 	}
@@ -259,16 +304,14 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	assert( sc_inner_ptr(data)->parent_fn );
 	if( is_entry( sc_inner_ptr(data)->parent_fn ) ){
 		assert( v.jump_expr );
-		
-		EFLIB_ASSERT_UNIMPLEMENTED();
-
+		copy_to_result( v.jump_expr );
 		sc_inner_ptr(data)->return_inst = builder()->CreateRetVoid();
 	} else {
 		parent_class::return_statement(v, data);
 	}
 }
 
-cgllvm_vs::cgllvm_vs(): entry_fn(NULL){}
+cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL){}
 
 bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
 	assert(fn && entry_fn);

@@ -76,6 +76,7 @@ protected:
 	llvm::Value* load( boost::any* data );
 	llvm::Value* load( cgllvm_sctxt* data );
 	
+	llvm::Value* load_ptr( cgllvm_sctxt* data );
 	void store( llvm::Value*, boost::any* data );
 	void store( llvm::Value*, cgllvm_sctxt* data );
 	
