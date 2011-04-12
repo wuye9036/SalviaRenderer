@@ -204,11 +204,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	Function* fn = sc_inner_ptr(data)->self_fn;
 
-	any child_ctxt_init = *data;
-	sc_inner_ptr(&child_ctxt_init)->parent_fn = fn;
-
-	any child_ctxt;
-
 	// Register arguments names.
 	Function::arg_iterator arg_it = fn->arg_begin();
 	for( size_t arg_idx = 0; arg_idx < fn->arg_size(); ++arg_idx, ++arg_it){

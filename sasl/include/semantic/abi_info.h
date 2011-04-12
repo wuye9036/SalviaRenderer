@@ -76,26 +76,30 @@ private:
 	void compute_layout();
 
 	void compute_input_semantics_layout();
-	void compute_output_semantics_layout();
-	void compute_input_stream_layout();
+	void compute_output_buffer_layout();
 	void compute_output_stream_layout();
 	void compute_input_constant_layout();
 
 	module_si* mod;
 	symbol* entry_point;
 
+	// Include stream_in and buffer_in
 	std::vector< softart::semantic > sems_in;
 	typedef boost::unordered_map< softart::semantic, storage_info > sem_storages_t;
 	sem_storages_t semin_storages;
 
+	// for uniform only.
 	std::vector< symbol* > syms_in;
 	typedef boost::unordered_map< symbol*, storage_info > sym_storages_t;
 	sym_storages_t symin_storages;
 
+	// Include stream_out and buffer_out
 	std::vector< softart::semantic > sems_out;
 	boost::unordered_map< softart::semantic, storage_info > semout_storages;
 
-	int sems_in_size;
+	// The count and offsets of 
+	int counts[sasl::semantic::storage_types_count];
+	int offsets[sasl::semantic::storage_types_count];
 };
 
 END_NS_SASL_SEMANTIC();

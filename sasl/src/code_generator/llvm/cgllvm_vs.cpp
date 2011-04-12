@@ -5,6 +5,7 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
+#include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
 
 #include <eflib/include/diagnostics/assert.h>
@@ -42,7 +43,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
 		bool sign(false);
 		Type const* storage_llvm_type = llvm_type(si->sv_type, sign );
 		assert(storage_llvm_type);
-		if( stream_in == st ){
+		if( stream_in == st || stream_out == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
 		} else {
 			entry_params_types[st].push_back( storage_llvm_type );
@@ -51,7 +52,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
 	
 	// Here we create packed data.
 	// It is easy to compute struct layout.
-	// TODO support aligned and packed layout in future.
+	// TODO support aligned and unpacked layout in future.
 	entry_params_structs[st].data() = StructType::get( mod_ptr()->context(), entry_params_types[st], true );
 }
 
@@ -76,6 +77,10 @@ void cgllvm_vs::add_entry_param_type( boost::any* data, storage_types st, vector
 	param_ctxts[st].reset(ctxt);
 
 	par_types.push_back(parref_type);
+}
+
+void cgllvm_vs::copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& v ){
+	cgllvm_sctxt* expr_ctxt = node_ctxt(v);
 }
 
 // expressions
@@ -156,6 +161,8 @@ SASL_VISIT_DEF( declarator ){
 	sc_ptr(data)->data().agg.index = psi->index;
 	if( psi->storage == stream_in || psi->storage == stream_out ){
 		sc_ptr(data)->data().is_ref = true;
+	} else {
+		sc_ptr(data)->data().is_ref = false;
 	}
 
 	if (v.init){
@@ -196,11 +203,13 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	if( abii->is_entry( v.symbol() ) ){
 
+		boost::any child_ctxt;
+
 		vector<Type const*> param_types;
-		add_entry_param_type( data, stream_in, param_types );
-		add_entry_param_type( data, buffer_in, param_types );
-		add_entry_param_type( data, stream_out, param_types );
-		add_entry_param_type( data, buffer_out, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), stream_in, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), buffer_in, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), stream_out, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), buffer_out, param_types );
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy(llcontext()), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.name->str, llmodule() );
@@ -214,8 +223,33 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
+	Function* fn = sc_inner_ptr(data)->self_fn;
+
 	if( abii->is_entry( v.symbol() ) ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		// Register arguments names.
+		Function::arg_iterator arg_it = fn->arg_begin();
+
+		cgllvm_sctxt* psctxt = new cgllvm_sctxt();
+		param_ctxts[stream_in].reset( psctxt );
+		psctxt->data().val = arg_it++;
+		psctxt->data().is_ref = true;
+		psctxt->data().val_type = entry_params_structs[stream_in].data();
+
+		param_ctxts[buffer_in].reset( psctxt );
+		psctxt->data().val = arg_it++;
+		psctxt->data().is_ref = true;
+		psctxt->data().val_type = entry_params_structs[buffer_in].data();
+
+		param_ctxts[stream_out].reset( psctxt );
+		psctxt->data().val = arg_it++;
+		psctxt->data().is_ref = true;
+		psctxt->data().val_type = entry_params_structs[stream_out].data();
+
+		param_ctxts[buffer_out].reset( psctxt );
+		psctxt->data().val = arg_it++;
+		psctxt->data().is_ref = true;
+		psctxt->data().val_type = entry_params_structs[buffer_out].data();
+
 	} else {
 		parent_class::create_fnargs(v, data);
 	}
@@ -224,7 +258,11 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	assert( sc_inner_ptr(data)->parent_fn );
 	if( is_entry( sc_inner_ptr(data)->parent_fn ) ){
+		assert( v.jump_expr );
+		
 		EFLIB_ASSERT_UNIMPLEMENTED();
+
+		sc_inner_ptr(data)->return_inst = builder()->CreateRetVoid();
 	} else {
 		parent_class::return_statement(v, data);
 	}

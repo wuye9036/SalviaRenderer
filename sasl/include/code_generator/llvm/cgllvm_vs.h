@@ -94,8 +94,8 @@ private:
 
 	void create_entry_params();
 	void add_entry_param_type( boost::any* data, sasl::semantic::storage_types st, std::vector< llvm::Type const* >& par_types );
-
 	void fill_llvm_type_from_si( sasl::semantic::storage_types st );
+	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
 
 	llvm::Function* entry_fn;
 	

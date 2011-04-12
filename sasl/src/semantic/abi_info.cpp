@@ -15,12 +15,15 @@ BEGIN_NS_SASL_SEMANTIC();
 
 storage_info::storage_info()
 	: index(-1), offset(0), size(0), storage(storage_none), sv_type( builtin_type_code::none )
-{}
+{
+}
 
 abi_info::abi_info()
-	: mod(NULL), entry_point(NULL), lang(softart::lang_none),
-	sems_in_size(0)
-{}
+	: mod(NULL), entry_point(NULL), lang(softart::lang_none)
+{
+	memset( counts, 0, sizeof(counts) );
+	memset( offsets, 0, sizeof(offsets) );
+}
 
 void abi_info::module( shared_ptr<module_si> const& v ){
 	mod = v.get();
@@ -133,8 +136,7 @@ void abi_info::compute_layout(){
 	}
 
 	compute_input_semantics_layout();
-	compute_input_stream_layout();
-	compute_output_semantics_layout();
+	compute_output_buffer_layout();
 	compute_output_stream_layout();
 	compute_input_constant_layout();
 }
@@ -168,44 +170,26 @@ std::vector<storage_info*> abi_info::storage_infos( storage_types st ) const{
 }
 
 void abi_info::compute_input_semantics_layout(){
-	int offset = 0;
-	int valid_semantic_index = 0;
-	for ( size_t index = 0; index < sems_in.size(); ++index ){
-
-		storage_info* pstorage = input_storage( sems_in[index] );
-		assert( pstorage );
-		if ( pstorage->storage == buffer_in ){
-			
-			pstorage->index = valid_semantic_index++;
-			pstorage->offset = offset;
-			int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
-			pstorage->size = size;
-			offset += size;
-
-		}
-
-	}
-	sems_in_size = offset;
-}
-
-void abi_info::compute_input_stream_layout(){
-	int const ptr_size = static_cast<int>( sizeof( void* ) );
-	int valid_semantic_index = 0;
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
 
 		storage_info* pstorage = input_storage( sems_in[index] );
 		assert( pstorage );
 
-		if( pstorage->storage == stream_in ){
-			pstorage->index =  valid_semantic_index;
-			pstorage->offset = ( valid_semantic_index++ ) * ptr_size;
-			pstorage->size = ptr_size;
-		}
+		pstorage->index =  counts[pstorage->storage];
+		pstorage->offset = offsets[pstorage->storage];
+		pstorage->size = 
+			pstorage->storage == buffer_in ?
+			static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) )
+			: static_cast<int> ( sizeof(void*) )
+			;
+
+		counts[pstorage->storage]++;
+		offsets[pstorage->storage] += pstorage->size;
 
 	}
 }
 
-void abi_info::compute_output_semantics_layout(){
+void abi_info::compute_output_buffer_layout(){
 	int offset = 0;
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
 		storage_info* pstorage = alloc_output_storage( sems_in[index] );
@@ -224,19 +208,18 @@ void abi_info::compute_output_stream_layout()
 }
 
 void abi_info::compute_input_constant_layout(){
-	int offset = sems_in_size;
-	int index_base = static_cast<int>( sems_in.size() );
-
 	for ( size_t index = 0; index < syms_in.size(); ++index ){
 		storage_info* pstorage = addressof( symin_storages[ syms_in[index] ] );
 		pstorage->storage = buffer_in;
-		pstorage->index = static_cast<int>( index + index_base );
-		pstorage->offset = offset;
+		pstorage->index = counts[buffer_in];
+		pstorage->offset = offsets[buffer_in];
+
 		int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
 		pstorage->size = size;
-		offset += size;
+
+		counts[buffer_in]++;
+		offsets[buffer_in] += size;
 	}
-	sems_in_size = offset;
 }
 
 
