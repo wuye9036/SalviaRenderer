@@ -35,6 +35,19 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 //
 // Remarks:
 class cgllvm_sctxt;
+
+struct cgllvm_sctxt_env{
+	cgllvm_sctxt_env();
+
+	bool is_semantic_mode;
+
+	llvm::Function* parent_fn;	// If generating code in function, it will be used.
+	llvm::BasicBlock* block;
+	
+	boost::weak_ptr< sasl::semantic::symbol > sym;
+	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
+};
+
 struct cgllvm_sctxt_data{
 	cgllvm_sctxt_data();
 
@@ -50,8 +63,7 @@ struct cgllvm_sctxt_data{
 	//  is_ref = true
 	// load() = *(int*)value;
 	// *(int*)value = store()
-	bool is_ref;						
-	
+	bool is_ref;
 	llvm::Value* val;					// Argument and constant
 	llvm::GlobalVariable* global;
 	llvm::AllocaInst* local;
@@ -60,13 +72,12 @@ struct cgllvm_sctxt_data{
 		int index;
 	} agg;
 
+	bool is_semantic_mode;
+
 	// Functions
-	llvm::Function* parent_fn;	// If generating code in function, it will be used.
 	llvm::Function* self_fn;	// used by function type.
 
 	// Code blocks
-	llvm::BasicBlock* block;
-
 	llvm::BasicBlock* continue_to;
 	llvm::BasicBlock* break_to;
 
@@ -84,18 +95,34 @@ public:
 	typedef codegen_context base_type;
 	cgllvm_sctxt();
 
-	boost::weak_ptr< sasl::semantic::symbol > sym;
-	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
+	cgllvm_sctxt( cgllvm_sctxt const& );
+	cgllvm_sctxt& operator = ( cgllvm_sctxt const& );
 
+	// Copy all
+	void copy( cgllvm_sctxt const* rhs );
+
+	// Copy environment and data
+	cgllvm_sctxt_env& env();
+	cgllvm_sctxt_env const& env() const;
+
+	void env( cgllvm_sctxt const* rhs );
+	void env( cgllvm_sctxt_env const& );
+
+	void clear_data();
 	cgllvm_sctxt_data& data();
 	cgllvm_sctxt_data const& data() const;
 
-	void set_storage( cgllvm_sctxt const* rhs );
-	void set_type( cgllvm_sctxt const* rhs );
-	void set_storage_and_type( cgllvm_sctxt* rhs );
+	void data( cgllvm_sctxt_data const& rhs );
+	void data( cgllvm_sctxt const* rhs );
+
+	// Copy some special members
+	void storage( cgllvm_sctxt const* rhs );
+	void type( cgllvm_sctxt const* rhs );
+	void storage_and_type( cgllvm_sctxt* rhs );
 
 private:
 	cgllvm_sctxt_data hold_data;
+	cgllvm_sctxt_env hold_env;
 };
 
 END_NS_SASL_CODE_GENERATOR();

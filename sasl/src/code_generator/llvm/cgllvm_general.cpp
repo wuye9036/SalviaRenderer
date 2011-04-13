@@ -81,8 +81,8 @@ void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_
 
 	store( load( node_ctxt(rexpr) ), node_ctxt(lexpr) );
 
-	sc_inner_ptr(data)->val_type = node_ctxt(lexpr)->data().val_type;
-	sc_inner_ptr(data)->local = node_ctxt(lexpr)->data().local;
+	sc_data_ptr(data)->val_type = node_ctxt(lexpr)->data().val_type;
+	sc_data_ptr(data)->local = node_ctxt(lexpr)->data().local;
 }
 
 SASL_VISIT_DEF_UNIMPL( unary_expression );
@@ -106,8 +106,8 @@ SASL_VISIT_DEF( cast_expression ){
 	}
 
 	cgllvm_sctxt* vctxt = node_ctxt(v, false);
-	sc_inner_ptr(data)->val_type = vctxt->data().val_type;
-	sc_inner_ptr(data)->val = load( vctxt );
+	sc_data_ptr(data)->val_type = vctxt->data().val_type;
+	sc_data_ptr(data)->val = load( vctxt );
 }
 
 SASL_VISIT_DEF( binary_expression ){
@@ -131,7 +131,7 @@ SASL_VISIT_DEF( binary_expression ){
 		args += v.left_expr, v.right_expr;
 
 		symbol::overloads_t overloads
-			= sc_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
+			= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
 
 		EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
 			return;
@@ -202,7 +202,7 @@ SASL_VISIT_DEF( binary_expression ){
 		store( retval, sc_ptr(data) );
 	}
 
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( expression_list );
@@ -233,7 +233,7 @@ SASL_VISIT_DEF( constant_expression ){
 	}
 
 	store( retval, sc_ptr(data) );
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( identifier );
@@ -247,24 +247,24 @@ SASL_VISIT_DEF( expression_initializer ){
 	visit_child( child_ctxt, child_ctxt_init, v.init_expr );
 
 	shared_ptr<type_info_si> init_tsi = extract_semantic_info<type_info_si>(v.handle());
-	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(sc_ptr(data)->variable_to_fill.lock());
+	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(sc_env_ptr(data)->variable_to_fill.lock());
 
 	if( init_tsi->entry_id() != var_tsi->entry_id() ){
 		typeconv->convert( var_tsi->type_info(), v.init_expr );
 	}
 
-	sc_ptr(data)->set_storage_and_type( sc_ptr(child_ctxt) );
-	*node_ctxt(v, true) = *sc_ptr(data);
+	sc_ptr(data)->storage_and_type( sc_ptr(child_ctxt) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF( declarator ){
 	any child_ctxt_init = *data;
-	sc_ptr( child_ctxt_init )->variable_to_fill = v.handle();
+	sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.handle();
 	any child_ctxt;
 
-	Function* parent_func = sc_ptr(data)->data().parent_fn;
+	Function* parent_func = sc_env_ptr(data)->parent_fn;
 
 	create_alloca( sc_ptr(data), v.name->str );
 
@@ -278,7 +278,7 @@ SASL_VISIT_DEF( declarator ){
 		}
 	}
 
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 SASL_VISIT_DEF( variable_declaration ){
 	any child_ctxt_init = *data;
@@ -293,7 +293,7 @@ SASL_VISIT_DEF( variable_declaration ){
 		visit_child( child_ctxt, child_ctxt_init, decl );
 	}
 
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
@@ -318,25 +318,25 @@ SASL_VISIT_DEF( builtin_type ){
 	sc_ptr(data)->data().val_type = ret_type;
 	sc_ptr(data)->data().is_signed = sign;
 
-	*node_ctxt( tisi->type_info(), true ) = *(sc_ptr(data));
+	node_ctxt( tisi->type_info(), true )->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF( parameter ){
 
-	sc_ptr(data)->sym = v.symbol();
+	sc_env_ptr(data)->sym = v.symbol();
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.param_type );
-	sc_ptr(data)->set_type( sc_ptr(child_ctxt) );
+	sc_ptr(data)->type( sc_ptr(child_ctxt) );
 	if (v.init){
 		visit_child( child_ctxt, child_ctxt_init, v.init );
 	} 
 
-	*node_ctxt(v, true) = *(sc_ptr(data));
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 
 }
 
@@ -352,7 +352,7 @@ SASL_VISIT_DEF( declaration_statement ){
 
 	visit_child( child_ctxt, child_ctxt_init, v.decl );
 
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 SASL_VISIT_DEF( if_statement ){
 	any child_ctxt_init = *data;
@@ -367,7 +367,7 @@ SASL_VISIT_DEF( if_statement ){
 	BasicBlock* cond_block = mod_ptr()->builder()->GetInsertBlock();
 
 	// Generate 'then' branch code.
-	BasicBlock* yes_block = BasicBlock::Create( mod_ptr()->context(), v.yes_stmt->symbol()->mangled_name(), sc_inner_ptr(data)->parent_fn );
+	BasicBlock* yes_block = BasicBlock::Create( mod_ptr()->context(), v.yes_stmt->symbol()->mangled_name(), sc_env_ptr(data)->parent_fn );
 	mod_ptr()->builder()->SetInsertPoint( yes_block );
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
 	BasicBlock* after_yes_block = mod_ptr()->builder()->GetInsertBlock();
@@ -375,7 +375,7 @@ SASL_VISIT_DEF( if_statement ){
 	// Generate 'else' branch code.
 	BasicBlock* no_block = NULL;
 	if( v.no_stmt ){
-		no_block = BasicBlock::Create( mod_ptr()->context(), v.no_stmt->symbol()->mangled_name(), sc_inner_ptr(data)->parent_fn );
+		no_block = BasicBlock::Create( mod_ptr()->context(), v.no_stmt->symbol()->mangled_name(), sc_env_ptr(data)->parent_fn );
 		mod_ptr()->builder()->SetInsertPoint( no_block );
 		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
 	}
@@ -385,7 +385,7 @@ SASL_VISIT_DEF( if_statement ){
 	BasicBlock* aggregate_block = BasicBlock::Create(
 			mod_ptr()->context(),
 			extract_semantic_info<statement_si>(v)->exit_point().c_str(),
-			sc_inner_ptr(data)->parent_fn
+			sc_env_ptr(data)->parent_fn
 		);
 	
 	// Fill back if-jump instruction
@@ -402,7 +402,7 @@ SASL_VISIT_DEF( if_statement ){
 	// Set insert point to end of code.
 	builder()->SetInsertPoint( aggregate_block );
 
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( while_statement );
@@ -416,7 +416,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 	visit_child( child_ctxt, child_ctxt_init, v.expr );
 
-	*node_ctxt(v, true) = *( sc_ptr(data) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( ident_label );

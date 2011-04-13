@@ -89,7 +89,7 @@ void cgllvm_vs::add_entry_param_type( boost::any* data, storage_types st, vector
 	PointerType* parref_type = PointerType::getUnqual( par_type );
 
 	cgllvm_sctxt* ctxt = new cgllvm_sctxt();
-	*ctxt = *sc_ptr(data);
+	ctxt->copy( sc_ptr(data) );
 
 	ctxt->data().val_type = par_type;
 	ctxt->data().ref_type = parref_type;
@@ -127,14 +127,14 @@ SASL_VISIT_DEF( variable_expression ){
 	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
 	storage_si* var_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
 
-	if ( is_entry( sc_inner_ptr(data)->self_fn ) ){
+	if ( is_entry( sc_data_ptr(data)->self_fn ) ){
 		storage_info* var_si = abii->input_storage( sym );
 
 		if( var_ssi->get_semantic() == softart::SV_None && !var_si ){
 			// If non semantic and not have abii, it must be local variable.
 			// Use normal data loader.
-			sc_inner_ptr(data)->val = load( varctxt );
-			sc_ptr(data)->set_type( varctxt );
+			sc_data_ptr(data)->val = load( varctxt );
+			sc_ptr(data)->type( varctxt );
 		} else {
 			// Else the expression is stored as an offsetted space in argument.
 			if( !var_si ){
@@ -143,12 +143,12 @@ SASL_VISIT_DEF( variable_expression ){
 			}
 			assert(var_si);
 
-			sc_ptr(data)->set_storage_and_type( varctxt );
-			sc_inner_ptr(data)->agg.parent = param_ctxts[var_si->storage].get();
-			sc_inner_ptr(data)->val = load( sc_ptr(data) );
+			sc_ptr(data)->storage_and_type( varctxt );
+			sc_data_ptr(data)->agg.parent = param_ctxts[var_si->storage].get();
+			sc_data_ptr(data)->val = load( sc_ptr(data) );
 		}
 
-		*node_ctxt(v, true) = *sc_ptr(data);
+		node_ctxt(v, true)->copy( sc_ptr(data) );
 
 	} else {
 		parent_class::visit( v, data );
@@ -163,12 +163,12 @@ SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF( declarator ){
-	sc_ptr(data)->sym = v.symbol();
+	sc_env_ptr(data)->sym = v.symbol();
 
 	storage_si* pssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
 
 	// Local variable will call parent version.
-	if( sc_inner_ptr(data)->parent_fn ){
+	if( sc_env_ptr(data)->parent_fn ){
 		parent_class::visit( v, data );
 	}
 
@@ -193,7 +193,7 @@ SASL_VISIT_DEF( declarator ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
@@ -240,8 +240,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		entry_fn = fn;
 		entry_sym = v.symbol().get();
 
-		sc_inner_ptr(data)->val_type = fntype;
-		sc_inner_ptr(data)->self_fn = fn;
+		sc_data_ptr(data)->val_type = fntype;
+		sc_data_ptr(data)->self_fn = fn;
 
 	} else {
 		parent_class::create_fnsig(v, data);
@@ -249,7 +249,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	Function* fn = sc_inner_ptr(data)->self_fn;
+	Function* fn = sc_data_ptr(data)->self_fn;
 
 	if( abii->is_entry( v.symbol() ) ){
 		// Register arguments names.
@@ -301,11 +301,11 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
-	assert( sc_inner_ptr(data)->parent_fn );
-	if( is_entry( sc_inner_ptr(data)->parent_fn ) ){
+	assert( sc_env_ptr(data)->parent_fn );
+	if( is_entry( sc_env_ptr(data)->parent_fn ) ){
 		assert( v.jump_expr );
 		copy_to_result( v.jump_expr );
-		sc_inner_ptr(data)->return_inst = builder()->CreateRetVoid();
+		sc_data_ptr(data)->return_inst = builder()->CreateRetVoid();
 	} else {
 		parent_class::return_statement(v, data);
 	}
@@ -331,7 +331,7 @@ bool cgllvm_vs::create_mod( sasl::syntax_tree::program& v )
 }
 
 boost::shared_ptr<sasl::semantic::symbol> cgllvm_vs::find_symbol( cgllvm_sctxt* data, std::string const& str ){
-	return data->sym.lock()->find( str );
+	return data->env().sym.lock()->find( str );
 }
 
 END_NS_SASL_CODE_GENERATOR();

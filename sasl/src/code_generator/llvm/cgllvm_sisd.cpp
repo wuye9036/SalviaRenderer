@@ -76,16 +76,16 @@ SASL_VISIT_DEF( program ){
 }
 
 SASL_VISIT_DEF( variable_expression ){
-	shared_ptr<symbol> declsym = sc_ptr(data)->sym.lock()->find( v.var_name->str );
+	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
 
-	sc_ptr(data)->set_storage_and_type( node_ctxt( declsym->node() ) );
-	*node_ctxt(v, true) = *sc_ptr(data);
+	sc_ptr(data)->storage_and_type( node_ctxt( declsym->node() ) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 // Generate normal function code.
 SASL_VISIT_DEF( function_type ){
-	sc_ptr(data)->sym = v.symbol();
+	sc_env_ptr(data)->sym = v.symbol();
 
 	create_fnsig( v, data );
 	if ( v.body ){
@@ -94,7 +94,7 @@ SASL_VISIT_DEF( function_type ){
 	}
 
 	// Here use the definition node.
-	*node_ctxt(v.symbol()->node(), true) = *( sc_ptr(data) );
+	node_ctxt(v.symbol()->node(), true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( declarator ){
@@ -108,21 +108,21 @@ SASL_VISIT_DEF( variable_declaration ){
 }
 
 SASL_VISIT_DEF( compound_statement ){
-	sc_ptr(data)->sym = v.symbol();
+	sc_env_ptr(data)->sym = v.symbol();
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
 	BasicBlock* bb = NULL;
 	// If instruction block is the first block of function, we must create it.
-	if ( sc_inner_ptr(data)->parent_fn->getBasicBlockList().empty() ){
+	if ( sc_env_ptr(data)->parent_fn->getBasicBlockList().empty() ){
 		bb = BasicBlock::Create(
 				mod_ptr()->context(),
 				v.symbol()->mangled_name(),
-				sc_inner_ptr(data)->parent_fn
+				sc_env_ptr(data)->parent_fn
 				);
 	}
-	sc_ptr(data)->data().block = bb;
+	sc_env_ptr(data)->block = bb;
 
 	if(bb){	builder()->SetInsertPoint(bb); }
 
@@ -132,7 +132,7 @@ SASL_VISIT_DEF( compound_statement ){
 		visit_child( child_ctxt, child_ctxt_init, *it );
 	}
 
-	*node_ctxt(v, true) = *( sc_ptr(data) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );;
 }
 
 SASL_VISIT_DEF( jump_statement ){
@@ -147,17 +147,17 @@ SASL_VISIT_DEF( jump_statement ){
 	if ( v.code == jump_mode::_return ){
 		return_statement(v, data);
 	} else if ( v.code == jump_mode::_continue ){
-		assert( sc_inner_ptr(data)->continue_to );
-		mod_ptr()->builder()->CreateBr( sc_inner_ptr(data)->continue_to );
+		assert( sc_data_ptr(data)->continue_to );
+		mod_ptr()->builder()->CreateBr( sc_data_ptr(data)->continue_to );
 	} else if ( v.code == jump_mode::_break ){
-		assert( sc_inner_ptr(data)->break_to );
-		mod_ptr()->builder()->CreateBr( sc_inner_ptr(data)->break_to );
+		assert( sc_data_ptr(data)->break_to );
+		mod_ptr()->builder()->CreateBr( sc_data_ptr(data)->break_to );
 	}
 
 	// Restart a new block for sealing the old block.
 	restart_block(data);
 
-	*node_ctxt(v, true) = *sc_ptr(data);
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
@@ -179,14 +179,14 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 	// Generate return types.
 	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
-	Type const* ret_type = sc_inner_ptr(data)->val_type;
+	Type const* ret_type = sc_data_ptr(data)->val_type;
 	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){ return; }
 
 	// Generate paramenter types.
 	vector<Type const*> param_types;
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
 		visit_child( child_ctxt, child_ctxt_init, par );
-		Type const* par_lltype = sc_inner_ptr(&child_ctxt)->val_type;
+		Type const* par_lltype = sc_data_ptr(&child_ctxt)->val_type;
 		if ( par_lltype ){
 			param_types.push_back( par_lltype );
 		} else {
@@ -196,14 +196,14 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 	// Create function.
 	FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
-	sc_inner_ptr(data)->val_type = ftype;
+	sc_data_ptr(data)->val_type = ftype;
 
 	Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.name->str, llmodule() );
-	sc_inner_ptr(data)->self_fn = fn;
+	sc_data_ptr(data)->self_fn = fn;
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	Function* fn = sc_inner_ptr(data)->self_fn;
+	Function* fn = sc_data_ptr(data)->self_fn;
 
 	// Register arguments names.
 	Function::arg_iterator arg_it = fn->arg_begin();
@@ -217,10 +217,10 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-	Function* fn = sc_inner_ptr(data)->self_fn;
+	Function* fn = sc_data_ptr(data)->self_fn;
 
 	any child_ctxt_init = *data;
-	sc_inner_ptr(&child_ctxt_init)->parent_fn = fn;
+	sc_env_ptr(&child_ctxt_init)->parent_fn = fn;
 
 	any child_ctxt;
 
@@ -233,9 +233,9 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	if ( !v.jump_expr ){
-		sc_inner_ptr(data)->return_inst = builder()->CreateRetVoid();
+		sc_data_ptr(data)->return_inst = builder()->CreateRetVoid();
 	} else {
-		sc_inner_ptr(data)->return_inst = builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
+		sc_data_ptr(data)->return_inst = builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
 	}
 }
 
@@ -257,12 +257,20 @@ cgllvm_sctxt* sc_ptr( boost::any* any_val )
 	return any_cast<cgllvm_sctxt>(any_val);
 }
 
-cgllvm_sctxt_data* sc_inner_ptr( boost::any* any_val ){
+cgllvm_sctxt_data* sc_data_ptr( boost::any* any_val ){
 	return addressof( sc_ptr(any_val)->data() );
 }
 
-cgllvm_sctxt_data const* sc_inner_ptr( boost::any const* any_val ){
+cgllvm_sctxt_data const* sc_data_ptr( boost::any const* any_val ){
 	return addressof( sc_ptr(any_val)->data() );
+}
+
+cgllvm_sctxt_env* sc_env_ptr( boost::any* any_val ){
+	return addressof( sc_ptr(any_val)->env() );
+}
+
+cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val ){
+	return addressof( sc_ptr(any_val)->env() );
 }
 
 Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
@@ -292,7 +300,7 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 }
 
 void cgllvm_sisd::restart_block( boost::any* data ){
-	BasicBlock* restart = BasicBlock::Create( llcontext(), "", sc_inner_ptr(data)->parent_fn );
+	BasicBlock* restart = BasicBlock::Create( llcontext(), "", sc_env_ptr(data)->parent_fn );
 	builder()->SetInsertPoint(restart);
 }
 
@@ -382,7 +390,7 @@ void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 	assert( ctxt->data().val_type );
 
 	if( !ctxt->data().global ){
-		Function* parent_fn = ctxt->data().parent_fn;
+		Function* parent_fn = ctxt->env().parent_fn;
 		assert( parent_fn );
 		IRBuilder<> vardecl_builder( mod_ptr()->context() ) ;
 		vardecl_builder.SetInsertPoint( &parent_fn->getEntryBlock(), parent_fn->getEntryBlock().begin() );
