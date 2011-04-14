@@ -200,7 +200,6 @@ SASL_VISIT_DEF( declarator ){
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
-SASL_VISIT_DEF_UNIMPL( builtin_type );
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF_UNIMPL( parameter );
@@ -252,6 +251,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	Function* fn = sc_data_ptr(data)->self_fn;
+	sc_env_ptr(data)->parent_fn = fn;
 
 	if( abii->is_entry( v.symbol() ) ){
 		// Create entry arguments.
@@ -317,6 +317,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 	any child_ctxt;
 
+	goto_insert_block(data);
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
 		visit_child( child_ctxt, child_ctxt_init, par->param_type );
 		storage_si* par_ssi = dynamic_cast<storage_si*>( par->semantic_info().get() );
@@ -334,10 +335,11 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			softart::semantic par_sem = par_ssi->get_semantic();
 			assert( par_sem != softart::SV_None );
 			pctxt->env( sc_ptr(data) );
-			pctxt->data().local = builder()->CreateAlloca( pctxt->data().val_type, 0, v.name->str );
+			create_alloca( pctxt, par->name->str );
 			storage_info* psi = abii->input_storage( par_sem );
 			
 			cgllvm_sctxt tmpctxt;
+			tmpctxt.data().is_ref = (psi->storage == stream_in);
 			tmpctxt.data().agg.parent = param_ctxts[psi->storage].get();
 			tmpctxt.data().agg.index = psi->index;
 

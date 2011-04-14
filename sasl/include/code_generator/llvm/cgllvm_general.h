@@ -73,7 +73,6 @@ public:
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );
-	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( parameter );

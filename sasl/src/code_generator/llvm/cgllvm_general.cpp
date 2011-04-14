@@ -298,28 +298,7 @@ SASL_VISIT_DEF( variable_declaration ){
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
-SASL_VISIT_DEF( builtin_type ){
 
-	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
-
-	if ( node_ctxt( tisi->type_info() ) ){
-		*data = *node_ctxt( tisi->type_info() );
-		return;
-	}
-
-	bool sign = false;
-	Type const* ret_type = llvm_type(v.value_typecode, sign);
-
-	std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
-	EFLIB_ASSERT_AND_IF( ret_type, tips.c_str() ){
-		return;
-	}
-
-	sc_ptr(data)->data().val_type = ret_type;
-	sc_ptr(data)->data().is_signed = sign;
-
-	node_ctxt( tisi->type_info(), true )->copy( sc_ptr(data) );
-}
 
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( struct_type );

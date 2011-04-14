@@ -19,6 +19,7 @@ namespace sasl{
 }
 
 namespace llvm{
+	class BasicBlock;
 	class Constant;
 	class Function;
 	class Value;
@@ -40,6 +41,7 @@ public:
 	SASL_VISIT_DCL( program );
 	SASL_VISIT_DCL( variable_expression );
 
+	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( function_type );
 	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
@@ -83,6 +85,7 @@ protected:
 	
 	void create_alloca( cgllvm_sctxt* data, std::string const& name );
 
+	void goto_insert_block( boost::any* data );
 	void restart_block( boost::any* data );
 	void clear_empty_blocks( llvm::Function* fn );
 

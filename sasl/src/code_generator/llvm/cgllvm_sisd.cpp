@@ -31,7 +31,10 @@
 
 using namespace llvm;
 using namespace sasl::syntax_tree;
+
+using sasl::semantic::extract_semantic_info;
 using sasl::semantic::symbol;
+using sasl::semantic::type_info_si;
 
 using boost::addressof;
 using boost::any_cast;
@@ -83,12 +86,38 @@ SASL_VISIT_DEF( variable_expression ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( builtin_type ){
+
+	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
+
+	cgllvm_sctxt* pctxt = node_ctxt( tisi->type_info(), true );
+	if ( !pctxt->data().val_type ){
+		bool sign = false;
+		Type const* ptype = llvm_type(v.value_typecode, sign);
+
+		std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
+		EFLIB_ASSERT_AND_IF( ptype, tips.c_str() ){
+			return;
+		}
+
+		pctxt->data().val_type = ptype;
+		pctxt->data().is_signed = sign;
+	}
+	sc_ptr( data )->data( pctxt );
+
+	return;
+}
+
 // Generate normal function code.
 SASL_VISIT_DEF( function_type ){
 	sc_env_ptr(data)->sym = v.symbol();
 
-	create_fnsig( v, data );
+	cgllvm_sctxt* fnctxt = node_ctxt(v.symbol()->node(), true);
+	if( !fnctxt->data().self_fn ){
+		create_fnsig( v, data );
+	}
 	if ( v.body ){
+		sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
 		create_fnargs( v, data );
 		create_fnbody( v, data );
 	}
@@ -109,22 +138,10 @@ SASL_VISIT_DEF( variable_declaration ){
 
 SASL_VISIT_DEF( compound_statement ){
 	sc_env_ptr(data)->sym = v.symbol();
+	goto_insert_block(data);
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
-
-	BasicBlock* bb = NULL;
-	// If instruction block is the first block of function, we must create it.
-	if ( sc_env_ptr(data)->parent_fn->getBasicBlockList().empty() ){
-		bb = BasicBlock::Create(
-				mod_ptr()->context(),
-				v.symbol()->mangled_name(),
-				sc_env_ptr(data)->parent_fn
-				);
-	}
-	sc_env_ptr(data)->block = bb;
-
-	if(bb){	builder()->SetInsertPoint(bb); }
 
 	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
@@ -132,7 +149,7 @@ SASL_VISIT_DEF( compound_statement ){
 		visit_child( child_ctxt, child_ctxt_init, *it );
 	}
 
-	node_ctxt(v, true)->copy( sc_ptr(data) );;
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( jump_statement ){
@@ -299,6 +316,27 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
 }
 
+
+void cgllvm_sisd::goto_insert_block( boost::any* data ){
+	cgllvm_sctxt* ctxt = sc_ptr(data);
+
+	// If instruction block is the first block of function, we must create it.
+	if ( sc_env_ptr(data)->parent_fn->getBasicBlockList().empty() ){
+		ctxt->env().block 
+			= BasicBlock::Create(
+				mod_ptr()->context(),
+				// TODO The name will be discussed.
+				sc_env_ptr(data)->sym.lock()->unique_name(), 
+				sc_env_ptr(data)->parent_fn
+				);
+	}
+
+	// If function has blocks yet and env without any block, it is not correct case.
+	assert( ctxt->env().block );
+
+	builder()->SetInsertPoint( ctxt->env().block );
+}
+
 void cgllvm_sisd::restart_block( boost::any* data ){
 	BasicBlock* restart = BasicBlock::Create( llcontext(), "", sc_env_ptr(data)->parent_fn );
 	builder()->SetInsertPoint(restart);
@@ -395,7 +433,7 @@ void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 		IRBuilder<> vardecl_builder( mod_ptr()->context() ) ;
 		vardecl_builder.SetInsertPoint( &parent_fn->getEntryBlock(), parent_fn->getEntryBlock().begin() );
 		ctxt->data().local
-			= builder()->CreateAlloca( sc_ptr(ctxt)->data().val_type, 0, name.c_str() );
+			= builder()->CreateAlloca( ctxt->data().val_type, 0, name.c_str() );
 	} else {
 		ctxt->data().global
 			 = cast<GlobalVariable>( mod_ptr()->module()->getOrInsertGlobal( name, ctxt->data().val_type ) );
