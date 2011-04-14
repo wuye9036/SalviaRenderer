@@ -82,7 +82,8 @@ private:
 	// Overrides them for generating entry function if need.
 	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
-	
+	SASL_SPECIFIC_VISIT_DCL( create_virtual_args, function_type );
+
 	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
 
 	bool is_entry( llvm::Function* ) const;

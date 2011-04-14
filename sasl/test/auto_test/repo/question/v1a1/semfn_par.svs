@@ -1,0 +1,4 @@
+float fn( float a: SV_Position ): SV_Position
+{
+	return a;
+}

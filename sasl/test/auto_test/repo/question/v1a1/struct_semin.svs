@@ -1,0 +1,15 @@
+struct VSIN
+{
+	float a: SV_Position;
+};
+
+struct VSOUT
+{
+	float a: SV_Position
+};
+
+VSOUT fn( VSIN in ){
+	VSOUT o;
+	o.a = in.a;
+	return o;
+}

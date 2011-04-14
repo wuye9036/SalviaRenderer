@@ -32,8 +32,10 @@ using sasl::semantic::storage_si;
 using sasl::semantic::storage_types;
 using sasl::semantic::symbol;
 
+using namespace sasl::syntax_tree;
 using namespace llvm;
 
+using boost::any;
 using boost::shared_ptr;
 using std::vector;
 
@@ -60,16 +62,16 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
 	char const* struct_name = NULL;
 	switch( st ){
 	case stream_in:
-		struct_name = "0.struct.stri";
+		struct_name = ".s.stri";
 		break;
 	case buffer_in:
-		struct_name = "0.struct.bufi";
+		struct_name = ".s.bufi";
 		break;
 	case stream_out:
-		struct_name = "0.struct.stro";
+		struct_name = ".s.stro";
 		break;
 	case buffer_out:
-		struct_name = "0.struct.bufo";
+		struct_name = ".s.bufo";
 		break;
 	}
 	assert( struct_name );
@@ -252,40 +254,42 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	Function* fn = sc_data_ptr(data)->self_fn;
 
 	if( abii->is_entry( v.symbol() ) ){
-		// Register arguments names.
+		// Create entry arguments.
 		Function::arg_iterator arg_it = fn->arg_begin();
 
 		cgllvm_sctxt* psctxt = new cgllvm_sctxt();
 		param_ctxts[stream_in].reset( psctxt );
-		arg_it->setName( "0.arg.stri" );
+		arg_it->setName( ".arg.stri" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[stream_in].data();
 
 		psctxt = new cgllvm_sctxt();
 		param_ctxts[buffer_in].reset( psctxt );
-		arg_it->setName( "0.arg.bufi" );
+		arg_it->setName( ".arg.bufi" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[buffer_in].data();
 
 		psctxt = new cgllvm_sctxt();
 		param_ctxts[stream_out].reset( psctxt );
-		arg_it->setName( "0.arg.stro" );
+		arg_it->setName( ".arg.stro" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[stream_out].data();
 
 		psctxt = new cgllvm_sctxt();
 		param_ctxts[buffer_out].reset( psctxt );
-		arg_it->setName( "0.arg.bufo" );
+		arg_it->setName( ".arg.bufo" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
 		psctxt->data().val_type = entry_params_structs[buffer_out].data();
 
+		// Create return type
 		psctxt = node_ctxt(v.symbol()->node(), true );
 		storage_si* fn_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
 		if( fn_ssi->get_semantic() != softart::SV_None ){
+			// Return an built-in value.
 			storage_info* si = abii->output_storage( fn_ssi->get_semantic() );
 			if( si->storage == stream_out ){
 				psctxt->data().is_ref = true;
@@ -294,9 +298,55 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 			}
 			psctxt->data().agg.index = si->index;
 			psctxt->data().agg.parent = param_ctxts[si->storage].get();
+		} else {
+			// Return an aggregated value.
+			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
+
+		// Create virutal arguments
+		create_virtual_args(v, data);
+
 	} else {
 		parent_class::create_fnargs(v, data);
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
+		visit_child( child_ctxt, child_ctxt_init, par->param_type );
+		storage_si* par_ssi = dynamic_cast<storage_si*>( par->semantic_info().get() );
+
+		cgllvm_sctxt* tctxt = sc_ptr(child_ctxt);
+		cgllvm_sctxt* pctxt = node_ctxt( par, true );
+		pctxt->type(tctxt);
+
+		if( par_ssi->type_info()->is_builtin() ){
+			// Virtual args for built in typed argument.
+
+			// Get Value from semantic.
+			// Create local variable for 'virtual argument'.
+			// Store value to local variable.
+			softart::semantic par_sem = par_ssi->get_semantic();
+			assert( par_sem != softart::SV_None );
+			pctxt->env( sc_ptr(data) );
+			pctxt->data().local = builder()->CreateAlloca( pctxt->data().val_type, 0, v.name->str );
+			storage_info* psi = abii->input_storage( par_sem );
+			
+			cgllvm_sctxt tmpctxt;
+			tmpctxt.data().agg.parent = param_ctxts[psi->storage].get();
+			tmpctxt.data().agg.index = psi->index;
+
+			store( load(&tmpctxt), pctxt );
+
+		} else {
+			// Virtual args for aggregated argument
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 }
 
