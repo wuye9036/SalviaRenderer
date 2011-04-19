@@ -56,6 +56,7 @@ public:
 	boost::shared_ptr<declarator> build_initdecl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<function_type> build_fndecl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<parameter> build_param( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<struct_type> build_struct( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<expression> build_expr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<expression_list> build_exprlst( boost::shared_ptr<sasl::parser::attribute> attr );

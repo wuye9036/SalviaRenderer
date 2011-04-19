@@ -585,7 +585,7 @@ shared_ptr<declaration> syntax_tree_builder::build_basic_decl( shared_ptr<attrib
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 		SASL_CASE_RULE( struct_decl ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			return build_struct(attr);
 		}
 		SASL_CASE_RULE( typedef_decl ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -651,6 +651,15 @@ shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> at
 		ret->init = build_init( optional_init->attrs[0] );
 	}
 
+	return ret;
+}
+
+shared_ptr<struct_type> syntax_tree_builder::build_struct( shared_ptr<attribute> attr ){
+	shared_ptr<struct_type> ret = create_node<struct_type>( token_t::null() );
+
+
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return ret;
 }
 
@@ -1053,7 +1062,5 @@ void syntax_tree_builder::build_semantic(
 		}
 	}
 }
-
-
 
 END_NS_SASL_SYNTAX_TREE()
