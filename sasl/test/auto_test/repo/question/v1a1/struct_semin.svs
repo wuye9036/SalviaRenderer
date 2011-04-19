@@ -5,7 +5,7 @@ struct VSIN
 
 struct VSOUT
 {
-	float a: SV_Position
+	float a: SV_Position;
 };
 
 VSOUT fn( VSIN in ){

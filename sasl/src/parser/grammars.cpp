@@ -115,8 +115,7 @@ void grammars::set_stmts()
 {
 	SRULE(
 		stmt,
-		stmt_expr
-		| stmt_if
+		stmt_if
 		| stmt_while | stmt_dowhile
 		| stmt_for
 		| stmt_switch
@@ -124,6 +123,7 @@ void grammars::set_stmts()
 		| stmt_flowctrl
 		| labeled_stmt
 		| stmt_decl
+		| stmt_expr
 		);
 	SRULE( stmt_if, kw_if > lparen > expr > rparen > stmt > -(kw_else > stmt) );
 	SRULE( stmt_while, kw_while > lparen > expr > rparen > stmt );

@@ -115,7 +115,9 @@ shared_ptr<program> parse(
 
 		("ident")
 		("comma")("colon")("semicolon")
+		("dot")("equal")
 		;
+
 	l.add_token( "SKIPPED" )
 		("space")("newline")
 		;
