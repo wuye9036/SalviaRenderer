@@ -44,6 +44,10 @@ struct cgllvm_sctxt_env{
 	llvm::Function* parent_fn;	// If generating code in function, it will be used.
 	llvm::BasicBlock* block;
 	
+	// Code blocks
+	llvm::BasicBlock* continue_to;
+	llvm::BasicBlock* break_to;
+
 	boost::weak_ptr< sasl::semantic::symbol > sym;
 	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
 };
@@ -76,10 +80,6 @@ struct cgllvm_sctxt_data{
 
 	// Functions
 	llvm::Function* self_fn;	// used by function type.
-
-	// Code blocks
-	llvm::BasicBlock* continue_to;
-	llvm::BasicBlock* break_to;
 
 	// Types
 	llvm::Type const* ref_type;				// Pointer qualified val_type. Enabled when is_ref is true.

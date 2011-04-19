@@ -1,0 +1,23 @@
+; ModuleID = 'prog'
+
+%.s.bufi = type <{}>
+%.s.bufo = type <{ float }>
+%.s.stri = type <{ float* }>
+%.s.stro = type <{}>
+
+define void @fn(%.s.stri* %.arg.stri, %.s.bufi* %.arg.bufi, %.s.bufi* %.arg.stro, %.s.bufo* %.arg.bufo) {
+.init.vargs:
+  %a = alloca float
+  %0 = load %.s.stri* %.arg.stri
+  %1 = extractvalue %.s.stri %0, 0
+  %2 = load float* %1
+  store float %2, float* %a
+
+.entry:                                           ; No predecessors!
+  %3 = load float* %a
+  %4 = getelementptr %.s.bufo* %.arg.bufo, i32 0, i32 0
+  store float %3, float* %4
+  ret void
+                                                  ; No predecessors!
+  ret void
+}

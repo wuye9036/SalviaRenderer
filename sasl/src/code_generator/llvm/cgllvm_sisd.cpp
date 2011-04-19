@@ -138,7 +138,6 @@ SASL_VISIT_DEF( variable_declaration ){
 
 SASL_VISIT_DEF( compound_statement ){
 	sc_env_ptr(data)->sym = v.symbol();
-	goto_insert_block(data);
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -164,15 +163,15 @@ SASL_VISIT_DEF( jump_statement ){
 	if ( v.code == jump_mode::_return ){
 		return_statement(v, data);
 	} else if ( v.code == jump_mode::_continue ){
-		assert( sc_data_ptr(data)->continue_to );
-		mod_ptr()->builder()->CreateBr( sc_data_ptr(data)->continue_to );
+		assert( sc_env_ptr(data)->continue_to );
+		builder()->CreateBr( sc_env_ptr(data)->continue_to );
 	} else if ( v.code == jump_mode::_break ){
-		assert( sc_data_ptr(data)->break_to );
-		mod_ptr()->builder()->CreateBr( sc_data_ptr(data)->break_to );
+		assert( sc_env_ptr(data)->break_to );
+		builder()->CreateBr( sc_env_ptr(data)->break_to );
 	}
 
 	// Restart a new block for sealing the old block.
-	restart_block(data);
+	restart_block(data, "");
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -192,11 +191,13 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
 	any child_ctxt;
 
 	// Generate return types.
 	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
-	Type const* ret_type = sc_data_ptr(data)->val_type;
+	Type const* ret_type = sc_data_ptr(&child_ctxt)->val_type;
 	EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){ return; }
 
 	// Generate paramenter types.
@@ -242,10 +243,10 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	any child_ctxt;
 
 	// Create function body.
-	if ( v.body ){
-		visit_child( child_ctxt, child_ctxt_init, v.body );
-		clear_empty_blocks( fn );
-	}
+	// Create block
+	restart_block( &child_ctxt_init, std::string(".entry") );
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	clear_empty_blocks( fn );
 }
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
@@ -316,29 +317,10 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
 }
 
-
-void cgllvm_sisd::goto_insert_block( boost::any* data ){
-	cgllvm_sctxt* ctxt = sc_ptr(data);
-
-	// If instruction block is the first block of function, we must create it.
-	if ( sc_env_ptr(data)->parent_fn->getBasicBlockList().empty() ){
-		ctxt->env().block 
-			= BasicBlock::Create(
-				mod_ptr()->context(),
-				// TODO The name will be discussed.
-				sc_env_ptr(data)->sym.lock()->unique_name(), 
-				sc_env_ptr(data)->parent_fn
-				);
-	}
-
-	// If function has blocks yet and env without any block, it is not correct case.
-	assert( ctxt->env().block );
-
-	builder()->SetInsertPoint( ctxt->env().block );
-}
-
-void cgllvm_sisd::restart_block( boost::any* data ){
-	BasicBlock* restart = BasicBlock::Create( llcontext(), "", sc_env_ptr(data)->parent_fn );
+void cgllvm_sisd::restart_block( boost::any* data, std::string const& name ){
+	assert( sc_env_ptr(data)->parent_fn );
+	BasicBlock* restart = BasicBlock::Create( llcontext(), name, sc_env_ptr(data)->parent_fn );
+	sc_env_ptr(data)->block = restart;
 	builder()->SetInsertPoint(restart);
 }
 
@@ -422,27 +404,24 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 	builder()->CreateStore( v, addr );
 }
 
-
 void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 	assert( ctxt );
 	assert( ctxt->data().val_type );
 
-	if( !ctxt->data().global ){
-		Function* parent_fn = ctxt->env().parent_fn;
-		assert( parent_fn );
-		IRBuilder<> vardecl_builder( mod_ptr()->context() ) ;
-		vardecl_builder.SetInsertPoint( &parent_fn->getEntryBlock(), parent_fn->getEntryBlock().begin() );
+	Function* parent_fn = ctxt->env().parent_fn;
+	if( parent_fn ){
 		ctxt->data().local
 			= builder()->CreateAlloca( ctxt->data().val_type, 0, name.c_str() );
 	} else {
 		ctxt->data().global
-			 = cast<GlobalVariable>( mod_ptr()->module()->getOrInsertGlobal( name, ctxt->data().val_type ) );
+			 = cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );
 	}
 }
 
 void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 {
 	// Inner empty block, insert an br instruction for jumping to next block.
+	// And the tail empty block we add an virtual return instruction.
 	for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin();
 		it != fn->getBasicBlockList().end(); ++it
 		)

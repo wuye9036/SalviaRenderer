@@ -150,7 +150,7 @@ def test_file( path ):
 				passed_items.add(path)
 				report_str += " ... PASSED"
 			else:
-				failed.add(path)
+				failed_items.add(path)
 				report_str += " ... FAILED, Result is not matched."
 	
 	if os.path.isfile( tmpfile_name ):

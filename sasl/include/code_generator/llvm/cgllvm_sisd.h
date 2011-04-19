@@ -82,11 +82,10 @@ protected:
 	llvm::Value* load_ptr( cgllvm_sctxt* data );
 	void store( llvm::Value*, boost::any* data );
 	void store( llvm::Value*, cgllvm_sctxt* data );
-	
+
 	void create_alloca( cgllvm_sctxt* data, std::string const& name );
 
-	void goto_insert_block( boost::any* data );
-	void restart_block( boost::any* data );
+	void restart_block( boost::any* data, std::string const& name );
 	void clear_empty_blocks( llvm::Function* fn );
 
 	// For type conversation.

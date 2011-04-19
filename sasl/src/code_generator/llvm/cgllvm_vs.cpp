@@ -317,7 +317,8 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 	any child_ctxt;
 
-	goto_insert_block(data);
+	restart_block( data, ".init.vargs" );
+
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
 		visit_child( child_ctxt, child_ctxt_init, par->param_type );
 		storage_si* par_ssi = dynamic_cast<storage_si*>( par->semantic_info().get() );
