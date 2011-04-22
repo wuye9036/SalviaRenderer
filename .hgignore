@@ -1,0 +1,17 @@
+syntax: glob
+softart/build
+3rd_party
+build
+sasl/bin/
+sasl/lib
+sasl/enums/compiler_infos.cmake.rule
+sasl/enums/enums.cmake.rule
+softart/bin
+softart/lib
+sasl/test/auto_test/src/config.py
+sasl/test/auto_test/src/config.pyc
+sasl/test/cgllvm_test/test_main.cpp
+sasl/test/parser_test/test_main.cpp
+sasl/test/semantic_test/test_main.cpp
+sasl/test/st_combinator_test/test_main.cpp
+sasl/test/regression_test/test_main.cpp
