@@ -1,6 +1,4 @@
-SoftArt Prealpha 2 will be release at about spring of 2009.
-
-Features avaliable on prealpha 2:
+Features avaliable:
 	SoftArt Shading Language (SASL): A Shading Language compatiable with HLSL Shader Model 4.
 	Set or get render state as property map
 	Vertex Shader with SASL
