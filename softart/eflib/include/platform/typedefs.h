@@ -10,6 +10,8 @@
 		#include <boost/cstdint.hpp>
 		#include <eflib/include/platform/boost_end.h>
 
+		#define SUPPORT_DATATYPES_H
+
 		using boost::int8_t;
 		using boost::int16_t;
 		using boost::int32_t;
