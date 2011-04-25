@@ -585,7 +585,7 @@ shared_ptr<declaration> syntax_tree_builder::build_basic_decl( shared_ptr<attrib
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 		SASL_CASE_RULE( struct_decl ){
-			return build_struct(attr);
+			return build_struct( typed_decl_attr->attr );
 		}
 		SASL_CASE_RULE( typedef_decl ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -657,10 +657,38 @@ shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> at
 shared_ptr<struct_type> syntax_tree_builder::build_struct( shared_ptr<attribute> attr ){
 	shared_ptr<struct_type> ret = create_node<struct_type>( token_t::null() );
 
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_TYPED_ATTRIBUTE( selector_attribute, body_attr, typed_attr->attrs[1] );
 
+	SASL_SWITCH_RULE( body_attr->attr )
+		SASL_CASE_RULE( struct_body ){
+			build_struct_body( body_attr->attr, ret );
+		}
+		SASL_CASE_RULE( named_struct_body ){
+			SASL_TYPED_ATTRIBUTE( queuer_attribute, named_body_attr, body_attr->attr );
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, named_body_attr->attrs[0] );
+			ret->name = name_attr->tok;
+			SASL_TYPED_ATTRIBUTE( sequence_attribute, opt_body_attr, named_body_attr->attrs[1] );
+			if( !opt_body_attr->attrs.empty() ){
+				build_struct_body( opt_body_attr->attrs[0], ret );
+			}
+		}
+	SASL_END_SWITCH_RULE()
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
 	return ret;
+}
+
+void syntax_tree_builder::build_struct_body( shared_ptr<attribute> attr, shared_ptr<struct_type> out ){
+	assert( out );
+	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, decls_attr, typed_attr->attrs[1] );
+
+	BOOST_FOREACH( shared_ptr<attribute> const& decl_attr, decls_attr->attrs ){
+		shared_ptr<declaration> decl = build_decl(decl_attr);
+		if( decl ){
+			out->decls.push_back( decl );
+		}
+	}
 }
 
 shared_ptr<expression> syntax_tree_builder::build_expr( shared_ptr<attribute> attr ){
