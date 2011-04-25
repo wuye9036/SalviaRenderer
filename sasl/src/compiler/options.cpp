@@ -275,7 +275,7 @@ void options_io::process( bool& abort )
 		BOOST_FOREACH( string const & fname, in_names ){
 			cout << "Compile " << fname << "..." << endl;
 			
-			std::ifstream in(fname, std::ios_base::in);
+			std::ifstream in(fname.c_str(), std::ios_base::in);
 			if (!in){
 				cout << "Fatal error: Could not open input file: " << fname << endl;
 			} else {
@@ -318,7 +318,7 @@ void options_io::process( bool& abort )
 				}
 
 				if( !output().empty() ){
-					ofstream out_file( output(), std::ios_base::out );
+					ofstream out_file( output().c_str(), std::ios_base::out );
 					dump( llvmcode, out_file );
 				}
 			}

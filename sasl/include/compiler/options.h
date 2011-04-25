@@ -123,6 +123,8 @@ public:
 	options_io const & io_info() const;
 
 private:
+	options_manager( options_manager const& );
+	options_manager& operator = ( options_manager const& );
 	options_global opt_global;
 	options_display_info opt_disp;
 	options_io opt_io;

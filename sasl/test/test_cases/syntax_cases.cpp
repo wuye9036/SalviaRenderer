@@ -254,7 +254,7 @@ void syntax_cases::initialize(){
 				.dvarstmt()
 					.dtype().dnode(type_sint32()).end()
 					.dname("v0")
-					.dinit_expr().dconstant2( (int)15 ).end()
+					.dinit_expr().dconstant2( (int32_t)15 ).end()
 					.end()
 				.end()
 				.dexprstmt()
