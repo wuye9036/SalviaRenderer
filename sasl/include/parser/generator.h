@@ -45,6 +45,8 @@ public:
 	attribute();
 	virtual ~attribute();
 
+	virtual boost::shared_ptr<attribute> child( int idx ) const = 0;
+
 	virtual void accept( attribute_visitor& v, boost::any& ctxt ) = 0;
 	virtual intptr_t rule_id() const;
 	virtual void rule_id( intptr_t id );
@@ -54,12 +56,16 @@ protected:
 
 class terminal_attribute: public attribute{
 public:
+	virtual boost::shared_ptr<attribute> child( int idx ) const;
+
 	virtual void accept( attribute_visitor& v, boost::any& ctxt );
 	boost::shared_ptr<sasl::common::token_t> tok;
 };
 
 class sequence_attribute: public attribute{
 public:
+	virtual boost::shared_ptr<attribute> child( int idx ) const;
+
 	virtual void accept( attribute_visitor& v, boost::any& ctxt );
 	std::vector< boost::shared_ptr<attribute> > attrs;
 };
@@ -67,6 +73,8 @@ public:
 class selector_attribute: public attribute{
 public:
 	selector_attribute();
+
+	virtual boost::shared_ptr<attribute> child( int idx ) const;
 	virtual void accept( attribute_visitor& v, boost::any& ctxt );
 	boost::shared_ptr<attribute> attr;
 	int selected_idx;
@@ -74,6 +82,7 @@ public:
 
 class queuer_attribute: public attribute{
 public:
+	virtual boost::shared_ptr<attribute> child( int idx ) const;
 	virtual void accept( attribute_visitor& v, boost::any& ctxt );
 	std::vector< boost::shared_ptr<attribute> > attrs;
 };

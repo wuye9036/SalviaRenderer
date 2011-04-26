@@ -71,6 +71,10 @@ public:
 	boost::shared_ptr<cast_expression> build_typecastedexpr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<unary_expression> build_unariedexpr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<expression> build_postexpr( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<expression> build_memexpr(
+		boost::shared_ptr<sasl::parser::attribute> attr,
+		boost::shared_ptr<expression> expr
+		);
 	boost::shared_ptr<expression> build_pmexpr( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<type_specifier> build_typespec( boost::shared_ptr<sasl::parser::attribute> attr );
@@ -83,6 +87,8 @@ public:
 	boost::shared_ptr<statement> build_stmt( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<compound_statement> build_stmt_compound( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<jump_statement> build_flowctrl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<expression_statement> build_stmt_expr( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<declaration_statement> build_stmt_decl( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<type_specifier> bind_typequal(
 		boost::shared_ptr<type_specifier> unqual,

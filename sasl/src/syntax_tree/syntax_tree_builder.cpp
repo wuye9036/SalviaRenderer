@@ -862,14 +862,38 @@ shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<
 }
 
 shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	shared_ptr<expression> ret = build_pmexpr( attr->child(0) );
 
-	shared_ptr<expression> ret = build_pmexpr( typed_attr->attrs[0] );
-
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, postfix_attrs, typed_attr->attrs[1] );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, postfix_attrs, attr->child(1) );
 	BOOST_FOREACH( shared_ptr<attribute> postfix_attr, postfix_attrs->attrs ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		shared_ptr<attribute> expr_attr = postfix_attr->child(0);
+		SASL_SWITCH_RULE( expr_attr )
+			SASL_CASE_RULE( idxexpr ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+			SASL_CASE_RULE( callexpr ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+			SASL_CASE_RULE( memexpr ){
+				ret = build_memexpr(expr_attr, ret);
+			}
+			SASL_CASE_RULE( opinc ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+		SASL_END_SWITCH_RULE();
 	}
+
+	return ret;
+}
+
+shared_ptr<expression> syntax_tree_builder::build_memexpr(
+	shared_ptr<attribute> attr,
+	shared_ptr<expression> expr )
+{
+	shared_ptr<member_expression> ret = create_node<member_expression>( token_t::null() );
+	ret->expr = expr;
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, mem_attr, attr->child(1) );
+	ret->member = mem_attr->tok;
 
 	return ret;
 }
@@ -989,6 +1013,12 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 		SASL_CASE_RULE( stmt_flowctrl ){
 			return build_flowctrl( typed_attr->attr );
 		}
+		SASL_CASE_RULE( stmt_decl ){
+			return build_stmt_decl( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_expr ){
+			return build_stmt_expr( typed_attr->attr );
+		}
 		SASL_DEFAULT(){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return ret;
@@ -1031,6 +1061,18 @@ shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl( shared_ptr<attri
 		}
 	SASL_END_SWITCH_RULE();
 
+	return ret;
+}
+
+shared_ptr<expression_statement> syntax_tree_builder::build_stmt_expr( shared_ptr<attribute> attr ){
+	shared_ptr<expression_statement> ret = create_node<expression_statement>( token_t::null() );
+	ret->expr = build_expr( attr->child(0) );
+	return ret;
+}
+
+shared_ptr<declaration_statement> syntax_tree_builder::build_stmt_decl( shared_ptr<attribute> attr ){
+	shared_ptr<declaration_statement> ret = create_node<declaration_statement>( token_t::null() );
+	ret->decl = build_decl( attr );
 	return ret;
 }
 
