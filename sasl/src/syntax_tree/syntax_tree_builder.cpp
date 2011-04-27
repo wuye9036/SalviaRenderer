@@ -1109,8 +1109,18 @@ shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute
 	return ret;
 }
 
-operators syntax_tree_builder::build_binop( boost::shared_ptr<sasl::parser::attribute> attr ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
+	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, tok_attr, attr );
+	if( !tok_attr ){
+		tok_attr = shared_polymorphic_cast<terminal_attribute>( attr->child(0) );
+	}
+
+	assert( tok_attr );
+
+	std::string const& op_str = tok_attr->tok->str;
+	if( op_str == "=" ){
+		return operators::assign;
+	}
 	return operators::none;
 }
 
