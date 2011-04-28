@@ -39,6 +39,7 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::common::compiler_info_manager;
 using ::sasl::common::token_t;
 
+using ::sasl::syntax_tree::alias_type;
 using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::builtin_type;
 using ::sasl::syntax_tree::cast_expression;
@@ -354,7 +355,65 @@ SASL_VISIT_DEF( builtin_type ){
 }
 
 SASL_VISIT_DEF_UNIMPL( array_type );
-SASL_VISIT_DEF_UNIMPL( struct_type );
+
+SASL_VISIT_DEF( struct_type ){
+	// Struct Type are 3 sorts:
+	//	* unnamed structure
+	//	* struct declaration
+	//	* struct definition.
+
+	std::string name;
+	if( !v.name ){
+		name = data_as_ctxt_ptr()->parent_sym->unique_name( symbol::unnamed_struct );
+		v.name = token_t::from_string( name );
+	}
+
+	// Get from type pool or insert a new one.
+	type_entry::id_t dup_struct_id
+		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_as_ctxt_ptr()->parent_sym );
+
+	assert( dup_struct_id != -1 );
+
+	shared_ptr<struct_type> dup_struct
+		= msi->type_manager()->get( dup_struct_id )->typed_handle<struct_type>();
+	
+	SASL_EXTRACT_SI( type_info_si, tisi, dup_struct );
+	dup_struct = tisi->type_info()->typed_handle<struct_type>();
+	if( !dup_struct->decls.empty() && !v.decls.empty() && v.decls[0] != dup_struct->decls[0] ){
+		// TODO: struct redefinition
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	shared_ptr<symbol> sym = dup_struct->symbol();
+
+	any child_ctxt;
+	any child_ctxt_init = *data;
+	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = sym;
+
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+		visit_child( child_ctxt, child_ctxt_init, decl );
+		dup_struct->decls.push_back(
+			any_to_ctxt_ptr( child_ctxt )->generated_node->typed_handle<declaration>()
+			);
+	}
+
+	data_as_ctxt_ptr()->generated_node = dup_struct;
+}
+
+SASL_VISIT_DEF( alias_type ){
+	shared_ptr<symbol> sym = data_as_ctxt_ptr()->parent_sym->find( v.alias->str );
+	if (!sym){
+		// TODO semantic error, type name is invalid.
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	shared_ptr<alias_type> dup_alias = duplicate( v.handle() )->typed_handle<alias_type>();
+
+	SASL_GET_OR_CREATE_SI_P( type_si, tsi, dup_alias, msi->type_manager() );
+	tsi->type_info( sym->node()->typed_handle<type_specifier>(), sym );
+
+	data_as_ctxt_ptr()->generated_node = dup_alias;
+}
 
 SASL_VISIT_DEF( parameter )
 {
