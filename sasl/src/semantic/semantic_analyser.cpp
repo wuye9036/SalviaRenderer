@@ -56,6 +56,7 @@ using ::sasl::syntax_tree::expression_statement;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::if_statement;
 using ::sasl::syntax_tree::jump_statement;
+using ::sasl::syntax_tree::member_expression;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
@@ -244,7 +245,45 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
-SASL_VISIT_DEF_UNIMPL( member_expression );
+
+SASL_VISIT_DEF( member_expression ){
+	shared_ptr<member_expression> dup_expr =
+		duplicate( v.handle() )->typed_handle<member_expression>();
+
+	any child_ctxt = *data;
+	visit_child( child_ctxt, v.expr );
+	dup_expr->expr = any_to_ctxt_ptr(child_ctxt)->generated_node->typed_handle<expression>();
+
+	SASL_EXTRACT_SI( storage_si, agg_ssi, dup_expr->expr );
+	assert( agg_ssi );
+
+	shared_ptr<type_specifier> agg_type = agg_ssi->type_info();
+	shared_ptr<type_specifier> mem_type;
+
+	// TODO aggregated class is vector & matrix
+
+	// TODO aggregated class is sampler
+
+	if( agg_type->node_class() == syntax_node_types::struct_type ){
+		shared_ptr<symbol> struct_sym = agg_type->typed_handle<struct_type>()->symbol();
+		shared_ptr<declarator> mem_declr
+			= struct_sym->find( v.member->str )->node()->typed_handle<declarator>();
+		// TODO if mem_declr isn't found, it means the name of member is wrong.
+		// Need to report that.
+		assert( mem_declr );
+		SASL_EXTRACT_SI( type_info_si, mem_si, mem_declr );
+		mem_type = mem_si->type_info();
+		assert( mem_type );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return;
+	}
+
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->type_manager() );
+	ssi->type_info( mem_type, data_as_ctxt_ptr()->parent_sym );
+
+	data_as_ctxt_ptr()->generated_node = dup_expr;
+}
 
 SASL_VISIT_DEF( constant_expression )
 {
@@ -382,6 +421,8 @@ SASL_VISIT_DEF( struct_type ){
 	if( !dup_struct->decls.empty() && !v.decls.empty() && v.decls[0] != dup_struct->decls[0] ){
 		// TODO: struct redefinition
 		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		dup_struct->decls.clear();
 	}
 
 	shared_ptr<symbol> sym = dup_struct->symbol();
@@ -401,18 +442,13 @@ SASL_VISIT_DEF( struct_type ){
 }
 
 SASL_VISIT_DEF( alias_type ){
-	shared_ptr<symbol> sym = data_as_ctxt_ptr()->parent_sym->find( v.alias->str );
-	if (!sym){
-		// TODO semantic error, type name is invalid.
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	type_entry::id_t dup_struct_id
+		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_as_ctxt_ptr()->parent_sym );
+	// TODO: If struct id not found, it means the type name is wrong.
+	// Compiler will report that.
+	assert( dup_struct_id != -1 );
 
-	shared_ptr<alias_type> dup_alias = duplicate( v.handle() )->typed_handle<alias_type>();
-
-	SASL_GET_OR_CREATE_SI_P( type_si, tsi, dup_alias, msi->type_manager() );
-	tsi->type_info( sym->node()->typed_handle<type_specifier>(), sym );
-
-	data_as_ctxt_ptr()->generated_node = dup_alias;
+	data_as_ctxt_ptr()->generated_node = msi->type_manager()->get(dup_struct_id);
 }
 
 SASL_VISIT_DEF( parameter )

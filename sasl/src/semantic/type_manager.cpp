@@ -154,10 +154,6 @@ type_entry::id_t type_manager::get( shared_ptr<type_specifier> const& node, shar
 			return type_entry_id_of_symbol( sym );
 		} else {
 			if( node->node_class() == syntax_node_types::alias_type ){
-				// TODO:
-				//	If type specifier is an alias specifier and the name didn't exist in symbol,
-				//	it must be error.
-				EFLIB_ASSERT_UNIMPLEMENTED();
 				return -1;
 			}
 			type_entry::id_t entry_id = allocate_and_assign_id( node );
