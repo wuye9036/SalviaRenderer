@@ -167,6 +167,10 @@ SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF( declarator ){
 	sc_env_ptr(data)->sym = v.symbol();
 
+	if( sc_env_ptr(data)->parent_struct ){
+		parent_class::visit( v, data );
+	}
+
 	storage_si* pssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
 
 	// Local variable will call parent version.
@@ -201,7 +205,29 @@ SASL_VISIT_DEF( declarator ){
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
 SASL_VISIT_DEF_UNIMPL( array_type );
-SASL_VISIT_DEF_UNIMPL( struct_type );
+
+SASL_VISIT_DEF( struct_type ){
+	
+	std::string name = v.symbol()->mangled_name();
+
+	// Create structure type
+	StructType* ret_type = StructType::get( llcontext(), true );
+	llmodule()->addTypeName( name.c_str(), ret_type );
+
+	// Clear data and 
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	sc_env_ptr(child_ctxt_init)->parent_struct = ret_type;
+
+	any child_ctxt;
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+		visit_child( child_ctxt, child_ctxt_init, decl );
+	}
+
+	sc_data_ptr(data)->val_type = ret_type;
+	node_ctxt(v, true)->copy_from( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF_UNIMPL( parameter );
 

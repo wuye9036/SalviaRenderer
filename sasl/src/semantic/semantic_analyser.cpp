@@ -267,7 +267,7 @@ SASL_VISIT_DEF( member_expression ){
 	if( agg_type->node_class() == syntax_node_types::struct_type ){
 		shared_ptr<symbol> struct_sym = agg_type->typed_handle<struct_type>()->symbol();
 		shared_ptr<declarator> mem_declr
-			= struct_sym->find( v.member->str )->node()->typed_handle<declarator>();
+			= struct_sym->find_this( v.member->str )->node()->typed_handle<declarator>();
 		// TODO if mem_declr isn't found, it means the name of member is wrong.
 		// Need to report that.
 		assert( mem_declr );

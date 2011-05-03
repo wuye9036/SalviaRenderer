@@ -55,6 +55,8 @@ public:
 	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node = boost::shared_ptr<struct node>() );
 
 	boost::shared_ptr<symbol> find( const std::string& name ) const;
+	boost::shared_ptr<symbol> find_this(const std::string& mangled) const;
+
 	std::vector< boost::shared_ptr<symbol> > find_overloads( const std::string& name ) const;
 	std::vector< boost::shared_ptr<symbol> > find_overloads(
 		const std::string& name,
@@ -101,7 +103,6 @@ private:
 		const std::string& mangled
 		);
 
-	boost::shared_ptr<symbol> find_this(const std::string& mangled) const;
 	const std::vector< ::std::string >& get_overloads( const ::std::string& umnalged ) const;
 
 	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;

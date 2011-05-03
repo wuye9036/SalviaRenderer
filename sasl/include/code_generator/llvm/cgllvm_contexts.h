@@ -41,6 +41,8 @@ struct cgllvm_sctxt_env{
 
 	bool is_semantic_mode;
 
+	llvm::StructType* parent_struct;
+
 	llvm::Function* parent_fn;	// If generating code in function, it will be used.
 	llvm::BasicBlock* block;
 	
