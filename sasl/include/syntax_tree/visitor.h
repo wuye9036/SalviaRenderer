@@ -33,6 +33,7 @@ struct type_specifier;
 struct builtin_type;
 struct array_type;
 struct struct_type;
+struct alias_type;
 struct parameter;
 struct function_type;
 
@@ -117,6 +118,7 @@ public:
 	SASL_VISIT_DCL( builtin_type ) = 0;
 	SASL_VISIT_DCL( array_type ) = 0;
 	SASL_VISIT_DCL( struct_type ) = 0;
+	SASL_VISIT_DCL( alias_type ) = 0;
 	SASL_VISIT_DCL( parameter ) = 0;
 	SASL_VISIT_DCL( function_type ) = 0;
 

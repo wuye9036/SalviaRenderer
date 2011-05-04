@@ -118,6 +118,9 @@ public:
 		visit( v.decls, data );
 		applied( v, data );
 	}
+	SASL_VISIT_DCL( alias_type ){
+		visit( v, data );
+	}
 	SASL_VISIT_DCL( parameter ){
 		SAFE_ACCEPT( v.init );
 		SAFE_ACCEPT( v.param_type );
@@ -271,7 +274,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( cond_expression );
 	SASL_VISIT_INLINE_DEF_UNIMPL( index_expression );
 	SASL_VISIT_INLINE_DEF_UNIMPL( call_expression );
-	SASL_VISIT_INLINE_DEF_UNIMPL( member_expression );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, member_expression, (expr)(member) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, constant_expression, (value_tok)(ctype) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_expression, (var_name) );
 
@@ -286,7 +289,8 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (value_typecode)(qual)(tok) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
-	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, struct_type, (name)(decls) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, alias_type, (alias) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter, (param_type)(name)(init) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, function_type, (name)(retval_type)(params)(body)(value_typecode)(qual) );
 
@@ -337,6 +341,7 @@ public:
 
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );
+	SASL_VISIT_INLINE_DEF_UNIMPL( alias_type );
 	SASL_VISIT_INLINE_DEF_UNIMPL( parameter );
 	SASL_VISIT_INLINE_DEF_UNIMPL( function_type );
 

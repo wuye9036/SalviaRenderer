@@ -56,11 +56,11 @@ public:
 	SASL_VISIT_DCL( expression_initializer );
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
-	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
+	SASL_VISIT_DCL( alias_type );
 	SASL_VISIT_DCL( parameter );
 
 	// statement
@@ -85,6 +85,8 @@ private:
 
 	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
 
+	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
+
 	bool is_entry( llvm::Function* ) const;
 
 	virtual bool create_mod( sasl::syntax_tree::program& v );
@@ -96,6 +98,7 @@ private:
 	void add_entry_param_type( boost::any* data, sasl::semantic::storage_types st, std::vector< llvm::Type const* >& par_types );
 	void fill_llvm_type_from_si( sasl::semantic::storage_types st );
 	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
+	void copy_to_agg_result( cgllvm_sctxt* data );
 
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;

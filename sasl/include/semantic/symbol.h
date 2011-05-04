@@ -55,6 +55,8 @@ public:
 	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node = boost::shared_ptr<struct node>() );
 
 	boost::shared_ptr<symbol> find( const std::string& name ) const;
+	boost::shared_ptr<symbol> find_this(const std::string& mangled) const;
+
 	std::vector< boost::shared_ptr<symbol> > find_overloads( const std::string& name ) const;
 	std::vector< boost::shared_ptr<symbol> > find_overloads(
 		const std::string& name,
@@ -64,7 +66,14 @@ public:
 	int count( std::string name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
-	static std::string unique_name();
+
+	enum unique_name_types{
+		unique_in_unit,	/* Generate unique name in unit.*/
+		unique_in_module,	/* Generate unique name in module. */
+		unnamed_struct
+	};
+	static std::string unique_name( unique_name_types unique_type = unique_in_unit );
+
 	boost::shared_ptr<symbol> add_anonymous_child( boost::shared_ptr<node> child_node );
 
 	boost::shared_ptr<symbol> add_function_begin( boost::shared_ptr<function_type> child_fn );
@@ -94,7 +103,6 @@ private:
 		const std::string& mangled
 		);
 
-	boost::shared_ptr<symbol> find_this(const std::string& mangled) const;
 	const std::vector< ::std::string >& get_overloads( const ::std::string& umnalged ) const;
 
 	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;

@@ -302,6 +302,7 @@ SASL_VISIT_DEF_UNIMPL( type_specifier );
 
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( struct_type );
+SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF( parameter ){
 
 	sc_env_ptr(data)->sym = v.symbol();

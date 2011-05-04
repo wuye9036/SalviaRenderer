@@ -14,6 +14,9 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
@@ -294,9 +297,21 @@ const string& symbol::unmangled_name() const{
 
 int anonymous_name_count = 0;
 boost::mutex mtx;
-string symbol::unique_name(){
-	boost::mutex::scoped_lock locker(mtx);
-	return string("1_") + boost::lexical_cast<string>(++anonymous_name_count);
+string symbol::unique_name( symbol::unique_name_types unique_type ){
+	boost::uuids::uuid uid = boost::uuids::random_generator()();
+	
+	switch( unique_type ){
+	case unique_in_unit:
+		{
+			boost::mutex::scoped_lock locker(mtx);
+			return string("0unnamed_") + boost::lexical_cast<string>(++anonymous_name_count);
+		}
+	case unnamed_struct:
+		return std::string("0unnamed_struct") + boost::uuids::to_string( uid );
+	case unique_in_module:
+	default:
+		return std::string("unnamed") + boost::uuids::to_string( uid );
+	}
 }
 
 shared_ptr<symbol> symbol::add_anonymous_child( shared_ptr<struct node> child_node ){
