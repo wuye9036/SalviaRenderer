@@ -8,6 +8,7 @@ set( SASL_LLVM_LIBS
 		LLVMSelectionDAG
 		LLVMX86AsmPrinter
 		LLVMX86Info
+		LLVMX86Utils
 		LLVMCodeGen
 		LLVMScalarOpts
 		LLVMInstCombine
@@ -18,7 +19,6 @@ set( SASL_LLVM_LIBS
 		LLVMCore
 		LLVMMC
 		LLVMSupport
-		LLVMSystem
 		LLVMAsmPrinter
 		LLVMMCParser
 	)

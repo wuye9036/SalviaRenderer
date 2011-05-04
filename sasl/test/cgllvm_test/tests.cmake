@@ -9,27 +9,7 @@ if( SOFTART_BUILD_WITH_LLVM )
 		${SASL_HOME_DIR}/sasl/test/cgllvm_test/function_test_basic.cpp
 	)
 	set( SASL_CGLLVM_TEST_LIBS
-		EFLIB sasl_cgllvm
-		LLVMJIT
-		LLVMInterpreter
-		LLVMX86CodeGen
-		LLVMExecutionEngine
-		LLVMSelectionDAG
-		LLVMX86AsmPrinter
-		LLVMX86Info
-		LLVMCodeGen
-		LLVMScalarOpts
-		LLVMInstCombine
-		LLVMTransformUtils
-		LLVMipa
-		LLVMAnalysis
-		LLVMTarget
-		LLVMCore
-		LLVMMC
-		LLVMSupport
-		LLVMSystem
-		LLVMAsmPrinter
-		LLVMMCParser
+		${SASL_LLVM_LIBS}
 	)
 
 	if ( WIN32 AND MINGW )

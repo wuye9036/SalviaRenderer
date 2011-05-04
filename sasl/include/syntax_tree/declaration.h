@@ -113,6 +113,11 @@ struct type_specifier: public declaration{
 	type_qualifiers qual;
 
 	bool is_builtin() const;
+	bool is_struct() const;
+	bool is_array() const;
+	bool is_function() const;
+	bool is_alias() const;
+
 	bool is_uniform() const;
 protected:
 	type_specifier(syntax_node_types type_id, boost::shared_ptr<token_t> tok);

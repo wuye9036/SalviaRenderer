@@ -51,6 +51,22 @@ bool type_specifier::is_builtin() const{
 	return node_class() == syntax_node_types::builtin_type;
 }
 
+bool type_specifier::is_struct() const{
+	return node_class() == syntax_node_types::struct_type;
+}
+
+bool type_specifier::is_array() const{
+	return node_class() == syntax_node_types::array_type;
+}
+
+bool type_specifier::is_function() const{
+	return node_class() == syntax_node_types::function_type;
+}
+
+bool type_specifier::is_alias() const{
+	return node_class() == syntax_node_types::alias_type;
+}
+
 bool type_specifier::is_uniform() const
 {
 	return qual.included( type_qualifiers::_uniform );

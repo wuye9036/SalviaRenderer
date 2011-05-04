@@ -88,7 +88,15 @@ bool peel_qualifier(
 }
 
 shared_ptr<type_specifier> duplicate_type_specifier( shared_ptr<type_specifier> const& typespec ){
-	return duplicate(typespec)->typed_handle<type_specifier>();
+	if( typespec->is_struct() ){
+		// NOTE:
+		//	Clear declarations of duplicated since they must be filled by struct visitor.
+		shared_ptr<struct_type> ret_struct = duplicate(typespec)->typed_handle<struct_type>();
+		ret_struct->decls.clear();
+		return ret_struct;
+	} else {
+		return duplicate(typespec)->typed_handle<type_specifier>();
+	}
 }
 
 std::string name_of_unqualified_type( shared_ptr<type_specifier> const& typespec ){
