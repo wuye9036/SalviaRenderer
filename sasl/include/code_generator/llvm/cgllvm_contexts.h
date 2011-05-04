@@ -16,6 +16,7 @@ namespace llvm{
 	
 	// Type
 	class Type;
+	class StructType;
 
 	// Instructions
 	class ReturnInst;
@@ -41,7 +42,10 @@ struct cgllvm_sctxt_env{
 
 	bool is_semantic_mode;
 
-	llvm::StructType* parent_struct;
+	llvm::Type const* declarator_type;
+
+	cgllvm_sctxt* parent_struct;
+	int members_count;
 
 	llvm::Function* parent_fn;	// If generating code in function, it will be used.
 	llvm::BasicBlock* block;
@@ -87,6 +91,9 @@ struct cgllvm_sctxt_data{
 	llvm::Type const* ref_type;				// Pointer qualified val_type. Enabled when is_ref is true.
 	llvm::Type const* val_type;
 	bool is_signed;							// For integral only.
+
+	// For declaration only
+	int declarator_count;
 
 	// Instructions
 	llvm::ReturnInst* return_inst;

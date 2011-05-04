@@ -62,6 +62,10 @@ protected:
 
 	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
 
+	SASL_SPECIFIC_VISIT_DCL( visit_member_declarator, declarator );
+	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
+	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator, declarator );
+
 	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
 
 	// Override node_ctxt of cgllvm_impl

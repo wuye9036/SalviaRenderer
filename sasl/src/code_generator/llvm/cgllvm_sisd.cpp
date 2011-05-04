@@ -127,13 +127,38 @@ SASL_VISIT_DEF( function_type ){
 }
 
 SASL_VISIT_DEF( declarator ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	// local *OR* member.
+	// TODO TBD: Support member function and nested structure ?
+	assert( !(sc_env_ptr(data)->parent_fn && sc_env_ptr(data)->parent_struct) );
+
+	if( sc_env_ptr(data)->parent_fn ){
+		visit_local_declarator( v, data );
+	}
+	if( sc_env_ptr(data)->parent_struct ){
+		visit_member_declarator( v, data );
+	}
+	visit_global_declarator(v, data);
 }
 
 SASL_VISIT_DEF( variable_declaration ){
+	// Visit type info
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.type_info );
+	Type const* val_type = sc_data_ptr(&child_ctxt)->val_type;
+	sc_env_ptr(&child_ctxt_init)->declarator_type = val_type;
+
 	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
-		visit_child( *data, dclr );
+		visit_child( child_ctxt, child_ctxt_init, dclr );
+		++sc_data_ptr(data)->declarator_count;
+		++sc_env_ptr(&child_ctxt_init)->members_count;
 	}
+
+	sc_data_ptr(data)->val_type = val_type;
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( compound_statement ){
@@ -255,6 +280,29 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	} else {
 		sc_data_ptr(data)->return_inst = builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
 	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
+	Type const* lltype = sc_env_ptr(data)->declarator_type;
+	assert(lltype);
+
+	// Needn't process init expression now.
+
+	cgllvm_sctxt* parent_struct = sc_env_ptr(data)->parent_struct;
+
+	sc_data_ptr(data)->val_type = lltype;
+	sc_data_ptr(data)->agg.index = sc_env_ptr(data)->members_count;
+	sc_data_ptr(data)->agg.parent = parent_struct;
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

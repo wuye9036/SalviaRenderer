@@ -31,6 +31,7 @@ using sasl::semantic::storage_info;
 using sasl::semantic::storage_si;
 using sasl::semantic::storage_types;
 using sasl::semantic::symbol;
+using sasl::semantic::type_info_si;
 
 using namespace sasl::syntax_tree;
 using namespace llvm;
@@ -106,7 +107,47 @@ void cgllvm_vs::copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression>
 	cgllvm_sctxt* expr_ctxt = node_ctxt(v);
 	cgllvm_sctxt* ret_ctxt = node_ctxt( entry_sym->node(), false );
 
-	store( load(expr_ctxt), ret_ctxt );
+	if( !ret_ctxt->data().val_type->isStructTy() ){
+		store( load(expr_ctxt), ret_ctxt );
+	} else {
+		// OK, It's return the fucking aggragated value.
+		copy_to_agg_result( expr_ctxt );
+	}
+}
+
+void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
+	// Extract all semantics.
+	shared_ptr<type_specifier> fn_rettype = entry_sym->node()->typed_handle<function_type>()->retval_type;
+	assert( fn_rettype );
+	type_info_si* ret_tisi = dynamic_cast<type_info_si*>( fn_rettype->semantic_info().get() );
+	shared_ptr<struct_type> ret_struct = ret_tisi->type_info()->typed_handle<struct_type>();
+
+	// Copy value to semantics.
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, ret_struct->decls ){
+		if( decl->node_class() == syntax_node_types::variable_declaration ){
+
+			shared_ptr<variable_declaration> vardecl = decl->typed_handle<variable_declaration>();
+
+			BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
+				storage_si* ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
+				softart::semantic sem = ssi->get_semantic();
+				storage_info* si = abii->output_storage( sem );
+			
+				cgllvm_sctxt semantic_ctxt;
+				semantic_ctxt.data().agg.parent = param_ctxts[si->storage].get();
+				semantic_ctxt.data().agg.index = si->index;
+
+				if( si->storage == stream_out ){
+					// If stream out, the output is only a pointer.
+					// Set is_ref to true for generating right code.
+					semantic_ctxt.data().is_ref = true;
+				}
+
+				store( load(data), &semantic_ctxt );
+			}
+
+		}
+	}
 }
 
 // expressions
@@ -164,43 +205,6 @@ SASL_VISIT_DEF_UNIMPL( initializer );
 SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
-SASL_VISIT_DEF( declarator ){
-	sc_env_ptr(data)->sym = v.symbol();
-
-	if( sc_env_ptr(data)->parent_struct ){
-		parent_class::visit( v, data );
-	}
-
-	storage_si* pssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
-
-	// Local variable will call parent version.
-	if( sc_env_ptr(data)->parent_fn ){
-		parent_class::visit( v, data );
-	}
-
-	// Global is filled by offset value with null parent.
-	// The parent is filled when it is referred.
-	storage_info* psi = NULL;
-	if( pssi->get_semantic() == softart::SV_None ){
-		psi = abii->input_storage( v.symbol() );
-	} else {
-		psi = abii->input_storage( pssi->get_semantic() );
-	}
-
-	sc_ptr(data)->data().val_type = llvm_type( psi->sv_type, sc_ptr(data)->data().is_signed );
-	sc_ptr(data)->data().agg.index = psi->index;
-	if( psi->storage == stream_in || psi->storage == stream_out ){
-		sc_ptr(data)->data().is_ref = true;
-	} else {
-		sc_ptr(data)->data().is_ref = false;
-	}
-
-	if (v.init){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
@@ -210,22 +214,39 @@ SASL_VISIT_DEF( struct_type ){
 	
 	std::string name = v.symbol()->mangled_name();
 
-	// Create structure type
-	StructType* ret_type = StructType::get( llcontext(), true );
-	llmodule()->addTypeName( name.c_str(), ret_type );
+	// Create context.
+	// Declarator visiting need parent information.
+	cgllvm_sctxt* ctxt = node_ctxt(v, true);
 
-	// Clear data and 
+	// Init data.
 	any child_ctxt_init = *data;
 	sc_ptr(child_ctxt_init)->clear_data();
-	sc_env_ptr(child_ctxt_init)->parent_struct = ret_type;
+	sc_env_ptr(&child_ctxt_init)->parent_struct = ctxt;
 
 	any child_ctxt;
+
+	// Visit children.
+	// Add type of child into member types, and calculate index.
+	vector<Type const*> members;
+	sc_env_ptr(&child_ctxt_init)->members_count = 0;
 	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
 		visit_child( child_ctxt, child_ctxt_init, decl );
+		assert( sc_data_ptr(&child_ctxt)->declarator_count > 0 );
+		sc_env_ptr(&child_ctxt_init)->members_count += sc_data_ptr(&child_ctxt)->declarator_count;
+		members.insert(
+			members.end(),
+			sc_data_ptr(&child_ctxt)->declarator_count,
+			sc_data_ptr(&child_ctxt)->val_type
+			);
 	}
 
-	sc_data_ptr(data)->val_type = ret_type;
-	node_ctxt(v, true)->copy_from( sc_ptr(data) );
+	// Create
+	StructType* stype = StructType::get( llcontext(), members, true );
+	
+	llmodule()->addTypeName( name.c_str(), stype );
+	sc_data_ptr(data)->val_type = stype;
+
+	ctxt->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( alias_type );
@@ -327,8 +348,15 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 			psctxt->data().agg.parent = param_ctxts[si->storage].get();
 		} else {
 			// Return an aggregated value.
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
+
+			// Anyway, create return types.
+			any child_ctxt_init = *data;
+			sc_ptr(&child_ctxt_init)->clear_data();
+			any child_ctxt;
+
+			visit_child( child_ctxt, child_ctxt_init, v.retval_type );
+			psctxt->data().val_type = sc_data_ptr(&child_ctxt)->val_type;
+		} 
 
 		// Create virutal arguments
 		create_virtual_args(v, data);
@@ -389,6 +417,35 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	} else {
 		parent_class::return_statement(v, data);
 	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
+	sc_env_ptr(data)->sym = v.symbol();
+
+	storage_si* pssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
+
+	// Global is filled by offset value with null parent.
+	// The parent is filled when it is referred.
+	storage_info* psi = NULL;
+	if( pssi->get_semantic() == softart::SV_None ){
+		psi = abii->input_storage( v.symbol() );
+	} else {
+		psi = abii->input_storage( pssi->get_semantic() );
+	}
+
+	sc_ptr(data)->data().val_type = llvm_type( psi->sv_type, sc_ptr(data)->data().is_signed );
+	sc_ptr(data)->data().agg.index = psi->index;
+	if( psi->storage == stream_in || psi->storage == stream_out ){
+		sc_ptr(data)->data().is_ref = true;
+	} else {
+		sc_ptr(data)->data().is_ref = false;
+	}
+
+	if (v.init){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL){}
