@@ -134,11 +134,11 @@ SASL_VISIT_DEF( declarator ){
 
 	if( sc_env_ptr(data)->parent_fn ){
 		visit_local_declarator( v, data );
-	}
-	if( sc_env_ptr(data)->parent_struct ){
+	} else if( sc_env_ptr(data)->parent_struct ){
 		visit_member_declarator( v, data );
+	} else {
+		visit_global_declarator(v, data);
 	}
-	visit_global_declarator(v, data);
 }
 
 SASL_VISIT_DEF( variable_declaration ){
@@ -158,6 +158,15 @@ SASL_VISIT_DEF( variable_declaration ){
 	}
 
 	sc_data_ptr(data)->val_type = val_type;
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_VISIT_DEF( declaration_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.decl );
+
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
@@ -292,7 +301,6 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 
 	sc_data_ptr(data)->val_type = lltype;
 	sc_data_ptr(data)->agg.index = sc_env_ptr(data)->members_count;
-	sc_data_ptr(data)->agg.parent = parent_struct;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -302,7 +310,30 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	sc_data_ptr(data)->val_type = sc_env_ptr(data)->declarator_type;
+	create_alloca( sc_ptr(data), v.name->str );
+
+	if ( v.init ){
+		sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.handle();
+		visit_child( child_ctxt, child_ctxt_init, v.init );
+		store( load(&child_ctxt), data );
+	}
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_VISIT_DEF( expression_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.expr );
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

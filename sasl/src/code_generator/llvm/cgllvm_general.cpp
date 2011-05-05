@@ -259,27 +259,7 @@ SASL_VISIT_DEF( expression_initializer ){
 
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
-SASL_VISIT_DEF( declarator ){
-	any child_ctxt_init = *data;
-	sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.handle();
-	any child_ctxt;
 
-	Function* parent_func = sc_env_ptr(data)->parent_fn;
-
-	create_alloca( sc_ptr(data), v.name->str );
-
-	if ( v.init ){
-		if (parent_func){
-			visit_child( child_ctxt, child_ctxt_init, v.init );
-			store( load(&child_ctxt), data );
-		} else {
-			// Here is global variable initialization.
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	}
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
 SASL_VISIT_DEF( variable_declaration ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -326,14 +306,7 @@ SASL_VISIT_DEF( function_type ){
 
 // statement
 SASL_VISIT_DEF_UNIMPL( statement );
-SASL_VISIT_DEF( declaration_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
 
-	visit_child( child_ctxt, child_ctxt_init, v.decl );
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
 SASL_VISIT_DEF( if_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -390,14 +363,6 @@ SASL_VISIT_DEF_UNIMPL( dowhile_statement );
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
 
-SASL_VISIT_DEF( expression_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	visit_child( child_ctxt, child_ctxt_init, v.expr );
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
 
 SASL_VISIT_DEF_UNIMPL( ident_label );
 

@@ -133,17 +133,19 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 				softart::semantic sem = ssi->get_semantic();
 				storage_info* si = abii->output_storage( sem );
 			
-				cgllvm_sctxt semantic_ctxt;
-				semantic_ctxt.data().agg.parent = param_ctxts[si->storage].get();
-				semantic_ctxt.data().agg.index = si->index;
+				cgllvm_sctxt destctxt;
+				destctxt.data().agg.parent = param_ctxts[si->storage].get();
+				destctxt.data().agg.index = si->index;
+				// If stream out, the output is only a pointer.
+				// Set is_ref to true for generating right code.
+				destctxt.data().is_ref =( si->storage == stream_out );
 
-				if( si->storage == stream_out ){
-					// If stream out, the output is only a pointer.
-					// Set is_ref to true for generating right code.
-					semantic_ctxt.data().is_ref = true;
-				}
+				cgllvm_sctxt srcctxt;
+				cgllvm_sctxt* declr_ctxt = node_ctxt(*declr);
+				srcctxt.storage( declr_ctxt );
+				srcctxt.data().agg.parent = data;
 
-				store( load(data), &semantic_ctxt );
+				store( load(&srcctxt), &destctxt );
 			}
 
 		}
@@ -153,7 +155,11 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 // expressions
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF_UNIMPL( cast_expression );
-SASL_VISIT_DEF_UNIMPL( binary_expression );
+
+SASL_VISIT_DEF( binary_expression ){
+	//TODO: Implements.
+}
+
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
@@ -170,7 +176,7 @@ SASL_VISIT_DEF( variable_expression ){
 	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
 	storage_si* var_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
 
-	if ( is_entry( sc_data_ptr(data)->self_fn ) ){
+	if ( is_entry( sc_env_ptr(data)->parent_fn ) ){
 		storage_info* var_si = abii->input_storage( sym );
 
 		if( var_ssi->get_semantic() == softart::SV_None && !var_si ){
@@ -211,12 +217,19 @@ SASL_VISIT_DEF_UNIMPL( type_specifier );
 SASL_VISIT_DEF_UNIMPL( array_type );
 
 SASL_VISIT_DEF( struct_type ){
-	
-	std::string name = v.symbol()->mangled_name();
-
 	// Create context.
 	// Declarator visiting need parent information.
 	cgllvm_sctxt* ctxt = node_ctxt(v, true);
+
+	// A struct is visited at definition type.
+	// If the visited again, it must be as an alias_type.
+	// So return environment directly.
+	if( ctxt->data().val_type ){
+		sc_ptr(data)->data(ctxt);
+		return;
+	}
+
+	std::string name = v.symbol()->mangled_name();
 
 	// Init data.
 	any child_ctxt_init = *data;
@@ -254,7 +267,6 @@ SASL_VISIT_DEF_UNIMPL( parameter );
 
 // statement
 SASL_VISIT_DEF_UNIMPL( statement );
-SASL_VISIT_DEF_UNIMPL( declaration_statement );
 SASL_VISIT_DEF_UNIMPL( if_statement );
 SASL_VISIT_DEF_UNIMPL( while_statement );
 SASL_VISIT_DEF_UNIMPL( dowhile_statement );
@@ -262,7 +274,6 @@ SASL_VISIT_DEF_UNIMPL( for_statement );
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
-SASL_VISIT_DEF_UNIMPL( expression_statement );
 
 // In cgllvm_vs, you would initialize entry function before call
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
@@ -382,16 +393,17 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 		cgllvm_sctxt* pctxt = node_ctxt( par, true );
 		pctxt->type(tctxt);
 
+		// Create local variable for 'virtual argument'.
+		pctxt->env( sc_ptr(data) );
+		create_alloca( pctxt, par->name->str );
+
 		if( par_ssi->type_info()->is_builtin() ){
 			// Virtual args for built in typed argument.
 
 			// Get Value from semantic.
-			// Create local variable for 'virtual argument'.
 			// Store value to local variable.
 			softart::semantic par_sem = par_ssi->get_semantic();
 			assert( par_sem != softart::SV_None );
-			pctxt->env( sc_ptr(data) );
-			create_alloca( pctxt, par->name->str );
 			storage_info* psi = abii->input_storage( par_sem );
 			
 			cgllvm_sctxt tmpctxt;
@@ -403,7 +415,29 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 		} else {
 			// Virtual args for aggregated argument
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			shared_ptr<struct_type> par_type = par_ssi->type_info()->typed_handle<struct_type>();
+			BOOST_FOREACH( shared_ptr<declaration> const& decl, par_type->decls ){
+				shared_ptr<variable_declaration> vardecl = decl->typed_handle<variable_declaration>();
+				BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
+					storage_si* par_mem_ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
+					assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
+
+					softart::semantic sem = par_mem_ssi->get_semantic();
+					storage_info* psi = abii->input_storage( sem );
+			
+					cgllvm_sctxt srcctxt;
+					srcctxt.data().is_ref = (psi->storage == stream_in);
+					srcctxt.data().agg.parent = param_ctxts[psi->storage].get();
+					srcctxt.data().agg.index = psi->index;
+
+					cgllvm_sctxt destctxt;
+					destctxt.data().is_ref = false;
+					destctxt.data().agg.parent = pctxt;
+					destctxt.data().agg.index = node_ctxt(*declr)->data().agg.index;
+
+					store( load(&srcctxt), &destctxt );
+				}
+			}
 		}
 	}
 }
@@ -411,8 +445,15 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	assert( sc_env_ptr(data)->parent_fn );
 	if( is_entry( sc_env_ptr(data)->parent_fn ) ){
-		assert( v.jump_expr );
+
+		any child_ctxt_init = *data;
+		sc_ptr(child_ctxt_init)->clear_data();
+		any child_ctxt;
+
+		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
+
 		copy_to_result( v.jump_expr );
+
 		sc_data_ptr(data)->return_inst = builder()->CreateRetVoid();
 	} else {
 		parent_class::return_statement(v, data);

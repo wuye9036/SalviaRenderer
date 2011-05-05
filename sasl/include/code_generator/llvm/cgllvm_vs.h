@@ -65,7 +65,6 @@ public:
 
 	// statement
 	SASL_VISIT_DCL( statement );
-	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( if_statement );
 	SASL_VISIT_DCL( while_statement );
 	SASL_VISIT_DCL( dowhile_statement );
@@ -73,7 +72,6 @@ public:
 	SASL_VISIT_DCL( case_label );
 	SASL_VISIT_DCL( ident_label );
 	SASL_VISIT_DCL( switch_statement );
-	SASL_VISIT_DCL( expression_statement );
 
 private:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );

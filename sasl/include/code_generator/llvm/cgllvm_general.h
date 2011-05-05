@@ -69,7 +69,6 @@ public:
 	SASL_VISIT_DCL( expression_initializer );
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
-	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );
@@ -81,7 +80,6 @@ public:
 
 	// statement
 	SASL_VISIT_DCL( statement );
-	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( if_statement );
 	SASL_VISIT_DCL( while_statement );
 	SASL_VISIT_DCL( dowhile_statement );
@@ -89,7 +87,7 @@ public:
 	SASL_VISIT_DCL( case_label );
 	SASL_VISIT_DCL( ident_label );
 	SASL_VISIT_DCL( switch_statement );
-	SASL_VISIT_DCL( expression_statement );
+	
 
 private:
 	virtual bool create_mod( sasl::syntax_tree::program& v );

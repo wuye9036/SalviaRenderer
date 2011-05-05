@@ -46,8 +46,10 @@ public:
 	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
 
+	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( jump_statement );
+	SASL_VISIT_DCL( expression_statement );
 
 protected:
 	// It is called in program visitor BEFORE declaration was visited.
