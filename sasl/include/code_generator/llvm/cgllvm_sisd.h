@@ -39,6 +39,8 @@ public:
 	);
 
 	SASL_VISIT_DCL( program );
+
+	SASL_VISIT_DCL( binary_expression );
 	SASL_VISIT_DCL( variable_expression );
 
 	SASL_VISIT_DCL( builtin_type );
@@ -67,6 +69,8 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_member_declarator, declarator );
 	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
 	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator, declarator );
+
+	SASL_SPECIFIC_VISIT_DCL( bin_assign, binary_expression );
 
 	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
 

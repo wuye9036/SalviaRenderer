@@ -78,6 +78,21 @@ SASL_VISIT_DEF( program ){
 	}
 }
 
+SASL_VISIT_DEF( binary_expression ){
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.left_expr );
+	visit_child( child_ctxt, child_ctxt_init, v.right_expr );
+
+	if( v.op == operators::assign ){
+		bin_assign( v, data );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+}
+
 SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
@@ -210,6 +225,23 @@ SASL_VISIT_DEF( jump_statement ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
+	if ( !v.jump_expr ){
+		sc_data_ptr(data)->return_inst = builder()->CreateRetVoid();
+	} else {
+		sc_data_ptr(data)->return_inst = builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
+	}
+}
+
+SASL_VISIT_DEF( expression_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.expr );
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
 
@@ -283,14 +315,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	clear_empty_blocks( fn );
 }
 
-SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
-	if ( !v.jump_expr ){
-		sc_data_ptr(data)->return_inst = builder()->CreateRetVoid();
-	} else {
-		sc_data_ptr(data)->return_inst = builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
-	}
-}
-
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	Type const* lltype = sc_env_ptr(data)->declarator_type;
 	assert(lltype);
@@ -327,13 +351,13 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF( expression_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
+SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
+	
+	// Evaluated by visit(binary_expression)
+	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
+	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
 
-	visit_child( child_ctxt, child_ctxt_init, v.expr );
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
+	
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

@@ -155,11 +155,6 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 // expressions
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF_UNIMPL( cast_expression );
-
-SASL_VISIT_DEF( binary_expression ){
-	//TODO: Implements.
-}
-
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
