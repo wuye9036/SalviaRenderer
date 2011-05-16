@@ -85,7 +85,7 @@ using std::string;
 
 // semantic analysis context
 struct sacontext{
-	sacontext(): declarator_type_id(-1), is_global(true){
+	sacontext(): declarator_type_id(-1), is_global(true), member_index(-1){
 	}
 
 	shared_ptr<symbol> parent_sym;
@@ -95,18 +95,20 @@ struct sacontext{
 	shared_ptr<node> variable_to_fill; // for initializer only.
 	type_entry::id_t declarator_type_id;
 
+	int member_index;
+
 	bool is_global;
 };
 
-sacontext* any_to_ctxt_ptr( any& any_val ){
+sacontext* ctxt_ptr( any& any_val ){
 	return any_cast<sacontext>(&any_val);
 }
 
-sacontext const * any_to_ctxt_ptr( const any& any_val ){
+sacontext const * ctxt_ptr( const any& any_val ){
 	return any_cast<sacontext>(&any_val);
 }
 
-#define data_as_ctxt_ptr() ( any_to_ctxt_ptr(*data) )
+#define data_cptr() ( ctxt_ptr(*data) )
 
 // utility functions
 
@@ -142,8 +144,8 @@ template <typename NodeT> any& semantic_analyser::visit_child(
 	shared_ptr<NodeT> child, shared_ptr<NodeT>& generated_node )
 {
 	visit_child( child_ctxt, init_data, child );
-	if( any_to_ctxt_ptr( child_ctxt )->generated_node ){
-		generated_node = any_to_ctxt_ptr(child_ctxt)->generated_node->typed_handle<NodeT>();
+	if( ctxt_ptr( child_ctxt )->generated_node ){
+		generated_node = ctxt_ptr(child_ctxt)->generated_node->typed_handle<NodeT>();
 	}
 	return child_ctxt;
 }
@@ -201,13 +203,13 @@ SASL_VISIT_DEF( cast_expression ){
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_cexpr, msi->type_manager() );
 	ssi->entry_id( casted_tsi->entry_id() );
 
-	data_as_ctxt_ptr()->generated_node = dup_cexpr->handle();
+	data_cptr()->generated_node = dup_cexpr->handle();
 }
 
 SASL_VISIT_DEF( binary_expression )
 {
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
 
 	shared_ptr<binary_expression> dup_expr = duplicate( v.handle() )->typed_handle<binary_expression>();
 
@@ -219,7 +221,7 @@ SASL_VISIT_DEF( binary_expression )
 	std::string opname = operator_name( v.op );
 	vector< shared_ptr<expression> > exprs;
 	exprs += dup_expr->left_expr, dup_expr->right_expr;
-	vector< shared_ptr<symbol> > overloads = data_as_ctxt_ptr()->parent_sym->find_overloads( opname, typeconv, exprs );
+	vector< shared_ptr<symbol> > overloads = data_cptr()->parent_sym->find_overloads( opname, typeconv, exprs );
 
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
 		return;
@@ -238,7 +240,7 @@ SASL_VISIT_DEF( binary_expression )
 	type_entry::id_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
 	get_or_create_semantic_info<storage_si>( dup_expr, msi->type_manager() )->entry_id( result_tid );
 
-	data_as_ctxt_ptr()->generated_node = dup_expr->handle();
+	data_cptr()->generated_node = dup_expr->handle();
 }
 
 SASL_VISIT_DEF_UNIMPL( expression_list );
@@ -252,7 +254,7 @@ SASL_VISIT_DEF( member_expression ){
 
 	any child_ctxt = *data;
 	visit_child( child_ctxt, v.expr );
-	dup_expr->expr = any_to_ctxt_ptr(child_ctxt)->generated_node->typed_handle<expression>();
+	dup_expr->expr = ctxt_ptr(child_ctxt)->generated_node->typed_handle<expression>();
 
 	SASL_EXTRACT_SI( storage_si, agg_ssi, dup_expr->expr );
 	assert( agg_ssi );
@@ -280,9 +282,9 @@ SASL_VISIT_DEF( member_expression ){
 	}
 
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->type_manager() );
-	ssi->type_info( mem_type, data_as_ctxt_ptr()->parent_sym );
+	ssi->type_info( mem_type, data_cptr()->parent_sym );
 
-	data_as_ctxt_ptr()->generated_node = dup_expr;
+	data_cptr()->generated_node = dup_expr;
 }
 
 SASL_VISIT_DEF( constant_expression )
@@ -292,16 +294,16 @@ SASL_VISIT_DEF( constant_expression )
 	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, dup_cexpr, msi->type_manager() );
 	vsi->set_literal( v.value_tok->str, v.ctype );
 
-	data_as_ctxt_ptr()->generated_node = dup_cexpr->handle();	
+	data_cptr()->generated_node = dup_cexpr->handle();	
 }
 
 SASL_VISIT_DEF( variable_expression ){
 
-	shared_ptr<symbol> vdecl = data_as_ctxt_ptr()->parent_sym->find( v.var_name->str );
+	shared_ptr<symbol> vdecl = data_cptr()->parent_sym->find( v.var_name->str );
 	shared_ptr<variable_expression> dup_vexpr = duplicate( v.handle() )->typed_handle<variable_expression>();
 	
 	dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
-	data_as_ctxt_ptr()->generated_node = dup_vexpr->handle();
+	data_cptr()->generated_node = dup_vexpr->handle();
 }
 
 // declaration & type specifier
@@ -311,7 +313,7 @@ SASL_VISIT_DEF( expression_initializer )
 	shared_ptr<expression_initializer> dup_exprinit = duplicate( v.handle() )->typed_handle<expression_initializer>();
 
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
 
 	any child_ctxt;
 	visit_child( child_ctxt, child_ctxt_init, v.init_expr, dup_exprinit->init_expr );
@@ -319,12 +321,12 @@ SASL_VISIT_DEF( expression_initializer )
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_exprinit, msi->type_manager() );
 	ssi->entry_id( extract_semantic_info<type_info_si>(dup_exprinit->init_expr)->entry_id() );
 
-	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>( data_as_ctxt_ptr()->variable_to_fill );
+	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>( data_cptr()->variable_to_fill );
 	if ( var_tsi->entry_id() != ssi->entry_id() ){
 		assert( typeconv->implicit_convertible( var_tsi->entry_id(), ssi->entry_id() ) );
 	}
 
-	data_as_ctxt_ptr()->generated_node = dup_exprinit->handle();
+	data_cptr()->generated_node = dup_exprinit->handle();
 }
 
 SASL_VISIT_DEF_UNIMPL( member_initializer );
@@ -332,44 +334,48 @@ SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF( declarator ){
 
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
 	any child_ctxt;
 
 	shared_ptr<declarator> dup_decl = duplicate( v.handle() )->typed_handle<declarator>();
 
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_decl, msi->type_manager() );
-	ssi->entry_id( data_as_ctxt_ptr()->declarator_type_id );
+	ssi->entry_id( data_cptr()->declarator_type_id );
 
-	any_to_ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_decl;
+	if( data_cptr()->member_index >= 0 ){
+		 ssi->mem_index( data_cptr()->member_index++ );
+	}
+
+	ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_decl;
 	if ( v.init ){
 		visit_child( child_ctxt, child_ctxt_init, v.init, dup_decl->init );
 	}
 
-	shared_ptr<symbol> nodesym = data_as_ctxt_ptr()->parent_sym->add_child( v.name->str, dup_decl );
+	shared_ptr<symbol> nodesym = data_cptr()->parent_sym->add_child( v.name->str, dup_decl );
 
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
-	if(	data_as_ctxt_ptr()->is_global )
+	if(	data_cptr()->is_global )
 	{
 		msi->globals().push_back( nodesym );
 	}
 
-	data_as_ctxt_ptr()->generated_node = dup_decl->handle();
+	data_cptr()->generated_node = dup_decl->handle();
 }
 
 SASL_VISIT_DEF( variable_declaration )
 {
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
 	any child_ctxt;
 
 	shared_ptr<variable_declaration> dup_vdecl = duplicate( v.handle() )->typed_handle<variable_declaration>();
 
 	visit_child( child_ctxt, child_ctxt_init, v.type_info, dup_vdecl->type_info );
 	
-	any_to_ctxt_ptr(child_ctxt_init)->declarator_type_id
+	ctxt_ptr(child_ctxt_init)->declarator_type_id
 		= extract_semantic_info<type_info_si>( dup_vdecl->type_info )->entry_id();
-	any_to_ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_vdecl;
+	ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_vdecl;
 
 	dup_vdecl->declarators.clear();
 	BOOST_FOREACH( shared_ptr<declarator> decl, v.declarators ){
@@ -377,9 +383,11 @@ SASL_VISIT_DEF( variable_declaration )
 		visit_child( child_ctxt, child_ctxt_init, decl, gen_decl );
 		assert(gen_decl);
 		dup_vdecl->declarators.push_back( gen_decl );
+		data_cptr()->member_index = ctxt_ptr(child_ctxt)->member_index;
+		ctxt_ptr(child_ctxt_init)->member_index = ctxt_ptr(child_ctxt)->member_index;
 	}
 
-	data_as_ctxt_ptr()->generated_node = dup_vdecl->handle();
+	data_cptr()->generated_node = dup_vdecl->handle();
 }
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
@@ -388,9 +396,9 @@ SASL_VISIT_DEF( builtin_type ){
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
 	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, msi->type_manager() );
-	tsi->type_info( v.typed_handle<type_specifier>(), data_as_ctxt_ptr()->parent_sym );
+	tsi->type_info( v.typed_handle<type_specifier>(), data_cptr()->parent_sym );
 
-	data_as_ctxt_ptr()->generated_node = tsi->type_info()->handle();
+	data_cptr()->generated_node = tsi->type_info()->handle();
 }
 
 SASL_VISIT_DEF_UNIMPL( array_type );
@@ -403,13 +411,13 @@ SASL_VISIT_DEF( struct_type ){
 
 	std::string name;
 	if( !v.name ){
-		name = data_as_ctxt_ptr()->parent_sym->unique_name( symbol::unnamed_struct );
+		name = data_cptr()->parent_sym->unique_name( symbol::unnamed_struct );
 		v.name = token_t::from_string( name );
 	}
 
 	// Get from type pool or insert a new one.
 	type_entry::id_t dup_struct_id
-		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_as_ctxt_ptr()->parent_sym );
+		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_cptr()->parent_sym );
 
 	assert( dup_struct_id != -1 );
 
@@ -429,32 +437,36 @@ SASL_VISIT_DEF( struct_type ){
 
 	any child_ctxt;
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = sym;
+	ctxt_ptr(child_ctxt_init)->parent_sym = sym;
+	ctxt_ptr(child_ctxt_init)->member_index = 0;
 
 	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
 		visit_child( child_ctxt, child_ctxt_init, decl );
 		dup_struct->decls.push_back(
-			any_to_ctxt_ptr( child_ctxt )->generated_node->typed_handle<declaration>()
+			ctxt_ptr( child_ctxt )->generated_node->typed_handle<declaration>()
 			);
+
+		// Update member index
+		ctxt_ptr(child_ctxt_init)->member_index = ctxt_ptr(child_ctxt)->member_index;
 	}
 
-	data_as_ctxt_ptr()->generated_node = dup_struct;
+	data_cptr()->generated_node = dup_struct;
 }
 
 SASL_VISIT_DEF( alias_type ){
 	type_entry::id_t dup_struct_id
-		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_as_ctxt_ptr()->parent_sym );
+		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_cptr()->parent_sym );
 	// TODO: If struct id not found, it means the type name is wrong.
 	// Compiler will report that.
 	assert( dup_struct_id != -1 );
 
-	data_as_ctxt_ptr()->generated_node = msi->type_manager()->get(dup_struct_id);
+	data_cptr()->generated_node = msi->type_manager()->get(dup_struct_id);
 }
 
 SASL_VISIT_DEF( parameter )
 {
 	shared_ptr<parameter> dup_par = duplicate( v.handle() )->typed_handle<parameter>();
-	data_as_ctxt_ptr()->parent_sym->add_child( v.name ? v.name->str : std::string(), dup_par );
+	data_cptr()->parent_sym->add_child( v.name ? v.name->str : std::string(), dup_par );
 
 	any child_ctxt;
 	visit_child( child_ctxt, *data, v.param_type, dup_par->param_type );
@@ -469,7 +481,7 @@ SASL_VISIT_DEF( parameter )
 
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
-	data_as_ctxt_ptr()->generated_node = dup_par->handle();
+	data_cptr()->generated_node = dup_par->handle();
 }
 
 SASL_VISIT_DEF( function_type )
@@ -482,25 +494,25 @@ SASL_VISIT_DEF( function_type )
 	shared_ptr<function_type> dup_fn = dup_node->typed_handle<function_type>();
 	dup_fn->params.clear();
 
-	shared_ptr<symbol> sym = data_as_ctxt_ptr()->parent_sym->add_function_begin( dup_fn );
+	shared_ptr<symbol> sym = data_cptr()->parent_sym->add_function_begin( dup_fn );
 
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = sym;
+	ctxt_ptr(child_ctxt_init)->parent_sym = sym;
 
 	any child_ctxt;
 
 	dup_fn->retval_type
-		= any_to_ctxt_ptr( visit_child( child_ctxt, child_ctxt_init, v.retval_type ) )->generated_node->typed_handle<type_specifier>();
+		= ctxt_ptr( visit_child( child_ctxt, child_ctxt_init, v.retval_type ) )->generated_node->typed_handle<type_specifier>();
 
 	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )
 	{
 		dup_fn->params.push_back( 
-			any_to_ctxt_ptr( visit_child(child_ctxt, child_ctxt_init, *it) )->generated_node->typed_handle<parameter>()
+			ctxt_ptr( visit_child(child_ctxt, child_ctxt_init, *it) )->generated_node->typed_handle<parameter>()
 			);
 	}
 
-	data_as_ctxt_ptr()->parent_sym->add_function_end( sym );
+	data_cptr()->parent_sym->add_function_end( sym );
 	
 	type_entry::id_t ret_tid = extract_semantic_info<type_info_si>( dup_fn->retval_type )->entry_id();
 
@@ -508,14 +520,14 @@ SASL_VISIT_DEF( function_type )
 	ssi->entry_id( ret_tid );
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
-	any_to_ctxt_ptr(child_ctxt_init)->is_global = false;
+	ctxt_ptr(child_ctxt_init)->is_global = false;
 
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
 		msi->functions().push_back( sym );
 	}
 
-	data_as_ctxt_ptr()->generated_node = dup_fn;
+	data_cptr()->generated_node = dup_fn;
 }
 
 // statement
@@ -524,7 +536,7 @@ SASL_VISIT_DEF_UNIMPL( statement );
 SASL_VISIT_DEF( declaration_statement )
 {
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
 	any child_ctxt;
 
 	shared_ptr<declaration_statement> dup_declstmt = duplicate( v.handle() )->typed_handle<declaration_statement>();
@@ -533,7 +545,7 @@ SASL_VISIT_DEF( declaration_statement )
 
 	get_or_create_semantic_info<statement_si>(dup_declstmt);
 
-	data_as_ctxt_ptr()->generated_node = dup_declstmt;
+	data_cptr()->generated_node = dup_declstmt;
 }
 
 SASL_VISIT_DEF( if_statement )
@@ -556,17 +568,17 @@ SASL_VISIT_DEF( if_statement )
 	extract_semantic_info<statement_si>(dup_ifstmt->no_stmt)->parent_block( dup_ifstmt );
 
 	if( !dup_ifstmt->yes_stmt->symbol() ){
-		data_as_ctxt_ptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+		data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
 	}
 
 	if( !dup_ifstmt->no_stmt->symbol() ){
-		data_as_ctxt_ptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+		data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
 	}
 
 	SASL_GET_OR_CREATE_SI( statement_si, si, dup_ifstmt);
 	si->exit_point( symbol::unique_name() );
 
-	data_as_ctxt_ptr()->generated_node = dup_ifstmt;
+	data_cptr()->generated_node = dup_ifstmt;
 }
 
 SASL_VISIT_DEF( while_statement ){
@@ -585,8 +597,8 @@ SASL_VISIT_DEF( compound_statement )
 	dup_stmt->stmts.clear();
 
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = data_as_ctxt_ptr()->parent_sym->add_anonymous_child( dup_stmt );
-	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->parent_sym = data_cptr()->parent_sym->add_anonymous_child( dup_stmt );
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
 
 	any child_ctxt;
 	for( vector< shared_ptr<statement> >::iterator it = v.stmts.begin();
@@ -598,7 +610,7 @@ SASL_VISIT_DEF( compound_statement )
 	}
 
 	get_or_create_semantic_info<statement_si>(dup_stmt);
-	data_as_ctxt_ptr()->generated_node = dup_stmt->handle();
+	data_cptr()->generated_node = dup_stmt->handle();
 }
 
 SASL_VISIT_DEF( expression_statement ){
@@ -606,14 +618,14 @@ SASL_VISIT_DEF( expression_statement ){
 	shared_ptr<expression_statement> dup_exprstmt = duplicate( v.handle() )->typed_handle<expression_statement>();
 	
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr(child_ctxt_init)->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
 
 	any child_ctxt;
 	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_exprstmt->expr );
 
 	get_or_create_semantic_info<statement_si>(dup_exprstmt);
 
-	data_as_ctxt_ptr()->generated_node = dup_exprstmt->handle();
+	data_cptr()->generated_node = dup_exprstmt->handle();
 
 }
 
@@ -622,7 +634,7 @@ SASL_VISIT_DEF( jump_statement )
 	shared_ptr<jump_statement> dup_jump = duplicate(v.handle())->typed_handle<jump_statement>();
 
 	any child_ctxt_init = *data;
-	any_to_ctxt_ptr( child_ctxt_init )->generated_node.reset();
+	ctxt_ptr( child_ctxt_init )->generated_node.reset();
 
 	if (v.code == jump_mode::_return){
 		if( v.jump_expr ){
@@ -631,7 +643,7 @@ SASL_VISIT_DEF( jump_statement )
 		}
 	}
 
-	data_as_ctxt_ptr()->generated_node = dup_jump;
+	data_cptr()->generated_node = dup_jump;
 }
 
 // program
@@ -642,7 +654,7 @@ SASL_VISIT_DEF( program ){
 	msi.reset( new module_si() );
 
 	any child_ctxt_init = sacontext();
-	any_to_ctxt_ptr(child_ctxt_init)->parent_sym = msi->root();
+	ctxt_ptr(child_ctxt_init)->parent_sym = msi->root();
 
 	any child_ctxt = child_ctxt_init;
 

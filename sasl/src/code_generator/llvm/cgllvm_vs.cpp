@@ -159,8 +159,6 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
-SASL_VISIT_DEF_UNIMPL( member_expression );
-
 SASL_VISIT_DEF_UNIMPL( constant_expression );
 
 SASL_VISIT_DEF( variable_expression ){
@@ -177,8 +175,7 @@ SASL_VISIT_DEF( variable_expression ){
 		if( var_ssi->get_semantic() == softart::SV_None && !var_si ){
 			// If non semantic and not have abii, it must be local variable.
 			// Use normal data loader.
-			sc_data_ptr(data)->val = load( varctxt );
-			sc_ptr(data)->type( varctxt );
+			sc_ptr(data)->storage_and_type( varctxt );
 		} else {
 			// Else the expression is stored as an offsetted space in argument.
 			if( !var_si ){
@@ -236,11 +233,8 @@ SASL_VISIT_DEF( struct_type ){
 	// Visit children.
 	// Add type of child into member types, and calculate index.
 	vector<Type const*> members;
-	sc_env_ptr(&child_ctxt_init)->members_count = 0;
 	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
 		visit_child( child_ctxt, child_ctxt_init, decl );
-		assert( sc_data_ptr(&child_ctxt)->declarator_count > 0 );
-		sc_env_ptr(&child_ctxt_init)->members_count += sc_data_ptr(&child_ctxt)->declarator_count;
 		members.insert(
 			members.end(),
 			sc_data_ptr(&child_ctxt)->declarator_count,

@@ -152,9 +152,14 @@ public:
 	softart::semantic get_semantic() const;
 	void set_semantic( softart::semantic v );
 
+	// Member index of structure.
+	int mem_index() const;
+	void mem_index( int i );
+
 	SASL_TYPE_INFO_PROXY();
 
 private:
+	int memidx;
 	softart::semantic sem;
 };
 

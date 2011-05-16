@@ -35,6 +35,7 @@ using namespace sasl::syntax_tree;
 using sasl::semantic::extract_semantic_info;
 using sasl::semantic::symbol;
 using sasl::semantic::type_info_si;
+using sasl::semantic::storage_si;
 
 using boost::addressof;
 using boost::any_cast;
@@ -91,6 +92,31 @@ SASL_VISIT_DEF( binary_expression ){
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
+}
+
+SASL_VISIT_DEF( member_expression ){
+
+	any child_ctxt = *data;
+	sc_ptr(child_ctxt)->clear_data();
+
+	visit_child( child_ctxt, v.expr );
+
+	// Struct symbol
+	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
+	shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
+	shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
+
+	assert( mem_sym );
+
+	cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
+	cgllvm_sctxt* agg_ctxt = node_ctxt( v.expr );
+
+	assert( agg_ctxt );
+
+	sc_ptr(data)->data( mem_ctxt );
+	sc_data_ptr(data)->agg.parent = agg_ctxt;
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( variable_expression ){
@@ -168,9 +194,9 @@ SASL_VISIT_DEF( variable_declaration ){
 
 	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
 		visit_child( child_ctxt, child_ctxt_init, dclr );
-		++sc_data_ptr(data)->declarator_count;
-		++sc_env_ptr(&child_ctxt_init)->members_count;
 	}
+
+	sc_data_ptr(data)->declarator_count = v.declarators.size();
 
 	sc_data_ptr(data)->val_type = val_type;
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -320,11 +346,9 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	assert(lltype);
 
 	// Needn't process init expression now.
-
-	cgllvm_sctxt* parent_struct = sc_env_ptr(data)->parent_struct;
-
+	storage_si* si = dynamic_cast<storage_si*>( v.semantic_info().get() );
+	sc_data_ptr(data)->agg.index = si->mem_index();
 	sc_data_ptr(data)->val_type = lltype;
-	sc_data_ptr(data)->agg.index = sc_env_ptr(data)->members_count;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -357,7 +381,11 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
 	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
 
-	
+	store( load(rctxt), lctxt );
+
+	cgllvm_sctxt* pctxt = node_ctxt(v, true);
+	pctxt->data( lctxt->data() );
+	pctxt->env( sc_ptr(data) );
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

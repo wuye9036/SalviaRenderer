@@ -41,6 +41,7 @@ public:
 	SASL_VISIT_DCL( program );
 
 	SASL_VISIT_DCL( binary_expression );
+	SASL_VISIT_DCL( member_expression );
 	SASL_VISIT_DCL( variable_expression );
 
 	SASL_VISIT_DCL( builtin_type );

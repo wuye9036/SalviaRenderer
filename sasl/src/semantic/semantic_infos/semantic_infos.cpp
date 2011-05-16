@@ -192,7 +192,7 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 }
 
 storage_si::storage_si( shared_ptr<type_manager> typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None), memidx(-1)
 {
 }
 
@@ -203,6 +203,15 @@ softart::semantic storage_si::get_semantic() const{
 void storage_si::set_semantic( softart::semantic v ){
 	sem = v;
 }
+
+int storage_si::mem_index() const{
+	return memidx;
+}
+
+void storage_si::mem_index( int i ){
+	memidx = i;
+}
+
 
 type_si::type_si( shared_ptr<type_manager> typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)

@@ -45,7 +45,6 @@ struct cgllvm_sctxt_env{
 	llvm::Type const* declarator_type;
 
 	cgllvm_sctxt* parent_struct;
-	int members_count;
 
 	llvm::Function* parent_fn;	// If generating code in function, it will be used.
 	llvm::BasicBlock* block;
