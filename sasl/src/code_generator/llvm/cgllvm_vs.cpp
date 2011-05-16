@@ -165,35 +165,26 @@ SASL_VISIT_DEF( variable_expression ){
 	// TODO Referenced symbol must be evaluated in semantic analysis stages.
 	shared_ptr<symbol> sym = find_symbol( sc_ptr(data), v.var_name->str );
 	assert(sym);
+	
+	// var_si is not null if sym is global value( SV_None is available )
+	storage_info* var_si = abii->input_storage( sym );
 
-	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
-	storage_si* var_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
+	if( var_si ){
+		// TODO global only avaliable in entry function.
+		assert( is_entry( sc_env_ptr(data)->parent_fn ) );
 
-	if ( is_entry( sc_env_ptr(data)->parent_fn ) ){
-		storage_info* var_si = abii->input_storage( sym );
+		cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
 
-		if( var_ssi->get_semantic() == softart::SV_None && !var_si ){
-			// If non semantic and not have abii, it must be local variable.
-			// Use normal data loader.
-			sc_ptr(data)->storage_and_type( varctxt );
-		} else {
-			// Else the expression is stored as an offsetted space in argument.
-			if( !var_si ){
-				// If it is not global. It must be parameter of entry function.
-				var_si = abii->input_storage( var_ssi->get_semantic() );
-			}
-			assert(var_si);
-
-			sc_ptr(data)->storage_and_type( varctxt );
-			sc_data_ptr(data)->agg.parent = param_ctxts[var_si->storage].get();
-			sc_data_ptr(data)->val = load( sc_ptr(data) );
-		}
+		sc_ptr(data)->storage_and_type( varctxt );
+		sc_data_ptr(data)->agg.parent = param_ctxts[var_si->storage].get();
 
 		node_ctxt(v, true)->copy( sc_ptr(data) );
 
-	} else {
-		parent_class::visit( v, data );
+		return;
 	}
+
+	// Argument("virtual args") or local variable or in non-entry
+	parent_class::visit( v, data );
 }
 
 SASL_VISIT_DEF_UNIMPL( identifier );
