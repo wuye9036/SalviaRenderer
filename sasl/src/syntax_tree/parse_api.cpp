@@ -103,7 +103,12 @@ shared_ptr<program> parse(
 
 		( "space", "{SPACE}" )
 		( "newline", "{NEWLINE}" )
+		( "cppcomment", "{SLASH}{SLASH}[^\\n]*" )
+		( "comment", "{SLASH}{ASTERISK}")
+		( "anychar", "." )
+		( "endcomment", "{ASTERISK}{SLASH}")
 		;
+
 	l.add_token( "INITIAL" )
 		("lit_int")("lit_float")("lit_bool")
 		("lparen")("rparen")("lbrace")("rbrace")
@@ -120,9 +125,18 @@ shared_ptr<program> parse(
 
 	l.add_token( "SKIPPED" )
 		("space")("newline")
+		("cppcomment")
+		("comment", "COMMENT")
 		;
-	l.skippers( "SKIPPED" );
-	
+
+	l.add_token( "COMMENT" )
+		("endcomment", "INITIAL")
+		("anychar")
+		;
+
+	l.skippers( "SKIPPED" )( "COMMENT" );
+	l.init_states( "INITIAL" )( "SKIPPED" );
+
 	grammars g(l);
 
 	shared_ptr<sasl::parser::attribute> pt_prog;

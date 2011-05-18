@@ -58,6 +58,7 @@ public:
 		token_adder( lexer& owner, char const* state );
 		token_adder( token_adder const& rhs );
 		token_adder const& operator()( std::string const& name ) const;
+		token_adder const& operator()( std::string const& name, std::string const& jump_to ) const;
 	private:
 		token_adder& operator = ( token_adder const& rhs );
 		lexer& owner;
@@ -74,11 +75,22 @@ public:
 		lexer& owner;
 	};
 
+	class init_states_adder{
+	public:
+		init_states_adder( lexer& owner );
+		init_states_adder( init_states_adder const& rhs );
+		init_states_adder const& operator()( std::string const& name ) const;
+	private:
+		init_states_adder& operator = ( init_states_adder const& rhs );
+		lexer& owner;
+	};
+
 	token_definer define_tokens( std::string const& name, std::string const& patterndef );
 	pattern_adder add_pattern( std::string const& name, std::string const& patterndef );
 	token_adder add_token( const char* state );
 
 	skippers_adder skippers( std::string const& s );
+	init_states_adder init_states( std::string const& s );
 
 	std::string const& get_name( size_t id );
 	size_t get_id( std::string const& name );

@@ -8,6 +8,8 @@
 #include <boost/unordered_set.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/diagnostics/assert.h>
+
 namespace splex = boost::spirit::lex;
 
 using sasl::common::lex_context;
@@ -29,48 +31,13 @@ public:
 	shared_data(): attrs(NULL){}
 	boost::unordered_map< std::pair<size_t, std::string>, std::string > state_translations;
 	unordered_set< std::string > skippers;
+	unordered_set< std::string > init_states;
 	token_seq* attrs;
 	shared_ptr<lex_context> ctxt;
 };
 
 class attr_processor{
 public:
-	class state_translation_rule_adder{
-	public:
-		state_translation_rule_adder( attr_processor& proc )
-			: proc(proc){}
-
-		state_translation_rule_adder( state_translation_rule_adder const & rhs )
-			: proc( rhs.proc ){}
-
-		template <typename TokenDefT>
-		state_translation_rule_adder& operator() ( TokenDefT const& tok_def, std::string const& on_state, std::string const& jump_to ){
-			proc.add_state_translation_rule( tok_def, on_state, jump_to );
-			return *this;
-		}
-
-	private:
-		state_translation_rule_adder& operator = ( state_translation_rule_adder const & );
-		attr_processor& proc;
-	};
-
-	class skipper_adder{
-	public:
-		skipper_adder( attr_processor& proc )
-			: proc(proc){}
-
-		skipper_adder( skipper_adder const & rhs )
-			: proc( rhs.proc ){}
-
-		skipper_adder& operator()( std::string const& s ){
-			proc.data->skippers.insert(s);
-			return *this;
-		}
-	private:
-		skipper_adder& operator = ( skipper_adder const & );
-		attr_processor& proc;
-	};
-
 	attr_processor(){
 		data = make_shared<shared_data>();
 	}
@@ -86,24 +53,28 @@ public:
 		data->ctxt = ctxt;
 	}
 
-	skipper_adder add_skipper( std::string const& s ){
-		return skipper_adder(*this)(s);
+	void add_skipper( std::string const& s ){
+		data->skippers.insert(s);
 	}
 	
 	vector<std::string> get_skippers() const{
 		return vector<std::string>( data->skippers.begin(), data->skippers.end() );
 	}
 
-	template <typename TokenDefT>
-	void add_state_translation_rule( TokenDefT const & tok_def, std::string const& on_state, std::string const& jump_to ){
-		assert( data->state_translations.count( tok_def.id() ) == 0 );
-		data->state_translations.insert(
-			make_pair( make_pair(tok_def.id(), on_state), jump_to )
-			);
+	void add_init_states( std::string const& s ){
+		data->init_states.insert(s);
 	}
 
-	state_translation_rule_adder add_state_translation_rule(){
-		return state_translation_rule_adder( *this );
+	vector<std::string> get_init_states() const{
+		return vector<std::string>( data->init_states.begin(), data->init_states.end() );
+	}
+
+	void add_state_translation_rule( size_t tok_def_id, std::string const& on_state, std::string const& jump_to ){
+		std::pair<size_t, std::string> key_pair = make_pair(tok_def_id, on_state);
+		assert( data->state_translations.count( key_pair ) == 0 );
+		data->state_translations.insert(
+			make_pair( key_pair, jump_to )
+			);
 	}
 
 	template <typename IteratorT, typename PassFlagT, typename IdT, typename ContextT>
@@ -191,6 +162,14 @@ lexer::token_adder const& lexer::token_adder::operator()( std::string const& nam
 	return *this;
 }
 
+lexer::token_adder const& lexer::token_adder::operator()( std::string const& name, std::string const& jump_to ) const
+{
+	(*this)( name );
+	shared_ptr<lexer_impl> impl = owner.get_impl();
+	impl->proc->add_state_translation_rule( impl->defs[name].id(), state, jump_to );
+	return *this;
+}
+
 
 lexer::skippers_adder::skippers_adder( lexer& owner ) : owner(owner)
 {
@@ -203,6 +182,19 @@ lexer::skippers_adder::skippers_adder( skippers_adder const& rhs ):owner(rhs.own
 lexer::skippers_adder const& lexer::skippers_adder::operator()( std::string const& name ) const
 {
 	owner.get_impl()->proc->add_skipper(name);
+	return *this;
+}
+
+lexer::init_states_adder::init_states_adder( lexer& owner ): owner(owner)
+{
+}
+
+lexer::init_states_adder::init_states_adder( init_states_adder const& rhs ): owner(rhs.owner)
+{
+}
+
+lexer::init_states_adder const& lexer::init_states_adder::operator()( std::string const& name ) const{
+	owner.get_impl()->proc->add_init_states(name);
 	return *this;
 }
 
@@ -234,6 +226,11 @@ lexer::skippers_adder lexer::skippers( std::string const& s )
 	return skippers_adder(*this)(s);
 }
 
+lexer::init_states_adder lexer::init_states( std::string const& s )
+{
+	return init_states_adder(*this)(s);
+}
+
 std::string const& lexer::get_name( size_t id ){
 	return impl->ids[id];
 }
@@ -251,8 +248,10 @@ bool lexer::tokenize( /*INPUTS*/ std::string const& code, shared_ptr<lex_context
 	const char* lex_last = &code[0] + code.size();
 
 	// Try to use all lex state for tokenize character sequence.
-	std::vector<std::string> tok_states = impl->proc->get_skippers();
-	tok_states.push_back( std::string("INITIAL") );
+	std::vector<std::string> tok_states = impl->proc->get_init_states();
+	EFLIB_ASSERT_AND_IF( !tok_states.empty(), "Initial state set should not be empty." ){
+		return false;
+	}
 
 	size_t tok_states_count = tok_states.size();
 
