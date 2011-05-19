@@ -101,6 +101,15 @@ public:
 		/*INPUTS*/ std::string const& code, boost::shared_ptr<sasl::common::lex_context> ctxt,
 		/*OUTPUT*/ token_seq& seq
 		);
+
+	bool begin_incremental();
+	bool incremental_tokenize(
+		std::string const& word,
+		boost::shared_ptr<sasl::common::lex_context> ctxt,
+		token_seq& seq
+		);
+	bool end_incremental();
+
 private:
 	boost::shared_ptr<lexer_impl> impl;
 };

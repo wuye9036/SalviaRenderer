@@ -14,8 +14,13 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/wave.hpp>
+#include <boost/wave/cpplexer/cpp_lex_token.hpp>
+#include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <boost/exception/all.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -30,6 +35,7 @@ using sasl::syntax_tree::parse;
 using sasl::syntax_tree::program;
 
 using boost::make_shared;
+using boost::scoped_ptr;
 using boost::shared_polymorphic_cast;
 using boost::shared_ptr;
 using boost::to_lower;
@@ -41,24 +47,94 @@ using std::ofstream;
 using std::string;
 using std::vector;
 
-class lex_context_test_impl: public lex_context{
+class compiler_code_source: public lex_context, public sasl::common::code_source{
+
+private:
+	typedef boost::wave::cpplexer::lex_iterator<
+		boost::wave::cpplexer::lex_token<> >
+		wlex_iterator_t;
+	typedef boost::wave::context<
+		string::iterator, wlex_iterator_t>
+		wcontext_t;
+
 public:
+	bool process( std::string const& file_name ){
+		std::ifstream in(file_name.c_str(), std::ios_base::in);
+		if (!in){
+			return false;
+		} else {
+			in.unsetf(std::ios::skipws);
+			std::copy(
+				std::istream_iterator<char>(in), std::istream_iterator<char>(),
+				std::back_inserter(code) );
+			wctxt.reset( new wcontext_t( code.begin(), code.end() ) );
+
+			size_t lang_flag = wctxt->get_language();
+			lang_flag &= ~(boost::wave::support_option_emit_line_directives );
+			lang_flag &= ~(boost::wave::support_option_single_line );
+			lang_flag &= ~(boost::wave::support_option_emit_pragma_directives );
+			wctxt->set_language( static_cast<boost::wave::language_support>( lang_flag ) );
+
+			cur_it = wctxt->begin();
+			next_it = wctxt->begin();
+		}
+		in.close();
+
+		return true;
+	}
+
+	// code source
+	virtual bool is_eof(){
+		return next_it == wctxt->end();
+	}
+
+	virtual std::string next_token(){
+		assert( next_it != wctxt->end() );
+		cur_it = next_it;
+
+		try{
+			++next_it;
+		} catch ( boost::wave::preprocess_exception& e ){
+			next_it = wctxt->end();
+			cout << e.description() << endl;
+		}
+
+		return std::string( (*cur_it).get_value().begin(), (*cur_it).get_value().end() ) ;
+	}
+
+	// lex_context
 	virtual const std::string& file_name() const{
+		assert( cur_it != wctxt->end() );
+
+		filename = to_std_string( cur_it->get_position().get_file() );
 		return filename;
 	}
 	virtual size_t column() const{
-		return 0;
+		assert( cur_it != wctxt->end() );
+		return cur_it->get_position().get_column();
 	}
 	virtual size_t line() const{
-		return 0;
+		assert( cur_it != wctxt->end() );
+		return cur_it->get_position().get_line();
 	}
 
 	virtual void next( const std::string& /*lit*/ ){
+		// Do nothing.
 		return;
 	}
-
 private:
-	std::string filename;
+	template<typename StringT>
+	std::string to_std_string( StringT const& str ) const{
+		return std::string( str.begin(), str.end() );
+	}
+
+	scoped_ptr<wcontext_t> wctxt;
+
+	std::string code;
+	mutable std::string filename;
+
+	wcontext_t::iterator_type cur_it;
+	wcontext_t::iterator_type next_it;
 };
 
 BEGIN_NS_SASL_COMPILER();
@@ -275,18 +351,11 @@ void options_io::process( bool& abort )
 		BOOST_FOREACH( string const & fname, in_names ){
 			cout << "Compile " << fname << "..." << endl;
 			
-			std::ifstream in(fname.c_str(), std::ios_base::in);
-			if (!in){
+			shared_ptr<compiler_code_source> code_src( new compiler_code_source() );
+			if ( !code_src->process(fname) ){
 				cout << "Fatal error: Could not open input file: " << fname << endl;
 			} else {
-				string code;
-				in.unsetf(std::ios::skipws);
-				std::copy(
-					std::istream_iterator<char>(in), std::istream_iterator<char>(),
-					std::back_inserter(code)
-					);
-				
-				shared_ptr<node> prog = parse( code, make_shared<lex_context_test_impl>() );
+				shared_ptr<node> prog = parse( code_src.get(), code_src );
 				if( !prog ){
 					cout << "Syntax error occurs!" << endl;
 					abort = true;

@@ -297,4 +297,19 @@ shared_ptr<lexer_impl> lexer::get_impl() const
 	return impl;
 }
 
+bool lexer::begin_incremental()
+{
+	return true;
+}
+
+bool lexer::incremental_tokenize( std::string const& word, boost::shared_ptr<sasl::common::lex_context> ctxt, token_seq& seq )
+{
+	return tokenize(word, ctxt, seq);
+}
+
+bool lexer::end_incremental()
+{
+	return true;
+}
+
 END_NS_SASL_PARSER();
