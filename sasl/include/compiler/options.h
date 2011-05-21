@@ -13,12 +13,24 @@
 #include <string>
 #include <vector>
 
+namespace sasl{
+	namespace syntax_tree{
+		struct node;
+	}
+	namespace semantic{
+		class module_si;
+	}
+	namespace code_generator{
+		class codegen_context;
+	}
+}
 BEGIN_NS_SASL_COMPILER();
 
 namespace po = boost::program_options;
 
 class options_filter{
 public:
+	virtual void reg_extra_parser( po::basic_command_line_parser<char>& );
 	virtual void fill_desc( po::options_description& desc ) = 0;
 	virtual void filterate( po::variables_map const& vm ) = 0;
 	virtual void process( bool& abort ) = 0;
@@ -89,6 +101,10 @@ public:
 	softart::languages language() const;
 	std::string output() const;
 
+	boost::shared_ptr< sasl::semantic::module_si > module_sem() const;
+	boost::shared_ptr< sasl::code_generator::codegen_context > module_codegen() const;
+	boost::shared_ptr< sasl::syntax_tree::node > root() const;
+
 private:
 	export_format fmt;
 	std::string fmt_str;
@@ -96,6 +112,10 @@ private:
 	std::string lang_str;
 	std::vector< std::string > in_names;
 	std::string out_name;
+
+	boost::shared_ptr< sasl::semantic::module_si > msi;
+	boost::shared_ptr< sasl::code_generator::codegen_context> mcg;
+	boost::shared_ptr< sasl::syntax_tree::node > mroot;
 
 	static const char* in_tag;
 	static const char* in_desc;
@@ -108,6 +128,25 @@ private:
 
 	static const char* export_as_tag;
 	static const char* export_as_desc;
+};
+
+class options_predefinition: options_filter
+{
+public:
+	options_predefinition();
+
+	void reg_extra_parser( po::basic_command_line_parser<char>& );
+	void fill_desc( po::options_description& desc );
+	void filterate( po::variables_map const & vm );
+	void process( bool& abort );
+
+private:
+	std::pair<std::string, std::string> parse_predef( std::string const& );
+
+	std::vector< std::pair<std::string, std::string> > defs;
+
+	static const char* define_tag;
+	static const char* define_desc;
 };
 
 class options_manager{
@@ -125,13 +164,15 @@ public:
 private:
 	options_manager( options_manager const& );
 	options_manager& operator = ( options_manager const& );
+
 	options_global opt_global;
 	options_display_info opt_disp;
 	options_io opt_io;
-	
+	options_predefinition opt_predef;
+
 	po::options_description desc;
 	po::variables_map vm;
-	
+
 	static options_manager inst;
 };
 

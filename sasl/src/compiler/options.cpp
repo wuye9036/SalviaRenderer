@@ -13,12 +13,14 @@
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <iostream>
 #include <fstream>
 
+using sasl::code_generator::codegen_context;
 using sasl::code_generator::llvm_module;
 using sasl::code_generator::generate_llvm_code;
 using sasl::common::lex_context;
@@ -37,7 +39,12 @@ using boost::to_lower;
 using std::cout;
 using std::endl;
 using std::ifstream;
+using std::locale;
+using std::isalnum;
+using std::isalpha;
+using std::make_pair;
 using std::ofstream;
+using std::pair;
 using std::string;
 using std::vector;
 
@@ -65,8 +72,7 @@ BEGIN_NS_SASL_COMPILER();
 
 options_manager options_manager::inst;
 
-options_manager& options_manager::instance()
-{
+options_manager& options_manager::instance(){
 	return inst;
 }
 
@@ -74,7 +80,16 @@ bool options_manager::parse( int argc, char** argv )
 {
 	try{
 
-		po::parsed_options parsed = po::command_line_parser(argc, argv).options( desc ).allow_unregistered().run();
+		po::basic_command_line_parser<char> parser
+			= po::command_line_parser(argc, argv).options( desc ).allow_unregistered();
+
+		opt_disp.reg_extra_parser( parser );
+		opt_global.reg_extra_parser( parser );
+		opt_io.reg_extra_parser( parser );
+		opt_predef.reg_extra_parser( parser );
+
+		po::parsed_options parsed
+			= parser.run();
 
 		std::vector<std::string> unrecg = po::collect_unrecognized( parsed.options, po::include_positional );
 
@@ -105,6 +120,7 @@ options_manager::options_manager()
 	opt_disp.fill_desc(desc);
 	opt_global.fill_desc(desc);
 	opt_io.fill_desc(desc);
+	opt_predef.fill_desc(desc);
 }
 
 void options_manager::process( bool& abort )
@@ -114,6 +130,7 @@ void options_manager::process( bool& abort )
 	opt_disp.filterate(vm);
 	opt_global.filterate(vm);
 	opt_io.filterate(vm);
+	opt_predef.filterate(vm);
 
 	opt_disp.process(abort);
 	if( abort ){ return; }
@@ -122,6 +139,9 @@ void options_manager::process( bool& abort )
 	if( abort ){ return; }
 
 	opt_io.process(abort);
+	if( abort ){ return; }
+
+	opt_predef.process(abort);
 	if( abort ){ return; }
 }
 
@@ -138,6 +158,10 @@ options_display_info const & options_manager::display_info() const
 options_io const & options_manager::io_info() const
 {
 	return opt_io;
+}
+
+// options filter
+void options_filter::reg_extra_parser( po::basic_command_line_parser<char>& ){
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -286,14 +310,14 @@ void options_io::process( bool& abort )
 					std::back_inserter(code)
 					);
 				
-				shared_ptr<node> prog = parse( code, make_shared<lex_context_test_impl>() );
-				if( !prog ){
+				shared_ptr<node> mroot = parse( code, make_shared<lex_context_test_impl>() );
+				if( !mroot ){
 					cout << "Syntax error occurs!" << endl;
 					abort = true;
 					return;
 				}
 
-				shared_ptr<module_si> msi = analysis_semantic( prog );
+				msi = analysis_semantic( mroot );
 				if( !msi ){
 					cout << "Semantic error occurs!" << endl;
 					abort = true;
@@ -311,6 +335,8 @@ void options_io::process( bool& abort )
 				}
 
 				shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
+				mcg = llvmcode;
+
 				if( !llvmcode ){
 					cout << "Code generation error occurs!" << endl;
 					abort = true;
@@ -341,6 +367,17 @@ std::string options_io::output() const
 	return out_name;
 }
 
+shared_ptr< module_si > options_io::module_sem() const{
+	return msi;
+}
+
+shared_ptr<codegen_context> options_io::module_codegen() const{
+	return mcg;
+}
+
+shared_ptr<node> options_io::root() const{
+	return mroot;
+}
 //////////////////////////////////////////////////////////////////////////
 // options global
 void options_global::fill_desc( po::options_description& desc )
@@ -389,4 +426,75 @@ options_global::detail_level options_global::detail() const
 	return detail_lvl;
 }
 
+// options_predefinition
+
+const char* options_predefinition::define_tag = "define,D";
+const char* options_predefinition::define_desc = "-D<name><=><text>, Define macros.";
+
+options_predefinition::options_predefinition(){
+	return;
+}
+
+void options_predefinition::reg_extra_parser( po::basic_command_line_parser<char>& cmdpar ){
+	cmdpar.extra_parser( bind( &options_predefinition::parse_predef, this, _1 ) );
+}
+
+void options_predefinition::fill_desc( po::options_description& desc ){
+	desc.add_options()
+		( define_tag, define_desc )
+		;
+}
+
+void options_predefinition::filterate( po::variables_map const & vm ){
+	// Do nothing. parse_predef will hook all legal definitions.
+	return;
+}
+
+void options_predefinition::process( bool& abort ){
+	return;
+}
+
+pair<string, string> options_predefinition::parse_predef( string const& str )
+{
+	pair<string, string> null_ret( string(""), string("") );
+
+	if( str.find("-D") != 0 ){ return null_ret; }
+	if( str.length() <= 2 ){ return null_ret; }
+
+	// Split cmd
+	string::const_iterator equal_it = find(str.begin(), str.end(), '=');
+
+	string::const_iterator beg_it = str.begin()+2;
+	if( isalpha( *beg_it, locale() ) || *beg_it == '_' ){
+		// Check define name
+		for( string::const_iterator it = beg_it; it != equal_it; ++it ){
+			if( !isalnum(*beg_it) && *beg_it != '_' ){
+				return null_ret;
+			}
+		}
+		string name( beg_it, equal_it );
+
+		// Split define content
+		string content;
+		if( equal_it != str.end() ){
+			string::const_iterator content_it = equal_it + 1;
+			if( 
+				*content_it == '"'
+				&& content_it+1 != str.end()
+				&& *str.rbegin() == '"'
+				)
+			{
+				content.assign( content_it+1, str.end()-1 );
+			} else {
+				content.assign( content_it, str.end() );
+			}
+		}
+
+		defs.push_back( make_pair(name, content) );
+		return defs.back();
+
+	} else {
+		return null_ret;
+	}
+}
 END_NS_SASL_COMPILER();
