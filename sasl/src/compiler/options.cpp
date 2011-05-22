@@ -74,7 +74,7 @@ public:
 			std::copy(
 				std::istream_iterator<char>(in), std::istream_iterator<char>(),
 				std::back_inserter(code) );
-			wctxt.reset( new wcontext_t( code.begin(), code.end() ) );
+			wctxt.reset( new wcontext_t( code.begin(), code.end(), file_name.c_str() ) );
 
 			size_t lang_flag = wctxt->get_language();
 			lang_flag &= ~(boost::wave::support_option_emit_line_directives );
@@ -102,11 +102,14 @@ public:
 		try{
 			++next_it;
 		} catch ( boost::wave::preprocess_exception& e ){
+			
+			errtok = to_std_string( cur_it->get_value() );
+
 			next_it = wctxt->end();
 			cout << e.description() << endl;
 		}
 
-		return std::string( (*cur_it).get_value().begin(), (*cur_it).get_value().end() ) ;
+		return to_std_string( cur_it->get_value() ) ;
 	}
 
 	// lex_context
@@ -129,6 +132,13 @@ public:
 		// Do nothing.
 		return;
 	}
+
+	virtual string error_token(){
+		if( errtok.empty() ){
+			errtok = to_std_string( cur_it->get_value() );
+		}
+		return errtok;
+	}
 private:
 	template<typename StringT>
 	std::string to_std_string( StringT const& str ) const{
@@ -138,6 +148,9 @@ private:
 	scoped_ptr<wcontext_t> wctxt;
 
 	std::string code;
+
+	std::string errtok;
+
 	mutable std::string filename;
 
 	wcontext_t::iterator_type cur_it;

@@ -20,8 +20,9 @@ class code_source{
 public:
 	virtual bool is_eof() = 0;
 	virtual std::string next_token() = 0;
+	virtual std::string error_token() = 0;
 };
 
-END_NS_SASL_COMMON()
+END_NS_SASL_COMMON();
 
 #endif

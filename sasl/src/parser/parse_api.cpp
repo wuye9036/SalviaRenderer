@@ -6,6 +6,10 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/format.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <iostream>
 
 using sasl::common::lex_context;
@@ -40,7 +44,15 @@ void sasl::parser::parse(
 	l.begin_incremental();
 	while( !src->is_eof() ){
 		bool tok_result = l.incremental_tokenize( src->next_token(), ctxt, toks );
-		EFLIB_ASSERT_AND_IF( tok_result, "Tokenizing is failed." ){	break; }
+		if( !tok_result ){
+			boost::format fmt( "%s(%d): fatal error: unrecognized token: '%s' " );
+			std::string etok = src->error_token();
+			if( etok.empty() ){ etok = "<Unrecognized>"; }
+			fmt % ctxt->file_name() % ctxt->line() % etok;
+			cout << ( boost::str(fmt).c_str() ) << endl;
+			assert( !"Tokenize failed!" );
+			return;
+		}
 	}
 	l.end_incremental();
 
