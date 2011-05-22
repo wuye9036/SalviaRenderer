@@ -1,3 +1,5 @@
+#include <eflib/include/platform/config.h>
+
 #include <sasl/include/compiler/options.h>
 
 using sasl::compiler::options_manager;
@@ -9,6 +11,10 @@ int main (int argc, char **argv){
 
 	options_manager::instance().parse(argc, argv);
 	options_manager::instance().process( aborted );
+
+#if defined(EFLIB_DEBUG)
+	system("pause");
+#endif
 
 	return 0;
 }
