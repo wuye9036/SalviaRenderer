@@ -9,8 +9,9 @@ struct VSOUT{
 VSOUT fn( VSIN in ){
 	VSOUT o;
 	
-	float x = in.pos;
-	float y = 5.0f;
+	float x, y;
+	x = in.pos;
+	y = 5.0f;
 	
 	o.pos = x + y;
 	o.pos = o.pos + (x - y);

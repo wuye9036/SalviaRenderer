@@ -85,6 +85,11 @@ void init_lex( lexer& l ){
 		( "vertical", "{VERTICAL}" )
 		( "tilde", "~" )
 
+		("add_assign", "{PLUS}=")
+		("sub_assign", "{MINUS}=")
+		("mul_assign", "{ASTERISK}=")
+		("div_assign", "{SLASH}=")
+
 		( "lparen", "{LPAREN}" )
 		( "rparen", "{RPAREN}" )
 		( "lbrace", "{LBRACE}" )
@@ -112,6 +117,9 @@ void init_lex( lexer& l ){
 		("kw_while")("kw_do")
 
 		("ident")
+		("add_assign")("sub_assign")("mul_assign")("div_assign") // += -= *= /=
+		("plus")("minus")("asterisk")("slash") // + - * /
+		
 		("comma")("colon")("semicolon")
 		("dot")("equal")
 		;

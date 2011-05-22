@@ -1103,7 +1103,7 @@ shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute
 
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_init_attr, typed_attr->attrs[3] );
 	if( !optional_init_attr->attrs.empty() ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		ret->init = build_init( optional_init_attr->child(0) );
 	}
 
 	return ret;
