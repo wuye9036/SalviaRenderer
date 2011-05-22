@@ -379,14 +379,7 @@ void options_io::process( bool& abort )
 			if ( !code_src->process(fname) ){
 				cout << "Fatal error: Could not open input file: " << fname << endl;
 			} else {
-				string code;
-				in.unsetf(std::ios::skipws);
-				std::copy(
-					std::istream_iterator<char>(in), std::istream_iterator<char>(),
-					std::back_inserter(code)
-					);
-				
-				shared_ptr<node> mroot = parse( code, make_shared<lex_context_test_impl>() );
+				shared_ptr<node> mroot = parse( code_src.get(), code_src );
 				if( !mroot ){
 					cout << "Syntax error occurs!" << endl;
 					abort = true;
@@ -512,7 +505,7 @@ options_predefinition::options_predefinition(){
 }
 
 void options_predefinition::reg_extra_parser( po::basic_command_line_parser<char>& cmdpar ){
-	cmdpar.extra_parser( bind( &options_predefinition::parse_predef, this, _1 ) );
+	cmdpar.extra_parser( boost::bind( &options_predefinition::parse_predef, this, _1 ) );
 }
 
 void options_predefinition::fill_desc( po::options_description& desc ){
