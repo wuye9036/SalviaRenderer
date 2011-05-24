@@ -80,8 +80,8 @@ struct cgllvm_sctxt_data{
 		cgllvm_sctxt* parent;
 		int index;
 	} agg;
-
-	bool is_semantic_mode;
+	
+	char const* hint_name;
 
 	// Functions
 	llvm::Function* self_fn;	// used by function type.

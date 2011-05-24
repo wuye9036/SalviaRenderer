@@ -124,6 +124,7 @@ SASL_VISIT_DEF( variable_expression ){
 	assert( declsym && declsym->node() );
 
 	sc_ptr(data)->storage_and_type( node_ctxt( declsym->node() ) );
+	sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
@@ -517,15 +518,18 @@ llvm::Value* cgllvm_sisd::load( boost::any* data ){
 llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	assert(data);
 	Value* val = data->data().val;
-	do{
+	
+	const char* name = data->data().hint_name;
+	name = ( name == NULL ? "" : name );
 
+	do{
 		if( val ){ break; }
 		if( data->data().local ){
-			val = builder()->CreateLoad( data->data().local );
+			val = builder()->CreateLoad( data->data().local, name );
 			break;
 		}
 		if( data->data().global ){
-			val = builder()->CreateLoad( data->data().global );
+			val = builder()->CreateLoad( data->data().global, name );
 			break;
 		}
 		if( data->data().agg.parent ){
@@ -538,7 +542,7 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	} while(0);
 
 	if( data->data().is_ref ){
-		val = builder()->CreateLoad( val );
+		val = builder()->CreateLoad( val, name );
 	}
 
 	return val;
@@ -569,7 +573,8 @@ llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
 		if( !addr ){
 			addr = inner_data->val;
 		} else {
-			addr = builder()->CreateLoad( addr );
+			const char* name = data->data().hint_name;
+			addr = builder()->CreateLoad( addr, Twine( name ? name : "" ) );
 		}
 	}
 

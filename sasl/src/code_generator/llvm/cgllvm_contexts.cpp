@@ -40,6 +40,7 @@ void cgllvm_sctxt::storage( cgllvm_sctxt const* rhs ){
 	data().global = rhs->data().global;
 	data().local = rhs->data().local;
 	data().agg = rhs->data().agg;
+	data().hint_name = rhs->data().hint_name;
 }
 
 void cgllvm_sctxt::type( cgllvm_sctxt const* rhs ){
