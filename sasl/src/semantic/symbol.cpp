@@ -133,9 +133,20 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 		// try to match all parameters.
 		bool all_parameter_success = true;
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-			type_entry::id_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
-			type_entry::id_t par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
+			shared_ptr<type_info_si> arg_tisi = extract_semantic_info<type_info_si>( args[i_param] );
+			shared_ptr<type_info_si> par_tisi = extract_semantic_info<type_info_si>( matching_func->params[i_param] );
+			type_entry::id_t arg_type = arg_tisi->entry_id();
+			type_entry::id_t par_type = par_tisi->entry_id();
 			if( arg_type == -1 || par_type == -1 ){
+				boost::format fmt( "Type of %s <%s> is invalid." );
+				if( arg_type == -1 ){
+					fmt % "argument";
+				} else {
+					fmt % "parameter";
+				}
+				cout
+					<< str( fmt % ( arg_tisi->type_info()->is_builtin() ? arg_tisi->type_info()->value_typecode.name() : "<complex>") )
+					<< endl;
 				assert( !"Argument type or parameter type is invalid." );
 				// TODO: Here is syntax error. Need to be processed.
 				all_parameter_success = false;

@@ -902,8 +902,21 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> 
 	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( lit_const ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return shared_ptr<expression>();
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, const_attr, typed_attr->attr->child(0) );
+			shared_ptr<constant_expression> ret = create_node<constant_expression>( const_attr->tok );
+			ret->value_tok = const_attr->tok;
+			SASL_SWITCH_RULE( const_attr )
+				SASL_CASE_RULE( lit_int ){
+					ret->ctype = literal_constant_types::integer;
+				}
+				SASL_CASE_RULE( lit_float ){
+					ret->ctype = literal_constant_types::real;
+				}
+				SASL_CASE_RULE( lit_bool ){
+					ret->ctype = literal_constant_types::boolean;
+				}
+			SASL_END_SWITCH_RULE();
+			return ret;
 		}
 		SASL_CASE_RULE( ident ){
 			SASL_TYPED_ATTRIBUTE( terminal_attribute, var_attr, typed_attr->attr );
@@ -912,8 +925,7 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> 
 			return varexpr;
 		}
 		SASL_CASE_RULE( parenexpr ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return shared_ptr<expression>();
+			return build_expr( typed_attr->attr->child(1) );
 		}
 	SASL_END_SWITCH_RULE();
 
@@ -1118,9 +1130,29 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 	assert( tok_attr );
 
 	std::string const& op_str = tok_attr->tok->str;
-	if( op_str == "=" ){
-		return operators::assign;
+	char op_chars[4] = {'\0', '\0', '\0', '\0'};
+	for( int i = 0; i < op_str.length(); ++i ){ op_chars[i] = op_str[i]; }
+
+	switch( op_chars[0] ){
+	case '=':
+		return op_chars[1] == '\0'
+			? operators::assign
+			: operators::equal
+			;
+	case '+':
+		return op_chars[1] == '=' ? operators::add_assign : operators::add;
+	case '-':
+		return op_chars[1] == '=' ? operators::sub_assign : operators::sub;
+	case '*':
+		return op_chars[1] == '=' ? operators::mul_assign : operators::mul;
+	case '/':
+		return op_chars[1] == '=' ? operators::div_assign : operators::div;
+	default:
+		string assertion("Unsupported operator: ");
+		assertion += op_str;
+		EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
 	}
+
 	return operators::none;
 }
 

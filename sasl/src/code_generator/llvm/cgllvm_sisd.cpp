@@ -167,6 +167,55 @@ SASL_VISIT_DEF( function_type ){
 	node_ctxt(v.symbol()->node(), true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( struct_type ){
+	// Create context.
+	// Declarator visiting need parent information.
+	cgllvm_sctxt* ctxt = node_ctxt(v, true);
+
+	// A struct is visited at definition type.
+	// If the visited again, it must be as an alias_type.
+	// So return environment directly.
+	if( ctxt->data().val_type ){
+		sc_ptr(data)->data(ctxt);
+		return;
+	}
+
+	std::string name = v.symbol()->mangled_name();
+
+	// Init data.
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	sc_env_ptr(&child_ctxt_init)->parent_struct = ctxt;
+
+	any child_ctxt;
+
+	// Visit children.
+	// Add type of child into member types, and calculate index.
+	vector<Type const*> members;
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+		visit_child( child_ctxt, child_ctxt_init, decl );
+
+		assert(
+			sc_data_ptr(&child_ctxt)->declarator_count != 0
+			&& sc_data_ptr(&child_ctxt)->val_type != NULL
+			);
+
+		members.insert(
+			members.end(),
+			sc_data_ptr(&child_ctxt)->declarator_count,
+			sc_data_ptr(&child_ctxt)->val_type
+			);
+	}
+
+	// Create
+	StructType* stype = StructType::get( llcontext(), members, true );
+	
+	llmodule()->addTypeName( name.c_str(), stype );
+	sc_data_ptr(data)->val_type = stype;
+
+	ctxt->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( declarator ){
 
 	// local *OR* member.
@@ -337,6 +386,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	// Create function body.
 	// Create block
 	restart_block( &child_ctxt_init, std::string(".entry") );
+	restart_block( &child_ctxt_init, std::string(".body") );
 	visit_child( child_ctxt, child_ctxt_init, v.body );
 	clear_empty_blocks( fn );
 }
@@ -532,7 +582,17 @@ void cgllvm_sisd::store( llvm::Value* v, boost::any* data ){
 
 void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 	Value* addr = load_ptr( data );
-	builder()->CreateStore( v, addr );
+	if( addr ){
+		builder()->CreateStore( v, addr );
+	} else {
+
+		assert( data->data().agg.parent == NULL );
+		assert( data->data().val == NULL );
+		assert( data->data().local == NULL );
+		assert( data->data().global == NULL );
+
+		data->data().val = v;
+	}
 }
 
 void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
@@ -561,10 +621,13 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 			Function::BasicBlockListType::iterator next_it = it;
 			++next_it;
 
-			if( next_it != fn->getBasicBlockList().end() ){
+			builder()->SetInsertPoint( &(*it) );
+
+			if( next_it != fn->getBasicBlockList().end() ){	
 				mod_ptr()->builder()->CreateBr( &(*next_it) );
 			} else {
 				if( !fn->getReturnType()->isVoidTy() ){
+
 					Value* val = zero_value( fn->getReturnType() );
 					builder()->CreateRet(val);
 				} else {

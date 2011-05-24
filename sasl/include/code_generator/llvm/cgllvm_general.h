@@ -59,7 +59,6 @@ public:
 	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( index_expression );
 	SASL_VISIT_DCL( call_expression );
-	SASL_VISIT_DCL( member_expression );
 
 	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( identifier );
@@ -68,12 +67,9 @@ public:
 	SASL_VISIT_DCL( initializer );
 	SASL_VISIT_DCL( expression_initializer );
 	SASL_VISIT_DCL( member_initializer );
-	SASL_VISIT_DCL( declaration );
-	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( type_specifier );
 	SASL_VISIT_DCL( array_type );
-	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( alias_type );
 	SASL_VISIT_DCL( parameter );
 	SASL_VISIT_DCL( function_type );

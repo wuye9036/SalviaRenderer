@@ -86,7 +86,7 @@ void cgllvm_sctxt::clear_data(){
 cgllvm_sctxt_env::cgllvm_sctxt_env() 
 	: parent_fn(NULL), block(NULL), parent_struct(NULL),
 	continue_to(NULL), break_to(NULL),
-	is_semantic_mode(false)
+	is_semantic_mode(false), declarator_type(NULL)
 {
 }
 

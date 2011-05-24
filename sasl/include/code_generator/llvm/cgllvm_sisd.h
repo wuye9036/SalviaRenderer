@@ -46,6 +46,8 @@ public:
 
 	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( function_type );
+	SASL_VISIT_DCL( struct_type );
+
 	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
 
