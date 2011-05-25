@@ -548,7 +548,6 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	return val;
 }
 
-
 llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
 	cgllvm_sctxt_data* inner_data = &data->data();
 
