@@ -45,7 +45,6 @@ public:
 	SASL_VISIT_DCL( index_expression );
 	SASL_VISIT_DCL( call_expression );
 
-	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( variable_expression );
 	SASL_VISIT_DCL( identifier );
 

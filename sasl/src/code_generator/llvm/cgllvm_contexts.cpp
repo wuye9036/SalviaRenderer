@@ -27,6 +27,7 @@ cgllvm_sctxt_data const& cgllvm_sctxt::data() const{
 }
 
 void cgllvm_sctxt::data( cgllvm_sctxt_data const& rhs ){
+	if( &rhs == &data() ) return;
 	hold_data = rhs;
 }
 

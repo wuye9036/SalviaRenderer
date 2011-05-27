@@ -159,7 +159,6 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
-SASL_VISIT_DEF_UNIMPL( constant_expression );
 
 SASL_VISIT_DEF( variable_expression ){
 	// TODO Referenced symbol must be evaluated in semantic analysis stages.

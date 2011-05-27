@@ -152,14 +152,20 @@ public:
 	softart::semantic get_semantic() const;
 	void set_semantic( softart::semantic v );
 
-	// Member index of structure.
+	// For members
 	int mem_index() const;
 	void mem_index( int i );
+
+	// Indicate that member is a swizzle
+	//	e.g. float2.xyyx;
+	int32_t swizzle() const;
+	void swizzle( int32_t v );
 
 	SASL_TYPE_INFO_PROXY();
 
 private:
 	int memidx;
+	int32_t swz;
 	softart::semantic sem;
 };
 

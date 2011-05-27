@@ -8,6 +8,8 @@
 #include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <vector>
+
 namespace sasl{
 	namespace semantic{
 		class type_converter;
@@ -21,6 +23,7 @@ namespace sasl{
 namespace llvm{
 	class BasicBlock;
 	class Constant;
+	class ConstantInt;
 	class Function;
 	class Value;
 }
@@ -43,6 +46,7 @@ public:
 	SASL_VISIT_DCL( binary_expression );
 	SASL_VISIT_DCL( member_expression );
 	SASL_VISIT_DCL( variable_expression );
+	SASL_VISIT_DCL( constant_expression );
 
 	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( function_type );
@@ -74,6 +78,7 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator, declarator );
 
 	SASL_SPECIFIC_VISIT_DCL( bin_assign, binary_expression );
+	// SASL_SPECIFIC_VISIT_DCL( bin_arith, binary_expression );
 
 	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
 
@@ -88,6 +93,8 @@ protected:
 	llvm::Constant* zero_value( boost::shared_ptr<sasl::syntax_tree::type_specifier> );
 	llvm::Constant* zero_value( llvm::Type const* );
 
+	llvm::ConstantInt* llcvalue( int32_t v );
+
 	// LLVM code generator Utilities
 	llvm::Value* load( boost::any* data );
 	llvm::Value* load( cgllvm_sctxt* data );
@@ -95,6 +102,8 @@ protected:
 	llvm::Value* load_ptr( cgllvm_sctxt* data );
 	void store( llvm::Value*, boost::any* data );
 	void store( llvm::Value*, cgllvm_sctxt* data );
+
+	std::vector<llvm::Constant*> mask_to_indexes( uint32_t mask );
 
 	void create_alloca( cgllvm_sctxt* data, std::string const& name );
 

@@ -60,7 +60,6 @@ public:
 	SASL_VISIT_DCL( index_expression );
 	SASL_VISIT_DCL( call_expression );
 
-	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( identifier );
 
 	// declaration & type specifier
@@ -88,12 +87,6 @@ public:
 private:
 	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modimpl* mod_ptr();
-	
-	void do_assign(
-		boost::any* data,
-		boost::shared_ptr<sasl::syntax_tree::expression> lexpr,
-		boost::shared_ptr<sasl::syntax_tree::expression> rexpr
-		);
 };
 
 END_NS_SASL_CODE_GENERATOR()

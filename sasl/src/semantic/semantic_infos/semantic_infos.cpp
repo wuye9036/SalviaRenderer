@@ -192,7 +192,7 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 }
 
 storage_si::storage_si( shared_ptr<type_manager> typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None), memidx(-1)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None), memidx(-1), swz(0)
 {
 }
 
@@ -210,6 +210,14 @@ int storage_si::mem_index() const{
 
 void storage_si::mem_index( int i ){
 	memidx = i;
+}
+
+int32_t storage_si::swizzle() const{
+	return swz;
+}
+
+void storage_si::swizzle( int32_t v ){
+	swz = v;
 }
 
 

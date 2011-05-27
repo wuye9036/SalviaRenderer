@@ -9,13 +9,18 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/utility.h>
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <eflib/include/diagnostics/assert.h>
 
 using ::llvm::IRBuilderBase;
 using ::llvm::IRBuilder;
 using ::llvm::Type;
 using ::llvm::Value;
+using ::llvm::VectorType;
 
 using ::sasl::semantic::symbol;
 using ::sasl::semantic::type_converter;
@@ -94,10 +99,29 @@ public:
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
-		Value* dest_v = NULL;
 		Type const* dest_type = dest_ctxt->data().val_type;
-		dest_v = builder->CreateFPCast( load(src_ctxt), dest_type );
+		Value* dest_v = builder->CreateFPCast( load(src_ctxt), dest_type );
+
 		store(dest_v, dest_ctxt);
+	}
+
+	void scalar2vec1( shared_ptr<node> dest, shared_ptr<node> src ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+
+		Type const* elem_type = dest_ctxt->data().val_type;
+		dest_ctxt->data().val_type = VectorType::get( elem_type, 1 );
+
+		// Store value to an vector
+		cgllvm_sctxt agg_ctxt;
+		cgllvm_sctxt elem_ctxt;
+		elem_ctxt.data().agg.is_swizzle = true;
+		elem_ctxt.data().agg.swizzle = 1; /*X*/
+		elem_ctxt.data().agg.parent = &agg_ctxt;
+		store( load(src_ctxt), &elem_ctxt );
+
+		store( load(&agg_ctxt), dest_ctxt );
 	}
 private:
 	shared_ptr< IRBuilder<> > builder;
@@ -125,6 +149,9 @@ void register_builtin_typeconv(
 	boost::function<
 		void ( shared_ptr<node>, shared_ptr<node> ) 
 	> float2float_pfn = ::boost::bind( &cgllvm_type_converter::float2float, cg_typeconv.get(), _1, _2 ) ;
+	boost::function<
+		void ( shared_ptr<node>, shared_ptr<node> ) 
+	> scalar2vec1_pfn = ::boost::bind( &cgllvm_type_converter::scalar2vec1, cg_typeconv.get(), _1, _2 ) ;
 
 	type_entry::id_t sint8_ts = typemgr->get( builtin_type_code::_sint8 );
 	type_entry::id_t sint16_ts = typemgr->get( builtin_type_code::_sint16 );
@@ -261,6 +288,11 @@ void register_builtin_typeconv(
 	//cg_typeconv->register_converter( type_converter::explicit_conv, bool_ts, uint64_ts, default_conv );
 	//cg_typeconv->register_converter( type_converter::explicit_conv, bool_ts, float_ts, default_conv );
 	//cg_typeconv->register_converter( type_converter::explicit_conv, bool_ts, double_ts, default_conv );
+
+	//-------------------------------------------------------------------------
+	// Register scalar <====> vector<scalar, 1>.
+	type_entry::id_t float1_ts = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::_float, 1) );
+	cg_typeconv->register_converter( type_converter::explicit_conv, float_ts, float1_ts, scalar2vec1_pfn );
 }
 
 shared_ptr<type_converter> create_type_converter(

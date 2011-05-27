@@ -65,26 +65,6 @@ typedef cgllvm_sctxt* sctxt_handle;
 cgllvm_general::cgllvm_general()
 {}
 
-// Process assign
-void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
-{
-	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(lexpr);
-	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(rexpr);
-
-	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
-		if( typeconv->implicit_convertible( larg_tsi->entry_id(), rarg_tsi->entry_id() ) ){
-			typeconv->convert( larg_tsi->type_info(), rexpr );
-		} else {
-			assert( !"Expression could not converted to storage type." );
-		}
-	}
-
-	store( load( node_ctxt(rexpr) ), node_ctxt(lexpr) );
-
-	sc_data_ptr(data)->val_type = node_ctxt(lexpr)->data().val_type;
-	sc_data_ptr(data)->local = node_ctxt(lexpr)->data().local;
-}
-
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF( cast_expression ){
 	any child_ctxt_init = *data;
@@ -118,7 +98,7 @@ SASL_VISIT_DEF( binary_expression ){
 	visit_child( child_ctxt, child_ctxt_init, v.right_expr );
 
 	if( v.op == operators::assign ){
-		do_assign( data, v.left_expr, v.right_expr );
+		bin_assign( v, data );
 	} else {
 		shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
 		shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
@@ -222,36 +202,6 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
-
-SASL_VISIT_DEF( constant_expression ){
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
-	if( ! node_ctxt( c_si->type_info() ) ){
-		visit_child( child_ctxt, child_ctxt_init, c_si->type_info() );
-	}
-
-	Value* retval = NULL;
-
-	cgllvm_sctxt* const_ctxt = node_ctxt( c_si->type_info() );
-	Type const* const_lltype = const_ctxt->data().val_type;
-
-	if( c_si->value_type() == builtin_type_code::_sint32 ){
-		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<int32_t>() ), true );
-	} else if ( c_si->value_type() == builtin_type_code::_uint32 ) {
-		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<uint32_t>() ), false );
-	} else if ( c_si->value_type() == builtin_type_code::_float ) {
-		retval = ConstantFP::get( const_lltype, c_si->value<double>() );
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	store( retval, sc_ptr(data) );
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
 
 SASL_VISIT_DEF_UNIMPL( identifier );
 
