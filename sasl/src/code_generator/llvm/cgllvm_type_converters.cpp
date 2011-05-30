@@ -110,8 +110,8 @@ public:
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
-		Type const* elem_type = dest_ctxt->data().val_type;
-		dest_ctxt->data().val_type = VectorType::get( elem_type, 1 );
+		Type const* elem_type = src_ctxt->data().val_type;
+		Type const* dest_type = VectorType::get( elem_type, 1 );
 
 		// Store value to an vector
 		cgllvm_sctxt agg_ctxt;
@@ -122,6 +122,7 @@ public:
 		store( load(src_ctxt), &elem_ctxt );
 
 		store( load(&agg_ctxt), dest_ctxt );
+		dest_ctxt->data().val_type = dest_type;
 	}
 private:
 	shared_ptr< IRBuilder<> > builder;

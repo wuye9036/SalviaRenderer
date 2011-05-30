@@ -7,6 +7,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
+#include <boost/pointee.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -53,6 +54,20 @@ struct node{
 
 	boost::shared_ptr<class ::sasl::semantic::semantic_info> semantic_info() const;
 	void semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_info> ) const;
+
+	template <typename T> T* si_ptr() const{
+#ifdef EFLIB_DEBUG
+		if( seminfo ){ 
+			T* ptr = dynamic_cast<T*>( semantic_info().get() );
+			assert( ptr );
+			return ptr;
+		} else {
+			return NULL;
+		}
+#else
+		return static_cast<T*>( semantic_info().get() );
+#endif
+	}
 
 	boost::shared_ptr<token_t> token() const;
 	syntax_node_types node_class() const;
