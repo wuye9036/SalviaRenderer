@@ -266,39 +266,13 @@ int check_swizzle( builtin_type_code btc, std::string const& mask, int32_t& swiz
 
 	if( agg_size == 0 ){ return 0; }
 
-	for( int i = 0; i < mask.length(); ++i ){
-		int32_t field_code = 0;
-		switch( mask[i] ){
-		case 'x':
-			field_code = 1;
-			break;
-		case 'y':
-			field_code = 2;
-			break;
-		case 'z':
-			field_code = 3;
-			break;
-		case 'w':
-			field_code = 4;
-			break;
-		default:
-			// TODO Field char is error.
-			// float2 v; v.xi; 'i' is unrecognized field.
-			swizzle_code = 0;
-			return 0;
-		}
-
-		if( field_code > agg_size ){
-			// TODO field is bigger than input.
-			//	float2 v; v.xyz; 'z' field will raise this error.
-			swizzle_code = 0;
-			return 0;
-		}
-
-		swizzle_code |= ( field_code << (i*8) );
-	}
+	int min_src_size = 0;
+	int dest_size = 0;
+	swizzle_code = encode_swizzle( dest_size, min_src_size, mask.c_str() );
 	
-	return static_cast<int>( mask.length() );
+	assert( min_src_size <= agg_size );
+
+	return dest_size;
 }
 
 SASL_VISIT_DEF( member_expression ){
