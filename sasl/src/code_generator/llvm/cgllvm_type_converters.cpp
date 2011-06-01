@@ -371,12 +371,12 @@ void register_builtin_typeconv(
 }
 
 shared_ptr<type_converter> create_type_converter(
-	boost::shared_ptr<llvm::IRBuilderBase> const& builder,
-	boost::function<
-		cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
+	shared_ptr<IRBuilderBase> const& builder,
+	function<
+		cgllvm_sctxt* ( shared_ptr<node> const& )
 	> const& ctxt_lookup,
-	boost::function< llvm::Value* ( cgllvm_sctxt* ) > const& loader,
-	boost::function< void (llvm::Value*, cgllvm_sctxt*) > const& storer
+	function< Value* ( cgllvm_sctxt* ) > const& loader,
+	function< void (Value*, cgllvm_sctxt*) > const& storer
 	)
 {
 	return make_shared<cgllvm_type_converter>( builder, ctxt_lookup, loader, storer );
