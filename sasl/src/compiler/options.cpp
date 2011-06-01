@@ -221,17 +221,96 @@ void options_manager::process( bool& abort )
 	opt_io.filterate(vm);
 	opt_predef.filterate(vm);
 
-	opt_disp.process(abort);
-	if( abort ){ return; }
+	if( opt_disp.help_enabled() ){
+		cout << desc << endl;
+		return;
+	}
 
-	opt_global.process(abort);
-	if( abort ){ return; }
+	if( opt_disp.version_enabled() ){
+		cout << opt_disp.version() << endl;
+		return;
+	}
 
-	opt_io.process(abort);
-	if( abort ){ return; }
+	if( opt_global.detail() == options_global::none ){
+		cout << "Detail level is an invalid value. Ignore it." << endl;
+	}
 
-	opt_predef.process(abort);
-	if( abort ){ return; }
+	// Process inputs and outputs.
+	vector<string> inputs = opt_io.inputs();
+
+	if( inputs.empty() ){
+		cout << "Need at least one input file." << endl;
+		return;
+	}
+
+	// TODO
+	softart::languages lang = opt_io.language();
+
+	EFLIB_ASSERT_AND_IF( lang != softart::lang_none, "Can not support language guessing by file extension yet." ){
+		return;
+	}
+
+	if( opt_io.format() == options_io::llvm_ir ){
+		BOOST_FOREACH( string const & fname, inputs ){
+			cout << "Compile " << fname << "..." << endl;
+
+			shared_ptr<compiler_code_source> code_src( new compiler_code_source() );
+			if ( !code_src->process(fname) ){
+				cout << "Fatal error: Could not open input file: " << fname << endl;
+				return;
+			} 
+			shared_ptr<node> mroot = sasl::syntax_tree::parse( code_src.get(), code_src );
+			if( !mroot ){
+				cout << "Syntax error occurs!" << endl;
+				abort = true;
+				return;
+			}
+
+			msi = analysis_semantic( mroot );
+			if( !msi ){
+				cout << "Semantic error occurs!" << endl;
+				abort = true;
+				return;
+			}
+
+			abi_analyser aa;
+
+			if( !aa.auto_entry( msi, lang ) ){
+				if ( lang != softart::lang_general ){
+					cout << "ABI analysis error occurs!" << endl;
+					abort = true;
+					return;
+				}
+			}
+
+			shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
+			mcg = llvmcode;
+
+			if( !llvmcode ){
+				cout << "Code generation error occurs!" << endl;
+				abort = true;
+				return;
+			}
+
+			if( !opt_io.output().empty() ){
+				ofstream out_file( opt_io.output().c_str(), std::ios_base::out );
+				dump( llvmcode, out_file );
+			}
+
+		}
+	}
+}
+
+shared_ptr< module_si > options_manager::module_sem() const{
+	return msi;
+}
+
+shared_ptr<codegen_context> options_manager::module_codegen() const{
+	return mcg;
+}
+
+shared_ptr<node> options_manager::root() const{
+	return mroot;
 }
 
 po::variables_map const & options_manager::variables() const
@@ -286,20 +365,6 @@ void options_display_info::filterate( po::variables_map const & vm )
 	
 }
 
-void options_display_info::process( bool& abort )
-{
-	if( h ){
-		cout << *pdesc << endl;
-		abort = true;
-		return;
-	}
-
-	if( v ){
-		cout << version_info << endl;
-		abort = false;
-	}
-}
-
 bool options_display_info::help_enabled() const
 {
 	return h;
@@ -310,6 +375,10 @@ bool options_display_info::version_enabled() const
 	return v;
 }
 
+char const* options_display_info::version() const
+{
+	return version_info;
+}
 //////////////////////////////////////////////////////////////////////////
 // input & output
 
@@ -370,71 +439,6 @@ void options_io::filterate( po::variables_map const & vm )
 	}
 }
 
-void options_io::process( bool& abort )
-{
-	if( in_names.empty() ){
-		cout << "No input files." << endl;
-		abort = true;
-		return;
-	}
-
-	// TODO
-	EFLIB_ASSERT_AND_IF( lang != softart::lang_none, "Can not support language guessing by file extension yet." ){
-		abort = true;
-		return;
-	}
-
-	if( fmt == llvm_ir ){
-		BOOST_FOREACH( string const & fname, in_names ){
-			cout << "Compile " << fname << "..." << endl;
-			
-			shared_ptr<compiler_code_source> code_src( new compiler_code_source() );
-			if ( !code_src->process(fname) ){
-				cout << "Fatal error: Could not open input file: " << fname << endl;
-			} else {
-				shared_ptr<node> mroot = parse( code_src.get(), code_src );
-				if( !mroot ){
-					cout << "Syntax error occurs!" << endl;
-					abort = true;
-					return;
-				}
-
-				msi = analysis_semantic( mroot );
-				if( !msi ){
-					cout << "Semantic error occurs!" << endl;
-					abort = true;
-					return;
-				}
-				
-				abi_analyser aa;
-
-				if( !aa.auto_entry( msi, lang ) ){
-					if ( lang != softart::lang_general ){
-						cout << "ABI analysis error occurs!" << endl;
-						abort = true;
-						return;
-					}
-				}
-
-				shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
-				mcg = llvmcode;
-
-				if( !llvmcode ){
-					cout << "Code generation error occurs!" << endl;
-					abort = true;
-					return;
-				}
-
-				if( !output().empty() ){
-					ofstream out_file( output().c_str(), std::ios_base::out );
-					dump( llvmcode, out_file );
-				}
-			}
-			
-		}
-	}
-}
-
 softart::languages options_io::language() const{
 	return lang;
 }
@@ -449,17 +453,10 @@ std::string options_io::output() const
 	return out_name;
 }
 
-shared_ptr< module_si > options_io::module_sem() const{
-	return msi;
+std::vector<std::string> options_io::inputs() const{
+	return in_names;
 }
 
-shared_ptr<codegen_context> options_io::module_codegen() const{
-	return mcg;
-}
-
-shared_ptr<node> options_io::root() const{
-	return mroot;
-}
 //////////////////////////////////////////////////////////////////////////
 // options global
 void options_global::fill_desc( po::options_description& desc )
@@ -495,14 +492,6 @@ void options_global::filterate( po::variables_map const & vm )
 	}
 }
 
-void options_global::process( bool& abort )
-{
-	abort = false;
-	if( detail_lvl == none ){
-		cout << "Detail level is an invalid value. Ignore it." << endl;
-	}
-}
-
 options_global::detail_level options_global::detail() const
 {
 	return detail_lvl;
@@ -529,10 +518,6 @@ void options_predefinition::fill_desc( po::options_description& desc ){
 
 void options_predefinition::filterate( po::variables_map const & vm ){
 	// Do nothing. parse_predef will hook all legal definitions.
-	return;
-}
-
-void options_predefinition::process( bool& abort ){
 	return;
 }
 

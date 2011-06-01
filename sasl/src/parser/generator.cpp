@@ -56,24 +56,19 @@ attribute::~attribute(){}
 intptr_t attribute::rule_id() const{ return rid; }
 void attribute::rule_id( intptr_t id ){ rid = id; }
 
-void terminal_attribute::accept( attribute_visitor& v, boost::any& ctxt ){}
-
-shared_ptr<attribute> terminal_attribute::child( int idx ) const{
+shared_ptr<attribute> terminal_attribute::child( int /*idx*/ ) const{
 	assert(!"Terminate attribute has no child.");
 	return shared_ptr<attribute>();
 }
 
-void sequence_attribute::accept( attribute_visitor& v, boost::any& ctxt ){}
-
 shared_ptr<attribute> sequence_attribute::child( int idx ) const{
-	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < attrs.size(), "" ){
+	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
 		return shared_ptr<attribute>();
 	}
 	return attrs[idx];
 }
 
 selector_attribute::selector_attribute() : selected_idx(-1){}
-void selector_attribute::accept( attribute_visitor& v, boost::any& ctxt ){}
 shared_ptr<attribute> selector_attribute::child( int idx ) const{
 	EFLIB_ASSERT_AND_IF( idx == 0, "" ){
 		return shared_ptr<attribute>();
@@ -81,9 +76,8 @@ shared_ptr<attribute> selector_attribute::child( int idx ) const{
 	return attr;
 }
 
-void queuer_attribute::accept( attribute_visitor& v, boost::any& ctxt ){}
 shared_ptr<attribute> queuer_attribute::child( int idx ) const{
-	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < attrs.size(), "" ){
+	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
 		return shared_ptr<attribute>();
 	}
 	return attrs[idx];

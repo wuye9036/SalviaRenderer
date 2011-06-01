@@ -33,14 +33,12 @@ public:
 	virtual void reg_extra_parser( po::basic_command_line_parser<char>& );
 	virtual void fill_desc( po::options_description& desc ) = 0;
 	virtual void filterate( po::variables_map const& vm ) = 0;
-	virtual void process( bool& abort ) = 0;
 };
 
 class options_global: public options_filter{
 public:
 	void fill_desc( po::options_description& desc );
 	void filterate( po::variables_map const & vm );
-	void process( bool& abort );
 
 	enum detail_level{
 		none,
@@ -64,10 +62,11 @@ public:
 
 	void fill_desc( po::options_description& desc );
 	void filterate( po::variables_map const & vm );
-	void process( bool& abort );
 
 	bool help_enabled() const;
 	bool version_enabled() const;
+
+	char const* version() const;
 
 private:
 	static const char* version_tag;
@@ -89,7 +88,6 @@ public:
 
 	void fill_desc( po::options_description& desc );
 	void filterate( po::variables_map const & vm );
-	void process( bool& abort );
 
 	enum export_format{
 		none,
@@ -101,10 +99,6 @@ public:
 	softart::languages language() const;
 	std::string output() const;
 
-	boost::shared_ptr< sasl::semantic::module_si > module_sem() const;
-	boost::shared_ptr< sasl::code_generator::codegen_context > module_codegen() const;
-	boost::shared_ptr< sasl::syntax_tree::node > root() const;
-
 private:
 	export_format fmt;
 	std::string fmt_str;
@@ -112,10 +106,6 @@ private:
 	std::string lang_str;
 	std::vector< std::string > in_names;
 	std::string out_name;
-
-	boost::shared_ptr< sasl::semantic::module_si > msi;
-	boost::shared_ptr< sasl::code_generator::codegen_context> mcg;
-	boost::shared_ptr< sasl::syntax_tree::node > mroot;
 
 	static const char* in_tag;
 	static const char* in_desc;
@@ -138,7 +128,6 @@ public:
 	void reg_extra_parser( po::basic_command_line_parser<char>& );
 	void fill_desc( po::options_description& desc );
 	void filterate( po::variables_map const & vm );
-	void process( bool& abort );
 
 private:
 	std::pair<std::string, std::string> parse_predef( std::string const& );
@@ -160,10 +149,18 @@ public:
 	po::variables_map const & variables() const;
 	options_display_info const & display_info() const;
 	options_io const & io_info() const;
+	
+	boost::shared_ptr< sasl::semantic::module_si > module_sem() const;
+	boost::shared_ptr< sasl::code_generator::codegen_context > module_codegen() const;
+	boost::shared_ptr< sasl::syntax_tree::node > root() const;
 
 private:
 	options_manager( options_manager const& );
 	options_manager& operator = ( options_manager const& );
+
+	boost::shared_ptr< sasl::semantic::module_si > msi;
+	boost::shared_ptr< sasl::code_generator::codegen_context> mcg;
+	boost::shared_ptr< sasl::syntax_tree::node > mroot;
 
 	options_global opt_global;
 	options_display_info opt_disp;

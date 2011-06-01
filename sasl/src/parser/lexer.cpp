@@ -257,7 +257,7 @@ bool lexer::tokenize( /*INPUTS*/ std::string const& code, shared_ptr<lex_context
 
 	int toked_state = 0; // 0 is no result, 1 is succeed, 2 is failed.
 	int i_state = 0;
-	int failed_count = 0;
+	size_t failed_count = 0;
 	while( lex_first != lex_last && toked_state == 0 ){
 		// Use current state, and match as long as possible.
 		const char* next_lex_first = lex_first;
