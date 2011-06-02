@@ -192,7 +192,7 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 }
 
 storage_si::storage_si( shared_ptr<type_manager> typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None), memidx(-1)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None), memidx(-1), swz(0)
 {
 }
 
@@ -210,6 +210,14 @@ int storage_si::mem_index() const{
 
 void storage_si::mem_index( int i ){
 	memidx = i;
+}
+
+int32_t storage_si::swizzle() const{
+	return swz;
+}
+
+void storage_si::swizzle( int32_t v ){
+	swz = v;
 }
 
 
@@ -248,6 +256,81 @@ shared_ptr<node> statement_si::parent_block() const{
 }
 void statement_si::parent_block( shared_ptr<node> v ){
 	parent = v;
+}
+
+
+int32_t swizzle_field_name_to_id( char ch ){
+	switch( ch ){
+	case 'x': return 1;
+	case 'y': return 2;
+	case 'z': return 3;
+	case 'w': return 4;
+	}
+	return 0;
+}
+
+int32_t encode_swizzle( char _1st, char _2nd, char _3rd, char _4th ){
+	int32_t swz = 0;
+
+	if( _1st == 0 ){
+		return 0;
+	} else {
+		assert( swizzle_field_name_to_id(_1st) );
+		swz = swizzle_field_name_to_id(_1st);
+	}
+
+	if( _2nd == 0){
+		return swz;
+	} else {
+		assert( swizzle_field_name_to_id(_2nd) );
+		swz &= ( _2nd << 8);
+	}
+
+	if( _3rd == 0){
+		return swz;
+	} else {
+		assert( swizzle_field_name_to_id(_3rd) );
+		swz &= ( _3rd << 16);
+	}
+	
+	if( _3rd == 0){
+		return swz;
+	} else {
+		assert( swizzle_field_name_to_id(_4th) );
+		swz &= ( _4th << 24);
+	}
+
+	return swz;
+}
+
+int32_t encode_swizzle( int& dest_size, int& min_src_size, char const* masks ){
+	min_src_size = 0;
+	dest_size = 0;
+	int32_t swz = 0;
+	for( char const* p = &masks[0];;++p){
+		if( *p ){
+			int32_t field_swz = swizzle_field_name_to_id(*p);
+			assert( field_swz );
+			swz += ( field_swz << (dest_size * 8) );
+			if( field_swz > min_src_size ){
+				min_src_size = field_swz;
+			}
+			++dest_size;
+		} else {
+			break;
+		}
+	}
+
+	return swz;
+}
+
+int32_t encode_sized_swizzle( int size )
+{
+	int32_t swz = 0;
+	for( int32_t i = 1; i <= size; ++i ){
+		swz &= ( i << (i-1) * 8 );
+	}
+	return swz;
 }
 
 END_NS_SASL_SEMANTIC();

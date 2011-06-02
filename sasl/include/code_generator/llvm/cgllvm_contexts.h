@@ -4,6 +4,8 @@
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/codegen_context.h>
 
+#include <eflib/include/platform/typedefs.h>
+
 namespace llvm{
 	// Node
 	class AllocaInst;
@@ -78,10 +80,14 @@ struct cgllvm_sctxt_data{
 	llvm::AllocaInst* local;
 	struct aggregated_data{
 		cgllvm_sctxt* parent;
-		int index;
+		union{
+			int index;
+			int32_t swizzle;
+		};
+		bool is_swizzle;
 	} agg;
-
-	bool is_semantic_mode;
+	
+	char const* hint_name;
 
 	// Functions
 	llvm::Function* self_fn;	// used by function type.

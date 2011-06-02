@@ -3,9 +3,11 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
-
+#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/type_converter.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -27,15 +29,20 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
+#include <boost/assign/std/vector.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace llvm;
 using namespace sasl::syntax_tree;
+using namespace boost::assign;
 
 using sasl::semantic::extract_semantic_info;
 using sasl::semantic::symbol;
 using sasl::semantic::type_info_si;
 using sasl::semantic::storage_si;
+using sasl::semantic::const_value_si;
+using sasl::semantic::operator_name;
 
 using boost::addressof;
 using boost::any_cast;
@@ -45,6 +52,20 @@ using std::vector;
 #define SASL_VISITOR_TYPE_NAME cgllvm_sisd
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+vector<Constant*> cgllvm_sisd::mask_to_indexes( uint32_t mask ){
+	vector<Constant*> ret;
+	ret.reserve(4);
+	IntegerType const* int32_type = IntegerType::getInt32Ty(llcontext());
+	for( int i = 0; i < 4; ++i ){
+		// XYZW is 1,2,3,4 but LLVM used 0,1,2,3
+		uint64_t comp_index = static_cast<uint64_t>( (mask >> i*8) & 0xFF );
+		if( comp_index == 0 ){break;}
+					
+		ret.push_back( ConstantInt::get( int32_type, comp_index-1 ) );
+	}
+	return ret;
+}
 
 bool cgllvm_sisd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii ){
 	this->msi = mod;
@@ -90,7 +111,101 @@ SASL_VISIT_DEF( binary_expression ){
 	if( v.op == operators::assign ){
 		bin_assign( v, data );
 	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
+		shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
+
+		//////////////////////////////////////////////////////////////////////////
+		// type conversation for matching the operator prototype
+
+		// get an overloadable prototype.
+		std::vector< shared_ptr<expression> > args;
+		args += v.left_expr, v.right_expr;
+
+		symbol::overloads_t overloads
+			= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
+
+		EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
+			return;
+		}
+		EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
+			return;
+		}
+
+		boost::shared_ptr<function_type> op_proto = overloads[0]->node()->typed_handle<function_type>();
+
+		shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
+		shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
+
+		// convert value type to match proto type.
+		if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
+			if( ! node_ctxt( p0_tsi->type_info() ) ){
+				visit_child( child_ctxt, child_ctxt_init,  op_proto->params[0]->param_type );
+			}
+			node_ctxt(v.left_expr)->data().val_type = node_ctxt( p0_tsi->type_info() )->data().val_type;
+			typeconv->convert( p0_tsi->type_info(), v.left_expr );
+		}
+		if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
+			if( ! node_ctxt( p1_tsi->type_info() ) ){
+				visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
+			}
+			node_ctxt(v.right_expr)->data().val_type = node_ctxt( p1_tsi->type_info() )->data().val_type;
+			typeconv->convert( p1_tsi->type_info(), v.right_expr );
+		}
+
+		// use type-converted value to generate code.
+		Value* lval = load( node_ctxt( v.left_expr ) );
+		Value* rval = load( node_ctxt( v.right_expr ) );
+
+		Value* retval = NULL;
+		if( lval && rval ){
+
+			builtin_type_code lbtc = p0_tsi->type_info()->value_typecode;
+			builtin_type_code rbtc = p1_tsi->type_info()->value_typecode;
+
+			if (v.op == operators::add){
+				if( sasl_ehelper::is_real(lbtc) ){
+					retval = mod_ptr()->builder()->CreateFAdd( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(lbtc) ){
+					retval = mod_ptr()->builder()->CreateAdd( lval, rval, "" );
+				}
+			} else if ( v.op == operators::sub ){
+				if( sasl_ehelper::is_real(lbtc) ){
+					retval = mod_ptr()->builder()->CreateFSub( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(lbtc) ){
+					retval = mod_ptr()->builder()->CreateSub( lval, rval, "" );
+				}
+			} else if ( v.op == operators::mul ){
+				if( sasl_ehelper::is_real(lbtc) ){
+					retval = mod_ptr()->builder()->CreateFMul( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(lbtc) ){
+					retval = mod_ptr()->builder()->CreateMul( lval, rval, "" );
+				}
+			} else if ( v.op == operators::div ){
+				if( sasl_ehelper::is_real(lbtc) ){
+					retval = mod_ptr()->builder()->CreateFDiv( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(lbtc) ){
+					// TODO support signed integer yet.
+					retval = mod_ptr()->builder()->CreateSDiv( lval, rval, "" );
+				}
+			} else if ( v.op == operators::less ){
+				if(sasl_ehelper::is_real(lbtc)){
+					retval = mod_ptr()->builder()->CreateFCmpULT( lval, rval );
+				} else if ( sasl_ehelper::is_integer(lbtc) ){
+					if( sasl_ehelper::is_signed(lbtc) ){
+						retval = mod_ptr()->builder()->CreateICmpSLT(lval, rval);
+					}
+					if( sasl_ehelper::is_unsigned(lbtc) ){
+						retval = mod_ptr()->builder()->CreateICmpULT(lval, rval);
+					}
+				}
+			} else {
+				EFLIB_INTERRUPT( (boost::format("Operator %s is not supported yet.") % v.op.name() ).str().c_str() );
+			}
+		}
+
+		store( retval, sc_ptr(data) );
+
+		node_ctxt(v, true)->copy( sc_ptr(data) );
 	}
 }
 
@@ -101,20 +216,63 @@ SASL_VISIT_DEF( member_expression ){
 
 	visit_child( child_ctxt, v.expr );
 
-	// Struct symbol
-	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
-	shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
-	shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
-
-	assert( mem_sym );
-
-	cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
 	cgllvm_sctxt* agg_ctxt = node_ctxt( v.expr );
+	cgllvm_sctxt* mem_ctxt = NULL;
 
 	assert( agg_ctxt );
 
-	sc_ptr(data)->data( mem_ctxt );
+	// Aggregated value
+	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
+
+	if( tisi->type_info()->is_builtin() ){
+		// Swizzle or write mask
+
+		storage_si* mem_ssi = dynamic_cast<storage_si*>(v.semantic_info().get());
+		sc_ptr(data)->clear_data();
+		sc_data_ptr(data)->agg.swizzle = mem_ssi->swizzle();
+		sc_data_ptr(data)->agg.is_swizzle = true;
+	} else {
+		// Member
+		shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
+		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
+
+		assert( mem_sym );
+		mem_ctxt = node_ctxt( mem_sym->node(), true );
+		sc_ptr(data)->data( mem_ctxt );
+	}
+
+	
 	sc_data_ptr(data)->agg.parent = agg_ctxt;
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_VISIT_DEF( constant_expression ){
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
+	if( ! node_ctxt( c_si->type_info() ) ){
+		visit_child( child_ctxt, child_ctxt_init, c_si->type_info() );
+	}
+
+	Value* retval = NULL;
+
+	cgllvm_sctxt* const_ctxt = node_ctxt( c_si->type_info() );
+	Type const* const_lltype = const_ctxt->data().val_type;
+
+	if( c_si->value_type() == builtin_type_code::_sint32 ){
+		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<int32_t>() ), true );
+	} else if ( c_si->value_type() == builtin_type_code::_uint32 ) {
+		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<uint32_t>() ), false );
+	} else if ( c_si->value_type() == builtin_type_code::_float ) {
+		retval = ConstantFP::get( const_lltype, c_si->value<double>() );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	store( retval, sc_ptr(data) );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -124,6 +282,7 @@ SASL_VISIT_DEF( variable_expression ){
 	assert( declsym && declsym->node() );
 
 	sc_ptr(data)->storage_and_type( node_ctxt( declsym->node() ) );
+	sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
@@ -135,7 +294,7 @@ SASL_VISIT_DEF( builtin_type ){
 	if ( !pctxt->data().val_type ){
 		bool sign = false;
 		Type const* ptype = llvm_type(v.value_typecode, sign);
-
+		assert( ptype );
 		std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
 		EFLIB_ASSERT_AND_IF( ptype, tips.c_str() ){
 			return;
@@ -167,6 +326,55 @@ SASL_VISIT_DEF( function_type ){
 	node_ctxt(v.symbol()->node(), true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( struct_type ){
+	// Create context.
+	// Declarator visiting need parent information.
+	cgllvm_sctxt* ctxt = node_ctxt(v, true);
+
+	// A struct is visited at definition type.
+	// If the visited again, it must be as an alias_type.
+	// So return environment directly.
+	if( ctxt->data().val_type ){
+		sc_ptr(data)->data(ctxt);
+		return;
+	}
+
+	std::string name = v.symbol()->mangled_name();
+
+	// Init data.
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	sc_env_ptr(&child_ctxt_init)->parent_struct = ctxt;
+
+	any child_ctxt;
+
+	// Visit children.
+	// Add type of child into member types, and calculate index.
+	vector<Type const*> members;
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+		visit_child( child_ctxt, child_ctxt_init, decl );
+
+		assert(
+			sc_data_ptr(&child_ctxt)->declarator_count != 0
+			&& sc_data_ptr(&child_ctxt)->val_type != NULL
+			);
+
+		members.insert(
+			members.end(),
+			sc_data_ptr(&child_ctxt)->declarator_count,
+			sc_data_ptr(&child_ctxt)->val_type
+			);
+	}
+
+	// Create
+	StructType* stype = StructType::get( llcontext(), members, true );
+	
+	llmodule()->addTypeName( name.c_str(), stype );
+	sc_data_ptr(data)->val_type = stype;
+
+	ctxt->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( declarator ){
 
 	// local *OR* member.
@@ -196,7 +404,7 @@ SASL_VISIT_DEF( variable_declaration ){
 		visit_child( child_ctxt, child_ctxt_init, dclr );
 	}
 
-	sc_data_ptr(data)->declarator_count = v.declarators.size();
+	sc_data_ptr(data)->declarator_count = static_cast<int>( v.declarators.size() );
 
 	sc_data_ptr(data)->val_type = val_type;
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -337,6 +545,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	// Create function body.
 	// Create block
 	restart_block( &child_ctxt_init, std::string(".entry") );
+	restart_block( &child_ctxt_init, std::string(".body") );
 	visit_child( child_ctxt, child_ctxt_init, v.body );
 	clear_empty_blocks( fn );
 }
@@ -376,7 +585,18 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
-	
+
+	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
+	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
+
+	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
+		if( typeconv->implicit_convertible( larg_tsi->entry_id(), rarg_tsi->entry_id() ) ){
+			typeconv->convert( larg_tsi->type_info(), v.right_expr );
+		} else {
+			assert( !"Expression could not converted to storage type." );
+		}
+	}
+
 	// Evaluated by visit(binary_expression)
 	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
 	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
@@ -424,7 +644,7 @@ cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val ){
 
 Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
 {
-	if( typespec->node_class() == syntax_node_types::builtin_type ){
+	if( typespec->is_builtin() ){
 		builtin_type_code btc = typespec->value_typecode;
 		Type const* valtype = node_ctxt(typespec)->data().val_type;
 		if( sasl_ehelper::is_integer( btc ) ){
@@ -441,6 +661,11 @@ Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
 
 llvm::Constant* cgllvm_sisd::zero_value( llvm::Type const* t ){
 	return Constant::getNullValue(t);
+}
+
+llvm::ConstantInt* cgllvm_sisd::llcvalue( int32_t v ){
+	uint64_t ulong_v = static_cast<uint64_t>(v);
+	return ConstantInt::get( IntegerType::getInt32Ty(llcontext()), ulong_v, true );
 }
 
 cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if_need /*= false */ )
@@ -467,33 +692,52 @@ llvm::Value* cgllvm_sisd::load( boost::any* data ){
 llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	assert(data);
 	Value* val = data->data().val;
-	do{
+	
+	const char* name = data->data().hint_name;
+	name = ( name == NULL ? "" : name );
 
+	do{
 		if( val ){ break; }
 		if( data->data().local ){
-			val = builder()->CreateLoad( data->data().local );
+			val = builder()->CreateLoad( data->data().local, name );
 			break;
 		}
 		if( data->data().global ){
-			val = builder()->CreateLoad( data->data().global );
+			val = builder()->CreateLoad( data->data().global, name );
 			break;
 		}
 		if( data->data().agg.parent ){
 			val = load( data->data().agg.parent );
-			val = builder()->CreateExtractValue( val, data->data().agg.index );
+			if( data->data().agg.is_swizzle ){
+				// Swizzle with shuffle instruction.
+				IntegerType const* int32_type = IntegerType::getInt32Ty(llcontext());
+				int32_t swz = data->data().agg.swizzle;
+				vector<Constant*> indices = mask_to_indexes(swz);
+				VectorType* mask_type = VectorType::get( int32_type, static_cast<unsigned>( indices.size() ) );
+
+				if( !val->getType()->isVectorTy() ){
+					vector<Constant*> vals;
+					vals.push_back( zero_value( val->getType() ) );
+					val = ConstantVector::get( VectorType::get(val->getType(), 1), vals );
+				}
+
+				val = builder()->CreateShuffleVector( val, UndefValue::get(val->getType()), ConstantVector::get(mask_type, indices) );
+
+			} else {
+				val = builder()->CreateExtractValue( val, data->data().agg.index );
+			}
 			break;
 		}
 		
-		assert(!"Here is an invalid path!");
+		return NULL;
 	} while(0);
 
 	if( data->data().is_ref ){
-		val = builder()->CreateLoad( val );
+		val = builder()->CreateLoad( val, name );
 	}
 
 	return val;
 }
-
 
 llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
 	cgllvm_sctxt_data* inner_data = &data->data();
@@ -519,7 +763,8 @@ llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
 		if( !addr ){
 			addr = inner_data->val;
 		} else {
-			addr = builder()->CreateLoad( addr );
+			const char* name = data->data().hint_name;
+			addr = builder()->CreateLoad( addr, Twine( name ? name : "" ) );
 		}
 	}
 
@@ -530,9 +775,62 @@ void cgllvm_sisd::store( llvm::Value* v, boost::any* data ){
 	store(v, sc_ptr(data) );
 }
 
+// Store will be enabled in following cases:
+//	value to address of same type.
+//	value to null data.
+//	scalar to vector value.
 void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
-	Value* addr = load_ptr( data );
-	builder()->CreateStore( v, addr );
+	if( !data->data().agg.is_swizzle ){
+		Value* addr = load_ptr( data );
+
+		if( addr ){
+			builder()->CreateStore( v, addr );
+		} else {
+			assert( data->data().agg.parent == NULL );
+			assert( data->data().val == NULL );
+			assert( data->data().local == NULL );
+			assert( data->data().global == NULL );
+
+			data->data().val = v;
+		}
+	} else {
+		// Write mask
+		// Steps:
+		//  Load or create vector value
+		//  Shuffle or insert value to vector.
+		//  Save new vector to parent.
+		vector<Constant*> mask_indexes = mask_to_indexes( data->data().agg.swizzle );
+
+		Value* dest_vec = NULL;
+		Value* old_vec = load(data->data().agg.parent);
+
+		// Scalar, insert directly
+		if( v->getType()->isIntegerTy() || v->getType()->isFloatingPointTy() ){
+			assert( mask_indexes.size() == 1);	
+			if( !old_vec ){
+				// Parent is fucking null.
+				// Create an null vector
+				vector<Constant*> vec_values;
+				vec_values.push_back( zero_value( v->getType() ) );
+				VectorType const* vec_type = VectorType::get( v->getType(), 1 );
+
+				dest_vec = ConstantVector::get( vec_type, vec_values );
+			}
+			dest_vec = builder()->CreateInsertElement( old_vec, v, llcvalue(0) );
+		} else {
+			assert( v->getType()->isVectorTy() );
+			// Vector, insert per element.
+			dest_vec = old_vec;
+			for( int i = 0; i < mask_indexes.size(); ++i ){
+				Value* elem = builder()->CreateExtractElement( v, llcvalue(0) );
+				dest_vec = builder()->CreateInsertElement( dest_vec, elem, mask_indexes[i] );
+			}
+		}
+
+		store( dest_vec, data->data().agg.parent );
+	}
+
+
 }
 
 void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
@@ -561,10 +859,13 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 			Function::BasicBlockListType::iterator next_it = it;
 			++next_it;
 
-			if( next_it != fn->getBasicBlockList().end() ){
+			builder()->SetInsertPoint( &(*it) );
+
+			if( next_it != fn->getBasicBlockList().end() ){	
 				mod_ptr()->builder()->CreateBr( &(*next_it) );
 			} else {
 				if( !fn->getReturnType()->isVoidTy() ){
+
 					Value* val = zero_value( fn->getReturnType() );
 					builder()->CreateRet(val);
 				} else {

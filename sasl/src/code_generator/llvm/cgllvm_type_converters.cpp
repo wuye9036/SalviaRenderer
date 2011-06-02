@@ -9,14 +9,21 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/utility.h>
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <eflib/include/diagnostics/assert.h>
 
 using ::llvm::IRBuilderBase;
 using ::llvm::IRBuilder;
 using ::llvm::Type;
 using ::llvm::Value;
+using ::llvm::VectorType;
 
+using ::sasl::semantic::encode_swizzle;
+using ::sasl::semantic::encode_sized_swizzle;
 using ::sasl::semantic::symbol;
 using ::sasl::semantic::type_converter;
 using ::sasl::semantic::type_entry;
@@ -27,6 +34,7 @@ using ::sasl::syntax_tree::create_builtin_type;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::type_specifier;
 
+using ::boost::bind;
 using ::boost::function;
 using ::boost::make_shared;
 using ::boost::shared_polymorphic_cast;
@@ -48,9 +56,13 @@ public:
 	{
 	}
 
+
+	// TODO if dest == src, maybe some bad thing happen ...
 	void int2int( shared_ptr<node> dest, shared_ptr<node> src ){
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+
+		assert( src_ctxt != dest_ctxt );
 
 		Value* dest_v = builder->CreateIntCast(
 			load( src_ctxt ),
@@ -63,6 +75,8 @@ public:
 	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+		
+		assert( src_ctxt != dest_ctxt );
 
 		Value* src_v = load( src_ctxt );
 		Type const* dest_type = dest_ctxt->data().val_type;
@@ -79,6 +93,8 @@ public:
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
+		assert( src_ctxt != dest_ctxt );
+
 		Value* src_v = load( src_ctxt );
 		Type const* dest_type = dest_ctxt->data().val_type;
 		Value* dest_v = NULL;
@@ -94,10 +110,56 @@ public:
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
 
-		Value* dest_v = NULL;
+		assert( src_ctxt != dest_ctxt );
+
 		Type const* dest_type = dest_ctxt->data().val_type;
-		dest_v = builder->CreateFPCast( load(src_ctxt), dest_type );
+		Value* dest_v = builder->CreateFPCast( load(src_ctxt), dest_type );
+
+		if( dest_ctxt )
 		store(dest_v, dest_ctxt);
+	}
+
+	void scalar2vec1( shared_ptr<node> dest, shared_ptr<node> src ){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+
+		assert( src_ctxt != dest_ctxt );
+
+		Type const* elem_type = src_ctxt->data().val_type;
+		Type const* dest_type = VectorType::get( elem_type, 1 );
+
+		// Store value to an vector
+		cgllvm_sctxt agg_ctxt;
+		cgllvm_sctxt elem_ctxt;
+		elem_ctxt.data().agg.is_swizzle = true;
+		elem_ctxt.data().agg.swizzle = encode_swizzle('x'); /*X*/
+		elem_ctxt.data().agg.parent = &agg_ctxt;
+		store( load(src_ctxt), &elem_ctxt );
+
+		store( load(&agg_ctxt), dest_ctxt );
+		dest_ctxt->data().val_type = dest_type;
+	}
+
+	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+
+		assert( src_ctxt != dest_ctxt );
+		assert( source_size > dest_size );
+
+		Type const* elem_type = src_ctxt->data().val_type;
+		Type const* dest_type = VectorType::get( elem_type, 1 );
+
+		// Store value to an vector
+		cgllvm_sctxt agg_ctxt;
+		cgllvm_sctxt elem_ctxt;
+		elem_ctxt.data().agg.is_swizzle = true;
+		elem_ctxt.data().agg.swizzle = encode_sized_swizzle(dest_size);
+		elem_ctxt.data().agg.parent = &agg_ctxt;
+		store( load(src_ctxt), &elem_ctxt );
+
+		store( load(&agg_ctxt), dest_ctxt );
+		dest_ctxt->data().val_type = dest_type;
 	}
 private:
 	shared_ptr< IRBuilder<> > builder;
@@ -111,20 +173,27 @@ void register_builtin_typeconv(
 	shared_ptr<type_manager> typemgr
 	)
 {
+	typedef function< void ( shared_ptr<node>, shared_ptr<node> ) > converter_t;
+
 	shared_ptr<cgllvm_type_converter> cg_typeconv = shared_polymorphic_cast<cgllvm_type_converter>(typeconv);
 
-	boost::function<
-		void ( shared_ptr<node>, shared_ptr<node> ) 
-	> int2int_pfn = ::boost::bind( &cgllvm_type_converter::int2int, cg_typeconv.get(), _1, _2 ) ;
-	boost::function<
-		void ( shared_ptr<node>, shared_ptr<node> ) 
-	> int2float_pfn = ::boost::bind( &cgllvm_type_converter::int2float, cg_typeconv.get(), _1, _2 ) ;
-	boost::function<
-		void ( shared_ptr<node>, shared_ptr<node> ) 
-	> float2int_pfn = ::boost::bind( &cgllvm_type_converter::float2int, cg_typeconv.get(), _1, _2 ) ;
-	boost::function<
-		void ( shared_ptr<node>, shared_ptr<node> ) 
-	> float2float_pfn = ::boost::bind( &cgllvm_type_converter::float2float, cg_typeconv.get(), _1, _2 ) ;
+	converter_t int2int_pfn = bind( &cgllvm_type_converter::int2int, cg_typeconv.get(), _1, _2 ) ;
+	converter_t int2float_pfn = bind( &cgllvm_type_converter::int2float, cg_typeconv.get(), _1, _2 ) ;
+	converter_t float2int_pfn = bind( &cgllvm_type_converter::float2int, cg_typeconv.get(), _1, _2 ) ;
+	converter_t float2float_pfn = bind( &cgllvm_type_converter::float2float, cg_typeconv.get(), _1, _2 ) ;
+	converter_t scalar2vec1_pfn = bind( &cgllvm_type_converter::scalar2vec1, cg_typeconv.get(), _1, _2 ) ;
+
+	converter_t shrink_vec_pfn[5][5];
+	for( int src_size = 1; src_size < 5; ++src_size ){
+		for( int dest_size = 0; dest_size < 5; ++dest_size ){
+			if( src_size > dest_size ){
+				shrink_vec_pfn[src_size][dest_size] = bind(
+					&cgllvm_type_converter::shrink_vector, cg_typeconv.get(),
+					_1, _2, src_size, dest_size
+					);
+			}
+		}
+	}
 
 	type_entry::id_t sint8_ts = typemgr->get( builtin_type_code::_sint8 );
 	type_entry::id_t sint16_ts = typemgr->get( builtin_type_code::_sint16 );
@@ -261,6 +330,44 @@ void register_builtin_typeconv(
 	//cg_typeconv->register_converter( type_converter::explicit_conv, bool_ts, uint64_ts, default_conv );
 	//cg_typeconv->register_converter( type_converter::explicit_conv, bool_ts, float_ts, default_conv );
 	//cg_typeconv->register_converter( type_converter::explicit_conv, bool_ts, double_ts, default_conv );
+
+	//-------------------------------------------------------------------------
+	// Register scalar <====> vector<scalar, 1>.
+#define DEFINE_VECTOR_TYPE_IDS( btc ) \
+	type_entry::id_t btc##_vts[5] = {-1, -1, -1, -1, -1};\
+	btc##_vts[1] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 1 ) ); \
+	btc##_vts[2] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 2 ) ); \
+	btc##_vts[3] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 3 ) ); \
+	btc##_vts[4] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 4 ) );
+
+#define DEFINE_SHRINK_VECTORS( btc )				\
+	for( int i = 1; i <=3; ++i ) {					\
+		for( int j = i + 1; j <= 4; ++j ){			\
+			cg_typeconv->register_converter(		\
+				type_converter::explicit_conv,		\
+				btc##_vts[j], btc##_vts[i],			\
+				shrink_vec_pfn[j][i]				\
+				);									\
+		}											\
+	}
+	
+#define DEFINE_VECTOR_AND_SHRINK( btc )	\
+	DEFINE_VECTOR_TYPE_IDS( btc );	\
+	DEFINE_SHRINK_VECTORS( btc );
+
+	DEFINE_VECTOR_AND_SHRINK( _sint8 );
+	DEFINE_VECTOR_AND_SHRINK( _sint16 );
+	DEFINE_VECTOR_AND_SHRINK( _sint32 );
+	DEFINE_VECTOR_AND_SHRINK( _sint64 );
+	
+	DEFINE_VECTOR_AND_SHRINK( _uint8 );
+	DEFINE_VECTOR_AND_SHRINK( _uint16 );
+	DEFINE_VECTOR_AND_SHRINK( _uint32 );
+	DEFINE_VECTOR_AND_SHRINK( _uint64 );
+
+	DEFINE_VECTOR_AND_SHRINK( _float );
+	DEFINE_VECTOR_AND_SHRINK( _double );
+
 }
 
 shared_ptr<type_converter> create_type_converter(

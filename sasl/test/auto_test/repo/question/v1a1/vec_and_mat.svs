@@ -1,0 +1,22 @@
+struct VSIN{
+	float4 pos: SV_Position;
+};
+
+struct VSOUT{
+	float4 pos: SV_Position;
+};
+
+VSOUT fn( VSIN in ){
+	VSOUT o;
+	
+	float4 x, y;
+	x = (in.pos).xxxx;
+	y = (5.0f).xxxx;
+	
+	o.pos = x + y;
+	o.pos = o.pos + (x - y);
+	o.pos = o.pos + (x * y);
+	o.pos = o.pos + (x / y);
+	
+	return o;
+}

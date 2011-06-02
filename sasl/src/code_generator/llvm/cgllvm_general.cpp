@@ -65,26 +65,6 @@ typedef cgllvm_sctxt* sctxt_handle;
 cgllvm_general::cgllvm_general()
 {}
 
-// Process assign
-void cgllvm_general::do_assign( any* data, shared_ptr<expression> lexpr, shared_ptr<expression> rexpr )
-{
-	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(lexpr);
-	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(rexpr);
-
-	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
-		if( typeconv->implicit_convertible( larg_tsi->entry_id(), rarg_tsi->entry_id() ) ){
-			typeconv->convert( larg_tsi->type_info(), rexpr );
-		} else {
-			assert( !"Expression could not converted to storage type." );
-		}
-	}
-
-	store( load( node_ctxt(rexpr) ), node_ctxt(lexpr) );
-
-	sc_data_ptr(data)->val_type = node_ctxt(lexpr)->data().val_type;
-	sc_data_ptr(data)->local = node_ctxt(lexpr)->data().local;
-}
-
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF( cast_expression ){
 	any child_ctxt_init = *data;
@@ -118,7 +98,7 @@ SASL_VISIT_DEF( binary_expression ){
 	visit_child( child_ctxt, child_ctxt_init, v.right_expr );
 
 	if( v.op == operators::assign ){
-		do_assign( data, v.left_expr, v.right_expr );
+		bin_assign( v, data );
 	} else {
 		shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
 		shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
@@ -178,11 +158,24 @@ SASL_VISIT_DEF( binary_expression ){
 					retval = mod_ptr()->builder()->CreateAdd( lval, rval, "" );
 				}
 			} else if ( v.op == operators::sub ){
-				retval = mod_ptr()->builder()->CreateSub( lval, rval, "" );
+				if( sasl_ehelper::is_real(lbtc) ){
+					retval = mod_ptr()->builder()->CreateFSub( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(lbtc) ){
+					retval = mod_ptr()->builder()->CreateSub( lval, rval, "" );
+				}
 			} else if ( v.op == operators::mul ){
-				retval = mod_ptr()->builder()->CreateMul( lval, rval, "" );
+				if( sasl_ehelper::is_real(lbtc) ){
+					retval = mod_ptr()->builder()->CreateFMul( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(lbtc) ){
+					retval = mod_ptr()->builder()->CreateMul( lval, rval, "" );
+				}
 			} else if ( v.op == operators::div ){
-				EFLIB_INTERRUPT( "Division is not supported yet." );
+				if( sasl_ehelper::is_real(lbtc) ){
+					retval = mod_ptr()->builder()->CreateFDiv( lval, rval, "" );
+				} else if( sasl_ehelper::is_integer(lbtc) ){
+					// TODO support signed integer yet.
+					retval = mod_ptr()->builder()->CreateSDiv( lval, rval, "" );
+				}
 			} else if ( v.op == operators::less ){
 				if(sasl_ehelper::is_real(lbtc)){
 					retval = mod_ptr()->builder()->CreateFCmpULT( lval, rval );
@@ -209,32 +202,6 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
-SASL_VISIT_DEF_UNIMPL( member_expression );
-
-SASL_VISIT_DEF( constant_expression ){
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
-	if( ! node_ctxt( c_si->type_info() ) ){
-		visit_child( child_ctxt, child_ctxt_init, c_si->type_info() );
-	}
-
-	Value* retval = NULL;
-	if( c_si->value_type() == builtin_type_code::_sint32 ){
-		retval = ConstantInt::get( node_ctxt( c_si->type_info() )->data().val_type, uint64_t( c_si->value<int32_t>() ), true );
-	} else if ( c_si->value_type() == builtin_type_code::_uint32 ) {
-		retval = ConstantInt::get( node_ctxt( c_si->type_info() )->data().val_type, uint64_t( c_si->value<uint32_t>() ), false );
-	} else if ( c_si->value_type() == builtin_type_code::_float ) {
-		retval = ConstantFP::get( node_ctxt( c_si->type_info() )->data().val_type, c_si->value<double>() );
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	store( retval, sc_ptr(data) );
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
 
 SASL_VISIT_DEF_UNIMPL( identifier );
 
@@ -258,30 +225,11 @@ SASL_VISIT_DEF( expression_initializer ){
 }
 
 SASL_VISIT_DEF_UNIMPL( member_initializer );
-SASL_VISIT_DEF_UNIMPL( declaration );
-
-SASL_VISIT_DEF( variable_declaration ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	visit_child( child_ctxt, child_ctxt_init, v.type_info );
-	assert( sc_ptr(child_ctxt)->data().val_type );
-
-	sc_ptr(child_ctxt_init)->data().val_type = sc_ptr(child_ctxt)->data().val_type;
-
-	BOOST_FOREACH( shared_ptr<declarator> decl, v.declarators ){
-		visit_child( child_ctxt, child_ctxt_init, decl );
-	}
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
 
 
 SASL_VISIT_DEF_UNIMPL( array_type );
-SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF( parameter ){
 
@@ -362,7 +310,6 @@ SASL_VISIT_DEF_UNIMPL( while_statement );
 SASL_VISIT_DEF_UNIMPL( dowhile_statement );
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
-
 
 SASL_VISIT_DEF_UNIMPL( ident_label );
 

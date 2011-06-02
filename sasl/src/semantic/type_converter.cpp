@@ -62,8 +62,8 @@ type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared
 
 type_converter::conv_type type_converter::convert( shared_ptr<type_specifier> desttype, shared_ptr<node> src )
 {
-	type_entry::id_t dst_tid = extract_semantic_info<type_info_si>( desttype )->entry_id();
-	type_entry::id_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
+	type_entry::id_t dst_tid = desttype->si_ptr<type_info_si>()->entry_id();
+	type_entry::id_t src_tid = src->si_ptr<type_info_si>()->entry_id();
 
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){

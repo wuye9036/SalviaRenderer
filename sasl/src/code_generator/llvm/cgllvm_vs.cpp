@@ -159,7 +159,6 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
-SASL_VISIT_DEF_UNIMPL( constant_expression );
 
 SASL_VISIT_DEF( variable_expression ){
 	// TODO Referenced symbol must be evaluated in semantic analysis stages.
@@ -198,49 +197,6 @@ SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( type_specifier );
 SASL_VISIT_DEF_UNIMPL( array_type );
-
-SASL_VISIT_DEF( struct_type ){
-	// Create context.
-	// Declarator visiting need parent information.
-	cgllvm_sctxt* ctxt = node_ctxt(v, true);
-
-	// A struct is visited at definition type.
-	// If the visited again, it must be as an alias_type.
-	// So return environment directly.
-	if( ctxt->data().val_type ){
-		sc_ptr(data)->data(ctxt);
-		return;
-	}
-
-	std::string name = v.symbol()->mangled_name();
-
-	// Init data.
-	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-	sc_env_ptr(&child_ctxt_init)->parent_struct = ctxt;
-
-	any child_ctxt;
-
-	// Visit children.
-	// Add type of child into member types, and calculate index.
-	vector<Type const*> members;
-	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
-		visit_child( child_ctxt, child_ctxt_init, decl );
-		members.insert(
-			members.end(),
-			sc_data_ptr(&child_ctxt)->declarator_count,
-			sc_data_ptr(&child_ctxt)->val_type
-			);
-	}
-
-	// Create
-	StructType* stype = StructType::get( llcontext(), members, true );
-	
-	llmodule()->addTypeName( name.c_str(), stype );
-	sc_data_ptr(data)->val_type = stype;
-
-	ctxt->copy( sc_ptr(data) );
-}
 
 SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF_UNIMPL( parameter );

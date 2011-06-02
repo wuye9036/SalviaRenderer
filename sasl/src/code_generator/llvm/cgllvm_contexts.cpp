@@ -27,6 +27,7 @@ cgllvm_sctxt_data const& cgllvm_sctxt::data() const{
 }
 
 void cgllvm_sctxt::data( cgllvm_sctxt_data const& rhs ){
+	if( &rhs == &data() ) return;
 	hold_data = rhs;
 }
 
@@ -40,6 +41,7 @@ void cgllvm_sctxt::storage( cgllvm_sctxt const* rhs ){
 	data().global = rhs->data().global;
 	data().local = rhs->data().local;
 	data().agg = rhs->data().agg;
+	data().hint_name = rhs->data().hint_name;
 }
 
 void cgllvm_sctxt::type( cgllvm_sctxt const* rhs ){
@@ -86,7 +88,7 @@ void cgllvm_sctxt::clear_data(){
 cgllvm_sctxt_env::cgllvm_sctxt_env() 
 	: parent_fn(NULL), block(NULL), parent_struct(NULL),
 	continue_to(NULL), break_to(NULL),
-	is_semantic_mode(false)
+	is_semantic_mode(false), declarator_type(NULL)
 {
 }
 

@@ -248,6 +248,33 @@ SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
 
+int check_swizzle( builtin_type_code btc, std::string const& mask, int32_t& swizzle_code ){
+	swizzle_code = 0;
+
+	if( mask.length() > 4 ){
+		return 0;
+	}
+
+	size_t agg_size = 0;
+	if( sasl_ehelper::is_scalar(btc) ){
+		agg_size = 1;
+	} else if( sasl_ehelper::is_vector(btc) ){
+		agg_size = sasl_ehelper::len_0( btc );
+	} else if( sasl_ehelper::is_matrix(btc) ){
+		agg_size = sasl_ehelper::len_1( btc );
+	}
+
+	if( agg_size == 0 ){ return 0; }
+
+	int min_src_size = 0;
+	int dest_size = 0;
+	swizzle_code = encode_swizzle( dest_size, min_src_size, mask.c_str() );
+	
+	assert( min_src_size <= agg_size );
+
+	return dest_size;
+}
+
 SASL_VISIT_DEF( member_expression ){
 	shared_ptr<member_expression> dup_expr =
 		duplicate( v.handle() )->typed_handle<member_expression>();
@@ -256,17 +283,16 @@ SASL_VISIT_DEF( member_expression ){
 	visit_child( child_ctxt, v.expr );
 	dup_expr->expr = ctxt_ptr(child_ctxt)->generated_node->typed_handle<expression>();
 
-	SASL_EXTRACT_SI( storage_si, agg_ssi, dup_expr->expr );
-	assert( agg_ssi );
+	SASL_EXTRACT_SI( type_info_si, arg_tisi, dup_expr->expr );
+	assert( arg_tisi );
 
-	shared_ptr<type_specifier> agg_type = agg_ssi->type_info();
-	shared_ptr<type_specifier> mem_type;
+	shared_ptr<type_specifier> agg_type = arg_tisi->type_info();
+	type_entry::id_t mem_typeid = -1;
 
-	// TODO aggregated class is vector & matrix
-
-	// TODO aggregated class is sampler
-
+	
+	int32_t swizzle_code = 0;
 	if( agg_type->node_class() == syntax_node_types::struct_type ){
+		// Aggeragated is struct
 		shared_ptr<symbol> struct_sym = agg_type->typed_handle<struct_type>()->symbol();
 		shared_ptr<declarator> mem_declr
 			= struct_sym->find_this( v.member->str )->node()->typed_handle<declarator>();
@@ -274,15 +300,49 @@ SASL_VISIT_DEF( member_expression ){
 		// Need to report that.
 		assert( mem_declr );
 		SASL_EXTRACT_SI( type_info_si, mem_si, mem_declr );
-		mem_type = mem_si->type_info();
-		assert( mem_type );
+		mem_typeid = mem_si->entry_id();
+		assert( mem_typeid != -1 );
+	} else if( agg_type->is_builtin() ){
+		// Aggregated class is vector & matrix
+		builtin_type_code agg_btc = agg_type->value_typecode;
+		int field_count = check_swizzle( agg_btc, v.member->str, swizzle_code );
+		if( field_count > 0 ){
+			builtin_type_code elem_btc = sasl_ehelper::scalar_of( agg_btc );
+			builtin_type_code swizzled_btc = builtin_type_code::none;
+
+			if( sasl_ehelper::is_scalar(agg_btc)
+				|| sasl_ehelper::is_vector(agg_btc) )
+			{
+				swizzled_btc = sasl_ehelper::vector_of(
+					elem_btc,
+					static_cast<size_t>( field_count )
+					);
+			} else {
+				// matrix only
+				swizzled_btc = sasl_ehelper::matrix_of(
+					elem_btc,
+					sasl_ehelper::len_0( agg_btc ),
+					static_cast<size_t>( field_count )
+					);
+			}
+
+			mem_typeid = msi->type_manager()->get( swizzled_btc );
+		} else {
+			// TODO swizzle fields are some errors.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return;
+		}
 	} else {
+		// TODO:
+		//	If type is not a struct or builtin type, it could not support member operation.
+		//	Error on compiling.
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return;
 	}
 
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->type_manager() );
-	ssi->type_info( mem_type, data_cptr()->parent_sym );
+	ssi->entry_id( mem_typeid );
+	ssi->swizzle( swizzle_code );
 
 	data_cptr()->generated_node = dup_expr;
 }

@@ -34,6 +34,13 @@ namespace softart{
 
 BEGIN_NS_SASL_SEMANTIC();
 
+int32_t swizzle_field_name_to_id( char ch );
+// bool is_valid_swizzle_field( char ch, int max_size );
+int32_t encode_swizzle( char _1st, char _2nd = 0, char _3rd = 0, char _4th = 0 );
+int32_t encode_swizzle( int& dest_size, int& min_src_size, char const* masks );
+int32_t encode_sized_swizzle( int size );
+// char decode_swizzle( int32_t swz, int pos );
+
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::statement;
@@ -152,14 +159,20 @@ public:
 	softart::semantic get_semantic() const;
 	void set_semantic( softart::semantic v );
 
-	// Member index of structure.
+	// For members
 	int mem_index() const;
 	void mem_index( int i );
+
+	// Indicate that member is a swizzle
+	//	e.g. float2.xyyx;
+	int32_t swizzle() const;
+	void swizzle( int32_t v );
 
 	SASL_TYPE_INFO_PROXY();
 
 private:
 	int memidx;
+	int32_t swz;
 	softart::semantic sem;
 };
 
