@@ -170,18 +170,6 @@ builtin_type_code const_value_si::value_type() const{
 	return type_info()->value_typecode;
 }
 
-variable_semantic_info::variable_semantic_info()
-	: isloc(false)
-{
-}
-bool variable_semantic_info::is_local() const{
-	return isloc;
-}
-
-void variable_semantic_info::is_local( bool isloc ){
-	this->isloc = isloc;
-}
-
 shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 {
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
@@ -220,10 +208,29 @@ void storage_si::swizzle( int32_t v ){
 	swz = v;
 }
 
-
 type_si::type_si( shared_ptr<type_manager> typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 {
+}
+
+fnvar_si::fnvar_si() : sym(NULL)
+{
+}
+
+void fnvar_si::scope( boost::shared_ptr<symbol> const& sym){
+	this->sym = sym.get();
+}
+
+symbol* fnvar_si::scope() const{
+	return sym;
+}
+
+void fnvar_si::name( std::string const& name ){
+	fn_name = name;
+}
+
+std::string const& fnvar_si::name() const{
+	return fn_name;
 }
 
 statement_si::statement_si():has_lp(false){}

@@ -71,12 +71,14 @@ public:
 	boost::shared_ptr<cast_expression> build_typecastedexpr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<unary_expression> build_unariedexpr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<expression> build_postexpr( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<expression> build_callexpr(
+		boost::shared_ptr<sasl::parser::attribute> attr,
+		boost::shared_ptr<expression> expr );
 	boost::shared_ptr<expression> build_memexpr(
 		boost::shared_ptr<sasl::parser::attribute> attr,
-		boost::shared_ptr<expression> expr
-		);
+		boost::shared_ptr<expression> expr );
 	boost::shared_ptr<expression> build_pmexpr( boost::shared_ptr<sasl::parser::attribute> attr );
-
+	
 	boost::shared_ptr<type_specifier> build_typespec( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<type_specifier> build_unqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<type_specifier> build_prequaledtype( boost::shared_ptr<sasl::parser::attribute> attr );

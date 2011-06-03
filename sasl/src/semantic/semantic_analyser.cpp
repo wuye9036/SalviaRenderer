@@ -246,7 +246,10 @@ SASL_VISIT_DEF( binary_expression )
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
-SASL_VISIT_DEF_UNIMPL( call_expression );
+
+SASL_VISIT_DEF( call_expression )
+{
+}
 
 int check_swizzle( builtin_type_code btc, std::string const& mask, int32_t& swizzle_code ){
 	swizzle_code = 0;
@@ -358,12 +361,30 @@ SASL_VISIT_DEF( constant_expression )
 }
 
 SASL_VISIT_DEF( variable_expression ){
+	std::string name = v.var_name->str;
 
-	shared_ptr<symbol> vdecl = data_cptr()->parent_sym->find( v.var_name->str );
+	shared_ptr<symbol> vdecl = data_cptr()->parent_sym->find( name );
 	shared_ptr<variable_expression> dup_vexpr = duplicate( v.handle() )->typed_handle<variable_expression>();
-	
-	dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
+
+	if( vdecl ){
+		// Variable
+		dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
+	} else{
+		// Function
+		vector< shared_ptr<symbol> > fdecls = data_cptr()->parent_sym->find_overloads( name );
+		if( fdecls.empty() )
+		{
+			// TODO Variable name is invalid.
+			dup_vexpr.reset();
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else {
+			SASL_GET_OR_CREATE_SI( fnvar_si, fvsi, dup_vexpr );
+			// fvsi->symbols( fdecls );
+		}
+	}
+
 	data_cptr()->generated_node = dup_vexpr->handle();
+	return;
 }
 
 // declaration & type specifier

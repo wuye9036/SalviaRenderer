@@ -78,7 +78,7 @@ void grammars::set_exprs()
 	SRULE( unariedexpr, (opinc | opunary) > castexpr );
 	SRULE( postexpr, pmexpr >> *(idxexpr | callexpr | memexpr | opinc) );
 	SRULE( idxexpr, lsbracket >> expr > rsbracket );
-	SRULE( callexpr, lparen >> -expr > rparen );
+	SRULE( callexpr, lparen >> -exprlst > rparen );
 	SRULE( memexpr, opmember > ident );
 	SRULE( pmexpr, lit_const | ident | parenexpr );
 	SRULE( parenexpr, lparen >> expr > rparen );

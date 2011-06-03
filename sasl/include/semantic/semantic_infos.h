@@ -176,16 +176,22 @@ private:
 	softart::semantic sem;
 };
 
-class variable_semantic_info: public semantic_info{
+/*! \brief fnvar_si storages the semantic informations of variable of function.
+ *
+ */
+class fnvar_si: public semantic_info{
 public:
-	friend class semantic_info_collection;
-	typedef semantic_info base_type;
+	fnvar_si();
 
-	bool is_local() const;
-	void is_local( bool isloc );
+	void scope( boost::shared_ptr<symbol> const& );
+	symbol* scope() const;
+
+	void name( std::string const& );
+	std::string const& name() const;
+
 private:
-	variable_semantic_info();
-	bool isloc;
+	symbol* sym;
+	std::string fn_name;
 };
 
 class statement_si: public semantic_info{
