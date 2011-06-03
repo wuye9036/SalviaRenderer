@@ -17,6 +17,8 @@ using boost::uint16_t;
 using boost::uint32_t;
 using boost::uint64_t;
 
+typedef boost::uint8_t byte;
+
 #define STATIC_ASSERT_INFO(info) static const bool info = false;
 
 #endif

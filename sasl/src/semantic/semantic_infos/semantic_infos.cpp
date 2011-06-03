@@ -293,12 +293,8 @@ int32_t encode_swizzle( char _1st, char _2nd, char _3rd, char _4th ){
 		swz &= ( _3rd << 16);
 	}
 	
-	if( _3rd == 0){
-		return swz;
-	} else {
-		assert( swizzle_field_name_to_id(_4th) );
-		swz &= ( _4th << 24);
-	}
+	assert( swizzle_field_name_to_id(_4th) );
+	swz &= ( _4th << 24);
 
 	return swz;
 }
