@@ -251,7 +251,7 @@ public:
 		vec3 e = normalize3(in.attributes[1].xyz());
 		vec3 n = normalize3(in.attributes[2].xyz());
 		float n_dot_l = dot_prod3(n, l);
-		float roughness = 80;
+		float roughness = 5;
 		float spec = (roughness + 2) / 2 * pow(max(dot_prod3(normalize3(l + e), n), 0.0f), roughness);
 		float clr = n_dot_l * (0.8f + spec * 0.4f);
 		out.color[0] = vec4(clr, clr, clr, 1);

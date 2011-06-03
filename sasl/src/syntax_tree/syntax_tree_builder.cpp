@@ -872,7 +872,7 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
 			SASL_CASE_RULE( callexpr ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				ret = build_callexpr( expr_attr->child(1), ret );
 			}
 			SASL_CASE_RULE( memexpr ){
 				ret = build_memexpr(expr_attr, ret);
@@ -883,6 +883,23 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 		SASL_END_SWITCH_RULE();
 	}
 
+	return ret;
+}
+
+shared_ptr<expression> syntax_tree_builder::build_callexpr(
+	shared_ptr<attribute> attr,
+	shared_ptr<expression> expr )
+{
+	shared_ptr<call_expression> ret = create_node<call_expression>( token_t::null() );
+	ret->expr = expr;
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_args, attr );
+	if( !optional_args->attrs.empty() )
+	{
+		shared_ptr<expression_list> arglst = build_exprlst( attr->child(0) );
+		ret->args = arglst->exprs;
+	}
+	
 	return ret;
 }
 

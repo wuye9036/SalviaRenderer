@@ -246,7 +246,10 @@ SASL_VISIT_DEF( binary_expression )
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
-SASL_VISIT_DEF_UNIMPL( call_expression );
+
+SASL_VISIT_DEF( call_expression )
+{
+}
 
 int check_swizzle( builtin_type_code btc, std::string const& mask, int32_t& swizzle_code ){
 	swizzle_code = 0;
@@ -358,12 +361,30 @@ SASL_VISIT_DEF( constant_expression )
 }
 
 SASL_VISIT_DEF( variable_expression ){
+	std::string name = v.var_name->str;
 
-	shared_ptr<symbol> vdecl = data_cptr()->parent_sym->find( v.var_name->str );
+	shared_ptr<symbol> vdecl = data_cptr()->parent_sym->find( name );
 	shared_ptr<variable_expression> dup_vexpr = duplicate( v.handle() )->typed_handle<variable_expression>();
-	
-	dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
+
+	if( vdecl ){
+		// Variable
+		dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
+	} else{
+		// Function
+		vector< shared_ptr<symbol> > fdecls = data_cptr()->parent_sym->find_overloads( name );
+		if( fdecls.empty() )
+		{
+			// TODO Variable name is invalid.
+			dup_vexpr.reset();
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else {
+			SASL_GET_OR_CREATE_SI( fnvar_si, fvsi, dup_vexpr );
+			// fvsi->symbols( fdecls );
+		}
+	}
+
 	data_cptr()->generated_node = dup_vexpr->handle();
+	return;
 }
 
 // declaration & type specifier
@@ -900,20 +921,24 @@ void semantic_analyser::register_type_converter( const boost::any& /*ctxt*/ ){
 void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt_init ){
 	any child_ctxt;
 
+	// Operators
 	typedef unordered_map<
 		builtin_type_code, shared_ptr<builtin_type>, enum_hasher
 		> bt_table_t;
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
+
 	map_of_builtin_type( standard_bttbl, &sasl_ehelper::is_standard );
 	map_of_builtin_type( storage_bttbl, &sasl_ehelper::is_storagable );
 
-	shared_ptr<builtin_type> bt_bool = storage_bttbl[ builtin_type_code::_boolean ];
-	shared_ptr<builtin_type> bt_i32 = storage_bttbl[ builtin_type_code::_sint32 ];
+#define BUILTIN_TYPE( btc ) (storage_bttbl[ builtin_type_code::btc ])
+
+	shared_ptr<builtin_type> bt_bool = BUILTIN_TYPE( _boolean );
+	shared_ptr<builtin_type> bt_i32 = BUILTIN_TYPE( _sint32 );
 
 	shared_ptr<function_type> tmpft;
 
-	// arithmetic operators
+	// Arithmetic operators
 	vector<std::string> op_tbl;
 	const vector<operators>& oplist = sasl_ehelper::list_of_operators();
 
@@ -1050,6 +1075,44 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 			}
 		}
+	}
+
+	// Intrinsics
+	shared_ptr<builtin_type> fvec_ts[5];
+	for( int i = 1; i <= 4; ++i ){
+		fvec_ts[i] = storage_bttbl[ sasl_ehelper::vector_of( builtin_type_code::_float, i ) ];
+	}
+
+	shared_ptr<builtin_type> fmat_ts[5][5];
+	for( int vec_size = 1; vec_size < 5; ++vec_size ){
+		for( int n_vec = 1; n_vec < 5; ++n_vec ){
+			fmat_ts[vec_size][n_vec] = storage_bttbl[
+				sasl_ehelper::matrix_of( builtin_type_code::_float, vec_size, n_vec )
+			];
+		}
+	}
+
+	for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
+
+		for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
+			dfunction_combinator(NULL).dname("mul")
+				.dreturntype().dnode( fvec_ts[vec_size] ).end()
+				.dparam().dtype().dnode( fvec_ts[n_vec] ).end().end()
+				.dparam().dtype().dnode( fmat_ts[vec_size][n_vec] ).end().end()
+			.end();
+			dfunction_combinator(NULL).dname("mul")
+				.dreturntype().dnode( fvec_ts[n_vec] ).end()
+				.dparam().dtype().dnode( fmat_ts[vec_size][n_vec] ).end().end()
+				.dparam().dtype().dnode( fvec_ts[vec_size] ).end().end()
+			.end()
+			;
+		}
+
+		dfunction_combinator(NULL).dname("dot")
+			.dreturntype().dnode( BUILTIN_TYPE(_float) ).end()
+			.dparam().dtype().dnode( fvec_ts[vec_size] ).end().end()
+			.dparam().dtype().dnode( fvec_ts[vec_size] ).end().end()
+		.end();
 	}
 }
 
