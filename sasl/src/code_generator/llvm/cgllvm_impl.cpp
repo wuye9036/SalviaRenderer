@@ -9,13 +9,19 @@
 #include <llvm/DerivedTypes.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <eflib/include/diagnostics/assert.h>
+
 using namespace sasl::syntax_tree;
 using namespace llvm;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
+#define SASL_VISITOR_TYPE_NAME cgllvm_impl
+
 cgllvm_impl::cgllvm_impl(): abii(NULL), msi(NULL){
 }
+
+SASL_VISIT_DEF_UNIMPL( declaration );
 
 Type const* cgllvm_impl::llvm_type( builtin_type_code const& btc, bool& sign ){
 

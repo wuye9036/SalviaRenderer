@@ -62,6 +62,8 @@ public:
 protected:
 	cgllvm_impl();
 
+	SASL_VISIT_DCL( declaration );
+
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );

@@ -8,6 +8,8 @@
 #include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/platform/typedefs.h>
+
 #include <vector>
 
 namespace sasl{
