@@ -11,10 +11,14 @@
 #include <eflib/include/diagnostics/log.h>
 #include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/cpuinfo.h>
+#include <eflib/include/platform/ext_intrinsics.h>
 
-#include <algorithm>
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
 #include <boost/bind.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <algorithm>
 
 using eflib::num_available_threads;
 using eflib::atomic;
@@ -414,7 +418,7 @@ void rasterizer::draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t*
 				mask_rej = _mm_or_ps(mask_rej, _mm_cmplt_ps(msteprej, mevalue));
 			}
 
-			__m128 sample_mask = _mm_castsi128_ps(_mm_set1_epi32(1UL << i_sample));
+			__m128 sample_mask = eflib_mm_castsi128_ps(_mm_set1_epi32(1UL << i_sample));
 			sample_mask = _mm_andnot_ps(mask_rej, sample_mask);
 
 			ALIGN16 uint32_t store[4];
@@ -562,7 +566,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 		mix = _mm_add_epi32(mix, _mm_set1_epi32(cur_region.x));
 		miy = _mm_add_epi32(miy, _mm_set1_epi32(cur_region.y));
 		__m128i miregion = _mm_or_si128(mix, _mm_slli_epi32(miy, 8));
-		miregion = _mm_or_si128(miregion, _mm_castps_si128(mask_acc));
+		miregion = _mm_or_si128(miregion, eflib_mm_castps_si128(mask_acc));
 
 		ALIGN16 uint32_t region_code[4];
 		_mm_store_si128(reinterpret_cast<__m128i*>(&region_code[0]), miregion);
@@ -749,8 +753,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 				subtile_w, subtile_h);
 			TRI_VS_TILE intersect = (packed_region >> 31) ? TVT_FULL : TVT_PARTIAL;
 
-			const int vpleft = max(0U, vpleft0 + cur_region.x);
-			const int vptop = max(0U, vptop0 + cur_region.y);
+			const int vpleft = max(0U, static_cast<unsigned>(vpleft0 + cur_region.x) );
+			const int vptop = max(0U, static_cast<unsigned>(vptop0 + cur_region.y) );
 			const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(hfb_->get_width()));
 			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(hfb_->get_height()));
 

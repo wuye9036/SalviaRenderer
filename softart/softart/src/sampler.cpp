@@ -2,6 +2,9 @@
 
 #include "../include/surface.h"
 #include "../include/texture.h"
+
+#include <eflib/include/platform/ext_intrinsics.h>
+
 BEGIN_NS_SOFTART()
 
 using namespace eflib;
@@ -534,11 +537,11 @@ float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx
 	__m128 mrho = _mm_max_ss(tmp, _mm_set_ss(0.000001f));
 
 	// log 2
-	__m128i mx = _mm_castps_si128(mrho);
+	__m128i mx = eflib_mm_castps_si128(mrho);
 	__m128 mlog2 = _mm_cvtepi32_ps(_mm_sub_epi32(_mm_and_si128(_mm_srli_epi32(mx, 23), _mm_set1_epi32(255)), _mm_set1_epi32(128)));
 	mx = _mm_and_si128(mx, _mm_set1_epi32(0x007FFFFF));
 	mx = _mm_or_si128(mx, _mm_set1_epi32(0x3F800000));
-	tmp = _mm_castsi128_ps(mx);
+	tmp = eflib_mm_castsi128_ps(mx);
 	tmp = _mm_sub_ss(_mm_mul_ss(_mm_add_ss(_mm_mul_ss(tmp, _mm_set_ss(-1.0f / 3)), _mm_set_ss(2)), tmp), _mm_set_ss(2.0f / 3));
 	__m128 mlambda = _mm_add_ss(tmp, mlog2);
 
