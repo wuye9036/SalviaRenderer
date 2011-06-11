@@ -23,8 +23,8 @@ purpose:
 Modify Log:
 
 *********************************************************************/
-#ifndef SALVIAXINC_D3D9X_H
-#define SALVIAXINC_D3D9X_H
+#ifndef SALVIAX_INC_D3D9X_H
+#define SALVIAX_INC_D3D9X_H
 
 #ifndef EFLIB_USE_STD_MINMAX
 #include <algorithm>
@@ -35,4 +35,4 @@ using ::std::max;
 #endif
 #include <d3dx9.h> 
 
-#endif //SALVIAXINC_D3D9X_H
+#endif //SALVIAX_INC_D3D9X_H

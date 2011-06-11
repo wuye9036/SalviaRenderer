@@ -1,7 +1,7 @@
-#ifndef SALVIAXRESOURCE_FORWARD_H
-#define SALVIAXRESOURCE_FORWARD_H
+#ifndef SALVIAX_RESOURCE_FORWARD_H
+#define SALVIAX_RESOURCE_FORWARD_H
 
-#define BEGIN_NS_SALVIAXRESOURCE() namespace softartx{ namespace resource{
-#define END_NS_SALVIAXRESOURCE() }}
+#define BEGIN_NS_SALVIAX_RESOURCE() namespace softartx{ namespace resource{
+#define END_NS_SALVIAX_RESOURCE() }}
 
-#endif //SALVIAXRESOURCE_FORWARD_H
+#endif //SALVIAX_RESOURCE_FORWARD_H

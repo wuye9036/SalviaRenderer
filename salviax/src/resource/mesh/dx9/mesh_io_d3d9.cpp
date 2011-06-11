@@ -25,7 +25,7 @@ using namespace eflib;
 using namespace boost;
 using namespace softartx::utility;
 using namespace salviar;
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 
 h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH pmesh)
 {
@@ -144,4 +144,4 @@ h_mesh create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const _t
 	return ret;
 }
 
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()

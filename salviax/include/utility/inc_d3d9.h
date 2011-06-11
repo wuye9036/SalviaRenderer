@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SALVIAXINC_D3D9_H
-#define SALVIAXINC_D3D9_H
+#ifndef SALVIAX_INC_D3D9_H
+#define SALVIAX_INC_D3D9_H
 
 #ifndef EFLIB_USE_STD_MINMAX
 #include <algorithm>
@@ -36,4 +36,4 @@ using ::std::max;
 #endif
 #include <d3dx9.h> 
 
-#endif //SALVIAXINC_D3D9_H
+#endif //SALVIAX_INC_D3D9_H

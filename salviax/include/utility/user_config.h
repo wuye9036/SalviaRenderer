@@ -24,9 +24,9 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SALVIAXUSER_CONFIG_H
-#define SALVIAXUSER_CONFIG_H
+#ifndef SALVIAX_USER_CONFIG_H
+#define SALVIAX_USER_CONFIG_H
 
-#define SALVIAXFREEIMAGE_ENABLED
+#define SALVIAX_FREEIMAGE_ENABLED
 
-#endif //SALVIAXUSER_CONFIG_H
+#endif //SALVIAX_USER_CONFIG_H

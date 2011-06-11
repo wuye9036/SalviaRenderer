@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SALVIAXMESH_H
-#define SALVIAXMESH_H
+#ifndef SALVIAX_MESH_H
+#define SALVIAX_MESH_H
 
 #include "salviax/include/resource/resource_forward.h"
 #include "salviar/include/decl.h"
@@ -40,7 +40,7 @@ Modify Log:
 #endif
 #include <vector>
 
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 
 class base_mesh
 {
@@ -108,6 +108,6 @@ public:
 
 DECL_HANDLE(base_mesh, h_mesh);
 
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()
 
 #endif

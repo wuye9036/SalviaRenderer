@@ -23,8 +23,8 @@ purpose:	GDI+ Device, Will Be Obseleted
 Modify Log:
 		
 *********************************************************************/
-#ifndef SALVIAXDEV_GDIPLUS_H
-#define SALVIAXDEV_GDIPLUS_H
+#ifndef SALVIAX_DEV_GDIPLUS_H
+#define SALVIAX_DEV_GDIPLUS_H
 
 #include "salviar/include/presenter_dev.h"
 #include "salviax/include/utility/inc_gdiplus.h"
@@ -34,10 +34,10 @@ Modify Log:
 #include <algorithm>
 #include <stdio.h>
 
-#define BEGIN_NS_SALVIAXPRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SALVIAXPRESENTER() }}
+#define BEGIN_NS_SALVIAX_PRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SALVIAX_PRESENTER() }}
 
-BEGIN_NS_SALVIAXPRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER()
 
 class dev_gdiplus;
 DECL_HANDLE(dev_gdiplus, h_dev_gdiplus)
@@ -55,7 +55,7 @@ public:
 	virtual void present(const salviar::surface& surf);
 };
 
-END_NS_SALVIAXPRESENTER()
+END_NS_SALVIAX_PRESENTER()
 
 class gdiplus_initializer
 {
@@ -91,4 +91,4 @@ extern "C"
 	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
 }
 
-#endif //SALVIAXDEV_GDIPLUS_H
+#endif //SALVIAX_DEV_GDIPLUS_H

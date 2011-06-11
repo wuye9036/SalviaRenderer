@@ -31,7 +31,7 @@ struct Vertex
 	float s, t;
 };
 
-BEGIN_NS_SALVIAXPRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER()
 
 dev_d3d9::dev_d3d9(HWND hwnd, h_d3d9_device dev): hwnd_(hwnd), dev_(dev), buftex_(NULL), vb_(NULL){
 	init_device();
@@ -162,7 +162,7 @@ void dev_d3d9::present(const salviar::surface& surf)
 	pdxdev->Present(NULL, &rc, NULL, NULL);
 }
 
-END_NS_SALVIAXPRESENTER()
+END_NS_SALVIAX_PRESENTER()
 
 void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {

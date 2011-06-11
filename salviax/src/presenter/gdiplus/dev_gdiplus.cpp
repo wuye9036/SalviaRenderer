@@ -25,7 +25,7 @@ using namespace Gdiplus;
 using namespace eflib;
 using namespace salviar;
 
-BEGIN_NS_SALVIAXPRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER()
 
 gdiplus_initializer gdiplus_initer;
 
@@ -82,7 +82,7 @@ void dev_gdiplus::present(const salviar::surface& surf){
 		Rect(0, 0, static_cast<UINT>(surf.get_width()), static_cast<UINT>(surf.get_height())));
 }
 
-END_NS_SALVIAXPRESENTER()
+END_NS_SALVIAX_PRESENTER()
 
 void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {

@@ -37,7 +37,7 @@ struct Vertex
 	float x, y;
 };
 
-BEGIN_NS_SALVIAXPRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER()
 
 HINSTANCE GetDLLHInstance()
 {
@@ -350,7 +350,7 @@ void dev_d3d11::present(const salviar::surface& surf)
 	swap_chain_->Present(0, 0);
 }
 
-END_NS_SALVIAXPRESENTER()
+END_NS_SALVIAX_PRESENTER()
 
 void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {

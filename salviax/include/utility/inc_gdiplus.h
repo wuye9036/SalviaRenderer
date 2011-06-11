@@ -23,8 +23,8 @@ purpose:
 Modify Log:
 
 *********************************************************************/
-#ifndef SALVIAXINC_GDIPLUS_H
-#define SALVIAXINC_GDIPLUS_H
+#ifndef SALVIAX_INC_GDIPLUS_H
+#define SALVIAX_INC_GDIPLUS_H
 
 #ifndef EFLIB_USE_STD_MINMAX
 #include <algorithm>
@@ -36,4 +36,4 @@ using ::std::max;
 #include "inc_windows.h"
 #include <gdiplus.h> 
 
-#endif //SALVIAXINC_GDIPLUS_H
+#endif //SALVIAX_INC_GDIPLUS_H

@@ -24,8 +24,8 @@ Modify Log:
 
 *********************************************************************/
 
-#ifndef SALVIAXTEX_IO_H
-#define SALVIAXTEX_IO_H
+#ifndef SALVIAX_TEX_IO_H
+#define SALVIAX_TEX_IO_H
 
 #include "salviax/include/resource/resource_forward.h"
 #include "salviar/include/surface.h"
@@ -33,7 +33,7 @@ Modify Log:
 #include "salviar/include/decl.h"
 #include <eflib/include/math/math.h>
 
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 
 class texture_io{
 public:
@@ -43,6 +43,6 @@ public:
 	virtual void save(const salviar::surface& surf, const std::_tstring& filename, salviar::pixel_format pxfmt) = 0;
 };
 
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()
 
-#endif //SALVIAXTEX_IO_H
+#endif //SALVIAX_TEX_IO_H

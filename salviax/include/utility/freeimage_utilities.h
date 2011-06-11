@@ -1,9 +1,9 @@
-#ifndef SALVIAXFREEIMAGE_UTILITIES_H
-#define SALVIAXFREEIMAGE_UTILITIES_H
+#ifndef SALVIAX_FREEIMAGE_UTILITIES_H
+#define SALVIAX_FREEIMAGE_UTILITIES_H
 
 #include <salviax/include/utility/user_config.h>
 
-#ifdef SALVIAXFREEIMAGE_ENABLED
+#ifdef SALVIAX_FREEIMAGE_ENABLED
 
 #include "utility_forward.h"
 #include "salviar/include/colors.h"
@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <tchar.h>
 
-BEGIN_NS_SALVIAXUTILITY()
+BEGIN_NS_SALVIAX_UTILITY()
 // ∂¡»°ŒªÕº
 FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 
@@ -133,7 +133,7 @@ struct softart_rgba_color_type<FIRGBAF>{
 	typedef salviar::color_rgba32f type;
 	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
 };
-END_NS_SALVIAXUTILITY()
+END_NS_SALVIAX_UTILITY()
 
 #endif // SOFTART_FREEIMAGE_ENABLED
 

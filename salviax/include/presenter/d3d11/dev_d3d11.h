@@ -16,8 +16,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SALVIAXDEV_D3D11_H
-#define SALVIAXDEV_D3D11_H
+#ifndef SALVIAX_DEV_D3D11_H
+#define SALVIAX_DEV_D3D11_H
 
 #ifndef NOMINMAX
 #	define NOMINMAX
@@ -29,10 +29,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <eflib/include/math/math.h>
 #include <boost/smart_ptr.hpp>
 
-#define BEGIN_NS_SALVIAXPRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SALVIAXPRESENTER() }}
+#define BEGIN_NS_SALVIAX_PRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SALVIAX_PRESENTER() }}
 
-BEGIN_NS_SALVIAXPRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER()
 
 class dev_d3d11;
 DECL_HANDLE(dev_d3d11, h_dev_d3d11);
@@ -79,7 +79,7 @@ private:
 	ID3D11PixelShader* ps_;
 };
 
-END_NS_SALVIAXPRESENTER()
+END_NS_SALVIAX_PRESENTER()
 
 #ifdef salviax_d3d11_presenter_EXPORTS
 	#define SALVIAX_API __declspec(dllexport)
@@ -92,4 +92,4 @@ extern "C"
 	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
 }
 
-#endif //SALVIAXDEV_D3D11_H
+#endif //SALVIAX_DEV_D3D11_H

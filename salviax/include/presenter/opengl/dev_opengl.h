@@ -16,8 +16,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SALVIAXDEV_OPENGL_H
-#define SALVIAXDEV_OPENGL_H
+#ifndef SALVIAX_DEV_OPENGL_H
+#define SALVIAX_DEV_OPENGL_H
 
 #include <eflib/include/platform/config.h>
 
@@ -28,10 +28,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <windows.h>
 #include <GL/GL.h>
 
-#define BEGIN_NS_SALVIAXPRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SALVIAXPRESENTER() }}
+#define BEGIN_NS_SALVIAX_PRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SALVIAX_PRESENTER() }}
 
-BEGIN_NS_SALVIAXPRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER()
 
 class dev_opengl;
 DECL_HANDLE(dev_opengl, h_dev_opengl);
@@ -58,7 +58,7 @@ private:
 	uint32_t width_, height_;
 };
 
-END_NS_SALVIAXPRESENTER()
+END_NS_SALVIAX_PRESENTER()
 
 #ifdef salviax_opengl_presenter_EXPORTS
 	#define SALVIAX_API __declspec(dllexport)
@@ -71,4 +71,4 @@ extern "C"
 	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
 }
 
-#endif //SALVIAXDEV_OPENGL_H
+#endif //SALVIAX_DEV_OPENGL_H

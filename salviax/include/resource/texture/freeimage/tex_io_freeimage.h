@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SALVIAXTEX_IO_FREEIMAGE_H
-#define SALVIAXTEX_IO_FREEIMAGE_H
+#ifndef SALVIAX_TEX_IO_FREEIMAGE_H
+#define SALVIAX_TEX_IO_FREEIMAGE_H
 
 #include <salviax/include/utility/user_config.h>
 
@@ -37,8 +37,8 @@ Modify Log:
 
 struct FIBITMAP;
 
-BEGIN_NS_SALVIAXRESOURCE()
-#ifdef SALVIAXFREEIMAGE_ENABLED
+BEGIN_NS_SALVIAX_RESOURCE()
+#ifdef SALVIAX_FREEIMAGE_ENABLED
 class texture_io_fi: public texture_io{
 public:
 	virtual salviar::h_texture load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt);
@@ -57,6 +57,6 @@ private:
 	texture_io_fi(){}
 };
 #endif
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()
 
-#endif //SALVIAXTEX_IO_FREEIMAGE_H
+#endif //SALVIAX_TEX_IO_FREEIMAGE_H

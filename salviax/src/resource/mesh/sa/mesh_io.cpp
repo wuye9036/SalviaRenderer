@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 using namespace std;
 using namespace eflib;
 using namespace salviar;
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 
 //0, 0, 0 - 1, 1, 1
 h_mesh create_box(salviar::renderer* psr)
@@ -217,4 +217,4 @@ h_mesh create_planar(
 	return h_mesh(pmesh);
 }
 
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()

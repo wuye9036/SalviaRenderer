@@ -27,7 +27,7 @@ using namespace Gdiplus;
 using namespace eflib;
 using namespace std;
 using namespace salviar;
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 ULONG_PTR g_gdiplus = 0;
 texture_io_gdiplus::texture_io_gdiplus()
 {
@@ -127,4 +127,4 @@ bool texture_io_gdiplus::load(salviar::surface& surf, const eflib::rect<size_t>&
 	}
 }
 
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()

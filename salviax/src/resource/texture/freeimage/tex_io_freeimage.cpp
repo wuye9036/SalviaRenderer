@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 
-#ifdef SALVIAXFREEIMAGE_ENABLED
+#ifdef SALVIAX_FREEIMAGE_ENABLED
 
 #include <salviax/include/utility/freeimage_utilities.h>
 #include <salviar/include/renderer_impl.h>
@@ -34,7 +34,7 @@ using namespace std;
 using namespace salviar;
 using namespace softartx::utility;
 
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 //从FIBITMAP将图像拷贝至Surface中。
 //	拷贝将分为以下几步：
 //		首先将FIBITMAP中的像素颜色提领出来，获得FIBITMAP中的分量信息。
@@ -221,6 +221,6 @@ default:
 	FreeImage_Save(fif, image, to_ansi_string(filename).c_str());
 	FreeImage_Unload(image);
 }
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()
 
 #endif

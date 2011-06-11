@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 using namespace std;
 using namespace eflib;
 using namespace salviar;
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 
 mesh::mesh(salviar::renderer* psr)
 {
@@ -143,4 +143,4 @@ void mesh::set_default_layout(const salviar::input_layout_decl& layout)
 	default_layout_ = layout;
 }
 
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()

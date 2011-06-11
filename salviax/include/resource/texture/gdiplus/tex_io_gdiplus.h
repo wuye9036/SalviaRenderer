@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SALVIAXTEX_IO_GDIPLUS_H
-#define SALVIAXTEX_IO_GDIPLUS_H
+#ifndef SALVIAX_TEX_IO_GDIPLUS_H
+#define SALVIAX_TEX_IO_GDIPLUS_H
 
 #include "salviax/include/utility/inc_gdiplus.h"
 #include "salviax/include/resource/texture/sa/tex_io.h"
@@ -35,7 +35,7 @@ Modify Log:
 #include <string>
 #include <vector>
 
-BEGIN_NS_SALVIAXRESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE()
 class texture_io_gdiplus: public texture_io{
 public:
 	virtual salviar::h_texture load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt);
@@ -57,6 +57,6 @@ Gdiplus::Rect efl_rect_to_gdiplus_rect(const eflib::rect<T>& src){
 	return Gdiplus::Rect((INT)src.x, (INT)src.y, (INT)src.w, (INT)src.h);
 }
 
-END_NS_SALVIAXRESOURCE()
+END_NS_SALVIAX_RESOURCE()
 
-#endif //SALVIAXTEX_IO_GDIPLUS_H
+#endif //SALVIAX_TEX_IO_GDIPLUS_H

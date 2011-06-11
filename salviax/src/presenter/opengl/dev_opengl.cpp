@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 using namespace eflib;
 using namespace salviar;
 
-BEGIN_NS_SALVIAXPRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER()
 
 dev_opengl::dev_opengl(HWND hwnd): hwnd_(hwnd), width_(0), height_(0){
 	init_device();
@@ -148,7 +148,7 @@ void dev_opengl::present(const salviar::surface& surf)
 	::SwapBuffers(hdc_);
 }
 
-END_NS_SALVIAXPRESENTER()
+END_NS_SALVIAX_PRESENTER()
 
 void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {
