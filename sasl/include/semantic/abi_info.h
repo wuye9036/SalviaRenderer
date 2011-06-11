@@ -3,7 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 #include <sasl/enums/builtin_type_code.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -48,7 +48,7 @@ public:
 
 	abi_info();
 
-	softart::languages lang;
+	salviar::languages lang;
 
 	void module( boost::shared_ptr<module_si> const& );
 	bool is_module( boost::shared_ptr<module_si> const& ) const;
@@ -56,20 +56,20 @@ public:
 	void entry( boost::shared_ptr<symbol> const& );
 	bool is_entry( boost::shared_ptr<symbol> const& ) const;
 
-	bool add_input_semantic( softart::semantic sem, builtin_type_code btc, bool is_stream );
-	bool add_output_semantic( softart::semantic sem, builtin_type_code btc );
+	bool add_input_semantic( salviar::semantic sem, builtin_type_code btc, bool is_stream );
+	bool add_output_semantic( salviar::semantic sem, builtin_type_code btc );
 	void add_global_var( boost::shared_ptr<symbol> const&, builtin_type_code btc );
 
-	storage_info* input_storage( softart::semantic ) const;
+	storage_info* input_storage( salviar::semantic ) const;
 	storage_info* input_storage( boost::shared_ptr<symbol> const& ) const;
-	storage_info* output_storage( softart::semantic ) const;
+	storage_info* output_storage( salviar::semantic ) const;
 	
 	std::vector<storage_info*> storage_infos( storage_types st ) const;
 
 private:
-	storage_info* alloc_input_storage( softart::semantic );
+	storage_info* alloc_input_storage( salviar::semantic );
 	storage_info* alloc_input_storage( boost::shared_ptr<symbol> const& );
-	storage_info* alloc_output_storage( softart::semantic );
+	storage_info* alloc_output_storage( salviar::semantic );
 
 	// Called by abi_analyser after all semantic and global var was set.
 	// This function will compute the data layout.
@@ -84,8 +84,8 @@ private:
 	symbol* entry_point;
 
 	// Include stream_in and buffer_in
-	std::vector< softart::semantic > sems_in;
-	typedef boost::unordered_map< softart::semantic, storage_info > sem_storages_t;
+	std::vector< salviar::semantic > sems_in;
+	typedef boost::unordered_map< salviar::semantic, storage_info > sem_storages_t;
 	sem_storages_t semin_storages;
 
 	// for uniform only.
@@ -94,8 +94,8 @@ private:
 	sym_storages_t symin_storages;
 
 	// Include stream_out and buffer_out
-	std::vector< softart::semantic > sems_out;
-	boost::unordered_map< softart::semantic, storage_info > semout_storages;
+	std::vector< salviar::semantic > sems_out;
+	boost::unordered_map< salviar::semantic, storage_info > semout_storages;
 
 	// The count and offsets of 
 	int counts[sasl::semantic::storage_types_count];

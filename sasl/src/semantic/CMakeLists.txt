@@ -1,9 +1,7 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 INCLUDE_DIRECTORIES(
-	${SASL_HOME_DIR}
-	${BOOST_HOME_DIR}
+	${SALVIA_BOOST_HOME_DIR}
 	${SALVIA_HOME_DIR}
 )
 	
@@ -45,4 +43,4 @@ ADD_LIBRARY( sasl_semantic STATIC
 	${HEADER_FILES} ${SOURCE_FILES}
 )
 
-config_output_paths( sasl_common )
+SALVIA_CONFIG_OUTPUT_PATHS( sasl_semantic )

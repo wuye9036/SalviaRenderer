@@ -8,7 +8,7 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/node.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
 
@@ -25,14 +25,14 @@ boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_si* mo
 	boost::shared_ptr<symbol> root = mod->root();
 	if ( root && root->node() && root->node()->node_class() == syntax_node_types::program ){
 		
-		if( !abii || abii->lang == softart::lang_general ){
+		if( !abii || abii->lang == salviar::lang_general ){
 			cgllvm_general cg;
 			if( cg.generate(mod, abii) ){
 				return cg.module();
 			}
 		}
 		
-		if ( abii->lang == softart::lang_vertex_sl ){
+		if ( abii->lang == salviar::lang_vertex_sl ){
 			cgllvm_vs cg;
 			if( cg.generate(mod, abii) ){
 				return cg.module();

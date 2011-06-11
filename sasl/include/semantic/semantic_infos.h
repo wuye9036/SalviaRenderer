@@ -10,7 +10,7 @@
 #include <sasl/enums/builtin_type_code.h>
 #include <sasl/enums/enums_helper.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
@@ -156,8 +156,8 @@ class storage_si: public type_info_si{
 public:
 	storage_si( boost::shared_ptr<type_manager> typemgr );
 
-	softart::semantic get_semantic() const;
-	void set_semantic( softart::semantic v );
+	salviar::semantic get_semantic() const;
+	void set_semantic( salviar::semantic v );
 
 	// For members
 	int mem_index() const;
@@ -173,7 +173,7 @@ public:
 private:
 	int memidx;
 	int32_t swz;
-	softart::semantic sem;
+	salviar::semantic sem;
 };
 
 /*! \brief fnvar_si storages the semantic informations of variable of function.

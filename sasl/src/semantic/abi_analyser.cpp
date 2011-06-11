@@ -31,14 +31,14 @@ using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-bool verify_semantic_type( builtin_type_code btc, softart::semantic sem ){
+bool verify_semantic_type( builtin_type_code btc, salviar::semantic sem ){
 	switch( semantic_base(sem) ){
 
-	case softart::SV_None:
+	case salviar::SV_None:
 		return false;
 
-	case softart::SV_Position:
-	case softart::SV_Texcoord:
+	case salviar::SV_Position:
+	case salviar::SV_Texcoord:
 		return 
 			( sasl_ehelper::is_scalar(btc) || sasl_ehelper::is_vector(btc) )
 			&& sasl_ehelper::scalar_of(btc) == builtin_type_code::_float;
@@ -47,29 +47,29 @@ bool verify_semantic_type( builtin_type_code btc, softart::semantic sem ){
 	return false;
 }
 
-storage_types vsinput_semantic_storage( softart::semantic sem ){
+storage_types vsinput_semantic_storage( salviar::semantic sem ){
 	switch( semantic_base(sem) ){
-	case softart::SV_Position:
+	case salviar::SV_Position:
 		return stream_in;
-	case softart::SV_Texcoord:
+	case salviar::SV_Texcoord:
 		return stream_in;
 	}
 	return storage_none;
 }
 
-storage_types vsoutput_semantic_storage( softart::semantic sem ){
+storage_types vsoutput_semantic_storage( salviar::semantic sem ){
 	switch( semantic_base(sem) ){
-	case softart::SV_Position:
+	case salviar::SV_Position:
 		return buffer_out;
-	case softart::SV_Texcoord:
+	case salviar::SV_Texcoord:
 		return buffer_out;
 	}
 	return storage_none;
 }
 
-storage_types semantic_storage( softart::languages lang, bool is_output, softart::semantic sem ){
+storage_types semantic_storage( salviar::languages lang, bool is_output, salviar::semantic sem ){
 	switch ( lang ){
-	case softart::lang_vertex_sl:
+	case salviar::lang_vertex_sl:
 		if( is_output ){
 			return vsoutput_semantic_storage(sem);
 		} else {
@@ -79,8 +79,8 @@ storage_types semantic_storage( softart::languages lang, bool is_output, softart
 	return storage_none;
 }
 
-void abi_analyser::reset( softart::languages lang ){
-	assert( lang < softart::lang_count );
+void abi_analyser::reset( salviar::languages lang ){
+	assert( lang < salviar::lang_count );
 	
 	mods[lang].reset();
 	entries[lang].reset();
@@ -88,12 +88,12 @@ void abi_analyser::reset( softart::languages lang ){
 }
 
 void abi_analyser::reset_all(){
-	for( int i = 0; i < softart::lang_count; ++i ){
-		reset( static_cast<softart::languages>(i) );
+	for( int i = 0; i < salviar::lang_count; ++i ){
+		reset( static_cast<salviar::languages>(i) );
 	}
 }
 
-bool abi_analyser::entry( shared_ptr<module_si> const& mod, string const& name, softart::languages lang ){
+bool abi_analyser::entry( shared_ptr<module_si> const& mod, string const& name, salviar::languages lang ){
 	vector< shared_ptr<symbol> > const& overloads = mod->root()->find_overloads( name );
 	if ( overloads.size() != 1 ){
 		return false;
@@ -102,8 +102,8 @@ bool abi_analyser::entry( shared_ptr<module_si> const& mod, string const& name, 
 	return entry( mod, overloads[0], lang );
 }
 
-bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> const& fnsym, softart::languages lang ){
-	assert( lang < softart::lang_count );
+bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> const& fnsym, salviar::languages lang ){
+	assert( lang < salviar::lang_count );
 
 	mods[lang] = mod;
 	entries[lang] = fnsym;
@@ -112,7 +112,7 @@ bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> c
 	return update(lang);
 }
 
-bool abi_analyser::auto_entry( shared_ptr<module_si> const& mod, softart::languages lang ){
+bool abi_analyser::auto_entry( shared_ptr<module_si> const& mod, salviar::languages lang ){
 	shared_ptr<symbol> candidate;
 	shared_ptr<abi_info> candidate_abii;
 	BOOST_FOREACH( shared_ptr<symbol> const& fnsym, mod->functions() ){
@@ -137,14 +137,14 @@ bool abi_analyser::auto_entry( shared_ptr<module_si> const& mod, softart::langua
 	return false;
 }
 
-boost::shared_ptr<symbol> const& abi_analyser::entry( softart::languages lang ) const{
+boost::shared_ptr<symbol> const& abi_analyser::entry( salviar::languages lang ) const{
 	return entries[lang];
 }
 
 bool abi_analyser::update_abiis(){
-	return update( softart::lang_vertex_sl )
-		&& update( softart::lang_pixel_sl )
-		&& update( softart::lang_blend_sl )
+	return update( salviar::lang_vertex_sl )
+		&& update( salviar::lang_pixel_sl )
+		&& update( salviar::lang_blend_sl )
 		;
 }
 
@@ -152,7 +152,7 @@ bool abi_analyser::verify_abiis(){
 	return verify_vs_ps() && verify_ps_bs();
 }
 
-bool abi_analyser::update( softart::languages lang ){
+bool abi_analyser::update( salviar::languages lang ){
 	if ( abiis[lang] ){
 		return true;
 	}
@@ -167,16 +167,16 @@ bool abi_analyser::update( softart::languages lang ){
 	abiis[lang]->mod = mods[lang].get();
 	abiis[lang]->entry_point = entries[lang].get();
 
-	if( lang == softart::lang_vertex_sl
-		|| lang == softart::lang_pixel_sl
-		|| lang == softart::lang_blend_sl
+	if( lang == salviar::lang_vertex_sl
+		|| lang == salviar::lang_pixel_sl
+		|| lang == salviar::lang_blend_sl
 		)
 	{
 		// Process entry function.
 		shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
 		assert( entry_fn );
 
-		if( !add_semantic( entry_fn, false, false, softart::lang_vertex_sl, true ) ){
+		if( !add_semantic( entry_fn, false, false, salviar::lang_vertex_sl, true ) ){
 			reset(lang);
 			return false;
 		}
@@ -217,18 +217,18 @@ bool abi_analyser::update( softart::languages lang ){
 	return true;
 }
 
-abi_info const* abi_analyser::abii( softart::languages lang ) const{
+abi_info const* abi_analyser::abii( salviar::languages lang ) const{
 	return abiis[lang].get();
 }
 
-abi_info* abi_analyser::abii( softart::languages lang ){
+abi_info* abi_analyser::abii( salviar::languages lang ){
 	return abiis[lang].get();
 }
 
 bool abi_analyser::add_semantic(
 	shared_ptr<node> const& v,
 	bool is_member, bool enable_nested,
-	softart::languages lang, bool is_output)
+	salviar::languages lang, bool is_output)
 {
 	abi_info* ai = abii(lang);
 	assert( ai );
@@ -237,7 +237,7 @@ bool abi_analyser::add_semantic(
 	type_specifier* ptspec = pssi->type_info().get();
 	assert(ptspec); // TODO Here are semantic analysis error.
 
-	softart::semantic node_sem = pssi->get_semantic();
+	salviar::semantic node_sem = pssi->get_semantic();
 
 	if( ptspec->is_builtin() ){
 		builtin_type_code btc = ptspec->value_typecode;

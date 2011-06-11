@@ -18,7 +18,7 @@ ADD_SUBDIRECTORY( cmake )
 
 # Add projects
 ADD_SUBDIRECTORY( eflib )
-#ADD_SUBDIRECTORY( sasl )
+ADD_SUBDIRECTORY( sasl )
 ADD_SUBDIRECTORY( salviar )
 ADD_SUBDIRECTORY( salviax )
 ADD_SUBDIRECTORY( samples )

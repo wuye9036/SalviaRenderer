@@ -1,7 +1,6 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
-function(sasl_test_create_vcproj_userfile TARGETNAME)
+function(SASL_TEST_CREATE_VCPROJ_USERFILE TARGETNAME)
   if(MSVC)
     set(SYSTEM_NAME $ENV{USERDOMAIN})
     set(USER_NAME $ENV{USERNAME})
@@ -14,7 +13,7 @@ function(sasl_test_create_vcproj_userfile TARGETNAME)
 	)
     endif()
   endif()
-endfunction(sasl_test_create_vcproj_userfile)
+endfunction(SASL_TEST_CREATE_VCPROJ_USERFILE)
 
 if( ( NOT SALVIA_ENABLE_SASL_REGRESSION_TEST ) OR SALVIA_ENABLE_SASL_SEPERATED_TESTS_ALWAYS )
 	

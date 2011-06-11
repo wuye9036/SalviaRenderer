@@ -1,10 +1,9 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 include (generate_enum.cmake)
 
 INCLUDE_DIRECTORIES(../
-	${BOOST_HOME_DIR}
+	${SALVIA_BOOST_HOME_DIR}
 	${SASL_HOME_DIR}
 	${SALVIA_HOME_DIR}
 )
@@ -58,4 +57,4 @@ ADD_LIBRARY( sasl_enums STATIC
 	enums_generator.py
 )
 
-config_output_paths(sasl_enums)
+SALVIA_CONFIG_OUTPUT_PATHS(sasl_enums)

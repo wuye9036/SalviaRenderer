@@ -1,16 +1,15 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 INCLUDE_DIRECTORIES(
 	${SASL_HOME_DIR}
-	${BOOST_HOME_DIR}
+	${SALVIA_BOOST_HOME_DIR}
 	${SALVIA_HOME_DIR}
-	${3rd_party_llvm_include_path}
+	${SALVIA_LLVM_INCLUDE_PATH}
 )
 
 LINK_DIRECTORIES(
-	${BOOST_LIB_DIR}
-	${3rd_party_llvm_lib_path}
+	${SALVIA_BOOST_LIB_DIR}
+	${SALVIA_LLVM_LIB_PATH}
 )
 
 set( HEADER_FILES
@@ -37,5 +36,5 @@ TARGET_LINK_LIBRARIES( sasl_compiler
 	${SALVIA_BOOST_LIBS}
 )
 
-config_output_paths( sasl_compiler )
+SALVIA_CONFIG_OUTPUT_PATHS( sasl_compiler )
 

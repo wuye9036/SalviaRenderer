@@ -1,10 +1,9 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 include ( llvm_test_cases.cmake )
 
 INCLUDE_DIRECTORIES(
-	${BOOST_HOME_DIR}
+	${SALVIA_BOOST_HOME_DIR}
 	${SALVIA_HOME_DIR}
 	${SASL_HOME_DIR}
 )
@@ -26,4 +25,4 @@ set( SOURCE_FILES
 
 ADD_LIBRARY( sasl_test_cases ${HEADER_FILES} ${SOURCE_FILES} )
 
-config_output_paths( sasl_test_cases )
+SALVIA_CONFIG_OUTPUT_PATHS( sasl_test_cases )

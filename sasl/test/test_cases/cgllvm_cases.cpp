@@ -8,7 +8,7 @@
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/syntax_tree/utility.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/diagnostics/logrout.h>
@@ -61,9 +61,9 @@ void cgllvm_cases::initialize(){
 
 	shared_ptr< SEMANTIC_(module_si) > si_jit_root = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_jit_test) );
 	SEMANTIC_(abi_analyser) aa;
-	aa.auto_entry( si_jit_root, softart::lang_general );
+	aa.auto_entry( si_jit_root, salviar::lang_general );
 
-	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root.get(), aa.abii(softart::lang_general) );
+	LOCVAR_(root) = CODEGEN_(generate_llvm_code)( si_jit_root.get(), aa.abii(salviar::lang_general) );
 
 	fputs("\n======================================================\r\n", stderr);
 	fputs("Verify generated code: \r\n", stderr);

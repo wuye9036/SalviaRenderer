@@ -1,17 +1,16 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 include (tests.cmake)
 INCLUDE_DIRECTORIES(
-	${BOOST_HOME_DIR}
+	${SALVIA_BOOST_HOME_DIR}
 	${SALVIA_HOME_DIR}
 	${SASL_HOME_DIR}
-	${3rd_party_llvm_include_path}
+	${SALVIA_LLVM_INCLUDE_PATH}
 )
 
 LINK_DIRECTORIES(
-	${BOOST_LIB_DIR}
-	${3rd_party_llvm_lib_path}
+	${SALVIA_BOOST_LIB_DIR}
+	${SALVIA_LLVM_LIB_PATH}
 )
 
 set( SASL_TEST_PROJECT_DIR cgllvm_test )
@@ -36,5 +35,5 @@ TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 )
 ADD_DEPENDENCIES( ${SASL_TEST_PROJECT_NAME} logrout )
 
-config_output_paths( ${SASL_TEST_PROJECT_NAME} )
-sasl_test_create_vcproj_userfile( ${SASL_TEST_PROJECT_NAME} )
+SALVIA_CONFIG_OUTPUT_PATHS( ${SASL_TEST_PROJECT_NAME} )
+SASL_TEST_CREATE_VCPROJ_USERFILE( ${SASL_TEST_PROJECT_NAME} )

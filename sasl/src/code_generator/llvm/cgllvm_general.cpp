@@ -16,7 +16,7 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/metaprog/util.h>
