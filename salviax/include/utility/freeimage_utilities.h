@@ -1,9 +1,9 @@
-#ifndef SOFTARTX_FREEIMAGE_UTILITIES_H
-#define SOFTARTX_FREEIMAGE_UTILITIES_H
+#ifndef SALVIAXFREEIMAGE_UTILITIES_H
+#define SALVIAXFREEIMAGE_UTILITIES_H
 
 #include <salviax/include/utility/user_config.h>
 
-#ifdef SOFTARTX_FREEIMAGE_ENABLED
+#ifdef SALVIAXFREEIMAGE_ENABLED
 
 #include "utility_forward.h"
 #include "salviar/include/colors.h"
@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <tchar.h>
 
-BEGIN_NS_SOFTARTX_UTILITY()
+BEGIN_NS_SALVIAXUTILITY()
 // 读取位图
 FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 
@@ -107,33 +107,33 @@ private:
 // 获得与FreeImage内部颜色格式相同的，并按照RGBA色序排列的SoftArt颜色类型。
 template<typename FIColorT>
 struct softart_rgba_color_type{
-	typedef softart::color_max type;
-	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
+	typedef salviar::color_max type;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
 };
 template<>
 struct softart_rgba_color_type<RGBQUAD>{
-	typedef softart::color_rgba8 type;
-	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
+	typedef salviar::color_rgba8 type;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<RGBTRIPLE>{
-	typedef softart::color_rgba8 type;
-	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
+	typedef salviar::color_rgba8 type;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBF>{
-	typedef softart::color_rgba32f type;
-	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
+	typedef salviar::color_rgba32f type;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBAF>{
-	typedef softart::color_rgba32f type;
-	static const softart::pixel_format fmt = softart::pixel_type_to_fmt<typename type>::fmt;
+	typedef salviar::color_rgba32f type;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
 };
-END_NS_SOFTARTX_UTILITY()
+END_NS_SALVIAXUTILITY()
 
 #endif // SOFTART_FREEIMAGE_ENABLED
 

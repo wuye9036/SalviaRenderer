@@ -16,8 +16,8 @@
 #ifdef EFLIB_MSVC
 #pragma warning(pop)
 #endif
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 class vs_input
@@ -184,6 +184,6 @@ private:
 	surface* sbuf_;
 	size_t buf_x_, buf_y_;
 };
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

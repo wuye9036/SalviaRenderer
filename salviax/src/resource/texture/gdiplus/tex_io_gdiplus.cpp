@@ -26,8 +26,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 using namespace Gdiplus;
 using namespace eflib;
 using namespace std;
-using namespace softart;
-BEGIN_NS_SOFTARTX_RESOURCE()
+using namespace salviar;
+BEGIN_NS_SALVIAXRESOURCE()
 ULONG_PTR g_gdiplus = 0;
 texture_io_gdiplus::texture_io_gdiplus()
 {
@@ -46,7 +46,7 @@ texture_io_gdiplus& texture_io_gdiplus::instance(){
 }
 
 //将指定的GDI位图部分拷贝到Surface的指定区域。目标区域需要与源区域大小相同，且源位图格式为PixelFormat32bppARGB格式。
-bool texture_io_gdiplus::copy_image_to_surface(softart::surface& surf, const rect<size_t>& dest_region, Bitmap* src_bmp, const rect<size_t>& src_region){
+bool texture_io_gdiplus::copy_image_to_surface(salviar::surface& surf, const rect<size_t>& dest_region, Bitmap* src_bmp, const rect<size_t>& src_region){
 	if (src_bmp == NULL || dest_region.w != src_region.w || dest_region.h != src_region.h ){
 		return false;
 	}
@@ -73,21 +73,21 @@ bool texture_io_gdiplus::copy_image_to_surface(softart::surface& surf, const rec
 	return true;
 }
 
-softart::h_texture texture_io_gdiplus::load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt){
+salviar::h_texture texture_io_gdiplus::load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt){
 	Bitmap file_bmp(to_wide_string(filename).c_str());
 
 	size_t src_w = (size_t)file_bmp.GetWidth();
 	size_t src_h = (size_t)file_bmp.GetHeight();
 
 	rect<size_t> region(0, 0, src_w, src_h);
-	softart::h_texture ret(pr->create_tex2d(src_w, src_h, 1, tex_pxfmt));
+	salviar::h_texture ret(pr->create_tex2d(src_w, src_h, 1, tex_pxfmt));
 	load( ret->get_surface(0), region, &file_bmp, region);
 	return ret;
 }
 
 //使用六张图像创建Cube纹理。Cube纹理的每面大小和第一张纹理的大小相同。如果其他文件的大小与第一张不同，则按第一张的大小缩放。
-softart::h_texture texture_io_gdiplus::load_cube(softart::renderer *pr, const vector<_tstring> &filenames, softart::pixel_format fmt){
-	softart::h_texture ret;
+salviar::h_texture texture_io_gdiplus::load_cube(salviar::renderer *pr, const vector<_tstring> &filenames, salviar::pixel_format fmt){
+	salviar::h_texture ret;
 	rect<size_t> dest_region;
 
 	if (filenames.size() != 6){
@@ -102,14 +102,14 @@ softart::h_texture texture_io_gdiplus::load_cube(softart::renderer *pr, const ve
 			ret = pr->create_texcube( dest_region.w, dest_region.h, 1, fmt );
 		}
 		texture_cube* texcube = static_cast<texture_cube*>(ret.get());
-		softart::surface& cur_surf = texcube->get_face((cubemap_faces)i_file).get_surface(0);
+		salviar::surface& cur_surf = texcube->get_face((cubemap_faces)i_file).get_surface(0);
 		load(cur_surf, dest_region, &file_bmp, src_region);
 	}
 
 	return ret;
 }
 
-bool texture_io_gdiplus::load(softart::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region){
+bool texture_io_gdiplus::load(salviar::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region){
 	if(src_bmp->GetPixelFormat() == PixelFormat32bppARGB && src_region.w == dest_region.w && src_region.h == src_region.h){
 		return copy_image_to_surface( surf, dest_region, src_bmp, src_region);
 	} else {
@@ -127,4 +127,4 @@ bool texture_io_gdiplus::load(softart::surface& surf, const eflib::rect<size_t>&
 	}
 }
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()

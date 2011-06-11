@@ -2,8 +2,8 @@
 #define SOFTART_RENDERER_IMPL_H
 
 #include "renderer.h"
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 struct state_block
@@ -134,6 +134,6 @@ public:
 	h_clipper get_clipper();
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

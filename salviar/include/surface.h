@@ -8,8 +8,8 @@
 #include <eflib/include/math/collision_detection.h>
 
 #include <vector>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 //#define TILE_BASED_STORAGE
 
@@ -105,6 +105,6 @@ public:
 	void fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color);
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

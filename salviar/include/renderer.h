@@ -13,9 +13,9 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 struct viewport{
 	float x;
@@ -123,6 +123,6 @@ public:
 
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev);
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

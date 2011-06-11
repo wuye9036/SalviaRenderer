@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 using namespace eflib;
 using namespace softartx::utility;
-using namespace softart;
+using namespace salviar;
 #define FVF (D3DFVF_XYZ | D3DFVF_TEX1)
 struct Vertex
 {
@@ -31,7 +31,7 @@ struct Vertex
 	float s, t;
 };
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 dev_d3d9::dev_d3d9(HWND hwnd, h_d3d9_device dev): hwnd_(hwnd), dev_(dev), buftex_(NULL), vb_(NULL){
 	init_device();
@@ -71,7 +71,7 @@ h_dev_d3d9 dev_d3d9::create_device(HWND hwnd, h_d3d9_device dev){
 }
 
 //inherited
-void dev_d3d9::present(const softart::surface& surf)
+void dev_d3d9::present(const salviar::surface& surf)
 {
 	if (!dev_)
 	{
@@ -162,9 +162,9 @@ void dev_d3d9::present(const softart::surface& surf)
 	pdxdev->Present(NULL, &rc, NULL, NULL);
 }
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
-void salviax_create_presenter_device(softart::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {
 	dev = softartx::presenter::dev_d3d9::create_device(static_cast<HWND>(param));
 }

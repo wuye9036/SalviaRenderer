@@ -16,8 +16,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SOFTARTX_DEV_OPENGL_H
-#define SOFTARTX_DEV_OPENGL_H
+#ifndef SALVIAXDEV_OPENGL_H
+#define SALVIAXDEV_OPENGL_H
 
 #include <eflib/include/platform/config.h>
 
@@ -28,21 +28,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <windows.h>
 #include <GL/GL.h>
 
-#define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SOFTARTX_PRESENTER() }}
+#define BEGIN_NS_SALVIAXPRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SALVIAXPRESENTER() }}
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 class dev_opengl;
 DECL_HANDLE(dev_opengl, h_dev_opengl);
 
-class dev_opengl : public softart::device
+class dev_opengl : public salviar::device
 {
 public:
 	static h_dev_opengl create_device(HWND hwnd);
 
 	//inherited
-	virtual void present(const softart::surface& surf);
+	virtual void present(const salviar::surface& surf);
 
 	~dev_opengl();
 
@@ -58,17 +58,17 @@ private:
 	uint32_t width_, height_;
 };
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
-#ifdef SoftArtX_opengl_presenter_EXPORTS
-	#define SOFTARTX_API __declspec(dllexport)
+#ifdef salviax_opengl_presenter_EXPORTS
+	#define SALVIAX_API __declspec(dllexport)
 #else
-	#define SOFTARTX_API __declspec(dllimport)
+	#define SALVIAX_API __declspec(dllimport)
 #endif
 
 extern "C"
 {
-	SOFTARTX_API void salviax_create_presenter_device(softart::h_device& dev, void* param);
+	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
 }
 
-#endif //SOFTARTX_DEV_OPENGL_H
+#endif //SALVIAXDEV_OPENGL_H

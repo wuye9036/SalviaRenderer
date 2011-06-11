@@ -1,7 +1,7 @@
-#ifndef SOFTARTX_UTILITY_FORWARD_H
-#define SOFTARTX_UTILITY_FORWARD_H
+#ifndef SALVIAXUTILITY_FORWARD_H
+#define SALVIAXUTILITY_FORWARD_H
 
-#define BEGIN_NS_SOFTARTX_UTILITY() namespace softartx{ namespace utility{
-#define END_NS_SOFTARTX_UTILITY() }}
+#define BEGIN_NS_SALVIAXUTILITY() namespace softartx{ namespace utility{
+#define END_NS_SALVIAXUTILITY() }}
 
 #endif

@@ -5,8 +5,8 @@
 
 #include "type_register.h"
 #include "functions_tblhelper.h"
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 namespace shader_constant
@@ -88,6 +88,6 @@ namespace detail
 		}
 	};
 }
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

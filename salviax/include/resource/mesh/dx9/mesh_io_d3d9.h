@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SOFTARTX_MESH_IO_D3D9_H
-#define SOFTARTX_MESH_IO_D3D9_H
+#ifndef SALVIAXMESH_IO_D3D9_H
+#define SALVIAXMESH_IO_D3D9_H
 
 #include "salviax/include/resource/resource_forward.h"
 #include "salviax/include/utility/inc_d3d9x.h"
@@ -33,11 +33,11 @@ Modify Log:
 #include "salviax/include/utility/d3d9_utilities.h"
 #include "salviar/include/decl.h"
 
-BEGIN_NS_SOFTARTX_RESOURCE()
+BEGIN_NS_SALVIAXRESOURCE()
 
-h_mesh create_mesh_from_dx9mesh(softart::renderer* psr, LPD3DXMESH pmesh);
-h_mesh create_mesh_from_xfile(softart::renderer* psr, softartx::utility::d3d9_device* dev, const std::_tstring& filename);
+h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH pmesh);
+h_mesh create_mesh_from_xfile(salviar::renderer* psr, softartx::utility::d3d9_device* dev, const std::_tstring& filename);
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()
 
-#endif //SOFTARTX_MESH_IO_D3D9_H
+#endif //SALVIAXMESH_IO_D3D9_H

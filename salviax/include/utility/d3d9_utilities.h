@@ -16,14 +16,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SOFTARTX_D3D9_UTILITIES_H
-#define SOFTARTX_D3D9_UTILITIES_H
+#ifndef SALVIAXD3D9_UTILITIES_H
+#define SALVIAXD3D9_UTILITIES_H
 
 #include "utility_forward.h"
 #include "inc_d3d9.h"
 #include "salviar/include/handles.h"
 
-BEGIN_NS_SOFTARTX_UTILITY()
+BEGIN_NS_SALVIAXUTILITY()
 
 class d3d9_device;
 DECL_HANDLE( d3d9_device, h_d3d9_device );
@@ -48,6 +48,6 @@ public:
 	~d3d9_device();
 };
 
-END_NS_SOFTARTX_UTILITY()
+END_NS_SALVIAXUTILITY()
 
-#endif // SOFTARTX_D3D9_UTILITIES_H
+#endif // SALVIAXD3D9_UTILITIES_H

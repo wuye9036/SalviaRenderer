@@ -7,7 +7,7 @@
 
 using eflib::num_available_threads;
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 boost::threadpool::pool& global_thread_pool()
 {
@@ -15,4 +15,4 @@ boost::threadpool::pool& global_thread_pool()
 	return tp;
 }
 
-END_NS_SOFTART();
+END_NS_SALVIAR();

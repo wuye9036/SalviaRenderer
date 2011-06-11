@@ -5,7 +5,7 @@
 
 #include <eflib/include/platform/ext_intrinsics.h>
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 using namespace eflib;
 using namespace std;
@@ -771,4 +771,4 @@ color_rgba32f sampler::sample_cube(
 	//return color_rgba32f(invlod, invlod, invlod, 1.0f);
 	return sample_cube(coord.x, coord.y, coord.z, lod);
 }
-END_NS_SOFTART()
+END_NS_SALVIAR()

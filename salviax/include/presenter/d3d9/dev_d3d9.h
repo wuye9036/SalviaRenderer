@@ -16,8 +16,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SOFTARTX_DEV_D3D9_H
-#define SOFTARTX_DEV_D3D9_H
+#ifndef SALVIAXDEV_D3D9_H
+#define SALVIAXDEV_D3D9_H
 
 #include "salviar/include/presenter_dev.h"
 #include "salviax/include/utility/d3d9_utilities.h"
@@ -27,21 +27,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
 
-#define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SOFTARTX_PRESENTER() }}
+#define BEGIN_NS_SALVIAXPRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SALVIAXPRESENTER() }}
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 class dev_d3d9;
 DECL_HANDLE(dev_d3d9, h_dev_d3d9);
 
-class dev_d3d9 : public softart::device
+class dev_d3d9 : public salviar::device
 {
 public:
 	static h_dev_d3d9 create_device(HWND hwnd, softartx::utility::h_d3d9_device dev = softartx::utility::h_d3d9_device());
 
 	//inherited
-	virtual void present(const softart::surface& surf);
+	virtual void present(const salviar::surface& surf);
 
 	~dev_d3d9();
 
@@ -56,17 +56,17 @@ private:
 	IDirect3DVertexBuffer9* vb_;
 };
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
-#ifdef SoftArtX_d3d9_presenter_EXPORTS
-	#define SOFTARTX_API __declspec(dllexport)
+#ifdef salviax_d3d9_presenter_EXPORTS
+	#define SALVIAX_API __declspec(dllexport)
 #else
-	#define SOFTARTX_API __declspec(dllimport)
+	#define SALVIAX_API __declspec(dllimport)
 #endif
 
 extern "C"
 {
-	SOFTARTX_API void salviax_create_presenter_device(softart::h_device& dev, void* param);
+	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
 }
 
-#endif //SOFTARTX_DEV_D3D9_H
+#endif //SALVIAXDEV_D3D9_H

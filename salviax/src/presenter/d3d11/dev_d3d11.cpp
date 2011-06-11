@@ -30,14 +30,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #endif
 
 using namespace eflib;
-using namespace softart;
+using namespace salviar;
 
 struct Vertex
 {
 	float x, y;
 };
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 HINSTANCE GetDLLHInstance()
 {
@@ -135,7 +135,7 @@ h_dev_d3d11 dev_d3d11::create_device(HWND hwnd){
 }
 
 //inherited
-void dev_d3d11::present(const softart::surface& surf)
+void dev_d3d11::present(const salviar::surface& surf)
 {
 	if (!d3d_device_)
 	{
@@ -350,9 +350,9 @@ void dev_d3d11::present(const softart::surface& surf)
 	swap_chain_->Present(0, 0);
 }
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
-void salviax_create_presenter_device(softart::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {
 	dev = softartx::presenter::dev_d3d11::create_device(static_cast<HWND>(param));
 }

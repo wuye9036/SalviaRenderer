@@ -16,8 +16,8 @@
 #pragma warning(pop)
 #endif
 #include <vector>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 
@@ -138,6 +138,6 @@ public:
 	virtual void set_min_lod(size_t miplevel);
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

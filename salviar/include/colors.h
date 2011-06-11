@@ -8,8 +8,8 @@
 #include <eflib/include/math/math.h>
 #include <eflib/include/math/vector.h>
 #include <boost/type_traits.hpp>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 using eflib::round;
 
@@ -491,7 +491,7 @@ inline color_rgba32f lerp(const color_r32i& c0, const color_r32i& c1, const colo
 	return color_r32f(c01.r + (c23.r - c01.r) * ty).to_rgba32f();
 }
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #include "colors_convertors.h"
 

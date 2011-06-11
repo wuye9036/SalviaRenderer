@@ -4,8 +4,8 @@
 #include "decl.h"
 #include "render_stage.h"
 #include "stream.h"
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 class stream_assembler// : public render_stage
@@ -21,6 +21,6 @@ public:
 	size_t num_vertices() const;
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SOFTARTX_TEX_IO_GDIPLUS_H
-#define SOFTARTX_TEX_IO_GDIPLUS_H
+#ifndef SALVIAXTEX_IO_GDIPLUS_H
+#define SALVIAXTEX_IO_GDIPLUS_H
 
 #include "salviax/include/utility/inc_gdiplus.h"
 #include "salviax/include/resource/texture/sa/tex_io.h"
@@ -35,19 +35,19 @@ Modify Log:
 #include <string>
 #include <vector>
 
-BEGIN_NS_SOFTARTX_RESOURCE()
+BEGIN_NS_SALVIAXRESOURCE()
 class texture_io_gdiplus: public texture_io{
 public:
-	virtual softart::h_texture load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt);
-	virtual softart::h_texture load_cube(softart::renderer* pr, const std::vector<std::_tstring>& filenames, softart::pixel_format fmt);
+	virtual salviar::h_texture load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt);
+	virtual salviar::h_texture load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& filenames, salviar::pixel_format fmt);
 
-	virtual void save(const softart::surface& /*surf*/, const std::_tstring& /*filename*/, softart::pixel_format /*pxfmt*/){};
+	virtual void save(const salviar::surface& /*surf*/, const std::_tstring& /*filename*/, salviar::pixel_format /*pxfmt*/){};
 
 	static texture_io_gdiplus& instance();
 
 private:
-	bool load(softart::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region);
-	bool copy_image_to_surface(softart::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region);
+	bool load(salviar::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region);
+	bool copy_image_to_surface(salviar::surface& surf, const eflib::rect<size_t>& dest_region, Gdiplus::Bitmap* src_bmp, const eflib::rect<size_t>& src_region);
 	texture_io_gdiplus();
 	~texture_io_gdiplus();
 };
@@ -57,6 +57,6 @@ Gdiplus::Rect efl_rect_to_gdiplus_rect(const eflib::rect<T>& src){
 	return Gdiplus::Rect((INT)src.x, (INT)src.y, (INT)src.w, (INT)src.h);
 }
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()
 
-#endif //SOFTARTX_TEX_IO_GDIPLUS_H
+#endif //SALVIAXTEX_IO_GDIPLUS_H

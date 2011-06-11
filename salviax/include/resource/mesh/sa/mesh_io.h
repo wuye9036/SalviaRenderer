@@ -24,25 +24,25 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SOFTARTX_MESH_IO_H
-#define SOFTARTX_MESH_IO_H
+#ifndef SALVIAXMESH_IO_H
+#define SALVIAXMESH_IO_H
 
 #include "mesh.h"
 #include <eflib/include/math/vector.h>
 #include <vector>
 
-BEGIN_NS_SOFTARTX_RESOURCE()
+BEGIN_NS_SALVIAXRESOURCE()
 
-h_mesh create_box(softart::renderer* psr);
-h_mesh create_cylinder(softart::renderer* psr);
+h_mesh create_box(salviar::renderer* psr);
+h_mesh create_cylinder(salviar::renderer* psr);
 h_mesh create_planar(
-					 softart::renderer* psr,
+					 salviar::renderer* psr,
 					 const eflib::vec3& start_pos,
 					 const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
 					 size_t repeat_x, size_t repeat_y,
 					 bool positive_normal
 					 );
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()
 
-#endif //SOFTARTX_MESH_IO_H
+#endif //SALVIAXMESH_IO_H

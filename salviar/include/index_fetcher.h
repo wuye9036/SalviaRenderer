@@ -6,9 +6,9 @@
 
 #include <eflib/include/platform/typedefs.h>
 
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 class index_fetcher
 {
@@ -25,6 +25,6 @@ private:
 	uint32_t stride_;
 };
 
-END_NS_SOFTART();
+END_NS_SALVIAR();
 
 #endif

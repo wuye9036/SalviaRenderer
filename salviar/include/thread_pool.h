@@ -7,10 +7,10 @@
 #include <boost/threadpool.hpp>
 #include <eflib/include/platform/disable_warnings.h>
 
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 boost::threadpool::pool& global_thread_pool();
-END_NS_SOFTART();
+END_NS_SALVIAR();
 
 #endif

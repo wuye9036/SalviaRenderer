@@ -14,9 +14,9 @@
 
 #include <vector>
 #include <map>
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 struct viewport;
 struct scanline_info;
@@ -138,6 +138,6 @@ public:
 	virtual bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in) = 0;
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

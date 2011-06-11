@@ -3,8 +3,8 @@
 
 #include "buffer.h"
 #include "texture.h"
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 class buffer_manager
@@ -42,6 +42,6 @@ public:
 	}
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

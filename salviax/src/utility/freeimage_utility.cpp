@@ -1,12 +1,12 @@
 #include <salviax/include/utility/freeimage_utilities.h>
 
-#ifdef SOFTARTX_FREEIMAGE_ENABLED
+#ifdef SALVIAXFREEIMAGE_ENABLED
 
 using namespace std;
 using namespace eflib;
-using namespace softart;
+using namespace salviar;
 
-BEGIN_NS_SOFTARTX_UTILITY()
+BEGIN_NS_SALVIAXUTILITY()
 
 FIBITMAP* load_image(const std::_tstring& filename, int flag)
 {
@@ -98,6 +98,6 @@ FIBITMAP* make_bitmap_copy(
 	return scaled_image;
 }
 
-END_NS_SOFTARTX_UTILITY()
+END_NS_SALVIAXUTILITY()
 
-#endif //SOFTARTX_FREEIMAGE_ENABLED
+#endif //SALVIAXFREEIMAGE_ENABLED

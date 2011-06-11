@@ -1,6 +1,6 @@
 #include "salviar/include/shaderregs_op.h"
 #include "salviar/include/shader.h"
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 
 using namespace boost;
@@ -217,4 +217,4 @@ bool pixel_shader::execute(const vs_output& in, ps_output& out){
 	out.front_face = in.front_face;
 	return rv;
 }
-END_NS_SOFTART()
+END_NS_SALVIAR()

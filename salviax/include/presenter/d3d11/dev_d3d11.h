@@ -16,8 +16,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SOFTARTX_DEV_D3D11_H
-#define SOFTARTX_DEV_D3D11_H
+#ifndef SALVIAXDEV_D3D11_H
+#define SALVIAXDEV_D3D11_H
 
 #ifndef NOMINMAX
 #	define NOMINMAX
@@ -29,21 +29,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <eflib/include/math/math.h>
 #include <boost/smart_ptr.hpp>
 
-#define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SOFTARTX_PRESENTER() }}
+#define BEGIN_NS_SALVIAXPRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SALVIAXPRESENTER() }}
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 class dev_d3d11;
 DECL_HANDLE(dev_d3d11, h_dev_d3d11);
 
-class dev_d3d11 : public softart::device
+class dev_d3d11 : public salviar::device
 {
 public:
 	static h_dev_d3d11 create_device(HWND hwnd);
 
 	//inherited
-	virtual void present(const softart::surface& surf);
+	virtual void present(const salviar::surface& surf);
 
 	~dev_d3d11();
 
@@ -79,17 +79,17 @@ private:
 	ID3D11PixelShader* ps_;
 };
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
-#ifdef SoftArtX_d3d11_presenter_EXPORTS
-	#define SOFTARTX_API __declspec(dllexport)
+#ifdef salviax_d3d11_presenter_EXPORTS
+	#define SALVIAX_API __declspec(dllexport)
 #else
-	#define SOFTARTX_API __declspec(dllimport)
+	#define SALVIAX_API __declspec(dllimport)
 #endif
 
 extern "C"
 {
-	SOFTARTX_API void salviax_create_presenter_device(softart::h_device& dev, void* param);
+	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
 }
 
-#endif //SOFTARTX_DEV_D3D11_H
+#endif //SALVIAXDEV_D3D11_H

@@ -23,7 +23,7 @@
 using eflib::num_available_threads;
 using eflib::atomic;
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 //#define USE_TRADITIONAL_RASTERIZER
 
@@ -1561,4 +1561,4 @@ void rasterizer::draw(size_t prim_count){
 	}
 }
 
-END_NS_SOFTART()
+END_NS_SALVIAR()

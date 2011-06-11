@@ -27,7 +27,7 @@ using namespace eflib;
 using namespace boost;
 using namespace boost::assign;
 using namespace std;
-using namespace softart;
+using namespace salviar;
 using namespace softartx;
 using namespace softartx::resource;
 using namespace Gdiplus;
@@ -59,7 +59,7 @@ void ReadShortString(std::istream& file, std::string& str)
 	file.read(reinterpret_cast<char*>(&str[0]), len * sizeof(str[0]));
 }
 
-h_mesh LoadModel(softart::h_renderer hsr, std::string const & mesh_name)
+h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 {
 	std::vector<Material> mtls;
 	std::vector<std::string> mesh_names;
@@ -127,7 +127,7 @@ h_mesh LoadModel(softart::h_renderer hsr, std::string const & mesh_name)
 
 	mesh_names.resize(num_meshes);
 
-	softart::input_layout_decl layout;
+	salviar::input_layout_decl layout;
 	for (uint32_t mesh_index = 0; mesh_index < num_meshes; ++ mesh_index)
 	{
 		ReadShortString(file, mesh_names[mesh_index]);
@@ -150,9 +150,9 @@ h_mesh LoadModel(softart::h_renderer hsr, std::string const & mesh_name)
 			vertex_element ve;
 			file.read(reinterpret_cast<char*>(&ve), sizeof(ve));
 		}
-		layout.push_back(softart::input_element_decl(stream_0, 0, sizeof(vec3), input_float3,
+		layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec3), input_float3,
 				input_register_usage_position, input_reg_0));
-		layout.push_back(softart::input_element_decl(stream_1, 0, sizeof(vec3), input_float3,
+		layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec3), input_float3,
 				input_register_usage_attribute, input_reg_1));
 
 		uint32_t num_vertices;
@@ -161,8 +161,8 @@ h_mesh LoadModel(softart::h_renderer hsr, std::string const & mesh_name)
 		uint32_t max_num_blend;
 		file.read(reinterpret_cast<char*>(&max_num_blend), sizeof(max_num_blend));
 
-		softart::h_buffer verts = pmesh->create_buffer(vertbufid, sizeof(vec3) * num_vertices);
-		softart::h_buffer normals = pmesh->create_buffer(normbufid, sizeof(vec3) * num_vertices);
+		salviar::h_buffer verts = pmesh->create_buffer(vertbufid, sizeof(vec3) * num_vertices);
+		salviar::h_buffer normals = pmesh->create_buffer(normbufid, sizeof(vec3) * num_vertices);
 		vec4* pverts = (vec4*)(verts->raw_data(0));
 		vec3* pnorms = (vec3*)(normals->raw_data(0));
 
@@ -172,7 +172,7 @@ h_mesh LoadModel(softart::h_renderer hsr, std::string const & mesh_name)
 		uint32_t num_triangles;
 		file.read(reinterpret_cast<char*>(&num_triangles), sizeof(num_triangles));
 
-		softart::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t) * num_triangles * 3);
+		salviar::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t) * num_triangles * 3);
 		uint16_t* pidxs = (uint16_t*)(indices->raw_data(0));
 
 		char is_index_16_bit;
@@ -225,16 +225,16 @@ public:
 		switch (index)
 		{
 		case 0:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 
 		case 1:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 
 		case 2:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 
 		default:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 		}
 	}
 };
@@ -340,7 +340,7 @@ public:
 		dll_name += TEXT(".dll");
 
 		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*create_presenter_device_func)(softart::h_device& dev, void* param);
+		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
 		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
 		presenter_func(present_dev, static_cast<void*>(m_hWnd));
 

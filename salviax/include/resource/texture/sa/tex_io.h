@@ -24,8 +24,8 @@ Modify Log:
 
 *********************************************************************/
 
-#ifndef SOFTARTX_TEX_IO_H
-#define SOFTARTX_TEX_IO_H
+#ifndef SALVIAXTEX_IO_H
+#define SALVIAXTEX_IO_H
 
 #include "salviax/include/resource/resource_forward.h"
 #include "salviar/include/surface.h"
@@ -33,16 +33,16 @@ Modify Log:
 #include "salviar/include/decl.h"
 #include <eflib/include/math/math.h>
 
-BEGIN_NS_SOFTARTX_RESOURCE()
+BEGIN_NS_SALVIAXRESOURCE()
 
 class texture_io{
 public:
-	virtual softart::h_texture load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt) = 0;
-	virtual softart::h_texture load_cube(softart::renderer* pr, const std::vector<std::_tstring>& cube_imgs, softart::pixel_format tex_pxfmt) = 0;
+	virtual salviar::h_texture load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt) = 0;
+	virtual salviar::h_texture load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& cube_imgs, salviar::pixel_format tex_pxfmt) = 0;
 
-	virtual void save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt) = 0;
+	virtual void save(const salviar::surface& surf, const std::_tstring& filename, salviar::pixel_format pxfmt) = 0;
 };
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()
 
-#endif //SOFTARTX_TEX_IO_H
+#endif //SALVIAXTEX_IO_H

@@ -1,7 +1,7 @@
 #include "../include/buffer.h"
 #include "../include/index_fetcher.h"
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 void index_fetcher::initialize(h_buffer hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
 {
@@ -95,4 +95,4 @@ void index_fetcher::fetch_indices(uint32_t* prim_indices, uint32_t id)
 	}
 }
 
-END_NS_SOFTART()
+END_NS_SALVIAR()

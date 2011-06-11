@@ -9,7 +9,7 @@
 #include "../include/surface.h"
 #include "../include/vertex_cache.h"
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 using namespace eflib;
 
@@ -441,4 +441,4 @@ h_renderer create_software_renderer(const renderer_parameters* pparam, h_device 
 {
 	return h_renderer(new renderer_impl(pparam, hdev));
 }
-END_NS_SOFTART()
+END_NS_SALVIAR()

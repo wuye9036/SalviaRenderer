@@ -18,8 +18,8 @@
 #pragma warning(pop)
 #endif
 
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 struct scanline_info;
@@ -120,6 +120,6 @@ public:
 
 //DECL_HANDLE(rasterizer, h_rasterizer);
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

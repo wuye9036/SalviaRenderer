@@ -24,10 +24,10 @@ using namespace std;
 using namespace eflib;
 using namespace boost;
 using namespace softartx::utility;
-using namespace softart;
-BEGIN_NS_SOFTARTX_RESOURCE()
+using namespace salviar;
+BEGIN_NS_SALVIAXRESOURCE()
 
-h_mesh create_mesh_from_dx9mesh(softart::renderer* psr, LPD3DXMESH pmesh)
+h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH pmesh)
 {
 	vec3* pverts = NULL;
 	byte* pidxs = NULL;
@@ -47,8 +47,8 @@ h_mesh create_mesh_from_dx9mesh(softart::renderer* psr, LPD3DXMESH pmesh)
 	//一个vertex buffer，一个index buffer
 	psrmesh->set_buffer_count(2);
 
-	softart::h_buffer hvertbuf = psrmesh->create_buffer(0, nverts*bytes_per_vert);
-	softart::h_buffer hidxbuf = psrmesh->create_buffer(1, nfaces*bytes_per_idx*3);
+	salviar::h_buffer hvertbuf = psrmesh->create_buffer(0, nverts*bytes_per_vert);
+	salviar::h_buffer hidxbuf = psrmesh->create_buffer(1, nfaces*bytes_per_idx*3);
 
 	psrmesh->set_index_type(bytes_per_idx == 2 ? index_int16 : index_int32);
 	psrmesh->set_index_buf_id(1);
@@ -58,7 +58,7 @@ h_mesh create_mesh_from_dx9mesh(softart::renderer* psr, LPD3DXMESH pmesh)
 	//parse dx9 decl to layout
 	D3DVERTEXELEMENT9 dxdecl[MAX_FVF_DECL_SIZE];
 	pmesh->GetDeclaration(dxdecl);
-	softart::input_layout_decl layout;
+	salviar::input_layout_decl layout;
 
 	//累加流标号。Postion、Normal、TextureCoord，目前仅支持这三种情况
 	vector<size_t> positions;
@@ -88,19 +88,19 @@ h_mesh create_mesh_from_dx9mesh(softart::renderer* psr, LPD3DXMESH pmesh)
 	for(size_t i = 0; i < positions.size(); ++i)
 	{
 		layout.push_back( 
-			softart::input_element_decl(stream_0, dxdecl[positions[i]].Offset, bytes_per_vert, input_float3, input_register_usage_position, input_register_index(usage_idx_counter)));
+			salviar::input_element_decl(stream_0, dxdecl[positions[i]].Offset, bytes_per_vert, input_float3, input_register_usage_position, input_register_index(usage_idx_counter)));
 		++usage_idx_counter;
 	}
 
 	for(size_t i = 0; i < normals.size(); ++i){
 		layout.push_back(
-			softart::input_element_decl(stream_0, dxdecl[normals[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
+			salviar::input_element_decl(stream_0, dxdecl[normals[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
 		++usage_idx_counter;
 	}
 
 	for(size_t i = 0; i < texcoords.size(); ++i){
 		layout.push_back(
-			softart::input_element_decl(stream_0, dxdecl[texcoords[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
+			salviar::input_element_decl(stream_0, dxdecl[texcoords[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
 		++usage_idx_counter;
 	}
 
@@ -122,7 +122,7 @@ h_mesh create_mesh_from_dx9mesh(softart::renderer* psr, LPD3DXMESH pmesh)
 	return ret;
 }
 
-h_mesh create_mesh_from_xfile(softart::renderer* psr, d3d9_device* dev, const _tstring& filename)
+h_mesh create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const _tstring& filename)
 {
 	IDirect3DDevice9* d3ddev = dev->get_d3d_device9();
 	if(d3ddev == NULL) return h_mesh();
@@ -144,4 +144,4 @@ h_mesh create_mesh_from_xfile(softart::renderer* psr, d3d9_device* dev, const _t
 	return ret;
 }
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()

@@ -4,7 +4,7 @@
 #include "../include/buffer.h"
 #include "../include/shader.h"
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 using namespace eflib;
 
@@ -91,4 +91,4 @@ size_t stream_assembler::num_vertices() const
 	return hb->get_size() / ied.stride;
 }
 
-END_NS_SOFTART()
+END_NS_SALVIAR()

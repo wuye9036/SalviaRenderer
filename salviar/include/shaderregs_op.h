@@ -4,8 +4,8 @@
 #include "shaderregs.h"
 
 #include <boost/static_assert.hpp>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 struct viewport;
@@ -26,6 +26,6 @@ public:
 	void set(const eflib::vec4& base_vert, const vs_output& ddx, const vs_output& ddy);
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

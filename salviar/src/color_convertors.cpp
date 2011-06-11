@@ -1,5 +1,5 @@
 #include "../include/colors.h"
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 static pixel_format_convertor pfc_instance;
 
@@ -113,4 +113,4 @@ pixel_format_convertor::pixel_format_convertor(){
 	color_convertor_initializer<pixel_format_color_max - 1, pixel_format_color_max - 1> init_(&convertors[0][0], &array_convertors[0][0],
 		&lerpers_1d[0], &lerpers_2d[0]);
 }
-END_NS_SOFTART()
+END_NS_SALVIAR()

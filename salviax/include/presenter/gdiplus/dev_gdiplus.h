@@ -23,8 +23,8 @@ purpose:	GDI+ Device, Will Be Obseleted
 Modify Log:
 		
 *********************************************************************/
-#ifndef SOFTARTX_DEV_GDIPLUS_H
-#define SOFTARTX_DEV_GDIPLUS_H
+#ifndef SALVIAXDEV_GDIPLUS_H
+#define SALVIAXDEV_GDIPLUS_H
 
 #include "salviar/include/presenter_dev.h"
 #include "salviax/include/utility/inc_gdiplus.h"
@@ -34,15 +34,15 @@ Modify Log:
 #include <algorithm>
 #include <stdio.h>
 
-#define BEGIN_NS_SOFTARTX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SOFTARTX_PRESENTER() }}
+#define BEGIN_NS_SALVIAXPRESENTER() namespace softartx{ namespace presenter{
+#define END_NS_SALVIAXPRESENTER() }}
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 class dev_gdiplus;
 DECL_HANDLE(dev_gdiplus, h_dev_gdiplus)
 
-class dev_gdiplus: public softart::device{
+class dev_gdiplus: public salviar::device{
 	dev_gdiplus(HWND hwnd);
 
 	HWND hwnd_;
@@ -52,10 +52,10 @@ public:
 	~dev_gdiplus();
 	static h_dev_gdiplus create_device(HWND hwnd);
 
-	virtual void present(const softart::surface& surf);
+	virtual void present(const salviar::surface& surf);
 };
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
 class gdiplus_initializer
 {
@@ -80,15 +80,15 @@ public:
 	}
 };
 
-#ifdef SoftArtX_gdiplus_presenter_EXPORTS
-	#define SOFTARTX_API __declspec(dllexport)
+#ifdef salviax_gdiplus_presenter_EXPORTS
+	#define SALVIAX_API __declspec(dllexport)
 #else
-	#define SOFTARTX_API __declspec(dllimport)
+	#define SALVIAX_API __declspec(dllimport)
 #endif
 
 extern "C"
 {
-	SOFTARTX_API void salviax_create_presenter_device(softart::h_device& dev, void* param);
+	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
 }
 
-#endif //SOFTARTX_DEV_GDIPLUS_H
+#endif //SALVIAXDEV_GDIPLUS_H

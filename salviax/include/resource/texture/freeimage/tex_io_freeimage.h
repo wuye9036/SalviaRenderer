@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SOFTARTX_TEX_IO_FREEIMAGE_H
-#define SOFTARTX_TEX_IO_FREEIMAGE_H
+#ifndef SALVIAXTEX_IO_FREEIMAGE_H
+#define SALVIAXTEX_IO_FREEIMAGE_H
 
 #include <salviax/include/utility/user_config.h>
 
@@ -37,26 +37,26 @@ Modify Log:
 
 struct FIBITMAP;
 
-BEGIN_NS_SOFTARTX_RESOURCE()
-#ifdef SOFTARTX_FREEIMAGE_ENABLED
+BEGIN_NS_SALVIAXRESOURCE()
+#ifdef SALVIAXFREEIMAGE_ENABLED
 class texture_io_fi: public texture_io{
 public:
-	virtual softart::h_texture load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt);
-	virtual softart::h_texture load_cube(softart::renderer* pr, const std::vector<std::_tstring>& filenames, softart::pixel_format fmt);
+	virtual salviar::h_texture load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt);
+	virtual salviar::h_texture load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& filenames, salviar::pixel_format fmt);
 
-	virtual void save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt);
+	virtual void save(const salviar::surface& surf, const std::_tstring& filename, salviar::pixel_format pxfmt);
 
 	static texture_io_fi& instance(){
 		static texture_io_fi ins;
 		return ins;
 	}
 private:
-	bool load( softart::surface& surf, const eflib::rect<size_t>& dest_region, FIBITMAP* img, const eflib::rect<size_t>& src_region );
-	softart::h_texture load(softart::renderer* pr, FIBITMAP* img, const eflib::rect<size_t>& src, softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height);
+	bool load( salviar::surface& surf, const eflib::rect<size_t>& dest_region, FIBITMAP* img, const eflib::rect<size_t>& src_region );
+	salviar::h_texture load(salviar::renderer* pr, FIBITMAP* img, const eflib::rect<size_t>& src, salviar::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height);
 
 	texture_io_fi(){}
 };
 #endif
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()
 
-#endif //SOFTARTX_TEX_IO_FREEIMAGE_H
+#endif //SALVIAXTEX_IO_FREEIMAGE_H

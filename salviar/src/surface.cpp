@@ -1,6 +1,6 @@
 #include "../include/surface.h"
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 #ifdef TILE_BASED_STORAGE
 const size_t TILE_BITS = 5;
@@ -340,4 +340,4 @@ void surface::untile(std::vector<byte>& untile_data)
 #endif
 }
 
-END_NS_SOFTART()
+END_NS_SALVIAR()

@@ -16,7 +16,7 @@
 using eflib::num_available_threads;
 using eflib::atomic;
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
 const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
@@ -176,4 +176,4 @@ result default_vertex_cache::set_stream(stream_index sidx, h_buffer hbuf)
 	return result::ok;
 }
 
-END_NS_SOFTART()
+END_NS_SALVIAR()

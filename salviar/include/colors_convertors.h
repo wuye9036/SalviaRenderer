@@ -1,7 +1,7 @@
 #ifndef SOFTART_COLOR_CONVERTORS_H
 #define SOFTART_COLOR_CONVERTORS_H
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 struct color_max{};
@@ -118,6 +118,6 @@ private:
 	static pixel_lerp_2d lerpers_2d[pixel_format_color_max];
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef SOFTART_RENDERER_CAPACITY_H
 #define SOFTART_RENDERER_CAPACITY_H
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 //the count of vs input resigters
@@ -14,5 +14,5 @@ const size_t vso_attrib_regcnt = 32;
 const size_t pso_color_regcnt = 8;
 
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 #endif

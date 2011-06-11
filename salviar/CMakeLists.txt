@@ -8,7 +8,7 @@ INCLUDE_DIRECTORIES(
 LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
 
 SOURCE_GROUP( Fundations FILES
-	include/softart_fwd.h
+	include/salviar_forward.h
 	include/decl.h
 	include/enums.h
 	include/colors.h
@@ -37,6 +37,27 @@ SOURCE_GROUP( Buffers FILES
 )
 
 set (HEADER_FILES
+	include/salviar_forward.h
+	include/decl.h
+	include/enums.h
+	include/colors.h
+	include/colors_convertors.h
+	
+	include/stream.h
+	include/stream_assembler.h
+	include/clipper.h
+	
+	include/shader.h
+	include/shader_utility.h
+	include/shaderregs.h
+	include/shaderregs_op.h
+	
+	include/buffer.h
+	include/texture.h
+	include/sampler.h
+	include/surface.h
+	include/resource_manager.h
+	
 	include/framebuffer.h
 	include/handles.h
 	include/index_fetcher.h
@@ -73,6 +94,7 @@ set (SOURCE_FILES
 )
 
 ADD_LIBRARY( salviar STATIC
+	${Buffers}
 	${HEADER_FILES}
 	${SOURCE_FILES}
 )

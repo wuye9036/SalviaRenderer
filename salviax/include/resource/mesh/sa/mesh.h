@@ -24,8 +24,8 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SOFTARTX_MESH_H
-#define SOFTARTX_MESH_H
+#ifndef SALVIAXMESH_H
+#define SALVIAXMESH_H
 
 #include "salviax/include/resource/resource_forward.h"
 #include "salviar/include/decl.h"
@@ -40,7 +40,7 @@ Modify Log:
 #endif
 #include <vector>
 
-BEGIN_NS_SOFTARTX_RESOURCE()
+BEGIN_NS_SALVIAXRESOURCE()
 
 class base_mesh
 {
@@ -48,33 +48,33 @@ public:
 	virtual size_t get_buffer_count() = 0;
 	virtual size_t get_face_count() = 0;
 
-	virtual softart::h_buffer get_buffer(size_t buf_id) = 0;
-	virtual softart::h_buffer get_index_buffer() = 0;
-	virtual softart::h_buffer get_vertex_buffer() = 0;
+	virtual salviar::h_buffer get_buffer(size_t buf_id) = 0;
+	virtual salviar::h_buffer get_index_buffer() = 0;
+	virtual salviar::h_buffer get_vertex_buffer() = 0;
 
 	virtual void gen_adjancency() = 0;
 
-	virtual void render(const softart::input_layout_decl& layout) = 0;
+	virtual void render(const salviar::input_layout_decl& layout) = 0;
 	virtual void render() = 0;
 };
 
 class mesh : public base_mesh
 {
-	std::vector<softart::h_buffer> bufs_;
-	softart::h_buffer adjacancies_;
+	std::vector<salviar::h_buffer> bufs_;
+	salviar::h_buffer adjacancies_;
 
-	softart::renderer* pdev_;
+	salviar::renderer* pdev_;
 
 	size_t idxbufid_;
 	size_t vertbufid_;
 
 	size_t primcount_;
-	softart::index_type idxtype_;
+	salviar::index_type idxtype_;
 
-	std::vector<softart::input_element_decl> default_layout_;
+	std::vector<salviar::input_element_decl> default_layout_;
 
 public:
-	mesh(softart::renderer* psr);
+	mesh(salviar::renderer* psr);
 
 	/*
 	inherited
@@ -82,32 +82,32 @@ public:
 	virtual size_t get_buffer_count();
 	virtual size_t get_face_count();
 
-	virtual softart::h_buffer get_buffer(size_t buf_id);
-	virtual softart::h_buffer get_index_buffer();
-	virtual softart::h_buffer get_vertex_buffer();
+	virtual salviar::h_buffer get_buffer(size_t buf_id);
+	virtual salviar::h_buffer get_index_buffer();
+	virtual salviar::h_buffer get_vertex_buffer();
 
 	virtual void gen_adjancency();
 
-	virtual void render(const softart::input_layout_decl& layout);
+	virtual void render(const salviar::input_layout_decl& layout);
 	virtual void render();
 
 	/*
 	mesh
 	*/
 	virtual void set_buffer_count(size_t bufcount);
-	virtual softart::h_buffer create_buffer(size_t bufid, size_t size);
+	virtual salviar::h_buffer create_buffer(size_t bufid, size_t size);
 	
 	virtual void set_index_buf_id(size_t bufid);
 	virtual void set_vertex_buf_id(size_t bufid);
 
 	virtual void set_primitive_count(size_t primcount);
-	virtual void set_index_type(softart::index_type idxtype);
+	virtual void set_index_type(salviar::index_type idxtype);
 
-	virtual void set_default_layout(const std::vector<softart::input_element_decl>& layout);
+	virtual void set_default_layout(const std::vector<salviar::input_element_decl>& layout);
 };
 
 DECL_HANDLE(base_mesh, h_mesh);
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()
 
 #endif

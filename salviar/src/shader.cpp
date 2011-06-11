@@ -1,7 +1,7 @@
 #include "../include/shaderregs_op.h"
 #include "../include/shader.h"
 #include "../include/renderer.h"
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 
 using namespace boost;
@@ -388,4 +388,4 @@ void blend_shader::execute(size_t sample, backbuffer_pixel_out& out, const ps_ou
 	shader_prog(sample, out, in);
 }
 
-END_NS_SOFTART()
+END_NS_SALVIAR()

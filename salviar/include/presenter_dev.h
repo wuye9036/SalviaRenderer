@@ -4,8 +4,8 @@
 #include "salviar/include/decl.h"
 
 #include <eflib/include/math/math.h>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 class device;
@@ -15,9 +15,9 @@ class device
 {
 public:
 	virtual ~device(){};
-	virtual void present(const softart::surface& surf) = 0;
+	virtual void present(const salviar::surface& surf) = 0;
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 
-#ifdef SOFTARTX_FREEIMAGE_ENABLED
+#ifdef SALVIAXFREEIMAGE_ENABLED
 
 #include <salviax/include/utility/freeimage_utilities.h>
 #include <salviar/include/renderer_impl.h>
@@ -31,10 +31,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 using namespace eflib;
 using namespace std;
-using namespace softart;
+using namespace salviar;
 using namespace softartx::utility;
 
-BEGIN_NS_SOFTARTX_RESOURCE()
+BEGIN_NS_SALVIAXRESOURCE()
 //从FIBITMAP将图像拷贝至Surface中。
 //	拷贝将分为以下几步：
 //		首先将FIBITMAP中的像素颜色提领出来，获得FIBITMAP中的分量信息。
@@ -42,7 +42,7 @@ BEGIN_NS_SOFTARTX_RESOURCE()
 //		将SoftArt中间颜色变换成目标Surface的颜色格式，拷贝到目标Surface中。
 //	模板参数：FIColorT，FIBITMAP的存储格式
 template<typename FIColorT> bool copy_image_to_surface(
-	softart::surface& surf, const rect<size_t>& dest_rect,
+	salviar::surface& surf, const rect<size_t>& dest_rect,
 	FIBITMAP* image, const rect<size_t>& src_rect,
 	typename FIUC<FIColorT>::CompT default_alpha = (FIUC<FIColorT>::CompT)(0) 
 	)
@@ -91,7 +91,7 @@ template<typename FIColorT> bool copy_image_to_surface(
 	return true;
 }
 //将Image的局部拷贝到surface里的指定区域内。如果源区域和目标区域大小不同，则进行双线插值的缩放。
-bool texture_io_fi::load( softart::surface& surf, const rect<size_t>& dest_region, FIBITMAP* img, const rect<size_t>& src_region ){
+bool texture_io_fi::load( salviar::surface& surf, const rect<size_t>& dest_region, FIBITMAP* img, const rect<size_t>& src_region ){
 	rect<size_t> scaled_img_region ;
 	FIBITMAP* scaled_img = make_bitmap_copy(scaled_img_region, dest_region.w, dest_region.h, img, src_region);
 	
@@ -126,7 +126,7 @@ bool texture_io_fi::load( softart::surface& surf, const rect<size_t>& dest_regio
 	return is_success;
 }
 //根据图像创建纹理。
-softart::h_texture texture_io_fi::load(softart::renderer* pr, const std::_tstring& filename, softart::pixel_format tex_pxfmt){
+salviar::h_texture texture_io_fi::load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt){
 	FIBITMAP* img = load_image( filename );
 	
 	size_t src_w = FreeImage_GetWidth(img);
@@ -136,11 +136,11 @@ softart::h_texture texture_io_fi::load(softart::renderer* pr, const std::_tstrin
 }
 
 //选取图像的一部分创建纹理。
-softart::h_texture texture_io_fi::load(softart::renderer* pr,
+salviar::h_texture texture_io_fi::load(salviar::renderer* pr,
 		FIBITMAP* img, const eflib::rect<size_t>& src,
-		softart::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height)
+		salviar::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height)
 {
-	softart::h_texture ret((texture*)NULL);
+	salviar::h_texture ret((texture*)NULL);
 	ret = pr->create_tex2d(src.w, src.h, 1, tex_pxfmt);
 
 	if( !load(ret->get_surface(0), rect<size_t>(0, 0, dest_width, dest_height), img, src) ){
@@ -150,8 +150,8 @@ softart::h_texture texture_io_fi::load(softart::renderer* pr,
 }
 
 //使用六张图像创建Cube纹理。Cube纹理的每面大小和第一张纹理的大小相同。如果其他文件的大小与第一张不同，则按第一张的大小缩放。
-softart::h_texture texture_io_fi::load_cube(softart::renderer* pr, const vector<_tstring>& filenames, softart::pixel_format fmt){
-	softart::h_texture ret;
+salviar::h_texture texture_io_fi::load_cube(salviar::renderer* pr, const vector<_tstring>& filenames, salviar::pixel_format fmt){
+	salviar::h_texture ret;
 
 	for(int i_cubeface = 0; i_cubeface < 6; ++i_cubeface){
 		FIBITMAP* cube_img = load_image( filenames[i_cubeface] );
@@ -178,7 +178,7 @@ softart::h_texture texture_io_fi::load_cube(softart::renderer* pr, const vector<
 }
 
 // Save surface as PNG or HRD formatted file.
-void texture_io_fi::save(const softart::surface& surf, const std::_tstring& filename, softart::pixel_format pxfmt){
+void texture_io_fi::save(const salviar::surface& surf, const std::_tstring& filename, salviar::pixel_format pxfmt){
 	FREE_IMAGE_TYPE fit = FIT_UNKNOWN;
 	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
@@ -221,6 +221,6 @@ default:
 	FreeImage_Save(fif, image, to_ansi_string(filename).c_str());
 	FreeImage_Unload(image);
 }
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()
 
 #endif

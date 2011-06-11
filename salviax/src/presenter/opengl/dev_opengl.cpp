@@ -24,9 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #pragma comment(lib, "opengl32.lib")
 
 using namespace eflib;
-using namespace softart;
+using namespace salviar;
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 dev_opengl::dev_opengl(HWND hwnd): hwnd_(hwnd), width_(0), height_(0){
 	init_device();
@@ -87,7 +87,7 @@ h_dev_opengl dev_opengl::create_device(HWND hwnd){
 }
 
 //inherited
-void dev_opengl::present(const softart::surface& surf)
+void dev_opengl::present(const salviar::surface& surf)
 {
 	uint32_t surf_width = static_cast<uint32_t>(surf.get_width());
 	uint32_t surf_height = static_cast<uint32_t>(surf.get_height());
@@ -148,9 +148,9 @@ void dev_opengl::present(const softart::surface& surf)
 	::SwapBuffers(hdc_);
 }
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
-void salviax_create_presenter_device(softart::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {
 	dev = softartx::presenter::dev_opengl::create_device(static_cast<HWND>(param));
 }

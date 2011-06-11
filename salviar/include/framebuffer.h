@@ -8,8 +8,8 @@
 #include "shaderregs.h"
 
 #include <vector>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 struct depth_stencil_op_desc {
     stencil_op stencil_fail_op;
@@ -130,6 +130,6 @@ public:
 
 //DECL_HANDLE(framebuffer, h_framebuffer);
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

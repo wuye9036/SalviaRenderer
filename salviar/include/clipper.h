@@ -2,13 +2,13 @@
 #define SOFTART_CLIPPER_H
 
 #include "decl.h"
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
 #include <eflib/include/math/math.h>
 #include <boost/array.hpp>
 #include <vector>
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 const size_t plane_num = 6;
 
@@ -27,6 +27,6 @@ public:
 
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

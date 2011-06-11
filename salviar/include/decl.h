@@ -3,8 +3,8 @@
 
 #include <eflib/include/platform/config.h>
 #include "handles.h"
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 // stages of pipeline
@@ -81,6 +81,6 @@ DECL_HANDLE(renderer_mementor, h_renderer_mementor);
 DECL_HANDLE(rasterizer_state, h_rasterizer_state);
 DECL_HANDLE(depth_stencil_state, h_depth_stencil_state);
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

@@ -5,9 +5,9 @@
 #include "../include/enums.h"
 
 #include <eflib/include/platform/typedefs.h>
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 #include "texture.h"
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 
 class texture_1d;
@@ -109,5 +109,5 @@ public:
 };
 
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 #endif

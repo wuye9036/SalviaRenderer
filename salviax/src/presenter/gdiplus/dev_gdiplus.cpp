@@ -23,9 +23,9 @@ using namespace boost;
 using namespace std;
 using namespace Gdiplus;
 using namespace eflib;
-using namespace softart;
+using namespace salviar;
 
-BEGIN_NS_SOFTARTX_PRESENTER()
+BEGIN_NS_SALVIAXPRESENTER()
 
 gdiplus_initializer gdiplus_initer;
 
@@ -40,7 +40,7 @@ h_dev_gdiplus dev_gdiplus::create_device(HWND hwnd){
 	return h_dev_gdiplus( new dev_gdiplus( hwnd ) );
 }
 
-void dev_gdiplus::present(const softart::surface& surf){
+void dev_gdiplus::present(const salviar::surface& surf){
 	if ( !pbmp_ || 
 		pbmp_->GetWidth() < (INT)surf.get_width() || 
 		pbmp_->GetHeight() < (INT)surf.get_height() )
@@ -63,7 +63,7 @@ void dev_gdiplus::present(const softart::surface& surf){
 	
 	for(size_t iheight = 0; iheight < surf.get_height(); ++iheight)
 	{
-		softart::pixel_format rt_pxfmt = surf.get_pixel_format();
+		salviar::pixel_format rt_pxfmt = surf.get_pixel_format();
 		byte* surface_scanline_addr = (byte*)pfbdata + iheight*get_color_info(rt_pxfmt).size*surf.get_width();
 		byte* bmp_scanline_addr = ((uint8_t*)pixels) + bmpData.Stride * iheight;
 
@@ -82,9 +82,9 @@ void dev_gdiplus::present(const softart::surface& surf){
 		Rect(0, 0, static_cast<UINT>(surf.get_width()), static_cast<UINT>(surf.get_height())));
 }
 
-END_NS_SOFTARTX_PRESENTER()
+END_NS_SALVIAXPRESENTER()
 
-void salviax_create_presenter_device(softart::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {
 	dev = softartx::presenter::dev_gdiplus::create_device(static_cast<HWND>(param));
 }

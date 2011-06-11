@@ -12,9 +12,9 @@
 
 #include <vector>
 
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 class buffer
 {
@@ -50,6 +50,6 @@ public:
 	}
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

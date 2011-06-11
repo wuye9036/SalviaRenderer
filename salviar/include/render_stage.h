@@ -5,8 +5,8 @@
 #include "enums.h"
 
 #include <boost/any.hpp>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 //声明 RenderState Updated 事件的默认处理函数
@@ -50,6 +50,6 @@ public:
 	virtual ~render_stage(){}
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

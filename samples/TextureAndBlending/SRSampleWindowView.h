@@ -25,7 +25,7 @@ using namespace eflib;
 using namespace boost;
 using namespace boost::assign;
 using namespace std;
-using namespace softart;
+using namespace salviar;
 using namespace softartx;
 using namespace softartx::resource;
 using namespace Gdiplus;
@@ -63,27 +63,27 @@ public:
 		switch (index)
 		{
 		case 0:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 
 		case 1:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 
 		case 2:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 
 		default:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 		}
 	}
 };
 
 class ps_box : public pixel_shader
 {
-	softart::h_sampler sampler_;
-	softart::h_texture tex_;
+	salviar::h_sampler sampler_;
+	salviar::h_texture tex_;
 public:
 
-	ps_box(const softart::h_texture& tex)
+	ps_box(const salviar::h_texture& tex)
 		: tex_(tex)
 	{
 		sampler_desc desc;
@@ -143,21 +143,21 @@ public:
 		switch (index)
 		{
 		case 0:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 
 		default:
-			return softart::vs_output::am_linear;
+			return salviar::vs_output::am_linear;
 		}
 	}
 };
 
 class ps_plane : public pixel_shader
 {
-	softart::h_sampler sampler_;
-	softart::h_texture tex_;
+	salviar::h_sampler sampler_;
+	salviar::h_texture tex_;
 public:
 
-	ps_plane(const softart::h_texture& tex)
+	ps_plane(const salviar::h_texture& tex)
 		: tex_(tex)
 	{
 		sampler_desc desc;
@@ -275,7 +275,7 @@ public:
 		dll_name += TEXT(".dll");
 
 		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*create_presenter_device_func)(softart::h_device& dev, void* param);
+		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
 		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
 		presenter_func(present_dev, static_cast<void*>(m_hWnd));
 
@@ -312,14 +312,14 @@ public:
 		pvs_plane.reset(new vs_plane());
 
 		{
-			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , softart::pixel_format_color_rgba8);
+			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			tex->set_min_lod(8);
 			tex->gen_mipmap(filter_linear);
 			pps_box.reset(new ps_box(tex));
 		}
 
 		{
-			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , softart::pixel_format_color_rgba8);
+			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			tex->set_min_lod(5);
 			tex->gen_mipmap(filter_linear);
 			pps_plane.reset(new ps_plane(tex));

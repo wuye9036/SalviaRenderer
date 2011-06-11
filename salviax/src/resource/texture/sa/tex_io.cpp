@@ -26,8 +26,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 using namespace std;
 using namespace eflib;
-using namespace softart;
-BEGIN_NS_SOFTARTX_RESOURCE()
+using namespace salviar;
+BEGIN_NS_SALVIAXRESOURCE()
 
 //Impl Utilities
 struct raw_header
@@ -37,4 +37,4 @@ struct raw_header
 	size_t format;
 };
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()

@@ -1,7 +1,7 @@
 #ifndef SOFTART_ENUMS_H
 #define SOFTART_ENUMS_H
 
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/string/string.h>
@@ -12,7 +12,7 @@
 
 #include <string>
 
-BEGIN_NS_SOFTART()
+BEGIN_NS_SALVIAR()
 
 
 #define BEGIN_ENUM(enum_type) enum enum_type{
@@ -254,6 +254,6 @@ enum languages{
 	lang_count
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

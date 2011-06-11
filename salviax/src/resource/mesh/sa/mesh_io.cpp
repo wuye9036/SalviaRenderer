@@ -22,11 +22,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 using namespace std;
 using namespace eflib;
-using namespace softart;
-BEGIN_NS_SOFTARTX_RESOURCE()
+using namespace salviar;
+BEGIN_NS_SALVIAXRESOURCE()
 
 //0, 0, 0 - 1, 1, 1
-h_mesh create_box(softart::renderer* psr)
+h_mesh create_box(salviar::renderer* psr)
 {
 	mesh* pmesh = new mesh(psr);
 
@@ -42,10 +42,10 @@ h_mesh create_box(softart::renderer* psr)
 
 	pmesh->set_buffer_count(id_count);
 
-	softart::h_buffer verts = pmesh->create_buffer(vertbufid, sizeof(vec4)*24);
-	softart::h_buffer normals = pmesh->create_buffer(normbufid, sizeof(vec4)*24);
-	softart::h_buffer uvs = pmesh->create_buffer(uvid, sizeof(vec4)*24);
-	softart::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t)*36);
+	salviar::h_buffer verts = pmesh->create_buffer(vertbufid, sizeof(vec4)*24);
+	salviar::h_buffer normals = pmesh->create_buffer(normbufid, sizeof(vec4)*24);
+	salviar::h_buffer uvs = pmesh->create_buffer(uvid, sizeof(vec4)*24);
+	salviar::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t)*36);
 
 	vec4* pverts = (vec4*)(verts->raw_data(0));
 	uint16_t* pidxs = (uint16_t*)(indices->raw_data(0));
@@ -131,10 +131,10 @@ h_mesh create_box(softart::renderer* psr)
 	pidxs[30] = 20;pidxs[31] = 21;pidxs[32] = 22;
 	pidxs[33] = 22;pidxs[34] = 23;pidxs[35] = 20;
 
-	softart::input_layout_decl layout;
-	layout.push_back(softart::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
-	layout.push_back(softart::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
-	layout.push_back(softart::input_element_decl(stream_2, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_2));
+	salviar::input_layout_decl layout;
+	layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
+	layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
+	layout.push_back(salviar::input_element_decl(stream_2, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_2));
 
 	pmesh->set_index_type(index_int16);
 	pmesh->set_primitive_count(12);
@@ -145,7 +145,7 @@ h_mesh create_box(softart::renderer* psr)
 }
 
 h_mesh create_planar(
-					 softart::renderer* psr,
+					 salviar::renderer* psr,
 					 const eflib::vec3& start_pos,
 					 const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
 					 size_t repeat_x, size_t repeat_y,
@@ -161,9 +161,9 @@ h_mesh create_planar(
 	const size_t idxbufid = 2;
 
 	pmesh->set_buffer_count(3);
-	softart::h_buffer verts = pmesh->create_buffer(vertbufid, nverts * sizeof(vec4));
-	softart::h_buffer nors = pmesh->create_buffer(norbufid, nverts * sizeof(vec4));
-	softart::h_buffer idxs = pmesh->create_buffer(idxbufid, repeat_x * repeat_y * 6 * sizeof(uint16_t));
+	salviar::h_buffer verts = pmesh->create_buffer(vertbufid, nverts * sizeof(vec4));
+	salviar::h_buffer nors = pmesh->create_buffer(norbufid, nverts * sizeof(vec4));
+	salviar::h_buffer idxs = pmesh->create_buffer(idxbufid, repeat_x * repeat_y * 6 * sizeof(uint16_t));
 
 	//构造数据
 	vec4 normal(cross_prod3(x_dir, y_dir), 0.0f);
@@ -205,9 +205,9 @@ h_mesh create_planar(
 		}
 	}
 
-	softart::input_layout_decl layout;
-	layout.push_back(softart::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
-	layout.push_back(softart::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
+	salviar::input_layout_decl layout;
+	layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
+	layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
 
 	pmesh->set_index_type(index_int16);
 	pmesh->set_primitive_count(repeat_x * repeat_y * 2);
@@ -217,4 +217,4 @@ h_mesh create_planar(
 	return h_mesh(pmesh);
 }
 
-END_NS_SOFTARTX_RESOURCE()
+END_NS_SALVIAXRESOURCE()

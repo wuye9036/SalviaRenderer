@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 using namespace eflib;
 using namespace std;
@@ -184,4 +184,4 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 		viewport_transform(out_clipped_verts[i].position, vp);
 	}
 }
-END_NS_SOFTART()
+END_NS_SALVIAR()

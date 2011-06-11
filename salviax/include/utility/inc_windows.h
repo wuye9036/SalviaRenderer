@@ -23,8 +23,8 @@ purpose:
 Modify Log:
 
 *********************************************************************/
-#ifndef SOFTARTX_INC_WINDOWS_H
-#define SOFTARTX_INC_WINDOWS_H
+#ifndef SALVIAXINC_WINDOWS_H
+#define SALVIAXINC_WINDOWS_H
 
 #ifndef EFLIB_USE_STD_MINMAX
 #include <algorithm>
@@ -35,4 +35,4 @@ using ::std::max;
 #endif
 #include <windows.h> 
 
-#endif //SOFTARTX_INC_WINDOWS_H
+#endif //SALVIAXINC_WINDOWS_H

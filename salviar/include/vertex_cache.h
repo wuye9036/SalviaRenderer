@@ -13,9 +13,9 @@
 #include <vector>
 #include <utility>
 
-#include "softart_fwd.h"
+#include <salviar/include/salviar_forward.h>
 
-BEGIN_NS_SOFTART();
+BEGIN_NS_SALVIAR();
 
 class stream_assembler;
 
@@ -78,6 +78,6 @@ private:
 	const viewport* pvp_;
 };
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

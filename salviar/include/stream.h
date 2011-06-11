@@ -5,8 +5,8 @@
 #include "enums.h"
 
 #include <vector>
-#include "softart_fwd.h"
-BEGIN_NS_SOFTART()
+#include <salviar/include/salviar_forward.h>
+BEGIN_NS_SALVIAR()
 
 
 enum stream_index
@@ -65,6 +65,6 @@ struct input_element_decl
 
 typedef std::vector<input_element_decl> input_layout_decl;
 
-END_NS_SOFTART()
+END_NS_SALVIAR()
 
 #endif

@@ -24,9 +24,9 @@ Modify Log:
 		
 *********************************************************************/
 
-#ifndef SOFTARTX_USER_CONFIG_H
-#define SOFTARTX_USER_CONFIG_H
+#ifndef SALVIAXUSER_CONFIG_H
+#define SALVIAXUSER_CONFIG_H
 
-#define SOFTARTX_FREEIMAGE_ENABLED
+#define SALVIAXFREEIMAGE_ENABLED
 
-#endif //SOFTARTX_USER_CONFIG_H
+#endif //SALVIAXUSER_CONFIG_H
