@@ -1,2 +1,2 @@
 ADD_SUBDIRECTORY( ComplexMesh )
-ADD_SUBDIRECTORY( SampleWindow )
+ADD_SUBDIRECTORY( TextureAndBlending )

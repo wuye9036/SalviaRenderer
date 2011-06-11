@@ -1,9 +1,9 @@
-check_build_with_unicode()
-config_3rd_party()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
+
 INCLUDE_DIRECTORIES(../
-${3rd_party_includes}
+${SALVIA_3RD_PARTY_INCLUDES}
 )
-LINK_DIRECTORIES(${3rd_party_libs})
+LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
 
 set (HEADER_FILES
 	include/resource/mesh/sa/mesh.h
@@ -47,7 +47,7 @@ SoftArt
 TARGET_LINK_LIBRARIES (salviax FreeImage) 
 
 
-config_output_paths(salviax)
+SALVIA_CONFIG_OUTPUT_PATHS(salviax)
 
 
 set (HEADER_FILES
@@ -69,7 +69,7 @@ salviar
 salviax
 )
 
-config_output_paths(salviax_d3d9_presenter)
+SALVIA_CONFIG_OUTPUT_PATHS(salviax_d3d9_presenter)
 
 
 set (HEADER_FILES
@@ -93,7 +93,7 @@ EFLIB
 salviar
 )
 
-config_output_paths(salviax_d3d11_presenter)
+SALVIA_CONFIG_OUTPUT_PATHS(salviax_d3d11_presenter)
 
 
 set (HEADER_FILES
@@ -119,7 +119,7 @@ IF (WIN32)
 	TARGET_LINK_LIBRARIES (salviax_gdiplus_presenter "gdiplus") 
 ENDIF (WIN32) 
 
-config_output_paths(salviax_gdiplus_presenter)
+SALVIA_CONFIG_OUTPUT_PATHS(salviax_gdiplus_presenter)
 
 
 set (HEADER_FILES
@@ -140,4 +140,4 @@ EFLIB
 salviar
 )
 
-config_output_paths(salviax_opengl_presenter)
+SALVIA_CONFIG_OUTPUT_PATHS(salviax_opengl_presenter)

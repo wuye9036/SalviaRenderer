@@ -1,19 +1,45 @@
+
+set( SALVIA_BOOST_DIRECTORY CACHE PATH "Specify a path to boost." )
+if( SALVIA_BOOST_DIRECTORY )
+	set( Boost_ROOT ${SALVIA_BOOST_DIRECTORY} )
+endif()
+FIND_PACKAGE( Boost 1.44.0 )
+
+if( Boost_FOUND )
+	set( BOOST_HOME_DIR "${Boost_INCLUDE_DIRS}" )
+else ( Boost_FOUND )	
+	MESSAGE( FATAL_ERROR "Can not find boost 1.44 or later. Please specify a path with 'SALVIA_BOOST_DIRECOTRY'." )
+endif()
+
+if(SALVIA_PLATFORM_NAME STREQUAL "x64")
+	set( SALVIA_BOOST_LIB_DIR ${BOOST_HOME_DIR}/bin/x64)
+else(SALVIA_PLATFORM_NAME STREQUAL "x64")
+	set( SALVIA_BOOST_LIB_DIR ${BOOST_HOME_DIR}/bin/x86)
+endif()
+
+if( NOT EXISTS ${SALVIA_BOOST_LIB_DIR} )
+	MESSAGE( FATAL_ERROR "Cannot find libraries in ${SALVIA_BOOST_LIB_DIR}. Please compile libraries and copy lib files into directory.")
+endif()
+
+set( SALVIA_BOOST_VERSION_STRING "${Boost_MAJOR_VERSION}_${Boost_MINOR_VERSION}" )
+
+# From short name to full path name.
 macro( boost_lib_fullname FULL_NAME SHORT_NAME )
 	if( MINGW AND WIN32 )
-	
 		if( SALVIA_BUILD_TYPE_LOWERCASE STREQUAL "debug" )
 			set ( SALVIA_BOOST_LIBS_POSTFIX "-d" )
 		endif()
-		
-		set( ${FULL_NAME} "boost_${SHORT_NAME}-mgw${GCC_VERSION_STR_MAJOR_MINOR}-mt${SALVIA_BOOST_LIBS_POSTFIX}-${BOOST_VERSION_STRING}.dll" )
-		
+		set( ${FULL_NAME} "boost_${SHORT_NAME}-mgw${GCC_VERSION_STR_MAJOR_MINOR}-mt${SALVIA_BOOST_LIBS_POSTFIX}-${SALVIA_BOOST_VERSION_STRING}.lib" )
 	endif( MINGW AND WIN32 )
 endmacro( boost_lib_fullname )
 
 macro( add_boost_lib SHORT_NAME )
 	set( FULL_NAME "" )
 	boost_lib_fullname( FULL_NAME ${SHORT_NAME} )
-	message( STATUS ${FULL_NAME} )
+	FIND_PATH( FILE_FULL_PATH FULL_NAME PATHS ${SALVIA_BOOST_LIB_DIR} )
+	if( NOT FILE_FULL_PATH )
+		MESSAGE( FATAL_ERROR "Cannot find lib ${FULL_NAME}. Please compile this library and copy into ${SALVIA_BOOST_LIB_DIR}.")
+	endif()
 	set( SALVIA_BOOST_LIBS ${SALVIA_BOOST_LIBS} ${FULL_NAME} )
 endmacro( add_boost_lib )
 

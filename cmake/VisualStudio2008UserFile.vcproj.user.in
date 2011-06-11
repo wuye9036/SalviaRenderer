@@ -6,11 +6,11 @@
 	>
 	<Configurations>
 		<Configuration
-			Name="Debug|@SOFTART_PLATFORM_NAME@"
+			Name="Debug|@SALVIA_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
@@ -34,11 +34,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|@SOFTART_PLATFORM_NAME@"
+			Name="Release|@SALVIA_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
@@ -62,11 +62,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="RelWithDebInfo|@SOFTART_PLATFORM_NAME@"
+			Name="RelWithDebInfo|@SALVIA_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
@@ -90,11 +90,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="MinSizeRel|@SOFTART_PLATFORM_NAME@"
+			Name="MinSizeRel|@SALVIA_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SOFTART_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"

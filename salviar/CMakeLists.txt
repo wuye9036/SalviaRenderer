@@ -1,12 +1,12 @@
-check_build_with_unicode()
-config_3rd_party()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
-INCLUDE_DIRECTORIES(../
-${3rd_party_includes}
+INCLUDE_DIRECTORIES(
+	${SALVIA_HOME_DIR}
+	${SALVIA_3RD_PARTY_INCLUDES}
 )
-LINK_DIRECTORIES(${3rd_party_libs})
+LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
 
-SOURCE_GROUP( Fundations FILE
+SOURCE_GROUP( Fundations FILES
 	include/softart_fwd.h
 	include/decl.h
 	include/enums.h
@@ -14,20 +14,20 @@ SOURCE_GROUP( Fundations FILE
 	include/colors_convertors.h
 )
 
-SOURCE_GROUP( Pipeline FILE
+SOURCE_GROUP( Pipeline FILES
 	include/stream.h
 	include/stream_assembler.h
 	include/clipper.h
 )
 
-SOURCE_GROUP( Shader FILE
+SOURCE_GROUP( Shader FILES
 	include/shader.h
 	include/shader_utility.h
 	include/shaderregs.h
 	include/shaderregs_op.h
 )
 
-SOURCE_GROUP( Buffers FILE 
+SOURCE_GROUP( Buffers FILES
 	include/buffer.h
 	include/texture.h
 	include/sampler.h
@@ -78,4 +78,4 @@ ${SOURCE_FILES}
 
 TARGET_LINK_LIBRARIES(salviar EFLIB)
 
-config_output_paths(salviar)
+SALVIA_CONFIG_OUTPUT_PATHS(salviar)

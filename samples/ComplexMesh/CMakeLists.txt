@@ -1,11 +1,11 @@
-check_build_with_unicode()
-config_3rd_party()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
-INCLUDE_DIRECTORIES(../../
-${3rd_party_includes}
+INCLUDE_DIRECTORIES(
+${SALVIA_HOME_DIR}
+${SALVIA_3RD_PARTY_INCLUDES}
 )
 
-LINK_DIRECTORIES(${3rd_party_libs})
+LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
 
 set (HEADER_FILES
 	AboutDlg.h
@@ -37,10 +37,9 @@ ${RESOURCE_FILES}
 
 TARGET_LINK_LIBRARIES(ComplexMesh
 	EFLIB
-	SoftArt
-	SoftArtX
+	salviar
+	salviax
 )
-config_output_paths(ComplexMesh)
 
-
-softart_create_vcproj_userfile(ComplexMesh)
+SALVIA_CONFIG_OUTPUT_PATHS(ComplexMesh)
+SALVIA_CREATE_VCPROJ_USERFILE(ComplexMesh)
