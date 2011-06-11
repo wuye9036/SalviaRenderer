@@ -331,7 +331,7 @@ public:
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
-		std::_tstring dll_name = TEXT("SoftArtX_");
+		std::_tstring dll_name = TEXT("salviax_");
 		dll_name += TEXT(PRESENTER_NAME);
 		dll_name += TEXT("_presenter");
 #ifdef EFLIB_DEBUG
@@ -341,7 +341,7 @@ public:
 
 		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
 		typedef void (*create_presenter_device_func)(softart::h_device& dev, void* param);
-		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "softart_create_presenter_device");
+		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
 		presenter_func(present_dev, static_cast<void*>(m_hWnd));
 
 		renderer_parameters render_params = {0};

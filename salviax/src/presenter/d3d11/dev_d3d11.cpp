@@ -352,7 +352,7 @@ void dev_d3d11::present(const softart::surface& surf)
 
 END_NS_SOFTARTX_PRESENTER()
 
-void softart_create_presenter_device(softart::h_device& dev, void* param)
+void salviax_create_presenter_device(softart::h_device& dev, void* param)
 {
 	dev = softartx::presenter::dev_d3d11::create_device(static_cast<HWND>(param));
 }
