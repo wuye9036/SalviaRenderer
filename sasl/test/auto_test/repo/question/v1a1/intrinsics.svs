@@ -10,6 +10,6 @@ struct VSOUT{
 
 VSOUT fn( VSIN in ){
 	VSOUT o;
-	o.pos = mul( wvpMat, o.pos );
+	o.pos = mul( wvpMat, in.pos );
 	return o;
 }
