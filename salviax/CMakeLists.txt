@@ -34,20 +34,20 @@ set (SOURCE_FILES
 	src/utility/freeimage_utility.cpp
 )
 
-ADD_LIBRARY( SoftArtX STATIC
+ADD_LIBRARY( salviax STATIC
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
 
-TARGET_LINK_LIBRARIES(SoftArtX
+TARGET_LINK_LIBRARIES(salviax
 EFLIB
 SoftArt
 )
 
-TARGET_LINK_LIBRARIES (SoftArtX FreeImage) 
+TARGET_LINK_LIBRARIES (salviax FreeImage) 
 
 
-config_output_paths(SoftArtX)
+config_output_paths(salviax)
 
 
 set (HEADER_FILES
@@ -58,18 +58,18 @@ set (SOURCE_FILES
 	src/presenter/d3d9/dev_d3d9.cpp
 )
 
-ADD_LIBRARY( SoftArtX_d3d9_presenter SHARED
+ADD_LIBRARY( salviax_d3d9_presenter SHARED
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
 
-TARGET_LINK_LIBRARIES(SoftArtX_d3d9_presenter
+TARGET_LINK_LIBRARIES(salviax_d3d9_presenter
 EFLIB
-SoftArt
-SoftArtX
+salviar
+salviax
 )
 
-config_output_paths(SoftArtX_d3d9_presenter)
+config_output_paths(salviax_d3d9_presenter)
 
 
 set (HEADER_FILES
@@ -83,17 +83,17 @@ set (SOURCE_FILES
 	src/presenter/d3d11/ps.hlsl
 )
 
-ADD_LIBRARY( SoftArtX_d3d11_presenter SHARED
+ADD_LIBRARY( salviax_d3d11_presenter SHARED
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
 
-TARGET_LINK_LIBRARIES(SoftArtX_d3d11_presenter
+TARGET_LINK_LIBRARIES(salviax_d3d11_presenter
 EFLIB
-SoftArt
+salviar
 )
 
-config_output_paths(SoftArtX_d3d11_presenter)
+config_output_paths(salviax_d3d11_presenter)
 
 
 set (HEADER_FILES
@@ -104,22 +104,22 @@ set (SOURCE_FILES
 	src/presenter/gdiplus/dev_gdiplus.cpp
 )
 
-ADD_LIBRARY( SoftArtX_gdiplus_presenter SHARED
+ADD_LIBRARY( salviax_gdiplus_presenter SHARED
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
 
-TARGET_LINK_LIBRARIES(SoftArtX_gdiplus_presenter
+TARGET_LINK_LIBRARIES(salviax_gdiplus_presenter
 EFLIB
-SoftArt
-SoftArtX
+salviar
+salviax
 )
 
 IF (WIN32) 
-	TARGET_LINK_LIBRARIES (SoftArtX_gdiplus_presenter "gdiplus") 
+	TARGET_LINK_LIBRARIES (salviax_gdiplus_presenter "gdiplus") 
 ENDIF (WIN32) 
 
-config_output_paths(SoftArtX_gdiplus_presenter)
+config_output_paths(salviax_gdiplus_presenter)
 
 
 set (HEADER_FILES
@@ -130,14 +130,14 @@ set (SOURCE_FILES
 	src/presenter/opengl/dev_opengl.cpp
 )
 
-ADD_LIBRARY( SoftArtX_opengl_presenter SHARED
+ADD_LIBRARY( salviax_opengl_presenter SHARED
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
 
-TARGET_LINK_LIBRARIES(SoftArtX_opengl_presenter
+TARGET_LINK_LIBRARIES(salviax_opengl_presenter
 EFLIB
-SoftArt
+salviar
 )
 
-config_output_paths(SoftArtX_opengl_presenter)
+config_output_paths(salviax_opengl_presenter)

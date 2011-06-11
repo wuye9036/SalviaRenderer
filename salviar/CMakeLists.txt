@@ -1,16 +1,41 @@
 check_build_with_unicode()
 config_3rd_party()
+
 INCLUDE_DIRECTORIES(../
 ${3rd_party_includes}
 )
 LINK_DIRECTORIES(${3rd_party_libs})
-set (HEADER_FILES
-	include/buffer.h
-	include/clipper.h
-	include/colors.h
-	include/colors_convertors.h
+
+SOURCE_GROUP( Fundations FILE
+	include/softart_fwd.h
 	include/decl.h
 	include/enums.h
+	include/colors.h
+	include/colors_convertors.h
+)
+
+SOURCE_GROUP( Pipeline FILE
+	include/stream.h
+	include/stream_assembler.h
+	include/clipper.h
+)
+
+SOURCE_GROUP( Shader FILE
+	include/shader.h
+	include/shader_utility.h
+	include/shaderregs.h
+	include/shaderregs_op.h
+)
+
+SOURCE_GROUP( Buffers FILE 
+	include/buffer.h
+	include/texture.h
+	include/sampler.h
+	include/surface.h
+	include/resource_manager.h
+)
+
+set (HEADER_FILES
 	include/framebuffer.h
 	include/handles.h
 	include/index_fetcher.h
@@ -21,17 +46,6 @@ set (HEADER_FILES
 	include/renderer.h
 	include/renderer_capacity.h
 	include/renderer_impl.h
-	include/resource_manager.h
-	include/sampler.h
-	include/shader.h
-	include/shader_utility.h
-	include/shaderregs.h
-	include/shaderregs_op.h
-	include/softart_fwd.h
-	include/stream.h
-	include/stream_assembler.h
-	include/surface.h
-	include/texture.h
 	include/thread_pool.h
 	include/vertex_cache.h
 )
@@ -57,13 +71,11 @@ set (SOURCE_FILES
 	src/thread_pool.cpp
 )
 
-ADD_LIBRARY( SoftArt STATIC
+ADD_LIBRARY( salviar STATIC
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
 
-TARGET_LINK_LIBRARIES(SoftArt
-EFLIB
-)
+TARGET_LINK_LIBRARIES(salviar EFLIB)
 
-config_output_paths(SoftArt)
+config_output_paths(salviar)
