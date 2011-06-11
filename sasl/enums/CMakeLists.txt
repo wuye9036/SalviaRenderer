@@ -6,7 +6,7 @@ include (generate_enum.cmake)
 INCLUDE_DIRECTORIES(../
 	${BOOST_HOME_DIR}
 	${SASL_HOME_DIR}
-	${SOFTART_HOME_DIR}
+	${SALVIA_HOME_DIR}
 )
 
 LIST(APPEND enum_confs enums.xgt )

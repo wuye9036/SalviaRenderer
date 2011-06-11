@@ -5,7 +5,7 @@ include ( tests.cmake )
 
 INCLUDE_DIRECTORIES(
 	${BOOST_HOME_DIR}
-	${SOFTART_HOME_DIR}
+	${SALVIA_HOME_DIR}
 	${SASL_HOME_DIR}
 )
 
@@ -30,7 +30,7 @@ TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	sasl_test_cases
 	sasl_semantic sasl_syntaxtree sasl_common
 	sasl_enums EFLIB
-	${SOFTART_BOOST_LIBS}
+	${SALVIA_BOOST_LIBS}
 )
 
 ADD_DEPENDENCIES( ${SASL_TEST_PROJECT_NAME} logrout )

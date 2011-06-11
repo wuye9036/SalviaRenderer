@@ -4,7 +4,7 @@ set_environment()
 INCLUDE_DIRECTORIES(
 	${SASL_HOME_DIR}
 	${BOOST_HOME_DIR}
-	${SOFTART_HOME_DIR}
+	${SALVIA_HOME_DIR}
 	${3rd_party_llvm_include_path}
 )
 
@@ -34,7 +34,7 @@ TARGET_LINK_LIBRARIES( sasl_compiler
 	sasl_semantic sasl_syntaxtree sasl_parser
 	sasl_enums sasl_common
 	${SASL_LLVM_LIBS}
-	${SOFTART_BOOST_LIBS}
+	${SALVIA_BOOST_LIBS}
 )
 
 config_output_paths( sasl_compiler )

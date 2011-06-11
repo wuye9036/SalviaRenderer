@@ -7,7 +7,7 @@ include ( ../semantic_test/tests.cmake )
 
 INCLUDE_DIRECTORIES(
 	${BOOST_HOME_DIR}
-	${SOFTART_HOME_DIR}
+	${SALVIA_HOME_DIR}
 	${SASL_HOME_DIR}
 	${3rd_party_llvm_include_path}
 )
@@ -39,7 +39,7 @@ TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	sasl_semantic sasl_syntaxtree
 	sasl_enums sasl_common
 	${SASL_CGLLVM_TEST_LIBS}
-	${SOFTART_BOOST_LIBS}
+	${SALVIA_BOOST_LIBS}
 )
 ADD_DEPENDENCIES( ${SASL_TEST_PROJECT_NAME} logrout )
 
