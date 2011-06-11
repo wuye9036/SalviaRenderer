@@ -273,7 +273,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( expression_list );
 	SASL_VISIT_INLINE_DEF_UNIMPL( cond_expression );
 	SASL_VISIT_INLINE_DEF_UNIMPL( index_expression );
-	SASL_VISIT_INLINE_DEF_UNIMPL( call_expression );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, call_expression, (expr)(args) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, member_expression, (expr)(member) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, constant_expression, (value_tok)(ctype) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_expression, (var_name) );

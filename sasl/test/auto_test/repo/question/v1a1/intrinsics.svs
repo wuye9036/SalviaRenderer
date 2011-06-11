@@ -1,15 +1,15 @@
 float4x4 wvpMat;
 
 struct VSIN{
-	float pos: SV_Position;
+	float4 pos: SV_Position;
 };
 
 struct VSOUT{
-	float pos: SV_Position;
+	float4 pos: SV_Position;
 };
 
 VSOUT fn( VSIN in ){
 	VSOUT o;
-	o.pos = mul( wvpMat, pos );
+	o.pos = mul( wvpMat, o.pos );
 	return o;
 }

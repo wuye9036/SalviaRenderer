@@ -57,6 +57,13 @@ struct node{
 
 	template <typename T> T* si_ptr() const{
 #ifdef EFLIB_DEBUG
+		return dyn_siptr<T>();
+#else
+		return static_cast<T*>( semantic_info().get() );
+#endif
+	}
+	
+	template <typename T> T* dyn_siptr() const{
 		if( seminfo ){ 
 			T* ptr = dynamic_cast<T*>( semantic_info().get() );
 			assert( ptr );
@@ -64,9 +71,6 @@ struct node{
 		} else {
 			return NULL;
 		}
-#else
-		return static_cast<T*>( semantic_info().get() );
-#endif
 	}
 
 	boost::shared_ptr<token_t> token() const;

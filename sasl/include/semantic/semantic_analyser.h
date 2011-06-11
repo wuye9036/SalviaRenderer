@@ -100,6 +100,34 @@ private:
 
 	void register_type_converter( const boost::any& ctxt );
 	void register_builtin_functions( const boost::any& child_ctxt_init );
+
+	class function_register{
+	public:
+		typedef boost::shared_ptr<sasl::syntax_tree::type_specifier> type_handle_t;
+
+		function_register(
+			semantic_analyser& owner,
+			boost::any const& ctxt_init,
+			boost::shared_ptr<sasl::syntax_tree::function_type> const& fn
+			);
+		function_register( function_register const& );
+
+		function_register& operator % ( type_handle_t const& par_type );
+		void operator >> ( type_handle_t const& ret_type );
+
+		function_register& p( type_handle_t const& par_type );
+		void r( type_handle_t const& ret_type );
+
+	private:
+		function_register& operator = ( function_register const& );
+
+		boost::any const& ctxt_init;
+		boost::shared_ptr<sasl::syntax_tree::function_type> fn;
+		semantic_analyser& owner;
+	};
+
+	function_register register_function( boost::any const& child_ctxt_init, std::string const& name );
+
 	void register_builtin_types();
 
 	void builtin_type_convert(

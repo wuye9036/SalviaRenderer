@@ -42,6 +42,7 @@ using ::sasl::common::token_t;
 using ::sasl::syntax_tree::alias_type;
 using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::builtin_type;
+using ::sasl::syntax_tree::call_expression;
 using ::sasl::syntax_tree::cast_expression;
 using ::sasl::syntax_tree::create_builtin_type;
 using ::sasl::syntax_tree::create_node;
@@ -249,6 +250,43 @@ SASL_VISIT_DEF_UNIMPL( index_expression );
 
 SASL_VISIT_DEF( call_expression )
 {
+	any child_ctxt_init = *data;
+	ctxt_ptr( child_ctxt_init )->generated_node.reset();
+
+	any child_ctxt;
+
+	shared_ptr<call_expression> dup_callexpr = duplicate(v.handle())->typed_handle<call_expression>();
+	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_callexpr->expr );
+
+	dup_callexpr->args.clear();
+	BOOST_FOREACH( shared_ptr<expression> arg_expr, v.args )
+	{
+		visit_child( child_ctxt, child_ctxt_init, arg_expr );
+		dup_callexpr->args.push_back( ctxt_ptr(child_ctxt)->generated_node->typed_handle<expression>() );
+	}
+
+	fnvar_si* fnsi = dup_callexpr->expr->dyn_siptr<fnvar_si>();
+	if( fnsi == NULL ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		// Maybe pointer of function.
+	} else {
+		// Overload
+		vector< shared_ptr<symbol> > syms = fnsi->scope()->find_overloads( fnsi->name(), typeconv, dup_callexpr->args );
+		assert( !syms.empty() );
+		// TODO if syms is empty, no function was overloaded. report the error.
+		assert( syms.size() == 1 );
+		// TODO more than one overload candidates. report error.
+
+		shared_ptr<symbol> func_sym = syms[0];
+		assert( func_sym );
+
+		storage_si* ssi = func_sym->node()->si_ptr<storage_si>();
+		SASL_GET_OR_CREATE_SI_P( storage_si, expr_ssi, dup_callexpr, msi->type_manager() );
+
+		expr_ssi->entry_id( ssi->entry_id() );
+	}
+
+	data_cptr()->generated_node = dup_callexpr->handle();
 }
 
 int check_swizzle( builtin_type_code btc, std::string const& mask, int32_t& swizzle_code ){
@@ -371,15 +409,14 @@ SASL_VISIT_DEF( variable_expression ){
 		dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
 	} else{
 		// Function
-		vector< shared_ptr<symbol> > fdecls = data_cptr()->parent_sym->find_overloads( name );
-		if( fdecls.empty() )
-		{
-			// TODO Variable name is invalid.
-			dup_vexpr.reset();
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		} else {
+		bool is_function = ! data_cptr()->parent_sym->find_overloads( name ).empty();
+		if( is_function ){
 			SASL_GET_OR_CREATE_SI( fnvar_si, fvsi, dup_vexpr );
-			// fvsi->symbols( fdecls );
+			fvsi->scope( data_cptr()->parent_sym );
+			fvsi->name( name );
+		} else {
+			// TODO Not any symbol could be found. Report error.
+			assert( !"Not any symbol could be found. Report error." );
 		}
 	}
 
@@ -1093,26 +1130,21 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 	}
 
 	for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
-
 		for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
-			dfunction_combinator(NULL).dname("mul")
-				.dreturntype().dnode( fvec_ts[vec_size] ).end()
-				.dparam().dtype().dnode( fvec_ts[n_vec] ).end().end()
-				.dparam().dtype().dnode( fmat_ts[vec_size][n_vec] ).end().end()
-			.end();
-			dfunction_combinator(NULL).dname("mul")
-				.dreturntype().dnode( fvec_ts[n_vec] ).end()
-				.dparam().dtype().dnode( fmat_ts[vec_size][n_vec] ).end().end()
-				.dparam().dtype().dnode( fvec_ts[vec_size] ).end().end()
-			.end()
-			;
+
+			register_function(child_ctxt_init, "mul")
+				% fvec_ts[n_vec] % fmat_ts[vec_size][n_vec]
+			>> fvec_ts[vec_size];
+
+			register_function(child_ctxt_init, "mul")
+				% fmat_ts[vec_size][n_vec] % fvec_ts[vec_size]
+			>> fvec_ts[n_vec];
+
 		}
 
-		dfunction_combinator(NULL).dname("dot")
-			.dreturntype().dnode( BUILTIN_TYPE(_float) ).end()
-			.dparam().dtype().dnode( fvec_ts[vec_size] ).end().end()
-			.dparam().dtype().dnode( fvec_ts[vec_size] ).end().end()
-		.end();
+		register_function(child_ctxt_init, "dot")
+			% fvec_ts[vec_size] % fvec_ts[vec_size]
+		>> BUILTIN_TYPE(_float);
 	}
 }
 
@@ -1124,6 +1156,67 @@ void semantic_analyser::register_builtin_types(){
 
 boost::shared_ptr<module_si> const& semantic_analyser::module_semantic_info() const{
 	return msi;
+}
+
+semantic_analyser::function_register semantic_analyser::register_function( boost::any const& child_ctxt_init, std::string const& name )
+{
+	shared_ptr<function_type> fn = create_node<function_type>( token_t::null() );
+	fn->name = token_t::from_string( name );
+
+	function_register ret(*this, child_ctxt_init, fn);
+
+	return ret;
+}
+
+// function_register
+semantic_analyser::function_register::function_register(
+	semantic_analyser& owner,
+	boost::any const& ctxt_init,
+	shared_ptr<function_type> const& fn
+	) :owner(owner), ctxt_init(ctxt_init), fn(fn)
+{
+	assert( fn );
+}
+
+semantic_analyser::function_register& semantic_analyser::function_register::operator%(
+	semantic_analyser::function_register::type_handle_t const& par_type
+	)
+{
+	return p(par_type);
+}
+
+void semantic_analyser::function_register::operator>>(
+	semantic_analyser::function_register::type_handle_t const& ret_type
+	)
+{
+	r(ret_type);
+}
+
+semantic_analyser::function_register& semantic_analyser::function_register::p( semantic_analyser::function_register::type_handle_t const& par_type )
+{
+	assert( par_type && fn );
+	
+	shared_ptr<parameter> par = create_node<parameter>( token_t::null() );
+	par->param_type = par_type;
+	fn->params.push_back( par );
+
+	return *this;
+}
+
+void semantic_analyser::function_register::r(
+	semantic_analyser::function_register::type_handle_t const& ret_type 
+	)
+{
+	assert( ret_type && fn );
+	fn->retval_type = ret_type;
+	any child_ctxt;
+	owner.visit_child( child_ctxt, ctxt_init, fn );
+	fn.reset();
+}
+
+semantic_analyser::function_register::function_register( function_register const& rhs)
+	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner)
+{
 }
 
 END_NS_SASL_SEMANTIC();
