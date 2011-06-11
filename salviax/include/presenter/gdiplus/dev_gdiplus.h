@@ -26,18 +26,21 @@ Modify Log:
 #ifndef SALVIAX_DEV_GDIPLUS_H
 #define SALVIAX_DEV_GDIPLUS_H
 
-#include "salviar/include/presenter_dev.h"
-#include "salviax/include/utility/inc_gdiplus.h"
-#include "salviar/include/framebuffer.h"
-#include <tchar.h>
+#include <salviax/include/presenter/presenter_forward.h>
+
+#include <salviax/include/utility/inc_gdiplus.h>
+#include <salviar/include/presenter_dev.h>
+#include <salviar/include/framebuffer.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/smart_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <algorithm>
 #include <stdio.h>
+#include <tchar.h>
 
-#define BEGIN_NS_SALVIAX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SALVIAX_PRESENTER() }}
-
-BEGIN_NS_SALVIAX_PRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER();
 
 class dev_gdiplus;
 DECL_HANDLE(dev_gdiplus, h_dev_gdiplus)
@@ -55,7 +58,7 @@ public:
 	virtual void present(const salviar::surface& surf);
 };
 
-END_NS_SALVIAX_PRESENTER()
+END_NS_SALVIAX_PRESENTER();
 
 class gdiplus_initializer
 {

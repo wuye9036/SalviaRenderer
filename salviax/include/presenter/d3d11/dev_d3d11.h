@@ -23,16 +23,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #	define NOMINMAX
 #endif
 
+#include <salviax/include/presenter/presenter_forward.h>
+
 #include <DXGI.h>
 #include <D3D11.h>
 #include "salviar/include/presenter_dev.h"
 #include <eflib/include/math/math.h>
 #include <boost/smart_ptr.hpp>
 
-#define BEGIN_NS_SALVIAX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SALVIAX_PRESENTER() }}
-
-BEGIN_NS_SALVIAX_PRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER();
 
 class dev_d3d11;
 DECL_HANDLE(dev_d3d11, h_dev_d3d11);

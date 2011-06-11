@@ -36,7 +36,7 @@ Modify Log:
 BEGIN_NS_SALVIAX_RESOURCE()
 
 h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH pmesh);
-h_mesh create_mesh_from_xfile(salviar::renderer* psr, softartx::utility::d3d9_device* dev, const std::_tstring& filename);
+h_mesh create_mesh_from_xfile(salviar::renderer* psr, salviax::utility::d3d9_device* dev, const std::_tstring& filename);
 
 END_NS_SALVIAX_RESOURCE()
 

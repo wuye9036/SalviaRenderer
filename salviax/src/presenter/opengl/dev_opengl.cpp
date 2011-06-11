@@ -152,6 +152,6 @@ END_NS_SALVIAX_PRESENTER()
 
 void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {
-	dev = softartx::presenter::dev_opengl::create_device(static_cast<HWND>(param));
+	dev = salviax::presenter::dev_opengl::create_device(static_cast<HWND>(param));
 }
 

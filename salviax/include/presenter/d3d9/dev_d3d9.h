@@ -19,18 +19,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #ifndef SALVIAX_DEV_D3D9_H
 #define SALVIAX_DEV_D3D9_H
 
-#include "salviar/include/presenter_dev.h"
-#include "salviax/include/utility/d3d9_utilities.h"
+#include <salviax/include/presenter/presenter_forward.h>
+#include <salviax/include/utility/d3d9_utilities.h>
+#include <salviar/include/presenter_dev.h>
+
 #include <eflib/include/math/math.h>
 #include <boost/shared_ptr.hpp>
 
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
 
-#define BEGIN_NS_SALVIAX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SALVIAX_PRESENTER() }}
-
-BEGIN_NS_SALVIAX_PRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER();
 
 class dev_d3d9;
 DECL_HANDLE(dev_d3d9, h_dev_d3d9);
@@ -38,7 +37,7 @@ DECL_HANDLE(dev_d3d9, h_dev_d3d9);
 class dev_d3d9 : public salviar::device
 {
 public:
-	static h_dev_d3d9 create_device(HWND hwnd, softartx::utility::h_d3d9_device dev = softartx::utility::h_d3d9_device());
+	static h_dev_d3d9 create_device(HWND hwnd, salviax::utility::h_d3d9_device dev = salviax::utility::h_d3d9_device());
 
 	//inherited
 	virtual void present(const salviar::surface& surf);
@@ -46,11 +45,11 @@ public:
 	~dev_d3d9();
 
 private:
-	dev_d3d9(HWND hwnd, softartx::utility::h_d3d9_device dev);
+	dev_d3d9(HWND hwnd, salviax::utility::h_d3d9_device dev);
 	void init_device();
 
 	HWND hwnd_;
-	softartx::utility::h_d3d9_device dev_;
+	salviax::utility::h_d3d9_device dev_;
 	IDirect3DTexture9* buftex_;
 
 	IDirect3DVertexBuffer9* vb_;

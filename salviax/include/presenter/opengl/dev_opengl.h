@@ -21,17 +21,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include <eflib/include/platform/config.h>
 
+#include <salviax/include/presenter/presenter_forward.h>
 #include <salviar/include/presenter_dev.h>
 #include <eflib/include/math/math.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/smart_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #include <windows.h>
 #include <GL/GL.h>
 
-#define BEGIN_NS_SALVIAX_PRESENTER() namespace softartx{ namespace presenter{
-#define END_NS_SALVIAX_PRESENTER() }}
-
-BEGIN_NS_SALVIAX_PRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER();
 
 class dev_opengl;
 DECL_HANDLE(dev_opengl, h_dev_opengl);
@@ -58,7 +59,7 @@ private:
 	uint32_t width_, height_;
 };
 
-END_NS_SALVIAX_PRESENTER()
+END_NS_SALVIAX_PRESENTER();
 
 #ifdef salviax_opengl_presenter_EXPORTS
 	#define SALVIAX_API __declspec(dllexport)

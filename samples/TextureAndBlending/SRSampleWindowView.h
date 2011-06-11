@@ -26,8 +26,8 @@ using namespace boost;
 using namespace boost::assign;
 using namespace std;
 using namespace salviar;
-using namespace softartx;
-using namespace softartx::resource;
+using namespace salviax;
+using namespace salviax::resource;
 using namespace Gdiplus;
 
 struct vert

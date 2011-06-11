@@ -16,13 +16,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "salviax/include/presenter/d3d9/dev_d3d9.h"
-#include "salviar/include/framebuffer.h"
-#include "salviar/include/surface.h"
+#include <salviax/include/presenter/d3d9/dev_d3d9.h>
+#include <salviar/include/framebuffer.h>
+#include <salviar/include/surface.h>
 #include <tchar.h>
 
 using namespace eflib;
-using namespace softartx::utility;
+using namespace salviax::utility;
 using namespace salviar;
 #define FVF (D3DFVF_XYZ | D3DFVF_TEX1)
 struct Vertex
@@ -31,7 +31,7 @@ struct Vertex
 	float s, t;
 };
 
-BEGIN_NS_SALVIAX_PRESENTER()
+BEGIN_NS_SALVIAX_PRESENTER();
 
 dev_d3d9::dev_d3d9(HWND hwnd, h_d3d9_device dev): hwnd_(hwnd), dev_(dev), buftex_(NULL), vb_(NULL){
 	init_device();
@@ -86,13 +86,13 @@ void dev_d3d9::present(const salviar::surface& surf)
 		d3dpp.PresentationInterval		= D3DPRESENT_INTERVAL_IMMEDIATE;
 		d3dpp.BackBufferFormat			= D3DFMT_X8R8G8B8;
 
-		softartx::utility::d3d9_device_param device_params;
+		salviax::utility::d3d9_device_param device_params;
 		device_params.adapter = 0;
 		device_params.devtype = D3DDEVTYPE_HAL;
 		device_params.focuswnd = d3dpp.hDeviceWindow;
 		device_params.behavior = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
-		dev_ = softartx::utility::d3d9_device::create(device_params, d3dpp);
+		dev_ = salviax::utility::d3d9_device::create(device_params, d3dpp);
 
 		init_device();
 	
@@ -166,6 +166,6 @@ END_NS_SALVIAX_PRESENTER()
 
 void salviax_create_presenter_device(salviar::h_device& dev, void* param)
 {
-	dev = softartx::presenter::dev_d3d9::create_device(static_cast<HWND>(param));
+	dev = salviax::presenter::dev_d3d9::create_device(static_cast<HWND>(param));
 }
 
