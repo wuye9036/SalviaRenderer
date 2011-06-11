@@ -26,9 +26,9 @@ Modify Log:
 #ifndef SOFTARTX_DEV_GDIPLUS_H
 #define SOFTARTX_DEV_GDIPLUS_H
 
-#include "softart/include/presenter_dev.h"
-#include "softartx/include/utility/inc_gdiplus.h"
-#include "softart/include/framebuffer.h"
+#include "salviar/include/presenter_dev.h"
+#include "salviax/include/utility/inc_gdiplus.h"
+#include "salviar/include/framebuffer.h"
 #include <tchar.h>
 #include <boost/smart_ptr.hpp>
 #include <algorithm>

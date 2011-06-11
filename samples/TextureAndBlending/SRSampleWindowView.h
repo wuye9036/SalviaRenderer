@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include "softartx/include/resource/mesh/sa/mesh_io.h"
-#include "softartx/include/resource/texture/gdiplus/tex_io_gdiplus.h"
-#include "softartx/include/resource/texture/freeimage/tex_io_freeimage.h"
-#include "softart/include/presenter_dev.h"
-#include "softart/include/shader.h"
-#include "softart/include/renderer_impl.h"
-#include "softart/include/resource_manager.h"
-#include "softart/include/rasterizer.h"
+#include "salviax/include/resource/mesh/sa/mesh_io.h"
+#include "salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h"
+#include "salviax/include/resource/texture/freeimage/tex_io_freeimage.h"
+#include "salviar/include/presenter_dev.h"
+#include "salviar/include/shader.h"
+#include "salviar/include/renderer_impl.h"
+#include "salviar/include/resource_manager.h"
+#include "salviar/include/rasterizer.h"
 #include <eflib/include/metaprog/util.h>
 #include <iostream>
 #include <boost/assign.hpp>

@@ -27,11 +27,11 @@ Modify Log:
 #ifndef SOFTARTX_MESH_IO_D3D9_H
 #define SOFTARTX_MESH_IO_D3D9_H
 
-#include "softartx/include/resource/resource_forward.h"
-#include "softartx/include/utility/inc_d3d9x.h"
-#include "softartx/include/resource/mesh/sa/mesh.h"
-#include "softartx/include/utility/d3d9_utilities.h"
-#include "softart/include/decl.h"
+#include "salviax/include/resource/resource_forward.h"
+#include "salviax/include/utility/inc_d3d9x.h"
+#include "salviax/include/resource/mesh/sa/mesh.h"
+#include "salviax/include/utility/d3d9_utilities.h"
+#include "salviar/include/decl.h"
 
 BEGIN_NS_SOFTARTX_RESOURCE()
 

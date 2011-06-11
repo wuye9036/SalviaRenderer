@@ -1,12 +1,12 @@
 #ifndef SOFTARTX_FREEIMAGE_UTILITIES_H
 #define SOFTARTX_FREEIMAGE_UTILITIES_H
 
-#include <softartx/include/utility/user_config.h>
+#include <salviax/include/utility/user_config.h>
 
 #ifdef SOFTARTX_FREEIMAGE_ENABLED
 
 #include "utility_forward.h"
-#include "softart/include/colors.h"
+#include "salviar/include/colors.h"
 #include <eflib/include/string/string.h>
 #include <eflib/include/math/collision_detection.h>
 #include <FreeImage.h>

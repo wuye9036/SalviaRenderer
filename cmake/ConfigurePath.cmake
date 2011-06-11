@@ -5,8 +5,19 @@ set( SALVIA_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_HOME_DIRECTORY}/bin/${SALVIA_PLATF
 set( SALVIA_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_HOME_DIRECTORY}/lib/${SALVIA_PLATFORM_NAME}" )
 
 ################ configurate 3rd party library paths ###############
-set( SALVIA_3RD_PARTY_PATH "${SALVIA_HOME_DIR}/../3rd_party/" )
-	
+set( SALVIA_3RD_PARTY_PATH 
+	"${SALVIA_HOME_DIR}/3rd_party/"
+	)
+set( SALVIA_3RD_PARTY_INCLUDES
+    ${SALVIA_3RD_PARTY_PATH}/threadpool
+    ${SALVIA_3RD_PARTY_PATH}/FreeImage/include
+  )
+  if(SALVIA_PLATFORM_NAME STREQUAL "x64")
+    set(SALVIA_3RD_PARTY_LIBS ${SALVIA_3RD_PARTY_PATH}/FreeImage/lib/x64)
+  else(SALVIA_PLATFORM_NAME STREQUAL "x64")
+    set(SALVIA_3RD_PARTY_LIBS ${SALVIA_3RD_PARTY_PATH}/FreeImage/lib/win32)
+  endif()
+  
 ################ set llvm path ################
 set( SALVIA_LLVM_PATH "${SALVIA_3RD_PARTY_PATH}/llvm/" )
 set( SALVIA_LLVM_INCLUDE_PATH

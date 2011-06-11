@@ -27,10 +27,10 @@ Modify Log:
 #ifndef SOFTARTX_TEX_IO_H
 #define SOFTARTX_TEX_IO_H
 
-#include "softartx/include/resource/resource_forward.h"
-#include "softart/include/surface.h"
-#include "softart/include/texture.h"
-#include "softart/include/decl.h"
+#include "salviax/include/resource/resource_forward.h"
+#include "salviar/include/surface.h"
+#include "salviar/include/texture.h"
+#include "salviar/include/decl.h"
 #include <eflib/include/math/math.h>
 
 BEGIN_NS_SOFTARTX_RESOURCE()

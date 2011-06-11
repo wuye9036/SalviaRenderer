@@ -1,4 +1,4 @@
-#include <softartx/include/utility/freeimage_utilities.h>
+#include <salviax/include/utility/freeimage_utilities.h>
 
 #ifdef SOFTARTX_FREEIMAGE_ENABLED
 

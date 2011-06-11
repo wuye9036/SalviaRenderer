@@ -1,5 +1,5 @@
-#include "softart/include/shaderregs_op.h"
-#include "softart/include/shader.h"
+#include "salviar/include/shaderregs_op.h"
+#include "salviar/include/shader.h"
 BEGIN_NS_SOFTART()
 
 

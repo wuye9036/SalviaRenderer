@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
-#include <softartx/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 
 #ifdef SOFTARTX_FREEIMAGE_ENABLED
 
-#include <softartx/include/utility/freeimage_utilities.h>
-#include <softart/include/renderer_impl.h>
-#include <softart/include/resource_manager.h>
+#include <salviax/include/utility/freeimage_utilities.h>
+#include <salviar/include/renderer_impl.h>
+#include <salviar/include/resource_manager.h>
 #include <FreeImage.h>
 #include <tchar.h>
 #include <boost/static_assert.hpp>

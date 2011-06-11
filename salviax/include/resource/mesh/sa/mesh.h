@@ -27,9 +27,9 @@ Modify Log:
 #ifndef SOFTARTX_MESH_H
 #define SOFTARTX_MESH_H
 
-#include "softartx/include/resource/resource_forward.h"
-#include "softart/include/decl.h"
-#include "softart/include/stream_assembler.h"
+#include "salviax/include/resource/resource_forward.h"
+#include "salviar/include/decl.h"
+#include "salviar/include/stream_assembler.h"
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)

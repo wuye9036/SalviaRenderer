@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include "utility_forward.h"
 #include "inc_d3d9.h"
-#include "softart/include/handles.h"
+#include "salviar/include/handles.h"
 
 BEGIN_NS_SOFTARTX_UTILITY()
 

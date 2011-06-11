@@ -27,10 +27,10 @@ Modify Log:
 #ifndef SOFTARTX_TEX_IO_GDIPLUS_H
 #define SOFTARTX_TEX_IO_GDIPLUS_H
 
-#include "softartx/include/utility/inc_gdiplus.h"
-#include "softartx/include/resource/texture/sa/tex_io.h"
-#include "softart/include/surface.h"
-#include "softart/include/decl.h"
+#include "salviax/include/utility/inc_gdiplus.h"
+#include "salviax/include/resource/texture/sa/tex_io.h"
+#include "salviar/include/surface.h"
+#include "salviar/include/decl.h"
 #include <eflib/include/math/math.h>
 #include <string>
 #include <vector>

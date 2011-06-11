@@ -27,11 +27,11 @@ Modify Log:
 #ifndef SOFTARTX_TEX_IO_FREEIMAGE_H
 #define SOFTARTX_TEX_IO_FREEIMAGE_H
 
-#include <softartx/include/utility/user_config.h>
+#include <salviax/include/utility/user_config.h>
 
-#include <softartx/include/resource/texture/sa/tex_io.h>
-#include <softart/include/colors.h>
-#include <softart/include/decl.h>
+#include <salviax/include/resource/texture/sa/tex_io.h>
+#include <salviar/include/colors.h>
+#include <salviar/include/decl.h>
 #include <eflib/include/math/math.h>
 #include <vector>
 

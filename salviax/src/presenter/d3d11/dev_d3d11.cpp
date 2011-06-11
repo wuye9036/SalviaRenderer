@@ -17,9 +17,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
 #define INITGUID
-#include "softartx/include/presenter/d3d11/dev_d3d11.h"
-#include "softart/include/framebuffer.h"
-#include "softart/include/surface.h"
+#include "salviax/include/presenter/d3d11/dev_d3d11.h"
+#include "salviar/include/framebuffer.h"
+#include "salviar/include/surface.h"
 #include <D3DX11.h>
 #include <tchar.h>
 

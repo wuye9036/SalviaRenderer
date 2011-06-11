@@ -1,7 +1,7 @@
 #ifndef SOFTART_DEV_H
 #define SOFTART_DEV_H
 
-#include "softart/include/decl.h"
+#include "salviar/include/decl.h"
 
 #include <eflib/include/math/math.h>
 #include "softart_fwd.h"

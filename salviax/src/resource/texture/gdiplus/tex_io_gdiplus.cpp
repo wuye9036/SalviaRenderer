@@ -16,10 +16,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "softartx/include/utility/inc_gdiplus.h"
-#include "softartx/include/resource/texture/gdiplus/tex_io_gdiplus.h"
-#include "softart/include/renderer.h"
-#include "softart/include/resource_manager.h"
+#include "salviax/include/utility/inc_gdiplus.h"
+#include "salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h"
+#include "salviar/include/renderer.h"
+#include "salviar/include/resource_manager.h"
 #include <tchar.h>
 #include <algorithm>
 

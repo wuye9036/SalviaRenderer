@@ -4,7 +4,7 @@
 #include <eflib/include/platform/config.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include "boost/threadpool.hpp"
+#include <boost/threadpool.hpp>
 #include <eflib/include/platform/disable_warnings.h>
 
 #include "softart_fwd.h"
