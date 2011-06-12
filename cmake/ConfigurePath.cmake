@@ -17,8 +17,11 @@ set( SALVIA_3RD_PARTY_INCLUDES
   else(SALVIA_PLATFORM_NAME STREQUAL "x64")
     set(SALVIA_3RD_PARTY_LIBS ${SALVIA_3RD_PARTY_PATH}/FreeImage/lib/win32)
   endif()
-  
-################ set llvm path ################
+
+################ Set WTL Path ################
+set( SALVIA_WTL_INCLUDE_PATH ${SALVIA_3RD_PARTY_PATH}/wtl/include )  
+ 
+################ Set LLVM path ################
 set( SALVIA_LLVM_PATH "${SALVIA_3RD_PARTY_PATH}/llvm/" )
 set( SALVIA_LLVM_INCLUDE_PATH
 	"${SALVIA_LLVM_PATH}/include/" "${SALVIA_LLVM_PATH}/config/${SALVIA_ENV_WITHOUT_BUILD_TYPE}/"
