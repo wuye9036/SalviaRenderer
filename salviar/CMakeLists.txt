@@ -1,0 +1,104 @@
+SALVIA_CHECK_BUILD_WITH_UNICODE()
+
+INCLUDE_DIRECTORIES(
+	${SALVIA_HOME_DIR}
+	${SALVIA_3RD_PARTY_INCLUDES}
+	${SALVIA_BOOST_HOME_DIR}
+)
+LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
+
+SOURCE_GROUP( Fundations FILES
+	include/salviar_forward.h
+	include/decl.h
+	include/enums.h
+	include/colors.h
+	include/colors_convertors.h
+)
+
+SOURCE_GROUP( Pipeline FILES
+	include/stream.h
+	include/stream_assembler.h
+	include/clipper.h
+)
+
+SOURCE_GROUP( Shader FILES
+	include/shader.h
+	include/shader_utility.h
+	include/shaderregs.h
+	include/shaderregs_op.h
+)
+
+SOURCE_GROUP( Buffers FILES
+	include/buffer.h
+	include/texture.h
+	include/sampler.h
+	include/surface.h
+	include/resource_manager.h
+)
+
+set (HEADER_FILES
+	include/salviar_forward.h
+	include/decl.h
+	include/enums.h
+	include/colors.h
+	include/colors_convertors.h
+	
+	include/stream.h
+	include/stream_assembler.h
+	include/clipper.h
+	
+	include/shader.h
+	include/shader_utility.h
+	include/shaderregs.h
+	include/shaderregs_op.h
+	
+	include/buffer.h
+	include/texture.h
+	include/sampler.h
+	include/surface.h
+	include/resource_manager.h
+	
+	include/framebuffer.h
+	include/handles.h
+	include/index_fetcher.h
+	include/lockfree_queue.h
+	include/presenter_dev.h
+	include/rasterizer.h
+	include/render_stage.h
+	include/renderer.h
+	include/renderer_capacity.h
+	include/renderer_impl.h
+	include/thread_pool.h
+	include/vertex_cache.h
+)
+
+set (SOURCE_FILES
+	src/clipper.cpp
+	src/color_convertors.cpp
+	src/default_vertex_cache.cpp
+	src/framebuffer.cpp
+	src/index_fetcher.cpp
+	src/pixel_shader.cpp
+	src/rasterizer.cpp
+	src/renderer_impl.cpp
+	src/resource_manager.cpp
+	src/result.cpp
+	src/sampler.cpp
+	src/shader.cpp
+	src/stream_assembler.cpp
+	src/surface.cpp
+	src/texture1d.cpp
+	src/texture2d.cpp
+	src/texture_cube.cpp
+	src/thread_pool.cpp
+)
+
+ADD_LIBRARY( salviar STATIC
+	${Buffers}
+	${HEADER_FILES}
+	${SOURCE_FILES}
+)
+
+TARGET_LINK_LIBRARIES(salviar EFLIB)
+
+SALVIA_CONFIG_OUTPUT_PATHS(salviar)

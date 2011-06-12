@@ -17,7 +17,7 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/utility.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/metaprog/util.h>
@@ -158,19 +158,19 @@ void semantic_analyser::parse_semantic(
 	)
 {
 	if( sem_tok ){
-		softart::semantic sem( softart::SV_None );
+		salviar::semantic sem( salviar::SV_None );
 		string const& semstr = sem_tok->str;
 
 		if( semstr == "SV_Position" ){
-			sem = softart::SV_Position;
+			sem = salviar::SV_Position;
 		} else if ( semstr == "SV_RPosition" ){
-			sem = softart::SV_RPosition;
+			sem = salviar::SV_RPosition;
 		} else if( semstr == "SV_Texcoord" ){
 			int index = 0;
 			if( sem_idx_tok ){
 				index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
 			}
-			sem = pack_semantic( softart::SV_Texcoord, index );
+			sem = pack_semantic( salviar::SV_Texcoord, index );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}

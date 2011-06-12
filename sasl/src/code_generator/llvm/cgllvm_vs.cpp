@@ -130,7 +130,7 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 
 			BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
 				storage_si* ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
-				softart::semantic sem = ssi->get_semantic();
+				salviar::semantic sem = ssi->get_semantic();
 				storage_info* si = abii->output_storage( sem );
 			
 				cgllvm_sctxt destctxt;
@@ -283,7 +283,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		// Create return type
 		psctxt = node_ctxt(v.symbol()->node(), true );
 		storage_si* fn_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
-		if( fn_ssi->get_semantic() != softart::SV_None ){
+		if( fn_ssi->get_semantic() != salviar::SV_None ){
 			// Return an built-in value.
 			storage_info* si = abii->output_storage( fn_ssi->get_semantic() );
 			if( si->storage == stream_out ){
@@ -338,8 +338,8 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 			// Get Value from semantic.
 			// Store value to local variable.
-			softart::semantic par_sem = par_ssi->get_semantic();
-			assert( par_sem != softart::SV_None );
+			salviar::semantic par_sem = par_ssi->get_semantic();
+			assert( par_sem != salviar::SV_None );
 			storage_info* psi = abii->input_storage( par_sem );
 			
 			cgllvm_sctxt tmpctxt;
@@ -358,7 +358,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 					storage_si* par_mem_ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
 					assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
 
-					softart::semantic sem = par_mem_ssi->get_semantic();
+					salviar::semantic sem = par_mem_ssi->get_semantic();
 					storage_info* psi = abii->input_storage( sem );
 			
 					cgllvm_sctxt srcctxt;
@@ -404,7 +404,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 	// Global is filled by offset value with null parent.
 	// The parent is filled when it is referred.
 	storage_info* psi = NULL;
-	if( pssi->get_semantic() == softart::SV_None ){
+	if( pssi->get_semantic() == salviar::SV_None ){
 		psi = abii->input_storage( v.symbol() );
 	} else {
 		psi = abii->input_storage( pssi->get_semantic() );

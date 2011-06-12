@@ -1,16 +1,15 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 INCLUDE_DIRECTORIES(
 	${boost_home_dir}
 	${softart_home_dir}
 	${sasl_home_dir}
-	${3rd_party_llvm_include_path}
+	${SALVIA_LLVM_INCLUDE_PATH}
 )
 
 LINK_DIRECTORIES(
 	${boost_lib_dir}
-	${3rd_party_llvm_lib_path}
+	${SALVIA_LLVM_LIB_PATH}
 )
 
 set( HEADER_FILES
@@ -27,4 +26,4 @@ TARGET_LINK_LIBRARIES( sasl_test_cgllvm
 	sasl_enums sasl_common sasl_semantic sasl_syntaxtree sasl_cgllvm LLVMCore LLVMSystem LLVMSupport
 )
 
-config_output_paths( sasl_test_cgllvm )
+SALVIA_CONFIG_OUTPUT_PATHS( sasl_test_cgllvm )

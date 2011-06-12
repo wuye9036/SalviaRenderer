@@ -19,7 +19,7 @@ storage_info::storage_info()
 }
 
 abi_info::abi_info()
-	: mod(NULL), entry_point(NULL), lang(softart::lang_none)
+	: mod(NULL), entry_point(NULL), lang(salviar::lang_none)
 {
 	memset( counts, 0, sizeof(counts) );
 	memset( offsets, 0, sizeof(offsets) );
@@ -41,9 +41,9 @@ bool abi_info::is_entry( shared_ptr<symbol> const& v ) const{
 	return entry_point == v.get();
 }
 
-bool abi_info::add_input_semantic( softart::semantic sem, builtin_type_code btc, bool is_stream )
+bool abi_info::add_input_semantic( salviar::semantic sem, builtin_type_code btc, bool is_stream )
 {
-	vector<softart::semantic>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
+	vector<salviar::semantic>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
 	if( it != sems_in.end() ){
 		if( *it == sem ){
 			storage_info* si = input_storage( sem );
@@ -63,8 +63,8 @@ bool abi_info::add_input_semantic( softart::semantic sem, builtin_type_code btc,
 	return true;
 }
 
-bool abi_info::add_output_semantic( softart::semantic sem, builtin_type_code btc ){
-	vector<softart::semantic>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
+bool abi_info::add_output_semantic( salviar::semantic sem, builtin_type_code btc ){
+	vector<salviar::semantic>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
 	if( it != sems_out.end() ){
 		if( *it == sem ){
 			storage_info* si = alloc_output_storage( sem );
@@ -91,7 +91,7 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_type_
 	si->storage = buffer_in;
 }
 
-storage_info* abi_info::input_storage( softart::semantic sem ) const {
+storage_info* abi_info::input_storage( salviar::semantic sem ) const {
 	sem_storages_t::const_iterator it = semin_storages.find( sem );
 	if ( it == semin_storages.end() ){
 		return NULL;
@@ -99,7 +99,7 @@ storage_info* abi_info::input_storage( softart::semantic sem ) const {
 	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
-storage_info* abi_info::alloc_input_storage( softart::semantic sem ){
+storage_info* abi_info::alloc_input_storage( salviar::semantic sem ){
 	return addressof( semin_storages[sem] );
 }
 
@@ -115,7 +115,7 @@ storage_info* abi_info::alloc_input_storage( boost::shared_ptr<symbol> const& v 
 	return addressof( symin_storages[v.get()] );
 }
 
-storage_info* abi_info::output_storage( softart::semantic sem ) const{
+storage_info* abi_info::output_storage( salviar::semantic sem ) const{
 	sem_storages_t::const_iterator it = semout_storages.find( sem );
 	if ( it == semout_storages.end() ){
 		return NULL;
@@ -123,7 +123,7 @@ storage_info* abi_info::output_storage( softart::semantic sem ) const{
 	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
-storage_info* abi_info::alloc_output_storage( softart::semantic sem ){
+storage_info* abi_info::alloc_output_storage( salviar::semantic sem ){
 	return addressof( semout_storages[sem] );
 }
 
@@ -131,7 +131,7 @@ storage_info* abi_info::alloc_output_storage( softart::semantic sem ){
 void abi_info::compute_layout(){
 	if ( !mod || !entry_point ) return;
 
-	if ( lang == softart::lang_general ){
+	if ( lang == salviar::lang_general ){
 		return;
 	}
 
@@ -146,7 +146,7 @@ std::vector<storage_info*> abi_info::storage_infos( storage_types st ) const{
 
 	// Process output
 	if( st == buffer_out ){
-		BOOST_FOREACH( softart::semantic sem, sems_out ){
+		BOOST_FOREACH( salviar::semantic sem, sems_out ){
 			ret.push_back( output_storage(sem) );
 		}
 		return ret;

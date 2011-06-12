@@ -8,7 +8,7 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
 
@@ -23,7 +23,7 @@ using ::sasl::common::token_t;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::builtin_type;
 
-using softart::semantic;
+using salviar::semantic;
 
 using ::boost::addressof;
 using ::boost::shared_ptr;
@@ -180,15 +180,15 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 }
 
 storage_si::storage_si( shared_ptr<type_manager> typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(softart::SV_None), memidx(-1), swz(0)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(salviar::SV_None), memidx(-1), swz(0)
 {
 }
 
-softart::semantic storage_si::get_semantic() const{
+salviar::semantic storage_si::get_semantic() const{
 	return sem;
 }
 
-void storage_si::set_semantic( softart::semantic v ){
+void storage_si::set_semantic( salviar::semantic v ){
 	sem = v;
 }
 

@@ -8,7 +8,7 @@
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/platform/boost_begin.h>
@@ -244,9 +244,9 @@ void options_manager::process( bool& abort )
 	}
 
 	// TODO
-	softart::languages lang = opt_io.language();
+	salviar::languages lang = opt_io.language();
 
-	EFLIB_ASSERT_AND_IF( lang != softart::lang_none, "Can not support language guessing by file extension yet." ){
+	EFLIB_ASSERT_AND_IF( lang != salviar::lang_none, "Can not support language guessing by file extension yet." ){
 		return;
 	}
 
@@ -276,7 +276,7 @@ void options_manager::process( bool& abort )
 			abi_analyser aa;
 
 			if( !aa.auto_entry( msi, lang ) ){
-				if ( lang != softart::lang_general ){
+				if ( lang != salviar::lang_general ){
 					cout << "ABI analysis error occurs!" << endl;
 					abort = true;
 					return;
@@ -394,7 +394,7 @@ const char* options_io::export_as_desc = "Specifies the content of output file t
 const char* options_io::lang_tag = "lang";
 const char* options_io::lang_desc = "Specifies language the input file was treated as.'general(g)','vertex_shader(vs)','pixel_shader(ps)','blend_shader(bs)' are available. ";
 
-options_io::options_io() : fmt(none), lang(softart::lang_none)
+options_io::options_io() : fmt(none), lang(salviar::lang_none)
 {
 }
 
@@ -424,22 +424,22 @@ void options_io::filterate( po::variables_map const & vm )
 	}
 
 	if ( !vm.count("lang") ){
-		lang = softart::lang_none;
+		lang = salviar::lang_none;
 	} else {
 		to_lower( lang_str );
 		if ( lang_str == "general" || lang_str == "g" ){
-			lang = softart::lang_general;
+			lang = salviar::lang_general;
 		} else if ( lang_str == "vertex_shader" || lang_str == "vs" ){
-			lang = softart::lang_vertex_sl;
+			lang = salviar::lang_vertex_sl;
 		} else if ( lang_str == "pixel_shader" || lang_str == "ps" ){
-			lang = softart::lang_pixel_sl;
+			lang = salviar::lang_pixel_sl;
 		} else if ( lang_str == "blend_shader" || lang_str == "bs" ){
-			lang = softart::lang_blend_sl;
+			lang = salviar::lang_blend_sl;
 		}
 	}
 }
 
-softart::languages options_io::language() const{
+salviar::languages options_io::language() const{
 	return lang;
 }
 

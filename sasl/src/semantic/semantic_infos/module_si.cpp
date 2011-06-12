@@ -5,7 +5,7 @@
 #include <sasl/include/semantic/type_manager.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
-#include <softart/include/enums.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
 

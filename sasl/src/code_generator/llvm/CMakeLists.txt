@@ -1,11 +1,10 @@
-check_build_with_unicode()
-set_environment()
+SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 INCLUDE_DIRECTORIES(
 	${SASL_HOME_DIR}
-	${BOOST_HOME_DIR}
-	${SOFTART_HOME_DIR}
-	${3rd_party_llvm_include_path}
+	${SALVIA_BOOST_HOME_DIR}
+	${SALVIA_HOME_DIR}
+	${SALVIA_LLVM_INCLUDE_PATH}
 )
 	
 set( HEADER_FILES
@@ -43,4 +42,4 @@ set( SOURCE_FILES
 
 ADD_LIBRARY( sasl_cgllvm STATIC	${HEADER_FILES} ${SOURCE_FILES} )
 
-config_output_paths( sasl_cgllvm )
+SALVIA_CONFIG_OUTPUT_PATHS( sasl_cgllvm )
