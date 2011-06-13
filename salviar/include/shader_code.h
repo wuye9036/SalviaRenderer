@@ -7,18 +7,29 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-BEGIN_NS_SALVIAR();
+namespace sasl{
+	namespace semantic{
+		class abi_info;
+		class module_si;
+	}
+	namespace code_generator{
+		class jit_engine;
+	}
+}
 
-class shader_code_impl;
+BEGIN_NS_SALVIAR();
 
 class shader_code{
 public:
-	virtual abi_info const* abii() const;
-	virtual void abii( abi_info const* );
+	virtual sasl::semantic::abi_info const* abii() const;
+	virtual void abii( sasl::semantic::abi_info const* );
 	
 	virtual void* function_pointer() const;
 
-	static boost::shared_ptr<shader_code> create();
+	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
+	virtual boost::shared_ptr<sasl::code_generator::jit_engine> jit() const;
+private:
+	boost::shared_ptr<sasl::code_generator::jit_engine> je;
 };
 
 END_NS_SALVIAR();

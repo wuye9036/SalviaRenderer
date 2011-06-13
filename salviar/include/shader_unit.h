@@ -9,6 +9,8 @@
 
 #include <salviar/include/salviar_forward.h>
 
+#include <salviar/include/stream.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -17,39 +19,46 @@
 
 BEGIN_NS_SALVIAR();
 
-class shader_code;
 class compiler;
+class shader_code;
+class vs_output;
+
+struct input_element_decl;
 
 class vertex_shader_unit
 {
 public:
+	vertex_shader_unit();
+	~vertex_shader_unit();
+
 	void initialize( shader_code const* );
 
-	void bind_streams( input_layout_decl const& layout );
+	void bind_streams( std::vector<input_element_decl> const& layout );
 	void set_variable( std::string const&, void* data );
 
 	void update( size_t ivert );
 
-	void execute();
+	void execute( vs_output& out );
 
 public:
 	shader_code const* code;
+	std::vector<input_element_decl> layout;
 	std::vector<char> data;
 };
 
-class pixel_shader_unit
-{
-private:
-	void initialize( shader_code const* );
-
-	void update();
-
-	void execute();
-
-private:
-	shader_code const* code;
-	std::vector<char> data;
-};
+//class pixel_shader_unit
+//{
+//private:
+//	void initialize( shader_code const* );
+//
+//	void update();
+//
+//	void execute();
+//
+//private:
+//	shader_code const* code;
+//	std::vector<char> data;
+//};
 
 //extern "C"{
 //	SALVIA_API void salvia_create_shader_units(

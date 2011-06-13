@@ -12,6 +12,7 @@
 BEGIN_NS_SALVIAR();
 
 using namespace eflib;
+using boost::shared_ptr;
 
 //inherited
 result renderer_impl::set_input_layout(const input_layout_decl& layout)
@@ -27,7 +28,7 @@ result renderer_impl::set_input_layout(const input_layout_decl& layout)
 	}
 	vs_input_ops_ = &get_vs_input_op(n);
 
-	//layout_ 只能到运行期检测了...
+	//layout_ is checked at runtime.
 	hvertcache_->set_input_layout(layout);
 	return result::ok;
 }
@@ -59,7 +60,7 @@ result renderer_impl::set_index_buffer(h_buffer hbuf, index_type idxtype)
 	case index_int32:
 		break;
 	default:
-		EFLIB_ASSERT(false, "枚举值无效：无效的索引类型");
+		EFLIB_ASSERT(false, "The value of index type is invalid.");
 		return result::failed;
 	}
 
@@ -120,6 +121,15 @@ result renderer_impl::set_vertex_shader(h_vertex_shader hvs)
 h_vertex_shader renderer_impl::get_vertex_shader() const
 {
 	return hvs_;
+}
+
+result renderer_impl::set_vertex_shader_code( shared_ptr<shader_code> const& code ){
+	vscode_ = code;
+	return result::ok;
+}
+
+shared_ptr<shader_code> renderer_impl::get_vertex_shader_code() const{
+	return vscode_;
 }
 
 const vs_input_op* renderer_impl::get_vs_input_ops() const

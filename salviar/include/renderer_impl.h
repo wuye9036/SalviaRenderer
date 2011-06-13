@@ -1,15 +1,15 @@
 #ifndef SOFTART_RENDERER_IMPL_H
 #define SOFTART_RENDERER_IMPL_H
 
-#include "renderer.h"
+#include <salviar/include/renderer.h>
 #include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
 
+BEGIN_NS_SALVIAR();
 
-struct state_block
-{
-	viewport vp;
-	
+class shader_code;
+
+struct state_block{
+	viewport vp;	
 };
 
 class renderer_impl : public renderer
@@ -41,6 +41,8 @@ class renderer_impl : public renderer
 	vs_input_op*				vs_input_ops_;
 	vs_output_op*				vs_output_ops_;
 
+	boost::shared_ptr<shader_code> vscode_;
+
 	void initialize();
 
 public:
@@ -60,6 +62,10 @@ public:
 
 	virtual result set_vertex_shader(h_vertex_shader hvs);
 	virtual h_vertex_shader get_vertex_shader() const;
+	
+	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& );
+	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const;
+
 	virtual const vs_input_op* get_vs_input_ops() const;
 	virtual const vs_output_op* get_vs_output_ops() const;
 

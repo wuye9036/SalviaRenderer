@@ -1,22 +1,26 @@
-#include "../include/vertex_cache.h"
-#include "../include/stream_assembler.h"
-
 #include <eflib/include/platform/config.h>
 
-#include "../include/shader.h"
-#include "../include/shaderregs_op.h"
-#include "../include/renderer_impl.h"
-#include "../include/stream_assembler.h"
-#include "../include/thread_pool.h"
+#include <salviar/include/vertex_cache.h>
+#include <salviar/include/stream_assembler.h>
+
+#include <salviar/include/shader.h>
+#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/renderer_impl.h>
+#include <salviar/include/stream_assembler.h>
+#include <salviar/include/thread_pool.h>
+
+#include <salviar/include/shader_unit.h>
 
 #include <eflib/include/platform/cpuinfo.h>
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/ref.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 using eflib::num_available_threads;
 using eflib::atomic;
 
-BEGIN_NS_SALVIAR()
+BEGIN_NS_SALVIAR();
 
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
 const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
@@ -61,6 +65,11 @@ void default_vertex_cache::generate_indices_func(std::vector<uint32_t>& indices,
 
 void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& indices, int32_t index_count, atomic<int32_t>& working_package, int32_t package_size)
 {
+	vertex_shader_unit vsu;
+
+	vsu.initialize( pparent_->get_vertex_shader_code().get() );
+	vsu.bind_streams( pparent_->get_input_layout() );
+
 	const int32_t num_packages = (index_count + package_size - 1) / package_size;
 
 	int32_t local_working_package = working_package ++;
@@ -73,6 +82,10 @@ void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& in
 			used_verts_[id] = i;
 
 			vs_input vertex;
+
+			vsu.update( id );
+			vsu.execute( verts_[i] );
+
 			hsa_->fetch_vertex(vertex, id);
 			pvs_->execute(vertex, verts_[i]);
 		}
@@ -135,9 +148,6 @@ vs_output& default_vertex_cache::fetch(cache_entry_index id)
 	}
 
 	return verts_[used_verts_[id]];
-
-	//EFLIB_ASSERT(false, "");
-	//return null_obj;
 }
 
 vs_output& default_vertex_cache::fetch_for_write(cache_entry_index /*id*/)
@@ -165,7 +175,7 @@ void default_vertex_cache::delete_vertex(vs_output* const pvert)
 
 result default_vertex_cache::set_input_layout(const input_layout_decl& layout)
 {
-	//layout_ 只能到运行期检测了...
+	//layout_ will be checked at runtime.
 	hsa_->set_input_layout(layout);
 	return result::ok;
 }
@@ -176,4 +186,4 @@ result default_vertex_cache::set_stream(stream_index sidx, h_buffer hbuf)
 	return result::ok;
 }
 
-END_NS_SALVIAR()
+END_NS_SALVIAR();

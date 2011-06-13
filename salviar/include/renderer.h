@@ -1,15 +1,15 @@
 #ifndef SOFTART_RENDERER_H
 #define SOFTART_RENDERER_H
 
-#include "../include/decl.h"
-#include "../include/enums.h"
-#include "../include/colors.h"
+#include <salviar/include/decl.h>
+#include <salviar/include/enums.h>
+#include <salviar/include/colors.h>
 
 #include <eflib/include/math/collision_detection.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <boost/smart_ptr.hpp>
 #include <boost/any.hpp>
+#include <boost/smart_ptr.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>

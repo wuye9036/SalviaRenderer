@@ -1,13 +1,14 @@
 #ifndef SOFTART_STREAM_H
 #define SOFTART_STREAM_H
 
-#include "renderer_capacity.h"
-#include "enums.h"
+#include <salviar/include/salviar_forward.h>
+
+#include <salviar/include/renderer_capacity.h>
+#include <salviar/include/enums.h>
 
 #include <vector>
-#include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
 
+BEGIN_NS_SALVIAR();
 
 enum stream_index
 {
