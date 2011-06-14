@@ -1,6 +1,8 @@
 #include <sasl/include/semantic/abi_info.h>
 
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
+
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -89,6 +91,8 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_type_
 	storage_info* si = alloc_input_storage( v );
 	si->sv_type = btc;
 	si->storage = buffer_in;
+
+	name_storages.insert( make_pair(v->unmangled_name(), si) );
 }
 
 storage_info* abi_info::input_storage( salviar::semantic sem ) const {
@@ -111,6 +115,14 @@ storage_info* abi_info::input_storage( boost::shared_ptr<symbol> const& v ) cons
 	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
+storage_info* abi_info::input_storage( std::string const& name ) const
+{
+	name_storages_t::const_iterator it = name_storages.find( name );
+	if( it == name_storages.end() ){
+		return NULL;
+	}
+	return it->second;
+}
 storage_info* abi_info::alloc_input_storage( boost::shared_ptr<symbol> const& v ){
 	return addressof( symin_storages[v.get()] );
 }

@@ -49,6 +49,9 @@ public:
 
 	std::vector<char> stream_data;
 	std::vector<char> buffer_data;
+
+	std::vector<char> stream_odata;
+	std::vector<char> buffer_odata;
 };
 
 //class pixel_shader_unit

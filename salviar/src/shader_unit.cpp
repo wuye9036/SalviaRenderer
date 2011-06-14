@@ -1,6 +1,7 @@
 #include <salviar/include/shader_unit.h>
 
 #include <salviar/include/shader_code.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/renderer.h>
 #include <salviar/include/buffer.h>
 
@@ -21,6 +22,8 @@ void vertex_shader_unit::initialize( shader_code const* code ){
 	this->code = code;
 	this->stream_data.resize( code->abii()->storage_size(stream_in), 0 );
 	this->buffer_data.resize( code->abii()->storage_size(buffer_in), 0 );
+	this->stream_odata.resize( code->abii()->storage_size(stream_out), 0 );
+	this->buffer_odata.resize( code->abii()->storage_size(buffer_out), 0 );
 }
 
 void vertex_shader_unit::bind_streams( vector<input_element_decl> const& layout, vector<h_buffer> const& streams ){
@@ -45,12 +48,19 @@ void vertex_shader_unit::update( size_t ivert )
 
 void vertex_shader_unit::execute( vs_output& out )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	void (*p)(void*, void*, void*, void*)
+		= static_cast<void (*)(void*, void*, void*, void*)>( code->function_pointer() );
+	p( &(stream_data[0]), &(buffer_data[0]), &(stream_odata), &(buffer_odata) );
+
+	memset( &out.position, 0, sizeof(out.position) );
+	storage_info* out_info = code->abii()->output_storage(SV_Position);
+	memcpy( &out.position, &(buffer_odata[out_info->offset]), out_info->size );
 }
 
-void vertex_shader_unit::set_variable( std::string const&, void* data )
+void vertex_shader_unit::set_variable( std::string const& name, void* data )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	storage_info* vsi = code->abii()->input_storage( name );
+	memcpy( &buffer_data[vsi->offset], data, vsi->size );
 }
 
 vertex_shader_unit::vertex_shader_unit()

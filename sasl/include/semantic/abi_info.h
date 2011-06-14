@@ -62,6 +62,8 @@ public:
 
 	storage_info* input_storage( salviar::semantic ) const;
 	storage_info* input_storage( boost::shared_ptr<symbol> const& ) const;
+	storage_info* input_storage( std::string const& ) const;
+
 	storage_info* output_storage( salviar::semantic ) const;
 	
 	size_t storage_size( storage_types st ) const;
@@ -94,6 +96,8 @@ private:
 	std::vector< symbol* > syms_in;
 	typedef boost::unordered_map< symbol*, storage_info > sym_storages_t;
 	sym_storages_t symin_storages;
+	typedef boost::unordered_map< std::string, storage_info* > name_storages_t;
+	name_storages_t name_storages;
 
 	// Include stream_out and buffer_out
 	std::vector< salviar::semantic > sems_out;
