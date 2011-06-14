@@ -43,7 +43,9 @@ TARGET_LINK_LIBRARIES(ComplexMesh
 	EFLIB
 	salviar
 	salviax
+	sasl_enums
 	sasl_host
+	sasl_semantic
 )
 
 SALVIA_CONFIG_OUTPUT_PATHS(ComplexMesh)

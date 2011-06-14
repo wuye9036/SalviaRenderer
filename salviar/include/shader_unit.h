@@ -10,6 +10,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/stream.h>
+#include <salviar/include/decl.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -33,7 +34,7 @@ public:
 
 	void initialize( shader_code const* );
 
-	void bind_streams( std::vector<input_element_decl> const& layout );
+	void bind_streams( std::vector<input_element_decl> const& layout, std::vector<h_buffer> const& streams );
 	void set_variable( std::string const&, void* data );
 
 	void update( size_t ivert );
@@ -42,8 +43,12 @@ public:
 
 public:
 	shader_code const* code;
+	
 	std::vector<input_element_decl> layout;
-	std::vector<char> data;
+	std::vector<h_buffer> streams;
+
+	std::vector<char> stream_data;
+	std::vector<char> buffer_data;
 };
 
 //class pixel_shader_unit

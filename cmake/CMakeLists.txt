@@ -36,5 +36,12 @@ function(SALVIA_CREATE_VCPROJ_USERFILE TARGETNAME)
 	  @ONLY
 	)
     endif()
+	if(MSVC_VERSION EQUAL 1400)
+      configure_file(
+	  ${CMAKE_HOME_DIRECTORY}/cmake/VisualStudio2005UserFile.vcproj.user.in
+	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.${SYSTEM_NAME}.${USER_NAME}.user
+	  @ONLY
+	)
+    endif()
   endif()
 endfunction(SALVIA_CREATE_VCPROJ_USERFILE)

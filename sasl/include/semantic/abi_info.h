@@ -64,6 +64,8 @@ public:
 	storage_info* input_storage( boost::shared_ptr<symbol> const& ) const;
 	storage_info* output_storage( salviar::semantic ) const;
 	
+	size_t storage_size( storage_types st ) const;
+
 	std::vector<storage_info*> storage_infos( storage_types st ) const;
 
 private:

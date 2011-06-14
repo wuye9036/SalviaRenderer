@@ -1,12 +1,13 @@
-#include "../include/stream_assembler.h"
+#include <salviar/include/stream_assembler.h>
 
-#include "../include/shaderregs_op.h"
-#include "../include/buffer.h"
-#include "../include/shader.h"
+#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/buffer.h>
+#include <salviar/include/shader.h>
+
+using std::vector;
+using namespace eflib;
 
 BEGIN_NS_SALVIAR();
-
-using namespace eflib;
 
 vec4 get_vec4(input_type type, input_register_usage_decl usage, const void* data)
 {
@@ -89,6 +90,15 @@ size_t stream_assembler::num_vertices() const
 	EFLIB_ASSERT(hb, "");
 
 	return hb->get_size() / ied.stride;
+}
+
+vector<input_element_decl> const& stream_assembler::layout() const
+{
+	return layout_;
+}
+
+vector<h_buffer> const& stream_assembler::streams() const{
+	return streams_;
 }
 
 END_NS_SALVIAR()

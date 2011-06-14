@@ -68,7 +68,7 @@ void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& in
 	vertex_shader_unit vsu;
 
 	vsu.initialize( pparent_->get_vertex_shader_code().get() );
-	vsu.bind_streams( pparent_->get_input_layout() );
+	vsu.bind_streams( hsa_->layout(), hsa_->streams() );
 
 	const int32_t num_packages = (index_count + package_size - 1) / package_size;
 

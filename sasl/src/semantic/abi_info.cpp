@@ -123,6 +123,10 @@ storage_info* abi_info::output_storage( salviar::semantic sem ) const{
 	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
+size_t abi_info::storage_size( storage_types st ) const{
+	return offsets[st];
+}
+
 storage_info* abi_info::alloc_output_storage( salviar::semantic sem ){
 	return addressof( semout_storages[sem] );
 }
