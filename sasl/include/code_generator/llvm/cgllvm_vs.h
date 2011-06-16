@@ -43,8 +43,7 @@ public:
 	SASL_VISIT_DCL( expression_list );
 	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( index_expression );
-	SASL_VISIT_DCL( call_expression );
-
+	
 	SASL_VISIT_DCL( variable_expression );
 	SASL_VISIT_DCL( identifier );
 
@@ -57,7 +56,6 @@ public:
 	SASL_VISIT_DCL( type_specifier );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( alias_type );
-	SASL_VISIT_DCL( parameter );
 
 	// statement
 	SASL_VISIT_DCL( statement );

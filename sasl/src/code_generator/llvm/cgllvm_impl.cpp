@@ -54,8 +54,8 @@ Type const* cgllvm_impl::llvm_type( builtin_type_code const& btc, bool& sign ){
 	if( sasl_ehelper::is_matrix( btc ) ){
 		builtin_type_code scalar_btc = sasl_ehelper::scalar_of( btc );
 		Type const* row_type =
-			llvm_type( sasl_ehelper::vector_of(scalar_btc, sasl_ehelper::len_1(btc)), sign );
-		return ArrayType::get( row_type, sasl_ehelper::len_0(btc) );
+			llvm_type( sasl_ehelper::vector_of(scalar_btc, sasl_ehelper::len_0(btc)), sign );
+		return ArrayType::get( row_type, sasl_ehelper::len_1(btc) );
 	}
 
 	return NULL;

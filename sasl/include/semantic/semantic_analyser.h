@@ -83,7 +83,6 @@ public:
 	SASL_VISIT_DCL( program );
 
 	boost::shared_ptr<module_si> const& module_semantic_info() const;
-
 private:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& init_data, boost::shared_ptr<NodeT> child );
@@ -108,7 +107,8 @@ private:
 		function_register(
 			semantic_analyser& owner,
 			boost::any const& ctxt_init,
-			boost::shared_ptr<sasl::syntax_tree::function_type> const& fn
+			boost::shared_ptr<sasl::syntax_tree::function_type> const& fn,
+			bool is_intrinsic
 			);
 		function_register( function_register const& );
 
@@ -124,9 +124,11 @@ private:
 		boost::any const& ctxt_init;
 		boost::shared_ptr<sasl::syntax_tree::function_type> fn;
 		semantic_analyser& owner;
+		bool is_intrinsic;
 	};
 
 	function_register register_function( boost::any const& child_ctxt_init, std::string const& name );
+	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name );
 
 	void register_builtin_types();
 

@@ -8,6 +8,8 @@ INCLUDE_DIRECTORIES(
 )
 	
 set( HEADER_FILES
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_valexpr.h
+	
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_api.h
 	
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_impl.h
@@ -24,6 +26,8 @@ set( HEADER_FILES
 )
 
 set( SOURCE_FILES
+	cgllvm_valexpr.cpp
+	
 	cgllvm_api.cpp
 	
 	cgllvm_impl.cpp

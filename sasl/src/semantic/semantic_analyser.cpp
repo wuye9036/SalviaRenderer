@@ -1132,11 +1132,11 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 	for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
 		for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
 
-			register_function(child_ctxt_init, "mul")
+			register_intrinsic(child_ctxt_init, "mul")
 				% fvec_ts[n_vec] % fmat_ts[vec_size][n_vec]
 			>> fvec_ts[vec_size];
 
-			register_function(child_ctxt_init, "mul")
+			register_intrinsic(child_ctxt_init, "mul")
 				% fmat_ts[vec_size][n_vec] % fvec_ts[vec_size]
 			>> fvec_ts[n_vec];
 
@@ -1163,7 +1163,17 @@ semantic_analyser::function_register semantic_analyser::register_function( boost
 	shared_ptr<function_type> fn = create_node<function_type>( token_t::null() );
 	fn->name = token_t::from_string( name );
 
-	function_register ret(*this, child_ctxt_init, fn);
+	function_register ret(*this, child_ctxt_init, fn, false);
+
+	return ret;
+}
+
+semantic_analyser::function_register semantic_analyser::register_intrinsic( boost::any const& child_ctxt_init, std::string const& name )
+{
+	shared_ptr<function_type> fn = create_node<function_type>( token_t::null() );
+	fn->name = token_t::from_string( name );
+
+	function_register ret(*this, child_ctxt_init, fn, true);
 
 	return ret;
 }
@@ -1172,8 +1182,9 @@ semantic_analyser::function_register semantic_analyser::register_function( boost
 semantic_analyser::function_register::function_register(
 	semantic_analyser& owner,
 	boost::any const& ctxt_init,
-	shared_ptr<function_type> const& fn
-	) :owner(owner), ctxt_init(ctxt_init), fn(fn)
+	shared_ptr<function_type> const& fn,
+	bool is_intrinsic
+	) :owner(owner), ctxt_init(ctxt_init), fn(fn), is_intrinsic(is_intrinsic)
 {
 	assert( fn );
 }
@@ -1211,11 +1222,14 @@ void semantic_analyser::function_register::r(
 	fn->retval_type = ret_type;
 	any child_ctxt;
 	owner.visit_child( child_ctxt, ctxt_init, fn );
+	if( is_intrinsic ){
+		owner.module_semantic_info()->intrinsics().push_back( ctxt_ptr(child_ctxt)->generated_node->symbol() );
+	}
 	fn.reset();
 }
 
 semantic_analyser::function_register::function_register( function_register const& rhs)
-	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner)
+	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic)
 {
 }
 

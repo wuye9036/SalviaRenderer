@@ -64,6 +64,9 @@ public:
 	std::vector< boost::shared_ptr<symbol> > const& functions() const;
 	std::vector< boost::shared_ptr<symbol> >& functions();
 
+	std::vector< boost::shared_ptr<symbol> > const& intrinsics() const;
+	std::vector< boost::shared_ptr<symbol> >& intrinsics();
+
 private:
 	boost::shared_ptr<class type_manager> typemgr;
 	boost::shared_ptr<symbol> rootsym;
@@ -71,6 +74,7 @@ private:
 
 	std::vector< boost::shared_ptr<symbol> > gvars;
 	std::vector< boost::shared_ptr<symbol> > fns;
+	std::vector< boost::shared_ptr<symbol> > intr;
 };
 
 //////////////////////////////////////
@@ -104,13 +108,13 @@ public:
 
 #define SASL_TYPE_INFO_PROXY()	\
 	private:	\
-		type_info_si_impl type_info_proxy;	\
+	type_info_si_impl type_info_proxy;	\
 	public:	\
-		virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
-		virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
-		virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
-		virtual void type_info( ::boost::shared_ptr< type_specifier > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); } \
-		virtual void type_info( builtin_type_code btc ){ type_info_proxy.type_info(btc); }
+	virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
+	virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
+	virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
+	virtual void type_info( ::boost::shared_ptr< type_specifier > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); } \
+	virtual void type_info( builtin_type_code btc ){ type_info_proxy.type_info(btc); }
 
 class type_info_si_impl: public type_info_si{
 public:
@@ -154,7 +158,7 @@ public:
 class storage_si: public type_info_si{
 
 public:
-	storage_si( boost::shared_ptr<type_manager> typemgr );
+	storage_si( boost::shared_ptr<type_manager> const& typemgr );
 
 	salviar::semantic get_semantic() const;
 	void set_semantic( salviar::semantic v );
@@ -176,9 +180,18 @@ private:
 	salviar::semantic sem;
 };
 
+class call_si: public type_info_si{
+public:
+	call_si( boost::shared_ptr<type_manager> const& typemgr );
+
+	SASL_TYPE_INFO_PROXY();
+private:
+	symbol* overloaded;
+};
+
 /*! \brief fnvar_si storages the semantic informations of variable of function.
- *
- */
+*
+*/
 class fnvar_si: public semantic_info{
 public:
 	fnvar_si();
@@ -199,7 +212,7 @@ class statement_si: public semantic_info{
 public:
 
 	statement_si();
-	
+
 	const std::string& exit_point() const;
 	void exit_point( const std::string& );
 
