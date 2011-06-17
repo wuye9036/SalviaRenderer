@@ -184,8 +184,16 @@ class call_si: public type_info_si{
 public:
 	call_si( boost::shared_ptr<type_manager> const& typemgr );
 
+	void overloaded_function( symbol* );
+	symbol* overloaded_function() const;
+
+	bool is_function_pointer() const;
+	void is_function_pointer( bool v );
+
 	SASL_TYPE_INFO_PROXY();
+
 private:
+	bool is_pointer;
 	symbol* overloaded;
 };
 

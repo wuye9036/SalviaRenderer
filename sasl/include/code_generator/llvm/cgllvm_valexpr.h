@@ -287,6 +287,15 @@ public:
 		return ElementT( Constant::getNullValue(v.val->getType()), this );
 	}
 
+	// Fake statements
+	void return_( llvalue<BuilderT> const& v ){
+		builder->CreateRet(v.val);
+	}
+
+	void return_(){
+		builder->CreateRetVoid();
+	}
+
 	llvm::LLVMContext& ctxt;
 	BuilderT* builder;
 

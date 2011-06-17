@@ -208,6 +208,28 @@ void storage_si::swizzle( int32_t v ){
 	swz = v;
 }
 
+
+call_si::call_si( shared_ptr<type_manager> const& typemgr )
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), is_pointer(false), overloaded(NULL)
+{
+}
+
+void call_si::overloaded_function( symbol* v ){
+	overloaded = v;
+}
+
+symbol* call_si::overloaded_function() const{
+	return overloaded;
+}
+
+bool call_si::is_function_pointer() const{
+	return is_pointer;
+}
+
+void call_si::is_function_pointer( bool v ){
+	is_pointer = v;
+}
+
 type_si::type_si( shared_ptr<type_manager> typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 {

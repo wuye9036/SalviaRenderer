@@ -44,6 +44,8 @@ using sasl::semantic::symbol;
 using sasl::semantic::type_info_si;
 using sasl::semantic::storage_si;
 using sasl::semantic::const_value_si;
+using sasl::semantic::call_si;
+using sasl::semantic::fnvar_si;
 using sasl::semantic::operator_name;
 
 using boost::addressof;
@@ -285,11 +287,32 @@ SASL_VISIT_DEF( call_expression ){
 	sc_ptr(&child_ctxt_init)->clear_data();
 
 	any child_ctxt;
-	
-	EFLIB_ASSERT_UNIMPLEMENTED();
 
-	// visit_child( child_ctxt, child_ctxt_init,  )
+	vector<Value*> args;
+	BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
+		visit_child( child_ctxt, child_ctxt_init, arg_expr );
+		args.push_back( load( &child_ctxt ) );
+	}
 
+	Value* ret = NULL;
+
+	call_si* csi = v.si_ptr<call_si>();
+	if( csi->is_function_pointer() ){
+		visit_child( child_ctxt, child_ctxt_init, v.expr );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		// Get LLVM Function
+		symbol* fn_sym = csi->overloaded_function();
+		cgllvm_sctxt* fn_ctxt = node_ctxt( fn_sym->node(), false );
+		Function* fn = fn_ctxt->data().self_fn;
+		sc_data_ptr(data)->val_type = fn_ctxt->data().val_type;
+
+		// Create Call
+		ret = builder()->CreateCall( fn, args.begin(), args.end() );
+	}
+
+	sc_data_ptr(data)->val = ret;
+	node_ctxt( v, true )->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( variable_expression ){
@@ -551,7 +574,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
 	sc_data_ptr(data)->val_type = ftype;
 
-	Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.name->str, llmodule() );
+	Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
 	sc_data_ptr(data)->self_fn = fn;
 }
 
@@ -882,11 +905,9 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 				mod_ptr()->builder()->CreateBr( &(*next_it) );
 			} else {
 				if( !fn->getReturnType()->isVoidTy() ){
-
-					Value* val = ext->null_value( fn->getReturnType() ).val;
-					builder()->CreateRet(val);
+					ext->return_( ext->null_value( fn->getReturnType() ) );
 				} else {
-					builder()->CreateRetVoid();
+					ext->return_();
 				}
 			}
 		}
@@ -895,8 +916,6 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
-	llext< llvm::DefaultIRBuilder > ext( llcontext(), builder() );
-
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
 		shared_ptr<function_type> intr_fn = intr->node()->typed_handle<function_type>();
@@ -943,7 +962,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 					size_t vec_size = sasl_ehelper::len_0( rbtc );
 					size_t n_vec = sasl_ehelper::len_1( rbtc );
 
-					llvector< llv_fp<llvm::DefaultIRBuilder> > ret_val = ret_var;
+					llvector<llfloat> ret_val = ret_var;
 
 					for(size_t i = 0; i < n_vec; ++i){
 						llfloat agg_value( &ext, 0.0f );
@@ -953,7 +972,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 						ret_val.set( i, agg_value );
 					}
 
-					builder()->CreateRet( ret_val.v() );
+					ext.return_( ret_val );
 				}
 				else{
 					// EFLIB_ASSERT_UNIMPLEMENTED();

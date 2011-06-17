@@ -281,9 +281,11 @@ SASL_VISIT_DEF( call_expression )
 		assert( func_sym );
 
 		storage_si* ssi = func_sym->node()->si_ptr<storage_si>();
-		SASL_GET_OR_CREATE_SI_P( storage_si, expr_ssi, dup_callexpr, msi->type_manager() );
+		SASL_GET_OR_CREATE_SI_P( call_si, csi, dup_callexpr, msi->type_manager() );
 
-		expr_ssi->entry_id( ssi->entry_id() );
+		csi->entry_id( ssi->entry_id() );
+		csi->is_function_pointer(false);
+		csi->overloaded_function( func_sym.get() );
 	}
 
 	data_cptr()->generated_node = dup_callexpr->handle();
