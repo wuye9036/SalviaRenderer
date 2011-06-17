@@ -3,6 +3,8 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
+#include <sasl/include/code_generator/llvm/cgllvm_valexpr.h>
+
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantic_infos.imp.h>
@@ -42,6 +44,8 @@ using sasl::semantic::symbol;
 using sasl::semantic::type_info_si;
 using sasl::semantic::storage_si;
 using sasl::semantic::const_value_si;
+using sasl::semantic::call_si;
+using sasl::semantic::fnvar_si;
 using sasl::semantic::operator_name;
 
 using boost::addressof;
@@ -53,18 +57,19 @@ using std::vector;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-vector<Constant*> cgllvm_sisd::mask_to_indexes( uint32_t mask ){
-	vector<Constant*> ret;
-	ret.reserve(4);
-	IntegerType const* int32_type = IntegerType::getInt32Ty(llcontext());
+cgllvm_sisd::~cgllvm_sisd(){
+}
+
+void cgllvm_sisd::mask_to_indexes( char indexes[4], uint32_t mask ){
 	for( int i = 0; i < 4; ++i ){
 		// XYZW is 1,2,3,4 but LLVM used 0,1,2,3
-		uint64_t comp_index = static_cast<uint64_t>( (mask >> i*8) & 0xFF );
-		if( comp_index == 0 ){break;}
-					
-		ret.push_back( ConstantInt::get( int32_type, comp_index-1 ) );
+		char comp_index = static_cast<char>( (mask >> i*8) & 0xFF );
+		if( comp_index == 0 ){
+			indexes[i] = -1;
+			break;
+		}
+		indexes[i] = comp_index - 1;
 	}
-	return ret;
 }
 
 bool cgllvm_sisd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii ){
@@ -277,6 +282,39 @@ SASL_VISIT_DEF( constant_expression ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( call_expression ){
+	any child_ctxt_init = *data;
+	sc_ptr(&child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	vector<Value*> args;
+	BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
+		visit_child( child_ctxt, child_ctxt_init, arg_expr );
+		args.push_back( load( &child_ctxt ) );
+	}
+
+	Value* ret = NULL;
+
+	call_si* csi = v.si_ptr<call_si>();
+	if( csi->is_function_pointer() ){
+		visit_child( child_ctxt, child_ctxt_init, v.expr );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		// Get LLVM Function
+		symbol* fn_sym = csi->overloaded_function();
+		cgllvm_sctxt* fn_ctxt = node_ctxt( fn_sym->node(), false );
+		Function* fn = fn_ctxt->data().self_fn;
+		sc_data_ptr(data)->val_type = fn_ctxt->data().val_type;
+
+		// Create Call
+		ret = builder()->CreateCall( fn, args.begin(), args.end() );
+	}
+
+	sc_data_ptr(data)->val = ret;
+	node_ctxt( v, true )->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
@@ -316,6 +354,7 @@ SASL_VISIT_DEF( function_type ){
 	if( !fnctxt->data().self_fn ){
 		create_fnsig( v, data );
 	}
+
 	if ( v.body ){
 		sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
 		create_fnargs( v, data );
@@ -410,6 +449,20 @@ SASL_VISIT_DEF( variable_declaration ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( parameter ){
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.param_type );
+
+	if( v.init ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	sc_data_ptr(data)->val_type = sc_data_ptr( &child_ctxt )->val_type;
+}
+
 SASL_VISIT_DEF( declaration_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -485,8 +538,13 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	boost::function<void(Value*, cgllvm_sctxt*)> storer
 		= boost::bind( static_cast<void (cgllvm_sisd::*) (Value*, cgllvm_sctxt*)>( &cgllvm_sisd::store ), this, _1, _2 );
 
+	ext.reset( new llext<DefaultIRBuilder>( llcontext(), builder() ) );
+
 	typeconv = create_type_converter( mod_ptr()->builder(), ctxt_getter, loader, storer );
 	register_builtin_typeconv( typeconv, msi->type_manager() );
+
+	// Instrinsics will be generated before code was 
+	process_intrinsics( v, data );
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
@@ -516,7 +574,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
 	sc_data_ptr(data)->val_type = ftype;
 
-	Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.name->str, llmodule() );
+	Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
 	sc_data_ptr(data)->self_fn = fn;
 }
 
@@ -659,15 +717,6 @@ Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
 	return NULL;
 }
 
-llvm::Constant* cgllvm_sisd::zero_value( llvm::Type const* t ){
-	return Constant::getNullValue(t);
-}
-
-llvm::ConstantInt* cgllvm_sisd::llcvalue( int32_t v ){
-	uint64_t ulong_v = static_cast<uint64_t>(v);
-	return ConstantInt::get( IntegerType::getInt32Ty(llcontext()), ulong_v, true );
-}
-
 cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if_need /*= false */ )
 {
 	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
@@ -710,21 +759,21 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 			val = load( data->data().agg.parent );
 			if( data->data().agg.is_swizzle ){
 				// Swizzle with shuffle instruction.
-				IntegerType const* int32_type = IntegerType::getInt32Ty(llcontext());
-				int32_t swz = data->data().agg.swizzle;
-				vector<Constant*> indices = mask_to_indexes(swz);
-				VectorType* mask_type = VectorType::get( int32_type, static_cast<unsigned>( indices.size() ) );
+				char indices[4] = {-1, -1, -1, -1};
+				mask_to_indexes(indices, data->data().agg.swizzle);
 
-				if( !val->getType()->isVectorTy() ){
-					vector<Constant*> vals;
-					vals.push_back( zero_value( val->getType() ) );
-					val = ConstantVector::get( VectorType::get(val->getType(), 1), vals );
+				llvector<llval> v( NULL, ext.get() );
+				if( val->getType()->isVectorTy() ){
+					v = llvector<llval>( val, ext.get() );
+				} else {
+					v = llvector<llval>( llval( val, ext.get() ), 1 );
 				}
 
-				val = builder()->CreateShuffleVector( val, UndefValue::get(val->getType()), ConstantVector::get(mask_type, indices) );
+				v = v.swizzle( indices, 4 );
 
 			} else {
-				val = builder()->CreateExtractValue( val, data->data().agg.index );
+				llagg agg_val( val, ext.get() );
+				val = agg_val[data->data().agg.index].val;
 			}
 			break;
 		}
@@ -799,38 +848,29 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 		//  Load or create vector value
 		//  Shuffle or insert value to vector.
 		//  Save new vector to parent.
-		vector<Constant*> mask_indexes = mask_to_indexes( data->data().agg.swizzle );
-
-		Value* dest_vec = NULL;
-		Value* old_vec = load(data->data().agg.parent);
-
-		// Scalar, insert directly
+		char mask_indexes[4] = {-1, -1, -1, -1};
+		mask_to_indexes( mask_indexes, data->data().agg.swizzle );
+	
+		llvector<llval> vec( load(data->data().agg.parent), ext.get() );
+		
 		if( v->getType()->isIntegerTy() || v->getType()->isFloatingPointTy() ){
-			assert( mask_indexes.size() == 1);	
-			if( !old_vec ){
-				// Parent is fucking null.
-				// Create an null vector
-				vector<Constant*> vec_values;
-				vec_values.push_back( zero_value( v->getType() ) );
-				VectorType const* vec_type = VectorType::get( v->getType(), 1 );
-
-				dest_vec = ConstantVector::get( vec_type, vec_values );
+			// Scalar, insert directly
+			if( !vec.val ){
+				vec = llvector<llval>( llval(v, ext.get()), 1 );
+			} else {
+				vec.set( 0, llval(v, ext.get()) );
 			}
-			dest_vec = builder()->CreateInsertElement( old_vec, v, llcvalue(0) );
 		} else {
-			assert( v->getType()->isVectorTy() );
 			// Vector, insert per element.
-			dest_vec = old_vec;
-			for( int i = 0; i < mask_indexes.size(); ++i ){
-				Value* elem = builder()->CreateExtractElement( v, llcvalue(0) );
-				dest_vec = builder()->CreateInsertElement( dest_vec, elem, mask_indexes[i] );
+			assert( v->getType()->isVectorTy() );
+			for( int i = 0; i < 4 && mask_indexes[i] != -1; ++i ){
+				llvector<llval> src_vec( v, ext.get() );
+				vec.set( mask_indexes[i], src_vec[i] );
 			}
 		}
 
-		store( dest_vec, data->data().agg.parent );
+		store( vec.val, data->data().agg.parent );
 	}
-
-
 }
 
 void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
@@ -865,14 +905,83 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 				mod_ptr()->builder()->CreateBr( &(*next_it) );
 			} else {
 				if( !fn->getReturnType()->isVoidTy() ){
-
-					Value* val = zero_value( fn->getReturnType() );
-					builder()->CreateRet(val);
+					ext->return_( ext->null_value( fn->getReturnType() ) );
 				} else {
-					builder()->CreateRetVoid();
+					ext->return_();
 				}
 			}
 		}
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
+{
+	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
+	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
+		shared_ptr<function_type> intr_fn = intr->node()->typed_handle<function_type>();
+		any child_ctxt = cgllvm_sctxt();
+
+		visit_child( child_ctxt, intr_fn );
+
+		cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
+		assert( intrinsic_ctxt );
+
+		Function* fn = intrinsic_ctxt->data().self_fn;
+
+		assert(fn);
+
+		BasicBlock* body = BasicBlock::Create( llcontext(), ".body", fn );
+		builder()->SetInsertPoint( body );
+
+		if( intr->unmangled_name() == "mul" ){
+			// Set Argument name
+			Argument* larg = fn->getArgumentList().begin();
+			Argument* rarg = ++fn->getArgumentList().begin();
+
+			larg->setName( ".lhs" );
+			rarg->setName( ".rhs" );
+
+			// Get Type infos
+			shared_ptr<type_specifier> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<type_specifier> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
+			assert( lpar_type && rpar_type );
+			builtin_type_code lbtc = lpar_type->value_typecode;
+			builtin_type_code rbtc = rpar_type->value_typecode;
+
+			// TODO need to be optimized.
+
+			// vec_m mul(vec_n, mat_mxn);
+			if( sasl_ehelper::is_vector( lbtc ) && sasl_ehelper::is_matrix( rbtc ) ){
+				if( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_float ){
+
+					llvector< llfloat > lval( larg, &ext );
+					llarray< llvector< llfloat > > rval( rarg, &ext );
+
+					llvar< llvector<llfloat> > ret_var( fn->getReturnType(), &ext );
+
+					size_t vec_size = sasl_ehelper::len_0( rbtc );
+					size_t n_vec = sasl_ehelper::len_1( rbtc );
+
+					llvector<llfloat> ret_val = ret_var;
+
+					for(size_t i = 0; i < n_vec; ++i){
+						llfloat agg_value( &ext, 0.0f );
+						for( size_t j = 0; j < vec_size; ++j ){
+							agg_value = agg_value + lval[i] * rval[i][j];
+						}
+						ret_val.set( i, agg_value );
+					}
+
+					ext.return_( ret_val );
+				}
+				else{
+					// EFLIB_ASSERT_UNIMPLEMENTED();
+				}
+			} else {
+				// EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+		}
+		// EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 }
 

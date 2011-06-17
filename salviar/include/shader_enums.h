@@ -8,18 +8,18 @@ enum cbuffer_type{
 	ct_buffer,
 	ct_tbuffer,
 	ct_resource_bind_info,
-	CT_FORCE_INT32T = 0xFFFFFFFF
+	CT_FORCE_INT32T = 0x7FFFFFFF
 };
 
 enum shader_variable_class{
-	svc_none = 0
+	svc_none = 0,
 	svc_scalar,
 	svc_vector,
 	svc_matrix_rows,
 	svc_matrix_columns,
 	svc_object,
 	svc_struct,
-	SVC_FORCE_INT32T = 0xFFFFFFFF
+	SVC_FORCE_INT32T = 0x7FFFFFFF
 };
 
 enum shader_variable_type{
@@ -53,7 +53,7 @@ enum shader_variable_type{
 	svt_texture_2d_ms_array,
 	svt_texture_cube_array,
 	svt_double,
-	SVT_FORCE_INT32T = 0xFFFFFFFF
+	SVT_FORCE_INT32T = 0x7FFFFFFF
 };
 
 enum system_value_name{
@@ -69,8 +69,8 @@ enum system_value_name{
 	svn_sample_index,
 	svn_target,
 	svn_depth,
-	svn_coverage
-	SVN_FORCE_INT32_T = 0xFFFFFFFF
+	svn_coverage,
+	SVN_FORCE_INT32_T = 0x7FFFFFFF
 };
 
 enum register_component_type{
@@ -78,7 +78,7 @@ enum register_component_type{
 	rct_uint32 = 1,
 	rct_int32 = 2,
 	rct_float32 = 3,
-	RCT_FORCE_INT32_T = 0xFFFFFFFF
+	RCT_FORCE_INT32_T = 0x7FFFFFFF
 };
 
 enum shader_input_type{
@@ -87,7 +87,7 @@ enum shader_input_type{
 	sit_tbuffer,
 	sit_texture,
 	sit_sampler,
-	SIT_FORCE_INT32_T = 0xFFFFFFFF
+	SIT_FORCE_INT32_T = 0x7FFFFFFF
 };
 
 enum shader_input_flags {
@@ -96,7 +96,7 @@ enum shader_input_flags {
     sif_texture_component_0 = 1 << 2,
     sif_texture_component_1 = 1 << 3,
     sif_texture_components = sif_texture_component_0 | sif_texture_component_1,
-	SIF_FORCE_INT32_T = 0xFFFFFFFF
+	SIF_FORCE_INT32_T = 0x7FFFFFFF
 };
 
 enum resource_return_type {

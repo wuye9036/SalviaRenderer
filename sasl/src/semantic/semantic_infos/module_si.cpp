@@ -62,4 +62,12 @@ vector< shared_ptr<symbol> >&  module_si::functions(){
 	return fns;
 }
 
+vector< shared_ptr<symbol> > const& module_si::intrinsics() const{
+	return intr;
+}
+
+vector< shared_ptr<symbol> >& module_si::intrinsics(){
+	return intr;
+}
+
 END_NS_SASL_SEMANTIC();

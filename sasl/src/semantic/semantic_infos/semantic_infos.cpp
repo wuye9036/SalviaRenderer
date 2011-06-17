@@ -51,19 +51,19 @@ std::string integer_literal_suffix( const std::string& str, bool& is_unsigned, b
 	int tail_count = 0;
 	for ( int i = 0; i < 2; ++i ){
 		switch (ch[i]){
-			case 'u':
-			case 'U':
-				is_unsigned = true;
-				++tail_count;
-				break;
-			case 'l':
-			case 'L':
-				is_long = true;
-				++tail_count;
-				break;
-			default:
-				// do nothing
-				break;
+		case 'u':
+		case 'U':
+			is_unsigned = true;
+			++tail_count;
+			break;
+		case 'l':
+		case 'L':
+			is_long = true;
+			++tail_count;
+			break;
+		default:
+			// do nothing
+			break;
 		}
 	}
 
@@ -179,7 +179,7 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 	return shared_ptr<type_specifier>();
 }
 
-storage_si::storage_si( shared_ptr<type_manager> typemgr )
+storage_si::storage_si( shared_ptr<type_manager> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(salviar::SV_None), memidx(-1), swz(0)
 {
 }
@@ -206,6 +206,28 @@ int32_t storage_si::swizzle() const{
 
 void storage_si::swizzle( int32_t v ){
 	swz = v;
+}
+
+
+call_si::call_si( shared_ptr<type_manager> const& typemgr )
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), is_pointer(false), overloaded(NULL)
+{
+}
+
+void call_si::overloaded_function( symbol* v ){
+	overloaded = v;
+}
+
+symbol* call_si::overloaded_function() const{
+	return overloaded;
+}
+
+bool call_si::is_function_pointer() const{
+	return is_pointer;
+}
+
+void call_si::is_function_pointer( bool v ){
+	is_pointer = v;
 }
 
 type_si::type_si( shared_ptr<type_manager> typemgr )
@@ -299,7 +321,7 @@ int32_t encode_swizzle( char _1st, char _2nd, char _3rd, char _4th ){
 		assert( swizzle_field_name_to_id(_3rd) );
 		swz &= ( _3rd << 16);
 	}
-	
+
 	assert( swizzle_field_name_to_id(_4th) );
 	swz &= ( _4th << 24);
 
