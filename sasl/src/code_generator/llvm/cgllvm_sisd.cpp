@@ -3,7 +3,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
-#include <sasl/include/code_generator/llvm/cgllvm_valexpr.h>
+#include <sasl/include/code_generator/llvm/cgllvm_llext.h>
 
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -954,10 +954,10 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			if( sasl_ehelper::is_vector( lbtc ) && sasl_ehelper::is_matrix( rbtc ) ){
 				if( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_float ){
 
-					llvector< llfloat > lval( larg, &ext );
-					llarray< llvector< llfloat > > rval( rarg, &ext );
+					llvector< llfloat > lval( larg, ext.get() );
+					llarray< llvector< llfloat > > rval( rarg, ext.get() );
 
-					llvar< llvector<llfloat> > ret_var( fn->getReturnType(), &ext );
+					llvar< llvector<llfloat> > ret_var( fn->getReturnType(), ext.get() );
 
 					size_t vec_size = sasl_ehelper::len_0( rbtc );
 					size_t n_vec = sasl_ehelper::len_1( rbtc );
@@ -965,14 +965,14 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 					llvector<llfloat> ret_val = ret_var;
 
 					for(size_t i = 0; i < n_vec; ++i){
-						llfloat agg_value( &ext, 0.0f );
+						llfloat agg_value( ext.get(), 0.0f );
 						for( size_t j = 0; j < vec_size; ++j ){
 							agg_value = agg_value + lval[i] * rval[i][j];
 						}
 						ret_val.set( i, agg_value );
 					}
 
-					ext.return_( ret_val );
+					ext->return_( ret_val );
 				}
 				else{
 					// EFLIB_ASSERT_UNIMPLEMENTED();
