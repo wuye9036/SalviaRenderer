@@ -55,6 +55,7 @@ public:
 
 	void entry( boost::shared_ptr<symbol> const& );
 	bool is_entry( boost::shared_ptr<symbol> const& ) const;
+	std::string entry_name() const;
 
 	bool add_input_semantic( salviar::semantic sem, builtin_type_code btc, bool is_stream );
 	bool add_output_semantic( salviar::semantic sem, builtin_type_code btc );
@@ -86,6 +87,7 @@ private:
 
 	module_si* mod;
 	symbol* entry_point;
+	std::string entry_point_name;
 
 	// Include stream_in and buffer_in
 	std::vector< salviar::semantic > sems_in;

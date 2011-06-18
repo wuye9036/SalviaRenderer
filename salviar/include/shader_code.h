@@ -3,6 +3,8 @@
 
 #include <salviar/include/salviar_forward.h>
 
+#include <salviar/include/enums.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -21,17 +23,26 @@ BEGIN_NS_SALVIAR();
 
 class shader_code{
 public:
-	virtual sasl::semantic::abi_info const* abii() const;
-	virtual void abii( sasl::semantic::abi_info const* );
-	
-	virtual void* function_pointer() const;
+	shader_code();
 
+	virtual sasl::semantic::abi_info const* abii() const;
+	virtual void abii( boost::shared_ptr<sasl::semantic::abi_info> const& );
+	
+	void update();
+	virtual void* function_pointer() const;
+	
 	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
-	virtual boost::shared_ptr<sasl::code_generator::jit_engine> jit() const;
+	// virtual boost::shared_ptr<sasl::code_generator::jit_engine> jit() const;
 private:
+	
+	boost::shared_ptr<sasl::semantic::abi_info> shader_abii;
 	boost::shared_ptr<sasl::code_generator::jit_engine> je;
+	void* pfn;
 };
 
 END_NS_SALVIAR();
 
+extern "C"{
+	void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& , std::string const& code, salviar::languages lang );
+}
 #endif

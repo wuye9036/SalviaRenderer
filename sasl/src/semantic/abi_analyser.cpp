@@ -108,7 +108,6 @@ bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> c
 	mods[lang] = mod;
 	entries[lang] = fnsym;
 	abiis[lang].reset();
-
 	return update(lang);
 }
 
@@ -291,6 +290,10 @@ bool abi_analyser::verify_vs_ps(){
 bool abi_analyser::verify_ps_bs(){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return false;
+}
+
+shared_ptr<abi_info> abi_analyser::shared_abii( salviar::languages lang ) const{
+	return abiis[lang];
 }
 
 END_NS_SASL_SEMANTIC();

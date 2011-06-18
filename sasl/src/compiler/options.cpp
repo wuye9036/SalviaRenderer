@@ -65,7 +65,13 @@ private:
 		wcontext_t;
 
 public:
-	bool process( std::string const& file_name ){
+	bool process_code( std::string const& code ){
+		this->code = code;
+		this->filename = "in_memory";
+		return process();
+	}
+
+	bool process_file( std::string const& file_name ){
 		std::ifstream in(file_name.c_str(), std::ios_base::in);
 		if (!in){
 			return false;
@@ -74,20 +80,11 @@ public:
 			std::copy(
 				std::istream_iterator<char>(in), std::istream_iterator<char>(),
 				std::back_inserter(code) );
-			wctxt.reset( new wcontext_t( code.begin(), code.end(), file_name.c_str() ) );
-
-			size_t lang_flag = wctxt->get_language();
-			lang_flag &= ~(boost::wave::support_option_emit_line_directives );
-			lang_flag &= ~(boost::wave::support_option_single_line );
-			lang_flag &= ~(boost::wave::support_option_emit_pragma_directives );
-			wctxt->set_language( static_cast<boost::wave::language_support>( lang_flag ) );
-
-			cur_it = wctxt->begin();
-			next_it = wctxt->begin();
+			filename = file_name;
 		}
 		in.close();
 
-		return true;
+		return process();
 	}
 
 	// code source
@@ -140,6 +137,21 @@ public:
 		return errtok;
 	}
 private:
+	 bool process(){
+		wctxt.reset( new wcontext_t( code.begin(), code.end(), filename.c_str() ) );
+
+		size_t lang_flag = wctxt->get_language();
+		lang_flag &= ~(boost::wave::support_option_emit_line_directives );
+		lang_flag &= ~(boost::wave::support_option_single_line );
+		lang_flag &= ~(boost::wave::support_option_emit_pragma_directives );
+		wctxt->set_language( static_cast<boost::wave::language_support>( lang_flag ) );
+
+		cur_it = wctxt->begin();
+		next_it = wctxt->begin();
+
+		return true;
+	}
+
 	template<typename StringT>
 	std::string to_std_string( StringT const& str ) const{
 		return std::string( str.begin(), str.end() );
@@ -255,7 +267,7 @@ void options_manager::process( bool& abort )
 			cout << "Compile " << fname << "..." << endl;
 
 			shared_ptr<compiler_code_source> code_src( new compiler_code_source() );
-			if ( !code_src->process(fname) ){
+			if ( !code_src->process_file(fname) ){
 				cout << "Fatal error: Could not open input file: " << fname << endl;
 				return;
 			} 

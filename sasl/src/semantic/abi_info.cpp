@@ -37,12 +37,16 @@ bool abi_info::is_module( shared_ptr<module_si> const& v ) const{
 
 void abi_info::entry( shared_ptr<symbol> const& v ){
 	entry_point = v.get();
+	entry_point_name = entry_point->mangled_name();
 }
 
 bool abi_info::is_entry( shared_ptr<symbol> const& v ) const{
 	return entry_point == v.get();
 }
 
+std::string abi_info::entry_name() const{
+	return entry_point_name;
+}
 bool abi_info::add_input_semantic( salviar::semantic sem, builtin_type_code btc, bool is_stream )
 {
 	vector<salviar::semantic>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
@@ -237,6 +241,8 @@ void abi_info::compute_input_constant_layout(){
 		offsets[buffer_in] += size;
 	}
 }
+
+
 
 
 END_NS_SASL_SEMANTIC();

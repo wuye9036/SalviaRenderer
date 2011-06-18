@@ -39,6 +39,8 @@ public:
 	abi_info const* abii( salviar::languages lang ) const;
 	abi_info* abii( salviar::languages lang );
 
+	boost::shared_ptr<abi_info> shared_abii( salviar::languages lang ) const;
+
 private:
 	bool entry(
 		boost::shared_ptr<module_si> const& mod, boost::shared_ptr<symbol> const& fnsym,

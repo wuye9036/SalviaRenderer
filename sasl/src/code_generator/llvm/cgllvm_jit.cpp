@@ -11,7 +11,7 @@
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-boost::shared_ptr<cgllvm_jit_engine> cgllvm_jit_engine::create( boost::shared_ptr<cgllvm_modimpl> ctxt, std::string& error ){
+boost::shared_ptr<cgllvm_jit_engine> cgllvm_jit_engine::create( boost::shared_ptr<llvm_module> ctxt, std::string& error ){
 	boost::shared_ptr<cgllvm_jit_engine> ret = boost::shared_ptr<cgllvm_jit_engine>( new cgllvm_jit_engine( ctxt ) );
 	if( !ret ){
 		error.assign( "Unknown error occurred." );
@@ -33,7 +33,7 @@ void* cgllvm_jit_engine::get_function( const std::string& func_name ){
 	return engine->getPointerToFunction( func );
 }
 
-cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<cgllvm_modimpl> ctxt )
+cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<llvm_module> ctxt )
 : jit_engine(), global_ctxt( ctxt )
 {
 	build();

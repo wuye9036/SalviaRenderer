@@ -12,16 +12,18 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class cgllvm_modimpl;
+class llvm_module;
 class cgllvm_sctxt;
 
 class cgllvm_jit_engine:public jit_engine{
 public:
+
+	static boost::shared_ptr<cgllvm_jit_engine> create( boost::shared_ptr<llvm_module>, std::string& error );
+
 	virtual void* get_function( const std::string& /*func_name*/ );
-	static boost::shared_ptr<cgllvm_jit_engine> create( boost::shared_ptr<cgllvm_modimpl>, std::string& error );
 	virtual ~cgllvm_jit_engine(){}
 protected:
-	cgllvm_jit_engine( boost::shared_ptr<cgllvm_modimpl> );
+	cgllvm_jit_engine( boost::shared_ptr<llvm_module> );
 	void build();
 	bool is_valid();
 	std::string error();
@@ -30,7 +32,7 @@ private:
 	cgllvm_jit_engine( const cgllvm_jit_engine& );
 	cgllvm_jit_engine& operator = (const cgllvm_jit_engine& );
 
-	boost::shared_ptr<cgllvm_modimpl> global_ctxt;
+	boost::shared_ptr<llvm_module> global_ctxt;
 	boost::shared_ptr<llvm::ExecutionEngine> engine;
 	std::string err;
 };

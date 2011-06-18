@@ -52,6 +52,7 @@ void vertex_shader_unit::execute( vs_output& out )
 		= static_cast<void (*)(void*, void*, void*, void*)>( code->function_pointer() );
 	p( &(stream_data[0]), &(buffer_data[0]), &(stream_odata), &(buffer_odata) );
 
+	// Copy output position to vs_output.
 	memset( &out.position, 0, sizeof(out.position) );
 	storage_info* out_info = code->abii()->output_storage(SV_Position);
 	memcpy( &out.position, &(buffer_odata[out_info->offset]), out_info->size );
