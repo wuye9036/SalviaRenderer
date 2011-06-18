@@ -130,6 +130,20 @@ protected:
 
 	void mask_to_indexes( char index[4], uint32_t mask );
 
+	template <typename ElementT>
+	llvector<ElementT> mul_vm(
+		llvm::Value* v, llvm::Value* m,
+		size_t vec_size, size_t mat_vec_size,
+		llvm::Type const* ret_type
+		);
+
+	template <typename ElementT>
+	llvector<ElementT> mul_mv(
+		llvm::Value* m, llvm::Value* v,
+		size_t vec_size, size_t n_vec,
+		llvm::Type const* ret_type
+		);
+
 	void create_alloca( cgllvm_sctxt* data, std::string const& name );
 
 	void restart_block( boost::any* data, std::string const& name );

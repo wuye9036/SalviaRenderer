@@ -914,6 +914,55 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 	}
 }
 
+
+template <typename ElementT>
+llvector<ElementT> cgllvm_sisd::mul_vm(
+	llvm::Value* v, llvm::Value* m,
+	size_t vec_size, size_t mat_vec_size,
+	Type const* ret_type
+	)
+{
+	llvector< ElementT > lval( v, ext.get() );
+	llarray< llvector< ElementT > > rval( m, ext.get() );
+
+	llvector<ElementT> ret_val = ext->null_value< llvector<ElementT> >(ret_type);
+
+	for(size_t i = 0; i < vec_size; ++i){
+		ElementT agg_value = ret_val[i];
+		for( size_t j = 0; j < mat_vec_size; ++j ){
+			agg_value = agg_value + lval[i] * rval[i][j];
+		}
+		ret_val.set( i, agg_value );
+	}
+
+	return ret_val;
+}
+
+template <typename ElementT>
+llvector<ElementT> cgllvm_sisd::mul_mv(
+	llvm::Value* m, llvm::Value* v,
+	size_t vec_size, size_t n_vec,
+	llvm::Type const* ret_type )
+{
+	typedef llvector< ElementT > vector_t;
+	typedef llarray< llvector< ElementT > > matrix_t;
+
+	matrix_t lval( m, ext.get() );
+	vector_t rval( v, ext.get() );
+
+	vector_t ret_val = ext->null_value< vector_t >(ret_type);
+
+	for(size_t i = 0; i < n_vec; ++i){
+		ElementT agg_value = ret_val[i];
+		for( size_t j = 0; j < vec_size; ++j ){
+			agg_value = agg_value + lval[i][j] * rval[j];
+		}
+		ret_val.set( i, agg_value );
+	}
+
+	return ret_val;
+}
+
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
@@ -948,34 +997,34 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			builtin_type_code lbtc = lpar_type->value_typecode;
 			builtin_type_code rbtc = rpar_type->value_typecode;
 
+			Type const* ret_type = fn->getReturnType();
+
 			// TODO need to be optimized.
 
 			// vec_m mul(vec_n, mat_mxn);
 			if( sasl_ehelper::is_vector( lbtc ) && sasl_ehelper::is_matrix( rbtc ) ){
 				if( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_float ){
-
-					llvector< llfloat > lval( larg, ext.get() );
-					llarray< llvector< llfloat > > rval( rarg, ext.get() );
-
-					llvar< llvector<llfloat> > ret_var( fn->getReturnType(), ext.get() );
-
-					size_t vec_size = sasl_ehelper::len_0( rbtc );
-					size_t n_vec = sasl_ehelper::len_1( rbtc );
-
-					llvector<llfloat> ret_val = ret_var;
-
-					for(size_t i = 0; i < n_vec; ++i){
-						llfloat agg_value( ext.get(), 0.0f );
-						for( size_t j = 0; j < vec_size; ++j ){
-							agg_value = agg_value + lval[i] * rval[i][j];
-						}
-						ret_val.set( i, agg_value );
-					}
-
-					ext->return_( ret_val );
-				}
-				else{
+					ext->return_(
+						mul_vm<llfloat>( larg, rarg,
+						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_0(rbtc),
+						ret_type )
+						);
+				} else if ( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_sint32 ){
+					ext->return_(
+						mul_vm<lli32>( larg, rarg,
+						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_0(rbtc),
+						ret_type )
+						);
+				} else {
 					// EFLIB_ASSERT_UNIMPLEMENTED();
+				}
+			} else if( sasl_ehelper::is_matrix( lbtc ) && sasl_ehelper::is_vector( rbtc ) ) {
+				if( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_float ){
+					ext->return_(
+						mul_mv<llfloat>( larg, rarg,
+						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_1(lbtc),
+						ret_type )
+						);
 				}
 			} else {
 				// EFLIB_ASSERT_UNIMPLEMENTED();

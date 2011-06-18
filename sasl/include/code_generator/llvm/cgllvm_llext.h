@@ -282,6 +282,11 @@ public:
 		return llvalue<BuilderT>( Constant::getNullValue(t), this );
 	}
 
+	template<typename T>
+	T null_value( llvm::Type const* t ){
+		return T( Constant::getNullValue(t), this );
+	}
+
 	template <typename ElementT>
 	ElementT null_value( ElementT const& v ){
 		return ElementT( Constant::getNullValue(v.val->getType()), this );
@@ -314,6 +319,12 @@ llv_fp<BuilderT> operator + ( llv_fp<BuilderT> const& lhs, llv_fp<BuilderT> cons
 }
 
 template <typename BuilderT>
+llv_int<BuilderT, 32, true> operator + ( llv_int<BuilderT, 32, true> const& lhs, llv_int<BuilderT, 32, true> const& rhs ){
+	llext<BuilderT>* ext = lhs.ext;
+	return llv_int<BuilderT, 32, true>( ext->builder->CreateAdd( lhs.v(), rhs.v() ), ext );
+}
+
+template <typename BuilderT>
 llvector< llv_fp<BuilderT> > operator + (
 	llvector< llv_fp<BuilderT> > const& lhs,
 	llvector< llv_fp<BuilderT> > const& rhs
@@ -332,6 +343,12 @@ template<typename BuilderT>
 llv_fp<BuilderT> operator * ( llv_fp<BuilderT> const& lhs, llv_fp<BuilderT> const& rhs ){
 	llext<BuilderT>* ext = lhs.ext;
 	return llv_fp<BuilderT>( ext->builder->CreateFMul( lhs.v(), rhs.v() ), ext );
+}
+
+template<typename BuilderT>
+llv_int<BuilderT, 32, true> operator * ( llv_int<BuilderT, 32, true> const& lhs, llv_int<BuilderT, 32, true> const& rhs ){
+	llext<BuilderT>* ext = lhs.ext;
+	return llv_int<BuilderT, 32, true>( ext->builder->CreateMul( lhs.v(), rhs.v() ), ext );
 }
 
 template <typename BuilderT>
