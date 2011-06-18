@@ -12,6 +12,7 @@
 #include "salviar/include/renderer_impl.h"
 #include "salviar/include/resource_manager.h"
 #include "salviar/include/rasterizer.h"
+
 #include <eflib/include/metaprog/util.h>
 #include <iostream>
 #include <fstream>

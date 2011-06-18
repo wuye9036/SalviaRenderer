@@ -62,7 +62,7 @@ public:
 private:
 	void generate_indices_func(std::vector<uint32_t>& indices, int32_t prim_count, uint32_t stride, eflib::atomic<int32_t>& working_package, int32_t package_size);
 	void transform_vertex_func(const std::vector<uint32_t>& indices, int32_t index_count, eflib::atomic<int32_t>& working_package, int32_t package_size);
-
+	void transform_vertex_by_shader( const std::vector<uint32_t>& indices, int32_t index_count, eflib::atomic<int32_t>& working_package, int32_t package_size );
 private:
 	vertex_shader* pvs_;
 	h_stream_assembler hsa_;
@@ -77,6 +77,7 @@ private:
 	boost::pool<> verts_pool_;
 	const viewport* pvp_;
 };
+
 
 END_NS_SALVIAR()
 

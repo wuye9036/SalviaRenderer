@@ -65,6 +65,28 @@ void default_vertex_cache::generate_indices_func(std::vector<uint32_t>& indices,
 
 void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& indices, int32_t index_count, atomic<int32_t>& working_package, int32_t package_size)
 {
+	const int32_t num_packages = (index_count + package_size - 1) / package_size;
+
+	int32_t local_working_package = working_package ++;
+	while (local_working_package < num_packages)
+	{
+		const int32_t start = local_working_package * package_size;
+		const int32_t end = std::min(index_count, start + package_size);
+		for (int32_t i = start; i < end; ++ i){
+			uint32_t id = indices[i];
+			used_verts_[id] = i;
+
+			vs_input vertex;
+			hsa_->fetch_vertex(vertex, id);
+			pvs_->execute(vertex, verts_[i]);
+		}
+
+		local_working_package = working_package ++;
+	}
+}
+
+void default_vertex_cache::transform_vertex_by_shader( const std::vector<uint32_t>& indices, int32_t index_count, eflib::atomic<int32_t>& working_package, int32_t package_size )
+{
 	vertex_shader_unit vsu;
 
 	vsu.initialize( pparent_->get_vertex_shader_code().get() );
@@ -85,9 +107,6 @@ void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& in
 
 			vsu.update( id );
 			vsu.execute( verts_[i] );
-
-			hsa_->fetch_vertex(vertex, id);
-			pvs_->execute(vertex, verts_[i]);
 		}
 
 		local_working_package = working_package ++;
@@ -130,9 +149,9 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	working_package = 0;
 	for (size_t i = 0; i < num_threads - 1; ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_func, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
+		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_by_shader, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
 	}
-	transform_vertex_func(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
+	transform_vertex_by_shader(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
 	global_thread_pool().wait();
 }
 
