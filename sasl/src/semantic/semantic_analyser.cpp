@@ -161,16 +161,20 @@ void semantic_analyser::parse_semantic(
 		salviar::semantic sem( salviar::SV_None );
 		string const& semstr = sem_tok->str;
 
-		if( semstr == "SV_Position" ){
+		if( semstr == "SV_Position" || semstr == "POSITION" ){
 			sem = salviar::SV_Position;
-		} else if ( semstr == "SV_RPosition" ){
-			sem = salviar::SV_RPosition;
-		} else if( semstr == "SV_Texcoord" ){
+		} else if( semstr == "TEXCOORD" ){
 			int index = 0;
 			if( sem_idx_tok ){
 				index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
 			}
-			sem = pack_semantic( salviar::SV_Texcoord, index );
+			sem = pack_semantic( salviar::SV_TEXCOORD, index );
+		} else if( semstr == "NORMAL" ){
+			int index = 0;
+			if( sem_idx_tok ){
+				index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
+			}
+			sem = pack_semantic( salviar::SV_NORMAL, index );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}

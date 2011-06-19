@@ -38,10 +38,14 @@ bool verify_semantic_type( builtin_type_code btc, salviar::semantic sem ){
 		return false;
 
 	case salviar::SV_Position:
-	case salviar::SV_Texcoord:
+	case salviar::SV_TEXCOORD:
+	case salviar::SV_NORMAL:
 		return 
 			( sasl_ehelper::is_scalar(btc) || sasl_ehelper::is_vector(btc) )
 			&& sasl_ehelper::scalar_of(btc) == builtin_type_code::_float;
+
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
 	return false;
@@ -51,7 +55,9 @@ storage_types vsinput_semantic_storage( salviar::semantic sem ){
 	switch( semantic_base(sem) ){
 	case salviar::SV_Position:
 		return stream_in;
-	case salviar::SV_Texcoord:
+	case salviar::SV_TEXCOORD:
+		return stream_in;
+	case salviar::SV_NORMAL:
 		return stream_in;
 	}
 	return storage_none;
@@ -61,7 +67,7 @@ storage_types vsoutput_semantic_storage( salviar::semantic sem ){
 	switch( semantic_base(sem) ){
 	case salviar::SV_Position:
 		return buffer_out;
-	case salviar::SV_Texcoord:
+	case salviar::SV_TEXCOORD:
 		return buffer_out;
 	}
 	return storage_none;

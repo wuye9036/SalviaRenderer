@@ -42,7 +42,7 @@ void vertex_shader_unit::update( size_t ivert )
 			void* pdest = &(stream_data[pos_si->offset]);
 			*static_cast<intptr_t*>(pdest) = reinterpret_cast<intptr_t>(psrc);
 		} else {
-			// TODO Ingore others
+			// TODO Ignore others yet.
 		}
 	}
 }

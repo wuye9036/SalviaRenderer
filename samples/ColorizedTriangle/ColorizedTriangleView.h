@@ -26,16 +26,22 @@ using namespace salviax;
 using namespace salviax::resource;
 
 char const* vs_code = 
-"float4x4 wvpMatrix; \r\n"
+"float4x4	wvpMatrix; \r\n"
+"float4		lightPos; \r\n"
 "struct VSIn{ \r\n"
 "	float4 pos: SV_Position; \r\n"
+"	float4 norm: NORMAL;"
 "}; \r\n"
 "struct VSOut{ \r\n"
 "	float4 pos: SV_Position; \r\n"
+"	float4 norm: TEXCOORD(0); \r\n"
+"	float4 lightDir: TEXCOORD(1); \r\n"
 "}; \r\n"
 "VSOut vs_main(VSIn in){ \r\n"
 "	VSOut out; \r\n"
+"	out.norm = in.norm; \r\n"
 "	out.pos = mul(in.pos, wvpMatrix); \r\n"
+"	out.lightDir = lightPos - in.pos;"
 "	return out; \r\n"
 "} \r\n"
 ;
@@ -43,10 +49,11 @@ char const* vs_code =
 class ps : public pixel_shader
 {
 public:
+
 	ps()
 	{
 	}
-	bool shader_prog(const vs_output& in, ps_output& out)
+	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		out.color[0] = color_rgba32f(0.8f, 0.9f, 0.9f, 1.0f ).get_vec4();
 		return true;
@@ -218,13 +225,17 @@ public:
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
+		vec4 lightPos( sin(s_angle * 1.3f) * 0.7f, 0.6f, cos(s_angle * 1.3f) * 0.7f, 0.0f );
+
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
 			hsr->set_rasterizer_state(rs_back);
+
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
+			hsr->set_vs_variable( "lightPos", &lightPos );
 
 			hsr->set_pixel_shader(pps);
 			hsr->set_blend_shader(pbs);

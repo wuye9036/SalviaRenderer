@@ -230,11 +230,8 @@ enum semantic{
 
 	// Semantic for input.
 	SV_Position,
-	SV_Texcoord,
-
-	// Semantic for rasterizer.
-	SV_RTexcoord,
-	SV_RPosition,
+	SV_TEXCOORD,
+	SV_NORMAL,
 
 	// Semantic for pixel
 

@@ -32,9 +32,8 @@ public:
 	virtual void* function_pointer() const;
 	
 	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
-	// virtual boost::shared_ptr<sasl::code_generator::jit_engine> jit() const;
-private:
 	
+private:
 	boost::shared_ptr<sasl::semantic::abi_info> shader_abii;
 	boost::shared_ptr<sasl::code_generator::jit_engine> je;
 	void* pfn;
