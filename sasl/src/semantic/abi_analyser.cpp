@@ -165,6 +165,10 @@ bool abi_analyser::update( salviar::languages lang ){
 	abiis[lang]->lang = lang;
 	abiis[lang]->mod = mods[lang].get();
 	abiis[lang]->entry_point = entries[lang].get();
+	
+	if( entries[lang] ){
+		abiis[lang]->entry_point_name = entries[lang]->mangled_name();
+	}
 
 	if( lang == salviar::lang_vertex_sl
 		|| lang == salviar::lang_pixel_sl

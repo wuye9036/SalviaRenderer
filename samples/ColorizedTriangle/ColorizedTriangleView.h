@@ -34,10 +34,10 @@ char const* vs_code =
 "	float4 pos: SV_Position; \r\n"
 "}; \r\n"
 "VSOut vs_main(VSIn in){ \r\n"
-"	VSOut out;"
-"	out.pos = mul(in.pos, wvpMatrix);"
-"	return out;"
-"}"
+"	VSOut out; \r\n"
+"	out.pos = mul(in.pos, wvpMatrix); \r\n"
+"	return out; \r\n"
+"} \r\n"
 ;
 
 class ps : public pixel_shader

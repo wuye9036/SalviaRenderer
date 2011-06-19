@@ -50,7 +50,13 @@ void vertex_shader_unit::execute( vs_output& out )
 {
 	void (*p)(void*, void*, void*, void*)
 		= static_cast<void (*)(void*, void*, void*, void*)>( code->function_pointer() );
-	p( &(stream_data[0]), &(buffer_data[0]), &(stream_odata), &(buffer_odata) );
+
+	void* psi = stream_data.empty() ? NULL : &(stream_data[0]);
+	void* pbi = buffer_data.empty() ? NULL : &(buffer_data[0]);
+	void* pso = stream_odata.empty() ? NULL : &(stream_odata[0]);
+	void* pbo = buffer_odata.empty() ? NULL : &(buffer_odata[0]);
+
+	p( psi, pbi, pso, pbo );
 
 	// Copy output position to vs_output.
 	memset( &out.position, 0, sizeof(out.position) );

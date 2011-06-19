@@ -230,7 +230,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		add_entry_param_type( &( child_ctxt = *data ), buffer_out, param_types );
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy(llcontext()), param_types, false );
-		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.name->str, llmodule() );
+		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
 		entry_fn = fn;
 		entry_sym = v.symbol().get();
 

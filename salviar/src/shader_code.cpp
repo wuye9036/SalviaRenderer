@@ -99,7 +99,7 @@ public:
 	}
 private:
 	bool process(){
-		eof = !code.empty();
+		eof = code.empty();
 		return true;
 	}
 
@@ -110,7 +110,6 @@ private:
 
 void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::string const& code, languages lang )
 {
-	shared_ptr<shader_code> ret;
 	shared_ptr<shader_code_source> code_src( new shader_code_source() );
 	if ( !code_src->process_code( code ) ){
 		cout << "Fatal error: Could not process code:  \n\t" << code << endl;
@@ -142,8 +141,10 @@ void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::
 
 	string errors;
 
+	shared_ptr<shader_code> ret( new shader_code() );
 	ret->abii( aa.shared_abii(lang) );
 	ret->jit( cgllvm_jit_engine::create( llvmcode, errors ) );
+	ret->update();
 
 	scode = ret;
 }

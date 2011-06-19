@@ -210,15 +210,17 @@ void abi_info::compute_input_semantics_layout(){
 }
 
 void abi_info::compute_output_buffer_layout(){
-	int offset = 0;
-	for ( size_t index = 0; index < sems_in.size(); ++index ){
-		storage_info* pstorage = alloc_output_storage( sems_in[index] );
+	for ( size_t index = 0; index < sems_out.size(); ++index ){
+		storage_info* pstorage = output_storage( sems_out[index] );
+		assert(pstorage);
+
 		pstorage->storage = buffer_out;
-		pstorage->index =  static_cast<int>( index );
-		pstorage->offset = offset;
-		int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
-		pstorage->size = size;
-		offset += size;
+		pstorage->index =  counts[pstorage->storage];
+		pstorage->offset = offsets[pstorage->storage];
+		pstorage->size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
+		
+		counts[pstorage->storage]++;
+		offsets[pstorage->storage] += pstorage->size;
 	}
 }
 
