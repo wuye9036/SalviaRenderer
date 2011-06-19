@@ -49,7 +49,7 @@ public:
 	}
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
-		out.color[0] = color_rgba32f(0.3f, 0.1f, 0.5f, 1.0f ).get_vec4();
+		out.color[0] = color_rgba32f(0.8f, 0.9f, 0.9f, 1.0f ).get_vec4();
 		return true;
 	}
 	virtual h_pixel_shader create_clone()
@@ -155,6 +155,11 @@ public:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
+		shared_ptr<shader_code> compiled_code;
+		salvia_create_shader( compiled_code, vs_code, lang_vertex_sl );
+
+		hsr->set_vertex_shader_code( compiled_code );
+
 		num_frames = 0;
 		accumulate_time = 0;
 		fps = 0;
@@ -205,28 +210,21 @@ public:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		static float s_angle = -1;
-		//s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
+		static float s_angle = 0;
+		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
+		vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
 
-		mat44 world(mat44::identity()), view, proj, wv, wvp;
+		mat44 world(mat44::identity()), view, proj, wvp;
 
-		vec3 eye(0.0f, 0.0f, 0.0f);
-		mat_lookat(view, camera, eye, vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
+		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
-			mat_identity(world);
-			mat_mul(wv, world, view);
-			mat_mul(wvp, wv, proj);
+			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
+			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
 			hsr->set_rasterizer_state(rs_back);
-
-			shared_ptr<shader_code> compiled_code;
-			salvia_create_shader( compiled_code, vs_code, lang_vertex_sl );
-
-			hsr->set_vertex_shader_code( compiled_code );
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
 
 			hsr->set_pixel_shader(pps);

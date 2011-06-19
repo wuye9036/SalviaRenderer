@@ -205,11 +205,13 @@ public:
 	
 	llvar( llvm::Type const* var_type, llext<builder_t>* ext ){
 		val = ext->builder->CreateAlloca( var_type );
+		cast<llvm::AllocaInst>(val)->setAlignment(4);
 		this->ext = ext;
 	}
 
 	llvar( llvm::Value* val, llext<builder_t>* ext ){
 		val = ext->builder->CreateAlloca( val->getType() );
+		cast<llvm::AllocaInst>(val)->setAlignment(4);
 		this->ext = ext;
 	}
 
@@ -218,11 +220,14 @@ public:
 	}
 
 	operator ElementT(){
-		return ElementT( ext->builder->CreateLoad(val), ext );
+		LoadInst* inst = ext->builder->CreateLoad(val);
+		inst->setAlignment(4);
+		return ElementT( inst, ext );
 	}
 
 	llvar<ElementT> operator = ( ElementT const& v ){
-		ext->builder->CreateStore( v.val, val );
+		llvm::StoreInst* inst = ext->builder->CreateStore( v.val, val );
+		inst->setAlignment(4);
 	}
 };
 

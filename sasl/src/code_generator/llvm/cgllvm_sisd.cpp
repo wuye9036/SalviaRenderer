@@ -531,6 +531,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
+	mod_ptr()->module()->setDataLayout("v128:32:32-p:32:32:32-a0:0:1-s0:32:32");
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 	boost::function<Value* (cgllvm_sctxt*)> loader
@@ -749,10 +750,12 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 		if( val ){ break; }
 		if( data->data().local ){
 			val = builder()->CreateLoad( data->data().local, name );
+			cast<LoadInst>(val)->setAlignment(4);
 			break;
 		}
 		if( data->data().global ){
 			val = builder()->CreateLoad( data->data().global, name );
+			cast<LoadInst>(val)->setAlignment(4);
 			break;
 		}
 		if( data->data().agg.parent ){
@@ -777,12 +780,13 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 			}
 			break;
 		}
-		
+
 		return NULL;
 	} while(0);
 
 	if( data->data().is_ref ){
 		val = builder()->CreateLoad( val, name );
+		cast<LoadInst>(val)->setAlignment(4);
 	}
 
 	return val;
@@ -833,7 +837,8 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 		Value* addr = load_ptr( data );
 
 		if( addr ){
-			builder()->CreateStore( v, addr );
+			StoreInst* inst = builder()->CreateStore( v, addr );
+			inst->setAlignment(4);
 		} else {
 			assert( data->data().agg.parent == NULL );
 			assert( data->data().val == NULL );
@@ -881,6 +886,7 @@ void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 	if( parent_fn ){
 		ctxt->data().local
 			= builder()->CreateAlloca( ctxt->data().val_type, 0, name.c_str() );
+		ctxt->data().local->setAlignment(4);
 	} else {
 		ctxt->data().global
 			 = cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );
@@ -891,12 +897,14 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 {
 	// Inner empty block, insert an br instruction for jumping to next block.
 	// And the tail empty block we add an virtual return instruction.
-	for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin();
-		it != fn->getBasicBlockList().end(); ++it
-		)
+	typedef Function::BasicBlockListType::iterator block_iterator_t;
+	block_iterator_t beg = fn->getBasicBlockList().begin();
+	block_iterator_t end = fn->getBasicBlockList().end();
+
+	for(  block_iterator_t it = beg; it != end; ++it )
 	{
-		if( it->empty() ){
-			Function::BasicBlockListType::iterator next_it = it;
+		if( !it->getTerminator() ){
+			block_iterator_t next_it = it;
 			++next_it;
 
 			builder()->SetInsertPoint( &(*it) );
@@ -914,9 +922,7 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 	}
 }
 
-
-template <typename ElementT>
-llvector<ElementT> cgllvm_sisd::mul_vm(
+template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_vm(
 	llvm::Value* v, llvm::Value* m,
 	size_t vec_size, size_t mat_vec_size,
 	Type const* ret_type
@@ -927,10 +933,10 @@ llvector<ElementT> cgllvm_sisd::mul_vm(
 
 	llvector<ElementT> ret_val = ext->null_value< llvector<ElementT> >(ret_type);
 
-	for(size_t i = 0; i < vec_size; ++i){
+	for(size_t i = 0; i < mat_vec_size; ++i){
 		ElementT agg_value = ret_val[i];
-		for( size_t j = 0; j < mat_vec_size; ++j ){
-			agg_value = agg_value + lval[i] * rval[i][j];
+		for( size_t j = 0; j < vec_size; ++j ){
+			agg_value = agg_value + lval[j] * rval[j][i];
 		}
 		ret_val.set( i, agg_value );
 	}
@@ -938,8 +944,7 @@ llvector<ElementT> cgllvm_sisd::mul_vm(
 	return ret_val;
 }
 
-template <typename ElementT>
-llvector<ElementT> cgllvm_sisd::mul_mv(
+template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_mv(
 	llvm::Value* m, llvm::Value* v,
 	size_t vec_size, size_t n_vec,
 	llvm::Type const* ret_type )

@@ -148,9 +148,17 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	working_package = 0;
 	for (size_t i = 0; i < num_threads - 1; ++ i)
 	{
-		global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_by_shader, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
+		if( pparent_->get_vertex_shader() ){
+			global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_func, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
+		} else {
+			global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_by_shader, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
+		}
 	}
-	transform_vertex_by_shader(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
+	if( pparent_->get_vertex_shader() ){
+		transform_vertex_func(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
+	} else {
+		transform_vertex_by_shader(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
+	}
 	global_thread_pool().wait();
 }
 

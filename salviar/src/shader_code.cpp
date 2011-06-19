@@ -11,11 +11,13 @@
 #include <sasl/include/semantic/abi_analyser.h>
 
 #include <iostream>
+#include <fstream>
 
 using namespace sasl::semantic;
 using boost::shared_ptr;
 using std::cout;
 using std::endl;
+using std::fstream;
 
 BEGIN_NS_SALVIAR();
 
@@ -138,6 +140,10 @@ void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::
 	}
 
 	shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
+	
+	fstream ir_code("for_debug.ll", std::ios_base::out);
+	dump( llvmcode, ir_code );
+	ir_code.close();
 
 	string errors;
 

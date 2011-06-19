@@ -362,7 +362,7 @@ namespace eflib{
 
 		float& operator [](size_t i)
 		{
-			EFLIB_ASSERT(i < 3, "");
+			EFLIB_ASSERT(i < 4, "");
 			return ((float*)(this))[i];
 		}
 		///////////////////////////////////////////////

@@ -39,7 +39,7 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
 	wndMain.ShowWindow(nCmdShow);
 
-	int nRet = theLoop.Run();
+	int nRet = theLoop.GameRun();
 
 	_Module.RemoveMessageLoop();
 	return nRet;

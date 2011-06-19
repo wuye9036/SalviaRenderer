@@ -6,8 +6,18 @@
 #include <eflib/include/platform/enable_warnings.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <vector>
+#include <string>
+
 #include <assert.h>
+
+using std::vector;
+using std::string;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -45,7 +55,16 @@ void cgllvm_jit_engine::build(){
 	if ( !global_ctxt || !global_ctxt->module() ){
 		engine.reset();
 	}
-	engine.reset( llvm::EngineBuilder( global_ctxt->module() ).setErrorStr(&err).create() );
+	
+	vector<string> attrs;
+	attrs.push_back("-sse");
+	attrs.push_back("+vector-unaligned-mem");
+
+	engine.reset(
+		llvm::EngineBuilder( global_ctxt->module() ).setMAttrs(attrs)
+		.setErrorStr(&err)
+		.create()
+		);
 	if ( engine ){
 		if( !global_ctxt->get_ownership() ){
 			engine.reset();

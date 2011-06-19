@@ -1488,7 +1488,11 @@ void rasterizer::draw(size_t prim_count){
 		return;
 	}
 
-	num_vs_output_attributes_ = pparent_->get_vertex_shader()->num_output_attributes();
+	if( pparent_->get_vertex_shader() ){
+		num_vs_output_attributes_ = pparent_->get_vertex_shader()->num_output_attributes();
+	} else {
+		num_vs_output_attributes_ = 0;
+	}
 	const viewport& vp = pparent_->get_viewport();
 	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
 	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;

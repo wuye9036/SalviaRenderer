@@ -8,12 +8,13 @@
 #include <sasl/include/semantic/abi_info.h>
 
 #include <eflib/include/diagnostics/assert.h>
-
+#include <eflib/include/math/math.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace sasl::semantic;
+using namespace eflib;
 using std::vector;
 
 BEGIN_NS_SALVIAR();
@@ -57,6 +58,16 @@ void vertex_shader_unit::execute( vs_output& out )
 	void* pbo = buffer_odata.empty() ? NULL : &(buffer_odata[0]);
 
 	p( psi, pbi, pso, pbo );
+
+#if 0
+	/**(mat44*)pbi = mat44::identity();
+	(*(mat44*)pbi).f[0][0] = 2.0f;
+	(*(mat44*)pbi).f[0][1] = 0.7f;*/
+
+	vec4 src_vec4(*((float**)psi), 4);
+	vec4 ref_result;
+	transform( ref_result, src_vec4, *(mat44*)pbi );
+#endif
 
 	// Copy output position to vs_output.
 	memset( &out.position, 0, sizeof(out.position) );

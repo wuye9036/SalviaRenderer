@@ -125,6 +125,8 @@ h_vertex_shader renderer_impl::get_vertex_shader() const
 }
 
 result renderer_impl::set_vertex_shader_code( shared_ptr<shader_code> const& code ){
+	vs_output_ops_ = &get_vs_output_op(0);
+
 	vscode_ = code;
 	vs_proto_.reset( new vertex_shader_unit() );
 	vs_proto_->initialize( vscode_.get() );
