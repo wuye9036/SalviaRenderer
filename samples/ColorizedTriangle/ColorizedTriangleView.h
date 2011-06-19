@@ -43,11 +43,10 @@ char const* vs_code =
 class ps : public pixel_shader
 {
 public:
-
 	ps()
 	{
 	}
-	bool shader_prog(const vs_output& /*in*/, ps_output& out)
+	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		out.color[0] = color_rgba32f(0.8f, 0.9f, 0.9f, 1.0f ).get_vec4();
 		return true;

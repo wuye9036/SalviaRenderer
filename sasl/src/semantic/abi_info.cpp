@@ -244,7 +244,4 @@ void abi_info::compute_input_constant_layout(){
 	}
 }
 
-
-
-
 END_NS_SASL_SEMANTIC();
