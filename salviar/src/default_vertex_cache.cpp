@@ -87,9 +87,8 @@ void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& in
 
 void default_vertex_cache::transform_vertex_by_shader( const std::vector<uint32_t>& indices, int32_t index_count, eflib::atomic<int32_t>& working_package, int32_t package_size )
 {
-	vertex_shader_unit vsu;
+	vertex_shader_unit vsu = *(pparent_->vs_proto());
 
-	vsu.initialize( pparent_->get_vertex_shader_code().get() );
 	vsu.bind_streams( hsa_->layout(), hsa_->streams() );
 
 	const int32_t num_packages = (index_count + package_size - 1) / package_size;

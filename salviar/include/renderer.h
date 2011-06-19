@@ -17,6 +17,8 @@
 
 BEGIN_NS_SALVIAR();
 
+class shader_code;
+
 struct viewport{
 	float x;
 	float y;
@@ -58,6 +60,10 @@ public:
 
 	virtual result set_vertex_shader(h_vertex_shader hvs) = 0;
 	virtual h_vertex_shader get_vertex_shader() const = 0;
+
+	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& ) = 0;
+	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const = 0;
+	virtual result set_vs_variable( std::string const& name, void* data ) = 0;
 
 	virtual result set_rasterizer_state(const h_rasterizer_state& rs) = 0;
 	virtual const h_rasterizer_state& get_rasterizer_state() const = 0;

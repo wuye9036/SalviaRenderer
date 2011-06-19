@@ -3,9 +3,18 @@
 
 #include "stdafx.h"
 
+#include <eflib/include/platform/config.h>
+#include <eflib/include/platform/constant.h>
+
+#include <eflib/include/platform/disable_warnings.h>
+#include <atlbase.h>
+#include <atlapp.h>
+#include <atlwin.h>
 #include <atlframe.h>
 #include <atlctrls.h>
 #include <atldlgs.h>
+#include <atlctrlw.h>
+#include <eflib/include/platform/enable_warnings.h>
 
 #include "resource.h"
 

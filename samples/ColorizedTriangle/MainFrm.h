@@ -55,6 +55,7 @@ public:
 
 	virtual BOOL OnIdle()
 	{
+		m_view.Render();
 		return FALSE;
 	}
 

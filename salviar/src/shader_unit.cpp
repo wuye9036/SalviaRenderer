@@ -69,7 +69,28 @@ vertex_shader_unit::vertex_shader_unit()
 {
 }
 
+vertex_shader_unit::vertex_shader_unit( vertex_shader_unit const& rhs )
+: code(rhs.code),
+layout(rhs.layout), streams(rhs.streams),
+stream_data(rhs.stream_data), buffer_data(rhs.buffer_data),
+stream_odata(rhs.stream_odata), buffer_odata(rhs.buffer_odata)
+{
+}
+
+vertex_shader_unit& vertex_shader_unit::operator=( vertex_shader_unit const& rhs ){
+	code = rhs.code;
+	layout = rhs.layout;
+	streams = rhs.streams;
+	stream_data = rhs.stream_data;
+	buffer_data = rhs.buffer_data;
+	stream_odata = rhs.stream_odata;
+	buffer_odata = rhs.buffer_odata;
+	return *this;
+}
+
 vertex_shader_unit::~vertex_shader_unit()
 {
 }
+
+
 END_NS_SALVIAR();

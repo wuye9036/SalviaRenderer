@@ -6,7 +6,7 @@
 
 BEGIN_NS_SALVIAR();
 
-class shader_code;
+class vertex_shader_unit;
 
 struct state_block{
 	viewport vp;	
@@ -42,6 +42,7 @@ class renderer_impl : public renderer
 	vs_output_op*				vs_output_ops_;
 
 	boost::shared_ptr<shader_code> vscode_;
+	boost::shared_ptr<vertex_shader_unit> vs_proto_;
 
 	void initialize();
 
@@ -65,6 +66,8 @@ public:
 	
 	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& );
 	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const;
+	virtual result set_vs_variable( std::string const& name, void* data );
+	virtual boost::shared_ptr<vertex_shader_unit> vs_proto() const;
 
 	virtual const vs_input_op* get_vs_input_ops() const;
 	virtual const vs_output_op* get_vs_output_ops() const;

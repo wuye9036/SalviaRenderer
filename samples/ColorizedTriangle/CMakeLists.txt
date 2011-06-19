@@ -9,15 +9,27 @@ INCLUDE_DIRECTORIES(
 LINK_DIRECTORIES(
 	${SALVIA_3RD_PARTY_LIBS}
 	${SALVIA_BOOST_LIB_DIR}
+	${SALVIA_LLVM_LIB_PATH}
 	)
 
-set (HEADER_FILES
+set( FRAMEWORK_HEADERS 
+	Timer.h
+	stdafx.h
 	AboutDlg.h
 	MainFrm.h
 	resource.h
-	ColorizedTriangle.h
-	Timer.h
-	stdafx.h
+	ColorizedTriangle.h 
+	)
+	
+SOURCE_GROUP( "Header Files\\Framework"
+	FILES
+	${FRAMEWORK_HEADERS}
+)
+	
+set( VIEW_HEADERS ColorizedTriangleView.h )
+SOURCE_GROUP( "Header Files\\View"
+	FILES
+	${VIEW_HEADERS}
 )
 
 set (SOURCE_FILES
@@ -33,7 +45,8 @@ set (RESOURCE_FILES
 )
 
 ADD_EXECUTABLE(ColorizedTriangle
-	${HEADER_FILES}
+	${FRAMEWORK_HEADERS}
+	${VIEW_HEADERS}
 	${SOURCE_FILES}
 	${RESOURCE_FILES}
 )
@@ -44,9 +57,12 @@ TARGET_LINK_LIBRARIES(ColorizedTriangle
 	salviax
 	sasl_enums
 	sasl_host
+	sasl_parser
 	sasl_syntaxtree
 	sasl_semantic
 	sasl_common
+	sasl_cgllvm
+	${SASL_LLVM_LIBS}
 )
 
 SALVIA_CONFIG_OUTPUT_PATHS(ColorizedTriangle)

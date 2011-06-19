@@ -32,6 +32,9 @@ public:
 	vertex_shader_unit();
 	~vertex_shader_unit();
 
+	vertex_shader_unit( vertex_shader_unit const& );
+	vertex_shader_unit& operator = ( vertex_shader_unit const& );
+
 	void initialize( shader_code const* );
 
 	void bind_streams( std::vector<input_element_decl> const& layout, std::vector<h_buffer> const& streams );

@@ -8,6 +8,7 @@
 #include "../include/stream.h"
 #include "../include/surface.h"
 #include "../include/vertex_cache.h"
+#include <salviar/include/shader_unit.h>
 
 BEGIN_NS_SALVIAR();
 
@@ -125,6 +126,9 @@ h_vertex_shader renderer_impl::get_vertex_shader() const
 
 result renderer_impl::set_vertex_shader_code( shared_ptr<shader_code> const& code ){
 	vscode_ = code;
+	vs_proto_.reset( new vertex_shader_unit() );
+	vs_proto_->initialize( vscode_.get() );
+
 	return result::ok;
 }
 
@@ -445,6 +449,19 @@ h_vertex_cache renderer_impl::get_vertex_cache()
 h_clipper renderer_impl::get_clipper()
 {
 	return hclipper_;
+}
+
+result renderer_impl::set_vs_variable( std::string const& name, void* data )
+{
+	if( vs_proto_ ){
+		vs_proto_->set_variable(name, data);
+		return result::ok;
+	}
+	return result::failed;
+}
+
+shared_ptr<vertex_shader_unit> renderer_impl::vs_proto() const{
+	return vs_proto_;
 }
 
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev)
