@@ -147,7 +147,6 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 
 				store( load(&srcctxt), &destctxt );
 			}
-
 		}
 	}
 }

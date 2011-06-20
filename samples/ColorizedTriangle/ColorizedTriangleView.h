@@ -19,18 +19,22 @@
 #define PRESENTER_NAME "d3d9"
 
 using namespace eflib;
-using namespace boost;
-using namespace std;
 using namespace salviar;
 using namespace salviax;
 using namespace salviax::resource;
+
+using boost::shared_ptr;
+using boost::static_pointer_cast;
+
+using std::cout;
+using std::endl;
 
 char const* vs_code = 
 "float4x4	wvpMatrix; \r\n"
 "float4		lightPos; \r\n"
 "struct VSIn{ \r\n"
-"	float4 pos: SV_Position; \r\n"
-"	float4 norm: NORMAL;"
+"	float4 pos: POSITION; \r\n"
+"	float4 norm: NORMAL; \r\n"
 "}; \r\n"
 "struct VSOut{ \r\n"
 "	float4 pos: SV_Position; \r\n"
