@@ -1,5 +1,5 @@
-#ifndef SOFTART_FRAMEBUFFER_H
-#define SOFTART_FRAMEBUFFER_H
+#ifndef SALVIAR_FRAMEBUFFER_H
+#define SALVIAR_FRAMEBUFFER_H
 
 #include "enums.h"
 #include "decl.h"

@@ -1,5 +1,5 @@
-#ifndef SOFTART_RASTERIZER_H
-#define SOFTART_RASTERIZER_H
+#ifndef SALVIAR_RASTERIZER_H
+#define SALVIAR_RASTERIZER_H
 
 #include "decl.h"
 #include "enums.h"

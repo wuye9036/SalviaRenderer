@@ -1,5 +1,5 @@
-#ifndef SOFTART_RENDERER_IMPL_H
-#define SOFTART_RENDERER_IMPL_H
+#ifndef SALVIAR_RENDERER_IMPL_H
+#define SALVIAR_RENDERER_IMPL_H
 
 #include <salviar/include/renderer.h>
 #include <salviar/include/salviar_forward.h>

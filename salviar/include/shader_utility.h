@@ -1,5 +1,5 @@
-#ifndef SOFTART_SHADER_UTILITY_H
-#define SOFTART_SHADER_UTILITY_H
+#ifndef SALVIAR_SHADER_UTILITY_H
+#define SALVIAR_SHADER_UTILITY_H
 
 #include <eflib/include/platform/typedefs.h>
 

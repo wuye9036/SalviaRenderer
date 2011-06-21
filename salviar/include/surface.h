@@ -1,5 +1,5 @@
-#ifndef SOFTART_SURFACE_H
-#define SOFTART_SURFACE_H
+#ifndef SALVIAR_SURFACE_H
+#define SALVIAR_SURFACE_H
 
 #include "colors.h"
 #include "colors_convertors.h"

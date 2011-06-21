@@ -1,5 +1,5 @@
-#ifndef SOFTART_LOCKFREE_QUEUE_H
-#define SOFTART_LOCKFREE_QUEUE_H
+#ifndef SALVIAR_LOCKFREE_QUEUE_H
+#define SALVIAR_LOCKFREE_QUEUE_H
 
 #include "salviar/include/atomic.h"
 
@@ -143,4 +143,4 @@ private:
 	atomic<node_t*> head_, tail_;
 };
 
-#endif		// SOFTART_LOCKFREE_QUEUE_H
+#endif		// SALVIAR_LOCKFREE_QUEUE_H

@@ -1,5 +1,5 @@
-#ifndef SOFTART_TEXTURE_H
-#define SOFTART_TEXTURE_H
+#ifndef SALVIAR_TEXTURE_H
+#define SALVIAR_TEXTURE_H
 
 #include "surface.h"
 #include "colors.h"

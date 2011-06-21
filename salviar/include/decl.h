@@ -1,5 +1,5 @@
-#ifndef SOFTART_DECL_H
-#define SOFTART_DECL_H
+#ifndef SALVIAR_DECL_H
+#define SALVIAR_DECL_H
 
 #include <eflib/include/platform/config.h>
 #include "handles.h"

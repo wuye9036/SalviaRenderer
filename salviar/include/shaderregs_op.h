@@ -1,5 +1,5 @@
-#ifndef SOFTART_SHADERREGS_OP_H
-#define SOFTART_SHADERREGS_OP_H
+#ifndef SALVIAR_SHADERREGS_OP_H
+#define SALVIAR_SHADERREGS_OP_H
 
 #include "shaderregs.h"
 

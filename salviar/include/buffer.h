@@ -1,5 +1,5 @@
-#ifndef SOFTART_BUFFER_H
-#define SOFTART_BUFFER_H
+#ifndef SALVIAR_BUFFER_H
+#define SALVIAR_BUFFER_H
 
 #include "enums.h"
 

@@ -1,5 +1,5 @@
-#ifndef SOFTART_THREAD_POOL_H
-#define SOFTART_THREAD_POOL_H
+#ifndef SALVIAR_THREAD_POOL_H
+#define SALVIAR_THREAD_POOL_H
 
 #include <eflib/include/platform/config.h>
 

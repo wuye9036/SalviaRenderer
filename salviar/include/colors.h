@@ -1,5 +1,5 @@
-#ifndef SOFTART_COLOR_H
-#define SOFTART_COLOR_H
+#ifndef SALVIAR_COLOR_H
+#define SALVIAR_COLOR_H
 
 /*****************************************************************
 *  该文件定义了颜色类与基本的颜色变换、分量获取等操作。

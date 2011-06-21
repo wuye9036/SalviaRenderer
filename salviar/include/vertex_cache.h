@@ -1,5 +1,5 @@
-#ifndef SOFTART_VERTEX_CACHE_H
-#define SOFTART_VERTEX_CACHE_H
+#ifndef SALVIAR_VERTEX_CACHE_H
+#define SALVIAR_VERTEX_CACHE_H
 
 #include "decl.h"
 

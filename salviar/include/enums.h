@@ -1,5 +1,5 @@
-#ifndef SOFTART_ENUMS_H
-#define SOFTART_ENUMS_H
+#ifndef SALVIAR_ENUMS_H
+#define SALVIAR_ENUMS_H
 
 #include <salviar/include/salviar_forward.h>
 

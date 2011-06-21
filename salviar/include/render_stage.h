@@ -1,5 +1,5 @@
-#ifndef SOFTART_RENDER_STAGE_H
-#define SOFTART_RENDER_STAGE_H
+#ifndef SALVIAR_RENDER_STAGE_H
+#define SALVIAR_RENDER_STAGE_H
 
 #include "decl.h"
 #include "enums.h"

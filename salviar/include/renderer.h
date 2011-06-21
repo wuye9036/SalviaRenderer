@@ -1,5 +1,5 @@
-#ifndef SOFTART_RENDERER_H
-#define SOFTART_RENDERER_H
+#ifndef SALVIAR_RENDERER_H
+#define SALVIAR_RENDERER_H
 
 #include <salviar/include/decl.h>
 #include <salviar/include/enums.h>

@@ -1,5 +1,5 @@
-#ifndef SOFTART_SAMPLER_H
-#define SOFTART_SAMPLER_H
+#ifndef SALVIAR_SAMPLER_H
+#define SALVIAR_SAMPLER_H
 
 #include "../include/colors.h"
 #include "../include/enums.h"

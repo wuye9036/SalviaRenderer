@@ -1,5 +1,5 @@
-#ifndef SOFTART_RENDERER_CAPACITY_H
-#define SOFTART_RENDERER_CAPACITY_H
+#ifndef SALVIAR_RENDERER_CAPACITY_H
+#define SALVIAR_RENDERER_CAPACITY_H
 #include <salviar/include/salviar_forward.h>
 BEGIN_NS_SALVIAR()
 

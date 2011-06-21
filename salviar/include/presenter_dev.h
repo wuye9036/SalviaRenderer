@@ -1,5 +1,5 @@
-#ifndef SOFTART_DEV_H
-#define SOFTART_DEV_H
+#ifndef SALVIAR_DEV_H
+#define SALVIAR_DEV_H
 
 #include "salviar/include/decl.h"
 

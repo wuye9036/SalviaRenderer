@@ -1,5 +1,5 @@
-#ifndef SOFTART_SHADERREGS_H
-#define SOFTART_SHADERREGS_H
+#ifndef SALVIAR_SHADERREGS_H
+#define SALVIAR_SHADERREGS_H
 
 #include "decl.h"
 #include "colors.h"

@@ -1,5 +1,5 @@
-#ifndef SOFTART_CLIPPER_H
-#define SOFTART_CLIPPER_H
+#ifndef SALVIAR_CLIPPER_H
+#define SALVIAR_CLIPPER_H
 
 #include "decl.h"
 #include <salviar/include/salviar_forward.h>

@@ -1,5 +1,5 @@
-#ifndef SOFTART_HANDLES_H
-#define SOFTART_HANDLES_H
+#ifndef SALVIAR_HANDLES_H
+#define SALVIAR_HANDLES_H
 
 #ifdef EFLIB_MSVC
 #pragma warning(push)

@@ -1,5 +1,5 @@
-#ifndef SOFTART_RESOURCE_MANAGER_H
-#define SOFTART_RESOURCE_MANAGER_H
+#ifndef SALVIAR_RESOURCE_MANAGER_H
+#define SALVIAR_RESOURCE_MANAGER_H
 
 #include "buffer.h"
 #include "texture.h"

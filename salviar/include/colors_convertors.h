@@ -1,5 +1,5 @@
-#ifndef SOFTART_COLOR_CONVERTORS_H
-#define SOFTART_COLOR_CONVERTORS_H
+#ifndef SALVIAR_COLOR_CONVERTORS_H
+#define SALVIAR_COLOR_CONVERTORS_H
 #include <salviar/include/salviar_forward.h>
 BEGIN_NS_SALVIAR()
 

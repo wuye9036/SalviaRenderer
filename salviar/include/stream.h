@@ -1,5 +1,5 @@
-#ifndef SOFTART_STREAM_H
-#define SOFTART_STREAM_H
+#ifndef SALVIAR_STREAM_H
+#define SALVIAR_STREAM_H
 
 #include <salviar/include/salviar_forward.h>
 

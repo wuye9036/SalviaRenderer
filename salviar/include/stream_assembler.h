@@ -1,5 +1,5 @@
-#ifndef SOFTART_STREAM_ASSEMBLER_H
-#define SOFTART_STREAM_ASSEMBLER_H
+#ifndef SALVIAR_STREAM_ASSEMBLER_H
+#define SALVIAR_STREAM_ASSEMBLER_H
 
 #include "decl.h"
 #include "render_stage.h"

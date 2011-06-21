@@ -1326,4 +1326,4 @@ namespace eflib{
 	};
 #endif
 }
-#endif		// SOFTART_ATOMIC_H
+#endif		// SALVIAR_ATOMIC_H

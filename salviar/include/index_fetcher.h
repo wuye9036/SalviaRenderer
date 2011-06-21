@@ -1,5 +1,5 @@
-#ifndef SOFTART_INDEX_FETCHER_H
-#define SOFTART_INDEX_FETCHER_H
+#ifndef SALVIAR_INDEX_FETCHER_H
+#define SALVIAR_INDEX_FETCHER_H
 
 #include "decl.h"
 #include "enums.h"
