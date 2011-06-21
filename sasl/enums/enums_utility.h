@@ -37,7 +37,7 @@ namespace sasl{
 
 		size_t storage_size( const builtin_types& /*btc*/ );
 
-		const std::vector<builtin_types>& list_of_builtin_type_codes();
+		const std::vector<builtin_types>& list_of_builtin_types();
 
 		//////////////////////////////////////////////////////////////////////////
 		// operators

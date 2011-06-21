@@ -77,7 +77,7 @@ private:
 	std::string entry_point_name;
 
 	// Include stream_in and buffer_in
-	std::vector< semantic_value_t const& > sems_in;
+	std::vector< semantic_value_t > sems_in;
 	typedef boost::unordered_map< semantic_value_t, storage_info_t > sem_storages_t;
 	sem_storages_t semin_storages;
 
@@ -89,12 +89,12 @@ private:
 	name_storages_t name_storages;
 
 	// Include stream_out and buffer_out
-	std::vector< semantic_value_t const& > sems_out;
+	std::vector< semantic_value_t > sems_out;
 	boost::unordered_map< semantic_value_t, storage_info_t > semout_storages;
 
 	// The count and offsets of 
-	int counts[salviar::storage_classfications_count];
-	int offsets[salviar::storage_classfications_count];
+	int counts[salviar::storage_classifications_count];
+	int offsets[salviar::storage_classifications_count];
 };
 
 END_NS_SASL_SEMANTIC();

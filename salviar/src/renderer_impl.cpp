@@ -1,13 +1,12 @@
-#include "../include/renderer_impl.h"
+#include <salviar/include/renderer_impl.h>
 
-#include "../include/shaderregs_op.h"
-#include "../include/clipper.h"
-#include "../include/resource_manager.h"
-#include "../include/rasterizer.h"
-#include "../include/framebuffer.h"
-#include "../include/stream.h"
-#include "../include/surface.h"
-#include "../include/vertex_cache.h"
+#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/clipper.h>
+#include <salviar/include/resource_manager.h>
+#include <salviar/include/rasterizer.h>
+#include <salviar/include/framebuffer.h>
+#include <salviar/include/surface.h>
+#include <salviar/include/vertex_cache.h>
 #include <salviar/include/shader_unit.h>
 
 BEGIN_NS_SALVIAR();

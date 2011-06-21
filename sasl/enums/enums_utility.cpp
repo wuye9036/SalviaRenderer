@@ -151,7 +151,7 @@ namespace sasl{
 		boost::mutex mtx_btlist_init;
 		std::vector<builtin_types> btc_list;
 
-		const std::vector<builtin_types>& list_of_builtin_type_codes(){
+		const std::vector<builtin_types>& list_of_builtin_types(){
 			boost::mutex::scoped_lock locker(mtx_btlist_init);
 			if( btc_list.empty() ){
 				// add scalars.

@@ -1155,7 +1155,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 }
 
 void semantic_analyser::register_builtin_types(){
-	BOOST_FOREACH( builtin_types const & btc, list_of_builtin_type_codes() ){
+	BOOST_FOREACH( builtin_types const & btc, list_of_builtin_types() ){
 		EFLIB_ASSERT( msi->type_manager()->get( btc ) > -1, "Register builtin type failed!" );
 	}
 }

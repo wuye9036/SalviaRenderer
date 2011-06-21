@@ -35,13 +35,18 @@ struct input_element_desc
 	
 	input_element_desc()
 		: semantic_name(NULL), semantic_index(0)
-		, format(input_unknown_format),
-		, input_slot(0), aligned_byte_offset(0)
+		, format(input_unknown_format)
+		, input_slot(0), aligned_byte_offset(0xFFFFFFFF)
 		, slot_class(input_per_vertex), instance_data_step_rate(0)
 	{}
 };
 
 class input_layout{
+public:
+	size_t desc_size() const;
+	input_element_desc const& get_desc( size_t index ) const;
+private:
+	std::vector<input_element_desc> descs;
 };
 
 END_NS_SALVIAR();

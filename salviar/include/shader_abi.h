@@ -70,7 +70,7 @@ enum storage_classifications{
 	sc_buffer_in,
 	sc_buffer_out,
 	
-	storage_classfications_count
+	storage_classifications_count
 };
 
 struct storage_info{

@@ -6,13 +6,20 @@
 #include <salviar/include/decl.h>
 #include <salviar/include/render_stage.h>
 
+#include <vector>
+
 BEGIN_NS_SALVIAR();
 
 class stream_assembler
 {
 public:
 	void set_input_layout( input_layout const* );
-	void set_vertex_buffers( size_t starts_slot, size_t buffers_count, h_buffer* pbufs, size_t const* strides, size_t const* offsets );
+
+	void set_vertex_buffers(
+		size_t starts_slot,
+		size_t buffers_count, h_buffer* pbufs,
+		size_t const* strides, size_t const* offsets
+		);
 
 	input_layout const* layout() const;
 	std::vector<h_buffer> const& streams() const;
@@ -21,7 +28,7 @@ public:
 	size_t num_vertices() const;
 
 private:
-	input_layout* layout_;
+	input_layout const* layout_;
 
 	std::vector<size_t>		slots_;
 

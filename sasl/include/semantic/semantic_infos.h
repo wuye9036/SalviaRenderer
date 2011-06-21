@@ -5,12 +5,11 @@
 #include <sasl/include/semantic/semantic_info.h>
 #include <sasl/include/semantic/type_manager.h>
 #include <sasl/enums/default_hasher.h>
-#include <sasl/enums/type_types.h>
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <salviar/include/enums.h>
+#include <salviar/include/shader.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
