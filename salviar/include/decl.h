@@ -16,6 +16,7 @@ class vertex_cache;
 class vertex_shader;
 class clipper;
 class rasterizer;
+class shader_code;
 class pixel_shader;
 class blend_shader;
 class framebuffer;
@@ -52,16 +53,20 @@ struct vs_output_op;
 struct ps_output;
 
 //public structure
-struct input_element_decl;
+struct input_element_desc;
+class input_layout;
+
 struct viewport;
 
 //handles
 DECL_HANDLE(vertex_cache, h_vertex_cache);
 DECL_HANDLE(vertex_shader, h_vertex_shader);
 DECL_HANDLE(rasterizer, h_rasterizer);
+DECL_HANDLE(shader_code, h_shader_code);
 DECL_HANDLE(pixel_shader, h_pixel_shader);
 DECL_HANDLE(blend_shader, h_blend_shader);
 DECL_HANDLE(framebuffer, h_framebuffer);
+DECL_HANDLE(input_layout, h_input_layout);
 DECL_HANDLE(stream_assembler, h_stream_assembler);
 
 DECL_HANDLE(buffer_manager, h_buffer_manager);

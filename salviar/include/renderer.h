@@ -45,12 +45,10 @@ class renderer
 public:
 	//state accessors
 	/////////////////////////////////////////////
-	virtual result set_input_layout(const input_layout_decl& layout) = 0;
-	virtual const input_layout_decl& get_input_layout() const = 0;
+	virtual result set_input_layout( h_input_layout const& layout) = 0;
+	virtual h_input_layout create_input_layout( input_element_desc const* elem_descs, size_t elems_count, h_shader_code const& code ) = 0;
 
-	virtual result set_stream(stream_index sidx, h_buffer hbuf) = 0;
-	virtual h_buffer get_stream(stream_index sidx) const = 0;
-
+	virtual result set_vertex_buffers( size_t starts_slot, size_t buffers_count, h_buffer const* buffers, size_t* strides, size_t* offsets );
 	virtual result set_index_buffer(h_buffer hbuf, index_type idxtype) = 0;
 	virtual h_buffer get_index_buffer() const = 0;
 	virtual index_type get_index_type() const = 0;

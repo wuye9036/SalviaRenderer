@@ -23,6 +23,7 @@ SET( PIPELINE_HEADERS
 	include/stream_assembler.h
 	include/clipper.h
 	include/index_fetcher.h
+	include/input_layout.h
 	include/presenter_dev.h
 	include/rasterizer.h
 	include/render_stage.h
@@ -95,6 +96,7 @@ set(PIPELINE_SOURCES
 	src/resource_manager.cpp
 	src/stream_assembler.cpp
 	src/index_fetcher.cpp
+	src/input_layout.cpp
 )
 
 set(SHADER_SOURCES
