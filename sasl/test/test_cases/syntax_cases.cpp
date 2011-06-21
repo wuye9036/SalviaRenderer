@@ -1,6 +1,6 @@
 #include <sasl/test/test_cases/syntax_cases.h>
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 #include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>

@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>

@@ -1,6 +1,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_general.h>
 
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>

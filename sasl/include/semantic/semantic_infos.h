@@ -8,7 +8,7 @@
 #include <sasl/enums/type_types.h>
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 
 #include <salviar/include/enums.h>
 

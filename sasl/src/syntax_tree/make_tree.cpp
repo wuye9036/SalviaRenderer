@@ -1,7 +1,7 @@
 #include <sasl/include/syntax_tree/make_tree.h>
 
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 
 #include <sasl/include/common/token.h>
 #include <sasl/include/syntax_tree/declaration.h>

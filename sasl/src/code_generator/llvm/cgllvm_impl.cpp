@@ -3,7 +3,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/DerivedTypes.h>

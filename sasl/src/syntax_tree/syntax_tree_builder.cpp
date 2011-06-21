@@ -4,7 +4,7 @@
 #include <sasl/include/parser/generator.h>
 #include <sasl/include/parser/grammars.h>
 
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
 

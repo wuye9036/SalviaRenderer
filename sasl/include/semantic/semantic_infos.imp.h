@@ -3,7 +3,7 @@
 
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 
 BEGIN_NS_SASL_SEMANTIC();
 

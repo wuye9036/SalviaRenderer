@@ -1,4 +1,4 @@
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>

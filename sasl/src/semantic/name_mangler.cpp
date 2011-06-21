@@ -5,7 +5,7 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/enums/default_hasher.h>
-#include <sasl/enums/enums_helper.h>
+#include <sasl/enums/enums_utility.h>
 #include <sasl/enums/operators.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
