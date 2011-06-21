@@ -5,11 +5,14 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <eflib/include/memory/lifetime_manager.h>
+
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/thread.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 using namespace ::sasl::syntax_tree;
+using namespace sasl::utility;
 
 boost::mutex syntax_cases::mtx;
 boost::shared_ptr<syntax_cases> syntax_cases::tcase;
