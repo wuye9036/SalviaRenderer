@@ -1,21 +1,21 @@
 
-#ifndef SASL_ENUMS_BUILTIN_TYPE_CODE_H
-#define SASL_ENUMS_BUILTIN_TYPE_CODE_H
+#ifndef SASL_ENUMS_BUILTIN_TYPES_H
+#define SASL_ENUMS_BUILTIN_TYPES_H
 
 #include "../enums/enum_base.h" 
 
-struct builtin_type_code :
-	public enum_base< builtin_type_code, uint32_t >
-	, public bitwise_op< builtin_type_code >, public equal_op< builtin_type_code >, public value_op< builtin_type_code, uint32_t >
+struct builtin_types :
+	public enum_base< builtin_types, uint32_t >
+	, public bitwise_op< builtin_types >, public equal_op< builtin_types >, public value_op< builtin_types, uint32_t >
 {
 	friend struct enum_hasher;
 private:
-	builtin_type_code( const storage_type& val, const std::string& name );
-	builtin_type_code( const storage_type& val ): base_type(val){}
+	builtin_types( const storage_type& val, const std::string& name );
+	builtin_types( const storage_type& val ): base_type(val){}
 public:
 	static void force_initialize();
 	
-	builtin_type_code( const this_type& rhs )
+	builtin_types( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}
 	

@@ -195,20 +195,20 @@ void register_builtin_typeconv(
 		}
 	}
 
-	type_entry::id_t sint8_ts = typemgr->get( builtin_type_code::_sint8 );
-	type_entry::id_t sint16_ts = typemgr->get( builtin_type_code::_sint16 );
-	type_entry::id_t sint32_ts = typemgr->get( builtin_type_code::_sint32 );
-	type_entry::id_t sint64_ts = typemgr->get( builtin_type_code::_sint64 );
+	type_entry::id_t sint8_ts = typemgr->get( builtin_types::_sint8 );
+	type_entry::id_t sint16_ts = typemgr->get( builtin_types::_sint16 );
+	type_entry::id_t sint32_ts = typemgr->get( builtin_types::_sint32 );
+	type_entry::id_t sint64_ts = typemgr->get( builtin_types::_sint64 );
 
-	type_entry::id_t uint8_ts = typemgr->get( builtin_type_code::_uint8 );
-	type_entry::id_t uint16_ts = typemgr->get( builtin_type_code::_uint16 );
-	type_entry::id_t uint32_ts = typemgr->get( builtin_type_code::_uint32 );
-	type_entry::id_t uint64_ts = typemgr->get( builtin_type_code::_uint64 );
+	type_entry::id_t uint8_ts = typemgr->get( builtin_types::_uint8 );
+	type_entry::id_t uint16_ts = typemgr->get( builtin_types::_uint16 );
+	type_entry::id_t uint32_ts = typemgr->get( builtin_types::_uint32 );
+	type_entry::id_t uint64_ts = typemgr->get( builtin_types::_uint64 );
 
-	type_entry::id_t float_ts = typemgr->get( builtin_type_code::_float );
-	type_entry::id_t double_ts = typemgr->get( builtin_type_code::_double );
+	type_entry::id_t float_ts = typemgr->get( builtin_types::_float );
+	type_entry::id_t double_ts = typemgr->get( builtin_types::_double );
 
-	// type_entry::id_t bool_ts = typemgr->get( builtin_type_code::_boolean );
+	// type_entry::id_t bool_ts = typemgr->get( builtin_types::_boolean );
 
 	cg_typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint16_ts, int2int_pfn );
 	cg_typeconv->register_converter( type_converter::implicit_conv, sint8_ts, sint32_ts, int2int_pfn );
@@ -335,10 +335,10 @@ void register_builtin_typeconv(
 	// Register scalar <====> vector<scalar, 1>.
 #define DEFINE_VECTOR_TYPE_IDS( btc ) \
 	type_entry::id_t btc##_vts[5] = {-1, -1, -1, -1, -1};\
-	btc##_vts[1] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 1 ) ); \
-	btc##_vts[2] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 2 ) ); \
-	btc##_vts[3] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 3 ) ); \
-	btc##_vts[4] = typemgr->get( sasl_ehelper::vector_of(builtin_type_code::btc , 4 ) );
+	btc##_vts[1] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 1 ) ); \
+	btc##_vts[2] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 2 ) ); \
+	btc##_vts[3] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 3 ) ); \
+	btc##_vts[4] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 4 ) );
 
 #define DEFINE_SHRINK_VECTORS( btc )				\
 	for( int i = 1; i <=3; ++i ) {					\

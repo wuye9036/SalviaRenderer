@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <sasl/enums/literal_constant_types.h>
 #include <sasl/enums/operators.h>
 #include <sasl/enums/type_qualifiers.h>
@@ -176,9 +176,9 @@ public:
 	virtual tree_combinator& dinit_list(){ return default_proc(); }
 
 	// types
-	virtual tree_combinator& dbuiltin( builtin_type_code /*btc*/ ){ return default_proc(); }
-	virtual tree_combinator& dvec( builtin_type_code /*comp_btc*/, size_t /*size*/ ){ return default_proc(); }
-	virtual tree_combinator& dmat( builtin_type_code /*comp_btc*/, size_t /*s0*/, size_t /*s1*/ ){ return default_proc(); }
+	virtual tree_combinator& dbuiltin( builtin_types /*btc*/ ){ return default_proc(); }
+	virtual tree_combinator& dvec( builtin_types /*comp_btc*/, size_t /*size*/ ){ return default_proc(); }
+	virtual tree_combinator& dmat( builtin_types /*comp_btc*/, size_t /*s0*/, size_t /*s1*/ ){ return default_proc(); }
 	virtual tree_combinator& dalias( const std::string& /*alias*/ ){ return default_proc(); }
 	virtual tree_combinator& darray(){ return default_proc(); }
 	virtual tree_combinator& dtypequal( type_qualifiers /*qual*/ ){ return default_proc(); }
@@ -524,9 +524,9 @@ public:
 
 	dtype_combinator( tree_combinator* parent );
 	~dtype_combinator(){}
-	virtual tree_combinator& dbuiltin( builtin_type_code btc );
-	virtual tree_combinator& dvec( builtin_type_code comp_btc, size_t size );
-	virtual tree_combinator& dmat( builtin_type_code comp_btc, size_t s0, size_t s1 );
+	virtual tree_combinator& dbuiltin( builtin_types btc );
+	virtual tree_combinator& dvec( builtin_types comp_btc, size_t size );
+	virtual tree_combinator& dmat( builtin_types comp_btc, size_t s0, size_t s1 );
 	virtual tree_combinator& dalias( const std::string& alias );
 	virtual tree_combinator& darray();
 	virtual tree_combinator& dtypequal( type_qualifiers qual );

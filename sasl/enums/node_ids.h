@@ -1,21 +1,21 @@
 
-#ifndef SASL_ENUMS_SYNTAX_NODE_TYPES_H
-#define SASL_ENUMS_SYNTAX_NODE_TYPES_H
+#ifndef SASL_ENUMS_NODE_IDS_H
+#define SASL_ENUMS_NODE_IDS_H
 
 #include "../enums/enum_base.h" 
 
-struct syntax_node_types :
-	public enum_base< syntax_node_types, uint64_t >
-	, public bitwise_op< syntax_node_types >, public equal_op< syntax_node_types >, public value_op< syntax_node_types, uint64_t >
+struct node_ids :
+	public enum_base< node_ids, uint64_t >
+	, public bitwise_op< node_ids >, public equal_op< node_ids >, public value_op< node_ids, uint64_t >
 {
 	friend struct enum_hasher;
 private:
-	syntax_node_types( const storage_type& val, const std::string& name );
-	syntax_node_types( const storage_type& val ): base_type(val){}
+	node_ids( const storage_type& val, const std::string& name );
+	node_ids( const storage_type& val ): base_type(val){}
 public:
 	static void force_initialize();
 	
-	syntax_node_types( const this_type& rhs )
+	node_ids( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}
 	

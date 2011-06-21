@@ -1,6 +1,6 @@
 #include <sasl/include/syntax_tree/make_tree.h>
 
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_helper.h>
 
 #include <sasl/include/common/token.h>
@@ -151,7 +151,7 @@ dtype_combinator::dtype_combinator( tree_combinator* parent )
 {
 }
 
-tree_combinator& dtype_combinator::dbuiltin( builtin_type_code btc )
+tree_combinator& dtype_combinator::dbuiltin( builtin_types btc )
 {
 	DEFAULT_STATE_SCOPE();
 
@@ -164,7 +164,7 @@ tree_combinator& dtype_combinator::dbuiltin( builtin_type_code btc )
 	return *this;
 }
 
-tree_combinator& dtype_combinator::dvec( builtin_type_code comp_btc, size_t size )
+tree_combinator& dtype_combinator::dvec( builtin_types comp_btc, size_t size )
 {
 	DEFAULT_STATE_SCOPE();
 
@@ -177,7 +177,7 @@ tree_combinator& dtype_combinator::dvec( builtin_type_code comp_btc, size_t size
 	return *this;
 }
 
-tree_combinator& dtype_combinator::dmat( builtin_type_code comp_btc, size_t s0, size_t s1 )
+tree_combinator& dtype_combinator::dmat( builtin_types comp_btc, size_t s0, size_t s1 )
 {
 	DEFAULT_STATE_SCOPE();
 

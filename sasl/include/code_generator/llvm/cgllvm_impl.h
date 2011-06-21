@@ -36,7 +36,7 @@ namespace llvm{
         DefaultIRBuilder;
 }
 
-struct builtin_type_code;
+struct builtin_types;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -75,7 +75,7 @@ protected:
 	ContextT* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 
 	// Fetching and caching type information.
-	llvm::Type const* llvm_type( builtin_type_code const& btc, bool& sign );
+	llvm::Type const* llvm_type( builtin_types const& btc, bool& sign );
 	// llvm::Type const* llvm_type( boost::shared_ptr<sasl::syntax_tree::type_specifier> const& );
 
 	// Direct access member from module.

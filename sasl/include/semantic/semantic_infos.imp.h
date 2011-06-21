@@ -20,7 +20,7 @@ template <typename T> T const_value_si::value() const {
         return (T)boost::get<double>(val);
     }
 
-    if ( value_type() == builtin_type_code::_boolean ) {
+    if ( value_type() == builtin_types::_boolean ) {
         return (T)boost::get<bool>(val);
     }
 
@@ -30,7 +30,7 @@ template <typename T> T const_value_si::value() const {
 
 template <typename T> void const_value_si::value( T val ){
 	this->val = val;
-	type_info()->value_typecode = builtin_type_code::none;
+	type_info()->value_typecode = builtin_types::none;
 }
 END_NS_SASL_SEMANTIC();
 

@@ -3,8 +3,8 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
-#include <salviar/include/enums.h>
-#include <sasl/enums/builtin_type_code.h>
+#include <salviar/include/shader.h>
+#include <sasl/enums/builtin_types.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -18,14 +18,7 @@ BEGIN_NS_SASL_SEMANTIC();
 class module_si;
 class symbol;
 
-enum storage_types{
-	storage_none = 0,
-	stream_in,
-	stream_out,
-	buffer_in,
-	buffer_out,
-	storage_types_count
-};
+
 
 struct storage_info{
 	storage_info();
@@ -33,7 +26,7 @@ struct storage_info{
 	int offset;
 	int size;
 	storage_types storage;
-	builtin_type_code sv_type;
+	builtin_types sv_type;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -57,9 +50,9 @@ public:
 	bool is_entry( boost::shared_ptr<symbol> const& ) const;
 	std::string entry_name() const;
 
-	bool add_input_semantic( salviar::semantic sem, builtin_type_code btc, bool is_stream );
-	bool add_output_semantic( salviar::semantic sem, builtin_type_code btc );
-	void add_global_var( boost::shared_ptr<symbol> const&, builtin_type_code btc );
+	bool add_input_semantic( salviar::semantic sem, builtin_types btc, bool is_stream );
+	bool add_output_semantic( salviar::semantic sem, builtin_types btc );
+	void add_global_var( boost::shared_ptr<symbol> const&, builtin_types btc );
 
 	storage_info* input_storage( salviar::semantic ) const;
 	storage_info* input_storage( boost::shared_ptr<symbol> const& ) const;

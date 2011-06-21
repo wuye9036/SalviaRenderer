@@ -211,7 +211,7 @@ void follow_up_traversal( boost::shared_ptr<node> root, boost::function<void( no
 	}
 }
 
-boost::shared_ptr<builtin_type> create_builtin_type( const builtin_type_code& btc )
+boost::shared_ptr<builtin_type> create_builtin_type( const builtin_types& btc )
 {
 	boost::shared_ptr<builtin_type> ret = create_node<builtin_type>( token_t::null() );
 	ret->value_typecode = btc;

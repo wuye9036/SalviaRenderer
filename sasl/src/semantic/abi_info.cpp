@@ -16,7 +16,7 @@ using std::vector;
 BEGIN_NS_SASL_SEMANTIC();
 
 storage_info::storage_info()
-	: index(-1), offset(0), size(0), storage(storage_none), sv_type( builtin_type_code::none )
+	: index(-1), offset(0), size(0), storage(storage_none), sv_type( builtin_types::none )
 {
 }
 
@@ -47,14 +47,14 @@ bool abi_info::is_entry( shared_ptr<symbol> const& v ) const{
 std::string abi_info::entry_name() const{
 	return entry_point_name;
 }
-bool abi_info::add_input_semantic( salviar::semantic sem, builtin_type_code btc, bool is_stream )
+bool abi_info::add_input_semantic( salviar::semantic sem, builtin_types btc, bool is_stream )
 {
 	vector<salviar::semantic>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
 	if( it != sems_in.end() ){
 		if( *it == sem ){
 			storage_info* si = input_storage( sem );
 			assert(si);
-			if( si->sv_type == btc || si->sv_type == builtin_type_code::none ){
+			if( si->sv_type == btc || si->sv_type == builtin_types::none ){
 				si->sv_type = btc;
 				return true;
 			}
@@ -69,12 +69,12 @@ bool abi_info::add_input_semantic( salviar::semantic sem, builtin_type_code btc,
 	return true;
 }
 
-bool abi_info::add_output_semantic( salviar::semantic sem, builtin_type_code btc ){
+bool abi_info::add_output_semantic( salviar::semantic sem, builtin_types btc ){
 	vector<salviar::semantic>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
 	if( it != sems_out.end() ){
 		if( *it == sem ){
 			storage_info* si = alloc_output_storage( sem );
-			if( si->sv_type != btc && si->sv_type == builtin_type_code::none ){
+			if( si->sv_type != btc && si->sv_type == builtin_types::none ){
 				si->sv_type = btc;
 				return true;
 			}
@@ -89,7 +89,7 @@ bool abi_info::add_output_semantic( salviar::semantic sem, builtin_type_code btc
 	return true;
 }
 
-void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_type_code btc )
+void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_types btc )
 {
 	syms_in.push_back( v.get() );
 	storage_info* si = alloc_input_storage( v );

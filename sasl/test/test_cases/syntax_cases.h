@@ -29,19 +29,19 @@ public:
 	TEST_CASE_CREF_VARIABLE( uint32_t, val_21uint );
 
 	// builtin type codes.
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_sint8 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_sint32 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_uint32 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_uint64 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_float );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_double );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_boolean );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_void );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_short2 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_float3 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_double2x4 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_ulong3x2 );
-	TEST_CASE_CREF_VARIABLE( builtin_type_code, btc_none );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_sint8 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_sint32 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_uint32 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_uint64 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_float );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_double );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_boolean );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_void );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_short2 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_float3 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_double2x4 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_ulong3x2 );
+	TEST_CASE_CREF_VARIABLE( builtin_types, btc_none );
 
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_3p25f );
 	TEST_CASE_SP_VARIABLE( SYNTAX_(constant_expression), cexpr_17ushort );

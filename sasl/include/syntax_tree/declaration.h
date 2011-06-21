@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <sasl/enums/syntax_node_types.h>
 #include <sasl/enums/type_qualifiers.h>
 
@@ -109,7 +109,7 @@ protected:
 };
 
 struct type_specifier: public declaration{
-	builtin_type_code value_typecode;
+	builtin_types value_typecode;
 	type_qualifiers qual;
 
 	bool is_builtin() const;

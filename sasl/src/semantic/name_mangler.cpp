@@ -35,7 +35,7 @@ using ::sasl::syntax_tree::variable_declaration;
 // static boost::mutex lookup_table_mtx;
 
 static std::string mangling_tag("M");
-static boost::unordered_map< builtin_type_code, std::string, enum_hasher > btc_decorators;
+static boost::unordered_map< builtin_types, std::string, enum_hasher > btc_decorators;
 static bool is_initialized(false);
 
 static void initialize_lookup_table(){
@@ -44,18 +44,18 @@ static void initialize_lookup_table(){
 	if ( is_initialized ){ return; }
 
 	boost::assign::insert( btc_decorators )
-		( builtin_type_code::_void, "O" )
-		( builtin_type_code::_boolean, "B" )
-		( builtin_type_code::_sint8, "S1" )
-		( builtin_type_code::_sint16, "S2" )
-		( builtin_type_code::_sint32, "S4" )
-		( builtin_type_code::_sint64, "S8" )
-		( builtin_type_code::_uint8, "U1" )
-		( builtin_type_code::_uint16, "U2" )
-		( builtin_type_code::_uint32, "U4" )
-		( builtin_type_code::_uint64, "U8" )
-		( builtin_type_code::_float, "F" )
-		( builtin_type_code::_double, "D" )
+		( builtin_types::_void, "O" )
+		( builtin_types::_boolean, "B" )
+		( builtin_types::_sint8, "S1" )
+		( builtin_types::_sint16, "S2" )
+		( builtin_types::_sint32, "S4" )
+		( builtin_types::_sint64, "S8" )
+		( builtin_types::_uint8, "U1" )
+		( builtin_types::_uint16, "U2" )
+		( builtin_types::_uint32, "U4" )
+		( builtin_types::_uint64, "U8" )
+		( builtin_types::_float, "F" )
+		( builtin_types::_double, "D" )
 		;
 
 	is_initialized = true;
@@ -65,7 +65,7 @@ static void initialize_lookup_table(){
 // some free function for manging
 static void append( std::string& str, boost::shared_ptr<type_specifier> typespec );
 
-static void append( std::string& str, builtin_type_code btc, bool is_component = false ){
+static void append( std::string& str, builtin_types btc, bool is_component = false ){
 	if ( sasl_ehelper::is_scalar( btc ) ) {
 		if ( !is_component ){
 			// if it is not a component of a vector or matrix,

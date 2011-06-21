@@ -6,7 +6,7 @@
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -37,7 +37,7 @@ type_entry::id_t type_entry_id_of_symbol( shared_ptr<symbol> const& sym ){
 }
 
 // some utility functions
-std::string builtin_type_name( builtin_type_code btc ){
+std::string builtin_type_name( builtin_types btc ){
 	if( sasl_ehelper::is_vector(btc) ) {
 		return 
 			( boost::format("%1%_%2%") 
@@ -179,7 +179,7 @@ shared_ptr< type_specifier > type_manager::get( type_entry::id_t id ){
 }
 
 // Get type id by an builtin type code
-type_entry::id_t type_manager::get( const builtin_type_code& btc ){
+type_entry::id_t type_manager::get( const builtin_types& btc ){
 	// If it existed in symbol, return it.
 	// Otherwise create a new type and push into type manager.
 	type_entry::id_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );

@@ -9,7 +9,6 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/stream.h>
 #include <salviar/include/decl.h>
 
 #include <eflib/include/platform/boost_begin.h>

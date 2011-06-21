@@ -19,7 +19,6 @@ SET( FOUNDATION_HEADERS
 )
 
 SET( PIPELINE_HEADERS
-	include/stream.h
 	include/stream_assembler.h
 	include/clipper.h
 	include/index_fetcher.h
@@ -48,7 +47,6 @@ set( BUFFER_HEADERS
 	include/sampler.h
 	include/surface.h
 	include/resource_manager.h
-
 )
 
 SOURCE_GROUP( "Header Files\\Fundations" FILES

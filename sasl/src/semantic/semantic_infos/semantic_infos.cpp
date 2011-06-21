@@ -121,7 +121,7 @@ void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec, shared_p
 	tid = typemgr.lock()->get( typespec, sym );
 }
 
-void type_info_si_impl::type_info( builtin_type_code btc )
+void type_info_si_impl::type_info( builtin_types btc )
 {
 	tid = typemgr.lock()->get( btc ); 
 }
@@ -143,30 +143,30 @@ void const_value_si::set_literal(
 		nosuffix_litstr = integer_literal_suffix( litstr, is_unsigned, is_long );
 		if ( is_unsigned ){
 			val = boost::lexical_cast<uint64_t>(nosuffix_litstr);
-			type_info( is_long ? builtin_type_code::_uint64 : builtin_type_code::_uint32 );
+			type_info( is_long ? builtin_types::_uint64 : builtin_types::_uint32 );
 		} else {
 			val = boost::lexical_cast<int64_t>(nosuffix_litstr);
-			type_info( is_long ? builtin_type_code::_sint64 : builtin_type_code::_sint32 );
+			type_info( is_long ? builtin_types::_sint64 : builtin_types::_sint32 );
 		}
 	} else if( lctype == literal_constant_types::real ){
 		bool is_single(false);
 		nosuffix_litstr = real_literal_suffix( litstr, is_single );
 		val = boost::lexical_cast<double>(nosuffix_litstr);
-		type_info( is_single ? builtin_type_code::_float : builtin_type_code::_double);
+		type_info( is_single ? builtin_types::_float : builtin_types::_double);
 	} else if( lctype == literal_constant_types::boolean ){
 		val = (litstr == "true");
-		type_info( builtin_type_code::_boolean );
+		type_info( builtin_types::_boolean );
 	} else if( lctype == literal_constant_types::character ){
 		val = litstr[0];
-		type_info( builtin_type_code::_sint8 );
+		type_info( builtin_types::_sint8 );
 	} else if( lctype == literal_constant_types::string ){
 		val = litstr;
-		type_info( builtin_type_code::none );
+		type_info( builtin_types::none );
 	}
 }
 
-builtin_type_code const_value_si::value_type() const{
-	if( !type_info() ) return builtin_type_code::none;
+builtin_types const_value_si::value_type() const{
+	if( !type_info() ) return builtin_types::none;
 	return type_info()->value_typecode;
 }
 

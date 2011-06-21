@@ -5,7 +5,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/enums/default_hasher.h>
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <sasl/enums/type_qualifiers.h>
 #include <sasl/enums/storage_mode.h>
 #include <boost/shared_ptr.hpp>

@@ -443,21 +443,21 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 #define INSERT_INTO_TYPEMAP( litname, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
-		bt->value_typecode = builtin_type_code::enum_code;	\
+		bt->value_typecode = builtin_types::enum_code;	\
 		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
 	}
 
 #define INSERT_VECTOR_INTO_TYPEMAP( component_type, dim, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
-		bt->value_typecode = sasl_ehelper::vector_of( builtin_type_code::enum_code, dim );	\
+		bt->value_typecode = sasl_ehelper::vector_of( builtin_types::enum_code, dim );	\
 		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
 	}
 
 #define INSERT_MATRIX_INTO_TYPEMAP( component_type, dim0, dim1, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
-		bt->value_typecode = sasl_ehelper::matrix_of( builtin_type_code::enum_code, dim0, dim1 );	\
+		bt->value_typecode = sasl_ehelper::matrix_of( builtin_types::enum_code, dim0, dim1 );	\
 		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
 	}
 

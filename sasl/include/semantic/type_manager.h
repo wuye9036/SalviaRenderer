@@ -17,7 +17,7 @@ namespace sasl{
 	}
 }
 
-struct builtin_type_code;
+struct builtin_types;
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -52,7 +52,7 @@ public:
 		::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > const& node,
 		::boost::shared_ptr<symbol> const& parent
 		);
-	type_entry::id_t get( const builtin_type_code& btc );
+	type_entry::id_t get( const builtin_types& btc );
 
 	::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > get( type_entry::id_t id );
 	

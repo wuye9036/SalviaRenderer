@@ -164,8 +164,8 @@ SASL_VISIT_DEF( binary_expression ){
 		Value* retval = NULL;
 		if( lval && rval ){
 
-			builtin_type_code lbtc = p0_tsi->type_info()->value_typecode;
-			builtin_type_code rbtc = p1_tsi->type_info()->value_typecode;
+			builtin_types lbtc = p0_tsi->type_info()->value_typecode;
+			builtin_types rbtc = p1_tsi->type_info()->value_typecode;
 
 			if (v.op == operators::add){
 				if( sasl_ehelper::is_real(lbtc) ){
@@ -267,11 +267,11 @@ SASL_VISIT_DEF( constant_expression ){
 	cgllvm_sctxt* const_ctxt = node_ctxt( c_si->type_info() );
 	Type const* const_lltype = const_ctxt->data().val_type;
 
-	if( c_si->value_type() == builtin_type_code::_sint32 ){
+	if( c_si->value_type() == builtin_types::_sint32 ){
 		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<int32_t>() ), true );
-	} else if ( c_si->value_type() == builtin_type_code::_uint32 ) {
+	} else if ( c_si->value_type() == builtin_types::_uint32 ) {
 		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<uint32_t>() ), false );
-	} else if ( c_si->value_type() == builtin_type_code::_float ) {
+	} else if ( c_si->value_type() == builtin_types::_float ) {
 		retval = ConstantFP::get( const_lltype, c_si->value<double>() );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -704,7 +704,7 @@ cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val ){
 Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
 {
 	if( typespec->is_builtin() ){
-		builtin_type_code btc = typespec->value_typecode;
+		builtin_types btc = typespec->value_typecode;
 		Type const* valtype = node_ctxt(typespec)->data().val_type;
 		if( sasl_ehelper::is_integer( btc ) ){
 			return ConstantInt::get( valtype, 0, sasl_ehelper::is_signed(btc) );
@@ -999,8 +999,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			shared_ptr<type_specifier> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
 			shared_ptr<type_specifier> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
 			assert( lpar_type && rpar_type );
-			builtin_type_code lbtc = lpar_type->value_typecode;
-			builtin_type_code rbtc = rpar_type->value_typecode;
+			builtin_types lbtc = lpar_type->value_typecode;
+			builtin_types rbtc = rpar_type->value_typecode;
 
 			Type const* ret_type = fn->getReturnType();
 
@@ -1008,13 +1008,13 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			// vec_m mul(vec_n, mat_mxn);
 			if( sasl_ehelper::is_vector( lbtc ) && sasl_ehelper::is_matrix( rbtc ) ){
-				if( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_float ){
+				if( sasl_ehelper::scalar_of(lbtc) == builtin_types::_float ){
 					ext->return_(
 						mul_vm<llfloat>( larg, rarg,
 						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_0(rbtc),
 						ret_type )
 						);
-				} else if ( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_sint32 ){
+				} else if ( sasl_ehelper::scalar_of(lbtc) == builtin_types::_sint32 ){
 					ext->return_(
 						mul_vm<lli32>( larg, rarg,
 						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_0(rbtc),
@@ -1024,7 +1024,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 					// EFLIB_ASSERT_UNIMPLEMENTED();
 				}
 			} else if( sasl_ehelper::is_matrix( lbtc ) && sasl_ehelper::is_vector( rbtc ) ) {
-				if( sasl_ehelper::scalar_of(lbtc) == builtin_type_code::_float ){
+				if( sasl_ehelper::scalar_of(lbtc) == builtin_types::_float ){
 					ext->return_(
 						mul_mv<llfloat>( larg, rarg,
 						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_1(lbtc),

@@ -148,8 +148,8 @@ SASL_VISIT_DEF( binary_expression ){
 		Value* retval = NULL;
 		if( lval && rval ){
 
-			builtin_type_code lbtc = p0_tsi->type_info()->value_typecode;
-			builtin_type_code rbtc = p1_tsi->type_info()->value_typecode;
+			builtin_types lbtc = p0_tsi->type_info()->value_typecode;
+			builtin_types rbtc = p1_tsi->type_info()->value_typecode;
 
 			if (v.op == operators::add){
 				if( sasl_ehelper::is_real(lbtc) ){
@@ -261,7 +261,7 @@ SASL_VISIT_DEF( if_statement ){
 
 	visit_child( child_ctxt, child_ctxt_init, v.cond );
 	type_entry::id_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
-	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_type_code::_boolean );
+	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_types::_boolean );
 	if( cond_tid != bool_tid ){
 		typeconv->convert( msi->type_manager()->get(bool_tid), v.cond );
 	}

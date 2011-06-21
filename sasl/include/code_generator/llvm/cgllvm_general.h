@@ -38,7 +38,7 @@ namespace llvm{
 	class Constant;
 }
 
-struct builtin_type_code;
+struct builtin_types;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 

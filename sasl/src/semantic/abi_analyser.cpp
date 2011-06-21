@@ -6,7 +6,7 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_helper.h>
 
 #include <eflib/include/diagnostics/assert.h>
@@ -31,7 +31,7 @@ using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-bool verify_semantic_type( builtin_type_code btc, salviar::semantic sem ){
+bool verify_semantic_type( builtin_types btc, salviar::semantic sem ){
 	switch( semantic_base(sem) ){
 
 	case salviar::SV_None:
@@ -42,7 +42,7 @@ bool verify_semantic_type( builtin_type_code btc, salviar::semantic sem ){
 	case salviar::SV_NORMAL:
 		return 
 			( sasl_ehelper::is_scalar(btc) || sasl_ehelper::is_vector(btc) )
-			&& sasl_ehelper::scalar_of(btc) == builtin_type_code::_float;
+			&& sasl_ehelper::scalar_of(btc) == builtin_types::_float;
 
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -249,7 +249,7 @@ bool abi_analyser::add_semantic(
 	salviar::semantic node_sem = pssi->get_semantic();
 
 	if( ptspec->is_builtin() ){
-		builtin_type_code btc = ptspec->value_typecode;
+		builtin_types btc = ptspec->value_typecode;
 		if ( verify_semantic_type( btc, node_sem ) ) {
 			storage_types sem_s = semantic_storage( lang, is_output, node_sem );
 			switch( sem_s ){

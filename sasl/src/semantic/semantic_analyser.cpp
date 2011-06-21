@@ -295,7 +295,7 @@ SASL_VISIT_DEF( call_expression )
 	data_cptr()->generated_node = dup_callexpr->handle();
 }
 
-int check_swizzle( builtin_type_code btc, std::string const& mask, int32_t& swizzle_code ){
+int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_code ){
 	swizzle_code = 0;
 
 	if( mask.length() > 4 ){
@@ -351,11 +351,11 @@ SASL_VISIT_DEF( member_expression ){
 		assert( mem_typeid != -1 );
 	} else if( agg_type->is_builtin() ){
 		// Aggregated class is vector & matrix
-		builtin_type_code agg_btc = agg_type->value_typecode;
+		builtin_types agg_btc = agg_type->value_typecode;
 		int field_count = check_swizzle( agg_btc, v.member->str, swizzle_code );
 		if( field_count > 0 ){
-			builtin_type_code elem_btc = sasl_ehelper::scalar_of( agg_btc );
-			builtin_type_code swizzled_btc = builtin_type_code::none;
+			builtin_types elem_btc = sasl_ehelper::scalar_of( agg_btc );
+			builtin_types swizzled_btc = builtin_types::none;
 
 			if( sasl_ehelper::is_scalar(agg_btc)
 				|| sasl_ehelper::is_vector(agg_btc) )
@@ -682,7 +682,7 @@ SASL_VISIT_DEF( if_statement )
 	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_ifstmt->cond );
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_ifstmt->cond);
 	assert( cond_tsi );
-	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_type_code::_boolean );
+	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_types::_boolean );
 	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
 
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt, dup_ifstmt->yes_stmt );
@@ -809,20 +809,20 @@ void semantic_analyser::register_type_converter( const boost::any& /*ctxt*/ ){
 	// register default type converter
 	type_manager* typemgr = msi->type_manager().get();
 
-	type_entry::id_t sint8_ts = typemgr->get( builtin_type_code::_sint8 );
-	type_entry::id_t sint16_ts = typemgr->get( builtin_type_code::_sint16 );
-	type_entry::id_t sint32_ts = typemgr->get( builtin_type_code::_sint32 );
-	type_entry::id_t sint64_ts = typemgr->get( builtin_type_code::_sint64 );
+	type_entry::id_t sint8_ts = typemgr->get( builtin_types::_sint8 );
+	type_entry::id_t sint16_ts = typemgr->get( builtin_types::_sint16 );
+	type_entry::id_t sint32_ts = typemgr->get( builtin_types::_sint32 );
+	type_entry::id_t sint64_ts = typemgr->get( builtin_types::_sint64 );
 
-	type_entry::id_t uint8_ts = typemgr->get( builtin_type_code::_uint8 );
-	type_entry::id_t uint16_ts = typemgr->get( builtin_type_code::_uint16 );
-	type_entry::id_t uint32_ts = typemgr->get( builtin_type_code::_uint32 );
-	type_entry::id_t uint64_ts = typemgr->get( builtin_type_code::_uint64 );
+	type_entry::id_t uint8_ts = typemgr->get( builtin_types::_uint8 );
+	type_entry::id_t uint16_ts = typemgr->get( builtin_types::_uint16 );
+	type_entry::id_t uint32_ts = typemgr->get( builtin_types::_uint32 );
+	type_entry::id_t uint64_ts = typemgr->get( builtin_types::_uint64 );
 
-	type_entry::id_t float_ts = typemgr->get( builtin_type_code::_float );
-	type_entry::id_t double_ts = typemgr->get( builtin_type_code::_double );
+	type_entry::id_t float_ts = typemgr->get( builtin_types::_float );
+	type_entry::id_t double_ts = typemgr->get( builtin_types::_double );
 
-	type_entry::id_t bool_ts = typemgr->get( builtin_type_code::_boolean );
+	type_entry::id_t bool_ts = typemgr->get( builtin_types::_boolean );
 
 	// default conversation will do nothing.
 	type_converter::converter_t default_conv = bind(&semantic_analyser::builtin_type_convert, this, _1, _2);
@@ -966,7 +966,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 	// Operators
 	typedef unordered_map<
-		builtin_type_code, shared_ptr<builtin_type>, enum_hasher
+		builtin_types, shared_ptr<builtin_type>, enum_hasher
 		> bt_table_t;
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
@@ -974,7 +974,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 	map_of_builtin_type( standard_bttbl, &sasl_ehelper::is_standard );
 	map_of_builtin_type( storage_bttbl, &sasl_ehelper::is_storagable );
 
-#define BUILTIN_TYPE( btc ) (storage_bttbl[ builtin_type_code::btc ])
+#define BUILTIN_TYPE( btc ) (storage_bttbl[ builtin_types::btc ])
 
 	shared_ptr<builtin_type> bt_bool = BUILTIN_TYPE( _boolean );
 	shared_ptr<builtin_type> bt_i32 = BUILTIN_TYPE( _sint32 );
@@ -1096,7 +1096,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 		if( op == operators::negative ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( it_type->first != builtin_type_code::_uint64 ){
+				if ( it_type->first != builtin_types::_uint64 ){
 					dfunction_combinator(NULL).dname( op_name )
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
@@ -1123,14 +1123,14 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 	// Intrinsics
 	shared_ptr<builtin_type> fvec_ts[5];
 	for( int i = 1; i <= 4; ++i ){
-		fvec_ts[i] = storage_bttbl[ sasl_ehelper::vector_of( builtin_type_code::_float, i ) ];
+		fvec_ts[i] = storage_bttbl[ sasl_ehelper::vector_of( builtin_types::_float, i ) ];
 	}
 
 	shared_ptr<builtin_type> fmat_ts[5][5];
 	for( int vec_size = 1; vec_size < 5; ++vec_size ){
 		for( int n_vec = 1; n_vec < 5; ++n_vec ){
 			fmat_ts[vec_size][n_vec] = storage_bttbl[
-				sasl_ehelper::matrix_of( builtin_type_code::_float, vec_size, n_vec )
+				sasl_ehelper::matrix_of( builtin_types::_float, vec_size, n_vec )
 			];
 		}
 	}
@@ -1155,7 +1155,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 }
 
 void semantic_analyser::register_builtin_types(){
-	BOOST_FOREACH( builtin_type_code const & btc, sasl_ehelper::list_of_builtin_type_codes() ){
+	BOOST_FOREACH( builtin_types const & btc, sasl_ehelper::list_of_builtin_type_codes() ){
 		EFLIB_ASSERT( msi->type_manager()->get( btc ) > -1, "Register builtin type failed!" );
 	}
 }

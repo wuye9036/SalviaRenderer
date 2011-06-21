@@ -1,86 +1,86 @@
 #include <sasl/enums/enums_helper.h>
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/std/vector.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
-bool sasl_ehelper::is_none( const builtin_type_code& btc ){
-	return btc == builtin_type_code::none;
+bool sasl_ehelper::is_none( const builtin_types& btc ){
+	return btc == builtin_types::none;
 }
 
-bool sasl_ehelper::is_void( const builtin_type_code& btc ){
-	return btc == builtin_type_code::_void;
+bool sasl_ehelper::is_void( const builtin_types& btc ){
+	return btc == builtin_types::_void;
 }
 
-bool sasl_ehelper::is_integer( const builtin_type_code& btc )
+bool sasl_ehelper::is_integer( const builtin_types& btc )
 {
-	return ( btc & builtin_type_code::_generic_type_mask ) == builtin_type_code::_integer;
+	return ( btc & builtin_types::_generic_type_mask ) == builtin_types::_integer;
 }
 
-bool sasl_ehelper::is_real( const builtin_type_code& btc )
+bool sasl_ehelper::is_real( const builtin_types& btc )
 {
-	return ( btc & builtin_type_code::_generic_type_mask ) == builtin_type_code::_real;
+	return ( btc & builtin_types::_generic_type_mask ) == builtin_types::_real;
 }
 
-bool sasl_ehelper::is_signed( const builtin_type_code& btc )
+bool sasl_ehelper::is_signed( const builtin_types& btc )
 {
-	return ( btc & builtin_type_code::_sign_mask ) == builtin_type_code::_signed;
+	return ( btc & builtin_types::_sign_mask ) == builtin_types::_signed;
 }
 
-bool sasl_ehelper::is_unsigned( const builtin_type_code& btc )
+bool sasl_ehelper::is_unsigned( const builtin_types& btc )
 {
-	return ( btc & builtin_type_code::_sign_mask ) == builtin_type_code::_unsigned;
+	return ( btc & builtin_types::_sign_mask ) == builtin_types::_unsigned;
 }
 
-bool sasl_ehelper::is_scalar( const builtin_type_code& btc )
+bool sasl_ehelper::is_scalar( const builtin_types& btc )
 {
-	bool scalar = ( ( btc & builtin_type_code::_dimension_mask ) == builtin_type_code::_scalar );
+	bool scalar = ( ( btc & builtin_types::_dimension_mask ) == builtin_types::_scalar );
 	return scalar && !is_void(btc) && !is_none(btc) ;
 }
 
-bool sasl_ehelper::is_vector( const builtin_type_code& btc )
+bool sasl_ehelper::is_vector( const builtin_types& btc )
 {
-	return ( btc & builtin_type_code::_dimension_mask ) == builtin_type_code::_vector;
+	return ( btc & builtin_types::_dimension_mask ) == builtin_types::_vector;
 }
 
-bool sasl_ehelper::is_matrix( const builtin_type_code& btc )
+bool sasl_ehelper::is_matrix( const builtin_types& btc )
 {
-	return ( btc & builtin_type_code::_dimension_mask ) == builtin_type_code::_matrix;
+	return ( btc & builtin_types::_dimension_mask ) == builtin_types::_matrix;
 }
 
-bool sasl_ehelper::is_storagable( const builtin_type_code& btc ){
+bool sasl_ehelper::is_storagable( const builtin_types& btc ){
 	return 
 		is_scalar(btc) || is_vector( btc ) || is_matrix( btc )
 		;
 }
 
-builtin_type_code sasl_ehelper::scalar_of( const builtin_type_code& btc ){
-	return ( btc & builtin_type_code::_scalar_type_mask );
+builtin_types sasl_ehelper::scalar_of( const builtin_types& btc ){
+	return ( btc & builtin_types::_scalar_type_mask );
 }
 
-builtin_type_code sasl_ehelper::vector_of( const builtin_type_code& btc, size_t len )
+builtin_types sasl_ehelper::vector_of( const builtin_types& btc, size_t len )
 {
 	if ( !is_scalar(btc) ){
-		return builtin_type_code::none;
+		return builtin_types::none;
 	}
-	builtin_type_code ret = ( btc | builtin_type_code::_vector );
+	builtin_types ret = ( btc | builtin_types::_vector );
 	ret.from_value(
-		builtin_type_code::storage_type(
+		builtin_types::storage_type(
 		ret.to_value() | ( len << ret._dim0_field_shift.to_value() )
 		) 
 		);
 	return ret;
 }
 
-builtin_type_code sasl_ehelper::matrix_of( const builtin_type_code& btc, size_t len_0, size_t len_1 )
+builtin_types sasl_ehelper::matrix_of( const builtin_types& btc, size_t len_0, size_t len_1 )
 {
 	if ( !is_scalar(btc) ){
-		return builtin_type_code::none;
+		return builtin_types::none;
 	}
-	builtin_type_code ret( btc | builtin_type_code::_matrix );
+	builtin_types ret( btc | builtin_types::_matrix );
 	ret.from_value(
-		builtin_type_code::storage_type(
+		builtin_types::storage_type(
 		ret.to_value()
 		| ( len_0 << ret._dim0_field_shift.to_value() )
 		| ( len_1 << ret._dim1_field_shift.to_value() )
@@ -90,54 +90,54 @@ builtin_type_code sasl_ehelper::matrix_of( const builtin_type_code& btc, size_t 
 	return ret;
 }
 
-size_t sasl_ehelper::len_0( const builtin_type_code& btc )
+size_t sasl_ehelper::len_0( const builtin_types& btc )
 {
 	if( is_scalar(btc) ){
 		return 1;
 	}
 	return (size_t)
 		(
-		(btc & builtin_type_code::_dim0_mask).to_value()
-		>> builtin_type_code::_dim0_field_shift.to_value()
+		(btc & builtin_types::_dim0_mask).to_value()
+		>> builtin_types::_dim0_field_shift.to_value()
 		);
 }
 
-size_t sasl_ehelper::len_1( const builtin_type_code& btc )
+size_t sasl_ehelper::len_1( const builtin_types& btc )
 {
 	if( is_scalar(btc) || is_vector(btc) ){
 		return 1;
 	}
 	return (size_t)
 		(
-		(btc & builtin_type_code::_dim1_mask).to_value()
-		>> builtin_type_code::_dim1_field_shift.to_value()
+		(btc & builtin_types::_dim1_mask).to_value()
+		>> builtin_types::_dim1_field_shift.to_value()
 		);
 }
 
-size_t sasl_ehelper::storage_size( const builtin_type_code& btc ){
+size_t sasl_ehelper::storage_size( const builtin_types& btc ){
 	if( is_none(btc) || is_void(btc) ){
 		return 0;
 	}
 	size_t component_count = len_0(btc) * len_1(btc);
 	size_t component_size = 0;
-	builtin_type_code s_btc = scalar_of( btc );
-	if( s_btc == builtin_type_code::_sint8 
-		|| s_btc == builtin_type_code::_uint8 )
+	builtin_types s_btc = scalar_of( btc );
+	if( s_btc == builtin_types::_sint8 
+		|| s_btc == builtin_types::_uint8 )
 	{
 		component_size = 1;
-	} else if( s_btc == builtin_type_code::_sint16
-		|| s_btc == builtin_type_code::_uint16 )
+	} else if( s_btc == builtin_types::_sint16
+		|| s_btc == builtin_types::_uint16 )
 	{
 		component_size = 2;
-	} else if( s_btc == builtin_type_code::_sint32 
-		|| s_btc == builtin_type_code::_uint32 
-		|| s_btc == builtin_type_code::_float
-		|| s_btc == builtin_type_code::_boolean)
+	} else if( s_btc == builtin_types::_sint32 
+		|| s_btc == builtin_types::_uint32 
+		|| s_btc == builtin_types::_float
+		|| s_btc == builtin_types::_boolean)
 	{
 		component_size = 4;
-	} else if( s_btc == builtin_type_code::_sint64
-		|| s_btc == builtin_type_code::_uint64 
-		|| s_btc == builtin_type_code::_double)
+	} else if( s_btc == builtin_types::_sint64
+		|| s_btc == builtin_types::_uint64 
+		|| s_btc == builtin_types::_double)
 	{
 		component_size = 8;
 	}
@@ -147,24 +147,24 @@ size_t sasl_ehelper::storage_size( const builtin_type_code& btc ){
 using namespace boost::assign;
 
 boost::mutex sasl_ehelper::mtx_btlist_init;
-std::vector<builtin_type_code> sasl_ehelper::btc_list;
+std::vector<builtin_types> sasl_ehelper::btc_list;
 
-const std::vector<builtin_type_code>& sasl_ehelper::list_of_builtin_type_codes(){
+const std::vector<builtin_types>& sasl_ehelper::list_of_builtin_type_codes(){
 	boost::mutex::scoped_lock locker(mtx_btlist_init);
 	if( btc_list.empty() ){
 		// add scalars.
 		btc_list +=	
-			builtin_type_code::_sint8,
-			builtin_type_code::_sint16,
-			builtin_type_code::_sint32,
-			builtin_type_code::_sint64,
-			builtin_type_code::_uint8,
-			builtin_type_code::_uint16,
-			builtin_type_code::_uint32,
-			builtin_type_code::_uint64,
-			builtin_type_code::_boolean,
-			builtin_type_code::_float,
-			builtin_type_code::_double
+			builtin_types::_sint8,
+			builtin_types::_sint16,
+			builtin_types::_sint32,
+			builtin_types::_sint64,
+			builtin_types::_uint8,
+			builtin_types::_uint16,
+			builtin_types::_uint32,
+			builtin_types::_uint64,
+			builtin_types::_boolean,
+			builtin_types::_float,
+			builtin_types::_double
 			;
 
 		// add vectors & matrixs
@@ -180,8 +180,8 @@ const std::vector<builtin_type_code>& sasl_ehelper::list_of_builtin_type_codes()
 
 		// add other types.
 		btc_list +=
-			builtin_type_code::none,
-			builtin_type_code::_void
+			builtin_types::none,
+			builtin_types::_void
 			;
 	}
 	return btc_list;
@@ -313,12 +313,12 @@ const std::vector<operators>& sasl_ehelper::list_of_operators(){
 	return op_list;
 }
 
-bool sasl_ehelper::is_standard( const builtin_type_code& btc ){
-	if (btc == builtin_type_code::_sint32 ||
-		btc == builtin_type_code::_sint64 ||
-		btc == builtin_type_code::_uint64 ||
-		btc == builtin_type_code::_float ||
-		btc == builtin_type_code::_double) 
+bool sasl_ehelper::is_standard( const builtin_types& btc ){
+	if (btc == builtin_types::_sint32 ||
+		btc == builtin_types::_sint64 ||
+		btc == builtin_types::_uint64 ||
+		btc == builtin_types::_float ||
+		btc == builtin_types::_double) 
 	{
 			return true;
 	}

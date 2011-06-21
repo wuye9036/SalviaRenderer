@@ -43,7 +43,7 @@ SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( type_definition );
 
 type_specifier::type_specifier( syntax_node_types type_id, boost::shared_ptr<token_t> tok )
 	: declaration( type_id, tok ),
-	value_typecode( builtin_type_code::none),
+	value_typecode( builtin_types::none),
 	qual( type_qualifiers::none )
 { }
 

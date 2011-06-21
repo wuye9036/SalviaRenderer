@@ -2,7 +2,7 @@
 #define SASL_SYNTAX_TREE_UTILITY_H
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
-#include <sasl/enums/builtin_type_code.h>
+#include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_helper.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
@@ -22,17 +22,17 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 //		is a compatible with associated container in boost.assign.
 //		The prototype is
 //
-//		class ContainerT<builtin_type_code, builtin_type>
+//		class ContainerT<builtin_types, builtin_type>
 //
 //	*Pred* is a unary predicate function. The prototype of pred is
 //
-//		bool pred( const builtin_type_code& );
+//		bool pred( const builtin_types& );
 //
 //////////////////////////////////////////////////////////////////////////
 template<typename ContainerT, typename PredT>
 void map_of_builtin_type( ContainerT& cont, const PredT& pred){
 	cont.clear();
-	typedef std::vector<builtin_type_code> btc_list_t;
+	typedef std::vector<builtin_types> btc_list_t;
 	const btc_list_t& btclst( sasl_ehelper::list_of_builtin_type_codes() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
@@ -49,17 +49,17 @@ void map_of_builtin_type( ContainerT& cont, const PredT& pred){
 //		is a compatible with linear container in boost.assign.
 //		The prototype is
 //
-//		class ContainerT<builtin_type_code>
+//		class ContainerT<builtin_types>
 //
 //	*Pred* is a unary predicate function. The prototype of pred is
 //
-//		bool pred( const builtin_type_code& );
+//		bool pred( const builtin_types& );
 //
 //////////////////////////////////////////////////////////////////////////
 template<typename ContainerT, typename PredT>
 void list_of_builtin_type( ContainerT& cont, const PredT& pred ){
 	cont.clear();
-	typedef std::vector<builtin_type_code> btc_list_t;
+	typedef std::vector<builtin_types> btc_list_t;
 	const btc_list_t& btclst( sasl_ehelper::list_of_builtin_type_codes() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
@@ -79,7 +79,7 @@ void follow_up_traversal(
 boost::shared_ptr<node> duplicate( ::boost::shared_ptr<node> src );
 boost::shared_ptr<node> deep_duplicate( ::boost::shared_ptr<node> src );
 
-boost::shared_ptr<builtin_type> create_builtin_type( const builtin_type_code& btc );
+boost::shared_ptr<builtin_type> create_builtin_type( const builtin_types& btc );
 
 END_NS_SASL_SYNTAX_TREE();
 

@@ -67,7 +67,7 @@
 		<item>_newline</item>
 	</enum>
 	
-	<enum name="literal_constant_types">
+	<enum name="literal_classifications">
 		<HasName />
 		<AutoGen expression="$index$+1" />
 		<item>none</item>
@@ -78,7 +78,7 @@
 		<item>character</item>
 	</enum>	
 	
-	<enum name="builtin_type_code">
+	<enum name="builtin_types">
 		<HasName />
 		<Convertible/>
 		<Ortho />
@@ -132,7 +132,7 @@
 		<item value="(2**$_dim0_field_shift$) - 1">_dim1_mask</item>
 	</enum>
 	
-	<enum name="syntax_node_types" storage_type = "uint64_t" constant_macro = "UINT64_C">
+	<enum name="node_ids" storage_type = "uint64_t" constant_macro = "UINT64_C">
 		<HasName/>
 		<Convertible/>
 		<Ortho/>
@@ -190,15 +190,6 @@
 		<item value = "$label$ + 2">case_label</item><!-- include default label -->
 	</enum>
 	
-	<enum name="type_types">
-		<HasName/>
-		<Convertible/>
-		<AutoGen expression = "$index$"/>
-		<item>none</item>
-		<item>builtin</item>
-		<item>composited</item>
-		<item>alias</item>
-	</enum>
 	<enum name="storage_mode">
 		<HasName/>
 		<Convertible/>

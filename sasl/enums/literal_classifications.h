@@ -1,21 +1,21 @@
 
-#ifndef SASL_ENUMS_LITERAL_CONSTANT_TYPES_H
-#define SASL_ENUMS_LITERAL_CONSTANT_TYPES_H
+#ifndef SASL_ENUMS_LITERAL_CLASSIFICATIONS_H
+#define SASL_ENUMS_LITERAL_CLASSIFICATIONS_H
 
 #include "../enums/enum_base.h" 
 
-struct literal_constant_types :
-	public enum_base< literal_constant_types, uint32_t >
-	, public equal_op< literal_constant_types >
+struct literal_classifications :
+	public enum_base< literal_classifications, uint32_t >
+	, public equal_op< literal_classifications >
 {
 	friend struct enum_hasher;
 private:
-	literal_constant_types( const storage_type& val, const std::string& name );
-	literal_constant_types( const storage_type& val ): base_type(val){}
+	literal_classifications( const storage_type& val, const std::string& name );
+	literal_classifications( const storage_type& val ): base_type(val){}
 public:
 	static void force_initialize();
 	
-	literal_constant_types( const this_type& rhs )
+	literal_classifications( const this_type& rhs )
 		:base_type(rhs.val_)
 	{}
 	
