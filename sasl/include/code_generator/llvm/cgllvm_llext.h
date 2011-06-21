@@ -205,13 +205,13 @@ public:
 	
 	llvar( llvm::Type const* var_type, llext<builder_t>* ext ){
 		val = ext->builder->CreateAlloca( var_type );
-		cast<llvm::AllocaInst>(val)->setAlignment(4);
+		//cast<llvm::AllocaInst>(val)->setAlignment(4);
 		this->ext = ext;
 	}
 
 	llvar( llvm::Value* val, llext<builder_t>* ext ){
 		val = ext->builder->CreateAlloca( val->getType() );
-		cast<llvm::AllocaInst>(val)->setAlignment(4);
+		//cast<llvm::AllocaInst>(val)->setAlignment(4);
 		this->ext = ext;
 	}
 

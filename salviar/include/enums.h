@@ -225,32 +225,6 @@ enum stencil_op
     stencil_op_decr_wrap = 8,
 };
 
-enum semantic{
-	SV_None = 0,
-
-	// Semantic for input.
-	SV_Position,
-	SV_TEXCOORD,
-	SV_NORMAL,
-
-	// Semantic for pixel
-
-	semantic_count
-};
-
-inline semantic pack_semantic( semantic sem, int index ){ return static_cast<semantic>( ( index << 16 ) + static_cast<int>(sem) ); }
-inline int semantic_index( semantic sem ){ return sem >> 16; }
-inline semantic semantic_base( semantic sem ){ return static_cast<semantic>(sem & 65535); }
-
-enum languages{
-	lang_none = 0,
-	lang_general,	// general-purpose programming language.
-	lang_vertex_sl,
-	lang_pixel_sl,
-	lang_blend_sl,
-	lang_count
-};
-
 END_NS_SALVIAR()
 
 #endif

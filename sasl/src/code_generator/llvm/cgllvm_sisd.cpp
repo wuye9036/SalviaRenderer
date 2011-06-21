@@ -531,7 +531,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
-	mod_ptr()->module()->setDataLayout("v128:32:32-p:32:32:32-a0:0:1-s0:32:32");
+	// mod_ptr()->module()->setDataLayout("v128:128:32-p:32:32:32-a0:0:1-s0:32:32");
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 	boost::function<Value* (cgllvm_sctxt*)> loader
@@ -886,7 +886,7 @@ void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 	if( parent_fn ){
 		ctxt->data().local
 			= builder()->CreateAlloca( ctxt->data().val_type, 0, name.c_str() );
-		ctxt->data().local->setAlignment(4);
+		//ctxt->data().local->setAlignment(4);
 	} else {
 		ctxt->data().global
 			 = cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );

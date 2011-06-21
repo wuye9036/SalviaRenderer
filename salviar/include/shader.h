@@ -1,22 +1,110 @@
-#ifndef SOFTART_SHADER_H
-#define SOFTART_SHADER_H
+#ifndef SALVIAR_SHADER_H
+#define SALVIAR_SHADER_H
 
-#include "shader_utility.h"
-#include "shaderregs.h"
-#include "sampler.h"
-#include "renderer_capacity.h"
-#include "enums.h"
+#include <salviar/include/salviar_forward.h>
+
+#include <salviar/include/shader_utility.h>
+#include <salviar/include/shaderregs.h>
+#include <salviar/include/sampler.h>
+#include <salviar/include/renderer_capacity.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <boost/smart_ptr.hpp>
 #include <boost/array.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/functional/hash.hpp>
+#include <boost/smart_ptr.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
+#include <string>
 #include <map>
-#include <salviar/include/salviar_forward.h>
+
 
 BEGIN_NS_SALVIAR();
+
+enum languages{
+	lang_none,
+	
+	lang_general,
+	lang_vertex_shader,
+	lang_pixel_shader,
+	lang_blending_shader,
+
+	lang_count
+};
+
+enum system_values{
+	sv_none,
+	sv_position,
+	sv_normal,
+
+	sv_customized,
+};
+
+class semantic_value{
+	semantic_value(): sv(sv_none), index(0){}
+
+	semantic_value( std::string const& name, uint32_t index = 0 ){
+		assert( !name.empty() && boost::is_alpha(name[0]) );
+
+		std::string lower_name = boost::to_lower_copy( name );
+
+		if( lower_name == "position" || lower_name == "sv_position" ){
+			sv == sv_position;
+		} else if ( lower_name == "normal" ){
+			sv == sv_normal;
+		} else {
+			sv == sv_customized;
+			this->name = name;
+		}
+		this->index = index;
+	}
+
+	semantic_value( system_values sv, uint32_t index = 0 ){
+		assert( none < sv && sv < sv_customized );
+		this->sv = sv;
+		this->index = index;
+	}
+
+	std::string const& get_name() const{
+		return name;
+	}
+
+	system_values const& get_system_value() const{
+		return sv;
+	}
+
+	uint32_t get_index() const{
+		return index;
+	}
+
+	bool operator < ( semantic_value const& rhs ){
+		return sv < rhs.sv || name < rhs.name || index < rhs.index;
+	}
+
+	bool operator == ( semantic_value const& rhs ){
+		return is_same_sv(rhs) && index == rhs.index;
+	}
+
+private:
+	std::string		name;
+	system_values	sv;
+	uint32_t		index;
+
+	bool is_same_sv( semantic_value const& rhs ){
+		if( sv != rhs.sv ) return false;
+		if( sv == sv_customized ) return rhs.name == name;
+		return true;
+	}
+};
+
+size_t hash_value( semantic_value const& v ){
+	size_t seed = v.get_index();
+	boost::hash_combine<size_t>( seed, static_cast<size_t>( v.get_system_value() ) );
+	boost::hash_combine<size_t>( seed, v.get_name() );
+	return seed;
+}
 
 struct viewport;
 struct scanline_info;

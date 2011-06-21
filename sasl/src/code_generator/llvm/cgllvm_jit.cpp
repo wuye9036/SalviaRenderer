@@ -57,7 +57,10 @@ void cgllvm_jit_engine::build(){
 	}
 	
 	vector<string> attrs;
+#if defined(EFLIB_CPU_X86)
+	// TODO Here now used to ensure that unaligned pointer is avaliable.
 	attrs.push_back("-sse");
+#endif
 	attrs.push_back("+vector-unaligned-mem");
 
 	engine.reset(
