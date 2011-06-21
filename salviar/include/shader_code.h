@@ -3,7 +3,7 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/enums.h>
+#include <salviar/include/shader.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
