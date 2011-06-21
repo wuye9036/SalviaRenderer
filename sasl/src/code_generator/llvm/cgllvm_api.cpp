@@ -23,7 +23,7 @@ using boost::shared_ptr;
 boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii )
 {
 	boost::shared_ptr<symbol> root = mod->root();
-	if ( root && root->node() && root->node()->node_class() == syntax_node_types::program ){
+	if ( root && root->node() && root->node()->node_class() == node_ids::program ){
 		
 		if( !abii || abii->lang == salviar::lang_general ){
 			cgllvm_general cg;

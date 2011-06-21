@@ -128,7 +128,7 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 
 	mesh_names.resize(num_meshes);
 
-	salviar::input_layout_decl layout;
+	salviar::h_input_layout layout;
 	for (uint32_t mesh_index = 0; mesh_index < num_meshes; ++ mesh_index)
 	{
 		ReadShortString(file, mesh_names[mesh_index]);

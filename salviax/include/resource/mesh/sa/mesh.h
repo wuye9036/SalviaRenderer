@@ -54,7 +54,7 @@ public:
 
 	virtual void gen_adjancency() = 0;
 
-	virtual void render(const salviar::input_layout_decl& layout) = 0;
+	virtual void render(const salviar::h_input_layout& layout) = 0;
 	virtual void render() = 0;
 };
 
@@ -88,7 +88,7 @@ public:
 
 	virtual void gen_adjancency();
 
-	virtual void render(const salviar::input_layout_decl& layout);
+	virtual void render(const salviar::h_input_layout& layout);
 	virtual void render();
 
 	/*

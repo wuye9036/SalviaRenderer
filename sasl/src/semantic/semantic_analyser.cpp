@@ -158,7 +158,7 @@ void semantic_analyser::parse_semantic(
 	)
 {
 	if( sem_tok ){
-		salviar::semantic sem( salviar::SV_None );
+		salviar::semantic_value const& sem( salviar::SV_None );
 		string const& semstr = sem_tok->str;
 
 		if( semstr == "SV_Position" || semstr == "POSITION" ){
@@ -303,12 +303,12 @@ int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_
 	}
 
 	size_t agg_size = 0;
-	if( sasl_ehelper::is_scalar(btc) ){
+	if( is_scalar(btc) ){
 		agg_size = 1;
-	} else if( sasl_ehelper::is_vector(btc) ){
-		agg_size = sasl_ehelper::len_0( btc );
-	} else if( sasl_ehelper::is_matrix(btc) ){
-		agg_size = sasl_ehelper::len_1( btc );
+	} else if( is_vector(btc) ){
+		agg_size = len_0( btc );
+	} else if( is_matrix(btc) ){
+		agg_size = len_1( btc );
 	}
 
 	if( agg_size == 0 ){ return 0; }
@@ -338,7 +338,7 @@ SASL_VISIT_DEF( member_expression ){
 
 	
 	int32_t swizzle_code = 0;
-	if( agg_type->node_class() == syntax_node_types::struct_type ){
+	if( agg_type->node_class() == node_ids::struct_type ){
 		// Aggeragated is struct
 		shared_ptr<symbol> struct_sym = agg_type->typed_handle<struct_type>()->symbol();
 		shared_ptr<declarator> mem_declr
@@ -354,21 +354,21 @@ SASL_VISIT_DEF( member_expression ){
 		builtin_types agg_btc = agg_type->value_typecode;
 		int field_count = check_swizzle( agg_btc, v.member->str, swizzle_code );
 		if( field_count > 0 ){
-			builtin_types elem_btc = sasl_ehelper::scalar_of( agg_btc );
+			builtin_types elem_btc = scalar_of( agg_btc );
 			builtin_types swizzled_btc = builtin_types::none;
 
-			if( sasl_ehelper::is_scalar(agg_btc)
-				|| sasl_ehelper::is_vector(agg_btc) )
+			if( is_scalar(agg_btc)
+				|| is_vector(agg_btc) )
 			{
-				swizzled_btc = sasl_ehelper::vector_of(
+				swizzled_btc = vector_of(
 					elem_btc,
 					static_cast<size_t>( field_count )
 					);
 			} else {
 				// matrix only
-				swizzled_btc = sasl_ehelper::matrix_of(
+				swizzled_btc = matrix_of(
 					elem_btc,
-					sasl_ehelper::len_0( agg_btc ),
+					len_0( agg_btc ),
 					static_cast<size_t>( field_count )
 					);
 			}
@@ -971,8 +971,8 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
 
-	map_of_builtin_type( standard_bttbl, &sasl_ehelper::is_standard );
-	map_of_builtin_type( storage_bttbl, &sasl_ehelper::is_storagable );
+	map_of_builtin_type( standard_bttbl, &is_standard );
+	map_of_builtin_type( storage_bttbl, &is_storagable );
 
 #define BUILTIN_TYPE( btc ) (storage_bttbl[ builtin_types::btc ])
 
@@ -983,13 +983,13 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 	// Arithmetic operators
 	vector<std::string> op_tbl;
-	const vector<operators>& oplist = sasl_ehelper::list_of_operators();
+	const vector<operators>& oplist = list_of_operators();
 
 	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
 		operators op = oplist[i_op];
 		std::string op_name( operator_name(op) );
 
-		if ( sasl_ehelper::is_arithmetic(op) ){
+		if ( is_arithmetic(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				dfunction_combinator(NULL).dname( op_name )
 					.dreturntype().dnode( it_type->second ).end()
@@ -1001,7 +1001,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 		}
 
-		if( sasl_ehelper::is_arith_assign(op) ){
+		if( is_arith_assign(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				dfunction_combinator(NULL).dname( op_name )
 					.dreturntype().dnode( it_type->second ).end()
@@ -1012,7 +1012,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 		}
 
-		if( sasl_ehelper::is_relationship(op) ){
+		if( is_relationship(op) ){
 
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				dfunction_combinator(NULL).dname( op_name )
@@ -1024,9 +1024,9 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 		}
 
-		if( sasl_ehelper::is_bit(op) || sasl_ehelper::is_bit_assign(op) ){
+		if( is_bit(op) || is_bit_assign(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( sasl_ehelper::is_integer(it_type->first) ){
+				if ( is_integer(it_type->first) ){
 					dfunction_combinator(NULL).dname( op_name )
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
@@ -1037,9 +1037,9 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 		}
 
-		if( sasl_ehelper::is_shift(op) || sasl_ehelper::is_shift_assign(op) ){
+		if( is_shift(op) || is_shift_assign(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( sasl_ehelper::is_integer(it_type->first) ){
+				if ( is_integer(it_type->first) ){
 					dfunction_combinator(NULL).dname( op_name )
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
@@ -1050,7 +1050,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 		}
 
-		if( sasl_ehelper::is_bool_arith(op) ){
+		if( is_bool_arith(op) ){
 			dfunction_combinator(NULL).dname( op_name )
 				.dreturntype().dnode( bt_bool ).end()
 				.dparam().dtype().dnode( bt_bool ).end().end()
@@ -1059,9 +1059,9 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
 		}
 
-		if( sasl_ehelper::is_prefix(op) || sasl_ehelper::is_postfix(op) || op == operators::positive ){
+		if( is_prefix(op) || is_postfix(op) || op == operators::positive ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( sasl_ehelper::is_integer(it_type->first) ){
+				if ( is_integer(it_type->first) ){
 					dfunction_combinator(NULL).dname( op_name )
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
@@ -1074,7 +1074,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 		if( op == operators::bit_not ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( sasl_ehelper::is_integer(it_type->first) ){
+				if ( is_integer(it_type->first) ){
 					dfunction_combinator(NULL).dname( op_name )
 						.dreturntype().dnode( it_type->second ).end()
 						.dparam().dtype().dnode( it_type->second ).end().end()
@@ -1123,14 +1123,14 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 	// Intrinsics
 	shared_ptr<builtin_type> fvec_ts[5];
 	for( int i = 1; i <= 4; ++i ){
-		fvec_ts[i] = storage_bttbl[ sasl_ehelper::vector_of( builtin_types::_float, i ) ];
+		fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
 	}
 
 	shared_ptr<builtin_type> fmat_ts[5][5];
 	for( int vec_size = 1; vec_size < 5; ++vec_size ){
 		for( int n_vec = 1; n_vec < 5; ++n_vec ){
 			fmat_ts[vec_size][n_vec] = storage_bttbl[
-				sasl_ehelper::matrix_of( builtin_types::_float, vec_size, n_vec )
+				matrix_of( builtin_types::_float, vec_size, n_vec )
 			];
 		}
 	}
@@ -1155,7 +1155,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 }
 
 void semantic_analyser::register_builtin_types(){
-	BOOST_FOREACH( builtin_types const & btc, sasl_ehelper::list_of_builtin_type_codes() ){
+	BOOST_FOREACH( builtin_types const & btc, list_of_builtin_type_codes() ){
 		EFLIB_ASSERT( msi->type_manager()->get( btc ) > -1, "Register builtin type failed!" );
 	}
 }

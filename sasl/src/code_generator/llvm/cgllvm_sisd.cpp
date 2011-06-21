@@ -38,6 +38,7 @@
 using namespace llvm;
 using namespace sasl::syntax_tree;
 using namespace boost::assign;
+using namespace sasl::utility;
 
 using sasl::semantic::extract_semantic_info;
 using sasl::semantic::symbol;
@@ -168,38 +169,38 @@ SASL_VISIT_DEF( binary_expression ){
 			builtin_types rbtc = p1_tsi->type_info()->value_typecode;
 
 			if (v.op == operators::add){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFAdd( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					retval = mod_ptr()->builder()->CreateAdd( lval, rval, "" );
 				}
 			} else if ( v.op == operators::sub ){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFSub( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					retval = mod_ptr()->builder()->CreateSub( lval, rval, "" );
 				}
 			} else if ( v.op == operators::mul ){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFMul( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					retval = mod_ptr()->builder()->CreateMul( lval, rval, "" );
 				}
 			} else if ( v.op == operators::div ){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFDiv( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					// TODO support signed integer yet.
 					retval = mod_ptr()->builder()->CreateSDiv( lval, rval, "" );
 				}
 			} else if ( v.op == operators::less ){
-				if(sasl_ehelper::is_real(lbtc)){
+				if(is_real(lbtc)){
 					retval = mod_ptr()->builder()->CreateFCmpULT( lval, rval );
-				} else if ( sasl_ehelper::is_integer(lbtc) ){
-					if( sasl_ehelper::is_signed(lbtc) ){
+				} else if ( is_integer(lbtc) ){
+					if( is_signed(lbtc) ){
 						retval = mod_ptr()->builder()->CreateICmpSLT(lval, rval);
 					}
-					if( sasl_ehelper::is_unsigned(lbtc) ){
+					if( is_unsigned(lbtc) ){
 						retval = mod_ptr()->builder()->CreateICmpULT(lval, rval);
 					}
 				}
@@ -706,10 +707,10 @@ Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
 	if( typespec->is_builtin() ){
 		builtin_types btc = typespec->value_typecode;
 		Type const* valtype = node_ctxt(typespec)->data().val_type;
-		if( sasl_ehelper::is_integer( btc ) ){
-			return ConstantInt::get( valtype, 0, sasl_ehelper::is_signed(btc) );
+		if( is_integer( btc ) ){
+			return ConstantInt::get( valtype, 0, is_signed(btc) );
 		}
-		if( sasl_ehelper::is_real( btc ) ){
+		if( is_real( btc ) ){
 			return ConstantFP::get( valtype, 0.0 );
 		}
 	}
@@ -1007,27 +1008,27 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			// TODO need to be optimized.
 
 			// vec_m mul(vec_n, mat_mxn);
-			if( sasl_ehelper::is_vector( lbtc ) && sasl_ehelper::is_matrix( rbtc ) ){
-				if( sasl_ehelper::scalar_of(lbtc) == builtin_types::_float ){
+			if( is_vector( lbtc ) && is_matrix( rbtc ) ){
+				if( scalar_of(lbtc) == builtin_types::_float ){
 					ext->return_(
 						mul_vm<llfloat>( larg, rarg,
-						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_0(rbtc),
+						len_0(lbtc), len_0(rbtc),
 						ret_type )
 						);
-				} else if ( sasl_ehelper::scalar_of(lbtc) == builtin_types::_sint32 ){
+				} else if ( scalar_of(lbtc) == builtin_types::_sint32 ){
 					ext->return_(
 						mul_vm<lli32>( larg, rarg,
-						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_0(rbtc),
+						len_0(lbtc), len_0(rbtc),
 						ret_type )
 						);
 				} else {
 					// EFLIB_ASSERT_UNIMPLEMENTED();
 				}
-			} else if( sasl_ehelper::is_matrix( lbtc ) && sasl_ehelper::is_vector( rbtc ) ) {
-				if( sasl_ehelper::scalar_of(lbtc) == builtin_types::_float ){
+			} else if( is_matrix( lbtc ) && is_vector( rbtc ) ) {
+				if( scalar_of(lbtc) == builtin_types::_float ){
 					ext->return_(
 						mul_mv<llfloat>( larg, rarg,
-						sasl_ehelper::len_0(lbtc), sasl_ehelper::len_1(lbtc),
+						len_0(lbtc), len_1(lbtc),
 						ret_type )
 						);
 				}

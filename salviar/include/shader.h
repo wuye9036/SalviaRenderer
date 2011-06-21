@@ -43,26 +43,27 @@ enum system_values{
 };
 
 class semantic_value{
+public:
 	semantic_value(): sv(sv_none), index(0){}
 
 	semantic_value( std::string const& name, uint32_t index = 0 ){
-		assert( !name.empty() && boost::is_alpha(name[0]) );
+		assert( !name.empty() );
 
 		std::string lower_name = boost::to_lower_copy( name );
 
 		if( lower_name == "position" || lower_name == "sv_position" ){
-			sv == sv_position;
+			sv = sv_position;
 		} else if ( lower_name == "normal" ){
-			sv == sv_normal;
+			sv = sv_normal;
 		} else {
-			sv == sv_customized;
+			sv = sv_customized;
 			this->name = name;
 		}
 		this->index = index;
 	}
 
 	semantic_value( system_values sv, uint32_t index = 0 ){
-		assert( none < sv && sv < sv_customized );
+		assert( sv_none < sv && sv < sv_customized );
 		this->sv = sv;
 		this->index = index;
 	}
@@ -101,8 +102,8 @@ private:
 
 size_t hash_value( semantic_value const& v ){
 	size_t seed = v.get_index();
-	boost::hash_combine<size_t>( seed, static_cast<size_t>( v.get_system_value() ) );
-	boost::hash_combine<size_t>( seed, v.get_name() );
+	boost::hash_combine( seed, static_cast<size_t>( v.get_system_value() ) );
+	boost::hash_combine( seed, v.get_name() );
 	return seed;
 }
 

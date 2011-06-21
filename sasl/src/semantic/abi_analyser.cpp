@@ -31,7 +31,7 @@ using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-bool verify_semantic_type( builtin_types btc, salviar::semantic sem ){
+bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem ){
 	switch( semantic_base(sem) ){
 
 	case salviar::SV_None:
@@ -41,8 +41,8 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic sem ){
 	case salviar::SV_TEXCOORD:
 	case salviar::SV_NORMAL:
 		return 
-			( sasl_ehelper::is_scalar(btc) || sasl_ehelper::is_vector(btc) )
-			&& sasl_ehelper::scalar_of(btc) == builtin_types::_float;
+			( is_scalar(btc) || is_vector(btc) )
+			&& scalar_of(btc) == builtin_types::_float;
 
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -51,7 +51,7 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic sem ){
 	return false;
 }
 
-storage_types vsinput_semantic_storage( salviar::semantic sem ){
+storage_classifications vsinput_semantic_storage( salviar::semantic_value const& sem ){
 	switch( semantic_base(sem) ){
 	case salviar::SV_Position:
 		return stream_in;
@@ -63,7 +63,7 @@ storage_types vsinput_semantic_storage( salviar::semantic sem ){
 	return storage_none;
 }
 
-storage_types vsoutput_semantic_storage( salviar::semantic sem ){
+storage_classifications vsoutput_semantic_storage( salviar::semantic_value const& sem ){
 	switch( semantic_base(sem) ){
 	case salviar::SV_Position:
 		return buffer_out;
@@ -73,7 +73,7 @@ storage_types vsoutput_semantic_storage( salviar::semantic sem ){
 	return storage_none;
 }
 
-storage_types semantic_storage( salviar::languages lang, bool is_output, salviar::semantic sem ){
+storage_classifications semantic_storage( salviar::languages lang, bool is_output, salviar::semantic_value const& sem ){
 	switch ( lang ){
 	case salviar::lang_vertex_sl:
 		if( is_output ){
@@ -246,12 +246,12 @@ bool abi_analyser::add_semantic(
 	type_specifier* ptspec = pssi->type_info().get();
 	assert(ptspec); // TODO Here are semantic analysis error.
 
-	salviar::semantic node_sem = pssi->get_semantic();
+	salviar::semantic_value const& node_sem = pssi->get_semantic();
 
 	if( ptspec->is_builtin() ){
 		builtin_types btc = ptspec->value_typecode;
 		if ( verify_semantic_type( btc, node_sem ) ) {
-			storage_types sem_s = semantic_storage( lang, is_output, node_sem );
+			storage_classifications sem_s = semantic_storage( lang, is_output, node_sem );
 			switch( sem_s ){
 
 			case stream_in:
@@ -266,7 +266,7 @@ bool abi_analyser::add_semantic(
 
 			return false;
 		}
-	} else if( ptspec->node_class() == syntax_node_types::struct_type ){
+	} else if( ptspec->node_class() == node_ids::struct_type ){
 		if( is_member && !enable_nested ){
 			return false;
 		}
@@ -276,7 +276,7 @@ bool abi_analyser::add_semantic(
 		assert( pstructspec );
 		BOOST_FOREACH( shared_ptr<declaration> const& decl, pstructspec->decls )
 		{
-			if ( decl->node_class() == syntax_node_types::variable_declaration ){
+			if ( decl->node_class() == node_ids::variable_declaration ){
 				shared_ptr<variable_declaration> vardecl = decl->typed_handle<variable_declaration>();
 				BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators ){
 					if ( !add_semantic( dclr, true, enable_nested, lang, is_output ) ){

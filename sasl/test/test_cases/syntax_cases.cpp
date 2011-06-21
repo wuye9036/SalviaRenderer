@@ -44,10 +44,10 @@ LOCVAR_(btc_double)( builtin_types::_double ),
 LOCVAR_(btc_float)( builtin_types::_float ),
 LOCVAR_(btc_boolean)( builtin_types::_boolean ),
 LOCVAR_(btc_void)( builtin_types::_void ),
-LOCVAR_(btc_short2)( sasl_ehelper::vector_of(builtin_types::_sint16, 2) ),
-LOCVAR_(btc_float3)( sasl_ehelper::vector_of(builtin_types::_float, 3) ),
-LOCVAR_(btc_double2x4)( sasl_ehelper::matrix_of(builtin_types::_double, 2, 4) ),
-LOCVAR_(btc_ulong3x2)( sasl_ehelper::matrix_of(builtin_types::_uint64, 3, 2) ),
+LOCVAR_(btc_short2)( vector_of(builtin_types::_sint16, 2) ),
+LOCVAR_(btc_float3)( vector_of(builtin_types::_float, 3) ),
+LOCVAR_(btc_double2x4)( matrix_of(builtin_types::_double, 2, 4) ),
+LOCVAR_(btc_ulong3x2)( matrix_of(builtin_types::_uint64, 3, 2) ),
 LOCVAR_(btc_none)( builtin_types::none )
 {}
 

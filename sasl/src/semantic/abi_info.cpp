@@ -47,9 +47,9 @@ bool abi_info::is_entry( shared_ptr<symbol> const& v ) const{
 std::string abi_info::entry_name() const{
 	return entry_point_name;
 }
-bool abi_info::add_input_semantic( salviar::semantic sem, builtin_types btc, bool is_stream )
+bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream )
 {
-	vector<salviar::semantic>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
+	vector<salviar::semantic_value const&>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
 	if( it != sems_in.end() ){
 		if( *it == sem ){
 			storage_info* si = input_storage( sem );
@@ -69,8 +69,8 @@ bool abi_info::add_input_semantic( salviar::semantic sem, builtin_types btc, boo
 	return true;
 }
 
-bool abi_info::add_output_semantic( salviar::semantic sem, builtin_types btc ){
-	vector<salviar::semantic>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
+bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_types btc ){
+	vector<salviar::semantic_value const&>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
 	if( it != sems_out.end() ){
 		if( *it == sem ){
 			storage_info* si = alloc_output_storage( sem );
@@ -99,7 +99,7 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_types
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
 }
 
-storage_info* abi_info::input_storage( salviar::semantic sem ) const {
+storage_info* abi_info::input_storage( salviar::semantic_value const& sem ) const {
 	sem_storages_t::const_iterator it = semin_storages.find( sem );
 	if ( it == semin_storages.end() ){
 		return NULL;
@@ -107,7 +107,7 @@ storage_info* abi_info::input_storage( salviar::semantic sem ) const {
 	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
-storage_info* abi_info::alloc_input_storage( salviar::semantic sem ){
+storage_info* abi_info::alloc_input_storage( salviar::semantic_value const& sem ){
 	return addressof( semin_storages[sem] );
 }
 
@@ -131,7 +131,7 @@ storage_info* abi_info::alloc_input_storage( boost::shared_ptr<symbol> const& v 
 	return addressof( symin_storages[v.get()] );
 }
 
-storage_info* abi_info::output_storage( salviar::semantic sem ) const{
+storage_info* abi_info::output_storage( salviar::semantic_value const& sem ) const{
 	sem_storages_t::const_iterator it = semout_storages.find( sem );
 	if ( it == semout_storages.end() ){
 		return NULL;
@@ -139,11 +139,11 @@ storage_info* abi_info::output_storage( salviar::semantic sem ) const{
 	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
-size_t abi_info::storage_size( storage_types st ) const{
+size_t abi_info::storage_size( storage_classifications st ) const{
 	return offsets[st];
 }
 
-storage_info* abi_info::alloc_output_storage( salviar::semantic sem ){
+storage_info* abi_info::alloc_output_storage( salviar::semantic_value const& sem ){
 	return addressof( semout_storages[sem] );
 }
 
@@ -161,12 +161,12 @@ void abi_info::compute_layout(){
 	compute_input_constant_layout();
 }
 
-std::vector<storage_info*> abi_info::storage_infos( storage_types st ) const{
+std::vector<storage_info*> abi_info::storage_infos( storage_classifications st ) const{
 	std::vector<storage_info*> ret;
 
 	// Process output
 	if( st == buffer_out ){
-		BOOST_FOREACH( salviar::semantic sem, sems_out ){
+		BOOST_FOREACH( salviar::semantic_value const& sem, sems_out ){
 			ret.push_back( output_storage(sem) );
 		}
 		return ret;
@@ -199,7 +199,7 @@ void abi_info::compute_input_semantics_layout(){
 		pstorage->offset = offsets[pstorage->storage];
 		pstorage->size = 
 			pstorage->storage == buffer_in ?
-			static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) )
+			static_cast<int>( storage_size( pstorage->sv_type ) )
 			: static_cast<int> ( sizeof(void*) )
 			;
 
@@ -217,7 +217,7 @@ void abi_info::compute_output_buffer_layout(){
 		pstorage->storage = buffer_out;
 		pstorage->index =  counts[pstorage->storage];
 		pstorage->offset = offsets[pstorage->storage];
-		pstorage->size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
+		pstorage->size = static_cast<int>( storage_size( pstorage->sv_type ) );
 		
 		counts[pstorage->storage]++;
 		offsets[pstorage->storage] += pstorage->size;
@@ -236,7 +236,7 @@ void abi_info::compute_input_constant_layout(){
 		pstorage->index = counts[buffer_in];
 		pstorage->offset = offsets[buffer_in];
 
-		int size = static_cast<int>( sasl_ehelper::storage_size( pstorage->sv_type ) );
+		int size = static_cast<int>( storage_size( pstorage->sv_type ) );
 		pstorage->size = size;
 
 		counts[buffer_in]++;

@@ -34,6 +34,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 using namespace syntax_tree;
 using namespace boost::assign;
 using namespace llvm;
+using namespace sasl::utility;
 
 using semantic::abi_info;
 using semantic::const_value_si;
@@ -56,7 +57,7 @@ using std::vector;
 
 typedef cgllvm_sctxt* sctxt_handle;
 
-#define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == syntax_node_types::typecode )
+#define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == node_ids::typecode )
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -152,38 +153,38 @@ SASL_VISIT_DEF( binary_expression ){
 			builtin_types rbtc = p1_tsi->type_info()->value_typecode;
 
 			if (v.op == operators::add){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFAdd( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					retval = mod_ptr()->builder()->CreateAdd( lval, rval, "" );
 				}
 			} else if ( v.op == operators::sub ){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFSub( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					retval = mod_ptr()->builder()->CreateSub( lval, rval, "" );
 				}
 			} else if ( v.op == operators::mul ){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFMul( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					retval = mod_ptr()->builder()->CreateMul( lval, rval, "" );
 				}
 			} else if ( v.op == operators::div ){
-				if( sasl_ehelper::is_real(lbtc) ){
+				if( is_real(lbtc) ){
 					retval = mod_ptr()->builder()->CreateFDiv( lval, rval, "" );
-				} else if( sasl_ehelper::is_integer(lbtc) ){
+				} else if( is_integer(lbtc) ){
 					// TODO support signed integer yet.
 					retval = mod_ptr()->builder()->CreateSDiv( lval, rval, "" );
 				}
 			} else if ( v.op == operators::less ){
-				if(sasl_ehelper::is_real(lbtc)){
+				if(is_real(lbtc)){
 					retval = mod_ptr()->builder()->CreateFCmpULT( lval, rval );
-				} else if ( sasl_ehelper::is_integer(lbtc) ){
-					if( sasl_ehelper::is_signed(lbtc) ){
+				} else if ( is_integer(lbtc) ){
+					if( is_signed(lbtc) ){
 						retval = mod_ptr()->builder()->CreateICmpSLT(lval, rval);
 					}
-					if( sasl_ehelper::is_unsigned(lbtc) ){
+					if( is_unsigned(lbtc) ){
 						retval = mod_ptr()->builder()->CreateICmpULT(lval, rval);
 					}
 				}

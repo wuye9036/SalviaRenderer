@@ -24,60 +24,60 @@ BOOST_AUTO_TEST_CASE( btc_test )
 {
 	builtin_types btc_double( syntax_cases::instance().btc_double() );
 	BOOST_CHECK( btc_double == builtin_types::_double );
-	BOOST_CHECK( sasl_ehelper::is_scalar( btc_double ) );
-	BOOST_CHECK( !sasl_ehelper::is_vector(btc_double) );
-	BOOST_CHECK( !sasl_ehelper::is_matrix(btc_double) );
-	BOOST_CHECK( sasl_ehelper::is_real(btc_double) );
-	BOOST_CHECK( !sasl_ehelper::is_real( SYNCASE_(btc_sint8) ));
-	BOOST_CHECK( sasl_ehelper::len_0( SYNCASE_(btc_sint8) ) == 1 );
-	BOOST_CHECK( sasl_ehelper::len_1( SYNCASE_(btc_sint8) ) == 1 );
-	BOOST_CHECK( sasl_ehelper::is_integer( SYNCASE_(btc_sint8) ) );
-	BOOST_CHECK( !sasl_ehelper::is_integer( SYNCASE_(btc_double) ) );
-	BOOST_CHECK( !sasl_ehelper::is_integer( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( is_scalar( btc_double ) );
+	BOOST_CHECK( !is_vector(btc_double) );
+	BOOST_CHECK( !is_matrix(btc_double) );
+	BOOST_CHECK( is_real(btc_double) );
+	BOOST_CHECK( !is_real( SYNCASE_(btc_sint8) ));
+	BOOST_CHECK( len_0( SYNCASE_(btc_sint8) ) == 1 );
+	BOOST_CHECK( len_1( SYNCASE_(btc_sint8) ) == 1 );
+	BOOST_CHECK( is_integer( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !is_integer( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( !is_integer( SYNCASE_(btc_void) ) );
 
-	BOOST_CHECK( sasl_ehelper::is_signed( SYNCASE_(btc_sint8) ) );
-	BOOST_CHECK( !sasl_ehelper::is_signed( SYNCASE_(btc_uint64) ) );
-	BOOST_CHECK( sasl_ehelper::is_unsigned( SYNCASE_(btc_uint64) ) );
-	BOOST_CHECK( !sasl_ehelper::is_unsigned( SYNCASE_(btc_sint8) ) );
-	BOOST_CHECK( !sasl_ehelper::is_signed( SYNCASE_(btc_double) ) );
-	BOOST_CHECK( !sasl_ehelper::is_unsigned( SYNCASE_(btc_double) ) );
-	BOOST_CHECK( !sasl_ehelper::is_signed( SYNCASE_(btc_void) ) );
-	BOOST_CHECK( !sasl_ehelper::is_unsigned( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( is_signed( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !is_signed( SYNCASE_(btc_uint64) ) );
+	BOOST_CHECK( is_unsigned( SYNCASE_(btc_uint64) ) );
+	BOOST_CHECK( !is_unsigned( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !is_signed( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( !is_unsigned( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( !is_signed( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( !is_unsigned( SYNCASE_(btc_void) ) );
 
 	builtin_types btc_float3( syntax_cases::instance().btc_float3() );
 	BOOST_CHECK( btc_float3 != builtin_types::_float );
-	BOOST_CHECK( !sasl_ehelper::is_scalar( btc_float3 ) );
-	BOOST_CHECK( sasl_ehelper::is_vector(btc_float3) );
-	BOOST_CHECK( !sasl_ehelper::is_matrix(btc_float3) );
-	BOOST_CHECK( sasl_ehelper::scalar_of(btc_float3) == builtin_types::_float );
-	BOOST_CHECK( sasl_ehelper::len_0(btc_float3) == 3 );
+	BOOST_CHECK( !is_scalar( btc_float3 ) );
+	BOOST_CHECK( is_vector(btc_float3) );
+	BOOST_CHECK( !is_matrix(btc_float3) );
+	BOOST_CHECK( scalar_of(btc_float3) == builtin_types::_float );
+	BOOST_CHECK( len_0(btc_float3) == 3 );
 
 	builtin_types btc_ulong3x2( syntax_cases::instance().btc_ulong3x2() );
-	BOOST_CHECK( !sasl_ehelper::is_scalar( btc_ulong3x2 ) );
-	BOOST_CHECK( !sasl_ehelper::is_vector(btc_ulong3x2) );
-	BOOST_CHECK( sasl_ehelper::is_matrix(btc_ulong3x2) );
-	BOOST_CHECK( sasl_ehelper::scalar_of(btc_ulong3x2) == builtin_types::_uint64 );
-	BOOST_CHECK( sasl_ehelper::len_0(btc_ulong3x2) == 3 );
-	BOOST_CHECK( sasl_ehelper::len_1(btc_ulong3x2) == 2 );
+	BOOST_CHECK( !is_scalar( btc_ulong3x2 ) );
+	BOOST_CHECK( !is_vector(btc_ulong3x2) );
+	BOOST_CHECK( is_matrix(btc_ulong3x2) );
+	BOOST_CHECK( scalar_of(btc_ulong3x2) == builtin_types::_uint64 );
+	BOOST_CHECK( len_0(btc_ulong3x2) == 3 );
+	BOOST_CHECK( len_1(btc_ulong3x2) == 2 );
 
-	BOOST_CHECK( !sasl_ehelper::is_scalar( SYNCASE_(btc_void) ) );
-	BOOST_CHECK( !sasl_ehelper::is_scalar( SYNCASE_(btc_none) ) );
+	BOOST_CHECK( !is_scalar( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( !is_scalar( SYNCASE_(btc_none) ) );
 
-	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_void)) == 0 );
-	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_none)) == 0 );
-	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_sint8)) == 1 );
-	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_short2)) == 4 );
-	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_float3)) == 12 );
-	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_ulong3x2)) == 48 );
-	BOOST_CHECK( sasl_ehelper::storage_size(SYNCASE_(btc_double2x4)) == 64 );
+	BOOST_CHECK( storage_size(SYNCASE_(btc_void)) == 0 );
+	BOOST_CHECK( storage_size(SYNCASE_(btc_none)) == 0 );
+	BOOST_CHECK( storage_size(SYNCASE_(btc_sint8)) == 1 );
+	BOOST_CHECK( storage_size(SYNCASE_(btc_short2)) == 4 );
+	BOOST_CHECK( storage_size(SYNCASE_(btc_float3)) == 12 );
+	BOOST_CHECK( storage_size(SYNCASE_(btc_ulong3x2)) == 48 );
+	BOOST_CHECK( storage_size(SYNCASE_(btc_double2x4)) == 64 );
 
-	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_float) ) );
-	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_double) ) );
-	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_double2x4) ) );
-	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_float3) ) );
-	BOOST_CHECK( !sasl_ehelper::is_standard( SYNCASE_(btc_sint8) ) );
-	BOOST_CHECK( !sasl_ehelper::is_standard( SYNCASE_(btc_void) ) );
-	BOOST_CHECK( sasl_ehelper::is_standard( SYNCASE_(btc_float) ) );
+	BOOST_CHECK( is_standard( SYNCASE_(btc_float) ) );
+	BOOST_CHECK( is_standard( SYNCASE_(btc_double) ) );
+	BOOST_CHECK( is_standard( SYNCASE_(btc_double2x4) ) );
+	BOOST_CHECK( is_standard( SYNCASE_(btc_float3) ) );
+	BOOST_CHECK( !is_standard( SYNCASE_(btc_sint8) ) );
+	BOOST_CHECK( !is_standard( SYNCASE_(btc_void) ) );
+	BOOST_CHECK( is_standard( SYNCASE_(btc_float) ) );
 }
 
 BOOST_AUTO_TEST_CASE( decl_combinator_test )
@@ -96,15 +96,15 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->declarators[0]->name->str == SYNCASENAME_(var_float_3p25f) );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->type_info->value_typecode == SYNCASE_(btc_float) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f) );
-	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->node_class() == syntax_node_types::expression_initializer );
+	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->node_class() == node_ids::expression_initializer );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->declarators[0]->init == SYNCASE_(exprinit_cexpr_3p25f) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->init_expr == SYNCASE_( cexpr_3p25f ) );
-	BOOST_CHECK( SYNCASE_(cexpr_3p25f)->node_class() == syntax_node_types::constant_expression );
+	BOOST_CHECK( SYNCASE_(cexpr_3p25f)->node_class() == node_ids::constant_expression );
 	BOOST_REQUIRE( SYNCASE_(var_3_float) );
 	BOOST_REQUIRE( SYNCASE_(var_3_float)->declarators.size() == 3 );
 	BOOST_REQUIRE( SYNCASE_(var_3_0) );
 	BOOST_CHECK( SYNCASE_(var_3_float)->declarators[0] == SYNCASE_(var_3_0) );
-	BOOST_CHECK( SYNCASE_(var_3_0)->node_class() == syntax_node_types::declarator );
+	BOOST_CHECK( SYNCASE_(var_3_0)->node_class() == node_ids::declarator );
 	BOOST_CHECK( SYNCASE_(var_3_0)->name->str == SYNCASENAME_(var_3_0) );
 	BOOST_CHECK( ! SYNCASE_(var_3_0)->init );
 	BOOST_REQUIRE( SYNCASE_(var_3_1_with_init) );
@@ -112,10 +112,10 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(var_3_1_with_init)->init->typed_handle<expression_initializer>()->init_expr = SYNCASE_(cexpr_3p25f) );
 	BOOST_REQUIRE( SYNCASE_(var_3_2_with_nullinit) );
 	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit) == SYNCASE_(var_3_float)->declarators[2] );
-	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->node_class() == syntax_node_types::member_initializer );
+	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->node_class() == node_ids::member_initializer );
 	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->typed_handle<member_initializer>()->sub_inits.empty() );
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[1] == SYNCASE_(fn1_sem) );
-	BOOST_CHECK( SYNCASE_(fn1_sem)->node_class() == syntax_node_types::function_type );
+	BOOST_CHECK( SYNCASE_(fn1_sem)->node_class() == node_ids::function_type );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->name->str == SYNCASENAME_(fn1_sem) );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->retval_type );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->retval_type == SYNCASE_(type_float) );
@@ -128,11 +128,11 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( SYNCASE_(fn1_sem)->body == SYNCASE_(fn1_body) );
 	BOOST_CHECK( SYNCASE_(fn1_body) );
 	BOOST_CHECK( SYNCASE_(fn1_body)->stmts.size() == 2 );
-	BOOST_CHECK( SYNCASE_(fn1_body)->stmts[1]->node_class() == syntax_node_types::expression_statement );
+	BOOST_CHECK( SYNCASE_(fn1_body)->stmts[1]->node_class() == node_ids::expression_statement );
 
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[2] == SYNCASE_(tdef0_double2x4) );
 	BOOST_CHECK( SYNCASE_(tdef0_double2x4) );
-	BOOST_CHECK( SYNCASE_(tdef0_double2x4)->node_class() == syntax_node_types::typedef_definition );
+	BOOST_CHECK( SYNCASE_(tdef0_double2x4)->node_class() == node_ids::typedef_definition );
 	BOOST_CHECK( SYNCASE_(tdef0_double2x4)->name->str == SYNCASENAME_(tdef0_double2x4) );
 	BOOST_CHECK( SYNCASE_(tdef0_double2x4)->type_info == SYNCASE_(type_double2x4) );
 }
@@ -181,25 +181,25 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end( fltvar );
 
 		BOOST_CHECK( flt );
-		BOOST_CHECK( flt->node_class() == syntax_node_types::builtin_type );
+		BOOST_CHECK( flt->node_class() == node_ids::builtin_type );
 		BOOST_CHECK( flt->value_typecode == builtin_types::_float );
 
 		BOOST_CHECK( fltvar );
 		BOOST_CHECK( fltvar->type_info == flt );
-		BOOST_CHECK( fltvar->node_class() == syntax_node_types::variable_declaration );
+		BOOST_CHECK( fltvar->node_class() == node_ids::variable_declaration );
 		BOOST_REQUIRE( fltvar->declarators.size() == 1 );
 		BOOST_CHECK( fltvar->declarators[0]->name->str == "What's" );
 		BOOST_CHECK( fltvar->declarators[0]->init == meminit1 );
 		BOOST_CHECK( meminit1 );
-		BOOST_CHECK( meminit1->node_class() == syntax_node_types::member_initializer );
+		BOOST_CHECK( meminit1->node_class() == node_ids::member_initializer );
 		BOOST_CHECK( meminit1->sub_inits.size() == 3 );
 		BOOST_CHECK( meminit1->sub_inits[0] == exprinit0 );
-		BOOST_CHECK( exprinit0 && exprinit0->node_class() == syntax_node_types::expression_initializer );
+		BOOST_CHECK( exprinit0 && exprinit0->node_class() == node_ids::expression_initializer );
 		BOOST_CHECK( meminit1->sub_inits[2] == exprinit3 );
-		BOOST_CHECK( exprinit3 && exprinit3->node_class() == syntax_node_types::expression_initializer );
+		BOOST_CHECK( exprinit3 && exprinit3->node_class() == node_ids::expression_initializer );
 
 		BOOST_CHECK( meminit1->sub_inits[1] == meminit0 );
-		BOOST_CHECK( meminit0 && meminit0->node_class() == syntax_node_types::member_initializer );
+		BOOST_CHECK( meminit0 && meminit0->node_class() == node_ids::member_initializer );
 		BOOST_CHECK( meminit0->sub_inits.size() == 2 );
 		BOOST_CHECK( meminit0->sub_inits[0] == exprinit1 );
 		BOOST_CHECK( meminit0->sub_inits[1] == exprinit2 );
@@ -216,11 +216,11 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end(arrtype);
 
 		BOOST_CHECK( arrtype );
-		BOOST_CHECK( arrtype->node_class() == syntax_node_types::array_type );
+		BOOST_CHECK( arrtype->node_class() == node_ids::array_type );
 		BOOST_CHECK( arrtype->elem_type->value_typecode == builtin_types::_float );
 		BOOST_CHECK( arrtype->array_lens.size() == 2);
 		BOOST_CHECK( !arrtype->array_lens[0] );
-		BOOST_CHECK( arrtype->array_lens[1]->node_class() == syntax_node_types::constant_expression );
+		BOOST_CHECK( arrtype->array_lens[1]->node_class() == node_ids::constant_expression );
 	}
 
 	boost::shared_ptr<struct_type> stype;
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end(stype).end();
 
 		BOOST_CHECK( stype );
-		BOOST_CHECK( stype->node_class() == syntax_node_types::struct_type );
+		BOOST_CHECK( stype->node_class() == node_ids::struct_type );
 		BOOST_CHECK( stype->name->str == "struct_name" );
 		BOOST_CHECK( stype->decls.size() == 2 );
 		BOOST_CHECK( stype->decls[0] == member0 );
@@ -269,13 +269,13 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end()
 	.end( prog );
 
-	BOOST_CHECK( var1type && var1type->value_typecode == sasl_ehelper::vector_of(builtin_types::_uint64, 2) );
-	BOOST_CHECK( var2type && var2type->value_typecode == sasl_ehelper::matrix_of(builtin_types::_double, 4, 3) );
-	BOOST_CHECK( var2type->node_class() == syntax_node_types::builtin_type );
+	BOOST_CHECK( var1type && var1type->value_typecode == vector_of(builtin_types::_uint64, 2) );
+	BOOST_CHECK( var2type && var2type->value_typecode == matrix_of(builtin_types::_double, 4, 3) );
+	BOOST_CHECK( var2type->node_class() == node_ids::builtin_type );
 	BOOST_CHECK( !var2type->is_uniform() );
 	BOOST_CHECK( var3type && var3type->alias->str == struct_name );
 	BOOST_CHECK( var3type->is_uniform() );
-	BOOST_CHECK( var3type->node_class() == syntax_node_types::alias_type );
+	BOOST_CHECK( var3type->node_class() == node_ids::alias_type );
 
 }
 
@@ -300,8 +300,8 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		expr_comb
 			.dconstant2( 0.25868f )
 		.end( expr_c );
-		BOOST_CHECK( expr_c->node_class() == syntax_node_types::constant_expression );
-		BOOST_CHECK( expr_c->ctype == literal_constant_types::real );
+		BOOST_CHECK( expr_c->node_class() == node_ids::constant_expression );
+		BOOST_CHECK( expr_c->ctype == literal_classifications::real );
 		BOOST_CHECK( expr_c->value_tok->str == boost::lexical_cast<std::string>(0.25868f) + std::string("f") );
 	}
 
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		expr_comb
 			.dconstant2( true )
 		.end( cexpr );
-		BOOST_CHECK( cexpr->ctype == literal_constant_types::boolean );
+		BOOST_CHECK( cexpr->ctype == literal_classifications::boolean );
 		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(true) );
 	}
 
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		expr_comb
 			.dconstant2( (uint16_t)107 )
 			.end( cexpr );
-		BOOST_CHECK( cexpr->ctype == literal_constant_types::integer );
+		BOOST_CHECK( cexpr->ctype == literal_classifications::integer );
 		BOOST_CHECK( cexpr->value_tok->str == boost::lexical_cast<std::string>(107) + std::string("u") );
 	}
 
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		expr_comb
 			.dvarexpr( var_name )
 		.end(varexpr);
-		BOOST_CHECK( varexpr && varexpr->node_class() == syntax_node_types::variable_expression );
+		BOOST_CHECK( varexpr && varexpr->node_class() == node_ids::variable_expression );
 		BOOST_CHECK( varexpr->var_name->str == var_name );
 	}
 
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 			.end()
 		.end(unaryexpr);
 		BOOST_CHECK( unaryexpr );
-		BOOST_CHECK( unaryexpr->node_class() == syntax_node_types::unary_expression );
+		BOOST_CHECK( unaryexpr->node_class() == node_ids::unary_expression );
 		BOOST_CHECK( unaryexpr->op == operators::negative );
 		BOOST_CHECK( unaryexpr->expr == varexpr );
 	}
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 			.end()
 		.end(castexpr);
 		BOOST_CHECK( castexpr );
-		BOOST_CHECK( castexpr->node_class() == syntax_node_types::cast_expression );
+		BOOST_CHECK( castexpr->node_class() == node_ids::cast_expression );
 		BOOST_CHECK( castexpr->casted_type->value_typecode == builtin_types::_float );
 		BOOST_CHECK( castexpr->expr == varexpr );
 	}
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end(binexpr);
 
 		BOOST_CHECK( binexpr );
-		BOOST_CHECK( binexpr->node_class() == syntax_node_types::binary_expression );
+		BOOST_CHECK( binexpr->node_class() == node_ids::binary_expression );
 		BOOST_CHECK( binexpr->left_expr == castexpr );
 		BOOST_CHECK( binexpr->right_expr == varexpr );
 		BOOST_CHECK( binexpr->op == operators::add );
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end( branchexpr );
 
 		BOOST_CHECK( branchexpr );
-		BOOST_CHECK( branchexpr->node_class() == syntax_node_types::cond_expression );
+		BOOST_CHECK( branchexpr->node_class() == node_ids::cond_expression );
 		BOOST_CHECK( branchexpr->cond_expr == varexpr );
 		BOOST_CHECK( branchexpr->yes_expr == unaryexpr );
 		BOOST_CHECK( branchexpr->no_expr == binexpr );
@@ -421,9 +421,9 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end(mem1expr);
 
 		BOOST_CHECK( mem1expr );
-		BOOST_CHECK( mem1expr->node_class() == syntax_node_types::member_expression );
+		BOOST_CHECK( mem1expr->node_class() == node_ids::member_expression );
 		BOOST_CHECK( mem1expr->member->str == m1 );
-		BOOST_CHECK( mem1expr->expr->node_class() == syntax_node_types::member_expression );
+		BOOST_CHECK( mem1expr->expr->node_class() == node_ids::member_expression );
 
 		BOOST_CHECK( mem0expr->member->str == m0 );
 		BOOST_CHECK( mem0expr->expr == branchexpr );
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end(callexpr);
 
 		BOOST_CHECK( callexpr );
-		BOOST_CHECK( callexpr->node_class() == syntax_node_types::call_expression );
+		BOOST_CHECK( callexpr->node_class() == node_ids::call_expression );
 		BOOST_CHECK( callexpr->expr == mem0expr );
 		BOOST_CHECK( callexpr->args[0] == varexpr );
 		BOOST_CHECK( callexpr->args[1] == castexpr );
@@ -458,11 +458,11 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end(indexexpr1);
 
 		BOOST_CHECK( indexexpr1 );
-		BOOST_CHECK( indexexpr1->node_class() == syntax_node_types::index_expression );
+		BOOST_CHECK( indexexpr1->node_class() == node_ids::index_expression );
 		BOOST_CHECK( indexexpr1->index_expr == mem0expr );
 		BOOST_CHECK( indexexpr1->expr == indexexpr0 );
 		BOOST_CHECK( indexexpr0 );
-		BOOST_CHECK( indexexpr0->node_class() == syntax_node_types::index_expression );
+		BOOST_CHECK( indexexpr0->node_class() == node_ids::index_expression );
 		BOOST_CHECK( indexexpr0->index_expr == mem1expr );
 		BOOST_CHECK( indexexpr0->expr == callexpr );
 	}
@@ -504,17 +504,17 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 			.dstmts().end()
 		.end( stmts );
 		BOOST_CHECK( stmts );
-		BOOST_CHECK( stmts->node_class() == syntax_node_types::compound_statement );
+		BOOST_CHECK( stmts->node_class() == node_ids::compound_statement );
 		BOOST_CHECK( stmts->stmts.size() == 3 );
 		BOOST_CHECK( stmts->stmts[0] == varstmt);
-		BOOST_CHECK( varstmt->node_class() == syntax_node_types::declaration_statement );
+		BOOST_CHECK( varstmt->node_class() == node_ids::declaration_statement );
 		BOOST_CHECK( varstmt->decl == vardecl );
 		BOOST_CHECK( stmts->stmts[1] == exprstmt );
-		BOOST_CHECK( exprstmt->node_class() == syntax_node_types::expression_statement );
+		BOOST_CHECK( exprstmt->node_class() == node_ids::expression_statement );
 		BOOST_CHECK( exprstmt->expr );
-		BOOST_CHECK( exprstmt->expr->node_class() == syntax_node_types::constant_expression );
+		BOOST_CHECK( exprstmt->expr->node_class() == node_ids::constant_expression );
 		BOOST_CHECK( stmts->stmts[2] );
-		BOOST_CHECK( stmts->stmts[2]->node_class() == syntax_node_types::compound_statement );
+		BOOST_CHECK( stmts->stmts[2]->node_class() == node_ids::compound_statement );
 	}
 
 	boost::shared_ptr<compound_statement> stmts2;
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( stmts2->stmts.size() == 1 );
 		BOOST_CHECK( ifstmt );
 		BOOST_CHECK( stmts2->stmts[0] == ifstmt );
-		BOOST_CHECK( ifstmt->node_class() == syntax_node_types::if_statement );
+		BOOST_CHECK( ifstmt->node_class() == node_ids::if_statement );
 		BOOST_CHECK( ifstmt->cond == condexpr );
 		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) + std::string("f") );
 		BOOST_CHECK( ifstmt->yes_stmt == yesstmts );
@@ -557,7 +557,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		.end();
 
 		BOOST_CHECK( dwstmt );
-		BOOST_CHECK( dwstmt->node_class() == syntax_node_types::dowhile_statement );
+		BOOST_CHECK( dwstmt->node_class() == node_ids::dowhile_statement );
 		BOOST_CHECK( dwstmt->cond == condexpr );
 		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) + std::string("f") );
 		BOOST_CHECK( dwstmt->body = stmts3 );
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		.end();
 
 		BOOST_CHECK( whilestmt );
-		BOOST_CHECK( whilestmt->node_class() == syntax_node_types::while_statement );
+		BOOST_CHECK( whilestmt->node_class() == node_ids::while_statement );
 		BOOST_CHECK( whilestmt->cond == condexpr );
 		BOOST_CHECK( condexpr->value_tok->str == boost::lexical_cast<std::string>(1.0f) + std::string("f") );
 		BOOST_CHECK( whilestmt->body = stmts4 );
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 
 		BOOST_CHECK( stmts6 );
 		BOOST_CHECK( stmts6->stmts[0] == switchstmt );
-		BOOST_CHECK( switchstmt->node_class() == syntax_node_types::switch_statement );
+		BOOST_CHECK( switchstmt->node_class() == node_ids::switch_statement );
 		BOOST_CHECK( switchstmt->cond == expr );
 		BOOST_CHECK( expr->var_name->str == std::string("hello") );
 		BOOST_CHECK( switchstmt->stmts == stmts5 );
@@ -616,8 +616,8 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 		BOOST_CHECK( whilestmt->labels.size() == 2 );
 		BOOST_CHECK( whilestmt->labels[0] == clbl );
 		BOOST_CHECK( whilestmt->labels[1] == clbl2 );
-		BOOST_CHECK( clbl->node_class() == syntax_node_types::case_label );
-		BOOST_CHECK( clbl->expr->node_class() == syntax_node_types::constant_expression );
+		BOOST_CHECK( clbl->node_class() == node_ids::case_label );
+		BOOST_CHECK( clbl->expr->node_class() == node_ids::constant_expression );
 		BOOST_CHECK( ifstmt->labels.size() == 0 );
 		BOOST_CHECK( varstmt->labels.size() == 1 );
 		BOOST_CHECK( !boost::shared_polymorphic_cast<case_label>(varstmt->labels[0])->expr );
@@ -636,13 +636,13 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 
 		BOOST_CHECK( stmts7 );
 		BOOST_CHECK( stmts7->stmts.size() == 4 );
-		BOOST_CHECK( stmts7->stmts[0]->node_class() == syntax_node_types::jump_statement );
+		BOOST_CHECK( stmts7->stmts[0]->node_class() == node_ids::jump_statement );
 		BOOST_CHECK( boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[0])->code == jump_mode::_break );
 		BOOST_CHECK( boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[1])->code == jump_mode::_continue );
 		BOOST_CHECK( stmts7->stmts[2] == jmpstmt );
 		BOOST_CHECK( jmpstmt->code == jump_mode::_return );
 		BOOST_CHECK( jmpstmt->jump_expr );
-		BOOST_CHECK( jmpstmt->jump_expr->node_class() == syntax_node_types::variable_expression );
+		BOOST_CHECK( jmpstmt->jump_expr->node_class() == node_ids::variable_expression );
 		BOOST_CHECK( boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[3])->code == jump_mode::_return );
 		BOOST_CHECK( ! boost::shared_polymorphic_cast<jump_statement>(stmts7->stmts[3])->jump_expr );
 	}
@@ -666,8 +666,8 @@ BOOST_AUTO_TEST_CASE( stmt_combinator_test ){
 	BOOST_CHECK( forstmt );
 	BOOST_CHECK( forstmt->init );
 	BOOST_CHECK( forstmt->init == exprstmt );
-	BOOST_CHECK( forstmt->cond->node_class() == syntax_node_types::variable_expression );
-	BOOST_CHECK( forstmt->iter->node_class() == syntax_node_types::constant_expression );
+	BOOST_CHECK( forstmt->cond->node_class() == node_ids::variable_expression );
+	BOOST_CHECK( forstmt->iter->node_class() == node_ids::constant_expression );
 	BOOST_CHECK( forstmt->body == stmts7 );
 }
 BOOST_AUTO_TEST_SUITE_END();

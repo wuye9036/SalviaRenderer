@@ -7,7 +7,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 using ::sasl::semantic::semantic_info;
 
-node::node(syntax_node_types tid, shared_ptr<token_t> tok )
+node::node(node_ids tid, shared_ptr<token_t> tok )
 : type_id(tid), tok(tok)
 {
 	// DO NOTHING
@@ -37,7 +37,7 @@ boost::shared_ptr<token_t> node::token() const{
 	return tok;
 }
 
-syntax_node_types node::node_class() const{
+node_ids node::node_class() const{
 	return type_id;
 }
 

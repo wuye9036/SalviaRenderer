@@ -6,7 +6,7 @@
 #include <sasl/include/semantic/type_manager.h>
 #include <sasl/enums/default_hasher.h>
 #include <sasl/enums/type_types.h>
-#include <sasl/enums/literal_constant_types.h>
+#include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
 
@@ -136,7 +136,7 @@ public:
 	typedef semantic_info base_type;
 	const_value_si( boost::shared_ptr<type_manager> typemgr );
 
-	void set_literal( const std::string& litstr, literal_constant_types lctype );
+	void set_literal( const std::string& litstr, literal_classifications lctype );
 
 	SASL_TYPE_INFO_PROXY();
 
@@ -160,8 +160,8 @@ class storage_si: public type_info_si{
 public:
 	storage_si( boost::shared_ptr<type_manager> const& typemgr );
 
-	salviar::semantic get_semantic() const;
-	void set_semantic( salviar::semantic v );
+	salviar::semantic_value const& get_semantic() const;
+	void set_semantic( salviar::semantic_value const& v );
 
 	// For members
 	int mem_index() const;
@@ -177,7 +177,7 @@ public:
 private:
 	int memidx;
 	int32_t swz;
-	salviar::semantic sem;
+	salviar::semantic_value const& sem;
 };
 
 class call_si: public type_info_si{

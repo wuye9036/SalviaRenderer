@@ -2,6 +2,7 @@
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_VS_H
 
 #include <sasl/include/code_generator/llvm/cgllvm_sisd.h>
+
 #include <sasl/include/semantic/abi_info.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -87,18 +88,18 @@ private:
 	boost::shared_ptr<sasl::semantic::symbol> find_symbol( cgllvm_sctxt* data, std::string const& str );
 
 	void create_entry_params();
-	void add_entry_param_type( boost::any* data, sasl::semantic::storage_types st, std::vector< llvm::Type const* >& par_types );
-	void fill_llvm_type_from_si( sasl::semantic::storage_types st );
+	void add_entry_param_type( boost::any* data, salviar::storage_classifications st, std::vector< llvm::Type const* >& par_types );
+	void fill_llvm_type_from_si( salviar::storage_classifications st );
 	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
 	void copy_to_agg_result( cgllvm_sctxt* data );
 
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
 
-	boost::shared_ptr<cgllvm_sctxt> param_ctxts[sasl::semantic::storage_types_count];
+	boost::shared_ptr<cgllvm_sctxt> param_ctxts[salviar::storage_classifications_count];
 
-	std::vector< llvm::Type const* > entry_params_types[sasl::semantic::storage_types_count];
-	boost::value_initialized<llvm::StructType*> entry_params_structs[sasl::semantic::storage_types_count];
+	std::vector< llvm::Type const* > entry_params_types[salviar::storage_classifications_count];
+	boost::value_initialized<llvm::StructType*> entry_params_structs[salviar::storage_classifications_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();

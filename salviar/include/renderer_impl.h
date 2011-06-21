@@ -48,8 +48,8 @@ class renderer_impl : public renderer
 
 public:
 	//inherited
-	virtual result set_input_layout(const input_layout_decl& layout);
-	virtual const input_layout_decl& get_input_layout() const;
+	virtual result set_input_layout(const h_input_layout& layout);
+	virtual const h_input_layout& get_input_layout() const;
 
 	virtual result set_stream(stream_index sidx, h_buffer hbuf);
 	virtual h_buffer get_stream(stream_index sidx) const;

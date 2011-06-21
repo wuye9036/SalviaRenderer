@@ -131,7 +131,7 @@ h_mesh create_box(salviar::renderer* psr)
 	pidxs[30] = 20;pidxs[31] = 21;pidxs[32] = 22;
 	pidxs[33] = 22;pidxs[34] = 23;pidxs[35] = 20;
 
-	salviar::input_layout_decl layout;
+	salviar::h_input_layout layout;
 	layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
 	layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
 	layout.push_back(salviar::input_element_decl(stream_2, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_2));
@@ -205,7 +205,7 @@ h_mesh create_planar(
 		}
 	}
 
-	salviar::input_layout_decl layout;
+	salviar::h_input_layout layout;
 	layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
 	layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
 

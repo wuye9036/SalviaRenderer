@@ -49,8 +49,8 @@ SET_SOURCE_FILES_PROPERTIES(
 )
 
 ADD_LIBRARY( sasl_enums STATIC 
-	enum_base.h default_hasher.h
-	enums_helper.h enums_helper.cpp
+	enum_base.h		default_hasher.h
+	enums_utility.h enums_utility.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/enums.cmake 
 	${CMAKE_CURRENT_SOURCE_DIR}/compiler_infos.cmake
 	${code_fullpath}

@@ -16,7 +16,7 @@ using namespace eflib;
 using boost::shared_ptr;
 
 //inherited
-result renderer_impl::set_input_layout(const input_layout_decl& layout)
+result renderer_impl::set_input_layout(const h_input_layout& layout)
 {
 	uint32_t n = 0;
 	for(size_t i_elemdecl = 0; i_elemdecl < layout.size(); ++i_elemdecl){
@@ -34,10 +34,10 @@ result renderer_impl::set_input_layout(const input_layout_decl& layout)
 	return result::ok;
 }
 
-const input_layout_decl& renderer_impl::get_input_layout() const
+const h_input_layout& renderer_impl::get_input_layout() const
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	static input_layout_decl ret;
+	static h_input_layout ret;
 	return ret;
 }
 

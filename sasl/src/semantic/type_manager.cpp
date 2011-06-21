@@ -38,20 +38,20 @@ type_entry::id_t type_entry_id_of_symbol( shared_ptr<symbol> const& sym ){
 
 // some utility functions
 std::string builtin_type_name( builtin_types btc ){
-	if( sasl_ehelper::is_vector(btc) ) {
+	if( is_vector(btc) ) {
 		return 
 			( boost::format("%1%_%2%") 
-			% builtin_type_name( sasl_ehelper::scalar_of(btc) )
-			% sasl_ehelper::len_0( btc )
+			% builtin_type_name( scalar_of(btc) )
+			% len_0( btc )
 			).str();
 	}
 
-	if( sasl_ehelper::is_matrix(btc) ) {
+	if( is_matrix(btc) ) {
 		return 
 			( boost::format("%1%_%2%x%3%") 
-			% builtin_type_name( sasl_ehelper::scalar_of(btc) )
-			% sasl_ehelper::len_0( btc )
-			% sasl_ehelper::len_1( btc )
+			% builtin_type_name( scalar_of(btc) )
+			% len_0( btc )
+			% len_1( btc )
 			).str();
 	}
 
@@ -70,9 +70,9 @@ bool peel_qualifier(
 	type_entry::id_ptr_t& qual
 	)
 {
-	syntax_node_types tnode = src->node_class();
-	if ( tnode == syntax_node_types::builtin_type
-		|| tnode == syntax_node_types::struct_type )
+	node_ids tnode = src->node_class();
+	if ( tnode == node_ids::builtin_type
+		|| tnode == node_ids::struct_type )
 	{
 		if( src->is_uniform() ){
 			naked = shared_polymorphic_cast<type_specifier>( duplicate( src ) );
@@ -103,15 +103,15 @@ std::string name_of_unqualified_type( shared_ptr<type_specifier> const& typespec
 	// Only build in, struct and function are potential unqualified type.
 	// Array type is qualified type.
 
-	syntax_node_types actual_node_type = typespec->node_class();
+	node_ids actual_node_type = typespec->node_class();
 
-	if( actual_node_type == syntax_node_types::alias_type ){
+	if( actual_node_type == node_ids::alias_type ){
 		return typespec->typed_handle<alias_type>()->alias->str;
-	} else if( actual_node_type == syntax_node_types::builtin_type ){
+	} else if( actual_node_type == node_ids::builtin_type ){
 		return builtin_type_name( typespec->value_typecode );
-	} else if ( actual_node_type == syntax_node_types::function_type ){
+	} else if ( actual_node_type == node_ids::function_type ){
 		return mangle( typespec->typed_handle<function_type>() );
-	} else if ( actual_node_type == syntax_node_types::struct_type ){
+	} else if ( actual_node_type == node_ids::struct_type ){
 		return typespec->typed_handle<struct_type>()->name->str;
 	}
 
@@ -161,7 +161,7 @@ type_entry::id_t type_manager::get( shared_ptr<type_specifier> const& node, shar
 		if( sym ){
 			return type_entry_id_of_symbol( sym );
 		} else {
-			if( node->node_class() == syntax_node_types::alias_type ){
+			if( node->node_class() == node_ids::alias_type ){
 				return -1;
 			}
 			type_entry::id_t entry_id = allocate_and_assign_id( node );

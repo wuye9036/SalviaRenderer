@@ -169,17 +169,11 @@ vs_output& default_vertex_cache::fetch(cache_entry_index id)
 	id = indices_[id];
 
 	if((id > used_verts_.size()) || (-1 == used_verts_[id])){
-		EFLIB_ASSERT(false, "");
+		assert( !"The vertex could not be transformed. Maybe errors occurred on index statistics or vertex tranformation." );
 		return null_obj;
 	}
 
 	return verts_[used_verts_[id]];
-}
-
-vs_output& default_vertex_cache::fetch_for_write(cache_entry_index /*id*/)
-{
-	EFLIB_ASSERT(false, "Deprecated!");
-	return verts_[0];
 }
 
 vs_output* default_vertex_cache::new_vertex()
@@ -199,7 +193,7 @@ void default_vertex_cache::delete_vertex(vs_output* const pvert)
 	}
 }
 
-result default_vertex_cache::set_input_layout(const input_layout_decl& layout)
+result default_vertex_cache::set_input_layout(const h_input_layout& layout)
 {
 	//layout_ will be checked at runtime.
 	hsa_->set_input_layout(layout);

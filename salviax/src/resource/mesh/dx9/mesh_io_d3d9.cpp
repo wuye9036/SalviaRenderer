@@ -58,7 +58,7 @@ h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH pmesh)
 	//parse dx9 decl to layout
 	D3DVERTEXELEMENT9 dxdecl[MAX_FVF_DECL_SIZE];
 	pmesh->GetDeclaration(dxdecl);
-	salviar::input_layout_decl layout;
+	salviar::h_input_layout layout;
 
 	//累加流标号。Postion、Normal、TextureCoord，目前仅支持这三种情况
 	vector<size_t> positions;

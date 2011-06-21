@@ -29,7 +29,7 @@ using sasl::semantic::stream_in;
 using sasl::semantic::stream_out;
 using sasl::semantic::storage_info;
 using sasl::semantic::storage_si;
-using sasl::semantic::storage_types;
+using sasl::semantic::storage_classifications;
 using sasl::semantic::symbol;
 using sasl::semantic::type_info_si;
 
@@ -42,7 +42,7 @@ using std::vector;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-void cgllvm_vs::fill_llvm_type_from_si( storage_types st ){
+void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	vector<storage_info*> sis = abii->storage_infos( st );
 	BOOST_FOREACH( storage_info* si, sis ){
 		bool sign(false);
@@ -87,7 +87,7 @@ void cgllvm_vs::create_entry_params(){
 	fill_llvm_type_from_si ( stream_out );
 }
 
-void cgllvm_vs::add_entry_param_type( boost::any* data, storage_types st, vector<Type const*>& par_types ){
+void cgllvm_vs::add_entry_param_type( boost::any* data, storage_classifications st, vector<Type const*>& par_types ){
 	StructType* par_type = entry_params_structs[st].data();
 	PointerType* parref_type = PointerType::getUnqual( par_type );
 
@@ -124,13 +124,13 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 
 	// Copy value to semantics.
 	BOOST_FOREACH( shared_ptr<declaration> const& decl, ret_struct->decls ){
-		if( decl->node_class() == syntax_node_types::variable_declaration ){
+		if( decl->node_class() == node_ids::variable_declaration ){
 
 			shared_ptr<variable_declaration> vardecl = decl->typed_handle<variable_declaration>();
 
 			BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
 				storage_si* ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
-				salviar::semantic sem = ssi->get_semantic();
+				salviar::semantic_value const& sem = ssi->get_semantic();
 				storage_info* si = abii->output_storage( sem );
 			
 				cgllvm_sctxt destctxt;
@@ -335,7 +335,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 			// Get Value from semantic.
 			// Store value to local variable.
-			salviar::semantic par_sem = par_ssi->get_semantic();
+			salviar::semantic_value const& par_sem = par_ssi->get_semantic();
 			assert( par_sem != salviar::SV_None );
 			storage_info* psi = abii->input_storage( par_sem );
 			
@@ -355,7 +355,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 					storage_si* par_mem_ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
 					assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
 
-					salviar::semantic sem = par_mem_ssi->get_semantic();
+					salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
 					storage_info* psi = abii->input_storage( sem );
 			
 					cgllvm_sctxt srcctxt;

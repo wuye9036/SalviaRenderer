@@ -4,7 +4,7 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/operators.h>
-#include <sasl/enums/literal_constant_types.h>
+#include <sasl/enums/literal_classifications.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/smart_ptr.hpp>
@@ -42,7 +42,7 @@ class syntax_tree_visitor;
 
 struct expression: public node{
 protected:
-	expression( syntax_node_types nodetype, boost::shared_ptr<token_t> tok);
+	expression( node_ids nodetype, boost::shared_ptr<token_t> tok);
 };
 
 struct constant_expression: public expression{
@@ -51,7 +51,7 @@ struct constant_expression: public expression{
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<token_t> value_tok;
-	literal_constant_types ctype;
+	literal_classifications ctype;
 protected:
 	constant_expression( boost::shared_ptr<token_t> tok );
 };

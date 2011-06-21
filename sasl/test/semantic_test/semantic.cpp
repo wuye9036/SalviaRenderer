@@ -76,7 +76,7 @@ void test_mangle(){
 	BOOST_CHECK_EQUAL( SEMCASE_(sym_fn0_sem)->mangled_name(), SEMCASE_(mangled_fn0_name) );
 	BOOST_CHECK_EQUAL( SEMCASE_(sym_fn1_sem)->mangled_name(), SEMCASE_(mangled_fn1_name) );
 
-	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
+	std::vector<operators> oplist = list_of_operators();
 	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
 		BOOST_CHECK_EQUAL( operator_name( oplist[i_op] ), std::string("0") + oplist[i_op].name() );
 	}
@@ -116,13 +116,13 @@ void test_default_operators(){
 	semantic_cases::instance();
 
 	// Test operator classification functions.
-	BOOST_CHECK( sasl_ehelper::is_arithmetic(operators::add) );
-	BOOST_CHECK( !sasl_ehelper::is_assign(operators::add) );
+	BOOST_CHECK( is_arithmetic(operators::add) );
+	BOOST_CHECK( !is_assign(operators::add) );
 
-	BOOST_CHECK( sasl_ehelper::is_bit_assign( operators::bit_and_assign ) );
-	BOOST_CHECK( !sasl_ehelper::is_bool_arith( operators::bit_and_assign ) );
+	BOOST_CHECK( is_bit_assign( operators::bit_and_assign ) );
+	BOOST_CHECK( !is_bool_arith( operators::bit_and_assign ) );
 
-	std::vector<operators> oplist = sasl_ehelper::list_of_operators();
+	std::vector<operators> oplist = list_of_operators();
 	BOOST_CHECK_EQUAL( SEMCASE_(sym_root)->find_overloads( operator_name(operators::none) ).size(), 0 );
 
 	// Test could operators be accessed globally.

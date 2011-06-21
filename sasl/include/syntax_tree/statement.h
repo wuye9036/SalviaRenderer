@@ -22,7 +22,7 @@ struct identifier;
 struct label;
 
 struct statement: public node{
-	statement( syntax_node_types type_id, boost::shared_ptr<token_t> tok );
+	statement( node_ids type_id, boost::shared_ptr<token_t> tok );
 
 	boost::shared_ptr<struct label> pop_label();
 	template <typename T> void push_label( boost::shared_ptr<T> lbl ){
@@ -101,7 +101,7 @@ private:
 	for_statement& operator = ( const for_statement& rhs );
 };
 struct label: public node{
-	label( syntax_node_types type_id, boost::shared_ptr<token_t> tok );
+	label( node_ids type_id, boost::shared_ptr<token_t> tok );
 };
 
 struct case_label : public label{

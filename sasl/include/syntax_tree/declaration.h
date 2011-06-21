@@ -4,7 +4,7 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/syntax_node_types.h>
+#include <sasl/enums/node_ids.h>
 #include <sasl/enums/type_qualifiers.h>
 
 #include <eflib/include/metaprog/enable_if.h>
@@ -33,7 +33,7 @@ using sasl::common::token_t;
 
 struct initializer: public node{
 protected:
-	initializer(syntax_node_types type_id, boost::shared_ptr<token_t> tok);
+	initializer(node_ids type_id, boost::shared_ptr<token_t> tok);
 	initializer& operator = ( const initializer& );
 	initializer( const initializer& );
 };
@@ -63,7 +63,7 @@ private:
 
 struct declaration: public node{
 protected:
-	declaration(syntax_node_types type_id, boost::shared_ptr<token_t> tok);
+	declaration(node_ids type_id, boost::shared_ptr<token_t> tok);
 	declaration& operator = ( const declaration& );
 	declaration( const declaration& );
 };
@@ -120,7 +120,7 @@ struct type_specifier: public declaration{
 
 	bool is_uniform() const;
 protected:
-	type_specifier(syntax_node_types type_id, boost::shared_ptr<token_t> tok);
+	type_specifier(node_ids type_id, boost::shared_ptr<token_t> tok);
 };
 
 struct alias_type: public type_specifier{

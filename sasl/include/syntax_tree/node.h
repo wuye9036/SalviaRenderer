@@ -3,7 +3,7 @@
 
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <sasl/include/common/token.h>
-#include <sasl/enums/syntax_node_types.h>
+#include <sasl/enums/node_ids.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
@@ -74,7 +74,7 @@ struct node{
 	}
 
 	boost::shared_ptr<token_t> token() const;
-	syntax_node_types node_class() const;
+	node_ids node_class() const;
 
 	virtual SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() = 0;
 
@@ -82,11 +82,11 @@ struct node{
 	::std::vector< ::boost::shared_ptr< node > >& additionals();
 
 protected:
-	node(syntax_node_types tid, boost::shared_ptr<token_t> tok);
+	node(node_ids tid, boost::shared_ptr<token_t> tok);
 	node& operator = ( const node& );
 	node( const node& );
 
-	syntax_node_types			type_id;
+	node_ids			type_id;
 	boost::shared_ptr<token_t>	tok;
 	boost::weak_ptr<class ::sasl::semantic::symbol>	sym;
 

@@ -1,6 +1,6 @@
 #include <sasl/include/semantic/semantic_infos.h>
 
-#include <sasl/enums/literal_constant_types.h>
+#include <sasl/enums/literal_classifications.h>
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
@@ -23,7 +23,7 @@ using ::sasl::common::token_t;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::builtin_type;
 
-using salviar::semantic;
+using salviar::semantic_value const&;
 
 using ::boost::addressof;
 using ::boost::shared_ptr;
@@ -134,10 +134,10 @@ const_value_si::const_value_si( shared_ptr<type_manager> typemgr )
 
 void const_value_si::set_literal(
 	const std::string& litstr,
-	literal_constant_types lctype)
+	literal_classifications lctype)
 {
 	std::string nosuffix_litstr;
-	if (lctype == literal_constant_types::integer ){
+	if (lctype == literal_classifications::integer ){
 		bool is_unsigned(false);
 		bool is_long(false);
 		nosuffix_litstr = integer_literal_suffix( litstr, is_unsigned, is_long );
@@ -148,18 +148,18 @@ void const_value_si::set_literal(
 			val = boost::lexical_cast<int64_t>(nosuffix_litstr);
 			type_info( is_long ? builtin_types::_sint64 : builtin_types::_sint32 );
 		}
-	} else if( lctype == literal_constant_types::real ){
+	} else if( lctype == literal_classifications::real ){
 		bool is_single(false);
 		nosuffix_litstr = real_literal_suffix( litstr, is_single );
 		val = boost::lexical_cast<double>(nosuffix_litstr);
 		type_info( is_single ? builtin_types::_float : builtin_types::_double);
-	} else if( lctype == literal_constant_types::boolean ){
+	} else if( lctype == literal_classifications::boolean ){
 		val = (litstr == "true");
 		type_info( builtin_types::_boolean );
-	} else if( lctype == literal_constant_types::character ){
+	} else if( lctype == literal_classifications::character ){
 		val = litstr[0];
 		type_info( builtin_types::_sint8 );
-	} else if( lctype == literal_constant_types::string ){
+	} else if( lctype == literal_classifications::string ){
 		val = litstr;
 		type_info( builtin_types::none );
 	}
@@ -184,11 +184,11 @@ storage_si::storage_si( shared_ptr<type_manager> const& typemgr )
 {
 }
 
-salviar::semantic storage_si::get_semantic() const{
+salviar::semantic_value const& storage_si::get_semantic() const{
 	return sem;
 }
 
-void storage_si::set_semantic( salviar::semantic v ){
+void storage_si::set_semantic( salviar::semantic_value const& v ){
 	sem = v;
 }
 

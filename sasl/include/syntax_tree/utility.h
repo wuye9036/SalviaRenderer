@@ -33,7 +33,7 @@ template<typename ContainerT, typename PredT>
 void map_of_builtin_type( ContainerT& cont, const PredT& pred){
 	cont.clear();
 	typedef std::vector<builtin_types> btc_list_t;
-	const btc_list_t& btclst( sasl_ehelper::list_of_builtin_type_codes() );
+	const btc_list_t& btclst( list_of_builtin_type_codes() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
 			boost::shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );
@@ -60,7 +60,7 @@ template<typename ContainerT, typename PredT>
 void list_of_builtin_type( ContainerT& cont, const PredT& pred ){
 	cont.clear();
 	typedef std::vector<builtin_types> btc_list_t;
-	const btc_list_t& btclst( sasl_ehelper::list_of_builtin_type_codes() );
+	const btc_list_t& btclst( list_of_builtin_type_codes() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
 			cont += *it;
@@ -73,7 +73,7 @@ void follow_up_traversal(
 	boost::function<void( node&, ::boost::any* )> on_visit
 	);
 
-#define SASL_SYNTAX_NODE_IS_A( node, node_type ) ( (node)->node_class() == BOOST_PP_CAT(syntax_node_types::, node_type) )
+#define SASL_SYNTAX_NODE_IS_A( node, node_type ) ( (node)->node_class() == BOOST_PP_CAT(node_ids::, node_type) )
 
 // node creators
 boost::shared_ptr<node> duplicate( ::boost::shared_ptr<node> src );

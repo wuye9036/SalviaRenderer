@@ -69,7 +69,7 @@ void mesh::gen_adjancency(){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
-void mesh::render(const salviar::input_layout_decl& layout)
+void mesh::render(const salviar::h_input_layout& layout)
 {
 	EFLIB_ASSERT(pdev_, "");
 	if(!pdev_) return;
@@ -138,7 +138,7 @@ void mesh::set_index_type(salviar::index_type idxtype)
 	}
 }
 
-void mesh::set_default_layout(const salviar::input_layout_decl& layout)
+void mesh::set_default_layout(const salviar::h_input_layout& layout)
 {
 	default_layout_ = layout;
 }

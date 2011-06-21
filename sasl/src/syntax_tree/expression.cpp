@@ -8,66 +8,66 @@ using namespace boost;
 using namespace boost::assign;
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-expression::expression( syntax_node_types ntype, boost::shared_ptr<token_t> tok )
+expression::expression( node_ids ntype, boost::shared_ptr<token_t> tok )
 	: node( ntype, tok )
 {
 }
 
 constant_expression::constant_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::constant_expression, tok ), ctype( literal_constant_types::none) { }
+	: expression( node_ids::constant_expression, tok ), ctype( literal_classifications::none) { }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( constant_expression );
 
 unary_expression::unary_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::unary_expression, tok ), op( operators::none ) { }
+	: expression( node_ids::unary_expression, tok ), op( operators::none ) { }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( unary_expression );
 
 cast_expression::cast_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::cast_expression, tok ){
+	: expression( node_ids::cast_expression, tok ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( cast_expression );
 
 binary_expression::binary_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::binary_expression, tok ), op( operators::none) { }
+	: expression( node_ids::binary_expression, tok ), op( operators::none) { }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( binary_expression );
 
 expression_list::expression_list( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::expression_list, tok )
+	: expression( node_ids::expression_list, tok )
 {
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( expression_list );
 
 cond_expression::cond_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::cond_expression, tok ){
+	: expression( node_ids::cond_expression, tok ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( cond_expression );
 
 index_expression::index_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::index_expression, tok ){
+	: expression( node_ids::index_expression, tok ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( index_expression );
 
 call_expression::call_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::call_expression, tok ){
+	: expression( node_ids::call_expression, tok ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( call_expression );
 
 member_expression::member_expression( boost::shared_ptr<token_t> tok )
-	: expression( syntax_node_types::member_expression, tok )
+	: expression( node_ids::member_expression, tok )
 {
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( member_expression );
 
 variable_expression::variable_expression( boost::shared_ptr<token_t> tok )
-: expression( syntax_node_types::variable_expression, tok )
+: expression( node_ids::variable_expression, tok )
 {	
 }
 

@@ -26,33 +26,33 @@ using ::std::vector;
 
 struct lct_list{
 	static lct_list instance_;
-	vector<literal_constant_types> lst;
+	vector<literal_classifications> lst;
 
 	lct_list(){
 
-		literal_constant_types::force_initialize();
-		lst.resize(11, literal_constant_types::none);
+		literal_classifications::force_initialize();
+		lst.resize(11, literal_classifications::none);
 
-		lst[0] = literal_constant_types::boolean;
-		lst[1] = literal_constant_types::integer;
-		lst[2] = literal_constant_types::integer;
-		lst[3] = literal_constant_types::integer;
-		lst[4] = literal_constant_types::integer;
-		lst[5] = literal_constant_types::integer;
-		lst[6] = literal_constant_types::integer;
-		lst[7] = literal_constant_types::integer;
-		lst[8] = literal_constant_types::integer;
+		lst[0] = literal_classifications::boolean;
+		lst[1] = literal_classifications::integer;
+		lst[2] = literal_classifications::integer;
+		lst[3] = literal_classifications::integer;
+		lst[4] = literal_classifications::integer;
+		lst[5] = literal_classifications::integer;
+		lst[6] = literal_classifications::integer;
+		lst[7] = literal_classifications::integer;
+		lst[8] = literal_classifications::integer;
 
-		lst[9] = literal_constant_types::real;
-		lst[10] = literal_constant_types::real;
+		lst[9] = literal_classifications::real;
+		lst[10] = literal_classifications::real;
 
 	}
 };
 
 lct_list lct_list::instance_;
 
-const literal_constant_types* const typecode_map::type_codes(){
-	const literal_constant_types* ret_ptr =  &(lct_list::instance_.lst[0]);
+const literal_classifications* const typecode_map::type_codes(){
+	const literal_classifications* ret_ptr =  &(lct_list::instance_.lst[0]);
 	return ret_ptr;
 }
 
@@ -173,7 +173,7 @@ tree_combinator& dtype_combinator::dvec( builtin_types comp_btc, size_t size )
 	}
 
 	typed_node( create_node<builtin_type>(token_t::null()) );
-	typed_node()->value_typecode = sasl_ehelper::vector_of( comp_btc, size );
+	typed_node()->value_typecode = vector_of( comp_btc, size );
 	return *this;
 }
 
@@ -185,7 +185,7 @@ tree_combinator& dtype_combinator::dmat( builtin_types comp_btc, size_t s0, size
 		return default_proc();
 	}
 	typed_node( create_node<builtin_type>(token_t::null() ) );
-	typed_node()->value_typecode = sasl_ehelper::matrix_of(comp_btc, s0, s1);
+	typed_node()->value_typecode = matrix_of(comp_btc, s0, s1);
 	return *this;
 }
 
@@ -225,7 +225,7 @@ void dtype_combinator::child_ended()
 	switch ( leave() ){
 		case e_array:
 			assert ( typed_node() );
-			if ( typed_node()->node_class() != syntax_node_types::array_type ){
+			if ( typed_node()->node_class() != node_ids::array_type ){
 				outter_type = create_node<array_type>( token_t::null() );
 				outter_type->elem_type = typed_node();
 				typed_node( outter_type );
@@ -328,7 +328,7 @@ dexpr_combinator::dexpr_combinator( tree_combinator* parent )
 {
 }
 
-tree_combinator& dexpr_combinator::dconstant( literal_constant_types lct, const std::string& v )
+tree_combinator& dexpr_combinator::dconstant( literal_classifications lct, const std::string& v )
 {
 	DEFAULT_STATE_SCOPE();
 
@@ -789,7 +789,7 @@ dvarstmt_combinator::dvarstmt_combinator( tree_combinator* parent )
 
 void dvarstmt_combinator::before_end()
 {
-	if( typed_node2<node>()->node_class() == syntax_node_types::declaration_statement ){
+	if( typed_node2<node>()->node_class() == node_ids::declaration_statement ){
 		// this node may be set by dnode() function.
 		return;
 	}
@@ -807,7 +807,7 @@ dexprstmt_combinator::dexprstmt_combinator( tree_combinator* parent )
 
 void dexprstmt_combinator::before_end()
 {
-	if( typed_node2<node>()->node_class() == syntax_node_types::expression_statement ){
+	if( typed_node2<node>()->node_class() == node_ids::expression_statement ){
 		// this node may be set by dnode() function.
 		return;
 	}
@@ -997,7 +997,7 @@ dcase_combinator::dcase_combinator( tree_combinator* parent )
 }
 
 void dcase_combinator::before_end(){
-	if ( typed_node2<node>() && typed_node2<node>()->node_class() == syntax_node_types::case_label ){
+	if ( typed_node2<node>() && typed_node2<node>()->node_class() == node_ids::case_label ){
 		return;
 	}
 
@@ -1015,7 +1015,7 @@ dreturn_combinator::dreturn_combinator( tree_combinator* parent )
 
 void dreturn_combinator::before_end(){
 	if ( typed_node2<node>()
-		&& typed_node2<node>()->node_class() == syntax_node_types::jump_statement ){
+		&& typed_node2<node>()->node_class() == node_ids::jump_statement ){
 		return;
 	}
 	boost::shared_ptr<jump_statement> instead_node = create_node<jump_statement>( token_t::null() );
@@ -1128,7 +1128,7 @@ dparameter_combinator::dparameter_combinator( tree_combinator* parent )
 }
 
 void dparameter_combinator::before_end(){
-	if( typed_node2<node>()->node_class() == syntax_node_types::parameter ){
+	if( typed_node2<node>()->node_class() == node_ids::parameter ){
 		return;
 	}
 	assert( typed_node() );
@@ -1183,7 +1183,7 @@ dinitexpr_combinator::dinitexpr_combinator( tree_combinator* parent )
 void dinitexpr_combinator::before_end()
 {
 	if ( !typed_node2<node>() ) { return; }
-	if (typed_node2<node>()->node_class() == syntax_node_types::expression_initializer){
+	if (typed_node2<node>()->node_class() == node_ids::expression_initializer){
 		return;
 	}
 	boost::shared_ptr<expression_initializer> instead_node

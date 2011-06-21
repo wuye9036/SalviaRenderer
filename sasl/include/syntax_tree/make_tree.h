@@ -4,7 +4,7 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 
 #include <sasl/enums/builtin_types.h>
-#include <sasl/enums/literal_constant_types.h>
+#include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/operators.h>
 #include <sasl/enums/type_qualifiers.h>
 #include <sasl/include/syntax_tree/node_creation.h>
@@ -51,7 +51,7 @@ struct typecode_map
 		float, double
 	> cpptypes;
 
-	static const literal_constant_types* const type_codes();
+	static const literal_classifications* const type_codes();
 
 	template<typename T>
 	struct is_sasl_builtin_type: public boost::mpl::not_<
@@ -62,7 +62,7 @@ struct typecode_map
 	>::type{};
 
 	template <typename T>
-	static literal_constant_types lookup( EFLIB_ENABLE_IF_COND( is_sasl_builtin_type<T> ) )
+	static literal_classifications lookup( EFLIB_ENABLE_IF_COND( is_sasl_builtin_type<T> ) )
 	{
 		return type_codes()[boost::mpl::find<cpptypes, T>::type::pos::value];
 	}
@@ -185,7 +185,7 @@ public:
 
 	// expressions
 	virtual tree_combinator& dexpr(){ return default_proc(); }
-	virtual tree_combinator& dconstant( literal_constant_types /*lct*/, const std::string& /*v*/ ){
+	virtual tree_combinator& dconstant( literal_classifications /*lct*/, const std::string& /*v*/ ){
 		return default_proc();
 	}
 	// impl by expression
@@ -197,7 +197,7 @@ public:
 		std::string suffix;
 		append_suffix<T>(suffix);
 
-		literal_constant_types lct = typecode_map::lookup<T>();
+		literal_classifications lct = typecode_map::lookup<T>();
 		return dconstant( lct, boost::lexical_cast<std::string>(v) + suffix );
 	}
 	virtual tree_combinator& dvarexpr( const std::string& /*v*/){ return default_proc(); }
@@ -546,7 +546,7 @@ class dexpr_combinator: public tree_combinator
 public:
 	dexpr_combinator( tree_combinator* parent );
 
-	virtual tree_combinator& dconstant( literal_constant_types /*lct*/, const std::string& /*v*/ );
+	virtual tree_combinator& dconstant( literal_classifications /*lct*/, const std::string& /*v*/ );
 	virtual tree_combinator& dvarexpr( const std::string& /*v*/);
 	virtual tree_combinator& dunary( operators op );
 	virtual tree_combinator& dcast();

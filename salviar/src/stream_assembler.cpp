@@ -44,7 +44,7 @@ vec4 get_vec4(input_type type, input_register_usage_decl usage, const void* data
 	return vec4(floats[0], floats[1], floats[2], floats[3]);
 }
 
-void stream_assembler::set_input_layout(const input_layout_decl& layout)
+void stream_assembler::set_input_layout(const h_input_layout& layout)
 {
 	layout_ = layout;
 }

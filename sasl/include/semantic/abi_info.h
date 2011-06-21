@@ -4,6 +4,8 @@
 #include <sasl/include/semantic/semantic_forward.h>
 
 #include <salviar/include/shader.h>
+#include <salviar/include/shader_abi.h>
+
 #include <sasl/enums/builtin_types.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -18,24 +20,16 @@ BEGIN_NS_SASL_SEMANTIC();
 class module_si;
 class symbol;
 
-
-
-struct storage_info{
-	storage_info();
-	int index;
-	int offset;
-	int size;
-	storage_types storage;
-	builtin_types sv_type;
-};
-
 //////////////////////////////////////////////////////////////////////////
 // Application binary interface information.
 // Used by host and interpolator / rasterizer.
 class abi_analyser;
 
-class abi_info{
+class abi_info: public salviar::shader_abi{
 public:
+	typedef salviar::storage_info	storage_info_t;
+	typedef salviar::semantic_value	semantic_value_t;
+
 	// Friend for abi_analyser could call compute_layout();
 	friend class abi_analyser;
 
@@ -50,24 +44,24 @@ public:
 	bool is_entry( boost::shared_ptr<symbol> const& ) const;
 	std::string entry_name() const;
 
-	bool add_input_semantic( salviar::semantic sem, builtin_types btc, bool is_stream );
-	bool add_output_semantic( salviar::semantic sem, builtin_types btc );
+	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
+	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc );
 	void add_global_var( boost::shared_ptr<symbol> const&, builtin_types btc );
 
-	storage_info* input_storage( salviar::semantic ) const;
-	storage_info* input_storage( boost::shared_ptr<symbol> const& ) const;
-	storage_info* input_storage( std::string const& ) const;
+	storage_info_t* input_storage( semantic_value_t const& ) const;
+	storage_info_t* input_storage( boost::shared_ptr<symbol> const& ) const;
+	storage_info_t* input_storage( std::string const& ) const;
 
-	storage_info* output_storage( salviar::semantic ) const;
+	storage_info_t* output_storage( semantic_value_t const& ) const;
 	
-	size_t storage_size( storage_types st ) const;
+	size_t storage_size( salviar::storage_classifications sclass ) const;
 
-	std::vector<storage_info*> storage_infos( storage_types st ) const;
+	std::vector<storage_info_t*> storage_infos( salviar::storage_classifications sclass ) const;
 
 private:
-	storage_info* alloc_input_storage( salviar::semantic );
-	storage_info* alloc_input_storage( boost::shared_ptr<symbol> const& );
-	storage_info* alloc_output_storage( salviar::semantic );
+	storage_info_t* alloc_input_storage( semantic_value_t const& );
+	storage_info_t* alloc_input_storage( boost::shared_ptr<symbol> const& );
+	storage_info_t* alloc_output_storage( semantic_value_t const& );
 
 	// Called by abi_analyser after all semantic and global var was set.
 	// This function will compute the data layout.
@@ -83,24 +77,24 @@ private:
 	std::string entry_point_name;
 
 	// Include stream_in and buffer_in
-	std::vector< salviar::semantic > sems_in;
-	typedef boost::unordered_map< salviar::semantic, storage_info > sem_storages_t;
+	std::vector< semantic_value_t const& > sems_in;
+	typedef boost::unordered_map< semantic_value_t, storage_info_t > sem_storages_t;
 	sem_storages_t semin_storages;
 
 	// for uniform only.
 	std::vector< symbol* > syms_in;
-	typedef boost::unordered_map< symbol*, storage_info > sym_storages_t;
+	typedef boost::unordered_map< symbol*, storage_info_t > sym_storages_t;
 	sym_storages_t symin_storages;
-	typedef boost::unordered_map< std::string, storage_info* > name_storages_t;
+	typedef boost::unordered_map< std::string, storage_info_t* > name_storages_t;
 	name_storages_t name_storages;
 
 	// Include stream_out and buffer_out
-	std::vector< salviar::semantic > sems_out;
-	boost::unordered_map< salviar::semantic, storage_info > semout_storages;
+	std::vector< semantic_value_t const& > sems_out;
+	boost::unordered_map< semantic_value_t, storage_info_t > semout_storages;
 
 	// The count and offsets of 
-	int counts[sasl::semantic::storage_types_count];
-	int offsets[sasl::semantic::storage_types_count];
+	int counts[salviar::storage_classfications_count];
+	int offsets[salviar::storage_classfications_count];
 };
 
 END_NS_SASL_SEMANTIC();

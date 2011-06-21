@@ -5,7 +5,6 @@
 
 #include <salviar/include/decl.h>
 #include <salviar/include/render_stage.h>
-#include <salviar/include/stream.h>
 
 BEGIN_NS_SALVIAR();
 

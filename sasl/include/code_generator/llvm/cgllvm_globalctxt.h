@@ -49,11 +49,11 @@ protected:
 
 class cgllvm_modvs: public cgllvm_modimpl{
 public:
-	llvm::Type* entry_param_type( sasl::semantic::storage_types st ) const;
-	void entry_param_type( sasl::semantic::storage_types st, llvm::Type* t );
+	llvm::Type* entry_param_type( sasl::semantic::storage_classifications st ) const;
+	void entry_param_type( sasl::semantic::storage_classifications st, llvm::Type* t );
 
 protected:
-	llvm::Type* param_types[sasl::semantic::storage_types_count];
+	llvm::Type* param_types[sasl::semantic::storage_classifications_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();

@@ -1,25 +1,26 @@
 #ifndef SALVIAR_VERTEX_CACHE_H
 #define SALVIAR_VERTEX_CACHE_H
 
-#include "decl.h"
+#include <salviar/include/salviar_forward.h>
 
-#include "renderer.h"
-#include "render_stage.h"
-#include "index_fetcher.h"
+#include <salviar/include/decl.h>
+
+#include <salviar/include/renderer.h>
+#include <salviar/include/render_stage.h>
+#include <salviar/include/index_fetcher.h>
 #include <eflib/include/memory/atomic.h>
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #include <vector>
 #include <utility>
-
-#include <salviar/include/salviar_forward.h>
 
 BEGIN_NS_SALVIAR();
 
 class stream_assembler;
 
-//当顶点直接来自于input vertex时，则只有low标号起作用；如果顶点为裁切后的顶点，则hi id也会起作用
 typedef size_t cache_entry_index;
 
 class vertex_cache : public render_stage
@@ -27,13 +28,12 @@ class vertex_cache : public render_stage
 public:
 	virtual void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert) = 0;
 
-	virtual result set_input_layout(const input_layout_decl& layout) = 0;
+	virtual result set_input_layout( h_input_layout const& layout) = 0;
 	virtual result set_stream(stream_index sidx, h_buffer hbuf) = 0;
 
 	virtual void transform_vertices(uint32_t prim_count) = 0;
 
 	virtual vs_output& fetch(cache_entry_index id) = 0;
-	virtual vs_output& fetch_for_write(cache_entry_index id) = 0;
 
 	virtual vs_output* new_vertex() = 0;
 	virtual void delete_vertex(vs_output* const pvert) = 0;
@@ -48,13 +48,12 @@ public:
 
 	void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
 
-	result set_input_layout(const input_layout_decl& layout);
+	result set_input_layout(const h_input_layout& layout);
 	result set_stream(stream_index sidx, h_buffer hbuf);
 
 	void transform_vertices(uint32_t prim_count);
 
 	vs_output& fetch(cache_entry_index id);
-	vs_output& fetch_for_write(cache_entry_index id);
 
 	vs_output* new_vertex();
 	void delete_vertex(vs_output* const pvert);

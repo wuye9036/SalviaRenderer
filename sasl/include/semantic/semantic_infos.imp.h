@@ -9,14 +9,14 @@ BEGIN_NS_SASL_SEMANTIC();
 
 template <typename T> T const_value_si::value() const {
 
-    if ( sasl_ehelper::is_integer( value_type()  ) ) {
-        if ( sasl_ehelper::is_unsigned( value_type() ) ) {
+    if ( is_integer( value_type()  ) ) {
+        if ( is_unsigned( value_type() ) ) {
             return (T)boost::get<uint64_t>(val);
         }
         return (T)boost::get<int64_t>(val);
     }
 
-    if( sasl_ehelper::is_real( value_type() ) ) {
+    if( is_real( value_type() ) ) {
         return (T)boost::get<double>(val);
     }
 

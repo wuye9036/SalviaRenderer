@@ -41,6 +41,8 @@ using ::boost::shared_polymorphic_cast;
 using ::boost::shared_ptr;
 using ::boost::shared_static_cast;
 
+using namespace sasl::utility;
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_type_converter : public type_converter{
@@ -335,10 +337,10 @@ void register_builtin_typeconv(
 	// Register scalar <====> vector<scalar, 1>.
 #define DEFINE_VECTOR_TYPE_IDS( btc ) \
 	type_entry::id_t btc##_vts[5] = {-1, -1, -1, -1, -1};\
-	btc##_vts[1] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 1 ) ); \
-	btc##_vts[2] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 2 ) ); \
-	btc##_vts[3] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 3 ) ); \
-	btc##_vts[4] = typemgr->get( sasl_ehelper::vector_of(builtin_types::btc , 4 ) );
+	btc##_vts[1] = typemgr->get( vector_of(builtin_types::btc , 1 ) ); \
+	btc##_vts[2] = typemgr->get( vector_of(builtin_types::btc , 2 ) ); \
+	btc##_vts[3] = typemgr->get( vector_of(builtin_types::btc , 3 ) ); \
+	btc##_vts[4] = typemgr->get( vector_of(builtin_types::btc , 4 ) );
 
 #define DEFINE_SHRINK_VECTORS( btc )				\
 	for( int i = 1; i <=3; ++i ) {					\

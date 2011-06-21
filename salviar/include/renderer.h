@@ -37,9 +37,6 @@ struct renderer_parameters
 	pixel_format backbuffer_format;
 };
 
-typedef std::vector<input_element_decl> input_layout_decl;
-enum stream_index;
-
 class renderer
 {
 public:

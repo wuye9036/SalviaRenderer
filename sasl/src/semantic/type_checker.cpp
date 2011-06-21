@@ -20,12 +20,12 @@ bool type_equal( shared_ptr<builtin_type> lhs, shared_ptr<builtin_type> rhs ){
 
 bool type_equal( shared_ptr<type_specifier> lhs, shared_ptr<type_specifier> rhs ){
 	// if lhs or rhs is an alias of type, get its actual type for comparison.
-	if(lhs->node_class() == syntax_node_types::alias_type ){
+	if(lhs->node_class() == node_ids::alias_type ){
 		assert(!"need to be implemented!");
 		return false;
 		// return type_equal( actual_type(lhs), rhs );
 	}
-	if ( rhs->node_class() == syntax_node_types::alias_type ){
+	if ( rhs->node_class() == node_ids::alias_type ){
 		assert(!"need to be implemented!");
 		return false;
 		// return type_equal( lhs, actual_type( rhs ) );
@@ -33,7 +33,7 @@ bool type_equal( shared_ptr<type_specifier> lhs, shared_ptr<type_specifier> rhs 
 	if ( lhs->node_class() != rhs->node_class() ){
 		return false;
 	}
-	if( lhs->node_class() == syntax_node_types::builtin_type ){
+	if( lhs->node_class() == node_ids::builtin_type ){
 		return type_equal(
 			shared_polymorphic_cast<builtin_type>(lhs),
 			shared_polymorphic_cast<builtin_type>(rhs)
