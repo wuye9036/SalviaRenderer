@@ -9,8 +9,11 @@
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+using salviar::storage_info;
+
 using boost::addressof;
 using boost::shared_ptr;
+
 using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
@@ -44,13 +47,13 @@ std::string abi_info::entry_name() const{
 }
 bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream )
 {
-	vector<salviar::semantic_value const&>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
+	vector<salviar::semantic_value>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
 	if( it != sems_in.end() ){
 		if( *it == sem ){
 			storage_info* si = input_storage( sem );
 			assert(si);
-			if( si->sv_type == btc || si->sv_type == builtin_types::none ){
-				si->sv_type = btc;
+			if( builtin_types::from_value( si->value_type ) == btc || builtin_types::from_value( si->value_type ) == builtin_types::none ){
+				si->value_type = static_cast<language_value_types>( btc.to_value() );
 				return true;
 			}
 			return false;
@@ -58,19 +61,19 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 	}
 
 	storage_info* si = alloc_input_storage( sem );
-	si->sv_type = btc;
+	si->value_type = static_cast<language_value_types>( btc.to_value() );
 	si->storage = is_stream ? sc_stream_in : sc_buffer_in;
 	sems_in.insert( it, sem );
 	return true;
 }
 
 bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_types btc ){
-	vector<salviar::semantic_value const&>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
+	vector<salviar::semantic_value>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
 	if( it != sems_out.end() ){
 		if( *it == sem ){
 			storage_info* si = alloc_output_storage( sem );
-			if( si->sv_type != btc && si->sv_type == builtin_types::none ){
-				si->sv_type = btc;
+			if( builtin_types::from_value( si->value_type ) != btc && builtin_types::from_value( si->value_type ) == builtin_types::none ){
+				si->value_type = static_cast<language_value_types>( btc.to_value() );
 				return true;
 			}
 			return false;
@@ -78,7 +81,7 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 	}
 
 	storage_info* si = alloc_output_storage( sem );
-	si->sv_type = btc;
+	si->value_type = static_cast<language_value_types>( btc.to_value() );
 	si->storage = sc_buffer_out;
 	sems_out.insert( it, sem );
 	return true;
@@ -88,7 +91,7 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_types
 {
 	syms_in.push_back( v.get() );
 	storage_info* si = alloc_input_storage( v );
-	si->sv_type = btc;
+	si->value_type = static_cast<language_value_types>( btc.to_value() );
 	si->storage = sc_buffer_in;
 
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
@@ -134,7 +137,7 @@ storage_info* abi_info::output_storage( salviar::semantic_value const& sem ) con
 	return const_cast<storage_info*>( addressof( it->second ) );
 }
 
-size_t abi_info::storage_size( storage_classifications st ) const{
+size_t abi_info::total_size( storage_classifications st ) const{
 	return offsets[st];
 }
 
@@ -194,7 +197,7 @@ void abi_info::compute_input_semantics_layout(){
 		pstorage->offset = offsets[pstorage->storage];
 		pstorage->size = 
 			pstorage->storage == sc_buffer_in ?
-			static_cast<int>( storage_size( pstorage->sv_type ) )
+			static_cast<int>( total_size( pstorage->sv_type ) )
 			: static_cast<int> ( sizeof(void*) )
 			;
 
@@ -212,7 +215,7 @@ void abi_info::compute_output_buffer_layout(){
 		pstorage->storage = sc_buffer_out;
 		pstorage->index =  counts[pstorage->storage];
 		pstorage->offset = offsets[pstorage->storage];
-		pstorage->size = static_cast<int>( storage_size( pstorage->sv_type ) );
+		pstorage->size = static_cast<int>( total_size( pstorage->sv_type ) );
 		
 		counts[pstorage->storage]++;
 		offsets[pstorage->storage] += pstorage->size;
@@ -231,7 +234,7 @@ void abi_info::compute_input_constant_layout(){
 		pstorage->index = counts[sc_buffer_in];
 		pstorage->offset = offsets[sc_buffer_in];
 
-		int size = static_cast<int>( storage_size( pstorage->sv_type ) );
+		int size = static_cast<int>( total_size( pstorage->sv_type ) );
 		pstorage->size = size;
 
 		counts[sc_buffer_in]++;

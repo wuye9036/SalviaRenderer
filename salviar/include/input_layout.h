@@ -43,9 +43,16 @@ struct input_element_desc
 
 class input_layout{
 public:
-	size_t desc_size() const;
-	input_element_desc const& get_desc( size_t index ) const;
-	semantic_value const& get_semantic( size_t index ) const;
+	typedef std::vector<input_element_desc>::const_iterator iterator;
+
+	iterator desc_begin() const;
+	iterator desc_end() const;
+
+	semantic_value const& get_semantic( iterator it ) const;
+	size_t get_slot( semantic_value const& ) const;
+	input_element_desc const& slot_desc( size_t slot ) const;
+	input_element_desc const& semantic_desc( semantic_value const& ) const;
+
 	void slot_range( size_t&, size_t& ) const;
 
 private:

@@ -92,13 +92,13 @@ struct storage_info{
 class shader_abi{
 	virtual std::string entry_name() const = 0;
 
-	virtual std::vector<storage_info*> storage_infos( storage_classifications sclass ) = 0;
-	virtual size_t total_size( storage_classifications sclass ) = 0;
+	virtual std::vector<storage_info*> storage_infos( storage_classifications sclass ) const = 0;
+	virtual size_t total_size( storage_classifications sclass ) const = 0;
 
-	virtual storage_info* input_storage( salviar::semantic_value const& ) = 0;
-	virtual storage_info* input_storage( std::string const& ) = 0;
+	virtual storage_info* input_storage( salviar::semantic_value const& ) const = 0;
+	virtual storage_info* input_storage( std::string const& ) const = 0;
 
-	virtual storage_info* output_storage( salviar::semantic_value const& ) = 0;
+	virtual storage_info* output_storage( salviar::semantic_value const& ) const = 0;
 };
 
 END_NS_SALVIAR();

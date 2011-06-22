@@ -5,8 +5,14 @@
 #include <salviar/include/buffer.h>
 #include <salviar/include/shader.h>
 
-using std::vector;
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/foreach.hpp>
+#include <boost/range/iterator_range.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 using namespace eflib;
+using boost::make_iterator_range;
+using std::vector;
 
 BEGIN_NS_SALVIAR();
 
@@ -41,17 +47,18 @@ void stream_assembler::set_input_layout( input_layout const* layout ){
 
 void stream_assembler::fetch_vertex(vs_input& rv, size_t vert_index) const
 {
-	for(size_t i_elem = 0; i_elem < layout_->desc_size(); ++i_elem){
-		
+	BOOST_FOREACH(
+		input_element_desc const& elem_desc,
+		make_iterator_range( layout_->desc_begin(), layout_->desc_end() ) 
+		)
+	{
 		// TODO Correct stream mapping need to be implemented.
-		input_element_desc const& elem_desc = layout_->get_desc(i_elem);
 		size_t slot = elem_desc.input_slot;
-
 		if( slot >= vsi_attrib_regcnt ){
 			return;
 		}
 
-		void const* pdata = buf->element_address( elem_desc, vert_index );
+		void const* pdata = element_address( elem_desc, vert_index );
 		if( !pdata ){ return; }
 
 		// TODO Matched with semantic but not slot.
@@ -62,11 +69,11 @@ void stream_assembler::fetch_vertex(vs_input& rv, size_t vert_index) const
 void const* stream_assembler::element_address( input_element_desc const& elem_desc, size_t index ) const{
 	int buf_index = buffer_index( elem_desc.input_slot );
 	if( buf_index == -1 ){ return NULL; }
-	return vbufs_[buf_index]->( elem_desc.aligned_byte_offset + strides_[buf_index] * index + offsets_[buf_index] );
+	return vbufs_[buf_index]->raw_data( elem_desc.aligned_byte_offset + strides_[buf_index] * index + offsets_[buf_index] );
 }
 
 void const* stream_assembler::element_address( semantic_value const& sv, size_t index ) const{
-	return element_address( layout_->get_desc(sv), index );
+	return element_address( layout_->semantic_desc( sv ), index );
 }
 
 void stream_assembler::set_vertex_buffers(
@@ -105,7 +112,7 @@ input_layout const* stream_assembler::layout() const{
 }
 
 int stream_assembler::buffer_index( size_t slot ) const{
-	vector<size_t>::iterator slot_it = find( slots_.begin(), slots_.end(), slot );
+	vector<size_t>::const_iterator slot_it = find( slots_.begin(), slots_.end(), slot );
 	if( slot_it == slots_.end() ){
 		return -1;
 	}

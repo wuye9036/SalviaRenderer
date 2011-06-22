@@ -33,6 +33,18 @@ public:
 	// Friend for abi_analyser could call compute_layout();
 	friend class abi_analyser;
 
+	// Implements members of shader_abi
+	
+	std::string entry_name() const;
+
+	std::vector<storage_info_t*> storage_infos( salviar::storage_classifications sclass ) const;
+	size_t total_size( salviar::storage_classifications sclass ) const;
+
+	storage_info_t* input_storage( std::string const& ) const;
+	storage_info_t* output_storage( semantic_value_t const& ) const;
+
+	// End members of shader_abi
+
 	abi_info();
 
 	salviar::languages lang;
@@ -42,7 +54,7 @@ public:
 
 	void entry( boost::shared_ptr<symbol> const& );
 	bool is_entry( boost::shared_ptr<symbol> const& ) const;
-	std::string entry_name() const;
+	
 
 	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
 	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc );
@@ -50,13 +62,6 @@ public:
 
 	storage_info_t* input_storage( semantic_value_t const& ) const;
 	storage_info_t* input_storage( boost::shared_ptr<symbol> const& ) const;
-	storage_info_t* input_storage( std::string const& ) const;
-
-	storage_info_t* output_storage( semantic_value_t const& ) const;
-	
-	size_t storage_size( salviar::storage_classifications sclass ) const;
-
-	std::vector<storage_info_t*> storage_infos( salviar::storage_classifications sclass ) const;
 
 private:
 	storage_info_t* alloc_input_storage( semantic_value_t const& );

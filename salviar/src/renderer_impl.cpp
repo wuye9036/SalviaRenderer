@@ -20,7 +20,7 @@ result renderer_impl::set_input_layout(const h_input_layout& layout)
 {
 	size_t min_slot = 0, max_slot = 0;
 	layout->slot_range( min_slot, max_slot );
-	vs_input_ops_ = &get_vs_input_op( max_slot );
+	vs_input_ops_ = &get_vs_input_op( static_cast<uint32_t>(max_slot) );
 
 	return hvertcache_->set_input_layout(layout);
 }
@@ -449,8 +449,17 @@ shared_ptr<vertex_shader_unit> renderer_impl::vs_proto() const{
 	return vs_proto_;
 }
 
+h_input_layout renderer_impl::create_input_layout(
+	input_element_desc const* /*elem_descs*/, size_t /*elems_count*/,
+	h_shader_code const& /*code*/ )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return h_input_layout();
+}
+
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev)
 {
 	return h_renderer(new renderer_impl(pparam, hdev));
 }
-END_NS_SALVIAR()
+
+END_NS_SALVIAR();

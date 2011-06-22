@@ -176,7 +176,7 @@ public:
 private:
 	int memidx;
 	int32_t swz;
-	salviar::semantic_value const& sem;
+	salviar::semantic_value sem;
 };
 
 class call_si: public type_info_si{

@@ -22,10 +22,10 @@ BEGIN_NS_SALVIAR();
 
 void vertex_shader_unit::initialize( shader_code const* code ){
 	this->code = code;
-	this->stream_data.resize( code->abii()->storage_size( sc_stream_in), 0 );
-	this->buffer_data.resize( code->abii()->storage_size(sc_buffer_in), 0 );
-	this->stream_odata.resize( code->abii()->storage_size(sc_stream_out), 0 );
-	this->buffer_odata.resize( code->abii()->storage_size(sc_buffer_out), 0 );
+	this->stream_data.resize( code->abii()->total_size( sc_stream_in), 0 );
+	this->buffer_data.resize( code->abii()->total_size(sc_buffer_in), 0 );
+	this->stream_odata.resize( code->abii()->total_size(sc_stream_out), 0 );
+	this->buffer_odata.resize( code->abii()->total_size(sc_buffer_out), 0 );
 }
 
 void vertex_shader_unit::bind_streams( stream_assembler const* sa ){
