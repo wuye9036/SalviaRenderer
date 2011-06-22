@@ -39,6 +39,7 @@ using sasl::semantic::type_info_si;
 
 using namespace sasl::syntax_tree;
 using namespace llvm;
+using namespace sasl::utility;
 
 using boost::any;
 using boost::shared_ptr;

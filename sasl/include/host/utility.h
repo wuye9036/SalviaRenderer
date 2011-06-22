@@ -13,6 +13,7 @@ namespace sasl{
 			return ret;
 		}
 		
+		inline
 		salviar::language_value_types to_lvt( builtin_types v ){
 			return static_cast<salviar::language_value_types>( v.to_value() );
 		}
