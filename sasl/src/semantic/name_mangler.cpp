@@ -30,6 +30,8 @@ using ::sasl::syntax_tree::struct_type;
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::variable_declaration;
 
+using ::sasl::utility;
+
 //////////////////////////////////////////////////////////////////////////
 // lookup table for translating enumerations to string.
 // static boost::mutex lookup_table_mtx;
@@ -76,15 +78,15 @@ static void append( std::string& str, builtin_types btc, bool is_component = fal
 	} else if( is_vector( btc ) ) {
 		char vector_len_buf[2];
 		str.append("V");
-		sprintf( vector_len_buf, "%ld", len_0( btc ) );
+		sprintf( vector_len_buf, "%ld", vector_size( btc ) );
 		str.append( vector_len_buf );
 		append( str, scalar_of(btc), true );
 	} else if ( is_matrix(btc) ) {
 		char matrix_len_buf[2] = {0};
 		str.append("M");
-		sprintf( matrix_len_buf, "%ld", len_0( btc ) );
+		sprintf( matrix_len_buf, "%ld", vector_size( btc ) );
 		str.append( matrix_len_buf );
-		sprintf( matrix_len_buf, "%ld", len_1( btc ) );
+		sprintf( matrix_len_buf, "%ld", vector_count( btc ) );
 		str.append( matrix_len_buf );
 		append( str, scalar_of(btc), true );
 	}

@@ -1012,13 +1012,13 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				if( scalar_of(lbtc) == builtin_types::_float ){
 					ext->return_(
 						mul_vm<llfloat>( larg, rarg,
-						len_0(lbtc), len_0(rbtc),
+						vector_size(lbtc), vector_size(rbtc),
 						ret_type )
 						);
 				} else if ( scalar_of(lbtc) == builtin_types::_sint32 ){
 					ext->return_(
 						mul_vm<lli32>( larg, rarg,
-						len_0(lbtc), len_0(rbtc),
+						vector_size(lbtc), vector_size(rbtc),
 						ret_type )
 						);
 				} else {
@@ -1028,7 +1028,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				if( scalar_of(lbtc) == builtin_types::_float ){
 					ext->return_(
 						mul_mv<llfloat>( larg, rarg,
-						len_0(lbtc), len_1(lbtc),
+						vector_size(lbtc), vector_count(lbtc),
 						ret_type )
 						);
 				}

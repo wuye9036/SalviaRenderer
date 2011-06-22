@@ -103,7 +103,7 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_types
 {
 	syms_in.push_back( v.get() );
 	storage_info* si = alloc_input_storage( v );
-	si->value_type = static_cast<language_value_types>( btc.to_value() );
+	si->value_type = to_lvt( btc.to_value() );
 	si->storage = sc_buffer_in;
 
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
@@ -209,7 +209,7 @@ void abi_info::compute_input_semantics_layout(){
 		pstorage->offset = offsets[pstorage->storage];
 		pstorage->size = 
 			pstorage->storage == sc_buffer_in ?
-			static_cast<int>( total_size( pstorage->sv_type ) )
+			static_cast<int>( total_size( pstorage->value_type ) )
 			: static_cast<int> ( sizeof(void*) )
 			;
 
@@ -227,7 +227,7 @@ void abi_info::compute_output_buffer_layout(){
 		pstorage->storage = sc_buffer_out;
 		pstorage->index =  counts[pstorage->storage];
 		pstorage->offset = offsets[pstorage->storage];
-		pstorage->size = static_cast<int>( total_size( pstorage->sv_type ) );
+		pstorage->size = static_cast<int>( total_size( pstorage->value_type ) );
 		
 		counts[pstorage->storage]++;
 		offsets[pstorage->storage] += pstorage->size;
@@ -246,7 +246,7 @@ void abi_info::compute_input_constant_layout(){
 		pstorage->index = counts[sc_buffer_in];
 		pstorage->offset = offsets[sc_buffer_in];
 
-		int size = static_cast<int>( total_size( pstorage->sv_type ) );
+		int size = static_cast<int>( total_size( pstorage->value_type ) );
 		pstorage->size = size;
 
 		counts[sc_buffer_in]++;

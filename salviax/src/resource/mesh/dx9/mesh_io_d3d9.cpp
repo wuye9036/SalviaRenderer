@@ -88,19 +88,19 @@ h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH pmesh)
 	for(size_t i = 0; i < positions.size(); ++i)
 	{
 		layout.push_back( 
-			salviar::input_element_decl(stream_0, dxdecl[positions[i]].Offset, bytes_per_vert, input_float3, input_register_usage_position, input_register_index(usage_idx_counter)));
+			salviar::input_element_desc(stream_0, dxdecl[positions[i]].Offset, bytes_per_vert, input_float3, input_register_usage_position, input_register_index(usage_idx_counter)));
 		++usage_idx_counter;
 	}
 
 	for(size_t i = 0; i < normals.size(); ++i){
 		layout.push_back(
-			salviar::input_element_decl(stream_0, dxdecl[normals[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
+			salviar::input_element_desc(stream_0, dxdecl[normals[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
 		++usage_idx_counter;
 	}
 
 	for(size_t i = 0; i < texcoords.size(); ++i){
 		layout.push_back(
-			salviar::input_element_decl(stream_0, dxdecl[texcoords[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
+			salviar::input_element_desc(stream_0, dxdecl[texcoords[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
 		++usage_idx_counter;
 	}
 

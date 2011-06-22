@@ -29,11 +29,11 @@ namespace sasl{
 		bool is_standard( const builtin_types& /*btc*/ );
 
 		builtin_types scalar_of( const builtin_types& /*btc*/ );
-		builtin_types vector_of( const builtin_types& /*btc*/, size_t len );
-		builtin_types matrix_of( const builtin_types& /*btc*/, size_t len_0, size_t len_1 );
+		builtin_types vector_of( const builtin_types& /*btc*/, size_t vec_size );
+		builtin_types matrix_of( const builtin_types& /*btc*/, size_t vec_size, size_t vec_cnt );
 
-		size_t len_0( const builtin_types& /*btc*/);
-		size_t len_1( const builtin_types& /*btc*/);
+		size_t vector_size( const builtin_types& /*btc*/);
+		size_t vector_count( const builtin_types& /*btc*/);
 
 		size_t storage_size( const builtin_types& /*btc*/ );
 

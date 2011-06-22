@@ -48,7 +48,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	vector<storage_info*> sis = abii->storage_infos( st );
 	BOOST_FOREACH( storage_info* si, sis ){
 		bool sign(false);
-		Type const* storage_llvm_type = llvm_type( builtin_types::from_value(si->value_type), sign );
+		Type const* storage_llvm_type = llvm_type( to_builtin_types(si->value_type), sign );
 		assert(storage_llvm_type);
 		if( sc_stream_in == st || sc_stream_out == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
@@ -409,7 +409,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 		psi = abii->input_storage( pssi->get_semantic() );
 	}
 
-	sc_ptr(data)->data().val_type = llvm_type( psi->value_type, sc_ptr(data)->data().is_signed );
+	sc_ptr(data)->data().val_type = llvm_type( to_builtin_types(psi->value_type), sc_ptr(data)->data().is_signed );
 	sc_ptr(data)->data().agg.index = psi->index;
 	if( psi->storage == sc_stream_in || psi->storage == sc_stream_out ){
 		sc_ptr(data)->data().is_ref = true;

@@ -75,7 +75,7 @@ namespace sasl{
 			return ret;
 		}
 
-		builtin_types matrix_of( const builtin_types& btc, size_t len_0, size_t len_1 )
+		builtin_types matrix_of( const builtin_types& btc, size_t vec_size, size_t vec_cnt )
 		{
 			if ( !is_scalar(btc) ){
 				return builtin_types::none;
@@ -84,15 +84,15 @@ namespace sasl{
 			ret.from_value(
 				builtin_types::storage_type(
 				ret.to_value()
-				| ( len_0 << ret._dim0_field_shift.to_value() )
-				| ( len_1 << ret._dim1_field_shift.to_value() )
+				| ( vec_size << ret._dim0_field_shift.to_value() )
+				| ( vec_cnt << ret._dim1_field_shift.to_value() )
 				)
 				);
 
 			return ret;
 		}
 
-		size_t len_0( const builtin_types& btc )
+		size_t vector_size( const builtin_types& btc )
 		{
 			if( is_scalar(btc) ){
 				return 1;
@@ -104,7 +104,7 @@ namespace sasl{
 				);
 		}
 
-		size_t len_1( const builtin_types& btc )
+		size_t vector_count( const builtin_types& btc )
 		{
 			if( is_scalar(btc) || is_vector(btc) ){
 				return 1;
@@ -120,7 +120,7 @@ namespace sasl{
 			if( is_none(btc) || is_void(btc) ){
 				return 0;
 			}
-			size_t component_count = len_0(btc) * len_1(btc);
+			size_t component_count = vector_size(btc) * vector_count(btc);
 			size_t component_size = 0;
 			builtin_types s_btc = scalar_of( btc );
 			if( s_btc == builtin_types::_sint8 

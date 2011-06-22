@@ -132,9 +132,9 @@ h_mesh create_box(salviar::renderer* psr)
 	pidxs[33] = 22;pidxs[34] = 23;pidxs[35] = 20;
 
 	salviar::h_input_layout layout;
-	layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
-	layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
-	layout.push_back(salviar::input_element_decl(stream_2, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_2));
+	layout.push_back(salviar::input_element_desc(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
+	layout.push_back(salviar::input_element_desc(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
+	layout.push_back(salviar::input_element_desc(stream_2, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_2));
 
 	pmesh->set_index_type(index_int16);
 	pmesh->set_primitive_count(12);
@@ -206,8 +206,8 @@ h_mesh create_planar(
 	}
 
 	salviar::h_input_layout layout;
-	layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
-	layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
+	layout.push_back(salviar::input_element_desc(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
+	layout.push_back(salviar::input_element_desc(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
 
 	pmesh->set_index_type(index_int16);
 	pmesh->set_primitive_count(repeat_x * repeat_y * 2);

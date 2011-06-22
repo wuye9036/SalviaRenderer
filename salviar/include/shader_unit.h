@@ -19,12 +19,9 @@
 
 BEGIN_NS_SALVIAR();
 
-class compiler;
 class shader_code;
 class vs_output;
 class stream_assembler;
-
-struct input_element_decl;
 
 class vertex_shader_unit
 {

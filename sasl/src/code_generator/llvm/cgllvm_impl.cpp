@@ -49,14 +49,14 @@ Type const* cgllvm_impl::llvm_type( builtin_types const& btc, bool& sign ){
 	if( is_vector( btc) ){
 		builtin_types scalar_btc = scalar_of( btc );
 		Type const* inner_type = llvm_type(scalar_btc, sign);
-		return VectorType::get( inner_type, static_cast<uint32_t>(len_0(btc)) );
+		return VectorType::get( inner_type, static_cast<uint32_t>(vector_size(btc)) );
 	}
 	
 	if( is_matrix( btc ) ){
 		builtin_types scalar_btc = scalar_of( btc );
 		Type const* row_type =
-			llvm_type( vector_of(scalar_btc, len_0(btc)), sign );
-		return ArrayType::get( row_type, len_1(btc) );
+			llvm_type( vector_of(scalar_btc, vector_size(btc)), sign );
+		return ArrayType::get( row_type, vector_count(btc) );
 	}
 
 	return NULL;

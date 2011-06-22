@@ -71,7 +71,7 @@ class mesh : public base_mesh
 	size_t primcount_;
 	salviar::index_type idxtype_;
 
-	std::vector<salviar::input_element_decl> default_layout_;
+	std::vector<salviar::input_element_desc> default_layout_;
 
 public:
 	mesh(salviar::renderer* psr);
@@ -103,7 +103,7 @@ public:
 	virtual void set_primitive_count(size_t primcount);
 	virtual void set_index_type(salviar::index_type idxtype);
 
-	virtual void set_default_layout(const std::vector<salviar::input_element_decl>& layout);
+	virtual void set_default_layout(const std::vector<salviar::input_element_desc>& layout);
 };
 
 DECL_HANDLE(base_mesh, h_mesh);

@@ -307,9 +307,9 @@ int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_
 	if( is_scalar(btc) ){
 		agg_size = 1;
 	} else if( is_vector(btc) ){
-		agg_size = len_0( btc );
+		agg_size = vector_size( btc );
 	} else if( is_matrix(btc) ){
-		agg_size = len_1( btc );
+		agg_size = vector_count( btc );
 	}
 
 	if( agg_size == 0 ){ return 0; }
@@ -369,7 +369,7 @@ SASL_VISIT_DEF( member_expression ){
 				// matrix only
 				swizzled_btc = matrix_of(
 					elem_btc,
-					len_0( agg_btc ),
+					vector_size( agg_btc ),
 					static_cast<size_t>( field_count )
 					);
 			}

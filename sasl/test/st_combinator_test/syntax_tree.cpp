@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE( btc_test )
 	BOOST_CHECK( !is_matrix(btc_double) );
 	BOOST_CHECK( is_real(btc_double) );
 	BOOST_CHECK( !is_real( SYNCASE_(btc_sint8) ));
-	BOOST_CHECK( len_0( SYNCASE_(btc_sint8) ) == 1 );
-	BOOST_CHECK( len_1( SYNCASE_(btc_sint8) ) == 1 );
+	BOOST_CHECK( vector_size( SYNCASE_(btc_sint8) ) == 1 );
+	BOOST_CHECK( vector_count( SYNCASE_(btc_sint8) ) == 1 );
 	BOOST_CHECK( is_integer( SYNCASE_(btc_sint8) ) );
 	BOOST_CHECK( !is_integer( SYNCASE_(btc_double) ) );
 	BOOST_CHECK( !is_integer( SYNCASE_(btc_void) ) );
@@ -52,15 +52,15 @@ BOOST_AUTO_TEST_CASE( btc_test )
 	BOOST_CHECK( is_vector(btc_float3) );
 	BOOST_CHECK( !is_matrix(btc_float3) );
 	BOOST_CHECK( scalar_of(btc_float3) == builtin_types::_float );
-	BOOST_CHECK( len_0(btc_float3) == 3 );
+	BOOST_CHECK( vector_size(btc_float3) == 3 );
 
 	builtin_types btc_ulong3x2( syntax_cases::instance().btc_ulong3x2() );
 	BOOST_CHECK( !is_scalar( btc_ulong3x2 ) );
 	BOOST_CHECK( !is_vector(btc_ulong3x2) );
 	BOOST_CHECK( is_matrix(btc_ulong3x2) );
 	BOOST_CHECK( scalar_of(btc_ulong3x2) == builtin_types::_uint64 );
-	BOOST_CHECK( len_0(btc_ulong3x2) == 3 );
-	BOOST_CHECK( len_1(btc_ulong3x2) == 2 );
+	BOOST_CHECK( vector_size(btc_ulong3x2) == 3 );
+	BOOST_CHECK( vector_count(btc_ulong3x2) == 2 );
 
 	BOOST_CHECK( !is_scalar( SYNCASE_(btc_void) ) );
 	BOOST_CHECK( !is_scalar( SYNCASE_(btc_none) ) );

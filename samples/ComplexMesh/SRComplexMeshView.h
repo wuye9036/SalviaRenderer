@@ -151,9 +151,9 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 			vertex_element ve;
 			file.read(reinterpret_cast<char*>(&ve), sizeof(ve));
 		}
-		layout.push_back(salviar::input_element_decl(stream_0, 0, sizeof(vec3), input_float3,
+		layout.push_back(salviar::input_element_desc(stream_0, 0, sizeof(vec3), input_float3,
 				input_register_usage_position, input_reg_0));
-		layout.push_back(salviar::input_element_decl(stream_1, 0, sizeof(vec3), input_float3,
+		layout.push_back(salviar::input_element_desc(stream_1, 0, sizeof(vec3), input_float3,
 				input_register_usage_attribute, input_reg_1));
 
 		uint32_t num_vertices;

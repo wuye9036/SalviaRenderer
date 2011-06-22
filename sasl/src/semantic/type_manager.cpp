@@ -42,7 +42,7 @@ std::string builtin_type_name( builtin_types btc ){
 		return 
 			( boost::format("%1%_%2%") 
 			% builtin_type_name( scalar_of(btc) )
-			% len_0( btc )
+			% vector_size( btc )
 			).str();
 	}
 
@@ -50,8 +50,8 @@ std::string builtin_type_name( builtin_types btc ){
 		return 
 			( boost::format("%1%_%2%x%3%") 
 			% builtin_type_name( scalar_of(btc) )
-			% len_0( btc )
-			% len_1( btc )
+			% vector_size( btc )
+			% vector_count( btc )
 			).str();
 	}
 
