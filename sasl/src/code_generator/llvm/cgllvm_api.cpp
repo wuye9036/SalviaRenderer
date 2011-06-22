@@ -32,7 +32,7 @@ boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_si* mo
 			}
 		}
 		
-		if ( abii->lang == salviar::lang_vertex_sl ){
+		if ( abii->lang == salviar::lang_vertex_shader ){
 			cgllvm_vs cg;
 			if( cg.generate(mod, abii) ){
 				return cg.module();

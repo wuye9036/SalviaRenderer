@@ -442,11 +442,11 @@ void options_io::filterate( po::variables_map const & vm )
 		if ( lang_str == "general" || lang_str == "g" ){
 			lang = salviar::lang_general;
 		} else if ( lang_str == "vertex_shader" || lang_str == "vs" ){
-			lang = salviar::lang_vertex_sl;
+			lang = salviar::lang_vertex_shader;
 		} else if ( lang_str == "pixel_shader" || lang_str == "ps" ){
-			lang = salviar::lang_pixel_sl;
+			lang = salviar::lang_pixel_shader;
 		} else if ( lang_str == "blend_shader" || lang_str == "bs" ){
-			lang = salviar::lang_blend_sl;
+			lang = salviar::lang_blending_shader;
 		}
 	}
 }

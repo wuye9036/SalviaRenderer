@@ -75,7 +75,7 @@ storage_classifications vsoutput_semantic_storage( salviar::semantic_value const
 
 storage_classifications semantic_storage( salviar::languages lang, bool is_output, salviar::semantic_value const& sem ){
 	switch ( lang ){
-	case salviar::lang_vertex_sl:
+	case salviar::lang_vertex_shader:
 		if( is_output ){
 			return vsoutput_semantic_storage(sem);
 		} else {
@@ -147,9 +147,9 @@ boost::shared_ptr<symbol> const& abi_analyser::entry( salviar::languages lang ) 
 }
 
 bool abi_analyser::update_abiis(){
-	return update( salviar::lang_vertex_sl )
-		&& update( salviar::lang_pixel_sl )
-		&& update( salviar::lang_blend_sl )
+	return update( salviar::lang_vertex_shader )
+		&& update( salviar::lang_pixel_shader )
+		&& update( salviar::lang_blending_shader )
 		;
 }
 
@@ -176,16 +176,16 @@ bool abi_analyser::update( salviar::languages lang ){
 		abiis[lang]->entry_point_name = entries[lang]->mangled_name();
 	}
 
-	if( lang == salviar::lang_vertex_sl
-		|| lang == salviar::lang_pixel_sl
-		|| lang == salviar::lang_blend_sl
+	if( lang == salviar::lang_vertex_shader
+		|| lang == salviar::lang_pixel_shader
+		|| lang == salviar::lang_blending_shader
 		)
 	{
 		// Process entry function.
 		shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
 		assert( entry_fn );
 
-		if( !add_semantic( entry_fn, false, false, salviar::lang_vertex_sl, true ) ){
+		if( !add_semantic( entry_fn, false, false, salviar::lang_vertex_shader, true ) ){
 			reset(lang);
 			return false;
 		}

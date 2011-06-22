@@ -69,6 +69,7 @@ using ::sasl::syntax_tree::variable_expression;
 using ::sasl::syntax_tree::dfunction_combinator;
 
 using namespace boost::assign;
+using namespace sasl::utility;
 
 using boost::any;
 using boost::any_cast;

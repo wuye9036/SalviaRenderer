@@ -9,6 +9,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace sasl::utility;
+
 #define SYNCASE_(case_name) syntax_cases::instance().case_name()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().case_name##_name()
 
