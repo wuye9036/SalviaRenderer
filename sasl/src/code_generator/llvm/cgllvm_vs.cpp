@@ -7,7 +7,8 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>
-
+#include <sasl/include/host/utility.h>
+#include <sasl/enums/enums_utility.h>
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -23,13 +24,14 @@
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_vs
 
+using salviar::storage_classifications;
 using salviar::sc_buffer_in;
 using salviar::sc_buffer_out;
 using salviar::sc_stream_in;
 using salviar::sc_stream_out;
+using salviar::storage_classifications_count;
 
 using salviar::storage_info;
-using salviar::storage_classifications;
 
 using sasl::semantic::storage_si;
 using sasl::semantic::symbol;

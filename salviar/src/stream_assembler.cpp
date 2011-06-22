@@ -34,11 +34,11 @@ vec4 get_vec4(input_formats fmt, semantic_value const& sv, const void* data)
 			return vec4(floats[0], floats[1], 0.0f, w_comp);
 		case input_float3:
 			return vec4(floats[0], floats[1], floats[2], w_comp);
-		default:
-			return vec4::zero();
+		case input_float4:
+			return vec4(floats[0], floats[1], floats[2], floats[3]);
 	}
 
-	return vec4(floats[0], floats[1], floats[2], floats[3]);
+	return vec4::zero();
 }
 
 void stream_assembler::set_input_layout( input_layout const* layout ){
@@ -116,7 +116,7 @@ int stream_assembler::buffer_index( size_t slot ) const{
 	if( slot_it == slots_.end() ){
 		return -1;
 	}
-	return distance( slots_.begin(), slot_it );
+	return static_cast<int>( distance( slots_.begin(), slot_it ) );
 }
 
 END_NS_SALVIAR();

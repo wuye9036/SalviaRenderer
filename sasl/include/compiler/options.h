@@ -4,7 +4,7 @@
 #include <sasl/include/compiler/compiler_forward.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 
-#include <salviar/include/enums.h>
+#include <salviar/include/shader.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>

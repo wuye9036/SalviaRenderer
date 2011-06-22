@@ -36,6 +36,8 @@
 
 BEGIN_NS_SASL_SEMANTIC();
 
+using salviar::semantic_value;
+
 using ::sasl::common::compiler_info_manager;
 using ::sasl::common::token_t;
 
@@ -161,26 +163,20 @@ void semantic_analyser::parse_semantic(
 	if( sem_tok ){
 		salviar::semantic_value const& sem( salviar::sv_none );
 		string const& semstr = sem_tok->str;
-
-		if( semstr == "sv_position" || semstr == "POSITION" ){
-			sem = salviar::sv_position;
-		} else if( semstr == "TEXCOORD" ){
-			int index = 0;
-			if( sem_idx_tok ){
-				index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
-			}
-			sem = pack_semantic( salviar::sv_texcoord, index );
-		} else if( semstr == "NORMAL" ){
-			int index = 0;
-			if( sem_idx_tok ){
-				index = boost::lexical_cast<int16_t>(sem_idx_tok->str);
-			}
-			sem = pack_semantic( salviar::sv_normal, index );
+		size_t index = 0;
+		if( sem_idx_tok ){
+			index = boost::lexical_cast<size_t>(sem_idx_tok->str);
 		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
+			// Try to get last digitals for generate index.
+			string::const_reverse_iterator it = semstr.rbegin();
 
-		ssi->set_semantic( sem );
+			char ch = '\0';
+			while( ch = boost::is_digit()(*it) ){
+				index = index + ( ch - '0' );
+			}
+
+		}
+		ssi->set_semantic( semantic_value( semstr, index ) );
 	}
 }
 

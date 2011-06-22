@@ -30,7 +30,7 @@ using ::sasl::syntax_tree::struct_type;
 using ::sasl::syntax_tree::type_specifier;
 using ::sasl::syntax_tree::variable_declaration;
 
-using ::sasl::utility;
+using namespace sasl::utility;
 
 //////////////////////////////////////////////////////////////////////////
 // lookup table for translating enumerations to string.

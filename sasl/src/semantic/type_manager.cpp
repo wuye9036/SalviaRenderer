@@ -16,7 +16,8 @@
 
 #include <string>
 
-using namespace ::sasl::syntax_tree;
+using namespace sasl::syntax_tree;
+using namespace sasl::utility;
 
 using ::boost::make_shared;
 using ::boost::shared_ptr; // prevent conflicting with std::tr1.

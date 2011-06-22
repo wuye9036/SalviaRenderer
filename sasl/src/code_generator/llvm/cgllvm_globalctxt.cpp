@@ -9,10 +9,12 @@
 #include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-using sasl::semantic::sc_buffer_in;
-using sasl::semantic::sc_buffer_out;
-using sasl::semantic::sc_stream_in;
-using sasl::semantic::sc_stream_out;
+using salviar::storage_classifications;
+using salviar::sc_buffer_in;
+using salviar::sc_buffer_out;
+using salviar::sc_stream_in;
+using salviar::sc_stream_out;
+using salviar::storage_classifications_count;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 

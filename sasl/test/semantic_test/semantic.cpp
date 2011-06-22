@@ -13,6 +13,8 @@
 #include <sasl/test/test_cases/semantic_cases.h>
 #include <string>
 
+using namespace sasl::utility;
+
 using ::sasl::common::compiler_info_manager;
 
 using ::sasl::syntax_tree::program;

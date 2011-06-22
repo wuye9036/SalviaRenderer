@@ -23,7 +23,7 @@ using ::sasl::common::token_t;
 using ::sasl::syntax_tree::create_node;
 using ::sasl::syntax_tree::builtin_type;
 
-using salviar::semantic_value const&;
+using salviar::semantic_value;
 
 using ::boost::addressof;
 using ::boost::shared_ptr;

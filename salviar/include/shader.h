@@ -84,20 +84,20 @@ public:
 		return index;
 	}
 
-	bool operator < ( semantic_value const& rhs ){
+	bool operator < ( semantic_value const& rhs ) const{
 		return sv < rhs.sv || name < rhs.name || index < rhs.index;
 	}
 
-	bool operator == ( semantic_value const& rhs ){
+	bool operator == ( semantic_value const& rhs ) const{
 		return is_same_sv(rhs) && index == rhs.index;
 	}
 
-	bool operator == ( system_values rhs ){
+	bool operator == ( system_values rhs ) const{
 		return sv == rhs && index == 0;
 	}
 
 	template <typename T>
-	bool operator != ( T const& v ){
+	bool operator != ( T const& v ) const{
 		return !( *this == v );
 	}
 
@@ -106,14 +106,14 @@ private:
 	system_values	sv;
 	uint32_t		index;
 
-	bool is_same_sv( semantic_value const& rhs ){
+	bool is_same_sv( semantic_value const& rhs ) const{
 		if( sv != rhs.sv ) return false;
 		if( sv == sv_customized ) return rhs.name == name;
 		return true;
 	}
 };
 
-size_t hash_value( semantic_value const& v ){
+inline size_t hash_value( semantic_value const& v ){
 	size_t seed = v.get_index();
 	boost::hash_combine( seed, static_cast<size_t>( v.get_system_value() ) );
 	boost::hash_combine( seed, v.get_name() );
