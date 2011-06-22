@@ -161,7 +161,7 @@ void semantic_analyser::parse_semantic(
 	)
 {
 	if( sem_tok ){
-		salviar::semantic_value const& sem( salviar::sv_none );
+		salviar::semantic_value sem( salviar::sv_none );
 		string const& semstr = sem_tok->str;
 		size_t index = 0;
 		if( sem_idx_tok ){
@@ -314,7 +314,7 @@ int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_
 	int dest_size = 0;
 	swizzle_code = encode_swizzle( dest_size, min_src_size, mask.c_str() );
 	
-	assert( min_src_size <= agg_size );
+	assert( min_src_size <= static_cast<int>(agg_size) );
 
 	return dest_size;
 }

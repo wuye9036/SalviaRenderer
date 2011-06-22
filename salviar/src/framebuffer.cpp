@@ -400,7 +400,7 @@ void framebuffer::set_render_target(render_target tar, size_t tar_id, surface* p
 	EFLIB_ASSERT_AND_IF(tar == render_target_color, "只能绑定颜色缓冲"){
 		return;
 	}
-	EFLIB_ASSERT(tar_id < cbufs_.size(), "颜色缓冲ID的绑定错误"){
+	EFLIB_ASSERT_AND_IF(tar_id < cbufs_.size(), "颜色缓冲ID的绑定错误"){
 		return;
 	}
 

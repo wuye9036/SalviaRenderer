@@ -31,7 +31,7 @@ mesh::mesh(salviar::renderer* psr)
 {
 	EFLIB_ASSERT(psr, "");
 
-	pdev_ = psr;
+	device_ = psr;
 }
 
 /*
@@ -69,21 +69,23 @@ void mesh::gen_adjancency(){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
-void mesh::render(const salviar::h_input_layout& layout)
+void mesh::render( salviar::h_input_layout const& layout, h_shader_code const& shader_code )
 {
-	EFLIB_ASSERT(pdev_, "");
-	if(!pdev_) return;
+	EFLIB_ASSERT(device_, "");
+	if(!device_) return;
 
-	for(size_t i = 0; i < bufs_.size(); ++i){
-		if(i == idxbufid_) continue;
-		pdev_->set_stream(stream_index(i), get_buffer(i));
+	for(size_t i_buffer = 0; i_buffer < vertex_buffers_.size(); ++i_buffer){
+		device_->set_vertex_buffers(
+			slots_[i_buffer], 1, &vertex_buffers_[i_buffer],
+			&(strides_[i_buffer]), &(offsets_[i_buffer])
+			);
 	}
 
-	pdev_->set_index_buffer(get_index_buffer(), idxtype_);
-	pdev_->set_input_layout(layout);
-	pdev_->set_primitive_topology(primitive_triangle_list);
+	device_->set_index_buffer( get_index_buffer(), index_fmt_ );
+	device_->set_input_layout( layout_);
+	device_->set_primitive_topology(primitive_triangle_list);
 
-	pdev_->draw_index(0, primcount_, 0);
+	device_->draw_index(0, primcount_, 0);
 }
 
 void mesh::render(){
@@ -100,11 +102,11 @@ void mesh::set_buffer_count(size_t bufcount)
 
 salviar::h_buffer mesh::create_buffer(size_t bufid, size_t size)
 {
-	EFLIB_ASSERT(bufid < bufs_.size(), "");
-	EFLIB_ASSERT(pdev_, "");
+	assert( bufid < bufs_.size() );
+	assert( device_ );
 
-	if(bufid < bufs_.size() && pdev_){
-		bufs_[bufid] = pdev_->create_buffer(size);
+	if(bufid < bufs_.size() && device_){
+		bufs_[bufid] = device_->create_buffer(size);
 		return bufs_[bufid];
 	}
 

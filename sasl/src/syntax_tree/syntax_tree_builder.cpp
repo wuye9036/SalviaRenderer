@@ -761,7 +761,7 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 
 	std::string const& op_str = tok_attr->tok->str;
 	char op_chars[4] = {'\0', '\0', '\0', '\0'};
-	for( int i = 0; i < op_str.length(); ++i ){ op_chars[i] = op_str[i]; }
+	for( size_t i = 0; i < op_str.length(); ++i ){ op_chars[i] = op_str[i]; }
 
 	switch( op_chars[0] ){
 	case '=':
