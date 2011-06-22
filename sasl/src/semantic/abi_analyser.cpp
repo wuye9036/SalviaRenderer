@@ -54,11 +54,11 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 storage_classifications vsinput_semantic_storage( salviar::semantic_value const& sem ){
 	switch( semantic_base(sem) ){
 	case salviar::SV_Position:
-		return stream_in;
+		return sc_stream_in;
 	case salviar::SV_TEXCOORD:
-		return stream_in;
+		return sc_stream_in;
 	case salviar::SV_NORMAL:
-		return stream_in;
+		return sc_stream_in;
 	}
 	return storage_none;
 }
@@ -66,9 +66,9 @@ storage_classifications vsinput_semantic_storage( salviar::semantic_value const&
 storage_classifications vsoutput_semantic_storage( salviar::semantic_value const& sem ){
 	switch( semantic_base(sem) ){
 	case salviar::SV_Position:
-		return buffer_out;
+		return sc_buffer_out;
 	case salviar::SV_TEXCOORD:
-		return buffer_out;
+		return sc_buffer_out;
 	}
 	return storage_none;
 }
@@ -254,13 +254,13 @@ bool abi_analyser::add_semantic(
 			storage_classifications sem_s = semantic_storage( lang, is_output, node_sem );
 			switch( sem_s ){
 
-			case stream_in:
+			case sc_stream_in:
 				return ai->add_input_semantic( node_sem, btc, true );
-			case buffer_in:
+			case sc_buffer_in:
 				return ai->add_input_semantic( node_sem, btc, false );
 
-			case buffer_out:
-			case stream_out:
+			case sc_buffer_out:
+			case sc_stream_out:
 				return ai->add_output_semantic( node_sem, btc );
 			}
 

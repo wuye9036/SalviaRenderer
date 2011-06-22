@@ -29,7 +29,12 @@ public:
 	virtual void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert) = 0;
 
 	virtual result set_input_layout( h_input_layout const& layout) = 0;
-	virtual result set_stream(stream_index sidx, h_buffer hbuf) = 0;
+
+	virtual result set_vertex_buffers(
+		size_t starts_slot,
+		size_t buffers_count, h_buffer const* buffers,
+		size_t* strides, size_t* offsets
+		) = 0;
 
 	virtual void transform_vertices(uint32_t prim_count) = 0;
 
@@ -49,7 +54,11 @@ public:
 	void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
 
 	result set_input_layout(const h_input_layout& layout);
-	result set_stream(stream_index sidx, h_buffer hbuf);
+	result set_vertex_buffers(
+		size_t starts_slot,
+		size_t buffers_count, h_buffer const* buffers,
+		size_t* strides, size_t* offsets
+		);
 
 	void transform_vertices(uint32_t prim_count);
 

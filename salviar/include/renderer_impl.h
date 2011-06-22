@@ -49,10 +49,12 @@ class renderer_impl : public renderer
 public:
 	//inherited
 	virtual result set_input_layout(const h_input_layout& layout);
-	virtual const h_input_layout& get_input_layout() const;
 
-	virtual result set_stream(stream_index sidx, h_buffer hbuf);
-	virtual h_buffer get_stream(stream_index sidx) const;
+	virtual result set_vertex_buffers(
+		size_t starts_slot,
+		size_t buffers_count, h_buffer const* buffers,
+		size_t* strides, size_t* offsets
+		);
 
 	virtual result set_index_buffer(h_buffer hbuf, index_type idxtype);
 	virtual h_buffer get_index_buffer() const;

@@ -23,10 +23,10 @@
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_vs
 
-using sasl::semantic::buffer_in;
-using sasl::semantic::buffer_out;
-using sasl::semantic::stream_in;
-using sasl::semantic::stream_out;
+using sasl::semantic::sc_buffer_in;
+using sasl::semantic::sc_buffer_out;
+using sasl::semantic::sc_stream_in;
+using sasl::semantic::sc_stream_out;
 using sasl::semantic::storage_info;
 using sasl::semantic::storage_si;
 using sasl::semantic::storage_classifications;
@@ -48,7 +48,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 		bool sign(false);
 		Type const* storage_llvm_type = llvm_type(si->sv_type, sign );
 		assert(storage_llvm_type);
-		if( stream_in == st || stream_out == st ){
+		if( sc_stream_in == st || sc_stream_out == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
 		} else {
 			entry_params_types[st].push_back( storage_llvm_type );
@@ -62,16 +62,16 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 
 	char const* struct_name = NULL;
 	switch( st ){
-	case stream_in:
+	case sc_stream_in:
 		struct_name = ".s.stri";
 		break;
-	case buffer_in:
+	case sc_buffer_in:
 		struct_name = ".s.bufi";
 		break;
-	case stream_out:
+	case sc_stream_out:
 		struct_name = ".s.stro";
 		break;
-	case buffer_out:
+	case sc_buffer_out:
 		struct_name = ".s.bufo";
 		break;
 	}
@@ -81,10 +81,10 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 }
 
 void cgllvm_vs::create_entry_params(){
-	fill_llvm_type_from_si ( buffer_in );
-	fill_llvm_type_from_si ( buffer_out );
-	fill_llvm_type_from_si ( stream_in );
-	fill_llvm_type_from_si ( stream_out );
+	fill_llvm_type_from_si ( sc_buffer_in );
+	fill_llvm_type_from_si ( sc_buffer_out );
+	fill_llvm_type_from_si ( sc_stream_in );
+	fill_llvm_type_from_si ( sc_stream_out );
 }
 
 void cgllvm_vs::add_entry_param_type( boost::any* data, storage_classifications st, vector<Type const*>& par_types ){
@@ -138,7 +138,7 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 				destctxt.data().agg.index = si->index;
 				// If stream out, the output is only a pointer.
 				// Set is_ref to true for generating right code.
-				destctxt.data().is_ref =( si->storage == stream_out );
+				destctxt.data().is_ref =( si->storage == sc_stream_out );
 
 				cgllvm_sctxt srcctxt;
 				cgllvm_sctxt* declr_ctxt = node_ctxt(*declr);
@@ -223,10 +223,10 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		boost::any child_ctxt;
 
 		vector<Type const*> param_types;
-		add_entry_param_type( &( child_ctxt = *data ), stream_in, param_types );
-		add_entry_param_type( &( child_ctxt = *data ), buffer_in, param_types );
-		add_entry_param_type( &( child_ctxt = *data ), stream_out, param_types );
-		add_entry_param_type( &( child_ctxt = *data ), buffer_out, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), sc_stream_in, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), sc_buffer_in, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), sc_stream_out, param_types );
+		add_entry_param_type( &( child_ctxt = *data ), sc_buffer_out, param_types );
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy(llcontext()), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
@@ -250,32 +250,32 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		Function::arg_iterator arg_it = fn->arg_begin();
 
 		cgllvm_sctxt* psctxt = new cgllvm_sctxt();
-		param_ctxts[stream_in].reset( psctxt );
+		param_ctxts[sc_stream_in].reset( psctxt );
 		arg_it->setName( ".arg.stri" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
-		psctxt->data().val_type = entry_params_structs[stream_in].data();
+		psctxt->data().val_type = entry_params_structs[sc_stream_in].data();
 
 		psctxt = new cgllvm_sctxt();
-		param_ctxts[buffer_in].reset( psctxt );
+		param_ctxts[sc_buffer_in].reset( psctxt );
 		arg_it->setName( ".arg.bufi" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
-		psctxt->data().val_type = entry_params_structs[buffer_in].data();
+		psctxt->data().val_type = entry_params_structs[sc_buffer_in].data();
 
 		psctxt = new cgllvm_sctxt();
-		param_ctxts[stream_out].reset( psctxt );
+		param_ctxts[sc_stream_out].reset( psctxt );
 		arg_it->setName( ".arg.stro" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
-		psctxt->data().val_type = entry_params_structs[stream_out].data();
+		psctxt->data().val_type = entry_params_structs[sc_stream_out].data();
 
 		psctxt = new cgllvm_sctxt();
-		param_ctxts[buffer_out].reset( psctxt );
+		param_ctxts[sc_buffer_out].reset( psctxt );
 		arg_it->setName( ".arg.bufo" );
 		psctxt->data().val = arg_it++;
 		psctxt->data().is_ref = true;
-		psctxt->data().val_type = entry_params_structs[buffer_out].data();
+		psctxt->data().val_type = entry_params_structs[sc_buffer_out].data();
 
 		// Create return type
 		psctxt = node_ctxt(v.symbol()->node(), true );
@@ -283,7 +283,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		if( fn_ssi->get_semantic() != salviar::SV_None ){
 			// Return an built-in value.
 			storage_info* si = abii->output_storage( fn_ssi->get_semantic() );
-			if( si->storage == stream_out ){
+			if( si->storage == sc_stream_out ){
 				psctxt->data().is_ref = true;
 			} else {
 				psctxt->data().is_ref = false;
@@ -340,7 +340,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			storage_info* psi = abii->input_storage( par_sem );
 			
 			cgllvm_sctxt tmpctxt;
-			tmpctxt.data().is_ref = (psi->storage == stream_in);
+			tmpctxt.data().is_ref = (psi->storage == sc_stream_in);
 			tmpctxt.data().agg.parent = param_ctxts[psi->storage].get();
 			tmpctxt.data().agg.index = psi->index;
 
@@ -359,7 +359,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 					storage_info* psi = abii->input_storage( sem );
 			
 					cgllvm_sctxt srcctxt;
-					srcctxt.data().is_ref = (psi->storage == stream_in);
+					srcctxt.data().is_ref = (psi->storage == sc_stream_in);
 					srcctxt.data().agg.parent = param_ctxts[psi->storage].get();
 					srcctxt.data().agg.index = psi->index;
 
@@ -409,7 +409,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 
 	sc_ptr(data)->data().val_type = llvm_type( psi->sv_type, sc_ptr(data)->data().is_signed );
 	sc_ptr(data)->data().agg.index = psi->index;
-	if( psi->storage == stream_in || psi->storage == stream_out ){
+	if( psi->storage == sc_stream_in || psi->storage == sc_stream_out ){
 		sc_ptr(data)->data().is_ref = true;
 	} else {
 		sc_ptr(data)->data().is_ref = false;

@@ -64,7 +64,7 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 
 	storage_info* si = alloc_input_storage( sem );
 	si->sv_type = btc;
-	si->storage = is_stream ? stream_in : buffer_in;
+	si->storage = is_stream ? sc_stream_in : sc_buffer_in;
 	sems_in.insert( it, sem );
 	return true;
 }
@@ -84,7 +84,7 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 
 	storage_info* si = alloc_output_storage( sem );
 	si->sv_type = btc;
-	si->storage = buffer_out;
+	si->storage = sc_buffer_out;
 	sems_out.insert( it, sem );
 	return true;
 }
@@ -94,7 +94,7 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_types
 	syms_in.push_back( v.get() );
 	storage_info* si = alloc_input_storage( v );
 	si->sv_type = btc;
-	si->storage = buffer_in;
+	si->storage = sc_buffer_in;
 
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
 }
@@ -165,7 +165,7 @@ std::vector<storage_info*> abi_info::storage_infos( storage_classifications st )
 	std::vector<storage_info*> ret;
 
 	// Process output
-	if( st == buffer_out ){
+	if( st == sc_buffer_out ){
 		BOOST_FOREACH( salviar::semantic_value const& sem, sems_out ){
 			ret.push_back( output_storage(sem) );
 		}
@@ -180,7 +180,7 @@ std::vector<storage_info*> abi_info::storage_infos( storage_classifications st )
 		}
 	}
 
-	if ( st == buffer_in ){
+	if ( st == sc_buffer_in ){
 		BOOST_FOREACH( symbol* sym, syms_in ){
 			ret.push_back( const_cast<storage_info*>( addressof( symin_storages.find(sym)->second ) ) );
 		}
@@ -198,7 +198,7 @@ void abi_info::compute_input_semantics_layout(){
 		pstorage->index =  counts[pstorage->storage];
 		pstorage->offset = offsets[pstorage->storage];
 		pstorage->size = 
-			pstorage->storage == buffer_in ?
+			pstorage->storage == sc_buffer_in ?
 			static_cast<int>( storage_size( pstorage->sv_type ) )
 			: static_cast<int> ( sizeof(void*) )
 			;
@@ -214,7 +214,7 @@ void abi_info::compute_output_buffer_layout(){
 		storage_info* pstorage = output_storage( sems_out[index] );
 		assert(pstorage);
 
-		pstorage->storage = buffer_out;
+		pstorage->storage = sc_buffer_out;
 		pstorage->index =  counts[pstorage->storage];
 		pstorage->offset = offsets[pstorage->storage];
 		pstorage->size = static_cast<int>( storage_size( pstorage->sv_type ) );
@@ -232,15 +232,15 @@ void abi_info::compute_output_stream_layout()
 void abi_info::compute_input_constant_layout(){
 	for ( size_t index = 0; index < syms_in.size(); ++index ){
 		storage_info* pstorage = addressof( symin_storages[ syms_in[index] ] );
-		pstorage->storage = buffer_in;
-		pstorage->index = counts[buffer_in];
-		pstorage->offset = offsets[buffer_in];
+		pstorage->storage = sc_buffer_in;
+		pstorage->index = counts[sc_buffer_in];
+		pstorage->offset = offsets[sc_buffer_in];
 
 		int size = static_cast<int>( storage_size( pstorage->sv_type ) );
 		pstorage->size = size;
 
-		counts[buffer_in]++;
-		offsets[buffer_in] += size;
+		counts[sc_buffer_in]++;
+		offsets[sc_buffer_in] += size;
 	}
 }
 

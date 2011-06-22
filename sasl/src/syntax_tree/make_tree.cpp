@@ -24,6 +24,8 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 using ::sasl::common::token_t;
 using ::std::vector;
 
+using namespace sasl::utility;
+
 struct lct_list{
 	static lct_list instance_;
 	vector<literal_classifications> lst;

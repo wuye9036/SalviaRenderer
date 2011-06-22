@@ -76,7 +76,7 @@ private:
 	symbol* entry_point;
 	std::string entry_point_name;
 
-	// Include stream_in and buffer_in
+	// Include sc_stream_in and sc_buffer_in
 	std::vector< semantic_value_t > sems_in;
 	typedef boost::unordered_map< semantic_value_t, storage_info_t > sem_storages_t;
 	sem_storages_t semin_storages;
@@ -88,7 +88,7 @@ private:
 	typedef boost::unordered_map< std::string, storage_info_t* > name_storages_t;
 	name_storages_t name_storages;
 
-	// Include stream_out and buffer_out
+	// Include sc_stream_out and sc_buffer_out
 	std::vector< semantic_value_t > sems_out;
 	boost::unordered_map< semantic_value_t, storage_info_t > semout_storages;
 

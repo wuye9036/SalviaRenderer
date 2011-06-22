@@ -33,23 +33,18 @@ result renderer_impl::set_input_layout(const h_input_layout& layout)
 	return result::ok;
 }
 
-const h_input_layout& renderer_impl::get_input_layout() const
+result renderer_impl::set_vertex_buffers(
+		size_t starts_slot,
+		size_t buffers_count, h_buffer const* buffers,
+		size_t* strides, size_t* offsets
+		)
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	static h_input_layout ret;
-	return ret;
-}
-
-result renderer_impl::set_stream(stream_index sidx, h_buffer hbuf)
-{
-	hvertcache_->set_stream(stream_index(sidx), hbuf);
+	hvertcache_->set_vertex_buffers(
+		starts_slot,
+		buffers_count, buffers,
+		strides, offsets
+		);
 	return result::ok;
-}
-
-h_buffer renderer_impl::get_stream(stream_index /*sidx*/) const
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return h_buffer();
 }
 
 result renderer_impl::set_index_buffer(h_buffer hbuf, index_type idxtype)
@@ -70,13 +65,11 @@ result renderer_impl::set_index_buffer(h_buffer hbuf, index_type idxtype)
 	return result::ok;
 }
 
-h_buffer renderer_impl::get_index_buffer() const
-{
+h_buffer renderer_impl::get_index_buffer() const{
 	return indexbuf_;
 }
 
-index_type renderer_impl::get_index_type() const
-{
+index_type renderer_impl::get_index_type() const{
 	return idxtype_;
 }
 
@@ -91,7 +84,7 @@ result renderer_impl::set_primitive_topology(primitive_topology primtopo)
 	case primitive_triangle_strip:
 		break;
 	default:
-		EFLIB_ASSERT(false, "枚举值无效：无效的图元拓扑枚举。");
+		assert( !"Invalid primitive topology." );
 		return result::failed;
 	}
 
@@ -99,8 +92,7 @@ result renderer_impl::set_primitive_topology(primitive_topology primtopo)
 	return result::ok;
 }
 
-primitive_topology renderer_impl::get_primitive_topology() const
-{
+primitive_topology renderer_impl::get_primitive_topology() const{
 	return primtopo_;
 }
 
