@@ -19,6 +19,15 @@
 #include <algorithm>
 
 using namespace sasl::syntax_tree;
+using namespace sasl::utility;
+
+using salviar::storage_classifications;
+using salviar::sc_none;
+using salviar::sc_stream_in;
+using salviar::sc_stream_out;
+using salviar::sc_buffer_in;
+using salviar::sc_buffer_out;
+using salviar::storage_classifications_count;
 
 using boost::addressof;
 using boost::make_shared;
@@ -28,18 +37,17 @@ using std::lower_bound;
 using std::string;
 using std::vector;
 
-
 BEGIN_NS_SASL_SEMANTIC();
 
 bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem ){
-	switch( semantic_base(sem) ){
+	switch( sem.get_system_value() ){
 
-	case salviar::SV_None:
+	case salviar::sv_none:
 		return false;
 
-	case salviar::SV_Position:
-	case salviar::SV_TEXCOORD:
-	case salviar::SV_NORMAL:
+	case salviar::sv_position:
+	case salviar::sv_texcoord:
+	case salviar::sv_normal:
 		return 
 			( is_scalar(btc) || is_vector(btc) )
 			&& scalar_of(btc) == builtin_types::_float;
@@ -52,25 +60,25 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 }
 
 storage_classifications vsinput_semantic_storage( salviar::semantic_value const& sem ){
-	switch( semantic_base(sem) ){
-	case salviar::SV_Position:
+	switch( sem.get_system_value() ){
+	case salviar::sv_position:
 		return sc_stream_in;
-	case salviar::SV_TEXCOORD:
+	case salviar::sv_texcoord:
 		return sc_stream_in;
-	case salviar::SV_NORMAL:
+	case salviar::sv_normal:
 		return sc_stream_in;
 	}
-	return storage_none;
+	return sc_none;
 }
 
 storage_classifications vsoutput_semantic_storage( salviar::semantic_value const& sem ){
-	switch( semantic_base(sem) ){
-	case salviar::SV_Position:
+	switch( sem.get_system_value() ){
+	case salviar::sv_position:
 		return sc_buffer_out;
-	case salviar::SV_TEXCOORD:
+	case salviar::sv_texcoord:
 		return sc_buffer_out;
 	}
-	return storage_none;
+	return sc_none;
 }
 
 storage_classifications semantic_storage( salviar::languages lang, bool is_output, salviar::semantic_value const& sem ){
@@ -82,7 +90,7 @@ storage_classifications semantic_storage( salviar::languages lang, bool is_outpu
 			return vsinput_semantic_storage(sem);
 		}
 	}
-	return storage_none;
+	return sc_none;
 }
 
 void abi_analyser::reset( salviar::languages lang ){

@@ -4,6 +4,7 @@
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/renderer.h>
 #include <salviar/include/buffer.h>
+#include <salviar/include/stream_assembler.h>
 
 #include <sasl/include/semantic/abi_info.h>
 
@@ -27,23 +28,21 @@ void vertex_shader_unit::initialize( shader_code const* code ){
 	this->buffer_odata.resize( code->abii()->storage_size(sc_buffer_out), 0 );
 }
 
-void vertex_shader_unit::bind_streams( vector<input_element_decl> const& layout, vector<h_buffer> const& streams ){
-	this->layout = layout;
-	this->streams = streams;
+void vertex_shader_unit::bind_streams( stream_assembler const* sa ){
+	this->sa = sa;
 }
 
 void vertex_shader_unit::update( size_t ivert )
 {
 	abi_info const* abii = code->abii();
-	BOOST_FOREACH( input_element_decl const& elem_decl, layout ){
-		if( elem_decl.usage == input_register_usage_position ){
-			void* psrc = streams[elem_decl.stream_idx]->raw_data( elem_decl.stride*ivert + elem_decl.offset );
-			storage_info* pos_si = abii->input_storage( SV_Position );
-			void* pdest = &(stream_data[pos_si->offset]);
-			*static_cast<intptr_t*>(pdest) = reinterpret_cast<intptr_t>(psrc);
-		} else {
-			// TODO Ignore others yet.
-		}
+	vector<storage_info*> infos = abii->storage_infos( sc_stream_in );
+
+	BOOST_FOREACH( storage_info* info, infos ){
+		void const* psrc = sa->element_address( info->sv, ivert );
+		assert( psrc );
+		void* pdest = &(stream_data[info->offset]);
+
+		*static_cast<void const* *>(pdest) = psrc;
 	}
 }
 
@@ -59,19 +58,9 @@ void vertex_shader_unit::execute( vs_output& out )
 
 	p( psi, pbi, pso, pbo );
 
-#if 0
-	/**(mat44*)pbi = mat44::identity();
-	(*(mat44*)pbi).f[0][0] = 2.0f;
-	(*(mat44*)pbi).f[0][1] = 0.7f;*/
-
-	vec4 src_vec4(*((float**)psi), 4);
-	vec4 ref_result;
-	transform( ref_result, src_vec4, *(mat44*)pbi );
-#endif
-
 	// Copy output position to vs_output.
 	memset( &out.position, 0, sizeof(out.position) );
-	storage_info* out_info = code->abii()->output_storage(SV_Position);
+	storage_info* out_info = code->abii()->output_storage( semantic_value( sv_position ) );
 	memcpy( &out.position, &(buffer_odata[out_info->offset]), out_info->size );
 }
 
@@ -82,22 +71,20 @@ void vertex_shader_unit::set_variable( std::string const& name, void* data )
 }
 
 vertex_shader_unit::vertex_shader_unit()
-: code(NULL)
+: code(NULL), sa(NULL)
 {
 }
 
 vertex_shader_unit::vertex_shader_unit( vertex_shader_unit const& rhs )
-: code(rhs.code),
-layout(rhs.layout), streams(rhs.streams),
-stream_data(rhs.stream_data), buffer_data(rhs.buffer_data),
-stream_odata(rhs.stream_odata), buffer_odata(rhs.buffer_odata)
+	: code(rhs.code), sa(rhs.sa),
+	stream_data(rhs.stream_data), buffer_data(rhs.buffer_data),
+	stream_odata(rhs.stream_odata), buffer_odata(rhs.buffer_odata)
 {
 }
 
 vertex_shader_unit& vertex_shader_unit::operator=( vertex_shader_unit const& rhs ){
 	code = rhs.code;
-	layout = rhs.layout;
-	streams = rhs.streams;
+	sa = rhs.sa;
 	stream_data = rhs.stream_data;
 	buffer_data = rhs.buffer_data;
 	stream_odata = rhs.stream_odata;

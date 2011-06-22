@@ -45,6 +45,9 @@ class input_layout{
 public:
 	size_t desc_size() const;
 	input_element_desc const& get_desc( size_t index ) const;
+	semantic_value const& get_semantic( size_t index ) const;
+	void slot_range( size_t&, size_t& ) const;
+
 private:
 	std::vector<input_element_desc> descs;
 };

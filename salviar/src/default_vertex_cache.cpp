@@ -89,7 +89,7 @@ void default_vertex_cache::transform_vertex_by_shader( const std::vector<uint32_
 {
 	vertex_shader_unit vsu = *(pparent_->vs_proto());
 
-	vsu.bind_streams( hsa_->layout(), hsa_->streams() );
+	vsu.bind_streams( hsa_.get() );
 
 	const int32_t num_packages = (index_count + package_size - 1) / package_size;
 
@@ -196,13 +196,21 @@ void default_vertex_cache::delete_vertex(vs_output* const pvert)
 result default_vertex_cache::set_input_layout(const h_input_layout& layout)
 {
 	//layout_ will be checked at runtime.
-	hsa_->set_input_layout(layout);
+	hsa_->set_input_layout(layout.get());
 	return result::ok;
 }
 
-result default_vertex_cache::set_stream(stream_index sidx, h_buffer hbuf)
+result default_vertex_cache::set_vertex_buffers(
+		size_t starts_slot,
+		size_t buffers_count, h_buffer const* buffers,
+		size_t* strides, size_t* offsets
+		)
 {
-	hsa_->set_stream(stream_index(sidx), hbuf);
+	hsa_->set_vertex_buffers(
+		starts_slot,
+		buffers_count, buffers,
+		strides, offsets
+		);
 	return result::ok;
 }
 

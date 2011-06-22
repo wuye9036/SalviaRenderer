@@ -36,7 +36,9 @@ enum languages{
 
 enum system_values{
 	sv_none,
+
 	sv_position,
+	sv_texcoord,
 	sv_normal,
 
 	sv_customized,
@@ -55,6 +57,8 @@ public:
 			sv = sv_position;
 		} else if ( lower_name == "normal" ){
 			sv = sv_normal;
+		} else if ( lower_name == "texcoord" ){
+			sv = sv_texcoord;
 		} else {
 			sv = sv_customized;
 			this->name = name;
@@ -86,6 +90,15 @@ public:
 
 	bool operator == ( semantic_value const& rhs ){
 		return is_same_sv(rhs) && index == rhs.index;
+	}
+
+	bool operator == ( system_values rhs ){
+		return sv == rhs && index == 0;
+	}
+
+	template <typename T>
+	bool operator != ( T const& v ){
+		return !( *this == v );
 	}
 
 private:

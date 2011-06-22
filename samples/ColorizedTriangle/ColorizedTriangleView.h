@@ -37,7 +37,7 @@ char const* vs_code =
 //"	float4 norm: NORMAL; \r\n"
 "}; \r\n"
 "struct VSOut{ \r\n"
-"	float4 pos: SV_Position; \r\n"
+"	float4 pos: sv_position; \r\n"
 //"	float4 norm: TEXCOORD(0); \r\n"
 //"	float4 lightDir: TEXCOORD(1); \r\n"
 "}; \r\n"

@@ -180,7 +180,7 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 }
 
 storage_si::storage_si( shared_ptr<type_manager> const& typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(salviar::SV_None), memidx(-1), swz(0)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(salviar::sv_none), memidx(-1), swz(0)
 {
 }
 

@@ -15,11 +15,6 @@ using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-storage_info::storage_info()
-	: index(-1), offset(0), size(0), storage(storage_none), sv_type( builtin_types::none )
-{
-}
-
 abi_info::abi_info()
 	: mod(NULL), entry_point(NULL), lang(salviar::lang_none)
 {

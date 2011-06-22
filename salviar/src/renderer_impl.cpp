@@ -8,6 +8,7 @@
 #include <salviar/include/surface.h>
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/shader_unit.h>
+#include <salviar/include/input_layout.h>
 
 BEGIN_NS_SALVIAR();
 
@@ -17,20 +18,11 @@ using boost::shared_ptr;
 //inherited
 result renderer_impl::set_input_layout(const h_input_layout& layout)
 {
-	uint32_t n = 0;
-	for(size_t i_elemdecl = 0; i_elemdecl < layout.size(); ++i_elemdecl){
-		const input_element_decl& ied = layout[i_elemdecl];
-		uint32_t sidx = static_cast<uint32_t>(ied.stream_idx);
-		if (n < sidx + 1)
-		{
-			n = sidx + 1;
-		}
-	}
-	vs_input_ops_ = &get_vs_input_op(n);
+	size_t min_slot = 0, max_slot = 0;
+	layout->slot_range( min_slot, max_slot );
+	vs_input_ops_ = &get_vs_input_op( max_slot );
 
-	//layout_ is checked at runtime.
-	hvertcache_->set_input_layout(layout);
-	return result::ok;
+	return hvertcache_->set_input_layout(layout);
 }
 
 result renderer_impl::set_vertex_buffers(

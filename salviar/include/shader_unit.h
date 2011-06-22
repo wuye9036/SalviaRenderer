@@ -22,6 +22,7 @@ BEGIN_NS_SALVIAR();
 class compiler;
 class shader_code;
 class vs_output;
+class stream_assembler;
 
 struct input_element_decl;
 
@@ -36,7 +37,7 @@ public:
 
 	void initialize( shader_code const* );
 
-	void bind_streams( std::vector<input_element_decl> const& layout, std::vector<h_buffer> const& streams );
+	void bind_streams( stream_assembler const* sa );
 	void set_variable( std::string const&, void* data );
 
 	void update( size_t ivert );
@@ -45,9 +46,7 @@ public:
 
 public:
 	shader_code const* code;
-	
-	std::vector<input_element_decl> layout;
-	std::vector<h_buffer> streams;
+	stream_assembler const* sa;
 
 	std::vector<char> stream_data;
 	std::vector<char> buffer_data;
@@ -55,31 +54,6 @@ public:
 	std::vector<char> stream_odata;
 	std::vector<char> buffer_odata;
 };
-
-//class pixel_shader_unit
-//{
-//private:
-//	void initialize( shader_code const* );
-//
-//	void update();
-//
-//	void execute();
-//
-//private:
-//	shader_code const* code;
-//	std::vector<char> data;
-//};
-
-//extern "C"{
-//	SALVIA_API void salvia_create_shader_units(
-//		boost::shared_ptr<vertex_shader_unit>&,
-//		boost::shared_ptr<pixel_shader_unit>&,
-//		shader_code const*
-//		);
-//
-//	SALVIA_API boost::shared_ptr<vertex_shader_unit> salvia_create_vs_unit( shader_code const* );
-//	SALVIA_API boost::shared_ptr<pixel_shader_unit> salvia_create_ps_unit( shader_code const* );
-//};
 
 END_NS_SALVIAR();
 

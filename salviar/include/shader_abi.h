@@ -74,12 +74,17 @@ enum storage_classifications{
 };
 
 struct storage_info{
-	storage_info();
+	storage_info()
+		: index(-1), offset(0), size(0)
+		, storage(sc_none), value_type( lvt_none ), sv(sv_none)
+	{}
+
 	int						index;
 	int						offset;
 	int						size;
 	storage_classifications	storage;
 	language_value_types	value_type;
+	semantic_value			sv;
 };
 
 // ! Application binary interface of shader.

@@ -23,13 +23,15 @@
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_vs
 
-using sasl::semantic::sc_buffer_in;
-using sasl::semantic::sc_buffer_out;
-using sasl::semantic::sc_stream_in;
-using sasl::semantic::sc_stream_out;
-using sasl::semantic::storage_info;
+using salviar::sc_buffer_in;
+using salviar::sc_buffer_out;
+using salviar::sc_stream_in;
+using salviar::sc_stream_out;
+
+using salviar::storage_info;
+using salviar::storage_classifications;
+
 using sasl::semantic::storage_si;
-using sasl::semantic::storage_classifications;
 using sasl::semantic::symbol;
 using sasl::semantic::type_info_si;
 
@@ -46,7 +48,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	vector<storage_info*> sis = abii->storage_infos( st );
 	BOOST_FOREACH( storage_info* si, sis ){
 		bool sign(false);
-		Type const* storage_llvm_type = llvm_type(si->sv_type, sign );
+		Type const* storage_llvm_type = llvm_type( builtin_types::from_value(si->value_type), sign );
 		assert(storage_llvm_type);
 		if( sc_stream_in == st || sc_stream_out == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
@@ -163,7 +165,7 @@ SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> sym = find_symbol( sc_ptr(data), v.var_name->str );
 	assert(sym);
 	
-	// var_si is not null if sym is global value( SV_None is available )
+	// var_si is not null if sym is global value( sv_none is available )
 	storage_info* var_si = abii->input_storage( sym );
 
 	if( var_si ){
@@ -280,7 +282,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		// Create return type
 		psctxt = node_ctxt(v.symbol()->node(), true );
 		storage_si* fn_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
-		if( fn_ssi->get_semantic() != salviar::SV_None ){
+		if( fn_ssi->get_semantic() != salviar::sv_none ){
 			// Return an built-in value.
 			storage_info* si = abii->output_storage( fn_ssi->get_semantic() );
 			if( si->storage == sc_stream_out ){
@@ -336,7 +338,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			// Get Value from semantic.
 			// Store value to local variable.
 			salviar::semantic_value const& par_sem = par_ssi->get_semantic();
-			assert( par_sem != salviar::SV_None );
+			assert( par_sem != salviar::sv_none );
 			storage_info* psi = abii->input_storage( par_sem );
 			
 			cgllvm_sctxt tmpctxt;
@@ -401,13 +403,13 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 	// Global is filled by offset value with null parent.
 	// The parent is filled when it is referred.
 	storage_info* psi = NULL;
-	if( pssi->get_semantic() == salviar::SV_None ){
+	if( pssi->get_semantic() == salviar::sv_none ){
 		psi = abii->input_storage( v.symbol() );
 	} else {
 		psi = abii->input_storage( pssi->get_semantic() );
 	}
 
-	sc_ptr(data)->data().val_type = llvm_type( psi->sv_type, sc_ptr(data)->data().is_signed );
+	sc_ptr(data)->data().val_type = llvm_type( psi->value_type, sc_ptr(data)->data().is_signed );
 	sc_ptr(data)->data().agg.index = psi->index;
 	if( psi->storage == sc_stream_in || psi->storage == sc_stream_out ){
 		sc_ptr(data)->data().is_ref = true;
