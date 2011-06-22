@@ -2,12 +2,24 @@
 
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/host/utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+using namespace sasl::utility::operators;
+using namespace sasl::utility;
+
+using salviar::storage_classifications;
+using salviar::sc_none;
+using salviar::sc_stream_in;
+using salviar::sc_stream_out;
+using salviar::sc_buffer_in;
+using salviar::sc_buffer_out;
+using salviar::storage_classifications_count;
 
 using salviar::storage_info;
 
@@ -52,8 +64,8 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 		if( *it == sem ){
 			storage_info* si = input_storage( sem );
 			assert(si);
-			if( builtin_types::from_value( si->value_type ) == btc || builtin_types::from_value( si->value_type ) == builtin_types::none ){
-				si->value_type = static_cast<language_value_types>( btc.to_value() );
+			if( si->value_type == btc || si->value_type == builtin_types::none ){
+				si->value_type = to_lvt(btc);
 				return true;
 			}
 			return false;
@@ -61,7 +73,7 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 	}
 
 	storage_info* si = alloc_input_storage( sem );
-	si->value_type = static_cast<language_value_types>( btc.to_value() );
+	si->value_type = to_lvt( btc );
 	si->storage = is_stream ? sc_stream_in : sc_buffer_in;
 	sems_in.insert( it, sem );
 	return true;
@@ -72,8 +84,8 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 	if( it != sems_out.end() ){
 		if( *it == sem ){
 			storage_info* si = alloc_output_storage( sem );
-			if( builtin_types::from_value( si->value_type ) != btc && builtin_types::from_value( si->value_type ) == builtin_types::none ){
-				si->value_type = static_cast<language_value_types>( btc.to_value() );
+			if( si->value_type != btc && si->value_type == builtin_types::none ){
+				si->value_type = to_lvt( btc );
 				return true;
 			}
 			return false;
@@ -81,7 +93,7 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 	}
 
 	storage_info* si = alloc_output_storage( sem );
-	si->value_type = static_cast<language_value_types>( btc.to_value() );
+	si->value_type = to_lvt( btc );
 	si->storage = sc_buffer_out;
 	sems_out.insert( it, sem );
 	return true;
