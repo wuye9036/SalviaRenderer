@@ -2,6 +2,8 @@
 
 #if defined(EFLIB_MSVC)
 #   pragma warning(push, 0)
+// ATL, VS 2005
+#	pragma warning( disable : 4505 )
 #endif
 
 #if defined( EFLIB_GCC )

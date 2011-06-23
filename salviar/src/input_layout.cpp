@@ -31,7 +31,7 @@ input_layout::iterator input_layout::desc_end() const{
 	return descs.end();
 }
 
-semantic_value const& input_layout::get_semantic( iterator it ) const{
+semantic_value input_layout::get_semantic( iterator it ) const{
 	return semantic_value( it->semantic_name, it->semantic_index );
 }
 

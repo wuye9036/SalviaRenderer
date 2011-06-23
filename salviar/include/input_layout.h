@@ -72,7 +72,7 @@ public:
 	iterator desc_begin() const;
 	iterator desc_end() const;
 
-	semantic_value const& get_semantic( iterator it ) const;
+	semantic_value get_semantic( iterator it ) const;
 
 	/** Get a slot number that is belonged to a input elememt description has the same semantic value as parameter.
 		@param sv
