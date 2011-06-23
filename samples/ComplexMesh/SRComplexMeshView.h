@@ -67,13 +67,8 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 
 	mesh* pmesh = new mesh(hsr.get());
 
-	enum
-	{
-		vertbufid,
-		normbufid,
-		idxbufid,
-		id_count
-	};
+	size_t const geometry_slot = 0;
+	size_t const normal_slot = 1;
 
 	pmesh->set_buffer_count(id_count);
 
@@ -128,7 +123,8 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 
 	mesh_names.resize(num_meshes);
 
-	salviar::h_input_layout layout;
+	vector<input_element_desc> elem_descs;
+
 	for (uint32_t mesh_index = 0; mesh_index < num_meshes; ++ mesh_index)
 	{
 		ReadShortString(file, mesh_names[mesh_index]);
@@ -151,40 +147,44 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 			vertex_element ve;
 			file.read(reinterpret_cast<char*>(&ve), sizeof(ve));
 		}
-		layout.push_back(salviar::input_element_desc(stream_0, 0, sizeof(vec3), input_float3,
-				input_register_usage_position, input_reg_0));
-		layout.push_back(salviar::input_element_desc(stream_1, 0, sizeof(vec3), input_float3,
-				input_register_usage_attribute, input_reg_1));
 
+		elem_descs.push_back( input_element_desc( "POSITION", 0, input_float3, 0, 0, input_per_vertex, 0 ) );
+		elem_descs.push_back( input_element_desc( "NORMAL",   0, input_float3, 1, 0, input_per_vertex, 0 ) );
+
+		// Read vertex buffers
 		uint32_t num_vertices;
 		file.read(reinterpret_cast<char*>(&num_vertices), sizeof(num_vertices));
 
 		uint32_t max_num_blend;
 		file.read(reinterpret_cast<char*>(&max_num_blend), sizeof(max_num_blend));
 
-		salviar::h_buffer verts = pmesh->create_buffer(vertbufid, sizeof(vec3) * num_vertices);
-		salviar::h_buffer normals = pmesh->create_buffer(normbufid, sizeof(vec3) * num_vertices);
-		vec4* pverts = (vec4*)(verts->raw_data(0));
-		vec3* pnorms = (vec3*)(normals->raw_data(0));
+		salviar::h_buffer verts		= pmesh->create_buffer( sizeof(vec3) * num_vertices );
+		salviar::h_buffer normals	= pmesh->create_buffer( sizeof(vec3) * num_vertices );
+		vec3* verts_data   = reinterpret_cast<vec3*>(verts->raw_data(0));
+		vec3* normals_data = reinterpret_cast<vec3*>(normals->raw_data(0));
+		file.read(reinterpret_cast<char*>(verts_data), num_vertices * sizeof(vec3));
+		file.read(reinterpret_cast<char*>(verts_data), num_vertices * sizeof(vec3));
+		pmesh->add_vertex_buffer( geometry_slot, verts,   sizeof(vec3), 0 );
+		pmesh->add_vertex_buffer( normal_slot,   normals, sizeof(vec3), 0 );
 
-		file.read(reinterpret_cast<char*>(pverts), num_vertices * sizeof(vec3));
-		file.read(reinterpret_cast<char*>(pnorms), num_vertices * sizeof(vec3));
-
+		// Read index buffer.
 		uint32_t num_triangles;
 		file.read(reinterpret_cast<char*>(&num_triangles), sizeof(num_triangles));
 
-		salviar::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t) * num_triangles * 3);
-		uint16_t* pidxs = (uint16_t*)(indices->raw_data(0));
+		salviar::h_buffer indices = pmesh->create_buffer( sizeof(uint16_t) * num_triangles * 3);
+		uint16_t* indices_data = reinterpret_cast<uint16_t*>(indices->raw_data(0));
 
 		char is_index_16_bit;
 		file.read(&is_index_16_bit, sizeof(is_index_16_bit));
 		pmesh->set_index_type(is_index_16_bit ? index_int16 : index_int32);
 
-		file.read(reinterpret_cast<char*>(pidxs), sizeof(uint16_t) * num_triangles * 3);
+		file.read(reinterpret_cast<char*>(indices_data), sizeof(uint16_t) * num_triangles * 3);
 
+		pmesh->set_index_buffer( indices );
+
+		// Set other parameters
 		pmesh->set_primitive_count(num_triangles);
-		pmesh->set_index_buf_id(idxbufid);
-		pmesh->set_default_layout(layout);
+		pmesh->set_input_element_descs( elem_descs );
 	}
 
 	return h_mesh(pmesh);
