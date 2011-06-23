@@ -33,6 +33,24 @@ struct input_element_desc
 
 	uint32_t				instance_data_step_rate;
 	
+	input_element_desc(
+		const char* semantic_name,
+		uint32_t semantic_index,
+		input_formats format,
+		uint32_t input_slot,
+		uint32_t aligned_byte_offset,
+		input_classifications slot_class,
+		uint32_t instance_data_step_rate
+		)
+		: semantic_name( semantic_name )
+		, semantic_index( semantic_index )
+		, format( format )
+		, input_slot( input_slot )
+		, aligned_byte_offset( aligned_byte_offset )
+		, slot_class( slot_class )
+		, instance_data_step_rate( instance_data_step_rate )
+	{}
+
 	input_element_desc()
 		: semantic_name(NULL), semantic_index(0)
 		, format(input_unknown_format)

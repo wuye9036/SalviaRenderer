@@ -176,7 +176,7 @@ void semantic_analyser::parse_semantic(
 			}
 
 		}
-		ssi->set_semantic( semantic_value( semstr, index ) );
+		ssi->set_semantic( semantic_value( semstr, static_cast<uint32_t>(index ) ) );
 	}
 }
 

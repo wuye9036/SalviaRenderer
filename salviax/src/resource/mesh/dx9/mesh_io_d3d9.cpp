@@ -27,97 +27,81 @@ using namespace salviax::utility;
 using namespace salviar;
 BEGIN_NS_SALVIAX_RESOURCE()
 
-h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH pmesh)
+h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 {
-	vec3* pverts = NULL;
-	byte* pidxs = NULL;
+	vec3* dx_verts = NULL;
+	byte* dx_indices = NULL;
 
-	pmesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)(&pverts));
-	pmesh->LockIndexBuffer(D3DLOCK_READONLY, (void**)(&pidxs));
+	dx_mesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)(&dx_verts));
+	dx_mesh->LockIndexBuffer(D3DLOCK_READONLY, (void**)(&dx_indices));
 
-	DWORD nverts = pmesh->GetNumVertices();
-	DWORD bytes_per_vert = pmesh->GetNumBytesPerVertex();
-	DWORD nfaces = pmesh->GetNumFaces();
-	DWORD bytes_per_idx = 
-		(pmesh->GetOptions() & D3DXMESH_32BIT) == 0 ? 2 : 4;
+	DWORD nverts		= dx_mesh->GetNumVertices();
+	DWORD vert_size		= dx_mesh->GetNumBytesPerVertex();
+	DWORD nfaces		= dx_mesh->GetNumFaces();
+	DWORD index_size	= (dx_mesh->GetOptions() & D3DXMESH_32BIT) == 0 ? 2 : 4;
 
 	mesh* psrmesh= new mesh(psr);
 	h_mesh ret(psrmesh);
 	
-	//一个vertex buffer，一个index buffer
-	psrmesh->set_buffer_count(2);
-
-	salviar::h_buffer hvertbuf = psrmesh->create_buffer(0, nverts*bytes_per_vert);
-	salviar::h_buffer hidxbuf = psrmesh->create_buffer(1, nfaces*bytes_per_idx*3);
-
-	psrmesh->set_index_type(bytes_per_idx == 2 ? index_int16 : index_int32);
-	psrmesh->set_index_buf_id(1);
-	psrmesh->set_vertex_buf_id(0);
-	psrmesh->set_primitive_count(nfaces);
+	salviar::h_buffer verts = psrmesh->create_buffer( nverts * vert_size );
+	salviar::h_buffer indices = psrmesh->create_buffer( nfaces * index_size * 3 );
 
 	//parse dx9 decl to layout
-	D3DVERTEXELEMENT9 dxdecl[MAX_FVF_DECL_SIZE];
-	pmesh->GetDeclaration(dxdecl);
-	salviar::h_input_layout layout;
+	D3DVERTEXELEMENT9 dx_decls[MAX_FVF_DECL_SIZE];
+	dx_mesh->GetDeclaration(dx_decls);
 
-	//累加流标号。Postion、Normal、TextureCoord，目前仅支持这三种情况
-	vector<size_t> positions;
-	vector<size_t> normals;
-	vector<size_t> texcoords;
+	vector<input_element_desc> elem_descs;
+	// Get description
+	for(size_t i_decl = 0; i_decl < MAX_FVF_DECL_SIZE; ++i_decl){
+		D3DVERTEXELEMENT9* decl = &( dx_decls[i_decl] );
 
-	//计算layout
-	for(size_t idecl = 0; idecl < MAX_FVF_DECL_SIZE; ++idecl){
-		const D3DVERTEXELEMENT9& decl = dxdecl[idecl];
-		if(decl.Stream == 0xff) break;
-		switch(decl.Usage){
+		// The end of declarations
+		if(decl->Stream == 0xFF) break;
+
+		const char* semantic_name = NULL;
+
+		switch(decl->Usage){
 			case(D3DDECLUSAGE_POSITION):
-				positions.push_back(idecl);
+				semantic_name = "POSITION";
 				break;
 			case(D3DDECLUSAGE_NORMAL):
-				normals.push_back(idecl);
+				semantic_name = "NORMAL";
 				break;
 			case(D3DDECLUSAGE_TEXCOORD):
-				texcoords.push_back(idecl);
+				semantic_name = "TEXCOORD";
 				break;
 			default:
-				break;
+				semantic_name = NULL;
+		}
+
+		if( semantic_name ){
+			elem_descs.push_back(
+				input_element_desc(
+					semantic_name, decl->UsageIndex, input_float3, 0, decl->Offset, input_per_vertex, 0
+					)
+				);
 		}
 	}
 
-	size_t usage_idx_counter = 0;
-	for(size_t i = 0; i < positions.size(); ++i)
-	{
-		layout.push_back( 
-			salviar::input_element_desc(stream_0, dxdecl[positions[i]].Offset, bytes_per_vert, input_float3, input_register_usage_position, input_register_index(usage_idx_counter)));
-		++usage_idx_counter;
-	}
+	// Copy index buffer and vertex buffer
+	void* dx_verts_data = NULL;
+	dx_mesh->LockVertexBuffer(D3DLOCK_READONLY, &dx_verts_data);
+	verts->transfer( 0, dx_verts_data, 0, 0, vert_size * nverts, 1 );
+	dx_mesh->UnlockVertexBuffer();
 
-	for(size_t i = 0; i < normals.size(); ++i){
-		layout.push_back(
-			salviar::input_element_desc(stream_0, dxdecl[normals[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
-		++usage_idx_counter;
-	}
+	void* dx_indices_data;
+	dx_mesh->LockIndexBuffer(D3DLOCK_READONLY, &dx_indices_data);
+	indices->transfer( 0, dx_indices_data, 0, 0, index_size * nfaces * 3, 1 );
+	dx_mesh->UnlockIndexBuffer();
 
-	for(size_t i = 0; i < texcoords.size(); ++i){
-		layout.push_back(
-			salviar::input_element_desc(stream_0, dxdecl[texcoords[i]].Offset, bytes_per_vert, input_float3, input_register_usage_attribute, input_register_index(usage_idx_counter)));
-		++usage_idx_counter;
-	}
+	// Set buffer and parameter to mesh.
+	psrmesh->set_index_type(index_size == 2 ? index_int16 : index_int32);
+	psrmesh->set_index_buffer( indices );
+	psrmesh->add_vertex_buffer( 0, verts, vert_size, 0 );
 
-	psrmesh->set_default_layout(layout);
+	psrmesh->set_input_element_descs( elem_descs );
 
-	//copy index buffer and vertex buffer
-	void* pvertdata = hvertbuf->raw_data(0);
-	void* pxvertdata;
-	pmesh->LockVertexBuffer(D3DLOCK_READONLY, &pxvertdata);
-	memcpy(pvertdata, pxvertdata, bytes_per_vert * nverts);
-	pmesh->UnlockVertexBuffer();
-
-	void* pidxdata = hidxbuf->raw_data(0);
-	void* pxidxdata;
-	pmesh->LockIndexBuffer(D3DLOCK_READONLY, &pxidxdata);
-	memcpy(pidxdata, pxidxdata, bytes_per_idx*nfaces*3);
-	pmesh->UnlockIndexBuffer();
+	psrmesh->set_primitive_count(nfaces);
 
 	return ret;
 }

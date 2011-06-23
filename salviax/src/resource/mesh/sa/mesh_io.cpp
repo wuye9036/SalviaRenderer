@@ -16,41 +16,38 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "salviax/include/resource/mesh/sa/mesh_io.h"
-#include "salviar/include/renderer_impl.h"
-#include "salviar/include/resource_manager.h"
+#include <salviax/include/resource/mesh/sa/mesh_io.h>
+#include <salviar/include/input_layout.h>
+#include <salviar/include/renderer_impl.h>
+#include <salviar/include/resource_manager.h>
 
 using namespace std;
 using namespace eflib;
 using namespace salviar;
-BEGIN_NS_SALVIAX_RESOURCE()
+
+BEGIN_NS_SALVIAX_RESOURCE();
 
 //0, 0, 0 - 1, 1, 1
 h_mesh create_box(salviar::renderer* psr)
 {
 	mesh* pmesh = new mesh(psr);
 
-	enum
-	{
-		vertbufid,
-		normbufid,
-		uvid,
-		idxbufid,
-		id_count
-	};
+	size_t const geometry_slot	= 0;
+	size_t const normal_slot	= 1;
+	size_t const uv_slot		= 2;
 
+	salviar::h_buffer indices	= pmesh->create_buffer( sizeof(uint16_t)*36 );
 
-	pmesh->set_buffer_count(id_count);
+	salviar::h_buffer verts		= pmesh->create_buffer( sizeof(vec4)*24 );
+	salviar::h_buffer normals	= pmesh->create_buffer( sizeof(vec4)*24 );
+	salviar::h_buffer uvs		= pmesh->create_buffer( sizeof(vec4)*24 );
 
-	salviar::h_buffer verts = pmesh->create_buffer(vertbufid, sizeof(vec4)*24);
-	salviar::h_buffer normals = pmesh->create_buffer(normbufid, sizeof(vec4)*24);
-	salviar::h_buffer uvs = pmesh->create_buffer(uvid, sizeof(vec4)*24);
-	salviar::h_buffer indices = pmesh->create_buffer(idxbufid, sizeof(uint16_t)*36);
+	// Generate datas
+	uint16_t* pidxs = reinterpret_cast<uint16_t*>(indices->raw_data(0));
 
-	vec4* pverts = (vec4*)(verts->raw_data(0));
-	uint16_t* pidxs = (uint16_t*)(indices->raw_data(0));
-	vec4* pnorms = (vec4*)(normals->raw_data(0));
-	vec4* puvs = (vec4*)(uvs->raw_data(0));
+	vec4* pverts = reinterpret_cast<vec4*>(verts->raw_data(0));
+	vec4* pnorms = reinterpret_cast<vec4*>(normals->raw_data(0));
+	vec4* puvs = reinterpret_cast<vec4*>(uvs->raw_data(0));
 
 	//+x
 	pverts[0] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -131,15 +128,23 @@ h_mesh create_box(salviar::renderer* psr)
 	pidxs[30] = 20;pidxs[31] = 21;pidxs[32] = 22;
 	pidxs[33] = 22;pidxs[34] = 23;pidxs[35] = 20;
 
-	salviar::h_input_layout layout;
-	layout.push_back(salviar::input_element_desc(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
-	layout.push_back(salviar::input_element_desc(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
-	layout.push_back(salviar::input_element_desc(stream_2, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_2));
-
+	// Set generated data to mesh
 	pmesh->set_index_type(index_int16);
+	pmesh->set_index_buffer( indices );
+
+	pmesh->add_vertex_buffer( geometry_slot, verts, 24, 0 );
+	pmesh->add_vertex_buffer( normal_slot, normals, 24, 0 );
+	pmesh->add_vertex_buffer( uv_slot, uvs, 24, 0 );
+
+	vector<input_element_desc> descs;
+
+	descs.push_back( input_element_desc( "POSITION", 0, input_float4, geometry_slot, 0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "NORMAL",   0, input_float4, normal_slot,   0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "TEXCOORD", 0, input_float4, uv_slot,       0, input_per_vertex, 0 ) );
+
+	pmesh->set_input_element_descs( descs );
+
 	pmesh->set_primitive_count(12);
-	pmesh->set_index_buf_id(idxbufid);
-	pmesh->set_default_layout(layout);
 
 	return h_mesh(pmesh);
 }
@@ -156,16 +161,15 @@ h_mesh create_planar(
 
 	size_t nverts = (repeat_x + 1) * (repeat_y + 1);
 
-	const size_t vertbufid = 0;
-	const size_t norbufid = 1;
-	const size_t idxbufid = 2;
+	size_t const geometry_slot	= 0;
+	size_t const normal_slot	= 1;
 
-	pmesh->set_buffer_count(3);
-	salviar::h_buffer verts = pmesh->create_buffer(vertbufid, nverts * sizeof(vec4));
-	salviar::h_buffer nors = pmesh->create_buffer(norbufid, nverts * sizeof(vec4));
-	salviar::h_buffer idxs = pmesh->create_buffer(idxbufid, repeat_x * repeat_y * 6 * sizeof(uint16_t));
+	salviar::h_buffer indices	= pmesh->create_buffer( repeat_x * repeat_y * 6 * sizeof(uint16_t) );
 
-	//构造数据
+	salviar::h_buffer verts		= pmesh->create_buffer( nverts * sizeof(vec4) );
+	salviar::h_buffer normals	= pmesh->create_buffer( nverts * sizeof(vec4) );
+
+	//Generate datas
 	vec4 normal(cross_prod3(x_dir, y_dir), 0.0f);
 	if(!positive_normal) normal = -normal;
 	vec4 line_spos(start_pos, 1.0f);
@@ -173,13 +177,11 @@ h_mesh create_planar(
 	vec4 y(y_dir, 0.0f);
 	size_t offset_v = 0;
 
-	for(size_t i = 0; i < repeat_x + 1; ++i)
-	{
+	for(size_t i = 0; i < repeat_x + 1; ++i) {
 		vec4 pos = line_spos;
-		for(size_t j = 0; j < repeat_y + 1; ++j)
-		{
+		for(size_t j = 0; j < repeat_y + 1; ++j) {
 			verts->transfer(offset_v, &pos, sizeof(vec4), sizeof(vec4), sizeof(vec4), 1);
-			nors->transfer(offset_v, &normal, sizeof(vec4), sizeof(vec4), sizeof(vec4), 1);
+			normals->transfer(offset_v, &normal, sizeof(vec4), sizeof(vec4), sizeof(vec4), 1);
 			pos += y;
 			offset_v += sizeof(vec4);
 		}
@@ -200,21 +202,27 @@ h_mesh create_planar(
 			quad[4] = uint16_t(quad[2] - 1);
 			quad[5] = uint16_t(quad[0]);
 
-			idxs->transfer(offset_i, &quad[0], sizeof(quad), sizeof(quad), sizeof(quad), 1);
+			indices->transfer(offset_i, &quad[0], sizeof(quad), sizeof(quad), sizeof(quad), 1);
 			offset_i += sizeof(quad);
 		}
 	}
 
-	salviar::h_input_layout layout;
-	layout.push_back(salviar::input_element_desc(stream_0, 0, sizeof(vec4), input_float4, input_register_usage_position, input_reg_0));
-	layout.push_back(salviar::input_element_desc(stream_1, 0, sizeof(vec4), input_float4, input_register_usage_attribute, input_reg_1));
-
+	// Set generated data to mesh
 	pmesh->set_index_type(index_int16);
+	pmesh->set_index_buffer( indices );
+
+	pmesh->add_vertex_buffer( geometry_slot, verts, 24, 0 );
+	pmesh->add_vertex_buffer( normal_slot, normals, 24, 0 );
+
+	vector<input_element_desc> descs;
+	descs.push_back( input_element_desc( "POSITION", 0, input_float4, geometry_slot, 0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "NORMAL",   0, input_float4, normal_slot,   0, input_per_vertex, 0 ) );
+
+	pmesh->set_input_element_descs( descs );
+
 	pmesh->set_primitive_count(repeat_x * repeat_y * 2);
-	pmesh->set_index_buf_id(idxbufid);
-	pmesh->set_default_layout(layout);
 
 	return h_mesh(pmesh);
 }
 
-END_NS_SALVIAX_RESOURCE()
+END_NS_SALVIAX_RESOURCE();
