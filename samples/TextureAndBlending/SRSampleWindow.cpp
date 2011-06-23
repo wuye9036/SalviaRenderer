@@ -6,9 +6,8 @@
 #include <eflib/include/diagnostics/log.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-
 #include <boost/smart_ptr.hpp>
-
+#define NOMINMAX
 #include <atlbase.h>
 #include <atlapp.h>
 #include <atlwin.h>
@@ -16,7 +15,6 @@
 #include <atlctrls.h>
 #include <atldlgs.h>
 #include <atlctrlw.h>
-
 #include <eflib/include/platform/enable_warnings.h>
 
 using namespace eflib;

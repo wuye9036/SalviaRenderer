@@ -17,6 +17,7 @@ using namespace boost;
 #pragma warning(push)
 #pragma warning(disable: 4996 6001 6011 6202 6225 6255 6309 6386 6387)
 #endif
+#define NOMINMAX
 #include <atlbase.h>
 #include <atlapp.h>
 #include <atlwin.h>

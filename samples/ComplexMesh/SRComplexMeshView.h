@@ -70,8 +70,6 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 	size_t const geometry_slot = 0;
 	size_t const normal_slot = 1;
 
-	pmesh->set_buffer_count(id_count);
-
 	std::ifstream file(mesh_name.c_str(), std::ios::binary);
 	uint32_t fourcc;
 	file.read(reinterpret_cast<char*>(&fourcc), sizeof(fourcc));
@@ -163,7 +161,7 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 		vec3* verts_data   = reinterpret_cast<vec3*>(verts->raw_data(0));
 		vec3* normals_data = reinterpret_cast<vec3*>(normals->raw_data(0));
 		file.read(reinterpret_cast<char*>(verts_data), num_vertices * sizeof(vec3));
-		file.read(reinterpret_cast<char*>(verts_data), num_vertices * sizeof(vec3));
+		file.read(reinterpret_cast<char*>(normals_data), num_vertices * sizeof(vec3));
 		pmesh->add_vertex_buffer( geometry_slot, verts,   sizeof(vec3), 0 );
 		pmesh->add_vertex_buffer( normal_slot,   normals, sizeof(vec3), 0 );
 

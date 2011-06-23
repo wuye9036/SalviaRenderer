@@ -73,7 +73,7 @@ void const* stream_assembler::element_address( input_element_desc const& elem_de
 }
 
 void const* stream_assembler::element_address( semantic_value const& sv, size_t index ) const{
-	return element_address( layout_->semantic_desc( sv ), index );
+	return element_address( *( layout_->find_desc( sv ) ), index );
 }
 
 void stream_assembler::set_vertex_buffers(
