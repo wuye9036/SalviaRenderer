@@ -103,6 +103,10 @@ void mesh::set_primitive_count(size_t primcount)
 	primcount_ = primcount;
 }
 
+void mesh::set_index_buffer( salviar::h_buffer const& v ){
+	index_buffer_ = v;
+}
+
 void mesh::set_index_type( index_type fmt )
 {
 	switch(fmt){
@@ -113,6 +117,13 @@ void mesh::set_index_type( index_type fmt )
 		default:
 			EFLIB_ASSERT(false, "");
 	}
+}
+
+void mesh::add_vertex_buffer( size_t slot, salviar::h_buffer const& buf, size_t stride, size_t offset ){
+	vertex_buffers_.push_back( buf );
+	strides_.push_back( stride );
+	offsets_.push_back( offset );
+	slots_.push_back( slot );
 }
 
 void mesh::set_input_element_descs(const vector<input_element_desc>& descs){
