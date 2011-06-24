@@ -34,18 +34,18 @@ char const* vs_code =
 "float4		lightPos; \r\n"
 "struct VSIn{ \r\n"
 "	float4 pos: POSITION; \r\n"
-//"	float4 norm: NORMAL; \r\n"
+"	float4 norm: NORMAL; \r\n"
 "}; \r\n"
 "struct VSOut{ \r\n"
 "	float4 pos: sv_position; \r\n"
-//"	float4 norm: TEXCOORD(0); \r\n"
-//"	float4 lightDir: TEXCOORD(1); \r\n"
+"	float4 norm: TEXCOORD(0); \r\n"
+"	float4 lightDir: TEXCOORD(1); \r\n"
 "}; \r\n"
 "VSOut vs_main(VSIn in){ \r\n"
 "	VSOut out; \r\n"
-//"	out.norm = in.norm; \r\n"
+"	out.norm = in.norm; \r\n"
 "	out.pos = mul(in.pos, wvpMatrix); \r\n"
-//"	out.lightDir = lightPos - in.pos;"
+"	out.lightDir = lightPos - in.pos;"
 "	return out; \r\n"
 "} \r\n"
 ;
@@ -53,13 +53,12 @@ char const* vs_code =
 class ps : public pixel_shader
 {
 public:
-
 	ps()
+	{}
+	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-	}
-	bool shader_prog(const vs_output& /*in*/, ps_output& out)
-	{
-		out.color[0] = color_rgba32f(0.8f, 0.9f, 0.9f, 1.0f ).get_vec4();
+		float refl = dot_prod4( in.attributes[0], in.attributes[1] );
+		out.color[0] = vec4(0.7f, 0.5f, 0.9f, 1.0f ) * refl;
 		return true;
 	}
 	virtual h_pixel_shader create_clone()

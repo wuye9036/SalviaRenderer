@@ -75,6 +75,7 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 	storage_info* si = alloc_input_storage( sem );
 	si->value_type = to_lvt( btc );
 	si->storage = is_stream ? sc_stream_in : sc_buffer_in;
+	si->sv = sem;
 	sems_in.insert( it, sem );
 	return true;
 }
@@ -95,6 +96,7 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 	storage_info* si = alloc_output_storage( sem );
 	si->value_type = to_lvt( btc );
 	si->storage = sc_buffer_out;
+	si->sv = sem;
 	sems_out.insert( it, sem );
 	return true;
 }

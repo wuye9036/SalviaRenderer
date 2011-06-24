@@ -145,7 +145,9 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	verts_.reset(new vs_output[unique_indices.size()]);
 	used_verts_.resize(hsa_->num_vertices());
 
-	hsa_->update_register_map( pvs_->get_register_map() );
+	if( pvs_ ){
+		hsa_->update_register_map( pvs_->get_register_map() );
+	}
 
 	working_package = 0;
 	for (size_t i = 0; i < num_threads - 1; ++ i)

@@ -68,7 +68,7 @@ public:
 	}
 
 	semantic_value( system_values sv, uint32_t index = 0 ){
-		assert( sv_none < sv && sv < sv_customized );
+		assert( sv_none <= sv && sv < sv_customized );
 		this->sv = sv;
 		this->index = index;
 	}

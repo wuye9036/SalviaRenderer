@@ -562,6 +562,7 @@ SASL_VISIT_DEF( struct_type ){
 	any child_ctxt_init = *data;
 	ctxt_ptr(child_ctxt_init)->parent_sym = sym;
 	ctxt_ptr(child_ctxt_init)->member_index = 0;
+	ctxt_ptr(child_ctxt_init)->is_global = false;
 
 	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
 		visit_child( child_ctxt, child_ctxt_init, decl );
