@@ -114,6 +114,13 @@ result renderer_impl::set_vertex_shader_code( shared_ptr<shader_code> const& cod
 	vs_proto_.reset( new vertex_shader_unit() );
 	vs_proto_->initialize( vscode_.get() );
 
+	uint32_t n = vs_proto_->output_attributes_count();
+	vs_output_ops_ = &get_vs_output_op(n);
+	for (uint32_t i = 0; i < n; ++ i)
+	{
+		vs_output_ops_->attribute_modifiers[i] = vs_proto_->output_attribute_modifiers(i);
+	}
+
 	return result::ok;
 }
 

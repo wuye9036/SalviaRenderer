@@ -819,6 +819,7 @@ llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
 		} else {
 			const char* name = data->data().hint_name;
 			addr = builder()->CreateLoad( addr, Twine( name ? name : "" ) );
+			cast<LoadInst>(addr)->setAlignment(4);
 		}
 	}
 

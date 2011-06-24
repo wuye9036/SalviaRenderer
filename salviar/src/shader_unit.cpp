@@ -58,10 +58,21 @@ void vertex_shader_unit::execute( vs_output& out )
 
 	p( psi, pbi, pso, pbo );
 
-	// Copy output position to vs_output.
-	memset( &out.position, 0, sizeof(out.position) );
-	storage_info* out_info = code->abii()->output_storage( semantic_value( sv_position ) );
-	memcpy( &out.position, &(buffer_odata[out_info->offset]), out_info->size );
+	// Copy output attributes to vs_output.
+	// TODO Semantic will be mapped.
+	abi_info const* abii = code->abii();
+	vector<storage_info*> infos = abii->storage_infos( sc_buffer_out );
+
+	size_t register_index = 0;
+	BOOST_FOREACH( storage_info* info, infos ){
+		if( info->sv == semantic_value(sv_position) ){
+			memset( &out.position, 0, sizeof(out.position) );
+			memcpy( &out.position, &(buffer_odata[info->offset]), info->size );
+		} else {
+			memcpy( &out.attributes[register_index], &(buffer_odata[info->offset]), info->size );
+			++register_index;
+		}
+	}
 }
 
 void vertex_shader_unit::set_variable( std::string const& name, void* data )
@@ -96,5 +107,21 @@ vertex_shader_unit::~vertex_shader_unit()
 {
 }
 
+uint32_t vertex_shader_unit::output_attributes_count() const{
+	// TODO Need to be optimized.
+	abi_info const* abii = code->abii();
+	vector<storage_info*> infos = abii->storage_infos( sc_buffer_out );
 
+	size_t register_index = 0;
+	BOOST_FOREACH( storage_info* info, infos ){
+		if( info->sv != semantic_value(sv_position) ){
+			++register_index;
+		}
+	}
+	return register_index;
+}
+
+uint32_t vertex_shader_unit::output_attribute_modifiers( size_t /*index*/ ) const{
+	return vs_output::am_linear;
+}
 END_NS_SALVIAR();

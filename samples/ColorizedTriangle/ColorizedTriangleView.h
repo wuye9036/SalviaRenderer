@@ -57,8 +57,16 @@ public:
 	{}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		float refl = dot_prod4( in.attributes[0], in.attributes[1] );
-		out.color[0] = vec4(0.7f, 0.5f, 0.9f, 1.0f ) * refl;
+		vec3 lightDir = in.attributes[1].xyz();
+		vec3 norm = in.attributes[0].xyz();
+
+		float invLightDistance = 1.0f / lightDir.length();
+
+		vec3 normalized_norm = normalize3( norm );
+		vec3 normalized_lightDir = lightDir * invLightDistance;
+
+		float refl = dot_prod3( normalized_norm, normalized_lightDir );
+		out.color[0] = vec4(0.7f, 0.5f, 0.9f, 1.0f ) * refl * invLightDistance * invLightDistance;
 		return true;
 	}
 	virtual h_pixel_shader create_clone()
@@ -178,7 +186,7 @@ public:
 			vec3(-3.0f, -1.0f, -3.0f), 
 			vec3(6, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 6),
-			1, 1, true
+			1, 1, false
 			);
 
 		pps.reset( new ps() );
@@ -222,13 +230,12 @@ public:
 		static float s_angle = 0;
 		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
 		vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
-
 		mat44 world(mat44::identity()), view, proj, wvp;
 
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
-		vec4 lightPos( sin(s_angle * 1.3f) * 0.7f, 0.6f, cos(s_angle * 1.3f) * 0.7f, 0.0f );
+		vec4 lightPos( sin(s_angle * 1.5f) * 1.1f, 0.2f, cos(s_angle * 0.9f) * 1.3f, 0.0f );
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{

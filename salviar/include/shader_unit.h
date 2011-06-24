@@ -15,6 +15,8 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/platform/typedefs.h>
+
 #include <vector>
 
 BEGIN_NS_SALVIAR();
@@ -36,6 +38,9 @@ public:
 
 	void bind_streams( stream_assembler const* sa );
 	void set_variable( std::string const&, void* data );
+
+	uint32_t output_attributes_count() const;
+	uint32_t output_attribute_modifiers( size_t index ) const;
 
 	void update( size_t ivert );
 

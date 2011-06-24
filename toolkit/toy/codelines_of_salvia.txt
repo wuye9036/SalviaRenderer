@@ -2,64 +2,64 @@ statistic directory: ../../eflib
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 50
-  code lines: 8618
+  code lines: 8619
   null lines: 969
   empty lines: 1151
-  single line comments: 233
+  single line comments: 234
   multi line comments: 478
   mixed lines: 6
-  total: 11455
-  file bytes(KB): 255.67
-  bytes per line: 22.85
+  total: 11457
+  file bytes(KB): 255.72
+  bytes per line: 22.86
 statistic directory: ../../salviar
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
-  files: 59
-  code lines: 5354
-  null lines: 1442
-  empty lines: 1086
-  single line comments: 181
-  multi line comments: 1168
-  mixed lines: 31
-  total: 9262
-  file bytes(KB): 267.33
-  bytes per line: 29.56
+  files: 63
+  code lines: 5777
+  null lines: 1547
+  empty lines: 1126
+  single line comments: 161
+  multi line comments: 1185
+  mixed lines: 32
+  total: 9828
+  file bytes(KB): 284.42
+  bytes per line: 29.63
 statistic directory: ../../salviax
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 33
-  code lines: 1491
-  null lines: 435
-  empty lines: 217
-  single line comments: 52
-  multi line comments: 854
+  code lines: 1473
+  null lines: 434
+  empty lines: 202
+  single line comments: 55
+  multi line comments: 872
   mixed lines: 3
-  total: 3052
-  file bytes(KB): 91.91
-  bytes per line: 30.84
+  total: 3039
+  file bytes(KB): 91.99
+  bytes per line: 31.0
 statistic directory: ../../samples
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 34
-  code lines: 1199
-  null lines: 340
-  empty lines: 244
-  single line comments: 147
-  multi line comments: 534
+  code lines: 1218
+  null lines: 349
+  empty lines: 241
+  single line comments: 150
+  multi line comments: 532
   mixed lines: 32
-  total: 2496
-  file bytes(KB): 63.82
-  bytes per line: 26.18
+  total: 2522
+  file bytes(KB): 64.97
+  bytes per line: 26.38
 statistic directory: ../../sasl
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
-  files: 206
-  code lines: 14145
-  null lines: 4043
-  empty lines: 1946
-  single line comments: 1040
-  multi line comments: 2460
+  files: 205
+  code lines: 14109
+  null lines: 4030
+  empty lines: 1940
+  single line comments: 657
+  multi line comments: 2455
   mixed lines: 57
-  total: 23691
-  file bytes(KB): 725.92
-  bytes per line: 31.38
+  total: 23248
+  file bytes(KB): 704.02
+  bytes per line: 31.01
