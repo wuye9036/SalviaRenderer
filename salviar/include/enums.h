@@ -95,14 +95,6 @@ enum primitive_topology
 	primivite_topology_count = 5
 };
 
-enum index_type
-{
-	index_int16 = 0,
-	index_int32 = 1,
-
-	index_type_count = 2
-};
-
 enum cull_mode
 {
 	cull_none = 0,
@@ -110,8 +102,6 @@ enum cull_mode
 	cull_back = 2,
 
 	cull_mode_count = 3,
-
-
 };
 
 enum fill_mode

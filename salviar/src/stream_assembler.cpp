@@ -11,14 +11,16 @@
 #include <eflib/include/platform/boost_end.h>
 
 using namespace eflib;
+
 using boost::make_iterator_range;
+
 using std::vector;
+using std::make_pair;
 
 BEGIN_NS_SALVIAR();
 
-vec4 get_vec4(input_formats fmt, semantic_value const& sv, const void* data)
+vec4 get_vec4(format fmt, semantic_value const& sv, const void* data)
 {
-	assert( 0 <= fmt && fmt < input_formats_count );
 	assert( data );
 
 	if( !data ){ return vec4::zero(); }
@@ -28,13 +30,13 @@ vec4 get_vec4(input_formats fmt, semantic_value const& sv, const void* data)
 	float w_comp = ( sv.get_system_value() == sv_position ) ? 1.0f : 0.0f;
 		
 	switch(fmt){
-		case input_float:
+		case format_r32_float:
 			return vec4(floats[0], 0.0f, 0.0f, w_comp);
-		case input_float2:
+		case format_r32g32_float:
 			return vec4(floats[0], floats[1], 0.0f, w_comp);
-		case input_float3:
+		case format_r32g32b32_float:
 			return vec4(floats[0], floats[1], floats[2], w_comp);
-		case input_float4:
+		case format_r32g32b32a32_float:
 			return vec4(floats[0], floats[1], floats[2], floats[3]);
 	}
 
@@ -45,6 +47,21 @@ void stream_assembler::set_input_layout( input_layout const* layout ){
 	layout_ = layout;
 }
 
+void stream_assembler::update_register_map( boost::unordered_map<semantic_value, size_t> const& reg_map ){
+	BOOST_FOREACH(
+		input_element_desc const& elem_desc,
+		make_iterator_range( layout_->desc_begin(), layout_->desc_end() ) 
+		)
+	{
+		this->reg_map.clear();
+
+		size_t slot = elem_desc.input_slot;
+		semantic_value sv = semantic_value(elem_desc.semantic_name, elem_desc.semantic_index);
+
+		this->reg_map.insert( make_pair(slot, reg_map.at(sv)) );
+	}
+}
+
 void stream_assembler::fetch_vertex(vs_input& rv, size_t vert_index) const
 {
 	BOOST_FOREACH(
@@ -52,17 +69,12 @@ void stream_assembler::fetch_vertex(vs_input& rv, size_t vert_index) const
 		make_iterator_range( layout_->desc_begin(), layout_->desc_end() ) 
 		)
 	{
-		// TODO Correct stream mapping need to be implemented.
 		size_t slot = elem_desc.input_slot;
-		if( slot >= vsi_attrib_regcnt ){
-			return;
-		}
 
 		void const* pdata = element_address( elem_desc, vert_index );
 		if( !pdata ){ return; }
 
-		// TODO Matched with semantic but not slot.
-		rv.attributes[slot] = get_vec4( elem_desc.format, semantic_value(elem_desc.semantic_name, elem_desc.semantic_index), pdata);
+		rv.attributes[ reg_map.at(slot) ] = get_vec4( elem_desc.data_format, semantic_value(elem_desc.semantic_name, elem_desc.semantic_index), pdata);
 	}
 }
 
@@ -118,5 +130,6 @@ int stream_assembler::buffer_index( size_t slot ) const{
 	}
 	return static_cast<int>( distance( slots_.begin(), slot_it ) );
 }
+
 
 END_NS_SALVIAR();

@@ -40,7 +40,10 @@ class vs_box : public vertex_shader
 	mat44 wvp;
 public:
 	vs_box():wvp(mat44::identity()){
-		register_var(_T("WorldViewProjMat"), wvp);
+		declare_constant(_T("WorldViewProjMat"), wvp);
+
+		bind_semantic( "POSITION", 0, 0 );
+		bind_semantic( "TEXCOORD", 0, 1 );
 	}
 
 	vs_box(const mat44& wvp):wvp(wvp){}
@@ -50,12 +53,11 @@ public:
 		transform(out.position, pos, wvp);
 		out.attributes[0] = in.attributes[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
 		out.attributes[1] = in.attributes[1];
-		out.attributes[2] = in.attributes[2];
 	}
 
 	uint32_t num_output_attributes() const
 	{
-		return 3;
+		return 2;
 	}
 
 	uint32_t output_attribute_modifiers(uint32_t index) const
@@ -98,10 +100,7 @@ public:
 	}
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
-		
-		//out.color[0].xyz(in.attributes[0].xyz());
-		//out.color[0].w = 0.5;
-		color_rgba32f color = tex2d(*sampler_ , 2);
+		color_rgba32f color = tex2d(*sampler_ , 1);
 		color.a = 0.5;
 		out.color[0] = color.get_vec4();
 
@@ -122,7 +121,8 @@ class vs_plane : public vertex_shader
 	mat44 wvp;
 public:
 	vs_plane():wvp(mat44::identity()){
-		register_var(_T("WorldViewProjMat"), wvp);
+		declare_constant(_T("WorldViewProjMat"), wvp);
+		bind_semantic( "POSITION", 0, 0 );
 	}
 
 	vs_plane(const mat44& wvp):wvp(wvp){}

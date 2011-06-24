@@ -3,23 +3,12 @@
 
 #include <salviar/include/salviar_forward.h>
 
+#include <salviar/include/format.h>
 #include <salviar/include/shader.h>
 
 #include <vector>
 
 BEGIN_NS_SALVIAR();
-
-enum input_formats
-{
-	input_unknown_format = 0,
-	
-	input_float,
-	input_float2,
-	input_float3,
-	input_float4,
-
-	input_formats_count
-};
 
 enum input_classifications{
 	input_per_vertex
@@ -32,7 +21,7 @@ struct input_element_desc
 {
 	const char*				semantic_name;
 	uint32_t				semantic_index;
-	input_formats			format;
+	format					data_format;
 	uint32_t				input_slot;
 	uint32_t				aligned_byte_offset;
 	input_classifications	slot_class;
@@ -42,7 +31,7 @@ struct input_element_desc
 	input_element_desc(
 		const char* semantic_name,
 		uint32_t semantic_index,
-		input_formats format,
+		format data_format,
 		uint32_t input_slot,
 		uint32_t aligned_byte_offset,
 		input_classifications slot_class,
@@ -50,7 +39,7 @@ struct input_element_desc
 		)
 		: semantic_name( semantic_name )
 		, semantic_index( semantic_index )
-		, format( format )
+		, data_format( data_format )
 		, input_slot( input_slot )
 		, aligned_byte_offset( aligned_byte_offset )
 		, slot_class( slot_class )
@@ -59,7 +48,7 @@ struct input_element_desc
 
 	input_element_desc()
 		: semantic_name(NULL), semantic_index(0)
-		, format(input_unknown_format)
+		, data_format(format_unknown)
 		, input_slot(0), aligned_byte_offset(0xFFFFFFFF)
 		, slot_class(input_per_vertex), instance_data_step_rate(0)
 	{}

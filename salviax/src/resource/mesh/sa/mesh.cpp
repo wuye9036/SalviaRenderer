@@ -70,12 +70,16 @@ void mesh::render(){
 	EFLIB_ASSERT(device_, "");
 	if(!device_) return;
 	
-	if ( !device_->get_vertex_shader_code() ){ return; }
-
-	cached_layout_ = device_->create_input_layout(
-		&( elem_descs_[0] ), elem_descs_.size(),
-		device_->get_vertex_shader_code()
-		);
+	if ( device_->get_vertex_shader_code()  ){
+		cached_layout_ = device_->create_input_layout(
+			&( elem_descs_[0] ), elem_descs_.size(),
+			device_->get_vertex_shader_code()
+			);
+	} else if( device_->get_vertex_shader() ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		return;
+	}
 	if( !cached_layout_ ){ return; }
 	for(size_t i_buffer = 0; i_buffer < vertex_buffers_.size(); ++i_buffer){
 		device_->set_vertex_buffers(
@@ -107,11 +111,11 @@ void mesh::set_index_buffer( salviar::h_buffer const& v ){
 	index_buffer_ = v;
 }
 
-void mesh::set_index_type( index_type fmt )
+void mesh::set_index_type( format fmt )
 {
 	switch(fmt){
-		case index_int16:
-		case index_int32:
+		case format_r16_uint:
+		case format_r32_uint:
 			index_fmt_ = fmt;
 			break;
 		default:

@@ -72,7 +72,7 @@ class mesh : public base_mesh
 	/** Members for rendering
 	@{*/
 	size_t primcount_;
-	salviar::index_type index_fmt_;
+	salviar::format index_fmt_;
 	std::vector<salviar::input_element_desc> elem_descs_;
 	salviar::h_input_layout cached_layout_;
 	/**@}*/
@@ -97,7 +97,7 @@ public:
 	virtual salviar::h_buffer create_buffer( size_t size );
 	
 	virtual void set_index_buffer( salviar::h_buffer const& );
-	virtual void set_index_type(salviar::index_type idxtype);
+	virtual void set_index_type(salviar::format index_fmt);
 
 	virtual void add_vertex_buffer( size_t slot, salviar::h_buffer const&, size_t stride, size_t offset );
 

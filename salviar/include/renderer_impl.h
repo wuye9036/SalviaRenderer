@@ -30,7 +30,7 @@ class renderer_impl : public renderer
 	h_blend_shader				hbs_;
 
 	h_buffer indexbuf_;
-	index_type idxtype_;
+	format index_fmt_;
 
 	primitive_topology primtopo_;
 
@@ -58,9 +58,9 @@ public:
 		size_t* strides, size_t* offsets
 		);
 
-	virtual result set_index_buffer(h_buffer hbuf, index_type idxtype);
+	virtual result set_index_buffer(h_buffer hbuf, format index_fmt);
 	virtual h_buffer get_index_buffer() const;
-	virtual index_type get_index_type() const;
+	virtual format get_index_format() const;
 
 	virtual result set_primitive_topology(primitive_topology primtopo);
 	virtual primitive_topology get_primitive_topology() const;

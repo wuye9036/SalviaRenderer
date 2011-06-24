@@ -1,10 +1,6 @@
 #ifndef SALVIAR_COLOR_H
 #define SALVIAR_COLOR_H
 
-/*****************************************************************
-*  该文件定义了颜色类与基本的颜色变换、分量获取等操作。
-*****************************************************************/
-
 #include <eflib/include/math/math.h>
 #include <eflib/include/math/vector.h>
 #include <boost/type_traits.hpp>
@@ -13,7 +9,8 @@ BEGIN_NS_SALVIAR()
 
 using eflib::round;
 
-//内部使用的标准颜色类型，实质上是rgba32f。色彩范围没有归一化。
+/** R32BG32B32A32 unormalized float type.
+*/
 struct color_rgba32f
 {
 	typedef float component_type;

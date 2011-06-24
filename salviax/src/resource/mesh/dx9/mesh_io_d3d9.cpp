@@ -77,7 +77,7 @@ h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 		if( semantic_name ){
 			elem_descs.push_back(
 				input_element_desc(
-					semantic_name, decl->UsageIndex, input_float3, 0, decl->Offset, input_per_vertex, 0
+					semantic_name, decl->UsageIndex, format_r32g32b32_float, 0, decl->Offset, input_per_vertex, 0
 					)
 				);
 		}
@@ -95,7 +95,7 @@ h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 	dx_mesh->UnlockIndexBuffer();
 
 	// Set buffer and parameter to mesh.
-	psrmesh->set_index_type(index_size == 2 ? index_int16 : index_int32);
+	psrmesh->set_index_type(index_size == 2 ? format_r16_uint : format_r32_uint);
 	psrmesh->set_index_buffer( indices );
 	psrmesh->add_vertex_buffer( 0, verts, vert_size, 0 );
 

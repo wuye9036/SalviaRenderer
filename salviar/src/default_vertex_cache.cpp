@@ -36,7 +36,7 @@ void default_vertex_cache::initialize(renderer_impl* psr){
 	pparent_ = psr;
 }
 
-void default_vertex_cache::reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
+void default_vertex_cache::reset(const h_buffer& hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
 {
 	verts_.reset();
 
@@ -44,7 +44,7 @@ void default_vertex_cache::reset(const h_buffer& hbuf, index_type idxtype, primi
 	pvp_ = &(pparent_->get_viewport());
 
 	primtopo_ = primtopo;
-	ind_fetcher_.initialize(hbuf, idxtype, primtopo, startpos, basevert);
+	ind_fetcher_.initialize(hbuf, index_fmt, primtopo, startpos, basevert);
 }
 
 void default_vertex_cache::generate_indices_func(std::vector<uint32_t>& indices, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size)
@@ -144,6 +144,8 @@ void default_vertex_cache::transform_vertices(uint32_t prim_count)
 	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
 	verts_.reset(new vs_output[unique_indices.size()]);
 	used_verts_.resize(hsa_->num_vertices());
+
+	hsa_->update_register_map( pvs_->get_register_map() );
 
 	working_package = 0;
 	for (size_t i = 0; i < num_threads - 1; ++ i)

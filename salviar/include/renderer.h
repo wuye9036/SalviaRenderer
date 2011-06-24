@@ -4,12 +4,13 @@
 #include <salviar/include/decl.h>
 #include <salviar/include/enums.h>
 #include <salviar/include/colors.h>
+#include <salviar/include/format.h>
 
 #include <eflib/include/math/collision_detection.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/any.hpp>
-#include <boost/smart_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
@@ -46,9 +47,9 @@ public:
 	virtual h_input_layout create_input_layout( input_element_desc const* elem_descs, size_t elems_count, h_shader_code const& code ) = 0;
 
 	virtual result set_vertex_buffers( size_t starts_slot, size_t buffers_count, h_buffer const* buffers, size_t* strides, size_t* offsets ) = 0;
-	virtual result set_index_buffer(h_buffer hbuf, index_type idxtype) = 0;
+	virtual result set_index_buffer(h_buffer hbuf, format index_fmt) = 0;
 	virtual h_buffer get_index_buffer() const = 0;
-	virtual index_type get_index_type() const = 0;
+	virtual format get_index_format() const = 0;
 
 	virtual result set_primitive_topology(primitive_topology primtopo) = 0;
 	virtual primitive_topology get_primitive_topology() const = 0;

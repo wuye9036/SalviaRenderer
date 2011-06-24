@@ -26,7 +26,7 @@ typedef size_t cache_entry_index;
 class vertex_cache : public render_stage
 {
 public:
-	virtual void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert) = 0;
+	virtual void reset(const h_buffer& hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert) = 0;
 
 	virtual result set_input_layout( h_input_layout const& layout) = 0;
 
@@ -51,7 +51,7 @@ public:
 
 	void initialize(renderer_impl* psr);
 
-	void reset(const h_buffer& hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
+	void reset(const h_buffer& hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
 
 	result set_input_layout(const h_input_layout& layout);
 	result set_vertex_buffers(

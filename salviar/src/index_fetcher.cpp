@@ -3,18 +3,18 @@
 
 BEGIN_NS_SALVIAR()
 
-void index_fetcher::initialize(h_buffer hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
+void index_fetcher::initialize(h_buffer hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
 {
 	indexbuf_ = hbuf;
-	idxtype_ = idxtype;
+	index_fmt_ = index_fmt;
 	primtopo_ = primtopo;
-	if (index_int16 == idxtype_)
+	if (format_r16_uint == index_fmt_)
 	{
 		stride_ = 2;
 	}
 	else
 	{
-		EFLIB_ASSERT(index_int32 == idxtype_, "Wrong index type");
+		EFLIB_ASSERT(format_r32_uint == index_fmt_, "Wrong index type");
 		stride_ = 4;
 	}
 	startpos_ = startpos * stride_;
@@ -67,7 +67,7 @@ void index_fetcher::fetch_indices(uint32_t* prim_indices, uint32_t id)
 
 	if (indexbuf_)
 	{
-		if (index_int16 == idxtype_)
+		if (format_r16_uint == index_fmt_)
 		{
 			uint16_t* pidx = reinterpret_cast<uint16_t*>(indexbuf_->raw_data(startpos_));
 			for (uint32_t i = 0; i < count; ++ i)
@@ -77,7 +77,7 @@ void index_fetcher::fetch_indices(uint32_t* prim_indices, uint32_t id)
 		}
 		else
 		{
-			EFLIB_ASSERT(index_int32 == idxtype_, "Wrong index type");
+			EFLIB_ASSERT(format_r32_uint == index_fmt_, "Wrong index type");
 
 			uint32_t* pidx = reinterpret_cast<uint32_t*>(indexbuf_->raw_data(startpos_));
 			for (uint32_t i = 0; i < count; ++ i)

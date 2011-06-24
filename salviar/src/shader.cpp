@@ -1,11 +1,13 @@
-#include "../include/shaderregs_op.h"
-#include "../include/shader.h"
-#include "../include/renderer.h"
-BEGIN_NS_SALVIAR()
+#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader.h>
+#include <salviar/include/renderer.h>
 
+BEGIN_NS_SALVIAR();
 
 using namespace boost;
 using namespace eflib;
+
+using std::make_pair;
 
 template <int N>
 vs_input_op gen_vs_input_op_n()
@@ -362,7 +364,7 @@ void viewport_transform(vec4& position, const viewport& vp)
 	float invw = (eflib::equal<float>(position.w, 0.0f)) ? 1.0f : 1.0f / position.w;
 	vec4 pos = position * invw;
 
-	//viewport ±ä»»
+	// Transform to viewport space.
 	float ox = (vp.x + vp.w) * 0.5f;
 	float oy = (vp.y + vp.h) * 0.5f;
 
@@ -388,4 +390,25 @@ void blend_shader::execute(size_t sample, backbuffer_pixel_out& out, const ps_ou
 	shader_prog(sample, out, in);
 }
 
-END_NS_SALVIAR()
+result shader_impl::find_register( semantic_value const& sv, size_t& index ){
+	register_map::const_iterator it = regmap_.find( sv );
+	if( it != regmap_.end() ){
+		index = it->second;
+		return result::ok;
+	}
+	return result::failed;
+}
+
+boost::unordered_map<semantic_value, size_t> const& shader_impl::get_register_map(){
+	return regmap_;
+}
+
+void shader_impl::bind_semantic( char const* name, size_t semantic_index, size_t register_index ){
+	bind_semantic( semantic_value(name, static_cast<uint32_t>(semantic_index)), register_index );
+}
+
+void shader_impl::bind_semantic( semantic_value const& s, size_t register_index ){
+	regmap_.insert( make_pair(s, register_index) );
+}
+
+END_NS_SALVIAR();

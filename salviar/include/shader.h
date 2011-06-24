@@ -13,7 +13,8 @@
 #include <boost/array.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/smart_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
@@ -128,7 +129,11 @@ class shader
 {
 public:
 	virtual result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval) = 0;
-	virtual result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval, size_t index)	= 0;
+	virtual result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval, size_t index) = 0;
+
+	virtual result find_register( semantic_value const& sv, size_t& index ) = 0;
+	virtual boost::unordered_map<semantic_value, size_t> const& get_register_map() = 0;
+
 	virtual ~shader(){}
 };
 
@@ -156,28 +161,35 @@ public:
 		return result::ok;
 	}
 
-	template<class T>
-	result register_var(const std::_tstring& varname, T& var)
+	result find_register( semantic_value const& sv, size_t& index );
+	boost::unordered_map<semantic_value, size_t> const& get_register_map();
+	void bind_semantic( char const* name, size_t semantic_index, size_t register_index );
+	void bind_semantic( semantic_value const& s, size_t register_index );
+
+	template< class T >
+	result declare_constant(const std::_tstring& varname, T& var)
 	{
 		varmap_[varname] = shader_constant::voidptr(&var);
 		return result::ok;
 	}
 
 	template<class T>
-	result register_var_as_container(const std::_tstring& varname, T& var)
+	result declare_container_constant(const std::_tstring& varname, T& var)
 	{
-		return register_var_as_container_impl(varname, var, var[0]);
+		return declare_container_constant_impl(varname, var, var[0]);
 	}
 
 private:
 	typedef std::map<std::_tstring, shader_constant::voidptr> variable_map;
 	typedef std::map<std::_tstring, boost::shared_ptr<detail::container> > container_variable_map;
+	typedef boost::unordered_map<semantic_value, size_t> register_map;
 
 	variable_map varmap_;
 	container_variable_map contmap_;
+	register_map regmap_;
 
 	template<class T, class ElemType>
-	result register_var_as_container_impl(const std::_tstring& varname, T& var, const ElemType&)
+	result declare_container_constant_impl(const std::_tstring& varname, T& var, const ElemType&)
 	{
 		varmap_[varname] = shader_constant::voidptr(&var);
 		contmap_[varname] = boost::shared_ptr<detail::container>(new detail::container_impl<T, ElemType>(var));

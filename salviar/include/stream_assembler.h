@@ -6,6 +6,10 @@
 #include <salviar/include/decl.h>
 #include <salviar/include/render_stage.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/unordered_map.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 BEGIN_NS_SALVIAR();
@@ -25,6 +29,8 @@ public:
 
 	input_layout const* layout() const;
 
+	void update_register_map( boost::unordered_map<semantic_value, size_t> const& reg_map );
+
 	void fetch_vertex(vs_input& vertex, size_t vert_index) const;
 
 	void const* element_address( input_element_desc const&, size_t vert_index ) const;
@@ -36,6 +42,8 @@ private:
 	int buffer_index( size_t slot ) const;
 
 	input_layout const* layout_;
+
+	boost::unordered_map<size_t, size_t> reg_map; ///< Get register index from slot.
 
 	std::vector<size_t>		slots_;
 

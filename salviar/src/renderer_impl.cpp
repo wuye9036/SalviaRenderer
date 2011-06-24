@@ -39,12 +39,12 @@ result renderer_impl::set_vertex_buffers(
 	return result::ok;
 }
 
-result renderer_impl::set_index_buffer(h_buffer hbuf, index_type idxtype)
+result renderer_impl::set_index_buffer(h_buffer hbuf, format index_fmt)
 {
-	switch (idxtype)
+	switch (index_fmt)
 	{
-	case index_int16:
-	case index_int32:
+	case format_r16_uint:
+	case format_r32_uint:
 		break;
 	default:
 		EFLIB_ASSERT(false, "The value of index type is invalid.");
@@ -52,7 +52,7 @@ result renderer_impl::set_index_buffer(h_buffer hbuf, index_type idxtype)
 	}
 
 	indexbuf_ = hbuf;
-	idxtype_ = idxtype;
+	index_fmt_ = index_fmt;
 
 	return result::ok;
 }
@@ -61,8 +61,8 @@ h_buffer renderer_impl::get_index_buffer() const{
 	return indexbuf_;
 }
 
-index_type renderer_impl::get_index_type() const{
-	return idxtype_;
+format renderer_impl::get_index_format() const{
+	return index_fmt_;
 }
 
 //
@@ -303,7 +303,7 @@ result renderer_impl::draw(size_t startpos, size_t primcnt)
 {
 	hrast_->set_state(hrs_);
 
-	hvertcache_->reset(h_buffer(), idxtype_, primtopo_, static_cast<uint32_t>(startpos), 0);
+	hvertcache_->reset(h_buffer(), index_fmt_, primtopo_, static_cast<uint32_t>(startpos), 0);
 	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
 	
 	hrast_->draw(primcnt);
@@ -314,7 +314,7 @@ result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
 	hrast_->set_state(hrs_);
 
-	hvertcache_->reset(indexbuf_, idxtype_, primtopo_, static_cast<uint32_t>(startpos), basevert);
+	hvertcache_->reset(indexbuf_, index_fmt_, primtopo_, static_cast<uint32_t>(startpos), basevert);
 	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
 
 	hrast_->draw(primcnt);
@@ -369,7 +369,7 @@ void renderer_impl::initialize(){
 }
 
 renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
-	: idxtype_(index_int16), primtopo_(primitive_triangle_list)
+	: index_fmt_(format_r16_uint), primtopo_(primitive_triangle_list)
 {
 	hbufmgr_.reset(new buffer_manager());
 	htexmgr_.reset(new texture_manager());

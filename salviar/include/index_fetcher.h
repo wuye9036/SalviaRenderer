@@ -7,18 +7,18 @@
 #include <eflib/include/platform/typedefs.h>
 
 #include <salviar/include/salviar_forward.h>
-
+#include <salviar/include/format.h>
 BEGIN_NS_SALVIAR();
 
 class index_fetcher
 {
 public:
-	void initialize(h_buffer hbuf, index_type idxtype, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
+	void initialize(h_buffer hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
 	void fetch_indices(uint32_t* prim_indices, uint32_t id);
 
 private:
 	h_buffer indexbuf_;
-	index_type idxtype_;
+	format index_fmt_;
 	primitive_topology primtopo_;
 	uint32_t startpos_;
 	uint32_t basevert_;

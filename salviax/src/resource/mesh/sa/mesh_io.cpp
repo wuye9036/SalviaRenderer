@@ -129,7 +129,7 @@ h_mesh create_box(salviar::renderer* psr)
 	pidxs[33] = 22;pidxs[34] = 23;pidxs[35] = 20;
 
 	// Set generated data to mesh
-	pmesh->set_index_type(index_int16);
+	pmesh->set_index_type(format_r16_uint);
 	pmesh->set_index_buffer( indices );
 
 	pmesh->add_vertex_buffer( geometry_slot, verts, 24, 0 );
@@ -138,9 +138,9 @@ h_mesh create_box(salviar::renderer* psr)
 
 	vector<input_element_desc> descs;
 
-	descs.push_back( input_element_desc( "POSITION", 0, input_float4, geometry_slot, 0, input_per_vertex, 0 ) );
-	descs.push_back( input_element_desc( "NORMAL",   0, input_float4, normal_slot,   0, input_per_vertex, 0 ) );
-	descs.push_back( input_element_desc( "TEXCOORD", 0, input_float4, uv_slot,       0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "NORMAL",   0, format_r32g32b32a32_float, normal_slot,   0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "TEXCOORD", 0, format_r32g32b32a32_float, uv_slot,       0, input_per_vertex, 0 ) );
 
 	pmesh->set_input_element_descs( descs );
 
@@ -208,15 +208,15 @@ h_mesh create_planar(
 	}
 
 	// Set generated data to mesh
-	pmesh->set_index_type(index_int16);
+	pmesh->set_index_type(format_r16_uint);
 	pmesh->set_index_buffer( indices );
 
 	pmesh->add_vertex_buffer( geometry_slot, verts, 24, 0 );
 	pmesh->add_vertex_buffer( normal_slot, normals, 24, 0 );
 
 	vector<input_element_desc> descs;
-	descs.push_back( input_element_desc( "POSITION", 0, input_float4, geometry_slot, 0, input_per_vertex, 0 ) );
-	descs.push_back( input_element_desc( "NORMAL",   0, input_float4, normal_slot,   0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "NORMAL",   0, format_r32g32b32a32_float, normal_slot,   0, input_per_vertex, 0 ) );
 
 	pmesh->set_input_element_descs( descs );
 

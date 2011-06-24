@@ -171,8 +171,10 @@ void semantic_analyser::parse_semantic(
 			string::const_reverse_iterator it = semstr.rbegin();
 
 			char ch = '\0';
+			size_t mag = 1;
 			while( ch = boost::is_digit()(*it) ){
-				index = index + ( ch - '0' );
+				index = index + ( ch - '0' ) * mag;
+				mag *= 10;
 			}
 
 		}

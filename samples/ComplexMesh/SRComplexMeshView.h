@@ -14,10 +14,15 @@
 #include "salviar/include/rasterizer.h"
 
 #include <eflib/include/metaprog/util.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/assign.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <boost/assign.hpp>
+
 #include "Timer.h"
 
 //#define PRESENTER_NAME "gdiplus"
@@ -146,8 +151,8 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 			file.read(reinterpret_cast<char*>(&ve), sizeof(ve));
 		}
 
-		elem_descs.push_back( input_element_desc( "POSITION", 0, input_float3, 0, 0, input_per_vertex, 0 ) );
-		elem_descs.push_back( input_element_desc( "NORMAL",   0, input_float3, 1, 0, input_per_vertex, 0 ) );
+		elem_descs.push_back( input_element_desc( "POSITION", 0, format_r32g32b32_float, 0, 0, input_per_vertex, 0 ) );
+		elem_descs.push_back( input_element_desc( "NORMAL",   0, format_r32g32b32_float, 1, 0, input_per_vertex, 0 ) );
 
 		// Read vertex buffers
 		uint32_t num_vertices;
@@ -174,7 +179,7 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 
 		char is_index_16_bit;
 		file.read(&is_index_16_bit, sizeof(is_index_16_bit));
-		pmesh->set_index_type(is_index_16_bit ? index_int16 : index_int32);
+		pmesh->set_index_type(is_index_16_bit ? format_r16_uint : format_r32_uint);
 
 		file.read(reinterpret_cast<char*>(indices_data), sizeof(uint16_t) * num_triangles * 3);
 
@@ -196,10 +201,10 @@ class vs_mesh : public vertex_shader
 	vec3 eye_pos;
 public:
 	vs_mesh():wv(mat44::identity()), proj(mat44::identity()){
-		register_var(_T("WorldViewMat"), wv);
-		register_var(_T("ProjMat"), proj);
-		register_var(_T("LightPos"), light_pos);
-		register_var(_T("EyePos"), eye_pos);
+		declare_constant(_T("WorldViewMat"), wv);
+		declare_constant(_T("ProjMat"), proj);
+		declare_constant(_T("LightPos"), light_pos);
+		declare_constant(_T("EyePos"), eye_pos);
 	}
 
 	void shader_prog(const vs_input& in, vs_output& out)

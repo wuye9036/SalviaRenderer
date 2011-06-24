@@ -1,6 +1,10 @@
 #ifndef SALVIAR_FORMAT_H
 #define SALVIAR_FORMAT_H
 
+#include <salviar/include/salviar_forward.h>
+
+BEGIN_NS_SALVIAR();
+
 enum format{
 	
 	format_unknown = 0,
@@ -106,5 +110,7 @@ enum format{
 	
 	DXGI_FORMAT_FORCE_UINT = 0xFFFFFFFFUL,
 };
+
+END_NS_SALVIAR();
 
 #endif
