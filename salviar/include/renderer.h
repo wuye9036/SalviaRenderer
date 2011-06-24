@@ -44,9 +44,20 @@ public:
 	//state accessors
 	/////////////////////////////////////////////
 	virtual result set_input_layout( h_input_layout const& layout) = 0;
-	virtual h_input_layout create_input_layout( input_element_desc const* elem_descs, size_t elems_count, h_shader_code const& code ) = 0;
 
-	virtual result set_vertex_buffers( size_t starts_slot, size_t buffers_count, h_buffer const* buffers, size_t* strides, size_t* offsets ) = 0;
+	virtual h_input_layout create_input_layout(
+		input_element_desc const* elem_descs, size_t elems_count,
+		h_shader_code const& code ) = 0;
+
+	virtual h_input_layout create_input_layout(
+		input_element_desc const* elem_descs, size_t elems_count,
+		h_vertex_shader const& vs ) = 0;
+
+	virtual result set_vertex_buffers(
+		size_t starts_slot,
+		size_t buffers_count, h_buffer const* buffers,
+		size_t* strides, size_t* offsets ) = 0;
+
 	virtual result set_index_buffer(h_buffer hbuf, format index_fmt) = 0;
 	virtual h_buffer get_index_buffer() const = 0;
 	virtual format get_index_format() const = 0;
@@ -57,8 +68,8 @@ public:
 	virtual result set_vertex_shader(h_vertex_shader hvs) = 0;
 	virtual h_vertex_shader get_vertex_shader() const = 0;
 
-	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& ) = 0;
-	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const = 0;
+	virtual result set_vertex_shader_code( h_shader_code const& ) = 0;
+	virtual h_shader_code get_vertex_shader_code() const = 0;
 	virtual result set_vs_variable( std::string const& name, void* data ) = 0;
 
 	virtual result set_rasterizer_state(const h_rasterizer_state& rs) = 0;
@@ -120,8 +131,6 @@ public:
 
 	virtual result present() = 0;
 };
-
-
 
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev);
 

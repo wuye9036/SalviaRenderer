@@ -132,9 +132,9 @@ h_mesh create_box(salviar::renderer* psr)
 	pmesh->set_index_type(format_r16_uint);
 	pmesh->set_index_buffer( indices );
 
-	pmesh->add_vertex_buffer( geometry_slot, verts, 24, 0 );
-	pmesh->add_vertex_buffer( normal_slot, normals, 24, 0 );
-	pmesh->add_vertex_buffer( uv_slot, uvs, 24, 0 );
+	pmesh->add_vertex_buffer( geometry_slot, verts, sizeof(vec4), 0 );
+	pmesh->add_vertex_buffer( normal_slot, normals, sizeof(vec4), 0 );
+	pmesh->add_vertex_buffer( uv_slot, uvs, sizeof(vec4), 0 );
 
 	vector<input_element_desc> descs;
 
@@ -211,8 +211,8 @@ h_mesh create_planar(
 	pmesh->set_index_type(format_r16_uint);
 	pmesh->set_index_buffer( indices );
 
-	pmesh->add_vertex_buffer( geometry_slot, verts, 24, 0 );
-	pmesh->add_vertex_buffer( normal_slot, normals, 24, 0 );
+	pmesh->add_vertex_buffer( geometry_slot, verts, sizeof(vec4), 0 );
+	pmesh->add_vertex_buffer( normal_slot, normals, sizeof(vec4), 0 );
 
 	vector<input_element_desc> descs;
 	descs.push_back( input_element_desc( "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0 ) );

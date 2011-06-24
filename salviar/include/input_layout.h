@@ -56,6 +56,9 @@ struct input_element_desc
 
 class input_layout{
 public:
+	static h_input_layout create( input_element_desc const* pdesc, size_t desc_count, h_shader_code const& vs );
+	static h_input_layout create( input_element_desc const* pdesc, size_t desc_count, h_vertex_shader const& vs );
+
 	typedef std::vector<input_element_desc>::const_iterator iterator;
 
 	iterator desc_begin() const;

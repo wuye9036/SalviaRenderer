@@ -8,6 +8,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -39,11 +40,21 @@ public:
 	size_t num_vertices() const;
 
 private:
-	int buffer_index( size_t slot ) const;
+	void const* element_address( size_t buffer_index, size_t member_offset, size_t vert_index ) const;
+
+	/** Find buffer index by slot number.
+		@param slot
+			Slot number
+		@return
+			Buffer index found. If slot is invalid, it return -1.
+	*/
+	int find_buffer( size_t slot ) const;
 
 	input_layout const* layout_;
 
-	boost::unordered_map<size_t, size_t> reg_map; ///< Get register index from slot.
+	std::vector<
+		boost::tuple<size_t, input_element_desc const*, size_t>
+	> reg_and_pelem_and_buffer_index;
 
 	std::vector<size_t>		slots_;
 

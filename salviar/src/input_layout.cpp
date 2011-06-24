@@ -2,10 +2,13 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
+
+using boost::make_shared;
 
 BEGIN_NS_SALVIAR();
 
@@ -59,6 +62,26 @@ input_element_desc const* input_layout::find_desc( semantic_value const& v ) con
 		}
 	}
 	return NULL;
+}
+
+h_input_layout input_layout::create( input_element_desc const* pdesc, size_t desc_count, h_shader_code const& /*vs*/ ){
+	h_input_layout ret = make_shared<input_layout>();
+	ret->descs.assign( pdesc, pdesc + desc_count );
+
+	// Check shader code.
+	// Caculate member offset.
+
+	return ret;
+}
+
+h_input_layout input_layout::create( input_element_desc const* pdesc, size_t desc_count, h_vertex_shader const& /*vs*/ ){
+	h_input_layout ret = make_shared<input_layout>();
+	ret->descs.assign( pdesc, pdesc + desc_count );
+
+	// Check vertex shader.
+	// Caculate member offset.
+
+	return ret;
 }
 
 END_NS_SALVIAR();

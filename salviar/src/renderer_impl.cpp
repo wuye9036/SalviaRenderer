@@ -450,11 +450,17 @@ shared_ptr<vertex_shader_unit> renderer_impl::vs_proto() const{
 }
 
 h_input_layout renderer_impl::create_input_layout(
-	input_element_desc const* /*elem_descs*/, size_t /*elems_count*/,
-	h_shader_code const& /*code*/ )
+	input_element_desc const* elem_descs, size_t elems_count,
+	h_shader_code const& vs )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return h_input_layout();
+	return input_layout::create( elem_descs, elems_count, vs );
+}
+
+salviar::h_input_layout renderer_impl::create_input_layout(
+	input_element_desc const* elem_descs, size_t elems_count,
+	h_vertex_shader const& vs )
+{
+	return input_layout::create( elem_descs, elems_count, vs );
 }
 
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev)

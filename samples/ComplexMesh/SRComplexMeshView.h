@@ -205,6 +205,9 @@ public:
 		declare_constant(_T("ProjMat"), proj);
 		declare_constant(_T("LightPos"), light_pos);
 		declare_constant(_T("EyePos"), eye_pos);
+
+		bind_semantic( "POSITION", 0, 0 );
+		bind_semantic( "NORMAL", 0, 1 );
 	}
 
 	void shader_prog(const vs_input& in, vs_output& out)

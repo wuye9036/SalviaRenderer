@@ -48,7 +48,13 @@ class renderer_impl : public renderer
 
 public:
 	//inherited
-	virtual h_input_layout create_input_layout( input_element_desc const* elem_descs, size_t elems_count, h_shader_code const& code );
+	virtual h_input_layout create_input_layout(
+		input_element_desc const* elem_descs, size_t elems_count,
+		h_shader_code const& vs );
+	
+	virtual h_input_layout create_input_layout(
+		input_element_desc const* elem_descs, size_t elems_count,
+		h_vertex_shader const& vs );
 
 	virtual result set_input_layout(const h_input_layout& layout);
 

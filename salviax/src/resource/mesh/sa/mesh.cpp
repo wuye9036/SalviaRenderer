@@ -76,7 +76,10 @@ void mesh::render(){
 			device_->get_vertex_shader_code()
 			);
 	} else if( device_->get_vertex_shader() ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		cached_layout_ = device_->create_input_layout(
+			&( elem_descs_[0] ), elem_descs_.size(),
+			device_->get_vertex_shader()
+			);
 	} else {
 		return;
 	}
