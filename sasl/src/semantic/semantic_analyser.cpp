@@ -1202,7 +1202,7 @@ semantic_analyser::function_register& semantic_analyser::function_register::oper
 	return p(par_type);
 }
 
-void semantic_analyser::function_register::operator>>(
+void semantic_analyser::function_register::operator >> (
 	semantic_analyser::function_register::type_handle_t const& ret_type
 	)
 {

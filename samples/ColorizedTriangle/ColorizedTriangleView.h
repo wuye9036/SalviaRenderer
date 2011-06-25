@@ -31,7 +31,9 @@ using std::endl;
 
 char const* vs_code = 
 "float4x4	wvpMatrix; \r\n"
-"float4		lightPos; \r\n"
+"float4		lightPos0; \r\n"
+"float4		lightPos1; \r\n"
+"float4		lightPos2; \r\n"
 "struct VSIn{ \r\n"
 "	float4 pos: POSITION; \r\n"
 "	float4 norm: NORMAL; \r\n"
@@ -39,13 +41,17 @@ char const* vs_code =
 "struct VSOut{ \r\n"
 "	float4 pos: sv_position; \r\n"
 "	float4 norm: TEXCOORD(0); \r\n"
-"	float4 lightDir: TEXCOORD(1); \r\n"
+"	float4 lightDir0: TEXCOORD(1); \r\n"
+"	float4 lightDir1: TEXCOORD(2); \r\n"
+"	float4 lightDir2: TEXCOORD(3); \r\n"
 "}; \r\n"
 "VSOut vs_main(VSIn in){ \r\n"
 "	VSOut out; \r\n"
 "	out.norm = in.norm; \r\n"
 "	out.pos = mul(in.pos, wvpMatrix); \r\n"
-"	out.lightDir = lightPos - in.pos;"
+"	out.lightDir0 = lightPos0 - in.pos;"
+"	out.lightDir1 = lightPos1 - in.pos;"
+"	out.lightDir2 = lightPos2 - in.pos;"
 "	return out; \r\n"
 "} \r\n"
 ;
@@ -57,16 +63,33 @@ public:
 	{}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		vec3 lightDir = in.attributes[1].xyz();
+		vec3 lightDir0 = in.attributes[1].xyz();
+		vec3 lightDir1 = in.attributes[2].xyz();
+		vec3 lightDir2 = in.attributes[3].xyz();
+
 		vec3 norm = in.attributes[0].xyz();
 
-		float invLightDistance = 1.0f / lightDir.length();
+		float invLight0Distance = 1.0f / lightDir0.length();
+		float invLight1Distance = 1.0f / lightDir1.length();
+		float invLight2Distance = 1.0f / lightDir2.length();
 
 		vec3 normalized_norm = normalize3( norm );
-		vec3 normalized_lightDir = lightDir * invLightDistance;
+		vec3 normalized_lightDir0 = lightDir0 * invLight0Distance;
+		vec3 normalized_lightDir1 = lightDir1 * invLight1Distance;
+		vec3 normalized_lightDir2 = lightDir2 * invLight2Distance;
 
-		float refl = dot_prod3( normalized_norm, normalized_lightDir );
-		out.color[0] = vec4(0.7f, 0.5f, 0.9f, 1.0f ) * refl * invLightDistance * invLightDistance;
+		float refl0 = dot_prod3( normalized_norm, normalized_lightDir0 );
+		float refl1 = dot_prod3( normalized_norm, normalized_lightDir1 );
+		float refl2 = dot_prod3( normalized_norm, normalized_lightDir2 );
+
+		out.color[0] = clampss(
+			vec4(0.7f, 0.1f, 0.3f, 1.0f ) * refl0 * invLight0Distance * invLight0Distance +
+			vec4(0.1f, 0.3f, 0.7f, 1.0f ) * refl1 * invLight1Distance * invLight1Distance +
+			vec4(0.3f, 0.7f, 0.1f, 1.0f ) * refl2 * invLight2Distance * invLight2Distance
+			, 0.0f, 1.0f
+			)
+			;
+
 		return true;
 	}
 	virtual h_pixel_shader create_clone()
@@ -228,15 +251,17 @@ public:
 		hsr->clear_depth(1.0f);
 
 		static float s_angle = 0;
-		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
+		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
+
+		vec3 camera(cos(s_angle) * 2.3f, 2.5f, sin(s_angle) * 2.3f);
 		mat44 world(mat44::identity()), view, proj, wvp;
 
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
-		vec4 lightPos( sin(s_angle * 1.5f) * 1.1f, 0.2f, cos(s_angle * 0.9f) * 1.3f, 0.0f );
-
+		vec4 lightPos0( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
+		vec4 lightPos1( sin(s_angle * 0.7f) * 1.9f, 0.15f, cos( -s_angle * 0.4f) * 2.5f, 0.0f );
+		vec4 lightPos2( sin(s_angle * 2.6f) * 2.3f, 0.15f, cos(s_angle * 0.6f) * 1.7f, 0.0f );
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
@@ -245,7 +270,10 @@ public:
 			hsr->set_rasterizer_state(rs_back);
 
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
-			hsr->set_vs_variable( "lightPos", &lightPos );
+			
+			hsr->set_vs_variable( "lightPos0", &lightPos0 );
+			hsr->set_vs_variable( "lightPos1", &lightPos1 );
+			hsr->set_vs_variable( "lightPos2", &lightPos2 );
 
 			hsr->set_pixel_shader(pps);
 			hsr->set_blend_shader(pbs);
