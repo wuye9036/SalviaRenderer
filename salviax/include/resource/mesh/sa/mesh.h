@@ -40,6 +40,13 @@ Modify Log:
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
+class attached_data{
+public:
+	virtual ~attached_data() = 0{}
+};
+
+DECL_HANDLE(attached_data, h_attached_data);
+
 class base_mesh
 {
 public:
@@ -48,6 +55,8 @@ public:
 
 	virtual salviar::h_buffer get_index_buffer() = 0;
 	virtual salviar::h_buffer get_vertex_buffer( size_t buffer_index ) = 0;
+	
+	virtual h_attached_data get_attached() = 0;
 
 	virtual void gen_adjancency() = 0;
 
@@ -56,6 +65,7 @@ public:
 
 class mesh : public base_mesh
 {
+private:
 	salviar::renderer* device_;
 
 	/** Members for mesh data
@@ -67,6 +77,8 @@ class mesh : public base_mesh
 	std::vector<size_t>				strides_;
 	std::vector<size_t>				offsets_;
 	std::vector<size_t>				slots_;
+
+	boost::shared_ptr<attached_data> attached_;
 	/**@}*/
 
 	/** Members for rendering
@@ -87,6 +99,8 @@ public:
 	virtual salviar::h_buffer get_index_buffer();
 	virtual salviar::h_buffer get_vertex_buffer( size_t buffer_index );
 
+	virtual h_attached_data get_attached();
+	
 	virtual void gen_adjancency();
 
 	virtual void render();
@@ -104,6 +118,8 @@ public:
 	virtual void set_primitive_count(size_t primcount);
 	
 	virtual void set_input_element_descs(const std::vector<salviar::input_element_desc>& descs);
+
+	virtual void set_attached_data( h_attached_data const& attached );
 	/**@}*/
 };
 

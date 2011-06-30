@@ -137,4 +137,12 @@ void mesh::set_input_element_descs(const vector<input_element_desc>& descs){
 	elem_descs_ = descs;
 }
 
+salviax::resource::h_attached_data mesh::get_attached(){
+	return attached_;
+}
+
+void mesh::set_attached_data( h_attached_data const& attached ){
+	attached_ = attached;
+}
+
 END_NS_SALVIAX_RESOURCE();

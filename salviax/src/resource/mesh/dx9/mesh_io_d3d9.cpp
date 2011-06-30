@@ -16,16 +16,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "salviax/include/resource/mesh/dx9/mesh_io_d3d9.h"
-#include "salviar/include/renderer.h"
-#include "salviar/include/buffer.h"
+#include <salviax/include/resource/mesh/dx9/mesh_io_d3d9.h>
+#include <salviar/include/renderer.h>
+#include <salviar/include/buffer.h>
 
 using namespace std;
 using namespace eflib;
 using namespace boost;
 using namespace salviax::utility;
 using namespace salviar;
-BEGIN_NS_SALVIAX_RESOURCE()
+
+BEGIN_NS_SALVIAX_RESOURCE();
 
 h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 {
@@ -128,4 +129,4 @@ h_mesh create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const _t
 	return ret;
 }
 
-END_NS_SALVIAX_RESOURCE()
+END_NS_SALVIAX_RESOURCE();
