@@ -26,8 +26,10 @@ string make_command( string const& file_name, string const& options = "--lang=g"
 
 struct jit_fixture {
 	
-	jit_fixture() {
-		c.parse( make_command( "./repo/question/v1a1/preprocessors.ss" ) );
+	jit_fixture() {}
+
+	void init( string const& file_name ){
+		c.parse( make_command(file_name) );
 
 		bool aborted = false;
 		c.process( aborted );
@@ -49,6 +51,8 @@ struct jit_fixture {
 };
 
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
+	init( "./repo/question/v1a1/preprocessors.ss" );
+
 	int(*p)() = static_cast<int(*)()>( je->get_function("Mmain@@") );
 	BOOST_REQUIRE(p);
 
