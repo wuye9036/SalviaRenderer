@@ -28,6 +28,8 @@ BEGIN_NS_SASL_COMPILER();
 
 namespace po = boost::program_options;
 
+class compiler;
+
 class options_filter{
 public:
 	virtual void reg_extra_parser( po::basic_command_line_parser<char>& );
@@ -138,12 +140,13 @@ private:
 	static const char* define_desc;
 };
 
-class options_manager{
+class compiler{
 public:
-	options_manager();
-	static options_manager& instance();
+	compiler();
 	
 	bool parse( int argc, char** argv );
+	bool parse( std::string const& cmd );
+
 	void process( bool& abort );
 
 	po::variables_map const & variables() const;
@@ -155,8 +158,10 @@ public:
 	boost::shared_ptr< sasl::syntax_tree::node > root() const;
 
 private:
-	options_manager( options_manager const& );
-	options_manager& operator = ( options_manager const& );
+	compiler( compiler const& );
+	compiler& operator = ( compiler const& );
+
+	template <typename ParserT> bool parse( ParserT& parser );
 
 	boost::shared_ptr< sasl::semantic::module_si > msi;
 	boost::shared_ptr< sasl::code_generator::codegen_context> mcg;
@@ -169,8 +174,6 @@ private:
 
 	po::options_description desc;
 	po::variables_map vm;
-
-	static options_manager inst;
 };
 
 END_NS_SASL_COMPILER();
