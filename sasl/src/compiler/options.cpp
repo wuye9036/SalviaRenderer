@@ -277,7 +277,7 @@ void compiler::process( bool& abort )
 				cout << "Fatal error: Could not open input file: " << fname << endl;
 				return;
 			} 
-			shared_ptr<node> mroot = sasl::syntax_tree::parse( code_src.get(), code_src );
+			mroot = sasl::syntax_tree::parse( code_src.get(), code_src );
 			if( !mroot ){
 				cout << "Syntax error occurs!" << endl;
 				abort = true;
