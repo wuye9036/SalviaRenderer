@@ -5,8 +5,11 @@
 #include <sasl/include/compiler/options.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
-
+#include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/semantic_infos.h>
 using sasl::compiler::compiler;
+
+using sasl::semantic::symbol;
 
 using sasl::code_generator::jit_engine;
 using sasl::code_generator::cgllvm_jit_engine;
@@ -38,6 +41,8 @@ struct jit_fixture {
 		BOOST_REQUIRE( c.module_sem() );
 		BOOST_REQUIRE( c.module_codegen() );
 
+		root_sym = c.module_sem()->root();
+
 		std::string jit_err;
 
 		je = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(c.module_codegen()), jit_err );
@@ -47,11 +52,22 @@ struct jit_fixture {
 	~jit_fixture(){}
 
 	compiler c;
+	shared_ptr<symbol> root_sym;
 	shared_ptr<jit_engine> je;
 };
 
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init( "./repo/question/v1a1/preprocessors.ss" );
+
+	string fn_name = root_sym->find_overloads("main")[0]->mangled_name();
+	int(*p)() = static_cast<int(*)()>( je->get_function(fn_name) );
+	BOOST_REQUIRE(p);
+
+	BOOST_CHECK( p() == 0 );
+}
+
+BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){
+	init( "./repo/question/v1a1/bool.ss" );
 
 	int(*p)() = static_cast<int(*)()>( je->get_function("Mmain@@") );
 	BOOST_REQUIRE(p);
