@@ -3,7 +3,7 @@
 */
 
 bool test_max( int i, int j ){
-	return i > j : i : j;
+	return i > j ? i : j;
 }
 
 bool test_min( int i, int j ){

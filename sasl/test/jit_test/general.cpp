@@ -49,6 +49,12 @@ struct jit_fixture {
 		BOOST_REQUIRE( je );
 	}
 
+	template <typename FunctionT>
+	void function( FunctionT& fn, string const& unmangled_name ){
+		string fn_name = root_sym->find_overloads(unmangled_name)[0]->mangled_name();
+		fn = static_cast<FunctionT>( je->get_function(fn_name) );
+	}
+
 	~jit_fixture(){}
 
 	compiler c;
@@ -59,11 +65,23 @@ struct jit_fixture {
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init( "./repo/question/v1a1/preprocessors.ss" );
 
-	string fn_name = root_sym->find_overloads("main")[0]->mangled_name();
-	int(*p)() = static_cast<int(*)()>( je->get_function(fn_name) );
+	int(*p)() = NULL;
+	function( p, "main" );
+
 	BOOST_REQUIRE(p);
 
 	BOOST_CHECK( p() == 0 );
+}
+
+BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
+	init( "./repo/question/v1a1/function.ss" );
+
+	int(*p)(int) = NULL;
+	function( p, "foo" );
+
+	BOOST_REQUIRE(p);
+
+	BOOST_CHECK( p(5) == 5 );
 }
 
 BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){
