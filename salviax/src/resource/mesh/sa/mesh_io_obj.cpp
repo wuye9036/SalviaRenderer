@@ -1,5 +1,9 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
+#include <salviar/include/buffer.h>
+#include <salviar/include/input_layout.h>
+#include <salviar/include/renderer.h>
+
 #include <eflib/include/math/math.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -15,6 +19,8 @@ using std::string;
 using std::vector;
 
 using eflib::vec4;
+
+using namespace salviar;
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
@@ -200,15 +206,49 @@ bool load_obj_mesh(
 }
 
 void construct_meshes(
-	std::vector<h_mesh>& meshes, 
+	std::vector<h_mesh>& meshes,
+	salviar::renderer* render,
 	vector<obj_mesh_vertex> const& verts, vector<uint16_t> const& indices,
 	vector<uint16_t> const& attrs, vector<obj_material> const& mtls 
 	)
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	h_buffer vert_buf = render->create_buffer( sizeof(obj_mesh_vertex) * verts.size() );
+	vert_buf->transfer( 0, &verts[0], sizeof( obj_mesh_vertex ), verts.size() );
+
+	vector<input_element_desc> descs;
+
+	descs.push_back( input_element_desc("POSITION", 0, format_r32g32b32a32_float, 0, 0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc("TEXCOORD", 0, format_r32g32b32a32_float, 0, sizeof(vec4), input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc("NORMAL", 0, format_r32g32b32a32_float, 0, sizeof(vec4) * 2, input_per_vertex, 0 ) );
+
+	for( size_t i_mtl = 0; i_mtl < mtls.size(); ++i_mtl ){
+		mesh* pmesh = new mesh( render );
+
+		// Fill data
+		pmesh->add_vertex_buffer( 0, vert_buf, sizeof(obj_mesh_vertex), 0 );
+		pmesh->set_input_element_descs( descs );
+		h_attached_data mtl_data( new obj_material(mtls[i_mtl]) );
+		pmesh->set_attached_data( mtl_data );
+
+
+		vector<uint16_t> mesh_indices;
+
+		// Construct vertex indices
+		for( size_t i_indices = 0; i_indices < indices.size(); ++i_indices ){
+			if( attrs[i_indices] == i_mtl ){
+				mesh_indices.push_back( indices[i_indices] );
+			}
+		}
+
+		// Set mesh indices.
+		h_buffer index_buffer = render->create_buffer( sizeof(uint16_t) * mesh_indices.size() );
+		index_buffer->transfer( 0, &mesh_indices[0], sizeof(uint16_t), mesh_indices.size() );
+
+		meshes.push_back( h_mesh(pmesh) );
+	}
 }
 
-vector<h_mesh> create_mesh_from_obj( std::string const& file_name )
+vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name )
 {
 	vector<obj_mesh_vertex> verts;
 	vector<uint16_t> indices;
@@ -221,7 +261,7 @@ vector<h_mesh> create_mesh_from_obj( std::string const& file_name )
 		return meshes;
 	}
 
-	construct_meshes( meshes, verts, indices, attrs, mtls );
+	construct_meshes( meshes, render, verts, indices, attrs, mtls );
 
 	return meshes;
 }

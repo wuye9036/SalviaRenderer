@@ -31,7 +31,7 @@ public:
 	~obj_material(){}
 };
 
-std::vector<h_mesh> create_mesh_from_obj( std::string const& file_name );
+std::vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name );
 
 END_NS_SALVIAX_RESOURCE();
 #endif
