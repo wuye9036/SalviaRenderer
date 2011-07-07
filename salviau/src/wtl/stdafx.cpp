@@ -5,5 +5,6 @@
 #include "stdafx.h"
 
 #if (_ATL_VER < 0x0700)
+#define NOMINMAX
 #include <atlimpl.cpp>
 #endif //(_ATL_VER < 0x0700)

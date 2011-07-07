@@ -7,9 +7,7 @@ class window;
 
 class application{
 public:
-	application();
-	virtual bool run() = 0;
-	
+	virtual int run() = 0;
 protected:
 	window* main_wnd;
 };

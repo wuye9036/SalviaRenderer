@@ -4,15 +4,42 @@
 
 #pragma once
 
+#include <salviau/include/common/window.h>
+
+using namespace salviau;
+
 class CMainFrame : 
 	public CFrameWindowImpl<CMainFrame>, 
 	public CUpdateUI<CMainFrame>,
-	public CMessageFilter, public CIdleHandler
+	public CMessageFilter, public CIdleHandler,
+	public window
 {
 public:
 	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
 
 	CWTLAppFrameView m_view;
+	CAppModule* pmodule;
+
+	signal< void() > on_idle;
+
+	/** Inhertied from window
+	@{*/
+	void show(){
+		ShowWindow( SW_SHOWDEFAULT );
+	}
+
+	void set_idle_handler( idle_handler_t const& handler ){
+		on_idle.connect( handler );
+	}
+
+	void set_draw_handler( draw_handler_t const& handler ){
+		m_view.on_paint.connect( handler );
+	}
+
+	void refresh(){
+		m_view.InvalidateRect(NULL);
+	}
+	/** @} */
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg)
 	{
@@ -21,9 +48,9 @@ public:
 
 		return m_view.PreTranslateMessage(pMsg);
 	}
-
-	virtual BOOL OnIdle()
-	{
+	
+	virtual BOOL OnIdle(){
+		on_idle();
 		return FALSE;
 	}
 
@@ -40,10 +67,10 @@ public:
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 	END_MSG_MAP()
 
-// Handler prototypes (uncomment arguments if needed):
-//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
+	// Handler prototypes (uncomment arguments if needed):
+	//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+	//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
@@ -51,7 +78,7 @@ public:
 		m_hWndClient = m_view.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
 
 		// register object for message filtering and idle updates
-		CMessageLoop* pLoop = _Module.GetMessageLoop();
+		CMessageLoop* pLoop = pmodule->GetMessageLoop();
 		ATLASSERT(pLoop != NULL);
 		pLoop->AddMessageFilter(this);
 		pLoop->AddIdleHandler(this);
@@ -62,7 +89,7 @@ public:
 	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 	{
 		// unregister message filtering and idle updates
-		CMessageLoop* pLoop = _Module.GetMessageLoop();
+		CMessageLoop* pLoop = pmodule->GetMessageLoop();
 		ATLASSERT(pLoop != NULL);
 		pLoop->RemoveMessageFilter(this);
 		pLoop->RemoveIdleHandler(this);

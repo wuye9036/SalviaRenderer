@@ -4,11 +4,19 @@
 
 #pragma once
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/signals2.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+using namespace boost::signals2;
+
 class CWTLAppFrameView : public CWindowImpl<CWTLAppFrameView>
 {
 public:
 	DECLARE_WND_CLASS(NULL)
 
+	signal< void() > on_paint;
+	
 	BOOL PreTranslateMessage(MSG* pMsg)
 	{
 		pMsg;
@@ -27,9 +35,7 @@ public:
 	LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
 		CPaintDC dc(m_hWnd);
-
-		//TODO: Add your drawing code here
-
+		on_paint();
 		return 0;
 	}
 };
