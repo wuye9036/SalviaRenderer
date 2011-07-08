@@ -1,7 +1,7 @@
-#ifndef _TIMER_H
-#define _TIMER_H
+#ifndef SALVIAU_COMMON_TIMER_H
+#define SALVIAU_COMMON_TIMER_H
 
-#pragma once
+#include <salviau/include/salviau_forward.h>
 
 #include <limits>
 #ifdef EFLIB_WINDOWS
@@ -12,10 +12,12 @@
 	#include <limits>
 #endif
 
-class Timer
+BEGIN_NS_SALVIAU();
+
+class SALVIAU_API timer_t
 {
 public:
-	Timer()
+	timer_t()
 	{
 		if (0 == cps_)
 		{
@@ -73,5 +75,7 @@ private:
 
 	static uint64_t cps_;
 };
+
+END_NS_SALVIAU();
 
 #endif		// _TIMER_H

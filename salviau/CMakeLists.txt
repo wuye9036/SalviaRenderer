@@ -31,7 +31,6 @@ set( APP_WTL_IMPLS
 	${SALVIA_HOME_DIR}/salviau/src/wtl/resource.h
 	${SALVIA_HOME_DIR}/salviau/src/wtl/stdafx.cpp
 	${SALVIA_HOME_DIR}/salviau/src/wtl/stdafx.h
-	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrame.cpp
 	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrame.h
 	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrame.rc
 	${SALVIA_HOME_DIR}/salviau/src/wtl/WTLAppFrameView.h
@@ -40,6 +39,7 @@ set( APP_WTL_IMPLS
 
 set( APP_COMMON_SOURCES
 	${SALVIA_HOME_DIR}/salviau/src/common/timer.cpp
+	${SALVIA_HOME_DIR}/salviau/src/common/application.cpp
 )
 
 SOURCE_GROUP( "Header Files\\Common"	FILES ${APP_COMMON_HEADERS} )

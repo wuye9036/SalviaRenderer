@@ -36,6 +36,14 @@ public:
 		m_view.on_paint.connect( handler );
 	}
 
+	void set_create_handler( create_handler_t const& handler ){
+		m_view.on_create.connect( handler );
+	}
+
+	boost::any view_handle(){
+		return boost::any( m_hWndClient );
+	}
+
 	void refresh(){
 		m_view.InvalidateRect(NULL);
 	}

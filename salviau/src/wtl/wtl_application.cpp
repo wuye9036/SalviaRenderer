@@ -79,6 +79,10 @@ public:
 		::CoUninitialize();
 	}
 
+	window* main_window(){
+		return main_wnd;
+	}
+
 	int run(){
 		AtlInitCommonControls(ICC_BAR_CLASSES);	// add flags to support other controls
 		HRESULT hRes = module->Init(NULL, ::GetModuleHandle(NULL) );
