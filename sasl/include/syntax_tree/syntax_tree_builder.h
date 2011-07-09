@@ -109,9 +109,14 @@ public:
 		boost::shared_ptr<sasl::common::token_t>& out_semantic_index
 		);
 private:
+	void initialize_bt_cache();
+
 	syntax_tree_builder& operator = ( syntax_tree_builder const& );
+
 	sasl::parser::lexer& l;
 	sasl::parser::grammars& g;
+
+	boost::unordered_map< std::string, boost::shared_ptr<builtin_type> > bt_cache;
 };
 
 END_NS_SASL_SYNTAX_TREE()
