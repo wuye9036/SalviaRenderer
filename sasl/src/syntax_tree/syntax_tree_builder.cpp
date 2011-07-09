@@ -235,10 +235,27 @@ shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribut
 	ret->name = name_attr->tok;
 	
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, paren_params_attr, typed_attr->attrs[2] );
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, params_attr, paren_params_attr->attrs[1] );
-	BOOST_FOREACH( shared_ptr<attribute> param_attr, params_attr->attrs ){
-		ret->params.push_back( build_param(param_attr) );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_params_attr, paren_params_attr->attrs[1] );
+
+	if( !optional_params_attr->attrs.empty() ){
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, params_attr, optional_params_attr->attrs[0] );
+		
+		// params_attr: param >> *( comma > param )
+
+		// Head param
+		ret->params.push_back( build_param( params_attr->child(0) ) );
+
+		// Follows
+		SASL_TYPED_ATTRIBUTE( sequence_attribute, follow_params_attr, params_attr->child(1) );
+		BOOST_FOREACH( shared_ptr<attribute> comma_param_attr, follow_params_attr->attrs )
+		{
+			ret->params.push_back(
+				build_param( comma_param_attr->child(1) )
+				);
+		}
+		
 	}
+	
 	
 	build_semantic( typed_attr->attrs[3], ret->semantic, ret->semantic_index );
 
