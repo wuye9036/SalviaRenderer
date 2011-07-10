@@ -14,8 +14,6 @@
 #include <atlbase.h>
 #include <atlapp.h>
 
-extern CAppModule _Module;
-
 #include <atlwin.h>
 
 #if defined _M_IX86

@@ -5,8 +5,12 @@
 #pragma once
 
 #include <salviau/include/common/window.h>
-
+#include <eflib/include/string/string.h>
 using namespace salviau;
+
+using std::string;
+using std::wstring;
+using eflib::to_wide_string;
 
 class CMainFrame : 
 	public CFrameWindowImpl<CMainFrame>, 
@@ -40,8 +44,12 @@ public:
 		m_view.on_create.connect( handler );
 	}
 
+	void set_title( string const& title ){
+		this->SetWindowText( to_tstring( title ).c_str() );
+	}
+
 	boost::any view_handle(){
-		return boost::any( m_hWndClient );
+		return boost::any( (HWND)m_view );
 	}
 
 	void refresh(){

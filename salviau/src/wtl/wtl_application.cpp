@@ -26,8 +26,6 @@ using std::max;
 #include <salviau/src/wtl/aboutdlg.h>
 #include <salviau/src/wtl/MainFrm.h>
 
-CAppModule _Module;
-
 BEGIN_NS_SALVIAU();
 
 class CGameLoop : public CMessageLoop
@@ -70,13 +68,15 @@ public:
 
 		::DefWindowProc(NULL, 0, 0, 0L);
 
-		module = &_Module;
+		module = new CAppModule();
 		main_wnd = new CMainFrame();
 	}
 
 	~wtl_application(){
-		delete main_wnd;
 		::CoUninitialize();
+
+		delete main_wnd;
+		delete module;
 	}
 
 	window* main_window(){

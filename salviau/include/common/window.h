@@ -26,7 +26,10 @@ public:
 	virtual void set_create_handler( create_handler_t const& handler ) = 0;
 	/** @} */
 	
+	/** Properties @{ */
 	virtual boost::any view_handle() = 0;
+	virtual void set_title( std::string const& ) = 0;
+	/** @} */
 
 	virtual void refresh() = 0;
 };
