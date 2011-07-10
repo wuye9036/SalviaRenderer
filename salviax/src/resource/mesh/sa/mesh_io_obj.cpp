@@ -31,7 +31,7 @@ struct obj_mesh_vertex{
 };
 
 bool load_material( vector<obj_material>& mtls, string const& mtl_file ){
-	ifstream mtlf( mtl_file );
+	ifstream mtlf( mtl_file.c_str() );
 	if( !mtlf ) return false;
 
 	std::string cmd;
@@ -95,7 +95,7 @@ bool load_obj_mesh(
 	vector<uint16_t>& attrs, vector<obj_material>& mtls
 	)
 {
-	ifstream objf(fname);
+	ifstream objf(fname.c_str());
 
 	if( !objf ) return false;
 
