@@ -16,25 +16,25 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include <salviax/include/resource/texture/sa/tex_io.h>
-#include <salviar/include/surface.h>
-#include <eflib/include/string/string.h>
-
-#include <fstream>
-#include <cstdio>
-#include <tchar.h>
-
-using namespace std;
-using namespace eflib;
-using namespace salviar;
-BEGIN_NS_SALVIAX_RESOURCE()
-
-//Impl Utilities
-struct raw_header
-{
-	size_t width;
-	size_t height;
-	size_t format;
-};
-
-END_NS_SALVIAX_RESOURCE()
+//#include <salviax/include/resource/texture/sa/tex_io.h>
+//#include <salviar/include/surface.h>
+//#include <eflib/include/string/string.h>
+//
+//#include <fstream>
+//#include <cstdio>
+//#include <tchar.h>
+//
+//using namespace std;
+//using namespace eflib;
+//using namespace salviar;
+//BEGIN_NS_SALVIAX_RESOURCE()
+//
+////Impl Utilities
+//struct raw_header
+//{
+//	size_t width;
+//	size_t height;
+//	size_t format;
+//};
+//
+//END_NS_SALVIAX_RESOURCE()

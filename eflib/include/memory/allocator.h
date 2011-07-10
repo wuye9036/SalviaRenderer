@@ -22,9 +22,9 @@ namespace eflib{
 #endif
 
 
-	/***************
+	/**
 	 * Aligned allocator£¬from KlayGE
-	 ***************/
+	 */
 	template <typename T, int alignment>
 	class aligned_allocator
 	{
@@ -183,6 +183,11 @@ namespace eflib{
 	};
 
 #define  is_aligned(pointer, aligned_size) (eflib::is_aligned<aligned_size>().check(pointer))
+
+	//extern int dummy_for_module_distinct_;
+
+	//template <typename T>
+	//class heap_safe_allocator
 }
 
 #endif

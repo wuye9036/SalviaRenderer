@@ -34,18 +34,35 @@ public:
 	void map(T** pdata, map_mode mm, size_t offset, size_t size);
 	void unmap();
 
-	void transfer(size_t offset, void* psrcdata, size_t stride_dest, size_t stride_src, size_t size, size_t count)
-	{
-		EFLIB_ASSERT(offset + stride_dest * (count - 1) + size <= get_size(), "");
-		if( offset + stride_dest * (count - 1) + size > get_size() ) return;
+	void transfer( size_t offset, void const* psrcdata, size_t size, size_t count ){
+		EFLIB_ASSERT_AND_IF(offset + size * count <= get_size(), "Out of buffer."){
+			return;
+		}
 
 		byte* dest = raw_data(offset);
 		byte* src = (byte*)psrcdata;
-		for(size_t i = 0; i < count; ++i)
-		{
-			memcpy(dest, src, size);
-			src += stride_src;
-			dest += stride_dest;
+
+		memcpy( dest, src, size*count );
+	}
+
+	void transfer(size_t offset, void const* psrcdata, size_t stride_dest, size_t stride_src, size_t size, size_t count)
+	{
+		EFLIB_ASSERT_AND_IF(offset + stride_dest * (count - 1) + size <= get_size(), "Out of buffer."){
+			return;
+		}
+
+		byte* dest = raw_data(offset);
+		byte* src = (byte*)psrcdata;
+
+		if( stride_dest == stride_src && stride_src == size ){
+			// Optimized for continuous memory layout.
+			transfer( offset, psrcdata, size, count );
+		} else {
+			for(size_t i = 0; i < count; ++i){
+				memcpy(dest, src, size);
+				src += stride_src;
+				dest += stride_dest;
+			}
 		}
 	}
 };

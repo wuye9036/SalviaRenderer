@@ -27,11 +27,11 @@ Modify Log:
 #ifndef SALVIAX_MESH_IO_H
 #define SALVIAX_MESH_IO_H
 
-#include "mesh.h"
+#include <salviax/include/resource/mesh/sa/mesh.h>
 #include <eflib/include/math/vector.h>
 #include <vector>
 
-BEGIN_NS_SALVIAX_RESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE();
 
 h_mesh create_box(salviar::renderer* psr);
 h_mesh create_cylinder(salviar::renderer* psr);
@@ -43,6 +43,6 @@ h_mesh create_planar(
 					 bool positive_normal
 					 );
 
-END_NS_SALVIAX_RESOURCE()
+END_NS_SALVIAX_RESOURCE();
 
 #endif //SALVIAX_MESH_IO_H

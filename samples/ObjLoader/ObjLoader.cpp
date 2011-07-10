@@ -1,8 +1,6 @@
-// ColorizedTriangleView.h : interface of the CColorizedTriangleView class
-//
-/////////////////////////////////////////////////////////////////////////////
+#include <tchar.h>
 
-#pragma once
+#include <salviau/include/wtl/wtl_application.h>
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
@@ -14,7 +12,8 @@
 
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 
-#include "Timer.h"
+#include <salviau/include/common/timer.h>
+#include <salviau/include/common/window.h>
 
 #define PRESENTER_NAME "d3d9"
 
@@ -22,6 +21,7 @@ using namespace eflib;
 using namespace salviar;
 using namespace salviax;
 using namespace salviax::resource;
+using namespace salviau;
 
 using boost::shared_ptr;
 using boost::static_pointer_cast;
@@ -113,52 +113,17 @@ public:
 	}
 };
 
-class CColorizedTriangleView : public CWindowImpl<CColorizedTriangleView>
-{
+class obj_loader: public quick_app{
 public:
-	h_device present_dev;
-	h_renderer hsr;
-	h_texture sm_tex;
+	obj_loader(): quick_app( create_wtl_application() ){}
 
-	h_mesh planar_mesh;
+protected:
+	/** Event handlers @{ */
+	virtual void on_create(){
 
-	h_pixel_shader pps;
-	h_blend_shader pbs;
+		std::string title( "Sample: Obj File Loader" );
+		impl->main_window()->set_title( title );
 
-	h_rasterizer_state rs_back;
-
-	h_surface display_surf;
-	surface* pdsurf;
-
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	Timer timer;
-
-	DECLARE_WND_CLASS(NULL)
-
-	BOOL PreTranslateMessage(MSG* pMsg)
-	{
-		pMsg;
-		return FALSE;
-	}
-
-	BEGIN_MSG_MAP(CColorizedTriangleView)
-		MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		MESSAGE_HANDLER(WM_PAINT, OnPaint)
-		MESSAGE_HANDLER(WM_LBUTTONUP, OnClick)
-		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-		MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
-	END_MSG_MAP()
-
-// Handler prototypes (uncomment arguments if needed):
-//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
-
-	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
 		std::_tstring dll_name = TEXT("salviax_");
 		dll_name += TEXT(PRESENTER_NAME);
 		dll_name += TEXT("_presenter");
@@ -170,7 +135,9 @@ public:
 		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
 		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
 		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
-		presenter_func(present_dev, static_cast<void*>(m_hWnd));
+		
+		boost::any view_handle_any = impl->main_window()->view_handle();
+		presenter_func(present_dev, *boost::unsafe_any_cast<void*>( &view_handle_any ) );
 
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
@@ -214,20 +181,14 @@ public:
 
 		pps.reset( new ps() );
 		pbs.reset( new bs() );
-		return 0;
 	}
+	/** @} */
 
-	LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		CPaintDC dc(m_hWnd);
-		//TODO: Add your drawing code here
-
+	void on_draw(){
 		present_dev->present(*pdsurf);
-		return 0;
 	}
 
-	void Render()
-	{
+	void on_idle(){
 		// measure statistics
 		++ num_frames;
 		float elapsed_time = static_cast<float>(timer.elapsed());
@@ -284,38 +245,34 @@ public:
 			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
 		}
 
-		InvalidateRect(NULL);
+		impl->main_window()->refresh();
 	}
 
-	LRESULT OnClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
-	{
-		framebuffer* pfb = static_pointer_cast<renderer_impl>(hsr)->get_framebuffer().get();
-		PPOINTS pp = (PPOINTS)(&lParam);
-		if(pfb && size_t(pp->x) < pfb->get_width() && size_t(pp->y) < pfb->get_height())
-		{
-			color_rgba32f c = pfb->get_render_target(render_target_color, 0)->get_texel(pp->x, pfb->get_height() - 1 - pp->y, 0);
-			TCHAR str[512];
-#ifdef EFLIB_MSVC
-			_stprintf_s(str, sizeof(str) / sizeof(str[0]), _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
-#else
-			_stprintf(str, _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
-#endif
-			this->GetParent().SetWindowText(str);
-		}
-		return 0;
-	}
+protected:
+	/** Properties @{ */
+	h_device present_dev;
+	h_renderer hsr;
 
-	LRESULT OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		{
-			MSG msg;
-			PeekMessage(&msg, m_hWnd, WM_MOUSEMOVE, WM_MOUSEMOVE, PM_REMOVE);
-		}
-		return 0;
-	}
+	h_texture sm_tex;
+	h_mesh planar_mesh;
 
-	LRESULT OnEraseBkgnd(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		return 1;
-	}
+	h_pixel_shader pps;
+	h_blend_shader pbs;
+
+	h_rasterizer_state rs_back;
+
+	h_surface display_surf;
+	surface* pdsurf;
+
+	uint32_t num_frames;
+	float accumulate_time;
+	float fps;
+
+	timer_t timer;
+	/** @} */
 };
+
+int main( int /*argc*/, TCHAR* /*argv*/[] ){
+	obj_loader loader;
+	return loader.run();
+}

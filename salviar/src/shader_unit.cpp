@@ -112,7 +112,7 @@ uint32_t vertex_shader_unit::output_attributes_count() const{
 	abi_info const* abii = code->abii();
 	vector<storage_info*> infos = abii->storage_infos( sc_buffer_out );
 
-	size_t register_index = 0;
+	uint32_t register_index = 0;
 	BOOST_FOREACH( storage_info* info, infos ){
 		if( info->sv != semantic_value(sv_position) ){
 			++register_index;

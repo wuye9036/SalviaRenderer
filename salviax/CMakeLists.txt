@@ -10,6 +10,7 @@ LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
 set (HEADER_FILES
 	include/resource/mesh/sa/mesh.h
 	include/resource/mesh/sa/mesh_io.h
+	include/resource/mesh/sa/mesh_io_obj.h
 	include/resource/mesh/dx9/mesh_io_d3d9.h
 	include/resource/resource_forward.h
 	include/resource/texture/sa/tex_io.h
@@ -27,6 +28,7 @@ set (HEADER_FILES
 set (SOURCE_FILES
 	src/resource/mesh/sa/mesh.cpp
 	src/resource/mesh/sa/mesh_io.cpp
+	src/resource/mesh/sa/mesh_io_obj.cpp
 	src/resource/mesh/dx9/mesh_io_d3d9.cpp
 	src/resource/texture/sa/tex_io.cpp
 	src/resource/texture/freeimage/tex_io_freeimage.cpp

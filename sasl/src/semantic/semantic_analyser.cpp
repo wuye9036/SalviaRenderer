@@ -276,6 +276,10 @@ SASL_VISIT_DEF( call_expression )
 		// Overload
 		vector< shared_ptr<symbol> > syms = fnsi->scope()->find_overloads( fnsi->name(), typeconv, dup_callexpr->args );
 		assert( !syms.empty() );
+		if( syms.empty() ){
+			std::cout << fnsi->name();
+		}
+
 		// TODO if syms is empty, no function was overloaded. report the error.
 		assert( syms.size() == 1 );
 		// TODO more than one overload candidates. report error.
@@ -446,7 +450,10 @@ SASL_VISIT_DEF( expression_initializer )
 
 	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>( data_cptr()->variable_to_fill );
 	if ( var_tsi->entry_id() != ssi->entry_id() ){
-		assert( typeconv->implicit_convertible( var_tsi->entry_id(), ssi->entry_id() ) );
+		if( typeconv->implicit_convertible( var_tsi->entry_id(), ssi->entry_id() ) ){
+			assert( false );
+			return;
+		}
 	}
 
 	data_cptr()->generated_node = dup_exprinit->handle();
@@ -1156,7 +1163,9 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 void semantic_analyser::register_builtin_types(){
 	BOOST_FOREACH( builtin_types const & btc, list_of_builtin_types() ){
-		EFLIB_ASSERT( msi->type_manager()->get( btc ) > -1, "Register builtin type failed!" );
+		if( msi->type_manager()->get( btc ) == -1 ){
+			assert( !"Register builtin type failed!" );
+		}
 	}
 }
 
@@ -1202,7 +1211,7 @@ semantic_analyser::function_register& semantic_analyser::function_register::oper
 	return p(par_type);
 }
 
-void semantic_analyser::function_register::operator>>(
+void semantic_analyser::function_register::operator >> (
 	semantic_analyser::function_register::type_handle_t const& ret_type
 	)
 {
