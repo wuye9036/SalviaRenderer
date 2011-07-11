@@ -26,6 +26,7 @@ using namespace salviau;
 using boost::shared_ptr;
 using boost::static_pointer_cast;
 
+using std::string;
 using std::cout;
 using std::endl;
 
@@ -121,7 +122,7 @@ protected:
 	/** Event handlers @{ */
 	virtual void on_create(){
 
-		std::string title( "Sample: Obj File Loader" );
+		string title( "Sample: Obj File Loader" );
 		impl->main_window()->set_title( title );
 
 		std::_tstring dll_name = TEXT("salviax_");
