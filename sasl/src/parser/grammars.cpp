@@ -151,17 +151,13 @@ void grammars::set_terms()
 	SRULE( lit_bool,	STERM(lit_bool) );
 
 	SRULE( opadd,		STERM(plus) | STERM(minus) );
-	SRULE( opassign,
-		STERM(equal) |
-		STERM(add_assign) | STERM(sub_assign) |
-		STERM(mul_assign) | STERM(div_assign)
-		);
+	SRULE( opassign,	STERM(equal) |
+						STERM(add_assign) | STERM(sub_assign) |
+						STERM(mul_assign) | STERM(div_assign) );
 	SRULE( opmul,		STERM(asterisk) | STERM(slash) | STERM(percent) );
 	SRULE( opshift,		STERM(shift) );
-	SRULE( oprel,
-		STERM(less_equal) | STERM(greater_equal) |
-		STERM(labracket) | STERM(rabracket)
-		);
+	SRULE( oprel,		STERM(less_equal) | STERM(greater_equal) |
+						STERM(labracket) | STERM(rabracket) );
 	SRULE( opequal,		STERM(equal_to) | STERM(not_equal) );
 	SRULE( opband,		STERM(ampersand) );
 	SRULE( opbxor,		STERM(caret) );

@@ -444,8 +444,22 @@ shared_ptr<expression> syntax_tree_builder::build_rhsexpr( shared_ptr<attribute>
 }
 
 shared_ptr<expression> syntax_tree_builder::build_condexpr( shared_ptr<attribute> attr ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<expression>();
+
+	shared_ptr<cond_expression> ret = create_node<cond_expression>( token_t::null() );
+
+	shared_ptr<attribute> cond_attr = attr->child(0);
+	shared_ptr<attribute> yesno_attr = attr->child(1);
+
+	ret->cond_expr = build_lcomb_expr( cond_attr );
+	ret->yes_expr = build_expr( yesno_attr->child(1) );
+	ret->no_expr = build_assignexpr( yesno_attr->child(3) );
+
+	if( !(ret->cond_expr && ret->yes_expr && ret->no_expr) ){
+		assert( false );
+		ret.reset();
+	}
+
+	return ret;
 }
 
 shared_ptr<expression> syntax_tree_builder::build_castexpr( shared_ptr<attribute> attr ){
@@ -778,10 +792,7 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 
 	switch( op_chars[0] ){
 	case '=':
-		return op_chars[1] == '\0'
-			? operators::assign
-			: operators::equal
-			;
+		return op_chars[1] == '='? operators::equal : operators::assign;
 	case '+':
 		return op_chars[1] == '=' ? operators::add_assign : operators::add;
 	case '-':
@@ -790,11 +801,28 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 		return op_chars[1] == '=' ? operators::mul_assign : operators::mul;
 	case '/':
 		return op_chars[1] == '=' ? operators::div_assign : operators::div;
-	default:
-		string assertion("Unsupported operator: ");
-		assertion += op_str;
-		EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
+	case '<':
+		return op_chars[1] == '=' ? operators::less_equal : operators::less;
+	case '>':
+		return op_chars[1] == '=' ? operators::greater_equal : operators::greater;
+	case '!':
+		if ( op_chars[1] == '=' ) return operators::not_equal;
+		break;
+	case '|':
+		if ( op_chars[1] == '|' ) return operators::logic_or;
+		if ( op_chars[1] == '=' ) return operators::bit_or_assign;
+		if ( op_chars[1] == '\0' ) return operators::bit_or;
+		break;
+	case '&':
+		if ( op_chars[1] == '&' ) return operators::logic_and;
+		if ( op_chars[1] == '=' ) return operators::bit_and_assign;
+		if ( op_chars[1] == '\0' ) return operators::bit_and;
+		break;
 	}
+
+	string assertion("Unsupported operator: ");
+	assertion += op_str;
+	EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
 
 	return operators::none;
 }
