@@ -33,6 +33,8 @@ mesh::mesh(salviar::renderer* psr)
 	EFLIB_ASSERT(psr, "");
 
 	device_ = psr;
+	primcount_ = 0;
+	index_fmt_ = format_unknown;
 }
 
 /*
