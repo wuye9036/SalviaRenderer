@@ -155,7 +155,7 @@ bool load_obj_mesh(
 		} else if ( obj_cmd == "vt" ){
 			float u = 0.0f, v = 0.0f;
 			objf >> u >> v;
-			uvs.push_back( vec4(u, v, 0.0f, 0.0f) );
+			uvs.push_back( vec4(u, 1.0f - v, 0.0f, 0.0f) );
 		} else if ( obj_cmd == "vn" ){
 			float x = 0.0f, y = 0.0f, z = 0.0f;
 			objf >> x >> y >> z;
