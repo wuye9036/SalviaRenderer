@@ -14,21 +14,15 @@ namespace eflib{
 #else
 		size_t required = std::wcstombs(NULL, instr.c_str(), 0);
 #endif
-		outstr.resize(required + 1);
+		outstr.resize(required);
 
 		// Convert.
 #ifdef EFLIB_MSVC
 		size_t l;
-		wcstombs_s(&l, &(outstr[0]), outstr.size() * sizeof(outstr[0]), instr.c_str(), required + 1);
+		wcstombs_s(&l, &(outstr[0]), outstr.size(), instr.c_str(), required-1);
 #else
-		size_t l = std::wcstombs(&(outstr[0]), instr.c_str(), required+1);
+		size_t l = std::wcstombs(&(outstr[0]), instr.c_str(), required-1);
 #endif
-
-		// Return.
-		if(l == size_t(-1)){
-			return false;
-		}
-		outstr.resize(l);
 		return true;
 	}
 
@@ -56,21 +50,16 @@ namespace eflib{
 #else
 		size_t required = mbstowcs(NULL, instr.c_str(), 0);
 #endif
-		outstr.resize(required + 1);
+		outstr.resize(required);
 
 		// Convert.
 #ifdef EFLIB_MSVC
 		size_t len;
-		mbstowcs_s(&len, &(outstr[0]), outstr.size() * sizeof(outstr[0]), instr.c_str(), required + 1);
+		mbstowcs_s(&len, &(outstr[0]), outstr.size(), instr.c_str(), required-1);
 #else
-		size_t len = mbstowcs(&(outstr[0]), instr.c_str(), required+1);
+		size_t len = mbstowcs(&(outstr[0]), instr.c_str(), required-1);
 #endif
 
-		// Return.
-		if(len == size_t(-1)){
-			return false;
-		}
-		outstr.resize(len);
 		return true;
 	}
 

@@ -1,18 +1,24 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
+#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+
 #include <salviar/include/buffer.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/renderer.h>
 
 #include <eflib/include/math/math.h>
 
+#define BOOST_FILESYSTEM_VERSION 3
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
 
 using boost::unordered_map;
+using boost::filesystem3::path;
+using boost::filesystem3::absolute;
 
 using std::ifstream;
 using std::string;
@@ -30,8 +36,22 @@ struct obj_mesh_vertex{
 	vec4 normal;
 };
 
-bool load_material( vector<obj_material>& mtls, string const& mtl_file ){
-	ifstream mtlf( mtl_file.c_str() );
+obj_material::obj_material()
+	: name("default")
+	, ambient( 0.2f, 0.2f, 0.2f, 1.0f )
+	, diffuse( 0.5f, 0.5f, 0.5f, 1.0f )
+	, specular( 0.7f, 0.7f, 0.7f, 1.0f )
+	, shininess(2), alpha(1.0f)
+	, is_specular(true)
+	, tex_name("")
+{
+}
+
+bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_file, path const& base_path ){
+
+	std::string mtl_fullpath = ( base_path / mtl_file ).string();
+
+	ifstream mtlf( mtl_fullpath );
 	if( !mtlf ) return false;
 
 	std::string cmd;
@@ -41,6 +61,11 @@ bool load_material( vector<obj_material>& mtls, string const& mtl_file ){
 		mtlf >> cmd;
 		if( !mtlf ){ break; }
 		
+		if( cmd == "#" ){
+			mtlf.ignore(1000, '\n');
+			continue;
+		}
+
 		if( cmd == "newmtl" ){
 			string mtl_name;
 			mtlf >> mtl_name;
@@ -55,9 +80,7 @@ bool load_material( vector<obj_material>& mtls, string const& mtl_file ){
 
 		if( !pmtl ){ continue; }
 
-		if( cmd == "#" ){
-			/* Comment */ 
-		} else if( cmd == "Ka" ) {
+		if( cmd == "Ka" ) {
 			float r, g, b;
 			mtlf >> r >> g >> b;
 			pmtl->ambient = vec4( r, g, b, 0.0f );
@@ -79,6 +102,11 @@ bool load_material( vector<obj_material>& mtls, string const& mtl_file ){
 			pmtl->is_specular = ( illumination == 2 );
 		} else if ( cmd == "map_Kd" ){
 			mtlf >> pmtl->tex_name;
+			std::_tstring tex_fullpath = eflib::to_tstring( ( base_path / pmtl->tex_name ).string() );
+			pmtl->tex = texture_io_fi::instance().load(
+				r, tex_fullpath,
+				salviar::pixel_format_color_rgba8
+				);
 		} else {
 			// Unrecognized command
 		}
@@ -90,6 +118,7 @@ bool load_material( vector<obj_material>& mtls, string const& mtl_file ){
 }
 
 bool load_obj_mesh(
+	renderer* r,
 	string const& fname,
 	vector<obj_mesh_vertex>& verts, vector<uint16_t>& indices,
 	vector<uint16_t>& attrs, vector<obj_material>& mtls
@@ -126,7 +155,7 @@ bool load_obj_mesh(
 		} else if ( obj_cmd == "vt" ){
 			float u = 0.0f, v = 0.0f;
 			objf >> u >> v;
-			uvs.push_back( vec4(u, v, 0.0f, 0.0f) );
+			uvs.push_back( vec4(u, 1.0f - v, 0.0f, 0.0f) );
 		} else if ( obj_cmd == "vn" ){
 			float x = 0.0f, y = 0.0f, z = 0.0f;
 			objf >> x >> y >> z;
@@ -199,8 +228,9 @@ bool load_obj_mesh(
 
 	objf.close();
 
+	path base_path = absolute( path(fname) );
 	if( !mtl_fname.empty() ){
-		return load_material( mtls, mtl_fname );
+		load_material( r, mtls, mtl_fname, base_path.parent_path() );
 	}
 	return true;
 }
@@ -235,16 +265,21 @@ void construct_meshes(
 
 		// Construct vertex indices
 		for( size_t i_indices = 0; i_indices < indices.size(); ++i_indices ){
-			if( attrs[i_indices] == i_mtl ){
+			if( attrs[ i_indices / 3 ] == i_mtl ){
 				mesh_indices.push_back( indices[i_indices] );
 			}
 		}
 
 		// Set mesh indices.
-		h_buffer index_buffer = render->create_buffer( sizeof(uint16_t) * mesh_indices.size() );
-		index_buffer->transfer( 0, &mesh_indices[0], sizeof(uint16_t), mesh_indices.size() );
+		if ( !mesh_indices.empty() ){
+			h_buffer index_buffer = render->create_buffer( sizeof(uint16_t) * mesh_indices.size() );
+			index_buffer->transfer( 0, &mesh_indices[0], sizeof(uint16_t), mesh_indices.size() );
+			pmesh->set_index_buffer(index_buffer);
+			pmesh->set_index_type(format_r16_uint);
+			pmesh->set_primitive_count( mesh_indices.size() / 3 );
 
-		meshes.push_back( h_mesh(pmesh) );
+			meshes.push_back( h_mesh(pmesh) );
+		}
 	}
 }
 
@@ -257,7 +292,7 @@ vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string cons
 
 	vector<h_mesh> meshes;
 
-	if( !load_obj_mesh( file_name, verts, indices, attrs, mtls ) ){
+	if( !load_obj_mesh( render, file_name, verts, indices, attrs, mtls ) ){
 		return meshes;
 	}
 

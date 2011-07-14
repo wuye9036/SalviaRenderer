@@ -11,9 +11,12 @@
 #include <salviar/include/colors.h>
 
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
+#include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
+
+#include <vector>
 
 #define PRESENTER_NAME "d3d9"
 
@@ -24,83 +27,102 @@ using namespace salviax::resource;
 using namespace salviau;
 
 using boost::shared_ptr;
-using boost::static_pointer_cast;
+using boost::shared_polymorphic_cast;
 
+using std::string;
+using std::vector;
 using std::cout;
 using std::endl;
 
-char const* vs_code = 
-"float4x4	wvpMatrix; \r\n"
-"float4		lightPos0; \r\n"
-"float4		lightPos1; \r\n"
-"float4		lightPos2; \r\n"
+char const* cup_vs_code =
+"float4x4 wvpMatrix; \r\n"
+"float4   eyePos; \r\n"
+"float4	  lightPos; \r\n"
 "struct VSIn{ \r\n"
 "	float4 pos: POSITION; \r\n"
 "	float4 norm: NORMAL; \r\n"
+"	float4 tex: TEXCOORD0; \r\n"
 "}; \r\n"
 "struct VSOut{ \r\n"
 "	float4 pos: sv_position; \r\n"
-"	float4 norm: TEXCOORD(0); \r\n"
-"	float4 lightDir0: TEXCOORD(1); \r\n"
-"	float4 lightDir1: TEXCOORD(2); \r\n"
-"	float4 lightDir2: TEXCOORD(3); \r\n"
+"	float4 tex: TEXCOORD; \r\n"
+"	float4 norm: TEXCOORD1; \r\n"
+"	float4 lightDir: TEXCOORD2; \r\n"
+"	float4 eyeDir: TEXCOORD3; \r\n"
 "}; \r\n"
 "VSOut vs_main(VSIn in){ \r\n"
 "	VSOut out; \r\n"
 "	out.norm = in.norm; \r\n"
 "	out.pos = mul(in.pos, wvpMatrix); \r\n"
-"	out.lightDir0 = lightPos0 - in.pos;"
-"	out.lightDir1 = lightPos1 - in.pos;"
-"	out.lightDir2 = lightPos2 - in.pos;"
+"	out.lightDir = lightPos - in.pos; \r\n"
+"	out.eyeDir = eyePos - in.pos; \r\n"
+"	out.tex = in.tex; \r\n"
 "	return out; \r\n"
 "} \r\n"
 ;
 
-class ps : public pixel_shader
+class cup_ps : public pixel_shader
 {
+	salviar::h_sampler sampler_;
+	salviar::h_texture tex_;
+
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
+
+	int shininess;
 public:
-	ps()
-	{}
+	void set_texture( salviar::h_texture tex ){
+		tex_ = tex;
+		sampler_->set_texture(tex_.get());
+	}
+
+	cup_ps()
+	{
+		declare_constant(_T("Ambient"),   ambient );
+		declare_constant(_T("Diffuse"),   diffuse );
+		declare_constant(_T("Specular"),  specular );
+		declare_constant(_T("Shininess"), shininess );
+
+		sampler_desc desc;
+		desc.min_filter = filter_linear;
+		desc.mag_filter = filter_linear;
+		desc.mip_filter = filter_linear;
+		desc.addr_mode_u = address_clamp;
+		desc.addr_mode_v = address_clamp;
+		desc.addr_mode_w = address_clamp;
+		sampler_.reset(new sampler(desc));
+	}
+
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		vec3 lightDir0 = in.attributes[1].xyz();
-		vec3 lightDir1 = in.attributes[2].xyz();
-		vec3 lightDir2 = in.attributes[3].xyz();
+		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
+		if( tex_ ){
+			tex_color = tex2d(*sampler_ , 0);
+		}
+		vec3 norm( normalize3( in.attributes[1].xyz() ) );
+		vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
+		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
 
-		vec3 norm = in.attributes[0].xyz();
+		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
+		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
+		vec4 illum = ambient + diffuse * illum_diffuse + specular * illum_specular;
 
-		float invLight0Distance = 1.0f / lightDir0.length();
-		float invLight1Distance = 1.0f / lightDir1.length();
-		float invLight2Distance = 1.0f / lightDir2.length();
-
-		vec3 normalized_norm = normalize3( norm );
-		vec3 normalized_lightDir0 = lightDir0 * invLight0Distance;
-		vec3 normalized_lightDir1 = lightDir1 * invLight1Distance;
-		vec3 normalized_lightDir2 = lightDir2 * invLight2Distance;
-
-		float refl0 = dot_prod3( normalized_norm, normalized_lightDir0 );
-		float refl1 = dot_prod3( normalized_norm, normalized_lightDir1 );
-		float refl2 = dot_prod3( normalized_norm, normalized_lightDir2 );
-
-		out.color[0] = clampss(
-			vec4(0.7f, 0.1f, 0.3f, 1.0f ) * refl0 * invLight0Distance * invLight0Distance +
-			vec4(0.1f, 0.3f, 0.7f, 1.0f ) * refl1 * invLight1Distance * invLight1Distance +
-			vec4(0.3f, 0.7f, 0.1f, 1.0f ) * refl2 * invLight2Distance * invLight2Distance
-			, 0.0f, 1.0f
-			)
-			;
+		out.color[0] = tex_color.get_vec4() * illum;
+		out.color[0][3] = 1.0f;
 
 		return true;
 	}
 	virtual h_pixel_shader create_clone()
 	{
-		return h_pixel_shader(new ps(*this));
+		return h_pixel_shader(new cup_ps(*this));
 	}
 	virtual void destroy_clone(h_pixel_shader& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
+
 
 class bs : public blend_shader
 {
@@ -121,7 +143,7 @@ protected:
 	/** Event handlers @{ */
 	virtual void on_create(){
 
-		std::string title( "Sample: Obj File Loader" );
+		string title( "Sample: Obj File Loader" );
 		impl->main_window()->set_title( title );
 
 		std::_tstring dll_name = TEXT("salviax_");
@@ -162,24 +184,15 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
-		shared_ptr<shader_code> compiled_code;
-		salvia_create_shader( compiled_code, vs_code, lang_vertex_shader );
-
-		hsr->set_vertex_shader_code( compiled_code );
+		salvia_create_shader( cup_vs, cup_vs_code, lang_vertex_shader );
 
 		num_frames = 0;
 		accumulate_time = 0;
 		fps = 0;
 
-		planar_mesh = create_planar(
-			hsr.get(), 
-			vec3(-3.0f, -1.0f, -3.0f), 
-			vec3(6, 0.0f, 0.0f), 
-			vec3(0.0f, 0.0f, 6),
-			1, 1, false
-			);
+		cup_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/cup/cup.obj" );
 
-		pps.reset( new ps() );
+		pps.reset( new cup_ps() );
 		pbs.reset( new bs() );
 	}
 	/** @} */
@@ -214,15 +227,17 @@ protected:
 		static float s_angle = 0;
 		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
 
-		vec3 camera(cos(s_angle) * 2.3f, 2.5f, sin(s_angle) * 2.3f);
+		vec3 camera(cos(s_angle) * 1.1f, 1.1f, sin(s_angle) * 1.1f);
 		mat44 world(mat44::identity()), view, proj, wvp;
 
-		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera, vec3(0.0f, 0.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
-		vec4 lightPos0( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
-		vec4 lightPos1( sin(s_angle * 0.7f) * 1.9f, 0.15f, cos( -s_angle * 0.4f) * 2.5f, 0.0f );
-		vec4 lightPos2( sin(s_angle * 2.6f) * 2.3f, 0.15f, cos(s_angle * 0.6f) * 1.7f, 0.0f );
+		vec4 lightPos( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
+
+		hsr->set_pixel_shader(pps);
+		hsr->set_blend_shader(pbs);
+
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
@@ -230,15 +245,25 @@ protected:
 
 			hsr->set_rasterizer_state(rs_back);
 
+			hsr->set_vertex_shader_code( cup_vs );
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
-			
-			hsr->set_vs_variable( "lightPos0", &lightPos0 );
-			hsr->set_vs_variable( "lightPos1", &lightPos1 );
-			hsr->set_vs_variable( "lightPos2", &lightPos2 );
+			vec4 camera_pos = vec4( camera, 1.0f );
+			hsr->set_vs_variable( "eyePos", &camera_pos );
+			hsr->set_vs_variable( "lightPos", &lightPos );
 
-			hsr->set_pixel_shader(pps);
-			hsr->set_blend_shader(pbs);
-			planar_mesh->render();
+			for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh ){
+				h_mesh cur_mesh = cup_mesh[i_mesh];
+
+				shared_ptr<obj_material> mtl
+					= shared_polymorphic_cast<obj_material>( cur_mesh->get_attached() );
+				pps->set_constant( _T("Ambient"),  &mtl->ambient );
+				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
+				pps->set_constant( _T("Specular"), &mtl->specular );
+				pps->set_constant( _T("Shininess"),&mtl->ambient );
+				shared_polymorphic_cast<cup_ps>( pps )->set_texture( mtl->tex );
+
+				cur_mesh->render();
+			}
 		}
 
 		if (hsr->get_framebuffer()->get_num_samples() > 1){
@@ -253,8 +278,10 @@ protected:
 	h_device present_dev;
 	h_renderer hsr;
 
-	h_texture sm_tex;
-	h_mesh planar_mesh;
+	vector<h_mesh> cup_mesh;
+
+	shared_ptr<shader_code> plane_vs;
+	shared_ptr<shader_code> cup_vs;
 
 	h_pixel_shader pps;
 	h_blend_shader pbs;

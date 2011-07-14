@@ -162,7 +162,7 @@ void semantic_analyser::parse_semantic(
 {
 	if( sem_tok ){
 		salviar::semantic_value sem( salviar::sv_none );
-		string const& semstr = sem_tok->str;
+		string semstr = sem_tok->str;
 		size_t index = 0;
 		if( sem_idx_tok ){
 			index = boost::lexical_cast<size_t>(sem_idx_tok->str);
@@ -170,13 +170,19 @@ void semantic_analyser::parse_semantic(
 			// Try to get last digitals for generate index.
 			string::const_reverse_iterator it = semstr.rbegin();
 
+			size_t num_tail_length = 0;
 			char ch = '\0';
-			size_t mag = 1;
 			while( ch = boost::is_digit()(*it) ){
-				index = index + ( ch - '0' ) * mag;
-				mag *= 10;
+				++it;
+				++num_tail_length;
 			}
 
+			if( num_tail_length > 0 ){
+				size_t split_pos = semstr.size() - num_tail_length;
+
+				index = boost::lexical_cast<size_t>( semstr.substr( split_pos ) );
+				semstr = semstr.substr( 0, split_pos );
+			}
 		}
 		ssi->set_semantic( semantic_value( semstr, static_cast<uint32_t>(index ) ) );
 	}
