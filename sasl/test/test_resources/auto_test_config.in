@@ -1,2 +1,2 @@
-bin_path="@SOFTART_RUNTIME_OUTPUT_DIRECTORY@"
+bin_path="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@"
 build_config = "debug"

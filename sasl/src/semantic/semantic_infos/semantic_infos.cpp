@@ -114,15 +114,17 @@ void type_info_si_impl::entry_id( type_entry::id_t id ){
 }
 
 shared_ptr<type_specifier> type_info_si_impl::type_info() const{
+	assert( typemgr.lock() );
 	return typemgr.lock()->get( tid );
 }
 
 void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec, shared_ptr<symbol> sym ){
+	assert( typemgr.lock() );
 	tid = typemgr.lock()->get( typespec, sym );
 }
 
-void type_info_si_impl::type_info( builtin_types btc )
-{
+void type_info_si_impl::type_info( builtin_types btc ){
+	assert( typemgr.lock() );
 	tid = typemgr.lock()->get( btc ); 
 }
 

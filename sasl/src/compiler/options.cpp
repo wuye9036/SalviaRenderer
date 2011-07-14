@@ -171,19 +171,10 @@ private:
 
 BEGIN_NS_SASL_COMPILER();
 
-options_manager options_manager::inst;
-
-options_manager& options_manager::instance(){
-	return inst;
-}
-
-bool options_manager::parse( int argc, char** argv )
+template <typename ParserT>
+bool compiler::parse( ParserT& parser )
 {
 	try{
-
-		po::basic_command_line_parser<char> parser
-			= po::command_line_parser(argc, argv).options( desc ).allow_unregistered();
-
 		opt_disp.reg_extra_parser( parser );
 		opt_global.reg_extra_parser( parser );
 		opt_io.reg_extra_parser( parser );
@@ -201,8 +192,7 @@ bool options_manager::parse( int argc, char** argv )
 			}
 			cout << "are invalid. They were ignored." << endl;
 		}
-		
-		
+
 		po::store( parsed, vm );
 		po::notify(vm);
 
@@ -216,7 +206,23 @@ bool options_manager::parse( int argc, char** argv )
 	return true;
 }
 
-options_manager::options_manager()
+bool compiler::parse( int argc, char** argv )
+{
+	po::basic_command_line_parser<char> parser
+		= po::command_line_parser(argc, argv).options( desc ).allow_unregistered();
+	return parse(parser);
+}
+
+bool compiler::parse( std::string const& cmd )
+{
+	vector<string> cmds = po::split_unix(cmd);
+	po::basic_command_line_parser<char> parser
+		= po::command_line_parser(cmds).options( desc ).allow_unregistered();
+
+	return parse( parser );
+}
+
+compiler::compiler()
 {
 	opt_disp.fill_desc(desc);
 	opt_global.fill_desc(desc);
@@ -224,7 +230,7 @@ options_manager::options_manager()
 	opt_predef.fill_desc(desc);
 }
 
-void options_manager::process( bool& abort )
+void compiler::process( bool& abort )
 {
 	abort = false;
 
@@ -271,7 +277,7 @@ void options_manager::process( bool& abort )
 				cout << "Fatal error: Could not open input file: " << fname << endl;
 				return;
 			} 
-			shared_ptr<node> mroot = sasl::syntax_tree::parse( code_src.get(), code_src );
+			mroot = sasl::syntax_tree::parse( code_src.get(), code_src );
 			if( !mroot ){
 				cout << "Syntax error occurs!" << endl;
 				abort = true;
@@ -313,29 +319,29 @@ void options_manager::process( bool& abort )
 	}
 }
 
-shared_ptr< module_si > options_manager::module_sem() const{
+shared_ptr< module_si > compiler::module_sem() const{
 	return msi;
 }
 
-shared_ptr<codegen_context> options_manager::module_codegen() const{
+shared_ptr<codegen_context> compiler::module_codegen() const{
 	return mcg;
 }
 
-shared_ptr<node> options_manager::root() const{
+shared_ptr<node> compiler::root() const{
 	return mroot;
 }
 
-po::variables_map const & options_manager::variables() const
+po::variables_map const & compiler::variables() const
 {
 	return vm;
 }
 
-options_display_info const & options_manager::display_info() const
+options_display_info const & compiler::display_info() const
 {
 	return opt_disp;
 }
 
-options_io const & options_manager::io_info() const
+options_io const & compiler::io_info() const
 {
 	return opt_io;
 }

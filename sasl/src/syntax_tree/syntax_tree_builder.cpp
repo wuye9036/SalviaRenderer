@@ -53,75 +53,71 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 #define SASL_END_SWITCH_RULE() }
 
 
-#define INSERT_INTO_TYPEMAP( litname, enum_code ) \
+#define INSERT_INTO_BTCACHE( litname, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
 		bt->value_typecode = builtin_types::enum_code;	\
-		typemap.insert( make_pair( std::string( #litname ), bt ) );	\
+		bt_cache.insert( make_pair( std::string( #litname ), bt ) );	\
 	}
 
-#define INSERT_VECTOR_INTO_TYPEMAP( component_type, dim, enum_code ) \
+#define INSERT_VECTOR_INTO_BTCACHE( component_type, dim, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
 		bt->value_typecode = vector_of( builtin_types::enum_code, dim );	\
-		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
+		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
 	}
 
-#define INSERT_MATRIX_INTO_TYPEMAP( component_type, dim0, dim1, enum_code ) \
+#define INSERT_MATRIX_INTO_BTCACHE( component_type, dim0, dim1, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
 		bt->value_typecode = matrix_of( builtin_types::enum_code, dim0, dim1 );	\
-		typemap.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
+		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
 	}
 
-namespace builder_details{
-	unordered_map< std::string, shared_ptr<builtin_type> > typemap;
-	void initialize_typemap(){
-		if( typemap.empty() ){
+syntax_tree_builder::syntax_tree_builder( lexer& l, grammars& g ): l(l), g(g){}
 
-			char const char_tbl[] = { '0', '1', '2', '3', '4' };
+void syntax_tree_builder::initialize_bt_cache(){
+	if( bt_cache.empty() ){
 
-			INSERT_INTO_TYPEMAP( sbyte,    _sint8   );
-			INSERT_INTO_TYPEMAP( int8_t,   _sint8   );
-			INSERT_INTO_TYPEMAP( ubyte,    _uint8   );
-			INSERT_INTO_TYPEMAP( uint8_t,  _uint8   );
-			INSERT_INTO_TYPEMAP( short,    _sint16  );
-			INSERT_INTO_TYPEMAP( int16_t,  _sint16  );
-			INSERT_INTO_TYPEMAP( ushort,   _uint16  );
-			INSERT_INTO_TYPEMAP( uint16_t, _uint16  );
-			INSERT_INTO_TYPEMAP( int,      _sint32  );
-			INSERT_INTO_TYPEMAP( int32_t,  _sint32  );
-			INSERT_INTO_TYPEMAP( uint,     _uint32  );
-			INSERT_INTO_TYPEMAP( uint32_t, _uint32  );
-			INSERT_INTO_TYPEMAP( long,     _uint32  );
-			INSERT_INTO_TYPEMAP( int64_t,  _sint64  );
-			INSERT_INTO_TYPEMAP( ulong,    _sint64  );
-			INSERT_INTO_TYPEMAP( uint64_t, _uint64  );
+		char const char_tbl[] = { '0', '1', '2', '3', '4' };
 
-			INSERT_INTO_TYPEMAP( float,    _float   );
-			INSERT_INTO_TYPEMAP( double,   _double  );
-			INSERT_INTO_TYPEMAP( bool,     _boolean );
-			INSERT_INTO_TYPEMAP( void,     _void    );
+		INSERT_INTO_BTCACHE( sbyte,    _sint8   );
+		INSERT_INTO_BTCACHE( int8_t,   _sint8   );
+		INSERT_INTO_BTCACHE( ubyte,    _uint8   );
+		INSERT_INTO_BTCACHE( uint8_t,  _uint8   );
+		INSERT_INTO_BTCACHE( short,    _sint16  );
+		INSERT_INTO_BTCACHE( int16_t,  _sint16  );
+		INSERT_INTO_BTCACHE( ushort,   _uint16  );
+		INSERT_INTO_BTCACHE( uint16_t, _uint16  );
+		INSERT_INTO_BTCACHE( int,      _sint32  );
+		INSERT_INTO_BTCACHE( int32_t,  _sint32  );
+		INSERT_INTO_BTCACHE( uint,     _uint32  );
+		INSERT_INTO_BTCACHE( uint32_t, _uint32  );
+		INSERT_INTO_BTCACHE( long,     _uint32  );
+		INSERT_INTO_BTCACHE( int64_t,  _sint64  );
+		INSERT_INTO_BTCACHE( ulong,    _sint64  );
+		INSERT_INTO_BTCACHE( uint64_t, _uint64  );
 
-			for( int dim0 = 1; dim0 <= 4; ++dim0 ){
-				INSERT_VECTOR_INTO_TYPEMAP( int, dim0, _sint32  );
-				INSERT_VECTOR_INTO_TYPEMAP( long, dim0, _sint64  );
-				INSERT_VECTOR_INTO_TYPEMAP( float, dim0, _float  );
-				INSERT_VECTOR_INTO_TYPEMAP( double, dim0, _double  );
+		INSERT_INTO_BTCACHE( float,    _float   );
+		INSERT_INTO_BTCACHE( double,   _double  );
+		INSERT_INTO_BTCACHE( bool,     _boolean );
+		INSERT_INTO_BTCACHE( void,     _void    );
 
-				for( int dim1 = 1; dim1 <= 4; ++dim1 ){
-					INSERT_MATRIX_INTO_TYPEMAP( int, dim0, dim1, _sint32  );
-					INSERT_MATRIX_INTO_TYPEMAP( long, dim0, dim1, _sint64  );
-					INSERT_MATRIX_INTO_TYPEMAP( float, dim0, dim1, _float  );
-					INSERT_MATRIX_INTO_TYPEMAP( double, dim0, dim1, _double  );
-				}
+		for( int dim0 = 1; dim0 <= 4; ++dim0 ){
+			INSERT_VECTOR_INTO_BTCACHE( int, dim0, _sint32  );
+			INSERT_VECTOR_INTO_BTCACHE( long, dim0, _sint64  );
+			INSERT_VECTOR_INTO_BTCACHE( float, dim0, _float  );
+			INSERT_VECTOR_INTO_BTCACHE( double, dim0, _double  );
+
+			for( int dim1 = 1; dim1 <= 4; ++dim1 ){
+				INSERT_MATRIX_INTO_BTCACHE( int, dim0, dim1, _sint32  );
+				INSERT_MATRIX_INTO_BTCACHE( long, dim0, dim1, _sint64  );
+				INSERT_MATRIX_INTO_BTCACHE( float, dim0, dim1, _float  );
+				INSERT_MATRIX_INTO_BTCACHE( double, dim0, dim1, _double  );
 			}
 		}
 	}
 }
-using builder_details::typemap;
-
-syntax_tree_builder::syntax_tree_builder( lexer& l, grammars& g ): l(l), g(g){}
 
 shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > attr )
 {
@@ -235,10 +231,27 @@ shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribut
 	ret->name = name_attr->tok;
 	
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, paren_params_attr, typed_attr->attrs[2] );
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, params_attr, paren_params_attr->attrs[1] );
-	BOOST_FOREACH( shared_ptr<attribute> param_attr, params_attr->attrs ){
-		ret->params.push_back( build_param(param_attr) );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_params_attr, paren_params_attr->attrs[1] );
+
+	if( !optional_params_attr->attrs.empty() ){
+		SASL_TYPED_ATTRIBUTE( queuer_attribute, params_attr, optional_params_attr->attrs[0] );
+		
+		// params_attr: param >> *( comma > param )
+
+		// Head param
+		ret->params.push_back( build_param( params_attr->child(0) ) );
+
+		// Follows
+		SASL_TYPED_ATTRIBUTE( sequence_attribute, follow_params_attr, params_attr->child(1) );
+		BOOST_FOREACH( shared_ptr<attribute> comma_param_attr, follow_params_attr->attrs )
+		{
+			ret->params.push_back(
+				build_param( comma_param_attr->child(1) )
+				);
+		}
+		
 	}
+	
 	
 	build_semantic( typed_attr->attrs[3], ret->semantic, ret->semantic_index );
 
@@ -594,9 +607,9 @@ shared_ptr<type_specifier> syntax_tree_builder::build_unqualedtype( shared_ptr<a
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( ident ){
 			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, typed_attr->attr );
-			builder_details::initialize_typemap();
-			if ( typemap.count(ident_attr->tok->str) > 0 ){
-				return typemap[ident_attr->tok->str];
+			initialize_bt_cache();
+			if ( bt_cache.count(ident_attr->tok->str) > 0 ){
+				return bt_cache[ident_attr->tok->str];
 			}
 
 			shared_ptr<alias_type> type_ident = create_node<alias_type>( token_t::null() );

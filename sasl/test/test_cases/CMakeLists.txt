@@ -25,4 +25,22 @@ set( SOURCE_FILES
 
 ADD_LIBRARY( sasl_test_cases ${HEADER_FILES} ${SOURCE_FILES} )
 
+if (MSVC)
+	Set( SALVIA_TEST_REPOSITORY_PATH
+		"${SALVIA_RUNTIME_OUTPUT_DIRECTORY}/$(ConfigurationName)/repo"
+		)
+else( MSVC )
+	set( SALVIA_TEST_REPOSITORY_PATH "${SALVIA_RUNTIME_OUTPUT_DIRECTORY}/repo" )
+endif()
+
+ADD_CUSTOM_COMMAND(
+		TARGET sasl_test_cases
+		PRE_BUILD
+		COMMAND "python.exe"
+		ARGS
+			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
+			"${SASL_HOME_DIR}/sasl/test/auto_test/repo"
+			${SALVIA_TEST_REPOSITORY_PATH}
+		)
+		
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_test_cases )

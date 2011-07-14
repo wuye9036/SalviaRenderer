@@ -106,7 +106,7 @@ public:
 };
 
 #define SASL_TYPE_INFO_PROXY()	\
-	private:	\
+	protected:	\
 	type_info_si_impl type_info_proxy;	\
 	public:	\
 	virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
@@ -125,6 +125,7 @@ public:
 	virtual ::boost::shared_ptr< type_specifier > type_info() const;
 	virtual void type_info( ::boost::shared_ptr< type_specifier >, boost::shared_ptr<symbol> );
 	virtual void type_info( builtin_types btc );
+
 private:
 	type_entry::id_t tid;
 	::boost::weak_ptr< class type_manager > typemgr;

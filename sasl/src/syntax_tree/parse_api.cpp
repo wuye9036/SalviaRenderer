@@ -33,7 +33,7 @@ void init_lex( lexer& l ){
 		("SLASH", "\\/")
 		("DOT", "\\.")
 		("BACKSLASH", "\\\\")
-		("AMPERSAND", "\\^")
+		("CARET", "\\^")
 		("QUESTION", "\\?")
 		("DQUOTE", "\\\"")
 		("VERTICAL", "\\|")
@@ -46,6 +46,7 @@ void init_lex( lexer& l ){
 		("LABRACKET", "\\<")
 		("RABRACKET", "\\>")
 		;
+
 	l.define_tokens
 		( "lit_int", "({DIGIT}+{INT_TYPE_SUFFIX}?)|(0x{HEX_DIGIT}+{INT_TYPE_SUFFIX}?)" )
 		( "lit_float", "({DIGIT_SEQ}?{DOT}{DIGIT_SEQ}{EXPONENT_PART}?{REAL_TYPE_SUFFIX}?)|({DIGIT_SEQ}{EXPONENT_PART}{REAL_TYPE_SUFFIX}?)|({DIGIT_SEQ}{REAL_TYPE_SUFFIX})" )
@@ -70,7 +71,7 @@ void init_lex( lexer& l ){
 		( "asterisk", "{ASTERISK}" )
 		( "slash", "{SLASH}")
 		( "backslash", "{BACKSLASH}" )
-		( "caret", "{AMPERSAND}" )
+		( "caret", "{CARET}" )
 		( "ampersand", "&" )
 		( "percent", "%" )
 		( "equal", "=" )
@@ -99,6 +100,14 @@ void init_lex( lexer& l ){
 		( "labracket", "{LABRACKET}" )
 		( "rabracket", "{RABRACKET}" )
 
+		( "less_equal", "{LABRACKET}=")
+		( "greater_equal", "{RABRACKET}=")
+		( "equal_to", "==" )
+		( "not_equal", "!=" )
+
+		( "logic_or", "{VERTICAL}{VERTICAL}" )
+		( "logic_and", "&&" )
+
 		( "space", "{SPACE}" )
 		( "newline", "{NEWLINE}" )
 		( "cppcomment", "{SLASH}{SLASH}[^\\n]*" )
@@ -117,9 +126,13 @@ void init_lex( lexer& l ){
 		("kw_while")("kw_do")
 
 		("ident")
+		("less_equal")("equal_to")("not_equal")("greater_equal") // <= >= == !=
 		("add_assign")("sub_assign")("mul_assign")("div_assign") // += -= *= /=
+		("logic_or")("logic_and") // || &&
 		("plus")("minus")("asterisk")("slash") // + - * /
-		
+		("labracket")("rabracket") // < >
+		("vertical")("ampersand")
+		("question")
 		("comma")("colon")("semicolon")
 		("dot")("equal")
 		;

@@ -11,6 +11,20 @@ function(SASL_TEST_CREATE_VCPROJ_USERFILE TARGETNAME)
 	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcxproj.user
 	  @ONLY
 	)
+	endif()
+	if(MSVC_VERSION EQUAL 1500)
+      configure_file(
+	  ${SASL_HOME_DIR}/sasl/test/test_resources/vs2008.test.vcproj.user.in
+	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.${SYSTEM_NAME}.${USER_NAME}.user
+	  @ONLY
+	)
+	endif()
+	if(MSVC_VERSION EQUAL 1400)
+      configure_file(
+	  ${SASL_HOME_DIR}/sasl/test/test_resources/vs2005.test.vcproj.user.in
+	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.${SYSTEM_NAME}.${USER_NAME}.user
+	  @ONLY
+	)
     endif()
   endif()
 endfunction(SASL_TEST_CREATE_VCPROJ_USERFILE)
@@ -26,6 +40,7 @@ if( ( NOT SALVIA_ENABLE_SASL_REGRESSION_TEST ) OR SALVIA_ENABLE_SASL_SEPERATED_T
 	
 	if( SALVIA_BUILD_WITH_LLVM )
 		ADD_SUBDIRECTORY( cgllvm_test )
+		ADD_SUBDIRECTORY( jit_test )
 	endif( SALVIA_BUILD_WITH_LLVM )
 	
 endif( ( NOT SALVIA_ENABLE_SASL_REGRESSION_TEST ) OR SALVIA_ENABLE_SASL_SEPERATED_TESTS_ALWAYS )
