@@ -105,7 +105,7 @@ public:
 		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
-		float illum_specular = clamp( powf( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 6.0f ), 0.0f, 1.0f );
+		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
 		vec4 illum = ambient + diffuse * illum_diffuse + specular * illum_specular;
 
 		out.color[0] = tex_color.get_vec4() * illum;
