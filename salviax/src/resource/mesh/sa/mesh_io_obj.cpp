@@ -51,7 +51,7 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 
 	std::string mtl_fullpath = ( base_path / mtl_file ).string();
 
-	ifstream mtlf( mtl_fullpath );
+	ifstream mtlf( mtl_fullpath.c_str() );
 	if( !mtlf ) return false;
 
 	std::string cmd;

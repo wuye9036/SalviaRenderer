@@ -12,7 +12,6 @@
 
 using namespace eflib;
 
-using boost::make_iterator_range;
 using boost::make_tuple;
 using boost::get;
 using boost::tuple;

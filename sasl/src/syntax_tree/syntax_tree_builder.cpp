@@ -340,27 +340,48 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attri
 	return ret;
 }
 
+/* Build assignment expression tree.
+* Example:
+*    Expression: a = b = c
+* Generated tree:
+*        expr
+*        /  \
+*     expr0  a
+*     /  \
+*    c    b
+\*/
 shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
-	shared_ptr<expression> root;
-		
-	shared_ptr<expression> rexpr = build_rhsexpr( typed_attr->attrs[0] );
 
-	shared_ptr<binary_expression> binexpr;
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	// Make expression list and operators list.
+	vector< shared_ptr<expression> > exprs;
+	vector< operators > ops;
+
+	exprs.push_back( build_rhsexpr( attr->child(0) ) );
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, attr->child(1) );
 	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
-		SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
-
-		shared_ptr<expression> rexpr = binexpr->left_expr;
-		binexpr = create_node<binary_expression>( token_t::null() );
-		binexpr->left_expr = build_rhsexpr(typed_follow_pair->attrs[1]);;
-		binexpr->op = build_binop(typed_follow_pair->attrs[0]);
-		binexpr->right_expr = rexpr;
-
-		if( !root ){ root = binexpr; }
+		exprs.push_back( 
+			build_rhsexpr( follow_pair->child(1) )
+			);
+		ops.push_back( build_binop(follow_pair->child(0)) );
 	}
 
-	return root ? root : rexpr;
+	// Build tree
+	shared_ptr<expression> root;
+
+	BOOST_REVERSE_FOREACH( shared_ptr<expression> const& expr, exprs ){
+		if( !root ){
+			root = expr;
+		} else {
+			shared_ptr<binary_expression> new_root
+				= create_node<binary_expression>( token_t::null() );
+			new_root->left_expr = root;
+			new_root->right_expr = expr;
+			new_root->op = ops.back();
+			ops.pop_back();
+		}
+	}
+
+	return root;
 }
 
 shared_ptr<expression> syntax_tree_builder::build_lcomb_expr( shared_ptr<attribute> attr ){
