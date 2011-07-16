@@ -96,10 +96,10 @@ public:
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
+		vec4 diff_color = diffuse;
 
 		if( tex_ ){
-			tex_color = tex2d(*sampler_ , 0);
+			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
 
 		vec3 norm( normalize3( in.attributes[1].xyz() ) );
@@ -108,9 +108,8 @@ public:
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
 		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
-		vec4 illum = ambient + diffuse * illum_diffuse + specular * illum_specular;
 
-		out.color[0] = tex_color.get_vec4() ;// * illum;
+		out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
 		out.color[0][3] = 1.0f;
 
 		return true;
@@ -193,7 +192,7 @@ protected:
 		fps = 0;
 
 #ifdef _DEBUG
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza_arch.obj", false );
+		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza_bricks.obj", false );
 #else
 		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj", false );
 #endif
@@ -230,13 +229,18 @@ protected:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		vec3 camera( -10.0f, 18.0f, 0.0f);
+		static float xpos = -40.0f;
+		xpos += 1.0f;
+		if( xpos > 36.0f ){
+			xpos = -36.0f;
+		}
+		vec3 camera( xpos, 5.0f, 0.0f);
 		mat44 world(mat44::identity()), view, proj, wvp;
 
-		mat_lookat(view, camera, vec3(0.0f, 18.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera, vec3(40.0f, 7.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
-		vec4 lightPos( 0.0f, 0.15f, 0.0f, 1.0f );
+		vec4 lightPos( 0.0f, 6.0f, 0.0f, 1.0f );
 
 		hsr->set_pixel_shader(pps);
 		hsr->set_blend_shader(pbs);
@@ -262,7 +266,7 @@ protected:
 					= shared_polymorphic_cast<obj_material>( cur_mesh->get_attached() );
 
 #ifdef _DEBUG
-				if (mtl->name != "sponza_07SG"){ continue; }
+				// if (mtl->name != "sponza_07SG"){ continue; }
 #endif
 				pps->set_constant( _T("Ambient"),  &mtl->ambient );
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );

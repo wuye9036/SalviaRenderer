@@ -23,6 +23,7 @@ namespace addresser
 		{
 			return (size * 8192 + coord) % size;
 		}
+
 		static int4 do_coordi_point_2d(const vec4& coord, const int4& size)
 		{
 #ifndef EFLIB_NO_SIMD
@@ -512,7 +513,7 @@ namespace surface_sampler
 	};
 }
 
-float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
+float sampler::calc_lod(const vec4& unproj_attr, const int4& size, const vec4& ddx, const vec4& ddy, float inv_x_w, float inv_y_w, float inv_w, float bias) const
 {
 #ifndef EFLIB_NO_SIMD
 	static const union
@@ -522,7 +523,7 @@ float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx
 	} MASK = { 0x7FFFFFFF };
 	static const __m128 ABS_MASK = _mm_set1_ps(MASK.maskf);
 
-	__m128 mattr = _mm_loadu_ps(&attribute.x);
+	__m128 mattr = _mm_loadu_ps(&unproj_attr.x);
 	__m128 tmp = _mm_mul_ps(mattr, _mm_set1_ps(inv_w));
 	__m128 mddx2 = _mm_sub_ps(_mm_mul_ps(_mm_add_ps(mattr, _mm_loadu_ps(&ddx.x)), _mm_set1_ps(inv_x_w)), tmp);
 	__m128 mddy2 = _mm_sub_ps(_mm_mul_ps(_mm_add_ps(mattr, _mm_loadu_ps(&ddy.x)), _mm_set1_ps(inv_y_w)), tmp);
@@ -551,8 +552,8 @@ float sampler::calc_lod(const vec4& attribute, const int4& size, const vec4& ddx
 	_mm_store_ss(&lod, mlod);
 	return lod;
 #else
-	eflib::vec4 ddx2 = (attribute + ddx) * inv_x_w - attribute * inv_w;
-	eflib::vec4 ddy2 = (attribute + ddy) * inv_y_w - attribute * inv_w;
+	eflib::vec4 ddx2 = (unproj_attr + ddx) * inv_x_w - unproj_attr * inv_w;
+	eflib::vec4 ddy2 = (unproj_attr + ddy) * inv_y_w - unproj_attr * inv_w;
 
 	float rho, lambda;
 
@@ -637,23 +638,22 @@ color_rgba32f sampler::sample_impl(const texture *tex ,
 								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
 	return sample_2d_impl(tex,
-		vec4(coordx, coordy, 0.0f, 1.0f / inv_w), sample,
+		vec4(coordx, coordy, 0.0f, 0.0f), sample,
 		ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias
 		);
 }
 
 color_rgba32f sampler::sample_2d_impl(const texture *tex , 
-								 const vec4& coord, size_t sample,
+								 const vec4& proj_coord, size_t sample,
 								 const vec4& ddx, const vec4& ddy,
 								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
-{
-	float q = inv_w == 0 ? 1.0f : 1.0f / inv_w;
-	vec4 origin_coord(coord * q);
+{	float q = inv_w == 0 ? 1.0f : 1.0f / inv_w;
+	vec4 unproj_coord(proj_coord * q);
 	int4 size(static_cast<int>(tex->get_width(0)), static_cast<int>(tex->get_height(0)),
 		static_cast<int>(tex->get_depth(0)), 0);
 
-	float lod = calc_lod(origin_coord, size, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
-	return sample_impl(tex, coord.x, coord.y, sample, lod);
+	float lod = calc_lod(unproj_coord, size, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	return sample_impl(tex, proj_coord.x, proj_coord.y, sample, lod);
 }
 
 
@@ -672,11 +672,11 @@ color_rgba32f sampler::sample(
 
 
 color_rgba32f sampler::sample_2d(
-						const eflib::vec4& coord,
+						const eflib::vec4& proj_coord,
 						const eflib::vec4& ddx, const eflib::vec4& ddy,
 						float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_2d_impl(ptex_, coord, 0, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	return sample_2d_impl(ptex_, proj_coord, 0, ddx, ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 }
 
 

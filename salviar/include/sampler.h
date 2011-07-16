@@ -91,7 +91,7 @@ public:
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_2d(
-		const eflib::vec4& coord,
+		const eflib::vec4& proj_coord,
 		const eflib::vec4& ddx, const eflib::vec4& ddy,
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 

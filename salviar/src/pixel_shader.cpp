@@ -66,17 +66,17 @@ const eflib::vec4& pixel_shader::get_pos_ddy() const{
 	return ptriangleinfo_->ddy().position;
 }
 
-const eflib::vec4& pixel_shader::get_original_ddx(size_t iReg) const{
+const eflib::vec4& pixel_shader::unproj_ddx(size_t iReg) const{
 	return ptriangleinfo_->ddx().attributes[iReg];
 }
 
-const eflib::vec4& pixel_shader::get_original_ddy(size_t iReg) const{
+const eflib::vec4& pixel_shader::unproj_ddy(size_t iReg) const{
 	return ptriangleinfo_->ddy().attributes[iReg];
 }
 
 const eflib::vec4 pixel_shader::ddx(size_t iReg) const
 {
-	vec4 attr_org_ddx = get_original_ddx(iReg);
+	vec4 attr_org_ddx = unproj_ddx(iReg);
 
 	vec4 attr = ppxin_->attributes[iReg];
 	vec4 unproj_attr = attr * ppxin_->position.w;
@@ -91,7 +91,7 @@ const eflib::vec4 pixel_shader::ddx(size_t iReg) const
 
 const eflib::vec4 pixel_shader::ddy(size_t iReg) const
 {
-	vec4 attr_org_ddy = get_original_ddy(iReg);
+	vec4 attr_org_ddy = unproj_ddy(iReg);
 
 	vec4 attr = ppxin_->attributes[iReg];
 	vec4 unproj_attr = attr * ppxin_->position.w;
@@ -106,14 +106,19 @@ const eflib::vec4 pixel_shader::ddy(size_t iReg) const
 /*****************************************
  * Sample Texture
  ****************************************/
-color_rgba32f pixel_shader::tex2d(const sampler& s, const vec4& coord, const vec4& ddx, const vec4& ddy, float /*bias*/){
-	return s.sample_2d(coord, ddx, ddy,
-		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), 1.0f / ppxin_->position.w, 0.0f);
+color_rgba32f pixel_shader::tex2d(const sampler& s, const vec4& proj_coord, const vec4& ddx, const vec4& ddy, float bias){
+	return s.sample_2d(
+		proj_coord, ddx, ddy,
+		1.0f / (ppxin_->position.w + get_pos_ddx().w),
+		1.0f / (ppxin_->position.w + get_pos_ddy().w),
+		1.0f / ppxin_->position.w,
+		bias
+		);
 }
 
 color_rgba32f pixel_shader::tex2d(const sampler& s, size_t iReg)
 {
-	return tex2d(s, ppxin_->attributes[iReg], get_original_ddx(iReg), get_original_ddy(iReg));
+	return tex2d(s, ppxin_->attributes[iReg], unproj_ddx(iReg), unproj_ddy(iReg));
 }
 
 color_rgba32f pixel_shader::tex2dlod(const sampler& s, size_t iReg)
@@ -140,8 +145,8 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 	projected_attr /= 2.0f;
 	projected_attr.w = attr.w;
 
-	return s.sample_2d(projected_attr, get_original_ddx(iReg), get_original_ddy(iReg),
-		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
+	return s.sample_2d(projected_attr, unproj_ddx(iReg), unproj_ddy(iReg),
+		1.0f / (ppxin_->position.w + unproj_ddx(0).w), 1.0f / (ppxin_->position.w + unproj_ddy(0).w), invq, 0.0f);
 }
 
 color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec4& ddx, const vec4& ddy){
@@ -157,16 +162,16 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec
 	projected_v.w = v.w;
 
 	return s.sample_2d(projected_v, ddx, ddy,
-		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
+		1.0f / (ppxin_->position.w + unproj_ddx(0).w), 1.0f / (ppxin_->position.w + unproj_ddy(0).w), invq, 0.0f);
 }
 
 color_rgba32f pixel_shader::texcube(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float /*bias*/){
 	return s.sample_cube(coord, ddx, ddy,
-		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), 1.0f / ppxin_->position.w, 0.0f);
+		1.0f / (ppxin_->position.w + unproj_ddx(0).w), 1.0f / (ppxin_->position.w + unproj_ddy(0).w), 1.0f / ppxin_->position.w, 0.0f);
 }
 
 color_rgba32f pixel_shader::texcube(const sampler&s, size_t iReg){
-	return texcube(s, ppxin_->attributes[iReg], get_original_ddx(iReg), get_original_ddy(iReg));
+	return texcube(s, ppxin_->attributes[iReg], unproj_ddx(iReg), unproj_ddy(iReg));
 }
 
 color_rgba32f pixel_shader::texcubelod(const sampler& s, size_t iReg){
@@ -191,8 +196,8 @@ color_rgba32f pixel_shader::texcubeproj(const sampler& s, size_t iReg){
 	projected_attr.xyz() = (attr * proj_factor).xyz();
 	projected_attr.w = attr.w;
 
-	return s.sample_cube(projected_attr, get_original_ddx(iReg), get_original_ddy(iReg),
-		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
+	return s.sample_cube(projected_attr, unproj_ddx(iReg), unproj_ddy(iReg),
+		1.0f / (ppxin_->position.w + unproj_ddx(0).w), 1.0f / (ppxin_->position.w + unproj_ddy(0).w), invq, 0.0f);
 }
 
 color_rgba32f pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy){
@@ -203,7 +208,7 @@ color_rgba32f pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, c
 	projected_v.w = v.w;
 
 	return s.sample_cube(projected_v, ddx, ddy,
-		1.0f / (ppxin_->position.w + get_original_ddx(0).w), 1.0f / (ppxin_->position.w + get_original_ddy(0).w), invq, 0.0f);
+		1.0f / (ppxin_->position.w + unproj_ddx(0).w), 1.0f / (ppxin_->position.w + unproj_ddy(0).w), invq, 0.0f);
 }
 
 /******************************************
