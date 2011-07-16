@@ -190,7 +190,7 @@ protected:
 		accumulate_time = 0;
 		fps = 0;
 
-		cup_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/cup/cup.obj" );
+		cup_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/cup/cup.obj", true );
 
 		pps.reset( new cup_ps() );
 		pbs.reset( new bs() );

@@ -124,7 +124,8 @@ bool load_obj_mesh(
 	renderer* r,
 	string const& fname,
 	vector<obj_mesh_vertex>& verts, vector<uint32_t>& indices,
-	vector<uint32_t>& attrs, vector<obj_material>& mtls
+	vector<uint32_t>& attrs, vector<obj_material>& mtls,
+	bool flip_tex_v
 	)
 {
 	ifstream objf(fname.c_str());
@@ -158,7 +159,7 @@ bool load_obj_mesh(
 		} else if ( obj_cmd == "vt" ){
 			float u = 0.0f, v = 0.0f;
 			objf >> u >> v;
-			uvs.push_back( vec4(u, 1.0f - v, 0.0f, 0.0f) );
+			uvs.push_back( vec4(u, (flip_tex_v ? 1.0f - v : v), 0.0f, 0.0f) );
 		} else if ( obj_cmd == "vn" ){
 			float x = 0.0f, y = 0.0f, z = 0.0f;
 			objf >> x >> y >> z;
@@ -286,7 +287,7 @@ void construct_meshes(
 	}
 }
 
-vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name )
+vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name, bool flip_tex_v )
 {
 	vector<obj_mesh_vertex> verts;
 	vector<uint32_t> indices;
@@ -295,7 +296,7 @@ vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string cons
 
 	vector<h_mesh> meshes;
 
-	if( !load_obj_mesh( render, file_name, verts, indices, attrs, mtls ) ){
+	if( !load_obj_mesh( render, file_name, verts, indices, attrs, mtls, flip_tex_v ) ){
 		return meshes;
 	}
 
