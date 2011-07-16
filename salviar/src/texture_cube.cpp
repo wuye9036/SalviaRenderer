@@ -14,9 +14,9 @@ void texture_cube::reset(size_t width, size_t height, size_t num_samples, pixel_
 	new (this) texture_cube(width, height, num_samples, format);
 }
 
-void texture_cube::gen_mipmap(filter_type filter){
+void texture_cube::gen_mipmap(filter_type filter, bool auto_gen){
 	for(size_t i = 0; i < 6; ++i){
-		subtexs_[i].gen_mipmap(filter);
+		subtexs_[i].gen_mipmap(filter, auto_gen);
 	}
 }
 

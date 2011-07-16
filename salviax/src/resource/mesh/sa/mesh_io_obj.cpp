@@ -107,6 +107,9 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 				r, tex_fullpath,
 				salviar::pixel_format_color_rgba8
 				);
+			if( pmtl->tex ){
+				pmtl->tex->gen_mipmap(filter_linear, true);
+			}
 		} else {
 			// Unrecognized command
 		}

@@ -23,8 +23,13 @@ void texture_2d::reset(size_t width, size_t height, size_t num_samples, pixel_fo
 	new(this) texture_2d(width, height, num_samples, format);
 }
 
-void  texture_2d::gen_mipmap(filter_type filter)
+void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 {
+	if( auto_gen ){
+		max_lod_ = 0;
+		min_lod_ = calc_lod_limit( width_, height_ ) - 1;
+	}
+
 	size_t cur_sizex = surfs_[max_lod_].get_width();
 	size_t cur_sizey = surfs_[max_lod_].get_height();
 	size_t num_samples = surfs_[max_lod_].get_num_samples();
@@ -140,28 +145,28 @@ surface&  texture_2d::get_surface(size_t subresource)
 	return surfs_[subresource];
 }
 
-const surface&  texture_2d::get_surface(size_t subresource) const
+const surface& texture_2d::get_surface(size_t subresource) const
 {
 	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return surfs_[subresource];
 }
 
-size_t  texture_2d::get_width(size_t subresource) const
+size_t texture_2d::get_width(size_t subresource) const
 {
 	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return get_surface(subresource).get_width();
 }
 
-size_t  texture_2d::get_height(size_t subresource) const
+size_t texture_2d::get_height(size_t subresource) const
 {
 	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 
 	return get_surface(subresource).get_width();
 }
 
-size_t  texture_2d::get_depth(size_t subresource) const
+size_t texture_2d::get_depth(size_t subresource) const
 {
 	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
 	UNREF_PARAM(subresource);
@@ -176,7 +181,7 @@ size_t texture_2d::get_num_samples(size_t subresource) const
 	return get_surface(subresource).get_num_samples();
 }
 
-void  texture_2d::set_max_lod(size_t miplevel)
+void texture_2d::set_max_lod(size_t miplevel)
 {
 	EFLIB_ASSERT(max_lod_ <= min_lod_, "最低细节的Mip等级设置错误！");
 
@@ -184,7 +189,7 @@ void  texture_2d::set_max_lod(size_t miplevel)
 	max_lod_ = miplevel;
 }
 
-void  texture_2d::set_min_lod(size_t miplevel)
+void texture_2d::set_min_lod(size_t miplevel)
 {
 	size_t ml_limit = calc_lod_limit(surfs_[0].get_width());
 	EFLIB_ASSERT(max_lod_ <= miplevel && miplevel < ml_limit, "最低细节的Mip等级设置错误！");

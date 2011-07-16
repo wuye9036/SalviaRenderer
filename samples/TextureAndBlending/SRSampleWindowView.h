@@ -313,15 +313,13 @@ public:
 
 		{
 			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
-			tex->set_min_lod(8);
-			tex->gen_mipmap(filter_linear);
+			tex->gen_mipmap(filter_linear, true);
 			pps_box.reset(new ps_box(tex));
 		}
 
 		{
 			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
-			tex->set_min_lod(5);
-			tex->gen_mipmap(filter_linear);
+			tex->gen_mipmap(filter_linear, true);
 			pps_plane.reset(new ps_plane(tex));
 		}
 

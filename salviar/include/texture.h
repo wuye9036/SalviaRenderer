@@ -65,7 +65,7 @@ public:
 	virtual void set_max_lod(size_t miplevel) = 0;
 	virtual void set_min_lod(size_t miplevel) = 0;
 
-	virtual void gen_mipmap(filter_type filter) = 0;
+	virtual void gen_mipmap(filter_type filter, bool auto_gen) = 0;
 };
 
 class texture_2d : public texture
@@ -85,7 +85,7 @@ public:
 		return texture_type_2d;
 	};
 
-	virtual void gen_mipmap(filter_type filter);
+	virtual void gen_mipmap(filter_type filter, bool auto_gen);
 
 	virtual void map(void** pData, size_t subresource, map_mode mm);
 	virtual void unmap(size_t subresource);
@@ -118,7 +118,7 @@ public:
 	{
 		return texture_type_cube;
 	};
-	virtual void gen_mipmap(filter_type filter);
+	virtual void gen_mipmap(filter_type filter, bool auto_gen);
 
 	virtual void map(void** pData, size_t subresource, map_mode mm);
 	virtual void unmap(size_t subresource);
