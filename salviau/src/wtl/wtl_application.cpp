@@ -91,7 +91,7 @@ public:
 		module->AddMessageLoop(&msg_loop);
 		main_wnd->pmodule = module;
 
-		if(main_wnd->CreateEx( NULL, NULL, WS_POPUPWINDOW | WS_CAPTION  ) == NULL)	{
+		if(main_wnd->CreateEx( NULL, NULL, WS_BORDER | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU ) == NULL)	{
 			ATLTRACE(_T("Main window creation failed!\n"));
 			return 0;
 		}
