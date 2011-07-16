@@ -378,6 +378,7 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 			new_root->right_expr = expr;
 			new_root->op = ops.back();
 			ops.pop_back();
+			root = new_root;
 		}
 	}
 

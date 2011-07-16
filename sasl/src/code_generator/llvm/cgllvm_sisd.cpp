@@ -644,14 +644,17 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+/* Make binary assignment code.
+*    Note: Right argument is assignee, and left argument is value.
+*/
 SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 
 	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
 	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
 	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
-		if( typeconv->implicit_convertible( larg_tsi->entry_id(), rarg_tsi->entry_id() ) ){
-			typeconv->convert( larg_tsi->type_info(), v.right_expr );
+		if( typeconv->implicit_convertible( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
+			typeconv->convert( rarg_tsi->type_info(), v.left_expr );
 		} else {
 			assert( !"Expression could not converted to storage type." );
 		}
@@ -661,10 +664,10 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
 	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
 
-	store( load(rctxt), lctxt );
+	store( load(lctxt), rctxt );
 
 	cgllvm_sctxt* pctxt = node_ctxt(v, true);
-	pctxt->data( lctxt->data() );
+	pctxt->data( rctxt->data() );
 	pctxt->env( sc_ptr(data) );
 }
 

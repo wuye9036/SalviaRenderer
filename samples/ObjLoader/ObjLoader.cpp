@@ -227,10 +227,10 @@ protected:
 		static float s_angle = 0;
 		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
 
-		vec3 camera(cos(s_angle) * 1.1f, 1.1f, sin(s_angle) * 1.1f);
+		vec3 camera(cos(s_angle) * 10.1f, 10.1f, sin(s_angle) * 10.1f);
 		mat44 world(mat44::identity()), view, proj, wvp;
 
-		mat_lookat(view, camera, vec3(0.0f, 0.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
 		vec4 lightPos( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
