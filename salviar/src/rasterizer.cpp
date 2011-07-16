@@ -52,11 +52,17 @@ bool cull_mode_cw(float area)
 	return area >= 0;
 }
 
-void fill_wireframe_clipping(uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops)
+void fill_wireframe_clipping(
+	uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts,
+	vs_output* clipped_verts, uint32_t* clipped_indices,
+	uint32_t base_vertex,
+	const h_clipper& clipper, const viewport& vp, const vs_output** pv,
+	bool (*cull_fn)( float ),
+	const vs_output_op& vs_output_ops
+	)
 {
 	num_clipped_verts = 0;
-
-	const bool front_face = area > 0;
+	bool front_face = true;
 
 	clipper->clip(&clipped_verts[num_clipped_verts], num_out_clipped_verts, vp, *pv[0], *pv[1], vs_output_ops);
 	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
@@ -82,14 +88,27 @@ void fill_wireframe_clipping(uint32_t& num_clipped_verts, uint32_t& num_out_clip
 	num_out_clipped_verts = num_clipped_verts;
 }
 
-void fill_solid_clipping(uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops)
+void fill_solid_clipping(
+	uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts,
+	vs_output* clipped_verts, uint32_t* clipped_indices,
+	uint32_t base_vertex,
+	const h_clipper& clipper, const viewport& vp, const vs_output** pv,
+	bool (*cull_fn) ( float ),
+	const vs_output_op& vs_output_ops
+	)
 {
-	clipper->clip(clipped_verts, num_out_clipped_verts, vp, *pv[0], *pv[1], *pv[2], vs_output_ops);
-	EFLIB_ASSERT(num_out_clipped_verts <= 6, "");
+	bool front_face = true;
+
+	clipper->clip(
+		clipped_verts, num_out_clipped_verts,
+		front_face, cull_fn,
+		vp, *pv[0], *pv[1], *pv[2],
+		vs_output_ops
+		);
+
+	assert(num_out_clipped_verts <= 6);
 
 	num_clipped_verts = (0 == num_out_clipped_verts) ? 0 : (num_out_clipped_verts - 2) * 3;
-
-	const bool front_face = area > 0;
 
 	for (uint32_t i = 0; i < num_out_clipped_verts; ++ i){
 		clipped_verts[i].front_face = front_face;
@@ -169,9 +188,19 @@ bool rasterizer_state::cull(float area) const
 	return cm_func_(area);
 }
 
-void rasterizer_state::clipping(uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops) const
+void rasterizer_state::clipping(
+	uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts,
+	vs_output* clipped_verts, uint32_t* clipped_indices,
+	uint32_t base_vertex,
+	const h_clipper& clipper, const viewport& vp, const vs_output** pv, const vs_output_op& vs_output_ops) const
 {
-	clipping_func_(num_clipped_verts, num_out_clipped_verts, clipped_verts, clipped_indices, base_vertex, clipper, vp, pv, area, vs_output_ops);
+	clipping_func_(
+		num_clipped_verts, num_out_clipped_verts,
+		clipped_verts, clipped_indices,
+		base_vertex, clipper, vp, pv,
+		cm_func_,
+		vs_output_ops
+		);
 }
 
 void rasterizer_state::triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const
@@ -1222,27 +1251,22 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 		const int32_t end = min(prim_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i){
 			if (3 == prim_size){
+
 				const vs_output* pv[3];
-				vec2 pv_2d[3];
 				for (size_t j = 0; j < 3; ++ j){
 					const vs_output& v = dvc->fetch(i * 3 + j);
 					pv[j] = &v;
-					const float inv_abs_w = 1 / abs(v.position.w);
-					const float x = v.position.x * inv_abs_w;
-					const float y = v.position.y * inv_abs_w;
-					pv_2d[j] = vec2(x, y);
 				}
 
-				const float area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
-				if (!state_->cull(area)){
-					uint32_t num_out_clipped_verts;
-					state_->clipping(num_clipped_verts[i], num_out_clipped_verts, &clipped_verts[i * 6], &cliped_indices[i * 12], i * 6, clipper, vp, pv, area, *vs_output_ops);
-					for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-						vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
-					}
-				}
-				else{
-					num_clipped_verts[i] = 0;
+				uint32_t num_out_clipped_verts;
+				state_->clipping(
+					num_clipped_verts[i], num_out_clipped_verts,
+					&clipped_verts[i * 6], &cliped_indices[i * 12], 
+					i * 6, clipper, vp, pv, *vs_output_ops
+					);
+
+				for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
+					vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
 				}
 			}
 			else if (2 == prim_size){
@@ -1481,6 +1505,7 @@ void rasterizer::draw(size_t prim_count){
 		break;
 	case primitive_triangle_list:
 	case primitive_triangle_strip:
+		prim_size = 3;
 		state_->triangle_rast_func(prim_size, rasterize_func_);
 		break;
 	default:

@@ -50,7 +50,13 @@ class rasterizer_state {
 	rasterizer_desc desc_;
 
 	typedef bool (*cm_func_type)(float area);
-	typedef void (*clipping_func_type)(uint32_t& num_clipped_prims, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops);
+	typedef void (*clipping_func_type)(
+		uint32_t& num_clipped_prims, uint32_t& num_out_clipped_verts,
+		vs_output* clipped_verts, uint32_t* clipped_indices,
+		uint32_t base_vertex,
+		const h_clipper& clipper, const viewport& vp, const vs_output** pv, cm_func_type cm_fn,
+		const vs_output_op& vs_output_ops
+		);
 	typedef void (*triangle_rast_func_type)(uint32_t&, boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>&);
 
 	cm_func_type cm_func_;
@@ -62,8 +68,17 @@ public:
 	const rasterizer_desc& get_desc() const;
 
 	bool cull(float area) const;
-	void clipping(uint32_t& num_clipped_prims, uint32_t& num_out_clipped_verts, vs_output* clipped_verts, uint32_t* clipped_indices, uint32_t base_vertex, const h_clipper& clipper, const viewport& vp, const vs_output** pv, float area, const vs_output_op& vs_output_ops) const;
-	void triangle_rast_func(uint32_t& prim_size, boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func) const;
+	void clipping(
+		uint32_t& num_clipped_prims, uint32_t& num_out_clipped_verts,
+		vs_output* clipped_verts, uint32_t* clipped_indices,
+		uint32_t base_vertex,
+		const h_clipper& clipper, const viewport& vp, const vs_output** pv,
+		const vs_output_op& vs_output_ops
+		) const;
+
+	void triangle_rast_func(uint32_t& prim_size,
+		boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)>& rasterize_func
+		) const;
 };
 
 class rasterizer : public render_stage

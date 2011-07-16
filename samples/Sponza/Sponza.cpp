@@ -97,16 +97,17 @@ public:
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
-		//if( tex_ ){
-		//	tex_color = tex2d(*sampler_ , 0);
-		//}
-		//vec3 norm( normalize3( in.attributes[1].xyz() ) );
-		//vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
-		//vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
 
-		//float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
-		//float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
-		//vec4 illum = ambient + diffuse * illum_diffuse + specular * illum_specular;
+		if( tex_ ){
+			tex_color = tex2d(*sampler_ , 0);
+		}
+		vec3 norm( normalize3( in.attributes[1].xyz() ) );
+		vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
+		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
+
+		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
+		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
+		vec4 illum = ambient + diffuse * illum_diffuse + specular * illum_specular;
 
 		out.color[0] = tex_color.get_vec4() ;// * illum;
 		out.color[0][3] = 1.0f;
@@ -181,7 +182,7 @@ protected:
 		}
 
 		rasterizer_desc rs_desc;
-		rs_desc.cm = cull_back;
+		rs_desc.cm = cull_none;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
 		salvia_create_shader( sponza_vs, sponza_vs_code, lang_vertex_shader );
@@ -190,7 +191,7 @@ protected:
 		accumulate_time = 0;
 		fps = 0;
 
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza_ground.obj" );
+		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj" );
 
 		pps.reset( new cup_ps() );
 		pbs.reset( new bs() );

@@ -120,8 +120,8 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 bool load_obj_mesh(
 	renderer* r,
 	string const& fname,
-	vector<obj_mesh_vertex>& verts, vector<uint16_t>& indices,
-	vector<uint16_t>& attrs, vector<obj_material>& mtls
+	vector<obj_mesh_vertex>& verts, vector<uint32_t>& indices,
+	vector<uint32_t>& attrs, vector<obj_material>& mtls
 	)
 {
 	ifstream objf(fname.c_str());
@@ -140,9 +140,9 @@ bool load_obj_mesh(
 	// init_material
 	mtls.push_back(mtl);
 
-	uint16_t subset = 0;
+	uint32_t subset = 0;
 
-	unordered_map< uint16_t, uint16_t > position_index_to_vertex_index;
+	unordered_map< uint32_t, uint32_t > position_index_to_vertex_index;
 	for(;;){
 		objf >> obj_cmd;
 		if( !objf ){ break; }
@@ -162,7 +162,7 @@ bool load_obj_mesh(
 			normals.push_back( vec4(x, y, z, 0.0f) );
 		} else if ( obj_cmd == "f" ){
 
-			uint16_t pos_index = 0, texcoord_index = 0, normal_index = 0;
+			uint32_t pos_index = 0, texcoord_index = 0, normal_index = 0;
 			obj_mesh_vertex vert;
 
 			for( uint32_t face_index = 0; face_index < 3; ++face_index ){
@@ -186,9 +186,9 @@ bool load_obj_mesh(
 					}
 				}
 
-				uint16_t vert_index = 0;
+				uint32_t vert_index = 0;
 				if( position_index_to_vertex_index.count(pos_index) == 0){
-					vert_index = static_cast<uint16_t>( verts.size() );
+					vert_index = static_cast<uint32_t>( verts.size() );
 					position_index_to_vertex_index[pos_index] = vert_index;
 					verts.push_back( vert );
 				} else {
@@ -208,13 +208,13 @@ bool load_obj_mesh(
 				obj_material* pmtl = &mtls[mtl_index];
 				if( pmtl->name == name ){
 					found = true;
-					subset = static_cast<uint16_t>( mtl_index );
+					subset = static_cast<uint32_t>( mtl_index );
 					break;
 				}
 			}
 
 			if( !found ){
-				subset = static_cast<uint16_t>( mtls.size() );
+				subset = static_cast<uint32_t>( mtls.size() );
 				mtls.push_back( obj_material() );
 				mtls.back().name = name;
 			}
@@ -238,8 +238,8 @@ bool load_obj_mesh(
 void construct_meshes(
 	std::vector<h_mesh>& meshes,
 	salviar::renderer* render,
-	vector<obj_mesh_vertex> const& verts, vector<uint16_t> const& indices,
-	vector<uint16_t> const& attrs, vector<obj_material> const& mtls 
+	vector<obj_mesh_vertex> const& verts, vector<uint32_t> const& indices,
+	vector<uint32_t> const& attrs, vector<obj_material> const& mtls 
 	)
 {
 	h_buffer vert_buf = render->create_buffer( sizeof(obj_mesh_vertex) * verts.size() );
@@ -261,7 +261,7 @@ void construct_meshes(
 		pmesh->set_attached_data( mtl_data );
 
 
-		vector<uint16_t> mesh_indices;
+		vector<uint32_t> mesh_indices;
 
 		// Construct vertex indices
 		for( size_t i_indices = 0; i_indices < indices.size(); ++i_indices ){
@@ -272,10 +272,10 @@ void construct_meshes(
 
 		// Set mesh indices.
 		if ( !mesh_indices.empty() ){
-			h_buffer index_buffer = render->create_buffer( sizeof(uint16_t) * mesh_indices.size() );
-			index_buffer->transfer( 0, &mesh_indices[0], sizeof(uint16_t), mesh_indices.size() );
+			h_buffer index_buffer = render->create_buffer( sizeof(uint32_t) * mesh_indices.size() );
+			index_buffer->transfer( 0, &mesh_indices[0], sizeof(uint32_t), mesh_indices.size() );
 			pmesh->set_index_buffer(index_buffer);
-			pmesh->set_index_type(format_r16_uint);
+			pmesh->set_index_type(format_r32_uint);
 			pmesh->set_primitive_count( mesh_indices.size() / 3 );
 
 			meshes.push_back( h_mesh(pmesh) );
@@ -286,8 +286,8 @@ void construct_meshes(
 vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name )
 {
 	vector<obj_mesh_vertex> verts;
-	vector<uint16_t> indices;
-	vector<uint16_t> attrs;
+	vector<uint32_t> indices;
+	vector<uint32_t> attrs;
 	vector<obj_material> mtls;
 
 	vector<h_mesh> meshes;

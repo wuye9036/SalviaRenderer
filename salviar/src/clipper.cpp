@@ -13,9 +13,12 @@ using namespace eflib;
 using namespace std;
 
 clipper::clipper(){
-	planes_[0] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	planes_[1] = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	planes_[2] = vec4(0.0f, 0.0f, 1.0f, 0.0f);
+	// Near plane is 0.
+	planes_[0] = vec4(0.0f, 0.0f, 1.0f, 0.0f);
+
+	// Others
+	planes_[1] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	planes_[2] = vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	planes_[3] = vec4(-1.0f, 0.0f, 0.0f, 1.0f);
 	planes_[4] = vec4(0.0f, -1.0f, 0.0f, 1.0f);
 	planes_[5] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
@@ -34,11 +37,13 @@ void clipper::set_clip_plane_enable(bool enable, size_t idx)
 
 void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output_op& vs_output_ops) const
 {
+	EFLIB_ASSERT_UNIMPLEMENTED0( "Unimplemented. Clip need to support right cull information." );
+
 	eflib::pool::stack_pool< vs_output, 12 > pool;
 	const vs_output* clipped_verts[2][2];
 	uint32_t num_clipped_verts[2];
 
-	//¿ªÊ¼clip, Ping-Pong idioms
+	//Ping-Pong idioms
 	clipped_verts[0][0] = &v0;
 	clipped_verts[0][1] = &v1;
 	num_clipped_verts[0] = 2;
@@ -49,12 +54,10 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 
 	for(size_t i_plane = 0; i_plane < planes_.size(); ++i_plane)
 	{
-		if( ! planes_enable_[i_plane] ){
-			continue;
-		}
-
+		if( ! planes_enable_[i_plane] ){ continue; }
 		num_clipped_verts[dest_stage] = 0;
 
+		// Clip
 		if (num_clipped_verts[src_stage] != 0)
 		{
 			di = dot_prod4(planes_[i_plane], clipped_verts[src_stage][0]->position);
@@ -93,10 +96,8 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 		}
 
 		//swap src and dest pool
-		++src_stage;
-		++dest_stage;
-		src_stage &= 1;
-		dest_stage &= 1;
+		++src_stage;	src_stage &= 1;
+		++dest_stage;	dest_stage &= 1;
 	}
 
 	const vs_output** clipped_verts_ptrs = clipped_verts[src_stage];
@@ -107,7 +108,13 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 	}
 }
 
-void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output& v2, const vs_output_op& vs_output_ops) const
+void clipper::clip(
+	vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts,
+	bool& is_front, bool(*cull_fn)( float ),
+	const viewport& vp,
+	const vs_output& v0, const vs_output& v1, const vs_output& v2,
+	const vs_output_op& vs_output_ops
+	) const
 {
 	eflib::pool::stack_pool< vs_output, 12 > pool;
 	const vs_output* clipped_verts[2][6];
@@ -170,15 +177,39 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 			d[0] = d[1];
 		}
 
+		if ( i_plane == 0 ){
+			// Do some special after clipped by near plane
+			if ( num_clipped_verts[dest_stage] >= 3 ){
+				vec2 pv_2d[3];
+				for (size_t i = 0; i < 3; ++i){
+					
+					const vs_output& v = *clipped_verts[dest_stage][i];
+					const float inv_abs_w = 1 / abs(v.position.w);
+					const float x = v.position.x * inv_abs_w;
+					const float y = v.position.y * inv_abs_w;
+					pv_2d[i] = vec2(x, y);
+				}
+
+				float const area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
+				is_front = area > 0.0f;
+
+				// If triangle is culled, return 0.
+				if( cull_fn(area) ){
+					num_out_clipped_verts = 0;
+					return;
+				}
+			}
+		}
+
 		//swap src and dest pool
-		++src_stage;
-		++dest_stage;
-		src_stage &= 1;
-		dest_stage &= 1;
+		++src_stage;	src_stage &= 1;
+		++dest_stage;	dest_stage &= 1;
 	}
 
 	const vs_output** clipped_verts_ptrs = clipped_verts[src_stage];
 	num_out_clipped_verts = num_clipped_verts[src_stage];
+
+	assert( num_out_clipped_verts <= 6 );
 	for(size_t i = 0; i < num_out_clipped_verts; ++i){
 		vs_output_ops.copy(out_clipped_verts[i], *clipped_verts_ptrs[i]);
 		viewport_transform(out_clipped_verts[i].position, vp);
