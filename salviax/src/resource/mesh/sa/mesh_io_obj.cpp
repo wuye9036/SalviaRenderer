@@ -12,6 +12,8 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
@@ -19,6 +21,9 @@
 using boost::unordered_map;
 using boost::filesystem3::path;
 using boost::filesystem3::absolute;
+using boost::tuples::tuple;
+using boost::tuples::make_tuple;
+using boost::tuples::get;
 
 using std::ifstream;
 using std::string;
@@ -27,6 +32,17 @@ using std::vector;
 using eflib::vec4;
 
 using namespace salviar;
+
+typedef tuple< uint32_t, uint32_t, uint32_t > smooth_id_t;
+
+namespace boost{
+	size_t hash_value( smooth_id_t const& id ){
+		size_t ret = hash_value( get<0>(id) );
+		hash_combine( ret, get<1>(id) );
+		hash_combine( ret, get<2>(id) );
+		return ret;
+	}
+}
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
@@ -146,7 +162,9 @@ bool load_obj_mesh(
 
 	uint32_t subset = 0;
 
-	unordered_map< uint32_t, uint32_t > position_index_to_vertex_index;
+	
+	unordered_map< smooth_id_t, uint32_t > smooth_id_to_vertex_index;
+
 	for(;;){
 		objf >> obj_cmd;
 		if( !objf ){ break; }
@@ -191,12 +209,13 @@ bool load_obj_mesh(
 				}
 
 				uint32_t vert_index = 0;
-				if( position_index_to_vertex_index.count(pos_index) == 0){
+				smooth_id_t smooth_id = make_tuple( pos_index, texcoord_index, normal_index );
+				if( smooth_id_to_vertex_index.count(pos_index) == 0){
 					vert_index = static_cast<uint32_t>( verts.size() );
-					position_index_to_vertex_index[pos_index] = vert_index;
+					smooth_id_to_vertex_index[smooth_id] = vert_index;
 					verts.push_back( vert );
 				} else {
-					vert_index = position_index_to_vertex_index[pos_index];
+					vert_index = smooth_id_to_vertex_index[smooth_id];
 				}
 				indices.push_back( vert_index );
 			}
