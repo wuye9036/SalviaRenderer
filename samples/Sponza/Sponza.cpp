@@ -61,7 +61,38 @@ char const* sponza_vs_code =
 "} \r\n"
 ;
 
-class cup_ps : public pixel_shader
+class sponza_vs : public vertex_shader
+{
+	mat44 wvp;
+public:
+	sponza_vs():wvp(mat44::identity()){
+		declare_constant(_T("wvpMatrix"), wvp);
+
+		bind_semantic( "POSITION", 0, 0 );
+		bind_semantic( "TEXCOORD", 0, 1 );
+		bind_semantic( "NORMAL", 0, 2 );
+	}
+
+	sponza_vs(const mat44& wvp):wvp(wvp){}
+	void shader_prog(const vs_input& in, vs_output& out)
+	{
+		vec4 pos = in.attributes[0];
+		transform(out.position, pos, wvp);
+		out.attributes[0] = in.attributes[1];
+		
+		out.attributes[1] = in.attributes[2];
+	}
+
+	uint32_t num_output_attributes() const{
+		return 3;
+	}
+
+	uint32_t output_attribute_modifiers(uint32_t) const{
+		return salviar::vs_output::am_linear;
+	}
+};
+
+class sponza_ps : public pixel_shader
 {
 	salviar::h_sampler sampler_;
 	salviar::h_texture tex_;
@@ -77,7 +108,7 @@ public:
 		sampler_->set_texture(tex_.get());
 	}
 
-	cup_ps()
+	sponza_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
@@ -96,27 +127,28 @@ public:
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		vec4 diff_color = diffuse;
+		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
 		if( tex_ ){
-			diff_color = tex2d(*sampler_, 0).get_vec4();
+			// diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
 
 		vec3 norm( normalize3( in.attributes[1].xyz() ) );
 		vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
 		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
 
-		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
-		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
+		// float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
+		// float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
 
-		out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
+		// out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
+		out.color[0].xyz( norm * 0.5f + 0.5f ); //diff_color * illum_diffuse;
 		out.color[0][3] = 1.0f;
 
 		return true;
 	}
 	virtual h_pixel_shader create_clone()
 	{
-		return h_pixel_shader(new cup_ps(*this));
+		return h_pixel_shader(new sponza_ps(*this));
 	}
 	virtual void destroy_clone(h_pixel_shader& ps_clone)
 	{
@@ -143,6 +175,8 @@ public:
 protected:
 	/** Event handlers @{ */
 	virtual void on_create(){
+
+		cout << "Creating window and device ..." << endl;
 
 		string title( "Sample: Sponza" );
 		impl->main_window()->set_title( title );
@@ -185,19 +219,22 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
-		salvia_create_shader( sponza_vs, sponza_vs_code, lang_vertex_shader );
+		salvia_create_shader( sponza_sc, sponza_vs_code, lang_vertex_shader );
 
 		num_frames = 0;
 		accumulate_time = 0;
 		fps = 0;
 
+		cout << "Loading mesh ... " << endl;
 #ifdef _DEBUG
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza_bricks.obj", false );
+		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza_arch.obj", false );
 #else
 		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj", false );
 #endif
+		cout << "Initializing shader... " << endl;
 
-		pps.reset( new cup_ps() );
+		pvs.reset( new sponza_vs() );
+		pps.reset( new sponza_ps() );
 		pbs.reset( new bs() );
 	}
 	/** @} */
@@ -234,7 +271,7 @@ protected:
 		if( xpos > 36.0f ){
 			xpos = -36.0f;
 		}
-		vec3 camera( xpos, 5.0f, 0.0f);
+		vec3 camera( 10.0f, 5.0f, 0.0f);
 		mat44 world(mat44::identity()), view, proj, wvp;
 
 		mat_lookat(view, camera, vec3(40.0f, 7.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
@@ -252,7 +289,9 @@ protected:
 
 			hsr->set_rasterizer_state(rs_back);
 
-			hsr->set_vertex_shader_code( sponza_vs );
+			// hsr->set_vertex_shader_code( sponza_vs );
+			pvs->set_constant( _T("wvpMatrix"), &wvp );
+			hsr->set_vertex_shader(pvs);
 
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
 			vec4 camera_pos = vec4( camera, 1.0f );
@@ -272,7 +311,7 @@ protected:
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				pps->set_constant( _T("Specular"), &mtl->specular );
 				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				shared_polymorphic_cast<cup_ps>( pps )->set_texture( mtl->tex );
+				shared_polymorphic_cast<sponza_ps>( pps )->set_texture( mtl->tex );
 
 				cur_mesh->render();
 			}
@@ -292,7 +331,7 @@ protected:
 
 	vector<h_mesh> sponza_mesh;
 
-	shared_ptr<shader_code> sponza_vs;
+	shared_ptr<shader_code> sponza_sc;
 
 	h_vertex_shader	pvs;
 	h_pixel_shader	pps;
