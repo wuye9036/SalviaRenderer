@@ -136,17 +136,34 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 
 	float invq = (attr.w == 0.0f) ? 1.0f : 1.0f / attr.w;
 
-	//注意这里的透视纹理，不需要除以position.w回到纹理空间，但是由于在光栅化传递进入的时候
-	//执行了除法操作，因此需要再乘w回来。
-	//float proj_factor = ppxin_->wpos.w * invq;
-	eflib::vec4 projected_attr;
-	projected_attr.xyz() = (attr * invq).xyz();
-	projected_attr  += vec4(1.0f, 1.0f, 0.0f, 0.0f);
-	projected_attr /= 2.0f;
-	projected_attr.w = attr.w;
+	// If texture is projection,
+	// the 'q'('w') component of texture contains the correct perspective information. (not camera projection)
 
-	return s.sample_2d(projected_attr, unproj_ddx(iReg), unproj_ddy(iReg),
-		1.0f / (ppxin_->position.w + unproj_ddx(0).w), 1.0f / (ppxin_->position.w + unproj_ddy(0).w), invq, 0.0f);
+	// It means that, it is unprojected in projection space.
+	// So it will be converted to projected space.
+	eflib::vec4 ts_proj_attr;
+	ts_proj_attr *= invq;
+	ts_proj_attr += vec4(1.0f, 1.0f, 0.0f, 0.0f);
+	ts_proj_attr *= 0.5f;
+	ts_proj_attr.w = attr.w;
+
+	float next_x_inv_w = 1.0 / ( get_pos_ddx().w + ppxin_->position.w );
+	float next_y_inv_w = 1.0 / ( get_pos_ddy().w + ppxin_->position.w );
+
+	vec4 v_unproj_attr = attr * ppxin_->position.w;
+
+	vec4 next_x_attr = ( unproj_ddx(iReg) + v_unproj_attr ) * next_x_inv_w;
+	vec4 next_y_attr = ( unproj_ddy(iReg) + v_unproj_attr ) * next_y_inv_w;
+
+	return s.sample_2d(
+		ts_proj_attr,
+		( next_x_attr - attr ) * 0.5f,
+		( next_y_attr - attr ) * 0.5f,
+		1.0f / next_x_attr.w,
+		1.0f / next_y_attr.w,
+		invq,
+		0.0f
+		);
 }
 
 color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec4& ddx, const vec4& ddy){
