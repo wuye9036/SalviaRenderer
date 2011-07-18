@@ -64,9 +64,12 @@ char const* sponza_vs_code =
 class sponza_vs : public vertex_shader
 {
 	mat44 wvp;
+	vec4 light_pos, eye_pos;
 public:
 	sponza_vs():wvp(mat44::identity()){
 		declare_constant(_T("wvpMatrix"), wvp);
+		declare_constant(_T("lightPos"), light_pos);
+		declare_constant(_T("eyePos"), eye_pos );
 
 		bind_semantic( "POSITION", 0, 0 );
 		bind_semantic( "TEXCOORD", 0, 1 );
@@ -79,12 +82,13 @@ public:
 		vec4 pos = in.attributes[0];
 		transform(out.position, pos, wvp);
 		out.attributes[0] = in.attributes[1];
-		
 		out.attributes[1] = in.attributes[2];
+		out.attributes[2] = light_pos - pos;
+		out.attributes[3] = eye_pos - pos;
 	}
 
 	uint32_t num_output_attributes() const{
-		return 3;
+		return 4;
 	}
 
 	uint32_t output_attribute_modifiers(uint32_t) const{
@@ -130,18 +134,18 @@ public:
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
 		if( tex_ ){
-			// diff_color = tex2d(*sampler_, 0).get_vec4();
+			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
 
 		vec3 norm( normalize3( in.attributes[1].xyz() ) );
 		vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
 		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
 
-		// float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
-		// float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
+		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
+		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
 
-		// out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
-		out.color[0].xyz( norm * 0.5f + 0.5f ); //diff_color * illum_diffuse;
+		out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
+		out.color[0] = diff_color * illum_diffuse;
 		out.color[0][3] = 1.0f;
 
 		return true;
@@ -219,6 +223,7 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
+		cout << "Compiling vertex shader ... " << endl;
 		salvia_create_shader( sponza_sc, sponza_vs_code, lang_vertex_shader );
 
 		num_frames = 0;
@@ -226,12 +231,11 @@ protected:
 		fps = 0;
 
 		cout << "Loading mesh ... " << endl;
-#ifdef _DEBUG
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza_arch.obj", false );
-#else
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj", false );
+#if EFLIB_DEBUG
+		cout << "Application is built in debug mode. Mesh loading is *VERY SLOW*." << endl;
 #endif
-		cout << "Initializing shader... " << endl;
+		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj", false );
+		cout << "Loading pixel and blend shader... " << endl;
 
 		pvs.reset( new sponza_vs() );
 		pps.reset( new sponza_ps() );
@@ -266,18 +270,25 @@ protected:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		static float xpos = -40.0f;
+		static float xpos = -36.0f;
 		xpos += 1.0f;
 		if( xpos > 36.0f ){
 			xpos = -36.0f;
 		}
-		vec3 camera( 10.0f, 5.0f, 0.0f);
+		vec3 camera( xpos, 8.0f, 0.0f);
+		vec4 camera_pos = vec4( camera, 1.0f );
+
 		mat44 world(mat44::identity()), view, proj, wvp;
 
-		mat_lookat(view, camera, vec3(40.0f, 7.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera, vec3(40.0f, 15.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
-		vec4 lightPos( 0.0f, 6.0f, 0.0f, 1.0f );
+		static float ypos = 40.0f;
+		ypos -= elapsed_time;
+		if ( ypos < 3.0f ){
+			ypos = 40.0f;
+		}
+		vec4 lightPos( 0.0f, ypos, 0.0f, 1.0f );
 
 		hsr->set_pixel_shader(pps);
 		hsr->set_blend_shader(pbs);
@@ -289,12 +300,17 @@ protected:
 
 			hsr->set_rasterizer_state(rs_back);
 
-			// hsr->set_vertex_shader_code( sponza_vs );
+			// C++ vertex shader and SASL vertex shader are all available.
+#ifdef SASL_VERTEX_SHADER_ENABLED
+			hsr->set_vertex_shader_code( sponza_sc );
+#else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
+			pvs->set_constant( _T("eyePos"), &camera_pos );
+			pvs->set_constant( _T("lightPos"), &lightPos );
 			hsr->set_vertex_shader(pvs);
-
+#endif
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
-			vec4 camera_pos = vec4( camera, 1.0f );
+			
 			hsr->set_vs_variable( "eyePos", &camera_pos );
 			hsr->set_vs_variable( "lightPos", &lightPos );
 
