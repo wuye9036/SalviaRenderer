@@ -6,8 +6,6 @@
 #include <salviar/include/buffer.h>
 #include <salviar/include/stream_assembler.h>
 
-#include <sasl/include/semantic/abi_info.h>
-
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/math.h>
 #include <eflib/include/platform/boost_begin.h>
@@ -34,7 +32,7 @@ void vertex_shader_unit::bind_streams( stream_assembler const* sa ){
 
 void vertex_shader_unit::update( size_t ivert )
 {
-	abi_info const* abii = code->abii();
+	shader_abi const* abii = code->abii();
 	vector<storage_info*> infos = abii->storage_infos( sc_stream_in );
 
 	BOOST_FOREACH( storage_info* info, infos ){
@@ -60,7 +58,7 @@ void vertex_shader_unit::execute( vs_output& out )
 
 	// Copy output attributes to vs_output.
 	// TODO Semantic will be mapped.
-	abi_info const* abii = code->abii();
+	shader_abi const* abii = code->abii();
 	vector<storage_info*> infos = abii->storage_infos( sc_buffer_out );
 
 	size_t register_index = 0;
@@ -109,7 +107,7 @@ vertex_shader_unit::~vertex_shader_unit()
 
 uint32_t vertex_shader_unit::output_attributes_count() const{
 	// TODO Need to be optimized.
-	abi_info const* abii = code->abii();
+	shader_abi const* abii = code->abii();
 	vector<storage_info*> infos = abii->storage_infos( sc_buffer_out );
 
 	uint32_t register_index = 0;

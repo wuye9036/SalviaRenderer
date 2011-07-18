@@ -90,6 +90,7 @@ struct storage_info{
 // ! Application binary interface of shader.
 //
 class shader_abi{
+public:
 	virtual std::string entry_name() const = 0;
 
 	virtual std::vector<storage_info*> storage_infos( storage_classifications sclass ) const = 0;

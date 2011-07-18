@@ -147,8 +147,8 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 	ts_proj_attr *= 0.5f;
 	ts_proj_attr.w = attr.w;
 
-	float next_x_inv_w = 1.0 / ( get_pos_ddx().w + ppxin_->position.w );
-	float next_y_inv_w = 1.0 / ( get_pos_ddy().w + ppxin_->position.w );
+	float next_x_inv_w = 1.0f / ( get_pos_ddx().w + ppxin_->position.w );
+	float next_y_inv_w = 1.0f / ( get_pos_ddy().w + ppxin_->position.w );
 
 	vec4 v_unproj_attr = attr * ppxin_->position.w;
 

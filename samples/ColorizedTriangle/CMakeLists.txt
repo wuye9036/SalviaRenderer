@@ -55,14 +55,6 @@ TARGET_LINK_LIBRARIES(ColorizedTriangle
 	EFLIB
 	salviar
 	salviax
-	sasl_enums
-	sasl_host
-	sasl_parser
-	sasl_syntaxtree
-	sasl_semantic
-	sasl_common
-	sasl_cgllvm
-	${SASL_LLVM_LIBS}
 )
 
 SALVIA_CONFIG_OUTPUT_PATHS(ColorizedTriangle)

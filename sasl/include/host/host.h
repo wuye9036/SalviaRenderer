@@ -5,32 +5,28 @@
 
 BEGIN_NS_SASL_HOST();
 
-class shader_variable{
-	template <typename T> void get( T& ) const;
-	template <typename T> void set( T const& );
-	std::string const & name() const;
-};
-
-class host_shader{
-};
-
-class vertex_shader{
-};
-
-class pixel_shader{
-};
-
-class host{
+class shader_code_impl: public salviar::shader_code{
 public:
-	shader_variable variable( std::string const& name );
+	shader_code_impl();
 
-	// Entry
-	void set_entry( std::string const& entry_name );
+	virtual shader_abi const* abii() const;
+	virtual void abii( boost::shared_ptr<shader_abi> const& );
 
-	// Execution
-	void execute();
+	virtual void update();
+	virtual void* function_pointer() const;
+
+	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
+
+private:
+	boost::shared_ptr<sasl::semantic::abi_info> shader_abii;
+	boost::shared_ptr<sasl::code_generator::jit_engine> je;
+	void* pfn;
 };
 
 END_NS_SASL_HOST();
+
+extern "C"{
+	SASL_HOST_API void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& , std::string const& code, salviar::languages lang );
+};
 
 #endif

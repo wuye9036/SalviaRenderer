@@ -30,6 +30,7 @@ set (HEADER_FILES
 	include/platform/boost_end.h
 	include/platform/typedefs.h
 	include/platform/win32.h
+	include/platform/dl_loader.h
 	include/string/string.h
 	include/string/ustring.h
 )
@@ -44,6 +45,7 @@ set (SOURCE_FILES
 	src/string.cpp
 	src/logrout.cpp
 	src/cpuinfo.cpp
+	src/dl_loader.cpp
 )
 
 ADD_LIBRARY( EFLIB STATIC

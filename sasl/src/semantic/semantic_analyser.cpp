@@ -254,7 +254,29 @@ SASL_VISIT_DEF( binary_expression )
 }
 
 SASL_VISIT_DEF_UNIMPL( expression_list );
-SASL_VISIT_DEF_UNIMPL( cond_expression );
+
+SASL_VISIT_DEF( cond_expression ){
+	any child_ctxt_init = *data;
+	ctxt_ptr(child_ctxt_init)->generated_node.reset();
+
+	shared<cond_expression> dup_expr
+		= duplicate( v.handle() )->typed_handle<cond_expression>();
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.cond_expr, dup_expr->cond_expr );
+	visit_child( child_ctxt, child_ctxt_init, v.yes_expr, dup_expr->yes_expr );
+	visit_child( child_ctxt, child_ctxt_init, v.no_expr, dup_expr->no_expr );
+	
+	// TODO Test conversation between type of yes expression and no expression.
+	type_info_si* cond_tisi = dup_expr->cond_expr->typed_si<type_info_si>();
+	type_info_si* yes_tisi = dup_expr->yes_expr->typed_si<type_info_si>();
+	type_info_si* no_tisi = dup_expr->no_expr->typed_si<type_info_si>();
+ 
+	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	return ret_expr;
+}
+
 SASL_VISIT_DEF_UNIMPL( index_expression );
 
 SASL_VISIT_DEF( call_expression )
