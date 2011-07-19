@@ -315,6 +315,7 @@ SASL_VISIT_DEF( call_expression )
 		assert( func_sym );
 
 		storage_si* ssi = func_sym->node()->si_ptr<storage_si>();
+		ssi->is_invoked(true);
 		SASL_GET_OR_CREATE_SI_P( call_si, csi, dup_callexpr, msi->type_manager() );
 
 		csi->entry_id( ssi->entry_id() );
@@ -1264,8 +1265,13 @@ void semantic_analyser::function_register::r(
 	fn->retval_type = ret_type;
 	any child_ctxt;
 	owner.visit_child( child_ctxt, ctxt_init, fn );
+	
+	ctxt_ptr(child_ctxt)->generated_node->si_ptr<storage_si>()->is_intrinsic(is_intrinsic);
+
 	if( is_intrinsic ){
-		owner.module_semantic_info()->intrinsics().push_back( ctxt_ptr(child_ctxt)->generated_node->symbol() );
+		shared_ptr<symbol> generated_sym
+			= ctxt_ptr(child_ctxt)->generated_node->symbol();
+		owner.module_semantic_info()->intrinsics().push_back( generated_sym );
 	}
 	fn.reset();
 }

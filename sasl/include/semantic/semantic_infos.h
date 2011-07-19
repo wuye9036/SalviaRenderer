@@ -172,12 +172,24 @@ public:
 	int32_t swizzle() const;
 	void swizzle( int32_t v );
 
+	/** Properties used by intrinsic
+	@{ */
+	bool is_intrinsic() const;
+	void is_intrinsic( bool v );
+
+	bool is_invoked() const;
+	void is_invoked( bool v );
+	/** @} */
+
 	SASL_TYPE_INFO_PROXY();
 
 private:
 	int memidx;
 	int32_t swz;
 	salviar::semantic_value sem;
+
+	bool intrin;
+	bool invoked;
 };
 
 class call_si: public type_info_si{

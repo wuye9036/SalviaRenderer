@@ -976,8 +976,15 @@ template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_mv(
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
+
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
 		shared_ptr<function_type> intr_fn = intr->node()->typed_handle<function_type>();
+
+		// If intrinsic is not invoked, we don't generate code for it.
+		if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
+			continue;
+		}
+
 		any child_ctxt = cgllvm_sctxt();
 
 		visit_child( child_ctxt, intr_fn );

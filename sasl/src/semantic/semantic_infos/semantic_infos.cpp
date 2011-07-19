@@ -182,7 +182,10 @@ shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
 }
 
 storage_si::storage_si( shared_ptr<type_manager> const& typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr), sem(salviar::sv_none), memidx(-1), swz(0)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
+	, sem(salviar::sv_none)
+	, memidx(-1), swz(0)
+	, intrin(false), invoked(false)
 {
 }
 
@@ -208,6 +211,22 @@ int32_t storage_si::swizzle() const{
 
 void storage_si::swizzle( int32_t v ){
 	swz = v;
+}
+
+bool storage_si::is_intrinsic() const{
+	return intrin;
+}
+
+void storage_si::is_intrinsic( bool v ){
+	intrin = v;
+}
+
+bool storage_si::is_invoked() const{
+	return invoked;
+}
+
+void storage_si::is_invoked( bool v ){
+	invoked = v;
 }
 
 
