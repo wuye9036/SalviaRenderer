@@ -273,7 +273,37 @@ SASL_VISIT_DEF( cond_expression ){
 	type_info_si* yes_tisi = dup_expr->yes_expr->si_ptr<type_info_si>();
 	type_info_si* no_tisi = dup_expr->no_expr->si_ptr<type_info_si>();
  
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	assert( cond_tisi && yes_tisi && no_tisi );
+
+	if( cond_tisi && yes_tisi && no_tisi ) {
+		return;
+	}
+
+	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_types::_boolean );
+
+	if( !typeconv->implicit_convertible( cond_tisi->entry_id(), bool_tid ) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		// TODO error: cannot convert conditional expression to boolean.
+		return;
+	}
+
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->type_manager() );
+
+	type_entry::id_t yes_tid = yes_tisi->entry_id();
+	type_entry::id_t no_tid = no_tisi->entry_id();
+
+	if( yes_tid == no_tid ){
+		ssi->entry_id( yes_tid );
+	} else if( typeconv->implicit_convertible(yes_tid, no_tid) ){
+		ssi->entry_id( yes_tid );
+	} else if( typeconv->implicit_convertible(no_tid, yes_tid) ){
+		ssi->entry_id( no_tid );
+	} else {
+		// TODO error: can not match the type.
+		return;
+	}
+
+	data_cptr()->generated_node = dup_expr;
 }
 
 SASL_VISIT_DEF_UNIMPL( index_expression );
