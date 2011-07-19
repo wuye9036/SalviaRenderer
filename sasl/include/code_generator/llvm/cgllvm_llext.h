@@ -7,6 +7,11 @@
 #include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/preprocessor/seq.hpp>
+#include <boost/preprocessor/for.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 namespace llvm{
@@ -275,6 +280,49 @@ public:
 	}
 };
 
+
+class ll_block{
+public:
+	ll_block( llvm::BasicBlock* block ): block(block){}
+	ll_block(): block(NULL){}
+
+	operator bool() const{
+		return block != NULL;
+	}
+	llvm::BasicBlock* block;
+};
+
+#define LLEXT_CONTEXT_MEMBERS() \
+	((llvalue<BuilderT>,	cond_val	)) \
+	((ll_block,				cond_block	)) \
+	((ll_block,				then_block	)) \
+	((ll_block,				else_block	))
+
+#define LLEXT_CONTEXT_DECLARE_MEMBER( r, data, elem ) \
+	BOOST_PP_TUPLE_ELEM( 2, 0, elem) BOOST_PP_TUPLE_ELEM( 2, 1, elem ) ;
+
+#define LLEXT_CONTEXT_DECLARE_MEMBERS()	\
+	BOOST_PP_SEQ_FOR_EACH( LLEXT_CONTEXT_DECLARE_MEMBER, _, LLEXT_CONTEXT_MEMBERS() )
+	
+#define LLEXT_CONTEXT_PUSH_MEMBER( r, data, elem )	\
+	ctxts.back().BOOST_PP_TUPLE_ELEM(2, 1, elem) = BOOST_PP_TUPLE_ELEM(2, 1, elem);
+
+#define LLEXT_CONTEXT_PUSH() \
+	ctxts.push_back( llext_context<BuilderT>() );	\
+	BOOST_PP_SEQ_FOR_EACH( LLEXT_CONTEXT_DECLARE_MEMBER, _, LLEXT_CONTEXT_MEMBERS() );
+	
+#define LLEXT_CONTEXT_POP_MEMBER( r, data, elem )	\
+	BOOST_PP_TUPLE_ELEM(2, 1, elem) = ctxts.back().BOOST_PP_TUPLE_ELEM(2, 1, elem);
+
+#define LLEXT_CONTEXT_POP() \
+	BOOST_PP_SEQ_FOR_EACH( LLEXT_CONTEXT_DECLARE_MEMBER, _, LLEXT_CONTEXT_MEMBERS() ); \
+	ctxts.pop_back();
+
+template <typename BuilderT>
+struct llext_context{
+	LLEXT_CONTEXT_DECLARE_MEMBERS();
+};
+
 template <typename BuilderT>
 class llext{
 public:
@@ -298,6 +346,66 @@ public:
 	}
 
 	// Fake statements
+
+	/** If ... Then ... Else ... End If statement
+	@{ */
+public:
+	void if_( llvalue<BuilderT> const& cond ){
+		assert( cond.val->getType()->isIntegerTy(1) );
+
+		// Save cond, then, else.
+		push();
+
+		cond_block = ll_block( builder->GetInsertBlock() );
+		cond_val = cond;
+		else_block = then_block = ll_block();
+	}
+	void then_(){
+		assert( cond_block );
+		then_block = block( "then" );
+		insert_to( then_block );
+	}
+	void else_(){
+		assert( then_block );
+		then_block = current_block();
+		else_block = block( "else" );
+		insert_to( else_block );
+	}
+	void end_if(){
+		assert( cond_block && then_block );
+
+		ll_block cur_block = block( "endif" );
+
+		if( then_block ){
+			insert_to(then_block);
+			goto_(cur_block);
+		}
+
+		if( else_block ){
+			insert_to(else_block);
+			goto_(cur_block);
+		} else {
+			else_block = cur_block;
+		}
+
+		insert_to( cond_block );
+		goto_( cond_val, then_block, else_block );
+
+		insert_to( cur_block );
+
+		// Recovery cond, then, else.
+		pop();
+	}
+	/** @} */
+
+	/** Jump statement @{ */ 
+	void goto_( llvalue<BuilderT> const& cond_v, ll_block const& yes, ll_block const& no ){
+		builder->CreateBr( cond_v.val, yes.block, no.block );
+	}
+
+	void goto_( ll_block const& block ){
+		builder->CreateBr( block.block );
+	}
 	void return_( llvalue<BuilderT> const& v ){
 		builder->CreateRet(v.val);
 	}
@@ -305,11 +413,51 @@ public:
 	void return_(){
 		builder->CreateRetVoid();
 	}
+	/** @} */
 
 	llvm::LLVMContext& ctxt;
 	BuilderT* builder;
 
 private:
+
+	LLEXT_CONTEXT_DECLARE_MEMBERS();
+
+	/** Utility functions
+	@{*/
+
+	ll_block current_block(){
+		return ll_block( builder->GetInsertBlock() );
+	}
+
+	void insert_to( ll_block const& block ){
+		builder->SetInsertBlock( block.block );
+	}
+
+	void push_insert_point(){
+		insert_points.push_back(
+			make_pair( builder->GetInsertBlock(), builder->GetInsertPoint() )
+			);
+	}
+
+	void pop_insert_point(){
+		builder->SetInsertPoint( insert_points.back().first, insert_points.back().second );
+		insert_points.pop_back();
+	}
+
+	void push(){
+		LLEXT_CONTEXT_PUSH();
+	}
+
+	void pop(){
+		LLEXT_CONTEXT_POP();
+	}
+
+	/** @} */
+
+	// attributes
+	std::vector< llext_context<BuilderT> > ctxts;
+	std::vector< std::pair<llvm::BasicBlock*, llvm::BasicBlock::iterator> > insert_points;
+
 	llext( llext<BuilderT> const& );
 	llext& operator = ( const llext<BuilderT>& );
 };
