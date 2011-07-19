@@ -3,14 +3,16 @@
 
 #include <sasl/include/host/host_forward.h>
 
+#include <salviar/include/shader_code.h>
+
 BEGIN_NS_SASL_HOST();
 
 class shader_code_impl: public salviar::shader_code{
 public:
 	shader_code_impl();
 
-	virtual shader_abi const* abii() const;
-	virtual void abii( boost::shared_ptr<shader_abi> const& );
+	virtual salviar::shader_abi const* abii() const;
+	virtual void abii( boost::shared_ptr<salviar::shader_abi> const& );
 
 	virtual void update();
 	virtual void* function_pointer() const;
@@ -18,7 +20,7 @@ public:
 	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
 
 private:
-	boost::shared_ptr<sasl::semantic::abi_info> shader_abii;
+	boost::shared_ptr<sasl::semantic::abi_info> abi;
 	boost::shared_ptr<sasl::code_generator::jit_engine> je;
 	void* pfn;
 };

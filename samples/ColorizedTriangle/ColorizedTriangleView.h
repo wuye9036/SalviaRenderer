@@ -196,7 +196,7 @@ public:
 		rs_back.reset(new rasterizer_state(rs_desc));
 
 		shared_ptr<shader_code> compiled_code;
-		salvia_create_shader( compiled_code, vs_code, lang_vertex_shader );
+		compiled_code = shader_code::create( vs_code, lang_vertex_shader );
 
 		hsr->set_vertex_shader_code( compiled_code );
 

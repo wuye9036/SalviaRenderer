@@ -223,15 +223,17 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
+#ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
 		salvia_create_shader( sponza_sc, sponza_vs_code, lang_vertex_shader );
+#endif
 
 		num_frames = 0;
 		accumulate_time = 0;
 		fps = 0;
 
 		cout << "Loading mesh ... " << endl;
-#if EFLIB_DEBUG
+#ifdef EFLIB_DEBUG
 		cout << "Application is built in debug mode. Mesh loading is *VERY SLOW*." << endl;
 #endif
 		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj", false );

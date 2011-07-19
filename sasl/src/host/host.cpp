@@ -1,19 +1,49 @@
 #include <sasl/include/host/host.h>
 
+#include <sasl/include/common/lex_context.h>
+#include <sasl/include/syntax_tree/node.h>
+#include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/syntax_tree/parse_api.h>
+#include <sasl/include/semantic/abi_analyser.h>
+#include <sasl/include/semantic/abi_info.h>
+#include <sasl/include/semantic/semantic_api.h>
+#include <sasl/include/code_generator/jit_api.h>
+#include <sasl/include/code_generator/llvm/cgllvm_api.h>
+#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
+
+#include <fstream>
+
+using boost::shared_ptr;
+
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::string;
+
+using boost::shared_static_cast;
+using boost::shared_dynamic_cast;
+
+using namespace salviar;
+using namespace sasl::code_generator;
+using namespace sasl::common;
+using namespace sasl::syntax_tree;
+using namespace sasl::host;
+using namespace sasl::semantic;
+
 BEGIN_NS_SASL_HOST();
 
 shader_code_impl::shader_code_impl(): pfn(NULL){
 }
 
-void shader_code_impl::abii( shared_ptr<sasl::semantic::abi_info> const& v ){
-	shader_abii = v;
+void shader_code_impl::abii( shared_ptr<shader_abi> const& v ){
+	abi = shared_dynamic_cast<abi_info>( v );
 }
 
-sasl::semantic::abi_info const* shader_code_impl::abii() const{
-	return shader_abii.get();
+shader_abi const* shader_code_impl::abii() const{
+	return abi.get();
 }
 
-void shader_code_impl::jit( boost::shared_ptr<sasl::code_generator::jit_engine> const& v ){
+void shader_code_impl::jit( shared_ptr<jit_engine> const& v ){
 	je = v;
 }
 
@@ -22,24 +52,15 @@ void* shader_code_impl::function_pointer() const{
 }
 
 void shader_code_impl::update(){
-	assert( shader_abii && je );
-	if( !shader_abii || !je ){
+	assert( abi && je );
+	if( !abi || !je ){
 		pfn = NULL;
 		return;
 	}
-	pfn = je->get_function( shader_abii->entry_name() );
+	pfn = je->get_function( abi->entry_name() );
 }
 
 END_NS_SASL_HOST();
-
-using namespace salviar;
-using namespace sasl::code_generator;
-using namespace sasl::common;
-using namespace sasl::syntax_tree;
-using namespace sasl::host;
-
-using std::string;
-using boost::shared_static_cast;
 
 class shader_code_source: public lex_context, public code_source{
 public:
@@ -128,7 +149,7 @@ void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::
 
 	string errors;
 
-	shared_ptr<shader_code> ret( new shader_code() );
+	shared_ptr<shader_code_impl> ret( new shader_code_impl() );
 	ret->abii( aa.shared_abii(lang) );
 	ret->jit( cgllvm_jit_engine::create( llvmcode, errors ) );
 	ret->update();

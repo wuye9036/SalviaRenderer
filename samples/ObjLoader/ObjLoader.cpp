@@ -184,7 +184,7 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
-		salvia_create_shader( cup_vs, cup_vs_code, lang_vertex_shader );
+		cup_vs = shader_code::create( cup_vs_code, lang_vertex_shader );
 
 		num_frames = 0;
 		accumulate_time = 0;
