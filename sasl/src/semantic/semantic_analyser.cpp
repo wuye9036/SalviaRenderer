@@ -1185,38 +1185,43 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 	}
 
-	// Intrinsics
-	shared_ptr<builtin_type> fvec_ts[5];
-	for( int i = 1; i <= 4; ++i ){
-		fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
-	}
-
-	shared_ptr<builtin_type> fmat_ts[5][5];
-	for( int vec_size = 1; vec_size < 5; ++vec_size ){
-		for( int n_vec = 1; n_vec < 5; ++n_vec ){
-			fmat_ts[vec_size][n_vec] = storage_bttbl[
-				matrix_of( builtin_types::_float, vec_size, n_vec )
-			];
-		}
-	}
-
-	for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
-		for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
-
-			register_intrinsic(child_ctxt_init, "mul")
-				% fvec_ts[n_vec] % fmat_ts[vec_size][n_vec]
-			>> fvec_ts[vec_size];
-
-			register_intrinsic(child_ctxt_init, "mul")
-				% fmat_ts[vec_size][n_vec] % fvec_ts[vec_size]
-			>> fvec_ts[n_vec];
-
+	
+	{
+		/** @{ Intrinsics */
+		shared_ptr<builtin_type> fvec_ts[5];
+		for( int i = 1; i <= 4; ++i ){
+			fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
 		}
 
-		register_function(child_ctxt_init, "dot")
-			% fvec_ts[vec_size] % fvec_ts[vec_size]
-		>> BUILTIN_TYPE(_float);
+		shared_ptr<builtin_type> fmat_ts[5][5];
+		for( int vec_size = 1; vec_size < 5; ++vec_size ){
+			for( int n_vec = 1; n_vec < 5; ++n_vec ){
+				fmat_ts[vec_size][n_vec] = storage_bttbl[
+					matrix_of( builtin_types::_float, vec_size, n_vec )
+				];
+			}
+		}
+
+		for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
+			for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
+
+				register_intrinsic(child_ctxt_init, "mul")
+					% fvec_ts[n_vec] % fmat_ts[vec_size][n_vec]
+				>> fvec_ts[vec_size];
+
+				register_intrinsic(child_ctxt_init, "mul")
+					% fmat_ts[vec_size][n_vec] % fvec_ts[vec_size]
+				>> fvec_ts[n_vec];
+
+			}
+
+			register_intrinsic(child_ctxt_init, "dot")
+				% fvec_ts[vec_size] % fvec_ts[vec_size]
+			>> BUILTIN_TYPE(_float);
+		}
+		/**@}*/
 	}
+	
 }
 
 void semantic_analyser::register_builtin_types(){

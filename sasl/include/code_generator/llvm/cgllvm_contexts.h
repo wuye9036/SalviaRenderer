@@ -45,16 +45,13 @@ struct cgllvm_sctxt_env{
 	bool is_semantic_mode;
 
 	llvm::Type const* declarator_type;
+	bool is_mat, as_vec;
 
 	cgllvm_sctxt* parent_struct;
 
 	llvm::Function* parent_fn;	// If generating code in function, it will be used.
 	llvm::BasicBlock* block;
 	
-	// Code blocks
-	llvm::BasicBlock* continue_to;
-	llvm::BasicBlock* break_to;
-
 	boost::weak_ptr< sasl::semantic::symbol > sym;
 	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
 };
@@ -90,18 +87,14 @@ struct cgllvm_sctxt_data{
 	char const* hint_name;
 
 	// Functions
-	llvm::Function* self_fn;	// used by function type.
+	llvm::Function* self_fn;		///< used by function type.
 
-	// Types
-	llvm::Type const* ref_type;				// Pointer qualified val_type. Enabled when is_ref is true.
-	llvm::Type const* val_type;
-	bool is_signed;							// For integral only.
-
-	// For declaration only
-	int declarator_count;
-
-	// Instructions
-	llvm::ReturnInst* return_inst;
+	bool as_vector;					///< Treated data as vector. Available only if val_type is struct.
+	bool is_matrix;					///< Data is built-in matrix.
+	llvm::Type const* val_type;		///< Value Type.
+	bool is_signed;					///< For integral only.
+	int declarator_count;			///< For declaration only
+	llvm::ReturnInst* return_inst;	///< Instructions
 };
 
 class cgllvm_sctxt: public codegen_context{

@@ -247,7 +247,7 @@ SASL_VISIT_DEF( member_expression ){
 		sc_ptr(data)->data( mem_ctxt );
 	}
 
-	
+
 	sc_data_ptr(data)->agg.parent = agg_ctxt;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -331,16 +331,14 @@ SASL_VISIT_DEF( builtin_type ){
 
 	cgllvm_sctxt* pctxt = node_ctxt( tisi->type_info(), true );
 	if ( !pctxt->data().val_type ){
-		bool sign = false;
-		Type const* ptype = llvm_type(v.value_typecode, sign);
-		assert( ptype );
+		
+		llvm_type( v.value_typecode, pctxt );
+		
+		assert( pctxt->data().val_type );
 		std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
-		EFLIB_ASSERT_AND_IF( ptype, tips.c_str() ){
+		EFLIB_ASSERT_AND_IF( pctxt->data().val_type, tips.c_str() ){
 			return;
 		}
-
-		pctxt->data().val_type = ptype;
-		pctxt->data().is_signed = sign;
 	}
 	sc_ptr( data )->data( pctxt );
 
@@ -408,7 +406,7 @@ SASL_VISIT_DEF( struct_type ){
 
 	// Create
 	StructType* stype = StructType::get( llcontext(), members, true );
-	
+
 	llmodule()->addTypeName( name.c_str(), stype );
 	sc_data_ptr(data)->val_type = stype;
 
@@ -437,8 +435,14 @@ SASL_VISIT_DEF( variable_declaration ){
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.type_info );
+	
 	Type const* val_type = sc_data_ptr(&child_ctxt)->val_type;
+	bool as_vector = sc_data_ptr(&child_ctxt)->as_vector;
+	bool is_mat = sc_data_ptr(&child_ctxt)->is_matrix;
+
 	sc_env_ptr(&child_ctxt_init)->declarator_type = val_type;
+	sc_env_ptr(&child_ctxt_init)->is_mat = is_mat;
+	sc_env_ptr(&child_ctxt_init)->as_vec = as_vector;
 
 	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
 		visit_child( child_ctxt, child_ctxt_init, dclr );
@@ -500,11 +504,15 @@ SASL_VISIT_DEF( jump_statement ){
 	if ( v.code == jump_mode::_return ){
 		return_statement(v, data);
 	} else if ( v.code == jump_mode::_continue ){
-		assert( sc_env_ptr(data)->continue_to );
-		builder()->CreateBr( sc_env_ptr(data)->continue_to );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		//assert( sc_env_ptr(data)->continue_to );
+		//builder()->CreateBr( sc_env_ptr(data)->continue_to );
+
 	} else if ( v.code == jump_mode::_break ){
-		assert( sc_env_ptr(data)->break_to );
-		builder()->CreateBr( sc_env_ptr(data)->break_to );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+
+		//assert( sc_env_ptr(data)->break_to );
+		//builder()->CreateBr( sc_env_ptr(data)->break_to );
 	}
 
 	// Restart a new block for sealing the old block.
@@ -532,7 +540,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
-	mod_ptr()->module()->setDataLayout("s0:128:128-a0:128:128");
+	mod_ptr()->module()->setDataLayout("p:64:64:64");
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 	boost::function<Value* (cgllvm_sctxt*)> loader
@@ -618,6 +626,8 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	storage_si* si = dynamic_cast<storage_si*>( v.semantic_info().get() );
 	sc_data_ptr(data)->agg.index = si->mem_index();
 	sc_data_ptr(data)->val_type = lltype;
+	sc_data_ptr(data)->is_matrix = sc_env_ptr(data)->is_mat;
+	sc_data_ptr(data)->as_vector = sc_env_ptr(data)->as_vec;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -633,6 +643,9 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
 	any child_ctxt;
 
 	sc_data_ptr(data)->val_type = sc_env_ptr(data)->declarator_type;
+	sc_data_ptr(data)->as_vector = sc_env_ptr(data)->as_vec;
+	sc_data_ptr(data)->is_matrix = sc_env_ptr(data)->is_mat;
+
 	create_alloca( sc_ptr(data), v.name->str );
 
 	if ( v.init ){
@@ -746,7 +759,7 @@ llvm::Value* cgllvm_sisd::load( boost::any* data ){
 llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	assert(data);
 	Value* val = data->data().val;
-	
+
 	const char* name = data->data().hint_name;
 	name = ( name == NULL ? "" : name );
 
@@ -793,6 +806,9 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 		cast<LoadInst>(val)->setAlignment(4);
 	}
 
+	if( data->data().as_vector && val->getType()->isStructTy() ){
+		return llvector<llval>( val, ext.get() ).val;
+	}
 	return val;
 }
 
@@ -842,8 +858,11 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 		Value* addr = load_ptr( data );
 
 		if( addr ){
-			StoreInst* inst = builder()->CreateStore( v, addr );
-			inst->setAlignment(4);
+			if( data->data().as_vector && !data->data().is_matrix ){
+				v = llagg( v, ext.get() ).val;
+			}
+
+			builder()->CreateStore( v, addr );
 		} else {
 			assert( data->data().agg.parent == NULL );
 			assert( data->data().val == NULL );
@@ -860,9 +879,9 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 		//  Save new vector to parent.
 		char mask_indexes[4] = {-1, -1, -1, -1};
 		mask_to_indexes( mask_indexes, data->data().agg.swizzle );
-	
+
 		llvector<llval> vec( load(data->data().agg.parent), ext.get() );
-		
+
 		if( v->getType()->isIntegerTy() || v->getType()->isFloatingPointTy() ){
 			// Scalar, insert directly
 			if( !vec.val ){
@@ -894,7 +913,7 @@ void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 		ctxt->data().local->setAlignment(16);
 	} else {
 		ctxt->data().global
-			 = cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );
+			= cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );
 	}
 }
 
@@ -933,7 +952,7 @@ template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_vm(
 	Type const* ret_type
 	)
 {
-	llvector< ElementT > lval( v, ext.get() );
+	llvector< ElementT > lval = llvector<ElementT>::create( ext.get(), v );
 	llarray< llvector< ElementT > > rval( m, ext.get() );
 
 	llvector<ElementT> ret_val = ext->null_value< llvector<ElementT> >(ret_type);
@@ -973,6 +992,25 @@ template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_mv(
 	return ret_val;
 }
 
+template <typename ElementT> ElementT cgllvm_sisd::dot_prod(
+	llvm::Value* lhs, llvm::Value* rhs,
+	size_t vec_size,
+	llvm::Type const* ret_type
+	)
+{
+	typedef llvector<ElementT> vector_t;
+
+	vector_t lval( lhs, ext.get() );
+	vector_t rval( rhs, ext.get() );
+
+	ElementT ret_val = ext->null_value<ElementT>(ret_type);
+	for( size_t i = 0; i < vec_size; ++i ){
+		ret_val = ret_val + lval[i] * rval[i];
+	}
+	
+	return ret_val;
+}
+
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
@@ -999,7 +1037,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		BasicBlock* body = BasicBlock::Create( llcontext(), ".body", fn );
 		builder()->SetInsertPoint( body );
 
-		if( intr->unmangled_name() == "mul" ){
+		if( intr->unmangled_name() == "mul" )
+		{
 			// Set Argument name
 			Argument* larg = fn->getArgumentList().begin();
 			Argument* rarg = ++fn->getArgumentList().begin();
@@ -1047,7 +1086,51 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				// EFLIB_ASSERT_UNIMPLEMENTED();
 			}
 		}
-		// EFLIB_ASSERT_UNIMPLEMENTED();
+		else if( intr->unmangled_name() == "dot" )
+		{
+			// Set Argument name
+			Argument* larg = fn->getArgumentList().begin();
+			Argument* rarg = ++fn->getArgumentList().begin();
+
+			larg->setName( ".lhs" );
+			rarg->setName( ".rhs" );
+
+			// Get Type infos
+			shared_ptr<type_specifier> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<type_specifier> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
+			assert( lpar_type && rpar_type );
+			builtin_types lbtc = lpar_type->value_typecode;
+			builtin_types rbtc = rpar_type->value_typecode;
+
+			Type const* ret_type = fn->getReturnType();
+
+			assert( is_vector(lbtc) && is_vector(rbtc) );
+			assert( scalar_of(lbtc) == scalar_of(rbtc) );
+			assert( vector_size(lbtc) == vector_size(rbtc) );
+
+			size_t vec_size = vector_size(lbtc);
+
+			if( scalar_of(lbtc) == builtin_types::_float )
+			{
+				ext->return_(
+					dot_prod<llfloat>( larg, rarg, vec_size, ret_type )
+					);
+			} 
+			else if ( scalar_of(lbtc) == builtin_types::_sint32 )
+			{
+				ext->return_(
+					dot_prod<lli32>( larg, rarg, vec_size, ret_type )
+					);
+			}
+			else 
+			{
+				// EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+		}
+		else
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 }
 

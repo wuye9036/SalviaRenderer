@@ -22,6 +22,7 @@ namespace llvm{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 template <typename BuilderT> class llext;
+template <typename BuilderT> class llaggregated;
 
 template<typename BuilderT>
 class llvalue{
@@ -100,8 +101,14 @@ public:
 	typedef llvector<ElementT> this_type;
 
 	llvector( llvm::Value* val, llext<builder_t>* ext )
-		:llvalue(val, ext)
-	{}
+		:llvalue(NULL, ext)
+	{
+		if( !val || val->getType()->isVectorTy() ) {
+			this->val = val;
+		} else {
+			this->val = create( ext, val ).val;
+		}
+	}
 
 	llvector( std::vector<ElementT> const& v )
 	{
@@ -116,6 +123,15 @@ public:
 		}
 	}
 
+	llvector( llaggregated<builder_t> const& v ){
+		llvector< llvalue<builder_t> > ret( v[0], v.size() );
+		val = ret.val;
+		ext = v.ext;
+		for( size_t idx = 0; idx < v.size(); ++idx ){
+			set( idx, ElementT( v[idx].val, ext ) );
+		}
+	}
+
 	template <typename ValueT>
 	static llvector<ElementT> from_values( llext<builder_t>* ext, std::vector<ValueT> const& v ){
 		std::vector<ElementT> elems;
@@ -124,6 +140,18 @@ public:
 			elems.push_back( ElementT( ext, v[i] ) );
 		}
 		return llvector<ElementT>( elems );
+	}
+
+	template <typename ValueT>
+	static llvector<ElementT> create( llext<builder_t>* ext, ValueT* v ){
+		if( v->getType()->isVectorTy() ){
+			return llvector<ElementT>(v, ext);
+		} else if( v->getType()->isStructTy() ){
+			return llvector<ElementT>( llaggregated<builder_t>(v, ext) );
+		} else {
+			assert(false);
+			return llvector<ElementT>(NULL, ext);
+		}
 	}
 
 	llvector( ElementT const& v, size_t nvec ){
@@ -142,7 +170,11 @@ public:
 		}
 	};
 
-	llvector<ElementT> swizzle( std::vector<int> const& indices ){
+	size_t size() const{
+		return val ? cast<llvm::VectorType>(val->getType())->getNumElements() : 0;
+	}
+
+	llvector<ElementT> swizzle( std::vector<int> const& indices ) const{
 		typedef llvector< llv_int<builder_t, 32, true> > i32vec;
 
 		i32vec masks = i32vec::from_values( ext, indices );
@@ -155,7 +187,7 @@ public:
 	}
 	
 	template <typename IndexT>
-	llvector<ElementT> swizzle( IndexT* indices, int max_index = 0 ){
+	llvector<ElementT> swizzle( IndexT* indices, int max_index = 0 ) const{
 		std::vector<int> index_values;
 		int step = 0;
 		while( indices[step] != -1 && ( max_index == 0 || step < max_index ) ){
@@ -169,7 +201,7 @@ public:
 		return *this;
 	}
 
-	ElementT operator []( size_t idx ){
+	ElementT operator []( size_t idx ) const{
 		return ElementT( ext->builder->CreateExtractElement( val, llv_int<builder_t, 32, true>(ext, idx).val ), ext );
 	}
 };
@@ -242,20 +274,62 @@ public:
 	typedef BuilderT builder_t;
 	
 	llaggregated( llvm::Value* val, llext<builder_t>* ext )
-		:llvalue(val, ext)
-	{}
-
-	template <typename ElementT>
-	llaggregated<BuilderT> set( size_t idx, ElementT const& v ){
-		val = ext->builder->CreateInsertValue( val, v.v(), static_cast<unsigned>(idx) );
+		: llvalue( val, ext )
+	{
+		if( !val || val->getType()->isStructTy() ){
+			this->val = val;
+		} else {
+			this->val = create( ext, val ).val;
+		}
 	}
 
 	template <typename ElementT>
-	ElementT get( size_t idx ){
+	llaggregated( llvector<ElementT> const& v ){
+		ext = v.ext;
+		size_t size = v.size();
+
+		llvm::StructType const* struct_ty
+			= StructType::get( ext->ctxt, vector<Type const*>( size, v[0].val->getType() ), true );
+		val = ext->null_value< llvalue<BuilderT> >(struct_ty).val;
+		
+		for( size_t idx = 0; idx < size; ++idx ){
+			set(idx, v[idx]);
+		}
+
+		
+	}
+
+	static llaggregated<BuilderT> create(
+		llext<builder_t>* ext, llvm::Value* val
+		)
+	{
+		if( val->getType()->isVectorTy() ){
+			return llaggregated<BuilderT>( llvector< llvalue<builder_t> >(val, ext) );
+		} else if( val->getType()->isStructTy() ) {
+			return llaggregated<BuilderT>( val, ext );
+		} else {
+			assert( false );
+			return llaggregated<BuilderT>( NULL, ext );
+		}
+	}
+
+	size_t size() const{
+		if ( !val ) return 0;
+		return cast<StructType>(val->getType())->getNumElements();
+	}
+
+	template <typename ElementT>
+	llaggregated<BuilderT>& set( size_t idx, ElementT const& v ){
+		val = ext->builder->CreateInsertValue( val, v.v(), static_cast<unsigned>(idx) );
+		return *this;
+	}
+
+	template <typename ElementT>
+	ElementT get( size_t idx ) const{
 		return ElementT( ext->builder->CreateExtractValue( val, static_cast<unsigned>(idx) ), ext );
 	}
 
-	llvalue<BuilderT> operator []( size_t idx ){
+	llvalue<BuilderT> operator [] ( size_t idx ) const{
 		return get< llvalue<BuilderT> >(idx);
 	}
 };

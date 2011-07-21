@@ -7,6 +7,11 @@
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
+
+#include <eflib/include/math/vector.h>
+
+#include <fstream>
+
 using sasl::compiler::compiler;
 
 using sasl::semantic::symbol;
@@ -18,6 +23,7 @@ using sasl::code_generator::llvm_module;
 using boost::shared_ptr;
 using boost::shared_polymorphic_cast;
 
+using std::fstream;
 using std::string;
 
 BOOST_AUTO_TEST_SUITE( jit )
@@ -42,6 +48,10 @@ struct jit_fixture {
 		BOOST_REQUIRE( c.module_codegen() );
 
 		root_sym = c.module_sem()->root();
+
+		fstream dump_file( "jit_test.ll", std::ios::out );
+		dump( shared_polymorphic_cast<llvm_module>(c.module_codegen()), dump_file );
+		dump_file.close();
 
 		std::string jit_err;
 
@@ -84,13 +94,38 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 	BOOST_CHECK( p(5) == 5 );
 }
 
-BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){
-	init( "./repo/question/v1a1/bool.ss" );
+using eflib::vec3;
+using eflib::int2;
 
-	int(*p)() = static_cast<int(*)()>( je->get_function("Mmain@@") );
-	BOOST_REQUIRE(p);
+BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
+	init("./repo/question/v1a1/intrinsics.ss");
 
-	BOOST_CHECK( p() == 0 );
+	float (*test_dot_f3)(vec3, vec3) = NULL;
+	function( test_dot_f3, "test_dot_f3" );
+	BOOST_REQUIRE(test_dot_f3);
+	
+	vec3 lhs( 1.9f, 2.7f, -8.1f );
+	vec3 rhs( -4.8f, 1.1f, 17.5f );
+
+	float f = test_dot_f3(lhs, rhs);
+	BOOST_CHECK_CLOSE( dot_prod3( lhs.xyz(), rhs.xyz() ), f, 0.0001 );
+
+	//int (*test_dot_i2)(int2, int2) = NULL;
+	//int2 lhsi( 17, -8 );
+	//int2 rhsi( 9, 36 );
+	//function( test_dot_i2, "test_dot_i2" );
+	//BOOST_REQUIRE(test_dot_i2);
+
+	//BOOST_CHECK_EQUAL( lhsi.x*rhsi.x+lhsi.y*rhsi.y, test_dot_i2(lhsi, rhsi) );
 }
+
+//BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){
+//	init( "./repo/question/v1a1/bool.ss" );
+//
+//	int(*p)() = static_cast<int(*)()>( je->get_function("Mmain@@") );
+//	BOOST_REQUIRE(p);
+//
+//	BOOST_CHECK( p() == 0 );
+//}
 
 BOOST_AUTO_TEST_SUITE_END();

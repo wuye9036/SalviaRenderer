@@ -50,8 +50,8 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	vector<storage_info*> sis = abii->storage_infos( st );
 	BOOST_FOREACH( storage_info* si, sis ){
-		bool sign(false);
-		Type const* storage_llvm_type = llvm_type( to_builtin_types(si->value_type), sign );
+		bool as_vector(false), is_mat(false);
+		Type const* storage_llvm_type = llvm_type( to_builtin_types(si->value_type), as_vector, is_mat );
 		assert(storage_llvm_type);
 		if( sc_stream_in == st || sc_stream_out == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
@@ -100,7 +100,6 @@ void cgllvm_vs::add_entry_param_type( boost::any* data, storage_classifications 
 	ctxt->copy( sc_ptr(data) );
 
 	ctxt->data().val_type = par_type;
-	ctxt->data().ref_type = parref_type;
 	ctxt->data().is_ref = true;
 
 	param_ctxts[st].reset(ctxt);
@@ -412,8 +411,12 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 		psi = abii->input_storage( pssi->get_semantic() );
 	}
 
-	sc_ptr(data)->data().val_type = llvm_type( to_builtin_types(psi->value_type), sc_ptr(data)->data().is_signed );
+	builtin_types val_bt = to_builtin_types(psi->value_type);
+
+	llvm_type( val_bt, sc_ptr(data) );
+	sc_ptr(data)->data().is_signed = is_signed( val_bt );
 	sc_ptr(data)->data().agg.index = psi->index;
+
 	if( psi->storage == sc_stream_in || psi->storage == sc_stream_out ){
 		sc_ptr(data)->data().is_ref = true;
 	} else {
