@@ -45,6 +45,7 @@ struct cgllvm_sctxt_env{
 	bool is_semantic_mode;
 
 	llvm::Type const* declarator_type;
+	bool is_mat, as_vec;
 
 	cgllvm_sctxt* parent_struct;
 
@@ -89,6 +90,7 @@ struct cgllvm_sctxt_data{
 	llvm::Function* self_fn;		///< used by function type.
 
 	bool as_vector;					///< Treated data as vector. Available only if val_type is struct.
+	bool is_matrix;					///< Data is built-in matrix.
 	llvm::Type const* val_type;		///< Value Type.
 	bool is_signed;					///< For integral only.
 	int declarator_count;			///< For declaration only

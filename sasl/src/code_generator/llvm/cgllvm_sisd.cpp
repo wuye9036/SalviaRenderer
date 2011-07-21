@@ -331,16 +331,14 @@ SASL_VISIT_DEF( builtin_type ){
 
 	cgllvm_sctxt* pctxt = node_ctxt( tisi->type_info(), true );
 	if ( !pctxt->data().val_type ){
-		bool sign = false;
-		Type const* ptype = llvm_type(v.value_typecode, sign);
-		assert( ptype );
+		
+		llvm_type( v.value_typecode, pctxt );
+		
+		assert( pctxt->data().val_type );
 		std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
-		EFLIB_ASSERT_AND_IF( ptype, tips.c_str() ){
+		EFLIB_ASSERT_AND_IF( pctxt->data().val_type, tips.c_str() ){
 			return;
 		}
-
-		pctxt->data().val_type = ptype;
-		pctxt->data().is_signed = sign;
 	}
 	sc_ptr( data )->data( pctxt );
 
@@ -437,8 +435,14 @@ SASL_VISIT_DEF( variable_declaration ){
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.type_info );
+	
 	Type const* val_type = sc_data_ptr(&child_ctxt)->val_type;
+	bool as_vector = sc_data_ptr(&child_ctxt)->as_vector;
+	bool is_mat = sc_data_ptr(&child_ctxt)->is_matrix;
+
 	sc_env_ptr(&child_ctxt_init)->declarator_type = val_type;
+	sc_env_ptr(&child_ctxt_init)->is_mat = is_mat;
+	sc_env_ptr(&child_ctxt_init)->as_vec = as_vector;
 
 	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
 		visit_child( child_ctxt, child_ctxt_init, dclr );
@@ -622,6 +626,8 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	storage_si* si = dynamic_cast<storage_si*>( v.semantic_info().get() );
 	sc_data_ptr(data)->agg.index = si->mem_index();
 	sc_data_ptr(data)->val_type = lltype;
+	sc_data_ptr(data)->is_matrix = sc_env_ptr(data)->is_mat;
+	sc_data_ptr(data)->as_vector = sc_env_ptr(data)->as_vec;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -637,6 +643,9 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
 	any child_ctxt;
 
 	sc_data_ptr(data)->val_type = sc_env_ptr(data)->declarator_type;
+	sc_data_ptr(data)->as_vector = sc_env_ptr(data)->as_vec;
+	sc_data_ptr(data)->is_matrix = sc_env_ptr(data)->is_mat;
+
 	create_alloca( sc_ptr(data), v.name->str );
 
 	if ( v.init ){
@@ -797,6 +806,9 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 		cast<LoadInst>(val)->setAlignment(4);
 	}
 
+	if( data->data().as_vector && val->getType()->isStructTy() ){
+		return llvector<llval>( val, ext.get() ).val;
+	}
 	return val;
 }
 
@@ -846,8 +858,11 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 		Value* addr = load_ptr( data );
 
 		if( addr ){
-			StoreInst* inst = builder()->CreateStore( v, addr );
-			inst->setAlignment(4);
+			if( data->data().as_vector && !data->data().is_matrix ){
+				v = llagg( v, ext.get() ).val;
+			}
+
+			builder()->CreateStore( v, addr );
 		} else {
 			assert( data->data().agg.parent == NULL );
 			assert( data->data().val == NULL );
@@ -937,7 +952,7 @@ template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_vm(
 	Type const* ret_type
 	)
 {
-	llvector< ElementT > lval( v, ext.get() );
+	llvector< ElementT > lval = llvector<ElementT>::create( ext.get(), v );
 	llarray< llvector< ElementT > > rval( m, ext.get() );
 
 	llvector<ElementT> ret_val = ext->null_value< llvector<ElementT> >(ret_type);
