@@ -500,11 +500,15 @@ SASL_VISIT_DEF( jump_statement ){
 	if ( v.code == jump_mode::_return ){
 		return_statement(v, data);
 	} else if ( v.code == jump_mode::_continue ){
-		assert( sc_env_ptr(data)->continue_to );
-		builder()->CreateBr( sc_env_ptr(data)->continue_to );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		//assert( sc_env_ptr(data)->continue_to );
+		//builder()->CreateBr( sc_env_ptr(data)->continue_to );
+
 	} else if ( v.code == jump_mode::_break ){
-		assert( sc_env_ptr(data)->break_to );
-		builder()->CreateBr( sc_env_ptr(data)->break_to );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+
+		//assert( sc_env_ptr(data)->break_to );
+		//builder()->CreateBr( sc_env_ptr(data)->break_to );
 	}
 
 	// Restart a new block for sealing the old block.

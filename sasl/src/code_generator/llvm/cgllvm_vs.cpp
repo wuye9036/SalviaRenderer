@@ -100,7 +100,6 @@ void cgllvm_vs::add_entry_param_type( boost::any* data, storage_classifications 
 	ctxt->copy( sc_ptr(data) );
 
 	ctxt->data().val_type = par_type;
-	ctxt->data().ref_type = parref_type;
 	ctxt->data().is_ref = true;
 
 	param_ctxts[st].reset(ctxt);
