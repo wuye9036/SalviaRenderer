@@ -1,15 +1,19 @@
 float4x4 wvpMat;
+float3 lightDir;
 
 struct VSIN{
 	float4 pos: SV_Position;
+	float3 norm: NORMAL;
 };
 
 struct VSOUT{
 	float4 pos: SV_Position;
+	float n_dot_l;
 };
 
 VSOUT fn( VSIN in ){
 	VSOUT o;
 	o.pos = mul( wvpMat, in.pos );
+	o.n_dot_l = dot( in.norm, lightDir );
 	return o;
 }

@@ -143,6 +143,12 @@ protected:
 		size_t vec_size, size_t n_vec,
 		llvm::Type const* ret_type
 		);
+	template <typename ElementT>
+	ElementT dot_prod(
+		llvm::Value* lhs, llvm::Value* rhs,
+		size_t vec_size,
+		llvm::Type const* ret_type
+		);
 
 	void create_alloca( cgllvm_sctxt* data, std::string const& name );
 

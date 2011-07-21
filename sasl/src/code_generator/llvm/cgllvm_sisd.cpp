@@ -247,7 +247,7 @@ SASL_VISIT_DEF( member_expression ){
 		sc_ptr(data)->data( mem_ctxt );
 	}
 
-	
+
 	sc_data_ptr(data)->agg.parent = agg_ctxt;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -408,7 +408,7 @@ SASL_VISIT_DEF( struct_type ){
 
 	// Create
 	StructType* stype = StructType::get( llcontext(), members, true );
-	
+
 	llmodule()->addTypeName( name.c_str(), stype );
 	sc_data_ptr(data)->val_type = stype;
 
@@ -532,7 +532,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
-	mod_ptr()->module()->setDataLayout("s0:128:128-a0:128:128");
+	mod_ptr()->module()->setDataLayout("p:64:64:64");
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 	boost::function<Value* (cgllvm_sctxt*)> loader
@@ -746,7 +746,7 @@ llvm::Value* cgllvm_sisd::load( boost::any* data ){
 llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	assert(data);
 	Value* val = data->data().val;
-	
+
 	const char* name = data->data().hint_name;
 	name = ( name == NULL ? "" : name );
 
@@ -860,9 +860,9 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 		//  Save new vector to parent.
 		char mask_indexes[4] = {-1, -1, -1, -1};
 		mask_to_indexes( mask_indexes, data->data().agg.swizzle );
-	
+
 		llvector<llval> vec( load(data->data().agg.parent), ext.get() );
-		
+
 		if( v->getType()->isIntegerTy() || v->getType()->isFloatingPointTy() ){
 			// Scalar, insert directly
 			if( !vec.val ){
@@ -894,7 +894,7 @@ void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 		ctxt->data().local->setAlignment(16);
 	} else {
 		ctxt->data().global
-			 = cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );
+			= cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );
 	}
 }
 
@@ -973,6 +973,25 @@ template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_mv(
 	return ret_val;
 }
 
+template <typename ElementT> ElementT cgllvm_sisd::dot_prod(
+	llvm::Value* lhs, llvm::Value* rhs,
+	size_t vec_size,
+	llvm::Type const* ret_type
+	)
+{
+	typedef llvector<ElementT> vector_t;
+
+	vector_t lval( lhs, ext.get() );
+	vector_t rval( rhs, ext.get() );
+
+	ElementT ret_val = ext->null_value<ElementT>(ret_type);
+	for( size_t i = 0; i < vec_size; ++i ){
+		ret_val = ret_val + lval[i] * rval[i];
+	}
+	
+	return ret_val;
+}
+
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
@@ -999,7 +1018,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		BasicBlock* body = BasicBlock::Create( llcontext(), ".body", fn );
 		builder()->SetInsertPoint( body );
 
-		if( intr->unmangled_name() == "mul" ){
+		if( intr->unmangled_name() == "mul" )
+		{
 			// Set Argument name
 			Argument* larg = fn->getArgumentList().begin();
 			Argument* rarg = ++fn->getArgumentList().begin();
@@ -1047,7 +1067,51 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				// EFLIB_ASSERT_UNIMPLEMENTED();
 			}
 		}
-		// EFLIB_ASSERT_UNIMPLEMENTED();
+		else if( intr->unmangled_name() == "dot" )
+		{
+			// Set Argument name
+			Argument* larg = fn->getArgumentList().begin();
+			Argument* rarg = ++fn->getArgumentList().begin();
+
+			larg->setName( ".lhs" );
+			rarg->setName( ".rhs" );
+
+			// Get Type infos
+			shared_ptr<type_specifier> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<type_specifier> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
+			assert( lpar_type && rpar_type );
+			builtin_types lbtc = lpar_type->value_typecode;
+			builtin_types rbtc = rpar_type->value_typecode;
+
+			Type const* ret_type = fn->getReturnType();
+
+			assert( is_vector(lbtc) && is_vector(rbtc) );
+			assert( scalar_of(lbtc) == scalar_of(rbtc) );
+			assert( vector_size(lbtc) == vector_size(rbtc) );
+
+			size_t vec_size = vector_size(lbtc);
+
+			if( scalar_of(lbtc) == builtin_types::_float )
+			{
+				ext->return_(
+					dot_prod<llfloat>( larg, rarg, vec_size, ret_type )
+					);
+			} 
+			else if ( scalar_of(lbtc) == builtin_types::_sint32 )
+			{
+				ext->return_(
+					dot_prod<lli32>( larg, rarg, vec_size, ret_type )
+					);
+			}
+			else 
+			{
+				// EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+		}
+		else
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 }
 
