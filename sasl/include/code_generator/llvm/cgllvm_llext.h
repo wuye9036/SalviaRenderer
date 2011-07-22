@@ -24,6 +24,112 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 template <typename BuilderT> class llext;
 template <typename BuilderT> class llaggregated;
 
+template <typename BuilderT>
+class value_proxy
+{
+public:
+	enum classes{
+		cls_unknown,
+
+		cls_member,
+		cls_reference,
+		cls_value
+	};
+
+	enum format{
+		format_abi = 0,
+		format_internal = 1
+	}
+
+private:
+	classes	cls;
+	format	fmt;
+
+	Value*					val;
+	value_proxy<BuilderT>*	parent;
+	unsigned int			index;
+	Type const*				vty[2];
+
+	builtin_types ty_hint;
+
+	llext<BuilderT>* ext; 
+
+	llvm::Value* internal_load() const{
+		if( cls == cls_unknown ){
+			return NULL;
+		}
+		if( cls == cls_value ){
+			return val;
+		}
+		if( cls == cls_reference ){
+			return ext->CreateLoad( val );
+		}
+		if( cls == cls_member ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		}
+	}
+
+	void internal_store( llvm::Value* v ){
+		assert( cls != cls_unknown );
+
+		if( cls == cls_value ){
+			assert( val );
+			val = v;
+		} else {
+			if( cls == cls_reference ){
+				ext->builder->CreateStore( v, val );
+			}
+		} else {
+			if( cls == cls_member ){
+				assert( parent );
+				llvm::Value* addr = parent->child_address( index );
+				if( addr ){
+					ext->builder->CreateStore( v, addr );
+				} else {
+					llvm::Value* parent_val = parent->load();
+					parent_val = ext->builder->CreateInsertValue( parent_val, v, index );
+					parent->store( parent_val );
+				}
+			}
+		}
+	}
+
+public:
+	value_proxy( llext<BuilderT>* ext ): ext(ext){}
+
+	llvm::Value* load( format f ) const{
+		if( f == fmt ){
+			return internal_load();
+		} else {
+			return convert(f).load(f);
+		}
+	}
+
+	void store( llvm::Value* v, format f ){
+		if( f == fmt ){
+			internal_store( v );
+		} else {
+			internal_store( convert(fmt) )
+		}
+	}
+
+	void store( llvm::Value* v ){
+		// Must be basic type.
+		assert( ty_hint != builtin_types::none );
+
+		// Guess format
+		format guess_fmt;
+
+		store( v, guess_fmt );
+	}
+
+	value_proxy convert( format dest_fmt ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return value_proxy(NULL);
+	}
+};
+
 template<typename BuilderT>
 class llvalue{
 public:
