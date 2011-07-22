@@ -128,6 +128,9 @@ protected:
 	void store( llvm::Value*, boost::any* data );
 	void store( llvm::Value*, cgllvm_sctxt* data );
 
+	llvm::Value* to_abi( builtin_types hint, llvm::Value* v );
+	llvm::Value* from_abi( builtin_types hint, llvm::Value* v );
+
 	void mask_to_indexes( char index[4], uint32_t mask );
 
 	template <typename ElementT>

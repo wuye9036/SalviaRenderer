@@ -32,6 +32,7 @@ public:
 		cls_unknown,
 
 		cls_member,
+		cls_swizzle,
 		cls_reference,
 		cls_value
 	};
@@ -39,16 +40,16 @@ public:
 	enum format{
 		format_abi = 0,
 		format_internal = 1
-	}
+	};
 
 private:
 	classes	cls;
 	format	fmt;
 
-	Value*					val;
+	llvm::Value*			val;
 	value_proxy<BuilderT>*	parent;
 	unsigned int			index;
-	Type const*				vty[2];
+	llvm::Type const*		vty[2];
 
 	builtin_types ty_hint;
 
@@ -76,25 +77,59 @@ private:
 		if( cls == cls_value ){
 			assert( val );
 			val = v;
-		} else {
-			if( cls == cls_reference ){
-				ext->builder->CreateStore( v, val );
+		} else if( cls == cls_reference ){
+			ext->builder->CreateStore( v, val );
+		} else if( cls == cls_member ){
+			assert( parent );
+			llvm::Value* addr = internal_address();
+			if( addr ){
+				ext->builder->CreateStore( v, addr );
+			} else {
+				llvm::Value* parent_val = parent->load();
+				parent_val = ext->builder->CreateInsertValue( parent_val, v, index );
+				parent->store( parent_val );
 			}
-		} else {
-			if( cls == cls_member ){
-				assert( parent );
-				llvm::Value* addr = parent->child_address( index );
-				if( addr ){
-					ext->builder->CreateStore( v, addr );
-				} else {
-					llvm::Value* parent_val = parent->load();
-					parent_val = ext->builder->CreateInsertValue( parent_val, v, index );
-					parent->store( parent_val );
-				}
-			}
+		} else if ( cls == cls_swizzle ){
+			assert( parent );
+			llvm::Value* parent_val = parent->load();
+			parent_val = ext->builder->CreateInsertElement( parent_val, v, index );
+			parent->store( parent_val );
 		}
 	}
 
+	llvm::Value* internal_address(){
+		if( cls == cls_value ){
+			return NULL;
+		}
+		if( cls == cls_reference ){
+			return val;
+		}
+		if( cls == cls_swizzle ){
+			return NULL;
+		}
+		if( cls == cls_member ){
+			Value* indexes[2];
+			indexes[0] = llv_int<BuilderT, 32, true>(0).val;
+			indexes[1] = llv_int<BuilderT, 32, true>(index).val;
+			return ext->builder->GetElementPtr( parent->address(), indexes, indexes+2 );
+		}
+	}
+
+	bool compatible( llvm::Type const* lhs, llvm::Type const* rhs  ){
+		StructType const* struct_ty = cast<StructType>( lhs->isStructTy() ? lhs : rhs );
+		VectorType const* vector_ty = cast<VectorType>( lhs->isVectorTy() ? lhs : rhs );
+
+		if( !(struct_ty && vector_ty) ){ return false;}
+		if( struct_ty->getNumElements() != vector_ty->getNumElements() ){ return false; }
+		llvm::Type const* elem_ty = vector_ty->getElementType();
+		for( size_t i = 0; i < struct_ty->getNumElements(); ++i ){
+			if( struct_ty->getElementType(i) != elem_ty ){
+				return false;
+			}
+		}
+
+		return true;
+	}
 public:
 	value_proxy( llext<BuilderT>* ext ): ext(ext){}
 
@@ -102,7 +137,7 @@ public:
 		if( f == fmt ){
 			return internal_load();
 		} else {
-			return convert(f).load(f);
+			return convert(f, fmt, internal_load() );
 		}
 	}
 
@@ -110,23 +145,61 @@ public:
 		if( f == fmt ){
 			internal_store( v );
 		} else {
-			internal_store( convert(fmt) )
+			internal_store( convert(fmt, f, v) );
 		}
 	}
 
 	void store( llvm::Value* v ){
 		// Must be basic type.
 		assert( ty_hint != builtin_types::none );
-
-		// Guess format
-		format guess_fmt;
-
+		format guess_fmt = guess_format(v);
 		store( v, guess_fmt );
 	}
+	
+	format guess_format( llvm::Value* v ){
+		if( v->getType() == vty[format_internal] ){
+			return format_internal;
+		}
+		if( v->getType() == vty[format_abi] ){
+			return format_abi;
+		}
+		assert(false);
+		return format_internal;
+	}
 
-	value_proxy convert( format dest_fmt ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return value_proxy(NULL);
+	llvm::Value const* convert(
+		format dest_fmt, format src_fmt,
+		llvm::Value* source_value
+		)
+	{
+		if( dest_fmt == src_fmt ){
+			return source_value;
+		}
+
+		if( !( is_vector(ty_hint) || is_matrix(ty_hint) ) ){
+			return val;
+		}
+
+		if( is_vector(ty_hint) ){
+			if( source_value->getType()->isVectorTy() ){
+				return llaggregated<BuilderT>( llvector< llvalue<BuilderT> >( v, ext ) ).val;
+			} else {
+				return llvector< llvalue<BuilderT> >( llaggregated<BuilderT>( v, ext ) ).val;
+			}
+		}
+
+		if( is_matrix(ty_hint) ){
+			llaggregated<BuilderT> mat = llaggregated<BuilderT>( source_value, ext );
+			llaggregated<BuilderT> ret = ext->null_value< llaggregated<BuilderT> >( vty[dest_fmt] );
+			for( size_t i = 0; i < mat.size(); ++i){
+				builtin_types row_ty = vector_of( scalar_of(ty_hint), vector_size(ty_hint) );
+				llvm::Value* cvt = convert( row_ty, dest_fmt, src_fmt, mat[i].val );
+				ret.set( i, cvt );
+			}
+			return ret.val;
+		}
+
+		return NULL;
 	}
 };
 
@@ -348,13 +421,11 @@ public:
 	
 	llvar( llvm::Type const* var_type, llext<builder_t>* ext ){
 		val = ext->builder->CreateAlloca( var_type );
-		cast<llvm::AllocaInst>(val)->setAlignment(16);
 		this->ext = ext;
 	}
 
 	llvar( llvm::Value* val, llext<builder_t>* ext ){
 		val = ext->builder->CreateAlloca( val->getType() );
-		cast<llvm::AllocaInst>(val)->setAlignment(16);
 		this->ext = ext;
 	}
 
@@ -364,13 +435,11 @@ public:
 
 	operator ElementT(){
 		LoadInst* inst = ext->builder->CreateLoad(val);
-		inst->setAlignment(4);
 		return ElementT( inst, ext );
 	}
 
 	llvar<ElementT> operator = ( ElementT const& v ){
 		llvm::StoreInst* inst = ext->builder->CreateStore( v.val, val );
-		inst->setAlignment(4);
 	}
 };
 
@@ -382,7 +451,7 @@ public:
 	llaggregated( llvm::Value* val, llext<builder_t>* ext )
 		: llvalue( val, ext )
 	{
-		if( !val || val->getType()->isStructTy() ){
+		if( !val || val->getType()->isAggregateType() ){
 			this->val = val;
 		} else {
 			this->val = create( ext, val ).val;
@@ -411,7 +480,7 @@ public:
 	{
 		if( val->getType()->isVectorTy() ){
 			return llaggregated<BuilderT>( llvector< llvalue<builder_t> >(val, ext) );
-		} else if( val->getType()->isStructTy() ) {
+		} else if( val->getType()->isAggregateType() ) {
 			return llaggregated<BuilderT>( val, ext );
 		} else {
 			assert( false );
@@ -421,12 +490,18 @@ public:
 
 	size_t size() const{
 		if ( !val ) return 0;
-		return cast<StructType>(val->getType())->getNumElements();
+		if( val->getType()->isStructTy() ){
+			return cast<StructType>(val->getType())->getNumElements();
+		} else if(val->getType()->isArrayTy()) {
+			return cast<ArrayType>(val->getType())->getNumElements();
+		} else {
+			return 0;
+		}
 	}
 
 	template <typename ElementT>
 	llaggregated<BuilderT>& set( size_t idx, ElementT const& v ){
-		val = ext->builder->CreateInsertValue( val, v.v(), static_cast<unsigned>(idx) );
+		val = ext->builder->CreateInsertValue( val, v.val, static_cast<unsigned>(idx) );
 		return *this;
 	}
 
@@ -525,11 +600,11 @@ public:
 		return ElementT( Constant::getNullValue(v.val->getType()), this );
 	}
 
+public:
 	// Fake statements
 
 	/** If ... Then ... Else ... End If statement
 	@{ */
-public:
 	void if_( llvalue<BuilderT> const& cond ){
 		assert( cond.val->getType()->isIntegerTy(1) );
 

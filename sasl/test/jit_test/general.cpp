@@ -104,8 +104,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	function( test_dot_f3, "test_dot_f3" );
 	BOOST_REQUIRE(test_dot_f3);
 	
-	vec3 lhs( 1.9f, 2.7f, -8.1f );
-	vec3 rhs( -4.8f, 1.1f, 17.5f );
+	vec3 lhs( 1.0f, 0.0f, 0.0f );
+	vec3 rhs( 1.0f, 0.0f, 0.0f );
 
 	float f = test_dot_f3(lhs, rhs);
 	BOOST_CHECK_CLOSE( dot_prod3( lhs.xyz(), rhs.xyz() ), f, 0.0001 );

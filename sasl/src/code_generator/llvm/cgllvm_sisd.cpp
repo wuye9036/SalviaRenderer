@@ -289,12 +289,6 @@ SASL_VISIT_DEF( call_expression ){
 
 	any child_ctxt;
 
-	vector<Value*> args;
-	BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
-		visit_child( child_ctxt, child_ctxt_init, arg_expr );
-		args.push_back( load( &child_ctxt ) );
-	}
-
 	Value* ret = NULL;
 
 	call_si* csi = v.si_ptr<call_si>();
@@ -307,6 +301,31 @@ SASL_VISIT_DEF( call_expression ){
 		cgllvm_sctxt* fn_ctxt = node_ctxt( fn_sym->node(), false );
 		Function* fn = fn_ctxt->data().self_fn;
 		sc_data_ptr(data)->val_type = fn_ctxt->data().val_type;
+
+		vector<Value*> args;
+		BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
+			visit_child( child_ctxt, child_ctxt_init, arg_expr );
+
+			type_info_si* arg_tisi = arg_expr->si_ptr<type_info_si>();
+
+			llvm::Value* evaluated_value = load( &child_ctxt );
+			builtin_types arg_ty = arg_tisi->type_info()->value_typecode;
+			if( is_vector(arg_ty) ){
+				args.push_back( llagg( llvector<llval>( evaluated_value, ext.get() ) ).val );
+			} else if( is_matrix( arg_ty ) ) {
+				bool as_vec(false), as_mat(false);
+				llvm::Type const* mat_abity = llvm_type( arg_ty, as_vec, as_mat );
+				llagg ret = llagg( ext->null_value(mat_abity).val, ext.get() ) ;
+				llagg matv = llagg( evaluated_value, ext.get() );
+				for( size_t i = 0; i < matv.size(); ++i ){
+					ret.set( i, llagg( llvector<llval>( matv[i].val, ext.get() ) ) );
+				}
+				args.push_back(ret.val);
+			} else {
+				args.push_back(evaluated_value);
+			}
+
+		}
 
 		// Create Call
 		ret = builder()->CreateCall( fn, args.begin(), args.end() );
@@ -585,6 +604,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	sc_data_ptr(data)->val_type = ftype;
 
 	Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
+	fn->setCallingConv( CallingConv::Fast );
 	sc_data_ptr(data)->self_fn = fn;
 }
 
@@ -767,12 +787,10 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 		if( val ){ break; }
 		if( data->data().local ){
 			val = builder()->CreateLoad( data->data().local, name );
-			cast<LoadInst>(val)->setAlignment(4);
 			break;
 		}
 		if( data->data().global ){
 			val = builder()->CreateLoad( data->data().global, name );
-			cast<LoadInst>(val)->setAlignment(4);
 			break;
 		}
 		if( data->data().agg.parent ){
@@ -803,13 +821,48 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 
 	if( data->data().is_ref ){
 		val = builder()->CreateLoad( val, name );
-		cast<LoadInst>(val)->setAlignment(4);
 	}
 
 	if( data->data().as_vector && val->getType()->isStructTy() ){
 		return llvector<llval>( val, ext.get() ).val;
 	}
 	return val;
+}
+
+llvm::Value* cgllvm_sisd::to_abi( builtin_types hint, llvm::Value* v )
+{
+	if( is_vector(hint) ){
+		return llvector<llval>( llagg( v, ext.get() ) ).val;
+	} else if( is_matrix( hint ) ) {
+		bool as_vec(false), as_mat(false);
+		llvm::Type const* mat_abity = llvm_type( hint, as_vec, as_mat );
+		llagg ret = llagg( ext->null_value(mat_abity).val, ext.get() ) ;
+		llagg matv = llagg( v, ext.get() );
+		for( size_t i = 0; i < matv.size(); ++i ){
+			ret.set( i, llagg( llvector<llval>( matv[i].val, ext.get() ) ) );
+		}
+		return ret.val;
+	} else {
+		return v;
+	}
+}
+
+llvm::Value* cgllvm_sisd::from_abi( builtin_types hint, llvm::Value* v )
+{
+	if( is_vector(hint) ){
+		return llagg( llvector<llval>( v, ext.get() ) ).val;
+	} else if( is_matrix( hint ) ) {
+		bool as_vec(false), as_mat(false);
+		llvm::Type const* mat_abity = llvm_type( hint, as_vec, as_mat );
+		llagg matv = llagg( ext->null_value(mat_abity).val, ext.get() ) ;
+		llagg ret = llagg( v, ext.get() );
+		for( size_t i = 0; i < matv.size(); ++i ){
+			ret.set( i, llagg( llvector<llval>( matv[i].val, ext.get() ) ) );
+		}
+		return ret.val;
+	} else {
+		return v;
+	}
 }
 
 llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
@@ -838,7 +891,6 @@ llvm::Value* cgllvm_sisd::load_ptr( cgllvm_sctxt* data ){
 		} else {
 			const char* name = data->data().hint_name;
 			addr = builder()->CreateLoad( addr, Twine( name ? name : "" ) );
-			cast<LoadInst>(addr)->setAlignment(4);
 		}
 	}
 
@@ -910,7 +962,6 @@ void cgllvm_sisd::create_alloca( cgllvm_sctxt* ctxt, std::string const& name ){
 	if( parent_fn ){
 		ctxt->data().local
 			= builder()->CreateAlloca( ctxt->data().val_type, 0, name.c_str() );
-		ctxt->data().local->setAlignment(16);
 	} else {
 		ctxt->data().global
 			= cast<GlobalVariable>( llmodule()->getOrInsertGlobal( name, ctxt->data().val_type ) );
