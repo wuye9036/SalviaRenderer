@@ -32,7 +32,6 @@ string make_command( string const& file_name, string const& options = "--lang=g"
 	return "--input=\"" + file_name + "\" " + options;
 }
 
-
 struct jit_fixture {
 	
 	jit_fixture() {}

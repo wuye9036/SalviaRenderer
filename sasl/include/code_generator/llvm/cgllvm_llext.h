@@ -49,7 +49,7 @@ private:
 	llvm::Value*			val;
 	value_proxy<BuilderT>*	parent;
 	unsigned int			index;
-	llvm::Type const*		vty[2];
+	llvm::Type const*		vtys[2];
 
 	builtin_types ty_hint;
 
@@ -132,6 +132,19 @@ private:
 	}
 public:
 	value_proxy( llext<BuilderT>* ext ): ext(ext){}
+	value_proxy( value_proxy const& ){}
+
+	void clone_to( value_proxy& lhs );
+	void assign( value_proxy const& rhs );
+	void proto( value_proxy& lhs );
+	
+	llvm::Type const* value_ty() const{
+		return vty[fmt];
+	}
+
+	llvm::Type const* value_ty( format f ) const{
+		return vty[f];
+	}
 
 	llvm::Value* load( format f ) const{
 		if( f == fmt ){
@@ -167,6 +180,8 @@ public:
 		return format_internal;
 	}
 
+
+
 	llvm::Value const* convert(
 		format dest_fmt, format src_fmt,
 		llvm::Value* source_value
@@ -201,6 +216,9 @@ public:
 
 		return NULL;
 	}
+
+private:
+	value_proxy& operator = ( value_proxy const& );
 };
 
 template<typename BuilderT>
