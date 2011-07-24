@@ -10,6 +10,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 namespace llvm{
@@ -75,6 +76,8 @@ struct cgllvm_sctxt_data{
 	T& value() const{
 		return *val.get();
 	}
+
+	rvalue get_rvalue() const;
 
 	int declarator_count;			///< For declaration only
 };

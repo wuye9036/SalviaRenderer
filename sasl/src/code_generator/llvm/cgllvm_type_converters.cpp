@@ -45,16 +45,14 @@ using namespace sasl::utility;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
+class cg_service;
+
+typedef function< cgllvm_sctxt* ( shared_ptr<node> const& ) > get_ctxt_fn;
+
 class cgllvm_type_converter : public type_converter{
 public:
-	cgllvm_type_converter(
-		shared_ptr<IRBuilderBase> const& builder,
-		boost::function<cgllvm_sctxt*( boost::shared_ptr<node> const& )> const& ctxt_getter,
-		boost::function< llvm::Value* ( cgllvm_sctxt* ) > const& loader,
-		boost::function< void (llvm::Value*, cgllvm_sctxt*) > const& storer
-		)
-		: builder( shared_static_cast<IRBuilder<> >(builder) ),
-		get_ctxt( ctxt_getter ), load(loader), store(storer)
+	cgllvm_type_converter( get_ctxt_fn get_ctxt, cg_service* cgs )
+		: get_ctxt(get_ctxt), cgs(cgs)
 	{
 	}
 
@@ -66,12 +64,12 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		Value* dest_v = builder->CreateIntCast(
-			load( src_ctxt ),
-			dest_ctxt->data().val_type,
-			dest_ctxt->data().is_signed
+		rvalue casted = cgs->cast_ints(
+			src_ctxt->data().get_rvalue(),
+			dest_ctxt->data().tyinfo.get()
 			);
-		store( dest_v, dest_ctxt );
+
+		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
 	}
 
 	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -80,15 +78,11 @@ public:
 		
 		assert( src_ctxt != dest_ctxt );
 
-		Value* src_v = load( src_ctxt );
-		Type const* dest_type = dest_ctxt->data().val_type;
-		Value* dest_v = NULL;
-		if ( src_ctxt->data().is_signed ){
-			dest_v = builder->CreateSIToFP( src_v, dest_type );
-		} else {
-			dest_v = builder->CreateUIToFP( src_v, dest_type );
-		}
-		store( dest_v, dest_ctxt );
+		rvalue casted = cgs->cast_i2f(
+			src_ctxt->data().get_rvalue(),
+			dest_ctxt->data().tyinfo.get()
+			);
+		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
 	}
 
 	void float2int( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -97,15 +91,11 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		Value* src_v = load( src_ctxt );
-		Type const* dest_type = dest_ctxt->data().val_type;
-		Value* dest_v = NULL;
-		if ( dest_ctxt->data().is_signed ){
-			dest_v = builder->CreateFPToSI( src_v, dest_type );
-		} else {
-			dest_v = builder->CreateFPToUI( src_v, dest_type );
-		}
-		store( dest_v, dest_ctxt );
+		rvalue casted = cgs->cast_f2i(
+			src_ctxt->data().get_rvalue(),
+			dest_ctxt->data().tyinfo.get()
+			);
+		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
 	}
 
 	void float2float( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -114,11 +104,11 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		Type const* dest_type = dest_ctxt->data().val_type;
-		Value* dest_v = builder->CreateFPCast( load(src_ctxt), dest_type );
-
-		if( dest_ctxt )
-		store(dest_v, dest_ctxt);
+		rvalue casted = cgs->cast_f2f(
+			src_ctxt->data().get_rvalue(),
+			dest_ctxt->data().tyinfo.get()
+			);
+		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
 	}
 
 	void scalar2vec1( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -127,19 +117,20 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		Type const* elem_type = src_ctxt->data().val_type;
-		Type const* dest_type = VectorType::get( elem_type, 1 );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		//Type const* elem_type = src_ctxt->data().val_type;
+		//Type const* dest_type = VectorType::get( elem_type, 1 );
 
-		// Store value to an vector
-		cgllvm_sctxt agg_ctxt;
-		cgllvm_sctxt elem_ctxt;
-		elem_ctxt.data().agg.is_swizzle = true;
-		elem_ctxt.data().agg.swizzle = encode_swizzle('x'); /*X*/
-		elem_ctxt.data().agg.parent = &agg_ctxt;
-		store( load(src_ctxt), &elem_ctxt );
+		//// Store value to an vector
+		//cgllvm_sctxt agg_ctxt;
+		//cgllvm_sctxt elem_ctxt;
+		//elem_ctxt.data().agg.is_swizzle = true;
+		//elem_ctxt.data().agg.swizzle = encode_swizzle('x'); /*X*/
+		//elem_ctxt.data().agg.parent = &agg_ctxt;
+		//store( load(src_ctxt), &elem_ctxt );
 
-		store( load(&agg_ctxt), dest_ctxt );
-		dest_ctxt->data().val_type = dest_type;
+		//store( load(&agg_ctxt), dest_ctxt );
+		//dest_ctxt->data().val_type = dest_type;
 	}
 
 	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
@@ -149,25 +140,24 @@ public:
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		Type const* elem_type = src_ctxt->data().val_type;
-		Type const* dest_type = VectorType::get( elem_type, 1 );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		//Type const* elem_type = src_ctxt->data().val_type;
+		//Type const* dest_type = VectorType::get( elem_type, 1 );
 
-		// Store value to an vector
-		cgllvm_sctxt agg_ctxt;
-		cgllvm_sctxt elem_ctxt;
-		elem_ctxt.data().agg.is_swizzle = true;
-		elem_ctxt.data().agg.swizzle = encode_sized_swizzle(dest_size);
-		elem_ctxt.data().agg.parent = &agg_ctxt;
-		store( load(src_ctxt), &elem_ctxt );
+		//// Store value to an vector
+		//cgllvm_sctxt agg_ctxt;
+		//cgllvm_sctxt elem_ctxt;
+		//elem_ctxt.data().agg.is_swizzle = true;
+		//elem_ctxt.data().agg.swizzle = encode_sized_swizzle(dest_size);
+		//elem_ctxt.data().agg.parent = &agg_ctxt;
+		//store( load(src_ctxt), &elem_ctxt );
 
-		store( load(&agg_ctxt), dest_ctxt );
-		dest_ctxt->data().val_type = dest_type;
+		//store( load(&agg_ctxt), dest_ctxt );
+		//dest_ctxt->data().val_type = dest_type;
 	}
 private:
-	shared_ptr< IRBuilder<> > builder;
-	boost::function<cgllvm_sctxt*( boost::shared_ptr<node> const& )> get_ctxt;
-	boost::function< Value* ( cgllvm_sctxt* ) > load;
-	boost::function< void (Value*, cgllvm_sctxt*) > store;
+	get_ctxt_fn get_ctxt;
+	cg_service* cgs;
 };
 
 void register_builtin_typeconv(
@@ -373,15 +363,11 @@ void register_builtin_typeconv(
 }
 
 shared_ptr<type_converter> create_type_converter(
-	shared_ptr<IRBuilderBase> const& builder,
-	function<
-		cgllvm_sctxt* ( shared_ptr<node> const& )
-	> const& ctxt_lookup,
-	function< Value* ( cgllvm_sctxt* ) > const& loader,
-	function< void (Value*, cgllvm_sctxt*) > const& storer
+	get_ctxt_fn const& get_ctxt,
+	cg_service* cgs
 	)
 {
-	return make_shared<cgllvm_type_converter>( builder, ctxt_lookup, loader, storer );
+	return make_shared<cgllvm_type_converter>( get_ctxt, cgs );
 }
 
 END_NS_SASL_CODE_GENERATOR();

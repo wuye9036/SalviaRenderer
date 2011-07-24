@@ -3,6 +3,10 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/enums/enums_utility.h>
 
+#include <eflib/include/platform/disable_warnings.h>
+#include <llvm/Support/IRBuilder.h>
+#include <eflib/include/platform/enable_warnings.h>
+
 using sasl::syntax_tree::tynode;
 using namespace sasl::utility;
 

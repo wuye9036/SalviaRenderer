@@ -5,10 +5,6 @@
 
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/platform/disable_warnings.h>
-#include <llvm/Support/IRBuilder.h>
-#include <eflib/include/platform/enable_warnings.h>
-
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/preprocessor/seq.hpp>
 #include <boost/preprocessor/for.hpp>
@@ -17,8 +13,17 @@
 #include <vector>
 
 namespace llvm{
+	class Type;
 	class Value;
 	class LLVMContext;
+
+	template <bool preserveNames> class IRBuilderDefaultInserter;
+	template< bool preserveNames, typename T, typename Inserter
+	> class IRBuilder;
+	class ConstantFolder;
+
+	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
+		DefaultIRBuilder;
 }
 
 namespace sasl{
@@ -28,6 +33,8 @@ namespace sasl{
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+class rvalue;
 
 class value_tyinfo{
 public:
@@ -68,9 +75,10 @@ public:
 	friend class code_gen;
 
 	enum kinds{
-		kind_member,
+		kind_tyinfo_only,
 		kind_local,
 		kind_global,
+		kind_member,
 		kind_swizzle
 	};
 	/// Get service.
@@ -81,8 +89,11 @@ public:
 
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
+	builtin_types hint() const;
 
 	kinds get_kind() const;
+
+	rvalue cast_to_rvalue() const;
 
 protected:
 	value_proxy();
@@ -100,6 +111,8 @@ protected:
 class rvalue : public value_proxy{
 public:
 	friend class cg_service;
+
+	rvalue( rvalue const& );
 
 	/// Get aggregated value's addr.
 	llvm::Value* get_addr() const;
@@ -136,10 +149,6 @@ public:
 	rvalue operator [] ( size_t sz );
 };
 
-class convert{
-	rvalue convert_abi( value_tyinfo::abis dest_abi, rvalue const& src );
-};
-
 class cg_service{
 public:
 	/** Emit expressions.
@@ -150,7 +159,14 @@ public:
 	/** @} */
 	
 	/** Emit type casts @{ */
-	
+	/// Cast between integer types.
+	rvalue cast_ints( rvalue const& v, value_tyinfo* dest_tyi );
+	/// Cast integer to float.
+	rvalue cast_i2f( rvalue const& v, value_tyinfo* dest_tyi );
+	/// Cast float to integer.
+	rvalue cast_f2i( rvalue const& v, value_tyinfo* dest_tyi );
+	/// Cast between float types.
+	rvalue cast_f2f( rvalue const& v, value_tyinfo* dest_tyi );
 	/** @} */
 	
 	/** Emit outline @{ */
@@ -161,6 +177,10 @@ public:
 	
 	/** @} */
 	
+	/// Emit assignment @{
+	void store( value_proxy& lhs, value_proxy const& rhs );
+	/// @}
+
 	/** Emit values @{  */
 	template <typename T>
 	cgv_scalar create_constant_scalar( T const& v );
@@ -179,9 +199,9 @@ public:
 	lvalue create_member( value_tyinfo const*, value_proxy::kinds, size_t idx_or_swz );
 	/** @} */
 
-	llvm::IRBuilder<>* builder() const;
-	llvm::LLVMContext& context() const;
-private:	
+	llvm::DefaultIRBuilder* builder() const;
+	llvm::LLVMContext&		context() const;
+private:
 };
 
 //template <typename BuilderT>
