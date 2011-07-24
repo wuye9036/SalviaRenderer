@@ -29,7 +29,7 @@ struct declaration;
 struct declarator;
 struct variable_declaration;
 struct type_definition;
-struct type_specifier;
+struct tynode;
 struct builtin_type;
 struct array_type;
 struct struct_type;
@@ -114,7 +114,7 @@ public:
 	SASL_VISIT_DCL( declarator ) = 0;
 	SASL_VISIT_DCL( variable_declaration ) = 0;
 	SASL_VISIT_DCL( type_definition ) = 0;
-	SASL_VISIT_DCL( type_specifier ) = 0;
+	SASL_VISIT_DCL( tynode ) = 0;
 	SASL_VISIT_DCL( builtin_type ) = 0;
 	SASL_VISIT_DCL( array_type ) = 0;
 	SASL_VISIT_DCL( struct_type ) = 0;

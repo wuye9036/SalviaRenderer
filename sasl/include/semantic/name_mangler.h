@@ -14,7 +14,7 @@
 
 namespace sasl{
 	namespace syntax_tree{
-		struct type_specifier;
+		struct tynode;
 		struct array_type;
 		struct struct_type;
 		struct function_type;

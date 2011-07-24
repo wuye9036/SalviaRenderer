@@ -94,7 +94,7 @@ struct program;
 struct struct_type;
 struct switch_statement;
 struct type_definition;
-struct type_specifier;
+struct tynode;
 struct variable_declaration;
 struct while_statement;
 
@@ -531,7 +531,7 @@ public:
 	virtual tree_combinator& darray();
 	virtual tree_combinator& dtypequal( type_qualifiers qual );
 
-	SASL_TYPED_NODE_ACCESSORS_DECL( type_specifier );
+	SASL_TYPED_NODE_ACCESSORS_DECL( tynode );
 protected:
 	dtype_combinator( const dtype_combinator& rhs);
 	dtype_combinator& operator = ( const dtype_combinator& rhs );

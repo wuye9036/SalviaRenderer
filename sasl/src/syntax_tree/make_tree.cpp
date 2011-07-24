@@ -146,7 +146,7 @@ void dprog_combinator::child_ended()
 
 /////////////////////////////////
 // type combinator
-SASL_TYPED_NODE_ACCESSORS_IMPL( dtype_combinator, type_specifier );
+SASL_TYPED_NODE_ACCESSORS_IMPL( dtype_combinator, tynode );
 
 dtype_combinator::dtype_combinator( tree_combinator* parent )
 : tree_combinator( parent )
@@ -1112,7 +1112,7 @@ tree_combinator& dfunction_combinator::dbody(){
 void dfunction_combinator::child_ended(){
 	switch( leave() ){
 		case e_type:
-			typed_node()->retval_type = move_node2<type_specifier>( rettype_comb );
+			typed_node()->retval_type = move_node2<tynode>( rettype_comb );
 			break;
 		case e_param:
 			typed_node()->params.push_back( move_node2<parameter>(par_comb) );
@@ -1168,7 +1168,7 @@ tree_combinator& dtypedef_combinator::dtype(){
 void dtypedef_combinator::child_ended(){
 	switch( leave() ){
 		case e_type:
-			typed_node()->type_info = move_node2<type_specifier>( type_comb );
+			typed_node()->type_info = move_node2<tynode>( type_comb );
 			break;
 		default:
 			assert( !"invalid state." );

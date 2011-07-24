@@ -7,7 +7,7 @@
 
 namespace sasl{
 	namespace syntax_tree{
-		struct type_specifier;
+		struct tynode;
 		struct function_type;
 		struct builtin_type;
 	}
@@ -16,8 +16,8 @@ namespace sasl{
 BEGIN_NS_SASL_SEMANTIC();
 
 bool type_equal(
-	boost::shared_ptr< ::sasl::syntax_tree::type_specifier > lhs,
-	boost::shared_ptr< ::sasl::syntax_tree::type_specifier > rhs
+	boost::shared_ptr< ::sasl::syntax_tree::tynode > lhs,
+	boost::shared_ptr< ::sasl::syntax_tree::tynode > rhs
 );
 
 bool type_equal(
@@ -25,7 +25,7 @@ bool type_equal(
 	boost::shared_ptr< ::sasl::syntax_tree::builtin_type > rhs
 );
 
-// boost::shared_ptr<::sasl::syntax_tree::type_specifier> actual_type( boost::shared_ptr<::sasl::syntax_tree::type_specifier> );
+// boost::shared_ptr<::sasl::syntax_tree::tynode> actual_type( boost::shared_ptr<::sasl::syntax_tree::tynode> );
 END_NS_SASL_SEMANTIC();
 
 #endif

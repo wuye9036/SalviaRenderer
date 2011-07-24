@@ -147,7 +147,7 @@
 		<item value = "6 * (2 ** 48)">program</item>
 		<item value = "7 * (2 ** 48)">label</item>
 		
-		<item value = "$declaration$ + 1 * (2 ** 32)">type_specifier</item>
+		<item value = "$declaration$ + 1 * (2 ** 32)">tynode</item>
 		<item value = "$declaration$ + 1">variable_declaration</item>
 		<item value = "$declaration$ + 2">typedef_definition</item>
 		<item value = "$declaration$ + 3">parameter</item>

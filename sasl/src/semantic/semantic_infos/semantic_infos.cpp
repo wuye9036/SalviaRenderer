@@ -113,12 +113,12 @@ void type_info_si_impl::entry_id( type_entry::id_t id ){
 	tid = id;
 }
 
-shared_ptr<type_specifier> type_info_si_impl::type_info() const{
+shared_ptr<tynode> type_info_si_impl::type_info() const{
 	assert( typemgr.lock() );
 	return typemgr.lock()->get( tid );
 }
 
-void type_info_si_impl::type_info( shared_ptr<type_specifier> typespec, shared_ptr<symbol> sym ){
+void type_info_si_impl::type_info( shared_ptr<tynode> typespec, shared_ptr<symbol> sym ){
 	assert( typemgr.lock() );
 	tid = typemgr.lock()->get( typespec, sym );
 }
@@ -172,13 +172,13 @@ builtin_types const_value_si::value_type() const{
 	return type_info()->value_typecode;
 }
 
-shared_ptr<type_specifier> type_info_si::from_node( ::shared_ptr<node> n )
+shared_ptr<tynode> type_info_si::from_node( ::shared_ptr<node> n )
 {
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
 	if ( tisi ){
 		return tisi->type_info();
 	}
-	return shared_ptr<type_specifier>();
+	return shared_ptr<tynode>();
 }
 
 storage_si::storage_si( shared_ptr<type_manager> const& typemgr )

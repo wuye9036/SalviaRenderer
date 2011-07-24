@@ -41,49 +41,49 @@ type_definition::type_definition( boost::shared_ptr<token_t> tok )
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( type_definition );
 
-type_specifier::type_specifier( node_ids type_id, boost::shared_ptr<token_t> tok )
+tynode::tynode( node_ids type_id, boost::shared_ptr<token_t> tok )
 	: declaration( type_id, tok ),
 	value_typecode( builtin_types::none),
 	qual( type_qualifiers::none )
 { }
 
-bool type_specifier::is_builtin() const{
+bool tynode::is_builtin() const{
 	return node_class() == node_ids::builtin_type;
 }
 
-bool type_specifier::is_struct() const{
+bool tynode::is_struct() const{
 	return node_class() == node_ids::struct_type;
 }
 
-bool type_specifier::is_array() const{
+bool tynode::is_array() const{
 	return node_class() == node_ids::array_type;
 }
 
-bool type_specifier::is_function() const{
+bool tynode::is_function() const{
 	return node_class() == node_ids::function_type;
 }
 
-bool type_specifier::is_alias() const{
+bool tynode::is_alias() const{
 	return node_class() == node_ids::alias_type;
 }
 
-bool type_specifier::is_uniform() const
+bool tynode::is_uniform() const
 {
 	return qual.included( type_qualifiers::_uniform );
 }
 
 builtin_type::builtin_type( boost::shared_ptr<token_t> tok )
-	: type_specifier( node_ids::builtin_type, tok ){ }
+	: tynode( node_ids::builtin_type, tok ){ }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( builtin_type );
 
 array_type::array_type( boost::shared_ptr<token_t> tok )
-	: type_specifier( node_ids::array_type, tok ) { }
+	: tynode( node_ids::array_type, tok ) { }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( array_type );
 
 struct_type::struct_type( boost::shared_ptr<token_t> tok )
-	: type_specifier( node_ids::struct_type, tok ) {}
+	: tynode( node_ids::struct_type, tok ) {}
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( struct_type );
 
@@ -94,7 +94,7 @@ parameter::parameter( boost::shared_ptr<token_t> tok )
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( parameter );
 
 function_type::function_type( boost::shared_ptr<token_t> tok )
-	: type_specifier( node_ids::function_type, tok )
+	: tynode( node_ids::function_type, tok )
 {
 }
 
@@ -113,6 +113,6 @@ SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( null_declaration );
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( alias_type );
 
 alias_type::alias_type( boost::shared_ptr<token_t> tok )
-: type_specifier( node_ids::alias_type, tok ){
+: tynode( node_ids::alias_type, tok ){
 }
 END_NS_SASL_SYNTAX_TREE();

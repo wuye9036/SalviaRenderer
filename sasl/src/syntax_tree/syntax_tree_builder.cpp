@@ -616,7 +616,7 @@ shared_ptr<cast_expression> syntax_tree_builder::build_typecastedexpr( shared_pt
 	return shared_ptr<cast_expression>();
 }
 
-shared_ptr<type_specifier> syntax_tree_builder::build_typespec( shared_ptr<attribute> attr ){
+shared_ptr<tynode> syntax_tree_builder::build_typespec( shared_ptr<attribute> attr ){
 	return build_postqualedtype( attr );
 }
 
@@ -635,8 +635,8 @@ vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators( shared_
 	return ret;
 }
 
-shared_ptr<type_specifier> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute> attr ){
-	shared_ptr<type_specifier> ret;
+shared_ptr<tynode> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute> attr ){
+	shared_ptr<tynode> ret;
 
 	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
 
@@ -665,9 +665,9 @@ shared_ptr<type_specifier> syntax_tree_builder::build_unqualedtype( shared_ptr<a
 	return ret;
 }
 
-shared_ptr<type_specifier> syntax_tree_builder::build_prequaledtype( shared_ptr<attribute> attr ){
+shared_ptr<tynode> syntax_tree_builder::build_prequaledtype( shared_ptr<attribute> attr ){
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
-	shared_ptr<type_specifier> ret_type = build_unqualedtype( typed_attr->attrs[1] );
+	shared_ptr<tynode> ret_type = build_unqualedtype( typed_attr->attrs[1] );
 
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[0] );
 	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
@@ -677,10 +677,10 @@ shared_ptr<type_specifier> syntax_tree_builder::build_prequaledtype( shared_ptr<
 	return ret_type;
 }
 
-shared_ptr<type_specifier> syntax_tree_builder::build_postqualedtype( shared_ptr<attribute> attr )
+shared_ptr<tynode> syntax_tree_builder::build_postqualedtype( shared_ptr<attribute> attr )
 {
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
-	shared_ptr<type_specifier> ret_type = build_prequaledtype( typed_attr->attrs[0] );
+	shared_ptr<tynode> ret_type = build_prequaledtype( typed_attr->attrs[0] );
 
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
@@ -767,12 +767,12 @@ shared_ptr<declaration_statement> syntax_tree_builder::build_stmt_decl( shared_p
 	return ret;
 }
 
-shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<type_specifier> unqual, shared_ptr<attribute> qual ){
+shared_ptr<tynode> syntax_tree_builder::bind_typequal( shared_ptr<tynode> unqual, shared_ptr<attribute> qual ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return unqual;
 }
 
-shared_ptr<type_specifier> syntax_tree_builder::bind_typequal( shared_ptr<attribute> qual, shared_ptr<type_specifier> unqual ){
+shared_ptr<tynode> syntax_tree_builder::bind_typequal( shared_ptr<attribute> qual, shared_ptr<tynode> unqual ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return unqual;
 }

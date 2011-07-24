@@ -24,7 +24,7 @@ namespace sasl{
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 class syntax_tree_visitor;
-struct type_specifier;
+struct tynode;
 struct compound_statement;
 struct statement;
 struct expression;
@@ -87,7 +87,7 @@ struct variable_declaration : public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<type_specifier>				type_info;
+	boost::shared_ptr<tynode>				type_info;
 	std::vector< boost::shared_ptr<declarator> >	declarators;
 
 protected:
@@ -99,7 +99,7 @@ protected:
 struct type_definition: public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
-	boost::shared_ptr< type_specifier > type_info;
+	boost::shared_ptr< tynode > type_info;
 	boost::shared_ptr<token_t> name;
 
 protected:
@@ -108,7 +108,7 @@ protected:
 	type_definition( const type_definition& );
 };
 
-struct type_specifier: public declaration{
+struct tynode: public declaration{
 	builtin_types value_typecode;
 	type_qualifiers qual;
 
@@ -120,10 +120,10 @@ struct type_specifier: public declaration{
 
 	bool is_uniform() const;
 protected:
-	type_specifier(node_ids type_id, boost::shared_ptr<token_t> tok);
+	tynode(node_ids type_id, boost::shared_ptr<token_t> tok);
 };
 
-struct alias_type: public type_specifier{
+struct alias_type: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr<token_t> alias;
@@ -133,7 +133,7 @@ protected:
 	alias_type( const alias_type& );
 };
 
-struct builtin_type: public type_specifier{
+struct builtin_type: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	bool is_builtin() const;
@@ -145,20 +145,20 @@ protected:
 };
 
 
-struct array_type: public type_specifier{
+struct array_type: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	std::vector< boost::shared_ptr<expression> > array_lens;
-	boost::shared_ptr< type_specifier > elem_type;
+	boost::shared_ptr< tynode > elem_type;
 protected:
 	array_type( boost::shared_ptr<token_t> tok );
 	array_type& operator = ( const array_type& );
 	array_type( const array_type& );
 };
 
-struct struct_type: public type_specifier{
+struct struct_type: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr< token_t > name;
@@ -174,7 +174,7 @@ struct parameter: public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<type_specifier> param_type;
+	boost::shared_ptr<tynode> param_type;
 	boost::shared_ptr<token_t> name;
 	boost::shared_ptr<initializer> init;
 	boost::shared_ptr<token_t> semantic;
@@ -186,12 +186,12 @@ protected:
 	parameter( parameter const & );
 };
 
-struct function_type: public type_specifier{
+struct function_type: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr< token_t > name;
-	boost::shared_ptr< type_specifier > retval_type;
+	boost::shared_ptr< tynode > retval_type;
 	std::vector< boost::shared_ptr<parameter> > params;
 	boost::shared_ptr< token_t > semantic;
 	boost::shared_ptr< token_t > semantic_index;

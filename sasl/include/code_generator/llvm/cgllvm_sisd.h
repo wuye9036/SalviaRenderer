@@ -18,7 +18,7 @@ namespace sasl{
 		class type_converter;
 	}
 	namespace syntax_tree{
-		struct type_specifier;
+		struct tynode;
 		struct node;	
 	}
 }
@@ -119,7 +119,7 @@ protected:
 	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 
 	// LLVM code generator Utilities
-	llvm::Constant* zero_value( boost::shared_ptr<sasl::syntax_tree::type_specifier> typespec );
+	llvm::Constant* zero_value( boost::shared_ptr<sasl::syntax_tree::tynode> typespec );
 
 	llvm::Value* load( boost::any* data );
 	llvm::Value* load( cgllvm_sctxt* data );

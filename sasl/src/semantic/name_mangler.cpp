@@ -27,7 +27,7 @@ using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::struct_type;
-using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::variable_declaration;
 
 using namespace sasl::utility;
@@ -65,7 +65,7 @@ static void initialize_lookup_table(){
 
 //////////////////////////////////////////////////////////////////////////
 // some free function for manging
-static void append( std::string& str, boost::shared_ptr<type_specifier> typespec );
+static void append( std::string& str, boost::shared_ptr<tynode> typespec );
 
 static void append( std::string& str, builtin_types btc, bool is_component = false ){
 	if ( is_scalar( btc ) ) {
@@ -115,7 +115,7 @@ static void append( std::string& str, boost::shared_ptr<array_type> atype ){
 	append( str, atype->elem_type );
 }
 
-static void append( std::string& str, boost::shared_ptr<type_specifier> typespec ){
+static void append( std::string& str, boost::shared_ptr<tynode> typespec ){
 	append(str, typespec->qual);
 	// append (str, scope_qualifier(typespec) );
 	if ( typespec->node_class() == node_ids::builtin_type ){
@@ -147,7 +147,7 @@ std::string mangle( boost::shared_ptr<function_type> mangling_function ){
 
 	// parameter types
 	for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
-		boost::shared_ptr<type_specifier> par_type
+		boost::shared_ptr<tynode> par_type
 			= type_info_si::from_node( mangling_function->params[i_param] );
 		append( mangled_name, par_type );
 		mangled_name.append( "@@" );

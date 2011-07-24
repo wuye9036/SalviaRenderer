@@ -32,7 +32,7 @@ using ::sasl::semantic::type_manager;
 
 using ::sasl::syntax_tree::create_builtin_type;
 using ::sasl::syntax_tree::node;
-using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::tynode;
 
 using ::boost::bind;
 using ::boost::function;

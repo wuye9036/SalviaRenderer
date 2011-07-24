@@ -14,7 +14,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 using ::sasl::common::compiler_info_manager;
-using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::tynode;
 
 using ::boost::addressof;
 using ::boost::shared_ptr;

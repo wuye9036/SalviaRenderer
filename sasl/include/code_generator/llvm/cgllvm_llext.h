@@ -19,207 +19,325 @@ namespace llvm{
 	class LLVMContext;
 }
 
+namespace sasl{
+	namespace syntax_tree{
+		struct tynode;
+	}
+}
+
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+class value_tyinfo{
+	
+public:
+	friend class cg_service;
+	
+	value_tyinfo();
+	value_tyinfo( value_tyinfo const& );
+	value_tyinfo& operator = ( value_tyinfo const& );
+
+	enum abis{
+		abi_c,
+		abi_llvm,
+		abi_unknown
+	};
+	
+	enum types{
+		builtin,
+		aggregated
+	};
+	
+protected:
+	sasl::syntax_tree::tynode*	sasl_tys[2];
+	llvm::Type const*			llvm_tys[2];
+	abis						abi;
+	types						ty;
+	builtin_types				hint;
+};
+
+class value_proxy{
+public:
+	friend class code_gen;
+
+protected:
+	llvm::Value*		val;
+	value_tyinfo		tyinfo;
+	code_gen*			cg;
+};
+
+class rvalue : public value_proxy{
+
+	/// Get built-in's value.
+	llvm::Value* get_value() const;
+	
+	/// Get aggregated value's addr.
+	llvm::Value* get_addr() const;
+};
+
+class lvalue : public value_proxy{
+	rvalue load();
+	void store( rvalue const& );
+	
+	static lvalue allocate();
+};
+
+class cgv_scalar: public rvalue{
+	friend cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
+};
+
+cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
+
+class cgv_vector: public rvalue{
+};
+
+class cgv_matrix: public rvalue{
+};
+
+class cgv_aggragated: public rvalue{
+};
+
+class convert{
+	rvalue convert_abi( value_tyinfo::abis dest_abi, rvalue const& src );
+};
+
+class cg_service{
+public:
+	/** Emit expressions.
+	Some simple overloadable operators such as '+' '-' '*' '/'
+	will be implemented in 'cgv_*' classes in operator overload form.
+	@{  */
+	lvalue emit_cond_expr( rvalue cond, lvalue const& yes, lvalue const& no );
+	/** @} */
+	
+	/** Emit type casts @{ */
+	
+	/** @} */
+	
+	/** Emit outline @{ */
+	
+	/** @} */
+	
+	/** Emit statements @{  */
+	
+	/** @} */
+	
+	/** Emit values @{  */
+	template <typename T>
+	rvalue create_constant_scalar( T const& v );
+	
+	template <typename T>
+	rvalue create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );
+	
+	template <typename T>
+	rvalue create_constant_matrix( T const* vals, size_t length, value_tyinfo::abis abi );
+	/** @} */
+	
+	/** Emit variables @{ */
+	lvalue create_variable( value_tyinfo const* );
+	/** @} */
+	
+private:	
+};
 
 template <typename BuilderT> class llext;
 template <typename BuilderT> class llaggregated;
 
-template <typename BuilderT>
-class value_proxy
-{
-public:
-	enum classes{
-		cls_unknown,
-
-		cls_member,
-		cls_swizzle,
-		cls_reference,
-		cls_value
-	};
-
-	enum format{
-		format_abi = 0,
-		format_internal = 1
-	};
-
-private:
-	classes	cls;
-	format	fmt;
-
-	llvm::Value*			val;
-	value_proxy<BuilderT>*	parent;
-	unsigned int			index;
-	llvm::Type const*		vtys[2];
-
-	builtin_types ty_hint;
-
-	llext<BuilderT>* ext; 
-
-	llvm::Value* internal_load() const{
-		if( cls == cls_unknown ){
-			return NULL;
-		}
-		if( cls == cls_value ){
-			return val;
-		}
-		if( cls == cls_reference ){
-			return ext->CreateLoad( val );
-		}
-		if( cls == cls_member ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return NULL;
-		}
-	}
-
-	void internal_store( llvm::Value* v ){
-		assert( cls != cls_unknown );
-
-		if( cls == cls_value ){
-			assert( val );
-			val = v;
-		} else if( cls == cls_reference ){
-			ext->builder->CreateStore( v, val );
-		} else if( cls == cls_member ){
-			assert( parent );
-			llvm::Value* addr = internal_address();
-			if( addr ){
-				ext->builder->CreateStore( v, addr );
-			} else {
-				llvm::Value* parent_val = parent->load();
-				parent_val = ext->builder->CreateInsertValue( parent_val, v, index );
-				parent->store( parent_val );
-			}
-		} else if ( cls == cls_swizzle ){
-			assert( parent );
-			llvm::Value* parent_val = parent->load();
-			parent_val = ext->builder->CreateInsertElement( parent_val, v, index );
-			parent->store( parent_val );
-		}
-	}
-
-	llvm::Value* internal_address(){
-		if( cls == cls_value ){
-			return NULL;
-		}
-		if( cls == cls_reference ){
-			return val;
-		}
-		if( cls == cls_swizzle ){
-			return NULL;
-		}
-		if( cls == cls_member ){
-			Value* indexes[2];
-			indexes[0] = llv_int<BuilderT, 32, true>(0).val;
-			indexes[1] = llv_int<BuilderT, 32, true>(index).val;
-			return ext->builder->GetElementPtr( parent->address(), indexes, indexes+2 );
-		}
-	}
-
-	bool compatible( llvm::Type const* lhs, llvm::Type const* rhs  ){
-		StructType const* struct_ty = cast<StructType>( lhs->isStructTy() ? lhs : rhs );
-		VectorType const* vector_ty = cast<VectorType>( lhs->isVectorTy() ? lhs : rhs );
-
-		if( !(struct_ty && vector_ty) ){ return false;}
-		if( struct_ty->getNumElements() != vector_ty->getNumElements() ){ return false; }
-		llvm::Type const* elem_ty = vector_ty->getElementType();
-		for( size_t i = 0; i < struct_ty->getNumElements(); ++i ){
-			if( struct_ty->getElementType(i) != elem_ty ){
-				return false;
-			}
-		}
-
-		return true;
-	}
-public:
-	value_proxy( llext<BuilderT>* ext ): ext(ext){}
-	value_proxy( value_proxy const& ){}
-
-	void clone_to( value_proxy& lhs );
-	void assign( value_proxy const& rhs );
-	void proto( value_proxy& lhs );
-	
-	llvm::Type const* value_ty() const{
-		return vty[fmt];
-	}
-
-	llvm::Type const* value_ty( format f ) const{
-		return vty[f];
-	}
-
-	llvm::Value* load( format f ) const{
-		if( f == fmt ){
-			return internal_load();
-		} else {
-			return convert(f, fmt, internal_load() );
-		}
-	}
-
-	void store( llvm::Value* v, format f ){
-		if( f == fmt ){
-			internal_store( v );
-		} else {
-			internal_store( convert(fmt, f, v) );
-		}
-	}
-
-	void store( llvm::Value* v ){
-		// Must be basic type.
-		assert( ty_hint != builtin_types::none );
-		format guess_fmt = guess_format(v);
-		store( v, guess_fmt );
-	}
-	
-	format guess_format( llvm::Value* v ){
-		if( v->getType() == vty[format_internal] ){
-			return format_internal;
-		}
-		if( v->getType() == vty[format_abi] ){
-			return format_abi;
-		}
-		assert(false);
-		return format_internal;
-	}
-
-
-
-	llvm::Value const* convert(
-		format dest_fmt, format src_fmt,
-		llvm::Value* source_value
-		)
-	{
-		if( dest_fmt == src_fmt ){
-			return source_value;
-		}
-
-		if( !( is_vector(ty_hint) || is_matrix(ty_hint) ) ){
-			return val;
-		}
-
-		if( is_vector(ty_hint) ){
-			if( source_value->getType()->isVectorTy() ){
-				return llaggregated<BuilderT>( llvector< llvalue<BuilderT> >( v, ext ) ).val;
-			} else {
-				return llvector< llvalue<BuilderT> >( llaggregated<BuilderT>( v, ext ) ).val;
-			}
-		}
-
-		if( is_matrix(ty_hint) ){
-			llaggregated<BuilderT> mat = llaggregated<BuilderT>( source_value, ext );
-			llaggregated<BuilderT> ret = ext->null_value< llaggregated<BuilderT> >( vty[dest_fmt] );
-			for( size_t i = 0; i < mat.size(); ++i){
-				builtin_types row_ty = vector_of( scalar_of(ty_hint), vector_size(ty_hint) );
-				llvm::Value* cvt = convert( row_ty, dest_fmt, src_fmt, mat[i].val );
-				ret.set( i, cvt );
-			}
-			return ret.val;
-		}
-
-		return NULL;
-	}
-
-private:
-	value_proxy& operator = ( value_proxy const& );
-};
+//template <typename BuilderT>
+//class value_proxy
+//{
+//public:
+//	enum classes{
+//		cls_unknown,
+//
+//		cls_member,
+//		cls_swizzle,
+//		cls_reference,
+//		cls_value
+//	};
+//
+//	enum format{
+//		format_abi = 0,
+//		format_internal = 1
+//	};
+//
+//private:
+//	classes	cls;
+//	format	fmt;
+//
+//	llvm::Value*			val;
+//	value_proxy<BuilderT>*	parent;
+//	unsigned int			index;
+//	llvm::Type const*		vtys[2];
+//
+//	builtin_types ty_hint;
+//
+//	llext<BuilderT>* ext; 
+//
+//	llvm::Value* internal_load() const{
+//		if( cls == cls_unknown ){
+//			return NULL;
+//		}
+//		if( cls == cls_value ){
+//			return val;
+//		}
+//		if( cls == cls_reference ){
+//			return ext->CreateLoad( val );
+//		}
+//		if( cls == cls_member ){
+//			EFLIB_ASSERT_UNIMPLEMENTED();
+//			return NULL;
+//		}
+//	}
+//
+//	void internal_store( llvm::Value* v ){
+//		assert( cls != cls_unknown );
+//
+//		if( cls == cls_value ){
+//			assert( val );
+//			val = v;
+//		} else if( cls == cls_reference ){
+//			ext->builder->CreateStore( v, val );
+//		} else if( cls == cls_member ){
+//			assert( parent );
+//			llvm::Value* addr = internal_address();
+//			if( addr ){
+//				ext->builder->CreateStore( v, addr );
+//			} else {
+//				llvm::Value* parent_val = parent->load();
+//				parent_val = ext->builder->CreateInsertValue( parent_val, v, index );
+//				parent->store( parent_val );
+//			}
+//		} else if ( cls == cls_swizzle ){
+//			assert( parent );
+//			llvm::Value* parent_val = parent->load();
+//			parent_val = ext->builder->CreateInsertElement( parent_val, v, index );
+//			parent->store( parent_val );
+//		}
+//	}
+//
+//	llvm::Value* internal_address(){
+//		if( cls == cls_value ){
+//			return NULL;
+//		}
+//		if( cls == cls_reference ){
+//			return val;
+//		}
+//		if( cls == cls_swizzle ){
+//			return NULL;
+//		}
+//		if( cls == cls_member ){
+//			Value* indexes[2];
+//			indexes[0] = llv_int<BuilderT, 32, true>(0).val;
+//			indexes[1] = llv_int<BuilderT, 32, true>(index).val;
+//			return ext->builder->GetElementPtr( parent->address(), indexes, indexes+2 );
+//		}
+//	}
+//
+//	bool compatible( llvm::Type const* lhs, llvm::Type const* rhs  ){
+//		StructType const* struct_ty = cast<StructType>( lhs->isStructTy() ? lhs : rhs );
+//		VectorType const* vector_ty = cast<VectorType>( lhs->isVectorTy() ? lhs : rhs );
+//
+//		if( !(struct_ty && vector_ty) ){ return false;}
+//		if( struct_ty->getNumElements() != vector_ty->getNumElements() ){ return false; }
+//		llvm::Type const* elem_ty = vector_ty->getElementType();
+//		for( size_t i = 0; i < struct_ty->getNumElements(); ++i ){
+//			if( struct_ty->getElementType(i) != elem_ty ){
+//				return false;
+//			}
+//		}
+//
+//		return true;
+//	}
+//public:
+//	value_proxy( llext<BuilderT>* ext ): ext(ext){}
+//	value_proxy( value_proxy const& ){}
+//
+//	void clone_to( value_proxy& lhs );
+//	void assign( value_proxy const& rhs );
+//	void proto( value_proxy& lhs );
+//	
+//	llvm::Type const* value_ty() const{
+//		return vty[fmt];
+//	}
+//
+//	llvm::Type const* value_ty( format f ) const{
+//		return vty[f];
+//	}
+//
+//	llvm::Value* load( format f ) const{
+//		if( f == fmt ){
+//			return internal_load();
+//		} else {
+//			return convert(f, fmt, internal_load() );
+//		}
+//	}
+//
+//	void store( llvm::Value* v, format f ){
+//		if( f == fmt ){
+//			internal_store( v );
+//		} else {
+//			internal_store( convert(fmt, f, v) );
+//		}
+//	}
+//
+//	void store( llvm::Value* v ){
+//		// Must be basic type.
+//		assert( ty_hint != builtin_types::none );
+//		format guess_fmt = guess_format(v);
+//		store( v, guess_fmt );
+//	}
+//	
+//	format guess_format( llvm::Value* v ){
+//		if( v->getType() == vty[format_internal] ){
+//			return format_internal;
+//		}
+//		if( v->getType() == vty[format_abi] ){
+//			return format_abi;
+//		}
+//		assert(false);
+//		return format_internal;
+//	}
+//
+//
+//
+//	llvm::Value const* convert(
+//		format dest_fmt, format src_fmt,
+//		llvm::Value* source_value
+//		)
+//	{
+//		if( dest_fmt == src_fmt ){
+//			return source_value;
+//		}
+//
+//		if( !( is_vector(ty_hint) || is_matrix(ty_hint) ) ){
+//			return val;
+//		}
+//
+//		if( is_vector(ty_hint) ){
+//			if( source_value->getType()->isVectorTy() ){
+//				return llaggregated<BuilderT>( llvector< llvalue<BuilderT> >( v, ext ) ).val;
+//			} else {
+//				return llvector< llvalue<BuilderT> >( llaggregated<BuilderT>( v, ext ) ).val;
+//			}
+//		}
+//
+//		if( is_matrix(ty_hint) ){
+//			llaggregated<BuilderT> mat = llaggregated<BuilderT>( source_value, ext );
+//			llaggregated<BuilderT> ret = ext->null_value< llaggregated<BuilderT> >( vty[dest_fmt] );
+//			for( size_t i = 0; i < mat.size(); ++i){
+//				builtin_types row_ty = vector_of( scalar_of(ty_hint), vector_size(ty_hint) );
+//				llvm::Value* cvt = convert( row_ty, dest_fmt, src_fmt, mat[i].val );
+//				ret.set( i, cvt );
+//			}
+//			return ret.val;
+//		}
+//
+//		return NULL;
+//	}
+//
+//private:
+//	value_proxy& operator = ( value_proxy const& );
+//};
 
 template<typename BuilderT>
 class llvalue{

@@ -48,7 +48,7 @@ public:
 	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );
 
-	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::type_specifier > desttype,
+	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::tynode > desttype,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );
 
 	virtual ~type_converter(){}

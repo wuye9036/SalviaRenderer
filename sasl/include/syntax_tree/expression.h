@@ -37,7 +37,7 @@ private:
 };
 
 using sasl::common::token_t;
-struct type_specifier;
+struct tynode;
 class syntax_tree_visitor;
 
 struct expression: public node{
@@ -82,7 +82,7 @@ struct cast_expression: public expression{
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<type_specifier> casted_type;
+	boost::shared_ptr<tynode> casted_type;
 	boost::shared_ptr<expression> expr;
 protected:
 	cast_expression( boost::shared_ptr<token_t> tok );

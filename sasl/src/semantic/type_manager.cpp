@@ -66,8 +66,8 @@ std::string builtin_type_name( builtin_types btc ){
 //		If the src is unqualfied type, it returns 'false',
 //		naked was assgined from src, and qual return a null ptr.
 bool peel_qualifier(
-	shared_ptr<type_specifier> const& src,
-	shared_ptr<type_specifier>& naked,
+	shared_ptr<tynode> const& src,
+	shared_ptr<tynode>& naked,
 	type_entry::id_ptr_t& qual
 	)
 {
@@ -76,7 +76,7 @@ bool peel_qualifier(
 		|| tnode == node_ids::struct_type )
 	{
 		if( src->is_uniform() ){
-			naked = shared_polymorphic_cast<type_specifier>( duplicate( src ) );
+			naked = shared_polymorphic_cast<tynode>( duplicate( src ) );
 			naked->qual = type_qualifiers::none;
 			qual = &type_entry::u_qual;
 			return true;
@@ -88,7 +88,7 @@ bool peel_qualifier(
 	return false;
 }
 
-shared_ptr<type_specifier> duplicate_type_specifier( shared_ptr<type_specifier> const& typespec ){
+shared_ptr<tynode> duplicate_type_specifier( shared_ptr<tynode> const& typespec ){
 	if( typespec->is_struct() ){
 		// NOTE:
 		//	Clear declarations of duplicated since they must be filled by struct visitor.
@@ -96,11 +96,11 @@ shared_ptr<type_specifier> duplicate_type_specifier( shared_ptr<type_specifier> 
 		ret_struct->decls.clear();
 		return ret_struct;
 	} else {
-		return duplicate(typespec)->typed_handle<type_specifier>();
+		return duplicate(typespec)->typed_handle<tynode>();
 	}
 }
 
-std::string name_of_unqualified_type( shared_ptr<type_specifier> const& typespec ){
+std::string name_of_unqualified_type( shared_ptr<tynode> const& typespec ){
 	// Only build in, struct and function are potential unqualified type.
 	// Array type is qualified type.
 
@@ -133,7 +133,7 @@ shared_ptr<type_manager> type_manager::handle() const{
 	return self_handle.lock();
 }
 
-type_entry::id_t type_manager::get( shared_ptr<type_specifier> const& node, shared_ptr<symbol> const& parent ){
+type_entry::id_t type_manager::get( shared_ptr<tynode> const& node, shared_ptr<symbol> const& parent ){
 	/////////////////////////////////////////////////////
 	// if node has id yet, return it.
 	type_entry::id_t ret = type_entry_id_of_node( node );
@@ -141,7 +141,7 @@ type_entry::id_t type_manager::get( shared_ptr<type_specifier> const& node, shar
 
 	// otherwise process the node for getting right id;
 	type_entry::id_ptr_t qual;
-	boost::shared_ptr< type_specifier > inner_type;
+	boost::shared_ptr< tynode > inner_type;
 
 	if( peel_qualifier( node, inner_type, qual ) ){
 		type_entry::id_t decoratee_id = get( inner_type, parent );
@@ -172,9 +172,9 @@ type_entry::id_t type_manager::get( shared_ptr<type_specifier> const& node, shar
 	}
 }
 
-shared_ptr< type_specifier > type_manager::get( type_entry::id_t id ){
+shared_ptr< tynode > type_manager::get( type_entry::id_t id ){
 	if( id < 0 ){
-		return shared_ptr<type_specifier>();
+		return shared_ptr<tynode>();
 	}
 	return entries[id].stored;
 }
@@ -204,14 +204,14 @@ void type_manager::root_symbol( boost::shared_ptr<symbol> const& sym )
 	rootsym = sym;
 }
 
-void assign_entry_id( shared_ptr<type_specifier> const& node, shared_ptr<type_manager> const& typemgr, type_entry::id_t id ){
+void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<type_manager> const& typemgr, type_entry::id_t id ){
 	get_or_create_semantic_info<type_si>( node, typemgr )->entry_id( id );
 }
 
-type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<type_specifier> const& node  ){
+type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<tynode> const& node  ){
 	// Get a duplication from node.
 	// It assures that the node storaged in pool is always avaliable.
-	shared_ptr<type_specifier> dup_node = duplicate_type_specifier( node );
+	shared_ptr<tynode> dup_node = duplicate_type_specifier( node );
 
 	// add to pool and allocate an id
 	type_entry ret_entry;

@@ -57,7 +57,7 @@ public:
 	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
-	SASL_VISIT_DCL( type_specifier );
+	SASL_VISIT_DCL( tynode );
 	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
@@ -102,7 +102,7 @@ private:
 
 	class function_register{
 	public:
-		typedef boost::shared_ptr<sasl::syntax_tree::type_specifier> type_handle_t;
+		typedef boost::shared_ptr<sasl::syntax_tree::tynode> type_handle_t;
 
 		function_register(
 			semantic_analyser& owner,

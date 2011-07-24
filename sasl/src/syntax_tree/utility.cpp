@@ -105,7 +105,7 @@ public:
 		SAFE_ACCEPT( v.type_info );
 		applied( v, data );
 	}
-	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
+	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
 	SASL_VISIT_DCL( builtin_type ){
 		applied( v, data );
 	}
@@ -286,7 +286,7 @@ public:
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_declaration, (type_info)(declarators) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator, (name)(init)(semantic)(semantic_index) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
-	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
+	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (value_typecode)(qual)(tok) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, struct_type, (name)(decls) );
@@ -335,7 +335,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( variable_declaration );
 	SASL_VISIT_INLINE_DEF_UNIMPL( declarator );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
-	SASL_VISIT_INLINE_DEF_UNIMPL( type_specifier );
+	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
 
 	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, builtin_type, (value_typecode)(qual)(tok) );
 

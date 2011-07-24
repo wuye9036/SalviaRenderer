@@ -18,7 +18,7 @@
 
 namespace sasl {
 	namespace syntax_tree{
-		struct type_specifier;
+		struct tynode;
 		struct statement;
 		struct node;
 	}
@@ -40,7 +40,7 @@ int32_t encode_swizzle( int& dest_size, int& min_src_size, char const* masks );
 int32_t encode_sized_swizzle( int size );
 // char decode_swizzle( int32_t swz, int pos );
 
-using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::statement;
 
@@ -98,11 +98,11 @@ public:
 	virtual type_entry::id_t entry_id() const = 0;
 	virtual void entry_id( type_entry::id_t id ) = 0;
 
-	virtual ::boost::shared_ptr< type_specifier > type_info() const = 0;
-	virtual void type_info( ::boost::shared_ptr< type_specifier >, ::boost::shared_ptr<symbol> sym ) = 0;
+	virtual ::boost::shared_ptr< tynode > type_info() const = 0;
+	virtual void type_info( ::boost::shared_ptr< tynode >, ::boost::shared_ptr<symbol> sym ) = 0;
 	virtual void type_info( builtin_types btc ) = 0;
 
-	static boost::shared_ptr<type_specifier> from_node( ::boost::shared_ptr<node> );
+	static boost::shared_ptr<tynode> from_node( ::boost::shared_ptr<node> );
 };
 
 #define SASL_TYPE_INFO_PROXY()	\
@@ -111,8 +111,8 @@ public:
 	public:	\
 	virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
 	virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
-	virtual ::boost::shared_ptr< type_specifier > type_info() const{ return type_info_proxy.type_info(); }	\
-	virtual void type_info( ::boost::shared_ptr< type_specifier > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); } \
+	virtual ::boost::shared_ptr< tynode > type_info() const{ return type_info_proxy.type_info(); }	\
+	virtual void type_info( ::boost::shared_ptr< tynode > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); } \
 	virtual void type_info( builtin_types btc ){ type_info_proxy.type_info(btc); }
 
 class type_info_si_impl: public type_info_si{
@@ -122,8 +122,8 @@ public:
 	virtual type_entry::id_t entry_id() const;
 	virtual void entry_id( type_entry::id_t id );
 
-	virtual ::boost::shared_ptr< type_specifier > type_info() const;
-	virtual void type_info( ::boost::shared_ptr< type_specifier >, boost::shared_ptr<symbol> );
+	virtual ::boost::shared_ptr< tynode > type_info() const;
+	virtual void type_info( ::boost::shared_ptr< tynode >, boost::shared_ptr<symbol> );
 	virtual void type_info( builtin_types btc );
 
 private:

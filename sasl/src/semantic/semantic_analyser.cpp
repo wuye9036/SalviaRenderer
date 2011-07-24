@@ -66,7 +66,7 @@ using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
 using ::sasl::syntax_tree::statement;
 using ::sasl::syntax_tree::struct_type;
-using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::variable_expression;
 using ::sasl::syntax_tree::dfunction_combinator;
@@ -117,12 +117,12 @@ sacontext const * ctxt_ptr( const any& any_val ){
 
 // utility functions
 
-shared_ptr<type_specifier> type_info_of( shared_ptr<node> n ){
+shared_ptr<tynode> type_info_of( shared_ptr<node> n ){
 	shared_ptr<type_info_si> typesi = extract_semantic_info<type_info_si>( n );
 	if ( typesi ){
 		return typesi->type_info();
 	}
-	return shared_ptr<type_specifier>();
+	return shared_ptr<tynode>();
 }
 
 semantic_analyser::semantic_analyser()
@@ -394,7 +394,7 @@ SASL_VISIT_DEF( member_expression ){
 	SASL_EXTRACT_SI( type_info_si, arg_tisi, dup_expr->expr );
 	assert( arg_tisi );
 
-	shared_ptr<type_specifier> agg_type = arg_tisi->type_info();
+	shared_ptr<tynode> agg_type = arg_tisi->type_info();
 	type_entry::id_t mem_typeid = -1;
 
 	
@@ -579,12 +579,12 @@ SASL_VISIT_DEF( variable_declaration )
 }
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
-SASL_VISIT_DEF_UNIMPL( type_specifier );
+SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF( builtin_type ){
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
 	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, msi->type_manager() );
-	tsi->type_info( v.typed_handle<type_specifier>(), data_cptr()->parent_sym );
+	tsi->type_info( v.typed_handle<tynode>(), data_cptr()->parent_sym );
 
 	data_cptr()->generated_node = tsi->type_info()->handle();
 }
@@ -605,7 +605,7 @@ SASL_VISIT_DEF( struct_type ){
 
 	// Get from type pool or insert a new one.
 	type_entry::id_t dup_struct_id
-		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_cptr()->parent_sym );
+		= msi->type_manager()->get( v.typed_handle<tynode>(), data_cptr()->parent_sym );
 
 	assert( dup_struct_id != -1 );
 
@@ -644,7 +644,7 @@ SASL_VISIT_DEF( struct_type ){
 
 SASL_VISIT_DEF( alias_type ){
 	type_entry::id_t dup_struct_id
-		= msi->type_manager()->get( v.typed_handle<type_specifier>(), data_cptr()->parent_sym );
+		= msi->type_manager()->get( v.typed_handle<tynode>(), data_cptr()->parent_sym );
 	// TODO: If struct id not found, it means the type name is wrong.
 	// Compiler will report that.
 	assert( dup_struct_id != -1 );
@@ -691,7 +691,7 @@ SASL_VISIT_DEF( function_type )
 	any child_ctxt;
 
 	dup_fn->retval_type
-		= ctxt_ptr( visit_child( child_ctxt, child_ctxt_init, v.retval_type ) )->generated_node->typed_handle<type_specifier>();
+		= ctxt_ptr( visit_child( child_ctxt, child_ctxt_init, v.retval_type ) )->generated_node->typed_handle<tynode>();
 
 	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )

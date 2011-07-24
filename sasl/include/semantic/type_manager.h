@@ -13,7 +13,7 @@
 
 namespace sasl{
 	namespace syntax_tree{
-		struct type_specifier;
+		struct tynode;
 	}
 }
 
@@ -30,7 +30,7 @@ public:
 
 	type_entry();
 	
-	::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > stored;
+	::boost::shared_ptr< ::sasl::syntax_tree::tynode > stored;
 	
 	id_t u_qual;
 	/*
@@ -49,15 +49,15 @@ public:
 	boost::shared_ptr<type_manager> handle() const;
 	
 	type_entry::id_t get(
-		::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > const& node,
+		::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node,
 		::boost::shared_ptr<symbol> const& parent
 		);
 	type_entry::id_t get( const builtin_types& btc );
 
-	::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > get( type_entry::id_t id );
+	::boost::shared_ptr< ::sasl::syntax_tree::tynode > get( type_entry::id_t id );
 	
 private:
-	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::type_specifier > const& node );
+	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node );
 	::std::vector< type_entry > entries;
 	boost::weak_ptr<type_manager> self_handle;
 	boost::weak_ptr<symbol> rootsym;

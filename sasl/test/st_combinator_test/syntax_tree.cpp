@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	using ::sasl::syntax_tree::member_initializer;
 	using ::sasl::syntax_tree::program;
 	using ::sasl::syntax_tree::struct_type;
-	using ::sasl::syntax_tree::type_specifier;
+	using ::sasl::syntax_tree::tynode;
 	using ::sasl::syntax_tree::variable_declaration;
 
 	std::string var0_name( "var0_name" );
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 	dprog_combinator prog_comb("hello");
 
 	boost::shared_ptr<variable_declaration> fltvar;
-	boost::shared_ptr<type_specifier> flt;
+	boost::shared_ptr<tynode> flt;
 	boost::shared_ptr<member_initializer> meminit0, meminit1;
 	boost::shared_ptr<expression_initializer>
 		exprinit0, exprinit1, exprinit2, exprinit3;
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		BOOST_CHECK( member1->type_info == arrtype );
 	}
 
-	boost::shared_ptr<type_specifier>
+	boost::shared_ptr<tynode>
 		var0type, var1type, var2type;
 	boost::shared_ptr<alias_type> var3type;
 	boost::shared_ptr<array_type> var4type;

@@ -79,10 +79,10 @@ public:
 		boost::shared_ptr<expression> expr );
 	boost::shared_ptr<expression> build_pmexpr( boost::shared_ptr<sasl::parser::attribute> attr );
 	
-	boost::shared_ptr<type_specifier> build_typespec( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<type_specifier> build_unqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<type_specifier> build_prequaledtype( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<type_specifier> build_postqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<tynode> build_typespec( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<tynode> build_unqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<tynode> build_prequaledtype( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<tynode> build_postqualedtype( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<initializer> build_init( boost::shared_ptr<sasl::parser::attribute> attr );
 	
@@ -92,14 +92,14 @@ public:
 	boost::shared_ptr<expression_statement> build_stmt_expr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<declaration_statement> build_stmt_decl( boost::shared_ptr<sasl::parser::attribute> attr );
 
-	boost::shared_ptr<type_specifier> bind_typequal(
-		boost::shared_ptr<type_specifier> unqual,
+	boost::shared_ptr<tynode> bind_typequal(
+		boost::shared_ptr<tynode> unqual,
 		boost::shared_ptr<sasl::parser::attribute> qual
 		);
 
-	boost::shared_ptr<type_specifier> bind_typequal(
+	boost::shared_ptr<tynode> bind_typequal(
 		boost::shared_ptr<sasl::parser::attribute> qual,
-		boost::shared_ptr<type_specifier> unqual
+		boost::shared_ptr<tynode> unqual
 		);
 
 	operators build_binop( boost::shared_ptr<sasl::parser::attribute> attr );

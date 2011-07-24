@@ -738,7 +738,7 @@ cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val ){
 	return addressof( sc_ptr(any_val)->env() );
 }
 
-Constant* cgllvm_sisd::zero_value( boost::shared_ptr<type_specifier> typespec )
+Constant* cgllvm_sisd::zero_value( boost::shared_ptr<tynode> typespec )
 {
 	if( typespec->is_builtin() ){
 		builtin_types btc = typespec->value_typecode;
@@ -1098,8 +1098,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			rarg->setName( ".rhs" );
 
 			// Get Type infos
-			shared_ptr<type_specifier> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
-			shared_ptr<type_specifier> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
 			assert( lpar_type && rpar_type );
 			builtin_types lbtc = lpar_type->value_typecode;
 			builtin_types rbtc = rpar_type->value_typecode;
@@ -1147,8 +1147,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			rarg->setName( ".rhs" );
 
 			// Get Type infos
-			shared_ptr<type_specifier> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
-			shared_ptr<type_specifier> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
 			assert( lpar_type && rpar_type );
 			builtin_types lbtc = lpar_type->value_typecode;
 			builtin_types rbtc = rpar_type->value_typecode;

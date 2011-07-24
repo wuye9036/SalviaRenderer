@@ -121,7 +121,7 @@ void cgllvm_vs::copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression>
 
 void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 	// Extract all semantics.
-	shared_ptr<type_specifier> fn_rettype = entry_sym->node()->typed_handle<function_type>()->retval_type;
+	shared_ptr<tynode> fn_rettype = entry_sym->node()->typed_handle<function_type>()->retval_type;
 	assert( fn_rettype );
 	type_info_si* ret_tisi = dynamic_cast<type_info_si*>( fn_rettype->semantic_info().get() );
 	shared_ptr<struct_type> ret_struct = ret_tisi->type_info()->typed_handle<struct_type>();
@@ -197,7 +197,7 @@ SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
-SASL_VISIT_DEF_UNIMPL( type_specifier );
+SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF_UNIMPL( array_type );
 
 SASL_VISIT_DEF_UNIMPL( alias_type );

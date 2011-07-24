@@ -251,7 +251,7 @@ bool abi_analyser::add_semantic(
 	assert( ai );
 	storage_si* pssi = dynamic_cast<storage_si*>( v->semantic_info().get() );
 	assert(pssi); // TODO Here are semantic analysis error.
-	type_specifier* ptspec = pssi->type_info().get();
+	tynode* ptspec = pssi->type_info().get();
 	assert(ptspec); // TODO Here are semantic analysis error.
 
 	salviar::semantic_value const& node_sem = pssi->get_semantic();

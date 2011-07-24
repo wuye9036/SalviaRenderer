@@ -60,7 +60,7 @@ type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared
 	return ret_ct;
 }
 
-type_converter::conv_type type_converter::convert( shared_ptr<type_specifier> desttype, shared_ptr<node> src )
+type_converter::conv_type type_converter::convert( shared_ptr<tynode> desttype, shared_ptr<node> src )
 {
 	type_entry::id_t dst_tid = desttype->si_ptr<type_info_si>()->entry_id();
 	type_entry::id_t src_tid = src->si_ptr<type_info_si>()->entry_id();

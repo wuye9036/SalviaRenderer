@@ -33,7 +33,7 @@ public:
 	const static this_type variable_declaration;
 	const static this_type cond_expression;
 	const static this_type case_label;
-	const static this_type type_specifier;
+	const static this_type tynode;
 	const static this_type compound_statement;
 	const static this_type typedef_definition;
 	const static this_type struct_type;

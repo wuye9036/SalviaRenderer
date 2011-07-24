@@ -226,7 +226,7 @@ SASL_VISIT_DEF( expression_initializer ){
 
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( type_definition );
-SASL_VISIT_DEF_UNIMPL( type_specifier );
+SASL_VISIT_DEF_UNIMPL( tynode );
 
 
 SASL_VISIT_DEF_UNIMPL( array_type );

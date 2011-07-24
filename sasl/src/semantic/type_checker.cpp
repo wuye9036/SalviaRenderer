@@ -7,7 +7,7 @@
 
 BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::syntax_tree::builtin_type;
-using ::sasl::syntax_tree::type_specifier;
+using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::variable_declaration;
 
@@ -18,7 +18,7 @@ bool type_equal( shared_ptr<builtin_type> lhs, shared_ptr<builtin_type> rhs ){
 	return lhs->value_typecode == rhs->value_typecode;
 }
 
-bool type_equal( shared_ptr<type_specifier> lhs, shared_ptr<type_specifier> rhs ){
+bool type_equal( shared_ptr<tynode> lhs, shared_ptr<tynode> rhs ){
 	// if lhs or rhs is an alias of type, get its actual type for comparison.
 	if(lhs->node_class() == node_ids::alias_type ){
 		assert(!"need to be implemented!");
