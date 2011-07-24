@@ -136,6 +136,12 @@ class cgv_scalar: public rvalue{
 public:
 	static cgv_scalar from_rvalue( rvalue const& );
 	friend cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
+
+	cgv_scalar( cgv_scalar const& );
+	cgv_scalar& operator = ( cgv_scalar const& );
+
+protected:
+	cgv_scalar();
 };
 
 cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
@@ -145,15 +151,29 @@ public:
 	static cgv_vector from_rvalue( rvalue const& );
 	friend cgv_vector operator + ( cgv_vector const& lhs, cgv_vector const& );
 
+	cgv_vector( cgv_vector const& );
+
 	cgv_vector swizzle( size_t swz_code ) const;
+private:
+	cgv_vector();
+	cgv_vector& operator = ( cgv_vector const& );
 };
 
 class cgv_matrix: public rvalue{
+public:
+	cgv_matrix( cgv_matrix const& );
+private:
+	cgv_matrix();
+	cgv_matrix& operator = ( cgv_matrix const& );
 };
 
 class cgv_aggragated: public rvalue{
 public:
 	rvalue operator [] ( size_t sz );
+	cgv_aggragated( cgv_aggragated const& );
+private:
+	cgv_aggragated();
+	cgv_aggragated& operator = ( cgv_aggragated const& );
 };
 
 class cg_service{
