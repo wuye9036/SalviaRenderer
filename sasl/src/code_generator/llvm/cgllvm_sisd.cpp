@@ -145,7 +145,7 @@ SASL_VISIT_DEF( binary_expression ){
 		// convert value type to match proto type.
 		if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
 			if( ! node_ctxt( p0_tsi->type_info() ) ){
-				visit_child( child_ctxt, child_ctxt_init,  op_proto->params[0]->param_type );
+				visit_child( child_ctxt, child_ctxt_init, op_proto->params[0]->param_type );
 			}
 			node_ctxt(v.left_expr)->data().val_type = node_ctxt( p0_tsi->type_info() )->data().val_type;
 			typeconv->convert( p0_tsi->type_info(), v.left_expr );
@@ -232,11 +232,9 @@ SASL_VISIT_DEF( member_expression ){
 
 	if( tisi->type_info()->is_builtin() ){
 		// Swizzle or write mask
-
-		storage_si* mem_ssi = dynamic_cast<storage_si*>(v.semantic_info().get());
-		sc_ptr(data)->clear_data();
-		sc_data_ptr(data)->agg.swizzle = mem_ssi->swizzle();
-		sc_data_ptr(data)->agg.is_swizzle = true;
+		storage_si* mem_ssi = v.sc_ptr<storage_si>();
+		sc_data_ptr(data)->value()
+			= agg_ctxt->data().value<cgv_vector>().swizzle( mem_ssi->swizzle() );
 	} else {
 		// Member
 		shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
@@ -542,9 +540,9 @@ SASL_VISIT_DEF( jump_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	if ( !v.jump_expr ){
-		sc_data_ptr(data)->return_inst = builder()->CreateRetVoid();
+		builder()->CreateRetVoid();
 	} else {
-		sc_data_ptr(data)->return_inst = builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
+		builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
 	}
 }
 

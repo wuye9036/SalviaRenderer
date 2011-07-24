@@ -67,6 +67,12 @@ class value_proxy{
 public:
 	friend class code_gen;
 
+	enum kinds{
+		kind_member,
+		kind_local,
+		kind_global,
+		kind_swizzle
+	};
 	/// Get service.
 	cg_service* service() const;
 
@@ -76,9 +82,15 @@ public:
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
 
+	kinds get_kind() const;
+
 protected:
 	value_proxy();
-	value_proxy( value_tyinfo* tyinfo, llvm::Value* val, cg_service* cg );
+	value_proxy(
+		value_tyinfo* tyinfo,
+		llvm::Value* val,
+		cg_service* cg
+		);
 
 	llvm::Value*		val;
 	value_tyinfo*		tyinfo;
@@ -103,6 +115,10 @@ class lvalue : public value_proxy{
 	static lvalue allocate();
 };
 
+class cgv_member: public lvalue{
+
+};
+
 class cgv_scalar: public rvalue{
 	friend cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
 };
@@ -116,6 +132,8 @@ class cgv_matrix: public rvalue{
 };
 
 class cgv_aggragated: public rvalue{
+public:
+	rvalue operator [] ( size_t sz );
 };
 
 class convert{
@@ -158,8 +176,9 @@ public:
 	
 	/** Emit variables @{ */
 	lvalue create_variable( value_tyinfo const* );
+	lvalue create_member( value_tyinfo const*, value_proxy::kinds, size_t idx_or_swz );
 	/** @} */
-	
+
 	llvm::IRBuilder<>* builder() const;
 	llvm::LLVMContext& context() const;
 private:	

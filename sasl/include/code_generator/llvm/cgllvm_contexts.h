@@ -68,8 +68,13 @@ struct cgllvm_sctxt_data{
 	// Functions
 	llvm::Function* self_fn;		///< used by function type.
 
-	value_proxy						val;
+	boost::scoped_ptr<value_proxy>	val;
 	boost::shared_ptr<value_tyinfo>	tyinfo;
+
+	template <typename T>
+	T& value() const{
+		return *val.get();
+	}
 
 	int declarator_count;			///< For declaration only
 };
