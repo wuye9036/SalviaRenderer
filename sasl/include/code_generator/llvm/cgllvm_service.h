@@ -145,9 +145,9 @@ public:
 	
 	/** Emit values @{  */
 	template <typename T>
-	rvalue create_constant_scalar( T const& v );
+	cgv_scalar create_constant_scalar( T const& v );
 	
-	rvalue create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
+	cgv_scalar create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 
 	template <typename T>
 	rvalue create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );

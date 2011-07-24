@@ -2,9 +2,15 @@
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_CONTEXTS_H
 
 #include <sasl/include/code_generator/forward.h>
+
 #include <sasl/include/code_generator/codegen_context.h>
+#include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
 #include <eflib/include/platform/typedefs.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 namespace llvm{
 	// Node
@@ -59,42 +65,13 @@ struct cgllvm_sctxt_env{
 struct cgllvm_sctxt_data{
 	cgllvm_sctxt_data();
 
-	// Storage
-	// Only one of them is avaliable
-
-	// Treated as reference
-	// If it is true,
-	// Value must stored the address of value of val_type.
-	// e.g.
-	//  val_type = int
-	//	value = 0xDEADBEEF
-	//  is_ref = true
-	// load() = *(int*)value;
-	// *(int*)value = store()
-	bool is_ref;
-	llvm::Value* val;					// Argument and constant
-	llvm::GlobalVariable* global;
-	llvm::AllocaInst* local;
-	struct aggregated_data{
-		cgllvm_sctxt* parent;
-		union{
-			int index;
-			int32_t swizzle;
-		};
-		bool is_swizzle;
-	} agg;
-	
-	char const* hint_name;
-
 	// Functions
 	llvm::Function* self_fn;		///< used by function type.
 
-	bool as_vector;					///< Treated data as vector. Available only if val_type is struct.
-	bool is_matrix;					///< Data is built-in matrix.
-	llvm::Type const* val_type;		///< Value Type.
-	bool is_signed;					///< For integral only.
+	value_proxy						val;
+	boost::shared_ptr<value_tyinfo>	tyinfo;
+
 	int declarator_count;			///< For declaration only
-	llvm::ReturnInst* return_inst;	///< Instructions
 };
 
 class cgllvm_sctxt: public codegen_context{

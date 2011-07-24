@@ -75,12 +75,7 @@ Type const* cgllvm_impl::llvm_type( builtin_types const& btc, bool& as_vector, b
 
 void cgllvm_impl::llvm_type( builtin_types const& btc, cgllvm_sctxt* out_ctxt )
 {
-	out_ctxt->data().val_type
-		= llvm_type( 
-		btc,
-		out_ctxt->data().as_vector,
-		out_ctxt->data().is_matrix
-		);
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 llvm::DefaultIRBuilder* cgllvm_impl::builder(){

@@ -44,6 +44,6 @@ set( SOURCE_FILES
 	cgllvm_opt.cpp
 )
 
-ADD_LIBRARY( sasl_cgllvm STATIC	${HEADER_FILES} ${SOURCE_FILES} )
+ADD_LIBRARY( sasl_cgllvm STATIC ${HEADER_FILES} ${SOURCE_FILES} )
 
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_cgllvm )
