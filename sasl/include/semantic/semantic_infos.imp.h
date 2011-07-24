@@ -30,7 +30,7 @@ template <typename T> T const_value_si::value() const {
 
 template <typename T> void const_value_si::value( T val ){
 	this->val = val;
-	type_info()->value_typecode = builtin_types::none;
+	type_info()->tycode = builtin_types::none;
 }
 END_NS_SASL_SEMANTIC();
 

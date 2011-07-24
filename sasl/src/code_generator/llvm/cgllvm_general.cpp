@@ -149,8 +149,8 @@ SASL_VISIT_DEF( binary_expression ){
 		Value* retval = NULL;
 		if( lval && rval ){
 
-			builtin_types lbtc = p0_tsi->type_info()->value_typecode;
-			builtin_types rbtc = p1_tsi->type_info()->value_typecode;
+			builtin_types lbtc = p0_tsi->type_info()->tycode;
+			builtin_types rbtc = p1_tsi->type_info()->tycode;
 
 			if (v.op == operators::add){
 				if( is_real(lbtc) ){

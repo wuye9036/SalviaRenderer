@@ -37,7 +37,7 @@ void map_of_builtin_type( ContainerT& cont, const PredT& pred){
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
 			boost::shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );
-			bt->value_typecode = *it;
+			bt->tycode = *it;
 			boost::assign::insert( cont )(*it, bt );
 		}
 	}

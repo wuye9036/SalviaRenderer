@@ -109,7 +109,7 @@ protected:
 };
 
 struct tynode: public declaration{
-	builtin_types value_typecode;
+	builtin_types tycode;
 	type_qualifiers qual;
 
 	bool is_builtin() const;

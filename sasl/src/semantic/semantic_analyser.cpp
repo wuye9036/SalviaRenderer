@@ -240,8 +240,8 @@ SASL_VISIT_DEF( binary_expression )
 	EFLIB_ASSERT_AND_IF( overloads.size() == 1,	( format(
 		"Need to report a compiler error. Ambigous overloading. \r\n"
 		"operator is %1%, left expression type is %2%, right expression type is %3%. \r\n" 
-		) % v.op.name() % type_info_of( dup_expr->left_expr )->value_typecode.name()
-		% type_info_of( dup_expr->right_expr )->value_typecode.name() ).str().c_str()
+		) % v.op.name() % type_info_of( dup_expr->left_expr )->tycode.name()
+		% type_info_of( dup_expr->right_expr )->tycode.name() ).str().c_str()
 		)
 	{
 		return;
@@ -412,7 +412,7 @@ SASL_VISIT_DEF( member_expression ){
 		assert( mem_typeid != -1 );
 	} else if( agg_type->is_builtin() ){
 		// Aggregated class is vector & matrix
-		builtin_types agg_btc = agg_type->value_typecode;
+		builtin_types agg_btc = agg_type->tycode;
 		int field_count = check_swizzle( agg_btc, v.member->str, swizzle_code );
 		if( field_count > 0 ){
 			builtin_types elem_btc = scalar_of( agg_btc );

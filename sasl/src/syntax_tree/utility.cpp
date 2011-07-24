@@ -214,7 +214,7 @@ void follow_up_traversal( boost::shared_ptr<node> root, boost::function<void( no
 boost::shared_ptr<builtin_type> create_builtin_type( const builtin_types& btc )
 {
 	boost::shared_ptr<builtin_type> ret = create_node<builtin_type>( token_t::null() );
-	ret->value_typecode = btc;
+	ret->tycode = btc;
 	return ret;
 }
 
@@ -287,12 +287,12 @@ public:
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator, (name)(init)(semantic)(semantic_index) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (value_typecode)(qual)(tok) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (tycode)(qual)(tok) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, struct_type, (name)(decls) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, alias_type, (alias) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter, (param_type)(name)(init) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, function_type, (name)(retval_type)(params)(body)(value_typecode)(qual) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, function_type, (name)(retval_type)(params)(body)(tycode)(qual) );
 
 	// statement
 	SASL_VISIT_INLINE_DEF_UNIMPL( statement );
@@ -337,7 +337,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
 
-	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, builtin_type, (value_typecode)(qual)(tok) );
+	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, builtin_type, (tycode)(qual)(tok) );
 
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );

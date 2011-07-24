@@ -109,7 +109,7 @@ std::string name_of_unqualified_type( shared_ptr<tynode> const& typespec ){
 	if( actual_node_type == node_ids::alias_type ){
 		return typespec->typed_handle<alias_type>()->alias->str;
 	} else if( actual_node_type == node_ids::builtin_type ){
-		return builtin_type_name( typespec->value_typecode );
+		return builtin_type_name( typespec->tycode );
 	} else if ( actual_node_type == node_ids::function_type ){
 		return mangle( typespec->typed_handle<function_type>() );
 	} else if ( actual_node_type == node_ids::struct_type ){
@@ -186,7 +186,7 @@ type_entry::id_t type_manager::get( const builtin_types& btc ){
 	type_entry::id_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
 		shared_ptr< builtin_type > bt = create_node<builtin_type>( token_t::null() );
-		bt->value_typecode = btc;
+		bt->tycode = btc;
 		return get( bt, rootsym.lock() );
 	} else {
 		return ret_id;

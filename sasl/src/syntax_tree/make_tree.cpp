@@ -162,7 +162,7 @@ tree_combinator& dtype_combinator::dbuiltin( builtin_types btc )
 	}
 
 	typed_node( create_node<builtin_type>(token_t::null()) );
-	typed_node()->value_typecode = btc;
+	typed_node()->tycode = btc;
 	return *this;
 }
 
@@ -175,7 +175,7 @@ tree_combinator& dtype_combinator::dvec( builtin_types comp_btc, size_t size )
 	}
 
 	typed_node( create_node<builtin_type>(token_t::null()) );
-	typed_node()->value_typecode = vector_of( comp_btc, size );
+	typed_node()->tycode = vector_of( comp_btc, size );
 	return *this;
 }
 
@@ -187,7 +187,7 @@ tree_combinator& dtype_combinator::dmat( builtin_types comp_btc, size_t s0, size
 		return default_proc();
 	}
 	typed_node( create_node<builtin_type>(token_t::null() ) );
-	typed_node()->value_typecode = matrix_of(comp_btc, s0, s1);
+	typed_node()->tycode = matrix_of(comp_btc, s0, s1);
 	return *this;
 }
 

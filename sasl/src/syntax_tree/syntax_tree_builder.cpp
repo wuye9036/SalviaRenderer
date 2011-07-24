@@ -56,21 +56,21 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 #define INSERT_INTO_BTCACHE( litname, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
-		bt->value_typecode = builtin_types::enum_code;	\
+		bt->tycode = builtin_types::enum_code;	\
 		bt_cache.insert( make_pair( std::string( #litname ), bt ) );	\
 	}
 
 #define INSERT_VECTOR_INTO_BTCACHE( component_type, dim, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
-		bt->value_typecode = vector_of( builtin_types::enum_code, dim );	\
+		bt->tycode = vector_of( builtin_types::enum_code, dim );	\
 		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
 	}
 
 #define INSERT_MATRIX_INTO_BTCACHE( component_type, dim0, dim1, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
-		bt->value_typecode = matrix_of( builtin_types::enum_code, dim0, dim1 );	\
+		bt->tycode = matrix_of( builtin_types::enum_code, dim0, dim1 );	\
 		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
 	}
 

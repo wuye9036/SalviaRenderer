@@ -119,7 +119,7 @@ static void append( std::string& str, boost::shared_ptr<tynode> typespec ){
 	append(str, typespec->qual);
 	// append (str, scope_qualifier(typespec) );
 	if ( typespec->node_class() == node_ids::builtin_type ){
-		append( str, typespec->value_typecode );
+		append( str, typespec->tycode );
 	} else if ( typespec->node_class() == node_ids::struct_type ) {
 		append( str, boost::shared_polymorphic_cast<struct_type>( typespec ) );
 	} else if( typespec->node_class() == node_ids::array_type ){

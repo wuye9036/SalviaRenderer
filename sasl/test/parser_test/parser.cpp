@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE( program_test ){
 	shared_ptr<variable_declaration > vdecl = prog->decls[0]->typed_handle<variable_declaration>();
 	BOOST_REQUIRE( vdecl );
 	BOOST_REQUIRE( vdecl->type_info );
-	BOOST_CHECK( vdecl->type_info->value_typecode == builtin_types::_sint32 );
+	BOOST_CHECK( vdecl->type_info->tycode == builtin_types::_sint32 );
 	BOOST_REQUIRE( vdecl->declarators.size() == 1 );
 	BOOST_CHECK( vdecl->declarators[0]->name->str == "a" );
 	BOOST_CHECK( !vdecl->declarators[0]->init );

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_REQUIRE( SYNCASE_(var_float_3p25f) );
 	BOOST_REQUIRE( SYNCASE_(var_float_3p25f)->declarators.size() == 1 );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->declarators[0]->name->str == SYNCASENAME_(var_float_3p25f) );
-	BOOST_CHECK( SYNCASE_(var_float_3p25f)->type_info->value_typecode == SYNCASE_(btc_float) );
+	BOOST_CHECK( SYNCASE_(var_float_3p25f)->type_info->tycode == SYNCASE_(btc_float) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f) );
 	BOOST_CHECK( SYNCASE_(exprinit_cexpr_3p25f)->node_class() == node_ids::expression_initializer );
 	BOOST_CHECK( SYNCASE_(var_float_3p25f)->declarators[0]->init == SYNCASE_(exprinit_cexpr_3p25f) );
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 
 		BOOST_CHECK( flt );
 		BOOST_CHECK( flt->node_class() == node_ids::builtin_type );
-		BOOST_CHECK( flt->value_typecode == builtin_types::_float );
+		BOOST_CHECK( flt->tycode == builtin_types::_float );
 
 		BOOST_CHECK( fltvar );
 		BOOST_CHECK( fltvar->type_info == flt );
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 
 		BOOST_CHECK( arrtype );
 		BOOST_CHECK( arrtype->node_class() == node_ids::array_type );
-		BOOST_CHECK( arrtype->elem_type->value_typecode == builtin_types::_float );
+		BOOST_CHECK( arrtype->elem_type->tycode == builtin_types::_float );
 		BOOST_CHECK( arrtype->array_lens.size() == 2);
 		BOOST_CHECK( !arrtype->array_lens[0] );
 		BOOST_CHECK( arrtype->array_lens[1]->node_class() == node_ids::constant_expression );
@@ -271,8 +271,8 @@ BOOST_AUTO_TEST_CASE( type_combinator_test )
 		.end()
 	.end( prog );
 
-	BOOST_CHECK( var1type && var1type->value_typecode == vector_of(builtin_types::_uint64, 2) );
-	BOOST_CHECK( var2type && var2type->value_typecode == matrix_of(builtin_types::_double, 4, 3) );
+	BOOST_CHECK( var1type && var1type->tycode == vector_of(builtin_types::_uint64, 2) );
+	BOOST_CHECK( var2type && var2type->tycode == matrix_of(builtin_types::_double, 4, 3) );
 	BOOST_CHECK( var2type->node_class() == node_ids::builtin_type );
 	BOOST_CHECK( !var2type->is_uniform() );
 	BOOST_CHECK( var3type && var3type->alias->str == struct_name );
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE( expr_combinator_test ){
 		.end(castexpr);
 		BOOST_CHECK( castexpr );
 		BOOST_CHECK( castexpr->node_class() == node_ids::cast_expression );
-		BOOST_CHECK( castexpr->casted_type->value_typecode == builtin_types::_float );
+		BOOST_CHECK( castexpr->casted_type->tycode == builtin_types::_float );
 		BOOST_CHECK( castexpr->expr == varexpr );
 	}
 

@@ -3,7 +3,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
-#include <sasl/include/code_generator/llvm/cgllvm_llext.h>
+#include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -165,8 +165,8 @@ SASL_VISIT_DEF( binary_expression ){
 		Value* retval = NULL;
 		if( lval && rval ){
 
-			builtin_types lbtc = p0_tsi->type_info()->value_typecode;
-			builtin_types rbtc = p1_tsi->type_info()->value_typecode;
+			builtin_types lbtc = p0_tsi->type_info()->tycode;
+			builtin_types rbtc = p1_tsi->type_info()->tycode;
 
 			if (v.op == operators::add){
 				if( is_real(lbtc) ){
@@ -309,16 +309,16 @@ SASL_VISIT_DEF( call_expression ){
 			type_info_si* arg_tisi = arg_expr->si_ptr<type_info_si>();
 
 			llvm::Value* evaluated_value = load( &child_ctxt );
-			builtin_types arg_ty = arg_tisi->type_info()->value_typecode;
+			builtin_types arg_ty = arg_tisi->type_info()->tycode;
 			if( is_vector(arg_ty) ){
-				args.push_back( llagg( llvector<llval>( evaluated_value, ext.get() ) ).val );
+				args.push_back( llagg( cgv_vector( evaluated_value, ext.get() ) ).val );
 			} else if( is_matrix( arg_ty ) ) {
 				bool as_vec(false), as_mat(false);
 				llvm::Type const* mat_abity = llvm_type( arg_ty, as_vec, as_mat );
 				llagg ret = llagg( ext->null_value(mat_abity).val, ext.get() ) ;
 				llagg matv = llagg( evaluated_value, ext.get() );
 				for( size_t i = 0; i < matv.size(); ++i ){
-					ret.set( i, llagg( llvector<llval>( matv[i].val, ext.get() ) ) );
+					ret.set( i, llagg( cgv_vector( matv[i].val, ext.get() ) ) );
 				}
 				args.push_back(ret.val);
 			} else {
@@ -351,10 +351,10 @@ SASL_VISIT_DEF( builtin_type ){
 	cgllvm_sctxt* pctxt = node_ctxt( tisi->type_info(), true );
 	if ( !pctxt->data().val_type ){
 		
-		llvm_type( v.value_typecode, pctxt );
+		llvm_type( v.tycode, pctxt );
 		
 		assert( pctxt->data().val_type );
-		std::string tips = v.value_typecode.name() + std::string(" was not supported yet.");
+		std::string tips = v.tycode.name() + std::string(" was not supported yet.");
 		EFLIB_ASSERT_AND_IF( pctxt->data().val_type, tips.c_str() ){
 			return;
 		}
@@ -741,7 +741,7 @@ cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val ){
 Constant* cgllvm_sisd::zero_value( boost::shared_ptr<tynode> typespec )
 {
 	if( typespec->is_builtin() ){
-		builtin_types btc = typespec->value_typecode;
+		builtin_types btc = typespec->tycode;
 		Type const* valtype = node_ctxt(typespec)->data().val_type;
 		if( is_integer( btc ) ){
 			return ConstantInt::get( valtype, 0, is_signed(btc) );
@@ -800,11 +800,11 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 				char indices[4] = {-1, -1, -1, -1};
 				mask_to_indexes(indices, data->data().agg.swizzle);
 
-				llvector<llval> v( NULL, ext.get() );
+				cgv_vector v( NULL, ext.get() );
 				if( val->getType()->isVectorTy() ){
-					v = llvector<llval>( val, ext.get() );
+					v = cgv_vector( val, ext.get() );
 				} else {
-					v = llvector<llval>( llval( val, ext.get() ), 1 );
+					v = cgv_vector( llval( val, ext.get() ), 1 );
 				}
 
 				v = v.swizzle( indices, 4 );
@@ -824,7 +824,7 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 	}
 
 	if( data->data().as_vector && val->getType()->isStructTy() ){
-		return llvector<llval>( val, ext.get() ).val;
+		return cgv_vector( val, ext.get() ).val;
 	}
 	return val;
 }
@@ -832,14 +832,14 @@ llvm::Value* cgllvm_sisd::load( cgllvm_sctxt* data ){
 llvm::Value* cgllvm_sisd::to_abi( builtin_types hint, llvm::Value* v )
 {
 	if( is_vector(hint) ){
-		return llvector<llval>( llagg( v, ext.get() ) ).val;
+		return cgv_vector( llagg( v, ext.get() ) ).val;
 	} else if( is_matrix( hint ) ) {
 		bool as_vec(false), as_mat(false);
 		llvm::Type const* mat_abity = llvm_type( hint, as_vec, as_mat );
 		llagg ret = llagg( ext->null_value(mat_abity).val, ext.get() ) ;
 		llagg matv = llagg( v, ext.get() );
 		for( size_t i = 0; i < matv.size(); ++i ){
-			ret.set( i, llagg( llvector<llval>( matv[i].val, ext.get() ) ) );
+			ret.set( i, llagg( cgv_vector( matv[i].val, ext.get() ) ) );
 		}
 		return ret.val;
 	} else {
@@ -850,14 +850,14 @@ llvm::Value* cgllvm_sisd::to_abi( builtin_types hint, llvm::Value* v )
 llvm::Value* cgllvm_sisd::from_abi( builtin_types hint, llvm::Value* v )
 {
 	if( is_vector(hint) ){
-		return llagg( llvector<llval>( v, ext.get() ) ).val;
+		return llagg( cgv_vector( v, ext.get() ) ).val;
 	} else if( is_matrix( hint ) ) {
 		bool as_vec(false), as_mat(false);
 		llvm::Type const* mat_abity = llvm_type( hint, as_vec, as_mat );
 		llagg matv = llagg( ext->null_value(mat_abity).val, ext.get() ) ;
 		llagg ret = llagg( v, ext.get() );
 		for( size_t i = 0; i < matv.size(); ++i ){
-			ret.set( i, llagg( llvector<llval>( matv[i].val, ext.get() ) ) );
+			ret.set( i, llagg( cgv_vector( matv[i].val, ext.get() ) ) );
 		}
 		return ret.val;
 	} else {
@@ -932,12 +932,12 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 		char mask_indexes[4] = {-1, -1, -1, -1};
 		mask_to_indexes( mask_indexes, data->data().agg.swizzle );
 
-		llvector<llval> vec( load(data->data().agg.parent), ext.get() );
+		cgv_vector vec( load(data->data().agg.parent), ext.get() );
 
 		if( v->getType()->isIntegerTy() || v->getType()->isFloatingPointTy() ){
 			// Scalar, insert directly
 			if( !vec.val ){
-				vec = llvector<llval>( llval(v, ext.get()), 1 );
+				vec = cgv_vector( llval(v, ext.get()), 1 );
 			} else {
 				vec.set( 0, llval(v, ext.get()) );
 			}
@@ -945,7 +945,7 @@ void cgllvm_sisd::store( llvm::Value* v, cgllvm_sctxt* data ){
 			// Vector, insert per element.
 			assert( v->getType()->isVectorTy() );
 			for( int i = 0; i < 4 && mask_indexes[i] != -1; ++i ){
-				llvector<llval> src_vec( v, ext.get() );
+				cgv_vector src_vec( v, ext.get() );
 				vec.set( mask_indexes[i], src_vec[i] );
 			}
 		}
@@ -1101,8 +1101,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
 			shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
 			assert( lpar_type && rpar_type );
-			builtin_types lbtc = lpar_type->value_typecode;
-			builtin_types rbtc = rpar_type->value_typecode;
+			builtin_types lbtc = lpar_type->tycode;
+			builtin_types rbtc = rpar_type->tycode;
 
 			Type const* ret_type = fn->getReturnType();
 
@@ -1150,8 +1150,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
 			shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
 			assert( lpar_type && rpar_type );
-			builtin_types lbtc = lpar_type->value_typecode;
-			builtin_types rbtc = rpar_type->value_typecode;
+			builtin_types lbtc = lpar_type->tycode;
+			builtin_types rbtc = rpar_type->tycode;
 
 			Type const* ret_type = fn->getReturnType();
 

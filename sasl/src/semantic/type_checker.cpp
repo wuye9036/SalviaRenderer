@@ -15,7 +15,7 @@ using ::boost::shared_ptr;
 using ::boost::shared_polymorphic_cast;
 
 bool type_equal( shared_ptr<builtin_type> lhs, shared_ptr<builtin_type> rhs ){
-	return lhs->value_typecode == rhs->value_typecode;
+	return lhs->tycode == rhs->tycode;
 }
 
 bool type_equal( shared_ptr<tynode> lhs, shared_ptr<tynode> rhs ){

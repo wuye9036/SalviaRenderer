@@ -223,7 +223,7 @@ bool abi_analyser::update( salviar::languages lang ){
 					return false;
 				}
 
-				abiis[lang]->add_global_var(gvar_sym, psi->type_info()->value_typecode );
+				abiis[lang]->add_global_var(gvar_sym, psi->type_info()->tycode );
 			}
 		}
 	}
@@ -257,7 +257,7 @@ bool abi_analyser::add_semantic(
 	salviar::semantic_value const& node_sem = pssi->get_semantic();
 
 	if( ptspec->is_builtin() ){
-		builtin_types btc = ptspec->value_typecode;
+		builtin_types btc = ptspec->tycode;
 		if ( verify_semantic_type( btc, node_sem ) ) {
 			storage_classifications sem_s = semantic_storage( lang, is_output, node_sem );
 			switch( sem_s ){

@@ -3,6 +3,8 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
+#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/function.hpp>
@@ -49,7 +51,7 @@ template<typename ElementT> class llvector;
 template<typename ElementT> class llarray;
 
 // Code generation for SISD( Single Instruction Single Data )
-class cgllvm_sisd: public cgllvm_impl{
+class cgllvm_sisd: public cgllvm_impl, public cg_service{
 public:
 	~cgllvm_sisd();
 	bool generate(

@@ -169,7 +169,7 @@ void const_value_si::set_literal(
 
 builtin_types const_value_si::value_type() const{
 	if( !type_info() ) return builtin_types::none;
-	return type_info()->value_typecode;
+	return type_info()->tycode;
 }
 
 shared_ptr<tynode> type_info_si::from_node( ::shared_ptr<node> n )

@@ -43,7 +43,7 @@ SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( type_definition );
 
 tynode::tynode( node_ids type_id, boost::shared_ptr<token_t> tok )
 	: declaration( type_id, tok ),
-	value_typecode( builtin_types::none),
+	tycode( builtin_types::none),
 	qual( type_qualifiers::none )
 { }
 
