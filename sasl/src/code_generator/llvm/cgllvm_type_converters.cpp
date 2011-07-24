@@ -16,6 +16,8 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
+#include <vector>
+
 using ::llvm::IRBuilderBase;
 using ::llvm::IRBuilder;
 using ::llvm::Type;
@@ -40,6 +42,8 @@ using ::boost::make_shared;
 using ::boost::shared_polymorphic_cast;
 using ::boost::shared_ptr;
 using ::boost::shared_static_cast;
+
+using std::vector;
 
 using namespace sasl::utility;
 
@@ -117,20 +121,13 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		//Type const* elem_type = src_ctxt->data().val_type;
-		//Type const* dest_type = VectorType::get( elem_type, 1 );
+		rvalue scalar_value = src_ctxt->data().get_rvalue();
+		vector<cgv_scalar> scalars;
+		scalars.push_back( cgv_scalar::from_rvalue(scalar_value) );
 
-		//// Store value to an vector
-		//cgllvm_sctxt agg_ctxt;
-		//cgllvm_sctxt elem_ctxt;
-		//elem_ctxt.data().agg.is_swizzle = true;
-		//elem_ctxt.data().agg.swizzle = encode_swizzle('x'); /*X*/
-		//elem_ctxt.data().agg.parent = &agg_ctxt;
-		//store( load(src_ctxt), &elem_ctxt );
+		cgv_vector vector_value = cgs->create_vector( scalars, dest_ctxt->get_tyinfo_ptr()->get_abi() );
 
-		//store( load(&agg_ctxt), dest_ctxt );
-		//dest_ctxt->data().val_type = dest_type;
+		cgs->store( dest_ctxt->value<value_proxy>(), vector_value );
 	}
 
 	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
@@ -140,20 +137,13 @@ public:
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		//Type const* elem_type = src_ctxt->data().val_type;
-		//Type const* dest_type = VectorType::get( elem_type, 1 );
+		rvalue vector_value = dest_ctxt->data().get_rvalue();
+		size_t swz_code = encode_sized_swizzle(dest_size);
 
-		//// Store value to an vector
-		//cgllvm_sctxt agg_ctxt;
-		//cgllvm_sctxt elem_ctxt;
-		//elem_ctxt.data().agg.is_swizzle = true;
-		//elem_ctxt.data().agg.swizzle = encode_sized_swizzle(dest_size);
-		//elem_ctxt.data().agg.parent = &agg_ctxt;
-		//store( load(src_ctxt), &elem_ctxt );
-
-		//store( load(&agg_ctxt), dest_ctxt );
-		//dest_ctxt->data().val_type = dest_type;
+		cgs->store(
+			dest_ctxt->value<value_proxy>(),
+			cgv_vector::from_rvalue(vector_value).swizzle(swz_code)
+			);
 	}
 private:
 	get_ctxt_fn get_ctxt;

@@ -61,7 +61,7 @@ public:
 	value_tyinfo& operator = ( value_tyinfo const& );
 
 	builtin_types get_hint() const;
-
+	abis get_abi() const;
 protected:
 	sasl::syntax_tree::tynode*	sty;
 	llvm::Type const*			llvm_tys[2];
@@ -133,12 +133,19 @@ class cgv_member: public lvalue{
 };
 
 class cgv_scalar: public rvalue{
+public:
+	static cgv_scalar from_rvalue( rvalue const& );
 	friend cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
 };
 
 cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
 
 class cgv_vector: public rvalue{
+public:
+	static cgv_vector from_rvalue( rvalue const& );
+	friend cgv_vector operator + ( cgv_vector const& lhs, cgv_vector const& );
+
+	cgv_vector swizzle( size_t swz_code ) const;
 };
 
 class cgv_matrix: public rvalue{
@@ -184,12 +191,14 @@ public:
 	/** Emit values @{  */
 	template <typename T>
 	cgv_scalar create_constant_scalar( T const& v );
-	
+
 	cgv_scalar create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 
 	template <typename T>
 	rvalue create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );
-	
+
+	cgv_vector create_vector( std::vector<cgv_scalar> const& scalars, value_tyinfo::abis abi );
+
 	template <typename T>
 	rvalue create_constant_matrix( T const* vals, size_t length, value_tyinfo::abis abi );
 	/** @} */

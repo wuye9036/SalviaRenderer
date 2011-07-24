@@ -107,6 +107,9 @@ public:
 	void data( cgllvm_sctxt_data const& rhs );
 	void data( cgllvm_sctxt const* rhs );
 
+	value_tyinfo* get_tyinfo_ptr() const;
+	template <typename T> T& value() const;
+
 	// Copy some special members
 	void storage( cgllvm_sctxt const* rhs );
 	void type( cgllvm_sctxt const* rhs );
