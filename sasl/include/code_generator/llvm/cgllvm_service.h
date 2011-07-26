@@ -1,5 +1,5 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_LLEXT_H
-#define SASL_CODE_GENERATOR_LLVM_CGLLVM_LLEXT_H
+#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_SERVICE_H
+#define SASL_CODE_GENERATOR_LLVM_CGLLVM_SERVICE_H
 
 #include <sasl/include/code_generator/forward.h>
 
@@ -86,26 +86,42 @@ public:
 		rvalue
 	};
 
+	/// @name State queriers 
+	/// @{
+
 	/// Get service.
 	cg_service* service() const;
 
 	/// Get LLVM Value of built-in type.
 	llvm::Value* get_value() const;
-
+	
 	/// Get semantic of value.
 	lrv get_lrvalue() const;
-
+	
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
+	
+	/// Get type hint.
 	builtin_types hint() const;
 
+	/// Get kind.
 	kinds get_kind() const;
+
+	/// Get parent. If value is not a member of aggragation, it return NULL.
 	value_proxy* get_parent() const;
+
+	/// @}
 
 	void set_parent( value_proxy* parent, kinds k );
 
+	/// @name Operators
+	/// @{
+
 	value_proxy swizzle( size_t swz_code ) const;
 	value_proxy cast_to_rvalue() const;
+
+	friend value_proxy operator + ( value_proxy const&, value_proxy const& );
+	/// @}
 
 protected:
 	value_proxy();
@@ -115,24 +131,29 @@ protected:
 		cg_service* cg
 		);
 
+	/// @name Members
+	/// @{
 	value_proxy*		parent;
 	llvm::Value*		val;
 	value_tyinfo*		tyinfo;
 	cg_service*			cg;
-
 	lrv					lr;
+	/// @}
 };
+
+value_proxy operator + ( value_proxy const&, value_proxy const& );
 
 class cg_service{
 public:
-	/** Emit expressions.
+	/** @name Emit expressions
 	Some simple overloadable operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
-	@{  */
+	@{ */
 	value_proxy emit_cond_expr( value_proxy cond, value_proxy const& yes, value_proxy const& no );
 	/** @} */
 	
-	/** Emit type casts @{ */
+	/** @name Emit type casts
+	 * @{ */
 	/// Cast between integer types.
 	value_proxy cast_ints( value_proxy const& v, value_tyinfo* dest_tyi );
 	/// Cast integer to float.
@@ -156,6 +177,8 @@ public:
 	/// @}
 
 	/** Emit values @{  */
+	value_proxy null_value_proxy( value_tyinfo* tyinfo );
+
 	template <typename T>
 	value_proxy create_constant_scalar( T const& v );
 

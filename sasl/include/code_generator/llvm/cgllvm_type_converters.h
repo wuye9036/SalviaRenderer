@@ -27,14 +27,15 @@ namespace llvm{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
+class cg_service;
+
+typedef boost::function<
+		cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
+	> get_ctxt_fn;
 
 boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter(
-		boost::shared_ptr<llvm::IRBuilderBase> const& builder,
-		boost::function<
-			cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
-		> const& ctxt_lookup,
-		boost::function< llvm::Value* (cgllvm_sctxt*) > const& loader,
-		boost::function< void (llvm::Value*, cgllvm_sctxt*) > const& storer
+		get_ctxt_fn const& get_ctxt,
+		cg_service* cgs
 		);
 
 void register_builtin_typeconv(

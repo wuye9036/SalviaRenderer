@@ -51,7 +51,7 @@ template<typename ElementT> class llvector;
 template<typename ElementT> class llarray;
 
 // Code generation for SISD( Single Instruction Single Data )
-class cgllvm_sisd: public cgllvm_impl, public cg_service{
+class cgllvm_sisd: public cgllvm_impl{
 public:
 	~cgllvm_sisd();
 	bool generate(

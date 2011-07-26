@@ -66,6 +66,8 @@ struct cgllvm_sctxt_env{
 struct cgllvm_sctxt_data{
 	cgllvm_sctxt_data();
 
+	cgllvm_sctxt_data( cgllvm_sctxt_data const& );
+	cgllvm_sctxt_data& operator = ( cgllvm_sctxt_data const& );
 	// Functions
 	llvm::Function* self_fn;		///< used by function type.
 

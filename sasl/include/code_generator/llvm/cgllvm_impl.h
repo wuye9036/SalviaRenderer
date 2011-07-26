@@ -4,6 +4,7 @@
 #include <sasl/include/code_generator/forward.h>
 
 #include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -51,11 +52,9 @@ public:
 		sasl::semantic::module_si* mod,
 		sasl::semantic::abi_info const* abii
 		) = 0;
-
-	virtual boost::shared_ptr<llvm_module> module() = 0;
 };
 
-class cgllvm_impl: public cgllvm{
+class cgllvm_impl: public cgllvm, public cg_service{
 public:
 	boost::shared_ptr<llvm_module> module();
 

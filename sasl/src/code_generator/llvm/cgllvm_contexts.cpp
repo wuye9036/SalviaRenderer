@@ -35,19 +35,21 @@ void cgllvm_sctxt::data( cgllvm_sctxt const* rhs ){
 }
 
 void cgllvm_sctxt::storage( cgllvm_sctxt const* rhs ){
-	data().is_ref = rhs->data().is_ref;
-	data().val = rhs->data().val;
-	data().global = rhs->data().global;
-	data().local = rhs->data().local;
-	data().agg = rhs->data().agg;
-	data().hint_name = rhs->data().hint_name;
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	//data().is_ref = rhs->data().is_ref;
+	//data().val = rhs->data().val;
+	//data().global = rhs->data().global;
+	//data().local = rhs->data().local;
+	//data().agg = rhs->data().agg;
+	//data().hint_name = rhs->data().hint_name;
 }
 
 void cgllvm_sctxt::type( cgllvm_sctxt const* rhs ){
-	data().as_vector = rhs->data().as_vector;
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	/*data().as_vector = rhs->data().as_vector;
 	data().is_matrix = rhs->data().is_matrix;
 	data().val_type = rhs->data().val_type;
-	data().is_signed = rhs->data().is_signed;
+	data().is_signed = rhs->data().is_signed;*/
 }
 
 void cgllvm_sctxt::storage_and_type( cgllvm_sctxt* rhs ){
