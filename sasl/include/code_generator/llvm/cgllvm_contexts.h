@@ -77,7 +77,7 @@ struct cgllvm_sctxt_data{
 		return *val.get();
 	}
 
-	rvalue get_rvalue() const;
+	value_proxy get_rvalue() const;
 
 	int declarator_count;			///< For declaration only
 };
@@ -109,6 +109,7 @@ public:
 
 	value_tyinfo* get_tyinfo_ptr() const;
 	template <typename T> T& value() const;
+	value_proxy get_rvalue() const;
 
 	// Copy some special members
 	void storage( cgllvm_sctxt const* rhs );

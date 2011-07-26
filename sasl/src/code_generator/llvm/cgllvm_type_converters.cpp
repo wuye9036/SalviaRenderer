@@ -60,7 +60,6 @@ public:
 	{
 	}
 
-
 	// TODO if dest == src, maybe some bad thing happen ...
 	void int2int( shared_ptr<node> dest, shared_ptr<node> src ){
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
@@ -68,7 +67,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		rvalue casted = cgs->cast_ints(
+		value_proxy casted = cgs->cast_ints(
 			src_ctxt->data().get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -82,7 +81,7 @@ public:
 		
 		assert( src_ctxt != dest_ctxt );
 
-		rvalue casted = cgs->cast_i2f(
+		value_proxy casted = cgs->cast_i2f(
 			src_ctxt->data().get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -95,7 +94,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		rvalue casted = cgs->cast_f2i(
+		value_proxy casted = cgs->cast_f2i(
 			src_ctxt->data().get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -108,7 +107,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		rvalue casted = cgs->cast_f2f(
+		value_proxy casted = cgs->cast_f2f(
 			src_ctxt->data().get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -121,11 +120,11 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		rvalue scalar_value = src_ctxt->data().get_rvalue();
-		vector<cgv_scalar> scalars;
-		scalars.push_back( cgv_scalar::from_rvalue(scalar_value) );
+		value_proxy scalar_value = src_ctxt->data().get_rvalue();
+		vector<value_proxy> scalars;
+		scalars.push_back( scalar_value );
 
-		cgv_vector vector_value = cgs->create_vector( scalars, dest_ctxt->get_tyinfo_ptr()->get_abi() );
+		value_proxy vector_value = cgs->create_vector( scalars, dest_ctxt->get_tyinfo_ptr()->get_abi() );
 
 		cgs->store( dest_ctxt->value<value_proxy>(), vector_value );
 	}
@@ -137,12 +136,12 @@ public:
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		rvalue vector_value = dest_ctxt->data().get_rvalue();
+		value_proxy vector_value = dest_ctxt->data().get_rvalue();
 		size_t swz_code = encode_sized_swizzle(dest_size);
 
 		cgs->store(
 			dest_ctxt->value<value_proxy>(),
-			cgv_vector::from_rvalue(vector_value).swizzle(swz_code)
+			vector_value.swizzle(swz_code)
 			);
 	}
 private:

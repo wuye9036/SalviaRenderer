@@ -123,12 +123,12 @@ protected:
 	// LLVM code generator Utilities
 	llvm::Constant* zero_value( boost::shared_ptr<sasl::syntax_tree::tynode> typespec );
 
-	llvm::Value* load( boost::any* data );
-	llvm::Value* load( cgllvm_sctxt* data );
-	
-	llvm::Value* load_ptr( cgllvm_sctxt* data );
-	void store( llvm::Value*, boost::any* data );
-	void store( llvm::Value*, cgllvm_sctxt* data );
+	//llvm::Value* load( boost::any* data );
+	//llvm::Value* load( cgllvm_sctxt* data );
+	//
+	//llvm::Value* load_ptr( cgllvm_sctxt* data );
+	//void store( llvm::Value*, boost::any* data );
+	//void store( llvm::Value*, cgllvm_sctxt* data );
 
 	llvm::Value* to_abi( builtin_types hint, llvm::Value* v );
 	llvm::Value* from_abi( builtin_types hint, llvm::Value* v );

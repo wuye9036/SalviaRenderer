@@ -34,8 +34,6 @@ namespace sasl{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class rvalue;
-
 class value_tyinfo{
 public:
 	friend class cg_service;
@@ -75,25 +73,39 @@ public:
 	friend class code_gen;
 
 	enum kinds{
+		kind_unknown,
 		kind_tyinfo_only,
 		kind_local,
 		kind_global,
 		kind_member,
 		kind_swizzle
 	};
+
+	enum lrv{
+		lvalue,
+		rvalue
+	};
+
 	/// Get service.
 	cg_service* service() const;
 
 	/// Get LLVM Value of built-in type.
 	llvm::Value* get_value() const;
 
+	/// Get semantic of value.
+	lrv get_lrvalue() const;
+
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
 	builtin_types hint() const;
 
 	kinds get_kind() const;
+	value_proxy* get_parent() const;
 
-	rvalue cast_to_rvalue() const;
+	void set_parent( value_proxy* parent, kinds k );
+
+	value_proxy swizzle( size_t swz_code ) const;
+	value_proxy cast_to_rvalue() const;
 
 protected:
 	value_proxy();
@@ -103,77 +115,12 @@ protected:
 		cg_service* cg
 		);
 
+	value_proxy*		parent;
 	llvm::Value*		val;
 	value_tyinfo*		tyinfo;
 	cg_service*			cg;
-};
 
-class rvalue : public value_proxy{
-public:
-	friend class cg_service;
-
-	rvalue( rvalue const& );
-
-	/// Get aggregated value's addr.
-	llvm::Value* get_addr() const;
-
-protected:
-	rvalue( value_tyinfo* tyinfo, llvm::Value* val, cg_service* cg );
-};
-
-class lvalue : public value_proxy{
-	rvalue load();
-	void store( rvalue const& );
-	
-	static lvalue allocate();
-};
-
-class cgv_member: public lvalue{
-
-};
-
-class cgv_scalar: public rvalue{
-public:
-	static cgv_scalar from_rvalue( rvalue const& );
-	friend cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
-
-	cgv_scalar( cgv_scalar const& );
-	cgv_scalar& operator = ( cgv_scalar const& );
-
-protected:
-	cgv_scalar();
-};
-
-cgv_scalar operator + ( cgv_scalar const&, cgv_scalar const& );
-
-class cgv_vector: public rvalue{
-public:
-	static cgv_vector from_rvalue( rvalue const& );
-	friend cgv_vector operator + ( cgv_vector const& lhs, cgv_vector const& );
-
-	cgv_vector( cgv_vector const& );
-
-	cgv_vector swizzle( size_t swz_code ) const;
-private:
-	cgv_vector();
-	cgv_vector& operator = ( cgv_vector const& );
-};
-
-class cgv_matrix: public rvalue{
-public:
-	cgv_matrix( cgv_matrix const& );
-private:
-	cgv_matrix();
-	cgv_matrix& operator = ( cgv_matrix const& );
-};
-
-class cgv_aggragated: public rvalue{
-public:
-	rvalue operator [] ( size_t sz );
-	cgv_aggragated( cgv_aggragated const& );
-private:
-	cgv_aggragated();
-	cgv_aggragated& operator = ( cgv_aggragated const& );
+	lrv					lr;
 };
 
 class cg_service{
@@ -182,18 +129,18 @@ public:
 	Some simple overloadable operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{  */
-	lvalue emit_cond_expr( rvalue cond, lvalue const& yes, lvalue const& no );
+	value_proxy emit_cond_expr( value_proxy cond, value_proxy const& yes, value_proxy const& no );
 	/** @} */
 	
 	/** Emit type casts @{ */
 	/// Cast between integer types.
-	rvalue cast_ints( rvalue const& v, value_tyinfo* dest_tyi );
+	value_proxy cast_ints( value_proxy const& v, value_tyinfo* dest_tyi );
 	/// Cast integer to float.
-	rvalue cast_i2f( rvalue const& v, value_tyinfo* dest_tyi );
+	value_proxy cast_i2f( value_proxy const& v, value_tyinfo* dest_tyi );
 	/// Cast float to integer.
-	rvalue cast_f2i( rvalue const& v, value_tyinfo* dest_tyi );
+	value_proxy cast_f2i( value_proxy const& v, value_tyinfo* dest_tyi );
 	/// Cast between float types.
-	rvalue cast_f2f( rvalue const& v, value_tyinfo* dest_tyi );
+	value_proxy cast_f2f( value_proxy const& v, value_tyinfo* dest_tyi );
 	/** @} */
 	
 	/** Emit outline @{ */
@@ -210,22 +157,22 @@ public:
 
 	/** Emit values @{  */
 	template <typename T>
-	cgv_scalar create_constant_scalar( T const& v );
+	value_proxy create_constant_scalar( T const& v );
 
-	cgv_scalar create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
-
-	template <typename T>
-	rvalue create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );
-
-	cgv_vector create_vector( std::vector<cgv_scalar> const& scalars, value_tyinfo::abis abi );
+	value_proxy create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 
 	template <typename T>
-	rvalue create_constant_matrix( T const* vals, size_t length, value_tyinfo::abis abi );
+	value_proxy create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );
+
+	value_proxy create_vector( std::vector<value_proxy> const& scalars, value_tyinfo::abis abi );
+
+	template <typename T>
+	value_proxy create_constant_matrix( T const* vals, size_t length, value_tyinfo::abis abi );
 	/** @} */
 	
 	/** Emit variables @{ */
-	lvalue create_variable( value_tyinfo const* );
-	lvalue create_member( value_tyinfo const*, value_proxy::kinds, size_t idx_or_swz );
+	value_proxy create_variable( value_tyinfo const* );
+	value_proxy create_member( value_tyinfo const*, value_proxy::kinds, size_t idx_or_swz );
 	/** @} */
 
 	llvm::DefaultIRBuilder* builder() const;
