@@ -381,7 +381,7 @@ shared_ptr<type_converter> create_type_converter(
 	function< void (Value*, cgllvm_sctxt*) > const& storer
 	)
 {
-	return make_shared<cgllvm_type_converter>( builder, ctxt_lookup, loader, storer );
+	return boost::make_shared<cgllvm_type_converter>( builder, ctxt_lookup, loader, storer );
 }
 
 END_NS_SASL_CODE_GENERATOR();
