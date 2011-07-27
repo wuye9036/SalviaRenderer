@@ -1258,15 +1258,27 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 					pv[j] = &v;
 				}
 
-				uint32_t num_out_clipped_verts;
-				state_->clipping(
-					num_clipped_verts[i], num_out_clipped_verts,
-					&clipped_verts[i * 6], &cliped_indices[i * 12], 
-					i * 6, clipper, vp, pv, *vs_output_ops
-					);
-
-				for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-					vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
+				// view frustum culling
+				eflib::vec4 t0 = clampss(eflib::vec4(-pv[0]->position.x, -pv[0]->position.y, pv[0]->position.x, pv[0]->position.y) - pv[0]->position.w, 0, 1);
+				eflib::vec4 t1 = clampss(eflib::vec4(-pv[1]->position.x, -pv[1]->position.y, pv[1]->position.x, pv[1]->position.y) - pv[1]->position.w, 0, 1);
+				eflib::vec4 t2 = clampss(eflib::vec4(-pv[2]->position.x, -pv[2]->position.y, pv[2]->position.x, pv[2]->position.y) - pv[2]->position.w, 0, 1);
+				eflib::vec4 t = t0 * t1 * t2;
+				if ((0 == t.x) && (0 == t.y) && (0 == t.z) && (0 == t.w))
+				{
+					uint32_t num_out_clipped_verts;
+					state_->clipping(
+						num_clipped_verts[i], num_out_clipped_verts,
+						&clipped_verts[i * 6], &cliped_indices[i * 12], 
+						i * 6, clipper, vp, pv, *vs_output_ops
+						);
+				
+					for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
+						vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
+					}
+				}
+				else
+				{
+					num_clipped_verts[i] = 0;
 				}
 			}
 			else if (2 == prim_size){
