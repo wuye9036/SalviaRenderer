@@ -7,12 +7,14 @@
 #include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <eflib/include/diagnostics/assert.h>
+
 using sasl::syntax_tree::tynode;
 using namespace sasl::utility;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-/// value_tyinfo @{
+// Value tyinfo
 value_tyinfo::value_tyinfo(
 	tynode* sty,
 	llvm::Type const* cty,
@@ -27,6 +29,17 @@ value_tyinfo::value_tyinfo(
 		hint = sty->tycode;
 	}
 }
+
+builtin_types value_tyinfo::get_hint() const{
+	if( !sty || !sty->is_builtin() ){
+		return builtin_types::none;
+	}
+	return sty->tycode;
+}
+
+value_tyinfo::abis value_tyinfo::get_abi() const{
+	return abi;
+}
 /// @}
 
 /// value_proxy @{
@@ -40,6 +53,30 @@ value_proxy::value_proxy( value_tyinfo* tyinfo, llvm::Value* val, cg_service* cg
 {
 }
 
+value_proxy value_proxy::swizzle( size_t swz_code ) const{
+	assert( is_vector( hint() ) );
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+llvm::Value* value_proxy::get_value() const{
+	if( hint() == builtin_types::none ){
+		return NULL;
+	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
+
+value_proxy value_proxy::cast_to_rvalue() const
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+builtin_types value_proxy::hint() const
+{
+	return tyinfo->get_hint();
+}
 /// @}
 
 /// cgv_scalar @{
@@ -70,4 +107,52 @@ value_proxy::value_proxy( value_tyinfo* tyinfo, llvm::Value* val, cg_service* cg
 //}
 
 /// @}
+
+void cg_service::store( value_proxy& lhs, value_proxy const& rhs ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+value_proxy cg_service::cast_ints( value_proxy const& v, value_tyinfo* dest_tyi )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+value_proxy cg_service::cast_i2f( value_proxy const& v, value_tyinfo* dest_tyi )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+value_proxy cg_service::cast_f2i( value_proxy const& v, value_tyinfo* dest_tyi )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+value_proxy cg_service::cast_f2f( value_proxy const& v, value_tyinfo* dest_tyi )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+value_proxy cg_service::null_value_proxy( value_tyinfo* tyinfo )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+value_proxy cg_service::create_vector( std::vector<value_proxy> const& scalars, value_tyinfo::abis abi ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
+value_proxy operator+( value_proxy const& lhs, value_proxy const& rhs ){
+	assert( lhs.hint() != builtin_types::none );
+	assert( is_scalar( scalar_of( lhs.hint() ) ) );
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_proxy();
+}
+
 END_NS_SASL_CODE_GENERATOR();

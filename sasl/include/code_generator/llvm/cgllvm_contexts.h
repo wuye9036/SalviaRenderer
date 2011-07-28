@@ -13,6 +13,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/diagnostics/assert.h>
+
 namespace llvm{
 	// Node
 	class AllocaInst;
@@ -64,23 +66,25 @@ struct cgllvm_sctxt_env{
 };
 
 struct cgllvm_sctxt_data{
+
+	/// @name Builtin functions
+	/// @{
 	cgllvm_sctxt_data();
 
-	cgllvm_sctxt_data( cgllvm_sctxt_data const& );
-	cgllvm_sctxt_data& operator = ( cgllvm_sctxt_data const& );
+	cgllvm_sctxt_data( cgllvm_sctxt_data const& ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	cgllvm_sctxt_data& operator = ( cgllvm_sctxt_data const& ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return *this;
+	}
+	/// @}
+
 	// Functions
 	llvm::Function* self_fn;		///< used by function type.
 
-	boost::scoped_ptr<value_proxy>	val;
+	value_proxy						val;
 	boost::shared_ptr<value_tyinfo>	tyinfo;
-
-	template <typename T>
-	T& value() const{
-		return *val.get();
-	}
-
-	value_proxy get_rvalue() const;
-
 	int declarator_count;			///< For declaration only
 };
 
@@ -110,7 +114,9 @@ public:
 	void data( cgllvm_sctxt const* rhs );
 
 	value_tyinfo* get_tyinfo_ptr() const;
-	template <typename T> T& value() const;
+
+	value_proxy const& get_value() const;
+	value_proxy& get_value();
 	value_proxy get_rvalue() const;
 
 	// Copy some special members

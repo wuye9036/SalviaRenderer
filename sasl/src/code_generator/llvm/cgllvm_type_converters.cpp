@@ -68,11 +68,11 @@ public:
 		assert( src_ctxt != dest_ctxt );
 
 		value_proxy casted = cgs->cast_ints(
-			src_ctxt->data().get_rvalue(),
+			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
 
-		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
+		cgs->store( dest_ctxt->get_value(), casted );
 	}
 
 	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -82,10 +82,10 @@ public:
 		assert( src_ctxt != dest_ctxt );
 
 		value_proxy casted = cgs->cast_i2f(
-			src_ctxt->data().get_rvalue(),
+			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
-		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
+		cgs->store( dest_ctxt->get_value(), casted );
 	}
 
 	void float2int( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -95,10 +95,10 @@ public:
 		assert( src_ctxt != dest_ctxt );
 
 		value_proxy casted = cgs->cast_f2i(
-			src_ctxt->data().get_rvalue(),
+			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
-		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
+		cgs->store( dest_ctxt->get_value(), casted );
 	}
 
 	void float2float( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -108,10 +108,10 @@ public:
 		assert( src_ctxt != dest_ctxt );
 
 		value_proxy casted = cgs->cast_f2f(
-			src_ctxt->data().get_rvalue(),
+			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
-		cgs->store( dest_ctxt->data().value<value_proxy>(), casted );
+		cgs->store( dest_ctxt->get_value(), casted );
 	}
 
 	void scalar2vec1( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -120,13 +120,13 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_proxy scalar_value = src_ctxt->data().get_rvalue();
+		value_proxy scalar_value = src_ctxt->get_rvalue();
 		vector<value_proxy> scalars;
 		scalars.push_back( scalar_value );
 
 		value_proxy vector_value = cgs->create_vector( scalars, dest_ctxt->get_tyinfo_ptr()->get_abi() );
 
-		cgs->store( dest_ctxt->value<value_proxy>(), vector_value );
+		cgs->store( dest_ctxt->get_value(), vector_value );
 	}
 
 	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
@@ -136,11 +136,11 @@ public:
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		value_proxy vector_value = dest_ctxt->data().get_rvalue();
+		value_proxy vector_value = dest_ctxt->get_rvalue();
 		size_t swz_code = encode_sized_swizzle(dest_size);
 
 		cgs->store(
-			dest_ctxt->value<value_proxy>(),
+			dest_ctxt->get_value(),
 			vector_value.swizzle(swz_code)
 			);
 	}

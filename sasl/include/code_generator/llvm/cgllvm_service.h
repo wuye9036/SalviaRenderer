@@ -71,6 +71,8 @@ protected:
 class value_proxy{
 public:
 	friend class code_gen;
+	
+	value_proxy();
 
 	enum kinds{
 		kind_unknown,
@@ -124,7 +126,6 @@ public:
 	/// @}
 
 protected:
-	value_proxy();
 	value_proxy(
 		value_tyinfo* tyinfo,
 		llvm::Value* val,

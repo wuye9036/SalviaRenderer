@@ -229,7 +229,7 @@ SASL_VISIT_DEF( binary_expression ){
 			//}
 		}
 
-		store( sc_ptr(data)->value<value_proxy>(), retval );
+		store( sc_ptr(data)->get_value(), retval );
 		node_ctxt(v, true)->copy( sc_ptr(data) );
 	}
 }
@@ -254,9 +254,9 @@ SASL_VISIT_DEF( member_expression ){
 		// Swizzle or write mask
 		storage_si* mem_ssi = v.si_ptr<storage_si>();
 
-		value_proxy vec_value = agg_ctxt->data().get_rvalue();
+		value_proxy vec_value = agg_ctxt->get_rvalue();
 		store(
-			sc_data_ptr(data)->value<value_proxy>(),
+			sc_ptr(data)->get_value(),
 			vec_value.swizzle( mem_ssi->swizzle() )
 			);
 	} else {
@@ -270,7 +270,7 @@ SASL_VISIT_DEF( member_expression ){
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	// sc_data_ptr(data)->value<value_proxy>().set_parent( &( agg_ctxt->value<value_proxy>() ) )
+	// sc_data_ptr(data)->get_value().set_parent( &( agg_ctxt->get_value() ) )
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -1012,34 +1012,37 @@ llvm::Value* cgllvm_sisd::from_abi( builtin_types hint, llvm::Value* v )
 //	}
 //}
 //
-//void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
-//{
-//	// Inner empty block, insert an br instruction for jumping to next block.
-//	// And the tail empty block we add an virtual return instruction.
-//	typedef Function::BasicBlockListType::iterator block_iterator_t;
-//	block_iterator_t beg = fn->getBasicBlockList().begin();
-//	block_iterator_t end = fn->getBasicBlockList().end();
-//
-//	for(  block_iterator_t it = beg; it != end; ++it )
-//	{
-//		if( !it->getTerminator() ){
-//			block_iterator_t next_it = it;
-//			++next_it;
-//
-//			builder()->SetInsertPoint( &(*it) );
-//
-//			if( next_it != fn->getBasicBlockList().end() ){	
-//				mod_ptr()->builder()->CreateBr( &(*next_it) );
-//			} else {
-//				if( !fn->getReturnType()->isVoidTy() ){
-//					ext->return_( ext->null_value( fn->getReturnType() ) );
-//				} else {
-//					ext->return_();
-//				}
-//			}
-//		}
-//	}
-//}
+void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
+{
+	// Inner empty block, insert an br instruction for jumping to next block.
+	// And the tail empty block we add an virtual return instruction.
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	/*typedef Function::BasicBlockListType::iterator block_iterator_t;
+	block_iterator_t beg = fn->getBasicBlockList().begin();
+	block_iterator_t end = fn->getBasicBlockList().end();
+
+	for(  block_iterator_t it = beg; it != end; ++it )
+	{
+		if( !it->getTerminator() ){
+			block_iterator_t next_it = it;
+			++next_it;
+
+			builder()->SetInsertPoint( &(*it) );
+
+			if( next_it != fn->getBasicBlockList().end() ){	
+				mod_ptr()->builder()->CreateBr( &(*next_it) );
+			} else {
+				if( !fn->getReturnType()->isVoidTy() ){
+					ext->return_( ext->null_value( fn->getReturnType() ) );
+				} else {
+					ext->return_();
+				}
+			}
+		}
+	}*/
+}
 
 template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_vm(
 	llvm::Value* v, llvm::Value* m,
