@@ -222,7 +222,8 @@ SASL_VISIT_DEF( expression_initializer ){
 		typeconv->convert( var_tsi->type_info(), v.init_expr );
 	}
 
-	sc_ptr(data)->storage_and_type( sc_ptr(child_ctxt) );
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	//	sc_ptr(data)->storage_and_type( sc_ptr(child_ctxt) );
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
@@ -241,7 +242,8 @@ SASL_VISIT_DEF( parameter ){
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.param_type );
-	sc_ptr(data)->type( sc_ptr(child_ctxt) );
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	// sc_ptr(data)->type( sc_ptr(child_ctxt) );
 	if (v.init){
 		visit_child( child_ctxt, child_ctxt_init, v.init );
 	} 

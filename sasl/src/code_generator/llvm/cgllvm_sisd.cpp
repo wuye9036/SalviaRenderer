@@ -367,7 +367,10 @@ SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
 
-	sc_ptr(data)->storage_and_type( node_ctxt( declsym->node() ) );
+	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	//sc_ptr(data)->get_value() == node_ctxt( declsym->node() )->value();
+	//sc_ptr(data)->get_tyinfo_sp() == node_ctxt( declsym->node() )->get_tyinfo_sp();
 	// sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -673,8 +676,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
-	Type const* lltype = sc_env_ptr(data)->declarator_type;
-	assert(lltype);
+	// Type const* lltype = sc_env_ptr(data)->declarator_type;
+	// assert(lltype);
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 

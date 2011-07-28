@@ -35,30 +35,8 @@ void cgllvm_sctxt::data( cgllvm_sctxt const* rhs ){
 	hold_data = rhs->data();
 }
 
-void cgllvm_sctxt::storage( cgllvm_sctxt const* rhs ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//data().is_ref = rhs->data().is_ref;
-	//data().val = rhs->data().val;
-	//data().global = rhs->data().global;
-	//data().local = rhs->data().local;
-	//data().agg = rhs->data().agg;
-	//data().hint_name = rhs->data().hint_name;
-}
-
-void cgllvm_sctxt::type( cgllvm_sctxt const* rhs ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	/*data().as_vector = rhs->data().as_vector;
-	data().is_matrix = rhs->data().is_matrix;
-	data().val_type = rhs->data().val_type;
-	data().is_signed = rhs->data().is_signed;*/
-}
-
-void cgllvm_sctxt::storage_and_type( cgllvm_sctxt* rhs ){
-	storage(rhs);
-	type(rhs);
-}
-
 void cgllvm_sctxt::copy( cgllvm_sctxt const* rhs ){
+	if( rhs == this ){ return; }
 	env( rhs->env() );
 	data( rhs->data() );
 }
@@ -102,12 +80,16 @@ value_proxy cgllvm_sctxt::get_rvalue() const{
 
 value_tyinfo* cgllvm_sctxt::get_tyinfo_ptr() const
 {
-	return data().tyinfo.get();
+	return get_tyinfo_sp().get();
 }
+
+boost::shared_ptr<value_tyinfo> cgllvm_sctxt::get_tyinfo_sp() const{
+	return data().tyinfo;
+}
+
 cgllvm_sctxt_env::cgllvm_sctxt_env() 
 	: parent_fn(NULL), block(NULL), parent_struct(NULL),
-	is_mat(false), as_vec(false),
-	is_semantic_mode(false), declarator_type(NULL)
+	is_semantic_mode(false)
 {
 }
 

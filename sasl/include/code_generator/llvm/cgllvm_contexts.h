@@ -53,39 +53,35 @@ struct cgllvm_sctxt_env{
 
 	bool is_semantic_mode;
 
-	llvm::Type const* declarator_type;
-	bool is_mat, as_vec;
+	/// Type information used by declarator.
+	boost::shared_ptr<value_tyinfo> tyinfo;
 
 	cgllvm_sctxt* parent_struct;
 
-	llvm::Function* parent_fn;	// If generating code in function, it will be used.
+	/// If generating code in function, it will be used.
+	llvm::Function* parent_fn;	
+
 	llvm::BasicBlock* block;
 	
+	/// Current symbol scope.
 	boost::weak_ptr< sasl::semantic::symbol > sym;
+
+	/// The variable which will pass in initilizer to generate initialization code.
 	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
 };
 
 struct cgllvm_sctxt_data{
 
-	/// @name Builtin functions
-	/// @{
 	cgllvm_sctxt_data();
-
-	cgllvm_sctxt_data( cgllvm_sctxt_data const& ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	cgllvm_sctxt_data& operator = ( cgllvm_sctxt_data const& ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return *this;
-	}
-	/// @}
 
 	// Functions
 	llvm::Function* self_fn;		///< used by function type.
 
 	value_proxy						val;
 	boost::shared_ptr<value_tyinfo>	tyinfo;
-	int declarator_count;			///< For declaration only
+
+	/// The declarator count of declaration.
+	int declarator_count;			
 };
 
 class cgllvm_sctxt: public codegen_context{
@@ -113,16 +109,17 @@ public:
 	void data( cgllvm_sctxt_data const& rhs );
 	void data( cgllvm_sctxt const* rhs );
 
+	/// @name Accessors.
+	/// Expose members in environment and data for easily using.
+	/// @{
 	value_tyinfo* get_tyinfo_ptr() const;
+	boost::shared_ptr<value_tyinfo> get_tyinfo_sp() const;
 
 	value_proxy const& get_value() const;
 	value_proxy& get_value();
-	value_proxy get_rvalue() const;
 
-	// Copy some special members
-	void storage( cgllvm_sctxt const* rhs );
-	void type( cgllvm_sctxt const* rhs );
-	void storage_and_type( cgllvm_sctxt* rhs );
+	value_proxy get_rvalue() const;
+	/// @}
 
 private:
 	cgllvm_sctxt_data hold_data;
