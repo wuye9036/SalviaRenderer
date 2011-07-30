@@ -618,12 +618,10 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 	any child_ctxt;
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-
 	// Generate return types.
-	//visit_child( child_ctxt, child_ctxt_init, v.retval_type );
-	//Type const* ret_type = sc_data_ptr(&child_ctxt)->val_type;
-	//EFLIB_ASSERT_AND_IF( ret_type, "ret_type" ){ return; }
+	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
+	shared_ptr<value_tyinfo> ret_ty = sc_data_ptr(&child_ctxt)->tyinfo;
+	assert( ret_ty );
 
 	//// Generate paramenter types.
 	//vector<Type const*> param_types;

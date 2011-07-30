@@ -71,6 +71,24 @@ public:
 protected:
 	sasl::syntax_tree::tynode*	sty;
 	llvm::Type const*			llvm_tys[2];
+	
+	/// \brief Does treat type as reference if ABI is C compatible.
+	///  
+	/// An important fact is LLVM's ABI is not same as C API.
+	/// If structure was passed into function by value,
+	/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
+	/// But LLVM will push the instance to stack.
+	/// So this varaible will qualify the type of arguments/parameters indicates the compiler.
+	/// For e.g. we have a prototype:
+	///		void foo( struct S );
+	/// If is only called by LLVM code, the IR signature will be 
+	///		def foo( %S %arg );
+	/// But if it maybe called by external function as convention as "C" code,
+	/// The IR signature will be generated as following:
+	///		def foo( %S* %arg );
+	/// And 'as_ref' the parameter/argument 'arg' is set to true.
+	bool						as_ref;
+
 	abis						abi;
 	types						ty;
 	builtin_types				hint;
@@ -85,6 +103,8 @@ public:
 	enum kinds{
 		kind_unknown,
 		kind_tyinfo_only,
+		kind_value,
+		kind_ref,
 		kind_local,
 		kind_global,
 		kind_member,
@@ -161,6 +181,8 @@ struct function_t{
 	{
 		return NULL != fn;
 	}
+
+	function_t();
 
 	/// Get argument's value by index.
 	value_t arg( size_t index ) const;

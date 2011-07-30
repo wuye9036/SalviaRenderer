@@ -29,11 +29,14 @@ value_tyinfo::value_tyinfo(
 	tynode* sty,
 	llvm::Type const* cty,
 	llvm::Type const* llty,
-	value_tyinfo::abis abi
+	value_tyinfo::abis abi,
+	bool arg_as_ref
 	) : sty(sty), abi(abi), hint(builtin_types::none)
 {
 	llvm_tys[abi_c] = cty;
 	llvm_tys[abi_llvm] = llty;
+	
+	as_ref = arg_as_ref;
 
 	if( sty->is_builtin() ){
 		hint = sty->tycode;
@@ -231,6 +234,10 @@ value_t function_t::arg( size_t index ) const
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
+}
+
+function_t::function_t(): fn(NULL), fnty(NULL)
+{
 }
 
 END_NS_SASL_CODE_GENERATOR();
