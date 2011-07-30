@@ -13,7 +13,7 @@ node::node(node_ids tid, shared_ptr<token_t> tok )
 	// DO NOTHING
 }
 
-boost::shared_ptr<node> node::handle() const{
+boost::shared_ptr<node> node::as_handle() const{
 	return selfptr.lock();
 }
 

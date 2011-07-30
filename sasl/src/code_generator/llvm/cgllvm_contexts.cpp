@@ -6,7 +6,7 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 cgllvm_sctxt_data::cgllvm_sctxt_data()
-: declarator_count(0), self_fn(NULL)	
+: declarator_count(0)
 {
 }
 
@@ -88,8 +88,9 @@ boost::shared_ptr<value_tyinfo> cgllvm_sctxt::get_tysp() const{
 }
 
 cgllvm_sctxt_env::cgllvm_sctxt_env() 
-	: parent_fn(NULL), block(NULL), parent_struct(NULL),
-	is_semantic_mode(false)
+	: block(NULL)
+	, parent_struct(NULL)
+	, is_semantic_mode(false)
 {
 }
 

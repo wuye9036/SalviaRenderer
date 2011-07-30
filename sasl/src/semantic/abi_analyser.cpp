@@ -190,7 +190,7 @@ bool abi_analyser::update( salviar::languages lang ){
 		)
 	{
 		// Process entry function.
-		shared_ptr<function_type> entry_fn = entries[lang]->node()->typed_handle<function_type>();
+		shared_ptr<function_type> entry_fn = entries[lang]->node()->as_handle<function_type>();
 		assert( entry_fn );
 
 		if( !add_semantic( entry_fn, false, false, salviar::lang_vertex_shader, true ) ){
@@ -208,7 +208,7 @@ bool abi_analyser::update( salviar::languages lang ){
 
 		// Process global variables.
 		BOOST_FOREACH( shared_ptr<symbol> const& gvar_sym, mods[lang]->globals() ){
-			shared_ptr<declarator> gvar = gvar_sym->node()->typed_handle<declarator>();
+			shared_ptr<declarator> gvar = gvar_sym->node()->as_handle<declarator>();
 			assert(gvar);
 
 			// is_member is set to true for preventing aggregated variable.
@@ -285,7 +285,7 @@ bool abi_analyser::add_semantic(
 		BOOST_FOREACH( shared_ptr<declaration> const& decl, pstructspec->decls )
 		{
 			if ( decl->node_class() == node_ids::variable_declaration ){
-				shared_ptr<variable_declaration> vardecl = decl->typed_handle<variable_declaration>();
+				shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
 				BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators ){
 					if ( !add_semantic( dclr, true, enable_nested, lang, is_output ) ){
 						return false;

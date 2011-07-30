@@ -125,7 +125,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 	// better & worse judgement is as same as C#.
 	vector< shared_ptr<symbol> > candidates;
 	for( size_t i_func = 0; i_func < overloads.size(); ++i_func ){
-		shared_ptr<function_type> matching_func = overloads[i_func]->node()->typed_handle<function_type>();
+		shared_ptr<function_type> matching_func = overloads[i_func]->node()->as_handle<function_type>();
 
 		// could not matched.
 		if ( matching_func->params.size() != args.size() ){ continue; }
@@ -164,7 +164,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 		bool is_worse = false;
 		for( vector< shared_ptr<symbol> >::iterator it = candidates.begin(); it != candidates.end();  ){
 
-			shared_ptr<function_type> a_matched_func = (*it)->node()->typed_handle<function_type>();
+			shared_ptr<function_type> a_matched_func = (*it)->node()->as_handle<function_type>();
 
 			// match functions.
 			size_t better_param_count = 0;
@@ -221,7 +221,7 @@ shared_ptr<symbol> symbol::add_function_begin( shared_ptr<function_type> child_f
 	shared_ptr<symbol> ret;
 	if( !child_fn ){ return ret; }
 
-	return create( selfptr.lock(), child_fn->handle(), child_fn->name->str );
+	return create( selfptr.lock(), child_fn->as_handle(), child_fn->name->str );
 }
 
 bool symbol::add_function_end( boost::shared_ptr<symbol> sym ){
@@ -233,7 +233,7 @@ bool symbol::add_function_end( boost::shared_ptr<symbol> sym ){
 		return false;
 	}
 
-	sym->mgl_name = mangle( sym->node()->typed_handle<function_type>() );
+	sym->mgl_name = mangle( sym->node()->as_handle<function_type>() );
 
 	children_iterator_t ret_it = children.find(sym->mgl_name);
 	if ( ret_it != children.end() ){

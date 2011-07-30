@@ -84,7 +84,7 @@ SASL_VISIT_DEF( cast_expression ){
 	//		EFLIB_ASSERT_UNIMPLEMENTED();
 	//	}
 	//	node_ctxt(v, true)->data().val_type = node_ctxt(v.casted_type)->data().val_type;
-	//	typeconv->convert( v.handle(), v.expr );
+	//	typeconv->convert( v.as_handle(), v.expr );
 	//}
 
 	//cgllvm_sctxt* vctxt = node_ctxt(v, false);
@@ -123,7 +123,7 @@ SASL_VISIT_DEF( binary_expression ){
 	//		return;
 	//	}
 
-	//	boost::shared_ptr<function_type> op_proto = overloads[0]->node()->typed_handle<function_type>();
+	//	boost::shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
 
 	//	shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
 	//	shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
@@ -215,7 +215,7 @@ SASL_VISIT_DEF( expression_initializer ){
 
 	visit_child( child_ctxt, child_ctxt_init, v.init_expr );
 
-	shared_ptr<type_info_si> init_tsi = extract_semantic_info<type_info_si>(v.handle());
+	shared_ptr<type_info_si> init_tsi = extract_semantic_info<type_info_si>(v.as_handle());
 	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(sc_env_ptr(data)->variable_to_fill.lock());
 
 	if( init_tsi->entry_id() != var_tsi->entry_id() ){
@@ -327,7 +327,7 @@ cgllvm_modimpl* cgllvm_general::mod_ptr(){
 
 bool cgllvm_general::create_mod( sasl::syntax_tree::program& v ){
 	if ( mod ){ return false; }
-	mod = create_codegen_context<cgllvm_modimpl>( v.handle() );
+	mod = create_codegen_context<cgllvm_modimpl>( v.as_handle() );
 	return true;
 }
 

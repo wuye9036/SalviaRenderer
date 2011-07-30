@@ -82,7 +82,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	}
 	assert( struct_name );
 
-	llmodule()->addTypeName( struct_name, entry_params_structs[st].data() );
+	module()->addTypeName( struct_name, entry_params_structs[st].data() );
 }
 
 void cgllvm_vs::create_entry_params(){
@@ -127,16 +127,16 @@ void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 
 	// Extract all semantics.
-	//shared_ptr<tynode> fn_rettype = entry_sym->node()->typed_handle<function_type>()->retval_type;
+	//shared_ptr<tynode> fn_rettype = entry_sym->node()->as_handle<function_type>()->retval_type;
 	//assert( fn_rettype );
 	//type_info_si* ret_tisi = dynamic_cast<type_info_si*>( fn_rettype->semantic_info().get() );
-	//shared_ptr<struct_type> ret_struct = ret_tisi->type_info()->typed_handle<struct_type>();
+	//shared_ptr<struct_type> ret_struct = ret_tisi->type_info()->as_handle<struct_type>();
 
 	//// Copy value to semantics.
 	//BOOST_FOREACH( shared_ptr<declaration> const& decl, ret_struct->decls ){
 	//	if( decl->node_class() == node_ids::variable_declaration ){
 
-	//		shared_ptr<variable_declaration> vardecl = decl->typed_handle<variable_declaration>();
+	//		shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
 
 	//		BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
 	//			storage_si* ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
@@ -362,9 +362,9 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 	//	} else {
 	//		// Virtual args for aggregated argument
-	//		shared_ptr<struct_type> par_type = par_ssi->type_info()->typed_handle<struct_type>();
+	//		shared_ptr<struct_type> par_type = par_ssi->type_info()->as_handle<struct_type>();
 	//		BOOST_FOREACH( shared_ptr<declaration> const& decl, par_type->decls ){
-	//			shared_ptr<variable_declaration> vardecl = decl->typed_handle<variable_declaration>();
+	//			shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
 	//			BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
 	//				storage_si* par_mem_ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
 	//				assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
@@ -457,7 +457,7 @@ cgllvm_modvs* cgllvm_vs::mod_ptr(){
 bool cgllvm_vs::create_mod( sasl::syntax_tree::program& v )
 {
 	if ( mod ){ return false; }
-	mod = create_codegen_context<cgllvm_modvs>( v.handle() );
+	mod = create_codegen_context<cgllvm_modvs>( v.as_handle() );
 	return true;
 }
 

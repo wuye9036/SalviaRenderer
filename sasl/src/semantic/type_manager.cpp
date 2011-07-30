@@ -92,11 +92,11 @@ shared_ptr<tynode> duplicate_type_specifier( shared_ptr<tynode> const& typespec 
 	if( typespec->is_struct() ){
 		// NOTE:
 		//	Clear declarations of duplicated since they must be filled by struct visitor.
-		shared_ptr<struct_type> ret_struct = duplicate(typespec)->typed_handle<struct_type>();
+		shared_ptr<struct_type> ret_struct = duplicate(typespec)->as_handle<struct_type>();
 		ret_struct->decls.clear();
 		return ret_struct;
 	} else {
-		return duplicate(typespec)->typed_handle<tynode>();
+		return duplicate(typespec)->as_handle<tynode>();
 	}
 }
 
@@ -107,13 +107,13 @@ std::string name_of_unqualified_type( shared_ptr<tynode> const& typespec ){
 	node_ids actual_node_type = typespec->node_class();
 
 	if( actual_node_type == node_ids::alias_type ){
-		return typespec->typed_handle<alias_type>()->alias->str;
+		return typespec->as_handle<alias_type>()->alias->str;
 	} else if( actual_node_type == node_ids::builtin_type ){
 		return builtin_type_name( typespec->tycode );
 	} else if ( actual_node_type == node_ids::function_type ){
-		return mangle( typespec->typed_handle<function_type>() );
+		return mangle( typespec->as_handle<function_type>() );
 	} else if ( actual_node_type == node_ids::struct_type ){
-		return typespec->typed_handle<struct_type>()->name->str;
+		return typespec->as_handle<struct_type>()->name->str;
 	}
 
 	assert( !"Type type code is unrecgonized!" );

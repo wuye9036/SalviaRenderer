@@ -56,7 +56,7 @@ public:
 
 class cgllvm_impl: public cgllvm, public cg_service{
 public:
-	boost::shared_ptr<llvm_module> module();
+	boost::shared_ptr<llvm_module> cg_module() const;
 
 protected:
 	cgllvm_impl();
@@ -80,9 +80,9 @@ protected:
 	void llvm_type( builtin_types const& btc, sctxt_handle out_ctxt );
 
 	// Direct access member from module.
-	llvm::DefaultIRBuilder* builder();
-	llvm::LLVMContext& llcontext();
-	llvm::Module* llmodule() const;
+	llvm::DefaultIRBuilder* builder() const;
+	llvm::LLVMContext& context() const;
+	llvm::Module* module() const;
 
 protected:
 	// ---------------Data Members-----------------

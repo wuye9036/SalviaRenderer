@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( program_test ){
 	BOOST_REQUIRE( prog->decls[0] );
 
 	using ::sasl::syntax_tree::variable_declaration;
-	shared_ptr<variable_declaration > vdecl = prog->decls[0]->typed_handle<variable_declaration>();
+	shared_ptr<variable_declaration > vdecl = prog->decls[0]->as_handle<variable_declaration>();
 	BOOST_REQUIRE( vdecl );
 	BOOST_REQUIRE( vdecl->type_info );
 	BOOST_CHECK( vdecl->type_info->tycode == builtin_types::_sint32 );

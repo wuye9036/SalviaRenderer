@@ -21,6 +21,7 @@ namespace llvm{
 	class Type;
 	class Value;
 	class LLVMContext;
+	class Module;
 
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -63,6 +64,8 @@ public:
 	value_tyinfo( value_tyinfo const& );
 	value_tyinfo& operator = ( value_tyinfo const& );
 
+	sasl::syntax_tree::tynode* get_typtr() const;
+	boost::shared_ptr<sasl::syntax_tree::tynode> get_tysp() const;
 	builtin_types get_hint() const;
 	abis get_abi() const;
 protected:
@@ -243,11 +246,11 @@ public:
 	value_t create_member( value_tyinfo const*, value_t::kinds, size_t idx_or_swz );
 	/// @}
 
-	llvm::DefaultIRBuilder* builder() const;
-	llvm::LLVMContext&		context() const;
+	virtual llvm::DefaultIRBuilder* builder() const = 0;
+	virtual llvm::LLVMContext&		context() const = 0;
+	virtual llvm::Module*			module() const = 0;
 
 private:
-
 	std::vector<function_t> fn_ctxts;
 };
 

@@ -17,6 +17,8 @@ using namespace sasl::utility;
 using llvm::Function;
 using llvm::Type;
 
+using boost::shared_ptr;
+
 using std::vector;
 using std::string;
 
@@ -48,6 +50,15 @@ builtin_types value_tyinfo::get_hint() const{
 value_tyinfo::abis value_tyinfo::get_abi() const{
 	return abi;
 }
+
+tynode* value_tyinfo::get_typtr() const{
+	return sty;
+}
+
+shared_ptr<tynode> value_tyinfo::get_tysp() const{
+	return sty->as_handle<tynode>();
+}
+
 /// @}
 
 /// value_t @{
@@ -164,7 +175,7 @@ void cg_service::emit_return( value_t const& ret_v ){
 }
 
 function_t& cg_service::fn(){
-	fn_ctxts.back();
+	return fn_ctxts.back();
 }
 
 void cg_service::push_fn( function_t const& fn ){
@@ -203,6 +214,12 @@ void function_t::args_name( vector<string> const& names )
 		++arg_it;
 		++name_it;
 	}
+}
+
+shared_ptr<value_tyinfo> function_t::get_return_ty(){
+	assert( fnty->get_typtr()->is_function() );
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<value_tyinfo>();
 }
 
 END_NS_SASL_CODE_GENERATOR();

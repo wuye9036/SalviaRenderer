@@ -58,7 +58,7 @@ Type const* cgllvm_impl::llvm_type( builtin_types const& btc, bool& as_vector, b
 		is_mat = false;
 		vector<Type const*> member_tys;
 		member_tys.insert( member_tys.end(), vector_size(btc), inner_type );
-		return StructType::get( llcontext(), member_tys, true);
+		return StructType::get( context(), member_tys, true);
 	}
 	
 	if( is_matrix( btc ) ){
@@ -78,20 +78,19 @@ void cgllvm_impl::llvm_type( builtin_types const& btc, cgllvm_sctxt* out_ctxt )
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
-llvm::DefaultIRBuilder* cgllvm_impl::builder(){
+llvm::DefaultIRBuilder* cgllvm_impl::builder() const{
 	return mod->builder().get();
 }
 
-boost::shared_ptr<llvm_module> cgllvm_impl::module()
-{
+boost::shared_ptr<llvm_module> cgllvm_impl::cg_module() const{
 	return mod;
 }
 
-llvm::LLVMContext& cgllvm_impl::llcontext(){
+llvm::LLVMContext& cgllvm_impl::context() const{
 	return mod->context();
 }
 
-llvm::Module* cgllvm_impl::llmodule() const{
+llvm::Module* cgllvm_impl::module() const{
 	return mod->module();
 }
 

@@ -32,7 +32,7 @@ ContextT* cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if_ne
 		if( create_if_need ){
 			shared_ptr<ContextT> const& ret
 				= ctxts[ptr]
-				= create_codegen_context<ContextT>( nd->handle() );
+				= create_codegen_context<ContextT>( nd->as_handle() );
 			return ret.get();
 		}
 		return NULL;
@@ -43,7 +43,7 @@ ContextT* cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if_ne
 
 template<typename ContextT>
 ContextT* cgllvm_impl::node_ctxt( node& nd, bool create_if_need ){
-	return node_ctxt<node, ContextT>(nd.handle(), create_if_need);
+	return node_ctxt<node, ContextT>(nd.as_handle(), create_if_need);
 }
 
 END_NS_SASL_CODE_GENERATOR();

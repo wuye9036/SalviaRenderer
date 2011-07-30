@@ -111,11 +111,11 @@ BOOST_AUTO_TEST_CASE( decl_combinator_test )
 	BOOST_CHECK( ! SYNCASE_(var_3_0)->init );
 	BOOST_REQUIRE( SYNCASE_(var_3_1_with_init) );
 	BOOST_CHECK( SYNCASE_(var_3_1_with_init)->init );
-	BOOST_CHECK( SYNCASE_(var_3_1_with_init)->init->typed_handle<expression_initializer>()->init_expr = SYNCASE_(cexpr_3p25f) );
+	BOOST_CHECK( SYNCASE_(var_3_1_with_init)->init->as_handle<expression_initializer>()->init_expr = SYNCASE_(cexpr_3p25f) );
 	BOOST_REQUIRE( SYNCASE_(var_3_2_with_nullinit) );
 	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit) == SYNCASE_(var_3_float)->declarators[2] );
 	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->node_class() == node_ids::member_initializer );
-	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->typed_handle<member_initializer>()->sub_inits.empty() );
+	BOOST_CHECK( SYNCASE_(var_3_2_with_nullinit)->init->as_handle<member_initializer>()->sub_inits.empty() );
 	BOOST_CHECK( SYNCASE_(prog_for_syntax_test)->decls[1] == SYNCASE_(fn1_sem) );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->node_class() == node_ids::function_type );
 	BOOST_CHECK( SYNCASE_(fn1_sem)->name->str == SYNCASENAME_(fn1_sem) );

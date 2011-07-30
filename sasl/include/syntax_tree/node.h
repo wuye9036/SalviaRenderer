@@ -44,9 +44,9 @@ struct node{
 	friend class swallow_duplicator;
 	friend class deep_duplicator;
 
-	boost::shared_ptr<node> handle() const;
-	template <typename T> boost::shared_ptr<T> typed_handle() const{
-		return boost::shared_polymorphic_cast<T>( handle() );
+	boost::shared_ptr<node> as_handle() const;
+	template <typename T> boost::shared_ptr<T> as_handle() const{
+		return boost::shared_polymorphic_cast<T>( as_handle() );
 	}
 
 	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;

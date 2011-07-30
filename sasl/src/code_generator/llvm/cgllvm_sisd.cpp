@@ -140,7 +140,7 @@ SASL_VISIT_DEF( binary_expression ){
 			return;
 		}
 
-		boost::shared_ptr<function_type> op_proto = overloads[0]->node()->typed_handle<function_type>();
+		boost::shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
 
 		shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
 		shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
@@ -1121,7 +1121,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
 
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
-		shared_ptr<function_type> intr_fn = intr->node()->typed_handle<function_type>();
+		shared_ptr<function_type> intr_fn = intr->node()->as_handle<function_type>();
 
 		// If intrinsic is not invoked, we don't generate code for it.
 		if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
