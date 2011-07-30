@@ -59,7 +59,7 @@ struct cgllvm_sctxt_env{
 	cgllvm_sctxt* parent_struct;
 
 	/// If generating code in function, it will be used.
-	llvm::Function* parent_fn;	
+	function_t parent_fn;	
 
 	llvm::BasicBlock* block;
 	
@@ -74,10 +74,12 @@ struct cgllvm_sctxt_data{
 
 	cgllvm_sctxt_data();
 
-	// Functions
-	llvm::Function* self_fn;		///< used by function type.
+	/// Function type.
+	function_t self_fn;
+	/// Value attached to node.
+	value_t val;
 
-	value_t							val;
+	/// Type attached to node.
 	boost::shared_ptr<value_tyinfo>	tyinfo;
 
 	/// The declarator count of declaration.

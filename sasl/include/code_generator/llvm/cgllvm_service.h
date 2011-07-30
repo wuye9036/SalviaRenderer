@@ -8,11 +8,16 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/preprocessor/seq.hpp>
 #include <boost/preprocessor/for.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <eflib/include/metaprog/util.h>
 
 #include <vector>
 
 namespace llvm{
+	class Function;
 	class Type;
 	class Value;
 	class LLVMContext;
@@ -137,7 +142,33 @@ protected:
 	/// @}
 };
 
+template <typename RVT>
+struct scope_guard{
+	typedef boost::function<RVT ()> on_exit_fn;
+	scope_guard( on_exit_fn do_exit ): do_exit(do_exit){}
+	~scope_guard(){ do_exit(); }
+private:
+	on_exit_fn do_exit;
+};
+
 value_t operator + ( value_t const&, value_t const& );
+
+struct function_t{
+	EFLIB_OPERATOR_BOOL( function_t )
+	{
+		return NULL != fn;
+	}
+
+	/// Set argument name.
+	void arg_name( size_t index, std::string const& );
+	/// Set arguments name. Size of names must be less than argument size.
+	void args_name( std::vector<std::string> const& names );
+
+	boost::shared_ptr<value_tyinfo> get_return_ty();
+
+	value_tyinfo*	fnty;
+	llvm::Function* fn;
+};
 
 class cg_service{
 public:
@@ -162,12 +193,25 @@ public:
 	
 	/// @name Emit Declarations
 	/// @{
-	void begin_function();
-	void end_function();
+	function_t begin_fndecl();
+	function_t end_fndecl();
 	/// @}
 	
+	/// @name Context switchs
+	/// @{
+	void push_fn( function_t const& fn );
+	void pop_fn();
+	/// @}
+
+	/// @name Context queries
+	/// @{
+	function_t& fn();
+	/// @}
+
 	/// @name Emit statement
 	/// @{
+	void emit_return();
+	void emit_return( value_t const& );
 	/// @}
 
 	/// @name Emit assignment
@@ -201,7 +245,10 @@ public:
 
 	llvm::DefaultIRBuilder* builder() const;
 	llvm::LLVMContext&		context() const;
+
 private:
+
+	std::vector<function_t> fn_ctxts;
 };
 
 //template <typename BuilderT>

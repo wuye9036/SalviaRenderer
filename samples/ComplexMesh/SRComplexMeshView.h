@@ -483,10 +483,10 @@ public:
 
 	LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		UNREF_PARAM(uMsg);
-		UNREF_PARAM(wParam);
-		UNREF_PARAM(lParam);
-		UNREF_PARAM(bHandled);
+		EFLIB_UNREF_PARAM(uMsg);
+		EFLIB_UNREF_PARAM(wParam);
+		EFLIB_UNREF_PARAM(lParam);
+		EFLIB_UNREF_PARAM(bHandled);
 
 		return 1;
     }

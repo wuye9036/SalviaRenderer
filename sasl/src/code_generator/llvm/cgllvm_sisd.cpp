@@ -33,6 +33,8 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/assign/std/vector.hpp>
+#include <boost/scope_exit.hpp>
+#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace llvm;
@@ -51,6 +53,7 @@ using sasl::semantic::operator_name;
 
 using boost::addressof;
 using boost::any_cast;
+using boost::bind;
 
 using std::vector;
 
@@ -325,7 +328,7 @@ SASL_VISIT_DEF( call_expression ){
 		// Get LLVM Function
 		symbol* fn_sym = csi->overloaded_function();
 		cgllvm_sctxt* fn_ctxt = node_ctxt( fn_sym->node(), false );
-		Function* fn = fn_ctxt->data().self_fn;
+		// Function* fn = fn_ctxt->data().self_fn;
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 	//	sc_data_ptr(data)->val_type = fn_ctxt->data().val_type;
@@ -598,7 +601,6 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
-	mod_ptr()->module()->setDataLayout("p:64:64:64");
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 
@@ -644,7 +646,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	Function* fn = sc_data_ptr(data)->self_fn;
+	// Function* fn = sc_data_ptr(data)->self_fn;
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 
@@ -660,19 +662,20 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-	Function* fn = sc_data_ptr(data)->self_fn;
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	//Function* fn = sc_data_ptr(data)->self_fn;
 
-	any child_ctxt_init = *data;
-	sc_env_ptr(&child_ctxt_init)->parent_fn = fn;
+	//any child_ctxt_init = *data;
+	//// sc_env_ptr(&child_ctxt_init)->parent_fn = fn;
 
-	any child_ctxt;
+	//any child_ctxt;
 
-	// Create function body.
-	// Create block
-	restart_block( &child_ctxt_init, std::string(".entry") );
-	restart_block( &child_ctxt_init, std::string(".body") );
-	visit_child( child_ctxt, child_ctxt_init, v.body );
-	clear_empty_blocks( fn );
+	//// Create function body.
+	//// Create block
+	//restart_block( &child_ctxt_init, std::string(".entry") );
+	//restart_block( &child_ctxt_init, std::string(".body") );
+	//visit_child( child_ctxt, child_ctxt_init, v.body );
+	//clear_empty_blocks( fn );
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
@@ -804,10 +807,11 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 }
 
 void cgllvm_sisd::restart_block( boost::any* data, std::string const& name ){
-	assert( sc_env_ptr(data)->parent_fn );
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	/*assert( sc_env_ptr(data)->parent_fn );
 	BasicBlock* restart = BasicBlock::Create( llcontext(), name, sc_env_ptr(data)->parent_fn );
 	sc_env_ptr(data)->block = restart;
-	builder()->SetInsertPoint(restart);
+	builder()->SetInsertPoint(restart);*/
 }
 
 cgllvm_modimpl* cgllvm_sisd::mod_ptr(){
@@ -1114,126 +1118,124 @@ template <typename ElementT> ElementT cgllvm_sisd::dot_prod(
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
+	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
 
-	//BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
-	//	shared_ptr<function_type> intr_fn = intr->node()->typed_handle<function_type>();
+	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
+		shared_ptr<function_type> intr_fn = intr->node()->typed_handle<function_type>();
 
-	//	// If intrinsic is not invoked, we don't generate code for it.
-	//	if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
-	//		continue;
-	//	}
+		// If intrinsic is not invoked, we don't generate code for it.
+		if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
+			continue;
+		}
 
-	//	any child_ctxt = cgllvm_sctxt();
+		any child_ctxt = cgllvm_sctxt();
 
-	//	visit_child( child_ctxt, intr_fn );
+		visit_child( child_ctxt, intr_fn );
 
-	//	cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
-	//	assert( intrinsic_ctxt );
+		cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
+		assert( intrinsic_ctxt );
 
-	//	Function* fn = intrinsic_ctxt->data().self_fn;
+		push_fn( intrinsic_ctxt->data().self_fn );
+		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
 
-	//	assert(fn);
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		/*BasicBlock* body = BasicBlock::Create( llcontext(), ".body", fn );
+		builder()->SetInsertPoint( body );*/
 
-	//	BasicBlock* body = BasicBlock::Create( llcontext(), ".body", fn );
-	//	builder()->SetInsertPoint( body );
+		if( intr->unmangled_name() == "mul" )
+		{
+			// Set Argument name
+			fn().arg_name( 0, ".lhs" );
+			fn().arg_name( 1, ".rhs" );
 
-	//	if( intr->unmangled_name() == "mul" )
-	//	{
-	//		// Set Argument name
-	//		Argument* larg = fn->getArgumentList().begin();
-	//		Argument* rarg = ++fn->getArgumentList().begin();
+			// Get Type infos
+			shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
+			shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
+			assert( lpar_type && rpar_type );
+			builtin_types lbtc = lpar_type->tycode;
+			builtin_types rbtc = rpar_type->tycode;
 
-	//		larg->setName( ".lhs" );
-	//		rarg->setName( ".rhs" );
+			shared_ptr<value_tyinfo> result_ty = fn().get_return_ty();
 
-	//		// Get Type infos
-	//		shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
-	//		shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
-	//		assert( lpar_type && rpar_type );
-	//		builtin_types lbtc = lpar_type->tycode;
-	//		builtin_types rbtc = rpar_type->tycode;
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			// TODO need to be optimized.
 
-	//		Type const* ret_type = fn->getReturnType();
+			// vec_m mul(vec_n, mat_mxn);
+			//if( is_vector( lbtc ) && is_matrix( rbtc ) ){
+			//	if( scalar_of(lbtc) == builtin_types::_float ){
+			//		emit_return(
+			//			mul_vm<llfloat>( larg, rarg,
+			//			vector_size(lbtc), vector_size(rbtc),
+			//			ret_type )
+			//			);
+			//	} else if ( scalar_of(lbtc) == builtin_types::_sint32 ){
+			//		ext->return_(
+			//			mul_vm<lli32>( larg, rarg,
+			//			vector_size(lbtc), vector_size(rbtc),
+			//			ret_type )
+			//			);
+			//	} else {
+			//		// EFLIB_ASSERT_UNIMPLEMENTED();
+			//	}
+			//} else if( is_matrix( lbtc ) && is_vector( rbtc ) ) {
+			//	if( scalar_of(lbtc) == builtin_types::_float ){
+			//		ext->return_(
+			//			mul_mv<llfloat>( larg, rarg,
+			//			vector_size(lbtc), vector_count(lbtc),
+			//			ret_type )
+			//			);
+			//	}
+			//} else {
+			//	// EFLIB_ASSERT_UNIMPLEMENTED();
+			//}
+		}
+		else if( intr->unmangled_name() == "dot" )
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			// Set Argument name
+			//Argument* larg = fn->getArgumentList().begin();
+			//Argument* rarg = ++fn->getArgumentList().begin();
 
-	//		// TODO need to be optimized.
+			//larg->setName( ".lhs" );
+			//rarg->setName( ".rhs" );
 
-	//		// vec_m mul(vec_n, mat_mxn);
-	//		if( is_vector( lbtc ) && is_matrix( rbtc ) ){
-	//			if( scalar_of(lbtc) == builtin_types::_float ){
-	//				ext->return_(
-	//					mul_vm<llfloat>( larg, rarg,
-	//					vector_size(lbtc), vector_size(rbtc),
-	//					ret_type )
-	//					);
-	//			} else if ( scalar_of(lbtc) == builtin_types::_sint32 ){
-	//				ext->return_(
-	//					mul_vm<lli32>( larg, rarg,
-	//					vector_size(lbtc), vector_size(rbtc),
-	//					ret_type )
-	//					);
-	//			} else {
-	//				// EFLIB_ASSERT_UNIMPLEMENTED();
-	//			}
-	//		} else if( is_matrix( lbtc ) && is_vector( rbtc ) ) {
-	//			if( scalar_of(lbtc) == builtin_types::_float ){
-	//				ext->return_(
-	//					mul_mv<llfloat>( larg, rarg,
-	//					vector_size(lbtc), vector_count(lbtc),
-	//					ret_type )
-	//					);
-	//			}
-	//		} else {
-	//			// EFLIB_ASSERT_UNIMPLEMENTED();
-	//		}
-	//	}
-	//	else if( intr->unmangled_name() == "dot" )
-	//	{
-	//		// Set Argument name
-	//		Argument* larg = fn->getArgumentList().begin();
-	//		Argument* rarg = ++fn->getArgumentList().begin();
+			//// Get Type infos
+			//shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
+			//shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
+			//assert( lpar_type && rpar_type );
+			//builtin_types lbtc = lpar_type->tycode;
+			//builtin_types rbtc = rpar_type->tycode;
 
-	//		larg->setName( ".lhs" );
-	//		rarg->setName( ".rhs" );
+			//Type const* ret_type = fn->getReturnType();
 
-	//		// Get Type infos
-	//		shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
-	//		shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
-	//		assert( lpar_type && rpar_type );
-	//		builtin_types lbtc = lpar_type->tycode;
-	//		builtin_types rbtc = rpar_type->tycode;
+			//assert( is_vector(lbtc) && is_vector(rbtc) );
+			//assert( scalar_of(lbtc) == scalar_of(rbtc) );
+			//assert( vector_size(lbtc) == vector_size(rbtc) );
 
-	//		Type const* ret_type = fn->getReturnType();
+			//size_t vec_size = vector_size(lbtc);
 
-	//		assert( is_vector(lbtc) && is_vector(rbtc) );
-	//		assert( scalar_of(lbtc) == scalar_of(rbtc) );
-	//		assert( vector_size(lbtc) == vector_size(rbtc) );
-
-	//		size_t vec_size = vector_size(lbtc);
-
-	//		if( scalar_of(lbtc) == builtin_types::_float )
-	//		{
-	//			ext->return_(
-	//				dot_prod<llfloat>( larg, rarg, vec_size, ret_type )
-	//				);
-	//		} 
-	//		else if ( scalar_of(lbtc) == builtin_types::_sint32 )
-	//		{
-	//			ext->return_(
-	//				dot_prod<lli32>( larg, rarg, vec_size, ret_type )
-	//				);
-	//		}
-	//		else 
-	//		{
-	//			// EFLIB_ASSERT_UNIMPLEMENTED();
-	//		}
-	//	}
-	//	else
-	//	{
-	//		EFLIB_ASSERT_UNIMPLEMENTED();
-	//	}
-	//}
+			//if( scalar_of(lbtc) == builtin_types::_float )
+			//{
+			//	ext->return_(
+			//		dot_prod<llfloat>( larg, rarg, vec_size, ret_type )
+			//		);
+			//} 
+			//else if ( scalar_of(lbtc) == builtin_types::_sint32 )
+			//{
+			//	ext->return_(
+			//		dot_prod<lli32>( larg, rarg, vec_size, ret_type )
+			//		);
+			//}
+			//else 
+			//{
+			//	// EFLIB_ASSERT_UNIMPLEMENTED();
+			//}
+		}
+		else
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
 }
 
 

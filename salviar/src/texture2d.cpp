@@ -169,7 +169,7 @@ size_t texture_2d::get_height(size_t subresource) const
 size_t texture_2d::get_depth(size_t subresource) const
 {
 	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap LevelԽ�磡");
-	UNREF_PARAM(subresource);
+	EFLIB_UNREF_PARAM(subresource);
 
 	return 1;
 }

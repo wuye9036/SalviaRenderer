@@ -938,7 +938,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		vs_output_ops->selfintegral1(base_vert, ddy);
 	}
 #else
-	UNREF_PARAM(full);
+	EFLIB_UNREF_PARAM(full);
 
 	struct scanline_info
 	{

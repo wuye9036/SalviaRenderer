@@ -5,12 +5,20 @@
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Support/IRBuilder.h>
+#include <llvm/Function.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/diagnostics/assert.h>
 
 using sasl::syntax_tree::tynode;
+
 using namespace sasl::utility;
+
+using llvm::Function;
+using llvm::Type;
+
+using std::vector;
+using std::string;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -147,12 +155,54 @@ value_t cg_service::create_vector( std::vector<value_t> const& scalars, value_ty
 	return value_t();
 }
 
+void cg_service::emit_return(){
+	builder()->CreateRetVoid();
+}
+
+void cg_service::emit_return( value_t const& ret_v ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+function_t& cg_service::fn(){
+	fn_ctxts.back();
+}
+
+void cg_service::push_fn( function_t const& fn ){
+	fn_ctxts.push_back(fn);
+}
+
+void cg_service::pop_fn(){
+	fn_ctxts.pop_back();
+}
+
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	assert( lhs.get_hint() != builtin_types::none );
 	assert( is_scalar( scalar_of( lhs.get_hint() ) ) );
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
+}
+
+
+void function_t::arg_name( size_t index, std::string const& name ){
+	assert( index < fn->arg_size() );
+	Function::arg_iterator arg_it = fn->arg_begin();
+	for( size_t i = 0; i < index; ++i ){ ++arg_it; }
+	arg_it->setName( name );
+}
+
+void function_t::args_name( vector<string> const& names )
+{
+	assert( names.size() <= fn->arg_size() );
+
+	Function::arg_iterator arg_it = fn->arg_begin();
+	vector<string>::const_iterator name_it = names.begin();
+
+	for( size_t i = 0; i < names.size(); ++i ){
+		arg_it->setName( *name_it );
+		++arg_it;
+		++name_it;
+	}
 }
 
 END_NS_SASL_CODE_GENERATOR();
