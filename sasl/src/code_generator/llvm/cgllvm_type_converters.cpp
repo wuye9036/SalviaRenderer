@@ -67,7 +67,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_proxy casted = cgs->cast_ints(
+		value_t casted = cgs->cast_ints(
 			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -81,7 +81,7 @@ public:
 		
 		assert( src_ctxt != dest_ctxt );
 
-		value_proxy casted = cgs->cast_i2f(
+		value_t casted = cgs->cast_i2f(
 			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -94,7 +94,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_proxy casted = cgs->cast_f2i(
+		value_t casted = cgs->cast_f2i(
 			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -107,7 +107,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_proxy casted = cgs->cast_f2f(
+		value_t casted = cgs->cast_f2f(
 			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
@@ -120,11 +120,11 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_proxy scalar_value = src_ctxt->get_rvalue();
-		vector<value_proxy> scalars;
+		value_t scalar_value = src_ctxt->get_rvalue();
+		vector<value_t> scalars;
 		scalars.push_back( scalar_value );
 
-		value_proxy vector_value = cgs->create_vector( scalars, dest_ctxt->get_typtr()->get_abi() );
+		value_t vector_value = cgs->create_vector( scalars, dest_ctxt->get_typtr()->get_abi() );
 
 		cgs->store( dest_ctxt->get_value(), vector_value );
 	}
@@ -136,7 +136,7 @@ public:
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		value_proxy vector_value = dest_ctxt->get_rvalue();
+		value_t vector_value = dest_ctxt->get_rvalue();
 		size_t swz_code = encode_sized_swizzle(dest_size);
 
 		cgs->store(
@@ -356,7 +356,7 @@ shared_ptr<type_converter> create_type_converter(
 	cg_service* cgs
 	)
 {
-	return make_shared<cgllvm_type_converter>( get_ctxt, cgs );
+	return boost::make_shared<cgllvm_type_converter>( get_ctxt, cgs );
 }
 
 END_NS_SASL_CODE_GENERATOR();

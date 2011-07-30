@@ -68,12 +68,12 @@ protected:
 	builtin_types				hint;
 };
 
-class value_proxy{
+class value_t{
 public:
 	friend class code_gen;
 	
-	value_proxy();
-
+	value_t();
+	
 	enum kinds{
 		kind_unknown,
 		kind_tyinfo_only,
@@ -94,58 +94,50 @@ public:
 	/// Get service.
 	cg_service* service() const;
 
-	/// Get LLVM Value of built-in type.
-	llvm::Value* get_value() const;
-	
-	/// Get semantic of value.
-	lrv get_lrvalue() const;
-	
+	/// Load llvm value from value_t.
+	llvm::Value* load_llvm_value() const;
+	/// Return internal llvm value.
+	llvm::Value* get_llvm_value() const;
+	bool is_lvalue() const;
+	bool is_rvalue() const;
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
-	
-	/// Get type hint.
-	builtin_types hint() const;
-
+	/// Get type hint. if type is not built-in type it returns builtin_type::none.
+	builtin_types get_hint() const;
 	/// Get kind.
 	kinds get_kind() const;
-
 	/// Get parent. If value is not a member of aggragation, it return NULL.
-	value_proxy* get_parent() const;
-
+	value_t* get_parent() const;
 	/// @}
 
-	void set_parent( value_proxy* parent, kinds k );
+	void set_parent( value_t* parent, kinds k );
 
 	/// @name Operators
 	/// @{
 
-	value_proxy swizzle( size_t swz_code ) const;
-	value_proxy to_rvalue() const;
+	value_t swizzle( size_t swz_code ) const;
+	value_t to_rvalue() const;
 
-	friend value_proxy operator + ( value_proxy const&, value_proxy const& );
+	friend value_t operator + ( value_t const&, value_t const& );
 	/// @}
 
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
-	value_proxy(
-		value_tyinfo* tyinfo,
-		llvm::Value* val,
-		cg_service* cg
-		);
+	value_t( value_tyinfo* tyinfo, llvm::Value* val, cg_service* cg );
 	/// @}
 
 	/// @name Members
 	/// @{
-	value_proxy*		parent;
-	llvm::Value*		val;
-	value_tyinfo*		tyinfo;
-	cg_service*			cg;
-	lrv					lr;
+	value_t*		parent;
+	llvm::Value*	val;
+	value_tyinfo*	tyinfo;
+	cg_service*		cg;
+	lrv				lr;
 	/// @}
 };
 
-value_proxy operator + ( value_proxy const&, value_proxy const& );
+value_t operator + ( value_t const&, value_t const& );
 
 class cg_service{
 public:
@@ -153,54 +145,59 @@ public:
 	Some simple overloadable operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
-	value_proxy emit_cond_expr( value_proxy cond, value_proxy const& yes, value_proxy const& no );
+	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );
 	/** @} */
 	
 	/** @name Emit type casts
 	 * @{ */
 	/// Cast between integer types.
-	value_proxy cast_ints( value_proxy const& v, value_tyinfo* dest_tyi );
+	value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
 	/// Cast integer to float.
-	value_proxy cast_i2f( value_proxy const& v, value_tyinfo* dest_tyi );
+	value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi );
 	/// Cast float to integer.
-	value_proxy cast_f2i( value_proxy const& v, value_tyinfo* dest_tyi );
+	value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi );
 	/// Cast between float types.
-	value_proxy cast_f2f( value_proxy const& v, value_tyinfo* dest_tyi );
+	value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi );
 	/** @} */
 	
-	/** Emit outline @{ */
+	/// @name Emit Declarations
+	/// @{
+	void begin_function();
+	void end_function();
+	/// @}
 	
-	/** @} */
-	
-	/** Emit statements @{  */
-	
-	/** @} */
-	
-	/// Emit assignment @{
-	void store( value_proxy& lhs, value_proxy const& rhs );
+	/// @name Emit statement
+	/// @{
 	/// @}
 
-	/** Emit values @{  */
-	value_proxy null_value_proxy( value_tyinfo* tyinfo );
+	/// @name Emit assignment
+	/// @{
+	void store( value_t& lhs, value_t const& rhs );
+	/// @}
+
+	/// @name Emit values
+	/// @{
+	value_t null_value( value_tyinfo* tyinfo );
 
 	template <typename T>
-	value_proxy create_constant_scalar( T const& v );
+	value_t create_constant_scalar( T const& v );
 
-	value_proxy create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
-
-	template <typename T>
-	value_proxy create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );
-
-	value_proxy create_vector( std::vector<value_proxy> const& scalars, value_tyinfo::abis abi );
+	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 
 	template <typename T>
-	value_proxy create_constant_matrix( T const* vals, size_t length, value_tyinfo::abis abi );
-	/** @} */
+	value_t create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );
+
+	value_t create_vector( std::vector<value_t> const& scalars, value_tyinfo::abis abi );
+
+	template <typename T>
+	value_t create_constant_matrix( T const* vals, size_t length, value_tyinfo::abis abi );
+	/// @}
 	
-	/** Emit variables @{ */
-	value_proxy create_variable( value_tyinfo const* );
-	value_proxy create_member( value_tyinfo const*, value_proxy::kinds, size_t idx_or_swz );
-	/** @} */
+	/// @name Emit variables
+	/// @{
+	value_t create_variable( value_tyinfo const* );
+	value_t create_member( value_tyinfo const*, value_t::kinds, size_t idx_or_swz );
+	/// @}
 
 	llvm::DefaultIRBuilder* builder() const;
 	llvm::LLVMContext&		context() const;
@@ -208,7 +205,7 @@ private:
 };
 
 //template <typename BuilderT>
-//class value_proxy
+//class value_t
 //{
 //public:
 //	enum classes{
@@ -230,7 +227,7 @@ private:
 //	format	fmt;
 //
 //	llvm::Value*			val;
-//	value_proxy<BuilderT>*	parent;
+//	value_t<BuilderT>*	parent;
 //	unsigned int			index;
 //	llvm::Type const*		vtys[2];
 //
@@ -314,12 +311,12 @@ private:
 //		return true;
 //	}
 //public:
-//	value_proxy( llext<BuilderT>* ext ): ext(ext){}
-//	value_proxy( value_proxy const& ){}
+//	value_t( llext<BuilderT>* ext ): ext(ext){}
+//	value_t( value_t const& ){}
 //
-//	void clone_to( value_proxy& lhs );
-//	void assign( value_proxy const& rhs );
-//	void proto( value_proxy& lhs );
+//	void clone_to( value_t& lhs );
+//	void assign( value_t const& rhs );
+//	void proto( value_t& lhs );
 //	
 //	llvm::Type const* value_ty() const{
 //		return vty[fmt];
@@ -401,7 +398,7 @@ private:
 //	}
 //
 //private:
-//	value_proxy& operator = ( value_proxy const& );
+//	value_t& operator = ( value_t const& );
 //};
 
 //template<typename BuilderT>

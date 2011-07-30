@@ -77,7 +77,7 @@ struct cgllvm_sctxt_data{
 	// Functions
 	llvm::Function* self_fn;		///< used by function type.
 
-	value_proxy						val;
+	value_t							val;
 	boost::shared_ptr<value_tyinfo>	tyinfo;
 
 	/// The declarator count of declaration.
@@ -115,10 +115,10 @@ public:
 	value_tyinfo* get_typtr() const;
 	boost::shared_ptr<value_tyinfo> get_tysp() const;
 
-	value_proxy const& get_value() const;
-	value_proxy& get_value();
+	value_t const& get_value() const;
+	value_t& get_value();
 
-	value_proxy get_rvalue() const;
+	value_t get_rvalue() const;
 	/// @}
 
 private:

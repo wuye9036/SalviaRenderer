@@ -66,15 +66,15 @@ void cgllvm_sctxt::clear_data(){
 	data( cgllvm_sctxt().data() );
 }
 
-value_proxy const& cgllvm_sctxt::get_value() const{
+value_t const& cgllvm_sctxt::get_value() const{
 	return data().val;
 }
 
-value_proxy& cgllvm_sctxt::get_value(){
+value_t& cgllvm_sctxt::get_value(){
 	return data().val;
 }
 
-value_proxy cgllvm_sctxt::get_rvalue() const{
+value_t cgllvm_sctxt::get_rvalue() const{
 	return data().val.to_rvalue();
 }
 

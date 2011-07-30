@@ -166,12 +166,12 @@ SASL_VISIT_DEF( binary_expression ){
 
 		// use type-converted value to generate code.
 
-		value_proxy lval = node_ctxt(v.left_expr)->get_rvalue();
-		value_proxy rval = node_ctxt(v.right_expr)->get_rvalue();
+		value_t lval = node_ctxt(v.left_expr)->get_rvalue();
+		value_t rval = node_ctxt(v.right_expr)->get_rvalue();
 
-		value_proxy retval = null_value_proxy( NULL );
+		value_t retval = null_value( NULL );
 
-		if( lval.get_value() && rval.get_value() ){
+		if( lval.get_llvm_value() && rval.get_llvm_value() ){
 
 			builtin_types lbtc = p0_tsi->type_info()->tycode;
 			builtin_types rbtc = p1_tsi->type_info()->tycode;
@@ -249,12 +249,12 @@ SASL_VISIT_DEF( member_expression ){
 	// Aggregated value
 	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
 
-	value_proxy::kinds k = value_proxy::kind_unknown;
+	value_t::kinds k = value_t::kind_unknown;
 	if( tisi->type_info()->is_builtin() ){
 		// Swizzle or write mask
 		storage_si* mem_ssi = v.si_ptr<storage_si>();
 
-		value_proxy vec_value = agg_ctxt->get_rvalue();
+		value_t vec_value = agg_ctxt->get_rvalue();
 		store(
 			sc_ptr(data)->get_value(),
 			vec_value.swizzle( mem_ssi->swizzle() )
