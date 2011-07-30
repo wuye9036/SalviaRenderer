@@ -120,17 +120,20 @@ public:
 	/// @{
 
 	value_proxy swizzle( size_t swz_code ) const;
-	value_proxy cast_to_rvalue() const;
+	value_proxy to_rvalue() const;
 
 	friend value_proxy operator + ( value_proxy const&, value_proxy const& );
 	/// @}
 
 protected:
+	/// @name Constructor, Destructor, Copy constructor and assignment operator
+	/// @{
 	value_proxy(
 		value_tyinfo* tyinfo,
 		llvm::Value* val,
 		cg_service* cg
 		);
+	/// @}
 
 	/// @name Members
 	/// @{

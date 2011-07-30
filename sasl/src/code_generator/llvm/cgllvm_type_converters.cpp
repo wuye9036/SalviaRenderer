@@ -124,7 +124,7 @@ public:
 		vector<value_proxy> scalars;
 		scalars.push_back( scalar_value );
 
-		value_proxy vector_value = cgs->create_vector( scalars, dest_ctxt->get_tyinfo_ptr()->get_abi() );
+		value_proxy vector_value = cgs->create_vector( scalars, dest_ctxt->get_typtr()->get_abi() );
 
 		cgs->store( dest_ctxt->get_value(), vector_value );
 	}

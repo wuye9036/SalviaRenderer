@@ -67,7 +67,7 @@ llvm::Value* value_proxy::get_value() const{
 	return NULL;
 }
 
-value_proxy value_proxy::cast_to_rvalue() const
+value_proxy value_proxy::to_rvalue() const
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_proxy();

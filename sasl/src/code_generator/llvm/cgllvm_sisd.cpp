@@ -370,7 +370,7 @@ SASL_VISIT_DEF( variable_expression ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 
 	//sc_ptr(data)->get_value() == node_ctxt( declsym->node() )->value();
-	//sc_ptr(data)->get_tyinfo_sp() == node_ctxt( declsym->node() )->get_tyinfo_sp();
+	//sc_ptr(data)->get_tysp() == node_ctxt( declsym->node() )->get_tysp();
 	// sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }

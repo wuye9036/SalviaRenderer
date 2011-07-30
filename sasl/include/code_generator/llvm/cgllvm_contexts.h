@@ -112,8 +112,8 @@ public:
 	/// @name Accessors.
 	/// Expose members in environment and data for easily using.
 	/// @{
-	value_tyinfo* get_tyinfo_ptr() const;
-	boost::shared_ptr<value_tyinfo> get_tyinfo_sp() const;
+	value_tyinfo* get_typtr() const;
+	boost::shared_ptr<value_tyinfo> get_tysp() const;
 
 	value_proxy const& get_value() const;
 	value_proxy& get_value();

@@ -75,15 +75,15 @@ value_proxy& cgllvm_sctxt::get_value(){
 }
 
 value_proxy cgllvm_sctxt::get_rvalue() const{
-	return data().val.cast_to_rvalue();
+	return data().val.to_rvalue();
 }
 
-value_tyinfo* cgllvm_sctxt::get_tyinfo_ptr() const
+value_tyinfo* cgllvm_sctxt::get_typtr() const
 {
-	return get_tyinfo_sp().get();
+	return get_tysp().get();
 }
 
-boost::shared_ptr<value_tyinfo> cgllvm_sctxt::get_tyinfo_sp() const{
+boost::shared_ptr<value_tyinfo> cgllvm_sctxt::get_tysp() const{
 	return data().tyinfo;
 }
 
