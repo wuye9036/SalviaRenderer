@@ -222,4 +222,15 @@ shared_ptr<value_tyinfo> function_t::get_return_ty(){
 	return shared_ptr<value_tyinfo>();
 }
 
+size_t function_t::arg_size() const{
+	assert( fn );
+	return fn ? fn->arg_size() : 0;
+}
+
+value_t function_t::arg( size_t index ) const
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
 END_NS_SASL_CODE_GENERATOR();

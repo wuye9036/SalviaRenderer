@@ -56,6 +56,7 @@ using boost::any_cast;
 using boost::bind;
 
 using std::vector;
+using std::string;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_sisd
 
@@ -646,19 +647,22 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	// Function* fn = sc_data_ptr(data)->self_fn;
+	push_fn( sc_data_ptr(data)->self_fn );
+	scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 
 	// Register arguments names.
-	//Function::arg_iterator arg_it = fn->arg_begin();
-	//for( size_t arg_idx = 0; arg_idx < fn->arg_size(); ++arg_idx, ++arg_it){
-	//	shared_ptr<parameter> par = v.params[arg_idx];
-	//	sctxt_handle par_ctxt = node_ctxt( par );
+	assert( fn().arg_size() == v.params.size() );
 
-	//	arg_it->setName( par->symbol()->unmangled_name() );
-	//	par_ctxt->data().val = arg_it;
-	//}
+	vector<string> param_names;
+	size_t i_arg = 0;
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
+	{
+		sctxt_handle par_ctxt = node_ctxt( par );
+		param_names.push_back( par->symbol()->unmangled_name() );
+		par_ctxt->get_value() = fn().arg( i_arg++ );
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){

@@ -162,6 +162,10 @@ struct function_t{
 		return NULL != fn;
 	}
 
+	/// Get argument's value by index.
+	value_t arg( size_t index ) const;
+	/// Get argument size.
+	size_t arg_size() const;
 	/// Set argument name.
 	void arg_name( size_t index, std::string const& );
 	/// Set arguments name. Size of names must be less than argument size.
