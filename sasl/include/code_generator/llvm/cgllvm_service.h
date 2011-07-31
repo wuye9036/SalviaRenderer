@@ -71,7 +71,10 @@ public:
 protected:
 	sasl::syntax_tree::tynode*	sty;
 	llvm::Type const*			llvm_tys[2];
-	
+	abis						abi;
+	types						ty;
+	builtin_types				hint;
+
 	/// \brief Does treat type as reference if ABI is C compatible.
 	///  
 	/// An important fact is LLVM's ABI is not same as C API.
@@ -88,10 +91,6 @@ protected:
 	///		def foo( %S* %arg );
 	/// And 'as_ref' the parameter/argument 'arg' is set to true.
 	bool						as_ref;
-
-	abis						abi;
-	types						ty;
-	builtin_types				hint;
 };
 
 class value_t{
