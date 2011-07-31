@@ -51,6 +51,7 @@ public:
 	};
 	
 	enum types{
+		unknown_type,
 		builtin,
 		aggregated
 	};
@@ -68,34 +69,20 @@ public:
 	boost::shared_ptr<sasl::syntax_tree::tynode> get_tysp() const;
 	builtin_types get_hint() const;
 	abis get_abi() const;
+
 protected:
+	value_tyinfo();
+
 	sasl::syntax_tree::tynode*	sty;
 	llvm::Type const*			llvm_tys[2];
 	abis						abi;
 	types						ty;
 	builtin_types				hint;
-
-	/// \brief Does treat type as reference if ABI is C compatible.
-	///  
-	/// An important fact is LLVM's ABI is not same as C API.
-	/// If structure was passed into function by value,
-	/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
-	/// But LLVM will push the instance to stack.
-	/// So this varaible will qualify the type of arguments/parameters indicates the compiler.
-	/// For e.g. we have a prototype:
-	///		void foo( struct S );
-	/// If is only called by LLVM code, the IR signature will be 
-	///		def foo( %S %arg );
-	/// But if it maybe called by external function as convention as "C" code,
-	/// The IR signature will be generated as following:
-	///		def foo( %S* %arg );
-	/// And 'as_ref' the parameter/argument 'arg' is set to true.
-	bool						as_ref;
 };
 
 class value_t{
 public:
-	friend class code_gen;
+	friend class cg_service;
 	
 	value_t();
 	
@@ -103,7 +90,24 @@ public:
 		kind_unknown,
 		kind_tyinfo_only,
 		kind_value,
+
+		/// \brief Does treat type as reference if ABI is C compatible.
+		///  
+		/// An important fact is LLVM's ABI is not same as C API.
+		/// If structure was passed into function by value,
+		/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
+		/// But LLVM will push the instance to stack.
+		/// So this varaible will qualify the type of arguments/parameters indicates the compiler.
+		/// For e.g. we have a prototype:
+		///		void foo( struct S );
+		/// If is only called by LLVM code, the IR signature will be 
+		///		def foo( %S %arg );
+		/// But if it maybe called by external function as convention as "C" code,
+		/// The IR signature will be generated as following:
+		///		def foo( %S* %arg );
+		/// And 'kind' the parameter/argument 'arg' is set to 'kind_ref'.
 		kind_ref,
+
 		kind_local,
 		kind_global,
 		kind_member,
@@ -156,6 +160,7 @@ protected:
 
 	/// @name Members
 	/// @{
+	kinds			kind;
 	value_t*		parent;
 	llvm::Value*	val;
 	value_tyinfo*	tyinfo;
@@ -207,8 +212,8 @@ public:
 	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );
 	/** @} */
 	
-	/** @name Emit type casts
-	 * @{ */
+	/// @name Emit type casts
+	/// @{
 	/// Cast between integer types.
 	value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
 	/// Cast integer to float.
@@ -217,7 +222,7 @@ public:
 	value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi );
 	/// Cast between float types.
 	value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi );
-	/** @} */
+	/// @}
 	
 	/// @name Emit Declarations
 	/// @{
@@ -270,6 +275,14 @@ public:
 	value_t create_variable( value_tyinfo const* );
 	value_t create_member( value_tyinfo const*, value_t::kinds, size_t idx_or_swz );
 	/// @}
+
+	/// @name Type emitters
+	/// @{
+	boost::shared_ptr<value_tyinfo> create_tyinfo( boost::shared_ptr<sasl::syntax_tree::tynode> const& tyn );
+	/// @}
+
+	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
+	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( builtin_types bt ) = 0;
 
 	virtual llvm::DefaultIRBuilder* builder() const = 0;
 	virtual llvm::LLVMContext&		context() const = 0;

@@ -385,20 +385,18 @@ SASL_VISIT_DEF( builtin_type ){
 
 	cgllvm_sctxt* pctxt = node_ctxt( tisi->type_info(), true );
 
-	//if ( !pctxt->data().val_type ){
-	//	
-	//	llvm_type( v.tycode, pctxt );
-	//	
-	//	assert( pctxt->data().val_type );
-	//	std::string tips = v.tycode.name() + std::string(" was not supported yet.");
-	//	EFLIB_ASSERT_AND_IF( pctxt->data().val_type, tips.c_str() ){
-	//		return;
-	//	}
-	//}
+	if( !pctxt->get_typtr() ){
+		shared_ptr<value_tyinfo> bt_tyinfo = create_tyinfo( v.as_handle<tynode>() );
+		assert( bt_tyinfo );
+		pctxt->data().tyinfo = bt_tyinfo;
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
+		std::string tips = v.tycode.name() + std::string(" was not supported yet.");
+		EFLIB_ASSERT_AND_IF( pctxt->data().tyinfo, tips.c_str() ){
+			return;
+		}
+	}
+
 	sc_ptr( data )->data( pctxt );
-
 	return;
 }
 
@@ -623,6 +621,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	shared_ptr<value_tyinfo> ret_ty = sc_data_ptr(&child_ctxt)->tyinfo;
 	assert( ret_ty );
 
+	EFLIB_ASSERT_UNIMPLEMENTED();
+
 	//// Generate paramenter types.
 	//vector<Type const*> param_types;
 	//BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
@@ -647,8 +647,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	push_fn( sc_data_ptr(data)->self_fn );
 	scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
 
 	// Register arguments names.
 	assert( fn().arg_size() == v.params.size() );

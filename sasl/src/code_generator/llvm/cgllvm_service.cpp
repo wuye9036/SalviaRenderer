@@ -14,7 +14,9 @@ using sasl::syntax_tree::tynode;
 
 using namespace sasl::utility;
 
+using llvm::LLVMContext;
 using llvm::Function;
+using llvm::IntegerType;
 using llvm::Type;
 
 using boost::shared_ptr;
@@ -29,18 +31,22 @@ value_tyinfo::value_tyinfo(
 	tynode* sty,
 	llvm::Type const* cty,
 	llvm::Type const* llty,
-	value_tyinfo::abis abi,
-	bool arg_as_ref
+	value_tyinfo::abis abi
 	) : sty(sty), abi(abi), hint(builtin_types::none)
 {
 	llvm_tys[abi_c] = cty;
 	llvm_tys[abi_llvm] = llty;
 	
-	as_ref = arg_as_ref;
-
 	if( sty->is_builtin() ){
 		hint = sty->tycode;
 	}
+}
+
+value_tyinfo::value_tyinfo()
+	:sty(NULL), abi(abi_unknown), ty( unknown_type ), hint( builtin_types::none )
+{
+	llvm_tys[0] = NULL;
+	llvm_tys[1] = NULL;
 }
 
 builtin_types value_tyinfo::get_hint() const{
@@ -187,6 +193,51 @@ void cg_service::push_fn( function_t const& fn ){
 
 void cg_service::pop_fn(){
 	fn_ctxts.pop_back();
+}
+
+/// Create LLVM type from builtin types.
+Type const* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_compatible ){
+	assert( bt != builtin_types::none );
+
+	if ( is_void( bt ) ){
+		return Type::getVoidTy( ctxt );
+	}
+
+	if( is_scalar(bt) ){
+		if( bt == builtin_types::_boolean ){
+			return IntegerType::get( ctxt, 1 );
+		}
+		if( is_integer(bt) ){
+			return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );
+		}
+		if ( bt == builtin_types::_float ){
+			return Type::getFloatTy( ctxt );
+		}
+		if ( bt == builtin_types::_double ){
+			return Type::getDoubleTy( ctxt );
+		}
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
+
+shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& tyn ){
+	value_tyinfo* ret = new value_tyinfo();
+	ret->sty = tyn.get();
+	ret->hint = builtin_types::none;
+
+	if( tyn->is_builtin() ){
+		ret->llvm_tys[value_tyinfo::abi_c] = create_llvm_type( context(), tyn->tycode, true );
+		ret->llvm_tys[value_tyinfo::abi_llvm] = create_llvm_type( context(), tyn->tycode, false );
+		ret->hint = tyn->tycode;
+		ret->ty = value_tyinfo::builtin;
+	} else {
+		ret->ty = value_tyinfo::aggregated;
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return shared_ptr<value_tyinfo>(ret);
 }
 
 value_t operator+( value_t const& lhs, value_t const& rhs ){
