@@ -625,16 +625,20 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 	//// Generate paramenter types.
 	//vector<Type const*> param_types;
-	//BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
-	//	visit_child( child_ctxt, child_ctxt_init, par );
-	//	Type const* par_lltype = sc_data_ptr(&child_ctxt)->val_type;
-	//	if ( par_lltype ){
-	//		param_types.push_back( par_lltype );
-	//	} else {
-	//		EFLIB_ASSERT_AND_IF( ret_type, "Error occurs while parameter parsing." ){ return; }
-	//	}
-	//}
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
+		visit_child( child_ctxt, child_ctxt_init, par );
+	}
+	
+	/*Type const* par_lltype = sc_data_ptr(&child_ctxt)->val_type;
+	if ( par_lltype ){
+		param_types.push_back( par_lltype );
+	} else {
+		EFLIB_ASSERT_AND_IF( ret_type, "Error occurs while parameter parsing." ){ return; }
+	}*/
 
+	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	sc_data_ptr(data)->self_fn = create_function( v );
 	//// Create function.
 	//FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
 	//sc_data_ptr(data)->val_type = ftype;
