@@ -185,7 +185,7 @@ storage_si::storage_si( shared_ptr<type_manager> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 	, sem(salviar::sv_none)
 	, memidx(-1), swz(0)
-	, intrin(false), invoked(false)
+	, intrin(false), invoked(false), c_comp(false)
 {
 }
 
@@ -227,6 +227,14 @@ bool storage_si::is_invoked() const{
 
 void storage_si::is_invoked( bool v ){
 	invoked = v;
+}
+
+bool storage_si::c_compatible() const{
+	return c_comp;
+}
+
+void storage_si::c_compatible( bool v ){
+	c_comp = v;
 }
 
 

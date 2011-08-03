@@ -35,6 +35,7 @@ namespace llvm{
 namespace sasl{
 	namespace syntax_tree{
 		struct tynode;
+		struct function_type;
 	}
 }
 
@@ -199,8 +200,9 @@ struct function_t{
 
 	boost::shared_ptr<value_tyinfo> get_return_ty();
 
-	value_tyinfo*	fnty;
-	llvm::Function* fn;
+	sasl::syntax_tree::function_type*	fnty;
+	llvm::Function*						fn;
+	bool								c_compatible;
 };
 
 class cg_service{
@@ -273,6 +275,7 @@ public:
 	/// @name Emit variables
 	/// @{
 	value_t create_variable( value_tyinfo const* );
+	function_t create_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
 	value_t create_member( value_tyinfo const*, value_t::kinds, size_t idx_or_swz );
 	/// @}
 

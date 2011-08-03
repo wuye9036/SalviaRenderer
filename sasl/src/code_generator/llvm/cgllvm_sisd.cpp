@@ -638,7 +638,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 
-	sc_data_ptr(data)->self_fn = create_function( v );
+	sc_data_ptr(data)->self_fn = create_function( v.as_handle<function_type>() );
 	//// Create function.
 	//FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
 	//sc_data_ptr(data)->val_type = ftype;

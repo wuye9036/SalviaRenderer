@@ -172,14 +172,17 @@ public:
 	int32_t swizzle() const;
 	void swizzle( int32_t v );
 
-	/** Properties used by intrinsic
-	@{ */
+	/// @name Properties used by intrinsic and functions.
+	/// @{
 	bool is_intrinsic() const;
 	void is_intrinsic( bool v );
 
 	bool is_invoked() const;
 	void is_invoked( bool v );
-	/** @} */
+
+	bool c_compatible() const;
+	void c_compatible( bool v );
+	/// @}
 
 	SASL_TYPE_INFO_PROXY();
 
@@ -190,6 +193,7 @@ private:
 
 	bool intrin;
 	bool invoked;
+	bool c_comp;
 };
 
 class call_si: public type_info_si{

@@ -1,6 +1,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -8,9 +9,17 @@
 #include <llvm/Function.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/foreach.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <eflib/include/diagnostics/assert.h>
 
+using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::parameter;
 using sasl::syntax_tree::tynode;
+
+using sasl::semantic::storage_si;
 
 using namespace sasl::utility;
 
@@ -240,6 +249,33 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 	return shared_ptr<value_tyinfo>(ret);
 }
 
+function_t cg_service::create_function( shared_ptr<function_type> const& fn_node ){
+	function_t ret;
+	ret.fnty = fn_node.get();
+	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
+
+	if( ret.c_compatible ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return function_t();
+	}
+
+	vector<Type const*> par_tys;
+
+	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
+	{
+		// par_tys.push_back(  )
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	//FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
+	//sc_data_ptr(data)->val_type = ftype;
+
+	//Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
+	//fn->setCallingConv( CallingConv::Fast );
+	//sc_data_ptr(data)->self_fn = fn;
+}
+
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	assert( lhs.get_hint() != builtin_types::none );
 	assert( is_scalar( scalar_of( lhs.get_hint() ) ) );
@@ -271,7 +307,7 @@ void function_t::args_name( vector<string> const& names )
 }
 
 shared_ptr<value_tyinfo> function_t::get_return_ty(){
-	assert( fnty->get_typtr()->is_function() );
+	assert( fnty->is_function() );
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return shared_ptr<value_tyinfo>();
 }
