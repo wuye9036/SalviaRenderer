@@ -53,6 +53,8 @@ struct cgllvm_sctxt_env{
 
 	bool is_semantic_mode;
 
+	bool is_c_compatible;
+
 	/// Type information used by declarator.
 	boost::shared_ptr<value_tyinfo> tyinfo;
 

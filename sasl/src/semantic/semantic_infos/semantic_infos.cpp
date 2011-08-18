@@ -237,6 +237,14 @@ void storage_si::c_compatible( bool v ){
 	c_comp = v;
 }
 
+bool storage_si::is_reference() const{
+	return is_ref;
+}
+
+void storage_si::is_reference( bool v ){
+	is_ref = v;
+}
+
 
 call_si::call_si( shared_ptr<type_manager> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr), is_pointer(false), overloaded(NULL)

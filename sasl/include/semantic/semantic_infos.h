@@ -182,6 +182,10 @@ public:
 
 	bool c_compatible() const;
 	void c_compatible( bool v );
+
+	/// Is variable a reference. Only avaliable in parameter.
+	bool is_reference() const;
+	void is_reference( bool v );
 	/// @}
 
 	SASL_TYPE_INFO_PROXY();
@@ -194,6 +198,7 @@ private:
 	bool intrin;
 	bool invoked;
 	bool c_comp;
+	bool is_ref;
 };
 
 class call_si: public type_info_si{

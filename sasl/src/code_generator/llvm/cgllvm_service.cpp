@@ -1,7 +1,9 @@
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -25,8 +27,10 @@ using namespace sasl::utility;
 
 using llvm::LLVMContext;
 using llvm::Function;
+using llvm::FunctionType;
 using llvm::IntegerType;
 using llvm::Type;
+using llvm::PointerType;
 
 using boost::shared_ptr;
 
@@ -75,6 +79,15 @@ tynode* value_tyinfo::get_typtr() const{
 
 shared_ptr<tynode> value_tyinfo::get_tysp() const{
 	return sty->as_handle<tynode>();
+}
+
+llvm::Type const* value_tyinfo::get_llvm_ty() const{
+	return llvm_tys[abi];
+}
+
+llvm::Type const* value_tyinfo::get_llvm_ty( abis abi ) const
+{
+	return llvm_tys[abi];
 }
 
 /// @}
@@ -259,21 +272,31 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 		return function_t();
 	}
 
+	value_tyinfo::abis abi = ret.c_compatible ? value_tyinfo::abi_c : value_tyinfo::abi_llvm;
+
 	vector<Type const*> par_tys;
 
 	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
 	{
-		// par_tys.push_back(  )
+		cgllvm_sctxt* par_ctxt = node_ctxt( par, false );
+		value_tyinfo* par_ty = par_ctxt->get_typtr();
+		bool is_ref = par->si_ptr<storage_si>()->is_reference();
+
+		if( ret.c_compatible ){
+			Type const* par_llty = par_ty->get_llvm_ty( abi ); 
+			if( is_ref ){
+				par_tys.push_back( PointerType::getUnqual( par_llty ) );
+			}
+			par_tys.push_back( par_llty );
+		}
 	}
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	Type const* rety = node_ctxt( fn_node->retval_type, false )->get_typtr()->get_llvm_ty( abi );
+	FunctionType* fty = FunctionType::get( rety, par_tys, false );
 
-	//FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
-	//sc_data_ptr(data)->val_type = ftype;
+	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
 
-	//Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
-	//fn->setCallingConv( CallingConv::Fast );
-	//sc_data_ptr(data)->self_fn = fn;
+	return ret;
 }
 
 value_t operator+( value_t const& lhs, value_t const& rhs ){

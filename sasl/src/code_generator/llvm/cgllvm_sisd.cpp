@@ -616,27 +616,15 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 	any child_ctxt;
 
-	// Generate return types.
+	// Generate return type node.
 	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
 	shared_ptr<value_tyinfo> ret_ty = sc_data_ptr(&child_ctxt)->tyinfo;
 	assert( ret_ty );
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-
-	//// Generate paramenter types.
-	//vector<Type const*> param_types;
+	// Generate parameters.
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
 		visit_child( child_ctxt, child_ctxt_init, par );
 	}
-	
-	/*Type const* par_lltype = sc_data_ptr(&child_ctxt)->val_type;
-	if ( par_lltype ){
-		param_types.push_back( par_lltype );
-	} else {
-		EFLIB_ASSERT_AND_IF( ret_type, "Error occurs while parameter parsing." ){ return; }
-	}*/
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
 
 	sc_data_ptr(data)->self_fn = create_function( v.as_handle<function_type>() );
 	//// Create function.

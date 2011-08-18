@@ -34,12 +34,15 @@ namespace llvm{
 
 namespace sasl{
 	namespace syntax_tree{
+		struct node;
 		struct tynode;
 		struct function_type;
 	}
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+class cgllvm_sctxt;
 
 class value_tyinfo{
 public:
@@ -70,7 +73,8 @@ public:
 	boost::shared_ptr<sasl::syntax_tree::tynode> get_tysp() const;
 	builtin_types get_hint() const;
 	abis get_abi() const;
-
+	llvm::Type const* get_llvm_ty() const;
+	llvm::Type const* get_llvm_ty( abis abi ) const;
 protected:
 	value_tyinfo();
 
@@ -286,6 +290,8 @@ public:
 
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( builtin_types bt ) = 0;
+
+	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;
 
 	virtual llvm::DefaultIRBuilder* builder() const = 0;
 	virtual llvm::LLVMContext&		context() const = 0;
