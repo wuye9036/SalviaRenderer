@@ -244,6 +244,7 @@ public:
 
 	/// @name Context queries
 	/// @{
+	bool in_function() const;
 	function_t& fn();
 	/// @}
 

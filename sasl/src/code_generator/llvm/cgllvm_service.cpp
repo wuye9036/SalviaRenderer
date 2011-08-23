@@ -299,6 +299,10 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 	return ret;
 }
 
+bool cg_service::in_function() const{
+	return !fn_ctxts.empty();
+}
+
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	assert( lhs.get_hint() != builtin_types::none );
 	assert( is_scalar( scalar_of( lhs.get_hint() ) ) );

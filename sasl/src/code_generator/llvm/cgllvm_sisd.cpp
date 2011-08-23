@@ -654,20 +654,19 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
+	push_fn( sc_data_ptr(data)->self_fn );
+	scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	//Function* fn = sc_data_ptr(data)->self_fn;
-
-	//any child_ctxt_init = *data;
-	//// sc_env_ptr(&child_ctxt_init)->parent_fn = fn;
-
+	any child_ctxt_init = *data;
 	//any child_ctxt;
 
 	//// Create function body.
 	//// Create block
 	//restart_block( &child_ctxt_init, std::string(".entry") );
 	//restart_block( &child_ctxt_init, std::string(".body") );
-	//visit_child( child_ctxt, child_ctxt_init, v.body );
-	//clear_empty_blocks( fn );
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	clear_empty_blocks( fn );
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){

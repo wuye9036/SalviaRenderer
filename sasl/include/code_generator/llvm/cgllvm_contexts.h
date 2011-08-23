@@ -60,9 +60,6 @@ struct cgllvm_sctxt_env{
 
 	cgllvm_sctxt* parent_struct;
 
-	/// If generating code in function, it will be used.
-	function_t parent_fn;	
-
 	llvm::BasicBlock* block;
 	
 	/// Current symbol scope.
