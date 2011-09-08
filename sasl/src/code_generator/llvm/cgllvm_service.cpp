@@ -32,6 +32,8 @@ using llvm::IntegerType;
 using llvm::Type;
 using llvm::PointerType;
 using llvm::Value;
+using llvm::BasicBlock;
+using llvm::Constant;
 
 using boost::shared_ptr;
 
@@ -50,7 +52,7 @@ value_tyinfo::value_tyinfo(
 {
 	llvm_tys[abi_c] = cty;
 	llvm_tys[abi_llvm] = llty;
-	
+
 	if( sty->is_builtin() ){
 		hint = sty->tycode;
 	}
@@ -95,12 +97,12 @@ llvm::Type const* value_tyinfo::get_llvm_ty( abis abi ) const
 
 /// value_t @{
 value_t::value_t()
-	: tyinfo(NULL), val(NULL), cg(NULL)
+	: tyinfo(NULL), val(NULL), cg(NULL), kind(kind_unknown)
 {
 }
 
-value_t::value_t( value_tyinfo* tyinfo, llvm::Value* val, cg_service* cg )
-	: tyinfo(tyinfo), val(val), cg(cg)
+value_t::value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_service* cg )
+	: tyinfo(tyinfo), val(val), cg(cg), kind(k)
 {
 }
 
@@ -120,8 +122,7 @@ llvm::Value* value_t::get_llvm_value() const{
 
 value_t value_t::to_rvalue() const
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return value_t( tyinfo, load_llvm_value(), kind_value, cg );
 }
 
 builtin_types value_t::get_hint() const
@@ -150,11 +151,21 @@ bool value_t::is_lvalue() const{
 	case kind_local:
 		return true;
 	case kind_value:
+	case kind_unknown:
 		return false;
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return false;
 	}
+}
+
+bool value_t::storable() const{
+	return is_lvalue() || ( val == NULL && kind == kind_unknown );
+}
+
+void value_t::set_value( Value* v, kinds k ){
+	val = v;
+	kind = k;
 }
 
 /// @}
@@ -190,13 +201,17 @@ bool value_t::is_lvalue() const{
 
 void cg_service::store( value_t& lhs, value_t const& rhs ){
 	// TODO: assert( *lhs.get_tyinfo() == *rhs.get_tyinfo() );
-	assert( lhs.is_lvalue() );
+	assert( lhs.storable() );
 	value_t rv = rhs.to_rvalue();
 	switch( lhs.get_kind() ){
 	case value_t::kind_local:
 	case value_t::kind_ref:
 	case value_t::kind_global:
 		builder()->CreateStore( rv.load_llvm_value(), lhs.get_llvm_value() );
+		break;
+	case value_t::kind_unknown:
+		lhs.set_value( rv.load_llvm_value(), value_t::kind_value );
+		break;
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -242,7 +257,7 @@ void cg_service::emit_return(){
 }
 
 void cg_service::emit_return( value_t const& ret_v ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	builder()->CreateRet( ret_v.to_rvalue().load_llvm_value() );
 }
 
 function_t& cg_service::fn(){
@@ -346,11 +361,45 @@ bool cg_service::in_function() const{
 void cg_service::clean_empty_blocks()
 {
 	assert( in_function() );
-	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	typedef Function::BasicBlockListType::iterator block_iterator_t;
+	block_iterator_t beg = fn().fn->getBasicBlockList().begin();
+	block_iterator_t end = fn().fn->getBasicBlockList().end();
+
+	for(  block_iterator_t it = beg; it != end; ++it )
+	{
+		if( !it->getTerminator() ){
+			block_iterator_t next_it = it;
+			++next_it;
+
+			builder()->SetInsertPoint( &(*it) );
+
+			if( next_it != fn().fn->getBasicBlockList().end() ){
+				builder()->CreateBr( &(*next_it) );
+			} else {
+				if( !fn().fn->getReturnType()->isVoidTy() ){
+					builder()->CreateRet( Constant::getNullValue( fn().fn->getReturnType() ) );
+				} else {
+					emit_return();
+				}
+			}
+		}
+	}
 }
 
 value_t cg_service::create_scalar( Value* val, value_tyinfo* tyinfo ){
-	return value_t( tyinfo, val, this );
+	return value_t( tyinfo, val, value_t::kind_value, this );
+}
+
+BasicBlock* cg_service::new_block( std::string const& hint, bool set_insert_point )
+{
+	assert( in_function() );
+	
+	BasicBlock* ret = BasicBlock::Create( context(), hint, fn().fn );
+	if( set_insert_point ){
+		builder()->SetInsertPoint(ret);
+	}
+	return ret;
 }
 
 value_t operator+( value_t const& lhs, value_t const& rhs ){

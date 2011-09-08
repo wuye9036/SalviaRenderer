@@ -26,6 +26,7 @@ namespace llvm{
 	class Value;
 	class LLVMContext;
 	class Module;
+	class BasicBlock;
 
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -140,6 +141,7 @@ public:
 	llvm::Value* get_llvm_value() const;
 	bool is_lvalue() const;
 	bool is_rvalue() const;
+	bool storable() const;
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
 	/// Get type hint. if type is not built-in type it returns builtin_type::none.
@@ -150,8 +152,9 @@ public:
 	value_t* get_parent() const;
 	/// @}
 
+	void set_value( llvm::Value* v, kinds k );
 	void set_parent( value_t* parent, kinds k );
-
+	
 	/// @name Operators
 	/// @{
 
@@ -164,7 +167,7 @@ public:
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
-	value_t( value_tyinfo* tyinfo, llvm::Value* val, cg_service* cg );
+	value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_service* cg );
 	/// @}
 
 	/// @name Members
@@ -268,11 +271,6 @@ public:
 	value_t null_value( value_tyinfo* tyinfo );
 
 	template <typename T>
-	class type2type{
-		typedef T type;
-	};
-
-	template <typename T>
 	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
 		Value* ll_val = ConstantInt::get( IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value );
 		if( tyinfo ){
@@ -324,6 +322,7 @@ public:
 
 	/// @name Utilities
 	/// @{
+	virtual llvm::BasicBlock* new_block( std::string const& hint, bool set_insert_point );
 	/// Clean empty blocks of current function.
 	virtual void clean_empty_blocks(); 
 	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;

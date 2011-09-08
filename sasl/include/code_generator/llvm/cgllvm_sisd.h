@@ -157,9 +157,6 @@ protected:
 
 	void create_alloca( cgllvm_sctxt* data, std::string const& name );
 
-	void restart_block( boost::any* data, std::string const& name );
-	void clear_empty_blocks( llvm::Function* fn );
-
 	// For type conversation.
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
 	boost::shared_ptr< ::sasl::semantic::type_converter > typeconv;

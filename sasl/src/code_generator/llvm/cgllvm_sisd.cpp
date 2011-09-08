@@ -580,16 +580,16 @@ SASL_VISIT_DEF( jump_statement ){
 	}
 
 	// Restart a new block for sealing the old block.
-	restart_block(data, "");
+	new_block("", true);
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
 	if ( !v.jump_expr ){
-		builder()->CreateRetVoid();
+		emit_return();
 	} else {
+		emit_return( node_ctxt(v.jump_expr)->get_value() );
 		// builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
 	}
 }
@@ -658,11 +658,9 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
-	//// Create function body.
-	//// Create block
-	//restart_block( &child_ctxt_init, std::string(".entry") );
-	//restart_block( &child_ctxt_init, std::string(".body") );
+	new_block(".body", true);
 	visit_child( child_ctxt, child_ctxt_init, v.body );
+
 	clean_empty_blocks();
 }
 
@@ -792,14 +790,6 @@ Constant* cgllvm_sisd::zero_value( boost::shared_ptr<tynode> typespec )
 cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if_need /*= false */ )
 {
 	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
-}
-
-void cgllvm_sisd::restart_block( boost::any* data, std::string const& name ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	/*assert( sc_env_ptr(data)->parent_fn );
-	BasicBlock* restart = BasicBlock::Create( llcontext(), name, sc_env_ptr(data)->parent_fn );
-	sc_env_ptr(data)->block = restart;
-	builder()->SetInsertPoint(restart);*/
 }
 
 cgllvm_modimpl* cgllvm_sisd::mod_ptr(){
@@ -1007,12 +997,12 @@ llvm::Value* cgllvm_sisd::from_abi( builtin_types hint, llvm::Value* v )
 //	}
 //}
 //
-void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
-{
+//void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
+//{
 	// Inner empty block, insert an br instruction for jumping to next block.
 	// And the tail empty block we add an virtual return instruction.
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	//EFLIB_ASSERT_UNIMPLEMENTED();
 
 	/*typedef Function::BasicBlockListType::iterator block_iterator_t;
 	block_iterator_t beg = fn->getBasicBlockList().begin();
@@ -1037,7 +1027,7 @@ void cgllvm_sisd::clear_empty_blocks( llvm::Function* fn )
 			}
 		}
 	}*/
-}
+//}
 
 template <typename ElementT> llvector<ElementT> cgllvm_sisd::mul_vm(
 	llvm::Value* v, llvm::Value* m,

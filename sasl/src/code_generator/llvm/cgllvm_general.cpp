@@ -242,8 +242,9 @@ SASL_VISIT_DEF( parameter ){
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.param_type );
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	// sc_ptr(data)->type( sc_ptr(child_ctxt) );
+	
+	sc_ptr(data)->data().tyinfo = sc_ptr(data)->get_tysp();
+
 	if (v.init){
 		visit_child( child_ctxt, child_ctxt_init, v.init );
 	} 
