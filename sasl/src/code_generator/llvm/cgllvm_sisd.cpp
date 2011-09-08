@@ -59,6 +59,9 @@ using std::vector;
 using std::string;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_sisd
+#define FUNCTION_SCOPE( fn ) \
+	push_fn( (fn) );	\
+	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cg_service::pop_fn, this ) );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -292,23 +295,22 @@ SASL_VISIT_DEF( constant_expression ){
 	Value* retval = NULL;
 
 	cgllvm_sctxt* const_ctxt = node_ctxt( c_si->type_info() );
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	// Type const* const_lltype = const_ctxt->data().val_type;
 
+	value_tyinfo* tyinfo = const_ctxt->get_typtr();
+	assert( tyinfo );
 
-
-
-	/*if( c_si->value_type() == builtin_types::_sint32 ){
-		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<int32_t>() ), true );
+	value_t val;
+	if( c_si->value_type() == builtin_types::_sint32 ){
+		val = create_constant_scalar( c_si->value<int32_t>(), tyinfo );
 	} else if ( c_si->value_type() == builtin_types::_uint32 ) {
-		retval = ConstantInt::get( const_lltype, uint64_t( c_si->value<uint32_t>() ), false );
+		val = create_constant_scalar( c_si->value<uint32_t>(), tyinfo );
 	} else if ( c_si->value_type() == builtin_types::_float ) {
-		retval = ConstantFP::get( const_lltype, c_si->value<double>() );
+		val = create_constant_scalar( c_si->value<double>(), tyinfo );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
-	}*/
+	}
 
-	// store( retval, sc_ptr(data) );
+	store( sc_ptr(data)->get_value(), val );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -410,7 +412,8 @@ SASL_VISIT_DEF( function_type ){
 	}
 
 	if ( v.body ){
-		sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
+		// TODO
+		// sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
 		create_fnargs( v, data );
 		create_fnbody( v, data );
 	}
@@ -473,9 +476,11 @@ SASL_VISIT_DEF( declarator ){
 
 	// local *OR* member.
 	// TODO TBD: Support member function and nested structure ?
-	assert( !(sc_env_ptr(data)->parent_fn && sc_env_ptr(data)->parent_struct) );
 
-	if( sc_env_ptr(data)->parent_fn ){
+	// TODO
+	// assert( !(sc_env_ptr(data)->parent_fn && sc_env_ptr(data)->parent_struct) );
+
+	if( in_function() ){
 		visit_local_declarator( v, data );
 	} else if( sc_env_ptr(data)->parent_struct ){
 		visit_member_declarator( v, data );
@@ -627,13 +632,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	}
 
 	sc_data_ptr(data)->self_fn = create_function( v.as_handle<function_type>() );
-	//// Create function.
-	//FunctionType* ftype = FunctionType::get( ret_type, param_types, false );
-	//sc_data_ptr(data)->val_type = ftype;
-
-	//Function* fn = Function::Create( ftype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
-	//fn->setCallingConv( CallingConv::Fast );
-	//sc_data_ptr(data)->self_fn = fn;
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
@@ -654,19 +652,18 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-	push_fn( sc_data_ptr(data)->self_fn );
-	scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
+
 	any child_ctxt_init = *data;
-	//any child_ctxt;
+	any child_ctxt;
 
 	//// Create function body.
 	//// Create block
 	//restart_block( &child_ctxt_init, std::string(".entry") );
 	//restart_block( &child_ctxt_init, std::string(".body") );
 	visit_child( child_ctxt, child_ctxt_init, v.body );
-	clear_empty_blocks( fn );
+	clean_empty_blocks();
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){

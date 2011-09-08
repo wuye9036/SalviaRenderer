@@ -13,6 +13,10 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/metaprog/util.h>
+#include <eflib/include/metaprog/enable_if.h>
+#include <eflib/include/diagnostics/assert.h>
+
+#include <boost/type_traits.hpp>
 
 #include <vector>
 
@@ -264,8 +268,34 @@ public:
 	value_t null_value( value_tyinfo* tyinfo );
 
 	template <typename T>
-	value_t create_constant_scalar( T const& v );
+	class type2type{
+		typedef T type;
+	};
 
+	template <typename T>
+	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
+		Value* ll_val = ConstantInt::get( IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value );
+		if( tyinfo ){
+			return create_scalar( ll_val, tyinfo );
+		} else {
+			// Guess tyinfo.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return value_t();
+		}
+	}
+
+	template <typename T>
+	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
+		Value* ll_val = ConstantFP::get( Type::getFloatTy( context() ), v );
+
+		if( tyinfo ){
+			return create_scalar( ll_val, tyinfo );
+		} else {
+			// Guess tyinfo.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return value_t();
+		} 
+	}
 	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 
 	template <typename T>
@@ -292,11 +322,19 @@ public:
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( builtin_types bt ) = 0;
 
+	/// @name Utilities
+	/// @{
+	/// Clean empty blocks of current function.
+	virtual void clean_empty_blocks(); 
 	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;
-
+	/// @}
+	
+	/// @name Fundamentals
+	/// @{
 	virtual llvm::DefaultIRBuilder* builder() const = 0;
 	virtual llvm::LLVMContext&		context() const = 0;
 	virtual llvm::Module*			module() const = 0;
+	/// @}
 
 private:
 	std::vector<function_t> fn_ctxts;

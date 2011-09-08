@@ -31,6 +31,7 @@ using llvm::FunctionType;
 using llvm::IntegerType;
 using llvm::Type;
 using llvm::PointerType;
+using llvm::Value;
 
 using boost::shared_ptr;
 
@@ -127,6 +128,35 @@ builtin_types value_t::get_hint() const
 {
 	return tyinfo->get_hint();
 }
+
+llvm::Value* value_t::load_llvm_value() const{
+	switch( kind ){
+	case kind_value:
+		return val;
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return NULL;
+	}
+}
+
+value_t::kinds value_t::get_kind() const{
+	return kind;
+}
+
+bool value_t::is_lvalue() const{
+	switch( kind ){
+	case kind_ref:
+	case kind_global:
+	case kind_local:
+		return true;
+	case kind_value:
+		return false;
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return false;
+	}
+}
+
 /// @}
 
 /// cgv_scalar @{
@@ -159,7 +189,17 @@ builtin_types value_t::get_hint() const
 /// @}
 
 void cg_service::store( value_t& lhs, value_t const& rhs ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	// TODO: assert( *lhs.get_tyinfo() == *rhs.get_tyinfo() );
+	assert( lhs.is_lvalue() );
+	value_t rv = rhs.to_rvalue();
+	switch( lhs.get_kind() ){
+	case value_t::kind_local:
+	case value_t::kind_ref:
+	case value_t::kind_global:
+		builder()->CreateStore( rv.load_llvm_value(), lhs.get_llvm_value() );
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
 }
 
 value_t cg_service::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
@@ -301,6 +341,16 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 
 bool cg_service::in_function() const{
 	return !fn_ctxts.empty();
+}
+
+void cg_service::clean_empty_blocks()
+{
+	assert( in_function() );
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+value_t cg_service::create_scalar( Value* val, value_tyinfo* tyinfo ){
+	return value_t( tyinfo, val, this );
 }
 
 value_t operator+( value_t const& lhs, value_t const& rhs ){
