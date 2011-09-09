@@ -25,6 +25,7 @@ using sasl::semantic::storage_si;
 
 using namespace sasl::utility;
 
+using llvm::Argument;
 using llvm::LLVMContext;
 using llvm::Function;
 using llvm::FunctionType;
@@ -116,8 +117,7 @@ llvm::Value* value_t::get_llvm_value() const{
 	if( get_hint() == builtin_types::none ){
 		return NULL;
 	}
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return val;
 }
 
 value_t value_t::to_rvalue() const
@@ -134,6 +134,8 @@ llvm::Value* value_t::load_llvm_value() const{
 	switch( kind ){
 	case kind_value:
 		return val;
+	case kind_ref:
+		return cg->builder()->CreateLoad( val );
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return NULL;
@@ -210,7 +212,9 @@ void cg_service::store( value_t& lhs, value_t const& rhs ){
 		builder()->CreateStore( rv.load_llvm_value(), lhs.get_llvm_value() );
 		break;
 	case value_t::kind_unknown:
-		lhs.set_value( rv.load_llvm_value(), value_t::kind_value );
+		// Copy directly.
+		lhs.set_value( rhs.get_llvm_value(), rhs.kind );
+		lhs.tyinfo = rhs.tyinfo;
 		break;
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -335,13 +339,14 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 	{
 		cgllvm_sctxt* par_ctxt = node_ctxt( par, false );
 		value_tyinfo* par_ty = par_ctxt->get_typtr();
+		assert( par_ty );
+
 		bool is_ref = par->si_ptr<storage_si>()->is_reference();
 
-		if( ret.c_compatible ){
-			Type const* par_llty = par_ty->get_llvm_ty( abi ); 
-			if( is_ref ){
-				par_tys.push_back( PointerType::getUnqual( par_llty ) );
-			}
+		Type const* par_llty = par_ty->get_llvm_ty( abi ); 
+		if( ret.c_compatible && is_ref ){
+			par_tys.push_back( PointerType::getUnqual( par_llty ) );
+		} else {
 			par_tys.push_back( par_llty );
 		}
 	}
@@ -350,6 +355,7 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 	FunctionType* fty = FunctionType::get( rety, par_tys, false );
 
 	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
+	ret.cg = this;
 
 	return ret;
 }
@@ -402,6 +408,10 @@ BasicBlock* cg_service::new_block( std::string const& hint, bool set_insert_poin
 	return ret;
 }
 
+value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_t::kinds k ){
+	return value_t( tyinfo, val, k, this );
+}
+
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	assert( lhs.get_hint() != builtin_types::none );
 	assert( is_scalar( scalar_of( lhs.get_hint() ) ) );
@@ -445,12 +455,26 @@ size_t function_t::arg_size() const{
 
 value_t function_t::arg( size_t index ) const
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	shared_ptr<parameter> par = fnty->params[index];
+	value_tyinfo* par_typtr = cg->node_ctxt( par, false )->get_typtr();
+
+	if( argCache.empty() ){
+		for( Function::ArgumentListType::iterator it = fn->arg_begin(); it != fn->arg_end(); ++it ){
+			// Non const.
+			const_cast<function_t*>(this)->argCache.push_back((Argument*)it);
+		}
+	}
+
+	return cg->create_value( par_typtr, argCache[index], arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value );
 }
 
 function_t::function_t(): fn(NULL), fnty(NULL)
 {
+}
+
+bool function_t::arg_is_ref( size_t index ) const{
+	assert( index < fnty->params.size() );
+	return fnty->params[index]->si_ptr<storage_si>()->is_reference();
 }
 
 END_NS_SASL_CODE_GENERATOR();

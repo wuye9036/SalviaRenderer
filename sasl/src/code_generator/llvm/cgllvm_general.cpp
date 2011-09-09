@@ -235,22 +235,7 @@ SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF( parameter ){
-
-	sc_env_ptr(data)->sym = v.symbol();
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	visit_child( child_ctxt, child_ctxt_init, v.param_type );
-	
-	sc_ptr(data)->data().tyinfo = sc_ptr(data)->get_tysp();
-
-	if (v.init){
-		visit_child( child_ctxt, child_ctxt_init, v.init );
-	} 
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-
+	parent_class::visit(v, data);
 }
 
 SASL_VISIT_DEF( function_type ){

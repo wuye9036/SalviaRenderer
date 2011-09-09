@@ -21,6 +21,7 @@
 #include <vector>
 
 namespace llvm{
+	class Argument;
 	class Function;
 	class Type;
 	class Value;
@@ -208,12 +209,16 @@ struct function_t{
 	void arg_name( size_t index, std::string const& );
 	/// Set arguments name. Size of names must be less than argument size.
 	void args_name( std::vector<std::string> const& names );
+	/// Return true if argument is a reference.
+	bool arg_is_ref( size_t index ) const;
 
 	boost::shared_ptr<value_tyinfo> get_return_ty();
 
+	std::vector<llvm::Argument*>		argCache;
 	sasl::syntax_tree::function_type*	fnty;
 	llvm::Function*						fn;
 	bool								c_compatible;
+	cg_service*							cg;
 };
 
 class cg_service{
@@ -269,6 +274,8 @@ public:
 	/// @name Emit values
 	/// @{
 	value_t null_value( value_tyinfo* tyinfo );
+
+	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k );
 
 	template <typename T>
 	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){

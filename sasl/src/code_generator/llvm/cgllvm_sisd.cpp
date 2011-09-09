@@ -373,10 +373,9 @@ SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	sc_ptr(data)->get_value() = node_ctxt( declsym->node(), false )->get_value();
+	sc_ptr(data)->get_tysp() = node_ctxt( declsym->node(), false )->get_tysp();
 
-	//sc_ptr(data)->get_value() == node_ctxt( declsym->node() )->value();
-	//sc_ptr(data)->get_tysp() == node_ctxt( declsym->node() )->get_tysp();
 	// sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -525,11 +524,11 @@ SASL_VISIT_DEF( parameter ){
 	visit_child( child_ctxt, child_ctxt_init, v.param_type );
 
 	if( v.init ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		visit_child( child_ctxt, child_ctxt_init, v.init );
 	}
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	// sc_data_ptr(data)->val_type = sc_data_ptr( &child_ctxt )->val_type;
+	sc_data_ptr(data)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( declaration_statement ){
