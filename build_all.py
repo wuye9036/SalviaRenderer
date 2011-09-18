@@ -107,7 +107,7 @@ class build_config:
 			elif os.path.exists("C:\\Mingw\\bin\\gcc.exe"):
 				default_toolset = "mingw"
 			else:
-				print('ERROR: Cannot found any valid compiler on your computer.')
+				print('ERROR: Cannot found any valid compiler on your computer. Please set toolset in "build_conf.py" ')
 
 		if default_toolset == "msvc-10.0":
 			self.toolset_ = toolset('vs', 'msvc', 10, 0, None)
@@ -117,6 +117,11 @@ class build_config:
 			self.toolset_ = toolset('vs', 'msvc', 8, 0, None)
 		else:
 			print('ERROR: Unsupported toolset name: %s' % default_toolset)
+		
+		if build_conf.cmake == "" or build_conf.cmake == None or os.path.exists(build_conf.cmake):
+			print('ERROR: Cannot find CMake executable. Please specify it in "build_conf.py"')
+			self.cmake_ = None
+		self.cmake_ = build_conf.cmake
 		
 	# Platform
 	def arch(self):
@@ -131,7 +136,9 @@ class build_config:
 
 	def toolset(self):
 		return self.toolset_
-
+	def cmake_exe(self):
+		return self.cmake_
+		
 	# Boost builds.
 	def boost_root(self):
 		return self.boost_root_
@@ -192,7 +199,7 @@ def make_bjam( src ):
 		if not os.path.exists( "bjam.exe" ):
 			os.system( "bootstrap.bat" )
 	else:
-		print("Boost build doesn't support non-win32 for now.")
+		print("ERROR: Boost build doesn't support non-win32 for now.")
 		return False
 	os.chdir( build_config.instance().source_root() )
 	return True
@@ -230,7 +237,7 @@ def make_boost( src, stage_dir ):
 
 	os.chdir( build_config.instance().source_root() )
 	return True
-	
+
 def make_llvm( src, dest ):
 	pass
 
@@ -251,7 +258,7 @@ if __name__ == "__main__":
 
 	print( 'Finding boost...')
 	if not conf.boost_version():
-		print('ERROR: Boost is not found. Please edit its path in \'build_conf.py\'.')
+		print('ERROR: Boost is not found. Please specify boost path in \'build_conf.py\'.')
 		sys.exit(1)
 	print( 'Boost %s is found.' % conf.boost_version() )
 
@@ -267,10 +274,17 @@ if __name__ == "__main__":
 	if not make_boost( conf.boost_root(), boost_stage ):
 		sys.exit(1)
 
+	print( "Finding CMake..." )
+	if not conf.cmake_exe():
+		print('ERROR: CMake is not found.')
+		sys.exit(1)
+	print( "CMake is found." )
+	
 	print( 'Configuring LLVM ...' )
 	print( 'Building LLVM...' )
 
 	print( 'Configuring SALVIA ...' )
+	
 	print( 'Building SALVIA ...' )
 
 	print( 'Build done.')

@@ -18,3 +18,4 @@ arch = 'AMD64' # or 'i386'
 # Toolsets
 # toolset = 'msvc-10.0', 'msvc-9.0', 'msvc-8.0', 'gcc-4.3', etc, or None.
 toolset = 'msvc-10.0' #None for default compiler.
+cmake = "C:\Program Files (x86)\CMake 2.8\bin\cmake.exe"
