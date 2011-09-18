@@ -668,6 +668,9 @@ SASL_VISIT_DEF( parameter )
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, msi->type_manager() );
 	ssi->entry_id( tid );
 
+	// TODO: Unsupport reference yet.
+	ssi->is_reference( false );
+
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	data_cptr()->generated_node = dup_par->as_handle();
