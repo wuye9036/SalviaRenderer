@@ -35,6 +35,8 @@ using llvm::PointerType;
 using llvm::Value;
 using llvm::BasicBlock;
 using llvm::Constant;
+using llvm::StructType;
+using llvm::VectorType;
 
 using boost::shared_ptr;
 
@@ -297,6 +299,23 @@ Type const* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_com
 		if ( bt == builtin_types::_double ){
 			return Type::getDoubleTy( ctxt );
 		}
+	}
+
+	if( is_vector(bt) ){
+		Type const* elem_ty = create_llvm_type( ctxt, scalar_of(bt), is_c_compatible );
+		size_t vec_size = vector_size(bt);
+		if( is_c_compatible ){
+			vector<Type const*> elem_tys(vec_size, elem_ty);
+			return StructType::get( ctxt, elem_tys );
+		} else {
+			return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
+		}
+	}
+
+	if( is_matrix(bt) ){
+		Type const* vec_ty = create_llvm_type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), is_c_compatible );
+		vector<Type const*> row_tys( vector_count(bt), vec_ty );
+		return StructType::get( ctxt, row_tys );
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
