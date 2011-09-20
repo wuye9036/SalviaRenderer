@@ -50,17 +50,17 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
 
+enum abis{
+	abi_c,
+	abi_llvm,
+	abi_unknown
+};
+
 class value_tyinfo{
 public:
 	friend class cg_service;
 	
-	enum abis{
-		abi_c,
-		abi_llvm,
-		abi_unknown
-	};
-	
-	enum types{
+	enum classifications{
 		unknown_type,
 		builtin,
 		aggregated
@@ -69,26 +69,24 @@ public:
 	value_tyinfo(
 		sasl::syntax_tree::tynode* sty,
 		llvm::Type const* cty,
-		llvm::Type const* llty,
-		abis abi
+		llvm::Type const* llty
 	);
+
 	value_tyinfo( value_tyinfo const& );
 	value_tyinfo& operator = ( value_tyinfo const& );
 
 	sasl::syntax_tree::tynode* get_typtr() const;
 	boost::shared_ptr<sasl::syntax_tree::tynode> get_tysp() const;
 	builtin_types get_hint() const;
-	abis get_abi() const;
-	llvm::Type const* get_llvm_ty() const;
+
 	llvm::Type const* get_llvm_ty( abis abi ) const;
+
 protected:
 	value_tyinfo();
 
-	sasl::syntax_tree::tynode*	sty;
 	llvm::Type const*			llvm_tys[2];
-	abis						abi;
-	types						ty;
-	builtin_types				hint;
+	sasl::syntax_tree::tynode*	sty;
+	classifications				cls;
 };
 
 class value_t{
@@ -151,6 +149,8 @@ public:
 	kinds get_kind() const;
 	/// Get parent. If value is not a member of aggragation, it return NULL.
 	value_t* get_parent() const;
+	/// Get ABI.
+	abis get_abi() const;
 	/// @}
 
 	void set_value( llvm::Value* v, kinds k );
@@ -163,12 +163,14 @@ public:
 	value_t to_rvalue() const;
 
 	friend value_t operator + ( value_t const&, value_t const& );
+	friend value_t operator * ( value_t const&, value_t const& );
 	/// @}
 
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
 	value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_service* cg );
+	value_t( builtin_types hint, llvm::Value* val, value_t::kinds k, cg_service* cg );
 	/// @}
 
 	/// @name Members
@@ -176,7 +178,14 @@ protected:
 	kinds			kind;
 	value_t*		parent;
 	llvm::Value*	val;
+	
+	/// Type information
 	value_tyinfo*	tyinfo;
+	builtin_types	hint;
+
+	/// ABI
+	abis			abi;
+
 	cg_service*		cg;
 	lrv				lr;
 	/// @}
@@ -228,6 +237,18 @@ public:
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
 	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );
+	value_t emit_add( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul( value_t const& lhs, value_t const& rhs );
+
+	value_t emit_add_ss( value_t const& lhs, value_t const& rhs );
+
+	value_t emit_mul_ss( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
+
+	value_t emit_extract_rol( value_t const& lhs );
+
 	/** @} */
 	
 	/// @name Emit type casts
@@ -304,12 +325,12 @@ public:
 	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 
 	template <typename T>
-	value_t create_constant_vector( T const* vals, size_t length, value_tyinfo::abis abi );
+	value_t create_constant_vector( T const* vals, size_t length, abis abi );
 
-	value_t create_vector( std::vector<value_t> const& scalars, value_tyinfo::abis abi );
+	value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	template <typename T>
-	value_t create_constant_matrix( T const* vals, size_t length, value_tyinfo::abis abi );
+	value_t create_constant_matrix( T const* vals, size_t length, abis abi );
 	/// @}
 	
 	/// @name Emit variables

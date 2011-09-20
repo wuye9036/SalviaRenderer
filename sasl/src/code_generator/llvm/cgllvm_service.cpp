@@ -49,20 +49,15 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 value_tyinfo::value_tyinfo(
 	tynode* sty,
 	llvm::Type const* cty,
-	llvm::Type const* llty,
-	value_tyinfo::abis abi
-	) : sty(sty), abi(abi), hint(builtin_types::none)
+	llvm::Type const* llty
+	) : sty(sty)
 {
 	llvm_tys[abi_c] = cty;
 	llvm_tys[abi_llvm] = llty;
-
-	if( sty->is_builtin() ){
-		hint = sty->tycode;
-	}
 }
 
 value_tyinfo::value_tyinfo()
-	:sty(NULL), abi(abi_unknown), ty( unknown_type ), hint( builtin_types::none )
+	:sty(NULL), cls( unknown_type )
 {
 	llvm_tys[0] = NULL;
 	llvm_tys[1] = NULL;
@@ -75,20 +70,12 @@ builtin_types value_tyinfo::get_hint() const{
 	return sty->tycode;
 }
 
-value_tyinfo::abis value_tyinfo::get_abi() const{
-	return abi;
-}
-
 tynode* value_tyinfo::get_typtr() const{
 	return sty;
 }
 
 shared_ptr<tynode> value_tyinfo::get_tysp() const{
 	return sty->as_handle<tynode>();
-}
-
-llvm::Type const* value_tyinfo::get_llvm_ty() const{
-	return llvm_tys[abi];
 }
 
 llvm::Type const* value_tyinfo::get_llvm_ty( abis abi ) const
@@ -100,13 +87,23 @@ llvm::Type const* value_tyinfo::get_llvm_ty( abis abi ) const
 
 /// value_t @{
 value_t::value_t()
-	: tyinfo(NULL), val(NULL), cg(NULL), kind(kind_unknown)
+	: tyinfo(NULL), val(NULL), cg(NULL), kind(kind_unknown), hint(builtin_types::none)
 {
 }
 
 value_t::value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_service* cg )
-	: tyinfo(tyinfo), val(val), cg(cg), kind(k)
+	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none)
 {
+}
+
+value_t::value_t( builtin_types hint, llvm::Value* val, value_t::kinds k, cg_service* cg )
+	: tyinfo(NULL), hint(builtin_types::none)
+{
+
+}
+
+abis value_t::get_abi() const{
+	return abi;
 }
 
 value_t value_t::swizzle( size_t swz_code ) const{
@@ -253,7 +250,7 @@ value_t cg_service::null_value( value_tyinfo* tyinfo )
 	return value_t();
 }
 
-value_t cg_service::create_vector( std::vector<value_t> const& scalars, value_tyinfo::abis abi ){
+value_t cg_service::create_vector( std::vector<value_t> const& scalars, abis abi ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
@@ -325,15 +322,14 @@ Type const* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_com
 shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& tyn ){
 	value_tyinfo* ret = new value_tyinfo();
 	ret->sty = tyn.get();
-	ret->hint = builtin_types::none;
+	ret->cls = value_tyinfo::unknown_type;
 
 	if( tyn->is_builtin() ){
-		ret->llvm_tys[value_tyinfo::abi_c] = create_llvm_type( context(), tyn->tycode, true );
-		ret->llvm_tys[value_tyinfo::abi_llvm] = create_llvm_type( context(), tyn->tycode, false );
-		ret->hint = tyn->tycode;
-		ret->ty = value_tyinfo::builtin;
+		ret->llvm_tys[abi_c] = create_llvm_type( context(), tyn->tycode, true );
+		ret->llvm_tys[abi_llvm] = create_llvm_type( context(), tyn->tycode, false );
+		ret->cls = value_tyinfo::builtin;
 	} else {
-		ret->ty = value_tyinfo::aggregated;
+		ret->cls = value_tyinfo::aggregated;
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
@@ -350,7 +346,7 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 		return function_t();
 	}
 
-	value_tyinfo::abis abi = ret.c_compatible ? value_tyinfo::abi_c : value_tyinfo::abi_llvm;
+	abis abi = ret.c_compatible ? abi_c : abi_llvm;
 
 	vector<Type const*> par_tys;
 
@@ -419,7 +415,7 @@ value_t cg_service::create_scalar( Value* val, value_tyinfo* tyinfo ){
 BasicBlock* cg_service::new_block( std::string const& hint, bool set_insert_point )
 {
 	assert( in_function() );
-	
+
 	BasicBlock* ret = BasicBlock::Create( context(), hint, fn().fn );
 	if( set_insert_point ){
 		builder()->SetInsertPoint(ret);
@@ -431,14 +427,48 @@ value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_t::kin
 	return value_t( tyinfo, val, k, this );
 }
 
-value_t operator+( value_t const& lhs, value_t const& rhs ){
-	assert( lhs.get_hint() != builtin_types::none );
-	assert( is_scalar( scalar_of( lhs.get_hint() ) ) );
+sasl::code_generator::value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+sasl::code_generator::value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint = lhs.get_hint();
+
+	assert( hint != builtin_types::none );
+	assert( is_scalar( scalar_of( hint ) ) );
+	assert( hint == rhs.get_hint() );
+
+	if( is_scalar(hint) ){
+		return emit_add_ss(lhs, rhs);
+	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
+value_t cg_service::emit_add_ss( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint = lhs.get_hint();
+
+	Value* lval = lhs.load_llvm_value();
+	Value* rval = rhs.load_llvm_value();
+
+	Value* ret = NULL;
+	if( is_integer(hint) ){
+		Value* ret = builder()->CreateAdd(lval, rval);
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return value_t( hint, ret, value_t::kind_value, this );
+}
+
+value_t operator+( value_t const& lhs, value_t const& rhs ){
+	return lhs.cg->emit_add(lhs, rhs);
+}
 
 void function_t::arg_name( size_t index, std::string const& name ){
 	assert( index < fn->arg_size() );
