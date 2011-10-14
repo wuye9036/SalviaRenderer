@@ -29,12 +29,12 @@ BEGIN_NS_SASL_SEMANTIC();
 module_si::module_si()
 {
 	compinfo = compiler_info_manager::create();
-	typemgr = type_manager::create();
+	typemgr = pety_t::create();
 	rootsym = symbol::create_root( boost::shared_ptr<node>() );
 	typemgr->root_symbol(rootsym);
 }
 
-shared_ptr<class type_manager> module_si::type_manager() const{
+shared_ptr<class pety_t> module_si::pety() const{
 	return typemgr;
 }
 

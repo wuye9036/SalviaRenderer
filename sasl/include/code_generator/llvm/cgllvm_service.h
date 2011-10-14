@@ -230,6 +230,17 @@ struct function_t{
 	cg_service*							cg;
 };
 
+struct insert_point_t{
+	EFLIB_OPERATOR_BOOL( insert_point_t )
+	{
+		return block != NULL;
+	}
+	
+	insert_point_t();
+
+	llvm::BasicBlock* block;
+};
+
 class cg_service{
 public:
 	/** @name Emit expressions
@@ -239,8 +250,11 @@ public:
 	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );
 	value_t emit_add( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul( value_t const& lhs, value_t const& rhs );
+	value_t emit_dot( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_add_ss( value_t const& lhs, value_t const& rhs );
+
+	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_mul_ss( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
@@ -273,6 +287,8 @@ public:
 	/// @{
 	void push_fn( function_t const& fn );
 	void pop_fn();
+
+	void set_insert_point( insert_point_t const& ip );
 	/// @}
 
 	/// @name Context queries
@@ -350,7 +366,7 @@ public:
 
 	/// @name Utilities
 	/// @{
-	virtual llvm::BasicBlock* new_block( std::string const& hint, bool set_insert_point );
+	insert_point_t new_block( std::string const& hint, bool set_insert_point );
 	/// Clean empty blocks of current function.
 	virtual void clean_empty_blocks(); 
 	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;

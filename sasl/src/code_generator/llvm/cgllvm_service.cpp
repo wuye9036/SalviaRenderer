@@ -412,14 +412,16 @@ value_t cg_service::create_scalar( Value* val, value_tyinfo* tyinfo ){
 	return value_t( tyinfo, val, value_t::kind_value, this );
 }
 
-BasicBlock* cg_service::new_block( std::string const& hint, bool set_insert_point )
+insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
 {
 	assert( in_function() );
 
-	BasicBlock* ret = BasicBlock::Create( context(), hint, fn().fn );
-	if( set_insert_point ){
-		builder()->SetInsertPoint(ret);
+	insert_point_t ret;
+	ret.block = BasicBlock::Create( context(), hint, fn().fn );
+	if( set_as_current ){
+		set_insert_point( ret );
 	}
+
 	return ret;
 }
 
@@ -466,6 +468,22 @@ value_t cg_service::emit_add_ss( value_t const& lhs, value_t const& rhs )
 	return value_t( hint, ret, value_t::kind_value, this );
 }
 
+void cg_service::set_insert_point( insert_point_t const& ip ){
+	builder()->SetInsertPoint(ip.block);
+}
+
+value_t cg_service::emit_dot( value_t const& lhs, value_t const& rhs )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();	
+}
+
+value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	return lhs.cg->emit_add(lhs, rhs);
 }
@@ -493,8 +511,7 @@ void function_t::args_name( vector<string> const& names )
 
 shared_ptr<value_tyinfo> function_t::get_return_ty(){
 	assert( fnty->is_function() );
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<value_tyinfo>();
+	return shared_ptr<value_tyinfo>( cg->node_ctxt( fnty->retval_type, false )->get_tysp() );
 }
 
 size_t function_t::arg_size() const{
@@ -524,6 +541,11 @@ function_t::function_t(): fn(NULL), fnty(NULL)
 bool function_t::arg_is_ref( size_t index ) const{
 	assert( index < fnty->params.size() );
 	return fnty->params[index]->si_ptr<storage_si>()->is_reference();
+}
+
+
+insert_point_t::insert_point_t(): block(NULL)
+{
 }
 
 END_NS_SASL_CODE_GENERATOR();

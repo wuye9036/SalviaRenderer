@@ -40,13 +40,13 @@ public:
 	*/
 };
 
-class type_manager{
+class pety_t{
 public:
-	static boost::shared_ptr< type_manager > create();
+	static boost::shared_ptr< pety_t > create();
 
 	void root_symbol( boost::shared_ptr<symbol> const& sym );
 
-	boost::shared_ptr<type_manager> handle() const;
+	boost::shared_ptr<pety_t> handle() const;
 	
 	type_entry::id_t get(
 		::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node,
@@ -59,7 +59,7 @@ public:
 private:
 	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node );
 	::std::vector< type_entry > entries;
-	boost::weak_ptr<type_manager> self_handle;
+	boost::weak_ptr<pety_t> self_handle;
 	boost::weak_ptr<symbol> rootsym;
 };
 

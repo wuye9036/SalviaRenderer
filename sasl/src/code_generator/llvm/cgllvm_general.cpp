@@ -252,9 +252,9 @@ SASL_VISIT_DEF( if_statement ){
 
 	//visit_child( child_ctxt, child_ctxt_init, v.cond );
 	//type_entry::id_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
-	//type_entry::id_t bool_tid = msi->type_manager()->get( builtin_types::_boolean );
+	//type_entry::id_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	//if( cond_tid != bool_tid ){
-	//	typeconv->convert( msi->type_manager()->get(bool_tid), v.cond );
+	//	typeconv->convert( msi->pety()->get(bool_tid), v.cond );
 	//}
 	//BasicBlock* cond_block = mod_ptr()->builder()->GetInsertBlock();
 

@@ -129,11 +129,11 @@ type_entry::type_entry()
 
 // type_manager
 
-shared_ptr<type_manager> type_manager::handle() const{
+shared_ptr<pety_t> pety_t::handle() const{
 	return self_handle.lock();
 }
 
-type_entry::id_t type_manager::get( shared_ptr<tynode> const& node, shared_ptr<symbol> const& parent ){
+type_entry::id_t pety_t::get( shared_ptr<tynode> const& node, shared_ptr<symbol> const& parent ){
 	/////////////////////////////////////////////////////
 	// if node has id yet, return it.
 	type_entry::id_t ret = type_entry_id_of_node( node );
@@ -172,7 +172,7 @@ type_entry::id_t type_manager::get( shared_ptr<tynode> const& node, shared_ptr<s
 	}
 }
 
-shared_ptr< tynode > type_manager::get( type_entry::id_t id ){
+shared_ptr< tynode > pety_t::get( type_entry::id_t id ){
 	if( id < 0 ){
 		return shared_ptr<tynode>();
 	}
@@ -180,7 +180,7 @@ shared_ptr< tynode > type_manager::get( type_entry::id_t id ){
 }
 
 // Get type id by an builtin type code
-type_entry::id_t type_manager::get( const builtin_types& btc ){
+type_entry::id_t pety_t::get( const builtin_types& btc ){
 	// If it existed in symbol, return it.
 	// Otherwise create a new type and push into type manager.
 	type_entry::id_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );
@@ -193,22 +193,22 @@ type_entry::id_t type_manager::get( const builtin_types& btc ){
 	}
 }
 
-boost::shared_ptr< type_manager > type_manager::create(){
-	boost::shared_ptr<type_manager> ret = make_shared<type_manager>();
+boost::shared_ptr< pety_t > pety_t::create(){
+	boost::shared_ptr<pety_t> ret = make_shared<pety_t>();
 	ret->self_handle = ret;
 	return ret;
 }
 
-void type_manager::root_symbol( boost::shared_ptr<symbol> const& sym )
+void pety_t::root_symbol( boost::shared_ptr<symbol> const& sym )
 {
 	rootsym = sym;
 }
 
-void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<type_manager> const& typemgr, type_entry::id_t id ){
+void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<pety_t> const& typemgr, type_entry::id_t id ){
 	get_or_create_semantic_info<type_si>( node, typemgr )->entry_id( id );
 }
 
-type_entry::id_t semantic::type_manager::allocate_and_assign_id( shared_ptr<tynode> const& node  ){
+type_entry::id_t semantic::pety_t::allocate_and_assign_id( shared_ptr<tynode> const& node  ){
 	// Get a duplication from node.
 	// It assures that the node storaged in pool is always avaliable.
 	shared_ptr<tynode> dup_node = duplicate_type_specifier( node );

@@ -53,7 +53,7 @@ public:
 
 	module_si();
 
-	boost::shared_ptr<class type_manager> type_manager() const;
+	boost::shared_ptr<pety_t> pety() const;
 	boost::shared_ptr<symbol> root() const;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
 
@@ -67,7 +67,7 @@ public:
 	std::vector< boost::shared_ptr<symbol> >& intrinsics();
 
 private:
-	boost::shared_ptr<class type_manager> typemgr;
+	boost::shared_ptr<pety_t> typemgr;
 	boost::shared_ptr<symbol> rootsym;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;
 
@@ -117,7 +117,7 @@ public:
 
 class type_info_si_impl: public type_info_si{
 public:
-	type_info_si_impl( boost::shared_ptr<type_manager> typemgr );
+	type_info_si_impl( boost::shared_ptr<pety_t> typemgr );
 
 	virtual type_entry::id_t entry_id() const;
 	virtual void entry_id( type_entry::id_t id );
@@ -128,13 +128,13 @@ public:
 
 private:
 	type_entry::id_t tid;
-	::boost::weak_ptr< class type_manager > typemgr;
+	::boost::weak_ptr< class pety_t > typemgr;
 };
 
 class const_value_si: public type_info_si{
 public:
 	typedef semantic_info base_type;
-	const_value_si( boost::shared_ptr<type_manager> typemgr );
+	const_value_si( boost::shared_ptr<pety_t> typemgr );
 
 	void set_literal( const std::string& litstr, literal_classifications lctype );
 
@@ -150,7 +150,7 @@ private:
 
 class type_si : public type_info_si{
 public:
-	type_si( boost::shared_ptr<type_manager> typemgr );
+	type_si( boost::shared_ptr<pety_t> typemgr );
 
 	SASL_TYPE_INFO_PROXY();
 };
@@ -158,7 +158,7 @@ public:
 class storage_si: public type_info_si{
 
 public:
-	storage_si( boost::shared_ptr<type_manager> const& typemgr );
+	storage_si( boost::shared_ptr<pety_t> const& typemgr );
 
 	salviar::semantic_value const& get_semantic() const;
 	void set_semantic( salviar::semantic_value const& v );
@@ -203,7 +203,7 @@ private:
 
 class call_si: public type_info_si{
 public:
-	call_si( boost::shared_ptr<type_manager> const& typemgr );
+	call_si( boost::shared_ptr<pety_t> const& typemgr );
 
 	void overloaded_function( symbol* );
 	symbol* overloaded_function() const;

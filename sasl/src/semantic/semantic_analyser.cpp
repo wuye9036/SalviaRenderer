@@ -211,7 +211,7 @@ SASL_VISIT_DEF( cast_expression ){
 		}
 	}
 
-	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_cexpr, msi->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_cexpr, msi->pety() );
 	ssi->entry_id( casted_tsi->entry_id() );
 
 	data_cptr()->generated_node = dup_cexpr->as_handle();
@@ -249,7 +249,7 @@ SASL_VISIT_DEF( binary_expression )
 
 	// update semantic information of binary expression
 	type_entry::id_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
-	get_or_create_semantic_info<storage_si>( dup_expr, msi->type_manager() )->entry_id( result_tid );
+	get_or_create_semantic_info<storage_si>( dup_expr, msi->pety() )->entry_id( result_tid );
 
 	data_cptr()->generated_node = dup_expr->as_handle();
 }
@@ -279,7 +279,7 @@ SASL_VISIT_DEF( cond_expression ){
 		return;
 	}
 
-	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_types::_boolean );
+	type_entry::id_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 
 	if( !typeconv->implicit_convertible( cond_tisi->entry_id(), bool_tid ) ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -287,7 +287,7 @@ SASL_VISIT_DEF( cond_expression ){
 		return;
 	}
 
-	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->pety() );
 
 	type_entry::id_t yes_tid = yes_tisi->entry_id();
 	type_entry::id_t no_tid = no_tisi->entry_id();
@@ -346,7 +346,7 @@ SASL_VISIT_DEF( call_expression )
 
 		storage_si* ssi = func_sym->node()->si_ptr<storage_si>();
 		ssi->is_invoked(true);
-		SASL_GET_OR_CREATE_SI_P( call_si, csi, dup_callexpr, msi->type_manager() );
+		SASL_GET_OR_CREATE_SI_P( call_si, csi, dup_callexpr, msi->pety() );
 
 		csi->entry_id( ssi->entry_id() );
 		csi->is_function_pointer(false);
@@ -434,7 +434,7 @@ SASL_VISIT_DEF( member_expression ){
 					);
 			}
 
-			mem_typeid = msi->type_manager()->get( swizzled_btc );
+			mem_typeid = msi->pety()->get( swizzled_btc );
 		} else {
 			// TODO swizzle fields are some errors.
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -448,7 +448,7 @@ SASL_VISIT_DEF( member_expression ){
 		return;
 	}
 
-	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->pety() );
 	ssi->entry_id( mem_typeid );
 	ssi->swizzle( swizzle_code );
 
@@ -459,7 +459,7 @@ SASL_VISIT_DEF( constant_expression )
 {
 	shared_ptr<constant_expression> dup_cexpr = duplicate( v.as_handle() )->as_handle<constant_expression>();
 	
-	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, dup_cexpr, msi->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, dup_cexpr, msi->pety() );
 	vsi->set_literal( v.value_tok->str, v.ctype );
 
 	data_cptr()->generated_node = dup_cexpr->as_handle();	
@@ -503,7 +503,7 @@ SASL_VISIT_DEF( expression_initializer )
 	any child_ctxt;
 	visit_child( child_ctxt, child_ctxt_init, v.init_expr, dup_exprinit->init_expr );
 
-	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_exprinit, msi->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_exprinit, msi->pety() );
 	ssi->entry_id( extract_semantic_info<type_info_si>(dup_exprinit->init_expr)->entry_id() );
 
 	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>( data_cptr()->variable_to_fill );
@@ -527,7 +527,7 @@ SASL_VISIT_DEF( declarator ){
 
 	shared_ptr<declarator> dup_decl = duplicate( v.as_handle() )->as_handle<declarator>();
 
-	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_decl, msi->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_decl, msi->pety() );
 	ssi->entry_id( data_cptr()->declarator_type_id );
 
 	if( data_cptr()->member_index >= 0 ){
@@ -583,7 +583,7 @@ SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF( builtin_type ){
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, msi->type_manager() );
+	SASL_GET_OR_CREATE_SI_P( type_si, tsi, v, msi->pety() );
 	tsi->type_info( v.as_handle<tynode>(), data_cptr()->parent_sym );
 
 	data_cptr()->generated_node = tsi->type_info()->as_handle();
@@ -605,12 +605,12 @@ SASL_VISIT_DEF( struct_type ){
 
 	// Get from type pool or insert a new one.
 	type_entry::id_t dup_struct_id
-		= msi->type_manager()->get( v.as_handle<tynode>(), data_cptr()->parent_sym );
+		= msi->pety()->get( v.as_handle<tynode>(), data_cptr()->parent_sym );
 
 	assert( dup_struct_id != -1 );
 
 	shared_ptr<struct_type> dup_struct
-		= msi->type_manager()->get( dup_struct_id )->as_handle<struct_type>();
+		= msi->pety()->get( dup_struct_id )->as_handle<struct_type>();
 	
 	SASL_EXTRACT_SI( type_info_si, tisi, dup_struct );
 	dup_struct = tisi->type_info()->as_handle<struct_type>();
@@ -644,12 +644,12 @@ SASL_VISIT_DEF( struct_type ){
 
 SASL_VISIT_DEF( alias_type ){
 	type_entry::id_t dup_struct_id
-		= msi->type_manager()->get( v.as_handle<tynode>(), data_cptr()->parent_sym );
+		= msi->pety()->get( v.as_handle<tynode>(), data_cptr()->parent_sym );
 	// TODO: If struct id not found, it means the type name is wrong.
 	// Compiler will report that.
 	assert( dup_struct_id != -1 );
 
-	data_cptr()->generated_node = msi->type_manager()->get(dup_struct_id);
+	data_cptr()->generated_node = msi->pety()->get(dup_struct_id);
 }
 
 SASL_VISIT_DEF( parameter )
@@ -665,7 +665,7 @@ SASL_VISIT_DEF( parameter )
 	}
 
 	type_entry::id_t tid = extract_semantic_info<type_info_si>(dup_par->param_type)->entry_id();
-	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, msi->type_manager() );
+	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, msi->pety() );
 	ssi->entry_id( tid );
 
 	// TODO: Unsupport reference yet.
@@ -708,7 +708,7 @@ SASL_VISIT_DEF( function_type )
 	
 	type_entry::id_t ret_tid = extract_semantic_info<type_info_si>( dup_fn->retval_type )->entry_id();
 
-	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_fn, msi->type_manager() );
+	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_fn, msi->pety() );
 	ssi->entry_id( ret_tid );
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
@@ -750,7 +750,7 @@ SASL_VISIT_DEF( if_statement )
 	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_ifstmt->cond );
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_ifstmt->cond);
 	assert( cond_tsi );
-	type_entry::id_t bool_tid = msi->type_manager()->get( builtin_types::_boolean );
+	type_entry::id_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
 
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt, dup_ifstmt->yes_stmt );
@@ -875,7 +875,7 @@ void semantic_analyser::builtin_type_convert( shared_ptr<node> lhs, shared_ptr<n
 
 void semantic_analyser::register_type_converter( const boost::any& /*ctxt*/ ){
 	// register default type converter
-	type_manager* typemgr = msi->type_manager().get();
+	pety_t* typemgr = msi->pety().get();
 
 	type_entry::id_t sint8_ts = typemgr->get( builtin_types::_sint8 );
 	type_entry::id_t sint16_ts = typemgr->get( builtin_types::_sint16 );
@@ -1229,7 +1229,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 void semantic_analyser::register_builtin_types(){
 	BOOST_FOREACH( builtin_types const & btc, list_of_builtin_types() ){
-		if( msi->type_manager()->get( btc ) == -1 ){
+		if( msi->pety()->get( btc ) == -1 ){
 			assert( !"Register builtin type failed!" );
 		}
 	}

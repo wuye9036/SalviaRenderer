@@ -30,7 +30,7 @@ using ::sasl::semantic::symbol;
 using ::sasl::semantic::type_converter;
 using ::sasl::semantic::type_entry;
 using ::sasl::semantic::type_info_si;
-using ::sasl::semantic::type_manager;
+using ::sasl::semantic::pety_t;
 
 using ::sasl::syntax_tree::create_builtin_type;
 using ::sasl::syntax_tree::node;
@@ -151,7 +151,7 @@ private:
 
 void register_builtin_typeconv(
 	shared_ptr<type_converter> typeconv,
-	shared_ptr<type_manager> typemgr
+	shared_ptr<pety_t> pety
 	)
 {
 	typedef function< void ( shared_ptr<node>, shared_ptr<node> ) > converter_t;
@@ -176,18 +176,18 @@ void register_builtin_typeconv(
 		}
 	}
 
-	type_entry::id_t sint8_ts = typemgr->get( builtin_types::_sint8 );
-	type_entry::id_t sint16_ts = typemgr->get( builtin_types::_sint16 );
-	type_entry::id_t sint32_ts = typemgr->get( builtin_types::_sint32 );
-	type_entry::id_t sint64_ts = typemgr->get( builtin_types::_sint64 );
+	type_entry::id_t sint8_ts = pety->get( builtin_types::_sint8 );
+	type_entry::id_t sint16_ts = pety->get( builtin_types::_sint16 );
+	type_entry::id_t sint32_ts = pety->get( builtin_types::_sint32 );
+	type_entry::id_t sint64_ts = pety->get( builtin_types::_sint64 );
 
-	type_entry::id_t uint8_ts = typemgr->get( builtin_types::_uint8 );
-	type_entry::id_t uint16_ts = typemgr->get( builtin_types::_uint16 );
-	type_entry::id_t uint32_ts = typemgr->get( builtin_types::_uint32 );
-	type_entry::id_t uint64_ts = typemgr->get( builtin_types::_uint64 );
+	type_entry::id_t uint8_ts = pety->get( builtin_types::_uint8 );
+	type_entry::id_t uint16_ts = pety->get( builtin_types::_uint16 );
+	type_entry::id_t uint32_ts = pety->get( builtin_types::_uint32 );
+	type_entry::id_t uint64_ts = pety->get( builtin_types::_uint64 );
 
-	type_entry::id_t float_ts = typemgr->get( builtin_types::_float );
-	type_entry::id_t double_ts = typemgr->get( builtin_types::_double );
+	type_entry::id_t float_ts = pety->get( builtin_types::_float );
+	type_entry::id_t double_ts = pety->get( builtin_types::_double );
 
 	// type_entry::id_t bool_ts = typemgr->get( builtin_types::_boolean );
 
@@ -316,10 +316,10 @@ void register_builtin_typeconv(
 	// Register scalar <====> vector<scalar, 1>.
 #define DEFINE_VECTOR_TYPE_IDS( btc ) \
 	type_entry::id_t btc##_vts[5] = {-1, -1, -1, -1, -1};\
-	btc##_vts[1] = typemgr->get( vector_of(builtin_types::btc , 1 ) ); \
-	btc##_vts[2] = typemgr->get( vector_of(builtin_types::btc , 2 ) ); \
-	btc##_vts[3] = typemgr->get( vector_of(builtin_types::btc , 3 ) ); \
-	btc##_vts[4] = typemgr->get( vector_of(builtin_types::btc , 4 ) );
+	btc##_vts[1] = pety->get( vector_of(builtin_types::btc , 1 ) ); \
+	btc##_vts[2] = pety->get( vector_of(builtin_types::btc , 2 ) ); \
+	btc##_vts[3] = pety->get( vector_of(builtin_types::btc , 3 ) ); \
+	btc##_vts[4] = pety->get( vector_of(builtin_types::btc , 4 ) );
 
 #define DEFINE_SHRINK_VECTORS( btc )				\
 	for( int i = 1; i <=3; ++i ) {					\

@@ -608,7 +608,7 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 
 	typeconv = create_type_converter( ctxt_getter, this );
-	register_builtin_typeconv( typeconv, msi->type_manager() );
+	register_builtin_typeconv( typeconv, msi->pety() );
 
 	// Instrinsics will be generated before code was 
 	process_intrinsics( v, data );
@@ -1115,28 +1115,35 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		push_fn( intrinsic_ctxt->data().self_fn );
 		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
 
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		/*BasicBlock* body = BasicBlock::Create( llcontext(), ".body", fn );
-		builder()->SetInsertPoint( body );*/
+		insert_point_t ip_body = new_block( ".body", true );
 
+		// Parse Parameter Informations
+		vector< shared_ptr<tynode> > par_tys;
+		vector<builtin_types> par_tycodes;
+		vector<cgllvm_sctxt*> par_ctxts;
+
+		BOOST_FOREACH( shared_ptr<parameter> const& par, intr_fn->params )
+		{
+			par_tys.push_back( par->si_ptr<type_info_si>()->type_info() );
+			assert( par_tys.back() );
+			par_tycodes.push_back( par_tys.back()->tycode );
+			par_ctxts.push_back( node_ctxt(par, false) );
+			assert( par_ctxts.back() );
+		}
+
+		shared_ptr<value_tyinfo> result_ty = fn().get_return_ty();
+		
+		// Process Intrinsic
 		if( intr->unmangled_name() == "mul" )
 		{
+			assert( par_tys.size() == 2 );
+
 			// Set Argument name
 			fn().arg_name( 0, ".lhs" );
 			fn().arg_name( 1, ".rhs" );
 
-			// Get Type infos
-			shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
-			shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
-			assert( lpar_type && rpar_type );
-			builtin_types lbtc = lpar_type->tycode;
-			builtin_types rbtc = rpar_type->tycode;
-
-			shared_ptr<value_tyinfo> result_ty = fn().get_return_ty();
-
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			// TODO need to be optimized.
-
+			value_t ret_val = emit_mul( par_ctxts[0]->get_value(), par_ctxts[1]->get_value() );
+			emit_return( ret_val );
 			// vec_m mul(vec_n, mat_mxn);
 			//if( is_vector( lbtc ) && is_matrix( rbtc ) ){
 			//	if( scalar_of(lbtc) == builtin_types::_float ){
@@ -1168,7 +1175,14 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		}
 		else if( intr->unmangled_name() == "dot" )
 		{
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			assert( par_tys.size() == 2 );
+
+			// Set Argument name
+			fn().arg_name( 0, ".lhs" );
+			fn().arg_name( 1, ".rhs" );
+
+			value_t ret_val = emit_dot( par_ctxts[0]->get_value(), par_ctxts[1]->get_value() );
+			emit_return( ret_val );
 			// Set Argument name
 			//Argument* larg = fn->getArgumentList().begin();
 			//Argument* rarg = ++fn->getArgumentList().begin();

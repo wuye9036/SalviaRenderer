@@ -100,7 +100,7 @@ void program_si::name( const std::string& str ){
 //////////////////////////////////////////////////////////////////////////
 // type info semantic info implementation
 
-type_info_si_impl::type_info_si_impl( boost::shared_ptr<type_manager> typemgr )
+type_info_si_impl::type_info_si_impl( boost::shared_ptr<pety_t> typemgr )
 	: typemgr(typemgr), tid(-1)
 {
 }
@@ -130,7 +130,7 @@ void type_info_si_impl::type_info( builtin_types btc ){
 
 //////////////////////////////////////////////////////////////////////////
 // constant value semantic info
-const_value_si::const_value_si( shared_ptr<type_manager> typemgr )
+const_value_si::const_value_si( shared_ptr<pety_t> typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 {}
 
@@ -181,7 +181,7 @@ shared_ptr<tynode> type_info_si::from_node( ::shared_ptr<node> n )
 	return shared_ptr<tynode>();
 }
 
-storage_si::storage_si( shared_ptr<type_manager> const& typemgr )
+storage_si::storage_si( shared_ptr<pety_t> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 	, sem(salviar::sv_none)
 	, memidx(-1), swz(0)
@@ -246,7 +246,7 @@ void storage_si::is_reference( bool v ){
 }
 
 
-call_si::call_si( shared_ptr<type_manager> const& typemgr )
+call_si::call_si( shared_ptr<pety_t> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr), is_pointer(false), overloaded(NULL)
 {
 }
@@ -267,7 +267,7 @@ void call_si::is_function_pointer( bool v ){
 	is_pointer = v;
 }
 
-type_si::type_si( shared_ptr<type_manager> typemgr )
+type_si::type_si( shared_ptr<pety_t> typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 {
 }

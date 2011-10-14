@@ -11,7 +11,7 @@
 namespace sasl{
 	namespace semantic{
 		class type_converter;
-		class type_manager;
+		class pety_t;
 		class symbol;
 	}
 	namespace syntax_tree{
@@ -40,7 +40,7 @@ boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter(
 
 void register_builtin_typeconv(
 	boost::shared_ptr< ::sasl::semantic::type_converter> typeconv,
-	boost::shared_ptr< sasl::semantic::type_manager> typemgr
+	boost::shared_ptr< sasl::semantic::pety_t> typemgr
 	);
 
 END_NS_SASL_CODE_GENERATOR();
