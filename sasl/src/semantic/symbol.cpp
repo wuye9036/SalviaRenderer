@@ -3,7 +3,7 @@
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/type_converter.h>
+#include <sasl/include/semantic/tecov.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -104,7 +104,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads( const string& unmangled ) c
 
 vector< shared_ptr<symbol> > symbol::find_overloads(
 	const string& unmangled,
-	shared_ptr<type_converter> conv,
+	shared_ptr<tecov_t> conv,
 	vector< shared_ptr<expression> > args ) const
 {
 	// find all overloads
@@ -135,8 +135,8 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
 			shared_ptr<type_info_si> arg_tisi = extract_semantic_info<type_info_si>( args[i_param] );
 			shared_ptr<type_info_si> par_tisi = extract_semantic_info<type_info_si>( matching_func->params[i_param] );
-			type_entry::id_t arg_type = arg_tisi->entry_id();
-			type_entry::id_t par_type = par_tisi->entry_id();
+			tid_t arg_type = arg_tisi->entry_id();
+			tid_t par_type = par_tisi->entry_id();
 			if( arg_type == -1 || par_type == -1 ){
 				boost::format fmt( "Type of %s <%s> is invalid." );
 				if( arg_type == -1 ){
@@ -171,9 +171,9 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 			size_t worse_param_count = 0;
 
 			for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-				type_entry::id_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
-				type_entry::id_t matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
-				type_entry::id_t matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->entry_id();
+				tid_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
+				tid_t matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
+				tid_t matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->entry_id();
 
 				bool par_is_better = false;
 				bool par_is_worse = false;

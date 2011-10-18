@@ -21,23 +21,17 @@ struct builtin_types;
 
 BEGIN_NS_SASL_SEMANTIC();
 
+typedef int tid_t;
+
 class symbol;
 
-class type_entry{
+class pety_item_t{
 public:
-	typedef int id_t;
-	typedef id_t type_entry::*id_ptr_t;
-
-	type_entry();
+	typedef int pety_item_t::*id_ptr_t;
+	pety_item_t();
 	
 	::boost::shared_ptr< ::sasl::syntax_tree::tynode > stored;
-	
-	id_t u_qual;
-	/*
-	id_t v_qual;
-	id_t cv_qual;
-	id_t a_qual;
-	*/
+	tid_t u_qual;
 };
 
 class pety_t{
@@ -48,17 +42,17 @@ public:
 
 	boost::shared_ptr<pety_t> handle() const;
 	
-	type_entry::id_t get(
+	tid_t get(
 		::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node,
 		::boost::shared_ptr<symbol> const& parent
 		);
-	type_entry::id_t get( const builtin_types& btc );
+	tid_t get( const builtin_types& btc );
 
-	::boost::shared_ptr< ::sasl::syntax_tree::tynode > get( type_entry::id_t id );
+	::boost::shared_ptr< ::sasl::syntax_tree::tynode > get( tid_t id );
 	
 private:
-	type_entry::id_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node );
-	::std::vector< type_entry > entries;
+	tid_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node );
+	::std::vector< pety_item_t > entries;
 	boost::weak_ptr<pety_t> self_handle;
 	boost::weak_ptr<symbol> rootsym;
 };

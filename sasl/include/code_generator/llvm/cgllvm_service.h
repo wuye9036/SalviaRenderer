@@ -137,7 +137,7 @@ public:
 	/// Load llvm value from value_t.
 	llvm::Value* load_llvm_value() const;
 	/// Return internal llvm value.
-	llvm::Value* get_llvm_value() const;
+	llvm::Value* raw_llvm_value() const;
 	bool is_lvalue() const;
 	bool is_rvalue() const;
 	bool storable() const;
@@ -262,6 +262,8 @@ public:
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_extract_rol( value_t const& lhs );
+	value_t emit_extract_elem( value_t const& vec, int idx );
+	value_t emit_extract_elem( value_t const& vec, value_t const& idx );
 
 	/** @} */
 	

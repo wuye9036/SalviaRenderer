@@ -2,7 +2,7 @@
 
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/type_manager.h>
+#include <sasl/include/semantic/pety.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
 #include <salviar/include/enums.h>

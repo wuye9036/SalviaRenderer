@@ -9,7 +9,7 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/type_converter.h>
+#include <sasl/include/semantic/tecov.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -178,7 +178,7 @@ SASL_VISIT_DEF( binary_expression ){
 
 		value_t retval = null_value( NULL );
 
-		if( lval.get_llvm_value() && rval.get_llvm_value() ){
+		if( lval.raw_llvm_value() && rval.raw_llvm_value() ){
 
 			builtin_types lbtc = p0_tsi->type_info()->tycode;
 			builtin_types rbtc = p1_tsi->type_info()->tycode;

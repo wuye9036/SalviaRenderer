@@ -24,7 +24,7 @@
 
 namespace sasl{
 	namespace semantic{
-		class type_converter;
+		class tecov_t;
 		class module_si;
 	}
 	namespace syntax_tree{

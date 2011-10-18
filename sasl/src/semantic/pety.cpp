@@ -1,4 +1,4 @@
-#include <sasl/include/semantic/type_manager.h>
+#include <sasl/include/semantic/pety.h>
 
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -25,14 +25,14 @@ using ::boost::shared_polymorphic_cast;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-type_entry::id_t type_entry_id_of_node( shared_ptr<node> const& nd ){
+tid_t type_entry_id_of_node( shared_ptr<node> const& nd ){
 	if( !nd ) { return -1; }
 	shared_ptr<type_info_si> tinfo = extract_semantic_info<type_info_si>( nd );
 	if( !tinfo ) { return -1; }
 	return tinfo->entry_id();
 }
 
-type_entry::id_t type_entry_id_of_symbol( shared_ptr<symbol> const& sym ){
+tid_t type_entry_id_of_symbol( shared_ptr<symbol> const& sym ){
 	if( !sym ) { return -1; }
 	return type_entry_id_of_node( sym->node() );
 }
@@ -68,7 +68,7 @@ std::string builtin_type_name( builtin_types btc ){
 bool peel_qualifier(
 	shared_ptr<tynode> const& src,
 	shared_ptr<tynode>& naked,
-	type_entry::id_ptr_t& qual
+	pety_item_t::id_ptr_t& qual
 	)
 {
 	node_ids tnode = src->node_class();
@@ -78,7 +78,7 @@ bool peel_qualifier(
 		if( src->is_uniform() ){
 			naked = shared_polymorphic_cast<tynode>( duplicate( src ) );
 			naked->qual = type_qualifiers::none;
-			qual = &type_entry::u_qual;
+			qual = &pety_item_t::u_qual;
 			return true;
 		}
 	}
@@ -122,7 +122,7 @@ std::string name_of_unqualified_type( shared_ptr<tynode> const& typespec ){
 
 // type_entry
 
-type_entry::type_entry()
+pety_item_t::pety_item_t()
 	: u_qual(-1)
 {
 }
@@ -133,18 +133,18 @@ shared_ptr<pety_t> pety_t::handle() const{
 	return self_handle.lock();
 }
 
-type_entry::id_t pety_t::get( shared_ptr<tynode> const& node, shared_ptr<symbol> const& parent ){
+tid_t pety_t::get( shared_ptr<tynode> const& node, shared_ptr<symbol> const& parent ){
 	/////////////////////////////////////////////////////
 	// if node has id yet, return it.
-	type_entry::id_t ret = type_entry_id_of_node( node );
+	tid_t ret = type_entry_id_of_node( node );
 	if( ret != -1 ){ return ret; }
 
 	// otherwise process the node for getting right id;
-	type_entry::id_ptr_t qual;
+	pety_item_t::id_ptr_t qual;
 	boost::shared_ptr< tynode > inner_type;
 
 	if( peel_qualifier( node, inner_type, qual ) ){
-		type_entry::id_t decoratee_id = get( inner_type, parent );
+		tid_t decoratee_id = get( inner_type, parent );
 		if( decoratee_id == -1 ) { return -1; }
 		if( entries[decoratee_id].*qual >= 0 ){
 			// The qualfied node is in entries yet.
@@ -165,14 +165,14 @@ type_entry::id_t pety_t::get( shared_ptr<tynode> const& node, shared_ptr<symbol>
 			if( node->node_class() == node_ids::alias_type ){
 				return -1;
 			}
-			type_entry::id_t entry_id = allocate_and_assign_id( node );
+			tid_t entry_id = allocate_and_assign_id( node );
 			parent->add_child( name, entries[entry_id].stored );
 			return entry_id;
 		}
 	}
 }
 
-shared_ptr< tynode > pety_t::get( type_entry::id_t id ){
+shared_ptr< tynode > pety_t::get( tid_t id ){
 	if( id < 0 ){
 		return shared_ptr<tynode>();
 	}
@@ -180,10 +180,10 @@ shared_ptr< tynode > pety_t::get( type_entry::id_t id ){
 }
 
 // Get type id by an builtin type code
-type_entry::id_t pety_t::get( const builtin_types& btc ){
+tid_t pety_t::get( const builtin_types& btc ){
 	// If it existed in symbol, return it.
 	// Otherwise create a new type and push into type manager.
-	type_entry::id_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );
+	tid_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
 		shared_ptr< builtin_type > bt = create_node<builtin_type>( token_t::null() );
 		bt->tycode = btc;
@@ -204,20 +204,20 @@ void pety_t::root_symbol( boost::shared_ptr<symbol> const& sym )
 	rootsym = sym;
 }
 
-void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<pety_t> const& typemgr, type_entry::id_t id ){
+void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<pety_t> const& typemgr, tid_t id ){
 	get_or_create_semantic_info<type_si>( node, typemgr )->entry_id( id );
 }
 
-type_entry::id_t semantic::pety_t::allocate_and_assign_id( shared_ptr<tynode> const& node  ){
+tid_t semantic::pety_t::allocate_and_assign_id( shared_ptr<tynode> const& node  ){
 	// Get a duplication from node.
 	// It assures that the node storaged in pool is always avaliable.
 	shared_ptr<tynode> dup_node = duplicate_type_specifier( node );
 
 	// add to pool and allocate an id
-	type_entry ret_entry;
+	pety_item_t ret_entry;
 	ret_entry.stored = dup_node;
 	entries.push_back( ret_entry );
-	type_entry::id_t ret_id = (type_entry::id_t)( entries.size() - 1 );
+	tid_t ret_id = (tid_t)( entries.size() - 1 );
 
 	// assign id to source node and duplicated node.
 	assign_entry_id(node, handle(), ret_id);

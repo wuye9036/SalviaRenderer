@@ -4,7 +4,7 @@
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/type_manager.h>
+#include <sasl/include/semantic/pety.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 
@@ -105,11 +105,11 @@ type_info_si_impl::type_info_si_impl( boost::shared_ptr<pety_t> typemgr )
 {
 }
 
-type_entry::id_t type_info_si_impl::entry_id() const{
+tid_t type_info_si_impl::entry_id() const{
 	return tid;
 }
 
-void type_info_si_impl::entry_id( type_entry::id_t id ){
+void type_info_si_impl::entry_id( tid_t id ){
 	tid = id;
 }
 

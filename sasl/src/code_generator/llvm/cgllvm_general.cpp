@@ -10,7 +10,7 @@
 #include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/type_converter.h>
+#include <sasl/include/semantic/tecov.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
@@ -44,8 +44,8 @@ using semantic::storage_si;
 using semantic::operator_name;
 using semantic::statement_si;
 using semantic::symbol;
-using semantic::type_converter;
-using semantic::type_entry;
+using semantic::tecov_t;
+using semantic::pety_item_t;
 using semantic::type_equal;
 using semantic::type_info_si;
 
@@ -79,7 +79,7 @@ SASL_VISIT_DEF( cast_expression ){
 	//shared_ptr<type_info_si> casted_tsi = extract_semantic_info<type_info_si>( v.casted_type );
 
 	//if( src_tsi->entry_id() != casted_tsi->entry_id() ){
-	//	if( typeconv->convertible( casted_tsi->entry_id(), src_tsi->entry_id() ) == type_converter::cannot_conv ){
+	//	if( typeconv->convertible( casted_tsi->entry_id(), src_tsi->entry_id() ) == tecov_t::cannot_conv ){
 	//		// Here is code error. Compiler should report it.
 	//		EFLIB_ASSERT_UNIMPLEMENTED();
 	//	}
@@ -251,8 +251,8 @@ SASL_VISIT_DEF( if_statement ){
 	//any child_ctxt;
 
 	//visit_child( child_ctxt, child_ctxt_init, v.cond );
-	//type_entry::id_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
-	//type_entry::id_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	//tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	//tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	//if( cond_tid != bool_tid ){
 	//	typeconv->convert( msi->pety()->get(bool_tid), v.cond );
 	//}

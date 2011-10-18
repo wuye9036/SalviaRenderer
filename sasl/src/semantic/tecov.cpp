@@ -1,4 +1,4 @@
-#include <sasl/include/semantic/type_converter.h>
+#include <sasl/include/semantic/tecov.h>
 
 #include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/type_checker.h>
@@ -10,17 +10,17 @@ using namespace ::sasl::syntax_tree;
 using namespace ::std;
 using ::boost::shared_ptr;
 
-void type_converter::register_converter(
+void tecov_t::register_converter(
 	conv_type ct,
-	type_entry::id_t src_type,
-	type_entry::id_t dest_type,
+	tid_t src_type,
+	tid_t dest_type,
 	converter_t conv
 	)
 {
 	convinfos.push_back( make_tuple( ct, src_type, dest_type, conv ) );
 }
 
-type_converter::conv_type type_converter::convertible( type_entry::id_t dest, type_entry::id_t src ){
+tecov_t::conv_type tecov_t::convertible( tid_t dest, tid_t src ){
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
 		if ( dest == it->get<2>() && src == it->get<1>() ){
@@ -31,7 +31,7 @@ type_converter::conv_type type_converter::convertible( type_entry::id_t dest, ty
 	return ret_ct;
 }
 
-bool type_converter::implicit_convertible( type_entry::id_t dest, type_entry::id_t src ){
+bool tecov_t::implicit_convertible( tid_t dest, tid_t src ){
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
 		if ( dest == it->get<2>() && src == it->get<1>() ){
@@ -42,9 +42,9 @@ bool type_converter::implicit_convertible( type_entry::id_t dest, type_entry::id
 	return ret_ct == better_conv || ret_ct == implicit_conv || ret_ct == warning_conv;
 }
 
-type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared_ptr<node> src ){
-	type_entry::id_t dst_tid = extract_semantic_info<type_info_si>( dest )->entry_id();
-	type_entry::id_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
+tecov_t::conv_type tecov_t::convert( shared_ptr<node> dest, shared_ptr<node> src ){
+	tid_t dst_tid = extract_semantic_info<type_info_si>( dest )->entry_id();
+	tid_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
 
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
@@ -60,10 +60,10 @@ type_converter::conv_type type_converter::convert( shared_ptr<node> dest, shared
 	return ret_ct;
 }
 
-type_converter::conv_type type_converter::convert( shared_ptr<tynode> desttype, shared_ptr<node> src )
+tecov_t::conv_type tecov_t::convert( shared_ptr<tynode> desttype, shared_ptr<node> src )
 {
-	type_entry::id_t dst_tid = desttype->si_ptr<type_info_si>()->entry_id();
-	type_entry::id_t src_tid = src->si_ptr<type_info_si>()->entry_id();
+	tid_t dst_tid = desttype->si_ptr<type_info_si>()->entry_id();
+	tid_t src_tid = src->si_ptr<type_info_si>()->entry_id();
 
 	conv_type ret_ct = cannot_conv;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
@@ -79,10 +79,10 @@ type_converter::conv_type type_converter::convert( shared_ptr<tynode> desttype, 
 	return ret_ct;
 }
 
-type_converter::type_converter(){
+tecov_t::tecov_t(){
 }
 
-void type_converter::better_or_worse_convertible( type_entry::id_t matched, type_entry::id_t matching, type_entry::id_t src, bool& better, bool& worse )
+void tecov_t::better_or_worse_convertible( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse )
 {
 	better = false;
 	worse = false;

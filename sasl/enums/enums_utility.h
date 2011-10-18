@@ -59,6 +59,10 @@ namespace sasl{
 		bool is_shift_assign( const operators& );
 		bool is_assign( const operators& );
 
+		// Guess built-in types by static type T.
+		builtin_types match_builtin( int8_t const& = int8_t() );
+		builtin_types match_builtin( int const& = int() );
+
 		const std::vector<operators>& list_of_operators();
 	}
 }

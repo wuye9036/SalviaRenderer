@@ -10,7 +10,7 @@
 
 namespace sasl{
 	namespace semantic{
-		class type_converter;
+		class tecov_t;
 		class pety_t;
 		class symbol;
 	}
@@ -33,13 +33,13 @@ typedef boost::function<
 		cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
 	> get_ctxt_fn;
 
-boost::shared_ptr< ::sasl::semantic::type_converter> create_type_converter(
+boost::shared_ptr< ::sasl::semantic::tecov_t> create_type_converter(
 		get_ctxt_fn const& get_ctxt,
 		cg_service* cgs
 		);
 
 void register_builtin_typeconv(
-	boost::shared_ptr< ::sasl::semantic::type_converter> typeconv,
+	boost::shared_ptr< ::sasl::semantic::tecov_t> typeconv,
 	boost::shared_ptr< sasl::semantic::pety_t> typemgr
 	);
 

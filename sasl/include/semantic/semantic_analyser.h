@@ -28,7 +28,7 @@ namespace softart{
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
-class type_converter;
+class tecov_t;
 class module_si;
 class storage_si;
 struct sacontext;
@@ -138,7 +138,7 @@ private:
 		);
 
 	boost::shared_ptr<module_si> msi;
-	boost::shared_ptr<type_converter> typeconv;
+	boost::shared_ptr<tecov_t> typeconv;
 };
 
 END_NS_SASL_SEMANTIC();

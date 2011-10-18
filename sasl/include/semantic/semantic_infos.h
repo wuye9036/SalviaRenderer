@@ -3,7 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/semantic/semantic_info.h>
-#include <sasl/include/semantic/type_manager.h>
+#include <sasl/include/semantic/pety.h>
 #include <sasl/enums/default_hasher.h>
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
@@ -95,8 +95,8 @@ private:
 
 class type_info_si: public semantic_info{
 public:
-	virtual type_entry::id_t entry_id() const = 0;
-	virtual void entry_id( type_entry::id_t id ) = 0;
+	virtual tid_t entry_id() const = 0;
+	virtual void entry_id( tid_t id ) = 0;
 
 	virtual ::boost::shared_ptr< tynode > type_info() const = 0;
 	virtual void type_info( ::boost::shared_ptr< tynode >, ::boost::shared_ptr<symbol> sym ) = 0;
@@ -109,8 +109,8 @@ public:
 	protected:	\
 	type_info_si_impl type_info_proxy;	\
 	public:	\
-	virtual type_entry::id_t entry_id() const { return type_info_proxy.entry_id(); }	\
-	virtual void entry_id( type_entry::id_t id ) { type_info_proxy.entry_id( id ); }	\
+	virtual tid_t entry_id() const { return type_info_proxy.entry_id(); }	\
+	virtual void entry_id( tid_t id ) { type_info_proxy.entry_id( id ); }	\
 	virtual ::boost::shared_ptr< tynode > type_info() const{ return type_info_proxy.type_info(); }	\
 	virtual void type_info( ::boost::shared_ptr< tynode > typespec, ::boost::shared_ptr<symbol> sym ) { type_info_proxy.type_info( typespec, sym ); } \
 	virtual void type_info( builtin_types btc ){ type_info_proxy.type_info(btc); }
@@ -119,15 +119,15 @@ class type_info_si_impl: public type_info_si{
 public:
 	type_info_si_impl( boost::shared_ptr<pety_t> typemgr );
 
-	virtual type_entry::id_t entry_id() const;
-	virtual void entry_id( type_entry::id_t id );
+	virtual tid_t entry_id() const;
+	virtual void entry_id( tid_t id );
 
 	virtual ::boost::shared_ptr< tynode > type_info() const;
 	virtual void type_info( ::boost::shared_ptr< tynode >, boost::shared_ptr<symbol> );
 	virtual void type_info( builtin_types btc );
 
 private:
-	type_entry::id_t tid;
+	tid_t tid;
 	::boost::weak_ptr< class pety_t > typemgr;
 };
 

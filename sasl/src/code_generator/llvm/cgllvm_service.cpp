@@ -112,7 +112,7 @@ value_t value_t::swizzle( size_t swz_code ) const{
 	return value_t();
 }
 
-llvm::Value* value_t::get_llvm_value() const{
+llvm::Value* value_t::raw_llvm_value() const{
 	if( get_hint() == builtin_types::none ){
 		return NULL;
 	}
@@ -208,11 +208,11 @@ void cg_service::store( value_t& lhs, value_t const& rhs ){
 	case value_t::kind_local:
 	case value_t::kind_ref:
 	case value_t::kind_global:
-		builder()->CreateStore( rv.load_llvm_value(), lhs.get_llvm_value() );
+		builder()->CreateStore( rv.load_llvm_value(), lhs.raw_llvm_value() );
 		break;
 	case value_t::kind_unknown:
 		// Copy directly.
-		lhs.set_value( rhs.get_llvm_value(), rhs.kind );
+		lhs.set_value( rhs.raw_llvm_value(), rhs.kind );
 		lhs.tyinfo = rhs.tyinfo;
 		break;
 	default:
@@ -317,6 +317,11 @@ Type const* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_com
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return NULL;
+}
+
+template <typename T>
+APInt create_apint( T v ){
+	return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_sign<T>::value );
 }
 
 shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& tyn ){
@@ -474,16 +479,36 @@ void cg_service::set_insert_point( insert_point_t const& ip ){
 
 value_t cg_service::emit_dot( value_t const& lhs, value_t const& rhs )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();	
+	return emit_dot_vv(lhs, rhs);
 }
 
 value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	emit_mul_ss(  )
 	return value_t();
 }
 
+value_t cg_service::emit_extract_elem( value_t const& vec, int idx )
+{
+	assert( is_vector( vec.get_hint() ) );
+
+	value_t rv = vec.to_rvalue();
+	Value* val = rv.load_llvm_value();
+	Value* elem_val = NULL;
+	switch( rv.get_abi() ){
+		case abi_c:
+			elem_val = builder()->CreateExtractValue( val, static_cast<unsigned>(idx) );
+		case abi_llvm:
+			elem_val = builder()->CreateExtractElement( val, ConstantInt::get( APInt() ) );
+		default:
+			assert( !"Unknown ABI." );
+	}
+}
+
+value_t cg_service::emit_extract_elem( value_t const& vec, value_t const& idx )
+{
+
+}
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	return lhs.cg->emit_add(lhs, rhs);
 }
