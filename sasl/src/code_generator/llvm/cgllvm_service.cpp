@@ -25,6 +25,7 @@ using sasl::semantic::storage_si;
 
 using namespace sasl::utility;
 
+using llvm::APInt;
 using llvm::Argument;
 using llvm::LLVMContext;
 using llvm::Function;
@@ -35,6 +36,7 @@ using llvm::PointerType;
 using llvm::Value;
 using llvm::BasicBlock;
 using llvm::Constant;
+using llvm::ConstantInt;
 using llvm::StructType;
 using llvm::VectorType;
 
@@ -44,6 +46,63 @@ using std::vector;
 using std::string;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+namespace {
+	/// Create LLVM type from builtin types.
+	Type const* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_compatible ){
+		assert( bt != builtin_types::none );
+
+		if ( is_void( bt ) ){
+			return Type::getVoidTy( ctxt );
+		}
+
+		if( is_scalar(bt) ){
+			if( bt == builtin_types::_boolean ){
+				return IntegerType::get( ctxt, 1 );
+			}
+			if( is_integer(bt) ){
+				return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );
+			}
+			if ( bt == builtin_types::_float ){
+				return Type::getFloatTy( ctxt );
+			}
+			if ( bt == builtin_types::_double ){
+				return Type::getDoubleTy( ctxt );
+			}
+		}
+
+		if( is_vector(bt) ){
+			Type const* elem_ty = create_llvm_type( ctxt, scalar_of(bt), is_c_compatible );
+			size_t vec_size = vector_size(bt);
+			if( is_c_compatible ){
+				vector<Type const*> elem_tys(vec_size, elem_ty);
+				return StructType::get( ctxt, elem_tys );
+			} else {
+				return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
+			}
+		}
+
+		if( is_matrix(bt) ){
+			Type const* vec_ty = create_llvm_type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), is_c_compatible );
+			vector<Type const*> row_tys( vector_count(bt), vec_ty );
+			return StructType::get( ctxt, row_tys );
+		}
+
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return NULL;
+	}
+
+	template <typename T>
+	APInt apint( T v ){
+		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
+	}
+}
+
+template <typename T>
+ConstantInt* cg_service::int_( T v )
+{
+	return ConstantInt::get( context(), apint(v) );
+}
 
 // Value tyinfo
 value_tyinfo::value_tyinfo(
@@ -112,7 +171,7 @@ value_t value_t::swizzle( size_t swz_code ) const{
 	return value_t();
 }
 
-llvm::Value* value_t::raw_llvm_value() const{
+llvm::Value* value_t::raw() const{
 	if( get_hint() == builtin_types::none ){
 		return NULL;
 	}
@@ -121,15 +180,16 @@ llvm::Value* value_t::raw_llvm_value() const{
 
 value_t value_t::to_rvalue() const
 {
-	return value_t( tyinfo, load_llvm_value(), kind_value, cg );
+	return value_t( tyinfo, load(), kind_value, cg );
 }
 
 builtin_types value_t::get_hint() const
 {
-	return tyinfo->get_hint();
+	if( tyinfo ) return tyinfo->get_hint();
+	return hint;
 }
 
-llvm::Value* value_t::load_llvm_value() const{
+llvm::Value* value_t::load() const{
 	switch( kind ){
 	case kind_value:
 		return val;
@@ -160,13 +220,23 @@ bool value_t::is_lvalue() const{
 	}
 }
 
+bool value_t::is_rvalue() const
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return false;
+}
 bool value_t::storable() const{
 	return is_lvalue() || ( val == NULL && kind == kind_unknown );
 }
 
-void value_t::set_value( Value* v, kinds k ){
+void value_t::emplace( Value* v, kinds k ){
 	val = v;
 	kind = k;
+}
+
+void value_t::emplace( value_t const& v )
+{
+	emplace( v.raw(), v.get_kind() );
 }
 
 /// @}
@@ -208,11 +278,11 @@ void cg_service::store( value_t& lhs, value_t const& rhs ){
 	case value_t::kind_local:
 	case value_t::kind_ref:
 	case value_t::kind_global:
-		builder()->CreateStore( rv.load_llvm_value(), lhs.raw_llvm_value() );
+		builder()->CreateStore( rv.load(), lhs.raw() );
 		break;
 	case value_t::kind_unknown:
 		// Copy directly.
-		lhs.set_value( rhs.raw_llvm_value(), rhs.kind );
+		lhs.emplace( rhs.raw(), rhs.kind );
 		lhs.tyinfo = rhs.tyinfo;
 		break;
 	default:
@@ -244,7 +314,13 @@ value_t cg_service::cast_f2f( value_t const& v, value_tyinfo* dest_tyi )
 	return value_t();
 }
 
-value_t cg_service::null_value( value_tyinfo* tyinfo )
+value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::null_value( builtin_types bt, abis abi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -260,7 +336,7 @@ void cg_service::emit_return(){
 }
 
 void cg_service::emit_return( value_t const& ret_v ){
-	builder()->CreateRet( ret_v.to_rvalue().load_llvm_value() );
+	builder()->CreateRet( ret_v.to_rvalue().load() );
 }
 
 function_t& cg_service::fn(){
@@ -273,55 +349,6 @@ void cg_service::push_fn( function_t const& fn ){
 
 void cg_service::pop_fn(){
 	fn_ctxts.pop_back();
-}
-
-/// Create LLVM type from builtin types.
-Type const* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_compatible ){
-	assert( bt != builtin_types::none );
-
-	if ( is_void( bt ) ){
-		return Type::getVoidTy( ctxt );
-	}
-
-	if( is_scalar(bt) ){
-		if( bt == builtin_types::_boolean ){
-			return IntegerType::get( ctxt, 1 );
-		}
-		if( is_integer(bt) ){
-			return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );
-		}
-		if ( bt == builtin_types::_float ){
-			return Type::getFloatTy( ctxt );
-		}
-		if ( bt == builtin_types::_double ){
-			return Type::getDoubleTy( ctxt );
-		}
-	}
-
-	if( is_vector(bt) ){
-		Type const* elem_ty = create_llvm_type( ctxt, scalar_of(bt), is_c_compatible );
-		size_t vec_size = vector_size(bt);
-		if( is_c_compatible ){
-			vector<Type const*> elem_tys(vec_size, elem_ty);
-			return StructType::get( ctxt, elem_tys );
-		} else {
-			return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
-		}
-	}
-
-	if( is_matrix(bt) ){
-		Type const* vec_ty = create_llvm_type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), is_c_compatible );
-		vector<Type const*> row_tys( vector_count(bt), vec_ty );
-		return StructType::get( ctxt, row_tys );
-	}
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
-}
-
-template <typename T>
-APInt create_apint( T v ){
-	return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_sign<T>::value );
 }
 
 shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& tyn ){
@@ -434,6 +461,11 @@ value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_t::kin
 	return value_t( tyinfo, val, k, this );
 }
 
+value_t cg_service::create_value( builtin_types hint, Value* val, value_t::kinds k )
+{
+	return value_t( hint, val, k, this );
+}
+
 sasl::code_generator::value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
@@ -460,8 +492,8 @@ value_t cg_service::emit_add_ss( value_t const& lhs, value_t const& rhs )
 {
 	builtin_types hint = lhs.get_hint();
 
-	Value* lval = lhs.load_llvm_value();
-	Value* rval = rhs.load_llvm_value();
+	Value* lval = lhs.load();
+	Value* rval = rhs.load();
 
 	Value* ret = NULL;
 	if( is_integer(hint) ){
@@ -484,31 +516,73 @@ value_t cg_service::emit_dot( value_t const& lhs, value_t const& rhs )
 
 value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
 {
-	emit_mul_ss(  )
+	size_t vec_size = vector_size( lhs.get_hint() );
+
+	value_t total = null_value( scalar_of( lhs.get_hint() ), abi_llvm );
+
+	for( size_t i = 0; i < vec_size; ++i ){
+		value_t lhs_elem = emit_extract_elem( lhs, i );
+		value_t rhs_elem = emit_extract_elem( rhs, i );
+
+		value_t elem_mul = emit_mul_ss( lhs_elem, rhs_elem );
+		total.emplace( emit_add_ss( total, elem_mul ).to_rvalue() );
+	}
+
+	return total;
+}
+
+value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
-value_t cg_service::emit_extract_elem( value_t const& vec, int idx )
+sasl::code_generator::value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 {
-	assert( is_vector( vec.get_hint() ) );
-
-	value_t rv = vec.to_rvalue();
-	Value* val = rv.load_llvm_value();
-	Value* elem_val = NULL;
-	switch( rv.get_abi() ){
-		case abi_c:
-			elem_val = builder()->CreateExtractValue( val, static_cast<unsigned>(idx) );
-		case abi_llvm:
-			elem_val = builder()->CreateExtractElement( val, ConstantInt::get( APInt() ) );
-		default:
-			assert( !"Unknown ABI." );
-	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
-value_t cg_service::emit_extract_elem( value_t const& vec, value_t const& idx )
+sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 {
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	// assert( is_vector( vec.get_hint() ) );
 
+	//builtin_types agg_hint = vec.get_hint();
+	//if( agg_hint == builtin_types::none ){
+	//	EFLIB_ASSERT_UNIMPLEMENTED();
+	//	return value_t();
+	//}
+	// if( agg_hint )
+
+	//if( vec.get_tyinfo() )
+	//value_t rv = vec.to_rvalue();
+	//Value* val = rv.load_llvm_value();
+	//Value* elem_val = NULL;
+	//switch( rv.get_abi() ){
+	//case abi_c:
+	//	elem_val = builder()->CreateExtractValue( val, static_cast<unsigned>(idx) );
+	//case abi_llvm:
+	//	elem_val = builder()->CreateExtractElement( val, int_(idx) );
+	//default:
+	//	assert( !"Unknown ABI." );
+	//}
+
+	return value_t();
 }
+
+sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_mul_ss( value_t const& lhs, value_t const& rhs )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	return lhs.cg->emit_add(lhs, rhs);
 }

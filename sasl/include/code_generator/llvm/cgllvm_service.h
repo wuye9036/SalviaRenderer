@@ -28,6 +28,7 @@ namespace llvm{
 	class LLVMContext;
 	class Module;
 	class BasicBlock;
+	class ConstantInt;
 
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -135,9 +136,17 @@ public:
 	cg_service* service() const;
 
 	/// Load llvm value from value_t.
-	llvm::Value* load_llvm_value() const;
+	llvm::Value* load() const;
 	/// Return internal llvm value.
-	llvm::Value* raw_llvm_value() const;
+	llvm::Value* raw() const;
+	/// Store llvm value to value_t
+	// llvm::Value* store( llvm::Value* v );
+	/// Store llvm value to value_t
+	// llvm::Value* store( value_t const& );
+	void emplace( value_t const& );
+	void emplace( llvm::Value* v, kinds k );
+	void set_parent( value_t* parent, kinds k );
+
 	bool is_lvalue() const;
 	bool is_rvalue() const;
 	bool storable() const;
@@ -153,8 +162,7 @@ public:
 	abis get_abi() const;
 	/// @}
 
-	void set_value( llvm::Value* v, kinds k );
-	void set_parent( value_t* parent, kinds k );
+
 	
 	/// @name Operators
 	/// @{
@@ -262,8 +270,20 @@ public:
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_extract_rol( value_t const& lhs );
-	value_t emit_extract_elem( value_t const& vec, int idx );
-	value_t emit_extract_elem( value_t const& vec, value_t const& idx );
+
+	template <typename IndexT>
+	value_t emit_extract_elem( value_t const& vec, IndexT const& idx ){
+		if( vec.is_rvalue() ){
+			return emit_extract_ref( vec, idx );
+		} else {
+			return emit_extract_val( vec, idx );
+		}
+	}
+
+	value_t emit_extract_ref( value_t const& lhs, int idx );
+	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
+	value_t emit_extract_val( value_t const& lhs, int idx );
+	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
 
 	/** @} */
 	
@@ -312,9 +332,11 @@ public:
 
 	/// @name Emit values
 	/// @{
-	value_t null_value( value_tyinfo* tyinfo );
+	value_t null_value( value_tyinfo* tyinfo, abis abi );
+	value_t null_value( builtin_types bt, abis abi );
 
 	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k );
+	value_t create_value( builtin_types hint, llvm::Value* val, value_t::kinds k );
 
 	template <typename T>
 	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
@@ -381,6 +403,11 @@ public:
 	virtual llvm::Module*			module() const = 0;
 	/// @}
 
+	/// @name Bridges
+	/// @{
+	template <typename T>
+	llvm::ConstantInt* int_(T v);
+	/// @}
 private:
 	std::vector<function_t> fn_ctxts;
 };

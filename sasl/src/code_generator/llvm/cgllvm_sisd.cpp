@@ -176,9 +176,9 @@ SASL_VISIT_DEF( binary_expression ){
 		value_t lval = node_ctxt(v.left_expr)->get_rvalue();
 		value_t rval = node_ctxt(v.right_expr)->get_rvalue();
 
-		value_t retval = null_value( NULL );
+		value_t retval = null_value( NULL, abi_llvm );
 
-		if( lval.raw_llvm_value() && rval.raw_llvm_value() ){
+		if( lval.raw() && rval.raw() ){
 
 			builtin_types lbtc = p0_tsi->type_info()->tycode;
 			builtin_types rbtc = p1_tsi->type_info()->tycode;
