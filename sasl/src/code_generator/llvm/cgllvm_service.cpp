@@ -146,17 +146,17 @@ llvm::Type const* value_tyinfo::get_llvm_ty( abis abi ) const
 
 /// value_t @{
 value_t::value_t()
-	: tyinfo(NULL), val(NULL), cg(NULL), kind(kind_unknown), hint(builtin_types::none)
+	: tyinfo(NULL), val(NULL), cg(NULL), kind(kind_unknown), hint(builtin_types::none), abi(abi_unknown), parent(NULL)
 {
 }
 
 value_t::value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_service* cg )
-	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none)
+	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none), abi(abi_llvm), parent(NULL)
 {
 }
 
 value_t::value_t( builtin_types hint, llvm::Value* val, value_t::kinds k, cg_service* cg )
-	: tyinfo(NULL), hint(builtin_types::none)
+	: tyinfo(NULL), hint(builtin_types::none), abi(abi_llvm), parent(NULL)
 {
 
 }
@@ -322,8 +322,14 @@ value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
 
 value_t cg_service::null_value( builtin_types bt, abis abi )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	Type const* valty = NULL;
+	if( is_scalar(bt) ){
+		valty = create_llvm_type( context(), bt, abi == abi_c );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	value_t val = value_t( bt, Constant::getNullValue( valty ), value_t::kind_value, this );
+	return val;
 }
 
 value_t cg_service::create_vector( std::vector<value_t> const& scalars, abis abi ){

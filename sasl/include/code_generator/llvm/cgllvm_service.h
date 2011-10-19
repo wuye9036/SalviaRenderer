@@ -162,11 +162,8 @@ public:
 	abis get_abi() const;
 	/// @}
 
-
-	
 	/// @name Operators
 	/// @{
-
 	value_t swizzle( size_t swz_code ) const;
 	value_t to_rvalue() const;
 

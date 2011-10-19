@@ -1181,7 +1181,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn().arg_name( 0, ".lhs" );
 			fn().arg_name( 1, ".rhs" );
 
-			value_t ret_val = emit_dot( par_ctxts[0]->get_value(), par_ctxts[1]->get_value() );
+			value_t ret_val = emit_dot( fn().arg(0), fn().arg(1) );
 			emit_return( ret_val );
 			// Set Argument name
 			//Argument* larg = fn->getArgumentList().begin();
