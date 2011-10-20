@@ -45,6 +45,22 @@ using boost::shared_ptr;
 using std::vector;
 using std::string;
 
+// Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
+#define EMIT_OP_SS_BODY( op_name )	\
+		assert( lhs.get_hint() == rhs.get_hint() ); \
+		assert( is_scalar(lhs.get_hint()) ); \
+		\
+		builtin_types hint = lhs.get_hint(); \
+		Value* ret = NULL; \
+		\
+		if( is_real(hint) ){ \
+			ret = builder()->CreateF##op_name ( lhs.load(), rhs.load() ); \
+		} else { \
+			ret = builder()->Create##op_name( lhs.load(), rhs.load() ); \
+		}	\
+		\
+		return value_t( hint, ret, value_t::kind_value, this );
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 namespace {
@@ -156,7 +172,7 @@ value_t::value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_s
 }
 
 value_t::value_t( builtin_types hint, llvm::Value* val, value_t::kinds k, cg_service* cg )
-	: tyinfo(NULL), hint(builtin_types::none), abi(abi_llvm), parent(NULL)
+	: tyinfo(NULL), hint(hint), abi(abi_llvm), parent(NULL), val(val), kind(k), cg(cg)
 {
 
 }
@@ -172,9 +188,6 @@ value_t value_t::swizzle( size_t swz_code ) const{
 }
 
 llvm::Value* value_t::raw() const{
-	if( get_hint() == builtin_types::none ){
-		return NULL;
-	}
 	return val;
 }
 
@@ -222,9 +235,20 @@ bool value_t::is_lvalue() const{
 
 bool value_t::is_rvalue() const
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return false;
+	switch( kind ){
+	case kind_ref:
+	case kind_global:
+	case kind_local:
+	case kind_unknown:
+		return false;
+	case kind_value:
+		return true;
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return false;
+	}
 }
+
 bool value_t::storable() const{
 	return is_lvalue() || ( val == NULL && kind == kind_unknown );
 }
@@ -496,19 +520,7 @@ sasl::code_generator::value_t cg_service::emit_add( value_t const& lhs, value_t 
 
 value_t cg_service::emit_add_ss( value_t const& lhs, value_t const& rhs )
 {
-	builtin_types hint = lhs.get_hint();
-
-	Value* lval = lhs.load();
-	Value* rval = rhs.load();
-
-	Value* ret = NULL;
-	if( is_integer(hint) ){
-		Value* ret = builder()->CreateAdd(lval, rval);
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return value_t( hint, ret, value_t::kind_value, this );
+	EMIT_OP_SS_BODY(Add);
 }
 
 void cg_service::set_insert_point( insert_point_t const& ip ){
@@ -551,30 +563,35 @@ sasl::code_generator::value_t cg_service::emit_extract_ref( value_t const& lhs, 
 
 sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	// assert( is_vector( vec.get_hint() ) );
+	builtin_types agg_hint = lhs.get_hint();
 
-	//builtin_types agg_hint = vec.get_hint();
-	//if( agg_hint == builtin_types::none ){
-	//	EFLIB_ASSERT_UNIMPLEMENTED();
-	//	return value_t();
-	//}
-	// if( agg_hint )
+	Value* val = lhs.load();
+	Value* elem_val = NULL;
+	abis abi = abi_unknown;
+	builtin_types elem_hint = builtin_types::none;
 
-	//if( vec.get_tyinfo() )
-	//value_t rv = vec.to_rvalue();
-	//Value* val = rv.load_llvm_value();
-	//Value* elem_val = NULL;
-	//switch( rv.get_abi() ){
-	//case abi_c:
-	//	elem_val = builder()->CreateExtractValue( val, static_cast<unsigned>(idx) );
-	//case abi_llvm:
-	//	elem_val = builder()->CreateExtractElement( val, int_(idx) );
-	//default:
-	//	assert( !"Unknown ABI." );
-	//}
+	if( agg_hint == builtin_types::none ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return value_t();
+	} else if( is_vector(agg_hint) ){
+		switch( lhs.get_abi() ){
+		case abi_c:
+			elem_val = builder()->CreateExtractValue(val, static_cast<unsigned>(idx));
+			break;
+		case abi_llvm:
+			elem_val = builder()->CreateExtractElement(val, int_(idx) );
+			break;
+		default:
+			assert(!"Unknown ABI");
+			break;
+		}
+		abi = abi_llvm;
+		elem_hint = scalar_of(agg_hint);
+	} else if( is_matrix(agg_hint) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
 
-	return value_t();
+	return value_t(elem_hint, elem_val, value_t::kind_value, this );
 }
 
 sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
@@ -585,8 +602,7 @@ sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, 
 
 value_t cg_service::emit_mul_ss( value_t const& lhs, value_t const& rhs )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	EMIT_OP_SS_BODY(Mul);
 }
 
 value_t operator+( value_t const& lhs, value_t const& rhs ){

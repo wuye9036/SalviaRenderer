@@ -270,7 +270,7 @@ public:
 
 	template <typename IndexT>
 	value_t emit_extract_elem( value_t const& vec, IndexT const& idx ){
-		if( vec.is_rvalue() ){
+		if( vec.is_lvalue() ){
 			return emit_extract_ref( vec, idx );
 		} else {
 			return emit_extract_val( vec, idx );
