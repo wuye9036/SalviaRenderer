@@ -137,6 +137,9 @@ public:
 
 	/// Load llvm value from value_t.
 	llvm::Value* load() const;
+	llvm::Value* load( abis abi ) const;
+	llvm::Value* load_ref() const;
+
 	/// Return internal llvm value.
 	llvm::Value* raw() const;
 	/// Store llvm value to value_t
@@ -226,7 +229,7 @@ struct function_t{
 	/// Return true if argument is a reference.
 	bool arg_is_ref( size_t index ) const;
 
-	boost::shared_ptr<value_tyinfo> get_return_ty();
+	boost::shared_ptr<value_tyinfo> get_return_ty() const;
 
 	std::vector<llvm::Argument*>		argCache;
 	sasl::syntax_tree::function_type*	fnty;
@@ -282,6 +285,7 @@ public:
 	value_t emit_extract_val( value_t const& lhs, int idx );
 	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
 
+	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */
 	
 	/// @name Emit type casts
@@ -373,7 +377,7 @@ public:
 	/// @name Emit variables
 	/// @{
 	value_t create_variable( value_tyinfo const* );
-	function_t create_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
+	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
 	value_t create_member( value_tyinfo const*, value_t::kinds, size_t idx_or_swz );
 	/// @}
 

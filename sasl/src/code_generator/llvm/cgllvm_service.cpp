@@ -54,9 +54,9 @@ using std::string;
 		Value* ret = NULL; \
 		\
 		if( is_real(hint) ){ \
-			ret = builder()->CreateF##op_name ( lhs.load(), rhs.load() ); \
+			ret = builder()->CreateF##op_name ( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
 		} else { \
-			ret = builder()->Create##op_name( lhs.load(), rhs.load() ); \
+			ret = builder()->Create##op_name( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
 		}	\
 		\
 		return value_t( hint, ret, value_t::kind_value, this );
@@ -193,7 +193,7 @@ llvm::Value* value_t::raw() const{
 
 value_t value_t::to_rvalue() const
 {
-	return value_t( tyinfo, load(), kind_value, cg );
+	return value_t( tyinfo, load( abi ), kind_value, cg );
 }
 
 builtin_types value_t::get_hint() const
@@ -202,16 +202,25 @@ builtin_types value_t::get_hint() const
 	return hint;
 }
 
-llvm::Value* value_t::load() const{
-	switch( kind ){
-	case kind_value:
-		return val;
-	case kind_ref:
-		return cg->builder()->CreateLoad( val );
-	default:
+llvm::Value* value_t::load( abis abi ) const{
+	if( abi != get_abi() ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return NULL;
+	} else {
+		switch( kind ){
+		case kind_value:
+			return val;
+		case kind_ref:
+			return cg->builder()->CreateLoad( val );
+		default:
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		}
 	}
+}
+
+llvm::Value* value_t::load() const{
+	return load( abi );
 }
 
 value_t::kinds value_t::get_kind() const{
@@ -263,34 +272,11 @@ void value_t::emplace( value_t const& v )
 	emplace( v.raw(), v.get_kind() );
 }
 
-/// @}
-
-/// cgv_scalar @{
-//cgv_scalar operator+( cgv_scalar const& lhs, cgv_scalar const& rhs ){
-//	cg_service* cgs = lhs.service();
-//
-//	value_tyinfo* lhs_ti = lhs.get_tyinfo();
-//	value_tyinfo* rhs_ti = rhs.get_tyinfo();
-//
-//	builtin_types value_hint = lhs_ti->get_hint();
-//
-//	assert( is_scalar(value_hint) && value_hint == rhs_ti->get_hint() );
-//	
-//	llvm::Value* ret_llval = NULL;
-//
-//	if( value_hint == builtin_types::_float
-//		|| value_hint == builtin_types::_double 
-//		)
-//	{
-//		ret_llval = cgs->builder()->CreateFAdd( lhs.get_value(), rhs.get_value(), "" );
-//	} else if( is_integer( value_hint ) ){
-//		ret_llval = cgs->builder()->CreateAdd( lhs.get_value(), rhs.get_value(), "" );
-//	}
-//
-//	assert( ret_llval );
-//
-//	return cgs->create_scalar( ret_llval, lhs_ti );
-//}
+llvm::Value* value_t::load_ref() const
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
 
 /// @}
 
@@ -302,7 +288,7 @@ void cg_service::store( value_t& lhs, value_t const& rhs ){
 	case value_t::kind_local:
 	case value_t::kind_ref:
 	case value_t::kind_global:
-		builder()->CreateStore( rv.load(), lhs.raw() );
+		builder()->CreateStore( rv.load( lhs.get_abi() ), lhs.raw() );
 		break;
 	case value_t::kind_unknown:
 		// Copy directly.
@@ -398,7 +384,13 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 	return shared_ptr<value_tyinfo>(ret);
 }
 
-function_t cg_service::create_function( shared_ptr<function_type> const& fn_node ){
+function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node ){
+	
+	cgllvm_sctxt* fn_ctxt = node_ctxt( fn_node, false );
+	if( fn_ctxt->data().self_fn ){
+		return fn_ctxt->data().self_fn;
+	}
+
 	function_t ret;
 	ret.fnty = fn_node.get();
 	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
@@ -412,6 +404,8 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 
 	vector<Type const*> par_tys;
 
+	
+	// Create function type.
 	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
 	{
 		cgllvm_sctxt* par_ctxt = node_ctxt( par, false );
@@ -428,12 +422,13 @@ function_t cg_service::create_function( shared_ptr<function_type> const& fn_node
 		}
 	}
 
-	Type const* rety = node_ctxt( fn_node->retval_type, false )->get_typtr()->get_llvm_ty( abi );
-	FunctionType* fty = FunctionType::get( rety, par_tys, false );
+	Type const* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->get_llvm_ty( abi );
+	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
 
+	// Create function
 	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
-	ret.cg = this;
 
+	ret.cg = this;
 	return ret;
 }
 
@@ -605,6 +600,23 @@ value_t cg_service::emit_mul_ss( value_t const& lhs, value_t const& rhs )
 	EMIT_OP_SS_BODY(Mul);
 }
 
+value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
+{
+	vector<Value*> arg_values;
+	
+	if( fn.c_compatible ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return value_t();
+	} else {	
+		BOOST_FOREACH( value_t const& arg, args ){
+			arg_values.push_back( arg.load( abi_llvm ) );
+		}
+	}
+
+	Value* ret_val = builder()->CreateCall( fn.fn, arg_values.begin(), arg_values.end() );
+	return value_t( fn.get_return_ty().get(), ret_val, value_t::kind_value, this );
+}
+
 value_t operator+( value_t const& lhs, value_t const& rhs ){
 	return lhs.cg->emit_add(lhs, rhs);
 }
@@ -630,7 +642,7 @@ void function_t::args_name( vector<string> const& names )
 	}
 }
 
-shared_ptr<value_tyinfo> function_t::get_return_ty(){
+shared_ptr<value_tyinfo> function_t::get_return_ty() const{
 	assert( fnty->is_function() );
 	return shared_ptr<value_tyinfo>( cg->node_ctxt( fnty->retval_type, false )->get_tysp() );
 }

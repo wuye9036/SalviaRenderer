@@ -330,43 +330,24 @@ SASL_VISIT_DEF( call_expression ){
 	} else {
 		// Get LLVM Function
 		symbol* fn_sym = csi->overloaded_function();
-		cgllvm_sctxt* fn_ctxt = node_ctxt( fn_sym->node(), false );
-		// Function* fn = fn_ctxt->data().self_fn;
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		function_t fn = fetch_function( fn_sym->node()->as_handle<function_type>() );
+
+		// TODO implicit type conversations.
+		vector<value_t> args;
+		BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
+			visit_child( child_ctxt, child_ctxt_init, arg_expr );
+			cgllvm_sctxt* arg_ctxt = node_ctxt( arg_expr, false );
+			args.push_back( arg_ctxt->get_value() );
+		}
+
+		value_t rslt = emit_call( fn, args );
+		
+		cgllvm_sctxt* expr_ctxt = node_ctxt( v, true );
+		expr_ctxt->data().val = rslt;
+		expr_ctxt->data().tyinfo = fn.get_return_ty();
+
+		sc_ptr(data)->copy( expr_ctxt );
 	}
-	//	sc_data_ptr(data)->val_type = fn_ctxt->data().val_type;
-
-	//	vector<Value*> args;
-	//	BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
-	//		visit_child( child_ctxt, child_ctxt_init, arg_expr );
-
-	//		type_info_si* arg_tisi = arg_expr->si_ptr<type_info_si>();
-
-	//		llvm::Value* evaluated_value = load( &child_ctxt );
-	//		builtin_types arg_ty = arg_tisi->type_info()->tycode;
-	//		if( is_vector(arg_ty) ){
-	//			args.push_back( llagg( cgv_vector( evaluated_value, ext.get() ) ).val );
-	//		} else if( is_matrix( arg_ty ) ) {
-	//			bool as_vec(false), as_mat(false);
-	//			llvm::Type const* mat_abity = llvm_type( arg_ty, as_vec, as_mat );
-	//			llagg ret = llagg( ext->null_value(mat_abity).val, ext.get() ) ;
-	//			llagg matv = llagg( evaluated_value, ext.get() );
-	//			for( size_t i = 0; i < matv.size(); ++i ){
-	//				ret.set( i, llagg( cgv_vector( matv[i].val, ext.get() ) ) );
-	//			}
-	//			args.push_back(ret.val);
-	//		} else {
-	//			args.push_back(evaluated_value);
-	//		}
-
-	//	}
-
-	//	// Create Call
-	//	ret = builder()->CreateCall( fn, args.begin(), args.end() );
-	//}
-
-	//sc_data_ptr(data)->val = ret;
-	//node_ctxt( v, true )->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( variable_expression ){
@@ -630,7 +611,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		visit_child( child_ctxt, child_ctxt_init, par );
 	}
 
-	sc_data_ptr(data)->self_fn = create_function( v.as_handle<function_type>() );
+	sc_data_ptr(data)->self_fn = fetch_function( v.as_handle<function_type>() );
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
