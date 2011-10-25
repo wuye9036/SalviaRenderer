@@ -498,6 +498,8 @@ SASL_VISIT_DEF( variable_declaration ){
 }
 
 SASL_VISIT_DEF( parameter ){
+	sc_ptr(data)->clear_data();
+
 	any child_ctxt_init = *data;
 	sc_ptr(child_ctxt_init)->clear_data();
 
@@ -508,6 +510,7 @@ SASL_VISIT_DEF( parameter ){
 		visit_child( child_ctxt, child_ctxt_init, v.init );
 	}
 
+	sc_data_ptr(data)->val = sc_data_ptr(&child_ctxt)->val;
 	sc_data_ptr(data)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }

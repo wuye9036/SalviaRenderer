@@ -1,6 +1,8 @@
 #ifndef SASL_ENUMS_ENUMS_HELPER_H
 #define SASL_ENUMS_ENUMS_HELPER_H
 
+#include <eflib/include/platform/typedefs.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/thread/mutex.hpp>
 #include <eflib/include/platform/enable_warnings.h>
@@ -58,10 +60,6 @@ namespace sasl{
 		bool is_bit_assign( const operators& );
 		bool is_shift_assign( const operators& );
 		bool is_assign( const operators& );
-
-		// Guess built-in types by static type T.
-		builtin_types match_builtin( int8_t const& = int8_t() );
-		builtin_types match_builtin( int const& = int() );
 
 		const std::vector<operators>& list_of_operators();
 	}

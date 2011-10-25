@@ -112,6 +112,13 @@ namespace {
 	APInt apint( T v ){
 		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
 	}
+
+	void print_blocks( Function* fn ){
+		printf( "Function: 0x%X\n", fn );
+		for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin(); it != fn->getBasicBlockList().end(); ++it ){
+			printf( "  Block: 0x%X\n", &(*it) );
+		}
+	}
 }
 
 template <typename T>
@@ -461,7 +468,9 @@ void cg_service::clean_empty_blocks()
 	block_iterator_t beg = fn().fn->getBasicBlockList().begin();
 	block_iterator_t end = fn().fn->getBasicBlockList().end();
 
-	for(  block_iterator_t it = beg; it != end; ++it )
+	print_blocks( fn().fn );
+
+	for( block_iterator_t it = beg; it != end; ++it )
 	{
 		if( !it->getTerminator() ){
 			block_iterator_t next_it = it;
@@ -491,7 +500,16 @@ insert_point_t cg_service::new_block( std::string const& hint, bool set_as_curre
 	assert( in_function() );
 
 	insert_point_t ret;
-	ret.block = BasicBlock::Create( context(), hint, fn().fn );
+	
+	if( fn().fn->getBasicBlockList().empty() || !fn().fn->getBasicBlockList().back().empty() ){
+		ret.block = BasicBlock::Create( context(), hint, fn().fn );
+		printf("Block created: 0x%X at 0x%X\n", (uintptr_t)ret.block, fn().fn );
+
+		print_blocks( fn().fn );
+	} else {
+		ret.block = &fn().fn->getBasicBlockList().back();
+	}
+	
 	if( set_as_current ){
 		set_insert_point( ret );
 	}
@@ -720,12 +738,12 @@ value_t function_t::arg( size_t index ) const
 	value_tyinfo* par_typtr = cg->node_ctxt( par, false )->get_typtr();
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
-	for( size_t idx_counter = 0; idx_counter <= index; ++idx_counter ){
+	for( size_t idx_counter = 0; idx_counter < index; ++idx_counter ){
 		++it;
 	}
 
 	abis arg_abi = c_compatible ? abi_c: abi_llvm;
-	return cg->create_value( par_typtr, (Argument*)it, arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value, arg_abi );
+	return cg->create_value( par_typtr, &(*it), arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value, arg_abi );
 }
 
 function_t::function_t(): fn(NULL), fnty(NULL)
