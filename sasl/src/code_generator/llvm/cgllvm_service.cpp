@@ -217,16 +217,15 @@ llvm::Value* value_t::load( abis abi ) const{
 			return load();
 		} else if( is_vector( get_hint() ) ){
 			Value* org_value = load();
-			if( abi == abi_c ){
-				value_t ret_value = cg->null_value( get_hint(), abi );
+			
+			value_t ret_value = cg->null_value( get_hint(), abi );
 				
-				size_t vec_size = vector_size( get_hint() );
-				for( size_t i = 0; i < vec_size; ++i ){
-					ret_value = cg->emit_insert_val( ret_value, (int)i, cg->emit_extract_elem(*this, i) );
-				}
-
-				return ret_value.load();
+			size_t vec_size = vector_size( get_hint() );
+			for( size_t i = 0; i < vec_size; ++i ){
+				ret_value = cg->emit_insert_val( ret_value, (int)i, cg->emit_extract_elem(*this, i) );
 			}
+
+			return ret_value.load();
 		} else if( is_matrix( get_hint() ) ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else {
@@ -360,12 +359,8 @@ value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
 
 value_t cg_service::null_value( builtin_types bt, abis abi )
 {
-	Type const* valty = NULL;
-	if( is_scalar(bt) ){
-		valty = create_llvm_type( context(), bt, abi == abi_c );
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	assert( bt != builtin_types::none );
+	Type const* valty = create_llvm_type( context(), bt, abi == abi_c );
 	value_t val = value_t( bt, Constant::getNullValue( valty ), value_t::kind_value, abi, this );
 	return val;
 }
@@ -724,15 +719,13 @@ value_t function_t::arg( size_t index ) const
 	shared_ptr<parameter> par = fnty->params[index];
 	value_tyinfo* par_typtr = cg->node_ctxt( par, false )->get_typtr();
 
-	if( argCache.empty() ){
-		for( Function::ArgumentListType::iterator it = fn->arg_begin(); it != fn->arg_end(); ++it ){
-			// Non const.
-			const_cast<function_t*>(this)->argCache.push_back((Argument*)it);
-		}
+	Function::ArgumentListType::iterator it = fn->arg_begin();
+	for( size_t idx_counter = 0; idx_counter <= index; ++idx_counter ){
+		++it;
 	}
 
 	abis arg_abi = c_compatible ? abi_c: abi_llvm;
-	return cg->create_value( par_typtr, argCache[index], arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value, arg_abi );
+	return cg->create_value( par_typtr, (Argument*)it, arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value, arg_abi );
 }
 
 function_t::function_t(): fn(NULL), fnty(NULL)
