@@ -436,10 +436,10 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 		value_tyinfo* par_ty = par_ctxt->get_typtr();
 		assert( par_ty );
 
-		bool is_ref = par->si_ptr<storage_si>()->is_reference();
+//		bool is_ref = par->si_ptr<storage_si>()->is_reference();
 
 		Type const* par_llty = par_ty->llvm_ty( abi ); 
-		if( ret.c_compatible && is_ref ){
+		if( ret.c_compatible && !is_scalar(par_ty->hint()) ){
 			par_tys.push_back( PointerType::getUnqual( par_llty ) );
 		} else {
 			par_tys.push_back( par_llty );
@@ -752,7 +752,8 @@ function_t::function_t(): fn(NULL), fnty(NULL)
 
 bool function_t::arg_is_ref( size_t index ) const{
 	assert( index < fnty->params.size() );
-	return fnty->params[index]->si_ptr<storage_si>()->is_reference();
+	builtin_types hint = fnty->params[index]->si_ptr<storage_si>()->type_info()->tycode;
+	return c_compatible && !is_scalar(hint);
 }
 
 

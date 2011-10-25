@@ -624,12 +624,11 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	// Register arguments names.
 	assert( fn().arg_size() == v.params.size() );
 
-	vector<string> param_names;
 	size_t i_arg = 0;
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
 	{
 		sctxt_handle par_ctxt = node_ctxt( par );
-		param_names.push_back( par->symbol()->unmangled_name() );
+		fn().arg_name( i_arg, par->symbol()->unmangled_name() );
 		par_ctxt->get_value() = fn().arg( i_arg++ );
 	}
 }
