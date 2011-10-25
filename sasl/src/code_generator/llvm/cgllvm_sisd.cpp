@@ -187,7 +187,7 @@ SASL_VISIT_DEF( binary_expression ){
 
 			if( is_scalar(lbtc) ){
 				if( v.op == operators::add ){
-					retval = lval + rval;
+					retval = emit_add(lval, rval);
 				} else {
 					EFLIB_ASSERT_UNIMPLEMENTED();
 				}
@@ -310,7 +310,7 @@ SASL_VISIT_DEF( constant_expression ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	store( sc_ptr(data)->get_value(), val );
+	sc_ptr(data)->get_value().emplace( val );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }

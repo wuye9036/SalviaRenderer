@@ -2,28 +2,28 @@ statistic directory: ../../eflib
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 52
-  code lines: 8677
-  null lines: 995
-  empty lines: 1178
+  code lines: 8717
+  null lines: 1004
+  empty lines: 1184
   single line comments: 230
   multi line comments: 478
   mixed lines: 6
-  total: 11564
-  file bytes(KB): 257.84
-  bytes per line: 22.83
+  total: 11619
+  file bytes(KB): 259.19
+  bytes per line: 22.84
 statistic directory: ../../salviar
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 63
-  code lines: 5807
-  null lines: 1555
-  empty lines: 1120
-  single line comments: 168
+  code lines: 5816
+  null lines: 1558
+  empty lines: 1124
+  single line comments: 169
   multi line comments: 1144
   mixed lines: 30
-  total: 9824
-  file bytes(KB): 283.17
-  bytes per line: 29.52
+  total: 9841
+  file bytes(KB): 283.9
+  bytes per line: 29.54
 statistic directory: ../../salviax
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
@@ -40,7 +40,7 @@ result:
 statistic directory: ../../salviau
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
-  files: 17
+  files: 16
   code lines: 370
   null lines: 129
   empty lines: 60
@@ -54,25 +54,25 @@ statistic directory: ../../samples
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 38
-  code lines: 1618
+  code lines: 1615
   null lines: 461
   empty lines: 293
-  single line comments: 158
-  multi line comments: 703
+  single line comments: 162
+  multi line comments: 705
   mixed lines: 34
-  total: 3267
-  file bytes(KB): 84.71
-  bytes per line: 26.55
+  total: 3270
+  file bytes(KB): 84.83
+  bytes per line: 26.56
 statistic directory: ../../sasl
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
-  files: 211
-  code lines: 14399
-  null lines: 4129
-  empty lines: 1971
-  single line comments: 660
-  multi line comments: 2538
+  files: 209
+  code lines: 14750
+  null lines: 4364
+  empty lines: 2073
+  single line comments: 1537
+  multi line comments: 2774
   mixed lines: 58
-  total: 23755
-  file bytes(KB): 716.15
-  bytes per line: 30.87
+  total: 25556
+  file bytes(KB): 757.06
+  bytes per line: 30.33

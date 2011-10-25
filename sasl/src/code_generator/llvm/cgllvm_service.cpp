@@ -50,7 +50,7 @@ using std::string;
 		assert( lhs.get_hint() == rhs.get_hint() ); \
 		assert( is_scalar(lhs.get_hint()) ); \
 		\
-		builtin_types hint = lhs.get_hint(); \
+		builtin_types hint( lhs.get_hint() ); \
 		Value* ret = NULL; \
 		\
 		if( is_real(hint) ){ \
@@ -59,7 +59,7 @@ using std::string;
 			ret = builder()->Create##op_name( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
 		}	\
 		\
-		return value_t( hint, ret, value_t::kind_value, this );
+		return value_t( hint, ret, value_t::kind_value, abi_llvm, this );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -138,22 +138,22 @@ value_tyinfo::value_tyinfo()
 	llvm_tys[1] = NULL;
 }
 
-builtin_types value_tyinfo::get_hint() const{
+builtin_types value_tyinfo::hint() const{
 	if( !sty || !sty->is_builtin() ){
 		return builtin_types::none;
 	}
 	return sty->tycode;
 }
 
-tynode* value_tyinfo::get_typtr() const{
+tynode* value_tyinfo::typtr() const{
 	return sty;
 }
 
-shared_ptr<tynode> value_tyinfo::get_tysp() const{
+shared_ptr<tynode> value_tyinfo::tysp() const{
 	return sty->as_handle<tynode>();
 }
 
-llvm::Type const* value_tyinfo::get_llvm_ty( abis abi ) const
+llvm::Type const* value_tyinfo::llvm_ty( abis abi ) const
 {
 	return llvm_tys[abi];
 }
@@ -166,13 +166,20 @@ value_t::value_t()
 {
 }
 
-value_t::value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_service* cg )
-	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none), abi(abi_llvm), parent(NULL)
+value_t::value_t(
+	value_tyinfo* tyinfo,
+	llvm::Value* val, value_t::kinds k, abis abi,
+	cg_service* cg 
+	) 
+	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none), abi(abi), parent(NULL)
 {
 }
 
-value_t::value_t( builtin_types hint, llvm::Value* val, value_t::kinds k, cg_service* cg )
-	: tyinfo(NULL), hint(hint), abi(abi_llvm), parent(NULL), val(val), kind(k), cg(cg)
+value_t::value_t( builtin_types hint,
+	llvm::Value* val, value_t::kinds k, abis abi,
+	cg_service* cg 
+	)
+	: tyinfo(NULL), hint(hint), abi(abi), parent(NULL), val(val), kind(k), cg(cg)
 {
 
 }
@@ -193,12 +200,12 @@ llvm::Value* value_t::raw() const{
 
 value_t value_t::to_rvalue() const
 {
-	return value_t( tyinfo, load( abi ), kind_value, cg );
+	return value_t( tyinfo, load( abi ), kind_value, abi, cg );
 }
 
 builtin_types value_t::get_hint() const
 {
-	if( tyinfo ) return tyinfo->get_hint();
+	if( tyinfo ) return tyinfo->hint();
 	return hint;
 }
 
@@ -227,7 +234,7 @@ value_t::kinds value_t::get_kind() const{
 	return kind;
 }
 
-bool value_t::is_lvalue() const{
+bool value_t::storable() const{
 	switch( kind ){
 	case kind_ref:
 	case kind_global:
@@ -242,7 +249,7 @@ bool value_t::is_lvalue() const{
 	}
 }
 
-bool value_t::is_rvalue() const
+bool value_t::load_only() const
 {
 	switch( kind ){
 	case kind_ref:
@@ -256,10 +263,6 @@ bool value_t::is_rvalue() const
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return false;
 	}
-}
-
-bool value_t::storable() const{
-	return is_lvalue() || ( val == NULL && kind == kind_unknown );
 }
 
 void value_t::emplace( Value* v, kinds k ){
@@ -338,7 +341,7 @@ value_t cg_service::null_value( builtin_types bt, abis abi )
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-	value_t val = value_t( bt, Constant::getNullValue( valty ), value_t::kind_value, this );
+	value_t val = value_t( bt, Constant::getNullValue( valty ), value_t::kind_value, abi, this );
 	return val;
 }
 
@@ -414,7 +417,7 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 
 		bool is_ref = par->si_ptr<storage_si>()->is_reference();
 
-		Type const* par_llty = par_ty->get_llvm_ty( abi ); 
+		Type const* par_llty = par_ty->llvm_ty( abi ); 
 		if( ret.c_compatible && is_ref ){
 			par_tys.push_back( PointerType::getUnqual( par_llty ) );
 		} else {
@@ -422,7 +425,7 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 		}
 	}
 
-	Type const* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->get_llvm_ty( abi );
+	Type const* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->llvm_ty( abi );
 	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
 
 	// Create function
@@ -466,7 +469,7 @@ void cg_service::clean_empty_blocks()
 }
 
 value_t cg_service::create_scalar( Value* val, value_tyinfo* tyinfo ){
-	return value_t( tyinfo, val, value_t::kind_value, this );
+	return value_t( tyinfo, val, value_t::kind_value, abi_llvm, this );
 }
 
 insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
@@ -482,13 +485,13 @@ insert_point_t cg_service::new_block( std::string const& hint, bool set_as_curre
 	return ret;
 }
 
-value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_t::kinds k ){
-	return value_t( tyinfo, val, k, this );
+value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_t::kinds k, abis abi ){
+	return value_t( tyinfo, val, k, abi, this );
 }
 
-value_t cg_service::create_value( builtin_types hint, Value* val, value_t::kinds k )
+value_t cg_service::create_value( builtin_types hint, Value* val, value_t::kinds k, abis abi )
 {
-	return value_t( hint, val, k, this );
+	return value_t( hint, val, k, abi, this );
 }
 
 sasl::code_generator::value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
@@ -586,7 +589,7 @@ sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, 
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	return value_t(elem_hint, elem_val, value_t::kind_value, this );
+	return value_t(elem_hint, elem_val, value_t::kind_value, abi, this );
 }
 
 sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
@@ -614,11 +617,9 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	}
 
 	Value* ret_val = builder()->CreateCall( fn.fn, arg_values.begin(), arg_values.end() );
-	return value_t( fn.get_return_ty().get(), ret_val, value_t::kind_value, this );
-}
 
-value_t operator+( value_t const& lhs, value_t const& rhs ){
-	return lhs.cg->emit_add(lhs, rhs);
+	abis ret_abi = fn.c_compatible ? abi_c : abi_llvm;
+	return value_t( fn.get_return_ty().get(), ret_val, value_t::kind_value, ret_abi, this );
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){
@@ -664,7 +665,8 @@ value_t function_t::arg( size_t index ) const
 		}
 	}
 
-	return cg->create_value( par_typtr, argCache[index], arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value );
+	abis arg_abi = c_compatible ? abi_c: abi_llvm;
+	return cg->create_value( par_typtr, argCache[index], arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value, arg_abi );
 }
 
 function_t::function_t(): fn(NULL), fnty(NULL)

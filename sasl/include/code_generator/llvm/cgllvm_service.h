@@ -60,7 +60,7 @@ enum abis{
 class value_tyinfo{
 public:
 	friend class cg_service;
-	
+
 	enum classifications{
 		unknown_type,
 		builtin,
@@ -71,16 +71,16 @@ public:
 		sasl::syntax_tree::tynode* sty,
 		llvm::Type const* cty,
 		llvm::Type const* llty
-	);
+		);
 
 	value_tyinfo( value_tyinfo const& );
 	value_tyinfo& operator = ( value_tyinfo const& );
 
-	sasl::syntax_tree::tynode* get_typtr() const;
-	boost::shared_ptr<sasl::syntax_tree::tynode> get_tysp() const;
-	builtin_types get_hint() const;
+	sasl::syntax_tree::tynode* typtr() const;
+	boost::shared_ptr<sasl::syntax_tree::tynode> tysp() const;
+	builtin_types hint() const;
 
-	llvm::Type const* get_llvm_ty( abis abi ) const;
+	llvm::Type const* llvm_ty( abis abi ) const;
 
 protected:
 	value_tyinfo();
@@ -93,9 +93,9 @@ protected:
 class value_t{
 public:
 	friend class cg_service;
-	
+
 	value_t();
-	
+
 	enum kinds{
 		kind_unknown,
 		kind_tyinfo_only,
@@ -124,10 +124,10 @@ public:
 		kind_swizzle
 	};
 
-	enum lrv{
-		lvalue,
-		rvalue
-	};
+	enum accessibilities{
+		loadable,
+		load_store
+	} accesibility;
 
 	/// @name State queriers 
 	/// @{
@@ -135,24 +135,23 @@ public:
 	/// Get service.
 	cg_service* service() const;
 
+	/// Return internal llvm value.
+	llvm::Value* raw() const;
+
 	/// Load llvm value from value_t.
 	llvm::Value* load() const;
 	llvm::Value* load( abis abi ) const;
 	llvm::Value* load_ref() const;
 
-	/// Return internal llvm value.
-	llvm::Value* raw() const;
-	/// Store llvm value to value_t
-	// llvm::Value* store( llvm::Value* v );
 	/// Store llvm value to value_t
 	// llvm::Value* store( value_t const& );
 	void emplace( value_t const& );
 	void emplace( llvm::Value* v, kinds k );
 	void set_parent( value_t* parent, kinds k );
 
-	bool is_lvalue() const;
-	bool is_rvalue() const;
 	bool storable() const;
+	bool load_only() const;
+
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
 	/// Get type hint. if type is not built-in type it returns builtin_type::none.
@@ -170,15 +169,20 @@ public:
 	value_t swizzle( size_t swz_code ) const;
 	value_t to_rvalue() const;
 
-	friend value_t operator + ( value_t const&, value_t const& );
-	friend value_t operator * ( value_t const&, value_t const& );
 	/// @}
-
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
-	value_t( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, cg_service* cg );
-	value_t( builtin_types hint, llvm::Value* val, value_t::kinds k, cg_service* cg );
+	value_t(
+		value_tyinfo* tyinfo,
+		llvm::Value* val, value_t::kinds k, abis abi,
+		cg_service* cg
+		);
+	value_t(
+		builtin_types hint,
+		llvm::Value* val, value_t::kinds k, abis abi,
+		cg_service* cg
+		);
 	/// @}
 
 	/// @name Members
@@ -186,7 +190,7 @@ protected:
 	kinds			kind;
 	value_t*		parent;
 	llvm::Value*	val;
-	
+
 	/// Type information
 	value_tyinfo*	tyinfo;
 	builtin_types	hint;
@@ -195,7 +199,6 @@ protected:
 	abis			abi;
 
 	cg_service*		cg;
-	lrv				lr;
 	/// @}
 };
 
@@ -207,8 +210,6 @@ struct scope_guard{
 private:
 	on_exit_fn do_exit;
 };
-
-value_t operator + ( value_t const&, value_t const& );
 
 struct function_t{
 	EFLIB_OPERATOR_BOOL( function_t )
@@ -243,7 +244,7 @@ struct insert_point_t{
 	{
 		return block != NULL;
 	}
-	
+
 	insert_point_t();
 
 	llvm::BasicBlock* block;
@@ -273,7 +274,7 @@ public:
 
 	template <typename IndexT>
 	value_t emit_extract_elem( value_t const& vec, IndexT const& idx ){
-		if( vec.is_lvalue() ){
+		if( vec.storable() ){
 			return emit_extract_ref( vec, idx );
 		} else {
 			return emit_extract_val( vec, idx );
@@ -287,7 +288,7 @@ public:
 
 	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */
-	
+
 	/// @name Emit type casts
 	/// @{
 	/// Cast between integer types.
@@ -299,13 +300,13 @@ public:
 	/// Cast between float types.
 	value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi );
 	/// @}
-	
+
 	/// @name Emit Declarations
 	/// @{
 	function_t begin_fndecl();
 	function_t end_fndecl();
 	/// @}
-	
+
 	/// @name Context switchs
 	/// @{
 	void push_fn( function_t const& fn );
@@ -336,8 +337,8 @@ public:
 	value_t null_value( value_tyinfo* tyinfo, abis abi );
 	value_t null_value( builtin_types bt, abis abi );
 
-	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k );
-	value_t create_value( builtin_types hint, llvm::Value* val, value_t::kinds k );
+	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, abis abi );
+	value_t create_value( builtin_types hint, llvm::Value* val, value_t::kinds k, abis abi );
 
 	template <typename T>
 	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
@@ -373,7 +374,7 @@ public:
 	template <typename T>
 	value_t create_constant_matrix( T const* vals, size_t length, abis abi );
 	/// @}
-	
+
 	/// @name Emit variables
 	/// @{
 	value_t create_variable( value_tyinfo const* );
@@ -396,7 +397,7 @@ public:
 	virtual void clean_empty_blocks(); 
 	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;
 	/// @}
-	
+
 	/// @name Fundamentals
 	/// @{
 	virtual llvm::DefaultIRBuilder* builder() const = 0;
