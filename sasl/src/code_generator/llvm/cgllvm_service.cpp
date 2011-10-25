@@ -210,24 +210,44 @@ builtin_types value_t::get_hint() const
 }
 
 llvm::Value* value_t::load( abis abi ) const{
+	assert( abi != abi_unknown );
+
 	if( abi != get_abi() ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		if( is_scalar( get_hint() ) ){
+			return load();
+		} else if( is_vector( get_hint() ) ){
+			Value* org_value = load();
+			if( abi == abi_c ){
+				value_t ret_value = cg->null_value( get_hint(), abi );
+				
+				size_t vec_size = vector_size( get_hint() );
+				for( size_t i = 0; i < vec_size; ++i ){
+					ret_value = cg->emit_insert_val( ret_value, (int)i, cg->emit_extract_elem(*this, i) );
+				}
+
+				return ret_value.load();
+			}
+		} else if( is_matrix( get_hint() ) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 		return NULL;
 	} else {
-		switch( kind ){
-		case kind_value:
-			return val;
-		case kind_ref:
-			return cg->builder()->CreateLoad( val );
-		default:
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return NULL;
-		}
+		return load();
 	}
 }
 
 llvm::Value* value_t::load() const{
-	return load( abi );
+	switch( kind ){
+	case kind_value:
+		return val;
+	case kind_ref:
+		return cg->builder()->CreateLoad( val );
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return NULL;
+	}
 }
 
 value_t::kinds value_t::get_kind() const{
@@ -265,20 +285,25 @@ bool value_t::load_only() const
 	}
 }
 
-void value_t::emplace( Value* v, kinds k ){
+void value_t::emplace( Value* v, kinds k, abis abi ){
 	val = v;
 	kind = k;
+	this->abi = abi;
 }
 
 void value_t::emplace( value_t const& v )
 {
-	emplace( v.raw(), v.get_kind() );
+	emplace( v.raw(), v.get_kind(), v.get_abi() );
 }
 
 llvm::Value* value_t::load_ref() const
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return NULL;
+}
+
+value_tyinfo* value_t::get_tyinfo() const{
+	return tyinfo;
 }
 
 /// @}
@@ -295,7 +320,7 @@ void cg_service::store( value_t& lhs, value_t const& rhs ){
 		break;
 	case value_t::kind_unknown:
 		// Copy directly.
-		lhs.emplace( rhs.raw(), rhs.kind );
+		lhs.emplace( rhs );
 		lhs.tyinfo = rhs.tyinfo;
 		break;
 	default:
@@ -398,16 +423,10 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	ret.fnty = fn_node.get();
 	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
 
-	if( ret.c_compatible ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return function_t();
-	}
-
 	abis abi = ret.c_compatible ? abi_c : abi_llvm;
 
 	vector<Type const*> par_tys;
 
-	
 	// Create function type.
 	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
 	{
@@ -608,9 +627,16 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	vector<Value*> arg_values;
 	
 	if( fn.c_compatible ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return value_t();
-	} else {	
+		BOOST_FOREACH( value_t const& arg, args ){
+			builtin_types hint = arg.get_hint();
+			if( is_scalar(hint) ){
+				arg_values.push_back( arg.load(abi_llvm) );
+			} else {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+			// arg_values.push_back( arg.load( abi_llvm ) );
+		}
+	} else {
 		BOOST_FOREACH( value_t const& arg, args ){
 			arg_values.push_back( arg.load( abi_llvm ) );
 		}
@@ -620,6 +646,46 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 
 	abis ret_abi = fn.c_compatible ? abi_c : abi_llvm;
 	return value_t( fn.get_return_ty().get(), ret_val, value_t::kind_value, ret_abi, this );
+}
+
+value_t cg_service::emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value )
+{
+	Value* indexes[1] = { idx.load() };
+	Value* agg = lhs.load();
+	Value* new_value = NULL;
+	if( agg->getType()->isStructTy() ){
+		assert(false);
+	} else if ( agg->getType()->isVectorTy() ){
+		new_value = builder()->CreateInsertElement( agg, elem_value.load(), indexes[0] );
+	}
+	assert(new_value);
+
+	if( lhs.get_tyinfo() ){
+		return value_t( lhs.get_tyinfo(), new_value, value_t::kind_value, lhs.get_abi(), this );
+	} else {
+		return value_t( lhs.get_hint(), new_value, value_t::kind_value, lhs.get_abi(), this );
+	}
+}
+
+value_t cg_service::emit_insert_val( value_t const& lhs, int index, value_t const& elem_value )
+{
+	Value* agg = lhs.load();
+	Value* new_value = NULL;
+	if( agg->getType()->isStructTy() ){
+		new_value = builder()->CreateInsertValue( agg, elem_value.load(), (unsigned)index );
+	} else if ( agg->getType()->isVectorTy() ){
+		value_t index_value( builtin_types::_sint32, int_(index), value_t::kind_value, abi_llvm, this );
+		return emit_insert_val( lhs, index_value, elem_value );
+	}
+	assert(new_value);
+
+	if( lhs.get_tyinfo() ){
+		return value_t( lhs.get_tyinfo(), new_value, value_t::kind_value, lhs.get_abi(), this );
+	} else {
+		return value_t( lhs.get_hint(), new_value, value_t::kind_value, lhs.get_abi(), this );
+	}
+
+	
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

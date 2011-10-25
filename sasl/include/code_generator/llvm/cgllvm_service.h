@@ -146,7 +146,7 @@ public:
 	/// Store llvm value to value_t
 	// llvm::Value* store( value_t const& );
 	void emplace( value_t const& );
-	void emplace( llvm::Value* v, kinds k );
+	void emplace( llvm::Value* v, kinds k, abis abi );
 	void set_parent( value_t* parent, kinds k );
 
 	bool storable() const;
@@ -285,6 +285,9 @@ public:
 	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
 	value_t emit_extract_val( value_t const& lhs, int idx );
 	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
+
+	value_t emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value );
+	value_t emit_insert_val( value_t const& lhs, int index, value_t const& elem_value );
 
 	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */

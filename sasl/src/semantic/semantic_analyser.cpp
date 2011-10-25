@@ -712,7 +712,7 @@ SASL_VISIT_DEF( function_type )
 	ssi->entry_id( ret_tid );
 
 	// TODO judge the true abi.
-	ssi->c_compatible( !ssi->is_intrinsic() );
+	ssi->c_compatible( true );
 
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
@@ -1308,12 +1308,13 @@ void semantic_analyser::function_register::r(
 	any child_ctxt;
 	owner.visit_child( child_ctxt, ctxt_init, fn );
 	
-	ctxt_ptr(child_ctxt)->generated_node->si_ptr<storage_si>()->is_intrinsic(is_intrinsic);
+	shared_ptr<node> new_node = ctxt_ptr(child_ctxt)->generated_node;
+	new_node->si_ptr<storage_si>()->is_intrinsic(is_intrinsic);
+	new_node->si_ptr<storage_si>()->c_compatible(!is_intrinsic);
 
 	if( is_intrinsic ){
-		shared_ptr<symbol> generated_sym
-			= ctxt_ptr(child_ctxt)->generated_node->symbol();
-		owner.module_semantic_info()->intrinsics().push_back( generated_sym );
+		shared_ptr<symbol> new_sym = new_node->symbol();
+		owner.module_semantic_info()->intrinsics().push_back( new_sym );
 	}
 	fn.reset();
 }
