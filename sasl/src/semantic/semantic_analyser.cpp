@@ -710,10 +710,14 @@ SASL_VISIT_DEF( function_type )
 
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_fn, msi->pety() );
 	ssi->entry_id( ret_tid );
+
+	// TODO judge the true abi.
+	ssi->c_compatible( !ssi->is_intrinsic() );
+
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	ctxt_ptr(child_ctxt_init)->is_global = false;
-
+	
 	if ( v.body ){
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
 		msi->functions().push_back( sym );
@@ -851,7 +855,7 @@ SASL_VISIT_DEF( program ){
 	any child_ctxt = child_ctxt_init;
 
 	register_builtin_types();
-	register_type_converter( child_ctxt_init );
+	register_tecov( child_ctxt_init );
 	register_builtin_functions( child_ctxt_init );
 
 	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
@@ -869,11 +873,11 @@ SASL_VISIT_DEF( program ){
 
 SASL_VISIT_DEF_UNIMPL( for_statement );
 
-void semantic_analyser::builtin_type_convert( shared_ptr<node> lhs, shared_ptr<node> rhs ){
+void semantic_analyser::builtin_tecov( shared_ptr<node> lhs, shared_ptr<node> rhs ){
 	// do nothing
 }
 
-void semantic_analyser::register_type_converter( const boost::any& /*ctxt*/ ){
+void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
 	// register default type converter
 	pety_t* typemgr = msi->pety().get();
 
@@ -893,7 +897,7 @@ void semantic_analyser::register_type_converter( const boost::any& /*ctxt*/ ){
 	tid_t bool_ts = typemgr->get( builtin_types::_boolean );
 
 	// default conversation will do nothing.
-	tecov_t::converter_t default_conv = bind(&semantic_analyser::builtin_type_convert, this, _1, _2);
+	tecov_t::converter_t default_conv = bind(&semantic_analyser::builtin_tecov, this, _1, _2);
 
 	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, sint16_ts, default_conv );
 	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, sint32_ts, default_conv );

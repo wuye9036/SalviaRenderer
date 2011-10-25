@@ -97,7 +97,7 @@ private:
 		boost::shared_ptr<storage_si> const& ssi
 		);
 
-	void register_type_converter( const boost::any& ctxt );
+	void register_tecov( const boost::any& ctxt );
 	void register_builtin_functions( const boost::any& child_ctxt_init );
 
 	class function_register{
@@ -132,7 +132,7 @@ private:
 
 	void register_builtin_types();
 
-	void builtin_type_convert(
+	void builtin_tecov(
 		boost::shared_ptr< ::sasl::syntax_tree::node >,
 		boost::shared_ptr< ::sasl::syntax_tree::node >
 		);

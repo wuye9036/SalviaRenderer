@@ -156,7 +156,6 @@ public:
 };
 
 class storage_si: public type_info_si{
-
 public:
 	storage_si( boost::shared_ptr<pety_t> const& typemgr );
 
@@ -237,9 +236,7 @@ private:
 };
 
 class statement_si: public semantic_info{
-
 public:
-
 	statement_si();
 
 	const std::string& exit_point() const;
