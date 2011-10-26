@@ -118,6 +118,9 @@ protected:
 	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const& v, bool create_if_need = false ){
 		return cgllvm_impl::node_ctxt<NodeT, cgllvm_sctxt>(v, create_if_need);
 	}
+	//cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& v, bool create_if_need = false ){
+	//	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
+	//}
 	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 
 	// LLVM code generator Utilities

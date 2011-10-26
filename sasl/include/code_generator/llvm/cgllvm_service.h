@@ -17,6 +17,7 @@
 #include <eflib/include/diagnostics/assert.h>
 
 #include <boost/type_traits.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include <vector>
 
@@ -29,6 +30,7 @@ namespace llvm{
 	class Module;
 	class BasicBlock;
 	class ConstantInt;
+	class ConstantVector;
 
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -95,6 +97,8 @@ public:
 	friend class cg_service;
 
 	value_t();
+	value_t( value_t const& );
+	value_t& operator = ( value_t const& );
 
 	enum kinds{
 		kind_unknown,
@@ -147,7 +151,8 @@ public:
 	// llvm::Value* store( value_t const& );
 	void emplace( value_t const& );
 	void emplace( llvm::Value* v, kinds k, abis abi );
-	void set_parent( value_t* parent, kinds k );
+	void set_parent( value_t const& v );
+	void set_parent( value_t const* v );
 
 	bool storable() const;
 	bool load_only() const;
@@ -183,12 +188,16 @@ protected:
 		llvm::Value* val, value_t::kinds k, abis abi,
 		cg_service* cg
 		);
+
+	static value_t slice( value_t const& vec, uint32_t masks );
 	/// @}
 
 	/// @name Members
 	/// @{
+	boost::scoped_ptr<value_t>	parent; // For write mask and swizzle.
+	uint32_t					masks;
+	
 	kinds			kind;
-	value_t*		parent;
 	llvm::Value*	val;
 
 	/// Type information
@@ -370,12 +379,12 @@ public:
 	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 
 	template <typename T>
-	value_t create_constant_vector( T const* vals, size_t length, abis abi );
+	value_t create_constant_vector( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 
 	value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	template <typename T>
-	value_t create_constant_matrix( T const* vals, size_t length, abis abi );
+	value_t create_constant_matrix( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	/// @}
 
 	/// @name Emit variables
@@ -412,6 +421,10 @@ public:
 	/// @{
 	template <typename T>
 	llvm::ConstantInt* int_(T v);
+	template <typename T>
+	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	template <typename T>
+	llvm::Value* c_vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	/// @}
 private:
 	std::vector<function_t> fn_ctxts;

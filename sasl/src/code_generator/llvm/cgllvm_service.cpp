@@ -37,10 +37,14 @@ using llvm::Value;
 using llvm::BasicBlock;
 using llvm::Constant;
 using llvm::ConstantInt;
+using llvm::ConstantVector;
 using llvm::StructType;
 using llvm::VectorType;
+using llvm::UndefValue;
 
 using boost::shared_ptr;
+using boost::enable_if;
+using boost::is_integral;
 
 using std::vector;
 using std::string;
@@ -113,6 +117,25 @@ namespace {
 		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
 	}
 
+	void mask_to_indexes( char indexes[4], uint32_t mask ){
+		for( int i = 0; i < 4; ++i ){
+			// XYZW is 1,2,3,4 but LLVM used 0,1,2,3
+			char comp_index = static_cast<char>( (mask >> i*8) & 0xFF );
+			if( comp_index == 0 ){
+				indexes[i] = -1;
+				break;
+			}
+			indexes[i] = comp_index - 1;
+		}
+	}
+
+	void indexes_to_mask( char indexes[4], uint32_t& mask ){
+		mask = 0;
+		for( int i = 0; i < 4; ++i ){
+			mask += (uint32_t)( (indexes[i] + 1) << (i*8) );
+		}
+	}
+
 	void print_blocks( Function* fn ){
 		printf( "Function: 0x%X\n", fn );
 		for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin(); it != fn->getBasicBlockList().end(); ++it ){
@@ -125,6 +148,20 @@ template <typename T>
 ConstantInt* cg_service::int_( T v )
 {
 	return ConstantInt::get( context(), apint(v) );
+}
+
+template <typename T>
+llvm::ConstantVector* cg_service::vector_( T const* vals, size_t length, typename enable_if< is_integral<T> >::type* )
+{
+	assert( vals && length > 0 );
+	
+	vector<Constant*> elems(length);
+	for( size_t i = 0; i < length; ++i ){
+		elems.push_back( int_(vals[i]) );
+	}
+
+	VectorType* vec_type = VectorType::get( elems[0]->getType(), length );
+	return llvm::cast<ConstantVector>( ConstantVector::get( vec_type, elems ) );
 }
 
 // Value tyinfo
@@ -169,7 +206,7 @@ llvm::Type const* value_tyinfo::llvm_ty( abis abi ) const
 
 /// value_t @{
 value_t::value_t()
-	: tyinfo(NULL), val(NULL), cg(NULL), kind(kind_unknown), hint(builtin_types::none), abi(abi_unknown), parent(NULL)
+	: tyinfo(NULL), val(NULL), cg(NULL), kind(kind_unknown), hint(builtin_types::none), abi(abi_unknown), masks(0)
 {
 }
 
@@ -178,7 +215,7 @@ value_t::value_t(
 	llvm::Value* val, value_t::kinds k, abis abi,
 	cg_service* cg 
 	) 
-	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none), abi(abi), parent(NULL)
+	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none), abi(abi), masks(0)
 {
 }
 
@@ -186,9 +223,15 @@ value_t::value_t( builtin_types hint,
 	llvm::Value* val, value_t::kinds k, abis abi,
 	cg_service* cg 
 	)
-	: tyinfo(NULL), hint(hint), abi(abi), parent(NULL), val(val), kind(k), cg(cg)
+	: tyinfo(NULL), hint(hint), abi(abi), val(val), kind(k), cg(cg), masks(0)
 {
 
+}
+
+value_t::value_t( value_t const& rhs )
+	: tyinfo(rhs.tyinfo), hint(rhs.hint), abi(rhs.abi), val( rhs.val ), kind(rhs.kind), cg(rhs.cg), masks(rhs.masks)
+{
+	set_parent(rhs.parent.get());
 }
 
 abis value_t::get_abi() const{
@@ -250,6 +293,36 @@ llvm::Value* value_t::load() const{
 		return val;
 	case kind_ref:
 		return cg->builder()->CreateLoad( val );
+	case kind_swizzle:
+		{
+			// Decompose indexes.
+			char indexes[4] = {-1, -1, -1, -1};
+			mask_to_indexes(indexes, masks);
+			vector<int> index_values;
+			index_values.reserve(4);
+			for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
+				index_values.push_back( indexes[i] );
+			}
+			assert( !index_values.empty() );
+
+			// Swizzle
+			Value* agg_v = parent->load();
+			Value* ret = NULL;
+
+			if( index_values.size() == 1 ){
+				return cg->emit_extract_val( parent->to_rvalue(), index_values[0] ).load();
+			} else {
+				if( abi == abi_c ){
+					EFLIB_ASSERT_UNIMPLEMENTED();
+					return NULL;
+				} else {
+					Value* mask = cg->vector_( &indexes[0], index_values.size() );
+					return cg->builder()->CreateShuffleVector( agg_v, UndefValue::get( agg_v->getType() ), mask );
+				}
+			}
+
+			return ret;
+		}
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return NULL;
@@ -310,6 +383,45 @@ llvm::Value* value_t::load_ref() const
 
 value_tyinfo* value_t::get_tyinfo() const{
 	return tyinfo;
+}
+
+value_t& value_t::operator=( value_t const& rhs )
+{
+	kind = rhs.kind;
+	val = rhs.val;
+	tyinfo = rhs.tyinfo;
+	hint = rhs.hint;
+	abi = rhs.abi;
+	cg = rhs.cg;
+	masks = rhs.masks;
+
+	set_parent(rhs.parent.get());
+
+	return *this;
+}
+
+void value_t::set_parent( value_t const& v )
+{
+	parent.reset( new value_t(v) );
+}
+
+void value_t::set_parent( value_t const* v )
+{
+	if(v){
+		set_parent(*v);
+	}
+}
+
+value_t value_t::slice( value_t const& vec, uint32_t masks )
+{
+	builtin_types hint = vec.get_hint();
+	assert( is_vector(hint) );
+
+	value_t ret( scalar_of(hint), NULL, kind_swizzle, vec.abi, vec.cg );
+	ret.masks = masks;
+	ret.set_parent(vec);
+
+	return ret;
 }
 
 /// @}
@@ -581,17 +693,31 @@ value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
 
 value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	assert( lhs.storable() );
+
+	builtin_types agg_hint = lhs.get_hint();
+
+	if( is_vector(agg_hint) ){
+		char indexes[4] = { (char)idx, -1, -1, -1 };
+		uint32_t mask = 0;
+		indexes_to_mask( indexes, mask );
+		return value_t::slice( lhs, mask );
+	} else if( is_matrix(agg_hint) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else if ( agg_hint == builtin_types::none ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	
 	return value_t();
 }
 
-sasl::code_generator::value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
+value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
-sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
+value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 {
 	builtin_types agg_hint = lhs.get_hint();
 
@@ -603,6 +729,9 @@ sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, 
 	if( agg_hint == builtin_types::none ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return value_t();
+	} else if( is_scalar(agg_hint) ){
+		assert( idx == 0 );
+		elem_val = val;
 	} else if( is_vector(agg_hint) ){
 		switch( lhs.get_abi() ){
 		case abi_c:
@@ -624,7 +753,7 @@ sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, 
 	return value_t(elem_hint, elem_val, value_t::kind_value, abi, this );
 }
 
-sasl::code_generator::value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
+value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
