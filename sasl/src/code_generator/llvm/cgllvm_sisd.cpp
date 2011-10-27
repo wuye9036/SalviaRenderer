@@ -1117,47 +1117,19 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		shared_ptr<value_tyinfo> result_ty = fn().get_return_ty();
 		
 		// Process Intrinsic
-		if( intr->unmangled_name() == "mul" )
-		{
+		if( intr->unmangled_name() == "mul" ){
+			
 			assert( par_tys.size() == 2 );
 
 			// Set Argument name
 			fn().arg_name( 0, ".lhs" );
 			fn().arg_name( 1, ".rhs" );
 
-			value_t ret_val = emit_mul( par_ctxts[0]->get_value(), par_ctxts[1]->get_value() );
+			value_t ret_val = emit_mul( fn().arg(0), fn().arg(1) );
 			emit_return( ret_val );
-			// vec_m mul(vec_n, mat_mxn);
-			//if( is_vector( lbtc ) && is_matrix( rbtc ) ){
-			//	if( scalar_of(lbtc) == builtin_types::_float ){
-			//		emit_return(
-			//			mul_vm<llfloat>( larg, rarg,
-			//			vector_size(lbtc), vector_size(rbtc),
-			//			ret_type )
-			//			);
-			//	} else if ( scalar_of(lbtc) == builtin_types::_sint32 ){
-			//		ext->return_(
-			//			mul_vm<lli32>( larg, rarg,
-			//			vector_size(lbtc), vector_size(rbtc),
-			//			ret_type )
-			//			);
-			//	} else {
-			//		// EFLIB_ASSERT_UNIMPLEMENTED();
-			//	}
-			//} else if( is_matrix( lbtc ) && is_vector( rbtc ) ) {
-			//	if( scalar_of(lbtc) == builtin_types::_float ){
-			//		ext->return_(
-			//			mul_mv<llfloat>( larg, rarg,
-			//			vector_size(lbtc), vector_count(lbtc),
-			//			ret_type )
-			//			);
-			//	}
-			//} else {
-			//	// EFLIB_ASSERT_UNIMPLEMENTED();
-			//}
-		}
-		else if( intr->unmangled_name() == "dot" )
-		{
+
+		} else if( intr->unmangled_name() == "dot" ) {
+			
 			assert( par_tys.size() == 2 );
 
 			// Set Argument name
@@ -1166,44 +1138,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			value_t ret_val = emit_dot( fn().arg(0), fn().arg(1) );
 			emit_return( ret_val );
-			// Set Argument name
-			//Argument* larg = fn->getArgumentList().begin();
-			//Argument* rarg = ++fn->getArgumentList().begin();
 
-			//larg->setName( ".lhs" );
-			//rarg->setName( ".rhs" );
-
-			//// Get Type infos
-			//shared_ptr<tynode> lpar_type = intr_fn->params[0]->si_ptr<type_info_si>()->type_info();
-			//shared_ptr<tynode> rpar_type = intr_fn->params[1]->si_ptr<type_info_si>()->type_info();
-			//assert( lpar_type && rpar_type );
-			//builtin_types lbtc = lpar_type->tycode;
-			//builtin_types rbtc = rpar_type->tycode;
-
-			//Type const* ret_type = fn->getReturnType();
-
-			//assert( is_vector(lbtc) && is_vector(rbtc) );
-			//assert( scalar_of(lbtc) == scalar_of(rbtc) );
-			//assert( vector_size(lbtc) == vector_size(rbtc) );
-
-			//size_t vec_size = vector_size(lbtc);
-
-			//if( scalar_of(lbtc) == builtin_types::_float )
-			//{
-			//	ext->return_(
-			//		dot_prod<llfloat>( larg, rarg, vec_size, ret_type )
-			//		);
-			//} 
-			//else if ( scalar_of(lbtc) == builtin_types::_sint32 )
-			//{
-			//	ext->return_(
-			//		dot_prod<lli32>( larg, rarg, vec_size, ret_type )
-			//		);
-			//}
-			//else 
-			//{
-			//	// EFLIB_ASSERT_UNIMPLEMENTED();
-			//}
 		}
 		else
 		{

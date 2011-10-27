@@ -36,7 +36,15 @@ struct jit_fixture {
 	
 	jit_fixture() {}
 
-	void init( string const& file_name ){
+	void init_g( string const& file_name ){
+		init( file_name, "--lang=g" );
+	}
+
+	void init_vs( string const& file_name ){
+		init( file_name, "--lang=vs" );
+	}
+
+	void init( string const& file_name, string const& options ){
 		c.parse( make_command(file_name) );
 
 		bool aborted = false;
@@ -48,7 +56,7 @@ struct jit_fixture {
 
 		root_sym = c.module_sem()->root();
 
-		fstream dump_file( "jit_test.ll", std::ios::out );
+		fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
 		dump( shared_polymorphic_cast<llvm_module>(c.module_codegen()), dump_file );
 		dump_file.close();
 
@@ -72,7 +80,7 @@ struct jit_fixture {
 };
 
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
-	init( "./repo/question/v1a1/preprocessors.ss" );
+	init_g( "./repo/question/v1a1/preprocessors.ss" );
 
 	int(*p)() = NULL;
 	function( p, "main" );
@@ -83,7 +91,7 @@ BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 }
 
 BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
-	init( "./repo/question/v1a1/function.ss" );
+	init_g( "./repo/question/v1a1/function.ss" );
 
 	int(*p)(int) = NULL;
 	function( p, "foo" );
@@ -97,7 +105,7 @@ using eflib::vec3;
 using eflib::int2;
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
-	init("./repo/question/v1a1/intrinsics.ss");
+	init_g("./repo/question/v1a1/intrinsics.ss");
 
 	float (*test_dot_f3)(vec3, vec3) = NULL;
 	function( test_dot_f3, "test_dot_f3" );
@@ -116,6 +124,14 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	//BOOST_REQUIRE(test_dot_i2);
 
 	//BOOST_CHECK_EQUAL( lhsi.x*rhsi.x+lhsi.y*rhsi.y, test_dot_i2(lhsi, rhsi) );
+}
+
+BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
+	init_vs("./repo/question/v1a1/intrinsics.svs");
+
+	void* fn = NULL;
+	function( fn, "fn" );
+	BOOST_REQUIRE( fn );
 }
 
 //BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){
