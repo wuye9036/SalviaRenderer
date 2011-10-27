@@ -271,15 +271,19 @@ public:
 	value_t emit_dot( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_add_ss( value_t const& lhs, value_t const& rhs );
+	value_t emit_add_vv( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_mul_ss( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
 
-	value_t emit_extract_rol( value_t const& lhs );
+	value_t emit_extract_col( value_t const& lhs, size_t index );
 
 	template <typename IndexT>
 	value_t emit_extract_elem( value_t const& vec, IndexT const& idx ){

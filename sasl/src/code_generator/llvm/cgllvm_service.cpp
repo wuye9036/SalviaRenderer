@@ -640,6 +640,35 @@ value_t cg_service::create_value( builtin_types hint, Value* val, value_t::kinds
 
 sasl::code_generator::value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
 {
+	builtin_types lhint = lhs.get_hint();
+	builtin_types rhint = rhs.get_hint();
+
+	if( is_scalar(lhint) ){
+		if( is_scalar(rhint) ){
+			return emit_mul_ss( lhs, rhs );
+		} else if ( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_vector(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(rhint) ){
+			return emit_mul_vm( lhs, rhs );
+		}
+	} else if ( is_matrix(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_vector(rhint) ){
+			return emit_mul_mv( lhs, rhs );
+		} else if( is_matrix(rhint) ){
+			return emit_mul_mm( lhs, rhs );
+		}
+	}
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
@@ -732,6 +761,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 	} else if( is_scalar(agg_hint) ){
 		assert( idx == 0 );
 		elem_val = val;
+		elem_hint = agg_hint;
 	} else if( is_vector(agg_hint) ){
 		switch( lhs.get_abi() ){
 		case abi_c:
@@ -747,7 +777,9 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 		abi = abi_llvm;
 		elem_hint = scalar_of(agg_hint);
 	} else if( is_matrix(agg_hint) ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		elem_val = builder()->CreateExtractValue(val, static_cast<unsigned>(idx));
+		abi = lhs.get_abi();
+		elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
 	}
 
 	return value_t(elem_hint, elem_val, value_t::kind_value, abi, this );
@@ -763,6 +795,7 @@ value_t cg_service::emit_mul_ss( value_t const& lhs, value_t const& rhs )
 {
 	EMIT_OP_SS_BODY(Mul);
 }
+
 
 value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
 {
@@ -828,6 +861,133 @@ value_t cg_service::emit_insert_val( value_t const& lhs, int index, value_t cons
 	}
 
 	
+}
+
+value_t cg_service::emit_mul_mv( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types mhint = lhs.get_hint();
+	builtin_types vhint = rhs.get_hint();
+
+	size_t row_count = vector_count(mhint);
+	size_t vec_size = vector_size(mhint);
+
+	builtin_types ret_hint = vector_of( scalar_of(vhint), row_count );
+
+	value_t ret_v = null_value( ret_hint, lhs.abi );
+	for( size_t irow = 0; irow < row_count; ++irow ){
+		value_t row_vec = emit_extract_val( lhs, irow );
+		ret_v = emit_add_vv( ret_v, emit_mul_vv( row_vec, rhs ) );
+	}
+
+	return ret_v;
+}
+
+value_t cg_service::emit_add_vv( value_t const& lhs, value_t const& rhs ){
+	builtin_types vhint = lhs.get_hint();
+	Value* lvec = lhs.load( abi_llvm );
+	Value* rvec = rhs.load( abi_llvm );
+	Value* sum_vec = NULL;
+	if( is_integer( scalar_of(vhint) ) ){
+		sum_vec = builder()->CreateAdd(lvec, rvec);
+	} else {
+		sum_vec = builder()->CreateFAdd(lvec, rvec);
+	}
+	return value_t( vhint, sum_vec, value_t::kind_value, abi_llvm, this );
+}
+
+value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types lhint = lhs.get_hint();
+	builtin_types rhint = rhs.get_hint();
+
+	size_t out_v = vector_size( lhint );
+	size_t out_r = vector_count( rhint );
+	size_t inner_size = vector_size(rhint);
+
+	builtin_types out_row_hint = vector_of( scalar_of(lhint), out_v );
+	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
+	abis out_abi = lhs.abi;
+
+	vector<value_t> out_cells(out_v*out_r);
+	out_cells.resize( out_v*out_r );
+
+	// Caluclate matrix cells.
+	for( size_t icol = 0; icol < out_v; ++icol){
+		value_t col = emit_extract_col( rhs, icol );
+		for( size_t irow = 0; irow < out_r; ++irow )
+		{
+			value_t row = emit_extract_col( rhs, icol );
+			out_cells[irow*out_v+icol] = emit_dot_vv( col, row );
+		}
+	}
+
+	// Compose cells to matrix
+	value_t ret_value = null_value( out_hint, out_abi );
+	for( size_t irow = 0; irow < out_r; ++irow ){
+		value_t row_vec = null_value( out_row_hint, out_abi );
+		for( size_t icol = 0; icol < out_v; ++icol ){
+			row_vec = emit_insert_val( row_vec, (int)icol, out_cells[irow*out_v+icol] );
+		}
+		ret_value = emit_insert_val( ret_value, (int)irow, row_vec );
+	}
+
+	return ret_value;
+}
+
+value_t cg_service::emit_extract_col( value_t const& lhs, size_t index )
+{
+	value_t val = lhs.to_rvalue();
+	builtin_types mat_hint( lhs.get_hint() );
+	assert( is_matrix(mat_hint) );
+
+	size_t row_count = vector_count( mat_hint );
+	
+	builtin_types out_hint = vector_of( scalar_of(mat_hint), row_count );
+
+	value_t out_value = null_value( out_hint, lhs.abi );
+	for( size_t irow = 0; irow < row_count; ++irow ){
+		value_t row = emit_extract_val( val, (int)irow );
+		value_t cell = emit_extract_val( row, (int)index );
+		out_value = emit_insert_val( out_value, (int)irow, cell );
+	}
+
+	return out_value;
+}
+
+value_t cg_service::emit_mul_vv( value_t const& lhs, value_t const& rhs )
+{
+	Value* lval = lhs.load( abi_llvm );
+	Value* rval = rhs.load( abi_llvm );
+
+	builtin_types elem_hint = scalar_of( lhs.get_hint() );
+	Value* val = NULL;
+	if( is_integer(elem_hint) ){
+		val = builder()->CreateAdd( lval, rval );
+	} else {
+		val = builder()->CreateFAdd( lval, rval );
+	}
+
+	value_t ret( lhs.get_hint(), val, value_t::kind_value, abi_llvm, this );
+	if( lhs.get_abi() == abi_llvm ){
+		return ret;
+	}
+
+	return value_t( lhs.get_hint(), ret.load(abi_c), value_t::kind_value, abi_c, this );
+}
+
+value_t cg_service::emit_mul_vm( value_t const& lhs, value_t const& rhs )
+{
+	size_t out_v = vector_size( rhs.get_hint() );
+
+	value_t lrv = lhs.to_rvalue();
+	value_t rrv = rhs.to_rvalue();
+
+	value_t ret = null_value( vector_of( scalar_of(lhs.get_hint()), out_v ), lhs.get_abi() );
+	for( size_t idx = 0; idx < out_v; ++idx ){
+		ret = emit_insert_val( ret, (int)idx, emit_dot_vv( lrv, emit_extract_col(rrv, idx) ) );
+	}
+
+	return ret;
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){
