@@ -28,7 +28,7 @@ using std::string;
 
 BOOST_AUTO_TEST_SUITE( jit )
 
-string make_command( string const& file_name, string const& options = "--lang=g"){
+string make_command( string const& file_name, string const& options){
 	return "--input=\"" + file_name + "\" " + options;
 }
 
@@ -45,7 +45,7 @@ struct jit_fixture {
 	}
 
 	void init( string const& file_name, string const& options ){
-		c.parse( make_command(file_name) );
+		c.parse( make_command(file_name, options) );
 
 		bool aborted = false;
 		c.process( aborted );

@@ -476,16 +476,13 @@ SASL_VISIT_DEF( variable_declaration ){
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.type_info );
-	
-	EFLIB_ASSERT_UNIMPLEMENTED();
 
-	/*Type const* val_type = sc_data_ptr(&child_ctxt)->val_type;
-	bool as_vector = sc_data_ptr(&child_ctxt)->as_vector;
-	bool is_mat = sc_data_ptr(&child_ctxt)->is_matrix;
+	// bool as_vector = sc_data_ptr(&child_ctxt)->as_vector;
+	// bool is_mat = sc_data_ptr(&child_ctxt)->is_matrix;
 
-	sc_env_ptr(&child_ctxt_init)->declarator_type = val_type;
-	sc_env_ptr(&child_ctxt_init)->is_mat = is_mat;
-	sc_env_ptr(&child_ctxt_init)->as_vec = as_vector;
+	sc_env_ptr(&child_ctxt_init)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
+	// sc_env_ptr(&child_ctxt_init)->is_mat = is_mat;
+	// sc_env_ptr(&child_ctxt_init)->as_vec = as_vector;
 
 	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
 		visit_child( child_ctxt, child_ctxt_init, dclr );
@@ -493,8 +490,8 @@ SASL_VISIT_DEF( variable_declaration ){
 
 	sc_data_ptr(data)->declarator_count = static_cast<int>( v.declarators.size() );
 
-	sc_data_ptr(data)->val_type = val_type;
-	node_ctxt(v, true)->copy( sc_ptr(data) );*/
+	sc_data_ptr(data)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( parameter ){

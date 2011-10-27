@@ -8,7 +8,7 @@ struct VSIN{
 
 struct VSOUT{
 	float4 pos: SV_Position;
-	float n_dot_l;
+	float n_dot_l: Texcoord(0);
 };
 
 VSOUT fn( VSIN in ){
