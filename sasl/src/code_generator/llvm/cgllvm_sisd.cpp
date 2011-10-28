@@ -410,46 +410,25 @@ SASL_VISIT_DEF( struct_type ){
 	// A struct is visited at definition type.
 	// If the visited again, it must be as an alias_type.
 	// So return environment directly.
-	//if( ctxt->data().val_type ){
-	//	sc_ptr(data)->data(ctxt);
-	//	return;
-	//}
+	if( ctxt->data().tyinfo ){
+		sc_ptr(data)->data(ctxt);
+		return;
+	}
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//std::string name = v.symbol()->mangled_name();
+	std::string name = v.symbol()->mangled_name();
 
-	//// Init data.
-	//any child_ctxt_init = *data;
-	//sc_ptr(child_ctxt_init)->clear_data();
-	//sc_env_ptr(&child_ctxt_init)->parent_struct = ctxt;
+	// Init data.
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	sc_env_ptr(&child_ctxt_init)->parent_struct = ctxt;
 
-	//any child_ctxt;
+	any child_ctxt;
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+		visit_child( child_ctxt, child_ctxt_init, decl );
+	}
+	sc_data_ptr(data)->tyinfo = create_tyinfo( v.si_ptr<type_info_si>()->type_info() );
 
-	//// Visit children.
-	//// Add type of child into member types, and calculate index.
-	//vector<Type const*> members;
-	//BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
-	//	visit_child( child_ctxt, child_ctxt_init, decl );
-
-	//	assert(
-	//		sc_data_ptr(&child_ctxt)->declarator_count != 0
-	//		&& sc_data_ptr(&child_ctxt)->val_type != NULL
-	//		);
-
-	//	members.insert(
-	//		members.end(),
-	//		sc_data_ptr(&child_ctxt)->declarator_count,
-	//		sc_data_ptr(&child_ctxt)->val_type
-	//		);
-	//}
-
-	//// Create
-	//StructType* stype = StructType::get( llcontext(), members, true );
-
-	//llmodule()->addTypeName( name.c_str(), stype );
-	//sc_data_ptr(data)->val_type = stype;
-
-	//ctxt->copy( sc_ptr(data) );
+	ctxt->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( declarator ){

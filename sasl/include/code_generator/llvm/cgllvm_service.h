@@ -101,10 +101,11 @@ public:
 	value_t& operator = ( value_t const& );
 
 	enum kinds{
-		kind_unknown,
-		kind_tyinfo_only,
-		kind_value,
+		kind_unknown = 0,
+		kind_tyinfo_only = 1,
+		kind_swizzle = 2,
 
+		kind_value = 4,
 		/// \brief Does treat type as reference if ABI is C compatible.
 		///  
 		/// An important fact is LLVM's ABI is not same as C API.
@@ -120,12 +121,7 @@ public:
 		/// The IR signature will be generated as following:
 		///		def foo( %S* %arg );
 		/// And 'kind' the parameter/argument 'arg' is set to 'kind_ref'.
-		kind_ref,
-
-		kind_local,
-		kind_global,
-		kind_member,
-		kind_swizzle
+		kind_ref = 8
 	};
 
 	enum accessibilities{
@@ -147,6 +143,8 @@ public:
 	llvm::Value* load( abis abi ) const;
 	llvm::Value* load_ref() const;
 
+	void store( value_t const& ) const;
+
 	/// Store llvm value to value_t
 	// llvm::Value* store( value_t const& );
 	void emplace( value_t const& );
@@ -157,6 +155,7 @@ public:
 	bool storable() const;
 	bool load_only() const;
 
+	value_t as_ref() const;
 	/// Get type information of value.
 	value_tyinfo* get_tyinfo() const;
 	/// Get type hint. if type is not built-in type it returns builtin_type::none.
@@ -167,13 +166,14 @@ public:
 	value_t* get_parent() const;
 	/// Get ABI.
 	abis get_abi() const;
+	/// Set Index. It is only make sense if parent is available.
+	void set_index( size_t index );
 	/// @}
 
 	/// @name Operators
 	/// @{
 	value_t swizzle( size_t swz_code ) const;
 	value_t to_rvalue() const;
-
 	/// @}
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
@@ -393,9 +393,10 @@ public:
 
 	/// @name Emit variables
 	/// @{
-	value_t create_variable( value_tyinfo const* );
+	value_t create_variable( value_tyinfo const*, abis abi, std::string const& name );
+	value_t create_variable( builtin_types bt, abis abi, std::string const& name );
+
 	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
-	value_t create_member( value_tyinfo const*, value_t::kinds, size_t idx_or_swz );
 	/// @}
 
 	/// @name Type emitters
@@ -423,6 +424,7 @@ public:
 
 	/// @name Bridges
 	/// @{
+	llvm::Type const* type_( builtin_types bt, abis abi );
 	template <typename T>
 	llvm::ConstantInt* int_(T v);
 	template <typename T>

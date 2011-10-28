@@ -288,44 +288,45 @@ llvm::Value* value_t::load( abis abi ) const{
 }
 
 llvm::Value* value_t::load() const{
-	switch( kind ){
-	case kind_value:
-		return val;
-	case kind_ref:
-		return cg->builder()->CreateLoad( val );
-	case kind_swizzle:
-		{
-			// Decompose indexes.
-			char indexes[4] = {-1, -1, -1, -1};
-			mask_to_indexes(indexes, masks);
-			vector<int> index_values;
-			index_values.reserve(4);
-			for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
-				index_values.push_back( indexes[i] );
-			}
-			assert( !index_values.empty() );
+	Value* ref_val = NULL;
+	assert( kind != kind_unknown && kind != kind_tyinfo_only );
 
-			// Swizzle
-			Value* agg_v = parent->load();
-			Value* ret = NULL;
-
-			if( index_values.size() == 1 ){
-				return cg->emit_extract_val( parent->to_rvalue(), index_values[0] ).load();
-			} else {
-				if( abi == abi_c ){
-					EFLIB_ASSERT_UNIMPLEMENTED();
-					return NULL;
-				} else {
-					Value* mask = cg->vector_( &indexes[0], index_values.size() );
-					return cg->builder()->CreateShuffleVector( agg_v, UndefValue::get( agg_v->getType() ), mask );
-				}
-			}
-
-			return ret;
+	if( kind == kind_ref || kind == kind_value ){
+		ref_val = val;
+	} else if( (kind&(~kind_ref)) == kind_swizzle ){
+		// Decompose indexes.
+		char indexes[4] = {-1, -1, -1, -1};
+		mask_to_indexes(indexes, masks);
+		vector<int> index_values;
+		index_values.reserve(4);
+		for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
+			index_values.push_back( indexes[i] );
 		}
-	default:
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return NULL;
+		assert( !index_values.empty() );
+
+		// Swizzle
+		Value* agg_v = parent->load();
+
+		if( index_values.size() == 1 ){
+			ref_val = cg->emit_extract_val( parent->to_rvalue(), index_values[0] ).load();
+		} else {
+			assert( kind & kind_ref == 0 );
+			if( abi == abi_c ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+				return NULL;
+			} else {
+				Value* mask = cg->vector_( &indexes[0], index_values.size() );
+				return cg->builder()->CreateShuffleVector( agg_v, UndefValue::get( agg_v->getType() ), mask );
+			}
+		}
+	} else {
+		assert(false);
+	}
+
+	if( kind & kind_ref ){
+		return cg->builder()->CreateLoad( ref_val );
+	} else {
+		return ref_val;
 	}
 }
 
@@ -336,8 +337,6 @@ value_t::kinds value_t::get_kind() const{
 bool value_t::storable() const{
 	switch( kind ){
 	case kind_ref:
-	case kind_global:
-	case kind_local:
 		return true;
 	case kind_value:
 	case kind_unknown:
@@ -352,8 +351,6 @@ bool value_t::load_only() const
 {
 	switch( kind ){
 	case kind_ref:
-	case kind_global:
-	case kind_local:
 	case kind_unknown:
 		return false;
 	case kind_value:
@@ -424,6 +421,24 @@ value_t value_t::slice( value_t const& vec, uint32_t masks )
 	return ret;
 }
 
+value_t value_t::as_ref() const
+{
+	value_t ret(*this);
+	ret.kind = (kinds)( kind_ref | ret.kind );
+	return ret;
+}
+
+void value_t::store( value_t const& ) const
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+void value_t::set_index( size_t index )
+{
+	char indexes[4] = { (char)index, -1, -1, -1 };
+	indexes_to_mask( indexes, masks );
+}
+
 /// @}
 
 void cg_service::store( value_t& lhs, value_t const& rhs ){
@@ -431,9 +446,7 @@ void cg_service::store( value_t& lhs, value_t const& rhs ){
 	assert( lhs.storable() );
 	value_t rv = rhs.to_rvalue();
 	switch( lhs.get_kind() ){
-	case value_t::kind_local:
 	case value_t::kind_ref:
-	case value_t::kind_global:
 		builder()->CreateStore( rv.load( lhs.get_abi() ), lhs.raw() );
 		break;
 	case value_t::kind_unknown:
@@ -988,6 +1001,19 @@ value_t cg_service::emit_mul_vm( value_t const& lhs, value_t const& rhs )
 	}
 
 	return ret;
+}
+
+llvm::Type const* cg_service::type_( builtin_types bt, abis abi )
+{
+	assert( abi != abi_unknown );
+	return create_llvm_type( context(), bt, abi == abi_c );
+}
+
+value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
+{
+	Type const* var_ty = type_( bt, abi );
+	Value* var_val = builder()->CreateAlloca( var_ty );
+	return value_t( bt, var_val, value_t::kind_ref, abi, this );
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

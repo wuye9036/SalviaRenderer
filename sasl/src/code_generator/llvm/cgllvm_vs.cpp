@@ -50,13 +50,14 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	vector<storage_info*> sis = abii->storage_infos( st );
 	BOOST_FOREACH( storage_info* si, sis ){
-		bool as_vector(false), is_mat(false);
-		Type const* storage_llvm_type = llvm_type( to_builtin_types(si->value_type), as_vector, is_mat );
-		assert(storage_llvm_type);
+		builtin_types storage_bt = to_builtin_types(si->value_type);
+		entry_param_tys[st].push_back( storage_bt );
+		Type const* storage_ty = type_( storage_bt, abi_c );
+
 		if( sc_stream_in == st || sc_stream_out == st ){
-			entry_params_types[st].push_back( PointerType::getUnqual( storage_llvm_type ) );
+			entry_params_types[st].push_back( PointerType::getUnqual( storage_ty ) );
 		} else {
-			entry_params_types[st].push_back( storage_llvm_type );
+			entry_params_types[st].push_back( storage_ty );
 		}
 	}
 	
@@ -92,21 +93,11 @@ void cgllvm_vs::create_entry_params(){
 	fill_llvm_type_from_si ( sc_stream_out );
 }
 
-void cgllvm_vs::add_entry_param_type( boost::any* data, storage_classifications st, vector<Type const*>& par_types ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+void cgllvm_vs::add_entry_param_type( storage_classifications st, vector<Type const*>& par_types ){
+	StructType* par_type = entry_params_structs[st].data();
+	PointerType* parref_type = PointerType::getUnqual( par_type );
 
-	//StructType* par_type = entry_params_structs[st].data();
-	//PointerType* parref_type = PointerType::getUnqual( par_type );
-
-	//cgllvm_sctxt* ctxt = new cgllvm_sctxt();
-	//ctxt->copy( sc_ptr(data) );
-
-	//ctxt->data().val_type = par_type;
-	//ctxt->data().is_ref = true;
-
-	//param_ctxts[st].reset(ctxt);
-
-	//par_types.push_back(parref_type);
+	par_types.push_back(parref_type);
 }
 
 void cgllvm_vs::copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& v ){
@@ -229,164 +220,129 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//if( !entry_fn && abii->is_entry( v.symbol() ) ){
+	
+	if( !entry_fn && abii->is_entry( v.symbol() ) ){
 
-	//	boost::any child_ctxt;
+		boost::any child_ctxt;
 
-	//	vector<Type const*> param_types;
-	//	add_entry_param_type( &( child_ctxt = *data ), sc_stream_in, param_types );
-	//	add_entry_param_type( &( child_ctxt = *data ), sc_buffer_in, param_types );
-	//	add_entry_param_type( &( child_ctxt = *data ), sc_stream_out, param_types );
-	//	add_entry_param_type( &( child_ctxt = *data ), sc_buffer_out, param_types );
+		vector<Type const*> param_types;
+		add_entry_param_type( sc_stream_in, param_types );
+		add_entry_param_type( sc_buffer_in, param_types );
+		add_entry_param_type( sc_stream_out, param_types );
+		add_entry_param_type( sc_buffer_out, param_types );
 
-	//	FunctionType* fntype = FunctionType::get( Type::getVoidTy(llcontext()), param_types, false );
-	//	Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), llmodule() );
-	//	entry_fn = fn;
-	//	entry_sym = v.symbol().get();
+		FunctionType* fntype = FunctionType::get( Type::getVoidTy(context()), param_types, false );
+		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), module() );
+		entry_fn = fn;
+		entry_sym = v.symbol().get();
 
-	//	sc_data_ptr(data)->val_type = fntype;
-	//	sc_data_ptr(data)->self_fn = fn;
-
-	//} else {
-	//	parent_class::create_fnsig(v, data);
-	//}
+		sc_data_ptr(data)->self_fn.fn = fn;
+		sc_data_ptr(data)->self_fn.fnty = NULL;
+	} else {
+		parent_class::create_fnsig(v, data);
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//Function* fn = sc_data_ptr(data)->self_fn;
-	//sc_env_ptr(data)->parent_fn = fn;
+	Function* fn = sc_data_ptr(data)->self_fn.fn;
 
-	//if( abii->is_entry( v.symbol() ) ){
-	//	// Create entry arguments.
-	//	Function::arg_iterator arg_it = fn->arg_begin();
+	if( abii->is_entry( v.symbol() ) ){
+		// Create entry arguments.
+		Function::arg_iterator arg_it = fn->arg_begin();
 
-	//	cgllvm_sctxt* psctxt = new cgllvm_sctxt();
-	//	param_ctxts[sc_stream_in].reset( psctxt );
-	//	arg_it->setName( ".arg.stri" );
-	//	psctxt->data().val = arg_it++;
-	//	psctxt->data().is_ref = true;
-	//	psctxt->data().val_type = entry_params_structs[sc_stream_in].data();
+		arg_it->setName( ".arg.stri" );
+		param_values[sc_stream_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		++arg_it;
 
-	//	psctxt = new cgllvm_sctxt();
-	//	param_ctxts[sc_buffer_in].reset( psctxt );
-	//	arg_it->setName( ".arg.bufi" );
-	//	psctxt->data().val = arg_it++;
-	//	psctxt->data().is_ref = true;
-	//	psctxt->data().val_type = entry_params_structs[sc_buffer_in].data();
+		arg_it->setName( ".arg.bufi" );
+		param_values[sc_buffer_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		++arg_it;
 
-	//	psctxt = new cgllvm_sctxt();
-	//	param_ctxts[sc_stream_out].reset( psctxt );
-	//	arg_it->setName( ".arg.stro" );
-	//	psctxt->data().val = arg_it++;
-	//	psctxt->data().is_ref = true;
-	//	psctxt->data().val_type = entry_params_structs[sc_stream_out].data();
+		arg_it->setName( ".arg.stro" );
+		param_values[sc_stream_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		++arg_it;
 
-	//	psctxt = new cgllvm_sctxt();
-	//	param_ctxts[sc_buffer_out].reset( psctxt );
-	//	arg_it->setName( ".arg.bufo" );
-	//	psctxt->data().val = arg_it++;
-	//	psctxt->data().is_ref = true;
-	//	psctxt->data().val_type = entry_params_structs[sc_buffer_out].data();
+		arg_it->setName( ".arg.bufo" );
+		param_values[sc_buffer_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		++arg_it;
 
-	//	// Create return type
-	//	psctxt = node_ctxt(v.symbol()->node(), true );
-	//	storage_si* fn_ssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
-	//	if( fn_ssi->get_semantic() != salviar::sv_none ){
-	//		// Return an built-in value.
-	//		storage_info* si = abii->output_storage( fn_ssi->get_semantic() );
-	//		if( si->storage == sc_stream_out ){
-	//			psctxt->data().is_ref = true;
-	//		} else {
-	//			psctxt->data().is_ref = false;
-	//		}
-	//		psctxt->data().agg.index = si->index;
-	//		psctxt->data().agg.parent = param_ctxts[si->storage].get();
-	//	} else {
-	//		// Return an aggregated value.
+		// Create virutal arguments
+		create_virtual_args(v, data);
 
-	//		// Anyway, create return types.
-	//		any child_ctxt_init = *data;
-	//		sc_ptr(&child_ctxt_init)->clear_data();
-	//		any child_ctxt;
-
-	//		visit_child( child_ctxt, child_ctxt_init, v.retval_type );
-	//		psctxt->data().val_type = sc_data_ptr(&child_ctxt)->val_type;
-	//	} 
-
-	//	// Create virutal arguments
-	//	create_virtual_args(v, data);
-
-	//} else {
-	//	parent_class::create_fnargs(v, data);
-	//}
+	} else {
+		parent_class::create_fnargs(v, data);
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	//any child_ctxt_init = *data;
-	//sc_ptr(child_ctxt_init)->clear_data();
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
 
-	//any child_ctxt;
+	any child_ctxt;
 
-	//restart_block( data, ".init.vargs" );
+	new_block( ".init.vargs", true );
 
-	//BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
-	//	visit_child( child_ctxt, child_ctxt_init, par->param_type );
-	//	storage_si* par_ssi = dynamic_cast<storage_si*>( par->semantic_info().get() );
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
+		visit_child( child_ctxt, child_ctxt_init, par->param_type );
+		storage_si* par_ssi = dynamic_cast<storage_si*>( par->semantic_info().get() );
 
-	//	cgllvm_sctxt* tctxt = sc_ptr(child_ctxt);
-	//	cgllvm_sctxt* pctxt = node_ctxt( par, true );
-	//	pctxt->type(tctxt);
+		cgllvm_sctxt* pctxt = node_ctxt( par, true );
+		// Create local variable for 'virtual argument' and 'virtual result'.
+		pctxt->env( sc_ptr(data) );
 
-	//	// Create local variable for 'virtual argument'.
-	//	pctxt->env( sc_ptr(data) );
-	//	create_alloca( pctxt, par->name->str );
+		if( par_ssi->type_info()->is_builtin() ){
+			// Virtual args for built in typed argument.
 
-	//	if( par_ssi->type_info()->is_builtin() ){
-	//		// Virtual args for built in typed argument.
+			// Get Value from semantic.
+			// Store value to local variable.
+			salviar::semantic_value const& par_sem = par_ssi->get_semantic();
+			assert( par_sem != salviar::sv_none );
+			storage_info* psi = abii->input_storage( par_sem );
 
-	//		// Get Value from semantic.
-	//		// Store value to local variable.
-	//		salviar::semantic_value const& par_sem = par_ssi->get_semantic();
-	//		assert( par_sem != salviar::sv_none );
-	//		storage_info* psi = abii->input_storage( par_sem );
-	//		
-	//		cgllvm_sctxt tmpctxt;
-	//		tmpctxt.data().is_ref = (psi->storage == sc_stream_in);
-	//		tmpctxt.data().agg.parent = param_ctxts[psi->storage].get();
-	//		tmpctxt.data().agg.index = psi->index;
+			builtin_types hint = par_ssi->type_info()->tycode;
+			pctxt->get_value() = create_variable( hint, abi_c, par->name->str );
+			pctxt->get_value().store( si_to_value(psi) );
+		} else {
+			// Virtual args for aggregated argument
+			shared_ptr<struct_type> par_type = par_ssi->type_info()->as_handle<struct_type>();
 
-	//		store( load(&tmpctxt), pctxt );
+			BOOST_FOREACH( shared_ptr<declaration> const& decl, par_type->decls ){
 
-	//	} else {
-	//		// Virtual args for aggregated argument
-	//		shared_ptr<struct_type> par_type = par_ssi->type_info()->as_handle<struct_type>();
-	//		BOOST_FOREACH( shared_ptr<declaration> const& decl, par_type->decls ){
-	//			shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
-	//			BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
-	//				storage_si* par_mem_ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
-	//				assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
+				shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
 
-	//				salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
-	//				storage_info* psi = abii->input_storage( sem );
-	//		
-	//				cgllvm_sctxt srcctxt;
-	//				srcctxt.data().is_ref = (psi->storage == sc_stream_in);
-	//				srcctxt.data().agg.parent = param_ctxts[psi->storage].get();
-	//				srcctxt.data().agg.index = psi->index;
+				BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
+					storage_si* par_mem_ssi = declr->si_ptr<storage_si>();
+					assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
 
-	//				cgllvm_sctxt destctxt;
-	//				destctxt.data().is_ref = false;
-	//				destctxt.data().agg.parent = pctxt;
-	//				destctxt.data().agg.index = node_ctxt(*declr)->data().agg.index;
+					salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
+					storage_info* psi = abii->input_storage( sem );
 
-	//				store( load(&srcctxt), &destctxt );
-	//			}
-	//		}
-	//	}
-	//}
+					pctxt->get_value() = si_to_value( psi );
+				}
+			}
+		}
+	}
+	
+	// Update globals
+	BOOST_FOREACH( shared_ptr<symbol> const& gsym, msi->globals() ){
+		storage_si* pssi = gsym->node()->si_ptr<storage_si>();
+
+		// Global is filled by offset value with null parent.
+		// The parent is filled when it is referred.
+		storage_info* psi = NULL;
+		if( pssi->get_semantic() == salviar::sv_none ){
+			psi = abii->input_storage( v.symbol() );
+		} else {
+			psi = abii->input_storage( pssi->get_semantic() );
+		}
+
+		node_ctxt( gsym->node(), true )->get_value() = si_to_value(psi);
+
+		//if (v.init){
+		//	EFLIB_ASSERT_UNIMPLEMENTED();
+		//}
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
@@ -409,36 +365,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//sc_env_ptr(data)->sym = v.symbol();
-
-	//storage_si* pssi = dynamic_cast<storage_si*>( v.semantic_info().get() );
-
-	//// Global is filled by offset value with null parent.
-	//// The parent is filled when it is referred.
-	//storage_info* psi = NULL;
-	//if( pssi->get_semantic() == salviar::sv_none ){
-	//	psi = abii->input_storage( v.symbol() );
-	//} else {
-	//	psi = abii->input_storage( pssi->get_semantic() );
-	//}
-
-	//builtin_types val_bt = to_builtin_types(psi->value_type);
-
-	//llvm_type( val_bt, sc_ptr(data) );
-	//sc_ptr(data)->data().is_signed = is_signed( val_bt );
-	//sc_ptr(data)->data().agg.index = psi->index;
-
-	//if( psi->storage == sc_stream_in || psi->storage == sc_stream_out ){
-	//	sc_ptr(data)->data().is_ref = true;
-	//} else {
-	//	sc_ptr(data)->data().is_ref = false;
-	//}
-
-	//if (v.init){
-	//	EFLIB_ASSERT_UNIMPLEMENTED();
-	//}
-
+	sc_env_ptr(data)->sym = v.symbol();
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
@@ -463,6 +390,18 @@ bool cgllvm_vs::create_mod( sasl::syntax_tree::program& v )
 
 boost::shared_ptr<sasl::semantic::symbol> cgllvm_vs::find_symbol( cgllvm_sctxt* data, std::string const& str ){
 	return data->env().sym.lock()->find( str );
+}
+
+value_t cgllvm_vs::si_to_value( storage_info* si )
+{
+	builtin_types bt = to_builtin_types( si->value_type );
+
+	// TODO need to emit_extract_ref
+	value_t ret = emit_extract_val( param_values[si->storage], si->index );
+	if( si->storage == sc_stream_in || si->storage == sc_stream_out ){
+		return ret.as_ref();
+	}
+	return ret;
 }
 
 END_NS_SASL_CODE_GENERATOR();
