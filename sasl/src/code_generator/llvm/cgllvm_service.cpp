@@ -9,6 +9,7 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Function.h>
+#include <llvm/Module.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -20,8 +21,12 @@
 using sasl::syntax_tree::function_type;
 using sasl::syntax_tree::parameter;
 using sasl::syntax_tree::tynode;
+using sasl::syntax_tree::declaration;
+using sasl::syntax_tree::variable_declaration;
+using sasl::syntax_tree::struct_type;
 
 using sasl::semantic::storage_si;
+using sasl::semantic::type_info_si;
 
 using namespace sasl::utility;
 
@@ -523,6 +528,11 @@ void cg_service::pop_fn(){
 }
 
 shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& tyn ){
+	cgllvm_sctxt* ctxt = node_ctxt(tyn, true);
+	if( ctxt->get_tysp() ){
+		return ctxt->get_tysp();
+	}
+
 	value_tyinfo* ret = new value_tyinfo();
 	ret->sty = tyn.get();
 	ret->cls = value_tyinfo::unknown_type;
@@ -533,10 +543,40 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 		ret->cls = value_tyinfo::builtin;
 	} else {
 		ret->cls = value_tyinfo::aggregated;
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		
+		if( tyn->is_struct() ){
+			shared_ptr<struct_type> struct_tyn = tyn->as_handle<struct_type>();
+
+			vector<Type const*> c_member_types;
+			vector<Type const*> llvm_member_types;
+			
+			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_tyn->decls){
+				
+				if( decl->node_class() == node_ids::variable_declaration ){
+					shared_ptr<variable_declaration> decl_tyn = decl->as_handle<variable_declaration>();
+					shared_ptr<value_tyinfo> decl_tyinfo = create_tyinfo( decl_tyn->type_info->si_ptr<type_info_si>()->type_info() );
+					size_t declarator_count = decl_tyn->declarators.size();
+					// c_member_types.insert( c_member_types.end(), (Type const*)NULL );
+					c_member_types.insert( c_member_types.begin(), declarator_count, decl_tyinfo->llvm_ty(abi_c) );
+					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_tyinfo->llvm_ty(abi_llvm) );
+				}
+			}
+
+			StructType* ty_c = StructType::get( context(), c_member_types, true );
+			StructType* ty_llvm = StructType::get( context(), c_member_types, false );
+
+			ret->llvm_tys[abi_c] = ty_c;
+			ret->llvm_tys[abi_llvm] = ty_llvm;
+
+			module()->addTypeName( struct_tyn->name->str + ".abi.c", ty_c );
+			module()->addTypeName( struct_tyn->name->str + ".abi.llvm", ty_llvm );
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 
-	return shared_ptr<value_tyinfo>(ret);
+	ctxt->data().tyinfo = shared_ptr<value_tyinfo>(ret);
+	return ctxt->data().tyinfo;
 }
 
 function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node ){
@@ -769,8 +809,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 	builtin_types elem_hint = builtin_types::none;
 
 	if( agg_hint == builtin_types::none ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return value_t();
+		elem_val = builder()->CreateExtractValue(val, static_cast<unsigned>(idx));
 	} else if( is_scalar(agg_hint) ){
 		assert( idx == 0 );
 		elem_val = val;
@@ -1014,6 +1053,12 @@ value_t cg_service::create_variable( builtin_types bt, abis abi, std::string con
 	Type const* var_ty = type_( bt, abi );
 	Value* var_val = builder()->CreateAlloca( var_ty );
 	return value_t( bt, var_val, value_t::kind_ref, abi, this );
+}
+
+value_t cg_service::create_variable( value_tyinfo const*, abis abi, std::string const& name )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

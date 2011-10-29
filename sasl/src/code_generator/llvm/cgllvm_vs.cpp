@@ -19,6 +19,7 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -42,8 +43,13 @@ using namespace llvm;
 using namespace sasl::utility;
 
 using boost::any;
+using boost::bind;
 using boost::shared_ptr;
 using std::vector;
+
+#define FUNCTION_SCOPE( fn ) \
+	push_fn( (fn) );	\
+	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cg_service::pop_fn, this ) );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -275,11 +281,12 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
 	any child_ctxt_init = *data;
 	sc_ptr(child_ctxt_init)->clear_data();
 
 	any child_ctxt;
+
+	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
 
 	new_block( ".init.vargs", true );
 
@@ -332,7 +339,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 		// The parent is filled when it is referred.
 		storage_info* psi = NULL;
 		if( pssi->get_semantic() == salviar::sv_none ){
-			psi = abii->input_storage( v.symbol() );
+			psi = abii->input_storage( gsym );
 		} else {
 			psi = abii->input_storage( pssi->get_semantic() );
 		}

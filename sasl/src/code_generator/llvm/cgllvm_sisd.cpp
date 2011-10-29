@@ -194,46 +194,6 @@ SASL_VISIT_DEF( binary_expression ){
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
-
-			//if (v.op == operators::add){
-			//	if( is_real(lbtc) ){
-			//		retval = mod_ptr()->builder()->CreateFAdd( lval, rval, "" );
-			//	} else if( is_integer(lbtc) ){
-			//		retval = mod_ptr()->builder()->CreateAdd( lval, rval, "" );
-			//	}
-			//} else if ( v.op == operators::sub ){
-			//	if( is_real(lbtc) ){
-			//		retval = mod_ptr()->builder()->CreateFSub( lval, rval, "" );
-			//	} else if( is_integer(lbtc) ){
-			//		retval = mod_ptr()->builder()->CreateSub( lval, rval, "" );
-			//	}
-			//} else if ( v.op == operators::mul ){
-			//	if( is_real(lbtc) ){
-			//		retval = mod_ptr()->builder()->CreateFMul( lval, rval, "" );
-			//	} else if( is_integer(lbtc) ){
-			//		retval = mod_ptr()->builder()->CreateMul( lval, rval, "" );
-			//	}
-			//} else if ( v.op == operators::div ){
-			//	if( is_real(lbtc) ){
-			//		retval = mod_ptr()->builder()->CreateFDiv( lval, rval, "" );
-			//	} else if( is_integer(lbtc) ){
-			//		// TODO support signed integer yet.
-			//		retval = mod_ptr()->builder()->CreateSDiv( lval, rval, "" );
-			//	}
-			//} else if ( v.op == operators::less ){
-			//	if(is_real(lbtc)){
-			//		retval = mod_ptr()->builder()->CreateFCmpULT( lval, rval );
-			//	} else if ( is_integer(lbtc) ){
-			//		if( is_signed(lbtc) ){
-			//			retval = mod_ptr()->builder()->CreateICmpSLT(lval, rval);
-			//		}
-			//		if( is_unsigned(lbtc) ){
-			//			retval = mod_ptr()->builder()->CreateICmpULT(lval, rval);
-			//		}
-			//	}
-			//} else {
-			//	EFLIB_INTERRUPT( (boost::format("Operator %s is not supported yet.") % v.op.name() ).str().c_str() );
-			//}
 		}
 
 		store( sc_ptr(data)->get_value(), retval );
@@ -623,19 +583,16 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
-	// Type const* lltype = sc_env_ptr(data)->declarator_type;
-	// assert(lltype);
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	
+	shared_ptr<value_tyinfo> decl_ty = sc_env_ptr(data)->tyinfo;
+	assert(decl_ty);
 
 	// Needn't process init expression now.
-	//storage_si* si = dynamic_cast<storage_si*>( v.semantic_info().get() );
-	//sc_data_ptr(data)->agg.index = si->mem_index();
-	//sc_data_ptr(data)->val_type = lltype;
-	//sc_data_ptr(data)->is_matrix = sc_env_ptr(data)->is_mat;
-	//sc_data_ptr(data)->as_vector = sc_env_ptr(data)->as_vec;
+	storage_si* si = v.si_ptr<storage_si>();
+	sc_data_ptr(data)->tyinfo = decl_ty;
+	sc_data_ptr(data)->val = create_value(decl_ty.get(), NULL, value_t::kind_swizzle, abi_unknown );
 
-	//node_ctxt(v, true)->copy( sc_ptr(data) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
@@ -648,21 +605,16 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
 
 	any child_ctxt;
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	sc_data_ptr(data)->tyinfo = sc_env_ptr(data)->tyinfo;
+	sc_data_ptr(data)->val = create_variable( sc_data_ptr(data)->tyinfo.get(), v.si_ptr<storage_si>()->c_compatible() ? abi_c : abi_llvm, v.name->str );
 
-	//sc_data_ptr(data)->val_type = sc_env_ptr(data)->declarator_type;
-	//sc_data_ptr(data)->as_vector = sc_env_ptr(data)->as_vec;
-	//sc_data_ptr(data)->is_matrix = sc_env_ptr(data)->is_mat;
+	if ( v.init ){
+		sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.as_handle();
+		visit_child( child_ctxt, child_ctxt_init, v.init );
+		sc_data_ptr(data)->val.store( sc_ptr(&child_ctxt)->get_value() );
+	}
 
-	//create_alloca( sc_ptr(data), v.name->str );
-
-	//if ( v.init ){
-	//	sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.handle();
-	//	visit_child( child_ctxt, child_ctxt_init, v.init );
-	//	store( load(&child_ctxt), data );
-	//}
-
-	//node_ctxt(v, true)->copy( sc_ptr(data) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 /* Make binary assignment code.
