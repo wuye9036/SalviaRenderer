@@ -444,6 +444,11 @@ void value_t::set_index( size_t index )
 	indexes_to_mask( indexes, masks );
 }
 
+void value_t::set_hint( builtin_types bt )
+{
+	hint = bt;
+}
+
 /// @}
 
 void cg_service::store( value_t& lhs, value_t const& rhs ){
@@ -806,10 +811,14 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 	Value* val = lhs.load();
 	Value* elem_val = NULL;
 	abis abi = abi_unknown;
+
 	builtin_types elem_hint = builtin_types::none;
+	value_tyinfo* elem_tyi = NULL;
 
 	if( agg_hint == builtin_types::none ){
 		elem_val = builder()->CreateExtractValue(val, static_cast<unsigned>(idx));
+		abi = lhs.get_abi();
+		elem_tyi = member_tyinfo( lhs.get_tyinfo(), (size_t)idx );
 	} else if( is_scalar(agg_hint) ){
 		assert( idx == 0 );
 		elem_val = val;
@@ -834,7 +843,14 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 		elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
 	}
 
-	return value_t(elem_hint, elem_val, value_t::kind_value, abi, this );
+	// assert( elem_tyi || elem_hint != builtin_types::none );
+
+	if( elem_tyi ){
+		return value_t(elem_tyi, elem_val, value_t::kind_value, abi, this );
+	} else {
+		return value_t(elem_hint, elem_val, value_t::kind_value, abi, this );
+	}
+	
 }
 
 value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
@@ -1048,6 +1064,12 @@ llvm::Type const* cg_service::type_( builtin_types bt, abis abi )
 	return create_llvm_type( context(), bt, abi == abi_c );
 }
 
+Type const* cg_service::type_( value_tyinfo const* ty, abis abi )
+{
+	assert( ty->llvm_ty(abi) );
+	return ty->llvm_ty(abi);
+}
+
 value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type const* var_ty = type_( bt, abi );
@@ -1055,10 +1077,37 @@ value_t cg_service::create_variable( builtin_types bt, abis abi, std::string con
 	return value_t( bt, var_val, value_t::kind_ref, abi, this );
 }
 
-value_t cg_service::create_variable( value_tyinfo const*, abis abi, std::string const& name )
+value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	Type const* var_ty = type_(ty, abi);
+	Value* var_val = builder()->CreateAlloca( var_ty );
+	return value_t( const_cast<value_tyinfo*>(ty), var_val, value_t::kind_ref, abi, this );
+}
+
+value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index ) const
+{
+	if( !agg ){
+		return NULL;
+	} else if ( agg->typtr()->is_struct() ){
+		shared_ptr<struct_type> struct_sty = agg->typtr()->as_handle<struct_type>();
+		
+		size_t var_index = 0;
+		BOOST_FOREACH( shared_ptr<declaration> const& child, struct_sty->decls ){
+			if( child->node_class() == node_ids::variable_declaration ){
+				shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
+				var_index += vardecl->declarators.size();
+				if( index <= var_index ){
+					return const_cast<cg_service*>(this)->node_ctxt( vardecl, false )->get_typtr();
+				}
+			}
+		}
+
+		assert(!"Out of struct bound.");
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return NULL;
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

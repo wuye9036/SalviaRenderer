@@ -124,11 +124,6 @@ public:
 		kind_ref = 8
 	};
 
-	enum accessibilities{
-		loadable,
-		load_store
-	} accesibility;
-
 	/// @name State queriers 
 	/// @{
 
@@ -160,6 +155,8 @@ public:
 	value_tyinfo* get_tyinfo() const;
 	/// Get type hint. if type is not built-in type it returns builtin_type::none.
 	builtin_types get_hint() const;
+	/// Set type hint.
+	void set_hint( builtin_types bt );
 	/// Get kind.
 	kinds get_kind() const;
 	/// Get parent. If value is not a member of aggragation, it return NULL.
@@ -413,6 +410,8 @@ public:
 	/// Clean empty blocks of current function.
 	virtual void clean_empty_blocks(); 
 	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;
+	/// Get member type information is type is aggrated.
+	value_tyinfo* member_tyinfo( value_tyinfo const* agg, size_t index ) const;
 	/// @}
 
 	/// @name Fundamentals
@@ -425,6 +424,7 @@ public:
 	/// @name Bridges
 	/// @{
 	llvm::Type const* type_( builtin_types bt, abis abi );
+	llvm::Type const* type_( value_tyinfo const*, abis abi );
 	template <typename T>
 	llvm::ConstantInt* int_(T v);
 	template <typename T>

@@ -236,8 +236,7 @@ SASL_VISIT_DEF( member_expression ){
 		sc_ptr(data)->data( mem_ctxt );
 	}
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	// sc_data_ptr(data)->get_value().set_parent( &( agg_ctxt->get_value() ) )
+	sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }

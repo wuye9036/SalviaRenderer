@@ -166,30 +166,27 @@ SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 
 SASL_VISIT_DEF( variable_expression ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
 	// TODO Referenced symbol must be evaluated in semantic analysis stages.
-	//shared_ptr<symbol> sym = find_symbol( sc_ptr(data), v.var_name->str );
-	//assert(sym);
-	//
-	//// var_si is not null if sym is global value( sv_none is available )
-	//storage_info* var_si = abii->input_storage( sym );
+	shared_ptr<symbol> sym = find_symbol( sc_ptr(data), v.var_name->str );
+	assert(sym);
+	
+	// var_si is not null if sym is global value( sv_none is available )
+	storage_info* var_si = abii->input_storage( sym );
 
-	//if( var_si ){
-	//	// TODO global only avaliable in entry function.
-	//	assert( is_entry( sc_env_ptr(data)->parent_fn ) );
+	if( var_si ){
+		// TODO global only avaliable in entry function.
+		assert( is_entry( fn().fn ) );
 
-	//	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
+		cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
+		sc_ptr(data)->get_value() = varctxt->get_value();
+		sc_ptr(data)->get_value().set_parent( param_values[var_si->storage] );
+		
+		node_ctxt(v, true)->copy( sc_ptr(data) );
+		return;
+	}
 
-	//	sc_ptr(data)->storage_and_type( varctxt );
-	//	sc_data_ptr(data)->agg.parent = param_ctxts[var_si->storage].get();
-
-	//	node_ctxt(v, true)->copy( sc_ptr(data) );
-
-	//	return;
-	//}
-
-	//// Argument("virtual args") or local variable or in non-entry
-	//parent_class::visit( v, data );
+	// Argument("virtual args") or local variable or in non-entry
+	parent_class::visit( v, data );
 }
 
 SASL_VISIT_DEF_UNIMPL( identifier );
@@ -405,6 +402,7 @@ value_t cgllvm_vs::si_to_value( storage_info* si )
 
 	// TODO need to emit_extract_ref
 	value_t ret = emit_extract_val( param_values[si->storage], si->index );
+	ret.set_hint( to_builtin_types( si->value_type ) );
 	if( si->storage == sc_stream_in || si->storage == sc_stream_out ){
 		return ret.as_ref();
 	}
