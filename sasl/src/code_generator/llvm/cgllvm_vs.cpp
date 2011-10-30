@@ -165,22 +165,62 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 
+SASL_VISIT_DEF( member_expression ){
+	any child_ctxt = *data;
+	sc_ptr(child_ctxt)->clear_data();
+	visit_child( child_ctxt, v.expr );
+	cgllvm_sctxt* agg_ctxt = node_ctxt( v.expr );
+	assert( agg_ctxt );
+	
+	// Aggregated value
+	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
+
+	value_t::kinds k = value_t::kind_unknown;
+	if( tisi->type_info()->is_builtin() ){
+		// Swizzle or write mask
+		storage_si* mem_ssi = v.si_ptr<storage_si>();
+		value_t vec_value = agg_ctxt->get_value();
+		// mem_ctxt->get_value() = create_extract_elem();
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		// Member
+		shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
+		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
+		assert( mem_sym );
+
+		storage_si* par_mem_ssi = mem_sym->node()->si_ptr<storage_si>();
+		assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
+
+		salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
+		storage_info* psi = abii->input_storage( sem );
+
+		sc_ptr(data)->get_value() = si_to_value( psi );
+
+		// If it is not semantic mode, use general code
+		if( !agg_ctxt->data().semantic_mode ){
+			cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
+			assert( mem_ctxt );
+			sc_ptr(data)->get_value() = mem_ctxt->get_value();
+			sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
+		}
+	}
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( variable_expression ){
-	// TODO Referenced symbol must be evaluated in semantic analysis stages.
+	// T ODO Referenced symbol must be evaluated in semantic analysis stages.
 	shared_ptr<symbol> sym = find_symbol( sc_ptr(data), v.var_name->str );
 	assert(sym);
 	
 	// var_si is not null if sym is global value( sv_none is available )
 	storage_info* var_si = abii->input_storage( sym );
 
+	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
 	if( var_si ){
 		// TODO global only avaliable in entry function.
 		assert( is_entry( fn().fn ) );
-
-		cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
 		sc_ptr(data)->get_value() = varctxt->get_value();
-		sc_ptr(data)->get_value().set_parent( param_values[var_si->storage] );
-		
 		node_ctxt(v, true)->copy( sc_ptr(data) );
 		return;
 	}
@@ -309,22 +349,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			pctxt->get_value().store( si_to_value(psi) );
 		} else {
 			// Virtual args for aggregated argument
-			shared_ptr<struct_type> par_type = par_ssi->type_info()->as_handle<struct_type>();
-
-			BOOST_FOREACH( shared_ptr<declaration> const& decl, par_type->decls ){
-
-				shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
-
-				BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
-					storage_si* par_mem_ssi = declr->si_ptr<storage_si>();
-					assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
-
-					salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
-					storage_info* psi = abii->input_storage( sem );
-
-					pctxt->get_value() = si_to_value( psi );
-				}
-			}
+			pctxt->data().semantic_mode = true;
 		}
 	}
 	

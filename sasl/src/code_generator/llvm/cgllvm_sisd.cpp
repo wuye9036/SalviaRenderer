@@ -205,38 +205,30 @@ SASL_VISIT_DEF( member_expression ){
 
 	any child_ctxt = *data;
 	sc_ptr(child_ctxt)->clear_data();
-
 	visit_child( child_ctxt, v.expr );
 
 	cgllvm_sctxt* agg_ctxt = node_ctxt( v.expr );
-	cgllvm_sctxt* mem_ctxt = NULL;
-
 	assert( agg_ctxt );
 
 	// Aggregated value
 	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
 
-	value_t::kinds k = value_t::kind_unknown;
 	if( tisi->type_info()->is_builtin() ){
 		// Swizzle or write mask
 		storage_si* mem_ssi = v.si_ptr<storage_si>();
-
-		value_t vec_value = agg_ctxt->get_rvalue();
-		store(
-			sc_ptr(data)->get_value(),
-			vec_value.swizzle( mem_ssi->swizzle() )
-			);
+		value_t vec_value = agg_ctxt->get_value();
+		// mem_ctxt->get_value() = create_extract_elem();
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	} else {
 		// Member
 		shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
 		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
 
 		assert( mem_sym );
-		mem_ctxt = node_ctxt( mem_sym->node(), true );
-		sc_ptr(data)->data( mem_ctxt );
+		cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
+		sc_ptr(data)->get_value() = mem_ctxt->get_value();
+		sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
 	}
-
-	sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -315,6 +307,7 @@ SASL_VISIT_DEF( variable_expression ){
 
 	sc_ptr(data)->get_value() = node_ctxt( declsym->node(), false )->get_value();
 	sc_ptr(data)->get_tysp() = node_ctxt( declsym->node(), false )->get_tysp();
+	sc_ptr(data)->data().semantic_mode = node_ctxt( declsym->node(), false )->data().semantic_mode;
 
 	// sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -621,28 +614,27 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
 */
 SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
+	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
-	//shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
-	//shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
+	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		/*if( typeconv->implicit_convertible( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
+			typeconv->convert( rarg_tsi->type_info(), v.left_expr );
+		} else {
+			assert( !"Expression could not converted to storage type." );
+		}*/
+	}
 
-	//if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
-	//	if( typeconv->implicit_convertible( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
-	//		typeconv->convert( rarg_tsi->type_info(), v.left_expr );
-	//	} else {
-	//		assert( !"Expression could not converted to storage type." );
-	//	}
-	//}
+	// Evaluated by visit(binary_expression)
+	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
+	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
 
-	//// Evaluated by visit(binary_expression)
-	//cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
-	//cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
+	rctxt->get_value().store( lctxt->get_value() );
 
-	//store( load(lctxt), rctxt );
-
-	//cgllvm_sctxt* pctxt = node_ctxt(v, true);
-	//pctxt->data( rctxt->data() );
-	//pctxt->env( sc_ptr(data) );
+	cgllvm_sctxt* pctxt = node_ctxt(v, true);
+	pctxt->data( rctxt->data() );
+	pctxt->env( sc_ptr(data) );
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

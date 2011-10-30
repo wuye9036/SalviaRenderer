@@ -39,6 +39,7 @@ public:
 	cgllvm_vs();
 
 	// expressions
+	SASL_VISIT_DCL( member_expression );
 	SASL_VISIT_DCL( unary_expression );
 	SASL_VISIT_DCL( cast_expression );
 	SASL_VISIT_DCL( expression_list );

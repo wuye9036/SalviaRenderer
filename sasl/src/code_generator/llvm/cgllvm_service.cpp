@@ -282,9 +282,21 @@ llvm::Value* value_t::load( abis abi ) const{
 
 			return ret_value.load();
 		} else if( is_matrix( get_hint() ) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			value_t ret_value = cg->null_value( get_hint(), abi );
+			size_t vec_count = vector_count( get_hint() );
+			for( size_t i = 0; i < vec_count; ++i ){
+				value_t org_vec = cg->emit_extract_val( *this, (int)i );
+				ret_value = cg->emit_insert_val( ret_value, (int)i, org_vec );
+			}
+			
+			return ret_value.load();
 		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			// NOTE: We assume that, if tyinfo is null and hint is none, it is only the entry of vs/ps. Otherwise, tyinfo must be not NULL.
+			if( !tyinfo && hint == builtin_types::none ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} else {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
 		}
 		return NULL;
 	} else {
@@ -429,7 +441,16 @@ value_t value_t::slice( value_t const& vec, uint32_t masks )
 value_t value_t::as_ref() const
 {
 	value_t ret(*this);
-	ret.kind = (kinds)( kind_ref | ret.kind );
+	
+	switch( ret.kind ){
+	case kind_value:
+		ret.kind = kind_ref;
+		break;
+	case kind_swizzle:
+		ret.kind = (kinds)( kind_swizzle | kind_ref );
+		break;
+	}
+
 	return ret;
 }
 
@@ -915,7 +936,7 @@ value_t cg_service::emit_insert_val( value_t const& lhs, int index, value_t cons
 	Value* agg = lhs.load();
 	Value* new_value = NULL;
 	if( agg->getType()->isStructTy() ){
-		new_value = builder()->CreateInsertValue( agg, elem_value.load(), (unsigned)index );
+		new_value = builder()->CreateInsertValue( agg, elem_value.load(lhs.get_abi()), (unsigned)index );
 	} else if ( agg->getType()->isVectorTy() ){
 		value_t index_value( builtin_types::_sint32, int_(index), value_t::kind_value, abi_llvm, this );
 		return emit_insert_val( lhs, index_value, elem_value );
@@ -1164,7 +1185,6 @@ bool function_t::arg_is_ref( size_t index ) const{
 	builtin_types hint = fnty->params[index]->si_ptr<storage_si>()->type_info()->tycode;
 	return c_compatible && !is_scalar(hint);
 }
-
 
 insert_point_t::insert_point_t(): block(NULL)
 {

@@ -77,7 +77,8 @@ struct cgllvm_sctxt_data{
 	function_t self_fn;
 	/// Value attached to node.
 	value_t val;
-
+	/// Expression is a semantic mode. In this mode, the memory get from semantic but not
+	bool semantic_mode;
 	/// Type attached to node.
 	boost::shared_ptr<value_tyinfo>	tyinfo;
 

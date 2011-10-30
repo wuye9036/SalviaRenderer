@@ -6,7 +6,7 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 cgllvm_sctxt_data::cgllvm_sctxt_data()
-: declarator_count(0)
+: declarator_count(0), semantic_mode(false)
 {
 }
 
