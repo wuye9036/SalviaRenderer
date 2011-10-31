@@ -107,17 +107,11 @@ void cgllvm_vs::add_entry_param_type( storage_classifications st, vector<Type co
 }
 
 void cgllvm_vs::copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& v ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
 
 	//cgllvm_sctxt* expr_ctxt = node_ctxt(v);
 	//cgllvm_sctxt* ret_ctxt = node_ctxt( entry_sym->node(), false );
 
-	//if( !ret_ctxt->data().val_type->isStructTy() ){
-	//	store( load(expr_ctxt), ret_ctxt );
-	//} else {
-	//	// OK, It's return the fucking aggragated value.
-	//	copy_to_agg_result( expr_ctxt );
-	//}
+	//if( fn()->fn )
 }
 
 void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
@@ -281,7 +275,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		entry_sym = v.symbol().get();
 
 		sc_data_ptr(data)->self_fn.fn = fn;
-		sc_data_ptr(data)->self_fn.fnty = NULL;
+		sc_data_ptr(data)->self_fn.fnty = &v;
 	} else {
 		parent_class::create_fnsig(v, data);
 	}
@@ -376,22 +370,44 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//assert( sc_env_ptr(data)->parent_fn );
-	//if( is_entry( sc_env_ptr(data)->parent_fn ) ){
 
-	//	any child_ctxt_init = *data;
-	//	sc_ptr(child_ctxt_init)->clear_data();
-	//	any child_ctxt;
+	if( is_entry( fn().fn ) ){
+		any child_ctxt_init = *data;
+		sc_ptr(child_ctxt_init)->clear_data();
+		any child_ctxt;
 
-	//	visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
+		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
 
-	//	copy_to_result( v.jump_expr );
+		// Copy result.
+		value_t ret_value = node_ctxt( v.jump_expr )->get_value();
 
-	//	sc_data_ptr(data)->return_inst = builder()->CreateRetVoid();
-	//} else {
-	//	parent_class::return_statement(v, data);
-	//}
+		if( ret_value.get_hint() != builtin_types::none ){
+			storage_si* ret_ssi = fn().fnty->si_ptr<storage_si>();
+			storage_info* ret_si = abii->input_storage( ret_ssi->get_semantic() );
+			assert( ret_si );
+			si_to_value(ret_si).store( ret_value );
+		} else {
+			shared_ptr<struct_type> ret_struct = fn().fnty->retval_type->as_handle<struct_type>();
+			size_t member_index = 0;
+			BOOST_FOREACH( shared_ptr<declaration> const& child, ret_struct->decls ){
+				if( child->node_class() == node_ids::variable_declaration ){
+					shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
+					BOOST_FOREACH( shared_ptr<declarator> const& decl, vardecl->declarators ){
+						storage_si* decl_ssi = decl->si_ptr<storage_si>();
+						storage_info* decl_si = abii->output_storage( decl_ssi->get_semantic() );
+						assert( decl_si );
+						si_to_value(decl_si).store( emit_extract_val(ret_value, (int)member_index) );
+						++member_index;
+					}
+				}
+			}
+		}
+		
+		// Emit entry return.
+		emit_return();
+	} else {
+		parent_class::return_statement(v, data);
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
@@ -427,11 +443,15 @@ value_t cgllvm_vs::si_to_value( storage_info* si )
 	builtin_types bt = to_builtin_types( si->value_type );
 
 	// TODO need to emit_extract_ref
-	value_t ret = emit_extract_val( param_values[si->storage], si->index );
-	ret.set_hint( to_builtin_types( si->value_type ) );
+	value_t ret;
 	if( si->storage == sc_stream_in || si->storage == sc_stream_out ){
-		return ret.as_ref();
+		ret = emit_extract_val( param_values[si->storage], si->index );
+		ret = ret.as_ref();
+	} else {
+		ret = emit_extract_ref( param_values[si->storage], si->index );
 	}
+	ret.set_hint( to_builtin_types( si->value_type ) );
+
 	return ret;
 }
 

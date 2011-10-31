@@ -1152,7 +1152,7 @@ value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index )
 			if( child->node_class() == node_ids::variable_declaration ){
 				shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
 				var_index += vardecl->declarators.size();
-				if( index <= var_index ){
+				if( index < var_index ){
 					return const_cast<cg_service*>(this)->node_ctxt( vardecl, false )->get_typtr();
 				}
 			}
