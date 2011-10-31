@@ -325,8 +325,10 @@ llvm::Value* value_t::load() const{
 		Value* agg_v = parent->load();
 
 		if( index_values.size() == 1 ){
+			// Only one member we could extract reference.
 			ref_val = cg->emit_extract_val( parent->to_rvalue(), index_values[0] ).load();
 		} else {
+			// Multi-members must be swizzle/writemask.
 			assert( kind & kind_ref == 0 );
 			if( abi == abi_c ){
 				EFLIB_ASSERT_UNIMPLEMENTED();
@@ -391,7 +393,16 @@ void value_t::emplace( value_t const& v )
 
 llvm::Value* value_t::load_ref() const
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	if( kind == kind_ref ){
+		return val;
+	} else if( kind == (kind_swizzle|kind_ref) ){
+		value_t non_ref( *this );
+		non_ref.kind = kind_swizzle;
+		return non_ref.load();
+	} if( kind == kind_swizzle ){
+		assert( masks );
+		return cg->emit_extract_elem_mask( *parent, masks ).load_ref();
+	}
 	return NULL;
 }
 
@@ -454,9 +465,23 @@ value_t value_t::as_ref() const
 	return ret;
 }
 
-void value_t::store( value_t const& ) const
+void value_t::store( value_t const& v ) const
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	Value* src = v.load( abi );
+	Value* address = NULL;
+
+	if( kind == kind_ref ){	
+		address = val;
+	} else if ( kind == kind_swizzle ){
+		if( is_vector(parent->get_hint()) ){
+			assert( parent->storable() );
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else {
+			address = load_ref();
+		}
+	}
+
+	cg->builder()->CreateStore( src, address );
 }
 
 void value_t::set_index( size_t index )
@@ -468,6 +493,11 @@ void value_t::set_index( size_t index )
 void value_t::set_hint( builtin_types bt )
 {
 	hint = bt;
+}
+
+void value_t::set_abi( abis abi )
+{
+	this->abi = abi;
 }
 
 /// @}
@@ -583,13 +613,13 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 					shared_ptr<value_tyinfo> decl_tyinfo = create_tyinfo( decl_tyn->type_info->si_ptr<type_info_si>()->type_info() );
 					size_t declarator_count = decl_tyn->declarators.size();
 					// c_member_types.insert( c_member_types.end(), (Type const*)NULL );
-					c_member_types.insert( c_member_types.begin(), declarator_count, decl_tyinfo->llvm_ty(abi_c) );
+					c_member_types.insert( c_member_types.end(), declarator_count, decl_tyinfo->llvm_ty(abi_c) );
 					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_tyinfo->llvm_ty(abi_llvm) );
 				}
 			}
 
 			StructType* ty_c = StructType::get( context(), c_member_types, true );
-			StructType* ty_llvm = StructType::get( context(), c_member_types, false );
+			StructType* ty_llvm = StructType::get( context(), llvm_member_types, false );
 
 			ret->llvm_tys[abi_c] = ty_c;
 			ret->llvm_tys[abi_llvm] = ty_llvm;
@@ -812,11 +842,16 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 		return value_t::slice( lhs, mask );
 	} else if( is_matrix(agg_hint) ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
+		return value_t();
 	} else if ( agg_hint == builtin_types::none ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		Value* agg_address = lhs.load_ref();
+		Value* elem_address = builder()->CreateStructGEP( agg_address, (unsigned)idx );
+		value_tyinfo* tyinfo = NULL;
+		if( lhs.get_tyinfo() ){
+			tyinfo = member_tyinfo( lhs.get_tyinfo(), (size_t)idx );
+		}
+		return value_t( tyinfo, elem_address, value_t::kind_ref, lhs.get_abi(), this );
 	}
-	
-	return value_t();
 }
 
 value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
@@ -1129,6 +1164,19 @@ value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index )
 	}
 
 	return NULL;
+}
+
+value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
+{
+	char indexes[4] = {-1, -1, -1, -1};
+	mask_to_indexes( indexes, mask );
+	assert( indexes[0] != -1 );
+	if( indexes[1] == -1 ){
+		return emit_extract_elem( vec, indexes[0] );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return value_t();
+	}
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

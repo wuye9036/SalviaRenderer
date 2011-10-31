@@ -163,6 +163,8 @@ public:
 	value_t* get_parent() const;
 	/// Get ABI.
 	abis get_abi() const;
+	/// Set ABI
+	void set_abi( abis abi );
 	/// Set Index. It is only make sense if parent is available.
 	void set_index( size_t index );
 	/// @}
@@ -290,6 +292,9 @@ public:
 			return emit_extract_val( vec, idx );
 		}
 	}
+
+	/// Didn't support swizzle yet.
+	value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
 
 	value_t emit_extract_ref( value_t const& lhs, int idx );
 	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );

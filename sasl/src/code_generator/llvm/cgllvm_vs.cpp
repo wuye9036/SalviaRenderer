@@ -188,20 +188,21 @@ SASL_VISIT_DEF( member_expression ){
 		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
 		assert( mem_sym );
 
-		storage_si* par_mem_ssi = mem_sym->node()->si_ptr<storage_si>();
-		assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
+		if( agg_ctxt->data().semantic_mode ){
+			storage_si* par_mem_ssi = mem_sym->node()->si_ptr<storage_si>();
+			assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
 
-		salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
-		storage_info* psi = abii->input_storage( sem );
+			salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
+			storage_info* psi = abii->input_storage( sem );
 
-		sc_ptr(data)->get_value() = si_to_value( psi );
-
-		// If it is not semantic mode, use general code
-		if( !agg_ctxt->data().semantic_mode ){
+			sc_ptr(data)->get_value() = si_to_value( psi );
+		} else {
+			// If it is not semantic mode, use general code
 			cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
 			assert( mem_ctxt );
 			sc_ptr(data)->get_value() = mem_ctxt->get_value();
 			sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
+			sc_ptr(data)->get_value().set_abi( agg_ctxt->get_value().get_abi() );
 		}
 	}
 

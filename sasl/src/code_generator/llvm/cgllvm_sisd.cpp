@@ -196,7 +196,7 @@ SASL_VISIT_DEF( binary_expression ){
 			}
 		}
 
-		store( sc_ptr(data)->get_value(), retval );
+		sc_ptr(data)->get_value() = retval;
 		node_ctxt(v, true)->copy( sc_ptr(data) );
 	}
 }
@@ -583,6 +583,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	storage_si* si = v.si_ptr<storage_si>();
 	sc_data_ptr(data)->tyinfo = decl_ty;
 	sc_data_ptr(data)->val = create_value(decl_ty.get(), NULL, value_t::kind_swizzle, abi_unknown );
+	sc_data_ptr(data)->val.set_index( si->mem_index() );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
