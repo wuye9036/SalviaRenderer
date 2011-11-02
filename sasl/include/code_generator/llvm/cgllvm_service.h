@@ -237,6 +237,14 @@ struct function_t{
 	void args_name( std::vector<std::string> const& names );
 	/// Return true if argument is a reference.
 	bool arg_is_ref( size_t index ) const;
+	/// Return true if first argument is pointer to return value.
+	bool first_arg_is_return_address() const;
+	/// Get ABI
+	abis abi() const;
+	/// Get return address value.
+	llvm::Value* return_address() const;
+	/// Return name
+	void return_name( std::string const& s );
 
 	boost::shared_ptr<value_tyinfo> get_return_ty() const;
 
@@ -244,6 +252,7 @@ struct function_t{
 	sasl::syntax_tree::function_type*	fnty;
 	llvm::Function*						fn;
 	bool								c_compatible;
+	bool								ret_void;
 	cg_service*							cg;
 };
 

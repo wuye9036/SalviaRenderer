@@ -552,6 +552,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	// Register arguments names.
 	assert( fn().arg_size() == v.params.size() );
 
+	fn().return_name( ".ret" );
 	size_t i_arg = 0;
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
 	{

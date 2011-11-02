@@ -568,7 +568,14 @@ void cg_service::emit_return(){
 }
 
 void cg_service::emit_return( value_t const& ret_v, abis abi ){
-	builder()->CreateRet( ret_v.load(abi) );
+	if( abi == abi_unknown ){ abi = fn().abi(); }
+
+	if( fn().first_arg_is_return_address() ){
+		builder()->CreateStore( ret_v.load(abi), fn().return_address() );
+		builder()->CreateRetVoid();
+	} else {
+		builder()->CreateRet( ret_v.load(abi) );
+	}
 }
 
 function_t& cg_service::fn(){
@@ -650,6 +657,20 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 
 	vector<Type const*> par_tys;
 
+	Type const* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->llvm_ty( abi );
+
+	ret.ret_void = true;
+	if( abi == abi_c ){
+		if( fn_node->retval_type->tycode != builtin_types::_void ){
+			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
+			Type const* ret_ptr = PointerType::getUnqual( ret_ty );
+			par_tys.push_back( ret_ptr );
+			ret.ret_void = false;
+		}
+
+		ret_ty = Type::getVoidTy( context() );
+	}
+
 	// Create function type.
 	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
 	{
@@ -667,13 +688,12 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 		}
 	}
 
-	Type const* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->llvm_ty( abi );
+	
 	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
 
 	// Create function
 	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
-	ret.fn->setCallingConv( llvm::CallingConv::X86_FastCall );
-
+	
 	ret.cg = this;
 	return ret;
 }
@@ -925,8 +945,14 @@ value_t cg_service::emit_mul_ss( value_t const& lhs, value_t const& rhs )
 value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
 {
 	vector<Value*> arg_values;
-	
+	value_t var;
 	if( fn.c_compatible ){
+		// 
+		if ( fn.first_arg_is_return_address() ){
+			var = create_variable( fn.get_return_ty().get(), abi_c, "ret" );
+			arg_values.push_back( var.load_ref() );
+		}
+
 		BOOST_FOREACH( value_t const& arg, args ){
 			builtin_types hint = arg.get_hint();
 			if( is_scalar(hint) ){
@@ -943,6 +969,10 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	}
 
 	Value* ret_val = builder()->CreateCall( fn.fn, arg_values.begin(), arg_values.end() );
+
+	if( fn.first_arg_is_return_address() ){
+		return var;
+	}
 
 	abis ret_abi = fn.c_compatible ? abi_c : abi_llvm;
 	return value_t( fn.get_return_ty().get(), ret_val, value_t::kind_value, ret_abi, this );
@@ -1181,18 +1211,30 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){
-	assert( index < fn->arg_size() );
+	size_t param_size = fn->arg_size();
+	if( first_arg_is_return_address() ){
+		--param_size;
+	}
+	assert( index < param_size );
+
 	Function::arg_iterator arg_it = fn->arg_begin();
+	if( first_arg_is_return_address() ){
+		++arg_it;
+	}
+
 	for( size_t i = 0; i < index; ++i ){ ++arg_it; }
 	arg_it->setName( name );
 }
 
 void function_t::args_name( vector<string> const& names )
 {
-	assert( names.size() <= fn->arg_size() );
-
 	Function::arg_iterator arg_it = fn->arg_begin();
 	vector<string>::const_iterator name_it = names.begin();
+
+	if( first_arg_is_return_address() ){
+		arg_it->setName(".ret");
+		++arg_it;
+	}
 
 	for( size_t i = 0; i < names.size(); ++i ){
 		arg_it->setName( *name_it );
@@ -1208,16 +1250,24 @@ shared_ptr<value_tyinfo> function_t::get_return_ty() const{
 
 size_t function_t::arg_size() const{
 	assert( fn );
-	return fn ? fn->arg_size() : 0;
+	if( fn ){
+		if( first_arg_is_return_address() ){ return fn->arg_size() - 1; }
+		return fn->arg_size() - 1;
+	}
+	return 0;
 }
 
 value_t function_t::arg( size_t index ) const
 {
+	// If c_compatible and not void return, the first argument is address of return value.
+	size_t arg_index = index;
+	if( first_arg_is_return_address() ){ ++arg_index; }
+
 	shared_ptr<parameter> par = fnty->params[index];
 	value_tyinfo* par_typtr = cg->node_ctxt( par, false )->get_typtr();
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
-	for( size_t idx_counter = 0; idx_counter < index; ++idx_counter ){
+	for( size_t idx_counter = 0; idx_counter < arg_index; ++idx_counter ){
 		++it;
 	}
 
@@ -1225,14 +1275,40 @@ value_t function_t::arg( size_t index ) const
 	return cg->create_value( par_typtr, &(*it), arg_is_ref(index) ? value_t::kind_ref : value_t::kind_value, arg_abi );
 }
 
-function_t::function_t(): fn(NULL), fnty(NULL)
+function_t::function_t(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(false), cg(NULL)
 {
 }
 
 bool function_t::arg_is_ref( size_t index ) const{
 	assert( index < fnty->params.size() );
+
 	builtin_types hint = fnty->params[index]->si_ptr<storage_si>()->type_info()->tycode;
 	return c_compatible && !is_scalar(hint);
+}
+
+bool function_t::first_arg_is_return_address() const
+{
+	return c_compatible && !ret_void;
+}
+
+abis function_t::abi() const
+{
+	return c_compatible ? abi_c : abi_llvm;
+}
+
+llvm::Value* function_t::return_address() const
+{
+	if( first_arg_is_return_address() ){
+		return &(*fn->arg_begin());
+	}
+	return NULL;
+}
+
+void function_t::return_name( std::string const& s )
+{
+	if( first_arg_is_return_address() ){
+		fn->arg_begin()->setName( s );
+	}
 }
 
 insert_point_t::insert_point_t(): block(NULL)
