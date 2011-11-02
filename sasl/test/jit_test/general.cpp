@@ -188,7 +188,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 	jit_function<float (vec3*, vec3*)> test_dot_f3;
 	jit_function<vec4 (mat44*, vec4*)> test_mul_m44v4;
-	jit_function<vec4 (mat44*, vec4*)> test_fetch_m44v4;
+	jit_function<vec4 (mat44*)> test_fetch_m44v4;
 
 	function( test_dot_f3, "test_dot_f3" );
 	BOOST_REQUIRE(test_dot_f3);
@@ -196,8 +196,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	function( test_mul_m44v4, "test_mul_m44v4" );
 	BOOST_REQUIRE( test_mul_m44v4 );
 
-	/*function( test_fetch_m44v4, "test_fetch_m44v4" );
-	BOOST_REQUIRE( test_fetch_m44v4 );*/
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
 		vec3 rhs( 1.0f, -22.0f, 8.28f );
@@ -205,22 +203,17 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float f = test_dot_f3(&lhs, &rhs);
 		BOOST_CHECK_CLOSE( dot_prod3( lhs.xyz(), rhs.xyz() ), f, 0.0001 );
 	}
-	
-	//{
-	//	mat44 lhs( mat44::identity() );
-	//	vec4 rhs( 1.0f, 2.0f, 3.0f, 4.0f );
-
-	//	vec4 f = test_fetch_m44v4(&lhs, &rhs);
-	//	vec4 refv = lhs.get_row(0);
-
-	//	BOOST_CHECK_CLOSE( f.x, refv.x, 0.0001f );
-	//	BOOST_CHECK_CLOSE( f.y, refv.y, 0.001f );
-	//	BOOST_CHECK_CLOSE( f.z, refv.z, 0.001f );
-	//	BOOST_CHECK_CLOSE( f.w, refv.w, 0.001f );
-	//}
 
 	{
 		mat44 mat( mat44::identity() );
+		mat.f[0][0] = 1.0f;
+		mat.f[0][1] = 1.0f;
+		mat.f[0][2] = 1.0f;
+		mat.f[0][3] = 1.0f;
+
+		for( int i = 0; i < 16; ++i){
+			((float*)(&mat))[i] = float(i);
+		}
 		mat44 tmpMat;
 		mat_mul( mat, mat_rotX(tmpMat, 0.2f ), mat );
 		mat_mul( mat, mat_rotY(tmpMat, -0.3f ), mat );

@@ -188,6 +188,8 @@ SASL_VISIT_DEF( binary_expression ){
 			if( is_scalar(lbtc) ){
 				if( v.op == operators::add ){
 					retval = emit_add(lval, rval);
+				} else if ( v.op == operators::mul ) {
+					EFLIB_ASSERT_UNIMPLEMENTED();
 				} else {
 					EFLIB_ASSERT_UNIMPLEMENTED();
 				}

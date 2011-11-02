@@ -1031,7 +1031,7 @@ value_t cg_service::emit_mul_mv( value_t const& lhs, value_t const& rhs )
 	value_t ret_v = null_value( ret_hint, lhs.abi );
 	for( size_t irow = 0; irow < row_count; ++irow ){
 		value_t row_vec = emit_extract_val( lhs, irow );
-		ret_v = emit_add_vv( ret_v, emit_mul_vv( row_vec, rhs ) );
+		ret_v = emit_insert_val( ret_v, irow, emit_dot_vv(row_vec, rhs) );
 	}
 
 	return ret_v;
