@@ -9,9 +9,11 @@
 #include <sasl/include/semantic/semantic_infos.h>
 
 #include <eflib/include/math/vector.h>
+#include <eflib/include/math/matrix.h>
 
 #include <fstream>
 
+using namespace eflib;
 using sasl::compiler::compiler;
 
 using sasl::semantic::symbol;
@@ -82,7 +84,7 @@ struct jit_fixture {
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init_g( "./repo/question/v1a1/preprocessors.ss" );
 
-	int(*p)() = NULL;
+	int(*__stdcall p)() = NULL;
 	function( p, "main" );
 
 	BOOST_REQUIRE(p);
@@ -93,7 +95,7 @@ BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 	init_g( "./repo/question/v1a1/function.ss" );
 
-	int(*p)(int) = NULL;
+	int(*__fastcall p)(int) = NULL;
 	function( p, "foo" );
 
 	BOOST_REQUIRE(p);
@@ -107,16 +109,52 @@ using eflib::int2;
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
 
-	float (*test_dot_f3)(vec3, vec3) = NULL;
+	float (*__fastcall test_dot_f3)(vec3*, vec3*) = NULL;
+	vec4 (*__fastcall test_mul_m44v4)(void*, void*) = NULL;
+	vec4 (*__fastcall test_fetch_m44v4)(void*, void*) = NULL;
+
 	function( test_dot_f3, "test_dot_f3" );
 	BOOST_REQUIRE(test_dot_f3);
 	
-	vec3 lhs( 4.0f, 9.3f, -5.9f );
-	vec3 rhs( 1.0f, -22.0f, 8.28f );
+	function( test_mul_m44v4, "test_mul_m44v4" );
+	BOOST_REQUIRE( test_mul_m44v4 );
 
-	float f = test_dot_f3(lhs, rhs);
-	BOOST_CHECK_CLOSE( dot_prod3( lhs.xyz(), rhs.xyz() ), f, 0.0001 );
+	function( test_fetch_m44v4, "test_fetch_m44v4" );
+	BOOST_REQUIRE( test_fetch_m44v4 );
+	{
+		vec3 lhs( 4.0f, 9.3f, -5.9f );
+		vec3 rhs( 1.0f, -22.0f, 8.28f );
 
+		float f = test_dot_f3(&lhs, &rhs);
+		BOOST_CHECK_CLOSE( dot_prod3( lhs.xyz(), rhs.xyz() ), f, 0.0001 );
+	}
+	
+	{
+		mat44 lhs( mat44::identity() );
+		vec4 rhs( 1.0f, 2.0f, 3.0f, 4.0f );
+
+		vec4 f = test_fetch_m44v4(&lhs, &rhs);
+		vec4 refv = lhs.get_row(0);
+
+		BOOST_CHECK_CLOSE( f.x, refv.x, 0.0001f );
+		BOOST_CHECK_CLOSE( f.y, refv.y, 0.001f );
+		BOOST_CHECK_CLOSE( f.z, refv.z, 0.001f );
+		BOOST_CHECK_CLOSE( f.w, refv.w, 0.001f );
+	}
+
+	{
+		mat44 lhs( mat44::identity() );
+		vec4 rhs( 1.0f, 2.0f, 3.0f, 4.0f );
+
+		vec4 f = test_mul_m44v4(&lhs, &rhs);
+		vec4 refv;
+		transform( refv, lhs, rhs );
+
+		BOOST_CHECK_CLOSE( f.x, refv.x, 0.0001f );
+		BOOST_CHECK_CLOSE( f.y, refv.y, 0.001f );
+		BOOST_CHECK_CLOSE( f.z, refv.z, 0.001f );
+		BOOST_CHECK_CLOSE( f.w, refv.w, 0.001f );
+	}
 	//int (*test_dot_i2)(int2, int2) = NULL;
 	//int2 lhsi( 17, -8 );
 	//int2 rhsi( 9, 36 );
@@ -126,12 +164,74 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	//BOOST_CHECK_EQUAL( lhsi.x*rhsi.x+lhsi.y*rhsi.y, test_dot_i2(lhsi, rhsi) );
 }
 
+#pragma pack(push)
+#pragma pack(1)
+
+struct intrinsics_vs_data{
+	float pos[4];
+	float norm[3];
+};
+
+struct intrinsics_vs_bout{
+	float x,y,z,w;
+	float n_dot_l;
+};
+
+struct intrinsics_vs_sin{
+	float *position, *normal;
+};
+
+struct intrinsics_vs_bin{
+	float wvpMat[16];
+	float lx, ly, lz;
+};
+
+#pragma pack(pop)
+
 BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	init_vs("./repo/question/v1a1/intrinsics.svs");
+	
+	intrinsics_vs_data data;
+	intrinsics_vs_sin sin;
+	sin.position = &( data.pos[0] );
+	sin.normal = &(data.norm[0]);
+	intrinsics_vs_bin bin;
+	intrinsics_vs_bout bout;
+	
+	void (*fn)( intrinsics_vs_sin*, intrinsics_vs_bin*, void*, intrinsics_vs_bout*) = NULL;
+	vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
+	vec3 norm(1.5f, 1.2f, 0.8f);
+	vec3 light(0.6f, 1.1f, 4.7f);
 
-	void* fn = NULL;
+	//vec4 pos(0.0f, 0.0f, 0.0f, 0.0f);
+	//vec3 norm(0.0f, 0.0f, 0.0f);
+	//vec3 light(0.0f, 0.0f, 0.0f);
+
+
+	mat44 mat( mat44::identity() );
+	mat44 tmpMat;
+	mat_mul( mat, mat_rotX(tmpMat, 0.2f ), mat );
+	mat_mul( mat, mat_rotY(tmpMat, -0.3f ), mat );
+	mat_mul( mat, mat_translate(tmpMat, 1.7f, -0.9f, 1.1f ), mat );
+	mat_mul( mat, mat_scale(tmpMat, 0.5f, 1.2f, 2.0f), mat );
+
+	memcpy( sin.position, &pos, sizeof(float)*4 );
+	memcpy( sin.normal, &norm, sizeof(float)*3 );
+	memcpy( &bin.lx, &light, sizeof(float)*3 );
+	memcpy( &bin.wvpMat[0], &mat, sizeof(float)*16 );
+
 	function( fn, "fn" );
 	BOOST_REQUIRE( fn );
+
+	fn(&sin, &bin, NULL, &bout);
+	vec4 out_pos;
+	transform( out_pos, mat, pos );
+
+	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), 0.0001f );
+	BOOST_CHECK_CLOSE( bout.x, out_pos.x, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.y, out_pos.y, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.z, out_pos.z, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
 }
 
 //BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){

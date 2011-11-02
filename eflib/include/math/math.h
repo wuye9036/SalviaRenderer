@@ -244,6 +244,7 @@ namespace eflib{
 	//  blas level 2: matrix - vector
 	//////////////////////////////////////////////
 	vec4& transform(vec4& out, const vec4& v, const mat44& m);
+	vec4& transform(vec4& out, const mat44& m, const vec4& v);
 	vec4& transform_coord(vec4& out, const vec4& v, const mat44& m);
 	vec4& transform_normal(vec4& out, const vec4& v, const mat44& m);
 	vec4& transform33(vec4& out, const vec4& v, const mat44& m);

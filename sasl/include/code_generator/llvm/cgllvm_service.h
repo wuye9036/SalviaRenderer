@@ -342,7 +342,7 @@ public:
 	/// @name Emit statement
 	/// @{
 	void emit_return();
-	void emit_return( value_t const& );
+	void emit_return( value_t const&, abis abi );
 	/// @}
 
 	/// @name Emit assignment

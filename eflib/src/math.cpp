@@ -187,6 +187,21 @@ namespace eflib{
 		return out;
 	}
 
+	vec4& transform( vec4& out, const mat44& m, const vec4& v )
+	{
+		if(&out == &v){
+			vec4 tmpv(v);
+			return transform(out, m, tmpv);
+		}
+
+		out.x = dot_prod4(v, m.get_row(0));
+		out.y = dot_prod4(v, m.get_row(1));
+		out.z = dot_prod4(v, m.get_row(2));
+		out.w = dot_prod4(v, m.get_row(3));
+
+		return out;
+	}
+
 	vec4& transform_coord(vec4& out, const vec4& v, const mat44& m)
 	{
 		vec4 coord = vec4(v.x, v.y, v.z, 1.0f);

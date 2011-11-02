@@ -228,6 +228,7 @@ SASL_VISIT_DEF( member_expression ){
 		cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
 		sc_ptr(data)->get_value() = mem_ctxt->get_value();
 		sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
+		sc_ptr(data)->get_value().set_abi( agg_ctxt->get_value().get_abi() );
 	}
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -261,7 +262,7 @@ SASL_VISIT_DEF( constant_expression ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	sc_ptr(data)->get_value().emplace( val );
+	sc_ptr(data)->get_value() = val;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -500,8 +501,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	if ( !v.jump_expr ){
 		emit_return();
 	} else {
-		emit_return( node_ctxt(v.jump_expr)->get_value() );
-		// builder()->CreateRet( load( node_ctxt(v.jump_expr) ) );
+		emit_return( node_ctxt(v.jump_expr)->get_value(), fn().c_compatible?abi_c:abi_llvm );
 	}
 }
 
@@ -1046,7 +1046,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn().arg_name( 1, ".rhs" );
 
 			value_t ret_val = emit_mul( fn().arg(0), fn().arg(1) );
-			emit_return( ret_val );
+			emit_return( ret_val, abi_llvm );
 
 		} else if( intr->unmangled_name() == "dot" ) {
 			
@@ -1057,7 +1057,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn().arg_name( 1, ".rhs" );
 
 			value_t ret_val = emit_dot( fn().arg(0), fn().arg(1) );
-			emit_return( ret_val );
+			emit_return( ret_val, abi_llvm );
 
 		}
 		else

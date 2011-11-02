@@ -567,8 +567,8 @@ void cg_service::emit_return(){
 	builder()->CreateRetVoid();
 }
 
-void cg_service::emit_return( value_t const& ret_v ){
-	builder()->CreateRet( ret_v.to_rvalue().load() );
+void cg_service::emit_return( value_t const& ret_v, abis abi ){
+	builder()->CreateRet( ret_v.load(abi) );
 }
 
 function_t& cg_service::fn(){
@@ -672,6 +672,7 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 
 	// Create function
 	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
+	ret.fn->setCallingConv( llvm::CallingConv::X86_FastCall );
 
 	ret.cg = this;
 	return ret;
@@ -1086,9 +1087,9 @@ value_t cg_service::emit_mul_vv( value_t const& lhs, value_t const& rhs )
 	builtin_types elem_hint = scalar_of( lhs.get_hint() );
 	Value* val = NULL;
 	if( is_integer(elem_hint) ){
-		val = builder()->CreateAdd( lval, rval );
+		val = builder()->CreateMul( lval, rval );
 	} else {
-		val = builder()->CreateFAdd( lval, rval );
+		val = builder()->CreateFMul( lval, rval );
 	}
 
 	value_t ret( lhs.get_hint(), val, value_t::kind_value, abi_llvm, this );
