@@ -56,10 +56,10 @@ using std::string;
 
 // Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
 #define EMIT_OP_SS_VV_BODY( op_name )	\
-		assert( lhs.get_hint() == rhs.get_hint() ); \
-		assert( is_scalar(lhs.get_hint()) ); \
-		\
 		builtin_types hint( lhs.get_hint() ); \
+		assert( hint == rhs.get_hint() ); \
+		assert( is_scalar(hint) || is_vector(hint) ); \
+		\
 		Value* ret = NULL; \
 		\
 		builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint); \
@@ -258,7 +258,11 @@ llvm::Value* value_t::raw() const{
 
 value_t value_t::to_rvalue() const
 {
-	return value_t( tyinfo, load( abi ), kind_value, abi, cg );
+	if( tyinfo ){
+		return value_t( tyinfo, load( abi ), kind_value, abi, cg );
+	} else {
+		return value_t( hint, load(abi), kind_value, abi, cg );
+	}
 }
 
 builtin_types value_t::get_hint() const
