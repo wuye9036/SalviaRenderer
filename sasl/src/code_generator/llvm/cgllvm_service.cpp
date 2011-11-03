@@ -46,6 +46,7 @@ using llvm::ConstantVector;
 using llvm::StructType;
 using llvm::VectorType;
 using llvm::UndefValue;
+using llvm::StoreInst;
 
 using boost::shared_ptr;
 using boost::enable_if;
@@ -488,7 +489,8 @@ void value_t::store( value_t const& v ) const
 		}
 	}
 
-	cg->builder()->CreateStore( src, address );
+	StoreInst* inst = cg->builder()->CreateStore( src, address );
+	inst->setAlignment(4);
 }
 
 void value_t::set_index( size_t index )
@@ -513,9 +515,11 @@ void cg_service::store( value_t& lhs, value_t const& rhs ){
 	// TODO: assert( *lhs.get_tyinfo() == *rhs.get_tyinfo() );
 	assert( lhs.storable() );
 	value_t rv = rhs.to_rvalue();
+	StoreInst* inst = NULL;
 	switch( lhs.get_kind() ){
 	case value_t::kind_ref:
-		builder()->CreateStore( rv.load( lhs.get_abi() ), lhs.raw() );
+		inst = builder()->CreateStore( rv.load( lhs.get_abi() ), lhs.raw() );
+		inst->setAlignment(4);
 		break;
 	case value_t::kind_unknown:
 		// Copy directly.

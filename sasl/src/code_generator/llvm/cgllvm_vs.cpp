@@ -106,52 +106,6 @@ void cgllvm_vs::add_entry_param_type( storage_classifications st, vector<Type co
 	par_types.push_back(parref_type);
 }
 
-void cgllvm_vs::copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& v ){
-
-	//cgllvm_sctxt* expr_ctxt = node_ctxt(v);
-	//cgllvm_sctxt* ret_ctxt = node_ctxt( entry_sym->node(), false );
-
-	//if( fn()->fn )
-}
-
-void cgllvm_vs::copy_to_agg_result( cgllvm_sctxt* data ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-
-	// Extract all semantics.
-	//shared_ptr<tynode> fn_rettype = entry_sym->node()->as_handle<function_type>()->retval_type;
-	//assert( fn_rettype );
-	//type_info_si* ret_tisi = dynamic_cast<type_info_si*>( fn_rettype->semantic_info().get() );
-	//shared_ptr<struct_type> ret_struct = ret_tisi->type_info()->as_handle<struct_type>();
-
-	//// Copy value to semantics.
-	//BOOST_FOREACH( shared_ptr<declaration> const& decl, ret_struct->decls ){
-	//	if( decl->node_class() == node_ids::variable_declaration ){
-
-	//		shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
-
-	//		BOOST_FOREACH( shared_ptr<declarator> const& declr, vardecl->declarators ){
-	//			storage_si* ssi = dynamic_cast<storage_si*>( declr->semantic_info().get() );
-	//			salviar::semantic_value const& sem = ssi->get_semantic();
-	//			storage_info* si = abii->output_storage( sem );
-	//		
-	//			cgllvm_sctxt destctxt;
-	//			destctxt.data().agg.parent = param_ctxts[si->storage].get();
-	//			destctxt.data().agg.index = si->index;
-	//			// If stream out, the output is only a pointer.
-	//			// Set is_ref to true for generating right code.
-	//			destctxt.data().is_ref =( si->storage == sc_stream_out );
-
-	//			cgllvm_sctxt srcctxt;
-	//			cgllvm_sctxt* declr_ctxt = node_ctxt(*declr);
-	//			srcctxt.storage( declr_ctxt );
-	//			srcctxt.data().agg.parent = data;
-
-	//			store( load(&srcctxt), &destctxt );
-	//		}
-	//	}
-	//}
-}
-
 // expressions
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF_UNIMPL( cast_expression );

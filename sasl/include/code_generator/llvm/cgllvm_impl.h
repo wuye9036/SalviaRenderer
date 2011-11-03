@@ -74,12 +74,6 @@ protected:
 	template<typename ContextT>
 	ContextT* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 
-	// Fetching and caching type information.
-	llvm::Type const* llvm_type( builtin_types const& btc, 
-		bool& as_vector, bool& is_matrix
-		);
-	void llvm_type( builtin_types const& btc, sctxt_handle out_ctxt );
-
 	// Direct access member from module.
 	llvm::DefaultIRBuilder* builder() const;
 	llvm::LLVMContext& context() const;
