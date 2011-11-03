@@ -12,11 +12,18 @@
 #include <eflib/include/math/matrix.h>
 #include <eflib/include/metaprog/util.h>
 
+#include <boost/function.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/function_pointer.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/mpl/vector.hpp>
+#include <boost/mpl/push_front.hpp>
+#include <boost/mpl/or.hpp>
+#include <boost/type_traits/is_arithmetic.hpp>
+#include <boost/type_traits/add_reference.hpp>
+#include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/is_same.hpp>
 
 #include <fstream>
 
@@ -38,21 +45,6 @@ using boost::function_types::parameter_types;
 using std::fstream;
 using std::string;
 
-BOOST_AUTO_TEST_SUITE( jit )
-
-string make_command( string const& file_name, string const& options){
-	return "--input=\"" + file_name + "\" " + options;
-}
-
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/add_reference.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/is_same.hpp>
-
-#include <boost/mpl/push_front.hpp>
-#include <boost/mpl/or.hpp>
-#include <boost/function.hpp>
-
 using boost::mpl::_;
 using boost::mpl::if_;
 using boost::mpl::or_;
@@ -68,10 +60,11 @@ using boost::enable_if_c;
 using boost::enable_if;
 using boost::disable_if;
 
-template <typename T>
-struct FuckCompiler{
-	static T const foo = 5;
-};
+BOOST_AUTO_TEST_SUITE( jit )
+
+string make_command( string const& file_name, string const& options){
+	return "--input=\"" + file_name + "\" " + options;
+}
 
 template <typename Fn>
 class jit_function_forward_base{
@@ -189,9 +182,9 @@ struct jit_fixture {
 
 	template <typename FunctionT>
 	void function( FunctionT& fn, string const& unmangled_name ){
+		assert( !root_sym->find_overloads(unmangled_name).empty() );
 		string fn_name = root_sym->find_overloads(unmangled_name)[0]->mangled_name();
 		fn.callee = reinterpret_cast<typename FunctionT::callee_ptr_t>( je->get_function(fn_name) );
-		// fn = reinterpret_cast<FunctionT>( je->get_function(fn_name) );
 	}
 
 	~jit_fixture(){}

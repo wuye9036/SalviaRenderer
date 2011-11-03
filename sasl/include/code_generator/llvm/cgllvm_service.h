@@ -275,18 +275,18 @@ public:
 	@{ */
 	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );
 	value_t emit_add( value_t const& lhs, value_t const& rhs );
+	value_t emit_sub( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul( value_t const& lhs, value_t const& rhs );
 	value_t emit_dot( value_t const& lhs, value_t const& rhs );
 
-	value_t emit_add_ss( value_t const& lhs, value_t const& rhs );
-	value_t emit_add_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 
-	value_t emit_mul_ss( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );

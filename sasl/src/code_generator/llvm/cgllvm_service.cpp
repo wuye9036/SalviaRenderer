@@ -55,20 +55,23 @@ using std::vector;
 using std::string;
 
 // Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
-#define EMIT_OP_SS_BODY( op_name )	\
+#define EMIT_OP_SS_VV_BODY( op_name )	\
 		assert( lhs.get_hint() == rhs.get_hint() ); \
 		assert( is_scalar(lhs.get_hint()) ); \
 		\
 		builtin_types hint( lhs.get_hint() ); \
 		Value* ret = NULL; \
 		\
-		if( is_real(hint) ){ \
+		builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint); \
+		if( is_real( scalar_hint ) ){ \
 			ret = builder()->CreateF##op_name ( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
 		} else { \
 			ret = builder()->Create##op_name( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
 		}	\
 		\
-		return value_t( hint, ret, value_t::kind_value, abi_llvm, this );
+		value_t retval( hint, ret, value_t::kind_value, abi_llvm, this ); \
+		abis ret_abi = is_scalar(hint) ? abi_llvm : lhs.get_abi();\
+		return value_t( hint, retval.load(ret_abi), value_t::kind_value, ret_abi, this );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -546,8 +549,10 @@ value_t cg_service::cast_f2f( value_t const& v, value_tyinfo* dest_tyi )
 
 value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	assert( tyinfo && abi != abi_unknown );
+	Type const* value_type = tyinfo->llvm_ty(abi);
+	assert( value_type );
+	return value_t( tyinfo, Constant::getNullValue(value_type), value_t::kind_value, abi, this );
 }
 
 value_t cg_service::null_value( builtin_types bt, abis abi )
@@ -775,7 +780,7 @@ sasl::code_generator::value_t cg_service::emit_mul( value_t const& lhs, value_t 
 
 	if( is_scalar(lhint) ){
 		if( is_scalar(rhint) ){
-			return emit_mul_ss( lhs, rhs );
+			return emit_mul_ss_vv( lhs, rhs );
 		} else if ( is_vector(rhint) ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else if ( is_matrix(rhint) ){
@@ -785,7 +790,7 @@ sasl::code_generator::value_t cg_service::emit_mul( value_t const& lhs, value_t 
 		if( is_scalar(rhint) ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else if ( is_vector(rhint) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			emit_mul_ss_vv( lhs, rhs );
 		} else if ( is_matrix(rhint) ){
 			return emit_mul_vm( lhs, rhs );
 		}
@@ -811,17 +816,17 @@ sasl::code_generator::value_t cg_service::emit_add( value_t const& lhs, value_t 
 	assert( is_scalar( scalar_of( hint ) ) );
 	assert( hint == rhs.get_hint() );
 
-	if( is_scalar(hint) ){
-		return emit_add_ss(lhs, rhs);
+	if( is_scalar(hint) || is_vector(hint) ){
+		return emit_add_ss_vv(lhs, rhs);
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
-value_t cg_service::emit_add_ss( value_t const& lhs, value_t const& rhs )
+value_t cg_service::emit_add_ss_vv( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_OP_SS_BODY(Add);
+	EMIT_OP_SS_VV_BODY(Add);
 }
 
 void cg_service::set_insert_point( insert_point_t const& ip ){
@@ -843,8 +848,8 @@ value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
 		value_t lhs_elem = emit_extract_elem( lhs, i );
 		value_t rhs_elem = emit_extract_elem( rhs, i );
 
-		value_t elem_mul = emit_mul_ss( lhs_elem, rhs_elem );
-		total.emplace( emit_add_ss( total, elem_mul ).to_rvalue() );
+		value_t elem_mul = emit_mul_ss_vv( lhs_elem, rhs_elem );
+		total.emplace( emit_add_ss_vv( total, elem_mul ).to_rvalue() );
 	}
 
 	return total;
@@ -873,6 +878,8 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 		}
 		return value_t( tyinfo, elem_address, value_t::kind_ref, lhs.get_abi(), this );
 	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
 value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
@@ -936,11 +943,10 @@ value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
 	return value_t();
 }
 
-value_t cg_service::emit_mul_ss( value_t const& lhs, value_t const& rhs )
+value_t cg_service::emit_mul_ss_vv( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_OP_SS_BODY(Mul);
+	EMIT_OP_SS_VV_BODY(Mul);
 }
-
 
 value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
 {
@@ -1037,19 +1043,6 @@ value_t cg_service::emit_mul_mv( value_t const& lhs, value_t const& rhs )
 	return ret_v;
 }
 
-value_t cg_service::emit_add_vv( value_t const& lhs, value_t const& rhs ){
-	builtin_types vhint = lhs.get_hint();
-	Value* lvec = lhs.load( abi_llvm );
-	Value* rvec = rhs.load( abi_llvm );
-	Value* sum_vec = NULL;
-	if( is_integer( scalar_of(vhint) ) ){
-		sum_vec = builder()->CreateAdd(lvec, rvec);
-	} else {
-		sum_vec = builder()->CreateFAdd(lvec, rvec);
-	}
-	return value_t( vhint, sum_vec, value_t::kind_value, abi_llvm, this );
-}
-
 value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 {
 	builtin_types lhint = lhs.get_hint();
@@ -1107,27 +1100,6 @@ value_t cg_service::emit_extract_col( value_t const& lhs, size_t index )
 	}
 
 	return out_value;
-}
-
-value_t cg_service::emit_mul_vv( value_t const& lhs, value_t const& rhs )
-{
-	Value* lval = lhs.load( abi_llvm );
-	Value* rval = rhs.load( abi_llvm );
-
-	builtin_types elem_hint = scalar_of( lhs.get_hint() );
-	Value* val = NULL;
-	if( is_integer(elem_hint) ){
-		val = builder()->CreateMul( lval, rval );
-	} else {
-		val = builder()->CreateFMul( lval, rval );
-	}
-
-	value_t ret( lhs.get_hint(), val, value_t::kind_value, abi_llvm, this );
-	if( lhs.get_abi() == abi_llvm ){
-		return ret;
-	}
-
-	return value_t( lhs.get_hint(), ret.load(abi_c), value_t::kind_value, abi_c, this );
 }
 
 value_t cg_service::emit_mul_vm( value_t const& lhs, value_t const& rhs )
@@ -1208,6 +1180,27 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return value_t();
 	}
+}
+
+value_t cg_service::emit_sub_ss_vv( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_OP_SS_VV_BODY( Sub );
+}
+
+value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint = lhs.get_hint();
+
+	assert( hint != builtin_types::none );
+	assert( is_scalar( scalar_of( hint ) ) );
+	assert( hint == rhs.get_hint() );
+
+	if( is_scalar(hint) || is_vector(hint) ){
+		return emit_sub_ss_vv(lhs, rhs);
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

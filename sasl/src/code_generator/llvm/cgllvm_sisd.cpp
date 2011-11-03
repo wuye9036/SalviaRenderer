@@ -172,30 +172,28 @@ SASL_VISIT_DEF( binary_expression ){
 		}
 
 		// use type-converted value to generate code.
-
 		value_t lval = node_ctxt(v.left_expr)->get_rvalue();
 		value_t rval = node_ctxt(v.right_expr)->get_rvalue();
 
-		value_t retval = null_value( NULL, abi_llvm );
+		value_t retval;
 
-		if( lval.raw() && rval.raw() ){
+		builtin_types lbtc = p0_tsi->type_info()->tycode;
+		builtin_types rbtc = p1_tsi->type_info()->tycode;
 
-			builtin_types lbtc = p0_tsi->type_info()->tycode;
-			builtin_types rbtc = p1_tsi->type_info()->tycode;
+		assert( lbtc == rbtc );
 
-			assert( lbtc == rbtc );
-
-			if( is_scalar(lbtc) ){
-				if( v.op == operators::add ){
-					retval = emit_add(lval, rval);
-				} else if ( v.op == operators::mul ) {
-					EFLIB_ASSERT_UNIMPLEMENTED();
-				} else {
-					EFLIB_ASSERT_UNIMPLEMENTED();
-				}
+		if( is_scalar(lbtc) || is_vector(lbtc) ){
+			if( v.op == operators::add ){
+				retval = emit_add(lval, rval);
+			} else if ( v.op == operators::mul ) {
+				retval = emit_mul(lval, rval);
+			} else if ( v.op == operators::sub ) {
+				retval = emit_sub(lval, rval);
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 
 		sc_ptr(data)->get_value() = retval;
