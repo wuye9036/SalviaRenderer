@@ -47,6 +47,8 @@ string make_command( string const& file_name, string const& options){
 #include <boost/type_traits/is_arithmetic.hpp>
 #include <boost/type_traits/add_reference.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/is_same.hpp>
+
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/function.hpp>
@@ -59,8 +61,12 @@ using boost::mpl::sizeof_;
 
 using boost::is_arithmetic;
 using boost::is_pointer;
+using boost::is_same;
+
 using boost::add_reference;
 using boost::enable_if_c;
+using boost::enable_if;
+using boost::disable_if;
 
 template <typename T>
 struct FuckCompiler{
@@ -68,49 +74,84 @@ struct FuckCompiler{
 };
 
 template <typename Fn>
-class jit_function{
-	typedef typename result_type<Fn>::type return_type_t;
+class jit_function_forward_base{
+protected:
+	typedef typename result_type<Fn>::type result_t;
+	typedef result_t* result_type_pointer;
 	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> >
 		parameter_type_convertor;
 	typedef typename parameter_types<Fn, parameter_type_convertor>::type
 		param_types;
-	typedef return_type_t* return_type_pointer;
-	typedef typename push_front<param_types, return_type_pointer>::type
-		callee_parameters;
+	typedef typename if_<
+		is_same<result_t, void>,
+		param_types,
+		typename push_front<param_types, result_type_pointer>::type
+	>::type	callee_parameters;
 	typedef typename push_front<callee_parameters, void>::type
 		callee_return_parameters;
-
 public:
-	EFLIB_OPERATOR_BOOL( jit_function<Fn> ){
-		return callee;
-	}
-
+	EFLIB_OPERATOR_BOOL( jit_function_forward_base<Fn> ){ return callee; }
 	typedef typename function_pointer<callee_return_parameters>::type
 		callee_ptr_t;
 	callee_ptr_t callee;
+	jit_function_forward_base():callee(NULL){}
+};
 
-	return_type_t operator() ( typename enable_if_c<sizeof_<callee_parameters>::value == 1>::type* = NULL ){
-		return_type_t tmp;
+template <typename RT, typename Fn>
+class jit_function_forward: public jit_function_forward_base<Fn>{
+public:
+	result_t operator ()(){
+		result_t tmp;
 		callee(&tmp);
 		return tmp;
 	}
 
 	template <typename T0>
-	return_type_t operator() (T0 p0){
-		return_type_t tmp;
+	result_t operator() (T0 p0 ){
+		result_t tmp;
 		callee(&tmp, p0);
 		return tmp;
 	}
 
 	template <typename T0, typename T1>
-	return_type_t operator() (T0 p0, T1 p1){
-		return_type_t tmp;
+	result_t operator() (T0 p0, T1 p1){
+		result_t tmp;
 		callee(&tmp, p0, p1);
 		return tmp;
 	}
 };
 
+template <typename Fn>
+class jit_function_forward<void, Fn>: public jit_function_forward_base<Fn>{
+public:
+	result_t operator ()(){
+		callee();
+	}
 
+	template <typename T0>
+	result_t operator() (T0 p0 ){
+		callee(p0);
+	}
+
+	template <typename T0, typename T1>
+	result_t operator() (T0 p0, T1 p1){
+		callee(p0, p1);
+	}
+
+	template <typename T0, typename T1, typename T2>
+	result_t operator() (T0 p0, T1 p1, T2 p2){
+		callee(p0, p1, p2);
+	}
+
+	template <typename T0, typename T1, typename T2, typename T3>
+	result_t operator() (T0 p0, T1 p1, T2 p2, T3 p3){
+		callee(p0, p1, p2, p3);
+	}
+};
+
+template <typename Fn>
+class jit_function: public jit_function_forward< typename result_type<Fn>::type, Fn >
+{};
 
 struct jit_fixture {
 	
@@ -267,47 +308,43 @@ struct intrinsics_vs_bin{
 BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	init_vs("./repo/question/v1a1/intrinsics.svs");
 	
-//	intrinsics_vs_data data;
-//	intrinsics_vs_sin sin;
-//	sin.position = &( data.pos[0] );
-//	sin.normal = &(data.norm[0]);
-//	intrinsics_vs_bin bin;
-//	intrinsics_vs_bout bout;
-//	
-//	void (*fn)( intrinsics_vs_sin*, intrinsics_vs_bin*, void*, intrinsics_vs_bout*) = NULL;
-//	vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
-//	vec3 norm(1.5f, 1.2f, 0.8f);
-//	vec3 light(0.6f, 1.1f, 4.7f);
-//
-//	//vec4 pos(0.0f, 0.0f, 0.0f, 0.0f);
-//	//vec3 norm(0.0f, 0.0f, 0.0f);
-//	//vec3 light(0.0f, 0.0f, 0.0f);
-//
-//
-//	mat44 mat( mat44::identity() );
-//	mat44 tmpMat;
-//	mat_mul( mat, mat_rotX(tmpMat, 0.2f ), mat );
-//	mat_mul( mat, mat_rotY(tmpMat, -0.3f ), mat );
-//	mat_mul( mat, mat_translate(tmpMat, 1.7f, -0.9f, 1.1f ), mat );
-//	mat_mul( mat, mat_scale(tmpMat, 0.5f, 1.2f, 2.0f), mat );
-//
-//	memcpy( sin.position, &pos, sizeof(float)*4 );
-//	memcpy( sin.normal, &norm, sizeof(float)*3 );
-//	memcpy( &bin.lx, &light, sizeof(float)*3 );
-//	memcpy( &bin.wvpMat[0], &mat, sizeof(float)*16 );
-//
-//	function( fn, "fn" );
-//	BOOST_REQUIRE( fn );
-//
-//	fn(&sin, &bin, NULL, &bout);
-//	vec4 out_pos;
-//	transform( out_pos, mat, pos );
-//
-//	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), 0.0001f );
-//	BOOST_CHECK_CLOSE( bout.x, out_pos.x, 0.0001f );
-//	BOOST_CHECK_CLOSE( bout.y, out_pos.y, 0.0001f );
-//	BOOST_CHECK_CLOSE( bout.z, out_pos.z, 0.0001f );
-//	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
+	intrinsics_vs_data data;
+	intrinsics_vs_sin sin;
+	sin.position = &( data.pos[0] );
+	sin.normal = &(data.norm[0]);
+	intrinsics_vs_bin bin;
+	intrinsics_vs_bout bout;
+	
+
+	vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
+	vec3 norm(1.5f, 1.2f, 0.8f);
+	vec3 light(0.6f, 1.1f, 4.7f);
+
+	mat44 mat( mat44::identity() );
+	mat44 tmpMat;
+	mat_mul( mat, mat_rotX(tmpMat, 0.2f ), mat );
+	mat_mul( mat, mat_rotY(tmpMat, -0.3f ), mat );
+	mat_mul( mat, mat_translate(tmpMat, 1.7f, -0.9f, 1.1f ), mat );
+	mat_mul( mat, mat_scale(tmpMat, 0.5f, 1.2f, 2.0f), mat );
+
+	memcpy( sin.position, &pos, sizeof(float)*4 );
+	memcpy( sin.normal, &norm, sizeof(float)*3 );
+	memcpy( &bin.lx, &light, sizeof(float)*3 );
+	memcpy( &bin.wvpMat[0], &mat, sizeof(float)*16 );
+
+	jit_function<void(intrinsics_vs_sin*, intrinsics_vs_bin*, void*, intrinsics_vs_bout*)> fn;
+	function( fn, "fn" );
+	BOOST_REQUIRE( fn );
+	fn(&sin, &bin, (void*)NULL, &bout);
+
+	vec4 out_pos;
+	transform( out_pos, mat, pos );
+
+	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), 0.0001f );
+	BOOST_CHECK_CLOSE( bout.x, out_pos.x, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.y, out_pos.y, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.z, out_pos.z, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
 }
 
 //BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){
