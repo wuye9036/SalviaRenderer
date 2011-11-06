@@ -34,6 +34,8 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+#define SASL_VERTEX_SHADER_ENABLED
+
 char const* sponza_vs_code =
 "float4x4 wvpMatrix; \r\n"
 "float4   eyePos; \r\n"
@@ -225,7 +227,7 @@ protected:
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
-		salvia_create_shader( sponza_sc, sponza_vs_code, lang_vertex_shader );
+		sponza_sc = shader_code::create( sponza_vs_code, lang_vertex_shader );
 #endif
 
 		num_frames = 0;
@@ -273,8 +275,8 @@ protected:
 		hsr->clear_depth(1.0f);
 
 		static float xpos = -36.0f;
-		xpos += 1.0f;
-		if( xpos > 36.0f ){
+		xpos += 0.2f;
+		if( xpos > 30.0f ){
 			xpos = -36.0f;
 		}
 		vec3 camera( xpos, 8.0f, 0.0f);
@@ -287,7 +289,7 @@ protected:
 
 		static float ypos = 40.0f;
 		ypos -= elapsed_time;
-		if ( ypos < 3.0f ){
+		if ( ypos < 1.0f ){
 			ypos = 40.0f;
 		}
 		vec4 lightPos( 0.0f, ypos, 0.0f, 1.0f );
