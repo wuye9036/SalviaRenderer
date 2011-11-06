@@ -145,11 +145,16 @@ namespace {
 		}
 	}
 
-	void print_blocks( Function* fn ){
-		printf( "Function: 0x%X\n", fn );
+	void dbg_print_blocks( Function* fn ){
+#ifdef _DEBUG
+		/*printf( "Function: 0x%X\n", fn );
 		for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin(); it != fn->getBasicBlockList().end(); ++it ){
 			printf( "  Block: 0x%X\n", &(*it) );
-		}
+		}*/
+		fn = fn;
+#else
+		fn = fn;
+#endif
 	}
 }
 
@@ -723,7 +728,7 @@ void cg_service::clean_empty_blocks()
 	block_iterator_t beg = fn().fn->getBasicBlockList().begin();
 	block_iterator_t end = fn().fn->getBasicBlockList().end();
 
-	print_blocks( fn().fn );
+	dbg_print_blocks( fn().fn );
 
 	for( block_iterator_t it = beg; it != end; ++it )
 	{
@@ -760,7 +765,7 @@ insert_point_t cg_service::new_block( std::string const& hint, bool set_as_curre
 		ret.block = BasicBlock::Create( context(), hint, fn().fn );
 		printf("Block created: 0x%X at 0x%X\n", (uintptr_t)ret.block, fn().fn );
 
-		print_blocks( fn().fn );
+		dbg_print_blocks( fn().fn );
 	} else {
 		ret.block = &fn().fn->getBasicBlockList().back();
 	}

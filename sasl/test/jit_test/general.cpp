@@ -12,6 +12,7 @@
 #include <eflib/include/math/matrix.h>
 #include <eflib/include/metaprog/util.h>
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/function_pointer.hpp>
@@ -24,6 +25,7 @@
 #include <boost/type_traits/add_reference.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
 
@@ -147,7 +149,6 @@ class jit_function: public jit_function_forward< typename result_type<Fn>::type,
 {};
 
 struct jit_fixture {
-	
 	jit_fixture() {}
 
 	void init_g( string const& file_name ){
@@ -193,6 +194,15 @@ struct jit_fixture {
 	shared_ptr<symbol> root_sym;
 	shared_ptr<jit_engine> je;
 };
+
+BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
+	init_g( "./repo/question/v1a1/comments.ss" );
+	jit_function<int(int)> fn;
+	function( fn, "foo" );
+
+	BOOST_REQUIRE( fn );
+	BOOST_CHECK( fn( 1366 ) == 1366 );
+}
 
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init_g( "./repo/question/v1a1/preprocessors.ss" );
