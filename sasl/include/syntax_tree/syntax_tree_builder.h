@@ -91,6 +91,7 @@ public:
 	boost::shared_ptr<jump_statement> build_flowctrl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<expression_statement> build_stmt_expr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<declaration_statement> build_stmt_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<if_statement> build_stmt_if( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<tynode> bind_typequal(
 		boost::shared_ptr<tynode> unqual,

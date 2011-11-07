@@ -195,6 +195,8 @@ struct jit_fixture {
 	shared_ptr<jit_engine> je;
 };
 
+#if 0
+
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/empty.ss" );
 }
@@ -346,6 +348,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	BOOST_CHECK_CLOSE( bout.z, out_pos.z, 0.0001f );
 	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
 }
+
+#endif
 
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {

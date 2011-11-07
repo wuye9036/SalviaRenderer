@@ -710,6 +710,9 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 		SASL_CASE_RULE( stmt_expr ){
 			return build_stmt_expr( typed_attr->attr );
 		}
+		SASL_CASE_RULE( stmt_if ){
+			return build_stmt_if( typed_attr->attr );
+		}
 		SASL_DEFAULT(){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return ret;
@@ -764,6 +767,13 @@ shared_ptr<expression_statement> syntax_tree_builder::build_stmt_expr( shared_pt
 shared_ptr<declaration_statement> syntax_tree_builder::build_stmt_decl( shared_ptr<attribute> attr ){
 	shared_ptr<declaration_statement> ret = create_node<declaration_statement>( token_t::null() );
 	ret->decl = build_decl( attr );
+	return ret;
+}
+
+shared_ptr<if_statement> syntax_tree_builder::build_stmt_if( shared_ptr<attribute> attr )
+{
+	shared_ptr<if_statement> ret;
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return ret;
 }
 
