@@ -195,6 +195,10 @@ struct jit_fixture {
 	shared_ptr<jit_engine> je;
 };
 
+BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
+	init_g( "./repo/question/v1a1/empty.ss" );
+}
+
 BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 	init_g( "./repo/question/v1a1/comments.ss" );
 	jit_function<int(int)> fn;
@@ -275,13 +279,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( f.z, refv.z, 0.001f );
 		BOOST_CHECK_CLOSE( f.w, refv.w, 0.001f );
 	}
-	//int (*test_dot_i2)(int2, int2) = NULL;
-	//int2 lhsi( 17, -8 );
-	//int2 rhsi( 9, 36 );
-	//function( test_dot_i2, "test_dot_i2" );
-	//BOOST_REQUIRE(test_dot_i2);
-
-	//BOOST_CHECK_EQUAL( lhsi.x*rhsi.x+lhsi.y*rhsi.y, test_dot_i2(lhsi, rhsi) );
 }
 
 #pragma pack(push)
@@ -350,13 +347,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
 }
 
-//BOOST_FIXTURE_TEST_CASE( booleans, jit_fixture ){
-//	init( "./repo/question/v1a1/bool.ss" );
-//
-//	int(*p)() = static_cast<int(*)()>( je->get_function("Mmain@@") );
-//	BOOST_REQUIRE(p);
-//
-//	BOOST_CHECK( p() == 0 );
-//}
+BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
+{
+	init_g("./repo/question/v1a1/branches.ss");
+}
 
 BOOST_AUTO_TEST_SUITE_END();

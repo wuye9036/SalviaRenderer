@@ -763,8 +763,6 @@ insert_point_t cg_service::new_block( std::string const& hint, bool set_as_curre
 	
 	if( fn().fn->getBasicBlockList().empty() || !fn().fn->getBasicBlockList().back().empty() ){
 		ret.block = BasicBlock::Create( context(), hint, fn().fn );
-		printf("Block created: 0x%X at 0x%X\n", (uintptr_t)ret.block, fn().fn );
-
 		dbg_print_blocks( fn().fn );
 	} else {
 		ret.block = &fn().fn->getBasicBlockList().back();
