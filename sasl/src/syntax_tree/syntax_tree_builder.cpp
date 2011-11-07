@@ -713,6 +713,9 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 		SASL_CASE_RULE( stmt_if ){
 			return build_stmt_if( typed_attr->attr );
 		}
+		SASL_CASE_RULE( stmt_compound ){
+			return build_stmt_compound( typed_attr->attr );
+		}
 		SASL_DEFAULT(){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return ret;
@@ -773,7 +776,26 @@ shared_ptr<declaration_statement> syntax_tree_builder::build_stmt_decl( shared_p
 shared_ptr<if_statement> syntax_tree_builder::build_stmt_if( shared_ptr<attribute> attr )
 {
 	shared_ptr<if_statement> ret;
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	shared_ptr<expression> expr = build_expr( attr->child(2) );
+	shared_ptr<statement> yes_stmt = build_stmt( attr->child(4) );
+	shared_ptr<statement> no_stmt;
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_else_stmt, attr->child(5) );
+	if( !optional_else_stmt->attrs.empty() ){
+		no_stmt = build_stmt( optional_else_stmt->attrs[0]->child(1) );
+		assert( no_stmt );
+	}
+
+	if( expr && yes_stmt ){
+		ret = create_node<if_statement>( token_t::null() );
+		ret->cond = expr;
+		ret->yes_stmt = yes_stmt;
+		ret->no_stmt = no_stmt;
+	} else {
+		// ERROR.
+		;
+	}
+
 	return ret;
 }
 

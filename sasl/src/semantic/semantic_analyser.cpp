@@ -758,17 +758,19 @@ SASL_VISIT_DEF( if_statement )
 	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
 
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt, dup_ifstmt->yes_stmt );
-	visit_child( child_ctxt, child_ctxt_init, v.no_stmt, dup_ifstmt->no_stmt );
-
 	extract_semantic_info<statement_si>(dup_ifstmt->yes_stmt)->parent_block( dup_ifstmt );
-	extract_semantic_info<statement_si>(dup_ifstmt->no_stmt)->parent_block( dup_ifstmt );
 
 	if( !dup_ifstmt->yes_stmt->symbol() ){
 		data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
 	}
 
-	if( !dup_ifstmt->no_stmt->symbol() ){
-		data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+	if( dup_ifstmt->no_stmt ){
+		visit_child( child_ctxt, child_ctxt_init, v.no_stmt, dup_ifstmt->no_stmt );
+		extract_semantic_info<statement_si>(dup_ifstmt->no_stmt)->parent_block( dup_ifstmt );
+
+		if( !dup_ifstmt->no_stmt->symbol() ){
+			data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+		}
 	}
 
 	SASL_GET_OR_CREATE_SI( statement_si, si, dup_ifstmt);
