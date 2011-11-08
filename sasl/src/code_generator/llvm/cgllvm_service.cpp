@@ -1233,6 +1233,22 @@ void cg_service::jump_cond( value_t const& cond_v, insert_point_t const const & 
 	builder()->CreateCondBr( cond, true_ip.block, false_ip.block );
 }
 
+value_t cg_service::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint = lhs.get_hint();
+	assert( hint == rhs.get_hint() );
+	assert( is_scalar(hint) || (hint == builtin_types::_boolean) );
+
+	Value* ret = NULL;
+	if( is_integer(hint) || (hint == builtin_types::_boolean) ){
+		ret = builder()->CreateICmpEQ( lhs.load(), rhs.load() );
+	} else if( is_real(hint) ) {
+		ret = builder()->CreateFCmpUEQ( lhs.load(), rhs.load() );
+	}
+
+	return value_t( builtin_types::_boolean, ret, value_t::kind_value, abi_llvm, this );
+}
+
 void function_t::arg_name( size_t index, std::string const& name ){
 	size_t param_size = fn->arg_size();
 	if( first_arg_is_return_address() ){

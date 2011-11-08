@@ -189,6 +189,8 @@ SASL_VISIT_DEF( binary_expression ){
 				retval = emit_mul(lval, rval);
 			} else if ( v.op == operators::sub ) {
 				retval = emit_sub(lval, rval);
+			} else if( v.op == operators::equal ){
+				retval = emit_cmp_eq( lval, rval );
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}

@@ -354,6 +354,13 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
 	init_g("./repo/question/v1a1/branches.ss");
+
+	jit_function<float (int)> test_if;
+	function( test_if, "test_if" );
+
+	BOOST_CHECK_CLOSE( test_if(0), 1.0f, 0.00001f );
+	BOOST_CHECK_CLOSE( test_if(12), 0.0f, 0.00001f );
+	BOOST_CHECK_CLOSE( test_if(-9), 0.0f, 0.00001f );
 }
 
 BOOST_AUTO_TEST_SUITE_END();
