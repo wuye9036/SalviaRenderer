@@ -1214,6 +1214,25 @@ value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
+insert_point_t cg_service::insert_point() const
+{
+	insert_point_t ret;
+	ret.block = builder()->GetInsertBlock();
+	return ret;
+}
+
+void cg_service::jump_to( insert_point_t const& ip )
+{
+	assert( ip );
+	builder()->CreateBr( ip.block );
+}
+
+void cg_service::jump_cond( value_t const& cond_v, insert_point_t const const & true_ip, insert_point_t const& false_ip )
+{
+	Value* cond = cond_v.load();
+	builder()->CreateCondBr( cond, true_ip.block, false_ip.block );
+}
+
 void function_t::arg_name( size_t index, std::string const& name ){
 	size_t param_size = fn->arg_size();
 	if( first_arg_is_return_address() ){

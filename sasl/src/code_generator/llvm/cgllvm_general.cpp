@@ -32,6 +32,7 @@
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 using namespace syntax_tree;
+using namespace semantic;
 using namespace boost::assign;
 using namespace llvm;
 using namespace sasl::utility;
@@ -92,115 +93,6 @@ SASL_VISIT_DEF( cast_expression ){
 	//sc_data_ptr(data)->val = load( vctxt );
 }
 
-SASL_VISIT_DEF( binary_expression ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//any child_ctxt_init = *data;
-	//any child_ctxt;
-
-	//visit_child( child_ctxt, child_ctxt_init, v.left_expr );
-	//visit_child( child_ctxt, child_ctxt_init, v.right_expr );
-
-	//if( v.op == operators::assign ){
-	//	bin_assign( v, data );
-	//} else {
-	//	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
-	//	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
-
-	//	//////////////////////////////////////////////////////////////////////////
-	//	// type conversation for matching the operator prototype
-
-	//	// get an overloadable prototype.
-	//	std::vector< shared_ptr<expression> > args;
-	//	args += v.left_expr, v.right_expr;
-
-	//	symbol::overloads_t overloads
-	//		= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
-
-	//	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
-	//		return;
-	//	}
-	//	EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
-	//		return;
-	//	}
-
-	//	boost::shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
-
-	//	shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
-	//	shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
-
-	//	// convert value type to match proto type.
-	//	if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
-	//		if( ! node_ctxt( p0_tsi->type_info() ) ){
-	//			visit_child( child_ctxt, child_ctxt_init,  op_proto->params[0]->param_type );
-	//		}
-	//		node_ctxt(v.left_expr)->data().val_type = node_ctxt( p0_tsi->type_info() )->data().val_type;
-	//		typeconv->convert( p0_tsi->type_info(), v.left_expr );
-	//	}
-	//	if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
-	//		if( ! node_ctxt( p1_tsi->type_info() ) ){
-	//			visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
-	//		}
-	//		node_ctxt(v.right_expr)->data().val_type = node_ctxt( p1_tsi->type_info() )->data().val_type;
-	//		typeconv->convert( p1_tsi->type_info(), v.right_expr );
-	//	}
-
-	//	// use type-converted value to generate code.
-	//	Value* lval = load( node_ctxt( v.left_expr ) );
-	//	Value* rval = load( node_ctxt( v.right_expr ) );
-
-	//	Value* retval = NULL;
-	//	if( lval && rval ){
-
-	//		builtin_types lbtc = p0_tsi->type_info()->tycode;
-	//		builtin_types rbtc = p1_tsi->type_info()->tycode;
-
-	//		if (v.op == operators::add){
-	//			if( is_real(lbtc) ){
-	//				retval = mod_ptr()->builder()->CreateFAdd( lval, rval, "" );
-	//			} else if( is_integer(lbtc) ){
-	//				retval = mod_ptr()->builder()->CreateAdd( lval, rval, "" );
-	//			}
-	//		} else if ( v.op == operators::sub ){
-	//			if( is_real(lbtc) ){
-	//				retval = mod_ptr()->builder()->CreateFSub( lval, rval, "" );
-	//			} else if( is_integer(lbtc) ){
-	//				retval = mod_ptr()->builder()->CreateSub( lval, rval, "" );
-	//			}
-	//		} else if ( v.op == operators::mul ){
-	//			if( is_real(lbtc) ){
-	//				retval = mod_ptr()->builder()->CreateFMul( lval, rval, "" );
-	//			} else if( is_integer(lbtc) ){
-	//				retval = mod_ptr()->builder()->CreateMul( lval, rval, "" );
-	//			}
-	//		} else if ( v.op == operators::div ){
-	//			if( is_real(lbtc) ){
-	//				retval = mod_ptr()->builder()->CreateFDiv( lval, rval, "" );
-	//			} else if( is_integer(lbtc) ){
-	//				// TODO support signed integer yet.
-	//				retval = mod_ptr()->builder()->CreateSDiv( lval, rval, "" );
-	//			}
-	//		} else if ( v.op == operators::less ){
-	//			if(is_real(lbtc)){
-	//				retval = mod_ptr()->builder()->CreateFCmpULT( lval, rval );
-	//			} else if ( is_integer(lbtc) ){
-	//				if( is_signed(lbtc) ){
-	//					retval = mod_ptr()->builder()->CreateICmpSLT(lval, rval);
-	//				}
-	//				if( is_unsigned(lbtc) ){
-	//					retval = mod_ptr()->builder()->CreateICmpULT(lval, rval);
-	//				}
-	//			}
-	//		} else {
-	//			EFLIB_INTERRUPT( (boost::format("Operator %s is not supported yet.") % v.op.name() ).str().c_str() );
-	//		}
-	//	}
-
-	//	store( retval, sc_ptr(data) );
-	//}
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
@@ -246,55 +138,46 @@ SASL_VISIT_DEF( function_type ){
 SASL_VISIT_DEF_UNIMPL( statement );
 
 SASL_VISIT_DEF( if_statement ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//any child_ctxt_init = *data;
-	//any child_ctxt;
+	any child_ctxt_init = *data;
+	any child_ctxt;
 
-	//visit_child( child_ctxt, child_ctxt_init, v.cond );
-	//tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
-	//tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
-	//if( cond_tid != bool_tid ){
-	//	typeconv->convert( msi->pety()->get(bool_tid), v.cond );
-	//}
-	//BasicBlock* cond_block = mod_ptr()->builder()->GetInsertBlock();
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	if( cond_tid != bool_tid ){
+		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
+	}
+	
+	insert_point_t ip_cond = insert_point();
 
-	//// Generate 'then' branch code.
-	//BasicBlock* yes_block = BasicBlock::Create( mod_ptr()->context(), v.yes_stmt->symbol()->mangled_name(), sc_env_ptr(data)->parent_fn );
-	//mod_ptr()->builder()->SetInsertPoint( yes_block );
-	//visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
-	//BasicBlock* after_yes_block = mod_ptr()->builder()->GetInsertBlock();
-	//
-	//// Generate 'else' branch code.
-	//BasicBlock* no_block = NULL;
-	//if( v.no_stmt ){
-	//	no_block = BasicBlock::Create( mod_ptr()->context(), v.no_stmt->symbol()->mangled_name(), sc_env_ptr(data)->parent_fn );
-	//	mod_ptr()->builder()->SetInsertPoint( no_block );
-	//	visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
-	//}
-	//BasicBlock* after_no_block = mod_ptr()->builder()->GetInsertBlock();
+	insert_point_t ip_yes = new_block( v.yes_stmt->symbol()->mangled_name(), true );
+	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
 
-	//// Generate aggragate block
-	//BasicBlock* aggregate_block = BasicBlock::Create(
-	//		mod_ptr()->context(),
-	//		extract_semantic_info<statement_si>(v)->exit_point().c_str(),
-	//		sc_env_ptr(data)->parent_fn
-	//	);
-	//
-	//// Fill back if-jump instruction
-	//builder()->SetInsertPoint( cond_block );
-	//builder()->CreateCondBr( load( node_ctxt(v.cond) ), yes_block, no_block ? no_block : aggregate_block );
+	insert_point_t ip_no;
+	if( v.no_stmt ){
+		ip_no = new_block( v.no_stmt->symbol()->mangled_name(), true );
+		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
+		
+	}
 
-	//// Fill back jump out instruct of each branch.
-	//builder()->SetInsertPoint( after_yes_block );
-	//builder()->CreateBr( aggregate_block );
-	//
-	//builder()->SetInsertPoint( after_no_block );
-	//builder()->CreateBr( aggregate_block );
+	insert_point_t ip_merge = new_block( extract_semantic_info<statement_si>(v)->exit_point(), false );
 
-	//// Set insert point to end of code.
-	//builder()->SetInsertPoint( aggregate_block );
+	// Fill back.
+	set_insert_point( ip_cond );
+	value_t cond_value = node_ctxt( v.cond, false )->get_value();
+	jump_cond( cond_value, ip_yes, ip_no ? ip_no : ip_merge );
 
-	//node_ctxt(v, true)->copy( sc_ptr(data) );
+	set_insert_point( ip_yes );
+	jump_to( ip_merge );
+
+	if( ip_no ){
+		set_insert_point( ip_no );
+		jump_to(ip_merge);
+	}
+
+	set_insert_point( ip_merge );
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( while_statement );

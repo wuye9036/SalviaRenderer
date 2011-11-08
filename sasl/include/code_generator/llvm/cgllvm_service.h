@@ -340,6 +340,7 @@ public:
 	void pop_fn();
 
 	void set_insert_point( insert_point_t const& ip );
+	insert_point_t insert_point() const;
 	/// @}
 
 	/// @name Context queries
@@ -420,7 +421,12 @@ public:
 
 	/// @name Utilities
 	/// @{
+	/// Create a new block at the last of function
 	insert_point_t new_block( std::string const& hint, bool set_insert_point );
+	/// Jump to the specified block.
+	void jump_to( insert_point_t const& );
+	/// Jump to the specified block by condition.
+	void jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip );
 	/// Clean empty blocks of current function.
 	virtual void clean_empty_blocks(); 
 	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;
