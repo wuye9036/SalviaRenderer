@@ -114,6 +114,13 @@ public:
 		callee(&tmp, p0, p1);
 		return tmp;
 	}
+
+	template <typename T0, typename T1, typename T2>
+	result_t operator() (T0 p0, T1 p1, T2 p2){
+		result_t tmp;
+		callee(&tmp, p0, p1, p2);
+		return tmp;
+	}
 };
 
 template <typename Fn>
@@ -195,7 +202,7 @@ struct jit_fixture {
 	shared_ptr<jit_engine> je;
 };
 
-#if 0
+#if 1
 
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/empty.ss" );
@@ -363,8 +370,47 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 	BOOST_CHECK_CLOSE( test_if(-9), 0.0f, 0.00001f );
 }
 
+bool test_short_ref(int i, int j, int k){
+	return ( i == 0 || j == 0) && k!= 0;
+}
+
 BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/bool.ss" );
+
+	jit_function<int(int, int)> test_max, test_min;
+	jit_function<bool(int, int)> test_le;
+	jit_function<bool(float, float)> test_ge;
+	jit_function<bool(int, int, int)> test_short;
+
+	function( test_max, "test_max" );
+	function( test_min, "test_min" );
+	function( test_le, "test_le" );
+	function( test_ge, "test_ge" );
+	function( test_short, "test_short" );
+
+	BOOST_CHECK( test_max( 2, 15 ) == 15 );
+	BOOST_CHECK( test_max( 15, 2 ) == 15 );
+	BOOST_CHECK( test_min( 2, 15 ) == 2 );
+	BOOST_CHECK( test_min( 15, 2 ) == 2 );
+
+	BOOST_CHECK( test_le( 5, 6 ) );
+	BOOST_CHECK( test_le( 6, 6 ) );
+	BOOST_CHECK( !test_le( 6, 5 ) );
+
+	BOOST_CHECK( !test_ge( 5, 6 ) );
+	BOOST_CHECK( test_ge( 6, 6 ) );
+	BOOST_CHECK( test_ge( 6, 5 ) );
+
+	for( int i = -1; i < 2; ++i ){
+		for( int j = -1; j < 2; ++j ){
+			for( int k = -1; k < 2; ++k ){
+				bool short_result = test_short(i, j, k);
+				bool ref_result = test_short_ref(i, j, k);
+				BOOST_CHECK_EQUAL( short_result, ref_result );
+			}
+		}
+	}
 }
+
 BOOST_AUTO_TEST_SUITE_END();

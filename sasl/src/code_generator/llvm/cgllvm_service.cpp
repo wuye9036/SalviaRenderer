@@ -18,6 +18,7 @@
 
 #include <eflib/include/diagnostics/assert.h>
 
+using sasl::syntax_tree::node;
 using sasl::syntax_tree::function_type;
 using sasl::syntax_tree::parameter;
 using sasl::syntax_tree::tynode;
@@ -48,6 +49,7 @@ using llvm::VectorType;
 using llvm::UndefValue;
 using llvm::StoreInst;
 
+using boost::any;
 using boost::shared_ptr;
 using boost::enable_if;
 using boost::is_integral;
@@ -794,12 +796,8 @@ insert_point_t cg_service::new_block( std::string const& hint, bool set_as_curre
 
 	insert_point_t ret;
 	
-	if( fn().fn->getBasicBlockList().empty() || !fn().fn->getBasicBlockList().back().empty() ){
-		ret.block = BasicBlock::Create( context(), hint, fn().fn );
-		dbg_print_blocks( fn().fn );
-	} else {
-		ret.block = &fn().fn->getBasicBlockList().back();
-	}
+	ret.block = BasicBlock::Create( context(), hint, fn().fn );
+	dbg_print_blocks( fn().fn );
 	
 	if( set_as_current ){
 		set_insert_point( ret );

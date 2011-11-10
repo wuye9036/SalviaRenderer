@@ -95,6 +95,58 @@ bool cgllvm_sisd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_
 	return false;
 }
 
+value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
+{
+	// NOTE
+	//  If 'yes' and 'no' expression are all reference/variable,
+	//  and left is as same abi as right, it will return a reference,
+	//  otherwise we will return a value.
+	any child_ctxt;
+
+	Value* ret = NULL;
+	visit_child( child_ctxt, ctxt_init, cond );
+	value_t cond_value = node_ctxt( cond, false)->get_value().to_rvalue();
+	insert_point_t cond_ip = insert_point();
+
+	insert_point_t yes_ip_beg = new_block( "yes_expr", true );
+	if( cond != yes ){
+		visit_child( child_ctxt, ctxt_init, yes );
+	}
+	value_t yes_value = node_ctxt( yes, false )->get_value();
+	Value* yes_v = yes_value.load();
+	Value* yes_ref = yes_value.load_ref();
+	insert_point_t yes_ip_end = insert_point();
+
+	insert_point_t no_ip_beg = new_block( "no_expr", true );
+	if( cond != no ){
+		visit_child( child_ctxt, ctxt_init, no );
+	}
+	value_t no_value = node_ctxt( no, false )->get_value();
+	Value* no_ref = ( no_value.get_abi() == yes_value.get_abi() ) ? no_value.load_ref() : NULL;
+	Value* no_v = no_value.load( yes_value.get_abi() );
+	insert_point_t no_ip_end = insert_point();
+
+	set_insert_point(cond_ip);
+	jump_cond( cond_value, yes_ip_beg, no_ip_beg );
+
+	insert_point_t merge_ip = new_block( "cond_merge", false );
+	set_insert_point( yes_ip_end );
+	jump_to( merge_ip );
+	set_insert_point( no_ip_end );
+	jump_to( merge_ip );
+
+	set_insert_point(merge_ip);
+	value_t result_value;
+	if( yes_ref && no_ref ){
+		Value* merged = select_( cond_value.load(), yes_ref, no_ref );
+		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_ref, yes_value.get_abi() );
+	} else {
+		Value* merged = select_( cond_value.load(), yes_v, no_v );
+		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_value, yes_value.get_abi() );
+	}
+
+	return result_value;
+}
 SASL_VISIT_DEF( program ){
 	// Create module.
 	if( !create_mod( v ) ){
@@ -118,101 +170,104 @@ SASL_VISIT_DEF( binary_expression ){
 	sc_ptr(child_ctxt_init)->clear_data();
 	any child_ctxt;
 
-	visit_child( child_ctxt, child_ctxt_init, v.left_expr );
-	visit_child( child_ctxt, child_ctxt_init, v.right_expr );
-
-	if( v.op == operators::assign ){
-		bin_assign( v, data );
+	if( v.op == operators::logic_and || v.op == operators::logic_or ){
+		bin_logic( v, data );
 	} else {
-		shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
-		shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
+		visit_child( child_ctxt, child_ctxt_init, v.left_expr );
+		visit_child( child_ctxt, child_ctxt_init, v.right_expr );
 
-		//////////////////////////////////////////////////////////////////////////
-		// type conversation for matching the operator prototype
-
-		// get an overloadable prototype.
-		std::vector< shared_ptr<expression> > args;
-		args += v.left_expr, v.right_expr;
-
-		symbol::overloads_t overloads
-			= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
-
-		EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
-			return;
-		}
-		EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
-			return;
-		}
-
-		boost::shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
-
-		shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
-		shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
-
-		// convert value type to match proto type.
-		if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
-			if( ! node_ctxt( p0_tsi->type_info() ) ){
-				visit_child( child_ctxt, child_ctxt_init, op_proto->params[0]->param_type );
-			}
-
-			node_ctxt(v.left_expr)->data().tyinfo
-				= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
-
-			typeconv->convert( p0_tsi->type_info(), v.left_expr );
-		}
-		if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
-			if( ! node_ctxt( p1_tsi->type_info() ) ){
-				visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
-			}
-
-			node_ctxt(v.left_expr)->data().tyinfo
-				= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
-
-			typeconv->convert( p1_tsi->type_info(), v.right_expr );
-		}
-
-		// use type-converted value to generate code.
-		value_t lval = node_ctxt(v.left_expr)->get_rvalue();
-		value_t rval = node_ctxt(v.right_expr)->get_rvalue();
-
-		value_t retval;
-
-		builtin_types lbtc = p0_tsi->type_info()->tycode;
-		builtin_types rbtc = p1_tsi->type_info()->tycode;
-
-		assert( lbtc == rbtc );
-
-		if( is_scalar(lbtc) || is_vector(lbtc) ){
-			if( v.op == operators::add ){
-				retval = emit_add(lval, rval);
-			} else if ( v.op == operators::mul ) {
-				retval = emit_mul(lval, rval);
-			} else if ( v.op == operators::add) {
-				retval = emit_add(lval, rval);
-			} else if ( v.op == operators::sub ) {
-				retval = emit_sub(lval, rval);
-			} else if( v.op == operators::less ) {
-				retval = emit_cmp_lt( lval, rval );
-			} else if( v.op == operators::less_equal ){
-				retval = emit_cmp_le( lval, rval );
-			} else if( v.op == operators::equal ){
-				retval = emit_cmp_eq( lval, rval );
-			} else if( v.op == operators::greater_equal ){
-				retval = emit_cmp_ge( lval, rval );
-			} else if( v.op == operators::greater ){
-				retval = emit_cmp_gt( lval, rval );	
-			} else if( v.op == operators::not_equal ){
-				retval = emit_cmp_ne( lval, rval );
-			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED0( ( operators::to_name(v.op) + " not be implemented." ).c_str() );
-			}
-
+		if( v.op == operators::assign ){
+			bin_assign( v, data );
 		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
+			shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
+			shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
-		sc_ptr(data)->get_value() = retval;
-		node_ctxt(v, true)->copy( sc_ptr(data) );
+			//////////////////////////////////////////////////////////////////////////
+			// type conversation for matching the operator prototype
+
+			// get an overloadable prototype.
+			std::vector< shared_ptr<expression> > args;
+			args += v.left_expr, v.right_expr;
+
+			symbol::overloads_t overloads
+				= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
+
+			EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
+				return;
+			}
+			EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
+				return;
+			}
+
+			boost::shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
+
+			shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
+			shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
+
+			// convert value type to match proto type.
+			if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
+				if( ! node_ctxt( p0_tsi->type_info() ) ){
+					visit_child( child_ctxt, child_ctxt_init, op_proto->params[0]->param_type );
+				}
+
+				node_ctxt(v.left_expr)->data().tyinfo
+					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
+
+				typeconv->convert( p0_tsi->type_info(), v.left_expr );
+			}
+			if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
+				if( ! node_ctxt( p1_tsi->type_info() ) ){
+					visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
+				}
+
+				node_ctxt(v.left_expr)->data().tyinfo
+					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
+
+				typeconv->convert( p1_tsi->type_info(), v.right_expr );
+			}
+
+			// use type-converted value to generate code.
+			value_t lval = node_ctxt(v.left_expr)->get_rvalue();
+			value_t rval = node_ctxt(v.right_expr)->get_rvalue();
+
+			value_t retval;
+
+			builtin_types lbtc = p0_tsi->type_info()->tycode;
+			builtin_types rbtc = p1_tsi->type_info()->tycode;
+
+			assert( lbtc == rbtc );
+
+			if( is_scalar(lbtc) || is_vector(lbtc) ){
+				if( v.op == operators::add ){
+					retval = emit_add(lval, rval);
+				} else if ( v.op == operators::mul ) {
+					retval = emit_mul(lval, rval);
+				} else if ( v.op == operators::add) {
+					retval = emit_add(lval, rval);
+				} else if ( v.op == operators::sub ) {
+					retval = emit_sub(lval, rval);
+				} else if( v.op == operators::less ) {
+					retval = emit_cmp_lt( lval, rval );
+				} else if( v.op == operators::less_equal ){
+					retval = emit_cmp_le( lval, rval );
+				} else if( v.op == operators::equal ){
+					retval = emit_cmp_eq( lval, rval );
+				} else if( v.op == operators::greater_equal ){
+					retval = emit_cmp_ge( lval, rval );
+				} else if( v.op == operators::greater ){
+					retval = emit_cmp_gt( lval, rval );	
+				} else if( v.op == operators::not_equal ){
+					retval = emit_cmp_ne( lval, rval );
+				} else {
+					EFLIB_ASSERT_UNIMPLEMENTED0( ( operators::to_name(v.op) + " not be implemented." ).c_str() );
+				}
+
+			} else {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+			sc_ptr(data)->get_value() = retval;
+			node_ctxt(v, true)->copy( sc_ptr(data) );
+		}
 	}
 }
 
@@ -283,51 +338,11 @@ SASL_VISIT_DEF( constant_expression ){
 }
 
 SASL_VISIT_DEF( cond_expression ){
-	// NOTE
-	//  If 'yes' and 'no' expression are all reference/variable,
-	//  and left is as same abi as right, it will return a reference,
-	//  otherwise we will return a value.
 	any child_ctxt_init = *data;
 	sc_ptr( &child_ctxt_init )->clear_data();
-	any child_ctxt;
-
-	Value* ret = NULL;
-	visit_child( child_ctxt, child_ctxt_init, v.cond_expr );
-	value_t cond_value = node_ctxt(v.cond_expr, false)->get_value().to_rvalue();
-	insert_point_t cond_ip = insert_point();
-
-	insert_point_t yes_ip = new_block( "yes_expr", true );
-	visit_child( child_ctxt, child_ctxt_init, v.yes_expr );
-	value_t yes_value = node_ctxt( v.yes_expr, false )->get_value();
-	Value* yes_v = yes_value.load();
-	Value* yes_ref = yes_value.load_ref();
-
-	insert_point_t no_ip = new_block( "no_expr", true );
-	visit_child( child_ctxt, child_ctxt_init, v.no_expr );
-	value_t no_value = node_ctxt( v.no_expr, false )->get_value();
-	Value* no_ref = ( no_value.get_abi() == yes_value.get_abi() ) ? no_value.load_ref() : NULL;
-	Value* no_v = no_value.load( yes_value.get_abi() );
-
-	set_insert_point(cond_ip);
-	jump_cond( cond_value, yes_ip, no_ip );
-
-	insert_point_t merge_ip = new_block( "cond_merge", false );
-	set_insert_point( yes_ip );
-	jump_to( merge_ip );
-	set_insert_point( no_ip );
-	jump_to( merge_ip );
-
-	set_insert_point(merge_ip);
-	value_t result_value;
-	if( yes_ref && no_ref ){
-		Value* merged = select_( cond_value.load(), yes_ref, no_ref );
-		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_ref, yes_value.get_abi() );
-	} else {
-		Value* merged = select_( cond_value.load(), yes_v, no_v );
-		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_value, yes_value.get_abi() );
-	}
-
-	sc_ptr(data)->get_value() = result_value;
+	
+	sc_ptr(data)->get_value()
+		= emit_short_cond( child_ctxt_init, v.cond_expr, v.yes_expr, v.no_expr ) ;
 	node_ctxt( v, true )->copy( sc_ptr(data) );
 }
 
@@ -696,6 +711,23 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	cgllvm_sctxt* pctxt = node_ctxt(v, true);
 	pctxt->data( rctxt->data() );
 	pctxt->env( sc_ptr(data) );
+}
+
+SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
+	any child_ctxt_init = *data;
+	sc_ptr( &child_ctxt_init )->clear_data();
+	
+	value_t ret_value;
+	if( v.op == operators::logic_or ){
+		// return left ? left : right;
+		ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.left_expr, v.right_expr ) ;
+	} else {
+		// return left ? right : left;
+		ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.right_expr, v.left_expr ) ;
+	}
+	
+	sc_ptr(data)->get_value() = ret_value.to_rvalue();
+	node_ctxt( v, true )->copy( sc_ptr(data) );
 }
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){

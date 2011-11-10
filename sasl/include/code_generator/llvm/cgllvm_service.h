@@ -16,6 +16,7 @@
 #include <eflib/include/metaprog/enable_if.h>
 #include <eflib/include/diagnostics/assert.h>
 
+#include <boost/any.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -429,6 +430,7 @@ public:
 
 	/// @name Utilities
 	/// @{
+	
 	/// Create a new block at the last of function
 	insert_point_t new_block( std::string const& hint, bool set_insert_point );
 	/// Jump to the specified block.

@@ -91,7 +91,15 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator, declarator );
 
 	SASL_SPECIFIC_VISIT_DCL( bin_assign, binary_expression );
-	// SASL_SPECIFIC_VISIT_DCL( bin_arith, binary_expression );
+	SASL_SPECIFIC_VISIT_DCL( bin_logic, binary_expression );
+
+	/// Create short-circuit evaluation for condition expression. And logic operators will use it.
+	value_t emit_short_cond( 
+		boost::any const& ctxt_init,
+		boost::shared_ptr<sasl::syntax_tree::node> const& cond,
+		boost::shared_ptr<sasl::syntax_tree::node> const& yes,
+		boost::shared_ptr<sasl::syntax_tree::node> const& no
+		);
 
 	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
 

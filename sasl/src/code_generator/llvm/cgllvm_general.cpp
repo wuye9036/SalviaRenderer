@@ -146,17 +146,17 @@ SASL_VISIT_DEF( if_statement ){
 	if( cond_tid != bool_tid ){
 		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
 	}
-	
 	insert_point_t ip_cond = insert_point();
 
-	insert_point_t ip_yes = new_block( v.yes_stmt->symbol()->mangled_name(), true );
+	insert_point_t ip_yes_beg = new_block( v.yes_stmt->symbol()->mangled_name(), true );
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
+	insert_point_t ip_yes_end = insert_point();
 
-	insert_point_t ip_no;
+	insert_point_t ip_no_beg, ip_no_end;
 	if( v.no_stmt ){
-		ip_no = new_block( v.no_stmt->symbol()->mangled_name(), true );
+		ip_no_beg = new_block( v.no_stmt->symbol()->mangled_name(), true );
 		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
-		
+		ip_no_end = insert_point();
 	}
 
 	insert_point_t ip_merge = new_block( extract_semantic_info<statement_si>(v)->exit_point(), false );
@@ -164,13 +164,13 @@ SASL_VISIT_DEF( if_statement ){
 	// Fill back.
 	set_insert_point( ip_cond );
 	value_t cond_value = node_ctxt( v.cond, false )->get_value();
-	jump_cond( cond_value, ip_yes, ip_no ? ip_no : ip_merge );
+	jump_cond( cond_value, ip_yes_beg, ip_no_beg ? ip_no_beg : ip_merge );
 
-	set_insert_point( ip_yes );
+	set_insert_point( ip_yes_end );
 	jump_to( ip_merge );
 
-	if( ip_no ){
-		set_insert_point( ip_no );
+	if( ip_no_end ){
+		set_insert_point( ip_no_end );
 		jump_to(ip_merge);
 	}
 
