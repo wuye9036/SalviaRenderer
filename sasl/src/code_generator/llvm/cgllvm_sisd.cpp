@@ -187,6 +187,8 @@ SASL_VISIT_DEF( binary_expression ){
 				retval = emit_add(lval, rval);
 			} else if ( v.op == operators::mul ) {
 				retval = emit_mul(lval, rval);
+			} else if ( v.op == operators::add) {
+				retval = emit_add(lval, rval);
 			} else if ( v.op == operators::sub ) {
 				retval = emit_sub(lval, rval);
 			} else if( v.op == operators::less ) {
@@ -202,7 +204,7 @@ SASL_VISIT_DEF( binary_expression ){
 			} else if( v.op == operators::not_equal ){
 				retval = emit_cmp_ne( lval, rval );
 			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				EFLIB_ASSERT_UNIMPLEMENTED0( ( operators::to_name(v.op) + " not be implemented." ).c_str() );
 			}
 
 		} else {
