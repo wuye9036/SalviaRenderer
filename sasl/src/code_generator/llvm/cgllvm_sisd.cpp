@@ -189,11 +189,22 @@ SASL_VISIT_DEF( binary_expression ){
 				retval = emit_mul(lval, rval);
 			} else if ( v.op == operators::sub ) {
 				retval = emit_sub(lval, rval);
+			} else if( v.op == operators::less ) {
+				retval = emit_cmp_lt( lval, rval );
+			} else if( v.op == operators::less_equal ){
+				retval = emit_cmp_le( lval, rval );
 			} else if( v.op == operators::equal ){
 				retval = emit_cmp_eq( lval, rval );
+			} else if( v.op == operators::greater_equal ){
+				retval = emit_cmp_ge( lval, rval );
+			} else if( v.op == operators::greater ){
+				retval = emit_cmp_gt( lval, rval );	
+			} else if( v.op == operators::not_equal ){
+				retval = emit_cmp_ne( lval, rval );
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
+
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}

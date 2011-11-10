@@ -74,6 +74,39 @@ using std::string;
 		abis ret_abi = is_scalar(hint) ? abi_llvm : lhs.get_abi();\
 		return value_t( hint, retval.load(ret_abi), value_t::kind_value, ret_abi, this );
 
+#define EMIT_CMP_EQ_NE_BODY( op_name ) \
+	builtin_types hint = lhs.get_hint(); \
+	assert( hint == rhs.get_hint() ); \
+	assert( is_scalar(hint) || (hint == builtin_types::_boolean) ); \
+	\
+	Value* ret = NULL; \
+	if( is_integer(hint) || (hint == builtin_types::_boolean) ){ \
+		ret = builder()->CreateICmp##op_name( lhs.load(), rhs.load() ); \
+	} else if( is_real(hint) ) { \
+		ret = builder()->CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
+	} \
+	\
+	return value_t( builtin_types::_boolean, ret, value_t::kind_value, abi_llvm, this );
+
+#define EMIT_CMP_BODY( op_name ) \
+	builtin_types hint = lhs.get_hint(); \
+	assert( hint == rhs.get_hint() ); \
+	assert( is_scalar(hint) ); \
+	\
+	Value* ret = NULL; \
+	if( is_integer(hint) ){ \
+		if( is_signed(hint) ){ \
+			ret = builder()->CreateICmpS##op_name( lhs.load(), rhs.load() ); \
+		} else {\
+			ret = builder()->CreateICmpU##op_name( lhs.load(), rhs.load() ); \
+		}\
+		\
+	} else if( is_real(hint) ) { \
+		ret = builder()->CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
+	} \
+	\
+	return value_t( builtin_types::_boolean, ret, value_t::kind_value, abi_llvm, this );
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 namespace {
@@ -1244,25 +1277,40 @@ void cg_service::jump_cond( value_t const& cond_v, insert_point_t const const & 
 	builder()->CreateCondBr( cond, true_ip.block, false_ip.block );
 }
 
-value_t cg_service::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
-{
-	builtin_types hint = lhs.get_hint();
-	assert( hint == rhs.get_hint() );
-	assert( is_scalar(hint) || (hint == builtin_types::_boolean) );
-
-	Value* ret = NULL;
-	if( is_integer(hint) || (hint == builtin_types::_boolean) ){
-		ret = builder()->CreateICmpEQ( lhs.load(), rhs.load() );
-	} else if( is_real(hint) ) {
-		ret = builder()->CreateFCmpUEQ( lhs.load(), rhs.load() );
-	}
-
-	return value_t( builtin_types::_boolean, ret, value_t::kind_value, abi_llvm, this );
-}
 
 Value* cg_service::select_( Value* cond, Value* yes, Value* no )
 {
 	return builder()->CreateSelect( cond, yes, no );
+}
+
+value_t cg_service::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_CMP_EQ_NE_BODY( EQ );
+}
+
+value_t cg_service::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_CMP_BODY( LT );
+}
+
+value_t cg_service::emit_cmp_le( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_CMP_BODY( LE );
+}
+
+value_t cg_service::emit_cmp_ne( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_CMP_EQ_NE_BODY( NE );
+}
+
+value_t cg_service::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_CMP_BODY( GE );
+}
+
+value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_CMP_BODY( GT );
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

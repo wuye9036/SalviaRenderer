@@ -278,7 +278,13 @@ public:
 	value_t emit_sub( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul( value_t const& lhs, value_t const& rhs );
 	value_t emit_dot( value_t const& lhs, value_t const& rhs );
+
+	value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs );
+	value_t emit_cmp_le( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_eq( value_t const& lhs, value_t const& rhs );
+	value_t emit_cmp_ne( value_t const& lhs, value_t const& rhs );
+	value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs );
+	value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
