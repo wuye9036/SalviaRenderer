@@ -94,7 +94,6 @@ SASL_VISIT_DEF( cast_expression ){
 }
 
 SASL_VISIT_DEF_UNIMPL( expression_list );
-SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 
 SASL_VISIT_DEF_UNIMPL( identifier );

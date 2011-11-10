@@ -784,6 +784,15 @@ value_t cg_service::create_value( builtin_types hint, Value* val, value_t::kinds
 	return value_t( hint, val, k, abi, this );
 }
 
+value_t cg_service::create_value( value_tyinfo* tyinfo, builtin_types hint, Value* val, value_t::kinds k, abis abi )
+{
+	if( tyinfo ){
+		return create_value( tyinfo, val, k, abi );
+	} else {
+		return create_value( hint, val, k ,abi );
+	}
+}
+
 sasl::code_generator::value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
 {
 	builtin_types lhint = lhs.get_hint();
@@ -1224,7 +1233,9 @@ insert_point_t cg_service::insert_point() const
 void cg_service::jump_to( insert_point_t const& ip )
 {
 	assert( ip );
-	builder()->CreateBr( ip.block );
+	if( !insert_point().block->getTerminator() ){
+		builder()->CreateBr( ip.block );
+	}
 }
 
 void cg_service::jump_cond( value_t const& cond_v, insert_point_t const const & true_ip, insert_point_t const& false_ip )
@@ -1247,6 +1258,11 @@ value_t cg_service::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
 	}
 
 	return value_t( builtin_types::_boolean, ret, value_t::kind_value, abi_llvm, this );
+}
+
+Value* cg_service::select_( Value* cond, Value* yes, Value* no )
+{
+	return builder()->CreateSelect( cond, yes, no );
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

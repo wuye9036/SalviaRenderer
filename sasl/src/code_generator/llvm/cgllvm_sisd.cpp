@@ -269,6 +269,55 @@ SASL_VISIT_DEF( constant_expression ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( cond_expression ){
+	// NOTE
+	//  If 'yes' and 'no' expression are all reference/variable,
+	//  and left is as same abi as right, it will return a reference,
+	//  otherwise we will return a value.
+	any child_ctxt_init = *data;
+	sc_ptr( &child_ctxt_init )->clear_data();
+	any child_ctxt;
+
+	Value* ret = NULL;
+	visit_child( child_ctxt, child_ctxt_init, v.cond_expr );
+	value_t cond_value = node_ctxt(v.cond_expr, false)->get_value().to_rvalue();
+	insert_point_t cond_ip = insert_point();
+
+	insert_point_t yes_ip = new_block( "yes_expr", true );
+	visit_child( child_ctxt, child_ctxt_init, v.yes_expr );
+	value_t yes_value = node_ctxt( v.yes_expr, false )->get_value();
+	Value* yes_v = yes_value.load();
+	Value* yes_ref = yes_value.load_ref();
+
+	insert_point_t no_ip = new_block( "no_expr", true );
+	visit_child( child_ctxt, child_ctxt_init, v.no_expr );
+	value_t no_value = node_ctxt( v.no_expr, false )->get_value();
+	Value* no_ref = ( no_value.get_abi() == yes_value.get_abi() ) ? no_value.load_ref() : NULL;
+	Value* no_v = no_value.load( yes_value.get_abi() );
+
+	set_insert_point(cond_ip);
+	jump_cond( cond_value, yes_ip, no_ip );
+
+	insert_point_t merge_ip = new_block( "cond_merge", false );
+	set_insert_point( yes_ip );
+	jump_to( merge_ip );
+	set_insert_point( no_ip );
+	jump_to( merge_ip );
+
+	set_insert_point(merge_ip);
+	value_t result_value;
+	if( yes_ref && no_ref ){
+		Value* merged = select_( cond_value.load(), yes_ref, no_ref );
+		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_ref, yes_value.get_abi() );
+	} else {
+		Value* merged = select_( cond_value.load(), yes_v, no_v );
+		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_value, yes_value.get_abi() );
+	}
+
+	sc_ptr(data)->get_value() = result_value;
+	node_ctxt( v, true )->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( call_expression ){
 	any child_ctxt_init = *data;
 	sc_ptr(&child_ctxt_init)->clear_data();

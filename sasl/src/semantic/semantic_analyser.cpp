@@ -275,13 +275,14 @@ SASL_VISIT_DEF( cond_expression ){
  
 	assert( cond_tisi && yes_tisi && no_tisi );
 
-	if( cond_tisi && yes_tisi && no_tisi ) {
+	if( !(cond_tisi && yes_tisi && no_tisi) ) {
 		return;
 	}
 
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	tid_t cond_tid = cond_tisi->entry_id();
 
-	if( !typeconv->implicit_convertible( cond_tisi->entry_id(), bool_tid ) ){
+	if( cond_tid != bool_tid && !typeconv->implicit_convertible( cond_tisi->entry_id(), bool_tid ) ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		// TODO error: cannot convert conditional expression to boolean.
 		return;

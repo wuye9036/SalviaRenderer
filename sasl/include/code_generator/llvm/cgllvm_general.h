@@ -55,7 +55,6 @@ public:
 	SASL_VISIT_DCL( unary_expression );
 	SASL_VISIT_DCL( cast_expression );
 	SASL_VISIT_DCL( expression_list );
-	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( index_expression );
 
 	SASL_VISIT_DCL( identifier );

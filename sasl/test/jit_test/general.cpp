@@ -363,4 +363,8 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 	BOOST_CHECK_CLOSE( test_if(-9), 0.0f, 0.00001f );
 }
 
+BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
+{
+	init_g( "./repo/question/v1a1/bool.ss" );
+}
 BOOST_AUTO_TEST_SUITE_END();
