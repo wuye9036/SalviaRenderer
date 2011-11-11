@@ -340,6 +340,50 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attri
 	return ret;
 }
 
+operators syntax_tree_builder::build_prefix_op( shared_ptr<attribute> attr )
+{
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, tok_attr, attr );
+
+	assert( tok_attr );
+
+	std::string const& op_str = tok_attr->tok->str;
+	char op_chars[4] = {'\0', '\0', '\0', '\0'};
+	for( size_t i = 0; i < op_str.length(); ++i ){ op_chars[i] = op_str[i]; }
+
+	switch( op_chars[0] ){
+	case '+':
+		return op_chars[1] == '+' ? operators::prefix_incr : operators::positive;
+	case '-':
+		return op_chars[1] == '-' ? operators::prefix_decr : operators::negative;
+	case '!':
+		return operators::logic_not;
+	}
+
+	string assertion("Unsupported operator: ");
+	assertion += op_str;
+	EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
+
+	return operators::none;
+}
+
+operators syntax_tree_builder::build_postfix_op( shared_ptr<attribute> attr )
+{
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, tok_attr, attr );
+	switch( tok_attr->tok->str[0] )
+	{
+	case '+': // ++
+		return operators::postfix_incr;
+	case '-': // --
+		return operators::postfix_decr;
+	}
+
+	string assertion("Unsupported operator: ");
+	assertion += tok_attr->tok->str;
+	EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
+
+	return operators::none;
+}
+
 /* Build assignment expression tree.
 * Example:
 *    Expression: a = b = c
@@ -519,8 +563,20 @@ shared_ptr<expression> syntax_tree_builder::build_unaryexpr( shared_ptr<attribut
 }
 
 shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<attribute> attr ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<unary_expression>();
+	shared_ptr<attribute> op_attr = attr->child(0)->child(0);
+	shared_ptr<attribute> expr_attr = attr->child(1);
+
+	assert( op_attr );
+	assert( expr_attr );
+
+	shared_ptr<expression> expr = build_castexpr(expr_attr);
+	assert( expr );
+
+	shared_ptr<unary_expression> ret = create_node<unary_expression>( token_t::null() );
+	ret->expr = expr;
+	ret->op = build_prefix_op( op_attr );
+
+	return ret;
 }
 
 shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute> attr ){
@@ -540,7 +596,10 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 				ret = build_memexpr(expr_attr, ret);
 			}
 			SASL_CASE_RULE( opinc ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				shared_ptr<unary_expression> ret_unary = create_node<unary_expression>( token_t::null() );
+				ret_unary->op = build_postfix_op(expr_attr);
+				ret_unary->expr = ret;
+				ret = ret_unary;
 			}
 		SASL_END_SWITCH_RULE();
 	}
