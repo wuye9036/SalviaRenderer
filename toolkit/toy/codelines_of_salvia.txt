@@ -15,15 +15,15 @@ statistic directory: ../../salviar
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 63
-  code lines: 5816
-  null lines: 1558
-  empty lines: 1124
+  code lines: 5822
+  null lines: 1559
+  empty lines: 1127
   single line comments: 169
   multi line comments: 1144
   mixed lines: 30
-  total: 9841
-  file bytes(KB): 283.9
-  bytes per line: 29.54
+  total: 9851
+  file bytes(KB): 284.12
+  bytes per line: 29.53
 statistic directory: ../../salviax
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
@@ -54,25 +54,25 @@ statistic directory: ../../samples
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 38
-  code lines: 1619
-  null lines: 461
+  code lines: 1620
+  null lines: 462
   empty lines: 293
   single line comments: 158
   multi line comments: 705
   mixed lines: 34
-  total: 3270
-  file bytes(KB): 84.81
-  bytes per line: 26.56
+  total: 3272
+  file bytes(KB): 84.85
+  bytes per line: 26.55
 statistic directory: ../../sasl
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 209
-  code lines: 15366
-  null lines: 4424
-  empty lines: 2193
-  single line comments: 1078
-  multi line comments: 2724
+  code lines: 15594
+  null lines: 4450
+  empty lines: 2244
+  single line comments: 778
+  multi line comments: 2252
   mixed lines: 58
-  total: 25843
-  file bytes(KB): 765.46
-  bytes per line: 30.33
+  total: 25376
+  file bytes(KB): 752.49
+  bytes per line: 30.37
