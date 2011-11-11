@@ -174,7 +174,7 @@ void grammars::set_terms()
 	SRULE( rabracket,	STERM(rabracket) );
 	SRULE( lbrace,		STERM(lbrace) );
 	SRULE( rbrace,		STERM(rbrace) );
-	SRULE( opinc,		STERM(self_incr) );
+	SRULE( opinc,		STERM(inc_dec) );
 	SRULE( opunary,		STERM(plus) | STERM(minus) | STERM(tilde) | STERM(exclamation) );
 
 	SRULE( kw_typedef,	STERM(kw_typedef) );

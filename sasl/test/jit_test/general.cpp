@@ -202,7 +202,7 @@ struct jit_fixture {
 	shared_ptr<jit_engine> je;
 };
 
-#if 1
+#if 0
 
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/empty.ss" );
@@ -356,8 +356,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
 }
 
-#endif
-
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
 	init_g("./repo/question/v1a1/branches.ss");
@@ -413,4 +411,10 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 	}
 }
 
+#endif
+
+BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
+{
+	init_g( "./repo/question/v1a1/unary_operators.ss" );
+}
 BOOST_AUTO_TEST_SUITE_END();

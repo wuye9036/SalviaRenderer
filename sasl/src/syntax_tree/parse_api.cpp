@@ -108,6 +108,8 @@ void init_lex( lexer& l ){
 		( "logic_or", "{VERTICAL}{VERTICAL}" )
 		( "logic_and", "&&" )
 
+		( "inc_dec", "{PLUS}{PLUS}|{MINUS}{MINUS}" )
+
 		( "space", "{SPACE}" )
 		( "newline", "{NEWLINE}" )
 		( "cppcomment", "{SLASH}{SLASH}[^\\n]*" )
@@ -129,6 +131,7 @@ void init_lex( lexer& l ){
 		("less_equal")("equal_to")("not_equal")("greater_equal") // <= >= == !=
 		("add_assign")("sub_assign")("mul_assign")("div_assign") // += -= *= /=
 		("logic_or")("logic_and") // || &&
+		("inc_dec") // ++ --
 		("plus")("minus")("asterisk")("slash") // + - * /
 		("labracket")("rabracket") // < >
 		("vertical")("ampersand")
