@@ -17,6 +17,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/platform/cpuinfo.h>
 
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::function_type;
@@ -1309,6 +1310,12 @@ value_t cg_service::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
 value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 {
 	EMIT_CMP_BODY( GT );
+}
+
+value_t cg_service::emit_sqrt( value_t const& lhs )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

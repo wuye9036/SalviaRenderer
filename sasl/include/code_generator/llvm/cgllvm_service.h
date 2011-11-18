@@ -324,6 +324,11 @@ public:
 	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */
 
+	/// @name Intrinsics
+	/// @{
+	value_t emit_sqrt( value_t const& lhs );
+	/// @}
+
 	/// @name Emit type casts
 	/// @{
 	/// Cast between integer types.

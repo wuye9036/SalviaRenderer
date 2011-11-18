@@ -27,7 +27,10 @@
 #include <boost/type_traits/is_same.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/platform/cpuinfo.h>
+
 #include <fstream>
+#include <iostream>
 
 using namespace eflib;
 using sasl::compiler::compiler;
@@ -46,6 +49,8 @@ using boost::function_types::parameter_types;
 
 using std::fstream;
 using std::string;
+using std::cout;
+using std::endl;
 
 using boost::mpl::_;
 using boost::mpl::if_;
@@ -201,6 +206,29 @@ struct jit_fixture {
 	shared_ptr<symbol> root_sym;
 	shared_ptr<jit_engine> je;
 };
+
+BOOST_AUTO_TEST_CASE( instruction_set ){
+	cout << "Check CPU Features: " << endl;
+
+	if( support_instruction_set(ins_sse2) ){
+		cout << " SSE2 Supported." << endl;
+	} 
+	if( support_instruction_set(ins_sse3) ){
+		cout << " SSE3 Supported." << endl;
+	}
+	if( support_instruction_set(ins_ssse3) ){
+		cout << " SSSE3 Supported." << endl;
+	} 
+	if( support_instruction_set(ins_sse41) ){
+		cout << " SSE4.1 Supported." << endl;
+	} 
+	if( support_instruction_set(ins_sse42) ){
+		cout << " SSE4.2 Supported." << endl;
+	}
+	if( support_instruction_set(ins_sse4a) ){
+		cout << " SSE4A Supported." << endl;
+	}
+}
 
 #if 0
 
