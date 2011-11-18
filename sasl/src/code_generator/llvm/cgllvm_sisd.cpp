@@ -346,6 +346,62 @@ SASL_VISIT_DEF( cond_expression ){
 	node_ctxt( v, true )->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( unary_expression ){
+	any child_ctxt_init = *data;
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.expr );
+	
+	value_t inner_value = sc_ptr(&child_ctxt)->get_value();
+
+	shared_ptr<value_tyinfo> one_tyinfo = create_tyinfo( v.si_ptr<type_info_si>()->type_info() );
+	builtin_types hint = inner_value.get_hint();
+
+	if( v.op == operators::negative ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return;
+	} else if( v.op == operators::positive ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return;
+	} 
+	
+	value_t one_scalar;
+	value_t one_value;
+
+	builtin_types scalar_hint = scalar_of( hint );
+	if( is_signed(hint) ){
+		one_scalar = create_constant_scalar( (int32_t)1, one_tyinfo.get() );
+	} else {
+		one_scalar = create_constant_scalar( (uint32_t)1, one_tyinfo.get() );
+	}
+
+	if( is_scalar(hint) ){
+		one_value = one_scalar;
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return;
+	}
+
+	if( v.op == operators::prefix_incr ){
+		value_t inc_v = emit_add( inner_value, one_value );
+		inner_value.store( inc_v );
+		sc_ptr(data)->get_value() = inner_value;
+	} else if( v.op == operators::prefix_decr ){
+		value_t dec_v = emit_sub( inner_value, one_value );
+		inner_value.store( dec_v );
+		sc_ptr(data)->get_value() = inner_value;
+	} else if( v.op == operators::postfix_incr ){
+		sc_ptr(data)->get_value() = inner_value.to_rvalue();
+		inner_value.store( emit_add( inner_value, one_value ) );
+	} else if( v.op == operators::postfix_decr ){
+		sc_ptr(data)->get_value() = inner_value.to_rvalue();
+		inner_value.store( emit_sub( inner_value, one_value ) );
+	}
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+	node_ctxt(v, true)->data().tyinfo = one_tyinfo;
+}
+
 SASL_VISIT_DEF( call_expression ){
 	any child_ctxt_init = *data;
 	sc_ptr(&child_ctxt_init)->clear_data();

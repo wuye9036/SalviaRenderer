@@ -1,0 +1,66 @@
+目录说明：
+
+${HOME}		SALVIA源代码的根目录。该目录下应该包含README
+${BUILD}	CMake配置及编译的中间目录。
+${BIN}		最终二进制文件的生成目录
+
+${PLATFORM}	目标平台名称。包括win32，x64（win32 64bit）等。
+${COMPILER}	编译器名称。格式为短名+版本号。
+				短名表：
+					msvc	Microsoft Visual C++
+					mgw		MinGW C++
+					icc		Intel C++
+					gcc		GCC c++ compiler
+			版本号由主版本号，次版本号和修订号构成。
+			对于MSVC 2005以上仅使用主版本号。
+			Intel C++不显示修订号。
+			如果修订号为0，则不显示修订号。
+			例:
+				MSVC 2005	--> msvc8
+				MSVC 2010	--> msvc10
+				Mingw 4.5.1	--> mgw451
+${CONFIG}	配置选项。CMAKE支持DEBUG/RELEASE/RELWITHDEBINFO/RELMINSIZE四项。
+				
+${HOME}		: SALVIA及部分第三方库源代码
+	3rd_party
+		src			: 第三方源代码
+			llvm	: LLVM源码
+		wtl			: WTL源码
+		threadpool	: Thead Pool 源码
+		llvm		: 预编译LLVM库
+			config	: LLVM 配置头文件
+				${PLATFORM}_{COMPILER}
+					llvm	: 包含LLVM的CMake生成的Config和System文件夹
+			inlcude	: LLVM头文件。直接从LLVM源代码中拷贝即可。
+			lib
+				${PLATFORM}_{COMPILER}_${CONFIG}	: LLVM编译后生成的library
+			toolchains
+				${PLATFORM}	: LLVM编译生成的工具链。包括llc，lli等可执行文件
+	bin
+		resource	: 资源文件
+		${PLATFORM}
+			${CONFIG}		: 最终生成的二进制文件。
+			
+Boost的编译：
+	* 从build_conf中获取boost路径至${BOOST}。
+	* 根据boost路径编译生成bjam至 ${BOOST}/bjam.exe。
+	* 使用bjam编译库，并stage至 ${BOOST}/${PLATFORM} 中。
+	* ${BOOST_LIB_DIRECTORY} = ${BOOST}/${PLATFORM}/lib
+	
+LLVM的编译：
+	* LLVM源代码路径为 ${HOME}/3rd_party/src/llvm。我们称为${LLVM}
+	* LLVM的安装路径为 ${HOME}/3rd_party/llvm。我们称之为${LLVM_INSTALL}
+	* LLVM的编译目录为 ${BUILD}/llvm/${PLATFORM}_${COMPILER}。我们称为${LLVM_BUILD}
+	
+	* 使用CMake配置并生成Solution。设置LLVM_BOOST_STDINT为True，设置LLVM_BOOST_DIR为${BOOST}
+	* 编译LLVM。
+	* 拷贝 ${LLVM_BUILD}/include/llvm 下的 Config 和 Support 文件夹至 ${LLVM_INSTALL}/config/${PLATFORM}_{COMPILER}/llvm 文件夹下。
+	* 拷贝 ${LLVM}/include 至 ${HOME}/3rd_party/llvm下覆盖include文件夹。
+	* 拷贝 ${LLVM_BUILD}/lib/${CONFIG} 下所有库文件和符号文件至 ${LLVM_INSTALL}/lib/${PLATFORM}_{COMPILER}_${CONFIG}
+	* 拷贝 ${LLVM_BUILD}/bin/${CONFIG} 下所有可执行程序至 ${LLVM_INSTALL}/toolchains/${PLATFORM}_{COMPILER}_${CONFIG}
+	
+SALVIA的编译：
+	* SALVIA的编译目录为 ${BUILD}/salvia/${PLATFORM}_${COMPILER}
+	* 使用CMake配置并生成Solution。设置SALVIA_BOOST_DIRECTORY为${BOOST}
+	* 编译SALVIA
+	* 拷贝Boost dynamic libraries和LLVM dynamic libraries至bin目录（暂时不需要做）

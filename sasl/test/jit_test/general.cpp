@@ -416,5 +416,16 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/unary_operators.ss" );
+
+	jit_function<int(int)> test_pre_inc, test_pre_dec, test_post_inc, test_post_dec;
+	function( test_pre_inc, "test_pre_inc" );
+	function( test_pre_dec, "test_pre_dec" );
+	function( test_post_inc, "test_post_inc" );
+	function( test_post_dec, "test_post_dec" );
+
+	BOOST_CHECK( test_pre_inc(5) == 13 );
+	BOOST_CHECK( test_pre_dec(5) == 7 );
+	BOOST_CHECK( test_post_inc(5) == 11 );
+	BOOST_CHECK( test_post_dec(5) == 9 );
 }
 BOOST_AUTO_TEST_SUITE_END();

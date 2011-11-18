@@ -67,7 +67,6 @@ typedef cgllvm_sctxt* sctxt_handle;
 cgllvm_general::cgllvm_general()
 {}
 
-SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF( cast_expression ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	//any child_ctxt_init = *data;
