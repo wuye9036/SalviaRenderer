@@ -21,7 +21,11 @@ set( SOURCE_FILES
 	${SALVIA_LLVM_TEST_CASE_SOURCES}
 )
 
-ADD_LIBRARY( sasl_test_cases ${HEADER_FILES} ${SOURCE_FILES} )
+SOURCE_GROUP( "Header Files" FILES ${HEADER_FILES} )
+SOURCE_GROUP( "Source Files" FILES ${SOURCE_FILES} )
+include( ${SASL_HOME_DIR}/sasl/test/auto_test/repo/question/tests.cmake )
+
+ADD_LIBRARY( sasl_test_cases ${HEADER_FILES} ${SOURCE_FILES} ${V1A1_TESTS} )
 
 if (MSVC)
 	Set( SALVIA_TEST_REPOSITORY_PATH
