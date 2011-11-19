@@ -836,7 +836,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
 		shared_ptr<function_type> intr_fn = intr->node()->as_handle<function_type>();
-
+		
 		// If intrinsic is not invoked, we don't generate code for it.
 		if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
 			continue;
@@ -870,6 +870,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 		shared_ptr<value_tyinfo> result_ty = fn().get_return_ty();
 		
+		fn().inline_hint();
+
 		// Process Intrinsic
 		if( intr->unmangled_name() == "mul" ){
 			
@@ -893,9 +895,12 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret_val = emit_dot( fn().arg(0), fn().arg(1) );
 			emit_return( ret_val, abi_llvm );
 
-		}
-		else
-		{
+		} else if( intr->unmangled_name() == "sqrt" ){
+			assert( par_tys.size() == 1 );
+			fn().arg_name( 0, ".value" );
+			value_t ret_val = emit_sqrt( fn().arg(0) );
+			emit_return( ret_val, abi_llvm );
+		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	}

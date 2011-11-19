@@ -246,6 +246,8 @@ struct function_t{
 	llvm::Value* return_address() const;
 	/// Return name
 	void return_name( std::string const& s );
+	/// Set Inline hint
+	void inline_hint();
 
 	boost::shared_ptr<value_tyinfo> get_return_ty() const;
 
@@ -312,7 +314,7 @@ public:
 
 	/// Didn't support swizzle yet.
 	value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
-
+	
 	value_t emit_extract_ref( value_t const& lhs, int idx );
 	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
 	value_t emit_extract_val( value_t const& lhs, int idx );
@@ -467,6 +469,14 @@ public:
 	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	template <typename T>
 	llvm::Value* c_vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	/// @}
+
+	/// @name State
+	/// @{
+	/// Prefer to use external functions as intrinsic.
+	bool prefer_externals() const;
+	/// Prefer to use scalar code to intrinsic.
+	bool prefer_scalar_code() const;
 	/// @}
 private:
 	std::vector<function_t> fn_ctxts;

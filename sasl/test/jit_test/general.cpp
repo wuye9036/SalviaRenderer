@@ -274,6 +274,8 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 	BOOST_CHECK	( fn(5) == 5 );
 }
 
+#endif
+
 using eflib::vec3;
 using eflib::int2;
 
@@ -283,12 +285,16 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<float (vec3*, vec3*)> test_dot_f3;
 	jit_function<vec4 (mat44*, vec4*)> test_mul_m44v4;
 	jit_function<vec4 (mat44*)> test_fetch_m44v4;
+	jit_function<float (float) > test_sqrt_f;
 
 	function( test_dot_f3, "test_dot_f3" );
 	BOOST_REQUIRE(test_dot_f3);
 	
 	function( test_mul_m44v4, "test_mul_m44v4" );
 	BOOST_REQUIRE( test_mul_m44v4 );
+
+	function( test_sqrt_f, "test_sqrt_f" );
+	BOOST_REQUIRE( test_sqrt_f );
 
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -325,7 +331,13 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( f.z, refv.z, 0.001f );
 		BOOST_CHECK_CLOSE( f.w, refv.w, 0.001f );
 	}
+	{
+		float f = 876.625f;
+		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.0001f );
+	}
 }
+
+#if 0
 
 #pragma pack(push)
 #pragma pack(1)

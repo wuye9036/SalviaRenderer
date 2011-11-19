@@ -43,6 +43,9 @@ ADD_CUSTOM_COMMAND(
 			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
 			"${SASL_HOME_DIR}/sasl/test/auto_test/repo"
 			${SALVIA_TEST_REPOSITORY_PATH}
+		DEPENDS
+			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
+			${V1A1_TESTS}
 		)
 		
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_test_cases )

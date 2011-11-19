@@ -10,6 +10,7 @@
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Function.h>
 #include <llvm/Module.h>
+#include <llvm/Support/TypeBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -30,6 +31,9 @@ using sasl::syntax_tree::struct_type;
 using sasl::semantic::storage_si;
 using sasl::semantic::type_info_si;
 
+using eflib::support_feature;
+using eflib::cpu_sse2;
+
 using namespace sasl::utility;
 
 using llvm::APInt;
@@ -49,6 +53,8 @@ using llvm::StructType;
 using llvm::VectorType;
 using llvm::UndefValue;
 using llvm::StoreInst;
+using llvm::TypeBuilder;
+using llvm::AttrListPtr;
 
 using boost::any;
 using boost::shared_ptr;
@@ -207,7 +213,7 @@ llvm::ConstantVector* cg_service::vector_( T const* vals, size_t length, typenam
 	
 	vector<Constant*> elems(length);
 	for( size_t i = 0; i < length; ++i ){
-		elems.push_back( int_(vals[i]) );
+		elems[i] = int_(vals[i]);
 	}
 
 	VectorType* vec_type = VectorType::get( elems[0]->getType(), length );
@@ -1312,24 +1318,89 @@ value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 	EMIT_CMP_BODY( GT );
 }
 
-value_t cg_service::emit_sqrt( value_t const& lhs )
+value_t cg_service::emit_sqrt( value_t const& arg_value )
 {
-	builtin_types hint = lhs.get_hint();
-
+	builtin_types hint = arg_value.get_hint();
+	builtin_types scalar_hint = scalar_of( arg_value.get_hint() );
 	if( is_scalar(hint) ){
 		if( hint == builtin_types::_float ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			//if( support_feature( cpu_sse2 ) ){
-			//	// TODO emit SSE2 instrinsic directly.
-			//	EFLIB_ASSERT_UNIMPLEMENTED();
-			//} else if( enable_externals() ) {
-			//	function_t fn = external_proto( &externals::sqrt_f );
-			//	vector<value_t> args;
-			//	args.push_back(lhs);
-			//	return emit_call( fn, args );
-			//}
+			if( prefer_externals() ) {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+				//	function_t fn = external_proto( &externals::sqrt_f );
+				//	vector<value_t> args;
+				//	args.push_back(lhs);
+				//	return emit_call( fn, args );
+			} else if( support_feature( cpu_sse2 ) && !prefer_scalar_code() ){
+				// Extension to 4-elements vector.
+				value_t v4 = null_value( vector_of(scalar_hint, 4), abi_llvm );
+				v4 = emit_insert_val( v4, 0, arg_value );
+
+				Type const* v4_ty = type_( vector_of( scalar_hint, 4 ), abi_llvm );
+				vector<Type const *> arg_tys;
+				arg_tys.push_back( v4_ty );
+				FunctionType const* intrin_ty = FunctionType::get( v4_ty, arg_tys, false );
+				
+				Function* f = llvm::dyn_cast<Function>( module()->getOrInsertFunction( "llvm.x86.sse.sqrt.ss", intrin_ty ) );
+				Value* v = builder()->CreateCall( f, v4.load() );
+				Value* ret = builder()->CreateExtractElement( v, int_(0) );
+
+				return create_value( arg_value.get_tyinfo(), hint, ret, value_t::kind_value, abi_llvm );
+			} else {
+				// Emit LLVM intrinsics
+				FunctionType const* intrin_ty = TypeBuilder<float(float), false>::get( context() );
+				Function* f = llvm::dyn_cast<Function>( module()->getOrInsertFunction( "llvm.sqrt.f32", intrin_ty ) );
+				Value* v = builder()->CreateCall( f, arg_value.load() );
+				return create_value( arg_value.get_tyinfo(), arg_value.get_hint(), v, value_t::kind_value, abi_llvm );
+			}
 		} else if( hint == builtin_types::_double ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
+		} 
+	} else if( is_vector(hint) ) {
+
+		size_t vsize = vector_size(hint);
+
+		if( scalar_hint == builtin_types::_float ){
+			if( prefer_externals() ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} else if( support_feature(cpu_sse2) && !prefer_scalar_code() ){
+				// TODO emit SSE2 instrinsic directly.
+
+				// expanded to vector 4
+				value_t v4;
+				if( vsize == 4 ){	
+					v4 = create_value( arg_value.get_tyinfo(), hint, arg_value.load(abi_llvm), value_t::kind_value, abi_llvm );
+				} else {
+					v4 = null_value( vector_of( scalar_hint, 4 ), abi_llvm );
+					for ( size_t i = 0; i < vsize; ++i ){
+						v4 = emit_insert_val( v4, i, emit_extract_elem(arg_value, i) );
+					}
+				}
+				
+				// calculate
+				Type const* v4_ty = type_( vector_of( scalar_hint, 4 ), abi_llvm );
+				vector<Type const *> arg_tys;
+				arg_tys.push_back( v4_ty );
+				FunctionType const* intrin_ty = FunctionType::get( v4_ty, arg_tys, false );
+				
+				Function* f = llvm::dyn_cast<Function>( module()->getOrInsertFunction( "llvm.x86.sse.sqrt.ps", intrin_ty ) );
+				Value* v = builder()->CreateCall( f, v4.load() );
+
+				if( vsize < 4 ){
+					// Shrink
+					static int indexes[4] = {0, 1, 2, 3};
+					Value* mask = vector_( &indexes[0], vsize );
+					v = builder()->CreateShuffleVector( v, UndefValue::get( v->getType() ), mask );
+				}
+
+				return create_value( NULL, hint, v, value_t::kind_value, abi_llvm );
+			} else {
+				value_t ret = null_value( hint, arg_value.get_abi() );
+				for( size_t i = 0; i < vsize; ++i ){
+					value_t elem = emit_extract_elem( arg_value, i );
+					ret = emit_insert_val( ret, i, emit_sqrt( arg_value ) );
+				}
+				return ret;
+			}
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
@@ -1338,6 +1409,16 @@ value_t cg_service::emit_sqrt( value_t const& lhs )
 	}
 
 	return value_t();
+}
+
+bool cg_service::prefer_externals() const
+{
+	return false;
+}
+
+bool cg_service::prefer_scalar_code() const
+{
+	return false;
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){
@@ -1439,6 +1520,11 @@ void function_t::return_name( std::string const& s )
 	if( first_arg_is_return_address() ){
 		fn->arg_begin()->setName( s );
 	}
+}
+
+void function_t::inline_hint()
+{
+	fn->addAttribute( 0, llvm::Attribute::InlineHint );
 }
 
 insert_point_t::insert_point_t(): block(NULL)
