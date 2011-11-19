@@ -4,25 +4,25 @@
 #include <eflib/include/platform/typedefs.h>
 
 namespace eflib{
-	enum instruction_sets{
-		ins_none,
+	enum cpu_features{
+		cpu_none,
 		
-		ins_intel,
-		ins_sse2,
-		ins_sse3,
-		ins_sse3atom,
-		ins_ssse3,
-		ins_sse41,
-		ins_sse42,
-		ins_sse4a,
-		ins_avx,
+		cpu_intel,
+		cpu_sse2,
+		cpu_sse3,
+		cpu_sse3atom,
+		cpu_ssse3,
+		cpu_sse41,
+		cpu_sse42,
+		cpu_sse4a,
+		cpu_avx,
 		
-		ins_arm,
-		ins_neon,
-		ins_unknown
+		cpu_arm,
+		cpu_neon,
+		cpu_unknown
 	};
 
-	bool support_instruction_set( instruction_sets insset );
+	bool support_feature( cpu_features );
 	uint32_t num_cpu_cores();
 	uint32_t num_available_threads();
 }

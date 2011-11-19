@@ -35,20 +35,21 @@ namespace eflib{
 #else
 #	error "Unsupported compiler."
 #endif
-			feats[ins_sse2]		= ( cpu_infos[3] & (1 << 26) ) || false;
-			feats[ins_sse3]		= ( cpu_infos[2] & 0x1 ) || false;
-			feats[ins_ssse3]	= ( cpu_infos[2] & 0x200 ) || false;
-			feats[ins_sse41]	= ( cpu_infos[2] & 0x80000) || false;
-			feats[ins_sse42]	= ( cpu_infos[2] & 0x100000) || false;
-			feats[ins_sse4a]	= ( cpu_infos_ex[2] & 0x40) || false;
+			feats[cpu_sse2]		= ( cpu_infos[3] & (1 << 26) ) || false;
+			feats[cpu_sse3]		= ( cpu_infos[2] & 0x1 ) || false;
+			feats[cpu_ssse3]	= ( cpu_infos[2] & 0x200 ) || false;
+			feats[cpu_sse41]	= ( cpu_infos[2] & 0x80000) || false;
+			feats[cpu_sse42]	= ( cpu_infos[2] & 0x100000) || false;
+			feats[cpu_sse4a]	= ( cpu_infos_ex[2] & 0x40) || false;
+			feats[cpu_avx]		= ( cpu_infos[2] & (1 << 28) ) || false;
 
 			// others are unchecked.
 		};
 	private:
-		bool feats[ins_unknown];
+		bool feats[cpu_unknown];
 	public:
-		bool support( instruction_sets insset ) const{
-			return feats[insset];
+		bool support( cpu_features feat ) const{
+			return feats[feat];
 		}
 	};
 
@@ -89,9 +90,9 @@ namespace eflib{
 #endif
 	}
 
-	bool support_instruction_set( instruction_sets insset )
+	bool support_feature( cpu_features feat )
 	{
-		return cpuinfo.support(insset);
+		return cpuinfo.support(feat);
 	}
 
 }

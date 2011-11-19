@@ -207,27 +207,36 @@ struct jit_fixture {
 	shared_ptr<jit_engine> je;
 };
 
-BOOST_AUTO_TEST_CASE( instruction_set ){
-	cout << "Check CPU Features: " << endl;
 
-	if( support_instruction_set(ins_sse2) ){
-		cout << " SSE2 Supported." << endl;
+BOOST_AUTO_TEST_CASE( detect_cpu_features ){
+	cout << endl << "================================================" << endl << endl;
+	cout << "Detecting CPU Features... " << endl;
+
+	if( support_feature(cpu_sse2) ){
+		cout << "    ... SSE2 Detected" << endl;
 	} 
-	if( support_instruction_set(ins_sse3) ){
-		cout << " SSE3 Supported." << endl;
+	if( support_feature(cpu_sse3) ){
+		cout << "    ... SSE3 Detected" << endl;
 	}
-	if( support_instruction_set(ins_ssse3) ){
-		cout << " SSSE3 Supported." << endl;
+	if( support_feature(cpu_ssse3) ){
+		cout << "    ... Supplemental SSE3 Detected" << endl;
 	} 
-	if( support_instruction_set(ins_sse41) ){
-		cout << " SSE4.1 Supported." << endl;
+	if( support_feature(cpu_sse41) ){
+		cout << "    ... SSE4.1 Detected" << endl;
 	} 
-	if( support_instruction_set(ins_sse42) ){
-		cout << " SSE4.2 Supported." << endl;
+	if( support_feature(cpu_sse42) ){
+		cout << "    ... SSE4.2 Detected" << endl;
 	}
-	if( support_instruction_set(ins_sse4a) ){
-		cout << " SSE4A Supported." << endl;
+	if( support_feature(cpu_sse4a) ){
+		cout << "    ... SSE4A Detected" << endl;
 	}
+	if( support_feature(cpu_avx) ){
+		cout << "    ... AVX Detected" << endl;
+	}
+
+	cout << endl << "================================================" << endl << endl;
+
+	BOOST_CHECK(true);
 }
 
 #if 0
