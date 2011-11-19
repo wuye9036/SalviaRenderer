@@ -1314,7 +1314,29 @@ value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 
 value_t cg_service::emit_sqrt( value_t const& lhs )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	builtin_types hint = lhs.get_hint();
+
+	if( is_scalar(hint) ){
+		if( hint == builtin_types::_float ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			//if( support_feature( cpu_sse2 ) ){
+			//	// TODO emit SSE2 instrinsic directly.
+			//	EFLIB_ASSERT_UNIMPLEMENTED();
+			//} else if( enable_externals() ) {
+			//	function_t fn = external_proto( &externals::sqrt_f );
+			//	vector<value_t> args;
+			//	args.push_back(lhs);
+			//	return emit_call( fn, args );
+			//}
+		} else if( hint == builtin_types::_double ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
 	return value_t();
 }
 

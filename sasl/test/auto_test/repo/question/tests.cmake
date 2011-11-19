@@ -18,6 +18,7 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/empty.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/bool.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/unary_operators.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/host_intrinsic_detection.ss"
 )
 
 SOURCE_GROUP( "Tests\\v1a1\\General" REGULAR_EXPRESSION ".*\\.ss" )
