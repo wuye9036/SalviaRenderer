@@ -381,6 +381,7 @@ public:
 	/// @{
 	value_t null_value( value_tyinfo* tyinfo, abis abi );
 	value_t null_value( builtin_types bt, abis abi );
+	value_t undef_value( builtin_types bt, abis abi );
 
 	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, abis abi );
 	value_t create_value( builtin_types hint, llvm::Value* val, value_t::kinds k, abis abi );

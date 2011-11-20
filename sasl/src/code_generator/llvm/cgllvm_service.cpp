@@ -1342,7 +1342,7 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 				//	return emit_call( fn, args );
 			} else if( support_feature( cpu_sse2 ) && !prefer_scalar_code() ){
 				// Extension to 4-elements vector.
-				value_t v4 = null_value( vector_of(scalar_hint, 4), abi_llvm );
+				value_t v4 = undef_value( vector_of(scalar_hint, 4), abi_llvm );
 				v4 = emit_insert_val( v4, 0, arg_value );
 				Value* v = builder()->CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ss ), v4.load() );
 				Value* ret = builder()->CreateExtractElement( v, int_(0) );
@@ -1419,6 +1419,14 @@ bool cg_service::prefer_scalar_code() const
 Function* cg_service::intrin_( int v )
 {
 	return intrins.get( llvm::Intrinsic::ID(v), module() );
+}
+
+value_t cg_service::undef_value( builtin_types bt, abis abi )
+{
+	assert( bt != builtin_types::none );
+	Type const* valty = create_llvm_type( context(), bt, abi == abi_c );
+	value_t val = value_t( bt, UndefValue::get(valty), value_t::kind_value, abi, this );
+	return val;
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){
