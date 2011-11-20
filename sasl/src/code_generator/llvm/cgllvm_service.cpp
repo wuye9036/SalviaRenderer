@@ -10,6 +10,7 @@
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Function.h>
 #include <llvm/Module.h>
+#include <llvm/Intrinsics.h>
 #include <llvm/Support/TypeBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -1377,12 +1378,7 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 				}
 				
 				// calculate
-				Type const* v4_ty = type_( vector_of( scalar_hint, 4 ), abi_llvm );
-				vector<Type const *> arg_tys;
-				arg_tys.push_back( v4_ty );
-				FunctionType const* intrin_ty = FunctionType::get( v4_ty, arg_tys, false );
-				
-				Function* f = llvm::dyn_cast<Function>( module()->getOrInsertFunction( "llvm.x86.sse.sqrt.ps", intrin_ty ) );
+				Function* f = llvm::Intrinsic::getDeclaration( module(), Intrinsic::x86_sse_sqrt_ps );
 				Value* v = builder()->CreateCall( f, v4.load() );
 
 				if( vsize < 4 ){
