@@ -1,5 +1,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_sisd.h>
 
+#include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
@@ -646,6 +647,8 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
+	// Initialzie intrinsics
+	intrins.reset( new llvm_intrin_cache( module(), context() ) );
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 

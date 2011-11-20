@@ -3,6 +3,7 @@
 
 #include <sasl/include/code_generator/forward.h>
 
+#include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/enums/builtin_types.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -53,6 +54,7 @@ namespace sasl{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
+class llvm_intrin_cache;
 
 enum abis{
 	abi_c,
@@ -480,122 +482,10 @@ public:
 	/// @}
 private:
 	std::vector<function_t> fn_ctxts;
-};
 
-//template<typename ElementT>
-//class llvector: public llvalue< typename ElementT::builder_t >{
-//public:
-//	typedef typename ElementT::builder_t builder_t;
-//
-//	typedef llvector<ElementT> this_type;
-//
-//	llvector( llvm::Value* val, llext<builder_t>* ext )
-//		:llvalue(NULL, ext)
-//	{
-//		if( !val || val->getType()->isVectorTy() ) {
-//			this->val = val;
-//		} else {
-//			this->val = create( ext, val ).val;
-//		}
-//	}
-//
-//	llvector( std::vector<ElementT> const& v )
-//	{
-//		assert( !v.empty() );
-//
-//		ext = v[0].ext;
-//		llvector<ElementT> ret( ext->null_value( v[0] ), v.size() );
-//		val = ret.val;
-//
-//		for( size_t idx = 0; idx < v.size(); ++idx ){
-//			set( idx, v[idx] );
-//		}
-//	}
-//
-//	llvector( llaggregated<builder_t> const& v ){
-//		llvector< llvalue<builder_t> > ret( v[0], v.size() );
-//		val = ret.val;
-//		ext = v.ext;
-//		for( size_t idx = 0; idx < v.size(); ++idx ){
-//			set( idx, ElementT( v[idx].val, ext ) );
-//		}
-//	}
-//
-//	template <typename ValueT>
-//	static llvector<ElementT> from_values( llext<builder_t>* ext, std::vector<ValueT> const& v ){
-//		std::vector<ElementT> elems;
-//		elems.reserve(v.size());
-//		for( size_t i = 0; i < v.size(); ++i ){
-//			elems.push_back( ElementT( ext, v[i] ) );
-//		}
-//		return llvector<ElementT>( elems );
-//	}
-//
-//	template <typename ValueT>
-//	static llvector<ElementT> create( llext<builder_t>* ext, ValueT* v ){
-//		if( v->getType()->isVectorTy() ){
-//			return llvector<ElementT>(v, ext);
-//		} else if( v->getType()->isStructTy() ){
-//			return llvector<ElementT>( llaggregated<builder_t>(v, ext) );
-//		} else {
-//			assert(false);
-//			return llvector<ElementT>(NULL, ext);
-//		}
-//	}
-//
-//	llvector( ElementT const& v, size_t nvec ){
-//		ext = v.ext;
-//
-//		vector<Constant*> vals;
-//		for( size_t idx = 0 ; idx < nvec; ++idx ){
-//			vals.push_back( cast<Constant>( ext->null_value(v).val) );
-//		}
-//
-//		llvm::VectorType const* vtype = VectorType::get( v.val->getType(), static_cast<unsigned>( nvec ) );
-//		val = ConstantVector::get( vtype, vals );
-//
-//		for( size_t idx = 0; idx < nvec; ++idx ){
-//			set( idx, v );
-//		}
-//	};
-//
-//	size_t size() const{
-//		return val ? cast<llvm::VectorType>(val->getType())->getNumElements() : 0;
-//	}
-//
-//	llvector<ElementT> swizzle( std::vector<int> const& indices ) const{
-//		typedef llvector< llv_int<builder_t, 32, true> > i32vec;
-//
-//		i32vec masks = i32vec::from_values( ext, indices );
-//		return llvector<ElementT>(
-//			ext->builder->CreateShuffleVector(
-//				val, UndefValue::get(val->getType()),
-//				masks.val ),
-//				ext
-//			);
-//	}
-//	
-//	template <typename IndexT>
-//	llvector<ElementT> swizzle( IndexT* indices, int max_index = 0 ) const{
-//		std::vector<int> index_values;
-//		int step = 0;
-//		while( indices[step] != -1 && ( max_index == 0 || step < max_index ) ){
-//			index_values.push_back( indices[step] );
-//		}
-//		return swizzle( index_values );
-//	}
-//
-//	llvector<ElementT>& set( size_t idx, ElementT const& v ){
-//		val = ext->builder->CreateInsertElement( val, v.v(), llv_int<builder_t, 32, true>(ext, idx).val );
-//		return *this;
-//	}
-//
-//	ElementT operator []( size_t idx ) const{
-//		return ElementT( ext->builder->CreateExtractElement( val, llv_int<builder_t, 32, true>(ext, idx).val ), ext );
-//	}
-//};
-//
-//template <typename ElementT> class llvar;
+protected:
+	boost::scoped_ptr<llvm_intrin_cache> intrins;
+};
 
 END_NS_SASL_CODE_GENERATOR();
 

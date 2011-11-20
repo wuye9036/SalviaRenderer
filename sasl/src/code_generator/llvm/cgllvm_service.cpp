@@ -1,5 +1,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
+#include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -1335,22 +1336,13 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 				// Extension to 4-elements vector.
 				value_t v4 = null_value( vector_of(scalar_hint, 4), abi_llvm );
 				v4 = emit_insert_val( v4, 0, arg_value );
-
-				Type const* v4_ty = type_( vector_of( scalar_hint, 4 ), abi_llvm );
-				vector<Type const *> arg_tys;
-				arg_tys.push_back( v4_ty );
-				FunctionType const* intrin_ty = FunctionType::get( v4_ty, arg_tys, false );
-				
-				Function* f = llvm::dyn_cast<Function>( module()->getOrInsertFunction( "llvm.x86.sse.sqrt.ss", intrin_ty ) );
-				Value* v = builder()->CreateCall( f, v4.load() );
+				Value* v = builder()->CreateCall( intrins->get("llvm.x86.sse.sqrt.ss"), v4.load() );
 				Value* ret = builder()->CreateExtractElement( v, int_(0) );
 
 				return create_value( arg_value.get_tyinfo(), hint, ret, value_t::kind_value, abi_llvm );
 			} else {
 				// Emit LLVM intrinsics
-				FunctionType const* intrin_ty = TypeBuilder<float(float), false>::get( context() );
-				Function* f = llvm::dyn_cast<Function>( module()->getOrInsertFunction( "llvm.sqrt.f32", intrin_ty ) );
-				Value* v = builder()->CreateCall( f, arg_value.load() );
+				Value* v = builder()->CreateCall( intrins->get("llvm.sqrt.f32"), arg_value.load() );
 				return create_value( arg_value.get_tyinfo(), arg_value.get_hint(), v, value_t::kind_value, abi_llvm );
 			}
 		} else if( hint == builtin_types::_double ){
@@ -1378,8 +1370,7 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 				}
 				
 				// calculate
-				Function* f = llvm::Intrinsic::getDeclaration( module(), llvm::Intrinsic::x86_sse_sqrt_ps );
-				Value* v = builder()->CreateCall( f, v4.load() );
+				Value* v = builder()->CreateCall( intrins->get( "llvm.x86.sse.sqrt.ps" ), v4.load() );
 
 				if( vsize < 4 ){
 					// Shrink
