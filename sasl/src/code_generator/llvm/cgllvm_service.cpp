@@ -1378,7 +1378,7 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 				}
 				
 				// calculate
-				Function* f = llvm::Intrinsic::getDeclaration( module(), Intrinsic::x86_sse_sqrt_ps );
+				Function* f = llvm::Intrinsic::getDeclaration( module(), llvm::Intrinsic::x86_sse_sqrt_ps );
 				Value* v = builder()->CreateCall( f, v4.load() );
 
 				if( vsize < 4 ){
