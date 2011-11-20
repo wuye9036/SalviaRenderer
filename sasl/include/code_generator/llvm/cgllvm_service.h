@@ -471,6 +471,9 @@ public:
 	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	template <typename T>
 	llvm::Value* c_vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	llvm::Function* intrin_( int );
+	template <typename FunctionT>
+	llvm::Function* intrin_( int );
 	/// @}
 
 	/// @name State
@@ -484,7 +487,7 @@ private:
 	std::vector<function_t> fn_ctxts;
 
 protected:
-	boost::scoped_ptr<llvm_intrin_cache> intrins;
+	llvm_intrin_cache intrins;
 };
 
 END_NS_SASL_CODE_GENERATOR();

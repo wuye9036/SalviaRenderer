@@ -1,6 +1,5 @@
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
-#include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -57,6 +56,8 @@ using llvm::UndefValue;
 using llvm::StoreInst;
 using llvm::TypeBuilder;
 using llvm::AttrListPtr;
+
+namespace Intrinsic = llvm::Intrinsic;
 
 using boost::any;
 using boost::shared_ptr;
@@ -220,6 +221,13 @@ llvm::ConstantVector* cg_service::vector_( T const* vals, size_t length, typenam
 
 	VectorType* vec_type = VectorType::get( elems[0]->getType(), length );
 	return llvm::cast<ConstantVector>( ConstantVector::get( vec_type, elems ) );
+}
+
+
+template <typename FunctionT>
+Function* cg_service::intrin_( int id )
+{
+	return intrins.get(id, module(), TypeBuilder<FunctionT, false>::get( context() ) );
 }
 
 // Value tyinfo
@@ -1336,13 +1344,13 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 				// Extension to 4-elements vector.
 				value_t v4 = null_value( vector_of(scalar_hint, 4), abi_llvm );
 				v4 = emit_insert_val( v4, 0, arg_value );
-				Value* v = builder()->CreateCall( intrins->get("llvm.x86.sse.sqrt.ss"), v4.load() );
+				Value* v = builder()->CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ss ), v4.load() );
 				Value* ret = builder()->CreateExtractElement( v, int_(0) );
 
 				return create_value( arg_value.get_tyinfo(), hint, ret, value_t::kind_value, abi_llvm );
 			} else {
 				// Emit LLVM intrinsics
-				Value* v = builder()->CreateCall( intrins->get("llvm.sqrt.f32"), arg_value.load() );
+				Value* v = builder()->CreateCall( intrin_<float(float)>(Intrinsic::sqrt), arg_value.load() );
 				return create_value( arg_value.get_tyinfo(), arg_value.get_hint(), v, value_t::kind_value, abi_llvm );
 			}
 		} else if( hint == builtin_types::_double ){
@@ -1370,7 +1378,7 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 				}
 				
 				// calculate
-				Value* v = builder()->CreateCall( intrins->get( "llvm.x86.sse.sqrt.ps" ), v4.load() );
+				Value* v = builder()->CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ps ), v4.load() );
 
 				if( vsize < 4 ){
 					// Shrink
@@ -1406,6 +1414,11 @@ bool cg_service::prefer_externals() const
 bool cg_service::prefer_scalar_code() const
 {
 	return false;
+}
+
+Function* cg_service::intrin_( int v )
+{
+	return intrins.get( llvm::Intrinsic::ID(v), module() );
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

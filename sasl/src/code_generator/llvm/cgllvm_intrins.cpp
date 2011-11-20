@@ -3,6 +3,7 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Intrinsics.h>
 #include <llvm/adt/StringRef.h>
+#include <llvm/Module.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 using llvm::Function;
@@ -28,43 +29,30 @@ llvm::Intrinsic::ID get_intrinsic_id( char const* Name ){
 	return llvm::Intrinsic::ID(0);
 }
 
-class llvm_intrin_cache_impl{
-public:
-	llvm_intrin_cache_impl( llvm::Module* mod, llvm::LLVMContext& ctxt ): mod(mod), ctxt(ctxt){
-		memset( intrin_functions, 0, sizeof(intrin_functions) );
+llvm_intrin_cache::llvm_intrin_cache(): intrin_fns( Intrinsic::num_intrinsics )
+{
+}
+
+Function* llvm_intrin_cache::get( char const* name, Module* mod )
+{
+	return get( get_intrinsic_id( name ), mod );
+}
+
+Function* llvm_intrin_cache::get( int id, Module* mod )
+{
+	llvm::Intrinsic::ID IID = llvm::Intrinsic::ID( id );
+	assert( !Intrinsic::isOverloaded(IID) );
+
+	if( intrin_fns[IID] == NULL ){
+		intrin_fns[IID] = ( (IID == 0) ? NULL : getDeclaration( mod, IID ) );
 	}
-
-	Function* get( char const* name );
-
-private:
-	llvm::Module* mod;
-	llvm::LLVMContext& ctxt;
-
-	Function* intrin_functions[llvm::Intrinsic::num_intrinsics];
-};
-
-llvm_intrin_cache::llvm_intrin_cache( Module* mod, LLVMContext& ctxt )
-	: impl( new llvm_intrin_cache_impl(mod, ctxt) )
-{
+	return intrin_fns[IID];
 }
 
-Function* llvm_intrin_cache::get( char const* name )
+Function* llvm_intrin_cache::get( int id, Module* mod, llvm::FunctionType const* fnty )
 {
-	return impl->get( name );
-}
-
-llvm_intrin_cache::~llvm_intrin_cache()
-{
-
-}
-
-Function* llvm_intrin_cache_impl::get( char const* name )
-{
-	llvm::Intrinsic::ID IID = llvm::Intrinsic::ID( get_intrinsic_id( name ) );
-	if( intrin_functions[IID] == NULL ){
-		intrin_functions[IID] = ( (IID == 0) ? NULL : getDeclaration( mod, IID ) );
-	}
-	return intrin_functions[IID];
+	llvm::Intrinsic::ID IID = llvm::Intrinsic::ID( id );
+	return llvm::cast<Function>( mod->getOrInsertFunction( getName(IID), fnty ) );
 }
 
 END_NS_SASL_CODE_GENERATOR();

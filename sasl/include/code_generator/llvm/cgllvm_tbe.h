@@ -3,7 +3,7 @@
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Support/TypeBuilder.h>
-
+#include <eflib/include/platform/enable_warnings.h>
 #include <vector>
 
 namespace llvm_tags{
