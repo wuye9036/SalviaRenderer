@@ -901,6 +901,12 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn().arg_name( 0, ".value" );
 			value_t ret_val = emit_sqrt( fn().arg(0) );
 			emit_return( ret_val, abi_llvm );
+		} else if( intr->unmangled_name() == "cross" ){
+			assert( par_tys.size() == 2 );
+			fn().arg_name( 0, ".lhs" );
+			fn().arg_name( 1, ".rhs" );
+			value_t ret_val = emit_cross( fn().arg(0), fn().arg(1) );
+			emit_return( ret_val, abi_llvm );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}

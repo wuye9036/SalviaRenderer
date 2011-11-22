@@ -183,11 +183,17 @@ namespace {
 		}
 	}
 
-	void indexes_to_mask( char indexes[4], uint32_t& mask ){
-		mask = 0;
+	uint32_t indexes_to_mask( char indexes[4] ){
+		uint32_t mask = 0;
 		for( int i = 0; i < 4; ++i ){
 			mask += (uint32_t)( (indexes[i] + 1) << (i*8) );
 		}
+		return mask;
+	}
+
+	uint32_t indexes_to_mask( char idx0, char idx1, char idx2, char idx3 ){
+		char indexes[4] = { idx0, idx1, idx2, idx3 };
+		return indexes_to_mask( indexes );
 	}
 
 	void dbg_print_blocks( Function* fn ){
@@ -553,7 +559,7 @@ void value_t::store( value_t const& v ) const
 void value_t::set_index( size_t index )
 {
 	char indexes[4] = { (char)index, -1, -1, -1 };
-	indexes_to_mask( indexes, masks );
+	masks = indexes_to_mask( indexes );
 }
 
 void value_t::set_hint( builtin_types bt )
@@ -931,8 +937,7 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 
 	if( is_vector(agg_hint) ){
 		char indexes[4] = { (char)idx, -1, -1, -1 };
-		uint32_t mask = 0;
-		indexes_to_mask( indexes, mask );
+		uint32_t mask = indexes_to_mask( indexes );
 		return value_t::slice( lhs, mask );
 	} else if( is_matrix(agg_hint) ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -1245,7 +1250,15 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 	if( indexes[1] == -1 ){
 		return emit_extract_elem( vec, indexes[0] );
 	} else {
+		// Caculate out size
+		/*int out_size = 0;
+		for( int i = 0; i < 4; ++i ){
+			if( indexes[i] == -1 ){ break; }
+			++out_size;
+		}*/
+
 		EFLIB_ASSERT_UNIMPLEMENTED();
+
 		return value_t();
 	}
 }
@@ -1427,6 +1440,45 @@ value_t cg_service::undef_value( builtin_types bt, abis abi )
 	Type const* valty = create_llvm_type( context(), bt, abi == abi_c );
 	value_t val = value_t( bt, UndefValue::get(valty), value_t::kind_value, abi, this );
 	return val;
+}
+
+value_t cg_service::emit_cross( value_t const& lhs, value_t const& rhs )
+{
+	assert( lhs.get_hint() == vector_of( builtin_types::_float, 3 ) );
+	assert( rhs.get_hint() == lhs.get_hint() );
+
+	int swz_a[] = {1, 2, 0};
+	int swz_b[] = {2, 0, 1};
+
+	ConstantVector* swz_va = vector_( swz_a, 3 );
+	ConstantVector* swz_vb = vector_( swz_b, 3 );
+
+	Value* lvec_value = lhs.load(abi_llvm);
+	Value* rvec_value = rhs.load(abi_llvm);
+
+	Value* lvec_a = builder()->CreateShuffleVector( lvec_value, UndefValue::get( lvec_value->getType() ), swz_va );
+	Value* lvec_b = builder()->CreateShuffleVector( lvec_value, UndefValue::get( lvec_value->getType() ), swz_vb );
+	Value* rvec_a = builder()->CreateShuffleVector( rvec_value, UndefValue::get( rvec_value->getType() ), swz_va );
+	Value* rvec_b = builder()->CreateShuffleVector( rvec_value, UndefValue::get( rvec_value->getType() ), swz_vb );
+
+	Value* mul_first = builder()->CreateFMul( lvec_a, rvec_b );
+	Value* mul_second = builder()->CreateFMul( lvec_b, rvec_a );
+
+	Value* ret = builder()->CreateFSub( mul_first, mul_second );
+
+	return create_value( lhs.get_tyinfo(), lhs.get_hint(), ret, value_t::kind_value, abi_llvm );
+}
+
+value_t cg_service::emit_swizzle( value_t const& lhs, uint32_t mask )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_write_mask( value_t const& vec, uint32_t mask )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

@@ -28,6 +28,10 @@ float4 test_sqrt_f4(float4 v){
 	return sqrt(v);
 }
 
+float3 test_cross_prod( float3 v0, float3 v1 ){
+	return cross(v0, v1);
+}
+
 //float2x3 test_sqrt_f23(float2x3 v){
 //	return sqrt(v);
 //}

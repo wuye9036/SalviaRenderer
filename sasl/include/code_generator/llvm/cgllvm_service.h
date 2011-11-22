@@ -303,6 +303,8 @@ public:
 	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
 
+	value_t emit_cross( value_t const& lhs, value_t const& rhs );
+
 	value_t emit_extract_col( value_t const& lhs, size_t index );
 
 	template <typename IndexT>
@@ -316,7 +318,9 @@ public:
 
 	/// Didn't support swizzle yet.
 	value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
-	
+	value_t emit_swizzle( value_t const& vec, uint32_t mask );
+	value_t emit_write_mask( value_t const& vec, uint32_t mask );
+
 	value_t emit_extract_ref( value_t const& lhs, int idx );
 	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
 	value_t emit_extract_val( value_t const& lhs, int idx );
