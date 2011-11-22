@@ -112,8 +112,7 @@ SASL_VISIT_DEF( expression_initializer ){
 		typeconv->convert( var_tsi->type_info(), v.init_expr );
 	}
 
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//	sc_ptr(data)->storage_and_type( sc_ptr(child_ctxt) );
+	sc_ptr(data)->copy( node_ctxt(v.init_expr, false) );
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 

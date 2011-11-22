@@ -751,7 +751,19 @@ shared_ptr<tynode> syntax_tree_builder::build_postqualedtype( shared_ptr<attribu
 
 shared_ptr<initializer> syntax_tree_builder::build_init( shared_ptr<attribute> attr ){
 	shared_ptr<initializer> ret;
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	shared_ptr<attribute> init_body_attr = attr->child(1)->child(0);
+
+	SASL_SWITCH_RULE( init_body_attr )
+		SASL_CASE_RULE( assignexpr ){
+			shared_ptr<expression_initializer> expr_init = create_node<expression_initializer>( token_t::null() );
+			expr_init->init_expr = build_assignexpr( init_body_attr );
+			ret = expr_init;
+		}
+		SASL_CASE_RULE( nullable_initlist ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	SASL_END_SWITCH_RULE();
+
 	return ret;
 }
 

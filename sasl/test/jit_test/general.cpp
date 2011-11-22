@@ -460,21 +460,41 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 	}
 }
 
-#endif
-
 BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/unary_operators.ss" );
 
 	jit_function<int(int)> test_pre_inc, test_pre_dec, test_post_inc, test_post_dec;
 	function( test_pre_inc, "test_pre_inc" );
+	BOOST_REQUIRE(test_pre_inc);
 	function( test_pre_dec, "test_pre_dec" );
+	BOOST_REQUIRE(test_pre_dec);
 	function( test_post_inc, "test_post_inc" );
+	BOOST_REQUIRE(test_post_inc);
 	function( test_post_dec, "test_post_dec" );
+	BOOST_REQUIRE(test_post_dec);
 
 	BOOST_CHECK( test_pre_inc(5) == 13 );
 	BOOST_CHECK( test_pre_dec(5) == 7 );
 	BOOST_CHECK( test_post_inc(5) == 11 );
 	BOOST_CHECK( test_post_dec(5) == 9 );
 }
+
+#endif
+
+BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
+	init_g( "./repo/question/v1a1/initializer.ss" );
+
+	jit_function<int()> test_exprinit;
+	jit_function<float(float,float)> test_exprinit2;
+
+	function( test_exprinit, "test_exprinit" );
+	BOOST_REQUIRE( test_exprinit );
+	function( test_exprinit2, "test_exprinit2" );
+	BOOST_REQUIRE( test_exprinit2 );
+
+	BOOST_CHECK_EQUAL( test_exprinit(), 8 );
+	BOOST_CHECK_EQUAL( ( test_exprinit2(9.8f, 7.6f) ), 9.8f+7.6f );
+}
+
 BOOST_AUTO_TEST_SUITE_END();
