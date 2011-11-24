@@ -36,12 +36,12 @@ namespace eflib{
 			switch (rv)
 			{
 			case IDABORT:
-				return true;
+				::exit(-1);
 			case IDIGNORE:
 				*ignore = true;
 				return false;
 			case IDRETRY:
-				return false;
+				return true;
 			default:
 				return true;
 			}

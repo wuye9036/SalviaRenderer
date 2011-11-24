@@ -62,6 +62,11 @@ shared_ptr<attribute> terminal_attribute::child( int /*idx*/ ) const{
 }
 
 shared_ptr<attribute> sequence_attribute::child( int idx ) const{
+	if( attrs.empty() ){
+		assert( idx == 0 );
+		return shared_ptr<attribute>();
+	}
+
 	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
 		return shared_ptr<attribute>();
 	}

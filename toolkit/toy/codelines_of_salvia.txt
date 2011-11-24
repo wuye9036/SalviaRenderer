@@ -2,15 +2,15 @@ statistic directory: ../../eflib
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 52
-  code lines: 8727
-  null lines: 1007
-  empty lines: 1187
-  single line comments: 230
+  code lines: 8784
+  null lines: 1021
+  empty lines: 1190
+  single line comments: 231
   multi line comments: 478
   mixed lines: 6
-  total: 11635
-  file bytes(KB): 259.57
-  bytes per line: 22.84
+  total: 11710
+  file bytes(KB): 261.12
+  bytes per line: 22.83
 statistic directory: ../../salviar
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
@@ -64,15 +64,15 @@ result:
   file bytes(KB): 84.85
   bytes per line: 26.55
 statistic directory: ../../sasl
-with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
+with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake;.ss;.svs;.sps
 result:
-  files: 209
-  code lines: 15594
-  null lines: 4450
-  empty lines: 2244
-  single line comments: 778
-  multi line comments: 2252
-  mixed lines: 58
-  total: 25376
-  file bytes(KB): 752.49
-  bytes per line: 30.37
+  files: 243
+  code lines: 16252
+  null lines: 4652
+  empty lines: 2380
+  single line comments: 816
+  multi line comments: 2218
+  mixed lines: 60
+  total: 26378
+  file bytes(KB): 777.42
+  bytes per line: 30.18

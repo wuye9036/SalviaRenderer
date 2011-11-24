@@ -318,6 +318,10 @@ void syntax_tree_builder::build_struct_body( shared_ptr<attribute> attr, shared_
 }
 
 shared_ptr<expression> syntax_tree_builder::build_expr( shared_ptr<attribute> attr ){
+	if( !attr ){
+		return shared_ptr<expression>();
+	}
+
 	shared_ptr<expression_list> ret = build_exprlst( attr );
 	if ( ret->exprs.size() == 1 ){
 		return ret->exprs[0];
@@ -393,7 +397,7 @@ operators syntax_tree_builder::build_postfix_op( shared_ptr<attribute> attr )
 *     expr0  a
 *     /  \
 *    c    b
-\*/
+* */
 shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribute> attr ){
 
 	// Make expression list and operators list.
@@ -787,8 +791,17 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 		SASL_CASE_RULE( stmt_compound ){
 			return build_stmt_compound( typed_attr->attr );
 		}
+		SASL_CASE_RULE( stmt_for ){
+			return build_stmt_for( typed_attr->attr );
+		}
 		SASL_DEFAULT(){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			string err;
+			intptr_t rid = typed_attr->attr->rule_id();
+			if( rid != -1 ){
+				err = string( "Unprocessed rule: " );
+				err += reinterpret_cast<sasl::parser::rule*>(rid)->name();
+			}
+			EFLIB_ASSERT_UNIMPLEMENTED0( err.c_str() );
 			return ret;
 		}
 	SASL_END_SWITCH_RULE();
@@ -868,6 +881,46 @@ shared_ptr<if_statement> syntax_tree_builder::build_stmt_if( shared_ptr<attribut
 	}
 
 	return ret;
+}
+
+shared_ptr<for_statement> syntax_tree_builder::build_stmt_for( shared_ptr<attribute> attr )
+{
+	shared_ptr<for_statement> ret = build_for_loop( attr->child(1) ) ;
+
+	if( ret ){
+		shared_ptr<statement> body_stmt = build_stmt( attr->child(2) );
+		ret->body = wrap_to_compound( body_stmt );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	
+	return ret;
+}
+
+
+boost::shared_ptr<for_statement> syntax_tree_builder::build_for_loop( boost::shared_ptr<sasl::parser::attribute> attr )
+{
+	shared_ptr<for_statement> ret = create_node<for_statement>( token_t::null() );
+
+	ret->init = build_stmt( attr->child(1) );
+	if( ret->init ){
+		ret->cond = build_expr( attr->child(2)->child(0) );
+		ret->iter = build_expr( attr->child(4)->child(0) );
+	} else {
+		ret.reset();
+	}
+
+	return ret;
+}
+
+shared_ptr<compound_statement> syntax_tree_builder::wrap_to_compound( shared_ptr<statement> stmt )
+{
+	if( stmt->node_class() == node_ids::compound_statement ){
+		return stmt->as_handle<compound_statement>();
+	}
+	shared_ptr<compound_statement> ret_stmt = create_node<compound_statement>( token_t::null() );
+	ret_stmt->stmts.push_back( stmt );
+	return ret_stmt;
 }
 
 shared_ptr<tynode> syntax_tree_builder::bind_typequal( shared_ptr<tynode> unqual, shared_ptr<attribute> qual ){

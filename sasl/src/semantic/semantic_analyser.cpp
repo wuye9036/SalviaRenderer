@@ -895,7 +895,9 @@ SASL_VISIT_DEF( program ){
 	msi->root()->relink( dup_prog->as_handle() );
 }
 
-SASL_VISIT_DEF_UNIMPL( for_statement );
+SASL_VISIT_DEF( for_statement ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
 
 void semantic_analyser::builtin_tecov( shared_ptr<node> lhs, shared_ptr<node> rhs ){
 	// do nothing

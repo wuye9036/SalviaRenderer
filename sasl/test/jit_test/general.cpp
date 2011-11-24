@@ -279,6 +279,8 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
+#if 0
+
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
 
@@ -361,8 +363,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	}
 }
 
-#if 0
-
 #pragma pack(push)
 #pragma pack(1)
 
@@ -429,6 +429,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
 }
 
+#endif
+
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
 	init_g("./repo/question/v1a1/branches.ss");
@@ -440,6 +442,8 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 	BOOST_CHECK_CLOSE( test_if(12), 0.0f, 0.00001f );
 	BOOST_CHECK_CLOSE( test_if(-9), 0.0f, 0.00001f );
 }
+
+#if 0
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
@@ -504,8 +508,6 @@ BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 	BOOST_CHECK( test_post_dec(5) == 9 );
 }
 
-#endif
-
 BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/initializer.ss" );
 
@@ -520,5 +522,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 	BOOST_CHECK_EQUAL( test_exprinit(), 8 );
 	BOOST_CHECK_EQUAL( ( test_exprinit2(9.8f, 7.6f) ), 9.8f+7.6f );
 }
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END();

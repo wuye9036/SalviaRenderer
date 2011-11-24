@@ -53,6 +53,7 @@ protected:
 	intptr_t rid;
 };
 
+// Terminal
 class terminal_attribute: public attribute{
 public:
 	virtual boost::shared_ptr<attribute> child( int idx ) const;
@@ -60,6 +61,9 @@ public:
 	boost::shared_ptr<sasl::common::token_t> tok;
 };
 
+// *rule
+// +rule
+// -rule
 class sequence_attribute: public attribute{
 public:
 	virtual boost::shared_ptr<attribute> child( int idx ) const;
@@ -67,6 +71,7 @@ public:
 	std::vector< boost::shared_ptr<attribute> > attrs;
 };
 
+// rule0 | rule1
 class selector_attribute: public attribute{
 public:
 	selector_attribute();
@@ -77,6 +82,8 @@ public:
 	int selected_idx;
 };
 
+// rule0 >> rule1
+// rule0 > rule1
 class queuer_attribute: public attribute{
 public:
 	virtual boost::shared_ptr<attribute> child( int idx ) const;

@@ -92,6 +92,11 @@ public:
 	boost::shared_ptr<expression_statement> build_stmt_expr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<declaration_statement> build_stmt_decl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<if_statement> build_stmt_if( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<for_statement> build_stmt_for( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<for_statement> build_for_loop( boost::shared_ptr<sasl::parser::attribute> attr );
+
+	boost::shared_ptr<statement> build_for_init_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<compound_statement> wrap_to_compound( boost::shared_ptr<statement> stmt );
 
 	boost::shared_ptr<tynode> bind_typequal(
 		boost::shared_ptr<tynode> unqual,
