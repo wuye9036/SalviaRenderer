@@ -182,7 +182,6 @@ SASL_VISIT_DEF_UNIMPL( identifier );
 
 // declaration & type specifier
 SASL_VISIT_DEF_UNIMPL( initializer );
-SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 
@@ -191,16 +190,6 @@ SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF_UNIMPL( array_type );
 
 SASL_VISIT_DEF_UNIMPL( alias_type );
-
-// statement
-SASL_VISIT_DEF_UNIMPL( statement );
-SASL_VISIT_DEF_UNIMPL( if_statement );
-SASL_VISIT_DEF_UNIMPL( while_statement );
-SASL_VISIT_DEF_UNIMPL( dowhile_statement );
-SASL_VISIT_DEF_UNIMPL( for_statement );
-SASL_VISIT_DEF_UNIMPL( case_label );
-SASL_VISIT_DEF_UNIMPL( ident_label );
-SASL_VISIT_DEF_UNIMPL( switch_statement );
 
 // In cgllvm_vs, you would initialize entry function before call
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){

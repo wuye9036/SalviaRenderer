@@ -56,8 +56,9 @@ public:
 	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( unary_expression );
-
 	SASL_VISIT_DCL( call_expression );
+
+	SASL_VISIT_DCL( expression_initializer );
 
 	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( function_type );
@@ -67,10 +68,18 @@ public:
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( parameter );
 
+	SASL_VISIT_DCL( statement );
 	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( jump_statement );
 	SASL_VISIT_DCL( expression_statement );
+	SASL_VISIT_DCL( for_statement );
+	SASL_VISIT_DCL( if_statement );
+	SASL_VISIT_DCL( while_statement );
+	SASL_VISIT_DCL( dowhile_statement );
+	SASL_VISIT_DCL( case_label );
+	SASL_VISIT_DCL( ident_label );
+	SASL_VISIT_DCL( switch_statement );
 
 protected:
 	SASL_SPECIFIC_VISIT_DCL( process_intrinsics, program );

@@ -51,23 +51,12 @@ public:
 
 	// declaration & type specifier
 	SASL_VISIT_DCL( initializer );
-	SASL_VISIT_DCL( expression_initializer );
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( tynode );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( alias_type );
-
-	// statement
-	SASL_VISIT_DCL( statement );
-	SASL_VISIT_DCL( if_statement );
-	SASL_VISIT_DCL( while_statement );
-	SASL_VISIT_DCL( dowhile_statement );
-	SASL_VISIT_DCL( for_statement );
-	SASL_VISIT_DCL( case_label );
-	SASL_VISIT_DCL( ident_label );
-	SASL_VISIT_DCL( switch_statement );
 
 private:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );

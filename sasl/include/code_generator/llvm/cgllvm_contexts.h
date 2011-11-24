@@ -55,6 +55,9 @@ struct cgllvm_sctxt_env{
 
 	bool is_c_compatible;
 
+	insert_point_t continue_to;
+	insert_point_t break_to;
+
 	/// Type information used by declarator.
 	boost::shared_ptr<value_tyinfo> tyinfo;
 
@@ -63,10 +66,10 @@ struct cgllvm_sctxt_env{
 	llvm::BasicBlock* block;
 	
 	/// Current symbol scope.
-	boost::weak_ptr< sasl::semantic::symbol > sym;
+	boost::weak_ptr<sasl::semantic::symbol> sym;
 
 	/// The variable which will pass in initilizer to generate initialization code.
-	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
+	boost::weak_ptr<sasl::syntax_tree::node> variable_to_fill;
 };
 
 struct cgllvm_sctxt_data{

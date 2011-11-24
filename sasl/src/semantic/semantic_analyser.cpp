@@ -57,6 +57,7 @@ using ::sasl::syntax_tree::declaration_statement;
 using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::expression_initializer;
 using ::sasl::syntax_tree::expression_statement;
+using ::sasl::syntax_tree::for_statement;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::if_statement;
 using ::sasl::syntax_tree::jump_statement;
@@ -826,7 +827,13 @@ SASL_VISIT_DEF( compound_statement )
 	{
 		shared_ptr<statement> child_gen;
 		visit_child( child_ctxt, child_ctxt_init, (*it), child_gen );
-		dup_stmt->stmts.push_back(child_gen);
+		
+		if( child_gen ){
+			dup_stmt->stmts.push_back(child_gen);
+		} else {
+			// child_gen is null only if the child is error. Otherwise it is error about semantic analyser.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 
 	get_or_create_semantic_info<statement_si>(dup_stmt);
@@ -866,6 +873,31 @@ SASL_VISIT_DEF( jump_statement )
 	data_cptr()->generated_node = dup_jump;
 }
 
+
+SASL_VISIT_DEF( for_statement ){
+	any child_ctxt_init = *data;
+
+	shared_ptr<for_statement> dup_for = duplicate(v.as_handle())->as_handle<for_statement>();
+
+	ctxt_ptr( child_ctxt_init )->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->parent_sym = data_cptr()->parent_sym->add_anonymous_child( dup_for );
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.init, dup_for->init );
+	
+	if( v.cond ){
+		visit_child( child_ctxt, child_ctxt_init, v.cond, dup_for->cond );
+	}
+
+	if( v.iter ){
+		visit_child( child_ctxt, child_ctxt_init, v.iter, dup_for->iter );
+	}
+
+	visit_child( child_ctxt, child_ctxt_init, v.body, dup_for->body );
+
+	data_cptr()->generated_node = dup_for;
+}
+
 // program
 SASL_VISIT_DEF( program ){
 	data = data;
@@ -893,10 +925,6 @@ SASL_VISIT_DEF( program ){
 	}
 
 	msi->root()->relink( dup_prog->as_handle() );
-}
-
-SASL_VISIT_DEF( for_statement ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 void semantic_analyser::builtin_tecov( shared_ptr<node> lhs, shared_ptr<node> rhs ){

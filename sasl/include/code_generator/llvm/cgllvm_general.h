@@ -60,26 +60,16 @@ public:
 
 	// declaration & type specifier
 	SASL_VISIT_DCL( initializer );
-	SASL_VISIT_DCL( expression_initializer );
+	
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( tynode );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( alias_type );
-	SASL_VISIT_DCL( parameter );
-	SASL_VISIT_DCL( function_type );
 
 	// statement
-	SASL_VISIT_DCL( statement );
-	SASL_VISIT_DCL( if_statement );
-	SASL_VISIT_DCL( while_statement );
-	SASL_VISIT_DCL( dowhile_statement );
-	SASL_VISIT_DCL( for_statement );
-	SASL_VISIT_DCL( case_label );
-	SASL_VISIT_DCL( ident_label );
-	SASL_VISIT_DCL( switch_statement );
-	
 
+	
 private:
 	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modimpl* mod_ptr();

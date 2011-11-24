@@ -441,6 +441,13 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 	BOOST_CHECK_CLOSE( test_if(0), 1.0f, 0.00001f );
 	BOOST_CHECK_CLOSE( test_if(12), 0.0f, 0.00001f );
 	BOOST_CHECK_CLOSE( test_if(-9), 0.0f, 0.00001f );
+
+	jit_function<int(int, int)> test_for;
+	function( test_for, "test_for" );
+	BOOST_REQUIRE( test_for );
+
+	BOOST_CHECK_EQUAL( test_for(2,5), 32 );
+	BOOST_CHECK_EQUAL( test_for(5,2), 25 );
 }
 
 #if 0

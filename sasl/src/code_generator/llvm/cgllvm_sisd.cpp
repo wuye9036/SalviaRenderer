@@ -51,6 +51,8 @@ using sasl::semantic::const_value_si;
 using sasl::semantic::call_si;
 using sasl::semantic::fnvar_si;
 using sasl::semantic::operator_name;
+using sasl::semantic::tid_t;
+using sasl::semantic::statement_si;
 
 using boost::addressof;
 using boost::any_cast;
@@ -450,6 +452,23 @@ SASL_VISIT_DEF( variable_expression ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( expression_initializer ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.init_expr );
+
+	shared_ptr<type_info_si> init_tsi = extract_semantic_info<type_info_si>(v.as_handle());
+	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(sc_env_ptr(data)->variable_to_fill.lock());
+
+	if( init_tsi->entry_id() != var_tsi->entry_id() ){
+		typeconv->convert( var_tsi->type_info(), v.init_expr );
+	}
+
+	sc_ptr(data)->copy( node_ctxt(v.init_expr, false) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( builtin_type ){
 
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
@@ -575,6 +594,8 @@ SASL_VISIT_DEF( parameter ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF_UNIMPL( statement );
+
 SASL_VISIT_DEF( declaration_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -585,10 +606,10 @@ SASL_VISIT_DEF( declaration_statement ){
 }
 
 SASL_VISIT_DEF( compound_statement ){
-	sc_env_ptr(data)->sym = v.symbol();
-
 	any child_ctxt_init = *data;
 	any child_ctxt;
+
+	sc_env_ptr(&child_ctxt_init)->sym = v.symbol();
 
 	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
 		it != v.stmts.end(); ++it)
@@ -641,6 +662,125 @@ SASL_VISIT_DEF( expression_statement ){
 	any child_ctxt;
 
 	visit_child( child_ctxt, child_ctxt_init, v.expr );
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_VISIT_DEF( if_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	if( cond_tid != bool_tid ){
+		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
+	}
+	insert_point_t ip_cond = insert_point();
+
+	insert_point_t ip_yes_beg = new_block( v.yes_stmt->symbol()->mangled_name(), true );
+	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
+	insert_point_t ip_yes_end = insert_point();
+
+	insert_point_t ip_no_beg, ip_no_end;
+	if( v.no_stmt ){
+		ip_no_beg = new_block( v.no_stmt->symbol()->mangled_name(), true );
+		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
+		ip_no_end = insert_point();
+	}
+
+	insert_point_t ip_merge = new_block( extract_semantic_info<statement_si>(v)->exit_point(), false );
+
+	// Fill back.
+	set_insert_point( ip_cond );
+	value_t cond_value = node_ctxt( v.cond, false )->get_value();
+	jump_cond( cond_value, ip_yes_beg, ip_no_beg ? ip_no_beg : ip_merge );
+
+	set_insert_point( ip_yes_end );
+	jump_to( ip_merge );
+
+	if( ip_no_end ){
+		set_insert_point( ip_no_end );
+		jump_to(ip_merge);
+	}
+
+	set_insert_point( ip_merge );
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_VISIT_DEF_UNIMPL( while_statement );
+SASL_VISIT_DEF_UNIMPL( dowhile_statement );
+SASL_VISIT_DEF_UNIMPL( case_label );
+SASL_VISIT_DEF_UNIMPL( ident_label );
+SASL_VISIT_DEF_UNIMPL( switch_statement );
+
+SASL_VISIT_DEF( for_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	sc_env_ptr(&child_ctxt_init)->sym = v.symbol();
+	// For instructions layout:
+	//		... before code ...
+	//		for initializer
+	//		goto for_cond
+	//	for_cond:
+	//		condition expression
+	//		goto for_body
+	//	for_iter:
+	//		iteration code
+	//		goto for_cond
+	//	for_break:
+	//		goto the for_end
+	//	for_body:
+	//		...
+	//		...
+	//		goto for_cond
+	// This design is to avoid fill-back that need to store lots of break and continue points.
+
+	visit_child( child_ctxt, child_ctxt_init, v.init );
+	insert_point_t init_end = insert_point();
+
+	insert_point_t cond_beg = new_block( "for_cond", true );
+	if( v.cond ){ visit_child( child_ctxt, child_ctxt_init, v.cond ); }
+	insert_point_t cond_end = insert_point();
+
+	insert_point_t iter_beg = new_block( "for_iter", true );
+	if( v.iter ){ visit_child( child_ctxt, child_ctxt_init, v.iter ); }
+	insert_point_t iter_end = insert_point();
+
+	insert_point_t for_break = new_block( "for_break", true );
+
+	insert_point_t body_beg = new_block( "for_body", true );
+	sc_env_ptr(&child_ctxt_init)->continue_to = iter_beg;
+	sc_env_ptr(&child_ctxt_init)->break_to = for_break;
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	insert_point_t body_end = insert_point();
+
+	insert_point_t for_end = new_block( "for_end", true );
+
+	// Fill back jumps
+	set_insert_point( init_end );
+	jump_to( cond_beg );
+
+	set_insert_point( cond_end );
+	if( !v.cond ){
+		jump_to( body_beg );
+	} else {
+		jump_cond( node_ctxt( v.cond, false )->get_value(), body_beg, for_end );
+	}
+
+	set_insert_point( iter_end );
+	jump_to( cond_beg );
+
+	set_insert_point( body_end );
+	jump_to( iter_beg );
+
+	set_insert_point( for_break );
+	jump_to( for_end );
+
+	// Set correct out block.
+	set_insert_point( for_end );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
