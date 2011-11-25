@@ -448,6 +448,20 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 
 	BOOST_CHECK_EQUAL( test_for(2,5), 32 );
 	BOOST_CHECK_EQUAL( test_for(5,2), 25 );
+
+	jit_function<int(int, int)> test_while;
+	function( test_while, "test_while" );
+	BOOST_REQUIRE( test_while );
+
+	BOOST_CHECK_EQUAL( test_while(2,5), 32 );
+	BOOST_CHECK_EQUAL( test_while(5,2), 25 );
+
+	jit_function<int(int, int)> test_dowhile;
+	function( test_dowhile, "test_dowhile" );
+	BOOST_REQUIRE( test_dowhile );
+
+	BOOST_CHECK_EQUAL( test_dowhile(2,5), 32 );
+	BOOST_CHECK_EQUAL( test_dowhile(5,2), 25 );
 }
 
 #if 0

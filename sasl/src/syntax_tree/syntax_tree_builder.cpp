@@ -794,6 +794,20 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 		SASL_CASE_RULE( stmt_for ){
 			return build_stmt_for( typed_attr->attr );
 		}
+		SASL_CASE_RULE( stmt_while ){
+			return build_stmt_while( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_dowhile ){
+			return build_stmt_dowhile( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_switch ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return ret;
+		}
+		SASL_CASE_RULE( labeled_stmt ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return ret;
+		}
 		SASL_DEFAULT(){
 			string err;
 			intptr_t rid = typed_attr->attr->rule_id();
@@ -897,8 +911,51 @@ shared_ptr<for_statement> syntax_tree_builder::build_stmt_for( shared_ptr<attrib
 	return ret;
 }
 
+shared_ptr<while_statement> syntax_tree_builder::build_stmt_while( shared_ptr<attribute> attr )
+{
+	shared_ptr<expression> cond = build_expr( attr->child(2) );
+	shared_ptr<statement> stmt = wrap_to_compound( build_stmt( attr->child(4) ) );
+	assert( cond && stmt );
 
-boost::shared_ptr<for_statement> syntax_tree_builder::build_for_loop( boost::shared_ptr<sasl::parser::attribute> attr )
+	if( cond && stmt ){
+		shared_ptr<while_statement> ret = create_node<while_statement>( token_t::null() );
+		ret->cond = cond;
+		ret->body = stmt;
+		return ret;
+	}
+
+	return shared_ptr<while_statement>();
+}
+
+shared_ptr<dowhile_statement> syntax_tree_builder::build_stmt_dowhile( shared_ptr<attribute> attr )
+{
+	shared_ptr<statement> stmt = wrap_to_compound( build_stmt( attr->child(1) ) );
+	shared_ptr<expression> cond = build_expr( attr->child(4) );
+	assert( cond && stmt );
+
+	if( cond && stmt ){
+		shared_ptr<dowhile_statement> ret = create_node<dowhile_statement>( token_t::null() );
+		ret->cond = cond;
+		ret->body = stmt;
+		return ret;
+	}
+
+	return shared_ptr<dowhile_statement>();
+}
+
+shared_ptr<switch_statement> syntax_tree_builder::build_stmt_switch( shared_ptr<attribute> attr )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<switch_statement>();
+}
+
+shared_ptr<statement> syntax_tree_builder::build_stmt_labeled( shared_ptr<attribute> attr )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return shared_ptr<statement>();
+}
+
+shared_ptr<for_statement> syntax_tree_builder::build_for_loop( shared_ptr<attribute> attr )
 {
 	shared_ptr<for_statement> ret = create_node<for_statement>( token_t::null() );
 

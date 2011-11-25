@@ -709,8 +709,86 @@ SASL_VISIT_DEF( if_statement ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF_UNIMPL( while_statement );
-SASL_VISIT_DEF_UNIMPL( dowhile_statement );
+SASL_VISIT_DEF( while_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	insert_point_t cond_beg = new_block( "while.cond", true );
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	if( cond_tid != bool_tid ){
+		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
+	}
+	insert_point_t cond_end = insert_point();
+
+	insert_point_t break_beg = new_block( "while.break", true );
+	insert_point_t break_end = insert_point();
+
+	insert_point_t body_beg = new_block( "while.body", true );
+	sc_env_ptr( &child_ctxt_init )->continue_to = cond_beg;
+	sc_env_ptr( &child_ctxt_init )->break_to = break_beg;
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	insert_point_t body_end = insert_point();
+	
+	insert_point_t while_end = new_block( "while.end", true );
+	
+	// Fill back
+	set_insert_point( cond_end );
+	jump_cond( node_ctxt( v.cond )->get_value(), body_beg, break_beg );
+
+	set_insert_point( break_end );
+	jump_to( while_end );
+
+	set_insert_point( body_end );
+	jump_to( cond_beg );
+
+	set_insert_point( while_end );
+}
+
+SASL_VISIT_DEF( dowhile_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	insert_point_t do_beg = new_block( "do.to_body", true );
+	insert_point_t do_end = insert_point();
+
+	insert_point_t cond_beg = new_block( "while.cond", true );
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	if( cond_tid != bool_tid ){
+		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
+	}
+	insert_point_t cond_end = insert_point();
+
+	insert_point_t break_beg = new_block( "while.break", true );
+	insert_point_t break_end = insert_point();
+
+	insert_point_t body_beg = new_block( "while.body", true );
+	sc_env_ptr( &child_ctxt_init )->continue_to = cond_beg;
+	sc_env_ptr( &child_ctxt_init )->break_to = break_beg;
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	insert_point_t body_end = insert_point();
+	
+	insert_point_t while_end = new_block( "while.end", true );
+	
+	// Fill back
+	set_insert_point( do_end );
+	jump_to( body_beg );
+
+	set_insert_point( cond_end );
+	jump_cond( node_ctxt( v.cond )->get_value(), body_beg, break_beg );
+
+	set_insert_point( break_end );
+	jump_to( while_end );
+
+	set_insert_point( body_end );
+	jump_to( cond_beg );
+
+	set_insert_point( while_end );
+}
+
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );

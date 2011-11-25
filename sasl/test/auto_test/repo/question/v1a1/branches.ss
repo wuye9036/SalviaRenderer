@@ -13,3 +13,23 @@ int test_for( int base, int n ){
 	}
 	return ret;
 }
+
+int test_while( int base, int n ){
+	int ret = base;
+	int i = 1;
+	while ( i++ < n ){
+		ret = ret*base;
+	}
+	return ret;
+}
+
+int test_dowhile( int base, int n ){
+	int ret = 1;
+	int i = 0;
+
+	do{
+		ret = ret * base;
+	} while( ++i < n );
+
+	return ret;
+}

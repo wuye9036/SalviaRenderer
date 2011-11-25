@@ -299,8 +299,8 @@ public:
 
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement, (decl) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, if_statement, (cond)(yes_stmt)(no_stmt) );
-	SASL_VISIT_INLINE_DEF_UNIMPL( while_statement );
-	SASL_VISIT_INLINE_DEF_UNIMPL( dowhile_statement );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, while_statement, (cond)(body) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, dowhile_statement, (cond)(body) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, for_statement, (init)(cond)(iter)(body) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( case_label );
 	SASL_VISIT_INLINE_DEF_UNIMPL( ident_label );

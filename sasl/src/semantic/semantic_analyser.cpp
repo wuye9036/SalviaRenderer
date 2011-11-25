@@ -54,6 +54,7 @@ using ::sasl::syntax_tree::constant_expression;
 using ::sasl::syntax_tree::declaration;
 using ::sasl::syntax_tree::declarator;
 using ::sasl::syntax_tree::declaration_statement;
+using ::sasl::syntax_tree::dowhile_statement;
 using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::expression_initializer;
 using ::sasl::syntax_tree::expression_statement;
@@ -71,6 +72,8 @@ using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::unary_expression;
 using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::variable_expression;
+using ::sasl::syntax_tree::while_statement;
+
 using ::sasl::syntax_tree::dfunction_combinator;
 
 using namespace boost::assign;
@@ -803,11 +806,48 @@ SASL_VISIT_DEF( if_statement )
 }
 
 SASL_VISIT_DEF( while_statement ){
-	v.cond->accept( this, data );
-	v.body->accept( this, data );
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<while_statement> dup_while = duplicate( v.as_handle() )->as_handle<while_statement>();
+
+	data_cptr( child_ctxt_init )->parent_sym
+		= data_cptr()->parent_sym->add_anonymous_child( dup_while );
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_while->cond );
+	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_while->cond);
+	assert( cond_tsi );
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
+
+	visit_child( child_ctxt, child_ctxt_init, v.body, dup_while->body );
+	extract_semantic_info<statement_si>(dup_while->body)->parent_block( dup_while );
+
+	data_cptr()->generated_node = dup_while;
 }
 
-SASL_VISIT_DEF_UNIMPL( dowhile_statement );
+SASL_VISIT_DEF( dowhile_statement ){
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<dowhile_statement> dup_dowhile = duplicate( v.as_handle() )->as_handle<dowhile_statement>();
+
+	data_cptr( child_ctxt_init )->parent_sym
+		= data_cptr()->parent_sym->add_anonymous_child( dup_dowhile );
+
+	visit_child( child_ctxt, child_ctxt_init, v.body, dup_dowhile->body );
+	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_dowhile->cond );
+	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_dowhile->cond);
+	assert( cond_tsi );
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
+
+	extract_semantic_info<statement_si>(dup_dowhile->body)->parent_block( dup_dowhile );
+
+	data_cptr()->generated_node = dup_dowhile;
+}
+
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
