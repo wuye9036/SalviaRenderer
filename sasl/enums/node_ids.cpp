@@ -75,6 +75,7 @@ void node_ids::force_initialize(){
 	is_initialized = true;
 	new ( const_cast<node_ids*>(&expression_statement) ) node_ids ( UINT64_C( 844424930131975 ), "expression_statement" );
 	new ( const_cast<node_ids*>(&member_expression) ) node_ids ( UINT64_C( 562949953421322 ), "member_expression" );
+	new ( const_cast<node_ids*>(&tynode) ) node_ids ( UINT64_C( 281479271677952 ), "tynode" );
 	new ( const_cast<node_ids*>(&unary_expression) ) node_ids ( UINT64_C( 562949953421315 ), "unary_expression" );
 	new ( const_cast<node_ids*>(&for_statement) ) node_ids ( UINT64_C( 844424930131977 ), "for_statement" );
 	new ( const_cast<node_ids*>(&initializer) ) node_ids ( UINT64_C( 1125899906842624 ), "initializer" );
@@ -82,7 +83,6 @@ void node_ids::force_initialize(){
 	new ( const_cast<node_ids*>(&variable_declaration) ) node_ids ( UINT64_C( 281474976710657 ), "variable_declaration" );
 	new ( const_cast<node_ids*>(&cond_expression) ) node_ids ( UINT64_C( 562949953421319 ), "cond_expression" );
 	new ( const_cast<node_ids*>(&case_label) ) node_ids ( UINT64_C( 1970324836974594 ), "case_label" );
-	new ( const_cast<node_ids*>(&tynode) ) node_ids ( UINT64_C( 281479271677952 ), "tynode" );
 	new ( const_cast<node_ids*>(&compound_statement) ) node_ids ( UINT64_C( 844424930131974 ), "compound_statement" );
 	new ( const_cast<node_ids*>(&typedef_definition) ) node_ids ( UINT64_C( 281474976710658 ), "typedef_definition" );
 	new ( const_cast<node_ids*>(&struct_type) ) node_ids ( UINT64_C( 281479271677955 ), "struct_type" );
@@ -108,6 +108,7 @@ void node_ids::force_initialize(){
 	new ( const_cast<node_ids*>(&binary_expression) ) node_ids ( UINT64_C( 562949953421317 ), "binary_expression" );
 	new ( const_cast<node_ids*>(&expression_list) ) node_ids ( UINT64_C( 562949953421318 ), "expression_list" );
 	new ( const_cast<node_ids*>(&member_initializer) ) node_ids ( UINT64_C( 1125899906842626 ), "member_initializer" );
+	new ( const_cast<node_ids*>(&labeled_statement) ) node_ids ( UINT64_C( 844424930131978 ), "labeled_statement" );
 	new ( const_cast<node_ids*>(&declaration_statement) ) node_ids ( UINT64_C( 844424930131969 ), "declaration_statement" );
 	new ( const_cast<node_ids*>(&index_expression) ) node_ids ( UINT64_C( 562949953421320 ), "index_expression" );
 	new ( const_cast<node_ids*>(&declarator) ) node_ids ( UINT64_C( 281474976710661 ), "declarator" );
@@ -127,6 +128,7 @@ node_ids::node_ids( const storage_type& val, const std::string& name ): node_ids
 
 const node_ids node_ids::expression_statement ( UINT64_C( 844424930131975 ), "expression_statement" );
 const node_ids node_ids::member_expression ( UINT64_C( 562949953421322 ), "member_expression" );
+const node_ids node_ids::tynode ( UINT64_C( 281479271677952 ), "tynode" );
 const node_ids node_ids::unary_expression ( UINT64_C( 562949953421315 ), "unary_expression" );
 const node_ids node_ids::for_statement ( UINT64_C( 844424930131977 ), "for_statement" );
 const node_ids node_ids::initializer ( UINT64_C( 1125899906842624 ), "initializer" );
@@ -134,7 +136,6 @@ const node_ids node_ids::function_type ( UINT64_C( 281479271677956 ), "function_
 const node_ids node_ids::variable_declaration ( UINT64_C( 281474976710657 ), "variable_declaration" );
 const node_ids node_ids::cond_expression ( UINT64_C( 562949953421319 ), "cond_expression" );
 const node_ids node_ids::case_label ( UINT64_C( 1970324836974594 ), "case_label" );
-const node_ids node_ids::tynode ( UINT64_C( 281479271677952 ), "tynode" );
 const node_ids node_ids::compound_statement ( UINT64_C( 844424930131974 ), "compound_statement" );
 const node_ids node_ids::typedef_definition ( UINT64_C( 281474976710658 ), "typedef_definition" );
 const node_ids node_ids::struct_type ( UINT64_C( 281479271677955 ), "struct_type" );
@@ -160,6 +161,7 @@ const node_ids node_ids::alias_type ( UINT64_C( 281479271677957 ), "alias_type" 
 const node_ids node_ids::binary_expression ( UINT64_C( 562949953421317 ), "binary_expression" );
 const node_ids node_ids::expression_list ( UINT64_C( 562949953421318 ), "expression_list" );
 const node_ids node_ids::member_initializer ( UINT64_C( 1125899906842626 ), "member_initializer" );
+const node_ids node_ids::labeled_statement ( UINT64_C( 844424930131978 ), "labeled_statement" );
 const node_ids node_ids::declaration_statement ( UINT64_C( 844424930131969 ), "declaration_statement" );
 const node_ids node_ids::index_expression ( UINT64_C( 562949953421320 ), "index_expression" );
 const node_ids node_ids::declarator ( UINT64_C( 281474976710661 ), "declarator" );

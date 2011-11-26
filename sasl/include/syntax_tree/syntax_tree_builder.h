@@ -97,6 +97,7 @@ public:
 	boost::shared_ptr<dowhile_statement> build_stmt_dowhile( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<switch_statement> build_stmt_switch( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<statement> build_stmt_labeled( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<label> build_label( boost::shared_ptr<sasl::parser::attribute> attr );
 
 	boost::shared_ptr<for_statement> build_for_loop( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<statement> build_for_init_decl( boost::shared_ptr<sasl::parser::attribute> attr );

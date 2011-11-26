@@ -187,7 +187,10 @@ public:
 		SAFE_ACCEPT( v.jump_expr );
 		applied( v, data );
 	}
-
+	SASL_VISIT_DCL( labeled_statement ){
+		SAFE_ACCEPT( v.stmt );
+		visit( v.labels, data );
+	}
 	// program
 	SASL_VISIT_DCL( program ){
 		visit( v.decls, data );
@@ -297,17 +300,18 @@ public:
 	// statement
 	SASL_VISIT_INLINE_DEF_UNIMPL( statement );
 
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement, (decl) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, if_statement, (cond)(yes_stmt)(no_stmt) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, while_statement, (cond)(body) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, dowhile_statement, (cond)(body) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, for_statement, (init)(cond)(iter)(body) );
-	SASL_VISIT_INLINE_DEF_UNIMPL( case_label );
-	SASL_VISIT_INLINE_DEF_UNIMPL( ident_label );
-	SASL_VISIT_INLINE_DEF_UNIMPL( switch_statement );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, compound_statement, (stmts) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, expression_statement, (expr) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, jump_statement, (code)(jump_expr) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement,	(decl) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, if_statement,			(cond)(yes_stmt)(no_stmt) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, while_statement,			(cond)(body) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, dowhile_statement,		(cond)(body) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, for_statement,			(init)(cond)(iter)(body) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, switch_statement,		(cond)(stmts) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, compound_statement,		(stmts) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, expression_statement,	(expr) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, jump_statement,			(code)(jump_expr) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, labeled_statement,		(stmt)(labels) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, case_label,				(expr) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, ident_label,				(label_tok) );
 
 	// program
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, program, (decls)(name) );
@@ -359,6 +363,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( compound_statement );
 	SASL_VISIT_INLINE_DEF_UNIMPL( expression_statement );
 	SASL_VISIT_INLINE_DEF_UNIMPL( jump_statement );
+	SASL_VISIT_INLINE_DEF_UNIMPL( labeled_statement );
 
 	// program
 	SASL_VISIT_INLINE_DEF_UNIMPL( program );

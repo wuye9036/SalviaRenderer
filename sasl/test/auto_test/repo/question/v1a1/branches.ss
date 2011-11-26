@@ -33,3 +33,24 @@ int test_dowhile( int base, int n ){
 
 	return ret;
 }
+
+int test_switch( int base, int n ){
+	int ret = 0;
+	switch ( n ){
+	case 1:
+		return base;			// Return
+	case 2:
+		return base*base;
+	case 3:						// Walk through
+	case 4:
+		return base*base*base;
+	case 0:						// Unordered
+		return 1;
+	case 5:						// Break
+		ret = 8876;
+		break;
+	default:					// Default
+		return 0;
+	}
+	return ret;
+}

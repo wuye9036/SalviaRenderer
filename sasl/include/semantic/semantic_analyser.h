@@ -78,6 +78,7 @@ public:
 	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( jump_statement );
+	SASL_VISIT_DCL( labeled_statement );
 
 	// program
 	SASL_VISIT_DCL( program );

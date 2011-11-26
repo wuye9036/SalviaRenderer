@@ -451,11 +451,14 @@ public:
 	void jump_to( insert_point_t const& );
 	/// Jump to the specified block by condition.
 	void jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip );
+	/// Switch to blocks
+	void switch_to( value_t const& cond, std::vector< std::pair<value_t, insert_point_t> > const& cases, insert_point_t const& default_branch );
 	/// Clean empty blocks of current function.
 	virtual void clean_empty_blocks(); 
 	virtual cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need ) = 0;
 	/// Get member type information is type is aggrated.
 	value_tyinfo* member_tyinfo( value_tyinfo const* agg, size_t index ) const;
+
 	/// @}
 
 	/// @name Fundamentals

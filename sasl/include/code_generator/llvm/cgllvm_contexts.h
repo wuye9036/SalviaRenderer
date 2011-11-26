@@ -84,7 +84,8 @@ struct cgllvm_sctxt_data{
 	bool semantic_mode;
 	/// Type attached to node.
 	boost::shared_ptr<value_tyinfo>	tyinfo;
-
+	/// For labeled statement
+	insert_point_t position;
 	/// The declarator count of declaration.
 	int declarator_count;			
 };

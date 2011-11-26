@@ -778,7 +778,7 @@ void dstatements_combinator::child_ended()
 			return;
 	}
 
-	typed_node()->stmts.back()->labels = lbls;
+	// typed_node()->stmts.back()->labels = lbls;
 	lbls.clear();
 }
 

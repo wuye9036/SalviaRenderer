@@ -80,7 +80,7 @@ public:
 	SASL_VISIT_DCL( case_label );
 	SASL_VISIT_DCL( ident_label );
 	SASL_VISIT_DCL( switch_statement );
-
+	SASL_VISIT_DCL( labeled_statement );
 protected:
 	SASL_SPECIFIC_VISIT_DCL( process_intrinsics, program );
 

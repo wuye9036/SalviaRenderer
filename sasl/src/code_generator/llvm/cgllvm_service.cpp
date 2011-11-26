@@ -56,6 +56,7 @@ using llvm::UndefValue;
 using llvm::StoreInst;
 using llvm::TypeBuilder;
 using llvm::AttrListPtr;
+using llvm::SwitchInst;
 
 namespace Intrinsic = llvm::Intrinsic;
 
@@ -1479,6 +1480,15 @@ value_t cg_service::emit_write_mask( value_t const& vec, uint32_t mask )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
+}
+
+void cg_service::switch_to( value_t const& cond, std::vector< std::pair<value_t, insert_point_t> > const& cases, insert_point_t const& default_branch )
+{
+	Value* v = cond.load();
+	SwitchInst* inst = builder()->CreateSwitch( v, default_branch.block, static_cast<unsigned>(cases.size()) );
+	for( size_t i_case = 0; i_case < cases.size(); ++i_case ){
+		inst->addCase( llvm::cast<ConstantInt>( cases[i_case].first.load() ), cases[i_case].second.block );
+	}
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

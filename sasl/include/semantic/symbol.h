@@ -66,7 +66,7 @@ public:
 	int count( std::string name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
-
+	
 	enum unique_name_types{
 		unique_in_unit,	/* Generate unique name in unit.*/
 		unique_in_module,	/* Generate unique name in module. */

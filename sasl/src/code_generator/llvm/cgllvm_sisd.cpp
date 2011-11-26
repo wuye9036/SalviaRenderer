@@ -57,9 +57,12 @@ using sasl::semantic::statement_si;
 using boost::addressof;
 using boost::any_cast;
 using boost::bind;
+using boost::weak_ptr;
 
 using std::vector;
 using std::string;
+using std::pair;
+using std::make_pair;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_sisd
 #define FUNCTION_SCOPE( fn ) \
@@ -632,15 +635,12 @@ SASL_VISIT_DEF( jump_statement ){
 	if ( v.code == jump_mode::_return ){
 		return_statement(v, data);
 	} else if ( v.code == jump_mode::_continue ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		//assert( sc_env_ptr(data)->continue_to );
-		//builder()->CreateBr( sc_env_ptr(data)->continue_to );
+		assert( sc_env_ptr(data)->continue_to );
+		jump_to( sc_env_ptr(data)->continue_to );
 
 	} else if ( v.code == jump_mode::_break ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-
-		//assert( sc_env_ptr(data)->break_to );
-		//builder()->CreateBr( sc_env_ptr(data)->break_to );
+		assert( sc_env_ptr(data)->break_to );
+		jump_to( sc_env_ptr(data)->break_to );
 	}
 
 	// Restart a new block for sealing the old block.
@@ -678,18 +678,18 @@ SASL_VISIT_DEF( if_statement ){
 	}
 	insert_point_t ip_cond = insert_point();
 
-	insert_point_t ip_yes_beg = new_block( v.yes_stmt->symbol()->mangled_name(), true );
+	insert_point_t ip_yes_beg = new_block( "if.yes", true );
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
 	insert_point_t ip_yes_end = insert_point();
 
 	insert_point_t ip_no_beg, ip_no_end;
 	if( v.no_stmt ){
-		ip_no_beg = new_block( v.no_stmt->symbol()->mangled_name(), true );
+		ip_no_beg = new_block( "if.no", true );
 		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
 		ip_no_end = insert_point();
 	}
 
-	insert_point_t ip_merge = new_block( extract_semantic_info<statement_si>(v)->exit_point(), false );
+	insert_point_t ip_merge = new_block( "if.end", false );
 
 	// Fill back.
 	set_insert_point( ip_cond );
@@ -789,9 +789,84 @@ SASL_VISIT_DEF( dowhile_statement ){
 	set_insert_point( while_end );
 }
 
-SASL_VISIT_DEF_UNIMPL( case_label );
+SASL_VISIT_DEF( case_label ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	if( v.expr ){
+		visit_child( child_ctxt, child_ctxt_init, v.expr );
+	}
+}
+
 SASL_VISIT_DEF_UNIMPL( ident_label );
-SASL_VISIT_DEF_UNIMPL( switch_statement );
+
+SASL_VISIT_DEF( switch_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	insert_point_t cond_end = insert_point();
+
+	insert_point_t break_end = new_block( "switch.break", true );
+
+	insert_point_t body_beg = new_block( "switch.body", true );
+	sc_env_ptr(&child_ctxt_init)->break_to = break_end;
+	visit_child( child_ctxt, child_ctxt_init, v.stmts );
+	insert_point_t body_end = insert_point();
+
+	insert_point_t switch_end = new_block( "switch.end", true );
+
+	// Collect Labeled Statement Position
+	vector< pair<value_t,insert_point_t> > cases;
+	statement_si* ssi = v.si_ptr<statement_si>();
+	assert( ssi );
+
+	insert_point_t default_beg = switch_end;
+	BOOST_FOREACH( weak_ptr<labeled_statement> const& weak_lbl_stmt, ssi->labels() ){
+		shared_ptr<labeled_statement> lbl_stmt = weak_lbl_stmt.lock();
+		assert( lbl_stmt );
+
+		insert_point_t stmt_ip = node_ctxt(lbl_stmt)->data().position; 
+		BOOST_FOREACH( shared_ptr<label> const& lbl, lbl_stmt->labels ){
+			assert( lbl->node_class() == node_ids::case_label );
+			shared_ptr<case_label> case_lbl = lbl->as_handle<case_label>();
+			if( case_lbl->expr ){
+				value_t v = node_ctxt( case_lbl->expr )->get_value();
+				cases.push_back( make_pair(v, stmt_ip ) );
+			} else {
+				default_beg = stmt_ip;
+			}
+		}
+	}
+	
+	// Fill back jumps
+	set_insert_point(cond_end);
+	value_t cond_v = node_ctxt( v.cond )->get_value();
+	switch_to( cond_v, cases, default_beg );
+
+	set_insert_point( break_end );
+	jump_to( switch_end );
+
+	set_insert_point( body_end );
+	jump_to( switch_end );
+
+	set_insert_point( switch_end );
+}
+
+SASL_VISIT_DEF( labeled_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	BOOST_FOREACH( shared_ptr<label> const& lbl, v.labels ){
+		// Constant expression, no instruction was generated.
+		visit_child( child_ctxt, child_ctxt_init, lbl );
+	}
+	insert_point_t stmt_pos = new_block( "switch.case", true );
+	visit_child( child_ctxt, child_ctxt_init, v.stmt );
+	node_ctxt(v, true)->data().position = stmt_pos;
+
+	sc_ptr(data)->copy( node_ctxt(v) );
+}
 
 SASL_VISIT_DEF( for_statement ){
 	any child_ctxt_init = *data;

@@ -45,6 +45,7 @@ using ::sasl::syntax_tree::alias_type;
 using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::builtin_type;
 using ::sasl::syntax_tree::call_expression;
+using ::sasl::syntax_tree::case_label;
 using ::sasl::syntax_tree::cast_expression;
 using ::sasl::syntax_tree::cond_expression;
 using ::sasl::syntax_tree::create_builtin_type;
@@ -62,12 +63,15 @@ using ::sasl::syntax_tree::for_statement;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::if_statement;
 using ::sasl::syntax_tree::jump_statement;
+using ::sasl::syntax_tree::label;
+using ::sasl::syntax_tree::labeled_statement;
 using ::sasl::syntax_tree::member_expression;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
 using ::sasl::syntax_tree::statement;
 using ::sasl::syntax_tree::struct_type;
+using ::sasl::syntax_tree::switch_statement;
 using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::unary_expression;
 using ::sasl::syntax_tree::variable_declaration;
@@ -83,6 +87,7 @@ using boost::any;
 using boost::any_cast;
 using boost::format;
 using boost::shared_ptr;
+using boost::weak_ptr;
 using boost::unordered_map;
 
 using std::vector;
@@ -95,13 +100,14 @@ using std::string;
 
 // semantic analysis context
 struct sacontext{
-	sacontext(): declarator_type_id(-1), is_global(true), member_index(-1){
+	sacontext(): declarator_type_id(-1), is_global(true), member_index(-1), lbl_list(NULL){
 	}
 
 	shared_ptr<symbol> parent_sym;
 
-	shared_ptr<node> generated_node;
+	std::vector< weak_ptr<labeled_statement> >* lbl_list;
 
+	shared_ptr<node> generated_node;
 	shared_ptr<node> variable_to_fill; // for initializer only.
 	tid_t declarator_type_id;
 
@@ -800,7 +806,6 @@ SASL_VISIT_DEF( if_statement )
 	}
 
 	SASL_GET_OR_CREATE_SI( statement_si, si, dup_ifstmt);
-	si->exit_point( symbol::unique_name() );
 
 	data_cptr()->generated_node = dup_ifstmt;
 }
@@ -810,9 +815,6 @@ SASL_VISIT_DEF( while_statement ){
 	any child_ctxt;
 
 	shared_ptr<while_statement> dup_while = duplicate( v.as_handle() )->as_handle<while_statement>();
-
-	data_cptr( child_ctxt_init )->parent_sym
-		= data_cptr()->parent_sym->add_anonymous_child( dup_while );
 
 	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_while->cond );
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_while->cond);
@@ -833,9 +835,6 @@ SASL_VISIT_DEF( dowhile_statement ){
 
 	shared_ptr<dowhile_statement> dup_dowhile = duplicate( v.as_handle() )->as_handle<dowhile_statement>();
 
-	data_cptr( child_ctxt_init )->parent_sym
-		= data_cptr()->parent_sym->add_anonymous_child( dup_dowhile );
-
 	visit_child( child_ctxt, child_ctxt_init, v.body, dup_dowhile->body );
 	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_dowhile->cond );
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_dowhile->cond);
@@ -848,9 +847,71 @@ SASL_VISIT_DEF( dowhile_statement ){
 	data_cptr()->generated_node = dup_dowhile;
 }
 
-SASL_VISIT_DEF_UNIMPL( case_label );
-SASL_VISIT_DEF_UNIMPL( ident_label );
-SASL_VISIT_DEF_UNIMPL( switch_statement );
+SASL_VISIT_DEF( labeled_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<labeled_statement> dup_lbl_stmt = duplicate( v.as_handle() )->as_handle<labeled_statement>();
+	
+	assert( data_cptr()->lbl_list );
+
+	dup_lbl_stmt->labels.clear();
+	BOOST_FOREACH( shared_ptr<label> const& lbl, v.labels ){
+		shared_ptr<label> dup_lbl;
+		visit_child( child_ctxt, child_ctxt_init, lbl, dup_lbl );
+		assert(dup_lbl);
+		dup_lbl_stmt->labels.push_back( dup_lbl );
+	}
+	visit_child( child_ctxt, child_ctxt_init, v.stmt, dup_lbl_stmt->stmt );
+	data_cptr()->lbl_list->push_back( dup_lbl_stmt );
+
+	data_cptr()->generated_node = dup_lbl_stmt;
+}
+
+SASL_VISIT_DEF( case_label ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<case_label> dup_case = duplicate( v.as_handle() )->as_handle<case_label>();
+	
+	if( dup_case->expr ){
+		visit_child( child_ctxt, child_ctxt_init, v.expr, dup_case->expr );
+
+		// Only support constant yet.
+		assert( v.expr->node_class() == node_ids::constant_expression );
+		type_info_si* expr_tisi = dup_case->expr->si_ptr<type_info_si>();
+		builtin_types expr_bt = expr_tisi->type_info()->tycode;
+
+		// TODO expression must be int.
+		assert( is_integer( expr_bt ) || expr_bt == builtin_types::_boolean );
+	}
+	data_cptr()->generated_node = dup_case;
+}
+
+SASL_VISIT_DEF( ident_label ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_VISIT_DEF( switch_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<switch_statement> dup_switch = duplicate( v.as_handle() )->as_handle<switch_statement>();
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_switch->cond );
+	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_switch->cond);
+	assert( cond_tsi );
+	tid_t int_tid = msi->pety()->get( builtin_types::_sint32 );
+	builtin_types cond_bt = cond_tsi->type_info()->tycode;
+	assert( is_integer( cond_bt ) || typeconv->implicit_convertible( int_tid, cond_tsi->entry_id() ) );
+
+	SASL_GET_OR_CREATE_SI( statement_si, ssi, dup_switch );
+	
+	ctxt_ptr(child_ctxt_init)->lbl_list = &ssi->labels();
+	visit_child( child_ctxt, child_ctxt_init, v.stmts, dup_switch->stmts );
+	
+	data_cptr()->generated_node = dup_switch;
+}
 
 SASL_VISIT_DEF( compound_statement )
 {
@@ -912,7 +973,6 @@ SASL_VISIT_DEF( jump_statement )
 
 	data_cptr()->generated_node = dup_jump;
 }
-
 
 SASL_VISIT_DEF( for_statement ){
 	any child_ctxt_init = *data;

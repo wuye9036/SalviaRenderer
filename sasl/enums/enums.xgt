@@ -167,11 +167,11 @@
 		<item value = "$expr_index$">call_expression</item>
 		<item value = "$expr_index$">member_expression</item>
 		
-		<item value = "$type_specifier$ + 1">builtin_type</item>
-		<item value = "$type_specifier$ + 2">array_type</item>
-		<item value = "$type_specifier$ + 3">struct_type</item>
-		<item value = "$type_specifier$ + 4">function_type</item>
-		<item value = "$type_specifier$ + 5">alias_type</item>
+		<item value = "$tynode$ + 1">builtin_type</item>
+		<item value = "$tynode$ + 2">array_type</item>
+		<item value = "$tynode$ + 3">struct_type</item>
+		<item value = "$tynode$ + 4">function_type</item>
+		<item value = "$tynode$ + 5">alias_type</item>
 
 		<item value = "$statement$ + 1">declaration_statement</item>
 		<item value = "$statement$ + 2">if_statement</item>
@@ -182,7 +182,8 @@
 		<item value = "$statement$ + 7">expression_statement</item>
 		<item value = "$statement$ + 8">jump_statement</item>
 		<item value = "$statement$ + 9">for_statement</item>
-
+		<item value = "$statement$ + 10">labeled_statement</item>
+		
 		<item value = "$initializer$ + 1">expression_initializer</item>
 		<item value = "$initializer$ + 2">member_initializer</item>
 		

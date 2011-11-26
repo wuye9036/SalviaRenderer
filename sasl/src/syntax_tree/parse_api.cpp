@@ -65,6 +65,7 @@ void init_lex( lexer& l ){
 		( "kw_if", "if" )
 		( "kw_while", "while" )
 		( "kw_do", "do" )
+		( "kw_default", "default" )
 
 		( "plus", "{PLUS}" )
 		( "minus", "{MINUS}" )
@@ -123,7 +124,7 @@ void init_lex( lexer& l ){
 		("lparen")("rparen")("lbrace")("rbrace")
 		
 		("kw_struct")("kw_typedef")
-		("kw_break")("kw_continue")("kw_case")("kw_return")
+		("kw_break")("kw_continue")("kw_case")("kw_default")("kw_return")
 		("kw_switch")("kw_else")("kw_for")("kw_if")
 		("kw_while")("kw_do")
 

@@ -26,6 +26,7 @@ public:
 
 	const static this_type expression_statement;
 	const static this_type member_expression;
+	const static this_type tynode;
 	const static this_type unary_expression;
 	const static this_type for_statement;
 	const static this_type initializer;
@@ -33,7 +34,6 @@ public:
 	const static this_type variable_declaration;
 	const static this_type cond_expression;
 	const static this_type case_label;
-	const static this_type tynode;
 	const static this_type compound_statement;
 	const static this_type typedef_definition;
 	const static this_type struct_type;
@@ -59,6 +59,7 @@ public:
 	const static this_type binary_expression;
 	const static this_type expression_list;
 	const static this_type member_initializer;
+	const static this_type labeled_statement;
 	const static this_type declaration_statement;
 	const static this_type index_expression;
 	const static this_type declarator;

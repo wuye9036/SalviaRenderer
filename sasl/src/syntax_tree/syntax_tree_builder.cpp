@@ -801,12 +801,10 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 			return build_stmt_dowhile( typed_attr->attr );
 		}
 		SASL_CASE_RULE( stmt_switch ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return ret;
+			return build_stmt_switch( typed_attr->attr );
 		}
 		SASL_CASE_RULE( labeled_stmt ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return ret;
+			return build_stmt_labeled( typed_attr->attr );
 		}
 		SASL_DEFAULT(){
 			string err;
@@ -945,14 +943,59 @@ shared_ptr<dowhile_statement> syntax_tree_builder::build_stmt_dowhile( shared_pt
 
 shared_ptr<switch_statement> syntax_tree_builder::build_stmt_switch( shared_ptr<attribute> attr )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<switch_statement>();
+	shared_ptr<expression> cond = build_expr( attr->child(2) );
+	shared_ptr<compound_statement> stmts = build_stmt_compound( attr->child(4) );
+
+	assert( cond && stmts );
+
+	shared_ptr<switch_statement> ret = create_node<switch_statement>( token_t::null() );
+	ret->cond = cond;
+	ret->stmts = stmts;
+	return ret;
 }
 
 shared_ptr<statement> syntax_tree_builder::build_stmt_labeled( shared_ptr<attribute> attr )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<statement>();
+	shared_ptr<label> lbl = build_label( attr->child(0) );
+	shared_ptr<statement> stmt = build_stmt( attr->child(2) );
+	assert( lbl && stmt );
+	shared_ptr<labeled_statement> ret;
+	if( stmt->node_class() == node_ids::labeled_statement ){
+		ret = stmt->as_handle<labeled_statement>();
+	} else {
+		ret = create_node<labeled_statement>( token_t::null() );
+		ret->stmt = stmt;
+	}
+
+	ret->labels.push_back( lbl );
+	
+	return ret;
+}
+
+shared_ptr<label> syntax_tree_builder::build_label( shared_ptr<attribute> attr )
+{
+	shared_ptr<attribute> label_attr = attr->child(0);
+
+	SASL_SWITCH_RULE( label_attr )
+		SASL_CASE_RULE( kw_default ){
+			return create_node<case_label>( token_t::null() );
+		}
+		SASL_CASE_RULE( ident ){
+			shared_ptr<ident_label> ret = create_node<ident_label>( token_t::null() );
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, label_attr );
+			ret->label_tok = ident_attr->tok;
+			return ret;
+		}
+		SASL_DEFAULT(){
+			// Case Label
+			assert( label_attr->child(0)->rule_id() == g.kw_case.id() );
+			shared_ptr<case_label> ret = create_node<case_label>( token_t::null() );
+			ret->expr = build_expr( label_attr->child(1) );
+			return ret;
+		}
+	SASL_END_SWITCH_RULE();
+
+	return shared_ptr<label>();
 }
 
 shared_ptr<for_statement> syntax_tree_builder::build_for_loop( shared_ptr<attribute> attr )
