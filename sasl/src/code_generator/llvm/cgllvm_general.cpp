@@ -4,13 +4,13 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
-#include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
+#include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/tecov.h>
+#include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
@@ -45,7 +45,7 @@ using semantic::storage_si;
 using semantic::operator_name;
 using semantic::statement_si;
 using semantic::symbol;
-using semantic::tecov_t;
+using semantic::caster_t;
 using semantic::pety_item_t;
 using semantic::type_equal;
 using semantic::type_info_si;
@@ -79,12 +79,12 @@ SASL_VISIT_DEF( cast_expression ){
 	//shared_ptr<type_info_si> casted_tsi = extract_semantic_info<type_info_si>( v.casted_type );
 
 	//if( src_tsi->entry_id() != casted_tsi->entry_id() ){
-	//	if( typeconv->convertible( casted_tsi->entry_id(), src_tsi->entry_id() ) == tecov_t::cannot_conv ){
+	//	if( caster->try_cast( casted_tsi->entry_id(), src_tsi->entry_id() ) == caster_t::nocast ){
 	//		// Here is code error. Compiler should report it.
 	//		EFLIB_ASSERT_UNIMPLEMENTED();
 	//	}
 	//	node_ctxt(v, true)->data().val_type = node_ctxt(v.casted_type)->data().val_type;
-	//	typeconv->convert( v.as_handle(), v.expr );
+	//	caster->convert( v.as_handle(), v.expr );
 	//}
 
 	//cgllvm_sctxt* vctxt = node_ctxt(v, false);

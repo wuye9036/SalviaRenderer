@@ -3,7 +3,7 @@
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/tecov.h>
+#include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -104,7 +104,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads( const string& unmangled ) c
 
 vector< shared_ptr<symbol> > symbol::find_overloads(
 	const string& unmangled,
-	shared_ptr<tecov_t> conv,
+	shared_ptr<caster_t> conv,
 	vector< shared_ptr<expression> > args ) const
 {
 	// find all overloads
@@ -152,7 +152,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 				all_parameter_success = false;
 				break;
 			}
-			if ( !( arg_type == par_type || conv->implicit_convertible(par_type, arg_type) ) ){
+			if ( !( arg_type == par_type || conv->try_implicit(par_type, arg_type) ) ){
 				all_parameter_success = false;
 				break;
 			}

@@ -402,7 +402,7 @@ llvm::Value* value_t::load() const{
 			ref_val = cg->emit_extract_val( parent->to_rvalue(), index_values[0] ).load();
 		} else {
 			// Multi-members must be swizzle/writemask.
-			assert( kind & kind_ref == 0 );
+			assert( (kind & kind_ref) == 0 );
 			if( abi == abi_c ){
 				EFLIB_ASSERT_UNIMPLEMENTED();
 				return NULL;

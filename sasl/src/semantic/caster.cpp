@@ -1,4 +1,4 @@
-#include <sasl/include/semantic/tecov.h>
+#include <sasl/include/semantic/caster.h>
 
 #include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/type_checker.h>
@@ -10,8 +10,8 @@ using namespace ::sasl::syntax_tree;
 using namespace ::std;
 using ::boost::shared_ptr;
 
-void tecov_t::register_converter(
-	conv_type ct,
+void caster_t::add_cast(
+	casts ct,
 	tid_t src_type,
 	tid_t dest_type,
 	converter_t conv
@@ -20,8 +20,8 @@ void tecov_t::register_converter(
 	convinfos.push_back( make_tuple( ct, src_type, dest_type, conv ) );
 }
 
-tecov_t::conv_type tecov_t::convertible( tid_t dest, tid_t src ){
-	conv_type ret_ct = cannot_conv;
+caster_t::casts caster_t::try_cast( tid_t dest, tid_t src ){
+	casts ret_ct = nocast;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
 		if ( dest == it->get<2>() && src == it->get<1>() ){
 			ret_ct = it->get<0>();
@@ -31,22 +31,22 @@ tecov_t::conv_type tecov_t::convertible( tid_t dest, tid_t src ){
 	return ret_ct;
 }
 
-bool tecov_t::implicit_convertible( tid_t dest, tid_t src ){
-	conv_type ret_ct = cannot_conv;
+bool caster_t::try_implicit( tid_t dest, tid_t src ){
+	casts ret_ct = nocast;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
 		if ( dest == it->get<2>() && src == it->get<1>() ){
 			ret_ct = it->get<0>();
 			break;
 		}
 	}
-	return ret_ct == better_conv || ret_ct == implicit_conv || ret_ct == warning_conv;
+	return ret_ct == better || ret_ct == imp || ret_ct == warning;
 }
 
-tecov_t::conv_type tecov_t::convert( shared_ptr<node> dest, shared_ptr<node> src ){
+caster_t::casts caster_t::cast( shared_ptr<node> dest, shared_ptr<node> src ){
 	tid_t dst_tid = extract_semantic_info<type_info_si>( dest )->entry_id();
 	tid_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
 
-	conv_type ret_ct = cannot_conv;
+	casts ret_ct = nocast;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
 		if ( dst_tid == it->get<2>() && src_tid == it->get<1>() ){
 			ret_ct = it->get<0>();
@@ -60,12 +60,12 @@ tecov_t::conv_type tecov_t::convert( shared_ptr<node> dest, shared_ptr<node> src
 	return ret_ct;
 }
 
-tecov_t::conv_type tecov_t::convert( shared_ptr<tynode> desttype, shared_ptr<node> src )
+caster_t::casts caster_t::cast( shared_ptr<tynode> desttype, shared_ptr<node> src )
 {
 	tid_t dst_tid = desttype->si_ptr<type_info_si>()->entry_id();
 	tid_t src_tid = src->si_ptr<type_info_si>()->entry_id();
 
-	conv_type ret_ct = cannot_conv;
+	casts ret_ct = nocast;
 	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
 		if ( dst_tid == it->get<2>() && src_tid == it->get<1>() ){
 			ret_ct = it->get<0>();
@@ -79,10 +79,10 @@ tecov_t::conv_type tecov_t::convert( shared_ptr<tynode> desttype, shared_ptr<nod
 	return ret_ct;
 }
 
-tecov_t::tecov_t(){
+caster_t::caster_t(){
 }
 
-void tecov_t::better_or_worse_convertible( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse )
+void caster_t::better_or_worse_convertible( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse )
 {
 	better = false;
 	worse = false;
@@ -103,22 +103,22 @@ void tecov_t::better_or_worse_convertible( tid_t matched, tid_t matching, tid_t 
 		return;
 	}
 
-	if( convertible( matched, matching ) <= implicit_conv && convertible( matching, src ) <= implicit_conv ){
+	if( try_cast( matched, matching ) <= imp && try_cast( matching, src ) <= imp ){
 		better = true;
 		return;
 	}
 
-	if( convertible(matching, matched)  <= implicit_conv && convertible(matched, src) <= implicit_conv ){
+	if( try_cast(matching, matched)  <= imp && try_cast(matched, src) <= imp ){
 		worse = true;
 		return;
 	}
 
-	if( convertible(matching, src) < convertible(matched, src) ){
+	if( try_cast(matching, src) < try_cast(matched, src) ){
 		better = true;
 		return;
 	}
 
-	if( convertible(matched, src) < convertible(matching, src) ){
+	if( try_cast(matched, src) < try_cast(matching, src) ){
 		worse = true;
 		return;
 	}

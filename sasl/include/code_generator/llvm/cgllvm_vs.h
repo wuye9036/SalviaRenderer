@@ -12,7 +12,7 @@
 
 namespace sasl{
 	namespace semantic{
-		class tecov_t;
+		class caster_t;
 		class module_si;
 	}
 	namespace syntax_tree{

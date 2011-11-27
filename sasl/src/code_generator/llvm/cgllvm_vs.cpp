@@ -123,11 +123,10 @@ SASL_VISIT_DEF( member_expression ){
 	// Aggregated value
 	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
 
-	value_t::kinds k = value_t::kind_unknown;
 	if( tisi->type_info()->is_builtin() ){
 		// Swizzle or write mask
-		storage_si* mem_ssi = v.si_ptr<storage_si>();
-		value_t vec_value = agg_ctxt->get_value();
+		// storage_si* mem_ssi = v.si_ptr<storage_si>();
+		// value_t vec_value = agg_ctxt->get_value();
 		// mem_ctxt->get_value() = create_extract_elem();
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	} else {

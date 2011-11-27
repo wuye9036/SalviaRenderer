@@ -21,40 +21,40 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-class tecov_t{
+class caster_t{
 public:
-	enum conv_type{
-		better_conv = 0,
-		implicit_conv,
-		warning_conv,
-		explicit_conv,
-		cannot_conv = 0xFFFFFFFF
+	enum casts{
+		better = 0,
+		imp,
+		warning,
+		exp,
+		nocast = 0xFFFFFFFF
 	};
 	typedef boost::function<
 		void ( boost::shared_ptr< ::sasl::syntax_tree::node >,  boost::shared_ptr< ::sasl::syntax_tree::node >)
 	> converter_t;
 
-	tecov_t();
-	void register_converter( conv_type ct,
+	caster_t();
+	void add_cast( casts ct,
 		tid_t /*src*/,
 		tid_t /*dest*/,
 		converter_t conv );
 
-	conv_type convertible( tid_t dest, tid_t src );
-	bool implicit_convertible( tid_t dest, tid_t src );
+	casts try_cast( tid_t dest, tid_t src );
+	bool try_implicit( tid_t dest, tid_t src );
 
 	void better_or_worse_convertible( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse );
 
-	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
+	casts cast( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );
 
-	conv_type convert( boost::shared_ptr< ::sasl::syntax_tree::tynode > desttype,
+	casts cast( boost::shared_ptr< ::sasl::syntax_tree::tynode > desttype,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );
 
-	virtual ~tecov_t(){}
+	virtual ~caster_t(){}
 private:
 	typedef boost::tuples::tuple<
-		conv_type,
+		casts,
 		tid_t,
 		tid_t,
 		converter_t	> conv_info;

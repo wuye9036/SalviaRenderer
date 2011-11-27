@@ -3,14 +3,14 @@
 #include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
-#include <sasl/include/code_generator/llvm/cgllvm_type_converters.h>
+#include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/tecov.h>
+#include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -109,7 +109,6 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 	//  otherwise we will return a value.
 	any child_ctxt;
 
-	Value* ret = NULL;
 	visit_child( child_ctxt, ctxt_init, cond );
 	value_t cond_value = node_ctxt( cond, false)->get_value().to_rvalue();
 	insert_point_t cond_ip = insert_point();
@@ -196,7 +195,7 @@ SASL_VISIT_DEF( binary_expression ){
 			args += v.left_expr, v.right_expr;
 
 			symbol::overloads_t overloads
-				= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), typeconv, args );
+				= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), caster, args );
 
 			EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
 				return;
@@ -210,7 +209,7 @@ SASL_VISIT_DEF( binary_expression ){
 			shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
 			shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
 
-			// convert value type to match proto type.
+			// cast value type to match proto type.
 			if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
 				if( ! node_ctxt( p0_tsi->type_info() ) ){
 					visit_child( child_ctxt, child_ctxt_init, op_proto->params[0]->param_type );
@@ -219,7 +218,7 @@ SASL_VISIT_DEF( binary_expression ){
 				node_ctxt(v.left_expr)->data().tyinfo
 					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
 
-				typeconv->convert( p0_tsi->type_info(), v.left_expr );
+				caster->cast( p0_tsi->type_info(), v.left_expr );
 			}
 			if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
 				if( ! node_ctxt( p1_tsi->type_info() ) ){
@@ -229,7 +228,7 @@ SASL_VISIT_DEF( binary_expression ){
 				node_ctxt(v.left_expr)->data().tyinfo
 					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
 
-				typeconv->convert( p1_tsi->type_info(), v.right_expr );
+				caster->cast( p1_tsi->type_info(), v.right_expr );
 			}
 
 			// use type-converted value to generate code.
@@ -291,8 +290,8 @@ SASL_VISIT_DEF( member_expression ){
 
 	if( tisi->type_info()->is_builtin() ){
 		// Swizzle or write mask
-		storage_si* mem_ssi = v.si_ptr<storage_si>();
-		value_t vec_value = agg_ctxt->get_value();
+		/*storage_si* mem_ssi = v.si_ptr<storage_si>();
+		value_t vec_value = agg_ctxt->get_value();*/
 		// mem_ctxt->get_value() = create_extract_elem();
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	} else {
@@ -319,8 +318,6 @@ SASL_VISIT_DEF( constant_expression ){
 	if( ! node_ctxt( c_si->type_info() ) ){
 		visit_child( child_ctxt, child_ctxt_init, c_si->type_info() );
 	}
-
-	Value* retval = NULL;
 
 	cgllvm_sctxt* const_ctxt = node_ctxt( c_si->type_info() );
 
@@ -414,8 +411,6 @@ SASL_VISIT_DEF( call_expression ){
 
 	any child_ctxt;
 
-	Value* ret = NULL;
-
 	call_si* csi = v.si_ptr<call_si>();
 	if( csi->is_function_pointer() ){
 		visit_child( child_ctxt, child_ctxt_init, v.expr );
@@ -425,7 +420,7 @@ SASL_VISIT_DEF( call_expression ){
 		symbol* fn_sym = csi->overloaded_function();
 		function_t fn = fetch_function( fn_sym->node()->as_handle<function_type>() );
 
-		// TODO implicit type conversations.
+		// TODO imp type conversations.
 		vector<value_t> args;
 		BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
 			visit_child( child_ctxt, child_ctxt_init, arg_expr );
@@ -465,7 +460,7 @@ SASL_VISIT_DEF( expression_initializer ){
 	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(sc_env_ptr(data)->variable_to_fill.lock());
 
 	if( init_tsi->entry_id() != var_tsi->entry_id() ){
-		typeconv->convert( var_tsi->type_info(), v.init_expr );
+		caster->cast( var_tsi->type_info(), v.init_expr );
 	}
 
 	sc_ptr(data)->copy( node_ctxt(v.init_expr, false) );
@@ -674,7 +669,7 @@ SASL_VISIT_DEF( if_statement ){
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	if( cond_tid != bool_tid ){
-		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
+		caster->cast( msi->pety()->get(bool_tid), v.cond );
 	}
 	insert_point_t ip_cond = insert_point();
 
@@ -718,7 +713,7 @@ SASL_VISIT_DEF( while_statement ){
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	if( cond_tid != bool_tid ){
-		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
+		caster->cast( msi->pety()->get(bool_tid), v.cond );
 	}
 	insert_point_t cond_end = insert_point();
 
@@ -758,7 +753,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	if( cond_tid != bool_tid ){
-		typeconv->convert( msi->pety()->get(bool_tid), v.cond );
+		caster->cast( msi->pety()->get(bool_tid), v.cond );
 	}
 	insert_point_t cond_end = insert_point();
 
@@ -943,8 +938,8 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 
-	typeconv = create_type_converter( ctxt_getter, this );
-	register_builtin_typeconv( typeconv, msi->pety() );
+	caster = create_caster( ctxt_getter, this );
+	add_builtin_casts( caster, msi->pety() );
 
 	// Instrinsics will be generated before code was 
 	process_intrinsics( v, data );
@@ -1045,8 +1040,8 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 
 	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		/*if( typeconv->implicit_convertible( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
-			typeconv->convert( rarg_tsi->type_info(), v.left_expr );
+		/*if( caster->try_implicit( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
+			caster->convert( rarg_tsi->type_info(), v.left_expr );
 		} else {
 			assert( !"Expression could not converted to storage type." );
 		}*/

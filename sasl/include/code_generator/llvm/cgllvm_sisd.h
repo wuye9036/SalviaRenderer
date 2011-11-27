@@ -17,7 +17,7 @@
 
 namespace sasl{
 	namespace semantic{
-		class tecov_t;
+		class caster_t;
 	}
 	namespace syntax_tree{
 		struct tynode;
@@ -127,7 +127,7 @@ protected:
 
 	// For type conversation.
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
-	boost::shared_ptr< ::sasl::semantic::tecov_t > typeconv;
+	boost::shared_ptr< ::sasl::semantic::caster_t > caster;
 
 	cgllvm_modimpl* mod_ptr();
 };
