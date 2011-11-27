@@ -558,4 +558,24 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
+#if 1
+BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
+	init_g( "./repo/question/v1a1/casts.ss" );
+
+	jit_function<int(int)> test_implicit_cast_i32_b;
+	function( test_implicit_cast_i32_b, "test_implicit_cast_i32_b" );
+
+	jit_function<float(int)> test_implicit_cast_i32_f32;
+	function( test_implicit_cast_i32_f32, "test_implicit_cast_i32_f32" );
+
+	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
+	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
+	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(-7), 33 );
+
+	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(0), 0.0f, 0.000001f );
+	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(-20), -20.0f, 0.000001f );
+	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(17), 17.0f, 0.000001f );
+}
+#endif
+
 BOOST_AUTO_TEST_SUITE_END();

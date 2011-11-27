@@ -88,7 +88,7 @@ bool peel_qualifier(
 	return false;
 }
 
-shared_ptr<tynode> duplicate_type_specifier( shared_ptr<tynode> const& typespec ){
+shared_ptr<tynode> duplicate_tynode( shared_ptr<tynode> const& typespec ){
 	if( typespec->is_struct() ){
 		// NOTE:
 		//	Clear declarations of duplicated since they must be filled by struct visitor.
@@ -211,7 +211,7 @@ void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<pety_t> const& 
 tid_t semantic::pety_t::allocate_and_assign_id( shared_ptr<tynode> const& node  ){
 	// Get a duplication from node.
 	// It assures that the node storaged in pool is always avaliable.
-	shared_ptr<tynode> dup_node = duplicate_type_specifier( node );
+	shared_ptr<tynode> dup_node = duplicate_tynode( node );
 
 	// add to pool and allocate an id
 	pety_item_t ret_entry;

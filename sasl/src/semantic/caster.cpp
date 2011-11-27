@@ -10,19 +10,15 @@ using namespace ::sasl::syntax_tree;
 using namespace ::std;
 using ::boost::shared_ptr;
 
-void caster_t::add_cast(
-	casts ct,
-	tid_t src_type,
-	tid_t dest_type,
-	converter_t conv
+void caster_t::add_cast( casts ct, tid_t src, tid_t dest, cast_t conv
 	)
 {
-	convinfos.push_back( make_tuple( ct, src_type, dest_type, conv ) );
+	cast_infos.push_back( make_tuple( ct, src, dest, conv ) );
 }
 
 caster_t::casts caster_t::try_cast( tid_t dest, tid_t src ){
 	casts ret_ct = nocast;
-	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
+	for( vector<cast_info>::iterator it = cast_infos.begin(); it != cast_infos.end(); ++it ){
 		if ( dest == it->get<2>() && src == it->get<1>() ){
 			ret_ct = it->get<0>();
 			break;
@@ -33,7 +29,7 @@ caster_t::casts caster_t::try_cast( tid_t dest, tid_t src ){
 
 bool caster_t::try_implicit( tid_t dest, tid_t src ){
 	casts ret_ct = nocast;
-	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
+	for( vector<cast_info>::iterator it = cast_infos.begin(); it != cast_infos.end(); ++it ){
 		if ( dest == it->get<2>() && src == it->get<1>() ){
 			ret_ct = it->get<0>();
 			break;
@@ -47,7 +43,7 @@ caster_t::casts caster_t::cast( shared_ptr<node> dest, shared_ptr<node> src ){
 	tid_t src_tid = extract_semantic_info<type_info_si>( src )->entry_id();
 
 	casts ret_ct = nocast;
-	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
+	for( vector<cast_info>::iterator it = cast_infos.begin(); it != cast_infos.end(); ++it ){
 		if ( dst_tid == it->get<2>() && src_tid == it->get<1>() ){
 			ret_ct = it->get<0>();
 			// do conversation.
@@ -66,13 +62,13 @@ caster_t::casts caster_t::cast( shared_ptr<tynode> desttype, shared_ptr<node> sr
 	tid_t src_tid = src->si_ptr<type_info_si>()->entry_id();
 
 	casts ret_ct = nocast;
-	for( vector<conv_info>::iterator it = convinfos.begin(); it != convinfos.end(); ++it ){
+	for( vector<cast_info>::iterator it = cast_infos.begin(); it != cast_infos.end(); ++it ){
 		if ( dst_tid == it->get<2>() && src_tid == it->get<1>() ){
 			ret_ct = it->get<0>();
 
 			// do conversation.
 			if( !it->get<3>().empty() ){
-				it->get<3>()( src, src );
+				it->get<3>()( desttype, src );
 			}
 		}
 	}
@@ -82,7 +78,7 @@ caster_t::casts caster_t::cast( shared_ptr<tynode> desttype, shared_ptr<node> sr
 caster_t::caster_t(){
 }
 
-void caster_t::better_or_worse_convertible( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse )
+void caster_t::better_or_worse( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse )
 {
 	better = false;
 	worse = false;

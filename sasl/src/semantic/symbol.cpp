@@ -177,7 +177,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 
 				bool par_is_better = false;
 				bool par_is_worse = false;
-				conv->better_or_worse_convertible( matched_par_type, matching_par_type, arg_type, par_is_better, par_is_worse );
+				conv->better_or_worse( matched_par_type, matching_par_type, arg_type, par_is_better, par_is_worse );
 				if( par_is_better ){ ++better_param_count; }
 				if( par_is_worse ){ ++worse_param_count; }
 			}

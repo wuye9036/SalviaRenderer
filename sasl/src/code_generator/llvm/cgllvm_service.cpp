@@ -604,8 +604,17 @@ value_t cg_service::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
 
 value_t cg_service::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	builtin_types hint_i = v.get_hint();
+	builtin_types hint_f = dest_tyi->hint();
+
+	Value* val = NULL;
+	if( is_signed(hint_i) ){
+		val = builder()->CreateSIToFP( v.load(), dest_tyi->llvm_ty(abi_llvm) );
+	} else {
+		val = builder()->CreateUIToFP( v.load(), dest_tyi->llvm_ty(abi_llvm) );
+	}
+
+	return create_value( dest_tyi, builtin_types::none, val, value_t::kind_value, abi_llvm );
 }
 
 value_t cg_service::cast_f2i( value_t const& v, value_tyinfo* dest_tyi )
@@ -1510,6 +1519,12 @@ void cg_service::switch_to( value_t const& cond, std::vector< std::pair<value_t,
 	for( size_t i_case = 0; i_case < cases.size(); ++i_case ){
 		inst->addCase( llvm::cast<ConstantInt>( cases[i_case].first.load() ), cases[i_case].second.block );
 	}
+}
+
+value_t cg_service::cast_i2b( value_t const& v )
+{
+	assert( is_integer(v.get_hint()) );
+	return emit_cmp_ne( v, null_value( v.get_hint(), v.get_abi() ) );
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

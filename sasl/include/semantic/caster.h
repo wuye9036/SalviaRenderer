@@ -32,18 +32,15 @@ public:
 	};
 	typedef boost::function<
 		void ( boost::shared_ptr< ::sasl::syntax_tree::node >,  boost::shared_ptr< ::sasl::syntax_tree::node >)
-	> converter_t;
+	> cast_t;
 
 	caster_t();
-	void add_cast( casts ct,
-		tid_t /*src*/,
-		tid_t /*dest*/,
-		converter_t conv );
+	void add_cast( casts ct, tid_t src, tid_t dest, cast_t conv );
 
 	casts try_cast( tid_t dest, tid_t src );
 	bool try_implicit( tid_t dest, tid_t src );
 
-	void better_or_worse_convertible( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse );
+	void better_or_worse( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse );
 
 	casts cast( boost::shared_ptr< ::sasl::syntax_tree::node > dest,
 		boost::shared_ptr< ::sasl::syntax_tree::node > src );
@@ -53,12 +50,8 @@ public:
 
 	virtual ~caster_t(){}
 private:
-	typedef boost::tuples::tuple<
-		casts,
-		tid_t,
-		tid_t,
-		converter_t	> conv_info;
-	std::vector< conv_info > convinfos;
+	typedef boost::tuples::tuple< casts, tid_t, tid_t, cast_t > cast_info;
+	std::vector< cast_info > cast_infos;
 };
 
 END_NS_SASL_SEMANTIC();

@@ -141,11 +141,11 @@
 		
 		<item value = "1 * (2 ** 48)">declaration</item>
 		<item value = "2 * (2 ** 48)">expression</item>
-		<item value = "3 * (2 ** 48)">statement</item>
-		<item value = "4 * (2 ** 48)">initializer</item>
-		<item value = "5 * (2 ** 48)">identifier</item>
-		<item value = "6 * (2 ** 48)">program</item>
-		<item value = "7 * (2 ** 48)">label</item>
+		<item value = "4 * (2 ** 48)">statement</item>
+		<item value = "8 * (2 ** 48)">initializer</item>
+		<item value = "16 * (2 ** 48)">identifier</item>
+		<item value = "32 * (2 ** 48)">program</item>
+		<item value = "64 * (2 ** 48)">label</item>
 		
 		<item value = "$declaration$ + 1 * (2 ** 32)">tynode</item>
 		<item value = "$declaration$ + 1">variable_declaration</item>

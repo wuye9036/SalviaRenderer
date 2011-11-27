@@ -540,7 +540,8 @@ SASL_VISIT_DEF( expression_initializer )
 
 	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>( data_cptr()->variable_to_fill );
 	if ( var_tsi->entry_id() != ssi->entry_id() ){
-		if( caster->try_implicit( var_tsi->entry_id(), ssi->entry_id() ) ){
+		if( !caster->try_implicit( var_tsi->entry_id(), ssi->entry_id() ) ){
+			// TODO Error: Cannot implicit cast to xxx.
 			assert( false );
 			return;
 		}
@@ -1051,7 +1052,7 @@ void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
 	tid_t bool_ts = typemgr->get( builtin_types::_boolean );
 
 	// default conversation will do nothing.
-	caster_t::converter_t default_conv = bind(&semantic_analyser::builtin_tecov, this, _1, _2);
+	caster_t::cast_t default_conv = bind(&semantic_analyser::builtin_tecov, this, _1, _2);
 
 	caster->add_cast( caster_t::imp, sint8_ts, sint16_ts, default_conv );
 	caster->add_cast( caster_t::imp, sint8_ts, sint32_ts, default_conv );
@@ -1082,7 +1083,7 @@ void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
 	caster->add_cast( caster_t::exp, sint32_ts, uint16_ts, default_conv );
 	caster->add_cast( caster_t::exp, sint32_ts, uint32_ts, default_conv );
 	caster->add_cast( caster_t::exp, sint32_ts, uint64_ts, default_conv );
-	caster->add_cast( caster_t::warning, sint32_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint32_ts, float_ts, default_conv );
 	caster->add_cast( caster_t::imp, sint32_ts, double_ts, default_conv );
 	caster->add_cast( caster_t::imp, sint32_ts, bool_ts, default_conv );
 
@@ -1150,7 +1151,7 @@ void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
 	caster->add_cast( caster_t::exp, float_ts, uint32_ts, default_conv );
 	caster->add_cast( caster_t::exp, float_ts, uint64_ts, default_conv );
 	caster->add_cast( caster_t::imp, float_ts, double_ts, default_conv );
-	caster->add_cast( caster_t::warning, float_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::imp, float_ts, bool_ts, default_conv );
 
 	caster->add_cast( caster_t::exp, double_ts, sint8_ts, default_conv );
 	caster->add_cast( caster_t::exp, double_ts, sint16_ts, default_conv );
@@ -1161,18 +1162,7 @@ void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
 	caster->add_cast( caster_t::exp, double_ts, uint32_ts, default_conv );
 	caster->add_cast( caster_t::exp, double_ts, uint64_ts, default_conv );
 	caster->add_cast( caster_t::exp, double_ts, float_ts, default_conv );
-	caster->add_cast( caster_t::warning, double_ts, bool_ts, default_conv );
-
-	caster->add_cast( caster_t::exp, double_ts, sint8_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, sint16_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, sint32_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, sint64_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, uint8_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, uint16_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, uint32_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, uint64_ts, default_conv );
-	caster->add_cast( caster_t::exp, double_ts, float_ts, default_conv );
-	caster->add_cast( caster_t::warning, double_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::imp, double_ts, bool_ts, default_conv );
 
 	caster->add_cast( caster_t::exp, bool_ts, sint8_ts, default_conv );
 	caster->add_cast( caster_t::exp, bool_ts, sint16_ts, default_conv );
