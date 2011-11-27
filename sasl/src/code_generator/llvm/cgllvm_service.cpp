@@ -12,6 +12,7 @@
 #include <llvm/Module.h>
 #include <llvm/Intrinsics.h>
 #include <llvm/Support/TypeBuilder.h>
+#include <llvm/Support/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -789,22 +790,42 @@ void cg_service::clean_empty_blocks()
 
 	dbg_print_blocks( fn().fn );
 
+	// Remove useless blocks
+	vector<BasicBlock*> useless_blocks;
+
 	for( block_iterator_t it = beg; it != end; ++it )
 	{
-		if( !it->getTerminator() ){
-			block_iterator_t next_it = it;
-			++next_it;
+		// If block has terminator, that's a well-formed block.
+		if( it->getTerminator() ) continue;
+		
+		// Add no-pred & empty block to remove list.
+		if( llvm::pred_begin(it) == llvm::pred_end(it) && it->empty() ){
+			useless_blocks.push_back( it );
+			continue;
+		}
+	}
 
-			builder()->SetInsertPoint( &(*it) );
+	BOOST_FOREACH( BasicBlock* bb, useless_blocks ){
+		bb->removeFromParent();
+	}
 
-			if( next_it != fn().fn->getBasicBlockList().end() ){
-				builder()->CreateBr( &(*next_it) );
+	// Relink unlinked blocks
+	beg = fn().fn->getBasicBlockList().begin();
+	end = fn().fn->getBasicBlockList().end();
+	for( block_iterator_t it = beg; it != end; ++it ){
+		if( it->getTerminator() ) continue;
+
+		// Link block to next.
+		block_iterator_t next_it = it;
+		++next_it;
+		builder()->SetInsertPoint( it );
+		if( next_it != fn().fn->getBasicBlockList().end() ){
+			builder()->CreateBr( next_it );
+		} else {
+			if( !fn().fn->getReturnType()->isVoidTy() ){
+				builder()->CreateRet( Constant::getNullValue( fn().fn->getReturnType() ) );
 			} else {
-				if( !fn().fn->getReturnType()->isVoidTy() ){
-					builder()->CreateRet( Constant::getNullValue( fn().fn->getReturnType() ) );
-				} else {
-					emit_return();
-				}
+				emit_return();
 			}
 		}
 	}
