@@ -575,6 +575,13 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(0), 0.0f, 0.000001f );
 	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(-20), -20.0f, 0.000001f );
 	BOOST_CHECK_CLOSE( test_implicit_cast_i32_f32(17), 17.0f, 0.000001f );
+
+	jit_function<int(float)> test_implicit_cast_f32_b;
+	function( test_implicit_cast_f32_b, "test_implicit_cast_f32_b" );
+
+	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(0.0f), 85 );
+	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(19.0f), 33 );
+	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(-7.0f), 33 );
 }
 #endif
 

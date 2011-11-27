@@ -349,6 +349,8 @@ public:
 	value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi );
 	/// Cast integer to bool
 	value_t cast_i2b( value_t const& v );
+	/// Cast float to bool
+	value_t cast_f2b( value_t const& v );
 	/// @}
 
 	/// @name Emit Declarations

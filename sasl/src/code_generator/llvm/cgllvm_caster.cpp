@@ -92,11 +92,7 @@ public:
 
 	void int2bool( shared_ptr<node> dest, shared_ptr<node> src ){
 		if( src == dest ){ return; }
-
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
-
-		value_t casted = cgs->cast_i2b( src_ctxt->get_value() );
+		value_t casted = cgs->cast_i2b( get_ctxt(src)->get_value() );
 		store( dest, src, casted );
 	}
 
@@ -137,6 +133,12 @@ public:
 			dest_ctxt->data().tyinfo.get()
 			);
 		cgs->store( dest_ctxt->get_value(), casted );
+	}
+
+	void float2bool( shared_ptr<node> dest, shared_ptr<node> src ){
+		if( src == dest ){ return; }
+		value_t casted = cgs->cast_f2b( get_ctxt(src)->get_value() );
+		store( dest, src, casted );
 	}
 
 	void scalar2vec1( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -188,6 +190,7 @@ void add_builtin_casts(
 	cast_t int2float_pfn = bind( &cgllvm_caster::int2float, cg_caster.get(), _1, _2 ) ;
 	cast_t float2int_pfn = bind( &cgllvm_caster::float2int, cg_caster.get(), _1, _2 ) ;
 	cast_t float2float_pfn = bind( &cgllvm_caster::float2float, cg_caster.get(), _1, _2 ) ;
+	cast_t float2bool_pfn = bind( &cgllvm_caster::float2bool, cg_caster.get(), _1, _2 ) ;
 	cast_t scalar2vec1_pfn = bind( &cgllvm_caster::scalar2vec1, cg_caster.get(), _1, _2 ) ;
 	cast_t shrink_vec_pfn[5][5];
 	for( int src_size = 1; src_size < 5; ++src_size ){
@@ -313,7 +316,7 @@ void add_builtin_casts(
 	cg_caster->add_cast( caster_t::exp, float_ts, uint32_ts, float2int_pfn );
 	cg_caster->add_cast( caster_t::exp, float_ts, uint64_ts, float2int_pfn );
 	cg_caster->add_cast( caster_t::imp, float_ts, double_ts, float2float_pfn );
-	// cg_caster->add_cast( caster_t::imp, float_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast( caster_t::imp, float_ts, bool_ts, float2bool_pfn );
 
 	cg_caster->add_cast( caster_t::exp, double_ts, sint8_ts, float2int_pfn );
 	cg_caster->add_cast( caster_t::exp, double_ts, sint16_ts, float2int_pfn );
@@ -324,7 +327,7 @@ void add_builtin_casts(
 	cg_caster->add_cast( caster_t::exp, double_ts, uint32_ts, float2int_pfn );
 	cg_caster->add_cast( caster_t::exp, double_ts, uint64_ts, float2int_pfn );
 	cg_caster->add_cast( caster_t::exp, double_ts, float_ts, float2float_pfn );
-	// cg_caster->add_cast( caster_t::imp, double_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast( caster_t::imp, double_ts, bool_ts, float2bool_pfn );
 
 	//cg_caster->add_cast( caster_t::exp, bool_ts, sint8_ts, default_conv );
 	//cg_caster->add_cast( caster_t::exp, bool_ts, sint16_ts, default_conv );

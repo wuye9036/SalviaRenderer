@@ -1527,6 +1527,12 @@ value_t cg_service::cast_i2b( value_t const& v )
 	return emit_cmp_ne( v, null_value( v.get_hint(), v.get_abi() ) );
 }
 
+value_t cg_service::cast_f2b( value_t const& v )
+{
+	assert( is_real(v.get_hint()) );
+	return emit_cmp_ne( v, null_value( v.get_hint(), v.get_abi() ) );
+}
+
 void function_t::arg_name( size_t index, std::string const& name ){
 	size_t param_size = fn->arg_size();
 	if( first_arg_is_return_address() ){
