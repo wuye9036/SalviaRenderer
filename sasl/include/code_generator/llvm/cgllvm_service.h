@@ -74,8 +74,8 @@ public:
 
 	value_tyinfo(
 		sasl::syntax_tree::tynode* sty,
-		llvm::Type const* cty,
-		llvm::Type const* llty
+		llvm::Type* cty,
+		llvm::Type* llty
 		);
 
 	value_tyinfo( value_tyinfo const& );
@@ -85,12 +85,12 @@ public:
 	boost::shared_ptr<sasl::syntax_tree::tynode> tysp() const;
 	builtin_types hint() const;
 
-	llvm::Type const* llvm_ty( abis abi ) const;
+	llvm::Type* llvm_ty( abis abi ) const;
 
 protected:
 	value_tyinfo();
 
-	llvm::Type const*			llvm_tys[2];
+	llvm::Type*			llvm_tys[2];
 	sasl::syntax_tree::tynode*	sty;
 	classifications				cls;
 };
@@ -475,8 +475,8 @@ public:
 	/// @name Bridges
 	/// @{
 	llvm::Value* select_( llvm::Value* cond, llvm::Value* yes, llvm::Value* no );
-	llvm::Type const* type_( builtin_types bt, abis abi );
-	llvm::Type const* type_( value_tyinfo const*, abis abi );
+	llvm::Type* type_( builtin_types bt, abis abi );
+	llvm::Type* type_( value_tyinfo const*, abis abi );
 	template <typename T>
 	llvm::ConstantInt* int_(T v);
 	template <typename T>

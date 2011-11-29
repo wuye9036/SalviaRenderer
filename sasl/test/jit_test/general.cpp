@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#if 0
+#if 1
 
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/empty.ss" );
@@ -279,7 +279,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if 0
+#if 1
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -476,7 +476,7 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 	BOOST_CHECK_EQUAL( test_switch(2,6), 0 );
 }
 
-#if 0
+#if 1
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;

@@ -125,7 +125,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 namespace {
 	/// Create LLVM type from builtin types.
-	Type const* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_compatible ){
+	Type* create_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_compatible ){
 		assert( bt != builtin_types::none );
 
 		if ( is_void( bt ) ){
@@ -148,10 +148,10 @@ namespace {
 		}
 
 		if( is_vector(bt) ){
-			Type const* elem_ty = create_llvm_type( ctxt, scalar_of(bt), is_c_compatible );
+			Type* elem_ty = create_llvm_type( ctxt, scalar_of(bt), is_c_compatible );
 			size_t vec_size = vector_size(bt);
 			if( is_c_compatible ){
-				vector<Type const*> elem_tys(vec_size, elem_ty);
+				vector<Type*> elem_tys(vec_size, elem_ty);
 				return StructType::get( ctxt, elem_tys );
 			} else {
 				return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
@@ -159,8 +159,8 @@ namespace {
 		}
 
 		if( is_matrix(bt) ){
-			Type const* vec_ty = create_llvm_type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), is_c_compatible );
-			vector<Type const*> row_tys( vector_count(bt), vec_ty );
+			Type* vec_ty = create_llvm_type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), is_c_compatible );
+			vector<Type*> row_tys( vector_count(bt), vec_ty );
 			return StructType::get( ctxt, row_tys );
 		}
 
@@ -227,8 +227,7 @@ llvm::ConstantVector* cg_service::vector_( T const* vals, size_t length, typenam
 		elems[i] = int_(vals[i]);
 	}
 
-	VectorType* vec_type = VectorType::get( elems[0]->getType(), length );
-	return llvm::cast<ConstantVector>( ConstantVector::get( vec_type, elems ) );
+	return llvm::cast<ConstantVector>( ConstantVector::get( elems ) );
 }
 
 
@@ -241,8 +240,8 @@ Function* cg_service::intrin_( int id )
 // Value tyinfo
 value_tyinfo::value_tyinfo(
 	tynode* sty,
-	llvm::Type const* cty,
-	llvm::Type const* llty
+	llvm::Type* cty,
+	llvm::Type* llty
 	) : sty(sty)
 {
 	llvm_tys[abi_c] = cty;
@@ -271,7 +270,7 @@ shared_ptr<tynode> value_tyinfo::tysp() const{
 	return sty->as_handle<tynode>();
 }
 
-llvm::Type const* value_tyinfo::llvm_ty( abis abi ) const
+llvm::Type* value_tyinfo::llvm_ty( abis abi ) const
 {
 	return llvm_tys[abi];
 }
@@ -632,7 +631,7 @@ value_t cg_service::cast_f2f( value_t const& v, value_tyinfo* dest_tyi )
 value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
 {
 	assert( tyinfo && abi != abi_unknown );
-	Type const* value_type = tyinfo->llvm_ty(abi);
+	Type* value_type = tyinfo->llvm_ty(abi);
 	assert( value_type );
 	return value_t( tyinfo, Constant::getNullValue(value_type), value_t::kind_value, abi, this );
 }
@@ -640,7 +639,7 @@ value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
 value_t cg_service::null_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
-	Type const* valty = create_llvm_type( context(), bt, abi == abi_c );
+	Type* valty = create_llvm_type( context(), bt, abi == abi_c );
 	value_t val = value_t( bt, Constant::getNullValue( valty ), value_t::kind_value, abi, this );
 	return val;
 }
@@ -697,8 +696,8 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 		if( tyn->is_struct() ){
 			shared_ptr<struct_type> struct_tyn = tyn->as_handle<struct_type>();
 
-			vector<Type const*> c_member_types;
-			vector<Type const*> llvm_member_types;
+			vector<Type*> c_member_types;
+			vector<Type*> llvm_member_types;
 			
 			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_tyn->decls){
 				
@@ -706,7 +705,7 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 					shared_ptr<variable_declaration> decl_tyn = decl->as_handle<variable_declaration>();
 					shared_ptr<value_tyinfo> decl_tyinfo = create_tyinfo( decl_tyn->type_info->si_ptr<type_info_si>()->type_info() );
 					size_t declarator_count = decl_tyn->declarators.size();
-					// c_member_types.insert( c_member_types.end(), (Type const*)NULL );
+					// c_member_types.insert( c_member_types.end(), (Type*)NULL );
 					c_member_types.insert( c_member_types.end(), declarator_count, decl_tyinfo->llvm_ty(abi_c) );
 					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_tyinfo->llvm_ty(abi_llvm) );
 				}
@@ -718,8 +717,12 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 			ret->llvm_tys[abi_c] = ty_c;
 			ret->llvm_tys[abi_llvm] = ty_llvm;
 
-			module()->addTypeName( struct_tyn->name->str + ".abi.c", ty_c );
-			module()->addTypeName( struct_tyn->name->str + ".abi.llvm", ty_llvm );
+			if( !ty_c->isLiteral() ){
+				ty_c->setName( struct_tyn->name->str + ".abi.c" );
+			}
+			if( !ty_llvm->isLiteral() ){
+				ty_llvm->setName( struct_tyn->name->str + ".abi.llvm" );
+			}
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
@@ -742,15 +745,15 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 
 	abis abi = ret.c_compatible ? abi_c : abi_llvm;
 
-	vector<Type const*> par_tys;
+	vector<Type*> par_tys;
 
-	Type const* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->llvm_ty( abi );
+	Type* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->llvm_ty( abi );
 
 	ret.ret_void = true;
 	if( abi == abi_c ){
 		if( fn_node->retval_type->tycode != builtin_types::_void ){
 			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
-			Type const* ret_ptr = PointerType::getUnqual( ret_ty );
+			Type* ret_ptr = PointerType::getUnqual( ret_ty );
 			par_tys.push_back( ret_ptr );
 			ret.ret_void = false;
 		}
@@ -767,7 +770,7 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 
 //		bool is_ref = par->si_ptr<storage_si>()->is_reference();
 
-		Type const* par_llty = par_ty->llvm_ty( abi ); 
+		Type* par_llty = par_ty->llvm_ty( abi ); 
 		if( ret.c_compatible && !is_scalar(par_ty->hint()) ){
 			par_tys.push_back( PointerType::getUnqual( par_llty ) );
 		} else {
@@ -1078,7 +1081,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 		}
 	}
 
-	Value* ret_val = builder()->CreateCall( fn.fn, arg_values.begin(), arg_values.end() );
+	Value* ret_val = builder()->CreateCall( fn.fn, arg_values );
 
 	if( fn.first_arg_is_return_address() ){
 		return var;
@@ -1221,13 +1224,13 @@ value_t cg_service::emit_mul_vm( value_t const& lhs, value_t const& rhs )
 	return ret;
 }
 
-llvm::Type const* cg_service::type_( builtin_types bt, abis abi )
+llvm::Type* cg_service::type_( builtin_types bt, abis abi )
 {
 	assert( abi != abi_unknown );
 	return create_llvm_type( context(), bt, abi == abi_c );
 }
 
-Type const* cg_service::type_( value_tyinfo const* ty, abis abi )
+Type* cg_service::type_( value_tyinfo const* ty, abis abi )
 {
 	assert( ty->llvm_ty(abi) );
 	return ty->llvm_ty(abi);
@@ -1235,14 +1238,14 @@ Type const* cg_service::type_( value_tyinfo const* ty, abis abi )
 
 value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
-	Type const* var_ty = type_( bt, abi );
+	Type* var_ty = type_( bt, abi );
 	Value* var_val = builder()->CreateAlloca( var_ty );
 	return value_t( bt, var_val, value_t::kind_ref, abi, this );
 }
 
 value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
 {
-	Type const* var_ty = type_(ty, abi);
+	Type* var_ty = type_(ty, abi);
 	Value* var_val = builder()->CreateAlloca( var_ty );
 	return value_t( const_cast<value_tyinfo*>(ty), var_val, value_t::kind_ref, abi, this );
 }
@@ -1468,7 +1471,7 @@ Function* cg_service::intrin_( int v )
 value_t cg_service::undef_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
-	Type const* valty = create_llvm_type( context(), bt, abi == abi_c );
+	Type* valty = create_llvm_type( context(), bt, abi == abi_c );
 	value_t val = value_t( bt, UndefValue::get(valty), value_t::kind_value, abi, this );
 	return val;
 }

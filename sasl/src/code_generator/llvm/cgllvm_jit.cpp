@@ -1,8 +1,8 @@
 #include <eflib/include/platform/disable_warnings.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Module.h>
-#include <llvm/Target/TargetSelect.h>
 #include <eflib/include/platform/enable_warnings.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>

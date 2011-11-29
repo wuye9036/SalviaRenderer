@@ -18,7 +18,7 @@ public:
 	llvm_intrin_cache();
 	llvm::Function* get( char const*, llvm::Module* );
 	llvm::Function* get( int, llvm::Module* );
-	llvm::Function* get( int, llvm::Module*, llvm::FunctionType const* );
+	llvm::Function* get( int, llvm::Module*, llvm::FunctionType* );
 private:
 	std::vector<llvm::Function*> intrin_fns;
 };

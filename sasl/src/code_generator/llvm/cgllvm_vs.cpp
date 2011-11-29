@@ -58,7 +58,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	BOOST_FOREACH( storage_info* si, sis ){
 		builtin_types storage_bt = to_builtin_types(si->value_type);
 		entry_param_tys[st].push_back( storage_bt );
-		Type const* storage_ty = type_( storage_bt, abi_c );
+		Type* storage_ty = type_( storage_bt, abi_c );
 
 		if( sc_stream_in == st || sc_stream_out == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_ty ) );
@@ -89,7 +89,7 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 	}
 	assert( struct_name );
 
-	module()->addTypeName( struct_name, entry_params_structs[st].data() );
+	// entry_params_structs[st].data()->setName( struct_name );
 }
 
 void cgllvm_vs::create_entry_params(){
@@ -99,7 +99,7 @@ void cgllvm_vs::create_entry_params(){
 	fill_llvm_type_from_si ( sc_stream_out );
 }
 
-void cgllvm_vs::add_entry_param_type( storage_classifications st, vector<Type const*>& par_types ){
+void cgllvm_vs::add_entry_param_type( storage_classifications st, vector<Type*>& par_types ){
 	StructType* par_type = entry_params_structs[st].data();
 	PointerType* parref_type = PointerType::getUnqual( par_type );
 
@@ -205,7 +205,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 		boost::any child_ctxt;
 
-		vector<Type const*> param_types;
+		vector<Type*> param_types;
 		add_entry_param_type( sc_stream_in, param_types );
 		add_entry_param_type( sc_buffer_in, param_types );
 		add_entry_param_type( sc_stream_out, param_types );

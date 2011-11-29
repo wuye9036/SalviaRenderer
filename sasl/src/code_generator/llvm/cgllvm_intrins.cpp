@@ -49,7 +49,7 @@ Function* llvm_intrin_cache::get( int id, Module* mod )
 	return intrin_fns[IID];
 }
 
-Function* llvm_intrin_cache::get( int id, Module* mod, llvm::FunctionType const* fnty )
+Function* llvm_intrin_cache::get( int id, Module* mod, llvm::FunctionType* fnty )
 {
 	llvm::Intrinsic::ID IID = llvm::Intrinsic::ID( id );
 	return llvm::cast<Function>( mod->getOrInsertFunction( getName(IID), fnty ) );
