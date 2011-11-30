@@ -54,7 +54,7 @@ LLVM的编译：
 	
 	* 使用CMake配置并生成Solution。设置LLVM_BOOST_STDINT为True，设置LLVM_BOOST_DIR为${BOOST}
 	* 编译LLVM。
-	* 拷贝 ${LLVM_BUILD}/include/llvm 下的 Config 和 Support 文件夹至 ${LLVM_INSTALL}/config/${PLATFORM}_{COMPILER}/llvm 文件夹下。
+	* 拷贝 ${LLVM_BUILD}/include/llvm 下的 Config 和 Support 文件夹以及intrinsics.gen文件至 ${LLVM_INSTALL}/config/${PLATFORM}_{COMPILER}/llvm 文件夹下。
 	* 拷贝 ${LLVM}/include 至 ${HOME}/3rd_party/llvm下覆盖include文件夹。
 	* 拷贝 ${LLVM_BUILD}/lib/${CONFIG} 下所有库文件和符号文件至 ${LLVM_INSTALL}/lib/${PLATFORM}_{COMPILER}_${CONFIG}
 	* 拷贝 ${LLVM_BUILD}/bin/${CONFIG} 下所有可执行程序至 ${LLVM_INSTALL}/toolchains/${PLATFORM}_{COMPILER}_${CONFIG}
