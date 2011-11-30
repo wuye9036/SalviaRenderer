@@ -207,7 +207,6 @@ struct jit_fixture {
 	shared_ptr<jit_engine> je;
 };
 
-
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	cout << endl << "================================================" << endl << endl;
 	cout << "Detecting CPU Features... " << endl;
