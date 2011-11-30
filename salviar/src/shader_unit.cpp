@@ -65,9 +65,9 @@ void vertex_shader_unit::execute( vs_output& out )
 	BOOST_FOREACH( storage_info* info, infos ){
 		if( info->sv == semantic_value(sv_position) ){
 			memset( &out.position, 0, sizeof(out.position) );
-			memcpy( &out.position, &(buffer_odata[info->offset]), info->size );
+			memcpy( &out.position, &(buffer_odata[info->offset]), info->element_size );
 		} else {
-			memcpy( &out.attributes[register_index], &(buffer_odata[info->offset]), info->size );
+			memcpy( &out.attributes[register_index], &(buffer_odata[info->offset]), info->element_size );
 			++register_index;
 		}
 	}
@@ -76,7 +76,7 @@ void vertex_shader_unit::execute( vs_output& out )
 void vertex_shader_unit::set_variable( std::string const& name, void* data )
 {
 	storage_info* vsi = code->abii()->input_storage( name );
-	memcpy( &buffer_data[vsi->offset], data, vsi->size );
+	memcpy( &buffer_data[vsi->offset], data, vsi->element_size );
 }
 
 vertex_shader_unit::vertex_shader_unit()

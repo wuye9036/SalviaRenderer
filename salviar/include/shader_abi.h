@@ -75,13 +75,28 @@ enum storage_classifications{
 
 struct storage_info{
 	storage_info()
-		: index(-1), offset(0), size(0)
+		: logical_index(-1), physical_index(-1)
+		, offset(0)
+		, element_size(0), element_padding(0), element_count(0)
+		, padding(0)
 		, storage(sc_none), value_type( lvt_none ), sv(sv_none)
 	{}
 
-	int						index;
+	int total_size() const{
+		return (element_size+element_padding)*element_count+padding;
+	}
+
+	int						logical_index;
+	int						physical_index;
+
 	int						offset;
-	int						size;
+	
+	int						element_size;
+	int						element_padding;
+
+	int						element_count;
+	int						padding;
+
 	storage_classifications	storage;
 	language_value_types	value_type;
 	semantic_value			sv;

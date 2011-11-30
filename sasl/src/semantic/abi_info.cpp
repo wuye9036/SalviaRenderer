@@ -207,16 +207,18 @@ void abi_info::compute_input_semantics_layout(){
 		storage_info* pstorage = input_storage( sems_in[index] );
 		assert( pstorage );
 
-		pstorage->index =  counts[pstorage->storage];
+		pstorage->physical_index =  counts[pstorage->storage];
+		pstorage->logical_index  =  counts[pstorage->storage];
 		pstorage->offset = offsets[pstorage->storage];
-		pstorage->size = 
+		pstorage->element_size = 
 			pstorage->storage == sc_buffer_in ?
 			static_cast<int>( storage_size( to_builtin_types( pstorage->value_type ) ) )
 			: static_cast<int> ( sizeof(void*) )
 			;
+		pstorage->element_count = 1;
 
 		counts[pstorage->storage]++;
-		offsets[pstorage->storage] += pstorage->size;
+		offsets[pstorage->storage] += pstorage->total_size();
 
 	}
 }
@@ -227,12 +229,14 @@ void abi_info::compute_output_buffer_layout(){
 		assert(pstorage);
 
 		pstorage->storage = sc_buffer_out;
-		pstorage->index =  counts[pstorage->storage];
+		pstorage->physical_index =  counts[pstorage->storage];
+		pstorage->logical_index  =  counts[pstorage->storage];
 		pstorage->offset = offsets[pstorage->storage];
-		pstorage->size = static_cast<int>( storage_size( to_builtin_types( pstorage->value_type ) ) );
+		pstorage->element_size = static_cast<int>( storage_size( to_builtin_types( pstorage->value_type ) ) );
+		pstorage->element_count = 1;
 		
 		counts[pstorage->storage]++;
-		offsets[pstorage->storage] += pstorage->size;
+		offsets[pstorage->storage] += pstorage->total_size();
 	}
 }
 
@@ -245,11 +249,13 @@ void abi_info::compute_input_constant_layout(){
 	for ( size_t index = 0; index < syms_in.size(); ++index ){
 		storage_info* pstorage = addressof( symin_storages[ syms_in[index] ] );
 		pstorage->storage = sc_buffer_in;
-		pstorage->index = counts[sc_buffer_in];
+		pstorage->physical_index =  counts[pstorage->storage];
+		pstorage->logical_index  =  counts[pstorage->storage];
 		pstorage->offset = offsets[sc_buffer_in];
-
+		
 		int size = static_cast<int>( storage_size( to_builtin_types( pstorage->value_type ) ) );
-		pstorage->size = size;
+		pstorage->element_size = size;
+		pstorage->element_count = 1;
 
 		counts[sc_buffer_in]++;
 		offsets[sc_buffer_in] += size;

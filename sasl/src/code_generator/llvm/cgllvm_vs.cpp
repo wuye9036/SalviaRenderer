@@ -387,10 +387,10 @@ value_t cgllvm_vs::si_to_value( storage_info* si )
 	// TODO need to emit_extract_ref
 	value_t ret;
 	if( si->storage == sc_stream_in || si->storage == sc_stream_out ){
-		ret = emit_extract_val( param_values[si->storage], si->index );
+		ret = emit_extract_val( param_values[si->storage], si->physical_index );
 		ret = ret.as_ref();
 	} else {
-		ret = emit_extract_ref( param_values[si->storage], si->index );
+		ret = emit_extract_ref( param_values[si->storage], si->physical_index );
 	}
 	ret.set_hint( to_builtin_types( si->value_type ) );
 
