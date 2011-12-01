@@ -77,22 +77,22 @@ private:
 
 	boost::shared_ptr<sasl::semantic::symbol> find_symbol( cgllvm_sctxt* data, std::string const& str );
 
-	value_t si_to_value( salviar::storage_info* si );
+	value_t si_to_value( salviar::sv_layout* si );
 
 	void create_entry_params();
-	void add_entry_param_type( salviar::storage_classifications st, std::vector< llvm::Type* >& par_types );
-	void fill_llvm_type_from_si( salviar::storage_classifications st );
+	void add_entry_param_type( salviar::sv_usage st, std::vector< llvm::Type* >& par_types );
+	void fill_llvm_type_from_si( salviar::sv_usage st );
 	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
 	void copy_to_agg_result( cgllvm_sctxt* data );
 
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
 
-	value_t param_values[salviar::storage_classifications_count];
+	value_t param_values[salviar::storage_usage_count];
 
-	std::vector<builtin_types> entry_param_tys[salviar::storage_classifications_count];
-	std::vector< llvm::Type* > entry_params_types[salviar::storage_classifications_count];
-	boost::value_initialized<llvm::StructType*> entry_params_structs[salviar::storage_classifications_count];
+	std::vector<builtin_types> entry_param_tys[salviar::storage_usage_count];
+	std::vector< llvm::Type* > entry_params_types[salviar::storage_usage_count];
+	boost::value_initialized<llvm::StructType*> entry_params_structs[salviar::storage_usage_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();

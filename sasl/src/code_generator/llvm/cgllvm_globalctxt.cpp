@@ -9,12 +9,12 @@
 #include <llvm/Support/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
-using salviar::storage_classifications;
-using salviar::sc_buffer_in;
-using salviar::sc_buffer_out;
-using salviar::sc_stream_in;
-using salviar::sc_stream_out;
-using salviar::storage_classifications_count;
+using salviar::sv_usage;
+using salviar::su_buffer_in;
+using salviar::su_buffer_out;
+using salviar::su_stream_in;
+using salviar::su_stream_out;
+using salviar::storage_usage_count;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 

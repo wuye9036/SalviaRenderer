@@ -62,24 +62,24 @@ enum language_value_types
 	lvt_double	= ( 2U << details::scalar_field_offset )+ details::real_class
 };
 
-enum storage_classifications{
-	sc_none = 0,
+enum sv_usage{
+	su_none = 0,
 
-	sc_stream_in,
-	sc_stream_out,
-	sc_buffer_in,
-	sc_buffer_out,
+	su_stream_in,
+	su_stream_out,
+	su_buffer_in,
+	su_buffer_out,
 	
-	storage_classifications_count
+	storage_usage_count
 };
 
-struct storage_info{
-	storage_info()
+struct sv_layout{
+	sv_layout()
 		: logical_index(-1), physical_index(-1)
 		, offset(0)
 		, element_size(0), element_padding(0), element_count(0)
 		, padding(0)
-		, storage(sc_none), value_type( lvt_none ), sv(sv_none)
+		, storage(su_none), value_type( lvt_none ), sv(sv_none)
 	{}
 
 	int total_size() const{
@@ -97,7 +97,7 @@ struct storage_info{
 	int						element_count;
 	int						padding;
 
-	storage_classifications	storage;
+	sv_usage			storage;
 	language_value_types	value_type;
 	semantic_value			sv;
 };
@@ -108,13 +108,13 @@ class shader_abi{
 public:
 	virtual std::string entry_name() const = 0;
 
-	virtual std::vector<storage_info*> storage_infos( storage_classifications sclass ) const = 0;
-	virtual size_t total_size( storage_classifications sclass ) const = 0;
+	virtual std::vector<sv_layout*> layouts( sv_usage usage ) const = 0;
+	virtual size_t total_size( sv_usage usage ) const = 0;
 
-	virtual storage_info* input_storage( salviar::semantic_value const& ) const = 0;
-	virtual storage_info* input_storage( std::string const& ) const = 0;
+	virtual sv_layout* input_sv_layout( salviar::semantic_value const& ) const = 0;
+	virtual sv_layout* input_sv_layout( std::string const& ) const = 0;
 
-	virtual storage_info* output_storage( salviar::semantic_value const& ) const = 0;
+	virtual sv_layout* output_sv_layout( salviar::semantic_value const& ) const = 0;
 };
 
 END_NS_SALVIAR();

@@ -25,14 +25,14 @@
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_vs
 
-using salviar::storage_classifications;
-using salviar::sc_buffer_in;
-using salviar::sc_buffer_out;
-using salviar::sc_stream_in;
-using salviar::sc_stream_out;
-using salviar::storage_classifications_count;
+using salviar::sv_usage;
+using salviar::su_buffer_in;
+using salviar::su_buffer_out;
+using salviar::su_stream_in;
+using salviar::su_stream_out;
+using salviar::storage_usage_count;
 
-using salviar::storage_info;
+using salviar::sv_layout;
 
 using sasl::semantic::storage_si;
 using sasl::semantic::symbol;
@@ -53,14 +53,14 @@ using std::vector;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
-	vector<storage_info*> sis = abii->storage_infos( st );
-	BOOST_FOREACH( storage_info* si, sis ){
+void cgllvm_vs::fill_llvm_type_from_si( sv_usage st ){
+	vector<sv_layout*> sis = abii->layouts( st );
+	BOOST_FOREACH( sv_layout* si, sis ){
 		builtin_types storage_bt = to_builtin_types(si->value_type);
 		entry_param_tys[st].push_back( storage_bt );
 		Type* storage_ty = type_( storage_bt, abi_c );
 
-		if( sc_stream_in == st || sc_stream_out == st ){
+		if( su_stream_in == st || su_stream_out == st ){
 			entry_params_types[st].push_back( PointerType::getUnqual( storage_ty ) );
 		} else {
 			entry_params_types[st].push_back( storage_ty );
@@ -74,16 +74,16 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 
 	char const* struct_name = NULL;
 	switch( st ){
-	case sc_stream_in:
+	case su_stream_in:
 		struct_name = ".s.stri";
 		break;
-	case sc_buffer_in:
+	case su_buffer_in:
 		struct_name = ".s.bufi";
 		break;
-	case sc_stream_out:
+	case su_stream_out:
 		struct_name = ".s.stro";
 		break;
-	case sc_buffer_out:
+	case su_buffer_out:
 		struct_name = ".s.bufo";
 		break;
 	}
@@ -93,13 +93,13 @@ void cgllvm_vs::fill_llvm_type_from_si( storage_classifications st ){
 }
 
 void cgllvm_vs::create_entry_params(){
-	fill_llvm_type_from_si ( sc_buffer_in );
-	fill_llvm_type_from_si ( sc_buffer_out );
-	fill_llvm_type_from_si ( sc_stream_in );
-	fill_llvm_type_from_si ( sc_stream_out );
+	fill_llvm_type_from_si ( su_buffer_in );
+	fill_llvm_type_from_si ( su_buffer_out );
+	fill_llvm_type_from_si ( su_stream_in );
+	fill_llvm_type_from_si ( su_stream_out );
 }
 
-void cgllvm_vs::add_entry_param_type( storage_classifications st, vector<Type*>& par_types ){
+void cgllvm_vs::add_entry_param_type( sv_usage st, vector<Type*>& par_types ){
 	StructType* par_type = entry_params_structs[st].data();
 	PointerType* parref_type = PointerType::getUnqual( par_type );
 
@@ -140,7 +140,7 @@ SASL_VISIT_DEF( member_expression ){
 			assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
 
 			salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
-			storage_info* psi = abii->input_storage( sem );
+			sv_layout* psi = abii->input_sv_layout( sem );
 
 			sc_ptr(data)->get_value() = si_to_value( psi );
 		} else {
@@ -162,7 +162,7 @@ SASL_VISIT_DEF( variable_expression ){
 	assert(sym);
 	
 	// var_si is not null if sym is global value( sv_none is available )
-	storage_info* var_si = abii->input_storage( sym );
+	sv_layout* var_si = abii->input_sv_layout( sym );
 
 	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
 	if( var_si ){
@@ -206,10 +206,10 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		boost::any child_ctxt;
 
 		vector<Type*> param_types;
-		add_entry_param_type( sc_stream_in, param_types );
-		add_entry_param_type( sc_buffer_in, param_types );
-		add_entry_param_type( sc_stream_out, param_types );
-		add_entry_param_type( sc_buffer_out, param_types );
+		add_entry_param_type( su_stream_in, param_types );
+		add_entry_param_type( su_buffer_in, param_types );
+		add_entry_param_type( su_stream_out, param_types );
+		add_entry_param_type( su_buffer_out, param_types );
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy(context()), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), module() );
@@ -231,19 +231,19 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		Function::arg_iterator arg_it = fn->arg_begin();
 
 		arg_it->setName( ".arg.stri" );
-		param_values[sc_stream_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_stream_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
 		++arg_it;
 
 		arg_it->setName( ".arg.bufi" );
-		param_values[sc_buffer_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_buffer_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
 		++arg_it;
 
 		arg_it->setName( ".arg.stro" );
-		param_values[sc_stream_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_stream_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
 		++arg_it;
 
 		arg_it->setName( ".arg.bufo" );
-		param_values[sc_buffer_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_buffer_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
 		++arg_it;
 
 		// Create virutal arguments
@@ -279,7 +279,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			// Store value to local variable.
 			salviar::semantic_value const& par_sem = par_ssi->get_semantic();
 			assert( par_sem != salviar::sv_none );
-			storage_info* psi = abii->input_storage( par_sem );
+			sv_layout* psi = abii->input_sv_layout( par_sem );
 
 			builtin_types hint = par_ssi->type_info()->tycode;
 			pctxt->get_value() = create_variable( hint, abi_c, par->name->str );
@@ -296,11 +296,11 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 		// Global is filled by offset value with null parent.
 		// The parent is filled when it is referred.
-		storage_info* psi = NULL;
+		sv_layout* psi = NULL;
 		if( pssi->get_semantic() == salviar::sv_none ){
-			psi = abii->input_storage( gsym );
+			psi = abii->input_sv_layout( gsym );
 		} else {
-			psi = abii->input_storage( pssi->get_semantic() );
+			psi = abii->input_sv_layout( pssi->get_semantic() );
 		}
 
 		node_ctxt( gsym->node(), true )->get_value() = si_to_value(psi);
@@ -325,7 +325,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 
 		if( ret_value.get_hint() != builtin_types::none ){
 			storage_si* ret_ssi = fn().fnty->si_ptr<storage_si>();
-			storage_info* ret_si = abii->input_storage( ret_ssi->get_semantic() );
+			sv_layout* ret_si = abii->input_sv_layout( ret_ssi->get_semantic() );
 			assert( ret_si );
 			si_to_value(ret_si).store( ret_value );
 		} else {
@@ -336,7 +336,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 					shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
 					BOOST_FOREACH( shared_ptr<declarator> const& decl, vardecl->declarators ){
 						storage_si* decl_ssi = decl->si_ptr<storage_si>();
-						storage_info* decl_si = abii->output_storage( decl_ssi->get_semantic() );
+						sv_layout* decl_si = abii->output_sv_layout( decl_ssi->get_semantic() );
 						assert( decl_si );
 						si_to_value(decl_si).store( emit_extract_val(ret_value, (int)member_index) );
 						++member_index;
@@ -380,13 +380,13 @@ boost::shared_ptr<sasl::semantic::symbol> cgllvm_vs::find_symbol( cgllvm_sctxt* 
 	return data->env().sym.lock()->find( str );
 }
 
-value_t cgllvm_vs::si_to_value( storage_info* si )
+value_t cgllvm_vs::si_to_value( sv_layout* si )
 {
 	builtin_types bt = to_builtin_types( si->value_type );
 
 	// TODO need to emit_extract_ref
 	value_t ret;
-	if( si->storage == sc_stream_in || si->storage == sc_stream_out ){
+	if( si->storage == su_stream_in || si->storage == su_stream_out ){
 		ret = emit_extract_val( param_values[si->storage], si->physical_index );
 		ret = ret.as_ref();
 	} else {
