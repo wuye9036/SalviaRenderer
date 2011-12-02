@@ -42,6 +42,8 @@ enum system_values{
 	sv_texcoord,
 	sv_normal,
 
+	sv_target,
+
 	sv_customized,
 };
 
@@ -70,6 +72,8 @@ public:
 			sv = sv_normal;
 		} else if ( lower_name == "texcoord" ){
 			sv = sv_texcoord;
+		} else if ( lower_name == "color" || lower_name == "sv_target" ){
+			sv = sv_target;
 		} else {
 			sv = sv_customized;
 			this->name = name;

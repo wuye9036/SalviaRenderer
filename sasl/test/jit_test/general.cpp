@@ -171,6 +171,10 @@ struct jit_fixture {
 		init( file_name, "--lang=vs" );
 	}
 
+	void init_ps( string const& file_name ){
+		init( file_name, "--lang=ps" );
+	}
+
 	void init( string const& file_name, string const& options ){
 		c.parse( make_command(file_name, options) );
 
@@ -364,7 +368,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if 1
+#if 0
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -395,7 +399,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	intrinsics_vs_bin bin;
 	intrinsics_vs_bout bout;
 	
-
 	vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
 	vec3 norm(1.5f, 1.2f, 0.8f);
 	vec3 light(0.6f, 1.1f, 4.7f);
@@ -582,6 +585,12 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(0.0f), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(19.0f), 33 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(-7.0f), 33 );
+}
+#endif
+
+#if 1
+BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
+	init_ps( "./repo/question/v1a1/scalar.sps" );
 }
 #endif
 

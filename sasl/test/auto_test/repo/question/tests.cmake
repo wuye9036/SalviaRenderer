@@ -21,6 +21,7 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/host_intrinsic_detection.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/initializer.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/casts.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/scalar.sps"
 )
 
 SOURCE_GROUP( "Tests\\v1a1\\General" REGULAR_EXPRESSION ".*\\.ss" )

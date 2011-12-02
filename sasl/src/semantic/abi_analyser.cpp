@@ -48,6 +48,7 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 	case salviar::sv_position:
 	case salviar::sv_texcoord:
 	case salviar::sv_normal:
+	case salviar::sv_target:
 		return 
 			( is_scalar(btc) || is_vector(btc) )
 			&& scalar_of(btc) == builtin_types::_float;
@@ -68,6 +69,7 @@ sv_usage vsinput_semantic_usage( salviar::semantic_value const& sem ){
 	case salviar::sv_normal:
 		return su_stream_in;
 	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return su_none;
 }
 
@@ -78,6 +80,25 @@ sv_usage vsoutput_semantic_usage( salviar::semantic_value const& sem ){
 	case salviar::sv_texcoord:
 		return su_buffer_out;
 	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return su_none;
+}
+
+sv_usage psinput_semantic_usage( salviar::semantic_value const& sem ){
+	switch( sem.get_system_value() ){
+	case salviar::sv_texcoord:
+		return su_buffer_in;
+	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return su_none;
+}
+
+sv_usage psoutput_semantic_usage( salviar::semantic_value const& sem ){
+	switch( sem.get_system_value() ){
+	case salviar::sv_target:
+		return su_stream_out;
+	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
 	return su_none;
 }
 
@@ -89,7 +110,14 @@ sv_usage semantic_usage( salviar::languages lang, bool is_output, salviar::seman
 		} else {
 			return vsinput_semantic_usage(sem);
 		}
+	case salviar::lang_pixel_shader:
+		if( is_output ){
+			return psoutput_semantic_usage(sem);
+		} else {
+			return psinput_semantic_usage(sem);
+		}
 	}
+
 	return su_none;
 }
 
@@ -193,7 +221,8 @@ bool abi_analyser::update( salviar::languages lang ){
 		shared_ptr<function_type> entry_fn = entries[lang]->node()->as_handle<function_type>();
 		assert( entry_fn );
 
-		if( !add_semantic( entry_fn, false, false, salviar::lang_vertex_shader, true ) ){
+		if( !add_semantic( entry_fn, false, false, lang, true ) ){
+			assert( false );
 			reset(lang);
 			return false;
 		}
@@ -272,6 +301,7 @@ bool abi_analyser::add_semantic(
 				return ai->add_output_semantic( node_sem, btc );
 			}
 
+			assert( false );
 			return false;
 		}
 	} else if( ptspec->node_class() == node_ids::struct_type ){
@@ -288,6 +318,7 @@ bool abi_analyser::add_semantic(
 				shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
 				BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators ){
 					if ( !add_semantic( dclr, true, enable_nested, lang, is_output ) ){
+						assert( false );
 						return false;
 					}
 				}

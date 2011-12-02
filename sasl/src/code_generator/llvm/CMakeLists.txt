@@ -18,6 +18,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_general.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_vs.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_simd.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_ps.h
 	
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_jit.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_contexts.h
@@ -37,6 +38,7 @@ set( SOURCE_FILES
 	cgllvm_general.cpp
 	cgllvm_vs.cpp
 	cgllvm_simd.cpp
+	cgllvm_ps.cpp
 	
 	cgllvm_jit.cpp
 	cgllvm_contexts.cpp
