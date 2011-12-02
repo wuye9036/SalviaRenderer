@@ -16,6 +16,7 @@
 #include <llvm/Function.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
+#include <llvm/Target/TargetData.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -45,7 +46,12 @@ using namespace sasl::utility;
 using boost::any;
 using boost::bind;
 using boost::shared_ptr;
+
 using std::vector;
+using std::sort;
+using std::pair;
+using std::transform;
+using std::make_pair;
 
 #define FUNCTION_SCOPE( fn ) \
 	push_fn( (fn) );	\
@@ -53,27 +59,64 @@ using std::vector;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-void cgllvm_vs::fill_llvm_type_from_si( sv_usage st ){
-	vector<sv_layout*> sis = abii->layouts( st );
-	BOOST_FOREACH( sv_layout* si, sis ){
+bool layout_type_pairs_cmp( pair<sv_layout*, Type*> const& lhs, pair<sv_layout*, Type*> const& rhs ){
+	return lhs.first->element_size < rhs.first->element_size;
+}
+
+/// Re-arrange layouts will Sort up struct members by storage size.
+/// For e.g.
+///   struct { int i; byte b; float f; ushort us; }
+/// Will be arranged to
+///   struct { byte b; ushort us; int i; float f; };
+/// It will minimize the structure size.
+void rearrange_layouts( vector<sv_layout*>& sorted_layouts, vector<Type*>& sorted_tys, vector<sv_layout*> const& layouts, vector<Type*> const& tys, TargetData* target )
+{
+	size_t layouts_count = layouts.size();
+	vector<size_t> elems_size;
+	elems_size.reserve( layouts_count );
+
+	vector< pair<sv_layout*, Type*> > layout_ty_pairs;
+	layout_ty_pairs.reserve( layouts_count );
+
+	vector<sv_layout*>::const_iterator layout_it = layouts.begin();
+	BOOST_FOREACH( Type* ty, tys ){
+		size_t sz = target->getTypeStoreSize(ty);
+		(*layout_it)->element_size = sz;
+		layout_ty_pairs.push_back( make_pair(*layout_it, ty) );
+		++layout_it;
+	}
+
+	sort( layout_ty_pairs.begin(), layout_ty_pairs.end(), layout_type_pairs_cmp );
+
+	sorted_layouts.clear();
+	std::transform( layout_ty_pairs.begin(), layout_ty_pairs.end(), back_inserter(sorted_layouts), boost::bind(&pair<sv_layout*, Type*>::first, _1) );
+
+	sorted_tys.clear();
+	std::transform( layout_ty_pairs.begin(), layout_ty_pairs.end(), back_inserter(sorted_tys), boost::bind(&pair<sv_layout*, Type*>::second, _1) );
+}
+
+void cgllvm_vs::fill_llvm_type_from_si( sv_usage su ){
+	vector<sv_layout*> svls = abii->layouts( su );
+	vector<Type*>& tys = entry_params_types[su];
+
+	BOOST_FOREACH( sv_layout* si, svls ){
 		builtin_types storage_bt = to_builtin_types(si->value_type);
-		entry_param_tys[st].push_back( storage_bt );
+		entry_param_tys[su].push_back( storage_bt );
 		Type* storage_ty = type_( storage_bt, abi_c );
 
-		if( su_stream_in == st || su_stream_out == st ){
-			entry_params_types[st].push_back( PointerType::getUnqual( storage_ty ) );
+		if( su_stream_in == su || su_stream_out == su ){
+			tys.push_back( PointerType::getUnqual( storage_ty ) );
 		} else {
-			entry_params_types[st].push_back( storage_ty );
+			tys.push_back( storage_ty );
 		}
 	}
 	
-	// Here we create packed data.
-	// It is easy to compute struct layout.
-	// TODO support aligned and unpacked layout in future.
-	entry_params_structs[st].data() = StructType::get( mod_ptr()->context(), entry_params_types[st], true );
+	if( su_buffer_in == su || su_buffer_out == su ){
+		rearrange_layouts( svls, tys, svls, tys, target_data );
+	}
 
 	char const* struct_name = NULL;
-	switch( st ){
+	switch( su ){
 	case su_stream_in:
 		struct_name = ".s.stri";
 		break;
@@ -89,7 +132,30 @@ void cgllvm_vs::fill_llvm_type_from_si( sv_usage st ){
 	}
 	assert( struct_name );
 
-	// entry_params_structs[st].data()->setName( struct_name );
+	// Tys must not be empty. So placeholder (int8) will be inserted if tys is empty.
+	StructType* out_struct = tys.empty() ? StructType::create( struct_name, type_(builtin_types::_sint8, abi_llvm), NULL ) : StructType::create( tys, struct_name );
+	entry_params_structs[su].data() = out_struct;
+
+	// Update Layout physical informations.
+	if( su_buffer_in == su || su_buffer_out == su ){
+		StructLayout const* struct_layout = target_data->getStructLayout( out_struct );
+
+		size_t next_offset = 0;
+		for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
+			size_t offset = next_offset;
+			svls[i_elem]->offset = offset;
+			svls[i_elem]->physical_index = i_elem;
+
+			size_t next_i_elem = i_elem + 1;
+			if( next_i_elem < tys.size() ){
+				next_offset = struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
+			} else {
+				next_offset = struct_layout->getSizeInBytes();
+			}
+		
+			svls[i_elem]->element_padding = (next_offset - offset) - svls[i_elem]->element_size;
+		}
+	}
 }
 
 void cgllvm_vs::create_entry_params(){
@@ -142,7 +208,7 @@ SASL_VISIT_DEF( member_expression ){
 			salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
 			sv_layout* psi = abii->input_sv_layout( sem );
 
-			sc_ptr(data)->get_value() = si_to_value( psi );
+			sc_ptr(data)->get_value() = layout_to_value( psi );
 		} else {
 			// If it is not semantic mode, use general code
 			cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
@@ -194,6 +260,8 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	// Call parent for initialization
 	parent_class::before_decls_visit( v, data );
+
+	target_data = new TargetData( module() );
 
 	// Create entry function
 	create_entry_params();
@@ -283,7 +351,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 			builtin_types hint = par_ssi->type_info()->tycode;
 			pctxt->get_value() = create_variable( hint, abi_c, par->name->str );
-			pctxt->get_value().store( si_to_value(psi) );
+			pctxt->get_value().store( layout_to_value(psi) );
 		} else {
 			// Virtual args for aggregated argument
 			pctxt->data().semantic_mode = true;
@@ -303,7 +371,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			psi = abii->input_sv_layout( pssi->get_semantic() );
 		}
 
-		node_ctxt( gsym->node(), true )->get_value() = si_to_value(psi);
+		node_ctxt( gsym->node(), true )->get_value() = layout_to_value(psi);
 
 		//if (v.init){
 		//	EFLIB_ASSERT_UNIMPLEMENTED();
@@ -327,7 +395,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 			storage_si* ret_ssi = fn().fnty->si_ptr<storage_si>();
 			sv_layout* ret_si = abii->input_sv_layout( ret_ssi->get_semantic() );
 			assert( ret_si );
-			si_to_value(ret_si).store( ret_value );
+			layout_to_value(ret_si).store( ret_value );
 		} else {
 			shared_ptr<struct_type> ret_struct = fn().fnty->retval_type->as_handle<struct_type>();
 			size_t member_index = 0;
@@ -338,7 +406,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 						storage_si* decl_ssi = decl->si_ptr<storage_si>();
 						sv_layout* decl_si = abii->output_sv_layout( decl_ssi->get_semantic() );
 						assert( decl_si );
-						si_to_value(decl_si).store( emit_extract_val(ret_value, (int)member_index) );
+						layout_to_value(decl_si).store( emit_extract_val(ret_value, (int)member_index) );
 						++member_index;
 					}
 				}
@@ -357,7 +425,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL){}
+cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL), target_data(NULL){}
 
 bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
 	assert(fn && entry_fn);
@@ -380,21 +448,26 @@ boost::shared_ptr<sasl::semantic::symbol> cgllvm_vs::find_symbol( cgllvm_sctxt* 
 	return data->env().sym.lock()->find( str );
 }
 
-value_t cgllvm_vs::si_to_value( sv_layout* si )
+value_t cgllvm_vs::layout_to_value( sv_layout* svl )
 {
-	builtin_types bt = to_builtin_types( si->value_type );
+	builtin_types bt = to_builtin_types( svl->value_type );
 
 	// TODO need to emit_extract_ref
 	value_t ret;
-	if( si->storage == su_stream_in || si->storage == su_stream_out ){
-		ret = emit_extract_val( param_values[si->storage], si->physical_index );
+	if( svl->usage == su_stream_in || svl->usage == su_stream_out ){
+		ret = emit_extract_val( param_values[svl->usage], svl->physical_index );
 		ret = ret.as_ref();
 	} else {
-		ret = emit_extract_ref( param_values[si->storage], si->physical_index );
+		ret = emit_extract_ref( param_values[svl->usage], svl->physical_index );
 	}
-	ret.set_hint( to_builtin_types( si->value_type ) );
+	ret.set_hint( to_builtin_types( svl->value_type ) );
 
 	return ret;
+}
+
+cgllvm_vs::~cgllvm_vs()
+{
+	delete target_data;
 }
 
 END_NS_SASL_CODE_GENERATOR();

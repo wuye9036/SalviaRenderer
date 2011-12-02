@@ -74,7 +74,7 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 
 	sv_layout* si = alloc_input_storage( sem );
 	si->value_type = to_lvt( btc );
-	si->storage = is_stream ? su_stream_in : su_buffer_in;
+	si->usage = is_stream ? su_stream_in : su_buffer_in;
 	si->sv = sem;
 	sems_in.insert( it, sem );
 	return true;
@@ -95,7 +95,7 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 
 	sv_layout* si = alloc_output_storage( sem );
 	si->value_type = to_lvt( btc );
-	si->storage = su_buffer_out;
+	si->usage = su_buffer_out;
 	si->sv = sem;
 	sems_out.insert( it, sem );
 	return true;
@@ -106,7 +106,7 @@ void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_types
 	syms_in.push_back( v.get() );
 	sv_layout* si = alloc_input_storage( v );
 	si->value_type = to_lvt( btc );
-	si->storage = su_buffer_in;
+	si->usage = su_buffer_in;
 
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
 }
@@ -186,9 +186,9 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 
 	// Process input
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
-		sv_layout* pstorage = input_sv_layout( sems_in[index] );
-		if ( pstorage->storage == st ){
-			ret.push_back( pstorage );
+		sv_layout* svl = input_sv_layout( sems_in[index] );
+		if ( svl->usage == st ){
+			ret.push_back( svl );
 		}
 	}
 
@@ -204,39 +204,39 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 void abi_info::compute_input_semantics_layout(){
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
 
-		sv_layout* pstorage = input_sv_layout( sems_in[index] );
-		assert( pstorage );
+		sv_layout* svl = input_sv_layout( sems_in[index] );
+		assert( svl );
 
-		pstorage->physical_index =  counts[pstorage->storage];
-		pstorage->logical_index  =  counts[pstorage->storage];
-		pstorage->offset = offsets[pstorage->storage];
-		pstorage->element_size = 
-			pstorage->storage == su_buffer_in ?
-			static_cast<int>( storage_size( to_builtin_types( pstorage->value_type ) ) )
+		svl->physical_index =  counts[svl->usage];
+		svl->logical_index  =  counts[svl->usage];
+		svl->offset = offsets[svl->usage];
+		svl->element_size = 
+			svl->usage == su_buffer_in ?
+			static_cast<int>( storage_size( to_builtin_types( svl->value_type ) ) )
 			: static_cast<int> ( sizeof(void*) )
 			;
-		pstorage->element_count = 1;
+		svl->element_count = 1;
 
-		counts[pstorage->storage]++;
-		offsets[pstorage->storage] += pstorage->total_size();
+		counts[svl->usage]++;
+		offsets[svl->usage] += svl->total_size();
 
 	}
 }
 
 void abi_info::compute_output_buffer_layout(){
 	for ( size_t index = 0; index < sems_out.size(); ++index ){
-		sv_layout* pstorage = output_sv_layout( sems_out[index] );
-		assert(pstorage);
+		sv_layout* svl = output_sv_layout( sems_out[index] );
+		assert(svl);
 
-		pstorage->storage = su_buffer_out;
-		pstorage->physical_index =  counts[pstorage->storage];
-		pstorage->logical_index  =  counts[pstorage->storage];
-		pstorage->offset = offsets[pstorage->storage];
-		pstorage->element_size = static_cast<int>( storage_size( to_builtin_types( pstorage->value_type ) ) );
-		pstorage->element_count = 1;
+		svl->usage = su_buffer_out;
+		svl->physical_index =  counts[svl->usage];
+		svl->logical_index  =  counts[svl->usage];
+		svl->offset = offsets[svl->usage];
+		svl->element_size = static_cast<int>( storage_size( to_builtin_types( svl->value_type ) ) );
+		svl->element_count = 1;
 		
-		counts[pstorage->storage]++;
-		offsets[pstorage->storage] += pstorage->total_size();
+		counts[svl->usage]++;
+		offsets[svl->usage] += svl->total_size();
 	}
 }
 
@@ -247,15 +247,15 @@ void abi_info::compute_output_stream_layout()
 
 void abi_info::compute_input_constant_layout(){
 	for ( size_t index = 0; index < syms_in.size(); ++index ){
-		sv_layout* pstorage = addressof( symin_storages[ syms_in[index] ] );
-		pstorage->storage = su_buffer_in;
-		pstorage->physical_index =  counts[pstorage->storage];
-		pstorage->logical_index  =  counts[pstorage->storage];
-		pstorage->offset = offsets[su_buffer_in];
+		sv_layout* svl = addressof( symin_storages[ syms_in[index] ] );
+		svl->usage = su_buffer_in;
+		svl->physical_index =  counts[svl->usage];
+		svl->logical_index  =  counts[svl->usage];
+		svl->offset = offsets[su_buffer_in];
 		
-		int size = static_cast<int>( storage_size( to_builtin_types( pstorage->value_type ) ) );
-		pstorage->element_size = size;
-		pstorage->element_count = 1;
+		int size = static_cast<int>( storage_size( to_builtin_types( svl->value_type ) ) );
+		svl->element_size = size;
+		svl->element_count = 1;
 
 		counts[su_buffer_in]++;
 		offsets[su_buffer_in] += size;

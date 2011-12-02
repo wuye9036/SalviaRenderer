@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#if 1
+#if 0
 
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/empty.ss" );
@@ -278,7 +278,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if 1
+#if 0
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -362,17 +362,18 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	}
 }
 
-#pragma pack(push)
-#pragma pack(1)
+#endif
+
+#if 1
 
 struct intrinsics_vs_data{
-	float pos[4];
 	float norm[3];
+	float pos[4];
 };
 
 struct intrinsics_vs_bout{
-	float x,y,z,w;
 	float n_dot_l;
+	vec4  pos;
 };
 
 struct intrinsics_vs_sin{
@@ -380,11 +381,9 @@ struct intrinsics_vs_sin{
 };
 
 struct intrinsics_vs_bin{
-	float wvpMat[16];
-	float lx, ly, lz;
+	vec3	light;
+	float	wvpMat[16];
 };
-
-#pragma pack(pop)
 
 BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	init_vs("./repo/question/v1a1/intrinsics.svs");
@@ -410,7 +409,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 
 	memcpy( sin.position, &pos, sizeof(float)*4 );
 	memcpy( sin.normal, &norm, sizeof(float)*3 );
-	memcpy( &bin.lx, &light, sizeof(float)*3 );
+	memcpy( &bin.light, &light, sizeof(float)*3 );
 	memcpy( &bin.wvpMat[0], &mat, sizeof(float)*16 );
 
 	jit_function<void(intrinsics_vs_sin*, intrinsics_vs_bin*, void*, intrinsics_vs_bout*)> fn;
@@ -422,14 +421,15 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	transform( out_pos, mat, pos );
 
 	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), 0.0001f );
-	BOOST_CHECK_CLOSE( bout.x, out_pos.x, 0.0001f );
-	BOOST_CHECK_CLOSE( bout.y, out_pos.y, 0.0001f );
-	BOOST_CHECK_CLOSE( bout.z, out_pos.z, 0.0001f );
-	BOOST_CHECK_CLOSE( bout.w, out_pos.w, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos.x, out_pos.x, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos.y, out_pos.y, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos.z, out_pos.z, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos.w, out_pos.w, 0.0001f );
 }
 
 #endif
 
+#if 0
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
 	init_g("./repo/question/v1a1/branches.ss");
@@ -474,8 +474,9 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 	BOOST_CHECK_EQUAL( test_switch(2,5), 8876 );
 	BOOST_CHECK_EQUAL( test_switch(2,6), 0 );
 }
+#endif
 
-#if 1
+#if 0
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
@@ -557,7 +558,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 1
+#if 0
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
 

@@ -25,6 +25,7 @@ namespace sasl{
 namespace llvm{
 	class PointerType;
 	class StructType;
+	class TargetData;
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -37,6 +38,7 @@ public:
 	typedef cgllvm_sisd parent_class;
 
 	cgllvm_vs();
+	~cgllvm_vs();
 
 	// expressions
 	SASL_VISIT_DCL( member_expression );
@@ -77,7 +79,7 @@ private:
 
 	boost::shared_ptr<sasl::semantic::symbol> find_symbol( cgllvm_sctxt* data, std::string const& str );
 
-	value_t si_to_value( salviar::sv_layout* si );
+	value_t layout_to_value( salviar::sv_layout* si );
 
 	void create_entry_params();
 	void add_entry_param_type( salviar::sv_usage st, std::vector< llvm::Type* >& par_types );
@@ -87,6 +89,8 @@ private:
 
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
+
+	llvm::TargetData* target_data;
 
 	value_t param_values[salviar::storage_usage_count];
 

@@ -79,7 +79,7 @@ struct sv_layout{
 		, offset(0)
 		, element_size(0), element_padding(0), element_count(0)
 		, padding(0)
-		, storage(su_none), value_type( lvt_none ), sv(sv_none)
+		, usage(su_none), value_type( lvt_none ), sv(sv_none)
 	{}
 
 	int total_size() const{
@@ -97,7 +97,7 @@ struct sv_layout{
 	int						element_count;
 	int						padding;
 
-	sv_usage			storage;
+	sv_usage				usage;
 	language_value_types	value_type;
 	semantic_value			sv;
 };
