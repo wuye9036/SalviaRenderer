@@ -87,7 +87,7 @@ public:
 			dest_ctxt->data().tyinfo.get()
 			);
 
-		cgs->store( dest_ctxt->get_value(), casted );
+		dest_ctxt->get_value().store( casted );
 	}
 
 	void int2bool( shared_ptr<node> dest, shared_ptr<node> src ){

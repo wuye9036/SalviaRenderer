@@ -57,164 +57,6 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 class cgllvm_sctxt;
 class llvm_intrin_cache;
 
-enum abis{
-	abi_c,
-	abi_llvm,
-	abi_unknown
-};
-
-class value_tyinfo{
-public:
-	friend class cgs_sisd;
-
-	enum classifications{
-		unknown_type,
-		builtin,
-		aggregated
-	};
-
-	value_tyinfo(
-		sasl::syntax_tree::tynode* sty,
-		llvm::Type* cty,
-		llvm::Type* llty
-		);
-
-	value_tyinfo( value_tyinfo const& );
-	value_tyinfo& operator = ( value_tyinfo const& );
-
-	sasl::syntax_tree::tynode* typtr() const;
-	boost::shared_ptr<sasl::syntax_tree::tynode> tysp() const;
-	builtin_types hint() const;
-
-	llvm::Type* llvm_ty( abis abi ) const;
-
-protected:
-	value_tyinfo();
-
-	llvm::Type*			llvm_tys[2];
-	sasl::syntax_tree::tynode*	sty;
-	classifications				cls;
-};
-
-class value_t{
-public:
-	friend class cgs_sisd;
-
-	value_t();
-	value_t( value_t const& );
-	value_t& operator = ( value_t const& );
-
-	enum kinds{
-		kind_unknown = 0,
-		kind_tyinfo_only = 1,
-		kind_swizzle = 2,
-
-		kind_value = 4,
-		/// \brief Does treat type as reference if ABI is C compatible.
-		///  
-		/// An important fact is LLVM's ABI is not same as C API.
-		/// If structure was passed into function by value,
-		/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
-		/// But LLVM will push the instance to stack.
-		/// So this varaible will qualify the type of arguments/parameters indicates the compiler.
-		/// For e.g. we have a prototype:
-		///		void foo( struct S );
-		/// If is only called by LLVM code, the IR signature will be 
-		///		def foo( %S %arg );
-		/// But if it maybe called by external function as convention as "C" code,
-		/// The IR signature will be generated as following:
-		///		def foo( %S* %arg );
-		/// And 'kind' the parameter/argument 'arg' is set to 'kind_ref'.
-		kind_ref = 8
-	};
-
-	/// @name State queriers 
-	/// @{
-
-	/// Get service.
-	cgs_sisd* service() const;
-
-	/// Return internal llvm value.
-	llvm::Value* raw() const;
-
-	/// Load llvm value from value_t.
-	llvm::Value* load() const;
-	llvm::Value* load( abis abi ) const;
-	llvm::Value* load_ref() const;
-
-	void store( value_t const& ) const;
-
-	/// Store llvm value to value_t
-	void emplace( value_t const& );
-	void emplace( llvm::Value* v, kinds k, abis abi );
-	void set_parent( value_t const& v );
-	void set_parent( value_t const* v );
-
-	bool storable() const;
-	bool load_only() const;
-
-	value_t as_ref() const;
-	/// Get type information of value.
-	value_tyinfo* get_tyinfo() const;
-	/// Get type hint. if type is not built-in type it returns builtin_type::none.
-	builtin_types get_hint() const;
-	/// Set type hint.
-	void set_hint( builtin_types bt );
-	/// Get kind.
-	kinds get_kind() const;
-	/// Get parent. If value is not a member of aggragation, it return NULL.
-	value_t* get_parent() const;
-	/// Get ABI.
-	abis get_abi() const;
-	/// Set ABI
-	void set_abi( abis abi );
-	/// Set Index. It is only make sense if parent is available.
-	void set_index( size_t index );
-	/// @}
-
-	/// @name Operators
-	/// @{
-	value_t swizzle( size_t swz_code ) const;
-	value_t to_rvalue() const;
-	/// @}
-protected:
-	/// @name Constructor, Destructor, Copy constructor and assignment operator
-	/// @{
-	value_t(
-		value_tyinfo* tyinfo,
-		llvm::Value* val, value_t::kinds k, abis abi,
-		cgs_sisd* cg
-		);
-	value_t(
-		builtin_types hint,
-		llvm::Value* val, value_t::kinds k, abis abi,
-		cgs_sisd* cg
-		);
-
-	static value_t slice( value_t const& vec, uint32_t masks );
-	/// @}
-
-	/// @name Members
-	/// @{
-	boost::scoped_ptr<value_t>	parent; // For write mask and swizzle.
-	uint32_t					masks;
-	
-	kinds			kind;
-	llvm::Value*	val;
-	/// Branch execution tag, for SIMD.
-	llvm::Value*	bet;
-
-	/// Type information
-	value_tyinfo*	tyinfo;
-	builtin_types	hint;
-
-	/// ABI
-	abis			abi;
-
-	cgs_sisd*		cg;
-	/// @}
-};
-
 template <typename RVT>
 struct scope_guard{
 	typedef boost::function<RVT ()> on_exit_fn;
@@ -384,7 +226,10 @@ public:
 
 	/// @name Emit assignment
 	/// @{
-	void store( value_t& lhs, value_t const& rhs );
+	virtual llvm::Value* load( value_t const& );
+	virtual llvm::Value* load( value_t const& , abis abi );
+	virtual llvm::Value* load_ref( value_t const& );
+	virtual void store( value_t& lhs, value_t const& rhs );
 	/// @}
 
 	/// @name Emit values
@@ -393,9 +238,9 @@ public:
 	value_t null_value( builtin_types bt, abis abi );
 	value_t undef_value( builtin_types bt, abis abi );
 
-	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_t::kinds k, abis abi );
-	value_t create_value( builtin_types hint, llvm::Value* val, value_t::kinds k, abis abi );
-	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_t::kinds k, abis abi );
+	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 
 	template <typename T>
 	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){

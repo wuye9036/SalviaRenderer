@@ -298,19 +298,19 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		Function::arg_iterator arg_it = fn->arg_begin();
 
 		arg_it->setName( ".arg.stri" );
-		param_values[su_stream_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_stream_in] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
 		++arg_it;
 
 		arg_it->setName( ".arg.bufi" );
-		param_values[su_buffer_in] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_buffer_in] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
 		++arg_it;
 
 		arg_it->setName( ".arg.stro" );
-		param_values[su_stream_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_stream_out] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
 		++arg_it;
 
 		arg_it->setName( ".arg.bufo" );
-		param_values[su_buffer_out] = create_value( builtin_types::none, arg_it, value_t::kind_ref, abi_c );
+		param_values[su_buffer_out] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
 		++arg_it;
 
 		// Create virutal arguments

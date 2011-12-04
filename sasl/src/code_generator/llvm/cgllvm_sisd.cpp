@@ -145,10 +145,10 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 	value_t result_value;
 	if( yes_ref && no_ref ){
 		Value* merged = select_( cond_value.load(), yes_ref, no_ref );
-		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_ref, yes_value.get_abi() );
+		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, vkind_ref, yes_value.get_abi() );
 	} else {
 		Value* merged = select_( cond_value.load(), yes_v, no_v );
-		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, value_t::kind_value, yes_value.get_abi() );
+		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, vkind_value, yes_value.get_abi() );
 	}
 
 	return result_value;
@@ -1009,7 +1009,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	// Needn't process init expression now.
 	storage_si* si = v.si_ptr<storage_si>();
 	sc_data_ptr(data)->tyinfo = decl_ty;
-	sc_data_ptr(data)->val = create_value(decl_ty.get(), NULL, value_t::kind_swizzle, abi_unknown );
+	sc_data_ptr(data)->val = create_value(decl_ty.get(), NULL, vkind_swizzle, abi_unknown );
 	sc_data_ptr(data)->val.set_index( si->mem_index() );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );

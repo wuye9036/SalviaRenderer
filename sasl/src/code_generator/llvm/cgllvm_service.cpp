@@ -11,6 +11,7 @@
 using llvm::Module;
 using llvm::LLVMContext;
 using llvm::DefaultIRBuilder;
+using llvm::Value;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -37,6 +38,21 @@ LLVMContext& cg_service::context() const
 DefaultIRBuilder& cg_service::builder() const
 {
 	return *( mod_impl->builder() );
+}
+
+uint32_t value_t::get_masks() const
+{
+	return masks;
+}
+
+void value_t::set_kind( value_kinds vkind )
+{
+	kind = vkind;
+}
+
+value_t* value_t::get_parent() const
+{
+	return parent.get();
 }
 
 END_NS_SASL_CODE_GENERATOR();
