@@ -4,7 +4,7 @@
 #include <sasl/include/code_generator/forward.h>
 
 #include <sasl/include/syntax_tree/visitor.h>
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs_sisd.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -42,7 +42,7 @@ struct builtin_types;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class llvm_module;
-class cgllvm_modimpl;
+class llvm_module_impl;
 class cgllvm_sctxt;
 typedef cgllvm_sctxt* sctxt_handle;
 
@@ -54,21 +54,22 @@ public:
 		) = 0;
 };
 
-class cgllvm_impl: public cgllvm, public cg_service{
+class cgllvm_impl: public cgllvm{
 public:
 	boost::shared_ptr<llvm_module> cg_module() const;
 
-protected:
-	cgllvm_impl();
+	// Get context by node.
+	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node* n, bool create_if_need = false );
 
-	SASL_VISIT_DCL( declaration );
+protected:
+	cgllvm_impl(): abii(NULL), msi(NULL){}
+
+	SASL_VISIT_DCL( declaration ){}
 
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );
 
-	// Get context by node.
-	cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const&, bool create_if_need = false );
 	template <typename NodeT, typename ContextT >
 	ContextT* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
 	template<typename ContextT>
@@ -80,13 +81,12 @@ protected:
 	llvm::Module* module() const;
 
 protected:
-	// ---------------Data Members-----------------
 
 	// Store global informations
 	sasl::semantic::module_si* msi;
 	sasl::semantic::abi_info const* abii;
 
-	boost::shared_ptr<cgllvm_modimpl> mod;
+	boost::shared_ptr<llvm_module_impl> mod;
 	
 	// Store node-context pairs.
 	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;

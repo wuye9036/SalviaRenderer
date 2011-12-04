@@ -68,7 +68,7 @@ using std::make_pair;
 #define SASL_VISITOR_TYPE_NAME cgllvm_sisd
 #define FUNCTION_SCOPE( fn ) \
 	push_fn( (fn) );	\
-	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cg_service::pop_fn, this ) );
+	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cgs_sisd::pop_fn, this ) );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -941,6 +941,8 @@ SASL_VISIT_DEF( for_statement ){
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	mod_ptr()->create_module( v.name );
 
+	cg_service::initialize( mod_ptr(), boost::bind(static_cast<cgllvm_sctxt*(cgllvm_impl::*)(node*, bool)>(&cgllvm_impl::node_ctxt), this, _1, _2) );
+
 	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
 
 	caster = create_caster( ctxt_getter, this );
@@ -971,7 +973,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	push_fn( sc_data_ptr(data)->self_fn );
-	scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
+	scope_guard<void> pop_fn_on_exit( bind( &cgs_sisd::pop_fn, this ) );
 
 	// Register arguments names.
 	assert( fn().arg_size() == v.params.size() );
@@ -1119,9 +1121,9 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
 }
 
-cgllvm_modimpl* cgllvm_sisd::mod_ptr(){
-	assert( dynamic_cast<cgllvm_modimpl*>( mod.get() ) );
-	return static_cast<cgllvm_modimpl*>( mod.get() );
+llvm_module_impl* cgllvm_sisd::mod_ptr(){
+	assert( dynamic_cast<llvm_module_impl*>( mod.get() ) );
+	return static_cast<llvm_module_impl*>( mod.get() );
 }
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
@@ -1144,7 +1146,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		assert( intrinsic_ctxt );
 
 		push_fn( intrinsic_ctxt->data().self_fn );
-		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, this ) );
+		scope_guard<void> pop_fn_on_exit( bind( &cgs_sisd::pop_fn, this ) );
 
 		insert_point_t ip_body = new_block( ".body", true );
 

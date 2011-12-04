@@ -40,7 +40,8 @@ struct cgllvm_sctxt_data;
 struct cgllvm_sctxt_env;
 
 // Code generation for SISD( Single Instruction Single Data )
-class cgllvm_sisd: public cgllvm_impl{
+class cgllvm_sisd: public cgllvm_impl, public cgs_sisd{
+
 public:
 	~cgllvm_sisd();
 	bool generate(
@@ -129,7 +130,7 @@ protected:
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
 	boost::shared_ptr< ::sasl::semantic::caster_t > caster;
 
-	cgllvm_modimpl* mod_ptr();
+	llvm_module_impl* mod_ptr();
 };
 
 cgllvm_sctxt const * sc_ptr( const boost::any& any_val  );

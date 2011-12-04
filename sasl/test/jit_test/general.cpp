@@ -368,7 +368,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if 0
+#if 1
 
 struct intrinsics_vs_data{
 	float norm[3];

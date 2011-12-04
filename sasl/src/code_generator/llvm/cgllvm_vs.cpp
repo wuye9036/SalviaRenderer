@@ -15,7 +15,6 @@
 #include <llvm/DerivedTypes.h>
 #include <llvm/Function.h>
 #include <llvm/Module.h>
-#include <llvm/Support/IRBuilder.h>
 #include <llvm/Target/TargetData.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -55,7 +54,7 @@ using std::make_pair;
 
 #define FUNCTION_SCOPE( fn ) \
 	push_fn( (fn) );	\
-	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cg_service::pop_fn, this ) );
+	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cgs_sisd::pop_fn, this ) );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -261,7 +260,7 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	// Call parent for initialization
 	parent_class::before_decls_visit( v, data );
 
-	target_data = new TargetData( module() );
+	target_data = new TargetData( cgllvm_impl::module() );
 
 	// Create entry function
 	create_entry_params();
@@ -279,8 +278,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		add_entry_param_type( su_stream_out, param_types );
 		add_entry_param_type( su_buffer_out, param_types );
 
-		FunctionType* fntype = FunctionType::get( Type::getVoidTy(context()), param_types, false );
-		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), module() );
+		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cgllvm_impl::context() ), param_types, false );
+		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), cgllvm_impl::module() );
 		entry_fn = fn;
 		entry_sym = v.symbol().get();
 

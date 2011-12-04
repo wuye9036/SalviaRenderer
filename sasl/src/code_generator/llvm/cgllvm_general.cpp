@@ -106,14 +106,14 @@ SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( alias_type );
 
-cgllvm_modimpl* cgllvm_general::mod_ptr(){
-	assert( dynamic_cast<cgllvm_modimpl*>( mod.get() ) );
-	return static_cast<cgllvm_modimpl*>( mod.get() );
+llvm_module_impl* cgllvm_general::mod_ptr(){
+	assert( dynamic_cast<llvm_module_impl*>( mod.get() ) );
+	return static_cast<llvm_module_impl*>( mod.get() );
 }
 
 bool cgllvm_general::create_mod( sasl::syntax_tree::program& v ){
 	if ( mod ){ return false; }
-	mod = create_codegen_context<cgllvm_modimpl>( v.as_handle() );
+	mod = create_codegen_context<llvm_module_impl>( v.as_handle() );
 	return true;
 }
 

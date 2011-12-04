@@ -43,7 +43,7 @@ struct builtin_types;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
-class cgllvm_modimpl;
+class llvm_module_impl;
 class llvm_module;
 
 class cgllvm_general: public cgllvm_sisd{
@@ -72,7 +72,7 @@ public:
 	
 private:
 	virtual bool create_mod( sasl::syntax_tree::program& v );
-	cgllvm_modimpl* mod_ptr();
+	llvm_module_impl* mod_ptr();
 };
 
 END_NS_SASL_CODE_GENERATOR()

@@ -4,7 +4,7 @@
 #include <sasl/include/code_generator/forward.h>
 
 #include <sasl/include/code_generator/codegen_context.h>
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs_sisd.h>
 
 #include <eflib/include/platform/typedefs.h>
 
