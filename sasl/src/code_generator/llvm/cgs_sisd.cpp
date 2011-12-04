@@ -88,9 +88,9 @@ using std::string;
 	ret = builder().Create##op_name( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
 	}	\
 	\
-	value_t retval( hint, ret, vkind_value, abi_llvm, this ); \
+	value_t retval = create_value( hint, ret, vkind_value, abi_llvm ); \
 	abis ret_abi = is_scalar(hint) ? abi_llvm : lhs.abi();\
-	return value_t( hint, retval.load(ret_abi), vkind_value, ret_abi, this );
+	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
 
 #define EMIT_CMP_EQ_NE_BODY( op_name ) \
 	builtin_types hint = lhs.hint(); \
@@ -104,7 +104,7 @@ using std::string;
 	ret = builder().CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
 	} \
 	\
-	return value_t( builtin_types::_boolean, ret, vkind_value, abi_llvm, this );
+	return create_value( builtin_types::_boolean, ret, vkind_value, abi_llvm );
 
 #define EMIT_CMP_BODY( op_name ) \
 	builtin_types hint = lhs.hint(); \
@@ -123,7 +123,7 @@ using std::string;
 	ret = builder().CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
 	} \
 	\
-	return value_t( builtin_types::_boolean, ret, vkind_value, abi_llvm, this );
+	return create_value( builtin_types::_boolean, ret, vkind_value, abi_llvm );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -360,14 +360,14 @@ value_t cgs_sisd::null_value( value_tyinfo* tyinfo, abis abi )
 	assert( tyinfo && abi != abi_unknown );
 	Type* value_type = tyinfo->ty(abi);
 	assert( value_type );
-	return value_t( tyinfo, Constant::getNullValue(value_type), vkind_value, abi, this );
+	return create_value( tyinfo, Constant::getNullValue(value_type), vkind_value, abi );
 }
 
 value_t cgs_sisd::null_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
 	Type* valty = get_llvm_type( context(), bt, abi == abi_c );
-	value_t val = value_t( bt, Constant::getNullValue( valty ), vkind_value, abi, this );
+	value_t val = create_value( bt, Constant::getNullValue( valty ), vkind_value, abi );
 	return val;
 }
 
@@ -389,10 +389,6 @@ void cgs_sisd::emit_return( value_t const& ret_v, abis abi ){
 	} else {
 		builder().CreateRet( ret_v.load(abi) );
 	}
-}
-
-function_t& cgs_sisd::fn(){
-	return fn_ctxts.back();
 }
 
 void cgs_sisd::push_fn( function_t const& fn ){
@@ -515,9 +511,6 @@ function_t cgs_sisd::fetch_function( shared_ptr<function_type> const& fn_node ){
 	return ret;
 }
 
-bool cgs_sisd::in_function() const{
-	return !fn_ctxts.empty();
-}
 
 void cgs_sisd::clean_empty_blocks()
 {
@@ -571,41 +564,7 @@ void cgs_sisd::clean_empty_blocks()
 }
 
 value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
-	return value_t( tyinfo, val, vkind_value, abi_llvm, this );
-}
-
-insert_point_t cgs_sisd::new_block( std::string const& hint, bool set_as_current )
-{
-	assert( in_function() );
-
-	insert_point_t ret;
-
-	ret.block = BasicBlock::Create( context(), hint, fn().fn );
-	dbg_print_blocks( fn().fn );
-
-	if( set_as_current ){
-		set_insert_point( ret );
-	}
-
-	return ret;
-}
-
-value_t cgs_sisd::create_value( value_tyinfo* tyinfo, Value* val, value_kinds k, abis abi ){
-	return value_t( tyinfo, val, k, abi, this );
-}
-
-value_t cgs_sisd::create_value( builtin_types hint, Value* val, value_kinds k, abis abi )
-{
-	return value_t( hint, val, k, abi, this );
-}
-
-value_t cgs_sisd::create_value( value_tyinfo* tyinfo, builtin_types hint, Value* val, value_kinds k, abis abi )
-{
-	if( tyinfo ){
-		return create_value( tyinfo, val, k, abi );
-	} else {
-		return create_value( hint, val, k ,abi );
-	}
+	return create_value( tyinfo, val, vkind_value, abi_llvm );
 }
 
 sasl::code_generator::value_t cgs_sisd::emit_mul( value_t const& lhs, value_t const& rhs )
@@ -710,7 +669,7 @@ value_t cgs_sisd::emit_extract_ref( value_t const& lhs, int idx )
 		if( lhs.tyinfo() ){
 			tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
 		}
-		return value_t( tyinfo, elem_address, vkind_ref, lhs.abi(), this );
+		return create_value( tyinfo, elem_address, vkind_ref, lhs.abi() );
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -763,12 +722,7 @@ value_t cgs_sisd::emit_extract_val( value_t const& lhs, int idx )
 
 	// assert( elem_tyi || elem_hint != builtin_types::none );
 
-	if( elem_tyi ){
-		return value_t(elem_tyi, elem_val, vkind_value, abi, this );
-	} else {
-		return value_t(elem_hint, elem_val, vkind_value, abi, this );
-	}
-
+	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
 }
 
 value_t cgs_sisd::emit_extract_val( value_t const& lhs, value_t const& idx )
@@ -815,7 +769,7 @@ value_t cgs_sisd::emit_call( function_t const& fn, vector<value_t> const& args )
 	}
 
 	abis ret_abi = fn.c_compatible ? abi_c : abi_llvm;
-	return value_t( fn.get_return_ty().get(), ret_val, vkind_value, ret_abi, this );
+	return create_value( fn.get_return_ty().get(), ret_val, vkind_value, ret_abi );
 }
 
 value_t cgs_sisd::emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value )
@@ -829,12 +783,8 @@ value_t cgs_sisd::emit_insert_val( value_t const& lhs, value_t const& idx, value
 		new_value = builder().CreateInsertElement( agg, elem_value.load(), indexes[0] );
 	}
 	assert(new_value);
-
-	if( lhs.tyinfo() ){
-		return value_t( lhs.tyinfo(), new_value, vkind_value, lhs.abi(), this );
-	} else {
-		return value_t( lhs.hint(), new_value, vkind_value, lhs.abi(), this );
-	}
+	
+	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
 }
 
 value_t cgs_sisd::emit_insert_val( value_t const& lhs, int index, value_t const& elem_value )
@@ -844,18 +794,12 @@ value_t cgs_sisd::emit_insert_val( value_t const& lhs, int index, value_t const&
 	if( agg->getType()->isStructTy() ){
 		new_value = builder().CreateInsertValue( agg, elem_value.load(lhs.abi()), (unsigned)index );
 	} else if ( agg->getType()->isVectorTy() ){
-		value_t index_value( builtin_types::_sint32, int_(index), vkind_value, abi_llvm, this );
+		value_t index_value = create_value( builtin_types::_sint32, int_(index), vkind_value, abi_llvm );
 		return emit_insert_val( lhs, index_value, elem_value );
 	}
 	assert(new_value);
 
-	if( lhs.tyinfo() ){
-		return value_t( lhs.tyinfo(), new_value, vkind_value, lhs.abi(), this );
-	} else {
-		return value_t( lhs.hint(), new_value, vkind_value, lhs.abi(), this );
-	}
-
-
+	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
 }
 
 value_t cgs_sisd::emit_mul_mv( value_t const& lhs, value_t const& rhs )
@@ -868,7 +812,7 @@ value_t cgs_sisd::emit_mul_mv( value_t const& lhs, value_t const& rhs )
 
 	builtin_types ret_hint = vector_of( scalar_of(vhint), row_count );
 
-	value_t ret_v = null_value( ret_hint, lhs.abi_ );
+	value_t ret_v = null_value( ret_hint, lhs.abi() );
 	for( size_t irow = 0; irow < row_count; ++irow ){
 		value_t row_vec = emit_extract_val( lhs, irow );
 		ret_v = emit_insert_val( ret_v, irow, emit_dot_vv(row_vec, rhs) );
@@ -888,7 +832,7 @@ value_t cgs_sisd::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 
 	builtin_types out_row_hint = vector_of( scalar_of(lhint), out_v );
 	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
-	abis out_abi = lhs.abi_;
+	abis out_abi = lhs.abi();
 
 	vector<value_t> out_cells(out_v*out_r);
 	out_cells.resize( out_v*out_r );
@@ -926,7 +870,7 @@ value_t cgs_sisd::emit_extract_col( value_t const& lhs, size_t index )
 
 	builtin_types out_hint = vector_of( scalar_of(mat_hint), row_count );
 
-	value_t out_value = null_value( out_hint, lhs.abi_ );
+	value_t out_value = null_value( out_hint, lhs.abi() );
 	for( size_t irow = 0; irow < row_count; ++irow ){
 		value_t row = emit_extract_val( val, (int)irow );
 		value_t cell = emit_extract_val( row, (int)index );
@@ -967,14 +911,14 @@ value_t cgs_sisd::create_variable( builtin_types bt, abis abi, std::string const
 {
 	Type* var_ty = type_( bt, abi );
 	Value* var_val = builder().CreateAlloca( var_ty );
-	return value_t( bt, var_val, vkind_ref, abi, this );
+	return create_value( bt, var_val, vkind_ref, abi );
 }
 
 value_t cgs_sisd::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
 {
 	Type* var_ty = type_(ty, abi);
 	Value* var_val = builder().CreateAlloca( var_ty );
-	return value_t( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi, this );
+	return create_value( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi );
 }
 
 value_tyinfo* cgs_sisd::member_tyinfo( value_tyinfo const* agg, size_t index ) const
@@ -1199,7 +1143,7 @@ value_t cgs_sisd::undef_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
 	Type* valty = get_llvm_type( context(), bt, abi == abi_c );
-	value_t val = value_t( bt, UndefValue::get(valty), vkind_value, abi, this );
+	value_t val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
 	return val;
 }
 
@@ -1377,6 +1321,11 @@ llvm::Value* cgs_sisd::load_ref( value_t const& v )
 	return NULL;
 }
 
+abis cgs_sisd::intrinsic_abi() const
+{
+	return abi_llvm;
+}
+
 void function_t::arg_name( size_t index, std::string const& name ){
 	size_t param_size = fn->arg_size();
 	if( first_arg_is_return_address() ){
@@ -1412,7 +1361,7 @@ void function_t::args_name( vector<string> const& names )
 
 shared_ptr<value_tyinfo> function_t::get_return_ty() const{
 	assert( fnty->is_function() );
-	return shared_ptr<value_tyinfo>( cg->node_ctxt( fnty->retval_type, false )->get_tysp() );
+	return shared_ptr<value_tyinfo>( cg->node_ctxt( fnty->retval_type.get(), false )->get_tysp() );
 }
 
 size_t function_t::arg_size() const{
@@ -1431,7 +1380,7 @@ value_t function_t::arg( size_t index ) const
 	if( first_arg_is_return_address() ){ ++arg_index; }
 
 	shared_ptr<parameter> par = fnty->params[index];
-	value_tyinfo* par_typtr = cg->node_ctxt( par, false )->get_typtr();
+	value_tyinfo* par_typtr = cg->node_ctxt( par.get(), false )->get_typtr();
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
 	for( size_t idx_counter = 0; idx_counter < arg_index; ++idx_counter ){

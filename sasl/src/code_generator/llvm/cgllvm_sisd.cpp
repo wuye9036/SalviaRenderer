@@ -1078,7 +1078,7 @@ cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val ){
 
 cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if_need /*= false */ )
 {
-	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);
+	return cgllvm_impl::node_ctxt( &v, create_if_need);
 }
 
 llvm_module_impl* cgllvm_sisd::mod_ptr(){
@@ -1090,88 +1090,5 @@ cg_service* cgllvm_sisd::service() const
 {
 	return const_cast<cgllvm_sisd*>(this);
 }
-
-SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
-{
-	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
-
-	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
-		shared_ptr<function_type> intr_fn = intr->node()->as_handle<function_type>();
-		
-		// If intrinsic is not invoked, we don't generate code for it.
-		if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
-			continue;
-		}
-
-		any child_ctxt = cgllvm_sctxt();
-
-		visit_child( child_ctxt, intr_fn );
-
-		cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
-		assert( intrinsic_ctxt );
-
-		push_fn( intrinsic_ctxt->data().self_fn );
-		scope_guard<void> pop_fn_on_exit( bind( &cgs_sisd::pop_fn, this ) );
-
-		insert_point_t ip_body = new_block( ".body", true );
-
-		// Parse Parameter Informations
-		vector< shared_ptr<tynode> > par_tys;
-		vector<builtin_types> par_tycodes;
-		vector<cgllvm_sctxt*> par_ctxts;
-
-		BOOST_FOREACH( shared_ptr<parameter> const& par, intr_fn->params )
-		{
-			par_tys.push_back( par->si_ptr<type_info_si>()->type_info() );
-			assert( par_tys.back() );
-			par_tycodes.push_back( par_tys.back()->tycode );
-			par_ctxts.push_back( node_ctxt(par, false) );
-			assert( par_ctxts.back() );
-		}
-
-		shared_ptr<value_tyinfo> result_ty = fn().get_return_ty();
-		
-		fn().inline_hint();
-
-		// Process Intrinsic
-		if( intr->unmangled_name() == "mul" ){
-			
-			assert( par_tys.size() == 2 );
-
-			// Set Argument name
-			fn().arg_name( 0, ".lhs" );
-			fn().arg_name( 1, ".rhs" );
-
-			value_t ret_val = emit_mul( fn().arg(0), fn().arg(1) );
-			emit_return( ret_val, abi_llvm );
-
-		} else if( intr->unmangled_name() == "dot" ) {
-			
-			assert( par_tys.size() == 2 );
-
-			// Set Argument name
-			fn().arg_name( 0, ".lhs" );
-			fn().arg_name( 1, ".rhs" );
-
-			value_t ret_val = emit_dot( fn().arg(0), fn().arg(1) );
-			emit_return( ret_val, abi_llvm );
-
-		} else if( intr->unmangled_name() == "sqrt" ){
-			assert( par_tys.size() == 1 );
-			fn().arg_name( 0, ".value" );
-			value_t ret_val = emit_sqrt( fn().arg(0) );
-			emit_return( ret_val, abi_llvm );
-		} else if( intr->unmangled_name() == "cross" ){
-			assert( par_tys.size() == 2 );
-			fn().arg_name( 0, ".lhs" );
-			fn().arg_name( 1, ".rhs" );
-			value_t ret_val = emit_cross( fn().arg(0), fn().arg(1) );
-			emit_return( ret_val, abi_llvm );
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	}
-}
-
 
 END_NS_SASL_CODE_GENERATOR();

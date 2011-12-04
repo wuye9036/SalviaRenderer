@@ -72,16 +72,18 @@ protected:
 	SASL_VISIT_DCL( declaration ){}
 	SASL_VISIT_DCL( program );
 
+	/// It is called in program visitor BEFORE declaration was visited.
+	/// If any additional initialization you want to add before visit, override it.
+	/// DONT FORGET call parent function before your code.
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program ) = 0;
+	SASL_SPECIFIC_VISIT_DCL( process_intrinsics, program );
 
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );
 
-	template <typename NodeT, typename ContextT >
-	ContextT* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
-	template<typename ContextT>
-	ContextT* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
+	template <typename NodeT>
+	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
 
 	// Direct access member from module.
 	llvm::DefaultIRBuilder*	builder() const;

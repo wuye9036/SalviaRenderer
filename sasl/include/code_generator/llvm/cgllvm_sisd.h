@@ -79,11 +79,7 @@ public:
 protected:
 	cg_service* service() const;
 
-	SASL_SPECIFIC_VISIT_DCL( process_intrinsics, program );
 
-	// It is called in program visitor BEFORE declaration was visited.
-	// If any additional initialization you want to add before visit, override it.
-	// DONT FORGET call parent function before your code.
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 
 	// Called by function_type visitor.
@@ -111,7 +107,7 @@ protected:
 	// Override node_ctxt of cgllvm_impl
 	template <typename NodeT >
 	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const& v, bool create_if_need = false ){
-		return cgllvm_impl::node_ctxt<NodeT, cgllvm_sctxt>(v, create_if_need);
+		return cgllvm_impl::node_ctxt<NodeT>(v, create_if_need);
 	}
 	//cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& v, bool create_if_need = false ){
 	//	return cgllvm_impl::node_ctxt<cgllvm_sctxt>(v, create_if_need);

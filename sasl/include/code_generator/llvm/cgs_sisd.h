@@ -57,61 +57,10 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 class cgllvm_sctxt;
 class llvm_intrin_cache;
 
-template <typename RVT>
-struct scope_guard{
-	typedef boost::function<RVT ()> on_exit_fn;
-	scope_guard( on_exit_fn do_exit ): do_exit(do_exit){}
-	~scope_guard(){ do_exit(); }
-private:
-	on_exit_fn do_exit;
-};
-
-struct function_t{
-	function_t();
-
-	EFLIB_OPERATOR_BOOL( function_t ){ return NULL != fn; }
-
-	/// Get argument's value by index.
-	value_t arg( size_t index ) const;
-	/// Get argument size.
-	size_t arg_size() const;
-	/// Set argument name.
-	void arg_name( size_t index, std::string const& );
-	/// Set arguments name. Size of names must be less than argument size.
-	void args_name( std::vector<std::string> const& names );
-	/// Return true if argument is a reference.
-	bool arg_is_ref( size_t index ) const;
-	/// Return true if first argument is pointer to return value.
-	bool first_arg_is_return_address() const;
-	/// Get ABI
-	abis abi() const;
-	/// Get return address value.
-	llvm::Value* return_address() const;
-	/// Return name
-	void return_name( std::string const& s );
-	/// Set Inline hint
-	void inline_hint();
-
-	boost::shared_ptr<value_tyinfo> get_return_ty() const;
-
-	std::vector<llvm::Argument*>		argCache;
-	sasl::syntax_tree::function_type*	fnty;
-	llvm::Function*						fn;
-	bool								c_compatible;
-	bool								ret_void;
-	cgs_sisd*							cg;
-};
-
-struct insert_point_t{
-	insert_point_t();
-
-	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != NULL; }
-
-	llvm::BasicBlock* block;
-};
-
 class cgs_sisd: public cg_service{
 public:
+	abis intrinsic_abi() const;
+
 	/** @name Emit expressions
 	Some simple overloadable operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
@@ -120,8 +69,7 @@ public:
 	value_t emit_add( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul( value_t const& lhs, value_t const& rhs );
-	value_t emit_dot( value_t const& lhs, value_t const& rhs );
-
+	
 	value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_le( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_eq( value_t const& lhs, value_t const& rhs );
@@ -140,8 +88,6 @@ public:
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
-
-	value_t emit_cross( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_extract_col( value_t const& lhs, size_t index );
 
@@ -172,7 +118,9 @@ public:
 
 	/// @name Intrinsics
 	/// @{
+	value_t emit_dot( value_t const& lhs, value_t const& rhs );
 	value_t emit_sqrt( value_t const& lhs );
+	value_t emit_cross( value_t const& lhs, value_t const& rhs );
 	/// @}
 
 	/// @name Emit type casts
@@ -206,12 +154,6 @@ public:
 	insert_point_t insert_point() const;
 	/// @}
 
-	/// @name Context queries
-	/// @{
-	bool in_function() const;
-	function_t& fn();
-	/// @}
-
 	/// @name Emit statement
 	/// @{
 	void emit_return();
@@ -231,10 +173,6 @@ public:
 	value_t null_value( value_tyinfo* tyinfo, abis abi );
 	value_t null_value( builtin_types bt, abis abi );
 	value_t undef_value( builtin_types bt, abis abi );
-
-	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
-	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
-	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 
 	template <typename T>
 	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
@@ -290,8 +228,6 @@ public:
 	/// @name Utilities
 	/// @{
 	
-	/// Create a new block at the last of function
-	insert_point_t new_block( std::string const& hint, bool set_insert_point );
 	/// Jump to the specified block.
 	void jump_to( insert_point_t const& );
 	/// Jump to the specified block by condition.
@@ -329,11 +265,7 @@ public:
 	/// Prefer to use scalar code to intrinsic.
 	bool prefer_scalar_code() const;
 	/// @}
-private:
-	std::vector<function_t> fn_ctxts;
 
-protected:
-	llvm_intrin_cache intrins;
 };
 
 END_NS_SASL_CODE_GENERATOR();

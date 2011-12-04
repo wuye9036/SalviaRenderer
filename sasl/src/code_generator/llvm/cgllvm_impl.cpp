@@ -20,6 +20,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -28,6 +29,8 @@ using namespace sasl::syntax_tree;
 using namespace sasl::semantic;
 using namespace llvm;
 using namespace sasl::utility;
+
+using boost::bind;
 
 using std::vector;
 
@@ -97,7 +100,7 @@ SASL_VISIT_DEF( program )
 		);
 
 	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter
-		= boost::bind( &cgllvm_impl::node_ctxt<node, cgllvm_sctxt>, this, _1, false );
+		= boost::bind( &cgllvm_impl::node_ctxt<node>, this, _1, false );
 	caster = create_caster( ctxt_getter, service() );
 	add_builtin_casts( caster, msi->pety() );
 
@@ -110,6 +113,88 @@ SASL_VISIT_DEF( program )
 		it = v.decls.begin(); it != v.decls.end(); ++it )
 	{
 		visit_child( child_ctxt, (*it) );
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
+{
+	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
+
+	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
+		shared_ptr<function_type> intr_fn = intr->node()->as_handle<function_type>();
+		
+		// If intrinsic is not invoked, we don't generate code for it.
+		if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
+			continue;
+		}
+
+		any child_ctxt = cgllvm_sctxt();
+
+		visit_child( child_ctxt, intr_fn );
+
+		cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
+		assert( intrinsic_ctxt );
+
+		service()->push_fn( intrinsic_ctxt->data().self_fn );
+		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, service() ) );
+
+		insert_point_t ip_body = service()->new_block( ".body", true );
+
+		// Parse Parameter Informations
+		vector< shared_ptr<tynode> > par_tys;
+		vector<builtin_types> par_tycodes;
+		vector<cgllvm_sctxt*> par_ctxts;
+
+		BOOST_FOREACH( shared_ptr<parameter> const& par, intr_fn->params )
+		{
+			par_tys.push_back( par->si_ptr<type_info_si>()->type_info() );
+			assert( par_tys.back() );
+			par_tycodes.push_back( par_tys.back()->tycode );
+			par_ctxts.push_back( node_ctxt(par, false) );
+			assert( par_ctxts.back() );
+		}
+
+		shared_ptr<value_tyinfo> result_ty = service()->fn().get_return_ty();
+		
+		service()->fn().inline_hint();
+
+		// Process Intrinsic
+		if( intr->unmangled_name() == "mul" ){
+			
+			assert( par_tys.size() == 2 );
+
+			// Set Argument name
+			service()->fn().arg_name( 0, ".lhs" );
+			service()->fn().arg_name( 1, ".rhs" );
+
+			value_t ret_val = service()->emit_mul( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret_val, abi_llvm );
+
+		} else if( intr->unmangled_name() == "dot" ) {
+			
+			assert( par_tys.size() == 2 );
+
+			// Set Argument name
+			service()->fn().arg_name( 0, ".lhs" );
+			service()->fn().arg_name( 1, ".rhs" );
+
+			value_t ret_val = service()->emit_dot( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret_val, abi_llvm );
+
+		} else if( intr->unmangled_name() == "sqrt" ){
+			assert( par_tys.size() == 1 );
+			service()->fn().arg_name( 0, ".value" );
+			value_t ret_val = service()->emit_sqrt( service()->fn().arg(0) );
+			service()->emit_return( ret_val, abi_llvm );
+		} else if( intr->unmangled_name() == "cross" ){
+			assert( par_tys.size() == 2 );
+			service()->fn().arg_name( 0, ".lhs" );
+			service()->fn().arg_name( 1, ".rhs" );
+			value_t ret_val = service()->emit_cross( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret_val, abi_llvm );
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 }
 

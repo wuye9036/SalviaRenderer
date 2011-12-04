@@ -24,16 +24,11 @@ any& cgllvm_impl::visit_child( any& child_ctxt, shared_ptr<NodeT> const& child )
 	return child_ctxt;
 }
 
-template<typename NodeT, typename ContextT>
-ContextT* cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if_need ){
+template<typename NodeT>
+cgllvm_sctxt* cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if_need ){
 	if ( !nd ){ return NULL; }
 	node* ptr = static_cast<node*>(nd.get());
 	return node_ctxt( ptr, create_if_need );
-}
-
-template<typename ContextT>
-ContextT* cgllvm_impl::node_ctxt( node& nd, bool create_if_need ){
-	return node_ctxt<node, ContextT>(nd.as_handle(), create_if_need);
 }
 
 END_NS_SASL_CODE_GENERATOR();

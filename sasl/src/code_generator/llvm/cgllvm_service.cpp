@@ -15,6 +15,7 @@ using llvm::LLVMContext;
 using llvm::DefaultIRBuilder;
 using llvm::Value;
 using llvm::Type;
+using llvm::BasicBlock;
 
 using boost::shared_ptr;
 
@@ -248,6 +249,8 @@ void			value_t::parent( value_t const* v ){ if(v){ parent(*v); } }
 value_t*		value_t::parent() const { return parent_.get(); }
 /// @}
 
+
+
 bool cg_service::initialize( llvm_module_impl* mod, node_ctxt_fn const& fn )
 {
 	assert ( mod );
@@ -268,6 +271,48 @@ LLVMContext& cg_service::context() const{
 
 DefaultIRBuilder& cg_service::builder() const{
 	return *( mod_impl->builder() );
+}
+
+value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_kinds k, abis abi ){
+	return value_t( tyinfo, val, k, abi, this );
+}
+
+value_t cg_service::create_value( builtin_types hint, Value* val, value_kinds k, abis abi )
+{
+	return value_t( hint, val, k, abi, this );
+}
+
+value_t cg_service::create_value( value_tyinfo* tyinfo, builtin_types hint, Value* val, value_kinds k, abis abi )
+{
+	if( tyinfo ){
+		return create_value( tyinfo, val, k, abi );
+	} else {
+		return create_value( hint, val, k ,abi );
+	}
+}
+
+insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
+{
+	assert( in_function() );
+
+	insert_point_t ret;
+
+	ret.block = BasicBlock::Create( context(), hint, fn().fn );
+	// dbg_print_blocks( fn().fn );
+
+	if( set_as_current ){
+		set_insert_point( ret );
+	}
+
+	return ret;
+}
+
+bool cg_service::in_function() const{
+	return !fn_ctxts.empty();
+}
+
+function_t& cg_service::fn(){
+	return fn_ctxts.back();
 }
 
 END_NS_SASL_CODE_GENERATOR();

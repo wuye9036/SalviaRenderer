@@ -3,8 +3,10 @@
 
 #include <sasl/include/code_generator/forward.h>
 
+#include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/enums/builtin_types.h>
 
+#include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -17,6 +19,9 @@ namespace llvm{
 	class Module;
 	class Type;
 	class Value;
+	class Argument;
+	class Function;
+	class BasicBlock;
 
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -30,6 +35,7 @@ namespace sasl{
 	namespace syntax_tree{
 		struct node;
 		struct tynode;
+		struct function_type;
 	}
 }
 
@@ -106,7 +112,7 @@ protected:
 
 class value_t{
 public:
-	friend class cgs_sisd;
+	friend class cg_service;
 
 	value_t();
 	value_t( value_t const& );
@@ -160,6 +166,9 @@ public:
 	value_t swizzle( size_t swz_code ) const;
 	value_t to_rvalue() const;
 	/// @}
+
+	static value_t slice( value_t const& vec, uint32_t masks );
+
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
@@ -174,7 +183,7 @@ protected:
 		cg_service* cg
 		);
 
-	static value_t slice( value_t const& vec, uint32_t masks );
+	
 	/// @}
 
 	/// @name Members
@@ -194,11 +203,69 @@ protected:
 	/// @}
 };
 
+template <typename RVT>
+struct scope_guard{
+	typedef boost::function<RVT ()> on_exit_fn;
+	scope_guard( on_exit_fn do_exit ): do_exit(do_exit){}
+	~scope_guard(){ do_exit(); }
+private:
+	on_exit_fn do_exit;
+};
+
+struct function_t{
+	function_t();
+
+	EFLIB_OPERATOR_BOOL( function_t ){ return NULL != fn; }
+
+	/// Get argument's value by index.
+	value_t arg( size_t index ) const;
+	/// Get argument size.
+	size_t arg_size() const;
+	/// Set argument name.
+	void arg_name( size_t index, std::string const& );
+	/// Set arguments name. Size of names must be less than argument size.
+	void args_name( std::vector<std::string> const& names );
+	/// Return true if argument is a reference.
+	bool arg_is_ref( size_t index ) const;
+	/// Return true if first argument is pointer to return value.
+	bool first_arg_is_return_address() const;
+	/// Get ABI
+	abis abi() const;
+	/// Get return address value.
+	llvm::Value* return_address() const;
+	/// Return name
+	void return_name( std::string const& s );
+	/// Set Inline hint
+	void inline_hint();
+
+	boost::shared_ptr<value_tyinfo> get_return_ty() const;
+
+	std::vector<llvm::Argument*>		argCache;
+	sasl::syntax_tree::function_type*	fnty;
+	llvm::Function*						fn;
+	bool								c_compatible;
+	bool								ret_void;
+	cg_service*							cg;
+};
+
+struct insert_point_t{
+	insert_point_t();
+
+	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != NULL; }
+
+	llvm::BasicBlock* block;
+};
+
 class cg_service
 {
 public:
 	typedef boost::function< cgllvm_sctxt* (sasl::syntax_tree::node*, bool) > node_ctxt_fn;
 	virtual bool initialize( llvm_module_impl* mod, node_ctxt_fn const& fn );
+
+	/// @name Service States
+	/// @{
+	virtual abis intrinsic_abi() const = 0;
+	/// @}
 
 	/// @name Value Operators
 	/// @{
@@ -206,6 +273,25 @@ public:
 	virtual llvm::Value* load( value_t const& , abis abi ) = 0;
 	virtual llvm::Value* load_ref( value_t const& ) = 0;
 	virtual void store( value_t& lhs, value_t const& rhs ) = 0;
+	/// @}
+
+	/** @name Emit expressions
+	Some simple overloadable operators such as '+' '-' '*' '/'
+	will be implemented in 'cgv_*' classes in operator overload form.
+	@{ */
+
+	virtual value_t emit_add( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs ) = 0;
+	
+
+	/// @}
+
+	/// @name Intrinsics
+	/// @{
+	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_sqrt( value_t const& lhs ) = 0;
+	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs ) = 0;
 	/// @}
 
 	/// @name Emit type casts
@@ -224,14 +310,49 @@ public:
 	virtual value_t cast_f2b( value_t const& v ) = 0;
 	/// @}
 
+	/// @name Emit statement
+	/// @{
+	virtual void emit_return() = 0;
+	virtual void emit_return( value_t const&, abis abi ) = 0;
+	/// @}
+
+	/// @name Context switchs
+	/// @{
+	virtual void push_fn( function_t const& fn ) = 0;
+	virtual void pop_fn() = 0;
+
+	virtual void set_insert_point( insert_point_t const& ip ) = 0;
+	virtual insert_point_t insert_point() const = 0;
+	/// @}
+
+	/// @name Context queries
+	/// @{
+	bool in_function() const;
+	function_t& fn();
+	/// @}
+
+	/// @name Utilities
+	/// @{
+	
+	/// Create a new block at the last of function
+	insert_point_t new_block( std::string const& hint, bool set_insert_point );
+	
+	/// @}
+	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
+
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi ) = 0;
 
 	llvm::Module*			module () const;
 	llvm::LLVMContext&		context() const;
 	llvm::DefaultIRBuilder& builder() const;
 
-protected:
 	node_ctxt_fn			node_ctxt;
+
+protected:
+	std::vector<function_t> fn_ctxts;
+	llvm_intrin_cache		intrins;
 	llvm_module_impl*		mod_impl;
 };
 
