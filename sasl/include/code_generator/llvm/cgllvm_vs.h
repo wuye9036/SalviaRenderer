@@ -74,7 +74,6 @@ private:
 
 	bool is_entry( llvm::Function* ) const;
 
-	virtual bool create_mod( sasl::syntax_tree::program& v );
 	cgllvm_modvs* mod_ptr();
 
 	boost::shared_ptr<sasl::semantic::symbol> find_symbol( cgllvm_sctxt* data, std::string const& str );

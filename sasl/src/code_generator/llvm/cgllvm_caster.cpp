@@ -50,13 +50,13 @@ using namespace sasl::utility;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class cgs_sisd;
+class cg_service;
 
 typedef function< cgllvm_sctxt* ( shared_ptr<node> const& ) > get_ctxt_fn;
 
 class cgllvm_caster : public caster_t{
 public:
-	cgllvm_caster( get_ctxt_fn get_ctxt, cgs_sisd* cgs )
+	cgllvm_caster( get_ctxt_fn get_ctxt, cg_service* cgs )
 		: get_ctxt(get_ctxt), cgs(cgs)
 	{
 	}
@@ -173,7 +173,7 @@ public:
 	}
 private:
 	get_ctxt_fn get_ctxt;
-	cgs_sisd* cgs;
+	cg_service* cgs;
 };
 
 void add_builtin_casts(
@@ -381,7 +381,7 @@ void add_builtin_casts(
 
 shared_ptr<caster_t> create_caster(
 	get_ctxt_fn const& get_ctxt,
-	cgs_sisd* cgs
+	cg_service* cgs
 	)
 {
 	return boost::make_shared<cgllvm_caster>( get_ctxt, cgs );

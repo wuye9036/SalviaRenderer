@@ -3,16 +3,14 @@
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
 
-BEGIN_NS_SASL_CODE_GENERATOR();
-
 #define SASL_VISITOR_TYPE_NAME cgllvm_simd
+
+BEGIN_NS_SASL_CODE_GENERATOR();
 
 cgllvm_simd::~cgllvm_simd(){}
 
-bool cgllvm_simd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return false;
+cg_service* cgllvm_simd::service() const{
+	return const_cast<cgllvm_simd*>(this);
 }
 
 SASL_VISIT_DEF_UNIMPL( unary_expression );
@@ -57,7 +55,9 @@ SASL_VISIT_DEF_UNIMPL( expression_statement );
 SASL_VISIT_DEF_UNIMPL( jump_statement );
 SASL_VISIT_DEF_UNIMPL( labeled_statement );
 
-// program
-SASL_VISIT_DEF_UNIMPL( program );
+SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
 
 END_NS_SASL_CODE_GENERATOR();

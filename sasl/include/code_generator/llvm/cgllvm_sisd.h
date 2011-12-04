@@ -44,12 +44,6 @@ class cgllvm_sisd: public cgllvm_impl, public cgs_sisd{
 
 public:
 	~cgllvm_sisd();
-	bool generate(
-		sasl::semantic::module_si* mod,
-		sasl::semantic::abi_info const* abii
-	);
-
-	SASL_VISIT_DCL( program );
 
 	SASL_VISIT_DCL( binary_expression );
 	SASL_VISIT_DCL( member_expression );
@@ -83,6 +77,8 @@ public:
 	SASL_VISIT_DCL( switch_statement );
 	SASL_VISIT_DCL( labeled_statement );
 protected:
+	cg_service* service() const;
+
 	SASL_SPECIFIC_VISIT_DCL( process_intrinsics, program );
 
 	// It is called in program visitor BEFORE declaration was visited.
@@ -112,8 +108,6 @@ protected:
 		boost::shared_ptr<sasl::syntax_tree::node> const& no
 		);
 
-	virtual bool create_mod( sasl::syntax_tree::program& v ) = 0;
-
 	// Override node_ctxt of cgllvm_impl
 	template <typename NodeT >
 	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const& v, bool create_if_need = false ){
@@ -125,10 +119,6 @@ protected:
 	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 
 	void mask_to_indexes( char index[4], uint32_t mask );
-
-	// For type conversation.
-	boost::function<cgllvm_sctxt*( boost::shared_ptr<sasl::syntax_tree::node> const& )> ctxt_getter;
-	boost::shared_ptr< ::sasl::semantic::caster_t > caster;
 
 	llvm_module_impl* mod_ptr();
 };

@@ -27,7 +27,7 @@ namespace llvm{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
-class cgs_sisd;
+class cg_service;
 
 typedef boost::function<
 		cgllvm_sctxt* ( boost::shared_ptr<sasl::syntax_tree::node> const& )
@@ -35,7 +35,7 @@ typedef boost::function<
 
 boost::shared_ptr< ::sasl::semantic::caster_t> create_caster(
 		get_ctxt_fn const& get_ctxt,
-		cgs_sisd* cgs
+		cg_service* cgs
 		);
 
 void add_builtin_casts(

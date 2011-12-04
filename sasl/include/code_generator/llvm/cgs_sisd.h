@@ -67,12 +67,9 @@ private:
 };
 
 struct function_t{
-	EFLIB_OPERATOR_BOOL( function_t )
-	{
-		return NULL != fn;
-	}
-
 	function_t();
+
+	EFLIB_OPERATOR_BOOL( function_t ){ return NULL != fn; }
 
 	/// Get argument's value by index.
 	value_t arg( size_t index ) const;
@@ -106,12 +103,9 @@ struct function_t{
 };
 
 struct insert_point_t{
-	EFLIB_OPERATOR_BOOL( insert_point_t )
-	{
-		return block != NULL;
-	}
-
 	insert_point_t();
+
+	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != NULL; }
 
 	llvm::BasicBlock* block;
 };

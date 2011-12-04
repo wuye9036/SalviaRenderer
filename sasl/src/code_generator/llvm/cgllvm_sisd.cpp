@@ -87,21 +87,6 @@ void cgllvm_sisd::mask_to_indexes( char indexes[4], uint32_t mask ){
 	}
 }
 
-bool cgllvm_sisd::generate( sasl::semantic::module_si* mod, sasl::semantic::abi_info const* abii ){
-	this->msi = mod;
-	this->abii = abii;
-
-	if ( msi ){
-		assert( msi->root() );
-		assert( msi->root()->node() );
-
-		msi->root()->node()->accept( this, NULL );
-		return true;
-	}
-
-	return false;
-}
-
 value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
 {
 	// NOTE
@@ -152,23 +137,6 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 	}
 
 	return result_value;
-}
-SASL_VISIT_DEF( program ){
-	// Create module.
-	if( !create_mod( v ) ){
-		return;
-	}
-
-	// Initialization.
-	before_decls_visit( v, data );
-
-	// visit declarations
-	any child_ctxt = cgllvm_sctxt();
-	for( vector< shared_ptr<declaration> >::iterator
-		it = v.decls.begin(); it != v.decls.end(); ++it )
-	{
-		visit_child( child_ctxt, (*it) );
-	}
 }
 
 SASL_VISIT_DEF( binary_expression ){
@@ -940,15 +908,6 @@ SASL_VISIT_DEF( for_statement ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
-	mod_ptr()->create_module( v.name );
-
-	cg_service::initialize( mod_ptr(), boost::bind(static_cast<cgllvm_sctxt*(cgllvm_impl::*)(node*, bool)>(&cgllvm_impl::node_ctxt), this, _1, _2) );
-
-	ctxt_getter = boost::bind( &cgllvm_sisd::node_ctxt<node>, this, _1, false );
-
-	caster = create_caster( ctxt_getter, this );
-	add_builtin_casts( caster, msi->pety() );
-
 	// Instrinsics will be generated before code was 
 	process_intrinsics( v, data );
 }
@@ -1125,6 +1084,11 @@ cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if
 llvm_module_impl* cgllvm_sisd::mod_ptr(){
 	assert( dynamic_cast<llvm_module_impl*>( mod.get() ) );
 	return static_cast<llvm_module_impl*>( mod.get() );
+}
+
+cg_service* cgllvm_sisd::service() const
+{
+	return const_cast<cgllvm_sisd*>(this);
 }
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )

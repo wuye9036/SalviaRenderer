@@ -10,6 +10,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <vector>
+
 namespace llvm{
 	class LLVMContext;
 	class Module;
@@ -205,6 +207,24 @@ public:
 	virtual llvm::Value* load_ref( value_t const& ) = 0;
 	virtual void store( value_t& lhs, value_t const& rhs ) = 0;
 	/// @}
+
+	/// @name Emit type casts
+	/// @{
+	/// Cast between integer types.
+	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	/// Cast integer to float.
+	virtual value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	/// Cast float to integer.
+	virtual value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	/// Cast between float types.
+	virtual value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	/// Cast integer to bool
+	virtual value_t cast_i2b( value_t const& v ) = 0;
+	/// Cast float to bool
+	virtual value_t cast_f2b( value_t const& v ) = 0;
+	/// @}
+
+	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi ) = 0;
 
 	llvm::Module*			module () const;
 	llvm::LLVMContext&		context() const;

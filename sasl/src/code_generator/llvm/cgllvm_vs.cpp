@@ -436,13 +436,6 @@ cgllvm_modvs* cgllvm_vs::mod_ptr(){
 	return static_cast<cgllvm_modvs*>( mod.get() );
 }
 
-bool cgllvm_vs::create_mod( sasl::syntax_tree::program& v )
-{
-	if ( mod ){ return false; }
-	mod = create_codegen_context<cgllvm_modvs>( v.as_handle() );
-	return true;
-}
-
 boost::shared_ptr<sasl::semantic::symbol> cgllvm_vs::find_symbol( cgllvm_sctxt* data, std::string const& str ){
 	return data->env().sym.lock()->find( str );
 }

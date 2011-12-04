@@ -3,6 +3,8 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
+#include <sasl/include/code_generator/llvm/cgs_simd.h>
+
 namespace sasl{
 	namespace semantic{
 		class module_si;
@@ -13,15 +15,10 @@ namespace sasl{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 // Code generation for SIMD( Single Instruction Multiple Data )
-class cgllvm_simd: public cgllvm_impl{
+class cgllvm_simd: public cgllvm_impl, public cgs_simd{
 public:
 	
 	~cgllvm_simd();
-
-	bool generate(
-		sasl::semantic::module_si* mod,
-		sasl::semantic::abi_info const* abii
-	);
 
 	// expression
 	SASL_VISIT_DCL( unary_expression );
@@ -66,8 +63,10 @@ public:
 	SASL_VISIT_DCL( jump_statement );
 	SASL_VISIT_DCL( labeled_statement );
 
-	// program
-	SASL_VISIT_DCL( program );
+protected:
+	cg_service* service() const;
+
+	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 };
 
 END_NS_SASL_CODE_GENERATOR();

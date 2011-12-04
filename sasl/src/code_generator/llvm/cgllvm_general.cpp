@@ -111,10 +111,4 @@ llvm_module_impl* cgllvm_general::mod_ptr(){
 	return static_cast<llvm_module_impl*>( mod.get() );
 }
 
-bool cgllvm_general::create_mod( sasl::syntax_tree::program& v ){
-	if ( mod ){ return false; }
-	mod = create_codegen_context<llvm_module_impl>( v.as_handle() );
-	return true;
-}
-
 END_NS_SASL_CODE_GENERATOR();

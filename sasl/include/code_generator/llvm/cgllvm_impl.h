@@ -20,6 +20,7 @@ namespace sasl{
 	namespace semantic{
 		class module_si;
 		class abi_info;
+		class caster_t;
 	}
 }
 
@@ -57,6 +58,10 @@ public:
 class cgllvm_impl: public cgllvm{
 public:
 	boost::shared_ptr<llvm_module> cg_module() const;
+	bool generate(
+		sasl::semantic::module_si* mod,
+		sasl::semantic::abi_info const* abii
+		);
 
 	// Get context by node.
 	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node* n, bool create_if_need = false );
@@ -65,6 +70,9 @@ protected:
 	cgllvm_impl(): abii(NULL), msi(NULL){}
 
 	SASL_VISIT_DCL( declaration ){}
+	SASL_VISIT_DCL( program );
+
+	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program ) = 0;
 
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
@@ -76,11 +84,12 @@ protected:
 	ContextT* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 
 	// Direct access member from module.
-	llvm::DefaultIRBuilder* builder() const;
-	llvm::LLVMContext& context() const;
-	llvm::Module* module() const;
-
+	llvm::DefaultIRBuilder*	builder() const;
+	llvm::LLVMContext&		context() const;
+	llvm::Module*			module() const;
+	
 protected:
+	virtual cg_service*		service() const = 0;
 
 	// Store global informations
 	sasl::semantic::module_si* msi;
@@ -88,6 +97,9 @@ protected:
 
 	boost::shared_ptr<llvm_module_impl> mod;
 	
+	// For type conversation.
+	boost::shared_ptr< ::sasl::semantic::caster_t > caster;
+
 	// Store node-context pairs.
 	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;
 	ctxts_t ctxts ;

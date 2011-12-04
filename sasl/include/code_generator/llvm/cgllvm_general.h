@@ -71,7 +71,6 @@ public:
 
 	
 private:
-	virtual bool create_mod( sasl::syntax_tree::program& v );
 	llvm_module_impl* mod_ptr();
 };
 
