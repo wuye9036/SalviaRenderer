@@ -67,6 +67,10 @@ typedef cgllvm_sctxt* sctxt_handle;
 cgllvm_general::cgllvm_general()
 {}
 
+SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
+{
+}
+
 SASL_VISIT_DEF( cast_expression ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	//any child_ctxt_init = *data;

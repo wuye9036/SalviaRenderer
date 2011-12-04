@@ -13,6 +13,11 @@ cg_service* cgllvm_simd::service() const{
 	return const_cast<cgllvm_simd*>(this);
 }
 
+void cgllvm_simd::create_entries()
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF_UNIMPL( cast_expression );
 SASL_VISIT_DEF_UNIMPL( binary_expression );
@@ -57,7 +62,7 @@ SASL_VISIT_DEF_UNIMPL( labeled_statement );
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	create_entries();
 }
 
 END_NS_SASL_CODE_GENERATOR();

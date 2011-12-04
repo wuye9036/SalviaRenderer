@@ -65,6 +65,7 @@ public:
 
 protected:
 	cg_service* service() const;
+	void create_entries();
 
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 };

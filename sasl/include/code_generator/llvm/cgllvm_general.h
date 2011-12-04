@@ -68,7 +68,8 @@ public:
 	SASL_VISIT_DCL( alias_type );
 
 	// statement
-
+protected:
+	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 	
 private:
 	llvm_module_impl* mod_ptr();

@@ -79,9 +79,6 @@ public:
 protected:
 	cg_service* service() const;
 
-
-	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
-
 	// Called by function_type visitor.
 	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );

@@ -907,11 +907,6 @@ SASL_VISIT_DEF( for_statement ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
-	// Instrinsics will be generated before code was 
-	process_intrinsics( v, data );
-}
-
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	any child_ctxt_init = *data;
 	sc_ptr(child_ctxt_init)->clear_data();

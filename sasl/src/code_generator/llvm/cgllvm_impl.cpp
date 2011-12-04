@@ -103,6 +103,8 @@ SASL_VISIT_DEF( program )
 		= boost::bind( &cgllvm_impl::node_ctxt<node>, this, _1, false );
 	caster = create_caster( ctxt_getter, service() );
 	add_builtin_casts( caster, msi->pety() );
+	
+	process_intrinsics( v, data );
 
 	// Some other initializations.
 	before_decls_visit( v, data );
@@ -114,6 +116,11 @@ SASL_VISIT_DEF( program )
 	{
 		visit_child( child_ctxt, (*it) );
 	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
+{
+	; // Do nothing.
 }
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )

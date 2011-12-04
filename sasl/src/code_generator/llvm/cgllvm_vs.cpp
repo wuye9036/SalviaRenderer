@@ -261,7 +261,6 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	parent_class::before_decls_visit( v, data );
 
 	target_data = new TargetData( cgllvm_impl::module() );
-
 	// Create entry function
 	create_entry_params();
 }
