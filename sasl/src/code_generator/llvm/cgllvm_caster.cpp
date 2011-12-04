@@ -151,7 +151,7 @@ public:
 		vector<value_t> scalars;
 		scalars.push_back( scalar_value );
 
-		value_t vector_value = cgs->create_vector( scalars, dest_ctxt->get_value().get_abi() );
+		value_t vector_value = cgs->create_vector( scalars, dest_ctxt->get_value().abi() );
 
 		cgs->store( dest_ctxt->get_value(), vector_value );
 	}

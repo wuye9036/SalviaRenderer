@@ -213,8 +213,8 @@ SASL_VISIT_DEF( member_expression ){
 			cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
 			assert( mem_ctxt );
 			sc_ptr(data)->get_value() = mem_ctxt->get_value();
-			sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
-			sc_ptr(data)->get_value().set_abi( agg_ctxt->get_value().get_abi() );
+			sc_ptr(data)->get_value().parent( agg_ctxt->get_value() );
+			sc_ptr(data)->get_value().abi( agg_ctxt->get_value().abi() );
 		}
 	}
 
@@ -390,7 +390,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 		// Copy result.
 		value_t ret_value = node_ctxt( v.jump_expr )->get_value();
 
-		if( ret_value.get_hint() != builtin_types::none ){
+		if( ret_value.hint() != builtin_types::none ){
 			storage_si* ret_ssi = fn().fnty->si_ptr<storage_si>();
 			sv_layout* ret_si = abii->input_sv_layout( ret_ssi->get_semantic() );
 			assert( ret_si );
@@ -459,7 +459,7 @@ value_t cgllvm_vs::layout_to_value( sv_layout* svl )
 	} else {
 		ret = emit_extract_ref( param_values[svl->usage], svl->physical_index );
 	}
-	ret.set_hint( to_builtin_types( svl->value_type ) );
+	ret.hint( to_builtin_types( svl->value_type ) );
 
 	return ret;
 }

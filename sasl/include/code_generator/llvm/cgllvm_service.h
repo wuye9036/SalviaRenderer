@@ -41,8 +41,8 @@ class cg_service;
 enum abis{
 	abi_c,
 	abi_llvm,
-	abi_vectorize,	///< Repeat data to SIMD vector. For SIMD.
-	abi_package,	///< A SIMD logical package.
+	abi_vectorize,
+	abi_package,
 	abi_unknown
 };
 
@@ -127,33 +127,30 @@ public:
 	/// Store llvm value to value_t
 	void emplace( value_t const& );
 	void emplace( llvm::Value* v, value_kinds k, abis abi );
-	void set_parent( value_t const& v );
-	void set_parent( value_t const* v );
+
 
 	bool storable() const;
 	bool load_only() const;
 
 	value_t as_ref() const;
-	/// Get type information of value.
-	value_tyinfo* get_tyinfo() const;
-	/// Get type hint. if type is not built-in type it returns builtin_type::none.
-	builtin_types get_hint() const;
-	/// Set type hint.
-	void set_hint( builtin_types bt );
-	/// Get kind.
-	value_kinds get_kind() const;
-	/// Get parent. If value is not a member of aggragation, it return NULL.
-	value_t* get_parent() const;
-	/// Get ABI.
-	abis get_abi() const;
-	/// Set ABI
-	void set_abi( abis abi );
-	/// Set Index. It is only make sense if parent is available.
-	void set_index( size_t index );
-	/// Get masks
-	uint32_t get_masks() const;
-	/// Set kind
-	void set_kind( value_kinds vkind );
+	
+	value_tyinfo*	tyinfo() const;				///< Get type information of value.
+
+	builtin_types	hint() const;				///< Get type hint. if type is not built-in type it returns builtin_type::none.
+	void			hint( builtin_types bt );	///< Set type hint.
+	
+	value_kinds		kind() const;				///< Get kind.
+	void			kind( value_kinds vkind );	///< Set kind.
+	
+	value_t*		parent() const;				///< Get parent. If value is not a member of aggragation, it return NULL.
+	void			parent( value_t const& v );
+	void			parent( value_t const* v );
+	
+	abis			abi() const;				///< Get ABI.
+	void			abi( abis abi );			///< Set ABI
+
+	void			index( size_t index );		///< Set Index. It is only make sense if parent is available.
+	uint32_t		masks() const;				///< Get masks
 	/// @}
 
 	/// @name Operators
@@ -180,22 +177,18 @@ protected:
 
 	/// @name Members
 	/// @{
-	boost::scoped_ptr<value_t>	parent; // For write mask and swizzle.
-	uint32_t					masks;
+	boost::scoped_ptr<value_t>	parent_; // For write mask and swizzle.
+	uint32_t					masks_;
 
-	value_kinds		kind;
-	llvm::Value*	val;
-	/// Branch execution tag, for SIMD.
-	llvm::Value*	bet;
+	value_tyinfo*				tyinfo_;
+	builtin_types				hint_;
+	value_kinds					kind_;
+	abis						abi_;
 
-	/// Type information
-	value_tyinfo*	tyinfo;
-	builtin_types	hint;
+	llvm::Value*				val_;
+	llvm::Value*				bet_;	///<Branch execution tag, for SIMD.
 
-	/// ABI
-	abis			abi;
-
-	cg_service*		cg;
+	cg_service*					cg_;
 	/// @}
 };
 

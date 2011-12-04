@@ -75,8 +75,8 @@ using std::string;
 
 // Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
 #define EMIT_OP_SS_VV_BODY( op_name )	\
-	builtin_types hint( lhs.get_hint() ); \
-	assert( hint == rhs.get_hint() ); \
+	builtin_types hint( lhs.hint() ); \
+	assert( hint == rhs.hint() ); \
 	assert( is_scalar(hint) || is_vector(hint) ); \
 	\
 	Value* ret = NULL; \
@@ -89,12 +89,12 @@ using std::string;
 	}	\
 	\
 	value_t retval( hint, ret, vkind_value, abi_llvm, this ); \
-	abis ret_abi = is_scalar(hint) ? abi_llvm : lhs.get_abi();\
+	abis ret_abi = is_scalar(hint) ? abi_llvm : lhs.abi();\
 	return value_t( hint, retval.load(ret_abi), vkind_value, ret_abi, this );
 
 #define EMIT_CMP_EQ_NE_BODY( op_name ) \
-	builtin_types hint = lhs.get_hint(); \
-	assert( hint == rhs.get_hint() ); \
+	builtin_types hint = lhs.hint(); \
+	assert( hint == rhs.hint() ); \
 	assert( is_scalar(hint) || (hint == builtin_types::_boolean) ); \
 	\
 	Value* ret = NULL; \
@@ -107,8 +107,8 @@ using std::string;
 	return value_t( builtin_types::_boolean, ret, vkind_value, abi_llvm, this );
 
 #define EMIT_CMP_BODY( op_name ) \
-	builtin_types hint = lhs.get_hint(); \
-	assert( hint == rhs.get_hint() ); \
+	builtin_types hint = lhs.hint(); \
+	assert( hint == rhs.hint() ); \
 	assert( is_scalar(hint) ); \
 	\
 	Value* ret = NULL; \
@@ -128,7 +128,6 @@ using std::string;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 namespace {
-
 	/// Only support a context.
 	class ty_cache_t{
 	public:
@@ -303,252 +302,16 @@ Function* cgs_sisd::intrin_( int id )
 	return intrins.get(id, module(), TypeBuilder<FunctionT, false>::get( context() ) );
 }
 
-// Value tyinfo
-value_tyinfo::value_tyinfo(
-	tynode* tyn,
-	llvm::Type* cty,
-	llvm::Type* llty
-	) : tyn(tyn)
-{
-	tys[abi_c] = cty;
-	tys[abi_llvm] = llty;
-}
-
-value_tyinfo::value_tyinfo()
-	:tyn(NULL), cls( unknown_type )
-{
-	tys[0] = NULL;
-	tys[1] = NULL;
-}
-
-builtin_types value_tyinfo::hint() const{
-	if( !tyn || !tyn->is_builtin() ){
-		return builtin_types::none;
-	}
-	return tyn->tycode;
-}
-
-tynode* value_tyinfo::tyn_ptr() const{
-	return tyn;
-}
-
-shared_ptr<tynode> value_tyinfo::tyn_shared() const{
-	return tyn->as_handle<tynode>();
-}
-
-llvm::Type* value_tyinfo::ty( abis abi ) const
-{
-	return tys[abi];
-}
-
-/// @}
-
-/// value_t @{
-value_t::value_t()
-	: tyinfo(NULL), val(NULL), cg(NULL), kind(vkind_unknown), hint(builtin_types::none), abi(abi_unknown), masks(0)
-{
-}
-
-value_t::value_t(
-	value_tyinfo* tyinfo,
-	llvm::Value* val, value_kinds k, abis abi,
-	cg_service* cg 
-	) 
-	: tyinfo(tyinfo), val(val), cg(cg), kind(k), hint(builtin_types::none), abi(abi), masks(0)
-{
-}
-
-value_t::value_t( builtin_types hint,
-	llvm::Value* val, value_kinds k, abis abi,
-	cg_service* cg 
-	)
-	: tyinfo(NULL), hint(hint), abi(abi), val(val), kind(k), cg(cg), masks(0)
-{
-
-}
-
-value_t::value_t( value_t const& rhs )
-	: tyinfo(rhs.tyinfo), hint(rhs.hint), abi(rhs.abi), val( rhs.val ), kind(rhs.kind), cg(rhs.cg), masks(rhs.masks)
-{
-	set_parent(rhs.parent.get());
-}
-
-abis value_t::get_abi() const{
-	return abi;
-}
-
-value_t value_t::swizzle( size_t swz_code ) const{
-	assert( is_vector( get_hint() ) );
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-llvm::Value* value_t::raw() const{
-	return val;
-}
-
-value_t value_t::to_rvalue() const
-{
-	if( tyinfo ){
-		return value_t( tyinfo, load( abi ), vkind_value, abi, cg );
-	} else {
-		return value_t( hint, load(abi), vkind_value, abi, cg );
-	}
-}
-
-builtin_types value_t::get_hint() const
-{
-	if( tyinfo ) return tyinfo->hint();
-	return hint;
-}
-
-llvm::Value* value_t::load( abis abi ) const{
-	return cg->load( *this, abi );
-}
-
-Value* value_t::load() const{
-	return cg->load( *this );
-}
-
-value_kinds value_t::get_kind() const{
-	return kind;
-}
-
-bool value_t::storable() const{
-	switch( kind ){
-	case vkind_ref:
-		return true;
-	case vkind_value:
-	case vkind_unknown:
-		return false;
-	default:
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return false;
-	}
-}
-
-bool value_t::load_only() const
-{
-	switch( kind ){
-	case vkind_ref:
-	case vkind_unknown:
-		return false;
-	case vkind_value:
-		return true;
-	default:
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return false;
-	}
-}
-
-void value_t::emplace( Value* v, value_kinds k, abis abi ){
-	val = v;
-	kind = k;
-	this->abi = abi;
-}
-
-void value_t::emplace( value_t const& v )
-{
-	emplace( v.raw(), v.get_kind(), v.get_abi() );
-}
-
-llvm::Value* value_t::load_ref() const
-{
-	return cg->load_ref( *this );
-}
-
-value_tyinfo* value_t::get_tyinfo() const{
-	return tyinfo;
-}
-
-value_t& value_t::operator=( value_t const& rhs )
-{
-	kind = rhs.kind;
-	val = rhs.val;
-	tyinfo = rhs.tyinfo;
-	hint = rhs.hint;
-	abi = rhs.abi;
-	cg = rhs.cg;
-	masks = rhs.masks;
-
-	set_parent(rhs.parent.get());
-
-	return *this;
-}
-
-void value_t::set_parent( value_t const& v )
-{
-	parent.reset( new value_t(v) );
-}
-
-void value_t::set_parent( value_t const* v )
-{
-	if(v){
-		set_parent(*v);
-	}
-}
-
-value_t value_t::slice( value_t const& vec, uint32_t masks )
-{
-	builtin_types hint = vec.get_hint();
-	assert( is_vector(hint) );
-
-	value_t ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi, vec.cg );
-	ret.masks = masks;
-	ret.set_parent(vec);
-
-	return ret;
-}
-
-value_t value_t::as_ref() const
-{
-	value_t ret(*this);
-
-	switch( ret.kind ){
-	case vkind_value:
-		ret.kind = vkind_ref;
-		break;
-	case vkind_swizzle:
-		ret.kind = (value_kinds)( vkind_swizzle | vkind_ref );
-		break;
-	}
-
-	return ret;
-}
-
-void value_t::store( value_t const& v ) const
-{
-	cg->store( *(const_cast<value_t*>(this)), v );
-}
-
-void value_t::set_index( size_t index )
-{
-	char indexes[4] = { (char)index, -1, -1, -1 };
-	masks = indexes_to_mask( indexes );
-}
-
-void value_t::set_hint( builtin_types bt )
-{
-	hint = bt;
-}
-
-void value_t::set_abi( abis abi )
-{
-	this->abi = abi;
-}
-
-/// @}
-
 void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
-	Value* src = rhs.load( lhs.get_abi() );
+	Value* src = rhs.load( lhs.abi() );
 	Value* address = NULL;
-	value_kinds kind = lhs.get_kind();
+	value_kinds kind = lhs.kind();
 
 	if( kind == vkind_ref ){	
 		address = lhs.raw();
 	} else if ( kind == vkind_swizzle ){
-		if( is_vector( lhs.get_parent()->get_hint()) ){
-			assert( lhs.get_parent()->storable() );
+		if( is_vector( lhs.parent()->hint()) ){
+			assert( lhs.parent()->storable() );
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else {
 			address = lhs.load_ref();
@@ -567,7 +330,7 @@ value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
 
 value_t cgs_sisd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
 {
-	builtin_types hint_i = v.get_hint();
+	builtin_types hint_i = v.hint();
 	builtin_types hint_f = dest_tyi->hint();
 
 	Value* val = NULL;
@@ -847,8 +610,8 @@ value_t cgs_sisd::create_value( value_tyinfo* tyinfo, builtin_types hint, Value*
 
 sasl::code_generator::value_t cgs_sisd::emit_mul( value_t const& lhs, value_t const& rhs )
 {
-	builtin_types lhint = lhs.get_hint();
-	builtin_types rhint = rhs.get_hint();
+	builtin_types lhint = lhs.hint();
+	builtin_types rhint = rhs.hint();
 
 	if( is_scalar(lhint) ){
 		if( is_scalar(rhint) ){
@@ -882,11 +645,11 @@ sasl::code_generator::value_t cgs_sisd::emit_mul( value_t const& lhs, value_t co
 
 sasl::code_generator::value_t cgs_sisd::emit_add( value_t const& lhs, value_t const& rhs )
 {
-	builtin_types hint = lhs.get_hint();
+	builtin_types hint = lhs.hint();
 
 	assert( hint != builtin_types::none );
 	assert( is_scalar( scalar_of( hint ) ) );
-	assert( hint == rhs.get_hint() );
+	assert( hint == rhs.hint() );
 
 	if( is_scalar(hint) || is_vector(hint) ){
 		return emit_add_ss_vv(lhs, rhs);
@@ -912,9 +675,9 @@ value_t cgs_sisd::emit_dot( value_t const& lhs, value_t const& rhs )
 
 value_t cgs_sisd::emit_dot_vv( value_t const& lhs, value_t const& rhs )
 {
-	size_t vec_size = vector_size( lhs.get_hint() );
+	size_t vec_size = vector_size( lhs.hint() );
 
-	value_t total = null_value( scalar_of( lhs.get_hint() ), abi_llvm );
+	value_t total = null_value( scalar_of( lhs.hint() ), abi_llvm );
 
 	for( size_t i = 0; i < vec_size; ++i ){
 		value_t lhs_elem = emit_extract_elem( lhs, i );
@@ -931,7 +694,7 @@ value_t cgs_sisd::emit_extract_ref( value_t const& lhs, int idx )
 {
 	assert( lhs.storable() );
 
-	builtin_types agg_hint = lhs.get_hint();
+	builtin_types agg_hint = lhs.hint();
 
 	if( is_vector(agg_hint) ){
 		char indexes[4] = { (char)idx, -1, -1, -1 };
@@ -944,10 +707,10 @@ value_t cgs_sisd::emit_extract_ref( value_t const& lhs, int idx )
 		Value* agg_address = lhs.load_ref();
 		Value* elem_address = builder().CreateStructGEP( agg_address, (unsigned)idx );
 		value_tyinfo* tyinfo = NULL;
-		if( lhs.get_tyinfo() ){
-			tyinfo = member_tyinfo( lhs.get_tyinfo(), (size_t)idx );
+		if( lhs.tyinfo() ){
+			tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
 		}
-		return value_t( tyinfo, elem_address, vkind_ref, lhs.get_abi(), this );
+		return value_t( tyinfo, elem_address, vkind_ref, lhs.abi(), this );
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -961,7 +724,7 @@ value_t cgs_sisd::emit_extract_ref( value_t const& lhs, value_t const& idx )
 
 value_t cgs_sisd::emit_extract_val( value_t const& lhs, int idx )
 {
-	builtin_types agg_hint = lhs.get_hint();
+	builtin_types agg_hint = lhs.hint();
 
 	Value* val = lhs.load();
 	Value* elem_val = NULL;
@@ -972,14 +735,14 @@ value_t cgs_sisd::emit_extract_val( value_t const& lhs, int idx )
 
 	if( agg_hint == builtin_types::none ){
 		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
-		abi = lhs.get_abi();
-		elem_tyi = member_tyinfo( lhs.get_tyinfo(), (size_t)idx );
+		abi = lhs.abi();
+		elem_tyi = member_tyinfo( lhs.tyinfo(), (size_t)idx );
 	} else if( is_scalar(agg_hint) ){
 		assert( idx == 0 );
 		elem_val = val;
 		elem_hint = agg_hint;
 	} else if( is_vector(agg_hint) ){
-		switch( lhs.get_abi() ){
+		switch( lhs.abi() ){
 		case abi_c:
 			elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
 			break;
@@ -994,7 +757,7 @@ value_t cgs_sisd::emit_extract_val( value_t const& lhs, int idx )
 		elem_hint = scalar_of(agg_hint);
 	} else if( is_matrix(agg_hint) ){
 		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
-		abi = lhs.get_abi();
+		abi = lhs.abi();
 		elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
 	}
 
@@ -1031,7 +794,7 @@ value_t cgs_sisd::emit_call( function_t const& fn, vector<value_t> const& args )
 		}
 
 		BOOST_FOREACH( value_t const& arg, args ){
-			builtin_types hint = arg.get_hint();
+			builtin_types hint = arg.hint();
 			if( is_scalar(hint) ){
 				arg_values.push_back( arg.load(abi_llvm) );
 			} else {
@@ -1067,10 +830,10 @@ value_t cgs_sisd::emit_insert_val( value_t const& lhs, value_t const& idx, value
 	}
 	assert(new_value);
 
-	if( lhs.get_tyinfo() ){
-		return value_t( lhs.get_tyinfo(), new_value, vkind_value, lhs.get_abi(), this );
+	if( lhs.tyinfo() ){
+		return value_t( lhs.tyinfo(), new_value, vkind_value, lhs.abi(), this );
 	} else {
-		return value_t( lhs.get_hint(), new_value, vkind_value, lhs.get_abi(), this );
+		return value_t( lhs.hint(), new_value, vkind_value, lhs.abi(), this );
 	}
 }
 
@@ -1079,17 +842,17 @@ value_t cgs_sisd::emit_insert_val( value_t const& lhs, int index, value_t const&
 	Value* agg = lhs.load();
 	Value* new_value = NULL;
 	if( agg->getType()->isStructTy() ){
-		new_value = builder().CreateInsertValue( agg, elem_value.load(lhs.get_abi()), (unsigned)index );
+		new_value = builder().CreateInsertValue( agg, elem_value.load(lhs.abi()), (unsigned)index );
 	} else if ( agg->getType()->isVectorTy() ){
 		value_t index_value( builtin_types::_sint32, int_(index), vkind_value, abi_llvm, this );
 		return emit_insert_val( lhs, index_value, elem_value );
 	}
 	assert(new_value);
 
-	if( lhs.get_tyinfo() ){
-		return value_t( lhs.get_tyinfo(), new_value, vkind_value, lhs.get_abi(), this );
+	if( lhs.tyinfo() ){
+		return value_t( lhs.tyinfo(), new_value, vkind_value, lhs.abi(), this );
 	} else {
-		return value_t( lhs.get_hint(), new_value, vkind_value, lhs.get_abi(), this );
+		return value_t( lhs.hint(), new_value, vkind_value, lhs.abi(), this );
 	}
 
 
@@ -1097,15 +860,15 @@ value_t cgs_sisd::emit_insert_val( value_t const& lhs, int index, value_t const&
 
 value_t cgs_sisd::emit_mul_mv( value_t const& lhs, value_t const& rhs )
 {
-	builtin_types mhint = lhs.get_hint();
-	builtin_types vhint = rhs.get_hint();
+	builtin_types mhint = lhs.hint();
+	builtin_types vhint = rhs.hint();
 
 	size_t row_count = vector_count(mhint);
 	size_t vec_size = vector_size(mhint);
 
 	builtin_types ret_hint = vector_of( scalar_of(vhint), row_count );
 
-	value_t ret_v = null_value( ret_hint, lhs.abi );
+	value_t ret_v = null_value( ret_hint, lhs.abi_ );
 	for( size_t irow = 0; irow < row_count; ++irow ){
 		value_t row_vec = emit_extract_val( lhs, irow );
 		ret_v = emit_insert_val( ret_v, irow, emit_dot_vv(row_vec, rhs) );
@@ -1116,8 +879,8 @@ value_t cgs_sisd::emit_mul_mv( value_t const& lhs, value_t const& rhs )
 
 value_t cgs_sisd::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 {
-	builtin_types lhint = lhs.get_hint();
-	builtin_types rhint = rhs.get_hint();
+	builtin_types lhint = lhs.hint();
+	builtin_types rhint = rhs.hint();
 
 	size_t out_v = vector_size( lhint );
 	size_t out_r = vector_count( rhint );
@@ -1125,7 +888,7 @@ value_t cgs_sisd::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 
 	builtin_types out_row_hint = vector_of( scalar_of(lhint), out_v );
 	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
-	abis out_abi = lhs.abi;
+	abis out_abi = lhs.abi_;
 
 	vector<value_t> out_cells(out_v*out_r);
 	out_cells.resize( out_v*out_r );
@@ -1156,14 +919,14 @@ value_t cgs_sisd::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 value_t cgs_sisd::emit_extract_col( value_t const& lhs, size_t index )
 {
 	value_t val = lhs.to_rvalue();
-	builtin_types mat_hint( lhs.get_hint() );
+	builtin_types mat_hint( lhs.hint() );
 	assert( is_matrix(mat_hint) );
 
 	size_t row_count = vector_count( mat_hint );
 
 	builtin_types out_hint = vector_of( scalar_of(mat_hint), row_count );
 
-	value_t out_value = null_value( out_hint, lhs.abi );
+	value_t out_value = null_value( out_hint, lhs.abi_ );
 	for( size_t irow = 0; irow < row_count; ++irow ){
 		value_t row = emit_extract_val( val, (int)irow );
 		value_t cell = emit_extract_val( row, (int)index );
@@ -1175,12 +938,12 @@ value_t cgs_sisd::emit_extract_col( value_t const& lhs, size_t index )
 
 value_t cgs_sisd::emit_mul_vm( value_t const& lhs, value_t const& rhs )
 {
-	size_t out_v = vector_size( rhs.get_hint() );
+	size_t out_v = vector_size( rhs.hint() );
 
 	value_t lrv = lhs.to_rvalue();
 	value_t rrv = rhs.to_rvalue();
 
-	value_t ret = null_value( vector_of( scalar_of(lhs.get_hint()), out_v ), lhs.get_abi() );
+	value_t ret = null_value( vector_of( scalar_of(lhs.hint()), out_v ), lhs.abi() );
 	for( size_t idx = 0; idx < out_v; ++idx ){
 		ret = emit_insert_val( ret, (int)idx, emit_dot_vv( lrv, emit_extract_col(rrv, idx) ) );
 	}
@@ -1268,11 +1031,11 @@ value_t cgs_sisd::emit_sub_ss_vv( value_t const& lhs, value_t const& rhs )
 
 value_t cgs_sisd::emit_sub( value_t const& lhs, value_t const& rhs )
 {
-	builtin_types hint = lhs.get_hint();
+	builtin_types hint = lhs.hint();
 
 	assert( hint != builtin_types::none );
 	assert( is_scalar( scalar_of( hint ) ) );
-	assert( hint == rhs.get_hint() );
+	assert( hint == rhs.hint() );
 
 	if( is_scalar(hint) || is_vector(hint) ){
 		return emit_sub_ss_vv(lhs, rhs);
@@ -1341,8 +1104,8 @@ value_t cgs_sisd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 
 value_t cgs_sisd::emit_sqrt( value_t const& arg_value )
 {
-	builtin_types hint = arg_value.get_hint();
-	builtin_types scalar_hint = scalar_of( arg_value.get_hint() );
+	builtin_types hint = arg_value.hint();
+	builtin_types scalar_hint = scalar_of( arg_value.hint() );
 	if( is_scalar(hint) ){
 		if( hint == builtin_types::_float ){
 			if( prefer_externals() ) {
@@ -1358,11 +1121,11 @@ value_t cgs_sisd::emit_sqrt( value_t const& arg_value )
 				Value* v = builder().CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ss ), v4.load() );
 				Value* ret = builder().CreateExtractElement( v, int_(0) );
 
-				return create_value( arg_value.get_tyinfo(), hint, ret, vkind_value, abi_llvm );
+				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
 			} else {
 				// Emit LLVM intrinsics
 				Value* v = builder().CreateCall( intrin_<float(float)>(Intrinsic::sqrt), arg_value.load() );
-				return create_value( arg_value.get_tyinfo(), arg_value.get_hint(), v, vkind_value, abi_llvm );
+				return create_value( arg_value.tyinfo(), arg_value.hint(), v, vkind_value, abi_llvm );
 			}
 		} else if( hint == builtin_types::_double ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -1380,7 +1143,7 @@ value_t cgs_sisd::emit_sqrt( value_t const& arg_value )
 				// expanded to vector 4
 				value_t v4;
 				if( vsize == 4 ){	
-					v4 = create_value( arg_value.get_tyinfo(), hint, arg_value.load(abi_llvm), vkind_value, abi_llvm );
+					v4 = create_value( arg_value.tyinfo(), hint, arg_value.load(abi_llvm), vkind_value, abi_llvm );
 				} else {
 					v4 = null_value( vector_of( scalar_hint, 4 ), abi_llvm );
 					for ( size_t i = 0; i < vsize; ++i ){
@@ -1400,7 +1163,7 @@ value_t cgs_sisd::emit_sqrt( value_t const& arg_value )
 
 				return create_value( NULL, hint, v, vkind_value, abi_llvm );
 			} else {
-				value_t ret = null_value( hint, arg_value.get_abi() );
+				value_t ret = null_value( hint, arg_value.abi() );
 				for( size_t i = 0; i < vsize; ++i ){
 					value_t elem = emit_extract_elem( arg_value, i );
 					ret = emit_insert_val( ret, i, emit_sqrt( arg_value ) );
@@ -1442,8 +1205,8 @@ value_t cgs_sisd::undef_value( builtin_types bt, abis abi )
 
 value_t cgs_sisd::emit_cross( value_t const& lhs, value_t const& rhs )
 {
-	assert( lhs.get_hint() == vector_of( builtin_types::_float, 3 ) );
-	assert( rhs.get_hint() == lhs.get_hint() );
+	assert( lhs.hint() == vector_of( builtin_types::_float, 3 ) );
+	assert( rhs.hint() == lhs.hint() );
 
 	int swz_a[] = {1, 2, 0};
 	int swz_b[] = {2, 0, 1};
@@ -1464,7 +1227,7 @@ value_t cgs_sisd::emit_cross( value_t const& lhs, value_t const& rhs )
 
 	Value* ret = builder().CreateFSub( mul_first, mul_second );
 
-	return create_value( lhs.get_tyinfo(), lhs.get_hint(), ret, vkind_value, abi_llvm );
+	return create_value( lhs.tyinfo(), lhs.hint(), ret, vkind_value, abi_llvm );
 }
 
 value_t cgs_sisd::emit_swizzle( value_t const& lhs, uint32_t mask )
@@ -1490,14 +1253,14 @@ void cgs_sisd::switch_to( value_t const& cond, std::vector< std::pair<value_t, i
 
 value_t cgs_sisd::cast_i2b( value_t const& v )
 {
-	assert( is_integer(v.get_hint()) );
-	return emit_cmp_ne( v, null_value( v.get_hint(), v.get_abi() ) );
+	assert( is_integer(v.hint()) );
+	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
 }
 
 value_t cgs_sisd::cast_f2b( value_t const& v )
 {
-	assert( is_real(v.get_hint()) );
-	return emit_cmp_ne( v, null_value( v.get_hint(), v.get_abi() ) );
+	assert( is_real(v.hint()) );
+	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
 }
 
 cgllvm_sctxt* cgs_sisd::node_ctxt( shared_ptr<node> const& node, bool create_if_need )
@@ -1507,9 +1270,9 @@ cgllvm_sctxt* cgs_sisd::node_ctxt( shared_ptr<node> const& node, bool create_if_
 
 llvm::Value* cgs_sisd::load( value_t const& v )
 {
-	value_kinds kind = v.get_kind();
+	value_kinds kind = v.kind();
 	Value* raw = v.raw();
-	uint32_t masks = v.get_masks();
+	uint32_t masks = v.masks();
 
 	assert( kind != vkind_unknown && kind != vkind_tyinfo_only );
 
@@ -1528,15 +1291,15 @@ llvm::Value* cgs_sisd::load( value_t const& v )
 		assert( !index_values.empty() );
 
 		// Swizzle
-		Value* agg_v = v.get_parent()->load();
+		Value* agg_v = v.parent()->load();
 
 		if( index_values.size() == 1 ){
 			// Only one member we could extract reference.
-			ref_val = emit_extract_val( v.get_parent()->to_rvalue(), index_values[0] ).load();
+			ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
 		} else {
 			// Multi-members must be swizzle/writemask.
 			assert( (kind & vkind_ref) == 0 );
-			if( v.get_abi() == abi_c ){
+			if( v.abi() == abi_c ){
 				EFLIB_ASSERT_UNIMPLEMENTED();
 				return NULL;
 			} else {
@@ -1558,9 +1321,9 @@ llvm::Value* cgs_sisd::load( value_t const& v )
 llvm::Value* cgs_sisd::load( value_t const& v, abis abi )
 {
 	assert( abi != abi_unknown );
-	builtin_types hint = v.get_hint();
+	builtin_types hint = v.hint();
 
-	if( abi != v.get_abi() ){
+	if( abi != v.abi() ){
 		if( is_scalar( hint ) ){
 			return v.load();
 		} else if( is_vector( hint ) ){
@@ -1585,7 +1348,7 @@ llvm::Value* cgs_sisd::load( value_t const& v, abis abi )
 			return ret_value.load();
 		} else {
 			// NOTE: We assume that, if tyinfo is null and hint is none, it is only the entry of vs/ps. Otherwise, tyinfo must be not NULL.
-			if( !v.get_tyinfo() && hint == builtin_types::none ){
+			if( !v.tyinfo() && hint == builtin_types::none ){
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
@@ -1599,17 +1362,17 @@ llvm::Value* cgs_sisd::load( value_t const& v, abis abi )
 
 llvm::Value* cgs_sisd::load_ref( value_t const& v )
 {
-	value_kinds kind = v.get_kind();
+	value_kinds kind = v.kind();
 
 	if( kind == vkind_ref ){
-		return v.val;
+		return v.raw();
 	} else if( kind == (vkind_swizzle|vkind_ref) ){
 		value_t non_ref( v );
-		non_ref.set_kind( vkind_swizzle );
+		non_ref.kind( vkind_swizzle );
 		return non_ref.load();
 	} if( kind == vkind_swizzle ){
-		assert( v.get_masks() );
-		return emit_extract_elem_mask( *v.get_parent(), v.get_masks() ).load_ref();
+		assert( v.masks() );
+		return emit_extract_elem_mask( *v.parent(), v.masks() ).load_ref();
 	}
 	return NULL;
 }

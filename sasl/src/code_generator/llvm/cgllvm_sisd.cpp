@@ -128,8 +128,8 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 		visit_child( child_ctxt, ctxt_init, no );
 	}
 	value_t no_value = node_ctxt( no, false )->get_value();
-	Value* no_ref = ( no_value.get_abi() == yes_value.get_abi() ) ? no_value.load_ref() : NULL;
-	Value* no_v = no_value.load( yes_value.get_abi() );
+	Value* no_ref = ( no_value.abi() == yes_value.abi() ) ? no_value.load_ref() : NULL;
+	Value* no_v = no_value.load( yes_value.abi() );
 	insert_point_t no_ip_end = insert_point();
 
 	set_insert_point(cond_ip);
@@ -145,10 +145,10 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 	value_t result_value;
 	if( yes_ref && no_ref ){
 		Value* merged = select_( cond_value.load(), yes_ref, no_ref );
-		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, vkind_ref, yes_value.get_abi() );
+		result_value = create_value( yes_value.tyinfo(), yes_value.hint(), merged, vkind_ref, yes_value.abi() );
 	} else {
 		Value* merged = select_( cond_value.load(), yes_v, no_v );
-		result_value = create_value( yes_value.get_tyinfo(), yes_value.get_hint(), merged, vkind_value, yes_value.get_abi() );
+		result_value = create_value( yes_value.tyinfo(), yes_value.hint(), merged, vkind_value, yes_value.abi() );
 	}
 
 	return result_value;
@@ -303,8 +303,8 @@ SASL_VISIT_DEF( member_expression ){
 		assert( mem_sym );
 		cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
 		sc_ptr(data)->get_value() = mem_ctxt->get_value();
-		sc_ptr(data)->get_value().set_parent( agg_ctxt->get_value() );
-		sc_ptr(data)->get_value().set_abi( agg_ctxt->get_value().get_abi() );
+		sc_ptr(data)->get_value().parent( agg_ctxt->get_value() );
+		sc_ptr(data)->get_value().abi( agg_ctxt->get_value().abi() );
 	}
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -359,7 +359,7 @@ SASL_VISIT_DEF( unary_expression ){
 	value_t inner_value = sc_ptr(&child_ctxt)->get_value();
 
 	shared_ptr<value_tyinfo> one_tyinfo = create_tyinfo( v.si_ptr<type_info_si>()->type_info() );
-	builtin_types hint = inner_value.get_hint();
+	builtin_types hint = inner_value.hint();
 
 	if( v.op == operators::negative ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -646,6 +646,7 @@ SASL_VISIT_DEF( jump_statement ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
+	(data); (v);
 	if ( !v.jump_expr ){
 		emit_return();
 	} else {
@@ -1010,7 +1011,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	storage_si* si = v.si_ptr<storage_si>();
 	sc_data_ptr(data)->tyinfo = decl_ty;
 	sc_data_ptr(data)->val = create_value(decl_ty.get(), NULL, vkind_swizzle, abi_unknown );
-	sc_data_ptr(data)->val.set_index( si->mem_index() );
+	sc_data_ptr(data)->val.index( si->mem_index() );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
