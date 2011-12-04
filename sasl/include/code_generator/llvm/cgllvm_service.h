@@ -41,6 +41,8 @@ class cg_service;
 enum abis{
 	abi_c,
 	abi_llvm,
+	abi_vectorize,	///< Repeat data to SIMD vector. For SIMD.
+	abi_package,	///< A SIMD logical package.
 	abi_unknown
 };
 
