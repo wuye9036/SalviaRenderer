@@ -18,7 +18,7 @@ namespace sasl{
 			return static_cast<salviar::language_value_types>( v.to_value() );
 		}
 		
-		namespace operators{
+		namespace ops{
 			inline
 			bool operator == ( builtin_types lhs, salviar::language_value_types rhs ){
 				return to_lvt(lhs) == rhs;

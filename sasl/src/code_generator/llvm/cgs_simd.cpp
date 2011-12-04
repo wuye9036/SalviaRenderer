@@ -1,5 +1,10 @@
 #include <sasl/include/code_generator/llvm/cgllvm_simd.h>
 
+#include <eflib/include/platform/disable_warnings.h>
+#include <llvm/Type.h>
+#include <eflib/include/platform/enable_warnings.h>
+
+using llvm::Type;
 using std::vector;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -139,6 +144,18 @@ value_t cgs_simd::emit_cross( value_t const& lhs, value_t const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
+}
+
+Type* cgs_simd::type_( builtin_types bt, abis abi )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
+
+Type* cgs_simd::type_( value_tyinfo const*, abis abi )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
 }
 
 END_NS_SASL_CODE_GENERATOR();

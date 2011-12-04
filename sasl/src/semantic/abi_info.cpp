@@ -10,7 +10,7 @@
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-using namespace sasl::utility::operators;
+using namespace sasl::utility::ops;
 using namespace sasl::utility;
 
 using salviar::sv_usage;

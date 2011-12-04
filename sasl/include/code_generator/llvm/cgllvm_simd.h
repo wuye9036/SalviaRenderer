@@ -4,6 +4,8 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
 #include <sasl/include/code_generator/llvm/cgs_simd.h>
+#include <sasl/enums/builtin_types.h>
+#include <salviar/include/shader_abi.h>
 
 namespace sasl{
 	namespace semantic{
@@ -12,12 +14,21 @@ namespace sasl{
 	}
 }
 
+namespace llvm{
+	class StructType;
+	class Type;
+}
+
+int const SIMD_WIDE = 4;
+int const PACKAGE_WIDE = 16;
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 // Code generation for SIMD( Single Instruction Multiple Data )
 class cgllvm_simd: public cgllvm_impl, public cgs_simd{
+
 public:
-	
+	cgllvm_simd();
 	~cgllvm_simd();
 
 	// expression
@@ -65,9 +76,15 @@ public:
 
 protected:
 	cg_service* service() const;
+	
 	void create_entries();
+	void create_entry_param( salviar::sv_usage usage );
 
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
+
+	std::vector<llvm::Type*> entry_tys[salviar::storage_usage_count];
+	llvm::StructType* entry_structs[salviar::storage_usage_count];
+	std::vector<builtin_types> entry_tyns[salviar::storage_usage_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();
