@@ -31,4 +31,10 @@ cgllvm_sctxt* cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_i
 	return node_ctxt( ptr, create_if_need );
 }
 
+template <typename NodeT>
+cgllvm_sctxt* cgllvm_impl::node_ctxt( NodeT const& nd, bool create_if_need /*= false */ )
+{
+	return node_ctxt( (node*)(&nd), create_if_need );
+}
+
 END_NS_SASL_CODE_GENERATOR();

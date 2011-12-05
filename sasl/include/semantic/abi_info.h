@@ -39,6 +39,7 @@ public:
 
 	std::vector<storage_info_t*> layouts( salviar::sv_usage usage ) const;
 	size_t total_size( salviar::sv_usage usage ) const;
+	void update_size( size_t sz, salviar::sv_usage usage );
 
 	storage_info_t* input_sv_layout( std::string const& ) const;
 	storage_info_t* output_sv_layout( semantic_value_t const& ) const;
@@ -77,8 +78,7 @@ private:
 	void compute_output_stream_layout();
 	void compute_input_constant_layout();
 	
-	void compute_input_package_layout();
-	void compute_output_package_layout();
+	void compute_package_layout();
 
 	module_si* mod;
 	symbol* entry_point;

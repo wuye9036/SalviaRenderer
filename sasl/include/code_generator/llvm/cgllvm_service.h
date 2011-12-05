@@ -80,7 +80,7 @@ enum value_kinds{
 
 class value_tyinfo{
 public:
-	friend class cgs_sisd;
+	friend class cg_service;
 
 	enum classifications{
 		unknown_type,
@@ -105,7 +105,7 @@ public:
 protected:
 	value_tyinfo();
 
-	llvm::Type*					tys[2];
+	llvm::Type*					tys[4];
 	sasl::syntax_tree::tynode*	tyn;
 	classifications				cls;
 };
@@ -337,6 +337,11 @@ public:
 	/// Create a new block at the last of function
 	insert_point_t new_block( std::string const& hint, bool set_insert_point );
 	
+	/// @}
+
+	/// @name Type emitters
+	/// @{
+	boost::shared_ptr<value_tyinfo> create_tyinfo( boost::shared_ptr<sasl::syntax_tree::tynode> const& tyn );
 	/// @}
 
 	/// @name Bridges

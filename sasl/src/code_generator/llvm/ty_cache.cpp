@@ -3,6 +3,10 @@
 #include <sasl/enums/enums_utility.h>
 #include <sasl/enums/default_hasher.h>
 
+#include <eflib/include/diagnostics/assert.h>
+
+int const PACKAGE_SIZE = 16;
+
 using namespace sasl::utility;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
@@ -66,43 +70,63 @@ std::string const& ty_cache_t::name( builtin_types bt, abis abi )
 
 Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis abi )
 {
-	assert( abi == abi_c || abi == abi_llvm );
-
 	if ( is_void( bt ) ){
 		return Type::getVoidTy( ctxt );
 	}
 
-	if( is_scalar(bt) ){
-		if( bt == builtin_types::_boolean ){
-			return IntegerType::get( ctxt, 1 );
+	if( abi == abi_c || abi == abi_llvm ){
+		if( is_scalar(bt) ){
+			if( bt == builtin_types::_boolean ){
+				return IntegerType::get( ctxt, 1 );
+			}
+			if( is_integer(bt) ){
+				return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );
+			}
+			if ( bt == builtin_types::_float ){
+				return Type::getFloatTy( ctxt );
+			}
+			if ( bt == builtin_types::_double ){
+				return Type::getDoubleTy( ctxt );
+			}
 		}
-		if( is_integer(bt) ){
-			return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );
-		}
-		if ( bt == builtin_types::_float ){
-			return Type::getFloatTy( ctxt );
-		}
-		if ( bt == builtin_types::_double ){
-			return Type::getDoubleTy( ctxt );
-		}
-	}
 
-	if( is_vector(bt) ){
-		Type* elem_ty = type(ctxt, scalar_of(bt), abi );
-		size_t vec_size = vector_size(bt);
-		if( abi == abi_c ){
-			vector<Type*> elem_tys(vec_size, elem_ty);
-			return StructType::create( elem_tys, name(bt, abi) );
-		} else {
-			return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
+		if( is_vector(bt) ){
+			Type* elem_ty = type(ctxt, scalar_of(bt), abi );
+			size_t vec_size = vector_size(bt);
+			if( abi == abi_c ){
+				vector<Type*> elem_tys(vec_size, elem_ty);
+				return StructType::create( elem_tys, name(bt, abi) );
+			} else {
+				return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
+			}
+		}
+
+		if( is_matrix(bt) ){
+			Type* vec_ty = type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), abi );
+			vector<Type*> row_tys( vector_count(bt), vec_ty );
+			return StructType::create( row_tys, name(bt, abi) );
+		}
+	} else if ( abi == abi_vectorize ) {
+		if( is_scalar(bt) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_vector(bt) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(bt) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( abi == abi_package ){
+		if( is_scalar(bt) ){
+			Type* scalar_ty = get_llvm_type( ctxt, bt, abi_c );
+			return VectorType::get( scalar_ty, PACKAGE_SIZE );
+		} else if ( is_vector(bt) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(bt) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	}
-
-	if( is_matrix(bt) ){
-		Type* vec_ty = type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), abi );
-		vector<Type*> row_tys( vector_count(bt), vec_ty );
-		return StructType::create( row_tys, name(bt, abi) );
-	}
+	
+	assert(false);
+	return NULL;
 }
 
 ty_cache_t cache;

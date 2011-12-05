@@ -36,8 +36,8 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-struct cgllvm_sctxt_data;
-struct cgllvm_sctxt_env;
+class cgllvm_sctxt_data;
+class cgllvm_sctxt_env;
 
 // Code generation for SISD( Single Instruction Single Data )
 class cgllvm_sisd: public cgllvm_impl, public cgs_sisd{
@@ -55,12 +55,10 @@ public:
 
 	SASL_VISIT_DCL( expression_initializer );
 
-	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( function_type );
-	SASL_VISIT_DCL( struct_type );
 
 	SASL_VISIT_DCL( declarator );
-	SASL_VISIT_DCL( variable_declaration );
+	
 	SASL_VISIT_DCL( parameter );
 
 	SASL_VISIT_DCL( statement );
@@ -115,18 +113,6 @@ protected:
 
 	llvm_module_impl* mod_ptr();
 };
-
-cgllvm_sctxt const * sc_ptr( const boost::any& any_val  );
-cgllvm_sctxt* sc_ptr( boost::any& any_val );
-
-cgllvm_sctxt const * sc_ptr( const boost::any* any_val  );
-cgllvm_sctxt* sc_ptr( boost::any* any_val );
-
-cgllvm_sctxt_data* sc_data_ptr( boost::any* any_val );
-cgllvm_sctxt_data const* sc_data_ptr( boost::any const* any_val );
-
-cgllvm_sctxt_env* sc_env_ptr( boost::any* any_val );
-cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val );
 
 END_NS_SASL_CODE_GENERATOR();
 

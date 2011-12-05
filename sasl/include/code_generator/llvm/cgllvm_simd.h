@@ -28,6 +28,8 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 class cgllvm_simd: public cgllvm_impl, public cgs_simd{
 
 public:
+	typedef cgllvm_impl parent_class;
+
 	cgllvm_simd();
 	~cgllvm_simd();
 
@@ -49,12 +51,9 @@ public:
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
 	SASL_VISIT_DCL( declarator );
-	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( tynode );
-	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( array_type );
-	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( alias_type );
 	SASL_VISIT_DCL( parameter );
 	SASL_VISIT_DCL( function_type );

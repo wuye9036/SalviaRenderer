@@ -8,6 +8,7 @@
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/DerivedTypes.h>
+#include <llvm/Target/TargetData.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -25,6 +26,7 @@ using salviar::storage_usage_count;
 using salviar::sv_layout;
 using llvm::Type;
 using llvm::StructType;
+using llvm::StructLayout;
 using std::vector;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_simd
@@ -93,27 +95,23 @@ void cgllvm_simd::create_entry_param( sv_usage usage )
 	entry_structs[usage] = out_struct;
 
 	// Update Layout physical informations.
-	//if( su_buffer_in == usage || su_buffer_out == usage ){
-	//	StructLayout const* struct_layout = target_data->getStructLayout( out_struct );
+	StructLayout const* struct_layout = target_data->getStructLayout( out_struct );
 
-	//	size_t next_offset = 0;
-	//	for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
-	//		size_t offset = next_offset;
-	//		svls[i_elem]->offset = offset;
-	//		svls[i_elem]->physical_index = i_elem;
+	size_t next_offset = 0;
+	for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
+		size_t offset = next_offset;
+		svls[i_elem]->offset = offset;
+		svls[i_elem]->physical_index = i_elem;
 
-	//		size_t next_i_elem = i_elem + 1;
-	//		if( next_i_elem < tys.size() ){
-	//			next_offset = struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
-	//		} else {
-	//			next_offset = struct_layout->getSizeInBytes();
-	//		}
-	//	
-	//		svls[i_elem]->element_padding = (next_offset - offset) - svls[i_elem]->element_size;
-	//	}
-	//}
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
+		size_t next_i_elem = i_elem + 1;
+		if( next_i_elem < tys.size() ){
+			next_offset = struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
+		} else {
+			next_offset = struct_layout->getSizeInBytes();
+		}
+		
+		svls[i_elem]->element_padding = (next_offset - offset) - svls[i_elem]->element_size;
+	}
 }
 
 SASL_VISIT_DEF_UNIMPL( unary_expression );
@@ -133,12 +131,9 @@ SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF_UNIMPL( declarator );
-SASL_VISIT_DEF_UNIMPL( variable_declaration );
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( tynode );
-SASL_VISIT_DEF_UNIMPL( builtin_type );
 SASL_VISIT_DEF_UNIMPL( array_type );
-SASL_VISIT_DEF_UNIMPL( struct_type );
 SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF_UNIMPL( parameter );
 SASL_VISIT_DEF_UNIMPL( function_type );
@@ -160,6 +155,7 @@ SASL_VISIT_DEF_UNIMPL( labeled_statement );
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
+	parent_class::before_decls_visit( v, data );
 	create_entries();
 }
 

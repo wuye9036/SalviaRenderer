@@ -102,6 +102,10 @@ struct sv_layout{
 	semantic_value			sv;
 };
 
+int SIMD_WIDTH_IN_BYTES(); 
+
+int const PACKAGE_SIZE = 16;
+
 // ! Application binary interface of shader.
 //
 class shader_abi{

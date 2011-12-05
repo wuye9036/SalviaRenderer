@@ -7,6 +7,9 @@
 using llvm::Type;
 using std::vector;
 
+int const SIMD_WIDTH_IN_BYTES = 16;
+int const PACKAGE_SIZE = 16;
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 llvm::Value* cgs_simd::load( value_t const& )

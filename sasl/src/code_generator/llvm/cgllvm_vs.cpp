@@ -37,6 +37,7 @@ using salviar::sv_layout;
 using sasl::semantic::storage_si;
 using sasl::semantic::symbol;
 using sasl::semantic::type_info_si;
+using sasl::semantic::abi_info;
 
 using namespace sasl::syntax_tree;
 using namespace llvm;
@@ -150,6 +151,7 @@ void cgllvm_vs::fill_llvm_type_from_si( sv_usage su ){
 				next_offset = struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
 			} else {
 				next_offset = struct_layout->getSizeInBytes();
+				const_cast<abi_info*>(abii)->update_size( next_offset, su );
 			}
 		
 			svls[i_elem]->element_padding = (next_offset - offset) - svls[i_elem]->element_size;
@@ -259,8 +261,6 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	// Call parent for initialization
 	parent_class::before_decls_visit( v, data );
-
-	target_data = new TargetData( cgllvm_impl::module() );
 	// Create entry function
 	create_entry_params();
 }
@@ -423,7 +423,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL), target_data(NULL){}
+cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL){}
 
 bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
 	assert(fn && entry_fn);
@@ -456,9 +456,6 @@ value_t cgllvm_vs::layout_to_value( sv_layout* svl )
 	return ret;
 }
 
-cgllvm_vs::~cgllvm_vs()
-{
-	delete target_data;
-}
+cgllvm_vs::~cgllvm_vs(){}
 
 END_NS_SASL_CODE_GENERATOR();

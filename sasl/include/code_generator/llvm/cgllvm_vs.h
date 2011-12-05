@@ -89,8 +89,6 @@ private:
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
 
-	llvm::TargetData* target_data;
-
 	value_t param_values[salviar::storage_usage_count];
 
 	std::vector<builtin_types> entry_param_tys[salviar::storage_usage_count];

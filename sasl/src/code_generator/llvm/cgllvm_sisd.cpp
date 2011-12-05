@@ -436,27 +436,6 @@ SASL_VISIT_DEF( expression_initializer ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF( builtin_type ){
-
-	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
-
-	cgllvm_sctxt* pctxt = node_ctxt( tisi->type_info(), true );
-
-	if( !pctxt->get_typtr() ){
-		shared_ptr<value_tyinfo> bt_tyinfo = create_tyinfo( v.as_handle<tynode>() );
-		assert( bt_tyinfo );
-		pctxt->data().tyinfo = bt_tyinfo;
-
-		std::string tips = v.tycode.name() + std::string(" was not supported yet.");
-		EFLIB_ASSERT_AND_IF( pctxt->data().tyinfo, tips.c_str() ){
-			return;
-		}
-	}
-
-	sc_ptr( data )->data( pctxt );
-	return;
-}
-
 // Generate normal function code.
 SASL_VISIT_DEF( function_type ){
 	sc_env_ptr(data)->sym = v.symbol();
@@ -477,35 +456,6 @@ SASL_VISIT_DEF( function_type ){
 	node_ctxt(v.symbol()->node(), true)->copy( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF( struct_type ){
-	// Create context.
-	// Declarator visiting need parent information.
-	cgllvm_sctxt* ctxt = node_ctxt(v, true);
-
-	// A struct is visited at definition type.
-	// If the visited again, it must be as an alias_type.
-	// So return environment directly.
-	if( ctxt->data().tyinfo ){
-		sc_ptr(data)->data(ctxt);
-		return;
-	}
-
-	std::string name = v.symbol()->mangled_name();
-
-	// Init data.
-	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-	sc_env_ptr(&child_ctxt_init)->parent_struct = ctxt;
-
-	any child_ctxt;
-	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
-		visit_child( child_ctxt, child_ctxt_init, decl );
-	}
-	sc_data_ptr(data)->tyinfo = create_tyinfo( v.si_ptr<type_info_si>()->type_info() );
-
-	ctxt->copy( sc_ptr(data) );
-}
-
 SASL_VISIT_DEF( declarator ){
 
 	// local *OR* member.
@@ -521,26 +471,6 @@ SASL_VISIT_DEF( declarator ){
 	} else {
 		visit_global_declarator(v, data);
 	}
-}
-
-SASL_VISIT_DEF( variable_declaration ){
-	// Visit type info
-	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-	any child_ctxt;
-
-	visit_child( child_ctxt, child_ctxt_init, v.type_info );
-
-	sc_env_ptr(&child_ctxt_init)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
-
-	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators ){
-		visit_child( child_ctxt, child_ctxt_init, dclr );
-	}
-
-	sc_data_ptr(data)->declarator_count = static_cast<int>( v.declarators.size() );
-
-	sc_data_ptr(data)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
-	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( parameter ){
@@ -1035,40 +965,6 @@ SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 	
 	sc_ptr(data)->get_value() = ret_value.to_rvalue();
 	node_ctxt( v, true )->copy( sc_ptr(data) );
-}
-
-cgllvm_sctxt const * sc_ptr( const boost::any& any_val ){
-	return any_cast<cgllvm_sctxt>(&any_val);
-}
-
-cgllvm_sctxt* sc_ptr( boost::any& any_val ){
-	return any_cast<cgllvm_sctxt>(&any_val);
-}
-
-cgllvm_sctxt const * sc_ptr( const boost::any* any_val )
-{
-	return any_cast<cgllvm_sctxt>(any_val);
-}
-
-cgllvm_sctxt* sc_ptr( boost::any* any_val )
-{
-	return any_cast<cgllvm_sctxt>(any_val);
-}
-
-cgllvm_sctxt_data* sc_data_ptr( boost::any* any_val ){
-	return addressof( sc_ptr(any_val)->data() );
-}
-
-cgllvm_sctxt_data const* sc_data_ptr( boost::any const* any_val ){
-	return addressof( sc_ptr(any_val)->data() );
-}
-
-cgllvm_sctxt_env* sc_env_ptr( boost::any* any_val ){
-	return addressof( sc_ptr(any_val)->env() );
-}
-
-cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val ){
-	return addressof( sc_ptr(any_val)->env() );
 }
 
 cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if_need /*= false */ )

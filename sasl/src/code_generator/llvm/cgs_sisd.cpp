@@ -296,62 +296,6 @@ void cgs_sisd::pop_fn(){
 	fn_ctxts.pop_back();
 }
 
-shared_ptr<value_tyinfo> cgs_sisd::create_tyinfo( shared_ptr<tynode> const& tyn ){
-	cgllvm_sctxt* ctxt = node_ctxt(tyn, true);
-	if( ctxt->get_tysp() ){
-		return ctxt->get_tysp();
-	}
-
-	value_tyinfo* ret = new value_tyinfo();
-	ret->tyn = tyn.get();
-	ret->cls = value_tyinfo::unknown_type;
-
-	if( tyn->is_builtin() ){
-		ret->tys[abi_c] = type_( tyn->tycode, abi_c );
-		ret->tys[abi_llvm] = type_( tyn->tycode, abi_llvm );
-		ret->cls = value_tyinfo::builtin;
-	} else {
-		ret->cls = value_tyinfo::aggregated;
-
-		if( tyn->is_struct() ){
-			shared_ptr<struct_type> struct_tyn = tyn->as_handle<struct_type>();
-
-			vector<Type*> c_member_types;
-			vector<Type*> llvm_member_types;
-
-			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_tyn->decls){
-
-				if( decl->node_class() == node_ids::variable_declaration ){
-					shared_ptr<variable_declaration> decl_tyn = decl->as_handle<variable_declaration>();
-					shared_ptr<value_tyinfo> decl_tyinfo = create_tyinfo( decl_tyn->type_info->si_ptr<type_info_si>()->type_info() );
-					size_t declarator_count = decl_tyn->declarators.size();
-					// c_member_types.insert( c_member_types.end(), (Type*)NULL );
-					c_member_types.insert( c_member_types.end(), declarator_count, decl_tyinfo->ty(abi_c) );
-					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_tyinfo->ty(abi_llvm) );
-				}
-			}
-
-			StructType* ty_c = StructType::get( context(), c_member_types, true );
-			StructType* ty_llvm = StructType::get( context(), llvm_member_types, false );
-
-			ret->tys[abi_c] = ty_c;
-			ret->tys[abi_llvm] = ty_llvm;
-
-			if( !ty_c->isLiteral() ){
-				ty_c->setName( struct_tyn->name->str + ".abi.c" );
-			}
-			if( !ty_llvm->isLiteral() ){
-				ty_llvm->setName( struct_tyn->name->str + ".abi.llvm" );
-			}
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	}
-
-	ctxt->data().tyinfo = shared_ptr<value_tyinfo>(ret);
-	return ctxt->data().tyinfo;
-}
-
 function_t cgs_sisd::fetch_function( shared_ptr<function_type> const& fn_node ){
 
 	cgllvm_sctxt* fn_ctxt = node_ctxt( fn_node, false );
