@@ -245,8 +245,7 @@ public:
 	/// @name Bridges
 	/// @{
 	llvm::Value* select_( llvm::Value* cond, llvm::Value* yes, llvm::Value* no );
-	llvm::Type* type_( builtin_types bt, abis abi );
-	llvm::Type* type_( value_tyinfo const*, abis abi );
+
 	template <typename T>
 	llvm::ConstantInt* int_(T v);
 	template <typename T>

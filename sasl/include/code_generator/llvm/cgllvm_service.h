@@ -338,6 +338,13 @@ public:
 	insert_point_t new_block( std::string const& hint, bool set_insert_point );
 	
 	/// @}
+
+	/// @name Bridges
+	/// @{
+	llvm::Type* type_( builtin_types bt, abis abi );
+	llvm::Type* type_( value_tyinfo const*, abis abi );
+	/// @}
+
 	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );

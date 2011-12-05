@@ -20,6 +20,7 @@ using salviar::su_stream_out;
 using salviar::su_buffer_in;
 using salviar::su_buffer_out;
 using salviar::storage_usage_count;
+using salviar::lang_pixel_shader;
 
 using salviar::sv_layout;
 
@@ -202,6 +203,10 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 }
 
 void abi_info::compute_input_semantics_layout(){
+	if( lang == lang_pixel_shader ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
 
 		sv_layout* svl = input_sv_layout( sems_in[index] );
@@ -224,6 +229,10 @@ void abi_info::compute_input_semantics_layout(){
 }
 
 void abi_info::compute_output_buffer_layout(){
+	if( lang == lang_pixel_shader ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
 	for ( size_t index = 0; index < sems_out.size(); ++index ){
 		sv_layout* svl = output_sv_layout( sems_out[index] );
 		assert(svl);
@@ -246,6 +255,10 @@ void abi_info::compute_output_stream_layout()
 }
 
 void abi_info::compute_input_constant_layout(){
+	if( lang == lang_pixel_shader ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
 	for ( size_t index = 0; index < syms_in.size(); ++index ){
 		sv_layout* svl = addressof( symin_storages[ syms_in[index] ] );
 		svl->usage = su_buffer_in;

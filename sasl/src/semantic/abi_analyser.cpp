@@ -87,7 +87,7 @@ sv_usage vsoutput_semantic_usage( salviar::semantic_value const& sem ){
 sv_usage psinput_semantic_usage( salviar::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
 	case salviar::sv_texcoord:
-		return su_buffer_in;
+		return su_stream_in;
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return su_none;

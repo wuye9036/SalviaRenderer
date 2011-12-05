@@ -1,5 +1,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
+#include <sasl/include/code_generator/llvm/ty_cache.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/enums/enums_utility.h>
@@ -32,6 +33,7 @@ namespace {
 		return mask;
 	}
 }
+
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -313,6 +315,18 @@ bool cg_service::in_function() const{
 
 function_t& cg_service::fn(){
 	return fn_ctxts.back();
+}
+
+Type* cg_service::type_( builtin_types bt, abis abi )
+{
+	assert( abi != abi_unknown );
+	return get_llvm_type( context(), bt, abi );
+}
+
+Type* cg_service::type_( value_tyinfo const* ty, abis abi )
+{
+	assert( ty->ty(abi) );
+	return ty->ty(abi);
 }
 
 END_NS_SASL_CODE_GENERATOR();

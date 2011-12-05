@@ -128,110 +128,7 @@ using std::string;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 namespace {
-	/// Only support a context.
-	class ty_cache_t{
-	public:
-		Type* type( LLVMContext& ctxt, builtin_types bt, abis abi ){
-			Type*& found_ty = cache[abi][&ctxt][bt];
-			if( !found_ty ){ 
-				found_ty = create_ty( ctxt, bt, abi );
-			}
-			return found_ty;
-		}
-		std::string const& name( builtin_types bt, abis abi ){
-			std::string& ret_name = ty_name[abi][bt];
-			if( ret_name.empty() ){
-				if( is_scalar(bt) ){
-					if( bt == builtin_types::_void ){
-						ret_name = "void";
-					} else if ( bt == builtin_types::_sint8 ){
-						ret_name = "char";
-					} else if ( bt == builtin_types::_sint16 ){
-						ret_name = "short";
-					} else if ( bt == builtin_types::_sint32 ){
-						ret_name = "int";
-					} else if ( bt == builtin_types::_sint64 ){
-						ret_name = "int64";
-					} else if ( bt == builtin_types::_uint8 ){
-						ret_name = "uchar";
-					} else if ( bt == builtin_types::_uint16 ){
-						ret_name = "ushort";
-					} else if ( bt == builtin_types::_uint32 ){
-						ret_name = "uint";
-					} else if ( bt == builtin_types::_uint64 ){
-						ret_name = "uint64";
-					} else if ( bt == builtin_types::_float ){
-						ret_name = "float";
-					} else if ( bt == builtin_types::_double ){
-						ret_name = "double";
-					} else if ( bt == builtin_types::_boolean ){
-						ret_name = "bool";
-					}
-				} else if ( is_vector(bt) ){
-					ret_name = name( scalar_of(bt), abi );
-					ret_name.reserve( ret_name.length() + 5 );
-					ret_name += ".v";
-					ret_name += lexical_cast<string>( vector_size(bt) );
-					ret_name += ( abi == abi_c ? ".c" : ".l" );
-				} else if ( is_matrix(bt) ){
-					ret_name = name( scalar_of(bt), abi );
-					ret_name.reserve( ret_name.length() + 6 );
-					ret_name += ".m";
-					ret_name += lexical_cast<string>( vector_size(bt) );
-					ret_name += lexical_cast<string>( vector_count(bt) );
-					ret_name += ( abi == abi_c ? ".c" : ".l" );
-				}
-			}
-			return ret_name;
-		}
-	private:
-		Type* create_ty( LLVMContext& ctxt, builtin_types bt, abis abi ){
-			if ( is_void( bt ) ){
-				return Type::getVoidTy( ctxt );
-			}
 
-			if( is_scalar(bt) ){
-				if( bt == builtin_types::_boolean ){
-					return IntegerType::get( ctxt, 1 );
-				}
-				if( is_integer(bt) ){
-					return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );
-				}
-				if ( bt == builtin_types::_float ){
-					return Type::getFloatTy( ctxt );
-				}
-				if ( bt == builtin_types::_double ){
-					return Type::getDoubleTy( ctxt );
-				}
-			}
-
-			if( is_vector(bt) ){
-				Type* elem_ty = type(ctxt, scalar_of(bt), abi );
-				size_t vec_size = vector_size(bt);
-				if( abi == abi_c ){
-					vector<Type*> elem_tys(vec_size, elem_ty);
-					return StructType::create( elem_tys, name(bt, abi) );
-				} else {
-					return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
-				}
-			}
-
-			if( is_matrix(bt) ){
-				Type* vec_ty = type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), abi );
-				vector<Type*> row_tys( vector_count(bt), vec_ty );
-				return StructType::create( row_tys, name(bt, abi) );
-			}
-		}
-		unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> > cache[2];
-		unordered_map<builtin_types, std::string> ty_name[2];
-	};
-
-	ty_cache_t ty_cache;
-
-	/// Get LLVM type from builtin types.
-	Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, bool is_c_compatible ){
-		return ty_cache.type( ctxt, bt, is_c_compatible ? abi_c : abi_llvm );
-	}
 
 	template <typename T>
 	APInt apint( T v ){
@@ -366,7 +263,7 @@ value_t cgs_sisd::null_value( value_tyinfo* tyinfo, abis abi )
 value_t cgs_sisd::null_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
-	Type* valty = get_llvm_type( context(), bt, abi == abi_c );
+	Type* valty = type_( bt, abi );
 	value_t val = create_value( bt, Constant::getNullValue( valty ), vkind_value, abi );
 	return val;
 }
@@ -410,8 +307,8 @@ shared_ptr<value_tyinfo> cgs_sisd::create_tyinfo( shared_ptr<tynode> const& tyn 
 	ret->cls = value_tyinfo::unknown_type;
 
 	if( tyn->is_builtin() ){
-		ret->tys[abi_c] = get_llvm_type( context(), tyn->tycode, true );
-		ret->tys[abi_llvm] = get_llvm_type( context(), tyn->tycode, false );
+		ret->tys[abi_c] = type_( tyn->tycode, abi_c );
+		ret->tys[abi_llvm] = type_( tyn->tycode, abi_llvm );
 		ret->cls = value_tyinfo::builtin;
 	} else {
 		ret->cls = value_tyinfo::aggregated;
@@ -895,18 +792,6 @@ value_t cgs_sisd::emit_mul_vm( value_t const& lhs, value_t const& rhs )
 	return ret;
 }
 
-llvm::Type* cgs_sisd::type_( builtin_types bt, abis abi )
-{
-	assert( abi != abi_unknown );
-	return get_llvm_type( context(), bt, abi == abi_c );
-}
-
-Type* cgs_sisd::type_( value_tyinfo const* ty, abis abi )
-{
-	assert( ty->ty(abi) );
-	return ty->ty(abi);
-}
-
 value_t cgs_sisd::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type* var_ty = type_( bt, abi );
@@ -1142,7 +1027,7 @@ Function* cgs_sisd::intrin_( int v )
 value_t cgs_sisd::undef_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
-	Type* valty = get_llvm_type( context(), bt, abi == abi_c );
+	Type* valty = type_( bt, abi );
 	value_t val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
 	return val;
 }

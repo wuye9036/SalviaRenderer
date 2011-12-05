@@ -8,6 +8,8 @@ INCLUDE_DIRECTORIES(
 )
 	
 set( HEADER_FILES
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/ty_cache.h
+	
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_service.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs_sisd.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs_simd.h
@@ -31,6 +33,8 @@ set( HEADER_FILES
 )
 
 set( SOURCE_FILES
+	ty_cache.cpp
+	
 	cgllvm_service.cpp
 	cgs_sisd.cpp
 	cgs_simd.cpp
