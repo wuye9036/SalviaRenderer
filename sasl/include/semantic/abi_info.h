@@ -76,6 +76,9 @@ private:
 	void compute_output_buffer_layout();
 	void compute_output_stream_layout();
 	void compute_input_constant_layout();
+	
+	void compute_input_package_layout();
+	void compute_output_package_layout();
 
 	module_si* mod;
 	symbol* entry_point;

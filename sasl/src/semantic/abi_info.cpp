@@ -21,6 +21,7 @@ using salviar::su_buffer_in;
 using salviar::su_buffer_out;
 using salviar::storage_usage_count;
 using salviar::lang_pixel_shader;
+using salviar::lang_vertex_shader;
 
 using salviar::sv_layout;
 
@@ -58,6 +59,7 @@ bool abi_info::is_entry( shared_ptr<symbol> const& v ) const{
 std::string abi_info::entry_name() const{
 	return entry_point_name;
 }
+
 bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream )
 {
 	vector<salviar::semantic_value>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
@@ -168,9 +170,18 @@ void abi_info::compute_layout(){
 		return;
 	}
 
-	compute_input_semantics_layout();
-	compute_output_buffer_layout();
-	compute_output_stream_layout();
+	switch( lang ){
+	case lang_vertex_shader:
+		compute_input_semantics_layout();
+		compute_output_buffer_layout();
+		compute_output_stream_layout();
+		break;
+	case lang_pixel_shader:
+		compute_input_package_layout();
+		compute_output_package_layout();
+		break;
+	}
+	
 	compute_input_constant_layout();
 }
 
@@ -203,10 +214,6 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 }
 
 void abi_info::compute_input_semantics_layout(){
-	if( lang == lang_pixel_shader ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
 
 		sv_layout* svl = input_sv_layout( sems_in[index] );
@@ -229,10 +236,6 @@ void abi_info::compute_input_semantics_layout(){
 }
 
 void abi_info::compute_output_buffer_layout(){
-	if( lang == lang_pixel_shader ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
 	for ( size_t index = 0; index < sems_out.size(); ++index ){
 		sv_layout* svl = output_sv_layout( sems_out[index] );
 		assert(svl);
@@ -255,10 +258,6 @@ void abi_info::compute_output_stream_layout()
 }
 
 void abi_info::compute_input_constant_layout(){
-	if( lang == lang_pixel_shader ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
 	for ( size_t index = 0; index < syms_in.size(); ++index ){
 		sv_layout* svl = addressof( symin_storages[ syms_in[index] ] );
 		svl->usage = su_buffer_in;
@@ -273,6 +272,16 @@ void abi_info::compute_input_constant_layout(){
 		counts[su_buffer_in]++;
 		offsets[su_buffer_in] += size;
 	}
+}
+
+void abi_info::compute_input_package_layout()
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+void abi_info::compute_output_package_layout()
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 END_NS_SASL_SEMANTIC();
