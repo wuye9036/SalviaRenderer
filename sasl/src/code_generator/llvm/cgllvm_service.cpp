@@ -354,6 +354,20 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 	return ctxt->data().tyinfo;
 }
 
+value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
+{
+	Type* var_ty = type_( bt, abi );
+	Value* var_val = builder().CreateAlloca( var_ty );
+	return create_value( bt, var_val, vkind_ref, abi );
+}
+
+value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
+{
+	Type* var_ty = type_(ty, abi);
+	Value* var_val = builder().CreateAlloca( var_ty );
+	return create_value( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi );
+}
+
 insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
 {
 	assert( in_function() );

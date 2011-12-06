@@ -456,23 +456,6 @@ SASL_VISIT_DEF( function_type ){
 	node_ctxt(v.symbol()->node(), true)->copy( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF( declarator ){
-
-	// local *OR* member.
-	// TODO TBD: Support member function and nested structure ?
-
-	// TODO
-	// assert( !(sc_env_ptr(data)->parent_fn && sc_env_ptr(data)->parent_struct) );
-
-	if( in_function() ){
-		visit_local_declarator( v, data );
-	} else if( sc_env_ptr(data)->parent_struct ){
-		visit_member_declarator( v, data );
-	} else {
-		visit_global_declarator(v, data);
-	}
-}
-
 SASL_VISIT_DEF( parameter ){
 	sc_ptr(data)->clear_data();
 
@@ -886,42 +869,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	clean_empty_blocks();
 }
 
-SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
-	
-	shared_ptr<value_tyinfo> decl_ty = sc_env_ptr(data)->tyinfo;
-	assert(decl_ty);
-
-	// Needn't process init expression now.
-	storage_si* si = v.si_ptr<storage_si>();
-	sc_data_ptr(data)->tyinfo = decl_ty;
-	sc_data_ptr(data)->val = create_value(decl_ty.get(), NULL, vkind_swizzle, abi_unknown );
-	sc_data_ptr(data)->val.index( si->mem_index() );
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
-SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
-
-SASL_SPECIFIC_VISIT_DEF( visit_local_declarator, declarator ){
-	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-
-	any child_ctxt;
-
-	sc_data_ptr(data)->tyinfo = sc_env_ptr(data)->tyinfo;
-	sc_data_ptr(data)->val = create_variable( sc_data_ptr(data)->tyinfo.get(), v.si_ptr<storage_si>()->c_compatible() ? abi_c : abi_llvm, v.name->str );
-
-	if ( v.init ){
-		sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.as_handle();
-		visit_child( child_ctxt, child_ctxt_init, v.init );
-		sc_data_ptr(data)->val.store( sc_ptr(&child_ctxt)->get_value() );
-	}
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
 /* Make binary assignment code.
 *    Note: Right argument is assignee, and left argument is value.
 */
@@ -980,6 +927,11 @@ llvm_module_impl* cgllvm_sisd::mod_ptr(){
 cg_service* cgllvm_sisd::service() const
 {
 	return const_cast<cgllvm_sisd*>(this);
+}
+
+abis cgllvm_sisd::local_abi( bool is_c_compatible ) const
+{
+	return is_c_compatible ? abi_c : abi_llvm;
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -70,8 +70,6 @@ private:
 
 	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
 
-	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
-
 	bool is_entry( llvm::Function* ) const;
 
 	cgllvm_modvs* mod_ptr();

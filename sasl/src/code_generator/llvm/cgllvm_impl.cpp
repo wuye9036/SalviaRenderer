@@ -164,6 +164,53 @@ SASL_VISIT_DEF( variable_declaration ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( declarator ){
+	// local or member.
+	// TODO TBD: Support member function and nested structure ?
+	if( service()->in_function() ){
+		visit_local_declarator( v, data );
+	} else if( sc_env_ptr(data)->parent_struct ){
+		visit_member_declarator( v, data );
+	} else {
+		visit_global_declarator(v, data);
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
+	
+	shared_ptr<value_tyinfo> decl_ty = sc_env_ptr(data)->tyinfo;
+	assert(decl_ty);
+
+	// Needn't process init expression now.
+	storage_si* si = v.si_ptr<storage_si>();
+	sc_data_ptr(data)->tyinfo = decl_ty;
+	sc_data_ptr(data)->val = service()->create_value(decl_ty.get(), NULL, vkind_swizzle, abi_unknown );
+	sc_data_ptr(data)->val.index( si->mem_index() );
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
+	sc_env_ptr(data)->sym = v.symbol();
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	sc_data_ptr(data)->tyinfo = sc_env_ptr(data)->tyinfo;
+	sc_data_ptr(data)->val = service()->create_variable( sc_data_ptr(data)->tyinfo.get(), local_abi( v.si_ptr<storage_si>()->c_compatible() ), v.name->str );
+
+	if ( v.init ){
+		sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.as_handle();
+		visit_child( child_ctxt, child_ctxt_init, v.init );
+		sc_data_ptr(data)->val.store( sc_ptr(&child_ctxt)->get_value() );
+	}
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( program )
 {	
 	// Create module.

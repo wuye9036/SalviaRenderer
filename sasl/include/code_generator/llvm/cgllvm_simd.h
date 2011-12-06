@@ -50,7 +50,6 @@ public:
 	SASL_VISIT_DCL( expression_initializer );
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
-	SASL_VISIT_DCL( declarator );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( tynode );
 	SASL_VISIT_DCL( array_type );
@@ -75,7 +74,8 @@ public:
 
 protected:
 	cg_service* service() const;
-	
+	abis		local_abi( bool is_c_compatible ) const;
+
 	void create_entries();
 	void create_entry_param( salviar::sv_usage usage );
 

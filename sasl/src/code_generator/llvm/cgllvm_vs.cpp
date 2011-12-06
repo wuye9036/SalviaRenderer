@@ -418,11 +418,6 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
-	sc_env_ptr(data)->sym = v.symbol();
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
 cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL){}
 
 bool cgllvm_vs::is_entry( llvm::Function* fn ) const{

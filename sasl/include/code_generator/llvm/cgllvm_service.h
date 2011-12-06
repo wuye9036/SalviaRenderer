@@ -354,6 +354,9 @@ public:
 	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 
+	value_t create_variable( value_tyinfo const*, abis abi, std::string const& name );
+	value_t create_variable( builtin_types bt, abis abi, std::string const& name );
+
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi ) = 0;
 
 	llvm::Module*			module () const;

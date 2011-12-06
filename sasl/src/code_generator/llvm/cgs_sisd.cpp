@@ -736,20 +736,6 @@ value_t cgs_sisd::emit_mul_vm( value_t const& lhs, value_t const& rhs )
 	return ret;
 }
 
-value_t cgs_sisd::create_variable( builtin_types bt, abis abi, std::string const& name )
-{
-	Type* var_ty = type_( bt, abi );
-	Value* var_val = builder().CreateAlloca( var_ty );
-	return create_value( bt, var_val, vkind_ref, abi );
-}
-
-value_t cgs_sisd::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
-{
-	Type* var_ty = type_(ty, abi);
-	Value* var_val = builder().CreateAlloca( var_ty );
-	return create_value( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi );
-}
-
 value_tyinfo* cgs_sisd::member_tyinfo( value_tyinfo const* agg, size_t index ) const
 {
 	if( !agg ){

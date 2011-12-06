@@ -43,6 +43,11 @@ cg_service* cgllvm_simd::service() const{
 	return const_cast<cgllvm_simd*>(this);
 }
 
+abis cgllvm_simd::local_abi( bool is_c_compatible ) const
+{
+	return abi_package;
+}
+
 void cgllvm_simd::create_entries()
 {
 	create_entry_param( su_stream_in );
@@ -130,7 +135,6 @@ SASL_VISIT_DEF_UNIMPL( initializer );
 SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
-SASL_VISIT_DEF_UNIMPL( declarator );
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF_UNIMPL( array_type );

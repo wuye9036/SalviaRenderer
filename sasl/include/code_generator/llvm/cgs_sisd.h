@@ -211,9 +211,6 @@ public:
 
 	/// @name Emit variables
 	/// @{
-	value_t create_variable( value_tyinfo const*, abis abi, std::string const& name );
-	value_t create_variable( builtin_types bt, abis abi, std::string const& name );
-
 	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
 	/// @}
 

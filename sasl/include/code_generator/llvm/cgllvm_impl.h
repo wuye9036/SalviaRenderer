@@ -79,6 +79,7 @@ protected:
 	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( variable_declaration );
+	SASL_VISIT_DCL( declarator );
 
 	SASL_VISIT_DCL( program );
 
@@ -88,6 +89,10 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program ) = 0;
 	SASL_SPECIFIC_VISIT_DCL( process_intrinsics, program );
 	
+	SASL_SPECIFIC_VISIT_DCL( visit_member_declarator, declarator );
+	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
+	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator , declarator );
+
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );
@@ -104,6 +109,7 @@ protected:
 	
 protected:
 	virtual cg_service*		service() const = 0;
+	virtual abis			local_abi( bool c_compatible ) const = 0;
 
 	// Store global informations
 	sasl::semantic::module_si* msi;
