@@ -1,14 +1,18 @@
 #include <sasl/include/code_generator/llvm/cgllvm_simd.h>
 
 #include <sasl/include/host/utility.h>
+#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
+#include <sasl/include/syntax_tree/declaration.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Target/TargetData.h>
+#include <llvm/Function.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -27,13 +31,16 @@ using salviar::sv_layout;
 using llvm::Type;
 using llvm::StructType;
 using llvm::StructLayout;
+using llvm::PointerType;
+using llvm::FunctionType;
+using llvm::Function;
 using std::vector;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_simd
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-cgllvm_simd::cgllvm_simd(){
+cgllvm_simd::cgllvm_simd(): entry_fn(NULL){
 	memset( entry_structs, 0, sizeof( entry_structs ) );
 }
 
@@ -53,7 +60,7 @@ void cgllvm_simd::create_entries()
 	create_entry_param( su_stream_in );
 	create_entry_param( su_stream_out );
 	create_entry_param( su_buffer_in );
-	create_entry_param( su_stream_out );
+	create_entry_param( su_buffer_out );
 }
 
 void cgllvm_simd::create_entry_param( sv_usage usage )
@@ -139,8 +146,6 @@ SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( alias_type );
-SASL_VISIT_DEF_UNIMPL( parameter );
-SASL_VISIT_DEF_UNIMPL( function_type );
 
 // statement
 SASL_VISIT_DEF_UNIMPL( statement );
@@ -161,6 +166,68 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
 	parent_class::before_decls_visit( v, data );
 	create_entries();
+}
+
+void add_type_ref( Type* ty, vector<Type*>& tys )
+{
+	tys.push_back( PointerType::getUnqual( ty ) );
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
+{
+	if( !entry_fn && abii->is_entry( v.symbol() ) ){
+
+		boost::any child_ctxt;
+
+		vector<Type*> param_types;
+
+		add_type_ref( entry_structs[su_stream_in], param_types );
+		add_type_ref( entry_structs[su_buffer_in], param_types );
+		add_type_ref( entry_structs[su_stream_out], param_types );
+		add_type_ref( entry_structs[su_buffer_out], param_types );
+
+		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cgllvm_impl::context() ), param_types, false );
+		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), cgllvm_impl::module() );
+		entry_fn = fn;
+		// entry_sym = v.symbol().get();
+
+		sc_data_ptr(data)->self_fn.fn = fn;
+		sc_data_ptr(data)->self_fn.fnty = &v;
+	} else {
+		parent_class::create_fnsig(v, data);
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
+{
+	Function* fn = sc_data_ptr(data)->self_fn.fn;
+
+	if( abii->is_entry( v.symbol() ) ){
+		// Create entry arguments.
+		Function::arg_iterator arg_it = fn->arg_begin();
+
+		arg_it->setName( ".arg.stri" );
+		entry_values[su_stream_in] = create_value( builtin_types::none, arg_it, vkind_ref, abi_package );
+		++arg_it;
+		arg_it->setName( ".arg.bufi" );
+		entry_values[su_buffer_in] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		++arg_it;
+		arg_it->setName( ".arg.stro" );
+		entry_values[su_stream_out] = create_value( builtin_types::none, arg_it, vkind_ref, abi_package );
+		++arg_it;
+		arg_it->setName( ".arg.bufo" );
+		entry_values[su_buffer_out] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		++arg_it;
+
+		// Create virutal arguments
+		create_virtual_args(v, data);
+	} else {
+		parent_class::create_fnargs(v, data);
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -77,6 +77,8 @@ protected:
 	SASL_VISIT_DCL( declaration ){}
 	
 	SASL_VISIT_DCL( builtin_type );
+	SASL_VISIT_DCL( parameter );
+	SASL_VISIT_DCL( function_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( declarator );
@@ -92,6 +94,10 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_member_declarator, declarator );
 	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
 	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator , declarator );
+
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig , function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_type );
 
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );

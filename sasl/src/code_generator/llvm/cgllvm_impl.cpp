@@ -1,10 +1,12 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 
+#include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/program.h>
 
@@ -115,6 +117,45 @@ SASL_VISIT_DEF( builtin_type ){
 	sc_ptr( data )->data( pctxt );
 	return;
 }
+
+SASL_VISIT_DEF( parameter ){
+	sc_ptr(data)->clear_data();
+
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.param_type );
+
+	if( v.init ){
+		visit_child( child_ctxt, child_ctxt_init, v.init );
+	}
+
+	sc_data_ptr(data)->val = sc_data_ptr(&child_ctxt)->val;
+	sc_data_ptr(data)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+// Generate normal function code.
+SASL_VISIT_DEF( function_type ){
+	sc_env_ptr(data)->sym = v.symbol();
+
+	cgllvm_sctxt* fnctxt = node_ctxt(v.symbol()->node(), true);
+	if( !fnctxt->data().self_fn ){
+		create_fnsig( v, data );
+	}
+
+	if ( v.body ){
+		// TODO
+		// sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
+		create_fnargs( v, data );
+		create_fnbody( v, data );
+	}
+
+	// Here use the definition node.
+	node_ctxt(v.symbol()->node(), true)->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( struct_type ){
 	// Create context.
 	// Declarator visiting need parent information.
@@ -249,9 +290,58 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
 	target_data = new TargetData( module() );
 }
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	// Generate return type node.
+	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
+	shared_ptr<value_tyinfo> ret_ty = sc_data_ptr(&child_ctxt)->tyinfo;
+	assert( ret_ty );
+
+	// Generate parameters.
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
+		visit_child( child_ctxt, child_ctxt_init, par );
+	}
+
+	sc_data_ptr(data)->self_fn = service()->fetch_function( v.as_handle<function_type>() );
+}
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
+	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
+	
+	// Register arguments names.
+	assert( service()->fn().arg_size() == v.params.size() );
+
+	service()->fn().return_name( ".ret" );
+	size_t i_arg = 0;
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
+	{
+		sctxt_handle par_ctxt = node_ctxt( par );
+		service()->fn().arg_name( i_arg, par->symbol()->unmangled_name() );
+		par_ctxt->get_value() = service()->fn().arg( i_arg++ );
+	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
+
+	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	service()->new_block(".body", true);
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+
+	service()->clean_empty_blocks();
+}
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
+	// TODO Unsupport PS intrinsic yet;
+	if( abii->lang == salviar::lang_pixel_shader ) return;
+
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
 
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){

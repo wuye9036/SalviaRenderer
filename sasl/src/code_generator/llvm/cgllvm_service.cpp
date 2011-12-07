@@ -5,12 +5,14 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Module.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -28,6 +30,7 @@ using namespace sasl::syntax_tree;
 using namespace sasl::semantic;
 using sasl::utility::is_vector;
 using sasl::utility::scalar_of;
+using sasl::utility::is_scalar;
 
 namespace {
 	uint32_t indexes_to_mask( char indexes[4] ){
@@ -44,17 +47,18 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 /// @name Value Type Info
 /// @{
-value_tyinfo::value_tyinfo(tynode* tyn, Type* cty, Type* llty )
+value_tyinfo::value_tyinfo(tynode* tyn, Type* ty_c, Type* ty_llvm, Type* ty_vec, Type* ty_pkg )
 	: tyn(tyn)
 {
-	tys[abi_c] = cty;
-	tys[abi_llvm] = llty;
+	tys[abi_c]			= ty_c;
+	tys[abi_llvm]		= ty_llvm;
+	tys[abi_vectorize]	= ty_vec;
+	tys[abi_package]	= ty_pkg;
 }
 
 value_tyinfo::value_tyinfo(): tyn(NULL), cls(unknown_type)
 {
-	tys[0] = NULL;
-	tys[1] = NULL;
+	memset( tys, 0, sizeof(tys) );
 }
 
 builtin_types value_tyinfo::hint() const{
@@ -280,6 +284,62 @@ DefaultIRBuilder& cg_service::builder() const{
 	return *( mod_impl->builder() );
 }
 
+function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node ){
+
+	cgllvm_sctxt* fn_ctxt = node_ctxt( fn_node.get(), false );
+	if( fn_ctxt->data().self_fn ){
+		return fn_ctxt->data().self_fn;
+	}
+
+	function_t ret;
+	ret.fnty = fn_node.get();
+	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
+
+	abis abi = param_abi( ret.c_compatible );
+
+	vector<Type*> par_tys;
+
+	Type* ret_ty = node_ctxt( fn_node->retval_type.get(), false )->get_typtr()->ty( abi );
+
+	ret.ret_void = true;
+	if( abi == abi_c ){
+		if( fn_node->retval_type->tycode != builtin_types::_void ){
+			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
+			Type* ret_ptr = PointerType::getUnqual( ret_ty );
+			par_tys.push_back( ret_ptr );
+			ret.ret_void = false;
+		}
+
+		ret_ty = Type::getVoidTy( context() );
+	}
+
+	// Create function type.
+	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
+	{
+		cgllvm_sctxt* par_ctxt = node_ctxt( par.get(), false );
+		value_tyinfo* par_ty = par_ctxt->get_typtr();
+		assert( par_ty );
+
+		// bool is_ref = par->si_ptr<storage_si>()->is_reference();
+
+		Type* par_llty = par_ty->ty( abi ); 
+		if( ret.c_compatible && !is_scalar(par_ty->hint()) ){
+			par_tys.push_back( PointerType::getUnqual( par_llty ) );
+		} else {
+			par_tys.push_back( par_llty );
+		}
+	}
+
+
+	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
+
+	// Create function
+	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
+
+	ret.cg = this;
+	return ret;
+}
+
 value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_kinds k, abis abi ){
 	return value_t( tyinfo, val, k, abi, this );
 }
@@ -311,6 +371,8 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 	if( tyn->is_builtin() ){
 		ret->tys[abi_c] = type_( tyn->tycode, abi_c );
 		ret->tys[abi_llvm] = type_( tyn->tycode, abi_llvm );
+		ret->tys[abi_vectorize] = type_( tyn->tycode, abi_vectorize );
+		ret->tys[abi_package] = type_( tyn->tycode, abi_package );
 		ret->cls = value_tyinfo::builtin;
 	} else {
 		ret->cls = value_tyinfo::aggregated;
@@ -320,31 +382,36 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 
 			vector<Type*> c_member_types;
 			vector<Type*> llvm_member_types;
+			vector<Type*> vectorize_member_types;
+			vector<Type*> package_member_types;
 
 			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_tyn->decls){
-
 				if( decl->node_class() == node_ids::variable_declaration ){
 					shared_ptr<variable_declaration> decl_tyn = decl->as_handle<variable_declaration>();
 					shared_ptr<value_tyinfo> decl_tyinfo = create_tyinfo( decl_tyn->type_info->si_ptr<type_info_si>()->type_info() );
 					size_t declarator_count = decl_tyn->declarators.size();
-					// c_member_types.insert( c_member_types.end(), (Type*)NULL );
 					c_member_types.insert( c_member_types.end(), declarator_count, decl_tyinfo->ty(abi_c) );
 					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_tyinfo->ty(abi_llvm) );
+					vectorize_member_types.insert( vectorize_member_types.end(), declarator_count, decl_tyinfo->ty(abi_vectorize) );
+					package_member_types.insert( package_member_types.end(), declarator_count, decl_tyinfo->ty(abi_package) );
 				}
 			}
 
-			StructType* ty_c = StructType::get( context(), c_member_types, true );
-			StructType* ty_llvm = StructType::get( context(), llvm_member_types, false );
-
-			ret->tys[abi_c] = ty_c;
-			ret->tys[abi_llvm] = ty_llvm;
-
-			if( !ty_c->isLiteral() ){
-				ty_c->setName( struct_tyn->name->str + ".abi.c" );
+			StructType* ty_c	= StructType::create( c_member_types,			struct_tyn->name->str + ".abi.c" );
+			StructType* ty_llvm	= StructType::create( llvm_member_types,		struct_tyn->name->str + ".abi.llvm" );
+			StructType* ty_vec	= NULL;
+			if( vectorize_member_types[0] != NULL ){
+				StructType* ty_vec	= StructType::create( vectorize_member_types,	struct_tyn->name->str + ".abi.vec" );
 			}
-			if( !ty_llvm->isLiteral() ){
-				ty_llvm->setName( struct_tyn->name->str + ".abi.llvm" );
+			StructType* ty_pkg	= NULL;
+			if( package_member_types[0] != NULL ){
+				ty_pkg	= StructType::create( package_member_types,		struct_tyn->name->str + ".abi.pkg" );
 			}
+
+			ret->tys[abi_c]			= ty_c;
+			ret->tys[abi_llvm]		= ty_llvm;
+			ret->tys[abi_vectorize]	= ty_vec;
+			ret->tys[abi_package]	= ty_pkg;
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
@@ -371,17 +438,62 @@ value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::stri
 insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
 {
 	assert( in_function() );
-
 	insert_point_t ret;
-
 	ret.block = BasicBlock::Create( context(), hint, fn().fn );
 	// dbg_print_blocks( fn().fn );
+	if( set_as_current ){ set_insert_point( ret ); }
+	return ret;
+}
 
-	if( set_as_current ){
-		set_insert_point( ret );
+void cg_service::clean_empty_blocks()
+{
+	assert( in_function() );
+
+	typedef Function::BasicBlockListType::iterator block_iterator_t;
+	block_iterator_t beg = fn().fn->getBasicBlockList().begin();
+	block_iterator_t end = fn().fn->getBasicBlockList().end();
+
+	// dbg_print_blocks( fn().fn );
+
+	// Remove useless blocks
+	vector<BasicBlock*> useless_blocks;
+
+	for( block_iterator_t it = beg; it != end; ++it )
+	{
+		// If block has terminator, that's a well-formed block.
+		if( it->getTerminator() ) continue;
+
+		// Add no-pred & empty block to remove list.
+		if( llvm::pred_begin(it) == llvm::pred_end(it) && it->empty() ){
+			useless_blocks.push_back( it );
+			continue;
+		}
 	}
 
-	return ret;
+	BOOST_FOREACH( BasicBlock* bb, useless_blocks ){
+		bb->removeFromParent();
+	}
+
+	// Relink unlinked blocks
+	beg = fn().fn->getBasicBlockList().begin();
+	end = fn().fn->getBasicBlockList().end();
+	for( block_iterator_t it = beg; it != end; ++it ){
+		if( it->getTerminator() ) continue;
+
+		// Link block to next.
+		block_iterator_t next_it = it;
+		++next_it;
+		builder().SetInsertPoint( it );
+		if( next_it != fn().fn->getBasicBlockList().end() ){
+			builder().CreateBr( next_it );
+		} else {
+			if( !fn().fn->getReturnType()->isVoidTy() ){
+				builder().CreateRet( Constant::getNullValue( fn().fn->getReturnType() ) );
+			} else {
+				emit_return();
+			}
+		}
+	}
 }
 
 bool cg_service::in_function() const{

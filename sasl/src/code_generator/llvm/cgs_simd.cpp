@@ -149,4 +149,9 @@ value_t cgs_simd::emit_cross( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
+abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
+{
+	return abi_package;
+}
+
 END_NS_SASL_CODE_GENERATOR();

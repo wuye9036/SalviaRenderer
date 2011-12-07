@@ -296,114 +296,6 @@ void cgs_sisd::pop_fn(){
 	fn_ctxts.pop_back();
 }
 
-function_t cgs_sisd::fetch_function( shared_ptr<function_type> const& fn_node ){
-
-	cgllvm_sctxt* fn_ctxt = node_ctxt( fn_node, false );
-	if( fn_ctxt->data().self_fn ){
-		return fn_ctxt->data().self_fn;
-	}
-
-	function_t ret;
-	ret.fnty = fn_node.get();
-	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
-
-	abis abi = ret.c_compatible ? abi_c : abi_llvm;
-
-	vector<Type*> par_tys;
-
-	Type* ret_ty = node_ctxt( fn_node->retval_type, false )->get_typtr()->ty( abi );
-
-	ret.ret_void = true;
-	if( abi == abi_c ){
-		if( fn_node->retval_type->tycode != builtin_types::_void ){
-			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
-			Type* ret_ptr = PointerType::getUnqual( ret_ty );
-			par_tys.push_back( ret_ptr );
-			ret.ret_void = false;
-		}
-
-		ret_ty = Type::getVoidTy( context() );
-	}
-
-	// Create function type.
-	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
-	{
-		cgllvm_sctxt* par_ctxt = node_ctxt( par, false );
-		value_tyinfo* par_ty = par_ctxt->get_typtr();
-		assert( par_ty );
-
-		//		bool is_ref = par->si_ptr<storage_si>()->is_reference();
-
-		Type* par_llty = par_ty->ty( abi ); 
-		if( ret.c_compatible && !is_scalar(par_ty->hint()) ){
-			par_tys.push_back( PointerType::getUnqual( par_llty ) );
-		} else {
-			par_tys.push_back( par_llty );
-		}
-	}
-
-
-	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
-
-	// Create function
-	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
-
-	ret.cg = this;
-	return ret;
-}
-
-
-void cgs_sisd::clean_empty_blocks()
-{
-	assert( in_function() );
-
-	typedef Function::BasicBlockListType::iterator block_iterator_t;
-	block_iterator_t beg = fn().fn->getBasicBlockList().begin();
-	block_iterator_t end = fn().fn->getBasicBlockList().end();
-
-	dbg_print_blocks( fn().fn );
-
-	// Remove useless blocks
-	vector<BasicBlock*> useless_blocks;
-
-	for( block_iterator_t it = beg; it != end; ++it )
-	{
-		// If block has terminator, that's a well-formed block.
-		if( it->getTerminator() ) continue;
-
-		// Add no-pred & empty block to remove list.
-		if( llvm::pred_begin(it) == llvm::pred_end(it) && it->empty() ){
-			useless_blocks.push_back( it );
-			continue;
-		}
-	}
-
-	BOOST_FOREACH( BasicBlock* bb, useless_blocks ){
-		bb->removeFromParent();
-	}
-
-	// Relink unlinked blocks
-	beg = fn().fn->getBasicBlockList().begin();
-	end = fn().fn->getBasicBlockList().end();
-	for( block_iterator_t it = beg; it != end; ++it ){
-		if( it->getTerminator() ) continue;
-
-		// Link block to next.
-		block_iterator_t next_it = it;
-		++next_it;
-		builder().SetInsertPoint( it );
-		if( next_it != fn().fn->getBasicBlockList().end() ){
-			builder().CreateBr( next_it );
-		} else {
-			if( !fn().fn->getReturnType()->isVoidTy() ){
-				builder().CreateRet( Constant::getNullValue( fn().fn->getReturnType() ) );
-			} else {
-				emit_return();
-			}
-		}
-	}
-}
-
 value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
 	return create_value( tyinfo, val, vkind_value, abi_llvm );
 }
@@ -1139,6 +1031,11 @@ llvm::Value* cgs_sisd::load_ref( value_t const& v )
 abis cgs_sisd::intrinsic_abi() const
 {
 	return abi_llvm;
+}
+
+abis cgs_sisd::param_abi( bool c_compatible ) const
+{
+	return c_compatible ? abi_c : abi_llvm;
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

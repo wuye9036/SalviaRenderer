@@ -54,8 +54,6 @@ public:
 	SASL_VISIT_DCL( tynode );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( alias_type );
-	SASL_VISIT_DCL( parameter );
-	SASL_VISIT_DCL( function_type );
 
 	// statement
 	SASL_VISIT_DCL( statement );
@@ -81,9 +79,15 @@ protected:
 
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 
-	std::vector<llvm::Type*> entry_tys[salviar::storage_usage_count];
-	llvm::StructType* entry_structs[salviar::storage_usage_count];
-	std::vector<builtin_types> entry_tyns[salviar::storage_usage_count];
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig,			function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs,			function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_virtual_args,	function_type );
+
+	llvm::Function*				entry_fn;
+	std::vector<llvm::Type*>	entry_tys[salviar::storage_usage_count];
+	llvm::StructType*			entry_structs[salviar::storage_usage_count];
+	std::vector<builtin_types>	entry_tyns[salviar::storage_usage_count];
+	value_t						entry_values[salviar::storage_usage_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();

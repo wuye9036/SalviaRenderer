@@ -66,9 +66,6 @@ using std::pair;
 using std::make_pair;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_sisd
-#define FUNCTION_SCOPE( fn ) \
-	push_fn( (fn) );	\
-	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cgs_sisd::pop_fn, this ) );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -436,44 +433,6 @@ SASL_VISIT_DEF( expression_initializer ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-// Generate normal function code.
-SASL_VISIT_DEF( function_type ){
-	sc_env_ptr(data)->sym = v.symbol();
-
-	cgllvm_sctxt* fnctxt = node_ctxt(v.symbol()->node(), true);
-	if( !fnctxt->data().self_fn ){
-		create_fnsig( v, data );
-	}
-
-	if ( v.body ){
-		// TODO
-		// sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
-		create_fnargs( v, data );
-		create_fnbody( v, data );
-	}
-
-	// Here use the definition node.
-	node_ctxt(v.symbol()->node(), true)->copy( sc_ptr(data) );
-}
-
-SASL_VISIT_DEF( parameter ){
-	sc_ptr(data)->clear_data();
-
-	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-
-	any child_ctxt;
-	visit_child( child_ctxt, child_ctxt_init, v.param_type );
-
-	if( v.init ){
-		visit_child( child_ctxt, child_ctxt_init, v.init );
-	}
-
-	sc_data_ptr(data)->val = sc_data_ptr(&child_ctxt)->val;
-	sc_data_ptr(data)->tyinfo = sc_data_ptr(&child_ctxt)->tyinfo;
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
 SASL_VISIT_DEF_UNIMPL( statement );
 
 SASL_VISIT_DEF( declaration_statement ){
@@ -818,55 +777,6 @@ SASL_VISIT_DEF( for_statement ){
 	set_insert_point( for_end );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
-SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
-	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-
-	any child_ctxt;
-
-	// Generate return type node.
-	visit_child( child_ctxt, child_ctxt_init, v.retval_type );
-	shared_ptr<value_tyinfo> ret_ty = sc_data_ptr(&child_ctxt)->tyinfo;
-	assert( ret_ty );
-
-	// Generate parameters.
-	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
-		visit_child( child_ctxt, child_ctxt_init, par );
-	}
-
-	sc_data_ptr(data)->self_fn = fetch_function( v.as_handle<function_type>() );
-}
-
-SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	push_fn( sc_data_ptr(data)->self_fn );
-	scope_guard<void> pop_fn_on_exit( bind( &cgs_sisd::pop_fn, this ) );
-
-	// Register arguments names.
-	assert( fn().arg_size() == v.params.size() );
-
-	fn().return_name( ".ret" );
-	size_t i_arg = 0;
-	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
-	{
-		sctxt_handle par_ctxt = node_ctxt( par );
-		fn().arg_name( i_arg, par->symbol()->unmangled_name() );
-		par_ctxt->get_value() = fn().arg( i_arg++ );
-	}
-}
-
-SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-
-	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	new_block(".body", true);
-	visit_child( child_ctxt, child_ctxt_init, v.body );
-
-	clean_empty_blocks();
 }
 
 /* Make binary assignment code.

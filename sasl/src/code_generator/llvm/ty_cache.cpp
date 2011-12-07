@@ -6,6 +6,9 @@
 #include <eflib/include/diagnostics/assert.h>
 
 int const PACKAGE_SIZE = 16;
+int SIMD_WIDTH_IN_BYTES(){
+	return 4;
+}
 
 using namespace sasl::utility;
 
@@ -23,6 +26,26 @@ Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis abi )
 std::string const& ty_cache_t::name( builtin_types bt, abis abi )
 {
 	std::string& ret_name = ty_name[abi][bt];
+	char const* suffix = NULL;
+	switch( abi )
+	{
+	case abi_c:
+		suffix = ".c";
+		break;
+	case abi_llvm:
+		suffix = ".l";
+		break;
+	case abi_vectorize:
+		suffix = ".v";
+		break;
+	case abi_package:
+		suffix = ".p";
+		break;
+	default:
+		assert(false);
+		break;
+	}
+
 	if( ret_name.empty() ){
 		if( is_scalar(bt) ){
 			if( bt == builtin_types::_void ){
@@ -50,19 +73,22 @@ std::string const& ty_cache_t::name( builtin_types bt, abis abi )
 			} else if ( bt == builtin_types::_boolean ){
 				ret_name = "bool";
 			}
+			if( abi == abi_vectorize || abi == abi_package ){
+				ret_name += suffix;
+			}
 		} else if ( is_vector(bt) ){
 			ret_name = name( scalar_of(bt), abi );
 			ret_name.reserve( ret_name.length() + 5 );
 			ret_name += ".v";
 			ret_name += lexical_cast<string>( vector_size(bt) );
-			ret_name += ( abi == abi_c ? ".c" : ".l" );
+			ret_name += suffix;
 		} else if ( is_matrix(bt) ){
 			ret_name = name( scalar_of(bt), abi );
 			ret_name.reserve( ret_name.length() + 6 );
 			ret_name += ".m";
 			ret_name += lexical_cast<string>( vector_size(bt) );
 			ret_name += lexical_cast<string>( vector_count(bt) );
-			ret_name += ( abi == abi_c ? ".c" : ".l" );
+			ret_name += suffix;
 		}
 	}
 	return ret_name;
@@ -108,20 +134,27 @@ Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis abi )
 		}
 	} else if ( abi == abi_vectorize ) {
 		if( is_scalar(bt) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			Type* scalar_ty = get_llvm_type( ctxt, bt, abi_c );
+			int vsize = static_cast<int>( SIMD_WIDTH_IN_BYTES() / storage_size( bt ) );
+			vsize = std::max(vsize, 4 );
+			return VectorType::get( scalar_ty, vsize );
 		} else if ( is_vector(bt) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			// EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
 		} else if ( is_matrix(bt) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			// EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
 		}
 	} else if ( abi == abi_package ){
 		if( is_scalar(bt) ){
 			Type* scalar_ty = get_llvm_type( ctxt, bt, abi_c );
 			return VectorType::get( scalar_ty, PACKAGE_SIZE );
 		} else if ( is_vector(bt) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			// EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
 		} else if ( is_matrix(bt) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			// EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
 		}
 	}
 	

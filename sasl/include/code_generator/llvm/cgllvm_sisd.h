@@ -55,9 +55,6 @@ public:
 
 	SASL_VISIT_DCL( expression_initializer );
 
-	SASL_VISIT_DCL( function_type );
-	SASL_VISIT_DCL( parameter );
-
 	SASL_VISIT_DCL( statement );
 	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( compound_statement );
@@ -77,10 +74,6 @@ protected:
 	abis		local_abi( bool is_c_compatible ) const;
 
 	// Called by function_type visitor.
-	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
-	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
-	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_type );
-
 	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
 
 	SASL_SPECIFIC_VISIT_DCL( bin_assign, binary_expression );

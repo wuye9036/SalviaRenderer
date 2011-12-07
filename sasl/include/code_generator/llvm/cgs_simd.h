@@ -42,6 +42,8 @@ protected:
 	void emit_return( value_t const&, abis abi );
 	
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi );
+
+	abis param_abi( bool c_compatible ) const;
 };
 
 END_NS_SASL_CODE_GENERATOR();

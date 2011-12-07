@@ -209,11 +209,6 @@ public:
 	value_t create_constant_matrix( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	/// @}
 
-	/// @name Emit variables
-	/// @{
-	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
-	/// @}
-
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( builtin_types bt ) = 0;
 
@@ -227,7 +222,6 @@ public:
 	/// Switch to blocks
 	void switch_to( value_t const& cond, std::vector< std::pair<value_t, insert_point_t> > const& cases, insert_point_t const& default_branch );
 	/// Clean empty blocks of current function.
-	virtual void clean_empty_blocks(); 
 	cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need );
 	/// Get member type information is type is aggrated.
 	value_tyinfo* member_tyinfo( value_tyinfo const* agg, size_t index ) const;
@@ -237,7 +231,6 @@ public:
 	/// @name Bridges
 	/// @{
 	llvm::Value* select_( llvm::Value* cond, llvm::Value* yes, llvm::Value* no );
-
 	template <typename T>
 	llvm::ConstantInt* int_(T v);
 	template <typename T>
@@ -251,6 +244,7 @@ public:
 
 	/// @name State
 	/// @{
+	abis param_abi( bool c_compatible ) const;
 	/// Prefer to use external functions as intrinsic.
 	bool prefer_externals() const;
 	/// Prefer to use scalar code to intrinsic.

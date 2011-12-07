@@ -90,8 +90,10 @@ public:
 
 	value_tyinfo(
 		sasl::syntax_tree::tynode* sty,
-		llvm::Type* cty,
-		llvm::Type* llty
+		llvm::Type* ty_c,
+		llvm::Type* ty_llvm,
+		llvm::Type* ty_vec,
+		llvm::Type* ty_pkg
 		);
 
 	value_tyinfo( value_tyinfo const& );
@@ -279,12 +281,9 @@ public:
 	Some simple overloadable operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
-
 	virtual value_t emit_add( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs ) = 0;
-	
-
 	/// @}
 
 	/// @name Intrinsics
@@ -331,12 +330,25 @@ public:
 	function_t& fn();
 	/// @}
 
+	/// @name Emit value and variables
+	/// @{
+	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
+	
+	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
+
+	value_t create_variable( value_tyinfo const*, abis abi, std::string const& name );
+	value_t create_variable( builtin_types bt, abis abi, std::string const& name );
+
+	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi ) = 0;
+	/// @}
+
 	/// @name Utilities
 	/// @{
-	
 	/// Create a new block at the last of function
 	insert_point_t new_block( std::string const& hint, bool set_insert_point );
-	
+	void clean_empty_blocks();
 	/// @}
 
 	/// @name Type emitters
@@ -350,18 +362,11 @@ public:
 	llvm::Type* type_( value_tyinfo const*, abis abi );
 	/// @}
 
-	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
-	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
-	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
-
-	value_t create_variable( value_tyinfo const*, abis abi, std::string const& name );
-	value_t create_variable( builtin_types bt, abis abi, std::string const& name );
-
-	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi ) = 0;
-
 	llvm::Module*			module () const;
 	llvm::LLVMContext&		context() const;
 	llvm::DefaultIRBuilder& builder() const;
+
+	virtual abis			param_abi( bool is_c_compatible ) const = 0;
 
 	node_ctxt_fn			node_ctxt;
 

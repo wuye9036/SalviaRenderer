@@ -37,8 +37,8 @@ public:
 private:
 	Type* create_ty( LLVMContext& ctxt, builtin_types bt, abis abi );
 
-	unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> > cache[2];
-	unordered_map<builtin_types, std::string> ty_name[2];
+	unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> >	cache[4];
+	unordered_map<builtin_types, std::string>							ty_name[4];
 };
 
 Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis abi );
