@@ -82,27 +82,6 @@ abis cgs_simd::intrinsic_abi() const
 	return abi_vectorize;
 }
 
-void cgs_simd::push_fn( function_t const& fn )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
-
-void cgs_simd::pop_fn()
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
-
-void cgs_simd::set_insert_point( insert_point_t const& ip )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
-
-insert_point_t cgs_simd::insert_point() const
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return insert_point_t();
-}
-
 value_t cgs_simd::emit_add( value_t const& lhs, value_t const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
@@ -152,6 +131,30 @@ value_t cgs_simd::emit_cross( value_t const& lhs, value_t const& rhs )
 abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
 {
 	return abi_package;
+}
+
+value_t cgs_simd::emit_extract_val( value_t const& lhs, int idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cgs_simd::emit_extract_val( value_t const& lhs, value_t const& idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cgs_simd::emit_extract_ref( value_t const& lhs, int idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cgs_simd::emit_extract_ref( value_t const& lhs, value_t const& idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -286,6 +286,14 @@ public:
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs ) = 0;
 	/// @}
 
+	/// @name Emit element extraction
+	/// @{
+	virtual value_t emit_extract_val( value_t const& lhs, int idx ) = 0;
+	virtual value_t emit_extract_val( value_t const& lhs, value_t const& idx ) = 0;
+	virtual value_t emit_extract_ref( value_t const& lhs, int idx ) = 0;
+	virtual value_t emit_extract_ref( value_t const& lhs, value_t const& idx ) = 0;
+	/// @}
+
 	/// @name Intrinsics
 	/// @{
 	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs ) = 0;
@@ -317,11 +325,10 @@ public:
 
 	/// @name Context switchs
 	/// @{
-	virtual void push_fn( function_t const& fn ) = 0;
-	virtual void pop_fn() = 0;
-
-	virtual void set_insert_point( insert_point_t const& ip ) = 0;
-	virtual insert_point_t insert_point() const = 0;
+	virtual void push_fn( function_t const& fn );
+	virtual void pop_fn();
+	virtual void set_insert_point( insert_point_t const& ip );
+	virtual insert_point_t insert_point() const;
 	/// @}
 
 	/// @name Context queries

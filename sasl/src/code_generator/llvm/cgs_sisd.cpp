@@ -288,14 +288,6 @@ void cgs_sisd::emit_return( value_t const& ret_v, abis abi ){
 	}
 }
 
-void cgs_sisd::push_fn( function_t const& fn ){
-	fn_ctxts.push_back(fn);
-}
-
-void cgs_sisd::pop_fn(){
-	fn_ctxts.pop_back();
-}
-
 value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
 	return create_value( tyinfo, val, vkind_value, abi_llvm );
 }
@@ -354,10 +346,6 @@ sasl::code_generator::value_t cgs_sisd::emit_add( value_t const& lhs, value_t co
 value_t cgs_sisd::emit_add_ss_vv( value_t const& lhs, value_t const& rhs )
 {
 	EMIT_OP_SS_VV_BODY(Add);
-}
-
-void cgs_sisd::set_insert_point( insert_point_t const& ip ){
-	builder().SetInsertPoint(ip.block);
 }
 
 value_t cgs_sisd::emit_dot( value_t const& lhs, value_t const& rhs )
@@ -694,13 +682,6 @@ value_t cgs_sisd::emit_sub( value_t const& lhs, value_t const& rhs )
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
-}
-
-insert_point_t cgs_sisd::insert_point() const
-{
-	insert_point_t ret;
-	ret.block = builder().GetInsertBlock();
-	return ret;
 }
 
 void cgs_sisd::jump_to( insert_point_t const& ip )

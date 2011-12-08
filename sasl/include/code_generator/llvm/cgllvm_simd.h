@@ -74,8 +74,9 @@ protected:
 	cg_service* service() const;
 	abis		local_abi( bool is_c_compatible ) const;
 
-	void create_entries();
-	void create_entry_param( salviar::sv_usage usage );
+	void	create_entries();
+	void	create_entry_param( salviar::sv_usage usage );
+	value_t	layout_to_value( salviar::sv_layout* svl );
 
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 

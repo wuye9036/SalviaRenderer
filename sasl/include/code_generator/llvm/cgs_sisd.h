@@ -145,15 +145,6 @@ public:
 	function_t end_fndecl();
 	/// @}
 
-	/// @name Context switchs
-	/// @{
-	void push_fn( function_t const& fn );
-	void pop_fn();
-
-	void set_insert_point( insert_point_t const& ip );
-	insert_point_t insert_point() const;
-	/// @}
-
 	/// @name Emit statement
 	/// @{
 	void emit_return();

@@ -504,6 +504,25 @@ function_t& cg_service::fn(){
 	return fn_ctxts.back();
 }
 
+void cg_service::push_fn( function_t const& fn ){
+	fn_ctxts.push_back(fn);
+}
+
+void cg_service::pop_fn(){
+	fn_ctxts.pop_back();
+}
+
+void cg_service::set_insert_point( insert_point_t const& ip ){
+	builder().SetInsertPoint(ip.block);
+}
+
+insert_point_t cg_service::insert_point() const
+{
+	insert_point_t ret;
+	ret.block = builder().GetInsertBlock();
+	return ret;
+}
+
 Type* cg_service::type_( builtin_types bt, abis abi )
 {
 	assert( abi != abi_unknown );

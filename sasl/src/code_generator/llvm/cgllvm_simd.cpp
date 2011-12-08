@@ -1,6 +1,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_simd.h>
 
 #include <sasl/include/host/utility.h>
+#include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -17,9 +18,12 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
+#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using sasl::utility::to_builtin_types;
+using namespace sasl::syntax_tree;
+using namespace sasl::semantic;
 using salviar::sv_usage;
 using salviar::su_none;
 using salviar::su_stream_in;
@@ -34,6 +38,9 @@ using llvm::StructLayout;
 using llvm::PointerType;
 using llvm::FunctionType;
 using llvm::Function;
+using boost::any;
+using boost::bind;
+using boost::shared_ptr;
 using std::vector;
 
 #define SASL_VISITOR_TYPE_NAME cgllvm_simd
@@ -227,7 +234,67 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	any child_ctxt;
+
+	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
+
+	new_block( ".init.vargs", true );
+
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
+		visit_child( child_ctxt, child_ctxt_init, par->param_type );
+		storage_si* par_ssi = dynamic_cast<storage_si*>( par->semantic_info().get() );
+
+		cgllvm_sctxt* pctxt = cgllvm_impl::node_ctxt( par, true );
+		// Create local variable for 'virtual argument' and 'virtual result'.
+		pctxt->env( sc_ptr(data) );
+
+		if( par_ssi->type_info()->is_builtin() ){
+			// Virtual args for built in typed argument.
+
+			// Get Value from semantic.
+			// Store value to local variable.
+			salviar::semantic_value const& par_sem = par_ssi->get_semantic();
+			assert( par_sem != salviar::sv_none );
+			sv_layout* psi = abii->input_sv_layout( par_sem );
+
+			builtin_types hint = par_ssi->type_info()->tycode;
+			pctxt->get_value() = create_variable( hint, abi_c, par->name->str );
+			pctxt->get_value().store( layout_to_value(psi) );
+		} else {
+			// Virtual args for aggregated argument
+			pctxt->data().semantic_mode = true;
+		}
+	}
+	
+	// Update globals
+	BOOST_FOREACH( shared_ptr<symbol> const& gsym, msi->globals() ){
+		storage_si* pssi = gsym->node()->si_ptr<storage_si>();
+
+		// Global is filled by offset value with null parent.
+		// The parent is filled when it is referred.
+		sv_layout* psi = NULL;
+		if( pssi->get_semantic() == salviar::sv_none ){
+			psi = abii->input_sv_layout( gsym );
+		} else {
+			psi = abii->input_sv_layout( pssi->get_semantic() );
+		}
+
+		cgllvm_impl::node_ctxt( gsym->node(), true )->get_value() = layout_to_value(psi);
+
+		//if (v.init){
+		//	EFLIB_ASSERT_UNIMPLEMENTED();
+		//}
+	}
+}
+
+value_t cgllvm_simd::layout_to_value( sv_layout* svl )
+{
+	builtin_types bt = to_builtin_types( svl->value_type );
+	value_t ret = emit_extract_ref( entry_values[svl->usage], svl->physical_index );
+	ret.hint( to_builtin_types( svl->value_type ) );
+	return ret;
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -25,18 +25,17 @@ protected:
 	value_t emit_sqrt( value_t const& lhs );
 	value_t emit_cross( value_t const& lhs, value_t const& rhs );
 
+	value_t emit_extract_ref( value_t const& lhs, int idx );
+	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
+	value_t emit_extract_val( value_t const& lhs, int idx );
+	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
+
 	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_i2b( value_t const& v );
 	virtual value_t cast_f2b( value_t const& v );
-
-	void push_fn( function_t const& fn );
-	void pop_fn();
-
-	void set_insert_point( insert_point_t const& ip );
-	insert_point_t insert_point() const;
 
 	void emit_return();
 	void emit_return( value_t const&, abis abi );
