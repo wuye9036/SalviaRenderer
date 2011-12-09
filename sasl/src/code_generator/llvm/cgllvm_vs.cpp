@@ -241,7 +241,7 @@ SASL_VISIT_DEF( variable_expression ){
 	}
 
 	// Argument("virtual args") or local variable or in non-entry
-	parent_class::visit( v, data );
+	cgllvm_impl::visit( v, data );
 }
 
 SASL_VISIT_DEF_UNIMPL( identifier );
@@ -377,8 +377,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
-
+SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 	if( is_entry( fn().fn ) ){
 		any child_ctxt_init = *data;
 		sc_ptr(child_ctxt_init)->clear_data();
@@ -414,7 +413,7 @@ SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
 		// Emit entry return.
 		emit_return();
 	} else {
-		parent_class::return_statement(v, data);
+		parent_class::visit_return(v, data);
 	}
 }
 
@@ -428,10 +427,6 @@ bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
 cgllvm_modvs* cgllvm_vs::mod_ptr(){
 	assert( dynamic_cast<cgllvm_modvs*>( mod.get() ) );
 	return static_cast<cgllvm_modvs*>( mod.get() );
-}
-
-boost::shared_ptr<sasl::semantic::symbol> cgllvm_vs::find_symbol( cgllvm_sctxt* data, std::string const& str ){
-	return data->env().sym.lock()->find( str );
 }
 
 value_t cgllvm_vs::layout_to_value( sv_layout* svl )

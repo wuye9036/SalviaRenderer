@@ -260,8 +260,6 @@ void			value_t::parent( value_t const* v ){ if(v){ parent(*v); } }
 value_t*		value_t::parent() const { return parent_.get(); }
 /// @}
 
-
-
 bool cg_service::initialize( llvm_module_impl* mod, node_ctxt_fn const& fn )
 {
 	assert ( mod );
@@ -419,6 +417,32 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 
 	ctxt->data().tyinfo = shared_ptr<value_tyinfo>(ret);
 	return ctxt->data().tyinfo;
+}
+
+value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index ) const
+{
+	if( !agg ){
+		return NULL;
+	} else if ( agg->tyn_ptr()->is_struct() ){
+		shared_ptr<struct_type> struct_sty = agg->tyn_ptr()->as_handle<struct_type>();
+
+		size_t var_index = 0;
+		BOOST_FOREACH( shared_ptr<declaration> const& child, struct_sty->decls ){
+			if( child->node_class() == node_ids::variable_declaration ){
+				shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
+				var_index += vardecl->declarators.size();
+				if( index < var_index ){
+					return const_cast<cg_service*>(this)->node_ctxt( vardecl.get(), false )->get_typtr();
+				}
+			}
+		}
+
+		assert(!"Out of struct bound.");
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return NULL;
 }
 
 value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )

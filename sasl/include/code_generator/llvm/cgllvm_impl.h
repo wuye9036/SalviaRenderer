@@ -21,6 +21,7 @@ namespace sasl{
 		class module_si;
 		class abi_info;
 		class caster_t;
+		class symbol;
 	}
 }
 
@@ -74,6 +75,8 @@ protected:
 	cgllvm_impl(): abii(NULL), msi(NULL), target_data(NULL){}
 	~cgllvm_impl();
 
+	SASL_VISIT_DCL( variable_expression );
+	
 	SASL_VISIT_DCL( declaration ){}
 	
 	SASL_VISIT_DCL( builtin_type );
@@ -82,6 +85,8 @@ protected:
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( declarator );
+
+	SASL_VISIT_DCL( jump_statement );
 
 	SASL_VISIT_DCL( program );
 
@@ -98,6 +103,10 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( create_fnsig , function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_type );
+
+	SASL_SPECIFIC_VISIT_DCL( visit_return	, jump_statement );
+	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement ) = 0;
+	SASL_SPECIFIC_VISIT_DCL( visit_break	, jump_statement ) = 0;
 
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
@@ -116,6 +125,8 @@ protected:
 protected:
 	virtual cg_service*		service() const = 0;
 	virtual abis			local_abi( bool c_compatible ) const = 0;
+	boost::shared_ptr<sasl::semantic::symbol>
+		find_symbol( cgllvm_sctxt*, std::string const& );
 
 	// Store global informations
 	sasl::semantic::module_si* msi;

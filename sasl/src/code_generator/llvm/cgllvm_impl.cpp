@@ -6,6 +6,7 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -95,6 +96,23 @@ bool cgllvm_impl::generate( module_si* mod, abi_info const* abii )
 cgllvm_impl::~cgllvm_impl()
 {
 	if( target_data ){ delete target_data; }
+}
+
+shared_ptr<symbol> cgllvm_impl::find_symbol( cgllvm_sctxt* data, std::string const& str )
+{
+	return data->env().sym.lock()->find( str );
+}
+
+SASL_VISIT_DEF( variable_expression ){
+	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
+	assert( declsym && declsym->node() );
+
+	sc_ptr(data)->get_value() = node_ctxt( declsym->node(), false )->get_value();
+	sc_ptr(data)->get_tysp() = node_ctxt( declsym->node(), false )->get_tysp();
+	sc_ptr(data)->data().semantic_mode = node_ctxt( declsym->node(), false )->data().semantic_mode;
+
+	// sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( builtin_type ){
@@ -217,38 +235,25 @@ SASL_VISIT_DEF( declarator ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
-	
-	shared_ptr<value_tyinfo> decl_ty = sc_env_ptr(data)->tyinfo;
-	assert(decl_ty);
-
-	// Needn't process init expression now.
-	storage_si* si = v.si_ptr<storage_si>();
-	sc_data_ptr(data)->tyinfo = decl_ty;
-	sc_data_ptr(data)->val = service()->create_value(decl_ty.get(), NULL, vkind_swizzle, abi_unknown );
-	sc_data_ptr(data)->val.index( si->mem_index() );
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
-	sc_env_ptr(data)->sym = v.symbol();
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
+SASL_VISIT_DEF( jump_statement )
+{
 	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-
 	any child_ctxt;
 
-	sc_data_ptr(data)->tyinfo = sc_env_ptr(data)->tyinfo;
-	sc_data_ptr(data)->val = service()->create_variable( sc_data_ptr(data)->tyinfo.get(), local_abi( v.si_ptr<storage_si>()->c_compatible() ), v.name->str );
-
-	if ( v.init ){
-		sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.as_handle();
-		visit_child( child_ctxt, child_ctxt_init, v.init );
-		sc_data_ptr(data)->val.store( sc_ptr(&child_ctxt)->get_value() );
+	if (v.jump_expr){
+		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
 	}
 
+	if ( v.code == jump_mode::_return ){
+		visit_return(v, data);
+	} else if ( v.code == jump_mode::_continue ){
+		visit_continue(v, data);
+	} else if ( v.code == jump_mode::_break ){
+		visit_break( v, data );
+	}
+
+	// Restart a new block for sealing the old block.
+	service()->new_block(".restart", true);
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
@@ -290,6 +295,44 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
 	target_data = new TargetData( module() );
 }
+
+SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
+	
+	shared_ptr<value_tyinfo> decl_ty = sc_env_ptr(data)->tyinfo;
+	assert(decl_ty);
+
+	// Needn't process init expression now.
+	storage_si* si = v.si_ptr<storage_si>();
+	sc_data_ptr(data)->tyinfo = decl_ty;
+	sc_data_ptr(data)->val = service()->create_value(decl_ty.get(), NULL, vkind_swizzle, abi_unknown );
+	sc_data_ptr(data)->val.index( si->mem_index() );
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator ){
+	sc_env_ptr(data)->sym = v.symbol();
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	sc_data_ptr(data)->tyinfo = sc_env_ptr(data)->tyinfo;
+	sc_data_ptr(data)->val = service()->create_variable( sc_data_ptr(data)->tyinfo.get(), local_abi( v.si_ptr<storage_si>()->c_compatible() ), v.name->str );
+
+	if ( v.init ){
+		sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.as_handle();
+		visit_child( child_ctxt, child_ctxt_init, v.init );
+		sc_data_ptr(data)->val.store( sc_ptr(&child_ctxt)->get_value() );
+	}
+
+	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	any child_ctxt_init = *data;
 	sc_ptr(child_ctxt_init)->clear_data();
@@ -323,7 +366,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		par_ctxt->get_value() = service()->fn().arg( i_arg++ );
 	}
 }
-
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 
 	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
@@ -335,6 +377,15 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 	visit_child( child_ctxt, child_ctxt_init, v.body );
 
 	service()->clean_empty_blocks();
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
+	(data); (v);
+	if ( !v.jump_expr ){
+		service()->emit_return();
+	} else {
+		service()->emit_return( node_ctxt(v.jump_expr)->get_value(), service()->param_abi( service()->fn().c_compatible ) );
+	}
 }
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )

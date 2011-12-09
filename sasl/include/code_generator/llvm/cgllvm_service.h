@@ -292,6 +292,7 @@ public:
 	virtual value_t emit_extract_val( value_t const& lhs, value_t const& idx ) = 0;
 	virtual value_t emit_extract_ref( value_t const& lhs, int idx ) = 0;
 	virtual value_t emit_extract_ref( value_t const& lhs, value_t const& idx ) = 0;
+	virtual value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask ) = 0;
 	/// @}
 
 	/// @name Intrinsics
@@ -360,7 +361,10 @@ public:
 
 	/// @name Type emitters
 	/// @{
+	/// Create tyinfo.
 	boost::shared_ptr<value_tyinfo> create_tyinfo( boost::shared_ptr<sasl::syntax_tree::tynode> const& tyn );
+	/// Get member type information is type is aggrated.
+	value_tyinfo* member_tyinfo( value_tyinfo const* agg, size_t index ) const;
 	/// @}
 
 	/// @name Bridges

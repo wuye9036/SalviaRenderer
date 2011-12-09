@@ -58,7 +58,7 @@ public:
 	
 
 	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
-	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc );
+	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
 	void add_global_var( boost::shared_ptr<symbol> const&, builtin_types btc );
 
 	storage_info_t* input_sv_layout( semantic_value_t const& ) const;

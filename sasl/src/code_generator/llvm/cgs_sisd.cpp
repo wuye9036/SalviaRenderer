@@ -129,7 +129,6 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 namespace {
 
-
 	template <typename T>
 	APInt apint( T v ){
 		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
@@ -614,32 +613,6 @@ value_t cgs_sisd::emit_mul_vm( value_t const& lhs, value_t const& rhs )
 	}
 
 	return ret;
-}
-
-value_tyinfo* cgs_sisd::member_tyinfo( value_tyinfo const* agg, size_t index ) const
-{
-	if( !agg ){
-		return NULL;
-	} else if ( agg->tyn_ptr()->is_struct() ){
-		shared_ptr<struct_type> struct_sty = agg->tyn_ptr()->as_handle<struct_type>();
-
-		size_t var_index = 0;
-		BOOST_FOREACH( shared_ptr<declaration> const& child, struct_sty->decls ){
-			if( child->node_class() == node_ids::variable_declaration ){
-				shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
-				var_index += vardecl->declarators.size();
-				if( index < var_index ){
-					return const_cast<cgs_sisd*>(this)->node_ctxt( vardecl, false )->get_typtr();
-				}
-			}
-		}
-
-		assert(!"Out of struct bound.");
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return NULL;
 }
 
 value_t cgs_sisd::emit_extract_elem_mask( value_t const& vec, uint32_t mask )

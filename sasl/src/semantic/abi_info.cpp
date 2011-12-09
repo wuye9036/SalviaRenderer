@@ -98,7 +98,7 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 	return true;
 }
 
-bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_types btc ){
+bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream  ){
 	vector<salviar::semantic_value>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
 	if( it != sems_out.end() ){
 		if( *it == sem ){
@@ -113,7 +113,7 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 
 	sv_layout* si = alloc_output_storage( sem );
 	si->value_type = to_lvt( btc );
-	si->usage = su_buffer_out;
+	si->usage = is_stream ? su_stream_out : su_buffer_out;
 	si->sv = sem;
 	sems_out.insert( it, sem );
 	return true;
@@ -203,9 +203,12 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 	std::vector<sv_layout*> ret;
 
 	// Process output
-	if( st == su_buffer_out ){
+	if( st == su_buffer_out || st == su_stream_out ){
 		BOOST_FOREACH( salviar::semantic_value const& sem, sems_out ){
-			ret.push_back( output_sv_layout(sem) );
+			sv_layout* svl = output_sv_layout( sem );
+			if ( svl->usage == st ){
+				ret.push_back( svl );
+			}
 		}
 		return ret;
 	}

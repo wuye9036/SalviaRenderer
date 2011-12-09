@@ -1,12 +1,15 @@
 #include <sasl/include/code_generator/llvm/cgllvm_simd.h>
 
 #include <sasl/include/host/utility.h>
+#include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
+#include <sasl/include/syntax_tree/statement.h>
+#include <sasl/include/syntax_tree/expression.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/ADT/StringRef.h>
@@ -140,9 +143,72 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 SASL_VISIT_DEF_UNIMPL( call_expression );
-SASL_VISIT_DEF_UNIMPL( member_expression );
+
+SASL_VISIT_DEF( member_expression ){
+	any child_ctxt = *data;
+	sc_ptr(child_ctxt)->clear_data();
+	visit_child( child_ctxt, v.expr );
+	cgllvm_sctxt* agg_ctxt = cgllvm_impl::node_ctxt( v.expr );
+	assert( agg_ctxt );
+	
+	// Aggregated value
+	type_info_si* tisi = dynamic_cast<type_info_si*>( v.expr->semantic_info().get() );
+
+	if( tisi->type_info()->is_builtin() ){
+		// Swizzle or write mask
+		// storage_si* mem_ssi = v.si_ptr<storage_si>();
+		// value_t vec_value = agg_ctxt->get_value();
+		// mem_ctxt->get_value() = create_extract_elem();
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		// Member
+		shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
+		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
+		assert( mem_sym );
+
+		if( agg_ctxt->data().semantic_mode ){
+			storage_si* par_mem_ssi = mem_sym->node()->si_ptr<storage_si>();
+			assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
+
+			salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
+			sv_layout* psi = abii->input_sv_layout( sem );
+
+			sc_ptr(data)->get_value() = layout_to_value( psi );
+		} else {
+			// If it is not semantic mode, use general code
+			cgllvm_sctxt* mem_ctxt = cgllvm_impl::node_ctxt( mem_sym->node(), true );
+			assert( mem_ctxt );
+			sc_ptr(data)->get_value() = mem_ctxt->get_value();
+			sc_ptr(data)->get_value().parent( agg_ctxt->get_value() );
+			sc_ptr(data)->get_value().abi( agg_ctxt->get_value().abi() );
+		}
+	}
+
+	cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF_UNIMPL( constant_expression );
-SASL_VISIT_DEF_UNIMPL( variable_expression );
+
+SASL_VISIT_DEF( variable_expression ){
+	// T ODO Referenced symbol must be evaluated in semantic analysis stages.
+	shared_ptr<symbol> sym = find_symbol( sc_ptr(data), v.var_name->str );
+	assert(sym);
+	
+	// var_si is not null if sym is global value( sv_none is available )
+	sv_layout* var_si = abii->input_sv_layout( sym );
+
+	cgllvm_sctxt* varctxt = cgllvm_impl::node_ctxt( sym->node() );
+	if( var_si ){
+		// TODO global only avaliable in entry function.
+		assert( fn().fn == entry_fn );
+		sc_ptr(data)->get_value() = varctxt->get_value();
+		cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
+		return;
+	}
+
+	// Argument("virtual args") or local variable or not in entry
+	parent_class::visit( v, data );
+}
 
 // declaration & type specifier
 SASL_VISIT_DEF_UNIMPL( initializer );
@@ -164,9 +230,24 @@ SASL_VISIT_DEF_UNIMPL( for_statement );
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
-SASL_VISIT_DEF_UNIMPL( compound_statement );
+
+SASL_VISIT_DEF( compound_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	sc_env_ptr(&child_ctxt_init)->sym = v.symbol();
+
+	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
+		it != v.stmts.end(); ++it)
+	{
+		visit_child( child_ctxt, child_ctxt_init, *it );
+	}
+
+	cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF_UNIMPL( expression_statement );
-SASL_VISIT_DEF_UNIMPL( jump_statement );
+
 SASL_VISIT_DEF_UNIMPL( labeled_statement );
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
@@ -287,6 +368,52 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 		//	EFLIB_ASSERT_UNIMPLEMENTED();
 		//}
 	}
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
+	if( fn().fn == entry_fn ){
+		any child_ctxt_init = *data;
+		sc_ptr(child_ctxt_init)->clear_data();
+		any child_ctxt;
+
+		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
+
+		// Copy result.
+		value_t ret_value = cgllvm_impl::node_ctxt( v.jump_expr )->get_value();
+
+		if( ret_value.hint() != builtin_types::none ){
+			storage_si* ret_ssi = fn().fnty->si_ptr<storage_si>();
+			sv_layout* ret_si = abii->output_sv_layout( ret_ssi->get_semantic() );
+			assert( ret_si );
+			layout_to_value(ret_si).store( ret_value );
+		} else {
+			shared_ptr<struct_type> ret_struct = fn().fnty->retval_type->as_handle<struct_type>();
+			size_t member_index = 0;
+			BOOST_FOREACH( shared_ptr<declaration> const& child, ret_struct->decls ){
+				if( child->node_class() == node_ids::variable_declaration ){
+					shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
+					BOOST_FOREACH( shared_ptr<declarator> const& decl, vardecl->declarators ){
+						storage_si* decl_ssi = decl->si_ptr<storage_si>();
+						sv_layout* decl_si = abii->output_sv_layout( decl_ssi->get_semantic() );
+						assert( decl_si );
+						layout_to_value(decl_si).store( emit_extract_val(ret_value, (int)member_index) );
+						++member_index;
+					}
+				}
+			}
+		}
+		
+		// Emit entry return.
+		emit_return();
+	} else {
+		parent_class::visit_return(v, data);
+	}
+}
+SASL_SPECIFIC_VISIT_DEF( visit_continue	, jump_statement ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 value_t cgllvm_simd::layout_to_value( sv_layout* svl )

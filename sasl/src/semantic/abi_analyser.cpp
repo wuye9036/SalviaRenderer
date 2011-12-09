@@ -295,10 +295,10 @@ bool abi_analyser::add_semantic(
 				return ai->add_input_semantic( node_sem, btc, true );
 			case su_buffer_in:
 				return ai->add_input_semantic( node_sem, btc, false );
-
-			case su_buffer_out:
 			case su_stream_out:
-				return ai->add_output_semantic( node_sem, btc );
+				return ai->add_output_semantic( node_sem, btc, true );
+			case su_buffer_out:
+				return ai->add_output_semantic( node_sem, btc, false );
 			}
 
 			assert( false );

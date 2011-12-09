@@ -29,6 +29,7 @@ protected:
 	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
 	value_t emit_extract_val( value_t const& lhs, int idx );
 	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
+	value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
 
 	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi );

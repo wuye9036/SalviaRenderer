@@ -67,7 +67,6 @@ public:
 	SASL_VISIT_DCL( switch_statement );
 	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( expression_statement );
-	SASL_VISIT_DCL( jump_statement );
 	SASL_VISIT_DCL( labeled_statement );
 
 protected:
@@ -83,6 +82,10 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( create_fnsig,			function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs,			function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_virtual_args,	function_type );
+
+	SASL_SPECIFIC_VISIT_DCL( visit_return	, jump_statement );
+	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement );
+	SASL_SPECIFIC_VISIT_DCL( visit_break	, jump_statement );
 
 	llvm::Function*				entry_fn;
 	std::vector<llvm::Type*>	entry_tys[salviar::storage_usage_count];

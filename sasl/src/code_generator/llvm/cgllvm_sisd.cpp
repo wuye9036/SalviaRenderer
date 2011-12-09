@@ -404,18 +404,6 @@ SASL_VISIT_DEF( call_expression ){
 	}
 }
 
-SASL_VISIT_DEF( variable_expression ){
-	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
-	assert( declsym && declsym->node() );
-
-	sc_ptr(data)->get_value() = node_ctxt( declsym->node(), false )->get_value();
-	sc_ptr(data)->get_tysp() = node_ctxt( declsym->node(), false )->get_tysp();
-	sc_ptr(data)->data().semantic_mode = node_ctxt( declsym->node(), false )->data().semantic_mode;
-
-	// sc_data_ptr(data)->hint_name = v.var_name->str.c_str();
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
 SASL_VISIT_DEF( expression_initializer ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
@@ -457,41 +445,6 @@ SASL_VISIT_DEF( compound_statement ){
 	}
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
-SASL_VISIT_DEF( jump_statement ){
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	if (v.jump_expr){
-		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
-	}
-
-	if ( v.code == jump_mode::_return ){
-		return_statement(v, data);
-	} else if ( v.code == jump_mode::_continue ){
-		assert( sc_env_ptr(data)->continue_to );
-		jump_to( sc_env_ptr(data)->continue_to );
-
-	} else if ( v.code == jump_mode::_break ){
-		assert( sc_env_ptr(data)->break_to );
-		jump_to( sc_env_ptr(data)->break_to );
-	}
-
-	// Restart a new block for sealing the old block.
-	new_block("", true);
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
-SASL_SPECIFIC_VISIT_DEF( return_statement, jump_statement ){
-	(data); (v);
-	if ( !v.jump_expr ){
-		emit_return();
-	} else {
-		emit_return( node_ctxt(v.jump_expr)->get_value(), fn().c_compatible?abi_c:abi_llvm );
-	}
 }
 
 SASL_VISIT_DEF( expression_statement ){
@@ -777,6 +730,18 @@ SASL_VISIT_DEF( for_statement ){
 	set_insert_point( for_end );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_continue	, jump_statement )
+{
+	assert( sc_env_ptr(data)->continue_to );
+	jump_to( sc_env_ptr(data)->continue_to );
+}
+
+SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement )
+{
+	assert( sc_env_ptr(data)->break_to );
+	jump_to( sc_env_ptr(data)->break_to );
 }
 
 /* Make binary assignment code.

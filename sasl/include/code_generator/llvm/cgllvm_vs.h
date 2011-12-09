@@ -68,13 +68,11 @@ private:
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_virtual_args, function_type );
 
-	SASL_SPECIFIC_VISIT_DCL( return_statement, jump_statement );
+	SASL_SPECIFIC_VISIT_DCL( visit_return, jump_statement );
 
 	bool is_entry( llvm::Function* ) const;
 
 	cgllvm_modvs* mod_ptr();
-
-	boost::shared_ptr<sasl::semantic::symbol> find_symbol( cgllvm_sctxt* data, std::string const& str );
 
 	value_t layout_to_value( salviar::sv_layout* si );
 
