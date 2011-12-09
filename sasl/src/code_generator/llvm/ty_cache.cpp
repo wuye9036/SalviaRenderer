@@ -7,7 +7,10 @@
 
 int const PACKAGE_SIZE = 16;
 int SIMD_WIDTH_IN_BYTES(){
-	return 4;
+	return 16;
+}
+int SIMD_FLOAT_SIZE(){
+	return SIMD_WIDTH_IN_BYTES() / sizeof(float);
 }
 
 using namespace sasl::utility;
@@ -139,22 +142,22 @@ Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis abi )
 			vsize = std::max(vsize, 4 );
 			return VectorType::get( scalar_ty, vsize );
 		} else if ( is_vector(bt) ){
-			// EFLIB_ASSERT_UNIMPLEMENTED();
-			return NULL;
+			Type* scalar_ty = get_llvm_type( ctxt, scalar_of(bt), abi_c );
+			return VectorType::get( scalar_ty, SIMD_FLOAT_SIZE() );
 		} else if ( is_matrix(bt) ){
-			// EFLIB_ASSERT_UNIMPLEMENTED();
-			return NULL;
+			return get_llvm_type( ctxt, bt, abi_llvm );
 		}
 	} else if ( abi == abi_package ){
 		if( is_scalar(bt) ){
 			Type* scalar_ty = get_llvm_type( ctxt, bt, abi_c );
 			return VectorType::get( scalar_ty, PACKAGE_SIZE );
 		} else if ( is_vector(bt) ){
-			// EFLIB_ASSERT_UNIMPLEMENTED();
-			return NULL;
+			Type* scalar_ty = get_llvm_type( ctxt, scalar_of(bt), abi_c );
+			size_t padding_size = vector_size(bt);
+			if( padding_size == 3 ){ padding_size = 4; } // Add padding to vec3.
+			return VectorType::get( scalar_ty, padding_size * PACKAGE_SIZE );
 		} else if ( is_matrix(bt) ){
-			// EFLIB_ASSERT_UNIMPLEMENTED();
-			return NULL;
+			return ArrayType::get( get_llvm_type(ctxt, bt, abi_llvm), PACKAGE_SIZE );
 		}
 	}
 	
