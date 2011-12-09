@@ -72,18 +72,6 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 cgllvm_sisd::~cgllvm_sisd(){
 }
 
-void cgllvm_sisd::mask_to_indexes( char indexes[4], uint32_t mask ){
-	for( int i = 0; i < 4; ++i ){
-		// XYZW is 1,2,3,4 but LLVM used 0,1,2,3
-		char comp_index = static_cast<char>( (mask >> i*8) & 0xFF );
-		if( comp_index == 0 ){
-			indexes[i] = -1;
-			break;
-		}
-		indexes[i] = comp_index - 1;
-	}
-}
-
 value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
 {
 	// NOTE

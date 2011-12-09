@@ -1,9 +1,11 @@
 #include <sasl/include/code_generator/llvm/cgllvm_simd.h>
 
+#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
+#include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
-#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
+
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -75,51 +77,6 @@ using std::string;
 
 int const SIMD_WIDTH_IN_BYTES = 16;
 int const PACKAGE_SIZE = 16;
-
-namespace {
-
-	template <typename T>
-	APInt apint( T v ){
-		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
-	}
-
-	void mask_to_indexes( char indexes[4], uint32_t mask ){
-		for( int i = 0; i < 4; ++i ){
-			// XYZW is 1,2,3,4 but LLVM used 0,1,2,3
-			char comp_index = static_cast<char>( (mask >> i*8) & 0xFF );
-			if( comp_index == 0 ){
-				indexes[i] = -1;
-				break;
-			}
-			indexes[i] = comp_index - 1;
-		}
-	}
-
-	uint32_t indexes_to_mask( char indexes[4] ){
-		uint32_t mask = 0;
-		for( int i = 0; i < 4; ++i ){
-			mask += (uint32_t)( (indexes[i] + 1) << (i*8) );
-		}
-		return mask;
-	}
-
-	uint32_t indexes_to_mask( char idx0, char idx1, char idx2, char idx3 ){
-		char indexes[4] = { idx0, idx1, idx2, idx3 };
-		return indexes_to_mask( indexes );
-	}
-
-	void dbg_print_blocks( Function* fn ){
-#ifdef _DEBUG
-		/*printf( "Function: 0x%X\n", fn );
-		for( Function::BasicBlockListType::iterator it = fn->getBasicBlockList().begin(); it != fn->getBasicBlockList().end(); ++it ){
-		printf( "  Block: 0x%X\n", &(*it) );
-		}*/
-		fn = fn;
-#else
-		fn = fn;
-#endif
-	}
-}
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 

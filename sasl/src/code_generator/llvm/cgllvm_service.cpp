@@ -1,5 +1,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
 
+#include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/ty_cache.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
@@ -31,17 +32,6 @@ using namespace sasl::semantic;
 using sasl::utility::is_vector;
 using sasl::utility::scalar_of;
 using sasl::utility::is_scalar;
-
-namespace {
-	uint32_t indexes_to_mask( char indexes[4] ){
-		uint32_t mask = 0;
-		for( int i = 0; i < 4; ++i ){
-			mask += (uint32_t)( (indexes[i] + 1) << (i*8) );
-		}
-		return mask;
-	}
-}
-
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
