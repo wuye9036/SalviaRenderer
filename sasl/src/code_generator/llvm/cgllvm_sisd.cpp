@@ -411,15 +411,6 @@ SASL_VISIT_DEF( expression_initializer ){
 
 SASL_VISIT_DEF_UNIMPL( statement );
 
-SASL_VISIT_DEF( declaration_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	visit_child( child_ctxt, child_ctxt_init, v.decl );
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
 SASL_VISIT_DEF( compound_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;

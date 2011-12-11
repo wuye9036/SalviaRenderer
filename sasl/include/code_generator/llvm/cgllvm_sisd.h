@@ -59,7 +59,6 @@ public:
 	SASL_VISIT_DCL( expression_initializer );
 
 	SASL_VISIT_DCL( statement );
-	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( for_statement );

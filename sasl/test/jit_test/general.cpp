@@ -591,6 +591,18 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 #if 1
 BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/scalar.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> ps_main;
+	function( ps_main, "ps_main" );
+}
+#endif
+
+#if 1
+BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
+	init_ps( "./repo/question/v1a1/arithmetic.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
 }
 #endif
 

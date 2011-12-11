@@ -36,8 +36,7 @@ else( MSVC )
 endif()
 
 ADD_CUSTOM_COMMAND(
-		TARGET sasl_test_cases
-		PRE_BUILD
+		OUTPUT	auto_repo.deps
 		COMMAND "python.exe"
 		ARGS
 			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"

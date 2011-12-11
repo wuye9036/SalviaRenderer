@@ -57,7 +57,6 @@ public:
 
 	// statement
 	SASL_VISIT_DCL( statement );
-	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( if_statement );
 	SASL_VISIT_DCL( while_statement );
 	SASL_VISIT_DCL( dowhile_statement );

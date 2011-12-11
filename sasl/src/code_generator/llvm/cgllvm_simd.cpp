@@ -222,7 +222,6 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 
 // statement
 SASL_VISIT_DEF_UNIMPL( statement );
-SASL_VISIT_DEF_UNIMPL( declaration_statement );
 SASL_VISIT_DEF_UNIMPL( if_statement );
 SASL_VISIT_DEF_UNIMPL( while_statement );
 SASL_VISIT_DEF_UNIMPL( dowhile_statement );
