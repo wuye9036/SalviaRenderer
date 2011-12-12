@@ -124,112 +124,6 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 	return result_value;
 }
 
-SASL_VISIT_DEF( binary_expression ){
-	any child_ctxt_init = *data;
-	sc_ptr(child_ctxt_init)->clear_data();
-	any child_ctxt;
-
-	if( v.op == operators::logic_and || v.op == operators::logic_or ){
-		bin_logic( v, data );
-	} else {
-		visit_child( child_ctxt, child_ctxt_init, v.left_expr );
-		visit_child( child_ctxt, child_ctxt_init, v.right_expr );
-
-		if( v.op == operators::assign ){
-			bin_assign( v, data );
-		} else {
-			shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
-			shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
-
-			//////////////////////////////////////////////////////////////////////////
-			// type conversation for matching the operator prototype
-
-			// get an overloadable prototype.
-			std::vector< shared_ptr<expression> > args;
-			args += v.left_expr, v.right_expr;
-
-			symbol::overloads_t overloads
-				= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), caster, args );
-
-			EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
-				return;
-			}
-			EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
-				return;
-			}
-
-			boost::shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
-
-			shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
-			shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
-
-			// cast value type to match proto type.
-			if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
-				if( ! node_ctxt( p0_tsi->type_info() ) ){
-					visit_child( child_ctxt, child_ctxt_init, op_proto->params[0]->param_type );
-				}
-
-				node_ctxt(v.left_expr)->data().tyinfo
-					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
-
-				caster->cast( p0_tsi->type_info(), v.left_expr );
-			}
-			if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
-				if( ! node_ctxt( p1_tsi->type_info() ) ){
-					visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
-				}
-
-				node_ctxt(v.left_expr)->data().tyinfo
-					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
-
-				caster->cast( p1_tsi->type_info(), v.right_expr );
-			}
-
-			// use type-converted value to generate code.
-			value_t lval = node_ctxt(v.left_expr)->get_rvalue();
-			value_t rval = node_ctxt(v.right_expr)->get_rvalue();
-
-			value_t retval;
-
-			builtin_types lbtc = p0_tsi->type_info()->tycode;
-			builtin_types rbtc = p1_tsi->type_info()->tycode;
-
-			assert( lbtc == rbtc );
-
-			if( is_scalar(lbtc) || is_vector(lbtc) ){
-				if( v.op == operators::add ){
-					retval = emit_add(lval, rval);
-				} else if ( v.op == operators::mul ) {
-					retval = emit_mul(lval, rval);
-				} else if ( v.op == operators::add) {
-					retval = emit_add(lval, rval);
-				} else if ( v.op == operators::sub ) {
-					retval = emit_sub(lval, rval);
-				} else if( v.op == operators::less ) {
-					retval = emit_cmp_lt( lval, rval );
-				} else if( v.op == operators::less_equal ){
-					retval = emit_cmp_le( lval, rval );
-				} else if( v.op == operators::equal ){
-					retval = emit_cmp_eq( lval, rval );
-				} else if( v.op == operators::greater_equal ){
-					retval = emit_cmp_ge( lval, rval );
-				} else if( v.op == operators::greater ){
-					retval = emit_cmp_gt( lval, rval );	
-				} else if( v.op == operators::not_equal ){
-					retval = emit_cmp_ne( lval, rval );
-				} else {
-					EFLIB_ASSERT_UNIMPLEMENTED0( ( operators::to_name(v.op) + " not be implemented." ).c_str() );
-				}
-
-			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			}
-			sc_ptr(data)->get_value() = retval;
-			node_ctxt(v, true)->copy( sc_ptr(data) );
-		}
-	}
-}
-
 SASL_VISIT_DEF( member_expression ){
 
 	any child_ctxt = *data;
@@ -259,37 +153,6 @@ SASL_VISIT_DEF( member_expression ){
 		sc_ptr(data)->get_value().parent( agg_ctxt->get_value() );
 		sc_ptr(data)->get_value().abi( agg_ctxt->get_value().abi() );
 	}
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
-SASL_VISIT_DEF( constant_expression ){
-
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	boost::shared_ptr<const_value_si> c_si = extract_semantic_info<const_value_si>(v);
-	if( ! node_ctxt( c_si->type_info() ) ){
-		visit_child( child_ctxt, child_ctxt_init, c_si->type_info() );
-	}
-
-	cgllvm_sctxt* const_ctxt = node_ctxt( c_si->type_info() );
-
-	value_tyinfo* tyinfo = const_ctxt->get_typtr();
-	assert( tyinfo );
-
-	value_t val;
-	if( c_si->value_type() == builtin_types::_sint32 ){
-		val = create_constant_scalar( c_si->value<int32_t>(), tyinfo );
-	} else if ( c_si->value_type() == builtin_types::_uint32 ) {
-		val = create_constant_scalar( c_si->value<uint32_t>(), tyinfo );
-	} else if ( c_si->value_type() == builtin_types::_float ) {
-		val = create_constant_scalar( c_si->value<double>(), tyinfo );
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	sc_ptr(data)->get_value() = val;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -422,15 +285,6 @@ SASL_VISIT_DEF( compound_statement ){
 	{
 		visit_child( child_ctxt, child_ctxt_init, *it );
 	}
-
-	node_ctxt(v, true)->copy( sc_ptr(data) );
-}
-
-SASL_VISIT_DEF( expression_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
-
-	visit_child( child_ctxt, child_ctxt_init, v.expr );
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -721,34 +575,6 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement )
 {
 	assert( sc_env_ptr(data)->break_to );
 	jump_to( sc_env_ptr(data)->break_to );
-}
-
-/* Make binary assignment code.
-*    Note: Right argument is assignee, and left argument is value.
-*/
-SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
-
-	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
-	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
-
-	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		/*if( caster->try_implicit( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
-			caster->convert( rarg_tsi->type_info(), v.left_expr );
-		} else {
-			assert( !"Expression could not converted to storage type." );
-		}*/
-	}
-
-	// Evaluated by visit(binary_expression)
-	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
-	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
-
-	rctxt->get_value().store( lctxt->get_value() );
-
-	cgllvm_sctxt* pctxt = node_ctxt(v, true);
-	pctxt->data( rctxt->data() );
-	pctxt->env( sc_ptr(data) );
 }
 
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){

@@ -17,6 +17,7 @@
 #include <llvm/DerivedTypes.h>
 #include <llvm/Target/TargetData.h>
 #include <llvm/Function.h>
+#include <llvm/Constants.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -138,7 +139,6 @@ void cgllvm_simd::create_entry_param( sv_usage usage )
 
 SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF_UNIMPL( cast_expression );
-SASL_VISIT_DEF_UNIMPL( binary_expression );
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
@@ -186,8 +186,6 @@ SASL_VISIT_DEF( member_expression ){
 
 	cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
 }
-
-SASL_VISIT_DEF_UNIMPL( constant_expression );
 
 SASL_VISIT_DEF( variable_expression ){
 	// T ODO Referenced symbol must be evaluated in semantic analysis stages.
@@ -245,8 +243,6 @@ SASL_VISIT_DEF( compound_statement ){
 	cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF_UNIMPL( expression_statement );
-
 SASL_VISIT_DEF_UNIMPL( labeled_statement );
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
@@ -284,7 +280,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
 		parent_class::create_fnsig(v, data);
 	}
 }
-
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 {
 	Function* fn = sc_data_ptr(data)->self_fn.fn;
@@ -312,7 +307,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 		parent_class::create_fnargs(v, data);
 	}
 }
-
 SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 	any child_ctxt_init = *data;
 	sc_ptr(child_ctxt_init)->clear_data();
@@ -415,6 +409,9 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
+SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
 value_t cgllvm_simd::layout_to_value( sv_layout* svl )
 {
 	builtin_types bt = to_builtin_types( svl->value_type );

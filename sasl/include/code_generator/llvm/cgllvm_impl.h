@@ -47,8 +47,8 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 class llvm_module;
 class llvm_module_impl;
 class cgllvm_sctxt;
-class cgllvm_sctxt_data;
-class cgllvm_sctxt_env;
+struct cgllvm_sctxt_data;
+struct cgllvm_sctxt_env;
 
 typedef cgllvm_sctxt* sctxt_handle;
 
@@ -75,8 +75,10 @@ protected:
 	cgllvm_impl(): abii(NULL), msi(NULL), target_data(NULL){}
 	~cgllvm_impl();
 
+	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( variable_expression );
-	
+	SASL_VISIT_DCL( binary_expression );
+
 	SASL_VISIT_DCL( declaration ){}
 	
 	SASL_VISIT_DCL( builtin_type );
@@ -86,6 +88,7 @@ protected:
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( declarator );
 
+	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( declaration_statement );
 	SASL_VISIT_DCL( jump_statement );
 
@@ -108,6 +111,9 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_return	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement ) = 0;
 	SASL_SPECIFIC_VISIT_DCL( visit_break	, jump_statement ) = 0;
+
+	SASL_SPECIFIC_VISIT_DCL( bin_assign	, binary_expression );
+	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression ) = 0;
 
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );

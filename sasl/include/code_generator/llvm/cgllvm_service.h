@@ -6,10 +6,15 @@
 #include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/enums/builtin_types.h>
 
+#include <eflib/include/metaprog/enable_if.h>
+#include <eflib/include/diagnostics/assert.h>
+
 #include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/type_traits.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -284,6 +289,13 @@ public:
 	virtual value_t emit_add( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs ) = 0;
+
+	virtual value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_le( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_eq( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_ne( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs ) = 0;
 	/// @}
 
 	/// @name Emit element extraction
@@ -342,6 +354,32 @@ public:
 	/// @{
 	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
 	
+	template <typename T>
+	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
+		Value* ll_val = ConstantInt::get( IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value );
+		if( tyinfo ){
+			return create_scalar( ll_val, tyinfo );
+		} else {
+			// Guess tyinfo.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return value_t();
+		}
+	}
+
+	template <typename T>
+	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
+		Value* ll_val = ConstantFP::get( Type::getFloatTy( context() ), v );
+
+		if( tyinfo ){
+			return create_scalar( ll_val, tyinfo );
+		} else {
+			// Guess tyinfo.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return value_t();
+		} 
+	}
+	virtual value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo ) = 0;
+
 	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );

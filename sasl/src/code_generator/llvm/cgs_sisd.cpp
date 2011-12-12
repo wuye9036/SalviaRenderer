@@ -291,7 +291,7 @@ value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
 	return create_value( tyinfo, val, vkind_value, abi_llvm );
 }
 
-sasl::code_generator::value_t cgs_sisd::emit_mul( value_t const& lhs, value_t const& rhs )
+value_t cgs_sisd::emit_mul( value_t const& lhs, value_t const& rhs )
 {
 	builtin_types lhint = lhs.hint();
 	builtin_types rhint = rhs.hint();

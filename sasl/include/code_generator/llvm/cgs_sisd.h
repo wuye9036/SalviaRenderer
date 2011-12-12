@@ -166,34 +166,9 @@ public:
 	value_t undef_value( builtin_types bt, abis abi );
 
 	template <typename T>
-	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
-		Value* ll_val = ConstantInt::get( IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value );
-		if( tyinfo ){
-			return create_scalar( ll_val, tyinfo );
-		} else {
-			// Guess tyinfo.
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return value_t();
-		}
-	}
-
-	template <typename T>
-	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
-		Value* ll_val = ConstantFP::get( Type::getFloatTy( context() ), v );
-
-		if( tyinfo ){
-			return create_scalar( ll_val, tyinfo );
-		} else {
-			// Guess tyinfo.
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return value_t();
-		} 
-	}
-	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
-
-	template <typename T>
 	value_t create_constant_vector( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
-
+	
+	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
 	value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	template <typename T>

@@ -14,6 +14,7 @@
 #include <llvm/LLVMContext.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/CFG.h>
+#include <llvm/Constants.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>

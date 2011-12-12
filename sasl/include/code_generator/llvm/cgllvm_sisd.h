@@ -49,9 +49,7 @@ class cgllvm_sisd: public cgllvm_impl, public cgs_sisd{
 public:
 	~cgllvm_sisd();
 
-	SASL_VISIT_DCL( binary_expression );
 	SASL_VISIT_DCL( member_expression );
-	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( unary_expression );
 	SASL_VISIT_DCL( call_expression );
@@ -60,7 +58,6 @@ public:
 
 	SASL_VISIT_DCL( statement );
 	SASL_VISIT_DCL( compound_statement );
-	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( for_statement );
 	SASL_VISIT_DCL( if_statement );
 	SASL_VISIT_DCL( while_statement );
@@ -78,7 +75,6 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_break	, jump_statement );
 
-	SASL_SPECIFIC_VISIT_DCL( bin_assign	, binary_expression );
 	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression );
 
 	/// Create short-circuit evaluation for condition expression. And logic operators will use it.

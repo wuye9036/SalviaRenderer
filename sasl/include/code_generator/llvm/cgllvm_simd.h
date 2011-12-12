@@ -36,13 +36,11 @@ public:
 	// expression
 	SASL_VISIT_DCL( unary_expression );
 	SASL_VISIT_DCL( cast_expression );
-	SASL_VISIT_DCL( binary_expression );
 	SASL_VISIT_DCL( expression_list );
 	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( index_expression );
 	SASL_VISIT_DCL( call_expression );
 	SASL_VISIT_DCL( member_expression );
-	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( variable_expression );
 
 	// declaration & type specifier
@@ -65,7 +63,6 @@ public:
 	SASL_VISIT_DCL( ident_label );
 	SASL_VISIT_DCL( switch_statement );
 	SASL_VISIT_DCL( compound_statement );
-	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( labeled_statement );
 
 protected:
@@ -85,6 +82,8 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_return	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_break	, jump_statement );
+
+	SASL_SPECIFIC_VISIT_DCL( bin_logic, binary_expression );
 
 	llvm::Function*				entry_fn;
 	std::vector<llvm::Type*>	entry_tys[salviar::storage_usage_count];
