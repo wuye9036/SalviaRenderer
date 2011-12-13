@@ -22,8 +22,8 @@ using salviar::su_buffer_out;
 using salviar::storage_usage_count;
 using salviar::lang_pixel_shader;
 using salviar::lang_vertex_shader;
-using salviar::PACKAGE_SIZE;
-using salviar::SIMD_WIDTH_IN_BYTES;
+using salviar::PACKAGE_ELEMENT_COUNT;
+using salviar::SIMD_ELEMENT_COUNT;
 
 using salviar::sv_layout;
 
@@ -313,7 +313,7 @@ void abi_info::compute_package_layout()
 
 			if( is_vector(elem_bt) || is_scalar( elem_bt ) ){
 				int pow2_elem_size = next_pow2( elem_size );
-				svl->element_count = PACKAGE_SIZE;
+				svl->element_count = PACKAGE_ELEMENT_COUNT;
 				svl->element_size = elem_size;
 				svl->element_padding = pow2_elem_size - elem_size;
 			} else if ( is_matrix( elem_bt ) ){
@@ -323,7 +323,7 @@ void abi_info::compute_package_layout()
 				int pow2_mat_size = next_pow2( mat_size );
 				svl->element_size = mat_size;
 				svl->element_padding = pow2_mat_size - mat_size;
-				svl->element_count = PACKAGE_SIZE;
+				svl->element_count = PACKAGE_ELEMENT_COUNT;
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}

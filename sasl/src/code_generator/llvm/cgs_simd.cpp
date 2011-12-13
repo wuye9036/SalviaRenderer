@@ -80,88 +80,6 @@ int const PACKAGE_SIZE = 16;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-llvm::Value* cgs_simd::load( value_t const& v )
-{
-	value_kinds kind = v.kind();
-	Value* raw = v.raw();
-	uint32_t masks = v.masks();
-
-	assert( kind != vkind_unknown && kind != vkind_tyinfo_only );
-
-	Value* ref_val = NULL;
-	if( kind == vkind_ref || kind == vkind_value ){
-		ref_val = raw;
-	} else if( ( kind & (~vkind_ref) ) == vkind_swizzle ){
-		// Decompose indexes.
-		char indexes[4] = {-1, -1, -1, -1};
-		mask_to_indexes(indexes, masks);
-		vector<int> index_values;
-		index_values.reserve(4);
-		for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
-			index_values.push_back( indexes[i] );
-		}
-		assert( !index_values.empty() );
-
-		// Swizzle
-		Value* agg_v = v.parent()->load();
-
-		if( index_values.size() == 1 ){
-			// Only one member we could extract reference.
-			ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
-		} else {
-			// Multi-members must be swizzle/writemask.
-			assert( (kind & vkind_ref) == 0 );
-			if( v.abi() == abi_c ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
-				return NULL;
-			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-				/*Value* mask = vector_( &indexes[0], index_values.size() );
-				return builder().CreateShuffleVector( agg_v, UndefValue::get( agg_v->getType() ), mask );*/
-			}
-		}
-	} else {
-		assert(false);
-	}
-
-	if( kind & vkind_ref ){
-		return builder().CreateLoad( ref_val );
-	} else {
-		return ref_val;
-	}
-}
-
-llvm::Value* cgs_simd::load( value_t const& v, abis abi )
-{
-	assert( abi != abi_unknown );
-
-	if ( v.abi() == abi ){
-		return v.load();
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return NULL;
-}
-
-llvm::Value* cgs_simd::load_ref( value_t const& v )
-{
-	value_kinds kind = v.kind();
-
-	if( kind == vkind_ref ){
-		return v.raw();
-	} else if( kind == (vkind_swizzle|vkind_ref) ){
-		value_t non_ref( v );
-		non_ref.kind( vkind_swizzle );
-		return non_ref.load();
-	} if( kind == vkind_swizzle ){
-		assert( v.masks() );
-		return emit_extract_elem_mask( *v.parent(), v.masks() ).load_ref();
-	}
-
-	return NULL;
-}
-
 void cgs_simd::store( value_t& lhs, value_t const& rhs )
 {
 	Value* src = rhs.load( lhs.abi() );
@@ -374,10 +292,16 @@ value_t cgs_simd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
-value_t cgs_simd::create_scalar( llvm::Value*, value_tyinfo* )
+value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	Type* ty = tyi->ty( abi_vectorize );
+	Value* vectorize_v = Constant::getNullValue( ty );
+
+	for( size_t i_elem = 0; i_elem < llvm::cast<VectorType>(ty)->getNumElements(); ++i_elem ){
+		vectorize_v = builder().CreateInsertElement( vectorize_v, v, int_( static_cast<int>(i_elem) ) );
+	}
+
+	return create_value( tyi, vectorize_v, vkind_value, abi_vectorize );
 }
 
 END_NS_SASL_CODE_GENERATOR();

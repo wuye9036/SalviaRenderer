@@ -9,6 +9,8 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/enums_utility.h>
 
+#include <salviar/include/shader_abi.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Module.h>
 #include <llvm/LLVMContext.h>
@@ -33,6 +35,11 @@ using namespace sasl::semantic;
 using sasl::utility::is_vector;
 using sasl::utility::scalar_of;
 using sasl::utility::is_scalar;
+using sasl::utility::vector_size;
+using sasl::utility::is_matrix;
+using sasl::utility::vector_count;
+using salviar::PACKAGE_ELEMENT_COUNT;
+using salviar::SIMD_ELEMENT_COUNT;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -329,6 +336,22 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	return ret;
 }
 
+value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
+{
+	assert( tyinfo && abi != abi_unknown );
+	Type* value_type = tyinfo->ty(abi);
+	assert( value_type );
+	return create_value( tyinfo, Constant::getNullValue(value_type), vkind_value, abi );
+}
+
+value_t cg_service::null_value( builtin_types bt, abis abi )
+{
+	assert( bt != builtin_types::none );
+	Type* valty = type_( bt, abi );
+	value_t val = create_value( bt, Constant::getNullValue( valty ), vkind_value, abi );
+	return val;
+}
+
 value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_kinds k, abis abi ){
 	return value_t( tyinfo, val, k, abi, this );
 }
@@ -548,6 +571,241 @@ Type* cg_service::type_( value_tyinfo const* ty, abis abi )
 {
 	assert( ty->ty(abi) );
 	return ty->ty(abi);
+}
+
+llvm::Value* cg_service::load( value_t const& v )
+{
+	value_kinds kind = v.kind();
+	Value* raw = v.raw();
+	uint32_t masks = v.masks();
+
+	assert( kind != vkind_unknown && kind != vkind_tyinfo_only );
+
+	Value* ref_val = NULL;
+	if( kind == vkind_ref || kind == vkind_value ){
+		ref_val = raw;
+	} else if( ( kind & (~vkind_ref) ) == vkind_swizzle ){
+		// Decompose indexes.
+		char indexes[4] = {-1, -1, -1, -1};
+		mask_to_indexes(indexes, masks);
+		vector<int> index_values;
+		index_values.reserve(4);
+		for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
+			index_values.push_back( indexes[i] );
+		}
+		assert( !index_values.empty() );
+
+		// Swizzle
+		Value* agg_v = v.parent()->load();
+
+		if( index_values.size() == 1 ){
+			// Only one member we could extract reference.
+			ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
+		} else {
+			// Multi-members must be swizzle/writemask.
+			assert( (kind & vkind_ref) == 0 );
+			if( v.abi() == abi_c ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+				return NULL;
+			} else {
+				Value* mask = vector_( &indexes[0], index_values.size() );
+				return builder().CreateShuffleVector( agg_v, UndefValue::get( agg_v->getType() ), mask );
+			}
+		}
+	} else {
+		assert(false);
+	}
+
+	if( kind & vkind_ref ){
+		return builder().CreateLoad( ref_val );
+	} else {
+		return ref_val;
+	}
+}
+
+llvm::Value* cg_service::load( value_t const& v, abis abi )
+{
+	return load_as( v, abi );
+}
+
+llvm::Value* cg_service::load_ref( value_t const& v )
+{
+	value_kinds kind = v.kind();
+
+	if( kind == vkind_ref ){
+		return v.raw();
+	} else if( kind == (vkind_swizzle|vkind_ref) ){
+		value_t non_ref( v );
+		non_ref.kind( vkind_swizzle );
+		return non_ref.load();
+	} if( kind == vkind_swizzle ){
+		assert( v.masks() );
+		return emit_extract_elem_mask( *v.parent(), v.masks() ).load_ref();
+	}
+	return NULL;
+}
+
+Value* cg_service::load_as( value_t const& v, abis abi )
+{
+	assert( abi != abi_unknown );
+
+	if( v.abi() == abi ){ return v.load(); }
+
+	switch( v.abi() )
+	{
+	case abi_c:
+		if( abi == abi_llvm ){
+			return load_as_llvm_c(v, abi);
+		} else if ( abi == abi_vectorize ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else if ( abi == abi_package ) {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else {
+			assert(false);
+			return NULL;
+		}
+	case abi_llvm:
+		if( abi == abi_c ){
+			return load_as_llvm_c(v, abi);
+		} else if ( abi == abi_vectorize ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else if ( abi == abi_package ) {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else {
+			assert(false);
+			return NULL;
+		}
+	case abi_vectorize:
+		if( abi == abi_c ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else if ( abi == abi_llvm ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else if ( abi == abi_package ) {
+			return load_vec_as_package( v );
+		} else {
+			assert(false);
+			return NULL;
+		}
+	case abi_package:
+		if( abi == abi_c ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else if ( abi == abi_llvm ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else if ( abi == abi_vectorize ) {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		} else {
+			assert(false);
+			return NULL;
+		}
+	}
+
+	assert(false);
+	return NULL;
+}
+
+Value* cg_service::load_as_llvm_c( value_t const& v, abis abi )
+{
+	builtin_types hint = v.hint();
+
+	if( is_scalar( hint ) ){
+		return v.load();
+	} else if( is_vector( hint ) ){
+		Value* org_value = v.load();
+
+		value_t ret_value = null_value( hint, abi );
+
+		size_t vec_size = vector_size( hint );
+		for( size_t i = 0; i < vec_size; ++i ){
+			ret_value = emit_insert_val( ret_value, (int)i, emit_extract_elem(v, i) );
+		}
+
+		return ret_value.load();
+	} else if( is_matrix( hint ) ){
+		value_t ret_value = null_value( hint, abi );
+		size_t vec_count = vector_count( hint );
+		for( size_t i = 0; i < vec_count; ++i ){
+			value_t org_vec = emit_extract_val(v, (int)i);
+			ret_value = emit_insert_val( ret_value, (int)i, org_vec );
+		}
+
+		return ret_value.load();
+	} else {
+		// NOTE: We assume that, if tyinfo is null and hint is none, it is only the entry of vs/ps. Otherwise, tyinfo must be not NULL.
+		if( !v.tyinfo() && hint == builtin_types::none ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+	return NULL;
+}
+
+value_t cg_service::emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value )
+{
+	Value* indexes[1] = { idx.load() };
+	Value* agg = lhs.load();
+	Value* new_value = NULL;
+	if( agg->getType()->isStructTy() ){
+		assert(false);
+	} else if ( agg->getType()->isVectorTy() ){
+		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		new_value = builder().CreateInsertElement( agg, elem_value.load(), indexes[0] );
+	}
+	assert(new_value);
+	
+	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
+}
+
+value_t cg_service::emit_insert_val( value_t const& lhs, int index, value_t const& elem_value )
+{
+	Value* agg = lhs.load();
+	Value* new_value = NULL;
+	if( agg->getType()->isStructTy() ){
+		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		new_value = builder().CreateInsertValue( agg, elem_value.load(lhs.abi()), (unsigned)index );
+	} else if ( agg->getType()->isVectorTy() ){
+		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		value_t index_value = create_value( builtin_types::_sint32, int_(index), vkind_value, abi_llvm );
+		return emit_insert_val( lhs, index_value, elem_value );
+	}
+	assert(new_value);
+
+	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
+}
+
+Value* cg_service::load_vec_as_package( value_t const& v )
+{
+	builtin_types hint = v.hint();
+
+	if( is_scalar(hint) || is_vector(hint) )
+	{
+		Value* vec_v = v.load();
+		vector<Constant*> indexes;
+		indexes.reserve( PACKAGE_ELEMENT_COUNT );
+		for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+			indexes.push_back( int_( static_cast<int>(i) % SIMD_ELEMENT_COUNT() ) );
+		}
+		return builder().CreateShuffleVector( vec_v, vec_v, ConstantVector::get( indexes ) );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return NULL;
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -4,7 +4,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/shader.h>
-
+#include <eflib/include/platform/cpuinfo.h>
 #include <vector>
 
 BEGIN_NS_SALVIAR();
@@ -102,9 +102,21 @@ struct sv_layout{
 	semantic_value			sv;
 };
 
-int SIMD_WIDTH_IN_BYTES(); 
+int const PACKAGE_ELEMENT_COUNT			= 16;
+int const PACKAGE_LINE_ELEMENT_COUNT	= 4;
 
-int const PACKAGE_SIZE = 16;
+inline int SIMD_ELEMENT_COUNT()
+{
+	return eflib::support_feature( eflib::cpu_avx ) ? 8 : 4;
+}
+
+inline int SIMD_VECTOR_BYTES(){
+	return SIMD_ELEMENT_COUNT() * sizeof(float);
+}
+
+inline int SIMD_VECTOR_BITS(){
+	return SIMD_VECTOR_BYTES() << 3;
+}
 
 // ! Application binary interface of shader.
 //

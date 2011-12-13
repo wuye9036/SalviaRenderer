@@ -91,15 +91,6 @@ public:
 
 	value_t emit_extract_col( value_t const& lhs, size_t index );
 
-	template <typename IndexT>
-	value_t emit_extract_elem( value_t const& vec, IndexT const& idx ){
-		if( vec.storable() ){
-			return emit_extract_ref( vec, idx );
-		} else {
-			return emit_extract_val( vec, idx );
-		}
-	}
-
 	/// Didn't support swizzle yet.
 	value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
 	value_t emit_swizzle( value_t const& vec, uint32_t mask );
@@ -109,9 +100,6 @@ public:
 	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
 	value_t emit_extract_val( value_t const& lhs, int idx );
 	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
-
-	value_t emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value );
-	value_t emit_insert_val( value_t const& lhs, int index, value_t const& elem_value );
 
 	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */
@@ -153,16 +141,11 @@ public:
 
 	/// @name Emit assignment
 	/// @{
-	virtual llvm::Value* load( value_t const& );
-	virtual llvm::Value* load( value_t const& , abis abi );
-	virtual llvm::Value* load_ref( value_t const& );
 	virtual void store( value_t& lhs, value_t const& rhs );
 	/// @}
 
 	/// @name Emit values
 	/// @{
-	value_t null_value( value_tyinfo* tyinfo, abis abi );
-	value_t null_value( builtin_types bt, abis abi );
 	value_t undef_value( builtin_types bt, abis abi );
 
 	template <typename T>
@@ -194,10 +177,6 @@ public:
 	/// @name Bridges
 	/// @{
 	llvm::Value* select_( llvm::Value* cond, llvm::Value* yes, llvm::Value* no );
-	template <typename T>
-	llvm::ConstantInt* int_(T v);
-	template <typename T>
-	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	template <typename T>
 	llvm::Value* c_vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	llvm::Function* intrin_( int );

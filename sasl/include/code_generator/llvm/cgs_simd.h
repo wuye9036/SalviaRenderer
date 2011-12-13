@@ -12,9 +12,6 @@ class cgs_simd: public cg_service
 protected:
 	abis intrinsic_abi() const;
 
-	virtual llvm::Value* load( value_t const& );
-	virtual llvm::Value* load( value_t const& , abis abi );
-	virtual llvm::Value* load_ref( value_t const& );
 	virtual void store( value_t& lhs, value_t const& rhs );
 
 	value_t emit_add( value_t const& lhs, value_t const& rhs );

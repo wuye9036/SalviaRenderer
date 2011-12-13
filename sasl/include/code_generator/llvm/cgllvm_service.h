@@ -27,6 +27,8 @@ namespace llvm{
 	class Argument;
 	class Function;
 	class BasicBlock;
+	class ConstantInt;
+	class ConstantVector;
 
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -276,9 +278,9 @@ public:
 
 	/// @name Value Operators
 	/// @{
-	virtual llvm::Value* load( value_t const& ) = 0;
-	virtual llvm::Value* load( value_t const& , abis abi ) = 0;
-	virtual llvm::Value* load_ref( value_t const& ) = 0;
+	virtual llvm::Value* load( value_t const& );
+	virtual llvm::Value* load( value_t const&, abis abi );
+	virtual llvm::Value* load_ref( value_t const& );
 	virtual void store( value_t& lhs, value_t const& rhs ) = 0;
 	/// @}
 
@@ -300,11 +302,23 @@ public:
 
 	/// @name Emit element extraction
 	/// @{
+	virtual value_t emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value );
+	virtual value_t emit_insert_val( value_t const& lhs, int index, value_t const& elem_value );
+
 	virtual value_t emit_extract_val( value_t const& lhs, int idx ) = 0;
 	virtual value_t emit_extract_val( value_t const& lhs, value_t const& idx ) = 0;
 	virtual value_t emit_extract_ref( value_t const& lhs, int idx ) = 0;
 	virtual value_t emit_extract_ref( value_t const& lhs, value_t const& idx ) = 0;
 	virtual value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask ) = 0;
+
+	template <typename IndexT>
+	value_t emit_extract_elem( value_t const& vec, IndexT const& idx ){
+		if( vec.storable() ){
+			return emit_extract_ref( vec, idx );
+		} else {
+			return emit_extract_val( vec, idx );
+		}
+	}
 	/// @}
 
 	/// @name Intrinsics
@@ -380,6 +394,9 @@ public:
 	}
 	virtual value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo ) = 0;
 
+	value_t null_value( value_tyinfo* tyinfo, abis abi );
+	value_t null_value( builtin_types bt, abis abi );
+
 	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
@@ -409,6 +426,24 @@ public:
 	/// @{
 	llvm::Type* type_( builtin_types bt, abis abi );
 	llvm::Type* type_( value_tyinfo const*, abis abi );
+	template <typename T>
+	llvm::ConstantInt* int_( T v ){
+		return llvm::ConstantInt::get( context(), apint(v) );
+	}
+	template <typename T>
+	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
+	{
+		assert( vals && length > 0 );
+
+		std::vector<llvm::Constant*> elems(length);
+		for( size_t i = 0; i < length; ++i ){
+			elems[i] = int_(vals[i]);
+		}
+
+		return llvm::cast<llvm::ConstantVector>( llvm::ConstantVector::get( elems ) );
+	}
+
+	llvm::Value* load_as( value_t const& v, abis abi );
 	/// @}
 
 	llvm::Module*			module () const;
@@ -423,6 +458,12 @@ protected:
 	std::vector<function_t> fn_ctxts;
 	llvm_intrin_cache		intrins;
 	llvm_module_impl*		mod_impl;
+
+private:
+	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
+	llvm::Value* load_llvm_as_vec		( value_t const& v );
+	llvm::Value* load_vec_as_llvm		( value_t const& v );
+	llvm::Value* load_vec_as_package	( value_t const& v );
 };
 
 END_NS_SASL_CODE_GENERATOR();

@@ -19,9 +19,6 @@ namespace llvm{
 	class Type;
 }
 
-int const SIMD_WIDE = 4;
-int const PACKAGE_WIDE = 16;
-
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 // Code generation for SIMD( Single Instruction Multiple Data )
