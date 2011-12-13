@@ -73,25 +73,6 @@ using boost::lexical_cast;
 using std::vector;
 using std::string;
 
-// Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
-#define EMIT_OP_SS_VV_BODY( op_name )	\
-	builtin_types hint( lhs.hint() ); \
-	assert( hint == rhs.hint() ); \
-	assert( is_scalar(hint) || is_vector(hint) ); \
-	\
-	Value* ret = NULL; \
-	\
-	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint); \
-	if( is_real( scalar_hint ) ){ \
-	ret = builder().CreateF##op_name ( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
-	} else { \
-	ret = builder().Create##op_name( lhs.load(abi_llvm), rhs.load(abi_llvm) ); \
-	}	\
-	\
-	value_t retval = create_value( hint, ret, vkind_value, abi_llvm ); \
-	abis ret_abi = is_scalar(hint) ? abi_llvm : lhs.abi();\
-	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
-
 #define EMIT_CMP_EQ_NE_BODY( op_name ) \
 	builtin_types hint = lhs.hint(); \
 	assert( hint == rhs.hint() ); \
@@ -290,27 +271,6 @@ value_t cgs_sisd::emit_mul( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
-sasl::code_generator::value_t cgs_sisd::emit_add( value_t const& lhs, value_t const& rhs )
-{
-	builtin_types hint = lhs.hint();
-
-	assert( hint != builtin_types::none );
-	assert( is_scalar( scalar_of( hint ) ) );
-	assert( hint == rhs.hint() );
-
-	if( is_scalar(hint) || is_vector(hint) ){
-		return emit_add_ss_vv(lhs, rhs);
-	}
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_sisd::emit_add_ss_vv( value_t const& lhs, value_t const& rhs )
-{
-	EMIT_OP_SS_VV_BODY(Add);
-}
-
 value_t cgs_sisd::emit_dot( value_t const& lhs, value_t const& rhs )
 {
 	return emit_dot_vv(lhs, rhs);
@@ -413,11 +373,6 @@ value_t cgs_sisd::emit_extract_val( value_t const& lhs, value_t const& idx )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
-}
-
-value_t cgs_sisd::emit_mul_ss_vv( value_t const& lhs, value_t const& rhs )
-{
-	EMIT_OP_SS_VV_BODY(Mul);
 }
 
 value_t cgs_sisd::emit_call( function_t const& fn, vector<value_t> const& args )
@@ -570,10 +525,6 @@ value_t cgs_sisd::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 	}
 }
 
-value_t cgs_sisd::emit_sub_ss_vv( value_t const& lhs, value_t const& rhs )
-{
-	EMIT_OP_SS_VV_BODY( Sub );
-}
 
 value_t cgs_sisd::emit_sub( value_t const& lhs, value_t const& rhs )
 {

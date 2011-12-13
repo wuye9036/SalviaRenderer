@@ -288,7 +288,7 @@ public:
 	Some simple overloadable operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
-	virtual value_t emit_add( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_add( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs ) = 0;
 
@@ -451,13 +451,17 @@ public:
 	llvm::DefaultIRBuilder& builder() const;
 
 	virtual abis			param_abi( bool is_c_compatible ) const = 0;
-
+			abis			promote_abi( abis abi0, abis abi1 );
 	node_ctxt_fn			node_ctxt;
 
 protected:
 	std::vector<function_t> fn_ctxts;
 	llvm_intrin_cache		intrins;
 	llvm_module_impl*		mod_impl;
+
+	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
 
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );

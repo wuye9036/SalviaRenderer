@@ -147,13 +147,6 @@ abis cgs_simd::intrinsic_abi() const
 {
 	return abi_vectorize;
 }
-
-value_t cgs_simd::emit_add( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
 value_t cgs_simd::emit_sub( value_t const& lhs, value_t const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();

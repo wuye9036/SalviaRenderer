@@ -30,16 +30,41 @@ using llvm::Value;
 using llvm::Type;
 using llvm::BasicBlock;
 using boost::shared_ptr;
+
 using namespace sasl::syntax_tree;
 using namespace sasl::semantic;
-using sasl::utility::is_vector;
-using sasl::utility::scalar_of;
+
+using sasl::utility::is_real;
 using sasl::utility::is_scalar;
-using sasl::utility::vector_size;
+using sasl::utility::is_vector;
 using sasl::utility::is_matrix;
+using sasl::utility::scalar_of;
+using sasl::utility::vector_size;
 using sasl::utility::vector_count;
+
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::SIMD_ELEMENT_COUNT;
+
+// Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
+#define EMIT_OP_SS_VV_BODY( op_name )	\
+	builtin_types hint( lhs.hint() ); \
+	assert( hint == rhs.hint() ); \
+	assert( is_scalar(hint) || is_vector(hint) ); \
+	\
+	Value* ret = NULL; \
+	\
+	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint); \
+	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );	\
+	abis internal_abi = promote_abi( promoted_abi, abi_llvm );	\
+	if( is_real( scalar_hint ) ){ \
+	ret = builder().CreateF##op_name ( lhs.load(internal_abi), rhs.load(internal_abi) ); \
+	} else { \
+	ret = builder().Create##op_name( lhs.load(internal_abi), rhs.load(internal_abi) ); \
+	}	\
+	\
+	value_t retval = create_value( hint, ret, vkind_value, internal_abi ); \
+	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;\
+	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -806,6 +831,48 @@ Value* cg_service::load_vec_as_package( value_t const& v )
 	}
 
 	return NULL;
+}
+
+abis cg_service::promote_abi( abis abi0, abis abi1 )
+{
+	if( abi0 == abi_c ){ return abi1; }
+	if( abi1 == abi_c ){ return abi0; }
+	if( abi0 == abi_llvm ){ return abi1; }
+	if( abi1 == abi_llvm ){ return abi0; }
+	if( abi0 == abi_vectorize ){ return abi1; }
+	if( abi1 == abi_vectorize ){ return abi0; }
+	return abi0;
+}
+
+value_t cg_service::emit_add_ss_vv( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_OP_SS_VV_BODY(Add);
+}
+
+value_t cg_service::emit_sub_ss_vv( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_OP_SS_VV_BODY(Sub);
+}
+
+value_t cg_service::emit_mul_ss_vv( value_t const& lhs, value_t const& rhs )
+{
+	EMIT_OP_SS_VV_BODY(Mul);
+}
+
+value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint = lhs.hint();
+
+	assert( hint != builtin_types::none );
+	assert( is_scalar( scalar_of( hint ) ) );
+	assert( hint == rhs.hint() );
+
+	if( is_scalar(hint) || is_vector(hint) ){
+		return emit_add_ss_vv(lhs, rhs);
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -14,7 +14,6 @@ protected:
 
 	virtual void store( value_t& lhs, value_t const& rhs );
 
-	value_t emit_add( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul( value_t const& lhs, value_t const& rhs );
 	
