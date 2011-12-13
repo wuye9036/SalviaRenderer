@@ -66,8 +66,6 @@ public:
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
 	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );
-	value_t emit_sub( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul( value_t const& lhs, value_t const& rhs );
 	
 	value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_le( value_t const& lhs, value_t const& rhs );
@@ -76,25 +74,9 @@ public:
 	value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs );
 
-	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
-
-	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
-
-	value_t emit_extract_col( value_t const& lhs, size_t index );
-
 	/// Didn't support swizzle yet.
-	value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
 	value_t emit_swizzle( value_t const& vec, uint32_t mask );
 	value_t emit_write_mask( value_t const& vec, uint32_t mask );
-
-	value_t emit_extract_ref( value_t const& lhs, int idx );
-	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
-	value_t emit_extract_val( value_t const& lhs, int idx );
-	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
 
 	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */

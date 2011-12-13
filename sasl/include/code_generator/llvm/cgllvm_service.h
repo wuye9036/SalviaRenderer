@@ -289,8 +289,8 @@ public:
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
 	virtual value_t emit_add( value_t const& lhs, value_t const& rhs );
-	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_cmp_le( value_t const& lhs, value_t const& rhs ) = 0;
@@ -305,11 +305,12 @@ public:
 	virtual value_t emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value );
 	virtual value_t emit_insert_val( value_t const& lhs, int index, value_t const& elem_value );
 
-	virtual value_t emit_extract_val( value_t const& lhs, int idx ) = 0;
-	virtual value_t emit_extract_val( value_t const& lhs, value_t const& idx ) = 0;
-	virtual value_t emit_extract_ref( value_t const& lhs, int idx ) = 0;
-	virtual value_t emit_extract_ref( value_t const& lhs, value_t const& idx ) = 0;
-	virtual value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask ) = 0;
+	virtual value_t emit_extract_val( value_t const& lhs, int idx );
+	virtual value_t emit_extract_val( value_t const& lhs, value_t const& idx );
+	virtual value_t emit_extract_ref( value_t const& lhs, int idx );
+	virtual value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
+	virtual value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
+	value_t emit_extract_col( value_t const& lhs, size_t index );
 
 	template <typename IndexT>
 	value_t emit_extract_elem( value_t const& vec, IndexT const& idx ){
@@ -452,6 +453,7 @@ public:
 
 	virtual abis			param_abi( bool is_c_compatible ) const = 0;
 			abis			promote_abi( abis abi0, abis abi1 );
+			abis			promote_abi( abis abi0, abis abi1, abis abi2 );
 	node_ctxt_fn			node_ctxt;
 
 protected:
@@ -462,7 +464,12 @@ protected:
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
-
+	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_llvm_as_vec		( value_t const& v );

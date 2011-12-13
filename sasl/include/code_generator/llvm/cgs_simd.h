@@ -13,9 +13,6 @@ protected:
 	abis intrinsic_abi() const;
 
 	virtual void store( value_t& lhs, value_t const& rhs );
-
-	value_t emit_sub( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul( value_t const& lhs, value_t const& rhs );
 	
 	value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_le( value_t const& lhs, value_t const& rhs );
@@ -27,12 +24,6 @@ protected:
 	value_t emit_dot( value_t const& lhs, value_t const& rhs );
 	value_t emit_sqrt( value_t const& lhs );
 	value_t emit_cross( value_t const& lhs, value_t const& rhs );
-
-	value_t emit_extract_ref( value_t const& lhs, int idx );
-	value_t emit_extract_ref( value_t const& lhs, value_t const& idx );
-	value_t emit_extract_val( value_t const& lhs, int idx );
-	value_t emit_extract_val( value_t const& lhs, value_t const& idx );
-	value_t emit_extract_elem_mask( value_t const& vec, uint32_t mask );
 
 	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi );

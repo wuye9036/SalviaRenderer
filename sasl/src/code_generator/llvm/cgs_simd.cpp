@@ -147,17 +147,6 @@ abis cgs_simd::intrinsic_abi() const
 {
 	return abi_vectorize;
 }
-value_t cgs_simd::emit_sub( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_mul( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
 
 void cgs_simd::emit_return()
 {
@@ -197,56 +186,6 @@ value_t cgs_simd::emit_cross( value_t const& lhs, value_t const& rhs )
 abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
 {
 	return abi_package;
-}
-
-value_t cgs_simd::emit_extract_val( value_t const& lhs, int idx )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_extract_val( value_t const& lhs, value_t const& idx )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_extract_ref( value_t const& lhs, int idx )
-{
-	assert( lhs.storable() );
-
-	builtin_types agg_hint = lhs.hint();
-
-	if( is_vector(agg_hint) ){
-		char indexes[4] = { (char)idx, -1, -1, -1 };
-		uint32_t mask = indexes_to_mask( indexes );
-		return value_t::slice( lhs, mask );
-	} else if( is_matrix(agg_hint) ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return value_t();
-	} else if ( agg_hint == builtin_types::none ){
-		Value* agg_address = lhs.load_ref();
-		Value* elem_address = builder().CreateStructGEP( agg_address, (unsigned)idx );
-		value_tyinfo* tyinfo = NULL;
-		if( lhs.tyinfo() ){
-			tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
-		}
-		return create_value( tyinfo, elem_address, vkind_ref, lhs.abi() );
-	}
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_extract_ref( value_t const& lhs, value_t const& idx )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
 }
 
 value_t cgs_simd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )

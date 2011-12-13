@@ -39,6 +39,8 @@ using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
 using sasl::utility::is_matrix;
 using sasl::utility::scalar_of;
+using sasl::utility::vector_of;
+using sasl::utility::matrix_of;
 using sasl::utility::vector_size;
 using sasl::utility::vector_count;
 
@@ -844,6 +846,11 @@ abis cg_service::promote_abi( abis abi0, abis abi1 )
 	return abi0;
 }
 
+abis cg_service::promote_abi( abis abi0, abis abi1, abis abi2 )
+{
+	return promote_abi( promote_abi( abi0, abi1 ), abi2 );
+}
+
 value_t cg_service::emit_add_ss_vv( value_t const& lhs, value_t const& rhs )
 {
 	EMIT_OP_SS_VV_BODY(Add);
@@ -875,4 +882,281 @@ value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
+value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint = lhs.hint();
+
+	assert( hint != builtin_types::none );
+	assert( is_scalar( scalar_of( hint ) ) );
+	assert( hint == rhs.hint() );
+
+	if( is_scalar(hint) || is_vector(hint) ){
+		return emit_sub_ss_vv(lhs, rhs);
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types lhint = lhs.hint();
+	builtin_types rhint = rhs.hint();
+
+	if( is_scalar(lhint) ){
+		if( is_scalar(rhint) ){
+			return emit_mul_ss_vv( lhs, rhs );
+		} else if ( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_vector(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_vector(rhint) ){
+			emit_mul_ss_vv( lhs, rhs );
+		} else if ( is_matrix(rhint) ){
+			return emit_mul_vm( lhs, rhs );
+		}
+	} else if ( is_matrix(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_vector(rhint) ){
+			return emit_mul_mv( lhs, rhs );
+		} else if( is_matrix(rhint) ){
+			return emit_mul_mm( lhs, rhs );
+		}
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
+{
+	assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
+
+	assert( lhs.storable() );
+
+	builtin_types agg_hint = lhs.hint();
+
+	if( is_vector(agg_hint) ){
+		char indexes[4] = { (char)idx, -1, -1, -1 };
+		uint32_t mask = indexes_to_mask( indexes );
+		return value_t::slice( lhs, mask );
+	} else if( is_matrix(agg_hint) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return value_t();
+	} else if ( agg_hint == builtin_types::none ){
+		Value* agg_address = lhs.load_ref();
+		Value* elem_address = builder().CreateStructGEP( agg_address, (unsigned)idx );
+		value_tyinfo* tyinfo = NULL;
+		if( lhs.tyinfo() ){
+			tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
+		}
+		return create_value( tyinfo, elem_address, vkind_ref, lhs.abi() );
+	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
+{
+	assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
+
+	builtin_types agg_hint = lhs.hint();
+
+	Value* val = lhs.load();
+	Value* elem_val = NULL;
+	abis abi = abi_unknown;
+
+	builtin_types elem_hint = builtin_types::none;
+	value_tyinfo* elem_tyi = NULL;
+
+	if( agg_hint == builtin_types::none ){
+		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
+		abi = lhs.abi();
+		elem_tyi = member_tyinfo( lhs.tyinfo(), (size_t)idx );
+	} else if( is_scalar(agg_hint) ){
+		assert( idx == 0 );
+		elem_val = val;
+		elem_hint = agg_hint;
+	} else if( is_vector(agg_hint) ){
+		switch( lhs.abi() ){
+		case abi_c:
+			elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
+			break;
+		case abi_llvm:
+			elem_val = builder().CreateExtractElement(val, int_(idx) );
+			break;
+		default:
+			assert(!"Unknown ABI");
+			break;
+		}
+		abi = abi_llvm;
+		elem_hint = scalar_of(agg_hint);
+	} else if( is_matrix(agg_hint) ){
+		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
+		abi = lhs.abi();
+		elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
+	}
+
+	// assert( elem_tyi || elem_hint != builtin_types::none );
+
+	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
+}
+
+value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
+{
+	char indexes[4] = {-1, -1, -1, -1};
+	mask_to_indexes( indexes, mask );
+	assert( indexes[0] != -1 );
+	if( indexes[1] == -1 ){
+		return emit_extract_elem( vec, indexes[0] );
+	} else {
+		// Caculate out size
+		/*int out_size = 0;
+		for( int i = 0; i < 4; ++i ){
+		if( indexes[i] == -1 ){ break; }
+		++out_size;
+		}*/
+
+		EFLIB_ASSERT_UNIMPLEMENTED();
+
+		return value_t();
+	}
+}
+
+value_t cg_service::emit_extract_col( value_t const& lhs, size_t index )
+{
+	assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
+
+	value_t val = lhs.to_rvalue();
+	builtin_types mat_hint( lhs.hint() );
+	assert( is_matrix(mat_hint) );
+
+	size_t row_count = vector_count( mat_hint );
+
+	builtin_types out_hint = vector_of( scalar_of(mat_hint), row_count );
+
+	value_t out_value = null_value( out_hint, lhs.abi() );
+	for( size_t irow = 0; irow < row_count; ++irow ){
+		value_t row = emit_extract_val( val, (int)irow );
+		value_t cell = emit_extract_val( row, (int)index );
+		out_value = emit_insert_val( out_value, (int)irow, cell );
+	}
+
+	return out_value;
+}
+
+value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
+{
+	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
+
+	size_t vec_size = vector_size( lhs.hint() );
+
+	value_t total = null_value( scalar_of( lhs.hint() ), abi_llvm );
+
+	for( size_t i = 0; i < vec_size; ++i ){
+		value_t lhs_elem = emit_extract_elem( lhs, i );
+		value_t rhs_elem = emit_extract_elem( rhs, i );
+
+		value_t elem_mul = emit_mul_ss_vv( lhs_elem, rhs_elem );
+		total.emplace( emit_add_ss_vv( total, elem_mul ).to_rvalue() );
+	}
+
+	return total;
+}
+
+value_t cg_service::emit_mul_mv( value_t const& lhs, value_t const& rhs )
+{
+	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
+
+	builtin_types mhint = lhs.hint();
+	builtin_types vhint = rhs.hint();
+
+	size_t row_count = vector_count(mhint);
+	size_t vec_size = vector_size(mhint);
+
+	builtin_types ret_hint = vector_of( scalar_of(vhint), row_count );
+
+	value_t ret_v = null_value( ret_hint, lhs.abi() );
+	for( size_t irow = 0; irow < row_count; ++irow ){
+		value_t row_vec = emit_extract_val( lhs, irow );
+		ret_v = emit_insert_val( ret_v, irow, emit_dot_vv(row_vec, rhs) );
+	}
+
+	return ret_v;
+}
+
+value_t cg_service::emit_mul_vm( value_t const& lhs, value_t const& rhs )
+{
+	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
+
+	size_t out_v = vector_size( rhs.hint() );
+
+	value_t lrv = lhs.to_rvalue();
+	value_t rrv = rhs.to_rvalue();
+
+	value_t ret = null_value( vector_of( scalar_of(lhs.hint()), out_v ), lhs.abi() );
+	for( size_t idx = 0; idx < out_v; ++idx ){
+		ret = emit_insert_val( ret, (int)idx, emit_dot_vv( lrv, emit_extract_col(rrv, idx) ) );
+	}
+
+	return ret;
+}
+
+value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
+{
+	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
+
+	builtin_types lhint = lhs.hint();
+	builtin_types rhint = rhs.hint();
+
+	size_t out_v = vector_size( lhint );
+	size_t out_r = vector_count( rhint );
+	size_t inner_size = vector_size(rhint);
+
+	builtin_types out_row_hint = vector_of( scalar_of(lhint), out_v );
+	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
+	abis out_abi = lhs.abi();
+
+	vector<value_t> out_cells(out_v*out_r);
+	out_cells.resize( out_v*out_r );
+
+	// Caluclate matrix cells.
+	for( size_t icol = 0; icol < out_v; ++icol){
+		value_t col = emit_extract_col( rhs, icol );
+		for( size_t irow = 0; irow < out_r; ++irow )
+		{
+			value_t row = emit_extract_col( rhs, icol );
+			out_cells[irow*out_v+icol] = emit_dot_vv( col, row );
+		}
+	}
+
+	// Compose cells to matrix
+	value_t ret_value = null_value( out_hint, out_abi );
+	for( size_t irow = 0; irow < out_r; ++irow ){
+		value_t row_vec = null_value( out_row_hint, out_abi );
+		for( size_t icol = 0; icol < out_v; ++icol ){
+			row_vec = emit_insert_val( row_vec, (int)icol, out_cells[irow*out_v+icol] );
+		}
+		ret_value = emit_insert_val( ret_value, (int)irow, row_vec );
+	}
+
+	return ret_value;
+}
 END_NS_SASL_CODE_GENERATOR();
