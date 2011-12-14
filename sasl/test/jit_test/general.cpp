@@ -7,6 +7,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <salviar/include/shader_abi.h>
 
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
@@ -40,6 +41,8 @@ using sasl::semantic::symbol;
 using sasl::code_generator::jit_engine;
 using sasl::code_generator::cgllvm_jit_engine;
 using sasl::code_generator::llvm_module;
+
+using salviar::PACKAGE_ELEMENT_COUNT;
 
 using boost::shared_ptr;
 using boost::shared_polymorphic_cast;
@@ -598,11 +601,33 @@ BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 #endif
 
 #if 1
+
 BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/arithmetic.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
+
+	float* src	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* dest	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float dest_ref[PACKAGE_ELEMENT_COUNT];
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		src[i] = (i+3.77f)*(0.76f*i);
+
+		dest_ref[i] = src[i] + 5.0f;
+		dest_ref[i] += (src[i] - 5.0f);
+		dest_ref[i] += (src[i] * 5.0f);
+	}
+
+	fn( src, (void*)NULL, dest, (void*)NULL );
+	
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( dest_ref[i], dest[i], 0.00001f );
+	}
+
+	_aligned_free( src );
+	_aligned_free( dest );
 }
 #endif
 

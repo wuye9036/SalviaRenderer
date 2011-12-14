@@ -16,7 +16,7 @@ VSOUT fn( VSIN in ){
 	o.pos = x + y;
 	o.pos = o.pos + (x - y);
 	o.pos = o.pos + (x * y);
-	o.pos = o.pos + (x / y);
+	// o.pos = o.pos + (x / y);
 	
 	return o;
 }

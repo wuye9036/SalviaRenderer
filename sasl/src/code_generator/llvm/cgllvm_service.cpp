@@ -935,8 +935,6 @@ value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
 
 value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 {
-	assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
-
 	assert( lhs.storable() );
 
 	builtin_types agg_hint = lhs.hint();
@@ -969,8 +967,6 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 
 value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 {
-	assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
-
 	builtin_types agg_hint = lhs.hint();
 
 	Value* val = lhs.load();
@@ -996,13 +992,18 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 		case abi_llvm:
 			elem_val = builder().CreateExtractElement(val, int_(idx) );
 			break;
+		case abi_vectorize:
+		case abi_package:
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			break;
 		default:
 			assert(!"Unknown ABI");
 			break;
 		}
-		abi = abi_llvm;
+		abi = promote_abi( abi_llvm, lhs.abi() );
 		elem_hint = scalar_of(agg_hint);
 	} else if( is_matrix(agg_hint) ){
+		assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
 		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
 		abi = lhs.abi();
 		elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
