@@ -647,7 +647,7 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 	}
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		dest_ref[i].xyz( src[i].xyz() + src[i].wxy() );
+		dest_ref[i].yzx( src[i].xyz() + src[i].wxy() );
 	}
 
 	fn( src, (void*)NULL, dest, (void*)NULL );

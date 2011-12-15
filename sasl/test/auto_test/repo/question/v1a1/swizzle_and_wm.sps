@@ -15,7 +15,7 @@ PSOUT fn( PSIN in ){
 	x = (in.f4).xyz;
 	y = (in.f4).wxy;
 	
-	o.f3 = x + y;
+	o.f3.yzx = x + y;
 	
 	return o;
 }

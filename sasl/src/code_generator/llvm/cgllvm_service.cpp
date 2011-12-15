@@ -189,6 +189,8 @@ bool value_t::storable() const{
 	case vkind_value:
 	case vkind_unknown:
 		return false;
+	case vkind_swizzle:
+		return parent()->storable();
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return false;
@@ -992,9 +994,14 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 			elem_val = builder().CreateExtractElement(val, int_(idx) );
 			break;
 		case abi_vectorize:
-		case abi_package:
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			break;
+		case abi_package:
+			{
+				char indexes[4] = {idx, -1, -1, -1};
+				elem_val = emit_extract_elem_mask( lhs, indexes_to_mask(indexes) ).load();
+				break;
+			}
 		default:
 			assert(!"Unknown ABI");
 			break;
@@ -1025,87 +1032,90 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 	mask_to_indexes( indexes, mask );
 	uint32_t idx_len = indexes_length(indexes);
 
-	assert( indexes[0] != -1 );
-	if( indexes[1] == -1 ){
-		return emit_extract_elem( vec, indexes[0] );
-	} else {
-		// Get the hint.
-		assert( vec.hint() != builtin_types::none );
-
-		builtin_types swz_hint = scalar_of( vec.hint() );
-		if( is_vector(vec.hint()) ){
-			swz_hint = vector_of( scalar_of(vec.hint()), idx_len );
-		} else if ( is_matrix(vec.hint()) ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		} else {
-			assert(false);
+	assert( idx_len > 0 );
+	if( idx_len == 1 ){
+		// Struct, array or not-package, return extract elem.
+		// Else do extract mask.
+		if( vec.abi() != abi_package || vec.hint() == builtin_types::none ){
+			return emit_extract_elem( vec, indexes[0] );
 		}
-
-		if( vec.storable() ){
-			value_t swz_proxy = create_value( NULL, vec.hint(), NULL, vkind_swizzle, vec.abi() );
-			swz_proxy.parent( vec );
-			swz_proxy.masks( mask );
-			return swz_proxy;
-		} else {
-			if( is_scalar( vec.hint() ) ) {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			} else if( is_vector( vec.hint() ) ) {
-				Value* vec_v = vec.load( promote_abi(abi_llvm, vec.abi()) );
-				switch( vec.abi() ){
-				case abi_c:
-				case abi_llvm:
-					{
-						Value* v = builder().CreateShuffleVector( vec_v, vec_v, vector_<int>(indexes, idx_len) );
-						return create_value( NULL, swz_hint, v, vkind_value, abi_llvm );
-					}
-				case abi_vectorize:
-					{
-						vector<char> vectorize_idx( SIMD_ELEMENT_COUNT(), -1 );
-						assert( idx_len < SIMD_ELEMENT_COUNT() );
-						copy( &indexes[0], &indexes[idx_len], vectorize_idx.begin() );
-						fill( vectorize_idx.begin() + idx_len, vectorize_idx.end(), vector_size(vec.hint()) );
-
-						Value* v = builder().CreateShuffleVector(
-							vec_v, UndefValue::get(vec_v->getType()),
-							vector_<int>( &(vectorize_idx[0]), vectorize_idx.size() )
-							);
-						return create_value( NULL, swz_hint, v, vkind_value, abi_vectorize );
-					}
-				case abi_package:
-					{
-						int src_element_pitch = ceil_to_pow2( static_cast<int>(vector_size(vec.hint())) );
-						int swz_element_pitch = ceil_to_pow2( static_cast<int>(idx_len) );
-						
-						int src_scalar_count = src_element_pitch * PACKAGE_ELEMENT_COUNT;
-
-						vector<char> indexes_per_value( src_scalar_count, src_scalar_count );
-						copy( &indexes[0], &indexes[idx_len], indexes_per_value.begin() );
-
-						vector<char> package_idx( PACKAGE_ELEMENT_COUNT * swz_element_pitch, -1 );
-						assert( idx_len < SIMD_ELEMENT_COUNT() );
-
-						for ( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-							for( size_t j = 0; j < swz_element_pitch; ++j ){
-								package_idx[i*swz_element_pitch+j] = indexes_per_value[j]+i*src_element_pitch;
-							}
-						}
-
-						Value* v = builder().CreateShuffleVector(
-							vec_v, UndefValue::get(vec_v->getType()),
-							vector_<int>( &(package_idx[0]), package_idx.size() )
-							);
-						return create_value( NULL, swz_hint, v, vkind_value, abi_package );
-					}
-				default:
-					assert(false);
-				}
-			} else if( is_matrix(vec.hint()) ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			}
-		}
-
-		return value_t();
 	}
+	// Get the hint.
+	assert( vec.hint() != builtin_types::none );
+
+	builtin_types swz_hint = scalar_of( vec.hint() );
+	if( is_vector(vec.hint()) ){
+		swz_hint = vector_of( scalar_of(vec.hint()), idx_len );
+	} else if ( is_matrix(vec.hint()) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		assert(false);
+	}
+
+	if( vec.storable() ){
+		value_t swz_proxy = create_value( NULL, vec.hint(), NULL, vkind_swizzle, vec.abi() );
+		swz_proxy.parent( vec );
+		swz_proxy.masks( mask );
+		return swz_proxy;
+	} else {
+		if( is_scalar( vec.hint() ) ) {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_vector( vec.hint() ) ) {
+			Value* vec_v = vec.load( promote_abi(abi_llvm, vec.abi()) );
+			switch( vec.abi() ){
+			case abi_c:
+			case abi_llvm:
+				{
+					Value* v = builder().CreateShuffleVector( vec_v, vec_v, vector_<int>(indexes, idx_len) );
+					return create_value( NULL, swz_hint, v, vkind_value, abi_llvm );
+				}
+			case abi_vectorize:
+				{
+					vector<char> vectorize_idx( SIMD_ELEMENT_COUNT(), -1 );
+					assert( idx_len < SIMD_ELEMENT_COUNT() );
+					copy( &indexes[0], &indexes[idx_len], vectorize_idx.begin() );
+					fill( vectorize_idx.begin() + idx_len, vectorize_idx.end(), vector_size(vec.hint()) );
+
+					Value* v = builder().CreateShuffleVector(
+						vec_v, UndefValue::get(vec_v->getType()),
+						vector_<int>( &(vectorize_idx[0]), vectorize_idx.size() )
+						);
+					return create_value( NULL, swz_hint, v, vkind_value, abi_vectorize );
+				}
+			case abi_package:
+				{
+					int src_element_pitch = ceil_to_pow2( static_cast<int>(vector_size(vec.hint())) );
+					int swz_element_pitch = ceil_to_pow2( static_cast<int>(idx_len) );
+						
+					int src_scalar_count = src_element_pitch * PACKAGE_ELEMENT_COUNT;
+
+					vector<char> indexes_per_value( src_scalar_count, src_scalar_count );
+					copy( &indexes[0], &indexes[idx_len], indexes_per_value.begin() );
+
+					vector<char> package_idx( PACKAGE_ELEMENT_COUNT * swz_element_pitch, -1 );
+					assert( idx_len < SIMD_ELEMENT_COUNT() );
+
+					for ( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+						for( size_t j = 0; j < swz_element_pitch; ++j ){
+							package_idx[i*swz_element_pitch+j] = indexes_per_value[j]+i*src_element_pitch;
+						}
+					}
+
+					Value* v = builder().CreateShuffleVector(
+						vec_v, UndefValue::get(vec_v->getType()),
+						vector_<int>( &(package_idx[0]), package_idx.size() )
+						);
+					return create_value( NULL, swz_hint, v, vkind_value, abi_package );
+				}
+			default:
+				assert(false);
+			}
+		} else if( is_matrix(vec.hint()) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	return value_t();
 }
 
 value_t cg_service::emit_extract_col( value_t const& lhs, size_t index )

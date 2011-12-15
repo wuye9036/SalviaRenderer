@@ -8,6 +8,9 @@
 
 #include <sasl/enums/enums_utility.h>
 
+#include <salviar/include/shader_abi.h>
+#include <eflib/include/math/math.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Function.h>
@@ -37,8 +40,11 @@ using sasl::syntax_tree::struct_type;
 using sasl::semantic::storage_si;
 using sasl::semantic::type_info_si;
 
+using salviar::PACKAGE_ELEMENT_COUNT;
+
 using eflib::support_feature;
 using eflib::cpu_sse2;
+using eflib::ceil_to_pow2;
 
 using namespace sasl::utility;
 
@@ -75,9 +81,6 @@ using boost::lexical_cast;
 using std::vector;
 using std::string;
 
-int const SIMD_WIDTH_IN_BYTES = 16;
-int const PACKAGE_SIZE = 16;
-
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 void cgs_simd::store( value_t& lhs, value_t const& rhs )
@@ -91,7 +94,59 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 	} else if ( kind == vkind_swizzle ){
 		if( is_vector( lhs.parent()->hint()) ){
 			assert( lhs.parent()->storable() );
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			Value* parent_address = lhs.parent()->load_ref();
+			Value* r_value = rhs.load( lhs.abi() );
+
+			char indexes[4];
+			mask_to_indexes( indexes, lhs.masks() );
+			uint32_t idx_len = indexes_length( indexes );
+
+			switch ( lhs.abi() ){	
+			case abi_c:
+				{
+					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
+						value_t element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
+						Value* mem_ptr = builder().CreateStructGEP( parent_address, indexes[i_write_idx] );
+						builder().CreateStore( element_val.load(), mem_ptr );
+					}
+					return;
+				}
+			case abi_llvm:
+				{
+					value_t parent_v = lhs.parent()->to_rvalue();
+					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
+						value_t element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
+						parent_v = emit_insert_val( rhs, indexes[i_write_idx], element_val );
+					}
+					lhs.parent()->store( parent_v );
+					return;
+				}
+			case abi_vectorize:
+				EFLIB_ASSERT_UNIMPLEMENTED();
+				break;
+			case abi_package:
+				{
+					int dst_elem_pitch = ceil_to_pow2( vector_size( lhs.hint() ) );
+					int src_elem_pitch = ceil_to_pow2( vector_size( rhs.hint() ) );
+
+					Value* parent_value = lhs.parent()->load();
+					for( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
+						for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
+							int src_index = static_cast<int>( src_elem_pitch*i_elem+i_write_idx );
+							int dst_index = static_cast<int>( dst_elem_pitch*i_elem+indexes[i_write_idx] );
+					
+							Value* elem_val = builder().CreateExtractElement( r_value, int_(src_index) );
+							parent_value = builder().CreateInsertElement( parent_value, elem_val, int_(dst_index) );
+						}
+					}
+					value_t new_v = *lhs.parent();
+					new_v.emplace( parent_value, vkind_value, lhs.abi() );
+					lhs.parent()->store( new_v );
+					return;
+				}
+			default:
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
 		} else {
 			address = lhs.load_ref();
 		}
