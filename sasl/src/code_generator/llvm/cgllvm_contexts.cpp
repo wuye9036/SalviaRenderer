@@ -66,11 +66,11 @@ void cgllvm_sctxt::clear_data(){
 	data( cgllvm_sctxt().data() );
 }
 
-value_t const& cgllvm_sctxt::get_value() const{
+value_t const& cgllvm_sctxt::value() const{
 	return data().val;
 }
 
-value_t& cgllvm_sctxt::get_value(){
+value_t& cgllvm_sctxt::value(){
 	return data().val;
 }
 

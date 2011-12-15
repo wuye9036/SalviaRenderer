@@ -591,7 +591,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 }
 #endif
 
-#if 1
+#if 0
 BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/scalar.sps" );
 
@@ -600,7 +600,7 @@ BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 }
 #endif
 
-#if 1
+#if 0
 BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/arithmetic.sps" );
 
@@ -637,6 +637,29 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
+
+	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
+	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
+	vec4 dest_ref[PACKAGE_ELEMENT_COUNT];
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
+		((float*)src)[i] = (i+3.77f)*(0.76f*i);
+	}
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		dest_ref[i].xyz( src[i].xyz() + src[i].wxy() );
+	}
+
+	fn( src, (void*)NULL, dest, (void*)NULL );
+	
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( dest_ref[i].x, dest[i].x, 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i].y, dest[i].y, 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i].z, dest[i].z, 0.00001f );
+	}
+
+	_aligned_free( src );
+	_aligned_free( dest );
 }
 #endif
 

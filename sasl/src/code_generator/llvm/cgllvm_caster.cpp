@@ -65,13 +65,13 @@ public:
 	{
 		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
 			// Overwrite source.
-			get_ctxt(src)->get_value() = v;
+			get_ctxt(src)->value() = v;
 		} else {
 			// Store to dest.
-			if( get_ctxt(dest)->get_value().storable() ){
-				get_ctxt(dest)->get_value().store(v);
+			if( get_ctxt(dest)->value().storable() ){
+				get_ctxt(dest)->value().store(v);
 			} else {
-				get_ctxt(dest)->get_value() = v;
+				get_ctxt(dest)->value() = v;
 			}
 		}
 	}
@@ -87,12 +87,12 @@ public:
 			dest_ctxt->data().tyinfo.get()
 			);
 
-		dest_ctxt->get_value().store( casted );
+		dest_ctxt->value().store( casted );
 	}
 
 	void int2bool( shared_ptr<node> dest, shared_ptr<node> src ){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_i2b( get_ctxt(src)->get_value() );
+		value_t casted = cgs->cast_i2b( get_ctxt(src)->value() );
 		store( dest, src, casted );
 	}
 
@@ -119,7 +119,7 @@ public:
 			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
-		cgs->store( dest_ctxt->get_value(), casted );
+		cgs->store( dest_ctxt->value(), casted );
 	}
 
 	void float2float( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -132,12 +132,12 @@ public:
 			src_ctxt->get_rvalue(),
 			dest_ctxt->data().tyinfo.get()
 			);
-		cgs->store( dest_ctxt->get_value(), casted );
+		cgs->store( dest_ctxt->value(), casted );
 	}
 
 	void float2bool( shared_ptr<node> dest, shared_ptr<node> src ){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_f2b( get_ctxt(src)->get_value() );
+		value_t casted = cgs->cast_f2b( get_ctxt(src)->value() );
 		store( dest, src, casted );
 	}
 
@@ -151,9 +151,9 @@ public:
 		vector<value_t> scalars;
 		scalars.push_back( scalar_value );
 
-		value_t vector_value = cgs->create_vector( scalars, dest_ctxt->get_value().abi() );
+		value_t vector_value = cgs->create_vector( scalars, dest_ctxt->value().abi() );
 
-		cgs->store( dest_ctxt->get_value(), vector_value );
+		cgs->store( dest_ctxt->value(), vector_value );
 	}
 
 	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
@@ -167,7 +167,7 @@ public:
 		size_t swz_code = encode_sized_swizzle(dest_size);
 
 		cgs->store(
-			dest_ctxt->get_value(),
+			dest_ctxt->value(),
 			vector_value.swizzle(swz_code)
 			);
 	}

@@ -11,6 +11,8 @@
 
 #include <salviar/include/shader_abi.h>
 
+#include <eflib/include/math/math.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Module.h>
 #include <llvm/LLVMContext.h>
@@ -46,6 +48,8 @@ using sasl::utility::vector_count;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::SIMD_ELEMENT_COUNT;
+
+using eflib::ceil_to_pow2;
 
 // Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
 #define EMIT_OP_SS_VV_BODY( op_name )	\
@@ -279,6 +283,8 @@ value_tyinfo*	value_t::tyinfo() const{ return tyinfo_; }
 void			value_t::hint( builtin_types bt ){ hint_ = bt; }
 void			value_t::abi( abis abi ){ this->abi_ = abi; }
 uint32_t		value_t::masks() const{ return masks_; }
+void			value_t::masks( uint32_t v ){ masks_ = v; }
+
 void			value_t::kind( value_kinds vkind ) { kind_ = vkind; }
 void			value_t::parent( value_t const& v ){ parent_.reset( new value_t(v) ); }
 void			value_t::parent( value_t const* v ){ if(v){ parent(*v); } }
@@ -622,22 +628,15 @@ llvm::Value* cg_service::load( value_t const& v )
 		}
 		assert( !index_values.empty() );
 
-		// Swizzle
-		Value* agg_v = v.parent()->load();
-
+		// Swizzle and write mask
 		if( index_values.size() == 1 ){
 			// Only one member we could extract reference.
 			ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
 		} else {
 			// Multi-members must be swizzle/writemask.
 			assert( (kind & vkind_ref) == 0 );
-			if( v.abi() == abi_c ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
-				return NULL;
-			} else {
-				Value* mask = vector_( &indexes[0], index_values.size() );
-				return builder().CreateShuffleVector( agg_v, UndefValue::get( agg_v->getType() ), mask );
-			}
+			value_t ret_val = emit_extract_elem_mask( v.parent()->to_rvalue(), masks );
+			return ret_val.load( v.abi() );
 		}
 	} else {
 		assert(false);
@@ -1024,18 +1023,86 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 {
 	char indexes[4] = {-1, -1, -1, -1};
 	mask_to_indexes( indexes, mask );
+	uint32_t idx_len = indexes_length(indexes);
+
 	assert( indexes[0] != -1 );
 	if( indexes[1] == -1 ){
 		return emit_extract_elem( vec, indexes[0] );
 	} else {
-		// Caculate out size
-		/*int out_size = 0;
-		for( int i = 0; i < 4; ++i ){
-		if( indexes[i] == -1 ){ break; }
-		++out_size;
-		}*/
+		// Get the hint.
+		assert( vec.hint() != builtin_types::none );
 
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		builtin_types swz_hint = scalar_of( vec.hint() );
+		if( is_vector(vec.hint()) ){
+			swz_hint = vector_of( scalar_of(vec.hint()), idx_len );
+		} else if ( is_matrix(vec.hint()) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else {
+			assert(false);
+		}
+
+		if( vec.storable() ){
+			value_t swz_proxy = create_value( NULL, vec.hint(), NULL, vkind_swizzle, vec.abi() );
+			swz_proxy.parent( vec );
+			swz_proxy.masks( mask );
+			return swz_proxy;
+		} else {
+			if( is_scalar( vec.hint() ) ) {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} else if( is_vector( vec.hint() ) ) {
+				Value* vec_v = vec.load( promote_abi(abi_llvm, vec.abi()) );
+				switch( vec.abi() ){
+				case abi_c:
+				case abi_llvm:
+					{
+						Value* v = builder().CreateShuffleVector( vec_v, vec_v, vector_<int>(indexes, idx_len) );
+						return create_value( NULL, swz_hint, v, vkind_value, abi_llvm );
+					}
+				case abi_vectorize:
+					{
+						vector<char> vectorize_idx( SIMD_ELEMENT_COUNT(), -1 );
+						assert( idx_len < SIMD_ELEMENT_COUNT() );
+						copy( &indexes[0], &indexes[idx_len], vectorize_idx.begin() );
+						fill( vectorize_idx.begin() + idx_len, vectorize_idx.end(), vector_size(vec.hint()) );
+
+						Value* v = builder().CreateShuffleVector(
+							vec_v, UndefValue::get(vec_v->getType()),
+							vector_<int>( &(vectorize_idx[0]), vectorize_idx.size() )
+							);
+						return create_value( NULL, swz_hint, v, vkind_value, abi_vectorize );
+					}
+				case abi_package:
+					{
+						int src_element_pitch = ceil_to_pow2( static_cast<int>(vector_size(vec.hint())) );
+						int swz_element_pitch = ceil_to_pow2( static_cast<int>(idx_len) );
+						
+						int src_scalar_count = src_element_pitch * PACKAGE_ELEMENT_COUNT;
+
+						vector<char> indexes_per_value( src_scalar_count, src_scalar_count );
+						copy( &indexes[0], &indexes[idx_len], indexes_per_value.begin() );
+
+						vector<char> package_idx( PACKAGE_ELEMENT_COUNT * swz_element_pitch, -1 );
+						assert( idx_len < SIMD_ELEMENT_COUNT() );
+
+						for ( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+							for( size_t j = 0; j < swz_element_pitch; ++j ){
+								package_idx[i*swz_element_pitch+j] = indexes_per_value[j]+i*src_element_pitch;
+							}
+						}
+
+						Value* v = builder().CreateShuffleVector(
+							vec_v, UndefValue::get(vec_v->getType()),
+							vector_<int>( &(package_idx[0]), package_idx.size() )
+							);
+						return create_value( NULL, swz_hint, v, vkind_value, abi_package );
+					}
+				default:
+					assert(false);
+				}
+			} else if( is_matrix(vec.hint()) ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+		}
 
 		return value_t();
 	}

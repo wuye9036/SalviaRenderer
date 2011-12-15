@@ -49,4 +49,18 @@ void dbg_print_blocks( Function* fn )
 #endif
 }
 
+uint32_t indexes_length( char indexes[4] )
+{
+	int i = 0;
+	while( indexes[i] != -1 && i < 4 ){ ++i; }
+	return i;
+}
+
+uint32_t indexes_length( uint32_t mask )
+{
+	char indexes[4] = {-1, -1, -1, -1};
+	mask_to_indexes(indexes, mask);
+	return indexes_length(indexes);
+}
+
 END_NS_SASL_CODE_GENERATOR();

@@ -111,7 +111,7 @@ SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
 
-	sc_ptr(data)->get_value() = node_ctxt( declsym->node(), false )->get_value();
+	sc_ptr(data)->value() = node_ctxt( declsym->node(), false )->value();
 	sc_ptr(data)->get_tysp() = node_ctxt( declsym->node(), false )->get_tysp();
 	sc_ptr(data)->data().semantic_mode = node_ctxt( declsym->node(), false )->data().semantic_mode;
 
@@ -218,7 +218,7 @@ SASL_VISIT_DEF( binary_expression ){
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
-			sc_ptr(data)->get_value() = retval;
+			sc_ptr(data)->value() = retval;
 			node_ctxt(v, true)->copy( sc_ptr(data) );
 		}
 	}
@@ -250,7 +250,7 @@ SASL_VISIT_DEF( constant_expression ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	sc_ptr(data)->get_value() = val;
+	sc_ptr(data)->value() = val;
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
@@ -483,7 +483,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
 	if ( v.init ){
 		sc_env_ptr(&child_ctxt_init)->variable_to_fill = v.as_handle();
 		visit_child( child_ctxt, child_ctxt_init, v.init );
-		sc_data_ptr(data)->val.store( sc_ptr(&child_ctxt)->get_value() );
+		sc_data_ptr(data)->val.store( sc_ptr(&child_ctxt)->value() );
 	}
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -519,7 +519,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	{
 		sctxt_handle par_ctxt = node_ctxt( par );
 		service()->fn().arg_name( i_arg, par->symbol()->unmangled_name() );
-		par_ctxt->get_value() = service()->fn().arg( i_arg++ );
+		par_ctxt->value() = service()->fn().arg( i_arg++ );
 	}
 }
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
@@ -540,7 +540,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 	if ( !v.jump_expr ){
 		service()->emit_return();
 	} else {
-		service()->emit_return( node_ctxt(v.jump_expr)->get_value(), service()->param_abi( service()->fn().c_compatible ) );
+		service()->emit_return( node_ctxt(v.jump_expr)->value(), service()->param_abi( service()->fn().c_compatible ) );
 	}
 }
 
@@ -565,7 +565,7 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
 	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
 
-	rctxt->get_value().store( lctxt->get_value() );
+	rctxt->value().store( lctxt->value() );
 
 	cgllvm_sctxt* pctxt = node_ctxt(v, true);
 	pctxt->data( rctxt->data() );

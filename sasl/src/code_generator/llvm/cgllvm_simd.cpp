@@ -156,10 +156,9 @@ SASL_VISIT_DEF( member_expression ){
 
 	if( tisi->type_info()->is_builtin() ){
 		// Swizzle or write mask
-		// storage_si* mem_ssi = v.si_ptr<storage_si>();
-		// value_t vec_value = agg_ctxt->get_value();
-		// mem_ctxt->get_value() = create_extract_elem();
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		uint32_t masks = v.si_ptr<storage_si>()->swizzle();
+		value_t agg_value = agg_ctxt->value();
+		sc_ptr(data)->value() = emit_extract_elem_mask( agg_value, masks );
 	} else {
 		// Member
 		shared_ptr<symbol> struct_sym = tisi->type_info()->symbol();
@@ -173,14 +172,14 @@ SASL_VISIT_DEF( member_expression ){
 			salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
 			sv_layout* psi = abii->input_sv_layout( sem );
 
-			sc_ptr(data)->get_value() = layout_to_value( psi );
+			sc_ptr(data)->value() = layout_to_value( psi );
 		} else {
 			// If it is not semantic mode, use general code
-			cgllvm_sctxt* mem_ctxt = cgllvm_impl::node_ctxt( mem_sym->node(), true );
+			cgllvm_sctxt* mem_ctxt = cgllvm_impl::node_ctxt( mem_sym->node() );
 			assert( mem_ctxt );
-			sc_ptr(data)->get_value() = mem_ctxt->get_value();
-			sc_ptr(data)->get_value().parent( agg_ctxt->get_value() );
-			sc_ptr(data)->get_value().abi( agg_ctxt->get_value().abi() );
+			sc_ptr(data)->value() = mem_ctxt->value();
+			sc_ptr(data)->value().parent( agg_ctxt->value() );
+			sc_ptr(data)->value().abi( agg_ctxt->value().abi() );
 		}
 	}
 
@@ -199,7 +198,7 @@ SASL_VISIT_DEF( variable_expression ){
 	if( var_si ){
 		// TODO global only avaliable in entry function.
 		assert( fn().fn == entry_fn );
-		sc_ptr(data)->get_value() = varctxt->get_value();
+		sc_ptr(data)->value() = varctxt->value();
 		cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
 		return;
 	}
@@ -334,8 +333,8 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			sv_layout* psi = abii->input_sv_layout( par_sem );
 
 			builtin_types hint = par_ssi->type_info()->tycode;
-			pctxt->get_value() = create_variable( hint, abi_c, par->name->str );
-			pctxt->get_value().store( layout_to_value(psi) );
+			pctxt->value() = create_variable( hint, abi_c, par->name->str );
+			pctxt->value().store( layout_to_value(psi) );
 		} else {
 			// Virtual args for aggregated argument
 			pctxt->data().semantic_mode = true;
@@ -355,7 +354,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			psi = abii->input_sv_layout( pssi->get_semantic() );
 		}
 
-		cgllvm_impl::node_ctxt( gsym->node(), true )->get_value() = layout_to_value(psi);
+		cgllvm_impl::node_ctxt( gsym->node(), true )->value() = layout_to_value(psi);
 
 		//if (v.init){
 		//	EFLIB_ASSERT_UNIMPLEMENTED();
@@ -372,7 +371,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
 		visit_child( child_ctxt, child_ctxt_init, v.jump_expr );
 
 		// Copy result.
-		value_t ret_value = cgllvm_impl::node_ctxt( v.jump_expr )->get_value();
+		value_t ret_value = cgllvm_impl::node_ctxt( v.jump_expr )->value();
 
 		if( ret_value.hint() != builtin_types::none ){
 			storage_si* ret_ssi = fn().fnty->si_ptr<storage_si>();

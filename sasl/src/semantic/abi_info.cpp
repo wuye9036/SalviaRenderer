@@ -5,6 +5,7 @@
 #include <sasl/include/host/utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/math/math.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
@@ -27,23 +28,12 @@ using salviar::SIMD_ELEMENT_COUNT;
 
 using salviar::sv_layout;
 
+using eflib::ceil_to_pow2;
+
 using boost::addressof;
 using boost::shared_ptr;
 
 using std::vector;
-
-int next_pow2( int i )
-{
-	++i;
-	i |= i >> 1;
-	i |= i >> 2;
-	i |= i >> 4;
-	i |= i >> 8;
-	i |= i >> 16;
-	--i;
-
-	return i;
-}
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -312,15 +302,15 @@ void abi_info::compute_package_layout()
 		} else {
 
 			if( is_vector(elem_bt) || is_scalar( elem_bt ) ){
-				int pow2_elem_size = next_pow2( elem_size );
+				int pow2_elem_size = ceil_to_pow2( elem_size );
 				svl->element_count = PACKAGE_ELEMENT_COUNT;
 				svl->element_size = elem_size;
 				svl->element_padding = pow2_elem_size - elem_size;
 			} else if ( is_matrix( elem_bt ) ){
 				int row_size = static_cast<int>( storage_size( row_vector_of(elem_bt) ) );
-				int pow2_row_size = next_pow2( row_size );
+				int pow2_row_size = ceil_to_pow2( row_size );
 				int mat_size = row_size * static_cast<int>( vector_count(elem_bt) );
-				int pow2_mat_size = next_pow2( mat_size );
+				int pow2_mat_size = ceil_to_pow2( mat_size );
 				svl->element_size = mat_size;
 				svl->element_padding = pow2_mat_size - mat_size;
 				svl->element_count = PACKAGE_ELEMENT_COUNT;

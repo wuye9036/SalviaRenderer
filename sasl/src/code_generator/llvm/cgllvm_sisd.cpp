@@ -81,14 +81,14 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 	any child_ctxt;
 
 	visit_child( child_ctxt, ctxt_init, cond );
-	value_t cond_value = node_ctxt( cond, false)->get_value().to_rvalue();
+	value_t cond_value = node_ctxt( cond, false)->value().to_rvalue();
 	insert_point_t cond_ip = insert_point();
 
 	insert_point_t yes_ip_beg = new_block( "yes_expr", true );
 	if( cond != yes ){
 		visit_child( child_ctxt, ctxt_init, yes );
 	}
-	value_t yes_value = node_ctxt( yes, false )->get_value();
+	value_t yes_value = node_ctxt( yes, false )->value();
 	Value* yes_v = yes_value.load();
 	Value* yes_ref = yes_value.load_ref();
 	insert_point_t yes_ip_end = insert_point();
@@ -97,7 +97,7 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 	if( cond != no ){
 		visit_child( child_ctxt, ctxt_init, no );
 	}
-	value_t no_value = node_ctxt( no, false )->get_value();
+	value_t no_value = node_ctxt( no, false )->value();
 	Value* no_ref = ( no_value.abi() == yes_value.abi() ) ? no_value.load_ref() : NULL;
 	Value* no_v = no_value.load( yes_value.abi() );
 	insert_point_t no_ip_end = insert_point();
@@ -139,8 +139,8 @@ SASL_VISIT_DEF( member_expression ){
 	if( tisi->type_info()->is_builtin() ){
 		// Swizzle or write mask
 		/*storage_si* mem_ssi = v.si_ptr<storage_si>();
-		value_t vec_value = agg_ctxt->get_value();*/
-		// mem_ctxt->get_value() = create_extract_elem();
+		value_t vec_value = agg_ctxt->value();*/
+		// mem_ctxt->value() = create_extract_elem();
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	} else {
 		// Member
@@ -149,9 +149,9 @@ SASL_VISIT_DEF( member_expression ){
 
 		assert( mem_sym );
 		cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
-		sc_ptr(data)->get_value() = mem_ctxt->get_value();
-		sc_ptr(data)->get_value().parent( agg_ctxt->get_value() );
-		sc_ptr(data)->get_value().abi( agg_ctxt->get_value().abi() );
+		sc_ptr(data)->value() = mem_ctxt->value();
+		sc_ptr(data)->value().parent( agg_ctxt->value() );
+		sc_ptr(data)->value().abi( agg_ctxt->value().abi() );
 	}
 
 	node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -161,7 +161,7 @@ SASL_VISIT_DEF( cond_expression ){
 	any child_ctxt_init = *data;
 	sc_ptr( &child_ctxt_init )->clear_data();
 	
-	sc_ptr(data)->get_value()
+	sc_ptr(data)->value()
 		= emit_short_cond( child_ctxt_init, v.cond_expr, v.yes_expr, v.no_expr ) ;
 	node_ctxt( v, true )->copy( sc_ptr(data) );
 }
@@ -172,7 +172,7 @@ SASL_VISIT_DEF( unary_expression ){
 	any child_ctxt;
 	visit_child( child_ctxt, child_ctxt_init, v.expr );
 	
-	value_t inner_value = sc_ptr(&child_ctxt)->get_value();
+	value_t inner_value = sc_ptr(&child_ctxt)->value();
 
 	shared_ptr<value_tyinfo> one_tyinfo = create_tyinfo( v.si_ptr<type_info_si>()->type_info() );
 	builtin_types hint = inner_value.hint();
@@ -205,16 +205,16 @@ SASL_VISIT_DEF( unary_expression ){
 	if( v.op == operators::prefix_incr ){
 		value_t inc_v = emit_add( inner_value, one_value );
 		inner_value.store( inc_v );
-		sc_ptr(data)->get_value() = inner_value;
+		sc_ptr(data)->value() = inner_value;
 	} else if( v.op == operators::prefix_decr ){
 		value_t dec_v = emit_sub( inner_value, one_value );
 		inner_value.store( dec_v );
-		sc_ptr(data)->get_value() = inner_value;
+		sc_ptr(data)->value() = inner_value;
 	} else if( v.op == operators::postfix_incr ){
-		sc_ptr(data)->get_value() = inner_value.to_rvalue();
+		sc_ptr(data)->value() = inner_value.to_rvalue();
 		inner_value.store( emit_add( inner_value, one_value ) );
 	} else if( v.op == operators::postfix_decr ){
-		sc_ptr(data)->get_value() = inner_value.to_rvalue();
+		sc_ptr(data)->value() = inner_value.to_rvalue();
 		inner_value.store( emit_sub( inner_value, one_value ) );
 	}
 
@@ -242,7 +242,7 @@ SASL_VISIT_DEF( call_expression ){
 		BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
 			visit_child( child_ctxt, child_ctxt_init, arg_expr );
 			cgllvm_sctxt* arg_ctxt = node_ctxt( arg_expr, false );
-			args.push_back( arg_ctxt->get_value() );
+			args.push_back( arg_ctxt->value() );
 		}
 
 		value_t rslt = emit_call( fn, args );
@@ -318,7 +318,7 @@ SASL_VISIT_DEF( if_statement ){
 
 	// Fill back.
 	set_insert_point( ip_cond );
-	value_t cond_value = node_ctxt( v.cond, false )->get_value();
+	value_t cond_value = node_ctxt( v.cond, false )->value();
 	jump_cond( cond_value, ip_yes_beg, ip_no_beg ? ip_no_beg : ip_merge );
 
 	set_insert_point( ip_yes_end );
@@ -360,7 +360,7 @@ SASL_VISIT_DEF( while_statement ){
 	
 	// Fill back
 	set_insert_point( cond_end );
-	jump_cond( node_ctxt( v.cond )->get_value(), body_beg, break_beg );
+	jump_cond( node_ctxt( v.cond )->value(), body_beg, break_beg );
 
 	set_insert_point( break_end );
 	jump_to( while_end );
@@ -405,7 +405,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 	jump_to( body_beg );
 
 	set_insert_point( cond_end );
-	jump_cond( node_ctxt( v.cond )->get_value(), body_beg, break_beg );
+	jump_cond( node_ctxt( v.cond )->value(), body_beg, break_beg );
 
 	set_insert_point( break_end );
 	jump_to( while_end );
@@ -458,7 +458,7 @@ SASL_VISIT_DEF( switch_statement ){
 			assert( lbl->node_class() == node_ids::case_label );
 			shared_ptr<case_label> case_lbl = lbl->as_handle<case_label>();
 			if( case_lbl->expr ){
-				value_t v = node_ctxt( case_lbl->expr )->get_value();
+				value_t v = node_ctxt( case_lbl->expr )->value();
 				cases.push_back( make_pair(v, stmt_ip ) );
 			} else {
 				default_beg = stmt_ip;
@@ -468,7 +468,7 @@ SASL_VISIT_DEF( switch_statement ){
 	
 	// Fill back jumps
 	set_insert_point(cond_end);
-	value_t cond_v = node_ctxt( v.cond )->get_value();
+	value_t cond_v = node_ctxt( v.cond )->value();
 	switch_to( cond_v, cases, default_beg );
 
 	set_insert_point( break_end );
@@ -547,7 +547,7 @@ SASL_VISIT_DEF( for_statement ){
 	if( !v.cond ){
 		jump_to( body_beg );
 	} else {
-		jump_cond( node_ctxt( v.cond, false )->get_value(), body_beg, for_end );
+		jump_cond( node_ctxt( v.cond, false )->value(), body_beg, for_end );
 	}
 
 	set_insert_point( iter_end );
@@ -590,7 +590,7 @@ SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 		ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.right_expr, v.left_expr ) ;
 	}
 	
-	sc_ptr(data)->get_value() = ret_value.to_rvalue();
+	sc_ptr(data)->value() = ret_value.to_rvalue();
 	node_ctxt( v, true )->copy( sc_ptr(data) );
 }
 

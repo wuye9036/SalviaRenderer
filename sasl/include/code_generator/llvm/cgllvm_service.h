@@ -166,8 +166,9 @@ public:
 	abis			abi() const;				///< Get ABI.
 	void			abi( abis abi );			///< Set ABI
 
-	void			index( size_t index );		///< Set Index. It is only make sense if parent is available.
+	void			index( size_t v );			///< Set Index. It is only make sense if parent is available.
 	uint32_t		masks() const;				///< Get masks
+	void			masks( uint32_t v );		///< Set masks.
 	/// @}
 
 	/// @name Operators
@@ -439,6 +440,19 @@ public:
 		std::vector<llvm::Constant*> elems(length);
 		for( size_t i = 0; i < length; ++i ){
 			elems[i] = int_(vals[i]);
+		}
+
+		return llvm::cast<llvm::ConstantVector>( llvm::ConstantVector::get( elems ) );
+	}
+
+	template <typename U, typename T>
+	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
+	{
+		assert( vals && length > 0 );
+
+		std::vector<llvm::Constant*> elems(length);
+		for( size_t i = 0; i < length; ++i ){
+			elems[i] = int_( U(vals[i]) );
 		}
 
 		return llvm::cast<llvm::ConstantVector>( llvm::ConstantVector::get( elems ) );

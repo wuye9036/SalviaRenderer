@@ -121,8 +121,8 @@ public:
 	value_tyinfo* get_typtr() const;
 	boost::shared_ptr<value_tyinfo> get_tysp() const;
 
-	value_t const& get_value() const;
-	value_t& get_value();
+	value_t const& value() const;
+	value_t& value();
 
 	value_t get_rvalue() const;
 	/// @}
