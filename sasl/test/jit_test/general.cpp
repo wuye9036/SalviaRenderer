@@ -601,7 +601,6 @@ BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 #endif
 
 #if 1
-
 BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/arithmetic.sps" );
 
@@ -628,6 +627,16 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 
 	_aligned_free( src );
 	_aligned_free( dest );
+}
+#endif
+
+#if 1
+BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
+{
+	init_ps( "./repo/question/v1a1/swizzle_and_wm.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
 }
 #endif
 
