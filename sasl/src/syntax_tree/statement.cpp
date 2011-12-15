@@ -7,13 +7,24 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 statement::statement( node_ids nodetype, boost::shared_ptr<token_t> tok )
 : node( nodetype, tok ){}
 
-boost::shared_ptr<struct label> statement::pop_label()
+labeled_statement::labeled_statement( boost::shared_ptr<token_t> tok )
+	: statement( node_ids::labeled_statement, tok ){ }
+
+boost::shared_ptr<struct label> labeled_statement::pop_label()
 {
 	assert( !labels.empty() );
 	boost::shared_ptr<struct label> ret = labels.back();
 	labels.pop_back();
 	return ret;
 }
+
+void labeled_statement::push_label( boost::shared_ptr<label> lbl )
+{
+	this->labels.push_back( lbl );
+}
+
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( labeled_statement );
+
 declaration_statement::declaration_statement( boost::shared_ptr<token_t> tok )
 	: statement( node_ids::declaration_statement, tok ){ }
 

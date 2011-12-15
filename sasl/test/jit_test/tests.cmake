@@ -8,6 +8,7 @@ if( SALVIA_BUILD_WITH_LLVM )
 	)
 	set( SASL_JIT_TEST_SOURCES
 		${SASL_HOME_DIR}/sasl/test/jit_test/general.cpp
+		${SASL_HOME_DIR}/sasl/test/jit_test/check_abi.cpp
 		${SASL_HOME_DIR}/sasl/src/compiler/options.cpp
 	)
 	set( SASL_JIT_TEST_LIBS

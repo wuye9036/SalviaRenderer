@@ -42,17 +42,29 @@ enum system_values{
 	sv_texcoord,
 	sv_normal,
 
+	sv_target,
+
 	sv_customized,
 };
 
 class semantic_value{
 public:
+	static std::string lower_copy( std::string const& name ){
+		std::string ret(name);
+		for( size_t i = 0; i < ret.size(); ++i ){
+			if( 'A' <= ret[i] && ret[i] <= 'Z' ){
+				ret[i] = ret[i] - ('A' - 'a');
+			}
+		}
+		return ret;
+	}
+
 	semantic_value(): sv(sv_none), index(0){}
 
 	semantic_value( std::string const& name, uint32_t index = 0 ){
 		assert( !name.empty() );
 
-		std::string lower_name = boost::to_lower_copy( name );
+		std::string lower_name = lower_copy( name );
 
 		if( lower_name == "position" || lower_name == "sv_position" ){
 			sv = sv_position;
@@ -60,6 +72,8 @@ public:
 			sv = sv_normal;
 		} else if ( lower_name == "texcoord" ){
 			sv = sv_texcoord;
+		} else if ( lower_name == "color" || lower_name == "sv_target" ){
+			sv = sv_target;
 		} else {
 			sv = sv_customized;
 			this->name = name;

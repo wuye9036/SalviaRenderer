@@ -19,7 +19,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol.h
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol_scope.h
 	${SASL_HOME_DIR}/sasl/include/semantic/type_checker.h
-	${SASL_HOME_DIR}/sasl/include/semantic/tecov.h
+	${SASL_HOME_DIR}/sasl/include/semantic/caster.h
 	${SASL_HOME_DIR}/sasl/include/semantic/pety.h
 )
 
@@ -35,7 +35,7 @@ set( SOURCE_FILES
 	symbol.cpp
 	symbol_scope.cpp
 	type_checker.cpp
-	tecov.cpp
+	caster.cpp
 	pety.cpp
 )
 

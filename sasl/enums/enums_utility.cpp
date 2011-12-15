@@ -92,6 +92,15 @@ namespace sasl{
 			return ret;
 		}
 
+		builtin_types row_vector_of( const builtin_types& btc )
+		{
+			if( !is_matrix(btc) ){
+				return builtin_types::none;
+			}
+			
+			return vector_of( scalar_of(btc), vector_size(btc) );
+		}
+
 		size_t vector_size( const builtin_types& btc )
 		{
 			if( is_scalar(btc) ){

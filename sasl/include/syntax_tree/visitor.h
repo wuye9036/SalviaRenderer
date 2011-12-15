@@ -49,6 +49,7 @@ struct switch_statement;
 struct compound_statement;
 struct expression_statement;
 struct jump_statement;
+struct labeled_statement;
 
 struct program;
 
@@ -135,6 +136,7 @@ public:
 	SASL_VISIT_DCL( compound_statement ) = 0;
 	SASL_VISIT_DCL( expression_statement ) = 0;
 	SASL_VISIT_DCL( jump_statement ) = 0;
+	SASL_VISIT_DCL( labeled_statement ) = 0;
 
 	// program
 	SASL_VISIT_DCL( program ) = 0;

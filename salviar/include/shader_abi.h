@@ -4,7 +4,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/shader.h>
-
+#include <eflib/include/platform/cpuinfo.h>
 #include <vector>
 
 BEGIN_NS_SALVIAR();
@@ -62,30 +62,61 @@ enum language_value_types
 	lvt_double	= ( 2U << details::scalar_field_offset )+ details::real_class
 };
 
-enum storage_classifications{
-	sc_none = 0,
+enum sv_usage{
+	su_none = 0,
 
-	sc_stream_in,
-	sc_stream_out,
-	sc_buffer_in,
-	sc_buffer_out,
+	su_stream_in,
+	su_stream_out,
+	su_buffer_in,
+	su_buffer_out,
 	
-	storage_classifications_count
+	storage_usage_count
 };
 
-struct storage_info{
-	storage_info()
-		: index(-1), offset(0), size(0)
-		, storage(sc_none), value_type( lvt_none ), sv(sv_none)
+struct sv_layout{
+	sv_layout()
+		: logical_index(-1), physical_index(-1)
+		, offset(0)
+		, element_size(0), element_padding(0), element_count(0)
+		, padding(0)
+		, usage(su_none), value_type( lvt_none ), sv(sv_none)
 	{}
 
-	int						index;
+	int total_size() const{
+		return (element_size+element_padding)*element_count+padding;
+	}
+
+	int						logical_index;
+	int						physical_index;
+
 	int						offset;
-	int						size;
-	storage_classifications	storage;
+	
+	int						element_size;
+	int						element_padding;
+
+	int						element_count;
+	int						padding;
+
+	sv_usage				usage;
 	language_value_types	value_type;
 	semantic_value			sv;
 };
+
+int const PACKAGE_ELEMENT_COUNT			= 16;
+int const PACKAGE_LINE_ELEMENT_COUNT	= 4;
+
+inline int SIMD_ELEMENT_COUNT()
+{
+	return eflib::support_feature( eflib::cpu_avx ) ? 8 : 4;
+}
+
+inline int SIMD_VECTOR_BYTES(){
+	return SIMD_ELEMENT_COUNT() * sizeof(float);
+}
+
+inline int SIMD_VECTOR_BITS(){
+	return SIMD_VECTOR_BYTES() << 3;
+}
 
 // ! Application binary interface of shader.
 //
@@ -93,13 +124,13 @@ class shader_abi{
 public:
 	virtual std::string entry_name() const = 0;
 
-	virtual std::vector<storage_info*> storage_infos( storage_classifications sclass ) const = 0;
-	virtual size_t total_size( storage_classifications sclass ) const = 0;
+	virtual std::vector<sv_layout*> layouts( sv_usage usage ) const = 0;
+	virtual size_t total_size( sv_usage usage ) const = 0;
 
-	virtual storage_info* input_storage( salviar::semantic_value const& ) const = 0;
-	virtual storage_info* input_storage( std::string const& ) const = 0;
+	virtual sv_layout* input_sv_layout( salviar::semantic_value const& ) const = 0;
+	virtual sv_layout* input_sv_layout( std::string const& ) const = 0;
 
-	virtual storage_info* output_storage( salviar::semantic_value const& ) const = 0;
+	virtual sv_layout* output_sv_layout( salviar::semantic_value const& ) const = 0;
 };
 
 END_NS_SALVIAR();

@@ -9,7 +9,7 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol_scope.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/tecov.h>
+#include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/make_tree.h>
@@ -45,6 +45,7 @@ using ::sasl::syntax_tree::alias_type;
 using ::sasl::syntax_tree::binary_expression;
 using ::sasl::syntax_tree::builtin_type;
 using ::sasl::syntax_tree::call_expression;
+using ::sasl::syntax_tree::case_label;
 using ::sasl::syntax_tree::cast_expression;
 using ::sasl::syntax_tree::cond_expression;
 using ::sasl::syntax_tree::create_builtin_type;
@@ -54,21 +55,29 @@ using ::sasl::syntax_tree::constant_expression;
 using ::sasl::syntax_tree::declaration;
 using ::sasl::syntax_tree::declarator;
 using ::sasl::syntax_tree::declaration_statement;
+using ::sasl::syntax_tree::dowhile_statement;
 using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::expression_initializer;
 using ::sasl::syntax_tree::expression_statement;
+using ::sasl::syntax_tree::for_statement;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::if_statement;
 using ::sasl::syntax_tree::jump_statement;
+using ::sasl::syntax_tree::label;
+using ::sasl::syntax_tree::labeled_statement;
 using ::sasl::syntax_tree::member_expression;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::parameter;
 using ::sasl::syntax_tree::program;
 using ::sasl::syntax_tree::statement;
 using ::sasl::syntax_tree::struct_type;
+using ::sasl::syntax_tree::switch_statement;
 using ::sasl::syntax_tree::tynode;
+using ::sasl::syntax_tree::unary_expression;
 using ::sasl::syntax_tree::variable_declaration;
 using ::sasl::syntax_tree::variable_expression;
+using ::sasl::syntax_tree::while_statement;
+
 using ::sasl::syntax_tree::dfunction_combinator;
 
 using namespace boost::assign;
@@ -78,6 +87,7 @@ using boost::any;
 using boost::any_cast;
 using boost::format;
 using boost::shared_ptr;
+using boost::weak_ptr;
 using boost::unordered_map;
 
 using std::vector;
@@ -90,13 +100,14 @@ using std::string;
 
 // semantic analysis context
 struct sacontext{
-	sacontext(): declarator_type_id(-1), is_global(true), member_index(-1){
+	sacontext(): declarator_type_id(-1), is_global(true), member_index(-1), lbl_list(NULL){
 	}
 
 	shared_ptr<symbol> parent_sym;
 
-	shared_ptr<node> generated_node;
+	std::vector< weak_ptr<labeled_statement> >* lbl_list;
 
+	shared_ptr<node> generated_node;
 	shared_ptr<node> variable_to_fill; // for initializer only.
 	tid_t declarator_type_id;
 
@@ -127,7 +138,7 @@ shared_ptr<tynode> type_info_of( shared_ptr<node> n ){
 
 semantic_analyser::semantic_analyser()
 {
-	typeconv.reset( new tecov_t() );
+	caster.reset( new caster_t() );
 }
 
 #define SASL_VISITOR_TYPE_NAME semantic_analyser
@@ -189,7 +200,27 @@ void semantic_analyser::parse_semantic(
 	}
 }
 
-SASL_VISIT_DEF_UNIMPL( unary_expression );
+SASL_VISIT_DEF( unary_expression ){
+	any child_ctxt_init = *data;
+
+	shared_ptr<unary_expression> dup_expr = duplicate( v.as_handle() )->as_handle<unary_expression>();
+	
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_expr->expr );
+
+	type_info_si* inner_tisi = dup_expr->expr->si_ptr<type_info_si>();
+	if( !is_integer( inner_tisi->type_info()->tycode ) ){
+		// REPORT ERROR
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return;
+	}
+
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->pety() );
+	ssi->entry_id( inner_tisi->entry_id() );
+
+	data_cptr()->generated_node = dup_expr->as_handle();
+}
+
 SASL_VISIT_DEF( cast_expression ){
 	any child_ctxt_init = *data;
 	
@@ -204,7 +235,7 @@ SASL_VISIT_DEF( cast_expression ){
 	shared_ptr<type_info_si> casted_tsi = extract_semantic_info<type_info_si>( dup_cexpr->casted_type );
 
 	if( src_tsi->entry_id() != casted_tsi->entry_id() ){
-		if( typeconv->convertible( casted_tsi->entry_id(), src_tsi->entry_id() ) == tecov_t::cannot_conv ){
+		if( caster->try_cast( casted_tsi->entry_id(), src_tsi->entry_id() ) == caster_t::nocast ){
 			// Here is code error. Compiler should report it.
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return;
@@ -232,7 +263,7 @@ SASL_VISIT_DEF( binary_expression )
 	std::string opname = operator_name( v.op );
 	vector< shared_ptr<expression> > exprs;
 	exprs += dup_expr->left_expr, dup_expr->right_expr;
-	vector< shared_ptr<symbol> > overloads = data_cptr()->parent_sym->find_overloads( opname, typeconv, exprs );
+	vector< shared_ptr<symbol> > overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs );
 
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
 		return;
@@ -275,13 +306,14 @@ SASL_VISIT_DEF( cond_expression ){
  
 	assert( cond_tisi && yes_tisi && no_tisi );
 
-	if( cond_tisi && yes_tisi && no_tisi ) {
+	if( !(cond_tisi && yes_tisi && no_tisi) ) {
 		return;
 	}
 
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	tid_t cond_tid = cond_tisi->entry_id();
 
-	if( !typeconv->implicit_convertible( cond_tisi->entry_id(), bool_tid ) ){
+	if( cond_tid != bool_tid && !caster->try_implicit( cond_tisi->entry_id(), bool_tid ) ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		// TODO error: cannot convert conditional expression to boolean.
 		return;
@@ -294,9 +326,9 @@ SASL_VISIT_DEF( cond_expression ){
 
 	if( yes_tid == no_tid ){
 		ssi->entry_id( yes_tid );
-	} else if( typeconv->implicit_convertible(yes_tid, no_tid) ){
+	} else if( caster->try_implicit(yes_tid, no_tid) ){
 		ssi->entry_id( yes_tid );
-	} else if( typeconv->implicit_convertible(no_tid, yes_tid) ){
+	} else if( caster->try_implicit(no_tid, yes_tid) ){
 		ssi->entry_id( no_tid );
 	} else {
 		// TODO error: can not match the type.
@@ -331,7 +363,7 @@ SASL_VISIT_DEF( call_expression )
 		// Maybe pointer of function.
 	} else {
 		// Overload
-		vector< shared_ptr<symbol> > syms = fnsi->scope()->find_overloads( fnsi->name(), typeconv, dup_callexpr->args );
+		vector< shared_ptr<symbol> > syms = fnsi->scope()->find_overloads( fnsi->name(), caster, dup_callexpr->args );
 		assert( !syms.empty() );
 		if( syms.empty() ){
 			std::cout << fnsi->name();
@@ -508,7 +540,8 @@ SASL_VISIT_DEF( expression_initializer )
 
 	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>( data_cptr()->variable_to_fill );
 	if ( var_tsi->entry_id() != ssi->entry_id() ){
-		if( typeconv->implicit_convertible( var_tsi->entry_id(), ssi->entry_id() ) ){
+		if( !caster->try_implicit( var_tsi->entry_id(), ssi->entry_id() ) ){
+			// TODO Error: Cannot implicit cast to xxx.
 			assert( false );
 			return;
 		}
@@ -755,37 +788,131 @@ SASL_VISIT_DEF( if_statement )
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_ifstmt->cond);
 	assert( cond_tsi );
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
-	assert( cond_tsi->entry_id() == bool_tid || typeconv->implicit_convertible( bool_tid, cond_tsi->entry_id() ) );
+	assert( cond_tsi->entry_id() == bool_tid || caster->try_implicit( bool_tid, cond_tsi->entry_id() ) );
 
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt, dup_ifstmt->yes_stmt );
-	visit_child( child_ctxt, child_ctxt_init, v.no_stmt, dup_ifstmt->no_stmt );
-
 	extract_semantic_info<statement_si>(dup_ifstmt->yes_stmt)->parent_block( dup_ifstmt );
-	extract_semantic_info<statement_si>(dup_ifstmt->no_stmt)->parent_block( dup_ifstmt );
 
 	if( !dup_ifstmt->yes_stmt->symbol() ){
 		data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
 	}
 
-	if( !dup_ifstmt->no_stmt->symbol() ){
-		data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+	if( dup_ifstmt->no_stmt ){
+		visit_child( child_ctxt, child_ctxt_init, v.no_stmt, dup_ifstmt->no_stmt );
+		extract_semantic_info<statement_si>(dup_ifstmt->no_stmt)->parent_block( dup_ifstmt );
+
+		if( !dup_ifstmt->no_stmt->symbol() ){
+			data_cptr()->parent_sym->add_anonymous_child( dup_ifstmt->yes_stmt );
+		}
 	}
 
 	SASL_GET_OR_CREATE_SI( statement_si, si, dup_ifstmt);
-	si->exit_point( symbol::unique_name() );
 
 	data_cptr()->generated_node = dup_ifstmt;
 }
 
 SASL_VISIT_DEF( while_statement ){
-	v.cond->accept( this, data );
-	v.body->accept( this, data );
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<while_statement> dup_while = duplicate( v.as_handle() )->as_handle<while_statement>();
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_while->cond );
+	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_while->cond);
+	assert( cond_tsi );
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	assert( cond_tsi->entry_id() == bool_tid || caster->try_implicit( bool_tid, cond_tsi->entry_id() ) );
+
+	visit_child( child_ctxt, child_ctxt_init, v.body, dup_while->body );
+	extract_semantic_info<statement_si>(dup_while->body)->parent_block( dup_while );
+
+	data_cptr()->generated_node = dup_while;
 }
 
-SASL_VISIT_DEF_UNIMPL( dowhile_statement );
-SASL_VISIT_DEF_UNIMPL( case_label );
-SASL_VISIT_DEF_UNIMPL( ident_label );
-SASL_VISIT_DEF_UNIMPL( switch_statement );
+SASL_VISIT_DEF( dowhile_statement ){
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<dowhile_statement> dup_dowhile = duplicate( v.as_handle() )->as_handle<dowhile_statement>();
+
+	visit_child( child_ctxt, child_ctxt_init, v.body, dup_dowhile->body );
+	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_dowhile->cond );
+	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_dowhile->cond);
+	assert( cond_tsi );
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	assert( cond_tsi->entry_id() == bool_tid || caster->try_implicit( bool_tid, cond_tsi->entry_id() ) );
+
+	extract_semantic_info<statement_si>(dup_dowhile->body)->parent_block( dup_dowhile );
+
+	data_cptr()->generated_node = dup_dowhile;
+}
+
+SASL_VISIT_DEF( labeled_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<labeled_statement> dup_lbl_stmt = duplicate( v.as_handle() )->as_handle<labeled_statement>();
+	
+	assert( data_cptr()->lbl_list );
+
+	dup_lbl_stmt->labels.clear();
+	BOOST_FOREACH( shared_ptr<label> const& lbl, v.labels ){
+		shared_ptr<label> dup_lbl;
+		visit_child( child_ctxt, child_ctxt_init, lbl, dup_lbl );
+		assert(dup_lbl);
+		dup_lbl_stmt->labels.push_back( dup_lbl );
+	}
+	visit_child( child_ctxt, child_ctxt_init, v.stmt, dup_lbl_stmt->stmt );
+	data_cptr()->lbl_list->push_back( dup_lbl_stmt );
+
+	data_cptr()->generated_node = dup_lbl_stmt;
+}
+
+SASL_VISIT_DEF( case_label ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<case_label> dup_case = duplicate( v.as_handle() )->as_handle<case_label>();
+	
+	if( dup_case->expr ){
+		visit_child( child_ctxt, child_ctxt_init, v.expr, dup_case->expr );
+
+		// Only support constant yet.
+		assert( v.expr->node_class() == node_ids::constant_expression );
+		type_info_si* expr_tisi = dup_case->expr->si_ptr<type_info_si>();
+		builtin_types expr_bt = expr_tisi->type_info()->tycode;
+
+		// TODO expression must be int.
+		assert( is_integer( expr_bt ) || expr_bt == builtin_types::_boolean );
+	}
+	data_cptr()->generated_node = dup_case;
+}
+
+SASL_VISIT_DEF( ident_label ){
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_VISIT_DEF( switch_statement ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	shared_ptr<switch_statement> dup_switch = duplicate( v.as_handle() )->as_handle<switch_statement>();
+
+	visit_child( child_ctxt, child_ctxt_init, v.cond, dup_switch->cond );
+	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_switch->cond);
+	assert( cond_tsi );
+	tid_t int_tid = msi->pety()->get( builtin_types::_sint32 );
+	builtin_types cond_bt = cond_tsi->type_info()->tycode;
+	assert( is_integer( cond_bt ) || caster->try_implicit( int_tid, cond_tsi->entry_id() ) );
+
+	SASL_GET_OR_CREATE_SI( statement_si, ssi, dup_switch );
+	
+	ctxt_ptr(child_ctxt_init)->lbl_list = &ssi->labels();
+	visit_child( child_ctxt, child_ctxt_init, v.stmts, dup_switch->stmts );
+	
+	data_cptr()->generated_node = dup_switch;
+}
 
 SASL_VISIT_DEF( compound_statement )
 {
@@ -802,7 +929,13 @@ SASL_VISIT_DEF( compound_statement )
 	{
 		shared_ptr<statement> child_gen;
 		visit_child( child_ctxt, child_ctxt_init, (*it), child_gen );
-		dup_stmt->stmts.push_back(child_gen);
+		
+		if( child_gen ){
+			dup_stmt->stmts.push_back(child_gen);
+		} else {
+			// child_gen is null only if the child is error. Otherwise it is error about semantic analyser.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 
 	get_or_create_semantic_info<statement_si>(dup_stmt);
@@ -842,6 +975,30 @@ SASL_VISIT_DEF( jump_statement )
 	data_cptr()->generated_node = dup_jump;
 }
 
+SASL_VISIT_DEF( for_statement ){
+	any child_ctxt_init = *data;
+
+	shared_ptr<for_statement> dup_for = duplicate(v.as_handle())->as_handle<for_statement>();
+
+	ctxt_ptr( child_ctxt_init )->generated_node.reset();
+	ctxt_ptr(child_ctxt_init)->parent_sym = data_cptr()->parent_sym->add_anonymous_child( dup_for );
+
+	any child_ctxt;
+	visit_child( child_ctxt, child_ctxt_init, v.init, dup_for->init );
+	
+	if( v.cond ){
+		visit_child( child_ctxt, child_ctxt_init, v.cond, dup_for->cond );
+	}
+
+	if( v.iter ){
+		visit_child( child_ctxt, child_ctxt_init, v.iter, dup_for->iter );
+	}
+
+	visit_child( child_ctxt, child_ctxt_init, v.body, dup_for->body );
+
+	data_cptr()->generated_node = dup_for;
+}
+
 // program
 SASL_VISIT_DEF( program ){
 	data = data;
@@ -871,8 +1028,6 @@ SASL_VISIT_DEF( program ){
 	msi->root()->relink( dup_prog->as_handle() );
 }
 
-SASL_VISIT_DEF_UNIMPL( for_statement );
-
 void semantic_analyser::builtin_tecov( shared_ptr<node> lhs, shared_ptr<node> rhs ){
 	// do nothing
 }
@@ -897,139 +1052,128 @@ void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
 	tid_t bool_ts = typemgr->get( builtin_types::_boolean );
 
 	// default conversation will do nothing.
-	tecov_t::converter_t default_conv = bind(&semantic_analyser::builtin_tecov, this, _1, _2);
+	caster_t::cast_t default_conv = bind(&semantic_analyser::builtin_tecov, this, _1, _2);
 
-	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint8_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint8_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint8_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint8_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint8_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint8_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint8_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint8_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint8_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint8_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint8_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint8_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint8_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint8_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint8_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, sint16_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint16_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint16_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint16_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint16_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint16_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint16_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint16_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint16_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint16_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint16_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint16_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint16_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint16_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint16_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint16_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint16_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint16_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint16_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint16_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, sint32_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint32_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint32_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint32_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint32_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint32_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint32_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, sint32_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint32_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint32_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint32_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint32_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint32_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint32_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint32_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint32_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint32_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint32_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint32_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint32_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, sint64_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint64_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint64_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint64_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint64_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint64_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, sint64_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, sint64_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, sint64_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, sint64_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint64_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint64_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint64_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint64_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint64_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint64_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, sint64_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::warning, sint64_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::warning, sint64_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, sint64_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, uint8_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint8_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint8_ts, sint8_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, sint16_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, sint32_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, sint64_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, uint16_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, uint32_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, uint64_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, float_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, double_ts,	default_conv );
+	caster->add_cast( caster_t::imp, uint8_ts, bool_ts,	default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, uint16_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint16_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint16_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint16_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint16_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint16_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint16_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint16_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint16_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint16_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint16_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint16_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint16_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint16_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint16_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint16_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint16_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint16_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint16_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint16_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, uint32_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint32_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint32_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::better_conv, uint32_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint32_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint32_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint32_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, uint32_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint32_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint32_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint32_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint32_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint32_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::better, uint32_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint32_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint32_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint32_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::warning, uint32_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint32_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint32_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, uint64_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint64_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint64_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint64_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint64_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint64_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, uint64_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, uint64_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, uint64_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, uint64_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint64_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint64_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint64_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint64_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint64_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint64_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, uint64_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::warning, uint64_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::warning, uint64_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, uint64_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, float_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::implicit_conv, float_ts, double_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, float_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, float_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::imp, float_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::imp, float_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, double_ts, bool_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, double_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::imp, double_ts, bool_ts, default_conv );
 
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, double_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::warning_conv, double_ts, bool_ts, default_conv );
-
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, sint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, sint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, sint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, sint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, uint8_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, uint16_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, uint32_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, uint64_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, float_ts, default_conv );
-	typeconv->register_converter( tecov_t::explicit_conv, bool_ts, double_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, sint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, sint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, sint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, sint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, uint8_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, uint16_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, uint32_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, uint64_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, float_ts, default_conv );
+	caster->add_cast( caster_t::exp, bool_ts, double_ts, default_conv );
 
 }
 
@@ -1225,7 +1369,12 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			register_intrinsic(child_ctxt_init, "dot")
 				% fvec_ts[vec_size] % fvec_ts[vec_size]
 			>> BUILTIN_TYPE(_float);
+
+			register_intrinsic( child_ctxt_init, "sqrt" ) % fvec_ts[vec_size] >> fvec_ts[vec_size];
 		}
+
+		register_intrinsic( child_ctxt_init, "sqrt" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+		register_intrinsic( child_ctxt_init, "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];
 		/**@}*/
 	}
 	

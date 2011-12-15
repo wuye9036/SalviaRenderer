@@ -29,7 +29,7 @@ BEGIN_NS_SASL_SEMANTIC();
 using sasl::syntax_tree::function_type;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
-class tecov_t;
+class caster_t;
 
 //////////////////////////////////////////////////////////////////////////
 /*
@@ -60,13 +60,13 @@ public:
 	std::vector< boost::shared_ptr<symbol> > find_overloads( const std::string& name ) const;
 	std::vector< boost::shared_ptr<symbol> > find_overloads(
 		const std::string& name,
-		boost::shared_ptr<tecov_t> conv,
+		boost::shared_ptr<caster_t> conv,
 		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > args
 		) const;
 	int count( std::string name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
-
+	
 	enum unique_name_types{
 		unique_in_unit,	/* Generate unique name in unit.*/
 		unique_in_module,	/* Generate unique name in module. */

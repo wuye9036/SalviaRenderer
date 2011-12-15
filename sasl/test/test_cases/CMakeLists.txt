@@ -21,7 +21,9 @@ set( SOURCE_FILES
 	${SALVIA_LLVM_TEST_CASE_SOURCES}
 )
 
-ADD_LIBRARY( sasl_test_cases ${HEADER_FILES} ${SOURCE_FILES} )
+SOURCE_GROUP( "Header Files" FILES ${HEADER_FILES} )
+SOURCE_GROUP( "Source Files" FILES ${SOURCE_FILES} )
+include( ${SASL_HOME_DIR}/sasl/test/auto_test/repo/question/tests.cmake )
 
 if (MSVC)
 	Set( SALVIA_TEST_REPOSITORY_PATH
@@ -32,13 +34,22 @@ else( MSVC )
 endif()
 
 ADD_CUSTOM_COMMAND(
-		TARGET sasl_test_cases
-		PRE_BUILD
+		OUTPUT	auto_repo.deps
 		COMMAND "python.exe"
 		ARGS
-			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
+			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py" 
 			"${SASL_HOME_DIR}/sasl/test/auto_test/repo"
 			${SALVIA_TEST_REPOSITORY_PATH}
+		COMMAND echo "AUTO_REPO.DEPS" > auto_repo.deps
+		DEPENDS
+			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
+			${V1A1_TESTS}
 		)
+ADD_CUSTOM_TARGET( sasl_test_repo ALL DEPENDS auto_repo.deps )
+		
+ADD_LIBRARY(
+	sasl_test_cases
+	${HEADER_FILES} ${SOURCE_FILES} ${V1A1_TESTS}
+	)
 		
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_test_cases )

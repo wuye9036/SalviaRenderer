@@ -3,7 +3,6 @@
 #include <llvm/Analysis/Passes.h>
 #include <llvm/Module.h>
 #include <llvm/PassManager.h>
-#include <llvm/Support/StandardPasses.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -46,7 +45,7 @@ void optimize( shared_ptr<llvm_module> code, vector<optimization_options> opt_op
 				}
 				break;
 			case opt_preset_std_for_function:
-				createStandardFunctionPasses( &fpm, 1 );
+				// createStandardFunctionPasses( &fpm, 1 );
 				break;
 		}
 	}

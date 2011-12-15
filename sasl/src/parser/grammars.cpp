@@ -127,9 +127,9 @@ void grammars::set_stmts()
 		);
 	SRULE( stmt_if, kw_if > lparen > expr > rparen > stmt > -(kw_else > stmt) );
 	SRULE( stmt_while, kw_while > lparen > expr > rparen > stmt );
-	SRULE( stmt_dowhile, kw_do > stmt > kw_while > lparen > expr > rparen );
+	SRULE( stmt_dowhile, kw_do > stmt > kw_while > lparen > expr > rparen > semicolon );
 	SRULE( stmt_for, kw_for > for_looper > stmt );
-	SRULE( stmt_switch, kw_switch > lparen > expr > rparen > lbrace > *stmt > rbrace );
+	SRULE( stmt_switch, kw_switch > lparen > expr > rparen > stmt_compound );
 	SRULE( stmt_expr, expr > semicolon );
 	SRULE( stmt_decl, decl );
 	SRULE( stmt_compound, lbrace >> *stmt > rbrace );
@@ -174,7 +174,7 @@ void grammars::set_terms()
 	SRULE( rabracket,	STERM(rabracket) );
 	SRULE( lbrace,		STERM(lbrace) );
 	SRULE( rbrace,		STERM(rbrace) );
-	SRULE( opinc,		STERM(self_incr) );
+	SRULE( opinc,		STERM(inc_dec) );
 	SRULE( opunary,		STERM(plus) | STERM(minus) | STERM(tilde) | STERM(exclamation) );
 
 	SRULE( kw_typedef,	STERM(kw_typedef) );

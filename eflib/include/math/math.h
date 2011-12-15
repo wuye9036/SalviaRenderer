@@ -197,6 +197,19 @@ namespace eflib{
 	}
 #endif
 
+	inline int ceil_to_pow2( int i )
+	{
+		--i;
+		i |= i >> 1;
+		i |= i >> 2;
+		i |= i >> 4;
+		i |= i >> 8;
+		i |= i >> 16;
+		++i;
+
+		return i;
+	}
+
 	//////////////////////////////////////
 	// base vector function
 	//////////////////////////////////////

@@ -61,11 +61,24 @@ shared_ptr<attribute> terminal_attribute::child( int /*idx*/ ) const{
 	return shared_ptr<attribute>();
 }
 
+size_t terminal_attribute::child_size() const{
+	return 0;
+}
+
 shared_ptr<attribute> sequence_attribute::child( int idx ) const{
+	if( attrs.empty() ){
+		assert( idx == 0 );
+		return shared_ptr<attribute>();
+	}
+
 	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
 		return shared_ptr<attribute>();
 	}
 	return attrs[idx];
+}
+
+size_t sequence_attribute::child_size() const{
+	return attrs.size();
 }
 
 selector_attribute::selector_attribute() : selected_idx(-1){}
@@ -76,12 +89,22 @@ shared_ptr<attribute> selector_attribute::child( int idx ) const{
 	return attr;
 }
 
+size_t selector_attribute::child_size() const
+{
+	return selected_idx == -1 ? 0 : 1;
+}
+
 shared_ptr<attribute> queuer_attribute::child( int idx ) const{
 	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
 		return shared_ptr<attribute>();
 	}
 	return attrs[idx];
 }
+
+size_t queuer_attribute::child_size() const{
+	return attrs.size();
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Parsers
 

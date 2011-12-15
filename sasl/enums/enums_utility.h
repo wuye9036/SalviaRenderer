@@ -34,6 +34,8 @@ namespace sasl{
 		builtin_types vector_of( const builtin_types& /*btc*/, size_t vec_size );
 		builtin_types matrix_of( const builtin_types& /*btc*/, size_t vec_size, size_t vec_cnt );
 
+		builtin_types row_vector_of( const builtin_types& /*btc*/ );
+
 		size_t vector_size( const builtin_types& /*btc*/);
 		size_t vector_count( const builtin_types& /*btc*/);
 

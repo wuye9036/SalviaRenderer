@@ -2,6 +2,7 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_general.h>
 #include <sasl/include/code_generator/llvm/cgllvm_vs.h>
+#include <sasl/include/code_generator/llvm/cgllvm_ps.h>
 
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -39,7 +40,12 @@ boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_si* mo
 			}
 		}
 
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		if( abii->lang == salviar::lang_pixel_shader ){
+			cgllvm_ps cg;
+			if( cg.generate(mod, abii) ){
+				return cg.cg_module();
+			}
+		}
 	}
 	return boost::shared_ptr<llvm_module>();
 }

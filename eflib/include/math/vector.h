@@ -79,13 +79,13 @@ namespace eflib{
 
 		const float& operator [](size_t i) const
 		{
-			EFLIB_ASSERT(i < 1, "");
+			EFLIB_ASSERT(i < 2, "");
 			return ((float*)(this))[i];
 		}
 
 		float& operator [](size_t i)
 		{
-			EFLIB_ASSERT(i < 1, "");
+			EFLIB_ASSERT(i < 2, "Out of index boundary.");
 			return ((float*)(this))[i];
 		}
 
@@ -203,13 +203,13 @@ namespace eflib{
 
 		const float& operator [](size_t i) const
 		{
-			EFLIB_ASSERT(i < 2, "");
+			EFLIB_ASSERT(i < 3, "");
 			return ((float*)(this))[i];
 		}
 
 		float& operator [](size_t i)
 		{
-			EFLIB_ASSERT(i < 2, "");
+			EFLIB_ASSERT(i < 3, "");
 			return ((float*)(this))[i];
 		}
 
@@ -356,7 +356,7 @@ namespace eflib{
 
 		const float& operator [](size_t i) const
 		{
-			EFLIB_ASSERT(i < 3, "");
+			EFLIB_ASSERT(i < 4, "");
 			return ((float*)(this))[i];
 		}
 

@@ -27,7 +27,7 @@ class abi_analyser;
 
 class abi_info: public salviar::shader_abi{
 public:
-	typedef salviar::storage_info	storage_info_t;
+	typedef salviar::sv_layout	storage_info_t;
 	typedef salviar::semantic_value	semantic_value_t;
 
 	// Friend for abi_analyser could call compute_layout();
@@ -37,11 +37,12 @@ public:
 	
 	std::string entry_name() const;
 
-	std::vector<storage_info_t*> storage_infos( salviar::storage_classifications sclass ) const;
-	size_t total_size( salviar::storage_classifications sclass ) const;
+	std::vector<storage_info_t*> layouts( salviar::sv_usage usage ) const;
+	size_t total_size( salviar::sv_usage usage ) const;
+	void update_size( size_t sz, salviar::sv_usage usage );
 
-	storage_info_t* input_storage( std::string const& ) const;
-	storage_info_t* output_storage( semantic_value_t const& ) const;
+	storage_info_t* input_sv_layout( std::string const& ) const;
+	storage_info_t* output_sv_layout( semantic_value_t const& ) const;
 
 	// End members of shader_abi
 
@@ -57,11 +58,11 @@ public:
 	
 
 	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
-	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc );
+	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
 	void add_global_var( boost::shared_ptr<symbol> const&, builtin_types btc );
 
-	storage_info_t* input_storage( semantic_value_t const& ) const;
-	storage_info_t* input_storage( boost::shared_ptr<symbol> const& ) const;
+	storage_info_t* input_sv_layout( semantic_value_t const& ) const;
+	storage_info_t* input_sv_layout( boost::shared_ptr<symbol> const& ) const;
 
 private:
 	storage_info_t* alloc_input_storage( semantic_value_t const& );
@@ -76,12 +77,14 @@ private:
 	void compute_output_buffer_layout();
 	void compute_output_stream_layout();
 	void compute_input_constant_layout();
+	
+	void compute_package_layout();
 
 	module_si* mod;
 	symbol* entry_point;
 	std::string entry_point_name;
 
-	// Include sc_stream_in and sc_buffer_in
+	// Include su_stream_in and su_buffer_in
 	std::vector< semantic_value_t > sems_in;
 	typedef boost::unordered_map< semantic_value_t, storage_info_t > sem_storages_t;
 	sem_storages_t semin_storages;
@@ -93,13 +96,13 @@ private:
 	typedef boost::unordered_map< std::string, storage_info_t* > name_storages_t;
 	name_storages_t name_storages;
 
-	// Include sc_stream_out and sc_buffer_out
+	// Include su_stream_out and su_buffer_out
 	std::vector< semantic_value_t > sems_out;
 	boost::unordered_map< semantic_value_t, storage_info_t > semout_storages;
 
 	// The count and offsets of 
-	int counts[salviar::storage_classifications_count];
-	int offsets[salviar::storage_classifications_count];
+	int counts[salviar::storage_usage_count];
+	int offsets[salviar::storage_usage_count];
 };
 
 END_NS_SASL_SEMANTIC();

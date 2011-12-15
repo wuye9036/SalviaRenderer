@@ -23,14 +23,22 @@ struct label;
 
 struct statement: public node{
 	statement( node_ids type_id, boost::shared_ptr<token_t> tok );
+};
+
+struct labeled_statement: public statement{
+	SASL_SYNTAX_NODE_CREATORS();
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<struct label> pop_label();
-	template <typename T> void push_label( boost::shared_ptr<T> lbl ){
-		this->labels.push_back( boost::shared_polymorphic_cast<struct label>(lbl) );
-	}
+	void push_label( boost::shared_ptr<label> lbl );
 
+	boost::shared_ptr<statement> stmt;
 	std::vector<boost::shared_ptr<struct label> > labels;
+
 private:
+	labeled_statement( boost::shared_ptr<token_t> tok );
+	labeled_statement& operator = ( const labeled_statement& );
+	labeled_statement( const labeled_statement& );
 };
 
 struct declaration_statement: public statement{

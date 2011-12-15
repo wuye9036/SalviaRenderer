@@ -8,7 +8,12 @@ INCLUDE_DIRECTORIES(
 )
 	
 set( HEADER_FILES
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/utility.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/ty_cache.h
+	
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_service.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs_sisd.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs_simd.h
 	
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_api.h
 	
@@ -18,15 +23,23 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_general.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_vs.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_simd.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_ps.h
 	
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_jit.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_contexts.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_globalctxt.h
-	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_type_converters.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_caster.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_intrins.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_tbe.h
 )
 
 set( SOURCE_FILES
+	utility.cpp
+	ty_cache.cpp
+	
 	cgllvm_service.cpp
+	cgs_sisd.cpp
+	cgs_simd.cpp
 	
 	cgllvm_api.cpp
 	
@@ -35,13 +48,16 @@ set( SOURCE_FILES
 	cgllvm_general.cpp
 	cgllvm_vs.cpp
 	cgllvm_simd.cpp
+	cgllvm_ps.cpp
 	
 	cgllvm_jit.cpp
 	cgllvm_contexts.cpp
 	cgllvm_globalctxt.cpp
 	
-	cgllvm_type_converters.cpp
+	cgllvm_caster.cpp
 	cgllvm_opt.cpp
+	
+	cgllvm_intrins.cpp
 )
 
 ADD_LIBRARY( sasl_cgllvm STATIC ${HEADER_FILES} ${SOURCE_FILES} )

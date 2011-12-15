@@ -4,7 +4,7 @@
 #include <sasl/include/code_generator/forward.h>
 
 #include <sasl/include/code_generator/codegen_context.h>
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs_sisd.h>
 
 #include <eflib/include/platform/typedefs.h>
 
@@ -55,6 +55,9 @@ struct cgllvm_sctxt_env{
 
 	bool is_c_compatible;
 
+	insert_point_t continue_to;
+	insert_point_t break_to;
+
 	/// Type information used by declarator.
 	boost::shared_ptr<value_tyinfo> tyinfo;
 
@@ -63,10 +66,10 @@ struct cgllvm_sctxt_env{
 	llvm::BasicBlock* block;
 	
 	/// Current symbol scope.
-	boost::weak_ptr< sasl::semantic::symbol > sym;
+	boost::weak_ptr<sasl::semantic::symbol> sym;
 
 	/// The variable which will pass in initilizer to generate initialization code.
-	boost::weak_ptr< sasl::syntax_tree::node> variable_to_fill;
+	boost::weak_ptr<sasl::syntax_tree::node> variable_to_fill;
 };
 
 struct cgllvm_sctxt_data{
@@ -81,7 +84,8 @@ struct cgllvm_sctxt_data{
 	bool semantic_mode;
 	/// Type attached to node.
 	boost::shared_ptr<value_tyinfo>	tyinfo;
-
+	/// For labeled statement
+	insert_point_t position;
 	/// The declarator count of declaration.
 	int declarator_count;			
 };
@@ -117,8 +121,8 @@ public:
 	value_tyinfo* get_typtr() const;
 	boost::shared_ptr<value_tyinfo> get_tysp() const;
 
-	value_t const& get_value() const;
-	value_t& get_value();
+	value_t const& value() const;
+	value_t& value();
 
 	value_t get_rvalue() const;
 	/// @}

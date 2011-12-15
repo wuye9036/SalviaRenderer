@@ -52,9 +52,9 @@ public:
 	
 private:
 	tid_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node );
-	::std::vector< pety_item_t > entries;
-	boost::weak_ptr<pety_t> self_handle;
-	boost::weak_ptr<symbol> rootsym;
+	::std::vector<pety_item_t>	entries;
+	boost::weak_ptr<pety_t>		self_handle;
+	boost::weak_ptr<symbol>		rootsym;
 };
 
 END_NS_SASL_SEMANTIC();

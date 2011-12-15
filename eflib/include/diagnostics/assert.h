@@ -6,12 +6,19 @@
 #include <iostream>
 
 #ifdef _DEBUG
+
+#ifdef EFLIB_MSVC
+#	define EFLIB_ABORT() _CrtDbgBreak();
+#else
+#	define EFLIB_ABORT() ::abort();
+#endif
+
 #	define EFLIB_ASSERT(exp, desc) \
 				{\
 					static bool isIgnoreAlways = false;\
 					if(!isIgnoreAlways) {\
 					if((*eflib::detail::ProcPreAssert)(exp?true:false, #exp, desc, __LINE__, __FILE__, __FUNCTION__, &isIgnoreAlways))\
-						{ ::abort(); }\
+						{ EFLIB_ABORT(); }\
 					}\
 				}
 

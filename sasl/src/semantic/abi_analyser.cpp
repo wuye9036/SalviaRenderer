@@ -21,13 +21,13 @@
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
 
-using salviar::storage_classifications;
-using salviar::sc_none;
-using salviar::sc_stream_in;
-using salviar::sc_stream_out;
-using salviar::sc_buffer_in;
-using salviar::sc_buffer_out;
-using salviar::storage_classifications_count;
+using salviar::sv_usage;
+using salviar::su_none;
+using salviar::su_stream_in;
+using salviar::su_stream_out;
+using salviar::su_buffer_in;
+using salviar::su_buffer_out;
+using salviar::storage_usage_count;
 
 using boost::addressof;
 using boost::make_shared;
@@ -48,9 +48,10 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 	case salviar::sv_position:
 	case salviar::sv_texcoord:
 	case salviar::sv_normal:
+	case salviar::sv_target:
 		return 
-			( is_scalar(btc) || is_vector(btc) )
-			&& scalar_of(btc) == builtin_types::_float;
+			( is_scalar(btc) || is_vector(btc) || is_matrix(btc) )
+			&& ( scalar_of(btc) == builtin_types::_float || scalar_of(btc) == builtin_types::_sint32 );
 
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -59,38 +60,65 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 	return false;
 }
 
-storage_classifications vsinput_semantic_storage( salviar::semantic_value const& sem ){
+sv_usage vsinput_semantic_usage( salviar::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
 	case salviar::sv_position:
-		return sc_stream_in;
+		return su_stream_in;
 	case salviar::sv_texcoord:
-		return sc_stream_in;
+		return su_stream_in;
 	case salviar::sv_normal:
-		return sc_stream_in;
+		return su_stream_in;
 	}
-	return sc_none;
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return su_none;
 }
 
-storage_classifications vsoutput_semantic_storage( salviar::semantic_value const& sem ){
+sv_usage vsoutput_semantic_usage( salviar::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
 	case salviar::sv_position:
-		return sc_buffer_out;
+		return su_buffer_out;
 	case salviar::sv_texcoord:
-		return sc_buffer_out;
+		return su_buffer_out;
 	}
-	return sc_none;
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return su_none;
 }
 
-storage_classifications semantic_storage( salviar::languages lang, bool is_output, salviar::semantic_value const& sem ){
+sv_usage psinput_semantic_usage( salviar::semantic_value const& sem ){
+	switch( sem.get_system_value() ){
+	case salviar::sv_texcoord:
+		return su_stream_in;
+	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return su_none;
+}
+
+sv_usage psoutput_semantic_usage( salviar::semantic_value const& sem ){
+	switch( sem.get_system_value() ){
+	case salviar::sv_target:
+		return su_stream_out;
+	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return su_none;
+}
+
+sv_usage semantic_usage( salviar::languages lang, bool is_output, salviar::semantic_value const& sem ){
 	switch ( lang ){
 	case salviar::lang_vertex_shader:
 		if( is_output ){
-			return vsoutput_semantic_storage(sem);
+			return vsoutput_semantic_usage(sem);
 		} else {
-			return vsinput_semantic_storage(sem);
+			return vsinput_semantic_usage(sem);
+		}
+	case salviar::lang_pixel_shader:
+		if( is_output ){
+			return psoutput_semantic_usage(sem);
+		} else {
+			return psinput_semantic_usage(sem);
 		}
 	}
-	return sc_none;
+
+	return su_none;
 }
 
 void abi_analyser::reset( salviar::languages lang ){
@@ -193,7 +221,8 @@ bool abi_analyser::update( salviar::languages lang ){
 		shared_ptr<function_type> entry_fn = entries[lang]->node()->as_handle<function_type>();
 		assert( entry_fn );
 
-		if( !add_semantic( entry_fn, false, false, salviar::lang_vertex_shader, true ) ){
+		if( !add_semantic( entry_fn, false, false, lang, true ) ){
+			assert( false );
 			reset(lang);
 			return false;
 		}
@@ -259,19 +288,20 @@ bool abi_analyser::add_semantic(
 	if( ptspec->is_builtin() ){
 		builtin_types btc = ptspec->tycode;
 		if ( verify_semantic_type( btc, node_sem ) ) {
-			storage_classifications sem_s = semantic_storage( lang, is_output, node_sem );
+			sv_usage sem_s = semantic_usage( lang, is_output, node_sem );
 			switch( sem_s ){
 
-			case sc_stream_in:
+			case su_stream_in:
 				return ai->add_input_semantic( node_sem, btc, true );
-			case sc_buffer_in:
+			case su_buffer_in:
 				return ai->add_input_semantic( node_sem, btc, false );
-
-			case sc_buffer_out:
-			case sc_stream_out:
-				return ai->add_output_semantic( node_sem, btc );
+			case su_stream_out:
+				return ai->add_output_semantic( node_sem, btc, true );
+			case su_buffer_out:
+				return ai->add_output_semantic( node_sem, btc, false );
 			}
 
+			assert( false );
 			return false;
 		}
 	} else if( ptspec->node_class() == node_ids::struct_type ){
@@ -288,6 +318,7 @@ bool abi_analyser::add_semantic(
 				shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
 				BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators ){
 					if ( !add_semantic( dclr, true, enable_nested, lang, is_output ) ){
+						assert( false );
 						return false;
 					}
 				}

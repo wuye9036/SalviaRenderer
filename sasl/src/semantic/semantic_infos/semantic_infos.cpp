@@ -28,6 +28,7 @@ using salviar::semantic_value;
 using ::boost::addressof;
 using ::boost::shared_ptr;
 using ::boost::unordered_map;
+using ::boost::weak_ptr;
 
 using std::string;
 using std::vector;
@@ -292,36 +293,23 @@ std::string const& fnvar_si::name() const{
 	return fn_name;
 }
 
-statement_si::statement_si():has_lp(false){}
-
-const std::string& statement_si::exit_point() const{
-	return exit_pt;
-}
-
-void statement_si::exit_point( const std::string& v ){
-	exit_pt = v;
-}
-
-const std::string& statement_si::loop_point() const{
-	return loop_pt;
-}
-
-void statement_si::loop_point( const std::string& v ){
-	loop_pt = v;
-}
-
-bool statement_si::has_loop() const{
-	return has_lp;
-}
-void statement_si::has_loop( bool v ){
-	has_lp = v;
-}
+statement_si::statement_si(){}
 
 shared_ptr<node> statement_si::parent_block() const{
 	return parent.lock();
 }
 void statement_si::parent_block( shared_ptr<node> v ){
 	parent = v;
+}
+
+vector< weak_ptr<labeled_statement> >& statement_si::labels()
+{
+	return lbls;
+}
+
+vector< weak_ptr<labeled_statement> > const& statement_si::labels() const
+{
+	return lbls;
 }
 
 

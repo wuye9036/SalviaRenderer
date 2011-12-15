@@ -91,6 +91,6 @@ void cgllvm_cases::initialize(){
 	eflib::logrout::write_state( eflib::logrout::screen(), eflib::logrout::on() );
 
 	std::string err;
-	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_modimpl)>( LOCVAR_(root) ), err);
+	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(llvm_module_impl)>( LOCVAR_(root) ), err);
 	EFLIB_ASSERT( LOCVAR_(jit), err.c_str() );
 }

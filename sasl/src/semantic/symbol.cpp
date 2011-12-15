@@ -3,7 +3,7 @@
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <sasl/include/semantic/tecov.h>
+#include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -104,7 +104,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads( const string& unmangled ) c
 
 vector< shared_ptr<symbol> > symbol::find_overloads(
 	const string& unmangled,
-	shared_ptr<tecov_t> conv,
+	shared_ptr<caster_t> conv,
 	vector< shared_ptr<expression> > args ) const
 {
 	// find all overloads
@@ -152,7 +152,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 				all_parameter_success = false;
 				break;
 			}
-			if ( !( arg_type == par_type || conv->implicit_convertible(par_type, arg_type) ) ){
+			if ( !( arg_type == par_type || conv->try_implicit(par_type, arg_type) ) ){
 				all_parameter_success = false;
 				break;
 			}
@@ -177,7 +177,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 
 				bool par_is_better = false;
 				bool par_is_worse = false;
-				conv->better_or_worse_convertible( matched_par_type, matching_par_type, arg_type, par_is_better, par_is_worse );
+				conv->better_or_worse( matched_par_type, matching_par_type, arg_type, par_is_better, par_is_worse );
 				if( par_is_better ){ ++better_param_count; }
 				if( par_is_worse ){ ++worse_param_count; }
 			}

@@ -91,6 +91,17 @@ public:
 	boost::shared_ptr<jump_statement> build_flowctrl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<expression_statement> build_stmt_expr( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<declaration_statement> build_stmt_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<if_statement> build_stmt_if( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<for_statement> build_stmt_for( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<while_statement> build_stmt_while( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<dowhile_statement> build_stmt_dowhile( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<switch_statement> build_stmt_switch( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<statement> build_stmt_labeled( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<label> build_label( boost::shared_ptr<sasl::parser::attribute> attr );
+
+	boost::shared_ptr<for_statement> build_for_loop( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<statement> build_for_init_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	boost::shared_ptr<compound_statement> wrap_to_compound( boost::shared_ptr<statement> stmt );
 
 	boost::shared_ptr<tynode> bind_typequal(
 		boost::shared_ptr<tynode> unqual,
@@ -103,6 +114,9 @@ public:
 		);
 
 	operators build_binop( boost::shared_ptr<sasl::parser::attribute> attr );
+	operators build_prefix_op( boost::shared_ptr<sasl::parser::attribute> attr );
+	operators build_postfix_op( boost::shared_ptr<sasl::parser::attribute> attr );
+
 	void build_semantic(
 		boost::shared_ptr<sasl::parser::attribute> const& attr,
 		boost::shared_ptr<sasl::common::token_t>& out_semantic,

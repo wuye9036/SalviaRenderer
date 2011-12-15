@@ -21,6 +21,7 @@ namespace sasl {
 		struct tynode;
 		struct statement;
 		struct node;
+		struct labeled_statement;
 	}
 	namespace common{
 		class compiler_info_manager;
@@ -43,6 +44,7 @@ int32_t encode_sized_swizzle( int size );
 using ::sasl::syntax_tree::tynode;
 using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::statement;
+using ::sasl::syntax_tree::labeled_statement;
 
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
@@ -239,24 +241,15 @@ class statement_si: public semantic_info{
 public:
 	statement_si();
 
-	const std::string& exit_point() const;
-	void exit_point( const std::string& );
-
-	const std::string& loop_point() const;
-	void loop_point( const std::string& );
-
-	bool has_loop() const;
-	void has_loop( bool v );
+	std::vector< boost::weak_ptr<labeled_statement> >& labels();
+	std::vector< boost::weak_ptr<labeled_statement> > const& labels() const;
 
 	boost::shared_ptr<node> parent_block() const;
 	void parent_block( boost::shared_ptr<node> );
 private:
 	bool has_lp;
-
-	std::string loop_pt;
-	std::string exit_pt; // for if, while, for do-while.
-
 	boost::weak_ptr<node> parent;
+	std::vector< boost::weak_ptr<labeled_statement> > lbls;
 };
 
 END_NS_SASL_SEMANTIC();

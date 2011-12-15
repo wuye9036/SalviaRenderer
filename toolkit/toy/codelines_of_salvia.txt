@@ -2,28 +2,28 @@ statistic directory: ../../eflib
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 52
-  code lines: 8727
-  null lines: 1007
-  empty lines: 1187
-  single line comments: 230
+  code lines: 8793
+  null lines: 1023
+  empty lines: 1192
+  single line comments: 231
   multi line comments: 478
   mixed lines: 6
-  total: 11635
-  file bytes(KB): 259.57
-  bytes per line: 22.84
+  total: 11723
+  file bytes(KB): 261.27
+  bytes per line: 22.82
 statistic directory: ../../salviar
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
   files: 63
-  code lines: 5816
-  null lines: 1558
-  empty lines: 1124
+  code lines: 5844
+  null lines: 1568
+  empty lines: 1132
   single line comments: 169
   multi line comments: 1144
   mixed lines: 30
-  total: 9841
-  file bytes(KB): 283.9
-  bytes per line: 29.54
+  total: 9887
+  file bytes(KB): 284.85
+  bytes per line: 29.5
 statistic directory: ../../salviax
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
@@ -53,26 +53,26 @@ result:
 statistic directory: ../../samples
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
 result:
-  files: 38
-  code lines: 1619
-  null lines: 461
-  empty lines: 293
-  single line comments: 158
-  multi line comments: 705
-  mixed lines: 34
-  total: 3270
-  file bytes(KB): 84.81
-  bytes per line: 26.56
+  files: 40
+  code lines: 1835
+  null lines: 521
+  empty lines: 323
+  single line comments: 163
+  multi line comments: 798
+  mixed lines: 35
+  total: 3675
+  file bytes(KB): 95.15
+  bytes per line: 26.51
 statistic directory: ../../sasl
-with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake
+with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake;.ss;.svs;.sps
 result:
-  files: 209
-  code lines: 15366
-  null lines: 4424
-  empty lines: 2193
-  single line comments: 1078
-  multi line comments: 2724
-  mixed lines: 58
-  total: 25843
-  file bytes(KB): 765.46
-  bytes per line: 30.33
+  files: 259
+  code lines: 17774
+  null lines: 5008
+  empty lines: 2605
+  single line comments: 898
+  multi line comments: 2591
+  mixed lines: 61
+  total: 28937
+  file bytes(KB): 846.72
+  bytes per line: 29.96

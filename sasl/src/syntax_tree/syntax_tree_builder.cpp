@@ -318,6 +318,10 @@ void syntax_tree_builder::build_struct_body( shared_ptr<attribute> attr, shared_
 }
 
 shared_ptr<expression> syntax_tree_builder::build_expr( shared_ptr<attribute> attr ){
+	if( !attr ){
+		return shared_ptr<expression>();
+	}
+
 	shared_ptr<expression_list> ret = build_exprlst( attr );
 	if ( ret->exprs.size() == 1 ){
 		return ret->exprs[0];
@@ -340,6 +344,50 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attri
 	return ret;
 }
 
+operators syntax_tree_builder::build_prefix_op( shared_ptr<attribute> attr )
+{
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, tok_attr, attr );
+
+	assert( tok_attr );
+
+	std::string const& op_str = tok_attr->tok->str;
+	char op_chars[4] = {'\0', '\0', '\0', '\0'};
+	for( size_t i = 0; i < op_str.length(); ++i ){ op_chars[i] = op_str[i]; }
+
+	switch( op_chars[0] ){
+	case '+':
+		return op_chars[1] == '+' ? operators::prefix_incr : operators::positive;
+	case '-':
+		return op_chars[1] == '-' ? operators::prefix_decr : operators::negative;
+	case '!':
+		return operators::logic_not;
+	}
+
+	string assertion("Unsupported operator: ");
+	assertion += op_str;
+	EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
+
+	return operators::none;
+}
+
+operators syntax_tree_builder::build_postfix_op( shared_ptr<attribute> attr )
+{
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, tok_attr, attr );
+	switch( tok_attr->tok->str[0] )
+	{
+	case '+': // ++
+		return operators::postfix_incr;
+	case '-': // --
+		return operators::postfix_decr;
+	}
+
+	string assertion("Unsupported operator: ");
+	assertion += tok_attr->tok->str;
+	EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
+
+	return operators::none;
+}
+
 /* Build assignment expression tree.
 * Example:
 *    Expression: a = b = c
@@ -349,7 +397,7 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attri
 *     expr0  a
 *     /  \
 *    c    b
-\*/
+* */
 shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribute> attr ){
 
 	// Make expression list and operators list.
@@ -519,8 +567,20 @@ shared_ptr<expression> syntax_tree_builder::build_unaryexpr( shared_ptr<attribut
 }
 
 shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<attribute> attr ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<unary_expression>();
+	shared_ptr<attribute> op_attr = attr->child(0)->child(0);
+	shared_ptr<attribute> expr_attr = attr->child(1);
+
+	assert( op_attr );
+	assert( expr_attr );
+
+	shared_ptr<expression> expr = build_castexpr(expr_attr);
+	assert( expr );
+
+	shared_ptr<unary_expression> ret = create_node<unary_expression>( token_t::null() );
+	ret->expr = expr;
+	ret->op = build_prefix_op( op_attr );
+
+	return ret;
 }
 
 shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute> attr ){
@@ -540,7 +600,10 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 				ret = build_memexpr(expr_attr, ret);
 			}
 			SASL_CASE_RULE( opinc ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				shared_ptr<unary_expression> ret_unary = create_node<unary_expression>( token_t::null() );
+				ret_unary->op = build_postfix_op(expr_attr);
+				ret_unary->expr = ret;
+				ret = ret_unary;
 			}
 		SASL_END_SWITCH_RULE();
 	}
@@ -692,7 +755,19 @@ shared_ptr<tynode> syntax_tree_builder::build_postqualedtype( shared_ptr<attribu
 
 shared_ptr<initializer> syntax_tree_builder::build_init( shared_ptr<attribute> attr ){
 	shared_ptr<initializer> ret;
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	shared_ptr<attribute> init_body_attr = attr->child(1)->child(0);
+
+	SASL_SWITCH_RULE( init_body_attr )
+		SASL_CASE_RULE( assignexpr ){
+			shared_ptr<expression_initializer> expr_init = create_node<expression_initializer>( token_t::null() );
+			expr_init->init_expr = build_assignexpr( init_body_attr );
+			ret = expr_init;
+		}
+		SASL_CASE_RULE( nullable_initlist ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	SASL_END_SWITCH_RULE();
+
 	return ret;
 }
 
@@ -710,8 +785,35 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 		SASL_CASE_RULE( stmt_expr ){
 			return build_stmt_expr( typed_attr->attr );
 		}
+		SASL_CASE_RULE( stmt_if ){
+			return build_stmt_if( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_compound ){
+			return build_stmt_compound( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_for ){
+			return build_stmt_for( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_while ){
+			return build_stmt_while( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_dowhile ){
+			return build_stmt_dowhile( typed_attr->attr );
+		}
+		SASL_CASE_RULE( stmt_switch ){
+			return build_stmt_switch( typed_attr->attr );
+		}
+		SASL_CASE_RULE( labeled_stmt ){
+			return build_stmt_labeled( typed_attr->attr );
+		}
 		SASL_DEFAULT(){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			string err;
+			intptr_t rid = typed_attr->attr->rule_id();
+			if( rid != -1 ){
+				err = string( "Unprocessed rule: " );
+				err += reinterpret_cast<sasl::parser::rule*>(rid)->name();
+			}
+			EFLIB_ASSERT_UNIMPLEMENTED0( err.c_str() );
 			return ret;
 		}
 	SASL_END_SWITCH_RULE();
@@ -765,6 +867,160 @@ shared_ptr<declaration_statement> syntax_tree_builder::build_stmt_decl( shared_p
 	shared_ptr<declaration_statement> ret = create_node<declaration_statement>( token_t::null() );
 	ret->decl = build_decl( attr );
 	return ret;
+}
+
+shared_ptr<if_statement> syntax_tree_builder::build_stmt_if( shared_ptr<attribute> attr )
+{
+	shared_ptr<if_statement> ret;
+	shared_ptr<expression> expr = build_expr( attr->child(2) );
+	shared_ptr<statement> yes_stmt = build_stmt( attr->child(4) );
+	shared_ptr<statement> no_stmt;
+
+	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_else_stmt, attr->child(5) );
+	if( !optional_else_stmt->attrs.empty() ){
+		no_stmt = build_stmt( optional_else_stmt->attrs[0]->child(1) );
+		assert( no_stmt );
+	}
+
+	if( expr && yes_stmt ){
+		ret = create_node<if_statement>( token_t::null() );
+		ret->cond = expr;
+		ret->yes_stmt = yes_stmt;
+		ret->no_stmt = no_stmt;
+	} else {
+		// ERROR.
+		;
+	}
+
+	return ret;
+}
+
+shared_ptr<for_statement> syntax_tree_builder::build_stmt_for( shared_ptr<attribute> attr )
+{
+	shared_ptr<for_statement> ret = build_for_loop( attr->child(1) ) ;
+
+	if( ret ){
+		shared_ptr<statement> body_stmt = build_stmt( attr->child(2) );
+		ret->body = wrap_to_compound( body_stmt );
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	
+	return ret;
+}
+
+shared_ptr<while_statement> syntax_tree_builder::build_stmt_while( shared_ptr<attribute> attr )
+{
+	shared_ptr<expression> cond = build_expr( attr->child(2) );
+	shared_ptr<statement> stmt = wrap_to_compound( build_stmt( attr->child(4) ) );
+	assert( cond && stmt );
+
+	if( cond && stmt ){
+		shared_ptr<while_statement> ret = create_node<while_statement>( token_t::null() );
+		ret->cond = cond;
+		ret->body = stmt;
+		return ret;
+	}
+
+	return shared_ptr<while_statement>();
+}
+
+shared_ptr<dowhile_statement> syntax_tree_builder::build_stmt_dowhile( shared_ptr<attribute> attr )
+{
+	shared_ptr<statement> stmt = wrap_to_compound( build_stmt( attr->child(1) ) );
+	shared_ptr<expression> cond = build_expr( attr->child(4) );
+	assert( cond && stmt );
+
+	if( cond && stmt ){
+		shared_ptr<dowhile_statement> ret = create_node<dowhile_statement>( token_t::null() );
+		ret->cond = cond;
+		ret->body = stmt;
+		return ret;
+	}
+
+	return shared_ptr<dowhile_statement>();
+}
+
+shared_ptr<switch_statement> syntax_tree_builder::build_stmt_switch( shared_ptr<attribute> attr )
+{
+	shared_ptr<expression> cond = build_expr( attr->child(2) );
+	shared_ptr<compound_statement> stmts = build_stmt_compound( attr->child(4) );
+
+	assert( cond && stmts );
+
+	shared_ptr<switch_statement> ret = create_node<switch_statement>( token_t::null() );
+	ret->cond = cond;
+	ret->stmts = stmts;
+	return ret;
+}
+
+shared_ptr<statement> syntax_tree_builder::build_stmt_labeled( shared_ptr<attribute> attr )
+{
+	shared_ptr<label> lbl = build_label( attr->child(0) );
+	shared_ptr<statement> stmt = build_stmt( attr->child(2) );
+	assert( lbl && stmt );
+	shared_ptr<labeled_statement> ret;
+	if( stmt->node_class() == node_ids::labeled_statement ){
+		ret = stmt->as_handle<labeled_statement>();
+	} else {
+		ret = create_node<labeled_statement>( token_t::null() );
+		ret->stmt = stmt;
+	}
+
+	ret->labels.push_back( lbl );
+	
+	return ret;
+}
+
+shared_ptr<label> syntax_tree_builder::build_label( shared_ptr<attribute> attr )
+{
+	shared_ptr<attribute> label_attr = attr->child(0);
+
+	SASL_SWITCH_RULE( label_attr )
+		SASL_CASE_RULE( kw_default ){
+			return create_node<case_label>( token_t::null() );
+		}
+		SASL_CASE_RULE( ident ){
+			shared_ptr<ident_label> ret = create_node<ident_label>( token_t::null() );
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, label_attr );
+			ret->label_tok = ident_attr->tok;
+			return ret;
+		}
+		SASL_DEFAULT(){
+			// Case Label
+			assert( label_attr->child(0)->rule_id() == g.kw_case.id() );
+			shared_ptr<case_label> ret = create_node<case_label>( token_t::null() );
+			ret->expr = build_expr( label_attr->child(1) );
+			return ret;
+		}
+	SASL_END_SWITCH_RULE();
+
+	return shared_ptr<label>();
+}
+
+shared_ptr<for_statement> syntax_tree_builder::build_for_loop( shared_ptr<attribute> attr )
+{
+	shared_ptr<for_statement> ret = create_node<for_statement>( token_t::null() );
+
+	ret->init = build_stmt( attr->child(1) );
+	if( ret->init ){
+		ret->cond = build_expr( attr->child(2)->child(0) );
+		ret->iter = build_expr( attr->child(4)->child(0) );
+	} else {
+		ret.reset();
+	}
+
+	return ret;
+}
+
+shared_ptr<compound_statement> syntax_tree_builder::wrap_to_compound( shared_ptr<statement> stmt )
+{
+	if( stmt->node_class() == node_ids::compound_statement ){
+		return stmt->as_handle<compound_statement>();
+	}
+	shared_ptr<compound_statement> ret_stmt = create_node<compound_statement>( token_t::null() );
+	ret_stmt->stmts.push_back( stmt );
+	return ret_stmt;
 }
 
 shared_ptr<tynode> syntax_tree_builder::bind_typequal( shared_ptr<tynode> unqual, shared_ptr<attribute> qual ){

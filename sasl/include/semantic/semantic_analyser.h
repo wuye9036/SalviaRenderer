@@ -28,7 +28,7 @@ namespace softart{
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
-class tecov_t;
+class caster_t;
 class module_si;
 class storage_si;
 struct sacontext;
@@ -78,6 +78,7 @@ public:
 	SASL_VISIT_DCL( compound_statement );
 	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( jump_statement );
+	SASL_VISIT_DCL( labeled_statement );
 
 	// program
 	SASL_VISIT_DCL( program );
@@ -138,7 +139,7 @@ private:
 		);
 
 	boost::shared_ptr<module_si> msi;
-	boost::shared_ptr<tecov_t> typeconv;
+	boost::shared_ptr<caster_t> caster;
 };
 
 END_NS_SASL_SEMANTIC();
