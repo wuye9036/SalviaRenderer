@@ -575,7 +575,7 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
 	// TODO Unsupport PS intrinsic yet;
-	if( abii->lang == salviar::lang_pixel_shader ) return;
+	if( abii && abii->lang == salviar::lang_pixel_shader ) return;
 
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
 

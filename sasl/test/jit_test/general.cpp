@@ -245,7 +245,9 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#if 0
+#define ALL_TESTS_ENABLED 1
+
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/empty.ss" );
@@ -285,7 +287,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if 0
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -371,7 +373,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if 0
+#if ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -435,7 +437,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 
 #endif
 
-#if 0
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
 	init_g("./repo/question/v1a1/branches.ss");
@@ -482,7 +484,7 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 }
 #endif
 
-#if 0
+#if ALL_TESTS_ENABLED
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
@@ -564,7 +566,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 0
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
 
@@ -591,7 +593,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 }
 #endif
 
-#if 0
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/scalar.sps" );
 
@@ -600,7 +602,7 @@ BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 }
 #endif
 
-#if 0
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/arithmetic.sps" );
 
