@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #if ALL_TESTS_ENABLED
 
@@ -632,7 +632,7 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 }
 #endif
 
-#if 1
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/swizzle_and_wm.sps" );
@@ -664,5 +664,13 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 	_aligned_free( dest );
 }
 #endif
+
+BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
+{
+	init_ps( "./repo/question/v1a1/intrinsic.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
+}
 
 BOOST_AUTO_TEST_SUITE_END();
