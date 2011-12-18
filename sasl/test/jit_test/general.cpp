@@ -665,9 +665,9 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 }
 #endif
 
-BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
+BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 {
-	init_ps( "./repo/question/v1a1/intrinsic.sps" );
+	init_ps( "./repo/question/v1a1/intrinsics.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
