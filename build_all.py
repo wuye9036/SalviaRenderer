@@ -5,6 +5,7 @@
 from build_scripts import *
 import os, sys, platform, re
 import build_conf
+from functools import *
 
 class arch:
 	def __init__(self, tag):
@@ -71,9 +72,17 @@ class toolset:
 		self.minor_ver = minor_version
 		self.patch_ver = patch_version
 
-	def boost_toolset(self):
+	def boost_name(self):
 		return "%s-%d.%d" % (self.compiler_name, self.major_ver, self.minor_ver)
-
+		
+	def short_toolset(self):
+		ret = "%s%d" % ( self.compiler_name, self.major_ver )
+		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
+		need_minor_ver = need_patch_ver or ( self.minor_ver and self.minor_ver != 0 )
+		if need_minor_ver: ret += str(self.minor_ver)
+		if need_patch_ver: ret += str(self.patch_ver)
+		return ret
+		
 class build_config:
 	__instance = None
 
@@ -145,6 +154,37 @@ class build_config:
 	def boost_version(self):
 		return self.boost_ver_
 	
+	
+	def install_bin(self):
+		return os.path.join( self.source_root(), build_conf.install_path, "bin" )
+	def install_lib(self):
+		return os.path.join( self.source_root(), build_conf.install_path, "lib" )
+		
+	def llvm_fullname(self):
+		return "llvm_" + str( self.arch() ) + "_" + str( self.toolset().short_toolset() )
+		
+	def llvm_root(self):
+		return os.path.join( self.source_root(), "3rd_party", "src", "llvm" )
+	def llvm_build(self):
+		return os.path.join( self.build_path(), self.llvm_fullname() )
+	def llvm_install(self):
+		return os.path.join( self.install_lib(), self.llvm_fullname() )
+		
+	def llvm_generator(self):
+		if self.arch() == arch.x86:
+			if self.toolset().short_toolset() == 'msvc10':
+				return "Visual Studio 10"
+			else:
+				print( "Unknown generator.")
+				return None
+		elif self.arch() == arch.x64:
+			if self.toolset().short_toolset() == 'msvc10':
+				return "Visual Studio 10 Win64"
+			return None
+		else:
+			print( "Unknown generator.")
+			return None
+			
 	# Sources
 	def source_root(self):
 		return os.path.dirname( sys.argv[0] )
@@ -208,7 +248,8 @@ def make_boost( src, stage_dir ):
 	os.chdir( src )
 	#Get boost build command
 	if build_config.instance().current_os() == systems.win32:
-		libs = ["thread", "system", "filesystem", "date_time", "test"]
+		# Add configs
+		libs = ["thread", "system", "filesystem", "date_time", "test", "wave"]
 		address_model = 'address-model=%d' % build_config.instance().arch().bits()
 		options = "--build-dir=./ link=shared runtime-link=shared threading=multi stage"
 		toolset = build_config.instance().toolset()
@@ -221,11 +262,12 @@ def make_boost( src, stage_dir ):
 			defs = ["_CRT_SECURE_NO_DEPRECATE", "_SCL_SECURE_NO_DEPRECATE"]
 			cxxflags = ["-wd4819", "-wd4910"]
 
+		#configs to cmd
 		libs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "--with-%s " % lib for lib in libs ] )
 		defs_cmd = reduce( lambda cmd, dfn: cmd+dfn, [ "define=%s " % dfn for dfn in defs ] )
 		cxxflags_cmd = reduce( lambda cmd, flag: cmd+flag, [ "cxxflags=%s " % flag for flag in cxxflags ] )
 
-		toolset_cmd = "--toolset=%s" % toolset.boost_toolset()
+		toolset_cmd = "--toolset=%s" % toolset.boost_name()
 		stage_cmd = "--stagedir=\"%s\"" % stage_dir
 
 		#bjam toolset stagedir address-model defs cxxflags libs options
@@ -238,7 +280,30 @@ def make_boost( src, stage_dir ):
 	os.chdir( build_config.instance().source_root() )
 	return True
 
-def make_llvm( src, dest ):
+def config_llvm( conf ):
+	# Add definitions here
+	defs = {}
+	defs["LLVM_BOOST_DIR"] = ("PATH", conf.boost_root())
+	defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
+	defs["CMAKE_INSTALL_PREFIX"] = ("PATH", conf.llvm_install())
+	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
+	
+	print("WARNING: All directories referred by SALVIA *must not include* space.")
+	llvm_cmd = 'cmake -G "%s" %s %s ' % (conf.llvm_generator(), defs_cmd, conf.llvm_root() )
+	print( "Executing: %s" % llvm_cmd )
+	
+	if not os.path.exists( conf.llvm_build() ):
+		os.makedirs( conf.llvm_build() )
+	
+	os.chdir( conf.llvm_build() )
+	os.system( llvm_cmd )
+	os.chdir( conf.source_root() )
+	pass
+	
+def make_llvm( conf ):
+	pass
+
+def clean_all():
 	pass
 
 if __name__ == "__main__":
@@ -249,8 +314,6 @@ if __name__ == "__main__":
 	if conf.current_os() != systems.win32:
 		print("ERROR: Boost build doesn't support non-win32 for now.")
 		sys.exit(1)
-
-	print( 'Compiling SALVIA...' )
 
 	print( 'Configuring compiler...' )
 
@@ -269,10 +332,10 @@ if __name__ == "__main__":
 	print( 'Building boost ...' )
 	boost_stage_root = conf.build_path()
 	if not os.path.isabs(boost_stage_root):
-		boost_stage_root = os.path.join( conf.source_root(), conf.build_path() )
+		boost_stage_root = os.path.join( conf.install_lib() )
 	boost_stage = os.path.join( boost_stage_root, 'boost-%s' % conf.boost_version(), str(conf.arch()) )
-	if not make_boost( conf.boost_root(), boost_stage ):
-		sys.exit(1)
+	#if not make_boost( conf.boost_root(), boost_stage ):
+	#	sys.exit(1)
 
 	print( "Finding CMake..." )
 	if not conf.cmake_exe():
@@ -281,8 +344,11 @@ if __name__ == "__main__":
 	print( "CMake is found." )
 	
 	print( 'Configuring LLVM ...' )
+	config_llvm( conf )
+	
 	print( 'Building LLVM...' )
-
+	make_llvm( conf )
+	
 	print( 'Configuring SALVIA ...' )
 	
 	print( 'Building SALVIA ...' )
