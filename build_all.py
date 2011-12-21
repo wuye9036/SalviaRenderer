@@ -3,8 +3,7 @@
 #-*- coding:utf-8 -#-
 
 from build_scripts import *
-import os, sys, platform, re
-import build_conf
+import os, sys, datetime, platform, re, build_conf, hashlib
 from functools import *
 
 class arch:
@@ -28,7 +27,7 @@ class arch:
 
 	@staticmethod
 	def current():
-		return from_machine( platform.machine() )
+		return arch.from_machine( platform.machine() )
 
 	def __str__(self):
 		if self == arch.x86:
@@ -83,6 +82,30 @@ class toolset:
 		if need_patch_ver: ret += str(self.patch_ver)
 		return ret
 		
+class batch_command:
+	def __init__(self, working_dir):
+		self.dir_ = working_dir
+		self.commands_ = []
+		
+	def add_command(self, cmd):
+		print(cmd)
+		self.commands_ += [cmd]
+		
+	def execute(self):
+		print( self.commands_ )
+		tmp_gen = hashlib.md5()
+		dt = datetime.datetime.now()
+		tmp_gen.update( str(dt).encode('utf-8') )
+		batch_file = tmp_gen.hexdigest() + ".bat"
+		curdir = os.path.abspath(os.curdir)
+		os.chdir(self.dir_)
+		batch_f = open( batch_file, "w" )
+		batch_f.writelines( [cmd_line + "\n" for cmd_line in self.commands_] )
+		batch_f.close()
+		os.system(batch_file)
+		os.remove(batch_file)
+		os.chdir(curdir)
+
 class build_config:
 	__instance = None
 
@@ -102,10 +125,12 @@ class build_config:
 		self.install_path_ = build_conf.install_path
 		self.arch_ = arch.from_machine(build_conf.arch)
 		self.os_ = systems.current()
-
+		
 		# Initialize toolset
 		env = os.environ
 		default_toolset = build_conf.toolset
+		self.builder_ = None
+		
 		if default_toolset == None or default_toolset == "":
 			if "VS100COMNTOOLS" in env:
 				default_toolset = "msvc-10.0"
@@ -117,13 +142,16 @@ class build_config:
 				default_toolset = "mingw"
 			else:
 				print('ERROR: Cannot found any valid compiler on your computer. Please set toolset in "build_conf.py" ')
-
+				
 		if default_toolset == "msvc-10.0":
 			self.toolset_ = toolset('vs', 'msvc', 10, 0, None)
+			self.builder_root_ = os.path.join( env['VS100COMNTOOLS'], "../../" )
 		elif default_toolset == 'msvc-9.0':
 			self.toolset_ = toolset('vs', 'msvc', 9, 0, None)
+			self.builder_root_ = os.path.join( env['VS90COMNTOOLS'], "../../" )
 		elif default_toolset == 'msvc-8.0':
 			self.toolset_ = toolset('vs', 'msvc', 8, 0, None)
+			self.builder_root_ = os.path.join( env['VS80COMNTOOLS'], "../../" )
 		else:
 			print('ERROR: Unsupported toolset name: %s' % default_toolset)
 		
@@ -154,7 +182,17 @@ class build_config:
 	def boost_version(self):
 		return self.boost_ver_
 	
-	
+	def env_commands(self):
+		base_dir = os.path.join( self.builder_root_, "vc/bin" )
+		if self.os() == systems.win32:
+			if self.current_arch() == arch.x86:
+				return os.path.join( base_dir, "vcvars32.bat" )
+			if self.current_arch() == arch.x64:
+				return os.path.join( base_dir, "x86_amd64", "vcvarsx86_amd64.bat" )
+		else:
+			print("Unrecognized OS.")
+			
+		
 	def install_bin(self):
 		return os.path.join( self.source_root(), build_conf.install_path, "bin" )
 	def install_lib(self):
@@ -184,7 +222,10 @@ class build_config:
 		else:
 			print( "Unknown generator.")
 			return None
-			
+
+	def builder(self):
+		return self.builder_
+		
 	# Sources
 	def source_root(self):
 		return os.path.dirname( sys.argv[0] )
@@ -288,7 +329,7 @@ def config_llvm( conf ):
 	defs["CMAKE_INSTALL_PREFIX"] = ("PATH", conf.llvm_install())
 	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
-	print("WARNING: All directories referred by SALVIA *must not include* space.")
+	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
 	llvm_cmd = 'cmake -G "%s" %s %s ' % (conf.llvm_generator(), defs_cmd, conf.llvm_root() )
 	print( "Executing: %s" % llvm_cmd )
 	
@@ -300,7 +341,18 @@ def config_llvm( conf ):
 	os.chdir( conf.source_root() )
 	pass
 	
-def make_llvm( conf ):
+# configs := [ config, ... ]
+# config  := 'Debug' | 'Release' | 'MinSizeRel' | 'RelWithDebInfo'
+def make_llvm( conf, configs ):
+	#Write command to build.bat
+	print( "Building LLVM ..." )
+	cmd = batch_command( conf.llvm_build() )
+	cmd.add_command( '@echo off' )
+	cmd.add_command( 'call "%s"' % conf.env_commands() )
+	for config_str in configs:
+		cmd.add_command( 'devenv.exe LLVM.sln /build %s' % config_str )
+		cmd.add_command( 'devenv.exe LLVM.sln /build %s /project Install' % config_str )
+	cmd.execute()
 	pass
 
 def clean_all():
@@ -345,9 +397,7 @@ if __name__ == "__main__":
 	
 	print( 'Configuring LLVM ...' )
 	config_llvm( conf )
-	
-	print( 'Building LLVM...' )
-	make_llvm( conf )
+	make_llvm( conf, ['Debug'] )
 	
 	print( 'Configuring SALVIA ...' )
 	
