@@ -2,110 +2,20 @@
 
 #-*- coding:utf-8 -#-
 
-from build_scripts import *
-import os, sys, datetime, platform, re, build_conf, hashlib
-from functools import *
+import os, sys, re, build_conf, atexit
+from functools	import *
 
-class arch:
-	def __init__(self, tag):
-		self.__tag = tag
+from blibs		import *
+from blibs.copy	import *
+from blibs.env	import *
+from blibs.util	import *
 
-	@staticmethod
-	def from_machine( machine ):
-		if machine == 'i386':
-			return arch.x86
-		if machine == 'AMD64':
-			return arch.x64
-		return arch.unknown
-	
-	def bits(self):
-		if self == arch.x86:
-			return 32
-		if self == arch.x64:
-			return 64
-		return 0
-
-	@staticmethod
-	def current():
-		return arch.from_machine( platform.machine() )
-
-	def __str__(self):
-		if self == arch.x86:
-			return 'x86'
-		if self == arch.x64:
-			return 'x64'
-		return 'unknown'
-
-arch.unknown = arch(0)
-arch.x86 = arch(1)
-arch.x64 = arch(2)
-
-class systems:
-	def __init__(self, tag):
-		self.__tag = tag
-
-	@staticmethod
-	def current():
-		if platform.system() == 'Windows':
-			return systems.win32
-		if platform.system() == 'Linux':
-			return systems.linux
-		return systems.unknown
-
-	def __str__(self):
-		if self == win32:
-			return 'win32'
-		if self == linux:
-			return 'linux'
-		return 'unknown'
-
-systems.unknown = arch(0)
-systems.win32 = arch(1)
-systems.linux = arch(2)
-
-class toolset:
-	def __init__(self, ide_name, compiler_name, major_version, minor_version, patch_version):
-		self.ide_name = ide_name
-		self.compiler_name = compiler_name
-		self.major_ver = major_version
-		self.minor_ver = minor_version
-		self.patch_ver = patch_version
-
-	def boost_name(self):
-		return "%s-%d.%d" % (self.compiler_name, self.major_ver, self.minor_ver)
+log_f = None
+def close_log():
+	global log_f
+	if log_f != None:
+		log_f.close()
 		
-	def short_toolset(self):
-		ret = "%s%d" % ( self.compiler_name, self.major_ver )
-		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
-		need_minor_ver = need_patch_ver or ( self.minor_ver and self.minor_ver != 0 )
-		if need_minor_ver: ret += str(self.minor_ver)
-		if need_patch_ver: ret += str(self.patch_ver)
-		return ret
-		
-class batch_command:
-	def __init__(self, working_dir):
-		self.dir_ = working_dir
-		self.commands_ = []
-		
-	def add_command(self, cmd):
-		print(cmd)
-		self.commands_ += [cmd]
-		
-	def execute(self):
-		print( self.commands_ )
-		tmp_gen = hashlib.md5()
-		dt = datetime.datetime.now()
-		tmp_gen.update( str(dt).encode('utf-8') )
-		batch_file = tmp_gen.hexdigest() + ".bat"
-		curdir = os.path.abspath(os.curdir)
-		os.chdir(self.dir_)
-		batch_f = open( batch_file, "w" )
-		batch_f.writelines( [cmd_line + "\n" for cmd_line in self.commands_] )
-		batch_f.close()
-		os.system(batch_file)
-		os.remove(batch_file)
-		os.chdir(curdir)
-
 class build_config:
 	__instance = None
 
@@ -175,12 +85,6 @@ class build_config:
 		return self.toolset_
 	def cmake_exe(self):
 		return self.cmake_
-		
-	# Boost builds.
-	def boost_root(self):
-		return self.boost_root_
-	def boost_version(self):
-		return self.boost_ver_
 	
 	def env_commands(self):
 		base_dir = os.path.join( self.builder_root_, "vc/bin" )
@@ -198,16 +102,24 @@ class build_config:
 	def install_lib(self):
 		return os.path.join( self.source_root(), build_conf.install_path, "lib" )
 		
-	def llvm_fullname(self):
-		return "llvm_" + str( self.arch() ) + "_" + str( self.toolset().short_toolset() )
+	# Boost builds.
+	def boost_root(self):
+		return self.boost_root_
+	def boost_version(self):
+		return self.boost_ver_
+	def boost_stage(self):
+		return os.path.join( self.install_lib(), 'boost-%s' % self.boost_version(), str(self.arch()) )
+	def boost_lib_dir(self):
+		return 
 		
+	def llvm_fullname(self):
+		return "llvm_" + str( self.arch() ) + "_" + str( self.toolset().short_toolset() )		
 	def llvm_root(self):
 		return os.path.join( self.source_root(), "3rd_party", "src", "llvm" )
 	def llvm_build(self):
 		return os.path.join( self.build_path(), self.llvm_fullname() )
 	def llvm_install(self):
 		return os.path.join( self.install_lib(), self.llvm_fullname() )
-		
 	def llvm_generator(self):
 		if self.arch() == arch.x86:
 			if self.toolset().short_toolset() == 'msvc10':
@@ -223,6 +135,15 @@ class build_config:
 			print( "Unknown generator.")
 			return None
 
+	def salvia_build(self):
+		pass
+	def salvia_lib(self):
+		pass
+	def salvia_bin(self):
+		pass
+	def salvia_install(self):
+		pass
+		
 	def builder(self):
 		return self.builder_
 		
@@ -330,8 +251,9 @@ def config_llvm( conf ):
 	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
 	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
+	print("Configuring LLVM ...")
 	llvm_cmd = 'cmake -G "%s" %s %s ' % (conf.llvm_generator(), defs_cmd, conf.llvm_root() )
-	print( "Executing: %s" % llvm_cmd )
+	print( "-- Executing: %s" % llvm_cmd )
 	
 	if not os.path.exists( conf.llvm_build() ):
 		os.makedirs( conf.llvm_build() )
@@ -345,20 +267,50 @@ def config_llvm( conf ):
 # config  := 'Debug' | 'Release' | 'MinSizeRel' | 'RelWithDebInfo'
 def make_llvm( conf, configs ):
 	#Write command to build.bat
-	print( "Building LLVM ..." )
 	cmd = batch_command( conf.llvm_build() )
-	cmd.add_command( '@echo off' )
-	cmd.add_command( 'call "%s"' % conf.env_commands() )
-	for config_str in configs:
-		cmd.add_command( 'devenv.exe LLVM.sln /build %s' % config_str )
-		cmd.add_command( 'devenv.exe LLVM.sln /build %s /project Install' % config_str )
+	
+	#cmd.add_command( '@echo off' )
+	cmd.add_command( '@call "%s"' % conf.env_commands() )
+	for cfg in configs:
+		cmd.add_command( '@echo Building LLVM %s ...' % cfg )
+		cmd.add_command( '@devenv.exe LLVM.sln /build %s' % cfg )
+		cmd.add_command( '@echo Installing LLVM %s ...' % cfg )
+		cmd.add_command( '@devenv.exe LLVM.sln /build %s /project Install' % cfg )
 	cmd.execute()
+	pass
+
+def config_salvia( conf ):
+	# Add definitions here
+	defs = {}
+	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", conf.boost_root())
+	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", os.path.join( conf.boost_stage(), "lib" ) )
+	defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
+	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", conf.llvm_install())
+	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
+	
+	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
+	print("Configuring LLVM ...")
+	llvm_cmd = 'cmake -G "%s" %s %s ' % (conf.llvm_generator(), defs_cmd, conf.llvm_root() )
+	print( "-- Executing: %s" % llvm_cmd )
+	
+	if not os.path.exists( conf.llvm_build() ):
+		os.makedirs( conf.llvm_build() )
+	
+	os.chdir( conf.llvm_build() )
+	os.system( llvm_cmd )
+	os.chdir( conf.source_root() )
+	pass
+	
+def make_salvia():
 	pass
 
 def clean_all():
 	pass
 
 if __name__ == "__main__":
+	log_f = open("build.log", "w")
+	atexit.register(close_log)
+	
 	# Load configuration
 	conf = build_config.instance()
 
@@ -398,10 +350,8 @@ if __name__ == "__main__":
 	print( 'Configuring LLVM ...' )
 	config_llvm( conf )
 	make_llvm( conf, ['Debug'] )
-	
-	print( 'Configuring SALVIA ...' )
-	
-	print( 'Building SALVIA ...' )
+	config_salvia( conf )
+	make_salvia( conf, ['Debug'] )
 
 	print( 'Build done.')
 	os.system("pause")
