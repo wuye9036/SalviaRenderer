@@ -215,7 +215,7 @@ def make_boost( src, stage_dir ):
 	#Get boost build command
 	if build_config.instance().current_os() == systems.win32:
 		# Add configs
-		libs = ["thread", "system", "filesystem", "date_time", "test", "wave"]
+		libs = ["thread", "system", "filesystem", "date_time", "test", "wave", "program_options", "serialization"]
 		address_model = 'address-model=%d' % build_config.instance().arch().bits()
 		options = "--build-dir=./ link=shared runtime-link=shared threading=multi stage"
 		toolset = build_config.instance().toolset()
@@ -291,7 +291,7 @@ def config_salvia( conf ):
 	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", conf.llvm_install())
 	defs["SALVIA_BUILD_WITH_LLVM"] = ("BOOL", "TRUE")
 	defs["SALVIA_ENABLE_SASL_REGRESSION_TEST"] = ("BOOL", "TRUE")
-	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "FALSE")
+	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "TRUE")
 	
 	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
