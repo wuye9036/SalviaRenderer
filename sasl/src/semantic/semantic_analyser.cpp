@@ -263,11 +263,18 @@ SASL_VISIT_DEF( binary_expression )
 	std::string opname = operator_name( v.op );
 	vector< shared_ptr<expression> > exprs;
 	exprs += dup_expr->left_expr, dup_expr->right_expr;
-	vector< shared_ptr<symbol> > overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs );
-
+	
+	vector< shared_ptr<symbol> > overloads;
+	if( is_assign(v.op) || is_arith_assign(v.op) ){
+		overloads = data_cptr()->parent_sym->find_assign_overloads( opname, caster, exprs );
+	} else {
+		overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs );
+	}
+	
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
 		return;
 	}
+	
 	EFLIB_ASSERT_AND_IF( overloads.size() == 1,	( format(
 		"Need to report a compiler error. Ambigous overloading. \r\n"
 		"operator is %1%, left expression type is %2%, right expression type is %3%. \r\n" 
@@ -277,7 +284,7 @@ SASL_VISIT_DEF( binary_expression )
 	{
 		return;
 	}
-
+	
 	// update semantic information of binary expression
 	tid_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
 	get_or_create_semantic_info<storage_si>( dup_expr, msi->pety() )->entry_id( result_tid );
@@ -1012,7 +1019,7 @@ SASL_VISIT_DEF( program ){
 	any child_ctxt = child_ctxt_init;
 
 	register_builtin_types();
-	register_tecov( child_ctxt_init );
+	add_cast( child_ctxt_init );
 	register_builtin_functions( child_ctxt_init );
 
 	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
@@ -1032,7 +1039,7 @@ void semantic_analyser::builtin_tecov( shared_ptr<node> lhs, shared_ptr<node> rh
 	// do nothing
 }
 
-void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
+void semantic_analyser::add_cast( const boost::any& /*ctxt*/ ){
 	// register default type converter
 	pety_t* typemgr = msi->pety().get();
 
@@ -1175,6 +1182,27 @@ void semantic_analyser::register_tecov( const boost::any& /*ctxt*/ ){
 	caster->add_cast( caster_t::exp, bool_ts, float_ts, default_conv );
 	caster->add_cast( caster_t::exp, bool_ts, double_ts, default_conv );
 
+	// Add scalar-vector1 and vec1-scalar cast
+	vector<builtin_types> scalar_bts;
+	scalar_bts.push_back( builtin_types::_sint8	);
+	scalar_bts.push_back( builtin_types::_sint16 );
+	scalar_bts.push_back( builtin_types::_sint32 );
+	scalar_bts.push_back( builtin_types::_sint64 );
+	scalar_bts.push_back( builtin_types::_uint8 );
+	scalar_bts.push_back( builtin_types::_uint16 );
+	scalar_bts.push_back( builtin_types::_uint32 );
+	scalar_bts.push_back( builtin_types::_uint64 );
+	scalar_bts.push_back( builtin_types::_float );
+	scalar_bts.push_back( builtin_types::_double );
+	scalar_bts.push_back( builtin_types::_boolean );
+
+	BOOST_FOREACH( builtin_types bt, scalar_bts ){
+		builtin_types v1bt = vector_of( bt, 1 );
+		tid_t bt_tid = typemgr->get( bt );
+		tid_t v1bt_tid = typemgr->get( v1bt );
+		caster->add_cast( caster_t::imp, bt_tid, v1bt_tid, default_conv );
+		caster->add_cast( caster_t::imp, v1bt_tid, bt_tid, default_conv );
+	}
 }
 
 void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt_init ){

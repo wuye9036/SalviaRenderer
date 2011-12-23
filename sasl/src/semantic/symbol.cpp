@@ -17,6 +17,7 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
@@ -104,12 +105,20 @@ vector< shared_ptr<symbol> > symbol::find_overloads( const string& unmangled ) c
 
 vector< shared_ptr<symbol> > symbol::find_overloads(
 	const string& unmangled,
-	shared_ptr<caster_t> conv,
-	vector< shared_ptr<expression> > args ) const
+	shared_ptr<caster_t> const& conv,
+	vector< shared_ptr<expression> > const& args ) const
 {
 	// find all overloads
 	vector< shared_ptr<symbol> > overloads = find_overloads( unmangled );
 	if( overloads.empty() ) { return overloads; }
+
+	// Extract type info of args
+	vector<tid_t> arg_tids;
+	vector<type_info_si*> arg_tisis; 
+	BOOST_FOREACH( shared_ptr<expression> const& arg, args ){
+		arg_tisis.push_back( arg->si_ptr<type_info_si>() );
+		arg_tids.push_back( arg_tisis.back()->entry_id() );
+	}
 
 	// Find candidates.
 	// Following steps could impl function overloading :
@@ -133,9 +142,9 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 		// try to match all parameters.
 		bool all_parameter_success = true;
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-			shared_ptr<type_info_si> arg_tisi = extract_semantic_info<type_info_si>( args[i_param] );
+			type_info_si* arg_tisi = arg_tisis[i_param];
 			shared_ptr<type_info_si> par_tisi = extract_semantic_info<type_info_si>( matching_func->params[i_param] );
-			tid_t arg_type = arg_tisi->entry_id();
+			tid_t arg_type = arg_tids[i_param];
 			tid_t par_type = par_tisi->entry_id();
 			if( arg_type == -1 || par_type == -1 ){
 				boost::format fmt( "Type of %s <%s> is invalid." );
@@ -206,6 +215,24 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 	return candidates;
 }
 
+vector< shared_ptr<symbol> > symbol::find_assign_overloads(
+	const string& unmangled,
+	shared_ptr<caster_t> const& conv,
+	vector< shared_ptr<expression> > const& args ) const
+{
+	vector< shared_ptr<symbol> > candidates = find_overloads( unmangled, conv, args );
+	tid_t lhs_arg_tid = args.back()->si_ptr<type_info_si>()->entry_id();
+	vector< shared_ptr<symbol> > ret;
+	BOOST_FOREACH( shared_ptr<symbol> const& proto, candidates )
+	{
+		shared_ptr<function_type> proto_fn = proto->node()->as_handle<function_type>();
+		tid_t lhs_par_tid = proto_fn->params.back()->si_ptr<type_info_si>()->entry_id();
+		if( lhs_par_tid == lhs_arg_tid ){
+			ret.push_back(proto);
+		}
+	}
+	return ret;
+}
 shared_ptr<symbol> symbol::add_child( const string& mangled, shared_ptr<struct node> child_node )
 {
 	children_iterator_t ret_it = children.find(mangled);

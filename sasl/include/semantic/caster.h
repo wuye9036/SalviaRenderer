@@ -24,7 +24,8 @@ BEGIN_NS_SASL_SEMANTIC();
 class caster_t{
 public:
 	enum casts{
-		better = 0,
+		eql = 0,
+		better,
 		imp,
 		warning,
 		exp,

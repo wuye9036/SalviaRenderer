@@ -98,7 +98,7 @@ private:
 		boost::shared_ptr<storage_si> const& ssi
 		);
 
-	void register_tecov( const boost::any& ctxt );
+	void add_cast( const boost::any& ctxt );
 	void register_builtin_functions( const boost::any& child_ctxt_init );
 
 	class function_register{

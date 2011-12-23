@@ -60,10 +60,15 @@ public:
 	std::vector< boost::shared_ptr<symbol> > find_overloads( const std::string& name ) const;
 	std::vector< boost::shared_ptr<symbol> > find_overloads(
 		const std::string& name,
-		boost::shared_ptr<caster_t> conv,
-		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > args
+		boost::shared_ptr<caster_t> const& conv,
+		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > const& args
 		) const;
-	int count( std::string name ) const;
+	std::vector< boost::shared_ptr<symbol> > find_assign_overloads(
+		const std::string& name,
+		boost::shared_ptr<caster_t> const& conv,
+		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > const& args
+		) const; 
+	int count( std::string const& name ) const;
 
 	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
 	
