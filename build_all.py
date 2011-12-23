@@ -117,7 +117,7 @@ class build_config:
 	def boost_stage(self):
 		return os.path.join( self.install_lib(), 'boost-%s' % self.boost_version(), str(self.arch()) )
 	def boost_lib_dir(self):
-		return 
+		return os.path.join( self.boost_stage(), "lib" )
 		
 	def llvm_fullname(self):
 		return "llvm_" + str( self.arch() ) + "_" + str( self.toolset().short_name() )
@@ -134,8 +134,8 @@ class build_config:
 		return os.path.join( self.build_path(), self.salvia_fullname() )
 	def salvia_lib(self):
 		pass
-	def salvia_bin(self):
-		pass
+	def salvia_bin(self, cfg):
+		return os.path.join( self.install_bin(), self.target_modifier(['arch']), cfg )
 	def salvia_install(self):
 		pass
 		
@@ -320,6 +320,37 @@ def make_salvia( conf, build_cfgs):
 	cmd.execute()
 	pass
 
+def install_prebuild_binaries( conf, build_cfgs ):
+	print( "Installing dependencies ..." )
+	# Copy FreeImage
+	fi_bin_root = os.path.join( conf.source_root(), "3rd_party", "FreeImage", "bin" )
+	fi_dll = None
+	if conf.os() == systems.win32:
+		if conf.arch() == arch.x86:
+			fi_bin_dir = os.path.join( fi_bin_root, "win32" )
+		elif conf.arch() == arch.x64:
+			fi_bin_dir = os.path.join( fi_bin_root, "x64" )
+		fi_dll = os.path.join( fi_bin_dir, 'FreeImage.dll')
+	if fi_dll:
+		for cfg in build_cfgs:
+			copy_newer( fi_dll, conf.salvia_bin(cfg) )
+		
+	# Copy boost
+	files = os.listdir( conf.boost_lib_dir() )
+	need_copy = []
+	for cfg in build_cfgs:
+		if conf.os() == systems.win32:
+			for f in files:
+				f_basename = os.path.basename(f)
+				name, ext = os.path.splitext(f)
+				if( ext != ".dll" ): continue
+				if ( '-gd' in name ) != (cfg == "Debug"): continue
+				if ( not conf.toolset().boost_lib_name() in name ): continue
+				need_copy.append( os.path.join( conf.boost_lib_dir(), f_basename ) )
+	
+		for f in need_copy:
+			copy_newer( f, conf.salvia_bin(cfg) )
+		
 def clean_all():
 	pass
 
@@ -327,6 +358,7 @@ if __name__ == "__main__":
 	log_f = open("build.log", "w")
 	atexit.register(close_log)
 	
+	copy_newer( "build_conf.tmpl", "build_conf.py" )
 	# Load configuration
 	conf = build_config.instance()
 
@@ -354,8 +386,8 @@ if __name__ == "__main__":
 	if not os.path.isabs(boost_stage_root):
 		boost_stage_root = os.path.join( conf.install_lib() )
 	boost_stage = os.path.join( boost_stage_root, 'boost-%s' % conf.boost_version(), str(conf.arch()) )
-	#if not make_boost( conf.boost_root(), boost_stage ):
-	#	sys.exit(1)
+	if not make_boost( conf.boost_root(), boost_stage ):
+		sys.exit(1)
 
 	print( "Finding CMake..." )
 	if not conf.cmake_exe():
@@ -364,11 +396,13 @@ if __name__ == "__main__":
 	print( "CMake is found." )
 	
 	print( 'Configuring LLVM ...' )
-	# config_llvm( conf )
-	# make_llvm( conf, ['Debug'] )
+	config_llvm( conf )
+	make_llvm( conf, ['Debug'] )
 	config_salvia( conf )
 	make_salvia( conf, ['Debug'] )
 
+	install_prebuild_binaries( conf, ['Debug'] )
+	
 	print( 'Build done.')
 	os.system("pause")
 	

@@ -75,3 +75,18 @@ class toolset:
 		if need_minor_ver: ret += str(self.minor_ver)
 		if need_patch_ver: ret += str(self.patch_ver)
 		return ret
+	
+	def short_compiler_name(self):
+		if self.compiler_name == "msvc":
+			return "vc"
+		elif self.compiler_name == "mingw":
+			return "mgw"
+		else:
+			return None
+	
+	def boost_lib_name(self):
+		ret = "%s%d%d" % ( self.short_compiler_name(), self.major_ver, self.minor_ver )
+		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
+		if need_patch_ver:
+			ret += str(self.patch_ver)
+		return ret
