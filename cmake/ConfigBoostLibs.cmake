@@ -11,12 +11,6 @@ else ( Boost_FOUND )
 	MESSAGE( FATAL_ERROR "Can not find boost 1.44 or later. Please specify a path with 'SALVIA_BOOST_DIRECOTRY' or run './build_all.py'." )
 endif()
 
-if(SALVIA_PLATFORM_NAME STREQUAL "x64")
-	set( SALVIA_BOOST_LIB_DIR ${SALVIA_BOOST_HOME_DIR}/bin/x64)
-else(SALVIA_PLATFORM_NAME STREQUAL "x64")
-	set( SALVIA_BOOST_LIB_DIR ${SALVIA_BOOST_HOME_DIR}/bin/x86)
-endif()
-
 if( NOT EXISTS ${SALVIA_BOOST_LIB_DIR} )
 	MESSAGE( FATAL_ERROR "Cannot find libraries in ${SALVIA_BOOST_LIB_DIR}. Please compile libraries and copy lib files into directory or run './build_all.py'.")
 endif()

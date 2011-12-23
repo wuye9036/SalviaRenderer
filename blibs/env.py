@@ -68,7 +68,7 @@ class toolset:
 	def boost_name(self):
 		return "%s-%d.%d" % (self.compiler_name, self.major_ver, self.minor_ver)
 		
-	def short_toolset(self):
+	def short_name(self):
 		ret = "%s%d" % ( self.compiler_name, self.major_ver )
 		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
 		need_minor_ver = need_patch_ver or ( self.minor_ver and self.minor_ver != 0 )

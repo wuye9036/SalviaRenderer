@@ -85,8 +85,14 @@ class build_config:
 		return self.toolset_
 	def cmake_exe(self):
 		return self.cmake_
-	
-	def env_commands(self):
+	def target_modifier(self, hints):
+		hint_dict = {}
+		hint_dict["os"] = str( self.os() )
+		hint_dict["arch"] = str( self.arch() )
+		hint_dict["tool"] = str( self.toolset().short_name() )
+		return reduce( lambda ret,s: ret+"_"+s, [hint_dict[hnt] for hnt in hints] )
+		
+	def env_setup_commands(self):
 		base_dir = os.path.join( self.builder_root_, "vc/bin" )
 		if self.os() == systems.win32:
 			if self.current_arch() == arch.x86:
@@ -95,8 +101,9 @@ class build_config:
 				return os.path.join( base_dir, "x86_amd64", "vcvarsx86_amd64.bat" )
 		else:
 			print("Unrecognized OS.")
-			
-		
+	
+	def install_path(self):
+		return self.install_path_	
 	def install_bin(self):
 		return os.path.join( self.source_root(), build_conf.install_path, "bin" )
 	def install_lib(self):
@@ -113,30 +120,18 @@ class build_config:
 		return 
 		
 	def llvm_fullname(self):
-		return "llvm_" + str( self.arch() ) + "_" + str( self.toolset().short_toolset() )		
+		return "llvm_" + str( self.arch() ) + "_" + str( self.toolset().short_name() )
 	def llvm_root(self):
 		return os.path.join( self.source_root(), "3rd_party", "src", "llvm" )
 	def llvm_build(self):
 		return os.path.join( self.build_path(), self.llvm_fullname() )
 	def llvm_install(self):
 		return os.path.join( self.install_lib(), self.llvm_fullname() )
-	def llvm_generator(self):
-		if self.arch() == arch.x86:
-			if self.toolset().short_toolset() == 'msvc10':
-				return "Visual Studio 10"
-			else:
-				print( "Unknown generator.")
-				return None
-		elif self.arch() == arch.x64:
-			if self.toolset().short_toolset() == 'msvc10':
-				return "Visual Studio 10 Win64"
-			return None
-		else:
-			print( "Unknown generator.")
-			return None
 
+	def salvia_fullname(self):
+		return "salvia_" + self.target_modifier(['arch', 'tool'])
 	def salvia_build(self):
-		pass
+		return os.path.join( self.build_path(), self.salvia_fullname() )
 	def salvia_lib(self):
 		pass
 	def salvia_bin(self):
@@ -154,11 +149,20 @@ class build_config:
 	# Builds
 	def build_path(self):
 		return self.build_path_
-
-	# Targets
-	def install_path(self):
-		return self.install_path_
-
+	def generator(self):
+		if self.arch() == arch.x86:
+			if self.toolset().short_name() == 'msvc10':
+				return "Visual Studio 10"
+			else:
+				print( "Unknown generator.")
+				return None
+		elif self.arch() == arch.x64:
+			if self.toolset().short_name() == 'msvc10':
+				return "Visual Studio 10 Win64"
+			return None
+		else:
+			print( "Unknown generator.")
+			return None
 class filters:
 	default_filter = lambda src, dest : True
 	
@@ -252,7 +256,7 @@ def config_llvm( conf ):
 	
 	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
 	print("Configuring LLVM ...")
-	llvm_cmd = 'cmake -G "%s" %s %s ' % (conf.llvm_generator(), defs_cmd, conf.llvm_root() )
+	llvm_cmd = 'cmake -G "%s" %s %s ' % (conf.generator(), defs_cmd, conf.llvm_root() )
 	print( "-- Executing: %s" % llvm_cmd )
 	
 	if not os.path.exists( conf.llvm_build() ):
@@ -270,7 +274,7 @@ def make_llvm( conf, configs ):
 	cmd = batch_command( conf.llvm_build() )
 	
 	#cmd.add_command( '@echo off' )
-	cmd.add_command( '@call "%s"' % conf.env_commands() )
+	cmd.add_command( '@call "%s"' % conf.env_setup_commands() )
 	for cfg in configs:
 		cmd.add_command( '@echo Building LLVM %s ...' % cfg )
 		cmd.add_command( '@devenv.exe LLVM.sln /build %s' % cfg )
@@ -284,24 +288,36 @@ def config_salvia( conf ):
 	defs = {}
 	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", conf.boost_root())
 	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", os.path.join( conf.boost_stage(), "lib" ) )
-	defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
 	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", conf.llvm_install())
+	defs["SALVIA_BUILD_WITH_LLVM"] = ("BOOL", "TRUE")
+	defs["SALVIA_ENABLE_SASL_REGRESSION_TEST"] = ("BOOL", "TRUE")
+	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "FALSE")
+	
 	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
 	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
-	print("Configuring LLVM ...")
-	llvm_cmd = 'cmake -G "%s" %s %s ' % (conf.llvm_generator(), defs_cmd, conf.llvm_root() )
-	print( "-- Executing: %s" % llvm_cmd )
+	print("Configuring Salvia ...")
+	salvia_cmd = 'cmake -G "%s" %s %s ' % (conf.generator(), defs_cmd, conf.source_root() )
+	print( "-- Executing: %s" % salvia_cmd )
 	
-	if not os.path.exists( conf.llvm_build() ):
-		os.makedirs( conf.llvm_build() )
+	if not os.path.exists( conf.salvia_build() ):
+		os.makedirs( conf.salvia_build() )
 	
-	os.chdir( conf.llvm_build() )
-	os.system( llvm_cmd )
+	os.chdir( conf.salvia_build() )
+	os.system( salvia_cmd )
 	os.chdir( conf.source_root() )
 	pass
 	
-def make_salvia():
+def make_salvia( conf, build_cfgs):
+	#Write command to build.bat
+	cmd = batch_command( conf.salvia_build() )
+	
+	#cmd.add_command( '@echo off' )
+	cmd.add_command( '@call "%s"' % conf.env_setup_commands() )
+	for cfg in build_cfgs:
+		cmd.add_command( '@echo Building SALVIA %s ...' % cfg )
+		cmd.add_command( '@devenv.exe salvia.sln /build %s' % cfg )
+	cmd.execute()
 	pass
 
 def clean_all():
@@ -348,8 +364,8 @@ if __name__ == "__main__":
 	print( "CMake is found." )
 	
 	print( 'Configuring LLVM ...' )
-	config_llvm( conf )
-	make_llvm( conf, ['Debug'] )
+	# config_llvm( conf )
+	# make_llvm( conf, ['Debug'] )
 	config_salvia( conf )
 	make_salvia( conf, ['Debug'] )
 
