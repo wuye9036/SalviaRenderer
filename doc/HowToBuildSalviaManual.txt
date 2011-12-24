@@ -2,9 +2,10 @@
 
 ${HOME}		SALVIA源代码的根目录。该目录下应该包含README
 ${BUILD}	CMake配置及编译的中间目录。
-${BIN}		最终二进制文件的生成目录
+${BIN}		二进制文件的安装目录
+${LIB}		二进制库安装目录
 
-${PLATFORM}	目标平台名称。包括win32，x64（win32 64bit）等。
+${PLATFORM}	目标平台名称。包括ntx86，ntx64, linuxx86, linuxx64等。
 ${COMPILER}	编译器名称。格式为短名+版本号。
 				短名表：
 					msvc	Microsoft Visual C++
@@ -23,44 +24,42 @@ ${CONFIG}	配置选项。CMAKE支持DEBUG/RELEASE/RELWITHDEBINFO/MINSIZEREL四项。
 				
 ${HOME}		: SALVIA及部分第三方库源代码
 	3rd_party
-		src			: 第三方源代码
-			llvm	: LLVM源码
+		llvm		: LLVM 源代码
 		wtl			: WTL源码
 		threadpool	: Thead Pool 源码
-		llvm		: 预编译LLVM库
-			config	: LLVM 配置头文件
-				${PLATFORM}_{COMPILER}
-					llvm	: 包含LLVM的CMake生成的Config和System文件夹
-			inlcude	: LLVM头文件。直接从LLVM源代码中拷贝即可。
-			lib
-				${PLATFORM}_{COMPILER}_${CONFIG}	: LLVM编译后生成的library
-			toolchains
-				${PLATFORM}	: LLVM编译生成的工具链。包括llc，lli等可执行文件
 	bin
-		resource	: 资源文件
-		${PLATFORM}
-			${CONFIG}		: 最终生成的二进制文件。
-			
+		resource				: 资源文件
+		${PLATFORM}_${COMPILER}_${CONFIG}	: 最终生成的二进制文件。
+
 Boost的编译：
-	* 从build_conf中获取boost路径至${BOOST}。
-	* 根据boost路径编译生成bjam至 ${BOOST}/bjam.exe。
-	* 使用bjam编译库，并stage至 ${BOOST}/${PLATFORM} 中。
-	* ${BOOST_LIB_DIRECTORY} = ${BOOST}/${PLATFORM}/lib
+	* 从project.py获取boost路径至${BOOST}
+	* 根据boost路径编译生成bjam至${BOOST}
+	* ${BOOST_STAGE_DIRECTORY} = ${LIB}/${BOOST}_${PLATFORM}
+	* 使用bjam编译库，并stage至${BOOST_STAGE_DIRECTORY} 中。
+	* ${BOOST_LIB_DIRECTORY} = ${BOOST_STAGE_DIRECTORY}/lib
 	
 LLVM的编译：
-	* LLVM源代码路径为 ${HOME}/3rd_party/src/llvm。我们称为${LLVM}
-	* LLVM的安装路径为 ${HOME}/3rd_party/llvm。我们称之为${LLVM_INSTALL}
-	* LLVM的编译目录为 ${BUILD}/llvm/${PLATFORM}_${COMPILER}。我们称为${LLVM_BUILD}
-	
-	* 使用CMake配置并生成Solution。设置LLVM_BOOST_STDINT为True，设置LLVM_BOOST_DIR为${BOOST}
-	* 编译LLVM。
-	* 拷贝 ${LLVM_BUILD}/include/llvm 下的 Config 和 Support 文件夹以及intrinsics.gen文件至 ${LLVM_INSTALL}/config/${PLATFORM}_{COMPILER}/llvm 文件夹下。
-	* 拷贝 ${LLVM}/include 至 ${HOME}/3rd_party/llvm下覆盖include文件夹。
-	* 拷贝 ${LLVM_BUILD}/lib/${CONFIG} 下所有库文件和符号文件至 ${LLVM_INSTALL}/lib/${PLATFORM}_{COMPILER}_${CONFIG}
-	* 拷贝 ${LLVM_BUILD}/bin/${CONFIG} 下所有可执行程序至 ${LLVM_INSTALL}/toolchains/${PLATFORM}_{COMPILER}_${CONFIG}
+	* ${LLVM_BUILD} = ${BUILD}/llvm_{PLATFORM}_${COMPILER}
+	* LLVM的编译目录为${LLVM_BUILD}
+	* ${LLVM_INSTALL} = ${LIB}/llvm_${PLATFORM}_${COMPILER}_${CONFIG}
+	* 使用CMake配置并生成Solution
+		LLVM_BOOST_STDINT	= TRUE
+		LLVM_BOOST_DIR		= ${BOOST}
+		CMAKE_INSTALL_PREFIX= ${LLVM_INSTALL}
+	* 编译LLVM
+	* 安装LLVM
 	
 SALVIA的编译：
-	* SALVIA的编译目录为 ${BUILD}/salvia/${PLATFORM}_${COMPILER}
-	* 使用CMake配置并生成Solution。设置SALVIA_BOOST_DIRECTORY为${BOOST}
+	* SALVIA的编译目录为 ${BUILD}/salvia_${PLATFORM}_${COMPILER}
+	* 使用CMake配置并生成Solution
+		SALVIA_BOOST_DIRECTORY	= ${BOOST}
+		SALVIA_BOOST_LIB_DIR	= ${BOOST_LIB_DIRECTORY}
+		SALVIA_LLVM_INSTALL_PATH= ${LLVM_INSTALL}
+		SALVIA_BUILD_WITH_LLVM	= TRUE
+		SALVIA_ENABLE_SASL_REGRESSION_TEST = TRUE
+		SALVIA_ENABLE_SASL_REGRESSION_TEST = TRUE
 	* 编译SALVIA
-	* 拷贝Boost dynamic libraries和LLVM dynamic libraries至bin目录（暂时不需要做）
+
+运行时拷贝：
+	* 拷贝3rd_party/FreeImage/bin/${PLATFORM}/FreeImage.dll至${BIN}/${PLATFORM}/${CONFIG}
+	* 拷贝boost dynamic libraries至${BIN}/${PLATFORM}/${CONFIG}
