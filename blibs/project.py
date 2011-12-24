@@ -1,22 +1,24 @@
-import systems
+
+from functools			import *
+from blibs.env			import *
+from blibs.boost_build	import *
 
 class project:
-	def __init__(self, boost_root, build_root, install_root, arch, toolset, config):
-		self.boost_ver_ = boost_version(boost_root)
+	def __init__(self, props):
+		self.boost_ver_ = boost_version(props.boost_root)
 		if self.boost_ver_:
-			self.boost_root_ = boost_root
+			self.boost_root_ = props.boost_root
 		else:
 			self.boost_root_ = None
-		self.build_root_ = build_root
-		self.install_root_ = install_root
-		self.arch_ = arch.from_machine(arch)
+		self.build_root_ = props.build_root
+		self.install_root_ = props.install_root
+		self.arch_ = arch.from_machine(props.arch)
 		self.os_ = systems.current()
-		self.config_ = config
+		self.config_ = props.config
 		
 		# Initialize toolset
 		env = os.environ
-		default_toolset = toolset
-		self.builder_ = None
+		default_toolset = props.toolset
 		
 		if default_toolset == None or default_toolset == "":
 			if "VS100COMNTOOLS" in env:
@@ -41,8 +43,34 @@ class project:
 			self.builder_root_ = os.path.join( env['VS80COMNTOOLS'], "../../" )
 		else:
 			print('ERROR: Unsupported toolset name: %s' % default_toolset)
+	
+	def print_props(self):
+		print( '='*25 + ' Checking Project Properties ' + '='*25 )
+		print( ' * Current Arch ............ %s' % str( self.current_arch() ) )
+		print( ' * Current OS .............. %s' % str( self.current_os() ) )
+		print( ' * Toolset ................. %s' % self.toolset().short_name() )
+		print( ' * Env Script(win32 only) .. %s' % os.path.normpath( self.env_setup_commands() ) )
+		print( ' * CMake Generator ......... %s' % self.generator() )
+		print('')
+		print( ' * Target .................. %s' % self.target_modifier(['platform', 'tool', 'config']) )
+		print( ' * Source .................. %s' % self.source_root() )
+		print( ' * Build ................... %s' % self.build_root() )
+		print( ' * Install ................. %s' % self.install_root() )
+		print( ' * Install Binaries ........ %s' % self.install_bin() )
+		print( ' * Install Libraries ....... %s' % self.install_lib() )
+		print('')
+		print( ' * Boost ................... %s' % self.boost_root() )
+		print( ' * Boost Version ........... %s' % self.boost_version() )
+		print( ' * Boost Stage ............. %s' % self.boost_stage() )
+		print( ' * LLVM .................... %s' % self.llvm_root() )
+		print( ' * LLVM Build .............. %s' % self.llvm_build() )
+		print( ' * LLVM Install ............ %s' % self.llvm_install() )
+		print('')
+		print( ' * SALVIA Build ............ %s' % self.salvia_build() )
+		print( ' * SALVIA Binaries ......... %s' % self.salvia_bin() )
+		print( "========== Project Properties ==========" )
+		pass
 		
-	# Platform
 	def arch(self):
 		return self.arch_
 	def os(self):
@@ -79,53 +107,46 @@ class project:
 	def config_name(self):
 		return self.config_
 	
+	def to_abs(self, path):
+		if os.path.isabs( path ): return path
+		else: return os.path.abspath( os.path.join( self.source_root(), path ) )
+	
+	def source_root(self):
+		return os.path.dirname( sys.argv[0] )
+	def build_root(self):
+		return self.to_abs( self.build_root_ )
 	def install_root(self):
-		return self.install_root_	
+		return self.to_abs( self.install_root_ )
+		
 	def install_bin(self):
-		return os.path.join( self.source_root(), build_conf.install_root, "bin" )
+		return os.path.join( self.install_root(), "bin" )
 	def install_lib(self):
-		return os.path.join( self.source_root(), build_conf.install_root, "lib" )
+		return os.path.join( self.install_root(), "lib" )
 		
 	# Boost builds.
 	def boost_root(self):
-		return self.boost_root_
+		return self.to_abs( self.boost_root_ )
 	def boost_version(self):
 		return self.boost_ver_
 	def boost_stage(self):
-		return os.path.join( self.install_lib(), 'boost_' % target_modifier(['platform']) )
+		return os.path.join( self.install_lib(), 'boost_%s' % self.target_modifier(['platform']) )
 	def boost_lib_dir(self):
 		return os.path.join( self.boost_stage(), "lib" )
 		
 	def llvm_fullname(self):
-		return "llvm_" + str( self.arch() ) + "_" + str( self.toolset().short_name() )
+		return 
 	def llvm_root(self):
 		return os.path.join( self.source_root(), "3rd_party", "llvm" )
 	def llvm_build(self):
-		return os.path.join( self.build_root(), self.llvm_fullname() )
+		return os.path.join( self.build_root(), "llvm_" + self.target_modifier(['platform', 'tool']) )
 	def llvm_install(self):
-		return os.path.join( self.install_lib(), self.llvm_fullname()+'_' )
+		return os.path.join( self.install_lib(), "llvm_" + self.target_modifier(['platform', 'tool', 'config']) )
 
-	def salvia_fullname(self):
-		return "salvia_" + self.target_modifier(['arch', 'tool'])
 	def salvia_build(self):
-		return os.path.join( self.build_root(), self.salvia_fullname() )
-	def salvia_lib(self):
-		pass
-	def salvia_bin(self, cfg):
-		return os.path.join( self.install_bin(), self.target_modifier(['arch']), cfg )
-	def salvia_install(self):
-		pass
+		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
+	def salvia_bin(self):
+		return os.path.join( self.install_bin(), "salvia_" + self.target_modifier(['platform', 'tool', 'config']) )
 		
-	def builder(self):
-		return self.builder_
-		
-	# Sources
-	def source_root(self):
-		return os.path.dirname( sys.argv[0] )
-	
-	# Builds
-	def build_root(self):
-		return self.build_root_
 	def generator(self):
 		if self.arch() == arch.x86:
 			if self.toolset().short_name() == 'msvc10':

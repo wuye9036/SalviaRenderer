@@ -6,9 +6,9 @@ class arch:
 
 	@staticmethod
 	def from_machine( machine ):
-		if machine == 'i386':
+		if machine == 'x86' or machine == 'i386':
 			return arch.x86
-		if machine == 'AMD64':
+		if machine == 'x64' or machine == 'AMD64':
 			return arch.x64
 		return arch.unknown
 	
@@ -47,15 +47,15 @@ class systems:
 		return systems.unknown
 
 	def __str__(self):
-		if self == win32:
-			return 'win32'
-		if self == linux:
+		if self == systems.win32:
+			return 'nt'
+		if self == systems.linux:
 			return 'linux'
 		return 'unknown'
 
-systems.unknown = arch(0)
-systems.win32 = arch(1)
-systems.linux = arch(2)
+systems.unknown = systems(0)
+systems.win32 = systems(1)
+systems.linux = systems(2)
 
 class toolset:
 	def __init__(self, ide_name, compiler_name, major_version, minor_version, patch_version):
@@ -75,7 +75,14 @@ class toolset:
 		if need_minor_ver: ret += str(self.minor_ver)
 		if need_patch_ver: ret += str(self.patch_ver)
 		return ret
-	
+
+	def boost_lib_name(self):
+		ret = "%s%d%d" % ( self.short_compiler_name(), self.major_ver, self.minor_ver )
+		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
+		if need_patch_ver:
+			ret += str(self.patch_ver)
+		return ret
+		
 	def short_compiler_name(self):
 		if self.compiler_name == "msvc":
 			return "vc"
@@ -83,10 +90,4 @@ class toolset:
 			return "mgw"
 		else:
 			return None
-	
-	def boost_lib_name(self):
-		ret = "%s%d%d" % ( self.short_compiler_name(), self.major_ver, self.minor_ver )
-		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
-		if need_patch_ver:
-			ret += str(self.patch_ver)
-		return ret
+		

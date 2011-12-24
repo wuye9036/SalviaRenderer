@@ -8,10 +8,10 @@ def copy_newer( src, dst ):
 		print('Error: src parameter of copy_newer is a file path.')
 		return
 	target = None
-	if ( os.path.isfile(dst) ):
-		target = dst
-	else:
+	if ( os.path.isdir(dst) ):
 		target = os.path.join( dst, os.path.basename(src) )
+	else:
+		target = dst
 	if os.path.exists(target):
 		if os.path.getmtime(target) < os.path.getmtime(src):
 			os.remove(target)

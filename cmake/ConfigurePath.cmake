@@ -12,11 +12,8 @@ set( SALVIA_3RD_PARTY_INCLUDES
     ${SALVIA_3RD_PARTY_PATH}/threadpool
     ${SALVIA_3RD_PARTY_PATH}/FreeImage/include
   )
-  if(SALVIA_PLATFORM_NAME STREQUAL "x64")
-    set(SALVIA_3RD_PARTY_LIBS ${SALVIA_3RD_PARTY_PATH}/FreeImage/lib/x64)
-  else(SALVIA_PLATFORM_NAME STREQUAL "x64")
-    set(SALVIA_3RD_PARTY_LIBS ${SALVIA_3RD_PARTY_PATH}/FreeImage/lib/win32)
-  endif()
+
+  set(SALVIA_3RD_PARTY_LIBS "${SALVIA_3RD_PARTY_PATH}/FreeImage/lib/${SALVIA_PLATFORM_NAME}")
 
 ################ Set WTL Path ################
 set( SALVIA_WTL_INCLUDE_PATH ${SALVIA_3RD_PARTY_PATH}/wtl/include )  

@@ -6,7 +6,7 @@
     <ProjectGuid>{fbc164a2-f7f5-4bc3-80e8-d872f99ae3fc}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>build_all.py</StartupFile>
-    <SearchPath>C:\code\salvia</SearchPath>
+    <SearchPath>E:\Programming\Project\Cpp\salvia</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <AssemblyName>BuildScripts</AssemblyName>
     <Name>BuildScripts</Name>
