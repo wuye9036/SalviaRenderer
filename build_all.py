@@ -106,12 +106,12 @@ def make_llvm( proj ):
 	cmd.execute()
 	pass
 
-def config_salvia( conf ):
+def config_salvia( proj ):
 	# Add definitions here
 	defs = {}
-	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", conf.boost_root())
-	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", os.path.join( conf.boost_stage(), "lib" ) )
-	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", conf.llvm_install())
+	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", proj.boost_root())
+	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", proj.boost_lib_dir() )
+	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", proj.prebuilt_llvm() )
 	defs["SALVIA_BUILD_WITH_LLVM"] = ("BOOL", "TRUE")
 	defs["SALVIA_ENABLE_SASL_REGRESSION_TEST"] = ("BOOL", "TRUE")
 	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "TRUE")
@@ -120,59 +120,47 @@ def config_salvia( conf ):
 	
 	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
 	print("Configuring Salvia ...")
-	salvia_cmd = 'cmake -G "%s" %s %s ' % (conf.generator(), defs_cmd, conf.source_root() )
+	salvia_cmd = 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.source_root() )
 	print( "-- Executing: %s" % salvia_cmd )
 	
-	if not os.path.exists( conf.salvia_build() ):
-		os.makedirs( conf.salvia_build() )
+	if not os.path.exists( proj.salvia_build() ):
+		os.makedirs( proj.salvia_build() )
 	
-	os.chdir( conf.salvia_build() )
+	os.chdir( proj.salvia_build() )
 	os.system( salvia_cmd )
-	os.chdir( conf.source_root() )
+	os.chdir( proj.source_root() )
 	pass
 	
-def make_salvia( conf, build_cfgs):
-	#Write command to build.bat
-	cmd = batch_command( conf.salvia_build() )
-	
-	#cmd.add_command( '@echo off' )
-	cmd.add_command( '@call "%s"' % conf.env_setup_commands() )
-	for cfg in build_cfgs:
-		cmd.add_command( '@echo Building SALVIA %s ...' % cfg )
-		cmd.add_command( '@devenv.exe salvia.sln /build %s' % cfg )
+def make_salvia( proj ):
+	cmd = batch_command( proj.salvia_build() )
+	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
+	cmd.add_command( '@echo Building SALVIA %s ...' % proj.config_name() )
+	cmd.add_command( '@devenv.exe salvia.sln /build %s' % proj.config_name() )
 	cmd.execute()
-	pass
 
-def install_prebuild_binaries( conf, build_cfgs ):
+def install_prebuild_binaries( proj ):
 	print( "Installing dependencies ..." )
 	# Copy FreeImage
-	fi_bin_root = os.path.join( conf.source_root(), "3rd_party", "FreeImage", "bin" )
+	fi_bin_root = os.path.join( proj.source_root(), "3rd_party", "FreeImage", "bin" )
 	fi_dll = None
-	if conf.os() == systems.win32:
-		if conf.arch() == arch.x86:
-			fi_bin_dir = os.path.join( fi_bin_root, "win32" )
-		elif conf.arch() == arch.x64:
-			fi_bin_dir = os.path.join( fi_bin_root, "x64" )
-		fi_dll = os.path.join( fi_bin_dir, 'FreeImage.dll')
-	if fi_dll:
-		for cfg in build_cfgs:
-			copy_newer( fi_dll, conf.salvia_bin(cfg) )
+	fi_bin_dir = os.path.join( fi_bin_root, proj.target_modifier(['platform']) )
+	fi_dll = os.path.join( fi_bin_dir, 'FreeImage.dll')
+	copy_newer( fi_dll, proj.salvia_bin() )
 		
 	# Copy boost
-	files = os.listdir( conf.boost_lib_dir() )
+	files = os.listdir( proj.boost_lib_dir() )
 	need_copy = []
-	for cfg in build_cfgs:
-		if conf.os() == systems.win32:
-			for f in files:
-				f_basename = os.path.basename(f)
-				name, ext = os.path.splitext(f)
-				if( ext != ".dll" ): continue
-				if ( '-gd' in name ) != (cfg == "Debug"): continue
-				if ( not conf.toolset().boost_lib_name() in name ): continue
-				need_copy.append( os.path.join( conf.boost_lib_dir(), f_basename ) )
+	if proj.os() == systems.win32:
+		for f in files:
+			f_basename = os.path.basename(f)
+			name, ext = os.path.splitext(f)
+			if( ext != ".dll" ): continue
+			if ( '-gd' in name ) != (proj.config_name() == "Debug"): continue
+			if ( not proj.toolset().boost_lib_name() in name ): continue
+			need_copy.append( os.path.join( proj.boost_lib_dir(), f_basename ) )
 	
-		for f in need_copy:
-			copy_newer( f, conf.salvia_bin(cfg) )
+	for f in need_copy:
+		copy_newer( f, proj.salvia_bin() )
 		
 def clean_all():
 	pass
@@ -215,8 +203,8 @@ if __name__ == "__main__":
 
 	config_llvm( proj )
 	# make_llvm( conf, ['Debug'] )
-	# config_salvia( conf )
-	# make_salvia( conf, ['Debug'] )
+	config_salvia( proj )
+	make_salvia( proj )
 
 	# install_prebuild_binaries( conf, ['Debug'] )
 	

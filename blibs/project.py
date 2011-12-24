@@ -133,8 +133,11 @@ class project:
 	def boost_lib_dir(self):
 		return os.path.join( self.boost_stage(), "lib" )
 		
-	def llvm_fullname(self):
-		return 
+	def prebuilt_llvm(self):
+		if self.os() != systems.win32:
+			return llvm_install
+		else:
+			return os.path.join( self.install_lib(), "llvm_" + self.target_modifier(['platform', 'tool']) + '${ConfigurationName}' )
 	def llvm_root(self):
 		return os.path.join( self.source_root(), "3rd_party", "llvm" )
 	def llvm_build(self):
