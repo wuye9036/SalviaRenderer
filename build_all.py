@@ -79,20 +79,14 @@ def config_llvm( proj ):
 	defs["LLVM_BOOST_DIR"] = ("PATH", proj.boost_root())
 	defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
 	defs["CMAKE_INSTALL_PREFIX"] = ("PATH", proj.llvm_install())
-	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
+	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ '-D %s:%s="%s"' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
-	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
 	print("Configuring LLVM ...")
-	llvm_cmd = 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.llvm_root() )
-	print( "-- Executing: %s" % llvm_cmd )
-	
 	if not os.path.exists( proj.llvm_build() ):
 		os.makedirs( proj.llvm_build() )
-	
-	old_dir = os.curdir
-	os.chdir( proj.llvm_build() )
-	os.system( llvm_cmd )
-	os.chdir( old_dir )
+	llvm_cmd = batch_command( proj.llvm_build() )
+	llvm_cmd.add_command( 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.llvm_root() ) )
+	llvm_cmd.execute()
 	pass
 	
 def make_llvm( proj ):
@@ -100,7 +94,7 @@ def make_llvm( proj ):
 	cmd = batch_command( proj.llvm_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building LLVM %s ...' % proj.config_name() )
-	cmd.add_command( '@devenv.exe LLVM.sln /build %s' % proj.config_name() )
+	cmd.add_command( '@devenv.exe LLVM.sln /build %s /project ALL_BUILD' % proj.config_name() )
 	cmd.add_command( '@echo Installing LLVM %s ...' % proj.config_name() )
 	cmd.add_command( '@devenv.exe LLVM.sln /build %s /project Install' % proj.config_name() )
 	cmd.execute()
@@ -116,26 +110,21 @@ def config_salvia( proj ):
 	defs["SALVIA_ENABLE_SASL_REGRESSION_TEST"] = ("BOOL", "TRUE")
 	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "TRUE")
 	
-	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ "-D %s:%s=%s " % (k, v[0], v[1]) for (k, v) in defs.items() ] )
-	
-	print("WARNING: All directories referred by SALVIA *MUST NOT INCLUDE* space.")
-	print("Configuring Salvia ...")
-	salvia_cmd = 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.source_root() )
-	print( "-- Executing: %s" % salvia_cmd )
+	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ '-D %s:%s="%s" ' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
 	if not os.path.exists( proj.salvia_build() ):
 		os.makedirs( proj.salvia_build() )
-	
-	os.chdir( proj.salvia_build() )
-	os.system( salvia_cmd )
-	os.chdir( proj.source_root() )
-	pass
+
+	print("Configuring Salvia ...")
+	salvia_cmd = batch_command( proj.salvia_build() )
+	salvia_cmd.add_command( 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.source_root()) )
+	salvia_cmd.execute()
 	
 def make_salvia( proj ):
 	cmd = batch_command( proj.salvia_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building SALVIA %s ...' % proj.config_name() )
-	cmd.add_command( '@devenv.exe salvia.sln /build %s' % proj.config_name() )
+	cmd.add_command( '@devenv.exe salvia.sln /build %s /project ALL_BUILD' % proj.config_name() )
 	cmd.execute()
 
 def install_prebuild_binaries( proj ):
@@ -206,7 +195,7 @@ if __name__ == "__main__":
 	config_salvia( proj )
 	make_salvia( proj )
 
-	# install_prebuild_binaries( conf, ['Debug'] )
+	install_prebuild_binaries( proj )
 	
 	# print( 'Build done.')
 	os.system("pause")

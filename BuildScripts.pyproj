@@ -24,6 +24,15 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="blibs\boost_build.py" />
+    <Compile Include="blibs\copy.py" />
+    <Compile Include="blibs\env.py" />
+    <Compile Include="blibs\project.py" />
+    <Compile Include="blibs\util.py" />
+    <Compile Include="blibs\__init__.py" />
     <Compile Include="build_all.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="blibs" />
   </ItemGroup>
 </Project>

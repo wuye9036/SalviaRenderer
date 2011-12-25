@@ -136,8 +136,8 @@ class project:
 	def prebuilt_llvm(self):
 		if self.os() != systems.win32:
 			return llvm_install
-		else:
-			return os.path.join( self.install_lib(), "llvm_" + self.target_modifier(['platform', 'tool']) + '${ConfigurationName}' )
+		elif self.toolset().compiler_name == 'msvc':
+			return os.path.join( self.install_lib(), "llvm_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
 	def llvm_root(self):
 		return os.path.join( self.source_root(), "3rd_party", "llvm" )
 	def llvm_build(self):
@@ -148,7 +148,7 @@ class project:
 	def salvia_build(self):
 		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
 	def salvia_bin(self):
-		return os.path.join( self.install_bin(), "salvia_" + self.target_modifier(['platform', 'tool', 'config']) )
+		return os.path.join( self.install_bin(), self.target_modifier(['platform']), self.target_modifier(['config']) )
 		
 	def generator(self):
 		if self.arch() == arch.x86:
