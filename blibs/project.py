@@ -51,6 +51,7 @@ class project:
 		print( ' * Toolset ................. %s' % self.toolset().short_name() )
 		print( ' * Env Script(win32 only) .. %s' % os.path.normpath( self.env_setup_commands() ) )
 		print( ' * CMake Generator ......... %s' % self.generator() )
+		print( ' * Make tool ............... %s' % self.maker_name() )
 		print('')
 		print( ' * Target .................. %s' % self.target_modifier(['platform', 'tool', 'config']) )
 		print( ' * Source .................. %s' % self.source_root() )
@@ -95,15 +96,26 @@ class project:
 		return reduce( lambda ret,s: ret+"_"+s, [hint_dict[hnt] for hnt in hints] )
 		
 	def env_setup_commands(self):
-		base_dir = os.path.join( self.builder_root_, "vc/bin" )
-		if self.os() == systems.win32:
-			if self.current_arch() == arch.x86:
+		if self.os() == systems.win32 and self.toolset().compiler_name == 'msvc':
+			base_dir = os.path.join( self.builder_root_, "vc", "bin" )
+			if self.current_arch() == arch.x86 or self.vc_express():
 				return os.path.join( base_dir, "vcvars32.bat" )
 			if self.current_arch() == arch.x64:
 				return os.path.join( base_dir, "x86_amd64", "vcvarsx86_amd64.bat" )
 		else:
 			print("Unrecognized OS.")
 	
+	def vc_express(self):
+		return self.maker_name() == "VCExpress.exe"
+		
+	def maker_name(self):
+		if self.toolset().compiler_name == 'msvc':
+			if os.path.exists( os.path.join( self.builder_root_, 'Common7', 'IDE', 'VCExpress.exe' ) ):
+				return 'VCExpress.exe'
+			return 'devenv.exe'
+		else:
+			return 'make'
+			
 	def config_name(self):
 		return self.config_
 	

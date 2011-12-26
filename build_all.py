@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+﻿#!/usr/bin/env python
 #-*- coding:utf-8 -#-
 
 import os, sys, re, atexit
@@ -79,7 +78,7 @@ def config_llvm( proj ):
 	defs["LLVM_BOOST_DIR"] = ("PATH", proj.boost_root())
 	defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
 	defs["CMAKE_INSTALL_PREFIX"] = ("PATH", proj.llvm_install())
-	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ '-D %s:%s="%s"' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
+	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ ' -D %s:%s="%s"' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
 	print("Configuring LLVM ...")
 	if not os.path.exists( proj.llvm_build() ):
@@ -94,9 +93,9 @@ def make_llvm( proj ):
 	cmd = batch_command( proj.llvm_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building LLVM %s ...' % proj.config_name() )
-	cmd.add_command( '@devenv.exe LLVM.sln /build %s /project ALL_BUILD' % proj.config_name() )
+	cmd.add_command( '@%s LLVM.sln /build %s /project ALL_BUILD' % (proj.maker_name(), proj.config_name()) )
 	cmd.add_command( '@echo Installing LLVM %s ...' % proj.config_name() )
-	cmd.add_command( '@devenv.exe LLVM.sln /build %s /project Install' % proj.config_name() )
+	cmd.add_command( '@%s LLVM.sln /build %s /project Install' % (proj.maker_name(), proj.config_name()) )
 	cmd.execute()
 	pass
 
@@ -124,7 +123,7 @@ def make_salvia( proj ):
 	cmd = batch_command( proj.salvia_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building SALVIA %s ...' % proj.config_name() )
-	cmd.add_command( '@devenv.exe salvia.sln /build %s /project ALL_BUILD' % proj.config_name() )
+	cmd.add_command( '@%s salvia.sln /build %s /project ALL_BUILD' % (proj.maker_name(), proj.config_name()) )
 	cmd.execute()
 
 def install_prebuild_binaries( proj ):
@@ -191,7 +190,7 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 	config_llvm( proj )
-	# make_llvm( conf, ['Debug'] )
+	make_llvm( proj )
 	config_salvia( proj )
 	make_salvia( proj )
 
