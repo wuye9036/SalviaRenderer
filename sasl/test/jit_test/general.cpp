@@ -632,7 +632,7 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/swizzle_and_wm.sps" );
@@ -653,7 +653,7 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 	}
 
 	fn( src, (void*)NULL, dest, (void*)NULL );
-	
+
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		BOOST_CHECK_CLOSE( dest_ref[i].x, dest[i].x, 0.00001f );
 		BOOST_CHECK_CLOSE( dest_ref[i].y, dest[i].y, 0.00001f );

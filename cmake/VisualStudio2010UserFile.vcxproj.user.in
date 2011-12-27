@@ -1,21 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|@SALVIA_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|@SALVIA_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|@SALVIA_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|@SALVIA_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|@SALVIA_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|@SALVIA_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|@SALVIA_PLATFORM_NAME@'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|@SALVIA_VS_PLATFORM_NAME@'">
     <LocalDebuggerCommand>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)/$(TargetFileName)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(Configuration)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

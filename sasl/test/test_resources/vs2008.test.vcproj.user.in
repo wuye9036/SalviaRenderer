@@ -6,7 +6,7 @@
 	>
 	<Configurations>
 		<Configuration
-			Name="Debug|@SALVIA_PLATFORM_NAME@"
+			Name="Debug|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
@@ -34,7 +34,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|@SALVIA_PLATFORM_NAME@"
+			Name="Release|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
@@ -62,7 +62,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="RelWithDebInfo|@SALVIA_PLATFORM_NAME@"
+			Name="RelWithDebInfo|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
@@ -90,7 +90,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="MinSizeRel|@SALVIA_PLATFORM_NAME@"
+			Name="MinSizeRel|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
 				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
