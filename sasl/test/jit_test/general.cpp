@@ -60,6 +60,7 @@ using boost::mpl::if_;
 using boost::mpl::or_;
 using boost::mpl::push_front;
 using boost::mpl::sizeof_;
+using boost::mpl::transform;
 
 using boost::is_arithmetic;
 using boost::is_pointer;
@@ -81,14 +82,12 @@ class jit_function_forward_base{
 protected:
 	typedef typename result_type<Fn>::type result_t;
 	typedef result_t* result_type_pointer;
-	typedef if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> >
-		parameter_type_convertor;
-	typedef typename parameter_types<Fn, parameter_type_convertor>::type
-		param_types;
+	typedef typename parameter_types<Fn>::type param_types;
+	typedef typename boost::mpl::transform< param_types, if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > >::type param_refs;
 	typedef typename if_<
-		is_same<result_t, void>,
-		param_types,
-		typename push_front<param_types, result_type_pointer>::type
+	is_same<result_t, void>,
+	param_refs,
+		typename push_front<param_refs, result_type_pointer>::type
 	>::type	callee_parameters;
 	typedef typename push_front<callee_parameters, void>::type
 		callee_return_parameters;
@@ -245,7 +244,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #if ALL_TESTS_ENABLED
 
@@ -287,7 +286,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -342,7 +341,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		vec4 f = test_mul_m44v4(&mat, &rhs);
 		vec4 refv;
-		transform( refv, mat, rhs );
+		eflib::transform( refv, mat, rhs );
 
 		BOOST_CHECK_CLOSE( f.x, refv.x, 0.00001f );
 		BOOST_CHECK_CLOSE( f.y, refv.y, 0.00001f );
