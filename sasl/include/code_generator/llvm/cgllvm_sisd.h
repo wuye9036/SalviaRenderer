@@ -40,8 +40,8 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class cgllvm_sctxt_data;
-class cgllvm_sctxt_env;
+struct cgllvm_sctxt_data;
+struct cgllvm_sctxt_env;
 
 // Code generation for SISD( Single Instruction Single Data )
 class cgllvm_sisd: public cgllvm_impl, public cgs_sisd{

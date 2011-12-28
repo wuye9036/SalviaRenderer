@@ -4,8 +4,11 @@
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Module.h>
 #include <eflib/include/platform/enable_warnings.h>
+
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+
+#include <eflib/include/platform/cpuinfo.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string.hpp>
@@ -18,6 +21,7 @@
 
 using std::vector;
 using std::string;
+using namespace eflib;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -57,6 +61,9 @@ void cgllvm_jit_engine::build(){
 	}
 	
 	vector<string> attrs;
+	if( cpu_features( cpu_sse2 ) ){
+		attrs.push_back("+sse2");
+	}
 	attrs.push_back("+vector-unaligned-mem");
 
 	engine.reset(

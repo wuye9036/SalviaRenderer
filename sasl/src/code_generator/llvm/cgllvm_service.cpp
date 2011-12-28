@@ -18,6 +18,8 @@
 #include <llvm/LLVMContext.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/CFG.h>
+#include <llvm/Support/TypeBuilder.h>
+#include <llvm/Intrinsics.h>
 #include <llvm/Constants.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -30,7 +32,12 @@ using llvm::LLVMContext;
 using llvm::DefaultIRBuilder;
 using llvm::Value;
 using llvm::Type;
+using llvm::VectorType;
+using llvm::TypeBuilder;
 using llvm::BasicBlock;
+
+namespace Intrinsic = llvm::Intrinsic;
+
 using boost::shared_ptr;
 
 using namespace sasl::syntax_tree;
@@ -49,7 +56,7 @@ using sasl::utility::vector_count;
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::SIMD_ELEMENT_COUNT;
 
-using eflib::ceil_to_pow2;
+using namespace eflib;
 
 // Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
 #define EMIT_OP_SS_VV_BODY( op_name )	\
@@ -292,6 +299,17 @@ void			value_t::parent( value_t const& v ){ parent_.reset( new value_t(v) ); }
 void			value_t::parent( value_t const* v ){ if(v){ parent(*v); } }
 value_t*		value_t::parent() const { return parent_.get(); }
 /// @}
+
+Function* cg_service::intrin_( int v )
+{
+	return intrins.get( llvm::Intrinsic::ID(v), module() );
+}
+
+template <typename FunctionT>
+Function* cg_service::intrin_( int id )
+{
+	return intrins.get(id, module(), TypeBuilder<FunctionT, false>::get( context() ) );
+}
 
 bool cg_service::initialize( llvm_module_impl* mod, node_ctxt_fn const& fn )
 {
@@ -1237,4 +1255,160 @@ value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 
 	return ret_value;
 }
+
+Value* cg_service::shrink_( Value* vec, size_t vsize ){
+	return extract_elements_( vec, 0, vsize );
+}
+
+Value* cg_service::extract_elements_( Value* src, size_t start_pos, size_t length ){
+	VectorType* vty = cast<VectorType>(src->getType());
+	uint32_t elem_count = vty->getNumElements();
+	if( start_pos == 0 && length == elem_count ){
+		return src;
+	}
+
+	vector<int> indexes;
+	indexes.resize( length, 0 );
+	for ( size_t i_elem = 0; i_elem < length; ++i_elem ){
+		indexes[i_elem] = i_elem + start_pos;
+	}
+	Value* mask = vector_( &indexes[0], indexes.size() );
+	return builder().CreateShuffleVector( src, UndefValue::get( src->getType() ), mask );
+}
+
+Value* cg_service::insert_elements_( Value* dst, Value* src, size_t start_pos ){
+	if( src->getType() == dst->getType() ){
+		return src;
+	}
+
+	VectorType* src_ty = cast<VectorType>(src->getType());
+	VectorType* dst_ty = cast<VectorType>(dst->getType());
+	uint32_t src_count = src_ty->getNumElements();
+	uint32_t dst_count = dst_ty->getNumElements();
+
+	// Expand source to dest size
+	Value* ret = dst;
+	for( size_t i_elem = 0; i_elem < src_count; ++i_elem ){
+		Value* src_elem = builder().CreateExtractElement( src, int_<int>(i_elem) );
+		ret = builder().CreateInsertElement( ret, src_elem, int_<int>(i_elem+start_pos) );
+	}
+	
+	return ret;
+}
+
+Value* cg_service::sqrt_vf_( Value* v ){
+	VectorType* vty = cast<VectorType>(v->getType());
+	uint32_t elem_count = vty->getNumElements();
+	assert( elem_count % SIMD_ELEMENT_COUNT() == 0 );
+	int batch_count = elem_count / SIMD_ELEMENT_COUNT();
+
+	if ( !prefer_scalar_code() ){
+		if( support_feature( cpu_sse2 ) ){
+			Value* out_v = UndefValue::get( v->getType() );
+			for( int i_batch = 0; i_batch < batch_count; ++i_batch ){
+				Value* source = extract_elements_( v, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
+				Value* dest = builder().CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ps ), source );
+				out_v = insert_elements_( out_v, dest, i_batch*SIMD_ELEMENT_COUNT()  );
+				return out_v;
+			}
+		}
+	}
+	
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
+
+// llvm::Value* sqrt_sf( llvm::Value* v )
+
+value_t cg_service::emit_sqrt( value_t const& arg_value )
+{
+	builtin_types hint = arg_value.hint();
+	builtin_types scalar_hint = scalar_of( arg_value.hint() );
+	abis arg_abi = arg_value.abi();
+
+	if ( scalar_hint == builtin_types::_double ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	assert( is_real(hint) );
+
+	if( arg_abi == abi_vectorize || arg_abi == abi_package ){
+		if ( is_scalar(hint) || is_vector(hint) ){
+			Value* ret_v = sqrt_vf_( arg_value.load() );
+			return create_value( arg_value.tyinfo(), arg_value.hint(), ret_v, vkind_value, arg_value.abi() );
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	if( arg_abi == abi_c || arg_abi == abi_llvm ) {
+		if( is_scalar(hint) )
+		{
+			if( prefer_externals() ) {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+				//	function_t fn = external_proto( &externals::sqrt_f );
+				//	vector<value_t> args;
+				//	args.push_back(lhs);
+				//	return emit_call( fn, args );
+			} else if( support_feature( cpu_sse2 ) && !prefer_scalar_code() ){
+				// Expand scalar to 4-elements vector.
+				value_t v4 = undef_value( vector_of(scalar_hint, 4), abi_llvm );
+				v4 = emit_insert_val( v4, 0, arg_value );
+				Value* v = builder().CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ss ), v4.load() );
+				Value* ret = builder().CreateExtractElement( v, int_(0) );
+
+				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
+			} else {
+				// Emit LLVM intrinsics
+				Value* v = builder().CreateCall( intrin_<float(float)>(Intrinsic::sqrt), arg_value.load() );
+				return create_value( arg_value.tyinfo(), arg_value.hint(), v, vkind_value, abi_llvm );
+			}
+		}
+		else if( is_vector(hint) )
+		{
+			size_t vsize = vector_size(hint);
+
+			if( prefer_externals() ){
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} else if( support_feature(cpu_sse2) && !prefer_scalar_code() ){
+				// TODO emit SSE2 instrinsic directly.
+
+				// expanded to vector 4
+				value_t v4;
+				if( vsize == 4 ){	
+					v4 = create_value( arg_value.tyinfo(), hint, arg_value.load(abi_llvm), vkind_value, abi_llvm );
+				} else {
+					v4 = null_value( vector_of( scalar_hint, 4 ), abi_llvm );
+					for ( size_t i = 0; i < vsize; ++i ){
+						v4 = emit_insert_val( v4, i, emit_extract_elem(arg_value, i) );
+					}
+				}
+				Value* v = sqrt_vf_( v4.load() );
+				v = shrink_( v, vsize );
+				return create_value( NULL, hint, v, vkind_value, abi_llvm );
+			} else {
+				value_t ret = null_value( hint, arg_value.abi() );
+				for( size_t i = 0; i < vsize; ++i ){
+					value_t elem = emit_extract_elem( arg_value, i );
+					ret = emit_insert_val( ret, i, emit_sqrt( arg_value ) );
+				}
+				return ret;
+			}
+		} 
+		else 
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	return value_t();
+}
+
+value_t cg_service::undef_value( builtin_types bt, abis abi )
+{
+	assert( bt != builtin_types::none );
+	Type* valty = type_( bt, abi );
+	value_t val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
+	return val;
+}
+
 END_NS_SASL_CODE_GENERATOR();

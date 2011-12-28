@@ -107,7 +107,7 @@ int const PACKAGE_LINE_ELEMENT_COUNT	= 4;
 
 inline int SIMD_ELEMENT_COUNT()
 {
-	return eflib::support_feature( eflib::cpu_avx ) ? 8 : 4;
+	return 4;
 }
 
 inline int SIMD_VECTOR_BYTES(){

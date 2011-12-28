@@ -226,12 +226,6 @@ value_t cgs_simd::emit_dot( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
-value_t cgs_simd::emit_sqrt( value_t const& lhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
 value_t cgs_simd::emit_cross( value_t const& lhs, value_t const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();

@@ -84,7 +84,6 @@ public:
 	/// @name Intrinsics
 	/// @{
 	value_t emit_dot( value_t const& lhs, value_t const& rhs );
-	value_t emit_sqrt( value_t const& lhs );
 	value_t emit_cross( value_t const& lhs, value_t const& rhs );
 	/// @}
 
@@ -156,9 +155,6 @@ public:
 	llvm::Value* select_( llvm::Value* cond, llvm::Value* yes, llvm::Value* no );
 	template <typename T>
 	llvm::Value* c_vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
-	llvm::Function* intrin_( int );
-	template <typename FunctionT>
-	llvm::Function* intrin_( int );
 	/// @}
 
 	/// @name State

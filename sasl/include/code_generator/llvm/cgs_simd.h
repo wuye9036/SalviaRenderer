@@ -22,7 +22,6 @@ protected:
 	value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_dot( value_t const& lhs, value_t const& rhs );
-	value_t emit_sqrt( value_t const& lhs );
 	value_t emit_cross( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
@@ -39,6 +38,8 @@ protected:
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	abis param_abi( bool c_compatible ) const;
+	bool prefer_externals() const{ return false; }
+	bool prefer_scalar_code() const{ return false; }
 };
 
 END_NS_SASL_CODE_GENERATOR();

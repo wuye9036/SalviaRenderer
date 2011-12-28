@@ -20,6 +20,7 @@
 #include <vector>
 
 namespace llvm{
+	class Constant;
 	class LLVMContext;
 	class Module;
 	class Type;
@@ -326,7 +327,7 @@ public:
 	/// @name Intrinsics
 	/// @{
 	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_sqrt( value_t const& lhs ) = 0;
+	virtual value_t emit_sqrt( value_t const& lhs );
 	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs ) = 0;
 	/// @}
 
@@ -433,7 +434,7 @@ public:
 		return llvm::ConstantInt::get( context(), apint(v) );
 	}
 	template <typename T>
-	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
+	llvm::Constant* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
 	{
 		assert( vals && length > 0 );
 
@@ -442,11 +443,11 @@ public:
 			elems[i] = int_(vals[i]);
 		}
 
-		return llvm::cast<llvm::ConstantVector>( llvm::ConstantVector::get( elems ) );
+		return llvm::cast<llvm::Constant>( llvm::ConstantVector::get( elems ) );
 	}
 
 	template <typename U, typename T>
-	llvm::ConstantVector* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
+	llvm::Constant* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
 	{
 		assert( vals && length > 0 );
 
@@ -455,7 +456,7 @@ public:
 			elems[i] = int_( U(vals[i]) );
 		}
 
-		return llvm::cast<llvm::ConstantVector>( llvm::ConstantVector::get( elems ) );
+		return llvm::cast<llvm::Constant>( llvm::ConstantVector::get( elems ) );
 	}
 
 	llvm::Value* load_as( value_t const& v, abis abi );
@@ -464,6 +465,9 @@ public:
 	llvm::Module*			module () const;
 	llvm::LLVMContext&		context() const;
 	llvm::DefaultIRBuilder& builder() const;
+
+	virtual bool			prefer_externals() const	= 0;
+	virtual bool			prefer_scalar_code() const	= 0;
 
 	virtual abis			param_abi( bool is_c_compatible ) const = 0;
 			abis			promote_abi( abis abi0, abis abi1 );
@@ -475,6 +479,8 @@ protected:
 	llvm_intrin_cache		intrins;
 	llvm_module_impl*		mod_impl;
 
+	value_t undef_value( builtin_types bt, abis abi );
+
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
@@ -484,6 +490,15 @@ protected:
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
+
+	llvm::Value* sqrt_vf_( llvm::Value* v );
+	llvm::Function* intrin_( int );
+	template <typename FunctionT>
+	llvm::Function* intrin_( int );
+	llvm::Value* shrink_( llvm::Value* vec, size_t vsize );
+	llvm::Value* extract_elements_( llvm::Value* src, size_t start_pos, size_t length );
+	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
+
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_llvm_as_vec		( value_t const& v );

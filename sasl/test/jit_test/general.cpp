@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #if ALL_TESTS_ENABLED
 

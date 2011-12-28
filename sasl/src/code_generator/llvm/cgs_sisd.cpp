@@ -153,12 +153,6 @@ namespace {
 	}
 }
 
-template <typename FunctionT>
-Function* cgs_sisd::intrin_( int id )
-{
-	return intrins.get(id, module(), TypeBuilder<FunctionT, false>::get( context() ) );
-}
-
 void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 	Value* src = rhs.load( lhs.abi() );
 	Value* address = NULL;
@@ -327,84 +321,6 @@ value_t cgs_sisd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 	EMIT_CMP_BODY( GT );
 }
 
-value_t cgs_sisd::emit_sqrt( value_t const& arg_value )
-{
-	builtin_types hint = arg_value.hint();
-	builtin_types scalar_hint = scalar_of( arg_value.hint() );
-	if( is_scalar(hint) ){
-		if( hint == builtin_types::_float ){
-			if( prefer_externals() ) {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-				//	function_t fn = external_proto( &externals::sqrt_f );
-				//	vector<value_t> args;
-				//	args.push_back(lhs);
-				//	return emit_call( fn, args );
-			} else if( support_feature( cpu_sse2 ) && !prefer_scalar_code() ){
-				// Extension to 4-elements vector.
-				value_t v4 = undef_value( vector_of(scalar_hint, 4), abi_llvm );
-				v4 = emit_insert_val( v4, 0, arg_value );
-				Value* v = builder().CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ss ), v4.load() );
-				Value* ret = builder().CreateExtractElement( v, int_(0) );
-
-				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
-			} else {
-				// Emit LLVM intrinsics
-				Value* v = builder().CreateCall( intrin_<float(float)>(Intrinsic::sqrt), arg_value.load() );
-				return create_value( arg_value.tyinfo(), arg_value.hint(), v, vkind_value, abi_llvm );
-			}
-		} else if( hint == builtin_types::_double ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		} 
-	} else if( is_vector(hint) ) {
-
-		size_t vsize = vector_size(hint);
-
-		if( scalar_hint == builtin_types::_float ){
-			if( prefer_externals() ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			} else if( support_feature(cpu_sse2) && !prefer_scalar_code() ){
-				// TODO emit SSE2 instrinsic directly.
-
-				// expanded to vector 4
-				value_t v4;
-				if( vsize == 4 ){	
-					v4 = create_value( arg_value.tyinfo(), hint, arg_value.load(abi_llvm), vkind_value, abi_llvm );
-				} else {
-					v4 = null_value( vector_of( scalar_hint, 4 ), abi_llvm );
-					for ( size_t i = 0; i < vsize; ++i ){
-						v4 = emit_insert_val( v4, i, emit_extract_elem(arg_value, i) );
-					}
-				}
-
-				// calculate
-				Value* v = builder().CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ps ), v4.load() );
-
-				if( vsize < 4 ){
-					// Shrink
-					static int indexes[4] = {0, 1, 2, 3};
-					Value* mask = vector_( &indexes[0], vsize );
-					v = builder().CreateShuffleVector( v, UndefValue::get( v->getType() ), mask );
-				}
-
-				return create_value( NULL, hint, v, vkind_value, abi_llvm );
-			} else {
-				value_t ret = null_value( hint, arg_value.abi() );
-				for( size_t i = 0; i < vsize; ++i ){
-					value_t elem = emit_extract_elem( arg_value, i );
-					ret = emit_insert_val( ret, i, emit_sqrt( arg_value ) );
-				}
-				return ret;
-			}
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return value_t();
-}
-
 bool cgs_sisd::prefer_externals() const
 {
 	return false;
@@ -415,19 +331,6 @@ bool cgs_sisd::prefer_scalar_code() const
 	return false;
 }
 
-Function* cgs_sisd::intrin_( int v )
-{
-	return intrins.get( llvm::Intrinsic::ID(v), module() );
-}
-
-value_t cgs_sisd::undef_value( builtin_types bt, abis abi )
-{
-	assert( bt != builtin_types::none );
-	Type* valty = type_( bt, abi );
-	value_t val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
-	return val;
-}
-
 value_t cgs_sisd::emit_cross( value_t const& lhs, value_t const& rhs )
 {
 	assert( lhs.hint() == vector_of( builtin_types::_float, 3 ) );
@@ -436,8 +339,8 @@ value_t cgs_sisd::emit_cross( value_t const& lhs, value_t const& rhs )
 	int swz_a[] = {1, 2, 0};
 	int swz_b[] = {2, 0, 1};
 
-	ConstantVector* swz_va = vector_( swz_a, 3 );
-	ConstantVector* swz_vb = vector_( swz_b, 3 );
+	Constant* swz_va = vector_( swz_a, 3 );
+	Constant* swz_vb = vector_( swz_b, 3 );
 
 	Value* lvec_value = lhs.load(abi_llvm);
 	Value* rvec_value = rhs.load(abi_llvm);
@@ -564,7 +467,7 @@ value_t function_t::arg( size_t index ) const
 		++it;
 	}
 
-	abis arg_abi = c_compatible ? abi_c: abi_llvm;
+	abis arg_abi = cg->param_abi( c_compatible );
 	return cg->create_value( par_typtr, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
 }
 
