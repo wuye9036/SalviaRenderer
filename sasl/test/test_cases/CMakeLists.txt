@@ -35,9 +35,8 @@ endif()
 
 ADD_CUSTOM_COMMAND(
 		OUTPUT	auto_repo.deps
-		COMMAND "python.exe"
+		COMMAND "${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py"
 		ARGS
-			"${SASL_HOME_DIR}/sasl/test/auto_test/src/copy_tests.py" 
 			"${SASL_HOME_DIR}/sasl/test/auto_test/repo"
 			${SALVIA_TEST_REPOSITORY_PATH}
 		COMMAND echo "AUTO_REPO.DEPS" > auto_repo.deps

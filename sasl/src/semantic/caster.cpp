@@ -13,7 +13,7 @@ using ::boost::shared_ptr;
 void caster_t::add_cast( casts ct, tid_t src, tid_t dest, cast_t conv
 	)
 {
-	cast_infos.push_back( make_tuple( ct, src, dest, conv ) );
+	cast_infos.push_back( boost::make_tuple( ct, src, dest, conv ) );
 }
 
 caster_t::casts caster_t::try_cast( tid_t dest, tid_t src ){
