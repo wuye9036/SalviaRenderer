@@ -142,7 +142,6 @@ SASL_VISIT_DEF_UNIMPL( cast_expression );
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
-SASL_VISIT_DEF_UNIMPL( call_expression );
 
 SASL_VISIT_DEF( member_expression ){
 	any child_ctxt = *data;
@@ -209,7 +208,6 @@ SASL_VISIT_DEF( variable_expression ){
 
 // declaration & type specifier
 SASL_VISIT_DEF_UNIMPL( initializer );
-SASL_VISIT_DEF_UNIMPL( expression_initializer );
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF_UNIMPL( type_definition );

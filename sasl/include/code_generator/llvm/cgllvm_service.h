@@ -146,7 +146,6 @@ public:
 	void emplace( value_t const& );
 	void emplace( llvm::Value* v, value_kinds k, abis abi );
 
-
 	bool storable() const;
 	bool load_only() const;
 
@@ -300,6 +299,8 @@ public:
 	virtual value_t emit_cmp_ne( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs ) = 0;
+
+	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/// @}
 
 	/// @name Emit element extraction

@@ -52,9 +52,6 @@ public:
 	SASL_VISIT_DCL( member_expression );
 	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( unary_expression );
-	SASL_VISIT_DCL( call_expression );
-
-	SASL_VISIT_DCL( expression_initializer );
 
 	SASL_VISIT_DCL( statement );
 	SASL_VISIT_DCL( compound_statement );

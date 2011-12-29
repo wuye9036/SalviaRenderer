@@ -255,6 +255,39 @@ SASL_VISIT_DEF( constant_expression ){
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( call_expression ){
+	any child_ctxt_init = *data;
+	sc_ptr(&child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	call_si* csi = v.si_ptr<call_si>();
+	if( csi->is_function_pointer() ){
+		visit_child( child_ctxt, child_ctxt_init, v.expr );
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else {
+		// Get LLVM Function
+		symbol* fn_sym = csi->overloaded_function();
+		function_t fn = service()->fetch_function( fn_sym->node()->as_handle<function_type>() );
+
+		// TODO imp type conversations.
+		vector<value_t> args;
+		BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
+			visit_child( child_ctxt, child_ctxt_init, arg_expr );
+			cgllvm_sctxt* arg_ctxt = node_ctxt( arg_expr, false );
+			args.push_back( arg_ctxt->value() );
+		}
+
+		value_t rslt = service()->emit_call( fn, args );
+
+		cgllvm_sctxt* expr_ctxt = node_ctxt( v, true );
+		expr_ctxt->data().val = rslt;
+		expr_ctxt->data().tyinfo = fn.get_return_ty();
+
+		sc_ptr(data)->copy( expr_ctxt );
+	}
+}
+
 SASL_VISIT_DEF( builtin_type ){
 
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
@@ -373,6 +406,23 @@ SASL_VISIT_DEF( declarator ){
 	} else {
 		visit_global_declarator(v, data);
 	}
+}
+
+SASL_VISIT_DEF( expression_initializer ){
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.init_expr );
+
+	shared_ptr<type_info_si> init_tsi = extract_semantic_info<type_info_si>(v.as_handle());
+	shared_ptr<type_info_si> var_tsi = extract_semantic_info<type_info_si>(sc_env_ptr(data)->variable_to_fill.lock());
+
+	if( init_tsi->entry_id() != var_tsi->entry_id() ){
+		caster->cast( var_tsi->type_info(), v.init_expr );
+	}
+
+	sc_ptr(data)->copy( node_ctxt(v.init_expr, false) );
+	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF( expression_statement ){

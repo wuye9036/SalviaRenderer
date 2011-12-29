@@ -1432,4 +1432,48 @@ value_t cg_service::undef_value( builtin_types bt, abis abi )
 	return val;
 }
 
+
+value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
+{
+	abis promoted_abi = abi_llvm;
+	BOOST_FOREACH( value_t const& arg, args )
+	{
+		promoted_abi = promote_abi( arg.abi(), promoted_abi );
+	}
+	assert( promoted_abi == abi_llvm );
+
+	vector<Value*> arg_values;
+	value_t var;
+	if( fn.c_compatible ){
+		// 
+		if ( fn.first_arg_is_return_address() ){
+			var = create_variable( fn.get_return_ty().get(), abi_c, "ret" );
+			arg_values.push_back( var.load_ref() );
+		}
+
+		BOOST_FOREACH( value_t const& arg, args ){
+			builtin_types hint = arg.hint();
+			if( is_scalar(hint) ){
+				arg_values.push_back( arg.load(abi_llvm) );
+			} else {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
+			// arg_values.push_back( arg.load( abi_llvm ) );
+		}
+	} else {
+		BOOST_FOREACH( value_t const& arg, args ){
+			arg_values.push_back( arg.load( abi_llvm ) );
+		}
+	}
+
+	Value* ret_val = builder().CreateCall( fn.fn, arg_values );
+
+	if( fn.first_arg_is_return_address() ){
+		return var;
+	}
+
+	abis ret_abi = fn.c_compatible ? abi_c : abi_llvm;
+	return create_value( fn.get_return_ty().get(), ret_val, vkind_value, ret_abi );
+}
+
 END_NS_SASL_CODE_GENERATOR();

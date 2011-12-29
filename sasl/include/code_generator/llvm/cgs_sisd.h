@@ -77,8 +77,6 @@ public:
 	/// Didn't support swizzle yet.
 	value_t emit_swizzle( value_t const& vec, uint32_t mask );
 	value_t emit_write_mask( value_t const& vec, uint32_t mask );
-
-	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */
 
 	/// @name Emit type casts

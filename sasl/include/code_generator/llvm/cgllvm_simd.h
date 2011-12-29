@@ -36,13 +36,11 @@ public:
 	SASL_VISIT_DCL( expression_list );
 	SASL_VISIT_DCL( cond_expression );
 	SASL_VISIT_DCL( index_expression );
-	SASL_VISIT_DCL( call_expression );
 	SASL_VISIT_DCL( member_expression );
 	SASL_VISIT_DCL( variable_expression );
 
 	// declaration & type specifier
 	SASL_VISIT_DCL( initializer );
-	SASL_VISIT_DCL( expression_initializer );
 	SASL_VISIT_DCL( member_initializer );
 	SASL_VISIT_DCL( declaration );
 	SASL_VISIT_DCL( type_definition );

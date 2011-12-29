@@ -230,42 +230,6 @@ value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
 	return create_value( tyinfo, val, vkind_value, abi_llvm );
 }
 
-value_t cgs_sisd::emit_call( function_t const& fn, vector<value_t> const& args )
-{
-	vector<Value*> arg_values;
-	value_t var;
-	if( fn.c_compatible ){
-		// 
-		if ( fn.first_arg_is_return_address() ){
-			var = create_variable( fn.get_return_ty().get(), abi_c, "ret" );
-			arg_values.push_back( var.load_ref() );
-		}
-
-		BOOST_FOREACH( value_t const& arg, args ){
-			builtin_types hint = arg.hint();
-			if( is_scalar(hint) ){
-				arg_values.push_back( arg.load(abi_llvm) );
-			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			}
-			// arg_values.push_back( arg.load( abi_llvm ) );
-		}
-	} else {
-		BOOST_FOREACH( value_t const& arg, args ){
-			arg_values.push_back( arg.load( abi_llvm ) );
-		}
-	}
-
-	Value* ret_val = builder().CreateCall( fn.fn, arg_values );
-
-	if( fn.first_arg_is_return_address() ){
-		return var;
-	}
-
-	abis ret_abi = fn.c_compatible ? abi_c : abi_llvm;
-	return create_value( fn.get_return_ty().get(), ret_val, vkind_value, ret_abi );
-}
-
 void cgs_sisd::jump_to( insert_point_t const& ip )
 {
 	assert( ip );

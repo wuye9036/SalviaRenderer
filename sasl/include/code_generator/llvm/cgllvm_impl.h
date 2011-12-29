@@ -78,6 +78,7 @@ protected:
 	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( variable_expression );
 	SASL_VISIT_DCL( binary_expression );
+	SASL_VISIT_DCL( call_expression );
 
 	SASL_VISIT_DCL( declaration ){}
 	
@@ -87,6 +88,8 @@ protected:
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( declarator );
+	
+	SASL_VISIT_DCL( expression_initializer );
 
 	SASL_VISIT_DCL( expression_statement );
 	SASL_VISIT_DCL( declaration_statement );
