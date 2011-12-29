@@ -230,11 +230,6 @@ value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
 	return create_value( tyinfo, val, vkind_value, abi_llvm );
 }
 
-value_t cgs_sisd::emit_dot( value_t const& lhs, value_t const& rhs )
-{
-	return emit_dot_vv(lhs, rhs);
-}
-
 value_t cgs_sisd::emit_call( function_t const& fn, vector<value_t> const& args )
 {
 	vector<Value*> arg_values;
@@ -329,33 +324,6 @@ bool cgs_sisd::prefer_externals() const
 bool cgs_sisd::prefer_scalar_code() const
 {
 	return false;
-}
-
-value_t cgs_sisd::emit_cross( value_t const& lhs, value_t const& rhs )
-{
-	assert( lhs.hint() == vector_of( builtin_types::_float, 3 ) );
-	assert( rhs.hint() == lhs.hint() );
-
-	int swz_a[] = {1, 2, 0};
-	int swz_b[] = {2, 0, 1};
-
-	Constant* swz_va = vector_( swz_a, 3 );
-	Constant* swz_vb = vector_( swz_b, 3 );
-
-	Value* lvec_value = lhs.load(abi_llvm);
-	Value* rvec_value = rhs.load(abi_llvm);
-
-	Value* lvec_a = builder().CreateShuffleVector( lvec_value, UndefValue::get( lvec_value->getType() ), swz_va );
-	Value* lvec_b = builder().CreateShuffleVector( lvec_value, UndefValue::get( lvec_value->getType() ), swz_vb );
-	Value* rvec_a = builder().CreateShuffleVector( rvec_value, UndefValue::get( rvec_value->getType() ), swz_va );
-	Value* rvec_b = builder().CreateShuffleVector( rvec_value, UndefValue::get( rvec_value->getType() ), swz_vb );
-
-	Value* mul_first = builder().CreateFMul( lvec_a, rvec_b );
-	Value* mul_second = builder().CreateFMul( lvec_b, rvec_a );
-
-	Value* ret = builder().CreateFSub( mul_first, mul_second );
-
-	return create_value( lhs.tyinfo(), lhs.hint(), ret, vkind_value, abi_llvm );
 }
 
 value_t cgs_sisd::emit_swizzle( value_t const& lhs, uint32_t mask )

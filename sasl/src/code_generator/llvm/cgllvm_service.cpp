@@ -952,6 +952,30 @@ value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
+value_t cg_service::emit_dot( value_t const& lhs, value_t const& rhs )
+{
+	return emit_dot_vv(lhs, rhs);
+}
+
+value_t cg_service::emit_cross( value_t const& lhs, value_t const& rhs )
+{
+	assert( lhs.hint() == vector_of( builtin_types::_float, 3 ) );
+	assert( rhs.hint() == lhs.hint() );
+
+	int swz_a[] = {1, 2, 0};
+	int swz_b[] = {2, 0, 1};
+
+	uint32_t swz_va = indexes_to_mask( 1, 2, 0, -1 );
+	uint32_t swz_vb = indexes_to_mask( 2, 0, 1, -1 );
+
+	value_t lvec_a = emit_extract_elem_mask( lhs, swz_va );
+	value_t lvec_b = emit_extract_elem_mask( lhs, swz_vb );
+	value_t rvec_a = emit_extract_elem_mask( rhs, swz_va );
+	value_t rvec_b = emit_extract_elem_mask( rhs, swz_vb );
+
+	return emit_sub_ss_vv( emit_mul_ss_vv(lvec_a, rvec_b), emit_mul_ss_vv(lvec_b, rvec_a) );
+}
+
 value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 {
 	assert( lhs.storable() );
@@ -1160,18 +1184,15 @@ value_t cg_service::emit_extract_col( value_t const& lhs, size_t index )
 
 value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
 {
-	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
-
+	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abi_llvm);
+	// assert( promoted_abi == abi_llvm );
+	
 	size_t vec_size = vector_size( lhs.hint() );
-
-	value_t total = null_value( scalar_of( lhs.hint() ), abi_llvm );
-
+	value_t total = null_value( scalar_of( lhs.hint() ), promoted_abi );
+	value_t prod = emit_mul_ss_vv( lhs, rhs );
 	for( size_t i = 0; i < vec_size; ++i ){
-		value_t lhs_elem = emit_extract_elem( lhs, i );
-		value_t rhs_elem = emit_extract_elem( rhs, i );
-
-		value_t elem_mul = emit_mul_ss_vv( lhs_elem, rhs_elem );
-		total.emplace( emit_add_ss_vv( total, elem_mul ).to_rvalue() );
+		value_t prod_elem = emit_extract_elem( prod, i );
+		total.emplace( emit_add_ss_vv( total, prod_elem ).to_rvalue() );
 	}
 
 	return total;

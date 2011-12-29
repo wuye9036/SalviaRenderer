@@ -631,7 +631,7 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/swizzle_and_wm.sps" );

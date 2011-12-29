@@ -81,12 +81,6 @@ public:
 	value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	/** @} */
 
-	/// @name Intrinsics
-	/// @{
-	value_t emit_dot( value_t const& lhs, value_t const& rhs );
-	value_t emit_cross( value_t const& lhs, value_t const& rhs );
-	/// @}
-
 	/// @name Emit type casts
 	/// @{
 	/// Cast between integer types.

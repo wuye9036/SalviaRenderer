@@ -220,18 +220,6 @@ void cgs_simd::emit_return( value_t const& ret_v, abis abi )
 	}
 }
 
-value_t cgs_simd::emit_dot( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_cross( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
 abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
 {
 	return abi_package;

@@ -326,9 +326,9 @@ public:
 
 	/// @name Intrinsics
 	/// @{
-	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_sqrt( value_t const& lhs );
-	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs );
 	/// @}
 
 	/// @name Emit type casts

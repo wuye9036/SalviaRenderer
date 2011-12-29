@@ -21,9 +21,6 @@ protected:
 	value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs );
 
-	value_t emit_dot( value_t const& lhs, value_t const& rhs );
-	value_t emit_cross( value_t const& lhs, value_t const& rhs );
-
 	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi );
 	virtual value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi );
