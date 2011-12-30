@@ -19,10 +19,8 @@ PSOUT fn( PSIN in ){
 	float3 f3 = cross(in.in0, in.in1);
 	o.out0 = f3;
 	float x = dot(in.in0, in.in1);
-	/*
-	o.out0 = sqrt(f3);
-	*/
+	o.out0 = sqrt(in.in0);
 	o.out1.x = x;
-	o.out1.y = sqrt(f3.x);
+	o.out1.y = sqrt(in.in0.x);
 	return o;
 }

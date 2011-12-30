@@ -707,22 +707,22 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 		__m128 b1 = to_mm(in1[i].yzxw());
 		__m128 first_prod = _mm_mul_ps(a0, a1);
 		__m128 second_prod = _mm_mul_ps(b0, b1);
-		vec3 f3 = to_vec4( _mm_sub_ps( first_prod, second_prod ) ).xyz();
-		vec3 f3_ref = cross_prod3( in0[i].xyz(), in1[i].xyz() );
-
-		dest_ref[i].out0 = f3; //vec3( sqrt(f3.x), sqrt(f3.y), sqrt(f3.z) );
+		__m128 f3_m = _mm_sub_ps( first_prod, second_prod );
+		vec3 f3 = to_vec4( f3_m ).xyz();
+		
+		dest_ref[i].out0 = to_vec4( _mm_sqrt_ps(to_mm(in0[i])) ).xyz();
 		dest_ref[i].out1.x = x;
-		dest_ref[i].out1.y = sqrt(f3.x);
+		dest_ref[i].out1.y = sqrt(in0[i].x);
 	}
 
 	fn( (void*)in0, (void*)NULL, (void*)out0, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out0[i].x, dest_ref[i].out0.x, 0.0001f );
-		BOOST_CHECK_CLOSE( out0[i].y, dest_ref[i].out0.y, 0.0001f );
-		BOOST_CHECK_CLOSE( out0[i].z, dest_ref[i].out0.z, 0.0001f );
+		BOOST_CHECK_CLOSE( out0[i].x, dest_ref[i].out0.x, 0.00001f );
+		BOOST_CHECK_CLOSE( out0[i].y, dest_ref[i].out0.y, 0.00001f );
+		BOOST_CHECK_CLOSE( out0[i].z, dest_ref[i].out0.z, 0.00001f );
 
-		BOOST_CHECK_CLOSE( out1[i].x, dest_ref[i].out1.x, 0.000001f );
+		BOOST_CHECK_CLOSE( out1[i].x, dest_ref[i].out1.x, 0.00001f );
 		BOOST_CHECK_CLOSE( out1[i].y, dest_ref[i].out1.y, 0.00001f );
 	}
 

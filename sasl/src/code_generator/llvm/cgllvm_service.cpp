@@ -1329,9 +1329,9 @@ Value* cg_service::sqrt_vf_( Value* v ){
 			for( int i_batch = 0; i_batch < batch_count; ++i_batch ){
 				Value* source = extract_elements_( v, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
 				Value* dest = builder().CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ps ), source );
-				out_v = insert_elements_( out_v, dest, i_batch*SIMD_ELEMENT_COUNT()  );
-				return out_v;
+				out_v = insert_elements_( out_v, dest, i_batch*SIMD_ELEMENT_COUNT() );
 			}
+			return out_v;
 		}
 	}
 	
