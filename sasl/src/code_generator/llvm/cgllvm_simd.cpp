@@ -195,7 +195,7 @@ SASL_VISIT_DEF( variable_expression ){
 
 	cgllvm_sctxt* varctxt = cgllvm_impl::node_ctxt( sym->node() );
 	if( var_si ){
-		// TODO global only avaliable in entry function.
+		// TODO global only available in entry function.
 		assert( fn().fn == entry_fn );
 		sc_ptr(data)->value() = varctxt->value();
 		cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );

@@ -35,7 +35,7 @@ bool caster_t::try_implicit( tid_t dest, tid_t src ){
 			break;
 		}
 	}
-	return ret_ct == better || ret_ct == imp || ret_ct == warning;
+	return ret_ct == eql || ret_ct == better || ret_ct == imp || ret_ct == warning;
 }
 
 caster_t::casts caster_t::cast( shared_ptr<node> dest, shared_ptr<node> src ){

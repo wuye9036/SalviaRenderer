@@ -603,12 +603,11 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
 	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		/*if( caster->try_implicit( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
-			caster->convert( rarg_tsi->type_info(), v.left_expr );
+		if( caster->try_implicit( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
+			caster->cast( rarg_tsi->type_info(), v.left_expr );
 		} else {
 			assert( !"Expression could not converted to storage type." );
-		}*/
+		}
 	}
 
 	// Evaluated by visit(binary_expression)

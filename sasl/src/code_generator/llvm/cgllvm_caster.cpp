@@ -144,16 +144,8 @@ public:
 	void scalar2vec1( shared_ptr<node> dest, shared_ptr<node> src ){
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
-
 		assert( src_ctxt != dest_ctxt );
-
-		value_t scalar_value = src_ctxt->get_rvalue();
-		vector<value_t> scalars;
-		scalars.push_back( scalar_value );
-
-		value_t vector_value = cgs->create_vector( scalars, dest_ctxt->value().abi() );
-
-		cgs->store( dest_ctxt->value(), vector_value );
+		store( dest, src, cgs->cast_s2v( src_ctxt->get_rvalue() ) );
 	}
 
 	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
@@ -358,7 +350,10 @@ void add_builtin_casts(
 				shrink_vec_pfn[j][i]				\
 				);									\
 		}											\
-	}
+	}												\
+	cg_caster->add_cast( caster_t::eql,				\
+		pety->get(builtin_types::btc),				\
+		btc##_vts[1], scalar2vec1_pfn );			
 	
 #define DEFINE_VECTOR_AND_SHRINK( btc )	\
 	DEFINE_VECTOR_TYPE_IDS( btc );	\

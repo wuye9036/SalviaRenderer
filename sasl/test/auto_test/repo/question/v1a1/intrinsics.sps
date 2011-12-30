@@ -17,8 +17,11 @@ struct PSOUT{
 PSOUT fn( PSIN in ){
 	PSOUT o;
 	float3 f3 = cross(in.in0, in.in1);
-	float x = dot(f3, in.in1);
+	o.out0 = f3;
+	float x = dot(in.in0, in.in1);
+	/*
 	o.out0 = sqrt(f3);
+	*/
 	o.out1.x = x;
 	o.out1.y = sqrt(f3.x);
 	return o;

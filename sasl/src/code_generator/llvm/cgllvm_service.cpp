@@ -1114,7 +1114,7 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 			case abi_vectorize:
 				{
 					vector<char> vectorize_idx( SIMD_ELEMENT_COUNT(), -1 );
-					assert( idx_len < SIMD_ELEMENT_COUNT() );
+					assert( idx_len < static_cast<uint32_t>(SIMD_ELEMENT_COUNT()) );
 					copy( &indexes[0], &indexes[idx_len], vectorize_idx.begin() );
 					fill( vectorize_idx.begin() + idx_len, vectorize_idx.end(), vector_size(vec.hint()) );
 
@@ -1440,7 +1440,6 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	{
 		promoted_abi = promote_abi( arg.abi(), promoted_abi );
 	}
-	assert( promoted_abi == abi_llvm );
 
 	vector<Value*> arg_values;
 	value_t var;
@@ -1454,7 +1453,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 		BOOST_FOREACH( value_t const& arg, args ){
 			builtin_types hint = arg.hint();
 			if( is_scalar(hint) ){
-				arg_values.push_back( arg.load(abi_llvm) );
+				arg_values.push_back( arg.load( promoted_abi ) );
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
@@ -1462,7 +1461,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 		}
 	} else {
 		BOOST_FOREACH( value_t const& arg, args ){
-			arg_values.push_back( arg.load( abi_llvm ) );
+			arg_values.push_back( arg.load( promoted_abi ) );
 		}
 	}
 
@@ -1472,8 +1471,25 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 		return var;
 	}
 
-	abis ret_abi = fn.c_compatible ? abi_c : abi_llvm;
+	abis ret_abi = fn.c_compatible ? abi_c : promoted_abi;
 	return create_value( fn.get_return_ty().get(), ret_val, vkind_value, ret_abi );
+}
+
+value_t cg_service::cast_s2v( value_t const& v )
+{
+	builtin_types hint = v.hint();
+	assert( is_scalar(hint) );
+	builtin_types vhint = vector_of(hint, 1);
+
+	// vector1 and scalar are same LLVM vector type when abi is Vectorize and Package 
+	if( v.abi() == abi_vectorize || v.abi() == abi_package )
+	{
+		return create_value( NULL, vhint, v.load(), vkind_value, v.abi() );
+	}
+
+	// Otherwise return a new vector
+	value_t ret = null_value( vhint, v.abi() );
+	return emit_insert_val( ret, 0, v );
 }
 
 END_NS_SASL_CODE_GENERATOR();

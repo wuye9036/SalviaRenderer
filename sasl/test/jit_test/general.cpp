@@ -664,12 +664,71 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 }
 #endif
 
+#if 1 || ALL_TESTS_ENABLED
+
+__m128 to_mm( vec4& v ){
+	__m128 tmp;
+	*(vec4*)(&tmp) = v;
+	return tmp;
+}
+
+vec4 to_vec4( __m128& v ){
+	return *reinterpret_cast<vec4*>(&v);
+}
+
 BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/intrinsics.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
+
+	vec4* in0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4) * 2, 16 );
+	vec4* in1	= (vec4*)(in0 + PACKAGE_ELEMENT_COUNT);
+	vec4* out0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * ( sizeof(vec4) + sizeof(vec2) ), 16 );
+	vec2* out1	= (vec2*)(out0 + PACKAGE_ELEMENT_COUNT);
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
+		((float*)in0)[i] = (i+3.77f)*(0.76f*i);
+		((float*)in1)[i] = (i-4.62f)*(0.11f*i);
+	}
+	
+	struct { vec3 out0; vec2 out1; } dest_ref[PACKAGE_ELEMENT_COUNT];
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
+	{
+		// SSE dot
+		vec4 prod = to_vec4( _mm_mul_ps( to_mm(in0[i]), to_mm(in1[i]) ) );
+		float x = prod.x + prod.y + prod.z;
+
+		// SSE prod
+		__m128 a0 = to_mm(in0[i].yzxw());
+		__m128 a1 = to_mm(in1[i].zxyw());
+		__m128 b0 = to_mm(in0[i].zxyw());
+		__m128 b1 = to_mm(in1[i].yzxw());
+		__m128 first_prod = _mm_mul_ps(a0, a1);
+		__m128 second_prod = _mm_mul_ps(b0, b1);
+		vec3 f3 = to_vec4( _mm_sub_ps( first_prod, second_prod ) ).xyz();
+		vec3 f3_ref = cross_prod3( in0[i].xyz(), in1[i].xyz() );
+
+		dest_ref[i].out0 = f3; //vec3( sqrt(f3.x), sqrt(f3.y), sqrt(f3.z) );
+		dest_ref[i].out1.x = x;
+		dest_ref[i].out1.y = sqrt(f3.x);
+	}
+
+	fn( (void*)in0, (void*)NULL, (void*)out0, (void*)NULL );
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( out0[i].x, dest_ref[i].out0.x, 0.0001f );
+		BOOST_CHECK_CLOSE( out0[i].y, dest_ref[i].out0.y, 0.0001f );
+		BOOST_CHECK_CLOSE( out0[i].z, dest_ref[i].out0.z, 0.0001f );
+
+		BOOST_CHECK_CLOSE( out1[i].x, dest_ref[i].out1.x, 0.000001f );
+		BOOST_CHECK_CLOSE( out1[i].y, dest_ref[i].out1.y, 0.00001f );
+	}
+
+	_aligned_free( in0 );
+	_aligned_free( out0 );
 }
 
+#endif
 BOOST_AUTO_TEST_SUITE_END();

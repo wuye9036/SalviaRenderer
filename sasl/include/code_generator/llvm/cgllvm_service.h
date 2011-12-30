@@ -346,6 +346,10 @@ public:
 	virtual value_t cast_i2b( value_t const& v ) = 0;
 	/// Cast float to bool
 	virtual value_t cast_f2b( value_t const& v ) = 0;
+	/// Cast scalar to vector
+	virtual value_t cast_s2v( value_t const& v );
+	/// Cast vector to scalar
+	// virtual value_t cast_v2s( value_t const& v );
 	/// @}
 
 	/// @name Emit statement
@@ -422,7 +426,7 @@ public:
 	/// @{
 	/// Create tyinfo.
 	boost::shared_ptr<value_tyinfo> create_tyinfo( boost::shared_ptr<sasl::syntax_tree::tynode> const& tyn );
-	/// Get member type information is type is aggrated.
+	/// Get member type information is type is aggregated.
 	value_tyinfo* member_tyinfo( value_tyinfo const* agg, size_t index ) const;
 	/// @}
 
