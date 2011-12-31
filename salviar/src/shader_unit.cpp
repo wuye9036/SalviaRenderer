@@ -54,7 +54,27 @@ void vertex_shader_unit::execute( vs_output& out )
 	void* pso = stream_odata.empty() ? NULL : &(stream_odata[0]);
 	void* pbo = buffer_odata.empty() ? NULL : &(buffer_odata[0]);
 
+#if defined(EFLIB_CPU_X86) && defined(EFLIB_MSVC)
+	__asm{
+		push eax ;
+		mov  eax, esp ;
+		sub  esp, 0x10 ;
+		and  esp, 0xFFFFFFF0 ;
+		push eax ;
+		sub  esp, 0x0C ;
+		mov  eax, dword ptr [eax]
+	}
 	p( psi, pbi, pso, pbo );
+	__asm{
+		add esp, 0x0C ;
+		mov esp, [esp] ;
+		add esp, 0x04 ;
+	}
+
+	// X XXXX
+#else
+	p( psi, pbi, pso, pbo );
+#endif
 
 	// Copy output attributes to vs_output.
 	// TODO Semantic will be mapped.

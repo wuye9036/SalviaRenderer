@@ -279,6 +279,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cgllvm_impl::context() ), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, v.symbol()->mangled_name(), cgllvm_impl::module() );
+		fn->addFnAttr( Attribute::constructStackAlignmentFromInt(16) );
 		entry_fn = fn;
 		entry_sym = v.symbol().get();
 

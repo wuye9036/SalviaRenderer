@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #if ALL_TESTS_ENABLED
 
@@ -425,7 +425,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	fn(&sin, &bin, (void*)NULL, &bout);
 
 	vec4 out_pos;
-	transform( out_pos, mat, pos );
+	eflib::transform( out_pos, mat, pos );
 
 	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), 0.0001f );
 	BOOST_CHECK_CLOSE( bout.pos.x, out_pos.x, 0.0001f );

@@ -379,12 +379,10 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 		}
 	}
 
-
 	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
 
 	// Create function
 	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
-
 	ret.cg = this;
 	return ret;
 }
@@ -515,14 +513,16 @@ value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index )
 value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type* var_ty = type_( bt, abi );
-	Value* var_val = builder().CreateAlloca( var_ty );
+	AllocaInst* var_val = builder().CreateAlloca( var_ty );
+	// var_val->setAlignment( 4 );
 	return create_value( bt, var_val, vkind_ref, abi );
 }
 
 value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
 {
 	Type* var_ty = type_(ty, abi);
-	Value* var_val = builder().CreateAlloca( var_ty );
+	AllocaInst* var_val = builder().CreateAlloca( var_ty );
+	// var_val->setAlignment( 4 );
 	return create_value( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi );
 }
 

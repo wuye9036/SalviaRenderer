@@ -64,8 +64,7 @@ void cgllvm_jit_engine::build(){
 	if( cpu_features( cpu_sse2 ) ){
 		attrs.push_back("+sse2");
 	}
-	attrs.push_back("+vector-unaligned-mem");
-
+	
 	engine.reset(
 		llvm::EngineBuilder( global_ctxt->module() ).setMAttrs(attrs)
 		.setErrorStr(&err)
