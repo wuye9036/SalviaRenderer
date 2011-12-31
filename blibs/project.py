@@ -20,6 +20,8 @@ class project:
 		env = os.environ
 		default_toolset = props.toolset
 		
+		self.directx_ = ("DXSDK_DIR" in env)
+			
 		if default_toolset == None or default_toolset == "":
 			if "VS100COMNTOOLS" in env:
 				default_toolset = "msvc-10.0"
@@ -115,7 +117,10 @@ class project:
 			return 'devenv.exe'
 		else:
 			return 'make'
-			
+	
+	def directx(self):
+		return self.directx_
+	
 	def config_name(self):
 		return self.config_
 	

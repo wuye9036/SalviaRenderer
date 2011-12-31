@@ -18,7 +18,11 @@
 
 #include <vector>
 
-#define PRESENTER_NAME "d3d9"
+#if defined(SASL_BUILD_WITH_DIRECTX)
+#	define PRESENTER_NAME "d3d9"
+#else
+#	define PRESENTER_NAME "opengl"
+#endif
 
 using namespace eflib;
 using namespace salviar;
