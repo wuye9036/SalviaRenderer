@@ -56,19 +56,42 @@ void vertex_shader_unit::execute( vs_output& out )
 
 #if defined(EFLIB_CPU_X86) && defined(EFLIB_MSVC)
 	__asm{
-		push eax ;
-		mov  eax, esp ;
-		sub  esp, 0x10 ;
-		and  esp, 0xFFFFFFF0 ;
-		push eax ;
-		sub  esp, 0x0C ;
-		mov  eax, dword ptr [eax]
-	}
-	p( psi, pbi, pso, pbo );
-	__asm{
-		add esp, 0x0C ;
-		mov esp, [esp] ;
-		add esp, 0x04 ;
+		push ebp;
+
+		push p;
+
+		push pbo;
+		push pso;
+		push pbi;
+		push psi;
+
+		mov  ebp, esp ;
+
+		push ebx;
+		push esi;
+		push edi;
+
+		and  esp, -16;
+		sub  esp, 16;
+
+		mov  ebx, [ebp+12];
+		push ebx;
+		mov  ebx, [ebp+8];
+		push ebx;
+		mov  ebx, [ebp+4];
+		push ebx;
+		mov  ebx, [ebp];
+		push ebx;
+
+		mov  ebx, [ebp+16];
+		call ebx;
+
+		mov  edi, [ebp-12]
+		mov  esi, [ebp-8]
+		mov  ebx, [ebp-4]
+		mov  esp, ebp
+		add  esp, 20
+		pop  ebp
 	}
 
 	// X XXXX

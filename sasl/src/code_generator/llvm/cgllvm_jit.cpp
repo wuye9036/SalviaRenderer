@@ -62,6 +62,7 @@ void cgllvm_jit_engine::build(){
 	
 	vector<string> attrs;
 	if( cpu_features( cpu_sse2 ) ){
+		attrs.push_back("+sse");
 		attrs.push_back("+sse2");
 	}
 	
