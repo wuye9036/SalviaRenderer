@@ -309,7 +309,7 @@ void abi_info::compute_package_layout()
 			} else if ( is_matrix( elem_bt ) ){
 				int row_size = static_cast<int>( storage_size( row_vector_of(elem_bt) ) );
 				int pow2_row_size = ceil_to_pow2( row_size );
-				int mat_size = row_size * static_cast<int>( vector_count(elem_bt) );
+				int mat_size = pow2_row_size * static_cast<int>( vector_count(elem_bt) );
 				int pow2_mat_size = ceil_to_pow2( mat_size );
 				svl->element_size = mat_size;
 				svl->element_padding = pow2_mat_size - mat_size;

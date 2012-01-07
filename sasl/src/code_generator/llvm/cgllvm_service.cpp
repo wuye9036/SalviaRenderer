@@ -464,7 +464,7 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 			StructType* ty_llvm	= StructType::create( llvm_member_types,		struct_tyn->name->str + ".abi.llvm" );
 			StructType* ty_vec	= NULL;
 			if( vectorize_member_types[0] != NULL ){
-				StructType* ty_vec	= StructType::create( vectorize_member_types,	struct_tyn->name->str + ".abi.vec" );
+				ty_vec = StructType::create( vectorize_member_types,struct_tyn->name->str + ".abi.vec" );
 			}
 			StructType* ty_pkg	= NULL;
 			if( package_member_types[0] != NULL ){
@@ -513,7 +513,7 @@ value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index )
 value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type* var_ty = type_( bt, abi );
-	AllocaInst* var_val = builder().CreateAlloca( var_ty );
+	AllocaInst* var_val = builder().CreateAlloca( var_ty, NULL, name );
 	// var_val->setAlignment( 4 );
 	return create_value( bt, var_val, vkind_ref, abi );
 }
@@ -521,7 +521,7 @@ value_t cg_service::create_variable( builtin_types bt, abis abi, std::string con
 value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
 {
 	Type* var_ty = type_(ty, abi);
-	AllocaInst* var_val = builder().CreateAlloca( var_ty );
+	AllocaInst* var_val = builder().CreateAlloca( var_ty, NULL, name );
 	// var_val->setAlignment( 4 );
 	return create_value( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi );
 }
@@ -765,9 +765,7 @@ Value* cg_service::load_as_llvm_c( value_t const& v, abis abi )
 	if( is_scalar( hint ) ){
 		return v.load();
 	} else if( is_vector( hint ) ){
-		Value* org_value = v.load();
-
-		value_t ret_value = null_value( hint, abi );
+		value_t ret_value = undef_value( hint, abi );
 
 		size_t vec_size = vector_size( hint );
 		for( size_t i = 0; i < vec_size; ++i ){
@@ -962,9 +960,6 @@ value_t cg_service::emit_cross( value_t const& lhs, value_t const& rhs )
 	assert( lhs.hint() == vector_of( builtin_types::_float, 3 ) );
 	assert( rhs.hint() == lhs.hint() );
 
-	int swz_a[] = {1, 2, 0};
-	int swz_b[] = {2, 0, 1};
-
 	uint32_t swz_va = indexes_to_mask( 1, 2, 0, -1 );
 	uint32_t swz_vb = indexes_to_mask( 2, 0, 1, -1 );
 
@@ -1040,7 +1035,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 			break;
 		case abi_package:
 			{
-				char indexes[4] = {idx, -1, -1, -1};
+				char indexes[4] = { char(idx), -1, -1, -1};
 				elem_val = emit_extract_elem_mask( lhs, indexes_to_mask(indexes) ).load();
 				break;
 			}
@@ -1206,7 +1201,6 @@ value_t cg_service::emit_mul_mv( value_t const& lhs, value_t const& rhs )
 	builtin_types vhint = rhs.hint();
 
 	size_t row_count = vector_count(mhint);
-	size_t vec_size = vector_size(mhint);
 
 	builtin_types ret_hint = vector_of( scalar_of(vhint), row_count );
 
@@ -1245,7 +1239,6 @@ value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 
 	size_t out_v = vector_size( lhint );
 	size_t out_r = vector_count( rhint );
-	size_t inner_size = vector_size(rhint);
 
 	builtin_types out_row_hint = vector_of( scalar_of(lhint), out_v );
 	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
@@ -1303,13 +1296,11 @@ Value* cg_service::insert_elements_( Value* dst, Value* src, size_t start_pos ){
 	}
 
 	VectorType* src_ty = cast<VectorType>(src->getType());
-	VectorType* dst_ty = cast<VectorType>(dst->getType());
-	uint32_t src_count = src_ty->getNumElements();
-	uint32_t dst_count = dst_ty->getNumElements();
+	uint32_t count = src_ty->getNumElements();
 
 	// Expand source to dest size
 	Value* ret = dst;
-	for( size_t i_elem = 0; i_elem < src_count; ++i_elem ){
+	for( size_t i_elem = 0; i_elem < count; ++i_elem ){
 		Value* src_elem = builder().CreateExtractElement( src, int_<int>(i_elem) );
 		ret = builder().CreateInsertElement( ret, src_elem, int_<int>(i_elem+start_pos) );
 	}

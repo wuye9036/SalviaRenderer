@@ -61,7 +61,7 @@ cg_service* cgllvm_simd::service() const{
 	return const_cast<cgllvm_simd*>(this);
 }
 
-abis cgllvm_simd::local_abi( bool is_c_compatible ) const
+abis cgllvm_simd::local_abi( bool /*is_c_compatible*/ ) const
 {
 	return abi_package;
 }

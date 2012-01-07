@@ -28,10 +28,6 @@ namespace sasl {
 	}
 }
 
-namespace softart{
-	enum languages;
-}
-
 BEGIN_NS_SASL_SEMANTIC();
 
 int32_t swizzle_field_name_to_id( char ch );
@@ -46,6 +42,7 @@ using ::sasl::syntax_tree::node;
 using ::sasl::syntax_tree::statement;
 using ::sasl::syntax_tree::labeled_statement;
 
+class deps_graph;
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
 
@@ -69,8 +66,9 @@ public:
 	std::vector< boost::shared_ptr<symbol> >& intrinsics();
 
 private:
-	boost::shared_ptr<pety_t> typemgr;
-	boost::shared_ptr<symbol> rootsym;
+	boost::shared_ptr<pety_t>		typemgr;
+	boost::shared_ptr<symbol>		rootsym;
+	boost::shared_ptr<deps_graph>	deps;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;
 
 	std::vector< boost::shared_ptr<symbol> > gvars;
@@ -188,6 +186,8 @@ public:
 	bool is_reference() const;
 	void is_reference( bool v );
 	/// @}
+
+	/// Add depends
 
 	SASL_TYPE_INFO_PROXY();
 
