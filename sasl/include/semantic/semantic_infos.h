@@ -54,6 +54,7 @@ public:
 
 	boost::shared_ptr<pety_t> pety() const;
 	boost::shared_ptr<symbol> root() const;
+	boost::shared_ptr<deps_graph> deps() const;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
 
 	std::vector< boost::shared_ptr<symbol> > const& globals() const;
@@ -68,7 +69,7 @@ public:
 private:
 	boost::shared_ptr<pety_t>		typemgr;
 	boost::shared_ptr<symbol>		rootsym;
-	boost::shared_ptr<deps_graph>	deps;
+	boost::shared_ptr<deps_graph>	dependencies;
 	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;
 
 	std::vector< boost::shared_ptr<symbol> > gvars;

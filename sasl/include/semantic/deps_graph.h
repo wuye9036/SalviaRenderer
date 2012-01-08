@@ -45,7 +45,7 @@ private:
 	std::vector<sasl::syntax_tree::node*> member_list;
 };
 
-bool operator == ( data_t const& lhs, data_t const& rhs ){
+inline bool operator == ( data_t const& lhs, data_t const& rhs ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return false;
 }
@@ -61,12 +61,18 @@ public:
 		part_of,
 	};
 
+	static boost::shared_ptr<deps_graph> create();
+
 	void add( data_t, data_t, dep_kinds dep_kind );
 
 	void inputs_of( sasl::syntax_tree::node* src );
 	void outputs_of( sasl::syntax_tree::node* src );
 
 private:
+	deps_graph() {}
+	deps_graph( deps_graph const& );
+	deps_graph& operator = ( deps_graph const& );
+
 	boost::unordered_multimap< std::pair<data_t, data_t>, dep_kinds > v2e;
 	boost::unordered_multimap< std::pair<data_t, data_t>, sasl::syntax_tree::node* > v2v;
 };

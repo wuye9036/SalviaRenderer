@@ -3,6 +3,7 @@
 #include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/pety.h>
+#include <sasl/include/semantic/deps_graph.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
 #include <salviar/include/enums.h>
@@ -31,6 +32,7 @@ module_si::module_si()
 	compinfo = compiler_info_manager::create();
 	typemgr = pety_t::create();
 	rootsym = symbol::create_root( boost::shared_ptr<node>() );
+	dependencies = deps_graph::create();
 	typemgr->root_symbol(rootsym);
 }
 
@@ -68,6 +70,10 @@ vector< shared_ptr<symbol> > const& module_si::intrinsics() const{
 
 vector< shared_ptr<symbol> >& module_si::intrinsics(){
 	return intr;
+}
+
+shared_ptr<deps_graph> module_si::deps() const{
+	return dependencies;
 }
 
 END_NS_SASL_SEMANTIC();

@@ -132,4 +132,6 @@ public:
 BOOST_FIXTURE_TEST_CASE( deps, deps_fixture )
 {
 	init_ps( "./repo/question/v1a1/intrinsics.sps" );
+
+	BOOST_REQUIRE( msi->deps() );
 }
