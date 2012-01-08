@@ -11,7 +11,7 @@
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-using namespace sasl::utility::ops;
+
 using namespace sasl::utility;
 
 using salviar::sv_usage;
@@ -36,6 +36,8 @@ using boost::shared_ptr;
 using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
+
+using namespace sasl::utility::ops;
 
 abi_info::abi_info()
 	: mod(NULL), entry_point(NULL), lang(salviar::lang_none)

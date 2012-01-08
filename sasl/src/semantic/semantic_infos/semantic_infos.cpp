@@ -186,7 +186,7 @@ storage_si::storage_si( shared_ptr<pety_t> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 	, sem(salviar::sv_none)
 	, memidx(-1), swz(0)
-	, intrin(false), invoked(false), c_comp(false)
+	, intrin(false), invoked(false), c_comp(false), addr_ident(NULL)
 {
 }
 
@@ -244,6 +244,16 @@ bool storage_si::is_reference() const{
 
 void storage_si::is_reference( bool v ){
 	is_ref = v;
+}
+
+void storage_si::address_ident( address_ident_t const& v )
+{
+	addr_ident = v;
+}
+
+address_ident_t const& storage_si::address_ident() const
+{
+	return addr_ident;
 }
 
 

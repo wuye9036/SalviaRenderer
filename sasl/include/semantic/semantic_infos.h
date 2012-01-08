@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/semantic/semantic_info.h>
 #include <sasl/include/semantic/pety.h>
+#include <sasl/include/semantic/deps_graph.h>
 #include <sasl/enums/default_hasher.h>
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
@@ -188,11 +189,15 @@ public:
 	void is_reference( bool v );
 	/// @}
 
-	/// Add depends
+	/// Address and dependencies.
+	void address_ident( address_ident_t const& );
+	address_ident_t const& address_ident() const;
 
 	SASL_TYPE_INFO_PROXY();
 
 private:
+	address_ident_t addr_ident;
+
 	int memidx;
 	int32_t swz;
 	salviar::semantic_value sem;

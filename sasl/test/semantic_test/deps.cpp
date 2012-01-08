@@ -5,6 +5,7 @@
 #include <sasl/include/common/lex_context.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_infos.h>
@@ -20,12 +21,12 @@
 #include <string>
 #include <fstream>
 
+using namespace sasl::syntax_tree;
+using namespace sasl::semantic;
+
 using sasl::common::code_source;
 using sasl::common::lex_context;
-using sasl::syntax_tree::program;
-using sasl::semantic::abi_analyser;
-using sasl::semantic::module_si;
-using sasl::semantic::analysis_semantic;
+
 using boost::shared_ptr;
 using boost::make_shared;
 using std::fstream;
@@ -34,6 +35,7 @@ using std::istream_iterator;
 using std::cout;
 using std::endl;
 using std::ios_base;
+using std::vector;
 
 class deps_test_code_source: public lex_context, public code_source{
 public:
@@ -114,7 +116,7 @@ public:
 
 		abi_analyser aa;
 
-		if( !aa.auto_entry( msi, lang ) ){
+		if( lang != salviar::lang_general && !aa.auto_entry( msi, lang ) ){
 			if ( lang != salviar::lang_general ){
 				cout << "ABI analysis error occurs!" << endl;
 				return;
@@ -131,7 +133,27 @@ public:
 
 BOOST_FIXTURE_TEST_CASE( deps, deps_fixture )
 {
-	init_ps( "./repo/question/v1a1/intrinsics.sps" );
+	init_g( "./repo/question/v1a1/deps.ss" );
 
+	BOOST_REQUIRE( mroot );
+	BOOST_REQUIRE( msi );
 	BOOST_REQUIRE( msi->deps() );
+
+	shared_ptr<symbol> sym = msi->root();
+	BOOST_REQUIRE( sym );
+
+	shared_ptr<symbol> g = sym->find("g");
+	BOOST_REQUIRE( g );
+
+	{
+		shared_ptr<symbol> param_deps = sym->find_overloads("param_deps")[0];
+		BOOST_REQUIRE( param_deps );
+		shared_ptr<function_type> param_deps_fn = param_deps->node()->as_handle<function_type>();
+		address_ident_t par_addr( param_deps_fn->params[0].get() );
+		address_ident_t fn_addr( param_deps_fn.get() );
+		vector<address_ident_t> inputs = msi->deps()->inputs_of( fn_addr );
+		BOOST_REQUIRE( inputs.size() == 1 );
+		BOOST_CHECK( par_addr == inputs[0] );
+	}
+	
 }

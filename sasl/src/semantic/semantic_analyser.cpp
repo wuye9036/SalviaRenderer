@@ -10,6 +10,7 @@
 #include <sasl/include/semantic/symbol_scope.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/caster.h>
+#include <sasl/include/semantic/deps_graph.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/make_tree.h>
@@ -103,7 +104,8 @@ struct sacontext{
 	sacontext(): declarator_type_id(-1), is_global(true), member_index(-1), lbl_list(NULL){
 	}
 
-	shared_ptr<symbol> parent_sym;
+	shared_ptr<symbol>			parent_sym;
+	shared_ptr<function_type>	parent_fn;
 
 	std::vector< weak_ptr<labeled_statement> >* lbl_list;
 
@@ -710,7 +712,7 @@ SASL_VISIT_DEF( parameter )
 
 	// TODO: Unsupport reference yet.
 	ssi->is_reference( false );
-
+	ssi->address_ident( address_ident_t(dup_par.get()) );
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	data_cptr()->generated_node = dup_par->as_handle();
@@ -730,6 +732,7 @@ SASL_VISIT_DEF( function_type )
 
 	any child_ctxt_init = *data;
 	ctxt_ptr(child_ctxt_init)->parent_sym = sym;
+	ctxt_ptr(child_ctxt_init)->parent_fn = dup_fn;
 
 	any child_ctxt;
 
@@ -976,6 +979,12 @@ SASL_VISIT_DEF( jump_statement )
 		if( v.jump_expr ){
 			any child_ctxt;
 			visit_child( child_ctxt, child_ctxt_init, v.jump_expr, dup_jump->jump_expr );
+			storage_si* ssi = dup_jump->jump_expr->si_ptr<storage_si>();
+			msi->deps()->add(
+				ssi->address_ident(),
+				address_ident_t(ctxt_ptr(*data)->parent_fn.get()),
+				deps_graph::affects
+				);
 		}
 	}
 

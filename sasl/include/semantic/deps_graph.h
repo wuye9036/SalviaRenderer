@@ -19,14 +19,16 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-// data_t
-//  expression
-//  variable
+// address_ident_t
+//  r-value expression
+//  variable / l-value expression
 //  member of variable.
 
-class data_t
+class address_ident_t
 {
 public:
+	bool operator == ( address_ident_t const& rhs ) const;
+
 	enum data_types
 	{
 		unknown,
@@ -36,19 +38,18 @@ public:
 		mem
 	};
 
-	data_t( sasl::syntax_tree::node* nd );
+	address_ident_t( sasl::syntax_tree::node* nd );
 
-	data_t member_of( sasl::syntax_tree::node* mem ) const;
-	data_t parent_of() const;
+	address_ident_t member_of( size_t index ) const;
+	address_ident_t parent_of() const;
 
+	size_t hash_value() const;
 private:
-	std::vector<sasl::syntax_tree::node*> member_list;
+	sasl::syntax_tree::node*	agg;
+	std::vector<size_t>			mem_indexes;
 };
 
-inline bool operator == ( data_t const& lhs, data_t const& rhs ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return false;
-}
+size_t hash_value( address_ident_t const& v );
 
 class deps_graph{
 public:
@@ -63,18 +64,20 @@ public:
 
 	static boost::shared_ptr<deps_graph> create();
 
-	void add( data_t, data_t, dep_kinds dep_kind );
+	void add( address_ident_t const&, address_ident_t const&, dep_kinds dep_kind );
 
-	void inputs_of( sasl::syntax_tree::node* src );
-	void outputs_of( sasl::syntax_tree::node* src );
+	std::vector<address_ident_t> inputs_of( address_ident_t const& src ) const;
+	std::vector<address_ident_t> outputs_of( address_ident_t const& src ) const;
 
 private:
 	deps_graph() {}
 	deps_graph( deps_graph const& );
 	deps_graph& operator = ( deps_graph const& );
 
-	boost::unordered_multimap< std::pair<data_t, data_t>, dep_kinds > v2e;
-	boost::unordered_multimap< std::pair<data_t, data_t>, sasl::syntax_tree::node* > v2v;
+	typedef boost::unordered_multimap< std::pair<address_ident_t, address_ident_t>, dep_kinds > v2e_t;
+	v2e_t v2e;
+	typedef boost::unordered_multimap< std::pair<address_ident_t, dep_kinds>, address_ident_t > v2v_t;
+	v2v_t v2v;
 };
 
 END_NS_SASL_SEMANTIC();

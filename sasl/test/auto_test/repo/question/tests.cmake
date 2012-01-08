@@ -3,6 +3,7 @@ set( SALVIA_AUTO_TEST_HOME "${SASL_HOME_DIR}/sasl/test/auto_test/repo/question" 
 set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/comments.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/decl.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/deps.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/null.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/preprocessors.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/semantic.svs"

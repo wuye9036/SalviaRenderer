@@ -151,6 +151,7 @@ void test_default_operators(){
 
 BOOST_AUTO_TEST_SUITE( semantic );
 
+#if 0
 BOOST_AUTO_TEST_CASE( semantic_tests ){
 	test_global_si();
 	test_program_si();
@@ -162,5 +163,6 @@ BOOST_AUTO_TEST_CASE( semantic_tests ){
 	test_expression_si();
 	test_default_operators();
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END();
