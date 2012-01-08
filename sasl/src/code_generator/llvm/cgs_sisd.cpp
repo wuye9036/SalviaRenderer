@@ -238,7 +238,7 @@ void cgs_sisd::jump_to( insert_point_t const& ip )
 	}
 }
 
-void cgs_sisd::jump_cond( value_t const& cond_v, insert_point_t const const & true_ip, insert_point_t const& false_ip )
+void cgs_sisd::jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip )
 {
 	Value* cond = cond_v.load();
 	builder().CreateCondBr( cond, true_ip.block, false_ip.block );

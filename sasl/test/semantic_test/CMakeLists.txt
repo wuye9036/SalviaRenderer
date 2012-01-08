@@ -27,12 +27,10 @@ ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
 
 TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
 	sasl_test_cases
-	sasl_semantic sasl_syntaxtree sasl_common
+	sasl_semantic sasl_syntaxtree sasl_parser sasl_common
 	sasl_enums EFLIB
 	${SALVIA_BOOST_LIBS}
 )
-
-
 
 SALVIA_CONFIG_OUTPUT_PATHS( ${SASL_TEST_PROJECT_NAME} )
 SASL_TEST_CREATE_VCPROJ_USERFILE( ${SASL_TEST_PROJECT_NAME} )

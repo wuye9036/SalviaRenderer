@@ -182,7 +182,7 @@ public:
 	bool c_compatible() const;
 	void c_compatible( bool v );
 
-	/// Is variable a reference. Only avaliable in parameter.
+	/// Is variable a reference. Only available in parameter.
 	bool is_reference() const;
 	void is_reference( bool v );
 	/// @}

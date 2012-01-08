@@ -21,10 +21,6 @@ namespace sasl{
 	}
 }
 
-namespace softart{
-	enum languages;
-}
-
 BEGIN_NS_SASL_SEMANTIC();
 
 class symbol;
