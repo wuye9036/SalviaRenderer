@@ -99,6 +99,16 @@ using std::string;
 
 #define SASL_EXTRACT_SI( si_type, si_var, node ) shared_ptr<si_type> si_var = extract_semantic_info<si_type>(node);
 
+address_ident_t const& get_address_ident( shared_ptr<node> const& v )
+{
+	return v->si_ptr<storage_si>()->address_ident();
+}
+
+void set_address_ident( shared_ptr<node> const& v, address_ident_t const& addr_ident )
+{
+	v->si_ptr<storage_si>()->address_ident( addr_ident );
+}
+
 // semantic analysis context
 struct sacontext{
 	sacontext(): declarator_type_id(-1), is_global(true), member_index(-1), lbl_list(NULL){
@@ -247,6 +257,8 @@ SASL_VISIT_DEF( cast_expression ){
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_cexpr, msi->pety() );
 	ssi->entry_id( casted_tsi->entry_id() );
 
+	msi->deps()->add( address_ident_t( dup_cexpr.get() ), v.expr->si_ptr<storage_si>()->address_ident(), deps_graph::depends );
+
 	data_cptr()->generated_node = dup_cexpr->as_handle();
 }
 
@@ -269,6 +281,12 @@ SASL_VISIT_DEF( binary_expression )
 	vector< shared_ptr<symbol> > overloads;
 	if( is_assign(v.op) || is_arith_assign(v.op) ){
 		overloads = data_cptr()->parent_sym->find_assign_overloads( opname, caster, exprs );
+		msi->deps()->add(
+			get_address_ident( dup_expr->left_expr ),
+			get_address_ident( dup_expr->right_expr ),
+			deps_graph::affects
+			);
+		
 	} else {
 		overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs );
 	}
@@ -290,6 +308,13 @@ SASL_VISIT_DEF( binary_expression )
 	// update semantic information of binary expression
 	tid_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
 	get_or_create_semantic_info<storage_si>( dup_expr, msi->pety() )->entry_id( result_tid );
+
+	if( is_assign(v.op) || is_arith_assign(v.op) ){
+		set_address_ident( dup_expr, get_address_ident( dup_expr->right_expr ) );
+	} else {
+		msi->deps()->add( get_address_ident( dup_expr ), get_address_ident( dup_expr->left_expr ), deps_graph::depends );
+		msi->deps()->add( get_address_ident( dup_expr ), get_address_ident( dup_expr->right_expr ), deps_graph::depends );
+	}
 
 	data_cptr()->generated_node = dup_expr->as_handle();
 }
@@ -438,18 +463,20 @@ SASL_VISIT_DEF( member_expression ){
 	shared_ptr<tynode> agg_type = arg_tisi->type_info();
 	tid_t mem_typeid = -1;
 
-	
 	int32_t swizzle_code = 0;
+	int32_t member_index = -1;
+
 	if( agg_type->node_class() == node_ids::struct_type ){
-		// Aggeragated is struct
+		// Aggregated is struct
 		shared_ptr<symbol> struct_sym = agg_type->as_handle<struct_type>()->symbol();
 		shared_ptr<declarator> mem_declr
 			= struct_sym->find_this( v.member->str )->node()->as_handle<declarator>();
 		// TODO if mem_declr isn't found, it means the name of member is wrong.
 		// Need to report that.
 		assert( mem_declr );
-		SASL_EXTRACT_SI( type_info_si, mem_si, mem_declr );
+		SASL_EXTRACT_SI( storage_si, mem_si, mem_declr );
 		mem_typeid = mem_si->entry_id();
+		member_index = mem_si->mem_index();
 		assert( mem_typeid != -1 );
 	} else if( agg_type->is_builtin() ){
 		// Aggregated class is vector & matrix
@@ -459,8 +486,7 @@ SASL_VISIT_DEF( member_expression ){
 			builtin_types elem_btc = scalar_of( agg_btc );
 			builtin_types swizzled_btc = builtin_types::none;
 
-			if( is_scalar(agg_btc)
-				|| is_vector(agg_btc) )
+			if( is_scalar(agg_btc) || is_vector(agg_btc) )
 			{
 				swizzled_btc = vector_of(
 					elem_btc,
@@ -493,6 +519,15 @@ SASL_VISIT_DEF( member_expression ){
 	ssi->entry_id( mem_typeid );
 	ssi->swizzle( swizzle_code );
 
+	if( member_index ){
+		// Member
+		ssi->address_ident( get_address_ident( dup_expr->expr ).member_of( member_index ) );
+	} else {
+		// Swizzle
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		// ssi->address_ident( get_address_ident(dup_expr)->expr )
+	}
+
 	data_cptr()->generated_node = dup_expr;
 }
 
@@ -502,7 +537,7 @@ SASL_VISIT_DEF( constant_expression )
 	
 	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, dup_cexpr, msi->pety() );
 	vsi->set_literal( v.value_tok->str, v.ctype );
-
+	vsi->address_ident( address_ident_t( dup_cexpr.get() ) );
 	data_cptr()->generated_node = dup_cexpr->as_handle();	
 }
 
@@ -555,7 +590,7 @@ SASL_VISIT_DEF( expression_initializer )
 			return;
 		}
 	}
-
+	msi->deps()->add( get_address_ident( data_cptr()->variable_to_fill ), ssi->address_ident(), deps_graph::depends );
 	data_cptr()->generated_node = dup_exprinit->as_handle();
 }
 
@@ -573,7 +608,10 @@ SASL_VISIT_DEF( declarator ){
 	ssi->entry_id( data_cptr()->declarator_type_id );
 
 	if( data_cptr()->member_index >= 0 ){
-		 ssi->mem_index( data_cptr()->member_index++ );
+		ssi->mem_index( data_cptr()->member_index++ );
+	} else {
+		// Local or global
+		ssi->address_ident( address_ident_t( dup_decl.get() ) );
 	}
 
 	ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_decl;

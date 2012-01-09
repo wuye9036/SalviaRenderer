@@ -132,7 +132,7 @@ void type_info_si_impl::type_info( builtin_types btc ){
 //////////////////////////////////////////////////////////////////////////
 // constant value semantic info
 const_value_si::const_value_si( shared_ptr<pety_t> typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr), addr_ident(NULL)
 {}
 
 void const_value_si::set_literal(
@@ -171,6 +171,16 @@ void const_value_si::set_literal(
 builtin_types const_value_si::value_type() const{
 	if( !type_info() ) return builtin_types::none;
 	return type_info()->tycode;
+}
+
+void const_value_si::address_ident( address_ident_t const& v )
+{
+	addr_ident = v;
+}
+
+address_ident_t const& const_value_si::address_ident() const
+{
+	return addr_ident;
 }
 
 shared_ptr<tynode> type_info_si::from_node( ::shared_ptr<node> n )

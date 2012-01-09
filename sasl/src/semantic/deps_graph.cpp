@@ -90,6 +90,11 @@ size_t address_ident_t::hash_value() const
 	return seed;
 }
 
+address_ident_t address_ident_t::member_of( size_t index ) const
+{
+	return address_ident_t( agg, &index, &index+1 );
+}
+
 size_t hash_value( address_ident_t const& v )
 {
 	return v.hash_value();

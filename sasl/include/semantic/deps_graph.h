@@ -38,8 +38,12 @@ public:
 		mem
 	};
 
-	address_ident_t( sasl::syntax_tree::node* nd );
-
+	explicit address_ident_t( sasl::syntax_tree::node* nd );
+	template <typename IteratorT>
+	address_ident_t( sasl::syntax_tree::node* nd, IteratorT begin, IteratorT end )
+		: agg(nd), mem_indexes(begin, end)
+	{
+	}
 	address_ident_t member_of( size_t index ) const;
 	address_ident_t parent_of() const;
 

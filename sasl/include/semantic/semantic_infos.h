@@ -146,7 +146,12 @@ public:
 	template <typename T> void value( T val );
 
 	builtin_types value_type() const;
+	
+	void address_ident( address_ident_t const& );
+	address_ident_t const& address_ident() const;
+
 private:
+	address_ident_t addr_ident;
 	boost::variant< uint64_t, int64_t, double, std::string, bool, char > val;
 };
 
