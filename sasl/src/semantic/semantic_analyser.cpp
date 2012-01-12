@@ -281,11 +281,11 @@ SASL_VISIT_DEF( binary_expression )
 	vector< shared_ptr<symbol> > overloads;
 	if( is_assign(v.op) || is_arith_assign(v.op) ){
 		overloads = data_cptr()->parent_sym->find_assign_overloads( opname, caster, exprs );
-		msi->deps()->add(
-			get_address_ident( dup_expr->left_expr ),
-			get_address_ident( dup_expr->right_expr ),
-			deps_graph::affects
-			);
+		//msi->deps()->add(
+		//	get_address_ident( dup_expr->left_expr ),
+		//	get_address_ident( dup_expr->right_expr ),
+		//	deps_graph::affects
+		//	);
 		
 	} else {
 		overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs );
@@ -519,14 +519,14 @@ SASL_VISIT_DEF( member_expression ){
 	ssi->entry_id( mem_typeid );
 	ssi->swizzle( swizzle_code );
 
-	if( member_index ){
-		// Member
-		ssi->address_ident( get_address_ident( dup_expr->expr ).member_of( member_index ) );
-	} else {
-		// Swizzle
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		// ssi->address_ident( get_address_ident(dup_expr)->expr )
-	}
+	//if( member_index ){
+	//	// Member
+	//	ssi->address_ident( get_address_ident( dup_expr->expr ).member_of( member_index ) );
+	//} else {
+	//	// Swizzle
+	//	EFLIB_ASSERT_UNIMPLEMENTED();
+	//	// ssi->address_ident( get_address_ident(dup_expr)->expr )
+	//}
 
 	data_cptr()->generated_node = dup_expr;
 }

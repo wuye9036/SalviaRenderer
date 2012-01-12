@@ -18,7 +18,11 @@
 #include "Timer.h"
 
 //#define PRESENTER_NAME "gdiplus"
+#if defined( SASL_BUILD_WITH_DIRECTX )
 #define PRESENTER_NAME "d3d9"
+#else
+#define PRESENTER_NAME "opengl"
+#endif
 //#define PRESENTER_NAME "d3d11"
 
 using namespace eflib;
