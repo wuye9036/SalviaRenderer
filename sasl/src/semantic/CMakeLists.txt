@@ -18,6 +18,8 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.imp.h
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol.h
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol_scope.h
+	${SASL_HOME_DIR}/sasl/include/semantic/ssa_context.h
+	${SASL_HOME_DIR}/sasl/include/semantic/ssa_constructor.h
 	${SASL_HOME_DIR}/sasl/include/semantic/type_checker.h
 	${SASL_HOME_DIR}/sasl/include/semantic/caster.h
 	${SASL_HOME_DIR}/sasl/include/semantic/pety.h
@@ -33,6 +35,8 @@ set( SOURCE_FILES
 	semantic_error.cpp
 	semantic_infos/module_si.cpp
 	semantic_infos/semantic_infos.cpp
+	ssa_context.cpp
+	ssa_constructor.cpp
 	symbol.cpp
 	symbol_scope.cpp
 	type_checker.cpp

@@ -19,6 +19,37 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
+struct expr_t;
+struct block_t;
+struct variable_t;
+struct value_t;
+
+struct expr_t
+{
+	variable_t*	var;
+	value_t*	val;
+	std::vector<value_t> params;
+};
+
+struct block_t
+{
+	std::vector<block_t*> preds;
+	std::vector<block_t*> succs;
+	std::vector<expr_t*> exprs;
+};
+
+struct variable_t
+{
+	sasl::syntax_tree::node*	decl;
+	std::vector<size_t>			members;
+	value_t*					value;
+};
+
+struct value_t
+{
+	std::vector< std::pair<block_t*, sasl::syntax_tree::node*> > phi_exprs;
+};
+
 // address_ident_t
 //  r-value expression
 //  variable / l-value expression
