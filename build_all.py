@@ -84,7 +84,7 @@ def config_llvm( proj ):
 	if not os.path.exists( proj.llvm_build() ):
 		os.makedirs( proj.llvm_build() )
 	llvm_cmd = batch_command( proj.llvm_build() )
-	llvm_cmd.add_command( 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.llvm_root() ) )
+	llvm_cmd.add_command( '"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), defs_cmd, proj.llvm_root() ) )
 	llvm_cmd.execute()
 	pass
 	
@@ -157,13 +157,11 @@ def clean_all():
 if __name__ == "__main__":
 	log_f = open("build.log", "w")
 	atexit.register(close_log)
-
 	
-	if not os.path.exists( "proj.py" ):
+	if copy_newer( "build_conf.tmpl", "proj.py" ):
 		print( "Project file was generated.\nPlease edit proj.py and run build_all.py again." )
-		copy_newer( "build_conf.tmpl", "proj.py" )
+		os.system('pause')
 		sys.exit(1)
-	copy_newer( "build_conf.tmpl", "proj.py" )
 
 	# Load Project
 	prj_props = __import__( "proj" )
