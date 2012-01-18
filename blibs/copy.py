@@ -18,4 +18,7 @@ def copy_newer( src, dst ):
 		
 	if not os.path.exists(target):
 		shutil.copy2( src, target )
+		return True
+	else:
+		return False
 	

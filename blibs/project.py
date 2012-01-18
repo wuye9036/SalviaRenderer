@@ -17,6 +17,7 @@ class project:
 		self.config_ = props.config
 		
 		# Initialize toolset
+		self.cmake_ = props.cmake
 		env = os.environ
 		default_toolset = props.toolset
 		
@@ -52,6 +53,7 @@ class project:
 		print( ' * Current OS .............. %s' % str( self.current_os() ) )
 		print( ' * Toolset ................. %s' % self.toolset().short_name() )
 		print( ' * Env Script(win32 only) .. %s' % os.path.normpath( self.env_setup_commands() ) )
+		print( ' * CMake Executable ........ %s' % self.cmake_exe() )
 		print( ' * CMake Generator ......... %s' % self.generator() )
 		print( ' * Make tool ............... %s' % self.maker_name() )
 		print('')
