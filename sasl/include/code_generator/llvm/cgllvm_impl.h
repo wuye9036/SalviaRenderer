@@ -80,7 +80,7 @@ protected:
 	SASL_VISIT_DCL( binary_expression );
 	SASL_VISIT_DCL( call_expression );
 
-	SASL_VISIT_DCL( declaration ){}
+	SASL_VISIT_DCL( declaration ){ data = data; (&v); }
 	
 	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( parameter );

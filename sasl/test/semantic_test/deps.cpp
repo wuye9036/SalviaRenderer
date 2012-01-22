@@ -10,6 +10,7 @@
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantic_api.h>
+#include <sasl/include/semantic/ssa_constructor.h>
 
 #include <salviar/include/shader_abi.h>
 
@@ -114,6 +115,8 @@ public:
 			return;
 		}
 
+		mgraph = ssa_constructor::construct_ssa( *mroot );
+
 		abi_analyser aa;
 
 		if( lang != salviar::lang_general && !aa.auto_entry( msi, lang ) ){
@@ -127,6 +130,7 @@ public:
 		BOOST_REQUIRE( msi );
 	}
 
+	shared_ptr<ssa_graph>	mgraph;
 	shared_ptr<program>		mroot;
 	shared_ptr<module_si>	msi;
 };
@@ -137,23 +141,11 @@ BOOST_FIXTURE_TEST_CASE( deps, deps_fixture )
 
 	BOOST_REQUIRE( mroot );
 	BOOST_REQUIRE( msi );
-	BOOST_REQUIRE( msi->deps() );
+	BOOST_REQUIRE( mgraph );
 
 	shared_ptr<symbol> sym = msi->root();
 	BOOST_REQUIRE( sym );
 
 	shared_ptr<symbol> g = sym->find("g");
 	BOOST_REQUIRE( g );
-
-	{
-		shared_ptr<symbol> param_deps = sym->find_overloads("param_deps")[0];
-		BOOST_REQUIRE( param_deps );
-		shared_ptr<function_type> param_deps_fn = param_deps->node()->as_handle<function_type>();
-		address_ident_t par_addr( param_deps_fn->params[0].get() );
-		address_ident_t fn_addr( param_deps_fn.get() );
-		vector<address_ident_t> inputs = msi->deps()->inputs_of( fn_addr );
-		BOOST_REQUIRE( inputs.size() == 1 );
-		BOOST_CHECK( par_addr == inputs[0] );
-	}
-	
 }

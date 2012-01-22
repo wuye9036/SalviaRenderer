@@ -7,6 +7,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
+#include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -14,28 +15,34 @@
 namespace sasl{
 	namespace syntax_tree{
 		struct node;
+		struct function_type;
 	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
 
-struct expr_t;
+class ssa_context;
+struct instruction_t;
 struct block_t;
 struct variable_t;
 struct value_t;
 
-struct expr_t
+struct instruction_t
 {
-	variable_t*	var;
-	value_t*	val;
-	std::vector<value_t> params;
+	variable_t*				var;
+	value_t*				val;
+	std::vector<value_t>	params;
+
+	block_t*		parent;
+	instruction_t*	next;
+	instruction_t*	prev;
 };
 
 struct block_t
 {
-	std::vector<block_t*> preds;
-	std::vector<block_t*> succs;
-	std::vector<expr_t*> exprs;
+	std::vector<instruction_t*>	ins;
+	std::vector<block_t*>		preds;
+	std::vector< std::pair<value_t*,block_t*> >		succs;
 };
 
 struct variable_t
@@ -47,7 +54,32 @@ struct variable_t
 
 struct value_t
 {
-	std::vector< std::pair<block_t*, sasl::syntax_tree::node*> > phi_exprs;
+	block_t* parent;
+	
+	// Expression or Phi Expression
+	sasl::syntax_tree::node* expr;
+	std::vector< std::pair<block_t*, value_t*> > phi_exprs;
+};
+
+struct function_t
+{
+	sasl::syntax_tree::function_type* fn;
+	block_t* entry;
+};
+
+struct ssa_graph
+{
+	function_t* fns;
+	boost::shared_ptr<ssa_context>	ctxt;
+};
+
+class dom_tree
+{
+};
+
+class dom_frontiers
+{
+
 };
 
 // address_ident_t
@@ -85,6 +117,7 @@ private:
 };
 
 size_t hash_value( address_ident_t const& v );
+
 
 class deps_graph{
 public:

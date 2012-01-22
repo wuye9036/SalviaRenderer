@@ -2,15 +2,23 @@
 #define SASL_SEMANTIC_SSA_CONSTRUCTOR_H
 
 #include <sasl/include/semantic/semantic_forward.h>
+#include <sasl/include/syntax_tree/visitor.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+using sasl::syntax_tree::syntax_tree_visitor;
 
 BEGIN_NS_SASL_SEMANTIC();
 
 class ssa_context;
+struct ssa_graph;
 
-class ssa_contructor: public syntax_tree_visitor
+class ssa_constructor: public syntax_tree_visitor
 {
 public:
-	shared_ptr<deps_graph> construct_ssa( program const& root );
+	static boost::shared_ptr<ssa_graph> construct_ssa( sasl::syntax_tree::program const& root );
 
 	// expression
 	SASL_VISIT_DCL( unary_expression );
@@ -59,7 +67,13 @@ public:
 	SASL_VISIT_DCL( program );
 
 private:
-	deps_graph*		dg;
+	ssa_constructor( ssa_graph*, ssa_context* ctxt );
+	ssa_constructor( ssa_constructor const& );
+	ssa_constructor& operator = ( ssa_constructor const& );
+
+	template <typename NodeT> void visit_child( boost::shared_ptr<NodeT> const& child );
+	
+	ssa_graph*		dg;
 	ssa_context*	ctxt;
 };
 

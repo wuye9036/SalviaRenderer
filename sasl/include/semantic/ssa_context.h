@@ -12,10 +12,11 @@ struct value_t;
 
 class ssa_context
 {
-	value_t*	create_value();
-	variable_t*	create_variable();
-	block_t*	create_block();
-	expr_t*		create_expr();
+	function_t*		create_function();
+	value_t*		create_value();
+	variable_t*		create_variable();
+	block_t*		create_block();
+	instruction_t*	create_instruction();
 };
 
 END_NS_SASL_SEMANTIC();

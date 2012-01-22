@@ -10,7 +10,6 @@
 #include <sasl/include/semantic/symbol_scope.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/caster.h>
-#include <sasl/include/semantic/deps_graph.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/make_tree.h>
@@ -98,16 +97,6 @@ using std::string;
 #define SASL_GET_OR_CREATE_SI_P( si_type, si_var, node, param ) shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>( node, param );
 
 #define SASL_EXTRACT_SI( si_type, si_var, node ) shared_ptr<si_type> si_var = extract_semantic_info<si_type>(node);
-
-address_ident_t const& get_address_ident( shared_ptr<node> const& v )
-{
-	return v->si_ptr<storage_si>()->address_ident();
-}
-
-void set_address_ident( shared_ptr<node> const& v, address_ident_t const& addr_ident )
-{
-	v->si_ptr<storage_si>()->address_ident( addr_ident );
-}
 
 // semantic analysis context
 struct sacontext{
@@ -257,8 +246,6 @@ SASL_VISIT_DEF( cast_expression ){
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_cexpr, msi->pety() );
 	ssi->entry_id( casted_tsi->entry_id() );
 
-	msi->deps()->add( address_ident_t( dup_cexpr.get() ), v.expr->si_ptr<storage_si>()->address_ident(), deps_graph::depends );
-
 	data_cptr()->generated_node = dup_cexpr->as_handle();
 }
 
@@ -281,12 +268,6 @@ SASL_VISIT_DEF( binary_expression )
 	vector< shared_ptr<symbol> > overloads;
 	if( is_assign(v.op) || is_arith_assign(v.op) ){
 		overloads = data_cptr()->parent_sym->find_assign_overloads( opname, caster, exprs );
-		//msi->deps()->add(
-		//	get_address_ident( dup_expr->left_expr ),
-		//	get_address_ident( dup_expr->right_expr ),
-		//	deps_graph::affects
-		//	);
-		
 	} else {
 		overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs );
 	}
@@ -308,13 +289,6 @@ SASL_VISIT_DEF( binary_expression )
 	// update semantic information of binary expression
 	tid_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
 	get_or_create_semantic_info<storage_si>( dup_expr, msi->pety() )->entry_id( result_tid );
-
-	if( is_assign(v.op) || is_arith_assign(v.op) ){
-		set_address_ident( dup_expr, get_address_ident( dup_expr->right_expr ) );
-	} else {
-		msi->deps()->add( get_address_ident( dup_expr ), get_address_ident( dup_expr->left_expr ), deps_graph::depends );
-		msi->deps()->add( get_address_ident( dup_expr ), get_address_ident( dup_expr->right_expr ), deps_graph::depends );
-	}
 
 	data_cptr()->generated_node = dup_expr->as_handle();
 }
@@ -590,7 +564,6 @@ SASL_VISIT_DEF( expression_initializer )
 			return;
 		}
 	}
-	msi->deps()->add( get_address_ident( data_cptr()->variable_to_fill ), ssi->address_ident(), deps_graph::depends );
 	data_cptr()->generated_node = dup_exprinit->as_handle();
 }
 
@@ -609,9 +582,6 @@ SASL_VISIT_DEF( declarator ){
 
 	if( data_cptr()->member_index >= 0 ){
 		ssi->mem_index( data_cptr()->member_index++ );
-	} else {
-		// Local or global
-		ssi->address_ident( address_ident_t( dup_decl.get() ) );
 	}
 
 	ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_decl;
@@ -750,7 +720,6 @@ SASL_VISIT_DEF( parameter )
 
 	// TODO: Unsupport reference yet.
 	ssi->is_reference( false );
-	ssi->address_ident( address_ident_t(dup_par.get()) );
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	data_cptr()->generated_node = dup_par->as_handle();
@@ -1017,12 +986,6 @@ SASL_VISIT_DEF( jump_statement )
 		if( v.jump_expr ){
 			any child_ctxt;
 			visit_child( child_ctxt, child_ctxt_init, v.jump_expr, dup_jump->jump_expr );
-			storage_si* ssi = dup_jump->jump_expr->si_ptr<storage_si>();
-			msi->deps()->add(
-				ssi->address_ident(),
-				address_ident_t(ctxt_ptr(*data)->parent_fn.get()),
-				deps_graph::affects
-				);
 		}
 	}
 
