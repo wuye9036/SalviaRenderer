@@ -144,12 +144,8 @@ public:
 	template <typename T> void value( T val );
 
 	builtin_types value_type() const;
-	
-	void address_ident( address_ident_t const& );
-	address_ident_t const& address_ident() const;
 
 private:
-	address_ident_t addr_ident;
 	boost::variant< uint64_t, int64_t, double, std::string, bool, char > val;
 };
 
@@ -163,6 +159,10 @@ public:
 class storage_si: public type_info_si{
 public:
 	storage_si( boost::shared_ptr<pety_t> const& typemgr );
+
+	// Referred declarator, for variable expression
+	void declarator( symbol* );
+	symbol* declarator() const;
 
 	salviar::semantic_value const& get_semantic() const;
 	void set_semantic( salviar::semantic_value const& v );
@@ -203,6 +203,8 @@ private:
 	bool invoked;
 	bool c_comp;
 	bool is_ref;
+	
+	symbol* decl;
 };
 
 class call_si: public type_info_si{

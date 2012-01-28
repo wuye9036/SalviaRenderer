@@ -115,7 +115,7 @@ public:
 			return;
 		}
 
-		mgraph = ssa_constructor::construct_ssa( *mroot );
+		mgraph = ssa_constructor::construct_ssa( *msi->root()->node()->as_handle<program>() );
 
 		abi_analyser aa;
 

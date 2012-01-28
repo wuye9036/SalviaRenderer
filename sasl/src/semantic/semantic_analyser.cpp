@@ -511,7 +511,6 @@ SASL_VISIT_DEF( constant_expression )
 	
 	SASL_GET_OR_CREATE_SI_P( const_value_si, vsi, dup_cexpr, msi->pety() );
 	vsi->set_literal( v.value_tok->str, v.ctype );
-	vsi->address_ident( address_ident_t( dup_cexpr.get() ) );
 	data_cptr()->generated_node = dup_cexpr->as_handle();	
 }
 
@@ -524,6 +523,7 @@ SASL_VISIT_DEF( variable_expression ){
 	if( vdecl ){
 		// Variable
 		dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
+		dup_vexpr->si_ptr<storage_si>()->declarator( vdecl.get() );
 	} else{
 		// Function
 		bool is_function = ! data_cptr()->parent_sym->find_overloads( name ).empty();

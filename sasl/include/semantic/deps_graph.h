@@ -29,9 +29,16 @@ struct value_t;
 
 struct instruction_t
 {
+	enum IDs
+	{
+		load,
+		save,
+		eval
+	};
+
+	// variable or parameters
 	variable_t*				var;
-	value_t*				val;
-	std::vector<value_t>	params;
+	std::vector<value_t*>	params;
 
 	block_t*		parent;
 	instruction_t*	next;
@@ -57,20 +64,31 @@ struct value_t
 	block_t* parent;
 	
 	// Expression or Phi Expression
-	sasl::syntax_tree::node* expr;
-	std::vector< std::pair<block_t*, value_t*> > phi_exprs;
+	sasl::syntax_tree::node*	expr;
+	instruction_t*				ins;
+	std::vector<value_t*>		phi_exprs;
 };
 
 struct function_t
 {
 	sasl::syntax_tree::function_type* fn;
-	block_t* entry;
+
+	value_t*	retval;	
+	block_t*	entry;
+	block_t*	exit;
 };
 
 struct ssa_graph
 {
 	function_t* fns;
 	boost::shared_ptr<ssa_context>	ctxt;
+};
+
+struct ssa_attribute
+{
+	value_t*	val;
+	variable_t*	var;
+	function_t*	fn;
 };
 
 class dom_tree

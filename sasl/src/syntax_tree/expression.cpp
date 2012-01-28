@@ -73,7 +73,6 @@ variable_expression::variable_expression( boost::shared_ptr<token_t> tok )
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( variable_expression );
 
-
 operators_helper::operators_helper()
 {
 	prefix_ops +=

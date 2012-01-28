@@ -8,14 +8,30 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-using sasl::syntax_tree::syntax_tree_visitor;
+namespace sasl{
+	namespace syntax_tree{
+		struct node;
+	}
+}
 
 BEGIN_NS_SASL_SEMANTIC();
 
 class ssa_context;
 struct ssa_graph;
+struct function_t;
+struct block_t;
+class symbol;
 
-class ssa_constructor: public syntax_tree_visitor
+enum scopes
+{
+	scp_global,
+	scp_local,
+	scp_member
+};
+
+struct ssa_data;
+
+class ssa_constructor: public sasl::syntax_tree::syntax_tree_visitor
 {
 public:
 	static boost::shared_ptr<ssa_graph> construct_ssa( sasl::syntax_tree::program const& root );
@@ -73,6 +89,14 @@ private:
 
 	template <typename NodeT> void visit_child( boost::shared_ptr<NodeT> const& child );
 	
+	void connect( block_t* from, block_t* to );
+
+	// States
+	scopes			current_scope;
+	symbol*			current_symbol;
+	function_t*		current_function;
+	block_t*		current_block;
+
 	ssa_graph*		dg;
 	ssa_context*	ctxt;
 };

@@ -132,7 +132,7 @@ void type_info_si_impl::type_info( builtin_types btc ){
 //////////////////////////////////////////////////////////////////////////
 // constant value semantic info
 const_value_si::const_value_si( shared_ptr<pety_t> typemgr )
-	: SASL_INIT_TYPE_INFO_PROXY(typemgr), addr_ident(NULL)
+	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 {}
 
 void const_value_si::set_literal(
@@ -173,16 +173,6 @@ builtin_types const_value_si::value_type() const{
 	return type_info()->tycode;
 }
 
-void const_value_si::address_ident( address_ident_t const& v )
-{
-	addr_ident = v;
-}
-
-address_ident_t const& const_value_si::address_ident() const
-{
-	return addr_ident;
-}
-
 shared_ptr<tynode> type_info_si::from_node( ::shared_ptr<node> n )
 {
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>(n);
@@ -197,6 +187,7 @@ storage_si::storage_si( shared_ptr<pety_t> const& typemgr )
 	, sem(salviar::sv_none)
 	, memidx(-1), swz(0)
 	, intrin(false), invoked(false), c_comp(false)
+	, decl(NULL)
 {
 }
 
@@ -254,6 +245,16 @@ bool storage_si::is_reference() const{
 
 void storage_si::is_reference( bool v ){
 	is_ref = v;
+}
+
+void storage_si::declarator( symbol* v )
+{
+	decl = v;
+}
+
+symbol* storage_si::declarator() const
+{
+	return decl;
 }
 
 call_si::call_si( shared_ptr<pety_t> const& typemgr )
