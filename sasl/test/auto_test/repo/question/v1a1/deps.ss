@@ -5,6 +5,7 @@ int param_deps( int a ){
 }
 
 /*
+
 int rv_deps( int a ){
 	return a+a;
 }

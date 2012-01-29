@@ -21,6 +21,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
+class module_si;
 class ssa_context;
 struct instruction_t;
 struct block_t;
@@ -95,8 +96,24 @@ struct ssa_attribute
 	function_t*	fn;
 };
 
+struct dom_tree_node;
 class dom_tree
 {
+public:
+	static boost::shared_ptr<dom_tree> construct_dom_tree( module_si*, ssa_graph* );
+	
+	dom_tree_node*	dom_node( block_t* b );
+	block_t*		dom_block( block_t* b );
+private:
+	boost::unordered_map<function_t*, dom_tree_node*>	dom_roots;
+	boost::unordered_map<block_t*, dom_tree_node*>		dom_nodes;
+};
+
+struct dom_tree_node
+{
+	dom_tree_node*	idom;
+	block_t*		block;
+	size_t			post_order;
 };
 
 class dom_frontiers
@@ -139,7 +156,6 @@ private:
 };
 
 size_t hash_value( address_ident_t const& v );
-
 
 class deps_graph{
 public:

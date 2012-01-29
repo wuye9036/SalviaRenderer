@@ -120,7 +120,7 @@ public:
 		}
 
 		mgraph = ssa_constructor::construct_ssa( *msi->root()->node()->as_handle<program>() );
-
+		mdom = dom_tree::construct_dom_tree( msi.get(), mgraph.get() );
 		abi_analyser aa;
 
 		if( lang != salviar::lang_general && !aa.auto_entry( msi, lang ) ){
@@ -151,6 +151,7 @@ public:
 	}
 
 	shared_ptr<ssa_graph>	mgraph;
+	shared_ptr<dom_tree>	mdom;
 	shared_ptr<program>		mroot;
 	shared_ptr<module_si>	msi;
 };
@@ -162,6 +163,7 @@ BOOST_FIXTURE_TEST_CASE( deps, deps_fixture )
 	BOOST_REQUIRE( mroot );
 	BOOST_REQUIRE( msi );
 	BOOST_REQUIRE( mgraph );
+	BOOST_REQUIRE( mdom );
 
 	shared_ptr<symbol> sym = msi->root();
 	BOOST_REQUIRE( sym );
@@ -177,4 +179,6 @@ BOOST_FIXTURE_TEST_CASE( deps, deps_fixture )
 
 	BOOST_CHECK( is_succ( param_deps_fn->entry, param_deps_fn->exit ) );
 	BOOST_CHECK( is_pred( param_deps_fn->entry, param_deps_fn->exit ) );
+
+	BOOST_CHECK_EQUAL( mdom->dom_node( param_deps_fn->exit )->idom, mdom->dom_node( param_deps_fn->entry ) );
 }
