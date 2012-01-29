@@ -1,5 +1,7 @@
 #include <sasl/include/semantic/deps_graph.h>
 
+#include <sasl/include/semantic/ssa_context.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/make_shared.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -98,6 +100,20 @@ address_ident_t address_ident_t::member_of( size_t index ) const
 size_t hash_value( address_ident_t const& v )
 {
 	return v.hash_value();
+}
+
+
+function_t* ssa_graph::ssa_fn( sasl::syntax_tree::node* fn ) const
+{
+	return ctxt->attr(fn).fn;
+}
+
+ssa_context* ssa_graph::context()
+{
+	if( !ctxt ){
+		ctxt = make_shared<ssa_context>();
+	}
+	return ctxt.get();
 }
 
 END_NS_SASL_SEMANTIC();

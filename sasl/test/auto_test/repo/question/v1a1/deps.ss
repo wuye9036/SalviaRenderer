@@ -4,6 +4,7 @@ int param_deps( int a ){
 	return a;
 }
 
+/*
 int rv_deps( int a ){
 	return a+a;
 }
@@ -24,3 +25,4 @@ int constant_deps()
 	int b = 0;
 	return b;
 }
+*/

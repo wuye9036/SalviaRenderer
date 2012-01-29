@@ -11,12 +11,14 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/ssa_constructor.h>
+#include <sasl/include/semantic/deps_graph.h>
 
 #include <salviar/include/shader_abi.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -37,6 +39,7 @@ using std::cout;
 using std::endl;
 using std::ios_base;
 using std::vector;
+using std::pair;
 
 class deps_test_code_source: public lex_context, public code_source{
 public:
@@ -62,6 +65,7 @@ public:
 
 	virtual void next( const std::string& /*lit*/ ){ return; }
 	virtual string error_token(){ return string(""); }
+
 private:
 	bool process(){
 		eof = code.empty();
@@ -130,6 +134,22 @@ public:
 		BOOST_REQUIRE( msi );
 	}
 
+	bool is_succ( block_t* pred, block_t* succ )
+	{
+		typedef pair<value_t*,block_t*> succ_t;
+		BOOST_FOREACH( succ_t const& candidate, pred->succs ){
+			if( candidate.second == succ ){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool is_pred( block_t* pred, block_t* succ )
+	{
+		return std::find( succ->preds.begin(), succ->preds.end(), pred ) != succ->preds.end();
+	}
+
 	shared_ptr<ssa_graph>	mgraph;
 	shared_ptr<program>		mroot;
 	shared_ptr<module_si>	msi;
@@ -148,4 +168,13 @@ BOOST_FIXTURE_TEST_CASE( deps, deps_fixture )
 
 	shared_ptr<symbol> g = sym->find("g");
 	BOOST_REQUIRE( g );
+
+	shared_ptr<symbol> param_deps = sym->find_overloads( "param_deps" )[0];
+	BOOST_REQUIRE( param_deps );
+
+	function_t* param_deps_fn = mgraph->ssa_fn( param_deps->node().get() );
+	BOOST_REQUIRE( param_deps );
+
+	BOOST_CHECK( is_succ( param_deps_fn->entry, param_deps_fn->exit ) );
+	BOOST_CHECK( is_pred( param_deps_fn->entry, param_deps_fn->exit ) );
 }

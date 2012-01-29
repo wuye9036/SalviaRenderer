@@ -33,8 +33,9 @@ struct instruction_t
 	{
 		load,
 		save,
+		phi,
 		eval
-	};
+	} id;
 
 	// variable or parameters
 	variable_t*				var;
@@ -62,11 +63,11 @@ struct variable_t
 struct value_t
 {
 	block_t* parent;
-	
-	// Expression or Phi Expression
-	sasl::syntax_tree::node*	expr;
+
+	// Expr node maybe: declarator or expression
+	sasl::syntax_tree::node*	expr_node;
+
 	instruction_t*				ins;
-	std::vector<value_t*>		phi_exprs;
 };
 
 struct function_t
@@ -78,10 +79,13 @@ struct function_t
 	block_t*	exit;
 };
 
-struct ssa_graph
+class ssa_graph
 {
-	function_t* fns;
-	boost::shared_ptr<ssa_context>	ctxt;
+public:
+	function_t*		ssa_fn( sasl::syntax_tree::node* fn ) const;
+	ssa_context*	context();
+private:
+	boost::shared_ptr<ssa_context> ctxt;
 };
 
 struct ssa_attribute

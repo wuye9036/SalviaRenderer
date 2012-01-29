@@ -40,7 +40,7 @@ function_t* ssa_context::create_function()
 value_t* ssa_context::create_value()
 {
 	value_t* ret = new value_t();
-	ret->expr = NULL;
+	ret->expr_node = NULL;
 	ret->parent = NULL;
 	values.push_back(ret);
 	return ret;
@@ -55,7 +55,7 @@ block_t* ssa_context::create_block()
 
 value_t* ssa_context::load( variable_t* var )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	// EFLIB_ASSERT_UNIMPLEMENTED();
 	return NULL;
 }
 
@@ -71,6 +71,22 @@ value_t* ssa_context::load( sasl::syntax_tree::node* n )
 void ssa_context::store( variable_t* var, value_t* val )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+instruction_t* ssa_context::emit( block_t* parent, int id )
+{
+	instruction_t* ret = new instruction_t();
+	ret->id = (instruction_t::IDs)id;
+	if( !parent->ins.empty() )
+	{
+		ret->prev = parent->ins.empty() ? NULL : parent->ins.back();
+		parent->ins.back()->next = ret;
+		
+	}
+	ret->parent = parent;
+	parent->ins.push_back(ret);
+
+	return ret;
 }
 
 END_NS_SASL_SEMANTIC();

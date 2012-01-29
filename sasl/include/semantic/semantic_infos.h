@@ -4,7 +4,6 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/semantic/semantic_info.h>
 #include <sasl/include/semantic/pety.h>
-#include <sasl/include/semantic/deps_graph.h>
 #include <sasl/enums/default_hasher.h>
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>

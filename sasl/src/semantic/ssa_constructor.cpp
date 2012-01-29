@@ -32,9 +32,7 @@ BEGIN_NS_SASL_SEMANTIC();
 shared_ptr<ssa_graph> ssa_constructor::construct_ssa( program const& root )
 {
 	shared_ptr<ssa_graph> ret = make_shared<ssa_graph>();
-	ret->ctxt = make_shared<ssa_context>();
-
-	ssa_constructor constr( ret.get(), ret->ctxt.get() );
+	ssa_constructor constr( ret.get(), ret->context() );
 	constr.visit_child( root.as_handle<program>() );
 	return ret;
 }
@@ -77,16 +75,13 @@ SASL_VISIT_DEF( variable_expression )
 	if( ssi )
 	{
 		// Variable
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		ctxt->attr(&v).var = ctxt->attr( ssi->declarator()->node().get() ).var;
 	} 
 	else
 	{
 		// Function name
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-
-	// variable_t* var = 
-
 }
 
 // declaration & type specifier
@@ -160,6 +155,7 @@ SASL_VISIT_DEF( compound_statement )
 		current_function->entry				= current_block;
 		current_function->exit				= ctxt->create_block();
 		current_function->retval			= ctxt->create_value();
+		current_function->retval->ins		= ctxt->emit( current_function->exit, instruction_t::phi );
 		current_function->retval->parent	= current_function->exit;
 	}
 
@@ -177,7 +173,7 @@ SASL_VISIT_DEF( jump_statement )
 		if( v.jump_expr ){
 			visit_child( v.jump_expr );
 			value_t* expr_value = ctxt->load( v.jump_expr.get() );
-			current_function->retval->phi_exprs.push_back( expr_value );
+			current_function->retval->ins->params.push_back( expr_value );
 		}
 		connect( current_block, current_function->exit );
 	} 
