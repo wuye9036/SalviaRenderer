@@ -33,6 +33,7 @@ public:
 	variable_t*		create_variable( sasl::syntax_tree::node* decl );
 	block_t*		create_block();
 	instruction_t*	emit( block_t* parent, int id );
+	instruction_t*	emit( block_t* parent, instruction_t* position, int id );
 	ssa_attribute&	attr( sasl::syntax_tree::node* n );
 
 	value_t*		load( sasl::syntax_tree::node* n );

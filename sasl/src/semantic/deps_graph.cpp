@@ -20,6 +20,7 @@ using boost::hash_value;
 using boost::hash_range;
 using boost::hash_combine;
 using boost::unordered_set;
+using boost::unordered_map;
 using std::equal;
 using std::make_pair;
 using std::vector;
@@ -122,31 +123,50 @@ ssa_context* ssa_graph::context()
 }
 
 // K.D. Cooper, 2001
-void mark_post_order( dom_tree* tree, block_t* b, unordered_set<block_t*>& visited, vector<block_t*>& post_order ){
+void mark_post_order( dom_tree* tree, block_t* b, unordered_set<block_t*>& visited, vector<block_t*>& post_order, bool is_pdom ){
 	if( visited.count(b) > 0 ){
 		return;
 	}
+	
 	visited.insert(b);
-	pair<value_t*, block_t*> succ;
-	BOOST_FOREACH( succ, b->succs ){
-		mark_post_order( tree, succ.second, visited, post_order );
+
+	if ( !is_pdom ){
+		pair<value_t*, block_t*> succ;
+		BOOST_FOREACH( succ, b->succs ){
+			mark_post_order( tree, succ.second, visited, post_order, is_pdom );
+		}
+	} else {
+		BOOST_FOREACH( block_t* pred, b->preds ){
+			mark_post_order( tree, pred, visited, post_order, is_pdom );
+		}
 	}
-	tree->dom_node(b)->post_order = post_order.size();
+
+	if( is_pdom ){
+		tree->dom_node(b)->pdom_post_order = post_order.size();
+	} else {
+		tree->dom_node(b)->idom_post_order = post_order.size();
+	}
+	
 	post_order.push_back( b );
 }
 
 // K.D. Cooper, 2001
-dom_tree_node* intersect_dom( dom_tree_node* n0, dom_tree_node* n1 )
+dom_tree_node* intersect_dom(
+	dom_tree_node* n0,
+	dom_tree_node* n1,
+	size_t			dom_tree_node::*post_order,
+	dom_tree_node*	dom_tree_node::*next_dom 
+	)
 {
 	dom_tree_node* finger0 = n0;
 	dom_tree_node* finger1 = n1;
 
 	while( finger0 != finger1 ){
-		while( finger0->post_order < finger1->post_order ){
-			finger0 = finger0->idom;
+		while( finger0->*post_order < finger1->*post_order ){
+			finger0 = finger0->*next_dom;
 		}
-		while( finger1->post_order < finger0->post_order ){
-			finger1 = finger1->idom;
+		while( finger1->*post_order < finger0->*post_order ){
+			finger1 = finger1->*next_dom;
 		}
 	}
 
@@ -154,34 +174,60 @@ dom_tree_node* intersect_dom( dom_tree_node* n0, dom_tree_node* n1 )
 }
 
 // K.D. Cooper, 2001
-void construct_function_dom_tree( dom_tree* tree, function_t* fn )
+void construct_function_dom_tree( dom_tree* tree, function_t* fn, bool is_pdom )
 {
 	// Construct reverse post-order
 	unordered_set<block_t*> visited;
 	vector<block_t*> post_order_nodes;
-	mark_post_order( tree, fn->entry, visited, post_order_nodes );
+	block_t* first_node = is_pdom ? fn->exit : fn->entry;
+
+	mark_post_order( tree, first_node, visited, post_order_nodes, is_pdom );
 	
-	tree->dom_node( fn->entry )->idom = tree->dom_node( fn->entry );
+	dom_tree_node*	dom_tree_node::*next_dom;
+	size_t			dom_tree_node::*post_order;
+
+	next_dom = is_pdom ? &dom_tree_node::pdom : &dom_tree_node::idom;
+	post_order = is_pdom ? &dom_tree_node::pdom_post_order : &dom_tree_node::idom_post_order;
+
+	tree->dom_node( first_node )->*next_dom = tree->dom_node( first_node );
 	bool changed(true);
 	while( changed ){
 		changed = false;
 		BOOST_REVERSE_FOREACH( block_t* b, post_order_nodes )
 		{
-			if( b == fn->entry ){ continue; }
-			dom_tree_node* new_idom = NULL;
-			BOOST_FOREACH( block_t* p, b->preds ) {
-				dom_tree_node* pred_dom_node = tree->dom_node( p );
-				if( !new_idom ) {
-					if ( pred_dom_node->idom ){ new_idom = pred_dom_node; }
+			if( b == first_node ){ continue; }
+			dom_tree_node* new_dom = NULL;
+
+			vector< pair<value_t*, block_t*> >::iterator succ_iter = b->succs.begin();
+			vector<block_t*>::iterator pred_iter = b->preds.begin();
+			
+			block_t* linked_block = is_pdom ? succ_iter->second : *pred_iter;
+
+			while( linked_block ){
+				dom_tree_node* dom_node = tree->dom_node( linked_block );
+				if( !new_dom ) {
+					if ( dom_node->*next_dom ){ new_dom = dom_node; }
 					continue;
 				}
-				if( pred_dom_node->idom != NULL ){
-					new_idom = intersect_dom( pred_dom_node, new_idom );
+				if( dom_node->*next_dom != NULL ){
+					new_dom = intersect_dom( dom_node, new_dom, post_order, next_dom );
+				}
+
+				linked_block = NULL;
+				if( is_pdom ){
+					if( ++succ_iter != b->succs.end() ){
+						linked_block = succ_iter->second;
+					}
+				} else {
+					if( ++pred_iter != b->preds.end() ){
+						linked_block = *pred_iter;
+					}
 				}
 			}
+
 			dom_tree_node* b_dom_node = tree->dom_node(b);
-			if( b_dom_node->idom != new_idom ){
-				b_dom_node->idom = new_idom;
+			if( b_dom_node->*next_dom != new_dom ){
+				b_dom_node->*next_dom = new_dom;
 				changed = true;
 			}
 		}
@@ -195,7 +241,8 @@ shared_ptr<dom_tree> dom_tree::construct_dom_tree( module_si* msi, ssa_graph* g 
 	vector< shared_ptr<symbol> > fns = msi->functions();
 	BOOST_FOREACH( shared_ptr<symbol> const& fn_sym, fns )
 	{
-		construct_function_dom_tree( ret.get(), g->ssa_fn( fn_sym->node().get() ) );
+		construct_function_dom_tree( ret.get(), g->ssa_fn( fn_sym->node().get() ), false );
+		construct_function_dom_tree( ret.get(), g->ssa_fn( fn_sym->node().get() ), true );
 	}
 
 	return ret;
@@ -203,7 +250,7 @@ shared_ptr<dom_tree> dom_tree::construct_dom_tree( module_si* msi, ssa_graph* g 
 
 dom_tree_node* dom_tree::dom_node( block_t* b )
 {
-	boost::unordered_map<block_t*, dom_tree_node*>::iterator it;
+	unordered_map<block_t*, dom_tree_node*>::iterator it;
 	it = dom_nodes.find(b);
 	if( it != dom_nodes.end() ){
 		return it->second;
@@ -211,11 +258,168 @@ dom_tree_node* dom_tree::dom_node( block_t* b )
 
 	dom_tree_node* ret = new dom_tree_node();
 	ret->block = b;
-	ret->idom = NULL;
-	ret->post_order = 0;
+	ret->idom = ret->pdom = NULL;
+	ret->idom_post_order = ret->pdom_post_order = 0;
 	dom_nodes[b] = ret;
 
 	return ret;
+}
+
+class vmap_constructor
+{
+public:
+	bool construct( function_t* fn )
+	{
+		construct_block_vmap( fn->entry );
+	}
+
+private:
+	void construct_block_vmap( block_t* b ){
+		if( processed.count(b) > 0 ){ return; }
+
+		if( b->preds.size() > 1 ){
+			BOOST_FOREACH( variable_t* var, vars ){
+				instruction_t* phi_inst = ctxt->emit( b, b->beg, instruction_t::phi );
+				value_t* merged = ctxt->create_value();
+				merged->ins = phi_inst;
+
+				BOOST_FOREACH( block_t* p, b->preds ){
+					if( processed.count(p) > 0 ){
+						phi_inst->params.push_back( vmap->load( p->end, var ) );
+					} else {
+						phi_worklist.push_back( make_pair(p, phi_inst) );
+					}
+				}
+
+				vmap->store( phi_inst, var, merged );
+			}
+		}
+
+		for( instruction_t* ins = b->beg; ins != b->end; ins = ins->next ){
+			switch( ins->id ){
+			case instruction_t::save :
+				// Save
+				// vmap->store( ins, var, ins->var, ins->params[0] );
+				break;
+			}
+		}
+
+		processed.insert( b );
+
+		/*		
+		BOOST_FOREACH( block_t* s, b->succs ){
+			construct_block_vmap(s);
+		}
+		*/
+	}
+	
+	void fix_phi()
+	{
+		pair<block_t*, instruction_t*> connection;
+		BOOST_FOREACH( connection, phi_worklist ){
+			block_t*		p	= connection.first;
+			instruction_t*	ins	= connection.second;
+
+			BOOST_FOREACH( variable_t* var, vars ){
+				ins->params.push_back( vmap->load( p->end, var ) );
+			}
+		}
+	}
+
+	ssa_context*								ctxt;
+	unordered_set<block_t*>						processed;
+	vector< pair<block_t*, instruction_t*> >	phi_worklist;
+	vector< variable_t* >						vars;
+	function_vmap*								vmap;
+};
+
+void function_vmap::construct_vmap( function_t* fn )
+{
+	// Process all blocks
+
+	// 
+	
+
+}
+
+void compute_block_abi(){
+	/*
+	Initialize all Value.SOURCE to UNDEF
+	Initialize all Block.MODE to UNDEF
+
+	ENTRY.MODE = 'SIMD'
+	
+	VALUE_CHANGED = TRUE
+
+	while VALUE_CHANGED
+		VALUE_CHANGED = FALSE
+		Add ENTRY to BLOCK_QUEUE
+
+		for N in BLOCK_QUEUE
+			for V in N.VALUES
+				DEST_SOURCE = PROMOTE_SOURCE( V.INS.PARAMS )
+				if V.SOURCE != DEST_SOURCE
+					VALUE_CHANGED = TRUE
+					V.SOURCE = DEST_SOURCE
+
+			if N.SUCCS is single
+				SUCC = N.SUCCS[0]
+				if SUCC.MODE != n.MODE
+					add SUCC to BLOCK_QUEUE
+					SUCC.MODE = n.MODE
+			else 
+				for (COND, SUCC) in n.SUCCS
+					if COND.SOURCE = UNIFORM or UNDEF
+						DEST_MODE = N.MODE
+					else (COND.SOURCE = PER_PIXEL)
+						DEST_MODE = SISD
+					if SUCC.MODE != DEST_MODE
+						add SUCC to BLOCK_QUEUE
+	*/
+}
+
+void colorize_block()
+{
+	/*
+	
+	*/
+}
+
+
+block_t::block_t()
+{
+	end = new instruction_t();
+	end->parent = this;
+
+	beg = end;
+}
+
+void block_t::push_back( instruction_t* ins )
+{
+	insert( ins, end );
+}
+
+void block_t::insert( instruction_t* ins, instruction_t* pos )
+{
+	assert( !ins->parent );
+	assert( pos->parent == this );
+
+	ins->next = pos;
+	ins->prev = pos->prev;
+	pos->prev = ins;
+	
+	if( ins->prev ){
+		ins->prev->next = ins;
+	} else {
+		beg = ins;
+	}
+}
+
+
+instruction_t::instruction_t()
+	:var(NULL), id(instruction_t::none), parent(NULL), prev(NULL), next(NULL)
+{
+
 }
 
 END_NS_SASL_SEMANTIC();

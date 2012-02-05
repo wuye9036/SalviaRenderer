@@ -77,15 +77,7 @@ instruction_t* ssa_context::emit( block_t* parent, int id )
 {
 	instruction_t* ret = new instruction_t();
 	ret->id = (instruction_t::IDs)id;
-	if( !parent->ins.empty() )
-	{
-		ret->prev = parent->ins.empty() ? NULL : parent->ins.back();
-		parent->ins.back()->next = ret;
-		
-	}
-	ret->parent = parent;
-	parent->ins.push_back(ret);
-
+	parent->push_back( ret );
 	return ret;
 }
 

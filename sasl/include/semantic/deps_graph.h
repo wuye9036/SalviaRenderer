@@ -30,8 +30,11 @@ struct value_t;
 
 struct instruction_t
 {
+	instruction_t();
+
 	enum IDs
 	{
+		none,
 		load,
 		save,
 		phi,
@@ -49,7 +52,15 @@ struct instruction_t
 
 struct block_t
 {
-	std::vector<instruction_t*>	ins;
+	block_t();
+
+	void push_back( instruction_t* ins );
+	void insert( instruction_t* ins, instruction_t* pos );
+	bool empty();
+
+	instruction_t* beg;
+	instruction_t* end;
+	
 	std::vector<block_t*>		preds;
 	std::vector< std::pair<value_t*,block_t*> >		succs;
 };
@@ -109,11 +120,35 @@ private:
 	boost::unordered_map<block_t*, dom_tree_node*>		dom_nodes;
 };
 
+struct block_vmap
+{
+	block_t* block;
+	typedef std::pair<instruction_t*, value_t*> pos_value_pair_t;
+	boost::unordered_map< variable_t*, std::vector<pos_value_pair_t> > block_variables;
+};
+
+class function_vmap
+{
+public:
+	void		construct_vmap( function_t* fn );
+	void		store( instruction_t* position, variable_t* var, value_t* v );
+	value_t*	load ( instruction_t* position, variable_t* var );
+
+private:
+	boost::unordered_map<block_t*, block_vmap> block_variables;
+};
+
+void simplify_phi_node( ssa_graph* g );
+
 struct dom_tree_node
 {
 	dom_tree_node*	idom;
+	dom_tree_node*	pdom;
+	
+	size_t			idom_post_order;
+	size_t			pdom_post_order;
+
 	block_t*		block;
-	size_t			post_order;
 };
 
 class dom_frontiers
