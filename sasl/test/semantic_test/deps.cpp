@@ -180,6 +180,8 @@ BOOST_FIXTURE_TEST_CASE( deps, deps_fixture )
 	BOOST_CHECK( is_succ( param_deps_fn->entry, param_deps_fn->exit ) );
 	BOOST_CHECK( is_pred( param_deps_fn->entry, param_deps_fn->exit ) );
 
-	BOOST_CHECK_EQUAL( mdom->dom_node( param_deps_fn->exit )->idom, mdom->dom_node( param_deps_fn->entry ) );
-	BOOST_CHECK_EQUAL( mdom->dom_node( param_deps_fn->entry )->pdom, mdom->dom_node( param_deps_fn->exit ) );
+	BOOST_CHECK( mdom->idominance( param_deps_fn->entry, param_deps_fn->exit ) );
+	BOOST_CHECK( mdom->dominance( param_deps_fn->entry, param_deps_fn->exit ) );
+	BOOST_CHECK( mdom->post_idominance( param_deps_fn->exit, param_deps_fn->entry ) );
+	BOOST_CHECK( mdom->post_dominance( param_deps_fn->exit, param_deps_fn->entry ) );
 }

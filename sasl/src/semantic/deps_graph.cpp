@@ -179,9 +179,9 @@ void construct_function_dom_tree( dom_tree* tree, function_t* fn, bool is_pdom )
 	// Construct reverse post-order
 	unordered_set<block_t*> visited;
 	vector<block_t*> post_order_nodes;
-	block_t* first_node = is_pdom ? fn->exit : fn->entry;
+	block_t* entry_block = is_pdom ? fn->exit : fn->entry;
 
-	mark_post_order( tree, first_node, visited, post_order_nodes, is_pdom );
+	mark_post_order( tree, entry_block, visited, post_order_nodes, is_pdom );
 	
 	dom_tree_node*	dom_tree_node::*next_dom;
 	size_t			dom_tree_node::*post_order;
@@ -189,13 +189,13 @@ void construct_function_dom_tree( dom_tree* tree, function_t* fn, bool is_pdom )
 	next_dom = is_pdom ? &dom_tree_node::pdom : &dom_tree_node::idom;
 	post_order = is_pdom ? &dom_tree_node::pdom_post_order : &dom_tree_node::idom_post_order;
 
-	tree->dom_node( first_node )->*next_dom = tree->dom_node( first_node );
+	tree->dom_node( entry_block )->*next_dom = tree->dom_node( entry_block );
 	bool changed(true);
 	while( changed ){
 		changed = false;
 		BOOST_REVERSE_FOREACH( block_t* b, post_order_nodes )
 		{
-			if( b == first_node ){ continue; }
+			if( b == entry_block ){ continue; }
 			dom_tree_node* new_dom = NULL;
 
 			vector< pair<value_t*, block_t*> >::iterator succ_iter = b->succs.begin();
@@ -263,6 +263,60 @@ dom_tree_node* dom_tree::dom_node( block_t* b )
 	dom_nodes[b] = ret;
 
 	return ret;
+}
+
+block_t* dom_tree::pidom_block( block_t* b )
+{
+	return dom_node(b)->pdom->block;
+}
+
+block_t* dom_tree::idom_block( block_t* b )
+{
+	return dom_node(b)->idom->block;
+}
+
+bool dom_tree::dominance( block_t* b0, block_t* b1 )
+{
+	dom_tree_node* cur = dom_node(b1);
+	dom_tree_node* b0_node = dom_node(b0);
+
+	while( cur ){
+		if( cur == b0_node ){ return true; }
+		dom_tree_node* idom_node = cur->idom;
+		if( idom_node == cur || !idom_node ){
+			return false;
+		}
+		cur = idom_node;
+	}
+
+	return false;
+}
+
+bool dom_tree::idominance( block_t* b0, block_t* b1 )
+{
+	return b0 == b1 || idom_block(b1) == b0;
+}
+
+bool dom_tree::post_dominance( block_t* b0, block_t* b1 )
+{
+	dom_tree_node* cur = dom_node(b1);
+	dom_tree_node* b0_node = dom_node(b0);
+
+	while( cur ){
+		if( cur == b0_node ){ return true; }
+		dom_tree_node* pdom_node = cur->pdom;
+		if( pdom_node == cur || !pdom_node ){
+			return false;
+		}
+		cur = pdom_node;
+	}
+
+	return false;
+}
+
+bool dom_tree::post_idominance( block_t* b0, block_t* b1 )
+{
+	return b0 == b1 || pidom_block(b1) == b0;
 }
 
 class vmap_constructor
@@ -342,11 +396,62 @@ void function_vmap::construct_vmap( function_t* fn )
 
 }
 
-void compute_block_abi(){
-	/*
-	Initialize all Value.SOURCE to UNDEF
-	Initialize all Block.MODE to UNDEF
+enum execution_mode
+{
+	em_unknown,
+	em_single,
+	em_multiple
+};
 
+void compute_block_abi( dom_tree* tree, function_t* fn ){
+
+	unordered_set<block_t*> visited;
+	vector<block_t*> post_order_nodes;
+	mark_post_order( tree, fn->entry, visited, post_order_nodes, false );
+
+	unordered_map< value_t*, execution_mode > value_ems;
+	unordered_map< block_t*, execution_mode > block_ems;
+
+	// Initialize all Value.SOURCE to UNDEF
+	// Initialize all Block.MODE to UNDEF
+
+	block_ems[fn->entry] = em_single;
+	bool value_changed = true;
+
+	while( value_changed ){
+		BOOST_REVERSE_FOREACH( block_t* b, post_order_nodes ){
+			execution_mode em = block_ems[b];
+			for( instruction_t* ins = b->beg; ins != b->end; ins = ins->next ){
+				/*if( block_ems[b] )
+				value_ems[ins->ret] = */
+			}
+
+			pair<value_t*, block_t*> succ;
+			BOOST_FOREACH( succ, b->succs ){
+				execution_mode value_em = value_ems.count(succ.first) > 0 ? value_ems[succ.first] : em_unknown;
+				execution_mode dst_succ_em = em_unknown;
+				execution_mode cur_succ_em = block_ems.count(succ.second) > 0 ? block_ems[succ.second] : em_unknown;
+
+				block_t* succ_idom = tree->idom_block(succ.second);
+				if( tree->post_idominance( succ.second, succ_idom ) ){
+					dst_succ_em = block_ems[succ_idom];
+				} else {
+					if( succ.first ){
+						dst_succ_em = (execution_mode)std::max( value_em, cur_succ_em );
+						dst_succ_em = (execution_mode)std::max( em, dst_succ_em );
+					} else {
+						dst_succ_em = em;
+					}
+				}
+
+				if( dst_succ_em != cur_succ_em ){
+					block_ems[succ.second] = dst_succ_em;
+					value_changed = true;
+				}
+			}
+		}
+	}
+	/*
 	ENTRY.MODE = 'SIMD'
 	
 	VALUE_CHANGED = TRUE

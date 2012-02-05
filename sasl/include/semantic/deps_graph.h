@@ -44,6 +44,7 @@ struct instruction_t
 	// variable or parameters
 	variable_t*				var;
 	std::vector<value_t*>	params;
+	value_t*				ret;
 
 	block_t*		parent;
 	instruction_t*	next;
@@ -78,7 +79,6 @@ struct value_t
 
 	// Expr node maybe: declarator or expression
 	sasl::syntax_tree::node*	expr_node;
-
 	instruction_t*				ins;
 };
 
@@ -114,7 +114,19 @@ public:
 	static boost::shared_ptr<dom_tree> construct_dom_tree( module_si*, ssa_graph* );
 	
 	dom_tree_node*	dom_node( block_t* b );
-	block_t*		dom_block( block_t* b );
+	block_t*		idom_block( block_t* b );
+	block_t*		pidom_block( block_t* b );
+
+	bool			dominance( instruction_t* i0,  instruction_t* i1 ); // i0 dom i1
+	bool			idominance( instruction_t* i0,  instruction_t* i1 ); // i0 dom i1
+	bool			post_dominance( instruction_t* i0,  instruction_t* i1 ); //i0 pdom i1
+	bool			post_idominance( instruction_t* i0,  instruction_t* i1 ); //i0 pidom i1;
+
+	bool			dominance( block_t* b0, block_t* b1 ); // b0 dom b1
+	bool			idominance( block_t* b0, block_t* b1 );	//b0 idom b1;
+	bool			post_dominance( block_t* b0, block_t* b1 ); //b0 pdom b1
+	bool			post_idominance( block_t* b0, block_t* b1 ); //b0 pidom b1;
+
 private:
 	boost::unordered_map<function_t*, dom_tree_node*>	dom_roots;
 	boost::unordered_map<block_t*, dom_tree_node*>		dom_nodes;
@@ -138,8 +150,6 @@ private:
 	boost::unordered_map<block_t*, block_vmap> block_variables;
 };
 
-void simplify_phi_node( ssa_graph* g );
-
 struct dom_tree_node
 {
 	dom_tree_node*	idom;
@@ -151,9 +161,15 @@ struct dom_tree_node
 	block_t*		block;
 };
 
-class dom_frontiers
+struct execution_modes
 {
-
+	enum execution_mode{
+		em_unknown,
+		em_single,
+		em_multiple,
+	};
+public:
+	static boost::shared_ptr<dom_tree> compute_execution_modes( module_si*, ssa_graph* );
 };
 
 // address_ident_t
