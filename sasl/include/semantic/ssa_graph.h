@@ -1,5 +1,5 @@
-#ifndef SASL_SEMANTIC_DEPS_GRAPH_H
-#define SASL_SEMANTIC_DEPS_GRAPH_H
+#ifndef SASL_SEMANTIC_SSA_GRAPH_H
+#define SASL_SEMANTIC_SSA_GRAPH_H
 
 #include <sasl/include/semantic/semantic_forward.h>
 
@@ -23,79 +23,20 @@ BEGIN_NS_SASL_SEMANTIC();
 
 class module_si;
 class ssa_context;
-struct instruction_t;
+
 struct block_t;
+struct instruction_t;
+struct function_t;
 struct variable_t;
 struct value_t;
-
-struct instruction_t
-{
-	instruction_t();
-
-	enum IDs
-	{
-		none,
-		load,
-		save,
-		phi,
-		eval
-	} id;
-
-	// variable or parameters
-	variable_t*				var;
-	std::vector<value_t*>	params;
-	value_t*				ret;
-
-	block_t*		parent;
-	instruction_t*	next;
-	instruction_t*	prev;
-};
-
-struct block_t
-{
-	block_t();
-
-	void push_back( instruction_t* ins );
-	void insert( instruction_t* ins, instruction_t* pos );
-	bool empty();
-
-	instruction_t* beg;
-	instruction_t* end;
-	
-	std::vector<block_t*>		preds;
-	std::vector< std::pair<value_t*,block_t*> >		succs;
-};
-
-struct variable_t
-{
-	sasl::syntax_tree::node*	decl;
-	std::vector<size_t>			members;
-	value_t*					value;
-};
-
-struct value_t
-{
-	block_t* parent;
-
-	// Expr node maybe: declarator or expression
-	sasl::syntax_tree::node*	expr_node;
-	instruction_t*				ins;
-};
-
-struct function_t
-{
-	sasl::syntax_tree::function_type* fn;
-
-	value_t*	retval;	
-	block_t*	entry;
-	block_t*	exit;
-};
 
 class ssa_graph
 {
 public:
-	function_t*		ssa_fn( sasl::syntax_tree::node* fn ) const;
-	ssa_context*	context();
+	std::vector<function_t*>	functions() const;
+	std::vector<variable_t*>	globals() const;
+	function_t*					ssa_fn( sasl::syntax_tree::node* fn ) const;
+	ssa_context*				context();
 private:
 	boost::shared_ptr<ssa_context> ctxt;
 };

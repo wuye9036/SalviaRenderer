@@ -11,7 +11,8 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/ssa_constructor.h>
-#include <sasl/include/semantic/deps_graph.h>
+#include <sasl/include/semantic/ssa_graph.h>
+#include <sasl/include/semantic/ssa_nodes.h>
 
 #include <salviar/include/shader_abi.h>
 

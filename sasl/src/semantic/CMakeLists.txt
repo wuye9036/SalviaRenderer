@@ -23,7 +23,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/type_checker.h
 	${SASL_HOME_DIR}/sasl/include/semantic/caster.h
 	${SASL_HOME_DIR}/sasl/include/semantic/pety.h
-	${SASL_HOME_DIR}/sasl/include/semantic/deps_graph.h
+	${SASL_HOME_DIR}/sasl/include/semantic/ssa_graph.h
 )
 
 set( SOURCE_FILES
@@ -42,7 +42,8 @@ set( SOURCE_FILES
 	type_checker.cpp
 	caster.cpp
 	pety.cpp
-	deps_graph.cpp
+	ssa_graph.cpp
+	ssa_nodes.cpp
 )
 
 ADD_LIBRARY( sasl_semantic STATIC

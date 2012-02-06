@@ -16,11 +16,12 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
+class symbol;
+
 class ssa_context;
-struct ssa_graph;
+class ssa_graph;
 struct function_t;
 struct block_t;
-class symbol;
 
 enum scopes
 {
@@ -94,7 +95,7 @@ private:
 	// States
 	scopes			current_scope;
 	symbol*			current_symbol;
-	function_t*		current_function;
+	function_t*		current_fn;
 	block_t*		current_block;
 
 	ssa_graph*		dg;

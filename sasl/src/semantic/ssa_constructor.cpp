@@ -1,6 +1,8 @@
 #include <sasl/include/semantic/ssa_constructor.h>
 #include <sasl/include/semantic/ssa_context.h>
-#include <sasl/include/semantic/deps_graph.h>
+#include <sasl/include/semantic/ssa_graph.h>
+#include <sasl/include/semantic/ssa_nodes.h>
+
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
 
@@ -42,7 +44,9 @@ template <typename NodeT> void ssa_constructor::visit_child( shared_ptr<NodeT> c
 	child->accept( this, NULL );
 }
 
-ssa_constructor::ssa_constructor( ssa_graph* dg, ssa_context* ctxt ): dg(dg), ctxt(ctxt)
+ssa_constructor::ssa_constructor( ssa_graph* dg, ssa_context* ctxt )
+	: dg(dg), ctxt(ctxt)
+	, current_fn(NULL)
 {
 }
 
@@ -94,7 +98,7 @@ SASL_VISIT_DEF( declarator ){
 	if( current_scope == scp_member ){
 		return;
 	}
-	variable_t* var = ctxt->create_variable( &v );
+	variable_t* var = ctxt->create_variable( current_fn, &v );
 	ctxt->attr(&v).var = var;
 }
 
@@ -115,8 +119,8 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 
 SASL_VISIT_DEF( parameter )
 {
-	value_t* val = ctxt->create_value();
-	variable_t* var = ctxt->create_variable(&v);
+	value_t* val = ctxt->create_value( NULL, &v );
+	variable_t* var = ctxt->create_variable( current_fn, &v );
 	ctxt->attr(&v).val = val;
 	ctxt->attr(&v).var = var;
 }
@@ -126,13 +130,20 @@ SASL_VISIT_DEF( function_type )
 	function_t* fn = ctxt->create_function();
 	ctxt->attr( &v ).fn = fn;
 
-	current_function = fn;
+	current_fn = fn;
 
-	BOOST_FOREACH( shared_ptr<parameter> const& param, v.params )
-	{
-		visit_child(param);
+	if( v.body ){
+		fn->entry	= ctxt->create_block( fn );
+		fn->exit	= ctxt->create_block( fn );
+		fn->retval	= ctxt->emit( fn->exit, instruction_t::phi );
+		connect( fn->entry, fn->exit );
+		current_block = fn->entry;
+		BOOST_FOREACH( shared_ptr<parameter> const& param, v.params )
+		{
+			visit_child(param);
+		}
+		visit_child( v.body );
 	}
-	visit_child( v.body );
 }
 
 // statement
@@ -149,16 +160,6 @@ SASL_VISIT_DEF_UNIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement )
 {
-	if( !current_function->entry )
-	{
-		current_block = ctxt->create_block();
-		current_function->entry				= current_block;
-		current_function->exit				= ctxt->create_block();
-		current_function->retval			= ctxt->create_value();
-		current_function->retval->ins		= ctxt->emit( current_function->exit, instruction_t::phi );
-		current_function->retval->parent	= current_function->exit;
-	}
-
 	BOOST_FOREACH( shared_ptr<statement> const& stmt, v.stmts )
 	{
 		visit_child( stmt );
@@ -173,9 +174,9 @@ SASL_VISIT_DEF( jump_statement )
 		if( v.jump_expr ){
 			visit_child( v.jump_expr );
 			value_t* expr_value = ctxt->load( v.jump_expr.get() );
-			current_function->retval->ins->params.push_back( expr_value );
+			( (instruction_t*)current_fn->retval )->params.push_back( expr_value );
 		}
-		connect( current_block, current_function->exit );
+		connect( current_block, current_fn->exit );
 	} 
 	else
 	{

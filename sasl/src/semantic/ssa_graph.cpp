@@ -1,6 +1,7 @@
-#include <sasl/include/semantic/deps_graph.h>
+#include <sasl/include/semantic/ssa_graph.h>
 
 #include <sasl/include/semantic/ssa_context.h>
+#include <sasl/include/semantic/ssa_nodes.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 
@@ -334,8 +335,6 @@ private:
 		if( b->preds.size() > 1 ){
 			BOOST_FOREACH( variable_t* var, vars ){
 				instruction_t* phi_inst = ctxt->emit( b, b->beg, instruction_t::phi );
-				value_t* merged = ctxt->create_value();
-				merged->ins = phi_inst;
 
 				BOOST_FOREACH( block_t* p, b->preds ){
 					if( processed.count(p) > 0 ){
@@ -345,7 +344,7 @@ private:
 					}
 				}
 
-				vmap->store( phi_inst, var, merged );
+				vmap->store( phi_inst, var, phi_inst );
 			}
 		}
 
@@ -488,43 +487,6 @@ void colorize_block()
 	/*
 	
 	*/
-}
-
-
-block_t::block_t()
-{
-	end = new instruction_t();
-	end->parent = this;
-
-	beg = end;
-}
-
-void block_t::push_back( instruction_t* ins )
-{
-	insert( ins, end );
-}
-
-void block_t::insert( instruction_t* ins, instruction_t* pos )
-{
-	assert( !ins->parent );
-	assert( pos->parent == this );
-
-	ins->next = pos;
-	ins->prev = pos->prev;
-	pos->prev = ins;
-	
-	if( ins->prev ){
-		ins->prev->next = ins;
-	} else {
-		beg = ins;
-	}
-}
-
-
-instruction_t::instruction_t()
-	:var(NULL), id(instruction_t::none), parent(NULL), prev(NULL), next(NULL)
-{
-
 }
 
 END_NS_SASL_SEMANTIC();
