@@ -286,7 +286,7 @@ public:
 	/// @}
 
 	/** @name Emit expressions
-	Some simple overloadable operators such as '+' '-' '*' '/'
+	Some simple overload-able operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
 	virtual value_t emit_add( value_t const& lhs, value_t const& rhs );
@@ -358,8 +358,45 @@ public:
 	virtual void emit_return( value_t const&, abis abi ) = 0;
 	/// @}
 
-	/// @name Context switchs
+	/// @name Context switch
 	/// @{
+	virtual void function_beg(){}
+	virtual void function_end(){}
+
+	virtual void for_init_beg(){}
+	virtual void for_init_end(){}
+	virtual void for_cond_beg(){}
+	virtual void for_cond_end(){}
+	virtual void for_body_beg(){}
+	virtual void for_body_end(){}
+	virtual void for_iter_beg(){}
+	virtual void for_iter_end(){}
+
+	virtual void if_cond_beg(){}
+	virtual void if_cond_end(){}
+	virtual void then_beg(){}
+	virtual void then_end(){}
+	virtual void else_beg(){}
+	virtual void else_end(){}
+
+	virtual void switch_cond_beg(){}
+	virtual void switch_cond_end(){}
+	virtual void switch_expr_beg(){}
+	virtual void switch_expr_end(){}
+
+	virtual void while_cond_beg(){}
+	virtual void while_cond_end(){}
+	virtual void while_body_beg(){}
+	virtual void while_body_end(){}
+
+	virtual void do_body_beg(){}
+	virtual void do_body_end(){}
+	virtual void do_cond_beg(){}
+	virtual void do_cond_end(){}
+
+	virtual void break_(){}
+	virtual void continue_(){}
+
 	virtual void push_fn( function_t const& fn );
 	virtual void pop_fn();
 	virtual void set_insert_point( insert_point_t const& ip );
@@ -483,6 +520,7 @@ protected:
 	std::vector<function_t> fn_ctxts;
 	llvm_intrin_cache		intrins;
 	llvm_module_impl*		mod_impl;
+	value_t					exec_mask;
 
 	value_t undef_value( builtin_types bt, abis abi );
 

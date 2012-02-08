@@ -243,6 +243,7 @@ SASL_VISIT_DEF( if_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
+	if_cond_beg();
 	visit_child( child_ctxt, child_ctxt_init, v.cond );
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
@@ -251,16 +252,22 @@ SASL_VISIT_DEF( if_statement ){
 			assert(false);
 		}
 	}
+	if_cond_end();
+
 	insert_point_t ip_cond = insert_point();
 
 	insert_point_t ip_yes_beg = new_block( "if.yes", true );
+	then_beg();
 	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
+	then_end();
 	insert_point_t ip_yes_end = insert_point();
 
 	insert_point_t ip_no_beg, ip_no_end;
 	if( v.no_stmt ){
 		ip_no_beg = new_block( "if.no", true );
+		else_beg();
 		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
+		else_end();
 		ip_no_end = insert_point();
 	}
 

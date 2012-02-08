@@ -81,13 +81,9 @@ private:
 	function_vmap*								vmap;
 };
 
-void function_vmap::construct_vmap( function_t* fn )
+void function_vmap::construct_vmap( function_t* /*fn*/ )
 {
 	// Process all blocks
-
-	// 
-	
-
 }
 
 END_NS_SASL_SEMANTIC();

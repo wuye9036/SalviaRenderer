@@ -339,8 +339,10 @@ SASL_VISIT_DEF( function_type ){
 	if ( v.body ){
 		// TODO
 		// sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
+		service()->function_beg();
 		create_fnargs( v, data );
 		create_fnbody( v, data );
+		service()->function_end();
 	}
 
 	// Here use the definition node.

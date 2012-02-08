@@ -217,7 +217,11 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 
 // statement
 SASL_VISIT_DEF_UNIMPL( statement );
-SASL_VISIT_DEF_UNIMPL( if_statement );
+SASL_VISIT_DEF( if_statement )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
 SASL_VISIT_DEF_UNIMPL( while_statement );
 SASL_VISIT_DEF_UNIMPL( dowhile_statement );
 SASL_VISIT_DEF_UNIMPL( for_statement );
@@ -312,7 +316,6 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
 
 	new_block( ".init.vargs", true );
-
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
 		visit_child( child_ctxt, child_ctxt_init, par->param_type );
 		storage_si* par_ssi = dynamic_cast<storage_si*>( par->semantic_info().get() );

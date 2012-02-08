@@ -37,6 +37,8 @@ protected:
 	abis param_abi( bool c_compatible ) const;
 	bool prefer_externals() const{ return false; }
 	bool prefer_scalar_code() const{ return false; }
+
+	value_t all_one_mask() const;
 };
 
 END_NS_SASL_CODE_GENERATOR();
