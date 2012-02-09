@@ -3,6 +3,7 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Module.h>
+#include <llvm/Support/CommandLine.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
@@ -22,6 +23,20 @@
 using std::vector;
 using std::string;
 using namespace eflib;
+
+struct llvm_options
+{
+	llvm_options(){
+		// Add Options
+		char* options[] = { "", "-promote-elements" };
+		llvm::cl::ParseCommandLineOptions( sizeof(options)/sizeof(char*), options );
+	}
+};
+
+void initialize_llvm_options()
+{
+	static llvm_options opt;
+};
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -60,6 +75,9 @@ void cgllvm_jit_engine::build(){
 		engine.reset();
 	}
 	
+	initialize_llvm_options();
+
+	// Add Attrs
 	vector<string> attrs;
 	if( cpu_features( cpu_sse2 ) ){
 		attrs.push_back("+sse");

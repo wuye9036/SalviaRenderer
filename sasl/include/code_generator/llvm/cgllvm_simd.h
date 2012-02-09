@@ -21,13 +21,6 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-struct exec_mask_t
-{
-	value_t mask;
-	value_t continue_mask;
-	value_t break_mask;
-};
-
 // Code generation for SIMD( Single Instruction Multiple Data )
 class cgllvm_simd: public cgllvm_impl, public cgs_simd{
 
@@ -92,8 +85,6 @@ protected:
 	llvm::StructType*			entry_structs[salviar::storage_usage_count];
 	std::vector<builtin_types>	entry_tyns[salviar::storage_usage_count];
 	value_t						entry_values[salviar::storage_usage_count];
-
-	std::vector<exec_mask_t>	exec_mask_stack;
 };
 
 END_NS_SASL_CODE_GENERATOR();

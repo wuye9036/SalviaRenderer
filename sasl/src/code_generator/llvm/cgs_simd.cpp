@@ -91,6 +91,16 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 
 	if( kind == vkind_ref ){	
 		address = lhs.raw();
+
+		if( is_scalar( lhs.hint() ) || is_vector( lhs.hint() ) ){
+			size_t value_length = is_scalar( lhs.hint() ) ? 1 : vector_size( lhs.hint() );
+			size_t padded_value_length = ceil_to_pow2(value_length);
+			Value* mask = expanded_mask( padded_value_length );
+			Value* dest_value = builder().CreateLoad( address );
+			src = builder().CreateSelect( mask, src, dest_value, "Merged" );
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	} else if ( kind == vkind_swizzle ){
 		if( is_vector( lhs.parent()->hint()) ){
 			assert( lhs.parent()->storable() );
@@ -126,6 +136,7 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 				break;
 			case abi_package:
 				{
+					// EFLIB_ASSERT_UNIMPLEMENTED(); // Masked Store
 					int dst_elem_pitch = ceil_to_pow2( vector_size( lhs.hint() ) );
 					int src_elem_pitch = ceil_to_pow2( vector_size( rhs.hint() ) );
 
@@ -152,6 +163,7 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 		}
 	}
 
+	// Masked Store
 	StoreInst* inst = builder().CreateStore( src, address );
 	inst->setAlignment(4);
 }
@@ -271,6 +283,35 @@ value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi )
 	}
 
 	return create_value( tyi, vectorize_v, vkind_value, abi_vectorize );
+}
+
+void cgs_simd::function_beg()
+{
+	exec_masks.push_back( all_one_mask() );
+}
+
+void cgs_simd::function_end()
+{
+	// Do nothing
+}
+
+value_t cgs_simd::all_one_mask()
+{
+	Type* mask_ty = type_( builtin_types::_boolean, abi_package );
+	Value* mask_v = Constant::getAllOnesValue(mask_ty);
+	return create_value( builtin_types::_boolean, mask_v, vkind_value, abi_package );
+}
+
+Value* cgs_simd::expanded_mask( uint32_t expanded_times )
+{
+	Value* exec_mask_v = exec_masks.back().load( abi_package );
+	vector<int> shuffle_mask;
+	shuffle_mask.reserve( expanded_times * PACKAGE_ELEMENT_COUNT );
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		shuffle_mask.insert( shuffle_mask.end(), expanded_times, i );
+	}
+	Constant* shuffle_mask_v = vector_( &(shuffle_mask[0]), shuffle_mask.size() );
+	return builder().CreateShuffleVector( exec_mask_v, exec_mask_v, shuffle_mask_v );
 }
 
 END_NS_SASL_CODE_GENERATOR();

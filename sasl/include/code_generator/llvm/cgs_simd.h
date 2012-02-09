@@ -38,7 +38,48 @@ protected:
 	bool prefer_externals() const{ return false; }
 	bool prefer_scalar_code() const{ return false; }
 
-	value_t all_one_mask() const;
+	virtual void function_beg();
+	virtual void function_end();
+
+	virtual void for_init_beg(){}
+	virtual void for_init_end(){}
+	virtual void for_cond_beg(){}
+	virtual void for_cond_end(){}
+	virtual void for_body_beg(){}
+	virtual void for_body_end(){}
+	virtual void for_iter_beg(){}
+	virtual void for_iter_end(){}
+
+	virtual void if_cond_beg(){}
+	virtual void if_cond_end(){}
+	virtual void then_beg(){}
+	virtual void then_end(){}
+	virtual void else_beg(){}
+	virtual void else_end(){}
+
+	virtual void switch_cond_beg(){}
+	virtual void switch_cond_end(){}
+	virtual void switch_expr_beg(){}
+	virtual void switch_expr_end(){}
+
+	virtual void while_cond_beg(){}
+	virtual void while_cond_end(){}
+	virtual void while_body_beg(){}
+	virtual void while_body_end(){}
+
+	virtual void do_body_beg(){}
+	virtual void do_body_end(){}
+	virtual void do_cond_beg(){}
+	virtual void do_cond_end(){}
+
+	virtual void break_(){}
+	virtual void continue_(){}
+
+private:
+	value_t			all_one_mask();
+	llvm::Value*	expanded_mask( uint32_t expanded_times );
+
+	std::vector<value_t> exec_masks;
 };
 
 END_NS_SASL_CODE_GENERATOR();

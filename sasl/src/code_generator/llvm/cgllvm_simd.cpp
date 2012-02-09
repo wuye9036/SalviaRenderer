@@ -302,7 +302,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 		entry_values[su_buffer_out] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
 		++arg_it;
 
-		// Create virutal arguments
+		// Create virtual arguments
 		create_virtual_args(v, data);
 	} else {
 		parent_class::create_fnargs(v, data);
