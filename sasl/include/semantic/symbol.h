@@ -110,6 +110,8 @@ private:
 
 	const std::vector< ::std::string >& get_overloads( const ::std::string& umnalged ) const;
 
+	void collapse_vector1_overloads( std::vector< boost::shared_ptr<symbol> >& candidates ) const;
+
 	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;
 	typedef std::tr1::unordered_map< std::string, ::std::vector< ::std::string > > overload_table_t;
 	typedef children_t::iterator children_iterator_t;

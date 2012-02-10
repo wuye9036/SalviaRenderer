@@ -277,7 +277,7 @@ SASL_VISIT_DEF( binary_expression )
 	}
 	
 	EFLIB_ASSERT_AND_IF( overloads.size() == 1,	( format(
-		"Need to report a compiler error. Ambigous overloading. \r\n"
+		"Need to report a compiler error. Ambiguous overloading. \r\n"
 		"operator is %1%, left expression type is %2%, right expression type is %3%. \r\n" 
 		) % v.op.name() % type_info_of( dup_expr->left_expr )->tycode.name()
 		% type_info_of( dup_expr->right_expr )->tycode.name() ).str().c_str()

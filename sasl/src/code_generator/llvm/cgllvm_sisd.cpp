@@ -252,7 +252,8 @@ SASL_VISIT_DEF( if_statement ){
 			assert(false);
 		}
 	}
-	if_cond_end();
+	value_t cond_value = node_ctxt( v.cond, false )->value();
+	if_cond_end( cond_value );
 
 	insert_point_t ip_cond = insert_point();
 
@@ -275,7 +276,6 @@ SASL_VISIT_DEF( if_statement ){
 
 	// Fill back.
 	set_insert_point( ip_cond );
-	value_t cond_value = node_ctxt( v.cond, false )->value();
 	jump_cond( cond_value, ip_yes_beg, ip_no_beg ? ip_no_beg : ip_merge );
 
 	set_insert_point( ip_yes_end );

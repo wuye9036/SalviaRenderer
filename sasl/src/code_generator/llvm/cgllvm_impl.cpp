@@ -164,20 +164,12 @@ SASL_VISIT_DEF( binary_expression ){
 				if( ! node_ctxt( p0_tsi->type_info() ) ){
 					visit_child( child_ctxt, child_ctxt_init, op_proto->params[0]->param_type );
 				}
-
-				node_ctxt(v.left_expr)->data().tyinfo
-					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
-
 				caster->cast( p0_tsi->type_info(), v.left_expr );
 			}
 			if( p1_tsi->entry_id() != rarg_tsi->entry_id() ){
 				if( ! node_ctxt( p1_tsi->type_info() ) ){
 					visit_child( child_ctxt, child_ctxt_init, op_proto->params[1]->param_type );
 				}
-
-				node_ctxt(v.left_expr)->data().tyinfo
-					= node_ctxt( p0_tsi->type_info() )->data().tyinfo;
-
 				caster->cast( p1_tsi->type_info(), v.right_expr );
 			}
 

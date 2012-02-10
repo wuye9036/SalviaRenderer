@@ -29,6 +29,12 @@ BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::syntax_tree::expression;
 using ::sasl::syntax_tree::function_type;
 using ::sasl::syntax_tree::tynode;
+using sasl::utility::is_scalar;
+using sasl::utility::is_vector;
+using sasl::utility::is_matrix;
+using sasl::utility::scalar_of;
+using sasl::utility::vector_size;
+using sasl::utility::vector_count;
 
 using ::boost::shared_ptr;
 
@@ -131,7 +137,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 	//			after all comparison done, if candidate have not been discarded, add it into candidates.
 	//	now the candidates is result.
 	//
-	// better & worse judgement is as same as C#.
+	// better & worse judgment is as same as C#.
 	vector< shared_ptr<symbol> > candidates;
 	for( size_t i_func = 0; i_func < overloads.size(); ++i_func ){
 		shared_ptr<function_type> matching_func = overloads[i_func]->node()->as_handle<function_type>();
@@ -211,6 +217,8 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 			candidates.push_back(matching_func->symbol());
 		}
 	}
+
+	collapse_vector1_overloads( candidates );
 
 	return candidates;
 }
@@ -354,6 +362,102 @@ string symbol::unique_name( symbol::unique_name_types unique_type ){
 
 shared_ptr<symbol> symbol::add_anonymous_child( shared_ptr<struct node> child_node ){
 	return add_child( unique_name(), child_node );
+}
+
+bool is_equiva( builtin_types bt0, builtin_types bt1 )
+{
+	if( ! (is_scalar(bt0) || is_vector(bt0) || is_matrix(bt0)) ){
+		return false;
+	}
+
+	if( ! (is_scalar(bt1) || is_vector(bt1) || is_matrix(bt1)) ){
+		return false;
+	}
+
+	if( is_scalar(bt0) && is_scalar(bt1) ){
+		return false;
+	}
+
+	if( is_scalar(bt0) && is_vector(bt1) ){
+		return (
+			scalar_of(bt1) == bt0 && vector_size(bt1) == 1
+			);
+	}
+
+	if( is_scalar(bt0) && is_matrix(bt1) ){
+		return (
+			scalar_of(bt1) == bt0 && vector_size(bt1) == 1 && vector_count(bt1) == 1
+			);
+	}
+
+	if( is_vector(bt0) && is_vector(bt1) ){
+		return false;
+	}
+
+	if( is_vector(bt0) && is_matrix(bt1) ){
+		return (
+			scalar_of(bt1) == scalar_of(bt0) && vector_size(bt1) == vector_size(bt0) && vector_count(bt1) == 1
+			);
+	}
+
+	if( is_matrix(bt0) && is_matrix(bt1) ){
+		return false;
+	}
+
+	return is_equiva( bt1, bt0 );
+}
+
+void is_same_or_equiva( node* nd0, node* nd1, bool& same, bool& equiva ){
+	same = false;
+	equiva = false;
+
+	type_info_si* nd0_tisi = nd0->si_ptr<type_info_si>();
+	type_info_si* nd1_tisi = nd1->si_ptr<type_info_si>();
+
+	bool same_tid = ( nd0_tisi->entry_id() == nd1_tisi->entry_id() );
+
+	if( same_tid ){
+		same = true;
+		equiva = true;
+		return;
+	}
+
+	builtin_types nd0_bt = nd0_tisi->type_info()->tycode;
+	builtin_types nd1_bt = nd1_tisi->type_info()->tycode;
+	equiva = is_equiva(nd0_bt, nd1_bt);
+
+	return;
+}
+
+void symbol::collapse_vector1_overloads( vector< shared_ptr<symbol> >& candidates ) const
+{
+	vector< shared_ptr<symbol> > ret;
+
+	BOOST_FOREACH( shared_ptr<symbol> const& cand, candidates ){
+		shared_ptr<function_type> cand_fn = cand->node()->as_handle<function_type>();
+
+		bool matched = false;
+		BOOST_FOREACH( shared_ptr<symbol> const& filterated, ret ){
+			shared_ptr<function_type> filterated_fn = filterated->node()->as_handle<function_type>();
+			size_t param_count = filterated_fn->params.size();
+
+			bool same_function = true;
+			for( size_t i_param = 0; i_param < param_count; ++i_param ){
+				bool same = false;
+				bool equiva = false;
+				is_same_or_equiva( cand_fn->params[i_param].get(), filterated_fn->params[i_param].get(), same, equiva );
+				if( !(same || equiva) ){
+					same_function = false;
+					break;
+				}
+			}
+			if( same_function ){ matched = true; break; }
+		}
+
+		if( !matched ){ ret.push_back(cand); }
+	}
+
+	return std::swap( candidates, ret );
 }
 
 END_NS_SASL_SEMANTIC();

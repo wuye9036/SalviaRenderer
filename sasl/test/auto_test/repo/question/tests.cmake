@@ -19,6 +19,7 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/intrinsics.svs"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/intrinsics.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/branches.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/branches.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/empty.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/bool.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/unary_operators.ss"

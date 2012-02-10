@@ -1070,7 +1070,7 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 	uint32_t idx_len = indexes_length(indexes);
 
 	assert( idx_len > 0 );
-	if( idx_len == 1 ){
+	if( vec.hint() == builtin_types::none && idx_len == 1 ){
 		// Struct, array or not-package, return extract elem.
 		// Else do extract mask.
 		if( vec.abi() != abi_package || vec.hint() == builtin_types::none ){
@@ -1090,7 +1090,7 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 	}
 
 	if( vec.storable() ){
-		value_t swz_proxy = create_value( NULL, vec.hint(), NULL, vkind_swizzle, vec.abi() );
+		value_t swz_proxy = create_value( NULL, swz_hint, NULL, vkind_swizzle, vec.abi() );
 		swz_proxy.parent( vec );
 		swz_proxy.masks( mask );
 		return swz_proxy;
@@ -1481,6 +1481,14 @@ value_t cg_service::cast_s2v( value_t const& v )
 	// Otherwise return a new vector
 	value_t ret = null_value( vhint, v.abi() );
 	return emit_insert_val( ret, 0, v );
+}
+
+void cg_service::jump_to( insert_point_t const& ip )
+{
+	assert( ip );
+	if( !insert_point().block->getTerminator() ){
+		builder().CreateBr( ip.block );
+	}
 }
 
 END_NS_SASL_CODE_GENERATOR();

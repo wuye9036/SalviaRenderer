@@ -131,9 +131,6 @@ public:
 
 	/// @name Utilities
 	/// @{
-	
-	/// Jump to the specified block.
-	void jump_to( insert_point_t const& );
 	/// Jump to the specified block by condition.
 	void jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip );
 	/// Switch to blocks

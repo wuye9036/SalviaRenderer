@@ -286,7 +286,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -729,6 +729,17 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 	_aligned_free( in0 );
 	_aligned_free( out0 );
 }
-
 #endif
+
+#if 1 || ALL_TESTS_ENABLED 
+BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
+	init_ps( "./repo/question/v1a1/branches.sps" );
+	
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
+
+	BOOST_REQUIRE( fn );
+}
+#endif
+
 BOOST_AUTO_TEST_SUITE_END();

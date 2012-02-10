@@ -136,8 +136,7 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 				break;
 			case abi_package:
 				{
-					// EFLIB_ASSERT_UNIMPLEMENTED(); // Masked Store
-					int dst_elem_pitch = ceil_to_pow2( vector_size( lhs.hint() ) );
+					int dst_elem_pitch = ceil_to_pow2( vector_size( lhs.parent()->hint() ) );
 					int src_elem_pitch = ceil_to_pow2( vector_size( rhs.hint() ) );
 
 					Value* parent_value = lhs.parent()->load();
@@ -146,7 +145,10 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 							int src_index = static_cast<int>( src_elem_pitch*i_elem+i_write_idx );
 							int dst_index = static_cast<int>( dst_elem_pitch*i_elem+indexes[i_write_idx] );
 					
-							Value* elem_val = builder().CreateExtractElement( r_value, int_(src_index) );
+							Value* new_val = builder().CreateExtractElement( r_value, int_(src_index) );
+							Value* old_val = builder().CreateExtractElement( parent_value, int_(dst_index) ); 
+							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), int_(i_elem) );
+							Value* elem_val = builder().CreateSelect( elem_exec_mask, new_val, old_val );
 							parent_value = builder().CreateInsertElement( parent_value, elem_val, int_(dst_index) );
 						}
 					}
@@ -269,8 +271,34 @@ value_t cgs_simd::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
 
 value_t cgs_simd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	abis promoted_abi = promote_abi( lhs.abi(), rhs.abi() );
+
+	builtin_types hint = lhs.hint();
+	assert( hint == rhs.hint() );
+	assert( hint != builtin_types::none );
+
+	Value* lhs_v = lhs.load( promoted_abi );
+	Value* rhs_v = rhs.load( promoted_abi );
+
+	Value* ret_v = NULL;
+
+	if( is_scalar(hint) || is_vector(hint) ){	
+		if( is_integer(hint) ){
+			if( is_signed(hint) ){
+				ret_v = builder().CreateICmpSGT( lhs_v, rhs_v );
+			} else {
+				ret_v = builder().CreateICmpSGT( lhs_v, rhs_v );
+			}
+		} else if( is_real(hint) ){
+			ret_v = builder().CreateFCmpUGT( lhs_v, rhs_v );
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return create_value( builtin_types::_boolean, ret_v, vkind_value, promoted_abi );
 }
 
 value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi )
@@ -295,16 +323,16 @@ void cgs_simd::function_end()
 	// Do nothing
 }
 
-value_t cgs_simd::all_one_mask()
+Value* cgs_simd::all_one_mask()
 {
 	Type* mask_ty = type_( builtin_types::_boolean, abi_package );
 	Value* mask_v = Constant::getAllOnesValue(mask_ty);
-	return create_value( builtin_types::_boolean, mask_v, vkind_value, abi_package );
+	return mask_v;
 }
 
 Value* cgs_simd::expanded_mask( uint32_t expanded_times )
 {
-	Value* exec_mask_v = exec_masks.back().load( abi_package );
+	Value* exec_mask_v = exec_masks.back();
 	vector<int> shuffle_mask;
 	shuffle_mask.reserve( expanded_times * PACKAGE_ELEMENT_COUNT );
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
@@ -312,6 +340,39 @@ Value* cgs_simd::expanded_mask( uint32_t expanded_times )
 	}
 	Constant* shuffle_mask_v = vector_( &(shuffle_mask[0]), shuffle_mask.size() );
 	return builder().CreateShuffleVector( exec_mask_v, exec_mask_v, shuffle_mask_v );
+}
+
+void cgs_simd::if_cond_beg()
+{
+	// Do nothing
+}
+
+void cgs_simd::if_cond_end( value_t const& cond )
+{
+	cond_exec_mask = cond.load( abi_package );
+}
+
+void cgs_simd::then_beg()
+{
+	Value* then_mask =  builder().CreateAnd( cond_exec_mask, exec_masks.back(), "mask.then" );
+	exec_masks.push_back( then_mask );
+}
+
+void cgs_simd::then_end()
+{
+	exec_masks.pop_back();
+}
+
+void cgs_simd::else_beg()
+{
+	Value* inv_cond_exec_mask = builder().CreateNot( cond_exec_mask, "Cond.Inv" );
+	Value* else_mask =  builder().CreateAnd( cond_exec_mask, exec_masks.back(), "mask.else" );
+	exec_masks.push_back( else_mask );
+}
+
+void cgs_simd::else_end()
+{
+	exec_masks.pop_back();
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -373,7 +373,7 @@ public:
 	virtual void for_iter_end(){}
 
 	virtual void if_cond_beg(){}
-	virtual void if_cond_end(){}
+	virtual void if_cond_end( value_t const& ){}
 	virtual void then_beg(){}
 	virtual void then_end(){}
 	virtual void else_beg(){}
@@ -456,6 +456,8 @@ public:
 	/// @{
 	/// Create a new block at the last of function
 	insert_point_t new_block( std::string const& hint, bool set_insert_point );
+	/// Jump to
+	void jump_to( insert_point_t const& ip );
 	void clean_empty_blocks();
 	/// @}
 

@@ -7,6 +7,7 @@
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>
@@ -219,7 +220,53 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF_UNIMPL( statement );
 SASL_VISIT_DEF( if_statement )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	if_cond_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	if( cond_tid != bool_tid ){
+		if( caster->cast( msi->pety()->get(bool_tid), v.cond ) == caster_t::nocast ){
+			assert(false);
+		}
+	}
+	if_cond_end( cgllvm_impl::node_ctxt(v.cond)->value() );
+	insert_point_t ip_cond = insert_point();
+
+	insert_point_t ip_yes_beg = new_block( "if.yes", true );
+	then_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.yes_stmt );
+	then_end();
+	insert_point_t ip_yes_end = insert_point();
+
+	insert_point_t ip_no_beg, ip_no_end;
+	if( v.no_stmt ){
+		ip_no_beg = new_block( "if.no", true );
+		else_beg();
+		visit_child( child_ctxt, child_ctxt_init, v.no_stmt );
+		else_end();
+		ip_no_end = insert_point();
+	}
+
+	insert_point_t ip_merge = new_block( "if.merged", false );
+
+	// Link Blocks
+	set_insert_point( ip_cond );
+	jump_to( ip_yes_beg );
+
+	if( ip_no_beg ){
+		set_insert_point( ip_yes_end );
+		jump_to( ip_no_beg );
+
+		set_insert_point( ip_no_end );
+		jump_to( ip_merge );
+	}
+	
+	set_insert_point( ip_merge );
+
+	cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
 SASL_VISIT_DEF_UNIMPL( while_statement );

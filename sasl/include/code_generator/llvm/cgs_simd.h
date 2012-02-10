@@ -50,12 +50,12 @@ protected:
 	virtual void for_iter_beg(){}
 	virtual void for_iter_end(){}
 
-	virtual void if_cond_beg(){}
-	virtual void if_cond_end(){}
-	virtual void then_beg(){}
-	virtual void then_end(){}
-	virtual void else_beg(){}
-	virtual void else_end(){}
+	virtual void if_cond_beg();
+	virtual void if_cond_end( value_t const& );
+	virtual void then_beg();
+	virtual void then_end();
+	virtual void else_beg();
+	virtual void else_end();
 
 	virtual void switch_cond_beg(){}
 	virtual void switch_cond_end(){}
@@ -76,10 +76,12 @@ protected:
 	virtual void continue_(){}
 
 private:
-	value_t			all_one_mask();
+	llvm::Value*	all_one_mask();
 	llvm::Value*	expanded_mask( uint32_t expanded_times );
 
-	std::vector<value_t> exec_masks;
+	// Masks
+	llvm::Value*		cond_exec_mask;
+	std::vector<llvm::Value*> exec_masks;
 };
 
 END_NS_SASL_CODE_GENERATOR();
