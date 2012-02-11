@@ -114,7 +114,7 @@ void cgllvm_simd::create_entry_param( sv_usage usage )
 	// Tys must not be empty. So placeholder (int8) will be inserted if tys is empty.
 	StructType* out_struct = tys.empty()
 		? StructType::create( struct_name, type_(builtin_types::_sint8, abi_llvm), NULL )
-		: StructType::create( tys, struct_name );
+		: StructType::create( tys, struct_name, true );
 
 	entry_structs[usage] = out_struct;
 

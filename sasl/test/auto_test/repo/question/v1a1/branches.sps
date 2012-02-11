@@ -11,6 +11,7 @@ VSOUT fn( VSIN in ){
 	VSOUT o;
 
 	o.out.x = 88.3f;
+	o.out.y = 75.4f;
 
 	// Test if
 	if( in.in0 > 0.0f ){
@@ -20,7 +21,7 @@ VSOUT fn( VSIN in ){
 	// Test if-else
 	if( in.in0 > 1.0f ){
 		o.out.y = in.in1.x;
-	} else {
+	}  else {
 		o.out.y = in.in1.y;
 	}
 
@@ -33,6 +34,5 @@ VSOUT fn( VSIN in ){
 			o.out.y = o.out.y + 2.0f;
 		}
 	}
-
 	return o;
 }

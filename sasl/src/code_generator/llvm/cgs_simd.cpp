@@ -374,8 +374,8 @@ void cgs_simd::then_end()
 
 void cgs_simd::else_beg()
 {
-	Value* inv_cond_exec_mask = builder().CreateNot( cond_exec_mask, "Cond.Inv" );
-	Value* else_mask =  builder().CreateAnd( cond_exec_mask, exec_masks.back(), "mask.else" );
+	Value* inv_cond_exec_mask = builder().CreateNot( cond_exec_mask, "cond.inv" );
+	Value* else_mask =  builder().CreateAnd( inv_cond_exec_mask, exec_masks.back(), "mask.else" );
 	exec_masks.push_back( else_mask );
 }
 

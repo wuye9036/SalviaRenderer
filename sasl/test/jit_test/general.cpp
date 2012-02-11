@@ -130,6 +130,54 @@ public:
 	}
 };
 
+void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
+{
+#if defined(EFLIB_CPU_X86) && defined(EFLIB_MSVC)
+	__asm{
+		push ebp;
+
+		push callee;
+
+		push pbo;
+		push pso;
+		push pbi;
+		push psi;
+
+		mov  ebp, esp ;
+
+		push ebx;
+		push esi;
+		push edi;
+
+		and  esp, -16;
+		sub  esp, 16;
+
+		mov  ebx, [ebp+12];
+		push ebx;
+		mov  ebx, [ebp+8];
+		push ebx;
+		mov  ebx, [ebp+4];
+		push ebx;
+		mov  ebx, [ebp];
+		push ebx;
+
+		mov  ebx, [ebp+16];
+		call ebx;
+
+		mov  edi, [ebp-12];
+		mov  esi, [ebp-8];
+		mov  ebx, [ebp-4];
+		mov  esp, ebp;
+		add  esp, 20;
+		pop  ebp;
+	}
+
+	// X XXXX
+#else
+	callee( psi, pbi, pso, pbo );
+#endif
+}
+
 template <typename Fn>
 class jit_function_forward<void, Fn>: public jit_function_forward_base<Fn>{
 public:
@@ -155,6 +203,12 @@ public:
 	template <typename T0, typename T1, typename T2, typename T3>
 	result_t operator() (T0 p0, T1 p1, T2 p2, T3 p3){
 		callee(p0, p1, p2, p3);
+	}
+
+
+	template <typename T0, typename T1, typename T2, typename T3>
+	result_t operator() (T0* psi, T1* pbi, T2* pso, T3* pbo){
+		invoke( (void*)callee, psi, pbi, pso, pbo );
 	}
 };
 
@@ -244,7 +298,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #if ALL_TESTS_ENABLED
 
@@ -748,13 +802,14 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	srand(0);
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
 		// Init Data
-		in0[i] = (i * 0.7f) - 4.0f;
+		in0[i] = (i * 0.34f) - 1.0f;
 		for( int j = 0; j < 4; ++j ){
 			((float*)(in1))[i*4+j] = rand() / 35.0f;
 		}
 
 		// Compute reference data
 		ref_out[i].x = 88.3f;
+		ref_out[i].y = 75.4f;
 		if( in0[i] > 0.0f ){
 			ref_out[i].x = in0[i];
 		}
@@ -777,7 +832,7 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		BOOST_CHECK_CLOSE( out[i].x, ref_out[i].x, 0.00001f );
-		 BOOST_CHECK_CLOSE( out[i].y, ref_out[i].y, 0.00001f );
+		BOOST_CHECK_CLOSE( out[i].y, ref_out[i].y, 0.00001f );
 	}
 
 	_aligned_free( in0 );
