@@ -664,7 +664,7 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 __m128 to_mm( vec4& v ){
 	__m128 tmp;
@@ -739,6 +739,49 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	function( fn, "fn" );
 
 	BOOST_REQUIRE( fn );
+
+	float* in0	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec4)), 16 );
+	vec4* in1	= (vec4*)(in0 + PACKAGE_ELEMENT_COUNT);
+	vec2* out	= (vec2*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec2), 16 );
+	vec2 ref_out[ PACKAGE_ELEMENT_COUNT ];
+
+	srand(0);
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
+		// Init Data
+		in0[i] = (i * 0.7f) - 4.0f;
+		for( int j = 0; j < 4; ++j ){
+			((float*)(in1))[i*4+j] = rand() / 35.0f;
+		}
+
+		// Compute reference data
+		ref_out[i].x = 88.3f;
+		if( in0[i] > 0.0f ){
+			ref_out[i].x = in0[i];
+		}
+		if( in0[i] > 1.0f ){
+			ref_out[i].y = in1[i].x;
+		} else {
+			ref_out[i].y = in1[i].y;
+		}
+		if( in0[i] > 2.0f ){
+			ref_out[i].y = in1[i].z;
+			if ( in0[i] > 3.0f ){
+				ref_out[i].y = ref_out[i].y + 1.0f;
+			} else if( in0[i] > 2.5f ){
+				ref_out[i].y = ref_out[i].y + 2.0f;
+			}
+		}
+	}
+
+	fn( (void*)in0, (void*)NULL, (void*)out, (void*)NULL );
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( out[i].x, ref_out[i].x, 0.00001f );
+		 BOOST_CHECK_CLOSE( out[i].y, ref_out[i].y, 0.00001f );
+	}
+
+	_aligned_free( in0 );
+	_aligned_free( out );
 }
 #endif
 

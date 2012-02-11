@@ -290,7 +290,16 @@ value_t cgs_simd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 				ret_v = builder().CreateICmpSGT( lhs_v, rhs_v );
 			}
 		} else if( is_real(hint) ){
-			ret_v = builder().CreateFCmpUGT( lhs_v, rhs_v );
+			// TODO 
+			// According to the document, fcmp ugt works well on vector. But I don't know why it is failed.
+			// So We expand it manually.
+			ret_v = UndefValue::get( type_(builtin_types::_boolean, abi_package) );
+			for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
+				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
+				Value* cmp = builder().CreateFCmpUGT( lhs_elem, rhs_elem );
+				ret_v = builder().CreateInsertElement( ret_v, cmp, int_(i) );
+			}
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}

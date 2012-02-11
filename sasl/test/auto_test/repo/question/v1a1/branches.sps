@@ -10,6 +10,8 @@ struct VSOUT{
 VSOUT fn( VSIN in ){
 	VSOUT o;
 
+	o.out.x = 88.3f;
+
 	// Test if
 	if( in.in0 > 0.0f ){
 		o.out.x = in.in0;
