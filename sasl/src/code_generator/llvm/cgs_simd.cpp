@@ -420,12 +420,12 @@ value_t cgs_simd::derivation( value_t const& v, slice_layout_mode slm )
 		int slice_count = 0;
 		int slice_size = 0;
 		if( slm == slm_horizontal ){
-			slice_stride = 1;
+			slice_stride = 0;
 			elem_stride = 1;
 			slice_count = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
 			slice_size = PACKAGE_LINE_ELEMENT_COUNT;
 		} else {
-			slice_stride = -( PACKAGE_ELEMENT_COUNT - PACKAGE_LINE_ELEMENT_COUNT );
+			slice_stride = -PACKAGE_ELEMENT_COUNT+1;
 			elem_stride = PACKAGE_LINE_ELEMENT_COUNT;
 			slice_count = PACKAGE_LINE_ELEMENT_COUNT;
 			slice_size = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
@@ -468,12 +468,12 @@ Value* cgs_simd::pack_slices( Value** slices, int slice_count, int slice_size, i
 	int index = 0;
 	for( int i_slice = 0; i_slice < slice_count; ++i_slice ){
 		for( int i_elem = 0; i_elem < slice_size; ++i_elem ){
-			index += ( elem_stride * elem_width );
 			for( int i_scalar = 0; i_scalar < elem_width; ++i_scalar ){
 				Value* scalar  = builder().CreateExtractElement( slices[i_slice], int_( i_elem * elem_width + i_scalar ) );
 				Value* index_v = int_(index+i_scalar);
 				vec = builder().CreateInsertElement( vec, scalar, index_v );
 			}
+			index += ( elem_stride * elem_width );
 		}
 		index += slice_stride * elem_width;
 	}
@@ -490,10 +490,10 @@ void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int s
 
 		// Compute slice indexes
 		for( int i_elem = 0; i_elem < slice_size; ++i_elem ){
-			index += ( elem_stride * elem_width );
 			for( int i_scalar = 0; i_scalar < elem_width; ++i_scalar ){
 				slice_indexes[i_elem*elem_width+i_scalar] = ( index+i_scalar );
 			}
+			index += ( elem_stride * elem_width );
 		}
 
 		// Extract slices

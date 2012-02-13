@@ -929,12 +929,20 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 	fn( (void*)in0, (void*)NULL, (void*)out0, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_TEST_MESSAGE( i );
 		BOOST_CHECK_CLOSE( out0[i], ref_out0[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out1[i].x, ref_out1[i].x, 0.00001f );
+		BOOST_CHECK_CLOSE( out1[i].y, ref_out1[i].y, 0.00001f );
+		BOOST_CHECK_CLOSE( out2[i].x, ref_out2[i].x, 0.00001f );
+		BOOST_CHECK_CLOSE( out2[i].y, ref_out2[i].y, 0.00001f );
+		BOOST_CHECK_CLOSE( out2[i].z, ref_out2[i].z, 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i].x, ref_out3[i].x, 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i].y, ref_out3[i].y, 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i].z, ref_out3[i].z, 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i].w, ref_out3[i].w, 0.00001f );
 	}
 
-	//_aligned_free( in0 );
-	//_aligned_free( out );
+	_aligned_free( in0 );
+	_aligned_free( out0 );
 }
 
 #endif

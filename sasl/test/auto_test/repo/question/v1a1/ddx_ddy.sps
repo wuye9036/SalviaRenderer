@@ -15,11 +15,10 @@ struct VSOUT{
 VSOUT fn( VSIN in ){
 	VSOUT o;
 
-	o.out0 = ddx(in.in0); /* + ddy(in.in0);
+	o.out0 = ddx(in.in0) + ddy(in.in0);
 	o.out1 = ddx(in.in1).xy + ddy(in.in1).yx;
 	o.out2 = ddx(in.in2).xyz + ddy(in.in2).yzx;
 	o.out3 = ddx(in.in3).xwzy + ddy(in.in3).yzxw;
-	*/
 
 	return o;
 }
