@@ -41,6 +41,7 @@ using sasl::semantic::storage_si;
 using sasl::semantic::type_info_si;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
+using salviar::PACKAGE_LINE_ELEMENT_COUNT;
 
 using eflib::support_feature;
 using eflib::cpu_sse2;
@@ -363,7 +364,7 @@ void cgs_simd::if_cond_end( value_t const& cond )
 
 void cgs_simd::then_beg()
 {
-	Value* then_mask =  builder().CreateAnd( cond_exec_mask, exec_masks.back(), "mask.then" );
+	Value* then_mask = builder().CreateAnd( cond_exec_mask, exec_masks.back(), "mask.then" );
 	exec_masks.push_back( then_mask );
 }
 
@@ -382,6 +383,125 @@ void cgs_simd::else_beg()
 void cgs_simd::else_end()
 {
 	exec_masks.pop_back();
+}
+
+value_t cgs_simd::emit_ddx( value_t const& v )
+{
+	return derivation( v, slm_vertical );
+}
+
+value_t cgs_simd::emit_ddy( value_t const& v )
+{
+	return derivation( v, slm_horizontal );
+}
+
+value_t cgs_simd::derivation( value_t const& v, slice_layout_mode slm )
+{
+	if( v.abi() != abi_package ){
+		return null_value( v.hint(), v.abi() );
+	}
+
+	int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
+	int const MAX_SLICES_COUNT = ( PACKAGE_LINES > PACKAGE_LINE_ELEMENT_COUNT ? PACKAGE_LINES : PACKAGE_LINE_ELEMENT_COUNT );
+
+	Value* pkg_v = v.load();
+	Value* diff_v = NULL;
+
+	builtin_types hint = v.hint();
+	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
+	
+	if( is_scalar(hint) || is_vector(hint) )
+	{
+		int elem_width = static_cast<int>( hint == scalar_hint ? 1 : vector_size(hint) );
+		int padded_elem_width = ceil_to_pow2(elem_width);
+
+		int slice_stride = 0;
+		int elem_stride = 0;
+		int slice_count = 0;
+		int slice_size = 0;
+		if( slm == slm_horizontal ){
+			slice_stride = 1;
+			elem_stride = 1;
+			slice_count = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
+			slice_size = PACKAGE_LINE_ELEMENT_COUNT;
+		} else {
+			slice_stride = -( PACKAGE_ELEMENT_COUNT - PACKAGE_LINE_ELEMENT_COUNT );
+			elem_stride = PACKAGE_LINE_ELEMENT_COUNT;
+			slice_count = PACKAGE_LINE_ELEMENT_COUNT;
+			slice_size = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
+		}
+
+		Value* slides[MAX_SLICES_COUNT] = {NULL};
+		unpack_slices( pkg_v, slice_count, slice_size, slice_stride, elem_stride, padded_elem_width, slides );
+
+		// Compute derivations
+		Value* diff[MAX_SLICES_COUNT] = {NULL};
+		for( int i = 0; i < slice_count; i+=2 )
+		{
+			if( is_integer(scalar_hint) ){
+				if( is_signed(scalar_hint) ){
+					diff[i] = builder().CreateNSWSub( slides[i+1], slides[i] );
+				} else {
+					diff[i] = builder().CreateNUWSub( slides[i+1], slides[i] );
+				}
+			} else {
+				diff[i] = builder().CreateFSub( slides[i+1], slides[i] );
+			}
+			diff[i+1] = diff[i];
+		}
+
+		diff_v = pack_slices( diff, slice_count, slice_size, slice_stride, elem_stride, padded_elem_width );
+	}
+	else if( is_matrix(hint) )
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return create_value( v.tyinfo(), v.hint(), diff_v, vkind_value, abi_package );
+}
+
+/// Pack slides to vector.
+Value* cgs_simd::pack_slices( Value** slices, int slice_count, int slice_size, int slice_stride, int elem_stride, int elem_width )
+{
+	Type* element_ty = ((VectorType*)slices[0]->getType())->getElementType();
+	Value* vec = UndefValue::get( VectorType::get( element_ty, PACKAGE_ELEMENT_COUNT*elem_width ) );
+	int index = 0;
+	for( int i_slice = 0; i_slice < slice_count; ++i_slice ){
+		for( int i_elem = 0; i_elem < slice_size; ++i_elem ){
+			index += ( elem_stride * elem_width );
+			for( int i_scalar = 0; i_scalar < elem_width; ++i_scalar ){
+				Value* scalar  = builder().CreateExtractElement( slices[i_slice], int_( i_elem * elem_width + i_scalar ) );
+				Value* index_v = int_(index+i_scalar);
+				vec = builder().CreateInsertElement( vec, scalar, index_v );
+			}
+		}
+		index += slice_stride * elem_width;
+	}
+
+	return vec;
+}
+
+void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int slice_stride, int elem_stride, int elem_width, Value** out_slices )
+{
+	vector<int> slice_indexes( slice_size*elem_width, 0 );
+
+	int index = 0;
+	for( int i_slice = 0; i_slice < slice_count; ++i_slice ){
+
+		// Compute slice indexes
+		for( int i_elem = 0; i_elem < slice_size; ++i_elem ){
+			index += ( elem_stride * elem_width );
+			for( int i_scalar = 0; i_scalar < elem_width; ++i_scalar ){
+				slice_indexes[i_elem*elem_width+i_scalar] = ( index+i_scalar );
+			}
+		}
+
+		// Extract slices
+		Constant* slice_indexes_v = vector_( &slice_indexes[0], slice_size*elem_width );
+		out_slices[i_slice] = builder().CreateShuffleVector( pkg, pkg, slice_indexes_v );
+
+		index += slice_stride * elem_width;
+	}
 }
 
 END_NS_SASL_CODE_GENERATOR();

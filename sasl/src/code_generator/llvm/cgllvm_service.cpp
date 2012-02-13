@@ -1130,7 +1130,7 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 					copy( &indexes[0], &indexes[idx_len], indexes_per_value.begin() );
 
 					vector<char> package_idx( PACKAGE_ELEMENT_COUNT * swz_element_pitch, -1 );
-					assert( idx_len < SIMD_ELEMENT_COUNT() );
+					assert( idx_len <= SIMD_ELEMENT_COUNT() );
 
 					for ( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 						for( size_t j = 0; j < swz_element_pitch; ++j ){
@@ -1490,5 +1490,6 @@ void cg_service::jump_to( insert_point_t const& ip )
 		builder().CreateBr( ip.block );
 	}
 }
+
 
 END_NS_SASL_CODE_GENERATOR();

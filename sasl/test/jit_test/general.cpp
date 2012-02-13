@@ -43,6 +43,7 @@ using sasl::code_generator::cgllvm_jit_engine;
 using sasl::code_generator::llvm_module;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
+using salviar::PACKAGE_LINE_ELEMENT_COUNT;
 
 using boost::shared_ptr;
 using boost::shared_polymorphic_cast;
@@ -298,7 +299,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #if ALL_TESTS_ENABLED
 
@@ -785,7 +786,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED 
+#if ALL_TESTS_ENABLED 
 BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	init_ps( "./repo/question/v1a1/branches.sps" );
 	
@@ -840,4 +841,101 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 }
 #endif
 
+#if 1 || ALL_TESTS_ENABLED
+
+template<typename T>
+void get_ddx( T* out, T const* in )
+{
+	int const LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
+
+	for( int col = 0; col < PACKAGE_LINE_ELEMENT_COUNT; col+=2 ){
+		for( int row = 0; row < LINES; ++row ){
+			int index = row*PACKAGE_LINE_ELEMENT_COUNT+col; 
+			out[index+1] = out[index] = in[index+1] - in[index];
+		}
+	}
+}
+
+template<typename T>
+void get_ddy( T* out, T const* in )
+{
+	int const LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
+
+	for( int row = 0; row < LINES; row+=2 ){
+		for( int col = 0; col < PACKAGE_LINE_ELEMENT_COUNT; ++col ){
+			int index = row*PACKAGE_LINE_ELEMENT_COUNT+col; 
+			out[index+PACKAGE_LINE_ELEMENT_COUNT] = out[index] = in[index+PACKAGE_LINE_ELEMENT_COUNT] - in[index];
+		}
+	}
+}
+
+BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
+	init_ps( "./repo/question/v1a1/ddx_ddy.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
+
+	BOOST_REQUIRE( fn );
+
+	float* in0 = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec2) + 2 * sizeof(vec4)), 16 );
+	vec2*  in1 = (vec2*)(in0 + PACKAGE_ELEMENT_COUNT);
+	vec4*  in2 = (vec4*)(in1 + PACKAGE_ELEMENT_COUNT);
+	vec4*  in3 = (vec4*)(in2 + PACKAGE_ELEMENT_COUNT);
+	
+	float* out0 = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec2) + 2 * sizeof(vec4)), 16 );
+	vec2*  out1 = (vec2*)(out0 + PACKAGE_ELEMENT_COUNT);
+	vec4*  out2 = (vec4*)(out1 + PACKAGE_ELEMENT_COUNT);
+	vec4*  out3 = (vec4*)(out2 + PACKAGE_ELEMENT_COUNT);
+
+	float ddx_out0[ PACKAGE_ELEMENT_COUNT ];
+	vec2  ddx_out1[ PACKAGE_ELEMENT_COUNT ];
+	vec4  ddx_out2[ PACKAGE_ELEMENT_COUNT ];
+	vec4  ddx_out3[ PACKAGE_ELEMENT_COUNT ];
+
+	float ddy_out0[ PACKAGE_ELEMENT_COUNT ];
+	vec2  ddy_out1[ PACKAGE_ELEMENT_COUNT ];
+	vec4  ddy_out2[ PACKAGE_ELEMENT_COUNT ];
+	vec4  ddy_out3[ PACKAGE_ELEMENT_COUNT ];
+
+	float ref_out0[ PACKAGE_ELEMENT_COUNT ];
+	vec2  ref_out1[ PACKAGE_ELEMENT_COUNT ];
+	vec4  ref_out2[ PACKAGE_ELEMENT_COUNT ];
+	vec4  ref_out3[ PACKAGE_ELEMENT_COUNT ];
+
+	srand(0);
+
+	// Init Data
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT * 11; ++i){
+		in0[i] = i; //rand() / 67.0f;
+	}
+
+	get_ddx( ddx_out0, in0 );
+	get_ddx( ddx_out1, in1 );
+	get_ddx( ddx_out2, in2 );
+	get_ddx( ddx_out3, in3 );
+
+	get_ddy( ddy_out0, in0 );
+	get_ddy( ddy_out1, in1 );
+	get_ddy( ddy_out2, in2 );
+	get_ddy( ddy_out3, in3 );
+
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		ref_out0[i] = ddx_out0[i]			+ ddy_out0[i];
+		ref_out1[i] = ddx_out1[i].xy()		+ ddy_out1[i].yx();
+		ref_out2[i] = ddx_out2[i].xyzw()	+ ddy_out2[i].yzxw();
+		ref_out3[i] = ddx_out3[i].xwzy()	+ ddy_out3[i].yzxw();
+	}
+
+	fn( (void*)in0, (void*)NULL, (void*)out0, (void*)NULL );
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_TEST_MESSAGE( i );
+		BOOST_CHECK_CLOSE( out0[i], ref_out0[i], 0.00001f );
+	}
+
+	//_aligned_free( in0 );
+	//_aligned_free( out );
+}
+
+#endif
 BOOST_AUTO_TEST_SUITE_END();

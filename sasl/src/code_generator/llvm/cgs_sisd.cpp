@@ -330,6 +330,20 @@ abis cgs_sisd::param_abi( bool c_compatible ) const
 	return c_compatible ? abi_c : abi_llvm;
 }
 
+value_t cgs_sisd::emit_ddx( value_t const& v )
+{
+	// It is not available in SISD mode.
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return v;
+}
+
+value_t cgs_sisd::emit_ddy( value_t const& v )
+{
+	// It is not available in SISD mode.
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return v;
+}
+
 void function_t::arg_name( size_t index, std::string const& name ){
 	size_t param_size = fn->arg_size();
 	if( first_arg_is_return_address() ){

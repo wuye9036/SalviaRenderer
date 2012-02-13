@@ -692,8 +692,17 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->fn().arg_name( 1, ".rhs" );
 			value_t ret_val = service()->emit_cross( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( intr->unmangled_name() == "ddx" || intr->unmangled_name() == "ddy" ) {
+			assert( par_tys.size() == 1 );
+			service()->fn().arg_name( 0, ".value" );
+
+			value_t ret_val;
+			if( intr->unmangled_name() == "ddx" ){
+				ret_val = service()->emit_ddx( service()->fn().arg(0) );
+			} else {
+				ret_val = service()->emit_ddy( service()->fn().arg(0) );
+			}
+			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 	}
 }

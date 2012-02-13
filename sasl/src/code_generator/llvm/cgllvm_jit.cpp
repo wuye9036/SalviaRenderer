@@ -13,6 +13,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -59,7 +60,13 @@ void* cgllvm_jit_engine::get_function( const std::string& func_name ){
 	if (!func){
 		return NULL;
 	}
-	return engine->getPointerToFunction( func );
+
+	void* native_fn = engine->getPointerToFunction( func );
+	if( find( fns.begin(), fns.end(), func ) == fns.end() ){
+		fns.push_back(func);
+	}
+
+	return native_fn;
 }
 
 cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<llvm_module> ctxt )
@@ -102,6 +109,13 @@ bool cgllvm_jit_engine::is_valid(){
 
 std::string cgllvm_jit_engine::error(){
 	return err;
+}
+
+cgllvm_jit_engine::~cgllvm_jit_engine()
+{
+	BOOST_FOREACH( llvm::Function* fn, fns ){
+		engine->freeMachineCodeForFunction( fn );
+	}
 }
 
 END_NS_SASL_CODE_GENERATOR();

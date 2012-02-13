@@ -3,7 +3,9 @@
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/jit_api.h>
+
 #include <string>
+#include <vector>
 
 namespace llvm{
 	class Function; 
@@ -21,7 +23,7 @@ public:
 	static boost::shared_ptr<cgllvm_jit_engine> create( boost::shared_ptr<llvm_module>, std::string& error );
 
 	virtual void* get_function( const std::string& /*func_name*/ );
-	virtual ~cgllvm_jit_engine(){}
+	virtual ~cgllvm_jit_engine();
 protected:
 	cgllvm_jit_engine( boost::shared_ptr<llvm_module> );
 	void build();
@@ -34,6 +36,7 @@ private:
 
 	boost::shared_ptr<llvm_module> global_ctxt;
 	boost::shared_ptr<llvm::ExecutionEngine> engine;
+	std::vector<llvm::Function*> fns;
 	std::string err;
 };
 

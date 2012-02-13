@@ -1391,9 +1391,15 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 		}
 
-		for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
-			for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
+		for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+			shared_ptr<builtin_type> ty = it_type->second;
+			register_intrinsic(child_ctxt_init, "ddx") % ty >> ty;
+			register_intrinsic(child_ctxt_init, "ddy") % ty >> ty;
+		}
 
+		for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
+			
+			for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
 				register_intrinsic(child_ctxt_init, "mul")
 					% fvec_ts[n_vec] % fmat_ts[vec_size][n_vec]
 				>> fvec_ts[vec_size];
@@ -1401,7 +1407,6 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 				register_intrinsic(child_ctxt_init, "mul")
 					% fmat_ts[vec_size][n_vec] % fvec_ts[vec_size]
 				>> fvec_ts[n_vec];
-
 			}
 
 			register_intrinsic(child_ctxt_init, "dot")
@@ -1501,6 +1506,7 @@ void semantic_analyser::function_register::r(
 
 	if( is_intrinsic ){
 		shared_ptr<symbol> new_sym = new_node->symbol();
+		assert( new_sym );
 		owner.module_semantic_info()->intrinsics().push_back( new_sym );
 	}
 	fn.reset();

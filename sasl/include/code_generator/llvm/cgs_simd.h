@@ -31,6 +31,9 @@ protected:
 	void emit_return();
 	void emit_return( value_t const&, abis abi );
 	
+	virtual value_t emit_ddx( value_t const& v );
+	virtual value_t emit_ddy( value_t const& v );
+	
 	virtual value_t create_scalar( llvm::Value*, value_tyinfo* );
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
@@ -79,9 +82,35 @@ private:
 	llvm::Value*	all_one_mask();
 	llvm::Value*	expanded_mask( uint32_t expanded_times );
 
+	enum slice_layout_mode{
+		slm_horizontal,
+		slm_vertical
+	};
+
+	value_t derivation( value_t const& v, slice_layout_mode slm );
+
+	llvm::Value* pack_slices(
+		llvm::Value** slices,
+		int slice_count,
+		int slice_size,
+		int slice_stride,
+		int elem_stride,
+		int elem_width
+		);
+
+	void unpack_slices(
+		llvm::Value* pkg,
+		int slice_count,
+		int slice_size,
+		int slice_stride,
+		int elem_stride,
+		int elem_width,
+		llvm::Value** out_slices
+		);
+
 	// Masks
-	llvm::Value*		cond_exec_mask;
-	std::vector<llvm::Value*> exec_masks;
+	llvm::Value*				cond_exec_mask;
+	std::vector<llvm::Value*>	exec_masks;
 };
 
 END_NS_SASL_CODE_GENERATOR();

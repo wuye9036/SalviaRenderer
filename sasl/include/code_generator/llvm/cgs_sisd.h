@@ -101,6 +101,12 @@ public:
 	function_t end_fndecl();
 	/// @}
 
+	/// @name Intrinsics
+	/// @{
+	virtual value_t emit_ddx( value_t const& v );
+	virtual value_t emit_ddy( value_t const& v );
+	/// @}
+
 	/// @name Emit statement
 	/// @{
 	void emit_return();

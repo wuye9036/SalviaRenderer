@@ -330,6 +330,8 @@ public:
 	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_sqrt( value_t const& lhs );
 	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_ddx( value_t const& v ) = 0;
+	virtual value_t emit_ddy( value_t const& v ) = 0;
 	/// @}
 
 	/// @name Emit type casts
