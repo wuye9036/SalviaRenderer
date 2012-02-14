@@ -906,7 +906,7 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 	// Init Data
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT * 11; ++i){
-		in0[i] = i; //rand() / 67.0f;
+		in0[i] = rand() / 67.0f;
 	}
 
 	get_ddx( ddx_out0, in0 );
