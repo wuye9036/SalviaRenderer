@@ -105,7 +105,8 @@ private:
 			semantic_analyser& owner,
 			boost::any const& ctxt_init,
 			boost::shared_ptr<sasl::syntax_tree::function_type> const& fn,
-			bool is_intrinsic
+			bool is_intrinsic,
+			bool is_external
 			);
 		function_register( function_register const& );
 
@@ -122,10 +123,11 @@ private:
 		boost::shared_ptr<sasl::syntax_tree::function_type> fn;
 		semantic_analyser& owner;
 		bool is_intrinsic;
+		bool is_external;
 	};
 
 	function_register register_function( boost::any const& child_ctxt_init, std::string const& name );
-	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name );
+	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, bool external = false );
 
 	void register_builtin_types();
 

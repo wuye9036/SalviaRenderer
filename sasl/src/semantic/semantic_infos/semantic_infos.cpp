@@ -186,7 +186,7 @@ storage_si::storage_si( shared_ptr<pety_t> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 	, sem(salviar::sv_none)
 	, memidx(-1), swz(0)
-	, intrin(false), invoked(false), c_comp(false)
+	, intrin(false), invoked(false), c_comp(false), ext_comp(false)
 	, decl(NULL)
 {
 }
@@ -255,6 +255,16 @@ void storage_si::declarator( symbol* v )
 symbol* storage_si::declarator() const
 {
 	return decl;
+}
+
+bool storage_si::external_compatible() const
+{
+	return ext_comp;
+}
+
+void storage_si::external_compatible( bool v )
+{
+	ext_comp = v;
 }
 
 call_si::call_si( shared_ptr<pety_t> const& typemgr )

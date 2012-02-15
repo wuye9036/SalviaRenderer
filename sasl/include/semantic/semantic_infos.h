@@ -186,6 +186,9 @@ public:
 	bool c_compatible() const;
 	void c_compatible( bool v );
 
+	bool external_compatible() const;
+	void external_compatible( bool v );
+
 	/// Is variable a reference. Only available in parameter.
 	bool is_reference() const;
 	void is_reference( bool v );
@@ -201,6 +204,7 @@ private:
 	bool intrin;
 	bool invoked;
 	bool c_comp;
+	bool ext_comp;
 	bool is_ref;
 	
 	symbol* decl;
