@@ -192,7 +192,8 @@ namespace sasl{
 				// add other types.
 				btc_list +=
 					builtin_types::none,
-					builtin_types::_void
+					builtin_types::_void,
+					builtin_types::_sampler
 					;
 			}
 			return btc_list;

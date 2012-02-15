@@ -86,6 +86,7 @@ void builtin_types::force_initialize(){
 	new ( const_cast<builtin_types*>(&_sint8) ) builtin_types ( UINT32_C( 35717120 ), "_sint8" );
 	new ( const_cast<builtin_types*>(&_scalar) ) builtin_types ( UINT32_C( 0 ), "_scalar" );
 	new ( const_cast<builtin_types*>(&_sign_field_shift) ) builtin_types ( UINT32_C( 20 ), "_sign_field_shift" );
+	new ( const_cast<builtin_types*>(&_sampler) ) builtin_types ( UINT32_C( 83886080 ), "_sampler" );
 	new ( const_cast<builtin_types*>(&_float) ) builtin_types ( UINT32_C( 16842752 ), "_float" );
 	new ( const_cast<builtin_types*>(&_dim0_field_shift) ) builtin_types ( UINT32_C( 8 ), "_dim0_field_shift" );
 	new ( const_cast<builtin_types*>(&_void) ) builtin_types ( UINT32_C( 67108864 ), "_void" );
@@ -130,6 +131,7 @@ const builtin_types builtin_types::_generic_type_mask ( UINT32_C( 251658240 ), "
 const builtin_types builtin_types::_sint8 ( UINT32_C( 35717120 ), "_sint8" );
 const builtin_types builtin_types::_scalar ( UINT32_C( 0 ), "_scalar" );
 const builtin_types builtin_types::_sign_field_shift ( UINT32_C( 20 ), "_sign_field_shift" );
+const builtin_types builtin_types::_sampler ( UINT32_C( 83886080 ), "_sampler" );
 const builtin_types builtin_types::_float ( UINT32_C( 16842752 ), "_float" );
 const builtin_types builtin_types::_dim0_field_shift ( UINT32_C( 8 ), "_dim0_field_shift" );
 const builtin_types builtin_types::_void ( UINT32_C( 67108864 ), "_void" );

@@ -635,6 +635,12 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
 		assert( intrinsic_ctxt );
 
+		// Deal with external functions
+		if ( intr->unmangled_name() == "tex2D" ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return;
+		}
+
 		service()->push_fn( intrinsic_ctxt->data().self_fn );
 		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, service() ) );
 

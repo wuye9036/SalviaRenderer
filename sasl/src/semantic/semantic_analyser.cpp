@@ -697,6 +697,11 @@ SASL_VISIT_DEF( alias_type ){
 		= msi->pety()->get( v.as_handle<tynode>(), data_cptr()->parent_sym );
 	// TODO: If struct id not found, it means the type name is wrong.
 	// Compiler will report that.
+
+	if( v.alias->str == "sampler" ){
+		dup_struct_id = msi->pety()->get( builtin_types::_sampler );
+	}
+
 	assert( dup_struct_id != -1 );
 
 	data_cptr()->generated_node = msi->pety()->get(dup_struct_id);
@@ -1374,13 +1379,15 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 	}
 
-	
 	{
 		/** @{ Intrinsics */
 		shared_ptr<builtin_type> fvec_ts[5];
 		for( int i = 1; i <= 4; ++i ){
 			fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
 		}
+
+		shared_ptr<builtin_type> sampler_ty =  create_builtin_type( builtin_types::_sampler );
+		register_intrinsic( child_ctxt_init, "tex2D" ) % sampler_ty % fvec_ts[4] >> fvec_ts[4];
 
 		shared_ptr<builtin_type> fmat_ts[5][5];
 		for( int vec_size = 1; vec_size < 5; ++vec_size ){

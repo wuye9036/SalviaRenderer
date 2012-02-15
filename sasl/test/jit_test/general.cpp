@@ -946,4 +946,19 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 }
 
 #endif
+
+#if 1 || ALL_TESTS_ENABLED
+
+BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
+{
+	init_ps( "./repo/question/v1a1/tex.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
+
+	BOOST_REQUIRE( fn );
+}
+
+#endif
+
 BOOST_AUTO_TEST_SUITE_END();

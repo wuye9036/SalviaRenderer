@@ -102,6 +102,9 @@ Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis abi )
 	if ( is_void( bt ) ){
 		return Type::getVoidTy( ctxt );
 	}
+	if( bt == builtin_types::_sampler ){
+		return StructType::create( ".sampler", Type::getInt8PtrTy(ctxt), Type::getInt8PtrTy(ctxt), NULL );
+	}
 
 	if( abi == abi_c || abi == abi_llvm ){
 		if( is_scalar(bt) ){

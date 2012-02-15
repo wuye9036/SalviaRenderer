@@ -37,6 +37,7 @@ public:
 	const static this_type _sint8;
 	const static this_type _scalar;
 	const static this_type _sign_field_shift;
+	const static this_type _sampler;
 	const static this_type _float;
 	const static this_type _dim0_field_shift;
 	const static this_type _void;

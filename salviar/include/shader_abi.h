@@ -34,6 +34,7 @@ namespace details{
 	uint32_t const integer_class		= 2U	<< classification_field_offset;
 	uint32_t const boolean_class		= 3U	<< classification_field_offset;
 	uint32_t const void_class			= 4U	<< classification_field_offset;
+	uint32_t const sampler_class		= 5U	<< classification_field_offset;
 	uint32_t const classification_mask	= 0xFU	<< classification_field_offset;
 
 	uint32_t const signed_flag			= ( 1U << sign_field_offset ) + integer_class;
