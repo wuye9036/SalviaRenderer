@@ -1522,7 +1522,7 @@ void semantic_analyser::function_register::r(
 }
 
 semantic_analyser::function_register::function_register( function_register const& rhs)
-	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic)
+	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic), is_external(rhs.is_external)
 {
 }
 

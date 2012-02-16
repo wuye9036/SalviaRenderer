@@ -254,6 +254,7 @@ struct function_t{
 	sasl::syntax_tree::function_type*	fnty;
 	llvm::Function*						fn;
 	bool								c_compatible;
+	bool								external;
 	bool								ret_void;
 	cg_service*							cg;
 };

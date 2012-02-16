@@ -343,6 +343,7 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	function_t ret;
 	ret.fnty = fn_node.get();
 	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
+	ret.external = fn_node->si_ptr<storage_si>()->external_compatible();
 
 	abis abi = param_abi( ret.c_compatible );
 
@@ -351,7 +352,7 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	Type* ret_ty = node_ctxt( fn_node->retval_type.get(), false )->get_typtr()->ty( abi );
 
 	ret.ret_void = true;
-	if( abi == abi_c ){
+	if( abi == abi_c || ret.external ){
 		if( fn_node->retval_type->tycode != builtin_types::_void ){
 			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
 			Type* ret_ptr = PointerType::getUnqual( ret_ty );
@@ -369,10 +370,8 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 		value_tyinfo* par_ty = par_ctxt->get_typtr();
 		assert( par_ty );
 
-		// bool is_ref = par->si_ptr<storage_si>()->is_reference();
-
 		Type* par_llty = par_ty->ty( abi ); 
-		if( ret.c_compatible && !is_scalar(par_ty->hint()) ){
+		if( ( ret.c_compatible || ret.external ) && !is_scalar(par_ty->hint()) ){
 			par_tys.push_back( PointerType::getUnqual( par_llty ) );
 		} else {
 			par_tys.push_back( par_llty );
