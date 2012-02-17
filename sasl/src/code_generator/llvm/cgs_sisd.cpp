@@ -422,12 +422,12 @@ bool function_t::arg_is_ref( size_t index ) const{
 
 bool function_t::first_arg_is_return_address() const
 {
-	return c_compatible && !ret_void;
+	return ( c_compatible || external ) && !ret_void;
 }
 
 abis function_t::abi() const
 {
-	return c_compatible ? abi_c : abi_llvm;
+	return cg->param_abi( c_compatible );
 }
 
 llvm::Value* function_t::return_address() const

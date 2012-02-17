@@ -18,6 +18,7 @@ class codegen_context;
 class jit_engine{
 public:
 	virtual void* get_function( const std::string& func_name ) = 0;
+	virtual void inject_function( void* fn, std::string const& fn_name ) = 0;
 protected:
 	jit_engine(){}
 	virtual ~jit_engine(){}

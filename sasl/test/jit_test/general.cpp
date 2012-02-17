@@ -261,6 +261,12 @@ struct jit_fixture {
 		fn.callee = reinterpret_cast<typename FunctionT::callee_ptr_t>( je->get_function(fn_name) );
 	}
 
+	void set_function( void* fn, string const& unmangled_name ){
+		assert( !root_sym->find_overloads(unmangled_name).empty() );
+		string fn_name = root_sym->find_overloads(unmangled_name)[0]->mangled_name();
+		je->inject_function( fn, fn_name );
+	}
+
 	~jit_fixture(){}
 
 	compiler c;
@@ -299,7 +305,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #if ALL_TESTS_ENABLED
 
@@ -841,7 +847,7 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 template<typename T>
 void get_ddx( T* out, T const* in )
@@ -949,14 +955,59 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #if 1 || ALL_TESTS_ENABLED
 
+struct sampler_t{
+	uintptr_t ss, tex;
+};
+
+void tex2D(vec4* ret, sampler_t* s, vec4* t)
+{
+	BOOST_CHECK_EQUAL( s->ss, 0xF3DE89C );
+	BOOST_CHECK_EQUAL( s->tex, 0xB785D3A );
+
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		ret[i] = t[i].zyxw() + t[i].wxzy();
+	}
+}
+
+
 BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/tex.sps" );
+
+	set_function( &tex2D, "tex2D" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
 	BOOST_REQUIRE( fn );
+
+	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
+	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
+	vec4  dest_ref[PACKAGE_ELEMENT_COUNT];
+
+	srand(0);
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
+		((float*)src)[i] = rand() / 177.8f;
+	}
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		dest_ref[i] = src[i].zyxw() + src[i].wxzy();
+	}
+	sampler_t smpr;
+	
+	smpr.ss = 0xF3DE89C;
+	smpr.tex = 0xB785D3A;
+
+	fn( src, (void*)&smpr, dest, (void*)NULL );
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( dest_ref[i].x, dest[i].x, 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i].y, dest[i].y, 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i].z, dest[i].z, 0.00001f );
+	}
+
+	_aligned_free( src );
+	_aligned_free( dest );
 }
 
 #endif

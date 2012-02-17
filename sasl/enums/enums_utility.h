@@ -19,6 +19,7 @@ namespace sasl{
 		// builtin type code
 		bool is_none( const builtin_types& /*btc*/ );
 		bool is_void( const builtin_types& /*btc*/ );
+		bool is_sampler( const builtin_types& /*btc*/ );
 		bool is_integer( const builtin_types& /*btc*/ );
 		bool is_real( const builtin_types& /*btc*/ );
 		bool is_signed( const builtin_types& /*btc*/ );

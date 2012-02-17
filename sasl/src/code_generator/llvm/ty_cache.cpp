@@ -22,6 +22,14 @@ Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis abi )
 	Type*& found_ty = cache[abi][&ctxt][bt];
 	if( !found_ty ){ 
 		found_ty = create_ty( ctxt, bt, abi );
+
+		if( is_sampler(bt) ){
+			cache[abi_c][&ctxt][bt]
+			= cache[abi_llvm][&ctxt][bt]
+			= cache[abi_vectorize][&ctxt][bt]
+			= cache[abi_package][&ctxt][bt]
+			= found_ty;
+		}
 	}
 	return found_ty;
 }

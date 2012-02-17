@@ -283,6 +283,7 @@ public:
 	virtual llvm::Value* load( value_t const& );
 	virtual llvm::Value* load( value_t const&, abis abi );
 	virtual llvm::Value* load_ref( value_t const& );
+	virtual llvm::Value* load_ref( value_t const& v, abis abi );
 	virtual void store( value_t& lhs, value_t const& rhs ) = 0;
 	/// @}
 
@@ -549,6 +550,7 @@ protected:
 
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
+	llvm::Value* load_c_as_package		( value_t const& v );
 	llvm::Value* load_llvm_as_vec		( value_t const& v );
 	llvm::Value* load_vec_as_llvm		( value_t const& v );
 	llvm::Value* load_vec_as_package	( value_t const& v );

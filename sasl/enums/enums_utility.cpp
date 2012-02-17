@@ -15,6 +15,10 @@ namespace sasl{
 			return btc == builtin_types::_void;
 		}
 
+		bool is_sampler( const builtin_types& btc ){
+			return btc == builtin_types::_sampler;
+		}
+
 		bool is_integer( const builtin_types& btc )
 		{
 			return ( btc & builtin_types::_generic_type_mask ) == builtin_types::_integer;
@@ -38,7 +42,7 @@ namespace sasl{
 		bool is_scalar( const builtin_types& btc )
 		{
 			bool scalar = ( ( btc & builtin_types::_dimension_mask ) == builtin_types::_scalar );
-			return scalar && !is_void(btc) && !is_none(btc) ;
+			return scalar && !is_void(btc) && !is_none(btc) && !is_sampler(btc) ;
 		}
 
 		bool is_vector( const builtin_types& btc )

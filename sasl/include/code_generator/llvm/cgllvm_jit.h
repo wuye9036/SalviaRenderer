@@ -23,6 +23,8 @@ public:
 	static boost::shared_ptr<cgllvm_jit_engine> create( boost::shared_ptr<llvm_module>, std::string& error );
 
 	virtual void* get_function( const std::string& /*func_name*/ );
+	virtual void inject_function( void* fn, std::string const& );
+
 	virtual ~cgllvm_jit_engine();
 protected:
 	cgllvm_jit_engine( boost::shared_ptr<llvm_module> );

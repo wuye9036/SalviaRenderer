@@ -1,9 +1,9 @@
 struct VSIN{
-	float  in0: TEXCOORD(0);
+	float4	in0: TEXCOORD(0);
 };
 
 struct VSOUT{
-	float  out0: COLOR(0);
+	float4	out0: COLOR(0);
 };
 
 sampler s;
@@ -11,7 +11,7 @@ sampler s;
 VSOUT fn( VSIN in ){
 	VSOUT o;
 	
-	o.out0 = in.in0;
+	o.out0 = tex2D(s, in.in0);
 
 	return o;
 }

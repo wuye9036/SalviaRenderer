@@ -370,10 +370,16 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 		value_tyinfo* par_ty = par_ctxt->get_typtr();
 		assert( par_ty );
 
-		Type* par_llty = par_ty->ty( abi ); 
-		if( ( ret.c_compatible || ret.external ) && !is_scalar(par_ty->hint()) ){
+		Type* par_llty = par_ty->ty( abi );
+		
+		if( ( ret.c_compatible || ret.external ) 
+			&& ( !is_scalar(par_ty->hint()) || ( promote_abi( param_abi(false), abi_llvm ) != abi_llvm ) ) )
+
+		{
 			par_tys.push_back( PointerType::getUnqual( par_llty ) );
-		} else {
+		}
+		else
+		{
 			par_tys.push_back( par_llty );
 		}
 	}
@@ -690,6 +696,15 @@ llvm::Value* cg_service::load_ref( value_t const& v )
 	return NULL;
 }
 
+Value* cg_service::load_ref( value_t const& v, abis abi )
+{
+	if( v.abi() == abi || v.hint() == builtin_types::_sampler ){
+		return load_ref(v);
+	} else {
+		return NULL;
+	}
+}
+
 Value* cg_service::load_as( value_t const& v, abis abi )
 {
 	assert( abi != abi_unknown );
@@ -705,8 +720,7 @@ Value* cg_service::load_as( value_t const& v, abis abi )
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
 		} else if ( abi == abi_package ) {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return NULL;
+			return load_c_as_package( v );
 		} else {
 			assert(false);
 			return NULL;
@@ -849,6 +863,16 @@ Value* cg_service::load_vec_as_package( value_t const& v )
 	}
 
 	return NULL;
+}
+
+Value* cg_service::load_c_as_package( value_t const& v )
+{
+	if( v.hint() == builtin_types::_sampler ){
+		return v.load();
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return NULL;
+	}
 }
 
 abis cg_service::promote_abi( abis abi0, abis abi1 )
@@ -1433,21 +1457,27 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 
 	vector<Value*> arg_values;
 	value_t var;
-	if( fn.c_compatible ){
+
+	abis arg_abi = fn.c_compatible ? abi_c : promoted_abi;
+
+	if( fn.c_compatible || fn.external ){
 		// 
 		if ( fn.first_arg_is_return_address() ){
-			var = create_variable( fn.get_return_ty().get(), abi_c, "ret" );
+			var = create_variable( fn.get_return_ty().get(), fn.abi(), "ret" );
 			arg_values.push_back( var.load_ref() );
 		}
 
 		BOOST_FOREACH( value_t const& arg, args ){
 			builtin_types hint = arg.hint();
-			if( is_scalar(hint) ){
-				arg_values.push_back( arg.load( promoted_abi ) );
+			if( is_scalar(hint) && (arg_abi == abi_c || arg_abi == abi_llvm) ){
+				arg_values.push_back( arg.load( arg_abi ) );
 			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				Value* ref_arg = load_ref( arg, arg_abi );
+				if( !ref_arg ){
+					EFLIB_ASSERT_UNIMPLEMENTED();
+				}
+				arg_values.push_back( ref_arg );
 			}
-			// arg_values.push_back( arg.load( abi_llvm ) );
 		}
 	} else {
 		BOOST_FOREACH( value_t const& arg, args ){

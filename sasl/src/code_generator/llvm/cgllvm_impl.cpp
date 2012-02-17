@@ -636,8 +636,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		assert( intrinsic_ctxt );
 
 		// Deal with external functions
-		if ( intr->unmangled_name() == "tex2D" ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
+		bool external = intr->node()->si_ptr<storage_si>()->external_compatible();
+		if ( external ){
+			// External Function without body. Do nothing.
 			return;
 		}
 
