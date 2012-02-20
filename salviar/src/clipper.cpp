@@ -23,7 +23,8 @@ clipper::clipper(){
 	planes_[4] = vec4(0.0f, -1.0f, 0.0f, 1.0f);
 	planes_[5] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
 
-	std::fill(planes_enable_.begin(), planes_enable_.end(), true);
+	std::fill(planes_enable_.begin(), planes_enable_.end(), false);
+	planes_enable_[0] = true;
 }
 
 void clipper::set_clip_plane_enable(bool enable, size_t idx)

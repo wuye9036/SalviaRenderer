@@ -57,6 +57,28 @@ public:
 	std::vector<char> buffer_odata;
 };
 
+class pixel_shader_unit
+{
+public:
+	pixel_shader_unit();
+	~pixel_shader_unit();
+
+	pixel_shader_unit( pixel_shader_unit const& );
+	pixel_shader_unit& operator = ( pixel_shader_unit const& );
+
+	void initialize( shader_code const* );
+	void execute( ps_output& out );
+
+public:
+	shader_code const* code;
+
+	std::vector<char> stream_data;
+	std::vector<char> buffer_data;
+
+	std::vector<char> stream_odata;
+	std::vector<char> buffer_odata;
+};
+
 END_NS_SALVIAR();
 
 #endif

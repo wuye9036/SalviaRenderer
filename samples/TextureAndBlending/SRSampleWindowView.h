@@ -18,7 +18,7 @@
 #include "Timer.h"
 
 //#define PRESENTER_NAME "gdiplus"
-#if defined( SASL_BUILD_WITH_DIRECTX )
+#if defined( SALVIA_BUILD_WITH_DIRECTX )
 #define PRESENTER_NAME "d3d9"
 #else
 #define PRESENTER_NAME "opengl"
