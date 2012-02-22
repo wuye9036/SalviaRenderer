@@ -63,6 +63,22 @@ obj_material::obj_material()
 {
 }
 
+int peek( FILE* f )
+{
+	int ch = fgetc(f);
+	ungetc( ch, f );
+	return ch;
+}
+
+void ignore( FILE* f, int max_count, char delim )
+{
+	int cur = 0;
+	while( !feof(f) && cur++ < max_count ){
+		int ch = fgetc(f);
+		if( ch == delim ){ break; }
+	}
+}
+
 bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_file, path const& base_path ){
 
 	std::string mtl_fullpath = ( base_path / mtl_file ).string();
@@ -133,6 +149,130 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 	}
 
 	mtlf.close();
+	return true;
+}
+
+bool load_obj_mesh_c(
+	renderer* r,
+	string const& fname,
+	vector<obj_mesh_vertex>& verts, vector<uint32_t>& indices,
+	vector<uint32_t>& attrs, vector<obj_material>& mtls,
+	bool flip_tex_v
+	)
+{
+	FILE* objf = fopen( fname.c_str(), "r" );
+	if( !objf ){ return false; }
+
+	int const BUFFER_SIZE = 2048;
+	vector<char> obj_cmd_data(BUFFER_SIZE);
+	vector<char> mtl_fname_data(BUFFER_SIZE);
+	char* obj_cmd = &(obj_cmd_data[0]);
+	char* mtl_fname = &(mtl_fname_data[0]);
+	vector<vec4> positions;
+	vector<vec4> uvs;
+	vector<vec4> normals;
+
+	obj_material mtl;
+
+	// init_material
+	mtls.push_back(mtl);
+
+	uint32_t subset = 0;
+
+	unordered_map< smooth_id_t, uint32_t > smooth_id_to_vertex_index;
+
+	for(;;){
+		fscanf( objf, "%s", obj_cmd );
+		if( feof(objf) || ferror(objf) ) { break; }
+		if( obj_cmd[0] == '#' ){
+			; // Comment
+		} else if ( strncmp( obj_cmd, "v", BUFFER_SIZE ) == 0 ){
+			float x = 0.0f, y = 0.0f, z = 0.0f;
+			fscanf( objf, "%f %f %f", &x, &y, &z );
+			positions.push_back( vec4(x, y, z, 1.0f) );
+		} else if ( strncmp( obj_cmd, "vt", BUFFER_SIZE ) == 0 ){
+			float u = 0.0f, v = 0.0f;
+			fscanf( objf, "%f %f", &u, &v );
+			uvs.push_back( vec4(u, (flip_tex_v ? 1.0f - v : v), 0.0f, 0.0f) );
+		} else if ( strncmp( obj_cmd, "vn", BUFFER_SIZE ) == 0 ){
+			float x = 0.0f, y = 0.0f, z = 0.0f;
+			fscanf( objf, "%f %f %f", &x, &y, &z );
+			normals.push_back( vec4(x, y, z, 0.0f) );
+		} else if ( strncmp( obj_cmd, "f", BUFFER_SIZE ) == 0 ){
+
+			uint32_t pos_index = 0, texcoord_index = 0, normal_index = 0;
+			obj_mesh_vertex vert;
+
+			for( uint32_t face_index = 0; face_index < 3; ++face_index ){
+				memset( &vert, 0, sizeof(vert) );
+
+				fscanf( objf, "%u", &pos_index );
+				vert.pos = positions[pos_index-1];
+
+				if( peek(objf) == '/' ){
+					ignore( objf, 1, -1 );
+
+					if( peek(objf) != '/' ){
+						fscanf( objf, "%u", &texcoord_index );
+						vert.uv = uvs[texcoord_index-1];
+					}
+
+					if( peek(objf) == '/' ){
+						ignore(objf, 1, -1);
+						fscanf( objf, "%u", &normal_index );
+						vert.normal = normals[ normal_index - 1 ];
+					}
+				}
+
+				uint32_t vert_index = 0;
+				smooth_id_t smooth_id = make_tuple( pos_index, texcoord_index, normal_index );
+				if( smooth_id_to_vertex_index.count(pos_index) == 0){
+					vert_index = static_cast<uint32_t>( verts.size() );
+					smooth_id_to_vertex_index[smooth_id] = vert_index;
+					verts.push_back( vert );
+				} else {
+					vert_index = smooth_id_to_vertex_index[smooth_id];
+				}
+				indices.push_back( vert_index );
+			}
+
+			attrs.push_back( subset );
+		} else if( strncmp( obj_cmd, "mtllib", BUFFER_SIZE ) == 0 ){
+			fscanf( objf, "%s", mtl_fname );
+		} else if( strncmp( obj_cmd, "usemtl", BUFFER_SIZE ) == 0 ){
+			vector<char> name_data(BUFFER_SIZE);
+			char* name = &(name_data[0]);
+			fscanf( objf, "%s", name );
+
+			bool found = false;
+			for( size_t mtl_index = 0; mtl_index < mtls.size(); ++mtl_index ){
+				obj_material* pmtl = &mtls[mtl_index];
+				if( pmtl->name == name ){
+					found = true;
+					subset = static_cast<uint32_t>( mtl_index );
+					break;
+				}
+			}
+
+			if( !found ){
+				subset = static_cast<uint32_t>( mtls.size() );
+				mtls.push_back( obj_material() );
+				mtls.back().name = name;
+			}
+
+		} else {
+			; // Unrecognized command
+		}
+
+		ignore( objf, 65536, '\n' );
+	}
+
+	fclose(objf);
+
+	path base_path = absolute( path(fname) );
+	if( strnlen( mtl_fname, BUFFER_SIZE ) != 0 ){
+		load_material( r, mtls, mtl_fname, base_path.parent_path() );
+	}
 	return true;
 }
 
@@ -315,7 +455,7 @@ vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string cons
 
 	vector<h_mesh> meshes;
 
-	if( !load_obj_mesh( render, file_name, verts, indices, attrs, mtls, flip_tex_v ) ){
+	if( !load_obj_mesh_c( render, file_name, verts, indices, attrs, mtls, flip_tex_v ) ){
 		return meshes;
 	}
 
