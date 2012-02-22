@@ -230,13 +230,6 @@ value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
 	return create_value( tyinfo, val, vkind_value, abi_llvm );
 }
 
-void cgs_sisd::jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip )
-{
-	Value* cond = cond_v.load();
-	builder().CreateCondBr( cond, true_ip.block, false_ip.block );
-}
-
-
 Value* cgs_sisd::select_( Value* cond, Value* yes, Value* no )
 {
 	return builder().CreateSelect( cond, yes, no );

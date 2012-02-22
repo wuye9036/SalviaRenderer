@@ -242,8 +242,45 @@ abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
 
 value_t cgs_simd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	abis promoted_abi = promote_abi( lhs.abi(), rhs.abi() );
+
+	builtin_types hint = lhs.hint();
+	assert( hint == rhs.hint() );
+	assert( hint != builtin_types::none );
+
+	Value* lhs_v = lhs.load( promoted_abi );
+	Value* rhs_v = rhs.load( promoted_abi );
+
+	Value* ret_v = NULL;
+
+	if( is_scalar(hint) || is_vector(hint) ){	
+		if( is_integer(hint) ){
+			ret_v = UndefValue::get( type_(builtin_types::_boolean, abi_package) );
+			for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
+				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
+				Value* cmp = is_signed(hint) ? builder().CreateICmpSLT( lhs_elem, rhs_elem ) : builder().CreateICmpULT( lhs_elem, rhs_elem );
+				ret_v = builder().CreateInsertElement( ret_v, cmp, int_(i) );
+			}
+		} else if( is_real(hint) ){
+			// TODO 
+			// According to the document, fcmp ugt works well on vector. But I don't know why it is failed.
+			// So We expand it manually.
+			ret_v = UndefValue::get( type_(builtin_types::_boolean, abi_package) );
+			for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
+				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
+				Value* cmp = builder().CreateFCmpULT( lhs_elem, rhs_elem );
+				ret_v = builder().CreateInsertElement( ret_v, cmp, int_(i) );
+			}
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else {
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return create_value( builtin_types::_boolean, ret_v, vkind_value, promoted_abi );
 }
 
 value_t cgs_simd::emit_cmp_le( value_t const& lhs, value_t const& rhs )
@@ -326,6 +363,8 @@ value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi )
 void cgs_simd::function_beg()
 {
 	exec_masks.push_back( all_one_mask() );
+	break_masks.push_back(NULL);
+	continue_masks.push_back(NULL);
 }
 
 void cgs_simd::function_end()
@@ -343,6 +382,10 @@ Value* cgs_simd::all_one_mask()
 Value* cgs_simd::expanded_mask( uint32_t expanded_times )
 {
 	Value* exec_mask_v = exec_masks.back();
+	if( expanded_times == 1 ){
+		return exec_mask_v;
+	}
+
 	vector<int> shuffle_mask;
 	shuffle_mask.reserve( expanded_times * PACKAGE_ELEMENT_COUNT );
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
@@ -359,23 +402,24 @@ void cgs_simd::if_cond_beg()
 
 void cgs_simd::if_cond_end( value_t const& cond )
 {
-	cond_exec_mask = cond.load( abi_package );
+	cond_exec_masks.push_back( cond.load( abi_package ) );
 }
 
 void cgs_simd::then_beg()
 {
-	Value* then_mask = builder().CreateAnd( cond_exec_mask, exec_masks.back(), "mask.then" );
+	Value* then_mask = builder().CreateAnd( cond_exec_masks.back(), exec_masks.back(), "mask.then" );
 	exec_masks.push_back( then_mask );
 }
 
 void cgs_simd::then_end()
 {
 	exec_masks.pop_back();
+	apply_break_and_continue();
 }
 
 void cgs_simd::else_beg()
 {
-	Value* inv_cond_exec_mask = builder().CreateNot( cond_exec_mask, "cond.inv" );
+	Value* inv_cond_exec_mask = builder().CreateNot( cond_exec_masks.back(), "cond.inv" );
 	Value* else_mask =  builder().CreateAnd( inv_cond_exec_mask, exec_masks.back(), "mask.else" );
 	exec_masks.push_back( else_mask );
 }
@@ -383,6 +427,7 @@ void cgs_simd::else_beg()
 void cgs_simd::else_end()
 {
 	exec_masks.pop_back();
+	apply_break_and_continue();
 }
 
 value_t cgs_simd::emit_ddx( value_t const& v )
@@ -502,6 +547,132 @@ void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int s
 
 		index += slice_stride * elem_width;
 	}
+}
+
+void cgs_simd::for_init_beg() {
+	// TODO
+	//  store <16 x i1>, <16 x i1>* var is crashed by LLVM bug.
+	// We ext to i8 array and store.
+	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8, abi_package), NULL, ".for.mask.tmpvar" ) );
+	Value* mask_as_uchar = builder().CreateZExtOrBitCast( exec_masks.back(), type_( builtin_types::_uint8, abi_package) );
+	builder().CreateStore( mask_as_uchar, mask_vars.back() );
+
+	break_masks.push_back(NULL);
+	continue_masks.push_back(NULL);
+}
+
+void cgs_simd::for_init_end() {}
+
+void cgs_simd::for_cond_beg() {}
+
+void cgs_simd::for_cond_end( value_t const& cond )
+{
+	Value* exec_mask_as_uchar = builder().CreateLoad( mask_vars.back() );
+	Value* cond_exec_mask = NULL;
+	Value* exec_mask = builder().CreateTruncOrBitCast( exec_mask_as_uchar, type_(builtin_types::_boolean, abi_package) );
+	if( cond.abi() != abi_unknown ){
+		cond_exec_mask = cond.load( abi_package );
+		exec_mask = builder().CreateAnd( exec_mask, cond_exec_mask );
+	}
+	exec_masks.push_back( exec_mask );
+
+	break_masks.back() = NULL;
+	continue_masks.back() = NULL;
+}
+
+void cgs_simd::for_body_beg(){
+	// builder().CreateCall( intrin_( Intrinsic::trap ) );
+}
+
+void cgs_simd::for_body_end(){}
+
+void cgs_simd::for_iter_beg(){}
+
+void cgs_simd::for_iter_end()
+{
+	Value* next_iter_exec_mask = exec_masks.back();
+	if( continue_masks.back() ){
+		next_iter_exec_mask = builder().CreateOr( exec_masks.back(), continue_masks.back() );
+	}
+
+	exec_masks.pop_back();
+	Value* next_iter_exec_mask_as_uchar = builder().CreateZExtOrBitCast( next_iter_exec_mask, type_( builtin_types::_uint8, abi_package) );
+	builder().CreateStore( next_iter_exec_mask_as_uchar, mask_vars.back() );
+
+	break_masks.pop_back();
+	continue_masks.pop_back();
+}
+
+llvm::Value* cgs_simd::all_zero_mask()
+{
+	Type* mask_ty = type_( builtin_types::_boolean, abi_package );
+	Value* mask_v = Constant::getNullValue(mask_ty);
+	return mask_v;
+}
+
+void cgs_simd::apply_break_and_continue()
+{
+	apply_break();
+	apply_continue();
+}
+
+void cgs_simd::if_beg(){}
+
+void cgs_simd::if_end()
+{
+	cond_exec_masks.pop_back();
+}
+
+void cgs_simd::apply_break()
+{
+	Value* mask = exec_masks.back();
+	if( break_masks.back() ){
+		mask = builder().CreateAnd( builder().CreateNot( break_masks.back() ), mask );
+	}
+	exec_masks.back() = mask;
+}
+
+void cgs_simd::apply_continue()
+{
+	Value* mask = exec_masks.back();
+	if( continue_masks.back() ){
+		mask = builder().CreateAnd( builder().CreateNot( continue_masks.back() ), mask );
+	}
+	exec_masks.back() = mask;
+}
+
+void cgs_simd::break_()
+{
+	Value* break_mask = break_masks.back();
+	if( break_mask == NULL ){
+		break_mask = exec_masks.back();
+	} else {
+		break_mask = builder().CreateOr( exec_masks.back(), break_mask );
+	}
+	break_masks.back() = break_mask;
+	apply_break();
+}
+
+void cgs_simd::continue_()
+{
+	Value* continue_mask = continue_masks.back();
+	if( continue_mask == NULL ){
+		continue_mask = exec_masks.back();
+	} else {
+		continue_mask = builder().CreateOr( exec_masks.back(), continue_mask );
+	}
+	continue_masks.back() = continue_mask;
+	apply_continue();
+}
+
+value_t cgs_simd::joinable()
+{
+	Value* v = exec_masks.back();
+	Value* ret_bool = builder().CreateExtractElement( v, int_(0) );
+	for( int i = 1; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		ret_bool = builder().CreateOr( ret_bool, builder().CreateExtractElement( v, int_(i) ) );
+	}
+	return create_value( builtin_types::_boolean, ret_bool, vkind_value, abi_llvm );
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -223,6 +223,8 @@ SASL_VISIT_DEF( if_statement )
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
+	if_beg();
+
 	if_cond_beg();
 	visit_child( child_ctxt, child_ctxt_init, v.cond );
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
@@ -252,6 +254,8 @@ SASL_VISIT_DEF( if_statement )
 
 	insert_point_t ip_merge = new_block( "if.merged", false );
 
+	if_end();
+
 	// Link Blocks
 	set_insert_point( ip_cond );
 	jump_to( ip_yes_beg );
@@ -271,7 +275,80 @@ SASL_VISIT_DEF( if_statement )
 
 SASL_VISIT_DEF_UNIMPL( while_statement );
 SASL_VISIT_DEF_UNIMPL( dowhile_statement );
-SASL_VISIT_DEF_UNIMPL( for_statement );
+SASL_VISIT_DEF( for_statement )
+{
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	sc_env_ptr(&child_ctxt_init)->sym = v.symbol();
+
+	// Pseudo: SIMD For
+	//
+	//   for initializer
+	// for_cond:
+	//   cond_mask = cond
+	//   current_mask &= cond_mask
+	//   if sum( current mask ) == 0
+	//     goto for_end
+	//   else
+	//     goto for_body
+	// for_body:
+	//   ...
+	//   goto for_iter
+	// for_iter:
+	//   iteration code
+	//   goto for_cond
+	// for_end:
+	//   ...
+	
+	service()->for_init_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.init );
+	service()->for_init_end();
+	insert_point_t init_end = insert_point();
+
+	insert_point_t cond_beg = new_block( "for_cond", true );
+	service()->for_cond_beg();
+	value_t cond_value;
+	if( v.cond ){ 
+		visit_child( child_ctxt, child_ctxt_init, v.cond );
+		cond_value = cgllvm_impl::node_ctxt( v.cond, false )->value();
+	}
+	service()->for_cond_end( cond_value );
+	value_t joinable = service()->joinable();
+	insert_point_t cond_end = insert_point();
+
+	insert_point_t body_beg = new_block( "for_body", true );
+	service()->for_body_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	service()->for_body_end();
+	insert_point_t body_end = insert_point();
+
+	insert_point_t iter_beg = new_block( "for_iter", true );
+	service()->for_iter_beg();
+	if( v.iter ){ visit_child( child_ctxt, child_ctxt_init, v.iter ); }
+	service()->for_iter_end();
+	insert_point_t iter_end = insert_point();
+
+	insert_point_t for_end = new_block( "for_end", true );
+
+	// Fill back jumps
+	set_insert_point( init_end );
+	jump_to( cond_beg );
+
+	set_insert_point( cond_end );
+	jump_cond( joinable, body_beg, for_end );
+
+	set_insert_point( body_end );
+	jump_to( iter_beg );
+
+	set_insert_point( iter_end );
+	jump_to( cond_beg );
+
+	// Set correct out block.
+	set_insert_point( for_end );
+
+	cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
+}
 SASL_VISIT_DEF_UNIMPL( case_label );
 SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
@@ -453,7 +530,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_continue	, jump_statement ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	service()->break_();
 }
 
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){

@@ -370,12 +370,16 @@ public:
 	virtual void for_init_beg(){}
 	virtual void for_init_end(){}
 	virtual void for_cond_beg(){}
-	virtual void for_cond_end(){}
+	virtual void for_cond_end( value_t const& ){}
 	virtual void for_body_beg(){}
 	virtual void for_body_end(){}
 	virtual void for_iter_beg(){}
 	virtual void for_iter_end(){}
 
+	virtual value_t joinable(){ return value_t(); }
+
+	virtual void if_beg(){}
+	virtual void if_end(){}
 	virtual void if_cond_beg(){}
 	virtual void if_cond_end( value_t const& ){}
 	virtual void then_beg(){}
@@ -460,6 +464,8 @@ public:
 	/// @{
 	/// Create a new block at the last of function
 	insert_point_t new_block( std::string const& hint, bool set_insert_point );
+	/// Jump to the specified block by condition.
+	void jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip );
 	/// Jump to
 	void jump_to( insert_point_t const& ip );
 	void clean_empty_blocks();

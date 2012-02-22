@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #if ALL_TESTS_ENABLED
 
@@ -953,7 +953,7 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct sampler_t{
 	uintptr_t ss, tex;
@@ -1012,4 +1012,45 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 #endif
 
+#if 1 || ALL_TESTS_ENABLED
+
+BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
+	init_ps( "./repo/question/v1a1/for_loop.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
+
+	BOOST_REQUIRE( fn );
+
+	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float ref_out[ PACKAGE_ELEMENT_COUNT ];
+
+	srand(0);
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
+		// Init Data
+		in[i] = rand() / 1000.0f;
+
+		float x = in[i];
+		for( int j = 0; j < 10; ++j )
+		{
+			x *= 2.0f;
+			if ( x > 40.0f ){ break; }
+		}
+
+		ref_out[i] = x;
+	}
+
+	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+	}
+
+	_aligned_free( in );
+	_aligned_free( out );
+}
+
+#endif
 BOOST_AUTO_TEST_SUITE_END();

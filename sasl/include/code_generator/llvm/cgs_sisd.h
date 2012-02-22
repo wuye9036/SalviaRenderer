@@ -137,8 +137,6 @@ public:
 
 	/// @name Utilities
 	/// @{
-	/// Jump to the specified block by condition.
-	void jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip );
 	/// Switch to blocks
 	void switch_to( value_t const& cond, std::vector< std::pair<value_t, insert_point_t> > const& cases, insert_point_t const& default_branch );
 	/// Clean empty blocks of current function.

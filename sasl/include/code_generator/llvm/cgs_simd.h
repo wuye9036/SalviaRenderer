@@ -44,15 +44,19 @@ protected:
 	virtual void function_beg();
 	virtual void function_end();
 
-	virtual void for_init_beg(){}
-	virtual void for_init_end(){}
-	virtual void for_cond_beg(){}
-	virtual void for_cond_end(){}
-	virtual void for_body_beg(){}
-	virtual void for_body_end(){}
-	virtual void for_iter_beg(){}
-	virtual void for_iter_end(){}
+	virtual void for_init_beg();
+	virtual void for_init_end();
+	virtual void for_cond_beg();
+	virtual void for_cond_end( value_t const& );
+	virtual void for_body_beg();
+	virtual void for_body_end();
+	virtual void for_iter_beg();
+	virtual void for_iter_end();
 
+	virtual value_t joinable();
+
+	virtual void if_beg();
+	virtual void if_end();
 	virtual void if_cond_beg();
 	virtual void if_cond_end( value_t const& );
 	virtual void then_beg();
@@ -75,11 +79,12 @@ protected:
 	virtual void do_cond_beg(){}
 	virtual void do_cond_end(){}
 
-	virtual void break_(){}
-	virtual void continue_(){}
+	virtual void break_();
+	virtual void continue_();
 
 private:
 	llvm::Value*	all_one_mask();
+	llvm::Value*	all_zero_mask();
 	llvm::Value*	expanded_mask( uint32_t expanded_times );
 
 	enum slice_layout_mode{
@@ -108,8 +113,17 @@ private:
 		llvm::Value** out_slices
 		);
 
+	// Apply break mask and continue mask to top of exec mask stack.
+	//  It affects the following execution.
+	void apply_break_and_continue();
+	void apply_break();
+	void apply_continue();
+
 	// Masks
-	llvm::Value*				cond_exec_mask;
+	std::vector<llvm::Value*>	cond_exec_masks;
+	std::vector<llvm::Value*>	mask_vars;
+	std::vector<llvm::Value*>	break_masks;
+	std::vector<llvm::Value*>	continue_masks;
 	std::vector<llvm::Value*>	exec_masks;
 };
 
