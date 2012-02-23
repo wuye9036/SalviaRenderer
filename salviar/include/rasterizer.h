@@ -104,8 +104,13 @@ class rasterizer : public render_stage
 
 	boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
-	void draw_whole_tile(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left, int top, int right, int bottom, uint32_t full_mask);
-	void draw_pixels(uint8_t* pixel_begin, uint8_t* pixel_end, uint32_t* pixel_mask, int left0, int top0, int left, int top, const eflib::vec4* edge_factors, size_t num_samples);
+	void draw_whole_tile(int left, int top, int right, int bottom, size_t num_samples, bool has_centroid,
+			const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
+			const h_pixel_shader& pps, const h_blend_shader& hbs, const float* aa_z_offset);
+	void draw_pixels(int left0, int top0, int left, int top,
+			const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
+			const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
+			const h_pixel_shader& pps, const h_blend_shader& hbs, const float* aa_z_offset);
 	void subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const eflib::vec4* edge_factors,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
 		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y);
