@@ -51,7 +51,7 @@
 
 #ifdef EFLIB_DEBUG
 #	ifndef SOFTART_MAX_NUM_THREADS
-#		define SOFTART_MAX_NUM_THREADS 1
+#		define SOFTART_MAX_NUM_THREADS 4
 #	endif
 #endif
 

@@ -69,20 +69,31 @@ protected:
 	virtual void switch_expr_beg(){}
 	virtual void switch_expr_end(){}
 
-	virtual void while_cond_beg(){}
-	virtual void while_cond_end(){}
-	virtual void while_body_beg(){}
-	virtual void while_body_end(){}
+	virtual void while_beg();
+	virtual void while_end();
+	virtual void while_cond_beg();
+	virtual void while_cond_end( value_t const& );
+	virtual void while_body_beg();
+	virtual void while_body_end();
 
-	virtual void do_body_beg(){}
-	virtual void do_body_end(){}
-	virtual void do_cond_beg(){}
-	virtual void do_cond_end(){}
+	virtual void do_beg();
+	virtual void do_end();
+	virtual void do_body_beg();
+	virtual void do_body_end();
+	virtual void do_cond_beg();
+	virtual void do_cond_end( value_t const& );
 
 	virtual void break_();
 	virtual void continue_();
 
 private:
+	llvm::Value*	load_loop_execution_mask();
+	void			save_loop_execution_mask( llvm::Value* );
+	virtual void	enter_loop();
+	virtual void	exit_loop();
+	virtual void	update_loop_condition( value_t const& );
+	virtual void	update_break_and_continue();
+
 	llvm::Value*	all_one_mask();
 	llvm::Value*	all_zero_mask();
 	llvm::Value*	expanded_mask( uint32_t expanded_times );

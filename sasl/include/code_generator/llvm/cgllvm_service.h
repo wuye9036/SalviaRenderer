@@ -392,15 +392,19 @@ public:
 	virtual void switch_expr_beg(){}
 	virtual void switch_expr_end(){}
 
+	virtual void while_beg(){}
+	virtual void while_end(){}
 	virtual void while_cond_beg(){}
-	virtual void while_cond_end(){}
+	virtual void while_cond_end( value_t const& ){}
 	virtual void while_body_beg(){}
 	virtual void while_body_end(){}
 
+	virtual void do_beg(){}
+	virtual void do_end(){}
 	virtual void do_body_beg(){}
 	virtual void do_body_end(){}
 	virtual void do_cond_beg(){}
-	virtual void do_cond_end(){}
+	virtual void do_cond_end( value_t const& ){}
 
 	virtual void break_(){}
 	virtual void continue_(){}

@@ -1035,7 +1035,7 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 		for( int j = 0; j < 10; ++j )
 		{
 			x *= 2.0f;
-			if ( x > 40.0f ){ break; }
+			if ( x > 5000.0f ){ break; }
 		}
 
 		ref_out[i] = x;
@@ -1053,4 +1053,92 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 }
 
 #endif
+
+#if 1 || ALL_TESTS_ENABLED
+
+BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
+	init_ps( "./repo/question/v1a1/while.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
+
+	BOOST_REQUIRE( fn );
+
+	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float ref_out[ PACKAGE_ELEMENT_COUNT ];
+
+	srand(0);
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
+		// Init Data
+		in[i] = 0.79f * ( i * i * i );
+
+		float x = in[i];
+		while( x < 3000.0f )
+		{
+			if( x < 1.0f ) {
+				break;
+			}
+			x *= x;
+		}
+
+		ref_out[i] = x;
+	}
+
+	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+	}
+
+	_aligned_free( in );
+	_aligned_free( out );
+}
+
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+
+BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
+	init_ps( "./repo/question/v1a1/do_while.sps" );
+
+	jit_function<void(void*, void*, void*, void*)> fn;
+	function( fn, "fn" );
+
+	BOOST_REQUIRE( fn );
+
+	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float ref_out[ PACKAGE_ELEMENT_COUNT ];
+
+	srand(0);
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
+		// Init Data
+		in[i] = 0.79f * ( i * i * i );
+
+		float x = in[i];
+		do {
+			if( x < 1.0f ) {
+				break;
+			}
+			x *= x;
+		} while( x < 3000.0f );
+
+		ref_out[i] = x;
+	}
+
+	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+	}
+
+	_aligned_free( in );
+	_aligned_free( out );
+}
+
+#endif
+
 BOOST_AUTO_TEST_SUITE_END();

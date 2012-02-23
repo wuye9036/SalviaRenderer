@@ -549,59 +549,14 @@ void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int s
 	}
 }
 
-void cgs_simd::for_init_beg() {
-	// TODO
-	//  store <16 x i1>, <16 x i1>* var is crashed by LLVM bug.
-	// We ext to i8 array and store.
-	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8, abi_package), NULL, ".for.mask.tmpvar" ) );
-	Value* mask_as_uchar = builder().CreateZExtOrBitCast( exec_masks.back(), type_( builtin_types::_uint8, abi_package) );
-	builder().CreateStore( mask_as_uchar, mask_vars.back() );
-
-	break_masks.push_back(NULL);
-	continue_masks.push_back(NULL);
-}
-
+void cgs_simd::for_init_beg() {	enter_loop(); }
 void cgs_simd::for_init_end() {}
-
 void cgs_simd::for_cond_beg() {}
-
-void cgs_simd::for_cond_end( value_t const& cond )
-{
-	Value* exec_mask_as_uchar = builder().CreateLoad( mask_vars.back() );
-	Value* cond_exec_mask = NULL;
-	Value* exec_mask = builder().CreateTruncOrBitCast( exec_mask_as_uchar, type_(builtin_types::_boolean, abi_package) );
-	if( cond.abi() != abi_unknown ){
-		cond_exec_mask = cond.load( abi_package );
-		exec_mask = builder().CreateAnd( exec_mask, cond_exec_mask );
-	}
-	exec_masks.push_back( exec_mask );
-
-	break_masks.back() = NULL;
-	continue_masks.back() = NULL;
-}
-
-void cgs_simd::for_body_beg(){
-	// builder().CreateCall( intrin_( Intrinsic::trap ) );
-}
-
+void cgs_simd::for_cond_end( value_t const& cond ) { update_loop_condition( cond ); }
+void cgs_simd::for_body_beg(){}
 void cgs_simd::for_body_end(){}
-
 void cgs_simd::for_iter_beg(){}
-
-void cgs_simd::for_iter_end()
-{
-	Value* next_iter_exec_mask = exec_masks.back();
-	if( continue_masks.back() ){
-		next_iter_exec_mask = builder().CreateOr( exec_masks.back(), continue_masks.back() );
-	}
-
-	exec_masks.pop_back();
-	Value* next_iter_exec_mask_as_uchar = builder().CreateZExtOrBitCast( next_iter_exec_mask, type_( builtin_types::_uint8, abi_package) );
-	builder().CreateStore( next_iter_exec_mask_as_uchar, mask_vars.back() );
-
-	break_masks.pop_back();
-	continue_masks.pop_back();
-}
+void cgs_simd::for_iter_end(){ update_break_and_continue(); exit_loop(); }
 
 llvm::Value* cgs_simd::all_zero_mask()
 {
@@ -673,6 +628,80 @@ value_t cgs_simd::joinable()
 		ret_bool = builder().CreateOr( ret_bool, builder().CreateExtractElement( v, int_(i) ) );
 	}
 	return create_value( builtin_types::_boolean, ret_bool, vkind_value, abi_llvm );
+}
+
+void cgs_simd::while_beg(){ enter_loop(); }
+void cgs_simd::while_end(){ exit_loop(); }
+void cgs_simd::while_cond_beg(){}
+void cgs_simd::while_cond_end( value_t const& cond )
+{
+	update_loop_condition(cond);
+}
+void cgs_simd::while_body_beg() {}
+void cgs_simd::while_body_end() { update_break_and_continue(); }
+
+void cgs_simd::enter_loop()
+{
+	// TODO
+	//  store <16 x i1>, <16 x i1>* var is crashed by LLVM bug.
+	// We ext to i8 array and store.
+	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8, abi_package), NULL, ".for.mask.tmpvar" ) );
+	save_loop_execution_mask( exec_masks.back() );
+
+	exec_masks.push_back( exec_masks.back() );
+	break_masks.push_back(NULL);
+	continue_masks.push_back(NULL);
+}
+
+void cgs_simd::exit_loop()
+{
+	exec_masks.pop_back();
+	break_masks.pop_back();
+	continue_masks.pop_back();
+}
+
+void cgs_simd::update_loop_condition( value_t const& cond )
+{
+	Value* exec_mask = load_loop_execution_mask();
+	if( cond.abi() != abi_unknown ){
+		Value* cond_exec_mask = cond.load( abi_package );
+		exec_mask = builder().CreateAnd( exec_mask, cond_exec_mask );
+	}
+
+	exec_masks.back() = exec_mask;
+	break_masks.back() = NULL;
+	continue_masks.back() = NULL;
+}
+
+void cgs_simd::do_beg(){ enter_loop(); }
+void cgs_simd::do_end(){ exit_loop(); }
+void cgs_simd::do_body_beg(){ exec_masks.back() = load_loop_execution_mask(); }
+void cgs_simd::do_body_end(){ update_break_and_continue(); }
+void cgs_simd::do_cond_beg(){}
+void cgs_simd::do_cond_end( value_t const& cond ) {	
+	update_loop_condition( cond );
+	save_loop_execution_mask( exec_masks.back() );
+}
+
+void cgs_simd::update_break_and_continue()
+{
+	Value* next_iter_exec_mask = exec_masks.back();
+	if( continue_masks.back() ){
+		next_iter_exec_mask = builder().CreateOr( exec_masks.back(), continue_masks.back() );
+	}
+	save_loop_execution_mask(next_iter_exec_mask);
+}
+
+llvm::Value* cgs_simd::load_loop_execution_mask()
+{
+	Value* mask_as_uchar = builder().CreateLoad( mask_vars.back() );
+	return builder().CreateTruncOrBitCast( mask_as_uchar, type_(builtin_types::_boolean, abi_package) );
+}
+
+void cgs_simd::save_loop_execution_mask( Value* mask )
+{
+	Value* mask_as_uchar = builder().CreateZExtOrBitCast( mask, type_( builtin_types::_uint8, abi_package) );
+	builder().CreateStore( mask_as_uchar, mask_vars.back() );
 }
 
 END_NS_SASL_CODE_GENERATOR();

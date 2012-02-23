@@ -273,8 +273,84 @@ SASL_VISIT_DEF( if_statement )
 	cgllvm_impl::node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
-SASL_VISIT_DEF_UNIMPL( while_statement );
-SASL_VISIT_DEF_UNIMPL( dowhile_statement );
+SASL_VISIT_DEF( while_statement )
+{
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	service()->while_beg();
+	
+	insert_point_t cond_beg = new_block( "while.cond", true );
+	service()->while_cond_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	if( cond_tid != bool_tid ){
+		caster->cast( msi->pety()->get(bool_tid), v.cond );
+	}
+	service()->while_cond_end( cgllvm_impl::node_ctxt(v.cond)->value() );
+	value_t joinable = service()->joinable();
+	insert_point_t cond_end = insert_point();
+
+	insert_point_t body_beg = new_block( "while.body", true );
+	service()->while_body_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	service()->while_body_end();
+	insert_point_t body_end = insert_point();
+
+	insert_point_t while_end = new_block( "while.end", true );
+	
+	service()->while_end();
+
+	// Fill back
+	set_insert_point( cond_end );
+	jump_cond( joinable, body_beg, while_end );
+
+	set_insert_point( body_end );
+	jump_to( cond_beg );
+
+	set_insert_point( while_end );
+}
+SASL_VISIT_DEF( dowhile_statement )
+{
+	any child_ctxt_init = *data;
+	any child_ctxt;
+
+	service()->do_beg();
+
+	insert_point_t body_beg = new_block( "dowhile.body", true );
+	service()->do_body_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.body );
+	service()->do_body_end();
+	insert_point_t body_end = insert_point();
+
+	insert_point_t cond_beg = new_block( "dowhile.cond", true );
+	service()->do_cond_beg();
+	visit_child( child_ctxt, child_ctxt_init, v.cond );
+	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
+	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
+	if( cond_tid != bool_tid ){
+		if ( caster->cast( msi->pety()->get(bool_tid), v.cond ) == caster_t::nocast ){
+			assert( false );
+		}
+	}
+	service()->do_cond_end( cgllvm_impl::node_ctxt(v.cond)->value() );
+	value_t joinable = service()->joinable();
+	insert_point_t cond_end = insert_point();
+
+	insert_point_t while_end = new_block( "dowhile.end", true );
+	service()->do_end();
+
+	// Fill back
+	set_insert_point( body_end );
+	jump_to( cond_beg );
+
+	set_insert_point( cond_end );
+	jump_cond( joinable, body_beg, while_end );
+
+	set_insert_point( while_end );
+}
+
 SASL_VISIT_DEF( for_statement )
 {
 	any child_ctxt_init = *data;

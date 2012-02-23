@@ -31,6 +31,8 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/swizzle_and_wm.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/tex.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/for_loop.sps"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/while.sps"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/do_while.sps"
 )
 
 SOURCE_GROUP( "Tests\\v1a1\\General" REGULAR_EXPRESSION ".*\\.ss" )
