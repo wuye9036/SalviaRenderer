@@ -91,8 +91,8 @@ private:
 	void			save_loop_execution_mask( llvm::Value* );
 	virtual void	enter_loop();
 	virtual void	exit_loop();
-	virtual void	update_loop_condition( value_t const& );
-	virtual void	update_break_and_continue();
+	virtual void	apply_loop_condition( value_t const& );
+	virtual void	save_next_iteration_exec_mask();
 
 	llvm::Value*	all_one_mask();
 	llvm::Value*	all_zero_mask();

@@ -552,11 +552,11 @@ void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int s
 void cgs_simd::for_init_beg() {	enter_loop(); }
 void cgs_simd::for_init_end() {}
 void cgs_simd::for_cond_beg() {}
-void cgs_simd::for_cond_end( value_t const& cond ) { update_loop_condition( cond ); }
+void cgs_simd::for_cond_end( value_t const& cond ) { apply_loop_condition( cond ); }
 void cgs_simd::for_body_beg(){}
 void cgs_simd::for_body_end(){}
 void cgs_simd::for_iter_beg(){}
-void cgs_simd::for_iter_end(){ update_break_and_continue(); exit_loop(); }
+void cgs_simd::for_iter_end(){ save_next_iteration_exec_mask(); exit_loop(); }
 
 llvm::Value* cgs_simd::all_zero_mask()
 {
@@ -635,10 +635,10 @@ void cgs_simd::while_end(){ exit_loop(); }
 void cgs_simd::while_cond_beg(){}
 void cgs_simd::while_cond_end( value_t const& cond )
 {
-	update_loop_condition(cond);
+	apply_loop_condition(cond);
 }
 void cgs_simd::while_body_beg() {}
-void cgs_simd::while_body_end() { update_break_and_continue(); }
+void cgs_simd::while_body_end() { save_next_iteration_exec_mask(); }
 
 void cgs_simd::enter_loop()
 {
@@ -660,7 +660,7 @@ void cgs_simd::exit_loop()
 	continue_masks.pop_back();
 }
 
-void cgs_simd::update_loop_condition( value_t const& cond )
+void cgs_simd::apply_loop_condition( value_t const& cond )
 {
 	Value* exec_mask = load_loop_execution_mask();
 	if( cond.abi() != abi_unknown ){
@@ -676,14 +676,14 @@ void cgs_simd::update_loop_condition( value_t const& cond )
 void cgs_simd::do_beg(){ enter_loop(); }
 void cgs_simd::do_end(){ exit_loop(); }
 void cgs_simd::do_body_beg(){ exec_masks.back() = load_loop_execution_mask(); }
-void cgs_simd::do_body_end(){ update_break_and_continue(); }
+void cgs_simd::do_body_end(){ save_next_iteration_exec_mask(); }
 void cgs_simd::do_cond_beg(){}
 void cgs_simd::do_cond_end( value_t const& cond ) {	
-	update_loop_condition( cond );
+	apply_loop_condition( cond );
 	save_loop_execution_mask( exec_masks.back() );
 }
 
-void cgs_simd::update_break_and_continue()
+void cgs_simd::save_next_iteration_exec_mask()
 {
 	Value* next_iter_exec_mask = exec_masks.back();
 	if( continue_masks.back() ){
