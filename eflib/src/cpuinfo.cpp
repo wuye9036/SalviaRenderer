@@ -83,8 +83,8 @@ namespace eflib{
 
 	uint32_t num_available_threads()
 	{
-#ifdef SOFTART_MAX_NUM_THREADS
-		return std::min( static_cast<uint32_t>(SOFTART_MAX_NUM_THREADS), num_cpu_cores() );
+#if defined( EFLIB_DEBUG )
+		return 1;
 #else
 		return num_cpu_cores();
 #endif
