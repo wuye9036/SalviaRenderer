@@ -390,18 +390,18 @@ void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, size_
 		for(int ix = left; ix < right; ++ix){
 			vs_output_ops->unproject(unprojed, px_in);
 
-			if ((unprojed.position.x < 0) || (unprojed.position.y < 0))
+			//if( 256 <= iy && iy < 260 && 400 <= ix && ix < 404 )
 			{
-				printf("%f %f\n", unprojed.position.x, unprojed.position.y);
-			}
-
-			if(pps->execute(unprojed, px_out)){
-				if (1 == num_samples){
-					hfb_->render_sample(hbs, ix, iy, 0, px_out, px_out.depth);
-				}
-				else{
-					for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-						hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+				// printf("%f %f %f\n", unprojed.position.x, unprojed.position.y, px_in.position.w );
+				
+				if(pps->execute(unprojed, px_out)){
+					if (1 == num_samples){
+						hfb_->render_sample(hbs, ix, iy, 0, px_out, px_out.depth);
+					}
+					else{
+						for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
+							hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+						}
 					}
 				}
 			}
@@ -530,7 +530,7 @@ void rasterizer::draw_pixels(int left0, int top0, int left, int top,
 	vs_output_ops->integral2(base_vert, v0, offsety, ddy);
 	vs_output_ops->selfintegral2(base_vert, offsetx, ddx);
 
-#define SALVIA_ENABLE_PIXEL_SHADER
+// #define SALVIA_ENABLE_PIXEL_SHADER
 
 #if !defined( SALVIA_ENABLE_PIXEL_SHADER )
 	for(int iy = 0; iy < 4; ++iy){
@@ -852,6 +852,21 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	const size_t num_samples = hfb_->get_num_samples();
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 
+	vs_output const* verts[3] = { &v0, &v1, &v2 };
+	double dist_sqr[3] = { 
+		double(v0.position.x) * v0.position.x + v0.position.y * v0.position.y,
+		double(v1.position.x) * v1.position.x + v1.position.y * v1.position.y,
+		double(v2.position.x) * v2.position.x + v2.position.y * v2.position.y
+	};
+
+	float min_dist_sqr = min( min( dist_sqr[0], dist_sqr[1] ), dist_sqr[2] );
+	int reordered_index[3];
+	reordered_index[0] = min_dist_sqr == dist_sqr[0] ? 0 : ( min_dist_sqr == dist_sqr[1] ? 1 : 2 );
+	reordered_index[1] = ( reordered_index[0] + 1 ) % 3;
+	reordered_index[2] = ( reordered_index[1] + 1 ) % 3;
+
+	vs_output const* reordered_verts[3] = { verts[reordered_index[0]], verts[reordered_index[1]], verts[reordered_index[2]] };
+
 #ifndef USE_TRADITIONAL_RASTERIZER
 	bool has_centroid = false;
 	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
@@ -881,8 +896,8 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 	//初始化边及边上属性的差
 	vs_output e01, e02;
-	vs_output_ops->operator_sub(e01, v1, v0);
-	vs_output_ops->operator_sub(e02, v2, v0);
+	vs_output_ops->operator_sub(e01, *reordered_verts[1], *reordered_verts[0]);
+	vs_output_ops->operator_sub(e02, *reordered_verts[2], *reordered_verts[0]);
 
 	//计算面积
 	float area = cross_prod2(e02.position.xy(), e01.position.xy());
@@ -902,13 +917,13 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	}
 
 	triangle_info info;
-	info.set(v0.position, ddx, ddy);
+	info.set(reordered_verts[0]->position, ddx, ddy);
 	pps->ptriangleinfo_ = &info;
 
-	const float x_min = min(v0.position.x, min(v1.position.x, v2.position.x)) - vp.x;
-	const float x_max = max(v0.position.x, max(v1.position.x, v2.position.x)) - vp.x;
-	const float y_min = min(v0.position.y, min(v1.position.y, v2.position.y)) - vp.y;
-	const float y_max = max(v0.position.y, max(v1.position.y, v2.position.y)) - vp.y;
+	const float x_min = min(reordered_verts[0]->position.x, min(reordered_verts[1]->position.x, reordered_verts[2]->position.x)) - vp.x;
+	const float x_max = max(reordered_verts[0]->position.x, max(reordered_verts[1]->position.x, reordered_verts[2]->position.x)) - vp.x;
+	const float y_min = min(reordered_verts[0]->position.y, min(reordered_verts[1]->position.y, reordered_verts[2]->position.y)) - vp.y;
+	const float y_max = max(reordered_verts[0]->position.y, max(reordered_verts[1]->position.y, reordered_verts[2]->position.y)) - vp.y;
 
 	/*************************************************
 	*   开始绘制多边形。
@@ -993,14 +1008,14 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			case TVT_FULL:
 				// The whole tile is inside a triangle.
 				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, num_samples,
-					has_centroid, v0, ddx, ddy, vs_output_ops, pps, hbs, aa_z_offset);
+					has_centroid, *reordered_verts[0], ddx, ddy, vs_output_ops, pps, hbs, aa_z_offset);
 				break;
 
 			case TVT_PIXEL:
 				// The tile is small enough for pixel level matching.
 				this->draw_pixels(vpleft0, vptop0, vpleft, vptop, 
 					edge_factors, num_samples,
-					has_centroid, v0, ddx, ddy, vs_output_ops, pps, hbs, aa_z_offset);
+					has_centroid, *reordered_verts[0], ddx, ddy, vs_output_ops, pps, hbs, aa_z_offset);
 				break;
 
 			default:
@@ -1038,7 +1053,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		/**********************************************************
 	*        将顶点按照y大小排序，求出三角形面积与边
 	**********************************************************/
-	const vs_output* pvert[3] = {&v0, &v1, &v2};
+	const vs_output* pvert[3] = {reordered_verts[0], reordered_verts[1], reordered_verts[2]};
 
 	//升序排列
 	if(pvert[0]->position.y > pvert[1]->position.y){
@@ -1089,7 +1104,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	}
 
 	triangle_info info;
-	info.set(v0.position, ddx, ddy);
+	info.set(reordered_verts[0]->position, ddx, ddy);
 	pps->ptriangleinfo_ = &info;
 
 	/*************************************
