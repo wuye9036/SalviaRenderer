@@ -104,7 +104,7 @@ class rasterizer : public render_stage
 
 	boost::function<void (rasterizer*, const uint32_t*, const vs_output*, const std::vector<uint32_t>&, const viewport&, const h_pixel_shader&)> rasterize_func_;
 
-	void draw_whole_tile(int left, int top, int right, int bottom, size_t num_samples, bool has_centroid,
+	void draw_whole_tile(int left, int top, int right, int bottom, size_t num_samples,
 			const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
 			const h_pixel_shader& pps, const h_blend_shader& hbs, const float* aa_z_offset);
 	void draw_pixels(int left0, int top0, int left, int top,

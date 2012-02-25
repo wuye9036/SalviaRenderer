@@ -366,7 +366,7 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 	}
 }
 
-void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, size_t num_samples, bool has_centroid,
+void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, size_t num_samples,
 			const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
 			const h_pixel_shader& pps, const h_blend_shader& hbs, const float* aa_z_offset){
 	const float offsetx = left + 0.5f - v0.position.x;
@@ -377,39 +377,49 @@ void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, size_
 	vs_output_ops->integral2(base_vert, v0, offsety, ddy);
 	vs_output_ops->selfintegral2(base_vert, offsetx, ddx);
 
-	for(int iy = top; iy < bottom; ++iy)
+	for(int iy = top; iy < bottom; iy += 4)
 	{
 		//光栅化
 		vs_output px_in;
 		ps_output px_out;
 		vs_output unprojed;
 
-		vs_output_ops->copy(px_in, base_vert);
+		for(int ix = left; ix < right; ix += 4){
+			vs_output start_vert;
+			vs_output_ops->integral2(start_vert, base_vert, iy - top, ddy);
+			vs_output_ops->selfintegral2(start_vert, ix - left, ddx);
 
-		for(int ix = left; ix < right; ++ix){
-			vs_output_ops->unproject(unprojed, px_in);
+			for(int dy = 0; dy < 4; ++dy){
+				vs_output_ops->copy(px_in, start_vert);
 
-			if ((unprojed.position.x < 0) || (unprojed.position.y < 0))
-			{
-				printf("%f %f\n", unprojed.position.x, unprojed.position.y);
-			}
+				for(int dx = 0; dx < 4; ++dx){
+					vs_output_ops->unproject(unprojed, px_in);
 
-			if(pps->execute(unprojed, px_out)){
-				if (1 == num_samples){
-					hfb_->render_sample(hbs, ix, iy, 0, px_out, px_out.depth);
-				}
-				else{
-					for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-						hfb_->render_sample(hbs, ix, iy, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+					if ((unprojed.position.x < 0) || (unprojed.position.y < 0))
+					{
+						printf("%f %f\n", unprojed.position.x, unprojed.position.y);
 					}
+
+					if(pps->execute(unprojed, px_out)){
+						const int x_coord = ix + dx;
+						const int y_coord = iy + dy;
+						if (1 == num_samples){
+							hfb_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
+						}
+						else{
+							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
+								hfb_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+							}
+						}
+					}
+
+					vs_output_ops->selfintegral1(px_in, ddx);
 				}
+
+				//差分递增
+				vs_output_ops->selfintegral1(start_vert, ddy);
 			}
-
-			vs_output_ops->selfintegral1(px_in, ddx);
 		}
-
-		//差分递增
-		vs_output_ops->selfintegral1(base_vert, ddy);
 	}
 }
 
@@ -842,8 +852,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 	int src_stage = 0;
 	int dst_stage = !src_stage;
 
-	const uint32_t full_mask = (1UL << num_samples) - 1;
-
 	const int vpleft0 = fast_floori(vp.x);
 	const int vpright0 = fast_floori(vp.x + vp.w);
 	const int vptop0 = fast_floori(vp.y);
@@ -913,7 +921,7 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 			case TVT_FULL:
 				// The whole tile is inside a triangle.
 				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, num_samples,
-					has_centroid, v0, ddx, ddy, vs_output_ops, pps, hbs, aa_z_offset);
+					v0, ddx, ddy, vs_output_ops, pps, hbs, aa_z_offset);
 				break;
 
 			case TVT_PIXEL:
