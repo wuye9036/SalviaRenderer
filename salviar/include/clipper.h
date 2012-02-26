@@ -10,17 +10,14 @@
 
 BEGIN_NS_SALVIAR()
 
-const size_t plane_num = 6;
+const size_t plane_num = 2;
 
 class clipper
 {
 	boost::array<eflib::vec4, plane_num>				planes_;
-	boost::array<bool, plane_num>					planes_enable_;
 
 public:
 	clipper();
-
-	void set_clip_plane_enable(bool enable, size_t idx);
 
 	void clip(
 		vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts,

@@ -16,31 +16,15 @@ clipper::clipper(){
 	// Near plane is 0.
 	planes_[0] = vec4(0.0f, 0.0f, 1.0f, 0.0f);
 
-	// Others
-	planes_[1] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	planes_[2] = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	planes_[3] = vec4(-1.0f, 0.0f, 0.0f, 1.0f);
-	planes_[4] = vec4(0.0f, -1.0f, 0.0f, 1.0f);
-	planes_[5] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
-
-	std::fill(planes_enable_.begin(), planes_enable_.end(), false);
-	planes_enable_[0] = true;
-}
-
-void clipper::set_clip_plane_enable(bool enable, size_t idx)
-{
-	if(idx >= plane_num){
-		EFLIB_ASSERT(false, "");
-	}
-
-	planes_enable_[idx] = enable;
+	// Far plane
+	planes_[1] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
 }
 
 void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts, const viewport& vp, const vs_output& v0, const vs_output& v1, const vs_output_op& vs_output_ops) const
 {
 	EFLIB_ASSERT_UNIMPLEMENTED0( "Unimplemented. Clip need to support right cull information." );
 
-	eflib::pool::stack_pool< vs_output, 12 > pool;
+	eflib::pool::stack_pool< vs_output, 6 > pool;
 	const vs_output* clipped_verts[2][2];
 	uint32_t num_clipped_verts[2];
 
@@ -55,7 +39,6 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 
 	for(size_t i_plane = 0; i_plane < planes_.size(); ++i_plane)
 	{
-		if( ! planes_enable_[i_plane] ){ continue; }
 		num_clipped_verts[dest_stage] = 0;
 
 		// Clip
@@ -117,8 +100,8 @@ void clipper::clip(
 	const vs_output_op& vs_output_ops
 	) const
 {
-	eflib::pool::stack_pool< vs_output, 12 > pool;
-	const vs_output* clipped_verts[2][6];
+	eflib::pool::stack_pool< vs_output, 6 > pool;
+	const vs_output* clipped_verts[2][4];
 	uint32_t num_clipped_verts[2];
 
 	//¿ªÊ¼clip, Ping-Pong idioms
@@ -133,10 +116,6 @@ void clipper::clip(
 
 	for(size_t i_plane = 0; i_plane < planes_.size(); ++i_plane)
 	{
-		if( ! planes_enable_[i_plane] ){
-			continue;
-		}
-
 		num_clipped_verts[dest_stage] = 0;
 
 		if (num_clipped_verts[src_stage] != 0){
@@ -210,7 +189,7 @@ void clipper::clip(
 	const vs_output** clipped_verts_ptrs = clipped_verts[src_stage];
 	num_out_clipped_verts = num_clipped_verts[src_stage];
 
-	assert( num_out_clipped_verts <= 6 );
+	assert( num_out_clipped_verts <= 4 );
 	for(size_t i = 0; i < num_out_clipped_verts; ++i){
 		vs_output_ops.copy(out_clipped_verts[i], *clipped_verts_ptrs[i]);
 		viewport_transform(out_clipped_verts[i].position, vp);

@@ -106,7 +106,7 @@ void fill_solid_clipping(
 		vs_output_ops
 		);
 
-	assert(num_out_clipped_verts <= 6);
+	assert(num_out_clipped_verts <= 4);
 
 	num_clipped_verts = (0 == num_out_clipped_verts) ? 0 : (num_out_clipped_verts - 2) * 3;
 
@@ -1369,12 +1369,12 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 					uint32_t num_out_clipped_verts;
 					state_->clipping(
 						num_clipped_verts[i], num_out_clipped_verts,
-						&clipped_verts[i * 6], &cliped_indices[i * 12], 
-						i * 6, clipper, vp, pv, *vs_output_ops
+						&clipped_verts[i * 4], &cliped_indices[i * 6], 
+						i * 4, clipper, vp, pv, *vs_output_ops
 						);
 
 					for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-						vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
+						vs_output_ops->project(clipped_verts[i * 4 + j], clipped_verts[i * 4 + j]);
 					}
 				}
 				else
@@ -1389,10 +1389,10 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 					pv[j] = &v;
 				}
 
-				clipper->clip(&clipped_verts[i * 6], num_clipped_verts[i], vp, *pv[0], *pv[1], *vs_output_ops);
+				clipper->clip(&clipped_verts[i * 4], num_clipped_verts[i], vp, *pv[0], *pv[1], *vs_output_ops);
 				for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
-					vs_output_ops->project(clipped_verts[i * 6 + j], clipped_verts[i * 6 + j]);
-					cliped_indices[i * 12 + j] = static_cast<uint32_t>(i * 6 + j);
+					vs_output_ops->project(clipped_verts[i * 4 + j], clipped_verts[i * 4 + j]);
+					cliped_indices[i * 6 + j] = static_cast<uint32_t>(i * 4 + j);
 				}
 			}
 		}
@@ -1572,7 +1572,7 @@ void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uin
 		const int32_t start = local_working_package * package_size;
 		const int32_t end = min(prim_count, start + package_size);
 		for (int32_t i = start; i < end; ++ i){
-			memcpy(&clipped_indices[addresses[i]], &clipped_indices_full[i * 12], num_clipped_verts[i] * sizeof(*clipped_indices));
+			memcpy(&clipped_indices[addresses[i]], &clipped_indices_full[i * 6], num_clipped_verts[i] * sizeof(*clipped_indices));
 		}
 
 		local_working_package = working_package ++;
@@ -1640,8 +1640,8 @@ void rasterizer::draw(size_t prim_count){
 
 	// Culling, Clipping, Geometry setup
 	boost::shared_array<uint32_t> num_clipped_verts(new uint32_t[prim_count]);
-	boost::shared_array<vs_output> clipped_verts_full(new vs_output[prim_count * 6]);
-	boost::shared_array<uint32_t> clipped_indices_full(new uint32_t[prim_count * 12]);
+	boost::shared_array<vs_output> clipped_verts_full(new vs_output[prim_count * 4]);
+	boost::shared_array<uint32_t> clipped_indices_full(new uint32_t[prim_count * 6]);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		global_thread_pool().schedule(boost::bind(&rasterizer::geometry_setup_func, this, &num_clipped_verts[0],
 			&clipped_verts_full[0], &clipped_indices_full[0], static_cast<int32_t>(prim_count), primtopo,
