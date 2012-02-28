@@ -25,7 +25,6 @@ using eflib::atomic;
 
 BEGIN_NS_SALVIAR()
 
-//#define USE_TRADITIONAL_RASTERIZER
 #define SALVIA_ENABLE_PIXEL_SHADER
 
 using namespace std;
@@ -368,10 +367,10 @@ void rasterizer::rasterize_line(uint32_t /*prim_id*/, const vs_output& v0, const
 }
 
 void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, size_t num_samples,
-	const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
+			const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
 	const h_pixel_shader& pps, const h_blend_shader& hbs, const float* aa_z_offset)
 {
-
+	
 	const float offsetx = left + 0.5f - v0.position.x;
 	const float offsety = top + 0.5f - v0.position.y;
 
@@ -397,25 +396,25 @@ void rasterizer::draw_whole_tile(int left, int top, int right, int bottom, size_
 				vs_output_ops->copy(px_in, start_vert);
 
 				for(int dx = 0; dx < 4; ++dx){
-					vs_output_ops->unproject(unprojed, px_in);
+			vs_output_ops->unproject(unprojed, px_in);
 
-					if(pps->execute(unprojed, px_out)){
+			if(pps->execute(unprojed, px_out)){
 						const int x_coord = ix + dx;
 						const int y_coord = iy + dy;
-						if (1 == num_samples){
+				if (1 == num_samples){
 							hfb_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
-						}
-						else{
-							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-								hfb_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
-							}
-						}
-					}
-
-					vs_output_ops->selfintegral1(px_in, ddx);
 				}
+				else{
+					for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
+								hfb_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+					}
+				}
+			}
 
-				//差分递增
+			vs_output_ops->selfintegral1(px_in, ddx);
+		}
+
+		//差分递增
 				vs_output_ops->selfintegral1(start_vert, ddy);
 			}
 		}
@@ -652,38 +651,38 @@ void rasterizer::draw_pixels(int left0, int top0, int left, int top,
 			uint32_t mask = pixel_mask[iy * 4 + ix];
 
 			if ( mask ){
-				if (has_centroid && (mask != full_mask)){
-					vs_output projed;
-					vs_output_ops->copy(projed, px_in);
+			if (has_centroid && (mask != full_mask)){
+				vs_output projed;
+				vs_output_ops->copy(projed, px_in);
 
-					// centroid interpolate
-					vec2 sp_centroid(0, 0);
-					int n = 0;
-					unsigned long i_sample;
-					const uint32_t mask_backup = mask;
-					while (_BitScanForward(&i_sample, mask)){
-						const vec2& sp = samples_pattern_[i_sample];
-						sp_centroid.x += sp.x - 0.5f;
-						sp_centroid.y += sp.y - 0.5f;
-						++ n;
+				// centroid interpolate
+				vec2 sp_centroid(0, 0);
+				int n = 0;
+				unsigned long i_sample;
+				const uint32_t mask_backup = mask;
+				while (_BitScanForward(&i_sample, mask)){
+					const vec2& sp = samples_pattern_[i_sample];
+					sp_centroid.x += sp.x - 0.5f;
+					sp_centroid.y += sp.y - 0.5f;
+					++ n;
 
-						mask &= mask - 1;
-					}
-					sp_centroid /= n;
-
-					mask = mask_backup;
-
-					for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
-						if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
-							projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
-						}
-					}
-					vs_output_ops->unproject(unprojed[iy*4+ix], projed);
+					mask &= mask - 1;
 				}
-				else
-				{
-					vs_output_ops->unproject(unprojed[iy*4+ix], px_in);
+				sp_centroid /= n;
+
+				mask = mask_backup;
+
+				for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
+					if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
+						projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
+					}
 				}
+				vs_output_ops->unproject(unprojed[iy*4+ix], projed);
+			}
+			else
+			{
+				vs_output_ops->unproject(unprojed[iy*4+ix], px_in);
+			}
 			}
 
 			vs_output_ops->selfintegral1(px_in, ddx);
@@ -874,7 +873,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 
 	vs_output const* reordered_verts[3] = { verts[reordered_index[0]], verts[reordered_index[1]], verts[reordered_index[2]] };
 
-#ifndef USE_TRADITIONAL_RASTERIZER
 	bool has_centroid = false;
 	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
 		if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
@@ -1034,268 +1032,6 @@ void rasterizer::rasterize_triangle(uint32_t prim_id, uint32_t full, const vs_ou
 		src_stage = (src_stage + 1) & 1;
 		dst_stage = !src_stage;
 	}
-#else
-	EFLIB_UNREF_PARAM(full);
-
-	struct scanline_info
-	{
-		size_t scanline_width;
-
-		vs_output ddx;
-
-		vs_output base_vert;
-		size_t base_x;
-		size_t base_y;
-
-		scanline_info()
-		{}
-
-	private:
-		scanline_info(const scanline_info& rhs);
-		scanline_info& operator=(const scanline_info& rhs);
-	};
-
-		/**********************************************************
-	*        将顶点按照y大小排序，求出三角形面积与边
-	**********************************************************/
-	const vs_output* pvert[3] = {reordered_verts[0], reordered_verts[1], reordered_verts[2]};
-
-	//升序排列
-	if(pvert[0]->position.y > pvert[1]->position.y){
-		swap(pvert[1], pvert[0]);
-	}
-	if(pvert[1]->position.y > pvert[2]->position.y){
-		swap(pvert[2], pvert[1]);
-		if(pvert[0]->position.y > pvert[1]->position.y) 
-			swap(pvert[1], pvert[0]);
-	}
-
-	const vs_output& projed_vert0 = *(pvert[0]);
-	const vs_output& projed_vert1 = *(pvert[1]);
-	const vs_output& projed_vert2 = *(pvert[2]);
-
-	//初始化边及边上属性的差
-	vs_output e01;
-	vs_output_ops->operator_sub(e01, projed_vert1, projed_vert0);
-	//float watch_x = e01.attributes[2].x;
-	
-	vs_output e02;
-	vs_output_ops->operator_sub(e02, projed_vert2, projed_vert0);
-	vs_output e12;
-
-
-
-	//初始化边上的各个分量差值。（只要算两条边就可以了。）
-	e12.position = pvert[2]->position - pvert[1]->position;
-
-	//初始化dxdy
-	float dxdy_01 = eflib::equal<float>(e01.position.y, 0.0f) ? 0.0f: e01.position.x / e01.position.y;
-	float dxdy_02 = eflib::equal<float>(e02.position.y, 0.0f) ? 0.0f: e02.position.x / e02.position.y;
-	float dxdy_12 = eflib::equal<float>(e12.position.y, 0.0f) ? 0.0f: e12.position.x / e12.position.y;
-
-	//计算面积
-	float area = cross_prod2(e02.position.xy(), e01.position.xy());
-	if(equal<float>(area, 0.0f)) return;
-	float inv_area = 1.0f / area;
-
-	/**********************************************************
-	*  求解各个属性的差分式
-	*********************************************************/
-	vs_output ddx, ddy;
-	{
-		vs_output tmp0, tmp1, tmp2;
-		vs_output_ops->operator_mul(ddx, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e02, e01.position.y), vs_output_ops->operator_mul(tmp1, e01, e02.position.y)), inv_area);
-		vs_output_ops->operator_mul(ddy, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e01, e02.position.x), vs_output_ops->operator_mul(tmp1, e02, e01.position.x)), inv_area);
-	}
-
-	triangle_info info;
-	info.set(reordered_verts[0]->position, ddx, ddy);
-	pps->ptriangleinfo_ = &info;
-
-	/*************************************
-	*   设置基本的scanline属性。
-	*   这些属性将在多个扫描行中保持相同
-	************************************/
-	scanline_info base_scanline;
-	vs_output_ops->copy(base_scanline.ddx, ddx);
-
-	/*************************************************
-	*   开始绘制多边形。经典的上-下分割绘制算法
-	*   对扫描线光栅化保证是自左向右的。
-	*   所以不需要考虑major edge是在左或者右边。
-	*************************************************/
-
-	const int bot_part = 0;
-	//const int top_part = 1;
-
-	int vpleft = fast_floori(max(0.0f, vp.x));
-	int vptop = fast_floori(max(0.0f, vp.y));
-	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
-	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
-
-	for(int iPart = 0; iPart < 2; ++iPart){
-
-		//两条边的dxdy
-		float dxdy0 = 0.0f;
-		float dxdy1 = 0.0f;
-
-		//起始/终止的x与y坐标; 
-		//到三角形基准点位移,用于计算顶点属性
-		float
-			fsx0(0.0f), fsx1(0.0f), // 基准点的起止x坐标
-			fsy(0.0f), fey(0.0f),	// Part的起止扫描线y坐标
-			fcx0(0.0f), fcx1(0.0f), // 单根扫描线的起止点坐标
-			offsety(0.0f);
-
-		int isy(0), iey(0);	//Part的起止扫描线号
-
-		//扫描线的起止顶点
-		const vs_output* s_vert = NULL;
-		const vs_output* e_vert = NULL;
-
-		//依据片段设置起始参数
-		if(iPart == bot_part){
-			s_vert = pvert[0];
-			e_vert = pvert[1];
-
-			dxdy0 = dxdy_01;
-		} else {
-			s_vert = pvert[1];
-			e_vert = pvert[2];
-
-			dxdy0 = dxdy_12;
-		}
-		dxdy1 = dxdy_02;
-
-		if(equal<float>(s_vert->position.y, e_vert->position.y)){
-			continue; // next part
-		}
-
-		fsy = fast_ceil(s_vert->position.y + 0.5f) - 1;
-		fey = fast_ceil(e_vert->position.y - 0.5f) - 1;
-
-		isy = fast_floori(fsy);
-		iey = fast_floori(fey);
-
-		offsety = fsy + 0.5f - pvert[0]->position.y;
-
-		//起点的x计算由于三角形的不同而有所不同
-		if(iPart == bot_part){
-			fsx0 = pvert[0]->position.x + dxdy_01*(fsy + 0.5f - pvert[0]->position.y);
-		} else {
-			fsx0 = pvert[1]->position.x + dxdy_12*(fsy + 0.5f - pvert[1]->position.y);
-		}
-		fsx1 = pvert[0]->position.x + dxdy_02*(fsy + 0.5f - pvert[0]->position.y);
-
-		//设置基准扫描线的属性
-		vs_output_ops->integral2(base_scanline.base_vert, projed_vert0, offsety, ddy);
-
-		//当前的基准扫描线，起点在(base_vert.x, scanline.y)处。
-		//在传递到rasterize_scanline之前需要将基础点调整到扫描线的最左端。
-		scanline_info current_base_scanline;
-		current_base_scanline.scanline_width = base_scanline.scanline_width;
-		vs_output_ops->copy(current_base_scanline.ddx, base_scanline.ddx);
-		vs_output_ops->copy(current_base_scanline.base_vert, base_scanline.base_vert);
-		current_base_scanline.base_x = base_scanline.base_x;
-		current_base_scanline.base_y = base_scanline.base_y;
-
-		for(int iy = isy; iy <= iey; ++iy)
-		{	
-			//如果扫描线在view port的外面则跳过。	
-			if( iy >= vpbottom ){
-				break;
-			}
-
-			if( iy >= vptop ){
-				//扫描线在视口内的就做扫描线
-				int icx_s = 0;
-				int icx_e = 0;
-
-				fcx0 = dxdy0 * (iy - isy) + fsx0;
-				fcx1 = dxdy1 * (iy - isy) + fsx1;
-
-				//LOG: 记录扫描线的起止点。版本
-				//if (fcx0 > 256.0 && iy == 222)
-				//{
-				//	log_serializer_indent_scope<log_system<slog_type>::slog_type> scope(&log_system<slog_type>::instance());
-				//	log_system<slog_type>::instance().write(
-				//		to_tstring(str(format("%1%") % iy)), 
-				//		to_tstring(str(format("%1$8.5f, %2$8.5f") % fcx0 % fcx1)), LOGLEVEL_MESSAGE
-				//		);
-				//}
-
-				if(fcx0 < fcx1){
-					icx_s = fast_ceili(fcx0 + 0.5f) - 1;
-					icx_e = fast_ceili(fcx1 - 0.5f) - 1;
-				} else {
-					icx_s = fast_ceili(fcx1 + 0.5f) - 1;
-					icx_e = fast_ceili(fcx0 - 0.5f) - 1;
-				}
-
-				//如果起点大于终点说明scanline中不包含任何像素中心，直接跳过。
-				if ((icx_s <= icx_e) && (icx_s < vpright) && (icx_e >= vpleft)) {
-					icx_s = eflib::clamp(icx_s, vpleft, vpright - 1);
-					icx_e = eflib::clamp(icx_e, vpleft, vpright - 1);
-
-					float offsetx = icx_s + 0.5f - pvert[0]->position.x;
-
-					//设置扫描线信息
-					scanline_info scanline;
-					scanline.scanline_width = current_base_scanline.scanline_width;
-					vs_output_ops->copy(scanline.ddx, current_base_scanline.ddx);
-					scanline.base_x = current_base_scanline.base_x;
-					scanline.base_y = current_base_scanline.base_y;
-					vs_output_ops->integral2(scanline.base_vert, current_base_scanline.base_vert, offsetx, ddx);
-
-					scanline.base_x = icx_s;
-					scanline.base_y = iy;
-					scanline.scanline_width = icx_e - icx_s + 1;
-
-					//光栅化
-					vec3* edge_factors = &edge_factors_[prim_id * 3];
-
-					vs_output px_in;
-					vs_output_ops->copy(px_in, scanline.base_vert);
-					ps_output px_out;
-					vs_output unprojed;
-					for(size_t i_pixel = 0; i_pixel < scanline.scanline_width; ++i_pixel)
-					{
-						vs_output_ops->unproject(unprojed, px_in);
-						if(pps->execute(unprojed, px_out)){
-							if (1 == num_samples){
-								hfb_->render_sample(hbs, scanline.base_x + i_pixel, scanline.base_y, 0, px_out, px_out.depth);
-							}
-							else{
-								for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-									const vec2& sp = samples_pattern_[i_sample];
-									bool intersect = true;
-									for (int e = 0; e < 3; ++ e){
-										if ((scanline.base_x + i_pixel + sp.x) * edge_factors[e].x
-												+ (scanline.base_y + sp.y) * edge_factors[e].y
-												< edge_factors[e].z){
-											intersect = false;
-											break;
-										}
-									}
-									if (intersect){
-										float ddxz = (sp.x - 0.5f) * ddx.position.z;
-										float ddyz = (sp.y - 0.5f) * ddy.position.z;
-										hfb_->render_sample(hbs, scanline.base_x + i_pixel, scanline.base_y, i_sample, px_out, px_out.depth + ddxz + ddyz);
-									}
-								}
-							}
-						}
-
-						vs_output_ops->selfintegral1(px_in, scanline.ddx);
-					}
-				}
-			}
-
-			//差分递增
-			vs_output_ops->selfintegral1(current_base_scanline.base_vert, ddy);
-		}
-	}
-#endif
 }
 
 rasterizer::rasterizer()
