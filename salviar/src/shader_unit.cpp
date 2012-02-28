@@ -165,4 +165,22 @@ uint32_t vertex_shader_unit::output_attributes_count() const{
 uint32_t vertex_shader_unit::output_attribute_modifiers( size_t /*index*/ ) const{
 	return vs_output::am_linear;
 }
+
+void pixel_shader_unit::initialize( shader_code const* )
+{
+	this->code = code;
+	this->stream_data.resize( code->abii()->total_size( su_stream_in), 0 );
+	this->buffer_data.resize( code->abii()->total_size(su_buffer_in), 0 );
+	this->stream_odata.resize( code->abii()->total_size(su_stream_out), 0 );
+	this->buffer_odata.resize( code->abii()->total_size(su_buffer_out), 0 );
+}
+
+pixel_shader_unit::~pixel_shader_unit()
+{
+}
+
+pixel_shader_unit::pixel_shader_unit() : code(NULL)
+{
+}
+
 END_NS_SALVIAR();

@@ -67,7 +67,9 @@ public:
 	pixel_shader_unit& operator = ( pixel_shader_unit const& );
 
 	void initialize( shader_code const* );
-	void execute( ps_output& out );
+
+	void update( vs_output* inputs );
+	void execute( ps_output* outs );
 
 public:
 	shader_code const* code;

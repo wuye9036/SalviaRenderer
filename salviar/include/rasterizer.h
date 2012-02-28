@@ -115,6 +115,8 @@ class rasterizer : public render_stage
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
 		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y);
 
+	void draw_full_package( vs_output* pixels, uint32_t top, uint32_t left, size_t num_samples, h_blend_shader const& bs, h_pixel_shader const& pps, float const* aa_z_offset );
+	void draw_package( vs_output* pixels, uint32_t top, uint32_t left, size_t num_samples, h_blend_shader const& bs, h_pixel_shader const& pps, uint32_t const* masks, float const* aa_z_offset );
 public:
 	//inherited
 	void initialize(renderer_impl* pparent);

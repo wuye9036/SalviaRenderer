@@ -53,6 +53,8 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 			( is_scalar(btc) || is_vector(btc) || is_matrix(btc) )
 			&& ( scalar_of(btc) == builtin_types::_float || scalar_of(btc) == builtin_types::_sint32 );
 
+	case salviar::sv_depth:
+		return ( btc == builtin_types::_float );
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}

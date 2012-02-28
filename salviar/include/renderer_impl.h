@@ -7,6 +7,7 @@
 BEGIN_NS_SALVIAR();
 
 class vertex_shader_unit;
+class pixel_shader_unit;
 
 struct state_block{
 	viewport vp;	
@@ -41,9 +42,10 @@ class renderer_impl : public renderer
 	vs_input_op*				vs_input_ops_;
 	vs_output_op*				vs_output_ops_;
 
-	boost::shared_ptr<shader_code> vscode_;
-	boost::shared_ptr<vertex_shader_unit> vs_proto_;
-
+	boost::shared_ptr<shader_code>			vscode_;
+	boost::shared_ptr<shader_code>			pscode_;
+	boost::shared_ptr<vertex_shader_unit>	vs_proto_;
+	boost::shared_ptr<pixel_shader_unit>	ps_proto_;
 	void initialize();
 
 public:
@@ -90,6 +92,10 @@ public:
 
 	virtual result set_pixel_shader(h_pixel_shader hps);
 	virtual h_pixel_shader get_pixel_shader() const;
+
+	virtual result set_pixel_shader_code( boost::shared_ptr<shader_code> const& );
+	virtual boost::shared_ptr<shader_code> get_pixel_shader_code() const;
+	virtual boost::shared_ptr<pixel_shader_unit> ps_proto() const;
 
 	virtual result set_blend_shader(h_blend_shader hbs);
 	virtual h_blend_shader get_blend_shader();

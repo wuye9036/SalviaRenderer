@@ -77,6 +77,8 @@ public:
 
 	virtual result set_pixel_shader(h_pixel_shader hps) = 0;
 	virtual h_pixel_shader get_pixel_shader() const = 0;
+	virtual result set_pixel_shader_code( h_shader_code const& ) = 0;
+	virtual h_shader_code get_pixel_shader_code() const = 0;
 
 	virtual result set_blend_shader(h_blend_shader hbs) = 0;
 	virtual h_blend_shader get_blend_shader() = 0;

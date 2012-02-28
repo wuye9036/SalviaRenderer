@@ -43,8 +43,9 @@ enum system_values{
 	sv_normal,
 
 	sv_target,
+	sv_depth,
 
-	sv_customized,
+	sv_customized
 };
 
 class semantic_value{
@@ -74,6 +75,8 @@ public:
 			sv = sv_texcoord;
 		} else if ( lower_name == "color" || lower_name == "sv_target" ){
 			sv = sv_target;
+		} else if ( lower_name == "depth" || lower_name == "sv_depth" ) {
+			sv = sv_depth;
 		} else {
 			sv = sv_customized;
 			this->name = name;

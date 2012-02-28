@@ -470,6 +470,24 @@ salviar::h_input_layout renderer_impl::create_input_layout(
 	return input_layout::create( elem_descs, elems_count, vs );
 }
 
+result renderer_impl::set_pixel_shader_code( shared_ptr<shader_code> const& code )
+{
+	pscode_ = code;
+	ps_proto_.reset( new pixel_shader_unit() );
+	ps_proto_->initialize( pscode_.get() );
+
+	return result::ok;
+}
+
+shared_ptr<shader_code> renderer_impl::get_pixel_shader_code() const{
+	return pscode_;
+}
+
+shared_ptr<pixel_shader_unit> renderer_impl::ps_proto() const
+{
+	return ps_proto_;
+}
+
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev)
 {
 	return h_renderer(new renderer_impl(pparam, hdev));
