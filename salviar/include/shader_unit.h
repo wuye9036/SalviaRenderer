@@ -16,11 +16,13 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/platform/typedefs.h>
+#include <eflib/include/memory/allocator.h>
 
 #include <vector>
 
 BEGIN_NS_SALVIAR();
 
+class shader_abi;
 class shader_code;
 class vs_output;
 class stream_assembler;
@@ -71,17 +73,17 @@ public:
 	void initialize( shader_code const* );
 	void set_variable( std::string const&, void* data );
 
-	void update( vs_output* inputs );
+	void update( vs_output* inputs, shader_abi const* vs_abi );
 	void execute( ps_output* outs );
 
 public:
 	shader_code const* code;
 
-	std::vector<char> stream_data;
-	std::vector<char> buffer_data;
+	std::vector<char, eflib::aligned_allocator<char, 16> > stream_data;
+	std::vector<char, eflib::aligned_allocator<char, 16> > buffer_data;
 
-	std::vector<char> stream_odata;
-	std::vector<char> buffer_odata;
+	std::vector<char, eflib::aligned_allocator<char, 16> > stream_odata;
+	std::vector<char, eflib::aligned_allocator<char, 16> > buffer_odata;
 };
 
 END_NS_SALVIAR();

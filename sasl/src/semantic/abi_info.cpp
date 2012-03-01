@@ -184,7 +184,8 @@ void abi_info::compute_layout(){
 		compute_output_stream_layout();
 		break;
 	case lang_pixel_shader:
-		compute_package_layout();
+		compute_input_package_layout();
+		compute_output_package_layout();
 		break;
 	}
 	
@@ -283,52 +284,61 @@ void abi_info::compute_input_constant_layout(){
 	}
 }
 
-void abi_info::compute_package_layout()
+void abi_info::compute_input_package_layout()
 {
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
+		compute_package_layout( input_sv_layout( sems_in[index] ) );
+	}
+}
 
-		sv_layout* svl = input_sv_layout( sems_in[index] );
-		assert( svl );
-
-		svl->physical_index =  counts[svl->usage];
-		svl->logical_index  =  counts[svl->usage];
-		svl->offset = offsets[svl->usage];
-
-		builtin_types elem_bt = to_builtin_types( svl->value_type );
-		size_t elem_store_size = storage_size(elem_bt);
-		int elem_size = static_cast<int>(elem_store_size);
-
-		if( svl->usage == su_buffer_in || svl->usage == su_buffer_out ){
-			svl->element_count = 1;
-			svl->element_size = elem_size;
-		} else {
-
-			if( is_vector(elem_bt) || is_scalar( elem_bt ) ){
-				int pow2_elem_size = ceil_to_pow2( elem_size );
-				svl->element_count = PACKAGE_ELEMENT_COUNT;
-				svl->element_size = elem_size;
-				svl->element_padding = pow2_elem_size - elem_size;
-			} else if ( is_matrix( elem_bt ) ){
-				int row_size = static_cast<int>( storage_size( row_vector_of(elem_bt) ) );
-				int pow2_row_size = ceil_to_pow2( row_size );
-				int mat_size = pow2_row_size * static_cast<int>( vector_count(elem_bt) );
-				int pow2_mat_size = ceil_to_pow2( mat_size );
-				svl->element_size = mat_size;
-				svl->element_padding = pow2_mat_size - mat_size;
-				svl->element_count = PACKAGE_ELEMENT_COUNT;
-			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			}
-		}
-
-		counts[svl->usage]++;
-		offsets[svl->usage] += svl->total_size();
+void abi_info::compute_output_package_layout()
+{
+	for ( size_t index = 0; index < sems_out.size(); ++index ){
+		compute_package_layout( output_sv_layout( sems_out[index] ) );
 	}
 }
 
 void abi_info::update_size( size_t sz, salviar::sv_usage usage )
 {
 	offsets[usage] = sz;
+}
+
+void abi_info::compute_package_layout( sv_layout* svl )
+{
+	assert( svl );
+
+	svl->physical_index =  counts[svl->usage];
+	svl->logical_index  =  counts[svl->usage];
+	svl->offset = offsets[svl->usage];
+
+	builtin_types elem_bt = to_builtin_types( svl->value_type );
+	size_t elem_store_size = storage_size(elem_bt);
+	int elem_size = static_cast<int>(elem_store_size);
+
+	if( svl->usage == su_buffer_in || svl->usage == su_buffer_out ){
+		svl->element_count = 1;
+		svl->element_size = elem_size;
+	} else {
+		if( is_vector(elem_bt) || is_scalar( elem_bt ) ){
+			int pow2_elem_size = ceil_to_pow2( elem_size );
+			svl->element_count = PACKAGE_ELEMENT_COUNT;
+			svl->element_size = elem_size;
+			svl->element_padding = pow2_elem_size - elem_size;
+		} else if ( is_matrix( elem_bt ) ){
+			int row_size = static_cast<int>( storage_size( row_vector_of(elem_bt) ) );
+			int pow2_row_size = ceil_to_pow2( row_size );
+			int mat_size = pow2_row_size * static_cast<int>( vector_count(elem_bt) );
+			int pow2_mat_size = ceil_to_pow2( mat_size );
+			svl->element_size = mat_size;
+			svl->element_padding = pow2_mat_size - mat_size;
+			svl->element_count = PACKAGE_ELEMENT_COUNT;
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	counts[svl->usage]++;
+	offsets[svl->usage] += svl->total_size();
 }
 
 END_NS_SASL_SEMANTIC();

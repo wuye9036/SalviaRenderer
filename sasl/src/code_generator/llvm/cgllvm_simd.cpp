@@ -134,7 +134,8 @@ void cgllvm_simd::create_entry_param( sv_usage usage )
 			next_offset = struct_layout->getSizeInBytes();
 		}
 		
-		svls[i_elem]->element_padding = (next_offset - offset) - svls[i_elem]->element_size;
+		svls[i_elem]->element_padding = ( (next_offset - offset) / svls[i_elem]->element_count ) - svls[i_elem]->element_size ;
+		svls[i_elem]->padding =			(next_offset - offset) - ( svls[i_elem]->element_size + svls[i_elem]->element_padding ) * svls[i_elem]->element_count ;
 	}
 }
 

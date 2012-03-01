@@ -20,6 +20,54 @@ using std::vector;
 using boost::shared_ptr;
 using boost::make_shared;
 
+void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
+{
+#if defined(EFLIB_CPU_X86) && defined(EFLIB_MSVC)
+	__asm{
+		push ebp;
+
+		push callee;
+
+		push pbo;
+		push pso;
+		push pbi;
+		push psi;
+
+		mov  ebp, esp ;
+
+		push ebx;
+		push esi;
+		push edi;
+
+		and  esp, -16;
+		sub  esp, 16;
+
+		mov  ebx, [ebp+12];
+		push ebx;
+		mov  ebx, [ebp+8];
+		push ebx;
+		mov  ebx, [ebp+4];
+		push ebx;
+		mov  ebx, [ebp];
+		push ebx;
+
+		mov  ebx, [ebp+16];
+		call ebx;
+
+		mov  edi, [ebp-12];
+		mov  esi, [ebp-8];
+		mov  ebx, [ebp-4];
+		mov  esp, ebp;
+		add  esp, 20;
+		pop  ebp;
+	}
+
+	// X XXXX
+#else
+	callee( psi, pbi, pso, pbo );
+#endif
+}
+
 BEGIN_NS_SALVIAR();
 
 void vertex_shader_unit::initialize( shader_code const* code ){
@@ -214,7 +262,65 @@ void pixel_shader_unit::set_variable( std::string const& name, void* data )
 
 shared_ptr<pixel_shader_unit> pixel_shader_unit::clone() const
 {
-	return make_shared<pixel_shader_unit>( *this );
+	if( this ){
+		return make_shared<pixel_shader_unit>( *this );
+	} else {
+		return shared_ptr<pixel_shader_unit>();
+	}
+}
+
+void pixel_shader_unit::update( vs_output* inputs, shader_abi const* vs_abi )
+{
+	vector<sv_layout*> infos = code->abii()->layouts( su_stream_in );
+
+	size_t register_index = 0;
+	BOOST_FOREACH( sv_layout* info, infos ){
+		int elem_stride = info->element_size + info->element_padding;
+		if( info->sv == semantic_value(sv_position) ){
+			for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
+				void* pdata = &(stream_data[info->offset+elem_stride*i_elem]);
+				memset( pdata, 0, elem_stride );
+				memcpy( pdata, &( inputs[i_elem].position ), info->element_size );
+			}
+		} else {
+			sv_layout* src_sv_layout = vs_abi->input_sv_layout( info->sv );
+			for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
+				void* pdata = &(stream_data[info->offset+elem_stride*i_elem]);
+				memset( pdata, 0, elem_stride );
+				memcpy( pdata, &( inputs[i_elem].attributes[src_sv_layout->logical_index] ), info->element_size );
+			}
+			++register_index;
+		}
+	}
+}
+
+void pixel_shader_unit::execute( ps_output* outs )
+{
+	void* psi = stream_data.empty() ? NULL : &(stream_data[0]);
+	void* pbi = buffer_data.empty() ? NULL : &(buffer_data[0]);
+	void* pso = stream_odata.empty() ? NULL : &(stream_odata[0]);
+	void* pbo = buffer_odata.empty() ? NULL : &(buffer_odata[0]);
+
+	invoke( code->function_pointer(), psi, pbi, pso, pbo );
+
+	shader_abi const* abii = code->abii();
+	vector<sv_layout*> infos = abii->layouts( su_stream_out );
+
+	BOOST_FOREACH( sv_layout* info, infos ){
+		size_t elem_stride = info->element_size + info->element_padding;
+		for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
+			if( info->sv == semantic_value(sv_target) ){
+				assert( info->value_type == lvt_f32v4 );
+				for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
+					void* pdata = &(stream_odata[info->offset+elem_stride*i_elem]);
+					memcpy( &( outs[i_elem].color[info->sv.get_index()] ), pdata, info->element_size );
+				}
+			} else if( info->sv == semantic_value(sv_depth) ){
+				float* pdata = (float*)( &(stream_odata[info->offset+elem_stride*i_elem]) );
+				outs[i_elem].depth = *pdata;
+			}
+		}
+	}
 }
 
 END_NS_SALVIAR();

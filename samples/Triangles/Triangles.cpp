@@ -39,6 +39,7 @@ using std::cout;
 using std::endl;
 
 #define SASL_VERTEX_SHADER_ENABLED
+#define SALVIA_PIXEL_SHADER_ENABLED
 
 char const* vs_code =
 "float4x4 wvpMatrix; \r\n"
@@ -154,7 +155,9 @@ protected:
 
 		cout << "Compiling pixel shader ... " << endl;
 		psc = shader_code::create( ps_code, lang_pixel_shader );
-		hsr->set_pixel_shader_code( psc );
+#ifdef SALVIA_PIXEL_SHADER_ENABLED
+		hsr->set_pixel_shader_code(psc);
+#endif
 
 		h_mesh pmesh = create_planar(
 			hsr.get(), 
@@ -220,7 +223,6 @@ protected:
 		float x = r * cos(t);
 		float y = r * sin(t);
 
-		cout << t << endl;
 		vec3 camera( x, 8.0f, y);
 		vec4 camera_pos = vec4( camera, 1.0f );
 
@@ -249,8 +251,9 @@ protected:
 			hsr->set_vertex_shader_code( vsc );
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
 
+#ifdef SALVIA_PIXEL_SHADER_ENABLED
 			hsr->set_pixel_shader_code(psc);
-			
+#endif
 			vec4 color[3];
 			color[0] = vec4( 0.3f, 0.7f, 0.3f, 1.0f );
 			color[1] = vec4( 0.3f, 0.3f, 0.7f, 1.0f );

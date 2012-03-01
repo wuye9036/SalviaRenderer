@@ -1,13 +1,14 @@
-#include "../include/rasterizer.h"
+#include <salviar/include/rasterizer.h>
 
-#include "../include/shaderregs_op.h"
-#include "../include/framebuffer.h"
-#include "../include/renderer_impl.h"
-
-#include "../include/clipper.h"
-#include "../include/vertex_cache.h"
-#include "../include/thread_pool.h"
+#include <salviar/include/clipper.h>
+#include <salviar/include/framebuffer.h>
+#include <salviar/include/renderer_impl.h>
+#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_code.h>
 #include <salviar/include/shader_unit.h>
+#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/thread_pool.h>
+#include <salviar/include/vertex_cache.h>
 
 #include <eflib/include/diagnostics/log.h>
 #include <eflib/include/metaprog/util.h>
@@ -24,7 +25,9 @@
 using eflib::num_available_threads;
 using eflib::atomic;
 
-BEGIN_NS_SALVIAR()
+class shader_abi;
+
+BEGIN_NS_SALVIAR();
 
 #define SALVIA_ENABLE_PIXEL_SHADER
 
@@ -1502,40 +1505,51 @@ void rasterizer::draw_package(
 	uint32_t const* masks, float const* aa_z_offset )
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
-	
+
+	shader_abi const* vs_abi = pparent_->vs_proto()->code->abii();
+	ps_output pso[16];
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
+	{
+		pso[i].depth = pixels[i].position.z;
+		pso[i].front_face = pixels[i].front_face;
+	}
+
+	if( psu ){
+		psu->update( pixels, vs_abi );
+		psu->execute( pso );
+	}	
 
 	for( int iy = 0; iy < 4; ++iy ){
 		for ( int ix = 0; ix < 4; ++ix ){
 
 			int px_index = iy * 4 + ix;
-			ps_output px_out;
 			uint32_t mask = masks[px_index];
 
 			// No sampler need to be draw.
 			if( !mask ) continue;
 
 			// Clipped by pixel shader.
-			if( !pps->execute(pixels[px_index], px_out) ) continue;
+			if( !psu && !pps->execute(pixels[px_index], pso[px_index]) ) continue;
 
 			const int x_coord = left + ix;
 			const int y_coord = top + iy;
 
 			// Whole pixel
 			if (1 == num_samples){
-				hfb_->render_sample(bs, x_coord, y_coord, 0, px_out, px_out.depth);
+				hfb_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
 
 			// MSAA.
 			if (full_mask == mask){
 				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-					hfb_->render_sample(bs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 				}
 			} 
 
 			unsigned long i_sample;
 			while (_BitScanForward(&i_sample, mask)){
-				hfb_->render_sample(bs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+				hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 				mask &= mask - 1;
 			}
 		}
@@ -1548,26 +1562,37 @@ void rasterizer::draw_full_package(
 	h_blend_shader const& bs, h_pixel_shader const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 	float const* aa_z_offset )
 {
-	
+	shader_abi const* vs_abi = pparent_->vs_proto()->code->abii();
+	ps_output pso[16];
+	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
+	{
+		pso[i].depth = pixels[i].position.z;
+		pso[i].front_face = pixels[i].front_face;
+	}
+
+	if( psu ){
+		psu->update( pixels, vs_abi );
+		psu->execute( pso );
+	}
+
 	for ( int iy = 0; iy < 4; ++iy ){
 
 		for( int ix = 0; ix < 4; ++ix ){
 			int const px_index = ix + iy * 4;
-			ps_output px_out;
 
-			if( !pps->execute(pixels[px_index], px_out) ) {
+			if( !psu && !pps->execute(pixels[px_index], pso[px_index]) ) {
 				continue;
 			}
 
 			const int x_coord = left + ix;
 			const int y_coord = top + iy;
 			if (1 == num_samples){
-				hfb_->render_sample(bs, x_coord, y_coord, 0, px_out, px_out.depth);
+				hfb_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
 			
 			for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-				hfb_->render_sample(bs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+				hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 			}
 		}
 	}

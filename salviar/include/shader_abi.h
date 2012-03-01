@@ -60,7 +60,12 @@ enum language_value_types
 	lvt_uint64	= ( 4U << details::scalar_field_offset) + details::unsigned_flag ,
 
 	lvt_float	= ( 1U << details::scalar_field_offset )+ details::real_class,
-	lvt_double	= ( 2U << details::scalar_field_offset )+ details::real_class
+	lvt_double	= ( 2U << details::scalar_field_offset )+ details::real_class,
+
+	lvt_f32v1	= lvt_float | details::vector_flag | ( 1 << details::vector_size_field_offset ),
+	lvt_f32v2	= lvt_float | details::vector_flag | ( 2 << details::vector_size_field_offset ),
+	lvt_f32v3	= lvt_float | details::vector_flag | ( 3 << details::vector_size_field_offset ),
+	lvt_f32v4	= lvt_float | details::vector_flag | ( 4 << details::vector_size_field_offset )
 };
 
 enum sv_usage{

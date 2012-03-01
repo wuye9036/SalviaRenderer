@@ -78,7 +78,9 @@ private:
 	void compute_output_stream_layout();
 	void compute_input_constant_layout();
 	
-	void compute_package_layout();
+	void compute_input_package_layout();
+	void compute_output_package_layout();
+	void compute_package_layout( salviar::sv_layout* );
 
 	module_si* mod;
 	symbol* entry_point;
