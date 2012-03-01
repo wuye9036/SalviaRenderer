@@ -89,7 +89,7 @@ void cgllvm_simd::create_entry_param( sv_usage usage )
 			Type* storage_ty = type_( storage_bt, abi_package );
 			tys.push_back( storage_ty );
 		} else {
-			Type* storage_ty = type_( storage_bt, abi_llvm );
+			Type* storage_ty = type_( storage_bt, abi_c );
 			tys.push_back( storage_ty );
 		}
 	}

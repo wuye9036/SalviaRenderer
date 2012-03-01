@@ -8,13 +8,17 @@
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/math.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using namespace sasl::semantic;
 using namespace eflib;
 using std::vector;
+using boost::shared_ptr;
+using boost::make_shared;
 
 BEGIN_NS_SALVIAR();
 
@@ -166,7 +170,7 @@ uint32_t vertex_shader_unit::output_attribute_modifiers( size_t /*index*/ ) cons
 	return vs_output::am_linear;
 }
 
-void pixel_shader_unit::initialize( shader_code const* )
+void pixel_shader_unit::initialize( shader_code const* code )
 {
 	this->code = code;
 	this->stream_data.resize( code->abii()->total_size( su_stream_in), 0 );
@@ -181,6 +185,36 @@ pixel_shader_unit::~pixel_shader_unit()
 
 pixel_shader_unit::pixel_shader_unit() : code(NULL)
 {
+}
+
+pixel_shader_unit::pixel_shader_unit( pixel_shader_unit const& rhs )
+	:  code(rhs.code),
+	stream_data(rhs.stream_data), buffer_data(rhs.buffer_data),
+	stream_odata(rhs.stream_odata), buffer_odata(rhs.buffer_odata)
+{
+
+}
+
+pixel_shader_unit& pixel_shader_unit::operator=( pixel_shader_unit const& rhs )
+{
+	code = rhs.code;
+	stream_data = rhs.stream_data;
+	buffer_data = rhs.buffer_data;
+	stream_odata = rhs.stream_odata;
+	buffer_odata = rhs.buffer_odata;
+
+	return *this;
+}
+
+void pixel_shader_unit::set_variable( std::string const& name, void* data )
+{
+	sv_layout* vsi = code->abii()->input_sv_layout( name );
+	memcpy( &buffer_data[vsi->offset], data, vsi->element_size );
+}
+
+shared_ptr<pixel_shader_unit> pixel_shader_unit::clone() const
+{
+	return make_shared<pixel_shader_unit>( *this );
 }
 
 END_NS_SALVIAR();

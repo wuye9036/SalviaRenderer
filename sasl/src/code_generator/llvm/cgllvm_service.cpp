@@ -870,8 +870,38 @@ Value* cg_service::load_c_as_package( value_t const& v )
 	if( v.hint() == builtin_types::_sampler ){
 		return v.load();
 	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return NULL;
+		
+		value_t llvm_v = create_value( v.tyinfo(), v.hint(), v.load(abi_llvm), vkind_value, abi_llvm );
+
+		if( is_scalar( v.hint() ) || is_vector( v.hint() ) ){
+
+			// Vectorize value if scalar.
+			Value* vec_val = NULL;
+			if( is_scalar(v.hint()) ){
+				vec_val = cast_s2v( llvm_v ).load();
+			} else {
+				vec_val = v.load(abi_llvm);
+			}
+
+			// Shuffle llvm value to package value.
+			size_t vec_size = vector_size(v.hint());
+			size_t vec_stride = ceil_to_pow2(vec_size);
+
+			int package_scalar_count = static_cast<int>( vec_stride * PACKAGE_ELEMENT_COUNT );
+			vector<size_t> shuffle_indexes(package_scalar_count);
+			
+			for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
+				for ( size_t i_scalar = 0 ; i_scalar < vec_stride; ++i_scalar ){
+					shuffle_indexes[i_elem*vec_stride+i_scalar] = i_scalar;
+				}
+			}
+
+			Value* shuffle_mask = vector_<int>( &(shuffle_indexes[0]), package_scalar_count );
+			return builder().CreateShuffleVector( vec_val, UndefValue::get(vec_val->getType()), shuffle_mask );
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return NULL;
+		}
 	}
 }
 

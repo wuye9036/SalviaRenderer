@@ -65,8 +65,11 @@ public:
 
 	pixel_shader_unit( pixel_shader_unit const& );
 	pixel_shader_unit& operator = ( pixel_shader_unit const& );
+	
+	boost::shared_ptr<pixel_shader_unit> clone() const;
 
 	void initialize( shader_code const* );
+	void set_variable( std::string const&, void* data );
 
 	void update( vs_output* inputs );
 	void execute( ps_output* outs );

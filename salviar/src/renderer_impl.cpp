@@ -488,6 +488,15 @@ shared_ptr<pixel_shader_unit> renderer_impl::ps_proto() const
 	return ps_proto_;
 }
 
+result renderer_impl::set_ps_variable( std::string const& name, void* data )
+{
+	if( ps_proto_ ){
+		ps_proto_->set_variable(name, data);
+		return result::ok;
+	}
+	return result::failed;
+}
+
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev)
 {
 	return h_renderer(new renderer_impl(pparam, hdev));

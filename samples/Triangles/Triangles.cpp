@@ -55,6 +55,14 @@ char const* vs_code =
 "} \r\n"
 ;
 
+char const* ps_code =
+"float4 color; \r\n"
+"float4 ps_main(): COLOR \r\n"
+"{ \r\n"
+"	return color; \r\n"
+"} \r\n"
+;
+
 class ps : public pixel_shader
 {
 public:
@@ -141,8 +149,12 @@ protected:
 		rs_back.reset(new rasterizer_state(rs_desc));
 
 		cout << "Compiling vertex shader ... " << endl;
-		sc = shader_code::create( vs_code, lang_vertex_shader );
-		hsr->set_vertex_shader_code( sc );
+		vsc = shader_code::create( vs_code, lang_vertex_shader );
+		hsr->set_vertex_shader_code( vsc );
+
+		cout << "Compiling pixel shader ... " << endl;
+		psc = shader_code::create( ps_code, lang_pixel_shader );
+		hsr->set_pixel_shader_code( psc );
 
 		h_mesh pmesh = create_planar(
 			hsr.get(), 
@@ -234,9 +246,11 @@ protected:
 			hsr->set_rasterizer_state(rs_back);
 
 			// C++ vertex shader and SASL vertex shader are all available.
-			hsr->set_vertex_shader_code( sc );
+			hsr->set_vertex_shader_code( vsc );
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
 
+			hsr->set_pixel_shader_code(psc);
+			
 			vec4 color[3];
 			color[0] = vec4( 0.3f, 0.7f, 0.3f, 1.0f );
 			color[1] = vec4( 0.3f, 0.3f, 0.7f, 1.0f );
@@ -244,6 +258,7 @@ protected:
 
 			for( size_t i_mesh = 0; i_mesh < meshes.size(); ++i_mesh ){
 				h_mesh cur_mesh = meshes[i_mesh];
+				hsr->set_ps_variable( "color", &color[i_mesh] );
 				pps->set_constant( _T("Color"), &color[i_mesh] );
 				cur_mesh->render();
 			}
@@ -262,7 +277,8 @@ protected:
 	h_renderer hsr;
 
 	vector<h_mesh>			meshes;
-	shared_ptr<shader_code> sc;
+	shared_ptr<shader_code> vsc;
+	shared_ptr<shader_code> psc;
 
 	h_vertex_shader	pvs;
 	h_pixel_shader	pps;
