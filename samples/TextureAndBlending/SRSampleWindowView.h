@@ -4,17 +4,24 @@
 
 #pragma once
 
-#include "salviax/include/resource/mesh/sa/mesh_io.h"
-#include "salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h"
-#include "salviax/include/resource/texture/freeimage/tex_io_freeimage.h"
-#include "salviar/include/presenter_dev.h"
-#include "salviar/include/shader.h"
-#include "salviar/include/renderer_impl.h"
-#include "salviar/include/resource_manager.h"
-#include "salviar/include/rasterizer.h"
+#include <salviax/include/resource/mesh/sa/mesh_io.h>
+#include <salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h>
+#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+
+#include <salviar/include/presenter_dev.h>
+#include <salviar/include/shader.h>
+#include <salviar/include/renderer_impl.h>
+#include <salviar/include/resource_manager.h>
+#include <salviar/include/rasterizer.h>
+
 #include <eflib/include/metaprog/util.h>
-#include <iostream>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/assign.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <iostream>
+
 #include "Timer.h"
 
 //#define PRESENTER_NAME "gdiplus"

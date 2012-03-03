@@ -1,25 +1,20 @@
 #ifndef SALVIAR_TEXTURE_H
 #define SALVIAR_TEXTURE_H
 
-#include "surface.h"
-#include "colors.h"
+#include <salviar/include/colors.h>
+#include <salviar/include/decl.h>
+#include <salviar/include/enums.h>
+#include <salviar/include/surface.h>
 
-#include "enums.h"
-#include "decl.h"
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
 
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
-#include <boost/smart_ptr.hpp>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
 #include <vector>
+
 #include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
 
-
+BEGIN_NS_SALVIAR();
 
 class texture
 {

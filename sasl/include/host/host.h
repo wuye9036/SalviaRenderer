@@ -14,7 +14,7 @@ public:
 	virtual salviar::shader_abi const* abii() const;
 	virtual void abii( boost::shared_ptr<salviar::shader_abi> const& );
 
-	virtual void update();
+	virtual void update_native_function();
 	virtual void* function_pointer() const;
 
 	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );

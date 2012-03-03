@@ -953,7 +953,7 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct sampler_t{
 	uintptr_t ss, tex;

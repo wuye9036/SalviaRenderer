@@ -34,6 +34,7 @@ SET( PIPELINE_HEADERS
 )
 
 set( SHADER_HEADERS
+	include/sampler_api.h
 	include/shader.h
 	include/shader_abi.h
 	include/shader_code.h
@@ -102,6 +103,7 @@ set(PIPELINE_SOURCES
 
 set(SHADER_SOURCES
 	src/pixel_shader.cpp
+	src/sampler_api.cpp
 	src/shader.cpp
 	src/shader_abi.cpp
 	src/shader_code.cpp

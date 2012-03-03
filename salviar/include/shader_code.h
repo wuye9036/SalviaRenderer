@@ -29,7 +29,7 @@ public:
 	virtual shader_abi const* abii() const = 0;
 	virtual void abii( boost::shared_ptr<shader_abi> const& ) = 0;
 	
-	virtual void update() = 0;
+	virtual void  update_native_function() = 0;
 	virtual void* function_pointer() const = 0;
 };
 

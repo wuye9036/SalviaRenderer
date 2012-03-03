@@ -29,7 +29,9 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 
 	shared_ptr<shader_code> ret;
 	create_shader_code( ret, code, lang );
-
+	
+	ret->update_native_function();
+	
 	return ret;
 }
 

@@ -77,7 +77,6 @@ DECL_HANDLE(surface, h_surface);
 DECL_HANDLE(texture, h_texture);
 DECL_HANDLE(texture_2d, h_texture_2d);
 DECL_HANDLE(sampler, h_sampler);
-
 DECL_HANDLE(device, h_device);
 DECL_HANDLE(renderer, h_renderer);
 DECL_HANDLE(clipper, h_clipper);

@@ -121,7 +121,9 @@ cgllvm_jit_engine::~cgllvm_jit_engine()
 void cgllvm_jit_engine::inject_function( void* fn, std::string const& name )
 {
 	llvm::Function* func = global_ctxt->module()->getFunction( name );
-	engine->addGlobalMapping( func, fn );
+	if ( func ){
+		engine->addGlobalMapping( func, fn );
+	}
 }
 
 END_NS_SASL_CODE_GENERATOR();

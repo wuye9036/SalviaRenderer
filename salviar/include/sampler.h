@@ -55,10 +55,11 @@ private:
 	const texture* ptex_;
 	filter_op_type filters_[sampler_state_count];
 
+	float calc_lod( eflib::int4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const;
 	float calc_lod(
-		const eflib::vec4& attribute, 
+		const eflib::vec4& unproj_attr, 
 		const eflib::int4& size, 
-		const eflib::vec4& ddx, const eflib::vec4& ddy, 
+		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
 		float inv_x_w, float inv_y_w, float inv_w, float bias) const;
 
 	color_rgba32f sample_surface(
@@ -70,12 +71,12 @@ private:
 
 	color_rgba32f sample_impl(const texture *tex , 
 		float coordx, float coordy, size_t sample, 
-		const eflib::vec4& ddx, const eflib::vec4& ddy, 
+		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_2d_impl(const texture *tex , 
 		const eflib::vec4& coord, size_t sample,
-		const eflib::vec4& ddx, const eflib::vec4& ddy,
+		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 public:
@@ -87,12 +88,12 @@ public:
 
 	color_rgba32f sample(
 		float coordx, float coordy, 
-		const eflib::vec4& ddx, const eflib::vec4& ddy, 
+		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_2d(
 		const eflib::vec4& proj_coord,
-		const eflib::vec4& ddx, const eflib::vec4& ddy,
+		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 	color_rgba32f sample_cube(
@@ -102,8 +103,8 @@ public:
 
 	color_rgba32f sample_cube(
 		const eflib::vec4& coord,
-		const eflib::vec4& ddx,
-		const eflib::vec4& ddy,
+		const eflib::vec4& unproj_ddx,
+		const eflib::vec4& unproj_ddy,
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias
 		) const;
 };

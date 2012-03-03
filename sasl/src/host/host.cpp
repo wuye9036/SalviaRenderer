@@ -51,7 +51,7 @@ void* shader_code_impl::function_pointer() const{
 	return pfn;
 }
 
-void shader_code_impl::update(){
+void shader_code_impl::update_native_function(){
 	assert( abi && je );
 	if( !abi || !je ){
 		pfn = NULL;
@@ -152,7 +152,6 @@ void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::
 	shared_ptr<shader_code_impl> ret( new shader_code_impl() );
 	ret->abii( aa.shared_abii(lang) );
 	ret->jit( cgllvm_jit_engine::create( llvmcode, errors ) );
-	ret->update();
 
 	scode = ret;
 }
