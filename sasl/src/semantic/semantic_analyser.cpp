@@ -1387,7 +1387,25 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 
 		shared_ptr<builtin_type> sampler_ty =  create_builtin_type( builtin_types::_sampler );
-		register_intrinsic( child_ctxt_init, "tex2D", true ) % sampler_ty % fvec_ts[4] >> fvec_ts[4];
+		
+		register_intrinsic( child_ctxt_init, "tex2D", true, true )
+			% sampler_ty % fvec_ts[2] 
+			>> fvec_ts[4];
+		register_intrinsic( child_ctxt_init, "tex2Dlod", true, true )
+			% sampler_ty % fvec_ts[4]
+			>> fvec_ts[4];
+		register_intrinsic( child_ctxt_init, "tex2Dgrad", true, true ) 
+			% sampler_ty % fvec_ts[2] /*coord*/
+			% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
+			>> fvec_ts[4];
+		register_intrinsic( child_ctxt_init, "tex2Dbias", true, true ) 
+			% sampler_ty % fvec_ts[4] /*coord with bias*/
+			% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
+			>> fvec_ts[4];
+		register_intrinsic( child_ctxt_init, "tex2Dproj", true, true ) 
+			% sampler_ty % fvec_ts[4] /*coord with proj*/
+			% fvec_ts[4] % fvec_ts[4] /*ddx, ddy*/
+			>> fvec_ts[4];
 
 		shared_ptr<builtin_type> fmat_ts[5][5];
 		for( int vec_size = 1; vec_size < 5; ++vec_size ){
@@ -1447,17 +1465,17 @@ semantic_analyser::function_register semantic_analyser::register_function( boost
 	shared_ptr<function_type> fn = create_node<function_type>( token_t::null() );
 	fn->name = token_t::from_string( name );
 
-	function_register ret(*this, child_ctxt_init, fn, false, false);
+	function_register ret(*this, child_ctxt_init, fn, false, false, false);
 
 	return ret;
 }
 
-semantic_analyser::function_register semantic_analyser::register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, bool external )
+semantic_analyser::function_register semantic_analyser::register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, bool external, bool partial_exec )
 {
 	shared_ptr<function_type> fn = create_node<function_type>( token_t::null() );
 	fn->name = token_t::from_string( name );
 
-	function_register ret(*this, child_ctxt_init, fn, true, external);
+	function_register ret(*this, child_ctxt_init, fn, true, external, partial_exec);
 
 	return ret;
 }
@@ -1468,8 +1486,9 @@ semantic_analyser::function_register::function_register(
 	boost::any const& ctxt_init,
 	shared_ptr<function_type> const& fn,
 	bool is_intrinsic,
-	bool is_external
-	) :owner(owner), ctxt_init(ctxt_init), fn(fn), is_intrinsic(is_intrinsic), is_external(is_external)
+	bool is_external,
+	bool exec_partial
+	) :owner(owner), ctxt_init(ctxt_init), fn(fn), is_intrinsic(is_intrinsic), is_external(is_external), is_partial_exec(exec_partial)
 {
 	assert( fn );
 }
@@ -1512,6 +1531,7 @@ void semantic_analyser::function_register::r(
 	new_node->si_ptr<storage_si>()->is_intrinsic(is_intrinsic);
 	new_node->si_ptr<storage_si>()->c_compatible(!is_intrinsic);
 	new_node->si_ptr<storage_si>()->external_compatible(is_external);
+	new_node->si_ptr<storage_si>()->partial_execution(is_partial_exec);
 
 	if( is_intrinsic ){
 		shared_ptr<symbol> new_sym = new_node->symbol();
@@ -1522,7 +1542,7 @@ void semantic_analyser::function_register::r(
 }
 
 semantic_analyser::function_register::function_register( function_register const& rhs)
-	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic), is_external(rhs.is_external)
+	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic), is_external(rhs.is_external), is_partial_exec(is_partial_exec)
 {
 }
 

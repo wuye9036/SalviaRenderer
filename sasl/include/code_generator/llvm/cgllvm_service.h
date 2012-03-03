@@ -74,7 +74,7 @@ enum value_kinds{
 	/// If structure was passed into function by value,
 	/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
 	/// But LLVM will push the instance to stack.
-	/// So this varaible will qualify the type of arguments/parameters indicates the compiler.
+	/// So this variable will qualify the type of arguments/parameters indicates the compiler.
 	/// For e.g. we have a prototype:
 	///		void foo( struct S );
 	/// If is only called by LLVM code, the IR signature will be 
@@ -255,6 +255,7 @@ struct function_t{
 	llvm::Function*						fn;
 	bool								c_compatible;
 	bool								external;
+	bool								partial_execution;
 	bool								ret_void;
 	cg_service*							cg;
 };
@@ -419,6 +420,8 @@ public:
 	/// @{
 	bool in_function() const;
 	function_t& fn();
+	/// Get Packed Mask Which is a uint16_t.
+	virtual value_t packed_mask() = 0;
 	/// @}
 
 	/// @name Emit value and variables

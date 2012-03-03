@@ -337,6 +337,12 @@ value_t cgs_sisd::emit_ddy( value_t const& v )
 	return v;
 }
 
+value_t cgs_sisd::packed_mask()
+{
+	assert(false);
+	return value_t();
+}
+
 void function_t::arg_name( size_t index, std::string const& name ){
 	size_t param_size = fn->arg_size();
 	if( first_arg_is_return_address() ){
@@ -402,7 +408,7 @@ value_t function_t::arg( size_t index ) const
 	return cg->create_value( par_typtr, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
 }
 
-function_t::function_t(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(false), cg(NULL)
+function_t::function_t(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(false), cg(NULL), external(false), partial_execution(false)
 {
 }
 

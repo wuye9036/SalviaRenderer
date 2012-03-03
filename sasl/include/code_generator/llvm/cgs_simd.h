@@ -94,6 +94,7 @@ private:
 	virtual void	apply_loop_condition( value_t const& );
 	virtual void	save_next_iteration_exec_mask();
 
+	value_t			packed_mask();
 	llvm::Value*	all_one_mask();
 	llvm::Value*	all_zero_mask();
 	llvm::Value*	expanded_mask( uint32_t expanded_times );

@@ -704,4 +704,22 @@ void cgs_simd::save_loop_execution_mask( Value* mask )
 	builder().CreateStore( mask_as_uchar, mask_vars.back() );
 }
 
+value_t cgs_simd::packed_mask()
+{
+	assert( PACKAGE_ELEMENT_COUNT == 16 );
+
+	Value* mask_vec = exec_masks.back();
+
+	Type* packed_mask_ty = type_( builtin_types::_sint16, abi_llvm);
+	Value* ret = Constant::getNullValue( packed_mask_ty );
+	for( size_t i_mask = 0; i_mask < PACKAGE_ELEMENT_COUNT; ++i_mask ){
+		Value* mask_bit = builder().CreateExtractElement( mask_vec, int_<int32_t>(i_mask) );
+		mask_bit = builder().CreateZExt( mask_bit, packed_mask_ty );
+		ret = builder().CreateShl( ret, 1 );
+		ret = builder().CreateOr( ret, mask_bit );
+	}
+
+	return create_value( NULL, builtin_types::_sint16, ret, vkind_value, abi_llvm );
+}
+
 END_NS_SASL_CODE_GENERATOR();

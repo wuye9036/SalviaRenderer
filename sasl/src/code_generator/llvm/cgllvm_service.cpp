@@ -344,6 +344,7 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	ret.fnty = fn_node.get();
 	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
 	ret.external = fn_node->si_ptr<storage_si>()->external_compatible();
+	ret.partial_execution = fn_node->si_ptr<storage_si>()->partial_execution();
 
 	abis abi = param_abi( ret.c_compatible );
 
@@ -361,6 +362,15 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 		}
 
 		ret_ty = Type::getVoidTy( context() );
+	}
+
+	if( abi == abi_package && ret.partial_execution ){
+		if ( ret.external ){
+			Type* mask_ty = Type::getInt16Ty( context() );
+			par_tys.push_back(mask_ty);
+		} else {
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	}
 
 	// Create function type.
@@ -1435,7 +1445,7 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 			if( prefer_externals() ){
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			} else if( support_feature(cpu_sse2) && !prefer_scalar_code() ){
-				// TODO emit SSE2 instrinsic directly.
+				// TODO emit SSE2 intrinsic directly.
 
 				// expanded to vector 4
 				value_t v4;
@@ -1495,6 +1505,10 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 		if ( fn.first_arg_is_return_address() ){
 			var = create_variable( fn.get_return_ty().get(), fn.abi(), "ret" );
 			arg_values.push_back( var.load_ref() );
+		}
+
+		if( arg_abi == abi_package && fn.partial_execution ){
+			arg_values.push_back( packed_mask().load( abi_llvm ) );
 		}
 
 		BOOST_FOREACH( value_t const& arg, args ){

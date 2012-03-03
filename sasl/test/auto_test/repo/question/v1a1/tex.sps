@@ -11,7 +11,7 @@ sampler s;
 VSOUT fn( VSIN in ){
 	VSOUT o;
 	
-	o.out0 = tex2D(s, in.in0);
+	o.out0 = tex2Dlod(s, in.in0);
 
 	return o;
 }

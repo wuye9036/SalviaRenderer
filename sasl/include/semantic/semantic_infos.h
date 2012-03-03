@@ -189,6 +189,9 @@ public:
 	bool external_compatible() const;
 	void external_compatible( bool v );
 
+	bool partial_execution() const;
+	void partial_execution( bool v );
+
 	/// Is variable a reference. Only available in parameter.
 	bool is_reference() const;
 	void is_reference( bool v );
@@ -205,6 +208,7 @@ private:
 	bool invoked;
 	bool c_comp;
 	bool ext_comp;
+	bool part_exec;
 	bool is_ref;
 	
 	symbol* decl;

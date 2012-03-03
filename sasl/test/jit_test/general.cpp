@@ -959,7 +959,7 @@ struct sampler_t{
 	uintptr_t ss, tex;
 };
 
-void tex2D(vec4* ret, sampler_t* s, vec4* t)
+void tex2Dlod(vec4* ret, uint16_t mask, sampler_t* s, vec4* t)
 {
 	BOOST_CHECK_EQUAL( s->ss, 0xF3DE89C );
 	BOOST_CHECK_EQUAL( s->tex, 0xB785D3A );
@@ -974,7 +974,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/tex.sps" );
 
-	set_function( &tex2D, "tex2D" );
+	set_function( &tex2Dlod, "tex2Dlod" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );

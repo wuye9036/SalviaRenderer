@@ -152,6 +152,8 @@ public:
 
 	/// @name State
 	/// @{
+	value_t packed_mask();
+
 	abis param_abi( bool c_compatible ) const;
 	/// Prefer to use external functions as intrinsic.
 	bool prefer_externals() const;
