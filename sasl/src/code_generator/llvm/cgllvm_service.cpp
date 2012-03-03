@@ -47,6 +47,7 @@ using sasl::utility::is_real;
 using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
 using sasl::utility::is_matrix;
+using sasl::utility::is_sampler;
 using sasl::utility::scalar_of;
 using sasl::utility::vector_of;
 using sasl::utility::matrix_of;
@@ -382,9 +383,21 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 
 		Type* par_llty = par_ty->ty( abi );
 		
-		if( ( ret.c_compatible || ret.external ) 
-			&& ( !is_scalar(par_ty->hint()) || ( promote_abi( param_abi(false), abi_llvm ) != abi_llvm ) ) )
+		bool as_ref = false;
+		builtin_types par_hint = par_ty->hint();
+		if( ret.c_compatible || ret.external ){
+			if( is_sampler( par_hint ) ){
+				as_ref = false;
+			} else if ( is_scalar(par_hint) && ( promote_abi( param_abi(false), abi_llvm ) == abi_llvm ) ){
+				as_ref = false;
+			} else {
+				as_ref = true;
+			}
+		} else {
+			as_ref = false;
+		}
 
+		if( as_ref )
 		{
 			par_tys.push_back( PointerType::getUnqual( par_llty ) );
 		}
@@ -1513,7 +1526,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 
 		BOOST_FOREACH( value_t const& arg, args ){
 			builtin_types hint = arg.hint();
-			if( is_scalar(hint) && (arg_abi == abi_c || arg_abi == abi_llvm) ){
+			if( ( is_scalar(hint) && (arg_abi == abi_c || arg_abi == abi_llvm) ) || is_sampler(hint) ){
 				arg_values.push_back( arg.load( arg_abi ) );
 			} else {
 				Value* ref_arg = load_ref( arg, arg_abi );

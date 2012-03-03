@@ -998,7 +998,8 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 	smpr.ss = 0xF3DE89C;
 	smpr.tex = 0xB785D3A;
 
-	fn( src, (void*)&smpr, dest, (void*)NULL );
+	intptr_t addr = reinterpret_cast<intptr_t>(&smpr);
+	fn( src, (void*)&addr, dest, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		BOOST_CHECK_CLOSE( dest_ref[i].x, dest[i].x, 0.00001f );

@@ -1387,25 +1387,49 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 
 		shared_ptr<builtin_type> sampler_ty =  create_builtin_type( builtin_types::_sampler );
-		
-		register_intrinsic( child_ctxt_init, "tex2D", true, true )
-			% sampler_ty % fvec_ts[2] 
+
+		// External and Intrinsic are Same signatures
+		{
+			register_intrinsic( child_ctxt_init, "tex2Dlod", true, true )
+				% sampler_ty % fvec_ts[4]
 			>> fvec_ts[4];
-		register_intrinsic( child_ctxt_init, "tex2Dlod", true, true )
-			% sampler_ty % fvec_ts[4]
+
+			register_intrinsic( child_ctxt_init, "tex2Dgrad", true, true ) 
+				% sampler_ty % fvec_ts[2] /*coord*/
+				% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
 			>> fvec_ts[4];
-		register_intrinsic( child_ctxt_init, "tex2Dgrad", true, true ) 
-			% sampler_ty % fvec_ts[2] /*coord*/
-			% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
+		}
+
+
+		// External Signatures
+		{
+			register_intrinsic( child_ctxt_init, "__tex2Dbias", true, true ) 
+				% sampler_ty % fvec_ts[4] /*coord with bias*/
+				% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
 			>> fvec_ts[4];
-		register_intrinsic( child_ctxt_init, "tex2Dbias", true, true ) 
-			% sampler_ty % fvec_ts[4] /*coord with bias*/
-			% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
+
+			register_intrinsic( child_ctxt_init, "__tex2Dproj", true, true ) 
+				% sampler_ty % fvec_ts[4] /*coord with proj*/
+				% fvec_ts[4] % fvec_ts[4] /*ddx, ddy*/
 			>> fvec_ts[4];
-		register_intrinsic( child_ctxt_init, "tex2Dproj", true, true ) 
-			% sampler_ty % fvec_ts[4] /*coord with proj*/
-			% fvec_ts[4] % fvec_ts[4] /*ddx, ddy*/
+		}
+
+
+		// Intrinsic Signatures
+		{
+			register_intrinsic( child_ctxt_init, "tex2D", false, false )
+				% sampler_ty % fvec_ts[2] 
 			>> fvec_ts[4];
+			
+			register_intrinsic( child_ctxt_init, "tex2Dbias", false, false ) 
+				% sampler_ty % fvec_ts[4] /*coord with bias*/
+			>> fvec_ts[4];
+
+			register_intrinsic( child_ctxt_init, "tex2Dproj", false, false ) 
+				% sampler_ty % fvec_ts[4] /*coord with proj*/
+			>> fvec_ts[4];
+		}
+
 
 		shared_ptr<builtin_type> fmat_ts[5][5];
 		for( int vec_size = 1; vec_size < 5; ++vec_size ){

@@ -13,6 +13,7 @@ public:
 
 	virtual salviar::shader_abi const* abii() const;
 	virtual void abii( boost::shared_ptr<salviar::shader_abi> const& );
+	virtual void register_function( void* fnptr, std::string const& name );
 
 	virtual void update_native_function();
 	virtual void* function_pointer() const;

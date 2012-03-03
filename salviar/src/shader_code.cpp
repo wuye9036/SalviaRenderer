@@ -1,5 +1,6 @@
 #include <salviar/include/shader_code.h>
 
+#include <salviar/include/sampler_api.h>
 #include <eflib/include/platform/dl_loader.h>
 
 #include <iostream>
@@ -29,7 +30,14 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 
 	shared_ptr<shader_code> ret;
 	create_shader_code( ret, code, lang );
-	
+
+	if( lang == lang_pixel_shader ){
+		ret->register_function( &salviar_tex2Dlod_pkg,  "tex2Dlod" );
+		ret->register_function( &salviar_tex2Dgrad_pkg, "tex2Dgrad" );
+		ret->register_function( &salviar_tex2Dbias_pkg, "__tex2Dbias" );
+		ret->register_function( &salviar_tex2Dproj_pkg, "__tex2Dproj" );
+	}
+
 	ret->update_native_function();
 	
 	return ret;

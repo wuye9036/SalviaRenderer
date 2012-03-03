@@ -3,6 +3,8 @@
 
 #include <salviar/include/salviar_forward.h>
 
+#include <eflib/include/math/vector.h>
+
 BEGIN_NS_SALVIAR();
 
 class sampler;
@@ -30,10 +32,6 @@ extern "C"
 		eflib::vec4& ddx, eflib::vec4& ddy );
 
 	// Packaged version
-	void salviar_tex2D_pkg(
-		eflib::vec4* results, uint16_t mask,
-		salviar::sampler* samp, eflib::vec2* coords,
-		eflib::vec2 const* ddxs, eflib::vec2 const* ddys);
 	void salviar_tex2Dgrad_pkg(
 		eflib::vec4* results, uint16_t mask,
 		salviar::sampler* samp, eflib::vec2* coords,

@@ -60,6 +60,11 @@ void shader_code_impl::update_native_function(){
 	pfn = je->get_function( abi->entry_name() );
 }
 
+void shader_code_impl::register_function( void* fnptr, std::string const& name )
+{
+	je->inject_function( fnptr, name );
+}
+
 END_NS_SASL_HOST();
 
 class shader_code_source: public lex_context, public code_source{
