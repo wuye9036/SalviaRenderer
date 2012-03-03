@@ -710,6 +710,15 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				ret_val = service()->emit_ddy( service()->fn().arg(0) );
 			}
 			service()->emit_return( ret_val, service()->param_abi(false) );
+		} else if ( intr->unmangled_name() == "tex2D" ){
+			assert( par_tys.size() == 2 );
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( intr->unmangled_name() == "tex2Dbias" ){
+			assert( par_tys.size() == 2 );
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( intr->unmangled_name() == "tex2Dproj" ){
+			assert( par_tys.size() == 2 );
+			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	}
 }

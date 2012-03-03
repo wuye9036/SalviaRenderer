@@ -96,6 +96,8 @@ public:
 	virtual result set_pixel_shader_code( boost::shared_ptr<shader_code> const& );
 	virtual boost::shared_ptr<shader_code> get_pixel_shader_code() const;
 	virtual result set_ps_variable( std::string const& name, void* data );
+	virtual result set_ps_sampler( std::string const& name, h_sampler const& samp );
+
 	virtual boost::shared_ptr<pixel_shader_unit> ps_proto() const;
 
 	virtual result set_blend_shader(h_blend_shader hbs);

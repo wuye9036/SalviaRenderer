@@ -10,6 +10,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/shader_code.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
@@ -23,6 +24,8 @@
 #include <iostream>
 
 #include "Timer.h"
+
+#define SALVIA_ENABLE_PIXEL_SHADER
 
 //#define PRESENTER_NAME "gdiplus"
 #if defined( SALVIA_BUILD_WITH_DIRECTX )
@@ -89,6 +92,26 @@ public:
 		}
 	}
 };
+
+char const* box_ps_code =
+	"sampler samp;"
+	"float4 ps_main( float2 tex: TEXCOORD0 ): COLOR \r\n"
+	"{\r\n"
+	"	float4 color = tex2D(samp, tex); \r\n"
+	"	color.w = 0.5f; \r\n"
+	"	return color; \r\n"
+	"}\r\n"
+	;
+
+char const* plane_ps_code =
+	"sampler samp;"
+	"float4 ps_main( float2 tex: TEXCOORD0 ): COLOR \r\n"
+	"{\r\n"
+	"	float4 color = tex2D(samp, tex); \r\n"
+	"	color.w = 1.0f; \r\n" // color.w == color.a.
+	"	return color; \r\n"
+	"}\r\n"
+	;
 
 class ps_box : public pixel_shader
 {
@@ -227,10 +250,20 @@ public:
 	h_mesh planar_mesh;
 	h_mesh box_mesh;
 
+	h_texture plane_tex;
+	h_texture box_tex;
+
+	h_sampler plane_sampler;
+	h_sampler box_sampler;
+
 	h_vertex_shader pvs_box;
 	h_pixel_shader pps_box;
+	h_shader_code psc_box;
+
 	h_vertex_shader pvs_plane;
 	h_pixel_shader pps_plane;
+	h_shader_code psc_plane;
+
 	h_blend_shader pbs_box;
 	h_blend_shader pbs_plane;
 
@@ -323,15 +356,45 @@ public:
 		pvs_plane.reset(new vs_plane());
 
 		{
-			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
-			tex->gen_mipmap(filter_linear, true);
-			pps_box.reset(new ps_box(tex));
+			sampler_desc desc;
+			desc.min_filter = filter_linear;
+			desc.mag_filter = filter_linear;
+			desc.mip_filter = filter_linear;
+			desc.addr_mode_u = address_clamp;
+			desc.addr_mode_v = address_clamp;
+			desc.addr_mode_w = address_clamp;
+
+			box_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
+			box_tex->gen_mipmap(filter_linear, true);
+
+			pps_box.reset(new ps_box(box_tex));
+
+			box_sampler = hsr->create_sampler( desc );
+			box_sampler->set_texture( box_tex.get() );
+
+#ifdef SALVIA_ENABLE_PIXEL_SHADER
+			cout << "Creating Box Pixel Shader ..." << endl;
+			psc_box = shader_code::create( box_ps_code, lang_pixel_shader );
+#endif
 		}
 
 		{
-			h_texture tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
-			tex->gen_mipmap(filter_linear, true);
-			pps_plane.reset(new ps_plane(tex));
+			sampler_desc desc;
+			desc.min_filter = filter_linear;
+			desc.mag_filter = filter_linear;
+			desc.mip_filter = filter_linear;
+
+			plane_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+			plane_tex->gen_mipmap(filter_linear, true);
+			
+			pps_plane.reset(new ps_plane(plane_tex));
+			plane_sampler = hsr->create_sampler( desc );
+			plane_sampler->set_texture( plane_tex.get() );
+
+#ifdef SALVIA_ENABLE_PIXEL_SHADER
+			cout << "Creating Plane Pixel Shader ..." << endl;
+			psc_plane = shader_code::create( plane_ps_code, lang_pixel_shader );
+#endif
 		}
 
 		pbs_box.reset(new ts_blend_on);
@@ -400,20 +463,35 @@ public:
 			hsr->set_rasterizer_state(rs_back);
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_plane);
+#ifdef SALVIA_ENABLE_PIXEL_SHADER
+			hsr->set_pixel_shader_code( psc_plane );
+			hsr->set_ps_sampler( "samp", plane_sampler );
+#else
 			hsr->set_pixel_shader(pps_plane);
+#endif
 			hsr->set_blend_shader(pbs_plane);
 			planar_mesh->render();
 			
 			hsr->set_rasterizer_state(rs_front);
 			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_box);
+#ifdef SALVIA_ENABLE_PIXEL_SHADER
+			hsr->set_pixel_shader_code( psc_box );
+			hsr->set_ps_sampler( "samp", box_sampler );
+#else
 			hsr->set_pixel_shader(pps_box);
+#endif
 			hsr->set_blend_shader(pbs_box);
 			box_mesh->render();
 
 			hsr->set_rasterizer_state(rs_back);
 			hsr->set_vertex_shader(pvs_box);
+#ifdef SALVIA_ENABLE_PIXEL_SHADER
+			hsr->set_pixel_shader_code( psc_box );
+			hsr->set_ps_sampler( "samp", box_sampler );
+#else
 			hsr->set_pixel_shader(pps_box);
+#endif
 			hsr->set_blend_shader(pbs_box);
 			box_mesh->render();
 		}

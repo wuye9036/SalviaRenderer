@@ -283,13 +283,19 @@ void pixel_shader_unit::update( vs_output* inputs, shader_abi const* vs_abi )
 				memcpy( pdata, &( inputs[i_elem].position ), info->element_size );
 			}
 		} else {
-			sv_layout* src_sv_layout = vs_abi->input_sv_layout( info->sv );
+			size_t attr_index = 0;
+			if( vs_abi ){
+				sv_layout* src_sv_layout = vs_abi->input_sv_layout( info->sv );
+				attr_index = static_cast<size_t>( src_sv_layout->logical_index );
+			} else {
+				attr_index = register_index++;
+			}
+
 			for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
 				void* pdata = &(stream_data[info->offset+elem_stride*i_elem]);
 				memset( pdata, 0, elem_stride );
-				memcpy( pdata, &( inputs[i_elem].attributes[src_sv_layout->logical_index] ), info->element_size );
+				memcpy( pdata, &( inputs[i_elem].attributes[attr_index] ), info->element_size );
 			}
-			++register_index;
 		}
 	}
 }
@@ -321,6 +327,16 @@ void pixel_shader_unit::execute( ps_output* outs )
 			}
 		}
 	}
+}
+
+void pixel_shader_unit::set_sampler( std::string const& name, h_sampler const& samp )
+{
+	if( std::find( used_samplers.begin(), used_samplers.end(), samp ) != used_samplers.end() ){
+		used_samplers.push_back(samp);
+	}
+
+	sampler* psamp = samp.get();
+	set_variable( name, &psamp );
 }
 
 END_NS_SALVIAR();
