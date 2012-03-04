@@ -107,7 +107,7 @@ namespace sasl{
 
 		size_t vector_size( const builtin_types& btc )
 		{
-			if( is_scalar(btc) ){
+			if( is_sampler(btc) || is_scalar(btc) ){
 				return 1;
 			}
 			return (size_t)
@@ -119,7 +119,7 @@ namespace sasl{
 
 		size_t vector_count( const builtin_types& btc )
 		{
-			if( is_scalar(btc) || is_vector(btc) ){
+			if( is_sampler(btc) || is_scalar(btc) || is_vector(btc) ){
 				return 1;
 			}
 			return (size_t)
@@ -132,6 +132,9 @@ namespace sasl{
 		size_t storage_size( const builtin_types& btc ){
 			if( is_none(btc) || is_void(btc) ){
 				return 0;
+			}
+			if( is_sampler(btc) ){
+				return sizeof(void*);
 			}
 			size_t component_count = vector_size(btc) * vector_count(btc);
 			size_t component_size = 0;
@@ -156,6 +159,7 @@ namespace sasl{
 			{
 				component_size = 8;
 			}
+
 			return component_size * component_count;
 		}
 

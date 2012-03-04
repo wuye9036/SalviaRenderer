@@ -960,8 +960,10 @@ void rasterizer::rasterize_triangle(
 
 	triangle_info info;
 	info.set(reordered_verts[0]->position, ddx, ddy);
-	pps->ptriangleinfo_ = &info;
-
+	if( !psu ){
+		pps->ptriangleinfo_ = &info;
+	}
+	
 	const float x_min = min(reordered_verts[0]->position.x, min(reordered_verts[1]->position.x, reordered_verts[2]->position.x)) - vp.x;
 	const float x_max = max(reordered_verts[0]->position.x, max(reordered_verts[1]->position.x, reordered_verts[2]->position.x)) - vp.x;
 	const float y_min = min(reordered_verts[0]->position.y, min(reordered_verts[1]->position.y, reordered_verts[2]->position.y)) - vp.y;
@@ -1506,7 +1508,8 @@ void rasterizer::draw_package(
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
 
-	shader_abi const* vs_abi = pparent_->vs_proto()->code->abii();
+	shader_abi const* vs_abi = pparent_->vs_proto() ? pparent_->vs_proto()->code->abii() : NULL;
+
 	ps_output pso[16];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
