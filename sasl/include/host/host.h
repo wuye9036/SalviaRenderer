@@ -5,6 +5,12 @@
 
 #include <salviar/include/shader_code.h>
 
+namespace sasl {
+	namespace semantic{
+		class symbol;
+	}
+}
+
 BEGIN_NS_SASL_HOST();
 
 class shader_code_impl: public salviar::shader_code{
@@ -19,10 +25,11 @@ public:
 	virtual void* function_pointer() const;
 
 	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
-
+	virtual void root( boost::shared_ptr<sasl::semantic::symbol> const& );
 private:
-	boost::shared_ptr<sasl::semantic::abi_info> abi;
-	boost::shared_ptr<sasl::code_generator::jit_engine> je;
+	boost::shared_ptr<sasl::semantic::symbol>			root_sym;
+	boost::shared_ptr<sasl::semantic::abi_info>			abi;
+	boost::shared_ptr<sasl::code_generator::jit_engine>	je;
 	void* pfn;
 };
 

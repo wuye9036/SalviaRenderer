@@ -94,9 +94,11 @@ private:
 		boost::shared_ptr<storage_si> const& ssi
 		);
 
+	void mark_intrin_invoked_recursive( boost::shared_ptr<symbol> const& sym );
+
 	void add_cast( const boost::any& ctxt );
 	void register_builtin_functions( const boost::any& child_ctxt_init );
-
+	
 	class function_register{
 	public:
 		typedef boost::shared_ptr<sasl::syntax_tree::tynode> type_handle_t;
@@ -114,9 +116,10 @@ private:
 		function_register& operator % ( type_handle_t const& par_type );
 		void operator >> ( type_handle_t const& ret_type );
 
+		function_register& deps( std::string const& );
 		function_register& p( type_handle_t const& par_type );
 		void r( type_handle_t const& ret_type );
-
+		
 	private:
 		function_register& operator = ( function_register const& );
 
@@ -126,6 +129,7 @@ private:
 		bool is_intrinsic;
 		bool is_external;
 		bool is_partial_exec;
+		std::vector<std::string> intrinsic_deps;
 	};
 
 	function_register register_function( boost::any const& child_ctxt_init, std::string const& name );
@@ -133,7 +137,7 @@ private:
 
 	void register_builtin_types();
 
-	void builtin_tecov(
+	void empty_caster(
 		boost::shared_ptr< ::sasl::syntax_tree::node >,
 		boost::shared_ptr< ::sasl::syntax_tree::node >
 		);

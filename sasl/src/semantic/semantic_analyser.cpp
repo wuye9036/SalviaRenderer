@@ -384,8 +384,8 @@ SASL_VISIT_DEF( call_expression )
 		shared_ptr<symbol> func_sym = syms[0];
 		assert( func_sym );
 
+		mark_intrin_invoked_recursive( func_sym );
 		storage_si* ssi = func_sym->node()->si_ptr<storage_si>();
-		ssi->is_invoked(true);
 		SASL_GET_OR_CREATE_SI_P( call_si, csi, dup_callexpr, msi->pety() );
 
 		csi->entry_id( ssi->entry_id() );
@@ -1050,7 +1050,7 @@ SASL_VISIT_DEF( program ){
 	msi->root()->relink( dup_prog->as_handle() );
 }
 
-void semantic_analyser::builtin_tecov( shared_ptr<node> lhs, shared_ptr<node> rhs ){
+void semantic_analyser::empty_caster( shared_ptr<node> lhs, shared_ptr<node> rhs ){
 	// do nothing
 }
 
@@ -1074,7 +1074,7 @@ void semantic_analyser::add_cast( const boost::any& /*ctxt*/ ){
 	tid_t bool_ts = typemgr->get( builtin_types::_boolean );
 
 	// default conversation will do nothing.
-	caster_t::cast_t default_conv = bind(&semantic_analyser::builtin_tecov, this, _1, _2);
+	caster_t::cast_t default_conv = bind(&semantic_analyser::empty_caster, this, _1, _2);
 
 	caster->add_cast( caster_t::imp, sint8_ts, sint16_ts, default_conv );
 	caster->add_cast( caster_t::imp, sint8_ts, sint32_ts, default_conv );
@@ -1400,7 +1400,6 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			>> fvec_ts[4];
 		}
 
-
 		// External Signatures
 		{
 			register_intrinsic( child_ctxt_init, "__tex2Dbias", true, true ) 
@@ -1417,15 +1416,15 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 		// Intrinsic Signatures
 		{
-			register_intrinsic( child_ctxt_init, "tex2D", false, false )
+			register_intrinsic( child_ctxt_init, "tex2D", false, true ).deps("tex2Dgrad")
 				% sampler_ty % fvec_ts[2] 
 			>> fvec_ts[4];
 			
-			register_intrinsic( child_ctxt_init, "tex2Dbias", false, false ) 
+			register_intrinsic( child_ctxt_init, "tex2Dbias", false, true ).deps("__tex2Dbias")
 				% sampler_ty % fvec_ts[4] /*coord with bias*/
 			>> fvec_ts[4];
 
-			register_intrinsic( child_ctxt_init, "tex2Dproj", false, false ) 
+			register_intrinsic( child_ctxt_init, "tex2Dproj", false, true ).deps("__tex2Dproj")
 				% sampler_ty % fvec_ts[4] /*coord with proj*/
 			>> fvec_ts[4];
 		}
@@ -1504,6 +1503,20 @@ semantic_analyser::function_register semantic_analyser::register_intrinsic( boos
 	return ret;
 }
 
+void semantic_analyser::mark_intrin_invoked_recursive( shared_ptr<symbol> const& sym )
+{
+	storage_si* ssi = sym->node()->si_ptr<storage_si>();
+	
+	assert( ssi ); // Function must be analyzed.
+	
+	if( ssi->is_invoked() ){ return; }
+		
+	ssi->is_invoked( true );
+	BOOST_FOREACH( shared_ptr<symbol> const& dep, ssi->intrinsic_deps() ){
+		mark_intrin_invoked_recursive( dep );
+	}
+}
+
 // function_register
 semantic_analyser::function_register::function_register(
 	semantic_analyser& owner,
@@ -1547,27 +1560,47 @@ void semantic_analyser::function_register::r(
 	)
 {
 	assert( ret_type && fn );
+
 	fn->retval_type = ret_type;
+
 	any child_ctxt;
 	owner.visit_child( child_ctxt, ctxt_init, fn );
-	
 	shared_ptr<node> new_node = ctxt_ptr(child_ctxt)->generated_node;
-	new_node->si_ptr<storage_si>()->is_intrinsic(is_intrinsic);
-	new_node->si_ptr<storage_si>()->c_compatible(!is_intrinsic);
-	new_node->si_ptr<storage_si>()->external_compatible(is_external);
-	new_node->si_ptr<storage_si>()->partial_execution(is_partial_exec);
+
+	storage_si* fn_ssi = new_node->si_ptr<storage_si>();
+
+	fn_ssi->is_intrinsic(is_intrinsic);
+	fn_ssi->c_compatible(!is_intrinsic);
+	fn_ssi->external_compatible(is_external);
+	fn_ssi->partial_execution(is_partial_exec);
 
 	if( is_intrinsic ){
 		shared_ptr<symbol> new_sym = new_node->symbol();
 		assert( new_sym );
+	
+		// Add deps of intrinsic
+		BOOST_FOREACH( string const& dep_str, intrinsic_deps ){
+			vector< shared_ptr<symbol> > dep_syms = new_sym->find_overloads( dep_str );
+			assert( !dep_syms.empty() );
+			BOOST_FOREACH( shared_ptr<symbol> const& dep_sym, dep_syms ){
+				fn_ssi->add_intrin_dep( dep_sym );
+			}
+		}
+
 		owner.module_semantic_info()->intrinsics().push_back( new_sym );
 	}
 	fn.reset();
 }
 
 semantic_analyser::function_register::function_register( function_register const& rhs)
-	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic), is_external(rhs.is_external), is_partial_exec(is_partial_exec)
+	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic), is_external(rhs.is_external), is_partial_exec(rhs.is_partial_exec)
 {
+}
+
+semantic_analyser::function_register& semantic_analyser::function_register::deps( std::string const& name )
+{
+	intrinsic_deps.push_back( name );
+	return *this;
 }
 
 END_NS_SASL_SEMANTIC();

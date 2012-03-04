@@ -7,6 +7,8 @@
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_api.h>
+#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/symbol.h>
 #include <sasl/include/code_generator/jit_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
@@ -19,6 +21,7 @@ using std::cout;
 using std::endl;
 using std::fstream;
 using std::string;
+using std::vector;
 
 using boost::shared_static_cast;
 using boost::shared_dynamic_cast;
@@ -62,7 +65,14 @@ void shader_code_impl::update_native_function(){
 
 void shader_code_impl::register_function( void* fnptr, std::string const& name )
 {
-	je->inject_function( fnptr, name );
+	vector< shared_ptr<symbol> > syms = root_sym->find_overloads( name );
+	if( syms.empty() ){ return; }
+	je->inject_function( fnptr, syms[0]->mangled_name() );
+}
+
+void shader_code_impl::root( boost::shared_ptr<sasl::semantic::symbol> const& sym )
+{
+	root_sym = sym;
 }
 
 END_NS_SASL_HOST();
@@ -157,6 +167,7 @@ void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::
 	shared_ptr<shader_code_impl> ret( new shader_code_impl() );
 	ret->abii( aa.shared_abii(lang) );
 	ret->jit( cgllvm_jit_engine::create( llvmcode, errors ) );
+	ret->root( msi->root() );
 
 	scode = ret;
 }

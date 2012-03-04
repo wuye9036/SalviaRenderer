@@ -195,6 +195,9 @@ public:
 	/// Is variable a reference. Only available in parameter.
 	bool is_reference() const;
 	void is_reference( bool v );
+
+	void add_intrin_dep( boost::shared_ptr<symbol> const& dep );
+	std::vector< boost::shared_ptr<symbol> > const& intrinsic_deps() const;
 	/// @}
 
 	SASL_TYPE_INFO_PROXY();
@@ -211,6 +214,8 @@ private:
 	bool part_exec;
 	bool is_ref;
 	
+	std::vector< boost::shared_ptr<symbol> > intrin_deps;
+
 	symbol* decl;
 };
 

@@ -345,13 +345,14 @@ value_t cgs_sisd::packed_mask()
 
 void function_t::arg_name( size_t index, std::string const& name ){
 	size_t param_size = fn->arg_size();
-	if( first_arg_is_return_address() ){
-		--param_size;
-	}
+
 	assert( index < param_size );
 
 	Function::arg_iterator arg_it = fn->arg_begin();
 	if( first_arg_is_return_address() ){
+		++arg_it;
+	}
+	if( partial_execution ){
 		++arg_it;
 	}
 
@@ -366,6 +367,10 @@ void function_t::args_name( vector<string> const& names )
 
 	if( first_arg_is_return_address() ){
 		arg_it->setName(".ret");
+		++arg_it;
+	}
+	if( partial_execution ){
+		arg_it->setName(".exec_mask");
 		++arg_it;
 	}
 
@@ -383,9 +388,11 @@ shared_ptr<value_tyinfo> function_t::get_return_ty() const{
 
 size_t function_t::arg_size() const{
 	assert( fn );
+	size_t arg_size = fn->arg_size();
 	if( fn ){
-		if( first_arg_is_return_address() ){ return fn->arg_size() - 1; }
-		return fn->arg_size() - 1;
+		if( first_arg_is_return_address() ){ --arg_size; }
+		if( partial_execution ) { --arg_size; }
+		return arg_size;
 	}
 	return 0;
 }
@@ -395,6 +402,7 @@ value_t function_t::arg( size_t index ) const
 	// If c_compatible and not void return, the first argument is address of return value.
 	size_t arg_index = index;
 	if( first_arg_is_return_address() ){ ++arg_index; }
+	if( partial_execution ){ ++arg_index; }
 
 	shared_ptr<parameter> par = fnty->params[index];
 	value_tyinfo* par_typtr = cg->node_ctxt( par.get(), false )->get_typtr();
@@ -408,6 +416,16 @@ value_t function_t::arg( size_t index ) const
 	return cg->create_value( par_typtr, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
 }
 
+value_t function_t::packed_execution_mask() const
+{
+	if( !partial_execution ){ return value_t(); }
+
+	Function::ArgumentListType::iterator it = fn->arg_begin();
+	if( first_arg_is_return_address() ){ ++it; }
+
+	return cg->create_value( builtin_types::_uint16, &(*it), vkind_value, abi_llvm );
+}
+
 function_t::function_t(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(false), cg(NULL), external(false), partial_execution(false)
 {
 }
@@ -416,7 +434,7 @@ bool function_t::arg_is_ref( size_t index ) const{
 	assert( index < fnty->params.size() );
 
 	builtin_types hint = fnty->params[index]->si_ptr<storage_si>()->type_info()->tycode;
-	return c_compatible && !is_scalar(hint);
+	return c_compatible && !is_scalar(hint) && !is_sampler(hint);
 }
 
 bool function_t::first_arg_is_return_address() const

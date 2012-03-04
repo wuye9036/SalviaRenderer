@@ -535,7 +535,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			sv_layout* psi = abii->input_sv_layout( par_sem );
 
 			builtin_types hint = par_ssi->type_info()->tycode;
-			pctxt->value() = create_variable( hint, abi_c, par->name->str );
+			pctxt->value() = create_variable( hint, param_abi(false), par->name->str );
 			pctxt->value().store( layout_to_value(psi) );
 		} else {
 			// Virtual args for aggregated argument

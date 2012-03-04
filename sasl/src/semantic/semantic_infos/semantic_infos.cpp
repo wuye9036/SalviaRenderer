@@ -277,6 +277,16 @@ void storage_si::partial_execution( bool v )
 	part_exec = v;
 }
 
+void storage_si::add_intrin_dep( boost::shared_ptr<symbol> const& dep )
+{
+	intrin_deps.push_back( dep );
+}
+
+vector< boost::shared_ptr<symbol> > const& storage_si::intrinsic_deps() const
+{
+	return intrin_deps;
+}
+
 call_si::call_si( shared_ptr<pety_t> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr), is_pointer(false), overloaded(NULL)
 {

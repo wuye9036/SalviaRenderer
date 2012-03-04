@@ -617,7 +617,6 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
-	// TODO Unsupport PS intrinsic yet;
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
 
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
@@ -639,7 +638,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		bool external = intr->node()->si_ptr<storage_si>()->external_compatible();
 		if ( external ){
 			// External Function without body. Do nothing.
-			return;
+			continue;
 		}
 
 		service()->push_fn( intrinsic_ctxt->data().self_fn );
@@ -712,7 +711,24 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		} else if ( intr->unmangled_name() == "tex2D" ){
 			assert( par_tys.size() == 2 );
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			
+			value_t samp = service()->fn().arg(0);
+			value_t coord = service()->fn().arg(1);
+
+			value_t ddx = service()->emit_ddx(coord);
+			value_t ddy = service()->emit_ddy(coord);
+
+			shared_ptr<symbol> callee_sym = msi->root()->find_overloads( "tex2Dgrad" )[0];
+			function_t* callee_fn = &( node_ctxt( callee_sym->node() )->data().self_fn );
+
+			vector<value_t> args;
+			args.push_back( samp );
+			args.push_back( coord );
+			args.push_back( ddx );
+			args.push_back( ddy );
+
+			value_t ret = service()->emit_call( *callee_fn, args, service()->fn().packed_execution_mask() );
+			service()->emit_return( ret, service()->param_abi(false) );
 		} else if ( intr->unmangled_name() == "tex2Dbias" ){
 			assert( par_tys.size() == 2 );
 			EFLIB_ASSERT_UNIMPLEMENTED();

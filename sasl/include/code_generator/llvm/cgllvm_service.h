@@ -243,6 +243,8 @@ struct function_t{
 	abis abi() const;
 	/// Get return address value.
 	llvm::Value* return_address() const;
+	/// Get Execution Mask.
+	value_t packed_execution_mask() const;
 	/// Return name
 	void return_name( std::string const& s );
 	/// Set Inline hint
@@ -304,6 +306,7 @@ public:
 	virtual value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs ) = 0;
 
 	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
+	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args, value_t const& exec_mask );
 	/// @}
 
 	/// @name Emit element extraction

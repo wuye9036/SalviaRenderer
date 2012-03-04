@@ -366,12 +366,8 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	}
 
 	if( abi == abi_package && ret.partial_execution ){
-		if ( ret.external ){
-			Type* mask_ty = Type::getInt16Ty( context() );
-			par_tys.push_back(mask_ty);
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
+		Type* mask_ty = Type::getInt16Ty( context() );
+		par_tys.push_back(mask_ty);
 	}
 
 	// Create function type.
@@ -1502,6 +1498,11 @@ value_t cg_service::undef_value( builtin_types bt, abis abi )
 
 value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
 {
+	return emit_call( fn, args, value_t() );
+}
+
+value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args, value_t const& exec_mask )
+{
 	abis promoted_abi = abi_llvm;
 	BOOST_FOREACH( value_t const& arg, args )
 	{
@@ -1511,19 +1512,21 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	vector<Value*> arg_values;
 	value_t var;
 
+	if ( fn.first_arg_is_return_address() ){
+		var = create_variable( fn.get_return_ty().get(), fn.abi(), "ret" );
+		arg_values.push_back( var.load_ref() );
+	}
+
 	abis arg_abi = fn.c_compatible ? abi_c : promoted_abi;
+	if( arg_abi == abi_package && fn.partial_execution ){
+		if( exec_mask.abi() == abi_unknown ){
+			arg_values.push_back( packed_mask().load( abi_llvm ) );
+		} else {
+			arg_values.push_back( exec_mask.load( abi_llvm ) );
+		}
+	}
 
 	if( fn.c_compatible || fn.external ){
-		// 
-		if ( fn.first_arg_is_return_address() ){
-			var = create_variable( fn.get_return_ty().get(), fn.abi(), "ret" );
-			arg_values.push_back( var.load_ref() );
-		}
-
-		if( arg_abi == abi_package && fn.partial_execution ){
-			arg_values.push_back( packed_mask().load( abi_llvm ) );
-		}
-
 		BOOST_FOREACH( value_t const& arg, args ){
 			builtin_types hint = arg.hint();
 			if( ( is_scalar(hint) && (arg_abi == abi_c || arg_abi == abi_llvm) ) || is_sampler(hint) ){
@@ -1531,7 +1534,9 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 			} else {
 				Value* ref_arg = load_ref( arg, arg_abi );
 				if( !ref_arg ){
-					EFLIB_ASSERT_UNIMPLEMENTED();
+					Value* arg_val = load( arg, arg_abi );
+					ref_arg = builder().CreateAlloca( arg_val->getType() );
+					builder().CreateStore( arg_val, ref_arg );
 				}
 				arg_values.push_back( ref_arg );
 			}
