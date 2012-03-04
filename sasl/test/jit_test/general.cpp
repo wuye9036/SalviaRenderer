@@ -175,7 +175,7 @@ void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 
 	// X XXXX
 #else
-	callee( psi, pbi, pso, pbo );
+	reinterpret_cast<void (*)(void*, void*, void*, void*)>(callee)( psi, pbi, pso, pbo );
 #endif
 }
 
