@@ -633,7 +633,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		return lerp(c0, c1, frac);
 	}
 
-	EFLIB_ASSERT(false, "出现了错误的mip filters参数");
+	EFLIB_ASSERT(false, "Mip filters is error.");
 	return desc_.border_color;
 }
 
@@ -776,4 +776,19 @@ color_rgba32f sampler::sample_cube(
 	//return color_rgba32f(invlod, invlod, invlod, 1.0f);
 	return sample_cube(coord.x, coord.y, coord.z, lod);
 }
+
+color_rgba32f sampler::sampler_2d_lod( eflib::vec2 const& proj_coord, float lod ) const
+{
+	return sample( proj_coord.x, proj_coord.y, lod );
+}
+
+color_rgba32f sampler::sampler_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
+{
+	int4 size(static_cast<int>(ptex_->get_width(0)), static_cast<int>(ptex_->get_height(0)),
+		static_cast<int>(ptex_->get_depth(0)), 0);
+
+	float lod = calc_lod( size, vec4(ddx.x, ddy.y, 0.0f, 0.0f), vec4(ddy.x, ddy.y, 0.0f, 0.0f), lod_bias );
+	return sample( proj_coord.x, proj_coord.y, lod );
+}
+
 END_NS_SALVIAR()

@@ -95,7 +95,7 @@ public:
 
 char const* box_ps_code =
 	"sampler samp;"
-	"float4 ps_main( float2 tex: TEXCOORD0 ): COLOR \r\n"
+	"float4 ps_main( float4 pos: TEXCOORD0, float2 tex: TEXCOORD1 ): COLOR \r\n"
 	"{\r\n"
 	"	float4 color = tex2D(samp, tex); \r\n"
 	"	color.w = 0.5f; \r\n"

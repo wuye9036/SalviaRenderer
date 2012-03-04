@@ -684,8 +684,8 @@ void rasterizer::draw_pixels(
 		for(int ix = 0; ix < 4; ++ix){
 			uint32_t mask = pixel_mask[iy * 4 + ix];
 
-			if ( mask ){
-			if (has_centroid && (mask != full_mask)){
+			// if ( mask ){
+			if (has_centroid && (mask != full_mask) && mask != 0){
 				vs_output projed;
 				vs_output_ops->copy(projed, px_in);
 
@@ -717,7 +717,7 @@ void rasterizer::draw_pixels(
 			{
 				vs_output_ops->unproject(unprojed[iy*4+ix], px_in);
 			}
-			}
+			//}
 
 			vs_output_ops->selfintegral1(px_in, ddx);
 		}
@@ -1565,7 +1565,10 @@ void rasterizer::draw_full_package(
 	h_blend_shader const& bs, h_pixel_shader const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 	float const* aa_z_offset )
 {
-	shader_abi const* vs_abi = pparent_->vs_proto()->code->abii();
+	shader_abi const* vs_abi = NULL;
+	if( pparent_->vs_proto() ){
+		vs_abi = pparent_->vs_proto()->code->abii();
+	}
 	ps_output pso[16];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{

@@ -38,7 +38,7 @@ private:
 	std::vector<byte> mapped_data_;
 	map_mode mm_;
 
-	//lock mode judegement
+	// check lock mode
 	bool is_read_mode(map_mode lm){return (map_read == lm) || (map_read_write == lm);}
 	bool is_write_mode(map_mode lm){return (map_write == lm) || (map_read_write == lm) || (map_write_discard == lm) || (map_write_no_overwrite == lm);}
 
