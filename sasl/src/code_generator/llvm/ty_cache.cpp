@@ -17,20 +17,39 @@ using namespace sasl::utility;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
+class ty_cache_t{
+public:
+	Type* type( LLVMContext& ctxt, builtin_types bt, abis abi );
+	std::string const& name( builtin_types bt, abis abi );
+	void initialize( LLVMContext& ctxt );
+private:
+	Type* create_ty( LLVMContext& ctxt, builtin_types bt, abis abi );
+
+	unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> >	cache[4];
+	unordered_map<builtin_types, std::string>							ty_name[4];
+};
+
 Type* ty_cache_t::type( LLVMContext& ctxt, builtin_types bt, abis abi )
 {
-	Type*& found_ty = cache[abi][&ctxt][bt];
-	if( !found_ty ){ 
-		found_ty = create_ty( ctxt, bt, abi );
+	if( abi == abi_unknown ) { return NULL; }
 
-		if( is_sampler(bt) ){
-			cache[abi_c][&ctxt][bt]
-			= cache[abi_llvm][&ctxt][bt]
-			= cache[abi_vectorize][&ctxt][bt]
-			= cache[abi_package][&ctxt][bt]
-			= found_ty;
-		}
+	unordered_map<builtin_types, Type*>& ty_table = cache[abi][&ctxt];
+	unordered_map<builtin_types, Type*>::iterator ty_table_it = ty_table.find( bt );
+	
+	if ( ty_table_it != ty_table.end() ){
+		return ty_table_it->second;
 	}
+
+	Type*& found_ty = ty_table[bt];
+	found_ty = create_ty( ctxt, bt, abi );
+	if( is_sampler(bt) ){
+		cache[abi_c][&ctxt][bt]
+		= cache[abi_llvm][&ctxt][bt]
+		= cache[abi_vectorize][&ctxt][bt]
+		= cache[abi_package][&ctxt][bt]
+		= found_ty;
+	}
+
 	return found_ty;
 }
 
@@ -177,10 +196,23 @@ Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis abi )
 	return NULL;
 }
 
+void ty_cache_t::initialize( LLVMContext& ctxt )
+{
+	cache[abi_c			].erase(&ctxt);
+	cache[abi_llvm		].erase(&ctxt);
+	cache[abi_vectorize	].erase(&ctxt);
+	cache[abi_package	].erase(&ctxt);
+}
+
 ty_cache_t cache;
 Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis abi )
 {
 	return cache.type( ctxt, bt, abi );
+}
+
+void initialize_cache( LLVMContext& ctxt )
+{
+	cache.initialize(ctxt);
 }
 
 END_NS_SASL_CODE_GENERATOR();

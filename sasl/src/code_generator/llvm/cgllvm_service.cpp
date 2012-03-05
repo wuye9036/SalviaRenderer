@@ -318,6 +318,7 @@ bool cg_service::initialize( llvm_module_impl* mod, node_ctxt_fn const& fn )
 
 	mod_impl = mod;
 	node_ctxt = fn;
+	initialize_cache( context() );
 
 	return true;
 }

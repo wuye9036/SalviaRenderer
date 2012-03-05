@@ -80,9 +80,9 @@ using std::string;
 	\
 	Value* ret = NULL; \
 	if( is_integer(hint) || (hint == builtin_types::_boolean) ){ \
-	ret = builder().CreateICmp##op_name( lhs.load(), rhs.load() ); \
+		ret = builder().CreateICmp##op_name( lhs.load(), rhs.load() ); \
 	} else if( is_real(hint) ) { \
-	ret = builder().CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
+		ret = builder().CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
 	} \
 	\
 	return create_value( builtin_types::_boolean, ret, vkind_value, abi_llvm );

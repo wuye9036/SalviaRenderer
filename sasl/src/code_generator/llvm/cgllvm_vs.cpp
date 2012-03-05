@@ -285,6 +285,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 		sc_data_ptr(data)->self_fn.fn = fn;
 		sc_data_ptr(data)->self_fn.fnty = &v;
+		sc_data_ptr(data)->self_fn.cg = service();
 	} else {
 		parent_class::create_fnsig(v, data);
 	}

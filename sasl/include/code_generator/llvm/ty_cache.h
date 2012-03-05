@@ -30,17 +30,7 @@ using boost::lexical_cast;
 using std::string;
 using std::vector;
 
-class ty_cache_t{
-public:
-	Type* type( LLVMContext& ctxt, builtin_types bt, abis abi );
-	std::string const& name( builtin_types bt, abis abi );
-private:
-	Type* create_ty( LLVMContext& ctxt, builtin_types bt, abis abi );
-
-	unordered_map<LLVMContext*, unordered_map<builtin_types, Type*> >	cache[4];
-	unordered_map<builtin_types, std::string>							ty_name[4];
-};
-
+void initialize_cache( LLVMContext& ctxt );
 Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis abi );
 
 END_NS_SASL_CODE_GENERATOR();

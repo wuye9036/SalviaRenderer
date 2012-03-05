@@ -148,7 +148,7 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 					
 							Value* new_val = builder().CreateExtractElement( r_value, int_(src_index) );
 							Value* old_val = builder().CreateExtractElement( parent_value, int_(dst_index) ); 
-							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), int_(i_elem) );
+							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), int_( static_cast<int>(i_elem) ) );
 							Value* elem_val = builder().CreateSelect( elem_exec_mask, new_val, old_val );
 							parent_value = builder().CreateInsertElement( parent_value, elem_val, int_(dst_index) );
 						}

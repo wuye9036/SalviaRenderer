@@ -1487,8 +1487,12 @@ void rasterizer::draw(size_t prim_count){
 	std::vector< boost::shared_ptr<pixel_shader_unit> > ppsu(num_threads-1);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		// create pixel_shader clone per thread from hps
-		ppps[i] = hps->create_clone();
-		ppsu[i] = psu->clone();
+		if( hps ){
+			ppps[i] = hps->create_clone();
+		} 
+		if( psu ) {
+			ppsu[i] = psu->clone();
+		}
 		global_thread_pool().schedule(boost::bind(&rasterizer::rasterize_primitive_func, this, boost::ref(thread_tiles),
 			num_tiles_x, &clipped_indices[0], &clipped_verts_full[0], ppps[i], ppsu[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
 	}
@@ -1496,7 +1500,9 @@ void rasterizer::draw(size_t prim_count){
 	global_thread_pool().wait();
 	// destroy all pixel_shader clone
 	for (size_t i = 0; i < num_threads - 1; ++ i){
-		hps->destroy_clone(ppps[i]);
+		if( hps ){
+			hps->destroy_clone(ppps[i]);
+		}
 	}
 }
 
