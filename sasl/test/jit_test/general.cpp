@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	BOOST_CHECK(true);
 }
 
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #if ALL_TESTS_ENABLED
 
@@ -433,7 +433,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -497,7 +497,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
 	init_g("./repo/question/v1a1/branches.ss");
@@ -953,7 +953,7 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct sampler_t{
 	uintptr_t ss, tex;
@@ -1013,7 +1013,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 	init_ps( "./repo/question/v1a1/for_loop.sps" );
@@ -1055,7 +1055,7 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
 	init_ps( "./repo/question/v1a1/while.sps" );
@@ -1099,7 +1099,7 @@ BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 	init_ps( "./repo/question/v1a1/do_while.sps" );
@@ -1138,6 +1138,59 @@ BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 
 	_aligned_free( in );
 	_aligned_free( out );
+}
+
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+
+BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
+	init_g( "./repo/question/v1a1/constructors.ss" );
+
+	jit_function<int2()> get_int2;
+	function( get_int2, "get_int2" );
+
+	jit_function<int3( int3 )> add_int3;
+	function( add_int3, "add_int3" );
+
+	jit_function<vec3()> get_float3;
+	function( get_float3, "get_float3" );
+
+	jit_function<vec4( vec4 )> add_float4;
+	function( add_float4, "add_float4" );
+
+	BOOST_REQUIRE( get_int2 );
+	BOOST_REQUIRE( add_int3 );
+	BOOST_REQUIRE( get_float3 );
+	BOOST_REQUIRE( add_float4 );
+
+	int2 ref_v0 = int2(95, 86);
+	int3 ref_v1 = int3(22, 95, 86) + int3(67, 92, -98);
+	vec3 ref_v2 = vec3(0.87f, 7.89f, 98.76f);
+	vec4 ref_v3 = vec4(1.22f, 0.93f, 187.22f, 5.56f) + vec4(3.3f, 6.7f, 90.2f, -8.8f);
+
+	int2 v0 = get_int2();
+	int3 v1 = add_int3( int3(67, 92, -98) );
+	vec3 v2 = get_float3();
+	vec4 v3 = add_float4( vec4(3.3f, 6.7f, 90.2f, -8.8f) );
+
+	BOOST_CHECK_EQUAL( ref_v0.x, v0.x );
+	BOOST_CHECK_EQUAL( ref_v0.y, v0.y );
+
+	BOOST_CHECK_EQUAL( ref_v1.x, v1.x );
+	BOOST_CHECK_EQUAL( ref_v1.y, v1.y );
+	BOOST_CHECK_EQUAL( ref_v1.z, v1.z );
+
+	BOOST_CHECK_CLOSE( ref_v2.x, v2.x, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v2.y, v2.y, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v2.z, v2.z, 0.000001f );
+
+	BOOST_CHECK_CLOSE( ref_v3.x, v3.x, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3.y, v3.y, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3.z, v3.z, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3.w, v3.w, 0.000001f );
+
+	return ;
 }
 
 #endif

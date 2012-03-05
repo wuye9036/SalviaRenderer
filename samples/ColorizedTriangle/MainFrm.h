@@ -116,7 +116,7 @@ public:
 
 	LRESULT OnFileNew(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
-		// TODO: add code to initialize document
+		//TODO: add code to initialize document
 
 		return 0;
 	}

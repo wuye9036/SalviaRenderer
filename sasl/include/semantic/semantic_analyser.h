@@ -113,6 +113,7 @@ private:
 			);
 		function_register( function_register const& );
 
+		function_register& as_constructor();
 		function_register& operator % ( type_handle_t const& par_type );
 		void operator >> ( type_handle_t const& ret_type );
 
@@ -129,11 +130,16 @@ private:
 		bool is_intrinsic;
 		bool is_external;
 		bool is_partial_exec;
+		bool is_constr;
 		std::vector<std::string> intrinsic_deps;
 	};
 
 	function_register register_function( boost::any const& child_ctxt_init, std::string const& name );
 	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, bool external = false, bool parital_exec = false );
+	void register_constructor( boost::any const& child_ctxt_init, std::string const& name, boost::shared_ptr<sasl::syntax_tree::builtin_type>* tys, int total );
+	void register_constructor_impl(
+		boost::any const& child_ctxt_init, std::string const& name,	boost::shared_ptr<sasl::syntax_tree::builtin_type>* tys, int total,
+		int param_scalar_counts, std::vector< boost::shared_ptr<sasl::syntax_tree::builtin_type> >& param_tys );
 
 	void register_builtin_types();
 

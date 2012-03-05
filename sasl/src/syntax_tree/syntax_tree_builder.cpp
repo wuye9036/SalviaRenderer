@@ -568,6 +568,9 @@ shared_ptr<expression> syntax_tree_builder::build_unaryexpr( shared_ptr<attribut
 
 shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<attribute> attr ){
 	shared_ptr<attribute> op_attr = attr->child(0)->child(0);
+	if( op_attr->rule_id() == g.opunary.id() ) {
+		op_attr = op_attr->child(0);
+	}
 	shared_ptr<attribute> expr_attr = attr->child(1);
 
 	assert( op_attr );

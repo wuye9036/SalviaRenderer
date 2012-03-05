@@ -198,6 +198,9 @@ public:
 
 	void add_intrin_dep( boost::shared_ptr<symbol> const& dep );
 	std::vector< boost::shared_ptr<symbol> > const& intrinsic_deps() const;
+
+	bool is_constructor() const;
+	void is_constructor( bool v );
 	/// @}
 
 	SASL_TYPE_INFO_PROXY();
@@ -213,6 +216,7 @@ private:
 	bool ext_comp;
 	bool part_exec;
 	bool is_ref;
+	bool is_constr;
 	
 	std::vector< boost::shared_ptr<symbol> > intrin_deps;
 

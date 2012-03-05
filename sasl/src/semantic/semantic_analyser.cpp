@@ -92,6 +92,8 @@ using boost::unordered_map;
 
 using std::vector;
 using std::string;
+using std::pair;
+using std::make_pair;
 
 #define SASL_GET_OR_CREATE_SI( si_type, si_var, node ) shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>(node);
 #define SASL_GET_OR_CREATE_SI_P( si_type, si_var, node, param ) shared_ptr<si_type> si_var = get_or_create_semantic_info<si_type>( node, param );
@@ -210,10 +212,12 @@ SASL_VISIT_DEF( unary_expression ){
 	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_expr->expr );
 
 	type_info_si* inner_tisi = dup_expr->expr->si_ptr<type_info_si>();
-	if( !is_integer( inner_tisi->type_info()->tycode ) ){
-		// REPORT ERROR
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return;
+	if( v.op == operators::prefix_incr || v.op == operators::postfix_incr || v.op == operators::prefix_decr || v.op == operators::postfix_decr ){
+		if( !is_integer( inner_tisi->type_info()->tycode ) ){
+			// REPORT ERROR
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			return;
+		}
 	}
 
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->pety() );
@@ -723,7 +727,7 @@ SASL_VISIT_DEF( parameter )
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, msi->pety() );
 	ssi->entry_id( tid );
 
-	// TODO: Unsupport reference yet.
+	// TODO: Nonsupports reference yet.
 	ssi->is_reference( false );
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
@@ -1469,6 +1473,36 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		/**@}*/
 	}
 	
+	{
+		shared_ptr<builtin_type> fvec_ts[5];
+		fvec_ts[1] = storage_bttbl[builtin_types::_float];
+		for( int i = 2; i <= 4; ++i ){
+			fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
+		}
+
+		shared_ptr<builtin_type> ivec_ts[5];
+		ivec_ts[1] = storage_bttbl[builtin_types::_sint32];
+		for( int i = 2; i <= 4; ++i ){
+			ivec_ts[i] = storage_bttbl[ vector_of( builtin_types::_sint32, i ) ];
+		}
+
+		// Constructors
+		typedef pair<char const*, shared_ptr<builtin_type>* > name_ty_pair_t;
+		vector< name_ty_pair_t > scalar_name_tys;
+		scalar_name_tys.push_back( make_pair( "int"		, ivec_ts	) );
+		scalar_name_tys.push_back( make_pair( "float"	, fvec_ts	) );
+
+		BOOST_FOREACH( name_ty_pair_t const& name_ty, scalar_name_tys ){
+			for( int i = 2; i <= 4; ++i ){
+				std::string name( name_ty.first );
+				char index_to_str[] = "0";
+				index_to_str[0] += (char)i;
+				name.append( index_to_str );
+
+				register_constructor( child_ctxt_init, name, name_ty.second, i );
+			}
+		}
+	}
 }
 
 void semantic_analyser::register_builtin_types(){
@@ -1517,6 +1551,35 @@ void semantic_analyser::mark_intrin_invoked_recursive( shared_ptr<symbol> const&
 	}
 }
 
+void semantic_analyser::register_constructor( any const& child_ctxt_init, std::string const& name, shared_ptr<builtin_type>* tys, int total )
+{
+	vector< shared_ptr<builtin_type> > param_tys;
+	register_constructor_impl( child_ctxt_init, name, tys, total, 0, param_tys );
+}
+
+void semantic_analyser::register_constructor_impl(
+	any const& child_ctxt_init, string const& name, shared_ptr<builtin_type>* tys,
+	int total, int param_scalar_counts, vector< shared_ptr<builtin_type> >& param_tys )
+{
+	if( param_scalar_counts == total )
+	{
+		function_register constructor_reg = register_intrinsic( child_ctxt_init, name );
+		constructor_reg.as_constructor();
+		BOOST_FOREACH( shared_ptr<builtin_type> const& par_ty, param_tys ){
+			constructor_reg % par_ty;
+		}
+		constructor_reg >> tys[total];
+	} 
+	else 
+	{
+		for( int i = 1; i <= total - param_scalar_counts; ++i ){
+			param_tys.push_back( tys[i] );
+			register_constructor_impl( child_ctxt_init, name, tys, total, param_scalar_counts+i, param_tys );
+			param_tys.pop_back();
+		}
+	}
+}
+
 // function_register
 semantic_analyser::function_register::function_register(
 	semantic_analyser& owner,
@@ -1525,7 +1588,7 @@ semantic_analyser::function_register::function_register(
 	bool is_intrinsic,
 	bool is_external,
 	bool exec_partial
-	) :owner(owner), ctxt_init(ctxt_init), fn(fn), is_intrinsic(is_intrinsic), is_external(is_external), is_partial_exec(exec_partial)
+	) :owner(owner), ctxt_init(ctxt_init), fn(fn), is_intrinsic(is_intrinsic), is_external(is_external), is_partial_exec(exec_partial), is_constr(false)
 {
 	assert( fn );
 }
@@ -1573,6 +1636,7 @@ void semantic_analyser::function_register::r(
 	fn_ssi->c_compatible(!is_intrinsic);
 	fn_ssi->external_compatible(is_external);
 	fn_ssi->partial_execution(is_partial_exec);
+	fn_ssi->is_constructor(is_constr);
 
 	if( is_intrinsic ){
 		shared_ptr<symbol> new_sym = new_node->symbol();
@@ -1593,13 +1657,19 @@ void semantic_analyser::function_register::r(
 }
 
 semantic_analyser::function_register::function_register( function_register const& rhs)
-	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic), is_external(rhs.is_external), is_partial_exec(rhs.is_partial_exec)
+	: ctxt_init( rhs.ctxt_init ), fn(rhs.fn), owner(rhs.owner), is_intrinsic(rhs.is_intrinsic), is_external(rhs.is_external), is_partial_exec(rhs.is_partial_exec), is_constr(rhs.is_constr)
 {
 }
 
 semantic_analyser::function_register& semantic_analyser::function_register::deps( std::string const& name )
 {
 	intrinsic_deps.push_back( name );
+	return *this;
+}
+
+semantic_analyser::function_register& semantic_analyser::function_register::as_constructor()
+{
+	is_constr = true;
 	return *this;
 }
 

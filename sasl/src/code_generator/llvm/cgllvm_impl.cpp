@@ -621,11 +621,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
 		shared_ptr<function_type> intr_fn = intr->node()->as_handle<function_type>();
-		
+		storage_si* intrin_ssi = intr_fn->si_ptr<storage_si>();
 		// If intrinsic is not invoked, we don't generate code for it.
-		if( ! intr_fn->si_ptr<storage_si>()->is_invoked() ){
-			continue;
-		}
+		if( ! intrin_ssi->is_invoked() ){ continue;	}
 
 		any child_ctxt = cgllvm_sctxt();
 
@@ -634,12 +632,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
 		assert( intrinsic_ctxt );
 
-		// Deal with external functions
-		bool external = intr->node()->si_ptr<storage_si>()->external_compatible();
-		if ( external ){
-			// External Function without body. Do nothing.
-			continue;
-		}
+		// Deal with external functions. External function has nobody.
+		bool external = intrin_ssi->external_compatible();
+		if ( external ){ continue; }
 
 		service()->push_fn( intrinsic_ctxt->data().self_fn );
 		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, service() ) );
@@ -735,6 +730,38 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		} else if( intr->unmangled_name() == "tex2Dproj" ){
 			assert( par_tys.size() == 2 );
 			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( intrin_ssi->is_constructor() ) {
+			function_t& fn = service()->fn();
+			value_tyinfo* ret_ty = fn.get_return_ty().get();
+			builtin_types ret_hint = ret_ty->hint();
+			
+			if( is_vector(ret_hint) ){
+				value_t ret_v = service()->undef_value( ret_hint, service()->param_abi(false) );
+
+				size_t i_scalar = 0;
+				for( size_t i_arg = 0; i_arg < fn.arg_size(); ++i_arg ){
+					value_t arg_value = fn.arg(i_arg);
+					builtin_types arg_hint = arg_value.hint();
+					if( is_scalar(arg_hint) ){
+						ret_v = service()->emit_insert_val( ret_v, static_cast<int>(i_scalar), arg_value );
+						++i_scalar;
+					} else if ( is_vector(arg_hint) ) {
+						size_t arg_vec_size = vector_size(arg_hint);
+						for( size_t i_scalar_in_arg = 0; i_scalar_in_arg < arg_vec_size; ++i_scalar_in_arg ){
+							value_t scalar_value = service()->emit_extract_val( arg_value, static_cast<int>(i_scalar_in_arg) );
+							ret_v = service()->emit_insert_val( ret_v, static_cast<int>(i_scalar), scalar_value );
+							++i_scalar;
+						}
+					} else {
+						// TODO: Error.
+						assert( false );
+					}
+				}
+
+				service()->emit_return( ret_v, service()->param_abi(false) );
+			} else {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
 		}
 	}
 }

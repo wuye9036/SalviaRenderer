@@ -459,6 +459,7 @@ public:
 
 	value_t null_value( value_tyinfo* tyinfo, abis abi );
 	value_t null_value( builtin_types bt, abis abi );
+	value_t undef_value( builtin_types bt, abis abi );
 
 	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
@@ -543,8 +544,6 @@ protected:
 	llvm_intrin_cache		intrins;
 	llvm_module_impl*		mod_impl;
 	value_t					exec_mask;
-
-	value_t undef_value( builtin_types bt, abis abi );
 
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );

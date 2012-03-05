@@ -186,7 +186,7 @@ storage_si::storage_si( shared_ptr<pety_t> const& typemgr )
 	: SASL_INIT_TYPE_INFO_PROXY(typemgr)
 	, sem(salviar::sv_none)
 	, memidx(-1), swz(0)
-	, intrin(false), invoked(false), c_comp(false), ext_comp(false), part_exec(false)
+	, intrin(false), invoked(false), c_comp(false), ext_comp(false), part_exec(false), is_constr(false)
 	, decl(NULL)
 {
 }
@@ -285,6 +285,16 @@ void storage_si::add_intrin_dep( boost::shared_ptr<symbol> const& dep )
 vector< boost::shared_ptr<symbol> > const& storage_si::intrinsic_deps() const
 {
 	return intrin_deps;
+}
+
+bool storage_si::is_constructor() const
+{
+	return is_constr;
+}
+
+void storage_si::is_constructor( bool v )
+{
+	is_constr = v;
 }
 
 call_si::call_si( shared_ptr<pety_t> const& typemgr )
