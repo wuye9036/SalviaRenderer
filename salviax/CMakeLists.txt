@@ -55,9 +55,8 @@ if( SALVIA_BUILD_WITH_DIRECTX )
 endif()
 
 ADD_LIBRARY( salviax STATIC	${HEADER_FILES}	${SOURCE_FILES} )
-TARGET_LINK_LIBRARIES(salviax EFLIB	salviar)
-
-TARGET_LINK_LIBRARIES (salviax FreeImage) 
+TARGET_LINK_LIBRARIES(salviax EFLIB	salviar FreeImage)
+SET_TARGET_PROPERTIES(salviax PROPERTIES FOLDER "Core Renderer")
 SALVIA_CONFIG_OUTPUT_PATHS(salviax)
 
 if( SALVIA_BUILD_WITH_DIRECTX )
@@ -69,6 +68,7 @@ if( SALVIA_BUILD_WITH_DIRECTX )
 		${SOURCE_FILES}
 	)
 	TARGET_LINK_LIBRARIES(salviax_d3d9_presenter EFLIB salviar salviax)
+	SET_TARGET_PROPERTIES(salviax_d3d9_presenter PROPERTIES FOLDER "Presenters")
 	SALVIA_CONFIG_OUTPUT_PATHS(salviax_d3d9_presenter)
 
 	# D3D11
@@ -84,6 +84,7 @@ if( SALVIA_BUILD_WITH_DIRECTX )
 		${SOURCE_FILES}
 	)
 	TARGET_LINK_LIBRARIES(salviax_d3d11_presenter EFLIB	salviar)
+	SET_TARGET_PROPERTIES(salviax_d3d11_presenter PROPERTIES FOLDER "Presenters")
 	SALVIA_CONFIG_OUTPUT_PATHS(salviax_d3d11_presenter)
 endif()
 
@@ -94,7 +95,8 @@ IF (WIN32)
 		${HEADER_FILES}
 		${SOURCE_FILES}
 	)
-	TARGET_LINK_LIBRARIES (salviax_gdiplus_presenter EFLIB salviar salviax "gdiplus")
+	TARGET_LINK_LIBRARIES(salviax_gdiplus_presenter EFLIB salviar salviax "gdiplus")
+	SET_TARGET_PROPERTIES(salviax_gdiplus_presenter PROPERTIES FOLDER "Presenters")
 	SALVIA_CONFIG_OUTPUT_PATHS(salviax_gdiplus_presenter)
 ENDIF (WIN32) 
 
@@ -105,4 +107,5 @@ ADD_LIBRARY( salviax_opengl_presenter SHARED
 	${SOURCE_FILES}
 )
 TARGET_LINK_LIBRARIES(salviax_opengl_presenter EFLIB salviar )
+SET_TARGET_PROPERTIES(salviax_opengl_presenter PROPERTIES FOLDER "Presenters")
 SALVIA_CONFIG_OUTPUT_PATHS(salviax_opengl_presenter)

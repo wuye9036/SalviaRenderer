@@ -1,5 +1,7 @@
 option( SALVIA_ENABLE_SAMPLES "Build samples." TRUE )
 
+include ( ConfigureSample.cmake )
+
 if( SALVIA_ENABLE_SAMPLES )
 	ADD_SUBDIRECTORY( ComplexMesh )
 	ADD_SUBDIRECTORY( TextureAndBlending )
