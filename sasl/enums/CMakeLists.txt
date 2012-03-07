@@ -57,4 +57,5 @@ ADD_LIBRARY( sasl_enums STATIC
 	enums_generator.py
 )
 
+SET_TARGET_PROPERTIES( sasl_enums PROPERTIES FOLDER "Shader Libs")
 SALVIA_CONFIG_OUTPUT_PATHS(sasl_enums)

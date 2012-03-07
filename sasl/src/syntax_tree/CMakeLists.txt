@@ -1,11 +1,5 @@
 SALVIA_CHECK_BUILD_WITH_UNICODE()
 
-INCLUDE_DIRECTORIES(
-	${SASL_HOME_DIR}
-	${SALVIA_BOOST_HOME_DIR}
-	${SALVIA_HOME_DIR}
-)
-	
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/syntax_tree/declaration.h
 	${SASL_HOME_DIR}/sasl/include/syntax_tree/expression.h
@@ -36,9 +30,5 @@ set( SOURCE_FILES
 	utility.cpp
 )
 
-ADD_LIBRARY( sasl_syntaxtree STATIC
-	${HEADER_FILES} ${SOURCE_FILES}
-)
-
-SALVIA_CONFIG_OUTPUT_PATHS( sasl_common )
+SASL_CONFIG_LIBRARY( sasl_syntaxtree )
 

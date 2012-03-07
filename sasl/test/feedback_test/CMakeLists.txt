@@ -26,4 +26,5 @@ TARGET_LINK_LIBRARIES( sasl_test_cgllvm
 	sasl_enums sasl_common sasl_semantic sasl_syntaxtree sasl_cgllvm LLVMCore LLVMSystem LLVMSupport
 )
 
+SET_TARGET_PROPERTIES( sasl_test_cgllvm PROPERTIES FOLDER "Shader Tests")
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_test_cgllvm )

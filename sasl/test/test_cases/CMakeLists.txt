@@ -45,10 +45,12 @@ ADD_CUSTOM_COMMAND(
 			${V1A1_TESTS}
 		)
 ADD_CUSTOM_TARGET( sasl_test_repo ALL DEPENDS auto_repo.deps )
-		
+SET_TARGET_PROPERTIES( sasl_test_repo PROPERTIES FOLDER "Shader Tests")
+
 ADD_LIBRARY(
 	sasl_test_cases
 	${HEADER_FILES} ${SOURCE_FILES} ${V1A1_TESTS}
 	)
-		
+	
+SET_TARGET_PROPERTIES( sasl_test_cases PROPERTIES FOLDER "Shader Tests")
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_test_cases )

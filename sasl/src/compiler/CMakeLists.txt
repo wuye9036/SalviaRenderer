@@ -36,5 +36,6 @@ TARGET_LINK_LIBRARIES( sasl_compiler
 	${SALVIA_BOOST_LIBS}
 )
 
+SET_TARGET_PROPERTIES( sasl_compiler PROPERTIES FOLDER "Shader Drivers")
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_compiler )
 
