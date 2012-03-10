@@ -2,7 +2,6 @@
 
 #include <sasl/enums/operators.h>
 
-#include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_error.h>
 #include <sasl/include/semantic/symbol.h>

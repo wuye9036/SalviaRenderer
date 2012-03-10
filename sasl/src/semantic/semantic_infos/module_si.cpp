@@ -1,6 +1,5 @@
 #include <sasl/include/semantic/semantic_infos.h>
 
-#include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/pety.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -13,14 +12,14 @@
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-using ::sasl::common::compiler_info_manager;
-using ::sasl::syntax_tree::tynode;
+using sasl::common::diag_chat;
+using sasl::syntax_tree::tynode;
 
-using ::boost::addressof;
-using ::boost::shared_ptr;
-using ::boost::unordered_map;
+using boost::addressof;
+using boost::shared_ptr;
+using boost::unordered_map;
 
-using ::std::vector;
+using std::vector;
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -28,9 +27,9 @@ BEGIN_NS_SASL_SEMANTIC();
 // global semantic
 module_si::module_si()
 {
-	compinfo = compiler_info_manager::create();
-	typemgr = pety_t::create();
-	rootsym = symbol::create_root( boost::shared_ptr<node>() );
+	mod_diags	= diag_chat::create();
+	typemgr		= pety_t::create();
+	rootsym		= symbol::create_root( shared_ptr<node>() );
 	typemgr->root_symbol(rootsym);
 }
 
@@ -42,8 +41,8 @@ shared_ptr<symbol> module_si::root() const{
 	return rootsym;
 }
 
-shared_ptr<compiler_info_manager> module_si::compiler_infos() const{
-	return compinfo;
+shared_ptr<diag_chat> module_si::diags() const{
+	return mod_diags;
 }
 
 vector< shared_ptr<symbol> > const& module_si::globals() const{

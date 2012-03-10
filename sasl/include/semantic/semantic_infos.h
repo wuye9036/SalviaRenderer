@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/semantic/semantic_info.h>
 #include <sasl/include/semantic/pety.h>
+#include <sasl/include/common/diag_chat.h>
 #include <sasl/enums/default_hasher.h>
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
@@ -54,7 +55,7 @@ public:
 
 	boost::shared_ptr<pety_t> pety() const;
 	boost::shared_ptr<symbol> root() const;
-	boost::shared_ptr< ::sasl::common::compiler_info_manager > compiler_infos() const;
+	boost::shared_ptr<sasl::common::diag_chat> diags() const;
 
 	std::vector< boost::shared_ptr<symbol> > const& globals() const;
 	std::vector< boost::shared_ptr<symbol> >& globals();
@@ -66,9 +67,9 @@ public:
 	std::vector< boost::shared_ptr<symbol> >& intrinsics();
 
 private:
-	boost::shared_ptr<pety_t>		typemgr;
-	boost::shared_ptr<symbol>		rootsym;
-	boost::shared_ptr< ::sasl::common::compiler_info_manager > compinfo;
+	boost::shared_ptr<pety_t>					typemgr;
+	boost::shared_ptr<symbol>					rootsym;
+	boost::shared_ptr<sasl::common::diag_chat>	mod_diags;
 
 	std::vector< boost::shared_ptr<symbol> > gvars;
 	std::vector< boost::shared_ptr<symbol> > fns;

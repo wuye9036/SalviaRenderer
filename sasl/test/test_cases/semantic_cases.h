@@ -5,7 +5,6 @@
 
 #include <sasl/test/test_cases/utility.h>
 #include <sasl/enums/operators.h>
-#include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>

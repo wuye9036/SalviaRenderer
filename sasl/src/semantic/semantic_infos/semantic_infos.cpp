@@ -1,7 +1,6 @@
 #include <sasl/include/semantic/semantic_infos.h>
 
 #include <sasl/enums/literal_classifications.h>
-#include <sasl/include/common/compiler_info_manager.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/pety.h>
