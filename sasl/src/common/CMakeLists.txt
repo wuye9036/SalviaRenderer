@@ -8,7 +8,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/common/token.h
 )
 
-set( SOURCE_FILES diag_chat.cpp diag_item.cpp )
+set( SOURCE_FILES diag_chat.cpp diag_item.cpp token.cpp)
 
 SASL_CONFIG_LIBRARY( sasl_common )
 

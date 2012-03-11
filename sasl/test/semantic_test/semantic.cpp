@@ -4,7 +4,7 @@
 
 #include <sasl/enums/enums_utility.h>
 #include <sasl/enums/operators.h>
-#include <sasl/include/common/compiler_info_manager.h>
+#include <sasl/include/common/diag_chat.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.imp.h>

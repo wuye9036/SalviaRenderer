@@ -5,57 +5,57 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/make_shared.hpp>
-#include <boost/smart_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
 
-BEGIN_NS_SASL_COMMON()
+BEGIN_NS_SASL_COMMON();
+
+struct code_span
+{
+	code_span();
+	code_span( size_t line_beg, size_t col_beg, size_t line_end, size_t col_end );
+	code_span( size_t line_beg, size_t col_beg, size_t length );
+	void set( size_t line_beg, size_t col_beg, size_t line_end, size_t col_end );
+	void set( size_t line_beg, size_t col_beg, size_t length );
+	size_t line_beg, col_beg;
+	size_t line_end, col_end;
+	static code_span merge( code_span const& s0, code_span const& s1 );
+};
+
+class fname_t
+{
+public:
+	fname_t();
+	fname_t( std::string const& );
+	std::string const& str();
+private:
+	boost::shared_ptr<std::string> fname;
+	static std::string null_name;
+};
 
 struct token_t{
-	token_t()
-		: file_name("undefined"), column(0), line(0), str("UNINITIALIZED_VALUE"){}
-	token_t( const token_t& rhs )
-		: file_name( rhs.file_name ), column(rhs.column), line(rhs.line), str(rhs.str), id(rhs.id){}
-	template< typename IteratorT > token_t( const IteratorT& first, const IteratorT& last )
-		: file_name("undefined"), column(0), line(0), str(first, last), id(0) {}
-
-	static boost::shared_ptr<token_t> make( size_t id, std::string const& str, size_t line, size_t col, std::string const& fname ){
-		boost::shared_ptr<token_t> ret = boost::make_shared<token_t>();
-		ret->id = id;
-		ret->str = str;
-		ret->line = line;
-		ret->column = col;
-		ret->file_name = fname;
-		return ret;
+	token_t();
+	token_t( const token_t& rhs );
+	template< typename IteratorT >
+	token_t( const IteratorT& first, const IteratorT& last )
+		: str(first, last), id(0) 
+	{
 	}
+	token_t& operator = ( const token_t& rhs);
 
-	boost::shared_ptr<token_t> make_copy() const{
-		return boost::shared_ptr<token_t>( new token_t(*this) );
-	}
+	boost::shared_ptr<token_t> make_copy() const;
 
-	token_t& operator = ( const token_t& rhs){
-		file_name = rhs.file_name;
-		column = rhs.column;
-		line = rhs.line;
-		str = rhs.str;
-		return *this;
-	}
+	static boost::shared_ptr<token_t> null();
+	static boost::shared_ptr<token_t> from_string( const std::string& str );
+	static boost::shared_ptr<token_t> make( size_t id, std::string const& str, size_t line, size_t col, std::string const& fname );
 
-	size_t id;
-
+	size_t		id;
 	std::string str;
-	std::size_t line;
-	std::size_t column;
-	std::string file_name;
+	code_span	span;
+	fname_t		file_name;
 
-	static boost::shared_ptr<token_t> null(){
-		return boost::shared_ptr<token_t>();
-	}
-
-	static boost::shared_ptr<token_t> from_string( const std::string& str ){
-		return boost::make_shared<token_t>(str.begin(), str.end());
-	}
 };
 
 END_NS_SASL_COMMON()
