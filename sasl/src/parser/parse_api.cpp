@@ -12,8 +12,14 @@
 
 #include <iostream>
 
+namespace sasl{
+	namespace common{
+		class diag_chat;
+	}
+}
 using sasl::common::lex_context;
 using sasl::common::code_source;
+using sasl::common::diag_chat;
 using boost::shared_ptr;
 using std::cout;
 using std::endl;
@@ -22,21 +28,21 @@ void sasl::parser::parse(
 	shared_ptr<attribute>& pt_root,
 	const std::string& code,
 	shared_ptr<lex_context> ctxt,
-	lexer& l, grammars& g
+	lexer& l, grammars& g, diag_chat* diags
 	)
 {
 	sasl::parser::token_seq toks;
 	bool tok_result = l.tokenize(code, ctxt, toks);
 	EFLIB_ASSERT( tok_result, "Tokenizing is failed." );	
 	token_iterator it = toks.begin();
-	g.prog.parse( it, toks.end(), pt_root );
+	g.prog.parse( it, toks.end(), pt_root, diags );
 }
 
 void sasl::parser::parse( 
 	shared_ptr<attribute>& pt_root,
 	code_source* src,
 	shared_ptr<lex_context > ctxt,
-	lexer& l, grammars& g
+	lexer& l, grammars& g, diag_chat* diags
 	)
 {
 	sasl::parser::token_seq toks;
@@ -57,5 +63,5 @@ void sasl::parser::parse(
 	l.end_incremental();
 
 	token_iterator it = toks.begin();
-	g.prog.parse( it, toks.end(), pt_root );
+	g.prog.parse( it, toks.end(), pt_root, diags );
 }

@@ -2,6 +2,7 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/common/lex_context.h>
+#include <sasl/include/common/diag_chat.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -29,6 +30,7 @@ using sasl::code_generator::codegen_context;
 using sasl::code_generator::llvm_module;
 using sasl::code_generator::generate_llvm_code;
 using sasl::common::lex_context;
+using sasl::common::diag_chat;
 using sasl::semantic::abi_analyser;
 using sasl::semantic::module_si;
 using sasl::semantic::analysis_semantic;
@@ -277,7 +279,10 @@ void compiler::process( bool& abort )
 				cout << "Fatal error: Could not open input file: " << fname << endl;
 				return;
 			} 
-			mroot = sasl::syntax_tree::parse( code_src.get(), code_src );
+
+			shared_ptr<diag_chat> diags = diag_chat::create();
+
+			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags.get() );
 			if( !mroot ){
 				cout << "Syntax error occurs!" << endl;
 				abort = true;

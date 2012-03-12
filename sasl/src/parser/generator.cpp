@@ -1,7 +1,9 @@
 #include <sasl/include/parser/generator.h>
 
-#include <sasl/include/common/token.h>
 #include <sasl/include/parser/lexer.h>
+#include <sasl/include/common/token.h>
+#include <sasl/include/common/diag_chat.h>
+#include <sasl/include/common/diag_item.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
@@ -12,6 +14,10 @@
 
 #include <eflib/include/diagnostics/assert.h>
 #include <iostream>
+
+using sasl::common::diag_template;
+using sasl::common::diag_item;
+using sasl::common::diag_chat;
 
 using boost::shared_ptr;
 using boost::make_shared;
@@ -116,7 +122,7 @@ terminal::terminal( size_t tok_id ) :tok_id(tok_id){}
 
 terminal::terminal( terminal const& rhs ) :tok_id(rhs.tok_id){}
 
-bool terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr ) const
+bool terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	if ( iter == end ){
 		return false;
@@ -145,14 +151,14 @@ repeater::repeater( size_t lower_bound, size_t upper_bound, shared_ptr<parser> e
 
 repeater::repeater( repeater const& rhs ) : lower_bound(rhs.lower_bound), upper_bound(rhs.upper_bound), expr(rhs.expr){}
 
-bool repeater::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr ) const
+bool repeater::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	token_iterator stored = iter;
 	size_t matched_count = 0;
 
 	shared_ptr<sequence_attribute> seq_attr = make_shared<sequence_attribute>();
 	shared_ptr<attribute> out;
-	while( expr->parse(iter, end, out) ){
+	while( expr->parse(iter, end, out, diags) ){
 		seq_attr->attrs.push_back(out);
 		++matched_count;
 		if( matched_count == upper_bound ){
@@ -188,14 +194,14 @@ std::vector< shared_ptr<parser> > const& selector::branches() const
 	return slc_branches;
 }
 
-bool selector::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr ) const
+bool selector::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	shared_ptr<selector_attribute> slc_attr = make_shared<selector_attribute>();
 
 	int idx = 0;
 	BOOST_FOREACH( shared_ptr<parser> p, branches() )
 	{
-		if( p->parse(iter, end, slc_attr->attr) ){
+		if( p->parse(iter, end, slc_attr->attr, diags) ){
 			slc_attr->selected_idx = idx;
 			attr = slc_attr;
 			return true;
@@ -233,7 +239,7 @@ std::vector< shared_ptr<parser> > const& queuer::exprs() const
 	return exprlst;
 }
 
-bool queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr ) const
+bool queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	token_iterator stored = iter;
 
@@ -243,7 +249,7 @@ bool queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribu
 	BOOST_FOREACH( shared_ptr<parser> p, exprlst ){
 		out.reset();
 		token_iterator cur_iter = iter;
-		if( ! p->parse(iter, end, out ) ){
+		if( ! p->parse(iter, end, out, diags) ){
 			iter = stored;
 			if( p->is_expected() ){
 				throw expectation_failure(cur_iter, p.get() );
@@ -265,9 +271,9 @@ shared_ptr<parser> queuer::clone() const
 negnativer::negnativer( boost::shared_ptr<parser> p ): expr(p){}
 negnativer::negnativer( negnativer const& rhs ): expr(rhs.expr){}
 
-bool negnativer::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const{
+bool negnativer::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, diag_chat* diags ) const{
 	if ( !expr ) {return false;}
-	return !expr->parse(iter, end, attr);
+	return !expr->parse(iter, end, attr, diags);
 }
 
 boost::shared_ptr<parser> negnativer::clone() const{
@@ -298,7 +304,7 @@ void rule::name( std::string const & v ){
 }
 
 #define SASL_PARSER_LOG_ENABLED 0
-bool rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr ) const{
+bool rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const{
 #if SASL_PARSER_LOG_ENABLED
 	static size_t indent = 0;
 #endif // SASL_PARSER_LOG_ENABLED
@@ -314,7 +320,7 @@ bool rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute
 	cout << "<" << rule_name << ">" << endl;
 #endif // SASL_PARSER_LOG_ENABLED
 	
-	if( expr->parse(iter, end, attr) ){
+	if( expr->parse(iter, end, attr, diags) ){
 		attr->rule_id( id() );
 
 #if SASL_PARSER_LOG_ENABLED
@@ -360,9 +366,9 @@ rule_wrapper::rule_wrapper( rule const & rhs ) : r(rhs){}
 
 bool rule_wrapper::parse(
 	token_iterator& iter, token_iterator end,
-	shared_ptr<attribute>& attr ) const
+	shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
-	return r.parse(iter, end, attr);
+	return r.parse(iter, end, attr, diags);
 }
 
 shared_ptr<parser> rule_wrapper::clone() const{
@@ -375,7 +381,7 @@ std::string const& rule_wrapper::name() const{
 
 endholder::endholder(){}
 endholder::endholder( endholder const & ){}
-bool endholder::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const{
+bool endholder::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, diag_chat* /*diags*/ ) const{
 	if( iter == end ){
 		attr = make_shared<terminal_attribute>();
 		return true;

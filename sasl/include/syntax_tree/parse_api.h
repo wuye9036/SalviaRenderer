@@ -13,6 +13,7 @@ namespace sasl{
 	namespace common{
 		class lex_context;
 		class code_source;
+		class diag_chat;
 	}
 }
 
@@ -22,12 +23,14 @@ struct program;
 
 boost::shared_ptr<program> parse(
 	const std::string& code_text,
-	boost::shared_ptr< ::sasl::common::lex_context > ctxt
+	boost::shared_ptr<sasl::common::lex_context> ctxt,
+	sasl::common::diag_chat* diags
 	);
 
 boost::shared_ptr<program> parse(
 	sasl::common::code_source* src,
-	boost::shared_ptr< ::sasl::common::lex_context > ctxt
+	boost::shared_ptr<sasl::common::lex_context> ctxt,
+	sasl::common::diag_chat* diags
 	);
 
 END_NS_SASL_SYNTAX_TREE();

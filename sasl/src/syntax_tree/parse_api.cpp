@@ -7,6 +7,7 @@
 
 using sasl::common::code_source;
 using sasl::common::lex_context;
+using sasl::common::diag_chat;
 using sasl::parser::attribute;
 using sasl::parser::lexer;
 using sasl::parser::grammars;
@@ -156,9 +157,11 @@ void init_lex( lexer& l ){
 	l.skippers( "SKIPPED" )( "COMMENT" );
 	l.init_states( "INITIAL" )( "SKIPPED" );
 }
+
 shared_ptr<program> parse(
 	std::string const& code_text,
-	shared_ptr<lex_context> ctxt
+	shared_ptr<lex_context> ctxt,
+	diag_chat* diags
 	)
 {
 	lexer l;
@@ -166,19 +169,19 @@ shared_ptr<program> parse(
 	grammars g(l);
 
 	shared_ptr<sasl::parser::attribute> pt_prog;
-	sasl::parser::parse( pt_prog, code_text, ctxt, l, g );
+	sasl::parser::parse( pt_prog, code_text, ctxt, l, g, diags );
 	syntax_tree_builder builder(l, g);
 	return builder.build_prog( pt_prog );
 }
 
-shared_ptr<program> parse( code_source* src, shared_ptr<lex_context> ctxt )
+shared_ptr<program> parse( code_source* src, shared_ptr<lex_context> ctxt, diag_chat* diags )
 {
 	lexer l;
 	init_lex(l);
 	grammars g(l);
 
 	shared_ptr<sasl::parser::attribute> pt_prog;
-	sasl::parser::parse( pt_prog, src, ctxt, l, g );
+	sasl::parser::parse( pt_prog, src, ctxt, l, g, diags );
 	syntax_tree_builder builder(l, g);
 	return builder.build_prog( pt_prog );
 }

@@ -14,6 +14,7 @@
 namespace sasl{
 	namespace common{
 		struct token_t;
+		class diag_chat;
 	}
 }
 
@@ -99,7 +100,7 @@ public:
 class parser{
 public:
 	parser();
-	virtual bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const = 0;
+	virtual bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const = 0;
 	bool is_expected() const;
 	void is_expected( bool v );
 
@@ -113,7 +114,7 @@ class terminal: public parser{
 public:
 	terminal( size_t tok_id );
 	terminal( terminal const& rhs );
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 private:
 	terminal& operator = (terminal const &);
@@ -127,7 +128,7 @@ public:
 
 	repeater( size_t lower_bound, size_t upper_bound, boost::shared_ptr<parser> expr);
 	repeater( repeater const& rhs );
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 
 private:
@@ -145,7 +146,7 @@ public:
 	selector& add_branch( boost::shared_ptr<parser> p );
 	std::vector< boost::shared_ptr<parser> > const& branches() const;
 
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 private:
 	std::vector< boost::shared_ptr<parser> > slc_branches;
@@ -159,7 +160,7 @@ public:
 	queuer& append( boost::shared_ptr<parser> p, bool is_expected = false );
 	std::vector< boost::shared_ptr<parser> > const& exprs() const;
 
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 private:
 	std::vector< boost::shared_ptr<parser> > exprlst;
@@ -170,7 +171,7 @@ public:
 	negnativer( boost::shared_ptr<parser> );
 	negnativer( negnativer const& rhs );
 
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 private:
 	boost::shared_ptr<parser> expr;
@@ -190,7 +191,7 @@ public:
 	std::string const& name() const;
 	void name( std::string const & v );
 
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 private:
 	intptr_t preset_id;
@@ -202,7 +203,7 @@ class rule_wrapper: public parser{
 public:
 	rule_wrapper( rule_wrapper const& rhs );
 	rule_wrapper( rule const & rhs );
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 	std::string const& name() const;
 private:
@@ -214,7 +215,7 @@ class endholder: public parser{
 public:
 	endholder();
 	endholder ( endholder const & );
-	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr ) const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 };
 //////////////////////////////////////////////////////////////////////////

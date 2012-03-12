@@ -3,6 +3,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <sasl/include/common/lex_context.h>
+#include <sasl/include/common/diag_chat.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -30,6 +31,7 @@ using namespace sasl::semantic;
 
 using sasl::common::code_source;
 using sasl::common::lex_context;
+using sasl::common::diag_chat;
 
 using boost::shared_ptr;
 using boost::make_shared;
@@ -108,7 +110,9 @@ public:
 		shared_ptr<deps_test_code_source> cs = make_shared<deps_test_code_source>();
 		cs->process_code( code );
 
-		mroot = sasl::syntax_tree::parse( cs.get(), cs );
+		diags = diag_chat::create();
+		
+		mroot = sasl::syntax_tree::parse( cs.get(), cs, diags.get() );
 		if( !mroot ){
 			cout << "Syntax error occurs!" << endl;
 			return;
@@ -150,7 +154,8 @@ public:
 	{
 		return std::find( succ->preds.begin(), succ->preds.end(), pred ) != succ->preds.end();
 	}
-
+	
+	shared_ptr<diag_chat>	diags;
 	shared_ptr<ssa_graph>	mgraph;
 	shared_ptr<dom_tree>	mdom;
 	shared_ptr<program>		mroot;

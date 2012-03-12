@@ -3,13 +3,16 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <sasl/include/common/lex_context.h>
+#include <sasl/include/common/diag_chat.h>
 #include <sasl/include/parser/parse_api.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 #include <sasl/include/syntax_tree/program.h>
 
-using ::sasl::common::lex_context;
-using ::boost::shared_ptr;
+using sasl::common::lex_context;
+using sasl::common::diag_chat;
+
+using boost::shared_ptr;
 
 class lex_context_test_impl: public lex_context{
 public:
@@ -40,7 +43,8 @@ BOOST_AUTO_TEST_CASE( program_test ){
 		"int a;"
 		);
 
-	shared_ptr< ::sasl::syntax_tree::program > prog = ::sasl::syntax_tree::parse( code, lexctxt );
+	shared_ptr<diag_chat> diags = diag_chat::create();
+	shared_ptr<sasl::syntax_tree::program> prog = sasl::syntax_tree::parse( code, lexctxt, diags.get() );
 	BOOST_REQUIRE( prog );
 	BOOST_REQUIRE( prog->decls.size() == 1 );
 	BOOST_REQUIRE( prog->decls[0] );

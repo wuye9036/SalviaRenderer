@@ -135,7 +135,9 @@ void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::
 		return;
 	} 
 
-	shared_ptr<program> mroot = sasl::syntax_tree::parse( code_src.get(), code_src );
+	shared_ptr<diag_chat> diags = diag_chat::create();
+
+	shared_ptr<program> mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags.get() );
 	if( !mroot ){
 		cout << "Syntax error occurs!" << endl;
 		return;
