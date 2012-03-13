@@ -21,6 +21,7 @@ enum diag_levels{
 };
 
 class diag_template;
+class fname_t;
 
 class diag_item
 {
@@ -34,10 +35,12 @@ public:
 		return *this;
 	}
 
-	diag_item& span( token_t const& beg, token_t const& end );
-	bool is_template( diag_template const& v );
+	diag_item&	file( fname_t const& f );
+	diag_item&	span( token_t const& beg, token_t const& end );
+	bool		is_template( diag_template const& v );
 
 private:
+	fname_t					item_file;
 	code_span				item_span;
 	diag_template const*	tmpl;
 	boost::format			fmt;

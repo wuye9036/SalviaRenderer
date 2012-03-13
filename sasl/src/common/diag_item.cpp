@@ -18,6 +18,11 @@ diag_item& diag_item::span( token_t const& beg, token_t const& end )
 	return *this;
 }
 
+diag_item& diag_item::file( fname_t const& f )
+{
+	item_file = f;
+	return *this;
+}
 
 std::string const& diag_template::template_str() const
 {

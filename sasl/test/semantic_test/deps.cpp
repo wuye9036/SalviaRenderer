@@ -46,7 +46,7 @@ using std::pair;
 
 class deps_test_code_source: public lex_context, public code_source{
 public:
-	deps_test_code_source(): eof(true), fname("in_memory"){
+	deps_test_code_source(): is_eof(true), fname("in_memory"){
 	}
 
 	bool process_code( std::string const& code ){
@@ -55,9 +55,10 @@ public:
 	}
 
 	// code source
-	virtual bool is_eof(){ return eof; }
-	virtual std::string next_token(){
-		eof = true;
+	virtual bool eof(){ return is_eof; }
+	virtual string error(){ return string(""); }
+	virtual string next(){
+		is_eof = true;
 		return code;
 	}
 
@@ -66,18 +67,17 @@ public:
 	virtual size_t column() const{ return 0; }
 	virtual size_t line() const{ return 0; }
 
-	virtual void next( const std::string& /*lit*/ ){ return; }
-	virtual string error_token(){ return string(""); }
-
+	virtual void update_position( const std::string& /*lit*/ ){ return; }
+	
 private:
 	bool process(){
-		eof = code.empty();
+		is_eof = code.empty();
 		return true;
 	}
 
-	std::string fname;
-	std::string code;
-	bool eof;
+	string	fname;
+	string	code;
+	bool	is_eof;
 };
 
 class deps_fixture

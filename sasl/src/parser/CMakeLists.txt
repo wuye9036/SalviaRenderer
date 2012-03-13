@@ -6,6 +6,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/parser/lexer.h
 	${SASL_HOME_DIR}/sasl/include/parser/parse_api.h
 	${SASL_HOME_DIR}/sasl/include/parser/grammars.h
+	${SASL_HOME_DIR}/sasl/include/parser/diags.h
 )
 
 set( SOURCE_FILES
@@ -13,6 +14,7 @@ set( SOURCE_FILES
 	generator.cpp
 	grammars.cpp
 	parse_api.cpp
+	diags.cpp
 )
 
 SASL_CONFIG_LIBRARY( sasl_parser )

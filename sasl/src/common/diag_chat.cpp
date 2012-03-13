@@ -20,9 +20,13 @@ void diag_chat::add_report_raised_handler( report_handler_fn const& handler )
 
 diag_item& diag_chat::report( token_t& beg, token_t& end, diag_template const& tmpl )
 {
+	return report(tmpl).span(beg, end);
+}
+
+diag_item& diag_chat::report( diag_template const& tmpl )
+{
 	diag_item* ret = new diag_item(&tmpl);
 	diags.push_back( ret );
-	ret->span( beg, end );
 	for( vector<report_handler_fn>::iterator it = handlers.begin(); it != handlers.end(); ++it )
 	{
 		(*it)( this, ret );

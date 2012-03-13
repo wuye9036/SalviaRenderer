@@ -26,7 +26,7 @@ public:
 		return 0;
 	}
 
-	virtual void next( const std::string& /*lit*/ ){
+	virtual void update_position( const std::string& /*lit*/ ){
 		return;
 	}
 

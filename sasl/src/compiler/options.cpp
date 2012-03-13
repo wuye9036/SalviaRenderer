@@ -3,6 +3,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/common/lex_context.h>
 #include <sasl/include/common/diag_chat.h>
+#include <sasl/include/parser/diags.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -67,13 +68,16 @@ private:
 		wcontext_t;
 
 public:
-	bool process_code( std::string const& code ){
+	bool process_code( string const& code, diag_chat* diags ){
 		this->code = code;
 		this->filename = "in_memory";
+		this->diags = diags;
 		return process();
 	}
 
-	bool process_file( std::string const& file_name ){
+	bool process_file( string const& file_name, diag_chat* diags ){
+		this->diags = diags;
+
 		std::ifstream in(file_name.c_str(), std::ios_base::in);
 		if (!in){
 			return false;
@@ -90,25 +94,29 @@ public:
 	}
 
 	// code source
-	virtual bool is_eof(){
+	virtual bool eof(){
 		return next_it == wctxt->end();
 	}
-
-	virtual std::string next_token(){
+	virtual string next(){
 		assert( next_it != wctxt->end() );
 		cur_it = next_it;
 
 		try{
 			++next_it;
 		} catch ( boost::wave::preprocess_exception& e ){
-			
 			errtok = to_std_string( cur_it->get_value() );
-
 			next_it = wctxt->end();
+			diags->report( sasl::parser::unknown_tokenize_error ) % e.description();
 			cout << e.description() << endl;
 		}
 
 		return to_std_string( cur_it->get_value() ) ;
+	}
+	virtual string error(){
+		if( errtok.empty() ){
+			errtok = to_std_string( cur_it->get_value() );
+		}
+		return errtok;
 	}
 
 	// lex_context
@@ -126,18 +134,11 @@ public:
 		assert( cur_it != wctxt->end() );
 		return cur_it->get_position().get_line();
 	}
-
-	virtual void next( const std::string& /*lit*/ ){
+	virtual void update_position( const std::string& /*lit*/ ){
 		// Do nothing.
 		return;
 	}
 
-	virtual string error_token(){
-		if( errtok.empty() ){
-			errtok = to_std_string( cur_it->get_value() );
-		}
-		return errtok;
-	}
 private:
 	 bool process(){
 		wctxt.reset( new wcontext_t( code.begin(), code.end(), filename.c_str() ) );
@@ -159,13 +160,12 @@ private:
 		return std::string( str.begin(), str.end() );
 	}
 
-	scoped_ptr<wcontext_t> wctxt;
+	scoped_ptr<wcontext_t>	wctxt;
+	diag_chat*				diags;
 
-	std::string code;
-
-	std::string errtok;
-
-	mutable std::string filename;
+	string			code;
+	string			errtok;
+	mutable string	filename;
 
 	wcontext_t::iterator_type cur_it;
 	wcontext_t::iterator_type next_it;
@@ -273,14 +273,14 @@ void compiler::process( bool& abort )
 	if( opt_io.format() == options_io::llvm_ir ){
 		BOOST_FOREACH( string const & fname, inputs ){
 			cout << "Compile " << fname << "..." << endl;
+			
+			shared_ptr<diag_chat> diags = diag_chat::create();
 
 			shared_ptr<compiler_code_source> code_src( new compiler_code_source() );
-			if ( !code_src->process_file(fname) ){
-				cout << "Fatal error: Could not open input file: " << fname << endl;
+			if ( !code_src->process_file(fname, diags.get()) ){
+				diags->report( sasl::parser::cannot_open_input_file ) % fname;
 				return;
 			} 
-
-			shared_ptr<diag_chat> diags = diag_chat::create();
 
 			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags.get() );
 			if( !mroot ){

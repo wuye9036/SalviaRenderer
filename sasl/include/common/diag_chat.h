@@ -26,6 +26,7 @@ public:
 
 	void add_report_raised_handler( report_handler_fn const& handler );
 	diag_item& report( token_t& beg, token_t& end, diag_template const& tmpl );
+	diag_item& report( diag_template const& tmpl );
 
 private:
 	std::vector<report_handler_fn>	handlers;

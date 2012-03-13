@@ -85,8 +85,9 @@ public:
 		// do skip
 		std::string splexer_state( splexer_ctxt.get_state_name() );
 		if( data->skippers.count( splexer_state ) == 0 ){
-			data->ctxt->next( str );
-			data->attrs->push_back( token_t::make(id, str, data->ctxt->line(), data->ctxt->column(), data->ctxt->file_name() ) );
+			shared_ptr<token_t> tok = token_t::make(id, str, data->ctxt->line(), data->ctxt->column(), data->ctxt->file_name() );
+			data->attrs->push_back( tok );
+			data->ctxt->update_position(str);
 		}
 
 		// change state

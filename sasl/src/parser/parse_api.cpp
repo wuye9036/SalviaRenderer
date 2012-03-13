@@ -48,11 +48,11 @@ void sasl::parser::parse(
 	sasl::parser::token_seq toks;
 
 	l.begin_incremental();
-	while( !src->is_eof() ){
-		bool tok_result = l.incremental_tokenize( src->next_token(), ctxt, toks );
+	while( !src->eof() ){
+		bool tok_result = l.incremental_tokenize( src->next(), ctxt, toks );
 		if( !tok_result ){
 			boost::format fmt( "%s(%d): fatal error: unrecognized token: '%s' " );
-			std::string etok = src->error_token();
+			std::string etok = src->error();
 			if( etok.empty() ){ etok = "<Unrecognized>"; }
 			fmt % ctxt->file_name() % ctxt->line() % etok;
 			cout << ( boost::str(fmt).c_str() ) << endl;
