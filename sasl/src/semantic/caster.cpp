@@ -83,7 +83,7 @@ void caster_t::better_or_worse( tid_t matched, tid_t matching, tid_t src, bool& 
 	better = false;
 	worse = false;
 
-	if( matching == matched ){
+	if( matching == matched || try_cast( matched, matching ) == caster_t::eql ){
 		better = false;
 		worse = false;
 		return;

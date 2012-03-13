@@ -115,112 +115,9 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 	vector< shared_ptr<expression> > const& args ) const
 {
 	// find all overloads
-	vector< shared_ptr<symbol> > overloads = find_overloads( unmangled );
-	if( overloads.empty() ) { return overloads; }
-
-	// Extract type info of args
-	vector<tid_t> arg_tids;
-	vector<type_info_si*> arg_tisis; 
-	BOOST_FOREACH( shared_ptr<expression> const& arg, args ){
-		arg_tisis.push_back( arg->si_ptr<type_info_si>() );
-		arg_tids.push_back( arg_tisis.back()->entry_id() );
-	}
-
-	// Find candidates.
-	// Following steps could impl function overloading :
-	//
-	//	for each candidate in overloads
-	//		if candidate is a valid overload
-	//			compare this candidate to evaluated candidates
-	//				if candidate is better than evaluated, discard evaluated.
-	//				if candidate is worse than evaluated, discard current candidate
-	//			after all comparison done, if candidate have not been discarded, add it into candidates.
-	//	now the candidates is result.
-	//
-	// better & worse judgment is as same as C#.
-	vector< shared_ptr<symbol> > candidates;
-	for( size_t i_func = 0; i_func < overloads.size(); ++i_func ){
-		shared_ptr<function_type> matching_func = overloads[i_func]->node()->as_handle<function_type>();
-
-		// could not matched.
-		if ( matching_func->params.size() != args.size() ){ continue; }
-
-		// try to match all parameters.
-		bool all_parameter_success = true;
-		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-			type_info_si* arg_tisi = arg_tisis[i_param];
-			shared_ptr<type_info_si> par_tisi = extract_semantic_info<type_info_si>( matching_func->params[i_param] );
-			tid_t arg_type = arg_tids[i_param];
-			tid_t par_type = par_tisi->entry_id();
-			if( arg_type == -1 || par_type == -1 ){
-				boost::format fmt( "Type of %s <%s> is invalid." );
-				if( arg_type == -1 ){
-					fmt % "argument";
-				} else {
-					fmt % "parameter";
-				}
-				cout
-					<< str( fmt % ( arg_tisi->type_info()->is_builtin() ? arg_tisi->type_info()->tycode.name() : "<complex>") )
-					<< endl;
-				assert( !"Argument type or parameter type is invalid." );
-				// TODO: Here is syntax error. Need to be processed.
-				all_parameter_success = false;
-				break;
-			}
-			if ( !( arg_type == par_type || conv->try_implicit(par_type, arg_type) ) ){
-				all_parameter_success = false;
-				break;
-			}
-		}
-		if( !all_parameter_success ){ continue;	}
-
-		// if all parameter could be matched, we will find does it better than others.
-		bool is_better = false;
-		bool is_worse = false;
-		for( vector< shared_ptr<symbol> >::iterator it = candidates.begin(); it != candidates.end();  ){
-
-			shared_ptr<function_type> a_matched_func = (*it)->node()->as_handle<function_type>();
-
-			// match functions.
-			size_t better_param_count = 0;
-			size_t worse_param_count = 0;
-
-			for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-				tid_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
-				tid_t matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
-				tid_t matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->entry_id();
-
-				bool par_is_better = false;
-				bool par_is_worse = false;
-				conv->better_or_worse( matched_par_type, matching_par_type, arg_type, par_is_better, par_is_worse );
-				if( par_is_better ){ ++better_param_count; }
-				if( par_is_worse ){ ++worse_param_count; }
-			}
-
-			if ( better_param_count > 0 && worse_param_count == 0 ) {
-				is_better = true;
-			}
-			if ( better_param_count == 0 && worse_param_count > 0 ){
-				is_worse = true;
-				break;
-			}
-
-			// if current function is better than matched function, remove matched function.
-			if( is_better ){
-				it = candidates.erase( it );
-			} else {
-				++it;
-			}
-		}
-		// if current function is worse than matched function, discard it.
-		if ( !is_worse ) {
-			candidates.push_back(matching_func->symbol());
-		}
-	}
-
-	collapse_vector1_overloads( candidates );
-
-	return candidates;
+	vector< shared_ptr<symbol> > overloads = find_overloads_impl( unmangled, conv, args );
+	collapse_vector1_overloads(overloads);
+	return overloads;
 }
 
 vector< shared_ptr<symbol> > symbol::find_assign_overloads(
@@ -228,7 +125,7 @@ vector< shared_ptr<symbol> > symbol::find_assign_overloads(
 	shared_ptr<caster_t> const& conv,
 	vector< shared_ptr<expression> > const& args ) const
 {
-	vector< shared_ptr<symbol> > candidates = find_overloads( unmangled, conv, args );
+	vector< shared_ptr<symbol> > candidates = find_overloads_impl( unmangled, conv, args );
 	tid_t lhs_arg_tid = args.back()->si_ptr<type_info_si>()->entry_id();
 	vector< shared_ptr<symbol> > ret;
 	BOOST_FOREACH( shared_ptr<symbol> const& proto, candidates )
@@ -459,5 +356,118 @@ void symbol::collapse_vector1_overloads( vector< shared_ptr<symbol> >& candidate
 
 	return std::swap( candidates, ret );
 }
+
+vector< shared_ptr<symbol> > symbol::find_overloads_impl(
+	const string& unmangled,
+	shared_ptr<caster_t> const& conv,
+	vector< shared_ptr<expression> > const& args ) const
+{
+	// find all overloads
+	vector< shared_ptr<symbol> > overloads = find_overloads( unmangled );
+	if( overloads.empty() ) { return overloads; }
+
+	// Extract type info of args
+	vector<tid_t> arg_tids;
+	vector<type_info_si*> arg_tisis; 
+	BOOST_FOREACH( shared_ptr<expression> const& arg, args ){
+		arg_tisis.push_back( arg->si_ptr<type_info_si>() );
+		arg_tids.push_back( arg_tisis.back()->entry_id() );
+	}
+
+	// Find candidates.
+	// Following steps could impl function overloading :
+	//
+	//	for each candidate in overloads
+	//		if candidate is a valid overload
+	//			compare this candidate to evaluated candidates
+	//				if candidate is better than evaluated, discard evaluated.
+	//				if candidate is worse than evaluated, discard current candidate
+	//			after all comparison done, if candidate have not been discarded, add it into candidates.
+	//	now the candidates is result.
+	//
+	// better & worse judgment is as same as C#.
+	vector< shared_ptr<symbol> > candidates;
+	for( size_t i_func = 0; i_func < overloads.size(); ++i_func ){
+		shared_ptr<function_type> matching_func = overloads[i_func]->node()->as_handle<function_type>();
+
+		// could not matched.
+		if ( matching_func->params.size() != args.size() ){ continue; }
+
+		// try to match all parameters.
+		bool all_parameter_success = true;
+		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
+			type_info_si* arg_tisi = arg_tisis[i_param];
+			shared_ptr<type_info_si> par_tisi = extract_semantic_info<type_info_si>( matching_func->params[i_param] );
+			tid_t arg_type = arg_tids[i_param];
+			tid_t par_type = par_tisi->entry_id();
+			if( arg_type == -1 || par_type == -1 ){
+				boost::format fmt( "Type of %s <%s> is invalid." );
+				if( arg_type == -1 ){
+					fmt % "argument";
+				} else {
+					fmt % "parameter";
+				}
+				cout
+					<< str( fmt % ( arg_tisi->type_info()->is_builtin() ? arg_tisi->type_info()->tycode.name() : "<complex>") )
+					<< endl;
+				assert( !"Argument type or parameter type is invalid." );
+				// TODO: Here is syntax error. Need to be processed.
+				all_parameter_success = false;
+				break;
+			}
+			if ( !( arg_type == par_type || conv->try_implicit(par_type, arg_type) ) ){
+				all_parameter_success = false;
+				break;
+			}
+		}
+		if( !all_parameter_success ){ continue;	}
+
+		// if all parameter could be matched, we will find does it better than others.
+		bool is_better = false;
+		bool is_worse = false;
+		for( vector< shared_ptr<symbol> >::iterator it = candidates.begin(); it != candidates.end();  ){
+
+			shared_ptr<function_type> a_matched_func = (*it)->node()->as_handle<function_type>();
+
+			// match functions.
+			size_t better_param_count = 0;
+			size_t worse_param_count = 0;
+
+			for( size_t i_param = 0; i_param < args.size(); ++i_param ){
+				tid_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
+				tid_t matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
+				tid_t matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->entry_id();
+
+				bool par_is_better = false;
+				bool par_is_worse = false;
+				conv->better_or_worse( matched_par_type, matching_par_type, arg_type, par_is_better, par_is_worse );
+				if( par_is_better ){ ++better_param_count; }
+				if( par_is_worse ){ ++worse_param_count; }
+			}
+
+			if ( better_param_count > 0 && worse_param_count == 0 ) {
+				is_better = true;
+			}
+			if ( better_param_count == 0 && worse_param_count > 0 ){
+				is_worse = true;
+				break;
+			}
+
+			// if current function is better than matched function, remove matched function.
+			if( is_better ){
+				it = candidates.erase( it );
+			} else {
+				++it;
+			}
+		}
+		// if current function is worse than matched function, discard it.
+		if ( !is_worse ) {
+			candidates.push_back(matching_func->symbol());
+		}
+	}
+
+	return candidates;
+}
+
 
 END_NS_SASL_SEMANTIC();

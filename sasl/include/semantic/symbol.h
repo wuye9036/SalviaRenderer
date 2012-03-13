@@ -61,7 +61,7 @@ public:
 	std::vector< boost::shared_ptr<symbol> > find_overloads(
 		const std::string& name,
 		boost::shared_ptr<caster_t> const& conv,
-		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > const& args
+		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args
 		) const;
 	std::vector< boost::shared_ptr<symbol> > find_assign_overloads(
 		const std::string& name,
@@ -110,6 +110,11 @@ private:
 
 	const std::vector< ::std::string >& get_overloads( const ::std::string& umnalged ) const;
 
+	std::vector< boost::shared_ptr<symbol> > find_overloads_impl(
+		const std::string& name,
+		boost::shared_ptr<caster_t> const& conv,
+		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args
+		) const;
 	void collapse_vector1_overloads( std::vector< boost::shared_ptr<symbol> >& candidates ) const;
 
 	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;
