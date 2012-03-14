@@ -118,6 +118,11 @@ parser::parser(): expected(false){}
 bool parser::is_expected() const{ return expected; }
 void parser::is_expected( bool v ){ expected = v; }
 
+error_catcher parser::operator[]( error_handler on_err )
+{
+	return error_catcher( clone(), on_err );
+}
+
 terminal::terminal( size_t tok_id ) :tok_id(tok_id){}
 
 terminal::terminal( terminal const& rhs ) :tok_id(rhs.tok_id){}
@@ -437,6 +442,34 @@ queuer operator > ( queuer const& expr0, parser const& expr1 ){
 
 negnativer operator!( parser const& expr1 ){
 	return negnativer( expr1.clone() );
+}
+
+
+
+error_catcher::error_catcher( shared_ptr<parser> const& p, error_handler err_handler )
+	: expr(p), err_handler(err_handler)
+{
+}
+
+error_catcher::error_catcher( error_catcher const& rhs )
+	: expr(rhs.expr), err_handler( rhs.err_handler )
+{
+}
+
+shared_ptr<parser> error_catcher::clone() const
+{
+	return make_shared<error_catcher>( *this );
+}
+
+bool error_catcher::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const
+{
+	shared_ptr<diag_chat> children_diags = make_shared<diag_chat>();
+	if( !expr->parse(iter, end, attr, children_diags.get() ) ){
+		bool result = err_handler( children_diags.get() );
+		diag_chat::merge( diags, children_diags.get() );
+		return result;
+	}
+	return true;
 }
 
 END_NS_SASL_PARSER();

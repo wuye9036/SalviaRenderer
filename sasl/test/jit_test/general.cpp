@@ -1,3 +1,5 @@
+#define ALL_TESTS_ENABLED 1
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -304,8 +306,6 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 
 	BOOST_CHECK(true);
 }
-
-#define ALL_TESTS_ENABLED 0
 
 #if ALL_TESTS_ENABLED
 

@@ -23,11 +23,11 @@ class diag_chat
 {
 public:
 	static boost::shared_ptr<diag_chat> create();
-
+	static diag_chat* merge( diag_chat* dest, diag_chat* src );
 	void add_report_raised_handler( report_handler_fn const& handler );
 	diag_item& report( token_t& beg, token_t& end, diag_template const& tmpl );
 	diag_item& report( diag_template const& tmpl );
-
+	~diag_chat();
 private:
 	std::vector<report_handler_fn>	handlers;
 	std::vector<diag_item*>			diags;

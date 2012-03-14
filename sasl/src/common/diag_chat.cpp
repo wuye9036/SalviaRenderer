@@ -34,4 +34,19 @@ diag_item& diag_chat::report( diag_template const& tmpl )
 	return *ret;
 }
 
+diag_chat* diag_chat::merge( diag_chat* dest, diag_chat* src )
+{
+	dest->diags.insert( dest->diags.end(), src->diags.begin(), src->diags.end() );
+	src->diags.clear();
+	return dest; 
+}
+
+diag_chat::~diag_chat()
+{
+	for( vector<diag_item*>::iterator it = diags.begin(); it != diags.end(); ++it )
+	{
+		(*it)->release();
+	}
+}
+
 END_NS_SASL_COMMON();

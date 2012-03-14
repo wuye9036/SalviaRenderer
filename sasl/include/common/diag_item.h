@@ -38,7 +38,7 @@ public:
 	diag_item&	file( fname_t const& f );
 	diag_item&	span( token_t const& beg, token_t const& end );
 	bool		is_template( diag_template const& v );
-
+	void		release();
 private:
 	fname_t					item_file;
 	code_span				item_span;

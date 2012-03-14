@@ -24,6 +24,11 @@ diag_item& diag_item::file( fname_t const& f )
 	return *this;
 }
 
+void diag_item::release()
+{
+	delete this;
+}
+
 std::string const& diag_template::template_str() const
 {
 	return tmpl;

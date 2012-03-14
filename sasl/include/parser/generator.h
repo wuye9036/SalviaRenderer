@@ -4,6 +4,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <exception>
@@ -97,13 +98,17 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 // Parser combinators.
+
+typedef boost::function<bool/*Recovered*/ ( sasl::common::diag_chat* diags )> error_handler;
+class error_catcher;
+
 class parser{
 public:
 	parser();
 	virtual bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const = 0;
 	bool is_expected() const;
 	void is_expected( bool v );
-
+	error_catcher operator []( error_handler on_err );
 	virtual boost::shared_ptr<parser> clone() const = 0;
 	virtual ~parser(){}
 private:
@@ -218,8 +223,21 @@ public:
 	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 };
+
+class error_catcher: public parser
+{
+public:
+	error_catcher( boost::shared_ptr<parser> const& p, error_handler err_handler );
+	error_catcher( error_catcher const& );
+	boost::shared_ptr<parser> clone() const;
+	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+private:
+	boost::shared_ptr<parser>	expr;
+	error_handler				err_handler;
+};
+
 //////////////////////////////////////////////////////////////////////////
-// Operators for builting parser combinator.
+// Operators for building parser combinator.
 repeater operator * ( parser const & expr );
 repeater operator - ( parser const& expr );
 selector operator | ( parser const & expr0, parser const& expr1 );
