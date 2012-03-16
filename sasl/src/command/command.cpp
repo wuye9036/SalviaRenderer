@@ -29,6 +29,9 @@ int main (int argc, char **argv){
 	shared_ptr<driver> drv;
 	pfn(drv);
 
+	drv->set_parameter( argc, argv );
+	drv->compile();
+
 #if defined(EFLIB_DEBUG)
 	system("pause");
 #endif
