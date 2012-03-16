@@ -117,22 +117,22 @@ void driver_impl::compile()
 	opt_io.filterate(vm);
 	opt_predef.filterate(vm);
 
-	if( opt_disp.help_enabled() ){
+	if( opt_disp.show_help ){
 		cout << desc << endl;
 		return;
 	}
 
-	if( opt_disp.version_enabled() ){
-		cout << opt_disp.version() << endl;
+	if( opt_disp.show_version ){
+		cout << opt_disp.version_info << endl;
 		return;
 	}
 
-	if( opt_global.detail() == options_global::none ){
+	if( opt_global.detail == options_global::none ){
 		cout << "Detail level is an invalid value. Ignore it." << endl;
 	}
 
 	// Process inputs and outputs.
-	vector<string> inputs = opt_io.inputs();
+	vector<string> inputs = opt_io.in_names;
 
 	if( inputs.empty() ){
 		cout << "Need at least one input file." << endl;
@@ -140,13 +140,13 @@ void driver_impl::compile()
 	}
 
 	// TODO
-	salviar::languages lang = opt_io.language();
+	salviar::languages lang = opt_io.lang;
 
 	EFLIB_ASSERT_AND_IF( lang != salviar::lang_none, "Can not support language guessing by file extension yet." ){
 		return;
 	}
 
-	if( opt_io.format() == options_io::llvm_ir ){
+	if( opt_io.fmt == options_io::llvm_ir ){
 		BOOST_FOREACH( string const & fname, inputs ){
 			cout << "Compile " << fname << "..." << endl;
 
@@ -187,11 +187,10 @@ void driver_impl::compile()
 				return;
 			}
 
-			if( !opt_io.output().empty() ){
-				ofstream out_file( opt_io.output().c_str(), std::ios_base::out );
+			if( !opt_io.output_name.empty() ){
+				ofstream out_file( opt_io.output_name.c_str(), std::ios_base::out );
 				llvmcode->dump( out_file );
 			}
-
 		}
 	}
 }

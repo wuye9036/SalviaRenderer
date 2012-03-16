@@ -24,15 +24,15 @@ void options_filter::reg_extra_parser( po::basic_command_line_parser<char>& ){
 const char* options_display_info::version_tag = "version,v";
 const char* options_display_info::version_desc = "Show version and copyright information";
 const char* options_display_info::version_info = 
-	"SoftArt/SALVIA Shading Language Compiler(sac) 1.0 pre-alpha\r\n"
-	"Copyright (C) 2010 SoftArt/SALVIA Development Group."
+	"SALVIA Shading Language Compiler 0.4 \r\n"
+	"Copyright (C) 2007-2012 SALVIA Development Group."
 	"This software and its full source code copyright is GPLv2.";
 
 const char* options_display_info::help_tag = "help,h";
 const char* options_display_info::help_desc = "Display this information.";
 
 options_display_info::options_display_info()
-	: h(false), v(false)
+	: show_help(false), show_version(false)
 {}
 
 void options_display_info::fill_desc( po::options_description& desc )
@@ -46,25 +46,10 @@ void options_display_info::fill_desc( po::options_description& desc )
 
 void options_display_info::filterate( po::variables_map const & vm )
 {
-	h = ( vm.empty() || vm.count("help") > 0 );
-	v = ( vm.count("version") > 0 );
-
+	show_help		= ( vm.empty() || vm.count("help") > 0 );
+	show_version	= ( vm.count("version") > 0 );
 }
 
-bool options_display_info::help_enabled() const
-{
-	return h;
-}
-
-bool options_display_info::version_enabled() const
-{
-	return v;
-}
-
-char const* options_display_info::version() const
-{
-	return version_info;
-}
 //////////////////////////////////////////////////////////////////////////
 // input & output
 
@@ -91,8 +76,8 @@ void options_io::fill_desc( po::options_description& desc )
 {
 	desc.add_options()
 		( in_tag, po::value< vector<string> >(&in_names), in_desc )
-		( out_tag, po::value< string >(&out_name), out_desc )
-		( dump_ir_tag, po::value< string >(&dmp_ir), dump_ir_desc )
+		( out_tag, po::value< string >(&output_name), out_desc )
+		( dump_ir_tag, po::value< string >(&dump_ir), dump_ir_desc )
 		( export_as_tag, po::value< string >(&fmt_str), export_as_desc )
 		( lang_tag, po::value< string >(&lang_str), lang_desc )
 		;
@@ -129,36 +114,13 @@ void options_io::filterate( po::variables_map const & vm )
 	}
 }
 
-salviar::languages options_io::language() const{
-	return lang;
-}
-
-options_io::export_format options_io::format() const
-{
-	return fmt;
-}
-
-std::string options_io::output() const
-{
-	return out_name;
-}
-
-std::vector<std::string> options_io::inputs() const{
-	return in_names;
-}
-
-string options_io::dump_ir() const
-{
-	return dmp_ir;
-}
-
 //////////////////////////////////////////////////////////////////////////
 // options global
 void options_global::fill_desc( po::options_description& desc )
 {
 	desc.add_options()
 		(
-		"detail-level", po::value<string>(&detail_lvl_str),
+		"detail-level", po::value<string>(&detail_str),
 		"Specify the detail level of compiler output."
 		"The optional items are: quite(q), brief(b), normal(n), verbose(v)."
 		"Default is normal"
@@ -167,29 +129,24 @@ void options_global::fill_desc( po::options_description& desc )
 
 void options_global::filterate( po::variables_map const & vm )
 {
-	detail_lvl = normal;
+	detail = normal;
 	if( vm.count("detail-level") ){
 
-		to_lower( detail_lvl_str );
+		to_lower( detail_str );
 
-		if( detail_lvl_str == "quite" || detail_lvl_str == "q" ){
-			detail_lvl = quite;
-		} else if( detail_lvl_str == "brief" || detail_lvl_str == "b" ){
-			detail_lvl = brief;
-		} else if( detail_lvl_str == "normal" || detail_lvl_str == "n" ){
-			detail_lvl = normal;
-		} else if( detail_lvl_str == "verbose" || detail_lvl_str == "v" ){
-			detail_lvl = verbose;
-		} else if( detail_lvl_str == "debug" || detail_lvl_str == "d" ){
-			detail_lvl = debug;
+		if( detail_str == "quite" || detail_str == "q" ){
+			detail = quite;
+		} else if( detail_str == "brief" || detail_str == "b" ){
+			detail = brief;
+		} else if( detail_str == "normal" || detail_str == "n" ){
+			detail = normal;
+		} else if( detail_str == "verbose" || detail_str == "v" ){
+			detail = verbose;
+		} else if( detail_str == "debug" || detail_str == "d" ){
+			detail = debug;
 		}
 
 	}
-}
-
-options_global::detail_level options_global::detail() const
-{
-	return detail_lvl;
 }
 
 // options_predefinition

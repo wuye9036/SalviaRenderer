@@ -52,11 +52,8 @@ public:
 		debug
 	};
 
-	detail_level detail() const;
-
-private:
-	detail_level detail_lvl;
-	std::string detail_lvl_str;
+	detail_level	detail;
+	std::string		detail_str;
 };
 
 class options_display_info: public options_filter{
@@ -66,23 +63,19 @@ public:
 	void fill_desc( po::options_description& desc );
 	void filterate( po::variables_map const & vm );
 
-	bool help_enabled() const;
-	bool version_enabled() const;
+	po::options_description* pdesc;
 
-	char const* version() const;
+	bool show_help;
+	bool show_version;
 
-private:
-	static const char* version_tag;
-	static const char* version_desc;
 	static const char* version_info;
 
+private:
 	static const char* help_tag;
 	static const char* help_desc;
 
-	po::options_description* pdesc;
-
-	bool h;
-	bool v;
+	static const char* version_tag;
+	static const char* version_desc;
 };
 
 class options_io: public options_filter{
@@ -97,21 +90,15 @@ public:
 		llvm_ir
 	};
 	
-	export_format format() const;
-	std::vector<std::string> inputs() const;
-	salviar::languages language() const;
-	std::string output() const;
-	std::string dump_ir() const;
+	std::vector< std::string >	in_names;
+	export_format				fmt;
+	std::string					fmt_str;
+	salviar::languages			lang;
+	std::string					lang_str;
+	std::string					output_name;
+	std::string					dump_ir;
 
 private:
-	export_format fmt;
-	std::string fmt_str;
-	salviar::languages lang;
-	std::string lang_str;
-	std::vector< std::string > in_names;
-	std::string out_name;
-	std::string dmp_ir;
-
 	static const char* in_tag;
 	static const char* in_desc;
 
