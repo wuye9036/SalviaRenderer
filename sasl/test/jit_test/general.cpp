@@ -4,7 +4,7 @@
 #include <boost/test/unit_test.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <sasl/include/compiler/options.h>
+#include <sasl/include/driver/driver_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/symbol.h>
@@ -36,13 +36,11 @@
 #include <iostream>
 
 using namespace eflib;
-using sasl::compiler::compiler;
 
-using sasl::semantic::symbol;
-
+using sasl::driver::driver;
 using sasl::code_generator::jit_engine;
-using sasl::code_generator::cgllvm_jit_engine;
 using sasl::code_generator::llvm_module;
+using sasl::semantic::symbol;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::PACKAGE_LINE_ELEMENT_COUNT;
@@ -95,7 +93,7 @@ protected:
 	typedef typename push_front<callee_parameters, void>::type
 		callee_return_parameters;
 public:
-	EFLIB_OPERATOR_BOOL( jit_function_forward_base<Fn> ){ return callee; }
+	EFLIB_OPERATOR_BOOL( jit_function_forward_base<Fn> ){ return callee != NULL; }
 	typedef typename function_pointer<callee_return_parameters>::type
 		callee_ptr_t;
 	callee_ptr_t callee;
@@ -235,24 +233,24 @@ struct jit_fixture {
 	}
 
 	void init( string const& file_name, string const& options ){
-		c.parse( make_command(file_name, options) );
+		create_driver(drv);
+		BOOST_REQUIRE(drv);
+		
+		drv->set_parameter( make_command(file_name, options) );
+		drv->compile();
 
-		bool aborted = false;
-		c.process( aborted );
+		BOOST_REQUIRE( drv->root() );
+		BOOST_REQUIRE( drv->mod_si() );
+		BOOST_REQUIRE( drv->mod_codegen() );
 
-		BOOST_REQUIRE( c.root() );
-		BOOST_REQUIRE( c.module_sem() );
-		BOOST_REQUIRE( c.module_codegen() );
+		root_sym = drv->mod_si()->root();
 
-		root_sym = c.module_sem()->root();
-
+		shared_ptr<llvm_module> llvm_mod = shared_polymorphic_cast<llvm_module>( drv->mod_codegen() );
 		fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
-		dump( shared_polymorphic_cast<llvm_module>(c.module_codegen()), dump_file );
+		llvm_mod->dump( dump_file );
 		dump_file.close();
 
-		std::string jit_err;
-
-		je = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(c.module_codegen()), jit_err );
+		je = drv->create_jit();
 		BOOST_REQUIRE( je );
 	}
 
@@ -271,9 +269,9 @@ struct jit_fixture {
 
 	~jit_fixture(){}
 
-	compiler c;
-	shared_ptr<symbol> root_sym;
-	shared_ptr<jit_engine> je;
+	shared_ptr<driver>		drv;
+	shared_ptr<symbol>		root_sym;
+	shared_ptr<jit_engine>	je;
 };
 
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
@@ -727,14 +725,14 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 
 #if ALL_TESTS_ENABLED
 
-__m128 to_mm( vec4& v ){
+__m128 to_mm( vec4 const& v ){
 	__m128 tmp;
 	*(vec4*)(&tmp) = v;
 	return tmp;
 }
 
-vec4 to_vec4( __m128& v ){
-	return *reinterpret_cast<vec4*>(&v);
+vec4 to_vec4( __m128 const& v ){
+	return *reinterpret_cast<vec4 const*>(&v);
 }
 
 BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )

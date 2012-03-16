@@ -17,7 +17,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 class llvm_module;
 class cgllvm_sctxt;
 
-class cgllvm_jit_engine:public jit_engine{
+class cgllvm_jit_engine : public jit_engine{
 public:
 
 	static boost::shared_ptr<cgllvm_jit_engine> create( boost::shared_ptr<llvm_module>, std::string& error );

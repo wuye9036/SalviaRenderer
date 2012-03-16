@@ -7,6 +7,7 @@
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 using salviar::sv_usage;
@@ -56,6 +57,18 @@ llvm::Module* llvm_module_impl::get_ownership() const{
 
 boost::shared_ptr<llvm::IRBuilder<> > llvm_module_impl::builder() const{
 	return irbuilder;
+}
+
+void llvm_module_impl::dump() const
+{
+	module()->dump();
+}
+
+void llvm_module_impl::dump( std::ostream& ostr ) const
+{
+	llvm::raw_os_ostream raw_os(ostr);
+	module()->print( raw_os, NULL );
+	raw_os.flush();
 }
 
 END_NS_SASL_CODE_GENERATOR();

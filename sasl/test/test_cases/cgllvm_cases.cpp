@@ -76,7 +76,7 @@ void cgllvm_cases::initialize(){
 
 	fputs("\n======================================================\n", stderr);
 	fputs("Generated LLVM IR (before optimized): \r\n", stderr);
-	CODEGEN_(dump)(root());
+	root()->dump();
 	fputs("======================================================\n", stderr);
 
 	ops.clear();
@@ -85,7 +85,7 @@ void cgllvm_cases::initialize(){
 
 	fputs("\n======================================================\n", stderr);
 	fputs("Generated LLVM IR (after optimized): \r\n", stderr);
-	CODEGEN_(dump)(root());
+	root()->dump();
 	fputs("======================================================\n", stderr);
 	
 	eflib::logrout::write_state( eflib::logrout::screen(), eflib::logrout::on() );

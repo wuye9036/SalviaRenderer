@@ -1,8 +1,8 @@
-#ifndef SASL_DRIVER_DRIVER_H
-#define SASL_DRIVER_DRIVER_H
+#ifndef SASL_DRIVER_DRIVER_IMPL_H
+#define SASL_DRIVER_DRIVER_IMPL_H
 
 #include <sasl/include/driver/driver_forward.h>
-#include <sasl/include/driver/driver_api.h>
+#include <sasl/include/driver/driver.h>
 #include <sasl/include/driver/options.h>
 
 BEGIN_NS_SASL_DRIVER();
@@ -17,8 +17,11 @@ public:
 	virtual void set_code_source( std::string const& );
 	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& );
 	virtual void set_diag_chat( sasl::common::diag_chat* diags );
+	// virtual void set_dump_ir( std::string const& );
 
 	virtual void compile();
+
+	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit();
 
 	virtual boost::shared_ptr< sasl::semantic::module_si >				mod_si() const;
 	virtual boost::shared_ptr< sasl::code_generator::codegen_context>	mod_codegen() const;

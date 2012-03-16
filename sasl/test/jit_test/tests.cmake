@@ -13,7 +13,7 @@ if( SALVIA_BUILD_WITH_LLVM )
 	)
 
 	if ( WIN32 AND MINGW )
-		set ( SASL_JIT_TEST_LIBS ${SASL_JIT_TEST_LIBS} imagehlp psapi )
+		set ( SASL_JIT_TEST_LIBS imagehlp psapi )
 	endif( WIN32 AND MINGW )
 
 	ADD_DEFINITIONS(

@@ -1,9 +1,10 @@
-#include <sasl/include/driver/driver.h>
+#include <sasl/include/driver/driver_impl.h>
 
 #include <sasl/include/driver/code_sources.h>
 #include <sasl/include/driver/options.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
+#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/parser/parse_api.h>
@@ -24,6 +25,8 @@ namespace po = boost::program_options;
 using sasl::code_generator::llvm_module;
 using sasl::code_generator::generate_llvm_code;
 using sasl::code_generator::codegen_context;
+using sasl::code_generator::jit_engine;
+using sasl::code_generator::cgllvm_jit_engine;
 using sasl::semantic::module_si;
 using sasl::semantic::analysis_semantic;
 using sasl::semantic::abi_analyser;
@@ -31,6 +34,7 @@ using sasl::syntax_tree::node;
 using sasl::common::diag_chat;
 using sasl::common::code_source;
 
+using boost::shared_polymorphic_cast;
 using boost::shared_ptr;
 
 using std::vector;
@@ -185,7 +189,7 @@ void driver_impl::compile()
 
 			if( !opt_io.output().empty() ){
 				ofstream out_file( opt_io.output().c_str(), std::ios_base::out );
-				dump( llvmcode, out_file );
+				llvmcode->dump( out_file );
 			}
 
 		}
@@ -232,6 +236,12 @@ void driver_impl::set_code_source( shared_ptr<code_source> const& )
 void driver_impl::set_diag_chat( diag_chat* diags )
 {
 
+}
+
+shared_ptr<jit_engine> driver_impl::create_jit()
+{
+	std::string err;
+	return cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
 }
 
 END_NS_SASL_DRIVER();

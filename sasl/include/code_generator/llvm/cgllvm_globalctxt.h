@@ -33,6 +33,8 @@ public:
 	virtual llvm::Module* module() const;
 	virtual boost::shared_ptr<llvm::DefaultIRBuilder> builder() const;
 	virtual llvm::Module* get_ownership() const;
+	virtual void dump() const;
+	virtual void dump( std::ostream& ostr ) const;
 
 	virtual llvm::LLVMContext& context();
 

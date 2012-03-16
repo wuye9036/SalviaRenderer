@@ -28,9 +28,12 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class llvm_module: public codegen_context{
 public:
-	virtual llvm::Module* module() const = 0;
-	virtual llvm::Module* get_ownership() const = 0;
-	virtual llvm::LLVMContext& context() = 0;
+	virtual llvm::Module*		module() const					= 0;
+	virtual llvm::Module*		get_ownership() const			= 0;
+	virtual llvm::LLVMContext&	context()						= 0;
+	virtual void				dump() const					= 0;
+	virtual void				dump( std::ostream& ostr ) const= 0;
+
 	virtual ~llvm_module(){};
 };
 
@@ -41,8 +44,7 @@ enum optimization_options{
 
 boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_si*, sasl::semantic::abi_info const* );
 void optimize( boost::shared_ptr<llvm_module>, std::vector<optimization_options> opt_options );
-void dump( boost::shared_ptr<llvm_module> );
-void dump( boost::shared_ptr<llvm_module>, std::ostream& o );
+
 // void optimize( boost::shared_ptr<llvm_module>, const std::string& params );
 
 END_NS_SASL_CODE_GENERATOR();

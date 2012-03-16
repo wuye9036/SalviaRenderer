@@ -3,6 +3,7 @@
 
 #include <sasl/include/driver/driver_forward.h>
 
+#include <sasl/include/driver/driver.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -17,44 +18,11 @@
 
 namespace sasl
 {
-	namespace common
+	namespace driver
 	{
-		class code_source;
-		class diag_chat;
-	}
-	namespace semantic
-	{
-		class module_si;
-	}
-	namespace code_generator
-	{
-		class codegen_context;
-	}
-	namespace syntax_tree
-	{
-		class node;
+		class driver;
 	}
 }
-
-BEGIN_NS_SASL_DRIVER();
-
-class SASL_DRIVER_API driver{
-public:
-	virtual void set_parameter( int argc, char** argv )				= 0;
-	virtual void set_parameter( std::string const& cmd )			= 0;
-	
-	virtual void set_code_source( std::string const& )				= 0;
-	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& )	= 0;
-	virtual void set_diag_chat( sasl::common::diag_chat* diags )					= 0;
-
-	virtual void compile()											= 0;
-
-	virtual boost::shared_ptr< sasl::semantic::module_si >				mod_si() const		= 0;
-	virtual boost::shared_ptr< sasl::code_generator::codegen_context>	mod_codegen() const	= 0;
-	virtual boost::shared_ptr< sasl::syntax_tree::node >				root() const		= 0;
-};
-
-END_NS_SASL_DRIVER();
 
 extern "C"
 {

@@ -74,6 +74,9 @@ const char* options_io::in_desc = "Specify input files.";
 const char* options_io::out_tag = "out,o";
 const char* options_io::out_desc = "File name of output.";
 
+char const* options_io::dump_ir_tag = "dump_ir";
+char const* options_io::dump_ir_desc = "Dump LLVM IR to file";
+
 const char* options_io::export_as_tag = "export-as";
 const char* options_io::export_as_desc = "Specifies the content of output file that the compiler should generate.";
 
@@ -89,6 +92,7 @@ void options_io::fill_desc( po::options_description& desc )
 	desc.add_options()
 		( in_tag, po::value< vector<string> >(&in_names), in_desc )
 		( out_tag, po::value< string >(&out_name), out_desc )
+		( dump_ir_tag, po::value< string >(&dmp_ir), dump_ir_desc )
 		( export_as_tag, po::value< string >(&fmt_str), export_as_desc )
 		( lang_tag, po::value< string >(&lang_str), lang_desc )
 		;
@@ -141,6 +145,11 @@ std::string options_io::output() const
 
 std::vector<std::string> options_io::inputs() const{
 	return in_names;
+}
+
+string options_io::dump_ir() const
+{
+	return dmp_ir;
 }
 
 //////////////////////////////////////////////////////////////////////////

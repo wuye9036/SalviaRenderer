@@ -23,6 +23,7 @@ set( HEADER_FILES
 
 set( SOURCE_FILES
 	driver_impl.cpp
+	driver_api.cpp
 	options.cpp
 	code_sources.cpp
 )

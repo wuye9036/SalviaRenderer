@@ -101,6 +101,7 @@ public:
 	std::vector<std::string> inputs() const;
 	salviar::languages language() const;
 	std::string output() const;
+	std::string dump_ir() const;
 
 private:
 	export_format fmt;
@@ -109,6 +110,7 @@ private:
 	std::string lang_str;
 	std::vector< std::string > in_names;
 	std::string out_name;
+	std::string dmp_ir;
 
 	static const char* in_tag;
 	static const char* in_desc;
@@ -118,6 +120,9 @@ private:
 
 	static const char* out_tag;
 	static const char* out_desc;
+	
+	static const char* dump_ir_tag;
+	static const char* dump_ir_desc;
 
 	static const char* export_as_tag;
 	static const char* export_as_desc;

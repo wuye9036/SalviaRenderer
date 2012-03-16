@@ -59,15 +59,4 @@ void optimize( shared_ptr<llvm_module> code, vector<optimization_options> opt_op
 	}
 }
 
-void dump( shared_ptr<llvm_module> code )
-{
-	code->module()->dump();
-}
-
-void dump( shared_ptr<llvm_module> code, ostream& o ){
-	raw_os_ostream raw_os(o);
-	code->module()->print( raw_os, NULL );
-	raw_os.flush();
-}
-
 END_NS_SASL_CODE_GENERATOR();
