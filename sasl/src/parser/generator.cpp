@@ -1,6 +1,7 @@
 #include <sasl/include/parser/generator.h>
 
 #include <sasl/include/parser/lexer.h>
+#include <sasl/include/parser/diags.h>
 #include <sasl/include/common/token.h>
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/common/diag_item.h>
@@ -123,13 +124,14 @@ error_catcher parser::operator[]( error_handler on_err )
 	return error_catcher( clone(), on_err );
 }
 
-terminal::terminal( size_t tok_id ) :tok_id(tok_id){}
+terminal::terminal( size_t tok_id, std::string const& desc ) :tok_id(tok_id), desc(desc){}
 
-terminal::terminal( terminal const& rhs ) :tok_id(rhs.tok_id){}
+terminal::terminal( terminal const& rhs ) :tok_id(rhs.tok_id), desc(rhs.desc){}
 
 bool terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	if ( iter == end ){
+		diags->report( end_of_file ) % desc;
 		return false;
 	}
 
@@ -142,6 +144,7 @@ bool terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attri
 		return true;
 	}
 
+	diags->report( unmatched_token ).span(**iter, **iter) % (*iter)->str;
 	return false;
 }
 

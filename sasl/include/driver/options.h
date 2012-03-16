@@ -1,5 +1,5 @@
-#ifndef SASL_COMPILER_OPTIONS_H
-#define SASL_COMPILER_OPTIONS_H
+#ifndef SASL_DRIVER_OPTIONS_H
+#define SASL_DRIVER_OPTIONS_H
 
 #include <sasl/include/compiler/compiler_forward.h>
 #include <sasl/include/syntax_tree/parse_api.h>
@@ -24,7 +24,8 @@ namespace sasl{
 		class codegen_context;
 	}
 }
-BEGIN_NS_SASL_COMPILER();
+
+BEGIN_NS_SASL_DRIVER();
 
 namespace po = boost::program_options;
 
@@ -176,6 +177,6 @@ private:
 	po::variables_map vm;
 };
 
-END_NS_SASL_COMPILER();
+END_NS_SASL_DRIVER();
 
 #endif

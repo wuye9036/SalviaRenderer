@@ -117,13 +117,14 @@ private:
 
 class terminal: public parser{
 public:
-	terminal( size_t tok_id );
+	terminal( size_t tok_id, std::string const& desc );
 	terminal( terminal const& rhs );
 	bool parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 private:
 	terminal& operator = (terminal const &);
 	size_t tok_id;
+	std::string desc;
 };
 
 class repeater: public parser{

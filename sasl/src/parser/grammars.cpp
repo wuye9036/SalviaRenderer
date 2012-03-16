@@ -2,7 +2,7 @@
 
 #include <sasl/include/parser/lexer.h>
 
-#define STERM( name ) terminal( lxr.get_id( #name ) )
+#define STERM( name ) terminal( lxr.get_id( #name ), #name )
 #define SRULE( rule_name, def ) \
 	rule_name = def;	\
 	rule_name.name( #rule_name );
