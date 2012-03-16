@@ -14,14 +14,15 @@ LINK_DIRECTORIES(
 
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/driver/options.h
-	${SASL_HOME_DIR}/sasl/include/driver/driver.h
 	${SASL_HOME_DIR}/sasl/include/driver/driver_api.h
+	${SASL_HOME_DIR}/sasl/include/driver/driver.h
+	${SASL_HOME_DIR}/sasl/include/driver/driver_impl.h
 	${SASL_HOME_DIR}/sasl/include/driver/driver_forward.h
 	${SASL_HOME_DIR}/sasl/include/driver/code_sources.h
 )
 
 set( SOURCE_FILES
-	driver.cpp
+	driver_impl.cpp
 	options.cpp
 	code_sources.cpp
 )
@@ -29,9 +30,10 @@ set( SOURCE_FILES
 ADD_LIBRARY( sasl_driver SHARED ${HEADER_FILES} ${SOURCE_FILES} )
 
 TARGET_LINK_LIBRARIES( sasl_driver
-	sasl_cgllvm
+	EFLIB
 	sasl_semantic sasl_syntaxtree sasl_parser
 	sasl_enums sasl_common
+	sasl_cgllvm
 	${SASL_LLVM_LIBS}
 	${SALVIA_BOOST_LIBS}
 )

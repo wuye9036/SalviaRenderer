@@ -18,13 +18,7 @@ set( SOURCE_FILES
 
 ADD_EXECUTABLE( sasl_command ${HEADER_FILES} ${SOURCE_FILES} )
 
-TARGET_LINK_LIBRARIES( sasl_command
-	sasl_compiler sasl_cgllvm
-	sasl_semantic sasl_syntaxtree sasl_parser
-	sasl_enums sasl_common
-	${SASL_LLVM_LIBS}
-	${SALVIA_BOOST_LIBS}
-)
+TARGET_LINK_LIBRARIES( sasl_command EFLIB )
 
 SET_TARGET_PROPERTIES( sasl_command PROPERTIES FOLDER "Shader Drivers")
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_command )

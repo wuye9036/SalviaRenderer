@@ -1,7 +1,7 @@
 #ifndef SASL_DRIVER_OPTIONS_H
 #define SASL_DRIVER_OPTIONS_H
 
-#include <sasl/include/compiler/compiler_forward.h>
+#include <sasl/include/driver/driver_forward.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 
 #include <salviar/include/shader.h>
@@ -139,42 +139,6 @@ private:
 
 	static const char* define_tag;
 	static const char* define_desc;
-};
-
-class compiler{
-public:
-	compiler();
-	
-	bool parse( int argc, char** argv );
-	bool parse( std::string const& cmd );
-
-	void process( bool& abort );
-
-	po::variables_map const & variables() const;
-	options_display_info const & display_info() const;
-	options_io const & io_info() const;
-	
-	boost::shared_ptr< sasl::semantic::module_si > module_sem() const;
-	boost::shared_ptr< sasl::code_generator::codegen_context > module_codegen() const;
-	boost::shared_ptr< sasl::syntax_tree::node > root() const;
-
-private:
-	compiler( compiler const& );
-	compiler& operator = ( compiler const& );
-
-	template <typename ParserT> bool parse( ParserT& parser );
-
-	boost::shared_ptr< sasl::semantic::module_si > msi;
-	boost::shared_ptr< sasl::code_generator::codegen_context> mcg;
-	boost::shared_ptr< sasl::syntax_tree::node > mroot;
-
-	options_global opt_global;
-	options_display_info opt_disp;
-	options_io opt_io;
-	options_predefinition opt_predef;
-
-	po::options_description desc;
-	po::variables_map vm;
 };
 
 END_NS_SASL_DRIVER();

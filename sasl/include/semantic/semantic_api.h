@@ -20,8 +20,11 @@ BEGIN_NS_SASL_SEMANTIC();
 
 class module_si;
 
-boost::shared_ptr<module_si> analysis_semantic( boost::shared_ptr< ::sasl::syntax_tree::node > const& root );
+boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( boost::shared_ptr<sasl::syntax_tree::node> const& root );
+boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( sasl::syntax_tree::node* root );
 
 END_NS_SASL_SEMANTIC();
+
+
 
 #endif

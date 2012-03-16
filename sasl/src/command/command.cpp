@@ -1,11 +1,12 @@
 #include <eflib/include/platform/config.h>
+#include <eflib/include/platform/dl_loader.h>
 
-#include <sasl/include/compiler/options.h>
-
-using sasl::compiler::compiler;
-using sasl::compiler::options_io;
+using sasl::driver;
+using eflib::dynamic_lib;
 
 int main (int argc, char **argv){
+
+	shared_ptr<dynamic_lib> eflib::dynamic_lib;
 
 	bool aborted = false;
 

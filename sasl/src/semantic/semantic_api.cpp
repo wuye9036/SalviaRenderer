@@ -2,12 +2,10 @@
 #include <sasl/include/semantic/semantic_analyser.h>
 #include <sasl/include/syntax_tree/node.h>
 
-BEGIN_NS_SASL_SEMANTIC();
-
-using ::sasl::syntax_tree::node;
-using ::sasl::common::compiler_info_manager;
-
+using sasl::syntax_tree::node;
 using boost::shared_ptr;
+
+BEGIN_NS_SASL_SEMANTIC();
 
 shared_ptr<module_si> analysis_semantic( shared_ptr<node> const& root ){
 	semantic_analyser saimpl;
@@ -15,4 +13,10 @@ shared_ptr<module_si> analysis_semantic( shared_ptr<node> const& root ){
 	return saimpl.module_semantic_info();
 }
 
+shared_ptr<module_si> analysis_semantic( node* root )
+{
+	return analysis_semantic( root->as_handle() );
+}
+
 END_NS_SASL_SEMANTIC();
+

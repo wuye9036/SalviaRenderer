@@ -3,8 +3,8 @@ SALVIA_CHECK_BUILD_WITH_UNICODE()
 INCLUDE_DIRECTORIES(
 	${SASL_HOME_DIR}
 	${SALVIA_BOOST_HOME_DIR}
-	${SALVIA_LLVM_INCLUDE_PATH}
 	${SALVIA_HOME_DIR}
+	${SALVIA_LLVM_INCLUDE_PATH}
 )
 
 LINK_DIRECTORIES(
@@ -27,8 +27,7 @@ ADD_LIBRARY( sasl_host SHARED
 
 TARGET_LINK_LIBRARIES( sasl_host
 	EFLIB
-	sasl_semantic sasl_syntaxtree
-	sasl_parser
+	sasl_semantic sasl_syntaxtree sasl_parser
 	sasl_enums sasl_common
 	sasl_cgllvm
 	${SASL_LLVM_LIBS}

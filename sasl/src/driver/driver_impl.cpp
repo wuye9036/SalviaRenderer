@@ -1,7 +1,49 @@
-BEGIN_NS_SASL_COMPILER();
+#include <sasl/include/driver/driver.h>
+
+#include <sasl/include/driver/code_sources.h>
+#include <sasl/include/driver/options.h>
+
+#include <sasl/include/code_generator/llvm/cgllvm_api.h>
+#include <sasl/include/semantic/semantic_api.h>
+#include <sasl/include/semantic/abi_analyser.h>
+#include <sasl/include/parser/parse_api.h>
+#include <sasl/include/parser/diags.h>
+#include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/common/diag_chat.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/program_options.hpp>
+#include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+#include <fstream>
+
+namespace po = boost::program_options;
+
+using sasl::code_generator::llvm_module;
+using sasl::code_generator::generate_llvm_code;
+using sasl::code_generator::codegen_context;
+using sasl::semantic::module_si;
+using sasl::semantic::analysis_semantic;
+using sasl::semantic::abi_analyser;
+using sasl::syntax_tree::node;
+using sasl::common::diag_chat;
+using sasl::common::code_source;
+
+using boost::shared_ptr;
+
+using std::vector;
+using std::string;
+using std::cout;
+using std::endl;
+using std::ostream;
+using std::ofstream;
+
+BEGIN_NS_SASL_DRIVER();
 
 template <typename ParserT>
-bool compiler::parse( ParserT& parser )
+bool driver_impl::parse( ParserT& parser )
 {
 	try{
 		opt_disp.reg_extra_parser( parser );
@@ -35,23 +77,28 @@ bool compiler::parse( ParserT& parser )
 	return true;
 }
 
-bool compiler::parse( int argc, char** argv )
+void driver_impl::set_parameter( int argc, char** argv )
 {
 	po::basic_command_line_parser<char> parser
 		= po::command_line_parser(argc, argv).options( desc ).allow_unregistered();
-	return parse(parser);
+	if( !parse(parser) )
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
 }
 
-bool compiler::parse( std::string const& cmd )
+void driver_impl::set_parameter( std::string const& cmd )
 {
 	vector<string> cmds = po::split_unix(cmd);
 	po::basic_command_line_parser<char> parser
 		= po::command_line_parser(cmds).options( desc ).allow_unregistered();
 
-	return parse( parser );
+	if( !parse( parser ) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
 }
 
-compiler::compiler()
+driver_impl::driver_impl()
 {
 	opt_disp.fill_desc(desc);
 	opt_global.fill_desc(desc);
@@ -59,10 +106,8 @@ compiler::compiler()
 	opt_predef.fill_desc(desc);
 }
 
-void compiler::process( bool& abort )
+void driver_impl::compile()
 {
-	abort = false;
-
 	opt_disp.filterate(vm);
 	opt_global.filterate(vm);
 	opt_io.filterate(vm);
@@ -103,7 +148,7 @@ void compiler::process( bool& abort )
 
 			shared_ptr<diag_chat> diags = diag_chat::create();
 
-			shared_ptr<compiler_code_source> code_src( new compiler_code_source() );
+			shared_ptr<driver_code_source> code_src( new driver_code_source() );
 			if ( !code_src->process_file(fname, diags.get()) ){
 				diags->report( sasl::parser::cannot_open_input_file ) % fname;
 				return;
@@ -112,14 +157,12 @@ void compiler::process( bool& abort )
 			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags.get() );
 			if( !mroot ){
 				cout << "Syntax error occurs!" << endl;
-				abort = true;
 				return;
 			}
 
-			msi = analysis_semantic( mroot );
+			msi = analysis_semantic( mroot.get() );
 			if( !msi ){
 				cout << "Semantic error occurs!" << endl;
-				abort = true;
 				return;
 			}
 
@@ -128,7 +171,6 @@ void compiler::process( bool& abort )
 			if( !aa.auto_entry( msi, lang ) ){
 				if ( lang != salviar::lang_general ){
 					cout << "ABI analysis error occurs!" << endl;
-					abort = true;
 					return;
 				}
 			}
@@ -138,7 +180,6 @@ void compiler::process( bool& abort )
 
 			if( !llvmcode ){
 				cout << "Code generation error occurs!" << endl;
-				abort = true;
 				return;
 			}
 
@@ -151,29 +192,46 @@ void compiler::process( bool& abort )
 	}
 }
 
-shared_ptr< module_si > compiler::module_sem() const{
+shared_ptr< module_si > driver_impl::mod_si() const{
 	return msi;
 }
 
-shared_ptr<codegen_context> compiler::module_codegen() const{
+shared_ptr<codegen_context> driver_impl::mod_codegen() const{
 	return mcg;
 }
 
-shared_ptr<node> compiler::root() const{
+shared_ptr<node> driver_impl::root() const{
 	return mroot;
 }
 
-po::variables_map const & compiler::variables() const
+po::variables_map const & driver_impl::variables() const
 {
 	return vm;
 }
 
-options_display_info const & compiler::display_info() const
+options_display_info const & driver_impl::display_info() const
 {
 	return opt_disp;
 }
 
-options_io const & compiler::io_info() const
+options_io const & driver_impl::io_info() const
 {
 	return opt_io;
 }
+
+void driver_impl::set_code_source( std::string const& )
+{
+
+}
+
+void driver_impl::set_code_source( shared_ptr<code_source> const& )
+{
+
+}
+
+void driver_impl::set_diag_chat( diag_chat* diags )
+{
+
+}
+
+END_NS_SASL_DRIVER();

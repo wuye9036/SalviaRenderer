@@ -1,61 +1,18 @@
-#include <sasl/include/compiler/options.h>
+#include <sasl/include/driver/options.h>
 
-#include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/common/lex_context.h>
-#include <sasl/include/common/diag_chat.h>
-#include <sasl/include/parser/diags.h>
-#include <sasl/include/semantic/abi_analyser.h>
-#include <sasl/include/semantic/semantic_api.h>
-#include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/syntax_tree/parse_api.h>
-#include <sasl/include/syntax_tree/program.h>
-
-#include <salviar/include/enums.h>
-
-#include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/wave.hpp>
-#include <boost/wave/cpplexer/cpp_lex_token.hpp>
-#include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <boost/exception/all.hpp>
-#include <iostream>
-#include <fstream>
-
-using sasl::code_generator::codegen_context;
-using sasl::code_generator::llvm_module;
-using sasl::code_generator::generate_llvm_code;
-using sasl::common::lex_context;
-using sasl::common::diag_chat;
-using sasl::semantic::abi_analyser;
-using sasl::semantic::module_si;
-using sasl::semantic::analysis_semantic;
-using sasl::syntax_tree::node;
-using sasl::syntax_tree::parse;
-using sasl::syntax_tree::program;
-
-using boost::make_shared;
-using boost::scoped_ptr;
-using boost::shared_polymorphic_cast;
-using boost::shared_ptr;
 using boost::to_lower;
 
-using std::cout;
-using std::endl;
-using std::ifstream;
 using std::locale;
-using std::isalnum;
-using std::isalpha;
-using std::make_pair;
-using std::ofstream;
 using std::pair;
 using std::string;
 using std::vector;
+
+BEGIN_NS_SASL_DRIVER();
 
 // options filter
 void options_filter::reg_extra_parser( po::basic_command_line_parser<char>& ){
@@ -130,7 +87,7 @@ options_io::options_io() : fmt(none), lang(salviar::lang_none)
 void options_io::fill_desc( po::options_description& desc )
 {
 	desc.add_options()
-		( in_tag, po::value< std::vector<string> >(&in_names), in_desc )
+		( in_tag, po::value< vector<string> >(&in_names), in_desc )
 		( out_tag, po::value< string >(&out_name), out_desc )
 		( export_as_tag, po::value< string >(&fmt_str), export_as_desc )
 		( lang_tag, po::value< string >(&lang_str), lang_desc )
@@ -293,5 +250,5 @@ pair<string, string> options_predefinition::parse_predef( string const& str )
 		return null_ret;
 	}
 }
-END_NS_SASL_COMPILER();
+END_NS_SASL_DRIVER();
 
