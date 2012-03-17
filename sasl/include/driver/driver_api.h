@@ -11,9 +11,11 @@
 #include <string>
 
 #if defined(sasl_driver_EXPORTS)
-#define SASL_DRIVER_API __declspec(dllexport)
+#	define SASL_DRIVER_API __declspec(dllexport)
+#elif defined(SASL_STATIC_DRIVER)
+#	define SASL_DRIVER_API
 #else
-#define SASL_DRIVER_API __declspec(dllimport)
+#	define SASL_DRIVER_API __declspec(dllimport)
 #endif
 
 namespace sasl
@@ -26,8 +28,7 @@ namespace sasl
 
 extern "C"
 {
-	typedef void (*create_driver_pfn)( boost::shared_ptr<sasl::driver::driver>& out );
-	SASL_DRIVER_API void create_driver( boost::shared_ptr<sasl::driver::driver>& out );
+	SASL_DRIVER_API void sasl_create_driver( boost::shared_ptr<sasl::driver::driver>& out );
 };
 
 #endif

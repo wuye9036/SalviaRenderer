@@ -233,7 +233,7 @@ struct jit_fixture {
 	}
 
 	void init( string const& file_name, string const& options ){
-		create_driver(drv);
+		sasl_create_driver(drv);
 		BOOST_REQUIRE(drv);
 		
 		drv->set_parameter( make_command(file_name, options) );

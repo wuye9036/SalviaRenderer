@@ -1,9 +1,5 @@
 #include <eflib/include/platform/config.h>
-
-
-#include <sasl/include/driver/driver_api.h>
 #include <sasl/include/driver/driver.h>
-
 #include <eflib/include/platform/dl_loader.h>
 
 using eflib::dynamic_lib;
@@ -23,9 +19,9 @@ using boost::shared_ptr;
 #endif
 
 int main (int argc, char **argv){
-	create_driver_pfn pfn = NULL;
+	void (*pfn)( shared_ptr<driver>& ) = NULL;
 	shared_ptr<dynamic_lib> driver_lib = dynamic_lib::load( std::string(DRIVER_NAME) + std::string(DRIVER_EXT) );
-	driver_lib->get_function( pfn, "create_driver" );
+	driver_lib->get_function( pfn, "sasl_create_driver" );
 	shared_ptr<driver> drv;
 	pfn(drv);
 
