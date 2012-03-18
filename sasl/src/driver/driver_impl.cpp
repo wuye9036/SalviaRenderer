@@ -31,6 +31,7 @@ using sasl::semantic::module_si;
 using sasl::semantic::analysis_semantic;
 using sasl::semantic::abi_analyser;
 using sasl::syntax_tree::node;
+using sasl::common::lex_context;
 using sasl::common::diag_chat;
 using sasl::common::code_source;
 
@@ -112,12 +113,26 @@ driver_impl::driver_impl()
 
 void driver_impl::compile()
 {
+	// Initialize env for compiling.
+	shared_ptr<diag_chat> local_diags;
+	diag_chat* diags = NULL;
+	if( user_diags )
+	{
+		diags = user_diags;
+	}
+	else 
+	{
+		local_diags = diag_chat::create();
+		diags = local_diags.get();
+	}
+
 	opt_disp.filterate(vm);
 	opt_global.filterate(vm);
 	opt_io.filterate(vm);
 	opt_predef.filterate(vm);
 
 	if( opt_disp.show_help ){
+		// diags->report();
 		cout << desc << endl;
 		return;
 	}
@@ -132,7 +147,7 @@ void driver_impl::compile()
 	}
 
 	// Process inputs and outputs.
-	vector<string> inputs = opt_io.in_names;
+	vector<string> inputs = opt_io.input_file_names;
 
 	if( inputs.empty() ){
 		cout << "Need at least one input file." << endl;
@@ -150,15 +165,13 @@ void driver_impl::compile()
 		BOOST_FOREACH( string const & fname, inputs ){
 			cout << "Compile " << fname << "..." << endl;
 
-			shared_ptr<diag_chat> diags = diag_chat::create();
-
 			shared_ptr<driver_code_source> code_src( new driver_code_source() );
-			if ( !code_src->process_file(fname, diags.get()) ){
-				diags->report( sasl::parser::cannot_open_input_file ) % fname;
+			if ( !code_src->set_file(fname ) ){
+				diags->report( sasl::parser::cannot_open_input_file )->p(fname);
 				return;
 			} 
 
-			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags.get() );
+			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags );
 			if( !mroot ){
 				cout << "Syntax error occurs!" << endl;
 				return;
@@ -187,8 +200,8 @@ void driver_impl::compile()
 				return;
 			}
 
-			if( !opt_io.output_name.empty() ){
-				ofstream out_file( opt_io.output_name.c_str(), std::ios_base::out );
+			if( !opt_io.output_file_name.empty() ){
+				ofstream out_file( opt_io.output_file_name.c_str(), std::ios_base::out );
 				llvmcode->dump( out_file );
 			}
 		}
@@ -222,25 +235,38 @@ options_io const & driver_impl::io_info() const
 	return opt_io;
 }
 
-void driver_impl::set_code_source( std::string const& )
+void driver_impl::set_code( std::string const& code )
 {
-
+	shared_ptr<driver_code_source> src( new driver_code_source() );
+	src->set_code( code );
+	user_code_src = src;
+	user_lex_ctxt = src;
 }
 
-void driver_impl::set_code_source( shared_ptr<code_source> const& )
+void driver_impl::set_code_source( shared_ptr<code_source> const& src )
 {
-
+	user_code_src = src;
 }
 
 void driver_impl::set_diag_chat( diag_chat* diags )
 {
-
+	user_diags = diags;
 }
 
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
 	std::string err;
 	return cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
+}
+
+void driver_impl::set_code_file( std::string const& code_file )
+{
+	opt_io.input_file_names.push_back( code_file );
+}
+
+void driver_impl::set_lex_context( shared_ptr<lex_context> const& lex_ctxt )
+{
+	user_lex_ctxt = lex_ctxt;
 }
 
 END_NS_SASL_DRIVER();

@@ -18,25 +18,28 @@ void diag_chat::add_report_raised_handler( report_handler_fn const& handler )
 	handlers.push_back( handler );
 }
 
-diag_item& diag_chat::report( token_t& beg, token_t& end, diag_template const& tmpl )
+shared_ptr<diag_item_committer> diag_chat::report( diag_template const& tmpl )
 {
-	return report(tmpl).span(beg, end);
+	diag_item* diag = new diag_item(&tmpl);
+	shared_ptr<diag_item_committer> ret( new diag_item_committer(diag, this) );
+	return ret;
 }
 
-diag_item& diag_chat::report( diag_template const& tmpl )
-{
-	diag_item* ret = new diag_item(&tmpl);
-	diags.push_back( ret );
-	for( vector<report_handler_fn>::iterator it = handlers.begin(); it != handlers.end(); ++it )
-	{
-		(*it)( this, ret );
-	}
-	return *ret;
-}
-
-diag_chat* diag_chat::merge( diag_chat* dest, diag_chat* src )
+diag_chat* diag_chat::merge( diag_chat* dest, diag_chat* src, bool trigger_callback )
 {
 	dest->diags.insert( dest->diags.end(), src->diags.begin(), src->diags.end() );
+	
+	if( trigger_callback )
+	{
+		for( vector<diag_item*>::iterator diag_it = src->diags.begin(); diag_it != dest->diags.end(); ++diag_it )
+		{
+			for( vector<report_handler_fn>::iterator handler_it = dest->handlers.begin(); handler_it != dest->handlers.end(); ++handler_it )
+			{
+				(*handler_it)( dest, (*diag_it) );
+			}
+		}
+	}
+
 	src->diags.clear();
 	return dest; 
 }
@@ -47,6 +50,38 @@ diag_chat::~diag_chat()
 	{
 		(*it)->release();
 	}
+}
+
+void diag_chat::commit( diag_item* diag )
+{
+	diags.push_back( diag );
+	for( vector<report_handler_fn>::iterator it = handlers.begin(); it != handlers.end(); ++it )
+	{
+		(*it)( this, diag );
+	}
+}
+
+
+diag_item_committer::diag_item_committer( diag_item* item, diag_chat* chat )
+	: item(item), chat(chat)
+{
+}
+
+shared_ptr<diag_item_committer> diag_item_committer::file( fname_t const& f )
+{
+	item->file(f);
+	return shared_from_this();
+}
+
+shared_ptr<diag_item_committer> diag_item_committer::span( token_t const& beg, token_t const& end )
+{
+	item->span(beg, end);
+	return shared_from_this();
+}
+
+diag_item_committer::~diag_item_committer()
+{
+	chat->commit(item);
 }
 
 END_NS_SASL_COMMON();

@@ -90,12 +90,12 @@ public:
 		llvm_ir
 	};
 	
-	std::vector< std::string >	in_names;
+	std::vector< std::string >	input_file_names;
 	export_format				fmt;
 	std::string					fmt_str;
 	salviar::languages			lang;
 	std::string					lang_str;
-	std::string					output_name;
+	std::string					output_file_name;
 	std::string					dump_ir;
 
 private:

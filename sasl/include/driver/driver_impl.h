@@ -14,8 +14,11 @@ public:
 	virtual void set_parameter( int argc, char** argv );
 	virtual void set_parameter( std::string const& cmd );
 
-	virtual void set_code_source( std::string const& );
+	virtual void set_code       ( std::string const& code_text );
+	virtual void set_code_file  ( std::string const& code_file );
 	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& );
+	virtual void set_lex_context( boost::shared_ptr<sasl::common::lex_context> const& );
+
 	virtual void set_diag_chat( sasl::common::diag_chat* diags );
 	// virtual void set_dump_ir( std::string const& );
 
@@ -41,6 +44,7 @@ private:
 	boost::shared_ptr< sasl::code_generator::codegen_context>	mcg;
 	boost::shared_ptr< sasl::syntax_tree::node >				mroot;
 
+	// Options
 	options_global			opt_global;
 	options_display_info	opt_disp;
 	options_io				opt_io;
@@ -48,6 +52,11 @@ private:
 
 	po::options_description	desc;
 	po::variables_map		vm;
+
+	// Overridden options
+	boost::shared_ptr<sasl::common::code_source>	user_code_src;
+	boost::shared_ptr<sasl::common::lex_context>	user_lex_ctxt;
+	sasl::common::diag_chat*						user_diags;
 };
 
 END_NS_SASL_DRIVER();

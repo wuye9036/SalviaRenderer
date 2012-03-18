@@ -10,18 +10,15 @@ using std::endl;
 
 BEGIN_NS_SASL_DRIVER();
 
-bool driver_code_source::process_code( string const& code, diag_chat* diags )
+bool driver_code_source::set_code( string const& code )
 {
 	this->code = code;
-	this->filename = "in_memory";
-	this->diags = diags;
+	this->filename = "<In Memory>";
 	return process();
 }
 
-bool driver_code_source::process_file( string const& file_name, diag_chat* diags )
+bool driver_code_source::set_file( string const& file_name )
 {
-	this->diags = diags;
-
 	std::ifstream in(file_name.c_str(), std::ios_base::in);
 	if (!in){
 		return false;
@@ -52,7 +49,7 @@ string driver_code_source::next()
 	} catch ( boost::wave::preprocess_exception& e ){
 		errtok = to_std_string( cur_it->get_value() );
 		next_it = wctxt->end();
-		diags->report( sasl::parser::unknown_tokenize_error ) % e.description();
+		diags->report( sasl::parser::unknown_tokenize_error )->p( e.description() );
 		cout << e.description() << endl;
 	}
 
@@ -107,6 +104,11 @@ bool driver_code_source::process()
 	next_it = wctxt->begin();
 
 	return true;
+}
+
+void driver_code_source::set_diag_chat( sasl::common::diag_chat* diags )
+{
+	this->diags = diags;
 }
 
 END_NS_SASL_DRIVER();

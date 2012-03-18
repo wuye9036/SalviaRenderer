@@ -131,7 +131,7 @@ terminal::terminal( terminal const& rhs ) :tok_id(rhs.tok_id), desc(rhs.desc){}
 bool terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	if ( iter == end ){
-		diags->report( end_of_file ) % desc;
+		diags->report( end_of_file )->p(desc);
 		return false;
 	}
 
@@ -144,7 +144,7 @@ bool terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attri
 		return true;
 	}
 
-	diags->report( unmatched_token ).span(**iter, **iter) % (*iter)->str;
+	diags->report( unmatched_token )->span(**iter, **iter)->p( (*iter)->str );
 	return false;
 }
 
@@ -469,7 +469,7 @@ bool error_catcher::parse( token_iterator& iter, token_iterator end, boost::shar
 	shared_ptr<diag_chat> children_diags = make_shared<diag_chat>();
 	if( !expr->parse(iter, end, attr, children_diags.get() ) ){
 		bool result = err_handler( children_diags.get() );
-		diag_chat::merge( diags, children_diags.get() );
+		diag_chat::merge( diags, children_diags.get(), false );
 		return result;
 	}
 	return true;

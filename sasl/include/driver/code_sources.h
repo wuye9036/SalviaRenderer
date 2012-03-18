@@ -35,19 +35,20 @@ private:
 		wcontext_t;
 
 public:
-	bool process_code( std::string const&, sasl::common::diag_chat* );
-	bool process_file( std::string const&, sasl::common::diag_chat* );
+	void set_diag_chat( sasl::common::diag_chat* );
+	bool set_code( std::string const& );
+	bool set_file( std::string const& );
 
 	// code source
-	virtual bool eof();
+	virtual bool		eof();
 	virtual std::string next();
 	virtual std::string error();
 
 	// lex_context
-	virtual std::string const& file_name() const;
-	virtual size_t column() const;
-	virtual size_t line() const;
-	virtual void update_position( std::string const& /*lit*/ );
+	virtual std::string const&	file_name() const;
+	virtual size_t				column() const;
+	virtual size_t				line() const;
+	virtual void				update_position( std::string const& /*lit*/ );
 
 private:
 	bool process();

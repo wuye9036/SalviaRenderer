@@ -37,11 +37,12 @@ public:
 	virtual void set_parameter( std::string const& cmd )			= 0;
 
 	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& )	= 0;
-	virtual void set_code_source( std::string const& )				= 0;
+	virtual void set_code       ( std::string const& code_text )	= 0;
+	virtual void set_code_file  ( std::string const& code_file )	= 0;
 	virtual void set_diag_chat( sasl::common::diag_chat* diags )	= 0;
 
 	virtual void compile()											= 0;
-	virtual boost::shared_ptr< sasl::code_generator::jit_engine > create_jit()				= 0;
+	virtual boost::shared_ptr< sasl::code_generator::jit_engine > create_jit() = 0;
 
 	virtual boost::shared_ptr< sasl::semantic::module_si >				mod_si() const		= 0;
 	virtual boost::shared_ptr< sasl::code_generator::codegen_context>	mod_codegen() const	= 0;
