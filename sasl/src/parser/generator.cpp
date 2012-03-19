@@ -131,7 +131,6 @@ terminal::terminal( terminal const& rhs ) :tok_id(rhs.tok_id), desc(rhs.desc){}
 bool terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	if ( iter == end ){
-		diags->report( end_of_file )->p(desc);
 		return false;
 	}
 
@@ -206,10 +205,13 @@ bool selector::parse( token_iterator& iter, token_iterator end, shared_ptr<attri
 {
 	shared_ptr<selector_attribute> slc_attr = make_shared<selector_attribute>();
 
+	vector< shared_ptr<diag_chat> > branch_diags;
+
 	int idx = 0;
-	BOOST_FOREACH( shared_ptr<parser> p, branches() )
+	BOOST_FOREACH( shared_ptr<parser> const& p, branches() )
 	{
-		if( p->parse(iter, end, slc_attr->attr, diags) ){
+		branch_diags.push_back( diag_chat::create() );
+		if( p->parse(iter, end, slc_attr->attr, branch_diags.back().get()) ){
 			slc_attr->selected_idx = idx;
 			attr = slc_attr;
 			return true;
@@ -217,6 +219,14 @@ bool selector::parse( token_iterator& iter, token_iterator end, shared_ptr<attri
 		++idx;
 	}
 
+	shared_ptr<diag_chat> least_error_branch_diags;
+	BOOST_FOREACH( shared_ptr<diag_chat> const& branch_chat, branch_diags )
+	{
+		if( !least_error_branch_diags || branch_chat->diag_items().size() < least_error_branch_diags->diag_items().size() ){
+			least_error_branch_diags = branch_chat;
+		}
+	}
+	diags->merge( diags, least_error_branch_diags.get(), true );
 	return false;
 }
 

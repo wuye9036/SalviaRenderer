@@ -31,7 +31,7 @@ diag_chat* diag_chat::merge( diag_chat* dest, diag_chat* src, bool trigger_callb
 	
 	if( trigger_callback )
 	{
-		for( vector<diag_item*>::iterator diag_it = src->diags.begin(); diag_it != dest->diags.end(); ++diag_it )
+		for( vector<diag_item*>::iterator diag_it = src->diags.begin(); diag_it != src->diags.end(); ++diag_it )
 		{
 			for( vector<report_handler_fn>::iterator handler_it = dest->handlers.begin(); handler_it != dest->handlers.end(); ++handler_it )
 			{
@@ -61,6 +61,11 @@ void diag_chat::commit( diag_item* diag )
 	}
 }
 
+vector<diag_item*> const& diag_chat::diag_items() const
+{
+	return diags;
+}
+
 
 diag_item_committer::diag_item_committer( diag_item* item, diag_chat* chat )
 	: item(item), chat(chat)
@@ -79,9 +84,21 @@ shared_ptr<diag_item_committer> diag_item_committer::span( token_t const& beg, t
 	return shared_from_this();
 }
 
+shared_ptr<diag_item_committer> diag_item_committer::span( code_span const& s )
+{
+	item->span(s);
+	return shared_from_this();
+}
+
 diag_item_committer::~diag_item_committer()
 {
 	chat->commit(item);
+}
+
+shared_ptr<diag_item_committer> diag_item_committer::eval()
+{
+	item->eval();
+	return shared_from_this();
 }
 
 END_NS_SASL_COMMON();

@@ -4,6 +4,7 @@
 #include <sasl/include/driver/driver_forward.h>
 
 #include <sasl/include/common/lex_context.h>
+#include <sasl/include/common/diag_item.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/scoped_ptr.hpp>
@@ -35,6 +36,8 @@ private:
 		wcontext_t;
 
 public:
+	driver_code_source();
+
 	void set_diag_chat( sasl::common::diag_chat* );
 	bool set_code( std::string const& );
 	bool set_file( std::string const& );
@@ -50,8 +53,12 @@ public:
 	virtual size_t				line() const;
 	virtual void				update_position( std::string const& /*lit*/ );
 
+	
 private:
+	// Utilities
+	sasl::common::code_span		current_span() const;
 	bool process();
+
 	template<typename StringT>
 	std::string to_std_string( StringT const& str ) const
 	{

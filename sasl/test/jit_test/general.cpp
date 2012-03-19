@@ -5,6 +5,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <sasl/include/driver/driver_api.h>
+#include <sasl/include/common/diag_formatter.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/symbol.h>
@@ -40,6 +41,8 @@ using namespace eflib;
 using sasl::driver::driver;
 using sasl::code_generator::jit_engine;
 using sasl::code_generator::llvm_module;
+using sasl::common::diag_chat;
+using sasl::common::diag_item;
 using sasl::semantic::symbol;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
@@ -76,6 +79,12 @@ BOOST_AUTO_TEST_SUITE( jit )
 
 string make_command( string const& file_name, string const& options){
 	return "--input=\"" + file_name + "\" " + options;
+}
+
+bool print_diagnostic( diag_chat*, diag_item* item )
+{
+	BOOST_MESSAGE( sasl::common::str(item) );
+	return true;
 }
 
 template <typename Fn>
@@ -131,6 +140,7 @@ public:
 	}
 };
 
+#include <eflib/include/platform/disable_warnings.h>
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 {
 #if defined(EFLIB_CPU_X86) && defined(EFLIB_MSVC)
@@ -178,6 +188,7 @@ void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 	reinterpret_cast<void (*)(void*, void*, void*, void*)>(callee)( psi, pbi, pso, pbo );
 #endif
 }
+#include <eflib/include/platform/enable_warnings.h>
 
 template <typename Fn>
 class jit_function_forward<void, Fn>: public jit_function_forward_base<Fn>{
@@ -233,9 +244,11 @@ struct jit_fixture {
 	}
 
 	void init( string const& file_name, string const& options ){
+		diags = diag_chat::create();
+		diags->add_report_raised_handler( print_diagnostic );
 		sasl_create_driver(drv);
 		BOOST_REQUIRE(drv);
-		
+		drv->set_diag_chat(diags.get());
 		drv->set_parameter( make_command(file_name, options) );
 		drv->compile();
 
@@ -272,6 +285,7 @@ struct jit_fixture {
 	shared_ptr<driver>		drv;
 	shared_ptr<symbol>		root_sym;
 	shared_ptr<jit_engine>	je;
+	shared_ptr<diag_chat>	diags;
 };
 
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){

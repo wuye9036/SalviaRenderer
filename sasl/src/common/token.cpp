@@ -130,7 +130,7 @@ fname_t::fname_t( std::string const& name )
 	fname = shared_ptr<string>( new string(name) );
 }
 
-std::string const& fname_t::str()
+std::string const& fname_t::str() const
 {
 	return fname ? *fname : null_name;
 }

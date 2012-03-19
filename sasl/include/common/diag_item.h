@@ -14,10 +14,11 @@
 BEGIN_NS_SASL_COMMON();
 
 enum diag_levels{
-	dl_fatal_error,
-	dl_error,
-	dl_warning,
-	dl_info
+	dl_fatal_error,	// Fatal Error
+	dl_error,		// Error
+	dl_warning,		// Warning
+	dl_info,		// Information
+	dl_text			// Text.
 };
 
 class diag_template;
@@ -29,16 +30,26 @@ public:
 	diag_item( diag_template const* tmpl );
 	
 	template <typename T>
-	diag_item& operator % ( T const& v )
+	diag_item& operator %( T const& v )
 	{
 		fmt % v;
 		return *this;
 	}
 
-	diag_item&	file( fname_t const& f );
+	diag_item&	eval();
+	diag_item&	file( fname_t const& f );	
 	diag_item&	span( token_t const& beg, token_t const& end );
-	bool		is_template( diag_template const& v );
+	diag_item&	span( code_span const& s );
+
+	bool		is_template( diag_template const& v ) const;
+	diag_levels	level() const;
+	std::string str() const;
+	code_span	span() const;
+	std::string file() const;
+	size_t		id() const;
+
 	void		release();
+
 private:
 	fname_t					item_file;
 	code_span				item_span;
@@ -52,11 +63,14 @@ public:
 	diag_template( size_t uid, diag_levels lvl, std::string const& str );
 	diag_template( diag_levels lvl, std::string const& str );
 	
-	std::string const& template_str() const;
+	std::string const&	template_str() const;
+	diag_levels			level() const;
+	size_t				id() const;
+	
 	static size_t automatic_id();
 private:
 	size_t			uid;
-	diag_levels		level;
+	diag_levels		lvl;
 	std::string		tmpl;
 };
 

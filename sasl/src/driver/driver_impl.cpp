@@ -1,5 +1,6 @@
 #include <sasl/include/driver/driver_impl.h>
 
+#include <sasl/include/driver/driver_diags.h>
 #include <sasl/include/driver/code_sources.h>
 #include <sasl/include/driver/options.h>
 
@@ -104,6 +105,7 @@ void driver_impl::set_parameter( std::string const& cmd )
 }
 
 driver_impl::driver_impl()
+	: user_diags(NULL)
 {
 	opt_disp.fill_desc(desc);
 	opt_global.fill_desc(desc);
@@ -132,40 +134,42 @@ void driver_impl::compile()
 	opt_predef.filterate(vm);
 
 	if( opt_disp.show_help ){
-		// diags->report();
-		cout << desc << endl;
+		diags->report(text_only)->p(desc);
 		return;
 	}
 
 	if( opt_disp.show_version ){
-		cout << opt_disp.version_info << endl;
+		diags->report(text_only)->p(opt_disp.version_info);
 		return;
 	}
 
 	if( opt_global.detail == options_global::none ){
-		cout << "Detail level is an invalid value. Ignore it." << endl;
+		diags->report(unknown_detail_level)->p(opt_global.detail_str);
 	}
 
 	// Process inputs and outputs.
 	vector<string> inputs = opt_io.input_file_names;
 
 	if( inputs.empty() ){
-		cout << "Need at least one input file." << endl;
+		diags->report(input_file_is_missing);
 		return;
 	}
 
 	// TODO
 	salviar::languages lang = opt_io.lang;
 
-	EFLIB_ASSERT_AND_IF( lang != salviar::lang_none, "Can not support language guessing by file extension yet." ){
-		return;
+	if( lang == salviar::lang_none )
+	{
+		diags->report(unknown_lang);
 	}
 
 	if( opt_io.fmt == options_io::llvm_ir ){
 		BOOST_FOREACH( string const & fname, inputs ){
-			cout << "Compile " << fname << "..." << endl;
-
+			diags->report(compiling_input)->p(fname);
+			
 			shared_ptr<driver_code_source> code_src( new driver_code_source() );
+			code_src->set_diag_chat( diags );
+
 			if ( !code_src->set_file(fname ) ){
 				diags->report( sasl::parser::cannot_open_input_file )->p(fname);
 				return;

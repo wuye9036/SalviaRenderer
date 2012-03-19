@@ -4,6 +4,7 @@
 #include <sasl/include/parser/diags.h>
 
 using sasl::common::diag_chat;
+using sasl::common::code_span;
 using std::string;
 using std::cout;
 using std::endl;
@@ -49,7 +50,11 @@ string driver_code_source::next()
 	} catch ( boost::wave::preprocess_exception& e ){
 		errtok = to_std_string( cur_it->get_value() );
 		next_it = wctxt->end();
-		diags->report( sasl::parser::unknown_tokenize_error )->p( e.description() );
+		diags->report( sasl::parser::unknown_tokenize_error )
+			->p( e.description() )
+			->span( current_span() )
+			->file( to_std_string(cur_it->get_position().get_file()) )
+			;
 		cout << e.description() << endl;
 	}
 
@@ -109,6 +114,17 @@ bool driver_code_source::process()
 void driver_code_source::set_diag_chat( sasl::common::diag_chat* diags )
 {
 	this->diags = diags;
+}
+
+driver_code_source::driver_code_source()
+	: diags(NULL)
+{
+
+}
+
+code_span driver_code_source::current_span() const
+{
+	return code_span( cur_it->get_position().get_line(), cur_it->get_position().get_column(), 1 );
 }
 
 END_NS_SASL_DRIVER();

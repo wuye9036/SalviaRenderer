@@ -18,6 +18,7 @@ class	fname_t;
 class	diag_chat;
 class	diag_item;
 class	diag_template;
+struct	code_span;
 
 typedef boost::function<bool (diag_chat*, diag_item*)> report_handler_fn;
 
@@ -34,8 +35,10 @@ public:
 		return shared_from_this();
 	}
 
+	boost::shared_ptr<diag_item_committer>	eval();
 	boost::shared_ptr<diag_item_committer>	file( fname_t const& f );
 	boost::shared_ptr<diag_item_committer>	span( token_t const& beg, token_t const& end );
+	boost::shared_ptr<diag_item_committer>	span( code_span const& s );
 
 private:
 	diag_item_committer( diag_item* item, diag_chat* chat );
@@ -56,6 +59,8 @@ public:
 	void add_report_raised_handler( report_handler_fn const& handler );
 	boost::shared_ptr<diag_item_committer> report( diag_template const& tmpl );
 	
+	std::vector<diag_item*> const& diag_items() const;
+
 	~diag_chat();
 private:
 	void commit( diag_item* diag );

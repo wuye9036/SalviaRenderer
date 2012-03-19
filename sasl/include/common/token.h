@@ -29,7 +29,7 @@ class fname_t
 public:
 	fname_t();
 	fname_t( std::string const& );
-	std::string const& str();
+	std::string const& str() const;
 private:
 	boost::shared_ptr<std::string> fname;
 	static std::string null_name;
