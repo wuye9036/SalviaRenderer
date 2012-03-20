@@ -3,7 +3,7 @@ ALL-IN-ONE build:
 		Run build_all.py
 	otherwise
 		Run build_all.py to generate project.py
-		Modify project.py
+		Modify proj.py to set environments
 		Run build_all.py
 		
 Manual build:

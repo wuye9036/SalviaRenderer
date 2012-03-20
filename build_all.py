@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
 	print( 'Checking boost...')
 	if not proj.boost_version():
-		print('ERROR: Boost is not found. Please specify boost path in \'build_conf.py\'.')
+		print('ERROR: Boost is not found. Please specify boost path in \'proj.py\'.')
 		sys.exit(1)
 	else:
 		print('Boost is checked.')
