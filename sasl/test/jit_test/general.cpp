@@ -367,6 +367,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<float (vec3*, vec3*)> test_dot_f3;
 	jit_function<vec4 (mat44*, vec4*)> test_mul_m44v4;
 	jit_function<vec4 (mat44*)> test_fetch_m44v4;
+	jit_function<float (float) > test_abs;
 	jit_function<float (float) > test_sqrt_f;
 	jit_function<vec2 (vec2) > test_sqrt_f2;
 	jit_function<vec3 (vec3, vec3)> test_cross_prod;
@@ -376,6 +377,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	
 	function( test_mul_m44v4, "test_mul_m44v4" );
 	BOOST_REQUIRE( test_mul_m44v4 );
+
+	function( test_abs, "test_abs" );
+	BOOST_REQUIRE( test_abs );
 
 	function( test_sqrt_f, "test_sqrt_f" );
 	BOOST_REQUIRE( test_sqrt_f );
@@ -420,6 +424,13 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( f.y, refv.y, 0.00001f );
 		BOOST_CHECK_CLOSE( f.z, refv.z, 0.00001f );
 		BOOST_CHECK_CLOSE( f.w, refv.w, 0.00001f );
+	}
+	{
+		float p = 123.456f;
+		BOOST_CHECK_CLOSE( fabsf(p), test_abs(p), 0.000001f );
+
+		float n = - p;
+		BOOST_CHECK_CLOSE( fabsf(n), test_abs(n), 0.000001f );
 	}
 	{
 		float f = 876.625f;

@@ -16,6 +16,11 @@ f4 test_fetch_m44v4( f44 lhs ){
 	return lhs.x;
 }
 
+float test_abs(float v)
+{
+	return abs(v);
+}
+
 float test_sqrt_f( float v ){
 	return sqrt(v);
 }
