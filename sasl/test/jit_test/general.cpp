@@ -431,6 +431,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		float n = - p;
 		BOOST_CHECK_CLOSE( fabsf(n), test_abs(n), 0.000001f );
+
+		float z = 0.0f;
+		BOOST_CHECK_CLOSE( fabsf(z), test_abs(z), 0.000001f );
 	}
 	{
 		float f = 876.625f;
