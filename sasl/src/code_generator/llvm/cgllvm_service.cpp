@@ -1403,6 +1403,37 @@ Value* cg_service::sqrt_vf_( Value* v ){
 	return NULL;
 }
 
+value_t cg_service::emit_abs( value_t const& arg_value )
+{
+	builtin_types hint = arg_value.hint();
+	builtin_types scalar_hint = scalar_of( arg_value.hint() );
+	abis arg_abi = arg_value.abi();
+
+	if ( scalar_hint == builtin_types::_double ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	assert( is_real(hint) );
+
+	if( arg_abi == abi_c || arg_abi == abi_llvm ){
+		if( is_scalar(hint) )
+		{
+			if( prefer_externals() ) {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} else {
+				Value* i = builder().CreateBitCast( arg_value.load(), type_( builtin_types::_sint32, arg_abi ) );
+				i = builder().CreateAnd( i, int_(0x7fffffff) );
+				Value* ret = builder().CreateBitCast( i, type_( builtin_types::_float, arg_abi ) );
+
+				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
+			}
+		}
+		else 
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+}
+
 // llvm::Value* sqrt_sf( llvm::Value* v )
 
 value_t cg_service::emit_sqrt( value_t const& arg_value )
