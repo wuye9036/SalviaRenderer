@@ -1320,7 +1320,7 @@ value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 	vector<value_t> out_cells(out_v*out_r);
 	out_cells.resize( out_v*out_r );
 
-	// Caluclate matrix cells.
+	// Calculate matrix cells.
 	for( size_t icol = 0; icol < out_v; ++icol){
 		value_t col = emit_extract_col( rhs, icol );
 		for( size_t irow = 0; irow < out_r; ++irow )
