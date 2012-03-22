@@ -173,13 +173,21 @@ class project:
 		if self.arch() == arch.x86:
 			if self.toolset().short_name() == 'msvc10':
 				return "Visual Studio 10"
+			elif self.toolset().short_name() == 'msvc9':
+				return "Visual Studio 9 2008"
+			elif self.toolset().short_name() == 'msvc8':
+				return "Visual Studio 8 2005"
 			else:
 				print( "Unknown generator.")
 				return None
 		elif self.arch() == arch.x64:
 			if self.toolset().short_name() == 'msvc10':
 				return "Visual Studio 10 Win64"
-			return None
+			elif self.toolset().short_name() == 'msvc9':
+				return "Visual Studio 9 2008 Win64"
+			elif self.toolset().short_name() == 'msvc8':
+				return "Visual Studio 8 2005 Win64"
+			else:
 		else:
 			print( "Unknown generator.")
 			return None
