@@ -188,6 +188,8 @@ class project:
 			elif self.toolset().short_name() == 'msvc8':
 				return "Visual Studio 8 2005 Win64"
 			else:
+				print ("Unknown generator.")
+				return None
 		else:
 			print( "Unknown generator.")
 			return None
