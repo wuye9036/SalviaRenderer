@@ -320,11 +320,12 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 }
 
 #if ALL_TESTS_ENABLED
-
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 	init_g( "./repo/question/v1a1/empty.ss" );
 }
+#endif
 
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 	init_g( "./repo/question/v1a1/comments.ss" );
 	jit_function<int(int)> fn;
@@ -333,7 +334,9 @@ BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 	BOOST_REQUIRE( fn );
 	BOOST_CHECK( fn( 1366 ) == 1366 );
 }
+#endif
 
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init_g( "./repo/question/v1a1/preprocessors.ss" );
 

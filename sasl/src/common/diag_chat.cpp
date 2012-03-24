@@ -66,6 +66,11 @@ vector<diag_item*> const& diag_chat::diag_items() const
 	return diags;
 }
 
+void diag_chat::clear()
+{
+	diags.clear();
+}
+
 
 diag_item_committer::diag_item_committer( diag_item* item, diag_chat* chat )
 	: item(item), chat(chat)

@@ -60,6 +60,7 @@ public:
 	boost::shared_ptr<diag_item_committer> report( diag_template const& tmpl );
 	
 	std::vector<diag_item*> const& diag_items() const;
+	void clear();
 
 	~diag_chat();
 private:

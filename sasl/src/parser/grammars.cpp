@@ -1,5 +1,6 @@
 #include <sasl/include/parser/grammars.h>
 
+#include <sasl/include/parser/error_handlers.h>
 #include <sasl/include/parser/lexer.h>
 
 #define STERM( name ) terminal( lxr.get_id( #name ), #name )
@@ -95,6 +96,7 @@ void grammars::set_typespecs()
 		| struct_decl
 		| ident
 		);
+	SRULE( prefix_typequal, access_typequal );
 	SRULE( postfix_typequal, access_typequal | func_typequal | array_typequal );
 	SRULE( func_typequal, lparen >> *param_typequal > rparen );
 	SRULE( array_typequal, lsbracket > -expr > rsbracket );
@@ -132,7 +134,7 @@ void grammars::set_stmts()
 	SRULE( stmt_switch, kw_switch > lparen > expr > rparen > stmt_compound );
 	SRULE( stmt_expr, expr > semicolon );
 	SRULE( stmt_decl, decl );
-	SRULE( stmt_compound, lbrace >> *stmt > rbrace );
+	SRULE( stmt_compound, lbrace >> *stmt > rbrace[get_expected_failed_handler("}")] );
 	SRULE( stmt_flowctrl, stmt_break | stmt_continue | stmt_return );
 	SRULE( stmt_break, kw_break > semicolon );
 	SRULE( stmt_continue, kw_continue > semicolon );

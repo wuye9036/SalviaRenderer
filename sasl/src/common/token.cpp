@@ -7,11 +7,11 @@ using std::string;
 
 BEGIN_NS_SASL_COMMON();
 
-token_t::token_t(): str("UNINITIALIZED_VALUE")
+token_t::token_t(): str("UNINITIALIZED_VALUE"), end_of_file(false)
 {
 }
 
-token_t::token_t( const token_t& rhs ) : file_name(rhs.file_name), span(rhs.span), str(rhs.str), id(rhs.id)
+token_t::token_t(const token_t& rhs) : file_name(rhs.file_name), span(rhs.span), str(rhs.str), id(rhs.id), end_of_file(rhs.end_of_file)
 {
 }
 
@@ -22,6 +22,7 @@ boost::shared_ptr<token_t> token_t::make( size_t id, std::string const& str, siz
 	ret->str = str;
 	ret->file_name = fname;
 	ret->span.set( line, col, 0 );
+	ret->end_of_file = false;
 
 	size_t cur_line = line;
 	size_t cur_col = col;
@@ -52,6 +53,8 @@ token_t& token_t::operator=( const token_t& rhs )
 	file_name = rhs.file_name;
 	span = rhs.span;
 	str = rhs.str;
+	end_of_file = rhs.end_of_file;
+	id = rhs.id;
 	return *this;
 }
 

@@ -23,6 +23,7 @@ using boost::unordered_set;
 using std::cout;
 using std::endl;
 using std::vector;
+using std::string;
 
 BEGIN_NS_SASL_PARSER();
 
@@ -303,14 +304,30 @@ bool lexer::begin_incremental()
 	return true;
 }
 
-bool lexer::incremental_tokenize( std::string const& word, boost::shared_ptr<sasl::common::lex_context> ctxt, token_seq& seq )
+bool lexer::incremental_tokenize( string const& word, shared_ptr<lex_context> ctxt, token_seq& seq )
 {
 	return tokenize(word, ctxt, seq);
 }
 
-bool lexer::end_incremental()
+bool lexer::end_incremental( shared_ptr<lex_context> ctxt, token_seq& seq )
 {
+	token_ptr tok = token_t::make( size_t(-1), "", ctxt->line(), ctxt->column(), ctxt->file_name() );
+	tok->end_of_file = true;
+	seq.push_back(tok);
+
 	return true;
+}
+
+bool lexer::tokenize_with_end( std::string const& code, shared_ptr<lex_context> ctxt, /*OUTPUT*/ token_seq& seq )
+{
+	bool ret = tokenize( code, ctxt, seq );
+	if( ret )
+	{
+		token_ptr tok = token_t::make( size_t(-1), "", ctxt->line(), ctxt->column(), ctxt->file_name() );
+		tok->end_of_file = true;
+		seq.push_back(tok);
+	}
+	return ret;
 }
 
 END_NS_SASL_PARSER();

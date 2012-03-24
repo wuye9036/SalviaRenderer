@@ -32,10 +32,10 @@ void sasl::parser::parse(
 	)
 {
 	sasl::parser::token_seq toks;
-	bool tok_result = l.tokenize(code, ctxt, toks);
+	bool tok_result = l.tokenize_with_end(code, ctxt, toks);
 	EFLIB_ASSERT( tok_result, "Tokenizing is failed." );	
 	token_iterator it = toks.begin();
-	g.prog.parse( it, toks.end(), pt_root, diags );
+	g.prog.parse( it, toks.end()-1, pt_root, diags );
 }
 
 void sasl::parser::parse( 
@@ -60,8 +60,8 @@ void sasl::parser::parse(
 			return;
 		}
 	}
-	l.end_incremental();
+	l.end_incremental( ctxt, toks );
 
 	token_iterator it = toks.begin();
-	g.prog.parse( it, toks.end(), pt_root, diags );
+	g.prog.parse( it, toks.end()-1, pt_root, diags );
 }

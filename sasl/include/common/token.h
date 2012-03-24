@@ -40,7 +40,7 @@ struct token_t{
 	token_t( const token_t& rhs );
 	template< typename IteratorT >
 	token_t( const IteratorT& first, const IteratorT& last )
-		: str(first, last), id(0) 
+		: str(first, last), id(0), end_of_file(false)
 	{
 	}
 	token_t& operator = ( const token_t& rhs);
@@ -55,7 +55,7 @@ struct token_t{
 	std::string str;
 	code_span	span;
 	fname_t		file_name;
-
+	bool		end_of_file;
 };
 
 END_NS_SASL_COMMON()

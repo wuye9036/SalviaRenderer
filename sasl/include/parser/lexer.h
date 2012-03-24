@@ -97,7 +97,7 @@ public:
 
 	boost::shared_ptr<lexer_impl> get_impl() const;
 
-	bool tokenize(
+	bool tokenize_with_end(
 		/*INPUTS*/ std::string const& code, boost::shared_ptr<sasl::common::lex_context> ctxt,
 		/*OUTPUT*/ token_seq& seq
 		);
@@ -108,9 +108,16 @@ public:
 		boost::shared_ptr<sasl::common::lex_context> ctxt,
 		token_seq& seq
 		);
-	bool end_incremental();
+	bool end_incremental(
+		boost::shared_ptr<sasl::common::lex_context> ctxt,
+		token_seq& seq
+		);
 
 private:
+	bool tokenize(
+		/*INPUTS*/ std::string const& code, boost::shared_ptr<sasl::common::lex_context> ctxt,
+		/*OUTPUT*/ token_seq& seq
+		);
 	boost::shared_ptr<lexer_impl> impl;
 };
 

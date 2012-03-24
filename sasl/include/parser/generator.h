@@ -98,14 +98,39 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 // Parser combinators.
-enum parse_results
+
+class parse_results
 {
-	pr_succeed,
-	pr_failed,
-	pr_recovered
+public:
+	parse_results();
+	explicit parse_results(int i);
+
+	static parse_results const succeed;
+	static parse_results const recovered;
+	static parse_results const recovered_expected_failed;
+	static parse_results const failed;
+	static parse_results const expected_failed;
+
+	static parse_results recover( parse_results const& v );
+	static parse_results worse ( parse_results const& l, parse_results const& r );
+	static parse_results better( parse_results const& l, parse_results const& r );
+
+	bool worse_than ( parse_results const& v ) const;
+	bool better_than( parse_results const& v ) const;
+
+	bool is_succeed() const;
+	bool is_failed() const;
+	bool is_recovered() const;
+	bool is_expected_failed() const;
+	bool is_recovered_expected_failed() const;
+
+	bool is_expected_failed_or_recovered() const;
+	bool is_continuable() const;
+private:
+	int tag;
 };
 
-typedef boost::function<parse_results ( sasl::common::diag_chat* diags )> error_handler;
+typedef boost::function<parse_results ( sasl::common::diag_chat* /*diags*/, token_iterator const& /*origin iter*/, token_iterator& /*current start iter*/ )> error_handler;
 class error_catcher;
 
 class parser{
@@ -243,6 +268,16 @@ private:
 	error_handler				err_handler;
 };
 
+//class exceptor: public parser
+//{
+//public:
+//	exceptor( boost::shared_ptr<parser> const& p );
+//	exceptor( exceptor const& );
+//	boost::shared_ptr<parser> clone() const;
+//	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
+//private:
+//	boost::shared_ptr<parser>	expr;
+//};
 //////////////////////////////////////////////////////////////////////////
 // Operators for building parser combinator.
 repeater operator * ( parser const & expr );

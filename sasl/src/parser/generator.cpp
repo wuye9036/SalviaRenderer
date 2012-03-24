@@ -15,6 +15,7 @@
 
 #include <eflib/include/diagnostics/assert.h>
 #include <iostream>
+#include <fstream>
 
 using sasl::common::diag_template;
 using sasl::common::diag_item;
@@ -29,6 +30,73 @@ using std::cout;
 using std::endl;
 
 BEGIN_NS_SASL_PARSER();
+
+parse_results::parse_results(): tag(-1){}
+
+parse_results::parse_results( int t ): tag(t) {}
+
+namespace parse_result_values
+{
+	int const recover_failed_offset = 4;
+	int const recover_failed_mask = 0xF0;
+	int const expected_offset = 0;
+	int const expected_mask = 0x0F;
+	int const expected = 0x01;
+
+	int const succeed	= 0;
+	int const recovered	= 0x1 << recover_failed_offset;
+	int const failed	= 0x2 << recover_failed_offset;
+
+	int const expected_failed			= expected | failed;
+	int const recovered_expected_failed	= expected | recovered;
+	
+};
+
+
+parse_results const parse_results::succeed					(parse_result_values::succeed);
+parse_results const parse_results::recovered				(parse_result_values::recovered);
+parse_results const parse_results::failed					(parse_result_values::failed);
+parse_results const parse_results::expected_failed			(parse_result_values::expected_failed);
+parse_results const parse_results::recovered_expected_failed(parse_result_values::recovered_expected_failed);
+
+bool parse_results::is_succeed    ()					const { return tag == succeed.tag; }
+bool parse_results::is_failed     ()					const { return tag == failed.tag; }
+bool parse_results::is_recovered  ()					const { return tag == recovered.tag; }
+bool parse_results::is_expected_failed()				const { return tag != expected_failed.tag; }
+bool parse_results::is_recovered_expected_failed()		const { return tag == recovered_expected_failed.tag; }
+
+bool parse_results::is_continuable()					const { return (tag & parse_result_values::recover_failed_mask) != parse_result_values::failed; }
+bool parse_results::is_expected_failed_or_recovered()	const { return (tag & parse_result_values::expected_mask) == parse_result_values::expected; }
+
+parse_results parse_results::worse( parse_results const& l, parse_results const& r )
+{
+	return l.tag > r.tag ? l : r;
+}
+
+parse_results parse_results::better( parse_results const& l, parse_results const& r )
+{
+	return l.tag < r.tag ? l : r;
+}
+
+bool parse_results::worse_than( parse_results const& v ) const
+{
+	return tag > v.tag;
+}
+
+bool parse_results::better_than( parse_results const& v ) const
+{
+	return tag < v.tag;
+}
+
+parse_results parse_results::recover( parse_results const& v )
+{
+	if( v.is_expected_failed() ){
+		return recovered_expected_failed;
+	}
+	return recovered;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // Exceptions
 expectation_failure::expectation_failure( token_iterator iter, parser const* p ): iter(iter), p(p)
@@ -130,21 +198,21 @@ terminal::terminal( terminal const& rhs ) :tok_id(rhs.tok_id), desc(rhs.desc){}
 
 parse_results terminal::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
+	shared_ptr<terminal_attribute> ret = make_shared<terminal_attribute>();
+	ret->tok = *iter;
+	attr = ret;
+
 	if ( iter == end ){
-		return pr_failed;
+		return parse_results::failed;
 	}
 
 	if( (*iter)->id == tok_id ){
-		shared_ptr<terminal_attribute> ret = make_shared<terminal_attribute>();
-		ret->tok = *iter;
-		attr = ret;
-
 		++iter;
-		return pr_succeed;
+		return parse_results::succeed;
 	}
 
 	diags->report( unmatched_token )->span(**iter, **iter)->p( (*iter)->str );
-	return pr_failed;
+	return parse_results::failed;
 }
 
 shared_ptr<parser> terminal::clone() const
@@ -160,26 +228,50 @@ repeater::repeater( repeater const& rhs ) : lower_bound(rhs.lower_bound), upper_
 
 parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
-	token_iterator stored = iter;
+	token_iterator repeater_start = iter;
 	size_t matched_count = 0;
 
+	vector< shared_ptr<diag_chat> > children_diags;
+	
 	shared_ptr<sequence_attribute> seq_attr = make_shared<sequence_attribute>();
-	shared_ptr<attribute> out;
-	while( expr->parse(iter, end, out, diags) == pr_succeed ){
-		seq_attr->attrs.push_back(out);
-		++matched_count;
-		if( matched_count == upper_bound ){
-			break;
-		}
-	}
-
-	if( matched_count < lower_bound ){
-		iter = stored;
-		return pr_failed;
-	}
-
 	attr = seq_attr;
-	return pr_succeed;
+
+	for(size_t matched_count = 0;; ++matched_count )
+	{
+		shared_ptr<attribute> out;
+		shared_ptr<diag_chat> children_diags = diag_chat::create();
+
+		token_iterator child_start = iter;
+		parse_results result = expr->parse( iter, end, out, children_diags.get() );
+
+		// Child matched succeed.
+		if( result.is_succeed() ) { 
+			seq_attr->attrs.push_back(out);
+			if( matched_count == upper_bound ){ break; }
+			continue;
+		}
+		
+		// Repeater matched failed.
+		if( matched_count < lower_bound ){
+			iter = repeater_start;
+			diag_chat::merge( diags, children_diags.get(), true );
+			return parse_results::failed;
+		}
+
+		// Child expected failed. Recover for continue to do, but DON'T ignore the diagnostic informations.
+		if( result.is_expected_failed_or_recovered() )
+		{
+			diag_chat::merge( diags, children_diags.get(), true );
+			continue;
+		}
+
+		// if normal failed, maybe it's successful, just recover iterator and return.
+		iter = child_start;
+		return parse_results::succeed;
+	}
+
+	assert(false);
+	return parse_results::failed;
 }
 
 shared_ptr<parser> repeater::clone() const
@@ -207,28 +299,55 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 	shared_ptr<selector_attribute> slc_attr = make_shared<selector_attribute>();
 
 	vector< shared_ptr<diag_chat> > branch_diags;
-
+	vector< parse_results >			results;
+	vector< shared_ptr<attribute> >	attrs;
 	int idx = 0;
+
+	// Visit branch and return succeed branch.
 	BOOST_FOREACH( shared_ptr<parser> const& p, branches() )
 	{
 		branch_diags.push_back( diag_chat::create() );
-		if( p->parse(iter, end, slc_attr->attr, branch_diags.back().get()) == pr_succeed ){
+		shared_ptr<attribute> branch_attr;
+		parse_results branch_result = p->parse( iter, end, branch_attr, branch_diags.back().get() );
+		results.push_back( branch_result );
+		attrs.push_back( branch_attr );
+
+		if( branch_result.is_succeed() ){
+			slc_attr->attr = branch_attr;
 			slc_attr->selected_idx = idx;
 			attr = slc_attr;
-			return pr_succeed;
+			return parse_results::succeed;
 		}
 		++idx;
 	}
 
-	shared_ptr<diag_chat> least_error_branch_diags;
-	BOOST_FOREACH( shared_ptr<diag_chat> const& branch_chat, branch_diags )
+	assert( !branch_diags.empty() );
+
+	// All branch matched failed, return the best one.
+	shared_ptr<diag_chat>	least_error_branch_diags = branch_diags[0];
+	parse_results			final_result = results[0];
+	slc_attr->attr = attrs[0];
+	slc_attr->selected_idx = 0;
+
+	for ( size_t i_result = 1; i_result < branch_diags.size(); ++i_result )
 	{
-		if( !least_error_branch_diags || branch_chat->diag_items().size() < least_error_branch_diags->diag_items().size() ){
+		parse_results branch_result = results[i_result];
+		if( branch_result.worse_than(final_result) ){ continue; }
+
+		shared_ptr<diag_chat> branch_chat = branch_diags[i_result];
+		if( branch_result.better_than(final_result) || branch_chat->diag_items().size() < least_error_branch_diags->diag_items().size() )
+		{
 			least_error_branch_diags = branch_chat;
+			final_result = branch_result;
+			slc_attr->attr = attrs[i_result];
+			slc_attr->selected_idx = i_result;
 		}
 	}
+
+	attr = slc_attr;
 	diags->merge( diags, least_error_branch_diags.get(), true );
-	return pr_failed;
+
+	return final_result;
 }
 
 shared_ptr<parser> selector::clone() const
@@ -265,21 +384,28 @@ parse_results queuer::parse( token_iterator& iter, token_iterator end, shared_pt
 	shared_ptr<queuer_attribute> ret = make_shared<queuer_attribute>();
 
 	shared_ptr<attribute> out;
+	parse_results final_result = parse_results::succeed;
+
 	BOOST_FOREACH( shared_ptr<parser> p, exprlst ){
 		out.reset();
 		token_iterator cur_iter = iter;
-		if( p->parse(iter, end, out, diags) != pr_succeed ){
+		
+		parse_results result = p->parse(iter, end, out, diags);
+		final_result = parse_results::worse( result, final_result );
+
+		if( !result.is_continuable() ){
 			iter = stored;
 			if( p->is_expected() ){
 				throw expectation_failure(cur_iter, p.get() );
 			}
-			return pr_failed;
+			return parse_results::failed;
 		}
+
 		ret->attrs.push_back(out);
 	}
 
 	attr = ret;
-	return pr_succeed;
+	return final_result;
 }
 
 shared_ptr<parser> queuer::clone() const
@@ -291,8 +417,8 @@ negnativer::negnativer( boost::shared_ptr<parser> p ): expr(p){}
 negnativer::negnativer( negnativer const& rhs ): expr(rhs.expr){}
 
 parse_results negnativer::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, diag_chat* diags ) const{
-	if ( !expr ) {return pr_failed;}
-	return ( expr->parse(iter, end, attr, diags) == pr_succeed ) ? pr_failed : pr_succeed;
+	if ( !expr ) {return parse_results::failed;}
+	return ( expr->parse(iter, end, attr, diags).is_succeed() ) ? parse_results::failed : parse_results::succeed;
 }
 
 boost::shared_ptr<parser> negnativer::clone() const{
@@ -322,46 +448,44 @@ void rule::name( std::string const & v ){
 	rule_name = v;
 }
 
+void print_with_indent( std::ostream& o, int indent, boost::format const& fmt )
+{
+	for( int i = 0; i < indent; ++i ){ o << "  "; }
+	o << fmt << endl;
+}
+
+
+std::fstream* pf = NULL;
+
 #define SASL_PARSER_LOG_ENABLED 0
 parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const{
-#if SASL_PARSER_LOG_ENABLED
-	static size_t indent = 0;
-#endif // SASL_PARSER_LOG_ENABLED
-	if( !expr ){
-		return pr_failed;
-	}
-
-#if SASL_PARSER_LOG_ENABLED
-	for ( size_t i = 0; i < indent; ++i ){
-		cout << "  ";
-	}
-	++indent;
-	cout << "<" << rule_name << ">" << endl;
-#endif // SASL_PARSER_LOG_ENABLED
+	static int indent = 0;
 	
-	if( expr->parse(iter, end, attr, diags) == pr_succeed ){
+	if(!pf){
+		pf = new std::fstream( "rules.xml", std::ios::out );
+	}
+	
+	assert( expr );
+	if( !expr ){ return parse_results::failed; }
+
+	size_t diags_count = diags->diag_items().size();
+
+	print_with_indent(*pf, indent++, boost::format("<%s>") % rule_name );
+	parse_results result = expr->parse(iter, end, attr, diags);
+	print_with_indent(*pf, --indent, boost::format("</%s diag_count = \"%d\">") % rule_name % (diags->diag_items().size()-diags_count) );
+
+	if( indent == 0 )
+	{
+		pf->close();
+		delete pf;
+		pf = NULL;
+	}
+
+	if( result.is_continuable() ){
 		attr->rule_id( id() );
-
-#if SASL_PARSER_LOG_ENABLED
-		--indent;
-		for ( size_t i = 0; i < indent; ++i ){
-			cout << "  ";
-		}
-		
-		cout << "</" << rule_name << ">" << endl;
-#endif // SASL_PARSER_LOG_ENABLED
-		return pr_succeed;
 	}
 
-#if SASL_PARSER_LOG_ENABLED
-	--indent;
-	for ( size_t i = 0; i < indent; ++i ){
-		cout << "  ";
-	}
-	cout << "<-" << rule_name << ">" << endl;
-#endif // SASL_PARSER_LOG_ENABLED
-
-	return pr_failed;
+	return result;
 }
 
 shared_ptr<parser> rule::clone() const{
@@ -403,9 +527,9 @@ endholder::endholder( endholder const & ){}
 parse_results endholder::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, diag_chat* /*diags*/ ) const{
 	if( iter == end ){
 		attr = make_shared<terminal_attribute>();
-		return pr_succeed;
+		return parse_results::succeed;
 	}
-	return pr_failed;
+	return parse_results::failed;
 }
 boost::shared_ptr<parser> endholder::clone() const{
 	return make_shared<endholder>();
@@ -458,8 +582,6 @@ negnativer operator!( parser const& expr1 ){
 	return negnativer( expr1.clone() );
 }
 
-
-
 error_catcher::error_catcher( shared_ptr<parser> const& p, error_handler err_handler )
 	: expr(p), err_handler(err_handler)
 {
@@ -477,13 +599,21 @@ shared_ptr<parser> error_catcher::clone() const
 
 parse_results error_catcher::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const
 {
+	token_iterator origin_iter = iter;
+
 	shared_ptr<diag_chat> children_diags = make_shared<diag_chat>();
-	if( !expr->parse(iter, end, attr, children_diags.get() ) ){
-		parse_results result = err_handler( children_diags.get() );
-		diag_chat::merge( diags, children_diags.get(), false );
-		return result;
+	parse_results result = expr->parse(iter, end, attr, children_diags.get() );
+	if( !result.is_continuable() )
+	{
+		result = err_handler( children_diags.get(), origin_iter, iter );
 	}
-	return pr_succeed;
+
+	if( !result.is_succeed() )
+	{
+		diag_chat::merge( diags, children_diags.get(), true );
+	}
+
+	return result;
 }
 
 END_NS_SASL_PARSER();
