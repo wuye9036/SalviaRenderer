@@ -63,7 +63,7 @@ parse_results const parse_results::recovered_expected_failed(parse_result_values
 bool parse_results::is_succeed    ()					const { return tag == succeed.tag; }
 bool parse_results::is_failed     ()					const { return tag == failed.tag; }
 bool parse_results::is_recovered  ()					const { return tag == recovered.tag; }
-bool parse_results::is_expected_failed()				const { return tag != expected_failed.tag; }
+bool parse_results::is_expected_failed()				const { return tag == expected_failed.tag; }
 bool parse_results::is_recovered_expected_failed()		const { return tag == recovered_expected_failed.tag; }
 
 bool parse_results::is_continuable()					const { return (tag & parse_result_values::recover_failed_mask) != parse_result_values::failed; }
@@ -349,7 +349,8 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 	{
 		parse_results branch_result = results[i_result];
 		shared_ptr<diag_chat> branch_chat = branch_diags[i_result];
-		if( std::distance( iter, iters[i_result] ) > 0  )
+		if( branch_result.is_recovered_expected_failed() && !final_result.is_recovered_expected_failed()
+			|| std::distance( iter, iters[i_result] ) > 0 )
 		{
 			least_error_branch_diags = branch_chat;
 			final_result = branch_result;
@@ -440,19 +441,29 @@ parse_results queuer::parse( token_iterator& iter, token_iterator end, shared_pt
 		token_iterator cur_iter = iter;
 		
 		parse_results result = p->parse(iter, end, out, diags);
-		final_result = parse_results::worse( result, final_result );
 
 		ret->attrs.push_back(out);
 
 		if( !result.is_continuable() ){
-			iter = stored;
+			// iter = stored;
 			attr = ret;
 			if( p->is_expected() ){
 				assert(false);
+				
+			}
+
+			if( !final_result.is_succeed() )
+			{
 				return parse_results::expected_failed;
 			}
-			return parse_results::failed;
+			else
+			{
+				return result;
+			}
+			
 		}
+
+		final_result = parse_results::worse(final_result, result);
 	}
 
 	attr = ret;
@@ -551,9 +562,9 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	assert( expr );
 	if( !expr ){ return parse_results::failed; }
 
-	if( rule_name == "function_body" )
+	if( rule_name == "assignexpr" )
 	{
-		cout << "fuck" << endl;
+		// cout << "fuck" << endl;
 	}
 
 	shared_ptr<path_tree> current_path( make_shared<path_tree>() );
@@ -577,6 +588,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	} else if ( result.is_recovered_expected_failed() ) {
 		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "recovered_expected_failed" ) );
 	}
+
 	current_path->attributes.push_back( make_pair("position", boost::format("\"%d, %d\"") % (*iter)->span.line_beg % (*iter)->span.col_beg) );
 	current_path->attributes.push_back( make_pair("token_content", boost::format("\"%s\"") % (*iter)->str) );
 

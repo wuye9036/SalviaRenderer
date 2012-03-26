@@ -3,6 +3,8 @@
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/parser/diags.h>
 
+#include <eflib/include/diagnostics/assert.h>
+
 using sasl::common::diag_chat;
 using sasl::common::code_span;
 using sasl::common::diag_item_committer;
