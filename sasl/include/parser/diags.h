@@ -6,6 +6,11 @@
 
 BEGIN_NS_SASL_PARSER();
 
+// Boost.Wave Errors
+extern sasl::common::diag_template boost_wave_exception_warning;
+extern sasl::common::diag_template boost_wave_exception_error;
+extern sasl::common::diag_template boost_wave_exception_fatal_error;
+
 extern sasl::common::diag_template cannot_open_input_file;
 extern sasl::common::diag_template unrecognized_token;
 extern sasl::common::diag_template unknown_tokenize_error;

@@ -2,6 +2,7 @@
 
 #include <sasl/include/parser/lexer.h>
 #include <sasl/include/parser/diags.h>
+#include <sasl/include/parser/error_handlers.h>
 #include <sasl/include/common/token.h>
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/common/diag_item.h>
@@ -28,6 +29,7 @@ using std::vector;
 
 using std::cout;
 using std::endl;
+using std::string;
 
 BEGIN_NS_SASL_PARSER();
 
@@ -42,7 +44,6 @@ namespace parse_result_values
 	int const expected_offset = 0;
 	int const expected_mask = 0x0F;
 	int const expected = 0x01;
-
 	int const succeed	= 0;
 	int const recovered	= 0x1 << recover_failed_offset;
 	int const failed	= 0x2 << recover_failed_offset;
@@ -220,6 +221,11 @@ shared_ptr<parser> terminal::clone() const
 	return make_shared<terminal>(*this);
 }
 
+string const& terminal::get_desc() const
+{
+	return desc;
+}
+
 size_t const repeater::unlimited = std::numeric_limits<size_t>::max();
 
 repeater::repeater( size_t lower_bound, size_t upper_bound, shared_ptr<parser> expr ) : lower_bound(lower_bound), upper_bound(upper_bound), expr(expr){}
@@ -229,12 +235,13 @@ repeater::repeater( repeater const& rhs ) : lower_bound(rhs.lower_bound), upper_
 parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	token_iterator repeater_start = iter;
-	size_t matched_count = 0;
 
 	vector< shared_ptr<diag_chat> > children_diags;
 	
 	shared_ptr<sequence_attribute> seq_attr = make_shared<sequence_attribute>();
 	attr = seq_attr;
+
+	parse_results final_result = parse_results::succeed;
 
 	for(size_t matched_count = 0;; ++matched_count )
 	{
@@ -243,7 +250,7 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 
 		token_iterator child_start = iter;
 		parse_results result = expr->parse( iter, end, out, children_diags.get() );
-
+		
 		// Child matched succeed.
 		if( result.is_succeed() ) { 
 			seq_attr->attrs.push_back(out);
@@ -258,20 +265,22 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 			return parse_results::failed;
 		}
 
-		// Child expected failed. Recover for continue to do, but DON'T ignore the diagnostic informations.
+		// if normal failed, maybe it's successful, just recover iterator and return.
 		if( result.is_expected_failed_or_recovered() )
 		{
 			diag_chat::merge( diags, children_diags.get(), true );
+			final_result = parse_results::worse( result, final_result );
 			continue;
 		}
-
-		// if normal failed, maybe it's successful, just recover iterator and return.
-		iter = child_start;
-		return parse_results::succeed;
+		else
+		{
+			iter = child_start;
+			return final_result;
+		}
 	}
 
 	assert(false);
-	return parse_results::failed;
+	return final_result;
 }
 
 shared_ptr<parser> repeater::clone() const
@@ -301,22 +310,28 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 	vector< shared_ptr<diag_chat> > branch_diags;
 	vector< parse_results >			results;
 	vector< shared_ptr<attribute> >	attrs;
+	vector< token_iterator >		iters;
 	int idx = 0;
 
 	// Visit branch and return succeed branch.
 	BOOST_FOREACH( shared_ptr<parser> const& p, branches() )
 	{
+		token_iterator start_iter = iter;
+
 		branch_diags.push_back( diag_chat::create() );
 		shared_ptr<attribute> branch_attr;
 		parse_results branch_result = p->parse( iter, end, branch_attr, branch_diags.back().get() );
 		results.push_back( branch_result );
 		attrs.push_back( branch_attr );
+		iters.push_back( iter );
 
 		if( branch_result.is_succeed() ){
 			slc_attr->attr = branch_attr;
 			slc_attr->selected_idx = idx;
 			attr = slc_attr;
 			return parse_results::succeed;
+		} else {
+			iter = start_iter;
 		}
 		++idx;
 	}
@@ -328,19 +343,19 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 	parse_results			final_result = results[0];
 	slc_attr->attr = attrs[0];
 	slc_attr->selected_idx = 0;
+	iter = iters[0];
 
 	for ( size_t i_result = 1; i_result < branch_diags.size(); ++i_result )
 	{
 		parse_results branch_result = results[i_result];
-		if( branch_result.worse_than(final_result) ){ continue; }
-
 		shared_ptr<diag_chat> branch_chat = branch_diags[i_result];
-		if( branch_result.better_than(final_result) || branch_chat->diag_items().size() < least_error_branch_diags->diag_items().size() )
+		if( std::distance( iter, iters[i_result] ) > 0  )
 		{
 			least_error_branch_diags = branch_chat;
 			final_result = branch_result;
 			slc_attr->attr = attrs[i_result];
 			slc_attr->selected_idx = i_result;
+			iter = iters[i_result];
 		}
 	}
 
@@ -368,6 +383,40 @@ queuer::queuer( queuer const& rhs ) :exprlst(rhs.exprlst){}
 queuer& queuer::append( shared_ptr<parser> p, bool is_expected )
 {
 	p->is_expected(is_expected);
+	
+	// Add default error handler
+	if( is_expected )
+	{
+		terminal* term = dynamic_cast<terminal*>( p.get() );
+		if( term )
+		{ 
+			shared_ptr<error_catcher> err_catcher( new error_catcher( p, get_expected_failed_handler(term->get_desc()) ) );
+			exprlst.push_back( err_catcher );
+			return *this;
+		}
+		else 
+		{
+			rule_wrapper* rule_wrp = dynamic_cast<rule_wrapper*>(p.get());
+			if( rule_wrp )
+			{
+				parser const* inner_p = rule_wrp->get_rule()->get_parser();
+				terminal const* inner_term = dynamic_cast<terminal const*>(inner_p);
+				if( inner_term )
+				{
+					shared_ptr<error_catcher> err_catcher( new error_catcher( p, get_expected_failed_handler(inner_term->get_desc()) ) );
+					exprlst.push_back( err_catcher );
+					return *this;
+				}
+				else
+				{
+					shared_ptr<error_catcher> err_catcher( new error_catcher( p, get_expected_failed_handler( rule_wrp->get_rule()->name() ) ) );
+					exprlst.push_back( err_catcher );
+					return *this;
+				}
+			}
+		}
+	}
+	
 	exprlst.push_back(p);
 	return *this;
 }
@@ -393,15 +442,17 @@ parse_results queuer::parse( token_iterator& iter, token_iterator end, shared_pt
 		parse_results result = p->parse(iter, end, out, diags);
 		final_result = parse_results::worse( result, final_result );
 
+		ret->attrs.push_back(out);
+
 		if( !result.is_continuable() ){
 			iter = stored;
+			attr = ret;
 			if( p->is_expected() ){
-				throw expectation_failure(cur_iter, p.get() );
+				assert(false);
+				return parse_results::expected_failed;
 			}
 			return parse_results::failed;
 		}
-
-		ret->attrs.push_back(out);
 	}
 
 	attr = ret;
@@ -448,12 +499,42 @@ void rule::name( std::string const & v ){
 	rule_name = v;
 }
 
-void print_with_indent( std::ostream& o, int indent, boost::format const& fmt )
+struct path_tree
 {
-	for( int i = 0; i < indent; ++i ){ o << "  "; }
-	o << fmt << endl;
-}
+	std::string									element;
+	vector< std::pair<string, boost::format> >	attributes;
+	vector< shared_ptr<path_tree> >				children;
+};
 
+vector< shared_ptr<path_tree> > path_stack;
+
+void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, int indent = 0 )
+{
+	// Print Element
+	for( int i = 0; i < indent; ++i ){ o << "  "; }
+	o << "<" << path_node->element;
+
+	// Print Attribute
+	for( size_t i = 0; i < path_node->attributes.size(); ++i )
+	{
+		o << " " << path_node->attributes[i].first << "=" << path_node->attributes[i].second;
+	}
+
+	if( path_node->children.empty() )
+	{
+		o << " />" << endl;
+	}
+	else
+	{
+		o << " >" << endl;
+		for( size_t i = 0; i < path_node->children.size(); ++i )
+		{
+			print_path_tree( o, path_node->children[i], indent+1 );
+		}
+		for( int i = 0; i < indent; ++i ){ o << "  "; }
+		o << "</" << path_node->element << ">" << endl;
+	}
+}
 
 std::fstream* pf = NULL;
 
@@ -464,18 +545,46 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	if(!pf){
 		pf = new std::fstream( "rules.xml", std::ios::out );
 	}
+
+	shared_ptr<diag_chat> chat = diag_chat::create();
 	
 	assert( expr );
 	if( !expr ){ return parse_results::failed; }
 
-	size_t diags_count = diags->diag_items().size();
-
-	print_with_indent(*pf, indent++, boost::format("<%s>") % rule_name );
-	parse_results result = expr->parse(iter, end, attr, diags);
-	print_with_indent(*pf, --indent, boost::format("</%s diag_count = \"%d\">") % rule_name % (diags->diag_items().size()-diags_count) );
-
-	if( indent == 0 )
+	if( rule_name == "function_body" )
 	{
+		cout << "fuck" << endl;
+	}
+
+	shared_ptr<path_tree> current_path( make_shared<path_tree>() );
+	if( !path_stack.empty() )
+	{
+		path_stack.back()->children.push_back( current_path );
+	}
+	
+	path_stack.push_back( current_path );
+	current_path->element = rule_name;
+	parse_results result = expr->parse(iter, end, attr, chat.get());
+	current_path->attributes.push_back( make_pair( "diag_count", boost::format("\"%d\"") % chat->diag_items().size() ) );
+	if( result.is_succeed() ) {
+		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "succeed" ) );
+	} else if ( result.is_recovered() ) {
+		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "recovered" ) );
+	} else if ( result.is_failed() ) {
+		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "failed" ) );
+	} else if ( result.is_expected_failed() ) {
+		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "expected_failed" ) );
+	} else if ( result.is_recovered_expected_failed() ) {
+		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "recovered_expected_failed" ) );
+	}
+	current_path->attributes.push_back( make_pair("position", boost::format("\"%d, %d\"") % (*iter)->span.line_beg % (*iter)->span.col_beg) );
+	current_path->attributes.push_back( make_pair("token_content", boost::format("\"%s\"") % (*iter)->str) );
+
+	path_stack.pop_back();
+
+	if( path_stack.empty() )
+	{
+		print_path_tree( *pf,current_path );
 		pf->close();
 		delete pf;
 		pf = NULL;
@@ -483,6 +592,9 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 
 	if( result.is_continuable() ){
 		attr->rule_id( id() );
+	}
+	if( !result.is_succeed() ){
+		diag_chat::merge( diags, chat.get(), true );
 	}
 
 	return result;
@@ -501,6 +613,11 @@ rule& rule::operator=( rule const& rhs )
 {
 	expr = rhs.clone();
 	return *this;
+}
+
+parser const* rule::get_parser() const
+{
+	return expr.get();
 }
 
 rule_wrapper::rule_wrapper( rule_wrapper const& rhs ) : r(rhs.r){}
@@ -522,7 +639,13 @@ std::string const& rule_wrapper::name() const{
 	return r.name();
 }
 
+rule const* rule_wrapper::get_rule() const
+{
+	return &r;
+}
+
 endholder::endholder(){}
+
 endholder::endholder( endholder const & ){}
 parse_results endholder::parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, diag_chat* /*diags*/ ) const{
 	if( iter == end ){

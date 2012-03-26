@@ -123,7 +123,7 @@ shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > att
 {
 	shared_ptr<program> ret;
 	
-	SASL_TYPED_ATTRIBUTE(sequence_attribute, typed_attr, attr);
+	SASL_TYPED_ATTRIBUTE(sequence_attribute, typed_attr, attr->child(0));
 
 	if( typed_attr ){
 		ret = create_node<program>("prog");
@@ -154,6 +154,9 @@ boost::shared_ptr<declaration> syntax_tree_builder::build_decl( shared_ptr<attri
 		}
 		SASL_CASE_RULE( function_def ){
 			return build_fndef( typed_attr->attr );
+		}
+		SASL_CASE_RULE( function_decl ){
+			return build_fndecl( typed_attr->attr->child(0) );
 		}
 	SASL_END_SWITCH_RULE();
 
@@ -189,9 +192,6 @@ shared_ptr<declaration> syntax_tree_builder::build_basic_decl( shared_ptr<attrib
 	SASL_SWITCH_RULE( typed_decl_attr->attr )
 		SASL_CASE_RULE( vardecl ){
 			return build_vardecl(typed_decl_attr->attr);
-		}
-		SASL_CASE_RULE( function_decl ){
-			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 		SASL_CASE_RULE( struct_decl ){
 			return build_struct( typed_decl_attr->attr );
@@ -868,7 +868,7 @@ shared_ptr<expression_statement> syntax_tree_builder::build_stmt_expr( shared_pt
 
 shared_ptr<declaration_statement> syntax_tree_builder::build_stmt_decl( shared_ptr<attribute> attr ){
 	shared_ptr<declaration_statement> ret = create_node<declaration_statement>( token_t::null() );
-	ret->decl = build_decl( attr );
+	ret->decl = build_basic_decl( attr );
 	return ret;
 }
 

@@ -152,6 +152,7 @@ public:
 	terminal( terminal const& rhs );
 	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
+	std::string const& get_desc() const;
 private:
 	terminal& operator = (terminal const &);
 	size_t tok_id;
@@ -227,7 +228,7 @@ public:
 	intptr_t id() const;
 	std::string const& name() const;
 	void name( std::string const & v );
-
+	parser const* get_parser() const;
 	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 private:
@@ -243,6 +244,7 @@ public:
 	parse_results parse( token_iterator& iter, token_iterator end, boost::shared_ptr<attribute>& attr, sasl::common::diag_chat* diags ) const;
 	boost::shared_ptr<parser> clone() const;
 	std::string const& name() const;
+	rule const* get_rule() const;
 private:
 	rule_wrapper& operator = ( rule_wrapper const & );
 	rule const& r;

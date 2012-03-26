@@ -5,6 +5,9 @@
 
 using sasl::common::diag_chat;
 using sasl::common::code_span;
+using sasl::common::diag_item_committer;
+using boost::shared_ptr;
+using boost::wave::preprocess_exception;
 using std::string;
 using std::cout;
 using std::endl;
@@ -47,15 +50,29 @@ string driver_code_source::next()
 
 	try{
 		++next_it;
-	} catch ( boost::wave::preprocess_exception& e ){
+	} catch ( preprocess_exception& e ){
+		shared_ptr<diag_item_committer> committer;
+		switch( e.get_errorcode() )
+		{
+		case preprocess_exception::no_error:
+			break;
+		case preprocess_exception::last_line_not_terminated:
+			committer = diags->report( sasl::parser::boost_wave_exception_warning );
+			break;
+		default:
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			break;
+		}
+
+		if( committer )
+		{
+			committer
+				->p( preprocess_exception::error_text( e.get_errorcode() ) )
+				->span( current_span() )
+				->file( to_std_string(cur_it->get_position().get_file()) );
+		}
 		errtok = to_std_string( cur_it->get_value() );
 		next_it = wctxt->end();
-		diags->report( sasl::parser::unknown_tokenize_error )
-			->p( e.description() )
-			->span( current_span() )
-			->file( to_std_string(cur_it->get_position().get_file()) )
-			;
-		cout << e.description() << endl;
 	}
 
 	return to_std_string( cur_it->get_value() ) ;

@@ -19,9 +19,19 @@ parse_results expected_failed_handler( diag_chat* diags, token_iterator const& o
 	token_ptr tok = *iter;
 	
 	diags->clear();
-	diags->report( unmatched_expected_token )
-		->span(tok->span)->file(tok->file_name)
-		->p(expected_str)->p( tok->end_of_file ? "<eof>" : tok->str);
+	if( tok->end_of_file )
+	{
+		diags->report( end_of_file )
+			->span(tok->span)->file(tok->file_name)
+			->p(expected_str);
+	} 
+	else 
+	{
+		diags->report( unmatched_expected_token )
+			->span(tok->span)->file(tok->file_name)
+			->p(expected_str)->p(tok->str);
+	}
+	
 
 	iter = org_iter;
 
