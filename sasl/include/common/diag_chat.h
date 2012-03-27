@@ -69,6 +69,10 @@ private:
 	std::vector<diag_item*>			diags;
 };
 
+// Functions
+
+size_t error_count( diag_chat* chat, bool warning_as_error );
+
 END_NS_SASL_COMMON();
 
 #endif

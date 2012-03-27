@@ -53,10 +53,15 @@ public:
 	virtual intptr_t rule_id() const;
 	virtual void rule_id( intptr_t id );
 
-	virtual boost::shared_ptr<sasl::common::token_t> token_beg() const = 0;
-	virtual boost::shared_ptr<sasl::common::token_t> token_end() const = 0;
+	virtual token_ptr token_beg() const;
+	virtual token_ptr token_end() const;
+
+	virtual void token_range( token_ptr const&, token_ptr const& );
+
 protected:
-	intptr_t rid;
+	intptr_t	rid;
+	token_ptr	tok_beg;
+	token_ptr	tok_end;
 };
 
 // Terminal
@@ -64,8 +69,6 @@ class terminal_attribute: public attribute{
 public:
 	virtual boost::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_beg() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_end() const;
 	boost::shared_ptr<sasl::common::token_t> tok;
 };
 
@@ -76,8 +79,6 @@ class sequence_attribute: public attribute{
 public:
 	virtual boost::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_beg() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_end() const;
 	std::vector< boost::shared_ptr<attribute> > attrs;
 };
 
@@ -88,8 +89,6 @@ public:
 
 	virtual boost::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_beg() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_end() const;
 	boost::shared_ptr<attribute> attr;
 	int selected_idx;
 };
@@ -100,8 +99,6 @@ class queuer_attribute: public attribute{
 public:
 	virtual boost::shared_ptr<attribute> child( int idx ) const;
 	virtual size_t child_size() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_beg() const;
-	virtual boost::shared_ptr<sasl::common::token_t> token_end() const;
 	std::vector< boost::shared_ptr<attribute> > attrs;
 };
 

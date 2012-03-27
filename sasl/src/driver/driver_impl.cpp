@@ -178,7 +178,14 @@ void driver_impl::compile()
 			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags );
 			if( !mroot ){ return; }
 
-			msi = analysis_semantic( mroot.get(), diags );
+			shared_ptr<diag_chat> semantic_diags = diag_chat::create();
+			msi = analysis_semantic( mroot.get(), semantic_diags.get() );
+			if( error_count( semantic_diags.get(), false ) > 0 )
+			{
+				msi.reset();
+			}
+			diag_chat::merge( diags, semantic_diags.get(), true );
+
 			if( !msi ){ return; }
 
 			abi_analyser aa;

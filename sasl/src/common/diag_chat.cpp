@@ -107,4 +107,24 @@ shared_ptr<diag_item_committer> diag_item_committer::token_range( token_t const&
 	return shared_from_this();
 }
 
+size_t error_count( diag_chat* chat, bool warning_as_error )
+{
+	size_t count = 0;
+
+	for( size_t i_diag = 0; i_diag < chat->diag_items().size(); ++i_diag )
+	{
+		diag_item* diag = chat->diag_items()[i_diag];
+		if( diag->level() == dl_error )
+		{
+			++count;
+		} 
+		else if( warning_as_error && diag->level() == dl_warning )
+		{
+			++count;
+		}
+	}
+
+	return count;
+}
+
 END_NS_SASL_COMMON();

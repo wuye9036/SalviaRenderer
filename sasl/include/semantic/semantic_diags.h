@@ -4,8 +4,10 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/common/diag_item.h>
 
-namespace sasl{
-	namespace syntax_tree{
+namespace sasl
+{
+	namespace syntax_tree
+	{
 		struct node;
 		struct tynode;
 	}
@@ -39,6 +41,17 @@ BEGIN_NS_SASL_SEMANTIC();
 //	ListReprT	tail;
 //};
 
+class args_type_repr
+{
+public:
+	args_type_repr();
+	args_type_repr& arg( boost::shared_ptr<sasl::syntax_tree::tynode> const& );
+	std::string str();
+private:
+	std::vector< boost::shared_ptr<sasl::syntax_tree::tynode> > arg_tys;
+	std::string str_buffer;
+};
+
 class type_repr
 {
 public:
@@ -50,9 +63,11 @@ private:
 };
 
 extern sasl::common::diag_template unknown_semantic_error;
-
 extern sasl::common::diag_template function_arg_count_error;
 extern sasl::common::diag_template function_param_unmatched;
+extern sasl::common::diag_template function_multi_overloads;
+extern sasl::common::diag_template not_a_member_of;
+
 END_NS_SASL_SEMANTIC();
 
 #endif

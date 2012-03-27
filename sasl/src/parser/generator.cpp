@@ -133,6 +133,22 @@ attribute::~attribute(){}
 intptr_t attribute::rule_id() const{ return rid; }
 void attribute::rule_id( intptr_t id ){ rid = id; }
 
+void attribute::token_range( token_ptr const& beg, token_ptr const& end )
+{
+	tok_beg = beg;
+	tok_end = end;
+}
+
+token_ptr attribute::token_beg() const
+{
+	return tok_beg;
+}
+
+token_ptr attribute::token_end() const
+{
+	return tok_end;
+}
+
 shared_ptr<attribute> terminal_attribute::child( int /*idx*/ ) const{
 	assert(!"Terminate attribute has no child.");
 	return shared_ptr<attribute>();
@@ -140,16 +156,6 @@ shared_ptr<attribute> terminal_attribute::child( int /*idx*/ ) const{
 
 size_t terminal_attribute::child_size() const{
 	return 0;
-}
-
-shared_ptr<token_t> terminal_attribute::token_beg() const
-{
-	return tok;
-}
-
-shared_ptr<token_t> terminal_attribute::token_end() const
-{
-	return tok;
 }
 
 shared_ptr<attribute> sequence_attribute::child( int idx ) const{
@@ -168,18 +174,6 @@ size_t sequence_attribute::child_size() const{
 	return attrs.size();
 }
 
-shared_ptr<token_t> sequence_attribute::token_beg() const
-{
-	if( attrs.empty() ){ return token_t::null(); }
-	return attrs[0]->token_beg();
-}
-
-shared_ptr<token_t> sequence_attribute::token_end() const
-{
-	if( attrs.empty() ){ return token_t::null(); }
-	return attrs.back()->token_end();
-}
-
 selector_attribute::selector_attribute() : selected_idx(-1){}
 shared_ptr<attribute> selector_attribute::child( int idx ) const{
 	EFLIB_ASSERT_AND_IF( idx == 0, "" ){
@@ -193,18 +187,6 @@ size_t selector_attribute::child_size() const
 	return selected_idx == -1 ? 0 : 1;
 }
 
-shared_ptr<token_t> selector_attribute::token_beg() const
-{
-	if( attr ){ return attr->token_beg(); }
-	return token_t::null();
-}
-
-shared_ptr<token_t> selector_attribute::token_end() const
-{
-	if( attr ){ return attr->token_end(); }
-	return token_t::null();
-}
-
 shared_ptr<attribute> queuer_attribute::child( int idx ) const{
 	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
 		return shared_ptr<attribute>();
@@ -214,18 +196,6 @@ shared_ptr<attribute> queuer_attribute::child( int idx ) const{
 
 size_t queuer_attribute::child_size() const{
 	return attrs.size();
-}
-
-shared_ptr<token_t> queuer_attribute::token_beg() const
-{
-	if( attrs.empty() ){ return token_t::null(); }
-	return attrs[0]->token_beg();
-}
-
-shared_ptr<token_t> queuer_attribute::token_end() const
-{
-	if( attrs.empty() ){ return token_t::null(); }
-	return attrs.back()->token_end();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -248,6 +218,7 @@ parse_results terminal::parse( token_iterator& iter, token_iterator end, shared_
 {
 	shared_ptr<terminal_attribute> ret = make_shared<terminal_attribute>();
 	ret->tok = *iter;
+	ret->token_range( *iter, *iter );
 	attr = ret;
 
 	if ( iter == end ){
@@ -255,7 +226,9 @@ parse_results terminal::parse( token_iterator& iter, token_iterator end, shared_
 	}
 
 	if( (*iter)->id == tok_id ){
+		token_iterator current_iter = iter;
 		++iter;
+		ret->token_range( *current_iter, *iter );
 		return parse_results::succeed;
 	}
 
@@ -281,12 +254,13 @@ repeater::repeater( repeater const& rhs ) : lower_bound(rhs.lower_bound), upper_
 
 parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
-	token_iterator repeater_start = iter;
+	token_iterator iter_beg = iter;
 
 	vector< shared_ptr<diag_chat> > children_diags;
 	
 	shared_ptr<sequence_attribute> seq_attr = make_shared<sequence_attribute>();
 	attr = seq_attr;
+	attr->token_range( *iter_beg, *iter_beg );
 
 	parse_results final_result = parse_results::succeed;
 
@@ -299,7 +273,8 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 		parse_results result = expr->parse( iter, end, out, children_diags.get() );
 		
 		// Child matched succeed.
-		if( result.is_succeed() ) { 
+		if( result.is_succeed() ) {
+			out->token_range( *iter_beg, *iter );
 			seq_attr->attrs.push_back(out);
 			if( matched_count == upper_bound ){ break; }
 			continue;
@@ -307,7 +282,8 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 		
 		// Repeater matched failed.
 		if( matched_count < lower_bound ){
-			iter = repeater_start;
+			iter = iter_beg;
+			seq_attr->token_range( *iter_beg, *iter_beg );
 			diag_chat::merge( diags, children_diags.get(), true );
 			return parse_results::failed;
 		}
@@ -353,7 +329,7 @@ std::vector< shared_ptr<parser> > const& selector::branches() const
 parse_results selector::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
 	shared_ptr<selector_attribute> slc_attr = make_shared<selector_attribute>();
-
+	slc_attr->token_range(*iter, *iter);
 	vector< shared_ptr<diag_chat> > branch_diags;
 	vector< parse_results >			results;
 	vector< shared_ptr<attribute> >	attrs;
@@ -374,6 +350,7 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 
 		if( branch_result.is_succeed() ){
 			slc_attr->attr = branch_attr;
+			slc_attr->token_range( branch_attr->token_beg(), branch_attr->token_end() );
 			slc_attr->selected_idx = idx;
 			attr = slc_attr;
 			return parse_results::succeed;
@@ -402,6 +379,7 @@ parse_results selector::parse( token_iterator& iter, token_iterator end, shared_
 			least_error_branch_diags = branch_chat;
 			final_result = branch_result;
 			slc_attr->attr = attrs[i_result];
+			slc_attr->token_range( attrs[i_result]->token_beg(), attrs[i_result]->token_end() );
 			slc_attr->selected_idx = i_result;
 			iter = iters[i_result];
 		}
@@ -476,10 +454,10 @@ std::vector< shared_ptr<parser> > const& queuer::exprs() const
 
 parse_results queuer::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const
 {
-	token_iterator stored = iter;
+	token_iterator iter_beg = iter;
 
 	shared_ptr<queuer_attribute> ret = make_shared<queuer_attribute>();
-
+	ret->token_range( *iter, *iter );
 	shared_ptr<attribute> out;
 	parse_results final_result = parse_results::succeed;
 
@@ -490,24 +468,11 @@ parse_results queuer::parse( token_iterator& iter, token_iterator end, shared_pt
 		parse_results result = p->parse(iter, end, out, diags);
 
 		ret->attrs.push_back(out);
-
+		ret->token_range( *iter_beg, out->token_end() );
 		if( !result.is_continuable() ){
-			// iter = stored;
 			attr = ret;
-			if( p->is_expected() ){
-				assert(false);
-				
-			}
-
-			if( !final_result.is_succeed() )
-			{
-				return parse_results::expected_failed;
-			}
-			else
-			{
-				return result;
-			}
-			
+			if( p->is_expected() ){ assert(false); }
+			return final_result.is_succeed() ? result : parse_results::expected_failed;
 		}
 
 		final_result = parse_results::worse(final_result, result);

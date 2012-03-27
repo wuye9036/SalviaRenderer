@@ -378,23 +378,30 @@ SASL_VISIT_DEF( call_expression )
 		
 		if( syms.empty() )
 		{
-			diags->report( function_param_unmatched )->token_range( *v.token_begin(), *v.token_end() )->p( fnsi->name() );
+			args_type_repr atr;
+			for( size_t i = 0; i < dup_callexpr->args.size(); ++i )
+			{
+				atr.arg( dup_callexpr->args[i]->si_ptr<type_info_si>()->type_info() );
+			}
+			diags->report( function_param_unmatched )->token_range( *v.token_begin(), *v.token_end() )->p( fnsi->name() )->p( atr.str() );
 		}
+		else if ( syms.size() > 1 )
+		{
+			diags->report( function_multi_overloads )->token_range( *v.token_begin(), *v.token_end() )->p( fnsi->name() )->p( syms.size() );
+		}
+		else
+		{
+			shared_ptr<symbol> func_sym = syms[0];
+			assert( func_sym );
 
-		// TODO if syms is empty, no function was overloaded. report the error.
-		assert( syms.size() == 1 );
-		// TODO more than one overload candidates. report error.
+			mark_intrin_invoked_recursive( func_sym );
+			storage_si* ssi = func_sym->node()->si_ptr<storage_si>();
+			SASL_GET_OR_CREATE_SI_P( call_si, csi, dup_callexpr, msi->pety() );
 
-		shared_ptr<symbol> func_sym = syms[0];
-		assert( func_sym );
-
-		mark_intrin_invoked_recursive( func_sym );
-		storage_si* ssi = func_sym->node()->si_ptr<storage_si>();
-		SASL_GET_OR_CREATE_SI_P( call_si, csi, dup_callexpr, msi->pety() );
-
-		csi->entry_id( ssi->entry_id() );
-		csi->is_function_pointer(false);
-		csi->overloaded_function( func_sym.get() );
+			csi->entry_id( ssi->entry_id() );
+			csi->is_function_pointer(false);
+			csi->overloaded_function( func_sym.get() );
+		}
 	}
 
 	data_cptr()->generated_node = dup_callexpr->as_handle();
@@ -447,15 +454,25 @@ SASL_VISIT_DEF( member_expression ){
 	if( agg_type->node_class() == node_ids::struct_type ){
 		// Aggregated is struct
 		shared_ptr<symbol> struct_sym = agg_type->as_handle<struct_type>()->symbol();
-		shared_ptr<declarator> mem_declr
-			= struct_sym->find_this( v.member->str )->node()->as_handle<declarator>();
-		// TODO if mem_declr isn't found, it means the name of member is wrong.
-		// Need to report that.
-		assert( mem_declr );
-		SASL_EXTRACT_SI( storage_si, mem_si, mem_declr );
-		mem_typeid = mem_si->entry_id();
-		member_index = mem_si->mem_index();
-		assert( mem_typeid != -1 );
+		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
+
+		if( !mem_sym )
+		{
+			diags->report( not_a_member_of )
+				->token_range( *v.member, *v.member )
+				->p( v.member->str )
+				->p( struct_sym->unmangled_name() )
+				;
+		}
+		else
+		{
+			shared_ptr<declarator> mem_declr = mem_sym->node()->as_handle<declarator>();
+			assert( mem_declr );
+			SASL_EXTRACT_SI( storage_si, mem_si, mem_declr );
+			mem_typeid = mem_si->entry_id();
+			member_index = mem_si->mem_index();
+			assert( mem_typeid != -1 );
+		}
 	} else if( agg_type->is_builtin() ){
 		// Aggregated class is vector & matrix
 		builtin_types agg_btc = agg_type->tycode;
