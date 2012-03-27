@@ -73,45 +73,40 @@ struct node{
 		}
 	}
 
-	boost::shared_ptr<token_t> token() const;
-	node_ids node_class() const;
+	boost::shared_ptr<token_t>	token_begin() const;
+	boost::shared_ptr<token_t>	token_end() const;
+	void						token_range( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
+	node_ids					node_class() const;
 
 	virtual SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() = 0;
 
-	const ::std::vector< ::boost::shared_ptr< node > >& additionals() const;
-	::std::vector< ::boost::shared_ptr< node > >& additionals();
-
 protected:
-	node(node_ids tid, boost::shared_ptr<token_t> tok);
+	node(node_ids tid, boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end);
 	node& operator = ( const node& );
 	node( const node& );
 
-	node_ids			type_id;
-	boost::shared_ptr<token_t>	tok;
-	boost::weak_ptr<class ::sasl::semantic::symbol>	sym;
+	node_ids										type_id;
+	boost::shared_ptr<token_t>						tok_beg, tok_end;
+	boost::weak_ptr<class sasl::semantic::symbol>	sym;
 
-	boost::shared_ptr<class ::sasl::semantic::semantic_info> seminfo;
-	boost::shared_ptr<class ::sasl::code_generator::codegen_context> cgctxt;
+	boost::shared_ptr<class sasl::semantic::semantic_info>			seminfo;
+	boost::shared_ptr<class sasl::code_generator::codegen_context>	cgctxt;
 
 	boost::weak_ptr<node> selfptr;
-
-	//	additional syntax nodes.
-	//		It makes no sense in original syntax tree,
-	//		but could use when evaluate syntax tree processing.
-	//		It only hold life time of syntax node utility, and
-	//		without any processing during the syntax tree is visited.
-	::std::vector< ::boost::shared_ptr< node > > adds;
 
 	virtual ~node();
 };
 
-template <typename NodeT> boost::shared_ptr<NodeT> create_node();
-template <typename NodeT, typename ParamT> boost::shared_ptr<NodeT> create_node(ParamT);
+//template <typename NodeT> boost::shared_ptr<NodeT> create_node();
+//template <typename R, typename P0> boost::shared_ptr<R> create_node( P0 ); 
+//template <typename R, typename P0, typename P1> boost::shared_ptr<R> create_node( P0, P1 );
 
 END_NS_SASL_SYNTAX_TREE();
 
 #define SASL_SYNTAX_NODE_CREATORS() \
 	template <typename R> friend boost::shared_ptr<R> create_node(); \
-	template <typename R, typename P0> friend boost::shared_ptr<R> create_node( P0 );
+	template <typename R, typename P0> friend boost::shared_ptr<R> create_node( P0 ); \
+	template <typename R, typename P0, typename P1> friend boost::shared_ptr<R> create_node( P0, P1 );
 
+	
 #endif //SASL_SYNTAX_TREE_NODE_H

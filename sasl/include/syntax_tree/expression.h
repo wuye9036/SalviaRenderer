@@ -36,13 +36,13 @@ private:
 		prefix_ops, postfix_ops, binary_ops;
 };
 
-using sasl::common::token_t;
+using  sasl::common::token_t;
 struct tynode;
-class syntax_tree_visitor;
+class  syntax_tree_visitor;
 
 struct expression: public node{
 protected:
-	expression( node_ids nodetype, boost::shared_ptr<token_t> tok);
+	expression( node_ids nodetype, boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct constant_expression: public expression{
@@ -50,10 +50,10 @@ struct constant_expression: public expression{
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<token_t> value_tok;
-	literal_classifications ctype;
+	boost::shared_ptr<token_t>	value_tok;
+	literal_classifications		ctype;
 protected:
-	constant_expression( boost::shared_ptr<token_t> tok );
+	constant_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct variable_expression: public expression{
@@ -63,7 +63,7 @@ struct variable_expression: public expression{
 
 	boost::shared_ptr< token_t > var_name;
 protected:
-	variable_expression( boost::shared_ptr<token_t> tok );
+	variable_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct unary_expression: public expression{
@@ -74,7 +74,7 @@ struct unary_expression: public expression{
 	boost::shared_ptr<expression> expr;
 	operators op;
 protected:
-	unary_expression( boost::shared_ptr<token_t> tok );
+	unary_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct cast_expression: public expression{
@@ -82,10 +82,10 @@ struct cast_expression: public expression{
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<tynode> casted_type;
-	boost::shared_ptr<expression> expr;
+	boost::shared_ptr<tynode>		casted_type;
+	boost::shared_ptr<expression>	expr;
 protected:
-	cast_expression( boost::shared_ptr<token_t> tok );
+	cast_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct binary_expression: public expression {
@@ -97,7 +97,7 @@ struct binary_expression: public expression {
 	boost::shared_ptr<expression> left_expr;
 	boost::shared_ptr<expression> right_expr;
 protected:
-	binary_expression( boost::shared_ptr<token_t> tok );
+	binary_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct expression_list: public expression{
@@ -107,7 +107,7 @@ struct expression_list: public expression{
 
 	std::vector< boost::shared_ptr<expression> > exprs;
 protected:
-	expression_list( boost::shared_ptr<token_t> tok );
+	expression_list( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct cond_expression: public expression{
@@ -119,7 +119,7 @@ struct cond_expression: public expression{
 	boost::shared_ptr<expression> yes_expr;
 	boost::shared_ptr<expression> no_expr;
 protected:
-	cond_expression( boost::shared_ptr<token_t> tok );
+	cond_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct index_expression: public expression{
@@ -130,7 +130,7 @@ struct index_expression: public expression{
 	boost::shared_ptr<expression> expr;
 	boost::shared_ptr<expression> index_expr;
 protected:
-	index_expression( boost::shared_ptr<token_t> tok );
+	index_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct call_expression: public expression{
@@ -138,11 +138,11 @@ struct call_expression: public expression{
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<expression> expr;
-	std::vector<boost::shared_ptr<expression> > args;
+	boost::shared_ptr<expression>				expr;
+	std::vector<boost::shared_ptr<expression> >	args;
 
 protected:
-	call_expression( boost::shared_ptr<token_t> tok );
+	call_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 struct member_expression: public expression{
@@ -153,7 +153,7 @@ struct member_expression: public expression{
 	boost::shared_ptr<expression> expr;
 	boost::shared_ptr<token_t> member;
 protected:
-	member_expression( boost::shared_ptr<token_t> tok );
+	member_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 };
 
 END_NS_SASL_SYNTAX_TREE();

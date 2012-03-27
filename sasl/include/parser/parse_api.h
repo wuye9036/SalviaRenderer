@@ -20,7 +20,7 @@ namespace sasl{
 		class lexer;
 		class grammars;
 
-		void parse(
+		bool parse(
 			boost::shared_ptr<attribute>& pt_root,
 			const std::string& code,
 			boost::shared_ptr< ::sasl::common::lex_context > ctxt,
@@ -28,7 +28,7 @@ namespace sasl{
 			sasl::common::diag_chat* diags
 			);
 
-		void parse(
+		bool parse(
 			boost::shared_ptr<attribute>& pt_root,
 			sasl::common::code_source* src,
 			boost::shared_ptr< ::sasl::common::lex_context > ctxt,

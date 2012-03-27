@@ -7,7 +7,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/name_mangler.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_api.h
-	${SASL_HOME_DIR}/sasl/include/semantic/semantic_error.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantic_diags.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_info.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.imp.h
@@ -30,7 +30,7 @@ set( SOURCE_FILES
 	name_mangler.cpp
 	semantic_analyser.cpp
 	semantic_api.cpp
-	semantic_error.cpp
+	semantic_diags.cpp
 	symbol.cpp
 	symbol_scope.cpp
 	type_checker.cpp

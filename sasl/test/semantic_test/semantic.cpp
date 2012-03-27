@@ -15,15 +15,15 @@
 
 using namespace sasl::utility;
 
-using ::sasl::common::compiler_info_manager;
+using sasl::common::diag_chat;
 
-using ::sasl::syntax_tree::program;
+using sasl::syntax_tree::program;
 
-using ::sasl::semantic::extract_semantic_info;
-using ::sasl::semantic::mangle;
-using ::sasl::semantic::operator_name;
-using ::sasl::semantic::program_si;
-using ::sasl::semantic::symbol;
+using sasl::semantic::extract_semantic_info;
+using sasl::semantic::mangle;
+using sasl::semantic::operator_name;
+using sasl::semantic::program_si;
+using sasl::semantic::symbol;
 
 #define SYNCASE_(case_name) syntax_cases::instance().case_name()
 #define SYNCASENAME_( case_name ) syntax_cases::instance().case_name##_name()

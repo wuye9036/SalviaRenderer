@@ -7,8 +7,8 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 using ::sasl::semantic::semantic_info;
 
-node::node(node_ids tid, shared_ptr<token_t> tok )
-: type_id(tid), tok(tok)
+node::node(node_ids tid, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+: type_id(tid), tok_beg(tok_beg), tok_end(tok_end)
 {
 	// DO NOTHING
 }
@@ -33,8 +33,12 @@ void node::semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_inf
 	const_cast<node*>(this)->seminfo = si;
 }
 
-boost::shared_ptr<token_t> node::token() const{
-	return tok;
+boost::shared_ptr<token_t> node::token_begin() const{
+	return tok_beg;
+}
+
+boost::shared_ptr<token_t> node::token_end() const{
+	return tok_end;
 }
 
 node_ids node::node_class() const{
@@ -45,12 +49,10 @@ node::~node(){
 	// DO NOTHING
 }
 
-const ::std::vector< ::boost::shared_ptr< node > >& node::additionals() const{
-	return adds;
-}
-
-::std::vector< ::boost::shared_ptr< node > >& node::additionals(){
-	return adds;
+void node::token_range( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+{
+	this->tok_beg = tok_beg;
+	this->tok_end = tok_end;
 }
 
 END_NS_SASL_SYNTAX_TREE();

@@ -169,9 +169,12 @@ shared_ptr<program> parse(
 	grammars g(l);
 
 	shared_ptr<sasl::parser::attribute> pt_prog;
-	sasl::parser::parse( pt_prog, code_text, ctxt, l, g, diags );
-	syntax_tree_builder builder(l, g);
-	return builder.build_prog( pt_prog );
+	if( sasl::parser::parse( pt_prog, code_text, ctxt, l, g, diags ) )
+	{
+		syntax_tree_builder builder(l, g);
+		return builder.build_prog( pt_prog );
+	}
+	return shared_ptr<program>();
 }
 
 shared_ptr<program> parse( code_source* src, shared_ptr<lex_context> ctxt, diag_chat* diags )
@@ -181,9 +184,12 @@ shared_ptr<program> parse( code_source* src, shared_ptr<lex_context> ctxt, diag_
 	grammars g(l);
 
 	shared_ptr<sasl::parser::attribute> pt_prog;
-	sasl::parser::parse( pt_prog, src, ctxt, l, g, diags );
-	syntax_tree_builder builder(l, g);
-	return builder.build_prog( pt_prog );
+	if( sasl::parser::parse( pt_prog, src, ctxt, l, g, diags ) )
+	{
+		syntax_tree_builder builder(l, g);
+		return builder.build_prog( pt_prog );
+	}
+	return shared_ptr<program>();
 }
 
 END_NS_SASL_SYNTAX_TREE();

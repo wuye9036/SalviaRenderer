@@ -12,7 +12,7 @@ namespace sasl{
 		struct node;
 	}
 	namespace common{
-		class compiler_info_manager;
+		class diag_chat;
 	}
 }
 
@@ -20,11 +20,9 @@ BEGIN_NS_SASL_SEMANTIC();
 
 class module_si;
 
-boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( boost::shared_ptr<sasl::syntax_tree::node> const& root );
-boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( sasl::syntax_tree::node* root );
+boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( boost::shared_ptr<sasl::syntax_tree::node> const& root, sasl::common::diag_chat* );
+boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( sasl::syntax_tree::node* root, sasl::common::diag_chat* );
 
 END_NS_SASL_SEMANTIC();
-
-
 
 #endif

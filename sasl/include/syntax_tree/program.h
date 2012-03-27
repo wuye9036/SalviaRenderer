@@ -25,7 +25,7 @@ struct program: public node{
 
 protected:
 	program(const std::string& name);
-	program( boost::shared_ptr<token_t> );
+	program( boost::shared_ptr<token_t> const&, boost::shared_ptr<token_t> const& );
 	program& operator = (const program&);
 	program( const program& );
 };

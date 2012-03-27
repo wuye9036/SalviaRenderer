@@ -60,7 +60,7 @@ semantic_cases::semantic_cases() : LOCVAR_(op_bexpr0)( operators::none )
 }
 
 void semantic_cases::initialize(){
-	CHECK_RET( LOCVAR_(si_root) = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_semantic_test) ) );
+	CHECK_RET( LOCVAR_(si_root) = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_semantic_test), NULL ) );
 	CHECK_RET( LOCVAR_(sym_root) = LOCVAR_(si_root)->root() );
 	
 	vector< shared_ptr<symbol> > sym_fn0_sem_ol = LOCVAR_(sym_root)->find_overloads( SYNCASENAME_(fn0_sem) );

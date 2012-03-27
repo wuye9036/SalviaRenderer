@@ -36,8 +36,8 @@ public:
 	}
 
 	boost::shared_ptr<diag_item_committer>	eval();
+	boost::shared_ptr<diag_item_committer>	token_range( token_t const& beg, token_t const& end );
 	boost::shared_ptr<diag_item_committer>	file( fname_t const& f );
-	boost::shared_ptr<diag_item_committer>	span( token_t const& beg, token_t const& end );
 	boost::shared_ptr<diag_item_committer>	span( code_span const& s );
 
 private:

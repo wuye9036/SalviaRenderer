@@ -4,70 +4,71 @@
 #include <boost/assign/std/vector.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
-using namespace boost;
+using boost::shared_ptr;
 using namespace boost::assign;
+
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-expression::expression( node_ids ntype, boost::shared_ptr<token_t> tok )
-	: node( ntype, tok )
+expression::expression( node_ids ntype, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: node( ntype, tok_beg, tok_end )
 {
 }
 
-constant_expression::constant_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::constant_expression, tok ), ctype( literal_classifications::none) { }
+constant_expression::constant_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::constant_expression, tok_beg, tok_end ), ctype( literal_classifications::none) { }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( constant_expression );
 
-unary_expression::unary_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::unary_expression, tok ), op( operators::none ) { }
+unary_expression::unary_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::unary_expression, tok_beg, tok_end ), op( operators::none ) { }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( unary_expression );
 
-cast_expression::cast_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::cast_expression, tok ){
+cast_expression::cast_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::cast_expression, tok_beg, tok_end ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( cast_expression );
 
-binary_expression::binary_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::binary_expression, tok ), op( operators::none) { }
+binary_expression::binary_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::binary_expression, tok_beg, tok_end ), op( operators::none) { }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( binary_expression );
 
-expression_list::expression_list( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::expression_list, tok )
+expression_list::expression_list( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::expression_list, tok_beg, tok_end )
 {
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( expression_list );
 
-cond_expression::cond_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::cond_expression, tok ){
+cond_expression::cond_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::cond_expression, tok_beg, tok_end ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( cond_expression );
 
-index_expression::index_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::index_expression, tok ){
+index_expression::index_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::index_expression, tok_beg, tok_end ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( index_expression );
 
-call_expression::call_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::call_expression, tok ){
+call_expression::call_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::call_expression, tok_beg, tok_end ){
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( call_expression );
 
-member_expression::member_expression( boost::shared_ptr<token_t> tok )
-	: expression( node_ids::member_expression, tok )
+member_expression::member_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: expression( node_ids::member_expression, tok_beg, tok_end )
 {
 }
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( member_expression );
 
-variable_expression::variable_expression( boost::shared_ptr<token_t> tok )
-: expression( node_ids::variable_expression, tok )
+variable_expression::variable_expression( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+: expression( node_ids::variable_expression, tok_beg, tok_end )
 {	
 }
 

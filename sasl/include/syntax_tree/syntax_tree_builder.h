@@ -124,6 +124,7 @@ public:
 		);
 private:
 	void initialize_bt_cache();
+	boost::shared_ptr<builtin_type> get_builtin( boost::shared_ptr<sasl::parser::attribute> const& attr );
 
 	syntax_tree_builder& operator = ( syntax_tree_builder const& );
 

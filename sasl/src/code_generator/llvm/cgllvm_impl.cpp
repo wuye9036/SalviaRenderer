@@ -133,19 +133,21 @@ SASL_VISIT_DEF( binary_expression ){
 		if( v.op == operators::assign ){
 			bin_assign( v, data );
 		} else {
+
+			// v.si_ptr<storage_si>()->
 			shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
 			shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
 			//////////////////////////////////////////////////////////////////////////
 			// type conversation for matching the operator prototype
 
-			// get an overloadable prototype.
+			// get an overload-able prototype.
 			std::vector< shared_ptr<expression> > args;
 			args.push_back( v.left_expr );
 			args.push_back( v.right_expr );
 
 			symbol::overloads_t overloads
-				= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), caster, args );
+				= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), caster, args, NULL );
 
 			EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
 				return;

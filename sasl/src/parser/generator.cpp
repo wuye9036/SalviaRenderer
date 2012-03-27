@@ -21,6 +21,7 @@
 using sasl::common::diag_template;
 using sasl::common::diag_item;
 using sasl::common::diag_chat;
+using sasl::common::token_t;
 
 using boost::shared_ptr;
 using boost::make_shared;
@@ -141,6 +142,16 @@ size_t terminal_attribute::child_size() const{
 	return 0;
 }
 
+shared_ptr<token_t> terminal_attribute::token_beg() const
+{
+	return tok;
+}
+
+shared_ptr<token_t> terminal_attribute::token_end() const
+{
+	return tok;
+}
+
 shared_ptr<attribute> sequence_attribute::child( int idx ) const{
 	if( attrs.empty() ){
 		assert( idx == 0 );
@@ -157,6 +168,18 @@ size_t sequence_attribute::child_size() const{
 	return attrs.size();
 }
 
+shared_ptr<token_t> sequence_attribute::token_beg() const
+{
+	if( attrs.empty() ){ return token_t::null(); }
+	return attrs[0]->token_beg();
+}
+
+shared_ptr<token_t> sequence_attribute::token_end() const
+{
+	if( attrs.empty() ){ return token_t::null(); }
+	return attrs.back()->token_end();
+}
+
 selector_attribute::selector_attribute() : selected_idx(-1){}
 shared_ptr<attribute> selector_attribute::child( int idx ) const{
 	EFLIB_ASSERT_AND_IF( idx == 0, "" ){
@@ -170,6 +193,18 @@ size_t selector_attribute::child_size() const
 	return selected_idx == -1 ? 0 : 1;
 }
 
+shared_ptr<token_t> selector_attribute::token_beg() const
+{
+	if( attr ){ return attr->token_beg(); }
+	return token_t::null();
+}
+
+shared_ptr<token_t> selector_attribute::token_end() const
+{
+	if( attr ){ return attr->token_end(); }
+	return token_t::null();
+}
+
 shared_ptr<attribute> queuer_attribute::child( int idx ) const{
 	EFLIB_ASSERT_AND_IF( 0 <= idx && idx < static_cast<int>( attrs.size() ), "" ){
 		return shared_ptr<attribute>();
@@ -179,6 +214,18 @@ shared_ptr<attribute> queuer_attribute::child( int idx ) const{
 
 size_t queuer_attribute::child_size() const{
 	return attrs.size();
+}
+
+shared_ptr<token_t> queuer_attribute::token_beg() const
+{
+	if( attrs.empty() ){ return token_t::null(); }
+	return attrs[0]->token_beg();
+}
+
+shared_ptr<token_t> queuer_attribute::token_end() const
+{
+	if( attrs.empty() ){ return token_t::null(); }
+	return attrs.back()->token_end();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -212,7 +259,7 @@ parse_results terminal::parse( token_iterator& iter, token_iterator end, shared_
 		return parse_results::succeed;
 	}
 
-	diags->report( unmatched_token )->span(**iter, **iter)->p( (*iter)->str );
+	diags->report( unmatched_token )->token_range(**iter, **iter)->p( (*iter)->str );
 	return parse_results::failed;
 }
 

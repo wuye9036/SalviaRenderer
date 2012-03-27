@@ -83,12 +83,6 @@ shared_ptr<diag_item_committer> diag_item_committer::file( fname_t const& f )
 	return shared_from_this();
 }
 
-shared_ptr<diag_item_committer> diag_item_committer::span( token_t const& beg, token_t const& end )
-{
-	item->span(beg, end);
-	return shared_from_this();
-}
-
 shared_ptr<diag_item_committer> diag_item_committer::span( code_span const& s )
 {
 	item->span(s);
@@ -103,6 +97,13 @@ diag_item_committer::~diag_item_committer()
 shared_ptr<diag_item_committer> diag_item_committer::eval()
 {
 	item->eval();
+	return shared_from_this();
+}
+
+shared_ptr<diag_item_committer> diag_item_committer::token_range( token_t const& beg, token_t const& end )
+{
+	item->file( beg.file_name );
+	item->span( beg, end );
 	return shared_from_this();
 }
 

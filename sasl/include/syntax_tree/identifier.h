@@ -14,7 +14,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 using sasl::common::token_t;
 
 struct identifier: public node{
-	identifier( boost::shared_ptr<token_t> tok );
+	identifier( boost::shared_ptr<token_t> const& tok );
 	std::string name;
 };
 

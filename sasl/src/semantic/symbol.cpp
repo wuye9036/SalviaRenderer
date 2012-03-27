@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/caster.h>
+#include <sasl/include/semantic/semantic_diags.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -26,9 +27,10 @@ using namespace std;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-using ::sasl::syntax_tree::expression;
-using ::sasl::syntax_tree::function_type;
-using ::sasl::syntax_tree::tynode;
+using sasl::common::diag_chat;
+using sasl::syntax_tree::expression;
+using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::tynode;
 using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
 using sasl::utility::is_matrix;
@@ -112,10 +114,11 @@ vector< shared_ptr<symbol> > symbol::find_overloads( const string& unmangled ) c
 vector< shared_ptr<symbol> > symbol::find_overloads(
 	const string& unmangled,
 	shared_ptr<caster_t> const& conv,
-	vector< shared_ptr<expression> > const& args ) const
+	vector< shared_ptr<expression> > const& args,
+	diag_chat* diags ) const
 {
 	// find all overloads
-	vector< shared_ptr<symbol> > overloads = find_overloads_impl( unmangled, conv, args );
+	vector< shared_ptr<symbol> > overloads = find_overloads_impl( unmangled, conv, args, diags );
 	collapse_vector1_overloads(overloads);
 	return overloads;
 }
@@ -123,9 +126,10 @@ vector< shared_ptr<symbol> > symbol::find_overloads(
 vector< shared_ptr<symbol> > symbol::find_assign_overloads(
 	const string& unmangled,
 	shared_ptr<caster_t> const& conv,
-	vector< shared_ptr<expression> > const& args ) const
+	vector< shared_ptr<expression> > const& args,
+	diag_chat* diags ) const
 {
-	vector< shared_ptr<symbol> > candidates = find_overloads_impl( unmangled, conv, args );
+	vector< shared_ptr<symbol> > candidates = find_overloads_impl( unmangled, conv, args, diags );
 	tid_t lhs_arg_tid = args.back()->si_ptr<type_info_si>()->entry_id();
 	vector< shared_ptr<symbol> > ret;
 	BOOST_FOREACH( shared_ptr<symbol> const& proto, candidates )
@@ -360,7 +364,8 @@ void symbol::collapse_vector1_overloads( vector< shared_ptr<symbol> >& candidate
 vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 	const string& unmangled,
 	shared_ptr<caster_t> const& conv,
-	vector< shared_ptr<expression> > const& args ) const
+	vector< shared_ptr<expression> > const& args,
+	diag_chat* diags ) const
 {
 	// find all overloads
 	vector< shared_ptr<symbol> > overloads = find_overloads( unmangled );

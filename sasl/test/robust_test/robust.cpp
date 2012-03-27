@@ -45,7 +45,7 @@ using std::cout;
 using std::endl;
 
 
-BOOST_AUTO_TEST_SUITE( jit )
+BOOST_AUTO_TEST_SUITE( robust )
 
 string make_command( string const& file_name, string const& options){
 	return "--input=\"" + file_name + "\" " + options;
@@ -107,10 +107,14 @@ struct jit_fixture {
 
 #if ALL_TESTS_ENABLED
 
-BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
+BOOST_FIXTURE_TEST_CASE( incomplete, jit_fixture ){
 	init_g( "./repo/question/v1a1/incomplete.ss" );
 }
 
+BOOST_FIXTURE_TEST_CASE( semantic_errors, jit_fixture )
+{
+	init_g( "./repo/question/v1a1/semantic_errors.ss" );
+}
 #endif
 
 BOOST_AUTO_TEST_SUITE_END();

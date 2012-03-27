@@ -17,17 +17,17 @@
 
 #include <string>
 
-using ::sasl::common::compiler_info_manager;
-using ::sasl::common::token_t;
-using ::sasl::syntax_tree::create_node;
-using ::sasl::syntax_tree::builtin_type;
+using sasl::common::diag_chat;
+using sasl::common::token_t;
+using sasl::syntax_tree::create_node;
+using sasl::syntax_tree::builtin_type;
 
 using salviar::semantic_value;
 
-using ::boost::addressof;
-using ::boost::shared_ptr;
-using ::boost::unordered_map;
-using ::boost::weak_ptr;
+using boost::addressof;
+using boost::shared_ptr;
+using boost::unordered_map;
+using boost::weak_ptr;
 
 using std::string;
 using std::vector;

@@ -3,7 +3,7 @@
 #include <sasl/enums/operators.h>
 
 #include <sasl/include/semantic/name_mangler.h>
-#include <sasl/include/semantic/semantic_error.h>
+#include <sasl/include/semantic/semantic_diags.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol_scope.h>
@@ -37,7 +37,7 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using salviar::semantic_value;
 
-using ::sasl::common::compiler_info_manager;
+using ::sasl::common::diag_chat;
 using ::sasl::common::token_t;
 
 using ::sasl::syntax_tree::alias_type;
@@ -270,9 +270,9 @@ SASL_VISIT_DEF( binary_expression )
 	
 	vector< shared_ptr<symbol> > overloads;
 	if( is_assign(v.op) || is_arith_assign(v.op) ){
-		overloads = data_cptr()->parent_sym->find_assign_overloads( opname, caster, exprs );
+		overloads = data_cptr()->parent_sym->find_assign_overloads( opname, caster, exprs, get_diags() );
 	} else {
-		overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs );
+		overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs, get_diags() );
 	}
 	
 	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
@@ -374,10 +374,11 @@ SASL_VISIT_DEF( call_expression )
 		// Maybe pointer of function.
 	} else {
 		// Overload
-		vector< shared_ptr<symbol> > syms = fnsi->scope()->find_overloads( fnsi->name(), caster, dup_callexpr->args );
-		assert( !syms.empty() );
-		if( syms.empty() ){
-			std::cout << fnsi->name();
+		vector< shared_ptr<symbol> > syms = fnsi->scope()->find_overloads( fnsi->name(), caster, dup_callexpr->args, get_diags() );
+		
+		if( syms.empty() )
+		{
+			diags->report( function_param_unmatched )->token_range( *v.token_begin(), *v.token_end() )->p( fnsi->name() );
 		}
 
 		// TODO if syms is empty, no function was overloaded. report the error.
@@ -1030,6 +1031,7 @@ SASL_VISIT_DEF( program ){
 
 	// create semantic info
 	msi.reset( new module_si() );
+	diags = diag_chat::create();
 
 	any child_ctxt_init = sacontext();
 	ctxt_ptr(child_ctxt_init)->parent_sym = msi->root();
@@ -1043,7 +1045,7 @@ SASL_VISIT_DEF( program ){
 	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
 	dup_prog->decls.clear();
 
-	// analysis decalarations.
+	// analysis declarations.
 	for( vector< shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
 		shared_ptr<declaration> node_gen;
 		visit_child( child_ctxt, child_ctxt_init, (*it), node_gen );
@@ -1389,7 +1391,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
 		}
 
-		shared_ptr<builtin_type> sampler_ty =  create_builtin_type( builtin_types::_sampler );
+		shared_ptr<builtin_type> sampler_ty = create_builtin_type( builtin_types::_sampler );
 
 		// External and Intrinsic are Same signatures
 		{
@@ -1520,7 +1522,7 @@ boost::shared_ptr<module_si> const& semantic_analyser::module_semantic_info() co
 
 semantic_analyser::function_register semantic_analyser::register_function( boost::any const& child_ctxt_init, std::string const& name )
 {
-	shared_ptr<function_type> fn = create_node<function_type>( token_t::null() );
+	shared_ptr<function_type> fn = create_node<function_type>( token_t::null(), token_t::null() );
 	fn->name = token_t::from_string( name );
 
 	function_register ret(*this, child_ctxt_init, fn, false, false, false);
@@ -1530,7 +1532,7 @@ semantic_analyser::function_register semantic_analyser::register_function( boost
 
 semantic_analyser::function_register semantic_analyser::register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, bool external, bool partial_exec )
 {
-	shared_ptr<function_type> fn = create_node<function_type>( token_t::null() );
+	shared_ptr<function_type> fn = create_node<function_type>( token_t::null(), token_t::null() );
 	fn->name = token_t::from_string( name );
 
 	function_register ret(*this, child_ctxt_init, fn, true, external, partial_exec);
@@ -1581,6 +1583,11 @@ void semantic_analyser::register_constructor_impl(
 	}
 }
 
+diag_chat* semantic_analyser::get_diags() const
+{
+	return diags.get();
+}
+
 // function_register
 semantic_analyser::function_register::function_register(
 	semantic_analyser& owner,
@@ -1612,7 +1619,7 @@ semantic_analyser::function_register& semantic_analyser::function_register::p( s
 {
 	assert( par_type && fn );
 	
-	shared_ptr<parameter> par = create_node<parameter>( token_t::null() );
+	shared_ptr<parameter> par = create_node<parameter>( token_t::null(), token_t::null() );
 	par->param_type = par_type;
 	fn->params.push_back( par );
 

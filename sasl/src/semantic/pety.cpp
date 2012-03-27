@@ -185,7 +185,7 @@ tid_t pety_t::get( const builtin_types& btc ){
 	// Otherwise create a new type and push into type manager.
 	tid_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
-		shared_ptr< builtin_type > bt = create_node<builtin_type>( token_t::null() );
+		shared_ptr< builtin_type > bt = create_node<builtin_type>( token_t::null(), token_t::null() );
 		bt->tycode = btc;
 		return get( bt, rootsym.lock() );
 	} else {

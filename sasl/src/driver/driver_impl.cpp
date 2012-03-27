@@ -176,16 +176,10 @@ void driver_impl::compile()
 			} 
 
 			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags );
-			if( !mroot ){
-				cout << "Syntax error occurs!" << endl;
-				return;
-			}
+			if( !mroot ){ return; }
 
-			msi = analysis_semantic( mroot.get() );
-			if( !msi ){
-				cout << "Semantic error occurs!" << endl;
-				return;
-			}
+			msi = analysis_semantic( mroot.get(), diags );
+			if( !msi ){ return; }
 
 			abi_analyser aa;
 

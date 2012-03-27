@@ -5,7 +5,7 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 using namespace boost;
 
-identifier::identifier( boost::shared_ptr<token_t> tok )
-	: node( node_ids::identifier, tok ), name(tok->str){}
+identifier::identifier( boost::shared_ptr<token_t> const& tok )
+	: node( node_ids::identifier, tok, tok ), name(tok->str){}
 
 END_NS_SASL_SYNTAX_TREE();

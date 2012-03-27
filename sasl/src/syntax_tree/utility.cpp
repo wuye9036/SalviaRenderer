@@ -216,7 +216,7 @@ void follow_up_traversal( boost::shared_ptr<node> root, boost::function<void( no
 
 boost::shared_ptr<builtin_type> create_builtin_type( const builtin_types& btc )
 {
-	boost::shared_ptr<builtin_type> ret = create_node<builtin_type>( token_t::null() );
+	boost::shared_ptr<builtin_type> ret = create_node<builtin_type>( token_t::null(), token_t::null() );
 	ret->tycode = btc;
 	return ret;
 }
@@ -234,7 +234,7 @@ void store_node_to_data( any* lhs, shared_ptr< NodeT > rhs ){
 	BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member = BOOST_PP_TUPLE_ELEM(2, 1, dest_src).member;
 
 #define SASL_SWALLOW_CLONE_NODE( output, v, node_type, member_seq ) \
-	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_t::null() ); \
+	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( v.token_begin(), v.token_end() ); \
 	BOOST_PP_SEQ_FOR_EACH( COPY_VALUE_ITEM, (cloned, v), member_seq ); \
 	store_node_to_data( (output), cloned );
 
@@ -256,7 +256,7 @@ template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& 
 	copy_from_any( BOOST_PP_TUPLE_ELEM(2, 0, dest_src)->member, member_dup );
 
 #define SASL_DEEP_CLONE_NODE( dest_any_ptr, src_v_ref, node_type, member_seq )	\
-	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( token_t::null() ); \
+	::boost::shared_ptr< node_type > cloned	= create_node< node_type >( src_v_ref.token_begin(), src_v_ref.token_end() ); \
 	boost::any member_dup; \
 	BOOST_PP_SEQ_FOR_EACH( DEEPCOPY_VALUE_ITEM, (cloned, src_v_ref), member_seq ); \
 	store_node_to_data( (dest_any_ptr), cloned );
@@ -290,7 +290,7 @@ public:
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator, (name)(init)(semantic)(semantic_index) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (tycode)(qual)(tok) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (tycode)(qual)(tok_beg)(tok_end) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, struct_type, (name)(decls) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, alias_type, (alias) );
@@ -319,7 +319,7 @@ public:
 
 class deep_duplicator: public syntax_tree_visitor{
 public:
-	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, unary_expression, (op)(expr)(tok) );
+	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, unary_expression, (op)(expr)(tok_beg)(tok_end) );
 
 	SASL_VISIT_INLINE_DEF_UNIMPL( cast_expression );
 	SASL_VISIT_INLINE_DEF_UNIMPL( binary_expression );
@@ -341,7 +341,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
 
-	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, builtin_type, (tycode)(qual)(tok) );
+	SASL_CLONE_NODE_FUNCTION_DEF( DEEP, builtin_type, (tycode)(qual)(tok_beg)(tok_end) );
 
 	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
 	SASL_VISIT_INLINE_DEF_UNIMPL( struct_type );

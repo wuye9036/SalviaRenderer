@@ -1,9 +1,11 @@
 #include <sasl/include/syntax_tree/syntax_tree_builder.h>
 
+#include <sasl/include/syntax_tree/utility.h>
+#include <sasl/include/syntax_tree/node_creation.h>
+
 #include <sasl/include/parser/lexer.h>
 #include <sasl/include/parser/generator.h>
 #include <sasl/include/parser/grammars.h>
-
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
@@ -55,21 +57,21 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 #define INSERT_INTO_BTCACHE( litname, enum_code ) \
 	{	\
-		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
+		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );	\
 		bt->tycode = builtin_types::enum_code;	\
 		bt_cache.insert( make_pair( std::string( #litname ), bt ) );	\
 	}
 
 #define INSERT_VECTOR_INTO_BTCACHE( component_type, dim, enum_code ) \
 	{	\
-		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
+		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );	\
 		bt->tycode = vector_of( builtin_types::enum_code, dim );	\
 		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
 	}
 
 #define INSERT_MATRIX_INTO_BTCACHE( component_type, dim0, dim1, enum_code ) \
 	{	\
-		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null() );	\
+		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );	\
 		bt->tycode = matrix_of( builtin_types::enum_code, dim0, dim1 );	\
 		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
 	}
@@ -214,7 +216,7 @@ shared_ptr<variable_declaration> syntax_tree_builder::build_vardecl( shared_ptr<
 
 	assert( typed_attr->attrs.size() == 2 );
 
-	ret = create_node<variable_declaration>( token_t::null() );
+	ret = create_node<variable_declaration>( attr->token_beg(), attr->token_end() );
 	ret->type_info = build_typespec( typed_attr->attrs[0] );
 	ret->declarators = build_declarators( typed_attr->attrs[1] );
 	
@@ -222,7 +224,7 @@ shared_ptr<variable_declaration> syntax_tree_builder::build_vardecl( shared_ptr<
 }
 
 shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribute> attr ){
-	shared_ptr<function_type> ret = create_node<function_type>( token_t::null() );
+	shared_ptr<function_type> ret = create_node<function_type>( attr->token_beg(), attr->token_end() );
 
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->retval_type = build_typespec( typed_attr->attrs[0] );
@@ -259,7 +261,7 @@ shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribut
 }
 
 shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> attr ){
-	shared_ptr<parameter> ret = create_node<parameter>( token_t::null() );
+	shared_ptr<parameter> ret = create_node<parameter>( attr->token_beg(), attr->token_end() );
 	
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->param_type = build_typespec( typed_attr->attrs[0] );
@@ -281,7 +283,7 @@ shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> at
 }
 
 shared_ptr<struct_type> syntax_tree_builder::build_struct( shared_ptr<attribute> attr ){
-	shared_ptr<struct_type> ret = create_node<struct_type>( token_t::null() );
+	shared_ptr<struct_type> ret = create_node<struct_type>( attr->token_beg(), attr->token_end() );
 
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	SASL_TYPED_ATTRIBUTE( selector_attribute, body_attr, typed_attr->attrs[1] );
@@ -330,7 +332,7 @@ shared_ptr<expression> syntax_tree_builder::build_expr( shared_ptr<attribute> at
 }
 
 shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attribute> attr ){
-	shared_ptr<expression_list> ret = create_node<expression_list>( token_t::null() );
+	shared_ptr<expression_list> ret = create_node<expression_list>( attr->token_beg(), attr->token_end() );
 
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->exprs.push_back( build_assignexpr( typed_attr->attrs[0] ) );
@@ -403,6 +405,7 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 	// Make expression list and operators list.
 	vector< shared_ptr<expression> > exprs;
 	vector< operators > ops;
+	// vector< shared_ptr<token_t> > op_tokens;
 
 	exprs.push_back( build_rhsexpr( attr->child(0) ) );
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, attr->child(1) );
@@ -410,7 +413,9 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 		exprs.push_back( 
 			build_rhsexpr( follow_pair->child(1) )
 			);
-		ops.push_back( build_binop(follow_pair->child(0)) );
+		shared_ptr<attribute> op_attr = follow_pair->child(0);
+		// op_tokens.push_back( op_attr->token_beg );
+		ops.push_back( build_binop(op_attr) );
 	}
 
 	// Build tree
@@ -421,10 +426,12 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 			root = expr;
 		} else {
 			shared_ptr<binary_expression> new_root
-				= create_node<binary_expression>( token_t::null() );
+				= create_node<binary_expression>( expr->token_begin(), root->token_end() );
 			new_root->left_expr = root;
 			new_root->right_expr = expr;
 			new_root->op = ops.back();
+			// new_root->op_token = ops.back();
+			// op_tokens.pop_back();
 			ops.pop_back();
 			root = new_root;
 		}
@@ -441,11 +448,11 @@ shared_ptr<expression> syntax_tree_builder::build_lcomb_expr( shared_ptr<attribu
 	shared_ptr<binary_expression> binexpr;
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
-		SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
-		binexpr = create_node<binary_expression>( token_t::null() );
+		assert( dynamic_cast<queuer_attribute*>(follow_pair.get()) != NULL );
+		binexpr = create_node<binary_expression>( lexpr->token_begin(), follow_pair->child(1)->token_end() );
 		binexpr->left_expr = lexpr;
-		binexpr->op = build_binop(typed_follow_pair->attrs[0]);
-		binexpr->right_expr = dispatch_lcomb_expr(typed_follow_pair->attrs[1]);
+		binexpr->op = build_binop(follow_pair->child(0));
+		binexpr->right_expr = dispatch_lcomb_expr(follow_pair->child(1));
 		lexpr = binexpr;
 	}
 
@@ -515,7 +522,7 @@ shared_ptr<expression> syntax_tree_builder::build_rhsexpr( shared_ptr<attribute>
 
 shared_ptr<expression> syntax_tree_builder::build_condexpr( shared_ptr<attribute> attr ){
 
-	shared_ptr<cond_expression> ret = create_node<cond_expression>( token_t::null() );
+	shared_ptr<cond_expression> ret = create_node<cond_expression>( attr->token_beg(), attr->token_end() );
 
 	shared_ptr<attribute> cond_attr = attr->child(0);
 	shared_ptr<attribute> yesno_attr = attr->child(1);
@@ -579,7 +586,7 @@ shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<
 	shared_ptr<expression> expr = build_castexpr(expr_attr);
 	assert( expr );
 
-	shared_ptr<unary_expression> ret = create_node<unary_expression>( token_t::null() );
+	shared_ptr<unary_expression> ret = create_node<unary_expression>( attr->token_beg(), attr->token_end() );
 	ret->expr = expr;
 	ret->op = build_prefix_op( op_attr );
 
@@ -603,7 +610,7 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 				ret = build_memexpr(expr_attr, ret);
 			}
 			SASL_CASE_RULE( opinc ){
-				shared_ptr<unary_expression> ret_unary = create_node<unary_expression>( token_t::null() );
+				shared_ptr<unary_expression> ret_unary = create_node<unary_expression>( ret->token_begin(), expr_attr->token_end() );
 				ret_unary->op = build_postfix_op(expr_attr);
 				ret_unary->expr = ret;
 				ret = ret_unary;
@@ -618,7 +625,7 @@ shared_ptr<expression> syntax_tree_builder::build_callexpr(
 	shared_ptr<attribute> attr,
 	shared_ptr<expression> expr )
 {
-	shared_ptr<call_expression> ret = create_node<call_expression>( token_t::null() );
+	shared_ptr<call_expression> ret = create_node<call_expression>( expr->token_begin(), attr->token_end() );
 	ret->expr = expr;
 
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_args, attr );
@@ -635,7 +642,7 @@ shared_ptr<expression> syntax_tree_builder::build_memexpr(
 	shared_ptr<attribute> attr,
 	shared_ptr<expression> expr )
 {
-	shared_ptr<member_expression> ret = create_node<member_expression>( token_t::null() );
+	shared_ptr<member_expression> ret = create_node<member_expression>( expr->token_begin(), attr->token_end() );
 	ret->expr = expr;
 	SASL_TYPED_ATTRIBUTE( terminal_attribute, mem_attr, attr->child(1) );
 	ret->member = mem_attr->tok;
@@ -648,7 +655,7 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> 
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( lit_const ){
 			SASL_TYPED_ATTRIBUTE( terminal_attribute, const_attr, typed_attr->attr->child(0) );
-			shared_ptr<constant_expression> ret = create_node<constant_expression>( const_attr->tok );
+			shared_ptr<constant_expression> ret = create_node<constant_expression>( const_attr->tok, const_attr->tok );
 			ret->value_tok = const_attr->tok;
 			SASL_SWITCH_RULE( const_attr )
 				SASL_CASE_RULE( lit_int ){
@@ -665,7 +672,7 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> 
 		}
 		SASL_CASE_RULE( ident ){
 			SASL_TYPED_ATTRIBUTE( terminal_attribute, var_attr, typed_attr->attr );
-			shared_ptr<variable_expression> varexpr = create_node<variable_expression>( var_attr->tok );
+			shared_ptr<variable_expression> varexpr = create_node<variable_expression>( var_attr->tok, var_attr->tok );
 			varexpr->var_name = var_attr->tok;
 			return varexpr;
 		}
@@ -708,14 +715,13 @@ shared_ptr<tynode> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute
 
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( ident ){
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, typed_attr->attr );
-			initialize_bt_cache();
-			if ( bt_cache.count(ident_attr->tok->str) > 0 ){
-				return bt_cache[ident_attr->tok->str];
-			}
+			
+			shared_ptr<builtin_type> bt = get_builtin( typed_attr->attr );
+			if( bt ) { return bt; }
 
-			shared_ptr<alias_type> type_ident = create_node<alias_type>( token_t::null() );
-			type_ident->alias = ident_attr->tok->make_copy();
+			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, typed_attr->attr );
+			shared_ptr<alias_type> type_ident = create_node<alias_type>( ident_attr->tok, ident_attr->tok );
+			type_ident->alias = ident_attr->tok;
 
 			return type_ident;
 		}
@@ -762,7 +768,8 @@ shared_ptr<initializer> syntax_tree_builder::build_init( shared_ptr<attribute> a
 
 	SASL_SWITCH_RULE( init_body_attr )
 		SASL_CASE_RULE( assignexpr ){
-			shared_ptr<expression_initializer> expr_init = create_node<expression_initializer>( token_t::null() );
+			shared_ptr<expression_initializer> expr_init
+				= create_node<expression_initializer>( attr->token_beg(), attr->token_end() );
 			expr_init->init_expr = build_assignexpr( init_body_attr );
 			ret = expr_init;
 		}
@@ -825,7 +832,8 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 }
 
 shared_ptr<compound_statement> syntax_tree_builder::build_stmt_compound( shared_ptr<attribute> attr ){
-	shared_ptr<compound_statement> ret = create_node<compound_statement>( token_t::null() );
+	shared_ptr<compound_statement> ret
+		= create_node<compound_statement>( attr->token_beg(), attr->token_end() );
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, stmts_attr, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> stmt_attr, stmts_attr->attrs ){
@@ -835,7 +843,7 @@ shared_ptr<compound_statement> syntax_tree_builder::build_stmt_compound( shared_
 }
 
 shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl( shared_ptr<attribute> attr ){
-	shared_ptr<jump_statement> ret = create_node<jump_statement>( token_t::null() );
+	shared_ptr<jump_statement> ret = create_node<jump_statement>( attr->token_beg(), attr->token_end() );
 
 	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	shared_ptr<attribute> stmt_attr = typed_attr->attr;
@@ -861,13 +869,13 @@ shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl( shared_ptr<attri
 }
 
 shared_ptr<expression_statement> syntax_tree_builder::build_stmt_expr( shared_ptr<attribute> attr ){
-	shared_ptr<expression_statement> ret = create_node<expression_statement>( token_t::null() );
+	shared_ptr<expression_statement> ret = create_node<expression_statement>( attr->token_beg(), attr->token_end() );
 	ret->expr = build_expr( attr->child(0) );
 	return ret;
 }
 
 shared_ptr<declaration_statement> syntax_tree_builder::build_stmt_decl( shared_ptr<attribute> attr ){
-	shared_ptr<declaration_statement> ret = create_node<declaration_statement>( token_t::null() );
+	shared_ptr<declaration_statement> ret = create_node<declaration_statement>( attr->token_beg(), attr->token_end() );
 	ret->decl = build_basic_decl( attr );
 	return ret;
 }
@@ -886,13 +894,12 @@ shared_ptr<if_statement> syntax_tree_builder::build_stmt_if( shared_ptr<attribut
 	}
 
 	if( expr && yes_stmt ){
-		ret = create_node<if_statement>( token_t::null() );
+		ret = create_node<if_statement>( attr->token_beg(), attr->token_end() );
 		ret->cond = expr;
 		ret->yes_stmt = yes_stmt;
 		ret->no_stmt = no_stmt;
 	} else {
-		// ERROR.
-		;
+		assert(false);
 	}
 
 	return ret;
@@ -919,7 +926,7 @@ shared_ptr<while_statement> syntax_tree_builder::build_stmt_while( shared_ptr<at
 	assert( cond && stmt );
 
 	if( cond && stmt ){
-		shared_ptr<while_statement> ret = create_node<while_statement>( token_t::null() );
+		shared_ptr<while_statement> ret = create_node<while_statement>( attr->token_beg(), attr->token_end() );
 		ret->cond = cond;
 		ret->body = stmt;
 		return ret;
@@ -935,7 +942,7 @@ shared_ptr<dowhile_statement> syntax_tree_builder::build_stmt_dowhile( shared_pt
 	assert( cond && stmt );
 
 	if( cond && stmt ){
-		shared_ptr<dowhile_statement> ret = create_node<dowhile_statement>( token_t::null() );
+		shared_ptr<dowhile_statement> ret = create_node<dowhile_statement>( attr->token_beg(), attr->token_end() );
 		ret->cond = cond;
 		ret->body = stmt;
 		return ret;
@@ -951,7 +958,7 @@ shared_ptr<switch_statement> syntax_tree_builder::build_stmt_switch( shared_ptr<
 
 	assert( cond && stmts );
 
-	shared_ptr<switch_statement> ret = create_node<switch_statement>( token_t::null() );
+	shared_ptr<switch_statement> ret = create_node<switch_statement>( attr->token_beg(), attr->token_end() );
 	ret->cond = cond;
 	ret->stmts = stmts;
 	return ret;
@@ -965,8 +972,9 @@ shared_ptr<statement> syntax_tree_builder::build_stmt_labeled( shared_ptr<attrib
 	shared_ptr<labeled_statement> ret;
 	if( stmt->node_class() == node_ids::labeled_statement ){
 		ret = stmt->as_handle<labeled_statement>();
+		ret->token_range( attr->token_beg(), attr->token_end() );
 	} else {
-		ret = create_node<labeled_statement>( token_t::null() );
+		ret = create_node<labeled_statement>( attr->token_beg(), attr->token_end() );
 		ret->stmt = stmt;
 	}
 
@@ -981,10 +989,10 @@ shared_ptr<label> syntax_tree_builder::build_label( shared_ptr<attribute> attr )
 
 	SASL_SWITCH_RULE( label_attr )
 		SASL_CASE_RULE( kw_default ){
-			return create_node<case_label>( token_t::null() );
+			return create_node<case_label>( attr->token_beg(), attr->token_end() );
 		}
 		SASL_CASE_RULE( ident ){
-			shared_ptr<ident_label> ret = create_node<ident_label>( token_t::null() );
+			shared_ptr<ident_label> ret = create_node<ident_label>( attr->token_beg(), attr->token_end() );
 			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, label_attr );
 			ret->label_tok = ident_attr->tok;
 			return ret;
@@ -992,7 +1000,7 @@ shared_ptr<label> syntax_tree_builder::build_label( shared_ptr<attribute> attr )
 		SASL_DEFAULT(){
 			// Case Label
 			assert( label_attr->child(0)->rule_id() == g.kw_case.id() );
-			shared_ptr<case_label> ret = create_node<case_label>( token_t::null() );
+			shared_ptr<case_label> ret = create_node<case_label>( attr->token_beg(), attr->token_end() );
 			ret->expr = build_expr( label_attr->child(1) );
 			return ret;
 		}
@@ -1003,7 +1011,7 @@ shared_ptr<label> syntax_tree_builder::build_label( shared_ptr<attribute> attr )
 
 shared_ptr<for_statement> syntax_tree_builder::build_for_loop( shared_ptr<attribute> attr )
 {
-	shared_ptr<for_statement> ret = create_node<for_statement>( token_t::null() );
+	shared_ptr<for_statement> ret = create_node<for_statement>( attr->token_beg(), attr->token_end() );
 
 	ret->init = build_stmt( attr->child(1) );
 	if( ret->init ){
@@ -1021,7 +1029,7 @@ shared_ptr<compound_statement> syntax_tree_builder::wrap_to_compound( shared_ptr
 	if( stmt->node_class() == node_ids::compound_statement ){
 		return stmt->as_handle<compound_statement>();
 	}
-	shared_ptr<compound_statement> ret_stmt = create_node<compound_statement>( token_t::null() );
+	shared_ptr<compound_statement> ret_stmt = create_node<compound_statement>( stmt->token_begin(), stmt->token_end() );
 	ret_stmt->stmts.push_back( stmt );
 	return ret_stmt;
 }
@@ -1037,12 +1045,12 @@ shared_ptr<tynode> syntax_tree_builder::bind_typequal( shared_ptr<attribute> qua
 }
 
 shared_ptr<declarator> syntax_tree_builder::build_initdecl( shared_ptr<attribute> attr ){
-	shared_ptr<declarator> ret = create_node<declarator>( token_t::null() ) ;
+	shared_ptr<declarator> ret = create_node<declarator>( attr->token_beg(), attr->token_end() ) ;
 
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 
 	SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[0] );
-	ret->name = name_attr->tok->make_copy();
+	ret->name = name_attr->tok;
 	
 	build_semantic( typed_attr->attrs[1], ret->semantic, ret->semantic_index );
 	
@@ -1125,6 +1133,20 @@ void syntax_tree_builder::build_semantic(
 			out_semantic_index = index_attr->tok;
 		}
 	}
+}
+
+shared_ptr<builtin_type> syntax_tree_builder::get_builtin( boost::shared_ptr<sasl::parser::attribute> const& attr )
+{
+	initialize_bt_cache();
+	SASL_TYPED_ATTRIBUTE( terminal_attribute, term_attr, attr );
+	std::string name = term_attr->tok->str;
+	shared_ptr<builtin_type> ret;
+	if( bt_cache.count(name) > 0 )
+	{
+		ret = duplicate( bt_cache[name] )->as_handle<builtin_type>();
+		ret->token_range( term_attr->tok, term_attr->tok );
+	}
+	return ret;
 }
 
 END_NS_SASL_SYNTAX_TREE()

@@ -24,6 +24,13 @@ template <typename NodeT, typename ParamT> boost::shared_ptr<NodeT> create_node(
 	return ret;
 }
 
+template <typename NodeT, typename ParamT0, typename ParamT1> boost::shared_ptr<NodeT> create_node( ParamT0 par0, ParamT1 par1 ){
+	BOOST_STATIC_ASSERT( ( std::tr1::is_base_of<node, NodeT>::value ) );
+	boost::shared_ptr<NodeT> ret( new NodeT(par0, par1) );
+	ret->selfptr = ret;
+	return ret;
+}
+
 END_NS_SASL_SYNTAX_TREE();
 
 #endif

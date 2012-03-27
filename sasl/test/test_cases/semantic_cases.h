@@ -52,7 +52,7 @@ private:
 	semantic_cases();
 	void initialize();
 
-	boost::shared_ptr< ::sasl::common::compiler_info_manager> cim;
+	boost::shared_ptr<sasl::common::diag_chat> diags;
 
 	static boost::shared_ptr<semantic_cases> tcase;
 	static boost::mutex mtx;

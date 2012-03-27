@@ -3,6 +3,8 @@
 #include <sasl/include/common/lex_context.h>
 #include <sasl/include/parser/lexer.h>
 #include <sasl/include/parser/grammars.h>
+#include <sasl/include/parser/diags.h>
+#include <sasl/include/common/diag_chat.h>
 
 #include <eflib/include/diagnostics/assert.h>
 
@@ -24,7 +26,7 @@ using boost::shared_ptr;
 using std::cout;
 using std::endl;
 
-void sasl::parser::parse( 
+bool sasl::parser::parse( 
 	shared_ptr<attribute>& pt_root,
 	const std::string& code,
 	shared_ptr<lex_context> ctxt,
@@ -32,13 +34,21 @@ void sasl::parser::parse(
 	)
 {
 	sasl::parser::token_seq toks;
+	
 	bool tok_result = l.tokenize_with_end(code, ctxt, toks);
-	EFLIB_ASSERT( tok_result, "Tokenizing is failed." );	
+	if(!tok_result)
+	{
+		diags->report( sasl::parser::unrecognized_token )
+			->file( ctxt->file_name() )->span( sasl::common::code_span(ctxt->line(), ctxt->column(), 1) )
+			->p("<unknown>");
+		return false;
+	}
+
 	token_iterator it = toks.begin();
-	g.prog.parse( it, toks.end()-1, pt_root, diags );
+	return g.prog.parse( it, toks.end()-1, pt_root, diags ).is_succeed();
 }
 
-void sasl::parser::parse( 
+bool sasl::parser::parse( 
 	shared_ptr<attribute>& pt_root,
 	code_source* src,
 	shared_ptr<lex_context > ctxt,
@@ -49,19 +59,17 @@ void sasl::parser::parse(
 
 	l.begin_incremental();
 	while( !src->eof() ){
-		bool tok_result = l.incremental_tokenize( src->next(), ctxt, toks );
+		std::string next_token = src->next();
+		bool tok_result = l.incremental_tokenize( next_token, ctxt, toks );
 		if( !tok_result ){
-			boost::format fmt( "%s(%d): fatal error: unrecognized token: '%s' " );
-			std::string etok = src->error();
-			if( etok.empty() ){ etok = "<Unrecognized>"; }
-			fmt % ctxt->file_name() % ctxt->line() % etok;
-			cout << ( boost::str(fmt).c_str() ) << endl;
-			assert( !"Tokenize failed!" );
-			return;
+			diags->report( sasl::parser::unrecognized_token )
+				->file( ctxt->file_name() )->span( sasl::common::code_span(ctxt->line(), ctxt->column(), 1) )
+				->p(next_token);
+			return false;
 		}
 	}
 	l.end_incremental( ctxt, toks );
 
 	token_iterator it = toks.begin();
-	g.prog.parse( it, toks.end()-1, pt_root, diags );
+	return g.prog.parse( it, toks.end()-1, pt_root, diags ).is_succeed();
 }

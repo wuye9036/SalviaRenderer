@@ -25,7 +25,7 @@ namespace sasl {
 		struct labeled_statement;
 	}
 	namespace common{
-		class compiler_info_manager;
+		class  diag_chat;
 	}
 }
 

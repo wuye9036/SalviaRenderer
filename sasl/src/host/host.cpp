@@ -136,7 +136,7 @@ void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::
 		return;
 	}
 
-	shared_ptr<module_si> msi = analysis_semantic( mroot );
+	shared_ptr<module_si> msi = analysis_semantic( mroot, diags.get() );
 	if( !msi ){
 		cout << "Semantic error occurs!" << endl;
 		return;

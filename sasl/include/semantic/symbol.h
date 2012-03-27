@@ -15,8 +15,14 @@
 #include <string>
 #include <vector>
 
-namespace sasl{
-	namespace syntax_tree{
+namespace sasl
+{
+	namespace common
+	{
+		class diag_chat;
+	}
+	namespace syntax_tree
+	{
 		struct node;
 		struct expression;
 		struct function_type;
@@ -61,12 +67,14 @@ public:
 	std::vector< boost::shared_ptr<symbol> > find_overloads(
 		const std::string& name,
 		boost::shared_ptr<caster_t> const& conv,
-		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args
+		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args,
+		sasl::common::diag_chat* diags
 		) const;
 	std::vector< boost::shared_ptr<symbol> > find_assign_overloads(
 		const std::string& name,
 		boost::shared_ptr<caster_t> const& conv,
-		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > const& args
+		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > const& args,
+		sasl::common::diag_chat* diags
 		) const; 
 	int count( std::string const& name ) const;
 
@@ -113,7 +121,8 @@ private:
 	std::vector< boost::shared_ptr<symbol> > find_overloads_impl(
 		const std::string& name,
 		boost::shared_ptr<caster_t> const& conv,
-		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args
+		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args,
+		sasl::common::diag_chat* diags
 		) const;
 	void collapse_vector1_overloads( std::vector< boost::shared_ptr<symbol> >& candidates ) const;
 

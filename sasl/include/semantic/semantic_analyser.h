@@ -13,7 +13,7 @@
 
 namespace sasl{
 	namespace common{
-		class compiler_info_manager;
+		class  diag_chat;
 		struct token_t;
 	}
 	namespace syntax_tree{
@@ -80,6 +80,7 @@ public:
 	SASL_VISIT_DCL( program );
 
 	boost::shared_ptr<module_si> const& module_semantic_info() const;
+	sasl::common::diag_chat*			get_diags() const;
 private:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& init_data, boost::shared_ptr<NodeT> child );
@@ -148,8 +149,9 @@ private:
 		boost::shared_ptr< ::sasl::syntax_tree::node >
 		);
 
-	boost::shared_ptr<module_si> msi;
-	boost::shared_ptr<caster_t> caster;
+	boost::shared_ptr<module_si>				msi;
+	boost::shared_ptr<caster_t>					caster;
+	boost::shared_ptr<sasl::common::diag_chat>	diags;
 };
 
 END_NS_SASL_SEMANTIC();
