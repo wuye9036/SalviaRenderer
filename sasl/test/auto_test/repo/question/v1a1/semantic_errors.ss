@@ -13,3 +13,9 @@ int test_not_a_member()
 	not_a_member n;
 	return n.g;
 }
+
+int3 test_invalid_swizzle()
+{
+	int2 x = int2(0, 5);
+	return x.xyw;
+}

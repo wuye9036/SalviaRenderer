@@ -1,13 +1,20 @@
 #include <sasl/include/semantic/semantic_diags.h>
 
 #include <sasl/include/syntax_tree/declaration.h>
-#include <eflib/include/diagnostics/assert.h>
 
+#include <sasl/enums/enums_utility.h>
+#include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <sstream>
+
+using sasl::utility::scalar_of;
+using sasl::utility::is_vector;
+using sasl::utility::is_matrix;
+using sasl::utility::vector_count;
+using sasl::utility::vector_size;
 
 using sasl::common::diag_template;
 using sasl::common::dl_error;
@@ -26,6 +33,43 @@ diag_template function_arg_count_error( dl_error, "'%s': no overloaded function 
 diag_template function_param_unmatched( dl_error, "'%s': no overloaded function could convert all argument types\n\t while trying to match '%s'" );
 diag_template function_multi_overloads( dl_error, "'%s': %d overloads have similar conversations." );
 diag_template not_a_member_of( dl_error, "'%s': not a member of '%s'" );
+diag_template invalid_swizzle( dl_error, "'%s': invalid swizzle of '%s'." );
+
+
+char const* scalar_nick_name( builtin_types btcode )
+{
+	if( btcode == builtin_types::_sint8 ) {
+		return "char";
+	} else if ( btcode == builtin_types::_uint8 ) {
+		return "byte";
+	} else if ( btcode == builtin_types::_sint16 ) {
+		return "short";
+	} else if ( btcode == builtin_types::_uint16 ) {
+		return "ushort";
+	} else if ( btcode == builtin_types::_sint32 ) {
+		return "int";
+	} else if ( btcode == builtin_types::_uint32 ) {
+		return "uint";
+	} else if ( btcode == builtin_types::_sint64 ) {
+		return "long";
+	} else if ( btcode == builtin_types::_uint64 ) {
+		return "ulong";
+	} else if ( btcode == builtin_types::_float ) {
+		return "float";
+	} else if ( btcode == builtin_types::_double ) {
+		return "double";
+	} else if ( btcode == builtin_types::none ) {
+		return "none";
+	} else if ( btcode == builtin_types::_sampler ) {
+		return "sampler";
+	} else if ( btcode == builtin_types::_boolean ) {
+		return "bool";
+	} else {
+		assert(false);
+		return "<unknown>";
+	}
+}
+
 type_repr::type_repr( shared_ptr<tynode> const& ty ): ty(ty)
 {
 }
@@ -36,8 +80,25 @@ string type_repr::str()
 	{
 		if( ty->is_builtin() )
 		{
-			string name = builtin_types::to_name(ty->tycode);
-			str_cache.assign( name.begin()+1, name.end() );
+			stringstream name_stream;
+
+			builtin_types bt_code		= ty->tycode;
+			builtin_types scalar_code	= scalar_of(bt_code);
+			char const* scalar_name = scalar_nick_name(scalar_code);
+			if( is_matrix( bt_code ) )
+			{
+				name_stream << scalar_name << vector_count(bt_code) << "x" << vector_size(bt_code);
+			}
+			else if( is_vector(bt_code) )
+			{
+				name_stream << scalar_name << vector_size(bt_code);
+			}
+			else
+			{
+				name_stream << builtin_types::to_name(bt_code);
+			}
+			std::string name = name_stream.str();
+			str_cache.assign( name.begin(), name.end() );
 		}
 		else if ( ty->is_struct() )
 		{

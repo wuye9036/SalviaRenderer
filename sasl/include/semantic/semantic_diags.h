@@ -67,6 +67,7 @@ extern sasl::common::diag_template function_arg_count_error;
 extern sasl::common::diag_template function_param_unmatched;
 extern sasl::common::diag_template function_multi_overloads;
 extern sasl::common::diag_template not_a_member_of;
+extern sasl::common::diag_template invalid_swizzle;
 
 END_NS_SASL_SEMANTIC();
 

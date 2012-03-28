@@ -429,7 +429,10 @@ int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_
 	int dest_size = 0;
 	swizzle_code = encode_swizzle( dest_size, min_src_size, mask.c_str() );
 	
-	assert( min_src_size <= static_cast<int>(agg_size) );
+	if( min_src_size > static_cast<int>(agg_size) )
+	{
+		return 0;
+	}
 
 	return dest_size;
 }
@@ -451,7 +454,8 @@ SASL_VISIT_DEF( member_expression ){
 	int32_t swizzle_code = 0;
 	int32_t member_index = -1;
 
-	if( agg_type->node_class() == node_ids::struct_type ){
+	if( agg_type->node_class() == node_ids::struct_type )
+	{
 		// Aggregated is struct
 		shared_ptr<symbol> struct_sym = agg_type->as_handle<struct_type>()->symbol();
 		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
@@ -461,8 +465,7 @@ SASL_VISIT_DEF( member_expression ){
 			diags->report( not_a_member_of )
 				->token_range( *v.member, *v.member )
 				->p( v.member->str )
-				->p( struct_sym->unmangled_name() )
-				;
+				->p( struct_sym->unmangled_name() );
 		}
 		else
 		{
@@ -473,7 +476,9 @@ SASL_VISIT_DEF( member_expression ){
 			member_index = mem_si->mem_index();
 			assert( mem_typeid != -1 );
 		}
-	} else if( agg_type->is_builtin() ){
+	}
+	else if( agg_type->is_builtin() )
+	{
 		// Aggregated class is vector & matrix
 		builtin_types agg_btc = agg_type->tycode;
 		int field_count = check_swizzle( agg_btc, v.member->str, swizzle_code );
@@ -481,8 +486,7 @@ SASL_VISIT_DEF( member_expression ){
 			builtin_types elem_btc = scalar_of( agg_btc );
 			builtin_types swizzled_btc = builtin_types::none;
 
-			if( is_scalar(agg_btc) || is_vector(agg_btc) )
-			{
+			if( is_scalar(agg_btc) || is_vector(agg_btc) ) {
 				swizzled_btc = vector_of(
 					elem_btc,
 					static_cast<size_t>( field_count )
@@ -498,11 +502,12 @@ SASL_VISIT_DEF( member_expression ){
 
 			mem_typeid = msi->pety()->get( swizzled_btc );
 		} else {
-			// TODO swizzle fields are some errors.
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			diags->report( invalid_swizzle )->token_range( *v.member, *v.member )->p( v.member->str )->p( type_repr(agg_type).str() );
 			return;
 		}
-	} else {
+	}
+	else
+	{
 		// TODO:
 		//	If type is not a struct or builtin type, it could not support member operation.
 		//	Error on compiling.
