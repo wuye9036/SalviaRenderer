@@ -66,9 +66,12 @@ extern sasl::common::diag_template unknown_semantic_error;
 extern sasl::common::diag_template function_arg_count_error;
 extern sasl::common::diag_template function_param_unmatched;
 extern sasl::common::diag_template function_multi_overloads;
+extern sasl::common::diag_template operator_param_unmatched;
+extern sasl::common::diag_template operator_multi_overloads;
 extern sasl::common::diag_template not_a_member_of;
 extern sasl::common::diag_template invalid_swizzle;
-
+extern sasl::common::diag_template member_left_must_have_struct;
+extern sasl::common::diag_template cannot_convert_type_from;
 END_NS_SASL_SEMANTIC();
 
 #endif

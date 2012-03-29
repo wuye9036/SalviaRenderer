@@ -30,11 +30,14 @@ using std::stringstream;
 BEGIN_NS_SASL_SEMANTIC();
 
 diag_template function_arg_count_error( dl_error, "'%s': no overloaded function takes %d arguments" );
-diag_template function_param_unmatched( dl_error, "'%s': no overloaded function could convert all argument types\n\t while trying to match '%s'" );
+diag_template function_param_unmatched( dl_error, "'%s': no overloaded function could convert all argument types\n\twhile trying to match '%s'" );
 diag_template function_multi_overloads( dl_error, "'%s': %d overloads have similar conversations." );
 diag_template not_a_member_of( dl_error, "'%s': not a member of '%s'" );
 diag_template invalid_swizzle( dl_error, "'%s': invalid swizzle of '%s'." );
-
+diag_template operator_param_unmatched( dl_error, "no overloaded operator could convert all argument types\n\twhile trying to match '%s'" );
+diag_template operator_multi_overloads( dl_error, "%d overloads have similar conversations." );
+diag_template member_left_must_have_struct( dl_error, "left of '.%s' must have struct\n\ttype is '%s'");
+diag_template cannot_convert_type_from( dl_error, "'%s': cannot convert from '%s' to '%s'");
 
 char const* scalar_nick_name( builtin_types btcode )
 {
@@ -95,7 +98,7 @@ string type_repr::str()
 			}
 			else
 			{
-				name_stream << builtin_types::to_name(bt_code);
+				name_stream << scalar_nick_name(bt_code);
 			}
 			std::string name = name_stream.str();
 			str_cache.assign( name.begin(), name.end() );

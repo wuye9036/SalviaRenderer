@@ -263,7 +263,6 @@ SASL_VISIT_DEF( binary_expression )
 	visit_child( child_ctxt, child_ctxt_init, v.left_expr, dup_expr->left_expr );
 	visit_child( child_ctxt, child_ctxt_init, v.right_expr, dup_expr->right_expr );
 
-	// TODO: look up operator prototype.
 	std::string opname = operator_name( v.op );
 	vector< shared_ptr<expression> > exprs;
 	exprs += dup_expr->left_expr, dup_expr->right_expr;
@@ -275,24 +274,25 @@ SASL_VISIT_DEF( binary_expression )
 		overloads = data_cptr()->parent_sym->find_overloads( opname, caster, exprs, get_diags() );
 	}
 	
-	EFLIB_ASSERT_AND_IF( !overloads.empty(), "Need to report a compiler error. No overloading." ){
-		return;
-	}
-	
-	EFLIB_ASSERT_AND_IF( overloads.size() == 1,	( format(
-		"Need to report a compiler error. Ambiguous overloading. \r\n"
-		"operator is %1%, left expression type is %2%, right expression type is %3%. \r\n" 
-		) % v.op.name() % type_info_of( dup_expr->left_expr )->tycode.name()
-		% type_info_of( dup_expr->right_expr )->tycode.name() ).str().c_str()
-		)
+	if( overloads.empty() )
 	{
-		return;
+		args_type_repr atr;
+		for( size_t i = 0; i < 2 /*binary operator*/; ++i )
+		{
+			atr.arg( exprs[i]->si_ptr<type_info_si>()->type_info() );
+		}
+		diags->report( operator_param_unmatched )->token_range( *v.token_begin(), *v.token_end() )->p( atr.str() );
+	}
+	else if ( overloads.size() > 1 )
+	{
+		diags->report( operator_multi_overloads )->token_range( *v.token_begin(), *v.token_end() )->p( overloads.size() );
+	}
+	else
+	{
+		tid_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
+		get_or_create_semantic_info<storage_si>( dup_expr, msi->pety() )->entry_id( result_tid );
 	}
 	
-	// update semantic information of binary expression
-	tid_t result_tid = extract_semantic_info<type_info_si>( overloads[0]->node() )->entry_id();
-	get_or_create_semantic_info<storage_si>( dup_expr, msi->pety() )->entry_id( result_tid );
-
 	data_cptr()->generated_node = dup_expr->as_handle();
 }
 
@@ -310,7 +310,7 @@ SASL_VISIT_DEF( cond_expression ){
 	visit_child( child_ctxt, child_ctxt_init, v.yes_expr, dup_expr->yes_expr );
 	visit_child( child_ctxt, child_ctxt_init, v.no_expr, dup_expr->no_expr );
 	
-	// TODO Test conversation between type of yes expression and no expression.
+	// SEMANTIC_TODO Test conversation between type of yes expression and no expression.
 	type_info_si* cond_tisi = dup_expr->cond_expr->si_ptr<type_info_si>();
 	type_info_si* yes_tisi = dup_expr->yes_expr->si_ptr<type_info_si>();
 	type_info_si* no_tisi = dup_expr->no_expr->si_ptr<type_info_si>();
@@ -325,11 +325,11 @@ SASL_VISIT_DEF( cond_expression ){
 	tid_t cond_tid = cond_tisi->entry_id();
 
 	if( cond_tid != bool_tid && !caster->try_implicit( cond_tisi->entry_id(), bool_tid ) ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		// TODO error: cannot convert conditional expression to boolean.
-		return;
+		diags->report( cannot_convert_type_from )
+			->token_range( *dup_expr->cond_expr->token_begin(), *dup_expr->cond_expr->token_end() )
+			->p("?")->p(type_repr(cond_tisi->type_info()).str())->p("bool");
 	}
-
+	
 	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->pety() );
 
 	tid_t yes_tid = yes_tisi->entry_id();
@@ -342,8 +342,9 @@ SASL_VISIT_DEF( cond_expression ){
 	} else if( caster->try_implicit(no_tid, yes_tid) ){
 		ssi->entry_id( no_tid );
 	} else {
-		// TODO error: can not match the type.
-		return;
+		diags->report(cannot_convert_type_from)
+			->token_range( *dup_expr->yes_expr->token_begin(), *dup_expr->no_expr->token_end() )
+			->p(":")->p(type_repr(no_tisi->type_info()).str())->p(type_repr(yes_tisi->type_info()).str());
 	}
 
 	data_cptr()->generated_node = dup_expr;
@@ -477,7 +478,7 @@ SASL_VISIT_DEF( member_expression ){
 			assert( mem_typeid != -1 );
 		}
 	}
-	else if( agg_type->is_builtin() )
+	else if( agg_type->is_builtin() && is_storagable( agg_type->tycode ) )
 	{
 		// Aggregated class is vector & matrix
 		builtin_types agg_btc = agg_type->tycode;
@@ -508,10 +509,7 @@ SASL_VISIT_DEF( member_expression ){
 	}
 	else
 	{
-		// TODO:
-		//	If type is not a struct or builtin type, it could not support member operation.
-		//	Error on compiling.
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		diags->report( member_left_must_have_struct )->token_range( *v.member, *v.member )->p( v.member->str )->p( type_repr(agg_type).str() );
 		return;
 	}
 
