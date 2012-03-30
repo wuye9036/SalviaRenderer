@@ -43,6 +43,7 @@ using boost::shared_ptr;
 using namespace sasl::syntax_tree;
 using namespace sasl::semantic;
 
+using sasl::utility::is_integer;
 using sasl::utility::is_real;
 using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
@@ -1426,8 +1427,16 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 
 				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
 			}
-		}
-		else 
+		} else if ( is_integer(hint) )
+		{
+			if( prefer_externals() ) {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} else {
+				Value* ret = builder().CreateAnd( arg_value.load(), int_(0x7fffffff) );
+
+				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
+			}
+		} else 
 		{
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
