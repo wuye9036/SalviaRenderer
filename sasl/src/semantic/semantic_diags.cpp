@@ -18,6 +18,9 @@ using sasl::utility::vector_size;
 
 using sasl::common::diag_template;
 using sasl::common::dl_error;
+using sasl::common::dl_fatal_error;
+using sasl::common::token_t;
+using sasl::common::compiler_compatibility;
 using sasl::syntax_tree::tynode;
 using sasl::syntax_tree::struct_type;
 using sasl::syntax_tree::function_type;
@@ -29,6 +32,7 @@ using std::stringstream;
 
 BEGIN_NS_SASL_SEMANTIC();
 
+diag_template unknown_semantic_error(dl_fatal_error, "unknown semantic error occurred on '%s':%d");
 diag_template function_arg_count_error( dl_error, "'%s': no overloaded function takes %d arguments" );
 diag_template function_param_unmatched( dl_error, "'%s': no overloaded function could convert all argument types\n\twhile trying to match '%s'" );
 diag_template function_multi_overloads( dl_error, "'%s': %d overloads have similar conversations." );
@@ -38,6 +42,8 @@ diag_template operator_param_unmatched( dl_error, "no overloaded operator could 
 diag_template operator_multi_overloads( dl_error, "%d overloads have similar conversations." );
 diag_template member_left_must_have_struct( dl_error, "left of '.%s' must have struct\n\ttype is '%s'");
 diag_template cannot_convert_type_from( dl_error, "'%s': cannot convert from '%s' to '%s'");
+diag_template illegal_use_type_as_expr( dl_error, "'%s': illegal use of this type as an expression" );
+diag_template undeclared_identifier(dl_error, "'%s': undeclared identifier");
 
 char const* scalar_nick_name( builtin_types btcode )
 {
@@ -105,7 +111,8 @@ string type_repr::str()
 		}
 		else if ( ty->is_struct() )
 		{
-			str_cache = ty->as_handle<struct_type>()->name->str;
+			str_cache = "struct ";
+			str_cache += ty->as_handle<struct_type>()->name->str;
 		}
 		else if ( ty->is_function() )
 		{
@@ -153,7 +160,7 @@ string args_type_repr::str()
 			sstr << "(" << type_repr(arg_tys[0]).str();
 			for( size_t i = 1; i < arg_tys.size(); ++i )
 			{
-				sstr << " ,"<< type_repr(arg_tys[i]).str();
+				sstr << ", "<< type_repr(arg_tys[i]).str();
 			}
 			sstr << ")";
 		}
@@ -167,6 +174,19 @@ string args_type_repr::str()
 args_type_repr::args_type_repr()
 {
 
+}
+
+source_position_repr::source_position_repr(
+	shared_ptr<token_t> const& beg, shared_ptr<token_t> const& end,
+	compiler_compatibility cc ): beg(beg), end(end), cc(cc)
+{
+	
+}
+
+std::string source_position_repr::str()
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return std::string();
 }
 
 END_NS_SASL_SEMANTIC();

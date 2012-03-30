@@ -3,6 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/common/diag_item.h>
+#include <sasl/include/common/diag_formatter.h>
 
 namespace sasl
 {
@@ -62,6 +63,20 @@ private:
 	std::string str_cache;
 };
 
+class source_position_repr
+{
+public:
+	source_position_repr(
+		boost::shared_ptr<sasl::common::token_t> const& beg,
+		boost::shared_ptr<sasl::common::token_t> const& end,
+		sasl::common::compiler_compatibility cc );
+	std::string str();
+private:
+	boost::shared_ptr<sasl::common::token_t> beg, end;
+	sasl::common::compiler_compatibility cc;
+	std::string str_cache;
+};
+
 extern sasl::common::diag_template unknown_semantic_error;
 extern sasl::common::diag_template function_arg_count_error;
 extern sasl::common::diag_template function_param_unmatched;
@@ -72,6 +87,8 @@ extern sasl::common::diag_template not_a_member_of;
 extern sasl::common::diag_template invalid_swizzle;
 extern sasl::common::diag_template member_left_must_have_struct;
 extern sasl::common::diag_template cannot_convert_type_from;
+extern sasl::common::diag_template illegal_use_type_as_expr;
+extern sasl::common::diag_template undeclared_identifier;
 END_NS_SASL_SEMANTIC();
 
 #endif

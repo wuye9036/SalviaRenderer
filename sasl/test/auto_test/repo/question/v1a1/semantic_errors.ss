@@ -38,3 +38,9 @@ int test_operator_unmathced_type()
 	float r;
 	return 1 + s;
 }
+
+int test_undeclare_identifier()
+{
+	int f = not_a_member + 3;
+	return x + 5;
+}

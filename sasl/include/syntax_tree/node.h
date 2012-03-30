@@ -46,7 +46,7 @@ struct node{
 
 	boost::shared_ptr<node> as_handle() const;
 	template <typename T> boost::shared_ptr<T> as_handle() const{
-		return boost::shared_polymorphic_cast<T>( as_handle() );
+		return boost::shared_dynamic_cast<T>( as_handle() );
 	}
 
 	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;
@@ -57,20 +57,19 @@ struct node{
 
 	template <typename T> T* si_ptr() const{
 #ifdef EFLIB_DEBUG
-		return dyn_siptr<T>();
+		T* ret = dyn_siptr<T>();
+		if ( !ret && semantic_info() ){
+			assert(false);
+		}
+		return ret;
 #else
 		return static_cast<T*>( semantic_info().get() );
 #endif
 	}
 	
 	template <typename T> T* dyn_siptr() const{
-		if( seminfo ){ 
-			T* ptr = dynamic_cast<T*>( semantic_info().get() );
-			assert( ptr );
-			return ptr;
-		} else {
-			return NULL;
-		}
+		T* ptr = dynamic_cast<T*>( semantic_info().get() );
+		return ptr;
 	}
 
 	boost::shared_ptr<token_t>	token_begin() const;
