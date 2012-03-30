@@ -42,5 +42,25 @@ int test_operator_unmathced_type()
 int test_undeclare_identifier()
 {
 	int f = not_a_member + 3;
+	k t = 3;
 	return x + 5;
 }
+
+struct redef
+{ int d; };
+
+struct redef
+{ int d; };
+
+int test_case_expr_type()
+{
+	int x = 5;
+	switch( x )
+	{
+	case x:
+	case 3.0f:
+		break;
+	}
+	return 0;
+}
+

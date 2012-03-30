@@ -600,7 +600,7 @@ SASL_VISIT_DEF( expression_initializer )
 	if( !init_expr_tisi ) { return; }
 
 	type_info_si* var_tsi = data_cptr()->variable_to_fill->si_ptr<type_info_si>();
-	if( !var_tsi ) { return; }
+	if( !var_tsi || var_tsi->entry_id() == -1 ) { return; }
 
 	if ( var_tsi->entry_id() != init_expr_tisi->entry_id() ){
 		if( !caster->try_implicit( var_tsi->entry_id(), init_expr_tisi->entry_id() ) ){
@@ -636,13 +636,16 @@ SASL_VISIT_DEF( declarator ){
 		visit_child( child_ctxt, child_ctxt_init, v.init, dup_decl->init );
 	}
 
-	shared_ptr<symbol> nodesym = data_cptr()->parent_sym->add_child( v.name->str, dup_decl );
-
-	parse_semantic( v.semantic, v.semantic_index, ssi );
-
-	if(	data_cptr()->is_global )
+	if( data_cptr()->declarator_type_id != -1 )
 	{
-		msi->globals().push_back( nodesym );
+		shared_ptr<symbol> nodesym = data_cptr()->parent_sym->add_child( v.name->str, dup_decl );
+
+		parse_semantic( v.semantic, v.semantic_index, ssi );
+
+		if(	data_cptr()->is_global )
+		{
+			msi->globals().push_back( nodesym );
+		}
 	}
 
 	data_cptr()->generated_node = dup_decl->as_handle();
@@ -655,11 +658,16 @@ SASL_VISIT_DEF( variable_declaration )
 	any child_ctxt;
 
 	shared_ptr<variable_declaration> dup_vdecl = duplicate( v.as_handle() )->as_handle<variable_declaration>();
+	data_cptr()->generated_node = dup_vdecl->as_handle();
 
 	visit_child( child_ctxt, child_ctxt_init, v.type_info, dup_vdecl->type_info );
 	
-	ctxt_ptr(child_ctxt_init)->declarator_type_id
-		= extract_semantic_info<type_info_si>( dup_vdecl->type_info )->entry_id();
+	type_info_si* decl_tisi = dup_vdecl->type_info->si_ptr<type_info_si>();
+	if( decl_tisi ) {
+		ctxt_ptr(child_ctxt_init)->declarator_type_id = decl_tisi->entry_id();
+	} else {
+		ctxt_ptr(child_ctxt_init)->declarator_type_id = -1;
+	}
 	ctxt_ptr(child_ctxt_init)->variable_to_fill = dup_vdecl;
 
 	dup_vdecl->declarators.clear();
@@ -671,8 +679,6 @@ SASL_VISIT_DEF( variable_declaration )
 		data_cptr()->member_index = ctxt_ptr(child_ctxt)->member_index;
 		ctxt_ptr(child_ctxt_init)->member_index = ctxt_ptr(child_ctxt)->member_index;
 	}
-
-	data_cptr()->generated_node = dup_vdecl->as_handle();
 }
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
@@ -708,12 +714,15 @@ SASL_VISIT_DEF( struct_type ){
 
 	shared_ptr<struct_type> dup_struct
 		= msi->pety()->get( dup_struct_id )->as_handle<struct_type>();
-	
+	data_cptr()->generated_node = dup_struct;
+
 	SASL_EXTRACT_SI( type_info_si, tisi, dup_struct );
 	dup_struct = tisi->type_info()->as_handle<struct_type>();
-	if( !dup_struct->decls.empty() && !v.decls.empty() && v.decls[0] != dup_struct->decls[0] ){
-		// TODO: struct redefinition
-		EFLIB_ASSERT_UNIMPLEMENTED();
+	if( !dup_struct->decls.empty() && !v.decls.empty() ) {
+		diags->report( type_redefinition )
+			->token_range( *v.token_begin(), *v.token_end() )
+			->p(v.name->str)->p("struct");
+		return;
 	} else {
 		dup_struct->decls.clear();
 	}
@@ -735,21 +744,20 @@ SASL_VISIT_DEF( struct_type ){
 		// Update member index
 		ctxt_ptr(child_ctxt_init)->member_index = ctxt_ptr(child_ctxt)->member_index;
 	}
-
-	data_cptr()->generated_node = dup_struct;
 }
 
 SASL_VISIT_DEF( alias_type ){
-	tid_t dup_struct_id
-		= msi->pety()->get( v.as_handle<tynode>(), data_cptr()->parent_sym );
-	// TODO: If struct id not found, it means the type name is wrong.
-	// Compiler will report that.
-
+	tid_t dup_struct_id = -1;
 	if( v.alias->str == "sampler" ){
 		dup_struct_id = msi->pety()->get( builtin_types::_sampler );
+	} else {
+		dup_struct_id = msi->pety()->get( v.as_handle<tynode>(), data_cptr()->parent_sym );
 	}
-
-	assert( dup_struct_id != -1 );
+	
+	if( dup_struct_id == -1 )
+	{
+		diags->report( undeclared_identifier )->token_range( *v.alias, *v.alias )->p(v.alias->str);
+	}
 
 	data_cptr()->generated_node = msi->pety()->get(dup_struct_id);
 }
@@ -770,7 +778,7 @@ SASL_VISIT_DEF( parameter )
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, msi->pety() );
 	ssi->entry_id( tid );
 
-	// TODO: Nonsupports reference yet.
+	// SEMANTIC_TODO: Nonsupports reference yet.
 	ssi->is_reference( false );
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
@@ -813,7 +821,7 @@ SASL_VISIT_DEF( function_type )
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_fn, msi->pety() );
 	ssi->entry_id( ret_tid );
 
-	// TODO judge the true abi.
+	// SEMANTIC_TODO judge the true abi.
 	ssi->c_compatible( true );
 
 	parse_semantic( v.semantic, v.semantic_index, ssi );
@@ -929,8 +937,10 @@ SASL_VISIT_DEF( labeled_statement ){
 	BOOST_FOREACH( shared_ptr<label> const& lbl, v.labels ){
 		shared_ptr<label> dup_lbl;
 		visit_child( child_ctxt, child_ctxt_init, lbl, dup_lbl );
-		assert(dup_lbl);
-		dup_lbl_stmt->labels.push_back( dup_lbl );
+		if( dup_lbl )
+		{
+			dup_lbl_stmt->labels.push_back( dup_lbl );
+		}
 	}
 	visit_child( child_ctxt, child_ctxt_init, v.stmt, dup_lbl_stmt->stmt );
 	data_cptr()->lbl_list->push_back( dup_lbl_stmt );
@@ -944,17 +954,29 @@ SASL_VISIT_DEF( case_label ){
 
 	shared_ptr<case_label> dup_case = duplicate( v.as_handle() )->as_handle<case_label>();
 	
-	if( dup_case->expr ){
-		visit_child( child_ctxt, child_ctxt_init, v.expr, dup_case->expr );
+	assert( dup_case->expr );
 
-		// Only support constant yet.
-		assert( v.expr->node_class() == node_ids::constant_expression );
-		type_info_si* expr_tisi = dup_case->expr->si_ptr<type_info_si>();
-		builtin_types expr_bt = expr_tisi->type_info()->tycode;
+	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_case->expr );
 
-		// TODO expression must be int.
-		assert( is_integer( expr_bt ) || expr_bt == builtin_types::_boolean );
+	if( v.expr->node_class() != node_ids::constant_expression )
+	{
+		diags->report( case_expr_not_constant )
+			->token_range( *v.expr->token_begin(), *v.expr->token_end() );
 	}
+	else
+	{
+		type_info_si* expr_tisi = dup_case->expr->si_ptr<type_info_si>();
+		if( !expr_tisi ){ return; }
+
+		builtin_types expr_bt = expr_tisi->type_info()->tycode;
+		if( !is_integer( expr_bt ) && expr_bt != builtin_types::_boolean )
+		{
+			diags->report( illegal_type_for_case_expr )
+				->token_range( *v.expr->token_begin(), *v.expr->token_end() )
+				->p( type_repr(expr_tisi->type_info()).str() );
+		}
+	}
+
 	data_cptr()->generated_node = dup_case;
 }
 
@@ -1001,9 +1023,6 @@ SASL_VISIT_DEF( compound_statement )
 		
 		if( child_gen ){
 			dup_stmt->stmts.push_back(child_gen);
-		} else {
-			// child_gen is null only if the child is error. Otherwise it is error about semantic analyser.
-			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	}
 

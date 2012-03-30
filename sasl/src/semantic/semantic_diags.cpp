@@ -44,6 +44,9 @@ diag_template member_left_must_have_struct( dl_error, "left of '.%s' must have s
 diag_template cannot_convert_type_from( dl_error, "'%s': cannot convert from '%s' to '%s'");
 diag_template illegal_use_type_as_expr( dl_error, "'%s': illegal use of this type as an expression" );
 diag_template undeclared_identifier(dl_error, "'%s': undeclared identifier");
+diag_template type_redefinition(dl_error, "'%s': '%s' type redefinition");
+diag_template case_expr_not_constant(dl_error, "case expression not constant");
+diag_template illegal_type_for_case_expr(dl_error, "'%s': illegal type for case expression");
 
 char const* scalar_nick_name( builtin_types btcode )
 {
