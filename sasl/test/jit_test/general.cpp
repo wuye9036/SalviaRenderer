@@ -371,6 +371,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<vec4 (mat44*, vec4*)> test_mul_m44v4;
 	jit_function<vec4 (mat44*)> test_fetch_m44v4;
 	jit_function<float (float) > test_abs;
+	jit_function<float (float) > test_exp;
 	jit_function<float (float) > test_sqrt_f;
 	jit_function<vec2 (vec2) > test_sqrt_f2;
 	jit_function<vec3 (vec3, vec3)> test_cross_prod;
@@ -383,6 +384,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 	function( test_abs, "test_abs" );
 	BOOST_REQUIRE( test_abs );
+
+	function( test_exp, "test_exp" );
+	BOOST_REQUIRE( test_exp );
 
 	function( test_sqrt_f, "test_sqrt_f" );
 	BOOST_REQUIRE( test_sqrt_f );
@@ -437,6 +441,24 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		float z = 0.0f;
 		BOOST_CHECK_CLOSE( fabsf(z), test_abs(z), 0.000001f );
+	}
+	{
+		float x;
+
+		x = -10.0f;
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+
+		x = -1.0f;
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+
+		x = 0.0f;
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+
+		x = 1.0f;
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
+
+		x = 10.0f;
+		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
 	}
 	{
 		float f = 876.625f;

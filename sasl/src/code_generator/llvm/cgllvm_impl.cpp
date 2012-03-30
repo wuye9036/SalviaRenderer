@@ -689,6 +689,11 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->fn().arg_name( 0, ".value" );
 			value_t ret_val = service()->emit_abs( service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
+		} else if ( intr->unmangled_name() == "exp" ) {
+			assert( par_tys.size() == 1 );
+			service()->fn().arg_name( 0, ".value" );
+			value_t ret_val = service()->emit_exp( service()->fn().arg(0) );
+			service()->emit_return( ret_val, service()->param_abi(false) );
 		} else if( intr->unmangled_name() == "sqrt" ){
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );

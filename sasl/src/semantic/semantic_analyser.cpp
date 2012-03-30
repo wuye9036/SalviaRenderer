@@ -1534,6 +1534,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 
 		register_intrinsic( child_ctxt_init, "abs" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+		register_intrinsic( child_ctxt_init, "exp" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		register_intrinsic( child_ctxt_init, "sqrt" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 
 		register_intrinsic( child_ctxt_init, "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];

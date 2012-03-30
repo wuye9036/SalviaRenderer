@@ -1436,6 +1436,37 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 	return value_t();
 }
 
+value_t cg_service::emit_exp( value_t const& arg_value )
+{
+	builtin_types hint = arg_value.hint();
+	builtin_types scalar_hint = scalar_of( arg_value.hint() );
+	abis arg_abi = arg_value.abi();
+
+	if ( scalar_hint == builtin_types::_double ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	assert( is_real(hint) );
+
+	if( arg_abi == abi_c || arg_abi == abi_llvm ){
+		if( is_scalar(hint) )
+		{
+			if( prefer_externals() ) {
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			} else {
+				Value* ret = builder().CreateCall( intrin_<float(float)>( Intrinsic::exp ), arg_value.load() );
+
+				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
+			}
+		}
+		else 
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	return value_t();
+}
+
 // llvm::Value* sqrt_sf( llvm::Value* v )
 
 value_t cg_service::emit_sqrt( value_t const& arg_value )

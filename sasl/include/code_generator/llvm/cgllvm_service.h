@@ -335,6 +335,7 @@ public:
 	/// @{
 	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_abs( value_t const& lhs );
+	virtual value_t emit_exp( value_t const& lhs );
 	virtual value_t emit_sqrt( value_t const& lhs );
 	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_ddx( value_t const& v ) = 0;
