@@ -551,6 +551,7 @@ SASL_VISIT_DEF( variable_expression ){
 		shared_ptr<node> node = vdecl->node();
 		shared_ptr<tynode> ty_node = node->as_handle<tynode>();
 		shared_ptr<declarator> decl_node = node->as_handle<declarator>();
+		shared_ptr<parameter> param_node = node->as_handle<parameter>();
 
 		if( ty_node )
 		{
@@ -558,9 +559,9 @@ SASL_VISIT_DEF( variable_expression ){
 				->token_range( *v.token_begin(), *v.token_end() )
 				->p( name );
 		}
-		else if ( decl_node )
+		else if ( decl_node || param_node )
 		{
-			dup_vexpr->semantic_info( vdecl->node()->semantic_info() );
+			dup_vexpr->semantic_info( node->semantic_info() );
 			dup_vexpr->si_ptr<storage_si>()->declarator( vdecl.get() );
 		}
 		else
@@ -954,26 +955,27 @@ SASL_VISIT_DEF( case_label ){
 
 	shared_ptr<case_label> dup_case = duplicate( v.as_handle() )->as_handle<case_label>();
 	
-	assert( dup_case->expr );
-
-	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_case->expr );
-
-	if( v.expr->node_class() != node_ids::constant_expression )
+	if( v.expr )
 	{
-		diags->report( case_expr_not_constant )
-			->token_range( *v.expr->token_begin(), *v.expr->token_end() );
-	}
-	else
-	{
-		type_info_si* expr_tisi = dup_case->expr->si_ptr<type_info_si>();
-		if( !expr_tisi ){ return; }
+		visit_child( child_ctxt, child_ctxt_init, v.expr, dup_case->expr );
 
-		builtin_types expr_bt = expr_tisi->type_info()->tycode;
-		if( !is_integer( expr_bt ) && expr_bt != builtin_types::_boolean )
+		if( v.expr->node_class() != node_ids::constant_expression )
 		{
-			diags->report( illegal_type_for_case_expr )
-				->token_range( *v.expr->token_begin(), *v.expr->token_end() )
-				->p( type_repr(expr_tisi->type_info()).str() );
+			diags->report( case_expr_not_constant )
+				->token_range( *v.expr->token_begin(), *v.expr->token_end() );
+		}
+		else
+		{
+			type_info_si* expr_tisi = dup_case->expr->si_ptr<type_info_si>();
+			if( !expr_tisi ){ return; }
+
+			builtin_types expr_bt = expr_tisi->type_info()->tycode;
+			if( !is_integer( expr_bt ) && expr_bt != builtin_types::_boolean )
+			{
+				diags->report( illegal_type_for_case_expr )
+					->token_range( *v.expr->token_begin(), *v.expr->token_end() )
+					->p( type_repr(expr_tisi->type_info()).str() );
+			}
 		}
 	}
 
