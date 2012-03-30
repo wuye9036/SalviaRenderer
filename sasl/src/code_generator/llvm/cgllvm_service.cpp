@@ -1432,6 +1432,8 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	}
+
+	return value_t();
 }
 
 // llvm::Value* sqrt_sf( llvm::Value* v )
