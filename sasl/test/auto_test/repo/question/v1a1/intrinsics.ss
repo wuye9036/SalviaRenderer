@@ -16,15 +16,20 @@ f4 test_fetch_m44v4( f44 lhs ){
 	return lhs.x;
 }
 
-float test_abs(float v)
+float test_abs_f(float v)
 {
 	return abs(v);
 }
 
-float test_exp(float v)
+int test_abs_i(int v)
 {
-	return exp(v);
+	return abs(v);
 }
+
+//float test_exp(float v)
+//{
+//	return exp(v);
+//}
 
 float test_sqrt_f( float v ){
 	return sqrt(v);

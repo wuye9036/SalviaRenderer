@@ -370,7 +370,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<float (vec3*, vec3*)> test_dot_f3;
 	jit_function<vec4 (mat44*, vec4*)> test_mul_m44v4;
 	jit_function<vec4 (mat44*)> test_fetch_m44v4;
-	jit_function<float (float) > test_abs;
+	jit_function<float (float) > test_abs_f;
+	jit_function<int (int) > test_abs_i;
 	jit_function<float (float) > test_exp;
 	jit_function<float (float) > test_sqrt_f;
 	jit_function<vec2 (vec2) > test_sqrt_f2;
@@ -382,11 +383,16 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	function( test_mul_m44v4, "test_mul_m44v4" );
 	BOOST_REQUIRE( test_mul_m44v4 );
 
-	function( test_abs, "test_abs" );
-	BOOST_REQUIRE( test_abs );
+	function( test_abs_f, "test_abs_f" );
+	BOOST_REQUIRE( test_abs_f );
 
+	function( test_abs_i, "test_abs_i" );
+	BOOST_REQUIRE( test_abs_i );
+
+	/*
 	function( test_exp, "test_exp" );
 	BOOST_REQUIRE( test_exp );
+	*/
 
 	function( test_sqrt_f, "test_sqrt_f" );
 	BOOST_REQUIRE( test_sqrt_f );
@@ -434,14 +440,25 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	}
 	{
 		float p = 123.456f;
-		BOOST_CHECK_CLOSE( fabsf(p), test_abs(p), 0.000001f );
+		BOOST_CHECK_CLOSE( fabsf(p), test_abs_f(p), 0.000001f );
 
 		float n = - p;
-		BOOST_CHECK_CLOSE( fabsf(n), test_abs(n), 0.000001f );
+		BOOST_CHECK_CLOSE( fabsf(n), test_abs_f(n), 0.000001f );
 
 		float z = 0.0f;
-		BOOST_CHECK_CLOSE( fabsf(z), test_abs(z), 0.000001f );
+		BOOST_CHECK_CLOSE( fabsf(z), test_abs_f(z), 0.000001f );
 	}
+	{
+		int p = 0x7fffffff;
+		BOOST_CHECK_EQUAL( abs(p), test_abs_i(p) );
+
+		int n = - p;
+		BOOST_CHECK_EQUAL( abs(n), test_abs_i(n) );
+
+		int z = 0;
+		BOOST_CHECK_EQUAL( abs(z), test_abs_i(z) );
+	}
+	/*
 	{
 		float x;
 
@@ -460,6 +477,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		x = 10.0f;
 		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
 	}
+	*/
 	{
 		float f = 876.625f;
 		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.000001f );
