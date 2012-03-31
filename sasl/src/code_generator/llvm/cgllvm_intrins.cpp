@@ -4,12 +4,16 @@
 #include <llvm/Intrinsics.h>
 #include <llvm/adt/StringRef.h>
 #include <llvm/Module.h>
+#include <llvm/DerivedTypes.h>
 #include <eflib/include/platform/enable_warnings.h>
+
+#include <vector>
 
 using llvm::Function;
 using llvm::Module;
 using llvm::LLVMContext;
 using llvm::StringRef;
+using std::vector;
 
 namespace Intrinsic = llvm::Intrinsic;
 
@@ -52,7 +56,12 @@ Function* llvm_intrin_cache::get( int id, Module* mod )
 Function* llvm_intrin_cache::get( int id, Module* mod, llvm::FunctionType* fnty )
 {
 	llvm::Intrinsic::ID IID = llvm::Intrinsic::ID( id );
-	return llvm::cast<Function>( mod->getOrInsertFunction( getName(IID), fnty ) );
+	vector<llvm::Type*> par_types;
+	for( unsigned i = 0; i < fnty->getNumParams(); ++i )
+	{
+		par_types.push_back( fnty->getParamType(i) );
+	}
+	return llvm::cast<Function>( getDeclaration(mod, IID, par_types) );
 }
 
 END_NS_SASL_CODE_GENERATOR();

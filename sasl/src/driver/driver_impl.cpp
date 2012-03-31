@@ -8,6 +8,8 @@
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/abi_analyser.h>
+#include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/parser/parse_api.h>
 #include <sasl/include/parser/diags.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -258,10 +260,22 @@ void driver_impl::set_diag_chat( diag_chat* diags )
 	user_diags = diags;
 }
 
+// WORDAROUNDS_TODO LLVM 3.0 Intrinsic to native call error.
+void workaround_expf( float* ret, float v )
+{
+	*ret = expf(v);
+}
+
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
 	std::string err;
-	return cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
+	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
+
+	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
+	std::string expf_name = msi->root()->find_overloads( "__wa_expf" )[0]->mangled_name();
+	ret_jit->inject_function( &workaround_expf, expf_name );
+
+	return ret_jit;
 }
 
 void driver_impl::set_code_file( std::string const& code_file )

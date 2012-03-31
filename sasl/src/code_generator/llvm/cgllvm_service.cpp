@@ -1436,7 +1436,7 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 	return value_t();
 }
 
-value_t cg_service::emit_exp( value_t const& arg_value )
+value_t cg_service::emit_exp( value_t const& arg_value, function_t const& workaround_expf )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
@@ -1453,9 +1453,10 @@ value_t cg_service::emit_exp( value_t const& arg_value )
 			if( prefer_externals() ) {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			} else {
-				Value* ret = builder().CreateCall( intrin_<float(float)>( Intrinsic::exp ), arg_value.load() );
-
-				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
+				vector<value_t> args;
+				args.push_back( arg_value );
+				return emit_call( workaround_expf, args );
+				// return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
 			}
 		}
 		else 

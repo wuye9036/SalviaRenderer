@@ -1498,6 +1498,10 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			>> fvec_ts[4];
 		}
 
+		// LLVM Workaround for some intrinsics are NULL pointer.
+		{
+			register_intrinsic( child_ctxt_init, "__wa_expf", true, false ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+		}
 
 		shared_ptr<builtin_type> fmat_ts[5][5];
 		for( int vec_size = 1; vec_size < 5; ++vec_size ){
@@ -1534,7 +1538,11 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 
 		register_intrinsic( child_ctxt_init, "abs" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-		register_intrinsic( child_ctxt_init, "exp" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+
+		// WORKAROUND_TODO LLVM 3.0: Intrinsic didn't generate correct native call.
+		// register_intrinsic( child_ctxt_init, "exp" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+		register_intrinsic( child_ctxt_init, "exp" ).deps("__wa_expf") % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+
 		register_intrinsic( child_ctxt_init, "sqrt" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 
 		register_intrinsic( child_ctxt_init, "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];

@@ -107,6 +107,12 @@ shared_ptr<symbol> cgllvm_impl::find_symbol( cgllvm_sctxt* data, std::string con
 	return data->env().sym.lock()->find( str );
 }
 
+function_t* cgllvm_impl::get_function( std::string const& name ) const
+{
+	shared_ptr<symbol> callee_sym = msi->root()->find_overloads(name)[0];
+	return &( const_cast<cgllvm_impl*>(this)->node_ctxt( callee_sym->node() )->data().self_fn );
+}
+
 SASL_VISIT_DEF( variable_expression ){
 	shared_ptr<symbol> declsym = sc_env_ptr(data)->sym.lock()->find( v.var_name->str );
 	assert( declsym && declsym->node() );
@@ -692,7 +698,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		} else if ( intr->unmangled_name() == "exp" ) {
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			value_t ret_val = service()->emit_exp( service()->fn().arg(0) );
+			value_t ret_val = service()->emit_exp( service()->fn().arg(0), *get_function("__wa_expf") );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		} else if( intr->unmangled_name() == "sqrt" ){
 			assert( par_tys.size() == 1 );
@@ -725,16 +731,13 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ddx = service()->emit_ddx(coord);
 			value_t ddy = service()->emit_ddy(coord);
 
-			shared_ptr<symbol> callee_sym = msi->root()->find_overloads( "tex2Dgrad" )[0];
-			function_t* callee_fn = &( node_ctxt( callee_sym->node() )->data().self_fn );
-
 			vector<value_t> args;
 			args.push_back( samp );
 			args.push_back( coord );
 			args.push_back( ddx );
 			args.push_back( ddy );
 
-			value_t ret = service()->emit_call( *callee_fn, args, service()->fn().packed_execution_mask() );
+			value_t ret = service()->emit_call( *get_function("tex2Dgrad"), args, service()->fn().packed_execution_mask() );
 			service()->emit_return( ret, service()->param_abi(false) );
 		} else if ( intr->unmangled_name() == "tex2Dbias" ){
 			assert( par_tys.size() == 2 );

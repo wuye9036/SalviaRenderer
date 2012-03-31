@@ -137,6 +137,7 @@ protected:
 	virtual abis			local_abi( bool c_compatible ) const = 0;
 	boost::shared_ptr<sasl::semantic::symbol>
 		find_symbol( cgllvm_sctxt*, std::string const& );
+	function_t* get_function( std::string const& name ) const;
 
 	// Store global informations
 	sasl::semantic::module_si* msi;
