@@ -26,10 +26,10 @@ int test_abs_i(int v)
 	return abs(v);
 }
 
-//float test_exp(float v)
-//{
-//	return exp(v);
-//}
+float test_exp(float v)
+{
+	return exp(v);
+}
 
 float test_sqrt_f( float v ){
 	return sqrt(v);

@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -362,7 +362,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -389,10 +389,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	function( test_abs_i, "test_abs_i" );
 	BOOST_REQUIRE( test_abs_i );
 
-	/*
 	function( test_exp, "test_exp" );
 	BOOST_REQUIRE( test_exp );
-	*/
 
 	function( test_sqrt_f, "test_sqrt_f" );
 	BOOST_REQUIRE( test_sqrt_f );
@@ -458,7 +456,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		int z = 0;
 		BOOST_CHECK_EQUAL( abs(z), test_abs_i(z) );
 	}
-	/*
 	{
 		float x;
 
@@ -477,7 +474,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		x = 10.0f;
 		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
 	}
-	*/
 	{
 		float f = 876.625f;
 		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.000001f );

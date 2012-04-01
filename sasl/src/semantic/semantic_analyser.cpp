@@ -1538,7 +1538,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 
 		register_intrinsic( child_ctxt_init, "abs" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-
+		register_intrinsic( child_ctxt_init, "abs" ) % BUILTIN_TYPE(_sint32) >> BUILTIN_TYPE(_sint32);
 		// WORKAROUND_TODO LLVM 3.0: Intrinsic didn't generate correct native call.
 		// register_intrinsic( child_ctxt_init, "exp" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		register_intrinsic( child_ctxt_init, "exp" ).deps("__wa_expf") % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);

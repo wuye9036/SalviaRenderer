@@ -45,6 +45,7 @@ using namespace sasl::semantic;
 
 using sasl::utility::is_integer;
 using sasl::utility::is_real;
+using sasl::utility::is_signed;
 using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
 using sasl::utility::is_matrix;
@@ -54,6 +55,7 @@ using sasl::utility::vector_of;
 using sasl::utility::matrix_of;
 using sasl::utility::vector_size;
 using sasl::utility::vector_count;
+using sasl::utility::storage_size;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::SIMD_ELEMENT_COUNT;
@@ -1413,30 +1415,39 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 	if ( scalar_hint == builtin_types::_double ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
-	assert( is_real(hint) );
-
-	if( arg_abi == abi_c || arg_abi == abi_llvm ){
-		if( is_scalar(hint) )
+	if( arg_abi == abi_c || arg_abi == abi_llvm )
+	{
+		if( is_scalar(hint) || is_vector(hint) )
 		{
 			if( prefer_externals() ) {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			} else {
-				Value* i = builder().CreateBitCast( arg_value.load(), type_( builtin_types::_sint32, arg_abi ) );
-				i = builder().CreateAnd( i, int_(0x7fffffff) );
-				Value* ret = builder().CreateBitCast( i, type_( builtin_types::_float, arg_abi ) );
+				Value* ret = NULL;
+				uint64_t mask = (1ULL << ( (storage_size(scalar_hint)*8)-1 )) - 1;
 
-				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
+				if( is_real(scalar_hint) )
+				{
+					Value* i = builder().CreateBitCast( arg_value.load(), type_( builtin_types::_sint32, arg_abi ) );
+					i = builder().CreateAnd(i, mask);
+					ret = builder().CreateBitCast( i, type_( builtin_types::_float, arg_abi ) );
+				}
+				else if( is_integer(scalar_hint) )
+				{
+					assert( is_signed(hint) );
+					Value* v = arg_value.load();
+					Value* sign = builder().CreateICmpSGT( v, Constant::getNullValue( v->getType() ) );
+					Value* neg = builder().CreateNeg( v );
+					ret = builder().CreateSelect(sign, v, neg);
+				}
+				else
+				{
+					EFLIB_ASSERT_UNIMPLEMENTED();
+				}
+
+				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, arg_abi );
 			}
-		} else if ( is_integer(hint) )
-		{
-			if( prefer_externals() ) {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			} else {
-				Value* ret = builder().CreateAnd( arg_value.load(), int_(0x7fffffff) );
-
-				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
-		}
-		} else 
+		} 
+		else 
 		{
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
