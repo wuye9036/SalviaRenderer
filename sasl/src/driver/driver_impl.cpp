@@ -170,9 +170,22 @@ void driver_impl::compile()
 			diags->report(compiling_input)->p(fname);
 			
 			shared_ptr<driver_code_source> code_src( new driver_code_source() );
+
+			if( user_inc_handler )
+			{
+				code_src->set_include_handler( user_inc_handler );
+			}
+			else
+			{
+				for( virtual_file_dict::iterator it = virtual_files.begin(); it != virtual_files.end(); ++it)
+				{
+					code_src->add_virtual_file( it->first, it->second.first, it->second.second );
+				}
+			}
+
 			code_src->set_diag_chat( diags );
 
-			if ( !code_src->set_file(fname ) ){
+			if ( !code_src->set_file(fname) ){
 				diags->report( sasl::parser::cannot_open_input_file )->p(fname);
 				return;
 			} 
@@ -286,6 +299,16 @@ void driver_impl::set_code_file( std::string const& code_file )
 void driver_impl::set_lex_context( shared_ptr<lex_context> const& lex_ctxt )
 {
 	user_lex_ctxt = lex_ctxt;
+}
+
+void driver_impl::add_virtual_file( string const& file_name, string const& code_content, bool high_priority )
+{
+	virtual_files[file_name] = make_pair( code_content, high_priority );
+}
+
+void driver_impl::set_include_handler( include_handler_fn inc_handler )
+{
+	user_inc_handler = inc_handler;
 }
 
 END_NS_SASL_DRIVER();

@@ -61,6 +61,7 @@ public:
 		is_eof = true;
 		return code;
 	}
+	virtual bool failed(){ return false; }
 
 	// lex_context
 	virtual const std::string& file_name() const{ return fname; }

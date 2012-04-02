@@ -68,6 +68,10 @@ vector<diag_item*> const& diag_chat::diag_items() const
 
 void diag_chat::clear()
 {
+	for( vector<diag_item*>::iterator it = diags.begin(); it != diags.end(); ++it )
+	{
+		(*it)->release();
+	}
 	diags.clear();
 }
 

@@ -88,6 +88,7 @@ public:
 	}
 
 	// code source
+	virtual bool failed(){ return false; }
 	virtual bool eof(){ return is_eof; }
 	virtual string error(){ return string(""); }
 	virtual string next(){
@@ -105,7 +106,7 @@ public:
 	virtual size_t line() const{
 		return 0;
 	}
-
+	
 	virtual void update_position( const std::string& /*lit*/ ){
 		// Do nothing.
 		return;

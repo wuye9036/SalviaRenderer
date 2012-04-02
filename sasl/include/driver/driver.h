@@ -4,6 +4,7 @@
 #include <sasl/include/driver/driver_forward.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -31,6 +32,13 @@ namespace sasl
 
 BEGIN_NS_SASL_DRIVER();
 
+typedef boost::function<
+	bool/*succeed*/ (
+	std::string& /*[out]content*/, std::string& /*[out]native file name*/,
+	std::string const& /*file name*/, bool /*is system header*/,
+	bool /*check only*/ )
+> include_handler_fn;
+
 class driver{
 public:
 	virtual void set_parameter( int argc, char** argv )				= 0;
@@ -43,6 +51,12 @@ public:
 
 	virtual void compile()											= 0;
 	virtual boost::shared_ptr< sasl::code_generator::jit_engine > create_jit() = 0;
+
+	virtual void add_virtual_file(
+		std::string const& file_name,
+		std::string const& code_content,
+		bool high_priority ) = 0;
+	virtual void set_include_handler( include_handler_fn inc_handler ) = 0;
 
 	virtual boost::shared_ptr< sasl::semantic::module_si >				mod_si() const		= 0;
 	virtual boost::shared_ptr< sasl::code_generator::codegen_context>	mod_codegen() const	= 0;

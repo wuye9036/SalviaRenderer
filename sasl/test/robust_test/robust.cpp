@@ -43,7 +43,9 @@ using std::fstream;
 using std::string;
 using std::cout;
 using std::endl;
-
+using std::vector;
+using std::pair;
+using std::make_pair;
 
 BOOST_AUTO_TEST_SUITE( robust )
 
@@ -62,6 +64,7 @@ struct jit_fixture {
 	jit_fixture() {}
 
 	void init_g( string const& file_name ){
+		
 		init( file_name, "--lang=g" );
 	}
 
@@ -73,6 +76,11 @@ struct jit_fixture {
 		init( file_name, "--lang=ps" );
 	}
 
+	void add_virtual_file( char const* name, char const* content )
+	{
+		vfiles.push_back( make_pair(name, content) );
+	}
+
 	void init( string const& file_name, string const& options ){
 		diags = diag_chat::create();
 		diags->add_report_raised_handler( print_diagnostic );
@@ -80,6 +88,11 @@ struct jit_fixture {
 		BOOST_REQUIRE(drv);
 		drv->set_diag_chat(diags.get());
 		drv->set_parameter( make_command(file_name, options) );
+		for( size_t i = 0; i < vfiles.size(); ++i )
+		{
+			drv->add_virtual_file( vfiles[i].first, vfiles[i].second, true );
+		}
+
 		drv->compile();
 
 		BOOST_REQUIRE( drv->root() );
@@ -103,17 +116,30 @@ struct jit_fixture {
 	shared_ptr<symbol>		root_sym;
 	shared_ptr<jit_engine>	je;
 	shared_ptr<diag_chat>	diags;
+	vector< pair<char const*, char const*> > vfiles;
 };
 
-#if ALL_TESTS_ENABLED
-
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( incomplete, jit_fixture ){
 	init_g( "./repo/question/v1a1/incomplete.ss" );
 }
+#endif
 
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( semantic_errors, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/semantic_errors.ss" );
+}
+#endif
+
+#if ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE( include_test, jit_fixture ){
+	const char* virtual_include_content = 
+		"float virtual_include_add(float a, float b){ \r\n"
+		"	return a+b; \r\n"
+		"} \r\n";
+	add_virtual_file( "virtual_include.ss", virtual_include_content );
+	init_g( "./repo/question/v1a1/include_main.ss" );
 }
 #endif
 

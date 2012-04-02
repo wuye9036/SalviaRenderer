@@ -19,6 +19,11 @@ public:
 	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& );
 	virtual void set_lex_context( boost::shared_ptr<sasl::common::lex_context> const& );
 
+	/// Only support by default code_source.
+	virtual void add_virtual_file( std::string const& file_name, std::string const& code_content, bool high_priority );
+	/// Only support by default code_source.
+	virtual void set_include_handler( include_handler_fn inc_handler );
+
 	virtual void set_diag_chat( sasl::common::diag_chat* diags );
 	// virtual void set_dump_ir( std::string const& );
 
@@ -57,6 +62,12 @@ private:
 	boost::shared_ptr<sasl::common::code_source>	user_code_src;
 	boost::shared_ptr<sasl::common::lex_context>	user_lex_ctxt;
 	sasl::common::diag_chat*						user_diags;
+
+	typedef boost::unordered_map< std::string,
+		std::pair<std::string, bool> > virtual_file_dict;
+
+	virtual_file_dict	virtual_files;
+	include_handler_fn	user_inc_handler;
 };
 
 END_NS_SASL_DRIVER();

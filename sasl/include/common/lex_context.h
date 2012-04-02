@@ -17,9 +17,10 @@ public:
 
 class code_source{
 public:
-	virtual bool		eof() = 0;
-	virtual std::string	next() = 0;
-	virtual std::string	error() = 0;
+	virtual bool		failed()= 0;
+	virtual bool		eof()	= 0;
+	virtual std::string	next()	= 0;
+	virtual std::string	error()	= 0;
 };
 
 END_NS_SASL_COMMON();

@@ -71,5 +71,5 @@ bool sasl::parser::parse(
 	l.end_incremental( ctxt, toks );
 
 	token_iterator it = toks.begin();
-	return g.prog.parse( it, toks.end()-1, pt_root, diags ).is_succeed();
+	return !src->failed() && g.prog.parse( it, toks.end()-1, pt_root, diags ).is_succeed();
 }
