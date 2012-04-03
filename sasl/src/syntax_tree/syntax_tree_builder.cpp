@@ -83,8 +83,10 @@ void syntax_tree_builder::initialize_bt_cache(){
 
 		char const char_tbl[] = { '0', '1', '2', '3', '4' };
 
+		INSERT_INTO_BTCACHE( char,    _sint8   );
 		INSERT_INTO_BTCACHE( sbyte,    _sint8   );
 		INSERT_INTO_BTCACHE( int8_t,   _sint8   );
+		INSERT_INTO_BTCACHE( uchar,    _sint8   );
 		INSERT_INTO_BTCACHE( ubyte,    _uint8   );
 		INSERT_INTO_BTCACHE( uint8_t,  _uint8   );
 		INSERT_INTO_BTCACHE( short,    _sint16  );

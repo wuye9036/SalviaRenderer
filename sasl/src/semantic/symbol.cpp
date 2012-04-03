@@ -19,11 +19,13 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/foreach.hpp>
+#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
 
 using namespace std;
+using boost::bind;
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -361,6 +363,12 @@ void symbol::collapse_vector1_overloads( vector< shared_ptr<symbol> >& candidate
 	return std::swap( candidates, ret );
 }
 
+bool get_deprecated_and_next( shared_ptr<symbol> const& sym, shared_ptr<symbol> const* begin_addr, vector<bool> const& deprecated )
+{
+	intptr_t i = (intptr_t)std::distance( begin_addr, boost::addressof(sym) );
+	return !deprecated[i];
+}
+
 vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 	const string& unmangled,
 	shared_ptr<caster_t> const& conv,
@@ -384,10 +392,7 @@ vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 	//
 	//	for each candidate in overloads
 	//		if candidate is a valid overload
-	//			compare this candidate to evaluated candidates
-	//				if candidate is better than evaluated, discard evaluated.
-	//				if candidate is worse than evaluated, discard current candidate
-	//			after all comparison done, if candidate have not been discarded, add it into candidates.
+	//		add to candidates
 	//	now the candidates is result.
 	//
 	// better & worse judgment is as same as C#.
@@ -425,23 +430,34 @@ vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 				break;
 			}
 		}
-		if( !all_parameter_success ){ continue;	}
+		if( all_parameter_success )
+		{
+			candidates.push_back( overloads[i_func] );
+		}
+	}
 
-		// if all parameter could be matched, we will find does it better than others.
-		bool is_better = false;
-		bool is_worse = false;
-		for( vector< shared_ptr<symbol> >::iterator it = candidates.begin(); it != candidates.end();  ){
+	//  for each candidate in candidates
+	//		for each evaluated in candidate successors. 
+	//			if candidate is better than evaluated, deprecate evaluated.
+	//			if candidate is worse than evaluated, deprecated candidate.
+	vector<bool> deprecated(candidates.size(), false) ;
+	for ( size_t i_cand = 0; i_cand < candidates.size(); ++i_cand )
+	{
+		if( deprecated[i_cand] ){ continue; }
+		shared_ptr<function_type> a_matched_func = (candidates[i_cand])->node()->as_handle<function_type>();
+		for( size_t j_cand = i_cand+1; j_cand < candidates.size(); ++j_cand )
+		{
+			if( deprecated[j_cand] ){ continue; }
 
-			shared_ptr<function_type> a_matched_func = (*it)->node()->as_handle<function_type>();
+			shared_ptr<function_type> matching_func = (candidates[j_cand])->node()->as_handle<function_type>();
 
-			// match functions.
 			size_t better_param_count = 0;
 			size_t worse_param_count = 0;
 
 			for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-				tid_t arg_type = extract_semantic_info<type_info_si>( args[i_param] )->entry_id();
-				tid_t matching_par_type = extract_semantic_info<type_info_si>( matching_func->params[i_param] )->entry_id();
-				tid_t matched_par_type = extract_semantic_info<type_info_si>( a_matched_func->params[i_param] )->entry_id();
+				tid_t arg_type = args[i_param]->si_ptr<type_info_si>()->entry_id();
+				tid_t matching_par_type = matching_func->params[i_param]->si_ptr<type_info_si>()->entry_id();
+				tid_t matched_par_type = a_matched_func->params[i_param]->si_ptr<type_info_si>()->entry_id();
 
 				bool par_is_better = false;
 				bool par_is_worse = false;
@@ -451,26 +467,21 @@ vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 			}
 
 			if ( better_param_count > 0 && worse_param_count == 0 ) {
-				is_better = true;
+				deprecated[i_cand] = true;
 			}
 			if ( better_param_count == 0 && worse_param_count > 0 ){
-				is_worse = true;
-				break;
+				deprecated[j_cand] = true;
 			}
-
-			// if current function is better than matched function, remove matched function.
-			if( is_better ){
-				it = candidates.erase( it );
-			} else {
-				++it;
-			}
-		}
-		// if current function is worse than matched function, discard it.
-		if ( !is_worse ) {
-			candidates.push_back(matching_func->symbol());
 		}
 	}
 
+	// Gather candidates.
+	vector< shared_ptr<symbol> >::iterator it
+		= partition( candidates.begin(), candidates.end(), boost::bind( get_deprecated_and_next, _1, boost::addressof(candidates[0]), boost::cref(deprecated) ) );
+
+	vector< shared_ptr<symbol> > ret( candidates.begin(), it ); 
+	candidates.resize( distance(candidates.begin(), it) );
+	
 	return candidates;
 }
 
