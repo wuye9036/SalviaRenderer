@@ -32,6 +32,8 @@ class wave_reported_fatal_error: public boost::exception
 {
 };
 
+void fixes_file_end_with_newline( std::string& content );
+
 typedef boost::function<
 	bool/*succeed*/ (
 		std::string& /*[out]content*/, std::string& /*[out]native file name*/,
@@ -125,6 +127,7 @@ struct load_file_to_string {
 					iter_ctx.instring.assign(
 						std::istreambuf_iterator<char>(instream.rdbuf()),
 						std::istreambuf_iterator<char>());
+					fixes_file_end_with_newline( iter_ctx.instring );
 				}
 				else
 				{

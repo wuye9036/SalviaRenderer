@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -119,7 +119,7 @@ struct jit_fixture {
 	vector< pair<char const*, char const*> > vfiles;
 };
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( incomplete, jit_fixture ){
 	init_g( "./repo/question/v1a1/incomplete.ss" );
 }
@@ -132,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE( semantic_errors, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( include_test, jit_fixture ){
 	const char* virtual_include_content = 
 		"float virtual_include_add(float a, float b){ \r\n"

@@ -22,6 +22,7 @@ boost::unordered_map<void*, driver_code_source*> driver_code_source::ctxt_to_sou
 bool driver_code_source::set_code( string const& code )
 {
 	this->code = code;
+	fixes_file_end_with_newline(this->code);
 	this->filename = "<In Memory>";
 	return process();
 }
@@ -33,9 +34,8 @@ bool driver_code_source::set_file( string const& file_name )
 		return false;
 	} else {
 		in.unsetf(std::ios::skipws);
-		std::copy(
-			std::istream_iterator<char>(in), std::istream_iterator<char>(),
-			std::back_inserter(code) );
+		code.assign( std::istream_iterator<char>(in), std::istream_iterator<char>() );
+		fixes_file_end_with_newline( code );
 		filename = file_name;
 	}
 	in.close();
@@ -63,6 +63,10 @@ string driver_code_source::next()
 			break;
 		case preprocess_exception::last_line_not_terminated:
 			committer = diags->report( sasl::parser::boost_wave_exception_warning );
+			break;
+		case preprocess_exception::ill_formed_directive:
+			committer = diags->report( sasl::parser::boost_wave_exception_fatal_error );
+			is_failed = true;
 			break;
 		default:
 			is_failed = true;
@@ -127,13 +131,13 @@ bool driver_code_source::process()
 {
 	wctxt_wrapper.reset( new wave_context_wrapper( this, new wcontext_t( code.begin(), code.end(), filename.c_str() ) ) );
 
-	size_t lang_flag = wctxt_wrapper->get_wctxt()->get_language();
+	size_t lang_flag = boost::wave::support_cpp;
 	lang_flag &= ~(boost::wave::support_option_emit_line_directives );
-#if BOOST_VERSION <= 104900
-	lang_flag |= (boost::wave::support_option_single_line );
-#else
+//#if BOOST_VERSION <= 104900
+	//lang_flag |= (boost::wave::support_option_single_line );
+//#else
 	lang_flag &= ~(boost::wave::support_option_single_line );
-#endif
+//#endif
 	lang_flag &= ~(boost::wave::support_option_emit_pragma_directives );
 	wctxt_wrapper->get_wctxt()->set_language( static_cast<boost::wave::language_support>( lang_flag ) );
 
@@ -218,6 +222,7 @@ void load_virtual_file(
 		std::string native_name;
 		is_exclusive = true;
 		is_succeed = code_src->inc_handler( content, native_name, name, is_system, false );
+		fixes_file_end_with_newline(content);
 		return;
 	}
 
@@ -234,6 +239,7 @@ void load_virtual_file(
 	if( hi_prior == before_file_load )
 	{
 		content = it->second.second;
+		fixes_file_end_with_newline(content);
 		is_succeed = true;
 		return;
 	}
@@ -300,6 +306,23 @@ wave_context_wrapper::~wave_context_wrapper()
 wcontext_t* wave_context_wrapper::get_wctxt() const
 {
 	return wctxt.get();
+}
+
+void fixes_file_end_with_newline( std::string& content )
+{
+	char end_ch = *content.rbegin();
+	if( end_ch == '\r' || end_ch == '\n' )
+	{
+		return;
+	}
+
+#if defined(EFLIB_WINDOWS)
+	content.append( "\r\n" );
+#elif defined(EFLIB_OSX)
+	content.append( "\r" );
+#elif defined(EFLIB_UNIX) || defined(EFLIB_LINUX)
+	content.append( '\n' );
+#endif
 }
 
 END_NS_SASL_DRIVER();

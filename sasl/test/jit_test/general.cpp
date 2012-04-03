@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -749,7 +749,7 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	fn( src, (void*)NULL, dest, (void*)NULL );
 	
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( dest_ref[i], dest[i], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i], dest[i], 0.000012f );
 	}
 
 	_aligned_free( src );
