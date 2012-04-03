@@ -175,8 +175,12 @@ void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 
 value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	builtin_types hint_src = v.hint();
+	builtin_types hint_dst = dest_tyi->hint();
+
+	Value* val = builder().CreateSExtOrBitCast( v.load(), dest_tyi->ty(v.abi()) );
+
+	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
 
 value_t cgs_sisd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
@@ -186,12 +190,12 @@ value_t cgs_sisd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
 
 	Value* val = NULL;
 	if( is_signed(hint_i) ){
-		val = builder().CreateSIToFP( v.load(), dest_tyi->ty(abi_llvm) );
+		val = builder().CreateSIToFP( v.load(), dest_tyi->ty(v.abi()) );
 	} else {
-		val = builder().CreateUIToFP( v.load(), dest_tyi->ty(abi_llvm) );
+		val = builder().CreateUIToFP( v.load(), dest_tyi->ty(v.abi()) );
 	}
 
-	return create_value( dest_tyi, builtin_types::none, val, vkind_value, abi_llvm );
+	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
 
 value_t cgs_sisd::cast_f2i( value_t const& v, value_tyinfo* dest_tyi )

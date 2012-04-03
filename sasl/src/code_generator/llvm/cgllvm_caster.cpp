@@ -87,13 +87,13 @@ public:
 			dest_ctxt->data().tyinfo.get()
 			);
 
-		dest_ctxt->value().store( casted );
+		store(dest, src, casted);
 	}
 
 	void int2bool( shared_ptr<node> dest, shared_ptr<node> src ){
 		if( src == dest ){ return; }
 		value_t casted = cgs->cast_i2b( get_ctxt(src)->value() );
-		store( dest, src, casted );
+		store(dest, src, casted);
 	}
 
 	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
@@ -177,13 +177,14 @@ void add_builtin_casts(
 
 	shared_ptr<cgllvm_caster> cg_caster = shared_polymorphic_cast<cgllvm_caster>(caster);
 
-	cast_t int2int_pfn = bind( &cgllvm_caster::int2int, cg_caster.get(), _1, _2 ) ;
-	cast_t int2bool_pfn = bind( &cgllvm_caster::int2bool, cg_caster.get(), _1, _2 ) ;
-	cast_t int2float_pfn = bind( &cgllvm_caster::int2float, cg_caster.get(), _1, _2 ) ;
-	cast_t float2int_pfn = bind( &cgllvm_caster::float2int, cg_caster.get(), _1, _2 ) ;
-	cast_t float2float_pfn = bind( &cgllvm_caster::float2float, cg_caster.get(), _1, _2 ) ;
-	cast_t float2bool_pfn = bind( &cgllvm_caster::float2bool, cg_caster.get(), _1, _2 ) ;
-	cast_t scalar2vec1_pfn = bind( &cgllvm_caster::scalar2vec1, cg_caster.get(), _1, _2 ) ;
+	cast_t int2int_pfn		= bind( &cgllvm_caster::int2int,	cg_caster.get(), _1, _2 );
+	cast_t int2bool_pfn		= bind( &cgllvm_caster::int2bool,	cg_caster.get(), _1, _2 );
+	cast_t int2float_pfn	= bind( &cgllvm_caster::int2float,	cg_caster.get(), _1, _2 );
+	cast_t float2int_pfn	= bind( &cgllvm_caster::float2int,	cg_caster.get(), _1, _2 );
+	cast_t float2float_pfn	= bind( &cgllvm_caster::float2float,cg_caster.get(), _1, _2 );
+	cast_t float2bool_pfn	= bind( &cgllvm_caster::float2bool,	cg_caster.get(), _1, _2 );
+	cast_t scalar2vec1_pfn	= bind( &cgllvm_caster::scalar2vec1,cg_caster.get(), _1, _2 );
+
 	cast_t shrink_vec_pfn[5][5];
 	for( int src_size = 1; src_size < 5; ++src_size ){
 		for( int dest_size = 0; dest_size < 5; ++dest_size ){
@@ -211,115 +212,115 @@ void add_builtin_casts(
 
 	tid_t bool_ts = pety->get( builtin_types::_boolean );
 
-	cg_caster->add_cast( caster_t::imp, sint8_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, sint8_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, sint8_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint8_ts, uint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint8_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint8_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint8_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, sint8_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, sint8_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, sint8_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, sint16_ts, sint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, sint16_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, sint16_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint16_ts, uint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint16_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint16_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint16_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, sint16_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, sint16_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, sint16_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, sint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, sint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, sint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, sint32_ts, sint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint32_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, sint32_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint32_ts, uint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint32_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint32_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint32_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::warning, sint32_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, sint32_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, sint32_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, sint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, sint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, sint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, sint64_ts, sint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint64_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint64_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint64_ts, uint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint64_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint64_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, sint64_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::warning, sint64_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::warning, sint64_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, sint64_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint64_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint64_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, sint64_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, uint8_ts, sint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, uint8_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint8_ts, sint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, uint16_ts, sint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint16_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint16_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint16_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint16_ts, uint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint16_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint16_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint16_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, uint16_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, uint16_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint16_ts, sint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint16_ts, sint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, sint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, sint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint16_ts, uint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, uint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, uint32_ts, sint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint32_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint32_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::better, uint32_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint32_ts, uint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint32_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::imp, uint32_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::warning, uint32_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, uint32_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, uint32_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, sint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, uint64_ts, sint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint64_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint64_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint64_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint64_ts, uint8_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint64_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::exp, uint64_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast( caster_t::warning, uint64_ts, float_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::warning, uint64_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast( caster_t::imp, uint64_ts, bool_ts, int2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint8_ts,  int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint16_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint32_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint64_ts, float_ts,  int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint64_ts, double_ts, int2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint64_ts, bool_ts,   int2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, float_ts, sint8_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, float_ts, sint16_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, float_ts, sint32_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, float_ts, sint64_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, float_ts, uint8_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, float_ts, uint16_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, float_ts, uint32_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, float_ts, uint64_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::imp, float_ts, double_ts, float2float_pfn );
-	cg_caster->add_cast( caster_t::imp, float_ts, bool_ts, float2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint8_ts,  float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint16_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint32_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint64_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint8_ts,  float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint16_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint32_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint64_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, float_ts, double_ts, float2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, float_ts, bool_ts,   float2bool_pfn );
 
-	cg_caster->add_cast( caster_t::exp, double_ts, sint8_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, sint16_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, sint32_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, sint64_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, uint8_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, uint16_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, uint32_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, uint64_ts, float2int_pfn );
-	cg_caster->add_cast( caster_t::exp, double_ts, float_ts, float2float_pfn );
-	cg_caster->add_cast( caster_t::imp, double_ts, bool_ts, float2bool_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint8_ts,  float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint16_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint32_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint64_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint8_ts,  float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint16_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint32_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint64_ts, float2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, float_ts,  float2float_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, double_ts, bool_ts,   float2bool_pfn );
 
 	//cg_caster->add_cast( caster_t::exp, bool_ts, sint8_ts, default_conv );
 	//cg_caster->add_cast( caster_t::exp, bool_ts, sint16_ts, default_conv );
