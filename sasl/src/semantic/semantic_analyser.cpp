@@ -1305,9 +1305,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 #define BUILTIN_TYPE( btc ) (storage_bttbl[ builtin_types::btc ])
 
 	shared_ptr<builtin_type> bt_bool = BUILTIN_TYPE( _boolean );
-	shared_ptr<builtin_type> bt_i32 = BUILTIN_TYPE( _sint32 );
-
-	shared_ptr<function_type> tmpft;
+	shared_ptr<builtin_type> bt_i32  = BUILTIN_TYPE( _sint32 );
 
 	// Arithmetic operators
 	vector<std::string> op_tbl;
@@ -1317,50 +1315,37 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		operators op = oplist[i_op];
 		std::string op_name( operator_name(op) );
 
-		if ( is_arithmetic(op) ){
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				dfunction_combinator(NULL).dname( op_name )
-					.dreturntype().dnode( it_type->second ).end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-				.end( tmpft );
-
-				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+		if ( is_arithmetic(op) )
+		{
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
+			{
+				shared_ptr<builtin_type> ty = it_type->second;
+				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 			}
 		}
 
-		if( is_arith_assign(op) ){
+		if( is_arith_assign(op) )
+		{
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				dfunction_combinator(NULL).dname( op_name )
-					.dreturntype().dnode( it_type->second ).end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-					.end( tmpft );
-				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+				shared_ptr<builtin_type> ty = it_type->second;
+				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 			}
 		}
 
 		if( is_relationship(op) ){
-
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				dfunction_combinator(NULL).dname( op_name )
-					.dreturntype().dnode( bt_bool ).end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-					.end( tmpft );
-				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
+			{
+				shared_ptr<builtin_type> ty = it_type->second;
+				register_function(child_ctxt_init, op_name) % ty % ty >> bt_bool;
 			}
 		}
 
 		if( is_bit(op) || is_bit_assign(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_integer(it_type->first) ){
-					dfunction_combinator(NULL).dname( op_name )
-						.dreturntype().dnode( it_type->second ).end()
-						.dparam().dtype().dnode( it_type->second ).end().end()
-						.dparam().dtype().dnode( it_type->second ).end().end()
-					.end( tmpft );
-					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+				if ( is_integer(it_type->first) )
+				{
+					shared_ptr<builtin_type> ty = it_type->second;
+					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 				}
 			}
 		}
@@ -1368,34 +1353,22 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		if( is_shift(op) || is_shift_assign(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				if ( is_integer(it_type->first) ){
-					dfunction_combinator(NULL).dname( op_name )
-						.dreturntype().dnode( it_type->second ).end()
-						.dparam().dtype().dnode( it_type->second ).end().end()
-						.dparam().dtype().dnode( bt_i32 ).end().end()
-						.end( tmpft );
-					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+					shared_ptr<builtin_type> ty = it_type->second;
+					register_function( child_ctxt_init, op_name ) % ty % bt_i32 >> ty;
 				}
 			}
 		}
 
 		if( is_bool_arith(op) ){
-			dfunction_combinator(NULL).dname( op_name )
-				.dreturntype().dnode( bt_bool ).end()
-				.dparam().dtype().dnode( bt_bool ).end().end()
-				.dparam().dtype().dnode( bt_bool ).end().end()
-			.end( tmpft );
-			if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+			register_function( child_ctxt_init, op_name ) % bt_bool % bt_bool >> bt_bool;
 		}
 
 		if( is_prefix(op) || is_postfix(op) || op == operators::positive ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_integer(it_type->first) ){
-					dfunction_combinator(NULL).dname( op_name )
-						.dreturntype().dnode( it_type->second ).end()
-						.dparam().dtype().dnode( it_type->second ).end().end()
-						.end( tmpft );
-
-					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+				if ( is_integer(it_type->first) )
+				{
+					shared_ptr<builtin_type> ty = it_type->second;
+					register_function( child_ctxt_init, op_name ) % ty >> ty;
 				}
 			}
 		}
@@ -1403,47 +1376,29 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		if( op == operators::bit_not ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				if ( is_integer(it_type->first) ){
-					dfunction_combinator(NULL).dname( op_name )
-						.dreturntype().dnode( it_type->second ).end()
-						.dparam().dtype().dnode( it_type->second ).end().end()
-						.end( tmpft );
-
-					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+					shared_ptr<builtin_type> ty = it_type->second;
+					register_function( child_ctxt_init, op_name ) % ty >> ty;
 				}
 			}
 		}
 
 		if( op == operators::logic_not ){
-			dfunction_combinator(NULL).dname( op_name )
-				.dreturntype().dnode( bt_bool ).end()
-				.dparam().dtype().dnode( bt_bool ).end().end()
-			.end( tmpft );
-
-			if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+			register_function( child_ctxt_init, op_name ) % bt_bool >> bt_bool;
 		}
 
 		if( op == operators::negative ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 				if ( it_type->first != builtin_types::_uint64 ){
-					dfunction_combinator(NULL).dname( op_name )
-						.dreturntype().dnode( it_type->second ).end()
-						.dparam().dtype().dnode( it_type->second ).end().end()
-					.end( tmpft );
-
-					if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+					shared_ptr<builtin_type> ty = it_type->second;
+					register_function( child_ctxt_init, op_name ) % ty >> ty;
 				}
 			}
 		}
 
 		if ( op == operators::assign ){
 			for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type ){
-				dfunction_combinator(NULL).dname( op_name )
-					.dreturntype().dnode( it_type->second ).end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-					.dparam().dtype().dnode( it_type->second ).end().end()
-				.end( tmpft );
-
-				if ( tmpft ){ visit_child( child_ctxt, child_ctxt_init, tmpft ); }
+				shared_ptr<builtin_type> ty = it_type->second;
+				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 			}
 		}
 	}
