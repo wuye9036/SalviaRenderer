@@ -476,12 +476,15 @@ vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 	}
 
 	// Gather candidates.
-	vector< shared_ptr<symbol> >::iterator it
-		= partition( candidates.begin(), candidates.end(), boost::bind( get_deprecated_and_next, _1, boost::addressof(candidates[0]), boost::cref(deprecated) ) );
+	if( !candidates.empty() )
+	{
+		vector< shared_ptr<symbol> >::iterator it
+			= partition( candidates.begin(), candidates.end(), boost::bind( get_deprecated_and_next, _1, boost::addressof(candidates[0]), boost::cref(deprecated) ) );
 
-	vector< shared_ptr<symbol> > ret( candidates.begin(), it ); 
-	candidates.resize( distance(candidates.begin(), it) );
-	
+		vector< shared_ptr<symbol> > ret( candidates.begin(), it ); 
+		candidates.resize( distance(candidates.begin(), it) );
+	}
+
 	return candidates;
 }
 

@@ -85,7 +85,7 @@ array_type::array_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( array_type );
 
 struct_type::struct_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: tynode( node_ids::struct_type, tok_beg, tok_end ) {}
+	: tynode( node_ids::struct_type, tok_beg, tok_end ), has_body(false) {}
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( struct_type );
 

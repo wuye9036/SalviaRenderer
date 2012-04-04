@@ -162,6 +162,7 @@ struct struct_type: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 	boost::shared_ptr< token_t > name;
+	bool has_body;
 	std::vector< boost::shared_ptr<declaration> > decls;
 
 protected:

@@ -313,6 +313,7 @@ void syntax_tree_builder::build_struct_body( shared_ptr<attribute> attr, shared_
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, decls_attr, typed_attr->attrs[1] );
 
+	out->has_body = true;
 	BOOST_FOREACH( shared_ptr<attribute> const& decl_attr, decls_attr->attrs ){
 		shared_ptr<declaration> decl = build_decl(decl_attr);
 		if( decl ){

@@ -719,31 +719,42 @@ SASL_VISIT_DEF( struct_type ){
 
 	SASL_EXTRACT_SI( type_info_si, tisi, dup_struct );
 	dup_struct = tisi->type_info()->as_handle<struct_type>();
-	if( !dup_struct->decls.empty() && !v.decls.empty() ) {
+
+	// If v is declaration only, just return.
+	if( !v.has_body ){ return; }
+
+	// If v has body, try to update body, or redefinition.
+	if( dup_struct->has_body )
+	{
 		diags->report( type_redefinition )
 			->token_range( *v.token_begin(), *v.token_end() )
 			->p(v.name->str)->p("struct");
 		return;
-	} else {
+	} 
+
+	// Update struct body.
+	else
+	{
 		dup_struct->decls.clear();
-	}
 
-	shared_ptr<symbol> sym = dup_struct->symbol();
+		shared_ptr<symbol> sym = dup_struct->symbol();
 
-	any child_ctxt;
-	any child_ctxt_init = *data;
-	ctxt_ptr(child_ctxt_init)->parent_sym = sym;
-	ctxt_ptr(child_ctxt_init)->member_index = 0;
-	ctxt_ptr(child_ctxt_init)->is_global = false;
+		any child_ctxt;
+		any child_ctxt_init = *data;
+		ctxt_ptr(child_ctxt_init)->parent_sym = sym;
+		ctxt_ptr(child_ctxt_init)->member_index = 0;
+		ctxt_ptr(child_ctxt_init)->is_global = false;
 
-	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
-		visit_child( child_ctxt, child_ctxt_init, decl );
-		dup_struct->decls.push_back(
-			ctxt_ptr( child_ctxt )->generated_node->as_handle<declaration>()
-			);
+		dup_struct->has_body = true;
+		BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls ){
+			visit_child( child_ctxt, child_ctxt_init, decl );
+			dup_struct->decls.push_back(
+				ctxt_ptr( child_ctxt )->generated_node->as_handle<declaration>()
+				);
 
-		// Update member index
-		ctxt_ptr(child_ctxt_init)->member_index = ctxt_ptr(child_ctxt)->member_index;
+			// Update member index
+			ctxt_ptr(child_ctxt_init)->member_index = ctxt_ptr(child_ctxt)->member_index;
+		}
 	}
 }
 

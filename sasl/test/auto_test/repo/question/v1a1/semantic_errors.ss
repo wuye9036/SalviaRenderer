@@ -46,9 +46,12 @@ int test_undeclare_identifier()
 	return x + 5;
 }
 
+struct redef;
 struct redef
-{ int d; };
+{};
 
+struct redef;
+ 
 struct redef
 { int d; };
 
