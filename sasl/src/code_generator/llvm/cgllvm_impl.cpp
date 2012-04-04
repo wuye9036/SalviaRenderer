@@ -139,8 +139,6 @@ SASL_VISIT_DEF( binary_expression ){
 		if( v.op == operators::assign ){
 			bin_assign( v, data );
 		} else {
-
-			// v.si_ptr<storage_si>()->
 			shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
 			shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
@@ -268,17 +266,31 @@ SASL_VISIT_DEF( call_expression ){
 	} else {
 		// Get LLVM Function
 		symbol* fn_sym = csi->overloaded_function();
-		function_t fn = service()->fetch_function( fn_sym->node()->as_handle<function_type>() );
-
-		// TODO imp type conversations.
+		shared_ptr<function_type> proto = fn_sym->node()->as_handle<function_type>();
+		
 		vector<value_t> args;
-		BOOST_FOREACH( shared_ptr<expression> const& arg_expr, v.args ){
-			visit_child( child_ctxt, child_ctxt_init, arg_expr );
-			cgllvm_sctxt* arg_ctxt = node_ctxt( arg_expr, false );
+		for( size_t i_arg = 0; i_arg < v.args.size(); ++i_arg )
+		{
+			visit_child( child_ctxt, child_ctxt_init, v.args[i_arg] );
+
+			type_info_si* arg_tisi = v.args[i_arg]->si_ptr<type_info_si>();
+			type_info_si* par_tisi = proto->params[i_arg]->si_ptr<type_info_si>();
+			
+			if( par_tisi->entry_id() != arg_tisi->entry_id() )
+			{
+				if( !node_ctxt( par_tisi->type_info() ) )
+				{
+					visit_child( child_ctxt, child_ctxt_init, proto->params[i_arg]->param_type );
+				}
+				caster->cast( par_tisi->type_info(), v.args[i_arg] );
+			}
+
+			cgllvm_sctxt* arg_ctxt = node_ctxt( v.args[i_arg], false );
 			args.push_back( arg_ctxt->value() );
 		}
-
-		value_t rslt = service()->emit_call( fn, args );
+		
+		function_t fn = service()->fetch_function( proto );
+		value_t rslt  = service()->emit_call( fn, args );
 
 		cgllvm_sctxt* expr_ctxt = node_ctxt( v, true );
 		expr_ctxt->data().val = rslt;

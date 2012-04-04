@@ -28,3 +28,8 @@ int test_op_sub_cast( uint8_t i, int j )
 {
 	return i-j;
 }
+
+float test_sqrt_cast( int j )
+{
+	return sqrt(j);
+}

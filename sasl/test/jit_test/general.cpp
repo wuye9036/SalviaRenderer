@@ -701,14 +701,17 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	jit_function<float(int)> test_implicit_cast_i32_f32;
 	function( test_implicit_cast_i32_f32, "test_implicit_cast_i32_f32" );
 
+	jit_function<int(float)> test_implicit_cast_f32_b;
+	function( test_implicit_cast_f32_b, "test_implicit_cast_f32_b" );
+
 	jit_function<float(int, float)> test_op_add_cast;
 	function( test_op_add_cast, "test_op_add_cast" );
 
 	jit_function<int(uint8_t, int)> test_op_sub_cast;
 	function( test_op_sub_cast, "test_op_sub_cast" );
 
-	jit_function<int(float)> test_implicit_cast_f32_b;
-	function( test_implicit_cast_f32_b, "test_implicit_cast_f32_b" );
+	jit_function<float(int)> test_sqrt_cast;
+	function( test_sqrt_cast, "test_sqrt_cast" );
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
@@ -722,13 +725,16 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(19.0f), 33 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_f32_b(-7.0f), 33 );
 
-	BOOST_CHECK_CLOSE( test_op_add_cast(33, 87.6f), 33+87.6f, 0.000001f );
-	BOOST_CHECK_CLOSE( test_op_add_cast(-33, 87.6f), -33+87.6f, 0.000001f );
-	BOOST_CHECK_CLOSE( test_op_add_cast(33, -87.6f), 33-87.6f, 0.000001f );
+	BOOST_CHECK_CLOSE( test_op_add_cast( 33,  87.6f),  33+87.6f, 0.000001f );
+	BOOST_CHECK_CLOSE( test_op_add_cast(-33,  87.6f), -33+87.6f, 0.000001f );
+	BOOST_CHECK_CLOSE( test_op_add_cast( 33, -87.6f),  33-87.6f, 0.000001f );
 
 	BOOST_CHECK_EQUAL( test_op_sub_cast( 122,  8645),  122-8645 );
 	BOOST_CHECK_EQUAL( test_op_sub_cast(-122,  8645), -122-8645 );
 	BOOST_CHECK_EQUAL( test_op_sub_cast( 122, -8645),  122+8645 );
+
+	BOOST_CHECK_CLOSE( test_sqrt_cast(0),	  0.0f,			   0.000001f );
+	BOOST_CHECK_CLOSE( test_sqrt_cast(17652), sqrtf(17652.0f), 0.000001f );
 }
 #endif
 
