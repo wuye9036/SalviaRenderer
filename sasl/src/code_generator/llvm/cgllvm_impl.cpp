@@ -350,8 +350,6 @@ SASL_VISIT_DEF( function_type ){
 	}
 
 	if ( v.body ){
-		// TODO
-		// sc_env_ptr(data)->parent_fn = sc_data_ptr(data)->self_fn;
 		service()->function_beg();
 		create_fnargs( v, data );
 		create_fnbody( v, data );
@@ -593,6 +591,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 
 	any child_ctxt_init = *data;
 	any child_ctxt;
+	insert_point_t alloc_block = service()->new_block(".alloc", true);
+	service()->fn().allocation_block( alloc_block );
 
 	service()->new_block(".body", true);
 	visit_child( child_ctxt, child_ctxt_init, v.body );
@@ -660,6 +660,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		service()->push_fn( intrinsic_ctxt->data().self_fn );
 		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, service() ) );
 
+		service()->fn().allocation_block( service()->new_block(".alloc", true) );
 		insert_point_t ip_body = service()->new_block( ".body", true );
 
 		// Parse Parameter Informations
@@ -791,6 +792,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
 		}
+
+		service()->clean_empty_blocks();
 	}
 }
 

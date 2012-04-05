@@ -222,6 +222,12 @@ private:
 	on_exit_fn do_exit;
 };
 
+struct insert_point_t{
+	insert_point_t();
+	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != NULL; }
+	llvm::BasicBlock* block;
+};
+
 struct function_t{
 	function_t();
 
@@ -249,9 +255,12 @@ struct function_t{
 	void return_name( std::string const& s );
 	/// Set Inline hint
 	void inline_hint();
+	void allocation_block( insert_point_t const& ip);
+	insert_point_t allocation_block() const;
 
 	boost::shared_ptr<value_tyinfo> get_return_ty() const;
 
+	insert_point_t						alloc_block;
 	std::vector<llvm::Argument*>		argCache;
 	sasl::syntax_tree::function_type*	fnty;
 	llvm::Function*						fn;
@@ -260,14 +269,6 @@ struct function_t{
 	bool								partial_execution;
 	bool								ret_void;
 	cg_service*							cg;
-};
-
-struct insert_point_t{
-	insert_point_t();
-
-	EFLIB_OPERATOR_BOOL( insert_point_t ) { return block != NULL; }
-
-	llvm::BasicBlock* block;
 };
 
 class cg_service
@@ -546,7 +547,7 @@ protected:
 	llvm_intrin_cache		intrins;
 	llvm_module_impl*		mod_impl;
 	value_t					exec_mask;
-
+	
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );

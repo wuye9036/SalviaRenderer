@@ -540,15 +540,23 @@ value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index )
 
 value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
+	insert_point_t ip = insert_point();
 	Type* var_ty = type_( bt, abi );
+	set_insert_point( fn().allocation_block() );
 	AllocaInst* var_val = builder().CreateAlloca( var_ty, NULL, name );
+
+	set_insert_point( ip );
 	return create_value( bt, var_val, vkind_ref, abi );
 }
 
 value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
 {
+	insert_point_t ip = insert_point();
+	set_insert_point( fn().allocation_block() );
 	Type* var_ty = type_(ty, abi);
 	AllocaInst* var_val = builder().CreateAlloca( var_ty, NULL, name );
+
+	set_insert_point( ip );
 	return create_value( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi );
 }
 
@@ -1667,6 +1675,16 @@ void cg_service::jump_cond( value_t const& cond_v, insert_point_t const & true_i
 {
 	Value* cond = cond_v.load();
 	builder().CreateCondBr( cond, true_ip.block, false_ip.block );
+}
+
+void function_t::allocation_block( insert_point_t const& ip )
+{
+	alloc_block = ip;
+}
+
+insert_point_t function_t::allocation_block() const
+{
+	return alloc_block;
 }
 
 END_NS_SASL_CODE_GENERATOR();
