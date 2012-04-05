@@ -542,7 +542,6 @@ value_t cg_service::create_variable( builtin_types bt, abis abi, std::string con
 {
 	Type* var_ty = type_( bt, abi );
 	AllocaInst* var_val = builder().CreateAlloca( var_ty, NULL, name );
-	// var_val->setAlignment( 4 );
 	return create_value( bt, var_val, vkind_ref, abi );
 }
 
@@ -550,7 +549,6 @@ value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::stri
 {
 	Type* var_ty = type_(ty, abi);
 	AllocaInst* var_val = builder().CreateAlloca( var_ty, NULL, name );
-	// var_val->setAlignment( 4 );
 	return create_value( const_cast<value_tyinfo*>(ty), var_val, vkind_ref, abi );
 }
 
@@ -559,7 +557,6 @@ insert_point_t cg_service::new_block( std::string const& hint, bool set_as_curre
 	assert( in_function() );
 	insert_point_t ret;
 	ret.block = BasicBlock::Create( context(), hint, fn().fn );
-	// dbg_print_blocks( fn().fn );
 	if( set_as_current ){ set_insert_point( ret ); }
 	return ret;
 }
@@ -571,8 +568,6 @@ void cg_service::clean_empty_blocks()
 	typedef Function::BasicBlockListType::iterator block_iterator_t;
 	block_iterator_t beg = fn().fn->getBasicBlockList().begin();
 	block_iterator_t end = fn().fn->getBasicBlockList().end();
-
-	// dbg_print_blocks( fn().fn );
 
 	// Remove useless blocks
 	vector<BasicBlock*> useless_blocks;

@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -336,7 +336,7 @@ BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init_g( "./repo/question/v1a1/preprocessors.ss" );
@@ -581,7 +581,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 {
 	init_g("./repo/question/v1a1/branches.ss");
@@ -628,7 +628,7 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
@@ -710,7 +710,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
 
@@ -1297,6 +1297,21 @@ BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
 	return ;
 }
 
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
+	init_g( "./repo/question/v1a1/local_var.ss" );
+
+	jit_function<int(int, int)> get_sum;
+	function( get_sum, "get_sum" );
+
+	BOOST_REQUIRE( get_sum );
+
+	BOOST_CHECK_EQUAL( get_sum(10,       2),       10* 2 );
+	BOOST_CHECK_EQUAL( get_sum(987,      3),      987* 3 );
+	BOOST_CHECK_EQUAL( get_sum(22876765, 1),  22876765*1 );
+}
 #endif
 
 BOOST_AUTO_TEST_SUITE_END();
