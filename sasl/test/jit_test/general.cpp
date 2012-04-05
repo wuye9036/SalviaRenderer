@@ -336,7 +336,8 @@ BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
+
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init_g( "./repo/question/v1a1/preprocessors.ss" );
 
@@ -347,14 +348,32 @@ BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	BOOST_CHECK( fn() == 0 );
 }
 
+int fib_ref(int i)
+{
+	if(i < 2) return i;
+	return fib_ref(i-1) + fib_ref(i-2);
+}
+
 BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 	init_g( "./repo/question/v1a1/function.ss" );
 
-	jit_function<int(int)> fn;
-	function( fn, "foo" );
-	BOOST_REQUIRE(fn);
+	jit_function<int(int)> foo;
+	function( foo, "foo" );
+	BOOST_REQUIRE(foo);
 
-	BOOST_CHECK	( fn(5) == 5 );
+	jit_function<int(int, int)> foo2;
+	function( foo2, "foo2" );
+
+	jit_function<int(int)> cross_caller;
+	function( cross_caller, "cross_caller" );
+
+	jit_function<int(int)> fib;
+	function( fib, "fib" );
+
+	BOOST_CHECK_EQUAL( foo(5)			, 5 );
+	BOOST_CHECK_EQUAL( foo2(-2, 7)		,-2 );
+	BOOST_CHECK_EQUAL( cross_caller(5)	, 5 );
+	BOOST_CHECK_EQUAL( fib(16)			, fib_ref(16) );
 }
 
 #endif

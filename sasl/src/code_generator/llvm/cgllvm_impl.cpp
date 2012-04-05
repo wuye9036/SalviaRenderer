@@ -346,6 +346,7 @@ SASL_VISIT_DEF( function_type ){
 	cgllvm_sctxt* fnctxt = node_ctxt(v.symbol()->node(), true);
 	if( !fnctxt->data().self_fn ){
 		create_fnsig( v, data );
+		node_ctxt(v.symbol()->node(), true)->data().self_fn = sc_data_ptr(data)->self_fn;
 	}
 
 	if ( v.body ){
