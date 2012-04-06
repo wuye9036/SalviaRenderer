@@ -15,7 +15,7 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/struct_semin.svs"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/vec_and_mat.svs"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/vec_and_mat.sps"
-	"${SALVIA_AUTO_TEST_HOME}/v1a1/arithmetic.svs"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/arithmetic.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/arithmetic.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/function.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/intrinsics.ss"

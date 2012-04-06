@@ -350,7 +350,10 @@ SASL_VISIT_DEF( function_type ){
 	}
 
 	if ( v.body ){
+		FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
+
 		service()->function_beg();
+		service()->fn().allocation_block( service()->new_block(".alloc", true) );
 		create_fnargs( v, data );
 		create_fnbody( v, data );
 		service()->function_end();
@@ -586,13 +589,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	}
 }
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-
-	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
-
 	any child_ctxt_init = *data;
 	any child_ctxt;
-	insert_point_t alloc_block = service()->new_block(".alloc", true);
-	service()->fn().allocation_block( alloc_block );
 
 	service()->new_block(".body", true);
 	visit_child( child_ctxt, child_ctxt_init, v.body );

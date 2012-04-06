@@ -1299,7 +1299,7 @@ BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 	init_g( "./repo/question/v1a1/local_var.ss" );
 
