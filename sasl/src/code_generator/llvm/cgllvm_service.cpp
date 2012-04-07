@@ -684,7 +684,7 @@ llvm::Value* cg_service::load( value_t const& v )
 		assert( !index_values.empty() );
 
 		// Swizzle and write mask
-		if( index_values.size() == 1 ){
+		if( index_values.size() == 1 && is_scalar(v.hint()) ){
 			// Only one member we could extract reference.
 			ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
 		} else {
@@ -966,6 +966,64 @@ value_t cg_service::emit_mul_ss_vv( value_t const& lhs, value_t const& rhs )
 	EMIT_OP_SS_VV_BODY(Mul);
 }
 
+value_t cg_service::emit_div_ss_vv( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint( lhs.hint() );
+	assert( hint == rhs.hint() );
+	assert( is_scalar(hint) || is_vector(hint) );
+	Value* ret = NULL; 
+	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
+	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
+	abis internal_abi = promote_abi( promoted_abi, abi_llvm );
+	if( is_real( scalar_hint ) ){
+		ret = builder().CreateFDiv ( lhs.load(internal_abi), rhs.load(internal_abi) );
+	} else if( is_integer(scalar_hint) ){
+		if( is_signed(scalar_hint) )
+		{
+			ret = builder().CreateSDiv( lhs.load(internal_abi), rhs.load(internal_abi) );
+		}
+		else
+		{
+			ret = builder().CreateUDiv( lhs.load(internal_abi), rhs.load(internal_abi) );
+		}
+	} else {
+		assert(false);
+	}
+
+	value_t retval = create_value( hint, ret, vkind_value, internal_abi );
+	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
+	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
+}
+
+value_t cg_service::emit_mod_ss_vv( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types hint( lhs.hint() );
+	assert( hint == rhs.hint() );
+	assert( is_scalar(hint) || is_vector(hint) );
+	Value* ret = NULL; 
+	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
+	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
+	abis internal_abi = promote_abi( promoted_abi, abi_llvm );
+	if( is_real( scalar_hint ) ){
+		ret = builder().CreateFRem( lhs.load(internal_abi), rhs.load(internal_abi) );
+	} else if( is_integer(scalar_hint) ){
+		if( is_signed(scalar_hint) )
+		{
+			ret = builder().CreateSRem( lhs.load(internal_abi), rhs.load(internal_abi) );
+		}
+		else
+		{
+			ret = builder().CreateURem( lhs.load(internal_abi), rhs.load(internal_abi) );
+		}
+	} else {
+		assert(false);
+	}
+
+	value_t retval = create_value( hint, ret, vkind_value, internal_abi );
+	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
+	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
+}
+
 value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
 {
 	builtin_types hint = lhs.hint();
@@ -1015,7 +1073,7 @@ value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
 		if( is_scalar(rhint) ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else if ( is_vector(rhint) ){
-			emit_mul_ss_vv( lhs, rhs );
+			return emit_mul_ss_vv( lhs, rhs );
 		} else if ( is_matrix(rhint) ){
 			return emit_mul_vm( lhs, rhs );
 		}
@@ -1026,6 +1084,76 @@ value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
 			return emit_mul_mv( lhs, rhs );
 		} else if( is_matrix(rhint) ){
 			return emit_mul_mm( lhs, rhs );
+		}
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types lhint = lhs.hint();
+	builtin_types rhint = rhs.hint();
+
+	if( is_scalar(lhint) ){
+		if( is_scalar(rhint) ){
+			return emit_div_ss_vv( lhs, rhs );
+		} else if ( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_vector(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_vector(rhint) ){
+			return emit_div_ss_vv( lhs, rhs );
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_matrix(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types lhint = lhs.hint();
+	builtin_types rhint = rhs.hint();
+
+	if( is_scalar(lhint) ){
+		if( is_scalar(rhint) ){
+			return emit_mod_ss_vv( lhs, rhs );
+		} else if ( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_vector(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_vector(rhint) ){
+			return emit_mod_ss_vv( lhs, rhs );
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_matrix(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	}
 
@@ -1665,6 +1793,19 @@ value_t cg_service::cast_s2v( value_t const& v )
 	// Otherwise return a new vector
 	value_t ret = null_value( vhint, v.abi() );
 	return emit_insert_val( ret, 0, v );
+}
+
+
+value_t cg_service::cast_v2s( value_t const& v )
+{
+	assert( is_vector(v.hint()) );
+
+	// vector1 and scalar are same LLVM vector type when abi is Vectorize and Package 
+	if( v.abi() == abi_vectorize || v.abi() == abi_package )
+	{
+		return create_value( NULL, scalar_of(v.hint()), v.load(), vkind_value, v.abi() );
+	}
+	return emit_extract_val( v, 0 );
 }
 
 void cg_service::jump_to( insert_point_t const& ip )

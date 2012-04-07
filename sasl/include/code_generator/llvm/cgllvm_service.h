@@ -298,6 +298,8 @@ public:
 	virtual value_t emit_add( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_div( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_cmp_le( value_t const& lhs, value_t const& rhs ) = 0;
@@ -360,7 +362,7 @@ public:
 	/// Cast scalar to vector
 	virtual value_t cast_s2v( value_t const& v );
 	/// Cast vector to scalar
-	// virtual value_t cast_v2s( value_t const& v );
+	virtual value_t cast_v2s( value_t const& v );
 	/// @}
 
 	/// @name Emit statement
@@ -551,6 +553,9 @@ protected:
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_div_ss_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mod_ss_vv( value_t const& lhs, value_t const& rhs );
+
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );

@@ -328,8 +328,6 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 	any child_ctxt;
 
-	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
-
 	new_block( ".init.vargs", true );
 
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){

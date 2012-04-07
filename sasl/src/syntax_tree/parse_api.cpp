@@ -134,7 +134,7 @@ void init_lex( lexer& l ){
 		("add_assign")("sub_assign")("mul_assign")("div_assign") // += -= *= /=
 		("logic_or")("logic_and") // || &&
 		("inc_dec") // ++ --
-		("plus")("minus")("asterisk")("slash") // + - * /
+		("plus")("minus")("asterisk")("slash")("percent") // + - * / %
 		("labracket")("rabracket") // < >
 		("vertical")("ampersand")
 		("question")

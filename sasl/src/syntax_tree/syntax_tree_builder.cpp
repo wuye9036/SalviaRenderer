@@ -1093,6 +1093,8 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 		return op_chars[1] == '=' ? operators::mul_assign : operators::mul;
 	case '/':
 		return op_chars[1] == '=' ? operators::div_assign : operators::div;
+	case '%':
+		return op_chars[1] == '=' ? operators::mod_assign : operators::mod;
 	case '<':
 		return op_chars[1] == '=' ? operators::less_equal : operators::less;
 	case '>':

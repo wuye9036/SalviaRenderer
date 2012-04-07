@@ -197,6 +197,10 @@ SASL_VISIT_DEF( binary_expression ){
 					retval = service()->emit_mul(lval, rval);
 				} else if ( v.op == operators::sub ) {
 					retval = service()->emit_sub(lval, rval);
+				} else if( v.op == operators::div ){
+					retval = service()->emit_div(lval, rval);
+				} else if( v.op == operators::mod ){
+					retval = service()->emit_mod(lval, rval);
 				} else if( v.op == operators::less ) {
 					retval = service()->emit_cmp_lt( lval, rval );
 				} else if( v.op == operators::less_equal ){
@@ -574,8 +578,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	sc_data_ptr(data)->self_fn = service()->fetch_function( v.as_handle<function_type>() );
 }
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
-	FUNCTION_SCOPE( sc_data_ptr(data)->self_fn );
-	
 	// Register arguments names.
 	assert( service()->fn().arg_size() == v.params.size() );
 

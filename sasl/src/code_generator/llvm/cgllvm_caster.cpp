@@ -148,6 +148,13 @@ public:
 		store( dest, src, cgs->cast_s2v( src_ctxt->get_rvalue() ) );
 	}
 
+	void vec2scalar( shared_ptr<node> dest, shared_ptr<node> src ){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
+		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+		assert( src_ctxt != dest_ctxt );
+		store( dest, src, cgs->cast_v2s( src_ctxt->get_rvalue() ) );
+	}
+
 	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
 		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
 		cgllvm_sctxt* src_ctxt = get_ctxt(src);
@@ -184,7 +191,7 @@ void add_builtin_casts(
 	cast_t float2float_pfn	= bind( &cgllvm_caster::float2float,cg_caster.get(), _1, _2 );
 	cast_t float2bool_pfn	= bind( &cgllvm_caster::float2bool,	cg_caster.get(), _1, _2 );
 	cast_t scalar2vec1_pfn	= bind( &cgllvm_caster::scalar2vec1,cg_caster.get(), _1, _2 );
-
+	cast_t vec2scalar_pfn	= bind( &cgllvm_caster::vec2scalar,	cg_caster.get(), _1, _2 );
 	cast_t shrink_vec_pfn[5][5];
 	for( int src_size = 1; src_size < 5; ++src_size ){
 		for( int dest_size = 0; dest_size < 5; ++dest_size ){
@@ -354,7 +361,10 @@ void add_builtin_casts(
 	}												\
 	cg_caster->add_cast( caster_t::eql,				\
 		pety->get(builtin_types::btc),				\
-		btc##_vts[1], scalar2vec1_pfn );			
+		btc##_vts[1], scalar2vec1_pfn );			\
+	cg_caster->add_cast( caster_t::eql,				\
+		btc##_vts[1],								\
+		pety->get(builtin_types::btc), vec2scalar_pfn );	
 	
 #define DEFINE_VECTOR_AND_SHRINK( btc )	\
 	DEFINE_VECTOR_TYPE_IDS( btc );	\

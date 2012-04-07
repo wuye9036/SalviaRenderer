@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -1311,6 +1311,39 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 	BOOST_CHECK_EQUAL( get_sum(10,       2),       10* 2 );
 	BOOST_CHECK_EQUAL( get_sum(987,      3),      987* 3 );
 	BOOST_CHECK_EQUAL( get_sum(22876765, 1),  22876765*1 );
+}
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
+{
+	init_g( "./repo/question/v1a1/arithmetic.ss" );
+
+	jit_function<vec4(vec4)> test_float_arith;
+	function( test_float_arith, "test_float_arith" );
+	BOOST_REQUIRE(test_float_arith);
+
+	jit_function<int3(int3)> test_int_arith;
+	function( test_int_arith, "test_int_arith" );
+	BOOST_REQUIRE(test_int_arith);
+
+	vec4 vf( 76.8f, -88.5f, 37.7f, -98.1f );
+	int3 vi( 87, 46, 22 );
+
+	vec4 ref_f( vf.x+vf.y, vf.y-vf.z, vf.z*vf.w, vf.w/vf.x );
+	vec4 ref_i( vi.x/vi.y, vi.y%vi.z, vi.z*vi.x );
+
+	vec4 ret_f = test_float_arith(vf);
+	int3 ret_i = test_int_arith(vi);
+
+	BOOST_CHECK_CLOSE( ref_f.x, ret_f.x, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f.y, ret_f.y, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f.z, ret_f.z, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f.w, ret_f.w, 0.000001f );
+
+	BOOST_CHECK_EQUAL( ref_i.x, ret_i.x );
+	BOOST_CHECK_EQUAL( ref_i.y, ret_i.y );
+	BOOST_CHECK_EQUAL( ref_i.z, ret_i.z );
 }
 #endif
 
