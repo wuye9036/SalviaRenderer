@@ -136,6 +136,8 @@ SASL_VISIT_DEF( binary_expression ){
 		visit_child( child_ctxt, child_ctxt_init, v.left_expr );
 		visit_child( child_ctxt, child_ctxt_init, v.right_expr );
 
+		std::string op_name = operator_name(v.op);
+
 		if( v.op == operators::assign ){
 			bin_assign( v, data );
 		} else {
@@ -151,7 +153,7 @@ SASL_VISIT_DEF( binary_expression ){
 			args.push_back( v.right_expr );
 
 			symbol::overloads_t overloads
-				= sc_env_ptr(data)->sym.lock()->find_overloads( operator_name( v.op ), caster, args, NULL );
+				= sc_env_ptr(data)->sym.lock()->find_overloads( op_name, caster, args, NULL );
 
 			EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
 				return;
@@ -188,8 +190,6 @@ SASL_VISIT_DEF( binary_expression ){
 			builtin_types lbtc = p0_tsi->type_info()->tycode;
 			builtin_types rbtc = p1_tsi->type_info()->tycode;
 
-			assert( lbtc == rbtc );
-
 			if( is_scalar(lbtc) || is_vector(lbtc) ){
 				if( v.op == operators::add ){
 					retval = service()->emit_add(lval, rval);
@@ -201,6 +201,14 @@ SASL_VISIT_DEF( binary_expression ){
 					retval = service()->emit_div(lval, rval);
 				} else if( v.op == operators::mod ){
 					retval = service()->emit_mod(lval, rval);
+				} else if( v.op == operators::left_shift ) {
+					retval = service()->emit_lshift( lval, rval );
+				} else if( v.op == operators::right_shift ) {
+					retval = service()->emit_rshift( lval, rval );
+				} else if( v.op == operators::bit_and ) {
+					retval = service()->emit_bit_and( lval, rval );
+				} else if( v.op == operators::bit_or ) {
+					retval = service()->emit_bit_or( lval, rval );
 				} else if( v.op == operators::less ) {
 					retval = service()->emit_cmp_lt( lval, rval );
 				} else if( v.op == operators::less_equal ){
@@ -220,6 +228,9 @@ SASL_VISIT_DEF( binary_expression ){
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
+
+			assert(retval.hint() == op_proto->si_ptr<type_info_si>()->type_info()->tycode);
+
 			sc_ptr(data)->value() = retval;
 			node_ctxt(v, true)->copy( sc_ptr(data) );
 		}
@@ -605,6 +616,13 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 	if ( !v.jump_expr ){
 		service()->emit_return();
 	} else {
+		shared_ptr<tynode> fn_retty = service()->fn().fnty->retval_type;
+		tid_t fret_tid = fn_retty->si_ptr<type_info_si>()->entry_id();
+		tid_t expr_tid = v.jump_expr->si_ptr<type_info_si>()->entry_id();
+		if( fret_tid != expr_tid )
+		{
+			caster->cast( fn_retty, v.jump_expr );
+		}
 		service()->emit_return( node_ctxt(v.jump_expr)->value(), service()->param_abi( service()->fn().c_compatible ) );
 	}
 }

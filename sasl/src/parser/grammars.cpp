@@ -155,7 +155,7 @@ void grammars::set_terms()
 						STERM2(add_assign, "+=") | STERM2(sub_assign, "-=") |
 						STERM2(mul_assign, "*=") | STERM2(div_assign, "/=") );
 	SRULE( opmul,		STERM2(asterisk, "*") | STERM2(slash, "/") | STERM2(percent, "%") );
-	SRULE( opshift,		STERM(shift) );
+	SRULE( opshift,		STERM2(shift, "<< or >>") );
 	SRULE( oprel,		STERM2(less_equal, "<=") | STERM2(greater_equal, ">=") |
 						STERM2(labracket, "<") | STERM2(rabracket, ">") );
 	SRULE( opequal,		STERM2(equal_to, "==") | STERM2(not_equal, "!=") );

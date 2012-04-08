@@ -288,10 +288,10 @@ void add_builtin_casts(
 	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint8_ts,  int2int_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint16_ts, int2int_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, sint64_ts, int2int_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint8_ts,  int2int_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint16_ts, int2int_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, uint64_ts, int2int_pfn );
+	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, sint64_ts, int2int_pfn );	
 	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, float_ts,  int2float_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, double_ts, int2float_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, bool_ts,   int2bool_pfn );

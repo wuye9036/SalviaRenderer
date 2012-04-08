@@ -36,6 +36,7 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/while.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/do_while.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/local_var.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/bit_ops.ss"
 	
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/include_header.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/include_main.ss"

@@ -93,6 +93,8 @@ void init_lex( lexer& l ){
 		("mul_assign", "{ASTERISK}=")
 		("div_assign", "{SLASH}=")
 
+		("shift", "{LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET}")
+
 		( "lparen", "{LPAREN}" )
 		( "rparen", "{RPAREN}" )
 		( "lbrace", "{LBRACE}" )
@@ -130,16 +132,17 @@ void init_lex( lexer& l ){
 		("kw_while")("kw_do")
 
 		("ident")
+		("shift") // << >>
 		("less_equal")("equal_to")("not_equal")("greater_equal") // <= >= == !=
 		("add_assign")("sub_assign")("mul_assign")("div_assign") // += -= *= /=
 		("logic_or")("logic_and") // || &&
 		("inc_dec") // ++ --
 		("plus")("minus")("asterisk")("slash")("percent") // + - * / %
 		("labracket")("rabracket") // < >
-		("vertical")("ampersand")
-		("question")
-		("comma")("colon")("semicolon")
-		("dot")("equal")
+		("vertical")("ampersand") // & |
+		("question") // ?
+		("comma")("colon")("semicolon") // , : ;
+		("dot")("equal") // . =
 		;
 
 	l.add_token( "SKIPPED" )

@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -1314,7 +1314,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
@@ -1344,6 +1344,29 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 	BOOST_CHECK_EQUAL( ref_i.x, ret_i.x );
 	BOOST_CHECK_EQUAL( ref_i.y, ret_i.y );
 	BOOST_CHECK_EQUAL( ref_i.z, ret_i.z );
+}
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+
+struct uint4
+{
+	uint32_t v[4];
+};
+
+BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
+{
+	init_g( "./repo/question/v1a1/bit_ops.ss" );
+
+	jit_function<uint32_t(uint4, uint32_t)> test_bitwise_ops;
+	function( test_bitwise_ops, "test_bitwise_ops" );
+	
+	uint4	 a = { {0x3C657DBAU, 13, 0x76337BEC, 4} };
+	uint32_t b(0xCB6F34A3);
+	uint64_t ref_v = ( (a.v[0]<<a.v[1]) + (a.v[1]<<3u) - (a.v[1]>>2u) ) & (a.v[2]>>a.v[3]) | b;
+	uint64_t ret_v = test_bitwise_ops(a, b);
+
+	BOOST_CHECK_EQUAL( ref_v, ret_v );
 }
 #endif
 

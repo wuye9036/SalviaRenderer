@@ -334,10 +334,11 @@ namespace sasl{
 		}
 
 		bool is_standard( const builtin_types& btc ){
-			if (btc == builtin_types::_sint32 ||
+			if (btc == builtin_types::_sint32 || 
+				btc == builtin_types::_uint32 ||
 				btc == builtin_types::_sint64 ||
 				btc == builtin_types::_uint64 ||
-				btc == builtin_types::_float ||
+				btc == builtin_types::_float  ||
 				btc == builtin_types::_double) 
 			{
 				return true;

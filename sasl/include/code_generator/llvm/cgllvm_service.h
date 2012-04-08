@@ -301,12 +301,18 @@ public:
 	virtual value_t emit_div( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs );
 
-	virtual value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_le( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_eq( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_ne( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_lshift ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_rshift ( value_t const& lhs, value_t const& rhs );
+
+	virtual value_t emit_bit_and( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_bit_or ( value_t const& lhs, value_t const& rhs );
+
+	virtual value_t emit_cmp_lt ( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_le ( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_eq ( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_ne ( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_ge ( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_gt ( value_t const& lhs, value_t const& rhs ) = 0;
 
 	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args, value_t const& exec_mask );
@@ -555,6 +561,11 @@ protected:
 	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_div_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mod_ss_vv( value_t const& lhs, value_t const& rhs );
+
+	value_t emit_lshift_ss_vv ( value_t const& lhs, value_t const& rhs );
+	value_t emit_rshift_ss_vv ( value_t const& lhs, value_t const& rhs );
+	value_t emit_bit_and_ss_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_bit_or_ss_vv ( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );

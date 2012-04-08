@@ -25,7 +25,7 @@ void caster_t::add_cast( casts ct, int prior, tid_t src, tid_t dest, cast_t conv
 
 void caster_t::add_cast_auto_prior( casts ct, tid_t src, tid_t dest, cast_t conv )
 {
-	if( conv != caster_t::imp )
+	if( ct != caster_t::imp )
 	{
 		add_cast(ct, src, dest, conv);
 		return;
@@ -34,7 +34,7 @@ void caster_t::add_cast_auto_prior( casts ct, tid_t src, tid_t dest, cast_t conv
 	unordered_map<tid_t,int>::iterator it = lowest_priors.find(src);
 	if( it != lowest_priors.end() )
 	{
-		add_cast(ct, (it->second)++, src, dest, conv);
+		add_cast(ct, ++(it->second), src, dest, conv);
 	}
 	else
 	{
@@ -154,5 +154,11 @@ void caster_t::better_or_worse( tid_t matched, tid_t matching, tid_t src, bool& 
 	better = matching_prior < matched_prior;
 	worse  = matching_prior > matched_prior;
 }
+
+//void caster_t::add_vec2scalar( tid v, tid s )
+//{
+//	v2s.insert( make_pair(v,s) );
+//	s2v.insert( make_pair(s,v) );
+//}
 
 END_NS_SASL_SEMANTIC();

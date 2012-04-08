@@ -269,9 +269,8 @@ SASL_VISIT_DEF( binary_expression )
 	exprs += dup_expr->left_expr, dup_expr->right_expr;
 	
 	if( dup_expr->left_expr->si_ptr<semantic_info>() == NULL 
-		|| dup_expr->left_expr->si_ptr<semantic_info>() == NULL )
+		|| dup_expr->right_expr->si_ptr<semantic_info>() == NULL )
 	{
-		
 		return;
 	}
 
@@ -786,7 +785,8 @@ SASL_VISIT_DEF( parameter )
 		visit_child( child_ctxt, *data, v.init, dup_par->init );
 	}
 
-	tid_t tid = extract_semantic_info<type_info_si>(dup_par->param_type)->entry_id();
+	type_info_si* par_tisi = dup_par->param_type->si_ptr<type_info_si>();
+	tid_t tid = par_tisi ? par_tisi->entry_id() : -1;
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, msi->pety() );
 	ssi->entry_id( tid );
 
@@ -1071,6 +1071,21 @@ SASL_VISIT_DEF( jump_statement )
 			any child_ctxt;
 			visit_child( child_ctxt, child_ctxt_init, v.jump_expr, dup_jump->jump_expr );
 		}
+
+		type_info_si* expr_tisi = dup_jump->jump_expr->si_ptr<type_info_si>();
+		type_info_si* fret_tisi = ctxt_ptr(*data)->parent_fn->retval_type->si_ptr<type_info_si>();
+
+		tid_t expr_tid = fret_tisi->entry_id();
+		tid_t fret_tid = expr_tisi->entry_id();
+
+		if( expr_tid != fret_tid && !caster->try_implicit(expr_tid, fret_tid) )
+		{
+			diags->report( cannot_convert_type_from )
+				->token_range( *dup_jump->jump_expr->token_begin(), *dup_jump->jump_expr->token_end() )
+				->p("return")
+				->p( type_repr(expr_tisi->type_info()).str() )
+				->p( type_repr(fret_tisi->type_info()).str() );
+		}
 	}
 
 	data_cptr()->generated_node = dup_jump;
@@ -1222,16 +1237,17 @@ void semantic_analyser::add_cast( const boost::any& /*ctxt*/ ){
 	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, double_ts, default_conv );
 	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, bool_ts,   default_conv );
 
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint16_ts, default_conv );
 	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, uint64_ts, default_conv );
+	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, sint64_ts, default_conv );
 	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, float_ts,  default_conv );
 	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, double_ts, default_conv );
 	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, bool_ts,   default_conv );
+	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint8_ts,  default_conv );
+	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint16_ts, default_conv );
+	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint32_ts, default_conv );
+	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint8_ts,  default_conv );
+	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint16_ts, default_conv );
+	
 
 	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint8_ts,  default_conv );
 	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint16_ts, default_conv );
@@ -1353,8 +1369,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 		if( is_bit(op) || is_bit_assign(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_integer(it_type->first) )
-				{
+				if ( is_integer(it_type->first) ){
 					shared_ptr<builtin_type> ty = it_type->second;
 					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 				}
@@ -1363,9 +1378,10 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 		if( is_shift(op) || is_shift_assign(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_integer(it_type->first) ){
+				if ( is_scalar(it_type->first) && is_integer(it_type->first) ){
 					shared_ptr<builtin_type> ty = it_type->second;
-					register_function( child_ctxt_init, op_name ) % ty % bt_i32 >> ty;
+					register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint32) >> ty;
+					register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint64) >> ty;
 				}
 			}
 		}

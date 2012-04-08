@@ -97,9 +97,9 @@ void syntax_tree_builder::initialize_bt_cache(){
 		INSERT_INTO_BTCACHE( int32_t,  _sint32  );
 		INSERT_INTO_BTCACHE( uint,     _uint32  );
 		INSERT_INTO_BTCACHE( uint32_t, _uint32  );
-		INSERT_INTO_BTCACHE( long,     _uint32  );
+		INSERT_INTO_BTCACHE( long,     _sint64  );
 		INSERT_INTO_BTCACHE( int64_t,  _sint64  );
-		INSERT_INTO_BTCACHE( ulong,    _sint64  );
+		INSERT_INTO_BTCACHE( ulong,    _uint64  );
 		INSERT_INTO_BTCACHE( uint64_t, _uint64  );
 
 		INSERT_INTO_BTCACHE( float,    _float   );
@@ -108,16 +108,30 @@ void syntax_tree_builder::initialize_bt_cache(){
 		INSERT_INTO_BTCACHE( void,     _void    );
 
 		for( int dim0 = 1; dim0 <= 4; ++dim0 ){
-			INSERT_VECTOR_INTO_BTCACHE( int, dim0, _sint32  );
-			INSERT_VECTOR_INTO_BTCACHE( long, dim0, _sint64  );
-			INSERT_VECTOR_INTO_BTCACHE( float, dim0, _float  );
-			INSERT_VECTOR_INTO_BTCACHE( double, dim0, _double  );
+			INSERT_VECTOR_INTO_BTCACHE( char,	dim0, _sint8 );
+			INSERT_VECTOR_INTO_BTCACHE( uchar,	dim0, _uint8 );
+			INSERT_VECTOR_INTO_BTCACHE( short,	dim0, _sint16 );
+			INSERT_VECTOR_INTO_BTCACHE( ushort,	dim0, _uint16 );
+			INSERT_VECTOR_INTO_BTCACHE( int,	dim0, _sint32 );
+			INSERT_VECTOR_INTO_BTCACHE( uint,	dim0, _uint32 );
+			INSERT_VECTOR_INTO_BTCACHE( long,	dim0, _sint64 );
+			INSERT_VECTOR_INTO_BTCACHE( ulong,	dim0, _uint64 );
+			INSERT_VECTOR_INTO_BTCACHE( float,	dim0, _float );
+			INSERT_VECTOR_INTO_BTCACHE( double,	dim0, _double );
+			INSERT_VECTOR_INTO_BTCACHE( bool,	dim0, _boolean );
 
 			for( int dim1 = 1; dim1 <= 4; ++dim1 ){
-				INSERT_MATRIX_INTO_BTCACHE( int, dim0, dim1, _sint32  );
-				INSERT_MATRIX_INTO_BTCACHE( long, dim0, dim1, _sint64  );
-				INSERT_MATRIX_INTO_BTCACHE( float, dim0, dim1, _float  );
-				INSERT_MATRIX_INTO_BTCACHE( double, dim0, dim1, _double  );
+				INSERT_MATRIX_INTO_BTCACHE( char,	dim0, dim1, _sint8 );
+				INSERT_MATRIX_INTO_BTCACHE( uchar,	dim0, dim1, _uint8 );
+				INSERT_MATRIX_INTO_BTCACHE( short,	dim0, dim1, _sint16 );
+				INSERT_MATRIX_INTO_BTCACHE( ushort,	dim0, dim1, _uint16 );
+				INSERT_MATRIX_INTO_BTCACHE( int,	dim0, dim1, _sint32 );
+				INSERT_MATRIX_INTO_BTCACHE( uint,	dim0, dim1, _uint32 );
+				INSERT_MATRIX_INTO_BTCACHE( long,	dim0, dim1, _sint64 );
+				INSERT_MATRIX_INTO_BTCACHE( ulong,	dim0, dim1, _uint64 );
+				INSERT_MATRIX_INTO_BTCACHE( float,	dim0, dim1, _float );
+				INSERT_MATRIX_INTO_BTCACHE( double,	dim0, dim1, _double );
+				INSERT_MATRIX_INTO_BTCACHE( bool,	dim0, dim1, _boolean );
 			}
 		}
 	}
@@ -1084,7 +1098,7 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 
 	switch( op_chars[0] ){
 	case '=':
-		return op_chars[1] == '='? operators::equal : operators::assign;
+		return op_chars[1] == '=' ? operators::equal : operators::assign;
 	case '+':
 		return op_chars[1] == '=' ? operators::add_assign : operators::add;
 	case '-':
@@ -1096,9 +1110,21 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 	case '%':
 		return op_chars[1] == '=' ? operators::mod_assign : operators::mod;
 	case '<':
-		return op_chars[1] == '=' ? operators::less_equal : operators::less;
+		if ( op_chars[1] == '\0' ) return operators::less;
+		if ( op_chars[1] == '<'  )
+		{
+			return op_chars[2] == '=' ? operators::lshift_assign : operators::left_shift;
+		}
+		if ( op_chars[1] == '='  ) return operators::less_equal;
+		break;
 	case '>':
-		return op_chars[1] == '=' ? operators::greater_equal : operators::greater;
+		if ( op_chars[1] == '\0' ) return operators::greater;
+		if ( op_chars[1] == '>'  )
+		{
+			return op_chars[2] == '=' ? operators::rshift_assign : operators::right_shift;
+		}
+		if ( op_chars[1] == '='  ) return operators::greater_equal;
+		break;
 	case '!':
 		if ( op_chars[1] == '=' ) return operators::not_equal;
 		break;
