@@ -776,6 +776,8 @@ SASL_VISIT_DEF( alias_type ){
 SASL_VISIT_DEF( parameter )
 {
 	shared_ptr<parameter> dup_par = duplicate( v.as_handle() )->as_handle<parameter>();
+	data_cptr()->generated_node = dup_par->as_handle();
+
 	data_cptr()->parent_sym->add_child( v.name ? v.name->str : std::string(), dup_par );
 
 	any child_ctxt;
@@ -787,14 +789,14 @@ SASL_VISIT_DEF( parameter )
 
 	type_info_si* par_tisi = dup_par->param_type->si_ptr<type_info_si>();
 	tid_t tid = par_tisi ? par_tisi->entry_id() : -1;
+	
+	if( tid == -1 ) { return; }
+
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_par, msi->pety() );
 	ssi->entry_id( tid );
-
 	// SEMANTIC_TODO: Nonsupports reference yet.
 	ssi->is_reference( false );
 	parse_semantic( v.semantic, v.semantic_index, ssi );
-
-	data_cptr()->generated_node = dup_par->as_handle();
 }
 
 SASL_VISIT_DEF( function_type )
@@ -805,6 +807,7 @@ SASL_VISIT_DEF( function_type )
 		return;
 	}
 	shared_ptr<function_type> dup_fn = dup_node->as_handle<function_type>();
+	data_cptr()->generated_node = dup_fn;
 	dup_fn->params.clear();
 
 	shared_ptr<symbol> sym = data_cptr()->parent_sym->add_function_begin( dup_fn );
@@ -817,20 +820,25 @@ SASL_VISIT_DEF( function_type )
 
 	dup_fn->retval_type
 		= ctxt_ptr( visit_child( child_ctxt, child_ctxt_init, v.retval_type ) )->generated_node->as_handle<tynode>();
-
+	if( !dup_fn->retval_type->si_ptr<semantic_info>() ) { return; }
+	
+	bool successful = true;
 	for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 		it != v.params.end(); ++it )
 	{
-		dup_fn->params.push_back( 
-			ctxt_ptr( visit_child(child_ctxt, child_ctxt_init, *it) )->generated_node->as_handle<parameter>()
-			);
-	}
+		shared_ptr<parameter> fn_param;
+		visit_child(child_ctxt, child_ctxt_init, *it, fn_param);
+		dup_fn->params.push_back(fn_param);
 
-	data_cptr()->parent_sym->add_function_end( sym );
+		type_info_si* param_tisi = fn_param->si_ptr<type_info_si>();
+		if( !param_tisi || param_tisi->entry_id() == -1 ){ successful = false; }
+	}
+	if( !successful ){ return; }
 	
-	tid_t ret_tid = extract_semantic_info<type_info_si>( dup_fn->retval_type )->entry_id();
+	data_cptr()->parent_sym->add_function_end( sym );
 
 	shared_ptr<storage_si> ssi = get_or_create_semantic_info<storage_si>( dup_fn, msi->pety() );
+	tid_t ret_tid = dup_fn->retval_type->si_ptr<type_info_si>()->entry_id();
 	ssi->entry_id( ret_tid );
 
 	// SEMANTIC_TODO judge the true abi.
@@ -839,13 +847,14 @@ SASL_VISIT_DEF( function_type )
 	parse_semantic( v.semantic, v.semantic_index, ssi );
 
 	ctxt_ptr(child_ctxt_init)->is_global = false;
-	
-	if ( v.body ){
+
+	if ( v.body )
+	{
 		visit_child( child_ctxt, child_ctxt_init, v.body, dup_fn->body );
 		msi->functions().push_back( sym );
 	}
 
-	data_cptr()->generated_node = dup_fn;
+	
 }
 
 // statement
@@ -1065,6 +1074,7 @@ SASL_VISIT_DEF( jump_statement )
 
 	any child_ctxt_init = *data;
 	ctxt_ptr( child_ctxt_init )->generated_node.reset();
+	data_cptr()->generated_node = dup_jump;
 
 	if (v.code == jump_mode::_return){
 		if( v.jump_expr ){
@@ -1075,8 +1085,12 @@ SASL_VISIT_DEF( jump_statement )
 		type_info_si* expr_tisi = dup_jump->jump_expr->si_ptr<type_info_si>();
 		type_info_si* fret_tisi = ctxt_ptr(*data)->parent_fn->retval_type->si_ptr<type_info_si>();
 
-		tid_t expr_tid = fret_tisi->entry_id();
-		tid_t fret_tid = expr_tisi->entry_id();
+		if( !expr_tisi || !fret_tisi ){ return; }
+
+		tid_t expr_tid = expr_tisi->entry_id();
+		tid_t fret_tid = fret_tisi->entry_id();
+
+		if( expr_tid == -1 || fret_tid == -1 ){ return; }
 
 		if( expr_tid != fret_tid && !caster->try_implicit(expr_tid, fret_tid) )
 		{
@@ -1087,8 +1101,6 @@ SASL_VISIT_DEF( jump_statement )
 				->p( type_repr(fret_tisi->type_info()).str() );
 		}
 	}
-
-	data_cptr()->generated_node = dup_jump;
 }
 
 SASL_VISIT_DEF( for_statement ){

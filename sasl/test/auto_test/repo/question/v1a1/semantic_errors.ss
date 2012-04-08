@@ -67,3 +67,7 @@ int test_case_expr_type()
 	return 0;
 }
 
+int test_function_parameter_error( xx )
+{
+	return 0;
+}
