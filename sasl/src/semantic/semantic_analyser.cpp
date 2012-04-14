@@ -1092,7 +1092,7 @@ SASL_VISIT_DEF( jump_statement )
 
 		if( expr_tid == -1 || fret_tid == -1 ){ return; }
 
-		if( expr_tid != fret_tid && !caster->try_implicit(expr_tid, fret_tid) )
+		if( expr_tid != fret_tid && !caster->try_implicit(fret_tid, expr_tid) )
 		{
 			diags->report( cannot_convert_type_from )
 				->token_range( *dup_jump->jump_expr->token_begin(), *dup_jump->jump_expr->token_end() )
@@ -1142,6 +1142,11 @@ SASL_VISIT_DEF( program ){
 
 	register_builtin_types();
 	add_cast( child_ctxt_init );
+	caster->set_tynode_getter(
+		boost::bind(
+		static_cast<shared_ptr<tynode> (pety_t::*)(tid_t)>(&pety_t::get),
+		msi->pety().get(), _1)
+		);
 	register_builtin_functions( child_ctxt_init );
 
 	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
@@ -1323,8 +1328,8 @@ void semantic_analyser::add_cast( const boost::any& /*ctxt*/ ){
 		builtin_types v1bt = vector_of( bt, 1 );
 		tid_t bt_tid = typemgr->get( bt );
 		tid_t v1bt_tid = typemgr->get( v1bt );
-		caster->add_cast( caster_t::imp, bt_tid, v1bt_tid, default_conv );
-		caster->add_cast( caster_t::imp, v1bt_tid, bt_tid, default_conv );
+		caster->add_cast( caster_t::eql, bt_tid, v1bt_tid, default_conv );
+		caster->add_cast( caster_t::eql, v1bt_tid, bt_tid, default_conv );
 	}
 }
 

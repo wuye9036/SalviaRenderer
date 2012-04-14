@@ -61,7 +61,7 @@ public:
 	{
 	}
 
-	void store( shared_ptr<node> dest, shared_ptr<node> src, value_t const& v )
+	void store(shared_ptr<node> dest, shared_ptr<node> src, value_t const& v)
 	{
 		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
 			// Overwrite source.
@@ -181,17 +181,22 @@ void add_builtin_casts(
 	)
 {
 	typedef function< void ( shared_ptr<node>, shared_ptr<node> ) > cast_t;
+	caster->set_tynode_getter(
+		boost::bind(
+		static_cast<shared_ptr<tynode> (pety_t::*)(tid_t)>(&pety_t::get),
+		pety.get(), _1)
+		);
 
 	shared_ptr<cgllvm_caster> cg_caster = shared_polymorphic_cast<cgllvm_caster>(caster);
 
-	cast_t int2int_pfn		= bind( &cgllvm_caster::int2int,	cg_caster.get(), _1, _2 );
-	cast_t int2bool_pfn		= bind( &cgllvm_caster::int2bool,	cg_caster.get(), _1, _2 );
-	cast_t int2float_pfn	= bind( &cgllvm_caster::int2float,	cg_caster.get(), _1, _2 );
-	cast_t float2int_pfn	= bind( &cgllvm_caster::float2int,	cg_caster.get(), _1, _2 );
-	cast_t float2float_pfn	= bind( &cgllvm_caster::float2float,cg_caster.get(), _1, _2 );
-	cast_t float2bool_pfn	= bind( &cgllvm_caster::float2bool,	cg_caster.get(), _1, _2 );
-	cast_t scalar2vec1_pfn	= bind( &cgllvm_caster::scalar2vec1,cg_caster.get(), _1, _2 );
-	cast_t vec2scalar_pfn	= bind( &cgllvm_caster::vec2scalar,	cg_caster.get(), _1, _2 );
+	cast_t int2int_pfn		= bind( &cgllvm_caster::int2int,	cg_caster.get(), _1, _2);
+	cast_t int2bool_pfn		= bind( &cgllvm_caster::int2bool,	cg_caster.get(), _1, _2);
+	cast_t int2float_pfn	= bind( &cgllvm_caster::int2float,	cg_caster.get(), _1, _2);
+	cast_t float2int_pfn	= bind( &cgllvm_caster::float2int,	cg_caster.get(), _1, _2);
+	cast_t float2float_pfn	= bind( &cgllvm_caster::float2float,cg_caster.get(), _1, _2);
+	cast_t float2bool_pfn	= bind( &cgllvm_caster::float2bool,	cg_caster.get(), _1, _2);
+	cast_t scalar2vec1_pfn	= bind( &cgllvm_caster::scalar2vec1,cg_caster.get(), _1, _2);
+	cast_t vec2scalar_pfn	= bind( &cgllvm_caster::vec2scalar,	cg_caster.get(), _1, _2);
 	cast_t shrink_vec_pfn[5][5];
 	for( int src_size = 1; src_size < 5; ++src_size ){
 		for( int dest_size = 0; dest_size < 5; ++dest_size ){

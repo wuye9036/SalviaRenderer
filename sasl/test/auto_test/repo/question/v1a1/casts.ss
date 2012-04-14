@@ -1,3 +1,4 @@
+
 int test_implicit_cast_i32_b( int i ){
 	if( i ){
 		return 33;
@@ -32,4 +33,9 @@ int test_op_sub_cast( uint8_t i, int j )
 float test_sqrt_cast( int j )
 {
 	return sqrt(j);
+}
+
+float test_imp_v1_s_cast(int2 x)
+{
+	return x.x;
 }

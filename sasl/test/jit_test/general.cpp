@@ -710,7 +710,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
 
@@ -731,6 +731,9 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 
 	jit_function<float(int)> test_sqrt_cast;
 	function( test_sqrt_cast, "test_sqrt_cast" );
+
+	jit_function<float(int2)> test_imp_v1_s_cast;
+	function( test_imp_v1_s_cast, "test_imp_v1_s_cast" );
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
@@ -754,6 +757,11 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 
 	BOOST_CHECK_CLOSE( test_sqrt_cast(0),	  0.0f,			   0.000001f );
 	BOOST_CHECK_CLOSE( test_sqrt_cast(17652), sqrtf(17652.0f), 0.000001f );
+
+	{
+		int2 xy(86, 99);
+		BOOST_CHECK_CLOSE( (float)86, test_imp_v1_s_cast(xy), 0.000001f );
+	}
 }
 #endif
 

@@ -66,13 +66,13 @@ result:
 statistic directory: ../../sasl
 with extensions: .h;.cpp;.py;.xgt;.xgp;.txt;.cmake;.ss;.svs;.sps
 result:
-  files: 302
-  code lines: 20626
-  null lines: 5753
-  empty lines: 3441
-  single line comments: 944
-  multi line comments: 4583
+  files: 304
+  code lines: 21098
+  null lines: 5860
+  empty lines: 3551
+  single line comments: 947
+  multi line comments: 4642
   mixed lines: 85
-  total: 35432
-  file bytes(KB): 1029.83
-  bytes per line: 29.76
+  total: 36183
+  file bytes(KB): 1052.66
+  bytes per line: 29.79

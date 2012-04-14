@@ -6,6 +6,7 @@
 #include <sasl/include/semantic/pety.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/bimap.hpp>
 #include <boost/function.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -24,12 +25,12 @@ BEGIN_NS_SASL_SEMANTIC();
 
 namespace sst = sasl::syntax_tree;
 
+typedef boost::function< boost::shared_ptr<sasl::syntax_tree::tynode> (tid_t) > get_tynode_fn;
 class caster_t{
 public:
 	enum casts
 	{
 		eql = 0,
-		better,
 		imp,
 		exp,
 		nocast = 0xFFFFFFFF
@@ -49,7 +50,8 @@ public:
 	void better_or_worse( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse );
 
 	casts cast(boost::shared_ptr<sst::node>   dest,	  boost::shared_ptr<sst::node> src);
-	casts cast(boost::shared_ptr<sst::tynode> destty, boost::shared_ptr<sst::node> src);
+
+	void set_tynode_getter( get_tynode_fn fn );
 
 	virtual ~caster_t(){}
 private:
@@ -57,8 +59,19 @@ private:
 		casts/*result*/, int/*prior*/,
 		tid_t/*src*/, tid_t/*dest*/, cast_t/*caster*/
 	> cast_info;
-	boost::unordered_map<tid_t,int>	lowest_priors;
+
+	boost::shared_ptr<sasl::syntax_tree::tynode> get_tynode( tid_t );
+
+	cast_info const* find_caster(
+		cast_info const*& first_caster, cast_info const*& second_caster,
+		tid_t& immediate_tid,
+		tid_t dest, tid_t src, bool direct_caster_only
+		); // return non-equal caster.
+
+	boost::unordered_map<tid_t,int>	lowest_priors; // For auto cast priority.
 	std::vector<cast_info>			cast_infos;
+	boost::bimap<tid_t, tid_t>		eql_casts;
+	get_tynode_fn					tynode_getter;
 };
 
 END_NS_SASL_SEMANTIC();
