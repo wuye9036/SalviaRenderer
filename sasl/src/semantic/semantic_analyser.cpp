@@ -452,7 +452,8 @@ SASL_VISIT_DEF( member_expression ){
 	visit_child( child_ctxt, v.expr );
 	dup_expr->expr = ctxt_ptr(child_ctxt)->generated_node->as_handle<expression>();
 
-	SASL_EXTRACT_SI( type_info_si, arg_tisi, dup_expr->expr );
+	type_info_si* arg_tisi = dup_expr->expr->dyn_siptr<type_info_si>();
+
 	if( arg_tisi )
 	{
 		shared_ptr<tynode> agg_type = arg_tisi->type_info();

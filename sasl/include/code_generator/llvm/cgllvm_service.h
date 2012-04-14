@@ -574,6 +574,8 @@ protected:
 	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
 
+	void merge_swizzle( value_t const*& root, char indexes[], value_t const& v );
+
 	llvm::Value* sqrt_vf_( llvm::Value* v );
 	llvm::Function* intrin_( int );
 	template <typename FunctionT>

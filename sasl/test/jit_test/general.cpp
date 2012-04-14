@@ -710,7 +710,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
 
@@ -801,6 +801,33 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 
 	_aligned_free( src );
 	_aligned_free( dest );
+}
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
+{
+	init_g("./repo/question/v1a1/swizzle.ss");
+
+	jit_function<int3 (int4 x, int2 y)> fn;
+	function(fn, "fn");
+
+	int4 x(1, 2, 3, 4);
+	int2 y(5, 6);
+
+	int3 ref_v;
+	ref_v.x = x.z + y.y; 
+	ref_v.y = x.w + y.x;
+	ref_v.z = x.w + y.y;
+	int3 tmp = int3( ref_v.z, ref_v.y, ref_v.x );
+	ref_v = tmp;
+
+	int3 ret_v;
+	ret_v = fn(x, y);
+
+	BOOST_CHECK_EQUAL( ref_v.x, ret_v.x );
+	BOOST_CHECK_EQUAL( ref_v.y, ret_v.y );
+	BOOST_CHECK_EQUAL( ref_v.z, ret_v.z );
 }
 #endif
 
@@ -1071,7 +1098,7 @@ struct sampler_t{
 	uintptr_t ss, tex;
 };
 
-void tex2Dlod(vec4* ret, uint16_t mask, sampler_t* s, vec4* t)
+void tex2Dlod(vec4* ret, uint16_t /*mask*/, sampler_t* s, vec4* t)
 {
 	BOOST_CHECK_EQUAL( s->ss, 0xF3DE89C );
 	BOOST_CHECK_EQUAL( s->tex, 0xB785D3A );
@@ -1339,7 +1366,7 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 	int3 vi( 87, 46, 22 );
 
 	vec4 ref_f( vf.x+vf.y, vf.y-vf.z, vf.z*vf.w, vf.w/vf.x );
-	vec4 ref_i( vi.x/vi.y, vi.y%vi.z, vi.z*vi.x );
+	int4 ref_i( vi.x/vi.y, vi.y%vi.z, vi.z*vi.x );
 
 	vec4 ret_f = test_float_arith(vf);
 	int3 ret_i = test_int_arith(vi);
@@ -1355,7 +1382,7 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct uint4
 {

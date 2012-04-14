@@ -209,20 +209,20 @@ void add_builtin_casts(
 		}
 	}
 
-	tid_t sint8_ts = pety->get( builtin_types::_sint8 );
+	tid_t sint8_ts  = pety->get( builtin_types::_sint8 );
 	tid_t sint16_ts = pety->get( builtin_types::_sint16 );
 	tid_t sint32_ts = pety->get( builtin_types::_sint32 );
 	tid_t sint64_ts = pety->get( builtin_types::_sint64 );
 
-	tid_t uint8_ts = pety->get( builtin_types::_uint8 );
+	tid_t uint8_ts  = pety->get( builtin_types::_uint8 );
 	tid_t uint16_ts = pety->get( builtin_types::_uint16 );
 	tid_t uint32_ts = pety->get( builtin_types::_uint32 );
 	tid_t uint64_ts = pety->get( builtin_types::_uint64 );
 
-	tid_t float_ts = pety->get( builtin_types::_float );
+	tid_t float_ts  = pety->get( builtin_types::_float );
 	tid_t double_ts = pety->get( builtin_types::_double );
 
-	tid_t bool_ts = pety->get( builtin_types::_boolean );
+	tid_t bool_ts   = pety->get( builtin_types::_boolean );
 
 	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint16_ts, int2int_pfn );
 	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint32_ts, int2int_pfn );

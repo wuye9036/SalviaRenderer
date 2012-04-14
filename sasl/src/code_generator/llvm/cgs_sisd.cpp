@@ -154,17 +154,32 @@ namespace {
 }
 
 void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
-	Value* src = rhs.load( lhs.abi() );
+	Value* src = NULL;
 	Value* address = NULL;
 	value_kinds kind = lhs.kind();
 
 	if( kind == vkind_ref ){	
+		src = rhs.load( lhs.abi() );
 		address = lhs.raw();
 	} else if ( kind == vkind_swizzle ){
-		if( is_vector( lhs.parent()->hint()) ){
+		char indexes[4] = {-1, -1, -1, -1};
+		value_t const* root = NULL;
+		merge_swizzle(root, indexes, lhs);
+
+		if( is_vector( root->hint()) ){
 			assert( lhs.parent()->storable() );
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			
+			value_t rhs_rvalue = rhs.to_rvalue();
+			value_t ret_v = root->to_rvalue();
+			for(size_t i = 0; i < vector_size(rhs.hint()); ++i)
+			{
+				ret_v = emit_insert_val( ret_v, indexes[i], emit_extract_val(rhs_rvalue, i) );
+			}
+
+			src = ret_v.load( lhs.abi() );
+			address = root->load_ref();
 		} else {
+			src = rhs.load( lhs.abi() );
 			address = lhs.load_ref();
 		}
 	}

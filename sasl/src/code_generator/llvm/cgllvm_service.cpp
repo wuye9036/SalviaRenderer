@@ -2055,6 +2055,38 @@ void cg_service::jump_cond( value_t const& cond_v, insert_point_t const & true_i
 	builder().CreateCondBr( cond, true_ip.block, false_ip.block );
 }
 
+void cg_service::merge_swizzle( value_t const*& root, char indexes[], value_t const& v )
+{
+	root = &v;
+	vector<uint32_t> masks;
+	while( root->masks() != 0 ){
+		masks.push_back(root->masks());
+		root = root->parent();
+	}
+
+	for( vector<uint32_t>::reverse_iterator it = masks.rbegin();
+		it != masks.rend(); ++it )
+	{
+		if( it == masks.rbegin() ){
+			mask_to_indexes(indexes, *it);
+			continue;
+		}
+
+		char current_indexes[]	= {-1, -1, -1, -1};
+		char tmp_indexes[]		= {-1, -1, -1, -1};
+
+		mask_to_indexes(current_indexes, *it);
+
+		for(int i = 0; i < 4; ++i)
+		{
+			if( current_indexes[i] == -1 ) break;
+			tmp_indexes[i] = indexes[ current_indexes[i] ];
+		}
+
+		std::copy(tmp_indexes, tmp_indexes+4, indexes);
+	}
+}
+
 void function_t::allocation_block( insert_point_t const& ip )
 {
 	alloc_block = ip;
