@@ -140,6 +140,7 @@ struct ps_output
 	float depth;
 	boost::array<eflib::vec4, pso_color_regcnt> color;
 	bool front_face;
+	uint32_t coverage;
 };
 
 struct backbuffer_pixel_out
