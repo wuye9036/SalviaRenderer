@@ -1516,11 +1516,12 @@ void rasterizer::draw_package(
 
 	shader_abi const* vs_abi = pparent_->vs_proto() ? pparent_->vs_proto()->code->abii() : NULL;
 
-	ps_output pso[16];
+	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
 		pso[i].depth = pixels[i].position.z;
 		pso[i].front_face = pixels[i].front_face;
+		pso[i].coverage = 0xFFFFFFFF;
 	}
 
 	if( psu ){
@@ -1549,17 +1550,20 @@ void rasterizer::draw_package(
 				continue;
 			}
 
+			mask &= pso[px_index].coverage;
+
 			// MSAA.
 			if (full_mask == mask){
 				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
 					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 				}
 			} 
-
-			unsigned long i_sample;
-			while (_BitScanForward(&i_sample, mask)){
-				hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
-				mask &= mask - 1;
+			else{
+				unsigned long i_sample;
+				while (_BitScanForward(&i_sample, mask)){
+					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+					mask &= mask - 1;
+				}
 			}
 		}
 	}
@@ -1571,15 +1575,18 @@ void rasterizer::draw_full_package(
 	h_blend_shader const& bs, h_pixel_shader const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 	float const* aa_z_offset )
 {
+	uint32_t const full_mask = (1UL << num_samples) - 1;
+
 	shader_abi const* vs_abi = NULL;
 	if( pparent_->vs_proto() ){
 		vs_abi = pparent_->vs_proto()->code->abii();
 	}
-	ps_output pso[16];
+	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
 		pso[i].depth = pixels[i].position.z;
 		pso[i].front_face = pixels[i].front_face;
+		pso[i].coverage = 0xFFFFFFFF;
 	}
 
 	if( psu ){
@@ -1602,9 +1609,20 @@ void rasterizer::draw_full_package(
 				hfb_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
+
+			uint32_t mask = pso[px_index].coverage;
 			
-			for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-				hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+			if (full_mask == mask){
+				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
+					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+				}
+			}
+			else{
+				unsigned long i_sample;
+				while (_BitScanForward(&i_sample, mask)){
+					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+					mask &= mask - 1;
+				}
 			}
 		}
 	}
