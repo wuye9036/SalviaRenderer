@@ -54,7 +54,7 @@ void options_display_info::filterate( po::variables_map const & vm )
 // input & output
 
 const char* options_io::in_tag = "input,i";
-const char* options_io::in_desc = "Specify input files.";
+const char* options_io::in_desc = "Specify input file.";
 
 const char* options_io::out_tag = "out,o";
 const char* options_io::out_desc = "File name of output.";
@@ -75,11 +75,11 @@ options_io::options_io() : fmt(none), lang(salviar::lang_none)
 void options_io::fill_desc( po::options_description& desc )
 {
 	desc.add_options()
-		( in_tag, po::value< vector<string> >(&input_file_names), in_desc )
-		( out_tag, po::value< string >(&output_file_name), out_desc )
-		( dump_ir_tag, po::value< string >(&dump_ir), dump_ir_desc )
-		( export_as_tag, po::value< string >(&fmt_str), export_as_desc )
-		( lang_tag, po::value< string >(&lang_str), lang_desc )
+		( in_tag,		po::value<string>(&input_file),			in_desc )
+		( out_tag,		po::value<string>(&output_file_name),	out_desc )
+		( dump_ir_tag,	po::value<string>(&dump_ir),			dump_ir_desc )
+		( export_as_tag,po::value<string>(&fmt_str),			export_as_desc )
+		( lang_tag,		po::value<string>(&lang_str),			lang_desc )
 		;
 }
 

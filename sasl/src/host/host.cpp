@@ -1,17 +1,8 @@
 #include <sasl/include/host/host.h>
 
-#include <sasl/include/common/lex_context.h>
-#include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/syntax_tree/parse_api.h>
-#include <sasl/include/semantic/abi_analyser.h>
-#include <sasl/include/semantic/abi_info.h>
-#include <sasl/include/semantic/semantic_api.h>
-#include <sasl/include/semantic/semantic_infos.h>
-#include <sasl/include/semantic/symbol.h>
+#include <sasl/include/driver/driver_api.h>
 #include <sasl/include/code_generator/jit_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
+#include <sasl/include/semantic/abi_info.h>
 
 #include <fstream>
 
@@ -25,6 +16,7 @@ using std::vector;
 
 using boost::shared_static_cast;
 using boost::shared_dynamic_cast;
+using boost::tuple;
 
 using namespace salviar;
 using namespace sasl::code_generator;
@@ -32,6 +24,8 @@ using namespace sasl::common;
 using namespace sasl::syntax_tree;
 using namespace sasl::host;
 using namespace sasl::semantic;
+
+using sasl::driver::driver;
 
 BEGIN_NS_SASL_HOST();
 
@@ -63,107 +57,37 @@ void shader_code_impl::update_native_function(){
 	pfn = je->get_function( abi->entry_name() );
 }
 
-void shader_code_impl::register_function( void* fnptr, std::string const& name )
-{
-	vector< shared_ptr<symbol> > syms = root_sym->find_overloads( name );
-	if( syms.empty() ){ return; }
-	je->inject_function( fnptr, syms[0]->mangled_name() );
-}
-
-void shader_code_impl::root( boost::shared_ptr<sasl::semantic::symbol> const& sym )
-{
-	root_sym = sym;
-}
-
 END_NS_SASL_HOST();
 
-class shader_code_source: public lex_context, public code_source{
-public:
-	shader_code_source(): is_eof(true), fname("in_memory"){
-	}
-
-	bool process_code( std::string const& code ){
-		this->code = code;
-		return process();
-	}
-
-	// code source
-	virtual bool failed(){ return false; }
-	virtual bool eof(){ return is_eof; }
-	virtual string error(){ return string(""); }
-	virtual string next(){
-		is_eof = true;
-		return code;
-	}
-
-	// lex_context
-	virtual const std::string& file_name() const{
-		return fname;
-	}
-	virtual size_t column() const{
-		return 0;
-	}
-	virtual size_t line() const{
-		return 0;
-	}
-	
-	virtual void update_position( const std::string& /*lit*/ ){
-		// Do nothing.
-		return;
-	}
-private:
-	bool process(){
-		is_eof = code.empty();
-		return true;
-	}
-
-	string	fname;
-	string	code;
-	bool	is_eof;
-};
-
-void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& scode, std::string const& code, languages lang )
+void salvia_create_shader(
+	shared_ptr<salviar::shader_code>& scode, string const& code, languages lang,
+	vector< tuple<void*, string, bool> > const& ext_fns )
 {
-	shared_ptr<shader_code_source> code_src( new shader_code_source() );
-	if ( !code_src->process_code( code ) ){
-		return;
-	} 
+	shared_ptr<driver> drv;
+	sasl_create_driver(drv);
 
-	shared_ptr<diag_chat> diags = diag_chat::create();
+	drv->set_code(code);
 
-	shared_ptr<program> mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags.get() );
-	if( !mroot ){
-		cout << "Syntax error occurs!" << endl;
-		return;
+	const char* lang_name = NULL;
+	switch(lang)
+	{
+	case lang_pixel_shader:
+		lang_name = "--lang=ps";
+		break;
+	case lang_vertex_shader:
+		lang_name = "--lang=vs";
+		break;
+	default:
+		lang_name = "--lang=g";
+		break;
 	}
 
-	shared_ptr<module_si> msi = analysis_semantic( mroot, diags.get() );
-	if( !msi ){
-		cout << "Semantic error occurs!" << endl;
-		return;
-	}
-
-	abi_analyser aa;
-
-	if( !aa.auto_entry( msi, lang ) ){
-		if ( lang != salviar::lang_general ){
-			cout << "ABI analysis error occurs!" << endl;
-			return;
-		}
-	}
-
-	shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
-
-	fstream ir_code("for_debug.ll", std::ios_base::out);
-	llvmcode->dump( ir_code );
-	ir_code.close();
-
-	string errors;
+	drv->set_parameter(lang_name);
+	drv->compile();
 
 	shared_ptr<shader_code_impl> ret( new shader_code_impl() );
-	ret->abii( aa.shared_abii(lang) );
-	ret->jit( cgllvm_jit_engine::create( llvmcode, errors ) );
-	ret->root( msi->root() );
-
+	ret->abii( drv->mod_abi() );
+	ret->jit( drv->create_jit(ext_fns) );
+	
 	scode = ret;
 }

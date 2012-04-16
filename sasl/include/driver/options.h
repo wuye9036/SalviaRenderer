@@ -90,13 +90,13 @@ public:
 		llvm_ir
 	};
 	
-	std::vector< std::string >	input_file_names;
-	export_format				fmt;
-	std::string					fmt_str;
-	salviar::languages			lang;
-	std::string					lang_str;
-	std::string					output_file_name;
-	std::string					dump_ir;
+	std::string			input_file;
+	export_format		fmt;
+	std::string			fmt_str;
+	salviar::languages	lang;
+	std::string			lang_str;
+	std::string			output_file_name;
+	std::string			dump_ir;
 
 private:
 	static const char* in_tag;

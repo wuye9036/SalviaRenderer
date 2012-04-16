@@ -5,9 +5,18 @@
 
 #include <salviar/include/shader_code.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/tuple/tuple.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 namespace sasl {
-	namespace semantic{
-		class symbol;
+	namespace semantic
+	{
+		class abi_info;
+	}
+	namespace code_generator
+	{
+		class jit_engine;
 	}
 }
 
@@ -19,15 +28,11 @@ public:
 
 	virtual salviar::shader_abi const* abii() const;
 	virtual void abii( boost::shared_ptr<salviar::shader_abi> const& );
-	virtual void register_function( void* fnptr, std::string const& name );
-
 	virtual void update_native_function();
 	virtual void* function_pointer() const;
 
 	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
-	virtual void root( boost::shared_ptr<sasl::semantic::symbol> const& );
 private:
-	boost::shared_ptr<sasl::semantic::symbol>			root_sym;
 	boost::shared_ptr<sasl::semantic::abi_info>			abi;
 	boost::shared_ptr<sasl::code_generator::jit_engine>	je;
 	void* pfn;
@@ -36,7 +41,11 @@ private:
 END_NS_SASL_HOST();
 
 extern "C"{
-	SASL_HOST_API void salvia_create_shader( boost::shared_ptr<salviar::shader_code>& , std::string const& code, salviar::languages lang );
+	SASL_HOST_API void salvia_create_shader(
+		boost::shared_ptr<salviar::shader_code>&,
+		std::string const& code,
+		salviar::languages lang,
+		std::vector< boost::tuple<void*, std::string, bool> > const&);
 };
 
 #endif

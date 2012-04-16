@@ -25,14 +25,7 @@ ADD_LIBRARY( sasl_host SHARED
 	${HEADER_FILES} ${SOURCE_FILES}
 )
 
-TARGET_LINK_LIBRARIES( sasl_host
-	EFLIB
-	sasl_semantic sasl_syntaxtree sasl_parser
-	sasl_enums sasl_common
-	sasl_cgllvm
-	${SASL_LLVM_LIBS}
-)
-
+TARGET_LINK_LIBRARIES( sasl_host EFLIB sasl_driver )
 SET_TARGET_PROPERTIES( sasl_host PROPERTIES FOLDER "Shader Drivers")
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_host )
 

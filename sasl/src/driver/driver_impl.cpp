@@ -33,6 +33,7 @@ using sasl::code_generator::cgllvm_jit_engine;
 using sasl::semantic::module_si;
 using sasl::semantic::analysis_semantic;
 using sasl::semantic::abi_analyser;
+using sasl::semantic::abi_info;
 using sasl::syntax_tree::node;
 using sasl::common::lex_context;
 using sasl::common::diag_chat;
@@ -149,81 +150,97 @@ void driver_impl::compile()
 		diags->report(unknown_detail_level)->p(opt_global.detail_str);
 	}
 
-	// Process inputs and outputs.
-	vector<string> inputs = opt_io.input_file_names;
+	salviar::languages lang = opt_io.lang;
+	if( lang == salviar::lang_none ) {
+		diags->report(unknown_lang);
+	}
 
-	if( inputs.empty() ){
+	// Process inputs and outputs.
+	std::string fname = opt_io.input_file;
+	shared_ptr<code_source> code_src;
+	shared_ptr<lex_context> lex_ctxt;
+	// Set code source.
+	if( !fname.empty() )
+	{
+		shared_ptr<driver_code_source> file_code_source( new driver_code_source() );
+		
+		if ( !file_code_source->set_file(fname) ){
+			diags->report( sasl::parser::cannot_open_input_file )->p(fname);
+			return;
+		} 
+
+		diags->report(compiling_input)->p(fname);
+		code_src = file_code_source;
+		lex_ctxt = file_code_source;
+	}
+	else if( user_code_src )
+	{
+		code_src = user_code_src;
+		lex_ctxt = user_lex_ctxt;
+	}
+	else
+	{
 		diags->report(input_file_is_missing);
 		return;
 	}
 
-	// TODO
-	salviar::languages lang = opt_io.lang;
+	// Set include and virtual include.
 
-	if( lang == salviar::lang_none )
+	driver_code_source* driver_sc = dynamic_cast<driver_code_source*>( code_src.get() );
+
+	if( driver_sc )
 	{
-		diags->report(unknown_lang);
+		driver_sc->set_diag_chat( diags );
+
+		if( user_inc_handler )
+		{
+			driver_sc->set_include_handler( user_inc_handler );
+		}
+		else
+		{
+			for( virtual_file_dict::iterator it = virtual_files.begin(); it != virtual_files.end(); ++it)
+			{
+				driver_sc->add_virtual_file( it->first, it->second.first, it->second.second );
+			}
+		}
+	}
+
+	// Compiling
+	mroot = sasl::syntax_tree::parse( code_src.get(), lex_ctxt, diags );
+	if( !mroot ){ return; }
+
+	shared_ptr<diag_chat> semantic_diags = diag_chat::create();
+	msi = analysis_semantic( mroot.get(), semantic_diags.get() );
+	if( error_count( semantic_diags.get(), false ) > 0 )
+	{
+		msi.reset();
+	}
+	diag_chat::merge( diags, semantic_diags.get(), true );
+
+	if( !msi ){ return; }
+
+	abi_analyser aa;
+
+	if( !aa.auto_entry(msi, lang) ){
+		if ( lang != salviar::lang_general ){
+			cout << "ABI analysis error occurs!" << endl;
+			return;
+		}
+	}
+	mabi = aa.shared_abii(lang);
+
+	shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), mabi.get() );
+	mcg = llvmcode;
+
+	if( !llvmcode ){
+		cout << "Code generation error occurs!" << endl;
+		return;
 	}
 
 	if( opt_io.fmt == options_io::llvm_ir ){
-		BOOST_FOREACH( string const & fname, inputs ){
-			diags->report(compiling_input)->p(fname);
-			
-			shared_ptr<driver_code_source> code_src( new driver_code_source() );
-
-			if( user_inc_handler )
-			{
-				code_src->set_include_handler( user_inc_handler );
-			}
-			else
-			{
-				for( virtual_file_dict::iterator it = virtual_files.begin(); it != virtual_files.end(); ++it)
-				{
-					code_src->add_virtual_file( it->first, it->second.first, it->second.second );
-				}
-			}
-
-			code_src->set_diag_chat( diags );
-
-			if ( !code_src->set_file(fname) ){
-				diags->report( sasl::parser::cannot_open_input_file )->p(fname);
-				return;
-			} 
-
-			mroot = sasl::syntax_tree::parse( code_src.get(), code_src, diags );
-			if( !mroot ){ return; }
-
-			shared_ptr<diag_chat> semantic_diags = diag_chat::create();
-			msi = analysis_semantic( mroot.get(), semantic_diags.get() );
-			if( error_count( semantic_diags.get(), false ) > 0 )
-			{
-				msi.reset();
-			}
-			diag_chat::merge( diags, semantic_diags.get(), true );
-
-			if( !msi ){ return; }
-
-			abi_analyser aa;
-
-			if( !aa.auto_entry( msi, lang ) ){
-				if ( lang != salviar::lang_general ){
-					cout << "ABI analysis error occurs!" << endl;
-					return;
-				}
-			}
-
-			shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), aa.abii(lang) );
-			mcg = llvmcode;
-
-			if( !llvmcode ){
-				cout << "Code generation error occurs!" << endl;
-				return;
-			}
-
-			if( !opt_io.output_file_name.empty() ){
-				ofstream out_file( opt_io.output_file_name.c_str(), std::ios_base::out );
-				llvmcode->dump( out_file );
-			}
+		if( !opt_io.output_file_name.empty() ){
+			ofstream out_file( opt_io.output_file_name.c_str(), std::ios_base::out );
+			llvmcode->dump( out_file );
 		}
 	}
 }
@@ -285,15 +302,24 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
-	std::string expf_name = msi->root()->find_overloads( "__wa_expf" )[0]->mangled_name();
-	ret_jit->inject_function( &workaround_expf, expf_name );
+	inject_function(ret_jit, &workaround_expf, "__wa_expf", false);
+	
+	return ret_jit;
+}
 
+shared_ptr<jit_engine> driver_impl::create_jit( external_function_array const& extfns )
+{
+	shared_ptr<jit_engine> ret_jit = create_jit();
+	for( size_t i = 0; i < extfns.size(); ++i )
+	{
+		inject_function( ret_jit, extfns[i].get<0>(), extfns[i].get<1>(), extfns[i].get<2>() );
+	}
 	return ret_jit;
 }
 
 void driver_impl::set_code_file( std::string const& code_file )
 {
-	opt_io.input_file_names.push_back( code_file );
+	opt_io.input_file = code_file;
 }
 
 void driver_impl::set_lex_context( shared_ptr<lex_context> const& lex_ctxt )
@@ -309,6 +335,26 @@ void driver_impl::add_virtual_file( string const& file_name, string const& code_
 void driver_impl::set_include_handler( include_handler_fn inc_handler )
 {
 	user_inc_handler = inc_handler;
+}
+
+shared_ptr<abi_info> driver_impl::mod_abi() const
+{
+	return mabi;
+}
+
+void driver_impl::inject_function(shared_ptr<jit_engine> const& je, void* pfn, string const& name, bool is_raw_name )
+{
+	std::string const* raw_name;
+	if( is_raw_name )
+	{
+		raw_name = &name;
+	}
+	else
+	{
+		raw_name = &( msi->root()->find_overloads(name)[0]->mangled_name() );
+	}
+	
+	je->inject_function(pfn, *raw_name);
 }
 
 END_NS_SASL_DRIVER();
