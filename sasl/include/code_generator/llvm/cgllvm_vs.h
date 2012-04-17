@@ -63,6 +63,9 @@ public:
 private:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 
+	// Binary logical operators.
+	SASL_SPECIFIC_VISIT_DCL( bin_logic, binary_expression );
+
 	// Overrides them for generating entry function if need.
 	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_type );
 	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );

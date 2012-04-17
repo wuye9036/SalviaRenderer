@@ -628,11 +628,16 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
 }
+
+struct char3
+{
+	char data[3];
+};
 
 BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 {
@@ -642,12 +647,14 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 	jit_function<bool(int, int)> test_le;
 	jit_function<bool(float, float)> test_ge;
 	jit_function<bool(int, int, int)> test_short;
-
+	jit_function< char3 (int3, int3, int3) > test_vbool;
+	
 	function( test_max, "test_max" );
 	function( test_min, "test_min" );
 	function( test_le, "test_le" );
 	function( test_ge, "test_ge" );
 	function( test_short, "test_short" );
+	function( test_vbool, "test_vbool" );
 
 	BOOST_CHECK( test_max( 2, 15 ) == 15 );
 	BOOST_CHECK( test_max( 15, 2 ) == 15 );
@@ -671,6 +678,20 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 			}
 		}
 	}
+	int3 x(87,  46, -22);
+	int3 y(65, -11,   9);
+	int3 z(37,  16,  22);
+
+	bool ref_v[3];
+	ref_v[0] = x[0] > y[0] || x[0] > z[0] && x[0] <= y[0]+z[0];  
+	ref_v[1] = x[1] > y[1] || x[1] > z[1] && x[1] <= y[1]+z[1];  
+	ref_v[2] = x[2] > y[2] || x[2] > z[2] && x[2] <= y[2]+z[2];  
+
+	char3 ret_v = test_vbool(x, y, z);
+
+	BOOST_CHECK_EQUAL( bool(ret_v.data[0]), ref_v[0] );
+	BOOST_CHECK_EQUAL( bool(ret_v.data[1]), ref_v[1] );
+	BOOST_CHECK_EQUAL( bool(ret_v.data[2]), ref_v[2] );
 }
 
 BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
@@ -804,7 +825,7 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
 {
 	init_g("./repo/question/v1a1/swizzle.ss");

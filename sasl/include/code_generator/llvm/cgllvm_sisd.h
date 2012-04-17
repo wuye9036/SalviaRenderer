@@ -4,6 +4,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/enums/operators.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
@@ -71,8 +72,14 @@ protected:
 	// Called by function_type visitor.
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_break	, jump_statement );
-
-	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression );
+	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression ) = 0;
+	
+	value_t emit_logic_op(
+		boost::any const& ctxt_init,
+		operators op,
+		boost::shared_ptr<sasl::syntax_tree::node> const& left,
+		boost::shared_ptr<sasl::syntax_tree::node> const& right
+		);
 
 	/// Create short-circuit evaluation for condition expression. And logic operators will use it.
 	value_t emit_short_cond( 

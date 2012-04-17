@@ -848,13 +848,13 @@ namespace eflib{
 
 		const int& operator [](size_t i) const
 		{
-			EFLIB_ASSERT(i < 2, "");
+			EFLIB_ASSERT( i < 3, "Out of bound." );
 			return ((int*)(this))[i];
 		}
 
 		int& operator [](size_t i)
 		{
-			EFLIB_ASSERT(i < 2, "");
+			EFLIB_ASSERT( i < 3, "Out of bound." );
 			return ((int*)(this))[i];
 		}
 

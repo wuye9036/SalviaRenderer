@@ -1380,8 +1380,9 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		if( is_relationship(op) ){
 			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
 			{
+				builtin_types tycode = it_type->first;
 				shared_ptr<builtin_type> ty = it_type->second;
-				register_function(child_ctxt_init, op_name) % ty % ty >> bt_bool;
+				register_function(child_ctxt_init, op_name) % ty % ty >> storage_bttbl[replace_scalar(tycode, builtin_types::_boolean)];
 			}
 		}
 
@@ -1406,6 +1407,21 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 		if( is_bool_arith(op) ){
 			register_function( child_ctxt_init, op_name ) % bt_bool % bt_bool >> bt_bool;
+
+			builtin_types tycode( builtin_types::none );
+			shared_ptr<builtin_type> ty;
+			for( size_t vsize = 1; vsize <= 4; ++vsize )
+			{
+				tycode = vector_of(builtin_types::_boolean, vsize);
+				ty = storage_bttbl[tycode];
+				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
+				for( size_t vcnt = 1; vcnt <= 4; ++vcnt )
+				{
+					tycode = matrix_of(builtin_types::_boolean, vsize, vcnt);
+					ty = storage_bttbl[tycode];
+					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
+				}
+			}
 		}
 
 		if( is_prefix(op) || is_postfix(op) || op == operators::positive ){

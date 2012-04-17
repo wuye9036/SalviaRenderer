@@ -265,6 +265,14 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	create_entry_params();
 }
 
+SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
+	any child_ctxt_init = *data;
+	sc_ptr( &child_ctxt_init )->clear_data();
+	value_t ret_value = emit_logic_op( child_ctxt_init, v.op, v.left_expr, v.right_expr );
+	sc_ptr(data)->value() = ret_value.to_rvalue();
+	node_ctxt( v, true )->copy( sc_ptr(data) );
+}
+
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	
 	if( !entry_fn && abii->is_entry( v.symbol() ) ){

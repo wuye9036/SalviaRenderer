@@ -350,6 +350,26 @@ namespace sasl{
 
 			return false;
 		}
+
+		builtin_types replace_scalar( builtin_types const& btc, builtin_types const& scalar_btc )
+		{
+			assert( is_scalar(scalar_btc) );
+			if( !is_scalar(scalar_btc) ) { return scalar_btc; }
+
+			if( is_vector(btc) )
+			{
+				return vector_of( scalar_btc, vector_size(btc) );
+			}
+			else if ( is_matrix(btc) )
+			{
+				return matrix_of( scalar_btc, vector_size(btc), vector_count(btc) );
+			}
+			else
+			{
+				return scalar_btc;
+			}
+		}
+
 	}
 }
 

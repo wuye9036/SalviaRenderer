@@ -21,12 +21,15 @@ protected:
 	value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs );
 
+	value_t emit_and(value_t const& lhs, value_t const& rhs);
+	value_t emit_or (value_t const& lhs, value_t const& rhs);
+
 	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
-	virtual value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi );
-	virtual value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi );
-	virtual value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi );
-	virtual value_t cast_i2b( value_t const& v );
-	virtual value_t cast_f2b( value_t const& v );
+	virtual value_t cast_i2f ( value_t const& v, value_tyinfo* dest_tyi );
+	virtual value_t cast_f2i ( value_t const& v, value_tyinfo* dest_tyi );
+	virtual value_t cast_f2f ( value_t const& v, value_tyinfo* dest_tyi );
+	virtual value_t cast_i2b ( value_t const& v );
+	virtual value_t cast_f2b ( value_t const& v );
 
 	void emit_return();
 	void emit_return( value_t const&, abis abi );

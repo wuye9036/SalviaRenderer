@@ -133,11 +133,7 @@ bool driver_code_source::process()
 
 	size_t lang_flag = boost::wave::support_cpp;
 	lang_flag &= ~(boost::wave::support_option_emit_line_directives );
-//#if BOOST_VERSION <= 104900
-	//lang_flag |= (boost::wave::support_option_single_line );
-//#else
 	lang_flag &= ~(boost::wave::support_option_single_line );
-//#endif
 	lang_flag &= ~(boost::wave::support_option_emit_pragma_directives );
 	wctxt_wrapper->get_wctxt()->set_language( static_cast<boost::wave::language_support>( lang_flag ) );
 

@@ -110,6 +110,32 @@ SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( alias_type );
 
+SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)
+{
+	any child_ctxt_init = *data;
+	sc_ptr( &child_ctxt_init )->clear_data();
+
+	value_t ret_value;
+	builtin_types bt = v.left_expr->si_ptr<type_info_si>()->type_info()->tycode;
+	if( is_scalar(bt) )
+	{
+		if( v.op == operators::logic_or ){
+			// return left ? left : right;
+			ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.left_expr, v.right_expr ) ;
+		} else {
+			// return left ? right : left;
+			ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.right_expr, v.left_expr ) ;
+		}
+	}
+	else
+	{
+		ret_value = emit_logic_op( child_ctxt_init, v.op, v.left_expr, v.right_expr );
+	}
+
+	sc_ptr(data)->value() = ret_value.to_rvalue();
+	node_ctxt( v, true )->copy( sc_ptr(data) );
+}
+
 llvm_module_impl* cgllvm_general::mod_ptr(){
 	assert( dynamic_cast<llvm_module_impl*>( mod.get() ) );
 	return static_cast<llvm_module_impl*>( mod.get() );

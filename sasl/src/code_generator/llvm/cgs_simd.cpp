@@ -722,4 +722,16 @@ value_t cgs_simd::packed_mask()
 	return create_value( NULL, builtin_types::_sint16, ret, vkind_value, abi_llvm );
 }
 
+value_t cgs_simd::emit_and( value_t const& lhs, value_t const& rhs )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
+value_t cgs_simd::emit_or( value_t const& lhs, value_t const& rhs )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
 END_NS_SASL_CODE_GENERATOR();

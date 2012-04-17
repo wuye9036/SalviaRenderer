@@ -72,6 +72,22 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 cgllvm_sisd::~cgllvm_sisd(){
 }
 
+value_t cgllvm_sisd::emit_logic_op( any const& ctxt_init, operators op, shared_ptr<node> const& left, shared_ptr<node> const& right )
+{
+	any child_ctxt;
+	visit_child( child_ctxt, ctxt_init, left );
+	visit_child( child_ctxt, ctxt_init, right );
+
+	if( op == operators::logic_or )
+	{
+		return service()->emit_and( node_ctxt(left)->value(), node_ctxt(right)->value() );
+	}
+	else
+	{
+		return service()->emit_or( node_ctxt(left)->value(), node_ctxt(right)->value() );
+	}
+}
+
 value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
 {
 	// NOTE
@@ -531,23 +547,6 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement )
 {
 	assert( sc_env_ptr(data)->break_to );
 	jump_to( sc_env_ptr(data)->break_to );
-}
-
-SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
-	any child_ctxt_init = *data;
-	sc_ptr( &child_ctxt_init )->clear_data();
-	
-	value_t ret_value;
-	if( v.op == operators::logic_or ){
-		// return left ? left : right;
-		ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.left_expr, v.right_expr ) ;
-	} else {
-		// return left ? right : left;
-		ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.right_expr, v.left_expr ) ;
-	}
-	
-	sc_ptr(data)->value() = ret_value.to_rvalue();
-	node_ctxt( v, true )->copy( sc_ptr(data) );
 }
 
 cgllvm_sctxt* cgllvm_sisd::node_ctxt( sasl::syntax_tree::node& v, bool create_if_need /*= false */ )

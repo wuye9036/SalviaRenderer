@@ -60,6 +60,7 @@ using llvm::StoreInst;
 using llvm::TypeBuilder;
 using llvm::AttrListPtr;
 using llvm::SwitchInst;
+using llvm::CmpInst;
 
 namespace Intrinsic = llvm::Intrinsic;
 
@@ -73,40 +74,53 @@ using boost::lexical_cast;
 using std::vector;
 using std::string;
 
-#define EMIT_CMP_EQ_NE_BODY( op_name ) \
-	builtin_types hint = lhs.hint(); \
-	assert( hint == rhs.hint() ); \
-	assert( is_scalar(hint) || (hint == builtin_types::_boolean) ); \
-	\
-	Value* ret = NULL; \
-	if( is_integer(hint) || (hint == builtin_types::_boolean) ){ \
-		ret = builder().CreateICmp##op_name( lhs.load(), rhs.load() ); \
-	} else if( is_real(hint) ) { \
-		ret = builder().CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
-	} \
-	\
-	return create_value( builtin_types::_boolean, ret, vkind_value, abi_llvm );
-
-#define EMIT_CMP_BODY( op_name ) \
-	builtin_types hint = lhs.hint(); \
-	assert( hint == rhs.hint() ); \
-	assert( is_scalar(hint) ); \
-	\
-	Value* ret = NULL; \
-	if( is_integer(hint) ){ \
-	if( is_signed(hint) ){ \
-	ret = builder().CreateICmpS##op_name( lhs.load(), rhs.load() ); \
-	} else {\
-	ret = builder().CreateICmpU##op_name( lhs.load(), rhs.load() ); \
-	}\
-	\
-	} else if( is_real(hint) ) { \
-	ret = builder().CreateFCmpU##op_name( lhs.load(), rhs.load() ); \
-	} \
-	\
-	return create_value( builtin_types::_boolean, ret, vkind_value, abi_llvm );
-
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+value_t emit_cmp(
+	cgs_sisd* cg,
+	value_t const& lhs,
+	value_t const& rhs,
+	CmpInst::Predicate pred_signed,
+	CmpInst::Predicate pred_unsigned,
+	CmpInst::Predicate pred_float
+	)
+{
+	builtin_types hint = lhs.hint();
+	assert( hint == rhs.hint() );
+	assert( is_scalar( scalar_of(hint) ) );
+
+	Value* ret = NULL;
+
+	if( is_scalar(hint) || is_vector(hint) )
+	{
+		if( scalar_of(hint) == builtin_types::_boolean )
+		{
+			ret = cg->builder().CreateICmp( pred_unsigned, lhs.load(abi_llvm), rhs.load(abi_llvm) );
+		}
+		else if( is_integer(hint) )
+		{
+			if( is_signed(hint) )
+			{
+				ret = cg->builder().CreateICmp( pred_signed, lhs.load(abi_llvm), rhs.load(abi_llvm) );
+			}
+			else
+			{
+				ret = cg->builder().CreateICmp( pred_unsigned, lhs.load(abi_llvm), rhs.load(abi_llvm) );
+			}
+		}
+		else if( is_real(hint) )
+		{
+			ret = cg->builder().CreateFCmp( pred_float, lhs.load(abi_llvm), rhs.load(abi_llvm) );
+		}
+	}
+	else
+	{
+		// TODO MATRIX
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return cg->create_value( replace_scalar(hint, builtin_types::_boolean), ret, vkind_value, abi_llvm );
+}
 
 namespace {
 
@@ -256,32 +270,32 @@ Value* cgs_sisd::select_( Value* cond, Value* yes, Value* no )
 
 value_t cgs_sisd::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_CMP_EQ_NE_BODY( EQ );
+	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_EQ, CmpInst::ICMP_EQ, CmpInst::FCMP_UEQ );
 }
 
 value_t cgs_sisd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_CMP_BODY( LT );
+	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SLT, CmpInst::ICMP_ULT, CmpInst::FCMP_ULT );
 }
 
 value_t cgs_sisd::emit_cmp_le( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_CMP_BODY( LE );
+	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SLE, CmpInst::ICMP_ULE, CmpInst::FCMP_ULE );
 }
 
 value_t cgs_sisd::emit_cmp_ne( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_CMP_EQ_NE_BODY( NE );
+	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_NE, CmpInst::ICMP_NE, CmpInst::FCMP_UNE );
 }
 
 value_t cgs_sisd::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_CMP_BODY( GE );
+	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SGE, CmpInst::ICMP_UGE, CmpInst::FCMP_UGE );
 }
 
 value_t cgs_sisd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_CMP_BODY( GT );
+	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SGT, CmpInst::ICMP_UGT, CmpInst::FCMP_UGT );
 }
 
 bool cgs_sisd::prefer_externals() const
@@ -360,6 +374,24 @@ value_t cgs_sisd::packed_mask()
 {
 	assert(false);
 	return value_t();
+}
+
+value_t cgs_sisd::emit_and( value_t const& lhs, value_t const& rhs )
+{
+	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
+	assert( lhs.hint() == rhs.hint() );
+
+	Value* ret = builder().CreateAnd( lhs.load(abi_llvm), rhs.load(abi_llvm) );
+	return create_value( lhs.tyinfo(), lhs.hint(), ret, vkind_value, abi_llvm );
+}
+
+value_t cgs_sisd::emit_or( value_t const& lhs, value_t const& rhs )
+{
+	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
+	assert( lhs.hint() == rhs.hint() );
+
+	Value* ret = builder().CreateOr( lhs.load(abi_llvm), rhs.load(abi_llvm) );
+	return create_value( lhs.tyinfo(), lhs.hint(), ret, vkind_value, abi_llvm );
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

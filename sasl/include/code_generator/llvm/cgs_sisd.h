@@ -74,6 +74,9 @@ public:
 	value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs );
 	value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs );
 
+	virtual value_t emit_and( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_or ( value_t const& lhs, value_t const& rhs );
+
 	/// Didn't support swizzle yet.
 	value_t emit_swizzle( value_t const& vec, uint32_t mask );
 	value_t emit_write_mask( value_t const& vec, uint32_t mask );

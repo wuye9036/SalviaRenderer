@@ -314,6 +314,9 @@ public:
 	virtual value_t emit_cmp_ge ( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_cmp_gt ( value_t const& lhs, value_t const& rhs ) = 0;
 
+	virtual value_t emit_and( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_or ( value_t const& lhs, value_t const& rhs ) = 0;
+
 	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args, value_t const& exec_mask );
 	/// @}

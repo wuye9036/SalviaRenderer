@@ -69,8 +69,8 @@ public:
 
 	// statement
 protected:
-	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
-	
+	SASL_SPECIFIC_VISIT_DCL( before_decls_visit	, program );
+	SASL_SPECIFIC_VISIT_DCL( bin_logic			, binary_expression );
 private:
 	llvm_module_impl* mod_ptr();
 };
