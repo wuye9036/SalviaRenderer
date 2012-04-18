@@ -359,19 +359,21 @@ public:
 	/// Cast between integer types.
 	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi ) = 0;
 	/// Cast integer to float.
-	virtual value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	virtual value_t cast_i2f ( value_t const& v, value_tyinfo* dest_tyi ) = 0;
 	/// Cast float to integer.
-	virtual value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	virtual value_t cast_f2i ( value_t const& v, value_tyinfo* dest_tyi ) = 0;
 	/// Cast between float types.
-	virtual value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	virtual value_t cast_f2f ( value_t const& v, value_tyinfo* dest_tyi ) = 0;
 	/// Cast integer to bool
-	virtual value_t cast_i2b( value_t const& v ) = 0;
+	virtual value_t cast_i2b ( value_t const& v ) = 0;
 	/// Cast float to bool
-	virtual value_t cast_f2b( value_t const& v ) = 0;
+	virtual value_t cast_f2b ( value_t const& v ) = 0;
 	/// Cast scalar to vector
-	virtual value_t cast_s2v( value_t const& v );
+	virtual value_t cast_s2v ( value_t const& v );
 	/// Cast vector to scalar
-	virtual value_t cast_v2s( value_t const& v );
+	virtual value_t cast_v2s ( value_t const& v );
+	/// Bit casts
+	virtual value_t cast_bits(value_t const& v, value_tyinfo* dest_tyi);
 	/// @}
 
 	/// @name Emit statement

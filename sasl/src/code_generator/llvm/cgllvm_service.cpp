@@ -2041,6 +2041,39 @@ value_t cg_service::cast_v2s( value_t const& v )
 	return emit_extract_val( v, 0 );
 }
 
+value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
+{
+	builtin_types hint = v.hint();
+	if( is_scalar(hint) )
+	{
+		abis abi = promote_abi(v.abi(), abi_llvm);
+		Value* ret_v = builder().CreateBitCast( v.load(abi), dest_tyi->ty(abi) );
+		return create_value( dest_tyi, ret_v, vkind_value, abi );
+	}
+	else if( is_vector(hint) )
+	{
+		abis abi = promote_abi(v.abi(), abi_llvm);
+		Value* src_v = v.load(abi);
+		Value* dest_v = UndefValue::get( type_(dest_tyi, abi) );
+		Type* dest_elem_ty = dest_v->getType()->getScalarType();
+
+		for( size_t i = 0; i < vector_size(hint); ++i )
+		{
+			Value* src_elem = builder().CreateExtractElement(src_v, int_(i) );
+			Value* casted_elem = builder().CreateBitCast( src_elem, dest_elem_ty );
+			dest_v = builder().CreateInsertElement( dest_v, casted_elem, int_(i) );
+		}
+		
+		return create_value( dest_tyi, dest_v, vkind_value, abi );
+	}
+	else
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return value_t();
+}
+
 void cg_service::jump_to( insert_point_t const& ip )
 {
 	assert( ip );

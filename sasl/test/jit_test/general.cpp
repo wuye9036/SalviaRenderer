@@ -628,7 +628,7 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
@@ -731,7 +731,33 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
+
+template <typename T, int size>
+struct vector_
+{
+	template <typename IndexT>
+	T& operator [](IndexT i){ return data[i]; }
+
+	template <typename IndexT>
+	T operator [](IndexT i) const{ return data[i]; }
+
+	vector_<T,size> operator + ( vector_<T,size> const& r )
+	{
+		vector_<T,size> ret;
+		for( int i = 0; i < size; ++i ){
+			ret[i] = data[i] + r[i];
+		}
+		return ret;
+	}
+	
+	T data[size];
+};
+
+
+typedef vector_<uint32_t, 2> uint2;
+typedef vector_<uint32_t, 3> uint3;
+
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
 
@@ -755,6 +781,15 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 
 	jit_function<float(int2)> test_imp_v1_s_cast;
 	function( test_imp_v1_s_cast, "test_imp_v1_s_cast" );
+
+	jit_function< int2 (vec2, uint2) >test_bitcast_to_i;
+	function( test_bitcast_to_i, "test_bitcast_to_i" );
+
+	jit_function< uint3 (vec3, int3) >test_bitcast_to_u;
+	function( test_bitcast_to_u, "test_bitcast_to_u" );
+
+	jit_function< float (uint32_t, int32_t) >test_bitcast_to_f;
+	function( test_bitcast_to_f, "test_bitcast_to_f" );
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
@@ -782,6 +817,32 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	{
 		int2 xy(86, 99);
 		BOOST_CHECK_CLOSE( (float)86, test_imp_v1_s_cast(xy), 0.000001f );
+	}
+
+	{
+		uint2 u2;
+		u2[0] = 0xCCCCCCCC;
+		u2[1] = 0x12345678;
+
+		int3 i3(-87, 99, 0x7F836798);
+		vec3 v3(-98.765, 0.00765, 198760000000.0);
+		vec2 v2(998.65, -0.000287);
+
+		int2  to_i_ref_v = reinterpret_cast<int2&>(u2) + reinterpret_cast<int2&>(v2);
+		uint3 to_u_ref_v = reinterpret_cast<uint3&>(v3) + reinterpret_cast<uint3&>(i3);
+		float to_f_ref_v = reinterpret_cast<float&>(u2[0]) + reinterpret_cast<float&>(i3[0]);
+
+		int2  to_i_ret_v = test_bitcast_to_i(v2, u2);
+		uint3 to_u_ret_v = test_bitcast_to_u(v3, i3);
+		float to_f_ret_v = test_bitcast_to_f(u2[0], i3[0]);
+
+		BOOST_CHECK_BITWISE_EQUAL( to_i_ref_v[0], to_i_ret_v[0] );
+		BOOST_CHECK_BITWISE_EQUAL( to_i_ref_v[1], to_i_ret_v[1] );
+
+		BOOST_CHECK_BITWISE_EQUAL( to_u_ref_v[0], to_u_ret_v[0] );
+		BOOST_CHECK_BITWISE_EQUAL( to_u_ref_v[1], to_u_ret_v[1] );
+
+		BOOST_CHECK_BITWISE_EQUAL( *(uint32_t*)(&to_f_ref_v), *(uint32_t*)(&to_f_ret_v) );
 	}
 }
 #endif

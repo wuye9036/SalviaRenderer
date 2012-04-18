@@ -39,3 +39,18 @@ float test_imp_v1_s_cast(int2 x)
 {
 	return x.x;
 }
+
+int2 test_bitcast_to_i( float2 f, uint2 u )
+{
+	return asint(f) + asint(u);
+}
+
+uint3 test_bitcast_to_u( float3 f, int3 i )
+{
+	return asuint(f) + asuint(i);
+}
+
+float test_bitcast_to_f( uint u, int i )
+{
+	return asfloat(u) + asfloat(i);
+}

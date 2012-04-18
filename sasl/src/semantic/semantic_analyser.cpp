@@ -1558,13 +1558,50 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		// WORKAROUND_TODO LLVM 3.0: Intrinsic didn't generate correct native call.
 		// register_intrinsic( child_ctxt_init, "exp" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		register_intrinsic( child_ctxt_init, "exp" ).deps("__wa_expf") % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-
 		register_intrinsic( child_ctxt_init, "sqrt" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-
 		register_intrinsic( child_ctxt_init, "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];
+
 		/**@}*/
 	}
-	
+
+	// Register as* functions.
+	{
+		vector< shared_ptr<builtin_type> > int_tys;
+		vector< shared_ptr<builtin_type> > uint_tys;
+		vector< shared_ptr<builtin_type> > float_tys;
+
+		int_tys.push_back	( BUILTIN_TYPE(_sint32) );
+		uint_tys.push_back	( BUILTIN_TYPE(_uint32) );
+		float_tys.push_back	( BUILTIN_TYPE(_float) );
+
+		for( size_t vsize = 1; vsize <= 4; ++vsize )
+		{
+			int_tys.push_back	( storage_bttbl[vector_of(builtin_types::_sint32, vsize)] );
+			uint_tys.push_back	( storage_bttbl[vector_of(builtin_types::_uint32, vsize)] );
+			float_tys.push_back	( storage_bttbl[vector_of(builtin_types::_float,  vsize)] );
+
+			for( size_t vcnt = 1; vcnt <= 4; ++vcnt )
+			{
+				int_tys.push_back	( storage_bttbl[matrix_of(builtin_types::_sint32, vsize, vcnt)] );
+				uint_tys.push_back	( storage_bttbl[matrix_of(builtin_types::_uint32, vsize, vcnt)] );
+				float_tys.push_back	( storage_bttbl[matrix_of(builtin_types::_float,  vsize, vcnt)] );
+			}
+		}
+
+		for( size_t i_ty = 0; i_ty < int_tys.size(); ++i_ty )
+		{
+			register_intrinsic( child_ctxt_init, "asint" ) % uint_tys[i_ty]  >> int_tys[i_ty];
+			register_intrinsic( child_ctxt_init, "asint" ) % float_tys[i_ty] >> int_tys[i_ty];
+
+			register_intrinsic( child_ctxt_init, "asuint" ) % int_tys[i_ty]   >> uint_tys[i_ty];
+			register_intrinsic( child_ctxt_init, "asuint" ) % float_tys[i_ty] >> uint_tys[i_ty];
+
+			register_intrinsic( child_ctxt_init, "asfloat" ) % uint_tys[i_ty] >> float_tys[i_ty];
+			register_intrinsic( child_ctxt_init, "asfloat" ) % int_tys[i_ty]  >> float_tys[i_ty];
+		}
+	}
+
+	// Register constructors.
 	{
 		shared_ptr<builtin_type> fvec_ts[5];
 		fvec_ts[1] = storage_bttbl[builtin_types::_float];

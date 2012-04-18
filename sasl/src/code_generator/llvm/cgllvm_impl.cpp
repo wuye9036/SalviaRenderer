@@ -700,7 +700,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		service()->fn().inline_hint();
 
 		// Process Intrinsic
-		if( intr->unmangled_name() == "mul" ){
+		if( intr->unmangled_name() == "mul" )
+		{
 			
 			assert( par_tys.size() == 2 );
 
@@ -711,7 +712,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret_val = service()->emit_mul( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 
-		} else if( intr->unmangled_name() == "dot" ) {
+		}
+		else if( intr->unmangled_name() == "dot" )
+		{
 			
 			assert( par_tys.size() == 2 );
 
@@ -722,28 +725,38 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret_val = service()->emit_dot( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 
-		} else if ( intr->unmangled_name() == "abs" ) {
+		}
+		else if ( intr->unmangled_name() == "abs" )
+		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
 			value_t ret_val = service()->emit_abs( service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
-		} else if ( intr->unmangled_name() == "exp" ) {
+		}
+		else if ( intr->unmangled_name() == "exp" )
+		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
 			value_t ret_val = service()->emit_exp( service()->fn().arg(0), *get_function("__wa_expf") );
 			service()->emit_return( ret_val, service()->param_abi(false) );
-		} else if( intr->unmangled_name() == "sqrt" ){
+		}
+		else if( intr->unmangled_name() == "sqrt" )
+		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
 			value_t ret_val = service()->emit_sqrt( service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
-		} else if( intr->unmangled_name() == "cross" ){
+		}
+		else if( intr->unmangled_name() == "cross" )
+		{
 			assert( par_tys.size() == 2 );
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
 			value_t ret_val = service()->emit_cross( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
-		} else if ( intr->unmangled_name() == "ddx" || intr->unmangled_name() == "ddy" ) {
+		}
+		else if ( intr->unmangled_name() == "ddx" || intr->unmangled_name() == "ddy" )
+		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
 
@@ -754,7 +767,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				ret_val = service()->emit_ddy( service()->fn().arg(0) );
 			}
 			service()->emit_return( ret_val, service()->param_abi(false) );
-		} else if ( intr->unmangled_name() == "tex2D" ){
+		}
+		else if ( intr->unmangled_name() == "tex2D" )
+		{
 			assert( par_tys.size() == 2 );
 			
 			value_t samp = service()->fn().arg(0);
@@ -771,13 +786,19 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			value_t ret = service()->emit_call( *get_function("tex2Dgrad"), args, service()->fn().packed_execution_mask() );
 			service()->emit_return( ret, service()->param_abi(false) );
-		} else if ( intr->unmangled_name() == "tex2Dbias" ){
+		}
+		else if ( intr->unmangled_name() == "tex2Dbias" )
+		{
 			assert( par_tys.size() == 2 );
 			EFLIB_ASSERT_UNIMPLEMENTED();
-		} else if( intr->unmangled_name() == "tex2Dproj" ){
+		}
+		else if( intr->unmangled_name() == "tex2Dproj" )
+		{
 			assert( par_tys.size() == 2 );
 			EFLIB_ASSERT_UNIMPLEMENTED();
-		} else if ( intrin_ssi->is_constructor() ) {
+		}
+		else if ( intrin_ssi->is_constructor() )
+		{
 			function_t& fn = service()->fn();
 			value_tyinfo* ret_ty = fn.get_return_ty().get();
 			builtin_types ret_hint = ret_ty->hint();
@@ -810,7 +831,17 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				EFLIB_ASSERT_UNIMPLEMENTED();
 			}
 		}
-
+		else if( intr->unmangled_name() == "asint" || intr->unmangled_name() == "asfloat" || intr->unmangled_name() == "asuint" )
+		{
+			function_t& fn = service()->fn();
+			fn.arg_name(0, "v");
+			value_tyinfo* ret_ty = fn.get_return_ty().get();
+			service()->emit_return( service()->cast_bits(fn.arg(0), ret_ty), service()->param_abi(false) );
+		}
+		else
+		{
+			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );
+		}
 		service()->clean_empty_blocks();
 	}
 }
