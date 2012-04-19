@@ -554,9 +554,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 
 	mat44 mat( mat44::identity() );
 	mat44 tmpMat;
-	mat_mul( mat, mat_rotX(tmpMat, 0.2f ), mat );
-	mat_mul( mat, mat_rotY(tmpMat, -0.3f ), mat );
-	mat_mul( mat, mat_translate(tmpMat, 1.7f, -0.9f, 1.1f ), mat );
+	mat_mul( mat, mat_rotX(tmpMat, 0.2f), mat );
+	mat_mul( mat, mat_rotY(tmpMat, -0.3f), mat );
+	mat_mul( mat, mat_translate(tmpMat, 1.7f, -0.9f, 1.1f), mat );
 	mat_mul( mat, mat_scale(tmpMat, 0.5f, 1.2f, 2.0f), mat );
 
 	memcpy( sin.position, &pos, sizeof(float)*4 );
