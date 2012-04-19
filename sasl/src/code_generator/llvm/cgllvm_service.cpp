@@ -1847,7 +1847,7 @@ value_t cg_service::emit_exp( value_t const& arg_value, function_t const& workar
 				// return create_value( arg_value.tyinfo(), hint, ret, vkind_value, abi_llvm );
 			}
 		}
-		else 
+		else
 		{
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}

@@ -1352,125 +1352,204 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 	shared_ptr<builtin_type> bt_bool = BUILTIN_TYPE( _boolean );
 	shared_ptr<builtin_type> bt_i32  = BUILTIN_TYPE( _sint32 );
 
-	// Arithmetic operators
-	vector<std::string> op_tbl;
-	const vector<operators>& oplist = list_of_operators();
+	shared_ptr<builtin_type> fvec_ts[5];
+	for( int i = 1; i <= 4; ++i )
+	{
+		fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
+	}
 
-	for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
-		operators op = oplist[i_op];
-		std::string op_name( operator_name(op) );
+	shared_ptr<builtin_type> fmat_ts[5][5];
+	for( int vec_size = 1; vec_size < 5; ++vec_size ){
+		for( int n_vec = 1; n_vec < 5; ++n_vec ){
+			fmat_ts[vec_size][n_vec] = storage_bttbl[
+				matrix_of( builtin_types::_float, vec_size, n_vec )
+			];
+		}
+	}
 
-		if ( is_arithmetic(op) )
-		{
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
+	// operators
+	{
+		vector<std::string> op_tbl;
+		const vector<operators>& oplist = list_of_operators();
+
+		for( size_t i_op = 0; i_op < oplist.size(); ++i_op ){
+			operators op = oplist[i_op];
+			std::string op_name( operator_name(op) );
+
+			if ( is_arithmetic(op) )
 			{
-				shared_ptr<builtin_type> ty = it_type->second;
-				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
-			}
-		}
-
-		if( is_arith_assign(op) )
-		{
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				shared_ptr<builtin_type> ty = it_type->second;
-				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
-			}
-		}
-
-		if( is_relationship(op) ){
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
-			{
-				builtin_types tycode = it_type->first;
-				shared_ptr<builtin_type> ty = it_type->second;
-				register_function(child_ctxt_init, op_name) % ty % ty >> storage_bttbl[replace_scalar(tycode, builtin_types::_boolean)];
-			}
-		}
-
-		if( is_bit(op) || is_bit_assign(op) ){
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_integer(it_type->first) ){
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
+				{
 					shared_ptr<builtin_type> ty = it_type->second;
 					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 				}
 			}
-		}
 
-		if( is_shift(op) || is_shift_assign(op) ){
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_scalar(it_type->first) && is_integer(it_type->first) ){
+			if( is_arith_assign(op) )
+			{
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
 					shared_ptr<builtin_type> ty = it_type->second;
-					register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint32) >> ty;
-					register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint64) >> ty;
+					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 				}
 			}
-		}
 
-		if( is_bool_arith(op) ){
-			register_function( child_ctxt_init, op_name ) % bt_bool % bt_bool >> bt_bool;
-
-			builtin_types tycode( builtin_types::none );
-			shared_ptr<builtin_type> ty;
-			for( size_t vsize = 1; vsize <= 4; ++vsize )
-			{
-				tycode = vector_of(builtin_types::_boolean, vsize);
-				ty = storage_bttbl[tycode];
-				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
-				for( size_t vcnt = 1; vcnt <= 4; ++vcnt )
+			if( is_relationship(op) ){
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
 				{
-					tycode = matrix_of(builtin_types::_boolean, vsize, vcnt);
+					builtin_types tycode = it_type->first;
+					shared_ptr<builtin_type> ty = it_type->second;
+					register_function(child_ctxt_init, op_name) % ty % ty >> storage_bttbl[replace_scalar(tycode, builtin_types::_boolean)];
+				}
+			}
+
+			if( is_bit(op) || is_bit_assign(op) ){
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+					if ( is_integer(it_type->first) ){
+						shared_ptr<builtin_type> ty = it_type->second;
+						register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
+					}
+				}
+			}
+
+			if( is_shift(op) || is_shift_assign(op) ){
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+					if ( is_scalar(it_type->first) && is_integer(it_type->first) ){
+						shared_ptr<builtin_type> ty = it_type->second;
+						register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint32) >> ty;
+						register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint64) >> ty;
+					}
+				}
+			}
+
+			if( is_bool_arith(op) ){
+				register_function( child_ctxt_init, op_name ) % bt_bool % bt_bool >> bt_bool;
+
+				builtin_types tycode( builtin_types::none );
+				shared_ptr<builtin_type> ty;
+				for( size_t vsize = 1; vsize <= 4; ++vsize )
+				{
+					tycode = vector_of(builtin_types::_boolean, vsize);
 					ty = storage_bttbl[tycode];
 					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
+					for( size_t vcnt = 1; vcnt <= 4; ++vcnt )
+					{
+						tycode = matrix_of(builtin_types::_boolean, vsize, vcnt);
+						ty = storage_bttbl[tycode];
+						register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
+					}
 				}
 			}
-		}
 
-		if( is_prefix(op) || is_postfix(op) || op == operators::positive ){
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_integer(it_type->first) )
-				{
+			if( is_prefix(op) || is_postfix(op) || op == operators::positive ){
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+					if ( is_integer(it_type->first) )
+					{
+						shared_ptr<builtin_type> ty = it_type->second;
+						register_function( child_ctxt_init, op_name ) % ty >> ty;
+					}
+				}
+			}
+
+			if( op == operators::bit_not ){
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+					if ( is_integer(it_type->first) ){
+						shared_ptr<builtin_type> ty = it_type->second;
+						register_function( child_ctxt_init, op_name ) % ty >> ty;
+					}
+				}
+			}
+
+			if( op == operators::logic_not ){
+				register_function( child_ctxt_init, op_name ) % bt_bool >> bt_bool;
+			}
+
+			if( op == operators::negative ){
+				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+					if ( it_type->first != builtin_types::_uint64 ){
+						shared_ptr<builtin_type> ty = it_type->second;
+						register_function( child_ctxt_init, op_name ) % ty >> ty;
+					}
+				}
+			}
+
+			if ( op == operators::assign ){
+				for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type ){
 					shared_ptr<builtin_type> ty = it_type->second;
-					register_function( child_ctxt_init, op_name ) % ty >> ty;
+					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 				}
-			}
-		}
-
-		if( op == operators::bit_not ){
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( is_integer(it_type->first) ){
-					shared_ptr<builtin_type> ty = it_type->second;
-					register_function( child_ctxt_init, op_name ) % ty >> ty;
-				}
-			}
-		}
-
-		if( op == operators::logic_not ){
-			register_function( child_ctxt_init, op_name ) % bt_bool >> bt_bool;
-		}
-
-		if( op == operators::negative ){
-			for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-				if ( it_type->first != builtin_types::_uint64 ){
-					shared_ptr<builtin_type> ty = it_type->second;
-					register_function( child_ctxt_init, op_name ) % ty >> ty;
-				}
-			}
-		}
-
-		if ( op == operators::assign ){
-			for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type ){
-				shared_ptr<builtin_type> ty = it_type->second;
-				register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 			}
 		}
 	}
 
+	// all, any, ddx, ddy
 	{
-		/** @{ Intrinsics */
-		shared_ptr<builtin_type> fvec_ts[5];
-		for( int i = 1; i <= 4; ++i ){
-			fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
-		}
+		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
+		{
+			builtin_types tycode = it_type->first;
+			shared_ptr<builtin_type> ty = it_type->second;
 
+			if( is_scalar(tycode) || is_vector(tycode) || is_matrix(tycode) )
+			{
+				register_intrinsic( child_ctxt_init, "all" ) % ty >> bt_bool;
+				register_intrinsic( child_ctxt_init, "any" ) % ty >> bt_bool;
+				register_intrinsic( child_ctxt_init, "ddx" ) % ty >> ty;
+				register_intrinsic( child_ctxt_init, "ddy" ) % ty >> ty;
+			}
+		}
+	}
+
+	// abs
+	{
+		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
+		{
+			builtin_types tycode = it_type->first;
+			shared_ptr<builtin_type> ty = it_type->second;
+
+			if( is_scalar(tycode) || is_vector(tycode) || is_matrix(tycode) )
+			{
+				builtin_types scalar_tycode = scalar_of(tycode);
+				if( is_real(scalar_tycode) || (is_integer(scalar_tycode) && is_signed(scalar_tycode)) )
+				{
+					register_intrinsic( child_ctxt_init, "abs" ) % ty >> ty;
+				}
+			}
+		}
+	}
+
+	// degrees, radians, sqrt, fmod, lerp
+	{
+		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
+		{
+			builtin_types tycode = it_type->first;
+			shared_ptr<builtin_type> ty = it_type->second;
+
+			if( is_scalar(tycode) || is_vector(tycode) || is_matrix(tycode) )
+			{
+				if( scalar_of(tycode) == builtin_types::_float )
+				{
+					register_intrinsic( child_ctxt_init, "degrees" ) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "radians" ) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "sqrt"    ) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "fmod"    ) % ty % ty		>> ty;
+					register_intrinsic( child_ctxt_init, "lerp"    ) % ty % ty % ty	>> ty;
+				}
+			}
+		}
+	}
+
+	// distance, dst, length, dot
+	{
+		for( size_t i = 1; i <= 4; ++i )
+		{
+			register_intrinsic(child_ctxt_init, "length") % fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic(child_ctxt_init, "distance").deps("sqrt") % fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic(child_ctxt_init, "dst") % fvec_ts[i] % fvec_ts[i] >> fvec_ts[i];
+			register_intrinsic(child_ctxt_init, "dot") % fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
+		}
+	}
+
+	// Sampling, cross
+	{
 		shared_ptr<builtin_type> sampler_ty = create_builtin_type( builtin_types::_sampler );
 
 		// External and Intrinsic are Same signatures
@@ -1519,23 +1598,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			register_intrinsic( child_ctxt_init, "__wa_expf", true, false ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		}
 
-		shared_ptr<builtin_type> fmat_ts[5][5];
-		for( int vec_size = 1; vec_size < 5; ++vec_size ){
-			for( int n_vec = 1; n_vec < 5; ++n_vec ){
-				fmat_ts[vec_size][n_vec] = storage_bttbl[
-					matrix_of( builtin_types::_float, vec_size, n_vec )
-				];
-			}
-		}
-
-		for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-			shared_ptr<builtin_type> ty = it_type->second;
-			register_intrinsic(child_ctxt_init, "ddx") % ty >> ty;
-			register_intrinsic(child_ctxt_init, "ddy") % ty >> ty;
-		}
-
 		for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
-			
 			for( size_t n_vec = 1; n_vec <= 4; ++n_vec ){
 				register_intrinsic(child_ctxt_init, "mul")
 					% fvec_ts[n_vec] % fmat_ts[vec_size][n_vec]
@@ -1545,26 +1608,15 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 					% fmat_ts[vec_size][n_vec] % fvec_ts[vec_size]
 				>> fvec_ts[n_vec];
 			}
-
-			register_intrinsic(child_ctxt_init, "dot")
-				% fvec_ts[vec_size] % fvec_ts[vec_size]
-			>> BUILTIN_TYPE(_float);
-
-			register_intrinsic( child_ctxt_init, "sqrt" ) % fvec_ts[vec_size] >> fvec_ts[vec_size];
 		}
 
-		register_intrinsic( child_ctxt_init, "abs" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-		register_intrinsic( child_ctxt_init, "abs" ) % BUILTIN_TYPE(_sint32) >> BUILTIN_TYPE(_sint32);
 		// WORKAROUND_TODO LLVM 3.0: Intrinsic didn't generate correct native call.
 		// register_intrinsic( child_ctxt_init, "exp" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		register_intrinsic( child_ctxt_init, "exp" ).deps("__wa_expf") % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-		register_intrinsic( child_ctxt_init, "sqrt" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		register_intrinsic( child_ctxt_init, "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];
-
-		/**@}*/
 	}
 
-	// Register as* functions.
+	// asfloat, asint, asuint
 	{
 		vector< shared_ptr<builtin_type> > int_tys;
 		vector< shared_ptr<builtin_type> > uint_tys;
@@ -1601,7 +1653,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 	}
 
-	// Register constructors.
+	// constructors.
 	{
 		shared_ptr<builtin_type> fvec_ts[5];
 		fvec_ts[1] = storage_bttbl[builtin_types::_float];
