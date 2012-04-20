@@ -278,7 +278,7 @@ Value* cgs_sisd::select_( Value* cond, Value* yes, Value* no )
 
 value_t cgs_sisd::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
 {
-	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_EQ, CmpInst::ICMP_EQ, CmpInst::FCMP_UEQ );
+	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_EQ, CmpInst::ICMP_EQ, CmpInst::FCMP_OEQ );
 }
 
 value_t cgs_sisd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )

@@ -89,6 +89,7 @@ extern sasl::common::diag_template member_left_must_have_struct;
 extern sasl::common::diag_template cannot_convert_type_from;
 extern sasl::common::diag_template illegal_use_type_as_expr;
 extern sasl::common::diag_template undeclared_identifier;
+extern sasl::common::diag_template identifier_not_found;
 extern sasl::common::diag_template type_redefinition;
 extern sasl::common::diag_template case_expr_not_constant;
 extern sasl::common::diag_template illegal_type_for_case_expr;

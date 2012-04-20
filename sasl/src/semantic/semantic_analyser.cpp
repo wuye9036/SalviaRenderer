@@ -375,8 +375,14 @@ SASL_VISIT_DEF( call_expression )
 		dup_callexpr->args.push_back( ctxt_ptr(child_ctxt)->generated_node->as_handle<expression>() );
 	}
 
-	fnvar_si* fnsi = dup_callexpr->expr->dyn_siptr<fnvar_si>();
-	if( fnsi == NULL ){
+	data_cptr()->generated_node = dup_callexpr->as_handle();
+
+	semantic_info* expr_si = dup_callexpr->expr->dyn_siptr<semantic_info>();
+	fnvar_si* fnsi = dynamic_cast<fnvar_si*>(expr_si);
+
+	if( expr_si == NULL ){
+		return;
+	} else if(fnsi == NULL) {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		// Maybe pointer of function.
 	} else {
@@ -418,8 +424,6 @@ SASL_VISIT_DEF( call_expression )
 			csi->overloaded_function( func_sym.get() );
 		}
 	}
-
-	data_cptr()->generated_node = dup_callexpr->as_handle();
 }
 
 int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_code ){
@@ -1664,23 +1668,30 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 	// constructors.
 	{
-		shared_ptr<builtin_type> fvec_ts[5];
-		fvec_ts[1] = storage_bttbl[builtin_types::_float];
-		for( int i = 2; i <= 4; ++i ){
-			fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
+		unordered_map<builtin_types, size_t> vec_indexes;
+		vector< shared_ptr<builtin_type> > bts;
+
+		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
+		{
+			builtin_types tycode = it_type->first;
+			if( is_scalar(tycode) )
+			{
+				vec_indexes[tycode] = bts.size();
+				bts.push_back( storage_bttbl[tycode] );
+				bts.push_back( storage_bttbl[tycode] );
+				for( int i = 2; i <= 4; ++i ){
+					bts.push_back( storage_bttbl[vector_of(tycode, i)] );
+				}
+			}
 		}
 
-		shared_ptr<builtin_type> ivec_ts[5];
-		ivec_ts[1] = storage_bttbl[builtin_types::_sint32];
-		for( int i = 2; i <= 4; ++i ){
-			ivec_ts[i] = storage_bttbl[ vector_of( builtin_types::_sint32, i ) ];
-		}
-
+#define TY_ADDRESS(tyname) boost::addressof( bts[vec_indexes[builtin_types::tyname]] )
 		// Constructors
 		typedef pair<char const*, shared_ptr<builtin_type>* > name_ty_pair_t;
 		vector< name_ty_pair_t > scalar_name_tys;
-		scalar_name_tys.push_back( make_pair( "int"		, ivec_ts	) );
-		scalar_name_tys.push_back( make_pair( "float"	, fvec_ts	) );
+		scalar_name_tys.push_back( make_pair( "bool" , TY_ADDRESS(_boolean)) );
+		scalar_name_tys.push_back( make_pair( "int"	 , TY_ADDRESS(_sint32 )) );
+		scalar_name_tys.push_back( make_pair( "float", TY_ADDRESS(_float  )) );
 
 		BOOST_FOREACH( name_ty_pair_t const& name_ty, scalar_name_tys ){
 			for( int i = 2; i <= 4; ++i ){
@@ -1688,7 +1699,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 				char index_to_str[] = "0";
 				index_to_str[0] += (char)i;
 				name.append( index_to_str );
-
+				
 				register_constructor( child_ctxt_init, name, name_ty.second, i );
 			}
 		}

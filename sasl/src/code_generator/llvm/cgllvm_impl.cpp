@@ -800,6 +800,12 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if ( intrin_ssi->is_constructor() )
 		{
 			function_t& fn = service()->fn();
+			for(size_t i = 0; i < fn.arg_size(); ++i)
+			{
+				char name[4] = ".v0";
+				name[2] += (char)i;
+				fn.arg_name(i, name);
+			}
 			value_tyinfo* ret_ty = fn.get_return_ty().get();
 			builtin_types ret_hint = ret_ty->hint();
 			
@@ -825,7 +831,6 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 						assert( false );
 					}
 				}
-
 				service()->emit_return( ret_v, service()->param_abi(false) );
 			} else {
 				EFLIB_ASSERT_UNIMPLEMENTED();
@@ -852,6 +857,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			function_t& fn = service()->fn();
 			assert( fn.arg_size() == 1 );
+			fn.arg_name(0, ".deg");
 			float deg2rad = (float)(eflib::PI/180.0f);
 			value_t deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
 			value_t deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
@@ -861,6 +867,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			function_t& fn = service()->fn();
 			assert( fn.arg_size() == 1 );
+			fn.arg_name(0, ".rad");
 			float rad2deg = (float)(180.0f/eflib::PI);
 			value_t rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
 			value_t rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
@@ -870,6 +877,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			function_t& fn = service()->fn();
 			assert( fn.arg_size() == 3 );
+			fn.arg_name(0, ".s");
+			fn.arg_name(1, ".d");
+			fn.arg_name(2, ".t");
 			value_t diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
 			value_t t_diff = service()->emit_mul( diff, fn.arg(2) );
 			value_t ret = service()->emit_add(fn.arg(0), t_diff);
@@ -879,6 +889,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			function_t& fn = service()->fn();
 			assert( fn.arg_size() == 2 );
+			fn.arg_name(0, ".s");
+			fn.arg_name(1, ".d");
 			value_t diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
 			value_t dist_sqr = service()->emit_dot(diff, diff);
 			value_t dist = service()->emit_sqrt(dist_sqr);
@@ -888,7 +900,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			function_t& fn = service()->fn();
 			assert( fn.arg_size() == 2 );
-
+			fn.arg_name(0, ".sqr");
+			fn.arg_name(1, ".inv");
 			value_t x2 = service()->create_constant_scalar(1.0f, NULL, builtin_types::_float);
 			value_t y0 = service()->emit_extract_val( fn.arg(0), 1 );
 			value_t y1 = service()->emit_extract_val( fn.arg(1), 1 );
@@ -902,6 +915,20 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			elems.push_back(w1);
 			value_t dest = service()->create_vector(elems, service()->param_abi(false) );
 			service()->emit_return( dest, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "any" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 1 );
+			fn.arg_name(0, ".v");
+			service()->emit_return( service()->emit_any(fn.arg(0)), service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "all" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 1 );
+			fn.arg_name(0, ".v");
+			service()->emit_return( service()->emit_all(fn.arg(0)), service()->param_abi(false) );
 		}
 		else
 		{

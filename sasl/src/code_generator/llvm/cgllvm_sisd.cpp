@@ -80,11 +80,11 @@ value_t cgllvm_sisd::emit_logic_op( any const& ctxt_init, operators op, shared_p
 
 	if( op == operators::logic_or )
 	{
-		return service()->emit_and( node_ctxt(left)->value(), node_ctxt(right)->value() );
+		return service()->emit_or( node_ctxt(left)->value(), node_ctxt(right)->value() );
 	}
 	else
 	{
-		return service()->emit_or( node_ctxt(left)->value(), node_ctxt(right)->value() );
+		return service()->emit_and( node_ctxt(left)->value(), node_ctxt(right)->value() );
 	}
 }
 

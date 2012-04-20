@@ -352,6 +352,8 @@ public:
 	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_ddx( value_t const& v ) = 0;
 	virtual value_t emit_ddy( value_t const& v ) = 0;
+	virtual value_t emit_any( value_t const& v );
+	virtual value_t emit_all( value_t const& v );
 	/// @}
 
 	/// @name Emit type casts

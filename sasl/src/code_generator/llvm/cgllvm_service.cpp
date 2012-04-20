@@ -2172,6 +2172,66 @@ value_t cg_service::create_value_by_scalar( value_t const& scalar, value_tyinfo*
 	return value_t();
 }
 
+value_t cg_service::emit_any( value_t const& v )
+{
+	builtin_types hint = v.hint();
+	builtin_types scalar_hint = scalar_of(v.hint());
+	if( is_scalar(hint) )
+	{
+		return emit_cmp_ne( v, null_value(hint, v.abi()) );
+	}
+	else if( is_vector(hint) )
+	{
+		value_t elem_v = emit_extract_val(v, 0);
+		value_t ret = emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) );
+		for( size_t i = 1; i < vector_size(hint); ++i )
+		{
+			elem_v = emit_extract_val(v, i);
+			ret = emit_or( ret, emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) ) );
+		}
+		return ret;
+	}
+	else if( is_matrix(hint) )
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();	
+	}
+	else
+	{
+		assert(false);
+	}
+	return value_t();
+}
+
+value_t cg_service::emit_all( value_t const& v )
+{
+	builtin_types hint = v.hint();
+	builtin_types scalar_hint = scalar_of(v.hint());
+	if( is_scalar(hint) )
+	{
+		return emit_cmp_ne( v, null_value(hint, v.abi()) );
+	}
+	else if( is_vector(hint) )
+	{
+		value_t elem_v = emit_extract_val(v, 0);
+		value_t ret = emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) );
+		for( size_t i = 1; i < vector_size(hint); ++i )
+		{
+			elem_v = emit_extract_val(v, i);
+			ret = emit_and( ret, emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) ) );
+		}
+		return ret;
+	}
+	else if( is_matrix(hint) )
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();	
+	}
+	else
+	{
+		assert(false);
+	}
+	return value_t();
+}
+
 void function_t::allocation_block( insert_point_t const& ip )
 {
 	alloc_block = ip;

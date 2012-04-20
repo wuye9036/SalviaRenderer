@@ -47,6 +47,7 @@ diag_template undeclared_identifier(dl_error, "'%s': undeclared identifier");
 diag_template type_redefinition(dl_error, "'%s': '%s' type redefinition");
 diag_template case_expr_not_constant(dl_error, "case expression not constant");
 diag_template illegal_type_for_case_expr(dl_error, "'%s': illegal type for case expression");
+diag_template identifier_not_found(dl_error, "'%s': identifier not found");
 
 char const* scalar_nick_name( builtin_types btcode )
 {
