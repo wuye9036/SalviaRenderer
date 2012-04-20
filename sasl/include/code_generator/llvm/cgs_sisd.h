@@ -123,12 +123,10 @@ public:
 
 	/// @name Emit values
 	/// @{
-	value_t undef_value( builtin_types bt, abis abi );
-
 	template <typename T>
 	value_t create_constant_vector( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	
-	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo );
+	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo, builtin_types hint );
 	value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	template <typename T>

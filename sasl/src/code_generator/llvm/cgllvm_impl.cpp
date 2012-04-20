@@ -200,7 +200,7 @@ SASL_VISIT_DEF( binary_expression ){
 				} else if( v.op == operators::div ){
 					retval = service()->emit_div(lval, rval);
 				} else if( v.op == operators::mod ){
-					retval = service()->emit_mod(lval, rval);
+					retval = service()->emit_mod(lval, rval, *get_function("__wa_fmodf"));
 				} else if( v.op == operators::left_shift ) {
 					retval = service()->emit_lshift( lval, rval );
 				} else if( v.op == operators::right_shift ) {
@@ -254,11 +254,11 @@ SASL_VISIT_DEF( constant_expression ){
 
 	value_t val;
 	if( c_si->value_type() == builtin_types::_sint32 ){
-		val = service()->create_constant_scalar( c_si->value<int32_t>(), tyinfo );
+		val = service()->create_constant_scalar( c_si->value<int32_t>(), tyinfo, tyinfo->hint() );
 	} else if ( c_si->value_type() == builtin_types::_uint32 ) {
-		val = service()->create_constant_scalar( c_si->value<uint32_t>(), tyinfo );
+		val = service()->create_constant_scalar( c_si->value<uint32_t>(), tyinfo, tyinfo->hint() );
 	} else if ( c_si->value_type() == builtin_types::_float ) {
-		val = service()->create_constant_scalar( c_si->value<double>(), tyinfo );
+		val = service()->create_constant_scalar( c_si->value<double>(), tyinfo, tyinfo->hint() );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -837,6 +837,71 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, "v");
 			value_tyinfo* ret_ty = fn.get_return_ty().get();
 			service()->emit_return( service()->cast_bits(fn.arg(0), ret_ty), service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "fmod" )
+		{
+			function_t& fn = service()->fn();
+
+			assert( fn.arg_size() == 2 );
+			fn.arg_name(0, "lhs");
+			fn.arg_name(1, "rhs");
+			
+			service()->emit_return( service()->emit_mod( fn.arg(0), fn.arg(1), *get_function("__wa_fmodf") ), service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "radians" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 1 );
+			float deg2rad = (float)(eflib::PI/180.0f);
+			value_t deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
+			value_t deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
+			service()->emit_return( service()->emit_mul( deg2rad_v, fn.arg(0) ), service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "degrees" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 1 );
+			float rad2deg = (float)(180.0f/eflib::PI);
+			value_t rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
+			value_t rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
+			service()->emit_return( service()->emit_mul( rad2deg_v, fn.arg(0) ), service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "lerp" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 3 );
+			value_t diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
+			value_t t_diff = service()->emit_mul( diff, fn.arg(2) );
+			value_t ret = service()->emit_add(fn.arg(0), t_diff);
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "distance" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 2 );
+			value_t diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
+			value_t dist_sqr = service()->emit_dot(diff, diff);
+			value_t dist = service()->emit_sqrt(dist_sqr);
+			service()->emit_return( dist, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "dst" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 2 );
+
+			value_t x2 = service()->create_constant_scalar(1.0f, NULL, builtin_types::_float);
+			value_t y0 = service()->emit_extract_val( fn.arg(0), 1 );
+			value_t y1 = service()->emit_extract_val( fn.arg(1), 1 );
+			value_t z0 = service()->emit_extract_val( fn.arg(0), 2 );
+			value_t w1 = service()->emit_extract_val( fn.arg(1), 3 );
+			value_t y2 = service()->emit_mul( y0, y1 );
+			vector<value_t> elems;
+			elems.push_back(x2);
+			elems.push_back(y2);
+			elems.push_back(z0);
+			elems.push_back(w1);
+			value_t dest = service()->create_vector(elems, service()->param_abi(false) );
+			service()->emit_return( dest, service()->param_abi(false) );
 		}
 		else
 		{

@@ -388,7 +388,15 @@ SASL_VISIT_DEF( call_expression )
 			args_type_repr atr;
 			for( size_t i = 0; i < dup_callexpr->args.size(); ++i )
 			{
-				atr.arg( dup_callexpr->args[i]->si_ptr<type_info_si>()->type_info() );
+				type_info_si* arg_tisi = dup_callexpr->args[i]->si_ptr<type_info_si>();
+				if( arg_tisi )
+				{
+					atr.arg( arg_tisi->type_info() );
+				}
+				else
+				{
+					atr.arg( shared_ptr<tynode>() );
+				}
 			}
 			diags->report( function_param_unmatched )->token_range( *v.token_begin(), *v.token_end() )->p( fnsi->name() )->p( atr.str() );
 		}
@@ -1516,6 +1524,12 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 	}
 
+	// LLVM Workaround for some intrinsics are NULL pointer.
+	{
+		register_intrinsic( child_ctxt_init, "__wa_expf", true, false ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+		register_intrinsic( child_ctxt_init, "__wa_fmodf", true, false ) % BUILTIN_TYPE(_float) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
+	}
+
 	// degrees, radians, sqrt, fmod, lerp
 	{
 		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
@@ -1530,8 +1544,8 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 					register_intrinsic( child_ctxt_init, "degrees" ) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "radians" ) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "sqrt"    ) % ty			>> ty;
-					register_intrinsic( child_ctxt_init, "fmod"    ) % ty % ty		>> ty;
 					register_intrinsic( child_ctxt_init, "lerp"    ) % ty % ty % ty	>> ty;
+					register_intrinsic( child_ctxt_init, "fmod"    ).deps("__wa_fmodf") % ty % ty >> ty;
 				}
 			}
 		}
@@ -1542,10 +1556,10 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		for( size_t i = 1; i <= 4; ++i )
 		{
 			register_intrinsic(child_ctxt_init, "length") % fvec_ts[i] >> BUILTIN_TYPE(_float);
-			register_intrinsic(child_ctxt_init, "distance").deps("sqrt") % fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
-			register_intrinsic(child_ctxt_init, "dst") % fvec_ts[i] % fvec_ts[i] >> fvec_ts[i];
+			register_intrinsic(child_ctxt_init, "distance") % fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
 			register_intrinsic(child_ctxt_init, "dot") % fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
 		}
+		register_intrinsic(child_ctxt_init, "dst") % fvec_ts[4] % fvec_ts[4] >> fvec_ts[4];
 	}
 
 	// Sampling, cross
@@ -1591,11 +1605,6 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			register_intrinsic( child_ctxt_init, "tex2Dproj", false, true ).deps("__tex2Dproj")
 				% sampler_ty % fvec_ts[4] /*coord with proj*/
 			>> fvec_ts[4];
-		}
-
-		// LLVM Workaround for some intrinsics are NULL pointer.
-		{
-			register_intrinsic( child_ctxt_init, "__wa_expf", true, false ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		}
 
 		for( size_t vec_size = 1; vec_size <= 4; ++vec_size){

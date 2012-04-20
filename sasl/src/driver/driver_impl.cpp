@@ -296,6 +296,11 @@ void workaround_expf( float* ret, float v )
 	*ret = expf(v);
 }
 
+void workaround_fmodf( float* ret, float lhs, float rhs )
+{
+	*ret = fmodf(lhs, rhs);
+}
+
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
 	std::string err;
@@ -303,7 +308,7 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
 	inject_function(ret_jit, &workaround_expf, "__wa_expf", false);
-	
+	inject_function(ret_jit, &workaround_fmodf, "__wa_fmodf", false);
 	return ret_jit;
 }
 

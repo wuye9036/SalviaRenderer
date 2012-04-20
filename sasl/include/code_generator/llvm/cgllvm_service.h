@@ -299,7 +299,7 @@ public:
 	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_div( value_t const& lhs, value_t const& rhs );
-	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf );
 
 	virtual value_t emit_lshift ( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_rshift ( value_t const& lhs, value_t const& rhs );
@@ -448,30 +448,17 @@ public:
 	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
 	
 	template <typename T>
-	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
+	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
 		Value* ll_val = ConstantInt::get( IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value );
-		if( tyinfo ){
-			return create_scalar( ll_val, tyinfo );
-		} else {
-			// Guess tyinfo.
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return value_t();
-		}
+		return create_scalar( ll_val, tyinfo, hint );
 	}
 
 	template <typename T>
-	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
+	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
 		Value* ll_val = ConstantFP::get( Type::getFloatTy( context() ), v );
-
-		if( tyinfo ){
-			return create_scalar( ll_val, tyinfo );
-		} else {
-			// Guess tyinfo.
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			return value_t();
-		} 
+		return create_scalar( ll_val, tyinfo, hint );
 	}
-	virtual value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo ) = 0;
+	virtual value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo, builtin_types hint ) = 0;
 
 	value_t null_value( value_tyinfo* tyinfo, abis abi );
 	value_t null_value( builtin_types bt, abis abi );
@@ -485,6 +472,7 @@ public:
 	value_t create_variable( builtin_types bt, abis abi, std::string const& name );
 
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi ) = 0;
+	virtual value_t create_value_by_scalar( value_t const& scalar, value_tyinfo* tyinfo, builtin_types hint );
 	/// @}
 
 	/// @name Utilities
@@ -565,7 +553,7 @@ protected:
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_div_ss_vv( value_t const& lhs, value_t const& rhs );
-	value_t emit_mod_ss_vv( value_t const& lhs, value_t const& rhs );
+	value_t emit_mod_ss_vv( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf );
 
 	value_t emit_lshift_ss_vv ( value_t const& lhs, value_t const& rhs );
 	value_t emit_rshift_ss_vv ( value_t const& lhs, value_t const& rhs );

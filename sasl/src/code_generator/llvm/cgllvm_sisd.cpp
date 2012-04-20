@@ -205,9 +205,9 @@ SASL_VISIT_DEF( unary_expression ){
 
 	builtin_types scalar_hint = scalar_of( hint );
 	if( is_signed(hint) ){
-		one_scalar = create_constant_scalar( (int32_t)1, one_tyinfo.get() );
+		one_scalar = create_constant_scalar( (int32_t)1, one_tyinfo.get(), one_tyinfo->hint() );
 	} else {
-		one_scalar = create_constant_scalar( (uint32_t)1, one_tyinfo.get() );
+		one_scalar = create_constant_scalar( (uint32_t)1, one_tyinfo.get(), one_tyinfo->hint() );
 	}
 
 	if( is_scalar(hint) ){

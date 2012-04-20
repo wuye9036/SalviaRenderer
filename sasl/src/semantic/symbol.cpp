@@ -384,6 +384,11 @@ vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 	vector<type_info_si*> arg_tisis; 
 	BOOST_FOREACH( shared_ptr<expression> const& arg, args ){
 		arg_tisis.push_back( arg->si_ptr<type_info_si>() );
+		if( !arg_tisis.back() )
+		{
+			overloads.clear();
+			return overloads;
+		}
 		arg_tids.push_back( arg_tisis.back()->entry_id() );
 	}
 

@@ -348,16 +348,25 @@ value_t cgs_simd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 	return create_value( builtin_types::_boolean, ret_v, vkind_value, promoted_abi );
 }
 
-value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi )
+value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi, builtin_types hint )
 {
-	Type* ty = tyi->ty( abi_vectorize );
+	Type* ty = NULL;
+	if( tyi )
+	{
+		ty = tyi->ty( abi_vectorize );
+	}
+	else
+	{
+		ty = type_( hint, abi_vectorize );
+	}
+	
 	Value* vectorize_v = Constant::getNullValue( ty );
 
 	for( size_t i_elem = 0; i_elem < llvm::cast<VectorType>(ty)->getNumElements(); ++i_elem ){
 		vectorize_v = builder().CreateInsertElement( vectorize_v, v, int_( static_cast<int>(i_elem) ) );
 	}
 
-	return create_value( tyi, vectorize_v, vkind_value, abi_vectorize );
+	return create_value( tyi, hint, vectorize_v, vkind_value, abi_vectorize );
 }
 
 void cgs_simd::function_beg()

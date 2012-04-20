@@ -381,7 +381,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -395,6 +395,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<float (float) > test_sqrt_f;
 	jit_function<vec2 (vec2) > test_sqrt_f2;
 	jit_function<vec3 (vec3, vec3)> test_cross_prod;
+	jit_function<float (vec2, vec3, vec3)> test_distance;
+	jit_function<vec4 (vec3, float, vec3)> test_fmod;
+	jit_function<vec3 (vec3, vec3, vec3)> test_lerp;
+	jit_function<vec3 (vec3)> test_rad_deg;
 
 	function( test_dot_f3, "test_dot_f3" );
 	BOOST_REQUIRE(test_dot_f3);
@@ -419,6 +423,18 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 	function( test_cross_prod, "test_cross_prod" );
 	BOOST_REQUIRE( test_cross_prod );
+
+	function( test_distance, "test_distance" );
+	BOOST_REQUIRE(test_distance);
+
+	function( test_fmod, "test_fmod" );
+	BOOST_REQUIRE(test_fmod);
+
+	function( test_lerp, "test_lerp" );
+	BOOST_REQUIRE(test_lerp);
+
+	function( test_rad_deg, "test_rad_deg" );
+	BOOST_REQUIRE(test_rad_deg);
 
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -512,6 +528,36 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( cross_v3[0], ref_v3[0], 0.000001f );
 		BOOST_CHECK_CLOSE( cross_v3[1], ref_v3[1], 0.000001f );
 		BOOST_CHECK_CLOSE( cross_v3[2], ref_v3[2], 0.000001f );
+	}
+
+	{
+		vec3 v0(227.5f, -0.33f, -76.4f);
+		vec3 v1(-113.8f, 17.22f, -9.44f);
+		vec2 v2(87.9f, 54.2f);
+		float f = 15.5;
+
+		vec4  dst(1.0f, v1.y*v0.x, v1.z, v0.y);
+		float ref0 = ( v2-v1.xy() ).length() + ( v2.xyxy() - dst ).length();
+		vec4  ref1 = vec4( fmodf(v0.x, v1.x), fmodf(v0.y, v1.y), fmodf(v0.z, v1.z), fmodf(f, v1.y) );
+		vec3  ref2 = v0 + (v1-v0)*vec3(v2.x, v2.y, f);
+		vec3  ref3 = ( (eflib::PI/180.0f)*v0.xy() ).xxy() + (180.0f/eflib::PI)*v0;
+
+		float ret0 = test_distance( v2, v0, v1 );
+		vec4  ret1 = test_fmod( v0, f, v1 );
+		vec3  ret2 = test_lerp( v0, v1, vec3(v2.x, v2.y, f) );
+		vec3  ret3 = test_rad_deg( v0 );
+
+		BOOST_CHECK_CLOSE( ret0,	ref0,	0.000001f );
+		BOOST_CHECK_CLOSE( ret1.x,	ref1.x,	0.000001f );
+		BOOST_CHECK_CLOSE( ret1.y,	ref1.y,	0.000001f );
+		BOOST_CHECK_CLOSE( ret1.z,	ref1.z,	0.000001f );
+		BOOST_CHECK_CLOSE( ret1.w,	ref1.w,	0.000001f );
+		BOOST_CHECK_CLOSE( ret2.x,	ref2.x,	0.000001f );
+		BOOST_CHECK_CLOSE( ret2.y,	ref2.y,	0.000001f );
+		BOOST_CHECK_CLOSE( ret2.z,	ref2.z,	0.000001f );
+		BOOST_CHECK_CLOSE( ret3.x,	ref3.x,	0.000001f );
+		BOOST_CHECK_CLOSE( ret3.y,	ref3.y,	0.000001f );
+		BOOST_CHECK_CLOSE( ret3.z,	ref3.z,	0.000001f );
 	}
 }
 
@@ -731,7 +777,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 template <typename T, int size>
 struct vector_

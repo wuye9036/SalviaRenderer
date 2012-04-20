@@ -240,8 +240,15 @@ value_t cgs_sisd::cast_f2f( value_t const& v, value_tyinfo* dest_tyi )
 }
 
 value_t cgs_sisd::create_vector( std::vector<value_t> const& scalars, abis abi ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	builtin_types scalar_hint = scalars[0].hint();
+	builtin_types hint = vector_of(scalar_hint, scalars.size());
+
+	value_t ret = undef_value(hint, abi);
+	for( size_t i = 0; i < scalars.size(); ++i )
+	{
+		ret = emit_insert_val( ret, (int)i, scalars[i] );
+	}
+	return ret;
 }
 
 void cgs_sisd::emit_return(){
@@ -259,8 +266,9 @@ void cgs_sisd::emit_return( value_t const& ret_v, abis abi ){
 	}
 }
 
-value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo ){
-	return create_value( tyinfo, val, vkind_value, abi_llvm );
+value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo, builtin_types hint ){
+	assert( is_scalar(hint) );
+	return create_value( tyinfo, hint, val, vkind_value, abi_llvm );
 }
 
 Value* cgs_sisd::select_( Value* cond, Value* yes, Value* no )

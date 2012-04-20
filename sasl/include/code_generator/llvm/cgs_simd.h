@@ -37,7 +37,7 @@ protected:
 	virtual value_t emit_ddx( value_t const& v );
 	virtual value_t emit_ddy( value_t const& v );
 	
-	virtual value_t create_scalar( llvm::Value*, value_tyinfo* );
+	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo, builtin_types hint );
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	abis param_abi( bool c_compatible ) const;

@@ -90,7 +90,11 @@ string type_repr::str()
 {
 	if( str_cache.empty() )
 	{
-		if( ty->is_builtin() )
+		if( !ty )
+		{
+			str_cache = "<unknown>";
+		}
+		else if( ty->is_builtin() )
 		{
 			stringstream name_stream;
 

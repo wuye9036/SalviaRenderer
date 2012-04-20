@@ -995,7 +995,7 @@ value_t cg_service::emit_div_ss_vv( value_t const& lhs, value_t const& rhs )
 	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
 }
 
-value_t cg_service::emit_mod_ss_vv( value_t const& lhs, value_t const& rhs )
+value_t cg_service::emit_mod_ss_vv( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf )
 {
 	builtin_types hint( lhs.hint() );
 	assert( hint == rhs.hint() );
@@ -1005,7 +1005,32 @@ value_t cg_service::emit_mod_ss_vv( value_t const& lhs, value_t const& rhs )
 	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
 	abis internal_abi = promote_abi( promoted_abi, abi_llvm );
 	if( is_real( scalar_hint ) ){
-		ret = builder().CreateFRem( lhs.load(internal_abi), rhs.load(internal_abi) );
+		Value* lhs_v = lhs.load(internal_abi);
+		Value* rhs_v = rhs.load(internal_abi);
+
+		Type* lhs_ty = lhs_v->getType();
+		if( lhs_ty->isFloatingPointTy() )
+		{
+			ret = builder().CreateFRem( lhs.load(internal_abi), rhs.load(internal_abi) );
+		}
+		else if( lhs_ty->isVectorTy() )
+		{
+			ret = UndefValue::get(lhs_ty);
+			for( size_t i = 0; i < llvm::cast<VectorType>(lhs_ty)->getNumElements(); ++i )
+			{
+				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
+				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
+				vector<value_t> args;
+				args.push_back( create_value(scalar_hint, lhs_elem, vkind_value, abi_llvm) );
+				args.push_back( create_value(scalar_hint, rhs_elem, vkind_value, abi_llvm) );
+				value_t ret_elem_v = emit_call( workaround_fmodf, args );
+				ret = builder().CreateInsertElement(ret, ret_elem_v.load(abi_llvm), int_(i) );
+			}
+		}
+		else
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
 	} else if( is_integer(scalar_hint) ){
 		if( is_signed(scalar_hint) )
 		{
@@ -1219,14 +1244,14 @@ value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
-value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs )
+value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf )
 {
 	builtin_types lhint = lhs.hint();
 	builtin_types rhint = rhs.hint();
 
 	if( is_scalar(lhint) ){
 		if( is_scalar(rhint) ){
-			return emit_mod_ss_vv( lhs, rhs );
+			return emit_mod_ss_vv( lhs, rhs, workaround_fmodf );
 		} else if ( is_vector(rhint) ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else if ( is_matrix(rhint) ){
@@ -1236,7 +1261,7 @@ value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs )
 		if( is_scalar(rhint) ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else if ( is_vector(rhint) ){
-			return emit_mod_ss_vv( lhs, rhs );
+			return emit_mod_ss_vv( lhs, rhs, workaround_fmodf );
 		} else if ( is_matrix(rhint) ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
@@ -2118,6 +2143,33 @@ void cg_service::merge_swizzle( value_t const*& root, char indexes[], value_t co
 
 		std::copy(tmp_indexes, tmp_indexes+4, indexes);
 	}
+}
+
+value_t cg_service::create_value_by_scalar( value_t const& scalar, value_tyinfo* tyinfo, builtin_types hint )
+{
+	builtin_types src_hint = scalar.hint();
+	assert( is_scalar(src_hint) );
+	builtin_types dst_hint = tyinfo ? tyinfo->hint() : hint;
+	builtin_types dst_scalar = scalar_of(dst_hint);
+	assert( dst_scalar == src_hint );
+
+	if( is_scalar(dst_hint) )
+	{
+		return scalar;
+	}
+	else if( is_vector(dst_hint) )
+	{
+		size_t vsize = vector_size(dst_hint);
+		vector<value_t> scalars;
+		scalars.insert(scalars.end(), vsize, scalar);
+		return create_vector(scalars, scalar.abi());
+	}
+	else
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return value_t();
 }
 
 void function_t::allocation_block( insert_point_t const& ip )
