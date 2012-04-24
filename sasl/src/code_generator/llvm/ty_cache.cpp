@@ -137,7 +137,7 @@ Type* ty_cache_t::create_ty( LLVMContext& ctxt, builtin_types bt, abis abi )
 	if( abi == abi_c || abi == abi_llvm ){
 		if( is_scalar(bt) ){
 			if( bt == builtin_types::_boolean ){
-				return IntegerType::get( ctxt, 1 );
+				return IntegerType::get( ctxt, 8 );
 			}
 			if( is_integer(bt) ){
 				return IntegerType::get( ctxt, (unsigned int)storage_size( bt ) << 3 );

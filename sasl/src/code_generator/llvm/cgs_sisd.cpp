@@ -61,6 +61,7 @@ using llvm::TypeBuilder;
 using llvm::AttrListPtr;
 using llvm::SwitchInst;
 using llvm::CmpInst;
+using llvm::PHINode;
 
 namespace Intrinsic = llvm::Intrinsic;
 
@@ -86,6 +87,8 @@ value_t emit_cmp(
 	)
 {
 	builtin_types hint = lhs.hint();
+	builtin_types ret_hint = replace_scalar(hint, builtin_types::_boolean);
+	
 	assert( hint == rhs.hint() );
 	assert( is_scalar( scalar_of(hint) ) );
 
@@ -112,6 +115,7 @@ value_t emit_cmp(
 		{
 			ret = cg->builder().CreateFCmp( pred_float, lhs.load(abi_llvm), rhs.load(abi_llvm) );
 		}
+		ret = cg->builder().CreateZExtOrBitCast(ret, cg->type_(ret_hint, abi_llvm) );
 	}
 	else
 	{
@@ -199,7 +203,7 @@ void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 	}
 
 	StoreInst* inst = builder().CreateStore( src, address );
-	inst->setAlignment(4);
+	// inst->setAlignment(4);
 }
 
 value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
@@ -400,6 +404,14 @@ value_t cgs_sisd::emit_or( value_t const& lhs, value_t const& rhs )
 
 	Value* ret = builder().CreateOr( lhs.load(abi_llvm), rhs.load(abi_llvm) );
 	return create_value( lhs.tyinfo(), lhs.hint(), ret, vkind_value, abi_llvm );
+}
+
+Value* cgs_sisd::phi_( BasicBlock* b0, Value* v0, BasicBlock* b1, Value* v1 )
+{
+	PHINode* phi = builder().CreatePHI( v0->getType(), 2 );
+	phi->addIncoming(v0, b0);
+	phi->addIncoming(v1, b1);
+	return phi;
 }
 
 void function_t::arg_name( size_t index, std::string const& name ){

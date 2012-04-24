@@ -29,7 +29,7 @@ struct llvm_options
 {
 	llvm_options(){
 		// Add Options
-		char* options[] = { "", "-promote-elements" };
+		char* options[] = { ""/*, "-promote-elements" */};
 		llvm::cl::ParseCommandLineOptions( sizeof(options)/sizeof(char*), options );
 	}
 };

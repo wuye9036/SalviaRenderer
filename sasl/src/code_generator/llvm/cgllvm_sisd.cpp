@@ -129,13 +129,9 @@ value_t cgllvm_sisd::emit_short_cond( any const& ctxt_init, shared_ptr<node> con
 
 	set_insert_point(merge_ip);
 	value_t result_value;
-	if( yes_ref && no_ref ){
-		Value* merged = select_( cond_value.load(), yes_ref, no_ref );
-		result_value = create_value( yes_value.tyinfo(), yes_value.hint(), merged, vkind_ref, yes_value.abi() );
-	} else {
-		Value* merged = select_( cond_value.load(), yes_v, no_v );
-		result_value = create_value( yes_value.tyinfo(), yes_value.hint(), merged, vkind_value, yes_value.abi() );
-	}
+	Value*		merged = phi_( yes_ip_end.block, yes_v, no_ip_end.block, no_v );
+	value_kinds	vkind = (yes_ref && no_ref) ? vkind_ref : vkind_value;
+	result_value = create_value( yes_value.tyinfo(), yes_value.hint(), merged, vkind, yes_value.abi() );
 
 	return result_value;
 }

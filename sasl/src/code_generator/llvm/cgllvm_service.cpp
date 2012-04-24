@@ -302,6 +302,21 @@ void			value_t::kind( value_kinds vkind ) { kind_ = vkind; }
 void			value_t::parent( value_t const& v ){ parent_.reset( new value_t(v) ); }
 void			value_t::parent( value_t const* v ){ if(v){ parent(*v); } }
 value_t*		value_t::parent() const { return parent_.get(); }
+
+//Workaround for llvm issue 12618
+llvm::Value* value_t::load_i1() const{
+	Value* bool_v = NULL;
+	if( hint() == builtin_types::_boolean )
+	{
+		return cg_->builder().CreateTruncOrBitCast( load(abi_llvm), IntegerType::get(cg_->context(), 1) );
+	}
+	else
+	{
+		assert(false);
+		return NULL;
+	}
+}
+
 /// @}
 
 Function* cg_service::intrin_( int v )
@@ -665,6 +680,7 @@ llvm::Value* cg_service::load( value_t const& v )
 {
 	value_kinds kind = v.kind();
 	Value* raw = v.raw();
+
 	uint32_t masks = v.masks();
 
 	assert( kind != vkind_unknown && kind != vkind_tyinfo_only );
@@ -2109,7 +2125,7 @@ void cg_service::jump_to( insert_point_t const& ip )
 
 void cg_service::jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip )
 {
-	Value* cond = cond_v.load();
+	Value* cond = cond_v.load_i1();
 	builder().CreateCondBr( cond, true_ip.block, false_ip.block );
 }
 
@@ -2230,6 +2246,28 @@ value_t cg_service::emit_all( value_t const& v )
 		assert(false);
 	}
 	return value_t();
+}
+
+Value* cg_service::i8toi1_( Value* v )
+{
+	Type* ty = IntegerType::get( v->getContext(), 1 );
+	if( v->getType()->isVectorTy() )
+	{
+		ty = VectorType::get( ty, llvm::cast<VectorType>(v->getType())->getNumElements() );
+	}
+
+	return builder().CreateTruncOrBitCast(v, ty);
+}
+
+Value* cg_service::i1toi8_( Value* v )
+{
+	Type* ty = IntegerType::get( v->getContext(), 8 );
+	if( v->getType()->isVectorTy() )
+	{
+		ty = VectorType::get( ty, llvm::cast<VectorType>(v->getType())->getNumElements() );
+	}
+
+	return builder().CreateZExtOrBitCast(v, ty);
 }
 
 void function_t::allocation_block( insert_point_t const& ip )

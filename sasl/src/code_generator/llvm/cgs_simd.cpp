@@ -98,7 +98,7 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 			size_t padded_value_length = ceil_to_pow2(value_length);
 			Value* mask = expanded_mask( padded_value_length );
 			Value* dest_value = builder().CreateLoad( address );
-			src = builder().CreateSelect( mask, src, dest_value, "Merged" );
+			src = builder().CreateSelect( i8toi1_(mask), src, dest_value, "Merged" );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
@@ -149,7 +149,7 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 							Value* new_val = builder().CreateExtractElement( r_value, int_(src_index) );
 							Value* old_val = builder().CreateExtractElement( parent_value, int_(dst_index) ); 
 							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), int_( static_cast<int>(i_elem) ) );
-							Value* elem_val = builder().CreateSelect( elem_exec_mask, new_val, old_val );
+							Value* elem_val = builder().CreateSelect( i8toi1_(elem_exec_mask), new_val, old_val );
 							parent_value = builder().CreateInsertElement( parent_value, elem_val, int_(dst_index) );
 						}
 					}
@@ -168,7 +168,7 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 
 	// Masked Store
 	StoreInst* inst = builder().CreateStore( src, address );
-	inst->setAlignment(4);
+	//inst->setAlignment(4);
 }
 
 value_t cgs_simd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
@@ -260,7 +260,7 @@ value_t cgs_simd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
 				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
 				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
 				Value* cmp = is_signed(hint) ? builder().CreateICmpSLT( lhs_elem, rhs_elem ) : builder().CreateICmpULT( lhs_elem, rhs_elem );
-				ret_v = builder().CreateInsertElement( ret_v, cmp, int_(i) );
+				ret_v = builder().CreateInsertElement( ret_v, i1toi8_(cmp), int_(i) );
 			}
 		} else if( is_real(hint) ){
 			// TODO 
@@ -271,7 +271,7 @@ value_t cgs_simd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
 				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
 				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
 				Value* cmp = builder().CreateFCmpULT( lhs_elem, rhs_elem );
-				ret_v = builder().CreateInsertElement( ret_v, cmp, int_(i) );
+				ret_v = builder().CreateInsertElement( ret_v, i1toi8_(cmp), int_(i) );
 			}
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -336,7 +336,7 @@ value_t cgs_simd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
 				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
 				Value* cmp = builder().CreateFCmpUGT( lhs_elem, rhs_elem );
-				ret_v = builder().CreateInsertElement( ret_v, cmp, int_(i) );
+				ret_v = builder().CreateInsertElement( ret_v, i1toi8_(cmp), int_(i) );
 			}
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();

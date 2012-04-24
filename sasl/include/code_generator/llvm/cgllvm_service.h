@@ -138,6 +138,7 @@ public:
 	/// Load llvm value from value_t.
 	llvm::Value* load() const;
 	llvm::Value* load( abis abi ) const;
+	llvm::Value* load_i1() const;
 	llvm::Value* load_ref() const;
 
 	void store( value_t const& ) const;
@@ -578,7 +579,8 @@ protected:
 	llvm::Value* shrink_( llvm::Value* vec, size_t vsize );
 	llvm::Value* extract_elements_( llvm::Value* src, size_t start_pos, size_t length );
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
-
+	llvm::Value* i8toi1_( llvm::Value* );
+	llvm::Value* i1toi8_( llvm::Value* );
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_c_as_package		( value_t const& v );

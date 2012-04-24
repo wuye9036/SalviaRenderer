@@ -416,7 +416,8 @@ using eflib::int2;
 #if 1 || ALL_TESTS_ENABLED
 
 typedef vector_<char,2> char2;
-typedef vector_<int,3> bool3;
+typedef vector_<char,3> bool3;
+typedef vector_<char,4> bool4;
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -434,7 +435,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<vec4 (vec3, float, vec3)> test_fmod;
 	jit_function<vec3 (vec3, vec3, vec3)> test_lerp;
 	jit_function<vec3 (vec3)> test_rad_deg;
-	// jit_function<bool3(vec3, int3)> test_any_all;
+	jit_function<bool4(vec3, int3)> test_any_all;
+
+	function( test_any_all, "test_any_all" );
+	BOOST_REQUIRE(test_any_all);
 
 	function( test_dot_f3, "test_dot_f3" );
 	BOOST_REQUIRE(test_dot_f3);
@@ -471,10 +475,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 	function( test_rad_deg, "test_rad_deg" );
 	BOOST_REQUIRE(test_rad_deg);
-
-	/*function( test_any_all, "test_any_all" );
-	BOOST_REQUIRE(test_any_all);
-	*/
+	
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
 		vec3 rhs( 1.0f, -22.0f, 8.28f );
@@ -599,32 +600,34 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( ret3.z,	ref3.z,	0.000001f );
 	}
 
+	{
+		vec3 v0( 0.0f,  0.0f,  0.0f );
+		vec3 v1( 2.3f, -1.7f,  0.0f );
+		vec3 v2( 2.3f, -1.7f,  7.7f );
 
-	//{
-	//	vec3 v0( 0.0f,  0.0f,  0.0f );
-	//	vec3 v1( 2.3f, -1.7f,  0.0f );
-	//	vec3 v2( 2.3f, -1.7f,  7.7f );
+		int3 i0(  0,  0,  0 );
+		int3 i1( 15,  0, -7 );
+		int3 i2( 10, -9, 11 );
 
-	//	int3 i0(  0,  0,  0 );
-	//	int3 i1( 15,  0, -7 );
-	//	int3 i2( 10, -9, 11 );
+		bool4 ret0 = test_any_all(v0, i0);
+		bool4 ret1 = test_any_all(v1, i1);
+		bool4 ret2 = test_any_all(v2, i2);
 
-	//	bool3 ret0 = test_any_all(v0, i0);
-	//	bool3 ret1 = test_any_all(v1, i1);
-	//	bool3 ret2 = test_any_all(v2, i2);
+		BOOST_CHECK_EQUAL( ret0[0], false );
+		BOOST_CHECK_EQUAL( ret0[1], false );
+		BOOST_CHECK_EQUAL( ret0[2], false );
+		BOOST_CHECK_EQUAL( ret0[3], false );
 
-	//	BOOST_CHECK_EQUAL( ret0[0], false );
-	//	BOOST_CHECK_EQUAL( ret0[1], false );
-	//	BOOST_CHECK_EQUAL( ret0[2], false );
+		BOOST_CHECK_EQUAL( ret1[0], true  );
+		BOOST_CHECK_EQUAL( ret1[1], false );
+		BOOST_CHECK_EQUAL( ret1[2], true );
+		BOOST_CHECK_EQUAL( ret1[3], false );
 
-	//	BOOST_CHECK_EQUAL( ret1[0], true  );
-	//	BOOST_CHECK_EQUAL( ret1[1], false );
-	//	BOOST_CHECK_EQUAL( ret1[2], false );
-
-	//	BOOST_CHECK_EQUAL( ret2[0], true );
-	//	BOOST_CHECK_EQUAL( ret2[1], true );
-	//	BOOST_CHECK_EQUAL( ret2[2], true );
-	//}
+		BOOST_CHECK_EQUAL( ret2[0], true );
+		BOOST_CHECK_EQUAL( ret2[1], true );
+		BOOST_CHECK_EQUAL( ret2[2], true );
+		BOOST_CHECK_EQUAL( ret2[3], true );
+	}
 }
 
 #endif
@@ -937,7 +940,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/scalar.sps" );
 

@@ -147,6 +147,7 @@ public:
 	/// @name Bridges
 	/// @{
 	llvm::Value* select_( llvm::Value* cond, llvm::Value* yes, llvm::Value* no );
+	llvm::Value* phi_( llvm::BasicBlock* b0, llvm::Value* v0, llvm::BasicBlock* b1, llvm::Value* v1 );
 	template <typename T>
 	llvm::Value* c_vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	/// @}

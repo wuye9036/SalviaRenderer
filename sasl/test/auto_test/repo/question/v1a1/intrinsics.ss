@@ -1,4 +1,3 @@
-
 float test_dot_f3( float3 lhs, float3 rhs ){
 	return dot( lhs, rhs );
 }
@@ -64,10 +63,7 @@ float3 test_rad_deg( float3 s )
 	return radians(s.xy).xxy + degrees(s);
 }
 
-/*
-bool3 test_any_all(float3 f, int3 i)
+bool4 test_any_all(float3 f, int3 i)
 {
-	bool3 ret = (f == f); //any(i)&&all(i) );
-	return bool3(ret.x, ret.z, ret.y);
+	return bool4( any(f), all(f), any(i), all(i) );
 }
-*/
