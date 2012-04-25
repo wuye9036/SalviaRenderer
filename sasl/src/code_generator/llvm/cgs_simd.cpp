@@ -69,6 +69,7 @@ using llvm::StoreInst;
 using llvm::TypeBuilder;
 using llvm::AttrListPtr;
 using llvm::SwitchInst;
+using llvm::CmpInst;
 
 namespace Intrinsic = llvm::Intrinsic;
 
@@ -238,114 +239,6 @@ void cgs_simd::emit_return( value_t const& ret_v, abis abi )
 abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
 {
 	return abi_package;
-}
-
-value_t cgs_simd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
-{
-	abis promoted_abi = promote_abi( lhs.abi(), rhs.abi() );
-
-	builtin_types hint = lhs.hint();
-	assert( hint == rhs.hint() );
-	assert( hint != builtin_types::none );
-
-	Value* lhs_v = lhs.load( promoted_abi );
-	Value* rhs_v = rhs.load( promoted_abi );
-
-	Value* ret_v = NULL;
-
-	if( is_scalar(hint) || is_vector(hint) ){	
-		if( is_integer(hint) ){
-			ret_v = UndefValue::get( type_(builtin_types::_boolean, abi_package) );
-			for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
-				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
-				Value* cmp = is_signed(hint) ? builder().CreateICmpSLT( lhs_elem, rhs_elem ) : builder().CreateICmpULT( lhs_elem, rhs_elem );
-				ret_v = builder().CreateInsertElement( ret_v, i1toi8_(cmp), int_(i) );
-			}
-		} else if( is_real(hint) ){
-			// TODO 
-			// According to the document, fcmp ugt works well on vector. But I don't know why it is failed.
-			// So We expand it manually.
-			ret_v = UndefValue::get( type_(builtin_types::_boolean, abi_package) );
-			for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
-				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
-				Value* cmp = builder().CreateFCmpULT( lhs_elem, rhs_elem );
-				ret_v = builder().CreateInsertElement( ret_v, i1toi8_(cmp), int_(i) );
-			}
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return create_value( builtin_types::_boolean, ret_v, vkind_value, promoted_abi );
-}
-
-value_t cgs_simd::emit_cmp_le( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_cmp_ne( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
-}
-
-value_t cgs_simd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
-{
-	abis promoted_abi = promote_abi( lhs.abi(), rhs.abi() );
-
-	builtin_types hint = lhs.hint();
-	assert( hint == rhs.hint() );
-	assert( hint != builtin_types::none );
-
-	Value* lhs_v = lhs.load( promoted_abi );
-	Value* rhs_v = rhs.load( promoted_abi );
-
-	Value* ret_v = NULL;
-
-	if( is_scalar(hint) || is_vector(hint) ){	
-		if( is_integer(hint) ){
-			if( is_signed(hint) ){
-				ret_v = builder().CreateICmpSGT( lhs_v, rhs_v );
-			} else {
-				ret_v = builder().CreateICmpSGT( lhs_v, rhs_v );
-			}
-		} else if( is_real(hint) ){
-			// TODO 
-			// According to the document, fcmp ugt works well on vector. But I don't know why it is failed.
-			// So We expand it manually.
-			ret_v = UndefValue::get( type_(builtin_types::_boolean, abi_package) );
-			for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-				Value* lhs_elem = builder().CreateExtractElement( lhs_v, int_(i) );
-				Value* rhs_elem = builder().CreateExtractElement( rhs_v, int_(i) );
-				Value* cmp = builder().CreateFCmpUGT( lhs_elem, rhs_elem );
-				ret_v = builder().CreateInsertElement( ret_v, i1toi8_(cmp), int_(i) );
-			}
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return create_value( builtin_types::_boolean, ret_v, vkind_value, promoted_abi );
 }
 
 value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi, builtin_types hint )

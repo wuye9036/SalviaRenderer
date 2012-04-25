@@ -56,6 +56,7 @@ using sasl::utility::matrix_of;
 using sasl::utility::vector_size;
 using sasl::utility::vector_count;
 using sasl::utility::storage_size;
+using sasl::utility::replace_scalar;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::SIMD_ELEMENT_COUNT;
@@ -2268,6 +2269,83 @@ Value* cg_service::i1toi8_( Value* v )
 	}
 
 	return builder().CreateZExtOrBitCast(v, ty);
+}
+
+value_t cg_service::emit_cmp( value_t const& lhs, value_t const& rhs, uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float )
+{
+	builtin_types hint = lhs.hint();
+	builtin_types ret_hint = replace_scalar(hint, builtin_types::_boolean);
+
+	assert( hint == rhs.hint() );
+	assert( is_scalar( scalar_of(hint) ) );
+
+	Value* ret = NULL;
+
+	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abi_llvm);
+
+	Value* lhs_v = lhs.load(promoted_abi);
+	Value* rhs_v = rhs.load(promoted_abi);
+
+	if( is_scalar(hint) || is_vector(hint) )
+	{
+		if( scalar_of(hint) == builtin_types::_boolean )
+		{
+			ret = builder().CreateICmp( (CmpInst::Predicate)pred_unsigned, lhs_v, rhs_v );
+		}
+		else if( is_integer(hint) )
+		{
+			if( is_signed(hint) )
+			{
+				ret = builder().CreateICmp( (CmpInst::Predicate)pred_signed, lhs_v, rhs_v );
+			}
+			else
+			{
+				ret = builder().CreateICmp( (CmpInst::Predicate)pred_unsigned, lhs_v, rhs_v );
+			}
+		}
+		else if( is_real(hint) )
+		{
+			ret = builder().CreateFCmp( (CmpInst::Predicate)pred_float, lhs_v, rhs_v );
+		}
+		ret = i1toi8_(ret);
+	}
+	else
+	{
+		// TODO MATRIX
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	return create_value( ret_hint, ret, vkind_value, promoted_abi );
+}
+
+value_t cg_service::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
+{
+	return emit_cmp( lhs, rhs, CmpInst::ICMP_EQ, CmpInst::ICMP_EQ, CmpInst::FCMP_OEQ );
+}
+
+value_t cg_service::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
+{
+	return emit_cmp( lhs, rhs, CmpInst::ICMP_SLT, CmpInst::ICMP_ULT, CmpInst::FCMP_ULT );
+}
+
+value_t cg_service::emit_cmp_le( value_t const& lhs, value_t const& rhs )
+{
+	return emit_cmp( lhs, rhs, CmpInst::ICMP_SLE, CmpInst::ICMP_ULE, CmpInst::FCMP_ULE );
+}
+
+value_t cg_service::emit_cmp_ne( value_t const& lhs, value_t const& rhs )
+{
+	return emit_cmp( lhs, rhs, CmpInst::ICMP_NE, CmpInst::ICMP_NE, CmpInst::FCMP_UNE );
+}
+
+value_t cg_service::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
+{
+	return emit_cmp( lhs, rhs, CmpInst::ICMP_SGE, CmpInst::ICMP_UGE, CmpInst::FCMP_UGE );
+}
+
+value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
+{
+	return emit_cmp( lhs, rhs, CmpInst::ICMP_SGT, CmpInst::ICMP_UGT, CmpInst::FCMP_UGT );
 }
 
 void function_t::allocation_block( insert_point_t const& ip )

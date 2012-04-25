@@ -308,12 +308,12 @@ public:
 	virtual value_t emit_bit_and( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_bit_or ( value_t const& lhs, value_t const& rhs );
 
-	virtual value_t emit_cmp_lt ( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_le ( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_eq ( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_ne ( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_ge ( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_cmp_gt ( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_cmp_lt ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_cmp_le ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_cmp_eq ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_cmp_ne ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_cmp_ge ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_cmp_gt ( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t emit_and( value_t const& lhs, value_t const& rhs ) = 0;
 	virtual value_t emit_or ( value_t const& lhs, value_t const& rhs ) = 0;
@@ -552,6 +552,11 @@ protected:
 	llvm_module_impl*		mod_impl;
 	value_t					exec_mask;
 	
+	value_t emit_cmp(
+		value_t const& lhs, value_t const& rhs,
+		uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float
+		);
+
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );

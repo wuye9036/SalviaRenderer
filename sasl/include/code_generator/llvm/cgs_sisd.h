@@ -66,13 +66,6 @@ public:
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
 	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );
-	
-	value_t emit_cmp_lt( value_t const& lhs, value_t const& rhs );
-	value_t emit_cmp_le( value_t const& lhs, value_t const& rhs );
-	value_t emit_cmp_eq( value_t const& lhs, value_t const& rhs );
-	value_t emit_cmp_ne( value_t const& lhs, value_t const& rhs );
-	value_t emit_cmp_ge( value_t const& lhs, value_t const& rhs );
-	value_t emit_cmp_gt( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t emit_and( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_or ( value_t const& lhs, value_t const& rhs );

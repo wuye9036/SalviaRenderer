@@ -77,59 +77,9 @@ using std::string;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-value_t emit_cmp(
-	cgs_sisd* cg,
-	value_t const& lhs,
-	value_t const& rhs,
-	CmpInst::Predicate pred_signed,
-	CmpInst::Predicate pred_unsigned,
-	CmpInst::Predicate pred_float
-	)
-{
-	builtin_types hint = lhs.hint();
-	builtin_types ret_hint = replace_scalar(hint, builtin_types::_boolean);
-	
-	assert( hint == rhs.hint() );
-	assert( is_scalar( scalar_of(hint) ) );
-
-	Value* ret = NULL;
-
-	if( is_scalar(hint) || is_vector(hint) )
-	{
-		if( scalar_of(hint) == builtin_types::_boolean )
-		{
-			ret = cg->builder().CreateICmp( pred_unsigned, lhs.load(abi_llvm), rhs.load(abi_llvm) );
-		}
-		else if( is_integer(hint) )
-		{
-			if( is_signed(hint) )
-			{
-				ret = cg->builder().CreateICmp( pred_signed, lhs.load(abi_llvm), rhs.load(abi_llvm) );
-			}
-			else
-			{
-				ret = cg->builder().CreateICmp( pred_unsigned, lhs.load(abi_llvm), rhs.load(abi_llvm) );
-			}
-		}
-		else if( is_real(hint) )
-		{
-			ret = cg->builder().CreateFCmp( pred_float, lhs.load(abi_llvm), rhs.load(abi_llvm) );
-		}
-		ret = cg->builder().CreateZExtOrBitCast(ret, cg->type_(ret_hint, abi_llvm) );
-	}
-	else
-	{
-		// TODO MATRIX
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return cg->create_value( replace_scalar(hint, builtin_types::_boolean), ret, vkind_value, abi_llvm );
-}
-
 namespace {
-
-	template <typename T>
-	APInt apint( T v ){
+	template <typename T> APInt apint( T v )
+	{
 		return APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
 	}
 
@@ -278,36 +228,6 @@ value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo, builtin_types
 Value* cgs_sisd::select_( Value* cond, Value* yes, Value* no )
 {
 	return builder().CreateSelect( cond, yes, no );
-}
-
-value_t cgs_sisd::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
-{
-	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_EQ, CmpInst::ICMP_EQ, CmpInst::FCMP_OEQ );
-}
-
-value_t cgs_sisd::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
-{
-	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SLT, CmpInst::ICMP_ULT, CmpInst::FCMP_ULT );
-}
-
-value_t cgs_sisd::emit_cmp_le( value_t const& lhs, value_t const& rhs )
-{
-	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SLE, CmpInst::ICMP_ULE, CmpInst::FCMP_ULE );
-}
-
-value_t cgs_sisd::emit_cmp_ne( value_t const& lhs, value_t const& rhs )
-{
-	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_NE, CmpInst::ICMP_NE, CmpInst::FCMP_UNE );
-}
-
-value_t cgs_sisd::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
-{
-	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SGE, CmpInst::ICMP_UGE, CmpInst::FCMP_UGE );
-}
-
-value_t cgs_sisd::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
-{
-	return emit_cmp( this, lhs, rhs, CmpInst::ICMP_SGT, CmpInst::ICMP_UGT, CmpInst::FCMP_UGT );
 }
 
 bool cgs_sisd::prefer_externals() const

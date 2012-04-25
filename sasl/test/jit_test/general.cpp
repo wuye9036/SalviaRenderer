@@ -1327,7 +1327,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 	init_ps( "./repo/question/v1a1/for_loop.sps" );
