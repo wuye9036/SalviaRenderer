@@ -62,7 +62,7 @@ public:
 	abis intrinsic_abi() const;
 
 	/** @name Emit expressions
-	Some simple overloadable operators such as '+' '-' '*' '/'
+	Some simple overload-able operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
 	value_t emit_cond_expr( value_t cond, value_t const& yes, value_t const& no );

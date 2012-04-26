@@ -556,6 +556,21 @@ protected:
 		value_t const& lhs, value_t const& rhs,
 		uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float
 		);
+	
+	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)> bin_fn_t;
+	
+	value_t emit_bin_ss_vv(
+		value_t const& lhs, value_t const& rhs,
+		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+		);
+	value_t emit_bin_sv( 
+		value_t const& lhs, value_t const& rhs,
+		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+		);
+	value_t emit_bin_vs(
+		value_t const& lhs, value_t const& rhs,
+		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+		);
 
 	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
 	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
@@ -586,6 +601,7 @@ protected:
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
 	llvm::Value* i8toi1_( llvm::Value* );
 	llvm::Value* i1toi8_( llvm::Value* );
+
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_c_as_package		( value_t const& v );

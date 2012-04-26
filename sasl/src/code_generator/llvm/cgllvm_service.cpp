@@ -25,6 +25,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
+#include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 using llvm::Module;
@@ -62,27 +63,6 @@ using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::SIMD_ELEMENT_COUNT;
 
 using namespace eflib;
-
-// Fn name is function name, op_name is llvm Create##op_name/CreateF##op_name
-#define EMIT_OP_SS_VV_BODY( op_name )	\
-	builtin_types hint( lhs.hint() ); \
-	assert( hint == rhs.hint() ); \
-	assert( is_scalar(hint) || is_vector(hint) ); \
-	\
-	Value* ret = NULL; \
-	\
-	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint); \
-	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );	\
-	abis internal_abi = promote_abi( promoted_abi, abi_llvm );	\
-	if( is_real( scalar_hint ) ){ \
-	ret = builder().CreateF##op_name ( lhs.load(internal_abi), rhs.load(internal_abi) ); \
-	} else { \
-	ret = builder().Create##op_name( lhs.load(internal_abi), rhs.load(internal_abi) ); \
-	}	\
-	\
-	value_t retval = create_value( hint, ret, vkind_value, internal_abi ); \
-	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;\
-	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
@@ -157,7 +137,7 @@ abis value_t::abi() const{
 	return abi_;
 }
 
-value_t value_t::swizzle( size_t swz_code ) const{
+value_t value_t::swizzle( size_t /*swz_code*/ ) const{
 	assert( is_vector( hint() ) );
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -306,7 +286,6 @@ value_t*		value_t::parent() const { return parent_.get(); }
 
 //Workaround for llvm issue 12618
 llvm::Value* value_t::load_i1() const{
-	Value* bool_v = NULL;
 	if( hint() == builtin_types::_boolean )
 	{
 		return cg_->builder().CreateTruncOrBitCast( load(abi_llvm), IntegerType::get(cg_->context(), 1) );
@@ -970,46 +949,31 @@ abis cg_service::promote_abi( abis abi0, abis abi1, abis abi2 )
 
 value_t cg_service::emit_add_ss_vv( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_OP_SS_VV_BODY(Add);
+	bin_fn_t f_add = boost::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	bin_fn_t i_add = boost::bind( &DefaultIRBuilder::CreateAdd,  builder(), _1, _2, "", false, false );
+	return emit_bin_ss_vv( lhs, rhs, i_add, i_add, f_add );
 }
 
 value_t cg_service::emit_sub_ss_vv( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_OP_SS_VV_BODY(Sub);
+	bin_fn_t f_sub = boost::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	bin_fn_t i_sub = boost::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
+	return emit_bin_ss_vv( lhs, rhs, i_sub, i_sub, f_sub );
 }
 
 value_t cg_service::emit_mul_ss_vv( value_t const& lhs, value_t const& rhs )
 {
-	EMIT_OP_SS_VV_BODY(Mul);
+	bin_fn_t f_mul = boost::bind( &DefaultIRBuilder::CreateFMul, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	bin_fn_t i_mul = boost::bind( &DefaultIRBuilder::CreateMul,  builder(), _1, _2, "", false, false );
+	return emit_bin_ss_vv( lhs, rhs, i_mul, i_mul, f_mul );
 }
 
 value_t cg_service::emit_div_ss_vv( value_t const& lhs, value_t const& rhs )
 {
-	builtin_types hint( lhs.hint() );
-	assert( hint == rhs.hint() );
-	assert( is_scalar(hint) || is_vector(hint) );
-	Value* ret = NULL; 
-	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
-	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
-	abis internal_abi = promote_abi( promoted_abi, abi_llvm );
-	if( is_real( scalar_hint ) ){
-		ret = builder().CreateFDiv ( lhs.load(internal_abi), rhs.load(internal_abi) );
-	} else if( is_integer(scalar_hint) ){
-		if( is_signed(scalar_hint) )
-		{
-			ret = builder().CreateSDiv( lhs.load(internal_abi), rhs.load(internal_abi) );
-		}
-		else
-		{
-			ret = builder().CreateUDiv( lhs.load(internal_abi), rhs.load(internal_abi) );
-		}
-	} else {
-		assert(false);
-	}
-
-	value_t retval = create_value( hint, ret, vkind_value, internal_abi );
-	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
-	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
+	bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
+	bin_fn_t i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
+	bin_fn_t u_div = boost::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
+	return emit_bin_ss_vv( lhs, rhs, i_div, u_div, f_div );
 }
 
 value_t cg_service::emit_mod_ss_vv( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf )
@@ -1028,7 +992,7 @@ value_t cg_service::emit_mod_ss_vv( value_t const& lhs, value_t const& rhs, func
 		Type* lhs_ty = lhs_v->getType();
 		if( lhs_ty->isFloatingPointTy() )
 		{
-			ret = builder().CreateFRem( lhs.load(internal_abi), rhs.load(internal_abi) );
+			ret = builder().CreateFRem(lhs_v, rhs_v);
 		}
 		else if( lhs_ty->isVectorTy() )
 		{
@@ -1483,7 +1447,7 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 	return value_t();
 }
 
-value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
+value_t cg_service::emit_extract_ref( value_t const& /*lhs*/, value_t const& /*idx*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -1543,7 +1507,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
 }
 
-value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
+value_t cg_service::emit_extract_val( value_t const& /*lhs*/, value_t const& /*idx*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -1616,11 +1580,11 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 					copy( &indexes[0], &indexes[idx_len], indexes_per_value.begin() );
 
 					vector<char> package_idx( PACKAGE_ELEMENT_COUNT * swz_element_pitch, -1 );
-					assert( idx_len <= SIMD_ELEMENT_COUNT() );
+					assert( (int)idx_len <= SIMD_ELEMENT_COUNT() );
 
 					for ( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-						for( size_t j = 0; j < swz_element_pitch; ++j ){
-							package_idx[i*swz_element_pitch+j] = indexes_per_value[j]+i*src_element_pitch;
+						for( size_t j = 0; j < (size_t)swz_element_pitch; ++j ){
+							package_idx[i*swz_element_pitch+j] = (char)(indexes_per_value[j]+i*src_element_pitch);
 						}
 					}
 
@@ -2346,6 +2310,46 @@ value_t cg_service::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
 value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 {
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_SGT, CmpInst::ICMP_UGT, CmpInst::FCMP_UGT );
+}
+
+value_t cg_service::emit_bin_ss_vv( value_t const& lhs, value_t const& rhs, bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn )
+{
+	builtin_types hint( lhs.hint() );
+	assert( hint == rhs.hint() );
+	assert( is_scalar(hint) || is_vector(hint) );
+
+	Value* ret = NULL;
+
+	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
+	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
+	abis internal_abi = promote_abi( promoted_abi, abi_llvm );
+
+	Value* lhs_v = lhs.load(internal_abi);
+	Value* rhs_v = rhs.load(internal_abi);
+
+	if( is_real(scalar_hint) )
+	{
+		ret = float_fn( lhs_v, rhs_v );
+	}
+	else if( is_integer(scalar_hint) ) 
+	{
+		if( is_signed(scalar_hint) )
+		{
+			ret = signed_fn( lhs_v, rhs_v );
+		}
+		else
+		{
+			ret = unsigned_fn(lhs_v, rhs_v);
+		}
+	}
+	else
+	{
+		assert(false);
+	}
+
+	value_t retval = create_value( hint, ret, vkind_value, internal_abi );
+	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
+	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
 }
 
 void function_t::allocation_block( insert_point_t const& ip )
