@@ -13,3 +13,6 @@ sasl/test/semantic_test/test_main.cpp
 sasl/test/st_combinator_test/test_main.cpp
 sasl/test/regression_test/test_main.cpp
 doc/roadmap.mpp
+*.pyc
+proj.py
+build.log
