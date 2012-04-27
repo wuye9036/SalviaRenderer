@@ -559,7 +559,15 @@ protected:
 	
 	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)> bin_fn_t;
 	
-	value_t emit_bin_ss_vv(
+	llvm::Value* bin_op_ps_				(llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn);
+	llvm::Value* bin_op_ps_scalar_ext_	(llvm::Value* lhs, llvm::Value* rhs, builtin_types scalar_hint, function_t const& fn );
+
+	value_t emit_bin_mm(
+		value_t const& lhs, value_t const& rhs,
+		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+		);
+
+	value_t emit_bin(
 		value_t const& lhs, value_t const& rhs,
 		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
 		);
@@ -572,18 +580,9 @@ protected:
 		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
 		);
 
-	value_t emit_add_ss_vv( value_t const& lhs, value_t const& rhs );
-	value_t emit_sub_ss_vv( value_t const& lhs, value_t const& rhs );
-	value_t emit_mul_ss_vv( value_t const& lhs, value_t const& rhs );
-	value_t emit_div_ss_vv( value_t const& lhs, value_t const& rhs );
-	value_t emit_mod_ss_vv( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf );
-
-	value_t emit_lshift_ss_vv ( value_t const& lhs, value_t const& rhs );
-	value_t emit_rshift_ss_vv ( value_t const& lhs, value_t const& rhs );
-	value_t emit_bit_and_ss_vv( value_t const& lhs, value_t const& rhs );
-	value_t emit_bit_or_ss_vv ( value_t const& lhs, value_t const& rhs );
-
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
+
+	value_t emit_mul_ps( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );

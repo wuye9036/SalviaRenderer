@@ -190,43 +190,38 @@ SASL_VISIT_DEF( binary_expression ){
 			builtin_types lbtc = p0_tsi->type_info()->tycode;
 			builtin_types rbtc = p1_tsi->type_info()->tycode;
 
-			if( is_scalar(lbtc) || is_vector(lbtc) ){
-				if( v.op == operators::add ){
-					retval = service()->emit_add(lval, rval);
-				} else if ( v.op == operators::mul ) {
-					retval = service()->emit_mul(lval, rval);
-				} else if ( v.op == operators::sub ) {
-					retval = service()->emit_sub(lval, rval);
-				} else if( v.op == operators::div ){
-					retval = service()->emit_div(lval, rval);
-				} else if( v.op == operators::mod ){
-					retval = service()->emit_mod(lval, rval, *get_function("__wa_fmodf"));
-				} else if( v.op == operators::left_shift ) {
-					retval = service()->emit_lshift( lval, rval );
-				} else if( v.op == operators::right_shift ) {
-					retval = service()->emit_rshift( lval, rval );
-				} else if( v.op == operators::bit_and ) {
-					retval = service()->emit_bit_and( lval, rval );
-				} else if( v.op == operators::bit_or ) {
-					retval = service()->emit_bit_or( lval, rval );
-				} else if( v.op == operators::less ) {
-					retval = service()->emit_cmp_lt( lval, rval );
-				} else if( v.op == operators::less_equal ){
-					retval = service()->emit_cmp_le( lval, rval );
-				} else if( v.op == operators::equal ){
-					retval = service()->emit_cmp_eq( lval, rval );
-				} else if( v.op == operators::greater_equal ){
-					retval = service()->emit_cmp_ge( lval, rval );
-				} else if( v.op == operators::greater ){
-					retval = service()->emit_cmp_gt( lval, rval );	
-				} else if( v.op == operators::not_equal ){
-					retval = service()->emit_cmp_ne( lval, rval );
-				} else {
-					EFLIB_ASSERT_UNIMPLEMENTED0( ( operators::to_name(v.op) + " not be implemented." ).c_str() );
-				}
-
+			if( v.op == operators::add ){
+				retval = service()->emit_add(lval, rval);
+			} else if ( v.op == operators::mul ) {
+				retval = service()->emit_mul(lval, rval);
+			} else if ( v.op == operators::sub ) {
+				retval = service()->emit_sub(lval, rval);
+			} else if( v.op == operators::div ){
+				retval = service()->emit_div(lval, rval);
+			} else if( v.op == operators::mod ){
+				retval = service()->emit_mod(lval, rval, *get_function("__wa_fmodf"));
+			} else if( v.op == operators::left_shift ) {
+				retval = service()->emit_lshift( lval, rval );
+			} else if( v.op == operators::right_shift ) {
+				retval = service()->emit_rshift( lval, rval );
+			} else if( v.op == operators::bit_and ) {
+				retval = service()->emit_bit_and( lval, rval );
+			} else if( v.op == operators::bit_or ) {
+				retval = service()->emit_bit_or( lval, rval );
+			} else if( v.op == operators::less ) {
+				retval = service()->emit_cmp_lt( lval, rval );
+			} else if( v.op == operators::less_equal ){
+				retval = service()->emit_cmp_le( lval, rval );
+			} else if( v.op == operators::equal ){
+				retval = service()->emit_cmp_eq( lval, rval );
+			} else if( v.op == operators::greater_equal ){
+				retval = service()->emit_cmp_ge( lval, rval );
+			} else if( v.op == operators::greater ){
+				retval = service()->emit_cmp_gt( lval, rval );	
+			} else if( v.op == operators::not_equal ){
+				retval = service()->emit_cmp_ne( lval, rval );
 			} else {
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				EFLIB_ASSERT_UNIMPLEMENTED0( ( operators::to_name(v.op) + " not be implemented." ).c_str() );
 			}
 
 			assert(retval.hint() == op_proto->si_ptr<type_info_si>()->type_info()->tycode);
@@ -661,19 +656,19 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
 		shared_ptr<function_type> intr_fn = intr->node()->as_handle<function_type>();
 		storage_si* intrin_ssi = intr_fn->si_ptr<storage_si>();
+		bool external = intrin_ssi->external_compatible();
+
 		// If intrinsic is not invoked, we don't generate code for it.
-		if( ! intrin_ssi->is_invoked() ){ continue;	}
+		if( !intrin_ssi->is_invoked() && !external ){ continue;	}
 
 		any child_ctxt = cgllvm_sctxt();
 
 		visit_child( child_ctxt, intr_fn );
+		// Deal with external functions. External function has nobody.
+		if ( external ){ continue; }
 
 		cgllvm_sctxt* intrinsic_ctxt = node_ctxt( intr_fn, false );
 		assert( intrinsic_ctxt );
-
-		// Deal with external functions. External function has nobody.
-		bool external = intrin_ssi->external_compatible();
-		if ( external ){ continue; }
 
 		service()->push_fn( intrinsic_ctxt->data().self_fn );
 		scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, service() ) );
