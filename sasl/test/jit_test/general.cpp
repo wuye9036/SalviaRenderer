@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -392,7 +392,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 typedef vector_<char,2> char2;
 typedef vector_<char,3> bool3;
@@ -919,7 +919,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/scalar.sps" );
 
@@ -1306,7 +1306,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 	init_ps( "./repo/question/v1a1/for_loop.sps" );
@@ -1435,7 +1435,7 @@ BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
 	init_g( "./repo/question/v1a1/constructors.ss" );
@@ -1503,7 +1503,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
