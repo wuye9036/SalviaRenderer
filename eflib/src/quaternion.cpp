@@ -29,10 +29,10 @@ namespace eflib{
 
 	quaternion quaternion::from_mat44( const mat44& mat )
 	{
-		float _4_w_sqr_minus_1 = + mat.f[0][0] + mat.f[1][1] + mat.f[2][2];
-		float _4_x_sqr_minus_1 = + mat.f[0][0] - mat.f[1][1] - mat.f[2][2];
-		float _4_y_sqr_minus_1 = - mat.f[0][0] + mat.f[1][1] - mat.f[2][2];
-		float _4_z_sqr_minus_1 = - mat.f[0][0] - mat.f[1][1] + mat.f[2][2];
+		float _4_w_sqr_minus_1 = + mat.data_[0][0] + mat.data_[1][1] + mat.data_[2][2];
+		float _4_x_sqr_minus_1 = + mat.data_[0][0] - mat.data_[1][1] - mat.data_[2][2];
+		float _4_y_sqr_minus_1 = - mat.data_[0][0] + mat.data_[1][1] - mat.data_[2][2];
+		float _4_z_sqr_minus_1 = - mat.data_[0][0] - mat.data_[1][1] + mat.data_[2][2];
 
 		int i_biggest = 0;
 		float biggest_val = _4_w_sqr_minus_1;
@@ -58,31 +58,31 @@ namespace eflib{
 		switch(i_biggest){
 		case 0:
 			return quaternion(
-				(mat.f[1][2] - mat.f[2][1]) * m,
-				(mat.f[2][0] - mat.f[0][2]) * m,
-				(mat.f[0][1] - mat.f[1][0]) * m,
+				(mat.data_[1][2] - mat.data_[2][1]) * m,
+				(mat.data_[2][0] - mat.data_[0][2]) * m,
+				(mat.data_[0][1] - mat.data_[1][0]) * m,
 				biggest_val
 				);
 		case 1:
 			return quaternion(
 				biggest_val,
-				(mat.f[0][1] + mat.f[1][0]) * m,
-				(mat.f[2][0] + mat.f[0][2]) * m,
-				(mat.f[1][2] - mat.f[2][1]) * m
+				(mat.data_[0][1] + mat.data_[1][0]) * m,
+				(mat.data_[2][0] + mat.data_[0][2]) * m,
+				(mat.data_[1][2] - mat.data_[2][1]) * m
 				);
 		case 2:
 			return quaternion(
-				(mat.f[0][1] + mat.f[1][0]) * m,
+				(mat.data_[0][1] + mat.data_[1][0]) * m,
 				biggest_val,
-				(mat.f[1][2] + mat.f[2][1]) * m,
-				(mat.f[2][0] - mat.f[0][2]) * m
+				(mat.data_[1][2] + mat.data_[2][1]) * m,
+				(mat.data_[2][0] - mat.data_[0][2]) * m
 				);
 		default:
 			return quaternion(
-				(mat.f[2][0] + mat.f[0][2]) * m,
-				(mat.f[1][2] + mat.f[2][1]) * m,
+				(mat.data_[2][0] + mat.data_[0][2]) * m,
+				(mat.data_[1][2] + mat.data_[2][1]) * m,
 				biggest_val,
-				(mat.f[0][1] - mat.f[1][0]) * m
+				(mat.data_[0][1] - mat.data_[1][0]) * m
 				);
 
 		}

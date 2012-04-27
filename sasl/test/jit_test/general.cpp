@@ -465,10 +465,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 	{
 		mat44 mat( mat44::identity() );
-		mat.f[0][0] = 1.0f;
-		mat.f[0][1] = 1.0f;
-		mat.f[0][2] = 1.0f;
-		mat.f[0][3] = 1.0f;
+		mat.data_[0][0] = 1.0f;
+		mat.data_[0][1] = 1.0f;
+		mat.data_[0][2] = 1.0f;
+		mat.data_[0][3] = 1.0f;
 
 		for( int i = 0; i < 16; ++i){
 			((float*)(&mat))[i] = float(i);
