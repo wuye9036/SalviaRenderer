@@ -193,7 +193,7 @@ SASL_VISIT_DEF( binary_expression ){
 			if( v.op == operators::add ){
 				retval = service()->emit_add(lval, rval);
 			} else if ( v.op == operators::mul ) {
-				retval = service()->emit_mul(lval, rval);
+				retval = service()->emit_mul_ps(lval, rval);
 			} else if ( v.op == operators::sub ) {
 				retval = service()->emit_sub(lval, rval);
 			} else if( v.op == operators::div ){

@@ -299,6 +299,7 @@ public:
 	virtual value_t emit_add( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_mul_ps( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_div( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf );
 
@@ -582,7 +583,7 @@ protected:
 
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 
-	value_t emit_mul_ps( value_t const& lhs, value_t const& rhs );
+	
 	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
