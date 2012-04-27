@@ -178,7 +178,7 @@ namespace vs_output_op_funcs
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
 				out.attributes[i_attr] = in.attributes[i_attr];
 				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attributes[i_attr] *= in.position.w;
+					out.attributes[i_attr] *= in.position[3];
 				}
 			}
 			out.position = in.position;
@@ -187,7 +187,7 @@ namespace vs_output_op_funcs
 		else{
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
 				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attributes[i_attr] *= in.position.w;
+					out.attributes[i_attr] *= in.position[3];
 				}
 			}
 		}
@@ -197,7 +197,7 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& unproject_n(vs_output& out, const vs_output& in)
 	{
-		const float inv_w = 1.0f / in.position.w;
+		const float inv_w = 1.0f / in.position[3];
 		if (&out != &in){
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
 				out.attributes[i_attr] = in.attributes[i_attr];
@@ -361,17 +361,17 @@ vs_output_op& get_vs_output_op(uint32_t n)
 
 void viewport_transform(vec4& position, const viewport& vp)
 {
-	float invw = (eflib::equal<float>(position.w, 0.0f)) ? 1.0f : 1.0f / position.w;
+	float invw = (eflib::equal<float>(position[3], 0.0f)) ? 1.0f : 1.0f / position[3];
 	vec4 pos = position * invw;
 
 	// Transform to viewport space.
 	float ox = (vp.x + vp.w) * 0.5f;
 	float oy = (vp.y + vp.h) * 0.5f;
 
-	position.x = (float(vp.w) * 0.5f) * pos.x + ox;
-	position.y = (float(vp.h) * 0.5f) * -pos.y + oy;
-	position.z = (vp.maxz - vp.minz) * 0.5f * pos.z + vp.minz;
-	position.w = invw;
+	position[0] = (float(vp.w) * 0.5f) *  pos.x() + ox;
+	position[1] = (float(vp.h) * 0.5f) * -pos.y() + oy;
+	position[2] = (vp.maxz - vp.minz) * 0.5f * pos.z() + vp.minz;
+	position[3] = invw;
 }
 
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2)

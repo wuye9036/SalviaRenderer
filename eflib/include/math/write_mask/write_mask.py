@@ -2,6 +2,8 @@
 # -*- coding: gbk -*-
 import math
 
+ch_to_index = { 'x':0, 'y':1, 'z':2, 'w':3 }
+
 def arr(lst, outarr, rtlst = []):
 	if len(lst) == 0:
 		outarr(rtlst)
@@ -55,17 +57,17 @@ def get_min_dim(lst):
 	return ret
 
 def type_from_size(nelem):
-	return "vec%d" % nelem
+	return "vector_<ScalarT, %d>" % nelem
 
 def float_params(lst):
 	str = '('
 	for i in range(0, len(lst) - 1):
-		str = str + 'float %s,' % lst[i]
-	str = str + 'float %s' % lst[-1]
+		str = str + 'ScalarT %s, ' % lst[i]
+	str = str + 'ScalarT %s' % lst[-1]
 	return str + ')'
 
 def vec_params(lst):
-	return '(const vec%d& v)' % len(lst)
+	return '(vector_<ScalarT,%d> const& v)' % len(lst)
 	
 def func_name(lst):
 	str = ' '
@@ -76,20 +78,20 @@ def func_name(lst):
 def func_body_floats(lst):
 	ret = '{\\\n'
 	for c in lst:
-		ret += '\tthis->%s = %s;\\\n' % (c, c)
+		ret += '\t((ScalarT*)this)[%d] = %s;\\\n' % (ch_to_index[c], c)
 	return ret + '}\\\n'
 
 def func_body_vec(lst):
 	varslst = ['x', 'y', 'z', 'w']
 	ret = '{\\\n'
 	for i in range(0, len(lst)):
-		ret += '\t%s = v.%s;\\\n' %(lst[i], varslst[i])
+		ret += '\t((ScalarT*)this)[%d] = v[%d];\\\n' %(ch_to_index[lst[i]], ch_to_index[varslst[i]])
 	return ret + '}\\\n'
 
 def gen_write_mask(f):
 	all_arrange_lst = []
 	varslst = ['x', 'y', 'z', 'w']
-	full_arrange(varslst, lambda lst:all_arrange_lst.append(lst), 2)
+	full_arrange(varslst, lambda lst:all_arrange_lst.append(lst), 1)
 	write_masks_lst = {1:[], 2:[], 3:[], 4:[]} #4 dimensions
 	for lst in all_arrange_lst:
 		mindim = get_min_dim(lst)
@@ -108,12 +110,13 @@ def gen_write_mask(f):
 				+ float_params(vars)\
 				+ func_body_floats(vars)\
 			)
-			f.write( \
-				'void'\
-				+ func_name(vars) \
-				+ vec_params(vars)\
-				+ func_body_vec(vars)
-			)
+			if( len(vars) > 1 ):			
+				f.write( \
+					'void'\
+					+ func_name(vars) \
+					+ vec_params(vars)\
+					+ func_body_vec(vars)
+				)
 			
 	f.write('\n')		
 	f.write('#endif')

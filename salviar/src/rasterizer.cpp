@@ -251,7 +251,7 @@ void rasterizer::initialize(renderer_impl* pparent)
  *   Note: 
  *			1 Position is in window coordinate.
  *			2 x y z components of w-pos have been divided by w component.
- *			3 positon.w = 1.0f / clip w
+ *			3 positon.w() = 1.0f / clip w
  **************************************************/
 void rasterizer::rasterize_line(
 	uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu)
@@ -263,14 +263,14 @@ void rasterizer::rasterize_line(
 	vs_output diff;
 	vs_output_ops->operator_sub(diff, v1, v0);
 	const eflib::vec4& dir = diff.position;
-	float diff_dir = abs(dir.x) > abs(dir.y) ? dir.x : dir.y;
+	float diff_dir = abs(dir.x()) > abs(dir.y()) ? dir.x() : dir.y();
 
 	h_blend_shader hbs = pparent_->get_blend_shader();
 
 	// Computing differential.
 	vs_output ddx, ddy;
-	vs_output_ops->operator_mul(ddx, diff, (diff.position.x / (diff.position.xy().length_sqr())));
-	vs_output_ops->operator_mul(ddy, diff, (diff.position.y / (diff.position.xy().length_sqr())));
+	vs_output_ops->operator_mul(ddx, diff, (diff.position.x() / (diff.position.xy().length_sqr())));
+	vs_output_ops->operator_mul(ddy, diff, (diff.position.y() / (diff.position.xy().length_sqr())));
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
 	int vptop = fast_floori(max(0.0f, vp.y));
@@ -280,12 +280,12 @@ void rasterizer::rasterize_line(
 	ps_output px_out;
 
 	// Divided drawing to x major DDA method and y major DDA method.
-	if( abs(dir.x) > abs(dir.y))
+	if( abs(dir.x()) > abs(dir.y()))
 	{
 
 		//Swap start and end to make diff is positive.
 		const vs_output *start, *end;
-		if(dir.x < 0){
+		if(dir.x() < 0){
 			start = &v1;
 			end = &v0;
 			diff_dir = -diff_dir;
@@ -298,10 +298,10 @@ void rasterizer::rasterize_line(
 		info.set(start->position, ddx, ddy);
 		pps->ptriangleinfo_ = &info;
 
-		float fsx = fast_floor(start->position.x + 0.5f);
+		float fsx = fast_floor(start->position.x() + 0.5f);
 
 		int sx = fast_floori(fsx);
-		int ex = fast_floori(end->position.x - 0.5f);
+		int ex = fast_floori(end->position.x() - 0.5f);
 
 		// Clamp to visible screen.
 		sx = eflib::clamp<int>(sx, vpleft, int(vpright - 1));
@@ -311,7 +311,7 @@ void rasterizer::rasterize_line(
 		vs_output px_start, px_end;
 		vs_output_ops->copy(px_start, *start);
 		vs_output_ops->copy(px_end, *end);
-		float step = sx + 0.5f - start->position.x;
+		float step = sx + 0.5f - start->position.x();
 		vs_output px_in;
 		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 
@@ -320,19 +320,19 @@ void rasterizer::rasterize_line(
 		for(int iPixel = sx; iPixel < ex; ++iPixel)
 		{
 			// Ingore pixels which are outside of viewport.
-			if(px_in.position.y >= vpbottom){
-				if(dir.y > 0) break;
+			if(px_in.position.y() >= vpbottom){
+				if(dir.y() > 0) break;
 				continue;
 			}
-			if(px_in.position.y < 0){
-				if(dir.y < 0) break;
+			if(px_in.position.y() < 0){
+				if(dir.y() < 0) break;
 				continue;
 			}
 
 			// Render pixel.
 			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_sample(hbs, iPixel, fast_floori(px_in.position.y), 0, px_out, px_out.depth);
+				hfb_->render_sample(hbs, iPixel, fast_floori(px_in.position.y()), 0, px_out, px_out.depth);
 			}
 
 			// Increment ddx
@@ -343,7 +343,7 @@ void rasterizer::rasterize_line(
 	else //y major
 	{
 		const vs_output *start, *end;
-		if(dir.y < 0){
+		if(dir.y() < 0){
 			start = &v1;
 			end = &v0;
 			diff_dir = -diff_dir;
@@ -356,10 +356,10 @@ void rasterizer::rasterize_line(
 		info.set(start->position, ddx, ddy);
 		pps->ptriangleinfo_ = &info;
 
-		float fsy = fast_floor(start->position.y + 0.5f);
+		float fsy = fast_floor(start->position.y() + 0.5f);
 
 		int sy = fast_floori(fsy);
-		int ey = fast_floori(end->position.y - 0.5f);
+		int ey = fast_floori(end->position.y() - 0.5f);
 
 		sy = eflib::clamp<int>(sy, vptop, int(vpbottom - 1));
 		ey = eflib::clamp<int>(ey, vptop, int(vpbottom));
@@ -367,25 +367,25 @@ void rasterizer::rasterize_line(
 		vs_output px_start, px_end;
 		vs_output_ops->copy(px_start, *start);
 		vs_output_ops->copy(px_end, *end);
-		float step = sy + 0.5f - start->position.y;
+		float step = sy + 0.5f - start->position.y();
 		vs_output px_in;
 		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
 
 		vs_output unprojed;
 		for(int iPixel = sy; iPixel < ey; ++iPixel)
 		{
-			if(px_in.position.x >= vpright){
-				if(dir.x > 0) break;
+			if(px_in.position.x() >= vpright){
+				if(dir.x() > 0) break;
 				continue;
 			}
-			if(px_in.position.x < 0){
-				if(dir.x < 0) break;
+			if(px_in.position.x() < 0){
+				if(dir.x() < 0) break;
 				continue;
 			}
 
 			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_sample(hbs, fast_floori(px_in.position.x), iPixel, 0, px_out, px_out.depth);
+				hfb_->render_sample(hbs, fast_floori(px_in.position.x()), iPixel, 0, px_out, px_out.depth);
 			}
 
 			++ step;
@@ -402,8 +402,8 @@ void rasterizer::draw_whole_tile(
 	const float* aa_z_offset)
 {
 	
-	const float offsetx = left + 0.5f - v0.position.x;
-	const float offsety = top + 0.5f - v0.position.y;
+	const float offsetx = left + 0.5f - v0.position.x();
+	const float offsety = top + 0.5f - v0.position.y();
 
 	// Set base vertex of scan-lines
 	vs_output base_vert;
@@ -495,9 +495,9 @@ void rasterizer::draw_pixels(
 	const __m128 mtx = _mm_set_ps(1, 0, 1, 0);
 	const __m128 mty = _mm_set_ps(1, 1, 0, 0);
 
-	__m128 medge0 = _mm_load_ps(&edge_factors[0].x);
-	__m128 medge1 = _mm_load_ps(&edge_factors[1].x);
-	__m128 medge2 = _mm_load_ps(&edge_factors[2].x);
+	__m128 medge0 = _mm_load_ps(&edge_factors[0].x());
+	__m128 medge1 = _mm_load_ps(&edge_factors[1].x());
+	__m128 medge2 = _mm_load_ps(&edge_factors[2].x());
 
 	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
 	__m128 medgex = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 0, 1, 0));
@@ -511,8 +511,8 @@ void rasterizer::draw_pixels(
 
 	for (size_t i_sample = 0; i_sample < num_samples; ++ i_sample){
 		const vec2& sp = samples_pattern_[i_sample];
-		__m128 mspx = _mm_set1_ps(sp.x);
-		__m128 mspy = _mm_set1_ps(sp.y);
+		__m128 mspx = _mm_set1_ps(sp.x());
+		__m128 mspy = _mm_set1_ps(sp.y());
 
 		for(int iy = 0; iy < 4; ++ iy){
 			__m128 my = _mm_add_ps(mspy, _mm_set1_ps(iy));
@@ -561,7 +561,7 @@ void rasterizer::draw_pixels(
 #else
 	float evalue[3];
 	for (int e = 0; e < 3; ++ e){
-		evalue[e] = edge_factors[e].z - (left * edge_factors[e].x + top * edge_factors[e].y);
+		evalue[e] = edge_factors[e].z() - (left * edge_factors[e].x() + top * edge_factors[e].y());
 	}
 
 	for(int iy = 0; iy < 4; ++iy)
@@ -571,11 +571,11 @@ void rasterizer::draw_pixels(
 		{
 			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
 				const vec2& sp = samples_pattern_[i_sample];
-				const float fx = ix + sp.x;
-				const float fy = iy + sp.y;
+				const float fx = ix + sp.x();
+				const float fy = iy + sp.y();
 				bool inside = true;
 				for (int e = 0; e < 3; ++ e){
-					if (fx * edge_factors[e].x + fy * edge_factors[e].y < evalue[e]){
+					if (fx * edge_factors[e].x() + fy * edge_factors[e].y() < evalue[e]){
 						inside = false;
 						break;
 					}
@@ -588,8 +588,8 @@ void rasterizer::draw_pixels(
 	}
 #endif
 
-	const float offsetx = left + 0.5f - v0.position.x;
-	const float offsety = top + 0.5f - v0.position.y;
+	const float offsetx = left + 0.5f - v0.position.x();
+	const float offsety = top + 0.5f - v0.position.y();
 
 	//设置基准扫描线的属性
 	vs_output base_vert;
@@ -619,8 +619,8 @@ void rasterizer::draw_pixels(
 					const uint32_t mask_backup = mask;
 					while (_BitScanForward(&i_sample, mask)){
 						const vec2& sp = samples_pattern_[i_sample];
-						sp_centroid.x += sp.x - 0.5f;
-						sp_centroid.y += sp.y - 0.5f;
+						sp_centroid.x() += sp.x() - 0.5f;
+						sp_centroid.y() += sp.y() - 0.5f;
 						++ n;
 
 						mask &= mask - 1;
@@ -631,7 +631,7 @@ void rasterizer::draw_pixels(
 
 					for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
 						if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
-							projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
+							projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x() + ddy.attributes[i_attr] * sp_centroid.y();
 						}
 					}
 
@@ -641,9 +641,9 @@ void rasterizer::draw_pixels(
 					vs_output_ops->unproject(unprojed, px_in);
 				}
 
-				if ((unprojed.position.x < 0) || (unprojed.position.y < 0))
+				if ((unprojed.position.x() < 0) || (unprojed.position.y() < 0))
 				{
-					printf("%f %f\n", unprojed.position.x, unprojed.position.y);
+					printf("%f %f\n", unprojed.position.x(), unprojed.position.y());
 				}
 
 				if(pps->execute(unprojed, px_out)){
@@ -696,8 +696,8 @@ void rasterizer::draw_pixels(
 				const uint32_t mask_backup = mask;
 				while (_BitScanForward(&i_sample, mask)){
 					const vec2& sp = samples_pattern_[i_sample];
-					sp_centroid.x += sp.x - 0.5f;
-					sp_centroid.y += sp.y - 0.5f;
+					sp_centroid.x() += sp.x() - 0.5f;
+					sp_centroid.y() += sp.y() - 0.5f;
 					++ n;
 
 					mask &= mask - 1;
@@ -708,7 +708,7 @@ void rasterizer::draw_pixels(
 
 				for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
 					if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
-						projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x + ddy.attributes[i_attr] * sp_centroid.y;
+						projed.attributes[i_attr] += ddx.attributes[i_attr] * sp_centroid.x() + ddy.attributes[i_attr] * sp_centroid.y();
 					}
 				}
 				vs_output_ops->unproject(unprojed[iy*4+ix], projed);
@@ -743,9 +743,9 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 	} MASK = { 0x80000000 };
 	static const __m128 SIGN_MASK = _mm_set1_ps(MASK.maskf);
 
-	__m128 medge0 = _mm_load_ps(&edge_factors[0].x);
-	__m128 medge1 = _mm_load_ps(&edge_factors[1].x);
-	__m128 medge2 = _mm_load_ps(&edge_factors[2].x);
+	__m128 medge0 = _mm_load_ps(&edge_factors[0].x());
+	__m128 medge1 = _mm_load_ps(&edge_factors[1].x());
+	__m128 medge2 = _mm_load_ps(&edge_factors[2].x());
 
 	__m128 mtmp = _mm_unpacklo_ps(medge0, medge1);
 	__m128 medgex = _mm_shuffle_ps(mtmp, medge2, _MM_SHUFFLE(3, 0, 1, 0));
@@ -842,7 +842,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 #else
 	float evalue1[3];
 	for (int e = 0; e < 3; ++ e){
-		evalue1[e] = evalue[e] - (left * edge_factors[e].x + top * edge_factors[e].y);
+		evalue1[e] = evalue[e] - (left * edge_factors[e].x() + top * edge_factors[e].y());
 	}
 
 	for (int ty = 0; ty < 4; ++ ty){
@@ -884,7 +884,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 *   Note: 
 *			1 参数的postion将位于窗口坐标系下
 *			2 wpos的x y z分量已经除以了clip w
-*			3 positon.w为1.0f / clip w
+*			3 positon.w()为1.0f / clip w
 **************************************************/
 void rasterizer::rasterize_triangle(
 	uint32_t prim_id, uint32_t full,
@@ -897,9 +897,9 @@ void rasterizer::rasterize_triangle(
 
 	vs_output const* verts[3] = { &v0, &v1, &v2 };
 	double dist_sqr[3] = { 
-		double(v0.position.x) * v0.position.x + v0.position.y * v0.position.y,
-		double(v1.position.x) * v1.position.x + v1.position.y * v1.position.y,
-		double(v2.position.x) * v2.position.x + v2.position.y * v2.position.y
+		double(v0.position.x()) * v0.position.x() + v0.position.y() * v0.position.y(),
+		double(v1.position.x()) * v1.position.x() + v1.position.y() * v1.position.y(),
+		double(v2.position.x()) * v2.position.x() + v2.position.y() * v2.position.y()
 	};
 
 	float min_dist_sqr = min( min( dist_sqr[0], dist_sqr[1] ), dist_sqr[2] );
@@ -923,10 +923,10 @@ void rasterizer::rasterize_triangle(
 		vec4(edge_factors_[prim_id * 3 + 2], 0)
 	};
 	const bool mark_x[3] = {
-		edge_factors[0].x > 0, edge_factors[1].x > 0, edge_factors[2].x > 0
+		edge_factors[0].x() > 0, edge_factors[1].x() > 0, edge_factors[2].x() > 0
 	};
 	const bool mark_y[3] = {
-		edge_factors[0].y > 0, edge_factors[1].y > 0, edge_factors[2].y > 0
+		edge_factors[0].y() > 0, edge_factors[1].y() > 0, edge_factors[2].y() > 0
 	};
 	
 	enum TRI_VS_TILE {
@@ -951,11 +951,11 @@ void rasterizer::rasterize_triangle(
 	*********************************************************/
 	vs_output ddx, ddy;
 	{
-		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
-		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
+		// ddx = (e02 * e01.position.y() - e02.position.y() * e01) * inv_area;
+		// ddy = (e01 * e02.position.x() - e01.position.x() * e02) * inv_area;
 		vs_output tmp0, tmp1, tmp2;
-		vs_output_ops->operator_mul(ddx, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e02, e01.position.y), vs_output_ops->operator_mul(tmp1, e01, e02.position.y)), inv_area);
-		vs_output_ops->operator_mul(ddy, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e01, e02.position.x), vs_output_ops->operator_mul(tmp1, e02, e01.position.x)), inv_area);
+		vs_output_ops->operator_mul(ddx, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e02, e01.position.y()), vs_output_ops->operator_mul(tmp1, e01, e02.position.y())), inv_area);
+		vs_output_ops->operator_mul(ddy, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e01, e02.position.x()), vs_output_ops->operator_mul(tmp1, e02, e01.position.x())), inv_area);
 	}
 
 	triangle_info info;
@@ -964,10 +964,10 @@ void rasterizer::rasterize_triangle(
 		pps->ptriangleinfo_ = &info;
 	}
 	
-	const float x_min = min(reordered_verts[0]->position.x, min(reordered_verts[1]->position.x, reordered_verts[2]->position.x)) - vp.x;
-	const float x_max = max(reordered_verts[0]->position.x, max(reordered_verts[1]->position.x, reordered_verts[2]->position.x)) - vp.x;
-	const float y_min = min(reordered_verts[0]->position.y, min(reordered_verts[1]->position.y, reordered_verts[2]->position.y)) - vp.y;
-	const float y_max = max(reordered_verts[0]->position.y, max(reordered_verts[1]->position.y, reordered_verts[2]->position.y)) - vp.y;
+	const float x_min = min(reordered_verts[0]->position.x(), min(reordered_verts[1]->position.x(), reordered_verts[2]->position.x())) - vp.x;
+	const float x_max = max(reordered_verts[0]->position.x(), max(reordered_verts[1]->position.x(), reordered_verts[2]->position.x())) - vp.x;
+	const float y_min = min(reordered_verts[0]->position.y(), min(reordered_verts[1]->position.y(), reordered_verts[2]->position.y())) - vp.y;
+	const float y_max = max(reordered_verts[0]->position.y(), max(reordered_verts[1]->position.y(), reordered_verts[2]->position.y())) - vp.y;
 
 	/*************************************************
 	*   Draw triangles with Larrabee algorithm .
@@ -994,11 +994,11 @@ void rasterizer::rasterize_triangle(
 	ALIGN16 float evalue[4];
 	float part_evalue[4];
 	for (int e = 0; e < 3; ++ e){
-		step_x[e] = TILE_SIZE * edge_factors[e].x;
-		step_y[e] = TILE_SIZE * edge_factors[e].y;
+		step_x[e] = TILE_SIZE * edge_factors[e].x();
+		step_y[e] = TILE_SIZE * edge_factors[e].y();
 		rej_to_acc[e] = -abs(step_x[e]) - abs(step_y[e]);
-		part_evalue[e] = mark_x[e] * TILE_SIZE * edge_factors[e].x + mark_y[e] * TILE_SIZE * edge_factors[e].y;
-		evalue[e] = edge_factors[e].z - part_evalue[e];
+		part_evalue[e] = mark_x[e] * TILE_SIZE * edge_factors[e].x() + mark_y[e] * TILE_SIZE * edge_factors[e].y();
+		evalue[e] = edge_factors[e].z() - part_evalue[e];
 	}
 	step_x[3] = step_y[3] = 0;
 
@@ -1006,7 +1006,7 @@ void rasterizer::rasterize_triangle(
 	if (num_samples > 1){
 		for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
 			const vec2& sp = samples_pattern_[i_sample];
-			aa_z_offset[i_sample] = (sp.x - 0.5f) * ddx.position.z + (sp.y - 0.5f) * ddy.position.z;
+			aa_z_offset[i_sample] = (sp.x() - 0.5f) * ddx.position.z() + (sp.y() - 0.5f) * ddy.position.z();
 		}
 	}
 
@@ -1021,7 +1021,7 @@ void rasterizer::rasterize_triangle(
 			step_y[e] *= 0.25f;
 			rej_to_acc[e] *= 0.25f;
 			part_evalue[e] *= 0.25f;
-			evalue[e] = edge_factors[e].z - part_evalue[e];
+			evalue[e] = edge_factors[e].z() - part_evalue[e];
 		}
 
 		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp){
@@ -1131,11 +1131,11 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 
 				// grand band culling
 				float const GRAND_BAND_SCALE = 1.2f;
-				eflib::vec4 t0 = clampss(eflib::vec4(-pv[0]->position.x, -pv[0]->position.y, pv[0]->position.x, pv[0]->position.y) - pv[0]->position.w * GRAND_BAND_SCALE, 0, 1);
-				eflib::vec4 t1 = clampss(eflib::vec4(-pv[1]->position.x, -pv[1]->position.y, pv[1]->position.x, pv[1]->position.y) - pv[1]->position.w * GRAND_BAND_SCALE, 0, 1);
-				eflib::vec4 t2 = clampss(eflib::vec4(-pv[2]->position.x, -pv[2]->position.y, pv[2]->position.x, pv[2]->position.y) - pv[2]->position.w * GRAND_BAND_SCALE, 0, 1);
+				eflib::vec4 t0 = clampss(eflib::vec4(-pv[0]->position.x(), -pv[0]->position.y(), pv[0]->position.x(), pv[0]->position.y()) - pv[0]->position.w() * GRAND_BAND_SCALE, 0, 1);
+				eflib::vec4 t1 = clampss(eflib::vec4(-pv[1]->position.x(), -pv[1]->position.y(), pv[1]->position.x(), pv[1]->position.y()) - pv[1]->position.w() * GRAND_BAND_SCALE, 0, 1);
+				eflib::vec4 t2 = clampss(eflib::vec4(-pv[2]->position.x(), -pv[2]->position.y(), pv[2]->position.x(), pv[2]->position.y()) - pv[2]->position.w() * GRAND_BAND_SCALE, 0, 1);
 				eflib::vec4 t = t0 * t1 * t2;
-				if ((0 == t.x) && (0 == t.y) && (0 == t.z) && (0 == t.w))
+				if ((0 == t.x()) && (0 == t.y()) && (0 == t.z()) && (0 == t.w()))
 				{
 					uint32_t num_out_clipped_verts;
 					state_->clipping(
@@ -1207,21 +1207,21 @@ void rasterizer::dispatch_primitive_func(
 				for (int e = 0; e < 3; ++ e){
 					const int se = e;
 					const int ee = (e + 1) % 3;
-					edge_factors[e].x = pv[se]->y - pv[ee]->y;
-					edge_factors[e].y = pv[ee]->x - pv[se]->x;
-					edge_factors[e].z = pv[ee]->x * pv[se]->y - pv[ee]->y * pv[se]->x;
+					edge_factors[e].x() = pv[se]->y() - pv[ee]->y();
+					edge_factors[e].y() = pv[ee]->x() - pv[se]->x();
+					edge_factors[e].z() = pv[ee]->x() * pv[se]->y() - pv[ee]->y() * pv[se]->x();
 				}
 			}
 
-			x_min = pv[0]->x;
-			x_max = pv[0]->x;
-			y_min = pv[0]->y;
-			y_max = pv[0]->y;
+			x_min = pv[0]->x();
+			x_max = pv[0]->x();
+			y_min = pv[0]->y();
+			y_max = pv[0]->y();
 			for (size_t j = 1; j < stride; ++ j){
-				x_min = min(x_min, pv[j]->x);
-				x_max = max(x_max, pv[j]->x);
-				y_min = min(y_min, pv[j]->y);
-				y_max = max(y_max, pv[j]->y);
+				x_min = min(x_min, pv[j]->x());
+				x_max = max(x_max, pv[j]->x());
+				y_min = min(y_min, pv[j]->y());
+				y_max = max(y_max, pv[j]->y());
 			}
 
 			const int sx = std::min(fast_floori(std::max(0.0f, x_min) / TILE_SIZE), num_tiles_x);
@@ -1237,18 +1237,18 @@ void rasterizer::dispatch_primitive_func(
 					vec3* edge_factors = &edge_factors_[i * 3];
 
 					const bool mark_x[3] = {
-						edge_factors[0].x > 0, edge_factors[1].x > 0, edge_factors[2].x > 0
+						edge_factors[0].x() > 0, edge_factors[1].x() > 0, edge_factors[2].x() > 0
 					};
 					const bool mark_y[3] = {
-						edge_factors[0].y > 0, edge_factors[1].y > 0, edge_factors[2].y > 0
+						edge_factors[0].y() > 0, edge_factors[1].y() > 0, edge_factors[2].y() > 0
 					};
 					
 					float step_x[3];
 					float step_y[3];
 					float rej_to_acc[3];
 					for (int e = 0; e < 3; ++ e){
-						step_x[e] = TILE_SIZE * edge_factors[e].x;
-						step_y[e] = TILE_SIZE * edge_factors[e].y;
+						step_x[e] = TILE_SIZE * edge_factors[e].x();
+						step_y[e] = TILE_SIZE * edge_factors[e].y();
 						rej_to_acc[e] = -abs(step_x[e]) - abs(step_y[e]);
 					}
 
@@ -1259,7 +1259,7 @@ void rasterizer::dispatch_primitive_func(
 
 							// Trival rejection & acception
 							for (int e = 0; e < 3; ++ e){
-								float evalue = edge_factors[e].z - ((x + mark_x[e]) * TILE_SIZE * edge_factors[e].x + (y + mark_y[e]) * TILE_SIZE * edge_factors[e].y);
+								float evalue = edge_factors[e].z() - ((x + mark_x[e]) * TILE_SIZE * edge_factors[e].x() + (y + mark_y[e]) * TILE_SIZE * edge_factors[e].y());
 								rejection |= (0 < evalue);
 								acception &= (rej_to_acc[e] >= evalue);
 							}
@@ -1519,7 +1519,7 @@ void rasterizer::draw_package(
 	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
-		pso[i].depth = pixels[i].position.z;
+		pso[i].depth = pixels[i].position.z();
 		pso[i].front_face = pixels[i].front_face;
 		pso[i].coverage = 0xFFFFFFFF;
 	}
@@ -1584,7 +1584,7 @@ void rasterizer::draw_full_package(
 	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
-		pso[i].depth = pixels[i].position.z;
+		pso[i].depth = pixels[i].position.z();
 		pso[i].front_face = pixels[i].front_face;
 		pso[i].coverage = 0xFFFFFFFF;
 	}

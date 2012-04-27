@@ -3,759 +3,786 @@
 
 
 #define WRITE_MASK_FOR_VEC2() \
-void xy(float x,float y){\
-	this->x = x;\
-	this->y = y;\
+void x(ScalarT x){\
+	((ScalarT*)this)[0] = x;\
 }\
-void xy(const vec2& v){\
-	x = v.x;\
-	y = v.y;\
+void y(ScalarT y){\
+	((ScalarT*)this)[1] = y;\
 }\
-void yx(float y,float x){\
-	this->y = y;\
-	this->x = x;\
+void xy(ScalarT x, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
 }\
-void yx(const vec2& v){\
-	y = v.x;\
-	x = v.y;\
+void xy(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+}\
+void yx(ScalarT y, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+}\
+void yx(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
 }\
 
 
 #define WRITE_MASK_FOR_VEC3() \
-void xy(float x,float y){\
-	this->x = x;\
-	this->y = y;\
+void x(ScalarT x){\
+	((ScalarT*)this)[0] = x;\
 }\
-void xy(const vec2& v){\
-	x = v.x;\
-	y = v.y;\
+void y(ScalarT y){\
+	((ScalarT*)this)[1] = y;\
 }\
-void yx(float y,float x){\
-	this->y = y;\
-	this->x = x;\
+void z(ScalarT z){\
+	((ScalarT*)this)[2] = z;\
 }\
-void yx(const vec2& v){\
-	y = v.x;\
-	x = v.y;\
+void xy(ScalarT x, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
 }\
-void xz(float x,float z){\
-	this->x = x;\
-	this->z = z;\
+void xy(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
 }\
-void xz(const vec2& v){\
-	x = v.x;\
-	z = v.y;\
+void yx(ScalarT y, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
 }\
-void zx(float z,float x){\
-	this->z = z;\
-	this->x = x;\
+void yx(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
 }\
-void zx(const vec2& v){\
-	z = v.x;\
-	x = v.y;\
+void xz(ScalarT x, ScalarT z){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
 }\
-void yz(float y,float z){\
-	this->y = y;\
-	this->z = z;\
+void xz(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
 }\
-void yz(const vec2& v){\
-	y = v.x;\
-	z = v.y;\
+void zx(ScalarT z, ScalarT x){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
 }\
-void zy(float z,float y){\
-	this->z = z;\
-	this->y = y;\
+void zx(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
 }\
-void zy(const vec2& v){\
-	z = v.x;\
-	y = v.y;\
+void yz(ScalarT y, ScalarT z){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
 }\
-void xyz(float x,float y,float z){\
-	this->x = x;\
-	this->y = y;\
-	this->z = z;\
+void yz(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
 }\
-void xyz(const vec3& v){\
-	x = v.x;\
-	y = v.y;\
-	z = v.z;\
+void zy(ScalarT z, ScalarT y){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
 }\
-void xzy(float x,float z,float y){\
-	this->x = x;\
-	this->z = z;\
-	this->y = y;\
+void zy(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
 }\
-void xzy(const vec3& v){\
-	x = v.x;\
-	z = v.y;\
-	y = v.z;\
+void xyz(ScalarT x, ScalarT y, ScalarT z){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
 }\
-void yxz(float y,float x,float z){\
-	this->y = y;\
-	this->x = x;\
-	this->z = z;\
+void xyz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
 }\
-void yxz(const vec3& v){\
-	y = v.x;\
-	x = v.y;\
-	z = v.z;\
+void xzy(ScalarT x, ScalarT z, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
 }\
-void yzx(float y,float z,float x){\
-	this->y = y;\
-	this->z = z;\
-	this->x = x;\
+void xzy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
 }\
-void yzx(const vec3& v){\
-	y = v.x;\
-	z = v.y;\
-	x = v.z;\
+void yxz(ScalarT y, ScalarT x, ScalarT z){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
 }\
-void zxy(float z,float x,float y){\
-	this->z = z;\
-	this->x = x;\
-	this->y = y;\
+void yxz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
 }\
-void zxy(const vec3& v){\
-	z = v.x;\
-	x = v.y;\
-	y = v.z;\
+void yzx(ScalarT y, ScalarT z, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
 }\
-void zyx(float z,float y,float x){\
-	this->z = z;\
-	this->y = y;\
-	this->x = x;\
+void yzx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
 }\
-void zyx(const vec3& v){\
-	z = v.x;\
-	y = v.y;\
-	x = v.z;\
+void zxy(ScalarT z, ScalarT x, ScalarT y){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+}\
+void zxy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+}\
+void zyx(ScalarT z, ScalarT y, ScalarT x){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+}\
+void zyx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
 }\
 
 
 #define WRITE_MASK_FOR_VEC4() \
-void xy(float x,float y){\
-	this->x = x;\
-	this->y = y;\
-}\
-void xy(const vec2& v){\
-	x = v.x;\
-	y = v.y;\
-}\
-void yx(float y,float x){\
-	this->y = y;\
-	this->x = x;\
-}\
-void yx(const vec2& v){\
-	y = v.x;\
-	x = v.y;\
-}\
-void xz(float x,float z){\
-	this->x = x;\
-	this->z = z;\
-}\
-void xz(const vec2& v){\
-	x = v.x;\
-	z = v.y;\
-}\
-void zx(float z,float x){\
-	this->z = z;\
-	this->x = x;\
-}\
-void zx(const vec2& v){\
-	z = v.x;\
-	x = v.y;\
-}\
-void xw(float x,float w){\
-	this->x = x;\
-	this->w = w;\
-}\
-void xw(const vec2& v){\
-	x = v.x;\
-	w = v.y;\
-}\
-void wx(float w,float x){\
-	this->w = w;\
-	this->x = x;\
-}\
-void wx(const vec2& v){\
-	w = v.x;\
-	x = v.y;\
-}\
-void yz(float y,float z){\
-	this->y = y;\
-	this->z = z;\
-}\
-void yz(const vec2& v){\
-	y = v.x;\
-	z = v.y;\
-}\
-void zy(float z,float y){\
-	this->z = z;\
-	this->y = y;\
-}\
-void zy(const vec2& v){\
-	z = v.x;\
-	y = v.y;\
-}\
-void yw(float y,float w){\
-	this->y = y;\
-	this->w = w;\
-}\
-void yw(const vec2& v){\
-	y = v.x;\
-	w = v.y;\
-}\
-void wy(float w,float y){\
-	this->w = w;\
-	this->y = y;\
-}\
-void wy(const vec2& v){\
-	w = v.x;\
-	y = v.y;\
-}\
-void zw(float z,float w){\
-	this->z = z;\
-	this->w = w;\
-}\
-void zw(const vec2& v){\
-	z = v.x;\
-	w = v.y;\
-}\
-void wz(float w,float z){\
-	this->w = w;\
-	this->z = z;\
-}\
-void wz(const vec2& v){\
-	w = v.x;\
-	z = v.y;\
-}\
-void xyz(float x,float y,float z){\
-	this->x = x;\
-	this->y = y;\
-	this->z = z;\
-}\
-void xyz(const vec3& v){\
-	x = v.x;\
-	y = v.y;\
-	z = v.z;\
-}\
-void xzy(float x,float z,float y){\
-	this->x = x;\
-	this->z = z;\
-	this->y = y;\
-}\
-void xzy(const vec3& v){\
-	x = v.x;\
-	z = v.y;\
-	y = v.z;\
-}\
-void yxz(float y,float x,float z){\
-	this->y = y;\
-	this->x = x;\
-	this->z = z;\
-}\
-void yxz(const vec3& v){\
-	y = v.x;\
-	x = v.y;\
-	z = v.z;\
-}\
-void yzx(float y,float z,float x){\
-	this->y = y;\
-	this->z = z;\
-	this->x = x;\
-}\
-void yzx(const vec3& v){\
-	y = v.x;\
-	z = v.y;\
-	x = v.z;\
-}\
-void zxy(float z,float x,float y){\
-	this->z = z;\
-	this->x = x;\
-	this->y = y;\
-}\
-void zxy(const vec3& v){\
-	z = v.x;\
-	x = v.y;\
-	y = v.z;\
-}\
-void zyx(float z,float y,float x){\
-	this->z = z;\
-	this->y = y;\
-	this->x = x;\
-}\
-void zyx(const vec3& v){\
-	z = v.x;\
-	y = v.y;\
-	x = v.z;\
-}\
-void xyw(float x,float y,float w){\
-	this->x = x;\
-	this->y = y;\
-	this->w = w;\
-}\
-void xyw(const vec3& v){\
-	x = v.x;\
-	y = v.y;\
-	w = v.z;\
-}\
-void xwy(float x,float w,float y){\
-	this->x = x;\
-	this->w = w;\
-	this->y = y;\
-}\
-void xwy(const vec3& v){\
-	x = v.x;\
-	w = v.y;\
-	y = v.z;\
-}\
-void yxw(float y,float x,float w){\
-	this->y = y;\
-	this->x = x;\
-	this->w = w;\
-}\
-void yxw(const vec3& v){\
-	y = v.x;\
-	x = v.y;\
-	w = v.z;\
-}\
-void ywx(float y,float w,float x){\
-	this->y = y;\
-	this->w = w;\
-	this->x = x;\
-}\
-void ywx(const vec3& v){\
-	y = v.x;\
-	w = v.y;\
-	x = v.z;\
-}\
-void wxy(float w,float x,float y){\
-	this->w = w;\
-	this->x = x;\
-	this->y = y;\
-}\
-void wxy(const vec3& v){\
-	w = v.x;\
-	x = v.y;\
-	y = v.z;\
-}\
-void wyx(float w,float y,float x){\
-	this->w = w;\
-	this->y = y;\
-	this->x = x;\
-}\
-void wyx(const vec3& v){\
-	w = v.x;\
-	y = v.y;\
-	x = v.z;\
-}\
-void xzw(float x,float z,float w){\
-	this->x = x;\
-	this->z = z;\
-	this->w = w;\
-}\
-void xzw(const vec3& v){\
-	x = v.x;\
-	z = v.y;\
-	w = v.z;\
-}\
-void xwz(float x,float w,float z){\
-	this->x = x;\
-	this->w = w;\
-	this->z = z;\
-}\
-void xwz(const vec3& v){\
-	x = v.x;\
-	w = v.y;\
-	z = v.z;\
-}\
-void zxw(float z,float x,float w){\
-	this->z = z;\
-	this->x = x;\
-	this->w = w;\
-}\
-void zxw(const vec3& v){\
-	z = v.x;\
-	x = v.y;\
-	w = v.z;\
-}\
-void zwx(float z,float w,float x){\
-	this->z = z;\
-	this->w = w;\
-	this->x = x;\
-}\
-void zwx(const vec3& v){\
-	z = v.x;\
-	w = v.y;\
-	x = v.z;\
-}\
-void wxz(float w,float x,float z){\
-	this->w = w;\
-	this->x = x;\
-	this->z = z;\
-}\
-void wxz(const vec3& v){\
-	w = v.x;\
-	x = v.y;\
-	z = v.z;\
-}\
-void wzx(float w,float z,float x){\
-	this->w = w;\
-	this->z = z;\
-	this->x = x;\
-}\
-void wzx(const vec3& v){\
-	w = v.x;\
-	z = v.y;\
-	x = v.z;\
-}\
-void yzw(float y,float z,float w){\
-	this->y = y;\
-	this->z = z;\
-	this->w = w;\
-}\
-void yzw(const vec3& v){\
-	y = v.x;\
-	z = v.y;\
-	w = v.z;\
-}\
-void ywz(float y,float w,float z){\
-	this->y = y;\
-	this->w = w;\
-	this->z = z;\
-}\
-void ywz(const vec3& v){\
-	y = v.x;\
-	w = v.y;\
-	z = v.z;\
-}\
-void zyw(float z,float y,float w){\
-	this->z = z;\
-	this->y = y;\
-	this->w = w;\
-}\
-void zyw(const vec3& v){\
-	z = v.x;\
-	y = v.y;\
-	w = v.z;\
-}\
-void zwy(float z,float w,float y){\
-	this->z = z;\
-	this->w = w;\
-	this->y = y;\
-}\
-void zwy(const vec3& v){\
-	z = v.x;\
-	w = v.y;\
-	y = v.z;\
-}\
-void wyz(float w,float y,float z){\
-	this->w = w;\
-	this->y = y;\
-	this->z = z;\
-}\
-void wyz(const vec3& v){\
-	w = v.x;\
-	y = v.y;\
-	z = v.z;\
-}\
-void wzy(float w,float z,float y){\
-	this->w = w;\
-	this->z = z;\
-	this->y = y;\
-}\
-void wzy(const vec3& v){\
-	w = v.x;\
-	z = v.y;\
-	y = v.z;\
-}\
-void xyzw(float x,float y,float z,float w){\
-	this->x = x;\
-	this->y = y;\
-	this->z = z;\
-	this->w = w;\
-}\
-void xyzw(const vec4& v){\
-	x = v.x;\
-	y = v.y;\
-	z = v.z;\
-	w = v.w;\
-}\
-void xywz(float x,float y,float w,float z){\
-	this->x = x;\
-	this->y = y;\
-	this->w = w;\
-	this->z = z;\
-}\
-void xywz(const vec4& v){\
-	x = v.x;\
-	y = v.y;\
-	w = v.z;\
-	z = v.w;\
-}\
-void xzyw(float x,float z,float y,float w){\
-	this->x = x;\
-	this->z = z;\
-	this->y = y;\
-	this->w = w;\
-}\
-void xzyw(const vec4& v){\
-	x = v.x;\
-	z = v.y;\
-	y = v.z;\
-	w = v.w;\
-}\
-void xzwy(float x,float z,float w,float y){\
-	this->x = x;\
-	this->z = z;\
-	this->w = w;\
-	this->y = y;\
-}\
-void xzwy(const vec4& v){\
-	x = v.x;\
-	z = v.y;\
-	w = v.z;\
-	y = v.w;\
-}\
-void xwyz(float x,float w,float y,float z){\
-	this->x = x;\
-	this->w = w;\
-	this->y = y;\
-	this->z = z;\
-}\
-void xwyz(const vec4& v){\
-	x = v.x;\
-	w = v.y;\
-	y = v.z;\
-	z = v.w;\
-}\
-void xwzy(float x,float w,float z,float y){\
-	this->x = x;\
-	this->w = w;\
-	this->z = z;\
-	this->y = y;\
-}\
-void xwzy(const vec4& v){\
-	x = v.x;\
-	w = v.y;\
-	z = v.z;\
-	y = v.w;\
-}\
-void yxzw(float y,float x,float z,float w){\
-	this->y = y;\
-	this->x = x;\
-	this->z = z;\
-	this->w = w;\
-}\
-void yxzw(const vec4& v){\
-	y = v.x;\
-	x = v.y;\
-	z = v.z;\
-	w = v.w;\
-}\
-void yxwz(float y,float x,float w,float z){\
-	this->y = y;\
-	this->x = x;\
-	this->w = w;\
-	this->z = z;\
-}\
-void yxwz(const vec4& v){\
-	y = v.x;\
-	x = v.y;\
-	w = v.z;\
-	z = v.w;\
-}\
-void yzxw(float y,float z,float x,float w){\
-	this->y = y;\
-	this->z = z;\
-	this->x = x;\
-	this->w = w;\
-}\
-void yzxw(const vec4& v){\
-	y = v.x;\
-	z = v.y;\
-	x = v.z;\
-	w = v.w;\
-}\
-void yzwx(float y,float z,float w,float x){\
-	this->y = y;\
-	this->z = z;\
-	this->w = w;\
-	this->x = x;\
-}\
-void yzwx(const vec4& v){\
-	y = v.x;\
-	z = v.y;\
-	w = v.z;\
-	x = v.w;\
-}\
-void ywxz(float y,float w,float x,float z){\
-	this->y = y;\
-	this->w = w;\
-	this->x = x;\
-	this->z = z;\
-}\
-void ywxz(const vec4& v){\
-	y = v.x;\
-	w = v.y;\
-	x = v.z;\
-	z = v.w;\
-}\
-void ywzx(float y,float w,float z,float x){\
-	this->y = y;\
-	this->w = w;\
-	this->z = z;\
-	this->x = x;\
-}\
-void ywzx(const vec4& v){\
-	y = v.x;\
-	w = v.y;\
-	z = v.z;\
-	x = v.w;\
-}\
-void zxyw(float z,float x,float y,float w){\
-	this->z = z;\
-	this->x = x;\
-	this->y = y;\
-	this->w = w;\
-}\
-void zxyw(const vec4& v){\
-	z = v.x;\
-	x = v.y;\
-	y = v.z;\
-	w = v.w;\
-}\
-void zxwy(float z,float x,float w,float y){\
-	this->z = z;\
-	this->x = x;\
-	this->w = w;\
-	this->y = y;\
-}\
-void zxwy(const vec4& v){\
-	z = v.x;\
-	x = v.y;\
-	w = v.z;\
-	y = v.w;\
-}\
-void zyxw(float z,float y,float x,float w){\
-	this->z = z;\
-	this->y = y;\
-	this->x = x;\
-	this->w = w;\
-}\
-void zyxw(const vec4& v){\
-	z = v.x;\
-	y = v.y;\
-	x = v.z;\
-	w = v.w;\
-}\
-void zywx(float z,float y,float w,float x){\
-	this->z = z;\
-	this->y = y;\
-	this->w = w;\
-	this->x = x;\
-}\
-void zywx(const vec4& v){\
-	z = v.x;\
-	y = v.y;\
-	w = v.z;\
-	x = v.w;\
-}\
-void zwxy(float z,float w,float x,float y){\
-	this->z = z;\
-	this->w = w;\
-	this->x = x;\
-	this->y = y;\
-}\
-void zwxy(const vec4& v){\
-	z = v.x;\
-	w = v.y;\
-	x = v.z;\
-	y = v.w;\
-}\
-void zwyx(float z,float w,float y,float x){\
-	this->z = z;\
-	this->w = w;\
-	this->y = y;\
-	this->x = x;\
-}\
-void zwyx(const vec4& v){\
-	z = v.x;\
-	w = v.y;\
-	y = v.z;\
-	x = v.w;\
-}\
-void wxyz(float w,float x,float y,float z){\
-	this->w = w;\
-	this->x = x;\
-	this->y = y;\
-	this->z = z;\
-}\
-void wxyz(const vec4& v){\
-	w = v.x;\
-	x = v.y;\
-	y = v.z;\
-	z = v.w;\
-}\
-void wxzy(float w,float x,float z,float y){\
-	this->w = w;\
-	this->x = x;\
-	this->z = z;\
-	this->y = y;\
-}\
-void wxzy(const vec4& v){\
-	w = v.x;\
-	x = v.y;\
-	z = v.z;\
-	y = v.w;\
-}\
-void wyxz(float w,float y,float x,float z){\
-	this->w = w;\
-	this->y = y;\
-	this->x = x;\
-	this->z = z;\
-}\
-void wyxz(const vec4& v){\
-	w = v.x;\
-	y = v.y;\
-	x = v.z;\
-	z = v.w;\
-}\
-void wyzx(float w,float y,float z,float x){\
-	this->w = w;\
-	this->y = y;\
-	this->z = z;\
-	this->x = x;\
-}\
-void wyzx(const vec4& v){\
-	w = v.x;\
-	y = v.y;\
-	z = v.z;\
-	x = v.w;\
-}\
-void wzxy(float w,float z,float x,float y){\
-	this->w = w;\
-	this->z = z;\
-	this->x = x;\
-	this->y = y;\
-}\
-void wzxy(const vec4& v){\
-	w = v.x;\
-	z = v.y;\
-	x = v.z;\
-	y = v.w;\
-}\
-void wzyx(float w,float z,float y,float x){\
-	this->w = w;\
-	this->z = z;\
-	this->y = y;\
-	this->x = x;\
-}\
-void wzyx(const vec4& v){\
-	w = v.x;\
-	z = v.y;\
-	y = v.z;\
-	x = v.w;\
+void x(ScalarT x){\
+	((ScalarT*)this)[0] = x;\
+}\
+void y(ScalarT y){\
+	((ScalarT*)this)[1] = y;\
+}\
+void z(ScalarT z){\
+	((ScalarT*)this)[2] = z;\
+}\
+void w(ScalarT w){\
+	((ScalarT*)this)[3] = w;\
+}\
+void xy(ScalarT x, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+}\
+void xy(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+}\
+void yx(ScalarT y, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+}\
+void yx(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+}\
+void xz(ScalarT x, ScalarT z){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+}\
+void xz(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+}\
+void zx(ScalarT z, ScalarT x){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+}\
+void zx(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+}\
+void xw(ScalarT x, ScalarT w){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+}\
+void xw(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+}\
+void wx(ScalarT w, ScalarT x){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+}\
+void wx(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+}\
+void yz(ScalarT y, ScalarT z){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+}\
+void yz(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+}\
+void zy(ScalarT z, ScalarT y){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+}\
+void zy(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+}\
+void yw(ScalarT y, ScalarT w){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+}\
+void yw(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+}\
+void wy(ScalarT w, ScalarT y){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+}\
+void wy(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+}\
+void zw(ScalarT z, ScalarT w){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+}\
+void zw(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+}\
+void wz(ScalarT w, ScalarT z){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+}\
+void wz(vector_<ScalarT,2> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+}\
+void xyz(ScalarT x, ScalarT y, ScalarT z){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+}\
+void xyz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+}\
+void xzy(ScalarT x, ScalarT z, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+}\
+void xzy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+}\
+void yxz(ScalarT y, ScalarT x, ScalarT z){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+}\
+void yxz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+}\
+void yzx(ScalarT y, ScalarT z, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+}\
+void yzx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+}\
+void zxy(ScalarT z, ScalarT x, ScalarT y){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+}\
+void zxy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+}\
+void zyx(ScalarT z, ScalarT y, ScalarT x){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+}\
+void zyx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+}\
+void xyw(ScalarT x, ScalarT y, ScalarT w){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+}\
+void xyw(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+}\
+void xwy(ScalarT x, ScalarT w, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+}\
+void xwy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+}\
+void yxw(ScalarT y, ScalarT x, ScalarT w){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+}\
+void yxw(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+}\
+void ywx(ScalarT y, ScalarT w, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+}\
+void ywx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+}\
+void wxy(ScalarT w, ScalarT x, ScalarT y){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+}\
+void wxy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+}\
+void wyx(ScalarT w, ScalarT y, ScalarT x){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+}\
+void wyx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+}\
+void xzw(ScalarT x, ScalarT z, ScalarT w){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+}\
+void xzw(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+}\
+void xwz(ScalarT x, ScalarT w, ScalarT z){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+}\
+void xwz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+}\
+void zxw(ScalarT z, ScalarT x, ScalarT w){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+}\
+void zxw(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+}\
+void zwx(ScalarT z, ScalarT w, ScalarT x){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+}\
+void zwx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+}\
+void wxz(ScalarT w, ScalarT x, ScalarT z){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+}\
+void wxz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+}\
+void wzx(ScalarT w, ScalarT z, ScalarT x){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+}\
+void wzx(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+}\
+void yzw(ScalarT y, ScalarT z, ScalarT w){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+}\
+void yzw(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+}\
+void ywz(ScalarT y, ScalarT w, ScalarT z){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+}\
+void ywz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+}\
+void zyw(ScalarT z, ScalarT y, ScalarT w){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+}\
+void zyw(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+}\
+void zwy(ScalarT z, ScalarT w, ScalarT y){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+}\
+void zwy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+}\
+void wyz(ScalarT w, ScalarT y, ScalarT z){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+}\
+void wyz(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+}\
+void wzy(ScalarT w, ScalarT z, ScalarT y){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+}\
+void wzy(vector_<ScalarT,3> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+}\
+void xyzw(ScalarT x, ScalarT y, ScalarT z, ScalarT w){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+}\
+void xyzw(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+	((ScalarT*)this)[3] = v[3];\
+}\
+void xywz(ScalarT x, ScalarT y, ScalarT w, ScalarT z){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+}\
+void xywz(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+	((ScalarT*)this)[2] = v[3];\
+}\
+void xzyw(ScalarT x, ScalarT z, ScalarT y, ScalarT w){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+}\
+void xzyw(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+	((ScalarT*)this)[3] = v[3];\
+}\
+void xzwy(ScalarT x, ScalarT z, ScalarT w, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+}\
+void xzwy(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+	((ScalarT*)this)[1] = v[3];\
+}\
+void xwyz(ScalarT x, ScalarT w, ScalarT y, ScalarT z){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+}\
+void xwyz(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+	((ScalarT*)this)[2] = v[3];\
+}\
+void xwzy(ScalarT x, ScalarT w, ScalarT z, ScalarT y){\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+}\
+void xwzy(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[0] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+	((ScalarT*)this)[1] = v[3];\
+}\
+void yxzw(ScalarT y, ScalarT x, ScalarT z, ScalarT w){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+}\
+void yxzw(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+	((ScalarT*)this)[3] = v[3];\
+}\
+void yxwz(ScalarT y, ScalarT x, ScalarT w, ScalarT z){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+}\
+void yxwz(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+	((ScalarT*)this)[2] = v[3];\
+}\
+void yzxw(ScalarT y, ScalarT z, ScalarT x, ScalarT w){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+}\
+void yzxw(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+	((ScalarT*)this)[3] = v[3];\
+}\
+void yzwx(ScalarT y, ScalarT z, ScalarT w, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+}\
+void yzwx(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+	((ScalarT*)this)[0] = v[3];\
+}\
+void ywxz(ScalarT y, ScalarT w, ScalarT x, ScalarT z){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+}\
+void ywxz(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+	((ScalarT*)this)[2] = v[3];\
+}\
+void ywzx(ScalarT y, ScalarT w, ScalarT z, ScalarT x){\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+}\
+void ywzx(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[1] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+	((ScalarT*)this)[0] = v[3];\
+}\
+void zxyw(ScalarT z, ScalarT x, ScalarT y, ScalarT w){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+}\
+void zxyw(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+	((ScalarT*)this)[3] = v[3];\
+}\
+void zxwy(ScalarT z, ScalarT x, ScalarT w, ScalarT y){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+}\
+void zxwy(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+	((ScalarT*)this)[1] = v[3];\
+}\
+void zyxw(ScalarT z, ScalarT y, ScalarT x, ScalarT w){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[3] = w;\
+}\
+void zyxw(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+	((ScalarT*)this)[3] = v[3];\
+}\
+void zywx(ScalarT z, ScalarT y, ScalarT w, ScalarT x){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+}\
+void zywx(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[3] = v[2];\
+	((ScalarT*)this)[0] = v[3];\
+}\
+void zwxy(ScalarT z, ScalarT w, ScalarT x, ScalarT y){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+}\
+void zwxy(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+	((ScalarT*)this)[1] = v[3];\
+}\
+void zwyx(ScalarT z, ScalarT w, ScalarT y, ScalarT x){\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+}\
+void zwyx(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[2] = v[0];\
+	((ScalarT*)this)[3] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+	((ScalarT*)this)[0] = v[3];\
+}\
+void wxyz(ScalarT w, ScalarT x, ScalarT y, ScalarT z){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+}\
+void wxyz(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+	((ScalarT*)this)[2] = v[3];\
+}\
+void wxzy(ScalarT w, ScalarT x, ScalarT z, ScalarT y){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+}\
+void wxzy(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[0] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+	((ScalarT*)this)[1] = v[3];\
+}\
+void wyxz(ScalarT w, ScalarT y, ScalarT x, ScalarT z){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[2] = z;\
+}\
+void wyxz(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+	((ScalarT*)this)[2] = v[3];\
+}\
+void wyzx(ScalarT w, ScalarT y, ScalarT z, ScalarT x){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+}\
+void wyzx(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[1] = v[1];\
+	((ScalarT*)this)[2] = v[2];\
+	((ScalarT*)this)[0] = v[3];\
+}\
+void wzxy(ScalarT w, ScalarT z, ScalarT x, ScalarT y){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[0] = x;\
+	((ScalarT*)this)[1] = y;\
+}\
+void wzxy(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[0] = v[2];\
+	((ScalarT*)this)[1] = v[3];\
+}\
+void wzyx(ScalarT w, ScalarT z, ScalarT y, ScalarT x){\
+	((ScalarT*)this)[3] = w;\
+	((ScalarT*)this)[2] = z;\
+	((ScalarT*)this)[1] = y;\
+	((ScalarT*)this)[0] = x;\
+}\
+void wzyx(vector_<ScalarT,4> const& v){\
+	((ScalarT*)this)[3] = v[0];\
+	((ScalarT*)this)[2] = v[1];\
+	((ScalarT*)this)[1] = v[2];\
+	((ScalarT*)this)[0] = v[3];\
 }\
 
 #endif

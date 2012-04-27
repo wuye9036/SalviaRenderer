@@ -4,7 +4,7 @@ import shutil
 if __name__ == "__main__":
 	comp_list = ['x', 'y', 'z', 'w']
 	comp_pos_lookup = {'x':0, 'y':1, 'z':2, 'w':3}
-	comp_class_lookup = ['', '', 'vec2::', 'vec3::', 'vec4::']
+	comp_class_lookup = ['', '', 'vector_swizzle<ScalarT,2>::', 'vector_swizzle<ScalarT,3>::', 'vector_swizzle<ScalarT,4>::']
 	inline_funcs = [[], [], [], []]
 	inline_decls = [[], [], [], []]
 	
@@ -18,12 +18,24 @@ if __name__ == "__main__":
 	#write 2 components swizzle
 	suitbale_vec = 0
 	for c0 in comp_list:
+		suitable_vec = comp_pos_lookup[c0]
+		inline_decls[suitable_vec].append('\tScalarT const& %c() const;\\\n' % c0)
+		inline_decls[suitable_vec].append('\tScalarT& %c();\\\n' % c0)
+		inline_funcs[suitable_vec].append(\
+			'\ttemplate<typename ScalarT> ScalarT const& %s%c() const{\\\n' % ('%s', c0) + \
+			'\t\treturn ((ScalarT const*)(this))[%d];\\\n' % suitable_vec + \
+			'\t}\\\n')
+		inline_funcs[suitable_vec].append(\
+			'\ttemplate<typename ScalarT> ScalarT& %s%c(){\\\n' % ('%s', c0) + \
+			'\t\treturn ((ScalarT*)(this))[%d];\\\n' % suitable_vec + \
+			'\t}\\\n')		
+	for c0 in comp_list:
 		for c1 in comp_list:
 			suitable_vec = max(comp_pos_lookup[c0], comp_pos_lookup[c1])
-			inline_decls[suitable_vec].append('\tvec2 %c%c() const;\\\n' % (c0, c1))
+			inline_decls[suitable_vec].append('\tvector_<ScalarT,2> %c%c() const;\\\n' % (c0, c1))
 			inline_funcs[suitable_vec].append(\
-				'\tinline vec2 %s%c%c() const{\\\n' % ('%s', c0, c1) + \
-				'\t\treturn vec2(%c, %c);\\\n' % (c0, c1) + \
+				'\ttemplate<typename ScalarT> vector_<ScalarT,2> %s%c%c() const{\\\n' % ('%s', c0, c1) + \
+				'\t\treturn vector_<ScalarT,2>(%c(), %c());\\\n' % (c0, c1) + \
 				'\t}\\\n')
 	
 	for c0 in comp_list:
@@ -34,10 +46,10 @@ if __name__ == "__main__":
 					comp_pos_lookup[c1],
 					comp_pos_lookup[c2]
 				)
-				inline_decls[suitable_vec].append('\tvec3 %c%c%c() const;\\\n' % (c0, c1, c2))
+				inline_decls[suitable_vec].append('\tvector_<ScalarT,3> %c%c%c() const;\\\n' % (c0, c1, c2))
 				inline_funcs[suitable_vec].append(
-					'\tinline vec3 %s%c%c%c() const{\\\n' % ('%s', c0, c1, c2)+
-					'\t\treturn vec3(%c, %c, %c);\\\n' % (c0, c1, c2)+
+					'\ttemplate<typename ScalarT> vector_<ScalarT,3> %s%c%c%c() const{\\\n' % ('%s', c0, c1, c2)+
+					'\t\treturn vector_<ScalarT,3>(%c(), %c(), %c());\\\n' % (c0, c1, c2)+
 					'\t}\\\n')
 
 	for c0 in comp_list:
@@ -50,10 +62,10 @@ if __name__ == "__main__":
 						comp_pos_lookup[c2],
 						comp_pos_lookup[c3]					
 					)
-					inline_decls[suitable_vec].append('\tvec4 %c%c%c%c() const;\\\n' % (c0, c1, c2, c3))
+					inline_decls[suitable_vec].append('\tvector_<ScalarT,4> %c%c%c%c() const;\\\n' % (c0, c1, c2, c3))
 					inline_funcs[suitable_vec].append(
-						'\tinline vec4 %s%c%c%c%c() const{\\\n' % ('%s', c0, c1, c2, c3)+ 
-						'\t\treturn vec4(%c, %c, %c, %c);\\\n' % (c0, c1, c2, c3)+
+						'\ttemplate<typename ScalarT> vector_<ScalarT,4> %s%c%c%c%c() const{\\\n' % ('%s', c0, c1, c2, c3)+ 
+						'\t\treturn vector_<ScalarT,4>(%c(), %c(), %c(), %c());\\\n' % (c0, c1, c2, c3)+
 						'\t}\\\n')
 		
 	for used_comp_ub in range(2, 5):

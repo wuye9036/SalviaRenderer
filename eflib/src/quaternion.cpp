@@ -8,7 +8,7 @@ namespace eflib{
 	quaternion::quaternion( float x, float y, float z, float w ): x(x), y(y), z(z), w(w){
 	}
 
-	quaternion::quaternion( const vec4& raw_v ):x(raw_v.x), y(raw_v.y), z(raw_v.z), w(raw_v.w){
+	quaternion::quaternion( const vec4& raw_v ):x(raw_v[0]), y(raw_v[1]), z(raw_v[2]), w(raw_v[3]){
 	}
 
 	quaternion quaternion::from_axis_angle( const vec3& axis, float angle ){
@@ -20,9 +20,9 @@ namespace eflib{
 		sincos(half_angle, half_angle_sin, half_angle_cos);
 
 		return quaternion(
-			half_angle_sin * normalized_axis.x,
-			half_angle_sin * normalized_axis.y,
-			half_angle_sin * normalized_axis.z,
+			half_angle_sin * normalized_axis[0],
+			half_angle_sin * normalized_axis[1],
+			half_angle_sin * normalized_axis[2],
 			half_angle_cos
 			);
 	}
@@ -153,7 +153,7 @@ namespace eflib{
 		sincos(alpha, sin_alpha, cos_alpha);
 
 		vec4 q_v;
-		q_v.w = cos_alpha;
+		q_v.w( cos_alpha );
 		q_v.xyz( sin_alpha * v );
 
 		return quaternion(q_v);
@@ -177,7 +177,7 @@ namespace eflib{
 			return lhs;
 		}
 		vec3 new_v = normalize3( lhs.comps().xyz() );
-		return quaternion(alpha*new_v.x, alpha*new_v.y, alpha*new_v.z, 0.0f);
+		return quaternion(alpha*new_v[0], alpha*new_v[1], alpha*new_v[2], 0.0f);
 	}
 
 	quaternion operator*( const quaternion& lhs, const quaternion& rhs )
@@ -186,7 +186,7 @@ namespace eflib{
 		vec3 rhs_v(rhs.x, rhs.y, rhs.z);
 		float w = lhs.w*rhs.w + dot_prod3(lhs_v, rhs_v);
 		vec3 v = lhs.w*rhs_v + rhs.w*lhs_v + cross_prod3(rhs_v, lhs_v);
-		return quaternion(v.x, v.y, v.z, w);
+		return quaternion(v[0], v[1], v[2], w);
 	}
 
 	quaternion operator*( const quaternion& q, float scalar )
@@ -211,7 +211,7 @@ namespace eflib{
 
 	vec3& transform( vec3& out, const quaternion& q, const vec3& v )
 	{
-		quaternion vq(v.x, v.y, v.z, 0.0f);
+		quaternion vq(v[0], v[1], v[2], 0.0f);
 		out = ( q * vq * conj(q) ).comps().xyz();
 		return out;
 	}

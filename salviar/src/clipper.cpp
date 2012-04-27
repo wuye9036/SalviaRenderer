@@ -164,9 +164,9 @@ void clipper::clip(
 				for (size_t i = 0; i < 3; ++i){
 					
 					const vs_output& v = *clipped_verts[dest_stage][i];
-					const float inv_abs_w = 1 / abs(v.position.w);
-					const float x = v.position.x * inv_abs_w;
-					const float y = v.position.y * inv_abs_w;
+					const float inv_abs_w = 1 / abs( v.position.w() );
+					const float x = v.position.x() * inv_abs_w;
+					const float y = v.position.y() * inv_abs_w;
 					pv_2d[i] = vec2(x, y);
 				}
 

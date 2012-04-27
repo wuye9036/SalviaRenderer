@@ -21,7 +21,7 @@ struct color_rgba32f
 	color_rgba32f(){}
 	color_rgba32f(float r, float g, float b, float a) : r(r), g(g), b(b), a(a){}
 	explicit color_rgba32f(const float* color):r(color[0]), g(color[1]), b(color[2]), a(color[3]){}
-	explicit color_rgba32f(const eflib::vec4& v):r(v.x), g(v.y), b(v.z), a(v.w){}
+	explicit color_rgba32f(const eflib::vec4& v):r(v[0]), g(v[1]), b(v[2]), a(v[3]){}
 
 	color_rgba32f& operator = (const color_rgba32f& c)
 	{

@@ -32,25 +32,25 @@ namespace eflib{
 
 	inline bool equal(const vec2& v1, const vec2& v2){
 		return 
-			equal(v1.x, v2.x) &&
-			equal(v1.y, v2.y);
+			equal(v1.x(), v2.x()) &&
+			equal(v1.y(), v2.y());
 	}
 
 	inline bool equal(const vec3& v1, const vec3& v2)
 	{
 		return 
-			equal(v1.x, v2.x) &&
-			equal(v1.y, v2.y) &&
-			equal(v1.z, v2.z);
+			equal(v1.x(), v2.x()) &&
+			equal(v1.y(), v2.y()) &&
+			equal(v1.z(), v2.z());
 	}
 
 	inline bool equal(const vec4& v1, const vec4& v2)
 	{
 		return 
-			equal(v1.x, v2.x) &&
-			equal(v1.y, v2.y) &&
-			equal(v1.z, v2.z) &&
-			equal(v1.w, v2.w)
+			equal(v1.x(), v2.x()) &&
+			equal(v1.y(), v2.y()) &&
+			equal(v1.z(), v2.z()) &&
+			equal(v1.w(), v2.w())
 			;
 	}
 

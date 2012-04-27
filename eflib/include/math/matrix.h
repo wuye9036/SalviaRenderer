@@ -79,17 +79,11 @@ namespace eflib
 		void set_column(size_t i, const vec4& v)
 		{
 			EFLIB_ASSERT(i < 4, "");
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable: 6385 6386)
-#endif
-			f[0][i] = v.x;
-			f[1][i] = v.y;
-			f[2][i] = v.z;
-			f[3][i] = v.w;
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
+
+			f[0][i] = v[0];
+			f[1][i] = v[1];
+			f[2][i] = v[2];
+			f[3][i] = v[3];
 		}
 
 		vec4 get_row(size_t i) const
@@ -108,17 +102,11 @@ namespace eflib
 		void set_row(size_t i, float _1, float _2, float _3, float _4)
 		{
 			EFLIB_ASSERT(i < 4, "");
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable: 6385 6386)
-#endif
+
 			f[i][0] = _1;
 			f[i][1] = _2;
 			f[i][2] = _3;
 			f[i][3] = _4;
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
 		}
 
 		void set_row(size_t i, const vec4& v)
@@ -128,10 +116,10 @@ namespace eflib
 #pragma warning(push)
 #pragma warning(disable: 6385 6386)
 #endif
-			f[i][0] = v.x;
-			f[i][1] = v.y;
-			f[i][2] = v.z;
-			f[i][3] = v.w;
+			f[i][0] = v[0];
+			f[i][1] = v[1];
+			f[i][2] = v[2];
+			f[i][3] = v[3];
 #ifdef EFLIB_MSVC
 #pragma warning(pop)
 #endif
@@ -153,10 +141,9 @@ namespace eflib
 				+ this->f[0][2] * (this->f[1][0] * _3244_3442 - this->f[1][1] * _3144_3441 + this->f[1][3] * _3142_3241)
 				- this->f[0][3] * (this->f[1][0] * _3243_3342 - this->f[1][1] * _3143_3341 + this->f[1][2] * _3142_3241);
 		}
-		/******************************************
-		*  构造函数
-		*
-		*****************************************/
+		
+
+		// Constructors
 		mat44(){}
 
 		mat44(
@@ -189,35 +176,31 @@ namespace eflib
 
 		mat44(const vec4& v0, const vec4& v1, const vec4& v2, const vec4& v3)
 		{
-			f[0][0] = v0.x;
-			f[0][1] = v0.y;
-			f[0][2] = v0.z;
-			f[0][3] = v0.w;
+			f[0][0] = v0[0];
+			f[0][1] = v0[1];
+			f[0][2] = v0[2];
+			f[0][3] = v0[3];
 
-			f[1][0] = v1.x;
-			f[1][1] = v1.y;
-			f[1][2] = v1.z;
-			f[1][3] = v1.w;
+			f[1][0] = v1[0];
+			f[1][1] = v1[1];
+			f[1][2] = v1[2];
+			f[1][3] = v1[3];
 
-			f[2][0] = v2.x;
-			f[2][1] = v2.y;
-			f[2][2] = v2.z;
-			f[2][3] = v2.w;
+			f[2][0] = v2[0];
+			f[2][1] = v2[1];
+			f[2][2] = v2[2];
+			f[2][3] = v2[3];
 
-			f[3][0] = v3.x;
-			f[3][1] = v3.y;
-			f[3][2] = v3.z;
-			f[3][3] = v3.w;
+			f[3][0] = v3[0];
+			f[3][1] = v3[1];
+			f[3][2] = v3[2];
+			f[3][3] = v3[3];
 		}
 
 		mat44(const float* _f){
 			memcpy(f, _f, sizeof(mat44));
 		}
 
-		/******************************************
-		*  赋值与拷贝构造
-		*
-		*****************************************/
 		mat44(const mat44& m){
 			memcpy(f, m.f, sizeof(mat44));
 		}
@@ -240,12 +223,7 @@ namespace eflib
 			}
 		}
 
-		/******************************************
-		*	 四则运算
-		*
-		*****************************************/
-
-		/********逐元素操作 矩阵vs矩阵 只提供加减*********/
+		// Arithmetic
 		mat44 operator + (const mat44& m)
 		{
 			return mat44(
@@ -346,7 +324,7 @@ namespace eflib
 			return *this;
 		}
 
-		/********数vs矩阵，只提供乘除*********/
+		// scalar mul
 		mat44 operator * (float s)
 		{
 			return mat44(
@@ -408,10 +386,8 @@ namespace eflib
 			float invs = 1.0f/s;
 			return ((*this)*=invs);
 		}
-		/******************************************
-		*  特殊矩阵
-		*
-		*****************************************/
+		
+		// Special Matrix
 		static mat44 zero()
 		{
 			return diag(0.0f, 0.0f, 0.0f, 0.0f);

@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -299,27 +299,6 @@ struct jit_fixture {
 	shared_ptr<diag_chat>	diags;
 };
 
-template <typename T, int size>
-struct vector_
-{
-	template <typename IndexT>
-	T& operator [](IndexT i){ return data[i]; }
-
-	template <typename IndexT>
-	T operator [](IndexT i) const{ return data[i]; }
-
-	vector_<T,size> operator + ( vector_<T,size> const& r )
-	{
-		vector_<T,size> ret;
-		for( int i = 0; i < size; ++i ){
-			ret[i] = data[i] + r[i];
-		}
-		return ret;
-	}
-
-	T data[size];
-};
-
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	cout << endl << "================================================" << endl << endl;
 	cout << "Detecting CPU Features... " << endl;
@@ -506,10 +485,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec4 refv;
 		eflib::transform( refv, mat, rhs );
 
-		BOOST_CHECK_CLOSE( f.x, refv.x, 0.00001f );
-		BOOST_CHECK_CLOSE( f.y, refv.y, 0.00001f );
-		BOOST_CHECK_CLOSE( f.z, refv.z, 0.00001f );
-		BOOST_CHECK_CLOSE( f.w, refv.w, 0.00001f );
+		BOOST_CHECK_CLOSE( f[0], refv[0], 0.00001f );
+		BOOST_CHECK_CLOSE( f[1], refv[1], 0.00001f );
+		BOOST_CHECK_CLOSE( f[2], refv[2], 0.00001f );
+		BOOST_CHECK_CLOSE( f[3], refv[3], 0.00001f );
 	}
 	{
 		float p = 123.456f;
@@ -576,28 +555,28 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec2 v2(87.9f, 54.2f);
 		float f = 15.5;
 
-		vec4  dst(1.0f, v1.y*v0.x, v1.z, v0.y);
+		vec4  dst(1.0f, v1[1]*v0[0], v1[2], v0[1]);
 		float ref0 = ( v2-v1.xy() ).length() + ( v2.xyxy() - dst ).length();
-		vec4  ref1 = vec4( fmodf(v0.x, v1.x), fmodf(v0.y, v1.y), fmodf(v0.z, v1.z), fmodf(f, v1.y) );
-		vec3  ref2 = v0 + (v1-v0)*vec3(v2.x, v2.y, f);
+		vec4  ref1 = vec4( fmodf(v0[0], v1[0]), fmodf(v0[1], v1[1]), fmodf(v0[2], v1[2]), fmodf(f, v1[1]) );
+		vec3  ref2 = v0 + (v1-v0)*vec3(v2[0], v2[1], f);
 		vec3  ref3 = ( (eflib::PI/180.0f)*v0.xy() ).xxy() + (180.0f/eflib::PI)*v0;
 
 		float ret0 = test_distance( v2, v0, v1 );
 		vec4  ret1 = test_fmod( v0, f, v1 );
-		vec3  ret2 = test_lerp( v0, v1, vec3(v2.x, v2.y, f) );
+		vec3  ret2 = test_lerp( v0, v1, vec3(v2[0], v2[1], f) );
 		vec3  ret3 = test_rad_deg( v0 );
 
-		BOOST_CHECK_CLOSE( ret0,	ref0,	0.000001f );
-		BOOST_CHECK_CLOSE( ret1.x,	ref1.x,	0.000001f );
-		BOOST_CHECK_CLOSE( ret1.y,	ref1.y,	0.000001f );
-		BOOST_CHECK_CLOSE( ret1.z,	ref1.z,	0.000001f );
-		BOOST_CHECK_CLOSE( ret1.w,	ref1.w,	0.000001f );
-		BOOST_CHECK_CLOSE( ret2.x,	ref2.x,	0.000001f );
-		BOOST_CHECK_CLOSE( ret2.y,	ref2.y,	0.000001f );
-		BOOST_CHECK_CLOSE( ret2.z,	ref2.z,	0.000001f );
-		BOOST_CHECK_CLOSE( ret3.x,	ref3.x,	0.000001f );
-		BOOST_CHECK_CLOSE( ret3.y,	ref3.y,	0.000001f );
-		BOOST_CHECK_CLOSE( ret3.z,	ref3.z,	0.000001f );
+		BOOST_CHECK_CLOSE( ret0,	ref0,	 0.000001f );
+		BOOST_CHECK_CLOSE( ret1[0], ref1[0], 0.000001f );
+		BOOST_CHECK_CLOSE( ret1[1], ref1[1], 0.000001f );
+		BOOST_CHECK_CLOSE( ret1[2], ref1[2], 0.000001f );
+		BOOST_CHECK_CLOSE( ret1[3], ref1[3], 0.000001f );
+		BOOST_CHECK_CLOSE( ret2[0], ref2[0], 0.000001f );
+		BOOST_CHECK_CLOSE( ret2[1], ref2[1], 0.000001f );
+		BOOST_CHECK_CLOSE( ret2[2], ref2[2], 0.000001f );
+		BOOST_CHECK_CLOSE( ret3[0], ref3[0], 0.000001f );
+		BOOST_CHECK_CLOSE( ret3[1], ref3[1], 0.000001f );
+		BOOST_CHECK_CLOSE( ret3[2], ref3[2], 0.000001f );
 	}
 
 	{
@@ -688,10 +667,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	eflib::transform( out_pos, mat, pos );
 
 	BOOST_CHECK_CLOSE( bout.n_dot_l, dot_prod3( light, norm ), 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos.x, out_pos.x, 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos.y, out_pos.y, 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos.z, out_pos.z, 0.0001f );
-	BOOST_CHECK_CLOSE( bout.pos.w, out_pos.w, 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos[0], out_pos[0], 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos[1], out_pos[1], 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos[2], out_pos[2], 0.0001f );
+	BOOST_CHECK_CLOSE( bout.pos[3], out_pos[3], 0.0001f );
 }
 
 #endif
@@ -991,18 +970,18 @@ BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
 	int2 y(5, 6);
 
 	int3 ref_v;
-	ref_v.x = x.z + y.y; 
-	ref_v.y = x.w + y.x;
-	ref_v.z = x.w + y.y;
-	int3 tmp = int3( ref_v.z, ref_v.y, ref_v.x );
+	ref_v[0] = x[2] + y[1]; 
+	ref_v[1] = x[3] + y[0];
+	ref_v[2] = x[3] + y[1];
+	int3 tmp = int3( ref_v[2], ref_v[1], ref_v[0] );
 	ref_v = tmp;
 
 	int3 ret_v;
 	ret_v = fn(x, y);
 
-	BOOST_CHECK_EQUAL( ref_v.x, ret_v.x );
-	BOOST_CHECK_EQUAL( ref_v.y, ret_v.y );
-	BOOST_CHECK_EQUAL( ref_v.z, ret_v.z );
+	BOOST_CHECK_EQUAL( ref_v[0], ret_v[0] );
+	BOOST_CHECK_EQUAL( ref_v[1], ret_v[1] );
+	BOOST_CHECK_EQUAL( ref_v[2], ret_v[2] );
 }
 #endif
 
@@ -1029,9 +1008,9 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 	fn( src, (void*)NULL, dest, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( dest_ref[i].x, dest[i].x, 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i].y, dest[i].y, 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i].z, dest[i].z, 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][0], dest[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][1], dest[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][2], dest[i][2], 0.00001f );
 	}
 
 	_aligned_free( src );
@@ -1073,7 +1052,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 	{
 		// SSE dot
 		vec4 prod = to_vec4( _mm_mul_ps( to_mm(in0[i]), to_mm(in1[i]) ) );
-		float x = prod.x + prod.y + prod.z;
+		float x = prod[0] + prod[1] + prod[2];
 
 		// SSE prod
 		__m128 a0 = to_mm(in0[i].yzxw());
@@ -1086,19 +1065,19 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 		vec3 f3 = to_vec4( f3_m ).xyz();
 		
 		dest_ref[i].out0 = to_vec4( _mm_sqrt_ps(to_mm(in0[i])) ).xyz();
-		dest_ref[i].out1.x = x;
-		dest_ref[i].out1.y = sqrt(in0[i].x);
+		dest_ref[i].out1[0] = x;
+		dest_ref[i].out1[1] = sqrt(in0[i][0]);
 	}
 
 	fn( (void*)in0, (void*)NULL, (void*)out0, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out0[i].x, dest_ref[i].out0.x, 0.00001f );
-		BOOST_CHECK_CLOSE( out0[i].y, dest_ref[i].out0.y, 0.00001f );
-		BOOST_CHECK_CLOSE( out0[i].z, dest_ref[i].out0.z, 0.00001f );
+		BOOST_CHECK_CLOSE( out0[i][0], dest_ref[i].out0[0], 0.00001f );
+		BOOST_CHECK_CLOSE( out0[i][1], dest_ref[i].out0[1], 0.00001f );
+		BOOST_CHECK_CLOSE( out0[i][2], dest_ref[i].out0[2], 0.00001f );
 
-		BOOST_CHECK_CLOSE( out1[i].x, dest_ref[i].out1.x, 0.00001f );
-		BOOST_CHECK_CLOSE( out1[i].y, dest_ref[i].out1.y, 0.00001f );
+		BOOST_CHECK_CLOSE( out1[i][0], dest_ref[i].out1[0], 0.00001f );
+		BOOST_CHECK_CLOSE( out1[i][1], dest_ref[i].out1[1], 0.00001f );
 	}
 
 	_aligned_free( in0 );
@@ -1129,22 +1108,22 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 		}
 
 		// Compute reference data
-		ref_out[i].x = 88.3f;
-		ref_out[i].y = 75.4f;
+		ref_out[i][0] = 88.3f;
+		ref_out[i][1] = 75.4f;
 		if( in0[i] > 0.0f ){
-			ref_out[i].x = in0[i];
+			ref_out[i][0] = in0[i];
 		}
 		if( in0[i] > 1.0f ){
-			ref_out[i].y = in1[i].x;
+			ref_out[i][1] = in1[i][0];
 		} else {
-			ref_out[i].y = in1[i].y;
+			ref_out[i][1] = in1[i][1];
 		}
 		if( in0[i] > 2.0f ){
-			ref_out[i].y = in1[i].z;
+			ref_out[i][1] = in1[i][2];
 			if ( in0[i] > 3.0f ){
-				ref_out[i].y = ref_out[i].y + 1.0f;
+				ref_out[i][1] = ref_out[i][1] + 1.0f;
 			} else if( in0[i] > 2.5f ){
-				ref_out[i].y = ref_out[i].y + 2.0f;
+				ref_out[i][1] = ref_out[i][1] + 2.0f;
 			}
 		}
 	}
@@ -1152,8 +1131,8 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	fn( (void*)in0, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out[i].x, ref_out[i].x, 0.00001f );
-		BOOST_CHECK_CLOSE( out[i].y, ref_out[i].y, 0.00001f );
+		BOOST_CHECK_CLOSE( out[i][0], ref_out[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( out[i][1], ref_out[i][1], 0.00001f );
 	}
 
 	_aligned_free( in0 );
@@ -1250,15 +1229,15 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		BOOST_CHECK_CLOSE( out0[i], ref_out0[i], 0.00001f );
-		BOOST_CHECK_CLOSE( out1[i].x, ref_out1[i].x, 0.00001f );
-		BOOST_CHECK_CLOSE( out1[i].y, ref_out1[i].y, 0.00001f );
-		BOOST_CHECK_CLOSE( out2[i].x, ref_out2[i].x, 0.00001f );
-		BOOST_CHECK_CLOSE( out2[i].y, ref_out2[i].y, 0.00001f );
-		BOOST_CHECK_CLOSE( out2[i].z, ref_out2[i].z, 0.00001f );
-		BOOST_CHECK_CLOSE( out3[i].x, ref_out3[i].x, 0.00001f );
-		BOOST_CHECK_CLOSE( out3[i].y, ref_out3[i].y, 0.00001f );
-		BOOST_CHECK_CLOSE( out3[i].z, ref_out3[i].z, 0.00001f );
-		BOOST_CHECK_CLOSE( out3[i].w, ref_out3[i].w, 0.00001f );
+		BOOST_CHECK_CLOSE( out1[i][0], ref_out1[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( out1[i][1], ref_out1[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( out2[i][0], ref_out2[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( out2[i][1], ref_out2[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( out2[i][2], ref_out2[i][2], 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i][0], ref_out3[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i][1], ref_out3[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i][2], ref_out3[i][2], 0.00001f );
+		BOOST_CHECK_CLOSE( out3[i][3], ref_out3[i][3], 0.00001f );
 	}
 
 	_aligned_free( in0 );
@@ -1316,9 +1295,9 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 	fn( src, (void*)&addr, dest, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( dest_ref[i].x, dest[i].x, 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i].y, dest[i].y, 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i].z, dest[i].z, 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][0], dest[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][1], dest[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][2], dest[i][2], 0.00001f );
 	}
 
 	_aligned_free( src );
@@ -1488,21 +1467,21 @@ BOOST_FIXTURE_TEST_CASE( constructor_ss, jit_fixture ){
 	vec3 v2 = get_float3();
 	vec4 v3 = add_float4( vec4(3.3f, 6.7f, 90.2f, -8.8f) );
 
-	BOOST_CHECK_EQUAL( ref_v0.x, v0.x );
-	BOOST_CHECK_EQUAL( ref_v0.y, v0.y );
+	BOOST_CHECK_EQUAL( ref_v0[0], v0[0] );
+	BOOST_CHECK_EQUAL( ref_v0[1], v0[1] );
 
-	BOOST_CHECK_EQUAL( ref_v1.x, v1.x );
-	BOOST_CHECK_EQUAL( ref_v1.y, v1.y );
-	BOOST_CHECK_EQUAL( ref_v1.z, v1.z );
+	BOOST_CHECK_EQUAL( ref_v1[0], v1[0] );
+	BOOST_CHECK_EQUAL( ref_v1[1], v1[1] );
+	BOOST_CHECK_EQUAL( ref_v1[2], v1[2] );
 
-	BOOST_CHECK_CLOSE( ref_v2.x, v2.x, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v2.y, v2.y, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v2.z, v2.z, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v2[0], v2[0], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v2[1], v2[1], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v2[2], v2[2], 0.000001f );
 
-	BOOST_CHECK_CLOSE( ref_v3.x, v3.x, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v3.y, v3.y, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v3.z, v3.z, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_v3.w, v3.w, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3[0], v3[0], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3[1], v3[1], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3[2], v3[2], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_v3[3], v3[3], 0.000001f );
 
 	return ;
 }
@@ -1540,20 +1519,20 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 	vec4 vf( 76.8f, -88.5f, 37.7f, -98.1f );
 	int3 vi( 87, 46, 22 );
 
-	vec4 ref_f( vf.x+vf.y, vf.y-vf.z, vf.z*vf.w, vf.w/vf.x );
-	int4 ref_i( vi.x/vi.y, vi.y%vi.z, vi.z*vi.x );
+	vec4 ref_f( vf[0]+vf[1], vf[1]-vf[2], vf[2]*vf[3], vf[3]/vf[0] );
+	int4 ref_i( vi[0]/vi[1], vi[1]%vi[2], vi[2]*vi[0] );
 
 	vec4 ret_f = test_float_arith(vf);
 	int3 ret_i = test_int_arith(vi);
 
-	BOOST_CHECK_CLOSE( ref_f.x, ret_f.x, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_f.y, ret_f.y, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_f.z, ret_f.z, 0.000001f );
-	BOOST_CHECK_CLOSE( ref_f.w, ret_f.w, 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f[0], ret_f[0], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f[1], ret_f[1], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f[2], ret_f[2], 0.000001f );
+	BOOST_CHECK_CLOSE( ref_f[3], ret_f[3], 0.000001f );
 
-	BOOST_CHECK_EQUAL( ref_i.x, ret_i.x );
-	BOOST_CHECK_EQUAL( ref_i.y, ret_i.y );
-	BOOST_CHECK_EQUAL( ref_i.z, ret_i.z );
+	BOOST_CHECK_EQUAL( ref_i[0], ret_i[0] );
+	BOOST_CHECK_EQUAL( ref_i[1], ret_i[1] );
+	BOOST_CHECK_EQUAL( ref_i[2], ret_i[2] );
 }
 #endif
 

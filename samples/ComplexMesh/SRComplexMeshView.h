@@ -99,18 +99,18 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 	for (uint32_t mtl_index = 0; mtl_index < num_mtls; ++ mtl_index)
 	{
 		Material& mtl = mtls[mtl_index];
-		file.read(reinterpret_cast<char*>(&mtl.ambient.x), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.ambient.y), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.ambient.z), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.diffuse.x), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.diffuse.y), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.diffuse.z), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.specular.x), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.specular.y), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.specular.z), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.emit.x), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.emit.y), sizeof(float));
-		file.read(reinterpret_cast<char*>(&mtl.emit.z), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.ambient.x ()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.ambient.y ()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.ambient.z ()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.diffuse.x ()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.diffuse.y ()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.diffuse.z ()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.specular.x()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.specular.y()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.specular.z()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.emit.x()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.emit.y()), sizeof(float));
+		file.read(reinterpret_cast<char*>(&mtl.emit.z()), sizeof(float));
 		file.read(reinterpret_cast<char*>(&mtl.opacity), sizeof(float));
 		file.read(reinterpret_cast<char*>(&mtl.specular_level), sizeof(float));
 		file.read(reinterpret_cast<char*>(&mtl.shininess), sizeof(float));

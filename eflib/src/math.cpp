@@ -33,84 +33,84 @@ namespace eflib{
 
 	float dot_prod2(const vec2& v1, const vec2& v2)
 	{
-		return v1.x * v2.x + v1.y * v2.y;
+		return v1[0]*v2[0] + v1[1]*v2[1];
 	}
 
 	float dot_prod3(const vec3& v1, const vec3& v2)
 	{
-		return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+		return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
 	}
 
 	float dot_prod4(const vec4& v1, const vec4& v2)
 	{
-		return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
+		return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2] + v1[3]*v2[3];
 	}
 
 	float cross_prod2(const vec2& v1, const vec2& v2)
 	{
-		return v1.x * v2.y - v1.y * v2.x;
+		return v1[0] * v2[1] - v1[1] * v2[0];
 	}
 
 	vec3 cross_prod3(const vec3& v1, const vec3& v2)
 	{
 		return vec3(
-			v1.y*v2.z - v1.z*v2.y,
-			v1.z*v2.x - v1.x*v2.z,
-			v1.x*v2.y - v1.y*v2.x
+			v1[1]*v2[2] - v1[2]*v2[1],
+			v1[2]*v2[0] - v1[0]*v2[2],
+			v1[0]*v2[1] - v1[1]*v2[0]
 			);
 	}
 
 	vec2 clampps(const vec2& v, const vec2& minv, const vec2& maxv)
 	{
 		return vec2(
-			clamp(v.x, minv.x, maxv.x),
-			clamp(v.y, minv.y, maxv.y)
+			clamp(v[0], minv[0], maxv[0]),
+			clamp(v[1], minv[1], maxv[1])
 			);
 	}
 
 	vec3 clampps(const vec3& v, const vec3& minv, const vec3& maxv)
 	{
 		return vec3(
-			clamp(v.x, minv.x, maxv.x),
-			clamp(v.y, minv.y, maxv.y),
-			clamp(v.z, minv.z, maxv.z)
+			clamp(v[0], minv[0], maxv[0]),
+			clamp(v[1], minv[1], maxv[1]),
+			clamp(v[2], minv[2], maxv[2])
 			);
 	}
 
 	vec4 clampps(const vec4& v, const vec4& minv, const vec4& maxv)
 	{
 		return vec4(
-			clamp(v.x, minv.x, maxv.x),
-			clamp(v.y, minv.y, maxv.y),
-			clamp(v.z, minv.z, maxv.z),
-			clamp(v.w, minv.w, maxv.w)
+			clamp(v[0], minv[0], maxv[0]),
+			clamp(v[1], minv[1], maxv[1]),
+			clamp(v[2], minv[2], maxv[2]),
+			clamp(v[3], minv[3], maxv[3])
 			);
 	}
 
 	vec2 clampss(const vec2& v, float min, float max)
 	{
 		return vec2(
-			clamp(v.x, min, max),
-			clamp(v.y, min, max)
+			clamp(v[0], min, max),
+			clamp(v[1], min, max)
 			);
 	}
 
 	vec3 clampss(const vec3& v, float min, float max)
 	{
 		return vec3(
-			clamp(v.x, min, max),
-			clamp(v.y, min, max),
-			clamp(v.z, min, max)
+			clamp(v[0], min, max),
+			clamp(v[1], min, max),
+			clamp(v[2], min, max)
 			);
 	}
 
 	vec4 clampss(const vec4& v, float min, float max)
 	{
 		return vec4(
-			clamp(v.x, min, max),
-			clamp(v.y, min, max),
-			clamp(v.z, min, max),
-			clamp(v.w, min, max)
+			clamp(v[0], min, max),
+			clamp(v[1], min, max),
+			clamp(v[2], min, max),
+			clamp(v[3], min, max)
 			);
 	}
 
@@ -152,7 +152,7 @@ namespace eflib{
 		vec4 e12 = v2 - v1;
 
 		out.xyz() = cross_prod3(e01.xyz(), e12.xyz());
-		out.w = -dot_prod3(v0.xyz(), out.xyz());
+		out[3] = -dot_prod3(v0.xyz(), out.xyz());
 		return out;
 	}
 
@@ -179,10 +179,10 @@ namespace eflib{
 			return transform(out, tmpv, m);
 		}
 
-		out.x = dot_prod4(v, m.get_column(0));
-		out.y = dot_prod4(v, m.get_column(1));
-		out.z = dot_prod4(v, m.get_column(2));
-		out.w = dot_prod4(v, m.get_column(3));
+		out[0] = dot_prod4(v, m.get_column(0));
+		out[1] = dot_prod4(v, m.get_column(1));
+		out[2] = dot_prod4(v, m.get_column(2));
+		out[3] = dot_prod4(v, m.get_column(3));
 
 		return out;
 	}
@@ -194,26 +194,26 @@ namespace eflib{
 			return transform(out, m, tmpv);
 		}
 
-		out.x = dot_prod4(v, m.get_row(0));
-		out.y = dot_prod4(v, m.get_row(1));
-		out.z = dot_prod4(v, m.get_row(2));
-		out.w = dot_prod4(v, m.get_row(3));
+		out[0] = dot_prod4(v, m.get_row(0));
+		out[1] = dot_prod4(v, m.get_row(1));
+		out[2] = dot_prod4(v, m.get_row(2));
+		out[3] = dot_prod4(v, m.get_row(3));
 
 		return out;
 	}
 
 	vec4& transform_coord(vec4& out, const vec4& v, const mat44& m)
 	{
-		vec4 coord = vec4(v.x, v.y, v.z, 1.0f);
+		vec4 coord = vec4(v[0], v[1], v[2], 1.0f);
 		transform(out, coord, m);
-		if(out.w == 0.0f) out.w = 1.0f;
-		out /= out.w;
+		if(out[3] == 0.0f) out[3] = 1.0f;
+		out /= out[3];
 		return out;
 	}
 
 	vec4& transform_normal(vec4& out, const vec4& v, const mat44& m)
 	{
-		vec4 norm = vec4(v.x, v.y, v.z, 0.0f);
+		vec4 norm = vec4(v[0], v[1], v[2], 0.0f);
 		transform(out, norm, m);
 		return out;
 	}
@@ -226,10 +226,10 @@ namespace eflib{
 			return transform33(out, tmpv, m);
 		}
 
-		out.x = dot_prod3(v.xyz(), m.get_column(0).xyz());
-		out.y = dot_prod3(v.xyz(), m.get_column(1).xyz());
-		out.z = dot_prod3(v.xyz(), m.get_column(2).xyz());
-		out.w = 0.0f;
+		out[0] = dot_prod3(v.xyz(), m.get_column(0).xyz());
+		out[1] = dot_prod3(v.xyz(), m.get_column(1).xyz());
+		out[2] = dot_prod3(v.xyz(), m.get_column(2).xyz());
+		out[3] = 0.0f;
 
 		return out;
 	}
@@ -372,19 +372,19 @@ namespace eflib{
 		float s, c;
 		sincos(radians(delta), s, c);
 
-		out.f[0][0]  = axis.x * axis.x + ( 1 - axis.x * axis.x ) * c;
-		out.f[1][0]  = axis.x * axis.y * ( 1 - c ) - axis.z * s;
-		out.f[2][0]  = axis.x * axis.z * ( 1 - c ) + axis.y * s;
+		out.f[0][0]  = axis[0] * axis[0] + ( 1 - axis[0] * axis[0] ) * c;
+		out.f[1][0]  = axis[0] * axis[1] * ( 1 - c ) - axis[2] * s;
+		out.f[2][0]  = axis[0] * axis[2] * ( 1 - c ) + axis[1] * s;
 		out.f[3][0]  = 0;
 
-		out.f[0][1]  = axis.x * axis.y * ( 1 - c ) + axis.z * s;
-		out.f[1][1]  = axis.y * axis.y + ( 1 - axis.y * axis.y ) * c;
-		out.f[2][1]  = axis.y * axis.z * ( 1 - c ) - axis.x * s;
+		out.f[0][1]  = axis[0] * axis[1] * ( 1 - c ) + axis[2] * s;
+		out.f[1][1]  = axis[1] * axis[1] + ( 1 - axis[1] * axis[1] ) * c;
+		out.f[2][1]  = axis[1] * axis[2] * ( 1 - c ) - axis[0] * s;
 		out.f[3][1]  = 0;
 
-		out.f[0][2]  = axis.x * axis.z * ( 1 - c ) - axis.y * s;
-		out.f[1][2]  = axis.y * axis.z * ( 1 - c ) + axis.x * s;
-		out.f[2][2]  = axis.z * axis.z + ( 1 - axis.z * axis.z ) * c;
+		out.f[0][2]  = axis[0] * axis[2] * ( 1 - c ) - axis[1] * s;
+		out.f[1][2]  = axis[1] * axis[2] * ( 1 - c ) + axis[0] * s;
+		out.f[2][2]  = axis[2] * axis[2] + ( 1 - axis[2] * axis[2] ) * c;
 		out.f[3][2]  = 0;
 
 		out.f[0][3]  = 0;
@@ -511,9 +511,9 @@ namespace eflib{
 		vec3 ydir = cross_prod3(zdir.xyz(), xdir.xyz());
 
 		out = mat44(
-			xdir.x, ydir.x, zdir.x, 0.0f,
-			xdir.y, ydir.y, zdir.y, 0.0f,
-			xdir.z, ydir.z, zdir.z, 0.0f,
+			xdir[0], ydir[0], zdir[0], 0.0f,
+			xdir[1], ydir[1], zdir[1], 0.0f,
+			xdir[2], ydir[2], zdir[2], 0.0f,
 			-dot_prod3(xdir, eye), -dot_prod3(ydir, eye), -dot_prod3(zdir, eye), 1.0f);
 
 		return out;

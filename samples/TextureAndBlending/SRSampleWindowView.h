@@ -164,7 +164,7 @@ public:
 	{
 		vec4 pos = in.attributes[0];
 		transform(out.position, pos, wvp);
-		out.attributes[0] = vec4(in.attributes[0].x, in.attributes[0].z, 0, 0);
+		out.attributes[0] = vec4(in.attributes[0].x(), in.attributes[0].z(), 0, 0);
 	}
 
 	uint32_t num_output_attributes() const
