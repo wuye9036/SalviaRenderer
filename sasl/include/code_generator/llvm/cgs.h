@@ -34,6 +34,7 @@ class cg_service
 public:
 	typedef boost::function< cgllvm_sctxt* (sasl::syntax_tree::node*, bool) > node_ctxt_fn;
 	virtual bool initialize( llvm_module_impl* mod, node_ctxt_fn const& fn );
+	virtual bool register_external_intrinsic();
 
 	/// @name Service States
 	/// @{
@@ -58,7 +59,7 @@ public:
 	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_mul_ps( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_div( value_t const& lhs, value_t const& rhs );
-	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs, function_t const& workaround_fmodf );
+	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t emit_lshift ( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_rshift ( value_t const& lhs, value_t const& rhs );
@@ -106,7 +107,7 @@ public:
 	/// @{
 	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_abs( value_t const& lhs );
-	virtual value_t emit_exp( value_t const& lhs, function_t const& workaround_expf );
+	virtual value_t emit_exp( value_t const& lhs );
 	virtual value_t emit_sqrt( value_t const& lhs );
 	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_ddx( value_t const& v ) = 0;
@@ -254,7 +255,7 @@ public:
 	/// Get member type information is type is aggregated.
 	value_tyinfo* member_tyinfo( value_tyinfo const* agg, size_t index ) const;
 	/// @}
-
+	
 	/// @name Bridges
 	/// @{
 	llvm::Type* type_( builtin_types bt, abis abi );
@@ -305,8 +306,16 @@ public:
 	node_ctxt_fn			node_ctxt;
 
 protected:
+	enum intrin_ids
+	{
+		exp_f32,
+		mod_f32,
+		intrins_count
+	};
+
 	std::vector<function_t> fn_ctxts;
 	llvm_intrin_cache		intrins;
+	llvm::Function*			external_intrins[intrins_count];
 	llvm_module_impl*		mod_impl;
 	value_t					exec_mask;
 	
@@ -318,18 +327,22 @@ protected:
 	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	bin_fn_t;
 	typedef boost::function<llvm::Value* (llvm::Value*)>				unary_fn_t;
 
-	llvm::Value* call_external1_		( function_t const&, llvm::Value* v, abis abi );
-	llvm::Value* call_external2_		( function_t const&, llvm::Value* v0, llvm::Value* v1, abis abi );
+	llvm::Value* call_external1_		( llvm::Function* f, llvm::Value* v );
+	llvm::Value* call_external2_		( llvm::Function* f, llvm::Value* v0, llvm::Value* v1 );
 
 	unary_fn_t	bind_unary_call_		( llvm::Function* fn );
 	bin_fn_t	bind_binary_call_		( llvm::Function* fn );
 	
-	unary_fn_t	bind_unary_external_	( function_t const&, abis abi );
-	bin_fn_t	bind_binary_external_	( function_t const&, abis abi );
+	unary_fn_t	bind_unary_external_	( llvm::Function* fn );
+	bin_fn_t	bind_binary_external_	( llvm::Function* fn );
 
-	llvm::Value* bin_op_ps_				(llvm::Type* ret_ty, llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn, unary_fn_t cast_fn);
-	llvm::Value* bin_op_ps_				(llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn);
-	llvm::Value* bin_op_ps_scalar_ext_	(llvm::Value* lhs, llvm::Value* rhs, builtin_types scalar_hint, function_t const& fn );
+	llvm::Value* bin_op_ps_				(
+		llvm::Type* ret_ty,
+		llvm::Value* lhs, llvm::Value* rhs,
+		bin_fn_t sfn, bin_fn_t vfn, bin_fn_t simd_fn, bin_fn_t sv_fn,
+		unary_fn_t cast_fn /*Must be sv fn*/
+		);
+
 	llvm::Value* unary_op_ps_			(llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn);
 
 	value_t emit_bin_mm(
@@ -338,7 +351,7 @@ protected:
 		);
 	value_t emit_bin_ps(
 		value_t const& lhs, value_t const& rhs,
-		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+		bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn
 		);
 	value_t emit_bin_sv( 
 		value_t const& lhs, value_t const& rhs,

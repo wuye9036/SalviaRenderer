@@ -296,7 +296,7 @@ void workaround_expf( float* ret, float v )
 	*ret = expf(v);
 }
 
-void workaround_fmodf( float* ret, float lhs, float rhs )
+void workaround_modf( float* ret, float lhs, float rhs )
 {
 	*ret = fmodf(lhs, rhs);
 }
@@ -307,8 +307,8 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
-	inject_function(ret_jit, &workaround_expf, "__wa_expf", false);
-	inject_function(ret_jit, &workaround_fmodf, "__wa_fmodf", false);
+	inject_function(ret_jit, &workaround_expf, "sasl.exp.f32", true);
+	inject_function(ret_jit, &workaround_modf, "sasl.mod.f32", true);
 	return ret_jit;
 }
 

@@ -199,7 +199,7 @@ SASL_VISIT_DEF( binary_expression ){
 			} else if( v.op == operators::div ){
 				retval = service()->emit_div(lval, rval);
 			} else if( v.op == operators::mod ){
-				retval = service()->emit_mod(lval, rval, *get_function("__wa_fmodf"));
+				retval = service()->emit_mod(lval, rval);
 			} else if( v.op == operators::left_shift ) {
 				retval = service()->emit_lshift( lval, rval );
 			} else if( v.op == operators::right_shift ) {
@@ -651,6 +651,8 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
+	service()->register_external_intrinsic();
+
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
 
 	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
@@ -732,7 +734,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			value_t ret_val = service()->emit_exp( service()->fn().arg(0), *get_function("__wa_expf") );
+			value_t ret_val = service()->emit_exp( service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "sqrt" )
@@ -846,7 +848,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, "lhs");
 			fn.arg_name(1, "rhs");
 			
-			service()->emit_return( service()->emit_mod( fn.arg(0), fn.arg(1), *get_function("__wa_fmodf") ), service()->param_abi(false) );
+			service()->emit_return( service()->emit_mod( fn.arg(0), fn.arg(1) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "radians" )
 		{
