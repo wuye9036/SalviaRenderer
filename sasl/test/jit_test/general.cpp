@@ -299,6 +299,16 @@ struct jit_fixture {
 	shared_ptr<diag_chat>	diags;
 };
 
+typedef vector_<char,2>		char2;
+typedef vector_<char,3>		bool3;
+typedef vector_<char,4>		bool4;
+typedef vector_<uint32_t,2>	uint2;
+typedef vector_<uint32_t,3>	uint3;
+
+typedef matrix_<char,4,3>	bool3x4;
+typedef matrix_<float,4,3>	float3x4;
+
+
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	cout << endl << "================================================" << endl << endl;
 	cout << "Detecting CPU Features... " << endl;
@@ -394,10 +404,6 @@ using eflib::int2;
 
 #if 1 || ALL_TESTS_ENABLED
 
-typedef vector_<char,2> char2;
-typedef vector_<char,3> bool3;
-typedef vector_<char,4> bool4;
-
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
 
@@ -407,6 +413,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<float (float) > test_abs_f;
 	jit_function<int (int) > test_abs_i;
 	jit_function<float (float) > test_exp;
+	jit_function<float3x4 (float3x4)> test_exp_m34;
 	jit_function<float (float) > test_sqrt_f;
 	jit_function<vec2 (vec2) > test_sqrt_f2;
 	jit_function<vec3 (vec3, vec3)> test_cross_prod;
@@ -433,6 +440,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 	function( test_exp, "test_exp" );
 	BOOST_REQUIRE( test_exp );
+
+	function( test_exp_m34, "test_exp_m34" );
+	BOOST_REQUIRE( test_exp_m34 );
 
 	function( test_sqrt_f, "test_sqrt_f" );
 	BOOST_REQUIRE( test_sqrt_f );
@@ -528,6 +538,42 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		x = 10.0f;
 		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
 	}
+	{
+		float arr[3][4] =
+		{
+			{17.7f, 66.3f, 0.92f, -88.7f},
+			{8.6f, -0.22f, 17.1f, -64.4f},
+			{199.8f, 0.1f, -0.1f, 99.73f}
+		};
+
+		float ref_v[3][4] = {0};
+
+		for( int i = 0; i < 3; ++i )
+			for( int j = 0; j < 4; ++j )
+				ref_v[i][j] = expf(arr[i][j]); 
+
+		float3x4&  m34( reinterpret_cast<float3x4&>(arr) );
+		
+		float3x4 ret = test_exp_m34(m34);
+
+		for( int i = 0; i < 3; ++i )
+		{
+			for( int j = 0; j < 4; ++j )
+			{
+				// Fix for NAN and INF
+				if( *(int*)(&ref_v[i][j]) == *(int*)(&ret.data_[i][j]) )
+				{
+					BOOST_CHECK_BITWISE_EQUAL( *(int*)(&ref_v[i][j]), *(int*)(&ret.data_[i][j]) );
+				}
+				else
+				{
+					BOOST_CHECK_CLOSE( ref_v[i][j], ret.data_[i][j], 0.000001f );
+				}
+			}
+		}
+				
+	}
+
 	{
 		float f = 876.625f;
 		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.000001f );
@@ -728,10 +774,6 @@ bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
 }
 
-typedef vector_<char,3>		char3;
-typedef matrix_<char,4,3>	bool3x4;
-typedef matrix_<float,4,3>	float3x4;
-
 BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/bool.ss" );
@@ -881,9 +923,6 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 #endif
 
 #if ALL_TESTS_ENABLED
-
-typedef vector_<uint32_t, 2> uint2;
-typedef vector_<uint32_t, 3> uint3;
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
@@ -1557,9 +1596,6 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 	BOOST_CHECK_EQUAL( get_sum(22876765, 1),  22876765*1 );
 }
 #endif
-
-typedef matrix_<float, 4, 3> float3x4;
-typedef matrix_<float, 4, 3> float3x4;
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )

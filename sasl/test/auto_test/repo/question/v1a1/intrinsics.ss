@@ -27,6 +27,11 @@ float test_exp(float v)
 	return exp(v);
 }
 
+float3x4 test_exp_m34( float3x4 v )
+{
+	return exp(v);
+}
+
 float test_sqrt_f( float v ){
 	return sqrt(v);
 }
