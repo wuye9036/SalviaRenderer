@@ -1528,12 +1528,6 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 	}
 
-	// LLVM Workaround for some intrinsics are NULL pointer.
-	{
-		register_intrinsic( child_ctxt_init, "__wa_expf", true, false ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-		register_intrinsic( child_ctxt_init, "__wa_fmodf", true, false ) % BUILTIN_TYPE(_float) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-	}
-
 	// degrees, radians, sqrt, fmod, lerp
 	{
 		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
@@ -1545,11 +1539,12 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			{
 				if( scalar_of(tycode) == builtin_types::_float )
 				{
-					register_intrinsic( child_ctxt_init, "degrees" ) % ty			>> ty;
-					register_intrinsic( child_ctxt_init, "radians" ) % ty			>> ty;
-					register_intrinsic( child_ctxt_init, "sqrt"    ) % ty			>> ty;
-					register_intrinsic( child_ctxt_init, "lerp"    ) % ty % ty % ty	>> ty;
-					register_intrinsic( child_ctxt_init, "fmod"    ).deps("__wa_fmodf") % ty % ty >> ty;
+					register_intrinsic( child_ctxt_init, "degrees"	) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "radians"	) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "sqrt"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "exp"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "lerp"		) % ty % ty % ty>> ty;
+					register_intrinsic( child_ctxt_init, "fmod"		) % ty % ty		>> ty;
 				}
 			}
 		}
@@ -1623,9 +1618,6 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 		}
 
-		// WORKAROUND_TODO LLVM 3.0: Intrinsic didn't generate correct native call.
-		// register_intrinsic( child_ctxt_init, "exp" ) % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
-		register_intrinsic( child_ctxt_init, "exp" ).deps("__wa_expf") % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_float);
 		register_intrinsic( child_ctxt_init, "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];
 	}
 
