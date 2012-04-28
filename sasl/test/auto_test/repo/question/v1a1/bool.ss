@@ -26,3 +26,8 @@ bool3 test_vbool( int3 i, int3 j, int3 k )
 {
 	return i > j || i > k && i <= j+k;  
 }
+
+bool3x4 test_mbool( float3x4 i, float3x4 j, float3x4 k )
+{
+	return i > j || i > k && i <= j+k;  
+}

@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -722,16 +722,15 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
 }
 
-struct char3
-{
-	char data[3];
-};
+typedef vector_<char,3>		char3;
+typedef matrix_<char,4,3>	bool3x4;
+typedef matrix_<float,4,3>	float3x4;
 
 BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 {
@@ -742,13 +741,15 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 	jit_function<bool(float, float)> test_ge;
 	jit_function<bool(int, int, int)> test_short;
 	jit_function< char3 (int3, int3, int3) > test_vbool;
-	
+	jit_function< bool3x4 (float3x4, float3x4, float3x4) > test_mbool;
+
 	function( test_max, "test_max" );
 	function( test_min, "test_min" );
 	function( test_le, "test_le" );
 	function( test_ge, "test_ge" );
 	function( test_short, "test_short" );
 	function( test_vbool, "test_vbool" );
+	function( test_mbool, "test_mbool" );
 
 	BOOST_CHECK( test_max( 2, 15 ) == 15 );
 	BOOST_CHECK( test_max( 15, 2 ) == 15 );
@@ -763,29 +764,83 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 	BOOST_CHECK( test_ge( 6, 6 ) );
 	BOOST_CHECK( test_ge( 6, 5 ) );
 
-	for( int i = -1; i < 2; ++i ){
-		for( int j = -1; j < 2; ++j ){
-			for( int k = -1; k < 2; ++k ){
-				bool short_result = test_short(i, j, k);
-				bool ref_result = test_short_ref(i, j, k);
-				BOOST_CHECK_EQUAL( short_result, ref_result );
+	{
+		for( int i = -1; i < 2; ++i ){
+			for( int j = -1; j < 2; ++j ){
+				for( int k = -1; k < 2; ++k ){
+					bool short_result = test_short(i, j, k);
+					bool ref_result = test_short_ref(i, j, k);
+					BOOST_CHECK_EQUAL( short_result, ref_result );
+				}
+			}
+		}
+		int3 x(87,  46, -22);
+		int3 y(65, -11,   9);
+		int3 z(37,  16,  22);
+
+		bool ref_v[3];
+		ref_v[0] = x[0] > y[0] || x[0] > z[0] && x[0] <= y[0]+z[0];  
+		ref_v[1] = x[1] > y[1] || x[1] > z[1] && x[1] <= y[1]+z[1];  
+		ref_v[2] = x[2] > y[2] || x[2] > z[2] && x[2] <= y[2]+z[2];  
+
+		char3 ret_v = test_vbool(x, y, z);
+
+		BOOST_CHECK_EQUAL( bool(ret_v.data_[0]), ref_v[0] );
+		BOOST_CHECK_EQUAL( bool(ret_v.data_[1]), ref_v[1] );
+		BOOST_CHECK_EQUAL( bool(ret_v.data_[2]), ref_v[2] );
+	}
+
+	{
+		float array0[3][4] =
+		{
+			{17.7f, 66.3f, 0.92f, -88.7f},
+			{8.6f, -0.22f, 17.1f, -64.4f},
+			{199.8f, 0.1f, -0.1f, 99.73f}
+		};
+
+		float array1[3][4] =
+		{
+			{9.62f, 10.33f, -18.2f, 99.7f},
+			{-0.3f, -76.9f, 93.3f,  0.22f},
+			{44.1f, 0.027f, 19.9f, -33.5f}
+		};
+
+		float array2[3][4] = 
+		{
+			{0.198f, 10.3f, -0.82f, 9.37f},
+			{7.3f, -7.92f, 93.3f,  10.22f},
+			{24.1f, -0.77f, -40.9f, 43.5f}
+		};
+
+		char ref_v[3][4] = {false};
+		for( int i = 0; i < 3; ++i )
+		{
+			for( int j = 0; j < 4; ++j )
+			{
+				// i > j || i > k && i <= j+k;  
+
+				ref_v[i][j] 
+				=  array0[i][j] > array1[i][j]
+				|| array0[i][j] > array2[i][j]
+				&& array0[i][j] < (array1[i][j] + array2[i][j])
+				;
+			}
+		}
+
+		float3x4& m0( reinterpret_cast<float3x4&>(array0) );
+		float3x4& m1( reinterpret_cast<float3x4&>(array1) );
+		float3x4& m2( reinterpret_cast<float3x4&>(array2) );
+
+		bool3x4 ret = test_mbool( m0, m1, m2 );
+
+		for( int i = 0; i < 3; ++i )
+		{
+			for( int j = 0; j < 4; ++j )
+			{
+				BOOST_CHECK_EQUAL( ref_v[i][j], ret.data_[i][j] == 1 );
 			}
 		}
 	}
-	int3 x(87,  46, -22);
-	int3 y(65, -11,   9);
-	int3 z(37,  16,  22);
-
-	bool ref_v[3];
-	ref_v[0] = x[0] > y[0] || x[0] > z[0] && x[0] <= y[0]+z[0];  
-	ref_v[1] = x[1] > y[1] || x[1] > z[1] && x[1] <= y[1]+z[1];  
-	ref_v[2] = x[2] > y[2] || x[2] > z[2] && x[2] <= y[2]+z[2];  
-
-	char3 ret_v = test_vbool(x, y, z);
-
-	BOOST_CHECK_EQUAL( bool(ret_v.data[0]), ref_v[0] );
-	BOOST_CHECK_EQUAL( bool(ret_v.data[1]), ref_v[1] );
-	BOOST_CHECK_EQUAL( bool(ret_v.data[2]), ref_v[2] );
 }
 
 BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )

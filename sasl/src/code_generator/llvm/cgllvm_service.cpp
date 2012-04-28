@@ -952,7 +952,7 @@ value_t cg_service::emit_mul_ps( value_t const& lhs, value_t const& rhs )
 {
 	bin_fn_t f_mul = boost::bind( &DefaultIRBuilder::CreateFMul, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_mul = boost::bind( &DefaultIRBuilder::CreateMul,  builder(), _1, _2, "", false, false );
-	return emit_bin( lhs, rhs, i_mul, i_mul, f_mul );
+	return emit_bin_ps( lhs, rhs, i_mul, i_mul, f_mul );
 }
 
 bool xor(bool l, bool r)
@@ -969,7 +969,7 @@ value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
 	bin_fn_t f_add = boost::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_add = boost::bind( &DefaultIRBuilder::CreateAdd,  builder(), _1, _2, "", false, false );
 
-	return emit_bin( lhs, rhs, i_add, i_add, f_add );
+	return emit_bin_ps( lhs, rhs, i_add, i_add, f_add );
 }
 
 value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
@@ -983,7 +983,7 @@ value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
 	bin_fn_t f_sub = boost::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_sub = boost::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
 	
-	return emit_bin( lhs, rhs, i_sub, i_sub, f_sub );
+	return emit_bin_ps( lhs, rhs, i_sub, i_sub, f_sub );
 }
 
 value_t cg_service::emit_mul( value_t const& lhs, value_t const& rhs )
@@ -1031,7 +1031,7 @@ value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
 		bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 		bin_fn_t i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
 		bin_fn_t u_div = boost::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
-		return emit_bin( lhs, rhs, i_div, u_div, f_div );
+		return emit_bin_ps( lhs, rhs, i_div, u_div, f_div );
 	}
 
 	if( is_scalar(lhint) ){
@@ -1068,7 +1068,7 @@ value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs, function_t
 		bin_fn_t i_mod = boost::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
 		bin_fn_t u_mod = boost::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
 		bin_fn_t f_mod = boost::bind( &cg_service::bin_op_ps_scalar_ext_, this, _1, _2, scalar_of(lhint), workaround_fmodf );
-		return emit_bin( lhs, rhs, i_mod, u_mod, f_mod );
+		return emit_bin_ps( lhs, rhs, i_mod, u_mod, f_mod );
 	}
 
 	if( is_scalar(lhint) ){
@@ -1103,7 +1103,7 @@ value_t cg_service::emit_lshift( value_t const& lhs, value_t const& rhs )
 	if( lhint == rhint )
 	{
 		bin_fn_t shl = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Shl, _1, _2, "" );
-		return emit_bin( lhs, rhs, shl, shl, shl );
+		return emit_bin_ps( lhs, rhs, shl, shl, shl );
 	}
 
 	if( is_scalar(lhint) ){
@@ -1138,7 +1138,7 @@ value_t cg_service::emit_rshift( value_t const& lhs, value_t const& rhs )
 	if( lhint == rhint )
 	{
 		bin_fn_t shr = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::LShr, _1, _2, "" );
-		return emit_bin( lhs, rhs, shr, shr, shr );
+		return emit_bin_ps( lhs, rhs, shr, shr, shr );
 	}
 
 	if( is_scalar(lhint) ){
@@ -1173,7 +1173,7 @@ value_t cg_service::emit_bit_and( value_t const& lhs, value_t const& rhs )
 	if( lhint == rhint )
 	{
 		bin_fn_t bit_and = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::And, _1, _2, "" );
-		return emit_bin( lhs, rhs, bit_and, bit_and, bit_and );
+		return emit_bin_ps( lhs, rhs, bit_and, bit_and, bit_and );
 	}
 
 	if( is_scalar(lhint) ){
@@ -1208,7 +1208,7 @@ value_t cg_service::emit_bit_or( value_t const& lhs, value_t const& rhs )
 	if( lhint == rhint )
 	{
 		bin_fn_t bit_or = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Or, _1, _2, "" );
-		return emit_bin( lhs, rhs, bit_or, bit_or, bit_or );
+		return emit_bin_ps( lhs, rhs, bit_or, bit_or, bit_or );
 	}
 
 	if( is_scalar(lhint) ){
@@ -2073,46 +2073,31 @@ Value* cg_service::i1toi8_( Value* v )
 value_t cg_service::emit_cmp( value_t const& lhs, value_t const& rhs, uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float )
 {
 	builtin_types hint = lhs.hint();
+	builtin_types scalar_hint = scalar_of(hint);
 	builtin_types ret_hint = replace_scalar(hint, builtin_types::_boolean);
 
 	assert( hint == rhs.hint() );
-	assert( is_scalar( scalar_of(hint) ) );
-
-	Value* ret = NULL;
+	assert( is_scalar(scalar_hint) );
 
 	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abi_llvm);
 
 	Value* lhs_v = lhs.load(promoted_abi);
 	Value* rhs_v = rhs.load(promoted_abi);
+	Type* ret_ty = type_(ret_hint, promoted_abi);
 
-	if( is_scalar(hint) || is_vector(hint) )
+	bin_fn_t cmp_fn;
+	if( is_real(scalar_hint) )
 	{
-		if( scalar_of(hint) == builtin_types::_boolean )
-		{
-			ret = builder().CreateICmp( (CmpInst::Predicate)pred_unsigned, lhs_v, rhs_v );
-		}
-		else if( is_integer(hint) )
-		{
-			if( is_signed(hint) )
-			{
-				ret = builder().CreateICmp( (CmpInst::Predicate)pred_signed, lhs_v, rhs_v );
-			}
-			else
-			{
-				ret = builder().CreateICmp( (CmpInst::Predicate)pred_unsigned, lhs_v, rhs_v );
-			}
-		}
-		else if( is_real(hint) )
-		{
-			ret = builder().CreateFCmp( (CmpInst::Predicate)pred_float, lhs_v, rhs_v );
-		}
-		ret = i1toi8_(ret);
+		cmp_fn = boost::bind( &DefaultIRBuilder::CreateFCmp, builder(), (CmpInst::Predicate)pred_float, _1, _2, "" );
 	}
-	else
+	else if ( is_integer(scalar_hint) )
 	{
-		// TODO MATRIX
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		int pred = is_signed(scalar_hint) ? pred_signed : pred_unsigned;
+		cmp_fn = boost::bind( &DefaultIRBuilder::CreateICmp, builder(), (CmpInst::Predicate)pred, _1, _2, "" );
 	}
+
+	result_cast_fn_t cast_fn = boost::bind( &cg_service::i1toi8_, this, _1 );
+	Value* ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, cmp_fn, cast_fn );
 
 	return create_value( ret_hint, ret, vkind_value, promoted_abi );
 }
@@ -2147,7 +2132,7 @@ value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_SGT, CmpInst::ICMP_UGT, CmpInst::FCMP_UGT );
 }
 
-value_t cg_service::emit_bin( value_t const& lhs, value_t const& rhs, bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn )
+value_t cg_service::emit_bin_ps( value_t const& lhs, value_t const& rhs, bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn )
 {
 	builtin_types hint( lhs.hint() );
 	assert( hint == rhs.hint() );
@@ -2176,6 +2161,10 @@ value_t cg_service::emit_bin( value_t const& lhs, value_t const& rhs, bin_fn_t s
 			ret = bin_op_ps_( lhs_v, rhs_v, unsigned_fn );
 		}
 	}
+	else if( scalar_hint == builtin_types::_boolean )
+	{
+		ret = bin_op_ps_( lhs_v, rhs_v, unsigned_fn );
+	}
 	else
 	{
 		assert(false);
@@ -2188,30 +2177,40 @@ value_t cg_service::emit_bin( value_t const& lhs, value_t const& rhs, bin_fn_t s
 
 Value* cg_service::bin_op_ps_( Value* lhs, Value* rhs, bin_fn_t fn )
 {
+	return bin_op_ps_( lhs->getType(), lhs, rhs, fn, result_cast_fn_t() );
+}
+
+Value* cg_service::bin_op_ps_( llvm::Type* ret_ty, llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn, result_cast_fn_t cast_fn )
+{
 	Type* ty = lhs->getType();
 	assert( ty == rhs->getType() );
 
 	if( !ty->isAggregateType() )
 	{
-		return fn( lhs, rhs );
+		Value* ret = fn( lhs, rhs );
+		if( cast_fn ){
+			return cast_fn(ret);
+		} else {
+			return ret;
+		}
 	}
 
 	if( ty->isStructTy() )
 	{
-		StructType* struct_ty = cast<StructType>(ty);
-		Value* ret = UndefValue::get(struct_ty);
+		Value* ret = UndefValue::get(ret_ty);
 
-		size_t elem_count = struct_ty->getNumElements();
+		size_t elem_count = ret_ty->getStructNumElements();
 		unsigned int elem_index[1] = {0};
 		for( unsigned int i = 0;i < elem_count; ++i )
 		{
+			Type* ret_elem_ty = ret_ty->getStructElementType(i);
 			elem_index[0] = i;
 			Value* lhs_elem = builder().CreateExtractValue( lhs, elem_index );
 			Value* rhs_elem = builder().CreateExtractValue( rhs, elem_index );
-			Value* ret_elem = bin_op_ps_(lhs_elem, rhs_elem, fn);
+			Value* ret_elem = bin_op_ps_(ret_elem_ty, lhs_elem, rhs_elem, fn, cast_fn);
 			ret = builder().CreateInsertValue( ret, ret_elem, elem_index );
 		}
-		
+
 		return ret;
 	}
 
@@ -2266,6 +2265,22 @@ Value* cg_service::bin_op_ps_scalar_ext_( llvm::Value* lhs, llvm::Value* rhs, bu
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return NULL;
+}
+
+value_t cg_service::emit_and( value_t const& lhs, value_t const& rhs )
+{
+	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
+	assert( lhs.hint() == rhs.hint() );
+
+	return emit_bit_and( lhs, rhs );
+}
+
+value_t cg_service::emit_or( value_t const& lhs, value_t const& rhs )
+{
+	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
+	assert( lhs.hint() == rhs.hint() );
+
+	return emit_bit_or( lhs, rhs );
 }
 
 void function_t::allocation_block( insert_point_t const& ip )

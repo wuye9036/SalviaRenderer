@@ -316,8 +316,8 @@ public:
 	virtual value_t emit_cmp_ge ( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_cmp_gt ( value_t const& lhs, value_t const& rhs );
 
-	virtual value_t emit_and( value_t const& lhs, value_t const& rhs ) = 0;
-	virtual value_t emit_or ( value_t const& lhs, value_t const& rhs ) = 0;
+	virtual value_t emit_and( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_or ( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args );
 	virtual value_t emit_call( function_t const& fn, std::vector<value_t> const& args, value_t const& exec_mask );
@@ -559,7 +559,9 @@ protected:
 		);
 	
 	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)> bin_fn_t;
-	
+	typedef boost::function<llvm::Value* (llvm::Value*)> result_cast_fn_t;
+
+	llvm::Value* bin_op_ps_				(llvm::Type* ret_ty, llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn, result_cast_fn_t cast_fn);
 	llvm::Value* bin_op_ps_				(llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn);
 	llvm::Value* bin_op_ps_scalar_ext_	(llvm::Value* lhs, llvm::Value* rhs, builtin_types scalar_hint, function_t const& fn );
 
@@ -568,7 +570,7 @@ protected:
 		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
 		);
 
-	value_t emit_bin(
+	value_t emit_bin_ps(
 		value_t const& lhs, value_t const& rhs,
 		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
 		);

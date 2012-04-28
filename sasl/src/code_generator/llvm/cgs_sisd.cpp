@@ -308,24 +308,6 @@ value_t cgs_sisd::packed_mask()
 	return value_t();
 }
 
-value_t cgs_sisd::emit_and( value_t const& lhs, value_t const& rhs )
-{
-	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
-	assert( lhs.hint() == rhs.hint() );
-
-	Value* ret = builder().CreateAnd( lhs.load(abi_llvm), rhs.load(abi_llvm) );
-	return create_value( lhs.tyinfo(), lhs.hint(), ret, vkind_value, abi_llvm );
-}
-
-value_t cgs_sisd::emit_or( value_t const& lhs, value_t const& rhs )
-{
-	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
-	assert( lhs.hint() == rhs.hint() );
-
-	Value* ret = builder().CreateOr( lhs.load(abi_llvm), rhs.load(abi_llvm) );
-	return create_value( lhs.tyinfo(), lhs.hint(), ret, vkind_value, abi_llvm );
-}
-
 Value* cgs_sisd::phi_( BasicBlock* b0, Value* v0, BasicBlock* b1, Value* v1 )
 {
 	PHINode* phi = builder().CreatePHI( v0->getType(), 2 );
