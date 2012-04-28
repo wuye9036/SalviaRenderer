@@ -132,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE( semantic_errors, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( include_test, jit_fixture ){
 	const char* virtual_include_content = 
 		"float virtual_include_add(float a, float b){ \r\n"

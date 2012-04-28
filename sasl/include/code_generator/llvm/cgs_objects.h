@@ -27,6 +27,7 @@ namespace llvm
 	class BasicBlock;
 	class ConstantInt;
 	class ConstantVector;
+	class AllocaInst;
 
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter

@@ -392,7 +392,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 typedef vector_<char,2> char2;
 typedef vector_<char,3> bool3;
@@ -722,7 +722,7 @@ BOOST_FIXTURE_TEST_CASE( branches, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 bool test_short_ref(int i, int j, int k){
 	return ( i == 0 || j == 0) && k!= 0;
@@ -1561,7 +1561,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 typedef matrix_<float, 4, 3> float3x4;
 typedef matrix_<float, 4, 3> float3x4;
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );

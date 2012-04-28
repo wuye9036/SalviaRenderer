@@ -315,18 +315,27 @@ protected:
 		uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float
 		);
 	
-	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)> bin_fn_t;
-	typedef boost::function<llvm::Value* (llvm::Value*)> result_cast_fn_t;
+	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	bin_fn_t;
+	typedef boost::function<llvm::Value* (llvm::Value*)>				unary_fn_t;
 
-	llvm::Value* bin_op_ps_				(llvm::Type* ret_ty, llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn, result_cast_fn_t cast_fn);
+	llvm::Value* call_external1_		( function_t const&, llvm::Value* v, abis abi );
+	llvm::Value* call_external2_		( function_t const&, llvm::Value* v0, llvm::Value* v1, abis abi );
+
+	unary_fn_t	bind_unary_call_		( llvm::Function* fn );
+	bin_fn_t	bind_binary_call_		( llvm::Function* fn );
+	
+	unary_fn_t	bind_unary_external_	( function_t const&, abis abi );
+	bin_fn_t	bind_binary_external_	( function_t const&, abis abi );
+
+	llvm::Value* bin_op_ps_				(llvm::Type* ret_ty, llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn, unary_fn_t cast_fn);
 	llvm::Value* bin_op_ps_				(llvm::Value* lhs, llvm::Value* rhs, bin_fn_t fn);
 	llvm::Value* bin_op_ps_scalar_ext_	(llvm::Value* lhs, llvm::Value* rhs, builtin_types scalar_hint, function_t const& fn );
+	llvm::Value* unary_op_ps_			(llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn);
 
 	value_t emit_bin_mm(
 		value_t const& lhs, value_t const& rhs,
 		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
 		);
-
 	value_t emit_bin_ps(
 		value_t const& lhs, value_t const& rhs,
 		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
@@ -351,10 +360,13 @@ protected:
 
 	void merge_swizzle( value_t const*& root, char indexes[], value_t const& v );
 
-	llvm::Value* sqrt_vf_( llvm::Value* v );
+	llvm::AllocaInst* alloca_(llvm::Type* ty, std::string const& name);
+
 	llvm::Function* intrin_( int );
 	template <typename FunctionT>
 	llvm::Function* intrin_( int );
+
+	llvm::Value* sqrt_vf_( llvm::Value* v );
 	llvm::Value* shrink_( llvm::Value* vec, size_t vsize );
 	llvm::Value* extract_elements_( llvm::Value* src, size_t start_pos, size_t length );
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
