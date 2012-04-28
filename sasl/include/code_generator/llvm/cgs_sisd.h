@@ -4,7 +4,7 @@
 #include <sasl/include/code_generator/forward.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs.h>
 #include <sasl/enums/builtin_types.h>
 
 #include <eflib/include/platform/boost_begin.h>

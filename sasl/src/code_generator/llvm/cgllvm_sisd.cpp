@@ -4,7 +4,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs.h>
 
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantic_infos.h>

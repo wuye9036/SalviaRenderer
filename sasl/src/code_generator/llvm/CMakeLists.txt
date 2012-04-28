@@ -6,7 +6,8 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/utility.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/ty_cache.h
 	
-	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgllvm_service.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs.h
+	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs_objects.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs_sisd.h
 	${SASL_HOME_DIR}/sasl/include/code_generator/llvm/cgs_simd.h
 	
@@ -32,7 +33,8 @@ set( SOURCE_FILES
 	utility.cpp
 	ty_cache.cpp
 	
-	cgllvm_service.cpp
+	cgs.cpp
+	cgs_objects.cpp
 	cgs_sisd.cpp
 	cgs_simd.cpp
 	

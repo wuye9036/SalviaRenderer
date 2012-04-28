@@ -3,7 +3,7 @@
 
 #include <sasl/include/code_generator/forward.h>
 
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs.h>
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 

@@ -1,5 +1,5 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs.h>
 
 #include <eflib/include/diagnostics/assert.h>
 

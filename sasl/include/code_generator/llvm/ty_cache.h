@@ -4,7 +4,7 @@
 #include <sasl/include/code_generator/forward.h>
 
 #include <sasl/enums/builtin_types.h>
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/ADT/ArrayRef.h>

@@ -3,7 +3,7 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_impl.h>
 
-#include <sasl/include/code_generator/llvm/cgllvm_service.h>
+#include <sasl/include/code_generator/llvm/cgs.h>
 #include <sasl/enums/operators.h>
 
 #include <eflib/include/platform/boost_begin.h>
