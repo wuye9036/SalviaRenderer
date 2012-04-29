@@ -88,12 +88,16 @@ void init_lex( lexer& l ){
 		( "vertical", "{VERTICAL}" )
 		( "tilde", "~" )
 
-		("add_assign", "{PLUS}=")
-		("sub_assign", "{MINUS}=")
-		("mul_assign", "{ASTERISK}=")
-		("div_assign", "{SLASH}=")
-
-		("shift", "{LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET}")
+		("add_assign",   "{PLUS}=")
+		("sub_assign",   "{MINUS}=")
+		("mul_assign",   "{ASTERISK}=")
+		("div_assign",   "{SLASH}=")
+		("mod_assign",   "%=")
+		("band_assign",  "&=")
+		("bor_assign",   "{VERTICAL}=")
+		("bxor_assign",  "{CARET}=")
+		("shift",		 "{LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET}")
+		("shift_assign", "({LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET})=")
 
 		( "lparen", "{LPAREN}" )
 		( "rparen", "{RPAREN}" )
@@ -132,14 +136,15 @@ void init_lex( lexer& l ){
 		("kw_while")("kw_do")
 
 		("ident")
+		("shift_assign")("band_assign")("bor_assign")("bxor_assign")			// &= |= ^=
+		("less_equal")("equal_to")("not_equal")("greater_equal")				// <= >= == !=
+		("add_assign")("sub_assign")("mul_assign")("div_assign")("mod_assign")	// += -= *= /= %=
 		("shift") // << >>
-		("less_equal")("equal_to")("not_equal")("greater_equal") // <= >= == !=
-		("add_assign")("sub_assign")("mul_assign")("div_assign") // += -= *= /=
 		("logic_or")("logic_and") // || &&
-		("inc_dec") // ++ --
+		("inc_dec")("exclamation")("tilde") // ++ -- ! ~
 		("plus")("minus")("asterisk")("slash")("percent") // + - * / %
 		("labracket")("rabracket") // < >
-		("vertical")("ampersand") // & |
+		("vertical")("ampersand")("caret") // & | ^
 		("question") // ?
 		("comma")("colon")("semicolon") // , : ;
 		("dot")("equal") // . =
