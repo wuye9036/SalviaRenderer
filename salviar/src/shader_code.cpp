@@ -38,10 +38,10 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 	dl->get_function( create_shader_code, std::string("salvia_create_shader") );
 
 	external_function_array extfns;
-	extfns.push_back( make_tuple(&salviar_tex2Dlod_pkg,	  "tex2Dlod", false) );
-	extfns.push_back( make_tuple(&salviar_tex2Dgrad_pkg,  "tex2Dgrad", false) );
-	extfns.push_back( make_tuple(&salviar_tex2Dbias_pkg,  "__tex2Dbias", false) );
-	extfns.push_back( make_tuple(&salviar_tex2Dproj_pkg,  "__tex2Dproj", false) );
+	extfns.push_back( make_tuple(&salviar_tex2Dlod_pkg,	  "sasl.ps.tex2d.lod" , true) );
+	extfns.push_back( make_tuple(&salviar_tex2Dgrad_pkg,  "sasl.ps.tex2d.grad", true) );
+	extfns.push_back( make_tuple(&salviar_tex2Dbias_pkg,  "sasl.ps.tex2d.bias", true) );
+	extfns.push_back( make_tuple(&salviar_tex2Dproj_pkg,  "sasl.ps.tex2d.proj", true) );
 	shared_ptr<shader_code> ret;
 	create_shader_code( ret, code, lang, extfns );
 	ret->update_native_function();

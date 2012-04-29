@@ -119,7 +119,7 @@ public:
 			return;
 		}
 
-		msi = analysis_semantic( mroot, diags.get() );
+		msi = analysis_semantic( mroot, diags.get(), lang );
 		if( !msi ){
 			cout << "Semantic error occurs!" << endl;
 			return;

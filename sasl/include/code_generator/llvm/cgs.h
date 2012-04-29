@@ -114,6 +114,12 @@ public:
 	virtual value_t emit_ddy( value_t const& v ) = 0;
 	virtual value_t emit_any( value_t const& v );
 	virtual value_t emit_all( value_t const& v );
+	
+	virtual value_t emit_tex2Dlod	( value_t const& samp, value_t const& coord );
+	virtual value_t emit_tex2Dgrad	( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );
+	virtual value_t emit_tex2Dbias	( value_t const& samp, value_t const& coord );
+	virtual value_t emit_tex2Dproj	( value_t const& samp, value_t const& coord );
+
 	/// @}
 
 	/// @name Emit type casts
@@ -310,6 +316,11 @@ protected:
 	{
 		exp_f32,
 		mod_f32,
+		tex2dlod_vs,
+		tex2dlod_ps,
+		tex2dgrad_ps,
+		tex2dbias_ps,
+		tex2dproj_ps,
 		intrins_count
 	};
 
@@ -364,7 +375,6 @@ protected:
 
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 
-	
 	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_sm( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );

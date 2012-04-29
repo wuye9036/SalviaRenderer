@@ -9,6 +9,8 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/platform/typedefs.h>
+
 #include <vector>
 
 namespace sasl{
@@ -81,6 +83,9 @@ public:
 
 	boost::shared_ptr<module_si> const& module_semantic_info() const;
 	sasl::common::diag_chat*			get_diags() const;
+	uint32_t							language() const;
+	void								language( uint32_t );
+
 private:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& init_data, boost::shared_ptr<NodeT> child );
@@ -136,7 +141,7 @@ private:
 	};
 
 	function_register register_function( boost::any const& child_ctxt_init, std::string const& name );
-	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, bool external = false, bool parital_exec = false );
+	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, /*bool external = false,*/ bool parital_exec = false );
 	void register_constructor( boost::any const& child_ctxt_init, std::string const& name, boost::shared_ptr<sasl::syntax_tree::builtin_type>* tys, int total );
 	void register_constructor_impl(
 		boost::any const& child_ctxt_init, std::string const& name,	boost::shared_ptr<sasl::syntax_tree::builtin_type>* tys, int total,
@@ -152,6 +157,7 @@ private:
 	boost::shared_ptr<module_si>				msi;
 	boost::shared_ptr<caster_t>					caster;
 	boost::shared_ptr<sasl::common::diag_chat>	diags;
+	uint32_t									lang;
 };
 
 END_NS_SASL_SEMANTIC();

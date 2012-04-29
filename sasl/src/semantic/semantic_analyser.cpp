@@ -1566,44 +1566,31 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		shared_ptr<builtin_type> sampler_ty = create_builtin_type( builtin_types::_sampler );
 
 		// External and Intrinsic are Same signatures
+		
 		{
-			register_intrinsic( child_ctxt_init, "tex2Dlod", true, true )
+			register_intrinsic( child_ctxt_init, "tex2Dlod", lang == salviar::lang_pixel_shader )
 				% sampler_ty % fvec_ts[4]
 			>> fvec_ts[4];
 
-			register_intrinsic( child_ctxt_init, "tex2Dgrad", true, true ) 
-				% sampler_ty % fvec_ts[2] /*coord*/
+			if( lang == salviar::lang_pixel_shader )
+			{
+				register_intrinsic( child_ctxt_init, "tex2D", true )
+					% sampler_ty % fvec_ts[2] 
+				>> fvec_ts[4];
+
+				register_intrinsic( child_ctxt_init, "tex2Dbias", true )
+					% sampler_ty % fvec_ts[4] /*coord with bias*/
+				>> fvec_ts[4];
+
+				register_intrinsic( child_ctxt_init, "tex2Dproj", true )
+					% sampler_ty % fvec_ts[4] /*coord with proj*/
+				>> fvec_ts[4];
+
+				register_intrinsic( child_ctxt_init, "tex2Dgrad", true ) 
+					% sampler_ty % fvec_ts[2] /*coord*/
 				% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
-			>> fvec_ts[4];
-		}
-
-		// External Signatures
-		{
-			register_intrinsic( child_ctxt_init, "__tex2Dbias", true, true ) 
-				% sampler_ty % fvec_ts[4] /*coord with bias*/
-				% fvec_ts[2] % fvec_ts[2] /*ddx, ddy*/
-			>> fvec_ts[4];
-
-			register_intrinsic( child_ctxt_init, "__tex2Dproj", true, true ) 
-				% sampler_ty % fvec_ts[4] /*coord with proj*/
-				% fvec_ts[4] % fvec_ts[4] /*ddx, ddy*/
-			>> fvec_ts[4];
-		}
-
-
-		// Intrinsic Signatures
-		{
-			register_intrinsic( child_ctxt_init, "tex2D", false, true ).deps("tex2Dgrad")
-				% sampler_ty % fvec_ts[2] 
-			>> fvec_ts[4];
-			
-			register_intrinsic( child_ctxt_init, "tex2Dbias", false, true ).deps("__tex2Dbias")
-				% sampler_ty % fvec_ts[4] /*coord with bias*/
-			>> fvec_ts[4];
-
-			register_intrinsic( child_ctxt_init, "tex2Dproj", false, true ).deps("__tex2Dproj")
-				% sampler_ty % fvec_ts[4] /*coord with proj*/
-			>> fvec_ts[4];
+				>> fvec_ts[4];
+			}
 		}
 
 		for( size_t vec_size = 1; vec_size <= 4; ++vec_size){
@@ -1720,12 +1707,12 @@ semantic_analyser::function_register semantic_analyser::register_function( boost
 	return ret;
 }
 
-semantic_analyser::function_register semantic_analyser::register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, bool external, bool partial_exec )
+semantic_analyser::function_register semantic_analyser::register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, /*bool external, */bool partial_exec )
 {
 	shared_ptr<function_type> fn = create_node<function_type>( token_t::null(), token_t::null() );
 	fn->name = token_t::from_string( name );
 
-	function_register ret(*this, child_ctxt_init, fn, true, external, partial_exec);
+	function_register ret(*this, child_ctxt_init, fn, true, /*external*/false, partial_exec);
 
 	return ret;
 }
@@ -1776,6 +1763,16 @@ void semantic_analyser::register_constructor_impl(
 diag_chat* semantic_analyser::get_diags() const
 {
 	return diags.get();
+}
+
+uint32_t semantic_analyser::language() const
+{
+	return lang;
+}
+
+void semantic_analyser::language( uint32_t v )
+{
+	lang = v;
 }
 
 // function_register

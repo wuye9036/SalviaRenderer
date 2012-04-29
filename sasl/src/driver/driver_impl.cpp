@@ -210,7 +210,7 @@ void driver_impl::compile()
 	if( !mroot ){ return; }
 
 	shared_ptr<diag_chat> semantic_diags = diag_chat::create();
-	msi = analysis_semantic( mroot.get(), semantic_diags.get() );
+	msi = analysis_semantic( mroot.get(), semantic_diags.get(), lang );
 	if( error_count( semantic_diags.get(), false ) > 0 )
 	{
 		msi.reset();

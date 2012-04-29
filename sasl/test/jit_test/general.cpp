@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -291,6 +291,11 @@ struct jit_fixture {
 		je->inject_function( fn, fn_name );
 	}
 
+	void set_raw_function( void* fn, string const& mangled_name )
+	{
+		je->inject_function(fn, mangled_name);
+	}
+
 	~jit_fixture(){}
 
 	shared_ptr<driver>		drv;
@@ -300,10 +305,12 @@ struct jit_fixture {
 };
 
 typedef vector_<char,2>		char2;
+typedef vector_<char,3>		char3;
 typedef vector_<char,3>		bool3;
 typedef vector_<char,4>		bool4;
 typedef vector_<uint32_t,2>	uint2;
 typedef vector_<uint32_t,3>	uint3;
+typedef vector_<int,3>		int3;
 
 typedef matrix_<char,4,3>	bool3x4;
 typedef matrix_<float,4,3>	float3x4;
@@ -571,7 +578,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				}
 			}
 		}
-				
 	}
 
 	{
@@ -583,6 +589,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( sqrtf(v2[0]), sqrt_v2[0], 0.000001f );
 		BOOST_CHECK_CLOSE( sqrtf(v2[1]), sqrt_v2[1], 0.000001f );
 	}
+
 	{
 		vec3 v3_a(199.7f, -872.5f, 8.63f);
 		vec3 v3_b(-98.7f, -37.29f, 77.3f);
@@ -782,8 +789,8 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 	jit_function<bool(int, int)> test_le;
 	jit_function<bool(float, float)> test_ge;
 	jit_function<bool(int, int, int)> test_short;
-	jit_function< char3 (int3, int3, int3) > test_vbool;
-	jit_function< bool3x4 (float3x4, float3x4, float3x4) > test_mbool;
+	jit_function<char3(int3, int3, int3)> test_vbool;
+	jit_function<bool3x4 (float3x4, float3x4, float3x4)> test_mbool;
 
 	function( test_max, "test_max" );
 	function( test_min, "test_min" );
@@ -1356,12 +1363,11 @@ void tex2Dlod(vec4* ret, uint16_t /*mask*/, sampler_t* s, vec4* t)
 	}
 }
 
-
 BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/tex.sps" );
 
-	set_function( &tex2Dlod, "tex2Dlod" );
+	set_raw_function( &tex2Dlod, "sasl.ps.tex2d.lod" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );

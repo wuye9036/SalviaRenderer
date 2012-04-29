@@ -768,31 +768,41 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if ( intr->unmangled_name() == "tex2D" )
 		{
 			assert( par_tys.size() == 2 );
-			
 			value_t samp = service()->fn().arg(0);
 			value_t coord = service()->fn().arg(1);
-
 			value_t ddx = service()->emit_ddx(coord);
 			value_t ddy = service()->emit_ddy(coord);
-
-			vector<value_t> args;
-			args.push_back( samp );
-			args.push_back( coord );
-			args.push_back( ddx );
-			args.push_back( ddy );
-
-			value_t ret = service()->emit_call( *get_function("tex2Dgrad"), args, service()->fn().packed_execution_mask() );
+			value_t ret = service()->emit_tex2Dgrad( samp, coord, ddx, ddy );
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if ( intr->unmangled_name() == "tex2Dgrad" )
+		{
+			assert( par_tys.size() == 4 );
+			value_t ret = service()->emit_tex2Dgrad(
+				service()->fn().arg(0),
+				service()->fn().arg(1),
+				service()->fn().arg(2),
+				service()->fn().arg(3)
+				);
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if ( intr->unmangled_name() == "tex2Dlod" )
+		{
+			assert( par_tys.size() == 2 );
+			value_t ret = service()->emit_tex2Dlod( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "tex2Dbias" )
 		{
 			assert( par_tys.size() == 2 );
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			value_t ret = service()->emit_tex2Dbias( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "tex2Dproj" )
 		{
 			assert( par_tys.size() == 2 );
-			EFLIB_ASSERT_UNIMPLEMENTED();
+			value_t ret = service()->emit_tex2Dproj( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if ( intrin_ssi->is_constructor() )
 		{
