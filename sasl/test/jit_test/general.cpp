@@ -312,8 +312,10 @@ typedef vector_<uint32_t,2>	uint2;
 typedef vector_<uint32_t,3>	uint3;
 typedef vector_<int,3>		int3;
 
-typedef matrix_<char,4,3>	bool3x4;
-typedef matrix_<float,4,3>	float3x4;
+typedef matrix_<char,3,2>		bool2x3;
+typedef matrix_<char,4,3>		bool3x4;
+typedef matrix_<float,4,3>		float3x4;
+typedef matrix_<uint32_t,3,2>	uint2x3;
 
 
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
@@ -409,7 +411,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -899,6 +901,11 @@ BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 	init_g( "./repo/question/v1a1/unary_operators.ss" );
 
 	jit_function<int(int)> test_pre_inc, test_pre_dec, test_post_inc, test_post_dec;
+	jit_function<int4(int3,int)>		test_neg_i;
+	jit_function<float3x4(float3x4)>	test_neg_f;
+	jit_function<bool2x3(bool2x3)>		test_not;
+	jit_function<uint2x3(uint2x3)>		test_bit_not;
+
 	function( test_pre_inc, "test_pre_inc" );
 	BOOST_REQUIRE(test_pre_inc);
 	function( test_pre_dec, "test_pre_dec" );
@@ -907,11 +914,78 @@ BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 	BOOST_REQUIRE(test_post_inc);
 	function( test_post_dec, "test_post_dec" );
 	BOOST_REQUIRE(test_post_dec);
+	function( test_neg_i, "test_neg_i" );
+	BOOST_REQUIRE(test_neg_i);
+	function( test_neg_f, "test_neg_f" );
+	BOOST_REQUIRE(test_neg_f);
+	function( test_not, "test_not" );
+	BOOST_REQUIRE(test_not);
+	function( test_bit_not, "test_bit_not" );
+	BOOST_REQUIRE(test_bit_not);
 
 	BOOST_CHECK( test_pre_inc(5) == 13 );
 	BOOST_CHECK( test_pre_dec(5) == 7 );
 	BOOST_CHECK( test_post_inc(5) == 11 );
 	BOOST_CHECK( test_post_dec(5) == 9 );
+
+	{
+		int x[3] = { 0, 227, -876 };
+		int y = 5;
+		int4 ret = test_neg_i( reinterpret_cast<int3&>(x), y );
+		BOOST_CHECK_EQUAL( ret[0], -x[0] );
+		BOOST_CHECK_EQUAL( ret[1], -x[1] );
+		BOOST_CHECK_EQUAL( ret[2], -x[2] );
+		BOOST_CHECK_EQUAL( ret[3], -y    );
+	}
+
+	{
+		float arr[3][4] =
+		{
+			{17.7f, 66.3f, 0.92f, -88.7f},
+			{8.6f, -0.22f, 17.1f, -64.4f},
+			{199.8f, 0.1f, -0.1f, 99.73f}
+		};
+		float3x4 ret = test_neg_f( reinterpret_cast<float3x4&>(arr) );
+		for( int i = 0; i < 3; ++i )
+		{
+			for( int j = 0; j < 4; ++j )
+			{
+				BOOST_CHECK_CLOSE( -arr[i][j], ret.data_[i][j], 0.000001f );
+			}
+		}
+	}
+
+	{
+		char arr[2][3] = 
+		{
+			{ 0, 1, 0 },
+			{ 0, 1, 1 },
+		};
+		bool2x3 ret = test_not( reinterpret_cast<bool2x3&>(arr) );
+		for( int i = 0; i < 2; ++i )
+		{
+			for( int j = 0; j < 3; ++j )
+			{
+				BOOST_CHECK_EQUAL( arr[i][j] == 0, ret.data_[i][j] == 1 );
+			}
+		}
+	}
+
+	{
+		uint32_t arr[2][3] =
+		{
+			{ 786, 0, 33769097 },
+			{ 0xFFFFFFFF, 3899927, 67}
+		};
+		uint2x3 ret = test_bit_not( reinterpret_cast<uint2x3&>(arr) );
+		for( int i = 0; i < 2; ++i )
+		{
+			for( int j = 0; j < 3; ++j )
+			{
+				BOOST_CHECK_EQUAL( ~arr[i][j], ret.data_[i][j] );
+			}
+		}
+	}
 }
 #endif
 

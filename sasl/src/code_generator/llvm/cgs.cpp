@@ -997,6 +997,41 @@ value_t cg_service::emit_bit_or( value_t const& lhs, value_t const& rhs )
 	return value_t();
 }
 
+value_t cg_service::emit_bit_xor( value_t const& lhs, value_t const& rhs )
+{
+	builtin_types lhint = lhs.hint();
+	builtin_types rhint = rhs.hint();
+
+	if( lhint == rhint )
+	{
+		bin_fn_t bit_xor = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Xor, _1, _2, "" );
+		return emit_bin_ps( lhs, rhs, bit_xor, bit_xor, bit_xor );
+	}
+
+	if( is_scalar(lhint) ){
+		if ( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_vector(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if ( is_matrix(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	} else if ( is_matrix(lhint) ){
+		if( is_scalar(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		} else if( is_vector(rhint) ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return value_t();
+}
+
 value_t cg_service::emit_dot( value_t const& lhs, value_t const& rhs )
 {
 	return emit_dot_vv(lhs, rhs);
@@ -2293,6 +2328,42 @@ value_t cg_service::emit_tex2Dproj( value_t const& samp, value_t const& coord )
 	builder().CreateCall( external_intrins[tex2dgrad_ps], args );
 
 	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
+}
+
+value_t cg_service::create_constant_int( value_tyinfo* tyinfo, builtin_types bt, abis abi, uint64_t v )
+{
+	builtin_types hint = tyinfo ? tyinfo->hint() : bt;
+	builtin_types scalar_hint = scalar_of(hint);
+	assert( is_integer(scalar_hint) || scalar_hint == builtin_types::_boolean );
+	uint32_t bits = static_cast<uint32_t>( storage_size(scalar_hint) ) << 3; 
+
+	Type* ret_ty = type_( hint, abi );
+	Value* ret = integer_value_( ret_ty, APInt( bits, v, is_signed(scalar_hint) ) );
+	return create_value(tyinfo, bt, ret, vkind_value, abi);
+}
+
+Value* cg_service::integer_value_( Type* ty, llvm::APInt const& v )
+{
+	if( !ty->isAggregateType() )
+	{
+		return Constant::getIntegerValue(ty, v);
+	}
+
+	if( ty->isStructTy() )
+	{
+		Value* ret = UndefValue::get(ty);
+		unsigned indexes[1] = {0};
+		for( uint32_t i = 0; i < ty->getStructNumElements(); ++i )
+		{
+			indexes[0] = i;
+			Value* elem_v = integer_value_( ty->getStructElementType(i), v );
+			ret = builder().CreateInsertValue( ret, elem_v, indexes );
+		}
+		return ret;
+	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -380,6 +380,8 @@ operators syntax_tree_builder::build_prefix_op( shared_ptr<attribute> attr )
 		return op_chars[1] == '-' ? operators::prefix_decr : operators::negative;
 	case '!':
 		return operators::logic_not;
+	case '~':
+		return operators::bit_not;
 	}
 
 	string assertion("Unsupported operator: ");

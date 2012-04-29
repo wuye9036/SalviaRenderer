@@ -140,7 +140,7 @@ namespace sasl{
 			size_t component_size = 0;
 			builtin_types s_btc = scalar_of( btc );
 			if( s_btc == builtin_types::_sint8 
-				|| s_btc == builtin_types::_uint8 )
+				|| s_btc == builtin_types::_uint8 || s_btc == builtin_types::_boolean )
 			{
 				component_size = 1;
 			} else if( s_btc == builtin_types::_sint16

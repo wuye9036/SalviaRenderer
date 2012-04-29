@@ -189,46 +189,37 @@ SASL_VISIT_DEF( unary_expression ){
 	builtin_types hint = inner_value.hint();
 
 	if( v.op == operators::negative ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return;
+		value_t zero_value = null_value( one_tyinfo->hint(), inner_value.abi() );
+		sc_ptr(data)->value() = emit_sub(zero_value, inner_value);
 	} else if( v.op == operators::positive ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return;
-	} 
+		sc_ptr(data)->value() = inner_value;
+	} else if( v.op == operators::logic_not ) {
+		value_t mask_value = create_constant_int( NULL, hint, inner_value.abi(), 1 );
+		sc_ptr(data)->value() = emit_bit_xor( mask_value, inner_value );
+	} else if( v.op == operators::bit_not ) {
+		value_t all_one_value = create_constant_int( NULL, hint, inner_value.abi(), 0xFFFFFFFFFFFFFFFF );
+		sc_ptr(data)->value() = emit_bit_xor( all_one_value, inner_value );
+	} else {
+
+		value_t one_value = service()->create_constant_int( one_tyinfo.get(), builtin_types::none, inner_value.abi(), 1 ) ;
+
+		if( v.op == operators::prefix_incr ){
+			value_t inc_v = emit_add( inner_value, one_value );
+			inner_value.store( inc_v );
+			sc_ptr(data)->value() = inner_value;
+		} else if( v.op == operators::prefix_decr ){
+			value_t dec_v = emit_sub( inner_value, one_value );
+			inner_value.store( dec_v );
+			sc_ptr(data)->value() = inner_value;
+		} else if( v.op == operators::postfix_incr ){
+			sc_ptr(data)->value() = inner_value.to_rvalue();
+			inner_value.store( emit_add( inner_value, one_value ) );
+		} else if( v.op == operators::postfix_decr ){
+			sc_ptr(data)->value() = inner_value.to_rvalue();
+			inner_value.store( emit_sub( inner_value, one_value ) );
+		}
+	}
 	
-	value_t one_scalar;
-	value_t one_value;
-
-	builtin_types scalar_hint = scalar_of( hint );
-	if( is_signed(hint) ){
-		one_scalar = create_constant_scalar( (int32_t)1, one_tyinfo.get(), one_tyinfo->hint() );
-	} else {
-		one_scalar = create_constant_scalar( (uint32_t)1, one_tyinfo.get(), one_tyinfo->hint() );
-	}
-
-	if( is_scalar(hint) ){
-		one_value = one_scalar;
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return;
-	}
-
-	if( v.op == operators::prefix_incr ){
-		value_t inc_v = emit_add( inner_value, one_value );
-		inner_value.store( inc_v );
-		sc_ptr(data)->value() = inner_value;
-	} else if( v.op == operators::prefix_decr ){
-		value_t dec_v = emit_sub( inner_value, one_value );
-		inner_value.store( dec_v );
-		sc_ptr(data)->value() = inner_value;
-	} else if( v.op == operators::postfix_incr ){
-		sc_ptr(data)->value() = inner_value.to_rvalue();
-		inner_value.store( emit_add( inner_value, one_value ) );
-	} else if( v.op == operators::postfix_decr ){
-		sc_ptr(data)->value() = inner_value.to_rvalue();
-		inner_value.store( emit_sub( inner_value, one_value ) );
-	}
-
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 	node_ctxt(v, true)->data().tyinfo = one_tyinfo;
 }

@@ -66,6 +66,7 @@ public:
 
 	virtual value_t emit_bit_and( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_bit_or ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_bit_xor( value_t const& lhs, value_t const& rhs );
 
 	virtual value_t emit_cmp_lt ( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_cmp_le ( value_t const& lhs, value_t const& rhs );
@@ -232,6 +233,8 @@ public:
 	value_t null_value( builtin_types bt, abis abi );
 	value_t undef_value( builtin_types bt, abis abi );
 
+	value_t create_constant_int( value_tyinfo* tyinfo, builtin_types bt, abis abi, uint64_t v );
+
 	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
@@ -295,6 +298,8 @@ public:
 
 		return llvm::cast<llvm::Constant>( llvm::ConstantVector::get( elems ) );
 	}
+
+	llvm::Value* integer_value_( llvm::Type* ty, llvm::APInt const& );
 
 	llvm::Value* load_as( value_t const& v, abis abi );
 	/// @}
