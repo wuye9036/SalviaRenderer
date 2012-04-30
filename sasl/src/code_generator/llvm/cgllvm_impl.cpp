@@ -30,6 +30,7 @@
 #include <boost/function.hpp>
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
+#include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -42,6 +43,7 @@ using namespace sasl::utility;
 using boost::bind;
 using boost::any_cast;
 using boost::addressof;
+using boost::format;
 
 using std::vector;
 
@@ -730,11 +732,34 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret_val = service()->emit_abs( service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
-		else if ( intr->unmangled_name() == "exp" )
+		else if ( intr->unmangled_name() == "exp"
+			|| intr->unmangled_name() == "sin"
+			|| intr->unmangled_name() == "cos"
+			|| intr->unmangled_name() == "tan"
+			|| intr->unmangled_name() == "asin"
+			|| intr->unmangled_name() == "acos"
+			|| intr->unmangled_name() == "atan"
+			|| intr->unmangled_name() == "ceil"
+			|| intr->unmangled_name() == "floor"
+			|| intr->unmangled_name() == "log"
+			|| intr->unmangled_name() == "log2"
+			|| intr->unmangled_name() == "log10"
+			|| intr->unmangled_name() == "rsqrt"
+			)
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			value_t ret_val = service()->emit_exp( service()->fn().arg(0) );
+			std::string scalar_intrin_name = ( format("sasl.%s.f32") % intr->unmangled_name() ).str();
+			value_t ret_val = service()->emit_unary_ps( scalar_intrin_name,service()->fn().arg(0) );
+			service()->emit_return( ret_val, service()->param_abi(false) );
+		}
+		else if(intr->unmangled_name() == "ldexp")
+		{
+			assert( par_tys.size() == 2 );
+			service()->fn().arg_name( 0, ".lhs" );
+			service()->fn().arg_name( 1, ".rhs" );
+			std::string scalar_intrin_name = ( format("sasl.%s.f32") % intr->unmangled_name() ).str();
+			value_t ret_val = service()->emit_bin_ps( scalar_intrin_name, service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "sqrt" )

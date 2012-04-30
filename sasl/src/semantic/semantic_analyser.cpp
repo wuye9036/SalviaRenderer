@@ -1543,8 +1543,21 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 					register_intrinsic( child_ctxt_init, "radians"	) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "sqrt"		) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "exp"		) % ty			>> ty;
-					register_intrinsic( child_ctxt_init, "lerp"		) % ty % ty % ty>> ty;
+					register_intrinsic( child_ctxt_init, "sin"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "cos"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "tan"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "asin"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "acos"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "atan"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "ceil"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "floor"	) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "log"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "log2"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "log10"	) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "rsqrt"	) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "fmod"		) % ty % ty		>> ty;
+					register_intrinsic( child_ctxt_init, "ldexp"	) % ty % ty		>> ty;
+					register_intrinsic( child_ctxt_init, "lerp"		) % ty % ty % ty>> ty;
 				}
 			}
 		}

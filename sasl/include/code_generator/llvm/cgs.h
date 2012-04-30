@@ -121,6 +121,8 @@ public:
 	virtual value_t emit_tex2Dbias	( value_t const& samp, value_t const& coord );
 	virtual value_t emit_tex2Dproj	( value_t const& samp, value_t const& coord );
 
+	virtual value_t emit_unary_ps( std::string const& scalar_external_intrin_name, value_t const& v );
+	virtual value_t emit_bin_ps( std::string const& scalar_external_intrin_name, value_t const& v0, value_t const& v1 );
 	/// @}
 
 	/// @name Emit type casts
@@ -320,6 +322,20 @@ protected:
 	enum intrin_ids
 	{
 		exp_f32,
+		exp2_f32,
+		sin_f32,
+		cos_f32,
+		tan_f32,
+		asin_f32,
+		acos_f32,
+		atan_f32,
+		ceil_f32,
+		floor_f32,
+		log_f32,
+		log2_f32,
+		log10_f32,
+		rsqrt_f32,
+		ldexp_f32,
 		mod_f32,
 		tex2dlod_vs,
 		tex2dlod_ps,
@@ -393,8 +409,7 @@ protected:
 	llvm::Function* intrin_( int );
 	template <typename FunctionT>
 	llvm::Function* intrin_( int );
-
-	llvm::Value* sqrt_vf_( llvm::Value* v );
+	
 	llvm::Value* shrink_( llvm::Value* vec, size_t vsize );
 	llvm::Value* extract_elements_( llvm::Value* src, size_t start_pos, size_t length );
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );

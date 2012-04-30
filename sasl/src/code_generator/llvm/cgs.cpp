@@ -1390,28 +1390,6 @@ Value* cg_service::insert_elements_( Value* dst, Value* src, size_t start_pos ){
 	return ret;
 }
 
-Value* cg_service::sqrt_vf_( Value* v ){
-	VectorType* vty = cast<VectorType>(v->getType());
-	uint32_t elem_count = vty->getNumElements();
-	assert( elem_count % SIMD_ELEMENT_COUNT() == 0 );
-	int batch_count = elem_count / SIMD_ELEMENT_COUNT();
-
-	if ( !prefer_scalar_code() ){
-		if( support_feature( cpu_sse2 ) ){
-			Value* out_v = UndefValue::get( v->getType() );
-			for( int i_batch = 0; i_batch < batch_count; ++i_batch ){
-				Value* source = extract_elements_( v, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
-				Value* dest = builder().CreateCall( intrin_( Intrinsic::x86_sse_sqrt_ps ), source );
-				out_v = insert_elements_( out_v, dest, i_batch*SIMD_ELEMENT_COUNT() );
-			}
-			return out_v;
-		}
-	}
-	
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
-}
-
 value_t cg_service::emit_abs( value_t const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
@@ -1462,9 +1440,6 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 	return value_t();
 }
 
-
-// llvm::Value* sqrt_sf( llvm::Value* v )
-
 value_t cg_service::emit_sqrt( value_t const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
@@ -1491,7 +1466,6 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return value_t();
 	}
-
 }
 
 value_t cg_service::emit_exp( value_t const& arg_value )
@@ -1609,7 +1583,6 @@ value_t cg_service::cast_s2v( value_t const& v )
 	return emit_insert_val( ret, 0, v );
 }
 
-
 value_t cg_service::cast_v2s( value_t const& v )
 {
 	assert( is_vector(v.hint()) );
@@ -1632,38 +1605,6 @@ value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
 	unary_fn_t sv_cast_fn = boost::bind( &cg_service::casts_elements_, this, _1, dest_scalar_ty );
 	Value* ret = unary_op_ps_( ty, v.load(abi), unary_fn_t(), unary_fn_t(), unary_fn_t(), sv_cast_fn );
 	return create_value( dest_tyi, ret, vkind_value, abi );
-
-	/*
-	builtin_types hint = v.hint();
-	if( is_scalar(hint) )
-	{
-		
-		Value* ret_v = builder().CreateBitCast( v.load(abi), dest_tyi->ty(abi) );
-		return create_value( dest_tyi, ret_v, vkind_value, abi );
-	}
-	else if( is_vector(hint) )
-	{
-		abis abi = promote_abi(v.abi(), abi_llvm);
-		Value* src_v = v.load(abi);
-		Value* dest_v = UndefValue::get( type_(dest_tyi, abi) );
-		Type* dest_elem_ty = dest_v->getType()->getScalarType();
-
-		for( size_t i = 0; i < vector_size(hint); ++i )
-		{
-			Value* src_elem = builder().CreateExtractElement(src_v, int_(i) );
-			Value* casted_elem = builder().CreateBitCast( src_elem, dest_elem_ty );
-			dest_v = builder().CreateInsertElement( dest_v, casted_elem, int_(i) );
-		}
-		
-		return create_value( dest_tyi, dest_v, vkind_value, abi );
-	}
-	else
-	{
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return value_t();
-	*/
 }
 
 void cg_service::jump_to( insert_point_t const& ip )
@@ -2237,7 +2178,23 @@ bool cg_service::register_external_intrinsic()
 	}
 
 	external_intrins[exp_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.exp.f32", module() );
+	external_intrins[exp2_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.exp2.f32", module() );
+	external_intrins[sin_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.sin.f32", module() );
+	external_intrins[cos_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.cos.f32", module() );
+	external_intrins[tan_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.tan.f32", module() );
+	external_intrins[asin_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.asin.f32", module() );
+	external_intrins[acos_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.acos.f32", module() );
+	external_intrins[atan_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.atan.f32", module() );
+	external_intrins[ceil_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.ceil.f32", module() );
+	external_intrins[floor_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.floor.f32", module() );
+	external_intrins[log_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log.f32", module() );
+	external_intrins[log2_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log2.f32", module() );
+	external_intrins[log10_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log10.f32", module() );
+	external_intrins[rsqrt_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.rsqrt.f32", module() );
+
 	external_intrins[mod_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.mod.f32", module() );
+	external_intrins[ldexp_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.ldexp.f32", module() );
+
 	external_intrins[tex2dlod_vs]	= Function::Create(vs_tex2dlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.tex2d.lod", module() );
 	external_intrins[tex2dlod_ps]	= Function::Create(ps_tex2dlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.tex2d.lod", module() );
 	external_intrins[tex2dgrad_ps]	= Function::Create(ps_tex2dgrad_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.grad", module() );
@@ -2387,6 +2344,45 @@ Value* cg_service::casts_elements_( llvm::Value* v, llvm::Type* scalar_ty )
 		? VectorType::get( scalar_ty, v->getType()->getVectorNumElements() )
 		: scalar_ty;
 	return builder().CreateBitCast( v, ret_ty );
+}
+
+value_t cg_service::emit_unary_ps( std::string const& scalar_external_intrin_name, value_t const& v )
+{
+	Function* scalar_intrin = module()->getFunction( scalar_external_intrin_name );
+	assert( scalar_intrin );
+
+	Value* ret_v = unary_op_ps_(
+		NULL,
+		v.load(),
+		bind_unary_external_( scalar_intrin ),
+		unary_fn_t(),
+		unary_fn_t(),
+		unary_fn_t()
+	);
+	return create_value( v.tyinfo(), v.hint(), ret_v, vkind_value, v.abi() );
+}
+
+value_t cg_service::emit_bin_ps( std::string const& scalar_external_intrin_name, value_t const& v0, value_t const& v1 )
+{
+	Function* scalar_intrin = module()->getFunction( scalar_external_intrin_name );
+	assert( scalar_intrin );
+
+	builtin_types hint = v0.hint();
+	assert( hint == v1.hint() );
+	abis abi = promote_abi( v0.abi(), v1.abi() );
+
+	Value* ret_v = bin_op_ps_(
+		(Type*)NULL,
+		v0.load(abi),
+		v1.load(abi),
+		bind_binary_external_( scalar_intrin ),
+		bin_fn_t(),
+		bin_fn_t(),
+		bin_fn_t(),
+		unary_fn_t()
+		);
+
+	return create_value( v0.tyinfo(), v0.hint(), ret_v, vkind_value, abi );
 }
 
 END_NS_SASL_CODE_GENERATOR();

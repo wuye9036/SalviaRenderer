@@ -291,15 +291,23 @@ void driver_impl::set_diag_chat( diag_chat* diags )
 }
 
 // WORDAROUNDS_TODO LLVM 3.0 Intrinsic to native call error.
-void workaround_expf( float* ret, float v )
-{
-	*ret = expf(v);
-}
+void sasl_exp_f32	( float* ret, float v ) { *ret = expf(v); }
+void sasl_exp2_f32	( float* ret, float v ) { *ret = ldexpf(1.0f, v); }
+void sasl_sin_f32	( float* ret, float v ) { *ret = sinf(v); }
+void sasl_cos_f32	( float* ret, float v ) { *ret = cosf(v); }
+void sasl_tan_f32	( float* ret, float v ) { *ret = tanf(v); }
+void sasl_asin_f32	( float* ret, float v ) { *ret = asinf(v); }
+void sasl_acos_f32	( float* ret, float v ) { *ret = acosf(v); }
+void sasl_atan_f32	( float* ret, float v ) { *ret = atanf(v); }
+void sasl_ceil_f32	( float* ret, float v ) { *ret = eflib::fast_ceil(v); }
+void sasl_floor_f32	( float* ret, float v ) { *ret = eflib::fast_floor(v); }
+void sasl_log_f32	( float* ret, float v ) { *ret = eflib::fast_log(v); }
+void sasl_log10_f32	( float* ret, float v ) { *ret = log10f(v); }
+void sasl_log2_f32	( float* ret, float v ) { *ret = eflib::fast_log2(v); }
+void sasl_rsqrt_f32	( float* ret, float v ) { *ret = 1.0f / sqrtf(v); }
 
-void workaround_modf( float* ret, float lhs, float rhs )
-{
-	*ret = fmodf(lhs, rhs);
-}
+void sasl_mod_f32	( float* ret, float lhs, float rhs ){ *ret = fmodf(lhs, rhs); }
+void sasl_ldexp_f32	( float* ret, float lhs, float rhs ){ *ret = ldexpf(lhs, rhs); }
 
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
@@ -307,8 +315,22 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
-	inject_function(ret_jit, &workaround_expf, "sasl.exp.f32", true);
-	inject_function(ret_jit, &workaround_modf, "sasl.mod.f32", true);
+	inject_function(ret_jit, &sasl_exp_f32,		"sasl.exp.f32",		true);
+	inject_function(ret_jit, &sasl_mod_f32,		"sasl.mod.f32",		true);
+	inject_function(ret_jit, &sasl_exp2_f32,	"sasl.exp2.f32",	true);
+	inject_function(ret_jit, &sasl_sin_f32,		"sasl.sin.f32",		true);
+	inject_function(ret_jit, &sasl_cos_f32,		"sasl.cos.f32",		true);
+	inject_function(ret_jit, &sasl_tan_f32,		"sasl.tan.f32",		true);
+	inject_function(ret_jit, &sasl_asin_f32,	"sasl.asin.f32",	true);
+	inject_function(ret_jit, &sasl_acos_f32,	"sasl.acos.f32",	true);
+	inject_function(ret_jit, &sasl_atan_f32,	"sasl.atan.f32",	true);
+	inject_function(ret_jit, &sasl_ceil_f32,	"sasl.ceil.f32",	true);
+	inject_function(ret_jit, &sasl_floor_f32,	"sasl.floor.f32",	true);
+	inject_function(ret_jit, &sasl_log_f32,		"sasl.log.f32",		true);
+	inject_function(ret_jit, &sasl_log2_f32,	"sasl.log2.f32",	true);
+	inject_function(ret_jit, &sasl_log10_f32,	"sasl.log10.f32",	true);
+	inject_function(ret_jit, &sasl_rsqrt_f32,	"sasl.rsqrt.f32",	true);
+	inject_function(ret_jit, &sasl_ldexp_f32,	"sasl.ldexp.f32",	true);
 	return ret_jit;
 }
 
