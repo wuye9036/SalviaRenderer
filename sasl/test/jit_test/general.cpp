@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -314,8 +314,10 @@ typedef vector_<int,3>		int3;
 
 typedef matrix_<char,3,2>		bool2x3;
 typedef matrix_<char,4,3>		bool3x4;
-typedef matrix_<float,4,3>		float3x4;
+typedef matrix_<int32_t,3,2>	int2x3;
 typedef matrix_<uint32_t,3,2>	uint2x3;
+typedef matrix_<float,3,2>		float2x3;
+typedef matrix_<float,4,3>		float3x4;
 
 
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
@@ -895,7 +897,7 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/unary_operators.ss" );
@@ -1008,7 +1010,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
@@ -1042,6 +1044,9 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 
 	jit_function< float (uint32_t, int32_t) >test_bitcast_to_f;
 	function( test_bitcast_to_f, "test_bitcast_to_f" );
+
+	jit_function< int2x3 (float2x3, uint2x3) >test_bitcast_to_mi;
+	function( test_bitcast_to_mi, "test_bitcast_to_mi" );
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
@@ -1095,6 +1100,35 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 		BOOST_CHECK_BITWISE_EQUAL( to_u_ref_v[1], to_u_ret_v[1] );
 
 		BOOST_CHECK_BITWISE_EQUAL( *(uint32_t*)(&to_f_ref_v), *(uint32_t*)(&to_f_ret_v) );
+	}
+
+	{
+		uint32_t uarr[2][3] =
+		{
+			{ 786, 0, 33769097 },
+			{ 0xFFFFFFFF, 3899927, 67}
+		};
+
+		float farr[2][3] =
+		{
+			{17.7f, 0.92f, -88.7f},
+			{8.6f, -0.22f, -64.4f}
+		};
+
+		int2x3 ret = test_bitcast_to_mi( reinterpret_cast<float2x3&>(farr), reinterpret_cast<uint2x3&>(uarr) );
+
+		for(int i = 0; i < 2; ++i)
+		{
+			for(int j = 0; j < 3; ++j)
+			{
+				union {float f; int i;}		f2i;
+				union {uint32_t u; int i;}	u2i;
+				f2i.f = farr[i][j];
+				u2i.u = uarr[i][j];
+				int v = f2i.i + u2i.i;
+				BOOST_CHECK_EQUAL( v, ret.data_[i][j] );
+			}
+		}
 	}
 }
 #endif

@@ -1476,6 +1476,7 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 	if( scalar_hint == builtin_types::_float )
 	{
 		Value* ret_v = unary_op_ps_(
+			NULL,
 			v,
 			bind_unary_call_( intrin_<float(float)>(Intrinsic::sqrt) ),
 			unary_fn_t(),
@@ -1504,6 +1505,7 @@ value_t cg_service::emit_exp( value_t const& arg_value )
 	if( scalar_hint == builtin_types::_float )
 	{
 		Value* ret_v = unary_op_ps_(
+			NULL,
 			v,
 			bind_unary_external_( external_intrins[exp_f32] ), // bind_unary_call_( intrin_<float(float)>(Intrinsic::exp) ),
 			unary_fn_t(),
@@ -1622,10 +1624,20 @@ value_t cg_service::cast_v2s( value_t const& v )
 
 value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
 {
+	abis abi = promote_abi(v.abi(), abi_llvm);
+
+	Type* ty = dest_tyi->ty(abi);
+	builtin_types dest_scalar_hint = scalar_of( dest_tyi->hint() );
+	Type* dest_scalar_ty = type_( dest_scalar_hint, abi_llvm );
+	unary_fn_t sv_cast_fn = boost::bind( &cg_service::casts_elements_, this, _1, dest_scalar_ty );
+	Value* ret = unary_op_ps_( ty, v.load(abi), unary_fn_t(), unary_fn_t(), unary_fn_t(), sv_cast_fn );
+	return create_value( dest_tyi, ret, vkind_value, abi );
+
+	/*
 	builtin_types hint = v.hint();
 	if( is_scalar(hint) )
 	{
-		abis abi = promote_abi(v.abi(), abi_llvm);
+		
 		Value* ret_v = builder().CreateBitCast( v.load(abi), dest_tyi->ty(abi) );
 		return create_value( dest_tyi, ret_v, vkind_value, abi );
 	}
@@ -1651,6 +1663,7 @@ value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
 	}
 
 	return value_t();
+	*/
 }
 
 void cg_service::jump_to( insert_point_t const& ip )
@@ -2027,14 +2040,14 @@ AllocaInst* cg_service::alloca_( Type* ty, string const& name )
 	return ret;
 }
 
-llvm::Value* cg_service::unary_op_ps_( llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn )
+llvm::Value* cg_service::unary_op_ps_( llvm::Type* ret_ty, llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn )
 {
 	Type* ty = v->getType();
-	Type* ret_ty = ty;
+	ret_ty = ret_ty ? ret_ty : ty;
 
-	if( ty->isPrimitiveType() )
+	if( !ty->isAggregateType() && !ty->isVectorTy() )
 	{
-		if( sv_fn ) { return sv_fn(v); }
+		if(sv_fn) { return sv_fn(v); }
 		assert(sfn);
 		return sfn(v);
 	}
@@ -2082,7 +2095,7 @@ llvm::Value* cg_service::unary_op_ps_( llvm::Value* v, unary_fn_t sfn, unary_fn_
 		{
 			elem_index[0] = i;
 			Value* v_elem = builder().CreateExtractValue(v, elem_index);
-			Value* ret_elem = unary_op_ps_(v_elem, sfn, vfn, simd_fn, sv_fn);
+			Value* ret_elem = unary_op_ps_(ret_ty->getStructElementType(i), v_elem, sfn, vfn, simd_fn, sv_fn);
 			ret = builder().CreateInsertValue( ret, ret_elem, elem_index );
 		}
 		return ret;
@@ -2364,6 +2377,16 @@ Value* cg_service::integer_value_( Type* ty, llvm::APInt const& v )
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return NULL;
+}
+
+Value* cg_service::casts_elements_( llvm::Value* v, llvm::Type* scalar_ty )
+{
+	assert( !v->getType()->isAggregateType() );
+	Type* ret_ty 
+		= v->getType()->isVectorTy()
+		? VectorType::get( scalar_ty, v->getType()->getVectorNumElements() )
+		: scalar_ty;
+	return builder().CreateBitCast( v, ret_ty );
 }
 
 END_NS_SASL_CODE_GENERATOR();

@@ -359,7 +359,7 @@ protected:
 		unary_fn_t cast_fn /*Must be sv fn*/
 		);
 
-	llvm::Value* unary_op_ps_			(llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn);
+	llvm::Value* unary_op_ps_			(llvm::Type* ret_ty, llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn);
 
 	value_t emit_bin_mm(
 		value_t const& lhs, value_t const& rhs,
@@ -400,6 +400,7 @@ protected:
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
 	llvm::Value* i8toi1_( llvm::Value* );
 	llvm::Value* i1toi8_( llvm::Value* );
+	llvm::Value* casts_elements_( llvm::Value*, llvm::Type* element_ty );
 
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );

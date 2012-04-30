@@ -54,3 +54,8 @@ float test_bitcast_to_f( uint u, int i )
 {
 	return asfloat(u) + asfloat(i);
 }
+
+int2x3 test_bitcast_to_mi( float2x3 f, uint2x3 u )
+{
+	return asint(f) + asint(u);
+}
