@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -415,6 +415,8 @@ using eflib::int2;
 
 #if 1 || ALL_TESTS_ENABLED
 
+#define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);
+
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
 
@@ -424,7 +426,23 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	jit_function<float (float) > test_abs_f;
 	jit_function<int (int) > test_abs_i;
 	jit_function<float (float) > test_exp;
-	jit_function<float3x4 (float3x4)> test_exp_m34;
+	jit_function<float3x4 (float3x4)>
+		test_exp_m34,
+		test_exp2_m34,
+		test_sin_m34,
+		test_cos_m34,
+		test_tan_m34,
+		test_asin_m34,
+		test_acos_m34,
+		test_atan_m34,
+		test_ceil_m34,
+		test_floor_m34,
+		test_log_m34,
+		test_log2_m34,
+		test_log10_m34,
+		test_rsqrt_m34;
+	jit_function<float3x4 (float3x4, float3x4)>
+		test_ldexp_m34;
 	jit_function<float (float) > test_sqrt_f;
 	jit_function<vec2 (vec2) > test_sqrt_f2;
 	jit_function<vec3 (vec3, vec3)> test_cross_prod;
@@ -454,6 +472,21 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 	function( test_exp_m34, "test_exp_m34" );
 	BOOST_REQUIRE( test_exp_m34 );
+
+	INIT_JIT_FUNCTION(test_exp2_m34);
+	INIT_JIT_FUNCTION(test_sin_m34);
+	INIT_JIT_FUNCTION(test_cos_m34);
+	INIT_JIT_FUNCTION(test_tan_m34);
+	INIT_JIT_FUNCTION(test_asin_m34);
+	INIT_JIT_FUNCTION(test_acos_m34);
+	INIT_JIT_FUNCTION(test_atan_m34);
+	INIT_JIT_FUNCTION(test_ceil_m34);
+	INIT_JIT_FUNCTION(test_floor_m34);
+	INIT_JIT_FUNCTION(test_log_m34);
+	INIT_JIT_FUNCTION(test_log2_m34);
+	INIT_JIT_FUNCTION(test_log10_m34);
+	INIT_JIT_FUNCTION(test_rsqrt_m34);
+	INIT_JIT_FUNCTION(test_ldexp_m34);
 
 	function( test_sqrt_f, "test_sqrt_f" );
 	BOOST_REQUIRE( test_sqrt_f );
@@ -663,6 +696,61 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_EQUAL( ret2[1], true );
 		BOOST_CHECK_EQUAL( ret2[2], true );
 		BOOST_CHECK_EQUAL( ret2[3], true );
+	}
+	{
+		float lhs_array[3][4] =
+		{
+			{17.7f, 66.3f, 0.92f, -88.7f},
+			{8.6f, -0.22f, 17.1f, -64.4f},
+			{199.8f, 0.1f, -0.1f, 99.73f}
+		};
+
+		float rhs_array[3][4] =
+		{
+			{9.62f, 10.33f, -18.2f, 99.7f},
+			{-0.3f, -76.9f, 93.3f,  0.22f},
+			{44.1f, 0.027f, 19.9f, -33.5f}
+		};
+
+		float3x4& lhs( reinterpret_cast<float3x4&>(lhs_array) );
+		float3x4& rhs( reinterpret_cast<float3x4&>(rhs_array) );
+
+		float3x4 ret_exp2	= test_exp2_m34(lhs);
+		float3x4 ret_sin	= test_sin_m34(lhs);
+		float3x4 ret_cos	= test_cos_m34(lhs);
+		float3x4 ret_tan	= test_tan_m34(lhs);
+		float3x4 ret_asin	= test_asin_m34(lhs);
+		float3x4 ret_acos	= test_acos_m34(lhs);
+		float3x4 ret_atan	= test_atan_m34(lhs);
+		float3x4 ret_ceil	= test_ceil_m34(lhs);
+		float3x4 ret_floor	= test_floor_m34(lhs);
+		float3x4 ret_log	= test_log_m34(lhs);
+		float3x4 ret_log2	= test_log2_m34(lhs);
+		float3x4 ret_log10	= test_log10_m34(lhs);
+		float3x4 ret_rsqrt	= test_rsqrt_m34(lhs);
+		float3x4 ret_ldexp	= test_ldexp_m34(lhs,rhs);
+
+		for( int i = 0; i < 3; ++i ) {
+			for( int j = 0; j < 4; ++j ) {
+				
+				union { float f; uint32_t u; } ret, ref;
+
+				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0, lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_sin.data_[i][j];	ref.f = sinf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_cos.data_[i][j];	ref.f = cosf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_tan.data_[i][j];	ref.f = tanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_asin.data_[i][j];	ref.f = asinf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_acos.data_[i][j];	ref.f = acosf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_atan.data_[i][j];	ref.f = atanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_ceil.data_[i][j];	ref.f = fast_ceil(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_floor.data_[i][j];	ref.f = fast_floor(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_log.data_[i][j];	ref.f = fast_log(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_log2.data_[i][j];	ref.f = fast_log2(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_log10.data_[i][j];	ref.f = log10f(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_rsqrt.data_[i][j];	ref.f = 1.0f/sqrtf(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_ldexp.data_[i][j];	ref.f = ldexpf(lhs_array[i][j], rhs_array[i][j]); BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+			}
+		}
 	}
 }
 

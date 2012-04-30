@@ -733,6 +733,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "exp"
+			|| intr->unmangled_name() == "exp2"
 			|| intr->unmangled_name() == "sin"
 			|| intr->unmangled_name() == "cos"
 			|| intr->unmangled_name() == "tan"

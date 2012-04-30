@@ -72,3 +72,18 @@ bool4 test_any_all(float3 f, int3 i)
 {
 	return bool4( any(f), all(f), any(i), all(i) );
 }
+
+float3x4 test_exp2_m34(float3x4 v)	{ return exp2(v); }
+float3x4 test_sin_m34(float3x4 v)	{ return sin(v); }
+float3x4 test_cos_m34(float3x4 v)	{ return cos(v); }
+float3x4 test_tan_m34(float3x4 v)	{ return tan(v); }
+float3x4 test_asin_m34(float3x4 v)	{ return asin(v); }
+float3x4 test_acos_m34(float3x4 v)	{ return acos(v); }
+float3x4 test_atan_m34(float3x4 v)	{ return atan(v); }
+float3x4 test_ceil_m34(float3x4 v)	{ return ceil(v); }
+float3x4 test_floor_m34( float3x4 v){ return floor(v); }
+float3x4 test_log_m34(float3x4 v)	{ return log(v); }
+float3x4 test_log2_m34(float3x4 v)	{ return log2(v); }
+float3x4 test_log10_m34(float3x4 v)	{ return log10(v); }
+float3x4 test_rsqrt_m34(float3x4 v)	{ return rsqrt(v); }
+float3x4 test_ldexp_m34(float3x4 v0, float3x4 v1){ return ldexp(v0, v1); }

@@ -1543,6 +1543,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 					register_intrinsic( child_ctxt_init, "radians"	) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "sqrt"		) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "exp"		) % ty			>> ty;
+					register_intrinsic( child_ctxt_init, "exp2"		) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "sin"		) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "cos"		) % ty			>> ty;
 					register_intrinsic( child_ctxt_init, "tan"		) % ty			>> ty;

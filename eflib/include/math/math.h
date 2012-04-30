@@ -102,8 +102,6 @@ namespace eflib{
 	// From http://www.musicdsp.org/showone.php?id=63 & http://www.flipcode.com/archives/Fast_log_Function.shtml
 	inline float fast_log2(float val)
 	{
-		EFLIB_ASSERT(val > 0, "");
-
 		union INTORFLOAT
 		{
 			int i;
