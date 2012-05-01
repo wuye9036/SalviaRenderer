@@ -306,6 +306,8 @@ wcontext_t* wave_context_wrapper::get_wctxt() const
 
 void fixes_file_end_with_newline( std::string& content )
 {
+	if ( content.empty() ) { return; }
+
 	char end_ch = *content.rbegin();
 	if( end_ch == '\r' || end_ch == '\n' )
 	{

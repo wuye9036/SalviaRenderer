@@ -304,6 +304,8 @@ struct jit_fixture {
 	shared_ptr<diag_chat>	diags;
 };
 
+#define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);
+
 typedef vector_<char,2>		char2;
 typedef vector_<char,3>		char3;
 typedef vector_<char,3>		bool3;
@@ -413,9 +415,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 using eflib::vec3;
 using eflib::int2;
 
-#if 1 || ALL_TESTS_ENABLED
-
-#define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -1098,7 +1098,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
@@ -1804,7 +1804,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
@@ -1823,12 +1823,14 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 
 	vec4 vf( 76.8f, -88.5f, 37.7f, -98.1f );
 	int3 vi( 87, 46, 22 );
+	int3 zi( 0, 0, 0 );
 
 	vec4 ref_f( vf[0]+vf[1], vf[1]-vf[2], vf[2]*vf[3], vf[3]/vf[0] );
 	int4 ref_i( vi[0]/vi[1], vi[1]%vi[2], vi[2]*vi[0] );
 
 	vec4 ret_f = test_float_arith(vf);
 	int3 ret_i = test_int_arith(vi);
+	int3 ret_zi = test_int_arith(zi);	// A special test for div and mod by zero.
 
 	BOOST_CHECK_CLOSE( ref_f[0], ret_f[0], 0.000001f );
 	BOOST_CHECK_CLOSE( ref_f[1], ret_f[1], 0.000001f );
@@ -1901,6 +1903,13 @@ BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 	uint64_t ret_v = test_bitwise_ops(a, b);
 
 	BOOST_CHECK_EQUAL( ref_v, ret_v );
+}
+#endif
+
+#if 0 && ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
+{
+	init_g( "./repo/question/v1a1/assigns.ss" );
 }
 #endif
 

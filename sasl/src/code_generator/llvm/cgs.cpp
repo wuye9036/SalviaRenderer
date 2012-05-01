@@ -790,7 +790,9 @@ value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
 		bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 		bin_fn_t i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
 		bin_fn_t u_div = boost::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
-		return emit_bin_ps( lhs, rhs, i_div, u_div, f_div );
+		bin_fn_t i_safe_div = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, i_div );
+		bin_fn_t u_safe_div = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, u_div );
+		return emit_bin_ps( lhs, rhs, i_safe_div, u_safe_div, f_div );
 	}
 
 	if( is_scalar(lhint) ){
@@ -826,11 +828,14 @@ value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs )
 	{
 		bin_fn_t i_mod = boost::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
 		bin_fn_t u_mod = boost::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
+		
+		bin_fn_t i_safe_mod = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, i_mod );
+		bin_fn_t u_safe_mod = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, u_mod );
 
-		bin_fn_t mod_f32 = bind_binary_external_( external_intrins[cg_service::mod_f32] );
-		bin_fn_t f_mod = boost::bind( &cg_service::bin_op_ps_, this, (Type*)NULL, _1, _2, mod_f32, bin_fn_t(), bin_fn_t(), bin_fn_t(), unary_fn_t() );
+		bin_fn_t intrin_mod_f32 = bind_binary_external_( external_intrins[mod_f32] );
+		bin_fn_t f_mod = boost::bind( &cg_service::bin_op_ps_, this, (Type*)NULL, _1, _2, intrin_mod_f32, bin_fn_t(), bin_fn_t(), bin_fn_t(), unary_fn_t() );
 
-		return emit_bin_ps( lhs, rhs, i_mod, u_mod, f_mod );
+		return emit_bin_ps( lhs, rhs, i_safe_mod, u_safe_mod, f_mod );
 	}
 
 	if( is_scalar(lhint) ){
@@ -1602,7 +1607,7 @@ value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
 	Type* ty = dest_tyi->ty(abi);
 	builtin_types dest_scalar_hint = scalar_of( dest_tyi->hint() );
 	Type* dest_scalar_ty = type_( dest_scalar_hint, abi_llvm );
-	unary_fn_t sv_cast_fn = boost::bind( &cg_service::casts_elements_, this, _1, dest_scalar_ty );
+	unary_fn_t sv_cast_fn = boost::bind( &cg_service::bit_cast_, this, _1, dest_scalar_ty );
 	Value* ret = unary_op_ps_( ty, v.load(abi), unary_fn_t(), unary_fn_t(), unary_fn_t(), sv_cast_fn );
 	return create_value( dest_tyi, ret, vkind_value, abi );
 }
@@ -2336,7 +2341,7 @@ Value* cg_service::integer_value_( Type* ty, llvm::APInt const& v )
 	return NULL;
 }
 
-Value* cg_service::casts_elements_( llvm::Value* v, llvm::Type* scalar_ty )
+Value* cg_service::bit_cast_( llvm::Value* v, llvm::Type* scalar_ty )
 {
 	assert( !v->getType()->isAggregateType() );
 	Type* ret_ty 
@@ -2383,6 +2388,20 @@ value_t cg_service::emit_bin_ps( std::string const& scalar_external_intrin_name,
 		);
 
 	return create_value( v0.tyinfo(), v0.hint(), ret_v, vkind_value, abi );
+}
+
+Value* cg_service::safe_div_mod_( Value* lhs, Value* rhs, bin_fn_t div_or_mod_fn )
+{
+	Type* rhs_ty = rhs->getType();
+	Type* rhs_scalar_ty = rhs_ty->getScalarType();
+	assert( rhs_scalar_ty->isIntegerTy() );
+
+	Value* zero = Constant::getNullValue( rhs_ty );
+	Value* is_zero = builder().CreateICmpEQ( rhs, zero );
+	Value* one_value = Constant::getIntegerValue( rhs_ty, APInt(rhs_scalar_ty->getIntegerBitWidth(), 1) );
+	Value* non_zero_rhs = builder().CreateSelect( is_zero, one_value, rhs );
+
+	return div_or_mod_fn( lhs, non_zero_rhs );
 }
 
 END_NS_SASL_CODE_GENERATOR();

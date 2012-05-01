@@ -415,8 +415,8 @@ protected:
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
 	llvm::Value* i8toi1_( llvm::Value* );
 	llvm::Value* i1toi8_( llvm::Value* );
-	llvm::Value* casts_elements_( llvm::Value*, llvm::Type* element_ty );
-
+	llvm::Value* bit_cast_( llvm::Value*, llvm::Type* element_ty );
+	llvm::Value* safe_div_mod_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_c_as_package		( value_t const& v );
