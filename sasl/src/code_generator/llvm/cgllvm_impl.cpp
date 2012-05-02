@@ -138,36 +138,39 @@ SASL_VISIT_DEF( binary_expression ){
 		visit_child( child_ctxt, child_ctxt_init, v.left_expr );
 		visit_child( child_ctxt, child_ctxt_init, v.right_expr );
 
-		std::string op_name = operator_name(v.op);
-
-		if( v.op == operators::assign ){
+		if(/**/v.op == operators::assign
+			|| v.op == operators::add_assign
+			|| v.op == operators::sub_assign
+			|| v.op == operators::mul_assign
+			|| v.op == operators::div_assign
+			|| v.op == operators::mod_assign
+			|| v.op == operators::lshift_assign
+			|| v.op == operators::rshift_assign
+			|| v.op == operators::bit_and_assign
+			|| v.op == operators::bit_or_assign
+			|| v.op == operators::bit_xor_assign
+			)
+		{
 			bin_assign( v, data );
-		} else {
+		}
+		else
+		{
+			std::string op_name = operator_name(v.op);
+
 			shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
 			shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
 
-			//////////////////////////////////////////////////////////////////////////
-			// type conversation for matching the operator prototype
-
-			// get an overload-able prototype.
 			std::vector< shared_ptr<expression> > args;
 			args.push_back( v.left_expr );
 			args.push_back( v.right_expr );
 
-			symbol::overloads_t overloads
-				= sc_env_ptr(data)->sym.lock()->find_overloads( op_name, caster, args, NULL );
-
-			EFLIB_ASSERT_AND_IF( !overloads.empty(), "Error report: no prototype could match the expression." ){
-				return;
-			}
-			EFLIB_ASSERT_AND_IF( overloads.size() == 1, "Error report: prototype was ambigous." ){
-				return;
-			}
+			symbol::overloads_t overloads = sc_env_ptr(data)->sym.lock()->find_overloads( op_name, caster, args, NULL );
+			EFLIB_ASSERT( overloads.size() == 1, "No or more an one overloads." );
 
 			boost::shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
 
-			shared_ptr<type_info_si> p0_tsi = extract_semantic_info<type_info_si>( op_proto->params[0] );
-			shared_ptr<type_info_si> p1_tsi = extract_semantic_info<type_info_si>( op_proto->params[1] );
+			type_info_si* p0_tsi = op_proto->params[0]->si_ptr<type_info_si>();
+			type_info_si* p1_tsi = op_proto->params[1]->si_ptr<type_info_si>();
 
 			// cast value type to match proto type.
 			if( p0_tsi->entry_id() != larg_tsi->entry_id() ){
@@ -210,6 +213,8 @@ SASL_VISIT_DEF( binary_expression ){
 				retval = service()->emit_bit_and( lval, rval );
 			} else if( v.op == operators::bit_or ) {
 				retval = service()->emit_bit_or( lval, rval );
+			} else if( v.op == operators::bit_xor ) {
+				retval = service()->emit_bit_xor( lval, rval );
 			} else if( v.op == operators::less ) {
 				retval = service()->emit_cmp_lt( lval, rval );
 			} else if( v.op == operators::less_equal ){
@@ -628,23 +633,90 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 *    Note: Right argument is assignee, and left argument is value.
 */
 SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
+	any child_ctxt_init = *data;
+	sc_ptr(child_ctxt_init)->clear_data();
+	any child_ctxt;
 
-	shared_ptr<type_info_si> larg_tsi = extract_semantic_info<type_info_si>(v.left_expr);
-	shared_ptr<type_info_si> rarg_tsi = extract_semantic_info<type_info_si>(v.right_expr);
+	std::string op_name = operator_name(v.op);
 
-	if ( larg_tsi->entry_id() != rarg_tsi->entry_id() ){
-		if( caster->try_implicit( rarg_tsi->entry_id(), larg_tsi->entry_id() ) ){
-			caster->cast( rarg_tsi->type_info(), v.left_expr );
-		} else {
-			assert( !"Expression could not converted to storage type." );
+	type_info_si* larg_tsi =  v.left_expr->si_ptr<type_info_si>();
+	type_info_si* rarg_tsi = v.right_expr->si_ptr<type_info_si>();
+
+	std::vector< shared_ptr<expression> > args;
+	args.push_back( v.left_expr );
+	args.push_back( v.right_expr );
+
+	symbol::overloads_t overloads = sc_env_ptr(data)->sym.lock()->find_overloads( op_name, caster, args, NULL );
+	EFLIB_ASSERT( overloads.size() == 1, "No or more an one overloads." );
+
+	shared_ptr<function_type> op_proto = overloads[0]->node()->as_handle<function_type>();
+
+	type_info_si* p0_tsi = op_proto->params[0]->si_ptr<type_info_si>();
+	if( p0_tsi->entry_id() != larg_tsi->entry_id() )
+	{
+		if( !node_ctxt( p0_tsi->type_info() ) )
+		{
+			visit_child( child_ctxt, child_ctxt_init, op_proto->params[0]->param_type );
 		}
+		caster->cast( p0_tsi->type_info(), v.left_expr );
 	}
 
 	// Evaluated by visit(binary_expression)
 	cgllvm_sctxt* lctxt = node_ctxt( v.left_expr );
 	cgllvm_sctxt* rctxt = node_ctxt( v.right_expr );
 
-	rctxt->value().store( lctxt->value() );
+	value_t val;
+	/**/ if( v.op == operators::add_assign )
+	{
+		val = service()->emit_add( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::sub_assign )
+	{
+		val = service()->emit_sub( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::mul_assign )
+	{
+		val = service()->emit_mul_ps( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::div_assign )
+	{
+		val = service()->emit_div( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::mod_assign )
+	{
+		val = service()->emit_mod( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::lshift_assign )
+	{
+		val = service()->emit_lshift( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::rshift_assign )
+	{
+		val = service()->emit_rshift( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::bit_and_assign )
+	{
+		val = service()->emit_bit_and( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::bit_or_assign )
+	{
+		val = service()->emit_bit_or( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::bit_xor_assign )
+	{
+		val = service()->emit_bit_xor( rctxt->value(), lctxt->value() );
+	}
+	else if( v.op == operators::sub_assign )
+	{
+		val = service()->emit_add( rctxt->value(), lctxt->value() );
+	}
+	else
+	{
+		assert( v.op == operators::assign );
+		val = lctxt->value();
+	}
+
+	rctxt->value().store(val);
 
 	cgllvm_sctxt* pctxt = node_ctxt(v, true);
 	pctxt->data( rctxt->data() );

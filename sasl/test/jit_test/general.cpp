@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -1387,7 +1387,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED 
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	init_ps( "./repo/question/v1a1/branches.sps" );
 	
@@ -1804,7 +1804,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
@@ -1906,10 +1906,64 @@ BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 }
 #endif
 
-#if 0 && ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
+
+int do_arith_assign( int v0, int v1 )
+{
+	int v = (v0%=(v1?v1:1));
+	int vv= (v1*=v0);
+	return (v0+=v1)-=(vv/=(v?v:1));
+}
+
+int do_bit_assign(int v0, int v1)
+{
+	int v = (v0&=v1);
+	int vv= (v1|=v0);
+	return v0^=(vv-v);
+}
+
 BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/assigns.ss" );
+
+	jit_function<int2x3(int2x3, int2x3)> test_arith_assign;
+	INIT_JIT_FUNCTION( test_arith_assign );
+
+	jit_function<int2x3(int2x3, int2x3)> test_bit_assign;
+	INIT_JIT_FUNCTION( test_bit_assign );
+
+	jit_function<int(int, int)> test_scalar_arith_assign;
+	INIT_JIT_FUNCTION( test_scalar_arith_assign );
+
+	int32_t lhs_arr[2][3] =
+	{
+		{ 786, 0, 33769097 },
+		{ -1, -3899927, 67}
+	};
+
+	int32_t rhs_arr[2][3] =
+	{
+		{ 0, 87927877, -9728 },
+		{ 788, -3899927, 67}
+	};
+
+	int2x3 lhs( reinterpret_cast<int2x3&>(lhs_arr) );
+	int2x3 rhs( reinterpret_cast<int2x3&>(rhs_arr) );
+
+	int scalar_ret = test_scalar_arith_assign(-1, 788);
+	BOOST_CHECK_EQUAL( scalar_ret, do_arith_assign(-1, 788) );
+
+	int2x3 arith_ret = test_arith_assign(lhs, rhs);
+	int2x3 bit_ret = test_bit_assign(lhs, rhs);
+	for( int i = 0; i < 2; ++i )
+	{
+		for( int j = 0; j < 3; ++j )
+		{
+			BOOST_CHECK_EQUAL( arith_ret.data_[i][j], do_arith_assign(lhs_arr[i][j], rhs_arr[i][j]) );
+			BOOST_CHECK_EQUAL( bit_ret.data_[i][j], do_bit_assign(lhs_arr[i][j], rhs_arr[i][j]) );
+		}
+	}
+
 }
 #endif
 

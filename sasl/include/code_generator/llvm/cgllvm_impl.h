@@ -117,7 +117,7 @@ protected:
 
 	SASL_SPECIFIC_VISIT_DCL( bin_assign	, binary_expression );
 	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression ) = 0;
-
+	
 	// Easy to visit child with context data.
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );

@@ -152,8 +152,8 @@ void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 		}
 	}
 
+	assert( src && address );
 	StoreInst* inst = builder().CreateStore( src, address );
-	// inst->setAlignment(4);
 }
 
 value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )

@@ -1140,6 +1140,10 @@ operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
 		if ( op_chars[1] == '=' ) return operators::bit_and_assign;
 		if ( op_chars[1] == '\0' ) return operators::bit_and;
 		break;
+	case '^':
+		if( op_chars[1] == '=' ) return operators::bit_xor_assign;
+		if( op_chars[1] == '\0') return operators::bit_xor;
+		break;
 	}
 
 	string assertion("Unsupported operator: ");

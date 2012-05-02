@@ -1016,6 +1016,8 @@ SASL_VISIT_DEF( case_label ){
 }
 
 SASL_VISIT_DEF( ident_label ){
+	EFLIB_UNREF_PARAM(v);
+	EFLIB_UNREF_PARAM(data);
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
@@ -1390,23 +1392,51 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 
 			if ( is_arithmetic(op) )
 			{
-				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
+				for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
 				{
+					builtin_types tycode = it_type->first;
+					builtin_types scalar_tycode = scalar_of(tycode);
+
+					if( scalar_tycode == builtin_types::_boolean ) { continue; }
+
 					shared_ptr<builtin_type> ty = it_type->second;
 					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
+
+					if(    ( is_vector(tycode) && vector_size(tycode) > 1 )
+						|| ( is_matrix(tycode) && (vector_size(tycode) * vector_count(tycode) > 1) )
+						)
+					{
+						shared_ptr<builtin_type> scalar_ty = storage_bttbl[ scalar_of(tycode) ];
+						register_function( child_ctxt_init, op_name ) % ty % scalar_ty >> ty;
+						register_function( child_ctxt_init, op_name ) % scalar_ty % ty >> ty;
+					}
 				}
 			}
 
 			if( is_arith_assign(op) )
 			{
-				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
+				for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
+				{
+					builtin_types tycode = it_type->first;
+					builtin_types scalar_tycode = scalar_of(tycode);
+
+					if( scalar_tycode == builtin_types::_boolean ) { continue; }
+
 					shared_ptr<builtin_type> ty = it_type->second;
 					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
+
+					if(    ( is_vector(tycode) && vector_size(tycode) > 1 )
+						|| ( is_matrix(tycode) && (vector_size(tycode) * vector_count(tycode) > 1) )
+						)
+					{
+						shared_ptr<builtin_type> scalar_ty = storage_bttbl[ scalar_of(tycode) ];
+						register_function( child_ctxt_init, op_name ) % ty % scalar_ty >> ty;
+					}
 				}
 			}
 
 			if( is_relationship(op) ){
-				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type )
+				for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
 				{
 					builtin_types tycode = it_type->first;
 					shared_ptr<builtin_type> ty = it_type->second;
@@ -1414,21 +1444,16 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 				}
 			}
 
-			if( is_bit(op) || is_bit_assign(op) ){
-				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-					if ( is_integer(it_type->first) ){
+			if( is_bit(op) || is_bit_assign(op) || is_shift(op) || is_shift_assign(op) )
+			{
+				for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
+				{
+					builtin_types scalar_tycode = scalar_of(it_type->first);
+
+					if ( is_integer(scalar_tycode) )
+					{
 						shared_ptr<builtin_type> ty = it_type->second;
 						register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
-					}
-				}
-			}
-
-			if( is_shift(op) || is_shift_assign(op) ){
-				for( bt_table_t::iterator it_type = standard_bttbl.begin(); it_type != standard_bttbl.end(); ++it_type ){
-					if ( is_scalar(it_type->first) && is_integer(it_type->first) ){
-						shared_ptr<builtin_type> ty = it_type->second;
-						register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint32) >> ty;
-						register_function( child_ctxt_init, op_name ) % ty % BUILTIN_TYPE(_uint64) >> ty;
 					}
 				}
 			}
@@ -1485,7 +1510,8 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			}
 
 			if ( op == operators::assign ){
-				for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type ){
+				for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
+				{
 					shared_ptr<builtin_type> ty = it_type->second;
 					register_function( child_ctxt_init, op_name ) % ty % ty >> ty;
 				}
