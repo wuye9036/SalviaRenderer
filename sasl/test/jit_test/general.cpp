@@ -4,76 +4,17 @@
 #include <boost/test/unit_test.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <sasl/include/driver/driver_api.h>
-#include <sasl/include/common/diag_formatter.h>
-#include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
-#include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/test/jit_test/jit_test.h>
 #include <salviar/include/shader_abi.h>
-
-#include <eflib/include/math/vector.h>
-#include <eflib/include/math/matrix.h>
-#include <eflib/include/metaprog/util.h>
-
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/function.hpp>
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/function_pointer.hpp>
-#include <boost/function_types/result_type.hpp>
-#include <boost/function_types/parameter_types.hpp>
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/push_front.hpp>
-#include <boost/mpl/or.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/add_reference.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <eflib/include/platform/boost_end.h>
-
 #include <eflib/include/platform/cpuinfo.h>
 
-#include <fstream>
 #include <iostream>
-
-using namespace eflib;
-
-using sasl::driver::driver;
-using sasl::code_generator::jit_engine;
-using sasl::code_generator::llvm_module;
-using sasl::common::diag_chat;
-using sasl::common::diag_item;
-using sasl::semantic::symbol;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::PACKAGE_LINE_ELEMENT_COUNT;
-
-using boost::shared_ptr;
-using boost::shared_polymorphic_cast;
-using boost::function_types::result_type;
-using boost::function_types::function_pointer;
-using boost::function_types::parameter_types;
-
-using std::fstream;
-using std::string;
+using namespace eflib;
 using std::cout;
 using std::endl;
-
-using boost::mpl::_;
-using boost::mpl::if_;
-using boost::mpl::or_;
-using boost::mpl::push_front;
-using boost::mpl::sizeof_;
-using boost::mpl::transform;
-
-using boost::is_arithmetic;
-using boost::is_pointer;
-using boost::is_same;
-
-using boost::add_reference;
-using boost::enable_if_c;
-using boost::enable_if;
-using boost::disable_if;
 
 void on_exit()
 {
@@ -87,241 +28,6 @@ struct atexit_register
 
 
 BOOST_AUTO_TEST_SUITE( jit )
-
-string make_command( string const& file_name, string const& options){
-	return "--input=\"" + file_name + "\" " + options;
-}
-
-bool print_diagnostic( diag_chat*, diag_item* item )
-{
-	BOOST_MESSAGE( sasl::common::str(item) );
-	return true;
-}
-
-template <typename Fn>
-class jit_function_forward_base{
-protected:
-	typedef typename result_type<Fn>::type result_t;
-	typedef result_t* result_type_pointer;
-	typedef typename parameter_types<Fn>::type param_types;
-	typedef typename boost::mpl::transform< param_types, if_< or_< is_arithmetic<_>, is_pointer<_> >, _, add_reference<_> > >::type param_refs;
-	typedef typename if_<
-	is_same<result_t, void>,
-	param_refs,
-		typename push_front<param_refs, result_type_pointer>::type
-	>::type	callee_parameters;
-	typedef typename push_front<callee_parameters, void>::type
-		callee_return_parameters;
-public:
-	EFLIB_OPERATOR_BOOL( jit_function_forward_base<Fn> ){ return callee != NULL; }
-	typedef typename function_pointer<callee_return_parameters>::type
-		callee_ptr_t;
-	callee_ptr_t callee;
-	jit_function_forward_base():callee(NULL){}
-};
-
-template <typename RT, typename Fn>
-class jit_function_forward: public jit_function_forward_base<Fn>{
-public:
-	result_t operator ()(){
-		result_t tmp;
-		callee(&tmp);
-		return tmp;
-	}
-
-	template <typename T0>
-	result_t operator() (T0 p0 ){
-		result_t tmp;
-		callee(&tmp, p0);
-		return tmp;
-	}
-
-	template <typename T0, typename T1>
-	result_t operator() (T0 p0, T1 p1){
-		result_t tmp;
-		callee(&tmp, p0, p1);
-		return tmp;
-	}
-
-	template <typename T0, typename T1, typename T2>
-	result_t operator() (T0 p0, T1 p1, T2 p2){
-		result_t tmp;
-		callee(&tmp, p0, p1, p2);
-		return tmp;
-	}
-};
-
-#include <eflib/include/platform/disable_warnings.h>
-void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
-{
-#if defined(EFLIB_CPU_X86) && defined(EFLIB_MSVC)
-	__asm{
-		push ebp;
-
-		push callee;
-
-		push pbo;
-		push pso;
-		push pbi;
-		push psi;
-
-		mov  ebp, esp ;
-
-		push ebx;
-		push esi;
-		push edi;
-
-		and  esp, -16;
-		sub  esp, 16;
-
-		mov  ebx, [ebp+12];
-		push ebx;
-		mov  ebx, [ebp+8];
-		push ebx;
-		mov  ebx, [ebp+4];
-		push ebx;
-		mov  ebx, [ebp];
-		push ebx;
-
-		mov  ebx, [ebp+16];
-		call ebx;
-
-		mov  edi, [ebp-12];
-		mov  esi, [ebp-8];
-		mov  ebx, [ebp-4];
-		mov  esp, ebp;
-		add  esp, 20;
-		pop  ebp;
-	}
-
-	// X XXXX
-#else
-	reinterpret_cast<void (*)(void*, void*, void*, void*)>(callee)( psi, pbi, pso, pbo );
-#endif
-}
-#include <eflib/include/platform/enable_warnings.h>
-
-template <typename Fn>
-class jit_function_forward<void, Fn>: public jit_function_forward_base<Fn>{
-public:
-	result_t operator ()(){
-		callee();
-	}
-
-	template <typename T0>
-	result_t operator() (T0 p0 ){
-		callee(p0);
-	}
-
-	template <typename T0, typename T1>
-	result_t operator() (T0 p0, T1 p1){
-		callee(p0, p1);
-	}
-
-	template <typename T0, typename T1, typename T2>
-	result_t operator() (T0 p0, T1 p1, T2 p2){
-		callee(p0, p1, p2);
-	}
-
-	template <typename T0, typename T1, typename T2, typename T3>
-	result_t operator() (T0 p0, T1 p1, T2 p2, T3 p3){
-		callee(p0, p1, p2, p3);
-	}
-
-
-	template <typename T0, typename T1, typename T2, typename T3>
-	result_t operator() (T0* psi, T1* pbi, T2* pso, T3* pbo){
-		invoke( (void*)callee, psi, pbi, pso, pbo );
-	}
-};
-
-template <typename Fn>
-class jit_function: public jit_function_forward< typename result_type<Fn>::type, Fn >
-{};
-
-struct jit_fixture {
-	jit_fixture() {}
-
-	void init_g( string const& file_name ){
-		init( file_name, "--lang=g" );
-	}
-
-	void init_vs( string const& file_name ){
-		init( file_name, "--lang=vs" );
-	}
-
-	void init_ps( string const& file_name ){
-		init( file_name, "--lang=ps" );
-	}
-
-	void init( string const& file_name, string const& options ){
-		diags = diag_chat::create();
-		diags->add_report_raised_handler( print_diagnostic );
-		sasl_create_driver(drv);
-		BOOST_REQUIRE(drv);
-		drv->set_diag_chat(diags.get());
-		drv->set_parameter( make_command(file_name, options) );
-		drv->compile();
-
-		BOOST_REQUIRE( drv->root() );
-		BOOST_REQUIRE( drv->mod_si() );
-		BOOST_REQUIRE( drv->mod_codegen() );
-
-		root_sym = drv->mod_si()->root();
-
-		shared_ptr<llvm_module> llvm_mod = shared_polymorphic_cast<llvm_module>( drv->mod_codegen() );
-		fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
-		llvm_mod->dump( dump_file );
-		dump_file.close();
-
-		je = drv->create_jit();
-		BOOST_REQUIRE( je );
-	}
-
-	template <typename FunctionT>
-	void function( FunctionT& fn, string const& unmangled_name ){
-		assert( !root_sym->find_overloads(unmangled_name).empty() );
-		string fn_name = root_sym->find_overloads(unmangled_name)[0]->mangled_name();
-		fn.callee = reinterpret_cast<typename FunctionT::callee_ptr_t>( je->get_function(fn_name) );
-	}
-
-	void set_function( void* fn, string const& unmangled_name ){
-		assert( !root_sym->find_overloads(unmangled_name).empty() );
-		string fn_name = root_sym->find_overloads(unmangled_name)[0]->mangled_name();
-		je->inject_function( fn, fn_name );
-	}
-
-	void set_raw_function( void* fn, string const& mangled_name )
-	{
-		je->inject_function(fn, mangled_name);
-	}
-
-	~jit_fixture(){}
-
-	shared_ptr<driver>		drv;
-	shared_ptr<symbol>		root_sym;
-	shared_ptr<jit_engine>	je;
-	shared_ptr<diag_chat>	diags;
-};
-
-#define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);
-#define JIT_FUNCTION( signature, name ) jit_function<signature> name; function(name, #name); BOOST_REQUIRE(name);
-
-typedef vector_<char,2>		char2;
-typedef vector_<char,3>		char3;
-typedef vector_<char,3>		bool3;
-typedef vector_<char,4>		bool4;
-typedef vector_<uint32_t,2>	uint2;
-typedef vector_<uint32_t,3>	uint3;
-typedef vector_<int,3>		int3;
-
-typedef matrix_<char,3,2>		bool2x3;
-typedef matrix_<char,4,3>		bool3x4;
-typedef matrix_<int32_t,3,2>	int2x3;
-typedef matrix_<uint32_t,3,2>	uint2x3;
-typedef matrix_<float,3,2>		float2x3;
-typedef matrix_<float,4,3>		float3x4;
-
 
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 	cout << endl << "================================================" << endl << endl;
@@ -412,9 +118,6 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 }
 
 #endif
-
-using eflib::vec3;
-using eflib::int2;
 
 #if ALL_TESTS_ENABLED
 
@@ -1171,8 +874,8 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 		u2[1] = 0x12345678;
 
 		int3 i3(-87, 99, 0x7F836798);
-		vec3 v3(-98.765, 0.00765, 198760000000.0);
-		vec2 v2(998.65, -0.000287);
+		vec3 v3(-98.765f, 0.00765f, 198760000000.0f);
+		vec2 v2(998.65f, -0.000287f);
 
 		int2  to_i_ref_v = reinterpret_cast<int2&>(u2) + reinterpret_cast<int2&>(v2);
 		uint3 to_u_ref_v = reinterpret_cast<uint3&>(v3) + reinterpret_cast<uint3&>(i3);
@@ -1955,15 +1658,10 @@ BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/assigns.ss" );
 
-	jit_function<int2x3(int2x3, int2x3)> test_arith_assign;
-	INIT_JIT_FUNCTION( test_arith_assign );
-
-	jit_function<int2x3(int2x3, int2x3)> test_bit_assign;
-	INIT_JIT_FUNCTION( test_bit_assign );
-
-	jit_function<int(int, int)> test_scalar_arith_assign;
-	INIT_JIT_FUNCTION( test_scalar_arith_assign );
-
+	JIT_FUNCTION( int2x3(int2x3,int2x3), test_arith_assign );
+	JIT_FUNCTION( int2x3(int2x3,int2x3), test_bit_assign );
+	JIT_FUNCTION( int(int,int),			 test_scalar_arith_assign );
+	
 	int32_t lhs_arr[2][3] =
 	{
 		{ 786, 0, 33769097 },
