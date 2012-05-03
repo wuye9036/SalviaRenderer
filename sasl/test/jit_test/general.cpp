@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -305,6 +305,7 @@ struct jit_fixture {
 };
 
 #define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);
+#define JIT_FUNCTION( signature, name ) jit_function<signature> name; function(name, #name); BOOST_REQUIRE(name);
 
 typedef vector_<char,2>		char2;
 typedef vector_<char,3>		char3;
@@ -1804,22 +1805,16 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
 
-	jit_function<vec4(vec4)> test_float_arith;
-	function( test_float_arith, "test_float_arith" );
-	BOOST_REQUIRE(test_float_arith);
-
-	jit_function<int3(int3)> test_int_arith;
-	function( test_int_arith, "test_int_arith" );
-	BOOST_REQUIRE(test_int_arith);
-
-	jit_function<float3x4 (float3x4, float3x4)> test_mat_arith;
-	function(test_mat_arith, "test_mat_arith");
-	BOOST_REQUIRE(test_mat_arith);
+	JIT_FUNCTION( vec4(vec4),					test_float_arith );
+	JIT_FUNCTION( int3(int3),					test_int_arith );
+	JIT_FUNCTION( float3x4(float3x4,float3x4),	test_mat_arith );
+	JIT_FUNCTION( int3(int3,int),				test_vec_scalar_arith );
+	JIT_FUNCTION( float3x4(float3x4, float),	test_mat_scalar_arith );
 
 	vec4 vf( 76.8f, -88.5f, 37.7f, -98.1f );
 	int3 vi( 87, 46, 22 );
@@ -1877,6 +1872,40 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 			for( int j = 0; j < 4; ++j )
 			{
 				BOOST_CHECK_CLOSE( ref_v[i][j], ret.data_[i][j], 0.000012f );
+			}
+		}
+	}
+
+	{
+		int arr[3] = {7, 0, -3};
+		int3& x = ( reinterpret_cast<int3&>(arr) );
+		int y = 876;
+
+		int3 ret = test_vec_scalar_arith(x, y);
+
+		for (int i = 0; i < 3; ++i){
+			BOOST_CHECK_EQUAL( 0-y/((arr[i]*6)?(arr[i]*6):1)+3, ret.data_[i] );
+		}
+	}
+
+	{
+		float arr[3][4] =
+		{
+			{17.7f, 66.3f, 0.92f, -88.7f},
+			{8.6f, -0.22f, 17.1f, -64.4f},
+			{199.8f, 0.1f, -0.0f, 99.73f}
+		};
+
+		float3x4&	x( reinterpret_cast<float3x4&>(arr) );
+		float		y = -0.33f;
+
+		float3x4 ret = test_mat_scalar_arith(x, y);
+		for( int i = 0; i < 3; ++i ) {
+			for( int j = 0; j < 4; ++j ) {
+				float ref_v = 7.0f-y/(arr[i][j]*0.5f)+3.3f;
+				if( *(int*)(&ref_v) != *(int*)(&ret.data_[i][j]) ){
+					BOOST_CHECK_CLOSE( ret.data_[i][j], ref_v, 0.000001f );
+				}
 			}
 		}
 	}

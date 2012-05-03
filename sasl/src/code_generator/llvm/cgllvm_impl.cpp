@@ -198,7 +198,7 @@ SASL_VISIT_DEF( binary_expression ){
 			if( v.op == operators::add ){
 				retval = service()->emit_add(lval, rval);
 			} else if ( v.op == operators::mul ) {
-				retval = service()->emit_mul_ps(lval, rval);
+				retval = service()->emit_mul_comp(lval, rval);
 			} else if ( v.op == operators::sub ) {
 				retval = service()->emit_sub(lval, rval);
 			} else if( v.op == operators::div ){
@@ -676,7 +676,7 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	}
 	else if( v.op == operators::mul_assign )
 	{
-		val = service()->emit_mul_ps( rctxt->value(), lctxt->value() );
+		val = service()->emit_mul_comp( rctxt->value(), lctxt->value() );
 	}
 	else if( v.op == operators::div_assign )
 	{
@@ -780,7 +780,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
 
-			value_t ret_val = service()->emit_mul( service()->fn().arg(0), service()->fn().arg(1) );
+			value_t ret_val = service()->emit_mul_intrin( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 
 		}
@@ -966,7 +966,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			float deg2rad = (float)(eflib::PI/180.0f);
 			value_t deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
 			value_t deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
-			service()->emit_return( service()->emit_mul( deg2rad_v, fn.arg(0) ), service()->param_abi(false) );
+			service()->emit_return( service()->emit_mul_comp( deg2rad_v, fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "degrees" )
 		{
@@ -976,7 +976,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			float rad2deg = (float)(180.0f/eflib::PI);
 			value_t rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
 			value_t rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
-			service()->emit_return( service()->emit_mul( rad2deg_v, fn.arg(0) ), service()->param_abi(false) );
+			service()->emit_return( service()->emit_mul_comp( rad2deg_v, fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "lerp" )
 		{
@@ -986,7 +986,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(1, ".d");
 			fn.arg_name(2, ".t");
 			value_t diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
-			value_t t_diff = service()->emit_mul( diff, fn.arg(2) );
+			value_t t_diff = service()->emit_mul_comp( diff, fn.arg(2) );
 			value_t ret = service()->emit_add(fn.arg(0), t_diff);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
@@ -1012,7 +1012,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t y1 = service()->emit_extract_val( fn.arg(1), 1 );
 			value_t z0 = service()->emit_extract_val( fn.arg(0), 2 );
 			value_t w1 = service()->emit_extract_val( fn.arg(1), 3 );
-			value_t y2 = service()->emit_mul( y0, y1 );
+			value_t y2 = service()->emit_mul_comp( y0, y1 );
 			vector<value_t> elems;
 			elems.push_back(x2);
 			elems.push_back(y2);

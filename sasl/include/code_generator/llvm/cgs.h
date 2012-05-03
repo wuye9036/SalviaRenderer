@@ -56,11 +56,12 @@ public:
 	@{ */
 	virtual value_t emit_add( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_sub( value_t const& lhs, value_t const& rhs );
-	virtual value_t emit_mul( value_t const& lhs, value_t const& rhs );
-	virtual value_t emit_mul_ps( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_div( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_mod( value_t const& lhs, value_t const& rhs );
 
+	virtual value_t emit_mul_comp  ( value_t const& lhs, value_t const& rhs );
+	virtual value_t emit_mul_intrin( value_t const& lhs, value_t const& rhs );
+	
 	virtual value_t emit_lshift ( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_rshift ( value_t const& lhs, value_t const& rhs );
 
@@ -120,9 +121,6 @@ public:
 	virtual value_t emit_tex2Dgrad	( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );
 	virtual value_t emit_tex2Dbias	( value_t const& samp, value_t const& coord );
 	virtual value_t emit_tex2Dproj	( value_t const& samp, value_t const& coord );
-
-	virtual value_t emit_unary_ps( std::string const& scalar_external_intrin_name, value_t const& v );
-	virtual value_t emit_bin_ps( std::string const& scalar_external_intrin_name, value_t const& v0, value_t const& v1 );
 	/// @}
 
 	/// @name Emit type casts
@@ -216,6 +214,8 @@ public:
 
 	/// @name Emit value and variables
 	/// @{
+	value_t extend_to_vm( value_t const&, builtin_types hint );
+
 	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
 	
 	template <typename T>
@@ -374,26 +374,32 @@ protected:
 		bin_fn_t sfn, bin_fn_t vfn, bin_fn_t simd_fn, bin_fn_t sv_fn,
 		unary_fn_t cast_fn /*Must be sv fn*/
 		);
-
 	llvm::Value* unary_op_ps_			(llvm::Type* ret_ty, llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn);
 
-	value_t emit_bin_mm(
-		value_t const& lhs, value_t const& rhs,
-		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
-		);
+public:
 	value_t emit_bin_ps(
 		value_t const& lhs, value_t const& rhs,
 		bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn
 		);
-	value_t emit_bin_sv( 
-		value_t const& lhs, value_t const& rhs,
-		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+	value_t emit_bin_ps(
+		std::string const& scalar_external_intrin_name,
+		value_t const& v0, value_t const& v1
 		);
-	value_t emit_bin_vs(
-		value_t const& lhs, value_t const& rhs,
-		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+	value_t extend_scalar_and_emit_bin_ps(
+		std::string const& scalar_external_intrin_name,
+		value_t const& lhs, value_t const& rhs
 		);
+	value_t extend_scalar_and_emit_bin_ps(
+		value_t const& lhs, value_t const& rhs,
+		bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn
+		);
+	value_t emit_unary_ps( std::string const& scalar_external_intrin_name, value_t const& v );
 
+protected:
+	value_t emit_bin_mm(
+		value_t const& lhs, value_t const& rhs,
+		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+		);
 	value_t emit_dot_vv( value_t const& lhs, value_t const& rhs );
 
 	value_t emit_mul_sv( value_t const& lhs, value_t const& rhs );
