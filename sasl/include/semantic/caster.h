@@ -60,6 +60,10 @@ private:
 		tid_t/*src*/, tid_t/*dest*/, cast_t/*caster*/
 	> cast_info;
 
+	typedef boost::unordered_map<
+		std::pair<tid_t /*src*/, tid_t /*dest*/>, size_t /*cast info index*/
+	> cast_info_dict_t;
+
 	boost::shared_ptr<sasl::syntax_tree::tynode> get_tynode( tid_t );
 
 	cast_info const* find_caster(
@@ -70,6 +74,7 @@ private:
 
 	boost::unordered_map<tid_t,int>	lowest_priors; // For auto cast priority.
 	std::vector<cast_info>			cast_infos;
+	cast_info_dict_t				cast_info_dict;
 	boost::bimap<tid_t, tid_t>		eql_casts;
 	get_tynode_fn					tynode_getter;
 };

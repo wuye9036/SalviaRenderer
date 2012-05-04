@@ -22,7 +22,7 @@ void caster_t::add_cast( casts ct, int prior, tid_t src, tid_t dest, cast_t conv
 {
 	assert( ct==caster_t::eql || ct==caster_t::imp || ct==caster_t::exp );
 	cast_infos.push_back( boost::make_tuple(ct, prior, src, dest, conv) );
-
+	cast_info_dict.insert( cast_info_dict_t::value_type(make_pair(src,dest),cast_infos.size()-1) );
 	if( ct == eql )
 	{
 		eql_casts.insert( bimap<tid_t, tid_t>::value_type(src, dest) );
@@ -160,13 +160,11 @@ caster_t::cast_info const* caster_t::find_caster(
 	first_caster = second_caster = NULL;
 
 	// SRC --xxx-> DST
-	for( vector<cast_info>::iterator it = cast_infos.begin(); it != cast_infos.end(); ++it )
+	cast_info_dict_t::iterator it = cast_info_dict.find( make_pair(src,dest) );
+	if( it != cast_info_dict.end() )
 	{
-		if ( dest == it->get<3>() && src == it->get<2>() )
-		{
-			first_caster = boost::addressof(*it);
-			return first_caster;
-		}
+		first_caster = boost::addressof(cast_infos[it->second]);
+		return first_caster;
 	}
 
 	if( direct_caster_only ){ return NULL; }
