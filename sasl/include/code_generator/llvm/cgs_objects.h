@@ -164,6 +164,8 @@ public:
 	abis			abi() const;				///< Get ABI.
 	void			abi( abis abi );			///< Set ABI
 
+	value_t*		index() const;
+	void			index( value_t const& );
 	void			index( size_t v );			///< Set Index. It is only make sense if parent is available.
 	uint32_t		masks() const;				///< Get masks
 	void			masks( uint32_t v );		///< Set masks.
@@ -176,7 +178,7 @@ public:
 	/// @}
 
 	static value_t slice( value_t const& vec, uint32_t masks );
-
+	static value_t slice( value_t const& vec, value_t const& index );
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
@@ -197,6 +199,7 @@ protected:
 	/// @name Members
 	/// @{
 	boost::scoped_ptr<value_t>	parent_; // For write mask and swizzle.
+	boost::scoped_ptr<value_t>	index_;
 	uint32_t					masks_;
 
 	value_tyinfo*				tyinfo_;

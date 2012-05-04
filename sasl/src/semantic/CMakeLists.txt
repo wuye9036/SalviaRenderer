@@ -37,11 +37,11 @@ set( SOURCE_FILES
 	caster.cpp
 	pety.cpp
 	
-	ssa_constructor.cpp
-	ssa_context.cpp
-	ssa_graph.cpp
-	ssa_nodes.cpp
-	ssa_vmap.cpp
+	# ssa_constructor.cpp
+	# ssa_context.cpp
+	# ssa_graph.cpp
+	# ssa_nodes.cpp
+	# ssa_vmap.cpp
 	
 	semantic_infos/module_si.cpp
 	semantic_infos/semantic_infos.cpp

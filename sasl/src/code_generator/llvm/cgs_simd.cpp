@@ -104,7 +104,8 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 	} else if ( kind == vkind_swizzle ){
-		if( is_vector( lhs.parent()->hint()) ){
+		if( is_vector( lhs.parent()->hint()) )
+		{
 			assert( lhs.parent()->storable() );
 			Value* parent_address = lhs.parent()->load_ref();
 			Value* r_value = rhs.load( lhs.abi() );

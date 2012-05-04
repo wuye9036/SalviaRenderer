@@ -48,6 +48,8 @@ diag_template type_redefinition(dl_error, "'%s': '%s' type redefinition");
 diag_template case_expr_not_constant(dl_error, "case expression not constant");
 diag_template illegal_type_for_case_expr(dl_error, "'%s': illegal type for case expression");
 diag_template identifier_not_found(dl_error, "'%s': identifier not found");
+diag_template not_an_acceptable_operator(dl_error, "binary '%s': '%s' is not acceptable to the predefined operator");
+diag_template subscript_not_integral(dl_error, "subscript is not of integral type");
 
 char const* scalar_nick_name( builtin_types btcode )
 {

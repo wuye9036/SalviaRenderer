@@ -364,10 +364,18 @@ vector< weak_ptr<labeled_statement> > const& statement_si::labels() const
 
 int32_t swizzle_field_name_to_id( char ch ){
 	switch( ch ){
-	case 'x': return 1;
-	case 'y': return 2;
-	case 'z': return 3;
-	case 'w': return 4;
+	case 'x':
+	case 'r':
+		return 1;
+	case 'y':
+	case 'g':
+		return 2;
+	case 'z':
+	case 'b':
+		return 3;
+	case 'w':
+	case 'a':
+		return 4;
 	}
 	return 0;
 }

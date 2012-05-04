@@ -93,6 +93,8 @@ extern sasl::common::diag_template identifier_not_found;
 extern sasl::common::diag_template type_redefinition;
 extern sasl::common::diag_template case_expr_not_constant;
 extern sasl::common::diag_template illegal_type_for_case_expr;
+extern sasl::common::diag_template not_an_acceptable_operator;
+extern sasl::common::diag_template subscript_not_integral;
 
 END_NS_SASL_SEMANTIC();
 

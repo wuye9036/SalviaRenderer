@@ -74,6 +74,9 @@ public:
 	boost::shared_ptr<expression> build_callexpr(
 		boost::shared_ptr<sasl::parser::attribute> attr,
 		boost::shared_ptr<expression> expr );
+	boost::shared_ptr<expression> build_indexexpr(
+		boost::shared_ptr<sasl::parser::attribute> attr,
+		boost::shared_ptr<expression> expr );
 	boost::shared_ptr<expression> build_memexpr(
 		boost::shared_ptr<sasl::parser::attribute> attr,
 		boost::shared_ptr<expression> expr );

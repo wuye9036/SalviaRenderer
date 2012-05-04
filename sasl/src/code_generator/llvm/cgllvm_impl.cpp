@@ -317,6 +317,26 @@ SASL_VISIT_DEF( call_expression ){
 	}
 }
 
+SASL_VISIT_DEF( index_expression )
+{
+	any child_ctxt_init = *data;
+	sc_ptr(&child_ctxt_init)->clear_data();
+
+	any child_ctxt;
+
+	visit_child( child_ctxt, child_ctxt_init, v.expr );
+	visit_child( child_ctxt, child_ctxt_init, v.index_expr );
+	cgllvm_sctxt* expr_ctxt  = node_ctxt(v.expr);
+	cgllvm_sctxt* index_ctxt = node_ctxt(v.index_expr);
+	assert( expr_ctxt && index_ctxt );
+
+	cgllvm_sctxt* ret_ctxt = node_ctxt( v, true );
+	ret_ctxt->value()		= service()->emit_extract_elem( expr_ctxt->value(), index_ctxt->value() );
+	ret_ctxt->data().tyinfo = service()->create_tyinfo( v.si_ptr<type_info_si>()->type_info() );
+	
+	sc_ptr(data)->data(ret_ctxt);
+}
+
 SASL_VISIT_DEF( builtin_type ){
 
 	shared_ptr<type_info_si> tisi = extract_semantic_info<type_info_si>( v );
@@ -534,6 +554,8 @@ SASL_VISIT_DEF( program )
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
+	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_PARAM(v);
 	target_data = new TargetData( module() );
 }
 
@@ -591,6 +613,9 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	sc_data_ptr(data)->self_fn = service()->fetch_function( v.as_handle<function_type>() );
 }
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
+
+	EFLIB_UNREF_PARAM(data);
+
 	// Register arguments names.
 	assert( service()->fn().arg_size() == v.params.size() );
 
@@ -640,7 +665,6 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	std::string op_name = operator_name(v.op);
 
 	type_info_si* larg_tsi =  v.left_expr->si_ptr<type_info_si>();
-	type_info_si* rarg_tsi = v.right_expr->si_ptr<type_info_si>();
 
 	std::vector< shared_ptr<expression> > args;
 	args.push_back( v.left_expr );
@@ -725,6 +749,9 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
+	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_PARAM(v);
+
 	service()->register_external_intrinsic();
 
 	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();

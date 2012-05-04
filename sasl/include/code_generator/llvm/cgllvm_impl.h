@@ -79,6 +79,7 @@ protected:
 	SASL_VISIT_DCL( variable_expression );
 	SASL_VISIT_DCL( binary_expression );
 	SASL_VISIT_DCL( call_expression );
+	SASL_VISIT_DCL( index_expression );
 
 	SASL_VISIT_DCL( declaration ){ data = data; (&v); }
 	

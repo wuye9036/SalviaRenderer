@@ -69,11 +69,11 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim], bt ) );	\
 	}
 
-#define INSERT_MATRIX_INTO_BTCACHE( component_type, dim0, dim1, enum_code ) \
+#define INSERT_MATRIX_INTO_BTCACHE( component_type, vsize, vcnt, enum_code ) \
 	{	\
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );	\
-		bt->tycode = matrix_of( builtin_types::enum_code, dim0, dim1 );	\
-		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[dim0] + "x" + char_tbl[dim1], bt ) );	\
+		bt->tycode = matrix_of( builtin_types::enum_code, vsize, vcnt );	\
+		bt_cache.insert( make_pair( string( #component_type ) + char_tbl[vcnt] + "x" + char_tbl[vsize], bt ) );	\
 	}
 
 syntax_tree_builder::syntax_tree_builder( lexer& l, grammars& g ): l(l), g(g){}
@@ -620,7 +620,7 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 		shared_ptr<attribute> expr_attr = postfix_attr->child(0);
 		SASL_SWITCH_RULE( expr_attr )
 			SASL_CASE_RULE( idxexpr ){
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				ret = build_indexexpr( expr_attr->child(1), ret );
 			}
 			SASL_CASE_RULE( callexpr ){
 				ret = build_callexpr( expr_attr->child(1), ret );
@@ -654,6 +654,17 @@ shared_ptr<expression> syntax_tree_builder::build_callexpr(
 		ret->args = arglst->exprs;
 	}
 	
+	return ret;
+}
+
+
+shared_ptr<expression> syntax_tree_builder::build_indexexpr(
+	shared_ptr<attribute> attr,
+	shared_ptr<expression> expr )
+{
+	shared_ptr<index_expression> ret = create_node<index_expression>(expr->token_begin(), attr->token_end());
+	ret->expr = expr;
+	ret->index_expr = build_expr(attr);
 	return ret;
 }
 

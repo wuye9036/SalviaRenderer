@@ -59,6 +59,7 @@ using sasl::utility::vector_size;
 using sasl::utility::vector_count;
 using sasl::utility::storage_size;
 using sasl::utility::replace_scalar;
+using sasl::utility::row_vector_of;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::SIMD_ELEMENT_COUNT;
@@ -888,9 +889,52 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 	return value_t();
 }
 
-value_t cg_service::emit_extract_ref( value_t const& /*lhs*/, value_t const& /*idx*/ )
+value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	assert( lhs.storable() );
+	
+	abis promoted_abi = promote_abi( lhs.abi(), idx.abi() );
+	builtin_types agg_hint = lhs.hint();
+
+	if( is_vector(agg_hint) )
+	{
+		return value_t::slice( lhs, idx );
+	}
+	else if( is_matrix(agg_hint) )
+	{
+		Value* addr = lhs.load_ref();
+		switch (promoted_abi)
+		{
+		case abi_c:
+		case abi_llvm:
+			{
+				Type*  value_ty = addr->getType()->getPointerElementType();
+				Type*  element_ty = value_ty->getStructElementType(0);
+				Value* first_elem_ptr = builder().CreateBitCast( addr, PointerType::getUnqual(element_ty) );
+				Value* indexes[] = { idx.load() };
+				Value* elem_ptr = builder().CreateGEP(first_elem_ptr, indexes);
+				return create_value(NULL, row_vector_of(lhs.hint()), elem_ptr, vkind_ref, lhs.abi() );
+			}
+		case abi_package:
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		default:
+			assert(false);
+		}
+		return value_t();
+	}
+	else if ( agg_hint == builtin_types::none )
+	{
+		// Array only
+
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		//Value* agg_address = lhs.load_ref();
+		//Value* elem_address = builder().CreateGEP( agg_address, idx );
+		//value_tyinfo* tyinfo = NULL;
+		//if( lhs.tyinfo() ){
+		//	tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
+		//}
+		//return create_value( tyinfo, elem_address, vkind_ref, lhs.abi() );
+	}
 	return value_t();
 }
 

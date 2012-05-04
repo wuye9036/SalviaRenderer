@@ -202,6 +202,18 @@ value_t value_t::slice( value_t const& vec, uint32_t masks )
 	return ret;
 }
 
+value_t value_t::slice( value_t const& vec, value_t const& index )
+{
+	builtin_types hint = vec.hint();
+	assert( is_vector(hint) );
+
+	value_t ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi_, vec.cg_ );
+	ret.index(index);
+	ret.parent(vec);
+
+	return ret;
+}
+
 value_t value_t::as_ref() const
 {
 	value_t ret(*this);
@@ -239,6 +251,9 @@ void			value_t::kind( value_kinds vkind ) { kind_ = vkind; }
 void			value_t::parent( value_t const& v ){ parent_.reset( new value_t(v) ); }
 void			value_t::parent( value_t const* v ){ if(v){ parent(*v); } }
 value_t*		value_t::parent() const { return parent_.get(); }
+
+value_t*		value_t::index() const { return index_.get(); }
+void			value_t::index( value_t const& v ){ index_.reset( new value_t(v) ); }
 
 //Workaround for llvm issue 12618
 llvm::Value* value_t::load_i1() const{

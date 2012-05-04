@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -1508,7 +1508,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
@@ -1638,7 +1638,7 @@ BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 int do_arith_assign( int v0, int v1 )
 {
@@ -1694,4 +1694,23 @@ BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 }
 #endif
 
+#if 1 || ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
+{
+	init_g( "./repo/question/v1a1/array_and_index.ss" );
+
+	JIT_FUNCTION( vec4(float3x4), test_mat_index );
+
+	{
+		float arr[3][4] = { {0.0f,1.0f,2.0f,3.0f}, {4.0f,5.0f,6.0f,7.0f}, {8.0f,9.0f,10.0f,11.0f} };
+		float3x4& m34 = reinterpret_cast<float3x4&>(arr);
+		vec4 ret = test_mat_index(m34);
+		float ref_v[4] = {4.0f,6.0f,8.0f,10.0f};
+		for( int i = 0; i < 4; ++i )
+		{
+			BOOST_CHECK_CLOSE( ret.data_[i], ref_v[i], 0.000001f );
+		}
+	}
+}
+#endif
 BOOST_AUTO_TEST_SUITE_END();

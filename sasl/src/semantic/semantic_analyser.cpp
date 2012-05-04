@@ -37,47 +37,48 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using salviar::semantic_value;
 
-using ::sasl::common::diag_chat;
-using ::sasl::common::token_t;
+using sasl::common::diag_chat;
+using sasl::common::token_t;
 
-using ::sasl::syntax_tree::alias_type;
-using ::sasl::syntax_tree::binary_expression;
-using ::sasl::syntax_tree::builtin_type;
-using ::sasl::syntax_tree::call_expression;
-using ::sasl::syntax_tree::case_label;
-using ::sasl::syntax_tree::cast_expression;
-using ::sasl::syntax_tree::cond_expression;
-using ::sasl::syntax_tree::create_builtin_type;
-using ::sasl::syntax_tree::create_node;
-using ::sasl::syntax_tree::compound_statement;
-using ::sasl::syntax_tree::constant_expression;
-using ::sasl::syntax_tree::declaration;
-using ::sasl::syntax_tree::declarator;
-using ::sasl::syntax_tree::declaration_statement;
-using ::sasl::syntax_tree::dowhile_statement;
-using ::sasl::syntax_tree::expression;
-using ::sasl::syntax_tree::expression_initializer;
-using ::sasl::syntax_tree::expression_statement;
-using ::sasl::syntax_tree::for_statement;
-using ::sasl::syntax_tree::function_type;
-using ::sasl::syntax_tree::if_statement;
-using ::sasl::syntax_tree::jump_statement;
-using ::sasl::syntax_tree::label;
-using ::sasl::syntax_tree::labeled_statement;
-using ::sasl::syntax_tree::member_expression;
-using ::sasl::syntax_tree::node;
-using ::sasl::syntax_tree::parameter;
-using ::sasl::syntax_tree::program;
-using ::sasl::syntax_tree::statement;
-using ::sasl::syntax_tree::struct_type;
-using ::sasl::syntax_tree::switch_statement;
-using ::sasl::syntax_tree::tynode;
-using ::sasl::syntax_tree::unary_expression;
-using ::sasl::syntax_tree::variable_declaration;
-using ::sasl::syntax_tree::variable_expression;
-using ::sasl::syntax_tree::while_statement;
+using sasl::syntax_tree::alias_type;
+using sasl::syntax_tree::binary_expression;
+using sasl::syntax_tree::builtin_type;
+using sasl::syntax_tree::call_expression;
+using sasl::syntax_tree::case_label;
+using sasl::syntax_tree::cast_expression;
+using sasl::syntax_tree::cond_expression;
+using sasl::syntax_tree::create_builtin_type;
+using sasl::syntax_tree::create_node;
+using sasl::syntax_tree::compound_statement;
+using sasl::syntax_tree::constant_expression;
+using sasl::syntax_tree::declaration;
+using sasl::syntax_tree::declarator;
+using sasl::syntax_tree::declaration_statement;
+using sasl::syntax_tree::dowhile_statement;
+using sasl::syntax_tree::expression;
+using sasl::syntax_tree::expression_initializer;
+using sasl::syntax_tree::expression_statement;
+using sasl::syntax_tree::for_statement;
+using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::if_statement;
+using sasl::syntax_tree::index_expression;
+using sasl::syntax_tree::jump_statement;
+using sasl::syntax_tree::label;
+using sasl::syntax_tree::labeled_statement;
+using sasl::syntax_tree::member_expression;
+using sasl::syntax_tree::node;
+using sasl::syntax_tree::parameter;
+using sasl::syntax_tree::program;
+using sasl::syntax_tree::statement;
+using sasl::syntax_tree::struct_type;
+using sasl::syntax_tree::switch_statement;
+using sasl::syntax_tree::tynode;
+using sasl::syntax_tree::unary_expression;
+using sasl::syntax_tree::variable_declaration;
+using sasl::syntax_tree::variable_expression;
+using sasl::syntax_tree::while_statement;
 
-using ::sasl::syntax_tree::dfunction_combinator;
+using sasl::syntax_tree::dfunction_combinator;
 
 using namespace boost::assign;
 using namespace sasl::utility;
@@ -356,7 +357,61 @@ SASL_VISIT_DEF( cond_expression ){
 	data_cptr()->generated_node = dup_expr;
 }
 
-SASL_VISIT_DEF_UNIMPL( index_expression );
+SASL_VISIT_DEF( index_expression )
+{
+	any child_ctxt_init = *data;
+	ctxt_ptr( child_ctxt_init )->generated_node.reset();
+
+	any child_ctxt;
+
+	shared_ptr<index_expression> dup_idxexpr = duplicate(v.as_handle())->as_handle<index_expression>();
+	visit_child( child_ctxt, child_ctxt_init, v.expr, dup_idxexpr->expr );
+	
+	data_cptr()->generated_node = dup_idxexpr->as_handle();
+
+	storage_si* agg_ssi = dup_idxexpr->expr->si_ptr<storage_si>();
+	if( !agg_ssi ){ return; }
+	shared_ptr<tynode> agg_tyn = agg_ssi->type_info();
+	builtin_types agg_tycode = agg_tyn->tycode;
+	if( !( agg_tyn->is_array() || is_vector(agg_tycode) || is_matrix(agg_tycode) ) )
+	{	
+		diags->report(not_an_acceptable_operator)
+			->token_range( *v.token_begin(), *v.token_end() )
+			->p("[")->p( type_repr(agg_tyn).str() );
+		agg_ssi = NULL;
+	}
+
+	visit_child( child_ctxt, child_ctxt_init, v.index_expr, dup_idxexpr->index_expr );
+	type_info_si* index_tisi = dup_idxexpr->index_expr->si_ptr<type_info_si>();
+	if( !index_tisi ){ return; }
+	shared_ptr<tynode> idx_tyn = index_tisi->type_info();
+	builtin_types idx_tycode = idx_tyn->tycode;
+
+	if( !is_integer(idx_tycode) )
+	{
+		diags->report( subscript_not_integral )
+			->token_range( *v.token_begin(), *v.token_end() );
+		index_tisi = NULL;
+	}
+	
+	if( !(agg_ssi && index_tisi) ) { return; }
+
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_idxexpr, msi->pety() );
+	
+	if( agg_tyn->is_array() )
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	else if( is_vector(agg_tycode) )
+	{
+		ssi->entry_id( msi->pety()->get( scalar_of(agg_tycode) ) );
+	}
+	else if( is_matrix(agg_tycode) )
+	{
+		builtin_types vector_tycode = vector_of( scalar_of(agg_tycode), vector_size(agg_tycode) );
+		ssi->entry_id( msi->pety()->get(vector_tycode) );
+	}
+}
 
 SASL_VISIT_DEF( call_expression )
 {
@@ -463,85 +518,74 @@ SASL_VISIT_DEF( member_expression ){
 	any child_ctxt = *data;
 	visit_child( child_ctxt, v.expr );
 	dup_expr->expr = ctxt_ptr(child_ctxt)->generated_node->as_handle<expression>();
+	data_cptr()->generated_node = dup_expr;
 
 	type_info_si* arg_tisi = dup_expr->expr->dyn_siptr<type_info_si>();
 
-	if( arg_tisi )
+	if( !arg_tisi )
 	{
-		shared_ptr<tynode> agg_type = arg_tisi->type_info();
-		tid_t mem_typeid = -1;
+		diags->report( member_left_must_have_struct )->token_range( *v.member, *v.member )->p( v.member->str )->p( "<unknown>" );
+		return;
+	}
 
-		int32_t swizzle_code = 0;
-		int32_t member_index = -1;
+	shared_ptr<tynode> agg_type = arg_tisi->type_info();
+	tid_t mem_typeid = -1;
 
-		if( agg_type->node_class() == node_ids::struct_type )
+	int32_t swizzle_code = 0;
+	int32_t member_index = -1;
+
+	if( agg_type->is_struct() )
+	{
+		// Aggregated is struct
+		shared_ptr<symbol> struct_sym = agg_type->as_handle<struct_type>()->symbol();
+		shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
+
+		if( !mem_sym )
 		{
-			// Aggregated is struct
-			shared_ptr<symbol> struct_sym = agg_type->as_handle<struct_type>()->symbol();
-			shared_ptr<symbol> mem_sym = struct_sym->find_this( v.member->str );
-
-			if( !mem_sym )
-			{
-				diags->report( not_a_member_of )
-					->token_range( *v.member, *v.member )
-					->p( v.member->str )
-					->p( struct_sym->unmangled_name() );
-			}
-			else
-			{
-				shared_ptr<declarator> mem_declr = mem_sym->node()->as_handle<declarator>();
-				assert( mem_declr );
-				SASL_EXTRACT_SI( storage_si, mem_si, mem_declr );
-				mem_typeid = mem_si->entry_id();
-				member_index = mem_si->mem_index();
-				assert( mem_typeid != -1 );
-			}
-		}
-		else if( agg_type->is_builtin() && is_storagable( agg_type->tycode ) )
-		{
-			// Aggregated class is vector & matrix
-			builtin_types agg_btc = agg_type->tycode;
-			int field_count = check_swizzle( agg_btc, v.member->str, swizzle_code );
-			if( field_count > 0 ){
-				builtin_types elem_btc = scalar_of( agg_btc );
-				builtin_types swizzled_btc = builtin_types::none;
-
-				if( is_scalar(agg_btc) || is_vector(agg_btc) ) {
-					swizzled_btc = vector_of(
-						elem_btc,
-						static_cast<size_t>( field_count )
-						);
-				} else {
-					// matrix only
-					swizzled_btc = matrix_of(
-						elem_btc,
-						vector_size( agg_btc ),
-						static_cast<size_t>( field_count )
-						);
-				}
-
-				mem_typeid = msi->pety()->get( swizzled_btc );
-			} else {
-				diags->report( invalid_swizzle )->token_range( *v.member, *v.member )->p( v.member->str )->p( type_repr(agg_type).str() );
-				return;
-			}
+			diags->report( not_a_member_of )
+				->token_range( *v.member, *v.member )
+				->p( v.member->str )
+				->p( struct_sym->unmangled_name() );
 		}
 		else
 		{
-			diags->report( member_left_must_have_struct )->token_range( *v.member, *v.member )->p( v.member->str )->p( type_repr(agg_type).str() );
+			shared_ptr<declarator> mem_declr = mem_sym->node()->as_handle<declarator>();
+			assert( mem_declr );
+			SASL_EXTRACT_SI( storage_si, mem_si, mem_declr );
+			mem_typeid = mem_si->entry_id();
+			member_index = mem_si->mem_index();
+			assert( mem_typeid != -1 );
+		}
+	}
+	else if( agg_type->is_builtin() 
+		&& ( is_scalar(agg_type->tycode) || is_vector(agg_type->tycode) ) )
+	{
+		// Aggregated class is scalar or vector
+		builtin_types agg_btc = agg_type->tycode;
+		int field_count = check_swizzle( agg_btc, v.member->str, swizzle_code );
+		if( field_count > 0 ){
+			builtin_types elem_btc = scalar_of( agg_btc );
+			builtin_types swizzled_btc
+				= vector_of( elem_btc, static_cast<size_t>(field_count) );
+			mem_typeid = msi->pety()->get( swizzled_btc );
+		} else {
+			diags->report( invalid_swizzle )
+				->token_range( *v.member, *v.member )
+				->p( v.member->str )->p( type_repr(agg_type).str() );
 			return;
 		}
-
-		SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->pety() );
-		ssi->entry_id( mem_typeid );
-		ssi->swizzle( swizzle_code );
 	}
 	else
 	{
-		diags->report( member_left_must_have_struct )->token_range( *v.member, *v.member )->p( v.member->str )->p( "<unknown>" );
+		diags->report( member_left_must_have_struct )
+			->token_range( *v.member, *v.member )
+			->p( v.member->str )->p( type_repr(agg_type).str() );
+		return;
 	}
 
-	data_cptr()->generated_node = dup_expr;
+	SASL_GET_OR_CREATE_SI_P( storage_si, ssi, dup_expr, msi->pety() );
+	ssi->entry_id( mem_typeid );
+	ssi->swizzle( swizzle_code );
 }
 
 SASL_VISIT_DEF( constant_expression )

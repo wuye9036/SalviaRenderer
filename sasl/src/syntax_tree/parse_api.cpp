@@ -68,6 +68,27 @@ void init_lex( lexer& l ){
 		( "kw_do", "do" )
 		( "kw_default", "default" )
 
+		( "inc_dec", "{PLUS}{PLUS}|{MINUS}{MINUS}" )
+
+		("add_assign",   "{PLUS}=")
+		("sub_assign",   "{MINUS}=")
+		("mul_assign",   "{ASTERISK}=")
+		("div_assign",   "{SLASH}=")
+		("mod_assign",   "%=")
+		("band_assign",  "&=")
+		("bor_assign",   "{VERTICAL}=")
+		("bxor_assign",  "{CARET}=")
+		("shift",		 "{LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET}")
+		("shift_assign", "({LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET})=")
+
+		( "less_equal", "{LABRACKET}=")
+		( "greater_equal", "{RABRACKET}=")
+		( "equal_to", "==" )
+		( "not_equal", "!=" )
+
+		( "logic_or", "{VERTICAL}{VERTICAL}" )
+		( "logic_and", "&&" )
+
 		( "plus", "{PLUS}" )
 		( "minus", "{MINUS}" )
 		( "asterisk", "{ASTERISK}" )
@@ -88,17 +109,6 @@ void init_lex( lexer& l ){
 		( "vertical", "{VERTICAL}" )
 		( "tilde", "~" )
 
-		("add_assign",   "{PLUS}=")
-		("sub_assign",   "{MINUS}=")
-		("mul_assign",   "{ASTERISK}=")
-		("div_assign",   "{SLASH}=")
-		("mod_assign",   "%=")
-		("band_assign",  "&=")
-		("bor_assign",   "{VERTICAL}=")
-		("bxor_assign",  "{CARET}=")
-		("shift",		 "{LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET}")
-		("shift_assign", "({LABRACKET}{LABRACKET}|{RABRACKET}{RABRACKET})=")
-
 		( "lparen", "{LPAREN}" )
 		( "rparen", "{RPAREN}" )
 		( "lbrace", "{LBRACE}" )
@@ -108,20 +118,11 @@ void init_lex( lexer& l ){
 		( "labracket", "{LABRACKET}" )
 		( "rabracket", "{RABRACKET}" )
 
-		( "less_equal", "{LABRACKET}=")
-		( "greater_equal", "{RABRACKET}=")
-		( "equal_to", "==" )
-		( "not_equal", "!=" )
-
-		( "logic_or", "{VERTICAL}{VERTICAL}" )
-		( "logic_and", "&&" )
-
-		( "inc_dec", "{PLUS}{PLUS}|{MINUS}{MINUS}" )
-
 		( "space", "{SPACE}" )
 		( "newline", "{NEWLINE}" )
 		( "cppcomment", "{SLASH}{SLASH}[^\\n]*" )
 		( "comment", "{SLASH}{ASTERISK}")
+
 		( "anychar", "." )
 		( "endcomment", "{ASTERISK}{SLASH}")
 		;
@@ -144,6 +145,7 @@ void init_lex( lexer& l ){
 		("inc_dec")("exclamation")("tilde") // ++ -- ! ~
 		("plus")("minus")("asterisk")("slash")("percent") // + - * / %
 		("labracket")("rabracket") // < >
+		("lsbracket")("rsbracket") // [ ]
 		("vertical")("ampersand")("caret") // & | ^
 		("question") // ?
 		("comma")("colon")("semicolon") // , : ;
