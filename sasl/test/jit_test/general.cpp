@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -1699,7 +1699,8 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/array_and_index.ss" );
 
-	JIT_FUNCTION( vec4(float3x4), test_mat_index );
+	JIT_FUNCTION( vec4(float3x4),  test_mat_index );
+	JIT_FUNCTION( float(float3x4), test_vec_index );
 
 	{
 		float arr[3][4] = { {0.0f,1.0f,2.0f,3.0f}, {4.0f,5.0f,6.0f,7.0f}, {8.0f,9.0f,10.0f,11.0f} };
@@ -1709,6 +1710,16 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 		for( int i = 0; i < 4; ++i )
 		{
 			BOOST_CHECK_CLOSE( ret.data_[i], ref_v[i], 0.000001f );
+		}
+	}
+
+	{
+		float arr[3][4] = { {0.0f,1.0f,2.0f,3.0f}, {4.0f,5.0f,6.0f,7.0f}, {8.0f,9.0f,10.0f,11.0f} };
+		float3x4& m34 = reinterpret_cast<float3x4&>(arr);
+		float ret = test_vec_index(m34);
+		for( int i = 0; i < 4; ++i )
+		{
+			BOOST_CHECK_CLOSE( ret, 15.0f, 0.000001f );
 		}
 	}
 }

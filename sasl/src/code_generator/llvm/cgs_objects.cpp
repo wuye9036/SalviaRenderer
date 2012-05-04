@@ -87,6 +87,7 @@ value_t::value_t( value_t const& rhs )
 	: tyinfo_(rhs.tyinfo_), hint_(rhs.hint_), abi_(rhs.abi_), val_( rhs.val_ ), kind_(rhs.kind_), cg_(rhs.cg_), masks_(rhs.masks_)
 {
 	parent(rhs.parent_.get());
+	index(rhs.index_.get());
 }
 
 abis value_t::abi() const{
@@ -186,7 +187,7 @@ value_t& value_t::operator=( value_t const& rhs )
 	masks_ = rhs.masks_;
 
 	parent(rhs.parent_.get());
-
+	index(rhs.index_.get());
 	return *this;
 }
 
@@ -254,6 +255,7 @@ value_t*		value_t::parent() const { return parent_.get(); }
 
 value_t*		value_t::index() const { return index_.get(); }
 void			value_t::index( value_t const& v ){ index_.reset( new value_t(v) ); }
+void			value_t::index( value_t const* v ){ if(v) index(*v); }
 
 //Workaround for llvm issue 12618
 llvm::Value* value_t::load_i1() const{

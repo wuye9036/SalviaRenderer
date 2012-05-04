@@ -430,25 +430,33 @@ llvm::Value* cg_service::load( value_t const& v )
 	if( kind == vkind_ref || kind == vkind_value ){
 		ref_val = raw;
 	} else if( ( kind & (~vkind_ref) ) == vkind_swizzle ){
-		// Decompose indexes.
-		char indexes[4] = {-1, -1, -1, -1};
-		mask_to_indexes(indexes, masks);
-		vector<int> index_values;
-		index_values.reserve(4);
-		for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
-			index_values.push_back( indexes[i] );
-		}
-		assert( !index_values.empty() );
+		if( masks > 0 )
+		{
+			// Decompose indexes.
+			char indexes[4] = {-1, -1, -1, -1};
+			mask_to_indexes(indexes, masks);
+			vector<int> index_values;
+			index_values.reserve(4);
+			for( int i = 0; i < 4 && indexes[i] != -1; ++i ){
+				index_values.push_back( indexes[i] );
+			}
+			assert( !index_values.empty() );
 
-		// Swizzle and write mask
-		if( index_values.size() == 1 && is_scalar(v.hint()) ){
-			// Only one member we could extract reference.
-			ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
-		} else {
-			// Multi-members must be swizzle/writemask.
-			assert( (kind & vkind_ref) == 0 );
-			value_t ret_val = emit_extract_elem_mask( v.parent()->to_rvalue(), masks );
-			return ret_val.load( v.abi() );
+			// Swizzle and write mask
+			if( index_values.size() == 1 && is_scalar(v.hint()) ){
+				// Only one member we could extract reference.
+				ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
+			} else {
+				// Multi-members must be swizzle/writemask.
+				assert( (kind & vkind_ref) == 0 );
+				value_t ret_val = emit_extract_elem_mask( v.parent()->to_rvalue(), masks );
+				return ret_val.load( v.abi() );
+			}
+		}
+		else
+		{
+			assert( v.index() );
+			ref_val = emit_extract_val( v.parent()->to_rvalue(), *v.index() ).load();
 		}
 	} else {
 		assert(false);
@@ -992,10 +1000,48 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
 }
 
-value_t cg_service::emit_extract_val( value_t const& /*lhs*/, value_t const& /*idx*/ )
+value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	builtin_types agg_hint = lhs.hint();
+
+	Value* elem_val = NULL;
+	abis abi = promote_abi(lhs.abi(), idx.abi());
+
+	builtin_types elem_hint = builtin_types::none;
+	value_tyinfo* elem_tyi = NULL;
+
+	if( agg_hint == builtin_types::none ){
+		// Array only
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	} else if( is_scalar(agg_hint) ){
+		elem_val	= lhs.load();
+		elem_hint	= agg_hint;
+	} else if( is_vector(agg_hint) ){
+		switch( abi ){
+		case abi_c:
+		case abi_llvm:
+			elem_val = builder().CreateExtractElement( lhs.load(abi_llvm), idx.load() );
+			break;
+		case abi_vectorize:
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			break;
+		case abi_package:
+			EFLIB_ASSERT_UNIMPLEMENTED();
+			break;
+		default:
+			assert(!"Unknown ABI");
+			break;
+		}
+		elem_hint = scalar_of(agg_hint);
+	} else if( is_matrix(agg_hint) ){
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		//assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
+		//elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
+		//abi = lhs.abi();
+		//elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
+	}
+
+	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
 }
 
 value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )

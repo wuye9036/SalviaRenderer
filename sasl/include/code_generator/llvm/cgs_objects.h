@@ -166,6 +166,7 @@ public:
 
 	value_t*		index() const;
 	void			index( value_t const& );
+	void			index( value_t const* );
 	void			index( size_t v );			///< Set Index. It is only make sense if parent is available.
 	uint32_t		masks() const;				///< Get masks
 	void			masks( uint32_t v );		///< Set masks.
