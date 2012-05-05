@@ -422,8 +422,21 @@ protected:
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
 	llvm::Value* i8toi1_( llvm::Value* );
 	llvm::Value* i1toi8_( llvm::Value* );
-	llvm::Value* cast_sv_( llvm::Value*, llvm::Type* elem_ty, cast_fn caster_sv );
-	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_fn caster_sv);
+
+	enum cast_ops
+	{
+		cast_op_unknown,
+		cast_op_f2u,
+		cast_op_f2i,
+		cast_op_u2f,
+		cast_op_i2f,
+		cast_op_bitcast,
+		cast_op_i2i_signed,
+		cast_op_i2i_unsigned
+	};
+
+	llvm::Value* cast_sv_( llvm::Value*, llvm::Type* elem_ty, cast_ops op );
+	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_ops op);
 	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );

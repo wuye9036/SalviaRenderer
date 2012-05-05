@@ -163,7 +163,15 @@ value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
 	builtin_types hint_src = v.hint();
 	builtin_types hint_dst = dest_tyi->hint();
 
-	Value* val = builder().CreateSExtOrBitCast( v.load(), dest_tyi->ty(v.abi()) );
+	builtin_types scalar_hint_src = scalar_of(hint_src);
+
+	Type* dest_ty = dest_tyi->ty(v.abi());
+	Type* elem_ty = type_( scalar_of(hint_dst), abi_llvm );
+
+	cast_ops op = is_signed(scalar_hint_src) ? cast_op_i2i_signed : cast_op_i2i_unsigned;
+	unary_fn_t cast_sv_fn = bind_cast_sv_( elem_ty, op );
+	
+	Value* val = unary_op_ps_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
 
 	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
@@ -173,20 +181,13 @@ value_t cgs_sisd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
 	builtin_types hint_i = v.hint();
 	builtin_types hint_f = dest_tyi->hint();
 
+	builtin_types scalar_hint_i = scalar_of(hint_i);
+
 	Type* dest_ty = dest_tyi->ty(v.abi());
 	Type* elem_ty = type_( scalar_of(hint_f), abi_llvm );
-	unary_fn_t cast_sv_fn;
-	if( is_signed(hint_i) ){
-		cast_sv_fn = bind_cast_sv_(
-			elem_ty,
-			boost::bind(&DefaultIRBuilder::CreateSIToFP,builder(),_1,_2,"")
-			);
-	} else {
-		cast_sv_fn = bind_cast_sv_(
-			elem_ty,
-			boost::bind(&DefaultIRBuilder::CreateUIToFP,builder(),_1,_2,"")
-			);
-	}
+
+	cast_ops op = is_signed(hint_i) ? cast_op_i2f : cast_op_u2f;
+	unary_fn_t cast_sv_fn = bind_cast_sv_( elem_ty, op );
 
 	Value* val = unary_op_ps_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
 

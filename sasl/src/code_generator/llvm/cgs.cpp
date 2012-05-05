@@ -1503,10 +1503,7 @@ value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
 	Type* ty = dest_tyi->ty(abi);
 	builtin_types dest_scalar_hint = scalar_of( dest_tyi->hint() );
 	Type* dest_scalar_ty = type_( dest_scalar_hint, abi_llvm );
-	unary_fn_t sv_cast_fn = bind_cast_sv_(
-		dest_scalar_ty,
-		boost::bind(&DefaultIRBuilder::CreateBitCast,builder(),_1, _2,"")
-		);
+	unary_fn_t sv_cast_fn = bind_cast_sv_( dest_scalar_ty, cast_op_bitcast );
 	Value* ret = unary_op_ps_( ty, v.load(abi), unary_fn_t(), unary_fn_t(), unary_fn_t(), sv_cast_fn );
 	return create_value( dest_tyi, ret, vkind_value, abi );
 }
@@ -2240,19 +2237,46 @@ Value* cg_service::integer_value_( Type* ty, llvm::APInt const& v )
 	return NULL;
 }
 
-cg_service::unary_fn_t cg_service::bind_cast_sv_( llvm::Type* elem_ty, cast_fn caster_sv )
+cg_service::unary_fn_t cg_service::bind_cast_sv_( llvm::Type* elem_ty, cast_ops op )
 {
-	return boost::bind( &cg_service::cast_sv_, this, _1, elem_ty, caster_sv );
+	return boost::bind( &cg_service::cast_sv_, this, _1, elem_ty, op );
 }
 
-Value* cg_service::cast_sv_( Value* v, Type* elem_ty, cast_fn caster_sv )
+Value* cg_service::cast_sv_( Value* v, Type* elem_ty, cast_ops op )
 {
 	assert( !v->getType()->isAggregateType() );
-	Type* ret_ty 
+	Type* ret_ty
 		= v->getType()->isVectorTy()
 		? VectorType::get( elem_ty, v->getType()->getVectorNumElements() )
 		: elem_ty;
-	return caster_sv( v, ret_ty );
+
+	Instruction::CastOps llvm_op = Instruction::BitCast;
+	switch ( op )
+	{
+	case cast_op_f2u:
+		llvm_op = Instruction::FPToUI;
+		break;
+	case cast_op_f2i:
+		llvm_op = Instruction::FPToSI;
+		break;
+	case cast_op_u2f:
+		llvm_op = Instruction::UIToFP;
+		break;
+	case cast_op_i2f:
+		llvm_op = Instruction::SIToFP;
+		break;
+	case cast_op_bitcast:
+		llvm_op = Instruction::BitCast;
+		break;
+	case cast_op_i2i_signed:
+		return builder().CreateIntCast( v, ret_ty, true );
+	case cast_op_i2i_unsigned:
+		return builder().CreateIntCast( v, ret_ty, false);
+	default:
+		assert(false);
+	}
+
+	return builder().CreateCast( llvm_op, v, ret_ty );
 }
 
 value_t cg_service::emit_unary_ps( std::string const& scalar_external_intrin_name, value_t const& v )

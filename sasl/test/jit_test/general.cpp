@@ -837,7 +837,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	BOOST_CHECK_CLOSE( test_op_add_cast( 33, -87.6f),  33-87.6f, 0.000001f );
 
 	BOOST_CHECK_EQUAL( test_op_sub_cast( 122,  8645),  122-8645 );
-	BOOST_CHECK_EQUAL( test_op_sub_cast(-122,  8645), -122-8645 );
+	BOOST_CHECK_EQUAL( test_op_sub_cast(-122,  8645), ((uint8_t)(-122))-8645 );
 	BOOST_CHECK_EQUAL( test_op_sub_cast( 122, -8645),  122+8645 );
 
 	BOOST_CHECK_CLOSE( test_sqrt_cast(0),	  0.0f,			   0.000001f );
