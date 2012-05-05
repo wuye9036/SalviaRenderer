@@ -175,6 +175,28 @@ private:
 	cg_service* cgs;
 };
 
+// Add casters for scalar, vector, matrix.
+void add_svm_casters(
+	shared_ptr<caster_t> const& caster, caster_t::casts casts, 
+	builtin_types src, builtin_types dst,
+	caster_t::cast_t fn,	pety_t* pety
+	)
+{
+	caster->add_cast_auto_prior( casts,	pety->get(src),	pety->get(dst), fn );
+	for( size_t i = 1; i <= 4; ++i )
+	{
+		caster->add_cast_auto_prior( casts,
+			pety->get( vector_of(src, i) ),	pety->get( vector_of(dst, i) ),
+			fn );
+		for( size_t j = 1; j <= 4; ++j )
+		{
+			caster->add_cast_auto_prior( casts,
+				pety->get( matrix_of(src, i, j) ),	pety->get( matrix_of(dst, i, j) ),
+				fn );
+		}
+	}
+}
+
 void add_builtin_casts(
 	shared_ptr<caster_t> caster,
 	shared_ptr<pety_t> pety
@@ -209,130 +231,130 @@ void add_builtin_casts(
 		}
 	}
 
-	tid_t sint8_ts  = pety->get( builtin_types::_sint8 );
-	tid_t sint16_ts = pety->get( builtin_types::_sint16 );
-	tid_t sint32_ts = pety->get( builtin_types::_sint32 );
-	tid_t sint64_ts = pety->get( builtin_types::_sint64 );
+	builtin_types sint8_bt	= builtin_types::_sint8	;
+	builtin_types sint16_bt	= builtin_types::_sint16;
+	builtin_types sint32_bt	= builtin_types::_sint32;
+	builtin_types sint64_bt	= builtin_types::_sint64;
 
-	tid_t uint8_ts  = pety->get( builtin_types::_uint8 );
-	tid_t uint16_ts = pety->get( builtin_types::_uint16 );
-	tid_t uint32_ts = pety->get( builtin_types::_uint32 );
-	tid_t uint64_ts = pety->get( builtin_types::_uint64 );
+	builtin_types uint8_bt	= builtin_types::_uint8	;
+	builtin_types uint16_bt	= builtin_types::_uint16;
+	builtin_types uint32_bt	= builtin_types::_uint32;
+	builtin_types uint64_bt	= builtin_types::_uint64;
 
-	tid_t float_ts  = pety->get( builtin_types::_float );
-	tid_t double_ts = pety->get( builtin_types::_double );
+	builtin_types float_bt	= builtin_types::_float	;
+	builtin_types double_bt	= builtin_types::_double;
 
-	tid_t bool_ts   = pety->get( builtin_types::_boolean );
+	builtin_types bool_bt	= builtin_types::_boolean;
 
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint8_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::imp, sint8_bt, sint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint8_bt, sint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint8_bt, sint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint8_bt, uint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint8_bt, uint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint8_bt, uint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint8_bt, uint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint8_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint8_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint8_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, sint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint16_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, sint16_bt, sint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint16_bt, sint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint16_bt, sint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint16_bt, uint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint16_bt, uint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint16_bt, uint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint16_bt, uint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint16_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint16_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint16_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, sint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint32_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, sint32_bt, sint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint32_bt, sint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint32_bt, sint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint32_bt, uint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint32_bt, uint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint32_bt, uint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint32_bt, uint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint32_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint32_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint32_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint64_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint64_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, sint64_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, sint64_bt, sint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint64_bt, sint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint64_bt, sint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint64_bt, uint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint64_bt, uint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint64_bt, uint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, sint64_bt, uint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint64_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint64_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, sint64_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint8_ts, sint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint8_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, uint8_bt, sint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, sint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, sint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, sint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, uint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, uint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, uint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint8_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint16_ts, sint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint16_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint16_ts, uint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint16_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, uint16_bt, sint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint16_bt, sint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint16_bt, sint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint16_bt, sint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint16_bt, uint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint16_bt, uint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint16_bt, uint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint16_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint16_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint16_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, uint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, sint64_ts, int2int_pfn );	
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint32_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, uint32_bt, sint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint32_bt, sint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint32_bt, sint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint32_bt, uint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint32_bt, uint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint32_bt, uint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint32_bt, sint64_bt, int2int_pfn,	pety.get() );	
+	add_svm_casters( cg_caster, caster_t::imp, uint32_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint32_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint32_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint64_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint8_ts,  int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint16_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint32_ts, int2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint64_ts, float_ts,  int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint64_ts, double_ts, int2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, uint64_ts, bool_ts,   int2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, uint64_bt, sint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint64_bt, sint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint64_bt, sint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint64_bt, sint64_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint64_bt, uint8_bt,  int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint64_bt, uint16_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, uint64_bt, uint32_bt, int2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint64_bt, float_bt,  int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint64_bt, double_bt, int2float_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, uint64_bt, bool_bt,   int2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint8_ts,  float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint16_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint32_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, sint64_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint8_ts,  float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint16_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint32_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, float_ts, uint64_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, float_ts, double_ts, float2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, float_ts, bool_ts,   float2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, sint8_bt,  float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, sint16_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, sint32_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, sint64_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, uint8_bt,  float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, uint16_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, uint32_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, float_bt, uint64_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, float_bt, double_bt, float2float_pfn,pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, float_bt, bool_bt,   float2bool_pfn,	pety.get() );
 
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint8_ts,  float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint16_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint32_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, sint64_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint8_ts,  float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint16_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint32_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, uint64_ts, float2int_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::exp, double_ts, float_ts,  float2float_pfn );
-	cg_caster->add_cast_auto_prior( caster_t::imp, double_ts, bool_ts,   float2bool_pfn );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, sint8_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, sint16_bt,float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, sint32_bt,float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, sint64_bt,float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, uint8_bt, float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, uint16_bt,float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, uint32_bt,float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, uint64_bt,float2int_pfn,	pety.get() );
+	add_svm_casters( cg_caster, caster_t::exp, double_bt, float_bt, float2float_pfn,pety.get() );
+	add_svm_casters( cg_caster, caster_t::imp, double_bt, bool_bt,  float2bool_pfn,	pety.get() );
 
 	//cg_caster->add_cast( caster_t::exp, bool_ts, sint8_ts, default_conv );
 	//cg_caster->add_cast( caster_t::exp, bool_ts, sint16_ts, default_conv );

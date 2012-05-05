@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -802,43 +802,23 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
 
-	jit_function<int(int)> test_implicit_cast_i32_b;
-	function( test_implicit_cast_i32_b, "test_implicit_cast_i32_b" );
-
-	jit_function<float(int)> test_implicit_cast_i32_f32;
-	function( test_implicit_cast_i32_f32, "test_implicit_cast_i32_f32" );
-
-	jit_function<int(float)> test_implicit_cast_f32_b;
-	function( test_implicit_cast_f32_b, "test_implicit_cast_f32_b" );
-
-	jit_function<float(int, float)> test_op_add_cast;
-	function( test_op_add_cast, "test_op_add_cast" );
-
-	jit_function<int(uint8_t, int)> test_op_sub_cast;
-	function( test_op_sub_cast, "test_op_sub_cast" );
-
-	jit_function<float(int)> test_sqrt_cast;
-	function( test_sqrt_cast, "test_sqrt_cast" );
-
-	jit_function<float(int2)> test_imp_v1_s_cast;
-	function( test_imp_v1_s_cast, "test_imp_v1_s_cast" );
-
-	jit_function< int2 (vec2, uint2) >test_bitcast_to_i;
-	function( test_bitcast_to_i, "test_bitcast_to_i" );
-
-	jit_function< uint3 (vec3, int3) >test_bitcast_to_u;
-	function( test_bitcast_to_u, "test_bitcast_to_u" );
-
-	jit_function< float (uint32_t, int32_t) >test_bitcast_to_f;
-	function( test_bitcast_to_f, "test_bitcast_to_f" );
-
-	jit_function< int2x3 (float2x3, uint2x3) >test_bitcast_to_mi;
-	function( test_bitcast_to_mi, "test_bitcast_to_mi" );
+	JIT_FUNCTION( int(int),					test_implicit_cast_i32_b );
+	JIT_FUNCTION( float(int),				test_implicit_cast_i32_f32 );
+	JIT_FUNCTION( int(float),				test_implicit_cast_f32_b );
+	JIT_FUNCTION( float(int, float),		test_op_add_cast );
+	JIT_FUNCTION( int(uint8_t,int),			test_op_sub_cast );
+	JIT_FUNCTION( float(int),				test_sqrt_cast );
+	JIT_FUNCTION( float(int2),				test_imp_v1_s_cast );
+	JIT_FUNCTION( int2(vec2,uint2),			test_bitcast_to_i );
+	JIT_FUNCTION( uint3(vec3,int3),			test_bitcast_to_u );
+	JIT_FUNCTION( float(uint32_t,int32_t),	test_bitcast_to_f );
+	JIT_FUNCTION( int2x3(float2x3,uint2x3),	test_bitcast_to_mi );
+	JIT_FUNCTION( float2x3(int2x3),			test_mat_i2f );
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
@@ -919,6 +899,24 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 				u2i.u = uarr[i][j];
 				int v = f2i.i + u2i.i;
 				BOOST_CHECK_EQUAL( v, ret.data_[i][j] );
+			}
+		}
+	}
+
+	{
+		int m23[2][3] =
+		{
+			{17, -82999738, -89287},
+			{0, 97532589, 9870}
+		};
+
+		float2x3 ret = test_mat_i2f( reinterpret_cast<int2x3&>(m23) );
+		
+		for(int i = 0; i < 2; ++i)
+		{
+			for(int j = 0; j < 3; ++j)
+			{
+				BOOST_CHECK_EQUAL( static_cast<float>(m23[i][j]), ret.data_[i][j] );
 			}
 		}
 	}
@@ -1694,7 +1692,7 @@ BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/array_and_index.ss" );

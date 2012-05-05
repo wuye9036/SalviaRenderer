@@ -1225,149 +1225,170 @@ void semantic_analyser::empty_caster( shared_ptr<node> lhs, shared_ptr<node> rhs
 	// do nothing
 }
 
+// Add casters for scalar, vector, matrix.
+void add_svm_casters(
+	shared_ptr<caster_t> const& caster, caster_t::casts casts, 
+	builtin_types src, builtin_types dst,
+	caster_t::cast_t fn, pety_t* pety
+	)
+{
+	caster->add_cast_auto_prior( casts, pety->get(src), pety->get(dst), fn );
+	for( size_t i = 1; i <= 4; ++i )
+	{
+		caster->add_cast_auto_prior( casts,
+			pety->get( vector_of(src, i) ), pety->get( vector_of(dst, i) ),
+			fn );
+		for( size_t j = 1; j <= 4; ++j )
+		{
+			caster->add_cast_auto_prior( casts,
+				pety->get( matrix_of(src, i, j) ), pety->get( matrix_of(dst, i, j) ),
+				fn );
+		}
+	}
+}
+
 void semantic_analyser::add_cast( const boost::any& /*ctxt*/ ){
 	// register default type converter
-	pety_t* typemgr = msi->pety().get();
+	pety_t* pety = msi->pety().get();
 
-	tid_t sint8_ts	= typemgr->get( builtin_types::_sint8	);
-	tid_t sint16_ts	= typemgr->get( builtin_types::_sint16	);
-	tid_t sint32_ts	= typemgr->get( builtin_types::_sint32	);
-	tid_t sint64_ts	= typemgr->get( builtin_types::_sint64	);
+	builtin_types sint8_bt	= builtin_types::_sint8	;
+	builtin_types sint16_bt	= builtin_types::_sint16;
+	builtin_types sint32_bt	= builtin_types::_sint32;
+	builtin_types sint64_bt	= builtin_types::_sint64;
 
-	tid_t uint8_ts	= typemgr->get( builtin_types::_uint8	);
-	tid_t uint16_ts	= typemgr->get( builtin_types::_uint16	);
-	tid_t uint32_ts	= typemgr->get( builtin_types::_uint32	);
-	tid_t uint64_ts	= typemgr->get( builtin_types::_uint64	);
+	builtin_types uint8_bt	= builtin_types::_uint8	;
+	builtin_types uint16_bt	= builtin_types::_uint16;
+	builtin_types uint32_bt	= builtin_types::_uint32;
+	builtin_types uint64_bt	= builtin_types::_uint64;
 
-	tid_t float_ts	= typemgr->get( builtin_types::_float	);
-	tid_t double_ts	= typemgr->get( builtin_types::_double	);
+	builtin_types float_bt	= builtin_types::_float	;
+	builtin_types double_bt	= builtin_types::_double;
 
-	tid_t bool_ts	= typemgr->get( builtin_types::_boolean	);
+	builtin_types bool_bt	= builtin_types::_boolean;
 
 	// default conversation will do nothing.
 	caster_t::cast_t default_conv = bind(&semantic_analyser::empty_caster, this, _1, _2);
 
-	caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint8_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint8_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint8_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint8_ts, bool_ts,   default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint8_ts, uint64_ts, default_conv );
+	add_svm_casters( caster, caster_t::imp, sint8_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint8_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint8_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint8_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint8_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint8_bt, bool_bt,   default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint8_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint8_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint8_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint8_bt, uint64_bt, default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, sint16_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint16_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint16_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint16_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint16_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint16_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint16_ts, bool_ts,   default_conv );
+	add_svm_casters( caster, caster_t::exp, sint16_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint16_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint16_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint16_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint16_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint16_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint16_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint16_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint16_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint16_bt, bool_bt,   default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, sint32_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint32_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint32_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint32_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint32_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint32_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint32_ts, bool_ts,   default_conv );
+	add_svm_casters( caster, caster_t::exp, sint32_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint32_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint32_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint32_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint32_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint32_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint32_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint32_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint32_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint32_bt, bool_bt,   default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint64_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, sint64_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint64_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint64_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, sint64_ts, bool_ts,   default_conv );
+	add_svm_casters( caster, caster_t::exp, sint64_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint64_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint64_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint64_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint64_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint64_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, sint64_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint64_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint64_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, sint64_bt, bool_bt,   default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, uint8_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint8_ts, bool_ts,   default_conv );
+	add_svm_casters( caster, caster_t::exp, uint8_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint8_bt, bool_bt,   default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, uint16_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint16_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint16_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint16_ts, bool_ts,   default_conv );
+	add_svm_casters( caster, caster_t::exp, uint16_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint16_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint16_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint16_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint16_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint16_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint16_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint16_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint16_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint16_bt, bool_bt,   default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint32_ts, bool_ts,   default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint32_ts, uint16_ts, default_conv );
-	
+	add_svm_casters( caster, caster_t::imp, uint32_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint32_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint32_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint32_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint32_bt, bool_bt,   default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint32_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint32_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint32_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint32_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint32_bt, uint16_bt, default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, uint64_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint64_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint64_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, uint64_ts, bool_ts,   default_conv );
+	add_svm_casters( caster, caster_t::exp, uint64_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint64_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint64_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint64_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint64_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint64_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, uint64_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint64_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint64_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, uint64_bt, bool_bt,   default_conv, pety );
+ 
+	add_svm_casters( caster, caster_t::exp, float_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, float_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, float_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, float_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, float_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, float_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, float_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, float_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, float_bt, double_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, float_bt, bool_bt,   default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, float_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, float_ts, double_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, float_ts, bool_ts,   default_conv );
+	add_svm_casters( caster, caster_t::exp, double_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, double_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::imp, double_bt, bool_bt,   default_conv, pety );
 
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, double_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::imp, double_ts, bool_ts,   default_conv );
-
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, sint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, sint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, sint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, sint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, uint8_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, uint16_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, uint32_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, uint64_ts, default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, float_ts,  default_conv );
-	caster->add_cast_auto_prior( caster_t::exp, bool_ts, double_ts, default_conv );
+	add_svm_casters( caster, caster_t::exp, bool_bt, sint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, sint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, sint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, sint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, uint8_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, uint16_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, uint32_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, uint64_bt, default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, float_bt,  default_conv, pety );
+	add_svm_casters( caster, caster_t::exp, bool_bt, double_bt, default_conv, pety );
 
 	// Add scalar-vector1 and vec1-scalar cast
 	vector<builtin_types> scalar_bts;
@@ -1385,8 +1406,8 @@ void semantic_analyser::add_cast( const boost::any& /*ctxt*/ ){
 
 	BOOST_FOREACH( builtin_types bt, scalar_bts ){
 		builtin_types v1bt = vector_of( bt, 1 );
-		tid_t bt_tid = typemgr->get( bt );
-		tid_t v1bt_tid = typemgr->get( v1bt );
+		tid_t bt_tid = pety->get( bt );
+		tid_t v1bt_tid = pety->get( v1bt );
 		caster->add_cast( caster_t::eql, bt_tid, v1bt_tid, default_conv );
 		caster->add_cast( caster_t::eql, v1bt_tid, bt_tid, default_conv );
 	}

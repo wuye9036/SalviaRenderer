@@ -12,8 +12,7 @@ using boost::shared_ptr;
 using boost::unordered_map;
 using boost::bimap;
 
-void caster_t::add_cast( casts ct, tid_t src, tid_t dest, cast_t conv
-	)
+void caster_t::add_cast( casts ct, tid_t src, tid_t dest, cast_t conv )
 {
 	add_cast(ct, std::numeric_limits<int>::max(), src, dest, conv);
 }

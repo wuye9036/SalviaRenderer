@@ -800,8 +800,8 @@ value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
 	bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
 	bin_fn_t u_div = boost::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
-	bin_fn_t i_safe_div = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, i_div );
-	bin_fn_t u_safe_div = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, u_div );
+	bin_fn_t i_safe_div = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, i_div );
+	bin_fn_t u_safe_div = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, u_div );
 
 	return extend_scalar_and_emit_bin_ps( lhs, rhs, i_safe_div, u_safe_div, f_div );
 }
@@ -811,8 +811,8 @@ value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs )
 	bin_fn_t i_mod = boost::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
 	bin_fn_t u_mod = boost::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
 		
-	bin_fn_t i_safe_mod = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, i_mod );
-	bin_fn_t u_safe_mod = boost::bind( &cg_service::safe_div_mod_, this, _1, _2, u_mod );
+	bin_fn_t i_safe_mod = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, i_mod );
+	bin_fn_t u_safe_mod = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, u_mod );
 
 	bin_fn_t intrin_mod_f32 = bind_binary_external_( external_intrins[mod_f32] );
 	bin_fn_t f_mod = boost::bind( &cg_service::bin_op_ps_, this, (Type*)NULL, _1, _2, intrin_mod_f32, bin_fn_t(), bin_fn_t(), bin_fn_t(), unary_fn_t() );
@@ -1503,7 +1503,10 @@ value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
 	Type* ty = dest_tyi->ty(abi);
 	builtin_types dest_scalar_hint = scalar_of( dest_tyi->hint() );
 	Type* dest_scalar_ty = type_( dest_scalar_hint, abi_llvm );
-	unary_fn_t sv_cast_fn = boost::bind( &cg_service::bit_cast_, this, _1, dest_scalar_ty );
+	unary_fn_t sv_cast_fn = bind_cast_sv_(
+		dest_scalar_ty,
+		boost::bind(&DefaultIRBuilder::CreateBitCast,builder(),_1, _2,"")
+		);
 	Value* ret = unary_op_ps_( ty, v.load(abi), unary_fn_t(), unary_fn_t(), unary_fn_t(), sv_cast_fn );
 	return create_value( dest_tyi, ret, vkind_value, abi );
 }
@@ -1725,7 +1728,7 @@ value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_SGT, CmpInst::ICMP_UGT, CmpInst::FCMP_UGT );
 }
 
-value_t cg_service::emit_bin_ps( value_t const& lhs, value_t const& rhs, bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn )
+value_t cg_service::emit_bin_ps( value_t const& lhs, value_t const& rhs, bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn )
 {
 	builtin_types hint( lhs.hint() );
 	assert( hint == rhs.hint() );
@@ -1743,22 +1746,22 @@ value_t cg_service::emit_bin_ps( value_t const& lhs, value_t const& rhs, bin_fn_
 
 	if( is_real(scalar_hint) )
 	{
-		ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), float_fn, unary_fn_t() );
+		ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), float_sv_fn, unary_fn_t() );
 	}
 	else if( is_integer(scalar_hint) ) 
 	{
 		if( is_signed(scalar_hint) )
 		{
-			ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), signed_fn, unary_fn_t() );
+			ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), signed_sv_fn, unary_fn_t() );
 		}
 		else
 		{
-			ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), unsigned_fn, unary_fn_t() );
+			ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), unsigned_sv_fn, unary_fn_t() );
 		}
 	}
 	else if( scalar_hint == builtin_types::_boolean )
 	{
-		ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), unsigned_fn, unary_fn_t() );
+		ret = bin_op_ps_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), unsigned_sv_fn, unary_fn_t() );
 	}
 	else
 	{
@@ -1770,7 +1773,7 @@ value_t cg_service::emit_bin_ps( value_t const& lhs, value_t const& rhs, bin_fn_
 	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
 }
 
-Value* cg_service::bin_op_ps_( Type* ret_ty, Value* lhs, llvm::Value* rhs, bin_fn_t sfn, bin_fn_t vfn, bin_fn_t simd_fn, bin_fn_t sv_fn, unary_fn_t cast_fn /*Must be sv fn*/ )
+Value* cg_service::bin_op_ps_( Type* ret_ty, Value* lhs, llvm::Value* rhs, bin_fn_t sfn, bin_fn_t vfn, bin_fn_t simd_fn, bin_fn_t sv_fn, unary_fn_t cast_sv_fn )
 {
 	Type* ty = lhs->getType();
 	if( !ret_ty ) ret_ty = ty;
@@ -1784,7 +1787,7 @@ Value* cg_service::bin_op_ps_( Type* ret_ty, Value* lhs, llvm::Value* rhs, bin_f
 			assert(sfn);
 			ret_v = sfn(lhs, rhs);
 		}
-		if( cast_fn ){ ret_v = cast_fn(ret_v); }
+		if( cast_sv_fn ){ ret_v = cast_sv_fn(ret_v); }
 		return ret_v;
 	}
 
@@ -1798,7 +1801,7 @@ Value* cg_service::bin_op_ps_( Type* ret_ty, Value* lhs, llvm::Value* rhs, bin_f
 			ret_v = vfn(lhs, rhs);
 		}
 
-		if( ret_v ) { return cast_fn ? cast_fn(ret_v) : ret_v; }
+		if( ret_v ) { return cast_sv_fn ? cast_sv_fn(ret_v) : ret_v; }
 
 		unsigned elem_count = ty->getVectorNumElements();
 
@@ -1812,7 +1815,7 @@ Value* cg_service::bin_op_ps_( Type* ret_ty, Value* lhs, llvm::Value* rhs, bin_f
 				Value* lhs_simd_elem = extract_elements_( lhs, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
 				Value* rhs_simd_elem = extract_elements_( rhs, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
 				Value* ret_simd_elem = simd_fn( lhs_simd_elem, rhs_simd_elem );
-				if( cast_fn ) { ret_simd_elem = cast_fn(ret_simd_elem); }
+				if( cast_sv_fn ) { ret_simd_elem = cast_sv_fn(ret_simd_elem); }
 				ret_v = insert_elements_( ret_v, ret_simd_elem, i_batch*SIMD_ELEMENT_COUNT() );
 			}
 
@@ -1828,7 +1831,7 @@ Value* cg_service::bin_op_ps_( Type* ret_ty, Value* lhs, llvm::Value* rhs, bin_f
 			Value* rhs_elem = builder().CreateExtractElement( rhs, int_(i) );
 			Value* ret_elem = sfn(lhs_elem, rhs_elem);
 
-			if( cast_fn ) { ret_elem = cast_fn(ret_elem); }
+			if( cast_sv_fn ) { ret_elem = cast_sv_fn(ret_elem); }
 
 			ret_v = builder().CreateInsertElement( ret_v, ret_elem, int_(i) );
 		}
@@ -1847,7 +1850,7 @@ Value* cg_service::bin_op_ps_( Type* ret_ty, Value* lhs, llvm::Value* rhs, bin_f
 			Value* lhs_elem = builder().CreateExtractValue(lhs, elem_index);
 			Value* rhs_elem = builder().CreateExtractValue(rhs, elem_index);
 			Type* ret_elem_ty = ret_ty->getStructElementType(i);
-			Value* ret_elem = bin_op_ps_(ret_elem_ty, lhs_elem, rhs_elem, sfn, vfn, simd_fn, sv_fn, cast_fn);
+			Value* ret_elem = bin_op_ps_(ret_elem_ty, lhs_elem, rhs_elem, sfn, vfn, simd_fn, sv_fn, cast_sv_fn);
 			ret = builder().CreateInsertValue( ret, ret_elem, elem_index );
 		}
 		return ret;
@@ -2237,14 +2240,19 @@ Value* cg_service::integer_value_( Type* ty, llvm::APInt const& v )
 	return NULL;
 }
 
-Value* cg_service::bit_cast_( llvm::Value* v, llvm::Type* scalar_ty )
+cg_service::unary_fn_t cg_service::bind_cast_sv_( llvm::Type* elem_ty, cast_fn caster_sv )
+{
+	return boost::bind( &cg_service::cast_sv_, this, _1, elem_ty, caster_sv );
+}
+
+Value* cg_service::cast_sv_( Value* v, Type* elem_ty, cast_fn caster_sv )
 {
 	assert( !v->getType()->isAggregateType() );
 	Type* ret_ty 
 		= v->getType()->isVectorTy()
-		? VectorType::get( scalar_ty, v->getType()->getVectorNumElements() )
-		: scalar_ty;
-	return builder().CreateBitCast( v, ret_ty );
+		? VectorType::get( elem_ty, v->getType()->getVectorNumElements() )
+		: elem_ty;
+	return caster_sv( v, ret_ty );
 }
 
 value_t cg_service::emit_unary_ps( std::string const& scalar_external_intrin_name, value_t const& v )
@@ -2286,7 +2294,7 @@ value_t cg_service::emit_bin_ps( std::string const& scalar_external_intrin_name,
 	return create_value( v0.tyinfo(), v0.hint(), ret_v, vkind_value, abi );
 }
 
-Value* cg_service::safe_div_mod_( Value* lhs, Value* rhs, bin_fn_t div_or_mod_fn )
+Value* cg_service::safe_idiv_imod_sv_( Value* lhs, Value* rhs, bin_fn_t div_or_mod_sv_fn )
 {
 	Type* rhs_ty = rhs->getType();
 	Type* rhs_scalar_ty = rhs_ty->getScalarType();
@@ -2297,7 +2305,7 @@ Value* cg_service::safe_div_mod_( Value* lhs, Value* rhs, bin_fn_t div_or_mod_fn
 	Value* one_value = Constant::getIntegerValue( rhs_ty, APInt(rhs_scalar_ty->getIntegerBitWidth(), 1) );
 	Value* non_zero_rhs = builder().CreateSelect( is_zero, one_value, rhs );
 
-	return div_or_mod_fn( lhs, non_zero_rhs );
+	return div_or_mod_sv_fn( lhs, non_zero_rhs );
 }
 
 value_t cg_service::extend_to_vm( value_t const& v, builtin_types complex_hint )
@@ -2368,5 +2376,7 @@ value_t cg_service::extend_scalar_and_emit_bin_ps( value_t const& lhs, value_t c
 
 	return emit_bin_ps( lv, rv, signed_sv_fn, unsigned_sv_fn, float_sv_fn );
 }
+
+
 
 END_NS_SASL_CODE_GENERATOR();

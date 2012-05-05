@@ -59,3 +59,8 @@ int2x3 test_bitcast_to_mi( float2x3 f, uint2x3 u )
 {
 	return asint(f) + asint(u);
 }
+
+float2x3 test_mat_i2f( int2x3 i )
+{
+	return i;
+}

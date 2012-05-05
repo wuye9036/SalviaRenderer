@@ -357,6 +357,7 @@ protected:
 		);
 	
 	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	bin_fn_t;
+	typedef boost::function<llvm::Value*(llvm::Value*, llvm::Type*)>	cast_fn;
 	typedef boost::function<llvm::Value* (llvm::Value*)>				unary_fn_t;
 
 	llvm::Value* call_external1_		( llvm::Function* f, llvm::Value* v );
@@ -421,8 +422,9 @@ protected:
 	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
 	llvm::Value* i8toi1_( llvm::Value* );
 	llvm::Value* i1toi8_( llvm::Value* );
-	llvm::Value* bit_cast_( llvm::Value*, llvm::Type* element_ty );
-	llvm::Value* safe_div_mod_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
+	llvm::Value* cast_sv_( llvm::Value*, llvm::Type* elem_ty, cast_fn caster_sv );
+	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_fn caster_sv);
+	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_c_as_package		( value_t const& v );
