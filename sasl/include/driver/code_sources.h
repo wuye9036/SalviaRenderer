@@ -195,9 +195,21 @@ public:
 	virtual size_t				line() const;
 	virtual void				update_position( std::string const& /*lit*/ );
 
-	// hooks
+	// hooks. It's enabled after function is called.
 	virtual void				add_virtual_file( std::string const& file_name, std::string const& content, bool high_priority );
 	virtual void				set_include_handler( include_handler_fn ihandler );
+	
+	// Inputs of preprocessor.
+	bool add_include_path( std::string const& );
+	bool add_include_path( std::vector<std::string> const& );
+	bool add_sys_include_path( std::string const& );
+	bool add_sys_include_path( std::vector<std::string> const& );
+
+	bool add_macro( std::string const&, bool predef );
+	bool add_macro( std::vector<std::string> const&, bool predef );
+	bool remove_macro( std::string const& );
+	bool remove_macro( std::vector<std::string> const& );
+	bool clear_macros();
 
 private:
 	// Utilities

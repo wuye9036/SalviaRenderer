@@ -11,6 +11,7 @@ class driver_impl: public driver{
 public:
 	driver_impl();
 
+	// All setting functions must be called before calling compile().
 	virtual void set_parameter( int argc, char** argv );
 	virtual void set_parameter( std::string const& cmd );
 
@@ -23,6 +24,18 @@ public:
 	virtual void add_virtual_file( std::string const& file_name, std::string const& code_content, bool high_priority );
 	/// Only support by default code_source.
 	virtual void set_include_handler( include_handler_fn inc_handler );
+	/// Only support by default code source.
+	virtual void add_include_path( std::string const& inc_path );
+	/// Only support by default code source.
+	virtual void add_sysinclude_path( std::string const& sys_path );
+	/// Only support by default code source.
+	virtual void clear_sysinclude_paths();
+	/// Only support by default code source.
+	virtual void add_macro( std::string const& macro, bool predef );
+	/// Only support by default code source.
+	virtual void remove_macro( std::string const& macro );
+	/// Only support by default code source.
+	virtual void clear_macros();
 
 	virtual void set_diag_chat( sasl::common::diag_chat* diags );
 	// virtual void set_dump_ir( std::string const& );
@@ -59,7 +72,8 @@ private:
 	options_global			opt_global;
 	options_display_info	opt_disp;
 	options_io				opt_io;
-	options_predefinition	opt_predef;
+	option_macros			opt_macros;
+	options_includes		opt_includes;
 
 	po::options_description	desc;
 	po::variables_map		vm;
@@ -71,9 +85,16 @@ private:
 
 	typedef boost::unordered_map< std::string,
 		std::pair<std::string, bool> > virtual_file_dict;
-
-	virtual_file_dict	virtual_files;
-	include_handler_fn	user_inc_handler;
+	enum macro_states
+	{
+		ms_normal,
+		ms_predef,
+		ms_remove
+	};
+	std::vector<std::string>	sys_paths, inc_paths;
+	std::vector< std::pair<std::string, macro_states> > macros;
+	include_handler_fn			user_inc_handler;
+	virtual_file_dict			virtual_files;
 };
 
 END_NS_SASL_DRIVER();

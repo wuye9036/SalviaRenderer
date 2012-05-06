@@ -151,70 +151,50 @@ void options_global::filterate( po::variables_map const & vm )
 
 // options_predefinition
 
-const char* options_predefinition::define_tag = "define,D";
-const char* options_predefinition::define_desc = "-D<name><=><text>, Define macros.";
+const char* option_macros::define_tag	= "define,D";
+const char* option_macros::define_desc	= "specify a macro to define (as macro[=[value]])";
+const char* option_macros::predef_tag	= "predefine,P";
+const char* option_macros::predef_desc	= "specify a macro to predefine (as macro[=[value]])";
+const char* option_macros::undef_tag	= "undefine,U";
+const char* option_macros::undef_desc	= "specify a macro to undefine";
 
-options_predefinition::options_predefinition(){
+option_macros::option_macros(){
 	return;
 }
 
-void options_predefinition::reg_extra_parser( po::basic_command_line_parser<char>& cmdpar ){
-	cmdpar.extra_parser( boost::bind( &options_predefinition::parse_predef, this, _1 ) );
-}
-
-void options_predefinition::fill_desc( po::options_description& desc ){
+void option_macros::fill_desc( po::options_description& desc ){
 	desc.add_options()
-		( define_tag, define_desc )
+		( define_tag, po::value< vector<string> >(&defines)->composing(), define_desc )
+		( predef_tag, po::value< vector<string> >(&predefs)->composing(), predef_desc )
+		( undef_tag , po::value< vector<string> >(&undefs )->composing(), undef_desc  )
 		;
 }
 
-void options_predefinition::filterate( po::variables_map const & vm ){
+void option_macros::filterate( po::variables_map const & vm ){
 	// Do nothing. parse_predef will hook all legal definitions.
 	return;
 }
 
-pair<string, string> options_predefinition::parse_predef( string const& str )
+char const* options_includes::include_tag	= "include,I";
+char const* options_includes::include_desc	= "specify an additional include directory";
+char const* options_includes::sysincl_tag	= "sysinclude,S";
+char const* options_includes::sysincl_desc	= "specify an additional system include directory";
+
+options_includes::options_includes() {}
+
+void options_includes::fill_desc( po::options_description& desc )
 {
-	pair<string, string> null_ret( string(""), string("") );
-
-	if( str.find("-D") != 0 ){ return null_ret; }
-	if( str.length() <= 2 ){ return null_ret; }
-
-	// Split cmd
-	string::const_iterator equal_it = find(str.begin(), str.end(), '=');
-
-	string::const_iterator beg_it = str.begin()+2;
-	if( isalpha( *beg_it, locale() ) || *beg_it == '_' ){
-		// Check define name
-		for( string::const_iterator it = beg_it; it != equal_it; ++it ){
-			if( !isalnum(*beg_it) && *beg_it != '_' ){
-				return null_ret;
-			}
-		}
-		string name( beg_it, equal_it );
-
-		// Split define content
-		string content;
-		if( equal_it != str.end() ){
-			string::const_iterator content_it = equal_it + 1;
-			if( 
-				*content_it == '"'
-				&& content_it+1 != str.end()
-				&& *str.rbegin() == '"'
-				)
-			{
-				content.assign( content_it+1, str.end()-1 );
-			} else {
-				content.assign( content_it, str.end() );
-			}
-		}
-
-		defs.push_back( make_pair(name, content) );
-		return defs.back();
-
-	} else {
-		return null_ret;
-	}
+	desc.add_options()
+		( include_tag, po::value< vector<string> >(&includes)->composing(), include_desc )
+		( sysincl_tag, po::value< vector<string> >(&sysincls)->composing(), sysincl_desc )
+		;
 }
+
+void options_includes::filterate( po::variables_map const & vm )
+{
+	// Nothing special to deal with.
+	return;
+}
+
 END_NS_SASL_DRIVER();
 

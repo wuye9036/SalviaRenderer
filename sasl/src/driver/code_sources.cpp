@@ -12,6 +12,7 @@ using boost::shared_ptr;
 using boost::wave::preprocess_exception;
 using boost::unordered_map;
 using std::string;
+using std::vector;
 using std::cout;
 using std::endl;
 
@@ -192,6 +193,81 @@ driver_code_source* driver_code_source::get_code_source( void* ctxt )
 bool driver_code_source::failed()
 {
 	return is_failed;
+}
+
+bool driver_code_source::add_sys_include_path( string const& path )
+{
+	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
+	assert(wctxt);
+	return wctxt->add_sysinclude_path( path.c_str() );
+}
+
+bool driver_code_source::add_sys_include_path( vector<string> const& paths )
+{
+	bool ret = true;
+	for(size_t i = 0; i < paths.size(); ++i)
+	{
+		bool path_ret = add_sys_include_path(paths[i]);
+		ret = ret && path_ret;
+	}
+	return ret;
+}
+
+bool driver_code_source::add_include_path( std::string const& path )
+{
+	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
+	assert(wctxt);
+	return wctxt->add_include_path( path.c_str() );
+}
+
+bool driver_code_source::add_include_path( std::vector<std::string> const& paths )
+{
+	bool ret = true;
+	for(size_t i = 0; i < paths.size(); ++i)
+	{
+		ret = add_include_path(paths[i]) && ret;
+	}
+	return ret;
+}
+
+bool driver_code_source::add_macro( std::string const& macro_def, bool predef )
+{
+	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
+	assert(wctxt);
+	return wctxt->add_macro_definition(macro_def, predef);
+}
+
+bool driver_code_source::add_macro( vector<string> const& macros, bool predef )
+{
+	bool ret = true;
+	for( size_t i = 0; i < macros.size(); ++i ) {
+		ret = add_macro(macros[i], predef) && ret;
+	}
+	return ret;
+}
+
+bool driver_code_source::clear_macros()
+{
+	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
+	assert(wctxt);
+	wctxt->reset_macro_definitions();
+	return true;
+}
+
+bool driver_code_source::remove_macro( std::string const& macro_def )
+{
+	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
+	assert(wctxt);
+	return wctxt->remove_macro_definition(macro_def);
+}
+
+bool driver_code_source::remove_macro( vector<string> const& macros )
+{
+	bool ret = true;
+	for( size_t i = 0; i < macros.size(); ++i ) {
+		ret = remove_macro(macros[i]) && ret;
+	}
+	return ret;
 }
 
 void report_load_file_failed( void* ctxt, std::string const& name, bool is_system )

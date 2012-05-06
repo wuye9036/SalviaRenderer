@@ -58,7 +58,8 @@ bool driver_impl::parse( ParserT& parser )
 		opt_disp.reg_extra_parser( parser );
 		opt_global.reg_extra_parser( parser );
 		opt_io.reg_extra_parser( parser );
-		opt_predef.reg_extra_parser( parser );
+		opt_macros.reg_extra_parser( parser );
+		opt_includes.reg_extra_parser(parser);
 
 		po::parsed_options parsed
 			= parser.run();
@@ -113,7 +114,8 @@ driver_impl::driver_impl()
 	opt_disp.fill_desc(desc);
 	opt_global.fill_desc(desc);
 	opt_io.fill_desc(desc);
-	opt_predef.fill_desc(desc);
+	opt_macros.fill_desc(desc);
+	opt_includes.fill_desc(desc);
 }
 
 void driver_impl::compile()
@@ -134,7 +136,8 @@ void driver_impl::compile()
 	opt_disp.filterate(vm);
 	opt_global.filterate(vm);
 	opt_io.filterate(vm);
-	opt_predef.filterate(vm);
+	opt_macros.filterate(vm);
+	opt_includes.filterate(vm);
 
 	if( opt_disp.show_help ){
 		diags->report(text_only)->p(desc);
@@ -202,6 +205,36 @@ void driver_impl::compile()
 			{
 				driver_sc->add_virtual_file( it->first, it->second.first, it->second.second );
 			}
+
+			// Apply macros from API.
+			for(size_t i = 0; i < macros.size(); ++i){
+				macro_states ms = macros[i].second;
+				switch (ms)
+				{
+				case ms_normal:
+					driver_sc->add_macro( macros[i].first, false );
+					break;
+				case ms_predef:
+					driver_sc->add_macro( macros[i].first, true );
+					break;
+				case ms_remove:
+					driver_sc->remove_macro( macros[i].first );
+					break;
+				}
+			}
+
+			// Apply macros from parameters.
+			driver_sc->add_macro( opt_macros.defines, false );
+			driver_sc->add_macro( opt_macros.predefs, true );
+			driver_sc->remove_macro( opt_macros.undefs );
+
+			// Apply search path from API
+			driver_sc->add_include_path( inc_paths );
+			driver_sc->add_sys_include_path( sys_paths );
+
+			// Apply search path from parameters.
+			driver_sc->add_include_path( opt_includes.includes );
+			driver_sc->add_sys_include_path( opt_includes.sysincls );
 		}
 	}
 
@@ -382,6 +415,36 @@ void driver_impl::inject_function(shared_ptr<jit_engine> const& je, void* pfn, s
 	}
 	
 	je->inject_function(pfn, *raw_name);
+}
+
+void driver_impl::add_sysinclude_path( std::string const& sys_path )
+{
+	sys_paths.push_back(sys_path);
+}
+
+void driver_impl::add_include_path( std::string const& inc_path )
+{
+	inc_paths.push_back(inc_path);
+}
+
+void driver_impl::clear_sysinclude_paths()
+{
+	sys_paths.clear();
+}
+
+void driver_impl::add_macro( std::string const& macro, bool predef )
+{
+	macros.push_back( make_pair(macro, predef?ms_predef:ms_normal) );
+}
+
+void driver_impl::clear_macros()
+{
+	macros.clear();
+}
+
+void driver_impl::remove_macro( std::string const& macro )
+{
+	macros.push_back( make_pair(macro, ms_remove) );
 }
 
 END_NS_SASL_DRIVER();

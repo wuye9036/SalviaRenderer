@@ -115,22 +115,39 @@ private:
 	static const char* export_as_desc;
 };
 
-class options_predefinition: options_filter
+class option_macros: public options_filter
 {
 public:
-	options_predefinition();
+	option_macros();
 
-	void reg_extra_parser( po::basic_command_line_parser<char>& );
 	void fill_desc( po::options_description& desc );
 	void filterate( po::variables_map const & vm );
 
+	std::vector<std::string> defines, predefs, undefs;
+
 private:
-	std::pair<std::string, std::string> parse_predef( std::string const& );
-
-	std::vector< std::pair<std::string, std::string> > defs;
-
 	static const char* define_tag;
 	static const char* define_desc;
+	static const char* predef_tag;
+	static const char* predef_desc;
+	static const char* undef_tag;
+	static const char* undef_desc;
+};
+
+class options_includes: public options_filter
+{
+public:
+	options_includes();
+
+	void fill_desc( po::options_description& desc );
+	void filterate( po::variables_map const & vm );
+
+	std::vector<std::string> sysincls, includes;
+private:
+	static char const* include_tag;
+	static char const* include_desc;
+	static char const* sysincl_tag;
+	static char const* sysincl_desc;
 };
 
 END_NS_SASL_DRIVER();
