@@ -43,8 +43,12 @@ set( V1A1_TESTS
 	
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/include_header.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/include_main.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/include_search_path.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/incomplete.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/semantic_errors.ss"
+	
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/include/header.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/sysincl/sysheader.ss"
 )
 
 SOURCE_GROUP( "Tests\\v1a1\\General" REGULAR_EXPRESSION ".*\\.ss" )

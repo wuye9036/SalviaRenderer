@@ -99,7 +99,12 @@ void driver_impl::set_parameter( int argc, char** argv )
 
 void driver_impl::set_parameter( std::string const& cmd )
 {
+#if defined(EFLIB_WINDOWS)
+	vector<string> cmds = po::split_winmain(cmd);
+#else
 	vector<string> cmds = po::split_unix(cmd);
+#endif
+
 	po::basic_command_line_parser<char> parser
 		= po::command_line_parser(cmds).options( desc ).allow_unregistered();
 

@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -17,6 +17,8 @@
 #include <eflib/include/metaprog/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
+#include <boost/format.hpp>
+#include <boost/filesystem.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/platform/cpuinfo.h>
@@ -38,6 +40,8 @@ using salviar::PACKAGE_LINE_ELEMENT_COUNT;
 
 using boost::shared_ptr;
 using boost::shared_polymorphic_cast;
+using boost::format;
+namespace fs = boost::filesystem;
 
 using std::fstream;
 using std::string;
@@ -49,8 +53,14 @@ using std::make_pair;
 
 BOOST_AUTO_TEST_SUITE( robust )
 
-string make_command( string const& file_name, string const& options){
-	return "--input=\"" + file_name + "\" " + options;
+string make_command( string const& file_name, string const& options)
+{
+	return ( format("--input=\"%s\" %s") % file_name % options ).str();
+}
+
+string make_command( string const& inc, string const& sysinc, string const& file_name, string const& options )
+{
+	return ( format("--input=\"%s\" -I \"%s\" -S \"%s\" %s") % file_name % inc % sysinc % options ).str();
 }
 
 bool print_diagnostic( diag_chat*, diag_item* item )
@@ -64,7 +74,6 @@ struct jit_fixture {
 	jit_fixture() {}
 
 	void init_g( string const& file_name ){
-		
 		init( file_name, "--lang=g" );
 	}
 
@@ -82,12 +91,17 @@ struct jit_fixture {
 	}
 
 	void init( string const& file_name, string const& options ){
+		init_cmd( make_command(file_name, options), file_name );
+	}
+
+	void init_cmd( string const& cmd, string const& dump_file_name )
+	{
 		diags = diag_chat::create();
 		diags->add_report_raised_handler( print_diagnostic );
 		sasl_create_driver(drv);
 		BOOST_REQUIRE(drv);
 		drv->set_diag_chat(diags.get());
-		drv->set_parameter( make_command(file_name, options) );
+		drv->set_parameter(cmd);
 		for( size_t i = 0; i < vfiles.size(); ++i )
 		{
 			drv->add_virtual_file( vfiles[i].first, vfiles[i].second, true );
@@ -102,14 +116,13 @@ struct jit_fixture {
 		root_sym = drv->mod_si()->root();
 
 		shared_ptr<llvm_module> llvm_mod = shared_polymorphic_cast<llvm_module>( drv->mod_codegen() );
-		fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
+		fstream dump_file( ( dump_file_name + "_ir.ll" ).c_str(), std::ios::out );
 		llvm_mod->dump( dump_file );
 		dump_file.close();
 
 		je = drv->create_jit();
 		BOOST_REQUIRE( je );
 	}
-
 	~jit_fixture(){}
 
 	shared_ptr<driver>		drv;
@@ -140,6 +153,32 @@ BOOST_FIXTURE_TEST_CASE( include_test, jit_fixture ){
 		"} \r\n";
 	add_virtual_file( "virtual_include.ss", virtual_include_content );
 	init_g( "./repo/question/v1a1/include_main.ss" );
+}
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE( include_dir_test, jit_fixture ){
+	fs::path include_path = fs::current_path() / "./repo/question/v1a1/include";
+	fs::path sysincl_path = fs::current_path() / "./repo/question/v1a1/sysincl";
+
+	BOOST_REQUIRE( fs::is_directory(include_path) && fs::is_directory(sysincl_path) );
+
+	std::string file_name(".\\repo\\question/v1a1/include_search_path.ss");
+	std::string cmd = make_command( include_path.string(), sysincl_path.string(), file_name, "--lang=g" );
+	init_cmd( cmd, file_name );
+}
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE( include_dir_test_need_failed, jit_fixture ){
+	fs::path include_path = fs::current_path() / "./repo/question/v1a1/include";
+	fs::path sysincl_path = fs::current_path() / "./repo/question/v1a1/sysincl";
+
+	BOOST_REQUIRE( fs::is_directory(include_path) && fs::is_directory(sysincl_path) );
+
+	std::string file_name(".\\repo\\question/v1a1/include_search_path.ss");
+	std::string cmd = make_command( sysincl_path.string(),  include_path.string(), file_name, "--lang=g" );
+	init_cmd( cmd, file_name );
 }
 #endif
 
