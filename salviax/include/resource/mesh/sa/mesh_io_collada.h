@@ -13,7 +13,7 @@ namespace salviar { class renderer; }
 
 BEGIN_NS_SALVIAX_RESOURCE();
 typedef boost::shared_ptr<class base_mesh> h_mesh;
-std::vector<h_mesh> create_mesh_from_collada( salviar::renderer* render, std::string const& file_name );
+h_mesh create_mesh_from_collada( salviar::renderer* render, std::string const& file_name );
 END_NS_SALVIAX_RESOURCE();
 
 #endif

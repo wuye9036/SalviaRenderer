@@ -12,7 +12,7 @@
 
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
-#include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
+#include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
@@ -230,21 +230,13 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
+		cout << "Loading mesh ... " << endl;
+		sponza_mesh = create_mesh_from_collada( hsr.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
+
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
 		sponza_sc = shader_code::create( sponza_vs_code, lang_vertex_shader );
 #endif
-
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-
-		cout << "Loading mesh ... " << endl;
-#ifdef EFLIB_DEBUG
-		cout << "Application is built in debug mode. Mesh loading is *VERY SLOW*." << endl;
-#endif
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj", false );
-		cout << "Loading pixel and blend shader... " << endl;
 
 		pvs.reset( new sponza_vs() );
 		pps.reset( new sponza_ps() );
@@ -323,23 +315,23 @@ protected:
 			hsr->set_vs_variable( "eyePos", &camera_pos );
 			hsr->set_vs_variable( "lightPos", &lightPos );
 
-			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
-				h_mesh cur_mesh = sponza_mesh[i_mesh];
-
-				shared_ptr<obj_material> mtl
-					= shared_polymorphic_cast<obj_material>( cur_mesh->get_attached() );
-
-#ifdef _DEBUG
-				// if (mtl->name != "sponza_07SG"){ continue; }
-#endif
-				pps->set_constant( _T("Ambient"),  &mtl->ambient );
-				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
-				pps->set_constant( _T("Specular"), &mtl->specular );
-				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				shared_polymorphic_cast<sponza_ps>( pps )->set_texture( mtl->tex );
-
-				cur_mesh->render();
-			}
+//			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
+//				h_mesh cur_mesh = sponza_mesh[i_mesh];
+//
+//				shared_ptr<obj_material> mtl
+//					= shared_polymorphic_cast<obj_material>( cur_mesh->get_attached() );
+//
+//#ifdef _DEBUG
+//				// if (mtl->name != "sponza_07SG"){ continue; }
+//#endif
+//				pps->set_constant( _T("Ambient"),  &mtl->ambient );
+//				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
+//				pps->set_constant( _T("Specular"), &mtl->specular );
+//				pps->set_constant( _T("Shininess"),&mtl->ambient );
+//				shared_polymorphic_cast<sponza_ps>( pps )->set_texture( mtl->tex );
+//
+//				cur_mesh->render();
+//			}
 		}
 
 		if (hsr->get_framebuffer()->get_num_samples() > 1){
@@ -354,7 +346,7 @@ protected:
 	h_device present_dev;
 	h_renderer hsr;
 
-	vector<h_mesh> sponza_mesh;
+	h_mesh sponza_mesh;
 
 	shared_ptr<shader_code> sponza_sc;
 
