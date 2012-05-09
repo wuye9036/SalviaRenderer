@@ -1,11 +1,10 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
+#include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
-
 #include <salviar/include/buffer.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/renderer.h>
-
 #include <eflib/include/math/math.h>
 
 #define BOOST_FILESYSTEM_VERSION 3
@@ -51,17 +50,6 @@ struct obj_mesh_vertex{
 	vec4 uv;
 	vec4 normal;
 };
-
-obj_material::obj_material()
-	: name("default")
-	, ambient( 0.2f, 0.2f, 0.2f, 1.0f )
-	, diffuse( 0.5f, 0.5f, 0.5f, 1.0f )
-	, specular( 0.7f, 0.7f, 0.7f, 1.0f )
-	, shininess(2), alpha(1.0f)
-	, is_specular(true)
-	, tex_name("")
-{
-}
 
 int peek( FILE* f )
 {

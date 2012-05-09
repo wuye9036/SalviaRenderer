@@ -12,6 +12,7 @@
 
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
+#include <salviax/include/resource/mesh/sa/material.h>
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>

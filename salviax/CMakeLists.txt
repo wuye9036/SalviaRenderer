@@ -8,21 +8,31 @@ INCLUDE_DIRECTORIES(
 LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
 
 set (HEADER_FILES
+	include/resource/mesh/sa/material.h
 	include/resource/mesh/sa/mesh.h
+	include/resource/mesh/sa/skin_mesh.h
+	
 	include/resource/mesh/sa/mesh_io.h
 	include/resource/mesh/sa/mesh_io_obj.h
+	include/resource/mesh/sa/mesh_io_collada.h
+	
 	include/resource/resource_forward.h
 	include/resource/texture/sa/tex_io.h
 	include/resource/texture/freeimage/tex_io_freeimage.h
 	include/resource/texture/gdiplus/tex_io_gdiplus.h
+	
 	include/utility/freeimage_utilities.h
 	include/utility/user_config.h
 	include/utility/utility_forward.h
 )
+
 set (SOURCE_FILES
+	src/resource/mesh/sa/material.cpp
 	src/resource/mesh/sa/mesh.cpp
+	src/resource/mesh/sa/skin_mesh.cpp
 	src/resource/mesh/sa/mesh_io.cpp
 	src/resource/mesh/sa/mesh_io_obj.cpp
+	src/resource/mesh/sa/mesh_io_collada.cpp
 	
 	src/resource/texture/sa/tex_io.cpp
 	src/resource/texture/freeimage/tex_io_freeimage.cpp
