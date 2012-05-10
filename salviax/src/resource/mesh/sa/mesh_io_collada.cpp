@@ -41,6 +41,23 @@ DECLARE_STRUCT_SHARED_PTR(dae_dom);
 struct dae_dom
 {
 	unordered_map<string, dae_node_ptr> id_nodes;
+	
+	template <typename T>
+	boost::shared_ptr<T> get_node( std::string const& name )
+	{
+		std::string unqual_name = (name[0] == '#' ? name.substr(1) : name);
+		unordered_map<string, dae_node_ptr>::iterator it = id_nodes.find(unqual_name);
+		if( it == id_nodes.end() ) { return boost::shared_ptr<T>(); }
+		return boost::shared_dynamic_cast<T>(it->second);
+	}
+
+	template <typename T>
+	void get_node( std::string const& name, boost::shared_ptr<T>& ret )
+	{
+		ret = get_node<T>(name);
+		return;
+	}
+
 };
 
 struct dae_node
@@ -88,21 +105,34 @@ struct dae_triangles: public dae_node
 
 struct dae_verts: public dae_node
 {
-	static dae_verts_ptr parse( ptree& root, dae_dom_ptr file )
-	{
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return dae_verts_ptr();
-	}
+	static dae_verts_ptr parse( ptree& root, dae_dom_ptr file );
 
-	vector<dae_input_ptr> inputs;
+	vector<dae_input_ptr>	inputs;
+	size_t					count;
+	dae_source_ptr			data_source;
+	optional<string>		material_name;
+	
 };
 
 struct dae_input: public dae_node
 {
-	string			semantic;
-	dae_source_ptr	source;
-	size_t			offset;
-	size_t			set;
+	static dae_input_ptr parse( ptree& root, dae_dom_ptr file )
+	{
+		dae_input_ptr ret = make_shared<dae_input>();
+		parse_attribute(root, ret, file);
+
+		ret->semantic	= root.get_optional<string>("<xmlattr>.semantic");
+		ret->offset		= root.get("<xmlattr>.offset",	(size_t)0);
+		ret->set		= root.get("<xmlattr>.set",		(size_t)0);
+		if(ret->source) { ret->data_source = file->get_node<dae_source>(*ret->source); }
+
+		return ret;
+	}
+
+	optional<string>	semantic;
+	dae_source_ptr		data_source;
+	size_t				offset;
+	size_t				set;
 };
 
 struct dae_source: public dae_node
@@ -169,6 +199,33 @@ struct dae_array: public dae_node
 	vector<float>	float_arr;
 };
 
+struct dae_accessor: public dae_node
+{
+	static dae_accessor_ptr parse( ptree& root, dae_dom_ptr file )
+	{
+		dae_accessor_ptr ret = make_shared<dae_accessor>();
+		parse_attribute(root, ret, file);
+
+		ret->source_array = file->get_node<dae_array>(*ret->source);
+		
+		if( ret->source_array )
+		{
+			ret->offset = root.get( "<xmlattr>.offset", size_t(0) );
+			ret->stride = root.get( "<xmlattr>.stride", size_t(0) );
+			ret->count  = root.get( "<xmlattr>.count" , size_t(0) );
+		}
+		else
+		{
+			ret.reset();
+		}
+
+		return ret;
+	}
+
+	size_t			offset, stride, count;
+	dae_array_ptr	source_array;
+};
+
 struct dae_tech: public dae_node
 {
 	static dae_tech_ptr parse( ptree& root, dae_dom_ptr file )
@@ -176,8 +233,14 @@ struct dae_tech: public dae_node
 		dae_tech_ptr ret = make_shared<dae_tech>();
 		parse_attribute(root, ret, file);
 
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		optional<ptree&> accessor_xml_node = root.get_child_optional("accessor");
 
+		if( !accessor_xml_node ) {
+			ret.reset(); 
+		} else {
+			ret->accessor = dae_accessor::parse( *accessor_xml_node, file );
+		}
+		
 		return ret;
 	}
 
@@ -196,7 +259,7 @@ dae_mesh_ptr dae_mesh::parse( ptree& root, dae_dom_ptr file )
 
 		if( child.first == "source" ){
 			ret->sources.push_back( dae_source::parse(child.second, file) );
-		} else if( child.first == "verts" ) {
+		} else if( child.first == "vertices" ) {
 			ret->verts.push_back( dae_verts::parse(child.second, file) );
 		} else if( child.first == "triangles" ) {
 			ret->triangle_sets.push_back( dae_triangles::parse(child.second, file) );
@@ -229,6 +292,27 @@ dae_source_ptr dae_source::parse( ptree& root, dae_dom_ptr file )
 		else
 		{
 			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	return ret;
+}
+
+dae_verts_ptr dae_verts::parse( ptree& root, dae_dom_ptr file )
+{
+	dae_verts_ptr ret = make_shared<dae_verts>();
+	parse_attribute(root, ret, file);
+
+	BOOST_FOREACH( ptree::value_type& child, root )
+	{
+		if( child.first == "<xmlattr>" )
+		{
+			ret->count = child.second.get("count", (size_t)0);
+			ret->material_name = child.second.get_optional<string>("material");
+		}
+		else if( child.first == "input" )
+		{
+			ret->inputs.push_back( dae_input::parse(child.second, file) );
 		}
 	}
 
