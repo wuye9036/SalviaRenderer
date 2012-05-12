@@ -19,7 +19,7 @@ enum input_classifications{
 
 struct input_element_desc
 {
-	const char*				semantic_name;
+	std::string				semantic_name;
 	uint32_t				semantic_index;
 	format					data_format;
 	uint32_t				input_slot;
@@ -47,7 +47,7 @@ struct input_element_desc
 	{}
 
 	input_element_desc()
-		: semantic_name(NULL), semantic_index(0)
+		: semantic_index(0)
 		, data_format(format_unknown)
 		, input_slot(0), aligned_byte_offset(0xFFFFFFFF)
 		, slot_class(input_per_vertex), instance_data_step_rate(0)

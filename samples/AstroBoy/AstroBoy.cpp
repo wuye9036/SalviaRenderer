@@ -46,24 +46,22 @@ char const* sponza_vs_code =
 "float4   eyePos; \r\n"
 "float4	  lightPos; \r\n"
 "struct VSIn{ \r\n"
-"	float4 pos: POSITION; \r\n"
-"	float4 norm: NORMAL; \r\n"
-"	float4 tex: TEXCOORD0; \r\n"
+"	float3 pos: POSITION; \r\n"
+"	float3 norm: NORMAL; \r\n"
 "}; \r\n"
 "struct VSOut{ \r\n"
 "	float4 pos: sv_position; \r\n"
-"	float4 tex: TEXCOORD; \r\n"
 "	float4 norm: TEXCOORD1; \r\n"
 "	float4 lightDir: TEXCOORD2; \r\n"
 "	float4 eyeDir: TEXCOORD3; \r\n"
 "}; \r\n"
 "VSOut vs_main(VSIn in){ \r\n"
 "	VSOut out; \r\n"
-"	out.norm = in.norm; \r\n"
-"	out.pos = mul(in.pos, wvpMatrix); \r\n"
-"	out.lightDir = lightPos - in.pos; \r\n"
-"	out.eyeDir = eyePos - in.pos; \r\n"
-"	out.tex = in.tex; \r\n"
+"	out.norm = float4(in.norm, 0.0f); \r\n"
+"	float4 pos_v4f32 = float4(in.pos, 1.0f);"
+"	out.pos = mul(pos_v4f32, wvpMatrix); \r\n"
+"	out.lightDir = lightPos-pos_v4f32; \r\n"
+"	out.eyeDir = eyePos-pos_v4f32; \r\n"
 "	return out; \r\n"
 "} \r\n"
 ;
@@ -144,9 +142,9 @@ public:
 			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
 
-		vec3 norm( normalize3( in.attributes[1].xyz() ) );
-		vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
-		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
+		vec3 norm( normalize3( in.attributes[0].xyz() ) );
+		vec3 light_dir( normalize3( in.attributes[1].xyz() ) );
+		vec3 eye_dir( normalize3( in.attributes[2].xyz() ) );
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
 		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
@@ -181,7 +179,7 @@ public:
 
 class sponza: public quick_app{
 public:
-	sponza(): quick_app( create_wtl_application() ){}
+	sponza(): quick_app( create_wtl_application() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
 
 protected:
 	/** Event handlers @{ */
@@ -227,7 +225,7 @@ protected:
 		}
 
 		rasterizer_desc rs_desc;
-		rs_desc.cm = cull_back;
+		rs_desc.cm = cull_none;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
@@ -271,17 +269,11 @@ protected:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		static float xpos = -36.0f;
-		xpos += 0.2f;
-		if( xpos > 30.0f ){
-			xpos = -36.0f;
-		}
-		vec3 camera( xpos, 8.0f, 0.0f);
-		vec4 camera_pos = vec4( camera, 1.0f );
+		vec4 camera_pos = vec4( 0.0f, 14.0f, 12.0f, 1.0f );
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 
-		mat_lookat(view, camera, vec3(40.0f, 15.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera_pos.xyz(), vec3(0.0f, 9.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
 		static float ypos = 40.0f;
@@ -315,23 +307,17 @@ protected:
 			hsr->set_vs_variable( "eyePos", &camera_pos );
 			hsr->set_vs_variable( "lightPos", &lightPos );
 
-//			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
-//				h_mesh cur_mesh = sponza_mesh[i_mesh];
-//
-//				shared_ptr<obj_material> mtl
-//					= shared_polymorphic_cast<obj_material>( cur_mesh->get_attached() );
-//
-//#ifdef _DEBUG
-//				// if (mtl->name != "sponza_07SG"){ continue; }
-//#endif
-//				pps->set_constant( _T("Ambient"),  &mtl->ambient );
-//				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
-//				pps->set_constant( _T("Specular"), &mtl->specular );
-//				pps->set_constant( _T("Shininess"),&mtl->ambient );
-//				shared_polymorphic_cast<sponza_ps>( pps )->set_texture( mtl->tex );
-//
-//				cur_mesh->render();
-//			}
+			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
+				h_mesh cur_mesh = sponza_mesh[i_mesh];
+
+				//pps->set_constant( _T("Ambient"),  &mtl->ambient );
+				//pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
+				//pps->set_constant( _T("Specular"), &mtl->specular );
+				//pps->set_constant( _T("Shininess"),&mtl->ambient );
+				//shared_polymorphic_cast<sponza_ps>( pps )->set_texture( mtl->tex );
+
+				cur_mesh->render();
+			}
 		}
 
 		if (hsr->get_framebuffer()->get_num_samples() > 1){
@@ -346,7 +332,7 @@ protected:
 	h_device present_dev;
 	h_renderer hsr;
 
-	h_mesh sponza_mesh;
+	vector<h_mesh> sponza_mesh;
 
 	shared_ptr<shader_code> sponza_sc;
 

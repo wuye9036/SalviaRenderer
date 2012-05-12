@@ -129,6 +129,7 @@ void mesh::set_index_type( format fmt )
 }
 
 void mesh::add_vertex_buffer( size_t slot, salviar::h_buffer const& buf, size_t stride, size_t offset ){
+	assert(buf);
 	vertex_buffers_.push_back( buf );
 	strides_.push_back( stride );
 	offsets_.push_back( offset );

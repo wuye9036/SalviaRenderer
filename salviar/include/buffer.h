@@ -23,7 +23,7 @@ class buffer
 	bool islocked();
 
 public:
-	buffer(size_t size):bufdata_(size){}
+	buffer(size_t size):bufdata_(size), is_locked_(false){}
 
 	size_t get_size() const{ return bufdata_.size(); }
 	const uint8_t* raw_data(size_t offset) const {return &(bufdata_[offset]);}
