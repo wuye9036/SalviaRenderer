@@ -11,6 +11,7 @@ set (HEADER_FILES
 	include/resource/mesh/sa/material.h
 	include/resource/mesh/sa/mesh.h
 	include/resource/mesh/sa/skin_mesh.h
+	include/resource/mesh/sa/collada.h
 	
 	include/resource/mesh/sa/mesh_io.h
 	include/resource/mesh/sa/mesh_io_obj.h
@@ -33,6 +34,7 @@ set (SOURCE_FILES
 	src/resource/mesh/sa/mesh_io.cpp
 	src/resource/mesh/sa/mesh_io_obj.cpp
 	src/resource/mesh/sa/mesh_io_collada.cpp
+	src/resource/mesh/sa/collada.cpp
 	
 	src/resource/texture/sa/tex_io.cpp
 	src/resource/texture/freeimage/tex_io_freeimage.cpp
