@@ -6,15 +6,26 @@
 
 #include <sstream>
 
+using eflib::mat44;
+
 using boost::property_tree::ptree;
 using boost::make_shared;
 using boost::unordered_map;
 using boost::optional;
 
+using std::vector;
 using std::string;
 using std::stringstream;
 
 BEGIN_NS_SALVIAX_RESOURCE();
+
+template <typename T>
+void parse_array( vector<T>& arr, std::string const& content )
+{
+	stringstream ss(content);
+	T tmp;
+	while( ss >> tmp ){ arr.push_back(tmp); }
+}
 
 void dae_node::parse_attribute( ptree& xml_node, dae_node_ptr node, dae_dom_ptr file )
 {
@@ -109,7 +120,8 @@ dae_source_ptr dae_source::parse( ptree& root, dae_dom_ptr file )
 		if( child.first == "<xmlattr>" ) { continue; }
 
 		if(/**/child.first == "float_array"
-			|| child.first == "int_array" )
+			|| child.first == "int_array"
+			|| child.first == "Name_array" )
 		{
 			ret->arr = dae_array::parse(child.first, child.second, file);
 		}
@@ -161,9 +173,7 @@ dae_triangles_ptr dae_triangles::parse( ptree& root, dae_dom_ptr file )
 		}
 		else if( child.first == "p" )
 		{
-			stringstream ss( child.second.get_value<string>() );
-			int32_t v = 0;
-			while( ss >> v ) { ret->indexes.push_back(v); }
+			parse_array( ret->indexes, child.second.get_value<string>() );
 		}
 		else if( child.first == "input" )
 		{
@@ -180,9 +190,13 @@ dae_param_ptr dae_param::parse( ptree& root, dae_dom_ptr file )
 	parse_attribute(root, ret, file);
 
 	string type_str = root.get<string>("<xmlattr>.type");
+	
+	ret->stype = st_none;
 
 	/**/ if(type_str == "float")	{ ret->vtype = salviar::lvt_float; }
 	else if(type_str == "int")		{ ret->vtype = salviar::lvt_sint32;}
+	else if(type_str == "float4x4") { ret->vtype = salviar::lvt_f32m44;}
+	else if(type_str == "name")		{ ret->vtype = salviar::lvt_none; ret->stype = st_name; }
 	else { assert(false); }
 
 	return ret;
@@ -231,6 +245,7 @@ dae_array_ptr dae_array::parse( string const& name, ptree& root, dae_dom_ptr fil
 
 	if( name == "float_array" ) ret->array_type = float_array;
 	if( name == "int_array" )	ret->array_type = int_array;
+	if( name == "Name_array")	ret->array_type = name_array;
 
 	ret->count = root.get( "<xmlattr>.count", 0 );
 	ret->content = root.get_value_optional<string>();
@@ -242,20 +257,97 @@ dae_array_ptr dae_array::parse( string const& name, ptree& root, dae_dom_ptr fil
 		{
 		case float_array:
 			{
-				stringstream ss( *ret->content );
-				float v = 0.0f;
-				while( ss >> v ) { ret->float_arr.push_back(v); }
+				parse_array(ret->float_arr, *ret->content );
 				if( ret->count == 0 ) { ret->count = ret->float_arr.size(); }
 			}
 			break;
 		case int_array:
 			{
-				stringstream ss( *ret->content );
-				int v = 0;
-				while( ss >> v ) { ret->int_arr.push_back(v); }
-				if( ret->count == 0 ) { ret->count = ret->int_arr.size(); }
+				parse_array(ret->int_arr, *ret->content );
+				if( ret->count == 0 ) { ret->count = ret->float_arr.size(); }
 			}
 			break;
+		case name_array:
+			{
+				parse_array(ret->name_arr, *ret->content );
+				if( ret->count == 0 ) { ret->count = ret->float_arr.size(); }
+			}
+			break;
+		}
+	}
+
+	return ret;
+}
+
+dae_controller_ptr dae_controller::parse( ptree& root, dae_dom_ptr file )
+{
+	dae_controller_ptr ret = make_shared<dae_controller>();
+	parse_attribute(root, ret, file);
+	optional<ptree&> skin_node = root.get_child_optional("skin");
+	assert( skin_node );
+	ret->skin = dae_skin::parse( *skin_node, file );
+	return ret;
+}
+
+dae_skin_ptr dae_skin::parse( ptree& root, dae_dom_ptr file )
+{
+	dae_skin_ptr ret = make_shared<dae_skin>();
+	parse_attribute(root, ret, file);
+
+	ret->bind_shape_mat = mat44::identity();
+
+	BOOST_FOREACH( ptree::value_type& child, root )
+	{
+		if(child.first == "bind_shape_matrix")
+		{
+			stringstream ss( child.second.get_value<string>() );
+			for(int i = 0; i < 16; ++i){
+				ss >> ret->bind_shape_mat.data_[i/4][i%4];
+			}
+		}
+		else if(child.first == "source")
+		{
+			ret->joint_sources.push_back( dae_source::parse(child.second, file) );
+		}
+		else if(child.first == "joints")
+		{
+			BOOST_FOREACH( ptree::value_type& joint_input, child.second )
+			{
+				if(joint_input.first == "input")
+				{
+					ret->joint_formats.push_back( dae_input::parse(joint_input.second, file) );
+				}
+			}
+		}
+		else if(child.first == "vertex_weights")
+		{
+			ret->weights = dae_vertex_weights::parse(child.second, file);
+		}
+	}
+
+	return ret;
+}
+
+
+dae_vertex_weights_ptr dae_vertex_weights::parse( ptree& root, dae_dom_ptr file )
+{
+	dae_vertex_weights_ptr ret = make_shared<dae_vertex_weights>();
+	parse_attribute(root, ret, file);
+
+	ret->count = root.get("<xmlattr>.count", (size_t)0);
+	BOOST_FOREACH( ptree::value_type& child, root )
+	{
+		if( child.first == "input" )
+		{
+			ret->inputs.push_back( dae_input::parse(child.second, file) );
+		}
+		else if(child.first == "vcount")
+		{
+			parse_array( ret->vcount, child.second.get_value<string>() );
+		}
+		else if(child.first == "v")
+		{
+			parse_array( ret->v, child.second.get_value<string>() );
 		}
 	}
 

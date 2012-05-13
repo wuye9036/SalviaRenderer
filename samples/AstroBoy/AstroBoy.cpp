@@ -41,13 +41,15 @@ using std::endl;
 
 #define SASL_VERTEX_SHADER_ENABLED
 
-char const* sponza_vs_code =
+char const* astro_boy_vs_code =
 "float4x4 wvpMatrix; \r\n"
 "float4   eyePos; \r\n"
 "float4	  lightPos; \r\n"
 "struct VSIn{ \r\n"
 "	float3 pos: POSITION; \r\n"
 "	float3 norm: NORMAL; \r\n"
+"	int4   indices: BLEND_INDICES; \r\n"
+"	float4 weights: BLEND_WEIGHTS; \r\n"
 "}; \r\n"
 "struct VSOut{ \r\n"
 "	float4 pos: sv_position; \r\n"
@@ -66,12 +68,12 @@ char const* sponza_vs_code =
 "} \r\n"
 ;
 
-class sponza_vs : public vertex_shader
+class astro_boy_vs : public vertex_shader
 {
 	mat44 wvp;
 	vec4 light_pos, eye_pos;
 public:
-	sponza_vs():wvp(mat44::identity()){
+	astro_boy_vs():wvp(mat44::identity()){
 		declare_constant(_T("wvpMatrix"), wvp);
 		declare_constant(_T("lightPos"), light_pos);
 		declare_constant(_T("eyePos"), eye_pos );
@@ -81,7 +83,7 @@ public:
 		bind_semantic( "NORMAL", 0, 2 );
 	}
 
-	sponza_vs(const mat44& wvp):wvp(wvp){}
+	astro_boy_vs(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in.attributes[0];
@@ -101,7 +103,7 @@ public:
 	}
 };
 
-class sponza_ps : public pixel_shader
+class astro_boy_ps : public pixel_shader
 {
 	salviar::h_sampler sampler_;
 	salviar::h_texture tex_;
@@ -117,7 +119,7 @@ public:
 		sampler_->set_texture(tex_.get());
 	}
 
-	sponza_ps()
+	astro_boy_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
@@ -157,7 +159,7 @@ public:
 	}
 	virtual h_pixel_shader create_clone()
 	{
-		return h_pixel_shader(new sponza_ps(*this));
+		return h_pixel_shader(new astro_boy_ps(*this));
 	}
 	virtual void destroy_clone(h_pixel_shader& ps_clone)
 	{
@@ -177,9 +179,9 @@ public:
 	}
 };
 
-class sponza: public quick_app{
+class astro_boy: public quick_app{
 public:
-	sponza(): quick_app( create_wtl_application() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
+	astro_boy(): quick_app( create_wtl_application() ), num_frames(0), accumulate_time(0.0f), fps(0.0f) {}
 
 protected:
 	/** Event handlers @{ */
@@ -187,7 +189,7 @@ protected:
 
 		cout << "Creating window and device ..." << endl;
 
-		string title( "Sample: Sponza" );
+		string title( "Sample: Astro Boy" );
 		impl->main_window()->set_title( title );
 
 		std::_tstring dll_name = TEXT("salviax_");
@@ -229,15 +231,15 @@ protected:
 		rs_back.reset(new rasterizer_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
-		sponza_mesh = create_mesh_from_collada( hsr.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
+		astro_boy_mesh = create_mesh_from_collada( hsr.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
-		sponza_sc = shader_code::create( sponza_vs_code, lang_vertex_shader );
+		astro_boy_sc = shader_code::create( astro_boy_vs_code, lang_vertex_shader );
 #endif
 
-		pvs.reset( new sponza_vs() );
-		pps.reset( new sponza_ps() );
+		pvs.reset( new astro_boy_vs() );
+		pps.reset( new astro_boy_ps() );
 		pbs.reset( new bs() );
 	}
 	/** @} */
@@ -295,7 +297,7 @@ protected:
 
 			// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
-			hsr->set_vertex_shader_code( sponza_sc );
+			hsr->set_vertex_shader_code( astro_boy_sc );
 #else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
 			pvs->set_constant( _T("eyePos"), &camera_pos );
@@ -307,14 +309,14 @@ protected:
 			hsr->set_vs_variable( "eyePos", &camera_pos );
 			hsr->set_vs_variable( "lightPos", &lightPos );
 
-			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
-				h_mesh cur_mesh = sponza_mesh[i_mesh];
+			for( size_t i_mesh = 0; i_mesh < astro_boy_mesh.size(); ++i_mesh ){
+				h_mesh cur_mesh = astro_boy_mesh[i_mesh];
 
 				//pps->set_constant( _T("Ambient"),  &mtl->ambient );
 				//pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				//pps->set_constant( _T("Specular"), &mtl->specular );
 				//pps->set_constant( _T("Shininess"),&mtl->ambient );
-				//shared_polymorphic_cast<sponza_ps>( pps )->set_texture( mtl->tex );
+				//shared_polymorphic_cast<astro_boy_ps>( pps )->set_texture( mtl->tex );
 
 				cur_mesh->render();
 			}
@@ -332,9 +334,9 @@ protected:
 	h_device present_dev;
 	h_renderer hsr;
 
-	vector<h_mesh> sponza_mesh;
+	vector<h_mesh> astro_boy_mesh;
 
-	shared_ptr<shader_code> sponza_sc;
+	shared_ptr<shader_code> astro_boy_sc;
 
 	h_vertex_shader	pvs;
 	h_pixel_shader	pps;
@@ -354,6 +356,6 @@ protected:
 };
 
 int main( int /*argc*/, TCHAR* /*argv*/[] ){
-	sponza loader;
+	astro_boy loader;
 	return loader.run();
 }

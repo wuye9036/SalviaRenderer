@@ -4,6 +4,7 @@
 #include <salviax/include/resource/resource_forward.h>
 
 #include <salviar/include/shader_abi.h>
+#include <eflib/include/math/matrix.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
@@ -31,6 +32,8 @@ DECLARE_STRUCT_SHARED_PTR(dae_node);
 DECLARE_STRUCT_SHARED_PTR(dae_dom);
 DECLARE_STRUCT_SHARED_PTR(dae_param);
 DECLARE_STRUCT_SHARED_PTR(dae_controller);
+DECLARE_STRUCT_SHARED_PTR(dae_skin);
+DECLARE_STRUCT_SHARED_PTR(dae_vertex_weights);
 
 struct dae_dom
 {
@@ -62,6 +65,12 @@ struct dae_node
 	boost::shared_ptr<T> node_by_id( std::string const& name )
 	{
 		return root->get_node<T>(name);
+	}
+
+	std::string unqualified_source_name()
+	{
+		if(!source) return std::string();
+		return ( (*source)[0] == '#' ? (*source).substr(1) : (*source) );
 	}
 
 	dae_node_ptr source_node()
@@ -143,6 +152,7 @@ struct dae_array: public dae_node
 		none_array,
 		float_array,
 		int_array,
+		name_array,
 		idref_array
 	};
 
@@ -166,8 +176,9 @@ struct dae_array: public dae_node
 	boost::optional<std::string>	content;
 
 	// Parsed members
-	std::vector<int>	int_arr;
-	std::vector<float>	float_arr;
+	std::vector<int>			int_arr;
+	std::vector<float>			float_arr;
+	std::vector<std::string>	name_arr;
 };
 
 struct dae_param: public dae_node
@@ -178,7 +189,14 @@ struct dae_param: public dae_node
 	int  index( std::string const& index_seq );
 	int  index_xyzw_stpq();
 
-	salviar::language_value_types vtype;
+	enum special_types
+	{
+		st_none,
+		st_name	
+	};
+
+	salviar::language_value_types	vtype;
+	special_types					stype;
 };
 
 struct dae_accessor: public dae_node
@@ -198,7 +216,26 @@ struct dae_tech: public dae_node
 
 struct dae_controller: public dae_node
 {
-	static dae_tech_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	static dae_controller_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	dae_skin_ptr skin;
+};
+
+struct dae_skin: public dae_node
+{
+	static dae_skin_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	eflib::mat44				bind_shape_mat;
+	std::vector<dae_source_ptr> joint_sources;
+	std::vector<dae_input_ptr>	joint_formats;
+	dae_vertex_weights_ptr		weights;
+};
+
+struct dae_vertex_weights: public dae_node
+{
+	static dae_vertex_weights_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	size_t						count;
+	std::vector<dae_input_ptr>	inputs;
+	std::vector<uint32_t>		vcount;
+	std::vector<uint32_t>		v;
 };
 
 END_NS_SALVIAX_RESOURCE();

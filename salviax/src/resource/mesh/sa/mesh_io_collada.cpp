@@ -26,19 +26,43 @@ using salviar::language_value_types;
 using salviar::input_element_desc;
 using salviar::input_per_vertex;
 
+using eflib::vec4;
+using eflib::int4;
+using eflib::mat44;
+
 using boost::property_tree::ptree;
 using boost::property_tree::read_xml;
 using boost::optional;
 using boost::make_shared;
 using boost::unordered_map;
+using boost::shared_ptr;
 
 using std::vector;
 using std::string;
 using std::fstream;
 using std::make_pair;
 using std::set;
+using std::pair;
 
 BEGIN_NS_SALVIAX_RESOURCE();
+
+struct skin_info
+{
+	string				source;
+
+	mat44				bind_matrix;
+	vector<string>		joints;
+	vector<mat44>		joint_inv_matrix;
+	vector<float>		weights;
+
+	vector<uint32_t>	vertex_skin_info_start_pos;
+	vector<uint32_t>	vertex_skin_info_count;
+	vector<
+		pair<uint32_t /*skin_info.joint*/, uint32_t /*skin_info.weight*/>
+	>					vertex_skin_infos;
+};
+
+typedef shared_ptr<skin_info> skin_info_ptr;
 
 template <typename T>
 bool repack_data(void* dst, size_t dst_stride, void const* src, size_t stride, size_t count, size_t offset, vector<int> const& pattern)
@@ -156,7 +180,7 @@ size_t hash_value( vertex_index_group const& v )
 	return ret;
 }
 
-vector<h_mesh> build_mesh( dae_mesh_ptr m, renderer* render )
+vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 {
 	vector<h_mesh> ret;
 
@@ -207,6 +231,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, renderer* render )
 		// Extract vertices to sources.
 		vector<dae_input_ptr>	inputs;
 		vector<size_t>			offsets;
+		size_t					vertex_index_offset = 0;
 		size_t					index_stride = triangles->inputs.size();
 		BOOST_FOREACH( dae_input_ptr const& input, triangles->inputs )
 		{
@@ -218,6 +243,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, renderer* render )
 				dae_verts* verts = input_source->as<dae_verts>();
 				inputs.insert( inputs.end(), verts->inputs.begin(), verts->inputs.end() );
 				offsets.insert( offsets.end(), verts->inputs.size(), input->offset );
+				vertex_index_offset = input->offset;
 			}
 			else
 			{
@@ -229,11 +255,11 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, renderer* render )
 
 		// Merge per-input index to an unified index, and re-order the data to matching unified index.
 		typedef unordered_map<vertex_index_group, uint32_t> index_dict_t;
-		vector< vector<char> >	buffers_data(index_group_size);
+		vector< vector<char> >	buffers_data(skinfo ? index_group_size + 2 : index_group_size ); // If skinfo is available, last two buffers for joints and weights.
 		vector<uint32_t>		attribute_merged_indexes;
 		index_dict_t			index_dict; // a map from grouped index to merged index.
-		size_t					vertex_index = 0;
-		vertex_index_group		index_group( index_group_size );
+		size_t					merged_vertex_counter = 0;
+		vertex_index_group		index_group(index_group_size);
 
 		for( size_t i_tri_vert = 0; i_tri_vert < triangles->count*3; ++i_tri_vert ){
 			// make index group
@@ -256,9 +282,34 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, renderer* render )
 					transfer_element( buffers_data[i_comp], repacked_source_data, index_group.indexes[i_comp], 0, stride_in_bytes );
 				}
 
-				attribute_merged_indexes.push_back(vertex_index);
-				index_dict[index_group] = vertex_index;
-				++vertex_index;
+				// Copy joint id and weights to buffer
+				if( skinfo )
+				{
+					size_t vert_index = (uint32_t)triangles->indexes[i_tri_vert*index_stride+vertex_index_offset];
+					size_t vert_skin_info_start  = skinfo->vertex_skin_info_start_pos[vert_index];
+					size_t vert_skin_info_length = skinfo->vertex_skin_info_count[vert_index]; 
+					int4 vert_joint_ids(-1, -1, -1, -1);
+					vec4 vert_joint_weights(0.0f, 0.0f, 0.0f, 0.0f);
+					for( int i = 0; i < vert_skin_info_length; ++i )
+					{
+						if( i > 3 ){ break; }
+						size_t skin_info_index = vert_skin_info_start + i;
+						vert_joint_ids.data_[i] = skinfo->vertex_skin_infos[skin_info_index].first;
+						vert_joint_weights.data_[i] = skinfo->weights[skinfo->vertex_skin_infos[skin_info_index].second];
+					}
+					vector<char>& weights_buffer = buffers_data.back();
+					vector<char>& joint_buffer = *(buffers_data.end()-2);
+					joint_buffer.insert(
+						joint_buffer.end(), (char*)(&vert_joint_ids), (char*)(&vert_joint_ids) + sizeof(vert_joint_ids)
+						);
+					weights_buffer.insert(
+						weights_buffer.end(), (char*)(&vert_joint_weights), (char*)(&vert_joint_weights) + sizeof(vert_joint_weights)
+						);
+				}
+
+				attribute_merged_indexes.push_back(merged_vertex_counter);
+				index_dict[index_group] = merged_vertex_counter;
+				++merged_vertex_counter;
 			}
 		}
 
@@ -289,6 +340,42 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, renderer* render )
 			buffer_strides.push_back( strides[input_source] );
 		}
 
+		// Add skin info buffers.
+		if(skinfo)
+		{
+			// Add blend indices buffer.
+			input_descs.push_back( input_element_desc() );
+			input_descs.back().semantic_name	= "BLEND_INDICES";
+			input_descs.back().semantic_index	= 0;
+			input_descs.back().data_format		= salviar::format_r32g32b32a32_sint;
+			input_descs.back().input_slot		= buffers.size();
+			input_descs.back().slot_class		= input_per_vertex; 
+			input_descs.back().aligned_byte_offset = 0;
+
+			vector<char>& joint_indices_buffer = buffers_data[buffers_data.size()-2];
+			size_t buffer_data_size = joint_indices_buffer.size();
+			h_buffer buf = render->create_buffer(buffer_data_size);
+			buf->transfer(0, &(joint_indices_buffer[0]), buffer_data_size, buffer_data_size, buffer_data_size, 1 );
+			buffers.push_back( buf );
+			buffer_strides.push_back( sizeof(int4) );
+
+			// Add blend weights buffer
+			input_descs.push_back( input_element_desc() );
+			input_descs.back().semantic_name	= "BLEND_WEIGHTS";
+			input_descs.back().semantic_index	= 0;
+			input_descs.back().data_format		= salviar::format_r32g32b32a32_float;
+			input_descs.back().input_slot		= buffers.size();
+			input_descs.back().slot_class		= input_per_vertex; 
+			input_descs.back().aligned_byte_offset = 0;
+
+			vector<char>& joint_weights_buffer = buffers_data.back();
+			buffer_data_size = joint_indices_buffer.size();
+			buf = render->create_buffer(buffer_data_size);
+			buf->transfer(0, &(joint_weights_buffer[0]), buffer_data_size, buffer_data_size, buffer_data_size, 1 );
+			buffers.push_back( buf );
+			buffer_strides.push_back( sizeof(int4) );
+		}
+
 		mesh* pmesh = new mesh(render);
 		for( size_t i = 0; i < buffers.size(); ++i )
 		{
@@ -312,6 +399,81 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, renderer* render )
 	return ret;
 }
 
+skin_info_ptr build_skin_info( dae_skin_ptr skin )
+{
+	skin_info_ptr ret = make_shared<skin_info>();
+
+	ret->bind_matrix = skin->bind_shape_mat;
+	ret->source = skin->unqualified_source_name();
+
+	BOOST_FOREACH( dae_input_ptr const& joint_fmt, skin->joint_formats )
+	{
+		if(!joint_fmt->semantic) { continue; }
+		if(*(joint_fmt->semantic) == "JOINT"){
+			dae_source* joint_name_source = joint_fmt->source_node()->as<dae_source>();
+			assert( joint_name_source );
+			assert( joint_name_source->arr->array_type == dae_array::name_array );
+			ret->joints = joint_name_source->arr->name_arr;	// Copy directly.
+		}
+		else if(*(joint_fmt->semantic) == "INV_BIND_MATRIX")
+		{
+			dae_source* inv_bind_matrix_source = joint_fmt->source_node()->as<dae_source>();
+			assert( inv_bind_matrix_source );
+			assert( inv_bind_matrix_source->arr->array_type == dae_array::float_array );
+
+			dae_accessor_ptr accessor = inv_bind_matrix_source->tech->accessor;
+			assert( accessor->params[0]->vtype == salviar::lvt_f32m44 );
+
+			for( size_t i = 0; i < accessor->count; ++i )
+			{
+				size_t start_addr = i*accessor->stride;
+				float* mat_addr = &( (inv_bind_matrix_source->arr->float_arr)[start_addr] );
+				ret->joint_inv_matrix.push_back( *reinterpret_cast<mat44*>(mat_addr) );
+			}
+		}
+	}
+
+	size_t joint_offset = 0;
+	size_t weight_offset = 0;
+	size_t weight_index_stride = 0;
+	BOOST_FOREACH( dae_input_ptr const& weight_input, skin->weights->inputs )
+	{
+		if(!weight_input->semantic) { continue; }
+		if( *weight_input->semantic == "JOINT" )
+		{
+			joint_offset = weight_input->offset;
+			++weight_index_stride;
+		}
+		else if( *weight_input->semantic == "WEIGHT" )
+		{
+			weight_offset = weight_input->offset;
+			dae_source* weight_source = weight_input->source_node()->as<dae_source>();
+			assert(weight_source);
+			ret->weights = weight_source->arr->float_arr; // Copy directly. maybe we need to repack.
+			++weight_index_stride;
+		}
+	}
+	assert( weight_index_stride == 2 );
+
+	size_t vertex_skin_info_cursor = 0;
+	for( size_t i_vert = 0; i_vert < skin->weights->count; ++i_vert )
+	{
+		size_t vcount = skin->weights->vcount[i_vert];
+		ret->vertex_skin_info_start_pos.push_back(vertex_skin_info_cursor);
+		ret->vertex_skin_info_count.push_back(vcount);
+		for( size_t i_joint = 0; i_joint < vcount; ++i_joint )
+		{
+			size_t pos_of_vert_skin_info = (vertex_skin_info_cursor+i_joint)*weight_index_stride;
+			size_t pos_of_joint_id = pos_of_vert_skin_info + joint_offset;
+			size_t pos_of_weight = pos_of_vert_skin_info + weight_offset;
+			ret->vertex_skin_infos.push_back( make_pair(skin->weights->v[pos_of_joint_id], skin->weights->v[pos_of_weight]) );
+		}
+		vertex_skin_info_cursor += vcount;
+	}
+
+	return ret;
+}
+
 vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& file_name )
 {
 	vector<h_mesh> ret;
@@ -327,21 +489,33 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 	optional<ptree&> geometries_root = collada_root->get_child_optional( "library_geometries" );
 	if( !geometries_root ) return ret;
 
+	optional<ptree&> controllers_root = collada_root->get_child_optional( "library_controllers" );
 	dae_dom_ptr pdom = make_shared<dae_dom>();
+
+	unordered_map<string, skin_info_ptr> skin_infos;
+	BOOST_FOREACH( ptree::value_type& ctrl_child, controllers_root.get() ){
+		if( ctrl_child.first == "controller" ){
+			dae_controller_ptr ctrl_node = dae_controller::parse( ctrl_child.second, pdom );
+			skin_info_ptr skinfo = build_skin_info(ctrl_node->skin);
+			skin_infos[skinfo->source] = skinfo;
+		}
+	}
 
 	BOOST_FOREACH( ptree::value_type& geom_child, geometries_root.get() )
 	{
 		if( geom_child.first == "geometry" )
 		{
-			BOOST_FOREACH( ptree::value_type& mesh_child, geom_child.second )
-			{
-				if( mesh_child.first == "mesh")
-				{
-					dae_mesh_ptr dae_mesh_node = dae_mesh::parse( mesh_child.second, pdom );
-					if( !dae_mesh_node ) return ret;
-					return build_mesh( dae_mesh_node, render );
-				}
-			}
+			string geom_id = geom_child.second.get<string>("<xmlattr>.id");
+			skin_info* skinfo = 
+				skin_infos.count(geom_id) > 0 ? skin_infos[geom_id].get() : NULL;
+			
+			optional<ptree&> mesh_node = geom_child.second.get_child_optional("mesh");
+			assert(mesh_node);
+
+			dae_mesh_ptr dae_mesh_node = dae_mesh::parse( *mesh_node, pdom );
+			if( !dae_mesh_node ) return ret;
+
+			return build_mesh( dae_mesh_node, skinfo, render );
 		}
 	}
 

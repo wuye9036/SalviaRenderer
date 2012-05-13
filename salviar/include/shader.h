@@ -42,6 +42,9 @@ enum system_values{
 	sv_texcoord,
 	sv_normal,
 
+	sv_blend_indices,
+	sv_blend_weights,
+
 	sv_target,
 	sv_depth,
 
@@ -77,6 +80,10 @@ public:
 			sv = sv_target;
 		} else if ( lower_name == "depth" || lower_name == "sv_depth" ) {
 			sv = sv_depth;
+		} else if ( lower_name == "blend_indices" ){
+			sv = sv_blend_indices;
+		} else if ( lower_name == "blend_weights" ){
+			sv = sv_blend_weights;
 		} else {
 			sv = sv_customized;
 			this->name = name;

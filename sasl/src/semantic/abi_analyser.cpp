@@ -52,7 +52,10 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 		return 
 			( is_scalar(btc) || is_vector(btc) || is_matrix(btc) )
 			&& ( scalar_of(btc) == builtin_types::_float || scalar_of(btc) == builtin_types::_sint32 );
-
+	case salviar::sv_blend_indices:
+		return ( is_scalar(btc) || is_vector(btc) ) && is_integer( scalar_of(btc) );
+	case salviar::sv_blend_weights:
+		return ( is_scalar(btc) || is_vector(btc) ) && ( scalar_of(btc) == builtin_types::_float );
 	case salviar::sv_depth:
 		return ( btc == builtin_types::_float );
 	default:
@@ -65,10 +68,10 @@ bool verify_semantic_type( builtin_types btc, salviar::semantic_value const& sem
 sv_usage vsinput_semantic_usage( salviar::semantic_value const& sem ){
 	switch( sem.get_system_value() ){
 	case salviar::sv_position:
-		return su_stream_in;
 	case salviar::sv_texcoord:
-		return su_stream_in;
 	case salviar::sv_normal:
+	case salviar::sv_blend_indices:
+	case salviar::sv_blend_weights:
 		return su_stream_in;
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
