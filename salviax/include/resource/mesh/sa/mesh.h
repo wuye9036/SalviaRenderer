@@ -35,7 +35,18 @@ public:
 	virtual void gen_adjancency() = 0;
 
 	virtual void render() = 0;
+
+	virtual ~base_mesh(){}
 };
+DECL_HANDLE(base_mesh, h_mesh);
+
+class base_skin_mesh
+{
+public:
+	virtual void render( uint32_t submesh_id ) = 0;
+	virtual ~base_skin_mesh(){}
+};
+DECL_HANDLE(base_skin_mesh, h_skin_mesh);
 
 class mesh : public base_mesh
 {
@@ -96,8 +107,6 @@ public:
 	virtual void set_attached_data( h_attached_data const& attached );
 	/**@}*/
 };
-
-DECL_HANDLE(base_mesh, h_mesh);
 
 END_NS_SALVIAX_RESOURCE();
 

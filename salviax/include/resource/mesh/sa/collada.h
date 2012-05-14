@@ -34,6 +34,12 @@ DECLARE_STRUCT_SHARED_PTR(dae_param);
 DECLARE_STRUCT_SHARED_PTR(dae_controller);
 DECLARE_STRUCT_SHARED_PTR(dae_skin);
 DECLARE_STRUCT_SHARED_PTR(dae_vertex_weights);
+DECLARE_STRUCT_SHARED_PTR(dae_animations);
+DECLARE_STRUCT_SHARED_PTR(dae_animation);
+DECLARE_STRUCT_SHARED_PTR(dae_sampler);
+DECLARE_STRUCT_SHARED_PTR(dae_channel);
+DECLARE_STRUCT_SHARED_PTR(dae_scene_node);
+DECLARE_STRUCT_SHARED_PTR(dae_matrix);
 
 struct dae_dom
 {
@@ -55,16 +61,31 @@ struct dae_dom
 		return;
 	}
 
+	template <typename T>
+	boost::shared_ptr<T> load_node(boost::property_tree::ptree& xml_node, dae_node* parent)
+	{
+		boost::shared_ptr<T> ret = make_shared<T>();
+		ret->owner	= this;
+		ret->parent	= parent; 
+		ret->parse_attribute(xml_node);
+		ret->parse(xml_node);
+		if( ret->sid && parent ){ parent->sid_children.insert( make_pair(*ret->sid, ret) ); }
+		if( ret->id  ){ id_nodes.insert( make_pair(*ret->id, ret) ); }
+
+		return ret;
+	}
 };
 
 struct dae_node
 {
-	static void parse_attribute( boost::property_tree::ptree& xml_node, dae_node_ptr node, dae_dom_ptr file );
+	void parse_attribute(boost::property_tree::ptree& xml_node);
+	
+	virtual bool parse(boost::property_tree::ptree& xml_node) = 0;
 
 	template <typename T>
 	boost::shared_ptr<T> node_by_id( std::string const& name )
 	{
-		return root->get_node<T>(name);
+		return owner->get_node<T>(name);
 	}
 
 	std::string unqualified_source_name()
@@ -75,7 +96,7 @@ struct dae_node
 
 	dae_node_ptr source_node()
 	{
-		if( source ) { return root->get_node<dae_node>(*source); }
+		if( source ) { return owner->get_node<dae_node>(*source); }
 		return dae_node_ptr();
 	}
 
@@ -93,14 +114,26 @@ struct dae_node
 		return dynamic_cast<T const*>(this);
 	}
 
-	dae_dom*				root;
-	boost::optional<std::string> id, sid, name, source;
+	template <typename T>
+	boost::shared_ptr<T> load_child( boost::property_tree::ptree& xml_node )
+	{
+		return owner->load_node<T>(xml_node, this);
+	}
+
+	boost::optional<
+		std::string >	id, sid, name, source;
+	dae_dom*			owner;
+	dae_node*			parent;
+	boost::unordered_map<
+		std::string, 
+		dae_node_ptr >	sid_children;
+
 	virtual ~dae_node(){}
 };
 
 struct dae_mesh: public dae_node
 {
-	static dae_mesh_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
 
 	std::vector<dae_source_ptr>		sources;
 	std::vector<dae_verts_ptr>		verts;
@@ -109,8 +142,7 @@ struct dae_mesh: public dae_node
 
 struct dae_triangles: public dae_node
 {
-	static dae_triangles_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
-
+	virtual bool parse(boost::property_tree::ptree& root);
 	size_t							count;
 	std::vector<dae_input_ptr>		inputs;
 	std::vector<int32_t>			indexes;
@@ -119,8 +151,7 @@ struct dae_triangles: public dae_node
 
 struct dae_verts: public dae_node
 {
-	static dae_verts_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
-
+	virtual bool parse(boost::property_tree::ptree& root);
 	std::vector<dae_input_ptr>		inputs;
 	size_t							count;
 	boost::optional<std::string>	material_name;
@@ -129,24 +160,23 @@ struct dae_verts: public dae_node
 
 struct dae_input: public dae_node
 {
-	static dae_input_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
-
+	virtual bool parse(boost::property_tree::ptree& root);
 	boost::optional<std::string>	semantic;
 	size_t							offset;
-	size_t							 set;
+	size_t							set;
 };
 
 struct dae_source: public dae_node
 {
-	static dae_source_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
-
+	virtual bool parse(boost::property_tree::ptree& root);
 	dae_array_ptr	arr;
 	dae_tech_ptr	tech;
 };
 
 struct dae_array: public dae_node
 {
-	static dae_array_ptr parse( std::string const& name, boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
+	void parse_content( std::string const& tag_name );
 
 	enum array_types {
 		none_array,
@@ -156,20 +186,7 @@ struct dae_array: public dae_node
 		idref_array
 	};
 
-	size_t element_size()
-	{
-		switch(array_type)
-		{
-		case float_array:
-			return sizeof(float);
-		case int_array:
-			return sizeof(int);
-		default:
-			assert(false);
-		}
-
-		return 0;
-	}
+	size_t element_size();
 
 	array_types						array_type;
 	size_t							count;
@@ -183,7 +200,7 @@ struct dae_array: public dae_node
 
 struct dae_param: public dae_node
 {
-	static dae_param_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
 
 	bool index( std::string const& index_seq, size_t& idx );
 	int  index( std::string const& index_seq );
@@ -201,7 +218,7 @@ struct dae_param: public dae_node
 
 struct dae_accessor: public dae_node
 {
-	static dae_accessor_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
 
 	size_t						offset, stride, count;
 	dae_array_ptr				source_array;
@@ -210,19 +227,20 @@ struct dae_accessor: public dae_node
 
 struct dae_tech: public dae_node
 {
-	static dae_tech_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
 	dae_accessor_ptr accessor;
 };
 
 struct dae_controller: public dae_node
 {
-	static dae_controller_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
 	dae_skin_ptr skin;
 };
 
 struct dae_skin: public dae_node
 {
-	static dae_skin_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
+
 	eflib::mat44				bind_shape_mat;
 	std::vector<dae_source_ptr> joint_sources;
 	std::vector<dae_input_ptr>	joint_formats;
@@ -231,11 +249,50 @@ struct dae_skin: public dae_node
 
 struct dae_vertex_weights: public dae_node
 {
-	static dae_vertex_weights_ptr parse( boost::property_tree::ptree& root, dae_dom_ptr file );
+	virtual bool parse(boost::property_tree::ptree& root);
 	size_t						count;
 	std::vector<dae_input_ptr>	inputs;
 	std::vector<uint32_t>		vcount;
 	std::vector<uint32_t>		v;
+};
+
+struct dae_animations: public dae_node
+{
+	virtual bool parse(boost::property_tree::ptree& root);
+	std::vector<dae_animation_ptr> anims;
+};
+
+struct dae_animation: public dae_node
+{
+	virtual bool parse(boost::property_tree::ptree& root);
+	std::vector<dae_source_ptr>	sources;
+	dae_sampler_ptr				sampler;
+	dae_channel_ptr				channel;
+};
+
+struct dae_sampler: public dae_node
+{
+	virtual bool parse(boost::property_tree::ptree& root);
+	std::vector<dae_input_ptr>	inputs;
+};
+
+struct dae_channel: public dae_node
+{
+	virtual bool parse(boost::property_tree::ptree& root);
+	boost::optional<std::string> target;
+};
+
+struct dae_scene_node: public dae_node
+{
+	virtual bool parse(boost::property_tree::ptree& root);
+	std::vector<dae_node_ptr>		children;
+	boost::optional<std::string>	type_name;
+};
+
+struct dae_matrix: public dae_node
+{
+	virtual bool parse(boost::property_tree::ptree& root);
+	eflib::mat44 mat;
 };
 
 END_NS_SALVIAX_RESOURCE();

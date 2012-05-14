@@ -495,7 +495,7 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 	unordered_map<string, skin_info_ptr> skin_infos;
 	BOOST_FOREACH( ptree::value_type& ctrl_child, controllers_root.get() ){
 		if( ctrl_child.first == "controller" ){
-			dae_controller_ptr ctrl_node = dae_controller::parse( ctrl_child.second, pdom );
+			dae_controller_ptr ctrl_node = pdom->load_node<dae_controller>(ctrl_child.second, NULL);
 			skin_info_ptr skinfo = build_skin_info(ctrl_node->skin);
 			skin_infos[skinfo->source] = skinfo;
 		}
@@ -512,7 +512,7 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 			optional<ptree&> mesh_node = geom_child.second.get_child_optional("mesh");
 			assert(mesh_node);
 
-			dae_mesh_ptr dae_mesh_node = dae_mesh::parse( *mesh_node, pdom );
+			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
 			if( !dae_mesh_node ) return ret;
 
 			return build_mesh( dae_mesh_node, skinfo, render );
