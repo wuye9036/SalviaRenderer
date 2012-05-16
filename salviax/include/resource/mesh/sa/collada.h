@@ -13,33 +13,35 @@
 #include <boost/optional.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <string>
 #include <vector>
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
-#define DECLARE_STRUCT_SHARED_PTR( name ) struct name; typedef boost::shared_ptr<name> name##_ptr;
-
-DECLARE_STRUCT_SHARED_PTR(dae_source);
-DECLARE_STRUCT_SHARED_PTR(dae_verts);
-DECLARE_STRUCT_SHARED_PTR(dae_array);
-DECLARE_STRUCT_SHARED_PTR(dae_tech);
-DECLARE_STRUCT_SHARED_PTR(dae_accessor);
-DECLARE_STRUCT_SHARED_PTR(dae_triangles);
-DECLARE_STRUCT_SHARED_PTR(dae_input);
-DECLARE_STRUCT_SHARED_PTR(dae_mesh);
-DECLARE_STRUCT_SHARED_PTR(dae_node);
-DECLARE_STRUCT_SHARED_PTR(dae_dom);
-DECLARE_STRUCT_SHARED_PTR(dae_param);
-DECLARE_STRUCT_SHARED_PTR(dae_controller);
-DECLARE_STRUCT_SHARED_PTR(dae_skin);
-DECLARE_STRUCT_SHARED_PTR(dae_vertex_weights);
-DECLARE_STRUCT_SHARED_PTR(dae_animations);
-DECLARE_STRUCT_SHARED_PTR(dae_animation);
-DECLARE_STRUCT_SHARED_PTR(dae_sampler);
-DECLARE_STRUCT_SHARED_PTR(dae_channel);
-DECLARE_STRUCT_SHARED_PTR(dae_scene_node);
-DECLARE_STRUCT_SHARED_PTR(dae_matrix);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_source);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_verts);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_array);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_tech);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_accessor);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_triangles);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_input);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_mesh);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_node);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_dom);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_param);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_controller);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_skin);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_vertex_weights);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_animations);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_animation);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_sampler);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_channel);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_visual_scenes);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_visual_scene);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_scene_node);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_matrix);
 
 struct dae_dom
 {
@@ -266,14 +268,14 @@ struct dae_animation: public dae_node
 {
 	virtual bool parse(boost::property_tree::ptree& root);
 	std::vector<dae_source_ptr>	sources;
-	dae_sampler_ptr				sampler;
+	dae_sampler_ptr				samp;
 	dae_channel_ptr				channel;
 };
 
 struct dae_sampler: public dae_node
 {
 	virtual bool parse(boost::property_tree::ptree& root);
-	std::vector<dae_input_ptr>	inputs;
+	dae_input_ptr data_in, data_out, interpolation;
 };
 
 struct dae_channel: public dae_node
@@ -282,10 +284,17 @@ struct dae_channel: public dae_node
 	boost::optional<std::string> target;
 };
 
+struct dae_visual_scenes: public dae_node
+{
+	virtual bool parse(boost::property_tree::ptree& root);
+	std::vector<dae_scene_node_ptr> scenes;
+};
+
 struct dae_scene_node: public dae_node
 {
 	virtual bool parse(boost::property_tree::ptree& root);
-	std::vector<dae_node_ptr>		children;
+	std::vector<dae_scene_node_ptr>	children;
+	dae_matrix_ptr					mat;
 	boost::optional<std::string>	type_name;
 };
 

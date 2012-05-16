@@ -78,6 +78,15 @@ namespace eflib
 				data_[i][i_col] = v[i_col];
 			}
 		}
+
+		typedef float*			iterator;
+		typedef float const*	const_iterator;
+
+		iterator		begin() { return &data_[0][0]; }
+		const_iterator	begin() const { return &data_[0][0]; }
+
+		iterator		end() { return begin() + RowSize*ColumnSize; }
+		const_iterator	end() const { return begin() + RowSize*ColumnSize; }
 	};
 
 	template <typename ScalarT, int ColumnSize, int RowSize, bool IsSquare>

@@ -2,6 +2,7 @@
 
 #include <salviax/include/resource/mesh/sa/collada.h>
 #include <salviax/include/resource/mesh/sa/mesh.h>
+#include <salviax/include/resource/mesh/sa/skin_mesh.h>
 
 #include <salviar/include/buffer.h>
 #include <salviar/include/renderer.h>
@@ -290,7 +291,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 					size_t vert_skin_info_length = skinfo->vertex_skin_info_count[vert_index]; 
 					int4 vert_joint_ids(-1, -1, -1, -1);
 					vec4 vert_joint_weights(0.0f, 0.0f, 0.0f, 0.0f);
-					for( int i = 0; i < vert_skin_info_length; ++i )
+					for( size_t i = 0; i < vert_skin_info_length; ++i )
 					{
 						if( i > 3 ){ break; }
 						size_t skin_info_index = vert_skin_info_start + i;
@@ -318,7 +319,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 		vector<size_t>				buffer_strides;
 		vector<input_element_desc>	input_descs;
 
-		for( int i_source = 0; i_source < inputs.size(); ++i_source )
+		for( size_t i_source = 0; i_source < inputs.size(); ++i_source )
 		{
 			dae_input*  input = inputs[i_source].get();
 			dae_source* input_source = input->source_node()->as<dae_source>();
@@ -474,6 +475,18 @@ skin_info_ptr build_skin_info( dae_skin_ptr skin )
 	return ret;
 }
 
+joint_node_ptr build_joint_tree( dae_scene_node_ptr scene )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return joint_node_ptr();
+}
+
+vector<animation_player_ptr> build_animations( dae_animations_ptr animations )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return vector<animation_player_ptr>();
+}
+
 vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& file_name )
 {
 	vector<h_mesh> ret;
@@ -486,12 +499,18 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 	optional<ptree&> collada_root = dae_doc.get_child_optional( "COLLADA" );
 	if( !collada_root ) return ret;
 
-	optional<ptree&> geometries_root = collada_root->get_child_optional( "library_geometries" );
-	if( !geometries_root ) return ret;
-
-	optional<ptree&> controllers_root = collada_root->get_child_optional( "library_controllers" );
 	dae_dom_ptr pdom = make_shared<dae_dom>();
 
+	optional<ptree&> geometries_root = collada_root->get_child_optional( "library_geometries" );
+	if( !geometries_root ) return ret;
+	optional<ptree&> controllers_root = collada_root->get_child_optional( "library_controllers" );
+	if( !controllers_root ) return ret;
+	optional<ptree&> animations_root = collada_root->get_child_optional( "library_animations" );
+	if( !animations_root ) return ret;
+	optional<ptree&> scenes_root = collada_root->get_child_optional("library_visual_scenes");
+	if( !scenes_root ) return ret;
+	
+	// Build skin infos.
 	unordered_map<string, skin_info_ptr> skin_infos;
 	BOOST_FOREACH( ptree::value_type& ctrl_child, controllers_root.get() ){
 		if( ctrl_child.first == "controller" ){
@@ -501,6 +520,7 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 		}
 	}
 
+	// Build mesh.
 	BOOST_FOREACH( ptree::value_type& geom_child, geometries_root.get() )
 	{
 		if( geom_child.first == "geometry" )
@@ -515,10 +535,22 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
 			if( !dae_mesh_node ) return ret;
 
-			return build_mesh( dae_mesh_node, skinfo, render );
+			ret = build_mesh( dae_mesh_node, skinfo, render );
 		}
 	}
 
+	// Build scene hierarchy
+	{
+		dae_visual_scenes_ptr scene_node = pdom->load_node<dae_visual_scenes>(*scenes_root, NULL);
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	
+	// Build animations
+	{
+		dae_animations_ptr anims_node = pdom->load_node<dae_animations>(*animations_root, NULL);
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+	
 	return ret;
 }
 

@@ -27,6 +27,14 @@ void parse_array( vector<T>& arr, std::string const& content )
 	while( ss >> tmp ){ arr.push_back(tmp); }
 }
 
+template <typename IteratorT>
+void parse_array(IteratorT begin, IteratorT end, std::string const& content)
+{
+	IteratorT it = begin;
+	stringstream ss(content);
+	while( it != end && ss >> *it ){ ++it; }
+}
+
 void dae_node::parse_attribute(ptree& xml_node)
 {
 	id		= xml_node.get_optional<string>("<xmlattr>.id");
@@ -317,6 +325,122 @@ bool dae_vertex_weights::parse(ptree& root)
 		}
 	}
 
+	return true;
+}
+
+
+bool dae_visual_scenes::parse(ptree& root)
+{
+	BOOST_FOREACH( ptree::value_type& child, root )
+	{
+		if( child.first == "visual_scene" )
+		{
+			scenes.push_back( load_child<dae_scene_node>(child.second) );
+		}
+	}
+	return true;
+}
+
+bool dae_scene_node::parse(ptree& root)
+{
+	type_name = root.get_optional<string>("<xmlattr>.type");
+
+	BOOST_FOREACH(ptree::value_type& child, root)
+	{
+		if( child.first == "matrix")
+		{
+			mat = load_child<dae_matrix>(child.second);
+		}
+		else if( child.first == "node" )
+		{
+			children.push_back( load_child<dae_scene_node>(child.second) );
+		}
+	}
+
+	return true;
+}
+
+bool dae_animations::parse(ptree& root)
+{
+	BOOST_FOREACH(ptree::value_type& child, root)
+	{
+		if(child.first == "animation")
+		{
+			anims.push_back( load_child<dae_animation>(child.second) );
+		}
+	}
+
+	return true;
+}
+
+
+bool dae_animation::parse(ptree& root)
+{
+	ptree* real_root = &root;
+	if( root.get_child_optional("animation") )
+	{
+		real_root = &root.get_child("animation");
+	}
+
+	BOOST_FOREACH(ptree::value_type& child, *real_root)
+	{
+		if(child.first == "source")
+		{
+			sources.push_back( load_child<dae_source>(child.second) );
+		}
+		else if(child.first == "sampler")
+		{
+			samp = load_child<dae_sampler>(child.second);
+		}
+		else if(child.first == "channel")
+		{
+			channel = load_child<dae_channel>(child.second);
+		}
+	}
+	return true;
+}
+
+
+bool dae_sampler::parse(ptree& root)
+{
+	BOOST_FOREACH(ptree::value_type& child, root)
+	{
+		if(child.first == "input")
+		{
+			dae_input_ptr input = load_child<dae_input>(child.second);
+			if(input->semantic) {
+				if (*input->semantic == "INPUT")
+				{
+					data_in = input;
+				}
+				else if (*input->semantic == "OUTPUT")
+				{
+					data_out = input;
+				}
+				else if(*input->semantic == "INTERPOLATION")
+				{
+					interpolation = input;
+				}
+				else
+				{
+					assert(false);
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+bool dae_channel::parse(ptree& root)
+{
+	target = root.get_optional<string>("<xmlattr>.target");
+	return true;
+}
+
+bool dae_matrix::parse(ptree& root)
+{
+	parse_array( mat.begin(), mat.end(), root.get_value<string>() );
 	return true;
 }
 
