@@ -2,6 +2,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <sstream>
@@ -442,6 +443,30 @@ bool dae_matrix::parse(ptree& root)
 {
 	parse_array( mat.begin(), mat.end(), root.get_value<string>() );
 	return true;
+}
+
+
+dae_node_ptr dae_dom::node_by_path(string const& path)
+{
+	vector<string> segments;
+	boost::algorithm::split( segments, path, boost::algorithm::is_any_of("/") );
+	assert(!segments.empty());
+
+	assert(id_nodes.count(segments[0]) > 0);
+
+	dae_node_ptr ret_node = id_nodes[segments[0]];
+	for(size_t i_generation = 1; i_generation < segments.size(); ++i_generation)
+	{
+		unordered_map<std::string, dae_node_ptr>::iterator it
+			= ret_node->sid_children.find(segments[i_generation]);
+		if( it == ret_node->sid_children.end() )
+		{
+			return dae_node_ptr();
+		}
+		ret_node = it->second;
+	}
+
+	return ret_node;
 }
 
 END_NS_SALVIAX_RESOURCE();

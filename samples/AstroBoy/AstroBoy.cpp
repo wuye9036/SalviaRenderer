@@ -309,16 +309,14 @@ protected:
 			hsr->set_vs_variable( "eyePos", &camera_pos );
 			hsr->set_vs_variable( "lightPos", &lightPos );
 
-			for( size_t i_mesh = 0; i_mesh < astro_boy_mesh.size(); ++i_mesh ){
-				h_mesh cur_mesh = astro_boy_mesh[i_mesh];
-
+			for( size_t i_mesh = 0; i_mesh < astro_boy_mesh->submesh_count(); ++i_mesh ){
 				//pps->set_constant( _T("Ambient"),  &mtl->ambient );
 				//pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				//pps->set_constant( _T("Specular"), &mtl->specular );
 				//pps->set_constant( _T("Shininess"),&mtl->ambient );
 				//shared_polymorphic_cast<astro_boy_ps>( pps )->set_texture( mtl->tex );
 
-				cur_mesh->render();
+				astro_boy_mesh->render(i_mesh);
 			}
 		}
 
@@ -334,7 +332,7 @@ protected:
 	h_device present_dev;
 	h_renderer hsr;
 
-	vector<h_mesh> astro_boy_mesh;
+	h_skin_mesh astro_boy_mesh;
 
 	shared_ptr<shader_code> astro_boy_sc;
 

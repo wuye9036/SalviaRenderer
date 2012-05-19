@@ -39,7 +39,6 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_animation);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_sampler);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_channel);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_visual_scenes);
-EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_visual_scene);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_scene_node);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(dae_matrix);
 
@@ -76,6 +75,8 @@ struct dae_dom
 
 		return ret;
 	}
+
+	dae_node_ptr node_by_path(std::string const& path);
 };
 
 struct dae_node

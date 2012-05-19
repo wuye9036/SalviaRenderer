@@ -182,6 +182,148 @@ namespace eflib
 			data_[3][3] = _44;
 		}
 	};
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator + (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs)
+	{
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] + rhs.data_[i][j];
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator - (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] - rhs.data_[i][j];
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator + (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] + s;
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator + (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
+		return lhs + s;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator - (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] - s;
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator - (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = s - lhs.data_[i][j];
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator * (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs)
+	{
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] * rhs.data_[i][j];
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator / (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, matrix_<ScalarT, ColumnSize, RowSize> const& rhs){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] / rhs.data_[i][j];
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator * (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] * s;
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator * (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
+		return lhs * s;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator / (matrix_<ScalarT, ColumnSize, RowSize> const& lhs, float s){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = lhs.data_[i][j] / s;
+			}
+		}
+		return ret;
+	}
+
+	template <typename ScalarT, int ColumnSize, int RowSize>
+	inline matrix_<ScalarT, ColumnSize, RowSize> operator / (float s, matrix_<ScalarT, ColumnSize, RowSize> const& lhs){
+		matrix_<ScalarT, ColumnSize, RowSize> ret;
+		for(int i = 0; i < RowSize; ++i)
+		{
+			for(int j = 0; j < ColumnSize; ++j)
+			{
+				ret.data_[i][j] = s / lhs.data_[i][j];
+			}
+		}
+		return ret;
+	}
 }
 
 #endif

@@ -43,7 +43,12 @@ DECL_HANDLE(base_mesh, h_mesh);
 class base_skin_mesh
 {
 public:
-	virtual void render( uint32_t submesh_id ) = 0;
+	virtual size_t	submesh_count() = 0;
+	virtual void	render( uint32_t submesh_id ) = 0;
+	virtual void	update_time(float t) = 0;
+	virtual void	set_time(float t) = 0;
+	virtual std::vector<eflib::mat44> joint_transformations() = 0;
+
 	virtual ~base_skin_mesh(){}
 };
 DECL_HANDLE(base_skin_mesh, h_skin_mesh);

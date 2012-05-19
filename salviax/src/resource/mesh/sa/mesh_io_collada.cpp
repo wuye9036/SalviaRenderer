@@ -37,6 +37,7 @@ using boost::optional;
 using boost::make_shared;
 using boost::unordered_map;
 using boost::shared_ptr;
+using boost::shared_polymorphic_cast;
 
 using std::vector;
 using std::string;
@@ -71,7 +72,7 @@ bool repack_data(void* dst, size_t dst_stride, void const* src, size_t stride, s
 	T const*	psrc = static_cast<T const*>(src);
 	T*			pdst = static_cast<T*>(dst);
 
-	for( int i = 0; i < count; ++i )
+	for( size_t i = 0; i < count; ++i )
 	{
 		for( size_t i_scalar = 0; i_scalar < pattern.size(); ++i_scalar )
 		{
@@ -475,21 +476,99 @@ skin_info_ptr build_skin_info( dae_skin_ptr skin )
 	return ret;
 }
 
-joint_node_ptr build_joint_tree( dae_scene_node_ptr scene )
+scene_node_ptr build_scene_node(
+	dae_scene_node_ptr scene,
+	unordered_map<dae_scene_node_ptr,scene_node_ptr>& dae_node_to_joints,
+	unordered_map<dae_matrix_ptr, mat44*>&	dae_node_to_matrix)
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return joint_node_ptr();
+	scene_node_ptr ret = make_shared<scene_node>((scene_node*)NULL);
+	dae_node_to_joints.insert( make_pair(scene, ret) );
+
+	BOOST_FOREACH(dae_scene_node_ptr const& child, scene->children){
+		scene_node_ptr child_scene = build_scene_node(child, dae_node_to_joints, dae_node_to_matrix);
+		child_scene->parent = ret.get();
+		ret->children.push_back(child_scene);
+		
+	}
+
+	if(scene->mat)
+	{
+		ret->local_matrix = ret->original_matrix = scene->mat->mat;
+		dae_node_to_matrix.insert( make_pair( scene->mat, &(ret->local_matrix) ) );
+	}
+
+	return ret;
 }
 
-vector<animation_player_ptr> build_animations( dae_animations_ptr animations )
+void assign_mat44(mat44* lhs, mat44 const& rhs)
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return vector<animation_player_ptr>();
+	*lhs = rhs;
 }
 
-vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& file_name )
+vector<animation_player_ptr> build_animations(
+	dae_animations_ptr animations,
+	unordered_map<dae_matrix_ptr, mat44*>&	dae_node_to_matrix
+	)
 {
-	vector<h_mesh> ret;
+	vector<animation_player_ptr> ret;
+
+	BOOST_FOREACH(dae_animation_ptr const& anim, animations->anims)
+	{
+		// Get channel
+		dae_sampler* samp = anim->channel->source_node()->as<dae_sampler>();
+		assert(samp);
+		if( !anim->channel->target ) continue;
+		dae_node_ptr target_node = animations->owner->node_by_path(*anim->channel->target);
+		assert(target_node);
+		
+		dae_source* input_source = samp->data_in->source_node()->as<dae_source>();
+		assert(input_source);
+		dae_source* output_source = samp->data_out->source_node()->as<dae_source>();
+		assert(output_source);
+		dae_source* interp_source = samp->interpolation->source_node()->as<dae_source>();
+
+		animation_player_ptr anim_player;
+		if( target_node->is_a<dae_matrix>() )
+		{
+			shared_ptr< animation_player_impl<mat44> > anim_player_mat44
+				= make_shared< animation_player_impl<mat44> >();
+			anim_player = anim_player_mat44;
+
+			anim_player_mat44->anim_info2()->X = input_source->arr->float_arr;
+
+			for( size_t i = 0; i < output_source->arr->float_arr.size()/16; ++i)
+			{
+				float* pfloat = &(output_source->arr->float_arr[i*16]);
+				mat44* pmat = reinterpret_cast<mat44*>(pfloat);
+				anim_player_mat44->anim_info2()->Y.push_back(*pmat); 
+			}
+			
+			mat44* target_data = dae_node_to_matrix[shared_polymorphic_cast<dae_matrix>(target_node)];
+			anim_player_mat44->anim_info2()->applier = boost::bind( assign_mat44, target_data, _1 );
+		}
+
+		if(anim_player)
+		{
+			for(size_t i = 0; i < interp_source->arr->name_arr.size(); ++i)
+			{
+				interpolation_methods im = im_none;
+				if(interp_source->arr->name_arr[i] == "LINEAR") {
+					im = im_linear;
+				}
+				anim_player->anim_info()->interps.push_back(im);
+			}
+		}
+
+		ret.push_back(anim_player);
+	}
+
+	return ret;
+}
+
+base_skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& file_name )
+{
+	skin_mesh_ptr ret = make_shared<skin_mesh>();
+
 	fstream fstr( file_name, std::ios::in );
 	if( !fstr.is_open() ) { return ret; }
 	ptree dae_doc;
@@ -497,7 +576,7 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 	fstr.close();
 
 	optional<ptree&> collada_root = dae_doc.get_child_optional( "COLLADA" );
-	if( !collada_root ) return ret;
+	if( !collada_root ) return skin_mesh_ptr();
 
 	dae_dom_ptr pdom = make_shared<dae_dom>();
 
@@ -533,22 +612,36 @@ vector<h_mesh> create_mesh_from_collada( renderer* render, std::string const& fi
 			assert(mesh_node);
 
 			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
-			if( !dae_mesh_node ) return ret;
+			if( !dae_mesh_node ) return skin_mesh_ptr();
 
-			ret = build_mesh( dae_mesh_node, skinfo, render );
+			ret->submeshes = build_mesh( dae_mesh_node, skinfo, render );
 		}
 	}
 
 	// Build scene hierarchy
+	unordered_map<dae_scene_node_ptr, scene_node_ptr>	dae_scene_node_to_scene_node;
+	unordered_map<dae_matrix_ptr, mat44*>				dae_matrix_to_matrix;
 	{
-		dae_visual_scenes_ptr scene_node = pdom->load_node<dae_visual_scenes>(*scenes_root, NULL);
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		dae_visual_scenes_ptr scenes = pdom->load_node<dae_visual_scenes>(*scenes_root, NULL);
+		BOOST_FOREACH( dae_scene_node_ptr const& child, scenes->scenes )
+		{
+			ret->roots.push_back( build_scene_node(child, dae_scene_node_to_scene_node, dae_matrix_to_matrix) );
+		}
+
+		typedef unordered_map<dae_scene_node_ptr, scene_node_ptr>::value_type item_type;
+		BOOST_FOREACH(item_type const& item, dae_scene_node_to_scene_node)
+		{
+			if( item.first->id )
+			{
+				ret->joint_nodes.insert( make_pair(*item.first->id, item.second.get()) );
+			}
+		}
 	}
 	
 	// Build animations
 	{
 		dae_animations_ptr anims_node = pdom->load_node<dae_animations>(*animations_root, NULL);
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		ret->anims = build_animations(anims_node, dae_matrix_to_matrix);
 	}
 	
 	return ret;
