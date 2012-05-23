@@ -452,6 +452,15 @@ result renderer_impl::set_vs_variable( std::string const& name, void* data )
 	return result::failed;
 }
 
+result renderer_impl::set_vs_variable( std::string const& name, void* data, size_t sz )
+{
+	if( vs_proto_ ){
+		vs_proto_->set_variable(name, data, sz);
+		return result::ok;
+	}
+	return result::failed;
+}
+
 shared_ptr<vertex_shader_unit> renderer_impl::vs_proto() const{
 	return vs_proto_;
 }

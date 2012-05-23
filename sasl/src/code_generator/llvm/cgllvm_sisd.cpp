@@ -152,6 +152,9 @@ SASL_VISIT_DEF( member_expression ){
 		// Swizzle or write mask
 		uint32_t masks = v.si_ptr<storage_si>()->swizzle();
 		value_t agg_value = agg_ctxt->value();
+		if( is_scalar(tisi->type_info()->tycode) ){
+			agg_value = service()->cast_s2v(agg_value);
+		}
 		sc_ptr(data)->value() = emit_extract_elem_mask( agg_value, masks );
 	} else {
 		// Member

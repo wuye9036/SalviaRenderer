@@ -18,6 +18,7 @@ using namespace sasl::semantic;
 using namespace eflib;
 using std::vector;
 using boost::shared_ptr;
+using boost::shared_array;
 using boost::make_shared;
 
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
@@ -172,6 +173,15 @@ void vertex_shader_unit::set_variable( std::string const& name, void* data )
 {
 	sv_layout* vsi = code->abii()->input_sv_layout( name );
 	memcpy( &buffer_data[vsi->offset], data, vsi->element_size );
+}
+
+void vertex_shader_unit::set_variable( std::string const& name, void* data, size_t sz )
+{
+	shared_array<char> data_array(new char[sz]);
+	memcpy(data_array.get(), data, sz);
+	dynamic_datas[name] = data_array;
+
+	set_variable( name, (void*)(data_array.get()) );
 }
 
 vertex_shader_unit::vertex_shader_unit()

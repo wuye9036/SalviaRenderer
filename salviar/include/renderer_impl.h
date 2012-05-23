@@ -79,6 +79,7 @@ public:
 	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& );
 	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const;
 	virtual result set_vs_variable( std::string const& name, void* data );
+	virtual result set_vs_variable( std::string const& name, void* data, size_t sz );
 	virtual boost::shared_ptr<vertex_shader_unit> vs_proto() const;
 
 	virtual const vs_input_op* get_vs_input_ops() const;

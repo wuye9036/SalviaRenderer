@@ -1096,7 +1096,7 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 
 	assert( idx_len > 0 );
 	if( vec.hint() == builtin_types::none && idx_len == 1 ){
-		// Struct, array or not-package, return extract elem.
+		// struct, array or not-package, return extract elem.
 		// Else do extract mask.
 		if( vec.abi() != abi_package || vec.hint() == builtin_types::none ){
 			return emit_extract_elem( vec, indexes[0] );

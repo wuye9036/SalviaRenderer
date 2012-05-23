@@ -46,7 +46,9 @@ char const* astro_boy_vs_code =
 "float4   eyePos; \r\n"
 "float4	  lightPos; \r\n"
 "int	  boneCount;\r\n"
-"float4x4[boneCount] boneMatrices;"
+"float4x4 boneMatrices[boneCount]; \r\n"
+"float4x4 invMatrices[boneCount]; \r\n"
+" \r\n"
 "struct VSIn{ \r\n"
 "	float3 pos: POSITION; \r\n"
 "	float3 norm: NORMAL; \r\n"
@@ -62,10 +64,17 @@ char const* astro_boy_vs_code =
 "VSOut vs_main(VSIn in){ \r\n"
 "	VSOut out; \r\n"
 "	out.norm = float4(in.norm, 0.0f); \r\n"
-"	float4 pos_v4f32 = float4(in.pos, 1.0f);"
-"	out.pos = mul(pos_v4f32, wvpMatrix); \r\n"
-"	out.lightDir = lightPos-pos_v4f32; \r\n"
-"	out.eyeDir = eyePos-pos_v4f32; \r\n"
+"	float4 pos_v4f32 = float4(in.pos, 1.0f); \r\n"
+"	float4 skin_pos = float4(0.0f, 0.0f, 0.0f, 0.0f); \r\n"
+"	for(int i = 0; i < 4; ++i){\r\n"
+"		float4 w = in.weights[i].xxxx; \r\n"
+"		int boneId = in.indices[i];"
+"		float4 posInBoneSpace = mul(invMatrices[boneId], pos_v4f32);"
+"		skin_pos += ( mul(boneMatrices[boneId], posInBoneSpace) * w ); \r\n"
+"	}\r\n"
+"	out.pos = mul(wvpMatrix, skin_pos); \r\n"
+"	out.lightDir = lightPos-skin_pos; \r\n"
+"	out.eyeDir = eyePos-skin_pos; \r\n"
 "	return out; \r\n"
 "} \r\n"
 ;
@@ -307,17 +316,17 @@ protected:
 			hsr->set_vertex_shader(pvs);
 #endif
 			hsr->set_vs_variable( "wvpMatrix", &wvp );
-			
 			hsr->set_vs_variable( "eyePos", &camera_pos );
 			hsr->set_vs_variable( "lightPos", &lightPos );
+			
+			vector<mat44> boneMatrices = astro_boy_mesh->joint_transformations();
+			int boneSize = (int)boneMatrices.size();
+			hsr->set_vs_variable( "boneCount", &boneSize );
+			hsr->set_vs_variable( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
+			hsr->set_vs_variable( "invMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
 
-			for( size_t i_mesh = 0; i_mesh < astro_boy_mesh->submesh_count(); ++i_mesh ){
-				//pps->set_constant( _T("Ambient"),  &mtl->ambient );
-				//pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
-				//pps->set_constant( _T("Specular"), &mtl->specular );
-				//pps->set_constant( _T("Shininess"),&mtl->ambient );
-				//shared_polymorphic_cast<astro_boy_ps>( pps )->set_texture( mtl->tex );
-
+			for( size_t i_mesh = 0; i_mesh < astro_boy_mesh->submesh_count(); ++i_mesh )
+			{
 				astro_boy_mesh->render(i_mesh);
 			}
 		}

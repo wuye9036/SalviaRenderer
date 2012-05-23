@@ -71,6 +71,7 @@ public:
 	virtual result set_vertex_shader_code( h_shader_code const& ) = 0;
 	virtual h_shader_code get_vertex_shader_code() const = 0;
 	virtual result set_vs_variable( std::string const& name, void* data ) = 0;
+	virtual result set_vs_variable( std::string const& name, void* data, size_t sz ) = 0;
 
 	virtual result set_rasterizer_state(const h_rasterizer_state& rs) = 0;
 	virtual const h_rasterizer_state& get_rasterizer_state() const = 0;

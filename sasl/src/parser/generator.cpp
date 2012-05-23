@@ -533,6 +533,7 @@ vector< shared_ptr<path_tree> > path_stack;
 
 void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, int indent = 0 )
 {
+	/*
 	// Print Element
 	for( int i = 0; i < indent; ++i ){ o << "  "; }
 	o << "<" << path_node->element;
@@ -557,6 +558,7 @@ void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, i
 		for( int i = 0; i < indent; ++i ){ o << "  "; }
 		o << "</" << path_node->element << ">" << endl;
 	}
+	*/
 }
 
 std::fstream* pf = NULL;

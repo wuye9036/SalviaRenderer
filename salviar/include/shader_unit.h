@@ -13,6 +13,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/platform/typedefs.h>
@@ -40,6 +41,7 @@ public:
 
 	void bind_streams( stream_assembler const* sa );
 	void set_variable( std::string const&, void* data );
+	void set_variable( std::string const&, void* data, size_t sz);
 
 	uint32_t output_attributes_count() const;
 	uint32_t output_attribute_modifiers( size_t index ) const;
@@ -52,11 +54,16 @@ public:
 	shader_code const* code;
 	stream_assembler const* sa;
 
-	std::vector<char> stream_data;
-	std::vector<char> buffer_data;
+	std::vector<char>	stream_data;
+	std::vector<char>	buffer_data;
 
-	std::vector<char> stream_odata;
-	std::vector<char> buffer_odata;
+	std::vector<char>	stream_odata;
+	std::vector<char>	buffer_odata;
+
+	boost::unordered_map<
+		std::string,
+		boost::shared_array<char> 
+	>					dynamic_datas;
 };
 
 class pixel_shader_unit
