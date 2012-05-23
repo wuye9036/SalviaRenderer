@@ -80,7 +80,7 @@ void rearrange_layouts( vector<sv_layout*>& sorted_layouts, vector<Type*>& sorte
 
 	vector<sv_layout*>::const_iterator layout_it = layouts.begin();
 	BOOST_FOREACH( Type* ty, tys ){
-		size_t sz = target->getTypeStoreSize(ty);
+		size_t sz = (size_t)target->getTypeStoreSize(ty);
 		(*layout_it)->element_size = sz;
 		layout_ty_pairs.push_back( make_pair(*layout_it, ty) );
 		++layout_it;
@@ -104,7 +104,7 @@ void cgllvm_vs::fill_llvm_type_from_si( sv_usage su ){
 		entry_param_tys[su].push_back( storage_bt );
 		Type* storage_ty = type_( storage_bt, abi_c );
 
-		if( su_stream_in == su || su_stream_out == su ){
+		if( su_stream_in == su || su_stream_out == su || si->agg_type == salviar::aggt_array ){
 			tys.push_back( PointerType::getUnqual( storage_ty ) );
 		} else {
 			tys.push_back( storage_ty );
@@ -148,9 +148,9 @@ void cgllvm_vs::fill_llvm_type_from_si( sv_usage su ){
 
 			size_t next_i_elem = i_elem + 1;
 			if( next_i_elem < tys.size() ){
-				next_offset = struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
+				next_offset = (size_t)struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
 			} else {
-				next_offset = struct_layout->getSizeInBytes();
+				next_offset = (size_t)struct_layout->getSizeInBytes();
 				const_cast<abi_info*>(abii)->update_size( next_offset, su );
 			}
 		
@@ -174,11 +174,9 @@ void cgllvm_vs::add_entry_param_type( sv_usage st, vector<Type*>& par_types ){
 }
 
 // expressions
-SASL_VISIT_DEF_UNIMPL( unary_expression );
 SASL_VISIT_DEF_UNIMPL( cast_expression );
 SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
-SASL_VISIT_DEF_UNIMPL( index_expression );
 
 SASL_VISIT_DEF( member_expression ){
 	any child_ctxt = *data;
@@ -207,9 +205,8 @@ SASL_VISIT_DEF( member_expression ){
 			assert( par_mem_ssi && par_mem_ssi->type_info()->is_builtin() );
 
 			salviar::semantic_value const& sem = par_mem_ssi->get_semantic();
-			sv_layout* psi = abii->input_sv_layout( sem );
-
-			sc_ptr(data)->value() = layout_to_value( psi );
+			sv_layout* psvl = abii->input_sv_layout( sem );
+			layout_to_sc(sc_ptr(data), psvl, false);
 		} else {
 			// If it is not semantic mode, use general code
 			cgllvm_sctxt* mem_ctxt = node_ctxt( mem_sym->node(), true );
@@ -233,7 +230,7 @@ SASL_VISIT_DEF( variable_expression ){
 
 	cgllvm_sctxt* varctxt = node_ctxt( sym->node() );
 	if( var_si ){
-		// TODO global only avaliable in entry function.
+		// TODO global only available in entry function.
 		assert( is_entry( fn().fn ) );
 		sc_ptr(data)->value() = varctxt->value();
 		node_ctxt(v, true)->copy( sc_ptr(data) );
@@ -253,7 +250,6 @@ SASL_VISIT_DEF_UNIMPL( declaration );
 
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( tynode );
-SASL_VISIT_DEF_UNIMPL( array_type );
 
 SASL_VISIT_DEF_UNIMPL( alias_type );
 
@@ -357,7 +353,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 			builtin_types hint = par_ssi->type_info()->tycode;
 			pctxt->value() = create_variable( hint, abi_c, par->name->str );
-			pctxt->value().store( layout_to_value(psi) );
+			layout_to_sc(pctxt, psi, true);
 		} else {
 			// Virtual args for aggregated argument
 			pctxt->data().semantic_mode = true;
@@ -370,14 +366,14 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 
 		// Global is filled by offset value with null parent.
 		// The parent is filled when it is referred.
-		sv_layout* psi = NULL;
+		sv_layout* svl = NULL;
 		if( pssi->get_semantic() == salviar::sv_none ){
-			psi = abii->input_sv_layout( gsym );
+			svl = abii->input_sv_layout( gsym );
 		} else {
-			psi = abii->input_sv_layout( pssi->get_semantic() );
+			svl = abii->input_sv_layout( pssi->get_semantic() );
 		}
 
-		node_ctxt( gsym->node(), true )->value() = layout_to_value(psi);
+		layout_to_sc(node_ctxt(gsym->node(), true), svl, false);
 
 		//if (v.init){
 		//	EFLIB_ASSERT_UNIMPLEMENTED();
@@ -437,21 +433,56 @@ cgllvm_modvs* cgllvm_vs::mod_ptr(){
 	return static_cast<cgllvm_modvs*>( mod.get() );
 }
 
-value_t cgllvm_vs::layout_to_value( sv_layout* svl )
+
+value_t cgllvm_vs::layout_to_value(sv_layout* svl)
 {
-	builtin_types bt = to_builtin_types( svl->value_type );
+	value_t ret;
 
 	// TODO need to emit_extract_ref
-	value_t ret;
-	if( svl->usage == su_stream_in || svl->usage == su_stream_out ){
+	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
 		ret = emit_extract_val( param_values[svl->usage], svl->physical_index );
 		ret = ret.as_ref();
 	} else {
 		ret = emit_extract_ref( param_values[svl->usage], svl->physical_index );
 	}
-	ret.hint( to_builtin_types( svl->value_type ) );
+
+	assert(svl->value_type != salviar::lvt_none);
+	ret.hint( to_builtin_types(svl->value_type) );
 
 	return ret;
+}
+
+void cgllvm_vs::layout_to_sc(cgllvm_sctxt* psc, salviar::sv_layout* svl, bool store_to_existed_value)
+{
+	builtin_types bt = to_builtin_types(svl->value_type);
+
+	value_t ret;
+	// TODO need to emit_extract_ref
+	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
+		ret = emit_extract_val( param_values[svl->usage], svl->physical_index );
+		ret = ret.as_ref();
+	} else {
+		ret = emit_extract_ref( param_values[svl->usage], svl->physical_index );
+	}
+
+	if(svl->internal_type == -1)
+	{
+		ret.hint( to_builtin_types(svl->value_type) );
+	}
+	else
+	{
+		psc->data().tyinfo = create_tyinfo( msi->pety()->get(svl->internal_type) );
+		ret.tyinfo( psc->data().tyinfo.get() );
+	}
+
+	if( store_to_existed_value && psc->value().storable() )
+	{
+		psc->value().store(ret);
+	}
+	else
+	{
+		psc->value() = ret;
+	}
 }
 
 cgllvm_vs::~cgllvm_vs(){}

@@ -1,0 +1,25 @@
+int		 mat_size;
+float4x4 mat_arr[mat_size];
+
+struct VSIN{
+	float4 pos: SV_Position;
+	int4   id:	BLEND_INDICES;
+};
+
+struct VSOUT{
+	float4 pos: SV_Position;
+};
+
+VSOUT fn( VSIN in ){
+	VSOUT o;
+	o.pos = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+	for(int i = 0; i < 4; ++i)
+	{
+		float4 tmp;
+		tmp = mul(mat_arr[in.id[i]], in.pos);
+		o.pos += (tmp*float4(0.25f, 0.25f, 0.25f, 0.25f));
+	}
+
+	return o;
+}

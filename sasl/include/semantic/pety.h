@@ -4,6 +4,8 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <eflib/include/platform/typedefs.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -13,7 +15,7 @@
 
 namespace sasl{
 	namespace syntax_tree{
-		struct tynode;
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
 	}
 }
 
@@ -23,36 +25,35 @@ BEGIN_NS_SASL_SEMANTIC();
 
 typedef int tid_t;
 
-class symbol;
+EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 
 class pety_item_t{
 public:
 	typedef int pety_item_t::*id_ptr_t;
 	pety_item_t();
 	
-	::boost::shared_ptr< ::sasl::syntax_tree::tynode > stored;
+	sasl::syntax_tree::tynode_ptr stored;
 	tid_t u_qual;
+	tid_t a_qual;
 };
 
+EFLIB_DECLARE_CLASS_SHARED_PTR(pety_t);
 class pety_t{
 public:
-	static boost::shared_ptr< pety_t > create();
+	static pety_t_ptr create();
 
-	void root_symbol( boost::shared_ptr<symbol> const& sym );
+	void root_symbol( symbol_ptr const& sym );
 
-	boost::shared_ptr<pety_t> handle() const;
+	pety_t_ptr handle() const;
 	
-	tid_t get(
-		::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node,
-		::boost::shared_ptr<symbol> const& parent
-		);
-	tid_t get( const builtin_types& btc );
+	tid_t get(sasl::syntax_tree::tynode_ptr const& node, symbol_ptr const& parent);
+	tid_t get(const builtin_types& btc);
+	sasl::syntax_tree::tynode_ptr get(tid_t id);
 
-	::boost::shared_ptr< ::sasl::syntax_tree::tynode > get( tid_t id );
-	
+	tid_t get_array(tid_t elem_type, size_t dimension);
 private:
-	tid_t allocate_and_assign_id( ::boost::shared_ptr< ::sasl::syntax_tree::tynode > const& node );
-	::std::vector<pety_item_t>	entries;
+	tid_t allocate_and_assign_id(sasl::syntax_tree::tynode_ptr const& node);
+	std::vector<pety_item_t>	entries;
 	boost::weak_ptr<pety_t>		self_handle;
 	boost::weak_ptr<symbol>		rootsym;
 };

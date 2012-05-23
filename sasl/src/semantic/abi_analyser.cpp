@@ -252,12 +252,15 @@ bool abi_analyser::update( salviar::languages lang ){
 
 				// Check the data type of global. Now global variables only support built-in types.
 				storage_si* psi = dynamic_cast<storage_si*>( gvar->semantic_info().get() );
-				if( !psi->type_info()->is_builtin() ){
+				if( psi->type_info()->is_builtin() || psi->type_info()->is_array()  )
+				{
+					abiis[lang]->add_global_var(gvar_sym, psi->type_info() );
+				}
+				else
+				{
 					//TODO It an semantic error need to be reported.
 					return false;
 				}
-
-				abiis[lang]->add_global_var(gvar_sym, psi->type_info()->tycode );
 			}
 		}
 	}

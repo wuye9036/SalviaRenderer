@@ -125,7 +125,7 @@ public:
 	value_t( value_t const& );
 	value_t& operator = ( value_t const& );
 
-	/// @name State queriers 
+	/// @name State accessors 
 	/// @{
 	/// Get service.
 	cg_service* service() const;
@@ -150,6 +150,7 @@ public:
 	value_t as_ref() const;
 
 	value_tyinfo*	tyinfo() const;				///< Get type information of value.
+	void			tyinfo(value_tyinfo*);		///< Set type information of value.
 
 	builtin_types	hint() const;				///< Get type hint. if type is not built-in type it returns builtin_type::none.
 	void			hint( builtin_types bt );	///< Set type hint.

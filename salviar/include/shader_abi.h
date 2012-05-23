@@ -70,6 +70,12 @@ enum language_value_types
 	lvt_f32m44	= lvt_float | details::matrix_flag | ( 4 << details::vector_size_field_offset ) | (4 << details::vector_count_field_offset)
 };
 
+enum aggregation_types
+{
+	aggt_none,
+	aggt_array
+};
+
 enum sv_usage{
 	su_none = 0,
 
@@ -106,7 +112,11 @@ struct sv_layout{
 	int						padding;
 
 	sv_usage				usage;
+	
 	language_value_types	value_type;
+	aggregation_types		agg_type;				
+	int						internal_type;	// Type used in SASL.
+
 	semantic_value			sv;
 };
 

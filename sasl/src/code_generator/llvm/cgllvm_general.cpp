@@ -106,7 +106,6 @@ SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( tynode );
 
-SASL_VISIT_DEF_UNIMPL( array_type );
 SASL_VISIT_DEF_UNIMPL( alias_type );
 
 SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)

@@ -416,17 +416,6 @@ vector< shared_ptr<symbol> > symbol::find_overloads_impl(
 			tid_t arg_type = arg_tids[i_param];
 			tid_t par_type = par_tisi->entry_id();
 			if( arg_type == -1 || par_type == -1 ){
-				boost::format fmt( "Type of %s <%s> is invalid." );
-				if( arg_type == -1 ){
-					fmt % "argument";
-				} else {
-					fmt % "parameter";
-				}
-				cout
-					<< str( fmt % ( arg_tisi->type_info()->is_builtin() ? arg_tisi->type_info()->tycode.name() : "<complex>") )
-					<< endl;
-				assert( !"Argument type or parameter type is invalid." );
-				// TODO: Here is syntax error. Need to be processed.
 				all_parameter_success = false;
 				break;
 			}

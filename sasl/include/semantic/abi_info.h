@@ -8,6 +8,8 @@
 
 #include <sasl/enums/builtin_types.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
@@ -15,10 +17,18 @@
 
 #include <vector>
 
+namespace sasl
+{
+	namespace syntax_tree
+	{
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
+	}
+}
+
 BEGIN_NS_SASL_SEMANTIC();
 
-class module_si;
-class symbol;
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_si);
+EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 
 //////////////////////////////////////////////////////////////////////////
 // Application binary interface information.
@@ -27,7 +37,7 @@ class abi_analyser;
 
 class abi_info: public salviar::shader_abi{
 public:
-	typedef salviar::sv_layout	storage_info_t;
+	typedef salviar::sv_layout		sv_layout_t;
 	typedef salviar::semantic_value	semantic_value_t;
 
 	// Friend for abi_analyser could call compute_layout();
@@ -37,12 +47,12 @@ public:
 	
 	std::string entry_name() const;
 
-	std::vector<storage_info_t*> layouts( salviar::sv_usage usage ) const;
+	std::vector<sv_layout_t*> layouts( salviar::sv_usage usage ) const;
 	size_t total_size( salviar::sv_usage usage ) const;
 	void update_size( size_t sz, salviar::sv_usage usage );
 
-	storage_info_t* input_sv_layout( std::string const& ) const;
-	storage_info_t* output_sv_layout( semantic_value_t const& ) const;
+	sv_layout_t* input_sv_layout( std::string const& ) const;
+	sv_layout_t* output_sv_layout( semantic_value_t const& ) const;
 
 	// End members of shader_abi
 
@@ -50,24 +60,24 @@ public:
 
 	salviar::languages lang;
 
-	void module( boost::shared_ptr<module_si> const& );
-	bool is_module( boost::shared_ptr<module_si> const& ) const;
+	void module( module_si_ptr const& );
+	bool is_module( module_si_ptr const& ) const;
 
-	void entry( boost::shared_ptr<symbol> const& );
-	bool is_entry( boost::shared_ptr<symbol> const& ) const;
+	void entry( symbol_ptr const& );
+	bool is_entry( symbol_ptr const& ) const;
 	
 
 	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
 	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
-	void add_global_var( boost::shared_ptr<symbol> const&, builtin_types btc );
+	void add_global_var( symbol_ptr const&, sasl::syntax_tree::tynode_ptr btc );
 
-	storage_info_t* input_sv_layout( semantic_value_t const& ) const;
-	storage_info_t* input_sv_layout( boost::shared_ptr<symbol> const& ) const;
+	sv_layout_t* input_sv_layout( semantic_value_t const& ) const;
+	sv_layout_t* input_sv_layout( symbol_ptr const& ) const;
 
 private:
-	storage_info_t* alloc_input_storage( semantic_value_t const& );
-	storage_info_t* alloc_input_storage( boost::shared_ptr<symbol> const& );
-	storage_info_t* alloc_output_storage( semantic_value_t const& );
+	sv_layout_t* alloc_input_storage( semantic_value_t const& );
+	sv_layout_t* alloc_input_storage( symbol_ptr const& );
+	sv_layout_t* alloc_output_storage( semantic_value_t const& );
 
 	// Called by abi_analyser after all semantic and global var was set.
 	// This function will compute the data layout.
@@ -82,25 +92,27 @@ private:
 	void compute_output_package_layout();
 	void compute_package_layout( salviar::sv_layout* );
 
+	int compute_element_size(salviar::sv_layout* svl) const;
+
 	module_si* mod;
 	symbol* entry_point;
 	std::string entry_point_name;
 
 	// Include su_stream_in and su_buffer_in
 	std::vector< semantic_value_t > sems_in;
-	typedef boost::unordered_map< semantic_value_t, storage_info_t > sem_storages_t;
+	typedef boost::unordered_map< semantic_value_t, sv_layout_t > sem_storages_t;
 	sem_storages_t semin_storages;
 
 	// for uniform only.
 	std::vector< symbol* > syms_in;
-	typedef boost::unordered_map< symbol*, storage_info_t > sym_storages_t;
+	typedef boost::unordered_map< symbol*, sv_layout_t > sym_storages_t;
 	sym_storages_t symin_storages;
-	typedef boost::unordered_map< std::string, storage_info_t* > name_storages_t;
+	typedef boost::unordered_map< std::string, sv_layout_t* > name_storages_t;
 	name_storages_t name_storages;
 
 	// Include su_stream_out and su_buffer_out
 	std::vector< semantic_value_t > sems_out;
-	boost::unordered_map< semantic_value_t, storage_info_t > semout_storages;
+	boost::unordered_map< semantic_value_t, sv_layout_t > semout_storages;
 
 	// The count and offsets of 
 	int counts[salviar::storage_usage_count];

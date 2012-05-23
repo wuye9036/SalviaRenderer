@@ -42,11 +42,9 @@ public:
 
 	// expressions
 	SASL_VISIT_DCL( member_expression );
-	SASL_VISIT_DCL( unary_expression );
 	SASL_VISIT_DCL( cast_expression );
 	SASL_VISIT_DCL( expression_list );
 	SASL_VISIT_DCL( cond_expression );
-	SASL_VISIT_DCL( index_expression );
 	
 	SASL_VISIT_DCL( variable_expression );
 	SASL_VISIT_DCL( identifier );
@@ -57,7 +55,6 @@ public:
 	SASL_VISIT_DCL( declaration );
 	SASL_VISIT_DCL( type_definition );
 	SASL_VISIT_DCL( tynode );
-	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( alias_type );
 
 private:
@@ -77,7 +74,8 @@ private:
 
 	cgllvm_modvs* mod_ptr();
 
-	value_t layout_to_value( salviar::sv_layout* si );
+	value_t layout_to_value(salviar::sv_layout* si);
+	void layout_to_sc(cgllvm_sctxt* psc, salviar::sv_layout* si, bool store_to_existed_value);
 
 	void create_entry_params();
 	void add_entry_param_type( salviar::sv_usage st, std::vector< llvm::Type* >& par_types );

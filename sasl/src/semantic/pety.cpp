@@ -63,24 +63,25 @@ std::string builtin_type_name( builtin_types btc ){
 //		remove qualifier from type.
 //	return:
 //		means does the peeling was executed actually.
-//		If the src is unqualfied type, it returns 'false',
-//		naked was assgined from src, and qual return a null ptr.
-bool peel_qualifier(
-	shared_ptr<tynode> const& src,
-	shared_ptr<tynode>& naked,
-	pety_item_t::id_ptr_t& qual
-	)
+//		If the src is unqualified type, it returns 'false',
+//		naked was assigned from src, and qual return a null ptr.
+bool peel_qualifier(tynode_ptr const& src, tynode_ptr& naked, pety_item_t::id_ptr_t& qual)
 {
-	node_ids tnode = src->node_class();
-	if ( tnode == node_ids::builtin_type
-		|| tnode == node_ids::struct_type )
+	if( src->is_uniform() )
 	{
-		if( src->is_uniform() ){
-			naked = shared_polymorphic_cast<tynode>( duplicate( src ) );
-			naked->qual = type_qualifiers::none;
-			qual = &pety_item_t::u_qual;
-			return true;
-		}
+		naked = duplicate(src)->as_handle<tynode>();
+		naked->qual = type_qualifiers::none;
+		qual = &pety_item_t::u_qual;
+		return true;
+	}
+
+	if( src->is_array() )
+	{
+		array_type_ptr derived_naked = duplicate(src)->as_handle<array_type>();
+		derived_naked->array_lens.pop_back();
+		naked = derived_naked->array_lens.empty() ? derived_naked->elem_type : derived_naked;
+		qual = &pety_item_t::a_qual;
+		return true;
 	}
 
 	naked = src;
@@ -116,14 +117,14 @@ std::string name_of_unqualified_type( shared_ptr<tynode> const& typespec ){
 		return typespec->as_handle<struct_type>()->name->str;
 	}
 
-	assert( !"Type type code is unrecgonized!" );
+	assert( !"Type type code is unrecognized!" );
 	return std::string("!undefined!");
 }
 
 // type_entry
 
 pety_item_t::pety_item_t()
-	: u_qual(-1)
+	: u_qual(-1), a_qual(-1)
 {
 }
 
@@ -133,7 +134,7 @@ shared_ptr<pety_t> pety_t::handle() const{
 	return self_handle.lock();
 }
 
-tid_t pety_t::get( shared_ptr<tynode> const& node, shared_ptr<symbol> const& parent ){
+tid_t pety_t::get( tynode_ptr const& node, symbol_ptr const& parent ){
 	/////////////////////////////////////////////////////
 	// if node has id yet, return it.
 	tid_t ret = type_entry_id_of_node( node );
@@ -144,10 +145,10 @@ tid_t pety_t::get( shared_ptr<tynode> const& node, shared_ptr<symbol> const& par
 	boost::shared_ptr< tynode > inner_type;
 
 	if( peel_qualifier( node, inner_type, qual ) ){
-		tid_t decoratee_id = get( inner_type, parent );
+		tid_t decoratee_id = get(inner_type, parent);
 		if( decoratee_id == -1 ) { return -1; }
 		if( entries[decoratee_id].*qual >= 0 ){
-			// The qualfied node is in entries yet.
+			// The qualified node is in entries yet.
 			return entries[decoratee_id].*qual;
 		} else {
 			// else allocate an new node.
@@ -204,13 +205,24 @@ void pety_t::root_symbol( boost::shared_ptr<symbol> const& sym )
 	rootsym = sym;
 }
 
+tid_t pety_t::get_array( tid_t elem_type, size_t dimension )
+{
+	tid_t ret_tid = elem_type;
+	for(size_t i = 1; i < dimension; ++i)
+	{
+		if( ret_tid == -1 ) break;
+		ret_tid = entries[ret_tid].a_qual;
+	}
+	return ret_tid;
+}
+
 void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<pety_t> const& typemgr, tid_t id ){
 	get_or_create_semantic_info<type_si>( node, typemgr )->entry_id( id );
 }
 
 tid_t semantic::pety_t::allocate_and_assign_id( shared_ptr<tynode> const& node  ){
 	// Get a duplication from node.
-	// It assures that the node storaged in pool is always avaliable.
+	// It assures that the node stored in pool is always available.
 	shared_ptr<tynode> dup_node = duplicate_tynode( node );
 
 	// add to pool and allocate an id

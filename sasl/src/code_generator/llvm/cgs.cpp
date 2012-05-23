@@ -234,7 +234,8 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 	} else {
 		ret->cls = value_tyinfo::aggregated;
 
-		if( tyn->is_struct() ){
+		if( tyn->is_struct() )
+		{
 			shared_ptr<struct_type> struct_tyn = tyn->as_handle<struct_type>();
 
 			vector<Type*> c_member_types;
@@ -269,8 +270,20 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 			ret->tys[abi_llvm]		= ty_llvm;
 			ret->tys[abi_vectorize]	= ty_vec;
 			ret->tys[abi_package]	= ty_pkg;
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+		else if( tyn->is_array() )
+		{
+			shared_ptr<array_type>		array_tyn = tyn->as_handle<array_type>();
+			shared_ptr<value_tyinfo>	elem_ti = create_tyinfo(array_tyn->elem_type);
+
+			ret->tys[abi_c]			= PointerType::getUnqual( elem_ti->ty(abi_c) );
+			ret->tys[abi_llvm]		= PointerType::getUnqual( elem_ti->ty(abi_llvm) );
+			ret->tys[abi_vectorize]	= PointerType::getUnqual( elem_ti->ty(abi_vectorize) );
+			ret->tys[abi_package]	= PointerType::getUnqual( elem_ti->ty(abi_package) );
+		}
+		else
+		{
+			assert(false);
 		}
 	}
 
@@ -933,15 +946,27 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 	else if ( agg_hint == builtin_types::none )
 	{
 		// Array only
+		Value* addr = lhs.load_ref();
+		assert(addr);
+		array_type_ptr array_tyn = lhs.tyinfo()->tyn_ptr()->as_handle<array_type>();
 
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		//Value* agg_address = lhs.load_ref();
-		//Value* elem_address = builder().CreateGEP( agg_address, idx );
-		//value_tyinfo* tyinfo = NULL;
-		//if( lhs.tyinfo() ){
-		//	tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
-		//}
-		//return create_value( tyinfo, elem_address, vkind_ref, lhs.abi() );
+		// Support one-dimension array only.
+		if( array_tyn->array_lens.size() > 1 ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+
+		switch(promoted_abi)
+		{
+		case abi_c:
+		case abi_llvm:
+			{
+				Value* elem_addr = builder().CreateGEP(addr, idx.load() );
+				value_tyinfo* elem_tyinfo = node_ctxt(array_tyn->elem_type.get(), false)->get_typtr();
+				return create_value( elem_tyinfo, elem_addr, vkind_ref, lhs.abi() );
+			}
+		default:
+			assert(false);
+		}
 	}
 	return value_t();
 }
@@ -995,8 +1020,6 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 		elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
 	}
 
-	// assert( elem_tyi || elem_hint != builtin_types::none );
-
 	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
 }
 
@@ -1012,7 +1035,28 @@ value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
 
 	if( agg_hint == builtin_types::none ){
 		// Array only
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		Value* addr = lhs.load_ref();
+		assert(addr);
+		array_type_ptr array_tyn = lhs.tyinfo()->tyn_ptr()->as_handle<array_type>();
+
+		// Support one-dimension array only.
+		if( array_tyn->array_lens.size() > 1 ){
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+
+		switch(abi)
+		{
+		case abi_c:
+		case abi_llvm:
+			{
+				Value* elem_addr = builder().CreateGEP(addr, idx.load() );
+				value_tyinfo* elem_tyinfo = node_ctxt(array_tyn->elem_type.get(), false)->get_typtr();
+				return create_value( elem_tyinfo, builtin_types::none, elem_addr, vkind_ref, lhs.abi() );
+			}
+		default:
+			assert(false);
+		}
+		
 	} else if( is_scalar(agg_hint) ){
 		elem_val	= lhs.load();
 		elem_hint	= agg_hint;

@@ -41,6 +41,7 @@ using sasl::common::diag_chat;
 using sasl::common::token_t;
 
 using sasl::syntax_tree::alias_type;
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, array_type);
 using sasl::syntax_tree::binary_expression;
 using sasl::syntax_tree::builtin_type;
 using sasl::syntax_tree::call_expression;
@@ -72,7 +73,7 @@ using sasl::syntax_tree::program;
 using sasl::syntax_tree::statement;
 using sasl::syntax_tree::struct_type;
 using sasl::syntax_tree::switch_statement;
-using sasl::syntax_tree::tynode;
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, tynode);
 using sasl::syntax_tree::unary_expression;
 using sasl::syntax_tree::variable_declaration;
 using sasl::syntax_tree::variable_expression;
@@ -400,7 +401,10 @@ SASL_VISIT_DEF( index_expression )
 	
 	if( agg_tyn->is_array() )
 	{
-		EFLIB_ASSERT_UNIMPLEMENTED();
+		array_type_ptr array_tyn = agg_tyn->as_handle<array_type>();
+		tid_t elem_tid  = array_tyn->elem_type->si_ptr<type_info_si>()->entry_id();
+		tid_t inner_tid = msi->pety()->get_array(elem_tid, array_tyn->array_lens.size()-1);
+		ssi->entry_id(inner_tid);
 	}
 	else if( is_vector(agg_tycode) )
 	{
@@ -408,7 +412,7 @@ SASL_VISIT_DEF( index_expression )
 	}
 	else if( is_matrix(agg_tycode) )
 	{
-		builtin_types vector_tycode = vector_of( scalar_of(agg_tycode), vector_size(agg_tycode) );
+		builtin_types vector_tycode = row_vector_of(agg_tycode);
 		ssi->entry_id( msi->pety()->get(vector_tycode) );
 	}
 }
@@ -749,10 +753,23 @@ SASL_VISIT_DEF( builtin_type ){
 	data_cptr()->generated_node = tsi->type_info()->as_handle();
 }
 
-SASL_VISIT_DEF_UNIMPL( array_type );
+SASL_VISIT_DEF(array_type)
+{
+	tid_t array_tid = msi->pety()->get(v.as_handle<tynode>(), data_cptr()->parent_sym);
+	assert(array_tid != -1);
+
+	array_type_ptr dup_array = msi->pety()->get(array_tid)->as_handle<array_type>();
+	if( !dup_array->elem_type->si_ptr<type_si>() )
+	{
+		any child_ctxt;
+		any child_ctxt_init = *data;
+		visit_child(child_ctxt, child_ctxt_init, v.elem_type, dup_array->elem_type);
+	}
+	data_cptr()->generated_node = dup_array;
+}
 
 SASL_VISIT_DEF( struct_type ){
-	// Struct Type are 3 sorts:
+	// struct type are 3 sorts:
 	//	* unnamed structure
 	//	* struct declaration
 	//	* struct definition.
@@ -925,8 +942,14 @@ SASL_VISIT_DEF( declaration_statement )
 
 	shared_ptr<declaration_statement> dup_declstmt = duplicate( v.as_handle() )->as_handle<declaration_statement>();
 
-	visit_child( child_ctxt, child_ctxt_init, v.decl, dup_declstmt->decl );
-
+	dup_declstmt->decls.clear();
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls )
+	{
+		shared_ptr<declaration> dup_decl;
+		visit_child( child_ctxt, child_ctxt_init, decl, dup_decl );
+		if( dup_decl ){ dup_declstmt->decls.push_back(dup_decl); }
+	}
+	
 	get_or_create_semantic_info<statement_si>(dup_declstmt);
 
 	data_cptr()->generated_node = dup_declstmt;

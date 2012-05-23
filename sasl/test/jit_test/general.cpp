@@ -802,7 +802,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
@@ -1719,6 +1719,108 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 		{
 			BOOST_CHECK_CLOSE( ret, 15.0f, 0.000001f );
 		}
+	}
+}
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+
+struct array_vertex_data
+{
+	vec4 pos;
+	int4 ids;
+};
+
+struct array_vs_sin
+{
+	vec4* pos;
+	int4* ids;
+};
+
+struct array_vs_bin
+{
+	int		mat_size;
+	mat44*	mat_arr;
+};
+
+struct array_vs_bout
+{
+	vec4 pos;
+};
+
+vec4 my_transform(mat44& m, vec4& v)
+{
+	vec4 ret(0.0f, 0.0f, 0.0f, 0.0f);
+
+#if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64)
+	__m128 col;
+	__m128 v4f;
+	for(int i = 0; i < 4; ++i)
+	{
+		for(int j = 0; j < 4; ++j)
+		{
+			col.m128_f32[j] = m.data_[i][j];
+			v4f.m128_f32[j] = v.data_[j];
+		}
+		__m128 elem_v4f = _mm_mul_ps(v4f, col);
+
+		for(int j = 0; j < 4; ++j)
+		{
+			ret[i] += elem_v4f.m128_f32[j];
+		}
+	}
+#else
+	eflib::transform(ret, m, v);
+#endif
+
+	return ret;
+}
+
+BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
+{
+	init_vs( "./repo/question/v1a1/array.svs" );
+	JIT_FUNCTION( void(array_vs_sin*, array_vs_bin*, void*, array_vs_bout*), fn );
+
+	srand(887);
+
+	mat44 mats[50];
+	for(int i = 0; i < 50; ++i)
+	{
+		for( mat44::iterator it = mats[i].begin(); it != mats[i].end(); ++it )
+		{
+			*it = rand() / 227.0f;
+		}
+	}
+
+	array_vertex_data data;
+	data.pos = vec4(-10.0f, 77.8f, 8.3f, -87.3f);
+	
+	array_vs_sin sin;
+	sin.ids = &data.ids;
+	sin.pos = &data.pos;
+
+	array_vs_bin bin;
+	bin.mat_size = 50;
+	bin.mat_arr = &mats[0];
+	
+	array_vs_bout bout;
+
+	for(int i = 0; i < 100; ++i)
+	{
+		data.ids = int4(rand()%50, rand()%50, rand()%50, rand()%50);
+		fn(&sin, &bin, (void*)NULL, &bout);
+
+		vec4 ref_v = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		for(int i = 0; i < 4; ++i)
+		{
+			ref_v += my_transform(mats[data.ids[i]], data.pos);
+		}
+		ref_v /= 4.0f;
+
+		BOOST_CHECK_CLOSE( ref_v[0], bout.pos[0], 0.000001f );
+		BOOST_CHECK_CLOSE( ref_v[1], bout.pos[1], 0.000001f );
+		BOOST_CHECK_CLOSE( ref_v[2], bout.pos[2], 0.000001f );
+		BOOST_CHECK_CLOSE( ref_v[3], bout.pos[3], 0.000001f );
 	}
 }
 #endif

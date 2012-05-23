@@ -1,5 +1,6 @@
 #include <sasl/include/semantic/abi_info.h>
 
+#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/host/utility.h>
@@ -11,8 +12,10 @@
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-
 using namespace sasl::utility;
+
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, array_type);
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, tynode);
 
 using salviar::sv_usage;
 using salviar::su_none;
@@ -72,10 +75,12 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 	vector<salviar::semantic_value>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
 	if( it != sems_in.end() ){
 		if( *it == sem ){
-			sv_layout* si = input_sv_layout( sem );
+			sv_layout* si = input_sv_layout(sem);
 			assert(si);
 			if( si->value_type == btc || si->value_type == builtin_types::none ){
 				si->value_type = to_lvt(btc);
+				si->agg_type = salviar::aggt_none;
+				si->internal_type = -1;
 				return true;
 			}
 			return false;
@@ -84,6 +89,8 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 
 	sv_layout* si = alloc_input_storage( sem );
 	si->value_type = to_lvt( btc );
+	si->agg_type = salviar::aggt_none;
+	si->internal_type = -1;
 	si->usage = is_stream ? su_stream_in : su_buffer_in;
 	si->sv = sem;
 	sems_in.insert( it, sem );
@@ -97,6 +104,8 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 			sv_layout* si = alloc_output_storage( sem );
 			if( si->value_type != btc && si->value_type == builtin_types::none ){
 				si->value_type = to_lvt( btc );
+				si->agg_type = salviar::aggt_none;
+				si->internal_type = -1;
 				return true;
 			}
 			return false;
@@ -104,18 +113,37 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 	}
 
 	sv_layout* si = alloc_output_storage( sem );
-	si->value_type = to_lvt( btc );
+	si->value_type = to_lvt(btc);
+	si->agg_type = salviar::aggt_none;
+	si->internal_type = -1;
 	si->usage = is_stream ? su_stream_out : su_buffer_out;
 	si->sv = sem;
 	sems_out.insert( it, sem );
 	return true;
 }
 
-void abi_info::add_global_var( boost::shared_ptr<symbol> const& v, builtin_types btc )
+void abi_info::add_global_var(symbol_ptr const& v, tynode_ptr tyn)
 {
 	syms_in.push_back( v.get() );
+
 	sv_layout* si = alloc_input_storage( v );
-	si->value_type = to_lvt( btc );
+	
+	if( tyn->is_builtin() )
+	{
+		si->value_type = to_lvt(tyn->tycode);
+	}
+	else if( tyn->is_array() )
+	{
+		si->value_type	= to_lvt(tyn->as_handle<array_type>()->elem_type->tycode);
+		assert(si->value_type != salviar::lvt_none);
+		si->agg_type	= salviar::aggt_array;
+	} 
+	else
+	{
+		assert(false);
+	}
+
+	si->internal_type = tyn->si_ptr<type_info_si>()->entry_id();
 	si->usage = su_buffer_in;
 
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
@@ -229,15 +257,11 @@ void abi_info::compute_input_semantics_layout(){
 		sv_layout* svl = input_sv_layout( sems_in[index] );
 		assert( svl );
 
-		svl->physical_index =  counts[svl->usage];
-		svl->logical_index  =  counts[svl->usage];
-		svl->offset = offsets[svl->usage];
-		svl->element_size = 
-			svl->usage == su_buffer_in ?
-			static_cast<int>( storage_size( to_builtin_types( svl->value_type ) ) )
-			: static_cast<int> ( sizeof(void*) )
-			;
+		svl->physical_index = counts[svl->usage];
+		svl->logical_index  = counts[svl->usage];
+		svl->offset			= offsets[svl->usage];
 		svl->element_count = 1;
+		compute_element_size(svl);
 
 		counts[svl->usage]++;
 		offsets[svl->usage] += svl->total_size();
@@ -254,8 +278,8 @@ void abi_info::compute_output_buffer_layout(){
 		svl->physical_index =  counts[svl->usage];
 		svl->logical_index  =  counts[svl->usage];
 		svl->offset = offsets[svl->usage];
-		svl->element_size = static_cast<int>( storage_size( to_builtin_types( svl->value_type ) ) );
 		svl->element_count = 1;
+		compute_element_size(svl);
 		
 		counts[svl->usage]++;
 		offsets[svl->usage] += svl->total_size();
@@ -274,13 +298,12 @@ void abi_info::compute_input_constant_layout(){
 		svl->physical_index =  counts[svl->usage];
 		svl->logical_index  =  counts[svl->usage];
 		svl->offset = offsets[su_buffer_in];
-		
-		int size = static_cast<int>( storage_size( to_builtin_types( svl->value_type ) ) );
-		svl->element_size = size;
+
 		svl->element_count = 1;
+		compute_element_size(svl);
 
 		counts[su_buffer_in]++;
-		offsets[su_buffer_in] += size;
+		offsets[su_buffer_in] += svl->element_size;
 	}
 }
 
@@ -307,23 +330,21 @@ void abi_info::compute_package_layout( sv_layout* svl )
 {
 	assert( svl );
 
-	svl->physical_index =  counts[svl->usage];
-	svl->logical_index  =  counts[svl->usage];
+	svl->physical_index = counts[svl->usage];
+	svl->logical_index  = counts[svl->usage];
 	svl->offset = offsets[svl->usage];
 
-	builtin_types elem_bt = to_builtin_types( svl->value_type );
-	size_t elem_store_size = storage_size(elem_bt);
-	int elem_size = static_cast<int>(elem_store_size);
+	builtin_types elem_bt = to_builtin_types(svl->value_type);
 
 	if( svl->usage == su_buffer_in || svl->usage == su_buffer_out ){
 		svl->element_count = 1;
-		svl->element_size = elem_size;
+		compute_element_size(svl);
 	} else {
 		if( is_vector(elem_bt) || is_scalar( elem_bt ) ){
-			int pow2_elem_size = ceil_to_pow2( elem_size );
+			compute_element_size(svl);
+			int pow2_elem_size = ceil_to_pow2(svl->element_size);
 			svl->element_count = PACKAGE_ELEMENT_COUNT;
-			svl->element_size = elem_size;
-			svl->element_padding = pow2_elem_size - elem_size;
+			svl->element_padding = pow2_elem_size - svl->element_size;
 		} else if ( is_matrix( elem_bt ) ){
 			int row_size = static_cast<int>( storage_size( row_vector_of(elem_bt) ) );
 			int pow2_row_size = ceil_to_pow2( row_size );
@@ -339,6 +360,22 @@ void abi_info::compute_package_layout( sv_layout* svl )
 
 	counts[svl->usage]++;
 	offsets[svl->usage] += svl->total_size();
+}
+
+int abi_info::compute_element_size(sv_layout* svl) const
+{
+	int elem_sz = 0;
+	if( svl->usage != su_buffer_in || svl->agg_type == salviar::aggt_array )
+	{
+		elem_sz = static_cast<int>( sizeof(void*) );
+	}
+	else
+	{
+		elem_sz = static_cast<int>( storage_size( to_builtin_types(svl->value_type) ) );
+	}
+	svl->element_size = elem_sz;
+
+	return elem_sz;
 }
 
 END_NS_SASL_SEMANTIC();

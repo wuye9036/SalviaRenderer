@@ -137,7 +137,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( statement );
 
 	SASL_VISIT_DCL( declaration_statement ){
-		SAFE_ACCEPT( v.decl );
+		visit(v.decls, data);
 		applied( v, data );
 	}
 	SASL_VISIT_DCL( if_statement ){
@@ -286,21 +286,21 @@ public:
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, expression_initializer, (init_expr) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( member_initializer );
 	SASL_VISIT_INLINE_DEF_UNIMPL( declaration );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_declaration, (type_info)(declarators) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator, (name)(init)(semantic)(semantic_index) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_declaration,	(type_info)(declarators) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter,				(param_type)(name)(init) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator,				(name)(init)(semantic)(semantic_index) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type, (tycode)(qual)(tok_beg)(tok_end) );
-	SASL_VISIT_INLINE_DEF_UNIMPL( array_type );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, struct_type, (name)(decls) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, alias_type, (alias) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter, (param_type)(name)(init) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, function_type, (name)(retval_type)(params)(body)(tycode)(qual) );
-
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, builtin_type,	(tycode)(qual) (tok_beg)(tok_end) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, array_type,		(tycode)(qual) (elem_type)(array_lens) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, struct_type,		(tycode)(qual) (name)(decls) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, alias_type,		(tycode)(qual) (alias) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, function_type,	(tycode)(qual) (name)(retval_type)(params)(body)(tycode)(qual) );
+	
 	// statement
 	SASL_VISIT_INLINE_DEF_UNIMPL( statement );
 
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement,	(decl) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declaration_statement,	(decls) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, if_statement,			(cond)(yes_stmt)(no_stmt) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, while_statement,			(cond)(body) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, dowhile_statement,		(cond)(body) );

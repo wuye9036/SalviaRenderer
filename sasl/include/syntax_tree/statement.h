@@ -46,7 +46,7 @@ struct declaration_statement: public statement{
 
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<declaration> decl;
+	std::vector< boost::shared_ptr<declaration> > decls;
 private:
 	declaration_statement( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 	declaration_statement& operator = ( const declaration_statement& );

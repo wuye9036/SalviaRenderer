@@ -8,6 +8,7 @@
 #include <sasl/enums/type_qualifiers.h>
 
 #include <eflib/include/metaprog/enable_if.h>
+#include <eflib/include/metaprog/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -108,6 +109,7 @@ protected:
 	type_definition( const type_definition& );
 };
 
+EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
 struct tynode: public declaration{
 	builtin_types tycode;
 	type_qualifiers qual;
@@ -144,7 +146,7 @@ protected:
 	builtin_type( const builtin_type& );
 };
 
-
+EFLIB_DECLARE_STRUCT_SHARED_PTR(array_type);
 struct array_type: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 

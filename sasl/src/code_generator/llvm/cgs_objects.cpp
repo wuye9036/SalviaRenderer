@@ -243,6 +243,8 @@ void value_t::index( size_t index )
 }
 
 value_tyinfo*	value_t::tyinfo() const{ return tyinfo_; }
+void			value_t::tyinfo( value_tyinfo* v ){ tyinfo_ = v; }
+
 void			value_t::hint( builtin_types bt ){ hint_ = bt; }
 void			value_t::abi( abis abi ){ this->abi_ = abi; }
 uint32_t		value_t::masks() const{ return masks_; }

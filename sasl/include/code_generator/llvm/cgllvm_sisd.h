@@ -92,8 +92,6 @@ protected:
 	// Override node_ctxt of cgllvm_impl
 	
 	void	mask_to_indexes( char index[4], uint32_t mask );
-	value_t	layout_to_value( salviar::sv_layout* svl );
-
 	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node&, bool create_if_need = false );
 	template <typename NodeT >
 	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const& v, bool create_if_need = false ){

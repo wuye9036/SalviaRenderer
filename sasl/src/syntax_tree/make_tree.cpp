@@ -9,6 +9,8 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 
+#include <eflib/include/diagnostics/assert.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
@@ -797,7 +799,8 @@ void dvarstmt_combinator::before_end()
 	}
 	assert( typed_node() );
 	boost::shared_ptr<declaration_statement> instead_node = create_node<declaration_statement>( token_t::null(), token_t::null() );
-	instead_node->decl = typed_node();
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	// instead_node->decl = typed_node();
 	typed_node( instead_node );
 }
 

@@ -48,12 +48,27 @@ class syntax_tree_builder{
 public:
 	syntax_tree_builder( sasl::parser::lexer& l, sasl::parser::grammars& g );
 	boost::shared_ptr<program> build_prog( boost::shared_ptr< sasl::parser::attribute > attr );
-	boost::shared_ptr<declaration> build_decl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<function_type> build_fndef( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<declaration> build_basic_decl( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<variable_declaration> build_vardecl( boost::shared_ptr<sasl::parser::attribute> attr );
-	std::vector< boost::shared_ptr<declarator> > build_declarators( boost::shared_ptr<sasl::parser::attribute> attr );
-	boost::shared_ptr<declarator> build_initdecl( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< boost::shared_ptr<declaration> >
+		build_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< boost::shared_ptr<declaration> > 
+		build_basic_decl( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< boost::shared_ptr<variable_declaration> >
+		build_vardecl( boost::shared_ptr<sasl::parser::attribute> attr );
+	std::vector< boost::shared_ptr<declarator> >
+		build_declarators(
+			boost::shared_ptr<sasl::parser::attribute> attr,
+			boost::shared_ptr<sasl::syntax_tree::tynode> tyn,
+			std::vector< boost::shared_ptr<sasl::syntax_tree::variable_declaration> >& new_decls
+			);
+
+	void build_initdecl(
+		boost::shared_ptr<sasl::parser::attribute> attr,
+		boost::shared_ptr<sasl::syntax_tree::tynode> tyn,
+		std::vector< boost::shared_ptr<sasl::syntax_tree::declarator> >&			declarators,
+		std::vector< boost::shared_ptr<sasl::syntax_tree::variable_declaration> >&	declarations
+		);
+
 	boost::shared_ptr<function_type> build_fndecl( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<parameter> build_param( boost::shared_ptr<sasl::parser::attribute> attr );
 	boost::shared_ptr<struct_type> build_struct( boost::shared_ptr<sasl::parser::attribute> attr );

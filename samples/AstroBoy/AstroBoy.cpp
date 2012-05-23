@@ -45,6 +45,8 @@ char const* astro_boy_vs_code =
 "float4x4 wvpMatrix; \r\n"
 "float4   eyePos; \r\n"
 "float4	  lightPos; \r\n"
+"int	  boneCount;\r\n"
+"float4x4[boneCount] boneMatrices;"
 "struct VSIn{ \r\n"
 "	float3 pos: POSITION; \r\n"
 "	float3 norm: NORMAL; \r\n"

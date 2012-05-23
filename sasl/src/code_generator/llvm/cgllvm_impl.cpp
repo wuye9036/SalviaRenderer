@@ -429,6 +429,24 @@ SASL_VISIT_DEF( struct_type ){
 	ctxt->copy( sc_ptr(data) );
 }
 
+SASL_VISIT_DEF( array_type )
+{
+	cgllvm_sctxt* ctxt = node_ctxt(v, true);
+	if( ctxt->data().tyinfo ){
+		sc_ptr(data)->data(ctxt);
+		return;
+	}
+
+	any child_ctxt_init = *data;
+	any child_ctxt;
+	sc_ptr(child_ctxt_init)->clear_data();
+
+	visit_child(child_ctxt, child_ctxt_init, v.elem_type);
+	sc_data_ptr(data)->tyinfo = service()->create_tyinfo(v.si_ptr<type_info_si>()->type_info());
+
+	ctxt->copy( sc_ptr(data) );
+}
+
 SASL_VISIT_DEF( variable_declaration ){
 	// Visit type info
 	any child_ctxt_init = *data;
@@ -491,8 +509,11 @@ SASL_VISIT_DEF( declaration_statement ){
 	any child_ctxt_init = *data;
 	any child_ctxt;
 
-	visit_child( child_ctxt, child_ctxt_init, v.decl );
-
+	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls )
+	{
+		visit_child( child_ctxt, child_ctxt_init, decl );
+	}
+	
 	node_ctxt(v, true)->copy( sc_ptr(data) );
 }
 
