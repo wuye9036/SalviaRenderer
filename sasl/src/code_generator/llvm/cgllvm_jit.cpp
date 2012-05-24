@@ -76,8 +76,6 @@ cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<llvm_module> ctxt )
 }
 
 void cgllvm_jit_engine::build(){
-	llvm::InitializeNativeTarget();
-
 	if ( !global_ctxt || !global_ctxt->module() ){
 		engine.reset();
 	}

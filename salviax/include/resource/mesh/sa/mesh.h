@@ -47,7 +47,8 @@ public:
 	virtual void	render( uint32_t submesh_id ) = 0;
 	virtual void	update_time(float t) = 0;
 	virtual void	set_time(float t) = 0;
-	virtual std::vector<eflib::mat44> joint_transformations() = 0;
+	virtual std::vector<eflib::mat44> joint_matrices() = 0;
+	virtual std::vector<eflib::mat44> bind_inv_matrices() = 0;
 
 	virtual ~base_skin_mesh(){}
 };

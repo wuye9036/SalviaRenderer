@@ -149,7 +149,7 @@ protected:
 	
 	// For type conversation.
 	boost::shared_ptr< ::sasl::semantic::caster_t > caster;
-	llvm::TargetData* target_data;
+	llvm::TargetData const * target_data;
 
 	// Store node-context pairs.
 	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;

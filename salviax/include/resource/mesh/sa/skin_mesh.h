@@ -144,13 +144,15 @@ public:
 	virtual void	render( uint32_t submesh_id );
 	virtual void	update_time(float t);
 	virtual void	set_time(float t);
-	virtual std::vector<eflib::mat44> joint_transformations();
+	virtual std::vector<eflib::mat44> joint_matrices();
+	virtual std::vector<eflib::mat44> bind_inv_matrices();
 
 	boost::unordered_map<
 		std::string, scene_node*>		joint_nodes;
+	std::vector<eflib::mat44>			bind_inv_mats;
 	std::vector<animation_player_ptr>	anims;
 	std::vector<std::string>			joints;
-	std::vector<eflib::mat44*>			joint_matrices;
+	std::vector<eflib::mat44*>			joint_mats;
 	std::vector<h_mesh>					submeshes;
 	std::vector<scene_node_ptr>			roots;
 };

@@ -69,7 +69,7 @@ bool layout_type_pairs_cmp( pair<sv_layout*, Type*> const& lhs, pair<sv_layout*,
 /// Will be arranged to
 ///   struct { byte b; ushort us; int i; float f; };
 /// It will minimize the structure size.
-void rearrange_layouts( vector<sv_layout*>& sorted_layouts, vector<Type*>& sorted_tys, vector<sv_layout*> const& layouts, vector<Type*> const& tys, TargetData* target )
+void rearrange_layouts( vector<sv_layout*>& sorted_layouts, vector<Type*>& sorted_tys, vector<sv_layout*> const& layouts, vector<Type*> const& tys, TargetData const* target )
 {
 	size_t layouts_count = layouts.size();
 	vector<size_t> elems_size;
@@ -320,7 +320,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		param_values[su_buffer_out] = create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
 		++arg_it;
 
-		// Create virutal arguments
+		// Create virtual arguments
 		create_virtual_args(v, data);
 
 	} else {

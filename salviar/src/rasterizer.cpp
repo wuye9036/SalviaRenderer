@@ -110,7 +110,7 @@ void fill_solid_clipping(
 		vs_output_ops
 		);
 
-	assert(num_out_clipped_verts <= 4);
+	assert(num_out_clipped_verts <= 5);
 
 	num_clipped_verts = (0 == num_out_clipped_verts) ? 0 : (num_out_clipped_verts - 2) * 3;
 

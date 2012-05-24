@@ -68,11 +68,13 @@ char const* astro_boy_vs_code =
 "	float4 skin_pos = float4(0.0f, 0.0f, 0.0f, 0.0f); \r\n"
 "	for(int i = 0; i < 4; ++i){\r\n"
 "		float4 w = in.weights[i].xxxx; \r\n"
-"		int boneId = in.indices[i];"
-"		float4 posInBoneSpace = mul(invMatrices[boneId], pos_v4f32);"
-"		skin_pos += ( mul(boneMatrices[boneId], posInBoneSpace) * w ); \r\n"
+"		int boneId = in.indices[i]; \r\n"
+"		if(boneId == -1){ break; } \r\n"
+"		float4 posInBoneSpace = mul(pos_v4f32, invMatrices[boneId]); \r\n"
+"		skin_pos += ( mul(posInBoneSpace, boneMatrices[boneId]) * w ); \r\n"
 "	}\r\n"
-"	out.pos = mul(wvpMatrix, skin_pos); \r\n"
+"	skin_pos.w = 1.0f; \r\n"
+"	out.pos = mul(skin_pos, wvpMatrix); \r\n"
 "	out.lightDir = lightPos-skin_pos; \r\n"
 "	out.eyeDir = eyePos-skin_pos; \r\n"
 "	return out; \r\n"
@@ -319,13 +321,17 @@ protected:
 			hsr->set_vs_variable( "eyePos", &camera_pos );
 			hsr->set_vs_variable( "lightPos", &lightPos );
 			
-			vector<mat44> boneMatrices = astro_boy_mesh->joint_transformations();
+			astro_boy_mesh->set_time(0.0f);
+			vector<mat44> boneMatrices = astro_boy_mesh->joint_matrices();
+			vector<mat44> boneInvMatrices = astro_boy_mesh->bind_inv_matrices();
+
 			int boneSize = (int)boneMatrices.size();
+			
 			hsr->set_vs_variable( "boneCount", &boneSize );
 			hsr->set_vs_variable( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
-			hsr->set_vs_variable( "invMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
+			hsr->set_vs_variable( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
 
-			for( size_t i_mesh = 0; i_mesh < astro_boy_mesh->submesh_count(); ++i_mesh )
+			for( size_t i_mesh = 0; i_mesh < 1 /*astro_boy_mesh->submesh_count()*/; ++i_mesh )
 			{
 				astro_boy_mesh->render(i_mesh);
 			}

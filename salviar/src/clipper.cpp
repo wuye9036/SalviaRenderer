@@ -101,7 +101,7 @@ void clipper::clip(
 	) const
 {
 	eflib::pool::stack_pool< vs_output, 6 > pool;
-	const vs_output* clipped_verts[2][4];
+	const vs_output* clipped_verts[2][5];
 	uint32_t num_clipped_verts[2];
 
 	//¿ªÊ¼clip, Ping-Pong idioms
@@ -189,7 +189,7 @@ void clipper::clip(
 	const vs_output** clipped_verts_ptrs = clipped_verts[src_stage];
 	num_out_clipped_verts = num_clipped_verts[src_stage];
 
-	assert( num_out_clipped_verts <= 4 );
+	assert( num_out_clipped_verts <= 5 );
 	for(size_t i = 0; i < num_out_clipped_verts; ++i){
 		vs_output_ops.copy(out_clipped_verts[i], *clipped_verts_ptrs[i]);
 		viewport_transform(out_clipped_verts[i].position, vp);

@@ -22,7 +22,9 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Target/TargetData.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/Constants.h>
+#include <llvm/Support/TargetSelect.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -101,7 +103,7 @@ bool cgllvm_impl::generate( module_si* mod, abi_info const* abii )
 
 cgllvm_impl::~cgllvm_impl()
 {
-	if( target_data ){ delete target_data; }
+	// if( target_data ){ delete target_data; }
 }
 
 shared_ptr<symbol> cgllvm_impl::find_symbol( cgllvm_sctxt* data, std::string const& str )
@@ -577,7 +579,11 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
 	EFLIB_UNREF_PARAM(data);
 	EFLIB_UNREF_PARAM(v);
-	target_data = new TargetData( module() );
+	
+	llvm::InitializeNativeTarget();
+
+	TargetMachine* tm = EngineBuilder(module()).selectTarget();
+	target_data = tm->getTargetData();
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){

@@ -181,7 +181,8 @@ void vertex_shader_unit::set_variable( std::string const& name, void* data, size
 	memcpy(data_array.get(), data, sz);
 	dynamic_datas[name] = data_array;
 
-	set_variable( name, (void*)(data_array.get()) );
+	void* array_ptr[2] = {data_array.get(), data_array.get()};
+	set_variable( name, &(array_ptr[0]) );
 }
 
 vertex_shader_unit::vertex_shader_unit()

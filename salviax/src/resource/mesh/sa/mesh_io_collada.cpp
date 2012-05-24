@@ -61,7 +61,7 @@ struct skin_info
 	vector<uint32_t>	vertex_skin_info_count;
 	vector<
 		pair<uint32_t /*skin_info.joint*/, uint32_t /*skin_info.weight*/>
-	>					vertex_skin_infos;
+	>					vertex_skin_infos; 
 };
 
 typedef shared_ptr<skin_info> skin_info_ptr;
@@ -615,6 +615,8 @@ base_skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const
 			if( !dae_mesh_node ) return skin_mesh_ptr();
 
 			ret->submeshes = build_mesh( dae_mesh_node, skinfo, render );
+			ret->joints = skinfo->joints;
+			ret->bind_inv_mats = skinfo->joint_inv_matrix;
 		}
 	}
 

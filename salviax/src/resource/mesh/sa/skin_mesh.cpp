@@ -25,7 +25,10 @@ void scene_node::update_world_matrix()
 	{
 		world_matrix = local_matrix;
 	}
-	mat_mul(world_matrix, parent->world_matrix, local_matrix);
+	else
+	{
+		mat_mul(world_matrix, parent->world_matrix, local_matrix);
+	}
 }
 
 void scene_node::update_world_matrix_recursive()
@@ -57,25 +60,66 @@ void skin_mesh::render( uint32_t submesh_id )
 	submeshes[submesh_id]->render();
 }
 
-vector<mat44> skin_mesh::joint_transformations()
+vector<mat44> skin_mesh::joint_matrices()
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return vector<mat44>();
+	if( joint_mats.size() != joints.size() )
+	{
+		joint_mats.clear();
+		for(size_t i_joint = 0; i_joint < joints.size(); ++i_joint)
+		{
+			joint_mats.push_back( &(joint_nodes[joints[i_joint]]->world_matrix) );
+		}
+	}
+
+	BOOST_FOREACH(scene_node_ptr const& pnode, roots)
+	{
+		pnode->update_world_matrix_recursive();
+	}
+	
+	vector<mat44> ret;
+	ret.reserve( joint_mats.size() );
+	for(size_t i_joint = 0; i_joint < joints.size(); ++i_joint)
+	{
+		/*mat44 tmp;
+		ret.push_back( eflib::mat_transpose(tmp, *joint_mats[i_joint]) );*/
+		ret.push_back( *joint_mats[i_joint] );
+	}
+
+	return ret;
 }
 
 void skin_mesh::update_time( float t )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	BOOST_FOREACH( animation_player_ptr const& anim_player, anims )
+	{
+		anim_player->update_play_time(t);
+	}
 }
 
 void skin_mesh::set_time( float t )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	BOOST_FOREACH( animation_player_ptr const& anim_player, anims )
+	{
+		anim_player->set_play_time(t);
+	}
 }
 
 size_t skin_mesh::submesh_count()
 {
 	return submeshes.size();
+}
+
+vector<mat44> skin_mesh::bind_inv_matrices()
+{
+	//vector<mat44> ret;
+	//ret.reserve( bind_inv_mats.size() );
+	//for(size_t i_joint = 0; i_joint < bind_inv_mats.size(); ++i_joint)
+	//{
+	//	mat44 tmp;
+	//	ret.push_back( eflib::mat_transpose(tmp, bind_inv_mats[i_joint]) );
+	//}
+
+	return bind_inv_mats;
 }
 
 END_NS_SALVIAX_RESOURCE();
