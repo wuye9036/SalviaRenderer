@@ -63,17 +63,21 @@ char const* astro_boy_vs_code =
 "}; \r\n"
 "VSOut vs_main(VSIn in){ \r\n"
 "	VSOut out; \r\n"
-"	out.norm = float4(in.norm, 0.0f); \r\n"
+"	float4 nor_v4f32 = float4(in.norm, 0.0f); \r\n"
 "	float4 pos_v4f32 = float4(in.pos, 1.0f); \r\n"
 "	float4 skin_pos = float4(0.0f, 0.0f, 0.0f, 0.0f); \r\n"
+"	float4 skin_nor = float4(0.0f, 0.0f, 0.0f, 0.0f); \r\n"
 "	for(int i = 0; i < 4; ++i){\r\n"
 "		float4 w = in.weights[i].xxxx; \r\n"
 "		int boneId = in.indices[i]; \r\n"
 "		if(boneId == -1){ break; } \r\n"
 "		float4 posInBoneSpace = mul(invMatrices[boneId], pos_v4f32); \r\n"
 "		skin_pos += ( mul(boneMatrices[boneId], posInBoneSpace) * w ); \r\n"
+"		float4 norInBoneSpace = mul(invMatrices[boneId], nor_v4f32); \r\n"
+"		skin_nor += ( mul(boneMatrices[boneId], norInBoneSpace) * w ); \r\n"
 "	}\r\n"
 "	out.pos = mul(skin_pos, wvpMatrix); \r\n"
+"	out.norm = skin_nor;\r\n"
 "	out.lightDir = lightPos-skin_pos; \r\n"
 "	out.eyeDir = eyePos-skin_pos; \r\n"
 "	return out; \r\n"
@@ -97,8 +101,8 @@ public:
 		declare_constant(_T("boneMatrices"), boneMatrices);
 
 		bind_semantic( "POSITION", 0, 0 );
-		bind_semantic( "TEXCOORD", 0, 1 );
-		bind_semantic( "NORMAL", 0, 2 );
+		bind_semantic( "NORMAL", 0, 1 );
+		bind_semantic( "TEXCOORD", 0, 2 );
 		bind_semantic( "BLEND_INDICES", 0, 3);
 		bind_semantic( "BLEND_WEIGHTS", 0, 4);
 	}
@@ -107,8 +111,14 @@ public:
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in.attributes[0];
-		out.position = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		vec4 nor = in.attributes[1];
+
+		out.position = out.attributes[0] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		pos.w(1.0f);
+		nor.w(0.0f);
+		/*out.position = pos;
+		out.attributes[0] = nor;*/
+		
 		for(int i = 0; i < 4; ++i)
 		{
 			union {float f; int i;} f2i;
@@ -118,10 +128,15 @@ public:
 			if(boneIndex == -1){break;}
 			// fprintf(f, "%2d ", boneIndex);
 			vec4 skin_pos;
+			vec4 skin_nor;
 			transform(skin_pos, invMatrices[boneIndex], pos);
 			transform(skin_pos, boneMatrices[boneIndex], skin_pos);
+			transform(skin_nor, invMatrices[boneIndex], nor);
+			transform(skin_nor, boneMatrices[boneIndex], skin_nor);
 			out.position += (skin_pos*w);
+			out.attributes[0] += (skin_nor*w);
 		}
+		
 #ifdef EFLIB_DEBUG
 		fprintf(f, "(%8.4f %8.4f %8.4f %8.4f)", out.position[0], out.position[1], out.position[2], out.position[3]);
 #endif
@@ -130,7 +145,7 @@ public:
 		fprintf(f, "\n");
 #endif
 
-		out.attributes[0] = in.attributes[1];
+		// out.attributes[0] = in.attributes[1];
 		out.attributes[1] = in.attributes[2];
 		out.attributes[2] = light_pos - pos;
 		out.attributes[3] = eye_pos - pos;
@@ -195,6 +210,7 @@ public:
 
 		out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
 		out.color[0] = diff_color * illum_diffuse;
+		//out.color[0] = ( vec4(norm, 1.0f) + vec4(1.0f, 1.0f, 1.0f, 1.0f) ) * 0.5f;
 		out.color[0][3] = 1.0f;
 
 		return true;
@@ -318,19 +334,16 @@ protected:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		vec4 camera_pos = vec4( 0.0f, 14.0f, 12.0f, 1.0f );
+		vec4 camera_pos = vec4( 0.0f, 10.0f, 14.0f, 1.0f );
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 
-		mat_lookat(view, camera_pos.xyz(), vec3(0.0f, 9.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera_pos.xyz(), vec3(0.0f, 10.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
-		static float ypos = 40.0f;
-		ypos -= elapsed_time;
-		if ( ypos < 1.0f ){
-			ypos = 40.0f;
-		}
-		vec4 lightPos( 0.0f, ypos, 0.0f, 1.0f );
+		static float ang = 0.0f;
+		ang += elapsed_time/3.0f;
+		vec4 lightPos( sin(ang)*15.0f, 10.0f, cos(ang)*15.0f, 1.0f );
 
 		hsr->set_pixel_shader(pps);
 		hsr->set_blend_shader(pbs);
@@ -343,8 +356,8 @@ protected:
 			hsr->set_rasterizer_state(rs_back);
 
 			static float cur_time = 0.0f;
-			cur_time = fmodf( cur_time + elapsed_time/10.0f, 1.0f );
-			astro_boy_mesh->set_time(cur_time);
+			cur_time = fmodf(cur_time+elapsed_time/1.5f, 1.0f);
+			astro_boy_mesh->set_time(cur_time+0.05f);
 
 			vector<mat44> boneMatrices = astro_boy_mesh->joint_matrices();
 			vector<mat44> boneInvMatrices = astro_boy_mesh->bind_inv_matrices();
