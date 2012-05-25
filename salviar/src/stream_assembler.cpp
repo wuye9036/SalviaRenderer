@@ -41,6 +41,10 @@ vec4 get_vec4(format fmt, semantic_value const& sv, const void* data)
 			return vec4(floats[0], floats[1], floats[2], w_comp);
 		case format_r32g32b32a32_float:
 			return vec4(floats[0], floats[1], floats[2], floats[3]);
+		case format_r32g32b32a32_sint:
+			return *reinterpret_cast<vec4 const*>(floats);
+		default:
+			assert(false);
 	}
 
 	return vec4::zero();

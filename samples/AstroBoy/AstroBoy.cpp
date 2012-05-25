@@ -70,10 +70,9 @@ char const* astro_boy_vs_code =
 "		float4 w = in.weights[i].xxxx; \r\n"
 "		int boneId = in.indices[i]; \r\n"
 "		if(boneId == -1){ break; } \r\n"
-"		float4 posInBoneSpace = mul(pos_v4f32, invMatrices[boneId]); \r\n"
-"		skin_pos += ( mul(posInBoneSpace, boneMatrices[boneId]) * w ); \r\n"
+"		float4 posInBoneSpace = mul(invMatrices[boneId], pos_v4f32); \r\n"
+"		skin_pos += ( mul(boneMatrices[boneId], posInBoneSpace) * w ); \r\n"
 "	}\r\n"
-"	skin_pos.w = 1.0f; \r\n"
 "	out.pos = mul(skin_pos, wvpMatrix); \r\n"
 "	out.lightDir = lightPos-skin_pos; \r\n"
 "	out.eyeDir = eyePos-skin_pos; \r\n"
@@ -81,26 +80,56 @@ char const* astro_boy_vs_code =
 "} \r\n"
 ;
 
+FILE* f = NULL;
+
 class astro_boy_vs : public vertex_shader
 {
 	mat44 wvp;
 	vec4 light_pos, eye_pos;
+	vector<mat44> invMatrices;
+	vector<mat44> boneMatrices;
 public:
 	astro_boy_vs():wvp(mat44::identity()){
 		declare_constant(_T("wvpMatrix"), wvp);
 		declare_constant(_T("lightPos"), light_pos);
-		declare_constant(_T("eyePos"), eye_pos );
+		declare_constant(_T("eyePos"), eye_pos);
+		declare_constant(_T("invMatrices"), invMatrices);
+		declare_constant(_T("boneMatrices"), boneMatrices);
 
 		bind_semantic( "POSITION", 0, 0 );
 		bind_semantic( "TEXCOORD", 0, 1 );
 		bind_semantic( "NORMAL", 0, 2 );
+		bind_semantic( "BLEND_INDICES", 0, 3);
+		bind_semantic( "BLEND_WEIGHTS", 0, 4);
 	}
 
 	astro_boy_vs(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in.attributes[0];
-		transform(out.position, pos, wvp);
+		out.position = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		pos.w(1.0f);
+		for(int i = 0; i < 4; ++i)
+		{
+			union {float f; int i;} f2i;
+			f2i.f = in.attributes[3][i];
+			float w = in.attributes[4][i];
+			int boneIndex = f2i.i;
+			if(boneIndex == -1){break;}
+			// fprintf(f, "%2d ", boneIndex);
+			vec4 skin_pos;
+			transform(skin_pos, invMatrices[boneIndex], pos);
+			transform(skin_pos, boneMatrices[boneIndex], skin_pos);
+			out.position += (skin_pos*w);
+		}
+#ifdef EFLIB_DEBUG
+		fprintf(f, "(%8.4f %8.4f %8.4f %8.4f)", out.position[0], out.position[1], out.position[2], out.position[3]);
+#endif
+		transform(out.position, out.position, wvp);
+#ifdef EFLIB_DEBUG
+		fprintf(f, "\n");
+#endif
+
 		out.attributes[0] = in.attributes[1];
 		out.attributes[1] = in.attributes[2];
 		out.attributes[2] = light_pos - pos;
@@ -254,6 +283,9 @@ protected:
 		pvs.reset( new astro_boy_vs() );
 		pps.reset( new astro_boy_ps() );
 		pbs.reset( new bs() );
+
+		f = fopen("indices.txt", "w");
+		fclose(f);
 	}
 	/** @} */
 
@@ -262,7 +294,9 @@ protected:
 	}
 
 	void on_idle(){
+		static int frame_count = 0;
 		// measure statistics
+		++frame_count;
 		++ num_frames;
 		float elapsed_time = static_cast<float>(timer.elapsed());
 		accumulate_time += elapsed_time;
@@ -300,7 +334,7 @@ protected:
 
 		hsr->set_pixel_shader(pps);
 		hsr->set_blend_shader(pbs);
-
+		
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
@@ -308,33 +342,43 @@ protected:
 
 			hsr->set_rasterizer_state(rs_back);
 
+			static float cur_time = 0.0f;
+			cur_time = fmodf( cur_time + elapsed_time/10.0f, 1.0f );
+			astro_boy_mesh->set_time(cur_time);
+
+			vector<mat44> boneMatrices = astro_boy_mesh->joint_matrices();
+			vector<mat44> boneInvMatrices = astro_boy_mesh->bind_inv_matrices();
+			int boneSize = (int)boneMatrices.size();
+
 			// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
 			hsr->set_vertex_shader_code( astro_boy_sc );
+
+			hsr->set_vs_variable( "wvpMatrix", &wvp );
+			hsr->set_vs_variable( "eyePos", &camera_pos );
+			hsr->set_vs_variable( "lightPos", &lightPos );
+
+			hsr->set_vs_variable( "boneCount", &boneSize );
+			hsr->set_vs_variable( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
+			hsr->set_vs_variable( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
 #else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
 			pvs->set_constant( _T("eyePos"), &camera_pos );
 			pvs->set_constant( _T("lightPos"), &lightPos );
+
+			// hsr->set_constant( "boneCount", &boneSize );
+			pvs->set_constant( _T("boneMatrices"), &boneMatrices );
+			pvs->set_constant( _T("invMatrices"), &boneInvMatrices );
+
 			hsr->set_vertex_shader(pvs);
 #endif
-			hsr->set_vs_variable( "wvpMatrix", &wvp );
-			hsr->set_vs_variable( "eyePos", &camera_pos );
-			hsr->set_vs_variable( "lightPos", &lightPos );
-			
-			astro_boy_mesh->set_time(0.0f);
-			vector<mat44> boneMatrices = astro_boy_mesh->joint_matrices();
-			vector<mat44> boneInvMatrices = astro_boy_mesh->bind_inv_matrices();
-
-			int boneSize = (int)boneMatrices.size();
-			
-			hsr->set_vs_variable( "boneCount", &boneSize );
-			hsr->set_vs_variable( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
-			hsr->set_vs_variable( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
-
+			f = fopen("indices.txt", "a");
+			fprintf(f, "FRAME %d", frame_count);
 			for( size_t i_mesh = 0; i_mesh < 1 /*astro_boy_mesh->submesh_count()*/; ++i_mesh )
 			{
 				astro_boy_mesh->render(i_mesh);
 			}
+			fclose(f);
 		}
 
 		if (hsr->get_framebuffer()->get_num_samples() > 1){

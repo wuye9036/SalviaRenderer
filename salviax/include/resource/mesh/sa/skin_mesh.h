@@ -121,9 +121,11 @@ private:
 class scene_node
 {
 public:
-	scene_node(scene_node* parent);
+	scene_node(scene_node* parent, std::string const& name);
 
 	scene_node* parent;
+	std::string name;
+
 	std::vector<scene_node_ptr>	children;
 
 	void reset_world_matrix();

@@ -3,11 +3,11 @@
 
 #include <eflib/include/platform/typedefs.h>
 
-#include "type_register.h"
-#include "functions_tblhelper.h"
+#include <salviar/include/type_register.h>
+#include <salviar/include/functions_tblhelper.h>
 #include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
 
+BEGIN_NS_SALVIAR();
 
 namespace shader_constant
 {
@@ -21,6 +21,7 @@ namespace shader_constant
 				(int8_t)(uint8_t)(int16_t)(uint16_t)(int32_t)(uint32_t)(int64_t)(uint64_t)\
 				(std::string)(std::wstring)\
 				(eflib::vec2)(eflib::vec3)(eflib::vec4)(eflib::mat44)\
+				(std::vector<eflib::mat44>)\
 				/*END REGISTER*/
 
 	#include END_REGISTER_TYPE()
@@ -88,6 +89,7 @@ namespace detail
 		}
 	};
 }
-END_NS_SALVIAR()
+
+END_NS_SALVIAR();
 
 #endif

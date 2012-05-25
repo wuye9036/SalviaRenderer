@@ -481,7 +481,8 @@ scene_node_ptr build_scene_node(
 	unordered_map<dae_scene_node_ptr,scene_node_ptr>& dae_node_to_joints,
 	unordered_map<dae_matrix_ptr, mat44*>&	dae_node_to_matrix)
 {
-	scene_node_ptr ret = make_shared<scene_node>((scene_node*)NULL);
+	scene_node_ptr ret = boost::make_shared<scene_node>( (scene_node*)NULL, std::string() );
+	ret->name = *(scene->id);
 	dae_node_to_joints.insert( make_pair(scene, ret) );
 
 	BOOST_FOREACH(dae_scene_node_ptr const& child, scene->children){

@@ -8,11 +8,13 @@
 
 using eflib::mat44;
 using std::vector;
+using std::string;
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
-scene_node::scene_node( scene_node* parent )
+scene_node::scene_node( scene_node* parent, string const& name )
 	: parent(parent)
+	, name(name)
 	, original_matrix(mat44::identity())
 	, local_matrix(mat44::identity())
 	, world_matrix(mat44::identity())
@@ -80,8 +82,8 @@ vector<mat44> skin_mesh::joint_matrices()
 	ret.reserve( joint_mats.size() );
 	for(size_t i_joint = 0; i_joint < joints.size(); ++i_joint)
 	{
-		/*mat44 tmp;
-		ret.push_back( eflib::mat_transpose(tmp, *joint_mats[i_joint]) );*/
+		// mat44 tmp;
+		// ret.push_back( eflib::mat_transpose(tmp, *joint_mats[i_joint]) );
 		ret.push_back( *joint_mats[i_joint] );
 	}
 
@@ -111,14 +113,6 @@ size_t skin_mesh::submesh_count()
 
 vector<mat44> skin_mesh::bind_inv_matrices()
 {
-	//vector<mat44> ret;
-	//ret.reserve( bind_inv_mats.size() );
-	//for(size_t i_joint = 0; i_joint < bind_inv_mats.size(); ++i_joint)
-	//{
-	//	mat44 tmp;
-	//	ret.push_back( eflib::mat_transpose(tmp, bind_inv_mats[i_joint]) );
-	//}
-
 	return bind_inv_mats;
 }
 
