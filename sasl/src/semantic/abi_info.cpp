@@ -261,7 +261,7 @@ void abi_info::compute_input_semantics_layout(){
 		svl->logical_index  = counts[svl->usage];
 		svl->offset			= offsets[svl->usage];
 		svl->element_count = 1;
-		compute_element_size(svl);
+		compute_element_size(svl, false);
 
 		counts[svl->usage]++;
 		offsets[svl->usage] += svl->total_size();
@@ -279,7 +279,7 @@ void abi_info::compute_output_buffer_layout(){
 		svl->logical_index  =  counts[svl->usage];
 		svl->offset = offsets[svl->usage];
 		svl->element_count = 1;
-		compute_element_size(svl);
+		compute_element_size(svl, false);
 		
 		counts[svl->usage]++;
 		offsets[svl->usage] += svl->total_size();
@@ -300,7 +300,7 @@ void abi_info::compute_input_constant_layout(){
 		svl->offset = offsets[su_buffer_in];
 
 		svl->element_count = 1;
-		compute_element_size(svl);
+		compute_element_size(svl, false);
 
 		counts[su_buffer_in]++;
 		offsets[su_buffer_in] += svl->element_size;
@@ -338,10 +338,10 @@ void abi_info::compute_package_layout( sv_layout* svl )
 
 	if( svl->usage == su_buffer_in || svl->usage == su_buffer_out ){
 		svl->element_count = 1;
-		compute_element_size(svl);
+		compute_element_size(svl, true);
 	} else {
 		if( is_vector(elem_bt) || is_scalar( elem_bt ) ){
-			compute_element_size(svl);
+			compute_element_size(svl, true);
 			int pow2_elem_size = ceil_to_pow2(svl->element_size);
 			svl->element_count = PACKAGE_ELEMENT_COUNT;
 			svl->element_padding = pow2_elem_size - svl->element_size;
@@ -362,10 +362,10 @@ void abi_info::compute_package_layout( sv_layout* svl )
 	offsets[svl->usage] += svl->total_size();
 }
 
-int abi_info::compute_element_size(sv_layout* svl) const
+int abi_info::compute_element_size(sv_layout* svl, bool package) const
 {
 	int elem_sz = 0;
-	if( svl->usage != su_buffer_in || svl->agg_type == salviar::aggt_array )
+	if( (svl->usage != su_buffer_in && !package) || svl->agg_type == salviar::aggt_array )
 	{
 		elem_sz = static_cast<int>( sizeof(void*) );
 	}

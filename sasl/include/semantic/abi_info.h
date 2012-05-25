@@ -92,7 +92,7 @@ private:
 	void compute_output_package_layout();
 	void compute_package_layout( salviar::sv_layout* );
 
-	int compute_element_size(salviar::sv_layout* svl) const;
+	int compute_element_size(salviar::sv_layout* svl, bool package) const;
 
 	module_si* mod;
 	symbol* entry_point;
