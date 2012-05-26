@@ -43,10 +43,10 @@ int main (int argc, char **argv){
 	driver_lib->get_function( pfn, "sasl_create_driver" );
 	shared_ptr<driver> drv;
 	pfn(drv);
-
 	drv->set_parameter( argc, argv );
-	drv->set_diag_chat( diags.get() );
-	drv->compile();
+	shared_ptr<diag_chat> comp_diags = drv->compile();
+
+	diag_chat::merge(diags.get(), comp_diags.get(), true);
 
 #if defined(EFLIB_DEBUG)
 	system("pause");

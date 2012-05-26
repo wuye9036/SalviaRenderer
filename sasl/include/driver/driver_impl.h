@@ -37,10 +37,7 @@ public:
 	/// Only support by default code source.
 	virtual void clear_macros();
 
-	virtual void set_diag_chat( sasl::common::diag_chat* diags );
-	// virtual void set_dump_ir( std::string const& );
-
-	virtual void compile();
+	virtual boost::shared_ptr<sasl::common::diag_chat> compile();
 
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit();
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit( external_function_array const& );
@@ -81,7 +78,6 @@ private:
 	// Overridden options
 	boost::shared_ptr<sasl::common::code_source>	user_code_src;
 	boost::shared_ptr<sasl::common::lex_context>	user_lex_ctxt;
-	sasl::common::diag_chat*						user_diags;
 
 	typedef boost::unordered_map< std::string,
 		std::pair<std::string, bool> > virtual_file_dict;

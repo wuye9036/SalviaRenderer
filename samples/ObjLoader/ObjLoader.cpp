@@ -189,7 +189,7 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
-		cup_vs = shader_code::create( cup_vs_code, lang_vertex_shader );
+		cup_vs = shader_code::create_and_log(cup_vs_code, lang_vertex_shader);
 
 		num_frames = 0;
 		accumulate_time = 0;
@@ -228,6 +228,8 @@ protected:
 
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
+
+		if(!cup_vs){ return; }
 
 		static float s_angle = 0;
 		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;

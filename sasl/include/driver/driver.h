@@ -3,6 +3,8 @@
 
 #include <sasl/include/driver/driver_forward.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
@@ -16,8 +18,8 @@ namespace sasl
 {
 	namespace common
 	{
-		class code_source;
-		class diag_chat;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(diag_chat);
+		EFLIB_DECLARE_CLASS_SHARED_PTR(code_source);
 	}
 	namespace semantic
 	{
@@ -51,12 +53,11 @@ public:
 	virtual void set_parameter( int argc, char** argv )				= 0;
 	virtual void set_parameter( std::string const& cmd )			= 0;
 
-	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& )	= 0;
+	virtual void set_code_source( sasl::common::code_source_ptr const& )	= 0;
 	virtual void set_code       ( std::string const& code_text )	= 0;
 	virtual void set_code_file  ( std::string const& code_file )	= 0;
-	virtual void set_diag_chat( sasl::common::diag_chat* diags )	= 0;
 
-	virtual void compile()											= 0;
+	virtual sasl::common::diag_chat_ptr compile()					= 0;
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit() = 0;
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit(external_function_array const&) = 0;
 	virtual void add_virtual_file(

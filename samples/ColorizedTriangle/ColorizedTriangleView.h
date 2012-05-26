@@ -200,7 +200,7 @@ public:
 		rs_back.reset(new rasterizer_state(rs_desc));
 
 		shared_ptr<shader_code> compiled_code;
-		compiled_code = shader_code::create( vs_code, lang_vertex_shader );
+		compiled_code = shader_code::create_and_log( vs_code, lang_vertex_shader );
 
 		hsr->set_vertex_shader_code( compiled_code );
 

@@ -374,7 +374,7 @@ public:
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Box Pixel Shader ..." << endl;
-			psc_box = shader_code::create( box_ps_code, lang_pixel_shader );
+			psc_box = shader_code::create_and_log( box_ps_code, lang_pixel_shader );
 #endif
 		}
 
@@ -393,7 +393,7 @@ public:
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Plane Pixel Shader ..." << endl;
-			psc_plane = shader_code::create( plane_ps_code, lang_pixel_shader );
+			psc_plane = shader_code::create_and_log( plane_ps_code, lang_pixel_shader );
 #endif
 		}
 

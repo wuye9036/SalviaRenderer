@@ -24,7 +24,7 @@ using std::fstream;
 
 BEGIN_NS_SALVIAR();
 
-shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::languages lang )
+shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::languages lang, vector<string>& results )
 {
 	std::string dll_name = "sasl_host";
 #ifdef EFLIB_DEBUG
@@ -34,7 +34,13 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 
 	shared_ptr<dynamic_lib> dl = dynamic_lib::load( dll_name );
 	typedef vector< tuple<void*, string, bool> > external_function_array;
-	void (*create_shader_code)( shared_ptr<shader_code>&, std::string const&, salviar::languages, external_function_array const& );
+	void (*create_shader_code)(
+		shared_ptr<shader_code>&,
+		string const&,
+		salviar::languages,
+		external_function_array const&,
+		boost::shared_ptr< vector<string> >& );
+
 	dl->get_function( create_shader_code, std::string("salvia_create_shader") );
 
 	external_function_array extfns;
@@ -43,8 +49,27 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 	extfns.push_back( make_tuple(&salviar_tex2Dbias_pkg,  "sasl.ps.tex2d.bias", true) );
 	extfns.push_back( make_tuple(&salviar_tex2Dproj_pkg,  "sasl.ps.tex2d.proj", true) );
 	shared_ptr<shader_code> ret;
-	create_shader_code( ret, code, lang, extfns );
-	ret->update_native_function();
+	shared_ptr< vector<string> > presults;
+	create_shader_code( ret, code, lang, extfns, presults );
+	results = *presults;
+	if(ret)
+	{
+		ret->update_native_function();
+	}
+	
+	return ret;
+}
+
+shared_ptr<shader_code> shader_code::create_and_log( string const& code, salviar::languages lang )
+{
+	vector<string> logs;
+	shared_ptr<shader_code> ret = shader_code::create( code, lang, logs );
+	if(!ret){
+		cout << "Shader was compiled failed!" << endl;
+		for( size_t i = 0; i < logs.size(); ++i ){
+			cout << logs[i] << endl;
+		}
+	}
 
 	return ret;
 }

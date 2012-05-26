@@ -114,7 +114,6 @@ void driver_impl::set_parameter( std::string const& cmd )
 }
 
 driver_impl::driver_impl()
-	: user_diags(NULL)
 {
 	opt_disp.fill_desc(desc);
 	opt_global.fill_desc(desc);
@@ -123,20 +122,10 @@ driver_impl::driver_impl()
 	opt_includes.fill_desc(desc);
 }
 
-void driver_impl::compile()
+shared_ptr<diag_chat> driver_impl::compile()
 {
-	// Initialize env for compiling.
-	shared_ptr<diag_chat> local_diags;
-	diag_chat* diags = NULL;
-	if( user_diags )
-	{
-		diags = user_diags;
-	}
-	else 
-	{
-		local_diags = diag_chat::create();
-		diags = local_diags.get();
-	}
+	// Initialize env for compiling. 
+	shared_ptr<diag_chat> diags = diag_chat::create();
 
 	opt_disp.filterate(vm);
 	opt_global.filterate(vm);
@@ -146,12 +135,12 @@ void driver_impl::compile()
 
 	if( opt_disp.show_help ){
 		diags->report(text_only)->p(desc);
-		return;
+		return diags;
 	}
 
 	if( opt_disp.show_version ){
 		diags->report(text_only)->p(opt_disp.version_info);
-		return;
+		return diags;
 	}
 
 	if( opt_global.detail == options_global::none ){
@@ -174,7 +163,7 @@ void driver_impl::compile()
 		
 		if ( !file_code_source->set_file(fname) ){
 			diags->report( sasl::parser::cannot_open_input_file )->p(fname);
-			return;
+			return diags;
 		} 
 
 		diags->report(compiling_input)->p(fname);
@@ -189,7 +178,7 @@ void driver_impl::compile()
 	else
 	{
 		diags->report(input_file_is_missing);
-		return;
+		return diags;
 	}
 
 	// Set include and virtual include.
@@ -198,7 +187,7 @@ void driver_impl::compile()
 
 	if( driver_sc )
 	{
-		driver_sc->set_diag_chat( diags );
+		driver_sc->set_diag_chat( diags.get() );
 
 		if( user_inc_handler )
 		{
@@ -244,8 +233,8 @@ void driver_impl::compile()
 	}
 
 	// Compiling
-	mroot = sasl::syntax_tree::parse( code_src.get(), lex_ctxt, diags );
-	if( !mroot ){ return; }
+	mroot = sasl::syntax_tree::parse( code_src.get(), lex_ctxt, diags.get() );
+	if( !mroot ){ return diags; }
 
 	shared_ptr<diag_chat> semantic_diags = diag_chat::create();
 	msi = analysis_semantic( mroot.get(), semantic_diags.get(), lang );
@@ -253,16 +242,16 @@ void driver_impl::compile()
 	{
 		msi.reset();
 	}
-	diag_chat::merge( diags, semantic_diags.get(), true );
+	diag_chat::merge( diags.get(), semantic_diags.get(), true );
 
-	if( !msi ){ return; }
+	if( !msi ){ return diags; }
 
 	abi_analyser aa;
 
 	if( !aa.auto_entry(msi, lang) ){
 		if ( lang != salviar::lang_general ){
 			cout << "ABI analysis error occurs!" << endl;
-			return;
+			return diags;
 		}
 	}
 	mabi = aa.shared_abii(lang);
@@ -272,7 +261,7 @@ void driver_impl::compile()
 
 	if( !llvmcode ){
 		cout << "Code generation error occurs!" << endl;
-		return;
+		return diags;
 	}
 
 	if( opt_io.fmt == options_io::llvm_ir ){
@@ -281,6 +270,7 @@ void driver_impl::compile()
 			llvmcode->dump( out_file );
 		}
 	}
+	return diags;
 }
 
 shared_ptr< module_si > driver_impl::mod_si() const{
@@ -323,11 +313,6 @@ void driver_impl::set_code_source( shared_ptr<code_source> const& src )
 	user_code_src = src;
 }
 
-void driver_impl::set_diag_chat( diag_chat* diags )
-{
-	user_diags = diags;
-}
-
 // WORDAROUNDS_TODO LLVM 3.0 Intrinsic to native call error.
 void sasl_exp_f32	( float* ret, float v ) { *ret = expf(v); }
 void sasl_exp2_f32	( float* ret, float v ) { *ret = ldexpf(1.0f, v); }
@@ -350,6 +335,9 @@ void sasl_ldexp_f32	( float* ret, float lhs, float rhs ){ *ret = ldexpf(lhs, rhs
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
 	std::string err;
+	if(!mcg){
+		return shared_ptr<jit_engine>();
+	}
 	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
@@ -375,9 +363,12 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 shared_ptr<jit_engine> driver_impl::create_jit( external_function_array const& extfns )
 {
 	shared_ptr<jit_engine> ret_jit = create_jit();
-	for( size_t i = 0; i < extfns.size(); ++i )
+	if(ret_jit)
 	{
-		inject_function( ret_jit, extfns[i].get<0>(), extfns[i].get<1>(), extfns[i].get<2>() );
+		for( size_t i = 0; i < extfns.size(); ++i )
+		{
+			inject_function( ret_jit, extfns[i].get<0>(), extfns[i].get<1>(), extfns[i].get<2>() );
+		}
 	}
 	return ret_jit;
 }

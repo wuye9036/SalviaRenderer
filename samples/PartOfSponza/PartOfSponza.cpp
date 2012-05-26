@@ -232,7 +232,7 @@ protected:
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
-		sponza_sc = shader_code::create( sponza_vs_code, lang_vertex_shader );
+		sponza_sc = shader_code::create_and_log( sponza_vs_code, lang_vertex_shader );
 #endif
 
 		num_frames = 0;

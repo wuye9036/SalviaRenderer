@@ -16,3 +16,4 @@ doc/roadmap.mpp
 *.pyc
 proj.py
 build.log
+bin_release

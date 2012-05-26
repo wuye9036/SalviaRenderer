@@ -1,5 +1,7 @@
 #include <sasl/include/host/host.h>
 
+#include <sasl/include/common/diag_chat.h>
+#include <sasl/include/common/diag_item.h>
 #include <sasl/include/driver/driver_api.h>
 #include <sasl/include/code_generator/jit_api.h>
 #include <sasl/include/semantic/abi_info.h>
@@ -17,6 +19,7 @@ using std::vector;
 using boost::shared_static_cast;
 using boost::shared_dynamic_cast;
 using boost::tuple;
+using boost::make_shared;
 
 using namespace salviar;
 using namespace sasl::code_generator;
@@ -61,11 +64,10 @@ END_NS_SASL_HOST();
 
 void salvia_create_shader(
 	shared_ptr<salviar::shader_code>& scode, string const& code, languages lang,
-	vector< tuple<void*, string, bool> > const& ext_fns )
+	vector< tuple<void*, string, bool> > const& ext_fns, shared_ptr< vector<string> >& diags )
 {
 	shared_ptr<driver> drv;
 	sasl_create_driver(drv);
-
 	drv->set_code(code);
 
 	const char* lang_name = NULL;
@@ -83,11 +85,21 @@ void salvia_create_shader(
 	}
 
 	drv->set_parameter(lang_name);
-	drv->compile();
+	shared_ptr<diag_chat> results = drv->compile();
 
+	diags = make_shared< vector<string> >();
+	for(size_t i = 0; i < results->diag_items().size(); ++i)
+	{
+		diags->push_back( results->diag_items()[i]->str() );
+	}
+	
 	shared_ptr<shader_code_impl> ret( new shader_code_impl() );
-	ret->abii( drv->mod_abi() );
-	ret->jit( drv->create_jit(ext_fns) );
+	shared_ptr<abi_info> abinfo = drv->mod_abi();
+	if(!abinfo){ return; }
+	ret->abii(abinfo);
+	shared_ptr<jit_engine> je = drv->create_jit(ext_fns);
+	if(!je){ return; }
+	ret->jit( je );
 	
 	scode = ret;
 }

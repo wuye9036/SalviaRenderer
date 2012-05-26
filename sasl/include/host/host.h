@@ -45,7 +45,8 @@ extern "C"{
 		boost::shared_ptr<salviar::shader_code>&,
 		std::string const& code,
 		salviar::languages lang,
-		std::vector< boost::tuple<void*, std::string, bool> > const&);
+		std::vector< boost::tuple<void*, std::string, bool> > const&,
+		boost::shared_ptr< std::vector<std::string> >& results );
 };
 
 #endif

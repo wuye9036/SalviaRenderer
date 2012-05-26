@@ -293,7 +293,7 @@ protected:
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
-		astro_boy_sc = shader_code::create( astro_boy_vs_code, lang_vertex_shader );
+		astro_boy_sc = shader_code::create_and_log( astro_boy_vs_code, lang_vertex_shader );
 #endif
 
 		pvs.reset( new astro_boy_vs() );

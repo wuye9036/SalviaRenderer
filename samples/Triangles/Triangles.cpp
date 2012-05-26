@@ -150,11 +150,11 @@ protected:
 		rs_back.reset(new rasterizer_state(rs_desc));
 
 		cout << "Compiling vertex shader ... " << endl;
-		vsc = shader_code::create( vs_code, lang_vertex_shader );
+		vsc = shader_code::create_and_log( vs_code, lang_vertex_shader );
 		hsr->set_vertex_shader_code( vsc );
 
 		cout << "Compiling pixel shader ... " << endl;
-		psc = shader_code::create( ps_code, lang_pixel_shader );
+		psc = shader_code::create_and_log( ps_code, lang_pixel_shader );
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
 		hsr->set_pixel_shader_code(psc);
 #endif

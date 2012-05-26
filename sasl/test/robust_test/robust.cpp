@@ -100,14 +100,14 @@ struct jit_fixture {
 		diags->add_report_raised_handler( print_diagnostic );
 		sasl_create_driver(drv);
 		BOOST_REQUIRE(drv);
-		drv->set_diag_chat(diags.get());
 		drv->set_parameter(cmd);
 		for( size_t i = 0; i < vfiles.size(); ++i )
 		{
 			drv->add_virtual_file( vfiles[i].first, vfiles[i].second, true );
 		}
 
-		drv->compile();
+		shared_ptr<diag_chat> results = drv->compile();
+		diag_chat::merge(diags.get(), results.get(), true);
 
 		BOOST_REQUIRE( drv->root() );
 		BOOST_REQUIRE( drv->mod_si() );

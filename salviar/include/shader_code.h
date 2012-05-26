@@ -24,7 +24,8 @@ BEGIN_NS_SALVIAR();
 
 class shader_code{
 public:
-	static boost::shared_ptr<shader_code> create( std::string const& code, salviar::languages lang );
+	static boost::shared_ptr<shader_code> create( std::string const& code, salviar::languages lang, std::vector<std::string>& results );
+	static boost::shared_ptr<shader_code> create_and_log(std::string const& code, salviar::languages lang);
 
 	virtual shader_abi const* abii() const = 0;
 	virtual void abii( boost::shared_ptr<shader_abi> const& ) = 0;

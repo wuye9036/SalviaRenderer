@@ -117,9 +117,9 @@ void jit_fixture::init( string const& file_name, string const& options )
 	diags->add_report_raised_handler( print_diagnostic );
 	sasl_create_driver(drv);
 	BOOST_REQUIRE(drv);
-	drv->set_diag_chat(diags.get());
 	drv->set_parameter( make_command(file_name, options) );
-	drv->compile();
+	shared_ptr<diag_chat> results = drv->compile();
+	diag_chat::merge(diags.get(), results.get(), true);
 
 	BOOST_REQUIRE( drv->root() );
 	BOOST_REQUIRE( drv->mod_si() );
