@@ -1,8 +1,8 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 
 #include <salviax/include/resource/mesh/sa/collada.h>
-#include <salviax/include/resource/mesh/sa/mesh.h>
-#include <salviax/include/resource/mesh/sa/skin_mesh.h>
+#include <salviax/include/resource/mesh/sa/mesh_impl.h>
+#include <salviax/include/resource/mesh/sa/skin_mesh_impl.h>
 
 #include <salviar/include/buffer.h>
 #include <salviar/include/renderer.h>
@@ -26,6 +26,7 @@ using salviar::h_buffer;
 using salviar::language_value_types;
 using salviar::input_element_desc;
 using salviar::input_per_vertex;
+using salviar::semantic_value;
 
 using eflib::vec4;
 using eflib::int4;
@@ -47,6 +48,8 @@ using std::set;
 using std::pair;
 
 BEGIN_NS_SALVIAX_RESOURCE();
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(mesh_impl);
 
 struct skin_info
 {
@@ -378,7 +381,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 			buffer_strides.push_back( sizeof(int4) );
 		}
 
-		mesh* pmesh = new mesh(render);
+		mesh_impl* pmesh = new mesh_impl(render);
 		for( size_t i = 0; i < buffers.size(); ++i )
 		{
 			pmesh->add_vertex_buffer(i, buffers[i], buffer_strides[i], 0);
@@ -566,9 +569,9 @@ vector<animation_player_ptr> build_animations(
 	return ret;
 }
 
-base_skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& file_name )
+skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& file_name )
 {
-	skin_mesh_ptr ret = make_shared<skin_mesh>();
+	skin_mesh_impl_ptr ret = make_shared<skin_mesh_impl>();
 
 	fstream fstr( file_name, std::ios::in );
 	if( !fstr.is_open() ) { return ret; }
@@ -577,7 +580,7 @@ base_skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const
 	fstr.close();
 
 	optional<ptree&> collada_root = dae_doc.get_child_optional( "COLLADA" );
-	if( !collada_root ) return skin_mesh_ptr();
+	if( !collada_root ) return skin_mesh_impl_ptr();
 
 	dae_dom_ptr pdom = make_shared<dae_dom>();
 
@@ -613,7 +616,7 @@ base_skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const
 			assert(mesh_node);
 
 			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
-			if( !dae_mesh_node ) return skin_mesh_ptr();
+			if( !dae_mesh_node ) return skin_mesh_impl_ptr();
 
 			ret->submeshes = build_mesh( dae_mesh_node, skinfo, render );
 			ret->joints = skinfo->joints;
@@ -648,6 +651,134 @@ base_skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const
 	}
 	
 	return ret;
+}
+
+vector<h_mesh> build_mesh_from_file(renderer* render, std::string const& file_name)
+{
+	vector<h_mesh> ret;
+
+	fstream fstr( file_name, std::ios::in );
+	if( !fstr.is_open() ) { return ret; }
+	ptree dae_doc;
+	read_xml( fstr, dae_doc );
+	fstr.close();
+
+	optional<ptree&> collada_root = dae_doc.get_child_optional( "COLLADA" );
+	if( !collada_root ) return ret;
+
+	dae_dom_ptr pdom = make_shared<dae_dom>();
+
+	optional<ptree&> geometries_root = collada_root->get_child_optional( "library_geometries" );
+	if( !geometries_root ) return ret;
+
+	// Build mesh.
+	BOOST_FOREACH( ptree::value_type& geom_child, geometries_root.get() )
+	{
+		if( geom_child.first == "geometry" )
+		{
+			string geom_id = geom_child.second.get<string>("<xmlattr>.id");
+
+			optional<ptree&> mesh_node = geom_child.second.get_child_optional("mesh");
+			assert(mesh_node);
+
+			dae_mesh_ptr dae_mesh_node = pdom->load_node<dae_mesh>(*mesh_node, NULL);
+			if( !dae_mesh_node ) return ret;
+
+			return build_mesh( dae_mesh_node, NULL, render );
+		}
+	}
+}
+
+void merge_buffer_to_mesh(
+	mesh_impl* merged_mesh, /*OUT*/
+	vector<input_element_desc>& ieds,
+	size_t& slot_counter /*IN OUT*/,
+	input_element_desc const& ied, mesh_impl* source_mesh, /*IN*/
+	size_t src_mesh_idx, size_t src_mesh_count /*For compute merged semantic index*/)
+{
+	vector<size_t>::iterator slot_it = find( source_mesh->slots_.begin(), source_mesh->slots_.end(), ied.input_slot );
+	size_t buffer_index = (size_t)distance(source_mesh->slots_.begin(), slot_it);
+	merged_mesh->add_vertex_buffer(
+		slot_counter,
+		source_mesh->vertex_buffers_[buffer_index],
+		source_mesh->strides_[buffer_index],
+		source_mesh->offsets_[buffer_index]
+	);
+	
+	ieds.push_back(ied);
+	ieds.back().input_slot = slot_counter;
+	ieds.back().semantic_index = src_mesh_idx+src_mesh_count*ied.semantic_index;
+
+	++slot_counter;
+}
+
+h_mesh merge_mesh_for_morphing( h_mesh lm, h_mesh rm )
+{
+	mesh_impl* left_mesh  = dynamic_cast<mesh_impl*>( lm.get() );
+	mesh_impl* right_mesh = dynamic_cast<mesh_impl*>( rm.get() );
+
+	EFLIB_ASSERT_AND_IF( left_mesh && right_mesh, "Left mesh or right mesh is invalid." )
+	{
+		return h_mesh();
+	}
+
+	EFLIB_ASSERT_AND_IF( left_mesh->primcount_ == right_mesh->primcount_, "Primitives amount is not matched." )
+	{
+		return h_mesh();
+	}
+
+	EFLIB_ASSERT_AND_IF( left_mesh->index_fmt_ == right_mesh->index_fmt_, "Index format is not matched." )
+	{
+		return h_mesh();
+	}
+
+	mesh_impl_ptr ret = make_shared<mesh_impl>(left_mesh->device_);
+	size_t slot_counter = 0;
+	vector<input_element_desc> merged_mesh_ieds;
+
+	BOOST_FOREACH( input_element_desc& left_ied, left_mesh->elem_descs_ )
+	{
+		semantic_value lsv(left_ied.semantic_name, left_ied.semantic_index);
+
+		BOOST_FOREACH( input_element_desc& right_ied, right_mesh->elem_descs_ )
+		{
+			semantic_value rsv( right_ied.semantic_name, right_ied.semantic_index );
+			if(lsv == rsv)
+			{
+				merge_buffer_to_mesh(ret.get(), merged_mesh_ieds, slot_counter, left_ied, left_mesh, 0, 2);
+				merge_buffer_to_mesh(ret.get(), merged_mesh_ieds, slot_counter, right_ied, right_mesh, 1, 2);
+				break;
+			}
+		}
+	}
+
+	ret->set_input_element_descs(merged_mesh_ieds);
+
+	ret->set_attached_data( left_mesh->get_attached() );
+	ret->set_index_type( left_mesh->index_fmt_ );
+	ret->set_index_buffer( left_mesh->index_buffer_ );
+	ret->set_primitive_count( left_mesh->primcount_ );
+
+	return ret;
+}
+
+mesh_ptr create_morph_mesh_from_collada( salviar::renderer* render, std::string const& src, std::string const& dst )
+{
+	vector<h_mesh> src_meshes = build_mesh_from_file(render, src);
+	vector<h_mesh> dst_meshes = build_mesh_from_file(render, dst);
+
+	EFLIB_ASSERT_AND_IF( src_meshes.size() == dst_meshes.size(), "Morph meshes need to be combined from two meshes with same size." )
+	{
+		return mesh_ptr();
+	}
+
+	for(size_t i = 0; i < src_meshes.size(); ++i)
+	{
+		mesh_ptr ret = merge_mesh_for_morphing( src_meshes[i], dst_meshes[i] );
+		if(ret) { return ret; }
+	}
+
+	return mesh_ptr();
 }
 
 END_NS_SALVIAX_RESOURCE();

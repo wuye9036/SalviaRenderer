@@ -1,6 +1,7 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
 #include <salviax/include/resource/mesh/sa/material.h>
+#include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 #include <salviar/include/buffer.h>
 #include <salviar/include/input_layout.h>
@@ -403,7 +404,7 @@ void construct_meshes(
 	descs.push_back( input_element_desc("NORMAL", 0, format_r32g32b32a32_float, 0, sizeof(vec4) * 2, input_per_vertex, 0 ) );
 
 	for( size_t i_mtl = 0; i_mtl < mtls.size(); ++i_mtl ){
-		mesh* pmesh = new mesh( render );
+		mesh_impl* pmesh = new mesh_impl( render );
 
 		// Fill data
 		pmesh->add_vertex_buffer( 0, vert_buf, sizeof(obj_mesh_vertex), 0 );

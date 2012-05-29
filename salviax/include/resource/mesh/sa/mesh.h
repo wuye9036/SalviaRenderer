@@ -21,7 +21,7 @@ public:
 
 DECL_HANDLE(attached_data, h_attached_data);
 
-class base_mesh
+class mesh
 {
 public:
 	virtual size_t get_buffer_count() = 0;
@@ -36,11 +36,11 @@ public:
 
 	virtual void render() = 0;
 
-	virtual ~base_mesh(){}
+	virtual ~mesh(){}
 };
-DECL_HANDLE(base_mesh, h_mesh);
+DECL_HANDLE(mesh, h_mesh);
 
-class base_skin_mesh
+class skin_mesh
 {
 public:
 	virtual size_t	submesh_count() = 0;
@@ -50,69 +50,9 @@ public:
 	virtual std::vector<eflib::mat44> joint_matrices() = 0;
 	virtual std::vector<eflib::mat44> bind_inv_matrices() = 0;
 
-	virtual ~base_skin_mesh(){}
+	virtual ~skin_mesh(){}
 };
-DECL_HANDLE(base_skin_mesh, h_skin_mesh);
-
-class mesh : public base_mesh
-{
-private:
-	salviar::renderer* device_;
-
-	/** Members for mesh data
-	@{*/
-	salviar::h_buffer index_buffer_;
-	salviar::h_buffer adjacancies_;
-
-	std::vector<salviar::h_buffer>	vertex_buffers_;
-	std::vector<size_t>				strides_;
-	std::vector<size_t>				offsets_;
-	std::vector<size_t>				slots_;
-
-	boost::shared_ptr<attached_data> attached_;
-	/**@}*/
-
-	/** Members for rendering
-	@{*/
-	size_t primcount_;
-	salviar::format index_fmt_;
-	std::vector<salviar::input_element_desc> elem_descs_;
-	salviar::h_input_layout cached_layout_;
-	/**@}*/
-public:
-	mesh(salviar::renderer* psr);
-
-	/** Implements base_mesh
-	@{*/ 
-	virtual size_t get_buffer_count();
-	virtual size_t get_face_count();
-
-	virtual salviar::h_buffer get_index_buffer();
-	virtual salviar::h_buffer get_vertex_buffer( size_t buffer_index );
-
-	virtual h_attached_data get_attached();
-	
-	virtual void gen_adjancency();
-
-	virtual void render();
-	/**@}*/
-
-	/** Mesh specific functions.
-	@{*/
-	virtual salviar::h_buffer create_buffer( size_t size );
-	
-	virtual void set_index_buffer( salviar::h_buffer const& );
-	virtual void set_index_type(salviar::format index_fmt);
-
-	virtual void add_vertex_buffer( size_t slot, salviar::h_buffer const&, size_t stride, size_t offset );
-
-	virtual void set_primitive_count(size_t primcount);
-	
-	virtual void set_input_element_descs(const std::vector<salviar::input_element_desc>& descs);
-
-	virtual void set_attached_data( h_attached_data const& attached );
-	/**@}*/
-};
+DECL_HANDLE(skin_mesh, h_skin_mesh);
 
 END_NS_SALVIAX_RESOURCE();
 

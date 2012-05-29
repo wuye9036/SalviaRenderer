@@ -17,6 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
+#include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
@@ -30,7 +31,7 @@ BEGIN_NS_SALVIAX_RESOURCE();
 //0, 0, 0 - 1, 1, 1
 h_mesh create_box(salviar::renderer* psr)
 {
-	mesh* pmesh = new mesh(psr);
+	mesh_impl* pmesh = new mesh_impl(psr);
 
 	size_t const geometry_slot	= 0;
 	size_t const normal_slot	= 1;
@@ -157,7 +158,7 @@ h_mesh create_planar(
 					 bool positive_normal
 					 )
 {
-	mesh* pmesh = new mesh(psr);
+	mesh_impl* pmesh = new mesh_impl(psr);
 
 	size_t nverts = (repeat_x + 1) * (repeat_y + 1);
 

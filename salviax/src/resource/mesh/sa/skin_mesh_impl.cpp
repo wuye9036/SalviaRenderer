@@ -1,4 +1,4 @@
-#include <salviax/include/resource/mesh/sa/skin_mesh.h>
+#include <salviax/include/resource/mesh/sa/skin_mesh_impl.h>
 
 #include <eflib/include/math/math.h>
 
@@ -57,12 +57,12 @@ void scene_node::reset_world_matrix_recursive()
 	}
 }
 
-void skin_mesh::render( uint32_t submesh_id )
+void skin_mesh_impl::render( uint32_t submesh_id )
 {
 	submeshes[submesh_id]->render();
 }
 
-vector<mat44> skin_mesh::joint_matrices()
+vector<mat44> skin_mesh_impl::joint_matrices()
 {
 	if( joint_mats.size() != joints.size() )
 	{
@@ -90,7 +90,7 @@ vector<mat44> skin_mesh::joint_matrices()
 	return ret;
 }
 
-void skin_mesh::update_time( float t )
+void skin_mesh_impl::update_time( float t )
 {
 	BOOST_FOREACH( animation_player_ptr const& anim_player, anims )
 	{
@@ -98,7 +98,7 @@ void skin_mesh::update_time( float t )
 	}
 }
 
-void skin_mesh::set_time( float t )
+void skin_mesh_impl::set_time( float t )
 {
 	BOOST_FOREACH( animation_player_ptr const& anim_player, anims )
 	{
@@ -106,12 +106,12 @@ void skin_mesh::set_time( float t )
 	}
 }
 
-size_t skin_mesh::submesh_count()
+size_t skin_mesh_impl::submesh_count()
 {
 	return submeshes.size();
 }
 
-vector<mat44> skin_mesh::bind_inv_matrices()
+vector<mat44> skin_mesh_impl::bind_inv_matrices()
 {
 	return bind_inv_mats;
 }

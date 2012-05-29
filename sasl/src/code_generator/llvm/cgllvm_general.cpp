@@ -69,6 +69,7 @@ cgllvm_general::cgllvm_general()
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
+	parent_class::before_decls_visit(v, data);
 }
 
 SASL_VISIT_DEF( cast_expression ){

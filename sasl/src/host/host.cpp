@@ -2,6 +2,7 @@
 
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/common/diag_item.h>
+#include <sasl/include/common/diag_formatter.h>
 #include <sasl/include/driver/driver_api.h>
 #include <sasl/include/code_generator/jit_api.h>
 #include <sasl/include/semantic/abi_info.h>
@@ -90,13 +91,15 @@ void salvia_create_shader(
 	diags = make_shared< vector<string> >();
 	for(size_t i = 0; i < results->diag_items().size(); ++i)
 	{
-		diags->push_back( results->diag_items()[i]->str() );
+		diags->push_back( sasl::common::str(results->diag_items()[i]) );
 	}
 	
 	shared_ptr<shader_code_impl> ret( new shader_code_impl() );
+	
 	shared_ptr<abi_info> abinfo = drv->mod_abi();
 	if(!abinfo){ return; }
 	ret->abii(abinfo);
+
 	shared_ptr<jit_engine> je = drv->create_jit(ext_fns);
 	if(!je){ return; }
 	ret->jit( je );

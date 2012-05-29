@@ -4,14 +4,15 @@
 
 #pragma once
 
-#include "salviax/include/resource/mesh/sa/mesh_io.h"
-#include "salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h"
-#include "salviax/include/resource/texture/freeimage/tex_io_freeimage.h"
-#include "salviar/include/presenter_dev.h"
-#include "salviar/include/shader.h"
-#include "salviar/include/renderer_impl.h"
-#include "salviar/include/resource_manager.h"
-#include "salviar/include/rasterizer.h"
+#include <salviax/include/resource/mesh/sa/mesh_io.h>
+#include <salviax/include/resource/mesh/sa/mesh_impl.h>
+#include <salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h>
+#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviar/include/presenter_dev.h>
+#include <salviar/include/shader.h>
+#include <salviar/include/renderer_impl.h>
+#include <salviar/include/resource_manager.h>
+#include <salviar/include/rasterizer.h>
 
 #include <eflib/include/metaprog/util.h>
 
@@ -73,7 +74,7 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 	std::vector<Material> mtls;
 	std::vector<std::string> mesh_names;
 
-	mesh* pmesh = new mesh(hsr.get());
+	mesh_impl* pmesh = new mesh_impl(hsr.get());
 
 	size_t const geometry_slot = 0;
 	size_t const normal_slot = 1;

@@ -1,5 +1,5 @@
-#ifndef SALVIAX_SKIN_MESH_H
-#define SALVIAX_SKIN_MESH_H
+#ifndef SALVIAX_SKIN_MESH_IMPL_H
+#define SALVIAX_SKIN_MESH_IMPL_H
 
 #include <salviax/include/resource/resource_forward.h>
 
@@ -20,7 +20,7 @@ BEGIN_NS_SALVIAX_RESOURCE();
 EFLIB_DECLARE_CLASS_SHARED_PTR(animation_player);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(animation_info);
 EFLIB_DECLARE_CLASS_SHARED_PTR(scene_node);
-EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh);
+EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh_impl);
 
 enum interpolation_methods{
 	im_none,
@@ -139,7 +139,7 @@ public:
 	eflib::mat44				world_matrix;
 };
 
-class skin_mesh: public base_skin_mesh
+class skin_mesh_impl: public skin_mesh
 {
 public:
 	virtual size_t	submesh_count();
