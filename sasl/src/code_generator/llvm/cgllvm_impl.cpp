@@ -1089,6 +1089,15 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, ".v");
 			service()->emit_return( service()->emit_all(fn.arg(0)), service()->param_abi(false) );
 		}
+		else if( intr->unmangled_name() == "length" )
+		{
+			function_t& fn = service()->fn();
+			assert( fn.arg_size() == 1 );
+			fn.arg_name(0, ".v");
+
+			value_t length_sqr = service()->emit_dot( fn.arg(0), fn.arg(0) );
+			service()->emit_return( service()->emit_sqrt( length_sqr ), service()->param_abi(false) );
+		}
 		else
 		{
 			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );

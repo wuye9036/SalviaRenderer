@@ -65,9 +65,12 @@ char const* morph_vs_code =
 "	VSOut out; \r\n"
 "	float3 morphed_pos = in.pos0 + (in.pos1-in.pos0) * blendWeight.xxx; \r\n"
 "	float4 morphed_pos_v4f32 = float4(morphed_pos, 1.0f); \r\n"
-"	float3 morphed_nor = in.norm0 + (in.norm1-in.norm0) * blendWeight.xxx; \r\n"
+//"	float3 projected_n0 = in.norm0 / in.norm0.zzz; \r\n"
+//"	float3 projected_n1 = in.norm1 / in.norm1.zzz; \r\n"
+//"	float3 morphed_projected_n = projected_n0 + (projected_n1-projected_n0) * blendWeight.xxx; \r\n"
 "	out.pos = mul( morphed_pos_v4f32, wvpMatrix ); \r\n"
-"	out.norm = float4(morphed_nor, 0.0f);\r\n"
+//"	float3 morphed_n = morphed_projected_n / length(morphed_projected_n).xxx; \r\n"
+"	out.norm = float4( in.norm0+(in.norm1-in.norm0)*blendWeight.xxx, 0.0f );\r\n"
 "	out.lightDir = lightPos-morphed_pos_v4f32; \r\n"
 "	out.eyeDir = eyePos-morphed_pos_v4f32; \r\n"
 "	return out; \r\n"
@@ -185,7 +188,9 @@ public:
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
+		vec4 ambi_color(0.22f, 0.20f, 0.09f, 1.0f);
+		vec4 diff_color(0.75f, 0.75f, 0.25f, 1.0f);
+		vec4 spec_color(2.0f, 1.7f, 0.0f, 1.0f);
 
 		if( tex_ ){
 			diff_color = tex2d(*sampler_, 0).get_vec4();
@@ -197,10 +202,11 @@ public:
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
 		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
-
-		out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
-		out.color[0] = diff_color * illum_diffuse;
-		//out.color[0] = ( vec4(norm, 1.0f) + vec4(1.0f, 1.0f, 1.0f, 1.0f) ) * 0.5f;
+		float powered_illum_spec = illum_specular*illum_specular;
+		powered_illum_spec *= powered_illum_spec;
+		powered_illum_spec *= powered_illum_spec;
+		out.color[0] = ambi_color * 0.01f + diff_color * illum_diffuse + spec_color * powered_illum_spec;
+		// out.color[0] = ( vec4(norm, 1.0f) + vec4(1.0f, 1.0f, 1.0f, 1.0f) ) * 0.5f;
 		out.color[0][3] = 1.0f;
 
 		return true;
@@ -331,16 +337,16 @@ protected:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		vec4 camera_pos = vec4( 0.0f, 5.0f, -12.0f, 1.0f );
+		vec4 camera_pos = vec4( 0.0f, 70.0f, -160.0f, 1.0f );
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 
-		mat_lookat(view, camera_pos.xyz(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, camera_pos.xyz(), vec3(0.0f, 35.0f, 0.0f), vec3(1.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
 
 		static float ang = 0.0f;
-		ang += elapsed_time/3.0f;
-		vec4 lightPos( sin(ang)*15.0f, 10.0f, cos(ang)*15.0f, 1.0f );
+		ang += elapsed_time/2.0f;
+		vec4 lightPos( sin(ang)*160.0f, 40.0f, cos(ang)*160.0f, 1.0f );
 
 		hsr->set_pixel_shader(pps);
 		hsr->set_blend_shader(pbs);
