@@ -87,3 +87,8 @@ float3x4 test_log2_m34(float3x4 v)	{ return log2(v); }
 float3x4 test_log10_m34(float3x4 v)	{ return log10(v); }
 float3x4 test_rsqrt_m34(float3x4 v)	{ return rsqrt(v); }
 float3x4 test_ldexp_m34(float3x4 v0, float3x4 v1){ return ldexp(v0, v1); }
+
+float2 test_length(float2 v0, float4 v1)
+{
+	return float2( length(v0), length(v1) );
+}

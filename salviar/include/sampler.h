@@ -96,14 +96,14 @@ public:
 		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
-	color_rgba32f sampler_2d_lod( eflib::vec2 const& proj_coord, float lod ) const;
+	color_rgba32f sample_2d_lod( eflib::vec2 const& proj_coord, float lod ) const;
 
-	color_rgba32f sampler_2d_grad(
+	color_rgba32f sample_2d_grad(
 		eflib::vec2 const& proj_coord,
 		eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias
 		) const;
 
-	color_rgba32f sampler_2d_proj(
+	color_rgba32f sample_2d_proj(
 		eflib::vec4 const& proj_coord,
 		eflib::vec4 const& ddx, eflib::vec4 const& ddy 
 		) const;

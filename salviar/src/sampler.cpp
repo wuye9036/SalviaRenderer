@@ -777,12 +777,12 @@ color_rgba32f sampler::sample_cube(
 	return sample_cube(coord[0], coord[1], coord[2], lod);
 }
 
-color_rgba32f sampler::sampler_2d_lod( eflib::vec2 const& proj_coord, float lod ) const
+color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod ) const
 {
 	return sample( proj_coord[0], proj_coord[1], lod );
 }
 
-color_rgba32f sampler::sampler_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
+color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
 {
 	int4 size(static_cast<int>(ptex_->get_width(0)), static_cast<int>(ptex_->get_height(0)),
 		static_cast<int>(ptex_->get_depth(0)), 0);

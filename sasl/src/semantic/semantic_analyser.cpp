@@ -1618,8 +1618,12 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 			{
 				register_intrinsic( child_ctxt_init, "all" ) % ty >> bt_bool;
 				register_intrinsic( child_ctxt_init, "any" ) % ty >> bt_bool;
-				register_intrinsic( child_ctxt_init, "ddx" ) % ty >> ty;
-				register_intrinsic( child_ctxt_init, "ddy" ) % ty >> ty;
+
+				if( lang == salviar::lang_pixel_shader )
+				{
+					register_intrinsic( child_ctxt_init, "ddx" ) % ty >> ty;
+					register_intrinsic( child_ctxt_init, "ddy" ) % ty >> ty;
+				}
 			}
 		}
 	}
@@ -1696,10 +1700,13 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		// External and Intrinsic are Same signatures
 		
 		{
-			register_intrinsic( child_ctxt_init, "tex2Dlod", lang == salviar::lang_pixel_shader )
-				% sampler_ty % fvec_ts[4]
-			>> fvec_ts[4];
-
+			if( lang == salviar::lang_pixel_shader || lang == salviar::lang_vertex_shader )
+			{
+				register_intrinsic( child_ctxt_init, "tex2Dlod", lang == salviar::lang_pixel_shader )
+					% sampler_ty % fvec_ts[4]
+				>> fvec_ts[4];
+			}
+			
 			if( lang == salviar::lang_pixel_shader )
 			{
 				register_intrinsic( child_ctxt_init, "tex2D", true )
@@ -1793,7 +1800,7 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 		}
 
 #define TY_ADDRESS(tyname) boost::addressof( bts[vec_indexes[builtin_types::tyname]] )
-		// Constructors
+
 		typedef pair<char const*, shared_ptr<builtin_type>* > name_ty_pair_t;
 		vector< name_ty_pair_t > scalar_name_tys;
 		scalar_name_tys.push_back( make_pair( "bool" , TY_ADDRESS(_boolean)) );

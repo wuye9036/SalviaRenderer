@@ -65,11 +65,7 @@ char const* morph_vs_code =
 "	VSOut out; \r\n"
 "	float3 morphed_pos = in.pos0 + (in.pos1-in.pos0) * blendWeight.xxx; \r\n"
 "	float4 morphed_pos_v4f32 = float4(morphed_pos, 1.0f); \r\n"
-//"	float3 projected_n0 = in.norm0 / in.norm0.zzz; \r\n"
-//"	float3 projected_n1 = in.norm1 / in.norm1.zzz; \r\n"
-//"	float3 morphed_projected_n = projected_n0 + (projected_n1-projected_n0) * blendWeight.xxx; \r\n"
 "	out.pos = mul( morphed_pos_v4f32, wvpMatrix ); \r\n"
-//"	float3 morphed_n = morphed_projected_n / length(morphed_projected_n).xxx; \r\n"
 "	out.norm = float4( in.norm0+(in.norm1-in.norm0)*blendWeight.xxx, 0.0f );\r\n"
 "	out.lightDir = lightPos-morphed_pos_v4f32; \r\n"
 "	out.eyeDir = eyePos-morphed_pos_v4f32; \r\n"
@@ -109,9 +105,7 @@ public:
 		out.position = out.attributes[0] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		pos.w(1.0f);
 		nor.w(0.0f);
-		/*out.position = pos;
-		out.attributes[0] = nor;*/
-		
+
 		for(int i = 0; i < 4; ++i)
 		{
 			union {float f; int i;} f2i;
@@ -119,7 +113,6 @@ public:
 			float w = in.attributes[4][i];
 			int boneIndex = f2i.i;
 			if(boneIndex == -1){break;}
-			// fprintf(f, "%2d ", boneIndex);
 			vec4 skin_pos;
 			vec4 skin_nor;
 			transform(skin_pos, invMatrices[boneIndex], pos);

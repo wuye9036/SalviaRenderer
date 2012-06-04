@@ -583,7 +583,7 @@ Value* cg_service::load_as_llvm_c( value_t const& v, abis abi )
 {
 	builtin_types hint = v.hint();
 
-	if( is_scalar( hint ) ){
+	if( is_scalar(hint) || is_sampler(hint) ){
 		return v.load();
 	} else if( is_vector( hint ) ){
 		value_t ret_value = undef_value( hint, abi );

@@ -1,0 +1,13 @@
+sampler s;
+struct VSIN{
+	float4 pos: SV_Position;
+};
+struct VSOUT{
+	float4 pos: SV_Position;
+};
+
+VSOUT fn( VSIN in ){
+	VSOUT o;
+	o.pos = tex2Dlod(s, in.pos);
+	return o;
+}

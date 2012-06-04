@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -213,6 +213,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	function( test_rad_deg, "test_rad_deg" );
 	BOOST_REQUIRE(test_rad_deg);
 	
+	JIT_FUNCTION(vec2 (vec2, vec4), test_length );
+
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
 		vec3 rhs( 1.0f, -22.0f, 8.28f );
@@ -354,11 +356,13 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec4  ref1 = vec4( fmodf(v0[0], v1[0]), fmodf(v0[1], v1[1]), fmodf(v0[2], v1[2]), fmodf(f, v1[1]) );
 		vec3  ref2 = v0 + (v1-v0)*vec3(v2[0], v2[1], f);
 		vec3  ref3 = ( (eflib::PI/180.0f)*v0.xy() ).xxy() + (180.0f/eflib::PI)*v0;
+		vec2  ref4(v2.length(), v0.xyzy().length());
 
-		float ret0 = test_distance( v2, v0, v1 );
-		vec4  ret1 = test_fmod( v0, f, v1 );
+		float ret0 = test_distance(v2, v0, v1);
+		vec4  ret1 = test_fmod(v0, f, v1);
 		vec3  ret2 = test_lerp( v0, v1, vec3(v2[0], v2[1], f) );
-		vec3  ret3 = test_rad_deg( v0 );
+		vec3  ret3 = test_rad_deg(v0);
+		vec2  ret4 = test_length( v2, v0.xyzy() );
 
 		BOOST_CHECK_CLOSE( ret0,	ref0,	 0.000001f );
 		BOOST_CHECK_CLOSE( ret1[0], ref1[0], 0.000001f );
@@ -371,6 +375,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( ret3[0], ref3[0], 0.000001f );
 		BOOST_CHECK_CLOSE( ret3[1], ref3[1], 0.000001f );
 		BOOST_CHECK_CLOSE( ret3[2], ref3[2], 0.000001f );
+		BOOST_CHECK_CLOSE( ret4[0], ref4[0], 0.00001f );
+		BOOST_CHECK_CLOSE( ret4[1], ref4[1], 0.00001f );
 	}
 
 	{
@@ -520,6 +526,73 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	BOOST_CHECK_CLOSE( bout.pos[1], out_pos[1], 0.0001f );
 	BOOST_CHECK_CLOSE( bout.pos[2], out_pos[2], 0.0001f );
 	BOOST_CHECK_CLOSE( bout.pos[3], out_pos[3], 0.0001f );
+}
+
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+
+struct tex2d_vs_data{
+	vec4 pos;
+};
+
+struct tex2d_vs_bout{
+	vec4 pos;
+};
+
+struct tex2d_vs_sin{
+	vec4 *position;
+};
+
+struct tex2d_vs_bin{
+	static int ph;
+	void* s;
+};
+
+void tex2Dlod_vs(vec4* out, void* s, vec4* in)
+{
+	BOOST_CHECK_EQUAL(in->data_[0], 3.0f);
+	BOOST_CHECK_EQUAL(in->data_[1], 4.5f);
+	BOOST_CHECK_EQUAL(in->data_[2], 2.6f);
+	BOOST_CHECK_EQUAL(in->data_[3], 1.0f);
+
+	BOOST_CHECK_EQUAL(s, &tex2d_vs_bin::ph);
+
+	out->data_[0] = 9.3f;
+	out->data_[1] = 8.7f;
+	out->data_[2] = -29.6f;
+	out->data_[3] = 0.0f;
+}
+int tex2d_vs_bin::ph = 335;
+
+BOOST_FIXTURE_TEST_CASE( tex2d_vs, jit_fixture ){
+	init_vs("./repo/question/v1a1/tex.svs");
+
+	set_raw_function( &tex2Dlod_vs, "sasl.vs.tex2d.lod" );
+
+	vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
+
+	tex2d_vs_data data;
+	data.pos = pos;
+
+	tex2d_vs_sin sin;
+	sin.position = &data.pos;
+
+	tex2d_vs_bin bin;
+	bin.s = &tex2d_vs_bin::ph;
+	
+	tex2d_vs_bout bout;
+
+	JIT_FUNCTION( void(tex2d_vs_sin*, tex2d_vs_bin*, void*, tex2d_vs_bout*), fn );
+	
+	fn(&sin, &bin, (void*)NULL, &bout);
+
+	vec4 out_pos(9.3f, 8.7f, -29.6f, 0.0f);
+
+	BOOST_CHECK_EQUAL( bout.pos[0], out_pos[0] );
+	BOOST_CHECK_EQUAL( bout.pos[1], out_pos[1] );
+	BOOST_CHECK_EQUAL( bout.pos[2], out_pos[2] );
+	BOOST_CHECK_EQUAL( bout.pos[3], out_pos[3] );
 }
 
 #endif
@@ -1256,7 +1329,7 @@ struct sampler_t{
 	uintptr_t ss, tex;
 };
 
-void tex2Dlod(vec4* ret, uint16_t /*mask*/, sampler_t* s, vec4* t)
+void tex2Dlod_ps(vec4* ret, uint16_t /*mask*/, sampler_t* s, vec4* t)
 {
 	BOOST_CHECK_EQUAL( s->ss, 0xF3DE89C );
 	BOOST_CHECK_EQUAL( s->tex, 0xB785D3A );
@@ -1270,7 +1343,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/tex.sps" );
 
-	set_raw_function( &tex2Dlod, "sasl.ps.tex2d.lod" );
+	set_raw_function( &tex2Dlod_ps, "sasl.ps.tex2d.lod" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );

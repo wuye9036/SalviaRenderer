@@ -35,6 +35,7 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/scalar.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/swizzle.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/swizzle_and_wm.sps"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/tex.svs"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/tex.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/for_loop.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/while.sps"
