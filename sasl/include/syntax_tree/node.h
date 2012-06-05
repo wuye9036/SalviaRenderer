@@ -5,29 +5,31 @@
 #include <sasl/include/common/token.h>
 #include <sasl/enums/node_ids.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/pointee.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
 
 namespace sasl{
 	namespace common{
-		struct token_t;
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(token_t);
 	}
-
 	namespace semantic{
-		class symbol;
-		class semantic_info;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
+		EFLIB_DECLARE_CLASS_SHARED_PTR(semantic_info);
 	}
-
 	namespace code_generator{
-		class codegen_context;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(codegen_context);
 	}
 }
+
 #define SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() void accept( syntax_tree_visitor*, ::boost::any* data )
 #define SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( node_class_name ) \
 	void node_class_name ::accept ( syntax_tree_visitor* v, ::boost::any* data ) \
@@ -38,22 +40,25 @@ BEGIN_NS_SASL_SYNTAX_TREE();
 
 class syntax_tree_visitor;
 
-using ::sasl::common::token_t;
+EFLIB_USING_SHARED_PTR(sasl::common, token_t);
 
-struct node{
+EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
+
+struct node: public boost::enable_shared_from_this<node>{
 	friend class swallow_duplicator;
 	friend class deep_duplicator;
 
-	boost::shared_ptr<node> as_handle() const;
-	template <typename T> boost::shared_ptr<T> as_handle() const{
+	node_ptr as_handle() const;
+	template <typename T> boost::shared_ptr<T> as_handle() const
+	{
 		return boost::shared_dynamic_cast<T>( as_handle() );
 	}
 
-	boost::shared_ptr<class ::sasl::semantic::symbol> symbol() const;
-	void symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym );
+	sasl::semantic::symbol_ptr symbol() const;
+	void symbol(sasl::semantic::symbol_ptr);
 
-	boost::shared_ptr<class ::sasl::semantic::semantic_info> semantic_info() const;
-	void semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_info> ) const;
+	sasl::semantic::semantic_info_ptr semantic_info() const;
+	void semantic_info(sasl::semantic::semantic_info_ptr) const;
 
 	template <typename T> T* si_ptr() const{
 #ifdef EFLIB_DEBUG
@@ -72,26 +77,24 @@ struct node{
 		return ptr;
 	}
 
-	boost::shared_ptr<token_t>	token_begin() const;
-	boost::shared_ptr<token_t>	token_end() const;
-	void						token_range( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
-	node_ids					node_class() const;
+	token_t_ptr	token_begin() const;
+	token_t_ptr	token_end() const;
+	void		token_range(token_t_ptr const& tok_beg, token_t_ptr const& tok_end);
+	node_ids	node_class() const;
 
 	virtual SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL() = 0;
 
 protected:
-	node(node_ids tid, boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end);
+	node(node_ids tid, token_t_ptr const& tok_beg, token_t_ptr const& tok_end);
 	node& operator = ( const node& );
 	node( const node& );
 
-	node_ids										type_id;
-	boost::shared_ptr<token_t>						tok_beg, tok_end;
+	node_ids	type_id;
+	token_t_ptr	tok_beg, tok_end;
 	boost::weak_ptr<class sasl::semantic::symbol>	sym;
 
-	boost::shared_ptr<class sasl::semantic::semantic_info>			seminfo;
-	boost::shared_ptr<class sasl::code_generator::codegen_context>	cgctxt;
-
-	boost::weak_ptr<node> selfptr;
+	sasl::semantic::semantic_info_ptr			seminfo;
+	sasl::code_generator::codegen_context_ptr	cgctxt;
 
 	virtual ~node();
 };

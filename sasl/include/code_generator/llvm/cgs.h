@@ -121,6 +121,12 @@ public:
 	virtual value_t emit_tex2Dgrad	( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );
 	virtual value_t emit_tex2Dbias	( value_t const& samp, value_t const& coord );
 	virtual value_t emit_tex2Dproj	( value_t const& samp, value_t const& coord );
+
+	virtual value_t emit_texCUBElod	( value_t const& samp, value_t const& coord );
+	virtual value_t emit_texCUBEgrad( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );
+	virtual value_t emit_texCUBEbias( value_t const& samp, value_t const& coord );
+	virtual value_t emit_texCUBEproj( value_t const& samp, value_t const& coord );
+
 	/// @}
 
 	/// @name Emit type casts
@@ -342,6 +348,11 @@ protected:
 		tex2dgrad_ps,
 		tex2dbias_ps,
 		tex2dproj_ps,
+		texCUBElod_vs,
+		texCUBElod_ps,
+		texCUBEgrad_ps,
+		texCUBEbias_ps,
+		texCUBEproj_ps,
 		intrins_count
 	};
 
@@ -357,7 +368,7 @@ protected:
 		);
 	
 	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	bin_fn_t;
-	typedef boost::function<llvm::Value*(llvm::Value*, llvm::Type*)>	cast_fn;
+	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Type*)>	cast_fn;
 	typedef boost::function<llvm::Value* (llvm::Value*)>				unary_fn_t;
 
 	llvm::Value* call_external1_		( llvm::Function* f, llvm::Value* v );
@@ -369,28 +380,62 @@ protected:
 	unary_fn_t	bind_unary_external_	( llvm::Function* fn );
 	bin_fn_t	bind_binary_external_	( llvm::Function* fn );
 
-	llvm::Value* bin_op_ps_				(
-		llvm::Type* ret_ty,
-		llvm::Value* lhs, llvm::Value* rhs,
+	// LLVM have some instructions/intrinsics to support unary and binary operations.
+	// But even simple instruction 'add', there are two overloads to support 'iadd' and 'fadd' separately.
+	// Additional, some intrinsics are only support scalar or SIMD vector as argument.
+	// In fact, For conventionally if binary operation is per-scalar, we need a function
+	// which support all aggregation and all scalar types.
+	// So, we could use techniques looks like high-order function to combine native intrinsics to
+	// a full-scalar-typed and full-aggregation supported function.
+	// But, sometimes we cannot combine them at once. Some intermediate functions/functors are generated.
+	// For instance, we combine some scalar intrinsic to scalar-vector supported intrinsic
+	// and later to all aggregation supported function. Also we may need some function as binder.
+	// For distinguish these side-effect functors, we built a postfix system, which decorated function names to
+	// indicate what the function can do.
+
+	// Postfix of function name described the requirements of arguments of function.
+	//   Component operation modes:
+	//     PS: Per scalar
+	//     ES: Two parameters are available and one is scalar, the other is aggregated, repeat scalar to aggregated and to PS
+	//   Scalar Type Compatibility:
+	//     TS: Type are Same. Type of component of Value are same as functor supported type.
+	//       e.g. if sv_fn only support Singed Int or Vector of Signed Int
+	//            lhs and rhs must be value of singed int or <singed int x n>.
+	//     TA: Type are All. Type of component of Value are one of functor supported type.
+	//       e.g. signed_sv_fn and float_sv_fn are functors to forward,
+	//	          lhs and rhs could be value of signed int or <singed int x n> or float or <float x n>
+	//   Aggregation Compatibility:
+	//     S: Scalar
+    //     V: Vector
+    //     A: Aggregated (Structure, Array)
+	//	   M: SIMD Vector
+	//       e.g. SVA means Value could be Scalar, Vector or Aggregated.
+
+	llvm::Value* bin_op_ps_ts_sva_		(
+		llvm::Type* ret_ty, llvm::Value* lhs, llvm::Value* rhs,
 		bin_fn_t sfn, bin_fn_t vfn, bin_fn_t simd_fn, bin_fn_t sv_fn,
-		unary_fn_t cast_fn /*Must be sv fn*/
+		unary_fn_t cast_result_sv_fn
 		);
-	llvm::Value* unary_op_ps_			(llvm::Type* ret_ty, llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn);
+
+	llvm::Value* unary_op_ps_ts_sva_	(
+		llvm::Type* ret_ty, llvm::Value* v,
+		unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn
+		);
 
 public:
-	value_t emit_bin_ps(
+	value_t emit_bin_ps_ta_sva(
 		value_t const& lhs, value_t const& rhs,
 		bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn
 		);
-	value_t emit_bin_ps(
+	value_t emit_bin_ps_ta_sva(
 		std::string const& scalar_external_intrin_name,
 		value_t const& v0, value_t const& v1
 		);
-	value_t extend_scalar_and_emit_bin_ps(
+	value_t emit_bin_es_ta_sva(
 		std::string const& scalar_external_intrin_name,
 		value_t const& lhs, value_t const& rhs
 		);
-	value_t extend_scalar_and_emit_bin_ps(
+	value_t emit_bin_es_ta_sva(
 		value_t const& lhs, value_t const& rhs,
 		bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn
 		);
@@ -408,6 +453,20 @@ protected:
 	value_t emit_mul_vm( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mv( value_t const& lhs, value_t const& rhs );
 	value_t emit_mul_mm( value_t const& lhs, value_t const& rhs );
+
+	virtual value_t emit_tex_lod_impl(
+		value_t const& samp, value_t const& coord,
+		intrin_ids vs_intrin, intrin_ids ps_intrin );
+	virtual value_t emit_tex_grad_impl(
+		value_t const& samp, value_t const& coord,
+		value_t const& ddx, value_t const& ddy,
+		intrin_ids ps_intrin );
+	virtual value_t emit_tex_bias_impl(
+		value_t const& samp, value_t const& coord,
+		intrin_ids ps_intrin );
+	virtual value_t emit_tex_proj_impl(
+		value_t const& samp, value_t const& coord,
+		intrin_ids ps_intrin );
 
 	void merge_swizzle( value_t const*& root, char indexes[], value_t const& v );
 

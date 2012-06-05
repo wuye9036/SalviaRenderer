@@ -35,3 +35,7 @@ void salviar_tex2Dlod( eflib::vec4& result, salviar::sampler* samp, eflib::vec4&
 	result = samp->sample_2d_lod( *(vec2*)(&coord), coord.w() ).get_vec4();
 }
 
+void salviar_texCUBElod( eflib::vec4& result, salviar::sampler* samp, eflib::vec4& coord )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}

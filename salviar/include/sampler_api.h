@@ -14,22 +14,8 @@ END_NS_SALVIAR();
 extern "C" 
 {
 	// MIMD
-	void salviar_tex2D( eflib::vec4& result, salviar::sampler* samp, eflib::vec2& coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy );
-	void salviar_tex2Dgrad(
-		eflib::vec4& result,
-		salviar::sampler* samp, eflib::vec2 const& coord,
-		eflib::vec2 const& ddx, eflib::vec2 const& ddy );
-	void salviar_tex2Dbias(
-		eflib::vec4& result,
-		salviar::sampler* samp, eflib::vec4& coord,
-		eflib::vec2& ddx, eflib::vec2& ddy );
-	void salviar_tex2Dlod (
-		eflib::vec4& result,
-		salviar::sampler* samp, eflib::vec4& coord );
-	void salviar_tex2Dproj(
-		eflib::vec4& result,
-		salviar::sampler* samp, eflib::vec4& coord,
-		eflib::vec4& ddx, eflib::vec4& ddy );
+	void salviar_tex2Dlod  (eflib::vec4& result, salviar::sampler* samp, eflib::vec4& coord);
+	void salviar_texCUBElod(eflib::vec4& result, salviar::sampler* samp, eflib::vec4& coord);
 
 	// Packaged version
 	void salviar_tex2Dgrad_pkg(

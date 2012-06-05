@@ -530,7 +530,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct tex2d_vs_data{
 	vec4 pos;
@@ -565,7 +565,7 @@ void tex2Dlod_vs(vec4* out, void* s, vec4* in)
 }
 int tex2d_vs_bin::ph = 335;
 
-BOOST_FIXTURE_TEST_CASE( tex2d_vs, jit_fixture ){
+BOOST_FIXTURE_TEST_CASE( tex_vs, jit_fixture ){
 	init_vs("./repo/question/v1a1/tex.svs");
 
 	set_raw_function( &tex2Dlod_vs, "sasl.vs.tex2d.lod" );
@@ -1323,7 +1323,7 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct sampler_t{
 	uintptr_t ss, tex;
@@ -1796,7 +1796,7 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct array_vertex_data
 {

@@ -5,39 +5,40 @@ using namespace boost;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-using ::sasl::semantic::semantic_info;
+EFLIB_USING_SHARED_PTR(sasl::semantic, semantic_info);
+EFLIB_USING_SHARED_PTR(sasl::semantic, symbol);
 
-node::node(node_ids tid, shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+node::node(node_ids tid, token_t_ptr const& tok_beg, token_t_ptr const& tok_end )
 : type_id(tid), tok_beg(tok_beg), tok_end(tok_end)
 {
 	// DO NOTHING
 }
 
-boost::shared_ptr<node> node::as_handle() const{
-	return selfptr.lock();
+node_ptr node::as_handle() const{
+	return const_cast<node*>(this)->shared_from_this();
 }
 
-boost::shared_ptr<class ::sasl::semantic::symbol> node::symbol() const{
+symbol_ptr node::symbol() const{
 	return sym.lock();
 }
 
-void node::symbol( boost::shared_ptr<class ::sasl::semantic::symbol> sym ){
+void node::symbol( symbol_ptr sym ){
 	this->sym = sym;
 }
 
-boost::shared_ptr<class semantic_info> node::semantic_info() const {
+semantic_info_ptr node::semantic_info() const {
 	return seminfo;
 }
 
-void node::semantic_info( boost::shared_ptr<class ::sasl::semantic::semantic_info> si ) const{
+void node::semantic_info( semantic_info_ptr si ) const{
 	const_cast<node*>(this)->seminfo = si;
 }
 
-boost::shared_ptr<token_t> node::token_begin() const{
+token_t_ptr node::token_begin() const{
 	return tok_beg;
 }
 
-boost::shared_ptr<token_t> node::token_end() const{
+token_t_ptr node::token_end() const{
 	return tok_end;
 }
 
@@ -49,7 +50,7 @@ node::~node(){
 	// DO NOTHING
 }
 
-void node::token_range( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+void node::token_range( token_t_ptr const& tok_beg, token_t_ptr const& tok_end )
 {
 	this->tok_beg = tok_beg;
 	this->tok_end = tok_end;

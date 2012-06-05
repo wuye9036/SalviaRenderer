@@ -155,7 +155,7 @@ void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 	}
 
 	assert( src && address );
-	StoreInst* inst = builder().CreateStore( src, address );
+	builder().CreateStore( src, address );
 }
 
 value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
@@ -171,7 +171,7 @@ value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
 	cast_ops op = is_signed(scalar_hint_src) ? cast_op_i2i_signed : cast_op_i2i_unsigned;
 	unary_fn_t cast_sv_fn = bind_cast_sv_( elem_ty, op );
 	
-	Value* val = unary_op_ps_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
+	Value* val = unary_op_ps_ts_sva_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
 
 	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
@@ -189,7 +189,7 @@ value_t cgs_sisd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
 	cast_ops op = is_signed(hint_i) ? cast_op_i2f : cast_op_u2f;
 	unary_fn_t cast_sv_fn = bind_cast_sv_( elem_ty, op );
 
-	Value* val = unary_op_ps_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
+	Value* val = unary_op_ps_ts_sva_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
 
 	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
@@ -255,6 +255,9 @@ bool cgs_sisd::prefer_scalar_code() const
 
 value_t cgs_sisd::emit_swizzle( value_t const& lhs, uint32_t mask )
 {
+	EFLIB_UNREF_PARAM(lhs);
+	EFLIB_UNREF_PARAM(mask);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }

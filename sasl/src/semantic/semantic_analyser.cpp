@@ -1705,6 +1705,9 @@ void semantic_analyser::register_builtin_functions( const boost::any& child_ctxt
 				register_intrinsic( child_ctxt_init, "tex2Dlod", lang == salviar::lang_pixel_shader )
 					% sampler_ty % fvec_ts[4]
 				>> fvec_ts[4];
+				register_intrinsic( child_ctxt_init, "texCUBElod", lang == salviar::lang_pixel_shader )
+					% sampler_ty % fvec_ts[4]
+				>> fvec_ts[4];
 			}
 			
 			if( lang == salviar::lang_pixel_shader )

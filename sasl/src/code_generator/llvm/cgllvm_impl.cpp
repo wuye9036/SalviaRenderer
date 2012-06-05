@@ -886,7 +886,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
 			std::string scalar_intrin_name = ( format("sasl.%s.f32") % intr->unmangled_name() ).str();
-			value_t ret_val = service()->emit_bin_ps( scalar_intrin_name, service()->fn().arg(0), service()->fn().arg(1) );
+			value_t ret_val = service()->emit_bin_ps_ta_sva( scalar_intrin_name, service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "sqrt" )
@@ -954,6 +954,45 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			assert( par_tys.size() == 2 );
 			value_t ret = service()->emit_tex2Dproj( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "texCUBE" )
+		{
+			assert( par_tys.size() == 2 );
+			value_t samp = service()->fn().arg(0);
+			value_t coord = service()->fn().arg(1);
+			value_t ddx = service()->emit_ddx(coord);
+			value_t ddy = service()->emit_ddy(coord);
+			value_t ret = service()->emit_texCUBEgrad( samp, coord, ddx, ddy );
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "texCUBElod" )
+		{
+			assert( par_tys.size() == 2 );
+			value_t ret = service()->emit_texCUBElod( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "texCUBEgrad" )
+		{
+			assert( par_tys.size() == 4 );
+			value_t ret = service()->emit_texCUBEgrad(
+				service()->fn().arg(0),
+				service()->fn().arg(1),
+				service()->fn().arg(2),
+				service()->fn().arg(3)
+				);
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "texCUBEbias" )
+		{
+			assert( par_tys.size() == 2 );
+			value_t ret = service()->emit_texCUBEbias( service()->fn().arg(0), service()->fn().arg(1) );
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "texCUBEproj" )
+		{
+			assert( par_tys.size() == 2 );
+			value_t ret = service()->emit_texCUBEproj( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if ( intrin_ssi->is_constructor() )
