@@ -4,6 +4,8 @@
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
@@ -15,21 +17,24 @@
 
 namespace sasl{
 	namespace common{
-		class  diag_chat;
-		struct token_t;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(diag_chat);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(token_t);
 	}
 	namespace syntax_tree{
-		struct node;
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(builtin_type);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(function_type);
 	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
 
-class symbol;
-class caster_t;
-class module_si;
-class storage_si;
-struct sacontext;
+EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
+EFLIB_DECLARE_CLASS_SHARED_PTR(caster_t);
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_si);
+EFLIB_DECLARE_CLASS_SHARED_PTR(storage_si);
+EFLIB_DECLARE_CLASS_SHARED_PTR(sacontext);
 
 class semantic_analyser: public ::sasl::syntax_tree::syntax_tree_visitor{
 public:
@@ -81,10 +86,10 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
-	boost::shared_ptr<module_si> const& module_semantic_info() const;
-	sasl::common::diag_chat*			get_diags() const;
-	uint32_t							language() const;
-	void								language( uint32_t );
+	module_si_ptr const&		module_semantic_info() const;
+	sasl::common::diag_chat*	get_diags() const;
+	uint32_t					language() const;
+	void						language( uint32_t );
 
 private:
 	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
@@ -95,24 +100,24 @@ private:
 		);
 
 	void parse_semantic(
-		boost::shared_ptr<sasl::common::token_t> const& sem_tok,
-		boost::shared_ptr<sasl::common::token_t> const& sem_idx_tok,
-		boost::shared_ptr<storage_si> const& ssi
+		sasl::common::token_t_ptr const& sem_tok,
+		sasl::common::token_t_ptr const& sem_idx_tok,
+		storage_si_ptr const& ssi
 		);
 
-	void mark_intrin_invoked_recursive( boost::shared_ptr<symbol> const& sym );
+	void mark_intrin_invoked_recursive( symbol_ptr const& sym );
 
 	void add_cast( const boost::any& ctxt );
 	void register_builtin_functions( const boost::any& child_ctxt_init );
 	
 	class function_register{
 	public:
-		typedef boost::shared_ptr<sasl::syntax_tree::tynode> type_handle_t;
+		typedef sasl::syntax_tree::tynode_ptr typenode_ptr;
 
 		function_register(
 			semantic_analyser& owner,
 			boost::any const& ctxt_init,
-			boost::shared_ptr<sasl::syntax_tree::function_type> const& fn,
+			sasl::syntax_tree::function_type_ptr const& fn,
 			bool is_intrinsic,
 			bool is_external,
 			bool partial_exec
@@ -120,18 +125,18 @@ private:
 		function_register( function_register const& );
 
 		function_register& as_constructor();
-		function_register& operator % ( type_handle_t const& par_type );
-		void operator >> ( type_handle_t const& ret_type );
+		function_register& operator % ( typenode_ptr const& par_type );
+		void operator >> ( typenode_ptr const& ret_type );
 
 		function_register& deps( std::string const& );
-		function_register& p( type_handle_t const& par_type );
-		void r( type_handle_t const& ret_type );
+		function_register& p( typenode_ptr const& par_type );
+		void r( typenode_ptr const& ret_type );
 		
 	private:
 		function_register& operator = ( function_register const& );
 
 		boost::any const& ctxt_init;
-		boost::shared_ptr<sasl::syntax_tree::function_type> fn;
+		sasl::syntax_tree::function_type_ptr fn;
 		semantic_analyser& owner;
 		bool is_intrinsic;
 		bool is_external;
@@ -144,20 +149,22 @@ private:
 	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, /*bool external = false,*/ bool parital_exec = false );
 	void register_constructor( boost::any const& child_ctxt_init, std::string const& name, boost::shared_ptr<sasl::syntax_tree::builtin_type>* tys, int total );
 	void register_constructor_impl(
-		boost::any const& child_ctxt_init, std::string const& name,	boost::shared_ptr<sasl::syntax_tree::builtin_type>* tys, int total,
-		int param_scalar_counts, std::vector< boost::shared_ptr<sasl::syntax_tree::builtin_type> >& param_tys );
+		boost::any const& child_ctxt_init, std::string const& name,	sasl::syntax_tree::builtin_type_ptr* tys, int total,
+		int param_scalar_counts, std::vector<sasl::syntax_tree::builtin_type_ptr>& param_tys );
 
 	void register_builtin_types();
 
-	void empty_caster(
-		boost::shared_ptr< ::sasl::syntax_tree::node >,
-		boost::shared_ptr< ::sasl::syntax_tree::node >
-		);
+	void empty_caster( sasl::syntax_tree::node_ptr, sasl::syntax_tree::node_ptr);
 
-	boost::shared_ptr<module_si>				msi;
-	boost::shared_ptr<caster_t>					caster;
-	boost::shared_ptr<sasl::common::diag_chat>	diags;
-	uint32_t									lang;
+	module_si_ptr				msi;
+	caster_t_ptr				caster;
+	sasl::common::diag_chat_ptr	diags;
+	uint32_t					lang;
+
+	// States
+	bool		global_scope;
+	symbol_ptr	symbol_scope;
+	symbol_ptr	function_scope;
 };
 
 END_NS_SASL_SEMANTIC();

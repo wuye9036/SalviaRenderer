@@ -1927,20 +1927,20 @@ semantic_analyser::function_register::function_register(
 }
 
 semantic_analyser::function_register& semantic_analyser::function_register::operator%(
-	semantic_analyser::function_register::type_handle_t const& par_type
+	semantic_analyser::function_register::typenode_ptr const& par_type
 	)
 {
 	return p(par_type);
 }
 
 void semantic_analyser::function_register::operator >> (
-	semantic_analyser::function_register::type_handle_t const& ret_type
+	semantic_analyser::function_register::typenode_ptr const& ret_type
 	)
 {
 	r(ret_type);
 }
 
-semantic_analyser::function_register& semantic_analyser::function_register::p( semantic_analyser::function_register::type_handle_t const& par_type )
+semantic_analyser::function_register& semantic_analyser::function_register::p( semantic_analyser::function_register::typenode_ptr const& par_type )
 {
 	assert( par_type && fn );
 	
@@ -1952,7 +1952,7 @@ semantic_analyser::function_register& semantic_analyser::function_register::p( s
 }
 
 void semantic_analyser::function_register::r(
-	semantic_analyser::function_register::type_handle_t const& ret_type 
+	semantic_analyser::function_register::typenode_ptr const& ret_type 
 	)
 {
 	assert( ret_type && fn );
