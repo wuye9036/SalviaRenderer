@@ -687,6 +687,8 @@ vector<h_mesh> build_mesh_from_file(renderer* render, std::string const& file_na
 			return build_mesh( dae_mesh_node, NULL, render );
 		}
 	}
+
+	return ret;
 }
 
 void merge_buffer_to_mesh(

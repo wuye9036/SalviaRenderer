@@ -7,6 +7,8 @@
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/common/diag_item.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
@@ -533,6 +535,10 @@ vector< shared_ptr<path_tree> > path_stack;
 
 void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, int indent = 0 )
 {
+	EFLIB_UNREF_PARAM(indent);
+	EFLIB_UNREF_PARAM(path_node);
+	EFLIB_UNREF_PARAM(o);
+
 	/*
 	// Print Element
 	for( int i = 0; i < indent; ++i ){ o << "  "; }

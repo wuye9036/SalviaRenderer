@@ -466,7 +466,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -1323,7 +1323,7 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct sampler_t{
 	uintptr_t ss, tex;

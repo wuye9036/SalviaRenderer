@@ -46,7 +46,7 @@ typedef boost::function<
 	bool /*check only*/ )
 > include_handler_fn;
 
-typedef std::vector< boost::tuple<void*/*function pointer*/, std::string/*name*/, bool /*is_raw_name*/> > external_function_array;
+typedef std::vector< boost::tuple<void* /*function pointer*/, std::string /*name*/, bool /*is_raw_name*/> > external_function_array;
 
 class driver{
 public:

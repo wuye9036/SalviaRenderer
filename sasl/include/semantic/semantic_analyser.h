@@ -34,7 +34,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 EFLIB_DECLARE_CLASS_SHARED_PTR(caster_t);
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_si);
 EFLIB_DECLARE_CLASS_SHARED_PTR(storage_si);
-EFLIB_DECLARE_CLASS_SHARED_PTR(sacontext);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(sacontext);
 
 class semantic_analyser: public ::sasl::syntax_tree::syntax_tree_visitor{
 public:
@@ -92,12 +92,8 @@ public:
 	void						language( uint32_t );
 
 private:
-	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> child );
-	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& init_data, boost::shared_ptr<NodeT> child );
-	template <typename NodeT> boost::any& visit_child(
-		boost::any& child_ctxt, const boost::any& init_data,
-		boost::shared_ptr<NodeT> child, boost::shared_ptr<NodeT>& generated_node 
-		);
+	template <typename NodeT> 
+	boost::shared_ptr<NodeT> visit_child( boost::shared_ptr<NodeT> const& child );
 
 	void parse_semantic(
 		sasl::common::token_t_ptr const& sem_tok,
@@ -107,8 +103,8 @@ private:
 
 	void mark_intrin_invoked_recursive( symbol_ptr const& sym );
 
-	void add_cast( const boost::any& ctxt );
-	void register_builtin_functions( const boost::any& child_ctxt_init );
+	void add_cast();
+	void register_builtin_functions();
 	
 	class function_register{
 	public:
@@ -116,11 +112,8 @@ private:
 
 		function_register(
 			semantic_analyser& owner,
-			boost::any const& ctxt_init,
 			sasl::syntax_tree::function_type_ptr const& fn,
-			bool is_intrinsic,
-			bool is_external,
-			bool partial_exec
+			bool is_intrinsic, bool is_external, bool partial_exec
 			);
 		function_register( function_register const& );
 
@@ -135,7 +128,6 @@ private:
 	private:
 		function_register& operator = ( function_register const& );
 
-		boost::any const& ctxt_init;
 		sasl::syntax_tree::function_type_ptr fn;
 		semantic_analyser& owner;
 		bool is_intrinsic;
@@ -145,11 +137,11 @@ private:
 		std::vector<std::string> intrinsic_deps;
 	};
 
-	function_register register_function( boost::any const& child_ctxt_init, std::string const& name );
-	function_register register_intrinsic( boost::any const& child_ctxt_init, std::string const& name, /*bool external = false,*/ bool parital_exec = false );
-	void register_constructor( boost::any const& child_ctxt_init, std::string const& name, boost::shared_ptr<sasl::syntax_tree::builtin_type>* tys, int total );
+	function_register register_function(std::string const& name );
+	function_register register_intrinsic(std::string const& name, /*bool external = false,*/ bool parital_exec = false );
+	void register_constructor(std::string const& name, sasl::syntax_tree::builtin_type_ptr* tys, int total );
 	void register_constructor_impl(
-		boost::any const& child_ctxt_init, std::string const& name,	sasl::syntax_tree::builtin_type_ptr* tys, int total,
+		std::string const& name,	sasl::syntax_tree::builtin_type_ptr* tys, int total,
 		int param_scalar_counts, std::vector<sasl::syntax_tree::builtin_type_ptr>& param_tys );
 
 	void register_builtin_types();
@@ -161,10 +153,20 @@ private:
 	sasl::common::diag_chat_ptr	diags;
 	uint32_t					lang;
 
-	// States
-	bool		global_scope;
-	symbol_ptr	symbol_scope;
-	symbol_ptr	function_scope;
+	// Global States
+	typedef std::vector< boost::weak_ptr<
+		sasl::syntax_tree::labeled_statement
+	> >												label_list_t;
+	typedef sasl::syntax_tree::function_type_ptr	function_type_ptr;
+
+	function_type_ptr	current_function;
+	label_list_t		*label_list;
+	sasl::syntax_tree::node_ptr	variable_to_initialized;
+	sasl::syntax_tree::node_ptr generated_node;
+	bool		is_global_scope;
+	symbol_ptr	current_symbol;
+	int			declaration_tid;
+	int			member_counter;
 };
 
 END_NS_SASL_SEMANTIC();
