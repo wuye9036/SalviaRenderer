@@ -1,8 +1,10 @@
 #include <sasl/include/semantic/semantics.h>
 
 #include <sasl/include/semantic/symbol.h>
+#include <sasl/include/semantic/pety.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/common/diag_chat.h>
 #include <salviar/include/shader.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -23,7 +25,13 @@ BEGIN_NS_SASL_SEMANTIC();
 class module_semantic_impl: public module_semantic
 {
 public:
-	module_semantic_impl();
+	module_semantic_impl(): node_semantic_pool_( sizeof(node_semantic) )
+	{
+		pety_ = pety_t::create();
+		root_symbol_ = symbol::create_root();
+		diag_chat_ = diag_chat::create();
+	}
+
 	~module_semantic_impl()
 	{
 		clean_node_semantics();
@@ -41,7 +49,7 @@ public:
 
 	virtual pety_t* pety() const
 	{
-		return pety_;
+		return pety_.get();
 	}
 
 	virtual diag_chat_ptr diags() const
@@ -99,7 +107,7 @@ public:
 	}
 
 private:
-	node_semantic*	new_node_sem()
+	node_semantic* new_node_sem()
 	{
 		node_semantic* ret = static_cast<node_semantic*>( node_semantic_pool_.malloc() );
 		memset( ret, 0, sizeof(node_semantic) );
@@ -115,7 +123,7 @@ private:
 		}
 	}
 
-	pety_t*			pety_;
+	pety_t_ptr		pety_;
 	symbol_ptr		root_symbol_;
 	diag_chat_ptr	diag_chat_;
 
@@ -150,7 +158,6 @@ void node_semantic::function_name( std::string const& v )
 	}
 }
 
-
 node_semantic::labeled_statement_array const&
 	node_semantic::labeled_statements() const
 {
@@ -166,7 +173,6 @@ node_semantic::labeled_statement_array& node_semantic::labeled_statements()
 	return *labeled_statements_;
 }
 
-
 void node_semantic::semantic_value( salviar::semantic_value const& v )
 {
 	if( !semantic_value_ )
@@ -176,6 +182,27 @@ void node_semantic::semantic_value( salviar::semantic_value const& v )
 	else
 	{
 		*semantic_value_ = v;
+	}
+}
+
+node_semantic::~node_semantic()
+{
+	if( semantic_value_ )
+	{
+		delete semantic_value_;
+		semantic_value_ = NULL;
+	}
+
+	if( function_name_ )
+	{
+		delete function_name_;
+		function_name_ = NULL;
+	}
+
+	if( labeled_statements_ )
+	{
+		delete labeled_statements_;
+		labeled_statements_ = NULL;
 	}
 }
 

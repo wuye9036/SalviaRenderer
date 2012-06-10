@@ -82,6 +82,8 @@ public:
 		boost::weak_ptr<sasl::syntax_tree::labeled_statement>
 	>		labeled_statement_array;
 
+	~node_semantic();
+
 	// Read functions
 public:
 	// General
