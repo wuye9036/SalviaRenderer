@@ -11,6 +11,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_info.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_infos.imp.h
+	${SASL_HOME_DIR}/sasl/include/semantic/semantics.h
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol.h
 	${SASL_HOME_DIR}/sasl/include/semantic/symbol_scope.h
 	${SASL_HOME_DIR}/sasl/include/semantic/type_checker.h
@@ -45,6 +46,7 @@ set( SOURCE_FILES
 	
 	semantic_infos/module_si.cpp
 	semantic_infos/semantic_infos.cpp
+	semantics.cpp
 )
 
 SASL_CONFIG_LIBRARY( sasl_semantic )

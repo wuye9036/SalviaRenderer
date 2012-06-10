@@ -266,6 +266,7 @@ public:
 
 	boost::shared_ptr<node> parent_block() const;
 	void parent_block( boost::shared_ptr<node> );
+	
 private:
 	bool has_lp;
 	boost::weak_ptr<node> parent;
