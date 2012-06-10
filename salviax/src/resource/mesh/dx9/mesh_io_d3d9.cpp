@@ -17,6 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
 #include <salviax/include/resource/mesh/dx9/mesh_io_d3d9.h>
+#include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviar/include/renderer.h>
 #include <salviar/include/buffer.h>
 
@@ -41,7 +42,7 @@ h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 	DWORD nfaces		= dx_mesh->GetNumFaces();
 	DWORD index_size	= (dx_mesh->GetOptions() & D3DXMESH_32BIT) == 0 ? 2 : 4;
 
-	mesh* psrmesh= new mesh(psr);
+	mesh_impl* psrmesh= new mesh_impl(psr);
 	h_mesh ret(psrmesh);
 	
 	salviar::h_buffer verts = psrmesh->create_buffer( nverts * vert_size );
