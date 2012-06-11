@@ -13,7 +13,7 @@
 namespace sasl{
 	namespace semantic{
 		class caster_t;
-		class module_si;
+		class module_semantic;
 	}
 	namespace syntax_tree{
 		struct expression;

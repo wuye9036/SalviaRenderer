@@ -37,11 +37,13 @@ BEGIN_NS_SASL_SEMANTIC();
 class node_semantic;
 class pety_t;
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 
 class module_semantic
 {
 public:
-	module_semantic();
+	static module_semantic_ptr create();
+
 	virtual ~module_semantic(){}
 	
 	template <typename T> node_semantic* get( boost::shared_ptr<T> const& v )
@@ -62,8 +64,8 @@ public:
 	virtual pety_t*							pety() const = 0;
 	virtual sasl::common::diag_chat_ptr		diags() const = 0;
 
-	virtual std::vector<symbol*> const&	globals() const = 0;
-	virtual std::vector<symbol*>&		globals() = 0;
+	virtual std::vector<symbol*> const&	global_vars() const = 0;
+	virtual std::vector<symbol*>&		global_vars() = 0;
 
 	virtual std::vector<symbol*> const&	functions() const = 0;
 	virtual std::vector<symbol*>&		functions() = 0;
@@ -71,7 +73,7 @@ public:
 	virtual std::vector<symbol*> const&	intrinsics() const = 0;
 	virtual std::vector<symbol*>&		intrinsics() = 0;
 
-	virtual node_semantic* get( sasl::syntax_tree::node const& ) = 0;
+	virtual node_semantic* get( sasl::syntax_tree::node const& ) const = 0;
 	virtual node_semantic* get_or_create( sasl::syntax_tree::node const& ) = 0;
 };
 

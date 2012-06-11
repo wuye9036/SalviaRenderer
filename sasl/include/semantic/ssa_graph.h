@@ -21,7 +21,7 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-class module_si;
+class module_semantic;
 class ssa_context;
 
 struct block_t;
@@ -34,7 +34,7 @@ class ssa_graph
 {
 public:
 	std::vector<function_t*>	functions() const;
-	std::vector<variable_t*>	globals() const;
+	std::vector<variable_t*>	global_vars() const;
 	function_t*					ssa_fn( sasl::syntax_tree::node* fn ) const;
 	ssa_context*				context();
 private:
@@ -52,7 +52,7 @@ struct dom_tree_node;
 class dom_tree
 {
 public:
-	static boost::shared_ptr<dom_tree> construct_dom_tree( module_si*, ssa_graph* );
+	static boost::shared_ptr<dom_tree> construct_dom_tree( module_semantic*, ssa_graph* );
 	
 	dom_tree_node*	dom_node( block_t* b );
 	block_t*		idom_block( block_t* b );
@@ -92,7 +92,7 @@ struct execution_modes
 		em_multiple,
 	};
 public:
-	static boost::shared_ptr<dom_tree> compute_execution_modes( module_si*, ssa_graph* );
+	static boost::shared_ptr<dom_tree> compute_execution_modes( module_semantic*, ssa_graph* );
 };
 
 END_NS_SASL_SEMANTIC();

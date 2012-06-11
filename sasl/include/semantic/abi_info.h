@@ -27,7 +27,7 @@ namespace sasl
 
 BEGIN_NS_SASL_SEMANTIC();
 
-EFLIB_DECLARE_CLASS_SHARED_PTR(module_si);
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 
 //////////////////////////////////////////////////////////////////////////
@@ -60,8 +60,8 @@ public:
 
 	salviar::languages lang;
 
-	void module( module_si_ptr const& );
-	bool is_module( module_si_ptr const& ) const;
+	void module( module_semantic_ptr const& );
+	bool is_module( module_semantic_ptr const& ) const;
 
 	void entry( symbol_ptr const& );
 	bool is_entry( symbol_ptr const& ) const;
@@ -69,14 +69,14 @@ public:
 
 	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
 	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
-	void add_global_var( symbol_ptr const&, sasl::syntax_tree::tynode_ptr btc );
+	void add_global_var( symbol*, sasl::syntax_tree::tynode_ptr btc );
 
 	sv_layout_t* input_sv_layout( semantic_value_t const& ) const;
-	sv_layout_t* input_sv_layout( symbol_ptr const& ) const;
+	sv_layout_t* input_sv_layout( symbol* ) const;
 
 private:
 	sv_layout_t* alloc_input_storage( semantic_value_t const& );
-	sv_layout_t* alloc_input_storage( symbol_ptr const& );
+	sv_layout_t* alloc_input_storage( symbol* );
 	sv_layout_t* alloc_output_storage( semantic_value_t const& );
 
 	// Called by abi_analyser after all semantic and global var was set.
@@ -94,7 +94,7 @@ private:
 
 	int compute_element_size(salviar::sv_layout* svl, bool package) const;
 
-	module_si* mod;
+	module_semantic* mod;
 	symbol* entry_point;
 	std::string entry_point_name;
 

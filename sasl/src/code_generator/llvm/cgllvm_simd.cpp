@@ -6,6 +6,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/semantic/abi_info.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -193,7 +194,7 @@ SASL_VISIT_DEF( variable_expression ){
 	assert(sym);
 	
 	// var_si is not null if sym is global value( sv_none is available )
-	sv_layout* var_si = abii->input_sv_layout( sym );
+	sv_layout* var_si = abii->input_sv_layout( sym.get() );
 
 	cgllvm_sctxt* varctxt = cgllvm_impl::node_ctxt( sym->node() );
 	if( var_si ){
@@ -543,7 +544,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 	}
 	
 	// Update globals
-	BOOST_FOREACH( shared_ptr<symbol> const& gsym, msi->globals() ){
+	BOOST_FOREACH( symbol* gsym, msi->global_vars() ){
 		storage_si* pssi = gsym->node()->si_ptr<storage_si>();
 
 		// Global is filled by offset value with null parent.

@@ -3,6 +3,8 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
+#include <eflib/include/metaprog/util.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -11,7 +13,7 @@
 
 namespace sasl{
 	namespace syntax_tree{
-		struct node;
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
 	}
 	namespace common{
 		class diag_chat;
@@ -20,10 +22,10 @@ namespace sasl{
 
 BEGIN_NS_SASL_SEMANTIC();
 
-class module_si;
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 
-boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( boost::shared_ptr<sasl::syntax_tree::node> const& root, sasl::common::diag_chat*, uint32_t lang );
-boost::shared_ptr<sasl::semantic::module_si> analysis_semantic( sasl::syntax_tree::node* root, sasl::common::diag_chat*, uint32_t lang );
+module_semantic_ptr analysis_semantic( sasl::syntax_tree::node_ptr const& root, sasl::common::diag_chat*, uint32_t lang );
+module_semantic_ptr analysis_semantic( sasl::syntax_tree::node* root, sasl::common::diag_chat*, uint32_t lang );
 
 END_NS_SASL_SEMANTIC();
 

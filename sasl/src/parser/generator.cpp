@@ -34,6 +34,8 @@ using std::cout;
 using std::endl;
 using std::string;
 
+#define OUTPUT_GRAMMAR_MATCHING_PATH 0
+
 BEGIN_NS_SASL_PARSER();
 
 parse_results::parse_results(): tag(-1){}
@@ -524,6 +526,8 @@ void rule::name( std::string const & v ){
 	rule_name = v;
 }
 
+#if OUTPUT_GRAMMAR_MATCHING_PATH
+
 struct path_tree
 {
 	std::string									element;
@@ -539,7 +543,6 @@ void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, i
 	EFLIB_UNREF_PARAM(path_node);
 	EFLIB_UNREF_PARAM(o);
 
-	/*
 	// Print Element
 	for( int i = 0; i < indent; ++i ){ o << "  "; }
 	o << "<" << path_node->element;
@@ -564,18 +567,20 @@ void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, i
 		for( int i = 0; i < indent; ++i ){ o << "  "; }
 		o << "</" << path_node->element << ">" << endl;
 	}
-	*/
 }
 
 std::fstream* pf = NULL;
 
-#define SASL_PARSER_LOG_ENABLED 0
+#endif
+
 parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const{
 	static int indent = 0;
 	
+#if OUTPUT_GRAMMAR_MATCHING_PATH
 	if(!pf){
 		pf = new std::fstream( "rules.xml", std::ios::out );
 	}
+#endif
 
 	shared_ptr<diag_chat> chat = diag_chat::create();
 	
@@ -587,6 +592,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 		// cout << "fuck" << endl;
 	}
 
+#if OUTPUT_GRAMMAR_MATCHING_PATH
 	shared_ptr<path_tree> current_path( make_shared<path_tree>() );
 	if( !path_stack.empty() )
 	{
@@ -595,7 +601,11 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	
 	path_stack.push_back( current_path );
 	current_path->element = rule_name;
+#endif
+
 	parse_results result = expr->parse(iter, end, attr, chat.get());
+
+#if OUTPUT_GRAMMAR_MATCHING_PATH
 	current_path->attributes.push_back( make_pair( "diag_count", boost::format("\"%d\"") % chat->diag_items().size() ) );
 	if( result.is_succeed() ) {
 		current_path->attributes.push_back( make_pair( "state", boost::format("\"%s\"") % "succeed" ) );
@@ -621,6 +631,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 		delete pf;
 		pf = NULL;
 	}
+#endif
 
 	if( result.is_continuable() ){
 		attr->rule_id( id() );

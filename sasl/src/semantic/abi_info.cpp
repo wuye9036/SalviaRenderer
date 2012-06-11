@@ -49,11 +49,11 @@ abi_info::abi_info()
 	memset( offsets, 0, sizeof(offsets) );
 }
 
-void abi_info::module( shared_ptr<module_si> const& v ){
+void abi_info::module( shared_ptr<module_semantic> const& v ){
 	mod = v.get();
 }
 
-bool abi_info::is_module( shared_ptr<module_si> const& v ) const{
+bool abi_info::is_module( shared_ptr<module_semantic> const& v ) const{
 	return mod == v.get();
 }
 
@@ -122,9 +122,9 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 	return true;
 }
 
-void abi_info::add_global_var(symbol_ptr const& v, tynode_ptr tyn)
+void abi_info::add_global_var(symbol* v, tynode_ptr tyn)
 {
-	syms_in.push_back( v.get() );
+	syms_in.push_back( v );
 
 	sv_layout* si = alloc_input_storage( v );
 	
@@ -161,8 +161,8 @@ sv_layout* abi_info::alloc_input_storage( salviar::semantic_value const& sem ){
 	return addressof( semin_storages[sem] );
 }
 
-sv_layout* abi_info::input_sv_layout( boost::shared_ptr<symbol> const& v ) const {
-	sym_storages_t::const_iterator it = symin_storages.find( v.get() );
+sv_layout* abi_info::input_sv_layout( symbol* v ) const {
+	sym_storages_t::const_iterator it = symin_storages.find(v);
 	if ( it == symin_storages.end() ){
 		return NULL;
 	}
@@ -177,8 +177,8 @@ sv_layout* abi_info::input_sv_layout( std::string const& name ) const
 	}
 	return it->second;
 }
-sv_layout* abi_info::alloc_input_storage( boost::shared_ptr<symbol> const& v ){
-	return addressof( symin_storages[v.get()] );
+sv_layout* abi_info::alloc_input_storage( symbol* v ){
+	return addressof( symin_storages[v] );
 }
 
 sv_layout* abi_info::output_sv_layout( salviar::semantic_value const& sem ) const{

@@ -18,7 +18,7 @@ namespace sasl{
 		struct node;
 	}
 	namespace semantic{
-		class module_si;
+		class module_semantic;
 	}
 	namespace code_generator{
 		class codegen_context;

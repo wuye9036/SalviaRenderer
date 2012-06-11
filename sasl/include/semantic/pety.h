@@ -42,11 +42,11 @@ class pety_t{
 public:
 	static pety_t_ptr create();
 
-	void root_symbol( symbol_ptr const& sym );
+	void root_symbol(symbol* sym);
 
 	pety_t_ptr handle() const;
 	
-	tid_t get(sasl::syntax_tree::tynode_ptr const& node, symbol_ptr const& parent);
+	tid_t get(sasl::syntax_tree::tynode_ptr const& node, symbol* parent);
 	tid_t get(const builtin_types& btc);
 	sasl::syntax_tree::tynode_ptr get(tid_t id);
 
@@ -55,7 +55,7 @@ private:
 	tid_t allocate_and_assign_id(sasl::syntax_tree::tynode_ptr const& node);
 	std::vector<pety_item_t>	entries;
 	boost::weak_ptr<pety_t>		self_handle;
-	boost::weak_ptr<symbol>		rootsym;
+	symbol*						root_symbol_;
 };
 
 END_NS_SASL_SEMANTIC();

@@ -45,34 +45,34 @@ class deps_graph;
 //////////////////////////////////////////////////////////////////////////
 // Global semantic infos
 
-class module_si: public semantic_info{
-public:
-	typedef semantic_info base_type;
-
-	module_si();
-
-	boost::shared_ptr<pety_t> pety() const;
-	boost::shared_ptr<symbol> root() const;
-	boost::shared_ptr<sasl::common::diag_chat> diags() const;
-
-	std::vector< boost::shared_ptr<symbol> > const& globals() const;
-	std::vector< boost::shared_ptr<symbol> >& globals();
-
-	std::vector< boost::shared_ptr<symbol> > const& functions() const;
-	std::vector< boost::shared_ptr<symbol> >& functions();
-
-	std::vector< boost::shared_ptr<symbol> > const& intrinsics() const;
-	std::vector< boost::shared_ptr<symbol> >& intrinsics();
-
-private:
-	boost::shared_ptr<pety_t>					typemgr;
-	boost::shared_ptr<symbol>					rootsym;
-	boost::shared_ptr<sasl::common::diag_chat>	mod_diags;
-
-	std::vector< boost::shared_ptr<symbol> > gvars;
-	std::vector< boost::shared_ptr<symbol> > fns;
-	std::vector< boost::shared_ptr<symbol> > intr;
-};
+//class module_si: public semantic_info{
+//public:
+//	typedef semantic_info base_type;
+//
+//	module_si();
+//
+//	boost::shared_ptr<pety_t> pety() const;
+//	boost::shared_ptr<symbol> root() const;
+//	boost::shared_ptr<sasl::common::diag_chat> diags() const;
+//
+//	std::vector< boost::shared_ptr<symbol> > const& global_vars() const;
+//	std::vector< boost::shared_ptr<symbol> >& global_vars();
+//
+//	std::vector< boost::shared_ptr<symbol> > const& functions() const;
+//	std::vector< boost::shared_ptr<symbol> >& functions();
+//
+//	std::vector< boost::shared_ptr<symbol> > const& intrinsics() const;
+//	std::vector< boost::shared_ptr<symbol> >& intrinsics();
+//
+//private:
+//	boost::shared_ptr<pety_t>					typemgr;
+//	boost::shared_ptr<symbol>					rootsym;
+//	boost::shared_ptr<sasl::common::diag_chat>	mod_diags;
+//
+//	std::vector< boost::shared_ptr<symbol> > gvars;
+//	std::vector< boost::shared_ptr<symbol> > fns;
+//	std::vector< boost::shared_ptr<symbol> > intr;
+//};
 
 //////////////////////////////////////
 //  program semantic infos.
@@ -115,7 +115,7 @@ public:
 
 class type_info_si_impl: public type_info_si{
 public:
-	type_info_si_impl( boost::shared_ptr<pety_t> typemgr );
+	type_info_si_impl(pety_t* typemgr);
 
 	virtual tid_t entry_id() const;
 	virtual void entry_id( tid_t id );
@@ -125,14 +125,14 @@ public:
 	virtual void type_info( builtin_types btc );
 
 private:
-	tid_t tid;
-	::boost::weak_ptr< class pety_t > typemgr;
+	tid_t	tid;
+	pety_t*	typemgr;
 };
 
 class const_value_si: public type_info_si{
 public:
 	typedef semantic_info base_type;
-	const_value_si( boost::shared_ptr<pety_t> typemgr );
+	const_value_si(pety_t* typemgr);
 
 	void set_literal( const std::string& litstr, literal_classifications lctype );
 
@@ -149,14 +149,14 @@ private:
 
 class type_si : public type_info_si{
 public:
-	type_si( boost::shared_ptr<pety_t> typemgr );
+	type_si(pety_t* typemgr);
 
 	SASL_TYPE_INFO_PROXY();
 };
 
 class storage_si: public type_info_si{
 public:
-	storage_si( boost::shared_ptr<pety_t> const& typemgr );
+	storage_si( pety_t* typemgr );
 
 	// Referred declarator, for variable expression
 	void declarator( symbol* );
@@ -224,7 +224,7 @@ private:
 
 class call_si: public type_info_si{
 public:
-	call_si( boost::shared_ptr<pety_t> const& typemgr );
+	call_si(pety_t* typemgr);
 
 	void overloaded_function( symbol* );
 	symbol* overloaded_function() const;

@@ -32,11 +32,11 @@ BEGIN_NS_SASL_SEMANTIC();
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 EFLIB_DECLARE_CLASS_SHARED_PTR(caster_t);
-EFLIB_DECLARE_CLASS_SHARED_PTR(module_si);
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 EFLIB_DECLARE_CLASS_SHARED_PTR(storage_si);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(sacontext);
 
-class semantic_analyser: public ::sasl::syntax_tree::syntax_tree_visitor{
+class semantic_analyser: public sasl::syntax_tree::syntax_tree_visitor{
 public:
 	semantic_analyser();
 
@@ -86,7 +86,7 @@ public:
 	// program
 	SASL_VISIT_DCL( program );
 
-	module_si_ptr const&		module_semantic_info() const;
+	module_semantic_ptr const&	get_module_semantic() const;
 	sasl::common::diag_chat*	get_diags() const;
 	uint32_t					language() const;
 	void						language( uint32_t );
@@ -148,7 +148,7 @@ private:
 
 	void empty_caster( sasl::syntax_tree::node_ptr, sasl::syntax_tree::node_ptr);
 
-	module_si_ptr				msi;
+	module_semantic_ptr			module_semantic_;
 	caster_t_ptr				caster;
 	sasl::common::diag_chat_ptr	diags;
 	uint32_t					lang;

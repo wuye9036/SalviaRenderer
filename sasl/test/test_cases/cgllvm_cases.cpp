@@ -59,7 +59,7 @@ cgllvm_cases::cgllvm_cases(){
 void cgllvm_cases::initialize(){
 	semantic_cases::instance();
 
-	shared_ptr< SEMANTIC_(module_si) > si_jit_root = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_jit_test), NULL, 1 );
+	shared_ptr< SEMANTIC_(module_semantic) > si_jit_root = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_jit_test), NULL, 1 );
 	SEMANTIC_(abi_analyser) aa;
 	aa.auto_entry( si_jit_root, salviar::lang_general );
 

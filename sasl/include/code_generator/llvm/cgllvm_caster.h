@@ -40,7 +40,7 @@ boost::shared_ptr< ::sasl::semantic::caster_t> create_caster(
 
 void add_builtin_casts(
 	boost::shared_ptr< ::sasl::semantic::caster_t> caster,
-	boost::shared_ptr< sasl::semantic::pety_t> typemgr
+	sasl::semantic::pety_t* typemgr
 	);
 
 END_NS_SASL_CODE_GENERATOR();

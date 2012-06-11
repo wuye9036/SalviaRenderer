@@ -10,6 +10,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <salviar/include/shader_abi.h>
 
 #include <eflib/include/math/vector.h>
@@ -113,7 +114,7 @@ struct jit_fixture {
 		BOOST_REQUIRE( drv->mod_si() );
 		BOOST_REQUIRE( drv->mod_codegen() );
 
-		root_sym = drv->mod_si()->root();
+		root_sym = drv->mod_si()->root_symbol();
 
 		shared_ptr<llvm_module> llvm_mod = shared_polymorphic_cast<llvm_module>( drv->mod_codegen() );
 		fstream dump_file( ( dump_file_name + "_ir.ll" ).c_str(), std::ios::out );

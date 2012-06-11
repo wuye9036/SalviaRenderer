@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -119,7 +119,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -289,18 +289,23 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( expf(x), test_exp(x), 0.000001f );
 	}
 	{
-		float arr[3][4] =
+		float arr[12] =
 		{
-			{17.7f, 66.3f, 0.92f, -88.7f},
-			{8.6f, -0.22f, 17.1f, -64.4f},
-			{199.8f, 0.1f, -0.1f, 99.73f}
+			17.7f, 66.3f, 0.92f,
+			-88.7f, 8.6f, -0.22f,
+			17.1f, -64.4f, 199.8f, 
+			0.1f, -0.1f, 99.73f
 		};
 
-		float ref_v[3][4] = {0};
+		float ref_v[12] = {0};
 
 		for( int i = 0; i < 3; ++i )
+		{
 			for( int j = 0; j < 4; ++j )
-				ref_v[i][j] = expf(arr[i][j]); 
+			{
+				ref_v[i*4+j] = (float)exp( (double)arr[i*4+j] );
+			}
+		}
 
 		float3x4&  m34( reinterpret_cast<float3x4&>(arr) );
 		
@@ -311,18 +316,18 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			for( int j = 0; j < 4; ++j )
 			{
 				// Fix for NAN and INF
-				if( *(int*)(&ref_v[i][j]) == *(int*)(&ret.data_[i][j]) )
+				if( *(int*)(&ref_v[i*4+j]) == *(int*)(&ret.data_[i][j]) )
 				{
-					BOOST_CHECK_BITWISE_EQUAL( *(int*)(&ref_v[i][j]), *(int*)(&ret.data_[i][j]) );
+					BOOST_CHECK_BITWISE_EQUAL( *(int*)(&ref_v[i*4+j]), *(int*)(&ret.data_[i][j]) );
 				}
 				else
 				{
-					BOOST_CHECK_CLOSE( ref_v[i][j], ret.data_[i][j], 0.000001f );
+					BOOST_CHECK_CLOSE( ref_v[i*4+j], ret.data_[i][j], 0.000001f );
 				}
 			}
 		}
 	}
-
+	/*
 	{
 		float f = 876.625f;
 		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.000001f );
@@ -462,6 +467,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			}
 		}
 	}
+	*/
 }
 
 #endif

@@ -5,6 +5,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantic_infos.imp.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>
 #include <sasl/include/semantic/name_mangler.h>
@@ -86,15 +87,15 @@ shared_ptr<llvm_module> cgllvm_impl::cg_module() const
 	return mod;
 }
 
-bool cgllvm_impl::generate( module_si* mod, abi_info const* abii )
+bool cgllvm_impl::generate( module_semantic* mod, abi_info const* abii )
 {
 	msi = mod;
 	this->abii = abii;
 
 	if( msi ){
-		assert( msi->root() );
-		assert( msi->root()->node() );
-		msi->root()->node()->accept( this, NULL );
+		assert( msi->root_symbol() );
+		assert( msi->root_symbol()->node() );
+		msi->root_symbol()->node()->accept( this, NULL );
 		return true;
 	}
 
@@ -113,7 +114,7 @@ shared_ptr<symbol> cgllvm_impl::find_symbol( cgllvm_sctxt* data, std::string con
 
 function_t* cgllvm_impl::get_function( std::string const& name ) const
 {
-	shared_ptr<symbol> callee_sym = msi->root()->find_overloads(name)[0];
+	shared_ptr<symbol> callee_sym = msi->root_symbol()->find_overloads(name)[0];
 	return &( const_cast<cgllvm_impl*>(this)->node_ctxt( callee_sym->node() )->data().self_fn );
 }
 
@@ -781,9 +782,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 	service()->register_external_intrinsic();
 
-	vector< shared_ptr<symbol> > const& intrinsics = msi->intrinsics();
+	vector<symbol*> const& intrinsics = msi->intrinsics();
 
-	BOOST_FOREACH( shared_ptr<symbol> const& intr, intrinsics ){
+	BOOST_FOREACH( symbol* intr, intrinsics ){
 		shared_ptr<function_type> intr_fn = intr->node()->as_handle<function_type>();
 		storage_si* intrin_ssi = intr_fn->si_ptr<storage_si>();
 		bool external = intrin_ssi->external_compatible();

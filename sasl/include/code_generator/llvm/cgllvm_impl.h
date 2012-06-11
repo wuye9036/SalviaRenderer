@@ -18,7 +18,7 @@ namespace sasl{
 		struct node;
 	}
 	namespace semantic{
-		class module_si;
+		class module_semantic;
 		class abi_info;
 		class caster_t;
 		class symbol;
@@ -55,7 +55,7 @@ typedef cgllvm_sctxt* sctxt_handle;
 class cgllvm : public sasl::syntax_tree::syntax_tree_visitor{
 public:
 	virtual bool generate(
-		sasl::semantic::module_si* mod,
+		sasl::semantic::module_semantic* mod,
 		sasl::semantic::abi_info const* abii
 		) = 0;
 };
@@ -64,7 +64,7 @@ class cgllvm_impl: public cgllvm{
 public:
 	boost::shared_ptr<llvm_module> cg_module() const;
 	bool generate(
-		sasl::semantic::module_si* mod,
+		sasl::semantic::module_semantic* mod,
 		sasl::semantic::abi_info const* abii
 		);
 
@@ -142,7 +142,7 @@ protected:
 	function_t* get_function( std::string const& name ) const;
 
 	// Store global informations
-	sasl::semantic::module_si* msi;
+	sasl::semantic::module_semantic* msi;
 	sasl::semantic::abi_info const* abii;
 
 	boost::shared_ptr<llvm_module_impl> mod;

@@ -10,6 +10,7 @@
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/parser/parse_api.h>
 #include <sasl/include/parser/diags.h>
 #include <sasl/include/syntax_tree/program.h>
@@ -30,7 +31,7 @@ using sasl::code_generator::generate_llvm_code;
 using sasl::code_generator::codegen_context;
 using sasl::code_generator::jit_engine;
 using sasl::code_generator::cgllvm_jit_engine;
-using sasl::semantic::module_si;
+using sasl::semantic::module_semantic;
 using sasl::semantic::analysis_semantic;
 using sasl::semantic::abi_analyser;
 using sasl::semantic::abi_info;
@@ -273,7 +274,7 @@ shared_ptr<diag_chat> driver_impl::compile()
 	return diags;
 }
 
-shared_ptr< module_si > driver_impl::mod_si() const{
+shared_ptr<module_semantic> driver_impl::mod_si() const{
 	return msi;
 }
 
@@ -407,7 +408,7 @@ void driver_impl::inject_function(shared_ptr<jit_engine> const& je, void* pfn, s
 	}
 	else
 	{
-		raw_name = &( msi->root()->find_overloads(name)[0]->mangled_name() );
+		raw_name = &( msi->root_symbol()->find_overloads(name)[0]->mangled_name() );
 	}
 	
 	je->inject_function(pfn, *raw_name);

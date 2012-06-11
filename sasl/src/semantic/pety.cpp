@@ -12,6 +12,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -19,9 +20,10 @@
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
 
-using ::boost::make_shared;
-using ::boost::shared_ptr; // prevent conflicting with std::tr1.
-using ::boost::shared_polymorphic_cast;
+using boost::make_shared;
+using boost::shared_ptr; // prevent conflicting with std::tr1.
+using boost::shared_polymorphic_cast;
+using boost::unordered_map;
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -37,26 +39,43 @@ tid_t type_entry_id_of_symbol( shared_ptr<symbol> const& sym ){
 	return type_entry_id_of_node( sym->node() );
 }
 
+unordered_map<builtin_types, std::string> bt_to_name;
+
 // some utility functions
 std::string builtin_type_name( builtin_types btc ){
-	if( is_vector(btc) ) {
-		return 
+	unordered_map<builtin_types, std::string>::iterator it = bt_to_name.find(btc);
+	if( it != bt_to_name.end() )
+	{
+		return it->second;
+	}
+
+	std::string ret;
+	if( is_vector(btc) )
+	{
+		ret = 
 			( boost::format("%1%_%2%") 
 			% builtin_type_name( scalar_of(btc) )
 			% vector_size( btc )
 			).str();
-	}
 
-	if( is_matrix(btc) ) {
-		return 
+	}
+	else if( is_matrix(btc) )
+	{
+		ret =
 			( boost::format("%1%_%2%x%3%") 
 			% builtin_type_name( scalar_of(btc) )
 			% vector_size( btc )
 			% vector_count( btc )
 			).str();
+
+	}
+	else
+	{
+		ret = ( boost::format("0%1%") % btc.name() ).str();
 	}
 
-	return ( boost::format("0%1%") % btc.name() ).str();
+	bt_to_name.insert( make_pair(btc, ret) );
+	return ret;
 }
 
 //	description:
@@ -134,7 +153,7 @@ shared_ptr<pety_t> pety_t::handle() const{
 	return self_handle.lock();
 }
 
-tid_t pety_t::get( tynode_ptr const& node, symbol_ptr const& parent ){
+tid_t pety_t::get( tynode_ptr const& node, symbol* parent ){
 	/////////////////////////////////////////////////////
 	// if node has id yet, return it.
 	tid_t ret = type_entry_id_of_node( node );
@@ -184,11 +203,11 @@ shared_ptr< tynode > pety_t::get( tid_t id ){
 tid_t pety_t::get( const builtin_types& btc ){
 	// If it existed in symbol, return it.
 	// Otherwise create a new type and push into type manager.
-	tid_t ret_id = type_entry_id_of_symbol( rootsym.lock()->find( builtin_type_name( btc ) ) );
+	tid_t ret_id = type_entry_id_of_symbol( root_symbol_->find( builtin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
 		shared_ptr< builtin_type > bt = create_node<builtin_type>( token_t::null(), token_t::null() );
 		bt->tycode = btc;
-		return get( bt, rootsym.lock() );
+		return get( bt, root_symbol_ );
 	} else {
 		return ret_id;
 	}
@@ -200,9 +219,9 @@ boost::shared_ptr< pety_t > pety_t::create(){
 	return ret;
 }
 
-void pety_t::root_symbol( boost::shared_ptr<symbol> const& sym )
+void pety_t::root_symbol( symbol* sym )
 {
-	rootsym = sym;
+	root_symbol_ = sym;
 }
 
 tid_t pety_t::get_array( tid_t elem_type, size_t dimension )
@@ -216,7 +235,7 @@ tid_t pety_t::get_array( tid_t elem_type, size_t dimension )
 	return ret_tid;
 }
 
-void assign_entry_id( shared_ptr<tynode> const& node, shared_ptr<pety_t> const& typemgr, tid_t id ){
+void assign_entry_id( shared_ptr<tynode> const& node, pety_t* typemgr, tid_t id ){
 	get_or_create_semantic_info<type_si>( node, typemgr )->entry_id( id );
 }
 
@@ -232,8 +251,8 @@ tid_t semantic::pety_t::allocate_and_assign_id( shared_ptr<tynode> const& node  
 	tid_t ret_id = (tid_t)( entries.size() - 1 );
 
 	// assign id to source node and duplicated node.
-	assign_entry_id(node, handle(), ret_id);
-	assign_entry_id(dup_node, handle(), ret_id);
+	assign_entry_id(node, this, ret_id);
+	assign_entry_id(dup_node, this, ret_id);
 	return ret_id;
 }
 END_NS_SASL_SEMANTIC();

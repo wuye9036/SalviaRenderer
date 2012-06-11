@@ -9,7 +9,7 @@
 
 namespace sasl{
 	namespace semantic{
-		class module_si;
+		class module_semantic;
 		class abi_info;
 	}
 }

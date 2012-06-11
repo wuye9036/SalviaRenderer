@@ -40,7 +40,7 @@ using namespace sasl::utility;
 using semantic::abi_info;
 using semantic::const_value_si;
 using semantic::extract_semantic_info;
-using semantic::module_si;
+using semantic::module_semantic;
 using semantic::storage_si;
 using semantic::operator_name;
 using semantic::statement_si;

@@ -5,6 +5,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_formatter.h>
 #include <sasl/include/common/diag_chat.h>
 
@@ -125,7 +126,7 @@ void jit_fixture::init( string const& file_name, string const& options )
 	BOOST_REQUIRE( drv->mod_si() );
 	BOOST_REQUIRE( drv->mod_codegen() );
 
-	root_sym = drv->mod_si()->root();
+	root_sym = drv->mod_si()->root_symbol();
 
 	shared_ptr<llvm_module> llvm_mod = shared_polymorphic_cast<llvm_module>( drv->mod_codegen() );
 	fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );

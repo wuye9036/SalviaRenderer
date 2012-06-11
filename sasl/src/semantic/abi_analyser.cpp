@@ -3,6 +3,7 @@
 #include <sasl/include/semantic/abi_info.h>
 
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
 
@@ -130,7 +131,7 @@ void abi_analyser::reset( salviar::languages lang ){
 	assert( lang < salviar::lang_count );
 	
 	mods[lang].reset();
-	entries[lang].reset();
+	entries[lang] = NULL;
 	abiis[lang].reset();
 }
 
@@ -140,16 +141,16 @@ void abi_analyser::reset_all(){
 	}
 }
 
-bool abi_analyser::entry( shared_ptr<module_si> const& mod, string const& name, salviar::languages lang ){
-	vector< shared_ptr<symbol> > const& overloads = mod->root()->find_overloads( name );
+bool abi_analyser::entry( shared_ptr<module_semantic> const& mod, string const& name, salviar::languages lang ){
+	vector< shared_ptr<symbol> > const& overloads = mod->root_symbol()->find_overloads( name );
 	if ( overloads.size() != 1 ){
 		return false;
 	}
 
-	return entry( mod, overloads[0], lang );
+	return entry( mod, overloads[0].get(), lang );
 }
 
-bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> const& fnsym, salviar::languages lang ){
+bool abi_analyser::entry( module_semantic_ptr const& mod, symbol* fnsym, salviar::languages lang ){
 	assert( lang < salviar::lang_count );
 
 	mods[lang] = mod;
@@ -158,13 +159,14 @@ bool abi_analyser::entry( shared_ptr<module_si> const& mod, shared_ptr<symbol> c
 	return update(lang);
 }
 
-bool abi_analyser::auto_entry( shared_ptr<module_si> const& mod, salviar::languages lang ){
-	shared_ptr<symbol> candidate;
-	shared_ptr<abi_info> candidate_abii;
-	BOOST_FOREACH( shared_ptr<symbol> const& fnsym, mod->functions() ){
+bool abi_analyser::auto_entry( shared_ptr<module_semantic> const& mod, salviar::languages lang ){
+	symbol*			candidate = NULL;
+	abi_info_ptr	candidate_abii;
+
+	BOOST_FOREACH( symbol* fnsym, mod->functions() ){
 		if( entry(mod, fnsym, lang) ){
 			if( candidate ){
-				// TODO More than one mactched. conflict error.
+				// TODO More than one matched. conflict error.
 				reset(lang);
 				return false;
 			}
@@ -183,7 +185,7 @@ bool abi_analyser::auto_entry( shared_ptr<module_si> const& mod, salviar::langua
 	return false;
 }
 
-boost::shared_ptr<symbol> const& abi_analyser::entry( salviar::languages lang ) const{
+symbol* abi_analyser::entry( salviar::languages lang ) const{
 	return entries[lang];
 }
 
@@ -211,7 +213,7 @@ bool abi_analyser::update( salviar::languages lang ){
 	abiis[lang] = make_shared<abi_info>();
 	abiis[lang]->lang = lang;
 	abiis[lang]->mod = mods[lang].get();
-	abiis[lang]->entry_point = entries[lang].get();
+	abiis[lang]->entry_point = entries[lang];
 	
 	if( entries[lang] ){
 		abiis[lang]->entry_point_name = entries[lang]->mangled_name();
@@ -241,7 +243,7 @@ bool abi_analyser::update( salviar::languages lang ){
 		}
 
 		// Process global variables.
-		BOOST_FOREACH( shared_ptr<symbol> const& gvar_sym, mods[lang]->globals() ){
+		BOOST_FOREACH( symbol* gvar_sym, mods[lang]->global_vars() ){
 			shared_ptr<declarator> gvar = gvar_sym->node()->as_handle<declarator>();
 			assert(gvar);
 

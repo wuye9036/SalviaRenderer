@@ -10,6 +10,7 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -22,7 +23,7 @@ public:
 	static bool is_avaliable();
 	static void release();
 
-	TEST_CASE_SP_VARIABLE( SEMANTIC_(module_si), si_root );
+	TEST_CASE_SP_VARIABLE( SEMANTIC_(module_semantic), si_root );
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_root );
 
 	TEST_CASE_SP_VARIABLE( SEMANTIC_(symbol), sym_fn0_sem );

@@ -30,6 +30,7 @@ public:
 		pety_ = pety_t::create();
 		root_symbol_ = symbol::create_root();
 		diag_chat_ = diag_chat::create();
+		pety_->root_symbol( root_symbol_.get() );
 	}
 
 	~module_semantic_impl()
@@ -204,6 +205,12 @@ node_semantic::~node_semantic()
 		delete labeled_statements_;
 		labeled_statements_ = NULL;
 	}
+}
+
+
+module_semantic_ptr module_semantic::create()
+{
+	return module_semantic_ptr( new module_semantic_impl() );
 }
 
 END_NS_SASL_SEMANTIC();

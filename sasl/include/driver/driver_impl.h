@@ -42,7 +42,7 @@ public:
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit();
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit( external_function_array const& );
 
-	virtual boost::shared_ptr<sasl::semantic::module_si>			 mod_si() const;
+	virtual boost::shared_ptr<sasl::semantic::module_semantic>		 mod_si() const;
 	virtual boost::shared_ptr<sasl::code_generator::codegen_context> mod_codegen() const;
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				 root() const;
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				 mod_abi() const;
@@ -60,7 +60,7 @@ private:
 		boost::shared_ptr<sasl::code_generator::jit_engine> const& je,
 		void* pfn, std::string const& name, bool is_raw_name);
 
-	boost::shared_ptr<sasl::semantic::module_si>			 msi;
+	boost::shared_ptr<sasl::semantic::module_semantic>		 msi;
 	boost::shared_ptr<sasl::code_generator::codegen_context> mcg;
 	boost::shared_ptr<sasl::syntax_tree::node>				 mroot;
 	boost::shared_ptr<sasl::semantic::abi_info>				 mabi;
