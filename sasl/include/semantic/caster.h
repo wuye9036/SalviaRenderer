@@ -25,7 +25,7 @@ BEGIN_NS_SASL_SEMANTIC();
 
 namespace sst = sasl::syntax_tree;
 
-typedef boost::function< boost::shared_ptr<sasl::syntax_tree::tynode> (tid_t) > get_tynode_fn;
+typedef boost::function< sasl::syntax_tree::tynode* (tid_t) > get_tynode_fn;
 class caster_t{
 public:
 	enum casts
@@ -36,7 +36,7 @@ public:
 		nocast = 0xFFFFFFFF
 	};
 
-	typedef boost::function<void (boost::shared_ptr<sst::node>, boost::shared_ptr<sst::node>)> cast_t;
+	typedef boost::function<void (sst::node*, sst::node*)> cast_t;
 
 	caster_t();
 	void  add_cast(casts ct,			tid_t src, tid_t dest, cast_t conv);
@@ -49,7 +49,8 @@ public:
 
 	void better_or_worse( tid_t matched, tid_t matching, tid_t src, bool& better, bool& worse );
 
-	casts cast(boost::shared_ptr<sst::node>   dest,	  boost::shared_ptr<sst::node> src);
+	casts cast(boost::shared_ptr<sst::node> dest, boost::shared_ptr<sst::node> src);
+	casts cast(sst::node* dest, sst::node* src);
 
 	void set_tynode_getter( get_tynode_fn fn );
 
@@ -64,7 +65,7 @@ private:
 		std::pair<tid_t /*src*/, tid_t /*dest*/>, size_t /*cast info index*/
 	> cast_info_dict_t;
 
-	boost::shared_ptr<sasl::syntax_tree::tynode> get_tynode( tid_t );
+	sasl::syntax_tree::tynode* get_tynode( tid_t );
 
 	cast_info const* find_caster(
 		cast_info const*& first_caster, cast_info const*& second_caster,

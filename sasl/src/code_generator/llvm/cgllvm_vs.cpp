@@ -474,7 +474,7 @@ void cgllvm_vs::layout_to_sc(cgllvm_sctxt* psc, salviar::sv_layout* svl, bool st
 	}
 	else
 	{
-		psc->data().tyinfo = create_tyinfo( msi->pety()->get(svl->internal_type) );
+		psc->data().tyinfo = create_tyinfo( msi->pety()->get_proto(svl->internal_type)->as_handle<tynode>() );
 		ret.tyinfo( psc->data().tyinfo.get() );
 	}
 

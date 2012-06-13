@@ -44,17 +44,17 @@ public:
 
 	void root_symbol(symbol* sym);
 
-	pety_t_ptr handle() const;
-	
 	tid_t get(sasl::syntax_tree::tynode_ptr const& node, symbol* parent);
+	tid_t get(sasl::syntax_tree::tynode* v, symbol* scope);
 	tid_t get(const builtin_types& btc);
-	sasl::syntax_tree::tynode_ptr get(tid_t id);
-
 	tid_t get_array(tid_t elem_type, size_t dimension);
+
+	sasl::syntax_tree::tynode* get_proto(tid_t tid);
+
 private:
-	tid_t allocate_and_assign_id(sasl::syntax_tree::tynode_ptr const& node);
-	std::vector<pety_item_t>	entries;
-	boost::weak_ptr<pety_t>		self_handle;
+	tid_t allocate_and_assign_id(sasl::syntax_tree::tynode* node);
+
+	std::vector<pety_item_t>	items_;
 	symbol*						root_symbol_;
 };
 

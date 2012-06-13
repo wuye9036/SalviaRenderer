@@ -114,7 +114,7 @@ void type_info_si_impl::entry_id( tid_t id ){
 }
 
 shared_ptr<tynode> type_info_si_impl::type_info() const{
-	return typemgr->get( tid );
+	return typemgr->get_proto(tid)->as_handle<tynode>();
 }
 
 void type_info_si_impl::type_info( shared_ptr<tynode> typespec, shared_ptr<symbol> sym ){

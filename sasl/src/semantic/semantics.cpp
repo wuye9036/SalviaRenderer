@@ -5,11 +5,13 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/common/diag_chat.h>
+#include <sasl/enums/builtin_types.h>
 #include <salviar/include/shader.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/lexical_cast.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
@@ -19,6 +21,52 @@ using boost::unordered_map;
 using std::vector;
 using std::string;
 using std::make_pair;
+
+string split_integer_literal_suffix( string const& str, bool& is_unsigned, bool& is_long ){
+	is_unsigned = false;
+	is_long = false;
+
+	string::const_reverse_iterator ch_it = str.rbegin();
+	char ch[2] = {'\0', '\0'};
+	ch[0] = *ch_it;
+	++ch_it;
+	ch[1] = (ch_it == str.rend() ? '\0' : *ch_it);
+
+	int tail_count = 0;
+	for ( int i = 0; i < 2; ++i ){
+		switch (ch[i]){
+		case 'u':
+		case 'U':
+			is_unsigned = true;
+			++tail_count;
+			break;
+		case 'l':
+		case 'L':
+			is_long = true;
+			++tail_count;
+			break;
+		default:
+			// do nothing
+			break;
+		}
+	}
+
+	// remove suffix for lexical casting.
+	return string( str.begin(), str.end()-tail_count );
+}
+
+string split_real_literal_suffix(string const& str, bool& is_single)
+{
+	is_single = false;
+
+	string::const_reverse_iterator ch_it = str.rbegin();
+	if ( *ch_it == 'F' || *ch_it == 'f' ){
+		is_single = true;
+	}
+
+	// remove suffix for lexical casting.
+	return is_single ? string(str.begin(), str.end()-1 ) : str;
+}
 
 BEGIN_NS_SASL_SEMANTIC();
 
@@ -205,8 +253,75 @@ node_semantic::~node_semantic()
 		delete labeled_statements_;
 		labeled_statements_ = NULL;
 	}
+
+	if( string_constant_ )
+	{
+		delete string_constant_;
+		string_constant_ = NULL;
+	}
 }
 
+void node_semantic::const_value(string const& lit, literal_classifications lit_class)
+{
+	string nosuffix_litstr;
+	builtin_types value_btc(builtin_types::none);
+
+	if (lit_class == literal_classifications::integer )
+	{
+		bool is_unsigned(false);
+		bool is_long(false);
+		nosuffix_litstr = split_integer_literal_suffix( lit, is_unsigned, is_long );
+		if ( is_unsigned )
+		{
+			unsigned_constant_ = boost::lexical_cast<uint64_t>(nosuffix_litstr);
+			value_btc = is_long ? builtin_types::_uint64 : builtin_types::_uint32;
+		}
+		else
+		{
+			signed_constant_ = boost::lexical_cast<int64_t>(nosuffix_litstr);
+			value_btc = is_long ? builtin_types::_sint64 : builtin_types::_sint32;
+		}
+	}
+	else if( lit_class == literal_classifications::real )
+	{
+		bool is_single(false);
+		nosuffix_litstr = split_real_literal_suffix(lit, is_single);
+		double_constant_ = boost::lexical_cast<double>(nosuffix_litstr);
+		value_btc = is_single ? builtin_types::_float : builtin_types::_double;
+	}
+	else if( lit_class == literal_classifications::boolean )
+	{
+		signed_constant_ = (lit == "true" ? 1 : 0);
+		value_btc = builtin_types::_boolean;
+	}
+	else if( lit_class == literal_classifications::character )
+	{
+		signed_constant_ = lit[0];
+		value_btc = builtin_types::_sint8;
+	}
+	else if( lit_class == literal_classifications::string )
+	{
+		const_value(lit);
+		value_btc = builtin_types::none;
+	}
+
+	tid_ = owner_->pety()->get(value_btc);
+	proto_type_ = NULL;
+}
+
+std::string node_semantic::const_string() const
+{
+	return string_constant_ ? *string_constant_ : string();
+}
+
+void node_semantic::const_value( std::string const& v )
+{
+	if( string_constant_ == NULL )
+	{
+		string_constant_ = new string(v);
+	}
+	*string_constant_ = v;
+}
 
 module_semantic_ptr module_semantic::create()
 {

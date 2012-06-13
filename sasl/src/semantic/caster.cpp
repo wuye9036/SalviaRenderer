@@ -79,6 +79,11 @@ bool caster_t::try_implicit( tid_t dest, tid_t src )
 
 caster_t::casts caster_t::cast(shared_ptr<node> dest, shared_ptr<node> src)
 {
+	return cast( dest.get(), src.get() );
+}
+
+caster_t::casts caster_t::cast( sst::node* dest, sst::node* src )
+{
 	tid_t dst_tid = dest->si_ptr<type_info_si>()->entry_id();
 	tid_t src_tid = src->si_ptr<type_info_si>()->entry_id();
 
@@ -87,12 +92,12 @@ caster_t::casts caster_t::cast(shared_ptr<node> dest, shared_ptr<node> src)
 	tid_t			 imm	= -1;
 
 	cast_info const* major_caster = find_caster( caster1, caster2, imm, dst_tid, src_tid, false );
-	
+
 	if(!major_caster){ return nocast; }
 
 	if( imm != -1 )
 	{
-		shared_ptr<tynode> tyn = get_tynode(imm);
+		tynode* tyn = get_tynode(imm);
 		assert(tyn);
 		caster1->get<4>()(tyn, src);
 		caster2->get<4>()(dest, src);
@@ -229,7 +234,7 @@ caster_t::cast_info const* caster_t::find_caster(
 	return NULL;
 }
 
-shared_ptr<tynode> caster_t::get_tynode( tid_t tid )
+tynode* caster_t::get_tynode( tid_t tid )
 {
 	assert(tynode_getter);
 	return tynode_getter(tid);

@@ -254,7 +254,7 @@ SASL_VISIT_DEF( if_statement ){
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	if( cond_tid != bool_tid ){
-		if( caster->cast( msi->pety()->get(bool_tid), v.cond ) == caster_t::nocast ){
+		if( caster->cast(msi->pety()->get_proto(bool_tid), v.cond.get()) == caster_t::nocast ){
 			assert(false);
 		}
 	}
@@ -306,7 +306,7 @@ SASL_VISIT_DEF( while_statement ){
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	if( cond_tid != bool_tid ){
-		caster->cast( msi->pety()->get(bool_tid), v.cond );
+		caster->cast( msi->pety()->get_proto(bool_tid), v.cond.get() );
 	}
 	insert_point_t cond_end = insert_point();
 
@@ -346,7 +346,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 	tid_t cond_tid = extract_semantic_info<type_info_si>(v.cond)->entry_id();
 	tid_t bool_tid = msi->pety()->get( builtin_types::_boolean );
 	if( cond_tid != bool_tid ){
-		if ( caster->cast( msi->pety()->get(bool_tid), v.cond ) == caster_t::nocast ){
+		if ( caster->cast( msi->pety()->get_proto(bool_tid), v.cond.get() ) == caster_t::nocast ){
 			assert( false );
 		}
 	}

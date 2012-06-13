@@ -733,7 +733,7 @@ SASL_VISIT_DEF(array_type)
 	tid_t array_tid = module_semantic_->pety()->get( v.as_handle<tynode>(), current_symbol.get() );
 	assert(array_tid != -1);
 
-	array_type_ptr dup_array = module_semantic_->pety()->get(array_tid)->as_handle<array_type>();
+	array_type_ptr dup_array = module_semantic_->pety()->get_proto(array_tid)->as_handle<array_type>();
 	if( !dup_array->elem_type->si_ptr<type_si>() )
 	{
 		dup_array->elem_type = visit_child(v.elem_type);
@@ -762,7 +762,7 @@ SASL_VISIT_DEF( struct_type ){
 	assert( dup_struct_id != -1 );
 
 	shared_ptr<struct_type> dup_struct
-		= module_semantic_->pety()->get( dup_struct_id )->as_handle<struct_type>();
+		= module_semantic_->pety()->get_proto( dup_struct_id )->as_handle<struct_type>();
 	generated_node = dup_struct;
 
 	SASL_EXTRACT_SI( type_info_si, tisi, dup_struct );
@@ -811,7 +811,7 @@ SASL_VISIT_DEF( alias_type ){
 		diags->report( undeclared_identifier )->token_range( *v.alias, *v.alias )->p(v.alias->str);
 	}
 
-	generated_node = module_semantic_->pety()->get(dup_struct_id);
+	generated_node = module_semantic_->pety()->get_proto(dup_struct_id)->as_handle();
 }
 
 SASL_VISIT_DEF( parameter )
@@ -926,7 +926,7 @@ SASL_VISIT_DEF( if_statement )
 	dup_ifstmt->cond = visit_child(v.cond);
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_ifstmt->cond);
 	assert( cond_tsi );
-	tid_t bool_tid = module_semantic_->pety()->get( builtin_types::_boolean );
+	// tid_t bool_tid = module_semantic_->pety()->get( builtin_types::_boolean );
 	assert( cond_tsi->entry_id() == bool_tid || caster->try_implicit( bool_tid, cond_tsi->entry_id() ) );
 
 	dup_ifstmt->yes_stmt = visit_child(v.yes_stmt);
@@ -1052,7 +1052,7 @@ SASL_VISIT_DEF( switch_statement ){
 	dup_switch->cond = visit_child(v.cond);
 	shared_ptr<type_info_si> cond_tsi = extract_semantic_info<type_info_si>(dup_switch->cond);
 	assert( cond_tsi );
-	tid_t int_tid = module_semantic_->pety()->get( builtin_types::_sint32 );
+	// tid_t int_tid = module_semantic_->pety()->get( builtin_types::_sint32 );
 	builtin_types cond_bt = cond_tsi->type_info()->tycode;
 	assert( is_integer( cond_bt ) || caster->try_implicit( int_tid, cond_tsi->entry_id() ) );
 
@@ -1158,11 +1158,7 @@ SASL_VISIT_DEF( program ){
 	
 	register_builtin_types();
 	add_cast();
-	caster->set_tynode_getter(
-		boost::bind(
-		static_cast<shared_ptr<tynode> (pety_t::*)(tid_t)>(&pety_t::get),
-		module_semantic_->pety(), _1)
-		);
+	caster->set_tynode_getter( boost::bind( &pety_t::get_proto, module_semantic_->pety(), _1) );
 	register_builtin_functions();
 
 	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
@@ -1177,7 +1173,7 @@ SASL_VISIT_DEF( program ){
 	module_semantic_->root_symbol()->relink( dup_prog->as_handle() );
 }
 
-void semantic_analyser::empty_caster( shared_ptr<node> lhs, shared_ptr<node> rhs ){
+void semantic_analyser::empty_caster( node* lhs, node* rhs ){
 	// do nothing
 }
 

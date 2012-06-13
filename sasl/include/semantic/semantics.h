@@ -3,6 +3,7 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
+#include <sasl/enums/literal_classifications.h>
 #include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/typedefs.h>
 
@@ -23,6 +24,7 @@ namespace sasl
 	namespace syntax_tree
 	{
 		struct node;
+		struct tynode;
 		struct labeled_statement;
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(program);
 	}
@@ -97,6 +99,16 @@ public:
 
 	// Type
 	int		tid() const	{ return tid_; }
+	sasl::syntax_tree::tynode*
+			ty_proto() const;
+
+	// Constant
+	int64_t const_signed() const { return signed_constant_; }
+	uint64_t
+			const_unsigned() const { return unsigned_constant_; }
+	double	const_double() const { return double_constant_; }
+	std::string
+			const_string() const;
 
 	// Expression and variable
 	salviar::semantic_value*
@@ -134,6 +146,14 @@ public:
 	// Type
 	void tid(int v) { tid_ = v; }
 
+	// Constant
+	void const_value(std::string const& lit, literal_classifications lit_class);
+
+	void const_value(int64_t v) { signed_constant_ = v; }
+	void const_value(uint64_t v) { unsigned_constant_ = v; }
+	void const_value(std::string const& v);
+	void const_value(double v) { double_constant_ = v; }
+
 	// Expression and variable
 	void semantic_value(salviar::semantic_value const& v);
 
@@ -143,7 +163,6 @@ public:
 	void is_function_pointer(bool v) { is_function_pointer_ = v; }
 
 	// Function and intrinsic
-	
 	void function_name(std::string const& v);
 	void is_intrinsic(bool v) { is_intrinsic_ = v; }
 	void is_external(bool v) { is_external_ = v; }
@@ -163,7 +182,15 @@ private:
 	symbol*				assoc_symbol_;
 	
 	// Type
+	sasl::syntax_tree::tynode*	
+			proto_type_;
 	int 	tid_;
+	
+	// Constant
+	int64_t			signed_constant_;
+	uint64_t		unsigned_constant_;
+	std::string*	string_constant_;
+	double			double_constant_;
 	
 	// Expression and variable
 	salviar::semantic_value* semantic_value_;

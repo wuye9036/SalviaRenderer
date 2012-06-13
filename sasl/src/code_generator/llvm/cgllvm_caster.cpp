@@ -61,24 +61,24 @@ public:
 	{
 	}
 
-	void store(shared_ptr<node> dest, shared_ptr<node> src, value_t const& v)
+	void store(node* dest, node* src, value_t const& v)
 	{
 		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
 			// Overwrite source.
-			get_ctxt(src)->value() = v;
+			get_ctxt(src->as_handle())->value() = v;
 		} else {
 			// Store to dest.
-			if( get_ctxt(dest)->value().storable() ){
-				get_ctxt(dest)->value().store(v);
+			if( get_ctxt(dest->as_handle())->value().storable() ){
+				get_ctxt(dest->as_handle())->value().store(v);
 			} else {
-				get_ctxt(dest)->value() = v;
+				get_ctxt(dest->as_handle())->value() = v;
 			}
 		}
 	}
 	// TODO if dest == src, maybe some bad thing happen ...
-	void int2int( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+	void int2int(node* dest, node* src){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
+		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 
@@ -90,15 +90,15 @@ public:
 		store(dest, src, casted);
 	}
 
-	void int2bool( shared_ptr<node> dest, shared_ptr<node> src ){
+	void int2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_i2b( get_ctxt(src)->value() );
+		value_t casted = cgs->cast_i2b( get_ctxt(src->as_handle())->value() );
 		store(dest, src, casted);
 	}
 
-	void int2float( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+	void int2float(node* dest, node* src){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
+		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
 		
 		assert( src_ctxt != dest_ctxt );
 
@@ -109,9 +109,9 @@ public:
 		store( dest, src, casted );
 	}
 
-	void float2int( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+	void float2int(node* dest, node* src){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
+		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 
@@ -122,9 +122,9 @@ public:
 		cgs->store( dest_ctxt->value(), casted );
 	}
 
-	void float2float( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+	void float2float(node* dest, node* src){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
+		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 
@@ -135,29 +135,29 @@ public:
 		cgs->store( dest_ctxt->value(), casted );
 	}
 
-	void float2bool( shared_ptr<node> dest, shared_ptr<node> src ){
+	void float2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_f2b( get_ctxt(src)->value() );
+		value_t casted = cgs->cast_f2b( get_ctxt(src->as_handle())->value() );
 		store( dest, src, casted );
 	}
 
-	void scalar2vec1( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+	void scalar2vec1(node* dest, node* src){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
+		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
 		assert( src_ctxt != dest_ctxt );
 		store( dest, src, cgs->cast_s2v( src_ctxt->get_rvalue() ) );
 	}
 
-	void vec2scalar( shared_ptr<node> dest, shared_ptr<node> src ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+	void vec2scalar(node* dest, node* src){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
+		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
 		assert( src_ctxt != dest_ctxt );
 		store( dest, src, cgs->cast_v2s( src_ctxt->get_rvalue() ) );
 	}
 
-	void shrink_vector( shared_ptr<node> dest, shared_ptr<node> src, int source_size, int dest_size ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest);
-		cgllvm_sctxt* src_ctxt = get_ctxt(src);
+	void shrink_vector(node* dest, node* src, int source_size, int dest_size ){
+		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
+		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
@@ -202,12 +202,8 @@ void add_builtin_casts(
 	pety_t* pety
 	)
 {
-	typedef function< void ( shared_ptr<node>, shared_ptr<node> ) > cast_t;
-	caster->set_tynode_getter(
-		boost::bind(
-		static_cast<shared_ptr<tynode> (pety_t::*)(tid_t)>(&pety_t::get),
-		pety, _1)
-		);
+	typedef caster_t::cast_t cast_t;
+	caster->set_tynode_getter( boost::bind(&pety_t::get_proto, pety, _1) );
 
 	shared_ptr<cgllvm_caster> cg_caster = shared_polymorphic_cast<cgllvm_caster>(caster);
 
@@ -369,6 +365,7 @@ void add_builtin_casts(
 
 	//-------------------------------------------------------------------------
 	// Register scalar <====> vector<scalar, 1>.
+
 #define DEFINE_VECTOR_TYPE_IDS( btc ) \
 	tid_t btc##_vts[5] = {-1, -1, -1, -1, -1};\
 	btc##_vts[1] = pety->get( vector_of(builtin_types::btc , 1 ) ); \
@@ -410,7 +407,6 @@ void add_builtin_casts(
 
 	DEFINE_VECTOR_AND_SHRINK( _float );
 	DEFINE_VECTOR_AND_SHRINK( _double );
-
 }
 
 shared_ptr<caster_t> create_caster(

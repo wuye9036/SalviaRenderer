@@ -146,7 +146,7 @@ private:
 
 	void register_builtin_types();
 
-	void empty_caster( sasl::syntax_tree::node_ptr, sasl::syntax_tree::node_ptr);
+	void empty_caster( sasl::syntax_tree::node*, sasl::syntax_tree::node*);
 
 	module_semantic_ptr			module_semantic_;
 	caster_t_ptr				caster;
