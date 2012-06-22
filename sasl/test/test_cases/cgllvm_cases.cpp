@@ -1,6 +1,5 @@
 #include <sasl/test/test_cases/cgllvm_cases.h>
 #include <sasl/test/test_cases/syntax_cases.h>
-#include <sasl/test/test_cases/semantic_cases.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
@@ -57,7 +56,6 @@ cgllvm_cases::cgllvm_cases(){
 }
 
 void cgllvm_cases::initialize(){
-	semantic_cases::instance();
 
 	shared_ptr< SEMANTIC_(module_semantic) > si_jit_root = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_jit_test), NULL, 1 );
 	SEMANTIC_(abi_analyser) aa;

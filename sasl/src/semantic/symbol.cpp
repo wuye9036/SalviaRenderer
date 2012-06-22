@@ -157,7 +157,7 @@ bool symbol::add_function_end(symbol* sym){
 		return false;
 	}
 
-	sym->mangled_name_ = mangle( polymorphic_cast<function_type*>( sym->associated_node() ) );
+	sym->mangled_name_ = mangle( owner_, polymorphic_cast<function_type*>( sym->associated_node() ) );
 
 	named_children_dict_iterator ret_it = named_children_.find(sym->mangled_name_);
 	if ( ret_it != named_children_.end() )
@@ -456,5 +456,9 @@ symbol::symbol_array symbol::find_overloads_impl(
 	return candidates;
 }
 
+module_semantic* symbol::owner() const
+{
+	return owner_;
+}
 
 END_NS_SASL_SEMANTIC();

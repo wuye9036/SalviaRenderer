@@ -2521,6 +2521,9 @@ value_t cg_service::emit_texCUBEproj( value_t const& samp, value_t const& coord 
 	return emit_tex_proj_impl(samp, coord, texCUBEproj_ps);
 }
 
-
+node_context* cg_service::get_node_context(node* v)
+{
+	return ctxt_->get_node_context(v);
+}
 
 END_NS_SASL_CODE_GENERATOR();

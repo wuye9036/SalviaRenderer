@@ -163,6 +163,7 @@ args_type_repr& args_type_repr::arg( shared_ptr<tynode> const& arg_ty )
 args_type_repr& args_type_repr::arg( sasl::syntax_tree::node* arg_ty )
 {
 	arg_tys.push_back( arg_ty->as_handle<tynode>() );
+	return *this;
 }
 
 string args_type_repr::str()

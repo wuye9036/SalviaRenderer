@@ -120,7 +120,7 @@ shared_ptr<tynode> duplicate_tynode( shared_ptr<tynode> const& typespec ){
 	}
 }
 
-std::string name_of_unqualified_type(tynode* typespec){
+std::string name_of_unqualified_type(module_semantic* sem, tynode* typespec){
 	// Only build in, struct and function are potential unqualified type.
 	// Array type is qualified type.
 
@@ -131,7 +131,7 @@ std::string name_of_unqualified_type(tynode* typespec){
 	} else if( actual_node_type == node_ids::builtin_type ){
 		return builtin_type_name( typespec->tycode );
 	} else if ( actual_node_type == node_ids::function_type ){
-		return mangle( polymorphic_cast<function_type*>(typespec) );
+		return mangle( sem, polymorphic_cast<function_type*>(typespec) );
 	} else if ( actual_node_type == node_ids::struct_type ){
 		return polymorphic_cast<struct_type*>(typespec)->name->str;
 	}
@@ -199,7 +199,7 @@ tid_t pety_t::get(tynode* v, symbol* scope)
 		// Here type specifier is a unqualified type.
 		// Look up the name of type in symbol.
 		// If it did not exist, throw an error or add it into symbol(as an swallow copy).
-		std::string name = name_of_unqualified_type(v);
+		std::string name = name_of_unqualified_type(scope->owner(), v);
 		symbol* sym = scope->find( name );
 		if( sym )
 		{

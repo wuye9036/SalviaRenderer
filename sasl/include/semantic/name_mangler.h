@@ -24,8 +24,9 @@ namespace sasl{
 struct operators;
 
 BEGIN_NS_SASL_SEMANTIC();
+class module_semantic;
 
-std::string mangle(sasl::syntax_tree::function_type* node);
+std::string mangle(module_semantic* sem, sasl::syntax_tree::function_type* node);
 std::string operator_name( const operators& );
 
 END_NS_SASL_SEMANTIC();

@@ -60,6 +60,8 @@ public:
 
 	static symbol* create_root(module_semantic* owner, node* root_node = NULL);
 
+	module_semantic* owner() const;
+
 	symbol* find		(std::string const& name) const;
 	symbol* find_this	(std::string const& mangled) const;
 	int		count		(std::string const& name) const;

@@ -1836,22 +1836,22 @@ void semantic_analyser::language( uint32_t v )
 
 node_semantic* semantic_analyser::get_node_semantic(sasl::syntax_tree::node* v)
 {
-	module_semantic_->get_semantic(v);
+	return module_semantic_->get_semantic(v);
 }
 
 node_semantic* semantic_analyser::get_node_semantic(sasl::syntax_tree::node_ptr const& v)
 {
-	module_semantic_->get_semantic(v);
+	return module_semantic_->get_semantic(v);
 }
 
 node_semantic* semantic_analyser::get_or_create_semantic( sasl::syntax_tree::node* v )
 {
-	module_semantic_->get_or_create_semantic(v);
+	return module_semantic_->get_or_create_semantic(v);
 }
 
 node_semantic* semantic_analyser::get_or_create_semantic( sasl::syntax_tree::node_ptr const& v )
 {
-	module_semantic_->get_or_create_semantic(v);
+	return module_semantic_->get_or_create_semantic(v);
 }
 
 std::string semantic_analyser::unique_structure_name()
@@ -1859,6 +1859,16 @@ std::string semantic_analyser::unique_structure_name()
 	boost::uuids::random_generator gen;
 	boost::uuids::uuid u = gen();
 	return std::string("__unnamed_struct_") + boost::uuids::to_string(u);
+}
+
+symbol* semantic_analyser::get_symbol(node* v)
+{
+	return module_semantic_->get_symbol(v);
+}
+
+symbol* semantic_analyser::get_symbol(node_ptr const& v)
+{
+	return module_semantic_->get_symbol( v.get() );
 }
 
 // function_register

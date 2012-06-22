@@ -1,5 +1,4 @@
 #include <sasl/include/syntax_tree/node.h>
-#include <sasl/include/semantic/semantic_info.h>
 
 using namespace boost;
 

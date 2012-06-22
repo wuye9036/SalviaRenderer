@@ -190,7 +190,7 @@ struct jit_fixture {
 	~jit_fixture(){}
 
 	shared_ptr<driver>		drv;
-	shared_ptr<symbol>		root_sym;
+	symbol*					root_sym;
 	shared_ptr<jit_engine>	je;
 	shared_ptr<diag_chat>	diags;
 };
