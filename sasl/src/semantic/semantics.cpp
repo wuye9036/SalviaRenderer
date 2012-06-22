@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/pety.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/program.h>
+#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/enums/builtin_types.h>
 #include <salviar/include/shader.h>
@@ -73,27 +74,31 @@ BEGIN_NS_SASL_SEMANTIC();
 class module_semantic_impl: public module_semantic
 {
 public:
-	module_semantic_impl(): node_semantic_pool_( sizeof(node_semantic) )
+	module_semantic_impl()
+		: node_semantic_pool_( sizeof(node_semantic) )
+		, symbol_pool_( sizeof(symbol) )
 	{
-		pety_ = pety_t::create();
-		root_symbol_ = symbol::create_root();
-		diag_chat_ = diag_chat::create();
-		pety_->root_symbol( root_symbol_.get() );
+		pety_		= pety_t::create(this);
+		root_symbol_= symbol::create_root(this);
+		diag_chat_	= diag_chat::create();
+
+		pety_->root_symbol(root_symbol_);
 	}
 
 	~module_semantic_impl()
 	{
 		clean_node_semantics();
+		clean_symbols();
 	}
 
-	virtual symbol_ptr root_symbol() const
+	virtual symbol* root_symbol() const
 	{
 		return root_symbol_;
 	}
 
 	virtual program_ptr root_program() const
 	{
-		return root_symbol_->node()->as_handle<program>();
+		return root_symbol_->associated_node()->as_handle<program>();
 	}
 
 	virtual pety_t* pety() const
@@ -136,23 +141,40 @@ public:
 		return intrinsics_;
 	}
 
-	virtual node_semantic* get(node const& v) const
+	virtual node_semantic* get_semantic(node const* v) const
 	{
 		unordered_map<node const*, node_semantic*>::const_iterator it
-			= semantics_dict_.find(&v);
+			= semantics_dict_.find(v);
 		if( it == semantics_dict_.end() ){ return NULL; }
 		return it->second;
 	}
 
-	virtual node_semantic* get_or_create( node const& v )
+	virtual node_semantic* get_or_create_semantic(node const* v)
 	{
-		node_semantic* ret = get(v);
+		node_semantic* ret = get_semantic(v);
 		if( ret == NULL )
 		{
 			ret = new_node_sem();
-			semantics_dict_.insert( make_pair(&v, ret) );
+			semantics_dict_.insert( make_pair(v, ret) );
 		}
 		return ret;
+	}
+
+	virtual symbol* get_symbol(sasl::syntax_tree::node*) const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return NULL;
+	}
+
+	virtual symbol* create_symbol(symbol*, sasl::syntax_tree::node*, std::string const&)
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return NULL;
+	}
+
+	virtual void	link_symbol(sasl::syntax_tree::node*, symbol*)
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
 private:
@@ -161,6 +183,7 @@ private:
 		node_semantic* ret = static_cast<node_semantic*>( node_semantic_pool_.malloc() );
 		memset( ret, 0, sizeof(node_semantic) );
 		ret->owner(this); 
+		ret->tid(-1);
 		return ret;
 	}
 
@@ -172,17 +195,28 @@ private:
 		}
 	}
 
+	void clean_symbols()
+	{
+		for(vector<symbol*>::iterator it = symbols_.begin(); it != symbols_.end(); ++it )
+		{
+			(*it)->~symbol();
+		}
+	}
 	pety_t_ptr		pety_;
-	symbol_ptr		root_symbol_;
+	program_ptr		root_node_;
+	symbol*			root_symbol_;
 	diag_chat_ptr	diag_chat_;
 
 	vector<symbol*> global_vars_;
 	vector<symbol*> functions_;
 	vector<symbol*> intrinsics_;
 
-	boost::pool<> node_semantic_pool_;
-	vector<node_semantic*> semantics_;
-	unordered_map<node const*, node_semantic*> semantics_dict_;
+	boost::pool<>			node_semantic_pool_;
+	boost::pool<>			symbol_pool_;
+	vector<node_semantic*>	semantics_;
+	vector<symbol*>			symbols_;
+	unordered_map<node const*, node_semantic*>	semantics_dict_;
+	unordered_map<node const*, symbol*>			symbols_dict_;
 };
 
 string const& node_semantic::function_name() const
@@ -306,7 +340,7 @@ void node_semantic::const_value(string const& lit, literal_classifications lit_c
 	}
 
 	tid_ = owner_->pety()->get(value_btc);
-	proto_type_ = NULL;
+	proto_type_ = owner_->pety()->get_proto_by_builtin(value_btc);
 }
 
 std::string node_semantic::const_string() const
@@ -321,11 +355,135 @@ void node_semantic::const_value( std::string const& v )
 		string_constant_ = new string(v);
 	}
 	*string_constant_ = v;
+	tid(-1);
+}
+
+salviar::semantic_value const& node_semantic::semantic_value_ref() const
+{
+	if( !semantic_value_ )
+	{
+		const_cast<node_semantic*>(this)->semantic_value_
+			= new salviar::semantic_value();
+	}
+	return *semantic_value_;
+}
+
+builtin_types node_semantic::value_builtin_type() const
+{
+	return proto_type_ ? builtin_types::none : proto_type_->tycode;
+}
+
+void node_semantic::tid(int v)
+{
+	if( tid_ != v )
+	{ 
+		tid_ = v;
+		proto_type_ = owner_->pety()->get_proto(tid_);
+	}
+}
+
+node_semantic::node_semantic( node_semantic const& )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+node_semantic& node_semantic::operator=( node_semantic const& )
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return *this;
+}
+
+tynode* node_semantic::ty_proto() const
+{
+	return proto_type_;
+}
+
+void node_semantic::ty_proto(tynode* ty, symbol* scope)
+{
+	tid( owner_->pety()->get(ty, scope) );
 }
 
 module_semantic_ptr module_semantic::create()
 {
 	return module_semantic_ptr( new module_semantic_impl() );
+}
+
+int32_t swizzle_field_name_to_id( char ch ){
+	switch( ch ){
+	case 'x':
+	case 'r':
+		return 1;
+	case 'y':
+	case 'g':
+		return 2;
+	case 'z':
+	case 'b':
+		return 3;
+	case 'w':
+	case 'a':
+		return 4;
+	}
+	return 0;
+}
+
+int32_t encode_swizzle( char _1st, char _2nd, char _3rd, char _4th ){
+	int32_t swz = 0;
+
+	if( _1st == 0 ){
+		return 0;
+	} else {
+		assert( swizzle_field_name_to_id(_1st) );
+		swz = swizzle_field_name_to_id(_1st);
+	}
+
+	if( _2nd == 0){
+		return swz;
+	} else {
+		assert( swizzle_field_name_to_id(_2nd) );
+		swz &= ( _2nd << 8);
+	}
+
+	if( _3rd == 0){
+		return swz;
+	} else {
+		assert( swizzle_field_name_to_id(_3rd) );
+		swz &= ( _3rd << 16);
+	}
+
+	assert( swizzle_field_name_to_id(_4th) );
+	swz &= ( _4th << 24);
+
+	return swz;
+}
+
+int32_t encode_swizzle( int& dest_size, int& min_src_size, char const* masks ){
+	min_src_size = 0;
+	dest_size = 0;
+	int32_t swz = 0;
+	for( char const* p = &masks[0];;++p){
+		if( *p ){
+			int32_t field_swz = swizzle_field_name_to_id(*p);
+			assert( field_swz );
+			swz += ( field_swz << (dest_size * 8) );
+			if( field_swz > min_src_size ){
+				min_src_size = field_swz;
+			}
+			++dest_size;
+		} else {
+			break;
+		}
+	}
+
+	return swz;
+}
+
+int32_t encode_sized_swizzle( int size )
+{
+	int32_t swz = 0;
+	for( int32_t i = 1; i <= size; ++i ){
+		swz &= ( i << (i-1) * 8 );
+	}
+	return swz;
 }
 
 END_NS_SASL_SEMANTIC();

@@ -7,6 +7,7 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/common/diag_formatter.h
 	${SASL_HOME_DIR}/sasl/include/common/lex_context.h
 	${SASL_HOME_DIR}/sasl/include/common/token.h
+	${SASL_HOME_DIR}/sasl/include/common/scope_guard.h
 )
 
 set( SOURCE_FILES diag_chat.cpp diag_item.cpp token.cpp diag_formatter.cpp)

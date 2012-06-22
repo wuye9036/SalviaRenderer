@@ -1,9 +1,10 @@
 #include <sasl/include/semantic/abi_info.h>
 
 #include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/host/utility.h>
+#include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/math.h>
@@ -43,31 +44,31 @@ BEGIN_NS_SASL_SEMANTIC();
 using namespace sasl::utility::ops;
 
 abi_info::abi_info()
-	: mod(NULL), entry_point(NULL), lang(salviar::lang_none)
+	: module_sem_(NULL), entry_point_(NULL), lang(salviar::lang_none)
 {
 	memset( counts, 0, sizeof(counts) );
 	memset( offsets, 0, sizeof(offsets) );
 }
 
 void abi_info::module( shared_ptr<module_semantic> const& v ){
-	mod = v.get();
+	module_sem_ = v.get();
 }
 
 bool abi_info::is_module( shared_ptr<module_semantic> const& v ) const{
-	return mod == v.get();
+	return module_sem_ == v.get();
 }
 
-void abi_info::entry( shared_ptr<symbol> const& v ){
-	entry_point = v.get();
-	entry_point_name = entry_point->mangled_name();
+void abi_info::entry( symbol* v ){
+	entry_point_ = v;
+	entry_point_name_ = entry_point_->mangled_name();
 }
 
-bool abi_info::is_entry( shared_ptr<symbol> const& v ) const{
-	return entry_point == v.get();
+bool abi_info::is_entry( symbol* v ) const{
+	return entry_point_ == v;
 }
 
 std::string abi_info::entry_name() const{
-	return entry_point_name;
+	return entry_point_name_;
 }
 
 bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream )
@@ -143,7 +144,7 @@ void abi_info::add_global_var(symbol* v, tynode_ptr tyn)
 		assert(false);
 	}
 
-	si->internal_type = tyn->si_ptr<type_info_si>()->entry_id();
+	si->internal_type = module_sem_->get_semantic(tyn)->tid();
 	si->usage = su_buffer_in;
 
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
@@ -199,7 +200,7 @@ sv_layout* abi_info::alloc_output_storage( salviar::semantic_value const& sem ){
 
 // Update ABI Information
 void abi_info::compute_layout(){
-	if ( !mod || !entry_point ) return;
+	if ( !module_sem_ || !entry_point_ ) return;
 
 	if ( lang == salviar::lang_general ){
 		return;

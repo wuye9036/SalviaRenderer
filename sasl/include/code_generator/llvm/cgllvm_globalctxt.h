@@ -37,13 +37,16 @@ public:
 	virtual void dump( std::ostream& ostr ) const;
 
 	virtual llvm::LLVMContext& context();
+	llvm::Type*	entry_param_type( salviar::sv_usage st ) const;
+	void		entry_param_type( salviar::sv_usage st, llvm::Type* t );
 
 	~llvm_module_impl();
 
 protected:
 	boost::shared_ptr<llvm::LLVMContext> lctxt;
 	boost::shared_ptr<llvm::DefaultIRBuilder> irbuilder;
-	
+	llvm::Type* param_types[salviar::storage_usage_count];
+
 	llvm::Module* mod;
 
 	mutable bool have_mod;
@@ -51,11 +54,7 @@ protected:
 
 class cgllvm_modvs: public llvm_module_impl{
 public:
-	llvm::Type* entry_param_type( salviar::sv_usage st ) const;
-	void entry_param_type( salviar::sv_usage st, llvm::Type* t );
 
-protected:
-	llvm::Type* param_types[salviar::storage_usage_count];
 };
 
 END_NS_SASL_CODE_GENERATOR();

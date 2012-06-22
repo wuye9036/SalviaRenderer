@@ -22,7 +22,8 @@ namespace llvm{
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 // Code generation for SIMD( Single Instruction Multiple Data )
-class cgllvm_simd: public cgllvm_impl, public cgs_simd{
+class cgllvm_simd: public cgllvm_impl
+{
 
 public:
 	typedef cgllvm_impl parent_class;
@@ -61,7 +62,7 @@ public:
 	SASL_VISIT_DCL( labeled_statement );
 
 protected:
-	cg_service* service() const;
+	cgs_simd*	service() const;
 	abis		local_abi( bool is_c_compatible ) const;
 
 	void	create_entries();

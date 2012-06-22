@@ -11,28 +11,20 @@ using boost::shared_ptr;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 template <typename NodeT>
-any& cgllvm_impl::visit_child( any& child_ctxt, const any& init_data, shared_ptr<NodeT> const& child )
+void cgllvm_impl::visit_child(shared_ptr<NodeT> const& child)
 {
-	child_ctxt = init_data;
-	return visit_child( child_ctxt, child );
-}
-
-template <typename NodeT>
-any& cgllvm_impl::visit_child( any& child_ctxt, shared_ptr<NodeT> const& child )
-{
-	child->accept( this, &child_ctxt );
-	return child_ctxt;
+	child->accept(this, NULL);
 }
 
 template<typename NodeT>
-cgllvm_sctxt* cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if_need ){
+node_context* cgllvm_impl::node_ctxt( shared_ptr<NodeT> const& nd, bool create_if_need ){
 	if ( !nd ){ return NULL; }
 	node* ptr = static_cast<node*>(nd.get());
 	return node_ctxt( ptr, create_if_need );
 }
 
 template <typename NodeT>
-cgllvm_sctxt* cgllvm_impl::node_ctxt( NodeT const& nd, bool create_if_need /*= false */ )
+node_context* cgllvm_impl::node_ctxt( NodeT const& nd, bool create_if_need /*= false */ )
 {
 	return node_ctxt( (node*)(&nd), create_if_need );
 }

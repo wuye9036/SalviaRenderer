@@ -9,7 +9,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgs_simd: public cg_service
 {
-protected:
+public:
 	abis intrinsic_abi() const;
 
 	virtual void store( value_t& lhs, value_t const& rhs );
@@ -17,10 +17,10 @@ protected:
 	value_t emit_and(value_t const& lhs, value_t const& rhs);
 	value_t emit_or (value_t const& lhs, value_t const& rhs);
 
-	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
-	virtual value_t cast_i2f ( value_t const& v, value_tyinfo* dest_tyi );
-	virtual value_t cast_f2i ( value_t const& v, value_tyinfo* dest_tyi );
-	virtual value_t cast_f2f ( value_t const& v, value_tyinfo* dest_tyi );
+	virtual value_t cast_ints( value_t const& v, cg_type* dest_tyi );
+	virtual value_t cast_i2f ( value_t const& v, cg_type* dest_tyi );
+	virtual value_t cast_f2i ( value_t const& v, cg_type* dest_tyi );
+	virtual value_t cast_f2f ( value_t const& v, cg_type* dest_tyi );
 	virtual value_t cast_i2b ( value_t const& v );
 	virtual value_t cast_f2b ( value_t const& v );
 
@@ -30,7 +30,7 @@ protected:
 	virtual value_t emit_ddx( value_t const& v );
 	virtual value_t emit_ddy( value_t const& v );
 	
-	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo, builtin_types hint );
+	value_t create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	abis param_abi( bool c_compatible ) const;

@@ -20,10 +20,19 @@
 
 #include <vector>
 
+namespace sasl
+{
+	namespace semantic
+	{
+		class module_semantic;
+		class node_semantic;
+	}
+}
+
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class value_t;
-class cgllvm_sctxt;
+struct node_context;
 class llvm_module_impl;
 class cg_service;
 
@@ -32,8 +41,10 @@ class cg_service
 	friend class value_t;
 
 public:
-	typedef boost::function< cgllvm_sctxt* (sasl::syntax_tree::node*, bool) > node_ctxt_fn;
-	virtual bool initialize( llvm_module_impl* mod, node_ctxt_fn const& fn );
+	virtual bool initialize(
+		llvm_module_impl* mod, module_context* ctxt,
+		sasl::semantic::module_semantic* sem
+		);
 	virtual bool register_external_intrinsic();
 
 	/// @name Service States
@@ -132,13 +143,13 @@ public:
 	/// @name Emit type casts
 	/// @{
 	/// Cast between integer types.
-	virtual value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	virtual value_t cast_ints( value_t const& v, cg_type* dest_tyi ) = 0;
 	/// Cast integer to float.
-	virtual value_t cast_i2f ( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	virtual value_t cast_i2f ( value_t const& v, cg_type* dest_tyi ) = 0;
 	/// Cast float to integer.
-	virtual value_t cast_f2i ( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	virtual value_t cast_f2i ( value_t const& v, cg_type* dest_tyi ) = 0;
 	/// Cast between float types.
-	virtual value_t cast_f2f ( value_t const& v, value_tyinfo* dest_tyi ) = 0;
+	virtual value_t cast_f2f ( value_t const& v, cg_type* dest_tyi ) = 0;
 	/// Cast integer to bool
 	virtual value_t cast_i2b ( value_t const& v ) = 0;
 	/// Cast float to bool
@@ -148,7 +159,7 @@ public:
 	/// Cast vector to scalar
 	virtual value_t cast_v2s ( value_t const& v );
 	/// Bit casts
-	virtual value_t cast_bits(value_t const& v, value_tyinfo* dest_tyi);
+	virtual value_t cast_bits(value_t const& v, cg_type* dest_tyi);
 	/// @}
 
 	/// @name Emit statement
@@ -204,7 +215,7 @@ public:
 	virtual void break_(){}
 	virtual void continue_(){}
 
-	virtual void push_fn( function_t const& fn );
+	virtual void push_fn(function_t* fn);
 	virtual void pop_fn();
 	virtual void set_insert_point( insert_point_t const& ip );
 	virtual insert_point_t insert_point() const;
@@ -222,36 +233,36 @@ public:
 	/// @{
 	value_t extend_to_vm( value_t const&, builtin_types hint );
 
-	function_t fetch_function( boost::shared_ptr<sasl::syntax_tree::function_type> const& fn_node );
+	function_t* fetch_function(sasl::syntax_tree::function_type* fn_node);
 	
 	template <typename T>
-	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
+	value_t create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
 		Value* ll_val = ConstantInt::get( IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value );
 		return create_scalar( ll_val, tyinfo, hint );
 	}
 
 	template <typename T>
-	value_t create_constant_scalar( T const& v, value_tyinfo* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
+	value_t create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
 		Value* ll_val = ConstantFP::get( Type::getFloatTy( context() ), v );
 		return create_scalar( ll_val, tyinfo, hint );
 	}
-	virtual value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo, builtin_types hint ) = 0;
+	virtual value_t create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint ) = 0;
 
-	value_t null_value( value_tyinfo* tyinfo, abis abi );
+	value_t null_value( cg_type* tyinfo, abis abi );
 	value_t null_value( builtin_types bt, abis abi );
 	value_t undef_value( builtin_types bt, abis abi );
 
-	value_t create_constant_int( value_tyinfo* tyinfo, builtin_types bt, abis abi, uint64_t v );
+	value_t create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v );
 
-	value_t create_value( value_tyinfo* tyinfo, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( cg_type* tyinfo, llvm::Value* val, value_kinds k, abis abi );
 	value_t create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
-	value_t create_value( value_tyinfo* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
+	value_t create_value( cg_type* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
 
-	value_t create_variable( value_tyinfo const*, abis abi, std::string const& name );
+	value_t create_variable( cg_type const*, abis abi, std::string const& name );
 	value_t create_variable( builtin_types bt, abis abi, std::string const& name );
 
 	virtual value_t create_vector( std::vector<value_t> const& scalars, abis abi ) = 0;
-	virtual value_t create_value_by_scalar( value_t const& scalar, value_tyinfo* tyinfo, builtin_types hint );
+	virtual value_t create_value_by_scalar( value_t const& scalar, cg_type* tyinfo, builtin_types hint );
 	/// @}
 
 	/// @name Utilities
@@ -268,15 +279,15 @@ public:
 	/// @name Type emitters
 	/// @{
 	/// Create tyinfo.
-	boost::shared_ptr<value_tyinfo> create_tyinfo( boost::shared_ptr<sasl::syntax_tree::tynode> const& tyn );
+	cg_type* create_ty( sasl::syntax_tree::tynode* tyn );
 	/// Get member type information is type is aggregated.
-	value_tyinfo* member_tyinfo( value_tyinfo const* agg, size_t index ) const;
+	cg_type* member_tyinfo( cg_type const* agg, size_t index ) const;
 	/// @}
 	
 	/// @name Bridges
 	/// @{
 	llvm::Type* type_( builtin_types bt, abis abi );
-	llvm::Type* type_( value_tyinfo const*, abis abi );
+	llvm::Type* type_( cg_type const*, abis abi );
 	template <typename T>
 	llvm::ConstantInt* int_( T v ){
 		return llvm::ConstantInt::get( context(), apint(v) );
@@ -322,8 +333,11 @@ public:
 	virtual abis			param_abi( bool is_c_compatible ) const = 0;
 			abis			promote_abi( abis abi0, abis abi1 );
 			abis			promote_abi( abis abi0, abis abi1, abis abi2 );
-	node_ctxt_fn			node_ctxt;
 
+	node_context*			get_node_context( sasl::syntax_tree::node* );
+	node_context*			get_or_create_node_context( sasl::syntax_tree::node* );
+	sasl::semantic::node_semantic*
+							get_node_semantic( sasl::syntax_tree::node* );
 protected:
 	enum intrin_ids
 	{
@@ -356,11 +370,14 @@ protected:
 		intrins_count
 	};
 
-	std::vector<function_t> fn_ctxts;
-	llvm_intrin_cache		intrins;
-	llvm::Function*			external_intrins[intrins_count];
-	llvm_module_impl*		mod_impl;
-	value_t					exec_mask;
+	sasl::semantic::module_semantic*	sem_;
+	llvm_module_impl*					llvm_mod_;
+	module_context*						ctxt_;
+	
+	std::vector<function_t*>			fn_ctxts;
+	llvm_intrin_cache					intrins;
+	llvm::Function*						external_intrins[intrins_count];
+	value_t								exec_mask;
 	
 	value_t emit_cmp(
 		value_t const& lhs, value_t const& rhs,

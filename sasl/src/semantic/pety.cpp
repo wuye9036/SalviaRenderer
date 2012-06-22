@@ -4,7 +4,7 @@
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/utility.h>
 #include <sasl/include/semantic/name_mangler.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/builtin_types.h>
 #include <eflib/include/diagnostics/assert.h>
@@ -19,7 +19,7 @@
 
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
-
+using eflib::polymorphic_cast;
 using boost::make_shared;
 using boost::shared_ptr; // prevent conflicting with std::tr1.
 using boost::shared_polymorphic_cast;
@@ -27,16 +27,16 @@ using boost::unordered_map;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-tid_t get_node_tid( node const* nd ){
+tid_t get_node_tid( module_semantic* msem, node const* nd ){
 	if( !nd ) { return -1; }
-	shared_ptr<type_info_si> tinfo = extract_semantic_info<type_info_si>(*nd);
+	node_semantic* tinfo = msem->get_semantic(nd);
 	if( !tinfo ) { return -1; }
-	return tinfo->entry_id();
+	return tinfo->tid();
 }
 
-tid_t get_symbol_tid( shared_ptr<symbol> const& sym ){
+tid_t get_symbol_tid( module_semantic* msem, symbol* sym ){
 	if( !sym ) { return -1; }
-	return get_node_tid( sym->node().get() );
+	return get_node_tid( msem, sym->associated_node() );
 }
 
 unordered_map<builtin_types, std::string> bt_to_name;
@@ -127,13 +127,13 @@ std::string name_of_unqualified_type(tynode* typespec){
 	node_ids actual_node_type = typespec->node_class();
 
 	if( actual_node_type == node_ids::alias_type ){
-		return typespec->as_handle<alias_type>()->alias->str;
+		return polymorphic_cast<alias_type*>(typespec)->alias->str;
 	} else if( actual_node_type == node_ids::builtin_type ){
 		return builtin_type_name( typespec->tycode );
 	} else if ( actual_node_type == node_ids::function_type ){
-		return mangle( typespec->as_handle<function_type>() );
+		return mangle( polymorphic_cast<function_type*>(typespec) );
 	} else if ( actual_node_type == node_ids::struct_type ){
-		return typespec->as_handle<struct_type>()->name->str;
+		return polymorphic_cast<struct_type*>(typespec)->name->str;
 	}
 
 	assert( !"Type type code is unrecognized!" );
@@ -147,37 +147,35 @@ pety_item_t::pety_item_t()
 {
 }
 
-// type_manager
-
-tid_t pety_t::get( tynode_ptr const& node, symbol* parent ){
-	/////////////////////////////////////////////////////
-	// if node has id yet, return it.
-	return get(node.get(), parent);
-}
-
 tynode* pety_t::get_proto(tid_t id)
 {
-	return id < 0 ? NULL : items_[id].stored.get();
+	return id < 0 ? NULL : type_items_[id].stored.get();
+}
+
+tynode* pety_t::get_proto_by_builtin(builtin_types bt)
+{
+	return get_proto( get(bt) );
 }
 
 // Get type id by an builtin type code
-tid_t pety_t::get( const builtin_types& btc ){
+tid_t pety_t::get(builtin_types const& btc)
+{
 	// If it existed in symbol, return it.
 	// Otherwise create a new type and push into type manager.
-	tid_t ret_id = get_symbol_tid( root_symbol_->find( builtin_type_name( btc ) ) );
+	tid_t ret_id = get_symbol_tid( owner_, root_symbol_->find( builtin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
-		shared_ptr< builtin_type > bt = create_node<builtin_type>( token_t::null(), token_t::null() );
+		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
 		bt->tycode = btc;
-		return get( bt, root_symbol_ );
+		return get(bt.get(), root_symbol_);
 	} else {
 		return ret_id;
 	}
 }
 
-tid_t pety_t::get( sasl::syntax_tree::tynode* v, symbol* scope )
+tid_t pety_t::get(tynode* v, symbol* scope)
 {
 	// Return id if existed.
-	tid_t ret = get_node_tid(v);
+	tid_t ret = get_node_tid(owner_, v);
 	if( ret != -1 ){ return ret; }
 
 	// otherwise process the node for getting right id;
@@ -188,9 +186,9 @@ tid_t pety_t::get( sasl::syntax_tree::tynode* v, symbol* scope )
 	{
 		tid_t decoratee_id = get(inner_type, scope);
 		if( decoratee_id == -1 ) { return -1; }
-		if( items_[decoratee_id].*qual >= 0 ){
+		if( type_items_[decoratee_id].*qual >= 0 ){
 			// The qualified node is in items yet.
-			return items_[decoratee_id].*qual;
+			return type_items_[decoratee_id].*qual;
 		} else {
 			// else allocate an new node.
 			return allocate_and_assign_id(v);
@@ -202,10 +200,10 @@ tid_t pety_t::get( sasl::syntax_tree::tynode* v, symbol* scope )
 		// Look up the name of type in symbol.
 		// If it did not exist, throw an error or add it into symbol(as an swallow copy).
 		std::string name = name_of_unqualified_type(v);
-		shared_ptr<symbol> sym = scope->find( name );
+		symbol* sym = scope->find( name );
 		if( sym )
 		{
-			return get_symbol_tid(sym);
+			return get_symbol_tid(owner_, sym);
 		}
 		else
 		{
@@ -214,15 +212,17 @@ tid_t pety_t::get( sasl::syntax_tree::tynode* v, symbol* scope )
 				return -1;
 			}
 			tid_t tid = allocate_and_assign_id(v);
-			scope->add_child(name, items_[tid].stored);
+			scope->add_named_child( name, type_items_[tid].stored.get() );
 			return tid;
 		}
 	}
 }
 
-shared_ptr<pety_t> pety_t::create()
+shared_ptr<pety_t> pety_t::create(module_semantic* owner)
 {
-	return shared_ptr<pety_t>( new pety_t() );
+	pety_t* ret = new pety_t();
+	ret->owner_ = owner;
+	return shared_ptr<pety_t>(ret);
 }
 
 void pety_t::root_symbol( symbol* sym )
@@ -236,13 +236,13 @@ tid_t pety_t::get_array( tid_t elem_type, size_t dimension )
 	for(size_t i = 1; i < dimension; ++i)
 	{
 		if( ret_tid == -1 ) break;
-		ret_tid = items_[ret_tid].a_qual;
+		ret_tid = type_items_[ret_tid].a_qual;
 	}
 	return ret_tid;
 }
 
-void assign_entry_id( tynode* node, pety_t* typemgr, tid_t id ){
-	get_or_create_semantic_info<type_si>( *node, typemgr )->entry_id( id );
+void assign_entry_id( module_semantic* msem, tynode* node, tid_t id ){
+	msem->get_or_create_semantic(node)->tid(id);
 }
 
 tid_t semantic::pety_t::allocate_and_assign_id(tynode* node){
@@ -253,12 +253,12 @@ tid_t semantic::pety_t::allocate_and_assign_id(tynode* node){
 	// add to pool and allocate an id
 	pety_item_t ret_entry;
 	ret_entry.stored = dup_node;
-	items_.push_back( ret_entry );
-	tid_t ret_id = (tid_t)( items_.size() - 1 );
+	type_items_.push_back( ret_entry );
+	tid_t ret_id = (tid_t)( type_items_.size() - 1 );
 
 	// assign id to source node and duplicated node.
-	assign_entry_id(node, this, ret_id);
-	assign_entry_id(dup_node.get(), this, ret_id);
+	assign_entry_id(owner_, node, ret_id);
+	assign_entry_id(owner_, dup_node.get(), ret_id);
 	return ret_id;
 }
 END_NS_SASL_SEMANTIC();

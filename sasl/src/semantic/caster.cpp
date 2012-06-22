@@ -1,7 +1,8 @@
 #include <sasl/include/semantic/caster.h>
 
-#include <sasl/include/semantic/semantic_infos.imp.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/type_checker.h>
+#include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node.h>
 
 BEGIN_NS_SASL_SEMANTIC();
@@ -84,8 +85,8 @@ caster_t::casts caster_t::cast(shared_ptr<node> dest, shared_ptr<node> src)
 
 caster_t::casts caster_t::cast( sst::node* dest, sst::node* src )
 {
-	tid_t dst_tid = dest->si_ptr<type_info_si>()->entry_id();
-	tid_t src_tid = src->si_ptr<type_info_si>()->entry_id();
+	tid_t dst_tid = get_semantic_(dest)->tid();
+	tid_t src_tid = get_semantic_(src)->tid();
 
 	cast_info const* caster1 = NULL;
 	cast_info const* caster2 = NULL;
@@ -97,7 +98,7 @@ caster_t::casts caster_t::cast( sst::node* dest, sst::node* src )
 
 	if( imm != -1 )
 	{
-		tynode* tyn = get_tynode(imm);
+		tynode* tyn = get_tynode_(imm);
 		assert(tyn);
 		caster1->get<4>()(tyn, src);
 		caster2->get<4>()(dest, src);
@@ -234,15 +235,9 @@ caster_t::cast_info const* caster_t::find_caster(
 	return NULL;
 }
 
-tynode* caster_t::get_tynode( tid_t tid )
+void caster_t::set_function_get_tynode( get_tynode_fn fn )
 {
-	assert(tynode_getter);
-	return tynode_getter(tid);
-}
-
-void caster_t::set_tynode_getter( get_tynode_fn fn )
-{
-	tynode_getter = fn;
+	get_tynode_ = fn;
 }
 
 END_NS_SASL_SEMANTIC();

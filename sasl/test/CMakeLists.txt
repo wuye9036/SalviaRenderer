@@ -37,7 +37,6 @@ if( SALVIA_ENABLE_SASL_SEPERATED_TESTS )
 
 	ADD_SUBDIRECTORY( parser_test )
 	ADD_SUBDIRECTORY( st_combinator_test )
-	ADD_SUBDIRECTORY( semantic_test )
 	ADD_SUBDIRECTORY( auto_test )
 	
 	if( SALVIA_BUILD_WITH_LLVM )

@@ -4,7 +4,6 @@
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_formatter.h>
 #include <sasl/include/common/diag_chat.h>

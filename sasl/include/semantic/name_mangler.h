@@ -25,7 +25,7 @@ struct operators;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-std::string mangle( boost::shared_ptr< ::sasl::syntax_tree::function_type > node );
+std::string mangle(sasl::syntax_tree::function_type* node);
 std::string operator_name( const operators& );
 
 END_NS_SASL_SEMANTIC();

@@ -23,7 +23,7 @@ namespace sasl{
 	}
 	namespace semantic{
 		EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
-		EFLIB_DECLARE_CLASS_SHARED_PTR(semantic_info);
+		EFLIB_DECLARE_CLASS_SHARED_PTR(node_semantic);
 	}
 	namespace code_generator{
 		EFLIB_DECLARE_CLASS_SHARED_PTR(codegen_context);
@@ -54,29 +54,6 @@ struct node: public boost::enable_shared_from_this<node>{
 		return boost::shared_dynamic_cast<T>( as_handle() );
 	}
 
-	sasl::semantic::symbol_ptr symbol() const;
-	void symbol(sasl::semantic::symbol_ptr);
-
-	sasl::semantic::semantic_info_ptr semantic_info() const;
-	void semantic_info(sasl::semantic::semantic_info_ptr) const;
-
-	template <typename T> T* si_ptr() const{
-#ifdef EFLIB_DEBUG
-		T* ret = dyn_siptr<T>();
-		if ( !ret && semantic_info() ){
-			assert(false);
-		}
-		return ret;
-#else
-		return static_cast<T*>( semantic_info().get() );
-#endif
-	}
-	
-	template <typename T> T* dyn_siptr() const{
-		T* ptr = dynamic_cast<T*>( semantic_info().get() );
-		return ptr;
-	}
-
 	token_t_ptr	token_begin() const;
 	token_t_ptr	token_end() const;
 	void		token_range(token_t_ptr const& tok_beg, token_t_ptr const& tok_end);
@@ -91,10 +68,6 @@ protected:
 
 	node_ids	type_id;
 	token_t_ptr	tok_beg, tok_end;
-	boost::weak_ptr<class sasl::semantic::symbol>	sym;
-
-	sasl::semantic::semantic_info_ptr			seminfo;
-	sasl::code_generator::codegen_context_ptr	cgctxt;
 
 	virtual ~node();
 };

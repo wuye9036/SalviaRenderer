@@ -47,6 +47,7 @@ class args_type_repr
 public:
 	args_type_repr();
 	args_type_repr& arg( boost::shared_ptr<sasl::syntax_tree::tynode> const& );
+	args_type_repr& arg( sasl::syntax_tree::node* );
 	std::string str();
 private:
 	std::vector< boost::shared_ptr<sasl::syntax_tree::tynode> > arg_tys;
@@ -57,6 +58,7 @@ class type_repr
 {
 public:
 	type_repr( boost::shared_ptr<sasl::syntax_tree::tynode> const& );
+	type_repr(sasl::syntax_tree::tynode*);
 	std::string str();
 private:
 	boost::shared_ptr<sasl::syntax_tree::tynode> ty;

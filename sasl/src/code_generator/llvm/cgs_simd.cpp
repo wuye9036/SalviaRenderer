@@ -4,7 +4,6 @@
 #include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantic_infos.h>
 
 #include <sasl/enums/enums_utility.h>
 
@@ -37,8 +36,8 @@ using sasl::syntax_tree::declaration;
 using sasl::syntax_tree::variable_declaration;
 using sasl::syntax_tree::struct_type;
 
-using sasl::semantic::storage_si;
-using sasl::semantic::type_info_si;
+using sasl::semantic::node_semantic;
+using sasl::semantic::node_semantic;
 
 using salviar::PACKAGE_ELEMENT_COUNT;
 using salviar::PACKAGE_LINE_ELEMENT_COUNT;
@@ -173,25 +172,25 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 	//inst->setAlignment(4);
 }
 
-value_t cgs_simd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_simd::cast_ints( value_t const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
-value_t cgs_simd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_simd::cast_i2f( value_t const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
-value_t cgs_simd::cast_f2i( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_simd::cast_f2i( value_t const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
-value_t cgs_simd::cast_f2f( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_simd::cast_f2f( value_t const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -242,7 +241,7 @@ abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
 	return abi_package;
 }
 
-value_t cgs_simd::create_scalar( llvm::Value* v, value_tyinfo* tyi, builtin_types hint )
+value_t cgs_simd::create_scalar( llvm::Value* v, cg_type* tyi, builtin_types hint )
 {
 	Type* ty = NULL;
 	if( tyi )

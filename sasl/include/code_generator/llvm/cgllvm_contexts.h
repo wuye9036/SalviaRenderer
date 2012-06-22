@@ -39,7 +39,60 @@ namespace sasl{
 	}
 }
 
+namespace llvm{
+	class LLVMContext;
+	class Module;
+	class ConstantFolder;
+	class Type;
+	template <bool preserveNames> class IRBuilderDefaultInserter;
+	template< bool preserveNames, typename T, typename Inserter
+	> class IRBuilder;
+	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
+		DefaultIRBuilder;
+}
+
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+class module_context
+{
+public:
+	static boost::shared_ptr<module_context> create();
+
+	virtual node_context*	get_node_context(sasl::syntax_tree::node*) const = 0;
+	virtual node_context*	get_or_create_node_context(sasl::syntax_tree::node*) = 0;
+	virtual cg_type*		create_cg_type() = 0;
+	virtual function_t*		create_cg_function() = 0;
+
+	virtual llvm::Module*	llvm_module() const = 0;
+	virtual llvm::Module*	take_ownership() = 0;
+	virtual llvm::DefaultIRBuilder*
+							llvm_builder() const = 0;
+	virtual llvm::LLVMContext&
+							context() const = 0;
+	virtual void			dump(std::ostream& ostr) const = 0;
+
+	virtual ~module_context(){}
+};
+
+struct node_context
+{
+	node_context(module_context* owner)
+		: owner(owner)
+		, function_scope(NULL)
+		, is_semantic_mode(false)
+		, ty(NULL)
+		, declarator_count(0)
+	{
+	}
+
+	module_context*	owner;
+	function_t*		function_scope;		///< Function type.
+	value_t			node_value;			///< Value attached to node.
+	bool			is_semantic_mode;	///< Expression is a semantic mode. In this mode, the memory get from semantic but not
+	cg_type*		ty;					///< Type attached to node.
+	insert_point_t	label_position;		///< For labeled statement
+	int				declarator_count;	///< The declarator count of declaration.
+};
 
 //////////////////////////////////////////////////////////
 // Context for SISD.
@@ -59,16 +112,16 @@ struct cgllvm_sctxt_env{
 	insert_point_t break_to;
 
 	/// Type information used by declarator.
-	boost::shared_ptr<value_tyinfo> tyinfo;
+	boost::shared_ptr<cg_type> tyinfo;
 
-	cgllvm_sctxt* parent_struct;
+	cgllvm_sctxt*			parent_struct;
 
-	llvm::BasicBlock* block;
+	llvm::BasicBlock*		block;
 	
 	/// Current symbol scope.
-	boost::weak_ptr<sasl::semantic::symbol> sym;
+	sasl::semantic::symbol* sym;
 
-	/// The variable which will pass in initilizer to generate initialization code.
+	/// The variable which will pass in initializer to generate initialization code.
 	boost::weak_ptr<sasl::syntax_tree::node> variable_to_fill;
 };
 
@@ -83,7 +136,7 @@ struct cgllvm_sctxt_data{
 	/// Expression is a semantic mode. In this mode, the memory get from semantic but not
 	bool semantic_mode;
 	/// Type attached to node.
-	boost::shared_ptr<value_tyinfo>	tyinfo;
+	boost::shared_ptr<cg_type>	tyinfo;
 	/// For labeled statement
 	insert_point_t position;
 	/// The declarator count of declaration.
@@ -118,8 +171,8 @@ public:
 	/// @name Accessors.
 	/// Expose members in environment and data for easily using.
 	/// @{
-	value_tyinfo* get_typtr() const;
-	boost::shared_ptr<value_tyinfo> get_tysp() const;
+	cg_type* get_typtr() const;
+	boost::shared_ptr<cg_type> get_tysp() const;
 
 	value_t const& value() const;
 	value_t& value();

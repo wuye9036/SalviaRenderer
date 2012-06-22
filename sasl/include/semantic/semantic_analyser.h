@@ -33,7 +33,7 @@ BEGIN_NS_SASL_SEMANTIC();
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 EFLIB_DECLARE_CLASS_SHARED_PTR(caster_t);
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
-EFLIB_DECLARE_CLASS_SHARED_PTR(storage_si);
+EFLIB_DECLARE_CLASS_SHARED_PTR(node_semantic);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(sacontext);
 
 class semantic_analyser: public sasl::syntax_tree::syntax_tree_visitor{
@@ -98,10 +98,20 @@ private:
 	void parse_semantic(
 		sasl::common::token_t_ptr const& sem_tok,
 		sasl::common::token_t_ptr const& sem_idx_tok,
-		storage_si_ptr const& ssi
+		node_semantic* ssi
 		);
+	
+	node_semantic* get_node_semantic( sasl::syntax_tree::node* );
+	node_semantic* get_node_semantic( sasl::syntax_tree::node_ptr const& );
 
-	void mark_intrin_invoked_recursive( symbol_ptr const& sym );
+	node_semantic* get_or_create_semantic( sasl::syntax_tree::node* );
+	node_semantic* get_or_create_semantic( sasl::syntax_tree::node_ptr const& );
+
+	symbol* get_symbol( sasl::syntax_tree::node* );
+	symbol* get_symbol( sasl::syntax_tree::node_ptr const& );
+
+	static std::string unique_structure_name();
+	void mark_intrin_invoked_recursive(symbol* sym);
 
 	void add_cast();
 	void register_builtin_functions();
@@ -121,7 +131,6 @@ private:
 		function_register& operator % ( typenode_ptr const& par_type );
 		void operator >> ( typenode_ptr const& ret_type );
 
-		function_register& deps( std::string const& );
 		function_register& p( typenode_ptr const& par_type );
 		void r( typenode_ptr const& ret_type );
 		
@@ -134,7 +143,6 @@ private:
 		bool is_external;
 		bool is_partial_exec;
 		bool is_constr;
-		std::vector<std::string> intrinsic_deps;
 	};
 
 	function_register register_function(std::string const& name );
@@ -143,7 +151,6 @@ private:
 	void register_constructor_impl(
 		std::string const& name,	sasl::syntax_tree::builtin_type_ptr* tys, int total,
 		int param_scalar_counts, std::vector<sasl::syntax_tree::builtin_type_ptr>& param_tys );
-
 	void register_builtin_types();
 
 	void empty_caster( sasl::syntax_tree::node*, sasl::syntax_tree::node*);
@@ -163,10 +170,10 @@ private:
 	label_list_t		*label_list;
 	sasl::syntax_tree::node_ptr	variable_to_initialized;
 	sasl::syntax_tree::node_ptr generated_node;
-	bool		is_global_scope;
-	symbol_ptr	current_symbol;
-	int			declaration_tid;
-	int			member_counter;
+	bool	is_global_scope;
+	symbol*	current_symbol;
+	int		declaration_tid;
+	int		member_counter;
 };
 
 END_NS_SASL_SEMANTIC();

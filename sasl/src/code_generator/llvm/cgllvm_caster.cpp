@@ -3,9 +3,9 @@
 #include <eflib/include/platform/enable_warnings.h>
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
-#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/caster.h>
 #include <sasl/include/semantic/pety.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/utility.h>
 
@@ -18,31 +18,31 @@
 
 #include <vector>
 
-using ::llvm::IRBuilderBase;
-using ::llvm::IRBuilder;
-using ::llvm::Type;
-using ::llvm::Value;
-using ::llvm::VectorType;
+using llvm::IRBuilderBase;
+using llvm::IRBuilder;
+using llvm::Type;
+using llvm::Value;
+using llvm::VectorType;
 
-using ::sasl::semantic::encode_swizzle;
-using ::sasl::semantic::encode_sized_swizzle;
-using ::sasl::semantic::symbol;
-using ::sasl::semantic::caster_t;
-using ::sasl::semantic::tid_t;
-using ::sasl::semantic::pety_item_t;
-using ::sasl::semantic::type_info_si;
-using ::sasl::semantic::pety_t;
+using sasl::semantic::encode_swizzle;
+using sasl::semantic::encode_sized_swizzle;
+using sasl::semantic::symbol;
+using sasl::semantic::caster_t;
+using sasl::semantic::tid_t;
+using sasl::semantic::pety_item_t;
+using sasl::semantic::node_semantic;
+using sasl::semantic::pety_t;
 
-using ::sasl::syntax_tree::create_builtin_type;
-using ::sasl::syntax_tree::node;
-using ::sasl::syntax_tree::tynode;
+using sasl::syntax_tree::create_builtin_type;
+using sasl::syntax_tree::node;
+using sasl::syntax_tree::tynode;
 
-using ::boost::bind;
-using ::boost::function;
-using ::boost::make_shared;
-using ::boost::shared_polymorphic_cast;
-using ::boost::shared_ptr;
-using ::boost::shared_static_cast;
+using boost::bind;
+using boost::function;
+using boost::make_shared;
+using boost::shared_polymorphic_cast;
+using boost::shared_ptr;
+using boost::shared_static_cast;
 
 using std::vector;
 
@@ -52,7 +52,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cg_service;
 
-typedef function< cgllvm_sctxt* ( shared_ptr<node> const& ) > get_ctxt_fn;
+typedef function< node_context* ( shared_ptr<node> const& ) > get_ctxt_fn;
 
 class cgllvm_caster : public caster_t{
 public:
@@ -65,26 +65,26 @@ public:
 	{
 		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
 			// Overwrite source.
-			get_ctxt(src->as_handle())->value() = v;
+			get_ctxt(src->as_handle())->node_value = v;
 		} else {
 			// Store to dest.
-			if( get_ctxt(dest->as_handle())->value().storable() ){
-				get_ctxt(dest->as_handle())->value().store(v);
+			if( get_ctxt(dest->as_handle())->node_value.storable() ){
+				get_ctxt(dest->as_handle())->node_value.store(v);
 			} else {
-				get_ctxt(dest->as_handle())->value() = v;
+				get_ctxt(dest->as_handle())->node_value = v;
 			}
 		}
 	}
 	// TODO if dest == src, maybe some bad thing happen ...
 	void int2int(node* dest, node* src){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
-		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_ctxt(dest->as_handle());
+		node_context* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 
 		value_t casted = cgs->cast_ints(
-			src_ctxt->get_rvalue(),
-			dest_ctxt->data().tyinfo.get()
+			src_ctxt->node_value.to_rvalue(),
+			dest_ctxt->ty
 			);
 
 		store(dest, src, casted);
@@ -92,81 +92,81 @@ public:
 
 	void int2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_i2b( get_ctxt(src->as_handle())->value() );
+		value_t casted = cgs->cast_i2b( get_ctxt(src->as_handle())->node_value );
 		store(dest, src, casted);
 	}
 
 	void int2float(node* dest, node* src){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
-		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_ctxt(dest->as_handle());
+		node_context* src_ctxt = get_ctxt(src->as_handle());
 		
 		assert( src_ctxt != dest_ctxt );
 
 		value_t casted = cgs->cast_i2f(
-			src_ctxt->get_rvalue(),
-			dest_ctxt->data().tyinfo.get()
+			src_ctxt->node_value.to_rvalue(),
+			dest_ctxt->ty
 			);
 		store( dest, src, casted );
 	}
 
 	void float2int(node* dest, node* src){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
-		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_ctxt(dest->as_handle());
+		node_context* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 
 		value_t casted = cgs->cast_f2i(
-			src_ctxt->get_rvalue(),
-			dest_ctxt->data().tyinfo.get()
+			src_ctxt->node_value.to_rvalue(),
+			dest_ctxt->ty
 			);
-		cgs->store( dest_ctxt->value(), casted );
+		cgs->store( dest_ctxt->node_value, casted );
 	}
 
 	void float2float(node* dest, node* src){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
-		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_ctxt(dest->as_handle());
+		node_context* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 
 		value_t casted = cgs->cast_f2f(
-			src_ctxt->get_rvalue(),
-			dest_ctxt->data().tyinfo.get()
+			src_ctxt->node_value.to_rvalue(),
+			dest_ctxt->ty
 			);
-		cgs->store( dest_ctxt->value(), casted );
+		cgs->store( dest_ctxt->node_value, casted );
 	}
 
 	void float2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_f2b( get_ctxt(src->as_handle())->value() );
+		value_t casted = cgs->cast_f2b( get_ctxt(src->as_handle())->node_value );
 		store( dest, src, casted );
 	}
 
 	void scalar2vec1(node* dest, node* src){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
-		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_ctxt(dest->as_handle());
+		node_context* src_ctxt = get_ctxt(src->as_handle());
 		assert( src_ctxt != dest_ctxt );
-		store( dest, src, cgs->cast_s2v( src_ctxt->get_rvalue() ) );
+		store( dest, src, cgs->cast_s2v( src_ctxt->node_value.to_rvalue() ) );
 	}
 
 	void vec2scalar(node* dest, node* src){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
-		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_ctxt(dest->as_handle());
+		node_context* src_ctxt = get_ctxt(src->as_handle());
 		assert( src_ctxt != dest_ctxt );
-		store( dest, src, cgs->cast_v2s( src_ctxt->get_rvalue() ) );
+		store( dest, src, cgs->cast_v2s( src_ctxt->node_value.to_rvalue() ) );
 	}
 
 	void shrink_vector(node* dest, node* src, int source_size, int dest_size ){
-		cgllvm_sctxt* dest_ctxt = get_ctxt(dest->as_handle());
-		cgllvm_sctxt* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_ctxt(dest->as_handle());
+		node_context* src_ctxt = get_ctxt(src->as_handle());
 
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		value_t vector_value = dest_ctxt->get_rvalue();
+		value_t vector_value = dest_ctxt->node_value.to_rvalue();
 		size_t swz_code = encode_sized_swizzle(dest_size);
 
 		cgs->store(
-			dest_ctxt->value(),
+			dest_ctxt->node_value,
 			vector_value.swizzle(swz_code)
 			);
 	}
@@ -203,7 +203,7 @@ void add_builtin_casts(
 	)
 {
 	typedef caster_t::cast_t cast_t;
-	caster->set_tynode_getter( boost::bind(&pety_t::get_proto, pety, _1) );
+	caster->set_function_get_tynode( boost::bind(&pety_t::get_proto, pety, _1) );
 
 	shared_ptr<cgllvm_caster> cg_caster = shared_polymorphic_cast<cgllvm_caster>(caster);
 

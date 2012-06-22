@@ -7,7 +7,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/abi_analyser.h>
-#include <sasl/include/semantic/semantic_infos.imp.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/caster.h>
@@ -38,17 +38,14 @@ using namespace llvm;
 using namespace sasl::utility;
 
 using semantic::abi_info;
-using semantic::const_value_si;
-using semantic::extract_semantic_info;
+using semantic::node_semantic;
 using semantic::module_semantic;
-using semantic::storage_si;
 using semantic::operator_name;
-using semantic::statement_si;
 using semantic::symbol;
 using semantic::caster_t;
 using semantic::pety_item_t;
 using semantic::type_equal;
-using semantic::type_info_si;
+using semantic::node_semantic;
 
 using boost::shared_ptr;
 using boost::any;
@@ -80,11 +77,11 @@ SASL_VISIT_DEF( cast_expression ){
 	//visit_child( child_ctxt, child_ctxt_init, v.casted_type );
 	//visit_child( child_ctxt, child_ctxt_init, v.expr );
 
-	//shared_ptr<type_info_si> src_tsi = extract_semantic_info<type_info_si>( v.expr );
-	//shared_ptr<type_info_si> casted_tsi = extract_semantic_info<type_info_si>( v.casted_type );
+	//shared_ptr<node_semantic> src_tsi = extract_semantic_info<node_semantic>( v.expr );
+	//shared_ptr<node_semantic> casted_tsi = extract_semantic_info<node_semantic>( v.casted_type );
 
-	//if( src_tsi->entry_id() != casted_tsi->entry_id() ){
-	//	if( caster->try_cast( casted_tsi->entry_id(), src_tsi->entry_id() ) == caster_t::nocast ){
+	//if( src_tsi->tid() != casted_tsi->tid() ){
+	//	if( caster->try_cast( casted_tsi->tid(), src_tsi->tid() ) == caster_t::nocast ){
 	//		// Here is code error. Compiler should report it.
 	//		EFLIB_ASSERT_UNIMPLEMENTED();
 	//	}
@@ -111,33 +108,30 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 
 SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)
 {
-	any child_ctxt_init = *data;
-	sc_ptr( &child_ctxt_init )->clear_data();
+	EFLIB_UNREF_PARAM(data);
 
 	value_t ret_value;
-	builtin_types bt = v.left_expr->si_ptr<type_info_si>()->type_info()->tycode;
+	builtin_types bt = sem_->get_semantic(v.left_expr)->value_builtin_type();
 	if( is_scalar(bt) )
 	{
 		if( v.op == operators::logic_or ){
 			// return left ? left : right;
-			ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.left_expr, v.right_expr ) ;
+			ret_value = emit_short_cond(v.left_expr, v.left_expr, v.right_expr) ;
 		} else {
 			// return left ? right : left;
-			ret_value = emit_short_cond( child_ctxt_init, v.left_expr, v.right_expr, v.left_expr ) ;
+			ret_value = emit_short_cond(v.left_expr, v.right_expr, v.left_expr) ;
 		}
 	}
 	else
 	{
-		ret_value = emit_logic_op( child_ctxt_init, v.op, v.left_expr, v.right_expr );
+		ret_value = emit_logic_op(v.op, v.left_expr, v.right_expr);
 	}
 
-	sc_ptr(data)->value() = ret_value.to_rvalue();
-	node_ctxt( v, true )->copy( sc_ptr(data) );
+	node_ctxt(v,true)->node_value = ret_value.to_rvalue();
 }
 
 llvm_module_impl* cgllvm_general::mod_ptr(){
-	assert( dynamic_cast<llvm_module_impl*>( mod.get() ) );
-	return static_cast<llvm_module_impl*>( mod.get() );
+	return llvm_mod_.get();
 }
 
 END_NS_SASL_CODE_GENERATOR();

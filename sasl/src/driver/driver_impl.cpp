@@ -9,7 +9,6 @@
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/parser/parse_api.h>
 #include <sasl/include/parser/diags.h>

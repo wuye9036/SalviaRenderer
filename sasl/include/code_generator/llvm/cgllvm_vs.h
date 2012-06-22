@@ -72,16 +72,16 @@ private:
 
 	bool is_entry( llvm::Function* ) const;
 
-	cgllvm_modvs* mod_ptr();
+	llvm_module_impl* mod_ptr();
 
 	value_t layout_to_value(salviar::sv_layout* si);
-	void layout_to_sc(cgllvm_sctxt* psc, salviar::sv_layout* si, bool store_to_existed_value);
+	void layout_to_sc(node_context* psc, salviar::sv_layout* si, bool store_to_existed_value);
 
 	void create_entry_params();
 	void add_entry_param_type( salviar::sv_usage st, std::vector< llvm::Type* >& par_types );
 	void fill_llvm_type_from_si( salviar::sv_usage st );
 	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
-	void copy_to_agg_result( cgllvm_sctxt* data );
+	void copy_to_agg_result( node_context* data );
 
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;

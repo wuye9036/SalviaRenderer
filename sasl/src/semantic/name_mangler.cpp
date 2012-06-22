@@ -9,9 +9,10 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <sasl/enums/operators.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
+#include <eflib/include/metaprog/util.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/list_inserter.hpp>
@@ -21,15 +22,16 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <cassert>
 #include <stdio.h>
 
-using ::sasl::syntax_tree::array_type;
-using ::sasl::syntax_tree::builtin_type;
-using ::sasl::syntax_tree::expression;
-using ::sasl::syntax_tree::function_type;
-using ::sasl::syntax_tree::node;
-using ::sasl::syntax_tree::struct_type;
-using ::sasl::syntax_tree::tynode;
-using ::sasl::syntax_tree::variable_declaration;
+using sasl::syntax_tree::array_type;
+using sasl::syntax_tree::builtin_type;
+using sasl::syntax_tree::expression;
+using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::node;
+using sasl::syntax_tree::struct_type;
+using sasl::syntax_tree::tynode;
+using sasl::syntax_tree::variable_declaration;
 
+using eflib::polymorphic_cast;
 using namespace sasl::utility;
 
 //////////////////////////////////////////////////////////////////////////
@@ -65,7 +67,7 @@ static void initialize_lookup_table(){
 
 //////////////////////////////////////////////////////////////////////////
 // some free function for manging
-static void append( std::string& str, boost::shared_ptr<tynode> typespec );
+static void append( std::string& str, tynode* typespec );
 
 static void append( std::string& str, builtin_types btc, bool is_component = false ){
 	if ( is_scalar( btc ) ) {
@@ -99,12 +101,12 @@ static void append( std::string& str, type_qualifiers qual ){
 	str.append("Q");
 }
 
-static void append( std::string& str, boost::shared_ptr<struct_type> stype ){
+static void append( std::string& str, struct_type* stype ){
 	str.append("S");
 	str.append( stype->name->str );
 }
 
-static void append( std::string& str, boost::shared_ptr<array_type> atype ){
+static void append( std::string& str, array_type* atype ){
 	for ( size_t i_dim = 0; i_dim < atype->array_lens.size(); ++i_dim ){
 		str.append("A");
 		// str.append( atype->array_lens[i_dim] );
@@ -112,31 +114,32 @@ static void append( std::string& str, boost::shared_ptr<array_type> atype ){
 		//	str.append("Q");
 		// }
 	}
-	append( str, atype->elem_type );
+	append( str, atype->elem_type.get() );
 }
 
-static void append( std::string& str, boost::shared_ptr<tynode> typespec ){
+static void append( std::string& str, tynode* typespec ){
 	append(str, typespec->qual);
 	// append (str, scope_qualifier(typespec) );
 	if ( typespec->node_class() == node_ids::builtin_type ){
 		append( str, typespec->tycode );
 	} else if ( typespec->node_class() == node_ids::struct_type ) {
-		append( str, boost::shared_polymorphic_cast<struct_type>( typespec ) );
+		append( str, polymorphic_cast<struct_type*>(typespec) );
 	} else if( typespec->node_class() == node_ids::array_type ){
-		append( str, boost::shared_polymorphic_cast<array_type>(typespec) );
+		append( str, polymorphic_cast<array_type*>(typespec) );
 	} else if ( typespec->node_class() == node_ids::function_type ){
 		// append( str, boost::shared_polymorphic_cast<function_type>(typespec) );
 	}
 }
 
-
 BEGIN_NS_SASL_SEMANTIC();
 
-std::string mangle( boost::shared_ptr<function_type> mangling_function ){
+std::string mangle( module_semantic* sem, function_type* mangling_function ){
 	initialize_lookup_table();
 
 	// start char
-	std::string mangled_name = "M";
+	std::string mangled_name;
+	mangled_name.reserve(32);
+	mangled_name = "M";
 
 	// qualified name
 	// append( str, scope_qualifier( mangling_function ) );
@@ -147,8 +150,7 @@ std::string mangle( boost::shared_ptr<function_type> mangling_function ){
 
 	// parameter types
 	for (size_t i_param = 0; i_param < mangling_function->params.size(); ++i_param){
-		boost::shared_ptr<tynode> par_type
-			= type_info_si::from_node( mangling_function->params[i_param] );
+		tynode* par_type = sem->get_semantic( mangling_function->params[i_param] )->ty_proto();
 		append( mangled_name, par_type );
 		mangled_name.append( "@@" );
 	}

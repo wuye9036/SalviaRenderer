@@ -44,35 +44,21 @@ struct builtin_types;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class llvm_module;
-class llvm_module_impl;
-class cgllvm_sctxt;
-struct cgllvm_sctxt_data;
-struct cgllvm_sctxt_env;
+class  llvm_module;
+class  llvm_module_impl;
+struct node_context;
 
-typedef cgllvm_sctxt* sctxt_handle;
-
-class cgllvm : public sasl::syntax_tree::syntax_tree_visitor{
+class cgllvm_impl: public sasl::syntax_tree::syntax_tree_visitor
+{
 public:
-	virtual bool generate(
-		sasl::semantic::module_semantic* mod,
-		sasl::semantic::abi_info const* abii
-		) = 0;
-};
-
-class cgllvm_impl: public cgllvm{
-public:
-	boost::shared_ptr<llvm_module> cg_module() const;
-	bool generate(
-		sasl::semantic::module_semantic* mod,
-		sasl::semantic::abi_info const* abii
-		);
+	boost::shared_ptr<llvm_module> generated_module() const;
+	bool generate(sasl::semantic::module_semantic* msem, sasl::semantic::abi_info const* abii);
 
 	// Get context by node.
-	cgllvm_sctxt* node_ctxt( sasl::syntax_tree::node* n, bool create_if_need = false );
+	node_context* node_ctxt( sasl::syntax_tree::node* n, bool create_if_need = false );
 
 protected:
-	cgllvm_impl(): abii(NULL), msi(NULL), target_data(NULL){}
+	cgllvm_impl();
 	~cgllvm_impl();
 
 	SASL_VISIT_DCL( constant_expression );
@@ -121,13 +107,13 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression ) = 0;
 	
 	// Easy to visit child with context data.
-	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, const boost::any& child_ctxt_init, boost::shared_ptr<NodeT> const& child );
-	template <typename NodeT> boost::any& visit_child( boost::any& child_ctxt, boost::shared_ptr<NodeT> const& child );
+	template <typename NodeT> void visit_child(boost::shared_ptr<NodeT> const& child);
+	void visit_child(sasl::syntax_tree::node* child);
 
 	template <typename NodeT>
-	cgllvm_sctxt* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
+	node_context* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
 	template <typename NodeT>
-	cgllvm_sctxt* node_ctxt( NodeT const&, bool create_if_need = false );
+	node_context* node_ctxt( NodeT const&, bool create_if_need = false );
 
 	// Direct access member from module.
 	llvm::DefaultIRBuilder*	builder() const;
@@ -137,36 +123,31 @@ protected:
 protected:
 	virtual cg_service*		service() const = 0;
 	virtual abis			local_abi( bool c_compatible ) const = 0;
-	boost::shared_ptr<sasl::semantic::symbol>
-		find_symbol( cgllvm_sctxt*, std::string const& );
-	function_t* get_function( std::string const& name ) const;
+	sasl::semantic::symbol* find_symbol(std::string const&);
+	function_t*				get_function( std::string const& name ) const;
 
 	// Store global informations
-	sasl::semantic::module_semantic* msi;
-	sasl::semantic::abi_info const* abii;
+	sasl::semantic::module_semantic*	sem_;
+	boost::shared_ptr<module_context>	ctxt_;
+	boost::shared_ptr<llvm_module_impl>	llvm_mod_;
+	sasl::semantic::abi_info const*		abii;
+	boost::shared_ptr<sasl::semantic::caster_t>
+										caster;			///< For type conversation.
+	llvm::TargetData const *			target_data;
 
-	boost::shared_ptr<llvm_module_impl> mod;
-	
-	// For type conversation.
-	boost::shared_ptr< ::sasl::semantic::caster_t > caster;
-	llvm::TargetData const * target_data;
-
-	// Store node-context pairs.
-	typedef boost::unordered_map< sasl::syntax_tree::node*, boost::shared_ptr<cgllvm_sctxt> > ctxts_t;
-	ctxts_t ctxts ;
+	// Status
+	bool				semantic_mode_;
+	bool				msc_compatible_;
+	insert_point_t		continue_to_;
+	insert_point_t		break_to_;
+	cg_type*			current_cg_type_;		///< Type information used by declarator.
+	node_context*		parent_struct_;
+	llvm::BasicBlock*	block_;
+	sasl::semantic::symbol*
+						current_symbol_;		///< Current symbol scope.
+	sasl::syntax_tree::node*
+						variable_to_initialize_;	///< The variable which will pass in initializer to generate initialization code.
 };
-
-cgllvm_sctxt const * sc_ptr( const boost::any& any_val  );
-cgllvm_sctxt* sc_ptr( boost::any& any_val );
-
-cgllvm_sctxt const * sc_ptr( const boost::any* any_val  );
-cgllvm_sctxt* sc_ptr( boost::any* any_val );
-
-cgllvm_sctxt_data* sc_data_ptr( boost::any* any_val );
-cgllvm_sctxt_data const* sc_data_ptr( boost::any const* any_val );
-
-cgllvm_sctxt_env* sc_env_ptr( boost::any* any_val );
-cgllvm_sctxt_env const* sc_env_ptr( boost::any const* any_val );
 
 END_NS_SASL_CODE_GENERATOR()
 

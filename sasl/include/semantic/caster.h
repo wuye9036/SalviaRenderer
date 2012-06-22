@@ -25,7 +25,13 @@ BEGIN_NS_SASL_SEMANTIC();
 
 namespace sst = sasl::syntax_tree;
 
-typedef boost::function< sasl::syntax_tree::tynode* (tid_t) > get_tynode_fn;
+class node_semantic;
+
+typedef boost::function< sst::tynode* (tid_t) >
+	get_tynode_fn;
+typedef boost::function< node_semantic* (sst::node*) >
+	get_semantic_fn;
+
 class caster_t{
 public:
 	enum casts
@@ -39,6 +45,7 @@ public:
 	typedef boost::function<void (sst::node*, sst::node*)> cast_t;
 
 	caster_t();
+
 	void  add_cast(casts ct,			tid_t src, tid_t dest, cast_t conv);
 	void  add_cast(casts ct, int prior, tid_t src, tid_t dest, cast_t conv);
 	void  add_cast_auto_prior(casts ct, tid_t src, tid_t dest, cast_t conv);
@@ -52,7 +59,8 @@ public:
 	casts cast(boost::shared_ptr<sst::node> dest, boost::shared_ptr<sst::node> src);
 	casts cast(sst::node* dest, sst::node* src);
 
-	void set_tynode_getter( get_tynode_fn fn );
+	void set_function_get_tynode(get_tynode_fn fn);
+	void set_function_get_semantic(get_semantic_fn fn);
 
 	virtual ~caster_t(){}
 private:
@@ -65,8 +73,6 @@ private:
 		std::pair<tid_t /*src*/, tid_t /*dest*/>, size_t /*cast info index*/
 	> cast_info_dict_t;
 
-	sasl::syntax_tree::tynode* get_tynode( tid_t );
-
 	cast_info const* find_caster(
 		cast_info const*& first_caster, cast_info const*& second_caster,
 		tid_t& immediate_tid,
@@ -77,7 +83,10 @@ private:
 	std::vector<cast_info>			cast_infos;
 	cast_info_dict_t				cast_info_dict;
 	boost::bimap<tid_t, tid_t>		eql_casts;
-	get_tynode_fn					tynode_getter;
+
+	// Functions
+	get_tynode_fn					get_tynode_;
+	get_semantic_fn					get_semantic_;
 };
 
 END_NS_SASL_SEMANTIC();

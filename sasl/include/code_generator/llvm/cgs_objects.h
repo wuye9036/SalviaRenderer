@@ -12,7 +12,6 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/metaprog/util.h>
-
 #include <vector>
 
 namespace llvm
@@ -47,9 +46,15 @@ namespace sasl
 		struct tynode;
 		struct function_type;
 	}
+	namespace semantic
+	{
+		class module_semantic;
+	}
 }
 
 BEGIN_NS_SASL_CODE_GENERATOR();
+
+class module_context;
 
 enum abis{
 	abi_c,
@@ -83,7 +88,7 @@ enum value_kinds{
 	vkind_ref = 8
 };
 
-class value_tyinfo{
+class cg_type{
 public:
 	friend class cg_service;
 
@@ -93,7 +98,8 @@ public:
 		aggregated
 	};
 
-	value_tyinfo(
+	cg_type(module_context* owner);
+	cg_type(
 		sasl::syntax_tree::tynode* sty,
 		llvm::Type* ty_c,
 		llvm::Type* ty_llvm,
@@ -101,8 +107,8 @@ public:
 		llvm::Type* ty_pkg
 		);
 
-	value_tyinfo( value_tyinfo const& );
-	value_tyinfo& operator = ( value_tyinfo const& );
+	cg_type( cg_type const& );
+	cg_type& operator = ( cg_type const& );
 
 	sasl::syntax_tree::tynode* tyn_ptr() const;
 	boost::shared_ptr<sasl::syntax_tree::tynode> tyn_shared() const;
@@ -110,11 +116,12 @@ public:
 	llvm::Type* ty( abis abi ) const;
 
 protected:
-	value_tyinfo();
+	cg_type();
 
 	llvm::Type*					tys[4];
 	sasl::syntax_tree::tynode*	tyn;
 	classifications				cls;
+	module_context*				owner;
 };
 
 class value_t{
@@ -149,8 +156,8 @@ public:
 
 	value_t as_ref() const;
 
-	value_tyinfo*	tyinfo() const;				///< Get type information of value.
-	void			tyinfo(value_tyinfo*);		///< Set type information of value.
+	cg_type*	tyinfo() const;				///< Get type information of value.
+	void			tyinfo(cg_type*);		///< Set type information of value.
 
 	builtin_types	hint() const;				///< Get type hint. if type is not built-in type it returns builtin_type::none.
 	void			hint( builtin_types bt );	///< Set type hint.
@@ -185,7 +192,7 @@ protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
 	value_t(
-		value_tyinfo* tyinfo,
+		cg_type* tyinfo,
 		llvm::Value* val, value_kinds k, abis abi,
 		cg_service* cg
 		);
@@ -194,8 +201,6 @@ protected:
 		llvm::Value* val, value_kinds k, abis abi,
 		cg_service* cg
 		);
-
-
 	/// @}
 
 	/// @name Members
@@ -204,7 +209,7 @@ protected:
 	boost::scoped_ptr<value_t>	index_;
 	uint32_t					masks_;
 
-	value_tyinfo*				tyinfo_;
+	cg_type*				tyinfo_;
 	builtin_types				hint_;
 	value_kinds					kind_;
 	abis						abi_;
@@ -217,10 +222,10 @@ protected:
 };
 
 template <typename RVT>
-struct scope_guard{
+struct cg_scope_guard{
 	typedef boost::function<RVT ()> on_exit_fn;
-	scope_guard( on_exit_fn do_exit ): do_exit(do_exit){}
-	~scope_guard(){ do_exit(); }
+	cg_scope_guard( on_exit_fn do_exit ): do_exit(do_exit){}
+	~cg_scope_guard(){ do_exit(); }
 private:
 	on_exit_fn do_exit;
 };
@@ -261,7 +266,7 @@ struct function_t{
 	void allocation_block( insert_point_t const& ip);
 	insert_point_t allocation_block() const;
 
-	boost::shared_ptr<value_tyinfo> get_return_ty() const;
+	cg_type* get_return_ty() const;
 
 	insert_point_t						alloc_block;
 	std::vector<llvm::Argument*>		argCache;
@@ -272,6 +277,7 @@ struct function_t{
 	bool								partial_execution;
 	bool								ret_void;
 	cg_service*							cg;
+	sasl::semantic::module_semantic*	sem;
 };
 
 END_NS_SASL_CODE_GENERATOR();

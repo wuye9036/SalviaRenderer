@@ -11,13 +11,11 @@ INCLUDE_DIRECTORIES(
 set( HEADER_FILES
 	utility.h
 	syntax_cases.h
-	semantic_cases.h
 	${SALVIA_LLVM_TEST_CASE_HEADERS}
 )
 
 set( SOURCE_FILES
 	syntax_cases.cpp
-	semantic_cases.cpp
 	${SALVIA_LLVM_TEST_CASE_SOURCES}
 )
 

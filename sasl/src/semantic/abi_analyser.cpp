@@ -1,8 +1,6 @@
 #include <sasl/include/semantic/abi_analyser.h>
 
 #include <sasl/include/semantic/abi_info.h>
-
-#include <sasl/include/semantic/semantic_infos.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -142,12 +140,12 @@ void abi_analyser::reset_all(){
 }
 
 bool abi_analyser::entry( shared_ptr<module_semantic> const& mod, string const& name, salviar::languages lang ){
-	vector< shared_ptr<symbol> > const& overloads = mod->root_symbol()->find_overloads( name );
+	vector<symbol*> overloads = mod->root_symbol()->find_overloads( name );
 	if ( overloads.size() != 1 ){
 		return false;
 	}
 
-	return entry( mod, overloads[0].get(), lang );
+	return entry( mod, overloads[0], lang );
 }
 
 bool abi_analyser::entry( module_semantic_ptr const& mod, symbol* fnsym, salviar::languages lang ){
@@ -211,12 +209,12 @@ bool abi_analyser::update( salviar::languages lang ){
 
 	// Initialize language ABI information.
 	abiis[lang] = make_shared<abi_info>();
-	abiis[lang]->lang = lang;
-	abiis[lang]->mod = mods[lang].get();
-	abiis[lang]->entry_point = entries[lang];
+	abiis[lang]->lang			= lang;
+	abiis[lang]->module_sem_	= mods[lang].get();
+	abiis[lang]->entry_point_	= entries[lang];
 	
 	if( entries[lang] ){
-		abiis[lang]->entry_point_name = entries[lang]->mangled_name();
+		abiis[lang]->entry_point_name_ = entries[lang]->mangled_name();
 	}
 
 	if( lang == salviar::lang_vertex_shader
@@ -225,7 +223,7 @@ bool abi_analyser::update( salviar::languages lang ){
 		)
 	{
 		// Process entry function.
-		shared_ptr<function_type> entry_fn = entries[lang]->node()->as_handle<function_type>();
+		shared_ptr<function_type> entry_fn = entries[lang]->associated_node()->as_handle<function_type>();
 		assert( entry_fn );
 
 		if( !add_semantic( entry_fn, false, false, lang, true ) ){
@@ -244,7 +242,7 @@ bool abi_analyser::update( salviar::languages lang ){
 
 		// Process global variables.
 		BOOST_FOREACH( symbol* gvar_sym, mods[lang]->global_vars() ){
-			shared_ptr<declarator> gvar = gvar_sym->node()->as_handle<declarator>();
+			shared_ptr<declarator> gvar = gvar_sym->associated_node()->as_handle<declarator>();
 			assert(gvar);
 
 			// is_member is set to true for preventing aggregated variable.
@@ -253,10 +251,10 @@ bool abi_analyser::update( salviar::languages lang ){
 				// If it is not attached to an valid semantic, it should be uniform variable.
 
 				// Check the data type of global. Now global variables only support built-in types.
-				storage_si* psi = dynamic_cast<storage_si*>( gvar->semantic_info().get() );
-				if( psi->type_info()->is_builtin() || psi->type_info()->is_array()  )
+				node_semantic* psi = mods[lang]->get_semantic( gvar.get() );
+				if( psi->ty_proto()->is_builtin() || psi->ty_proto()->is_array()  )
 				{
-					abiis[lang]->add_global_var(gvar_sym, psi->type_info() );
+					abiis[lang]->add_global_var(gvar_sym, psi->ty_proto()->as_handle<tynode>() );
 				}
 				else
 				{
@@ -288,12 +286,12 @@ bool abi_analyser::add_semantic(
 {
 	abi_info* ai = abii(lang);
 	assert( ai );
-	storage_si* pssi = dynamic_cast<storage_si*>( v->semantic_info().get() );
+	node_semantic* pssi = mods[lang]->get_semantic( v.get() );
 	assert(pssi); // TODO Here are semantic analysis error.
-	tynode* ptspec = pssi->type_info().get();
+	tynode* ptspec = pssi->ty_proto();
 	assert(ptspec); // TODO Here are semantic analysis error.
 
-	salviar::semantic_value const& node_sem = pssi->get_semantic();
+	salviar::semantic_value const& node_sem = *( pssi->semantic_value() );
 
 	if( ptspec->is_builtin() ){
 		builtin_types btc = ptspec->tycode;

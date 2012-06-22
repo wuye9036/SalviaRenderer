@@ -4,6 +4,7 @@
 #include <sasl/include/semantic/semantic_forward.h>
 
 #include <sasl/enums/literal_classifications.h>
+#include <sasl/enums/builtin_types.h>
 #include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/typedefs.h>
 
@@ -36,6 +37,11 @@ namespace sasl
 
 BEGIN_NS_SASL_SEMANTIC();
 
+int32_t swizzle_field_name_to_id( char ch );
+int32_t encode_swizzle( char _1st, char _2nd = 0, char _3rd = 0, char _4th = 0 );
+int32_t encode_swizzle( int& dest_size, int& min_src_size, char const* masks );
+int32_t encode_sized_swizzle( int size );
+
 class node_semantic;
 class pety_t;
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
@@ -48,19 +54,7 @@ public:
 
 	virtual ~module_semantic(){}
 	
-	template <typename T> node_semantic* get( boost::shared_ptr<T> const& v )
-	{
-		node const* pnode = static_cast<node const*>( v.get() );
-		return get(*pnode);
-	}
-
-	template <typename T> node_semantic* get_or_create( boost::shared_ptr<T> const& v )
-	{
-		node const* pnode = static_cast<node const*>( v.get() );
-		return get_or_create(*pnode);
-	}
-	
-	virtual symbol_ptr						root_symbol() const = 0;
+	virtual symbol*							root_symbol() const = 0;
 	virtual sasl::syntax_tree::program_ptr	root_program() const = 0;
 
 	virtual pety_t*							pety() const = 0;
@@ -75,8 +69,22 @@ public:
 	virtual std::vector<symbol*> const&	intrinsics() const = 0;
 	virtual std::vector<symbol*>&		intrinsics() = 0;
 
-	virtual node_semantic* get( sasl::syntax_tree::node const& ) const = 0;
-	virtual node_semantic* get_or_create( sasl::syntax_tree::node const& ) = 0;
+	template <typename T> node_semantic* get_semantic( boost::shared_ptr<T> const& v )
+	{
+		return get_semantic( v.get() );
+	}
+
+	template <typename T> node_semantic* get_or_create_semantic( boost::shared_ptr<T> const& v )
+	{
+		return get_or_create_semantic(v.get() );
+	}
+
+	virtual node_semantic* get_semantic( sasl::syntax_tree::node const* ) const = 0;
+	virtual node_semantic* get_or_create_semantic( sasl::syntax_tree::node const* ) = 0;
+
+	virtual symbol* get_symbol(sasl::syntax_tree::node*) const = 0;
+	virtual symbol* create_symbol(symbol*, sasl::syntax_tree::node*, std::string const&) = 0;
+	virtual void	link_symbol(sasl::syntax_tree::node*, symbol*) = 0;
 };
 
 class node_semantic
@@ -87,6 +95,9 @@ public:
 	>		labeled_statement_array;
 
 	~node_semantic();
+
+	node_semantic(node_semantic const&);
+	node_semantic& operator = (node_semantic const&);
 
 	// Read functions
 public:
@@ -99,6 +110,8 @@ public:
 
 	// Type
 	int		tid() const	{ return tid_; }
+	builtin_types
+			value_builtin_type() const;
 	sasl::syntax_tree::tynode*
 			ty_proto() const;
 
@@ -113,6 +126,8 @@ public:
 	// Expression and variable
 	salviar::semantic_value*
 			semantic_value() const { return semantic_value_; }
+	salviar::semantic_value const&
+			semantic_value_ref() const;
 	int		member_index() const { return member_index_; }
 	int32_t	swizzle() const {return swizzle_code_; }
 	bool	is_reference() const { return is_reference_; }
@@ -121,6 +136,7 @@ public:
 	// Function and intrinsic
 	std::string const&
 			function_name() const;
+	symbol*	overloaded_function() const { return overloaded_function_; }
 	bool	is_intrinsic() const { return is_intrinsic_; }
 	bool	is_external() const { return is_external_; }
 	bool	msc_compatible() const { return msc_compatible_; }
@@ -144,7 +160,8 @@ public:
 	void associated_symbol(symbol* v) { assoc_symbol_ = v; }
 
 	// Type
-	void tid(int v) { tid_ = v; }
+	void tid(int v);
+	void ty_proto(sasl::syntax_tree::tynode* ty, symbol* scope);
 
 	// Constant
 	void const_value(std::string const& lit, literal_classifications lit_class);
@@ -164,6 +181,7 @@ public:
 
 	// Function and intrinsic
 	void function_name(std::string const& v);
+	void overloaded_function(symbol* v) { overloaded_function_ = v; }
 	void is_intrinsic(bool v) { is_intrinsic_ = v; }
 	void is_external(bool v) { is_external_ = v; }
 	void msc_compatible(bool v) { msc_compatible_ = v; }
@@ -201,6 +219,7 @@ private:
 	
 	// Function and intrinsic
 	std::string* function_name_;
+	symbol*	overloaded_function_;
 	bool	is_intrinsic_;
 	bool	is_invoked_;
 	bool	msc_compatible_;

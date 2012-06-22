@@ -3,7 +3,7 @@
 #include <sasl/include/code_generator/llvm/cgs.h>
 #include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/enums/enums_utility.h>
 
@@ -17,7 +17,7 @@ using sasl::utility::is_vector;
 using sasl::utility::scalar_of;
 using sasl::utility::is_scalar;
 using sasl::utility::is_sampler;
-using sasl::semantic::storage_si;
+using sasl::semantic::node_semantic;
 using llvm::Type;
 using llvm::Value;
 using llvm::Function;
@@ -27,7 +27,7 @@ using std::string;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-value_tyinfo::value_tyinfo(tynode* tyn, Type* ty_c, Type* ty_llvm, Type* ty_vec, Type* ty_pkg )
+cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm, Type* ty_vec, Type* ty_pkg )
 	: tyn(tyn)
 {
 	tys[abi_c]			= ty_c;
@@ -36,27 +36,27 @@ value_tyinfo::value_tyinfo(tynode* tyn, Type* ty_c, Type* ty_llvm, Type* ty_vec,
 	tys[abi_package]	= ty_pkg;
 }
 
-value_tyinfo::value_tyinfo(): tyn(NULL), cls(unknown_type)
+cg_type::cg_type(): tyn(NULL), cls(unknown_type)
 {
 	memset( tys, 0, sizeof(tys) );
 }
 
-builtin_types value_tyinfo::hint() const{
+builtin_types cg_type::hint() const{
 	if( !tyn || !tyn->is_builtin() ){
 		return builtin_types::none;
 	}
 	return tyn->tycode;
 }
 
-tynode* value_tyinfo::tyn_ptr() const{
+tynode* cg_type::tyn_ptr() const{
 	return tyn;
 }
 
-shared_ptr<tynode> value_tyinfo::tyn_shared() const{
+shared_ptr<tynode> cg_type::tyn_shared() const{
 	return tyn->as_handle<tynode>();
 }
 
-llvm::Type* value_tyinfo::ty( abis abi ) const{
+llvm::Type* cg_type::ty( abis abi ) const{
 	return tys[abi];
 }
 
@@ -66,7 +66,7 @@ value_t::value_t()
 }
 
 value_t::value_t(
-	value_tyinfo* tyinfo,
+	cg_type* tyinfo,
 	llvm::Value* val, value_kinds k, abis abi,
 	cg_service* cg 
 	) 
@@ -242,8 +242,8 @@ void value_t::index( size_t index )
 	masks_ = indexes_to_mask( indexes );
 }
 
-value_tyinfo*	value_t::tyinfo() const{ return tyinfo_; }
-void			value_t::tyinfo( value_tyinfo* v ){ tyinfo_ = v; }
+cg_type*	value_t::tyinfo() const{ return tyinfo_; }
+void			value_t::tyinfo( cg_type* v ){ tyinfo_ = v; }
 
 void			value_t::hint( builtin_types bt ){ hint_ = bt; }
 void			value_t::abi( abis abi ){ this->abi_ = abi; }
@@ -277,9 +277,7 @@ void function_t::allocation_block( insert_point_t const& ip )
 	alloc_block = ip;
 }
 void function_t::arg_name( size_t index, std::string const& name ){
-	size_t param_size = fn->arg_size();
-
-	assert( index < param_size );
+	assert( index < fn->arg_size() );
 
 	Function::arg_iterator arg_it = fn->arg_begin();
 	if( first_arg_is_return_address() ){
@@ -314,9 +312,9 @@ void function_t::args_name( vector<string> const& names )
 	}
 }
 
-shared_ptr<value_tyinfo> function_t::get_return_ty() const{
+cg_type* function_t::get_return_ty() const{
 	assert( fnty->is_function() );
-	return shared_ptr<value_tyinfo>( cg->node_ctxt( fnty->retval_type.get(), false )->get_tysp() );
+	return cg->get_node_context( fnty->retval_type.get() )->ty;
 }
 
 size_t function_t::arg_size() const{
@@ -338,7 +336,7 @@ value_t function_t::arg( size_t index ) const
 	if( partial_execution ){ ++arg_index; }
 
 	shared_ptr<parameter> par = fnty->params[index];
-	value_tyinfo* par_typtr = cg->node_ctxt( par.get(), false )->get_typtr();
+	cg_type* par_ty = cg->get_node_context( par.get() )->ty;
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
 	for( size_t idx_counter = 0; idx_counter < arg_index; ++idx_counter ){
@@ -346,7 +344,7 @@ value_t function_t::arg( size_t index ) const
 	}
 
 	abis arg_abi = cg->param_abi( c_compatible );
-	return cg->create_value( par_typtr, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
+	return cg->create_value( par_ty, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
 }
 
 value_t function_t::packed_execution_mask() const
@@ -366,7 +364,7 @@ function_t::function_t(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(fal
 bool function_t::arg_is_ref( size_t index ) const{
 	assert( index < fnty->params.size() );
 
-	builtin_types hint = fnty->params[index]->si_ptr<storage_si>()->type_info()->tycode;
+	builtin_types hint = sem->get_semantic(fnty->params[index])->value_builtin_type();
 	return c_compatible && !is_scalar(hint) && !is_sampler(hint);
 }
 

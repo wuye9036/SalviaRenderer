@@ -75,13 +75,13 @@ public:
 	/// @name Emit type casts
 	/// @{
 	/// Cast between integer types.
-	value_t cast_ints( value_t const& v, value_tyinfo* dest_tyi );
+	value_t cast_ints( value_t const& v, cg_type* dest_tyi );
 	/// Cast integer to float.
-	value_t cast_i2f( value_t const& v, value_tyinfo* dest_tyi );
+	value_t cast_i2f( value_t const& v, cg_type* dest_tyi );
 	/// Cast float to integer.
-	value_t cast_f2i( value_t const& v, value_tyinfo* dest_tyi );
+	value_t cast_f2i( value_t const& v, cg_type* dest_tyi );
 	/// Cast between float types.
-	value_t cast_f2f( value_t const& v, value_tyinfo* dest_tyi );
+	value_t cast_f2f( value_t const& v, cg_type* dest_tyi );
 	/// Cast integer to bool
 	value_t cast_i2b( value_t const& v );
 	/// Cast float to bool
@@ -116,7 +116,7 @@ public:
 	template <typename T>
 	value_t create_constant_vector( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	
-	value_t create_scalar( llvm::Value* val, value_tyinfo* tyinfo, builtin_types hint );
+	value_t create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
 	value_t create_vector( std::vector<value_t> const& scalars, abis abi );
 
 	template <typename T>
@@ -130,8 +130,6 @@ public:
 	/// @{
 	/// Switch to blocks
 	void switch_to( value_t const& cond, std::vector< std::pair<value_t, insert_point_t> > const& cases, insert_point_t const& default_branch );
-	/// Clean empty blocks of current function.
-	cgllvm_sctxt* node_ctxt( boost::shared_ptr<sasl::syntax_tree::node> const& node, bool create_if_need );
 	/// @}
 
 	/// @name Bridges

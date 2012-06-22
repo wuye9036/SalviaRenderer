@@ -44,7 +44,6 @@ public:
 	friend class abi_analyser;
 
 	// Implements members of shader_abi
-	
 	std::string entry_name() const;
 
 	std::vector<sv_layout_t*> layouts( salviar::sv_usage usage ) const;
@@ -63,8 +62,8 @@ public:
 	void module( module_semantic_ptr const& );
 	bool is_module( module_semantic_ptr const& ) const;
 
-	void entry( symbol_ptr const& );
-	bool is_entry( symbol_ptr const& ) const;
+	void entry(symbol*);
+	bool is_entry(symbol*) const;
 	
 
 	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
@@ -94,9 +93,9 @@ private:
 
 	int compute_element_size(salviar::sv_layout* svl, bool package) const;
 
-	module_semantic* mod;
-	symbol* entry_point;
-	std::string entry_point_name;
+	module_semantic*	module_sem_;
+	symbol*				entry_point_;
+	std::string			entry_point_name_;
 
 	// Include su_stream_in and su_buffer_in
 	std::vector< semantic_value_t > sems_in;

@@ -2,7 +2,7 @@
 
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/enums/enums_utility.h>
 
@@ -33,8 +33,8 @@ using sasl::syntax_tree::declaration;
 using sasl::syntax_tree::variable_declaration;
 using sasl::syntax_tree::struct_type;
 
-using sasl::semantic::storage_si;
-using sasl::semantic::type_info_si;
+using sasl::semantic::node_semantic;
+using sasl::semantic::node_semantic;
 
 using eflib::support_feature;
 using eflib::cpu_sse2;
@@ -158,7 +158,7 @@ void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 	builder().CreateStore( src, address );
 }
 
-value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_sisd::cast_ints( value_t const& v, cg_type* dest_tyi )
 {
 	builtin_types hint_src = v.hint();
 	builtin_types hint_dst = dest_tyi->hint();
@@ -176,7 +176,7 @@ value_t cgs_sisd::cast_ints( value_t const& v, value_tyinfo* dest_tyi )
 	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
 
-value_t cgs_sisd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_sisd::cast_i2f( value_t const& v, cg_type* dest_tyi )
 {
 	builtin_types hint_i = v.hint();
 	builtin_types hint_f = dest_tyi->hint();
@@ -194,13 +194,13 @@ value_t cgs_sisd::cast_i2f( value_t const& v, value_tyinfo* dest_tyi )
 	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
 
-value_t cgs_sisd::cast_f2i( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_sisd::cast_f2i( value_t const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
 }
 
-value_t cgs_sisd::cast_f2f( value_t const& v, value_tyinfo* dest_tyi )
+value_t cgs_sisd::cast_f2f( value_t const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();
@@ -233,7 +233,7 @@ void cgs_sisd::emit_return( value_t const& ret_v, abis abi ){
 	}
 }
 
-value_t cgs_sisd::create_scalar( Value* val, value_tyinfo* tyinfo, builtin_types hint ){
+value_t cgs_sisd::create_scalar( Value* val, cg_type* tyinfo, builtin_types hint ){
 	assert( is_scalar(hint) );
 	return create_value( tyinfo, hint, val, vkind_value, abi_llvm );
 }
@@ -287,11 +287,6 @@ value_t cgs_sisd::cast_f2b( value_t const& v )
 {
 	assert( is_real(v.hint()) );
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
-}
-
-cgllvm_sctxt* cgs_sisd::node_ctxt( shared_ptr<node> const& node, bool create_if_need )
-{
-	return cg_service::node_ctxt( node.get(), create_if_need );
 }
 
 abis cgs_sisd::intrinsic_abi() const

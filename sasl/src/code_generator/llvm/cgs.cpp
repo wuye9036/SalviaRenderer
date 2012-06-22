@@ -5,7 +5,7 @@
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/syntax_tree/declaration.h>
-#include <sasl/include/semantic/semantic_infos.h>
+#include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/enums_utility.h>
 
@@ -81,61 +81,66 @@ Function* cg_service::intrin_( int id )
 	return intrins.get(id, module(), TypeBuilder<FunctionT, false>::get( context() ) );
 }
 
-bool cg_service::initialize( llvm_module_impl* mod, node_ctxt_fn const& fn )
+bool cg_service::initialize( llvm_module_impl* mod, module_context* ctxt, module_semantic* sem )
 {
-	assert ( mod );
+	assert(mod);
+	assert(ctxt);
+	assert(sem);
 
-	mod_impl = mod;
-	node_ctxt = fn;
+	llvm_mod_ = mod;
+	ctxt_ = ctxt;
+	sem_ = sem;
+
 	initialize_cache( context() );
 
 	return true;
 }
 
 Module* cg_service::module() const{
-	return mod_impl->module();
+	return llvm_mod_->module();
 }
 
 LLVMContext& cg_service::context() const{
-	return mod_impl->context();
+	return llvm_mod_->context();
 }
 
 DefaultIRBuilder& cg_service::builder() const{
-	return *( mod_impl->builder() );
+	return *( llvm_mod_->builder() );
 }
 
-function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node ){
-
-	cgllvm_sctxt* fn_ctxt = node_ctxt( fn_node.get(), false );
-	if( fn_ctxt->data().self_fn ){
-		return fn_ctxt->data().self_fn;
+function_t* cg_service::fetch_function(function_type* fn_node){
+	node_context* fn_ctxt = ctxt_->get_node_context(fn_node);
+	if(fn_ctxt->function_scope)
+	{
+		return fn_ctxt->function_scope;
 	}
 
-	function_t ret;
-	ret.fnty = fn_node.get();
-	ret.c_compatible = fn_node->si_ptr<storage_si>()->c_compatible();
-	ret.external = fn_node->si_ptr<storage_si>()->external_compatible();
-	ret.partial_execution = fn_node->si_ptr<storage_si>()->partial_execution();
+	function_t* ret = ctxt_->create_cg_function();
 
-	abis abi = param_abi( ret.c_compatible );
+	ret->fnty = fn_node;
+	ret->c_compatible		= sem_->get_semantic(fn_node)->msc_compatible();
+	ret->external			= sem_->get_semantic(fn_node)->is_external();
+	ret->partial_execution	= sem_->get_semantic(fn_node)->partial_execution();
+
+	abis abi = param_abi( ret->c_compatible );
 
 	vector<Type*> par_tys;
 
-	Type* ret_ty = node_ctxt( fn_node->retval_type.get(), false )->get_typtr()->ty( abi );
+	Type* ret_ty = ctxt_->get_node_context( fn_node->retval_type.get() )->ty->ty(abi);
 
-	ret.ret_void = true;
-	if( abi == abi_c || ret.external ){
+	ret->ret_void = true;
+	if( abi == abi_c || ret->external ){
 		if( fn_node->retval_type->tycode != builtin_types::_void ){
 			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
 			Type* ret_ptr = PointerType::getUnqual( ret_ty );
 			par_tys.push_back( ret_ptr );
-			ret.ret_void = false;
+			ret->ret_void = false;
 		}
 
 		ret_ty = Type::getVoidTy( context() );
 	}
 
-	if( abi == abi_package && ret.partial_execution ){
+	if( abi == abi_package && ret->partial_execution ){
 		Type* mask_ty = Type::getInt16Ty( context() );
 		par_tys.push_back(mask_ty);
 	}
@@ -143,15 +148,15 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	// Create function type.
 	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
 	{
-		cgllvm_sctxt* par_ctxt = node_ctxt( par.get(), false );
-		value_tyinfo* par_ty = par_ctxt->get_typtr();
-		assert( par_ty );
+		node_context* par_ctxt = ctxt_->get_node_context( par.get() );
+		cg_type* par_ty = par_ctxt->ty;
+		assert(par_ty);
 
 		Type* par_llty = par_ty->ty( abi );
 		
 		bool as_ref = false;
 		builtin_types par_hint = par_ty->hint();
-		if( ret.c_compatible || ret.external ){
+		if( ret->c_compatible || ret->external ){
 			if( is_sampler( par_hint ) ){
 				as_ref = false;
 			} else if ( is_scalar(par_hint) && ( promote_abi( param_abi(false), abi_llvm ) == abi_llvm ) ){
@@ -176,12 +181,12 @@ function_t cg_service::fetch_function( shared_ptr<function_type> const& fn_node 
 	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
 
 	// Create function
-	ret.fn = Function::Create( fty, Function::ExternalLinkage, fn_node->symbol()->mangled_name(), module() );
-	ret.cg = this;
+	ret->fn = Function::Create( fty, Function::ExternalLinkage, sem_->get_symbol(fn_node)->mangled_name(), module() );
+	ret->cg = this;
 	return ret;
 }
 
-value_t cg_service::null_value( value_tyinfo* tyinfo, abis abi )
+value_t cg_service::null_value( cg_type* tyinfo, abis abi )
 {
 	assert( tyinfo && abi != abi_unknown );
 	Type* value_type = tyinfo->ty(abi);
@@ -197,7 +202,7 @@ value_t cg_service::null_value( builtin_types bt, abis abi )
 	return val;
 }
 
-value_t cg_service::create_value( value_tyinfo* tyinfo, Value* val, value_kinds k, abis abi ){
+value_t cg_service::create_value( cg_type* tyinfo, Value* val, value_kinds k, abis abi ){
 	return value_t( tyinfo, val, k, abi, this );
 }
 
@@ -206,7 +211,7 @@ value_t cg_service::create_value( builtin_types hint, Value* val, value_kinds k,
 	return value_t( hint, val, k, abi, this );
 }
 
-value_t cg_service::create_value( value_tyinfo* tyinfo, builtin_types hint, Value* val, value_kinds k, abis abi )
+value_t cg_service::create_value( cg_type* tyinfo, builtin_types hint, Value* val, value_kinds k, abis abi )
 {
 	if( tyinfo ){
 		return create_value( tyinfo, val, k, abi );
@@ -215,24 +220,24 @@ value_t cg_service::create_value( value_tyinfo* tyinfo, builtin_types hint, Valu
 	}
 }
 
-shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& tyn ){
-	cgllvm_sctxt* ctxt = node_ctxt(tyn.get(), true);
-	if( ctxt->get_tysp() ){
-		return ctxt->get_tysp();
-	}
+cg_type* cg_service::create_ty(tynode* tyn)
+{
+	node_context* ctxt = ctxt_->get_or_create_node_context(tyn);
+	
+	if( ctxt->ty ) { return ctxt->ty; }
 
-	value_tyinfo* ret = new value_tyinfo();
-	ret->tyn = tyn.get();
-	ret->cls = value_tyinfo::unknown_type;
+	cg_type* ret= ctxt_->create_cg_type();
+	ret->tyn		= tyn;
+	ret->cls		= cg_type::unknown_type;
 
 	if( tyn->is_builtin() ){
-		ret->tys[abi_c] = type_( tyn->tycode, abi_c );
-		ret->tys[abi_llvm] = type_( tyn->tycode, abi_llvm );
-		ret->tys[abi_vectorize] = type_( tyn->tycode, abi_vectorize );
-		ret->tys[abi_package] = type_( tyn->tycode, abi_package );
-		ret->cls = value_tyinfo::builtin;
+		ret->tys[abi_c]			= type_(tyn->tycode, abi_c);
+		ret->tys[abi_llvm]		= type_(tyn->tycode, abi_llvm);
+		ret->tys[abi_vectorize]	= type_(tyn->tycode, abi_vectorize);
+		ret->tys[abi_package]	= type_(tyn->tycode, abi_package);
+		ret->cls = cg_type::builtin;
 	} else {
-		ret->cls = value_tyinfo::aggregated;
+		ret->cls = cg_type::aggregated;
 
 		if( tyn->is_struct() )
 		{
@@ -246,12 +251,12 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 			BOOST_FOREACH( shared_ptr<declaration> const& decl, struct_tyn->decls){
 				if( decl->node_class() == node_ids::variable_declaration ){
 					shared_ptr<variable_declaration> decl_tyn = decl->as_handle<variable_declaration>();
-					shared_ptr<value_tyinfo> decl_tyinfo = create_tyinfo( decl_tyn->type_info->si_ptr<type_info_si>()->type_info() );
+					cg_type* decl_cgty = create_ty( sem_->get_semantic(decl_tyn->type_info)->ty_proto() );
 					size_t declarator_count = decl_tyn->declarators.size();
-					c_member_types.insert( c_member_types.end(), declarator_count, decl_tyinfo->ty(abi_c) );
-					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_tyinfo->ty(abi_llvm) );
-					vectorize_member_types.insert( vectorize_member_types.end(), declarator_count, decl_tyinfo->ty(abi_vectorize) );
-					package_member_types.insert( package_member_types.end(), declarator_count, decl_tyinfo->ty(abi_package) );
+					c_member_types.insert( c_member_types.end(), declarator_count, decl_cgty->ty(abi_c) );
+					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_cgty->ty(abi_llvm) );
+					vectorize_member_types.insert( vectorize_member_types.end(), declarator_count, decl_cgty->ty(abi_vectorize) );
+					package_member_types.insert( package_member_types.end(), declarator_count, decl_cgty->ty(abi_package) );
 				}
 			}
 
@@ -262,8 +267,9 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 				ty_vec = StructType::create( vectorize_member_types,struct_tyn->name->str + ".abi.vec" );
 			}
 			StructType* ty_pkg	= NULL;
-			if( package_member_types[0] != NULL ){
-				ty_pkg	= StructType::create( package_member_types,		struct_tyn->name->str + ".abi.pkg" );
+			if( package_member_types[0] != NULL )
+			{
+				ty_pkg = StructType::create( package_member_types,	struct_tyn->name->str + ".abi.pkg" );
 			}
 
 			ret->tys[abi_c]			= ty_c;
@@ -273,8 +279,8 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 		}
 		else if( tyn->is_array() )
 		{
-			shared_ptr<array_type>		array_tyn = tyn->as_handle<array_type>();
-			shared_ptr<value_tyinfo>	elem_ti = create_tyinfo(array_tyn->elem_type);
+			array_type*	array_tyn	= polymorphic_cast<array_type*>(tyn);
+			cg_type*	elem_ti		= create_ty( array_tyn->elem_type.get() );
 
 			ret->tys[abi_c]			= PointerType::getUnqual( elem_ti->ty(abi_c) );
 			ret->tys[abi_llvm]		= PointerType::getUnqual( elem_ti->ty(abi_llvm) );
@@ -287,11 +293,10 @@ shared_ptr<value_tyinfo> cg_service::create_tyinfo( shared_ptr<tynode> const& ty
 		}
 	}
 
-	ctxt->data().tyinfo = shared_ptr<value_tyinfo>(ret);
-	return ctxt->data().tyinfo;
+	return ret;
 }
 
-value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index ) const
+cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 {
 	if( !agg ){
 		return NULL;
@@ -304,7 +309,7 @@ value_tyinfo* cg_service::member_tyinfo( value_tyinfo const* agg, size_t index )
 				shared_ptr<variable_declaration> vardecl = child->as_handle<variable_declaration>();
 				var_index += vardecl->declarators.size();
 				if( index < var_index ){
-					return const_cast<cg_service*>(this)->node_ctxt( vardecl.get(), false )->get_typtr();
+					return const_cast<cg_service*>(this)->ctxt_->get_node_context( vardecl.get() )->ty;
 				}
 			}
 		}
@@ -323,10 +328,10 @@ value_t cg_service::create_variable( builtin_types bt, abis abi, std::string con
 	return create_value( bt, alloca_(vty, name), vkind_ref, abi );
 }
 
-value_t cg_service::create_variable( value_tyinfo const* ty, abis abi, std::string const& name )
+value_t cg_service::create_variable( cg_type const* ty, abis abi, std::string const& name )
 {
 	Type* vty = type_( ty, abi );
-	return create_value( const_cast<value_tyinfo*>(ty), alloca_(vty, name), vkind_ref, abi );
+	return create_value( const_cast<cg_type*>(ty), alloca_(vty, name), vkind_ref, abi );
 }
 
 insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
@@ -392,10 +397,10 @@ bool cg_service::in_function() const{
 }
 
 function_t& cg_service::fn(){
-	return fn_ctxts.back();
+	return *fn_ctxts.back();
 }
 
-void cg_service::push_fn( function_t const& fn ){
+void cg_service::push_fn(function_t* fn){
 	if( !fn_ctxts.empty() )
 	{
 		assert( fn.fn != this->fn().fn );
@@ -424,7 +429,7 @@ Type* cg_service::type_( builtin_types bt, abis abi )
 	return get_llvm_type( context(), bt, abi );
 }
 
-Type* cg_service::type_( value_tyinfo const* ty, abis abi )
+Type* cg_service::type_( cg_type const* ty, abis abi )
 {
 	assert( ty->ty(abi) );
 	return ty->ty(abi);
@@ -900,7 +905,7 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 	} else if ( agg_hint == builtin_types::none ){
 		Value* agg_address = lhs.load_ref();
 		Value* elem_address = builder().CreateStructGEP( agg_address, (unsigned)idx );
-		value_tyinfo* tyinfo = NULL;
+		cg_type* tyinfo = NULL;
 		if( lhs.tyinfo() ){
 			tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
 		}
@@ -961,7 +966,7 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 		case abi_llvm:
 			{
 				Value* elem_addr = builder().CreateGEP(addr, idx.load() );
-				value_tyinfo* elem_tyinfo = node_ctxt(array_tyn->elem_type.get(), false)->get_typtr();
+				cg_type* elem_tyinfo = ctxt_->get_node_context( array_tyn->elem_type.get() )->ty;
 				return create_value( elem_tyinfo, elem_addr, vkind_ref, lhs.abi() );
 			}
 		default:
@@ -980,7 +985,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 	abis abi = abi_unknown;
 
 	builtin_types elem_hint = builtin_types::none;
-	value_tyinfo* elem_tyi = NULL;
+	cg_type* elem_tyi = NULL;
 
 	if( agg_hint == builtin_types::none ){
 		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
@@ -1031,7 +1036,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
 	abis abi = promote_abi(lhs.abi(), idx.abi());
 
 	builtin_types elem_hint = builtin_types::none;
-	value_tyinfo* elem_tyi = NULL;
+	cg_type* elem_tyi = NULL;
 
 	if( agg_hint == builtin_types::none ){
 		// Array only
@@ -1050,7 +1055,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
 		case abi_llvm:
 			{
 				Value* elem_addr = builder().CreateGEP(addr, idx.load() );
-				value_tyinfo* elem_tyinfo = node_ctxt(array_tyn->elem_type.get(), false)->get_typtr();
+				cg_type* elem_tyinfo = ctxt_->get_node_context( array_tyn->elem_type.get() )->ty;
 				return create_value( elem_tyinfo, builtin_types::none, elem_addr, vkind_ref, lhs.abi() );
 			}
 		default:
@@ -1467,7 +1472,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	value_t var;
 
 	if ( fn.first_arg_is_return_address() ){
-		var = create_variable( fn.get_return_ty().get(), fn.abi(), ".tmp" );
+		var = create_variable( fn.get_return_ty(), fn.abi(), ".tmp" );
 		arg_values.push_back( var.load_ref() );
 	}
 
@@ -1508,7 +1513,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	}
 
 	abis ret_abi = fn.c_compatible ? abi_c : promoted_abi;
-	return create_value( fn.get_return_ty().get(), ret_val, vkind_value, ret_abi );
+	return create_value( fn.get_return_ty(), ret_val, vkind_value, ret_abi );
 }
 
 value_t cg_service::cast_s2v( value_t const& v )
@@ -1540,7 +1545,7 @@ value_t cg_service::cast_v2s( value_t const& v )
 	return emit_extract_val( v, 0 );
 }
 
-value_t cg_service::cast_bits( value_t const& v, value_tyinfo* dest_tyi )
+value_t cg_service::cast_bits( value_t const& v, cg_type* dest_tyi )
 {
 	abis abi = promote_abi(v.abi(), abi_llvm);
 
@@ -1598,7 +1603,7 @@ void cg_service::merge_swizzle( value_t const*& root, char indexes[], value_t co
 	}
 }
 
-value_t cg_service::create_value_by_scalar( value_t const& scalar, value_tyinfo* tyinfo, builtin_types hint )
+value_t cg_service::create_value_by_scalar( value_t const& scalar, cg_type* tyinfo, builtin_types hint )
 {
 	builtin_types src_hint = scalar.hint();
 	assert( is_scalar(src_hint) );
@@ -2205,7 +2210,7 @@ value_t cg_service::emit_tex2Dproj( value_t const& samp, value_t const& coord )
 	return emit_tex_proj_impl(samp, coord, tex2dproj_ps);
 }
 
-value_t cg_service::create_constant_int( value_tyinfo* tyinfo, builtin_types bt, abis abi, uint64_t v )
+value_t cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v )
 {
 	builtin_types hint = tyinfo ? tyinfo->hint() : bt;
 	builtin_types scalar_hint = scalar_of(hint);

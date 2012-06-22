@@ -23,6 +23,7 @@ struct builtin_types;
 
 BEGIN_NS_SASL_SEMANTIC();
 
+class module_semantic;
 typedef int tid_t;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
@@ -40,22 +41,23 @@ public:
 EFLIB_DECLARE_CLASS_SHARED_PTR(pety_t);
 class pety_t{
 public:
-	static pety_t_ptr create();
+	static pety_t_ptr create( module_semantic* owner );
 
 	void root_symbol(symbol* sym);
 
-	tid_t get(sasl::syntax_tree::tynode_ptr const& node, symbol* parent);
-	tid_t get(sasl::syntax_tree::tynode* v, symbol* scope);
 	tid_t get(const builtin_types& btc);
+	tid_t get(sasl::syntax_tree::tynode*, symbol*);
 	tid_t get_array(tid_t elem_type, size_t dimension);
 
 	sasl::syntax_tree::tynode* get_proto(tid_t tid);
+	sasl::syntax_tree::tynode* get_proto_by_builtin(builtin_types bt);
 
 private:
 	tid_t allocate_and_assign_id(sasl::syntax_tree::tynode* node);
 
-	std::vector<pety_item_t>	items_;
+	std::vector<pety_item_t>	type_items_;
 	symbol*						root_symbol_;
+	module_semantic*			owner_;
 };
 
 END_NS_SASL_SEMANTIC();

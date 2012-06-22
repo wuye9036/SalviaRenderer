@@ -4,12 +4,9 @@
 #include <sasl/include/semantic/semantic_forward.h>
 
 #include <eflib/include/platform/boost_begin.h>
-#include <boost/pointer_cast.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/tr1/unordered_map.hpp>
-#include <boost/tr1/type_traits.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/type_traits.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -35,7 +32,9 @@ BEGIN_NS_SASL_SEMANTIC();
 using sasl::syntax_tree::function_type;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
+
 class caster_t;
+class module_semantic;
 
 //////////////////////////////////////////////////////////////////////////
 /*
@@ -55,91 +54,68 @@ class caster_t;
 //////////////////////////////////////////////////////////////////////////
 class symbol{
 public:
-	typedef std::vector< boost::shared_ptr<symbol> > overloads_t;
-	typedef overloads_t::iterator overloads_iterator_t;
+	typedef std::vector<sasl::syntax_tree::expression*> expression_array;
+	typedef std::vector<symbol*>	symbol_array;
+	typedef symbol_array::iterator	symbol_array_iterator;
 
-	static boost::shared_ptr<symbol> create_root( boost::shared_ptr<struct node> root_node = boost::shared_ptr<struct node>() );
+	static symbol* create_root(module_semantic* owner, node* root_node = NULL);
 
-	boost::shared_ptr<symbol> find( const std::string& name ) const;
-	boost::shared_ptr<symbol> find_this(const std::string& mangled) const;
+	symbol* find		(std::string const& name) const;
+	symbol* find_this	(std::string const& mangled) const;
+	int		count		(std::string const& name) const;
 
-	std::vector< boost::shared_ptr<symbol> > find_overloads( const std::string& name ) const;
-	std::vector< boost::shared_ptr<symbol> > find_overloads(
-		const std::string& name,
-		boost::shared_ptr<caster_t> const& conv,
-		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args,
-		sasl::common::diag_chat* diags
-		) const;
-	std::vector< boost::shared_ptr<symbol> > find_assign_overloads(
-		const std::string& name,
-		boost::shared_ptr<caster_t> const& conv,
-		std::vector< boost::shared_ptr< ::sasl::syntax_tree::expression > > const& args,
-		sasl::common::diag_chat* diags
-		) const; 
-	int count( std::string const& name ) const;
-
-	boost::shared_ptr<symbol> add_child(const std::string& mangled, boost::shared_ptr<node> child_node);
+	symbol_array find_overloads(std::string const& name) const;
+	symbol_array find_overloads(std::string const& name, caster_t* conv, expression_array const& args) const;
+	symbol_array find_assign_overloads(std::string const& name, caster_t* conv, expression_array const& args) const;
 	
-	enum unique_name_types{
-		unique_in_unit,	/* Generate unique name in unit.*/
-		unique_in_module,	/* Generate unique name in module. */
-		unnamed_struct
-	};
-	static std::string unique_name( unique_name_types unique_type = unique_in_unit );
+	symbol*	add_named_child(std::string const& mangled, node* child_node);
+	symbol*	add_child(node* child_node);
+	symbol*	add_function_begin(function_type* child_fn );
+	bool	add_function_end(symbol* sym);
 
-	boost::shared_ptr<symbol> add_anonymous_child( boost::shared_ptr<node> child_node );
-
-	boost::shared_ptr<symbol> add_function_begin( boost::shared_ptr<function_type> child_fn );
-	bool add_function_end( boost::shared_ptr<symbol> sym );
-
-	void remove_child( const std::string& mangled );
+	void remove_child(std::string const& mangled);
+	void remove_child(symbol*);
 	void remove();
 
-	boost::shared_ptr<symbol> parent() const;
+	symbol* parent() const;
 
-	boost::shared_ptr<struct node> node() const;
-	void relink( boost::shared_ptr<struct node> n );
+	node* associated_node() const;
+	void relink(node* n);
 
-	const std::string& unmangled_name() const;
-	const std::string& mangled_name() const;
+	std::string const& unmangled_name() const;
+	std::string const& mangled_name() const;
 
-	// std::string fullpath();
 private:
-	static boost::shared_ptr<symbol> create(
-		boost::shared_ptr<symbol> parent,
-		boost::shared_ptr<struct node> correspond_node,
-		const std::string& mangled
-		);
-	symbol(
-		boost::shared_ptr<symbol> parent,
-		boost::shared_ptr<struct node> correspond_node,
-		const std::string& mangled
-		);
+	static symbol* create(module_semantic* owner, symbol* parent, node* assoc_node, std::string const& mangled);
+	symbol(symbol* parent, node* assoc_node, std::string const& mangled);
 
-	const std::vector< ::std::string >& get_overloads( const ::std::string& umnalged ) const;
+	std::vector<std::string> const& get_overloads(std::string const& umnalged) const;
 
-	std::vector< boost::shared_ptr<symbol> > find_overloads_impl(
-		const std::string& name,
-		boost::shared_ptr<caster_t> const& conv,
-		std::vector< boost::shared_ptr<sasl::syntax_tree::expression> > const& args,
-		sasl::common::diag_chat* diags
-		) const;
-	void collapse_vector1_overloads( std::vector< boost::shared_ptr<symbol> >& candidates ) const;
+	symbol_array find_overloads_impl(std::string const& name, caster_t* conv, expression_array const& args) const;
+	void collapse_vector1_overloads( symbol_array& candidates ) const;
 
-	typedef std::tr1::unordered_map< std::string, boost::shared_ptr<symbol> > children_t;
-	typedef std::tr1::unordered_map< std::string, ::std::vector< ::std::string > > overload_table_t;
-	typedef children_t::iterator children_iterator_t;
+	typedef boost::unordered_map<node*, symbol*>		children_dict;
+	typedef children_dict::iterator						children_dict_iterator;
 
-	boost::shared_ptr<struct node> correspond_node;
-	boost::weak_ptr<symbol> this_parent;
-	boost::weak_ptr<symbol> selfptr;
+	typedef boost::unordered_map<std::string, symbol*>	named_children_dict;
+	typedef named_children_dict::iterator				named_children_dict_iterator; 
 
-	children_t children;
-	overload_table_t overloads;
-	::std::vector< ::std::string > null_mt;
+	typedef boost::unordered_map<
+		std::string, std::vector<std::string> >			overload_dict;
+	
+	module_semantic*	owner_;
+	node*				associated_node_;
+	symbol*				parent_;
+
 	// name
-	std::string mgl_name;
-	std::string umgl_name;
+	std::string			mangled_name_;
+	std::string			unmangled_name_;
+
+	children_dict		children_;
+	named_children_dict	named_children_;
+	overload_dict		overloads_;
+	std::vector<
+		std::string>	null_overloads_;
 };
 
 END_NS_SASL_SEMANTIC()

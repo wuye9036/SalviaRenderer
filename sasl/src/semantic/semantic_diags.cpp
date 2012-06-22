@@ -89,6 +89,11 @@ type_repr::type_repr( shared_ptr<tynode> const& ty ): ty(ty)
 {
 }
 
+type_repr::type_repr( sasl::syntax_tree::tynode* ty )
+{
+	this->ty = ty->as_handle<tynode>();
+}
+
 string type_repr::str()
 {
 	if( str_cache.empty() )
@@ -153,6 +158,11 @@ args_type_repr& args_type_repr::arg( shared_ptr<tynode> const& arg_ty )
 {
 	arg_tys.push_back( arg_ty );
 	return *this;
+}
+
+args_type_repr& args_type_repr::arg( sasl::syntax_tree::node* arg_ty )
+{
+	arg_tys.push_back( arg_ty->as_handle<tynode>() );
 }
 
 string args_type_repr::str()
