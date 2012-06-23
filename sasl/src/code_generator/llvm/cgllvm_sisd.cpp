@@ -7,7 +7,6 @@
 #include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/cgs.h>
 #include <sasl/include/semantic/name_mangler.h>
-#include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>

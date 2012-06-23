@@ -403,7 +403,7 @@ function_t& cg_service::fn(){
 void cg_service::push_fn(function_t* fn){
 	if( !fn_ctxts.empty() )
 	{
-		assert( fn.fn != this->fn().fn );
+		assert( fn->fn != this->fn().fn );
 	}
 	fn_ctxts.push_back(fn);
 }

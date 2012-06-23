@@ -47,19 +47,28 @@ using sasl::utility::vector_count;
 using ::boost::shared_ptr;
 
 symbol* symbol::create_root(module_semantic* owner, node* root_node){
-	return create( owner, NULL, root_node, string("") );
+	return create( owner, NULL, root_node );
 }
 
 symbol* symbol::create(module_semantic* owner, symbol* parent, node* assoc_node, string const& mangled)
 {
-	symbol* ret = owner->create_symbol(parent, assoc_node, mangled);
+	assert( owner->get_symbol(assoc_node) == NULL );
+	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, assoc_node, &mangled);
 	owner->link_symbol(assoc_node, ret);
 	return ret;
 }
 
-symbol::symbol(symbol* parent, node* assoc_node, string const& mangled)
-	: parent_(parent), associated_node_(assoc_node)
-	, unmangled_name_(mangled), mangled_name_(mangled)
+symbol* symbol::create( module_semantic* owner, symbol* parent, node* assoc_node )
+{
+	assert( owner->get_symbol(assoc_node) == NULL );
+	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, assoc_node, NULL);
+	owner->link_symbol(assoc_node, ret);
+	return ret;
+}
+
+symbol::symbol(module_semantic* owner, symbol* parent, node* assoc_node, string const* mangled)
+	: owner_(owner), parent_(parent), associated_node_(assoc_node)
+	, unmangled_name_(mangled ? *mangled : ""), mangled_name_(mangled ? *mangled : "")
 {
 }
 
@@ -141,7 +150,8 @@ symbol* symbol::add_named_child( const string& mangled, node* child_node )
 
 symbol* symbol::add_function_begin(function_type* child_fn){
 	if( !child_fn ){ return NULL; }
-	return create( owner_, this, child_fn, child_fn->name->str );
+	symbol* ret = new ( owner_->alloc_symbol() ) symbol(owner_, this, child_fn, &child_fn->name->str);
+	return ret;
 }
 
 bool symbol::add_function_end(symbol* sym){
@@ -160,14 +170,14 @@ bool symbol::add_function_end(symbol* sym){
 	sym->mangled_name_ = mangle( owner_, polymorphic_cast<function_type*>( sym->associated_node() ) );
 
 	named_children_dict_iterator ret_it = named_children_.find(sym->mangled_name_);
-	if ( ret_it != named_children_.end() )
-	{
+	if ( ret_it != named_children_.end() ){
 		return false;
 	}
 
+	children_.insert( make_pair(sym->associated_node(), sym) );
+	owner_->link_symbol(sym->associated_node(), sym);
 	named_children_.insert( make_pair( sym->mangled_name_, sym ) );
-	if( overloads_.count(sym->unmangled_name_) == 0 )
-	{
+	if( overloads_.count(sym->unmangled_name_) == 0 ){
 		overloads_[sym->unmangled_name_].resize(0);
 	}
 	overloads_[sym->unmangled_name_].push_back( sym->mangled_name_ );
@@ -222,6 +232,11 @@ node* symbol::associated_node() const
 	return associated_node_;
 }
 
+void symbol::associated_node( node* v )
+{
+	associated_node_ = v;
+}
+
 string const& symbol::mangled_name() const{
 	return mangled_name_;
 }
@@ -234,7 +249,7 @@ symbol* symbol::add_child(node* child_node){
 	children_dict::iterator iter = children_.find(child_node);
 	if( iter != children_.end() ) { return NULL; }
 
-	symbol* ret = create(owner_, this, child_node, "");
+	symbol* ret = create(owner_, this, child_node);
 	children_.insert( make_pair(child_node, ret) );
 
 	return ret;
@@ -338,7 +353,7 @@ void symbol::collapse_vector1_overloads( symbol_array& candidates ) const
 	return std::swap( candidates, ret );
 }
 
-bool get_deprecated_and_next( symbol* sym, symbol** begin_addr, vector<bool> const& deprecated )
+bool get_deprecated_and_next( symbol* const& sym, symbol* const* begin_addr, vector<bool> const& deprecated )
 {
 	intptr_t i = (intptr_t)std::distance( begin_addr, boost::addressof(sym) );
 	return !deprecated[i];

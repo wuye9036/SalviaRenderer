@@ -8,7 +8,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
@@ -55,6 +55,8 @@ public:
 private:
 	tid_t allocate_and_assign_id(sasl::syntax_tree::tynode* node);
 
+	boost::unordered_map<builtin_types, tid_t>
+								bt_dict_;
 	std::vector<pety_item_t>	type_items_;
 	symbol*						root_symbol_;
 	module_semantic*			owner_;

@@ -82,14 +82,16 @@ public:
 	symbol* parent() const;
 
 	node* associated_node() const;
-	void relink(node* n);
+	void associated_node(node*); ///< Don't call it as common API. It is reserved for internal class.
 
 	std::string const& unmangled_name() const;
 	std::string const& mangled_name() const;
 
 private:
+	static symbol* create(module_semantic* owner, symbol* parent, node* assoc_node);
 	static symbol* create(module_semantic* owner, symbol* parent, node* assoc_node, std::string const& mangled);
-	symbol(symbol* parent, node* assoc_node, std::string const& mangled);
+
+	symbol(module_semantic* owner, symbol* parent, node* assoc_node, std::string const* mangled);
 
 	std::vector<std::string> const& get_overloads(std::string const& umnalged) const;
 

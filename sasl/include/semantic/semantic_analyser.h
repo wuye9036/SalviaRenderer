@@ -115,7 +115,8 @@ private:
 
 	void add_cast();
 	void register_builtin_functions();
-	
+	void hold_node( sasl::syntax_tree::node_ptr const& );
+
 	class function_register{
 	public:
 		typedef sasl::syntax_tree::tynode_ptr typenode_ptr;
@@ -159,6 +160,7 @@ private:
 	caster_t_ptr				caster;
 	sasl::common::diag_chat_ptr	diags;
 	uint32_t					lang;
+	sasl::syntax_tree::program*	prog_;
 
 	// Global States
 	typedef std::vector< boost::weak_ptr<

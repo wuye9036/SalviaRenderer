@@ -236,7 +236,7 @@ SASL_VISIT_DEF( variable_expression ){
 	node_context* ctxt = node_ctxt(&v, true);
 	if( var_si ){
 		// TODO global only available in entry function.
-		assert( is_entry( fn().fn ) );
+		assert( is_entry( service()->fn().fn ) );
 		ctxt->node_value = varctxt->node_value;
 		return;
 	}

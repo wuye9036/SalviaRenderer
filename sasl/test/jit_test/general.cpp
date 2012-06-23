@@ -88,6 +88,9 @@ BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 
 	BOOST_CHECK( fn() == 0 );
 }
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
 
 int fib_ref(int i)
 {
@@ -119,7 +122,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -472,7 +475,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];

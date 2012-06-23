@@ -24,9 +24,9 @@ namespace sasl
 {
 	namespace syntax_tree
 	{
-		struct node;
 		struct tynode;
 		struct labeled_statement;
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(program);
 	}
 	namespace common
@@ -82,8 +82,9 @@ public:
 	virtual node_semantic* get_semantic( sasl::syntax_tree::node const* ) const = 0;
 	virtual node_semantic* get_or_create_semantic( sasl::syntax_tree::node const* ) = 0;
 
+	virtual void	hold_node(sasl::syntax_tree::node_ptr const& ) = 0;
 	virtual symbol* get_symbol(sasl::syntax_tree::node*) const = 0;
-	virtual symbol* create_symbol(symbol*, sasl::syntax_tree::node*, std::string const&) = 0;
+	virtual symbol* alloc_symbol() = 0; ///< Only called by symbol.
 	virtual void	link_symbol(sasl::syntax_tree::node*, symbol*) = 0;
 };
 

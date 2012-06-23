@@ -1,6 +1,8 @@
 #ifndef EFLIB_METAPROG_UTIL_H
 #define EFLIB_METAPROG_UTIL_H
 
+#include <cassert>
+
 template <typename T>
 inline void eflib_undef_param( T const& /*x*/ ){
 	;
@@ -44,7 +46,7 @@ namespace eflib
 		T ret = NULL;
 
 #if defined(EFLIB_DEBUG)
-		ret = dynamic_cast<T*>(v);
+		ret = dynamic_cast<T>(v);
 		if(v) { assert(ret); }
 #endif
 

@@ -585,7 +585,7 @@ SASL_VISIT_DEF( variable_expression ){
 		}
 		else if ( decl_node || param_node )
 		{
-			node_semantic* vexpr_sem = get_node_semantic(dup_vexpr);
+			node_semantic* vexpr_sem = module_semantic_->get_or_create_semantic(dup_vexpr);
 			*vexpr_sem = *get_node_semantic(node);
 			vexpr_sem->associated_symbol(vdecl);
 		}
@@ -705,7 +705,7 @@ SASL_VISIT_DEF( builtin_type ){
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	node_semantic* tsi = get_node_semantic(&v);
+	node_semantic* tsi = module_semantic_->get_or_create_semantic(&v);
 	tsi->ty_proto(&v, current_symbol);
 	generated_node = tsi->ty_proto()->as_handle();
 }
@@ -970,7 +970,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 	dup_dowhile->body = visit_child(v.body);
 	dup_dowhile->cond = visit_child(v.cond);
 
-#if EFLIB_DEBUG
+#if defined(EFLIB_DEBUG)
 	node_semantic* cond_tsi = get_node_semantic(dup_dowhile->cond);
 	assert( cond_tsi );
 	tid_t bool_tid = module_semantic_->pety()->get( builtin_types::_boolean );
@@ -1049,7 +1049,7 @@ SASL_VISIT_DEF( switch_statement ){
 	dup_switch->cond = visit_child(v.cond);
 	node_semantic* cond_tsi = get_node_semantic(dup_switch->cond);
 	assert( cond_tsi );
-	// tid_t int_tid = module_semantic_->pety()->get( builtin_types::_sint32 );
+	tid_t int_tid = module_semantic_->pety()->get( builtin_types::_sint32 );
 	builtin_types cond_bt = cond_tsi->ty_proto()->tycode;
 	assert( is_integer( cond_bt ) || caster->try_implicit( int_tid, cond_tsi->tid() ) );
 
@@ -1159,6 +1159,7 @@ SASL_VISIT_DEF( program ){
 	register_builtin_functions();
 
 	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
+	prog_ = dup_prog.get();
 	dup_prog->decls.clear();
 
 	// analysis declarations.
@@ -1871,6 +1872,11 @@ symbol* semantic_analyser::get_symbol(node_ptr const& v)
 	return module_semantic_->get_symbol( v.get() );
 }
 
+void semantic_analyser::hold_node(node_ptr const& v)
+{
+	module_semantic_->hold_node(v);
+}
+
 // function_register
 semantic_analyser::function_register::function_register(
 	semantic_analyser& owner,
@@ -1917,6 +1923,7 @@ void semantic_analyser::function_register::r(
 	fn->retval_type = ret_type;
 
 	shared_ptr<node> new_node = owner.visit_child(fn);
+	owner.hold_node(new_node);
 
 	node_semantic* fn_ssi = owner.get_node_semantic(new_node);
 

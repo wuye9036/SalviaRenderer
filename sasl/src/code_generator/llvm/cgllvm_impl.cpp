@@ -3,7 +3,6 @@
 #include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
-#include <sasl/include/semantic/semantic_infos.imp.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>

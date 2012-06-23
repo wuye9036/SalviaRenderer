@@ -203,7 +203,7 @@ SASL_VISIT_DEF( variable_expression ){
 
 	if( var_si ){
 		// TODO global only available in entry function.
-		assert( fn().fn == entry_fn );
+		assert( service()->fn().fn == entry_fn );
 		ctxt->node_value = varctxt->node_value;
 		return;
 	}
