@@ -57,6 +57,8 @@ private:
 
 	boost::unordered_map<builtin_types, tid_t>
 								bt_dict_;
+	boost::unordered_map<sasl::syntax_tree::tynode*, tid_t>
+								tynode_dict_;
 	std::vector<pety_item_t>	type_items_;
 	symbol*						root_symbol_;
 	module_semantic*			owner_;

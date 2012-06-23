@@ -87,8 +87,14 @@ public:
 		: node_semantic_pool_( sizeof(node_semantic) )
 		, symbol_pool_( sizeof(symbol) )
 	{
+		printf("new module_semantic_impl @ 0x%08X\n", this);
+		
 		pety_		= pety_t::create(this);
+		printf("Pety @ 0x%08X\n", pety_.get());
+		
 		root_symbol_= symbol::create_root(this);
+		printf("Root symbol @ 0x%08X\n", root_symbol_);
+
 		diag_chat_	= diag_chat::create();
 		pety_->root_symbol(root_symbol_);
 	}

@@ -24,19 +24,21 @@ using boost::make_shared;
 using boost::shared_ptr; // prevent conflicting with std::tr1.
 using boost::shared_polymorphic_cast;
 using boost::unordered_map;
+using std::make_pair;
 
 BEGIN_NS_SASL_SEMANTIC();
 
-tid_t get_node_tid( module_semantic* msem, node const* nd ){
+tid_t get_node_tid( unordered_map<tynode*, tid_t> const& dict, tynode* nd )
+{
 	if( !nd ) { return -1; }
-	node_semantic* tinfo = msem->get_semantic(nd);
-	if( !tinfo ) { return -1; }
-	return tinfo->tid();
+	unordered_map<tynode*, tid_t>::const_iterator it = dict.find(nd);
+	if( it == dict.end() ) { return -1; }
+	return it->second;
 }
 
-tid_t get_symbol_tid( module_semantic* msem, symbol* sym ){
+tid_t get_symbol_tid( unordered_map<tynode*, tid_t> const& dict, symbol* sym ){
 	if( !sym ) { return -1; }
-	return get_node_tid( msem, sym->associated_node() );
+	return get_node_tid( dict, polymorphic_cast<tynode*>( sym->associated_node() ) );
 }
 
 unordered_map<builtin_types, std::string> bt_to_name;
@@ -162,7 +164,7 @@ tid_t pety_t::get(builtin_types const& btc)
 {
 	// If it existed in symbol, return it.
 	// Otherwise create a new type and push into type manager.
-	tid_t ret_id = get_symbol_tid( owner_, root_symbol_->find( builtin_type_name( btc ) ) );
+	tid_t ret_id = get_symbol_tid( tynode_dict_, root_symbol_->find( builtin_type_name( btc ) ) );
 	if ( ret_id == -1 ){
 		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
 		bt->tycode = btc;
@@ -175,7 +177,7 @@ tid_t pety_t::get(builtin_types const& btc)
 tid_t pety_t::get(tynode* v, symbol* scope)
 {
 	// Return id if existed.
-	tid_t ret = get_node_tid(owner_, v);
+	tid_t ret = get_node_tid(tynode_dict_, v);
 	if( ret != -1 ){ return ret; }
 
 	// otherwise process the node for getting right id;
@@ -203,7 +205,7 @@ tid_t pety_t::get(tynode* v, symbol* scope)
 		symbol* sym = scope->find( name );
 		if( sym )
 		{
-			return get_symbol_tid(owner_, sym);
+			return get_symbol_tid(tynode_dict_, sym);
 		}
 		else
 		{
@@ -251,10 +253,12 @@ tid_t semantic::pety_t::allocate_and_assign_id(tynode* node){
 	shared_ptr<tynode> dup_node = duplicate_tynode( node->as_handle<tynode>() );
 
 	// add to pool and allocate an id
-	pety_item_t ret_entry;
-	ret_entry.stored = dup_node;
-	type_items_.push_back( ret_entry );
+	pety_item_t ret_item;
+	ret_item.stored = dup_node;
+	
+	type_items_.push_back( ret_item );
 	tid_t ret_id = (tid_t)( type_items_.size() - 1 );
+	tynode_dict_.insert( make_pair(ret_item.stored.get(), ret_id) );
 
 	// assign id to source node and duplicated node.
 	assign_entry_id(owner_, node, ret_id);
