@@ -116,22 +116,22 @@ void jit_fixture::init( string const& file_name, string const& options )
 	diags = diag_chat::create();
 	diags->add_report_raised_handler( print_diagnostic );
 	sasl_create_driver(drv);
-	//BOOST_REQUIRE(drv);
-	//drv->set_parameter( make_command(file_name, options) );
-	//shared_ptr<diag_chat> results = drv->compile();
-	//diag_chat::merge(diags.get(), results.get(), true);
+	BOOST_REQUIRE(drv);
+	drv->set_parameter( make_command(file_name, options) );
+	shared_ptr<diag_chat> results = drv->compile();
+	diag_chat::merge(diags.get(), results.get(), true);
 
-	//BOOST_REQUIRE( drv->root() );
-	//BOOST_REQUIRE( drv->module_sem() );
-	//BOOST_REQUIRE( drv->module() );
+	BOOST_REQUIRE( drv->root() );
+	BOOST_REQUIRE( drv->module_sem() );
+	BOOST_REQUIRE( drv->module() );
 
-	//root_sym = drv->module_sem()->root_symbol();
+	root_sym = drv->module_sem()->root_symbol();
 
-	//shared_ptr<cgllvm_module> llvm_mod = shared_polymorphic_cast<cgllvm_module>( drv->module() );
-	//fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
-	//llvm_mod->dump_ir( dump_file );
-	//dump_file.close();
+	shared_ptr<cgllvm_module> llvm_mod = shared_polymorphic_cast<cgllvm_module>( drv->module() );
+	fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
+	llvm_mod->dump_ir( dump_file );
+	dump_file.close();
 
-	//je = drv->create_jit();
+	je = drv->create_jit();
 	BOOST_REQUIRE( je );
 }

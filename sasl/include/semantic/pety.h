@@ -32,7 +32,7 @@ class pety_item_t{
 public:
 	typedef int pety_item_t::*id_ptr_t;
 	pety_item_t();
-	
+	~pety_item_t();
 	sasl::syntax_tree::tynode_ptr stored;
 	tid_t u_qual;
 	tid_t a_qual;
@@ -51,7 +51,7 @@ public:
 
 	sasl::syntax_tree::tynode* get_proto(tid_t tid);
 	sasl::syntax_tree::tynode* get_proto_by_builtin(builtin_types bt);
-
+	~pety_t();
 private:
 	tid_t allocate_and_assign_id(sasl::syntax_tree::tynode* node);
 

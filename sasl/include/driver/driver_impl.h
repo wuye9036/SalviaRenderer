@@ -6,7 +6,80 @@
 #include <sasl/include/driver/options.h>
 
 BEGIN_NS_SASL_DRIVER();
- 
+
+class driver_null: public driver
+{
+public:
+	driver_null();
+
+	virtual void set_parameter( int argc, char** argv );
+	virtual void set_parameter( std::string const& cmd ){}
+
+	virtual void set_code       ( std::string const& code_text ){}
+	virtual void set_code_file  ( std::string const& code_file ){}
+	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& ){}
+	virtual void set_lex_context( boost::shared_ptr<sasl::common::lex_context> const& ){}
+
+	/// Only support by default code_source.
+	virtual void add_virtual_file( std::string const& file_name, std::string const& code_content, bool high_priority ){}
+	/// Only support by default code_source.
+	virtual void set_include_handler( include_handler_fn inc_handler ){}
+	/// Only support by default code source.
+	virtual void add_include_path( std::string const& inc_path ){}
+	/// Only support by default code source.
+	virtual void add_sysinclude_path( std::string const& sys_path ){}
+	/// Only support by default code source.
+	virtual void clear_sysinclude_paths(){}
+	/// Only support by default code source.
+	virtual void add_macro( std::string const& macro, bool predef ){}
+	/// Only support by default code source.
+	virtual void remove_macro( std::string const& macro ){}
+	/// Only support by default code source.
+	virtual void clear_macros(){}
+
+	virtual boost::shared_ptr<sasl::common::diag_chat> compile(){ return boost::shared_ptr<sasl::common::diag_chat>(); }
+
+	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit(){ return boost::shared_ptr<sasl::code_generator::jit_engine>(); }
+	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit( external_function_array const& ){ return boost::shared_ptr<sasl::code_generator::jit_engine>(); }
+
+	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const{ return boost::shared_ptr<sasl::semantic::module_semantic>(); }
+	virtual boost::shared_ptr<sasl::code_generator::cgllvm_module>	module() const{ return boost::shared_ptr<sasl::code_generator::cgllvm_module>(); }
+	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const{ return boost::shared_ptr<sasl::syntax_tree::node>(); }
+	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const{ return boost::shared_ptr<sasl::semantic::abi_info>(); }
+	/*
+	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
+	boost::shared_ptr<sasl::code_generator::cgllvm_module>	mod;
+	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
+	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
+
+	options_global			opt_global;
+	options_display_info	opt_disp;
+	options_io				opt_io;
+	option_macros			opt_macros;
+	options_includes		opt_includes;
+
+	po::options_description	desc;
+	po::variables_map		vm;
+
+	// Overridden options
+	boost::shared_ptr<sasl::common::code_source>	user_code_src;
+	boost::shared_ptr<sasl::common::lex_context>	user_lex_ctxt;
+
+	typedef boost::unordered_map< std::string,
+		std::pair<std::string, bool> > virtual_file_dict;
+	enum macro_states
+	{
+		ms_normal,
+		ms_predef,
+		ms_remove
+	};
+	std::vector<std::string>	sys_paths, inc_paths;
+	std::vector< std::pair<std::string, macro_states> > macros;
+	include_handler_fn			user_inc_handler;
+	virtual_file_dict			virtual_files;
+	*/
+};
+
 class driver_impl: public driver{
 public:
 	driver_impl();

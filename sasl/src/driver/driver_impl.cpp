@@ -443,4 +443,15 @@ void driver_impl::remove_macro( std::string const& macro )
 	macros.push_back( make_pair(macro, ms_remove) );
 }
 
+
+void driver_null::set_parameter( int argc, char** argv )
+{
+
+}
+
+driver_null::driver_null()
+{
+
+}
+
 END_NS_SASL_DRIVER();

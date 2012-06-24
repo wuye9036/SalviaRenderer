@@ -28,6 +28,8 @@ namespace sasl
 
 extern "C"
 {
+	SASL_DRIVER_API void sasl_initialize_driver();
+	SASL_DRIVER_API void sasl_finalize_driver();
 	SASL_DRIVER_API void sasl_create_driver( boost::shared_ptr<sasl::driver::driver>& out );
 };
 

@@ -564,8 +564,6 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
 	EFLIB_UNREF_PARAM(data);
 	EFLIB_UNREF_PARAM(v);
-	
-	llvm::InitializeNativeTarget();
 
 	TargetMachine* tm = EngineBuilder(module()).selectTarget();
 	target_data = tm->getTargetData();

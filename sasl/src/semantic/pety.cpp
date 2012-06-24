@@ -149,6 +149,11 @@ pety_item_t::pety_item_t()
 {
 }
 
+pety_item_t::~pety_item_t()
+{
+	stored.reset();
+}
+
 tynode* pety_t::get_proto(tid_t id)
 {
 	return id < 0 ? NULL : type_items_[id].stored.get();
@@ -241,6 +246,10 @@ tid_t pety_t::get_array( tid_t elem_type, size_t dimension )
 		ret_tid = type_items_[ret_tid].a_qual;
 	}
 	return ret_tid;
+}
+
+pety_t::~pety_t()
+{
 }
 
 void assign_entry_id( module_semantic* msem, tynode* node, tid_t id ){

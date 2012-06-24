@@ -52,7 +52,7 @@ string split_integer_literal_suffix( string const& str, bool& is_unsigned, bool&
 			break;
 		}
 	}
-
+	
 	// remove suffix for lexical casting.
 	return string( str.begin(), str.end()-tail_count );
 }
@@ -173,7 +173,7 @@ public:
 		node_semantic* ret = get_semantic(v);
 		if( ret == NULL )
 		{
-			ret = new_node_sem();
+			ret = alloc_semantic();
 			semantics_dict_.insert( make_pair(v, ret) );
 		}
 		return ret;
@@ -194,7 +194,9 @@ public:
 
 	virtual symbol* alloc_symbol()
 	{
-		return alloc_object<symbol>(symbol_pool_);
+		symbol* ret = alloc_object<symbol>(symbol_pool_);
+		symbols_.push_back(ret);
+		return ret;
 	}
 
 	virtual void link_symbol(node* v, symbol* sym)
@@ -221,9 +223,10 @@ public:
 		extra_nodes_.push_back(v);
 	}
 private:
-	node_semantic* new_node_sem()
+	node_semantic* alloc_semantic()
 	{
 		node_semantic* ret = static_cast<node_semantic*>( node_semantic_pool_.malloc() );
+		semantics_.push_back(ret);
 		memset( ret, 0, sizeof(node_semantic) );
 		ret->owner(this); 
 		ret->tid(-1);
