@@ -418,7 +418,11 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 	}
 }
 
-cgllvm_vs::cgllvm_vs(): entry_fn(NULL), entry_sym(NULL){}
+cgllvm_vs::cgllvm_vs()
+	: entry_fn(NULL), entry_sym(NULL)
+{
+	service_ = new cgs_sisd();
+}
 
 bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
 	assert(fn && entry_fn);

@@ -62,7 +62,9 @@ typedef cgllvm_sctxt* sctxt_handle;
 #define SASL_VISITOR_TYPE_NAME cgllvm_general
 
 cgllvm_general::cgllvm_general()
-{}
+{
+	service_ = new cgs_sisd();
+}
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {

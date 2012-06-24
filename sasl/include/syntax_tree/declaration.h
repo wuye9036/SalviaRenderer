@@ -201,6 +201,11 @@ struct function_type: public tynode{
 	boost::shared_ptr<compound_statement> body;
 
 	bool declaration_only();
+
+	~function_type()
+	{
+		;
+	}
 protected:
 	function_type( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
 	function_type& operator = ( const function_type& );

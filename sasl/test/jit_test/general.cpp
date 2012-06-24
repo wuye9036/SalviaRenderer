@@ -66,7 +66,7 @@ BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 	init_g( "./repo/question/v1a1/comments.ss" );
 	jit_function<int(int)> fn;
@@ -77,7 +77,7 @@ BOOST_FIXTURE_TEST_CASE( comments, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 	init_g( "./repo/question/v1a1/preprocessors.ss" );
@@ -90,7 +90,7 @@ BOOST_FIXTURE_TEST_CASE( preprocessors, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 int fib_ref(int i)
 {
@@ -539,7 +539,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct tex2d_vs_data{
 	vec4 pos;

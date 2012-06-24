@@ -110,9 +110,14 @@ public:
 		return root_symbol_;
 	}
 
-	virtual program_ptr root_program() const
+	virtual program_ptr get_program() const
 	{
-		return root_symbol_->associated_node()->as_handle<program>();
+		return root_node_;
+	}
+
+	virtual	void set_program(sasl::syntax_tree::program_ptr const& v)
+	{
+		root_node_ = v;
 	}
 
 	virtual pety_t* pety() const
@@ -240,6 +245,7 @@ private:
 			(*it)->~symbol();
 		}
 	}
+
 	pety_t_ptr		pety_;
 	program_ptr		root_node_;
 	symbol*			root_symbol_;

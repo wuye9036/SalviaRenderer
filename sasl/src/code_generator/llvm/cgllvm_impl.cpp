@@ -93,8 +93,8 @@ bool cgllvm_impl::generate( module_semantic* mod, abi_info const* abii )
 
 	if(sem_){
 		assert( sem_->root_symbol() );
-		assert( sem_->root_program() );
-		sem_->root_program()->accept( this, NULL );
+		assert( sem_->get_program() );
+		sem_->get_program()->accept( this, NULL );
 		return true;
 	}
 
@@ -103,6 +103,12 @@ bool cgllvm_impl::generate( module_semantic* mod, abi_info const* abii )
 
 cgllvm_impl::~cgllvm_impl()
 {
+	if( service_ )
+	{
+		delete service_;
+		service_ = NULL;
+	}
+	
 	// if( target_data ){ delete target_data; }
 }
 
@@ -119,7 +125,7 @@ function_t* cgllvm_impl::get_function( std::string const& name ) const
 }
 
 cgllvm_impl::cgllvm_impl()
-	: abii(NULL), sem_(NULL), target_data(NULL)
+	: abii(NULL), sem_(NULL), target_data(NULL), service_(NULL)
 	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(NULL)
 	, parent_struct_(NULL), block_(NULL), current_symbol_(NULL), variable_to_initialize_(NULL)
 {

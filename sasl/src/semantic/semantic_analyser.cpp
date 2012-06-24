@@ -1169,6 +1169,7 @@ SASL_VISIT_DEF( program ){
 	}
 
 	module_semantic_->link_symbol(dup_prog.get(), module_semantic_->root_symbol() );
+	module_semantic_->set_program(dup_prog);
 }
 
 void semantic_analyser::empty_caster( node* /*lhs*/, node* /*rhs*/ )
@@ -1939,7 +1940,6 @@ void semantic_analyser::function_register::r(
 
 		owner.get_module_semantic()->intrinsics().push_back( new_sym );
 	}
-	fn.reset();
 }
 
 semantic_analyser::function_register::function_register( function_register const& rhs)

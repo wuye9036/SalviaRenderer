@@ -536,8 +536,7 @@ llvm_module_impl* cgllvm_sisd::mod_ptr(){
 
 cgs_sisd* cgllvm_sisd::service() const
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return static_cast<cgs_sisd*>(service_);
 }
 
 abis cgllvm_sisd::local_abi( bool is_c_compatible ) const

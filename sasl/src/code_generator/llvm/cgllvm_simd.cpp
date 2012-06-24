@@ -55,8 +55,10 @@ using std::vector;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-cgllvm_simd::cgllvm_simd(): entry_fn(NULL){
+cgllvm_simd::cgllvm_simd(): entry_fn(NULL)
+{
 	memset( entry_structs, 0, sizeof( entry_structs ) );
+	service_ = new cgs_simd();
 }
 
 cgllvm_simd::~cgllvm_simd(){}

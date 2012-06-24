@@ -55,7 +55,8 @@ public:
 	virtual ~module_semantic(){}
 	
 	virtual symbol*							root_symbol() const = 0;
-	virtual sasl::syntax_tree::program_ptr	root_program() const = 0;
+	virtual sasl::syntax_tree::program_ptr	get_program() const = 0;
+	virtual	void							set_program(sasl::syntax_tree::program_ptr const&) = 0;
 
 	virtual pety_t*							pety() const = 0;
 	virtual sasl::common::diag_chat_ptr		diags() const = 0;

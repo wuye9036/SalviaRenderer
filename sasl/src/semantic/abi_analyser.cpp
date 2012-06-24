@@ -291,7 +291,7 @@ bool abi_analyser::add_semantic(
 	tynode* ptspec = pssi->ty_proto();
 	assert(ptspec); // TODO Here are semantic analysis error.
 
-	salviar::semantic_value const& node_sem = *( pssi->semantic_value() );
+	salviar::semantic_value const& node_sem = pssi->semantic_value_ref();
 
 	if( ptspec->is_builtin() ){
 		builtin_types btc = ptspec->tycode;

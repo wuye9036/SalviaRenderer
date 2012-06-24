@@ -134,6 +134,7 @@ protected:
 	boost::shared_ptr<sasl::semantic::caster_t>
 										caster;			///< For type conversation.
 	llvm::TargetData const *			target_data;
+	cg_service*							service_;
 
 	// Status
 	bool				semantic_mode_;
