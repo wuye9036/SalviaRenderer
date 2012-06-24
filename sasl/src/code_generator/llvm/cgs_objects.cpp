@@ -52,10 +52,6 @@ tynode* cg_type::tyn_ptr() const{
 	return tyn;
 }
 
-shared_ptr<tynode> cg_type::tyn_shared() const{
-	return tyn->as_handle<tynode>();
-}
-
 llvm::Type* cg_type::ty( abis abi ) const{
 	return tys[abi];
 }
@@ -364,7 +360,7 @@ function_t::function_t(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(fal
 bool function_t::arg_is_ref( size_t index ) const{
 	assert( index < fnty->params.size() );
 
-	builtin_types hint = sem->get_semantic(fnty->params[index])->value_builtin_type();
+	builtin_types hint = cg->get_node_semantic( fnty->params[index].get() )->value_builtin_type();
 	return c_compatible && !is_scalar(hint) && !is_sampler(hint);
 }
 

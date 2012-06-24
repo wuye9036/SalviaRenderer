@@ -132,7 +132,7 @@ SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)
 	node_ctxt(v,true)->node_value = ret_value.to_rvalue();
 }
 
-llvm_module_impl* cgllvm_general::mod_ptr(){
+cgllvm_module_impl* cgllvm_general::mod_ptr(){
 	return llvm_mod_.get();
 }
 

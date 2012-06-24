@@ -278,8 +278,7 @@ SASL_VISIT_DEF( if_statement ){
 }
 
 SASL_VISIT_DEF( while_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	insert_point_t cond_beg = service()->new_block( "while.cond", true );
 	visit_child( v.cond );
@@ -319,8 +318,7 @@ SASL_VISIT_DEF( while_statement ){
 }
 
 SASL_VISIT_DEF( dowhile_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	insert_point_t do_beg = service()->new_block( "do.to_body", true );
 	insert_point_t do_end = service()->insert_point();
@@ -368,8 +366,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 }
 
 SASL_VISIT_DEF( case_label ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	if( v.expr ){
 		visit_child( v.expr );
@@ -379,8 +376,7 @@ SASL_VISIT_DEF( case_label ){
 SASL_VISIT_DEF_UNIMPL( ident_label );
 
 SASL_VISIT_DEF( switch_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	visit_child( v.cond );
 	insert_point_t cond_end = service()->insert_point();
@@ -530,7 +526,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement )
 	service()->jump_to(break_to_);
 }
 
-llvm_module_impl* cgllvm_sisd::mod_ptr(){
+cgllvm_module_impl* cgllvm_sisd::mod_ptr(){
 	return llvm_mod_.get();
 }
 

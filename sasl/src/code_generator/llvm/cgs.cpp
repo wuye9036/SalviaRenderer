@@ -81,7 +81,7 @@ Function* cg_service::intrin_( int id )
 	return intrins.get(id, module(), TypeBuilder<FunctionT, false>::get( context() ) );
 }
 
-bool cg_service::initialize( llvm_module_impl* mod, module_context* ctxt, module_semantic* sem )
+bool cg_service::initialize( cgllvm_module_impl* mod, module_context* ctxt, module_semantic* sem )
 {
 	assert(mod);
 	assert(ctxt);
@@ -97,11 +97,11 @@ bool cg_service::initialize( llvm_module_impl* mod, module_context* ctxt, module
 }
 
 Module* cg_service::module() const{
-	return llvm_mod_->module();
+	return llvm_mod_->llvm_module();
 }
 
 LLVMContext& cg_service::context() const{
-	return llvm_mod_->context();
+	return llvm_mod_->llvm_context();
 }
 
 DefaultIRBuilder& cg_service::builder() const{
@@ -2524,6 +2524,11 @@ value_t cg_service::emit_texCUBEproj( value_t const& samp, value_t const& coord 
 node_context* cg_service::get_node_context(node* v)
 {
 	return ctxt_->get_node_context(v);
+}
+
+node_semantic* cg_service::get_node_semantic( sasl::syntax_tree::node* v )
+{
+	return sem_->get_semantic(v);
 }
 
 END_NS_SASL_CODE_GENERATOR();

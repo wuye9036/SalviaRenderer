@@ -98,7 +98,6 @@ public:
 		aggregated
 	};
 
-	cg_type(module_context* owner);
 	cg_type(
 		sasl::syntax_tree::tynode* sty,
 		llvm::Type* ty_c,
@@ -106,22 +105,21 @@ public:
 		llvm::Type* ty_vec,
 		llvm::Type* ty_pkg
 		);
+	
+	cg_type();
 
 	cg_type( cg_type const& );
 	cg_type& operator = ( cg_type const& );
 
-	sasl::syntax_tree::tynode* tyn_ptr() const;
-	boost::shared_ptr<sasl::syntax_tree::tynode> tyn_shared() const;
-	builtin_types hint() const;
-	llvm::Type* ty( abis abi ) const;
+	sasl::syntax_tree::tynode*
+					tyn_ptr() const;
+	builtin_types	hint() const;
+	llvm::Type*		ty( abis abi ) const;
 
 protected:
-	cg_type();
-
 	llvm::Type*					tys[4];
 	sasl::syntax_tree::tynode*	tyn;
 	classifications				cls;
-	module_context*				owner;
 };
 
 class value_t{
@@ -277,7 +275,6 @@ struct function_t{
 	bool								partial_execution;
 	bool								ret_void;
 	cg_service*							cg;
-	sasl::semantic::module_semantic*	sem;
 };
 
 END_NS_SASL_CODE_GENERATOR();

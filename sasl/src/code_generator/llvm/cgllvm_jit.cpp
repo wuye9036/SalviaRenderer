@@ -41,7 +41,7 @@ void initialize_llvm_options()
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-boost::shared_ptr<cgllvm_jit_engine> cgllvm_jit_engine::create( boost::shared_ptr<llvm_module> ctxt, std::string& error ){
+boost::shared_ptr<cgllvm_jit_engine> cgllvm_jit_engine::create( boost::shared_ptr<cgllvm_module> ctxt, std::string& error ){
 	boost::shared_ptr<cgllvm_jit_engine> ret = boost::shared_ptr<cgllvm_jit_engine>( new cgllvm_jit_engine( ctxt ) );
 	if( !ret ){
 		error.assign( "Unknown error occurred." );
@@ -56,7 +56,7 @@ void* cgllvm_jit_engine::get_function( const std::string& func_name ){
 	assert( global_ctxt );
 	assert( engine );
 
-	llvm::Function* func = global_ctxt->module()->getFunction( func_name );
+	llvm::Function* func = global_ctxt->llvm_module()->getFunction( func_name );
 	if (!func){
 		return NULL;
 	}
@@ -69,14 +69,14 @@ void* cgllvm_jit_engine::get_function( const std::string& func_name ){
 	return native_fn;
 }
 
-cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<llvm_module> ctxt )
+cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<cgllvm_module> ctxt )
 : jit_engine(), global_ctxt( ctxt )
 {
 	build();
 }
 
 void cgllvm_jit_engine::build(){
-	if ( !global_ctxt || !global_ctxt->module() ){
+	if ( !global_ctxt || !global_ctxt->llvm_module() ){
 		engine.reset();
 	}
 	
@@ -90,12 +90,12 @@ void cgllvm_jit_engine::build(){
 	}
 	
 	engine.reset(
-		llvm::EngineBuilder( global_ctxt->module() ).setMAttrs(attrs)
+		llvm::EngineBuilder( global_ctxt->llvm_module() ).setMAttrs(attrs)
 		.setErrorStr(&err)
 		.create()
 		);
 	if ( engine ){
-		if( !global_ctxt->get_ownership() ){
+		if( !global_ctxt->take_ownership() ){
 			engine.reset();
 		}
 	}
@@ -118,7 +118,7 @@ cgllvm_jit_engine::~cgllvm_jit_engine()
 
 void cgllvm_jit_engine::inject_function( void* fn, std::string const& name )
 {
-	llvm::Function* func = global_ctxt->module()->getFunction( name );
+	llvm::Function* func = global_ctxt->llvm_module()->getFunction( name );
 	if ( func ){
 		engine->addGlobalMapping( func, fn );
 	}

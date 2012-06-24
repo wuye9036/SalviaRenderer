@@ -25,9 +25,9 @@
 
 namespace po = boost::program_options;
 
-using sasl::code_generator::llvm_module;
+using sasl::code_generator::cgllvm_module;
 using sasl::code_generator::generate_llvm_code;
-using sasl::code_generator::codegen_context;
+using sasl::code_generator::cgllvm_module;
 using sasl::code_generator::jit_engine;
 using sasl::code_generator::cgllvm_jit_engine;
 using sasl::semantic::module_semantic;
@@ -237,18 +237,18 @@ shared_ptr<diag_chat> driver_impl::compile()
 	if( !mroot ){ return diags; }
 
 	shared_ptr<diag_chat> semantic_diags = diag_chat::create();
-	msi = analysis_semantic( mroot.get(), semantic_diags.get(), lang );
+	msem = analysis_semantic( mroot.get(), semantic_diags.get(), lang );
 	if( error_count( semantic_diags.get(), false ) > 0 )
 	{
-		msi.reset();
+		msem.reset();
 	}
 	diag_chat::merge( diags.get(), semantic_diags.get(), true );
 
-	if( !msi ){ return diags; }
+	if( !msem ){ return diags; }
 
 	abi_analyser aa;
 
-	if( !aa.auto_entry(msi, lang) ){
+	if( !aa.auto_entry(msem, lang) ){
 		if ( lang != salviar::lang_general ){
 			cout << "ABI analysis error occurs!" << endl;
 			return diags;
@@ -256,8 +256,8 @@ shared_ptr<diag_chat> driver_impl::compile()
 	}
 	mabi = aa.shared_abii(lang);
 
-	shared_ptr<llvm_module> llvmcode = generate_llvm_code( msi.get(), mabi.get() );
-	mcg = llvmcode;
+	shared_ptr<cgllvm_module> llvmcode = generate_llvm_code( msem, mabi.get() );
+	mod = llvmcode;
 
 	if( !llvmcode ){
 		cout << "Code generation error occurs!" << endl;
@@ -267,18 +267,18 @@ shared_ptr<diag_chat> driver_impl::compile()
 	if( opt_io.fmt == options_io::llvm_ir ){
 		if( !opt_io.output_file_name.empty() ){
 			ofstream out_file( opt_io.output_file_name.c_str(), std::ios_base::out );
-			llvmcode->dump( out_file );
+			llvmcode->dump_ir( out_file );
 		}
 	}
 	return diags;
 }
 
-shared_ptr<module_semantic> driver_impl::mod_si() const{
-	return msi;
+shared_ptr<module_semantic> driver_impl::module_sem() const{
+	return msem;
 }
 
-shared_ptr<codegen_context> driver_impl::mod_codegen() const{
-	return mcg;
+shared_ptr<cgllvm_module> driver_impl::module() const{
+	return mod;
 }
 
 shared_ptr<node> driver_impl::root() const{
@@ -335,10 +335,10 @@ void sasl_ldexp_f32	( float* ret, float lhs, float rhs ){ *ret = ldexpf(lhs, rhs
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
 	std::string err;
-	if(!mcg){
+	if(!mod){
 		return shared_ptr<jit_engine>();
 	}
-	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<llvm_module>(mcg), err );
+	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<cgllvm_module>(mod), err );
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
 	inject_function(ret_jit, &sasl_exp_f32,		"sasl.exp.f32",		true);
@@ -407,7 +407,7 @@ void driver_impl::inject_function(shared_ptr<jit_engine> const& je, void* pfn, s
 	}
 	else
 	{
-		raw_name = &( msi->root_symbol()->find_overloads(name)[0]->mangled_name() );
+		raw_name = &( msem->root_symbol()->find_overloads(name)[0]->mangled_name() );
 	}
 	
 	je->inject_function(pfn, *raw_name);

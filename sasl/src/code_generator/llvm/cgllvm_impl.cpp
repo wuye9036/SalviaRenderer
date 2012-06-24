@@ -56,20 +56,20 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 llvm::DefaultIRBuilder* cgllvm_impl::builder() const
 {
-	return llvm_mod_->builder().get();
+	return llvm_mod_->builder();
 }
 
 llvm::LLVMContext& cgllvm_impl::context() const
 {
-	return llvm_mod_->context();
+	return llvm_mod_->llvm_context();
 }
 
 llvm::Module* cgllvm_impl::module() const
 {
-	return llvm_mod_->module();
+	return llvm_mod_->llvm_module();
 }
 
-node_context* cgllvm_impl::node_ctxt( node* n, bool create_if_need /*= false */ )
+node_context* cgllvm_impl::node_ctxt( node const* n, bool create_if_need /*= false */ )
 {
 	if(!create_if_need)
 	{
@@ -81,12 +81,12 @@ node_context* cgllvm_impl::node_ctxt( node* n, bool create_if_need /*= false */ 
 	}
 }
 
-shared_ptr<llvm_module> cgllvm_impl::generated_module() const
+shared_ptr<cgllvm_module> cgllvm_impl::generated_module() const
 {
 	return llvm_mod_;
 }
 
-bool cgllvm_impl::generate( module_semantic* mod, abi_info const* abii )
+bool cgllvm_impl::generate( shared_ptr<module_semantic> const& mod, abi_info const* abii )
 {
 	sem_ = mod;
 	this->abii = abii;
@@ -125,7 +125,7 @@ function_t* cgllvm_impl::get_function( std::string const& name ) const
 }
 
 cgllvm_impl::cgllvm_impl()
-	: abii(NULL), sem_(NULL), target_data(NULL), service_(NULL)
+	: abii(NULL), target_data(NULL), service_(NULL)
 	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(NULL)
 	, parent_struct_(NULL), block_(NULL), current_symbol_(NULL), variable_to_initialize_(NULL)
 {
@@ -352,19 +352,22 @@ SASL_VISIT_DEF( builtin_type ){
 	EFLIB_UNREF_PARAM(data);
 
 	node_semantic* tisi = sem_->get_semantic(&v);
-	node_context* pctxt = node_ctxt( tisi->ty_proto(), true );
+	node_context* ctxt = ctxt_->get_or_create_node_context(&v);
+	if( ctxt->ty ) { return; }
 
-	if( !pctxt->ty )
+	node_context* proto_ctxt = node_ctxt( tisi->ty_proto(), true );
+	if( !proto_ctxt->ty )
 	{
-		cg_type* bt_tyinfo = service()->create_ty(&v);
+		cg_type* bt_tyinfo = service()->create_ty( tisi->ty_proto() );
 		assert( bt_tyinfo );
-		pctxt->ty = bt_tyinfo;
+		proto_ctxt->ty = bt_tyinfo;
 
 		std::string tips = v.tycode.name() + std::string(" was not supported yet.");
-		EFLIB_ASSERT_AND_IF( pctxt->ty, tips.c_str() ){
+		EFLIB_ASSERT_AND_IF( proto_ctxt->ty, tips.c_str() ){
 			return;
 		}
 	}
+	*ctxt = *proto_ctxt;
 }
 
 SASL_VISIT_DEF( parameter ){
@@ -387,7 +390,7 @@ SASL_VISIT_DEF( function_type )
 	EFLIB_UNREF_PARAM(data);
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 
-	node_context* fn_ctxt = node_ctxt(&v, true);
+	node_context* fn_ctxt = node_ctxt(v, true);
 
 	if(!fn_ctxt->function_scope)
 	{
@@ -443,13 +446,16 @@ SASL_VISIT_DEF( variable_declaration ){
 
 	// Visit type info
 	visit_child( v.type_info );
-	node_context* ctxt = node_ctxt(v.type_info);
-
-	TYPE_SCOPE(ctxt->ty);
+	node_context* ty_ctxt = node_ctxt(v.type_info);
+	node_context* ctxt = node_ctxt(v, true);
+	
+	TYPE_SCOPE(ty_ctxt->ty);
 	BOOST_FOREACH( shared_ptr<declarator> const& dclr, v.declarators )
 	{
 		visit_child(dclr);
 	}
+
+	ctxt->ty = ty_ctxt->ty;
 	ctxt->declarator_count = static_cast<int>( v.declarators.size() );
 }
 
@@ -524,12 +530,15 @@ SASL_VISIT_DEF( program )
 
 	// Create module.
 	assert( !llvm_mod_ );
-	llvm_mod_ = create_codegen_context<llvm_module_impl>( v.as_handle() );
-	if( !llvm_mod_ ) return;
+	llvm_mod_.reset( new cgllvm_module_impl() );
+	ctxt_ = module_context::create();
 
 	// Initialization.
-	llvm_mod_->create_module(v.name);
-	service()->initialize(llvm_mod_.get(), ctxt_.get(), sem_);
+	llvm_mod_->create_llvm_module(v.name);
+	llvm_mod_->set_semantic(sem_);
+	llvm_mod_->set_context(ctxt_);
+
+	service()->initialize( llvm_mod_.get(), ctxt_.get(), sem_.get() );
 
 	typedef node_context* (fn_proto_t)( boost::shared_ptr<sasl::syntax_tree::node> const& );
 	typedef node_context* (cgllvm_impl::*mem_fn_proto_t) ( boost::shared_ptr<sasl::syntax_tree::node> const&, bool );
@@ -569,7 +578,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 
 	// Needn't process init expression now.
 	node_semantic* sem = sem_->get_semantic(&v);
-	node_context* ctxt = node_ctxt(&v, true);
+	node_context* ctxt = node_ctxt(v, true);
 	ctxt->ty = current_cg_type_;
 	ctxt->node_value = service()->create_value(current_cg_type_, NULL, vkind_swizzle, abi_unknown );
 	ctxt->node_value.index( sem->member_index() );
@@ -584,7 +593,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator )
 SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
 	EFLIB_UNREF_PARAM(data);
 
-	node_context* ctxt = node_ctxt(&v, true);
+	node_context* ctxt = node_ctxt(v, true);
 
 	ctxt->ty = current_cg_type_;
 	ctxt->node_value = service()->create_variable( ctxt->ty, local_abi( sem_->get_semantic(&v)->msc_compatible() ), v.name->str );
@@ -605,7 +614,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	assert( node_ctxt(v.retval_type)->ty );
 
 	// Generate parameters.
-	node_context* ctxt = node_ctxt(&v);
+	node_context* ctxt = node_ctxt(v);
 
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
 	{
@@ -632,8 +641,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	service()->new_block(".body", true);
 	visit_child( v.body );

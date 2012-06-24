@@ -42,10 +42,10 @@ public:
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit();
 	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit( external_function_array const& );
 
-	virtual boost::shared_ptr<sasl::semantic::module_semantic>		 mod_si() const;
-	virtual boost::shared_ptr<sasl::code_generator::codegen_context> mod_codegen() const;
-	virtual boost::shared_ptr<sasl::syntax_tree::node>				 root() const;
-	virtual boost::shared_ptr<sasl::semantic::abi_info>				 mod_abi() const;
+	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const;
+	virtual boost::shared_ptr<sasl::code_generator::cgllvm_module>	module() const;
+	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const;
+	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const;
 
 	boost::program_options::variables_map const &	variables() const;
 	options_display_info const &					display_info() const;
@@ -59,12 +59,12 @@ private:
 	void inject_function(
 		boost::shared_ptr<sasl::code_generator::jit_engine> const& je,
 		void* pfn, std::string const& name, bool is_raw_name);
-
-	boost::shared_ptr<sasl::semantic::module_semantic>		 msi;
-	boost::shared_ptr<sasl::code_generator::codegen_context> mcg;
-	boost::shared_ptr<sasl::syntax_tree::node>				 mroot;
-	boost::shared_ptr<sasl::semantic::abi_info>				 mabi;
-
+	
+	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
+	boost::shared_ptr<sasl::code_generator::cgllvm_module>	mod;
+	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
+	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
+	
 	// Options
 	options_global			opt_global;
 	options_display_info	opt_disp;

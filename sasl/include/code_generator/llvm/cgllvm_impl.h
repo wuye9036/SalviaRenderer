@@ -9,6 +9,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/utility/enable_if.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -44,18 +45,21 @@ struct builtin_types;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class  llvm_module;
-class  llvm_module_impl;
+class  cgllvm_module;
+class  cgllvm_module_impl;
 struct node_context;
 
 class cgllvm_impl: public sasl::syntax_tree::syntax_tree_visitor
 {
 public:
-	boost::shared_ptr<llvm_module> generated_module() const;
-	bool generate(sasl::semantic::module_semantic* msem, sasl::semantic::abi_info const* abii);
+	boost::shared_ptr<cgllvm_module> generated_module() const;
+	bool generate(
+		boost::shared_ptr<sasl::semantic::module_semantic> const& msem,
+		sasl::semantic::abi_info const* abii
+		);
 
 	// Get context by node.
-	node_context* node_ctxt( sasl::syntax_tree::node* n, bool create_if_need = false );
+	node_context* node_ctxt(sasl::syntax_tree::node const* n, bool create_if_need = false);
 
 protected:
 	cgllvm_impl();
@@ -113,7 +117,8 @@ protected:
 	template <typename NodeT>
 	node_context* node_ctxt( boost::shared_ptr<NodeT> const&, bool create_if_need = false );
 	template <typename NodeT>
-	node_context* node_ctxt( NodeT const&, bool create_if_need = false );
+	node_context* node_ctxt( NodeT const&, bool create_if_need = false,
+		typename boost::disable_if< std::is_pointer<NodeT> >::type* = NULL );
 
 	// Direct access member from module.
 	llvm::DefaultIRBuilder*	builder() const;
@@ -127,14 +132,15 @@ protected:
 	function_t*				get_function( std::string const& name ) const;
 
 	// Store global informations
-	sasl::semantic::module_semantic*	sem_;
-	boost::shared_ptr<module_context>	ctxt_;
-	boost::shared_ptr<llvm_module_impl>	llvm_mod_;
-	sasl::semantic::abi_info const*		abii;
+	boost::shared_ptr<sasl::semantic::module_semantic>
+											sem_;
+	boost::shared_ptr<module_context>		ctxt_;
+	boost::shared_ptr<cgllvm_module_impl>	llvm_mod_;
+	sasl::semantic::abi_info const*			abii;
 	boost::shared_ptr<sasl::semantic::caster_t>
-										caster;			///< For type conversation.
-	llvm::TargetData const *			target_data;
-	cg_service*							service_;
+											caster;			///< For type conversation.
+	llvm::TargetData const *				target_data;
+	cg_service*								service_;
 
 	// Status
 	bool				semantic_mode_;

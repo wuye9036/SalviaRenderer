@@ -90,7 +90,7 @@ protected:
 	// Override node_ctxt of cgllvm_impl
 	
 	void	mask_to_indexes( char index[4], uint32_t mask );
-	llvm_module_impl* mod_ptr();
+	cgllvm_module_impl* mod_ptr();
 };
 
 END_NS_SASL_CODE_GENERATOR();

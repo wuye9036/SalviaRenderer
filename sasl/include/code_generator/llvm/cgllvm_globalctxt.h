@@ -17,6 +17,14 @@ namespace llvm{
         DefaultIRBuilder;
 }
 
+namespace sasl
+{
+	namespace semantic
+	{
+		class module_semantic;
+	}
+}
+
 #include <boost/shared_ptr.hpp>
 #include <string>
 
@@ -25,36 +33,42 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 /////////////////////////////////////////
 // support LLVMContext, Module, IRBuilder and other data use by code generator.
 // General module created by llvm code generator.
-class llvm_module_impl: public llvm_module{
+class cgllvm_module_impl: public cgllvm_module{
 public:
-	llvm_module_impl();
-	void create_module( const std::string& modname );
+	cgllvm_module_impl();
+	void create_llvm_module(std::string const& module_name);
 
-	virtual llvm::Module* module() const;
-	virtual boost::shared_ptr<llvm::DefaultIRBuilder> builder() const;
-	virtual llvm::Module* get_ownership() const;
-	virtual void dump() const;
-	virtual void dump( std::ostream& ostr ) const;
+	virtual sasl::semantic::module_semantic*
+									get_semantic() const;
+	virtual void					set_semantic( boost::shared_ptr<sasl::semantic::module_semantic> const& );
+	virtual module_context*			get_context() const;
+	virtual void					set_context( boost::shared_ptr<module_context> const& );
 
-	virtual llvm::LLVMContext& context();
+	virtual llvm::Module*			llvm_module() const;
+	virtual llvm::LLVMContext&		llvm_context();
+	virtual llvm::Module*			take_ownership() const;
+	virtual llvm::DefaultIRBuilder*	builder() const;
+
+	virtual void dump_ir() const;
+	virtual void dump_ir( std::ostream& ostr ) const;
+
+	
 	llvm::Type*	entry_param_type( salviar::sv_usage st ) const;
 	void		entry_param_type( salviar::sv_usage st, llvm::Type* t );
 
-	~llvm_module_impl();
+	~cgllvm_module_impl();
 
 protected:
-	boost::shared_ptr<llvm::LLVMContext> lctxt;
-	boost::shared_ptr<llvm::DefaultIRBuilder> irbuilder;
+	boost::shared_ptr<llvm::LLVMContext>		llvm_ctxt_;
+	boost::shared_ptr<llvm::DefaultIRBuilder>	irbuilder_;
+	boost::shared_ptr<sasl::semantic::module_semantic>
+												sem_;
+	boost::shared_ptr<sasl::code_generator::module_context>
+												ctxt_;
+	llvm::Module*								llvm_mod_;
+	mutable bool								have_mod_;
+
 	llvm::Type* param_types[salviar::storage_usage_count];
-
-	llvm::Module* mod;
-
-	mutable bool have_mod;
-};
-
-class cgllvm_modvs: public llvm_module_impl{
-public:
-
 };
 
 END_NS_SASL_CODE_GENERATOR();

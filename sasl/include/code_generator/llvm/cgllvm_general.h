@@ -43,8 +43,8 @@ struct builtin_types;
 BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cgllvm_sctxt;
-class llvm_module_impl;
-class llvm_module;
+class cgllvm_module_impl;
+class cgllvm_module;
 
 class cgllvm_general: public cgllvm_sisd{
 public:
@@ -70,7 +70,7 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit	, program );
 	SASL_SPECIFIC_VISIT_DCL( bin_logic			, binary_expression );
 private:
-	llvm_module_impl* mod_ptr();
+	cgllvm_module_impl* mod_ptr();
 };
 
 END_NS_SASL_CODE_GENERATOR()

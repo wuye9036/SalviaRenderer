@@ -21,7 +21,7 @@ namespace sasl{
 		class module_semantic;
 	}
 	namespace code_generator{
-		class codegen_context;
+		class cgllvm_module;
 	}
 }
 

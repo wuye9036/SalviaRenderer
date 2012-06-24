@@ -2,7 +2,6 @@
 #define SASL_CODE_GENERATOR_LLVM_CGLLVM_API_H
 
 #include <sasl/include/code_generator/forward.h>
-#include <sasl/include/code_generator/codegen_context.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -26,15 +25,24 @@ namespace sasl {
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class llvm_module: public codegen_context{
-public:
-	virtual llvm::Module*		module() const					= 0;
-	virtual llvm::Module*		get_ownership() const			= 0;
-	virtual llvm::LLVMContext&	context()						= 0;
-	virtual void				dump() const					= 0;
-	virtual void				dump( std::ostream& ostr ) const= 0;
+class module_context;
 
-	virtual ~llvm_module(){};
+class cgllvm_module
+{
+public:
+	virtual sasl::semantic::module_semantic*
+								get_semantic() const				= 0;
+	virtual sasl::code_generator::module_context*
+								get_context() const					= 0;
+
+	virtual llvm::Module*		llvm_module() const					= 0;
+	virtual llvm::LLVMContext&	llvm_context()						= 0;
+	virtual llvm::Module*		take_ownership() const				= 0;
+
+	virtual void				dump_ir() const						= 0;
+	virtual void				dump_ir( std::ostream& ostr ) const	= 0;
+
+	virtual ~cgllvm_module(){};
 };
 
 enum optimization_options{
@@ -42,8 +50,11 @@ enum optimization_options{
 	opt_preset_std_for_function
 };
 
-boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_semantic*, sasl::semantic::abi_info const* );
-void optimize( boost::shared_ptr<llvm_module>, std::vector<optimization_options> opt_options );
+boost::shared_ptr<cgllvm_module> generate_llvm_code(
+	boost::shared_ptr<sasl::semantic::module_semantic> const&,
+	sasl::semantic::abi_info const*
+	);
+void optimize( boost::shared_ptr<cgllvm_module>, std::vector<optimization_options> opt_options );
 
 // void optimize( boost::shared_ptr<llvm_module>, const std::string& params );
 

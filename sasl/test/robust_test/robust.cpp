@@ -31,7 +31,7 @@ using namespace eflib;
 
 using sasl::driver::driver;
 using sasl::code_generator::jit_engine;
-using sasl::code_generator::llvm_module;
+using sasl::code_generator::cgllvm_module;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
 using sasl::semantic::symbol;
@@ -111,14 +111,14 @@ struct jit_fixture {
 		diag_chat::merge(diags.get(), results.get(), true);
 
 		BOOST_REQUIRE( drv->root() );
-		BOOST_REQUIRE( drv->mod_si() );
-		BOOST_REQUIRE( drv->mod_codegen() );
+		BOOST_REQUIRE( drv->module_sem() );
+		BOOST_REQUIRE( drv->module() );
 
-		root_sym = drv->mod_si()->root_symbol();
+		root_sym = drv->module_sem()->root_symbol();
 
-		shared_ptr<llvm_module> llvm_mod = shared_polymorphic_cast<llvm_module>( drv->mod_codegen() );
+		shared_ptr<cgllvm_module> llvm_mod = shared_polymorphic_cast<cgllvm_module>( drv->module() );
 		fstream dump_file( ( dump_file_name + "_ir.ll" ).c_str(), std::ios::out );
-		llvm_mod->dump( dump_file );
+		llvm_mod->dump_ir( dump_file );
 		dump_file.close();
 
 		je = drv->create_jit();

@@ -21,9 +21,11 @@ using sasl::semantic::abi_info;
 using sasl::syntax_tree::node;
 using boost::shared_ptr;
 
-boost::shared_ptr<llvm_module> generate_llvm_code( sasl::semantic::module_semantic* mod, sasl::semantic::abi_info const* abii )
+boost::shared_ptr<cgllvm_module> generate_llvm_code(
+	boost::shared_ptr<sasl::semantic::module_semantic> const& mod,
+	sasl::semantic::abi_info const* abii )
 {
-	shared_ptr<llvm_module> ret;
+	shared_ptr<cgllvm_module> ret;
 	
 	symbol* root = mod->root_symbol();
 	if(!root) { return ret; }

@@ -233,7 +233,7 @@ SASL_VISIT_DEF( variable_expression ){
 	sv_layout* var_si = abii->input_sv_layout(sym);
 
 	node_context* varctxt = node_ctxt( sym->associated_node() );
-	node_context* ctxt = node_ctxt(&v, true);
+	node_context* ctxt = node_ctxt(v, true);
 	if( var_si ){
 		// TODO global only available in entry function.
 		assert( is_entry( service()->fn().fn ) );
@@ -429,7 +429,7 @@ bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
 	return fn && fn == entry_fn;
 }
 
-llvm_module_impl* cgllvm_vs::mod_ptr(){
+cgllvm_module_impl* cgllvm_vs::mod_ptr(){
 	return llvm_mod_.get();
 }
 

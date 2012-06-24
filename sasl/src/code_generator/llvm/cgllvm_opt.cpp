@@ -29,9 +29,9 @@ using std::ostream;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-void optimize( shared_ptr<llvm_module> code, vector<optimization_options> opt_options )
+void optimize( shared_ptr<cgllvm_module> code, vector<optimization_options> opt_options )
 {
-	Module* mod = code->module();
+	Module* mod = code->llvm_module();
 
 	FunctionPassManager fpm(mod);
 

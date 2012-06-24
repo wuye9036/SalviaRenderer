@@ -9,65 +9,87 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+using sasl::semantic::module_semantic;
 using salviar::sv_usage;
 using salviar::su_buffer_in;
 using salviar::su_buffer_out;
 using salviar::su_stream_in;
 using salviar::su_stream_out;
 using salviar::storage_usage_count;
+using boost::shared_ptr;
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-llvm_module_impl::llvm_module_impl()
-: mod(NULL), have_mod(true)
+cgllvm_module_impl::cgllvm_module_impl()
+: llvm_mod_(NULL), have_mod_(true)
 {
-	lctxt.reset( new llvm::LLVMContext() );
-	irbuilder.reset( new llvm::IRBuilder<>( *lctxt ) );
+	llvm_ctxt_.reset( new llvm::LLVMContext() );
+	irbuilder_.reset( new llvm::IRBuilder<>( *llvm_ctxt_ ) );
 }
 
-void llvm_module_impl::create_module( const std::string& modname ){
-	mod = new llvm::Module( modname, *lctxt );
-	have_mod = true;
+void cgllvm_module_impl::create_llvm_module( const std::string& modname ){
+	llvm_mod_ = new llvm::Module( modname, *llvm_ctxt_ );
+	have_mod_ = true;
 }
 
-llvm::Module* llvm_module_impl::module() const{
-	return mod;
+llvm::Module* cgllvm_module_impl::llvm_module() const{
+	return llvm_mod_;
 }
 
-llvm::LLVMContext& llvm_module_impl::context(){
-	return *lctxt;
+llvm::LLVMContext& cgllvm_module_impl::llvm_context(){
+	return *llvm_ctxt_;
 }
 
-llvm_module_impl::~llvm_module_impl(){
-	if( have_mod && mod ){
-		delete mod;
-		mod = NULL;
-		have_mod = false;
+cgllvm_module_impl::~cgllvm_module_impl(){
+	if( have_mod_ && llvm_mod_ ){
+		delete llvm_mod_;
+		llvm_mod_ = NULL;
+		have_mod_ = false;
 	}
 }
 
-llvm::Module* llvm_module_impl::get_ownership() const{
-	if ( have_mod ){
-		have_mod = false;
-		return mod;
+llvm::Module* cgllvm_module_impl::take_ownership() const{
+	if ( have_mod_ ){
+		have_mod_ = false;
+		return llvm_mod_;
 	}
 	return NULL;
 }
 
-boost::shared_ptr<llvm::IRBuilder<> > llvm_module_impl::builder() const{
-	return irbuilder;
+llvm::DefaultIRBuilder* cgllvm_module_impl::builder() const{
+	return irbuilder_.get();
 }
 
-void llvm_module_impl::dump() const
+void cgllvm_module_impl::dump_ir() const
 {
-	module()->dump();
+	llvm_mod_->dump();
 }
 
-void llvm_module_impl::dump( std::ostream& ostr ) const
+void cgllvm_module_impl::dump_ir( std::ostream& ostr ) const
 {
 	llvm::raw_os_ostream raw_os(ostr);
-	module()->print( raw_os, NULL );
+	llvm_mod_->print( raw_os, NULL );
 	raw_os.flush();
+}
+
+module_semantic* cgllvm_module_impl::get_semantic() const
+{
+	return sem_.get();
+}
+
+void cgllvm_module_impl::set_semantic( shared_ptr<module_semantic> const& v )
+{
+	sem_ = v;
+}
+
+module_context* cgllvm_module_impl::get_context() const
+{
+	return ctxt_.get();
+}
+
+void cgllvm_module_impl::set_context( shared_ptr<module_context> const& v )
+{
+	ctxt_ = v;
 }
 
 END_NS_SASL_CODE_GENERATOR();

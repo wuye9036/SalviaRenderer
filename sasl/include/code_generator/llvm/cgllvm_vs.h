@@ -72,7 +72,7 @@ private:
 
 	bool is_entry( llvm::Function* ) const;
 
-	llvm_module_impl* mod_ptr();
+	cgllvm_module_impl* mod_ptr();
 
 	value_t layout_to_value(salviar::sv_layout* si);
 	void layout_to_sc(node_context* psc, salviar::sv_layout* si, bool store_to_existed_value);

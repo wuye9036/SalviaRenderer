@@ -33,7 +33,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class value_t;
 struct node_context;
-class llvm_module_impl;
+class cgllvm_module_impl;
 class cg_service;
 
 class cg_service
@@ -42,7 +42,7 @@ class cg_service
 
 public:
 	virtual bool initialize(
-		llvm_module_impl* mod, module_context* ctxt,
+		cgllvm_module_impl* mod, module_context* ctxt,
 		sasl::semantic::module_semantic* sem
 		);
 	virtual bool register_external_intrinsic();
@@ -371,7 +371,7 @@ protected:
 	};
 
 	sasl::semantic::module_semantic*	sem_;
-	llvm_module_impl*					llvm_mod_;
+	cgllvm_module_impl*					llvm_mod_;
 	module_context*						ctxt_;
 	
 	std::vector<function_t*>			fn_ctxts;
