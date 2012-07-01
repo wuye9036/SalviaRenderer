@@ -420,7 +420,7 @@ salviar::semantic_value const& node_semantic::semantic_value_ref() const
 
 builtin_types node_semantic::value_builtin_type() const
 {
-	return proto_type_ ? builtin_types::none : proto_type_->tycode;
+	return proto_type_ ? proto_type_->tycode : builtin_types::none;
 }
 
 void node_semantic::tid(int v)

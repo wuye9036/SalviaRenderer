@@ -32,6 +32,8 @@ using sasl::semantic::tid_t;
 using sasl::semantic::pety_item_t;
 using sasl::semantic::node_semantic;
 using sasl::semantic::pety_t;
+using sasl::semantic::get_semantic_fn;
+using sasl::semantic::get_tynode_fn;
 
 using sasl::syntax_tree::create_builtin_type;
 using sasl::syntax_tree::node;
@@ -52,12 +54,10 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 class cg_service;
 
-typedef function< node_context* ( shared_ptr<node> const& ) > get_ctxt_fn;
-
 class cgllvm_caster : public caster_t{
 public:
-	cgllvm_caster( get_ctxt_fn get_ctxt, cg_service* cgs )
-		: get_ctxt(get_ctxt), cgs(cgs)
+	cgllvm_caster( get_context_fn get_context, cg_service* cgs )
+		: get_context(get_context), cgs(cgs)
 	{
 	}
 
@@ -65,20 +65,20 @@ public:
 	{
 		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
 			// Overwrite source.
-			get_ctxt(src->as_handle())->node_value = v;
+			get_context(src)->node_value = v;
 		} else {
 			// Store to dest.
-			if( get_ctxt(dest->as_handle())->node_value.storable() ){
-				get_ctxt(dest->as_handle())->node_value.store(v);
+			if( get_context(dest)->node_value.storable() ){
+				get_context(dest)->node_value.store(v);
 			} else {
-				get_ctxt(dest->as_handle())->node_value = v;
+				get_context(dest)->node_value = v;
 			}
 		}
 	}
 	// TODO if dest == src, maybe some bad thing happen ...
 	void int2int(node* dest, node* src){
-		node_context* dest_ctxt = get_ctxt(dest->as_handle());
-		node_context* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_context(dest);
+		node_context* src_ctxt = get_context(src);
 
 		assert( src_ctxt != dest_ctxt );
 
@@ -92,13 +92,13 @@ public:
 
 	void int2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_i2b( get_ctxt(src->as_handle())->node_value );
+		value_t casted = cgs->cast_i2b( get_context(src)->node_value );
 		store(dest, src, casted);
 	}
 
 	void int2float(node* dest, node* src){
-		node_context* dest_ctxt = get_ctxt(dest->as_handle());
-		node_context* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_context(dest);
+		node_context* src_ctxt = get_context(src);
 		
 		assert( src_ctxt != dest_ctxt );
 
@@ -110,8 +110,8 @@ public:
 	}
 
 	void float2int(node* dest, node* src){
-		node_context* dest_ctxt = get_ctxt(dest->as_handle());
-		node_context* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_context(dest);
+		node_context* src_ctxt = get_context(src);
 
 		assert( src_ctxt != dest_ctxt );
 
@@ -123,8 +123,8 @@ public:
 	}
 
 	void float2float(node* dest, node* src){
-		node_context* dest_ctxt = get_ctxt(dest->as_handle());
-		node_context* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_context(dest);
+		node_context* src_ctxt = get_context(src);
 
 		assert( src_ctxt != dest_ctxt );
 
@@ -137,27 +137,27 @@ public:
 
 	void float2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_f2b( get_ctxt(src->as_handle())->node_value );
+		value_t casted = cgs->cast_f2b( get_context(src)->node_value );
 		store( dest, src, casted );
 	}
 
 	void scalar2vec1(node* dest, node* src){
-		node_context* dest_ctxt = get_ctxt(dest->as_handle());
-		node_context* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_context(dest);
+		node_context* src_ctxt = get_context(src);
 		assert( src_ctxt != dest_ctxt );
 		store( dest, src, cgs->cast_s2v( src_ctxt->node_value.to_rvalue() ) );
 	}
 
 	void vec2scalar(node* dest, node* src){
-		node_context* dest_ctxt = get_ctxt(dest->as_handle());
-		node_context* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_context(dest);
+		node_context* src_ctxt = get_context(src);
 		assert( src_ctxt != dest_ctxt );
 		store( dest, src, cgs->cast_v2s( src_ctxt->node_value.to_rvalue() ) );
 	}
 
 	void shrink_vector(node* dest, node* src, int source_size, int dest_size ){
-		node_context* dest_ctxt = get_ctxt(dest->as_handle());
-		node_context* src_ctxt = get_ctxt(src->as_handle());
+		node_context* dest_ctxt = get_context(dest);
+		node_context* src_ctxt = get_context(src);
 
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
@@ -171,7 +171,7 @@ public:
 			);
 	}
 private:
-	get_ctxt_fn get_ctxt;
+	get_context_fn get_context;
 	cg_service* cgs;
 };
 
@@ -203,8 +203,6 @@ void add_builtin_casts(
 	)
 {
 	typedef caster_t::cast_t cast_t;
-	caster->set_function_get_tynode( boost::bind(&pety_t::get_proto, pety, _1) );
-
 	shared_ptr<cgllvm_caster> cg_caster = shared_polymorphic_cast<cgllvm_caster>(caster);
 
 	cast_t int2int_pfn		= bind( &cgllvm_caster::int2int,	cg_caster.get(), _1, _2);
@@ -409,12 +407,17 @@ void add_builtin_casts(
 	DEFINE_VECTOR_AND_SHRINK( _double );
 }
 
-shared_ptr<caster_t> create_caster(
-	get_ctxt_fn const& get_ctxt,
+shared_ptr<caster_t> create_cgllvm_caster(
+	get_context_fn const&	get_context,
+	get_semantic_fn const&	get_semantic,
+	get_tynode_fn const&	get_tynode,
 	cg_service* cgs
 	)
 {
-	return boost::make_shared<cgllvm_caster>( get_ctxt, cgs );
+	shared_ptr<caster_t> ret = boost::make_shared<cgllvm_caster>( get_context, cgs );
+	ret->set_function_get_semantic(get_semantic);
+	ret->set_function_get_tynode(get_tynode);
+	return ret;
 }
 
 END_NS_SASL_CODE_GENERATOR();

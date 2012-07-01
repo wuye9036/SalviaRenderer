@@ -924,7 +924,7 @@ SASL_VISIT_DEF( if_statement )
 #endif
 
 	dup_ifstmt->yes_stmt = visit_child(v.yes_stmt);
-	get_node_semantic( dup_ifstmt->yes_stmt.get() )->parent_block( dup_ifstmt.get() );
+	//get_node_semantic( dup_ifstmt->yes_stmt.get() )->parent_block( dup_ifstmt.get() );
 
 	if( ! get_symbol(dup_ifstmt->yes_stmt) ){
 		current_symbol->add_child( dup_ifstmt->yes_stmt.get() );
@@ -932,7 +932,7 @@ SASL_VISIT_DEF( if_statement )
 
 	if( dup_ifstmt->no_stmt ){
 		dup_ifstmt->no_stmt = visit_child(v.no_stmt);
-		get_node_semantic( dup_ifstmt->no_stmt.get() )->parent_block(dup_ifstmt.get());
+		//get_node_semantic( dup_ifstmt->no_stmt.get() )->parent_block(dup_ifstmt.get());
 
 		if( ! get_symbol(dup_ifstmt->no_stmt) ){
 			current_symbol->add_child( dup_ifstmt->yes_stmt.get() );
@@ -957,7 +957,7 @@ SASL_VISIT_DEF( while_statement ){
 #endif
 
 	dup_while->body = visit_child(v.body);
-	get_node_semantic( dup_while->body.get() )->parent_block( dup_while.get() );
+	//get_node_semantic( dup_while->body.get() )->parent_block( dup_while.get() );
 
 	generated_node = dup_while;
 }
@@ -977,7 +977,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 	assert( cond_tsi->tid() == bool_tid || caster->try_implicit( bool_tid, cond_tsi->tid() ) );
 #endif
 
-	get_node_semantic(dup_dowhile->body)->parent_block( dup_dowhile.get() );
+	//get_node_semantic(dup_dowhile->body)->parent_block( dup_dowhile.get() );
 
 	generated_node = dup_dowhile;
 }

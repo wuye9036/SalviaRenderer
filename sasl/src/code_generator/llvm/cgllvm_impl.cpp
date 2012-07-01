@@ -278,12 +278,16 @@ SASL_VISIT_DEF( constant_expression ){
 
 	value_t val;
 	builtin_types const_tycode = const_sem->value_builtin_type();
-	if( const_tycode == builtin_types::_sint64 ){
-		val = service()->create_constant_scalar( const_sem->const_signed(),		ty, ty->hint() );
+	if( const_tycode == builtin_types::_sint64 ) {
+		val = service()->create_constant_scalar( static_cast<int64_t>( const_sem->const_signed() ),		ty, ty->hint() );
+	} else if ( const_tycode == builtin_types::_sint32 ) {
+		val = service()->create_constant_scalar( static_cast<int32_t>( const_sem->const_signed() ),		ty, ty->hint() );
 	} else if ( const_tycode == builtin_types::_uint64 ) {
-		val = service()->create_constant_scalar( const_sem->const_unsigned(),	ty, ty->hint() );
+		val = service()->create_constant_scalar( static_cast<uint64_t>( const_sem->const_unsigned() ),	ty, ty->hint() );
+	} else if ( const_tycode == builtin_types::_uint32 ) {
+		val = service()->create_constant_scalar( static_cast<uint32_t>( const_sem->const_unsigned() ),	ty, ty->hint() );
 	} else if ( const_tycode == builtin_types::_float ) {
-		val = service()->create_constant_scalar( const_sem->const_double(),		ty, ty->hint() );
+		val = service()->create_constant_scalar( static_cast<float>( const_sem->const_double() ),		ty, ty->hint() );
 	} else {
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
@@ -540,11 +544,22 @@ SASL_VISIT_DEF( program )
 
 	service()->initialize( llvm_mod_.get(), ctxt_.get(), sem_.get() );
 
-	typedef node_context* (fn_proto_t)( boost::shared_ptr<sasl::syntax_tree::node> const& );
-	typedef node_context* (cgllvm_impl::*mem_fn_proto_t) ( boost::shared_ptr<sasl::syntax_tree::node> const&, bool );
-	boost::function<fn_proto_t> ctxt_getter
-		= boost::bind( static_cast<mem_fn_proto_t>(&cgllvm_impl::node_ctxt), this, _1, false );
-	caster = create_caster( ctxt_getter, service() );
+	typedef node_context* (get_context_native_fn) (node const*);
+	boost::function<get_context_native_fn> get_context
+		= boost::bind(&module_context::get_node_context, ctxt_.get(), _1);
+
+	typedef tynode* (get_proto_native_fn)(tid_t);
+	boost::function<get_proto_native_fn> get_proto
+		= boost::bind(&pety_t::get_proto, sem_->pety(), _1);
+
+	typedef node_semantic* (get_semantic_native_fn)(node const*);
+	typedef node_semantic* (module_semantic::*get_semantic_mem_fn)(node const*) const;
+	boost::function<get_semantic_native_fn> get_semantic
+		= boost::bind(
+			static_cast<get_semantic_mem_fn>(&module_semantic::get_semantic),
+			sem_.get(), _1 );
+
+	caster = create_cgllvm_caster( get_context, get_semantic, get_proto, service() );
 	add_builtin_casts( caster, sem_->pety() );
 	
 	process_intrinsics(v, NULL);
@@ -648,7 +663,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
-	(data); (v);
+	EFLIB_UNREF_PARAM(data);
+
 	if ( !v.jump_expr ){
 		service()->emit_return();
 	} else {

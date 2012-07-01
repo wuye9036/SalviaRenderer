@@ -46,7 +46,6 @@ using llvm::StructLayout;
 using llvm::PointerType;
 using llvm::FunctionType;
 using llvm::Function;
-using boost::any;
 using boost::bind;
 using boost::shared_ptr;
 using std::vector;
@@ -64,8 +63,7 @@ cgllvm_simd::cgllvm_simd(): entry_fn(NULL)
 cgllvm_simd::~cgllvm_simd(){}
 
 cgs_simd* cgllvm_simd::service() const{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
+	return static_cast<cgs_simd*>(service_);
 }
 
 abis cgllvm_simd::local_abi( bool /*is_c_compatible*/ ) const
@@ -279,8 +277,7 @@ SASL_VISIT_DEF( if_statement )
 
 SASL_VISIT_DEF( while_statement )
 {
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	service()->while_beg();
 	
@@ -317,8 +314,7 @@ SASL_VISIT_DEF( while_statement )
 }
 SASL_VISIT_DEF( dowhile_statement )
 {
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	service()->do_beg();
 
@@ -431,8 +427,7 @@ SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement ){
-	any child_ctxt_init = *data;
-	any child_ctxt;
+	EFLIB_UNREF_PARAM(data);
 
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 	
@@ -458,10 +453,8 @@ void add_type_ref( Type* ty, vector<Type*>& tys )
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
 {
-	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) ){
-
-		boost::any child_ctxt;
-
+	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) )
+	{
 		vector<Type*> param_types;
 
 		add_type_ref( entry_structs[su_stream_in], param_types );

@@ -240,4 +240,9 @@ void caster_t::set_function_get_tynode( get_tynode_fn fn )
 	get_tynode_ = fn;
 }
 
+void caster_t::set_function_get_semantic( get_semantic_fn fn )
+{
+	get_semantic_ = fn;
+}
+
 END_NS_SASL_SEMANTIC();

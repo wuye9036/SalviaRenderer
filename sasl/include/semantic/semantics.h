@@ -149,8 +149,8 @@ public:
 	// Statement
 	labeled_statement_array const&
 			labeled_statements() const;
-	sasl::syntax_tree::node*
-			parent_block() const { return parent_block_; }
+	//sasl::syntax_tree::node*
+	//		parent_block() const { return parent_block_; }
 	bool	has_loop() const { return has_loop_; }
 	
 	// Write functions
@@ -193,7 +193,7 @@ public:
 
 	// Statement
 	labeled_statement_array& labeled_statements();
-	void parent_block(sasl::syntax_tree::node* v) { parent_block_ = v; }
+	//void parent_block(sasl::syntax_tree::node* v) { parent_block_ = v; }
 	void has_loop(bool v) { has_loop_ = v; }
 
 private:
@@ -231,7 +231,7 @@ private:
 	
 	// Statement
 	labeled_statement_array* labeled_statements_;
-	sasl::syntax_tree::node* parent_block_;
+	//sasl::syntax_tree::node* parent_block_;
 	bool	has_loop_;
 };
 
