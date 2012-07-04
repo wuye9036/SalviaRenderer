@@ -11,7 +11,8 @@
 #include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/operator_bool.h>
+
 #include <vector>
 
 namespace llvm

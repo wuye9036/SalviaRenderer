@@ -8,7 +8,7 @@
 #include <sasl/enums/operators.h>
 #include <sasl/enums/type_qualifiers.h>
 #include <sasl/include/syntax_tree/node_creation.h>
-#include <eflib/include/metaprog/enable_if.h>
+#include <eflib/include/utility/enable_if.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/any.hpp>

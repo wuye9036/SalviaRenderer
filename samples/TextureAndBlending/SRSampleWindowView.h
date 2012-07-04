@@ -15,7 +15,7 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign.hpp>
@@ -532,10 +532,10 @@ public:
 
 	LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		EFLIB_UNREF_PARAM(uMsg);
-		EFLIB_UNREF_PARAM(wParam);
-		EFLIB_UNREF_PARAM(lParam);
-		EFLIB_UNREF_PARAM(bHandled);
+		EFLIB_UNREF_DECLARATOR(uMsg);
+		EFLIB_UNREF_DECLARATOR(wParam);
+		EFLIB_UNREF_DECLARATOR(lParam);
+		EFLIB_UNREF_DECLARATOR(bHandled);
 
 		return 1;
     }

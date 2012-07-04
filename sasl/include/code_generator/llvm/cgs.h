@@ -7,10 +7,10 @@
 #include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/enums/builtin_types.h>
 
-#include <eflib/include/metaprog/enable_if.h>
+#include <eflib/include/utility/enable_if.h>
 #include <eflib/include/diagnostics/assert.h>
 
-#include <eflib/include/metaprog/util.h>
+//#include <eflib/include/utility/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>

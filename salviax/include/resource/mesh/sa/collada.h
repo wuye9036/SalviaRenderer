@@ -5,6 +5,7 @@
 
 #include <salviar/include/shader_abi.h>
 #include <eflib/include/math/matrix.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
@@ -12,8 +13,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/optional.hpp>
 #include <eflib/include/platform/boost_end.h>
-
-#include <eflib/include/metaprog/util.h>
 
 #include <string>
 #include <vector>

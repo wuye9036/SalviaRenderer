@@ -11,7 +11,7 @@
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/polymorphic_cast.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>

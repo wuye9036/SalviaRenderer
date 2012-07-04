@@ -3,7 +3,7 @@
 
 #include <sasl/include/driver/driver_forward.h>
 
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>

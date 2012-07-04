@@ -12,7 +12,7 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/polymorphic_cast.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/assign/list_inserter.hpp>

@@ -14,11 +14,10 @@
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
-#include <sasl/include/common/scope_guard.h>
-
 #include <sasl/enums/enums_utility.h>
-
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/include/utility/scoped_value.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/BasicBlock.h>
@@ -49,7 +48,7 @@ using sasl::semantic::operator_name;
 using sasl::semantic::tid_t;
 using sasl::semantic::caster_t;
 
-using sasl::common::scope_guard;
+using eflib::scoped_value;
 
 using boost::addressof;
 using boost::any_cast;
@@ -130,7 +129,7 @@ value_t cgllvm_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<no
 }
 
 SASL_VISIT_DEF( member_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child(v.expr);
 
@@ -163,13 +162,13 @@ SASL_VISIT_DEF( member_expression ){
 }
 
 SASL_VISIT_DEF( cond_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	node_ctxt(v, true)->node_value
 		= emit_short_cond(v.cond_expr, v.yes_expr, v.no_expr);
 }
 
 SASL_VISIT_DEF( unary_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child(v.expr);
 	
@@ -218,7 +217,7 @@ SASL_VISIT_DEF( unary_expression ){
 SASL_VISIT_DEF_UNIMPL( statement );
 
 SASL_VISIT_DEF( compound_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 	for ( std::vector< boost::shared_ptr<statement> >::iterator it = v.stmts.begin();
@@ -229,7 +228,7 @@ SASL_VISIT_DEF( compound_statement ){
 }
 
 SASL_VISIT_DEF( if_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->if_cond_beg();
 	visit_child(v.cond);
@@ -278,7 +277,7 @@ SASL_VISIT_DEF( if_statement ){
 }
 
 SASL_VISIT_DEF( while_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	insert_point_t cond_beg = service()->new_block( "while.cond", true );
 	visit_child( v.cond );
@@ -318,7 +317,7 @@ SASL_VISIT_DEF( while_statement ){
 }
 
 SASL_VISIT_DEF( dowhile_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	insert_point_t do_beg = service()->new_block( "do.to_body", true );
 	insert_point_t do_end = service()->insert_point();
@@ -366,7 +365,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 }
 
 SASL_VISIT_DEF( case_label ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	if( v.expr ){
 		visit_child( v.expr );
@@ -376,7 +375,7 @@ SASL_VISIT_DEF( case_label ){
 SASL_VISIT_DEF_UNIMPL( ident_label );
 
 SASL_VISIT_DEF( switch_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child( v.cond );
 	insert_point_t cond_end = service()->insert_point();
@@ -432,7 +431,7 @@ SASL_VISIT_DEF( switch_statement ){
 }
 
 SASL_VISIT_DEF( labeled_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	BOOST_FOREACH( shared_ptr<label> const& lbl, v.labels ){
 		// Constant expression, no instruction was generated.
@@ -444,7 +443,7 @@ SASL_VISIT_DEF( labeled_statement ){
 }
 
 SASL_VISIT_DEF( for_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 

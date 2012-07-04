@@ -12,11 +12,13 @@
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/program.h>
-#include <sasl/include/common/scope_guard.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/enums_utility.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/scoped_value.h>
+#include <eflib/include/utility/polymorphic_cast.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/DerivedTypes.h>
@@ -43,6 +45,7 @@ using namespace sasl::utility;
 using namespace sasl::common;
 
 using eflib::polymorphic_cast;
+using eflib::scoped_value;
 
 using boost::bind;
 using boost::addressof;
@@ -137,7 +140,7 @@ void cgllvm_impl::visit_child( sasl::syntax_tree::node* child )
 }
 
 SASL_VISIT_DEF( variable_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	symbol* var_sym = current_symbol_->find( v.var_name->str );
 	assert(var_sym);
@@ -155,7 +158,7 @@ SASL_VISIT_DEF( variable_expression ){
 }
 
 SASL_VISIT_DEF( binary_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	if( v.op == operators::logic_and || v.op == operators::logic_or ){
 		bin_logic( v, data );
@@ -264,7 +267,7 @@ SASL_VISIT_DEF( binary_expression ){
 }
 
 SASL_VISIT_DEF( constant_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	node_semantic* const_sem = sem_->get_semantic(&v);
 	if( ! node_ctxt( const_sem->ty_proto() ) ){
@@ -296,7 +299,7 @@ SASL_VISIT_DEF( constant_expression ){
 }
 
 SASL_VISIT_DEF( call_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	node_semantic* csi = sem_->get_semantic(&v);
 	if( csi->is_function_pointer() ){
@@ -339,7 +342,7 @@ SASL_VISIT_DEF( call_expression ){
 
 SASL_VISIT_DEF( index_expression )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child( v.expr );
 	visit_child( v.index_expr );
@@ -353,7 +356,7 @@ SASL_VISIT_DEF( index_expression )
 }
 
 SASL_VISIT_DEF( builtin_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	node_semantic* tisi = sem_->get_semantic(&v);
 	node_context* ctxt = ctxt_->get_or_create_node_context(&v);
@@ -375,7 +378,7 @@ SASL_VISIT_DEF( builtin_type ){
 }
 
 SASL_VISIT_DEF( parameter ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child( v.param_type );
 
@@ -391,7 +394,7 @@ SASL_VISIT_DEF( parameter ){
 // Generate normal function code.
 SASL_VISIT_DEF( function_type )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 
 	node_context* fn_ctxt = node_ctxt(v, true);
@@ -414,7 +417,7 @@ SASL_VISIT_DEF( function_type )
 }
 
 SASL_VISIT_DEF( struct_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// Create context.
 	// Declarator visiting need parent information.
@@ -436,7 +439,7 @@ SASL_VISIT_DEF( struct_type ){
 
 SASL_VISIT_DEF( array_type )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	node_context* ctxt = node_ctxt(v, true);
 	
 	if( ctxt->ty ){ return; }
@@ -446,7 +449,7 @@ SASL_VISIT_DEF( array_type )
 }
 
 SASL_VISIT_DEF( variable_declaration ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// Visit type info
 	visit_child( v.type_info );
@@ -464,7 +467,7 @@ SASL_VISIT_DEF( variable_declaration ){
 }
 
 SASL_VISIT_DEF( declarator ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// local or member.
 	// TODO TBD: Support member function and nested structure ?
@@ -478,7 +481,7 @@ SASL_VISIT_DEF( declarator ){
 }
 
 SASL_VISIT_DEF( expression_initializer ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child( v.init_expr );
 
@@ -495,12 +498,12 @@ SASL_VISIT_DEF( expression_initializer ){
 
 SASL_VISIT_DEF( expression_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	visit_child( v.expr );
 }
 
 SASL_VISIT_DEF( declaration_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	BOOST_FOREACH( shared_ptr<declaration> const& decl, v.decls )
 	{
@@ -510,7 +513,7 @@ SASL_VISIT_DEF( declaration_statement ){
 
 SASL_VISIT_DEF( jump_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	if (v.jump_expr){
 		visit_child( v.jump_expr );
@@ -530,7 +533,7 @@ SASL_VISIT_DEF( jump_statement )
 
 SASL_VISIT_DEF( program )
 {	
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// Create module.
 	assert( !llvm_mod_ );
@@ -577,15 +580,15 @@ SASL_VISIT_DEF( program )
 
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 {
-	EFLIB_UNREF_PARAM(data);
-	EFLIB_UNREF_PARAM(v);
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 
 	TargetMachine* tm = EngineBuilder(module()).selectTarget();
 	target_data = tm->getTargetData();
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	assert(current_cg_type_);
 
@@ -599,12 +602,12 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 
 SASL_SPECIFIC_VISIT_DEF( visit_global_declarator, declarator )
 {
-	EFLIB_UNREF_PARAM(data);
-	EFLIB_UNREF_PARAM(v);
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	node_context* ctxt = node_ctxt(v, true);
 
@@ -620,7 +623,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// Generate return type node.
 	visit_child( v.retval_type );
@@ -638,7 +641,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 }
 SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// Register arguments names.
 	assert( service()->fn().arg_size() == v.params.size() );
@@ -654,7 +657,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->new_block(".body", true);
 	visit_child( v.body );
@@ -663,7 +666,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	if ( !v.jump_expr ){
 		service()->emit_return();
@@ -683,7 +686,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 *    Note: Right argument is assignee, and left argument is value.
 */
 SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	std::string op_name = operator_name(v.op);
 
@@ -771,8 +774,8 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 
 SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 {
-	EFLIB_UNREF_PARAM(data);
-	EFLIB_UNREF_PARAM(v);
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 
 	service()->register_external_intrinsic();
 

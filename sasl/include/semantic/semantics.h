@@ -5,7 +5,7 @@
 
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/platform/typedefs.h>
 
 #include <eflib/include/platform/boost_begin.h>

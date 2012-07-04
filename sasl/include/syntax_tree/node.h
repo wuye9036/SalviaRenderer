@@ -5,7 +5,7 @@
 #include <sasl/include/common/token.h>
 #include <sasl/enums/node_ids.h>
 
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>

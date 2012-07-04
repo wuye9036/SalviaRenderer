@@ -11,7 +11,8 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/common/scope_guard.h>
+#include <eflib/include/utility/unref_declarator.h>
+#include <eflib/include/utility/scoped_value.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/ADT/StringRef.h>
@@ -30,7 +31,6 @@
 using sasl::utility::to_builtin_types;
 using namespace sasl::syntax_tree;
 using namespace sasl::semantic;
-using sasl::common::scope_guard;
 
 using salviar::sv_usage;
 using salviar::su_none;
@@ -40,6 +40,7 @@ using salviar::su_buffer_in;
 using salviar::su_buffer_out;
 using salviar::storage_usage_count;
 using salviar::sv_layout;
+using eflib::scoped_value;
 using llvm::Type;
 using llvm::StructType;
 using llvm::StructLayout;
@@ -150,7 +151,7 @@ SASL_VISIT_DEF_UNIMPL( cond_expression );
 SASL_VISIT_DEF_UNIMPL( index_expression );
 
 SASL_VISIT_DEF( member_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child(v.expr);
 	node_context* agg_ctxt = node_ctxt( v.expr );
@@ -225,7 +226,7 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_VISIT_DEF_UNIMPL( statement );
 SASL_VISIT_DEF( if_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->if_beg();
 
@@ -277,7 +278,7 @@ SASL_VISIT_DEF( if_statement )
 
 SASL_VISIT_DEF( while_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->while_beg();
 	
@@ -314,7 +315,7 @@ SASL_VISIT_DEF( while_statement )
 }
 SASL_VISIT_DEF( dowhile_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->do_beg();
 
@@ -353,7 +354,7 @@ SASL_VISIT_DEF( dowhile_statement )
 
 SASL_VISIT_DEF( for_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 
 	// Pseudo: SIMD For
@@ -427,7 +428,7 @@ SASL_VISIT_DEF_UNIMPL( ident_label );
 SASL_VISIT_DEF_UNIMPL( switch_statement );
 
 SASL_VISIT_DEF( compound_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 	
@@ -505,7 +506,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 	}
 }
 SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->new_block( ".init.vargs", true );
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
@@ -555,7 +556,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	if( service()->fn().fn == entry_fn ){
 		visit_child( v.jump_expr );

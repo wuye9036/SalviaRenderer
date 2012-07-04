@@ -14,8 +14,8 @@
 #include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <eflib/include/metaprog/util.h>
-#include <eflib/include/metaprog/enable_if.h>
+//#include <eflib/include/utility/util.h>
+#include <eflib/include/utility/enable_if.h>
 #include <eflib/include/diagnostics/assert.h>
 
 #include <boost/any.hpp>

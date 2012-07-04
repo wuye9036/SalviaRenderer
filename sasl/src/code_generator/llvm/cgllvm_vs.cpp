@@ -13,6 +13,7 @@
 #include <sasl/include/host/utility.h>
 #include <sasl/enums/enums_utility.h>
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/DerivedTypes.h>
@@ -182,7 +183,7 @@ SASL_VISIT_DEF_UNIMPL( expression_list );
 SASL_VISIT_DEF_UNIMPL( cond_expression );
 
 SASL_VISIT_DEF( member_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child(v.expr);
 	node_context* agg_ctxt = node_ctxt( v.expr );
@@ -266,7 +267,7 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	value_t ret_value = emit_logic_op(v.op, v.left_expr, v.right_expr);
 	node_ctxt(v, true)->node_value = ret_value.to_rvalue();
 }
@@ -330,7 +331,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	
 	service()->new_block( ".init.vargs", true );
 
@@ -381,7 +382,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	if( is_entry( service()->fn().fn ) ){
 		visit_child( v.jump_expr );

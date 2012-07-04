@@ -14,14 +14,14 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/utility.h>
-#include <sasl/include/common/scope_guard.h>
 #include <sasl/include/common/diag_chat.h>
 
 #include <salviar/include/enums.h>
 #include <salviar/include/shader_abi.h>
 
 #include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/scoped_value.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign/list_of.hpp>
@@ -82,10 +82,10 @@ using sasl::syntax_tree::variable_declaration;
 using sasl::syntax_tree::variable_expression;
 using sasl::syntax_tree::while_statement;
 
-using sasl::common::scope_guard;
-
 using namespace boost::assign;
 using namespace sasl::utility;
+
+using eflib::scoped_value;
 
 using boost::format;
 using boost::shared_ptr;
@@ -98,19 +98,19 @@ using std::pair;
 using std::make_pair;
 
 #define FUNCTION_SCOPE( new_fn ) \
-	scope_guard<function_type_ptr> __sasl_fn_scope_##__LINE__( current_function, (new_fn) );
+	scoped_value<function_type_ptr> __sasl_fn_scope_##__LINE__( current_function, (new_fn) );
 #define SYMBOL_SCOPE( new_sym ) \
-	scope_guard<symbol*> __sasl_sym_scope_##__LINE__( current_symbol, (new_sym) );
+	scoped_value<symbol*> __sasl_sym_scope_##__LINE__( current_symbol, (new_sym) );
 #define GLOBAL_FLAG_SCOPE( new_global_flag ) \
-	scope_guard<bool> __sasl_global_flag_scope_##__LINE__( is_global_scope, (new_global_flag) );
+	scoped_value<bool> __sasl_global_flag_scope_##__LINE__( is_global_scope, (new_global_flag) );
 #define LABEL_LIST_SCOPE( new_label_list ) \
-	scope_guard<label_list_t*> __sasl_label_list_scope_##__LINE__( label_list, (new_label_list) );
+	scoped_value<label_list_t*> __sasl_label_list_scope_##__LINE__( label_list, (new_label_list) );
 #define VARIABLE_TO_INIT_SCOPE( var_to_init ) \
-	scope_guard<node_ptr> __sasl_var_to_init_scope_##__LINE__( variable_to_initialized, (var_to_init) );
+	scoped_value<node_ptr> __sasl_var_to_init_scope_##__LINE__( variable_to_initialized, (var_to_init) );
 #define MEMBER_COUNTER_SCOPE(); \
-	scope_guard<int> __sasl_member_counter_scope_##__LINE__(member_counter, 0);
+	scoped_value<int> __sasl_member_counter_scope_##__LINE__(member_counter, 0);
 #define DECLARATION_TID_SCOPE( tid ) \
-	scope_guard<int> __sasl_decl_tid_scope_##__LINE__( declaration_tid, (tid) );
+	scoped_value<int> __sasl_decl_tid_scope_##__LINE__( declaration_tid, (tid) );
 
 semantic_analyser::semantic_analyser()
 {
@@ -171,7 +171,7 @@ void semantic_analyser::parse_semantic(token_t_ptr const& sem_tok, token_t_ptr c
 }
 
 SASL_VISIT_DEF( unary_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<unary_expression> dup_expr = duplicate( v.as_handle() )->as_handle<unary_expression>();
 	dup_expr->expr = visit_child(v.expr);
@@ -192,7 +192,7 @@ SASL_VISIT_DEF( unary_expression ){
 }
 
 SASL_VISIT_DEF( cast_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<cast_expression> dup_cexpr = duplicate(v.as_handle())->as_handle<cast_expression>();
 
@@ -218,7 +218,7 @@ SASL_VISIT_DEF( cast_expression ){
 
 SASL_VISIT_DEF( binary_expression )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<binary_expression> dup_expr = duplicate( v.as_handle() )->as_handle<binary_expression>();
 	generated_node = dup_expr;
@@ -267,7 +267,7 @@ SASL_VISIT_DEF( binary_expression )
 SASL_VISIT_DEF_UNIMPL( expression_list );
 
 SASL_VISIT_DEF( cond_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<cond_expression> dup_expr
 		= duplicate( v.as_handle() )->as_handle<cond_expression>();
@@ -318,7 +318,7 @@ SASL_VISIT_DEF( cond_expression ){
 
 SASL_VISIT_DEF( index_expression )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 	
 	shared_ptr<index_expression> dup_idxexpr = duplicate(v.as_handle())->as_handle<index_expression>();
 	generated_node = dup_idxexpr;
@@ -374,7 +374,7 @@ SASL_VISIT_DEF( index_expression )
 
 SASL_VISIT_DEF( call_expression )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<call_expression> dup_callexpr = duplicate(v.as_handle())->as_handle<call_expression>();
 	generated_node = dup_callexpr;
@@ -477,7 +477,7 @@ int check_swizzle( builtin_types btc, std::string const& mask, int32_t& swizzle_
 }
 
 SASL_VISIT_DEF( member_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<member_expression> dup_expr = duplicate( v.as_handle() )->as_handle<member_expression>();
 	generated_node = dup_expr;
@@ -554,7 +554,7 @@ SASL_VISIT_DEF( member_expression ){
 
 SASL_VISIT_DEF( constant_expression )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<constant_expression> dup_cexpr = duplicate( v.as_handle() )->as_handle<constant_expression>();
 	node_semantic* vsi = get_or_create_semantic(dup_cexpr);
@@ -564,7 +564,7 @@ SASL_VISIT_DEF( constant_expression )
 }
 
 SASL_VISIT_DEF( variable_expression ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	std::string name = v.var_name->str;
 
@@ -612,7 +612,7 @@ SASL_VISIT_DEF( variable_expression ){
 SASL_VISIT_DEF_UNIMPL( initializer );
 SASL_VISIT_DEF( expression_initializer )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<expression_initializer> dup_exprinit = duplicate( v.as_handle() )->as_handle<expression_initializer>();
 	generated_node = dup_exprinit->as_handle();
@@ -640,7 +640,7 @@ SASL_VISIT_DEF( expression_initializer )
 SASL_VISIT_DEF_UNIMPL( member_initializer );
 SASL_VISIT_DEF_UNIMPL( declaration );
 SASL_VISIT_DEF( declarator ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<declarator> dup_decl = duplicate( v.as_handle() )->as_handle<declarator>();
 
@@ -672,7 +672,7 @@ SASL_VISIT_DEF( declarator ){
 
 SASL_VISIT_DEF( variable_declaration )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<variable_declaration> dup_vdecl = duplicate( v.as_handle() )->as_handle<variable_declaration>();
 	generated_node = dup_vdecl;
@@ -701,7 +701,7 @@ SASL_VISIT_DEF( variable_declaration )
 SASL_VISIT_DEF_UNIMPL( type_definition );
 SASL_VISIT_DEF_UNIMPL( tynode );
 SASL_VISIT_DEF( builtin_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
@@ -712,7 +712,7 @@ SASL_VISIT_DEF( builtin_type ){
 
 SASL_VISIT_DEF(array_type)
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	tid_t array_tid = module_semantic_->pety()->get( &v, current_symbol );
 	assert(array_tid != -1);
@@ -726,7 +726,7 @@ SASL_VISIT_DEF(array_type)
 }
 
 SASL_VISIT_DEF( struct_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// struct type are 3 sorts:
 	//	* unnamed structure
@@ -781,7 +781,7 @@ SASL_VISIT_DEF( struct_type ){
 }
 
 SASL_VISIT_DEF( alias_type ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	tid_t dup_struct_id = -1;
 	if( v.alias->str == "sampler" ){
@@ -800,7 +800,7 @@ SASL_VISIT_DEF( alias_type ){
 
 SASL_VISIT_DEF( parameter )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<parameter> dup_par = duplicate( v.as_handle() )->as_handle<parameter>();
 	generated_node = dup_par;
@@ -832,7 +832,7 @@ SASL_VISIT_DEF( parameter )
 
 SASL_VISIT_DEF( function_type )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// Copy node
 	shared_ptr<node> dup_node = duplicate( v.as_handle() );
@@ -892,7 +892,7 @@ SASL_VISIT_DEF_UNIMPL( statement );
 
 SASL_VISIT_DEF( declaration_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<declaration_statement> dup_declstmt = duplicate( v.as_handle() )->as_handle<declaration_statement>();
 
@@ -910,7 +910,7 @@ SASL_VISIT_DEF( declaration_statement )
 
 SASL_VISIT_DEF( if_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<if_statement> dup_ifstmt = duplicate(v.as_handle())->as_handle<if_statement>();
 
@@ -943,7 +943,7 @@ SASL_VISIT_DEF( if_statement )
 }
 
 SASL_VISIT_DEF( while_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<while_statement> dup_while = duplicate( v.as_handle() )->as_handle<while_statement>();
 
@@ -963,7 +963,7 @@ SASL_VISIT_DEF( while_statement ){
 }
 
 SASL_VISIT_DEF( dowhile_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<dowhile_statement> dup_dowhile = duplicate( v.as_handle() )->as_handle<dowhile_statement>();
 
@@ -983,7 +983,7 @@ SASL_VISIT_DEF( dowhile_statement ){
 }
 
 SASL_VISIT_DEF( labeled_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<labeled_statement> dup_lbl_stmt = duplicate( v.as_handle() )->as_handle<labeled_statement>();
 	
@@ -1004,7 +1004,7 @@ SASL_VISIT_DEF( labeled_statement ){
 }
 
 SASL_VISIT_DEF( case_label ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<case_label> dup_case = duplicate( v.as_handle() )->as_handle<case_label>();
 	
@@ -1036,13 +1036,13 @@ SASL_VISIT_DEF( case_label ){
 }
 
 SASL_VISIT_DEF( ident_label ){
-	EFLIB_UNREF_PARAM(v);
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_UNREF_DECLARATOR(data);
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 SASL_VISIT_DEF( switch_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<switch_statement> dup_switch = duplicate( v.as_handle() )->as_handle<switch_statement>();
 
@@ -1063,7 +1063,7 @@ SASL_VISIT_DEF( switch_statement ){
 
 SASL_VISIT_DEF( compound_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<compound_statement> dup_stmt = duplicate(v.as_handle())->as_handle<compound_statement>();
 	dup_stmt->stmts.clear();
@@ -1084,7 +1084,7 @@ SASL_VISIT_DEF( compound_statement )
 }
 
 SASL_VISIT_DEF( expression_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<expression_statement> dup_exprstmt = duplicate( v.as_handle() )->as_handle<expression_statement>();
 	dup_exprstmt->expr = visit_child(v.expr);
@@ -1094,7 +1094,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 SASL_VISIT_DEF( jump_statement )
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<jump_statement> dup_jump = duplicate(v.as_handle())->as_handle<jump_statement>();
 	generated_node = dup_jump;
@@ -1126,7 +1126,7 @@ SASL_VISIT_DEF( jump_statement )
 }
 
 SASL_VISIT_DEF( for_statement ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<for_statement> dup_for = duplicate(v.as_handle())->as_handle<for_statement>();
 
@@ -1145,7 +1145,7 @@ SASL_VISIT_DEF( for_statement ){
 
 // program
 SASL_VISIT_DEF( program ){
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	// create semantic info
 	module_semantic_ = module_semantic::create();

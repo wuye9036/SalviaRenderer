@@ -12,6 +12,7 @@
 #include <salviar/include/shader_abi.h>
 
 #include <eflib/include/math/math.h>
+#include <eflib/include/utility/polymorphic_cast.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Module.h>

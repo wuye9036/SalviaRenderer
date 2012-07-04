@@ -5,6 +5,9 @@
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/enums/enums_utility.h>
+#include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/platform/cpuinfo.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Support/IRBuilder.h>
@@ -22,8 +25,6 @@
 #include <boost/bind.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/platform/cpuinfo.h>
 
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::function_type;
@@ -255,8 +256,8 @@ bool cgs_sisd::prefer_scalar_code() const
 
 value_t cgs_sisd::emit_swizzle( value_t const& lhs, uint32_t mask )
 {
-	EFLIB_UNREF_PARAM(lhs);
-	EFLIB_UNREF_PARAM(mask);
+	EFLIB_UNREF_DECLARATOR(lhs);
+	EFLIB_UNREF_DECLARATOR(mask);
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return value_t();

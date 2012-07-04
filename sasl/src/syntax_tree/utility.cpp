@@ -8,7 +8,7 @@
 #include <sasl/include/syntax_tree/visitor.h>
 
 #include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/metaprog/enable_if.h>
+#include <eflib/include/utility/enable_if.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>

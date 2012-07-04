@@ -1,7 +1,7 @@
 #ifndef SASL_TEST_JIT_TEST_H
 #define SASL_TEST_JIT_TEST_H
 
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/operator_bool.h>
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
 

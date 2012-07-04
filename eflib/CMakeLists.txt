@@ -20,8 +20,12 @@ set (HEADER_FILES
 	include/memory/atomic.h
 	include/memory/lifetime_manager.h
 	include/memory/pool.h
-	include/metaprog/enable_if.h
-	include/metaprog/util.h
+	include/utility/enable_if.h
+	include/utility/unref_declarator.h
+	include/utility/operator_bool.h
+	include/utility/polymorphic_cast.h
+	include/utility/scoped_value.h
+	include/utility/shared_declaration.h
 	include/platform/config.h
 	include/platform/constant.h
 	include/platform/disable_warnings.h
@@ -52,6 +56,9 @@ ADD_LIBRARY( EFLIB STATIC
 ${HEADER_FILES}
 ${SOURCE_FILES}
 )
+
+SALVIA_GROUP_BY_DIRECTORY( "Header Files" "include" HEADER_FILES )
+
 SET_TARGET_PROPERTIES( EFLIB PROPERTIES FOLDER "SALVIA Renderer")
 
 SALVIA_CONFIG_OUTPUT_PATHS(EFLIB)

@@ -11,9 +11,9 @@
 #include <salviar/include/vertex_cache.h>
 
 #include <eflib/include/diagnostics/log.h>
-#include <eflib/include/metaprog/util.h>
 #include <eflib/include/platform/cpuinfo.h>
 #include <eflib/include/platform/ext_intrinsics.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
@@ -256,7 +256,7 @@ void rasterizer::initialize(renderer_impl* pparent)
 void rasterizer::rasterize_line(
 	uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu)
 {
-	EFLIB_UNREF_PARAM( psu );
+	EFLIB_UNREF_DECLARATOR( psu );
 
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 

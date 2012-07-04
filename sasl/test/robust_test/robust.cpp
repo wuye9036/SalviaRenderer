@@ -15,7 +15,7 @@
 
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
-#include <eflib/include/metaprog/util.h>
+//#include <eflib/include/utility/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>

@@ -19,7 +19,7 @@
 #include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/unref_declarator.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign/std/vector.hpp>
 #include <boost/bind.hpp>
@@ -110,7 +110,7 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 
 SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)
 {
-	EFLIB_UNREF_PARAM(data);
+	EFLIB_UNREF_DECLARATOR(data);
 
 	value_t ret_value;
 	builtin_types bt = sem_->get_semantic(v.left_expr)->value_builtin_type();

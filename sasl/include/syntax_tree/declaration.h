@@ -7,8 +7,8 @@
 #include <sasl/enums/node_ids.h>
 #include <sasl/enums/type_qualifiers.h>
 
-#include <eflib/include/metaprog/enable_if.h>
-#include <eflib/include/metaprog/util.h>
+#include <eflib/include/utility/enable_if.h>
+//#include <eflib/include/utility/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>

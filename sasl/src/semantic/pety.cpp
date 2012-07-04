@@ -8,6 +8,7 @@
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/builtin_types.h>
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/polymorphic_cast.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
