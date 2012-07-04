@@ -94,6 +94,7 @@ struct sv_layout{
 		, element_size(0), element_padding(0), element_count(0)
 		, padding(0)
 		, usage(su_none), value_type( lvt_none ), sv(sv_none)
+		, agg_type(aggt_none)
 	{}
 
 	int total_size() const{

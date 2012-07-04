@@ -106,3 +106,13 @@ void salvia_create_shader(
 	
 	scode = ret;
 }
+
+SASL_HOST_API void salvia_initialize_host()
+{
+	sasl_initialize_driver();
+}
+
+SASL_HOST_API void salvia_finalize_host()
+{
+	sasl_finalize_driver();
+}

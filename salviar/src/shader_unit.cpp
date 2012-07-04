@@ -172,6 +172,10 @@ void vertex_shader_unit::execute( vs_output& out )
 void vertex_shader_unit::set_variable( std::string const& name, void* data )
 {
 	sv_layout* vsi = code->abii()->input_sv_layout( name );
+	EFLIB_ASSERT_AND_IF(vsi, "Cannot found variable.")
+	{
+		return;
+	}
 	memcpy( &buffer_data[vsi->offset], data, vsi->element_size );
 }
 

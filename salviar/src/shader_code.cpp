@@ -24,26 +24,70 @@ using std::fstream;
 
 BEGIN_NS_SALVIAR();
 
-shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::languages lang, vector<string>& results )
+class host_module
 {
-	std::string dll_name = "sasl_host";
+public:
+	static void initialize()
+	{
+		assert(!lib_);
+		std::string dll_name = "sasl_host";
 #ifdef EFLIB_DEBUG
-	dll_name += "_d";
+		dll_name += "_d";
 #endif
-	dll_name += ".dll";
+		dll_name += ".dll";
 
-	shared_ptr<dynamic_lib> dl = dynamic_lib::load( dll_name );
+		// Load DLL
+		lib_ = dynamic_lib::load(dll_name);
+
+		// Fetch function pointers.
+		lib_->get_function( sasl_initialize_host, std::string("salvia_initialize_host") );
+		lib_->get_function( create_shader_code, std::string("salvia_create_shader") );
+		lib_->get_function( sasl_finalize_host, std::string("salvia_finalize_host") );
+
+		// Initialize library.
+		sasl_initialize_host();
+	}
+
+	static void finalize()
+	{
+		assert(lib_);
+		sasl_finalize_host();
+		lib_.reset();
+	}
+
 	typedef vector< tuple<void*, string, bool> > external_function_array;
-	void (*create_shader_code)(
+	static void (*create_shader_code)(
 		shared_ptr<shader_code>&,
 		string const&,
 		salviar::languages,
 		external_function_array const&,
 		boost::shared_ptr< vector<string> >& );
+private:
+	static void (*sasl_initialize_host)();
+	static void (*sasl_finalize_host)();
+	static shared_ptr<dynamic_lib> lib_;
+};
 
-	dl->get_function( create_shader_code, std::string("salvia_create_shader") );
+void (*host_module::sasl_initialize_host)();
+void (*host_module::sasl_finalize_host)();
+void (*host_module::create_shader_code)(
+	shared_ptr<shader_code>&,
+	string const&,
+	salviar::languages,
+	host_module::external_function_array const&,
+	boost::shared_ptr< vector<string> >& );
+shared_ptr<dynamic_lib> host_module::lib_;
 
-	external_function_array extfns;
+class auto_init_host
+{
+public:
+	auto_init_host(){ host_module::initialize();  }
+	~auto_init_host(){ host_module::finalize(); }
+} auto_init_host_obj;
+
+shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::languages lang, vector<string>& results )
+{
+	host_module::external_function_array extfns;
 	extfns.push_back( make_tuple(&salviar_tex2Dlod,		  "sasl.vs.tex2d.lod" ,  true ) );
 	extfns.push_back( make_tuple(&salviar_texCUBElod,	  "sasl.vs.texCUBE.lod", true ) );
 	extfns.push_back( make_tuple(&salviar_tex2Dlod_pkg,	  "sasl.ps.tex2d.lod" ,  true ) );
@@ -52,7 +96,7 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 	extfns.push_back( make_tuple(&salviar_tex2Dproj_pkg,  "sasl.ps.tex2d.proj",  true ) );
 	shared_ptr<shader_code> ret;
 	shared_ptr< vector<string> > presults;
-	create_shader_code( ret, code, lang, extfns, presults );
+	host_module::create_shader_code( ret, code, lang, extfns, presults );
 	results = *presults;
 	if(ret)
 	{
@@ -74,6 +118,16 @@ shared_ptr<shader_code> shader_code::create_and_log( string const& code, salviar
 	}
 
 	return ret;
+}
+
+void shader_code::initialize()
+{
+	host_module::initialize();
+}
+
+void shader_code::finalize()
+{
+	host_module::finalize();
 }
 
 END_NS_SALVIAR();

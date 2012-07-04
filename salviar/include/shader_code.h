@@ -24,6 +24,9 @@ BEGIN_NS_SALVIAR();
 
 class shader_code{
 public:
+	static void initialize();
+	static void finalize();
+
 	static boost::shared_ptr<shader_code> create( std::string const& code, salviar::languages lang, std::vector<std::string>& results );
 	static boost::shared_ptr<shader_code> create_and_log(std::string const& code, salviar::languages lang);
 

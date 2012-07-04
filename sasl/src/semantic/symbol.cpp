@@ -143,6 +143,7 @@ symbol* symbol::add_named_child( const string& mangled, node* child_node )
 	}
 
 	symbol* ret = add_child(child_node);
+	ret->mangled_name_ = ret->unmangled_name_ = mangled;
 	named_children_.insert( make_pair(mangled, ret) );
 
 	return ret;

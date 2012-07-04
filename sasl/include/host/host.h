@@ -41,6 +41,8 @@ private:
 END_NS_SASL_HOST();
 
 extern "C"{
+	SASL_HOST_API void salvia_initialize_host();
+	SASL_HOST_API void salvia_finalize_host();
 	SASL_HOST_API void salvia_create_shader(
 		boost::shared_ptr<salviar::shader_code>&,
 		std::string const& code,
