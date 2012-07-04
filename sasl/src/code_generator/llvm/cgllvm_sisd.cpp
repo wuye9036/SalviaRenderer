@@ -2,7 +2,7 @@
 
 #include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
-#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_module_impl.h>
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/cgs.h>

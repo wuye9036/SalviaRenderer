@@ -3,7 +3,7 @@
 #include <sasl/enums/enums_utility.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/code_generator/llvm/cgllvm_impl.imp.h>
-#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_module_impl.h>
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/abi_analyser.h>

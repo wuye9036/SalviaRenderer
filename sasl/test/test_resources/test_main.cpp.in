@@ -4,14 +4,18 @@
 #include <boost/test/unit_test.hpp>
 
 #if defined(SASL_USE_LLVM)
-#	include <llvm/Support/ManagedStatic.h>
+#	include <sasl/include/driver/driver_api.h>
 #endif
 
 #include <eflib/include/memory/lifetime_manager.h>
 
 int BOOST_TEST_CALL_DECL
 main( int argc, char* argv[] )
-{	
+{
+#if defined(SASL_USE_LLVM)	
+	sasl_initialize_driver();
+#endif
+
 	setvbuf( stdout, NULL, _IONBF, 0 );
 	setvbuf( stderr, NULL, _IONBF, 0 );
 	
@@ -23,7 +27,7 @@ main( int argc, char* argv[] )
 	system("pause");
 	
 #if defined(SASL_USE_LLVM)
-	llvm::llvm_shutdown();
+	sasl_finalize_driver();
 #endif
 
 	return ret;

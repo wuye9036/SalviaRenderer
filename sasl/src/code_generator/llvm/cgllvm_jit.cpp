@@ -7,7 +7,7 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <sasl/include/code_generator/llvm/cgllvm_jit.h>
-#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_module_impl.h>
 
 #include <eflib/include/platform/cpuinfo.h>
 

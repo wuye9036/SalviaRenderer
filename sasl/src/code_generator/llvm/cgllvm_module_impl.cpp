@@ -1,4 +1,4 @@
-#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_module_impl.h>
 
 #include <sasl/include/semantic/abi_analyser.h>
 

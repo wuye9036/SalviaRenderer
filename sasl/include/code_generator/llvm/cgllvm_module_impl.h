@@ -1,5 +1,5 @@
-#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_GLOBALCTXT_H
-#define SASL_CODE_GENERATOR_LLVM_CGLLVM_GLOBALCTXT_H
+#ifndef SASL_CODE_GENERATOR_LLVM_CGLLVM_MODULE_IMPL_H
+#define SASL_CODE_GENERATOR_LLVM_CGLLVM_MODULE_IMPL_H
 
 #include <sasl/include/code_generator/forward.h>
 #include <sasl/include/code_generator/llvm/cgllvm_api.h>

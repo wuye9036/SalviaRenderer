@@ -2,7 +2,7 @@
 
 #include <sasl/include/code_generator/llvm/utility.h>
 #include <sasl/include/code_generator/llvm/ty_cache.h>
-#include <sasl/include/code_generator/llvm/cgllvm_globalctxt.h>
+#include <sasl/include/code_generator/llvm/cgllvm_module_impl.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/semantics.h>
