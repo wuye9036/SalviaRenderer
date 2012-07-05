@@ -13,16 +13,21 @@
 #include <boost/pool/pool.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/container/flat_map.hpp>
 #include <eflib/include/platform/boost_end.h>
+
+#include <map>
 
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
 using boost::unordered_map;
 using boost::shared_ptr;
+using boost::container::flat_map;
 using std::vector;
 using std::string;
 using std::make_pair;
+using std::map;
 
 string split_integer_literal_suffix( string const& str, bool& is_unsigned, bool& is_long ){
 	is_unsigned = false;
@@ -162,8 +167,11 @@ public:
 
 	virtual node_semantic* get_semantic(node const* v) const
 	{
-		unordered_map<node const*, node_semantic*>::const_iterator it
-			= semantics_dict_.find(v);
+		//static int counter = 0;
+		//++counter;
+		//if(counter % 10000 == 0) { printf("get_semantic() has been called %d times.\n", counter); }
+
+		semantics_dict::const_iterator it = semantics_dict_.find(v);
 		if( it == semantics_dict_.end() ){ return NULL; }
 		return it->second;
 	}
@@ -181,8 +189,11 @@ public:
 
 	virtual symbol* get_symbol(sasl::syntax_tree::node* v) const
 	{
-		unordered_map<node const*, symbol*>::const_iterator
-			it = symbols_dict_.find(v);
+		//static int counter = 0;
+		//++counter;
+		//if(counter % 1000 == 0) { printf("get_symbol() has been called %d times.\n", counter); }
+
+		symbols_dict::const_iterator it = symbols_dict_.find(v);
 
 		if ( it != symbols_dict_.end() )
 		{
@@ -203,7 +214,7 @@ public:
 	{
 		// Only available for symbol create by this module.
 		assert( sym->owner() == this );
-		symbol* ref_sym = get_symbol(v);
+		// symbol* ref_sym = get_symbol(v);
 		assert( get_symbol(v) == NULL );	// v was not connected to symbol.
 
 		node* old_assoc_node = sym->associated_node();
@@ -212,7 +223,7 @@ public:
 		}
 
 		if( v != NULL ) {
-			symbols_dict_.insert( make_pair(v, sym) );
+			symbols_dict_.insert( make_pair(const_cast<node const*>(v), sym) );
 		}
 
 		sym->associated_node(v);
@@ -265,8 +276,10 @@ private:
 	boost::pool<>			symbol_pool_;
 	vector<node_semantic*>	semantics_;
 	vector<symbol*>			symbols_;
-	unordered_map<node const*, node_semantic*>	semantics_dict_;
-	unordered_map<node const*, symbol*>			symbols_dict_;
+	typedef unordered_map<node const*, node_semantic*>	semantics_dict;
+	typedef unordered_map<node const*, symbol*>			symbols_dict;
+	semantics_dict	semantics_dict_;
+	symbols_dict	symbols_dict_;
 };
 
 string const& node_semantic::function_name() const

@@ -168,16 +168,19 @@ tynode* pety_t::get_proto_by_builtin(builtin_types bt)
 // Get type id by an builtin type code
 tid_t pety_t::get(builtin_types const& btc)
 {
-	// If it existed in symbol, return it.
-	// Otherwise create a new type and push into type manager.
-	tid_t ret_id = get_symbol_tid( tynode_dict_, root_symbol_->find( builtin_type_name( btc ) ) );
-	if ( ret_id == -1 ){
-		shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
-		bt->tycode = btc;
-		return get(bt.get(), root_symbol_);
-	} else {
-		return ret_id;
+	// If it is existed, return it.
+	bt_dict::iterator it = bt_dict_.find(btc);
+	if( it != bt_dict_.end() )
+	{
+		return it->second;
 	}
+
+	// Otherwise create a new type and push into type manager.
+	shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
+	bt->tycode = btc;
+	tid_t ret = get(bt.get(), root_symbol_);
+	bt_dict_.insert( make_pair(btc, ret) );
+	return ret;
 }
 
 tid_t pety_t::get(tynode* v, symbol* scope)
