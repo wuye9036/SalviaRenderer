@@ -122,7 +122,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -1805,7 +1805,7 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct array_vertex_data
 {

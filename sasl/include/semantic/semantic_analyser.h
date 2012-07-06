@@ -93,7 +93,7 @@ public:
 
 private:
 	template <typename NodeT> 
-	boost::shared_ptr<NodeT> visit_child( boost::shared_ptr<NodeT> const& child );
+	boost::shared_ptr<NodeT> visit_child( boost::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
 
 	void parse_semantic(
 		sasl::common::token_t_ptr const& sem_tok,
@@ -103,6 +103,9 @@ private:
 	
 	node_semantic* get_node_semantic( sasl::syntax_tree::node* );
 	node_semantic* get_node_semantic( sasl::syntax_tree::node_ptr const& );
+	
+	node_semantic* create_node_semantic( sasl::syntax_tree::node* );
+	node_semantic* create_node_semantic( sasl::syntax_tree::node_ptr const& );
 
 	node_semantic* get_or_create_semantic( sasl::syntax_tree::node* );
 	node_semantic* get_or_create_semantic( sasl::syntax_tree::node_ptr const& );
@@ -172,6 +175,8 @@ private:
 	label_list_t		*label_list;
 	sasl::syntax_tree::node_ptr	variable_to_initialized;
 	sasl::syntax_tree::node_ptr generated_node;
+	node_semantic*				generated_sem;
+
 	bool	is_global_scope;
 	symbol*	current_symbol;
 	int		declaration_tid;

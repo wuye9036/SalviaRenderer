@@ -169,29 +169,39 @@ public:
 	{
 		//static int counter = 0;
 		//++counter;
-		//if(counter % 10000 == 0) { printf("get_semantic() has been called %d times.\n", counter); }
+		//if(counter % 10000 == 0) {
+		//	printf("get_semantic() has been called %d times.\n", counter);
+		//}
 
 		semantics_dict::const_iterator it = semantics_dict_.find(v);
-		if( it == semantics_dict_.end() ){ return NULL; }
+		if( it == semantics_dict_.end() ){ 
+			return NULL;
+		}
 		return it->second;
+	}
+
+	virtual node_semantic* create_semantic(node const* v)
+	{
+		assert( !get_semantic(v) );
+		node_semantic* ret = alloc_semantic();
+		ret->associated_node( const_cast<node*>(v) );
+		semantics_dict_.insert( make_pair(v, ret) );
+		return ret;
 	}
 
 	virtual node_semantic* get_or_create_semantic(node const* v)
 	{
 		node_semantic* ret = get_semantic(v);
-		if( ret == NULL )
-		{
-			ret = alloc_semantic();
-			semantics_dict_.insert( make_pair(v, ret) );
-		}
-		return ret;
+		return ret ? ret : create_semantic(v);
 	}
 
 	virtual symbol* get_symbol(sasl::syntax_tree::node* v) const
 	{
 		//static int counter = 0;
 		//++counter;
-		//if(counter % 1000 == 0) { printf("get_symbol() has been called %d times.\n", counter); }
+		//if(counter % 1000 == 0) {
+		//	printf("get_symbol() has been called %d times.\n", counter);
+		//}
 
 		symbols_dict::const_iterator it = symbols_dict_.find(v);
 
@@ -479,6 +489,12 @@ tynode* node_semantic::ty_proto() const
 void node_semantic::ty_proto(tynode* ty, symbol* scope)
 {
 	tid( owner_->pety()->get(ty, scope) );
+}
+
+void node_semantic::internal_tid( int v, tynode* proto )
+{
+	tid_		= v;
+	proto_type_	= proto;
 }
 
 module_semantic_ptr module_semantic::create()

@@ -122,21 +122,28 @@ semantic_analyser::semantic_analyser()
 	declaration_tid = -1;
 	member_counter = -1;
 	label_list = NULL;
+	generated_sem = NULL;
 }
 
 #define SASL_VISITOR_TYPE_NAME semantic_analyser
 
 template <typename NodeT>
-shared_ptr<NodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const& child )
+shared_ptr<NodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const& child, node_semantic** return_sem )
 {
 	node_ptr old_generated_node = generated_node;
+	node_semantic* old_semantic = generated_sem;
+
 	generated_node.reset();
+	generated_sem = NULL;
 
 	child->accept(this, NULL);
 	
 	shared_ptr<NodeT> ret = generated_node->as_handle<NodeT>();
+	if(return_sem) { *return_sem = generated_sem; }
+
 	generated_node = old_generated_node;
-	
+	generated_sem = old_semantic;
+
 	return ret;
 }
 
@@ -174,9 +181,11 @@ SASL_VISIT_DEF( unary_expression ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<unary_expression> dup_expr = duplicate( v.as_handle() )->as_handle<unary_expression>();
-	dup_expr->expr = visit_child(v.expr);
 
-	node_semantic* inner_tisi = get_node_semantic(dup_expr->expr);
+	node_semantic* inner_tisi = NULL;
+	dup_expr->expr = visit_child(v.expr, &inner_tisi);
+	assert(inner_tisi);
+
 	if( v.op == operators::prefix_incr || v.op == operators::postfix_incr || v.op == operators::prefix_decr || v.op == operators::postfix_decr ){
 		if( !is_integer( inner_tisi->ty_proto()->tycode ) ){
 			// REPORT ERROR
@@ -185,10 +194,11 @@ SASL_VISIT_DEF( unary_expression ){
 		}
 	}
 
-	node_semantic* ssi = get_or_create_semantic(dup_expr);
+	node_semantic* ssi = create_node_semantic(dup_expr);
 	ssi->tid( inner_tisi->tid() );
 
 	generated_node = dup_expr;
+	generated_sem = ssi;
 }
 
 SASL_VISIT_DEF( cast_expression ){
@@ -196,11 +206,14 @@ SASL_VISIT_DEF( cast_expression ){
 
 	shared_ptr<cast_expression> dup_cexpr = duplicate(v.as_handle())->as_handle<cast_expression>();
 
-	dup_cexpr->casted_type = visit_child(v.casted_type);
-	dup_cexpr->expr = visit_child(v.expr);
+	node_semantic* src_tsi		= NULL;
+	node_semantic* casted_tsi	= NULL;
 
-	node_semantic* src_tsi = module_semantic_->get_semantic(dup_cexpr->expr);
-	node_semantic* casted_tsi = module_semantic_->get_semantic(dup_cexpr->casted_type);
+	dup_cexpr->casted_type = visit_child(v.casted_type, &src_tsi);
+	dup_cexpr->expr = visit_child(v.expr, &casted_tsi);
+
+	assert(src_tsi);
+	assert(casted_tsi);
 
 	if( src_tsi->tid() != casted_tsi->tid() ){
 		if( caster->try_cast( casted_tsi->tid(), src_tsi->tid() ) == caster_t::nocast ){
@@ -210,10 +223,11 @@ SASL_VISIT_DEF( cast_expression ){
 		}
 	}
 
-	node_semantic* ssi = get_or_create_semantic(dup_cexpr);
+	node_semantic* ssi = create_node_semantic(dup_cexpr);
 	ssi->tid( casted_tsi->tid() );
 
 	generated_node = dup_cexpr;
+	generated_sem = ssi;
 }
 
 SASL_VISIT_DEF( binary_expression )
@@ -223,15 +237,17 @@ SASL_VISIT_DEF( binary_expression )
 	shared_ptr<binary_expression> dup_expr = duplicate( v.as_handle() )->as_handle<binary_expression>();
 	generated_node = dup_expr;
 
-	dup_expr->left_expr = visit_child(v.left_expr);
-	dup_expr->right_expr = visit_child(v.right_expr);
+	node_semantic* left_expr_sem = NULL;
+	node_semantic* right_expr_sem = NULL;
+
+	dup_expr->left_expr  = visit_child(v.left_expr, &left_expr_sem);
+	dup_expr->right_expr = visit_child(v.right_expr, &right_expr_sem);
 
 	std::string opname = operator_name( v.op );
 	vector<expression*> exprs;
 	exprs += dup_expr->left_expr.get(), dup_expr->right_expr.get();
 	
-	if(		get_node_semantic(dup_expr->left_expr) == NULL 
-		||  get_node_semantic(dup_expr->right_expr) == NULL )
+	if(	left_expr_sem == NULL ||  right_expr_sem == NULL )
 	{
 		return;
 	}
@@ -260,7 +276,8 @@ SASL_VISIT_DEF( binary_expression )
 	else
 	{
 		tid_t result_tid = get_node_semantic( overloads[0]->associated_node() )->tid();
-		get_or_create_semantic(dup_expr)->tid( result_tid );
+		generated_sem = create_node_semantic(dup_expr);
+		generated_sem->tid( result_tid );
 	}
 }
 
@@ -272,17 +289,16 @@ SASL_VISIT_DEF( cond_expression ){
 	shared_ptr<cond_expression> dup_expr
 		= duplicate( v.as_handle() )->as_handle<cond_expression>();
 
-	dup_expr->cond_expr = visit_child(v.cond_expr);
-	dup_expr->yes_expr = visit_child(v.yes_expr);
-	dup_expr->no_expr = visit_child(v.no_expr);
+	node_semantic* cond_tisi= NULL;
+	node_semantic* yes_tisi	= NULL;
+	node_semantic* no_tisi	= NULL;
+
+	dup_expr->cond_expr	= visit_child(v.cond_expr,	&cond_tisi);
+	dup_expr->yes_expr	= visit_child(v.yes_expr,	&yes_tisi);
+	dup_expr->no_expr	= visit_child(v.no_expr,	&no_tisi);
 	
 	// SEMANTIC_TODO Test conversation between type of yes expression and no expression.
-	node_semantic* cond_tisi= get_node_semantic(dup_expr->cond_expr);
-	node_semantic* yes_tisi	= get_node_semantic(dup_expr->yes_expr);
-	node_semantic* no_tisi	= get_node_semantic(dup_expr->no_expr);
- 
 	assert( cond_tisi && yes_tisi && no_tisi );
-
 	if( !(cond_tisi && yes_tisi && no_tisi) ) {
 		return;
 	}
@@ -296,7 +312,7 @@ SASL_VISIT_DEF( cond_expression ){
 			->p("?")->p(type_repr(cond_tisi->ty_proto()).str())->p("bool");
 	}
 	
-	node_semantic* ssi = get_or_create_semantic(dup_expr);
+	node_semantic* ssi = create_node_semantic(dup_expr);
 
 	tid_t yes_tid = yes_tisi->tid();
 	tid_t no_tid = no_tisi->tid();
@@ -314,6 +330,7 @@ SASL_VISIT_DEF( cond_expression ){
 	}
 
 	generated_node = dup_expr;
+	generated_sem = ssi;
 }
 
 SASL_VISIT_DEF( index_expression )
@@ -352,8 +369,9 @@ SASL_VISIT_DEF( index_expression )
 	
 	if( !(agg_ssi && index_tisi) ) { return; }
 
-	node_semantic* ssi = get_or_create_semantic(dup_idxexpr);
-	
+	node_semantic* ssi = create_node_semantic(dup_idxexpr);
+	generated_sem = ssi;
+
 	if( agg_tyn->is_array() )
 	{
 		array_type_ptr array_tyn = agg_tyn->as_handle<array_type>();
@@ -437,7 +455,8 @@ SASL_VISIT_DEF( call_expression )
 
 			mark_intrin_invoked_recursive( func_sym );
 			node_semantic* ssi = get_node_semantic( func_sym->associated_node() );
-			node_semantic* csi = get_or_create_semantic(dup_callexpr);
+			node_semantic* csi = create_node_semantic(dup_callexpr);
+			generated_sem = csi;
 
 			csi->tid( ssi->tid() );
 			csi->is_function_pointer(false);
@@ -546,7 +565,8 @@ SASL_VISIT_DEF( member_expression ){
 		return;
 	}
 
-	node_semantic* ssi = get_or_create_semantic(dup_expr);
+	node_semantic* ssi = create_node_semantic(dup_expr);
+	generated_sem = ssi;
 
 	ssi->tid( mem_typeid );
 	ssi->swizzle( swizzle_code );
@@ -557,8 +577,8 @@ SASL_VISIT_DEF( constant_expression )
 	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<constant_expression> dup_cexpr = duplicate( v.as_handle() )->as_handle<constant_expression>();
-	node_semantic* vsi = get_or_create_semantic(dup_cexpr);
-	vsi->const_value( v.value_tok->str, v.ctype );
+	generated_sem = create_node_semantic(dup_cexpr);
+	generated_sem->const_value( v.value_tok->str, v.ctype );
 
 	generated_node = dup_cexpr;	
 }
@@ -585,9 +605,9 @@ SASL_VISIT_DEF( variable_expression ){
 		}
 		else if ( decl_node || param_node )
 		{
-			node_semantic* vexpr_sem = module_semantic_->get_or_create_semantic(dup_vexpr);
-			*vexpr_sem = *get_node_semantic(node);
-			vexpr_sem->associated_symbol(vdecl);
+			generated_sem = create_node_semantic(dup_vexpr);
+			*generated_sem = *get_node_semantic(node);
+			generated_sem->associated_symbol(vdecl);
 		}
 		else
 		{
@@ -597,9 +617,9 @@ SASL_VISIT_DEF( variable_expression ){
 		// Function
 		bool is_function = !current_symbol->find_overloads(name).empty();
 		if( is_function ){
-			node_semantic* fvsi = get_or_create_semantic(dup_vexpr);
-			fvsi->associated_symbol(current_symbol);
-			fvsi->function_name(name);
+			generated_sem = create_node_semantic(dup_vexpr);
+			generated_sem->associated_symbol(current_symbol);
+			generated_sem->function_name(name);
 		} else {
 			diags->report(undeclared_identifier)->token_range( *v.token_begin(), *v.token_end() )->p(name);
 		}
@@ -633,8 +653,8 @@ SASL_VISIT_DEF( expression_initializer )
 		}
 	}
 
-	node_semantic* ssi = get_or_create_semantic(dup_exprinit);
-	ssi->tid( init_expr_tisi->tid() );
+	generated_sem = create_node_semantic(dup_exprinit);
+	generated_sem->tid( init_expr_tisi->tid() );
 }
 
 SASL_VISIT_DEF_UNIMPL( member_initializer );
@@ -644,12 +664,12 @@ SASL_VISIT_DEF( declarator ){
 
 	shared_ptr<declarator> dup_decl = duplicate( v.as_handle() )->as_handle<declarator>();
 
-	node_semantic* ssi = get_or_create_semantic(dup_decl);
-	ssi->tid(declaration_tid);
+	generated_sem = create_node_semantic(dup_decl);
+	generated_sem->tid(declaration_tid);
 
 	if( member_counter >= 0 )
 	{
-		ssi->member_index(member_counter++);
+		generated_sem->member_index(member_counter++);
 	}
 
 	if ( v.init ){
@@ -660,7 +680,7 @@ SASL_VISIT_DEF( declarator ){
 	if( declaration_tid != -1 )
 	{
 		symbol* nodesym = current_symbol->add_named_child( v.name->str, dup_decl.get() );
-		parse_semantic( v.semantic, v.semantic_index, ssi );
+		parse_semantic( v.semantic, v.semantic_index, generated_sem );
 		if(is_global_scope)
 		{
 			module_semantic_->global_vars().push_back(nodesym);
@@ -705,9 +725,13 @@ SASL_VISIT_DEF( builtin_type ){
 
 	// create type information on current symbol.
 	// for e.g. create type info onto a variable node.
-	node_semantic* tsi = module_semantic_->get_or_create_semantic(&v);
-	tsi->ty_proto(&v, current_symbol);
-	generated_node = tsi->ty_proto()->as_handle();
+	tynode*			proto_node = NULL;
+	node_semantic*	proto_sem = NULL;
+	
+	module_semantic_->pety()->get2(v.tycode, &proto_node, &proto_sem);
+
+	generated_node = proto_node->as_handle();
+	generated_sem = proto_sem;
 }
 
 SASL_VISIT_DEF(array_type)
@@ -717,7 +741,9 @@ SASL_VISIT_DEF(array_type)
 	tid_t array_tid = module_semantic_->pety()->get( &v, current_symbol );
 	assert(array_tid != -1);
 
-	array_type_ptr dup_array = module_semantic_->pety()->get_proto(array_tid)->as_handle<array_type>();
+	tynode* proto_tyn = NULL;
+	module_semantic_->pety()->get2(array_tid, &proto_tyn, &generated_sem);
+	array_type_ptr dup_array = proto_tyn->as_handle<array_type>();
 	if( !get_node_semantic(dup_array->elem_type) )
 	{
 		dup_array->elem_type = visit_child(v.elem_type);
@@ -745,12 +771,11 @@ SASL_VISIT_DEF( struct_type ){
 
 	assert( dup_struct_id != -1 );
 
-	shared_ptr<struct_type> dup_struct
-		= module_semantic_->pety()->get_proto( dup_struct_id )->as_handle<struct_type>();
-	generated_node = dup_struct;
+	tynode* tyn = NULL;
+	module_semantic_->pety()->get2(dup_struct_id, &tyn, &generated_sem);
 
-	node_semantic* tisi = get_node_semantic(dup_struct);
-	dup_struct = tisi->ty_proto()->as_handle<struct_type>();
+	shared_ptr<struct_type> dup_struct = tyn->as_handle<struct_type>();
+	generated_node = dup_struct;
 
 	// If v is declaration only, just return.
 	if( !v.has_body ){ return; }
@@ -795,7 +820,9 @@ SASL_VISIT_DEF( alias_type ){
 		diags->report( undeclared_identifier )->token_range( *v.alias, *v.alias )->p(v.alias->str);
 	}
 
-	generated_node = module_semantic_->pety()->get_proto(dup_struct_id)->as_handle();
+	tynode* proto_node = NULL;
+	module_semantic_->pety()->get2(dup_struct_id, &proto_node, &generated_sem);
+	generated_node = proto_node->as_handle();
 }
 
 SASL_VISIT_DEF( parameter )
@@ -814,20 +841,19 @@ SASL_VISIT_DEF( parameter )
 		current_symbol->add_child( dup_par.get() );
 	}
 
-	dup_par->param_type = visit_child(v.param_type);
+	node_semantic* par_tisi = NULL;
+	dup_par->param_type = visit_child(v.param_type, &par_tisi);
 
 	if ( v.init ){ dup_par->init = visit_child(v.init); }
-
-	node_semantic* par_tisi = get_node_semantic(dup_par->param_type);
 	tid_t tid = par_tisi ? par_tisi->tid() : -1;
 	
 	if( tid == -1 ) { return; }
 
-	node_semantic* ssi = get_or_create_semantic(dup_par);
-	ssi->tid( tid );
+	generated_sem = create_node_semantic(dup_par);
+	generated_sem->tid( tid );
 	// SEMANTIC_TODO: Nonsupports reference yet.
-	ssi->is_reference(false);
-	parse_semantic( v.semantic, v.semantic_index, ssi );
+	generated_sem->is_reference(false);
+	parse_semantic( v.semantic, v.semantic_index, generated_sem );
 }
 
 SASL_VISIT_DEF( function_type )
@@ -845,36 +871,41 @@ SASL_VISIT_DEF( function_type )
 
 	symbol* sym = current_symbol->add_function_begin( dup_fn.get() );
 
+	node_semantic* ret_type_sem = NULL;
 	{
 		SYMBOL_SCOPE(sym);
 		FUNCTION_SCOPE(dup_fn);
 
-		dup_fn->retval_type = visit_child(v.retval_type);
+		dup_fn->retval_type = visit_child(v.retval_type, &ret_type_sem);
 
-		if( !get_node_semantic(dup_fn->retval_type) ) { return; }
+		if( !ret_type_sem ) { return; }
 
 		bool successful = true;
 		for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
 			it != v.params.end(); ++it )
 		{
-			shared_ptr<parameter> fn_param = visit_child(*it);
+			node_semantic* param_tisi = NULL;
+			shared_ptr<parameter> fn_param = visit_child(*it, &param_tisi);
 			dup_fn->params.push_back(fn_param);
-			node_semantic* param_tisi = get_node_semantic(fn_param);
-			if( !param_tisi || param_tisi->tid() == -1 ){ successful = false; }
+			if( !param_tisi || param_tisi->tid() == -1 ){
+				successful = false; 
+			}
 		}
-		if( !successful ){ return; }
+		if( !successful ){
+			assert(false);
+			return;
+		}
 	}
 
 	current_symbol->add_function_end(sym);
 
-	node_semantic* ssi = get_or_create_semantic(dup_fn);
-	tid_t ret_tid = get_node_semantic(dup_fn->retval_type)->tid();
-	ssi->tid( ret_tid );
+	generated_sem = create_node_semantic(dup_fn);
+	generated_sem->tid( ret_type_sem->tid() );
 
 	// SEMANTIC_TODO judge the true abi.
-	ssi->msc_compatible( true );
+	generated_sem->msc_compatible( true );
 
-	parse_semantic( v.semantic, v.semantic_index, ssi );
+	parse_semantic( v.semantic, v.semantic_index, generated_sem );
 
 	if ( v.body )
 	{
@@ -903,8 +934,7 @@ SASL_VISIT_DEF( declaration_statement )
 		if( dup_decl ){ dup_declstmt->decls.push_back(dup_decl); }
 	}
 	
-	get_or_create_semantic(dup_declstmt);
-
+	generated_sem = create_node_semantic(dup_declstmt);
 	generated_node = dup_declstmt;
 }
 
@@ -1047,15 +1077,18 @@ SASL_VISIT_DEF( switch_statement ){
 	shared_ptr<switch_statement> dup_switch = duplicate( v.as_handle() )->as_handle<switch_statement>();
 
 	dup_switch->cond = visit_child(v.cond);
+
+#if defined(EFLIB_DEBUG)
 	node_semantic* cond_tsi = get_node_semantic(dup_switch->cond);
 	assert( cond_tsi );
 	tid_t int_tid = module_semantic_->pety()->get( builtin_types::_sint32 );
 	builtin_types cond_bt = cond_tsi->ty_proto()->tycode;
 	assert( is_integer( cond_bt ) || caster->try_implicit( int_tid, cond_tsi->tid() ) );
+#endif
 
-	node_semantic* ssi = get_or_create_semantic(dup_switch);
+	generated_sem = create_node_semantic(dup_switch);
 	
-	LABEL_LIST_SCOPE( &ssi->labeled_statements() );
+	LABEL_LIST_SCOPE( &generated_sem->labeled_statements() );
 	dup_switch->stmts = visit_child(v.stmts);
 	
 	generated_node = dup_switch;
@@ -1079,7 +1112,7 @@ SASL_VISIT_DEF( compound_statement )
 		}
 	}
 
-	get_or_create_semantic(dup_stmt);
+	generated_sem = create_node_semantic(dup_stmt);
 	generated_node = dup_stmt;
 }
 
@@ -1088,7 +1121,7 @@ SASL_VISIT_DEF( expression_statement ){
 
 	shared_ptr<expression_statement> dup_exprstmt = duplicate( v.as_handle() )->as_handle<expression_statement>();
 	dup_exprstmt->expr = visit_child(v.expr);
-	get_or_create_semantic(dup_exprstmt);
+	generated_sem = create_node_semantic(dup_exprstmt);
 	generated_node = dup_exprstmt->as_handle();
 }
 
@@ -1595,13 +1628,13 @@ void semantic_analyser::register_builtin_functions(){
 					register_intrinsic( "acos"		) % ty			>> ty;
 					register_intrinsic( "atan"		) % ty			>> ty;
 					register_intrinsic( "ceil"		) % ty			>> ty;
-					register_intrinsic( "floor"	) % ty			>> ty;
+					register_intrinsic( "floor"		) % ty			>> ty;
 					register_intrinsic( "log"		) % ty			>> ty;
 					register_intrinsic( "log2"		) % ty			>> ty;
-					register_intrinsic( "log10"	) % ty			>> ty;
-					register_intrinsic( "rsqrt"	) % ty			>> ty;
+					register_intrinsic( "log10"		) % ty			>> ty;
+					register_intrinsic( "rsqrt"		) % ty			>> ty;
 					register_intrinsic( "fmod"		) % ty % ty		>> ty;
-					register_intrinsic( "ldexp"	) % ty % ty		>> ty;
+					register_intrinsic( "ldexp"		) % ty % ty		>> ty;
 					register_intrinsic( "lerp"		) % ty % ty % ty>> ty;
 				}
 			}
@@ -1844,6 +1877,16 @@ node_semantic* semantic_analyser::get_node_semantic(sasl::syntax_tree::node* v)
 node_semantic* semantic_analyser::get_node_semantic(sasl::syntax_tree::node_ptr const& v)
 {
 	return module_semantic_->get_semantic(v);
+}
+
+node_semantic* semantic_analyser::create_node_semantic(sasl::syntax_tree::node* v)
+{
+	return module_semantic_->create_semantic(v);
+}
+
+node_semantic* semantic_analyser::create_node_semantic( sasl::syntax_tree::node_ptr const& v )
+{
+	return module_semantic_->create_semantic( v.get() );
 }
 
 node_semantic* semantic_analyser::get_or_create_semantic( sasl::syntax_tree::node* v )

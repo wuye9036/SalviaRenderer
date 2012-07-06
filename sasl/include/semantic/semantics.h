@@ -80,9 +80,15 @@ public:
 		return get_or_create_semantic(v.get() );
 	}
 
-	virtual node_semantic* get_semantic( sasl::syntax_tree::node const* ) const = 0;
-	virtual node_semantic* get_or_create_semantic( sasl::syntax_tree::node const* ) = 0;
+	template <typename T> node_semantic* create_semantic(boost::shared_ptr<T> const& v)
+	{
+		return create_semantic( v.get() );
+	}
 
+	virtual node_semantic* get_semantic(sasl::syntax_tree::node const*) const = 0;
+	virtual node_semantic* create_semantic(sasl::syntax_tree::node const*) = 0;
+	virtual node_semantic* get_or_create_semantic(sasl::syntax_tree::node const*) = 0;
+	
 	virtual void	hold_node(sasl::syntax_tree::node_ptr const& ) = 0;
 	virtual symbol* get_symbol(sasl::syntax_tree::node*) const = 0;
 	virtual symbol* alloc_symbol() = 0; ///< Only called by symbol.
@@ -163,6 +169,7 @@ public:
 
 	// Type
 	void tid(int v);
+	void internal_tid(int v, sasl::syntax_tree::tynode* proto); /// Only used by pety.
 	void ty_proto(sasl::syntax_tree::tynode* ty, symbol* scope);
 
 	// Constant

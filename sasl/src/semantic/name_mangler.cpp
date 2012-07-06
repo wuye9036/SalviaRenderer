@@ -39,7 +39,8 @@ using namespace sasl::utility;
 // static boost::mutex lookup_table_mtx;
 
 static std::string mangling_tag("M");
-static boost::unordered_map< builtin_types, std::string, enum_hasher > btc_decorators;
+static boost::unordered_map< builtin_types, std::string > btc_decorators;
+// static boost::unordered_map< builtin_types, std::string > btc_names;
 static bool is_initialized(false);
 
 static void initialize_lookup_table(){
@@ -78,18 +79,18 @@ static void append( std::string& str, builtin_types btc, bool is_component = fal
 		}
 		str.append( btc_decorators[btc] );
 	} else if( is_vector( btc ) ) {
-		char vector_len_buf[2];
 		str.append("V");
-		sprintf( vector_len_buf, "%ld", vector_size( btc ) );
-		str.append( vector_len_buf );
+		char vector_len_ch = ( '0' + static_cast<char>( vector_size(btc) ) );
+		str.append(1, vector_len_ch);
 		append( str, scalar_of(btc), true );
 	} else if ( is_matrix(btc) ) {
-		char matrix_len_buf[2] = {0};
 		str.append("M");
-		sprintf( matrix_len_buf, "%ld", vector_size( btc ) );
-		str.append( matrix_len_buf );
-		sprintf( matrix_len_buf, "%ld", vector_count( btc ) );
-		str.append( matrix_len_buf );
+		char matrix_len_buf[3] = {
+			  '0' + static_cast<char>( vector_size(btc) )
+			, '0' + static_cast<char>( vector_count(btc) )
+			, 0
+		};
+		str.append(matrix_len_buf);
 		append( str, scalar_of(btc), true );
 	}
 }

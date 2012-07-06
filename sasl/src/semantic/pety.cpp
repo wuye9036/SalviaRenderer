@@ -29,6 +29,13 @@ using std::make_pair;
 
 BEGIN_NS_SASL_SEMANTIC();
 
+node_semantic* assign_tid_to_node( module_semantic* msem, tynode* node, tynode* proto, tid_t tid )
+{
+	node_semantic* ret = msem->create_semantic(node);
+	ret->internal_tid(tid, proto);
+	return ret;
+}
+
 tid_t get_node_tid( unordered_map<tynode*, tid_t> const& dict, tynode* nd )
 {
 	if( !nd ) { return -1; }
@@ -176,14 +183,19 @@ tid_t pety_t::get(builtin_types const& btc)
 	}
 
 	// Otherwise create a new type and push into type manager.
-	shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
-	bt->tycode = btc;
-	tid_t ret = get(bt.get(), root_symbol_);
-	bt_dict_.insert( make_pair(btc, ret) );
-	return ret;
+	tid_t btc_tid = -1;
+	add_builtin_type(btc, NULL, &btc_tid);
+	bt_dict_.insert( make_pair(btc, btc_tid) );
+
+	return btc_tid;
 }
 
 tid_t pety_t::get(tynode* v, symbol* scope)
+{
+	return get(v, scope, true);
+}
+
+tid_t pety_t::get(tynode* v, symbol* scope, bool attach_tid_to_input)
 {
 	// Return id if existed.
 	tid_t ret = get_node_tid(tynode_dict_, v);
@@ -202,7 +214,8 @@ tid_t pety_t::get(tynode* v, symbol* scope)
 			return type_items_[decoratee_id].*qual;
 		} else {
 			// else allocate an new node.
-			return allocate_and_assign_id(v);
+			add_tynode(v, attach_tid_to_input, NULL, &ret);
+			return ret;
 		}
 	}
 	else
@@ -222,7 +235,8 @@ tid_t pety_t::get(tynode* v, symbol* scope)
 			{
 				return -1;
 			}
-			tid_t tid = allocate_and_assign_id(v);
+			tid_t tid = -1;
+			add_tynode(v, attach_tid_to_input, NULL, &tid);
 			scope->add_named_child( name, type_items_[tid].stored.get() );
 			return tid;
 		}
@@ -256,26 +270,62 @@ pety_t::~pety_t()
 {
 }
 
-void assign_entry_id( module_semantic* msem, tynode* node, tid_t id ){
-	msem->get_or_create_semantic(node)->tid(id);
-}
+void pety_t::add_builtin_type(builtin_types btc, node_semantic** out_sem, tid_t* out_tid)
+{
+	std::string name = builtin_type_name(btc);
 
-tid_t semantic::pety_t::allocate_and_assign_id(tynode* node){
-	// Get a duplication from node.
-	// It assures that the node stored in pool is always available.
-	shared_ptr<tynode> dup_node = duplicate_tynode( node->as_handle<tynode>() );
-
-	// add to pool and allocate an id
-	pety_item_t ret_item;
-	ret_item.stored = dup_node;
+#ifdef EFLIB_DEBUG
+	symbol* sym = root_symbol_->find(name);
+	assert(!sym);
+#endif
 	
-	type_items_.push_back( ret_item );
-	tid_t ret_id = (tid_t)( type_items_.size() - 1 );
-	tynode_dict_.insert( make_pair(ret_item.stored.get(), ret_id) );
-
-	// assign id to source node and duplicated node.
-	assign_entry_id(owner_, node, ret_id);
-	assign_entry_id(owner_, dup_node.get(), ret_id);
-	return ret_id;
+	tynode_ptr tyn = create_builtin_type(btc);
+	node_semantic* sem = NULL;
+	add_proto_tynode(tyn, &sem, out_tid);
+	if(out_sem) { *out_sem = sem; }
+	assert( sem->associated_node() == tyn.get() );
+	root_symbol_->add_named_child( name, tyn.get() );
 }
+
+void pety_t::add_proto_tynode(tynode_ptr const& proto_node, node_semantic** out_sem, tid_t* out_tid)
+{
+	// add to pool and allocate an id
+	tid_t proto_tid = type_items_.size();
+
+	pety_item_t proto_item;
+	proto_item.stored = proto_node;
+	proto_item.ty_sem = assign_tid_to_node(owner_, proto_node.get(), proto_node.get(), proto_tid);
+	
+	type_items_.push_back(proto_item);
+	tynode_dict_.insert( make_pair(proto_node.get(), proto_tid) );
+
+	if(out_sem) { *out_sem = proto_item.ty_sem; }
+	if(out_tid) { *out_tid = proto_tid; }
+}
+
+void pety_t::add_tynode(tynode* tyn, bool attach_tid_to_input, node_semantic** out_sem, tid_t* out_tid )
+{
+	shared_ptr<tynode> dup_node = duplicate_tynode( tyn->as_handle<tynode>() );
+	tid_t tid = -1;
+	add_proto_tynode(dup_node, out_sem, &tid);
+	if(out_tid) { *out_tid = tid; }
+	
+	if(attach_tid_to_input)
+	{
+		assign_tid_to_node(owner_, tyn, dup_node.get(), tid);
+	}
+}
+
+void pety_t::get2(tid_t tid, tynode** out_tyn, node_semantic** out_sem)
+{
+	if(out_tyn) { *out_tyn = type_items_[tid].stored.get(); }
+	if(out_sem) { *out_sem = type_items_[tid].ty_sem; }
+}
+
+void pety_t::get2(builtin_types btc, tynode** out_tyn, node_semantic** out_sem)
+{
+	tid_t btc_tid = get(btc);
+	get2(btc_tid, out_tyn, out_sem);
+}
+
 END_NS_SASL_SEMANTIC();
