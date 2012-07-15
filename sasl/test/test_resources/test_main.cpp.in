@@ -1,13 +1,43 @@
 #define BOOST_TEST_MODULE @SASL_TEST_PROJECT_NAME@
 #define BOOST_TEST_NO_MAIN
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
+#define BOOST_CHRONO_HEADER_ONLY
+#include <boost/chrono.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #if defined(SASL_USE_LLVM)
 #	include <sasl/include/driver/driver_api.h>
 #endif
 
 #include <eflib/include/memory/lifetime_manager.h>
+
+namespace chrono = boost::chrono;
+
+bool enable_pause(int argc, char* argv[])
+{
+	for(int i_arg = 0; i_arg < argc; ++i_arg)
+	{
+		if( strncmp("--nopause", argv[i_arg], 9) == 0 )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool display_time(int argc, char* argv[])
+{
+	for(int i_arg = 0; i_arg < argc; ++i_arg)
+	{
+		if( strncmp("--display-time", argv[i_arg], 14) == 0 )
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 int BOOST_TEST_CALL_DECL
 main( int argc, char* argv[] )
@@ -22,9 +52,23 @@ main( int argc, char* argv[] )
 	int ret = 0;
 	{
 		eflib::lifetime_manager lfmgr;
+
+		chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
 		ret = ::boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
+		chrono::high_resolution_clock::time_point end_time = chrono::high_resolution_clock::now();
+		
+		if( display_time(argc, argv) )
+		{
+			chrono::milliseconds elapsed_ms
+				= chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
+			printf("Total elapsed time: %6dms\n", static_cast<int32_t>( elapsed_ms.count() ) );
+		}
 	}
-	system("pause");
+	
+	if( enable_pause(argc, argv) )
+	{
+		system("pause");
+	}
 	
 #if defined(SASL_USE_LLVM)
 	sasl_finalize_driver();

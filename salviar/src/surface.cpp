@@ -67,7 +67,7 @@ void surface::map(void** pdata, map_mode mm) const{
 }
 
 void surface::map(void** pdata, map_mode mm){
-	EFLIB_ASSERT(!is_mapped(), "不可重复锁定！");
+	EFLIB_ASSERT(!is_mapped(), "surface::map had been called yet.");
 	EFLIB_ASSERT(1 == num_samples_, "Can't map a multi-sample surface!");
 
 	if (num_samples_ > 1){
@@ -106,7 +106,7 @@ void surface::unmap() const{
 
 void surface::unmap()
 {
-	EFLIB_ASSERT(is_mapped(), "对未锁定的surface解锁！");
+	EFLIB_ASSERT(is_mapped(), "surface::map was not called but surface::unmap executed.");
 
 	if(is_write_mode(mm_)){
 		this->tile(mapped_data_);

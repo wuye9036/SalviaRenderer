@@ -23,6 +23,8 @@ set (HEADER_FILES
 	include/resource/texture/freeimage/tex_io_freeimage.h
 	include/resource/texture/gdiplus/tex_io_gdiplus.h
 	
+	include/resource/terrain/gen_terrain.h
+	
 	include/utility/freeimage_utilities.h
 	include/utility/user_config.h
 	include/utility/utility_forward.h
@@ -39,6 +41,8 @@ set (SOURCE_FILES
 	
 	src/resource/texture/sa/tex_io.cpp
 	src/resource/texture/freeimage/tex_io_freeimage.cpp
+	
+	src/resource/terrain/gen_terrain.cpp
 	
 	src/utility/freeimage_utility.cpp
 )

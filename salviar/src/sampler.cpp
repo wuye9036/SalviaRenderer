@@ -221,13 +221,13 @@ namespace addresser
 			mfcoord0 = _mm_max_ps(mfcoord0, mhalf);
 			mfcoord0 = _mm_min_ps(mfcoord0, _mm_sub_ps(mfsize, mhalf));
 
-			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord));
-			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord);		// if it increased (i.e. if it was negative...)
+			__m128 mfcoord0_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord0));
+			__m128 mask = _mm_cmpgt_ps(mfcoord0_ipart, mfcoord0);		// if it increased (i.e. if it was negative...)
 			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
-			mfcoord_ipart = _mm_sub_ps(mfcoord_ipart, mask);
+			mfcoord0_ipart = _mm_sub_ps(mfcoord0_ipart, mask);
 
 			mfsize = _mm_sub_ps(mfsize, _mm_set1_ps(1));
-			__m128i tmp = _mm_cvttps_epi32(_mm_min_ps(_mm_max_ps(mfcoord_ipart, _mm_setzero_ps()), mfsize));
+			__m128i tmp = _mm_cvttps_epi32(_mm_min_ps(_mm_max_ps(mfcoord0_ipart, _mm_setzero_ps()), mfsize));
 			int4 ret;
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&ret[0]), tmp);
 			return ret;

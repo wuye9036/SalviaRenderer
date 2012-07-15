@@ -233,6 +233,17 @@ uint32_t vertex_shader_unit::output_attribute_modifiers( size_t /*index*/ ) cons
 	return vs_output::am_linear;
 }
 
+void vertex_shader_unit::set_sampler( std::string const& name, h_sampler const& samp )
+{
+	if( std::find( used_samplers.begin(), used_samplers.end(), samp ) != used_samplers.end() )
+	{
+		used_samplers.push_back(samp);
+	}
+
+	sampler* psamp = samp.get();
+	set_variable( name, &psamp );
+}
+
 void pixel_shader_unit::initialize( shader_code const* code )
 {
 	this->code = code;

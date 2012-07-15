@@ -42,6 +42,7 @@ public:
 	void bind_streams( stream_assembler const* sa );
 	void set_variable( std::string const&, void* data );
 	void set_variable( std::string const&, void* data, size_t sz);
+	void set_sampler( std::string const&, h_sampler const& samp );
 
 	uint32_t output_attributes_count() const;
 	uint32_t output_attribute_modifiers( size_t index ) const;
@@ -54,16 +55,18 @@ public:
 	shader_code const* code;
 	stream_assembler const* sa;
 
-	std::vector<char>	stream_data;
-	std::vector<char>	buffer_data;
+	std::vector<h_sampler>	used_samplers;	// For take ownership
 
-	std::vector<char>	stream_odata;
-	std::vector<char>	buffer_odata;
+	std::vector<char>		stream_data;
+	std::vector<char>		buffer_data;
+
+	std::vector<char>		stream_odata;
+	std::vector<char>		buffer_odata;
 
 	boost::unordered_map<
 		std::string,
 		boost::shared_array<char> 
-	>					dynamic_datas;
+	>						dynamic_datas;
 };
 
 class pixel_shader_unit

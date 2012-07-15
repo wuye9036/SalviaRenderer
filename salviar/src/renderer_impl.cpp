@@ -515,6 +515,15 @@ result renderer_impl::set_ps_sampler( std::string const& name, h_sampler const& 
 	return result::failed;
 }
 
+result renderer_impl::set_vs_sampler( std::string const& name, h_sampler const& samp )
+{
+	if ( vs_proto_ ){
+		vs_proto_->set_sampler( name, samp );
+		return result::ok;
+	}
+	return result::failed;
+}
+
 h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev)
 {
 	return h_renderer(new renderer_impl(pparam, hdev));

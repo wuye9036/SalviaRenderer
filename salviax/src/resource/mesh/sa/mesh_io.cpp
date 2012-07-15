@@ -164,14 +164,16 @@ h_mesh create_planar(
 
 	size_t const geometry_slot	= 0;
 	size_t const normal_slot	= 1;
+	size_t const uv_slot		= 2;
 
 	salviar::h_buffer indices	= pmesh->create_buffer( repeat_x * repeat_y * 6 * sizeof(uint16_t) );
 
 	salviar::h_buffer verts		= pmesh->create_buffer( nverts * sizeof(vec4) );
 	salviar::h_buffer normals	= pmesh->create_buffer( nverts * sizeof(vec4) );
+	salviar::h_buffer uvs		= pmesh->create_buffer( nverts * sizeof(vec4) );
 
-	//Generate datas
-	vec4 normal(cross_prod3(x_dir, y_dir), 0.0f);
+	//Generate data
+ 	vec4 normal(cross_prod3(x_dir, y_dir), 0.0f);
 	if(!positive_normal) normal = -normal;
 	vec4 line_spos(start_pos, 1.0f);
 	vec4 x(x_dir, 0.0f);
@@ -181,8 +183,15 @@ h_mesh create_planar(
 	for(size_t i = 0; i < repeat_x + 1; ++i) {
 		vec4 pos = line_spos;
 		for(size_t j = 0; j < repeat_y + 1; ++j) {
+			vec4 uv(
+				static_cast<float>(i)/repeat_x,
+				static_cast<float>(j)/repeat_y,
+				0.0f, 0.0f
+				);
+
 			verts->transfer(offset_v, &pos, sizeof(vec4), sizeof(vec4), sizeof(vec4), 1);
 			normals->transfer(offset_v, &normal, sizeof(vec4), sizeof(vec4), sizeof(vec4), 1);
+			uvs->transfer(offset_v, &uv, sizeof(vec4), sizeof(vec4), sizeof(vec4), 1);
 			pos += y;
 			offset_v += sizeof(vec4);
 		}
@@ -214,10 +223,12 @@ h_mesh create_planar(
 
 	pmesh->add_vertex_buffer( geometry_slot, verts, sizeof(vec4), 0 );
 	pmesh->add_vertex_buffer( normal_slot, normals, sizeof(vec4), 0 );
+	pmesh->add_vertex_buffer( uv_slot, uvs, sizeof(vec4), 0);
 
 	vector<input_element_desc> descs;
 	descs.push_back( input_element_desc( "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0 ) );
 	descs.push_back( input_element_desc( "NORMAL",   0, format_r32g32b32a32_float, normal_slot,   0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "TEXCOORD", 0, format_r32g32b32a32_float, uv_slot,       0, input_per_vertex, 0 ) );
 
 	pmesh->set_input_element_descs( descs );
 
