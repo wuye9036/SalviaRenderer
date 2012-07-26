@@ -1,1 +1,0 @@
-// SRSampleWindow.h

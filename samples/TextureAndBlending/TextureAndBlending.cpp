@@ -1,12 +1,6 @@
-// SRSampleWindowView.h : interface of the CSRSampleWindowView class
-//
-/////////////////////////////////////////////////////////////////////////////
+#include <tchar.h>
 
-#pragma once
-
-#include <salviax/include/resource/mesh/sa/mesh_io.h>
-#include <salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h>
-#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviau/include/wtl/wtl_application.h>
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
@@ -14,35 +8,35 @@
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
+#include <salviar/include/colors.h>
 
-#include <eflib/include/utility/unref_declarator.h>
+#include <salviax/include/resource/mesh/sa/mesh_io.h>
+#include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
+#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviau/include/common/timer.h>
+#include <salviau/include/common/window.h>
 
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/assign.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <vector>
 
-#include <iostream>
-
-#include "Timer.h"
-
-#define SALVIA_ENABLE_PIXEL_SHADER
-
-//#define PRESENTER_NAME "gdiplus"
 #if defined( SALVIA_BUILD_WITH_DIRECTX )
 #define PRESENTER_NAME "d3d9"
 #else
 #define PRESENTER_NAME "opengl"
 #endif
-//#define PRESENTER_NAME "d3d11"
 
 using namespace eflib;
-using namespace boost;
-using namespace boost::assign;
-using namespace std;
 using namespace salviar;
 using namespace salviax;
 using namespace salviax::resource;
-using namespace Gdiplus;
+using namespace salviau;
+
+using boost::shared_ptr;
+using boost::shared_polymorphic_cast;
+
+using std::string;
+using std::vector;
+using std::cout;
+using std::endl;
 
 struct vert
 {
@@ -112,6 +106,7 @@ char const* plane_ps_code =
 	"	return color; \r\n"
 	"}\r\n"
 	;
+	
 
 class ps_box : public pixel_shader
 {
@@ -240,76 +235,19 @@ public:
 	}
 };
 
-class CSRSampleWindowView : public CWindowImpl<CSRSampleWindowView>
-{
+class texture_and_blending: public quick_app{
 public:
-	h_device present_dev;
-	h_renderer hsr;
-	h_texture sm_tex;
+	texture_and_blending(): quick_app( create_wtl_application() ){}
 
-	h_mesh planar_mesh;
-	h_mesh box_mesh;
+protected:
+	/** Event handlers @{ */
+	virtual void on_create(){
 
-	h_texture plane_tex;
-	h_texture box_tex;
+		cout << "Creating window and device ..." << endl;
 
-	h_sampler plane_sampler;
-	h_sampler box_sampler;
-
-	h_vertex_shader pvs_box;
-	h_pixel_shader pps_box;
-	h_shader_code psc_box;
-
-	h_vertex_shader pvs_plane;
-	h_pixel_shader pps_plane;
-	h_shader_code psc_plane;
-
-	h_blend_shader pbs_box;
-	h_blend_shader pbs_plane;
-
-	h_rasterizer_state rs_front;
-	h_rasterizer_state rs_back;
-
-	h_surface display_surf;
-	surface* pdsurf;
-
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	Timer timer;
-
-	CSRSampleWindowView::CSRSampleWindowView()
-	{
-	}
-
-	CSRSampleWindowView::~CSRSampleWindowView()
-	{
-	}
-
-	DECLARE_WND_CLASS(NULL)
-
-	BOOL PreTranslateMessage(MSG* pMsg)
-	{
-		pMsg;
-		return FALSE;
-	}
-
-	BEGIN_MSG_MAP(CSRSampleWindowView)
-		MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		MESSAGE_HANDLER(WM_PAINT, OnPaint)
-		MESSAGE_HANDLER(WM_LBUTTONUP, OnClick)
-		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-		MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
-	END_MSG_MAP()
-
-	// Handler prototypes (uncomment arguments if needed):
-	//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
-
-	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
+		string title( "Sample: Texture And Blending" );
+		impl->main_window()->set_title( title );
+		
 		std::_tstring dll_name = TEXT("salviax_");
 		dll_name += TEXT(PRESENTER_NAME);
 		dll_name += TEXT("_presenter");
@@ -321,8 +259,9 @@ public:
 		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
 		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
 		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
-		presenter_func(present_dev, static_cast<void*>(m_hWnd));
-
+		boost::any view_handle_any = impl->main_window()->view_handle();
+		presenter_func(present_dev, *boost::unsafe_any_cast<void*>( &view_handle_any ) );
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
@@ -409,22 +348,15 @@ public:
 		num_frames = 0;
 		accumulate_time = 0;
 		fps = 0;
-
-		return 0;
 	}
+	/** @} */
 
-	LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		CPaintDC dc(m_hWnd);
-		//TODO: Add your drawing code here
-
+	void on_draw(){
 		present_dev->present(*pdsurf);
-		return 0;
 	}
 
-	void Render()
-	{
-		// measure statistics
+	void on_idle(){
+			// measure statistics
 		++ num_frames;
 		float elapsed_time = static_cast<float>(timer.elapsed());
 		accumulate_time += elapsed_time;
@@ -500,43 +432,50 @@ public:
 			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
 		}
 
-		InvalidateRect(NULL);
+		impl->main_window()->refresh();
 	}
 
-	LRESULT OnClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
-	{
-		framebuffer* pfb = static_pointer_cast<renderer_impl>(hsr)->get_framebuffer().get();
-		PPOINTS pp = (PPOINTS)(&lParam);
-		if(pfb && size_t(pp->x) < pfb->get_width() && size_t(pp->y) < pfb->get_height())
-		{
-			color_rgba32f c = pfb->get_render_target(render_target_color, 0)->get_texel(pp->x, pfb->get_height() - 1 - pp->y, 0);
-			TCHAR str[512];
-#ifdef EFLIB_MSVC
-			_stprintf_s(str, sizeof(str) / sizeof(str[0]), _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
-#else
-			_stprintf(str, _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
-#endif
-			this->GetParent().SetWindowText(str);
-		}
-		return 0;
-	}
+protected:
+	/** Properties @{ */
+	h_device present_dev;
+	h_renderer hsr;
+	h_texture sm_tex;
 
-	LRESULT OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		{
-			MSG msg;
-			PeekMessage(&msg, m_hWnd, WM_MOUSEMOVE, WM_MOUSEMOVE, PM_REMOVE);
-		}
-		return 0;
-	}
+	h_mesh planar_mesh;
+	h_mesh box_mesh;
 
-	LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-	{
-		EFLIB_UNREF_DECLARATOR(uMsg);
-		EFLIB_UNREF_DECLARATOR(wParam);
-		EFLIB_UNREF_DECLARATOR(lParam);
-		EFLIB_UNREF_DECLARATOR(bHandled);
+	h_texture plane_tex;
+	h_texture box_tex;
 
-		return 1;
-    }
+	h_sampler plane_sampler;
+	h_sampler box_sampler;
+
+	h_vertex_shader pvs_box;
+	h_pixel_shader pps_box;
+	h_shader_code psc_box;
+
+	h_vertex_shader pvs_plane;
+	h_pixel_shader pps_plane;
+	h_shader_code psc_plane;
+
+	h_blend_shader pbs_box;
+	h_blend_shader pbs_plane;
+
+	h_rasterizer_state rs_front;
+	h_rasterizer_state rs_back;
+
+	h_surface display_surf;
+	surface* pdsurf;
+
+	uint32_t num_frames;
+	float accumulate_time;
+	float fps;
+
+	timer_t timer;
+	/** @} */
 };
+
+int main( int /*argc*/, TCHAR* /*argv*/[] ){
+	texture_and_blending loader;
+	return loader.run();
+}

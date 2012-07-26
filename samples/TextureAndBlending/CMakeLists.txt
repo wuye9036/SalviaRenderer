@@ -1,16 +1,3 @@
 SALVIA_CHECK_BUILD_WITH_UNICODE()
-
-SET( FRAMEWORK_HEADERS 
-	Timer.h 	stdafx.h
-	AboutDlg.h	MainFrm.h
-	resource.h	SRSampleWindow.h  )
-SOURCE_GROUP( "Header Files\\Framework" FILES ${FRAMEWORK_HEADERS} )
-	
-SET( VIEW_HEADERS SRSampleWindowView.h )
-SOURCE_GROUP( "Header Files\\View" FILES ${VIEW_HEADERS} )
-
-SET(SOURCE_FILES SRSampleWindow.cpp Timer.cpp stdafx.cpp )
-SET(RESOURCE_FILES res/SRSampleWindow.ico res/toolbar.bmp SRSampleWindow.rc )
-SET(ADDITIONAL_FILES ${FRAMEWORK_HEADERS} ${VIEW_HEADERS} )
-
+SET( SOURCE_FILES TextureAndBlending.cpp )
 SALVIA_CONFIG_SAMPLE_PROJECT( TextureAndBlending )
