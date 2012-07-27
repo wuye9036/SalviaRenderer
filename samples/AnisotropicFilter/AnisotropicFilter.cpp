@@ -398,9 +398,9 @@ protected:
 
 		static int total_time = 0;
 		total_time += (int)( elapsed_time * 1000 );
-		if(total_time / 2000 > 16) { total_time = 0; }
+		if(total_time/3000 > 4) { total_time = 0; }
 
-		if( total_time / 2000 == 0 )
+		if( total_time/3000 == 0 )
 		{
 			desc.mip_filter = filter_linear;
 			desc.max_anisotropy = 0;
@@ -409,12 +409,10 @@ protected:
 		else
 		{
 			desc.mip_filter = filter_anisotropic;
-			desc.max_anisotropy = total_time / 2000;
+			desc.max_anisotropy = 1 << (total_time/3000);
 			impl->main_window()->set_title( ( boost::format("Sample: Anisotropic Filter - AF %dX") % desc.max_anisotropy ).str() );
 		}
 		plane_sampler->set_sampler_desc(desc);
-
-
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{	
