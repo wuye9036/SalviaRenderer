@@ -22,6 +22,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 
+#include <eflib/include/math/quaternion.h>
+
 using namespace std;
 using namespace eflib;
 using namespace salviar;
@@ -43,7 +45,7 @@ h_mesh create_box(salviar::renderer* psr)
 	salviar::h_buffer normals	= pmesh->create_buffer( sizeof(vec4)*24 );
 	salviar::h_buffer uvs		= pmesh->create_buffer( sizeof(vec4)*24 );
 
-	// Generate datas
+	// Generate data
 	uint16_t* pidxs = reinterpret_cast<uint16_t*>(indices->raw_data(0));
 
 	vec4* pverts = reinterpret_cast<vec4*>(verts->raw_data(0));
@@ -233,6 +235,155 @@ h_mesh create_planar(
 	pmesh->set_input_element_descs( descs );
 
 	pmesh->set_primitive_count(repeat_x * repeat_y * 2);
+
+	return h_mesh(pmesh);
+}
+
+h_mesh create_cone(
+	salviar::renderer* psr,
+	eflib::vec3 const& bottom_center,
+	float radius, eflib::vec3 const& up_dir, int circle_segments)
+{
+	if( circle_segments < 3 )
+	{
+		circle_segments = 3;
+	}
+
+	// Pick an guide vector for generating bottom plane
+	vec3 guide_vector; 
+	if( eflib::equal(up_dir.x(), 0.0f) )
+	{
+		guide_vector = vec3(1.0f, 0.0f, 0.0f);
+	} 
+	else if( eflib::equal(up_dir.y(), 0.0f) )
+	{
+		guide_vector = vec3(0.0f, 1.0f, 0.0f);
+	}
+	else
+	{
+		guide_vector = vec3(0.0f, 0.0f, 1.0f);
+	}
+
+	// Compute local X axis of bottom plane
+	vec3 local_x_axis = cross_prod3(up_dir, guide_vector);
+	local_x_axis.normalize();
+	local_x_axis *= radius;
+
+	float segment_angle = eflib::TWO_PI / circle_segments;
+	quaternion seg_rotation = quaternion::from_axis_angle(up_dir, segment_angle);
+
+	// Compute all vertexes
+	vec3 top_vertex = bottom_center + up_dir;
+
+	vector<vec3> circle_vertices;
+	vec3 rotated_radial_amount = local_x_axis;
+	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
+	{
+		circle_vertices.push_back(rotated_radial_amount + bottom_center);
+		eflib::transform( rotated_radial_amount, seg_rotation, rotated_radial_amount);
+	}
+	circle_vertices.push_back( circle_vertices[0] );
+
+	// Compute face normals
+	vector<vec3> face_normals;
+	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
+	{
+		vec3 edge0 = circle_vertices[i_seg] - top_vertex;
+		vec3 edge1 = circle_vertices[i_seg+1] - circle_vertices[i_seg];
+		vec3 face_normal = cross_prod3(edge0, edge1);
+		face_normals.push_back(face_normal);
+	}
+	
+	// Compute bottom circle vert normals
+	vector<vec3> circle_normals;
+	circle_normals.push_back( (face_normals.back() + face_normals[0]) * 0.5f );
+	for(int i_seg = 1; i_seg < circle_segments; ++i_seg)
+	{
+		circle_normals.push_back( (face_normals[i_seg-1] + face_normals[i_seg]) * 0.5f );
+	}
+
+	// Compute UVs
+	vec2 top_uv = vec2(0.5f, 0.5f);
+	vector<vec2> circle_uvs;
+	for(int i_seg = 1; i_seg < circle_segments; ++i_seg)
+	{
+		float u = sin(segment_angle*i_seg) * 0.5f + 0.5f;
+		float v = cos(segment_angle*i_seg) * 0.5f + 0.5f;
+		circle_uvs.push_back( vec2(u, v) );
+	}
+	
+	// Fill buffers
+	mesh_impl* pmesh = new mesh_impl(psr);
+
+	size_t const geometry_slot = 0;
+	size_t const normal_slot = 1;
+	size_t const uv_slot = 2;
+
+	h_buffer indices = pmesh->create_buffer( sizeof(uint16_t)*circle_segments*3 );
+	h_buffer verts   = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
+	h_buffer norms   = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
+	h_buffer uvs     = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
+
+	// Fill vertex buffer
+	vec4* vert_cursor = reinterpret_cast<vec4*>( verts->raw_data(0) );
+	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
+	{
+		*vert_cursor = vec4(top_vertex, 1.0f);
+		++vert_cursor;
+		*vert_cursor = vec4(circle_vertices[i_seg], 1.0f);
+		++vert_cursor;
+	}
+
+	// Fill normal buffer
+	vec4* norm_cursor = reinterpret_cast<vec4*>( norms->raw_data(0) );
+	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
+	{
+		*norm_cursor = vec4(face_normals[i_seg], 1.0f);
+		++norm_cursor;
+		*norm_cursor = vec4(circle_normals[i_seg], 1.0f);
+		++norm_cursor;
+	}
+
+	// Fill UV buffer
+	vec4* uv_cursor = reinterpret_cast<vec4*>( uvs->raw_data(0) );
+	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
+	{
+		*uv_cursor = vec4(top_uv.x(), top_uv.y(), 0.0f, 0.0f);
+		++uv_cursor;
+		*uv_cursor = vec4(circle_uvs[i_seg].x(), circle_uvs[i_seg].y(), 0.0f, 0.0f);
+		++uv_cursor;
+	}
+
+	// Fill index buffer
+	uint16_t* index_cursor = reinterpret_cast<uint16_t*>( indices->raw_data(0) );
+	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
+	{
+
+		*index_cursor = i_seg*2; // Top
+		++index_cursor;
+		*index_cursor = (i_seg*2+3) % (circle_segments*2);
+		++index_cursor;
+		*index_cursor = i_seg*2+1;
+		++index_cursor;
+	}
+
+	// Set input layout
+	pmesh->set_index_type(format_r16_uint);
+	pmesh->set_index_buffer( indices );
+
+	pmesh->add_vertex_buffer( geometry_slot, verts, sizeof(vec4), 0 );
+	pmesh->add_vertex_buffer( normal_slot, norms, sizeof(vec4), 0 );
+	pmesh->add_vertex_buffer( uv_slot, uvs, sizeof(vec4), 0 );
+
+	vector<input_element_desc> descs;
+
+	descs.push_back( input_element_desc( "POSITION", 0, format_r32g32b32a32_float, geometry_slot, 0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "NORMAL",   0, format_r32g32b32a32_float, normal_slot,   0, input_per_vertex, 0 ) );
+	descs.push_back( input_element_desc( "TEXCOORD", 0, format_r32g32b32a32_float, uv_slot,       0, input_per_vertex, 0 ) );
+
+	pmesh->set_input_element_descs( descs );
+
+	pmesh->set_primitive_count(circle_segments);
 
 	return h_mesh(pmesh);
 }

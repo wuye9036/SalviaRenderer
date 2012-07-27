@@ -1,5 +1,5 @@
 /********************************************************************
-Copyright (C) 2007-2010 Ye Wu
+Copyright (C) 2007-2012 Ye Wu
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 created:	2008/06/08
 author:		Ye Wu
 
-purpose:	文件提供了无依赖库的网格模型的读、写、创建的声明
+purpose:	Support built-in meshes without any dependency.
 
 Modify Log:
 		
@@ -42,6 +42,11 @@ h_mesh create_planar(
 					 size_t repeat_x, size_t repeat_y,
 					 bool positive_normal
 					 );
+h_mesh create_cone(
+	salviar::renderer* psr,
+	eflib::vec3 const& bottom_center,
+	float radius, eflib::vec3 const& up_dir, int segments
+	);
 
 END_NS_SALVIAX_RESOURCE();
 
