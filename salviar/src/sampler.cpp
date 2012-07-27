@@ -596,7 +596,7 @@ sampler::sampler(const sampler_desc& desc)
 	filters_[sampler_state_mip] = surface_sampler::filter_table[desc_.mip_filter][desc_.addr_mode_u][desc.addr_mode_v];
 }
 
-color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coordy, size_t sample, float miplevel) const
+color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coordy, size_t sample, float miplevel, float ratio, vec4 const& long_axis) const
 {
 	bool is_mag = true;
 
@@ -606,7 +606,6 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		is_mag = (miplevel < 0);
 	}
 
-	//放大
 	if(is_mag){
 		return sample_surface(tex->get_surface(tex->get_max_lod()), coordx, coordy, sample, sampler_state_mag);
 	}
@@ -633,6 +632,44 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		return lerp(c0, c1, frac);
 	}
 
+	if(desc_.mip_filter == filter_anisotropic)
+	{
+		int int_ratio = min( fast_roundi(ratio), static_cast<int>(desc_.max_anisotropy) );
+		float miplevel_af_bias = fast_log2(ratio / int_ratio);
+		if( miplevel_af_bias < 1.5f )
+		{
+			miplevel_af_bias = 0.0f;
+		}
+
+		float start_relative_distance = - 0.5f * (int_ratio - 1.0f);
+		
+		float sample_coord_x = coordx + long_axis.x() * start_relative_distance;
+		float sample_coord_y = coordy + long_axis.y() * start_relative_distance;
+
+		size_t low = fast_floori(miplevel+miplevel_af_bias);
+		size_t up = low + 1;
+		
+		float frac = miplevel+miplevel_af_bias - low;
+		
+		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
+		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());
+
+		vec4 color(0.0f, 0.0f, 0.0f, 0.0f);
+		for(int i_sample = 0; i_sample < int_ratio; ++i_sample)
+		{
+			color_rgba32f c0 = sample_surface(tex->get_surface(low), sample_coord_x, sample_coord_y, sample, sampler_state_min);
+			// color_rgba32f c1 = sample_surface(tex->get_surface(up), sample_coord_x, sample_coord_y, sample, sampler_state_min);
+
+			color += c0.get_vec4(); //lerp(c0, c1, frac).get_vec4();
+
+			sample_coord_x += long_axis.x();
+			sample_coord_y += long_axis.y();
+		}
+
+		color /= int_ratio;
+		return color_rgba32f(color);
+	}
+
 	EFLIB_ASSERT(false, "Mip filters is error.");
 	return desc_.border_color;
 }
@@ -657,14 +694,29 @@ color_rgba32f sampler::sample_2d_impl(const texture *tex ,
 	int4 size(static_cast<int>(tex->get_width(0)), static_cast<int>(tex->get_height(0)),
 		static_cast<int>(tex->get_depth(0)), 0);
 
-	float lod = calc_lod(unproj_coord, size, unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
-	return sample_impl(tex, proj_coord[0], proj_coord[1], sample, lod);
+	float lod, ratio;
+	vec4  long_axis;
+	if( desc_.mip_filter == filter_anisotropic && desc_.max_anisotropy > 1 )
+	{
+		calc_anisotropic_lod(
+			unproj_coord, size, unproj_ddx, unproj_ddy,
+			inv_x_w, inv_y_w, inv_w, lod_bias,
+			lod, ratio, long_axis
+			);
+	}
+	else
+	{
+		lod = calc_lod(unproj_coord, size, unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+		ratio = 1.0f;
+	}
+
+	return sample_impl(tex, proj_coord[0], proj_coord[1], sample, lod, ratio, long_axis);
 }
 
 
 color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 {
-	return sample_impl(ptex_, coordx, coordy, 0, miplevel);
+	return sample_impl( ptex_, coordx, coordy, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f) );
 }
 
 color_rgba32f sampler::sample(
@@ -746,13 +798,12 @@ color_rgba32f sampler::sample_cube(
 		}
 	}
 
-	//暂时先不算ddx ddy
 	if(ptex_->get_texture_type() != texture_type_cube)
 	{
 		EFLIB_ASSERT(false , "texture type not texture_type_cube.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
-	return sample_impl(&pcube->get_face(major_dir), s, t, 0, miplevel);
+	return sample_impl(&pcube->get_face(major_dir), s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 color_rgba32f sampler::sample_cube(
@@ -787,8 +838,72 @@ color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec
 	int4 size(static_cast<int>(ptex_->get_width(0)), static_cast<int>(ptex_->get_height(0)),
 		static_cast<int>(ptex_->get_depth(0)), 0);
 
-	float lod = calc_lod( size, vec4(ddx[0], ddy[1], 0.0f, 0.0f), vec4(ddy[0], ddy[1], 0.0f, 0.0f), lod_bias );
-	return sample( proj_coord[0], proj_coord[1], lod );
+	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
+	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
+
+	float lod, ratio;
+	vec4  long_axis;
+	if( desc_.mip_filter == filter_anisotropic && desc_.max_anisotropy > 1 )
+	{
+		calc_anisotropic_lod(size, ddx_vec4, ddy_vec4, lod_bias, lod, ratio, long_axis);
+	}
+	else
+	{
+		lod = calc_lod(size, ddx_vec4, ddy_vec4, lod_bias);
+		ratio = 1.0f;
+	}
+
+	return sample_impl(ptex_, proj_coord[0], proj_coord[1], 0, lod, ratio, long_axis);
+}
+
+void sampler::calc_anisotropic_lod(
+	eflib::int4 const& size,
+	eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
+	float& out_lod, float& out_ratio, vec4& out_long_axis ) const
+{
+	float rho, lambda;
+
+	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
+	
+	vec4 ddx_in_texcoord = ddx * size_vec4;
+	vec4 ddy_in_texcoord = ddy * size_vec4;
+
+	float ddx_rho = max(max(abs(ddx_in_texcoord[0]), abs(ddx_in_texcoord[1])), abs(ddx_in_texcoord[2]));
+	float ddy_rho = max(max(abs(ddy_in_texcoord[0]), abs(ddy_in_texcoord[1])), abs(ddy_in_texcoord[2]));
+
+	if( ddx_rho > ddy_rho )
+	{
+		rho = ddy_rho;
+		out_ratio = ddx_rho / ddy_rho;
+		out_long_axis = ddx / out_ratio;
+	}
+	else
+	{
+		rho = ddx_rho;
+		out_ratio = ddy_rho / ddx_rho;
+		out_long_axis = ddy / out_ratio;
+	}
+
+	if(rho == 0.0f) rho = 0.000001f;
+	lambda = fast_log2(rho);
+	out_lod = lambda + bias;
+}
+
+void sampler::calc_anisotropic_lod(
+	const eflib::vec4& unproj_attr,
+	const eflib::int4& size, const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
+	float inv_x_w, float inv_y_w, float inv_w, float bias,
+	float& out_lod, float& out_ratio, vec4& out_long_axis ) const
+{
+	eflib::vec4 ddx2 = (unproj_attr + unproj_ddx) * inv_x_w - unproj_attr * inv_w;
+	eflib::vec4 ddy2 = (unproj_attr + unproj_ddy) * inv_y_w - unproj_attr * inv_w;
+
+	calc_anisotropic_lod(size, ddx2, ddy2, bias, out_lod, out_ratio, out_long_axis);
+}
+
+void sampler::set_sampler_desc( sampler_desc const& desc )
+{
+	desc_ = desc;
 }
 
 END_NS_SALVIAR()

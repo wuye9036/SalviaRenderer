@@ -16,6 +16,10 @@
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/format.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <vector>
 
 #if defined( SALVIA_BUILD_WITH_DIRECTX )
@@ -38,12 +42,14 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+#define SALVIA_ENABLE_PIXEL_SHADER 1
+
 struct vert
 {
 	vec4 pos;
 };
 
-class vs_cone : public vertex_shader
+class vs_cone : public vertex_shader 
 {
 	mat44 wvp;
 public:
@@ -106,7 +112,6 @@ char const* plane_ps_code =
 	"	return color; \r\n"
 	"}\r\n"
 	;
-	
 
 class ps_cone : public pixel_shader
 {
@@ -192,10 +197,12 @@ public:
 		sampler_desc desc;
 		desc.min_filter = filter_linear;
 		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
+		desc.mip_filter = filter_anisotropic;
+		desc.max_anisotropy = 16;
 		sampler_.reset(new sampler(desc));
 		sampler_->set_texture(tex_.get());
 	}
+
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		color_rgba32f color = tex2d(*sampler_, 0);
@@ -235,9 +242,9 @@ public:
 	}
 };
 
-class anistropic_filter: public quick_app{
+class anisotropic_filter: public quick_app{
 public:
-	anistropic_filter(): quick_app( create_wtl_application() ){}
+	anisotropic_filter(): quick_app( create_wtl_application() ){}
 
 protected:
 	/** Event handlers @{ */
@@ -245,7 +252,7 @@ protected:
 
 		cout << "Creating window and device ..." << endl;
 
-		string title( "Sample: Anistropic Filter" );
+		string title( "Sample: Anisotropic Filter" );
 		impl->main_window()->set_title( title );
 		
 		std::_tstring dll_name = TEXT("salviax_");
@@ -283,10 +290,10 @@ protected:
 
 		planar_mesh = create_planar(
 			hsr.get(), 
-			vec3(-3.0f, -1.0f, -3.0f), 
-			vec3(6, 0.0f, 0.0f), 
-			vec3(0.0f, 0.0f, 6),
-			1, 1, true
+			vec3(-50.0f, 0.0f, -50.0f), 
+			vec3(1.0f, 0.0f, 0.0f), 
+			vec3(0.0f, 0.0f, 1.0f),
+			100, 100, true
 			);
 		
 		cone_mesh = create_cone(hsr.get(), vec3(0.0f, 0.0f, 0.0f), 1.0f, vec3(0.0f, 1.0f, 0.0f), 120);
@@ -298,10 +305,11 @@ protected:
 			sampler_desc desc;
 			desc.min_filter = filter_linear;
 			desc.mag_filter = filter_linear;
-			desc.mip_filter = filter_linear;
+			desc.mip_filter = filter_anisotropic;
 			desc.addr_mode_u = address_clamp;
 			desc.addr_mode_v = address_clamp;
 			desc.addr_mode_w = address_clamp;
+			desc.max_anisotropy = 16;
 
 			cone_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			cone_tex->gen_mipmap(filter_linear, true);
@@ -321,7 +329,8 @@ protected:
 			sampler_desc desc;
 			desc.min_filter = filter_linear;
 			desc.mag_filter = filter_linear;
-			desc.mip_filter = filter_linear;
+			desc.mip_filter = filter_anisotropic;
+			desc.max_anisotropy = 16;
 
 			plane_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
@@ -378,17 +387,37 @@ protected:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		static float s_angle = 0;
-		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
-
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
-		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_lookat(view, vec3(0.0f, 1.0f, 10.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
-		for(float i = 0 ; i < 1 ; i ++)
+		sampler_desc desc;
+		desc.min_filter = filter_linear;
+		desc.mag_filter = filter_linear;
+
+		static int total_time = 0;
+		total_time += (int)( elapsed_time * 1000 );
+		if(total_time / 2000 > 16) { total_time = 0; }
+
+		if( total_time / 2000 == 0 )
 		{
+			desc.mip_filter = filter_linear;
+			desc.max_anisotropy = 0;
+			impl->main_window()->set_title( std::string("Sample: Anisotropic Filter - Mipmap") );
+		}
+		else
+		{
+			desc.mip_filter = filter_anisotropic;
+			desc.max_anisotropy = total_time / 2000;
+			impl->main_window()->set_title( ( boost::format("Sample: Anisotropic Filter - AF %dX") % desc.max_anisotropy ).str() );
+		}
+		plane_sampler->set_sampler_desc(desc);
+
+
+
+		for(float i = 0 ; i < 1 ; i ++)
+		{	
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
@@ -404,6 +433,7 @@ protected:
 			hsr->set_blend_shader(pbs_plane);
 			planar_mesh->render();
 			
+			/*
 			hsr->set_rasterizer_state(rs_front);
 			pvs_cone->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_cone);
@@ -426,6 +456,7 @@ protected:
 #endif
 			hsr->set_blend_shader(pbs_cone);
 			cone_mesh->render();
+			*/
 		}
 
 		if (hsr->get_framebuffer()->get_num_samples() > 1){
@@ -476,6 +507,6 @@ protected:
 };
 
 int main( int /*argc*/, TCHAR* /*argv*/[] ){
-	anistropic_filter loader;
+	anisotropic_filter loader;
 	return loader.run();
 }

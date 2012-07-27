@@ -137,7 +137,8 @@ enum filter_type
 {
 	filter_point = 0,
 	filter_linear = 1,
-	filter_type_count = 2
+	filter_anisotropic = 2,
+	filter_type_count = 3
 };
 
 enum sampler_state

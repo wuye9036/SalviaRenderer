@@ -305,7 +305,7 @@ h_mesh create_cone(
 	// Compute UVs
 	vec2 top_uv = vec2(0.5f, 0.5f);
 	vector<vec2> circle_uvs;
-	for(int i_seg = 1; i_seg < circle_segments; ++i_seg)
+	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
 	{
 		float u = sin(segment_angle*i_seg) * 0.5f + 0.5f;
 		float v = cos(segment_angle*i_seg) * 0.5f + 0.5f;

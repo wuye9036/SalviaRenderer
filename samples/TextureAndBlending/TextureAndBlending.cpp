@@ -38,6 +38,8 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+#define SALVIA_ENABLE_PIXEL_SHADER 1
+
 struct vert
 {
 	vec4 pos;

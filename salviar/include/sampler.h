@@ -62,12 +62,29 @@ private:
 		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
 		float inv_x_w, float inv_y_w, float inv_w, float bias) const;
 
+	void calc_anisotropic_lod(
+		eflib::int4 const& size,
+		eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias,
+		float& out_lod, float& out_ratio, eflib::vec4& out_long_axis ) const;
+
+	void calc_anisotropic_lod(
+		const eflib::vec4& unproj_attr, 
+		const eflib::int4& size, 
+		const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
+		float inv_x_w, float inv_y_w, float inv_w, float bias,
+		float& out_lod, float& out_ratio, eflib::vec4& out_long_axis
+		) const;
+
 	color_rgba32f sample_surface(
 		const surface& surf,
 		float x, float y, size_t sample,
 		sampler_state ss) const;
 
-	color_rgba32f sample_impl(const texture *tex , float coordx, float coordy, size_t sample, float miplevel) const;
+	color_rgba32f sample_impl(
+		const texture *tex ,
+		float coordx, float coordy,
+		size_t sample, float miplevel,
+		float ratio, eflib::vec4 const& long_axis) const;
 
 	color_rgba32f sample_impl(const texture *tex , 
 		float coordx, float coordy, size_t sample, 
@@ -83,6 +100,7 @@ public:
 	explicit sampler(const sampler_desc& desc);
 
 	void set_texture(const texture* ptex){ptex_ = ptex;}
+	void set_sampler_desc( sampler_desc const& desc );
 
 	color_rgba32f sample(float coordx, float coordy, float miplevel) const;
 
