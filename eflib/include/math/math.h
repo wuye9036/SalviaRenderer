@@ -208,6 +208,24 @@ namespace eflib{
 		return i;
 	}
 
+	inline uint32_t count_bits(uint32_t v)
+	{
+		v = v - ( (v >> 1) & 0x55555555 );                    // reuse input as temporary
+		v = (v & 0x33333333) + ( (v >> 2) & 0x33333333 );     // temp
+		return ( (v + (v >> 4) & 0xF0F0F0F) * 0x1010101 ) >> 24; // count
+	}
+
+	template <typename T> T count_bits(T v)
+	{
+		T c = 0;
+		while(i)
+		{
+			++c;
+			v &= v-1;
+		}
+		return c;
+	}
+
 	//////////////////////////////////////
 	// base vector function
 	//////////////////////////////////////

@@ -1419,34 +1419,6 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 	}
 }
 
-value_t cg_service::emit_exp( value_t const& arg_value )
-{
-	builtin_types hint = arg_value.hint();
-	builtin_types scalar_hint = scalar_of( arg_value.hint() );
-	abis arg_abi = arg_value.abi();
-
-	Value* v = arg_value.load(arg_abi);
-
-	if( scalar_hint == builtin_types::_float )
-	{
-		Value* ret_v = unary_op_ps_ts_sva_(
-			NULL,
-			v,
-			bind_unary_external_( external_intrins[exp_f32] ), // bind_unary_call_( intrin_<float(float)>(Intrinsic::exp) ),
-			unary_fn_t(),
-			unary_fn_t(),
-			unary_fn_t()
-			);
-
-		return create_value( arg_value.tyinfo(), arg_value.hint(), ret_v, vkind_value, arg_abi );
-	}
-	else
-	{
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return value_t();
-	}
-}
-
 value_t cg_service::undef_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
@@ -1454,7 +1426,6 @@ value_t cg_service::undef_value( builtin_types bt, abis abi )
 	value_t val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
 	return val;
 }
-
 
 value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
 {
@@ -2045,10 +2016,12 @@ bool cg_service::register_external_intrinsic()
 
 	Type* void_ty		= Type::getVoidTy( context() );
 	Type* u16_ty		= Type::getInt16Ty( context() );
+	Type* u32_ty		= Type::getInt32Ty( context() );
 	Type* f32_ty		= Type::getFloatTy( context() );
 	Type* samp_ty		= Type::getInt8PtrTy( context() );
 	Type* f32ptr_ty		= Type::getFloatPtrTy( context() );
-
+	Type* u32ptr_ty		= Type::getInt32PtrTy( context() );
+	
 	Type* v4f32_ty		= type_(v4f32_hint, abi_llvm);
 	Type* v4f32_pkg_ty	= type_(v4f32_hint, abi_package);
 	Type* v3f32_pkg_ty	= type_(v3f32_hint, abi_package);
@@ -2159,6 +2132,12 @@ bool cg_service::register_external_intrinsic()
 		ps_texproj_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
+	FunctionType* u32_u32_ty = NULL;
+	{
+		Type* arg_tys[2] = { u32ptr_ty, u32_ty };
+		u32_u32_ty = FunctionType::get(void_ty, arg_tys, false);
+	}
+
 	external_intrins[exp_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.exp.f32", module() );
 	external_intrins[exp2_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.exp2.f32", module() );
 	external_intrins[sin_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.sin.f32", module() );
@@ -2173,10 +2152,11 @@ bool cg_service::register_external_intrinsic()
 	external_intrins[log2_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log2.f32", module() );
 	external_intrins[log10_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log10.f32", module() );
 	external_intrins[rsqrt_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.rsqrt.f32", module() );
-
 	external_intrins[mod_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.mod.f32", module() );
 	external_intrins[ldexp_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.ldexp.f32", module() );
 
+	external_intrins[countbits_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.countbits.u32", module() );
+	
 	external_intrins[tex2dlod_vs]	= Function::Create(vs_texlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.tex2d.lod", module() );
 	external_intrins[tex2dlod_ps]	= Function::Create(ps_texlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.tex2d.lod", module() );
 	external_intrins[tex2dgrad_ps]	= Function::Create(ps_tex2dgrad_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.grad", module() );

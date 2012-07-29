@@ -131,7 +131,6 @@ public:
 	/// @{
 	virtual value_t emit_dot( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_abs( value_t const& lhs );
-	virtual value_t emit_exp( value_t const& lhs );
 	virtual value_t emit_sqrt( value_t const& lhs );
 	virtual value_t emit_cross( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_ddx( value_t const& v ) = 0;
@@ -369,6 +368,7 @@ protected:
 		rsqrt_f32,
 		ldexp_f32,
 		mod_f32,
+		countbits_u32,
 		tex2dlod_vs,
 		tex2dlod_ps,
 		tex2dgrad_ps,
@@ -527,6 +527,7 @@ protected:
 	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_ops op);
 	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
 
+	llvm::Value* countbits_( llvm::Value*, all_<of_llvm> );
 	llvm::Value* select_( llvm::Value*, llvm::Value*, llvm::Value*, all_<of_llvm> );
 
 private:

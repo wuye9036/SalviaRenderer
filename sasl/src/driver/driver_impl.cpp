@@ -328,9 +328,17 @@ void sasl_log_f32	( float* ret, float v ) { *ret = eflib::fast_log(v); }
 void sasl_log10_f32	( float* ret, float v ) { *ret = log10f(v); }
 void sasl_log2_f32	( float* ret, float v ) { *ret = eflib::fast_log2(v); }
 void sasl_rsqrt_f32	( float* ret, float v ) { *ret = 1.0f / sqrtf(v); }
-
 void sasl_mod_f32	( float* ret, float lhs, float rhs ){ *ret = fmodf(lhs, rhs); }
 void sasl_ldexp_f32	( float* ret, float lhs, float rhs ){ *ret = ldexpf(lhs, rhs); }
+
+void sasl_countbits_u32(uint32_t* ret, uint32_t v)
+{
+	*ret = 0;
+	while(v) {
+		++(*ret);
+		v &= (v-1);
+	}
+}
 
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
@@ -357,6 +365,8 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	inject_function(ret_jit, &sasl_log10_f32,	"sasl.log10.f32",	true);
 	inject_function(ret_jit, &sasl_rsqrt_f32,	"sasl.rsqrt.f32",	true);
 	inject_function(ret_jit, &sasl_ldexp_f32,	"sasl.ldexp.f32",	true);
+
+	inject_function(ret_jit, &sasl_countbits_u32, "sasl.countbits.u32", true);
 	return ret_jit;
 }
 

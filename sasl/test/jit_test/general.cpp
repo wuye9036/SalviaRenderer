@@ -159,6 +159,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(vec2 (vec2, vec4), test_length );
 	JIT_FUNCTION(int3 (int3, int3, int3), test_clamp_i3);
 	JIT_FUNCTION(float2x3 (float2x3, float2x3, float2x3), test_clamp_m23);
+	JIT_FUNCTION(uint3 (uint3), test_countbits_u3);
+	JIT_FUNCTION(uint3 (uint3), test_count_bits_u3);
 
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -468,6 +470,21 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 					);
 			}
 		}
+	}
+	{
+		uint3 v0(0, 0xFFFFFFFF, 7895567);
+		uint3 v1(678287, 99271, 7);
+
+		uint3 ret0 = test_countbits_u3(v0);
+		uint3 ret1 = test_count_bits_u3(v1);
+
+		BOOST_CHECK_EQUAL( ret0[0], 0 );
+		BOOST_CHECK_EQUAL( ret0[1], 32 );
+		BOOST_CHECK_EQUAL( ret0[2], count_bits(v0[2]) );
+
+		BOOST_CHECK_EQUAL( ret1[0], count_bits(v1[0]) );
+		BOOST_CHECK_EQUAL( ret1[1], count_bits(v1[1]) );
+		BOOST_CHECK_EQUAL( ret1[2], count_bits(v1[2]) );
 	}
 }
 

@@ -1564,7 +1564,7 @@ void semantic_analyser::register_builtin_functions(){
 		}
 	}
 
-	// all, any, ddx, ddy
+	// all, any, ddx, ddy, clamp
 	{
 		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
 		{
@@ -1704,7 +1704,7 @@ void semantic_analyser::register_builtin_functions(){
 		register_intrinsic( "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];
 	}
 
-	// asfloat, asint, asuint
+	// asfloat, asint, asuint, countbits
 	{
 		vector< shared_ptr<builtin_type> > int_tys;
 		vector< shared_ptr<builtin_type> > uint_tys;
@@ -1738,6 +1738,9 @@ void semantic_analyser::register_builtin_functions(){
 
 			register_intrinsic( "asfloat" ) % uint_tys[i_ty] >> float_tys[i_ty];
 			register_intrinsic( "asfloat" ) % int_tys[i_ty]  >> float_tys[i_ty];
+
+			register_intrinsic( "countbits" ) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "count_bits" ) % uint_tys[i_ty] >> uint_tys[i_ty];
 		}
 	}
 

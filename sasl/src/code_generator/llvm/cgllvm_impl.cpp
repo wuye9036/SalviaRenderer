@@ -875,6 +875,15 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret_val = service()->emit_unary_ps( scalar_intrin_name,service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
+		else if ( intr->unmangled_name() == "countbits"
+			|| intr->unmangled_name() == "count_bits"
+			)
+		{
+			assert( par_tys.size() == 1 );
+			service()->fn().arg_name( 0, ".value" );
+			value_t ret_val = service()->emit_unary_ps( "sasl.countbits.u32",service()->fn().arg(0) );
+			service()->emit_return( ret_val, service()->param_abi(false) );
+		}
 		else if(intr->unmangled_name() == "ldexp")
 		{
 			assert( par_tys.size() == 2 );
