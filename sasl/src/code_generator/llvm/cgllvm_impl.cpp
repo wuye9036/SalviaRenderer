@@ -867,6 +867,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			|| intr->unmangled_name() == "log2"
 			|| intr->unmangled_name() == "log10"
 			|| intr->unmangled_name() == "rsqrt"
+			|| intr->unmangled_name() == "sinh"
+			|| intr->unmangled_name() == "cosh"
+			|| intr->unmangled_name() == "tanh"
 			)
 		{
 			assert( par_tys.size() == 1 );

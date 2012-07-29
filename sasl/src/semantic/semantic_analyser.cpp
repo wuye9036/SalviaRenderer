@@ -1636,6 +1636,9 @@ void semantic_analyser::register_builtin_functions(){
 					register_intrinsic( "fmod"		) % ty % ty		>> ty;
 					register_intrinsic( "ldexp"		) % ty % ty		>> ty;
 					register_intrinsic( "lerp"		) % ty % ty % ty>> ty;
+					register_intrinsic( "sinh"		) % ty			>> ty;
+					register_intrinsic( "cosh"		) % ty			>> ty;
+					register_intrinsic( "tanh"		) % ty			>> ty;
 				}
 			}
 		}

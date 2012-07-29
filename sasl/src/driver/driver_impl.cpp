@@ -319,6 +319,9 @@ void sasl_exp2_f32	( float* ret, float v ) { *ret = ldexpf(1.0f, v); }
 void sasl_sin_f32	( float* ret, float v ) { *ret = sinf(v); }
 void sasl_cos_f32	( float* ret, float v ) { *ret = cosf(v); }
 void sasl_tan_f32	( float* ret, float v ) { *ret = tanf(v); }
+void sasl_sinh_f32	( float* ret, float v ) { *ret = sinhf(v); }
+void sasl_cosh_f32	( float* ret, float v ) { *ret = coshf(v); }
+void sasl_tanh_f32	( float* ret, float v ) { *ret = tanhf(v); }
 void sasl_asin_f32	( float* ret, float v ) { *ret = asinf(v); }
 void sasl_acos_f32	( float* ret, float v ) { *ret = acosf(v); }
 void sasl_atan_f32	( float* ret, float v ) { *ret = atanf(v); }
@@ -365,6 +368,9 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	inject_function(ret_jit, &sasl_log10_f32,	"sasl.log10.f32",	true);
 	inject_function(ret_jit, &sasl_rsqrt_f32,	"sasl.rsqrt.f32",	true);
 	inject_function(ret_jit, &sasl_ldexp_f32,	"sasl.ldexp.f32",	true);
+	inject_function(ret_jit, &sasl_sinh_f32,	"sasl.sinh.f32",	true);
+	inject_function(ret_jit, &sasl_cosh_f32,	"sasl.cosh.f32",	true);
+	inject_function(ret_jit, &sasl_tanh_f32,	"sasl.tanh.f32",	true);
 
 	inject_function(ret_jit, &sasl_countbits_u32, "sasl.countbits.u32", true);
 	return ret_jit;

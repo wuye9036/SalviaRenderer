@@ -77,6 +77,9 @@ float3x4 test_exp2_m34(float3x4 v)	{ return exp2(v); }
 float3x4 test_sin_m34(float3x4 v)	{ return sin(v); }
 float3x4 test_cos_m34(float3x4 v)	{ return cos(v); }
 float3x4 test_tan_m34(float3x4 v)	{ return tan(v); }
+float3x4 test_sinh_m34(float3x4 v)	{ return sinh(v); }
+float3x4 test_cosh_m34(float3x4 v)	{ return cosh(v); }
+float3x4 test_tanh_m34(float3x4 v)	{ return tanh(v); }
 float3x4 test_asin_m34(float3x4 v)	{ return asin(v); }
 float3x4 test_acos_m34(float3x4 v)	{ return acos(v); }
 float3x4 test_atan_m34(float3x4 v)	{ return atan(v); }

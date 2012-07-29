@@ -138,6 +138,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float3x4 (float3x4), test_sin_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_cos_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_tan_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_sinh_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_cosh_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_tanh_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_asin_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_acos_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_atan_m34);
@@ -376,6 +379,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float3x4 ret_sin	= test_sin_m34(lhs);
 		float3x4 ret_cos	= test_cos_m34(lhs);
 		float3x4 ret_tan	= test_tan_m34(lhs);
+		float3x4 ret_sinh	= test_sinh_m34(lhs);
+		float3x4 ret_cosh	= test_cosh_m34(lhs);
+		float3x4 ret_tanh	= test_tanh_m34(lhs);
 		float3x4 ret_asin	= test_asin_m34(lhs);
 		float3x4 ret_acos	= test_acos_m34(lhs);
 		float3x4 ret_atan	= test_atan_m34(lhs);
@@ -396,6 +402,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_sin.data_[i][j];	ref.f = sinf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_cos.data_[i][j];	ref.f = cosf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_tan.data_[i][j];	ref.f = tanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_sinh.data_[i][j];	ref.f = sinhf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_cosh.data_[i][j];	ref.f = coshf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_tanh.data_[i][j];	ref.f = tanhf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_asin.data_[i][j];	ref.f = asinf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_acos.data_[i][j];	ref.f = acosf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_atan.data_[i][j];	ref.f = atanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );

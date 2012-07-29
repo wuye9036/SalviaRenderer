@@ -2154,6 +2154,9 @@ bool cg_service::register_external_intrinsic()
 	external_intrins[rsqrt_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.rsqrt.f32", module() );
 	external_intrins[mod_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.mod.f32", module() );
 	external_intrins[ldexp_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.ldexp.f32", module() );
+	external_intrins[sinh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.sinh.f32", module() );
+	external_intrins[cosh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.cosh.f32", module() );
+	external_intrins[tanh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.tanh.f32", module() );
 
 	external_intrins[countbits_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.countbits.u32", module() );
 	
