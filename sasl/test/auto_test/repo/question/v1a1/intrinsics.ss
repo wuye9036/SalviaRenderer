@@ -92,3 +92,6 @@ float2 test_length(float2 v0, float4 v1)
 {
 	return float2( length(v0), length(v1) );
 }
+
+int3 test_clamp_i3(int3 v0, int3 v1, int3 v2)  { return clamp(v0, v1, v2); }
+float2x3 test_clamp_m23(float2x3 m0, float2x3 m1, float2x3 m2) { return clamp(m0, m1, m2); }

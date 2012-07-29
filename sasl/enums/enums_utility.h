@@ -25,8 +25,10 @@ namespace sasl{
 		bool is_signed( const builtin_types& /*btc*/ );
 		bool is_unsigned( const builtin_types& /*btc*/ );
 		bool is_scalar( const builtin_types& /*btc*/ );
+		bool is_numeric_scalar( builtin_types const& /*btc*/ );
 		bool is_vector( const builtin_types& /*btc*/ );
 		bool is_matrix( const builtin_types& /*btc*/ );
+		bool is_numeric( builtin_types const& /*btc*/ );
 
 		bool is_storagable( const builtin_types& /*btc*/ );
 		bool is_standard( const builtin_types& /*btc*/ );

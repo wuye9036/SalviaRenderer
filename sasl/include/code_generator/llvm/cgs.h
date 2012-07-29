@@ -36,6 +36,17 @@ struct node_context;
 class cgllvm_module_impl;
 class cg_service;
 
+class of_llvm{};
+class of_sasl{};
+
+template <typename T0, typename T1> class and_{};
+
+template<typename OfT> class scalar_{};
+template<typename OfT> class vector_{};
+template<typename OfT> class matrix_{};
+template<typename OfT> class aggr_{};
+template<typename OfT> class all_{};
+
 class cg_service
 {
 	friend class value_t;
@@ -127,7 +138,8 @@ public:
 	virtual value_t emit_ddy( value_t const& v ) = 0;
 	virtual value_t emit_any( value_t const& v );
 	virtual value_t emit_all( value_t const& v );
-	
+	virtual value_t emit_select( value_t const& flag, value_t const& v0, value_t const& v1 );
+
 	virtual value_t emit_tex2Dlod	( value_t const& samp, value_t const& coord );
 	virtual value_t emit_tex2Dgrad	( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );
 	virtual value_t emit_tex2Dbias	( value_t const& samp, value_t const& coord );
@@ -514,6 +526,9 @@ protected:
 	llvm::Value* cast_sv_( llvm::Value*, llvm::Type* elem_ty, cast_ops op );
 	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_ops op);
 	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
+
+	llvm::Value* select_( llvm::Value*, llvm::Value*, llvm::Value*, all_<of_llvm> );
+
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_c_as_package		( value_t const& v );

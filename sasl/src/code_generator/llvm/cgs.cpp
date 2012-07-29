@@ -2532,4 +2532,46 @@ node_semantic* cg_service::get_node_semantic( sasl::syntax_tree::node* v )
 	return sem_->get_semantic(v);
 }
 
+value_t cg_service::emit_select( value_t const& flag, value_t const& v0, value_t const& v1 )
+{
+	abis promoted_abi = promote_abi(flag.abi(), v0.abi(), v1.abi() );
+
+	Value* flag_v = flag.load(promoted_abi);
+	Value* v0_v = v0.load(promoted_abi);
+	Value* v1_v = v1.load(promoted_abi);
+
+	return create_value(
+		v0.tyinfo(), v0.hint(), 
+		select_(flag_v, v0_v, v1_v, all_<of_llvm>() ), vkind_value, promoted_abi
+		);
+}
+
+llvm::Value* cg_service::select_(llvm::Value* flag, llvm::Value* v0, llvm::Value* v1, all_<of_llvm> )
+{
+	Type* flag_ty = flag->getType();
+
+	if( !flag_ty->isAggregateType() )
+	{
+		Value* flag_i1 = flag;
+		if( !flag_ty->isIntegerTy(1) ) { flag_i1 = i8toi1_(flag); }
+		return builder().CreateSelect(flag_i1, v0, v1);
+	}
+	else if( flag_ty->isStructTy() )
+	{
+		Value* ret = UndefValue::get( v0->getType() );
+		size_t elem_count = flag_ty->getStructNumElements();
+		unsigned int elem_index[1] = {0};
+		for( unsigned int i = 0; i < elem_count; ++i )
+		{
+			elem_index[0] = i;
+			Value* v0_elem   = builder().CreateExtractValue(v0, elem_index);
+			Value* v1_elem   = builder().CreateExtractValue(v1, elem_index);
+			Value* flag_elem = builder().CreateExtractValue(flag, elem_index);
+			Value* ret_elem = select_(flag_elem, v0_elem, v1_elem, all_<of_llvm>() );
+			ret = builder().CreateInsertValue( ret, ret_elem, elem_index );
+		}
+		return ret;
+	}
+}
+
 END_NS_SASL_CODE_GENERATOR();

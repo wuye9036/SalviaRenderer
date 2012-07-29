@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -122,7 +122,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -217,6 +217,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	BOOST_REQUIRE(test_rad_deg);
 	
 	JIT_FUNCTION(vec2 (vec2, vec4), test_length );
+	JIT_FUNCTION(int3 (int3, int3, int3), test_clamp_i3);
+	JIT_FUNCTION(float2x3 (float2x3, float2x3, float2x3), test_clamp_m23);
 
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -330,7 +332,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			}
 		}
 	}
-	/*
+
 	{
 		float f = 876.625f;
 		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.000001f );
@@ -470,7 +472,71 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			}
 		}
 	}
-	*/
+	
+	{
+		int3 min_v( 98, -76, 0 );
+		int3 max_v( 226, 19, 0 );
+		int3 v0   ( -92, 61, 37);
+		int3 v1   ( 227,-26, -3);
+
+		int3 ret_v0 = test_clamp_i3( v0, min_v, max_v );
+		int3 ret_v1 = test_clamp_i3( v1, min_v, max_v );
+
+		BOOST_CHECK_EQUAL( ret_v0[0], min_v[0] );
+		BOOST_CHECK_EQUAL( ret_v0[1], max_v[1] );
+		BOOST_CHECK_EQUAL( ret_v0[2], max_v[2] );
+
+		BOOST_CHECK_EQUAL( ret_v1[0], max_v[0] );
+		BOOST_CHECK_EQUAL( ret_v1[1], v1   [1] );
+		BOOST_CHECK_EQUAL( ret_v1[2], max_v[2] );
+
+		float m[2][3] =
+		{
+			{17.7f, 66.3f, 0.92f},
+			{-88.7f, 8.6f,-0.22f}
+		};
+
+		float min_m[2][3] =
+		{
+			{17.1f,-64.4f,199.8f},
+			{0.1f, -0.1f, 99.73f}
+		};
+
+		float max_m[2][3] =
+		{
+			{9.62f, 10.33f, -18.2f},
+			{99.7f,  -0.3f, -76.9f}
+		};
+
+		for(int i = 0; i < 2; ++i)
+		{
+			for(int j = 0; j < 3; ++j)
+			{
+				if (min_m[i][j] > max_m[i][j])
+				{
+					std::swap(min_m[i][j], max_m[i][j]);
+				}
+			}
+		}
+		float2x3 ret = test_clamp_m23(
+			reinterpret_cast<float2x3&>(m),
+			reinterpret_cast<float2x3&>(min_m),
+			reinterpret_cast<float2x3&>(max_m)
+			);
+
+		for(int i = 0; i < 2; ++i)
+		{
+			for(int j = 0; j < 3; ++j)
+			{
+				BOOST_CHECK_EQUAL(
+					ret.data_[i][j],
+					clamp( m[i][j], std::min(min_m[i][j], max_m[i][j]), std::max(min_m[i][j], max_m[i][j]) ) 
+					);
+			}
+		}
+
+
+	}
 }
 
 #endif

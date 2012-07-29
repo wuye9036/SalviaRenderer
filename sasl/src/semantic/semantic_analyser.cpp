@@ -1399,9 +1399,7 @@ void semantic_analyser::add_cast(){
 
 void semantic_analyser::register_builtin_functions(){
 	// Operators
-	typedef unordered_map<
-		builtin_types, shared_ptr<builtin_type>, enum_hasher
-		> bt_table_t;
+	typedef unordered_map< builtin_types, shared_ptr<builtin_type> > bt_table_t;
 	bt_table_t standard_bttbl;
 	bt_table_t storage_bttbl;
 
@@ -1573,10 +1571,12 @@ void semantic_analyser::register_builtin_functions(){
 			builtin_types tycode = it_type->first;
 			shared_ptr<builtin_type> ty = it_type->second;
 
-			if( is_scalar(tycode) || is_vector(tycode) || is_matrix(tycode) )
+			register_intrinsic( "all" ) % ty >> bt_bool;
+			register_intrinsic( "any" ) % ty >> bt_bool;
+
+			if( is_numeric(tycode) )
 			{
-				register_intrinsic( "all" ) % ty >> bt_bool;
-				register_intrinsic( "any" ) % ty >> bt_bool;
+				register_intrinsic( "clamp" ) % ty % ty % ty >> ty;
 
 				if( lang == salviar::lang_pixel_shader )
 				{
@@ -1657,7 +1657,6 @@ void semantic_analyser::register_builtin_functions(){
 		shared_ptr<builtin_type> sampler_ty = create_builtin_type( builtin_types::_sampler );
 
 		// External and Intrinsic are Same signatures
-		
 		{
 			if( lang == salviar::lang_pixel_shader || lang == salviar::lang_vertex_shader )
 			{
