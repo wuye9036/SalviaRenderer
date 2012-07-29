@@ -127,95 +127,35 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
 
-	jit_function<float (vec3*, vec3*)> test_dot_f3;
-	jit_function<vec4 (mat44*, vec4*)> test_mul_m44v4;
-	jit_function<vec4 (mat44*)> test_fetch_m44v4;
-	jit_function<float (float) > test_abs_f;
-	jit_function<int (int) > test_abs_i;
-	jit_function<float (float) > test_exp;
-	jit_function<float3x4 (float3x4)>
-		test_exp_m34,
-		test_exp2_m34,
-		test_sin_m34,
-		test_cos_m34,
-		test_tan_m34,
-		test_asin_m34,
-		test_acos_m34,
-		test_atan_m34,
-		test_ceil_m34,
-		test_floor_m34,
-		test_log_m34,
-		test_log2_m34,
-		test_log10_m34,
-		test_rsqrt_m34;
-	jit_function<float3x4 (float3x4, float3x4)>
-		test_ldexp_m34;
-	jit_function<float (float) > test_sqrt_f;
-	jit_function<vec2 (vec2) > test_sqrt_f2;
-	jit_function<vec3 (vec3, vec3)> test_cross_prod;
-	jit_function<float (vec2, vec3, vec3)> test_distance;
-	jit_function<vec4 (vec3, float, vec3)> test_fmod;
-	jit_function<vec3 (vec3, vec3, vec3)> test_lerp;
-	jit_function<vec3 (vec3)> test_rad_deg;
-	jit_function<bool4(vec3, int3)> test_any_all;
-
-	function( test_any_all, "test_any_all" );
-	BOOST_REQUIRE(test_any_all);
-
-	function( test_dot_f3, "test_dot_f3" );
-	BOOST_REQUIRE(test_dot_f3);
-
-	function( test_mul_m44v4, "test_mul_m44v4" );
-	BOOST_REQUIRE( test_mul_m44v4 );
-
-	function( test_abs_f, "test_abs_f" );
-	BOOST_REQUIRE( test_abs_f );
-
-	function( test_abs_i, "test_abs_i" );
-	BOOST_REQUIRE( test_abs_i );
-
-	function( test_exp, "test_exp" );
-	BOOST_REQUIRE( test_exp );
-
-	function( test_exp_m34, "test_exp_m34" );
-	BOOST_REQUIRE( test_exp_m34 );
-
-	INIT_JIT_FUNCTION(test_exp2_m34);
-	INIT_JIT_FUNCTION(test_sin_m34);
-	INIT_JIT_FUNCTION(test_cos_m34);
-	INIT_JIT_FUNCTION(test_tan_m34);
-	INIT_JIT_FUNCTION(test_asin_m34);
-	INIT_JIT_FUNCTION(test_acos_m34);
-	INIT_JIT_FUNCTION(test_atan_m34);
-	INIT_JIT_FUNCTION(test_ceil_m34);
-	INIT_JIT_FUNCTION(test_floor_m34);
-	INIT_JIT_FUNCTION(test_log_m34);
-	INIT_JIT_FUNCTION(test_log2_m34);
-	INIT_JIT_FUNCTION(test_log10_m34);
-	INIT_JIT_FUNCTION(test_rsqrt_m34);
-	INIT_JIT_FUNCTION(test_ldexp_m34);
-
-	function( test_sqrt_f, "test_sqrt_f" );
-	BOOST_REQUIRE( test_sqrt_f );
-
-	function( test_sqrt_f2, "test_sqrt_f2" );
-	BOOST_REQUIRE( test_sqrt_f2 );
-
-	function( test_cross_prod, "test_cross_prod" );
-	BOOST_REQUIRE( test_cross_prod );
-
-	function( test_distance, "test_distance" );
-	BOOST_REQUIRE(test_distance);
-
-	function( test_fmod, "test_fmod" );
-	BOOST_REQUIRE(test_fmod);
-
-	function( test_lerp, "test_lerp" );
-	BOOST_REQUIRE(test_lerp);
-
-	function( test_rad_deg, "test_rad_deg" );
-	BOOST_REQUIRE(test_rad_deg);
-	
+	JIT_FUNCTION(float (vec3*, vec3*), test_dot_f3);
+	JIT_FUNCTION(vec4 (mat44*, vec4*), test_mul_m44v4);
+	JIT_FUNCTION(vec4 (mat44*), test_fetch_m44v4);
+	JIT_FUNCTION(float (float), test_abs_f);
+	JIT_FUNCTION(int (int), test_abs_i);
+	JIT_FUNCTION(float (float), test_exp);
+	JIT_FUNCTION(float3x4 (float3x4), test_exp_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_exp2_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_sin_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_cos_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_tan_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_asin_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_acos_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_atan_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_ceil_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_floor_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_log_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_log2_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_log10_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_rsqrt_m34);
+	JIT_FUNCTION(float3x4 (float3x4, float3x4), test_ldexp_m34);
+	JIT_FUNCTION(float (float), test_sqrt_f);
+	JIT_FUNCTION(vec2 (vec2), test_sqrt_f2);
+	JIT_FUNCTION(vec3 (vec3, vec3), test_cross_prod);
+	JIT_FUNCTION(float (vec2, vec3, vec3), test_distance);
+	JIT_FUNCTION(vec4 (vec3, float, vec3), test_fmod);
+	JIT_FUNCTION(vec3 (vec3, vec3, vec3), test_lerp);
+	JIT_FUNCTION(vec3 (vec3), test_rad_deg);
+	JIT_FUNCTION(bool4(vec3, int3), test_any_all);
 	JIT_FUNCTION(vec2 (vec2, vec4), test_length );
 	JIT_FUNCTION(int3 (int3, int3, int3), test_clamp_i3);
 	JIT_FUNCTION(float2x3 (float2x3, float2x3, float2x3), test_clamp_m23);
@@ -227,7 +167,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float f = test_dot_f3(&lhs, &rhs);
 		BOOST_CHECK_CLOSE( dot_prod3( lhs.xyz(), rhs.xyz() ), f, 0.0001 );
 	}
-
 	{
 		mat44 mat( mat44::identity() );
 		mat.data_[0][0] = 1.0f;
@@ -332,7 +271,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			}
 		}
 	}
-
 	{
 		float f = 876.625f;
 		BOOST_CHECK_CLOSE( sqrtf(f), test_sqrt_f(f), 0.000001f );
@@ -342,7 +280,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( sqrtf(v2[0]), sqrt_v2[0], 0.000001f );
 		BOOST_CHECK_CLOSE( sqrtf(v2[1]), sqrt_v2[1], 0.000001f );
 	}
-
 	{
 		vec3 v3_a(199.7f, -872.5f, 8.63f);
 		vec3 v3_b(-98.7f, -37.29f, 77.3f);
@@ -354,7 +291,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( cross_v3[1], ref_v3[1], 0.000001f );
 		BOOST_CHECK_CLOSE( cross_v3[2], ref_v3[2], 0.000001f );
 	}
-
 	{
 		vec3 v0(227.5f, -0.33f, -76.4f);
 		vec3 v1(-113.8f, 17.22f, -9.44f);
@@ -388,7 +324,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( ret4[0], ref4[0], 0.00001f );
 		BOOST_CHECK_CLOSE( ret4[1], ref4[1], 0.00001f );
 	}
-
 	{
 		vec3 v0( 0.0f,  0.0f,  0.0f );
 		vec3 v1( 2.3f, -1.7f,  0.0f );
@@ -471,8 +406,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_ldexp.data_[i][j];	ref.f = ldexpf(lhs_array[i][j], rhs_array[i][j]); BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 			}
 		}
-	}
-	
+	}	
 	{
 		int3 min_v( 98, -76, 0 );
 		int3 max_v( 226, 19, 0 );
@@ -534,8 +468,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 					);
 			}
 		}
-
-
 	}
 }
 
