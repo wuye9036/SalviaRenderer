@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -20,6 +20,8 @@ using namespace eflib;
 using std::cout;
 using std::endl;
 using std::numeric_limits;
+
+int const SIMD_ALIGNMENT = 32;
 
 void on_exit()
 {
@@ -127,7 +129,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
@@ -1075,8 +1077,8 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
-	float* src	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
-	float* dest	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* src	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* dest	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
 	float dest_ref[PACKAGE_ELEMENT_COUNT];
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
@@ -1133,8 +1135,8 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
-	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
-	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
+	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
+	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
 	vec4 dest_ref[PACKAGE_ELEMENT_COUNT];
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
@@ -1177,9 +1179,9 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
-	vec4* in0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4) * 2, 16 );
+	vec4* in0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4) * 2, SIMD_ALIGNMENT );
 	vec4* in1	= (vec4*)(in0 + PACKAGE_ELEMENT_COUNT);
-	vec4* out0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * ( sizeof(vec4) + sizeof(vec2) ), 16 );
+	vec4* out0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * ( sizeof(vec4) + sizeof(vec2) ), SIMD_ALIGNMENT );
 	vec2* out1	= (vec2*)(out0 + PACKAGE_ELEMENT_COUNT);
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
@@ -1234,9 +1236,9 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in0	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec4)), 16 );
+	float* in0	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec4)), SIMD_ALIGNMENT );
 	vec4* in1	= (vec4*)(in0 + PACKAGE_ELEMENT_COUNT);
-	vec2* out	= (vec2*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec2), 16 );
+	vec2* out	= (vec2*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec2), SIMD_ALIGNMENT );
 	vec2 ref_out[ PACKAGE_ELEMENT_COUNT ];
 
 	srand(0);
@@ -1316,12 +1318,12 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in0 = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec2) + 2 * sizeof(vec4)), 16 );
+	float* in0 = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec2) + 2 * sizeof(vec4)), SIMD_ALIGNMENT );
 	vec2*  in1 = (vec2*)(in0 + PACKAGE_ELEMENT_COUNT);
 	vec4*  in2 = (vec4*)(in1 + PACKAGE_ELEMENT_COUNT);
 	vec4*  in3 = (vec4*)(in2 + PACKAGE_ELEMENT_COUNT);
 	
-	float* out0 = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec2) + 2 * sizeof(vec4)), 16 );
+	float* out0 = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec2) + 2 * sizeof(vec4)), SIMD_ALIGNMENT );
 	vec2*  out1 = (vec2*)(out0 + PACKAGE_ELEMENT_COUNT);
 	vec4*  out2 = (vec4*)(out1 + PACKAGE_ELEMENT_COUNT);
 	vec4*  out3 = (vec4*)(out2 + PACKAGE_ELEMENT_COUNT);
@@ -1413,8 +1415,8 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 	BOOST_REQUIRE( fn );
 
-	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
-	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), 16 );
+	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
+	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
 	vec4  dest_ref[PACKAGE_ELEMENT_COUNT];
 
 	srand(0);
@@ -1445,7 +1447,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 	init_ps( "./repo/question/v1a1/for_loop.sps" );
@@ -1455,8 +1457,8 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
-	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
 	float ref_out[ PACKAGE_ELEMENT_COUNT ];
 
 	srand(0);
@@ -1478,7 +1480,6 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
-		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
 	}
 
 	_aligned_free( in );
@@ -1497,8 +1498,8 @@ BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
-	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
 	float ref_out[ PACKAGE_ELEMENT_COUNT ];
 
 	srand(0);
@@ -1541,8 +1542,8 @@ BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
-	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), 16 );
+	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
 	float ref_out[ PACKAGE_ELEMENT_COUNT ];
 
 	srand(0);
@@ -1859,7 +1860,7 @@ BOOST_FIXTURE_TEST_CASE( array_and_index, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct array_vertex_data
 {

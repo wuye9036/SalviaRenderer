@@ -156,7 +156,6 @@ public:
 		callee(p0, p1, p2, p3);
 	}
 
-
 	template <typename T0, typename T1, typename T2, typename T3>
 	result_t operator() (T0* psi, T1* pbi, T2* pso, T3* pbo){
 		invoke( (void*)callee, psi, pbi, pso, pbo );

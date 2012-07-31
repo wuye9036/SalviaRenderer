@@ -98,7 +98,26 @@ void cgs_simd::store( value_t& lhs, value_t const& rhs )
 			size_t padded_value_length = ceil_to_pow2(value_length);
 			Value* mask = expanded_mask( padded_value_length );
 			Value* dest_value = builder().CreateLoad( address );
-			src = builder().CreateSelect( i8toi1_(mask), src, dest_value, "Merged" );
+
+			if( mask->getType()->isVectorTy() )
+			{
+				// TODO Just fix for making ps_for_loop works. Expand vector select instruction manually.
+				Value* selected = UndefValue::get( src->getType() );
+				for(unsigned i = 0; i < mask->getType()->getVectorNumElements(); ++i)
+				{
+					Value* index = int_(i);
+					Value* mask_elem = i8toi1_( builder().CreateExtractElement(mask, index) );
+					Value* src_elem = builder().CreateExtractElement(src, index);
+					Value* dest_elem = builder().CreateExtractElement(dest_value, index);
+					Value* selected_elem = builder().CreateSelect(mask_elem, src_elem, dest_elem);
+					selected = builder().CreateInsertElement(selected, selected_elem, index);
+				}
+				src = selected;
+			}
+			else
+			{
+				src = builder().CreateSelect( i8toi1_(mask), src, dest_value, "Merged" );
+			}
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}

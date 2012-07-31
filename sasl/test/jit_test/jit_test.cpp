@@ -20,48 +20,7 @@ using std::fstream;
 #include <eflib/include/platform/disable_warnings.h>
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 {
-#if defined(EFLIB_CPU_X86) && defined(EFLIB_MSVC)
-	__asm{
-		push ebp;
-
-		push callee;
-
-		push pbo;
-		push pso;
-		push pbi;
-		push psi;
-
-		mov  ebp, esp ;
-
-		push ebx;
-		push esi;
-		push edi;
-
-		and  esp, -16;
-		sub  esp, 16;
-
-		mov  ebx, [ebp+12];
-		push ebx;
-		mov  ebx, [ebp+8];
-		push ebx;
-		mov  ebx, [ebp+4];
-		push ebx;
-		mov  ebx, [ebp];
-		push ebx;
-
-		mov  ebx, [ebp+16];
-		call ebx;
-
-		mov  edi, [ebp-12];
-		mov  esi, [ebp-8];
-		mov  ebx, [ebp-4];
-		mov  esp, ebp;
-		add  esp, 20;
-		pop  ebp;
-	}
-#else
 	reinterpret_cast<void (*)(void*, void*, void*, void*)>(callee)( psi, pbi, pso, pbo );
-#endif
 }
 
 string make_command( string const& file_name, string const& options )

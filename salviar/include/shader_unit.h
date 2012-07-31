@@ -93,11 +93,11 @@ public:
 
 	std::vector<h_sampler>									used_samplers;	// For take ownership
 
-	std::vector<char, eflib::aligned_allocator<char, 16> >	stream_data;
-	std::vector<char, eflib::aligned_allocator<char, 16> >	buffer_data;
+	std::vector<char, eflib::aligned_allocator<char, 32> >	stream_data;
+	std::vector<char, eflib::aligned_allocator<char, 32> >	buffer_data;
 
-	std::vector<char, eflib::aligned_allocator<char, 16> >	stream_odata;
-	std::vector<char, eflib::aligned_allocator<char, 16> >	buffer_odata;
+	std::vector<char, eflib::aligned_allocator<char, 32> >	stream_odata;
+	std::vector<char, eflib::aligned_allocator<char, 32> >	buffer_odata;
 };
 
 END_NS_SALVIAR();
