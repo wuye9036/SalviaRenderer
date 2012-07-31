@@ -1,4 +1,3 @@
-/*
 float test_dot_f3( float3 lhs, float3 rhs ){
 	return dot( lhs, rhs );
 }
@@ -98,6 +97,4 @@ uint3 test_countbits_u3(uint3 v) { return countbits(v); }
 uint3 test_count_bits_u3(uint3 v) { return count_bits(v); }
 bool3x3 test_isinf_m33(float3x3 v) { return isinf(v); }
 bool3x3 test_isfinite_m33(float3x3 v) { return isfinite(v); }
-*/
 bool3x3 test_isnan_m33(float3x3 v) { return isnan(v); }
-// bool3x3 test_bools(bool3x3 a, bool3x3 b) { return a && b; }

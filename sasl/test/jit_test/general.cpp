@@ -132,7 +132,6 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
 
-	/*
 	JIT_FUNCTION(float (vec3*, vec3*), test_dot_f3);
 	JIT_FUNCTION(vec4 (mat44*, vec4*), test_mul_m44v4);
 	JIT_FUNCTION(vec4 (mat44*), test_fetch_m44v4);
@@ -172,10 +171,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(uint3 (uint3), test_count_bits_u3);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isinf_m33);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isfinite_m33);
-	*/
 	JIT_FUNCTION(bool3x3 (float3x3), test_isnan_m33);
-	//JIT_FUNCTION(bool3x4 (bool3x3, bool3x4), test_bools );
-	/*
+
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
 		vec3 rhs( 1.0f, -22.0f, 8.28f );
@@ -506,7 +503,6 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_EQUAL( ret1[1], count_bits(v1[1]) );
 		BOOST_CHECK_EQUAL( ret1[2], count_bits(v1[2]) );
 	}
-	*/
 	{
 		float v[3][3] = 
 		{
@@ -515,17 +511,17 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			{ -numeric_limits<float>::infinity(), -0.0f, numeric_limits<float>::max() }
 		};
 
-		//bool3x3 ret_inf = test_isinf_m33( reinterpret_cast<float3x3&>(v) );
+		bool3x3 ret_inf = test_isinf_m33( reinterpret_cast<float3x3&>(v) );
 		bool3x3 ret_nan = test_isnan_m33( reinterpret_cast<float3x3&>(v) );
-		//bool3x3 ret_fin = test_isfinite_m33( reinterpret_cast<float3x3&>(v) );
+		bool3x3 ret_fin = test_isfinite_m33( reinterpret_cast<float3x3&>(v) );
 
 		for(int i = 0; i < 3; ++i)
 		{
 			for(int j = 0; j < 3; ++j)
 			{
 				BOOST_CHECK_EQUAL( boost::math::isnan(v[i][j]),		ret_nan.data_[i][j] != 0 );
-				//BOOST_CHECK_EQUAL( boost::math::isinf(v[i][j]),		ret_inf.data_[i][j] != 0 );
-				//BOOST_CHECK_EQUAL( boost::math::isfinite(v[i][j]),	ret_fin.data_[i][j] != 0 );
+				BOOST_CHECK_EQUAL( boost::math::isinf(v[i][j]),		ret_inf.data_[i][j] != 0 );
+				BOOST_CHECK_EQUAL( boost::math::isfinite(v[i][j]),	ret_fin.data_[i][j] != 0 );
 			}
 		}
 	}
