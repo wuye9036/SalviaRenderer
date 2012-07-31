@@ -1412,16 +1412,22 @@ void semantic_analyser::register_builtin_functions(){
 	shared_ptr<builtin_type> bt_i32  = BUILTIN_TYPE( _sint32 );
 
 	shared_ptr<builtin_type> fvec_ts[5];
+	shared_ptr<builtin_type> bvec_ts[5];
 	for( int i = 1; i <= 4; ++i )
 	{
 		fvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_float, i ) ];
+		bvec_ts[i] = storage_bttbl[ vector_of( builtin_types::_boolean, i ) ];
 	}
 
 	shared_ptr<builtin_type> fmat_ts[5][5];
+	shared_ptr<builtin_type> bmat_ts[5][5];
 	for( int vec_size = 1; vec_size < 5; ++vec_size ){
 		for( int n_vec = 1; n_vec < 5; ++n_vec ){
 			fmat_ts[vec_size][n_vec] = storage_bttbl[
 				matrix_of( builtin_types::_float, vec_size, n_vec )
+			];
+			bmat_ts[vec_size][n_vec] = storage_bttbl[
+				matrix_of( builtin_types::_boolean, vec_size, n_vec )
 			];
 		}
 	}
@@ -1641,6 +1647,27 @@ void semantic_analyser::register_builtin_functions(){
 					register_intrinsic( "tanh"		) % ty			>> ty;
 				}
 			}
+		}
+	}
+
+	// isinf, isfinite, isnan
+	{
+		register_intrinsic("isinf")    % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_boolean);
+		register_intrinsic("isfinite") % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_boolean);
+		register_intrinsic("isnan")    % BUILTIN_TYPE(_float) >> BUILTIN_TYPE(_boolean);
+
+		for(size_t i = 1; i <= 4; ++i)
+		{
+			for(size_t j = 1; j <= 4; ++j)
+			{
+				register_intrinsic("isinf")    % fmat_ts[i][j] >> bmat_ts[i][j];
+				register_intrinsic("isfinite") % fmat_ts[i][j] >> bmat_ts[i][j];
+				register_intrinsic("isnan")    % fmat_ts[i][j] >> bmat_ts[i][j];
+			}
+
+			register_intrinsic("isinf")    % fvec_ts[i] >> bvec_ts[i];
+			register_intrinsic("isfinite") % fvec_ts[i] >> bvec_ts[i];
+			register_intrinsic("isnan")    % fvec_ts[i] >> bvec_ts[i];
 		}
 	}
 

@@ -185,8 +185,7 @@ SASL_VISIT_DEF( unary_expression ){
 	} else if( v.op == operators::positive ){
 		ctxt->node_value = inner_value;
 	} else if( v.op == operators::logic_not ) {
-		value_t mask_value = service()->create_constant_int( NULL, hint, inner_value.abi(), 1 );
-		ctxt->node_value = service()->emit_bit_xor( mask_value, inner_value );
+		ctxt->node_value = service()->emit_not(inner_value);
 	} else if( v.op == operators::bit_not ) {
 		value_t all_one_value = service()->create_constant_int( NULL, hint, inner_value.abi(), 0xFFFFFFFFFFFFFFFF );
 		ctxt->node_value = service()->emit_bit_xor( all_one_value, inner_value );

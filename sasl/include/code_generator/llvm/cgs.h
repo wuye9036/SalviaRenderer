@@ -98,6 +98,7 @@ public:
 	virtual value_t emit_cmp_ge ( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_cmp_gt ( value_t const& lhs, value_t const& rhs );
 
+	virtual value_t emit_not( value_t const& v );
 	virtual value_t emit_and( value_t const& lhs, value_t const& rhs );
 	virtual value_t emit_or ( value_t const& lhs, value_t const& rhs );
 
@@ -138,6 +139,9 @@ public:
 	virtual value_t emit_any( value_t const& v );
 	virtual value_t emit_all( value_t const& v );
 	virtual value_t emit_select( value_t const& flag, value_t const& v0, value_t const& v1 );
+	virtual value_t emit_isinf( value_t const& v );
+	virtual value_t emit_isfinite( value_t const& v );
+	virtual value_t emit_isnan( value_t const& v );
 
 	virtual value_t emit_tex2Dlod	( value_t const& samp, value_t const& coord );
 	virtual value_t emit_tex2Dgrad	( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );
@@ -526,6 +530,8 @@ protected:
 		cast_op_i2i_unsigned
 	};
 
+	llvm::Value* abs_(llvm::Value* v, and_< sasl::code_generator::vector_<of_llvm>, scalar_<of_llvm> >);
+
 	llvm::Value* cast_sv_( llvm::Value*, llvm::Type* elem_ty, cast_ops op );
 	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_ops op);
 	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
@@ -533,6 +539,12 @@ protected:
 	llvm::Value* countbits_( llvm::Value*, all_<of_llvm> );
 	llvm::Value* select_( llvm::Value*, llvm::Value*, llvm::Value*, all_<of_llvm> );
 
+	llvm::Value* constant_value_by_scalar_(llvm::Type* ty, llvm::Value* scalar_value, scalar_<of_llvm>);
+
+	llvm::Value* get_llvm_vector_(llvm::ArrayRef<llvm::Value*> const& elements);
+	llvm::Value* get_llvm_struct_(llvm::Type* ty, llvm::ArrayRef<llvm::Value*> const& elements);
+
+	value_t inf_from_value(value_t const& v, bool negative);
 private:
 	llvm::Value* load_as_llvm_c			( value_t const& v, abis abi );
 	llvm::Value* load_c_as_package		( value_t const& v );

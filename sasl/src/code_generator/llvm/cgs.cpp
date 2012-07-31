@@ -1347,48 +1347,13 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
 	abis arg_abi = arg_value.abi();
 
-	if ( scalar_hint == builtin_types::_double ){
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-	if( arg_abi == abi_c || arg_abi == abi_llvm )
-	{
-		if( is_scalar(hint) || is_vector(hint) )
-		{
-			if( prefer_externals() ) {
-				EFLIB_ASSERT_UNIMPLEMENTED();
-			} else {
-				Value* ret = NULL;
-				uint64_t mask = (1ULL << ( (storage_size(scalar_hint)*8)-1 )) - 1;
+	Value* v = arg_value.load(arg_abi);
 
-				if( is_real(scalar_hint) )
-				{
-					Value* i = builder().CreateBitCast( arg_value.load(), type_( builtin_types::_sint32, arg_abi ) );
-					i = builder().CreateAnd(i, mask);
-					ret = builder().CreateBitCast( i, type_( builtin_types::_float, arg_abi ) );
-				}
-				else if( is_integer(scalar_hint) )
-				{
-					assert( is_signed(hint) );
-					Value* v = arg_value.load();
-					Value* sign = builder().CreateICmpSGT( v, Constant::getNullValue( v->getType() ) );
-					Value* neg = builder().CreateNeg( v );
-					ret = builder().CreateSelect(sign, v, neg);
-				}
-				else
-				{
-					EFLIB_ASSERT_UNIMPLEMENTED();
-				}
-
-				return create_value( arg_value.tyinfo(), hint, ret, vkind_value, arg_abi );
-			}
-		} 
-		else 
-		{
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	}
-
-	return value_t();
+	Value* ret_v = unary_op_ps_ts_sva_(
+		v->getType(), v,
+		unary_fn_t(), unary_fn_t(), unary_fn_t(), boost::bind( &cg_service::abs_, this, _1, and_< sasl::code_generator::vector_<of_llvm>, scalar_<of_llvm> >() )
+		);
+	return create_value(arg_value.tyinfo(), hint, ret_v, vkind_value, arg_abi);
 }
 
 value_t cg_service::emit_sqrt( value_t const& arg_value )
@@ -2529,7 +2494,7 @@ value_t cg_service::emit_select( value_t const& flag, value_t const& v0, value_t
 		);
 }
 
-llvm::Value* cg_service::select_(llvm::Value* flag, llvm::Value* v0, llvm::Value* v1, all_<of_llvm> )
+Value* cg_service::select_(Value* flag, Value* v0, Value* v1, all_<of_llvm> )
 {
 	Type* flag_ty = flag->getType();
 
@@ -2554,6 +2519,156 @@ llvm::Value* cg_service::select_(llvm::Value* flag, llvm::Value* v0, llvm::Value
 			ret = builder().CreateInsertValue( ret, ret_elem, elem_index );
 		}
 		return ret;
+	}
+}
+
+Value* cg_service::constant_value_by_scalar_( Type* ty, Value* scalar_value, scalar_<of_llvm> )
+{
+	Type* scalar_ty = scalar_value->getType();
+	assert( !scalar_ty->isAggregateType() && !scalar_ty->isVectorTy() );
+	if ( ty->isVectorTy() )
+	{
+		// Vector
+		unsigned vector_size = ty->getVectorNumElements();
+		assert( ty->getVectorElementType() == scalar_ty );
+
+		vector<Value*> scalar_values(vector_size, scalar_value);
+		return get_llvm_vector_(scalar_values);
+	}
+	else if ( !ty->isAggregateType() )
+	{
+		assert(ty == scalar_ty);
+		return scalar_value;
+	}
+	else if ( ty->isStructTy() )
+	{
+		// Struct
+		vector<Value*> elem_values;
+		for(unsigned i = 0; i < ty->getStructNumElements(); ++i)
+		{
+			elem_values.push_back(
+				constant_value_by_scalar_( ty->getStructElementType(i), scalar_value, scalar_<of_llvm>() )
+				);
+		}
+		return get_llvm_struct_(ty, elem_values);
+	}
+	else
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return NULL;
+	}
+}
+
+Value* cg_service::get_llvm_vector_(ArrayRef<Value*> const& elements )
+{
+	assert( !elements.empty() );
+	Type* vector_ty = VectorType::get( elements[0]->getType(), elements.size() );
+	Value* ret = UndefValue::get(vector_ty);
+
+	for(unsigned i = 0; i < elements.size(); ++i)
+	{
+		ret = builder().CreateInsertElement( ret, elements[i], int_(i) );
+	}
+
+	return ret;
+}
+
+Value* cg_service::get_llvm_struct_( Type* ty, ArrayRef<Value*> const& elements )
+{
+	assert( !elements.empty() );
+	Value* ret = UndefValue::get(ty);
+
+	for(unsigned i = 0; i < elements.size(); ++i)
+	{
+		unsigned indexes[] = {i};
+		ret = builder().CreateInsertValue(ret, elements[i], indexes);
+	}
+
+	return ret;
+}
+
+value_t cg_service::emit_not( value_t const& v )
+{
+	value_t mask_value = create_constant_int( NULL, v.hint(), v.abi(), 1 );
+	return emit_bit_xor( mask_value, v );
+}
+
+value_t cg_service::inf_from_value( value_t const& v, bool negative )
+{
+	Value* v_v = v.load();
+	builtin_types scalar_of_v = scalar_of( v.hint() );
+	Type* scalar_ty = type_(scalar_of_v, abi_llvm);
+	Value* scalar_inf = ConstantFP::getInfinity(scalar_ty, negative);
+	Value* inf_value = constant_value_by_scalar_( v_v->getType(), scalar_inf, scalar_<of_llvm>() );
+	return create_value( v.tyinfo(), v.hint(), inf_value, vkind_value, v.abi() );
+}
+
+value_t cg_service::emit_isinf(value_t const& v)
+{
+	value_t abs_v = emit_abs(v);
+	return emit_cmp(abs_v, inf_from_value(v, false), ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_OEQ);
+}
+
+value_t cg_service::emit_isfinite( value_t const& v )
+{
+	value_t is_eq = emit_cmp(v, v, ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_OEQ);
+	value_t is_inf = emit_isinf(v);
+	return emit_and(emit_not(is_inf), is_eq);
+}
+
+value_t cg_service::emit_isnan( value_t const& v )
+{
+	return emit_cmp(v, v, ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_UNO);
+}
+
+Value* cg_service::abs_( Value* v, and_< sasl::code_generator::vector_<of_llvm>, scalar_<of_llvm> > )
+{
+	Type* ty = v->getType();
+	assert( !ty->isAggregateType() );
+
+	Type*    elem_ty   = NULL;
+	unsigned elem_size = 0;
+
+	if( ty->isVectorTy() )
+	{
+		elem_ty   = ty->getVectorElementType();
+		elem_size = ty->getVectorNumElements();
+	}
+	else
+	{
+		elem_ty   = ty;
+		elem_size = 1;
+	}
+	
+	if( ty->isFPOrFPVectorTy() )
+	{
+		Type* elem_int_ty = NULL;
+		uint64_t mask = 0;
+		if( elem_ty->isFloatTy() )
+		{
+			elem_int_ty = Type::getInt32Ty( context() );
+			mask = (1ULL << 31) - 1;
+		}
+		else if ( elem_ty->isDoubleTy() )
+		{
+			elem_int_ty = Type::getInt32Ty( context() );
+			mask = (1ULL << 63) - 1;
+		}
+		else
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+
+		Type* int_ty = ty->isVectorTy() ? VectorType::get(elem_int_ty, elem_size) : elem_int_ty;
+		Value* i = builder().CreateBitCast( v, int_ty );
+		i = builder().CreateAnd(i, mask);
+		return builder().CreateBitCast(i, ty);
+	}
+	else
+	{
+		Value* sign = builder().CreateICmpSGT( v, Constant::getNullValue( v->getType() ) );
+		Value* neg = builder().CreateNeg( v );
+		return builder().CreateSelect(sign, v, neg);
 	}
 }
 

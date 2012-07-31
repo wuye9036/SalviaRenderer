@@ -1163,6 +1163,39 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
+		else if( intr->unmangled_name() == "isinf" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 1);
+			fn.arg_name(0, "v");
+
+			service()->emit_return(
+				service()->emit_isinf(fn.arg(0)),
+				service()->param_abi(false)
+				);
+		}
+		else if( intr->unmangled_name() == "isfinite" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 1);
+			fn.arg_name(0, "v");
+
+			service()->emit_return(
+				service()->emit_isfinite(fn.arg(0)),
+				service()->param_abi(false)
+				);
+		}
+		else if( intr->unmangled_name() == "isnan" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 1);
+			fn.arg_name(0, "v");
+
+			service()->emit_return(
+				service()->emit_isnan(fn.arg(0)),
+				service()->param_abi(false)
+				);
+		}
 		else
 		{
 			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );

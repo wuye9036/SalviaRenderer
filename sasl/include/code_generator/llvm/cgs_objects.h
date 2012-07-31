@@ -37,6 +37,7 @@ namespace llvm
 	class ConstantFolder;
 	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
 		DefaultIRBuilder;
+	template <typename T> class ArrayRef;
 }
 
 namespace sasl

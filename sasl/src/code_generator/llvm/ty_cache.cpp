@@ -186,7 +186,7 @@ Type* ty_cache_t::create_c_or_llvm_ty( LLVMContext& ctxt, builtin_types bt, abis
 		size_t vec_size = vector_size(bt);
 		if( abi == abi_c ){
 			vector<Type*> elem_tys(vec_size, elem_ty);
-			return StructType::create( elem_tys, name(bt, abi) );
+			return StructType::create( elem_tys, name(bt, abi), true );
 		} else {
 			return VectorType::get( elem_ty, static_cast<unsigned int>(vec_size) );
 		}
@@ -196,7 +196,7 @@ Type* ty_cache_t::create_c_or_llvm_ty( LLVMContext& ctxt, builtin_types bt, abis
 	{
 		Type* vec_ty = type( ctxt, vector_of( scalar_of(bt), vector_size(bt) ), abi );
 		vector<Type*> row_tys( vector_count(bt), vec_ty );
-		return StructType::create( row_tys, name(bt, abi) );
+		return StructType::create( row_tys, name(bt, abi), true );
 	}
 
 	return NULL;
