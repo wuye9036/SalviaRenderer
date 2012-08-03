@@ -1205,6 +1205,34 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				service()->param_abi(false)
 				);
 		}
+		else if( intr->unmangled_name() == "min" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 2);
+
+			fn.arg_name(0, "v0");
+			fn.arg_name(1, "v1");
+
+			value_t v0 = fn.arg(0);
+			value_t v1 = fn.arg(1);
+
+			value_t ret = service()->emit_select(service()->emit_cmp_lt(v0, v1), v0, v1);
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "max" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 2);
+
+			fn.arg_name(0, "v0");
+			fn.arg_name(1, "v1");
+
+			value_t v0 = fn.arg(0);
+			value_t v1 = fn.arg(1);
+
+			value_t ret = service()->emit_select(service()->emit_cmp_gt(v0, v1), v0, v1);
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
 		else
 		{
 			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );

@@ -1570,7 +1570,7 @@ void semantic_analyser::register_builtin_functions(){
 		}
 	}
 
-	// all, any, ddx, ddy, clamp
+	// all, any, ddx, ddy, clamp, min, max
 	{
 		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
 		{
@@ -1583,6 +1583,8 @@ void semantic_analyser::register_builtin_functions(){
 			if( is_numeric(tycode) )
 			{
 				register_intrinsic( "clamp" ) % ty % ty % ty >> ty;
+				register_intrinsic( "min" ) % ty % ty >> ty;
+				register_intrinsic( "max" ) % ty % ty >> ty;
 
 				if( lang == salviar::lang_pixel_shader )
 				{
