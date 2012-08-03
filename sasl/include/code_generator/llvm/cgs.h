@@ -376,6 +376,8 @@ protected:
 		tanh_f32,
 		mod_f32,
 		countbits_u32,
+		firstbithigh_u32,
+		firstbitlow_u32,
 		tex2dlod_vs,
 		tex2dlod_ps,
 		tex2dgrad_ps,

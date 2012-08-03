@@ -2123,8 +2123,10 @@ bool cg_service::register_external_intrinsic()
 	external_intrins[cosh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.cosh.f32", module() );
 	external_intrins[tanh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.tanh.f32", module() );
 
-	external_intrins[countbits_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.countbits.u32", module() );
-	
+	external_intrins[countbits_u32]   = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.countbits.u32", module() );
+	external_intrins[firstbithigh_u32]= Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.firstbithigh.u32", module() );
+	external_intrins[firstbitlow_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.firstbitlow.u32", module() );
+
 	external_intrins[tex2dlod_vs]	= Function::Create(vs_texlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.tex2d.lod", module() );
 	external_intrins[tex2dlod_ps]	= Function::Create(ps_texlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.tex2d.lod", module() );
 	external_intrins[tex2dgrad_ps]	= Function::Create(ps_tex2dgrad_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.grad", module() );

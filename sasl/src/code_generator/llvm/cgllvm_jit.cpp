@@ -29,7 +29,7 @@ struct llvm_options
 {
 	llvm_options(){
 		// Add Options
-		char* options[] = { ""/*, "-promote-elements" */};
+		char* options[] = {""/*, "-force-align-stack"*/};
 		llvm::cl::ParseCommandLineOptions( sizeof(options)/sizeof(char*), options );
 	}
 };
@@ -89,8 +89,12 @@ void cgllvm_jit_engine::build(){
 		attrs.push_back("+sse2");
 	}
 	
+	llvm::TargetOptions opts;
+
 	engine.reset(
-		llvm::EngineBuilder( global_ctxt->llvm_module() ).setMAttrs(attrs)
+		llvm::EngineBuilder( global_ctxt->llvm_module() )
+		.setTargetOptions(opts)
+		.setMAttrs(attrs)
 		.setErrorStr(&err)
 		.create()
 		);

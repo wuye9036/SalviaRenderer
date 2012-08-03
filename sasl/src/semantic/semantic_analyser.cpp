@@ -1734,7 +1734,7 @@ void semantic_analyser::register_builtin_functions(){
 		register_intrinsic( "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];
 	}
 
-	// asfloat, asint, asuint, countbits
+	// asfloat, asint, asuint, countbits, firstbithigh, firstbitlow
 	{
 		vector< shared_ptr<builtin_type> > int_tys;
 		vector< shared_ptr<builtin_type> > uint_tys;
@@ -1771,6 +1771,12 @@ void semantic_analyser::register_builtin_functions(){
 
 			register_intrinsic( "countbits" ) % uint_tys[i_ty] >> uint_tys[i_ty];
 			register_intrinsic( "count_bits" ) % uint_tys[i_ty] >> uint_tys[i_ty];
+
+			register_intrinsic( "firstbithigh" ) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "firstbithigh" ) % int_tys[i_ty] >> int_tys[i_ty];
+
+			register_intrinsic( "firstbitlow" ) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "firstbitlow" ) % int_tys[i_ty] >> int_tys[i_ty];
 		}
 	}
 

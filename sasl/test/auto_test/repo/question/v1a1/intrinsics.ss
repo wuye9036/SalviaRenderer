@@ -98,3 +98,7 @@ uint3 test_count_bits_u3(uint3 v) { return count_bits(v); }
 bool3x3 test_isinf_m33(float3x3 v) { return isinf(v); }
 bool3x3 test_isfinite_m33(float3x3 v) { return isfinite(v); }
 bool3x3 test_isnan_m33(float3x3 v) { return isnan(v); }
+int3 test_firstbithigh_i3(int3 v) { return firstbithigh(v); }
+uint2 test_firstbithigh_u2(uint2 v) { return firstbithigh(v); }
+int3 test_firstbitlow_i3(int3 v) { return firstbitlow(v); }
+uint2 test_firstbitlow_u2(uint2 v) { return firstbitlow(v); }
