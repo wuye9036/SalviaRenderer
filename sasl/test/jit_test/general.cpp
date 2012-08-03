@@ -182,6 +182,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(bool3x3 (float3x3), test_isinf_m33);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isfinite_m33);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isnan_m33);
+	JIT_FUNCTION(vec3 (vec3), test_frac_f3);
 
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -585,6 +586,21 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				BOOST_CHECK_EQUAL( boost::math::isfinite(v[i][j]),	ret_fin.data_[i][j] != 0 );
 			}
 		}
+	}
+	{
+		vec3 v0(-2.0, 1.7, 0.0);
+		vec3 v1(-2.11, 22.05, 3.8);
+
+		vec3 ret0 = test_frac_f3(v0);
+		vec3 ret1 = test_frac_f3(v1);
+
+		BOOST_CHECK_CLOSE(ret0[0], 0.0f, (0.00001f*fabsf(v0[0])/1.0f) );
+		BOOST_CHECK_CLOSE(ret0[1], 0.7f, (0.00001f*fabsf(v0[1])/0.7f) );
+		BOOST_CHECK_CLOSE(ret0[2], 0.0f, (0.00001f*fabsf(v0[2])/1.0f) );
+
+		BOOST_CHECK_CLOSE(ret1[0], 0.11f, 0.00001f*fabsf(v1[0])/0.11f);
+		BOOST_CHECK_CLOSE(ret1[1], 0.05f, 0.00001f*fabsf(v1[1])/0.05f);
+		BOOST_CHECK_CLOSE(ret1[2], 0.8f , 0.00001f*fabsf(v1[2])/0.8f );
 	}
 }
 

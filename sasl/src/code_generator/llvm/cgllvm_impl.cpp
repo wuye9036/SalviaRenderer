@@ -1233,6 +1233,20 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret = service()->emit_select(service()->emit_cmp_gt(v0, v1), v0, v1);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
+		else if( intr->unmangled_name() == "frac" )
+		{
+			// frac = abs(v) - abs( floor(v) );
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 1);
+
+			fn.arg_name(0, "v");
+
+			value_t v = fn.arg(0);
+			value_t abs_value = service()->emit_abs(v);
+			value_t floor_value = service()->emit_unary_ps( "sasl.floor.f32", abs_value );
+			value_t ret = service()->emit_sub(abs_value, floor_value);
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
 		else
 		{
 			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );

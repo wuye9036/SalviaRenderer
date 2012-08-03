@@ -2674,4 +2674,48 @@ Value* cg_service::abs_( Value* v, and_< sasl::code_generator::vector_<of_llvm>,
 	}
 }
 
+value_t cg_service::one_value( value_t const& proto )
+{
+	Type* ty = proto.tyinfo()->ty( proto.abi() );
+	Type* scalar_ty = extract_scalar_ty_(ty);
+	
+	Value* scalar_value = NULL;
+	if( scalar_ty->isFloatingPointTy() )
+	{
+		scalar_value = ConstantFP::get(scalar_ty, 1.0f);
+	}
+	else if( scalar_ty->isIntegerTy() )
+	{
+		scalar_value = ConstantInt::get(scalar_ty, 1);
+	}
+
+	assert(scalar_value);
+
+	Value* ret_value = constant_value_by_scalar_( ty, scalar_value, scalar_<of_llvm>() );
+	return create_value( proto.tyinfo(), proto.hint(), ret_value, vkind_value, proto.abi() );
+}
+
+llvm::Type* cg_service::extract_scalar_ty_( llvm::Type* ty )
+{
+	if( ty->isVectorTy() )
+	{
+		return ty->getVectorElementType();
+	}
+
+	if( ty->isAggregateType() )
+	{
+		if( ty->isStructTy() )
+		{
+			assert( ty->getStructNumElements() > 0 );
+			return ty->getStructElementType(0);
+		}
+		else
+		{
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+	}
+
+	return ty;
+}
+
 END_NS_SASL_CODE_GENERATOR();

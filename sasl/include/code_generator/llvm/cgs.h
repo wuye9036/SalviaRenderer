@@ -266,6 +266,7 @@ public:
 	value_t null_value( cg_type* tyinfo, abis abi );
 	value_t null_value( builtin_types bt, abis abi );
 	value_t undef_value( builtin_types bt, abis abi );
+	value_t one_value(value_t const& proto);
 
 	value_t create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v );
 
@@ -545,6 +546,8 @@ protected:
 
 	llvm::Value* get_llvm_vector_(llvm::ArrayRef<llvm::Value*> const& elements);
 	llvm::Value* get_llvm_struct_(llvm::Type* ty, llvm::ArrayRef<llvm::Value*> const& elements);
+
+	llvm::Type* extract_scalar_ty_( llvm::Type* );
 
 	value_t inf_from_value(value_t const& v, bool negative);
 private:
