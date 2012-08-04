@@ -1247,6 +1247,23 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret = service()->emit_sub(abs_value, floor_value);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
+		else if( intr->unmangled_name() == "saturate" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 1);
+
+			fn.arg_name(0, "v");
+
+			value_t v = fn.arg(0);
+			value_t zero_value = service()->null_value( v.hint(), v.abi() );
+			value_t one_value = service()->one_value( v );
+
+			value_t ret;
+			ret = service()->emit_select(service()->emit_cmp_ge(v, zero_value), v, zero_value);
+			ret = service()->emit_select(service()->emit_cmp_le(ret, one_value), ret, one_value);
+
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
 		else
 		{
 			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );

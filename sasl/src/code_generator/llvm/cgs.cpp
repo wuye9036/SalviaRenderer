@@ -2707,7 +2707,7 @@ llvm::Type* cg_service::extract_scalar_ty_( llvm::Type* ty )
 		if( ty->isStructTy() )
 		{
 			assert( ty->getStructNumElements() > 0 );
-			return ty->getStructElementType(0);
+			return extract_scalar_ty_( ty->getStructElementType(0) );
 		}
 		else
 		{

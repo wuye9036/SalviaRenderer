@@ -107,3 +107,4 @@ uint2 test_firstbithigh_u2(uint2 v) { return firstbithigh(v); }
 int3 test_firstbitlow_i3(int3 v) { return firstbitlow(v); }
 uint2 test_firstbitlow_u2(uint2 v) { return firstbitlow(v); }
 float3 test_frac_f3(float3 v){ return frac(v); }
+float2x3 test_saturate_m23( float2x3 m ) { return saturate(m); }

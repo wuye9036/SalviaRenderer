@@ -173,6 +173,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float2x3 (float2x3, float2x3, float2x3), test_clamp_m23);
 	JIT_FUNCTION(float2x3 (float2x3, float2x3), test_min_m23);
 	JIT_FUNCTION(float2x3 (float2x3, float2x3), test_max_m23);
+	JIT_FUNCTION(float2x3 (float2x3), test_saturate_m23 );
 	JIT_FUNCTION(uint3 (uint3), test_countbits_u3);
 	JIT_FUNCTION(uint3 (uint3), test_count_bits_u3);
 	JIT_FUNCTION(int3 (int3), test_firstbithigh_i3);
@@ -183,7 +184,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(bool3x3 (float3x3), test_isfinite_m33);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isnan_m33);
 	JIT_FUNCTION(vec3 (vec3), test_frac_f3);
-
+	
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
 		vec3 rhs( 1.0f, -22.0f, 8.28f );
@@ -506,6 +507,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			reinterpret_cast<float2x3&>(m),
 			reinterpret_cast<float2x3&>(max_m)
 			);
+		float2x3 ret3 = test_saturate_m23( reinterpret_cast<float2x3&>(m) );
 
 		for(int i = 0; i < 2; ++i)
 		{
@@ -513,7 +515,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			{
 				BOOST_CHECK_EQUAL(
 					ret0.data_[i][j],
-					clamp( m[i][j], std::min(min_m[i][j], max_m[i][j]), std::max(min_m[i][j], max_m[i][j]) ) 
+					clamp( m[i][j], min_m[i][j], max_m[i][j] ) 
 					);
 				BOOST_CHECK_EQUAL(
 					ret1.data_[i][j],
@@ -522,6 +524,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				BOOST_CHECK_EQUAL(
 					ret2.data_[i][j],
 					std::max(m[i][j], max_m[i][j])
+					);
+				BOOST_CHECK_EQUAL(
+					ret3.data_[i][j],
+					clamp(m[i][j], 0.0f, 1.0f)
 					);
 			}
 		}
