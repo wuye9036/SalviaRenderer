@@ -153,6 +153,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float3x4 (float3x4), test_atan_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_ceil_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_floor_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_round_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_log_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_log2_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_log10_m34);
@@ -407,6 +408,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float3x4 ret_atan	= test_atan_m34(lhs);
 		float3x4 ret_ceil	= test_ceil_m34(lhs);
 		float3x4 ret_floor	= test_floor_m34(lhs);
+		float3x4 ret_round	= test_round_m34(lhs);
 		float3x4 ret_log	= test_log_m34(lhs);
 		float3x4 ret_log2	= test_log2_m34(lhs);
 		float3x4 ret_log10	= test_log10_m34(lhs);
@@ -430,6 +432,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_atan.data_[i][j];	ref.f = atanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_ceil.data_[i][j];	ref.f = fast_ceil(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_floor.data_[i][j];	ref.f = fast_floor(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_round.data_[i][j];	ref.f = fast_round(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_log.data_[i][j];	ref.f = fast_log(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_log2.data_[i][j];	ref.f = fast_log2(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_log10.data_[i][j];	ref.f = log10f(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
@@ -1528,7 +1531,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 	init_ps( "./repo/question/v1a1/for_loop.sps" );
@@ -1854,7 +1857,7 @@ BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 int do_arith_assign( int v0, int v1 )
 {

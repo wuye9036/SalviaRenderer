@@ -2113,6 +2113,7 @@ bool cg_service::register_external_intrinsic()
 	external_intrins[atan_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.atan.f32", module() );
 	external_intrins[ceil_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.ceil.f32", module() );
 	external_intrins[floor_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.floor.f32", module() );
+	external_intrins[round_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.round.f32", module() );
 	external_intrins[log_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log.f32", module() );
 	external_intrins[log2_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log2.f32", module() );
 	external_intrins[log10_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log10.f32", module() );

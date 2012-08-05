@@ -85,6 +85,7 @@ float3x4 test_acos_m34(float3x4 v)	{ return acos(v); }
 float3x4 test_atan_m34(float3x4 v)	{ return atan(v); }
 float3x4 test_ceil_m34(float3x4 v)	{ return ceil(v); }
 float3x4 test_floor_m34( float3x4 v){ return floor(v); }
+float3x4 test_round_m34( float3x4 v){ return round(v); }
 float3x4 test_log_m34(float3x4 v)	{ return log(v); }
 float3x4 test_log2_m34(float3x4 v)	{ return log2(v); }
 float3x4 test_log10_m34(float3x4 v)	{ return log10(v); }

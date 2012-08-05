@@ -1649,6 +1649,7 @@ void semantic_analyser::register_builtin_functions(){
 					register_intrinsic( "tanh"		) % ty			>> ty;
 					register_intrinsic( "frac"		) % ty			>> ty;
 					register_intrinsic( "saturate"	) % ty			>> ty;
+					register_intrinsic( "round"		) % ty			>> ty;
 				}
 			}
 		}

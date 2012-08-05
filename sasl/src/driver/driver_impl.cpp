@@ -327,6 +327,7 @@ void sasl_acos_f32	( float* ret, float v ) { *ret = acosf(v); }
 void sasl_atan_f32	( float* ret, float v ) { *ret = atanf(v); }
 void sasl_ceil_f32	( float* ret, float v ) { *ret = eflib::fast_ceil(v); }
 void sasl_floor_f32	( float* ret, float v ) { *ret = eflib::fast_floor(v); }
+void sasl_round_f32	( float* ret, float v ) { *ret = eflib::fast_round(v); }
 void sasl_log_f32	( float* ret, float v ) { *ret = eflib::fast_log(v); }
 void sasl_log10_f32	( float* ret, float v ) { *ret = log10f(v); }
 void sasl_log2_f32	( float* ret, float v ) { *ret = eflib::fast_log2(v); }
@@ -377,6 +378,7 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	inject_function(ret_jit, &sasl_atan_f32,	"sasl.atan.f32",	true);
 	inject_function(ret_jit, &sasl_ceil_f32,	"sasl.ceil.f32",	true);
 	inject_function(ret_jit, &sasl_floor_f32,	"sasl.floor.f32",	true);
+	inject_function(ret_jit, &sasl_round_f32,	"sasl.round.f32",	true);
 	inject_function(ret_jit, &sasl_log_f32,		"sasl.log.f32",		true);
 	inject_function(ret_jit, &sasl_log2_f32,	"sasl.log2.f32",	true);
 	inject_function(ret_jit, &sasl_log10_f32,	"sasl.log10.f32",	true);

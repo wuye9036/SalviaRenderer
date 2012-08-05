@@ -863,6 +863,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			|| intr->unmangled_name() == "atan"
 			|| intr->unmangled_name() == "ceil"
 			|| intr->unmangled_name() == "floor"
+			|| intr->unmangled_name() == "round"
 			|| intr->unmangled_name() == "log"
 			|| intr->unmangled_name() == "log2"
 			|| intr->unmangled_name() == "log10"
