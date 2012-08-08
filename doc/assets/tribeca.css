@@ -1,0 +1,169 @@
+body {
+	margin: 0;
+	padding: 0;
+	font-family: Verdana, sans-serif;
+	font-size: small;
+	background: #fff;
+}
+
+#header {
+	background: #d0c1b6 url(header-bg.png) repeat-x top left;
+}
+
+#header h1 {
+	margin: 0;
+	padding: 25px;
+	font-family: Verdana, sans-serif;
+	font-size: 200%;
+	font-weight: bold;
+	color: #ef7039;
+	text-align: center;
+}
+
+#wrap {
+	min-width: 500px;
+	max-width: 1400px;
+}
+
+#content {
+	float: left;
+	width: 100%;
+	font-size: 95%;
+	line-height: 1.5em;
+	color: #333;
+}
+
+#content h1, h2, h3 {
+	color: #ef7039;
+}
+
+#content .gutter {
+	padding: 25px;
+}
+
+#content .wrapper {
+    width: 960px;
+    \width: 980px;
+    w\idth: 980px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-align: left;
+    background-color: #fff;
+}
+
+#content .description {
+	margin-top: 10px;
+	margin-left: 20px;
+	padding-left: 10px;
+	border-left: 2px solid #ccc;
+}
+
+#sidebar {
+	float: right;
+	width: 20%;
+	font-size: 95%;
+	line-height: 1.5em;
+}
+
+#sidebar .gutter {
+	padding: 15px;
+}
+
+#footer {
+	clear: both;
+	margin: 0;
+	border-top: 1px solid #000;
+	padding: 10px;
+	font-size: 90%;
+	color: #ef7039;
+	text-align: center;
+	background: #d0c1b6;
+}
+
+#centeredmenu {
+	float: left;
+	width: 100%;
+	background: #aaa;
+	border-top: 1px solid #000;
+	border-bottom: 1px solid #000;
+	overflow: hidden;
+	position: relative;
+}
+
+#centeredmenu ul {
+	clear: left;
+	float: left;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: relative;
+	left: 50%;
+	text-align: center;
+}
+
+#centeredmenu ul li {
+	display: block;
+	float: left;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: relative;
+	right: 50%;
+}
+
+#centeredmenu ul li a {
+	display: block;
+	margin: 0 0 0 1px;
+	padding: 10px 10px;
+	background: #aaa;
+	color: #fff;
+	text-decoration: none;
+	font-size: 90%;
+	font-weight: bold;
+}
+
+#centeredmenu ul li a:hover {
+	color: #ef7039;
+}
+
+#artgallery-image, #caf-image {
+	float: left;
+	width: 210px;
+	margin: 20px 10px 10px 10px;
+}
+
+#artgallery-text, #caf-text {
+	float: right;
+	width: 70%;
+}
+
+#artgallery-clear, #caf-clear {
+	clear: both;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.italic {
+	font-style: italic;
+}
+
+.underline {
+	text-decoration: underline;
+}
+
+.abstract {
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+IMG.displayed {
+    display: block;
+    margin-left: auto;
+    margin-right: auto 
+}
+
+    
