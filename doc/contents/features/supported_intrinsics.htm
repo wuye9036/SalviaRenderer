@@ -2,7 +2,8 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
     <title>Instrinsics</title>
-    <style type="text/css">
+	<link rel="stylesheet" type="text/css" href="../../assets/tribeca.css" />
+	<style type="text/css">
         td {font-family:"Courier New"; font-size:9pt; line-height: 14pt}
         tr {margin-top: 4px}
         .version
@@ -35,1284 +36,1297 @@
         }
     </style>
 </head>
-<body lang="zh-cn">
-    <div>
-        <table>
-            <thead style="text-align: center; background-color: #DDDDDD">
-                <tr>
-                    <td class="title">Name</td>
-                    <td class="title">Description</td>
-                    <td class="title">Min SM</td>
-                    <td class="title">Vertex Shader</td>
-                    <td class="title">Pixel Shader</td>
-                </tr>
-            </thead>
-            <tbody id="body">
-            <tr>
-                <td class="intrinsic_name">abort</td>
-                <td>Terminates the current draw or dispatch call being executed.</td>
-                <td>4</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">abs</td>
-                <td>Absolute value (per component).</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">acos</td>
-                <td>Returns the arccosine of each component of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">all</td>
-                <td>Test if all components of x are nonzero.</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">AllMemoryBarrier</td>
-                <td>Blocks execution of all threads in a group until all memory accesses have been
-                            completed.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">AllMemoryBarrierWithGroupSync</td>
-                <td>Blocks execution of all threads in a group until all memory accesses have been
-                            completed and all threads in the group have reached this call.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">any</td>
-                <td>Test if any component of x is nonzero.</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">asdouble</td>
-                <td>Reinterprets a cast value into a double.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">asfloat</td>
-                <td>Convert the input type to a float.</td>
-                <td>4</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">asin</td>
-                <td>Returns the arcsine of each component of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">asint</td>
-                <td>Convert the input type to an integer.</td>
-                <td>4</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">asuint</td>
-                <td>Reinterprets the bit pattern of a 64-bit type to a uint.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">asuint</td>
-                <td>Convert the input type to an unsigned integer.</td>
-                <td>4</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">atan</td>
-                <td>Returns the arctangent of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">atan2</td>
-                <td>Returns the arctangent of of two values (x,y).</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ceil</td>
-                <td>Returns the smallest integer which is greater than or equal to x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">clamp</td>
-                <td>Clamps x to the range [min, max].</td>
-                <td>11</td>
-                <td class="version">0.3.5</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">clip</td>
-                <td>Discards the current pixel, if any component of x is less than zero.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">cos</td>
-                <td>Returns the cosine of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">cosh</td>
-                <td>Returns the hyperbolic cosine of x.</td>
-                <td>11</td>
-                <td class="version">0.3.5</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">countbits</td>
-                <td>Counts the number of bits (per component) in the input integer.</td>
-                <td>5</td>
-                <td class="version">0.3.5</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">cross</td>
-                <td>Returns the cross product of two 3D vectors.</td>
-                <td>11</td>
-                <td class="version">0.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">D3DCOLORtoUBYTE4</td>
-                <td>Swizzles and scales components of the 4D vector xto compensate for the lack of
-                            UBYTE4 support in some hardware.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ddx</td>
-                <td>Returns the partial derivative of x with respect to the screen-space x-coordinate.</td>
-                <td>21</td>
-                <td class="version">na</td>
-                <td class="version">0.2.5</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ddx_coarse</td>
-                <td>Computes a low precision partial derivative with respect to the screen-space x-coordinate.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ddx_fine</td>
-                <td>Computes a high precision partial derivative with respect to the screen-space
-                            x-coordinate.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ddy</td>
-                <td>Returns the partial derivative of x with respect to the screen-space y-coordinate.</td>
-                <td>21</td>
-                <td class="version">na</td>
-                <td class="version">0.2.5</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ddy_coarse</td>
-                <td>Computes a low precision partial derivative with respect to the screen-space y-coordinate.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ddy_fine</td>
-                <td>Computes a high precision partial derivative with respect to the screen-space
-                            y-coordinate.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">degrees</td>
-                <td>Converts x from radians to degrees.</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">determinant</td>
-                <td>Returns the determinant of the square matrix m.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">DeviceMemoryBarrier</td>
-                <td>Blocks execution of all threads in a group until all device memory accesses have
-                            been completed.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">DeviceMemoryBarrierWithGroupSync</td>
-                <td>Blocks execution of all threads in a group until all device memory accesses have
-                            been completed and all threads in the group have reached this call.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">distance</td>
-                <td>Returns the distance between two points.</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">dot</td>
-                <td>Returns the dot product of two vectors.</td>
-                <td>1</td>
-                <td class="version">0.2</td>
-                <td class="version">0.2.2</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">dst</td>
-                <td>Calculates a distance vector.</td>
-                <td>5</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">errorf</td>
-                <td>Submits an error message to the information queue.</td>
-                <td>4</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">EvaluateAttributeAtCentroid</td>
-                <td>Evaluates at the pixel centroid.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">EvaluateAttributeAtSample</td>
-                <td>Evaluates at the indexed sample location.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">EvaluateAttributeSnapped</td>
-                <td>Evaluates at the pixel centroid with an offset.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">exp</td>
-                <td>Returns the base-e exponent.</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">exp2</td>
-                <td>Base 2 exponent (per component).</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">f16tof32</td>
-                <td>Converts the float16 stored in the low-half of the uint to a float.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">f32tof16</td>
-                <td>Converts an input into a float16 type.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">faceforward</td>
-                <td>Returns -n * sign(dot(i, ng)).</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">firstbithigh</td>
-                <td>Gets the location of the first set bit starting from the highest order bit and
-                            working downward, per component.</td>
-                <td>5</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">firstbitlow</td>
-                <td>Returns the location of the first set bit starting from the lowest order bit and
-                            working upward, per component.</td>
-                <td>5</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">floor</td>
-                <td>Returns the greatest integer which is less than or equal to x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">fma</td>
-                <td>Returns the double-precision fused multiply-addition of a * b + c.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">fmod</td>
-                <td>Returns the floating point remainder of x/y.</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">frac</td>
-                <td>Returns the fractional part of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">frexp</td>
-                <td>Returns the mantissa and exponent of x.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">fwidth</td>
-                <td>Returns abs(ddx(x)) + abs(ddy(x))</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">GetRenderTargetSampleCount</td>
-                <td>Returns the number of render-target samples.</td>
-                <td>4</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">GetRenderTargetSamplePosition</td>
-                <td>Returns a sample position (x,y) for a given sample index.</td>
-                <td>4</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">GroupMemoryBarrier</td>
-                <td>Blocks execution of all threads in a group until all group shared accesses have
-                            been completed.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">GroupMemoryBarrierWithGroupSync</td>
-                <td>Blocks execution of all threads in a group until all group shared accesses have
-                            been completed and all threads in the group have reached this call.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedAdd</td>
-                <td>Performs a guaranteed atomic add of value to the dest resource variable.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedAnd</td>
-                <td>Performs a guaranteed atomic and.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedCompareExchange</td>
-                <td>Atomically compares the input to the comparison value and exchanges the result.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedCompareStore</td>
-                <td>Atomically compares the input to the comparison value.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedExchange</td>
-                <td>Assigns value to dest and returns the original value.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedMax</td>
-                <td>Performs a guaranteed atomic max.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedMin</td>
-                <td>Performs a guaranteed atomic min.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedOr</td>
-                <td>Performs a guaranteed atomic or.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">InterlockedXor</td>
-                <td>Performs a guaranteed atomic xor.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">isfinite</td>
-                <td>Returns true if x is finite, false otherwise.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">isinf</td>
-                <td>Returns true if x is +INF or -INF, false otherwise.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">isnan</td>
-                <td>Returns true if x is NAN or QNAN, false otherwise.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ldexp</td>
-                <td>Returns x * 2exp</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">length</td>
-                <td>Returns the length of the vector v.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.2
-                </td>
-                <td class="version">
-                    0.3.2
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">lerp</td>
-                <td>Returns x + s(y - x).</td>
-                <td>11</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">lit</td>
-                <td>Returns a lighting vector (ambient, diffuse, specular, 1)</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">log</td>
-                <td>Returns the base-e logarithm of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">log10</td>
-                <td>Returns the base-10 logarithm of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">log2</td>
-                <td>Returns the base-2 logarithm of x.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">mad</td>
-                <td>Performs an arithmetic multiply/add operation on three values.</td>
-                <td>5</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">max</td>
-                <td>Selects the greater of x and y.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">min</td>
-                <td>Selects the lesser of x and y.</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">modf</td>
-                <td>Splits the value x into fractional and integer parts.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">msad4</td>
-                <td>Compares a 4-byte reference value and an 8-byte source value and accumulates a
-                            vector of 4 sums.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">mul</td>
-                <td>Performs matrix multiplication using x and y.</td>
-                <td>1</td>
-                <td class="version">0.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">noise</td>
-                <td>Generates a random value using the Perlin-noise algorithm.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">normalize</td>
-                <td>Returns a normalized vector.</td>
-                <td>11</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">pow</td>
-                <td>Returns x^y.</td>
-                <td>11</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">printf</td>
-                <td>Submits a custom shader message to the information queue.</td>
-                <td>4</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">Process2DQuadTessFactorsAvg</td>
-                <td>Generates the corrected tessellation factors for a quad patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">Process2DQuadTessFactorsMax</td>
-                <td>Generates the corrected tessellation factors for a quad patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">Process2DQuadTessFactorsMin</td>
-                <td>Generates the corrected tessellation factors for a quad patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ProcessIsolineTessFactors</td>
-                <td>Generates the rounded tessellation factors for an isoline.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ProcessQuadTessFactorsAvg</td>
-                <td>Generates the corrected tessellation factors for a quad patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ProcessQuadTessFactorsMax</td>
-                <td>Generates the corrected tessellation factors for a quad patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ProcessQuadTessFactorsMin</td>
-                <td>Generates the corrected tessellation factors for a quad patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ProcessTriTessFactorsAvg</td>
-                <td>Generates the corrected tessellation factors for a tri patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ProcessTriTessFactorsMax</td>
-                <td>Generates the corrected tessellation factors for a tri patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">ProcessTriTessFactorsMin</td>
-                <td>Generates the corrected tessellation factors for a tri patch.</td>
-                <td>5</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">radians</td>
-                <td>Converts x from degrees to radians.</td>
-                <td>1</td>
-                <td class="version">0.3.2</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">rcp</td>
-                <td>Calculates a fast, approximate, per-component reciprocal.</td>
-                <td>5</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">reflect</td>
-                <td>Returns a reflection vector.</td>
-                <td>1</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">refract</td>
-                <td>Returns the refraction vector.</td>
-                <td>11</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">reversebits</td>
-                <td>Reverses the order of the bits, per component.</td>
-                <td>5</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">round</td>
-                <td>Rounds x to the nearest integer</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">rsqrt</td>
-                <td>Returns 1 / sqrt(x)</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">saturate</td>
-                <td>Clamps x to the range [0, 1]</td>
-                <td>1</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">sign</td>
-                <td>Computes the sign of x.</td>
-                <td>11</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">sin</td>
-                <td>Returns the sine of x</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">sincos</td>
-                <td>Returns the sine and cosine of x.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">sinh</td>
-                <td>Returns the hyperbolic sine of x</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">smoothstep</td>
-                <td>Returns a smooth Hermite interpolation between 0 and 1.</td>
-                <td>11</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">sqrt</td>
-                <td>Square root (per component)</td>
-                <td>11</td>
-                <td class="version">0.2</td>
-                <td class="version">0.2.2</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">step</td>
-                <td>Returns (x &gt;= a) ? 1 : 0</td>
-                <td>11</td>
-                <td class="ongoing">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tan</td>
-                <td>Returns the tangent of x</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tanh</td>
-                <td>Returns the hyperbolic tangent of x</td>
-                <td>11</td>
-                <td class="version">
-                    0.3.5
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex1D(s, t)</td>
-                <td>1D texture lookup.</td>
-                <td>1</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex1D(s, t, ddx, ddy)</td>
-                <td>1D texture lookup.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex1Dbias</td>
-                <td>1D texture lookup with bias.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex1Dgrad</td>
-                <td>1D texture lookup with a gradient.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex1Dlod</td>
-                <td>1D texture lookup with LOD.</td>
-                <td>31</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex1Dproj</td>
-                <td>1D texture lookup with projective divide.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex2D(s, t)</td>
-                <td>2D texture lookup.</td>
-                <td>11</td>
-                <td class="version">
-                    na</td>
-                <td class="version">
-                    0.3.3</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex2D(s, t, ddx, ddy)</td>
-                <td>2D texture lookup.</td>
-                <td>21</td>
-                <td class="version">
-                    na</td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex2Dbias</td>
-                <td>2D texture lookup with bias.</td>
-                <td>21</td>
-                <td class="version">
-                    na</td>
-                <td class="version">
-                    &nbsp;</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex2Dgrad</td>
-                <td>2D texture lookup with a gradient.</td>
-                <td>21</td>
-                <td class="version">
-                    na</td>
-                <td class="version">
-                    0.3.3</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex2Dlod</td>
-                <td>2D texture lookup with LOD.</td>
-                <td>3</td>
-                <td class="version">
-                    0.3.3</td>
-                <td class="version">
-                    0.3.3</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex2Dproj</td>
-                <td>2D texture lookup with projective divide.</td>
-                <td>21</td>
-                <td class="version">
-                    na</td>
-                <td class="version">
-                    0.3.3</td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex3D(s, t)</td>
-                <td>3D texture lookup.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex3D(s, t, ddx, ddy)</td>
-                <td>3D texture lookup.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex3Dbias</td>
-                <td>3D texture lookup with bias.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex3Dgrad</td>
-                <td>3D texture lookup with a gradient.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex3Dlod</td>
-                <td>3D texture lookup with LOD.</td>
-                <td>31</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">tex3Dproj</td>
-                <td>3D texture lookup with projective divide.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">texCUBE(s, t)</td>
-                <td>Cube texture lookup.</td>
-                <td>11</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">texCUBE(s, t, ddx, ddy)</td>
-                <td>Cube texture lookup.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">texCUBEbias</td>
-                <td>Cube texture lookup with bias.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">texCUBEgrad</td>
-                <td>Cube texture lookup with a gradient.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">texCUBElod</td>
-                <td>Cube texture lookup with LOD.</td>
-                <td>31</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">texCUBEproj</td>
-                <td>Cube texture lookup with projective divide.</td>
-                <td>21</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">transpose</td>
-                <td>Returns the transpose of the matrix m.</td>
-                <td>1</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            <tr>
-                <td class="intrinsic_name">trunc</td>
-                <td>Truncates floating-point value(s) to integer value(s)</td>
-                <td>1</td>
-                <td class="version">
-                </td>
-                <td class="version">
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+<body>
+	<div id="wrap">
+
+	<div id="content">
+	<div class="wrapper">
+
+	<h1>SASL Supported Intrinsics</h1>
+	<table style="width: 88%; margin-left: 6%; margin-right: 6%">
+		<thead style="text-align: center; background-color: #DDDDDD">
+			<tr>
+				<td class="title">Name</td>
+				<td class="title">Description</td>
+				<td class="title">Min SM</td>
+				<td class="title">Vertex Shader</td>
+				<td class="title">Pixel Shader</td>
+			</tr>
+		</thead>
+		<tbody id="body">
+		<tr>
+			<td class="intrinsic_name">abort</td>
+			<td>Terminates the current draw or dispatch call being executed.</td>
+			<td>4</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">abs</td>
+			<td>Absolute value (per component).</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">acos</td>
+			<td>Returns the arccosine of each component of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">all</td>
+			<td>Test if all components of x are nonzero.</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">AllMemoryBarrier</td>
+			<td>Blocks execution of all threads in a group until all memory accesses have been
+						completed.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">AllMemoryBarrierWithGroupSync</td>
+			<td>Blocks execution of all threads in a group until all memory accesses have been
+						completed and all threads in the group have reached this call.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">any</td>
+			<td>Test if any component of x is nonzero.</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">asdouble</td>
+			<td>Reinterprets a cast value into a double.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">asfloat</td>
+			<td>Convert the input type to a float.</td>
+			<td>4</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">asin</td>
+			<td>Returns the arcsine of each component of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">asint</td>
+			<td>Convert the input type to an integer.</td>
+			<td>4</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">asuint</td>
+			<td>Reinterprets the bit pattern of a 64-bit type to a uint.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">asuint</td>
+			<td>Convert the input type to an unsigned integer.</td>
+			<td>4</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">atan</td>
+			<td>Returns the arctangent of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">atan2</td>
+			<td>Returns the arctangent of of two values (x,y).</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ceil</td>
+			<td>Returns the smallest integer which is greater than or equal to x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">clamp</td>
+			<td>Clamps x to the range [min, max].</td>
+			<td>11</td>
+			<td class="version">0.3.5</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">clip</td>
+			<td>Discards the current pixel, if any component of x is less than zero.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">cos</td>
+			<td>Returns the cosine of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">cosh</td>
+			<td>Returns the hyperbolic cosine of x.</td>
+			<td>11</td>
+			<td class="version">0.3.5</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">countbits</td>
+			<td>Counts the number of bits (per component) in the input integer.</td>
+			<td>5</td>
+			<td class="version">0.3.5</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">cross</td>
+			<td>Returns the cross product of two 3D vectors.</td>
+			<td>11</td>
+			<td class="version">0.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">D3DCOLORtoUBYTE4</td>
+			<td>Swizzles and scales components of the 4D vector xto compensate for the lack of
+						UBYTE4 support in some hardware.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ddx</td>
+			<td>Returns the partial derivative of x with respect to the screen-space x-coordinate.</td>
+			<td>21</td>
+			<td class="version">na</td>
+			<td class="version">0.2.5</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ddx_coarse</td>
+			<td>Computes a low precision partial derivative with respect to the screen-space x-coordinate.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ddx_fine</td>
+			<td>Computes a high precision partial derivative with respect to the screen-space
+						x-coordinate.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ddy</td>
+			<td>Returns the partial derivative of x with respect to the screen-space y-coordinate.</td>
+			<td>21</td>
+			<td class="version">na</td>
+			<td class="version">0.2.5</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ddy_coarse</td>
+			<td>Computes a low precision partial derivative with respect to the screen-space y-coordinate.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ddy_fine</td>
+			<td>Computes a high precision partial derivative with respect to the screen-space
+						y-coordinate.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">degrees</td>
+			<td>Converts x from radians to degrees.</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">determinant</td>
+			<td>Returns the determinant of the square matrix m.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">DeviceMemoryBarrier</td>
+			<td>Blocks execution of all threads in a group until all device memory accesses have
+						been completed.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">DeviceMemoryBarrierWithGroupSync</td>
+			<td>Blocks execution of all threads in a group until all device memory accesses have
+						been completed and all threads in the group have reached this call.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">distance</td>
+			<td>Returns the distance between two points.</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">dot</td>
+			<td>Returns the dot product of two vectors.</td>
+			<td>1</td>
+			<td class="version">0.2</td>
+			<td class="version">0.2.2</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">dst</td>
+			<td>Calculates a distance vector.</td>
+			<td>5</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">errorf</td>
+			<td>Submits an error message to the information queue.</td>
+			<td>4</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">EvaluateAttributeAtCentroid</td>
+			<td>Evaluates at the pixel centroid.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">EvaluateAttributeAtSample</td>
+			<td>Evaluates at the indexed sample location.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">EvaluateAttributeSnapped</td>
+			<td>Evaluates at the pixel centroid with an offset.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">exp</td>
+			<td>Returns the base-e exponent.</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">exp2</td>
+			<td>Base 2 exponent (per component).</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">f16tof32</td>
+			<td>Converts the float16 stored in the low-half of the uint to a float.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">f32tof16</td>
+			<td>Converts an input into a float16 type.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">faceforward</td>
+			<td>Returns -n * sign(dot(i, ng)).</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">firstbithigh</td>
+			<td>Gets the location of the first set bit starting from the highest order bit and
+						working downward, per component.</td>
+			<td>5</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">firstbitlow</td>
+			<td>Returns the location of the first set bit starting from the lowest order bit and
+						working upward, per component.</td>
+			<td>5</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">floor</td>
+			<td>Returns the greatest integer which is less than or equal to x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">fma</td>
+			<td>Returns the double-precision fused multiply-addition of a * b + c.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">fmod</td>
+			<td>Returns the floating point remainder of x/y.</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">frac</td>
+			<td>Returns the fractional part of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">frexp</td>
+			<td>Returns the mantissa and exponent of x.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">fwidth</td>
+			<td>Returns abs(ddx(x)) + abs(ddy(x))</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">GetRenderTargetSampleCount</td>
+			<td>Returns the number of render-target samples.</td>
+			<td>4</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">GetRenderTargetSamplePosition</td>
+			<td>Returns a sample position (x,y) for a given sample index.</td>
+			<td>4</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">GroupMemoryBarrier</td>
+			<td>Blocks execution of all threads in a group until all group shared accesses have
+						been completed.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">GroupMemoryBarrierWithGroupSync</td>
+			<td>Blocks execution of all threads in a group until all group shared accesses have
+						been completed and all threads in the group have reached this call.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedAdd</td>
+			<td>Performs a guaranteed atomic add of value to the dest resource variable.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedAnd</td>
+			<td>Performs a guaranteed atomic and.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedCompareExchange</td>
+			<td>Atomically compares the input to the comparison value and exchanges the result.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedCompareStore</td>
+			<td>Atomically compares the input to the comparison value.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedExchange</td>
+			<td>Assigns value to dest and returns the original value.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedMax</td>
+			<td>Performs a guaranteed atomic max.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedMin</td>
+			<td>Performs a guaranteed atomic min.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedOr</td>
+			<td>Performs a guaranteed atomic or.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">InterlockedXor</td>
+			<td>Performs a guaranteed atomic xor.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">isfinite</td>
+			<td>Returns true if x is finite, false otherwise.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">isinf</td>
+			<td>Returns true if x is +INF or -INF, false otherwise.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">isnan</td>
+			<td>Returns true if x is NAN or QNAN, false otherwise.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ldexp</td>
+			<td>Returns x * 2exp</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">length</td>
+			<td>Returns the length of the vector v.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.2
+			</td>
+			<td class="version">
+				0.3.2
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">lerp</td>
+			<td>Returns x + s(y - x).</td>
+			<td>11</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">lit</td>
+			<td>Returns a lighting vector (ambient, diffuse, specular, 1)</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">log</td>
+			<td>Returns the base-e logarithm of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">log10</td>
+			<td>Returns the base-10 logarithm of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">log2</td>
+			<td>Returns the base-2 logarithm of x.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">mad</td>
+			<td>Performs an arithmetic multiply/add operation on three values.</td>
+			<td>5</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">max</td>
+			<td>Selects the greater of x and y.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">min</td>
+			<td>Selects the lesser of x and y.</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">modf</td>
+			<td>Splits the value x into fractional and integer parts.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">msad4</td>
+			<td>Compares a 4-byte reference value and an 8-byte source value and accumulates a
+						vector of 4 sums.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">mul</td>
+			<td>Performs matrix multiplication using x and y.</td>
+			<td>1</td>
+			<td class="version">0.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">noise</td>
+			<td>Generates a random value using the Perlin-noise algorithm.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">normalize</td>
+			<td>Returns a normalized vector.</td>
+			<td>11</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">pow</td>
+			<td>Returns x^y.</td>
+			<td>11</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">printf</td>
+			<td>Submits a custom shader message to the information queue.</td>
+			<td>4</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">Process2DQuadTessFactorsAvg</td>
+			<td>Generates the corrected tessellation factors for a quad patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">Process2DQuadTessFactorsMax</td>
+			<td>Generates the corrected tessellation factors for a quad patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">Process2DQuadTessFactorsMin</td>
+			<td>Generates the corrected tessellation factors for a quad patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ProcessIsolineTessFactors</td>
+			<td>Generates the rounded tessellation factors for an isoline.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ProcessQuadTessFactorsAvg</td>
+			<td>Generates the corrected tessellation factors for a quad patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ProcessQuadTessFactorsMax</td>
+			<td>Generates the corrected tessellation factors for a quad patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ProcessQuadTessFactorsMin</td>
+			<td>Generates the corrected tessellation factors for a quad patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ProcessTriTessFactorsAvg</td>
+			<td>Generates the corrected tessellation factors for a tri patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ProcessTriTessFactorsMax</td>
+			<td>Generates the corrected tessellation factors for a tri patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">ProcessTriTessFactorsMin</td>
+			<td>Generates the corrected tessellation factors for a tri patch.</td>
+			<td>5</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">radians</td>
+			<td>Converts x from degrees to radians.</td>
+			<td>1</td>
+			<td class="version">0.3.2</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">rcp</td>
+			<td>Calculates a fast, approximate, per-component reciprocal.</td>
+			<td>5</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">reflect</td>
+			<td>Returns a reflection vector.</td>
+			<td>1</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">refract</td>
+			<td>Returns the refraction vector.</td>
+			<td>11</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">reversebits</td>
+			<td>Reverses the order of the bits, per component.</td>
+			<td>5</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">round</td>
+			<td>Rounds x to the nearest integer</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">rsqrt</td>
+			<td>Returns 1 / sqrt(x)</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">saturate</td>
+			<td>Clamps x to the range [0, 1]</td>
+			<td>1</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">sign</td>
+			<td>Computes the sign of x.</td>
+			<td>11</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">sin</td>
+			<td>Returns the sine of x</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">sincos</td>
+			<td>Returns the sine and cosine of x.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">sinh</td>
+			<td>Returns the hyperbolic sine of x</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">smoothstep</td>
+			<td>Returns a smooth Hermite interpolation between 0 and 1.</td>
+			<td>11</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">sqrt</td>
+			<td>Square root (per component)</td>
+			<td>11</td>
+			<td class="version">0.2</td>
+			<td class="version">0.2.2</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">step</td>
+			<td>Returns (x &gt;= a) ? 1 : 0</td>
+			<td>11</td>
+			<td class="ongoing">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tan</td>
+			<td>Returns the tangent of x</td>
+			<td>11</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tanh</td>
+			<td>Returns the hyperbolic tangent of x</td>
+			<td>11</td>
+			<td class="version">
+				0.3.5
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex1D(s, t)</td>
+			<td>1D texture lookup.</td>
+			<td>1</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex1D(s, t, ddx, ddy)</td>
+			<td>1D texture lookup.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex1Dbias</td>
+			<td>1D texture lookup with bias.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex1Dgrad</td>
+			<td>1D texture lookup with a gradient.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex1Dlod</td>
+			<td>1D texture lookup with LOD.</td>
+			<td>31</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex1Dproj</td>
+			<td>1D texture lookup with projective divide.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex2D(s, t)</td>
+			<td>2D texture lookup.</td>
+			<td>11</td>
+			<td class="version">
+				na</td>
+			<td class="version">
+				0.3.3</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex2D(s, t, ddx, ddy)</td>
+			<td>2D texture lookup.</td>
+			<td>21</td>
+			<td class="version">
+				na</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex2Dbias</td>
+			<td>2D texture lookup with bias.</td>
+			<td>21</td>
+			<td class="version">
+				na</td>
+			<td class="version">
+				&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex2Dgrad</td>
+			<td>2D texture lookup with a gradient.</td>
+			<td>21</td>
+			<td class="version">
+				na</td>
+			<td class="version">
+				0.3.3</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex2Dlod</td>
+			<td>2D texture lookup with LOD.</td>
+			<td>3</td>
+			<td class="version">
+				0.3.3</td>
+			<td class="version">
+				0.3.3</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex2Dproj</td>
+			<td>2D texture lookup with projective divide.</td>
+			<td>21</td>
+			<td class="version">
+				na</td>
+			<td class="version">
+				0.3.3</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex3D(s, t)</td>
+			<td>3D texture lookup.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex3D(s, t, ddx, ddy)</td>
+			<td>3D texture lookup.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex3Dbias</td>
+			<td>3D texture lookup with bias.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex3Dgrad</td>
+			<td>3D texture lookup with a gradient.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex3Dlod</td>
+			<td>3D texture lookup with LOD.</td>
+			<td>31</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">tex3Dproj</td>
+			<td>3D texture lookup with projective divide.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">texCUBE(s, t)</td>
+			<td>Cube texture lookup.</td>
+			<td>11</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">texCUBE(s, t, ddx, ddy)</td>
+			<td>Cube texture lookup.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">texCUBEbias</td>
+			<td>Cube texture lookup with bias.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">texCUBEgrad</td>
+			<td>Cube texture lookup with a gradient.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">texCUBElod</td>
+			<td>Cube texture lookup with LOD.</td>
+			<td>31</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">texCUBEproj</td>
+			<td>Cube texture lookup with projective divide.</td>
+			<td>21</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">transpose</td>
+			<td>Returns the transpose of the matrix m.</td>
+			<td>1</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		<tr>
+			<td class="intrinsic_name">trunc</td>
+			<td>Truncates floating-point value(s) to integer value(s)</td>
+			<td>1</td>
+			<td class="version">
+			</td>
+			<td class="version">
+			</td>
+		</tr>
+		</tbody>
+	</table>
+	
+	</div> <!-- end #gutter -->
+	</div>
+
+	<div id="footer">
+		<p>A Publication of SALVIA Copyright &copy; 2012 SALVIA Development Group.</p>
+	</div>
+
+	</div> <!-- end #wrap -->
 </body>
 
     <script type="text/javascript">
