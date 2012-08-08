@@ -60,6 +60,33 @@ body {
 	border-left: 2px solid #ccc;
 }
 
+#content .wrapper table
+{
+	border-collapse: collapse;
+	width: 76%;
+	margin-left: 12%;
+	margin-right: 12%;
+}
+
+#content .wrapper table td
+{
+	border-style: solid;
+	border-width: thin;
+	border-color: #003300;
+}
+
+#content .wrapper table thead
+{
+	font-family: Verdana, sans-serif;
+	font-weight: bold;
+	color: #ef7039;
+	text-align: left;
+}
+
+#content .wrapper table tbody{
+	text-align: left
+}
+
 #sidebar {
 	float: right;
 	width: 20%;

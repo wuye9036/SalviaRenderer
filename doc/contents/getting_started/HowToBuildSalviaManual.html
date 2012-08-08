@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <title>SALVIA: Shading And Lighting VIsualization Architecture</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../assets/tribeca.css" />
+</head>
+<body>
+
+<div id="wrap">
+
+<div id="content">
+<div class="wrapper">
+
+<h1>Building and Installing Directories</h1>
+
+<p>For conventially, we have defined follwing directory short names:</p>
+
+<table>
+    <colgroup><col width="35%" /><col width="64%"/></colgroup>
+
+	<thead><tr><td>Name</td><td>Desciption</td></tr></thead>
+	<tbody>
+	<tr><td>${HOME}</td><td>Root directory of SALVIA source code, which is include 'README' file.</td></tr>
+    <tr><td>${BUILD}</td><td>Intermediate directory for CMAKE configuring and building.</td></tr>
+    <tr><td>${BIN}</td><td>Directory that built executable binary and dynamic library will beinstalled.</td></tr>
+    <tr><td>${LIB}</td><td>Directory that built static library will beinstalled.</td></tr>
+	</tbody>
+</table>
+
+<p>And, some configuration macros is be defined and used later.</p>
+
+<table>
+    <colgroup><col width="25%" /><col width="46%"/><col width="20%"/></colgroup>
+
+	<thead><tr><td>Name</td><td>Desciption</td><td>Examples</td></tr></thead>
+	<tbody>
+	<tr><td>${PLATFORM}</td><td>Platform specified the OS name and CPU architecture. It would be composed by OS name and CPU architecture in short. </td><td>ntx86, ntx64, linuxx86</td></tr>
+    <tr><td>${COMPILER_SHORT_NAME}</td><td>Compiler short name is compiler name in short.</td>
+    <td>
+        msvc: Microsoft Visual C++ Compiler<br/>
+        mgw: MinGW Compiler Toolchains<br/>
+        icc: Intel C++ Compiler<br/>
+        gcc: GNU Compiler Collection<br/>
+    </td></tr>
+    <tr><td>${COMPILER_VERSION_STRING}</td><td>Compiler version string.</td>
+    <td>
+        MS VS 2003: 71<br />
+        MS VS 2005: 8<br />
+        MinGW 4.5.1: 451<br />
+    </td>
+    </tr>
+    <tr><td>${COMPILER}</td><td>Compiler name which is composed by compile short name and version string.</td>
+    <td>
+        MS VS 2003: msvc71<br />
+        MinGW 4.5.1: mgw451<br />
+    </td>
+    </tr>
+    <tr><td>${CONFIG}</td><td>Building configuration. We support all CMake default configurations.</td>
+        <td>
+            Debug<br />
+            Release<br />
+            RelWithDebInfo<br />
+            MinSizeRel<br />
+        </td>
+    </tr>
+	</tbody>
+</table>
+
+<h1>Building SALVIA step-by-step</h1>
+<h2>Building Boost</h2>
+<ul>
+	<li>Downloading Boost from <a href="http://www.boost.org">Boost offical site</a></li>
+	<li>Building Boost. You could follow its documentation.</li>
+	<li>Stage all built libraries to an abitary libraies, here we named ${BOOST_STAGE_DIRECTORY}</li>
+	<li>We named path '${BOOST_STAGE_DIRECTORY}/lib' as ${BOOST_LIB_DIRECTORY}</li>
+</ul>
+
+<h2>Building LLVM</h2>
+<ul>
+	<li>Let us named ${LLVM_BUILD} to stand by folder ${BUILD}/llvm_{PLATFORM}_${COMPILER}, and set LLVM build directory as ${LLVM_BUILD}.</li>
+	<li>We called ${LIB}/llvm_${PLATFORM}_${COMPILER}_${CONFIG} as ${LLVM_Install}.</li>
+	<li>Configuring CMake of LLVM as following options by GUI or command line:</li>
+	<ul>
+		<li>LLVM_BOOST_STDINT = TRUE</li>
+		<li>LLVM_BOOST_DIR = ${BOOST}</li>
+		<li>CMAKE_INSTALL_PREFIX = ${LLVM_INSTALL}</li>
+	</ul>
+	<li>Building and Installing LLVM.</li>
+</ul>
+
+<h2>Building SALVIA</h2>
+<ul>
+	<li>Set build directory of SALVIA as ${BUILD}/salvia_${PLATFORM}_${COMPILER}.</li>
+	<li>Configuring CMake of SALVIA as following options by GUI or command line:</li>
+	<ul>
+		<li>SALVIA_BOOST_DIRECTORY = ${BOOST}</li>
+		<li>SALVIA_BOOST_LIB_DIR = ${BOOST_LIB_DIRECTORY}</li>
+		<li>SALVIA_LLVM_INSTALL_PATH = ${LLVM_INSTALL}</li>
+		<li>SALVIA_BUILD_WITH_LLVM = TRUE</li>
+		<li>SALVIA_ENABLE_SASL_REGRESSION_TEST = TRUE</li>
+		<li>SALVIA_ENABLE_SASL_REGRESSION_TEST = TRUE</li>
+	</ul>
+	<li>Building SALVIA.</li>
+	<li>Copy dependecies:</li>
+	<ul>
+		<li>Copy 3rd_party/FreeImage/bin/${PLATFORM}/FreeImage.dll to ${BIN}/${PLATFORM}/${CONFIG}</li>
+		<li>Copy Boost dynamic libraries to ${BIN}/${PLATFORM}/${CONFIG}</li>
+	</ul>
+</ul>
+
+</div>
+</div>
+</div>
+	
+</body>
+</html>
