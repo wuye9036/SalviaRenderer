@@ -99,6 +99,19 @@ def make_llvm( proj ):
 	cmd.execute()
 	pass
 
+def make_freetype( proj ):
+	cmd = batch_command( proj.freetype_solution() )
+	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
+	cmd.add_command( '@echo Building FreeType2 %s ...' % proj.config_name() )
+	cmd.add_command( '@%s freetype.sln /build %s /project freetype' % (proj.maker_name(), proj.config_name()) )
+	cmd.execute()
+
+	cmd = batch_command( proj.source_root() )
+	cmd.add_command( '@echo Installing FreeType2 %s ...' % proj.config_name() )
+	cmd.add_command( '@mkdir "%s"' % proj.freetype_install() )
+	cmd.add_command( '@copy /y "%s" "%s"' % ( os.path.join(proj.freetype_build(), "freetype.lib"), os.path.join(proj.freetype_install(), "freetype.lib") ) )
+	cmd.execute()
+
 def config_salvia( proj ):
 	# Add definitions here
 	defs = {}
@@ -106,6 +119,7 @@ def config_salvia( proj ):
 	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", proj.boost_lib_dir() )
 	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", proj.prebuilt_llvm() )
 	defs["SALVIA_BUILD_WITH_LLVM"] = ("BOOL", "TRUE")
+	defs["SALVIA_FREETYPE_LIB_DIR"] = ("PATH", proj.freetype_install() )
 	defs["SALVIA_BUILD_WITH_DIRECTX"] = ("BOOL", "TRUE" if proj.directx() else "FALSE")
 	defs["SALVIA_ENABLE_SASL_REGRESSION_TEST"] = ("BOOL", "TRUE")
 	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "TRUE")
@@ -190,6 +204,7 @@ if __name__ == "__main__":
 
 	config_llvm( proj )
 	make_llvm( proj )
+	make_freetype(proj)
 	config_salvia( proj )
 	make_salvia( proj )
 

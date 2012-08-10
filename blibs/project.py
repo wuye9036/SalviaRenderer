@@ -70,6 +70,10 @@ class project:
 		print( ' * LLVM .................... %s' % self.llvm_root() )
 		print( ' * LLVM Build .............. %s' % self.llvm_build() )
 		print( ' * LLVM Install ............ %s' % self.llvm_install() )
+		print( ' * FreeType2 ............... %s' % self.freetype_root() )
+		print( ' * FreeType2 Solution....... %s' % self.freetype_solution() )
+		print( ' * FreeType2 Build ......... %s' % self.freetype_build() )
+		print( ' * FreeType2 Install ....... %s' % self.freetype_install() )
 		print('')
 		print( ' * SALVIA Build ............ %s' % self.salvia_build() )
 		print( ' * SALVIA Binaries ......... %s' % self.salvia_bin() )
@@ -164,6 +168,22 @@ class project:
 	def llvm_install(self):
 		return os.path.join( self.install_lib(), "llvm_" + self.target_modifier(['platform', 'tool', 'config']) )
 
+	def freetype_root(self):
+		return os.path.join( self.source_root(), "3rd_party", "freetype2")
+	def freetype_solution(self):
+		if self.current_os() == systems.win32:
+			if self.toolset().short_name() == "msvc8":
+				return os.path.join( self.freetype_root(), "builds", "win32", "vc2005" )
+			elif self.toolset().short_name() == "msvc9":
+				return os.path.join( self.freetype_root(), "builds", "win32", "vc2008" )
+			elif self.toolset().short_name() == "msvc10":
+				return os.path.join( self.freetype_root(), "builds", "win32", "vc2010" )
+		return None
+	def freetype_build(self):
+		return os.path.join( self.freetype_root(), "libs", self.target_modifier(['platform', 'tool', 'config']) )
+	def freetype_install(self):
+		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool', 'config']) )
+		
 	def salvia_build(self):
 		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
 	def salvia_bin(self):
