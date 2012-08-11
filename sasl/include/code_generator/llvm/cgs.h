@@ -381,6 +381,7 @@ protected:
 		countbits_u32,
 		firstbithigh_u32,
 		firstbitlow_u32,
+		reversebits_u32,
 		tex2dlod_vs,
 		tex2dlod_ps,
 		tex2dgrad_ps,

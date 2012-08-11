@@ -358,6 +358,15 @@ void sasl_firstbitlow_u32(uint32_t* ret, uint32_t v)
 	*ret = static_cast<uint32_t>(index);
 }
 
+void sasl_reversebits_u32(uint32_t* ret, uint32_t v)
+{
+	v	= ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
+	v	= ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
+	v	= ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
+	v	= ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+	*ret= ( v >> 16             ) | ( v               << 16);
+}
+
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
 	std::string err;
@@ -392,6 +401,7 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	inject_function(ret_jit, &sasl_countbits_u32, "sasl.countbits.u32", true);
 	inject_function(ret_jit, &sasl_firstbithigh_u32, "sasl.firstbithigh.u32", true);
 	inject_function(ret_jit, &sasl_firstbitlow_u32 , "sasl.firstbitlow.u32" , true);
+	inject_function(ret_jit, &sasl_reversebits_u32 , "sasl.reversebits.u32" , true);
 
 	return ret_jit;
 }

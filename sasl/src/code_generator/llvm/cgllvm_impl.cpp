@@ -890,6 +890,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		}
 		else if ( intr->unmangled_name() == "firstbithigh"
 			|| intr->unmangled_name() == "firstbitlow"
+			|| intr->unmangled_name() == "reversebits"
 			)
 		{
 			assert( par_tys.size() == 1 );

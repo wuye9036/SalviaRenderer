@@ -33,6 +33,15 @@ struct atexit_register
 	atexit_register(){ atexit(&on_exit); }
 } atexit_reg;
 
+uint32_t naive_reversebits(uint32_t v)
+{
+	uint32_t ret = 0;
+	for(int i = 0; i < 32; ++i)
+	{
+		ret |= ( ( ( v & (1<<i) ) >> i ) << (31-i) );
+	}
+	return ret;
+}
 
 BOOST_AUTO_TEST_SUITE( jit )
 
@@ -178,10 +187,12 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float2x3 (float2x3), test_saturate_m23 );
 	JIT_FUNCTION(uint3 (uint3), test_countbits_u3);
 	JIT_FUNCTION(uint3 (uint3), test_count_bits_u3);
-	JIT_FUNCTION(int3 (int3), test_firstbithigh_i3);
+	JIT_FUNCTION(int3 (int3),  test_firstbithigh_i3);
 	JIT_FUNCTION(uint2(uint2), test_firstbithigh_u2);
-	JIT_FUNCTION(int3 (int3), test_firstbitlow_i3);
+	JIT_FUNCTION(int3 (int3),  test_firstbitlow_i3);
 	JIT_FUNCTION(uint2(uint2), test_firstbitlow_u2);
+	JIT_FUNCTION(int3 (int3),  test_reversebits_i3);
+	JIT_FUNCTION(uint2(uint2), test_reversebits_u2);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isinf_m33);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isfinite_m33);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isnan_m33);
@@ -566,7 +577,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		uint3 ret0 = test_countbits_u3(v0);
 		uint3 ret1 = test_count_bits_u3(v1);
-
+		
 		BOOST_CHECK_EQUAL( ret0[0], 0 );
 		BOOST_CHECK_EQUAL( ret0[1], 32 );
 		BOOST_CHECK_EQUAL( ret0[2], count_bits(v0[2]) );
@@ -581,9 +592,23 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		int3  ret0 = test_firstbithigh_i3(v0);
 		int3  ret1 = test_firstbitlow_i3 (v0);
-
+		
 		uint2 ret2 = test_firstbithigh_u2(v1);
 		uint2 ret3 = test_firstbitlow_u2 (v1);
+
+		int3  ret4 = test_reversebits_i3(v0);
+		uint2 ret5 = test_reversebits_u2(v1);
+		
+		int32_t  ref4[3] = {
+			static_cast<int32_t>( naive_reversebits( static_cast<uint32_t>(v0[0]) ) ),
+			static_cast<int32_t>( naive_reversebits( static_cast<uint32_t>(v0[1]) ) ),
+			static_cast<int32_t>( naive_reversebits( static_cast<uint32_t>(v0[2]) ) )
+		};
+
+		uint32_t ref5[2] = {
+			naive_reversebits(v1[0]),
+			naive_reversebits(v1[1])
+		};
 
 		BOOST_CHECK_EQUAL(ret0[0], 1);
 		BOOST_CHECK_EQUAL(ret0[1], 24);
@@ -598,6 +623,12 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		BOOST_CHECK_EQUAL(ret3[0], 3);
 		BOOST_CHECK_EQUAL(ret3[1], 4);
+
+		BOOST_CHECK_EQUAL(ret4[0], ref4[0]);
+		BOOST_CHECK_EQUAL(ret4[1], ref4[1]);
+		BOOST_CHECK_EQUAL(ret4[2], ref4[2]);
+		BOOST_CHECK_EQUAL(ret5[0], ref5[0]);
+		BOOST_CHECK_EQUAL(ret5[1], ref5[1]);
 	}
 	{
 		float v[3][3] = 
