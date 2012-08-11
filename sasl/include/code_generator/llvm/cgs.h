@@ -377,6 +377,7 @@ protected:
 		cosh_f32,
 		tanh_f32,
 		mod_f32,
+		pow_f32,
 		countbits_u32,
 		firstbithigh_u32,
 		firstbitlow_u32,

@@ -897,7 +897,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t ret_val = service()->emit_unary_ps( ( format("sasl.%s.u32") % intr->unmangled_name() ).str(), service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
-		else if(intr->unmangled_name() == "ldexp")
+		else if( intr->unmangled_name() == "ldexp"
+			  || intr->unmangled_name() == "pow" )
 		{
 			assert( par_tys.size() == 2 );
 			service()->fn().arg_name( 0, ".lhs" );
@@ -1277,6 +1278,20 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			value_t ret = service()->emit_div(one_value, v);
 			
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "normalize" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 1);
+
+			fn.arg_name(0, "v");
+
+			value_t v = fn.arg(0);
+			value_t length_sqr = service()->emit_dot(v, v);
+			value_t length = service()->emit_sqrt(length_sqr);
+			value_t ret = service()->emit_div(v, length);
+
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else
