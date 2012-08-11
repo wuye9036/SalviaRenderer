@@ -188,6 +188,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(vec3 (vec3), test_frac_f3);
 	JIT_FUNCTION(float3x4 (float3x4), test_rcp_m34);
 	JIT_FUNCTION(float3x4 (float3x4, float3x4), test_pow_m34);
+	JIT_FUNCTION(vec3 (vec3, vec3), test_reflect_f3);
+
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
 		vec3 rhs( 1.0f, -22.0f, 8.28f );
@@ -198,10 +200,18 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec3 ret1 = test_norm_f3(rhs);
 		vec3 ref0 = normalize3(lhs);
 		vec3 ref1 = normalize3(rhs);
+
+		vec3 ret2 = test_reflect_f3(lhs, rhs);
+		vec3 ret3 = test_reflect_f3(rhs, lhs);
+		vec3 ref2 = reflect3(lhs, rhs);
+		vec3 ref3 = reflect3(rhs, lhs);
+
 		for(int i = 0; i < 3; ++i)
 		{
 			BOOST_CHECK_CLOSE( ret0[i], ref0[i], 0.00001f );
 			BOOST_CHECK_CLOSE( ret1[i], ref1[i], 0.00001f );
+			BOOST_CHECK_CLOSE( ret2[i], ref2[i], 0.00001f );
+			BOOST_CHECK_CLOSE( ret3[i], ref3[i], 0.00001f );
 		}
 	}
 	{

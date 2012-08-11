@@ -1294,6 +1294,23 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
+		else if( intr->unmangled_name() == "reflect" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 2);
+
+			fn.arg_name(0, "i");
+			fn.arg_name(1, "n");
+
+			value_t i = fn.arg(0);
+			value_t n = fn.arg(1);
+
+			value_t two = service()->create_constant_scalar( 2.0f, NULL, scalar_of( i.hint() ) );
+			value_t double_dot = service()->emit_mul_comp( two, service()->emit_dot(i, n) );
+			value_t ret = service()->emit_sub( i, service()->emit_mul_comp(double_dot, n) );
+
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
 		else
 		{
 			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );
