@@ -185,6 +185,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(bool3x3 (float3x3), test_isfinite_m33);
 	JIT_FUNCTION(bool3x3 (float3x3), test_isnan_m33);
 	JIT_FUNCTION(vec3 (vec3), test_frac_f3);
+	JIT_FUNCTION(float3x4 (float3x4), test_rcp_m34);
 	
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -414,6 +415,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float3x4 ret_log10	= test_log10_m34(lhs);
 		float3x4 ret_rsqrt	= test_rsqrt_m34(lhs);
 		float3x4 ret_ldexp	= test_ldexp_m34(lhs,rhs);
+		float3x4 ret_rcp	= test_rcp_m34(lhs);
 
 		for( int i = 0; i < 3; ++i ) {
 			for( int j = 0; j < 4; ++j ) {
@@ -438,6 +440,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_log10.data_[i][j];	ref.f = log10f(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_rsqrt.data_[i][j];	ref.f = 1.0f/sqrtf(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_ldexp.data_[i][j];	ref.f = ldexpf(lhs_array[i][j], rhs_array[i][j]); BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_rcp.data_[i][j];	ref.f = 1.0f / lhs_array[i][j];			BOOST_CHECK_CLOSE( ret.f, ref.f, 0.00001f );
 			}
 		}
 	}	
