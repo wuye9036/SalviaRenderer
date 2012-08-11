@@ -142,6 +142,7 @@ public:
 	virtual value_t emit_isinf( value_t const& v );
 	virtual value_t emit_isfinite( value_t const& v );
 	virtual value_t emit_isnan( value_t const& v );
+	virtual value_t emit_sign(value_t const& v);
 
 	virtual value_t emit_tex2Dlod	( value_t const& samp, value_t const& coord );
 	virtual value_t emit_tex2Dgrad	( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );

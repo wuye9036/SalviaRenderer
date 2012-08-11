@@ -210,6 +210,7 @@ typedef matrix_<char,3,2>		bool2x3;
 typedef matrix_<char,3,3>		bool3x3;
 typedef matrix_<char,4,3>		bool3x4;
 typedef matrix_<int32_t,3,2>	int2x3;
+typedef matrix_<int32_t,3,3>	int3x3;
 typedef matrix_<int32_t,4,3>	int3x4;
 typedef matrix_<uint32_t,3,2>	uint2x3;
 typedef matrix_<float,3,2>		float2x3;

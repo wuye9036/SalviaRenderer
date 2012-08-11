@@ -2679,7 +2679,13 @@ Value* cg_service::abs_( Value* v, and_< sasl::code_generator::vector_<of_llvm>,
 
 value_t cg_service::one_value( value_t const& proto )
 {
-	Type* ty = proto.tyinfo()->ty( proto.abi() );
+	Type* ty = NULL;
+	if( proto.tyinfo() ){
+		ty = proto.tyinfo()->ty( proto.abi() );
+	} else {
+		ty = type_( proto.hint(), proto.abi() );
+	}
+	
 	Type* scalar_ty = extract_scalar_ty_(ty);
 	
 	Value* scalar_value = NULL;
@@ -2719,6 +2725,19 @@ llvm::Type* cg_service::extract_scalar_ty_( llvm::Type* ty )
 	}
 
 	return ty;
+}
+
+value_t cg_service::emit_sign( value_t const& v )
+{
+	builtin_types ret_btc = replace_scalar(v.hint(), builtin_types::_sint32);
+	value_t zero = null_value( v.hint(), v.abi() );
+	value_t i_zero = null_value( ret_btc, v.abi() );
+	value_t i_one = one_value( i_zero );
+	value_t i_neg_one = emit_sub(i_zero, i_one);
+
+	value_t v0 = emit_select( emit_cmp_lt(v, zero), i_neg_one, i_zero );
+	value_t v1 = emit_select( emit_cmp_gt(v, zero), i_one, i_zero );
+	return emit_add(v0, v1);
 }
 
 END_NS_SASL_CODE_GENERATOR();

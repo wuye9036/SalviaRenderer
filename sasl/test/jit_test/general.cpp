@@ -200,6 +200,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float3x4 (float3x4), test_rcp_m34);
 	JIT_FUNCTION(float3x4 (float3x4, float3x4), test_pow_m34);
 	JIT_FUNCTION(vec3 (vec3, vec3), test_reflect_f3);
+	JIT_FUNCTION(int3x3 (float3x3), test_sign_m33);
 
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -641,7 +642,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		bool3x3 ret_inf = test_isinf_m33( reinterpret_cast<float3x3&>(v) );
 		bool3x3 ret_nan = test_isnan_m33( reinterpret_cast<float3x3&>(v) );
 		bool3x3 ret_fin = test_isfinite_m33( reinterpret_cast<float3x3&>(v) );
-
+		int3x3	ret_sgn = test_sign_m33( reinterpret_cast<float3x3&>(v) );
 		for(int i = 0; i < 3; ++i)
 		{
 			for(int j = 0; j < 3; ++j)
@@ -649,6 +650,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				BOOST_CHECK_EQUAL( boost::math::isnan(v[i][j]),		ret_nan.data_[i][j] != 0 );
 				BOOST_CHECK_EQUAL( boost::math::isinf(v[i][j]),		ret_inf.data_[i][j] != 0 );
 				BOOST_CHECK_EQUAL( boost::math::isfinite(v[i][j]),	ret_fin.data_[i][j] != 0 );
+				BOOST_CHECK_EQUAL( v[i][j] > 0.0f ? 1 : (v[i][j] < 0.0f ? -1 : 0), ret_sgn.data_[i][j] );
 			}
 		}
 	}
