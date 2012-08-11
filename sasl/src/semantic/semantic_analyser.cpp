@@ -1570,7 +1570,7 @@ void semantic_analyser::register_builtin_functions(){
 		}
 	}
 
-	// all, any, ddx, ddy, clamp, min, max
+	// all, any, ddx, ddy, clamp, min, max, mad
 	{
 		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
 		{
@@ -1582,10 +1582,11 @@ void semantic_analyser::register_builtin_functions(){
 
 			if( is_numeric(tycode) )
 			{
-				register_intrinsic( "clamp" ) % ty % ty % ty >> ty;
-				register_intrinsic( "min" ) % ty % ty >> ty;
-				register_intrinsic( "max" ) % ty % ty >> ty;
-
+				register_intrinsic( "mad" )		% ty % ty % ty >> ty;
+				register_intrinsic( "clamp" )	% ty % ty % ty >> ty;
+				register_intrinsic( "min" )		% ty % ty >> ty;
+				register_intrinsic( "max" )		% ty % ty >> ty;
+				
 				if( lang == salviar::lang_pixel_shader )
 				{
 					register_intrinsic( "ddx" ) % ty >> ty;
@@ -1613,7 +1614,13 @@ void semantic_analyser::register_builtin_functions(){
 		}
 	}
 
-	// degrees, radians, sqrt, fmod, lerp
+	// degrees, radians, exp, ldexp, exp2, pow, log, log2, log10
+	// sin, cos, tan, asin, acos, atan,
+	// sinh, cosh, tanh,
+	// ceil, floor,
+	// sqrt, rsqrt, 
+	// saturate, fmod, frac, round,
+	// lerp
 	{
 		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
 		{
@@ -1650,6 +1657,10 @@ void semantic_analyser::register_builtin_functions(){
 					register_intrinsic( "frac"		) % ty			>> ty;
 					register_intrinsic( "saturate"	) % ty			>> ty;
 					register_intrinsic( "round"		) % ty			>> ty;
+					register_intrinsic( "rcp"		) % ty			>> ty;
+					register_intrinsic( "pow"		) % ty % ty		>> ty;
+					register_intrinsic( "smoothstep") % ty % ty % ty>> ty;
+					register_intrinsic( "step"		) % ty % ty		>> ty;
 				}
 			}
 		}
@@ -1676,13 +1687,16 @@ void semantic_analyser::register_builtin_functions(){
 		}
 	}
 
-	// distance, dst, length, dot
+	// distance, dst, length, dot, normalize, reflect, refract
 	{
 		for( size_t i = 1; i <= 4; ++i )
 		{
-			register_intrinsic("length") % fvec_ts[i] >> BUILTIN_TYPE(_float);
-			register_intrinsic("distance") % fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
-			register_intrinsic("dot") % fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic("normalize") % fvec_ts[i] >> fvec_ts[i];
+			register_intrinsic("length")	% fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic("distance")	% fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic("dot")		% fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic("reflect")	% fvec_ts[i] % fvec_ts[i] >> fvec_ts[i];
+			register_intrinsic("refract")	% fvec_ts[i] % fvec_ts[i] % BUILTIN_TYPE(_float) >> fvec_ts[i];
 		}
 		register_intrinsic("dst") % fvec_ts[4] % fvec_ts[4] >> fvec_ts[4];
 	}
@@ -1739,7 +1753,7 @@ void semantic_analyser::register_builtin_functions(){
 		register_intrinsic( "cross" ) % fvec_ts[3] % fvec_ts[3] >> fvec_ts[3];
 	}
 
-	// asfloat, asint, asuint, countbits, firstbithigh, firstbitlow
+	// asfloat, asint, asuint, countbits, firstbithigh, firstbitlow, reversebits
 	{
 		vector< shared_ptr<builtin_type> > int_tys;
 		vector< shared_ptr<builtin_type> > uint_tys;
@@ -1765,23 +1779,28 @@ void semantic_analyser::register_builtin_functions(){
 
 		for( size_t i_ty = 0; i_ty < int_tys.size(); ++i_ty )
 		{
-			register_intrinsic( "asint" ) % uint_tys[i_ty]  >> int_tys[i_ty];
-			register_intrinsic( "asint" ) % float_tys[i_ty] >> int_tys[i_ty];
+			register_intrinsic( "asint"			) % uint_tys[i_ty]  >> int_tys[i_ty];
+			register_intrinsic( "asint"			) % float_tys[i_ty] >> int_tys[i_ty];
 
-			register_intrinsic( "asuint" ) % int_tys[i_ty]   >> uint_tys[i_ty];
-			register_intrinsic( "asuint" ) % float_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "asuint"		) % int_tys[i_ty]   >> uint_tys[i_ty];
+			register_intrinsic( "asuint"		) % float_tys[i_ty] >> uint_tys[i_ty];
 
-			register_intrinsic( "asfloat" ) % uint_tys[i_ty] >> float_tys[i_ty];
-			register_intrinsic( "asfloat" ) % int_tys[i_ty]  >> float_tys[i_ty];
+			register_intrinsic( "asfloat"		) % uint_tys[i_ty] >> float_tys[i_ty];
+			register_intrinsic( "asfloat"		) % int_tys[i_ty]  >> float_tys[i_ty];
 
-			register_intrinsic( "countbits" ) % uint_tys[i_ty] >> uint_tys[i_ty];
-			register_intrinsic( "count_bits" ) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "countbits"		) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "count_bits"	) % uint_tys[i_ty] >> uint_tys[i_ty];
 
-			register_intrinsic( "firstbithigh" ) % uint_tys[i_ty] >> uint_tys[i_ty];
-			register_intrinsic( "firstbithigh" ) % int_tys[i_ty] >> int_tys[i_ty];
+			register_intrinsic( "firstbithigh"	) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "firstbithigh"	) % int_tys[i_ty]  >> int_tys[i_ty];
 
-			register_intrinsic( "firstbitlow" ) % uint_tys[i_ty] >> uint_tys[i_ty];
-			register_intrinsic( "firstbitlow" ) % int_tys[i_ty] >> int_tys[i_ty];
+			register_intrinsic( "firstbitlow"	) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "firstbitlow"	) % int_tys[i_ty]  >> int_tys[i_ty];
+
+			register_intrinsic( "reversebits"	) % uint_tys[i_ty] >> uint_tys[i_ty];
+			register_intrinsic( "reversebits"	) % int_tys[i_ty]  >> int_tys[i_ty];
+
+			register_intrinsic( "sign"			) % float_tys[i_ty]>> int_tys[i_ty];
 		}
 	}
 
