@@ -4,8 +4,12 @@ INCLUDE_DIRECTORIES(
 	${SALVIA_HOME_DIR}
 	${SALVIA_3RD_PARTY_INCLUDES}
 	${SALVIA_BOOST_HOME_DIR}
+	${SALVIA_FREETYPE_INCLUDE_DIR}
 )
-LINK_DIRECTORIES(${SALVIA_3RD_PARTY_LIBS})
+LINK_DIRECTORIES(
+	${SALVIA_3RD_PARTY_LIBS}
+	${SALVIA_FREETYPE_LIB_DIR}
+	)
 
 set (HEADER_FILES
 	include/resource/mesh/sa/material.h
@@ -22,6 +26,7 @@ set (HEADER_FILES
 	include/resource/texture/sa/tex_io.h
 	include/resource/texture/freeimage/tex_io_freeimage.h
 	include/resource/texture/gdiplus/tex_io_gdiplus.h
+	include/resource/font/font.h
 	
 	include/resource/terrain/gen_terrain.h
 	
@@ -41,7 +46,7 @@ set (SOURCE_FILES
 	
 	src/resource/texture/sa/tex_io.cpp
 	src/resource/texture/freeimage/tex_io_freeimage.cpp
-	
+	src/resource/font/font.cpp
 	src/resource/terrain/gen_terrain.cpp
 	
 	src/utility/freeimage_utility.cpp
@@ -72,7 +77,7 @@ if( SALVIA_BUILD_WITH_DIRECTX )
 endif()
 
 ADD_LIBRARY( salviax STATIC	${HEADER_FILES}	${SOURCE_FILES} )
-TARGET_LINK_LIBRARIES(salviax EFLIB	salviar FreeImage)
+TARGET_LINK_LIBRARIES(salviax EFLIB	salviar FreeImage freetype)
 SET_TARGET_PROPERTIES(salviax PROPERTIES FOLDER "SALVIA Renderer")
 SALVIA_CONFIG_OUTPUT_PATHS(salviax)
 

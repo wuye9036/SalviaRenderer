@@ -182,7 +182,7 @@ class project:
 	def freetype_build(self):
 		return os.path.join( self.freetype_root(), "libs", self.target_modifier(['platform', 'tool', 'config']) )
 	def freetype_install(self):
-		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool', 'config']) )
+		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
 		
 	def salvia_build(self):
 		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
