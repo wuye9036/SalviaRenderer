@@ -25,4 +25,4 @@ set( SALVIA_LLVM_LIB_PATH "${SALVIA_LLVM_PATH}/lib" )
 
 ############ Set FreeType2 path #############
 set( SALVIA_FREETYPE_INCLUDE_DIR "${SALVIA_3RD_PARTY_PATH}/freetype2/include/")
-#SALVIA_FREE_TYPE_LIB_DIR
+#SALVIA_FREETYPE_LIB_DIR
