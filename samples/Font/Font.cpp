@@ -38,7 +38,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-#define SALVIA_ENABLE_PIXEL_SHADER 1
+// #define SALVIA_ENABLE_PIXEL_SHADER 1
 
 struct vert
 {
@@ -154,6 +154,7 @@ public:
 	vs_plane():wvp(mat44::identity()){
 		declare_constant(_T("WorldViewProjMat"), wvp);
 		bind_semantic( "POSITION", 0, 0 );
+		bind_semantic( "TEXCOORD", 0, 1 );
 	}
 
 	vs_plane(const mat44& wvp):wvp(wvp){}
@@ -161,7 +162,7 @@ public:
 	{
 		vec4 pos = in.attributes[0];
 		transform(out.position, pos, wvp);
-		out.attributes[0] = vec4(in.attributes[0].x(), in.attributes[0].z(), 0, 0);
+		out.attributes[0] = in.attributes[1]; // vec4(in.attributes[0].x(), in.attributes[0].z(), 0, 0);
 	}
 
 	uint32_t num_output_attributes() const
@@ -285,10 +286,10 @@ protected:
 
 		planar_mesh = create_planar(
 			hsr.get(), 
-			vec3(-3.0f, -1.0f, -3.0f), 
-			vec3(6, 0.0f, 0.0f), 
-			vec3(0.0f, 0.0f, 6),
-			1, 1, true
+			vec3(0.0f, 0.0f, 0.0f), 
+			vec3(1.0f, 0.0f, 0.0f), 
+			vec3(0.0f, 1.0f, 0.0f),
+			2, 2, true
 			);
 		
 		box_mesh = create_box(hsr.get());
@@ -324,8 +325,13 @@ protected:
 			desc.min_filter = filter_linear;
 			desc.mag_filter = filter_linear;
 			desc.mip_filter = filter_linear;
+			desc.addr_mode_u = address_wrap;
+			desc.addr_mode_v = address_wrap;
 
 			plane_tex = hsr->create_tex2d(512, 512, 1, pixel_format_color_rgba8);
+			fnt = font::create_in_system_path("msyh.ttf", 0, 48, font::pixels);
+			fnt->draw( "HelloÄãºÃ123", &plane_tex->get_surface(0), rect<int32_t>(0, 0, 512, 512),
+				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
 			plane_tex->gen_mipmap(filter_linear, true);
 			
 			pps_plane.reset(new ps_plane(plane_tex));
@@ -380,9 +386,10 @@ protected:
 		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		hsr->clear_depth(1.0f);
 
-		static float s_angle = 0;
-		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
+		//static float s_angle = 0;
+		//s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
+		//vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
+		vec3 camera(0.0f, 0.0f, -2.2f);
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
@@ -391,7 +398,6 @@ protected:
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
-			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
 			hsr->set_rasterizer_state(rs_back);
@@ -405,7 +411,7 @@ protected:
 #endif
 			hsr->set_blend_shader(pbs_plane);
 			planar_mesh->render();
-			
+			/*
 			hsr->set_rasterizer_state(rs_front);
 			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
 			hsr->set_vertex_shader(pvs_box);
@@ -417,7 +423,7 @@ protected:
 #endif
 			hsr->set_blend_shader(pbs_box);
 			box_mesh->render();
-
+			
 			hsr->set_rasterizer_state(rs_back);
 			hsr->set_vertex_shader(pvs_box);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
@@ -428,6 +434,7 @@ protected:
 #endif
 			hsr->set_blend_shader(pbs_box);
 			box_mesh->render();
+			*/
 		}
 
 		if (hsr->get_framebuffer()->get_num_samples() > 1){
@@ -469,6 +476,7 @@ protected:
 	h_surface display_surf;
 	surface* pdsurf;
 
+	font_ptr fnt;
 	uint32_t num_frames;
 	float accumulate_time;
 	float fps;

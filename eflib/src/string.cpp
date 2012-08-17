@@ -55,11 +55,12 @@ namespace eflib{
 		// Convert.
 #ifdef EFLIB_MSVC
 		size_t len;
-		mbstowcs_s(&len, &(outstr[0]), outstr.size(), instr.c_str(), required-1);
+		mbstowcs_s(&len, &(outstr[0]), required, instr.c_str(), required-1);
 #else
 		size_t len = mbstowcs(&(outstr[0]), instr.c_str(), required-1);
 #endif
 
+		outstr.resize(required-1);
 		return true;
 	}
 
