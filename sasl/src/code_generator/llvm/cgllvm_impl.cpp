@@ -1169,11 +1169,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			value_t min_v = fn.arg(1);
 			value_t max_v = fn.arg(2);
 
-			value_t ret;
-			ret = service()->emit_select(service()->emit_cmp_ge(v, min_v), v, min_v);
-			ret = service()->emit_select(service()->emit_cmp_le(ret, max_v), ret, max_v);
-
-			service()->emit_return( ret, service()->param_abi(false) );
+			service()->emit_return( service()->emit_clamp(v, min_v, max_v), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "isinf" )
 		{
@@ -1257,15 +1253,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			fn.arg_name(0, "v");
 
-			value_t v = fn.arg(0);
-			value_t zero_value = service()->null_value( v.hint(), v.abi() );
-			value_t one_value = service()->one_value( v );
-
-			value_t ret;
-			ret = service()->emit_select(service()->emit_cmp_ge(v, zero_value), v, zero_value);
-			ret = service()->emit_select(service()->emit_cmp_le(ret, one_value), ret, one_value);
-
-			service()->emit_return( ret, service()->param_abi(false) );
+			service()->emit_return( service()->emit_saturate( fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "rcp" )
 		{
@@ -1318,6 +1306,118 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert(fn.arg_size() == 1);
 			fn.arg_name(0, "v");
 			service()->emit_return( service()->emit_sign( fn.arg(0) ), service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "smoothstep" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 3);
+
+			fn.arg_name(0, "v0");
+			fn.arg_name(1, "v1");
+			fn.arg_name(2, "v2");
+
+			value_t min_v = fn.arg(0);
+			value_t max_v = fn.arg(1);
+			value_t v     = fn.arg(2);
+
+			// t = clamp((x - min) / (max-min), 0.0, 1.0);
+			// return t * t * (3.0 - 2.0 * t);
+
+			value_t t = service()->emit_div(
+				service()->emit_sub(v, min_v),
+				service()->emit_sub(max_v, min_v)
+				);
+			t = service()->emit_saturate(t);
+
+			value_t two = service()->numeric_value(t, 2.0, 2);
+			value_t three = service()->numeric_value(t, 3.0, 3);
+
+			value_t ret = service()->emit_sub(
+				three,
+				service()->emit_mul_comp(two, t)
+				);
+			ret = service()->emit_mul_comp(ret, t);
+			ret = service()->emit_mul_comp(ret, t);
+
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "refract" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 3);
+
+			fn.arg_name(0, "i");
+			fn.arg_name(1, "n");
+			fn.arg_name(2, "eta");
+
+			// k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I));
+			// if (k < 0.0)
+			//	 R = genType(0.0);       // or genDType(0.0)
+			// else
+			//	 R = eta * I - (eta * dot(N, I) + sqrt(k)) * N;
+
+			value_t i	= fn.arg(0);
+			value_t n	= fn.arg(1);
+			value_t eta = fn.arg(2);
+
+			value_t one			= service()->one_value(i);
+			value_t zero		= service()->null_value(i.hint(), i.abi());
+			value_t eta_x_eta	= service()->emit_mul_comp(eta, eta);
+			value_t n_dot_i		= service()->emit_dot(n, i);
+			value_t eta_x_i		= service()->emit_mul_comp(eta, i);
+
+			value_t k, r;
+
+			k = service()->emit_mul_comp(n_dot_i, n_dot_i);
+			k = service()->emit_sub(one, k);
+			k = service()->emit_mul_comp(eta_x_eta, k);
+			k = service()->emit_sub(one, k);
+
+			value_t flag = service()->emit_cmp_lt(k, zero);
+			k = service()->emit_select(flag, zero, k);
+
+			r = service()->emit_mul_comp(eta, n_dot_i);
+			r = service()->emit_add( r, service()->emit_sqrt(k) );
+			r = service()->emit_mul_comp(r, n);
+			r = service()->emit_sub(eta_x_i, r);
+
+			r = service()->emit_select(flag, zero, r);
+
+			service()->emit_return( r, service()->param_abi(false) );
+		}
+		else if (intr->unmangled_name() == "step")
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 2);
+
+			fn.arg_name(0, "y");
+			fn.arg_name(1, "x");
+
+			value_t y = fn.arg(0);
+			value_t x = fn.arg(1);
+
+			value_t ret = service()->emit_select(
+				service()->emit_cmp_ge(x, y),
+				service()->one_value(x),
+				service()->null_value( x.hint(), x.abi() ) );
+
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if (intr->unmangled_name() == "mad")
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 3);
+
+			fn.arg_name(0, "m");
+			fn.arg_name(1, "a");
+			fn.arg_name(1, "b");
+
+			value_t m = fn.arg(0);
+			value_t a = fn.arg(1);
+			value_t b = fn.arg(2);
+
+			value_t ret = service()->emit_add(service()->emit_mul_comp(m, a), b);
+			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else
 		{

@@ -143,6 +143,8 @@ public:
 	virtual value_t emit_isfinite( value_t const& v );
 	virtual value_t emit_isnan( value_t const& v );
 	virtual value_t emit_sign(value_t const& v);
+	virtual value_t emit_clamp(value_t const& v, value_t const& min_v, value_t const& max_v);
+	virtual value_t emit_saturate(value_t const& v);
 
 	virtual value_t emit_tex2Dlod	( value_t const& samp, value_t const& coord );
 	virtual value_t emit_tex2Dgrad	( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy );
@@ -268,6 +270,7 @@ public:
 	value_t null_value( builtin_types bt, abis abi );
 	value_t undef_value( builtin_types bt, abis abi );
 	value_t one_value(value_t const& proto);
+	value_t numeric_value(value_t const& proto, double fp, uint64_t ui);
 
 	value_t create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v );
 

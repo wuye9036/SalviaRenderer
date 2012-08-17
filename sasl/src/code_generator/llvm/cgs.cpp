@@ -2679,29 +2679,7 @@ Value* cg_service::abs_( Value* v, and_< sasl::code_generator::vector_<of_llvm>,
 
 value_t cg_service::one_value( value_t const& proto )
 {
-	Type* ty = NULL;
-	if( proto.tyinfo() ){
-		ty = proto.tyinfo()->ty( proto.abi() );
-	} else {
-		ty = type_( proto.hint(), proto.abi() );
-	}
-	
-	Type* scalar_ty = extract_scalar_ty_(ty);
-	
-	Value* scalar_value = NULL;
-	if( scalar_ty->isFloatingPointTy() )
-	{
-		scalar_value = ConstantFP::get(scalar_ty, 1.0f);
-	}
-	else if( scalar_ty->isIntegerTy() )
-	{
-		scalar_value = ConstantInt::get(scalar_ty, 1);
-	}
-
-	assert(scalar_value);
-
-	Value* ret_value = constant_value_by_scalar_( ty, scalar_value, scalar_<of_llvm>() );
-	return create_value( proto.tyinfo(), proto.hint(), ret_value, vkind_value, proto.abi() );
+	return numeric_value(proto, 1.0f, 1);
 }
 
 llvm::Type* cg_service::extract_scalar_ty_( llvm::Type* ty )
@@ -2738,6 +2716,44 @@ value_t cg_service::emit_sign( value_t const& v )
 	value_t v0 = emit_select( emit_cmp_lt(v, zero), i_neg_one, i_zero );
 	value_t v1 = emit_select( emit_cmp_gt(v, zero), i_one, i_zero );
 	return emit_add(v0, v1);
+}
+
+value_t cg_service::emit_clamp( value_t const& v, value_t const& min_v, value_t const& max_v )
+{
+	value_t ret = emit_select(emit_cmp_ge(v, min_v), v, min_v);
+	return emit_select(emit_cmp_le(ret, max_v), ret, max_v);
+}
+
+value_t cg_service::emit_saturate( value_t const& v )
+{
+	return emit_clamp(v, null_value( v.hint(), v.abi() ), one_value(v) );
+}
+
+value_t cg_service::numeric_value(value_t const& proto, double fp, uint64_t ui)
+{
+	Type* ty = NULL;
+	if( proto.tyinfo() ){
+		ty = proto.tyinfo()->ty( proto.abi() );
+	} else {
+		ty = type_( proto.hint(), proto.abi() );
+	}
+
+	Type* scalar_ty = extract_scalar_ty_(ty);
+
+	Value* scalar_value = NULL;
+	if( scalar_ty->isFloatingPointTy() )
+	{
+		scalar_value = ConstantFP::get(scalar_ty, fp);
+	}
+	else if( scalar_ty->isIntegerTy() )
+	{
+		scalar_value = ConstantInt::get(scalar_ty, ui);
+	}
+
+	assert(scalar_value);
+
+	Value* ret_value = constant_value_by_scalar_( ty, scalar_value, scalar_<of_llvm>() );
+	return create_value( proto.tyinfo(), proto.hint(), ret_value, vkind_value, proto.abi() );
 }
 
 END_NS_SASL_CODE_GENERATOR();
