@@ -286,7 +286,7 @@ protected:
 
 		planar_mesh = create_planar(
 			hsr.get(), 
-			vec3(0.0f, 0.0f, 0.0f), 
+			vec3(-1.0f, -1.0f, 0.0f), 
 			vec3(1.0f, 0.0f, 0.0f), 
 			vec3(0.0f, 1.0f, 0.0f),
 			2, 2, true
@@ -329,7 +329,7 @@ protected:
 			desc.addr_mode_v = address_wrap;
 
 			plane_tex = hsr->create_tex2d(512, 512, 1, pixel_format_color_rgba8);
-			fnt = font::create_in_system_path("msyh.ttf", 0, 48, font::pixels);
+			fnt = font::create_in_system_path("msyh.ttf", 0, 14, font::points);
 			fnt->draw( "HelloÄãºÃ123", &plane_tex->get_surface(0), rect<int32_t>(0, 0, 512, 512),
 				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
 			plane_tex->gen_mipmap(filter_linear, true);
@@ -394,7 +394,8 @@ protected:
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
+		mat_ortho(proj, -1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1000.0f);
+		// mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{

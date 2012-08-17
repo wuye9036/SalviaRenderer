@@ -480,10 +480,10 @@ namespace eflib{
 		float xs = ys / aspect;
 
 		out = mat44(
-			xs,			0.0f,		0.0f,		0.0f,
-			0.0f,		ys,			0.0f,		0.0f,
-			0.0f,		0.0f,		f/(f-n),	1.0f,
-			0.0f,		0.0f,		-n*f/(f-n),	0.0f
+			xs,		0.0f,	0.0f,		0.0f,
+			0.0f,	ys,		0.0f,		0.0f,
+			0.0f,	0.0f,	f/(f-n),		1.0f,
+			0.0f,	0.0f,	-n*f/(f-n),	0.0f
 			);
 
 		return out;
@@ -494,8 +494,8 @@ namespace eflib{
 		out = mat44(
 			2.0f/(r-l),		0.0f,			0.0f,			0.0f,
 			0.0f,			2.0f/(t-b),		0.0f,			0.0f,
-			0.0f,			0.0f,			-2.0f/(f-n),	-1.0f,
-			(r+l)/(l-r),	(t+b)/(b-t),	-(f+n)/(f-n),	1.0f
+			0.0f,			0.0f,			1.0f/(f-n),		0.0f,
+			(r+l)/(l-r),		(t+b)/(b-t),		n/(n-f),			1.0f
 			);
 
 		return out;
