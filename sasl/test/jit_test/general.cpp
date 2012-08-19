@@ -186,6 +186,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float2x3 (float2x3, float2x3, float2x3), test_mad_m23);
 	JIT_FUNCTION(float2x3 (float2x3, float2x3), test_min_m23);
 	JIT_FUNCTION(float2x3 (float2x3, float2x3), test_max_m23);
+	JIT_FUNCTION(float2x3 (float2x3, float2x3), test_step_m23);
 	JIT_FUNCTION(float2x3 (float2x3), test_saturate_m23 );
 	JIT_FUNCTION(uint3 (uint3), test_countbits_u3);
 	JIT_FUNCTION(uint3 (uint3), test_count_bits_u3);
@@ -559,6 +560,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			reinterpret_cast<float2x3&>(min_m),
 			reinterpret_cast<float2x3&>(m)
 			);
+		float2x3 ret5 = test_step_m23(
+			reinterpret_cast<float2x3&>(min_m),
+			reinterpret_cast<float2x3&>(m)
+			);
 
 		for(int i = 0; i < 2; ++i)
 		{
@@ -583,6 +588,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				BOOST_CHECK_EQUAL(
 					ret4.data_[i][j],
 					max_m[i][j]*min_m[i][j]+m[i][j]
+					);
+				BOOST_CHECK_EQUAL(
+					ret5.data_[i][j],
+					min_m[i][j]<=m[i][j]?1.0f:0.0f
 					);
 			}
 		}

@@ -99,6 +99,7 @@ int3 test_max_i3(int3 v0, int3 v1)  { return max(v0, v1); }
 float2x3 test_clamp_m23(float2x3 m0, float2x3 m1, float2x3 m2) { return clamp(m0, m1, m2); }
 float2x3 test_min_m23(float2x3 m0, float2x3 m1) { return min(m0, m1); }
 float2x3 test_max_m23(float2x3 m0, float2x3 m1) { return max(m0, m1); }
+float2x3 test_step_m23(float2x3 m0, float2x3 m1) { return step(m0, m1); }
 uint3 test_countbits_u3(uint3 v) { return countbits(v); }
 uint3 test_count_bits_u3(uint3 v) { return count_bits(v); }
 bool3x3 test_isinf_m33(float3x3 v) { return isinf(v); }
