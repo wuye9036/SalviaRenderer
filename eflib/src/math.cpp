@@ -124,26 +124,32 @@ namespace eflib{
 		return i - n * (2.0f * dot_prod4(i, n));
 	}
 
-	vec3 refract3(const vec3& n , const vec3& i , float eta )
+	vec3 refract3(const vec3& i, const vec3& n, float eta )
 	{
-		float IdotN = dot_prod3(n, i);
-		float k = 1.0f - eta * eta * (1.0f - IdotN * IdotN);
+		float n_dot_i = dot_prod3(n, i);
+		float k = 1.0f - eta * eta * (1.0f - n_dot_i * n_dot_i);
 		if( k < 0 ){
-			return n * (2.0f * IdotN) - i;
+			return vec3(0.0f, 0.0f, 0.0f);
 		} else {
-			return n * (sqrt(k) - eta * IdotN) - i * eta;
+			return eta * i - ( eta * n_dot_i + sqrtf(k) ) * n;
 		}
 	}
 
-	vec4 refract4(const vec4& n , const vec4& i , float eta)
+	vec4 refract4(const vec4& i, const vec4& n, float eta)
 	{
-		float IdotN = dot_prod4(n, i);
-		float k = 1.0f - eta * eta * ( 1.0f - IdotN * IdotN );
-		if( k < 0 ) {
-			return n * (2.0f * IdotN) - i;
+		float n_dot_i = dot_prod4(n, i);
+		float k = 1.0f - eta * eta * (1.0f - n_dot_i * n_dot_i);
+		if( k < 0 ){
+			return vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		} else {
-			return n * ( sqrt( k ) - eta * IdotN ) -  i * eta;
+			return eta * i - ( eta * n_dot_i + sqrtf(k) ) * n;
 		}
+	}
+
+	float smoothstep(float min_v, float max_v, float v)
+	{
+		float t = clamp( (v-min_v)/(max_v-min_v), 0.0f, 1.0f);
+		return t * t * (3.0f-2.0f*t);
 	}
 
 	vec4& gen_plane(vec4& out, const vec4& v0, const vec4& v1, const vec4& v2)

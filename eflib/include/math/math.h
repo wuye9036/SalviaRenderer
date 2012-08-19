@@ -261,8 +261,10 @@ namespace eflib{
 	vec3 reflect3(const vec3& i, const vec3& n);
 	vec4 reflect4(const vec4& i, const vec4& n);
 
-	vec3 refract3(const vec3& n , const vec3& i , float eta );
-	vec4 refract4(const vec4& n , const vec4& i , float eta);
+	vec3 refract3(const vec3& i, const vec3& n, float eta);
+	vec4 refract4(const vec4& i, const vec4& n, float eta);
+
+	float smoothstep(float min_v, float max_v, float v);
 
 	//v1,v2,v3 is counter-clockwise.
 	vec4& gen_plane(vec4& out, const vec4& v1, const vec4& v2, const vec4& v3);

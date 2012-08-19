@@ -97,6 +97,7 @@ int3 test_mad_i3(int3 v0, int3 v1, int3 v2) { return mad(v0, v1, v2); }
 int3 test_min_i3(int3 v0, int3 v1)  { return min(v0, v1); }
 int3 test_max_i3(int3 v0, int3 v1)  { return max(v0, v1); }
 float2x3 test_clamp_m23(float2x3 m0, float2x3 m1, float2x3 m2) { return clamp(m0, m1, m2); }
+float2x3 test_smoothstep_m23(float2x3 m0, float2x3 m1, float2x3 m2) { return smoothstep(m0, m1, m2); }
 float2x3 test_min_m23(float2x3 m0, float2x3 m1) { return min(m0, m1); }
 float2x3 test_max_m23(float2x3 m0, float2x3 m1) { return max(m0, m1); }
 float2x3 test_step_m23(float2x3 m0, float2x3 m1) { return step(m0, m1); }
@@ -119,3 +120,4 @@ float3x4 test_pow_m34(float3x4 m0, float3x4 m1) { return pow(m0, m1); }
 float3 test_reflect_f3(float3 i, float3 n) { return reflect(i, n); }
 int3x3 test_sign_m33(float3x3 v){ return sign(v); }
 float2x3 test_mad_m23(float2x3 m0, float2x3 m1, float2x3 m2) { return mad(m0, m1, m2); }
+float3 test_refract_f3(float3 i, float3 n, float eta) { return refract(i, n, eta); }

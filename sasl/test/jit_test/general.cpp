@@ -203,7 +203,9 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float3x4 (float3x4), test_rcp_m34);
 	JIT_FUNCTION(float3x4 (float3x4, float3x4), test_pow_m34);
 	JIT_FUNCTION(vec3 (vec3, vec3), test_reflect_f3);
+	JIT_FUNCTION(vec3 (vec3, vec3, float), test_refract_f3);
 	JIT_FUNCTION(int3x3 (float3x3), test_sign_m33);
+	JIT_FUNCTION(float2x3 (float2x3, float2x3, float2x3), test_smoothstep_m23);
 
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
@@ -218,8 +220,17 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		vec3 ret2 = test_reflect_f3(lhs, rhs);
 		vec3 ret3 = test_reflect_f3(rhs, lhs);
+		vec3 ret4 = test_refract_f3(lhs, rhs, 0.22f);
+		vec3 ret5 = test_refract_f3(lhs, rhs, 0.71f);
+		vec3 ret6 = test_refract_f3(rhs, lhs, 0.22f);
+		vec3 ret7 = test_refract_f3(rhs, lhs, 0.71f);
+
 		vec3 ref2 = reflect3(lhs, rhs);
 		vec3 ref3 = reflect3(rhs, lhs);
+		vec3 ref4 = refract3(lhs, rhs, 0.22f);
+		vec3 ref5 = refract3(lhs, rhs, 0.71f);
+		vec3 ref6 = refract3(rhs, lhs, 0.22f);
+		vec3 ref7 = refract3(rhs, lhs, 0.71f);
 
 		for(int i = 0; i < 3; ++i)
 		{
@@ -227,6 +238,10 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			BOOST_CHECK_CLOSE( ret1[i], ref1[i], 0.00001f );
 			BOOST_CHECK_CLOSE( ret2[i], ref2[i], 0.00001f );
 			BOOST_CHECK_CLOSE( ret3[i], ref3[i], 0.00001f );
+			BOOST_CHECK_CLOSE( ret4[i], ref4[i], 0.02000f );
+			BOOST_CHECK_CLOSE( ret5[i], ref5[i], 0.02000f );
+			BOOST_CHECK_CLOSE( ret6[i], ref6[i], 0.02000f );
+			BOOST_CHECK_CLOSE( ret7[i], ref7[i], 0.02000f );
 		}
 	}
 	{
@@ -564,6 +579,11 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			reinterpret_cast<float2x3&>(min_m),
 			reinterpret_cast<float2x3&>(m)
 			);
+		float2x3 ret6 = test_smoothstep_m23(
+			reinterpret_cast<float2x3&>(min_m),
+			reinterpret_cast<float2x3&>(max_m),
+			reinterpret_cast<float2x3&>(m)
+			);
 
 		for(int i = 0; i < 2; ++i)
 		{
@@ -592,6 +612,11 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				BOOST_CHECK_EQUAL(
 					ret5.data_[i][j],
 					min_m[i][j]<=m[i][j]?1.0f:0.0f
+					);
+				BOOST_CHECK_CLOSE(
+					ret6.data_[i][j],
+					smoothstep(min_m[i][j], max_m[i][j], m[i][j]),
+					0.0002f
 					);
 			}
 		}
