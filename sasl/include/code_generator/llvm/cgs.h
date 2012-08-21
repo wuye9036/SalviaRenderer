@@ -372,6 +372,7 @@ protected:
 		ceil_f32,
 		floor_f32,
 		round_f32,
+		trunc_f32,
 		log_f32,
 		log2_f32,
 		log10_f32,

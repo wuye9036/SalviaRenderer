@@ -864,6 +864,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			|| intr->unmangled_name() == "ceil"
 			|| intr->unmangled_name() == "floor"
 			|| intr->unmangled_name() == "round"
+			|| intr->unmangled_name() == "trunc"
 			|| intr->unmangled_name() == "log"
 			|| intr->unmangled_name() == "log2"
 			|| intr->unmangled_name() == "log10"
@@ -1410,7 +1411,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			fn.arg_name(0, "m");
 			fn.arg_name(1, "a");
-			fn.arg_name(1, "b");
+			fn.arg_name(2, "b");
 
 			value_t m = fn.arg(0);
 			value_t a = fn.arg(1);
@@ -1418,6 +1419,65 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			value_t ret = service()->emit_add(service()->emit_mul_comp(m, a), b);
 			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if( intr->unmangled_name() == "faceforward" )
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 3);
+
+			fn.arg_name(0, "n");
+			fn.arg_name(1, "i");
+			fn.arg_name(2, "ng");
+
+			// -n * sign( dot(i,ng) )
+			value_t n  = fn.arg(0);
+			value_t i  = fn.arg(1);
+			value_t ng = fn.arg(2);
+
+			value_t zero = service()->null_value( n.hint(), n.abi() );
+			value_t i_dot_ng = service()->emit_dot(i, ng);
+			value_t ret = service()->emit_select(
+				service()->emit_cmp_lt( i_dot_ng, service()->null_value( i_dot_ng.hint(), i_dot_ng.abi() ) ),
+				n, service()->emit_sub(zero, n)
+				);
+			service()->emit_return( ret, service()->param_abi(false) );
+		}
+		else if (intr->unmangled_name() == "lit")
+		{
+			function_t& fn = service()->fn();
+			assert(fn.arg_size() == 3);
+
+			fn.arg_name(0, "n_dot_l");
+			fn.arg_name(1, "n_dot_h");
+			fn.arg_name(2, "m");
+
+			// ambient = 1.
+			// diffuse = (n_dot_l < 0) ? 0 : n_dot_l.
+			// specular = (n_dot_l < 0) || (n_dot_h < 0) ? 0 : (n_dot_h* m).
+			value_t n_dot_l = fn.arg(0);
+			value_t n_dot_h = fn.arg(1);
+			value_t m		= fn.arg(2);
+
+			value_t one = service()->one_value(n_dot_l);
+			value_t zero = service()->null_value( n_dot_l.hint(), n_dot_l.abi() );
+			value_t ambient = one;
+			value_t diffuse = service()->emit_select(
+				service()->emit_cmp_lt(n_dot_l, zero), zero, n_dot_l );
+			value_t specular = service()->emit_select(
+				service()->emit_or(
+					service()->emit_cmp_lt(n_dot_l, zero),
+					service()->emit_cmp_lt(n_dot_h, zero)
+					), zero, service()->emit_mul_comp(n_dot_h, m) );
+
+			vector<value_t> values;
+			values.push_back(one);
+			values.push_back(diffuse);
+			values.push_back(specular);
+			values.push_back(one);
+			abis promoted_abi = service()->promote_abi(one.abi(), diffuse.abi(), specular.abi() );
+			value_t lit_packed = service()->create_vector( values, promoted_abi );
+
+			service()->emit_return( lit_packed, service()->param_abi(false) );
 		}
 		else
 		{

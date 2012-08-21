@@ -86,6 +86,7 @@ float3x4 test_atan_m34(float3x4 v)	{ return atan(v); }
 float3x4 test_ceil_m34(float3x4 v)	{ return ceil(v); }
 float3x4 test_floor_m34( float3x4 v){ return floor(v); }
 float3x4 test_round_m34( float3x4 v){ return round(v); }
+float3x4 test_trunc_m34( float3x4 v){ return trunc(v); }
 float3x4 test_log_m34(float3x4 v)	{ return log(v); }
 float3x4 test_log2_m34(float3x4 v)	{ return log2(v); }
 float3x4 test_log10_m34(float3x4 v)	{ return log10(v); }
@@ -121,3 +122,5 @@ float3 test_reflect_f3(float3 i, float3 n) { return reflect(i, n); }
 int3x3 test_sign_m33(float3x3 v){ return sign(v); }
 float2x3 test_mad_m23(float2x3 m0, float2x3 m1, float2x3 m2) { return mad(m0, m1, m2); }
 float3 test_refract_f3(float3 i, float3 n, float eta) { return refract(i, n, eta); }
+float4 test_lit(float n_dot_l, float n_dot_h, float m){ return lit(n_dot_l, n_dot_h, m); }
+float3 test_faceforward_f3(float3 n, float3 i, float3 ng){ return faceforward(n, i, ng); }

@@ -43,6 +43,20 @@ uint32_t naive_reversebits(uint32_t v)
 	return ret;
 }
 
+vec4 lit(float n_dot_l, float n_dot_h, float m)
+{
+	return vec4(
+		1.0f,
+		std::max(n_dot_l, 0.0f), 
+		(n_dot_l < 0.0f) || (n_dot_h < 0.0f) ? 0.0f : (n_dot_h*m),
+		1.0f
+		);
+}
+
+vec3 faceforward(vec3 n, vec3 i, vec3 ng)
+{
+	return -n*eflib::sign(eflib::dot_prod3(i, ng));
+}
 BOOST_AUTO_TEST_SUITE( jit )
 
 BOOST_AUTO_TEST_CASE( detect_cpu_features ){
@@ -163,6 +177,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(float3x4 (float3x4), test_ceil_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_floor_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_round_m34);
+	JIT_FUNCTION(float3x4 (float3x4), test_trunc_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_log_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_log2_m34);
 	JIT_FUNCTION(float3x4 (float3x4), test_log10_m34);
@@ -206,10 +221,12 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	JIT_FUNCTION(vec3 (vec3, vec3, float), test_refract_f3);
 	JIT_FUNCTION(int3x3 (float3x3), test_sign_m33);
 	JIT_FUNCTION(float2x3 (float2x3, float2x3, float2x3), test_smoothstep_m23);
-
+	JIT_FUNCTION(vec4 (float, float, float), test_lit);
+	JIT_FUNCTION(vec3 (vec3, vec3, vec3), test_faceforward_f3);
 	{
 		vec3 lhs( 4.0f, 9.3f, -5.9f );
 		vec3 rhs( 1.0f, -22.0f, 8.28f );
+		vec3 ng(8.2f, 1.6f, 0.3f);
 
 		float f = test_dot_f3(&lhs, &rhs);
 		BOOST_CHECK_CLOSE( dot_prod3( lhs.xyz(), rhs.xyz() ), f, 0.0001 );
@@ -225,23 +242,45 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec3 ret6 = test_refract_f3(rhs, lhs, 0.22f);
 		vec3 ret7 = test_refract_f3(rhs, lhs, 0.71f);
 
+		vec3 ret8 = test_faceforward_f3(lhs, rhs, ng);
+		vec3 ret9 = test_faceforward_f3(rhs, ng, lhs);
+		vec3 ret10= test_faceforward_f3(rhs, lhs, ng);
+
+		
+		vec4 ret11= test_lit(lhs[0], lhs[1], lhs[2]);
+		vec4 ret12= test_lit(rhs[0], rhs[1], rhs[2]);
+		vec4 ret13= test_lit(ng [0], ng [1], ng [2]);
+
 		vec3 ref2 = reflect3(lhs, rhs);
 		vec3 ref3 = reflect3(rhs, lhs);
 		vec3 ref4 = refract3(lhs, rhs, 0.22f);
 		vec3 ref5 = refract3(lhs, rhs, 0.71f);
 		vec3 ref6 = refract3(rhs, lhs, 0.22f);
 		vec3 ref7 = refract3(rhs, lhs, 0.71f);
+		vec3 ref8 = faceforward(lhs, rhs, ng);
+		vec3 ref9 = faceforward(rhs, ng, lhs);
+		vec3 ref10=	faceforward(rhs, lhs, ng);
+
+		vec4 ref11= lit(lhs[0], lhs[1], lhs[2]);
+		vec4 ref12= lit(rhs[0], rhs[1], rhs[2]);
+		vec4 ref13= lit(ng [0], ng [1], ng [2]);
 
 		for(int i = 0; i < 3; ++i)
 		{
-			BOOST_CHECK_CLOSE( ret0[i], ref0[i], 0.00001f );
-			BOOST_CHECK_CLOSE( ret1[i], ref1[i], 0.00001f );
-			BOOST_CHECK_CLOSE( ret2[i], ref2[i], 0.00001f );
-			BOOST_CHECK_CLOSE( ret3[i], ref3[i], 0.00001f );
-			BOOST_CHECK_CLOSE( ret4[i], ref4[i], 0.02000f );
-			BOOST_CHECK_CLOSE( ret5[i], ref5[i], 0.02000f );
-			BOOST_CHECK_CLOSE( ret6[i], ref6[i], 0.02000f );
-			BOOST_CHECK_CLOSE( ret7[i], ref7[i], 0.02000f );
+			BOOST_CHECK_CLOSE(ret0[i], ref0[i], 0.00001f);
+			BOOST_CHECK_CLOSE(ret1[i], ref1[i], 0.00001f);
+			BOOST_CHECK_CLOSE(ret2[i], ref2[i], 0.00001f);
+			BOOST_CHECK_CLOSE(ret3[i], ref3[i], 0.00001f);
+			BOOST_CHECK_CLOSE(ret4[i], ref4[i], 0.02000f);
+			BOOST_CHECK_CLOSE(ret5[i], ref5[i], 0.02000f);
+			BOOST_CHECK_CLOSE(ret6[i], ref6[i], 0.02000f);
+			BOOST_CHECK_CLOSE(ret7[i], ref7[i], 0.02000f);
+			BOOST_CHECK_CLOSE(ret8[i], ref8[i], 0.02000f);
+			BOOST_CHECK_CLOSE(ret9[i], ref9[i], 0.02000f);
+			BOOST_CHECK_CLOSE(ret10[i],ref10[i],0.02000f);
+			BOOST_CHECK_CLOSE(ret11[i],ref11[i],0.00001f);
+			BOOST_CHECK_CLOSE(ret12[i],ref12[i],0.00001f);
+			BOOST_CHECK_CLOSE(ret13[i],ref13[i],0.00001f);
 		}
 	}
 	{
@@ -460,6 +499,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float3x4 ret_ceil	= test_ceil_m34(lhs);
 		float3x4 ret_floor	= test_floor_m34(lhs);
 		float3x4 ret_round	= test_round_m34(lhs);
+		float3x4 ret_trunc	= test_trunc_m34(lhs);
 		float3x4 ret_log	= test_log_m34(lhs);
 		float3x4 ret_log2	= test_log2_m34(lhs);
 		float3x4 ret_log10	= test_log10_m34(lhs);
@@ -486,6 +526,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_ceil.data_[i][j];	ref.f = fast_ceil(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_floor.data_[i][j];	ref.f = fast_floor(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_round.data_[i][j];	ref.f = fast_round(lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_trunc.data_[i][j];	ref.f = trunc(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_log.data_[i][j];	ref.f = fast_log(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_log2.data_[i][j];	ref.f = fast_log2(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_log10.data_[i][j];	ref.f = log10f(lhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );

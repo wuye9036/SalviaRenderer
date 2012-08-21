@@ -28,19 +28,19 @@ struct sampler_desc {
     float min_lod;
     float max_lod;
 
-	sampler_desc()
-		: min_filter(filter_point),
-			mag_filter(filter_point),
-			mip_filter(filter_point),
-			addr_mode_u(address_wrap),
-			addr_mode_v(address_wrap),
-			addr_mode_w(address_wrap),
-			mip_lod_bias(0),
-			max_anisotropy(0),
-			comparison_func(compare_function_always),
-			border_color(color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f)),
-			min_lod(-1e20f),
-			max_lod(1e20f)
+	sampler_desc():
+		min_filter(filter_point),
+		mag_filter(filter_point),
+		mip_filter(filter_point),
+		addr_mode_u(address_wrap),
+		addr_mode_v(address_wrap),
+		addr_mode_w(address_wrap),
+		mip_lod_bias(0),
+		max_anisotropy(0),
+		comparison_func(compare_function_always),
+		border_color(color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f)),
+		min_lod(-1e20f),
+		max_lod(1e20f)
 	{
 	}
 };

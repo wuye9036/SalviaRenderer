@@ -62,6 +62,13 @@ namespace eflib{
 		return (T)(d+0.5);
 	}
 
+	template <class T>
+	T trunc(T d)
+	{
+		BOOST_STATIC_ASSERT(boost::is_floating_point<T>::value);
+		return d > static_cast<T>(0) ? fast_floor(d) : fast_ceil(d);
+	}
+
 	template <class T, class U>
 	void round(T& t, U d)
 	{

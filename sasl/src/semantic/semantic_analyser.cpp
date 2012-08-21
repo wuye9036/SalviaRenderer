@@ -1570,6 +1570,9 @@ void semantic_analyser::register_builtin_functions(){
 		}
 	}
 
+	// lit
+	register_intrinsic( "lit" ) % BUILTIN_TYPE(_float) % BUILTIN_TYPE(_float) % BUILTIN_TYPE(_float) >> fvec_ts[4];
+
 	// all, any, ddx, ddy, clamp, min, max, mad
 	{
 		for( bt_table_t::iterator it_type = storage_bttbl.begin(); it_type != storage_bttbl.end(); ++it_type )
@@ -1617,7 +1620,7 @@ void semantic_analyser::register_builtin_functions(){
 	// degrees, radians, exp, ldexp, exp2, pow, log, log2, log10
 	// sin, cos, tan, asin, acos, atan,
 	// sinh, cosh, tanh,
-	// ceil, floor,
+	// ceil, floor, trunc,
 	// sqrt, rsqrt, 
 	// saturate, fmod, frac, round,
 	// lerp
@@ -1657,6 +1660,7 @@ void semantic_analyser::register_builtin_functions(){
 					register_intrinsic( "frac"		) % ty			>> ty;
 					register_intrinsic( "saturate"	) % ty			>> ty;
 					register_intrinsic( "round"		) % ty			>> ty;
+					register_intrinsic( "trunc"		) % ty			>> ty;
 					register_intrinsic( "rcp"		) % ty			>> ty;
 					register_intrinsic( "pow"		) % ty % ty		>> ty;
 					register_intrinsic( "smoothstep") % ty % ty % ty>> ty;
@@ -1687,16 +1691,17 @@ void semantic_analyser::register_builtin_functions(){
 		}
 	}
 
-	// distance, dst, length, dot, normalize, reflect, refract
+	// distance, dst, length, dot, normalize, reflect, refract, faceforward
 	{
 		for( size_t i = 1; i <= 4; ++i )
 		{
-			register_intrinsic("normalize") % fvec_ts[i] >> fvec_ts[i];
-			register_intrinsic("length")	% fvec_ts[i] >> BUILTIN_TYPE(_float);
-			register_intrinsic("distance")	% fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
-			register_intrinsic("dot")		% fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
-			register_intrinsic("reflect")	% fvec_ts[i] % fvec_ts[i] >> fvec_ts[i];
-			register_intrinsic("refract")	% fvec_ts[i] % fvec_ts[i] % BUILTIN_TYPE(_float) >> fvec_ts[i];
+			register_intrinsic("normalize")		% fvec_ts[i] >> fvec_ts[i];
+			register_intrinsic("length")		% fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic("distance")		% fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic("dot")			% fvec_ts[i] % fvec_ts[i] >> BUILTIN_TYPE(_float);
+			register_intrinsic("reflect")		% fvec_ts[i] % fvec_ts[i] >> fvec_ts[i];
+			register_intrinsic("refract")		% fvec_ts[i] % fvec_ts[i] % BUILTIN_TYPE(_float) >> fvec_ts[i];
+			register_intrinsic("faceforward")	% fvec_ts[i] % fvec_ts[i] % fvec_ts[i] >> fvec_ts[i];
 		}
 		register_intrinsic("dst") % fvec_ts[4] % fvec_ts[4] >> fvec_ts[4];
 	}
