@@ -324,6 +324,11 @@ result renderer_impl::clear_stencil(const eflib::rect<size_t>& rc, uint32_t s)
 	return result::ok;
 }
 
+result renderer_impl::flush()
+{
+	return result::ok;
+}
+
 result renderer_impl::present()
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();

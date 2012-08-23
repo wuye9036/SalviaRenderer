@@ -141,6 +141,7 @@ public:
 	virtual result clear_depth(eflib::rect<size_t> const& rc, float d);
 	virtual result clear_stencil(eflib::rect<size_t> const& rc, uint32_t s);
 
+	virtual result flush();
 	virtual result present();
 
 	//this class for inner system

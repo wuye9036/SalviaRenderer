@@ -297,13 +297,23 @@ public:
 		return result::ok;
 	}
 
+	virtual result flush()
+	{
+		// Waiting until command buffer is empty.
+		boost::mutex::scoped_lock locker(waiting_mutex_);
+		boost::function<result()> cmd = boost::bind(&async_renderer::flush_impl, this);
+		cmds_.push_front(cmd);
+		waiting_condition_.wait(locker);
+		return result::ok;
+	}
+
 	virtual result present()
 	{
 		// Waiting until this frame is presented.
-		boost::mutex::scoped_lock locker(presented_mutex_);
-		boost::function<result()> cmd = boost::bind(&renderer::present, impl_);
+		boost::mutex::scoped_lock locker(waiting_mutex_);
+		boost::function<result()> cmd = boost::bind(&async_renderer::present_impl, this);
 		cmds_.push_front(cmd);
-		presented_.wait(locker);
+		waiting_condition_.wait(locker);
 		return result::ok;
 	}
 	
@@ -368,12 +378,12 @@ public:
 
 	virtual h_framebuffer get_framebuffer() const
 	{
-		boost::mutex::scoped_lock locker(acquire_frame_buffer_mutex_);
+		boost::mutex::scoped_lock locker(waiting_mutex_);
 		
 		boost::function<result()> cmd = boost::bind(&async_renderer::get_framebuffer_impl, this);
 		cmds_.push_front(cmd);
 
-		acquire_frame_buffer_.wait(locker);
+		waiting_condition_.wait(locker);
 
 		return current_frame_buffer_;
 	}
@@ -471,18 +481,26 @@ private:
 
 	virtual result present_impl()
 	{
-		boost::mutex::scoped_lock locker(presented_mutex_);
+		boost::mutex::scoped_lock locker(waiting_mutex_);
 		result ret = impl_->present();
-		presented_.notify_one();
+		waiting_condition_.notify_one();
 		return ret;
 	}
 
 	virtual result get_framebuffer_impl() const
 	{
-		boost::mutex::scoped_lock locker(acquire_frame_buffer_mutex_);
+		boost::mutex::scoped_lock locker(waiting_mutex_);
 		current_frame_buffer_ = impl_->get_framebuffer();
-		acquire_frame_buffer_.notify_one();
+		waiting_condition_.notify_one();
 		return result::ok;
+	}
+
+	virtual result flush_impl()
+	{
+		boost::mutex::scoped_lock locker(waiting_mutex_);
+		result ret = impl_->flush();
+		waiting_condition_.notify_one();
+		return ret;
 	}
 
 	result release()
@@ -519,11 +537,8 @@ private:
 	renderer_ptr	shared_impl_;
 	renderer*		impl_;
 
-	boost::condition	presented_;
-	boost::mutex		presented_mutex_;
-
-	mutable boost::condition	acquire_frame_buffer_;
-	mutable boost::mutex		acquire_frame_buffer_mutex_;
+	mutable boost::condition	waiting_condition_;
+	mutable boost::mutex		waiting_mutex_;
 
 	// Cached states
 	mutable h_framebuffer			current_frame_buffer_;
