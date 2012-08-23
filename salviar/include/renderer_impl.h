@@ -4,7 +4,11 @@
 #include <salviar/include/renderer.h>
 #include <salviar/include/salviar_forward.h>
 
+#include <eflib/include/utility/shared_declaration.h>
+
 BEGIN_NS_SALVIAR();
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(renderer_impl);
 
 class vertex_shader_unit;
 class pixel_shader_unit;
@@ -103,7 +107,7 @@ public:
 	virtual boost::shared_ptr<pixel_shader_unit> ps_proto() const;
 
 	virtual result set_blend_shader(h_blend_shader const& hbs);
-	virtual h_blend_shader get_blend_shader();
+	virtual h_blend_shader get_blend_shader() const;
 
 	virtual result set_viewport(viewport const& vp);
 	virtual viewport get_viewport() const;
@@ -142,9 +146,6 @@ public:
 	//this class for inner system
 	renderer_impl(const renderer_parameters* pparam, h_device hdev);
 
-	h_buffer_manager get_buf_mgr();
-	h_texture_manager get_tex_mgr();
-
 	h_rasterizer get_rasterizer();
 	
 	h_device get_device();
@@ -152,6 +153,8 @@ public:
 	h_clipper get_clipper();
 };
 
-END_NS_SALVIAR()
+renderer_ptr create_renderer_impl(renderer_parameters const* pparam, h_device const& hdev);
+
+END_NS_SALVIAR();
 
 #endif

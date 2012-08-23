@@ -183,7 +183,7 @@ result renderer_impl::set_blend_shader(h_blend_shader const& hbs)
 	return result::ok;
 }
 
-h_blend_shader renderer_impl::get_blend_shader()
+h_blend_shader renderer_impl::get_blend_shader() const
 {
 	return hbs_;
 }
@@ -368,16 +368,6 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 	initialize();
 }
 
-h_buffer_manager renderer_impl::get_buf_mgr()
-{
-	return hbufmgr_;
-}
-
-h_texture_manager renderer_impl::get_tex_mgr()
-{
-	return htexmgr_;
-}
-
 h_rasterizer renderer_impl::get_rasterizer()
 {
 	return hrast_;
@@ -403,7 +393,7 @@ h_clipper renderer_impl::get_clipper()
 	return hclipper_;
 }
 
-result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz )
+result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
 {
 	if( vs_proto_ ){
 		vs_proto_->set_variable(name, pvariable);
@@ -484,9 +474,9 @@ result renderer_impl::set_vs_sampler( std::string const& name, h_sampler const& 
 	return result::failed;
 }
 
-h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev)
+renderer_ptr create_renderer_impl(renderer_parameters const* pparam, h_device const& hdev)
 {
-	return h_renderer(new renderer_impl(pparam, hdev));
+	return renderer_ptr(new renderer_impl(pparam, hdev));
 }
 
 END_NS_SALVIAR();

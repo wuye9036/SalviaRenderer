@@ -7,6 +7,7 @@
 #include <salviar/include/format.h>
 
 #include <eflib/include/math/collision_detection.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/any.hpp>
@@ -17,6 +18,8 @@
 #include <salviar/include/salviar_forward.h>
 
 BEGIN_NS_SALVIAR();
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
 class shader_code;
 
@@ -100,7 +103,7 @@ public:
 	virtual result set_ps_sampler( std::string const& name, h_sampler const& samp ) = 0;
 
 	virtual result set_blend_shader(h_blend_shader const& hbs) = 0;
-	virtual h_blend_shader get_blend_shader() = 0;
+	virtual h_blend_shader get_blend_shader() const = 0;
 
 	virtual result		set_viewport(viewport const& vp) = 0;
 	virtual viewport	get_viewport() const = 0;
@@ -141,7 +144,7 @@ public:
 	virtual result present() = 0;
 };
 
-h_renderer create_software_renderer(const renderer_parameters* pparam, h_device hdev);
+h_renderer create_software_renderer(renderer_parameters const* pparam, h_device const& hdev);
 
 END_NS_SALVIAR();
 

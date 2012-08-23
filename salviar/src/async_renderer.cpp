@@ -1,7 +1,9 @@
 #include <salviar/include/async_renderer.h>
 
 #include <salviar/include/renderer.h>
+#include <salviar/include/renderer_impl.h>
 #include <eflib/include/memory/bounded_buffer.h>
+#include <eflib/include/diagnostics/assert.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/utility/addressof.hpp>
@@ -18,6 +20,10 @@ class async_renderer: public renderer
 {
 public:
 	async_renderer(): cmds_(32) {}
+	~async_renderer()
+	{
+		release();
+	}
 
 	//inherited
 	virtual result set_input_layout(h_input_layout const& layout)
@@ -54,9 +60,6 @@ public:
 		return result::ok;
 	}
 
-	virtual h_buffer get_index_buffer() const;
-	virtual format get_index_format() const;
-
 	virtual result set_primitive_topology(primitive_topology primtopo)
 	{
 		boost::function<result()> cmd = boost::bind(
@@ -66,10 +69,10 @@ public:
 		return result::ok;
 	}
 
-	virtual primitive_topology get_primitive_topology() const;
-
 	virtual result set_vertex_shader(h_vertex_shader const& hvs)
 	{
+		vertex_shader_ = hvs;
+
 		boost::function<result()> cmd = boost::bind(
 			&renderer::set_vertex_shader, impl_, hvs );
 		cmds_.push_front(cmd);
@@ -77,18 +80,15 @@ public:
 		return result::ok;
 	}
 
-	virtual h_vertex_shader get_vertex_shader() const;
-	
 	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& vsc )
 	{
+		vertex_shader_code_ = vsc;
 		boost::function<result()> cmd = boost::bind(
 			&renderer::set_vertex_shader_code, impl_, vsc );
 		cmds_.push_front(cmd);
 
 		return result::ok;
 	}
-
-	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const;
 
 	virtual result set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz )
 	{
@@ -129,8 +129,6 @@ public:
 		return result::ok;
 	}
 
-	virtual h_rasterizer_state get_rasterizer_state() const;
-
 	virtual result set_depth_stencil_state(h_depth_stencil_state const& dss, int32_t stencil_ref)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_depth_stencil_state, impl_, dss, stencil_ref);
@@ -138,28 +136,26 @@ public:
 
 		return result::ok;
 	}
-	virtual const h_depth_stencil_state& get_depth_stencil_state() const;
-	virtual int32_t get_stencil_ref() const;
 
 	virtual result set_pixel_shader(h_pixel_shader const& hps)
 	{
+		pixel_shader_ = hps;
+
 		boost::function<result()> cmd = boost::bind(&renderer::set_pixel_shader, impl_, hps);
 		cmds_.push_front(cmd);
 
 		return result::ok;
 	}
 
-	virtual h_pixel_shader get_pixel_shader() const;
-
 	virtual result set_pixel_shader_code( boost::shared_ptr<shader_code> const& psc )
 	{
+		pixel_shader_code_ = psc;
+
 		boost::function<result()> cmd = boost::bind(&renderer::set_pixel_shader_code, impl_, psc);
 		cmds_.push_front(cmd);
 
 		return result::ok;
 	}
-
-	virtual boost::shared_ptr<shader_code> get_pixel_shader_code() const;
 
 	virtual result set_ps_variable( std::string const& name, void const* data, size_t sz )
 	{
@@ -187,8 +183,6 @@ public:
 		return result::ok;
 	}
 
-	virtual h_blend_shader get_blend_shader();
-
 	virtual result set_viewport(const viewport& vp)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_viewport, impl_, vp);
@@ -196,8 +190,6 @@ public:
 
 		return result::ok;
 	}
-
-	virtual viewport get_viewport() const;
 
 	virtual result set_framebuffer_size(size_t width, size_t height, size_t num_samples)
 	{
@@ -207,8 +199,6 @@ public:
 		return result::ok;
 	}
 
-	virtual eflib::rect<size_t> get_framebuffer_size() const;
-
 	virtual result set_framebuffer_format(pixel_format pxfmt)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_framebuffer_format, impl_, pxfmt);
@@ -216,8 +206,6 @@ public:
 
 		return result::ok;
 	};
-
-	virtual pixel_format get_framebuffer_format(pixel_format pxfmt) const;
 
 	virtual result set_render_target_available(render_target tar, size_t target_index, bool valid)
 	{
@@ -228,10 +216,6 @@ public:
 		return result::ok;
 	}
 
-	virtual bool get_render_target_available(render_target tar, size_t target_index) const;
-
-	virtual h_framebuffer get_framebuffer() const;
-
 	virtual result set_render_target(render_target tar, size_t target_index, h_surface const& surf)
 	{
 		boost::function<result()> cmd =
@@ -240,25 +224,6 @@ public:
 
 		return result::ok;
 	}
-
-	virtual h_input_layout create_input_layout(
-		input_element_desc const* elem_descs, size_t elems_count,
-		h_shader_code const& vs )
-	{
-		return impl_->create_input_layout(elem_descs, elems_count, vs);
-	}
-	
-	virtual h_input_layout create_input_layout(
-		input_element_desc const* elem_descs, size_t elems_count,
-		h_vertex_shader const& vs )
-	{
-		return impl_->create_input_layout(elem_descs, elems_count, vs);
-	}
-
-	virtual h_buffer	create_buffer(size_t size);
-	virtual h_texture	create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt);
-	virtual h_texture	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt);
-	virtual h_sampler	create_sampler(const sampler_desc& desc);
 
 	virtual result draw(size_t startpos, size_t primcnt)
 	{
@@ -334,19 +299,142 @@ public:
 
 	virtual result present()
 	{
+		// Waiting until this frame is presented.
+		boost::mutex::scoped_lock locker(presented_mutex_);
 		boost::function<result()> cmd = boost::bind(&renderer::present, impl_);
 		cmds_.push_front(cmd);
-
+		presented_.wait(locker);
 		return result::ok;
 	}
 	
-	void run()
+	// Resources
+	virtual h_input_layout create_input_layout(
+		input_element_desc const* elem_descs, size_t elems_count,
+		h_shader_code const& vs )
 	{
-		shared_impl_ = create_software_renderer( NULL, h_device() );
+		return impl_->create_input_layout(elem_descs, elems_count, vs);
+	}
+	
+	virtual h_input_layout create_input_layout(
+		input_element_desc const* elem_descs, size_t elems_count,
+		h_vertex_shader const& vs )
+	{
+		return impl_->create_input_layout(elem_descs, elems_count, vs);
+	}
+
+	virtual h_buffer	create_buffer(size_t size)
+	{
+		return impl_->create_buffer(size);
+	}
+
+	virtual h_texture	create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+	{
+		return impl_->create_tex2d(width, height, num_samples, fmt);
+	}
+
+	virtual h_texture	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+	{
+		return impl_->create_texcube(width, height, num_samples, fmt);
+	}
+
+	virtual h_sampler	create_sampler(const sampler_desc& desc)
+	{
+		return impl_->create_sampler(desc);
+	}
+
+	virtual h_buffer get_index_buffer() const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return h_buffer();
+	}
+
+	virtual format get_index_format() const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return format_unknown;
+	}
+
+	virtual primitive_topology get_primitive_topology() const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return primitive_topology(0);
+	}
+
+	virtual bool get_render_target_available(render_target tar, size_t target_index) const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return false;
+	}
+
+	virtual h_framebuffer get_framebuffer() const
+	{
+		boost::mutex::scoped_lock locker(acquire_frame_buffer_mutex_);
+		
+		boost::function<result()> cmd = boost::bind(&async_renderer::get_framebuffer_impl, this);
+		cmds_.push_front(cmd);
+
+		acquire_frame_buffer_.wait(locker);
+
+		return current_frame_buffer_;
+	}
+
+	virtual pixel_format get_framebuffer_format(pixel_format pxfmt) const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return 0;
+	}
+
+	virtual eflib::rect<size_t> get_framebuffer_size() const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return eflib::rect<size_t>();
+	}
+	
+	virtual boost::shared_ptr<shader_code> get_pixel_shader_code() const
+	{
+		return pixel_shader_code_;
+	}
+
+	virtual h_vertex_shader get_vertex_shader() const
+	{
+		return vertex_shader_;
+	}
+
+	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const
+	{
+		return vertex_shader_code_;
+	}
+
+	virtual h_rasterizer_state get_rasterizer_state() const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return h_rasterizer_state();
+	}
+
+	virtual h_pixel_shader get_pixel_shader() const
+	{
+		return pixel_shader_;
+	}
+
+	virtual h_blend_shader get_blend_shader() const
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return h_blend_shader();
+	}
+
+	virtual viewport get_viewport() const
+	{
+		return viewport();
+	}
+
+	void run(renderer_parameters const* pparam, h_device const& hdev)
+	{
+		shared_impl_ = create_renderer_impl(pparam, hdev);
 		impl_ = shared_impl_.get();
 
 		rendering_thread_ = boost::thread( &async_renderer::working, this );
 	}
+
 private:
 	virtual result set_vertex_buffer_impl(
 		size_t starts_slot,
@@ -381,6 +469,22 @@ private:
 		return result::ok;
 	}
 
+	virtual result present_impl()
+	{
+		boost::mutex::scoped_lock locker(presented_mutex_);
+		result ret = impl_->present();
+		presented_.notify_one();
+		return ret;
+	}
+
+	virtual result get_framebuffer_impl() const
+	{
+		boost::mutex::scoped_lock locker(acquire_frame_buffer_mutex_);
+		current_frame_buffer_ = impl_->get_framebuffer();
+		acquire_frame_buffer_.notify_one();
+		return result::ok;
+	}
+
 	result release()
 	{
 		if ( rendering_thread_.joinable() )
@@ -409,17 +513,30 @@ private:
 		}
 	}
 
-	eflib::bounded_buffer< boost::function<result()> > cmds_;
+	mutable eflib::bounded_buffer< boost::function<result()> > cmds_;
 	
 	boost::thread	rendering_thread_;
 	renderer_ptr	shared_impl_;
 	renderer*		impl_;
+
+	boost::condition	presented_;
+	boost::mutex		presented_mutex_;
+
+	mutable boost::condition	acquire_frame_buffer_;
+	mutable boost::mutex		acquire_frame_buffer_mutex_;
+
+	// Cached states
+	mutable h_framebuffer			current_frame_buffer_;
+	boost::shared_ptr<shader_code>	vertex_shader_code_;
+	boost::shared_ptr<shader_code>	pixel_shader_code_;
+	h_vertex_shader					vertex_shader_;
+	h_pixel_shader					pixel_shader_;
 };
 
-renderer_ptr create_async_renderer()
+renderer_ptr create_async_renderer(renderer_parameters const* pparam, h_device const& hdev)
 {
 	boost::shared_ptr<async_renderer> ret( new async_renderer() );
-	ret->run();
+	ret->run(pparam, hdev);
 	return ret;
 }
 

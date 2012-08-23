@@ -4,6 +4,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/renderer.h>
+
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
@@ -17,7 +18,7 @@ BEGIN_NS_SALVIAR();
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
-renderer_ptr create_async_renderer();
+renderer_ptr create_async_renderer(renderer_parameters const* pparam, h_device const& hdev);
 
 END_NS_SALVIAR();
 

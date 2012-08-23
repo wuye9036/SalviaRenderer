@@ -95,6 +95,7 @@ set(PIPELINE_SOURCES
 	src/default_vertex_cache.cpp
 	src/framebuffer.cpp
 	src/rasterizer.cpp
+	src/renderer.cpp
 	src/renderer_impl.cpp
 	src/resource_manager.cpp
 	src/stream_assembler.cpp
