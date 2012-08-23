@@ -83,20 +83,20 @@ void vertex_shader_unit::execute( vs_output& out )
 	}
 }
 
-void vertex_shader_unit::set_variable( std::string const& name, void* data )
+void vertex_shader_unit::set_variable( std::string const& name, void const* pvariable )
 {
 	sv_layout* vsi = code->abii()->input_sv_layout( name );
 	EFLIB_ASSERT_AND_IF(vsi, "Cannot found variable.")
 	{
 		return;
 	}
-	memcpy( &buffer_data[vsi->offset], data, vsi->element_size );
+	memcpy( &buffer_data[vsi->offset], pvariable, vsi->element_size );
 }
 
-void vertex_shader_unit::set_variable( std::string const& name, void* data, size_t sz )
+void vertex_shader_unit::set_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
 {
 	shared_array<char> data_array(new char[sz]);
-	memcpy(data_array.get(), data, sz);
+	memcpy(data_array.get(), pvariable, sz);
 	dynamic_datas[name] = data_array;
 
 	void* array_ptr[2] = {data_array.get(), data_array.get()};
@@ -194,7 +194,7 @@ pixel_shader_unit& pixel_shader_unit::operator=( pixel_shader_unit const& rhs )
 	return *this;
 }
 
-void pixel_shader_unit::set_variable( std::string const& name, void* data )
+void pixel_shader_unit::set_variable( std::string const& name, void const* data )
 {
 	sv_layout* vsi = code->abii()->input_sv_layout( name );
 	memcpy( &buffer_data[vsi->offset], data, vsi->element_size );

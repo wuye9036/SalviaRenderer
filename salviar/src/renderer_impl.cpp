@@ -28,7 +28,7 @@ result renderer_impl::set_input_layout(const h_input_layout& layout)
 result renderer_impl::set_vertex_buffers(
 		size_t starts_slot,
 		size_t buffers_count, h_buffer const* buffers,
-		size_t* strides, size_t* offsets
+		size_t const* strides, size_t const* offsets
 		)
 {
 	hvertcache_->set_vertex_buffers(
@@ -39,7 +39,7 @@ result renderer_impl::set_vertex_buffers(
 	return result::ok;
 }
 
-result renderer_impl::set_index_buffer(h_buffer hbuf, format index_fmt)
+result renderer_impl::set_index_buffer(h_buffer const& hbuf, format index_fmt)
 {
 	switch (index_fmt)
 	{
@@ -88,7 +88,7 @@ primitive_topology renderer_impl::get_primitive_topology() const{
 	return primtopo_;
 }
 
-result renderer_impl::set_vertex_shader(h_vertex_shader hvs)
+result renderer_impl::set_vertex_shader(h_vertex_shader const& hvs)
 {
 	hvs_ = hvs;
 
@@ -144,7 +144,7 @@ result renderer_impl::set_rasterizer_state(const h_rasterizer_state& rs)
 	return result::ok;
 }
 
-const h_rasterizer_state& renderer_impl::get_rasterizer_state() const
+h_rasterizer_state renderer_impl::get_rasterizer_state() const
 {
 	return hrs_;
 }
@@ -166,7 +166,7 @@ int32_t renderer_impl::get_stencil_ref() const
 	return stencil_ref_;
 }
 
-result renderer_impl::set_pixel_shader(h_pixel_shader hps)
+result renderer_impl::set_pixel_shader(h_pixel_shader const& hps)
 {
 	hps_ = hps;
 	return result::ok;
@@ -177,7 +177,7 @@ h_pixel_shader renderer_impl::get_pixel_shader() const
 	return hps_;
 }
 
-result renderer_impl::set_blend_shader(h_blend_shader hbs)
+result renderer_impl::set_blend_shader(h_blend_shader const& hbs)
 {
 	hbs_ = hbs;
 	return result::ok;
@@ -194,7 +194,7 @@ result renderer_impl::set_viewport(const viewport& vp)
 	return result::ok;
 }
 
-const viewport& renderer_impl::get_viewport() const
+viewport renderer_impl::get_viewport() const
 {
 	return vp_;
 }
@@ -222,61 +222,33 @@ pixel_format renderer_impl::get_framebuffer_format(pixel_format /*pxfmt*/) const
 	return hfb_->get_buffer_format();
 }
 
-result renderer_impl::set_render_target_available(render_target tar, size_t tar_id, bool valid)
+result renderer_impl::set_render_target_available(render_target tar, size_t target_index, bool valid)
 {
 	if(valid){
-		hfb_->set_render_target_enabled(tar, tar_id);
+		hfb_->set_render_target_enabled(tar, target_index);
 	} else {
-		hfb_->set_render_target_disabled(tar, tar_id);
+		hfb_->set_render_target_disabled(tar, target_index);
 	}
 
 	return result::ok;
 }
 
-bool renderer_impl::get_render_target_available(render_target /*tar*/, size_t /*tar_id*/) const
+bool renderer_impl::get_render_target_available(render_target /*tar*/, size_t /*target_index*/) const
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return false;
 }
 
 //do not support get function for a while
-result renderer_impl::set_render_target(render_target tar, size_t tar_id, surface* psurf)
+result renderer_impl::set_render_target(render_target tar, size_t target_index, h_surface const& surf)
 {
-	hfb_->set_render_target(tar, tar_id, psurf);
+	hfb_->set_render_target( tar, target_index, surf.get() );
 	return result::ok;
 }
 
-h_renderer_mementor renderer_impl::create_mementor()
-{
-	return h_renderer_mementor();
-}
-
-result renderer_impl::release_mementor(h_renderer_mementor& /*mementor*/)
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return result::ok;
-}
-
-result renderer_impl::set_additional_state(const boost::any& /*state*/)
-{
-	return result::ok;
-}
-
-boost::any renderer_impl::get_additional_state(const boost::any& /*name*/)
-{
-	return boost::any();
-}
-
-//
 h_buffer renderer_impl::create_buffer(size_t size)
 {
 	return hbufmgr_->create_buffer(size);
-}
-
-result renderer_impl::release_buffer(h_buffer& hbuf)
-{
-	hbufmgr_->release_buffer(hbuf);
-	return result::ok;
 }
 
 h_texture renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
@@ -289,21 +261,9 @@ h_texture renderer_impl::create_texcube(size_t width, size_t height, size_t num_
 	return htexmgr_->create_texture_cube(width, height, num_samples, fmt);
 }
 
-result renderer_impl::release_texture(h_texture& htex)
-{
-	htexmgr_->release_texture(htex);
-	return result::ok;
-}
-
 h_sampler renderer_impl::create_sampler(const sampler_desc& desc)
 {
 	return h_sampler(new sampler(desc));
-}
-
-result renderer_impl::release_sampler(h_sampler& hsmp)
-{
-	hsmp.reset();
-	return result::ok;
 }
 
 result renderer_impl::draw(size_t startpos, size_t primcnt)
@@ -328,9 +288,9 @@ result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 	return result::ok;
 }
 
-result renderer_impl::clear_color(size_t tar_id, const color_rgba32f& c)
+result renderer_impl::clear_color(size_t target_index, const color_rgba32f& c)
 {
-	hfb_->clear_color(tar_id, c);
+	hfb_->clear_color(target_index, c);
 	return result::ok;
 }
 
@@ -346,9 +306,9 @@ result renderer_impl::clear_stencil(uint32_t s)
 	return result::ok;
 }
 
-result renderer_impl::clear_color(size_t tar_id, const eflib::rect<size_t>& rc, const color_rgba32f& c)
+result renderer_impl::clear_color(size_t target_index, const eflib::rect<size_t>& rc, const color_rgba32f& c)
 {
-	hfb_->clear_color(tar_id, rc, c);
+	hfb_->clear_color(target_index, rc, c);
 	return result::ok;
 }
 
@@ -443,19 +403,19 @@ h_clipper renderer_impl::get_clipper()
 	return hclipper_;
 }
 
-result renderer_impl::set_vs_variable( std::string const& name, void* data )
+result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz )
 {
 	if( vs_proto_ ){
-		vs_proto_->set_variable(name, data);
+		vs_proto_->set_variable(name, pvariable);
 		return result::ok;
 	}
 	return result::failed;
 }
 
-result renderer_impl::set_vs_variable( std::string const& name, void* data, size_t sz )
+result renderer_impl::set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
 {
 	if( vs_proto_ ){
-		vs_proto_->set_variable(name, data, sz);
+		vs_proto_->set_variable_pointer(name, pvariable, sz);
 		return result::ok;
 	}
 	return result::failed;
@@ -497,7 +457,7 @@ shared_ptr<pixel_shader_unit> renderer_impl::ps_proto() const
 	return ps_proto_;
 }
 
-result renderer_impl::set_ps_variable( std::string const& name, void* data )
+result renderer_impl::set_ps_variable( std::string const& name, void const* data, size_t /*sz*/ )
 {
 	if( ps_proto_ ){
 		ps_proto_->set_variable(name, data);

@@ -269,7 +269,7 @@ h_mesh create_cone(
 	local_x_axis.normalize();
 	local_x_axis *= radius;
 
-	float segment_angle = eflib::TWO_PI / circle_segments;
+	float segment_angle = static_cast<float>(eflib::TWO_PI/circle_segments);
 	quaternion seg_rotation = quaternion::from_axis_angle(up_dir, segment_angle);
 
 	// Compute all vertexes

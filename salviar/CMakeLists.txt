@@ -31,6 +31,7 @@ SET( PIPELINE_HEADERS
 	include/renderer_impl.h
 	include/vertex_cache.h
 	include/framebuffer.h
+	include/async_renderer.h
 )
 
 set( SHADER_HEADERS
@@ -99,6 +100,7 @@ set(PIPELINE_SOURCES
 	src/stream_assembler.cpp
 	src/index_fetcher.cpp
 	src/input_layout.cpp
+	src/async_renderer.cpp
 )
 
 set(SHADER_SOURCES

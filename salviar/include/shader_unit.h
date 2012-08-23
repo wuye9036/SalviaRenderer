@@ -40,8 +40,8 @@ public:
 	void initialize( shader_code const* );
 
 	void bind_streams( stream_assembler const* sa );
-	void set_variable( std::string const&, void* data );
-	void set_variable( std::string const&, void* data, size_t sz);
+	void set_variable( std::string const&, void const* pvariable );
+	void set_variable_pointer( std::string const&, void const* pvariable, size_t sz);
 	void set_sampler( std::string const&, h_sampler const& samp );
 
 	uint32_t output_attributes_count() const;
@@ -82,7 +82,7 @@ public:
 
 	void initialize( shader_code const* );
 
-	void set_variable( std::string const&, void* data );
+	void set_variable( std::string const&, void const* data );
 	void set_sampler( std::string const&, h_sampler const& samp );
 
 	void update( vs_output* inputs, shader_abi const* vs_abi );

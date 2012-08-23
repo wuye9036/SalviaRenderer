@@ -372,8 +372,8 @@ protected:
 			hsr->set_vs_variable( "lightPos", &lightPos );
 
 			hsr->set_vs_variable( "boneCount", &boneSize );
-			hsr->set_vs_variable( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
-			hsr->set_vs_variable( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
+			hsr->set_vs_variable_pointer( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
+			hsr->set_vs_variable_pointer( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
 #else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
 			pvs->set_constant( _T("eyePos"), &camera_pos );

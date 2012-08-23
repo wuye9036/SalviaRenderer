@@ -207,7 +207,7 @@ result default_vertex_cache::set_input_layout(const h_input_layout& layout)
 result default_vertex_cache::set_vertex_buffers(
 		size_t starts_slot,
 		size_t buffers_count, h_buffer const* buffers,
-		size_t* strides, size_t* offsets
+		size_t const* strides, size_t const* offsets
 		)
 {
 	hsa_->set_vertex_buffers(

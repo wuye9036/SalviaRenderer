@@ -20,6 +20,7 @@ set (HEADER_FILES
 	include/memory/atomic.h
 	include/memory/lifetime_manager.h
 	include/memory/pool.h
+	include/memory/bounded_buffer.h
 	include/utility/enable_if.h
 	include/utility/unref_declarator.h
 	include/utility/operator_bool.h

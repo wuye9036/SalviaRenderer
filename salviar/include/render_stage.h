@@ -44,9 +44,6 @@ public:
 	DECL_RS_UPDATED(render_target);
 	DECL_RS_UPDATED(rt_avaliable);
 
-	virtual result set_additional_state(const boost::any& /*state*/){return result::ok; }
-	virtual boost::any get_additional_state(){return boost::any();}
-
 	virtual ~render_stage(){}
 };
 

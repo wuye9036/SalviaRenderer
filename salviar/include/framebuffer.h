@@ -103,11 +103,11 @@ public:
 	void reset(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 
 	//渲染目标设置
-	void set_render_target_disabled(render_target tar, size_t tar_id);
-	void set_render_target_enabled(render_target tar, size_t tar_id);
+	void set_render_target_disabled(render_target tar, size_t target_index);
+	void set_render_target_enabled(render_target tar, size_t target_index);
 
-	void set_render_target(render_target tar, size_t tar_id, surface* psurf);
-	surface* get_render_target(render_target tar, size_t tar_id) const;
+	void set_render_target(render_target tar, size_t target_index, surface* psurf);
+	surface* get_render_target(render_target tar, size_t target_index) const;
 
 	//获得渲染状态	
 	eflib::rect<size_t> get_rect();
@@ -120,10 +120,10 @@ public:
 	void render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
 
 	//清理
-	void clear_color(size_t tar_id, const color_rgba32f& c);
+	void clear_color(size_t target_index, const color_rgba32f& c);
 	void clear_depth(float d);
 	void clear_stencil(int32_t s);
-	void clear_color(size_t tar_id, const eflib::rect<size_t>& rc, const color_rgba32f& c);
+	void clear_color(size_t target_index, const eflib::rect<size_t>& rc, const color_rgba32f& c);
 	void clear_depth(const eflib::rect<size_t>& rc, float d);
 	void clear_stencil(const eflib::rect<size_t>& rc, int32_t s);
 };

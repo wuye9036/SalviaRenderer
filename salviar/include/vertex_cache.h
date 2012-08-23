@@ -33,7 +33,7 @@ public:
 	virtual result set_vertex_buffers(
 		size_t starts_slot,
 		size_t buffers_count, h_buffer const* buffers,
-		size_t* strides, size_t* offsets
+		size_t const* strides, size_t const* offsets
 		) = 0;
 
 	virtual void transform_vertices(uint32_t prim_count) = 0;
@@ -57,7 +57,7 @@ public:
 	result set_vertex_buffers(
 		size_t starts_slot,
 		size_t buffers_count, h_buffer const* buffers,
-		size_t* strides, size_t* offsets
+		size_t const* strides, size_t const* offsets
 		);
 
 	void transform_vertices(uint32_t prim_count);
