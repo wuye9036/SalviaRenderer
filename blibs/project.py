@@ -129,6 +129,14 @@ class project:
 	
 	def config_name(self):
 		return self.config_
+
+	def msvc_config_name_with_platform(self):
+		platform_name_in_msvc = None
+		if self.arch() == arch.x86:
+			platform_name_in_msvc = "Win32"
+		elif self.arch() == arch.x64:
+			platform_name_in_msvc = "x64"
+		return '"' + self.config_ + "|" + platform_name_in_msvc + '"'
 	
 	def to_abs(self, path):
 		if os.path.isabs( path ): return path
@@ -182,8 +190,9 @@ class project:
 	def freetype_build(self):
 		return os.path.join( self.freetype_root(), "libs", self.target_modifier(['platform', 'tool', 'config']) )
 	def freetype_install(self):
+		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool', 'config']) )
+	def freetype_install_in_msvc(self):
 		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
-		
 	def salvia_build(self):
 		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
 	def salvia_bin(self):

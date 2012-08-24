@@ -19,8 +19,8 @@
 #include <fstream>
 
 using boost::unordered_map;
-using boost::filesystem3::path;
-using boost::filesystem3::absolute;
+using boost::filesystem::path;
+using boost::filesystem::absolute;
 using boost::tuples::tuple;
 using boost::tuples::make_tuple;
 using boost::tuples::get;

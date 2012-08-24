@@ -13,6 +13,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>

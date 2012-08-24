@@ -3,6 +3,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <sstream>

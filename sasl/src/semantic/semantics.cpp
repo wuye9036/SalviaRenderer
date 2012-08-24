@@ -13,7 +13,6 @@
 #include <boost/pool/pool.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/container/flat_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <map>
@@ -23,7 +22,6 @@ EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
 using boost::unordered_map;
 using boost::shared_ptr;
-using boost::container::flat_map;
 using std::vector;
 using std::string;
 using std::make_pair;

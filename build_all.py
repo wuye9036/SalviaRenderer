@@ -103,7 +103,7 @@ def make_freetype( proj ):
 	cmd = batch_command( proj.freetype_solution() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building FreeType2 %s ...' % proj.config_name() )
-	cmd.add_command( '@%s freetype.sln /build %s /project freetype' % (proj.maker_name(), proj.config_name()) )
+	cmd.add_command( '@%s freetype.sln /build %s /project freetype' % (proj.maker_name(), proj.msvc_config_name_with_platform()) )
 	cmd.execute()
 
 	cmd = batch_command( proj.source_root() )
@@ -119,7 +119,7 @@ def config_salvia( proj ):
 	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", proj.boost_lib_dir() )
 	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", proj.prebuilt_llvm() )
 	defs["SALVIA_BUILD_WITH_LLVM"] = ("BOOL", "TRUE")
-	defs["SALVIA_FREETYPE_LIB_DIR"] = ("PATH", proj.freetype_install() )
+	defs["SALVIA_FREETYPE_LIB_DIR"] = ( "PATH", proj.freetype_install_in_msvc() )
 	defs["SALVIA_BUILD_WITH_DIRECTX"] = ("BOOL", "TRUE" if proj.directx() else "FALSE")
 	defs["SALVIA_ENABLE_SASL_REGRESSION_TEST"] = ("BOOL", "TRUE")
 	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "TRUE")
