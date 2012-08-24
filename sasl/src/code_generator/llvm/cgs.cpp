@@ -753,7 +753,7 @@ value_t cg_service::emit_mul_comp( value_t const& lhs, value_t const& rhs )
 		else { assert(false); }
 	}
 
-	bin_fn_t f_mul = boost::bind( &DefaultIRBuilder::CreateFMul, builder(), _1, _2, "" );
+	bin_fn_t f_mul = boost::bind( &DefaultIRBuilder::CreateFMul, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_mul = boost::bind( &DefaultIRBuilder::CreateMul,  builder(), _1, _2, "", false, false );
 	return emit_bin_ps_ta_sva( lv, rv, i_mul, i_mul, f_mul );
 }
@@ -765,7 +765,7 @@ bool xor(bool l, bool r)
 
 value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
 {
-	bin_fn_t f_add = boost::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "" );
+	bin_fn_t f_add = boost::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_add = boost::bind( &DefaultIRBuilder::CreateAdd,  builder(), _1, _2, "", false, false );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_add, i_add, f_add );
@@ -773,7 +773,7 @@ value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
 
 value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
 {
-	bin_fn_t f_sub = boost::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "" );
+	bin_fn_t f_sub = boost::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_sub = boost::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
 	
 	return emit_bin_es_ta_sva( lhs, rhs, i_sub, i_sub, f_sub );
@@ -816,7 +816,7 @@ value_t cg_service::emit_mul_intrin( value_t const& lhs, value_t const& rhs )
 
 value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
 {
-	bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "" );
+	bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
 	bin_fn_t u_div = boost::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
 	bin_fn_t i_safe_div = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, i_div );
