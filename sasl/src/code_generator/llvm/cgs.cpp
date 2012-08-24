@@ -17,9 +17,9 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Module.h>
 #include <llvm/LLVMContext.h>
-#include <llvm/Support/IRBuilder.h>
+#include <llvm/IRBuilder.h>
+#include <llvm/TypeBuilder.h>
 #include <llvm/Support/CFG.h>
-#include <llvm/Support/TypeBuilder.h>
 #include <llvm/Intrinsics.h>
 #include <llvm/Constants.h>
 #include <eflib/include/platform/enable_warnings.h>
