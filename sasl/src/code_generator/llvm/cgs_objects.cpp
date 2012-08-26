@@ -56,12 +56,12 @@ llvm::Type* cg_type::ty( abis abi ) const{
 	return tys[abi];
 }
 
-value_t::value_t()
+cg_value::cg_value()
 	: tyinfo_(NULL), val_(NULL), cg_(NULL), kind_(vkind_unknown), hint_(builtin_types::none), abi_(abi_unknown), masks_(0)
 {
 }
 
-value_t::value_t(
+cg_value::cg_value(
 	cg_type* tyinfo,
 	llvm::Value* val, value_kinds k, abis abi,
 	cg_service* cg 
@@ -70,7 +70,7 @@ value_t::value_t(
 {
 }
 
-value_t::value_t( builtin_types hint,
+cg_value::cg_value( builtin_types hint,
 	llvm::Value* val, value_kinds k, abis abi,
 	cg_service* cg 
 	)
@@ -79,55 +79,55 @@ value_t::value_t( builtin_types hint,
 
 }
 
-value_t::value_t( value_t const& rhs )
+cg_value::cg_value( cg_value const& rhs )
 	: tyinfo_(rhs.tyinfo_), hint_(rhs.hint_), abi_(rhs.abi_), val_( rhs.val_ ), kind_(rhs.kind_), cg_(rhs.cg_), masks_(rhs.masks_)
 {
 	parent(rhs.parent_.get());
 	index(rhs.index_.get());
 }
 
-abis value_t::abi() const{
+abis cg_value::abi() const{
 	return abi_;
 }
 
-value_t value_t::swizzle( size_t /*swz_code*/ ) const{
+cg_value cg_value::swizzle( size_t /*swz_code*/ ) const{
 	assert( is_vector( hint() ) );
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-llvm::Value* value_t::raw() const{
+llvm::Value* cg_value::raw() const{
 	return val_;
 }
 
-value_t value_t::to_rvalue() const
+cg_value cg_value::to_rvalue() const
 {
 	if( tyinfo_ ){
-		return value_t( tyinfo_, load(abi_), vkind_value, abi_, cg_ );
+		return cg_value( tyinfo_, load(abi_), vkind_value, abi_, cg_ );
 	} else {
-		return value_t( hint_, load(abi_), vkind_value, abi_, cg_ );
+		return cg_value( hint_, load(abi_), vkind_value, abi_, cg_ );
 	}
 }
 
-builtin_types value_t::hint() const
+builtin_types cg_value::hint() const
 {
 	if( tyinfo_ ) return tyinfo_->hint();
 	return hint_;
 }
 
-llvm::Value* value_t::load( abis abi ) const{
+llvm::Value* cg_value::load( abis abi ) const{
 	return cg_->load( *this, abi );
 }
 
-Value* value_t::load() const{
+Value* cg_value::load() const{
 	return cg_->load( *this );
 }
 
-value_kinds value_t::kind() const{
+value_kinds cg_value::kind() const{
 	return kind_;
 }
 
-bool value_t::storable() const{
+bool cg_value::storable() const{
 	switch( kind_ ){
 	case vkind_ref:
 		return true;
@@ -142,7 +142,7 @@ bool value_t::storable() const{
 	}
 }
 
-bool value_t::load_only() const
+bool cg_value::load_only() const
 {
 	switch( kind_ ){
 	case vkind_ref:
@@ -156,23 +156,23 @@ bool value_t::load_only() const
 	}
 }
 
-void value_t::emplace( Value* v, value_kinds k, abis abi ){
+void cg_value::emplace( Value* v, value_kinds k, abis abi ){
 	val_ = v;
 	kind_ = k;
 	abi_ = abi;
 }
 
-void value_t::emplace( value_t const& v )
+void cg_value::emplace( cg_value const& v )
 {
 	emplace( v.raw(), v.kind(), v.abi() );
 }
 
-llvm::Value* value_t::load_ref() const
+llvm::Value* cg_value::load_ref() const
 {
 	return cg_->load_ref( *this );
 }
 
-value_t& value_t::operator=( value_t const& rhs )
+cg_value& cg_value::operator=( cg_value const& rhs )
 {
 	kind_ = rhs.kind_;
 	val_ = rhs.val_;
@@ -187,33 +187,33 @@ value_t& value_t::operator=( value_t const& rhs )
 	return *this;
 }
 
-value_t value_t::slice( value_t const& vec, uint32_t masks )
+cg_value cg_value::slice( cg_value const& vec, uint32_t masks )
 {
 	builtin_types hint = vec.hint();
 	assert( is_vector(hint) );
 
-	value_t ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi_, vec.cg_ );
+	cg_value ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi_, vec.cg_ );
 	ret.masks_ = masks;
 	ret.parent(vec);
 
 	return ret;
 }
 
-value_t value_t::slice( value_t const& vec, value_t const& index )
+cg_value cg_value::slice( cg_value const& vec, cg_value const& index )
 {
 	builtin_types hint = vec.hint();
 	assert( is_vector(hint) );
 
-	value_t ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi_, vec.cg_ );
+	cg_value ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi_, vec.cg_ );
 	ret.index(index);
 	ret.parent(vec);
 
 	return ret;
 }
 
-value_t value_t::as_ref() const
+cg_value cg_value::as_ref() const
 {
-	value_t ret(*this);
+	cg_value ret(*this);
 
 	switch( ret.kind_ ){
 	case vkind_value:
@@ -227,36 +227,36 @@ value_t value_t::as_ref() const
 	return ret;
 }
 
-void value_t::store( value_t const& v ) const
+void cg_value::store( cg_value const& v ) const
 {
-	cg_->store( *(const_cast<value_t*>(this)), v );
+	cg_->store( *(const_cast<cg_value*>(this)), v );
 }
 
-void value_t::index( size_t index )
+void cg_value::index( size_t index )
 {
 	char indexes[4] = { (char)index, -1, -1, -1 };
 	masks_ = indexes_to_mask( indexes );
 }
 
-cg_type*	value_t::tyinfo() const{ return tyinfo_; }
-void			value_t::tyinfo( cg_type* v ){ tyinfo_ = v; }
+cg_type*	cg_value::tyinfo() const{ return tyinfo_; }
+void			cg_value::tyinfo( cg_type* v ){ tyinfo_ = v; }
 
-void			value_t::hint( builtin_types bt ){ hint_ = bt; }
-void			value_t::abi( abis abi ){ this->abi_ = abi; }
-uint32_t		value_t::masks() const{ return masks_; }
-void			value_t::masks( uint32_t v ){ masks_ = v; }
+void			cg_value::hint( builtin_types bt ){ hint_ = bt; }
+void			cg_value::abi( abis abi ){ this->abi_ = abi; }
+uint32_t		cg_value::masks() const{ return masks_; }
+void			cg_value::masks( uint32_t v ){ masks_ = v; }
 
-void			value_t::kind( value_kinds vkind ) { kind_ = vkind; }
-void			value_t::parent( value_t const& v ){ parent_.reset( new value_t(v) ); }
-void			value_t::parent( value_t const* v ){ if(v){ parent(*v); } }
-value_t*		value_t::parent() const { return parent_.get(); }
+void			cg_value::kind( value_kinds vkind ) { kind_ = vkind; }
+void			cg_value::parent( cg_value const& v ){ parent_.reset( new cg_value(v) ); }
+void			cg_value::parent( cg_value const* v ){ if(v){ parent(*v); } }
+cg_value*		cg_value::parent() const { return parent_.get(); }
 
-value_t*		value_t::index() const { return index_.get(); }
-void			value_t::index( value_t const& v ){ index_.reset( new value_t(v) ); }
-void			value_t::index( value_t const* v ){ if(v) index(*v); }
+cg_value*		cg_value::index() const { return index_.get(); }
+void			cg_value::index( cg_value const& v ){ index_.reset( new cg_value(v) ); }
+void			cg_value::index( cg_value const* v ){ if(v) index(*v); }
 
 //Workaround for llvm issue 12618
-llvm::Value* value_t::load_i1() const{
+llvm::Value* cg_value::load_i1() const{
 	if( hint() == builtin_types::_boolean )
 	{
 		return cg_->i8toi1_( load(abi_llvm) );
@@ -324,7 +324,7 @@ size_t function_t::arg_size() const{
 	return 0;
 }
 
-value_t function_t::arg( size_t index ) const
+cg_value function_t::arg( size_t index ) const
 {
 	// If c_compatible and not void return, the first argument is address of return value.
 	size_t arg_index = index;
@@ -343,9 +343,9 @@ value_t function_t::arg( size_t index ) const
 	return cg->create_value( par_ty, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
 }
 
-value_t function_t::packed_execution_mask() const
+cg_value function_t::packed_execution_mask() const
 {
-	if( !partial_execution ){ return value_t(); }
+	if( !partial_execution ){ return cg_value(); }
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
 	if( first_arg_is_return_address() ){ ++it; }

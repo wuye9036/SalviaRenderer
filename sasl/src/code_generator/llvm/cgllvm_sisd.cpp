@@ -24,7 +24,7 @@
 #include <llvm/Constants.h>
 #include <llvm/Function.h>
 #include <llvm/Module.h>
-#include <llvm/Support/IRBuilder.h>
+#include <llvm/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -67,7 +67,7 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 cgllvm_sisd::~cgllvm_sisd(){
 }
 
-value_t cgllvm_sisd::emit_logic_op(operators op, shared_ptr<node> const& left, shared_ptr<node> const& right )
+cg_value cgllvm_sisd::emit_logic_op(operators op, shared_ptr<node> const& left, shared_ptr<node> const& right )
 {
 	visit_child(left);
 	visit_child(right);
@@ -82,21 +82,21 @@ value_t cgllvm_sisd::emit_logic_op(operators op, shared_ptr<node> const& left, s
 	}
 }
 
-value_t cgllvm_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
+cg_value cgllvm_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
 {
 	// NOTE
 	//  If 'yes' and 'no' expression are all reference/variable,
 	//  and left is as same abi as right, it will return a reference,
 	//  otherwise we will return a value.
 	visit_child(cond);
-	value_t cond_value = node_ctxt(cond)->node_value.to_rvalue();
+	cg_value cond_value = node_ctxt(cond)->node_value.to_rvalue();
 	insert_point_t cond_ip = service()->insert_point();
 
 	insert_point_t yes_ip_beg = service()->new_block( "yes_expr", true );
 	if( cond != yes ){
 		visit_child(yes);
 	}
-	value_t yes_value = node_ctxt(yes)->node_value;
+	cg_value yes_value = node_ctxt(yes)->node_value;
 	Value* yes_v = yes_value.load();
 	Value* yes_ref = yes_value.load_ref();
 	insert_point_t yes_ip_end = service()->insert_point();
@@ -105,7 +105,7 @@ value_t cgllvm_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<no
 	if( cond != no ){
 		visit_child(no);
 	}
-	value_t no_value = node_ctxt( no, false )->node_value;
+	cg_value no_value = node_ctxt( no, false )->node_value;
 	Value* no_ref = ( no_value.abi() == yes_value.abi() ) ? no_value.load_ref() : NULL;
 	Value* no_v = no_value.load( yes_value.abi() );
 	insert_point_t no_ip_end = service()->insert_point();
@@ -120,7 +120,7 @@ value_t cgllvm_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<no
 	service()->jump_to( merge_ip );
 
 	service()->set_insert_point(merge_ip);
-	value_t result_value;
+	cg_value result_value;
 	Value*		merged = service()->phi_( yes_ip_end.block, yes_v, no_ip_end.block, no_v );
 	value_kinds	vkind = (yes_ref && no_ref) ? vkind_ref : vkind_value;
 	result_value = service()->create_value( yes_value.tyinfo(), yes_value.hint(), merged, vkind, yes_value.abi() );
@@ -143,7 +143,7 @@ SASL_VISIT_DEF( member_expression ){
 	if( tisi->ty_proto()->is_builtin() ){
 		// Swizzle or write mask
 		uint32_t masks = sem_->get_semantic(&v)->swizzle();
-		value_t agg_value = agg_ctxt->node_value;
+		cg_value agg_value = agg_ctxt->node_value;
 		if( is_scalar( tisi->value_builtin_type() ) ){
 			agg_value = service()->cast_s2v(agg_value);
 		}
@@ -172,7 +172,7 @@ SASL_VISIT_DEF( unary_expression ){
 
 	visit_child(v.expr);
 	
-	value_t inner_value = node_ctxt(v.expr)->node_value;
+	cg_value inner_value = node_ctxt(v.expr)->node_value;
 
 	cg_type* one_tyinfo = service()->create_ty( sem_->get_semantic(&v)->ty_proto() );
 	builtin_types hint = inner_value.hint();
@@ -180,25 +180,25 @@ SASL_VISIT_DEF( unary_expression ){
 	node_context* ctxt = node_ctxt(v, true);
 
 	if( v.op == operators::negative ){
-		value_t zero_value = service()->null_value( one_tyinfo->hint(), inner_value.abi() );
+		cg_value zero_value = service()->null_value( one_tyinfo->hint(), inner_value.abi() );
 		ctxt->node_value = service()->emit_sub(zero_value, inner_value);
 	} else if( v.op == operators::positive ){
 		ctxt->node_value = inner_value;
 	} else if( v.op == operators::logic_not ) {
 		ctxt->node_value = service()->emit_not(inner_value);
 	} else if( v.op == operators::bit_not ) {
-		value_t all_one_value = service()->create_constant_int( NULL, hint, inner_value.abi(), 0xFFFFFFFFFFFFFFFF );
+		cg_value all_one_value = service()->create_constant_int( NULL, hint, inner_value.abi(), 0xFFFFFFFFFFFFFFFF );
 		ctxt->node_value = service()->emit_bit_xor( all_one_value, inner_value );
 	} else {
 
-		value_t one_value = service()->create_constant_int( one_tyinfo, builtin_types::none, inner_value.abi(), 1 ) ;
+		cg_value one_value = service()->create_constant_int( one_tyinfo, builtin_types::none, inner_value.abi(), 1 ) ;
 
 		if( v.op == operators::prefix_incr ){
-			value_t inc_v = service()->emit_add( inner_value, one_value );
+			cg_value inc_v = service()->emit_add( inner_value, one_value );
 			inner_value.store( inc_v );
 			ctxt->node_value = inner_value;
 		} else if( v.op == operators::prefix_decr ){
-			value_t dec_v = service()->emit_sub( inner_value, one_value );
+			cg_value dec_v = service()->emit_sub( inner_value, one_value );
 			inner_value.store( dec_v );
 			ctxt->node_value = inner_value;
 		} else if( v.op == operators::postfix_incr ){
@@ -238,7 +238,7 @@ SASL_VISIT_DEF( if_statement ){
 			assert(false);
 		}
 	}
-	value_t cond_value = node_ctxt(v.cond, false)->node_value;
+	cg_value cond_value = node_ctxt(v.cond, false)->node_value;
 	service()->if_cond_end( cond_value );
 
 	insert_point_t ip_cond = service()->insert_point();
@@ -393,7 +393,7 @@ SASL_VISIT_DEF( switch_statement ){
 	insert_point_t switch_end =service()->new_block( "switch.end", true );
 
 	// Collect Labeled Statement Position
-	vector< pair<value_t,insert_point_t> > cases;
+	vector< pair<cg_value,insert_point_t> > cases;
 	node_semantic* ssi = sem_->get_semantic(&v);
 	assert( ssi );
 
@@ -407,7 +407,7 @@ SASL_VISIT_DEF( switch_statement ){
 			assert( lbl->node_class() == node_ids::case_label );
 			shared_ptr<case_label> case_lbl = lbl->as_handle<case_label>();
 			if( case_lbl->expr ){
-				value_t v = node_ctxt( case_lbl->expr )->node_value;
+				cg_value v = node_ctxt( case_lbl->expr )->node_value;
 				cases.push_back( make_pair(v, stmt_ip ) );
 			} else {
 				default_beg = stmt_ip;
@@ -417,7 +417,7 @@ SASL_VISIT_DEF( switch_statement ){
 	
 	// Fill back jumps
 	service()->set_insert_point(cond_end);
-	value_t cond_v = node_ctxt( v.cond )->node_value;
+	cg_value cond_v = node_ctxt( v.cond )->node_value;
 	service()->switch_to( cond_v, cases, default_beg );
 
 	service()->set_insert_point( break_end );

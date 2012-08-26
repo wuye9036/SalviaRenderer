@@ -196,7 +196,7 @@ SASL_VISIT_DEF( member_expression ){
 	if( tisi->ty_proto()->is_builtin() ){
 		// Swizzle or write mask
 		uint32_t masks = sem_->get_semantic(&v)->swizzle();
-		value_t agg_value = agg_ctxt->node_value;
+		cg_value agg_value = agg_ctxt->node_value;
 		if( is_scalar(tisi->ty_proto()->tycode) ){
 			agg_value = service()->cast_s2v(agg_value);
 		}
@@ -268,7 +268,7 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 	EFLIB_UNREF_DECLARATOR(data);
-	value_t ret_value = emit_logic_op(v.op, v.left_expr, v.right_expr);
+	cg_value ret_value = emit_logic_op(v.op, v.left_expr, v.right_expr);
 	node_ctxt(v, true)->node_value = ret_value.to_rvalue();
 }
 
@@ -388,7 +388,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 		visit_child( v.jump_expr );
 
 		// Copy result.
-		value_t ret_value = node_ctxt( v.jump_expr )->node_value;
+		cg_value ret_value = node_ctxt( v.jump_expr )->node_value;
 
 		if( ret_value.hint() != builtin_types::none ){
 			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
@@ -435,9 +435,9 @@ cgllvm_module_impl* cgllvm_vs::mod_ptr(){
 }
 
 
-value_t cgllvm_vs::layout_to_value(sv_layout* svl)
+cg_value cgllvm_vs::layout_to_value(sv_layout* svl)
 {
-	value_t ret;
+	cg_value ret;
 
 	// TODO need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
@@ -457,7 +457,7 @@ void cgllvm_vs::layout_to_sc(node_context* psc, salviar::sv_layout* svl, bool st
 {
 	builtin_types bt = to_builtin_types(svl->value_type);
 
-	value_t ret;
+	cg_value ret;
 	// TODO need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
 		ret = service()->emit_extract_val( param_values[svl->usage], svl->physical_index );

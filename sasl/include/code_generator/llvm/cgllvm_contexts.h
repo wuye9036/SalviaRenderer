@@ -77,7 +77,7 @@ struct node_context
 
 	module_context*	owner;
 	function_t*		function_scope;		///< Function type.
-	value_t			node_value;			///< Value attached to node.
+	cg_value			node_value;			///< Value attached to node.
 	bool			is_semantic_mode;	///< Expression is a semantic mode. In this mode, the memory get from semantic but not
 	cg_type*		ty;					///< Type attached to node.
 	insert_point_t	label_position;		///< For labeled statement

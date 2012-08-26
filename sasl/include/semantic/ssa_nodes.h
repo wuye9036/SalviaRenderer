@@ -16,10 +16,10 @@ BEGIN_NS_SASL_SEMANTIC();
 
 struct block_t;
 struct function_t;
-struct value_t;
+struct cg_value;
 struct variable_t;
 
-struct value_t
+struct cg_value
 {
 	friend class ssa_context;
 	enum ID{
@@ -34,11 +34,11 @@ struct value_t
 	sasl::syntax_tree::node*	attached;
 	ID							vid;
 protected:
-	value_t(){}
-	~value_t(){}
+	cg_value(){}
+	~cg_value(){}
 };
 
-struct instruction_t: public value_t
+struct instruction_t: public cg_value
 {
 	friend class ssa_context;
 	enum IDs
@@ -50,7 +50,7 @@ struct instruction_t: public value_t
 		eval
 	} id;
 
-	std::vector<value_t*>	params;
+	std::vector<cg_value*>	params;
 
 	instruction_t*	next;
 	instruction_t*	prev;
@@ -59,7 +59,7 @@ private:
 	~instruction_t(){}
 };
 
-struct variable_t: public value_t
+struct variable_t: public cg_value
 {
 	friend class ssa_context;
 	std::vector<size_t> members;
@@ -69,7 +69,7 @@ private:
 	~variable_t(){}
 };
 
-struct block_t: public value_t
+struct block_t: public cg_value
 {
 	friend class ssa_context;
 	void push_back( instruction_t* ins );
@@ -80,7 +80,7 @@ struct block_t: public value_t
 	instruction_t* end;
 	
 	std::vector<block_t*>						preds;
-	std::vector< std::pair<value_t*,block_t*> >	succs;
+	std::vector< std::pair<cg_value*,block_t*> >	succs;
 private:
 	block_t(){}
 	~block_t(){}
@@ -92,7 +92,7 @@ struct function_t
 
 	std::vector<variable_t*> locals;
 
-	value_t*	retval;	
+	cg_value*	retval;	
 	block_t*	entry;
 	block_t*	exit;
 };

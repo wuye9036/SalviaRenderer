@@ -10,11 +10,11 @@
 #include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/Support/IRBuilder.h>
+#include <llvm/IRBuilder.h>
 #include <llvm/Function.h>
 #include <llvm/Module.h>
 #include <llvm/Intrinsics.h>
-#include <llvm/Support/TypeBuilder.h>
+#include <llvm/TypeBuilder.h>
 #include <llvm/Support/CFG.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -124,7 +124,7 @@ namespace {
 	}
 }
 
-void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
+void cgs_sisd::store( cg_value& lhs, cg_value const& rhs ){
 	Value* src = NULL;
 	Value* address = NULL;
 	value_kinds kind = lhs.kind();
@@ -134,14 +134,14 @@ void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 		address = lhs.raw();
 	} else if ( kind == vkind_swizzle ){
 		char indexes[4] = {-1, -1, -1, -1};
-		value_t const* root = NULL;
+		cg_value const* root = NULL;
 		merge_swizzle(root, indexes, lhs);
 
 		if( is_vector( root->hint()) ){
 			assert( lhs.parent()->storable() );
 			
-			value_t rhs_rvalue = rhs.to_rvalue();
-			value_t ret_v = root->to_rvalue();
+			cg_value rhs_rvalue = rhs.to_rvalue();
+			cg_value ret_v = root->to_rvalue();
 			for(size_t i = 0; i < vector_size(rhs.hint()); ++i)
 			{
 				ret_v = emit_insert_val( ret_v, indexes[i], emit_extract_val(rhs_rvalue, i) );
@@ -159,7 +159,7 @@ void cgs_sisd::store( value_t& lhs, value_t const& rhs ){
 	builder().CreateStore( src, address );
 }
 
-value_t cgs_sisd::cast_ints( value_t const& v, cg_type* dest_tyi )
+cg_value cgs_sisd::cast_ints( cg_value const& v, cg_type* dest_tyi )
 {
 	builtin_types hint_src = v.hint();
 	builtin_types hint_dst = dest_tyi->hint();
@@ -177,7 +177,7 @@ value_t cgs_sisd::cast_ints( value_t const& v, cg_type* dest_tyi )
 	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
 
-value_t cgs_sisd::cast_i2f( value_t const& v, cg_type* dest_tyi )
+cg_value cgs_sisd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
 {
 	builtin_types hint_i = v.hint();
 	builtin_types hint_f = dest_tyi->hint();
@@ -195,23 +195,23 @@ value_t cgs_sisd::cast_i2f( value_t const& v, cg_type* dest_tyi )
 	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
 }
 
-value_t cgs_sisd::cast_f2i( value_t const& v, cg_type* dest_tyi )
+cg_value cgs_sisd::cast_f2i( cg_value const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-value_t cgs_sisd::cast_f2f( value_t const& v, cg_type* dest_tyi )
+cg_value cgs_sisd::cast_f2f( cg_value const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-value_t cgs_sisd::create_vector( std::vector<value_t> const& scalars, abis abi ){
+cg_value cgs_sisd::create_vector( std::vector<cg_value> const& scalars, abis abi ){
 	builtin_types scalar_hint = scalars[0].hint();
 	builtin_types hint = vector_of(scalar_hint, scalars.size());
 
-	value_t ret = undef_value(hint, abi);
+	cg_value ret = undef_value(hint, abi);
 	for( size_t i = 0; i < scalars.size(); ++i )
 	{
 		ret = emit_insert_val( ret, (int)i, scalars[i] );
@@ -223,7 +223,7 @@ void cgs_sisd::emit_return(){
 	builder().CreateRetVoid();
 }
 
-void cgs_sisd::emit_return( value_t const& ret_v, abis abi ){
+void cgs_sisd::emit_return( cg_value const& ret_v, abis abi ){
 	if( abi == abi_unknown ){ abi = fn().abi(); }
 
 	if( fn().first_arg_is_return_address() ){
@@ -234,7 +234,7 @@ void cgs_sisd::emit_return( value_t const& ret_v, abis abi ){
 	}
 }
 
-value_t cgs_sisd::create_scalar( Value* val, cg_type* tyinfo, builtin_types hint ){
+cg_value cgs_sisd::create_scalar( Value* val, cg_type* tyinfo, builtin_types hint ){
 	assert( is_scalar(hint) );
 	return create_value( tyinfo, hint, val, vkind_value, abi_llvm );
 }
@@ -254,22 +254,22 @@ bool cgs_sisd::prefer_scalar_code() const
 	return false;
 }
 
-value_t cgs_sisd::emit_swizzle( value_t const& lhs, uint32_t mask )
+cg_value cgs_sisd::emit_swizzle( cg_value const& lhs, uint32_t mask )
 {
 	EFLIB_UNREF_DECLARATOR(lhs);
 	EFLIB_UNREF_DECLARATOR(mask);
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-value_t cgs_sisd::emit_write_mask( value_t const& vec, uint32_t mask )
+cg_value cgs_sisd::emit_write_mask( cg_value const& vec, uint32_t mask )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-void cgs_sisd::switch_to( value_t const& cond, std::vector< std::pair<value_t, insert_point_t> > const& cases, insert_point_t const& default_branch )
+void cgs_sisd::switch_to( cg_value const& cond, std::vector< std::pair<cg_value, insert_point_t> > const& cases, insert_point_t const& default_branch )
 {
 	Value* v = cond.load();
 	SwitchInst* inst = builder().CreateSwitch( v, default_branch.block, static_cast<unsigned>(cases.size()) );
@@ -278,13 +278,13 @@ void cgs_sisd::switch_to( value_t const& cond, std::vector< std::pair<value_t, i
 	}
 }
 
-value_t cgs_sisd::cast_i2b( value_t const& v )
+cg_value cgs_sisd::cast_i2b( cg_value const& v )
 {
 	assert( is_integer(v.hint()) );
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
 }
 
-value_t cgs_sisd::cast_f2b( value_t const& v )
+cg_value cgs_sisd::cast_f2b( cg_value const& v )
 {
 	assert( is_real(v.hint()) );
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
@@ -300,24 +300,24 @@ abis cgs_sisd::param_abi( bool c_compatible ) const
 	return c_compatible ? abi_c : abi_llvm;
 }
 
-value_t cgs_sisd::emit_ddx( value_t const& v )
+cg_value cgs_sisd::emit_ddx( cg_value const& v )
 {
 	// It is not available in SISD mode.
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return v;
 }
 
-value_t cgs_sisd::emit_ddy( value_t const& v )
+cg_value cgs_sisd::emit_ddy( cg_value const& v )
 {
 	// It is not available in SISD mode.
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return v;
 }
 
-value_t cgs_sisd::packed_mask()
+cg_value cgs_sisd::packed_mask()
 {
 	assert(false);
-	return value_t();
+	return cg_value();
 }
 
 Value* cgs_sisd::phi_( BasicBlock* b0, Value* v0, BasicBlock* b1, Value* v1 )

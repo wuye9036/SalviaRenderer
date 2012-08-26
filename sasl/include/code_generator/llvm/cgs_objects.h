@@ -124,13 +124,13 @@ protected:
 	classifications				cls;
 };
 
-class value_t{
+class cg_value{
 public:
 	friend class cg_service;
 
-	value_t();
-	value_t( value_t const& );
-	value_t& operator = ( value_t const& );
+	cg_value();
+	cg_value( cg_value const& );
+	cg_value& operator = ( cg_value const& );
 
 	/// @name State accessors 
 	/// @{
@@ -139,22 +139,22 @@ public:
 	/// Return internal llvm value.
 	llvm::Value* raw() const;
 
-	/// Load llvm value from value_t.
+	/// Load llvm value from cg_value.
 	llvm::Value* load() const;
 	llvm::Value* load( abis abi ) const;
 	llvm::Value* load_i1() const;
 	llvm::Value* load_ref() const;
 
-	void store( value_t const& ) const;
+	void store( cg_value const& ) const;
 
-	/// Store llvm value to value_t
-	void emplace( value_t const& );
+	/// Store llvm value to cg_value
+	void emplace( cg_value const& );
 	void emplace( llvm::Value* v, value_kinds k, abis abi );
 
 	bool storable() const;
 	bool load_only() const;
 
-	value_t as_ref() const;
+	cg_value as_ref() const;
 
 	cg_type*	tyinfo() const;				///< Get type information of value.
 	void			tyinfo(cg_type*);		///< Set type information of value.
@@ -165,16 +165,16 @@ public:
 	value_kinds		kind() const;				///< Get kind.
 	void			kind( value_kinds vkind );	///< Set kind.
 
-	value_t*		parent() const;				///< Get parent. If value is not a member of aggragation, it return NULL.
-	void			parent( value_t const& v );
-	void			parent( value_t const* v );
+	cg_value*		parent() const;				///< Get parent. If value is not a member of aggragation, it return NULL.
+	void			parent( cg_value const& v );
+	void			parent( cg_value const* v );
 
 	abis			abi() const;				///< Get ABI.
 	void			abi( abis abi );			///< Set ABI
 
-	value_t*		index() const;
-	void			index( value_t const& );
-	void			index( value_t const* );
+	cg_value*		index() const;
+	void			index( cg_value const& );
+	void			index( cg_value const* );
 	void			index( size_t v );			///< Set Index. It is only make sense if parent is available.
 	uint32_t		masks() const;				///< Get masks
 	void			masks( uint32_t v );		///< Set masks.
@@ -182,21 +182,21 @@ public:
 
 	/// @name Operators
 	/// @{
-	value_t swizzle( size_t swz_code ) const;
-	value_t to_rvalue() const;
+	cg_value swizzle( size_t swz_code ) const;
+	cg_value to_rvalue() const;
 	/// @}
 
-	static value_t slice( value_t const& vec, uint32_t masks );
-	static value_t slice( value_t const& vec, value_t const& index );
+	static cg_value slice( cg_value const& vec, uint32_t masks );
+	static cg_value slice( cg_value const& vec, cg_value const& index );
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
-	value_t(
+	cg_value(
 		cg_type* tyinfo,
 		llvm::Value* val, value_kinds k, abis abi,
 		cg_service* cg
 		);
-	value_t(
+	cg_value(
 		builtin_types hint,
 		llvm::Value* val, value_kinds k, abis abi,
 		cg_service* cg
@@ -205,8 +205,8 @@ protected:
 
 	/// @name Members
 	/// @{
-	boost::scoped_ptr<value_t>	parent_; // For write mask and swizzle.
-	boost::scoped_ptr<value_t>	index_;
+	boost::scoped_ptr<cg_value>	parent_; // For write mask and swizzle.
+	boost::scoped_ptr<cg_value>	index_;
 	uint32_t					masks_;
 
 	cg_type*				tyinfo_;
@@ -242,7 +242,7 @@ struct function_t{
 	EFLIB_OPERATOR_BOOL( function_t ){ return NULL != fn; }
 
 	/// Get argument's value by index.
-	value_t arg( size_t index ) const;
+	cg_value arg( size_t index ) const;
 	/// Get argument size.
 	size_t arg_size() const;
 	/// Set argument name.
@@ -258,7 +258,7 @@ struct function_t{
 	/// Get return address value.
 	llvm::Value* return_address() const;
 	/// Get Execution Mask.
-	value_t packed_execution_mask() const;
+	cg_value packed_execution_mask() const;
 	/// Return name
 	void return_name( std::string const& s );
 	/// Set Inline hint

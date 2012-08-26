@@ -164,7 +164,7 @@ SASL_VISIT_DEF( member_expression ){
 	if( tisi->ty_proto()->is_builtin() ){
 		// Swizzle or write mask
 		uint32_t masks = sem_->get_semantic(&v)->swizzle();
-		value_t agg_value = agg_ctxt->node_value;
+		cg_value agg_value = agg_ctxt->node_value;
 		ctxt->node_value = service()->emit_extract_elem_mask( agg_value, masks );
 	} else {
 		// Member
@@ -291,7 +291,7 @@ SASL_VISIT_DEF( while_statement )
 		caster->cast(sem_->pety()->get_proto(bool_tid), v.cond.get());
 	}
 	service()->while_cond_end( cgllvm_impl::node_ctxt(v.cond)->node_value );
-	value_t joinable = service()->joinable();
+	cg_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t body_beg = service()->new_block( "while.body", true );
@@ -336,7 +336,7 @@ SASL_VISIT_DEF( dowhile_statement )
 		}
 	}
 	service()->do_cond_end( cgllvm_impl::node_ctxt(v.cond)->node_value );
-	value_t joinable = service()->joinable();
+	cg_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t while_end = service()->new_block( "dowhile.end", true );
@@ -383,13 +383,13 @@ SASL_VISIT_DEF( for_statement )
 
 	insert_point_t cond_beg = service()->new_block( "for_cond", true );
 	service()->for_cond_beg();
-	value_t cond_value;
+	cg_value cond_value;
 	if( v.cond ){ 
 		visit_child( v.cond );
 		cond_value = cgllvm_impl::node_ctxt( v.cond, false )->node_value;
 	}
 	service()->for_cond_end( cond_value );
-	value_t joinable = service()->joinable();
+	cg_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t body_beg = service()->new_block( "for_body", true );
@@ -562,7 +562,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
 		visit_child( v.jump_expr );
 
 		// Copy result.
-		value_t ret_value = cgllvm_impl::node_ctxt( v.jump_expr )->node_value;
+		cg_value ret_value = cgllvm_impl::node_ctxt( v.jump_expr )->node_value;
 
 		if( ret_value.hint() != builtin_types::none ){
 			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
@@ -602,10 +602,10 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement ){
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
-value_t cgllvm_simd::layout_to_value( sv_layout* svl )
+cg_value cgllvm_simd::layout_to_value( sv_layout* svl )
 {
 	builtin_types bt = to_builtin_types( svl->value_type );
-	value_t ret = service()->emit_extract_ref( entry_values[svl->usage], svl->physical_index );
+	cg_value ret = service()->emit_extract_ref( entry_values[svl->usage], svl->physical_index );
 	ret.hint( to_builtin_types( svl->value_type ) );
 	return ret;
 }

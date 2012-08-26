@@ -215,10 +215,10 @@ SASL_VISIT_DEF( binary_expression ){
 			}
 
 			// use type-converted value to generate code.
-			value_t lval = node_ctxt(v.left_expr)->node_value;
-			value_t rval = node_ctxt(v.right_expr)->node_value;
+			cg_value lval = node_ctxt(v.left_expr)->node_value;
+			cg_value rval = node_ctxt(v.right_expr)->node_value;
 
-			value_t retval;
+			cg_value retval;
 
 			builtin_types lbtc = p0_tsi->ty_proto()->tycode;
 			builtin_types rbtc = p1_tsi->ty_proto()->tycode;
@@ -279,7 +279,7 @@ SASL_VISIT_DEF( constant_expression ){
 	cg_type* ty = const_ctxt->ty;
 	assert( ty );
 
-	value_t val;
+	cg_value val;
 	builtin_types const_tycode = const_sem->value_builtin_type();
 	if( const_tycode == builtin_types::_sint64 ) {
 		val = service()->create_constant_scalar( static_cast<int64_t>( const_sem->const_signed() ),		ty, ty->hint() );
@@ -310,7 +310,7 @@ SASL_VISIT_DEF( call_expression ){
 		symbol* fn_sym = csi->overloaded_function();
 		function_type* proto = polymorphic_cast<function_type*>( fn_sym->associated_node() );
 		
-		vector<value_t> args;
+		vector<cg_value> args;
 		for( size_t i_arg = 0; i_arg < v.args.size(); ++i_arg )
 		{
 			visit_child( v.args[i_arg] );
@@ -332,7 +332,7 @@ SASL_VISIT_DEF( call_expression ){
 		}
 		
 		function_t* fn	= service()->fetch_function(proto);
-		value_t	rslt	= service()->emit_call(*fn, args);
+		cg_value	rslt	= service()->emit_call(*fn, args);
 
 		node_context* expr_ctxt = node_ctxt( v, true );
 		expr_ctxt->node_value = rslt;
@@ -715,7 +715,7 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	node_context* lctxt = node_ctxt( v.left_expr );
 	node_context* rctxt = node_ctxt( v.right_expr );
 
-	value_t val;
+	cg_value val;
 	/**/ if( v.op == operators::add_assign )
 	{
 		val = service()->emit_add( rctxt->node_value, lctxt->node_value );
@@ -830,7 +830,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
 
-			value_t ret_val = service()->emit_mul_intrin( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret_val = service()->emit_mul_intrin( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 
 		}
@@ -842,7 +842,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
 
-			value_t ret_val = service()->emit_dot( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret_val = service()->emit_dot( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 
 		}
@@ -850,7 +850,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			value_t ret_val = service()->emit_abs( service()->fn().arg(0) );
+			cg_value ret_val = service()->emit_abs( service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "exp"
@@ -877,7 +877,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
 			std::string scalar_intrin_name = ( format("sasl.%s.f32") % intr->unmangled_name() ).str();
-			value_t ret_val = service()->emit_unary_ps( scalar_intrin_name,service()->fn().arg(0) );
+			cg_value ret_val = service()->emit_unary_ps( scalar_intrin_name,service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "countbits"
@@ -886,7 +886,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			value_t ret_val = service()->emit_unary_ps( "sasl.countbits.u32", service()->fn().arg(0) );
+			cg_value ret_val = service()->emit_unary_ps( "sasl.countbits.u32", service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "firstbithigh"
@@ -896,7 +896,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			value_t ret_val = service()->emit_unary_ps( ( format("sasl.%s.u32") % intr->unmangled_name() ).str(), service()->fn().arg(0) );
+			cg_value ret_val = service()->emit_unary_ps( ( format("sasl.%s.u32") % intr->unmangled_name() ).str(), service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "ldexp"
@@ -906,14 +906,14 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
 			std::string scalar_intrin_name = ( format("sasl.%s.f32") % intr->unmangled_name() ).str();
-			value_t ret_val = service()->emit_bin_ps_ta_sva( scalar_intrin_name, service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret_val = service()->emit_bin_ps_ta_sva( scalar_intrin_name, service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "sqrt" )
 		{
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
-			value_t ret_val = service()->emit_sqrt( service()->fn().arg(0) );
+			cg_value ret_val = service()->emit_sqrt( service()->fn().arg(0) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "cross" )
@@ -921,7 +921,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( par_tys.size() == 2 );
 			service()->fn().arg_name( 0, ".lhs" );
 			service()->fn().arg_name( 1, ".rhs" );
-			value_t ret_val = service()->emit_cross( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret_val = service()->emit_cross( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret_val, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "ddx" || intr->unmangled_name() == "ddy" )
@@ -929,7 +929,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( par_tys.size() == 1 );
 			service()->fn().arg_name( 0, ".value" );
 
-			value_t ret_val;
+			cg_value ret_val;
 			if( intr->unmangled_name() == "ddx" ){
 				ret_val = service()->emit_ddx( service()->fn().arg(0) );
 			} else {
@@ -940,17 +940,17 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if ( intr->unmangled_name() == "tex2D" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t samp = service()->fn().arg(0);
-			value_t coord = service()->fn().arg(1);
-			value_t ddx = service()->emit_ddx(coord);
-			value_t ddy = service()->emit_ddy(coord);
-			value_t ret = service()->emit_tex2Dgrad( samp, coord, ddx, ddy );
+			cg_value samp = service()->fn().arg(0);
+			cg_value coord = service()->fn().arg(1);
+			cg_value ddx = service()->emit_ddx(coord);
+			cg_value ddy = service()->emit_ddy(coord);
+			cg_value ret = service()->emit_tex2Dgrad( samp, coord, ddx, ddy );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "tex2Dgrad" )
 		{
 			assert( par_tys.size() == 4 );
-			value_t ret = service()->emit_tex2Dgrad(
+			cg_value ret = service()->emit_tex2Dgrad(
 				service()->fn().arg(0),
 				service()->fn().arg(1),
 				service()->fn().arg(2),
@@ -961,41 +961,41 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if ( intr->unmangled_name() == "tex2Dlod" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t ret = service()->emit_tex2Dlod( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret = service()->emit_tex2Dlod( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if ( intr->unmangled_name() == "tex2Dbias" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t ret = service()->emit_tex2Dbias( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret = service()->emit_tex2Dbias( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "tex2Dproj" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t ret = service()->emit_tex2Dproj( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret = service()->emit_tex2Dproj( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "texCUBE" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t samp = service()->fn().arg(0);
-			value_t coord = service()->fn().arg(1);
-			value_t ddx = service()->emit_ddx(coord);
-			value_t ddy = service()->emit_ddy(coord);
-			value_t ret = service()->emit_texCUBEgrad( samp, coord, ddx, ddy );
+			cg_value samp = service()->fn().arg(0);
+			cg_value coord = service()->fn().arg(1);
+			cg_value ddx = service()->emit_ddx(coord);
+			cg_value ddy = service()->emit_ddy(coord);
+			cg_value ret = service()->emit_texCUBEgrad( samp, coord, ddx, ddy );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "texCUBElod" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t ret = service()->emit_texCUBElod( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret = service()->emit_texCUBElod( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "texCUBEgrad" )
 		{
 			assert( par_tys.size() == 4 );
-			value_t ret = service()->emit_texCUBEgrad(
+			cg_value ret = service()->emit_texCUBEgrad(
 				service()->fn().arg(0),
 				service()->fn().arg(1),
 				service()->fn().arg(2),
@@ -1006,13 +1006,13 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "texCUBEbias" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t ret = service()->emit_texCUBEbias( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret = service()->emit_texCUBEbias( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "texCUBEproj" )
 		{
 			assert( par_tys.size() == 2 );
-			value_t ret = service()->emit_texCUBEproj( service()->fn().arg(0), service()->fn().arg(1) );
+			cg_value ret = service()->emit_texCUBEproj( service()->fn().arg(0), service()->fn().arg(1) );
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if ( intrin_ssi->is_constructor() )
@@ -1028,11 +1028,11 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			builtin_types ret_hint	= ret_ty->hint();
 			
 			if( is_vector(ret_hint) ){
-				value_t ret_v = service()->undef_value( ret_hint, service()->param_abi(false) );
+				cg_value ret_v = service()->undef_value( ret_hint, service()->param_abi(false) );
 
 				size_t i_scalar = 0;
 				for( size_t i_arg = 0; i_arg < fn.arg_size(); ++i_arg ){
-					value_t arg_value = fn.arg(i_arg);
+					cg_value arg_value = fn.arg(i_arg);
 					builtin_types arg_hint = arg_value.hint();
 					if( is_scalar(arg_hint) ){
 						ret_v = service()->emit_insert_val( ret_v, static_cast<int>(i_scalar), arg_value );
@@ -1040,7 +1040,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 					} else if ( is_vector(arg_hint) ) {
 						size_t arg_vec_size = vector_size(arg_hint);
 						for( size_t i_scalar_in_arg = 0; i_scalar_in_arg < arg_vec_size; ++i_scalar_in_arg ){
-							value_t scalar_value = service()->emit_extract_val( arg_value, static_cast<int>(i_scalar_in_arg) );
+							cg_value scalar_value = service()->emit_extract_val( arg_value, static_cast<int>(i_scalar_in_arg) );
 							ret_v = service()->emit_insert_val( ret_v, static_cast<int>(i_scalar), scalar_value );
 							++i_scalar;
 						}
@@ -1077,8 +1077,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.arg_size() == 1 );
 			fn.arg_name(0, ".deg");
 			float deg2rad = (float)(eflib::PI/180.0f);
-			value_t deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
-			value_t deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
+			cg_value deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
+			cg_value deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
 			service()->emit_return( service()->emit_mul_comp( deg2rad_v, fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "degrees" )
@@ -1087,8 +1087,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.arg_size() == 1 );
 			fn.arg_name(0, ".rad");
 			float rad2deg = (float)(180.0f/eflib::PI);
-			value_t rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
-			value_t rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
+			cg_value rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
+			cg_value rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
 			service()->emit_return( service()->emit_mul_comp( rad2deg_v, fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "lerp" )
@@ -1098,9 +1098,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, ".s");
 			fn.arg_name(1, ".d");
 			fn.arg_name(2, ".t");
-			value_t diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
-			value_t t_diff = service()->emit_mul_comp( diff, fn.arg(2) );
-			value_t ret = service()->emit_add(fn.arg(0), t_diff);
+			cg_value diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
+			cg_value t_diff = service()->emit_mul_comp( diff, fn.arg(2) );
+			cg_value ret = service()->emit_add(fn.arg(0), t_diff);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "distance" )
@@ -1109,9 +1109,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.arg_size() == 2 );
 			fn.arg_name(0, ".s");
 			fn.arg_name(1, ".d");
-			value_t diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
-			value_t dist_sqr = service()->emit_dot(diff, diff);
-			value_t dist = service()->emit_sqrt(dist_sqr);
+			cg_value diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
+			cg_value dist_sqr = service()->emit_dot(diff, diff);
+			cg_value dist = service()->emit_sqrt(dist_sqr);
 			service()->emit_return( dist, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "dst" )
@@ -1120,18 +1120,18 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.arg_size() == 2 );
 			fn.arg_name(0, ".sqr");
 			fn.arg_name(1, ".inv");
-			value_t x2 = service()->create_constant_scalar(1.0f, NULL, builtin_types::_float);
-			value_t y0 = service()->emit_extract_val( fn.arg(0), 1 );
-			value_t y1 = service()->emit_extract_val( fn.arg(1), 1 );
-			value_t z0 = service()->emit_extract_val( fn.arg(0), 2 );
-			value_t w1 = service()->emit_extract_val( fn.arg(1), 3 );
-			value_t y2 = service()->emit_mul_comp( y0, y1 );
-			vector<value_t> elems;
+			cg_value x2 = service()->create_constant_scalar(1.0f, NULL, builtin_types::_float);
+			cg_value y0 = service()->emit_extract_val( fn.arg(0), 1 );
+			cg_value y1 = service()->emit_extract_val( fn.arg(1), 1 );
+			cg_value z0 = service()->emit_extract_val( fn.arg(0), 2 );
+			cg_value w1 = service()->emit_extract_val( fn.arg(1), 3 );
+			cg_value y2 = service()->emit_mul_comp( y0, y1 );
+			vector<cg_value> elems;
 			elems.push_back(x2);
 			elems.push_back(y2);
 			elems.push_back(z0);
 			elems.push_back(w1);
-			value_t dest = service()->create_vector(elems, service()->param_abi(false) );
+			cg_value dest = service()->create_vector(elems, service()->param_abi(false) );
 			service()->emit_return( dest, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "any" )
@@ -1154,7 +1154,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			assert( fn.arg_size() == 1 );
 			fn.arg_name(0, ".v");
 
-			value_t length_sqr = service()->emit_dot( fn.arg(0), fn.arg(0) );
+			cg_value length_sqr = service()->emit_dot( fn.arg(0), fn.arg(0) );
 			service()->emit_return( service()->emit_sqrt( length_sqr ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "clamp" )
@@ -1166,9 +1166,9 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(1, "v1");
 			fn.arg_name(2, "v2");
 			
-			value_t v     = fn.arg(0);
-			value_t min_v = fn.arg(1);
-			value_t max_v = fn.arg(2);
+			cg_value v     = fn.arg(0);
+			cg_value min_v = fn.arg(1);
+			cg_value max_v = fn.arg(2);
 
 			service()->emit_return( service()->emit_clamp(v, min_v, max_v), service()->param_abi(false) );
 		}
@@ -1213,10 +1213,10 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, "v0");
 			fn.arg_name(1, "v1");
 
-			value_t v0 = fn.arg(0);
-			value_t v1 = fn.arg(1);
+			cg_value v0 = fn.arg(0);
+			cg_value v1 = fn.arg(1);
 
-			value_t ret = service()->emit_select(service()->emit_cmp_lt(v0, v1), v0, v1);
+			cg_value ret = service()->emit_select(service()->emit_cmp_lt(v0, v1), v0, v1);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "max" )
@@ -1227,10 +1227,10 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, "v0");
 			fn.arg_name(1, "v1");
 
-			value_t v0 = fn.arg(0);
-			value_t v1 = fn.arg(1);
+			cg_value v0 = fn.arg(0);
+			cg_value v1 = fn.arg(1);
 
-			value_t ret = service()->emit_select(service()->emit_cmp_gt(v0, v1), v0, v1);
+			cg_value ret = service()->emit_select(service()->emit_cmp_gt(v0, v1), v0, v1);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "frac" )
@@ -1241,10 +1241,10 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			fn.arg_name(0, "v");
 
-			value_t v = fn.arg(0);
-			value_t abs_value = service()->emit_abs(v);
-			value_t floor_value = service()->emit_unary_ps( "sasl.floor.f32", abs_value );
-			value_t ret = service()->emit_sub(abs_value, floor_value);
+			cg_value v = fn.arg(0);
+			cg_value abs_value = service()->emit_abs(v);
+			cg_value floor_value = service()->emit_unary_ps( "sasl.floor.f32", abs_value );
+			cg_value ret = service()->emit_sub(abs_value, floor_value);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "saturate" )
@@ -1263,10 +1263,10 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			fn.arg_name(0, "v");
 
-			value_t v = fn.arg(0);
-			value_t one_value = service()->one_value(v);
+			cg_value v = fn.arg(0);
+			cg_value one_value = service()->one_value(v);
 
-			value_t ret = service()->emit_div(one_value, v);
+			cg_value ret = service()->emit_div(one_value, v);
 			
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
@@ -1277,10 +1277,10 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 			fn.arg_name(0, "v");
 
-			value_t v = fn.arg(0);
-			value_t length_sqr = service()->emit_dot(v, v);
-			value_t length = service()->emit_sqrt(length_sqr);
-			value_t ret = service()->emit_div(v, length);
+			cg_value v = fn.arg(0);
+			cg_value length_sqr = service()->emit_dot(v, v);
+			cg_value length = service()->emit_sqrt(length_sqr);
+			cg_value ret = service()->emit_div(v, length);
 
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
@@ -1292,12 +1292,12 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, "i");
 			fn.arg_name(1, "n");
 
-			value_t i = fn.arg(0);
-			value_t n = fn.arg(1);
+			cg_value i = fn.arg(0);
+			cg_value n = fn.arg(1);
 
-			value_t two = service()->create_constant_scalar( 2.0f, NULL, scalar_of( i.hint() ) );
-			value_t double_dot = service()->emit_mul_comp( two, service()->emit_dot(i, n) );
-			value_t ret = service()->emit_sub( i, service()->emit_mul_comp(double_dot, n) );
+			cg_value two = service()->create_constant_scalar( 2.0f, NULL, scalar_of( i.hint() ) );
+			cg_value double_dot = service()->emit_mul_comp( two, service()->emit_dot(i, n) );
+			cg_value ret = service()->emit_sub( i, service()->emit_mul_comp(double_dot, n) );
 
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
@@ -1317,23 +1317,23 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(1, "v1");
 			fn.arg_name(2, "v2");
 
-			value_t min_v = fn.arg(0);
-			value_t max_v = fn.arg(1);
-			value_t v     = fn.arg(2);
+			cg_value min_v = fn.arg(0);
+			cg_value max_v = fn.arg(1);
+			cg_value v     = fn.arg(2);
 
 			// t = clamp((x - min) / (max-min), 0.0, 1.0);
 			// return t * t * (3.0 - 2.0 * t);
 
-			value_t t = service()->emit_div(
+			cg_value t = service()->emit_div(
 				service()->emit_sub(v, min_v),
 				service()->emit_sub(max_v, min_v)
 				);
 			t = service()->emit_saturate(t);
 
-			value_t two = service()->numeric_value(t, 2.0, 2);
-			value_t three = service()->numeric_value(t, 3.0, 3);
+			cg_value two = service()->numeric_value(t, 2.0, 2);
+			cg_value three = service()->numeric_value(t, 3.0, 3);
 
-			value_t ret = service()->emit_sub(
+			cg_value ret = service()->emit_sub(
 				three,
 				service()->emit_mul_comp(two, t)
 				);
@@ -1357,24 +1357,24 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			// else
 			//	 R = eta * I - (eta * dot(N, I) + sqrt(k)) * N;
 
-			value_t i	= fn.arg(0);
-			value_t n	= fn.arg(1);
-			value_t eta = fn.arg(2);
+			cg_value i	= fn.arg(0);
+			cg_value n	= fn.arg(1);
+			cg_value eta = fn.arg(2);
 
-			value_t one			= service()->one_value(i);
-			value_t zero		= service()->null_value(i.hint(), i.abi());
-			value_t eta_x_eta	= service()->emit_mul_comp(eta, eta);
-			value_t n_dot_i		= service()->emit_dot(n, i);
-			value_t eta_x_i		= service()->emit_mul_comp(eta, i);
+			cg_value one			= service()->one_value(i);
+			cg_value zero		= service()->null_value(i.hint(), i.abi());
+			cg_value eta_x_eta	= service()->emit_mul_comp(eta, eta);
+			cg_value n_dot_i		= service()->emit_dot(n, i);
+			cg_value eta_x_i		= service()->emit_mul_comp(eta, i);
 
-			value_t k, r;
+			cg_value k, r;
 
 			k = service()->emit_mul_comp(n_dot_i, n_dot_i);
 			k = service()->emit_sub(one, k);
 			k = service()->emit_mul_comp(eta_x_eta, k);
 			k = service()->emit_sub(one, k);
 
-			value_t flag = service()->emit_cmp_lt(k, zero);
+			cg_value flag = service()->emit_cmp_lt(k, zero);
 			k = service()->emit_select(flag, zero, k);
 
 			r = service()->emit_mul_comp(eta, n_dot_i);
@@ -1394,10 +1394,10 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, "y");
 			fn.arg_name(1, "x");
 
-			value_t y = fn.arg(0);
-			value_t x = fn.arg(1);
+			cg_value y = fn.arg(0);
+			cg_value x = fn.arg(1);
 
-			value_t ret = service()->emit_select(
+			cg_value ret = service()->emit_select(
 				service()->emit_cmp_ge(x, y),
 				service()->one_value(x),
 				service()->null_value( x.hint(), x.abi() ) );
@@ -1413,11 +1413,11 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(1, "a");
 			fn.arg_name(2, "b");
 
-			value_t m = fn.arg(0);
-			value_t a = fn.arg(1);
-			value_t b = fn.arg(2);
+			cg_value m = fn.arg(0);
+			cg_value a = fn.arg(1);
+			cg_value b = fn.arg(2);
 
-			value_t ret = service()->emit_add(service()->emit_mul_comp(m, a), b);
+			cg_value ret = service()->emit_add(service()->emit_mul_comp(m, a), b);
 			service()->emit_return( ret, service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "faceforward" )
@@ -1430,13 +1430,13 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(2, "ng");
 
 			// -n * sign( dot(i,ng) )
-			value_t n  = fn.arg(0);
-			value_t i  = fn.arg(1);
-			value_t ng = fn.arg(2);
+			cg_value n  = fn.arg(0);
+			cg_value i  = fn.arg(1);
+			cg_value ng = fn.arg(2);
 
-			value_t zero = service()->null_value( n.hint(), n.abi() );
-			value_t i_dot_ng = service()->emit_dot(i, ng);
-			value_t ret = service()->emit_select(
+			cg_value zero = service()->null_value( n.hint(), n.abi() );
+			cg_value i_dot_ng = service()->emit_dot(i, ng);
+			cg_value ret = service()->emit_select(
 				service()->emit_cmp_lt( i_dot_ng, service()->null_value( i_dot_ng.hint(), i_dot_ng.abi() ) ),
 				n, service()->emit_sub(zero, n)
 				);
@@ -1454,28 +1454,28 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			// ambient = 1.
 			// diffuse = (n_dot_l < 0) ? 0 : n_dot_l.
 			// specular = (n_dot_l < 0) || (n_dot_h < 0) ? 0 : (n_dot_h* m).
-			value_t n_dot_l = fn.arg(0);
-			value_t n_dot_h = fn.arg(1);
-			value_t m		= fn.arg(2);
+			cg_value n_dot_l = fn.arg(0);
+			cg_value n_dot_h = fn.arg(1);
+			cg_value m		= fn.arg(2);
 
-			value_t one = service()->one_value(n_dot_l);
-			value_t zero = service()->null_value( n_dot_l.hint(), n_dot_l.abi() );
-			value_t ambient = one;
-			value_t diffuse = service()->emit_select(
+			cg_value one = service()->one_value(n_dot_l);
+			cg_value zero = service()->null_value( n_dot_l.hint(), n_dot_l.abi() );
+			cg_value ambient = one;
+			cg_value diffuse = service()->emit_select(
 				service()->emit_cmp_lt(n_dot_l, zero), zero, n_dot_l );
-			value_t specular = service()->emit_select(
+			cg_value specular = service()->emit_select(
 				service()->emit_or(
 					service()->emit_cmp_lt(n_dot_l, zero),
 					service()->emit_cmp_lt(n_dot_h, zero)
 					), zero, service()->emit_mul_comp(n_dot_h, m) );
 
-			vector<value_t> values;
+			vector<cg_value> values;
 			values.push_back(one);
 			values.push_back(diffuse);
 			values.push_back(specular);
 			values.push_back(one);
 			abis promoted_abi = service()->promote_abi(one.abi(), diffuse.abi(), specular.abi() );
-			value_t lit_packed = service()->create_vector( values, promoted_abi );
+			cg_value lit_packed = service()->create_vector( values, promoted_abi );
 
 			service()->emit_return( lit_packed, service()->param_abi(false) );
 		}

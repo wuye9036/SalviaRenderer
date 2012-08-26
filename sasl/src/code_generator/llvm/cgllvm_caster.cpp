@@ -1,5 +1,5 @@
 #include <eflib/include/platform/disable_warnings.h>
-#include <LLVM/Support/IRBuilder.h>
+#include <LLVM/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 #include <sasl/include/code_generator/llvm/cgllvm_caster.h>
 #include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
@@ -61,7 +61,7 @@ public:
 	{
 	}
 
-	void store(node* dest, node* src, value_t const& v)
+	void store(node* dest, node* src, cg_value const& v)
 	{
 		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
 			// Overwrite source.
@@ -82,7 +82,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_t casted = cgs->cast_ints(
+		cg_value casted = cgs->cast_ints(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -92,7 +92,7 @@ public:
 
 	void int2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_i2b( get_context(src)->node_value );
+		cg_value casted = cgs->cast_i2b( get_context(src)->node_value );
 		store(dest, src, casted);
 	}
 
@@ -102,7 +102,7 @@ public:
 		
 		assert( src_ctxt != dest_ctxt );
 
-		value_t casted = cgs->cast_i2f(
+		cg_value casted = cgs->cast_i2f(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -115,7 +115,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_t casted = cgs->cast_f2i(
+		cg_value casted = cgs->cast_f2i(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -128,7 +128,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		value_t casted = cgs->cast_f2f(
+		cg_value casted = cgs->cast_f2f(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -137,7 +137,7 @@ public:
 
 	void float2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		value_t casted = cgs->cast_f2b( get_context(src)->node_value );
+		cg_value casted = cgs->cast_f2b( get_context(src)->node_value );
 		store( dest, src, casted );
 	}
 
@@ -162,7 +162,7 @@ public:
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		value_t vector_value = dest_ctxt->node_value.to_rvalue();
+		cg_value vector_value = dest_ctxt->node_value.to_rvalue();
 		size_t swz_code = encode_sized_swizzle(dest_size);
 
 		cgs->store(

@@ -187,7 +187,7 @@ function_t* cg_service::fetch_function(function_type* fn_node){
 	return ret;
 }
 
-value_t cg_service::null_value( cg_type* tyinfo, abis abi )
+cg_value cg_service::null_value( cg_type* tyinfo, abis abi )
 {
 	assert( tyinfo && abi != abi_unknown );
 	Type* value_type = tyinfo->ty(abi);
@@ -195,24 +195,24 @@ value_t cg_service::null_value( cg_type* tyinfo, abis abi )
 	return create_value( tyinfo, Constant::getNullValue(value_type), vkind_value, abi );
 }
 
-value_t cg_service::null_value( builtin_types bt, abis abi )
+cg_value cg_service::null_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
 	Type* valty = type_( bt, abi );
-	value_t val = create_value( bt, Constant::getNullValue( valty ), vkind_value, abi );
+	cg_value val = create_value( bt, Constant::getNullValue( valty ), vkind_value, abi );
 	return val;
 }
 
-value_t cg_service::create_value( cg_type* tyinfo, Value* val, value_kinds k, abis abi ){
-	return value_t( tyinfo, val, k, abi, this );
+cg_value cg_service::create_value( cg_type* tyinfo, Value* val, value_kinds k, abis abi ){
+	return cg_value( tyinfo, val, k, abi, this );
 }
 
-value_t cg_service::create_value( builtin_types hint, Value* val, value_kinds k, abis abi )
+cg_value cg_service::create_value( builtin_types hint, Value* val, value_kinds k, abis abi )
 {
-	return value_t( hint, val, k, abi, this );
+	return cg_value( hint, val, k, abi, this );
 }
 
-value_t cg_service::create_value( cg_type* tyinfo, builtin_types hint, Value* val, value_kinds k, abis abi )
+cg_value cg_service::create_value( cg_type* tyinfo, builtin_types hint, Value* val, value_kinds k, abis abi )
 {
 	if( tyinfo ){
 		return create_value( tyinfo, val, k, abi );
@@ -323,13 +323,13 @@ cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 	return NULL;
 }
 
-value_t cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
+cg_value cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type* vty = type_( bt, abi );
 	return create_value( bt, alloca_(vty, name), vkind_ref, abi );
 }
 
-value_t cg_service::create_variable( cg_type const* ty, abis abi, std::string const& name )
+cg_value cg_service::create_variable( cg_type const* ty, abis abi, std::string const& name )
 {
 	Type* vty = type_( ty, abi );
 	return create_value( const_cast<cg_type*>(ty), alloca_(vty, name), vkind_ref, abi );
@@ -436,7 +436,7 @@ Type* cg_service::type_( cg_type const* ty, abis abi )
 	return ty->ty(abi);
 }
 
-llvm::Value* cg_service::load( value_t const& v )
+llvm::Value* cg_service::load( cg_value const& v )
 {
 	value_kinds kind = v.kind();
 	Value* raw = v.raw();
@@ -468,7 +468,7 @@ llvm::Value* cg_service::load( value_t const& v )
 			} else {
 				// Multi-members must be swizzle/writemask.
 				assert( (kind & vkind_ref) == 0 );
-				value_t ret_val = emit_extract_elem_mask( v.parent()->to_rvalue(), masks );
+				cg_value ret_val = emit_extract_elem_mask( v.parent()->to_rvalue(), masks );
 				return ret_val.load( v.abi() );
 			}
 		}
@@ -488,19 +488,19 @@ llvm::Value* cg_service::load( value_t const& v )
 	}
 }
 
-llvm::Value* cg_service::load( value_t const& v, abis abi )
+llvm::Value* cg_service::load( cg_value const& v, abis abi )
 {
 	return load_as( v, abi );
 }
 
-llvm::Value* cg_service::load_ref( value_t const& v )
+llvm::Value* cg_service::load_ref( cg_value const& v )
 {
 	value_kinds kind = v.kind();
 
 	if( kind == vkind_ref ){
 		return v.raw();
 	} else if( kind == (vkind_swizzle|vkind_ref) ){
-		value_t non_ref( v );
+		cg_value non_ref( v );
 		non_ref.kind( vkind_swizzle );
 		return non_ref.load();
 	} if( kind == vkind_swizzle ){
@@ -510,7 +510,7 @@ llvm::Value* cg_service::load_ref( value_t const& v )
 	return NULL;
 }
 
-Value* cg_service::load_ref( value_t const& v, abis abi )
+Value* cg_service::load_ref( cg_value const& v, abis abi )
 {
 	if( v.abi() == abi || v.hint() == builtin_types::_sampler ){
 		return load_ref(v);
@@ -519,7 +519,7 @@ Value* cg_service::load_ref( value_t const& v, abis abi )
 	}
 }
 
-Value* cg_service::load_as( value_t const& v, abis abi )
+Value* cg_service::load_as( cg_value const& v, abis abi )
 {
 	assert( abi != abi_unknown );
 
@@ -585,14 +585,14 @@ Value* cg_service::load_as( value_t const& v, abis abi )
 	return NULL;
 }
 
-Value* cg_service::load_as_llvm_c( value_t const& v, abis abi )
+Value* cg_service::load_as_llvm_c( cg_value const& v, abis abi )
 {
 	builtin_types hint = v.hint();
 
 	if( is_scalar(hint) || is_sampler(hint) ){
 		return v.load();
 	} else if( is_vector( hint ) ){
-		value_t ret_value = undef_value( hint, abi );
+		cg_value ret_value = undef_value( hint, abi );
 
 		size_t vec_size = vector_size( hint );
 		for( size_t i = 0; i < vec_size; ++i ){
@@ -601,10 +601,10 @@ Value* cg_service::load_as_llvm_c( value_t const& v, abis abi )
 
 		return ret_value.load();
 	} else if( is_matrix( hint ) ){
-		value_t ret_value = null_value( hint, abi );
+		cg_value ret_value = null_value( hint, abi );
 		size_t vec_count = vector_count( hint );
 		for( size_t i = 0; i < vec_count; ++i ){
-			value_t org_vec = emit_extract_val(v, (int)i);
+			cg_value org_vec = emit_extract_val(v, (int)i);
 			ret_value = emit_insert_val( ret_value, (int)i, org_vec );
 		}
 
@@ -620,7 +620,7 @@ Value* cg_service::load_as_llvm_c( value_t const& v, abis abi )
 	return NULL;
 }
 
-value_t cg_service::emit_insert_val( value_t const& lhs, value_t const& idx, value_t const& elem_value )
+cg_value cg_service::emit_insert_val( cg_value const& lhs, cg_value const& idx, cg_value const& elem_value )
 {
 	Value* indexes[1] = { idx.load() };
 	Value* agg = lhs.load();
@@ -638,7 +638,7 @@ value_t cg_service::emit_insert_val( value_t const& lhs, value_t const& idx, val
 	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
 }
 
-value_t cg_service::emit_insert_val( value_t const& lhs, int index, value_t const& elem_value )
+cg_value cg_service::emit_insert_val( cg_value const& lhs, int index, cg_value const& elem_value )
 {
 	Value* agg = lhs.load();
 	Value* new_value = NULL;
@@ -651,7 +651,7 @@ value_t cg_service::emit_insert_val( value_t const& lhs, int index, value_t cons
 		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
-		value_t index_value = create_value( builtin_types::_sint32, int_(index), vkind_value, abi_llvm );
+		cg_value index_value = create_value( builtin_types::_sint32, int_(index), vkind_value, abi_llvm );
 		return emit_insert_val( lhs, index_value, elem_value );
 	}
 	assert(new_value);
@@ -659,7 +659,7 @@ value_t cg_service::emit_insert_val( value_t const& lhs, int index, value_t cons
 	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
 }
 
-Value* cg_service::load_vec_as_package( value_t const& v )
+Value* cg_service::load_vec_as_package( cg_value const& v )
 {
 	builtin_types hint = v.hint();
 
@@ -679,13 +679,13 @@ Value* cg_service::load_vec_as_package( value_t const& v )
 	return NULL;
 }
 
-Value* cg_service::load_c_as_package( value_t const& v )
+Value* cg_service::load_c_as_package( cg_value const& v )
 {
 	if( v.hint() == builtin_types::_sampler ){
 		return v.load();
 	} else {
 		
-		value_t llvm_v = create_value( v.tyinfo(), v.hint(), v.load(abi_llvm), vkind_value, abi_llvm );
+		cg_value llvm_v = create_value( v.tyinfo(), v.hint(), v.load(abi_llvm), vkind_value, abi_llvm );
 
 		if( is_scalar( v.hint() ) || is_vector( v.hint() ) ){
 
@@ -735,7 +735,7 @@ abis cg_service::promote_abi( abis abi0, abis abi1, abis abi2 )
 	return promote_abi( promote_abi( abi0, abi1 ), abi2 );
 }
 
-value_t cg_service::emit_mul_comp( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_mul_comp( cg_value const& lhs, cg_value const& rhs )
 {
 	builtin_types lhint = lhs.hint();
 	builtin_types rhint = rhs.hint();
@@ -743,8 +743,8 @@ value_t cg_service::emit_mul_comp( value_t const& lhs, value_t const& rhs )
 	assert( lhint != builtin_types::none );
 	assert( rhint != builtin_types::none );
 
-	value_t lv = lhs;
-	value_t rv = rhs;
+	cg_value lv = lhs;
+	cg_value rv = rhs;
 
 	if( lhint != rhint )
 	{
@@ -763,7 +763,7 @@ bool xor(bool l, bool r)
 	return (l && !r) || (!l && r);
 }
 
-value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_add( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t f_add = boost::bind( &DefaultIRBuilder::CreateFAdd, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_add = boost::bind( &DefaultIRBuilder::CreateAdd,  builder(), _1, _2, "", false, false );
@@ -771,7 +771,7 @@ value_t cg_service::emit_add( value_t const& lhs, value_t const& rhs )
 	return emit_bin_es_ta_sva( lhs, rhs, i_add, i_add, f_add );
 }
 
-value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_sub( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t f_sub = boost::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_sub = boost::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
@@ -779,7 +779,7 @@ value_t cg_service::emit_sub( value_t const& lhs, value_t const& rhs )
 	return emit_bin_es_ta_sva( lhs, rhs, i_sub, i_sub, f_sub );
 }
 
-value_t cg_service::emit_mul_intrin( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_mul_intrin( cg_value const& lhs, cg_value const& rhs )
 {
 	builtin_types lhint = lhs.hint();
 	builtin_types rhint = rhs.hint();
@@ -811,10 +811,10 @@ value_t cg_service::emit_mul_intrin( value_t const& lhs, value_t const& rhs )
 	}
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_div( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
@@ -825,7 +825,7 @@ value_t cg_service::emit_div( value_t const& lhs, value_t const& rhs )
 	return emit_bin_es_ta_sva( lhs, rhs, i_safe_div, u_safe_div, f_div );
 }
 
-value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_mod( cg_value const& lhs, cg_value const& rhs )
 {	
 	bin_fn_t i_mod = boost::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
 	bin_fn_t u_mod = boost::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
@@ -839,42 +839,42 @@ value_t cg_service::emit_mod( value_t const& lhs, value_t const& rhs )
 	return emit_bin_es_ta_sva( lhs, rhs, i_safe_mod, u_safe_mod, f_mod );
 }
 
-value_t cg_service::emit_lshift( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_lshift( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t shl = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Shl, _1, _2, "" );
 	return emit_bin_es_ta_sva( lhs, rhs, shl, shl, shl );
 }
 
-value_t cg_service::emit_rshift( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_rshift( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t shr = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::LShr, _1, _2, "" );
 	return emit_bin_es_ta_sva( lhs, rhs, shr, shr, shr );
 }
 
-value_t cg_service::emit_bit_and( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_bit_and( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t bit_and = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::And, _1, _2, "" );
 	return emit_bin_es_ta_sva( lhs, rhs, bit_and, bit_and, bit_and );
 }
 
-value_t cg_service::emit_bit_or( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_bit_or( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t bit_or = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Or, _1, _2, "" );
 	return emit_bin_es_ta_sva( lhs, rhs, bit_or, bit_or, bit_or );
 }
 
-value_t cg_service::emit_bit_xor( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_bit_xor( cg_value const& lhs, cg_value const& rhs )
 {
 	bin_fn_t bit_xor = boost::bind( &DefaultIRBuilder::CreateBinOp, builder(), Instruction::Xor, _1, _2, "" );
 	return emit_bin_es_ta_sva( lhs, rhs, bit_xor, bit_xor, bit_xor );
 }
 
-value_t cg_service::emit_dot( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_dot( cg_value const& lhs, cg_value const& rhs )
 {
 	return emit_dot_vv(lhs, rhs);
 }
 
-value_t cg_service::emit_cross( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_cross( cg_value const& lhs, cg_value const& rhs )
 {
 	assert( lhs.hint() == vector_of( builtin_types::_float, 3 ) );
 	assert( rhs.hint() == lhs.hint() );
@@ -882,15 +882,15 @@ value_t cg_service::emit_cross( value_t const& lhs, value_t const& rhs )
 	uint32_t swz_va = indexes_to_mask( 1, 2, 0, -1 );
 	uint32_t swz_vb = indexes_to_mask( 2, 0, 1, -1 );
 
-	value_t lvec_a = emit_extract_elem_mask( lhs, swz_va );
-	value_t lvec_b = emit_extract_elem_mask( lhs, swz_vb );
-	value_t rvec_a = emit_extract_elem_mask( rhs, swz_va );
-	value_t rvec_b = emit_extract_elem_mask( rhs, swz_vb );
+	cg_value lvec_a = emit_extract_elem_mask( lhs, swz_va );
+	cg_value lvec_b = emit_extract_elem_mask( lhs, swz_vb );
+	cg_value rvec_a = emit_extract_elem_mask( rhs, swz_va );
+	cg_value rvec_b = emit_extract_elem_mask( rhs, swz_vb );
 
 	return emit_sub( emit_mul_comp(lvec_a, rvec_b), emit_mul_comp(lvec_b, rvec_a) );
 }
 
-value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
+cg_value cg_service::emit_extract_ref( cg_value const& lhs, int idx )
 {
 	assert( lhs.storable() );
 
@@ -899,10 +899,10 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 	if( is_vector(agg_hint) ){
 		char indexes[4] = { (char)idx, -1, -1, -1 };
 		uint32_t mask = indexes_to_mask( indexes );
-		return value_t::slice( lhs, mask );
+		return cg_value::slice( lhs, mask );
 	} else if( is_matrix(agg_hint) ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		return value_t();
+		return cg_value();
 	} else if ( agg_hint == builtin_types::none ){
 		Value* agg_address = lhs.load_ref();
 		Value* elem_address = builder().CreateStructGEP( agg_address, (unsigned)idx );
@@ -913,10 +913,10 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, int idx )
 		return create_value( tyinfo, elem_address, vkind_ref, lhs.abi() );
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
+cg_value cg_service::emit_extract_ref( cg_value const& lhs, cg_value const& idx )
 {
 	assert( lhs.storable() );
 	
@@ -925,7 +925,7 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 
 	if( is_vector(agg_hint) )
 	{
-		return value_t::slice( lhs, idx );
+		return cg_value::slice( lhs, idx );
 	}
 	else if( is_matrix(agg_hint) )
 	{
@@ -947,7 +947,7 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 		default:
 			assert(false);
 		}
-		return value_t();
+		return cg_value();
 	}
 	else if ( agg_hint == builtin_types::none )
 	{
@@ -974,10 +974,10 @@ value_t cg_service::emit_extract_ref( value_t const& lhs, value_t const& idx )
 			assert(false);
 		}
 	}
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
+cg_value cg_service::emit_extract_val( cg_value const& lhs, int idx )
 {
 	builtin_types agg_hint = lhs.hint();
 
@@ -1029,7 +1029,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, int idx )
 	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
 }
 
-value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
+cg_value cg_service::emit_extract_val( cg_value const& lhs, cg_value const& idx )
 {
 	builtin_types agg_hint = lhs.hint();
 
@@ -1094,7 +1094,7 @@ value_t cg_service::emit_extract_val( value_t const& lhs, value_t const& idx )
 	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
 }
 
-value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
+cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask )
 {
 	char indexes[4] = {-1, -1, -1, -1};
 	mask_to_indexes( indexes, mask );
@@ -1121,7 +1121,7 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 	}
 
 	if( vec.storable() ){
-		value_t swz_proxy = create_value( NULL, swz_hint, NULL, vkind_swizzle, vec.abi() );
+		cg_value swz_proxy = create_value( NULL, swz_hint, NULL, vkind_swizzle, vec.abi() );
 		swz_proxy.parent( vec );
 		swz_proxy.masks( mask );
 		return swz_proxy;
@@ -1183,14 +1183,14 @@ value_t cg_service::emit_extract_elem_mask( value_t const& vec, uint32_t mask )
 		}
 	}
 
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_extract_col( value_t const& lhs, size_t index )
+cg_value cg_service::emit_extract_col( cg_value const& lhs, size_t index )
 {
 	assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
 
-	value_t val = lhs.to_rvalue();
+	cg_value val = lhs.to_rvalue();
 	builtin_types mat_hint( lhs.hint() );
 	assert( is_matrix(mat_hint) );
 
@@ -1198,33 +1198,33 @@ value_t cg_service::emit_extract_col( value_t const& lhs, size_t index )
 
 	builtin_types out_hint = vector_of( scalar_of(mat_hint), row_count );
 
-	value_t out_value = null_value( out_hint, lhs.abi() );
+	cg_value out_value = null_value( out_hint, lhs.abi() );
 	for( size_t irow = 0; irow < row_count; ++irow ){
-		value_t row = emit_extract_val( val, (int)irow );
-		value_t cell = emit_extract_val( row, (int)index );
+		cg_value row = emit_extract_val( val, (int)irow );
+		cg_value cell = emit_extract_val( row, (int)index );
 		out_value = emit_insert_val( out_value, (int)irow, cell );
 	}
 
 	return out_value;
 }
 
-value_t cg_service::emit_dot_vv( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_dot_vv( cg_value const& lhs, cg_value const& rhs )
 {
 	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abi_llvm);
 	// assert( promoted_abi == abi_llvm );
 	
 	size_t vec_size = vector_size( lhs.hint() );
-	value_t total = null_value( scalar_of( lhs.hint() ), promoted_abi );
-	value_t prod = emit_mul_comp( lhs, rhs );
+	cg_value total = null_value( scalar_of( lhs.hint() ), promoted_abi );
+	cg_value prod = emit_mul_comp( lhs, rhs );
 	for( size_t i = 0; i < vec_size; ++i ){
-		value_t prod_elem = emit_extract_elem( prod, i );
+		cg_value prod_elem = emit_extract_elem( prod, i );
 		total.emplace( emit_add( total, prod_elem ).to_rvalue() );
 	}
 
 	return total;
 }
 
-value_t cg_service::emit_mul_mv( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_mul_mv( cg_value const& lhs, cg_value const& rhs )
 {
 	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
 
@@ -1235,25 +1235,25 @@ value_t cg_service::emit_mul_mv( value_t const& lhs, value_t const& rhs )
 
 	builtin_types ret_hint = vector_of( scalar_of(vhint), row_count );
 
-	value_t ret_v = null_value( ret_hint, lhs.abi() );
+	cg_value ret_v = null_value( ret_hint, lhs.abi() );
 	for( size_t irow = 0; irow < row_count; ++irow ){
-		value_t row_vec = emit_extract_val( lhs, irow );
+		cg_value row_vec = emit_extract_val( lhs, irow );
 		ret_v = emit_insert_val( ret_v, irow, emit_dot_vv(row_vec, rhs) );
 	}
 
 	return ret_v;
 }
 
-value_t cg_service::emit_mul_vm( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_mul_vm( cg_value const& lhs, cg_value const& rhs )
 {
 	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
 
 	size_t out_v = vector_size( rhs.hint() );
 
-	value_t lrv = lhs.to_rvalue();
-	value_t rrv = rhs.to_rvalue();
+	cg_value lrv = lhs.to_rvalue();
+	cg_value rrv = rhs.to_rvalue();
 
-	value_t ret = null_value( vector_of( scalar_of(lhs.hint()), out_v ), lhs.abi() );
+	cg_value ret = null_value( vector_of( scalar_of(lhs.hint()), out_v ), lhs.abi() );
 	for( size_t idx = 0; idx < out_v; ++idx ){
 		ret = emit_insert_val( ret, (int)idx, emit_dot_vv( lrv, emit_extract_col(rrv, idx) ) );
 	}
@@ -1261,7 +1261,7 @@ value_t cg_service::emit_mul_vm( value_t const& lhs, value_t const& rhs )
 	return ret;
 }
 
-value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_mul_mm( cg_value const& lhs, cg_value const& rhs )
 {
 	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
 
@@ -1277,23 +1277,23 @@ value_t cg_service::emit_mul_mm( value_t const& lhs, value_t const& rhs )
 	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
 	abis out_abi = lhs.abi();
 
-	vector<value_t> out_cells(out_v*out_r);
+	vector<cg_value> out_cells(out_v*out_r);
 	out_cells.resize( out_v*out_r );
 
 	// Calculate matrix cells.
 	for( size_t icol = 0; icol < out_v; ++icol){
-		value_t col = emit_extract_col( rhs, icol );
+		cg_value col = emit_extract_col( rhs, icol );
 		for( size_t irow = 0; irow < out_r; ++irow )
 		{
-			value_t row = emit_extract_col( rhs, icol );
+			cg_value row = emit_extract_col( rhs, icol );
 			out_cells[irow*out_v+icol] = emit_dot_vv( col, row );
 		}
 	}
 
 	// Compose cells to matrix
-	value_t ret_value = null_value( out_hint, out_abi );
+	cg_value ret_value = null_value( out_hint, out_abi );
 	for( size_t irow = 0; irow < out_r; ++irow ){
-		value_t row_vec = null_value( out_row_hint, out_abi );
+		cg_value row_vec = null_value( out_row_hint, out_abi );
 		for( size_t icol = 0; icol < out_v; ++icol ){
 			row_vec = emit_insert_val( row_vec, (int)icol, out_cells[irow*out_v+icol] );
 		}
@@ -1341,7 +1341,7 @@ Value* cg_service::insert_elements_( Value* dst, Value* src, size_t start_pos ){
 	return ret;
 }
 
-value_t cg_service::emit_abs( value_t const& arg_value )
+cg_value cg_service::emit_abs( cg_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
@@ -1356,7 +1356,7 @@ value_t cg_service::emit_abs( value_t const& arg_value )
 	return create_value(arg_value.tyinfo(), hint, ret_v, vkind_value, arg_abi);
 }
 
-value_t cg_service::emit_sqrt( value_t const& arg_value )
+cg_value cg_service::emit_sqrt( cg_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
@@ -1380,33 +1380,33 @@ value_t cg_service::emit_sqrt( value_t const& arg_value )
 	else
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		return value_t();
+		return cg_value();
 	}
 }
 
-value_t cg_service::undef_value( builtin_types bt, abis abi )
+cg_value cg_service::undef_value( builtin_types bt, abis abi )
 {
 	assert( bt != builtin_types::none );
 	Type* valty = type_( bt, abi );
-	value_t val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
+	cg_value val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
 	return val;
 }
 
-value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args )
+cg_value cg_service::emit_call( function_t const& fn, vector<cg_value> const& args )
 {
-	return emit_call( fn, args, value_t() );
+	return emit_call( fn, args, cg_value() );
 }
 
-value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args, value_t const& exec_mask )
+cg_value cg_service::emit_call( function_t const& fn, vector<cg_value> const& args, cg_value const& exec_mask )
 {
 	abis promoted_abi = abi_llvm;
-	BOOST_FOREACH( value_t const& arg, args )
+	BOOST_FOREACH( cg_value const& arg, args )
 	{
 		promoted_abi = promote_abi( arg.abi(), promoted_abi );
 	}
 
 	vector<Value*> arg_values;
-	value_t var;
+	cg_value var;
 
 	if ( fn.first_arg_is_return_address() ){
 		var = create_variable( fn.get_return_ty(), fn.abi(), ".tmp" );
@@ -1423,7 +1423,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	}
 
 	if( fn.c_compatible || fn.external ){
-		BOOST_FOREACH( value_t const& arg, args ){
+		BOOST_FOREACH( cg_value const& arg, args ){
 			builtin_types hint = arg.hint();
 			if( ( is_scalar(hint) && (arg_abi == abi_c || arg_abi == abi_llvm) ) || is_sampler(hint) ){
 				arg_values.push_back( arg.load( arg_abi ) );
@@ -1438,7 +1438,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 			}
 		}
 	} else {
-		BOOST_FOREACH( value_t const& arg, args ){
+		BOOST_FOREACH( cg_value const& arg, args ){
 			arg_values.push_back( arg.load( promoted_abi ) );
 		}
 	}
@@ -1453,7 +1453,7 @@ value_t cg_service::emit_call( function_t const& fn, vector<value_t> const& args
 	return create_value( fn.get_return_ty(), ret_val, vkind_value, ret_abi );
 }
 
-value_t cg_service::cast_s2v( value_t const& v )
+cg_value cg_service::cast_s2v( cg_value const& v )
 {
 	builtin_types hint = v.hint();
 	assert( is_scalar(hint) );
@@ -1466,11 +1466,11 @@ value_t cg_service::cast_s2v( value_t const& v )
 	}
 
 	// Otherwise return a new vector
-	value_t ret = null_value( vhint, v.abi() );
+	cg_value ret = null_value( vhint, v.abi() );
 	return emit_insert_val( ret, 0, v );
 }
 
-value_t cg_service::cast_v2s( value_t const& v )
+cg_value cg_service::cast_v2s( cg_value const& v )
 {
 	assert( is_vector(v.hint()) );
 
@@ -1482,7 +1482,7 @@ value_t cg_service::cast_v2s( value_t const& v )
 	return emit_extract_val( v, 0 );
 }
 
-value_t cg_service::cast_bits( value_t const& v, cg_type* dest_tyi )
+cg_value cg_service::cast_bits( cg_value const& v, cg_type* dest_tyi )
 {
 	abis abi = promote_abi(v.abi(), abi_llvm);
 
@@ -1502,13 +1502,13 @@ void cg_service::jump_to( insert_point_t const& ip )
 	}
 }
 
-void cg_service::jump_cond( value_t const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip )
+void cg_service::jump_cond( cg_value const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip )
 {
 	Value* cond = cond_v.load_i1();
 	builder().CreateCondBr( cond, true_ip.block, false_ip.block );
 }
 
-void cg_service::merge_swizzle( value_t const*& root, char indexes[], value_t const& v )
+void cg_service::merge_swizzle( cg_value const*& root, char indexes[], cg_value const& v )
 {
 	root = &v;
 	vector<uint32_t> masks;
@@ -1540,7 +1540,7 @@ void cg_service::merge_swizzle( value_t const*& root, char indexes[], value_t co
 	}
 }
 
-value_t cg_service::create_value_by_scalar( value_t const& scalar, cg_type* tyinfo, builtin_types hint )
+cg_value cg_service::create_value_by_scalar( cg_value const& scalar, cg_type* tyinfo, builtin_types hint )
 {
 	builtin_types src_hint = scalar.hint();
 	assert( is_scalar(src_hint) );
@@ -1555,7 +1555,7 @@ value_t cg_service::create_value_by_scalar( value_t const& scalar, cg_type* tyin
 	else if( is_vector(dst_hint) )
 	{
 		size_t vsize = vector_size(dst_hint);
-		vector<value_t> scalars;
+		vector<cg_value> scalars;
 		scalars.insert(scalars.end(), vsize, scalar);
 		return create_vector(scalars, scalar.abi());
 	}
@@ -1564,10 +1564,10 @@ value_t cg_service::create_value_by_scalar( value_t const& scalar, cg_type* tyin
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_any( value_t const& v )
+cg_value cg_service::emit_any( cg_value const& v )
 {
 	builtin_types hint = v.hint();
 	builtin_types scalar_hint = scalar_of(v.hint());
@@ -1577,8 +1577,8 @@ value_t cg_service::emit_any( value_t const& v )
 	}
 	else if( is_vector(hint) )
 	{
-		value_t elem_v = emit_extract_val(v, 0);
-		value_t ret = emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) );
+		cg_value elem_v = emit_extract_val(v, 0);
+		cg_value ret = emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) );
 		for( size_t i = 1; i < vector_size(hint); ++i )
 		{
 			elem_v = emit_extract_val(v, i);
@@ -1594,10 +1594,10 @@ value_t cg_service::emit_any( value_t const& v )
 	{
 		assert(false);
 	}
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_all( value_t const& v )
+cg_value cg_service::emit_all( cg_value const& v )
 {
 	builtin_types hint = v.hint();
 	builtin_types scalar_hint = scalar_of(v.hint());
@@ -1607,8 +1607,8 @@ value_t cg_service::emit_all( value_t const& v )
 	}
 	else if( is_vector(hint) )
 	{
-		value_t elem_v = emit_extract_val(v, 0);
-		value_t ret = emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) );
+		cg_value elem_v = emit_extract_val(v, 0);
+		cg_value ret = emit_cmp_ne( elem_v, null_value(scalar_hint, v.abi()) );
 		for( size_t i = 1; i < vector_size(hint); ++i )
 		{
 			elem_v = emit_extract_val(v, i);
@@ -1624,7 +1624,7 @@ value_t cg_service::emit_all( value_t const& v )
 	{
 		assert(false);
 	}
-	return value_t();
+	return cg_value();
 }
 
 Value* cg_service::i8toi1_( Value* v )
@@ -1649,7 +1649,7 @@ Value* cg_service::i1toi8_( Value* v )
 	return builder().CreateZExtOrBitCast(v, ty);
 }
 
-value_t cg_service::emit_cmp( value_t const& lhs, value_t const& rhs, uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float )
+cg_value cg_service::emit_cmp( cg_value const& lhs, cg_value const& rhs, uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float )
 {
 	builtin_types hint = lhs.hint();
 	builtin_types scalar_hint = scalar_of(hint);
@@ -1681,37 +1681,37 @@ value_t cg_service::emit_cmp( value_t const& lhs, value_t const& rhs, uint32_t p
 	return create_value( ret_hint, ret, vkind_value, promoted_abi );
 }
 
-value_t cg_service::emit_cmp_eq( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_cmp_eq( cg_value const& lhs, cg_value const& rhs )
 {
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_EQ, CmpInst::ICMP_EQ, CmpInst::FCMP_OEQ );
 }
 
-value_t cg_service::emit_cmp_lt( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_cmp_lt( cg_value const& lhs, cg_value const& rhs )
 {
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_SLT, CmpInst::ICMP_ULT, CmpInst::FCMP_ULT );
 }
 
-value_t cg_service::emit_cmp_le( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_cmp_le( cg_value const& lhs, cg_value const& rhs )
 {
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_SLE, CmpInst::ICMP_ULE, CmpInst::FCMP_ULE );
 }
 
-value_t cg_service::emit_cmp_ne( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_cmp_ne( cg_value const& lhs, cg_value const& rhs )
 {
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_NE, CmpInst::ICMP_NE, CmpInst::FCMP_UNE );
 }
 
-value_t cg_service::emit_cmp_ge( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_cmp_ge( cg_value const& lhs, cg_value const& rhs )
 {
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_SGE, CmpInst::ICMP_UGE, CmpInst::FCMP_UGE );
 }
 
-value_t cg_service::emit_cmp_gt( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_cmp_gt( cg_value const& lhs, cg_value const& rhs )
 {
 	return emit_cmp( lhs, rhs, CmpInst::ICMP_SGT, CmpInst::ICMP_UGT, CmpInst::FCMP_UGT );
 }
 
-value_t cg_service::emit_bin_ps_ta_sva( value_t const& lhs, value_t const& rhs, bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn )
+cg_value cg_service::emit_bin_ps_ta_sva( cg_value const& lhs, cg_value const& rhs, bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn )
 {
 	builtin_types hint( lhs.hint() );
 	assert( hint == rhs.hint() );
@@ -1751,7 +1751,7 @@ value_t cg_service::emit_bin_ps_ta_sva( value_t const& lhs, value_t const& rhs, 
 		assert(false);
 	}
 
-	value_t retval = create_value( hint, ret, vkind_value, internal_abi );
+	cg_value retval = create_value( hint, ret, vkind_value, internal_abi );
 	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
 	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
 }
@@ -1843,7 +1843,7 @@ Value* cg_service::bin_op_ps_ts_sva_( Type* ret_ty, Value* lhs, llvm::Value* rhs
 	return NULL;
 }
 
-value_t cg_service::emit_and( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_and( cg_value const& lhs, cg_value const& rhs )
 {
 	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
 	assert( lhs.hint() == rhs.hint() );
@@ -1851,7 +1851,7 @@ value_t cg_service::emit_and( value_t const& lhs, value_t const& rhs )
 	return emit_bit_and( lhs, rhs );
 }
 
-value_t cg_service::emit_or( value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_or( cg_value const& lhs, cg_value const& rhs )
 {
 	assert( scalar_of( lhs.hint() ) == builtin_types::_boolean );
 	assert( lhs.hint() == rhs.hint() );
@@ -2145,27 +2145,27 @@ bool cg_service::register_external_intrinsic()
 	return true;
 }
 
-value_t cg_service::emit_tex2Dlod( value_t const& samp, value_t const& coord )
+cg_value cg_service::emit_tex2Dlod( cg_value const& samp, cg_value const& coord )
 {
 	return emit_tex_lod_impl(samp, coord, tex2dlod_vs, tex2dlod_ps);
 }
 
-value_t cg_service::emit_tex2Dgrad( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy )
+cg_value cg_service::emit_tex2Dgrad( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy )
 {
 	return emit_tex_grad_impl(samp, coord, ddx, ddy, tex2dgrad_ps);
 }
 
-value_t cg_service::emit_tex2Dbias( value_t const& samp, value_t const& coord )
+cg_value cg_service::emit_tex2Dbias( cg_value const& samp, cg_value const& coord )
 {
 	return emit_tex_bias_impl(samp, coord, tex2dbias_ps);
 }
 
-value_t cg_service::emit_tex2Dproj( value_t const& samp, value_t const& coord )
+cg_value cg_service::emit_tex2Dproj( cg_value const& samp, cg_value const& coord )
 {
 	return emit_tex_proj_impl(samp, coord, tex2dproj_ps);
 }
 
-value_t cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v )
+cg_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v )
 {
 	builtin_types hint = tyinfo ? tyinfo->hint() : bt;
 	builtin_types scalar_hint = scalar_of(hint);
@@ -2243,7 +2243,7 @@ Value* cg_service::cast_sv_( Value* v, Type* elem_ty, cast_ops op )
 	return builder().CreateCast( llvm_op, v, ret_ty );
 }
 
-value_t cg_service::emit_unary_ps( std::string const& scalar_external_intrin_name, value_t const& v )
+cg_value cg_service::emit_unary_ps( std::string const& scalar_external_intrin_name, cg_value const& v )
 {
 	Function* scalar_intrin = module()->getFunction( scalar_external_intrin_name );
 	assert( scalar_intrin );
@@ -2259,7 +2259,7 @@ value_t cg_service::emit_unary_ps( std::string const& scalar_external_intrin_nam
 	return create_value( v.tyinfo(), v.hint(), ret_v, vkind_value, v.abi() );
 }
 
-value_t cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_intrin_name, value_t const& v0, value_t const& v1 )
+cg_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_intrin_name, cg_value const& v0, cg_value const& v1 )
 {
 	Function* scalar_intrin = module()->getFunction( scalar_external_intrin_name );
 	assert( scalar_intrin );
@@ -2291,22 +2291,22 @@ Value* cg_service::safe_idiv_imod_sv_( Value* lhs, Value* rhs, bin_fn_t div_or_m
 	return div_or_mod_sv_fn( lhs, non_zero_rhs );
 }
 
-value_t cg_service::extend_to_vm( value_t const& v, builtin_types complex_hint )
+cg_value cg_service::extend_to_vm( cg_value const& v, builtin_types complex_hint )
 {
 	builtin_types hint = v.hint();
 	assert( is_scalar(hint) );
 
 	if( is_vector(complex_hint) )
 	{
-		vector<value_t> values(vector_size(complex_hint), v);
+		vector<cg_value> values(vector_size(complex_hint), v);
 		return create_vector( values, v.abi() );
 	}
 
 	if( is_matrix(complex_hint) )
 	{
-		vector<value_t> values(vector_size(complex_hint), v);
-		value_t vec_v = create_vector( values, v.abi() );
-		value_t ret_v = undef_value(complex_hint, v.abi());
+		vector<cg_value> values(vector_size(complex_hint), v);
+		cg_value vec_v = create_vector( values, v.abi() );
+		cg_value ret_v = undef_value(complex_hint, v.abi());
 		for( int i = 0; i < (int)vector_count(complex_hint); ++i )
 		{
 			ret_v = emit_insert_val( ret_v, i, vec_v );
@@ -2315,10 +2315,10 @@ value_t cg_service::extend_to_vm( value_t const& v, builtin_types complex_hint )
 	}
 
 	assert(false);
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_bin_es_ta_sva( std::string const& scalar_external_intrin_name, value_t const& lhs, value_t const& rhs )
+cg_value cg_service::emit_bin_es_ta_sva( std::string const& scalar_external_intrin_name, cg_value const& lhs, cg_value const& rhs )
 {
 	builtin_types lhint = lhs.hint();
 	builtin_types rhint = rhs.hint();
@@ -2326,8 +2326,8 @@ value_t cg_service::emit_bin_es_ta_sva( std::string const& scalar_external_intri
 	assert( lhint != builtin_types::none );
 	assert( rhint != builtin_types::none );
 
-	value_t lv = lhs;
-	value_t rv = rhs;
+	cg_value lv = lhs;
+	cg_value rv = rhs;
 
 	if( lhint != rhint )
 	{
@@ -2339,7 +2339,7 @@ value_t cg_service::emit_bin_es_ta_sva( std::string const& scalar_external_intri
 	return emit_bin_ps_ta_sva( scalar_external_intrin_name, lv, rv );
 }
 
-value_t cg_service::emit_bin_es_ta_sva( value_t const& lhs, value_t const& rhs, bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn )
+cg_value cg_service::emit_bin_es_ta_sva( cg_value const& lhs, cg_value const& rhs, bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn )
 {
 	builtin_types lhint = lhs.hint();
 	builtin_types rhint = rhs.hint();
@@ -2347,8 +2347,8 @@ value_t cg_service::emit_bin_es_ta_sva( value_t const& lhs, value_t const& rhs, 
 	assert( lhint != builtin_types::none );
 	assert( rhint != builtin_types::none );
 
-	value_t lv = lhs;
-	value_t rv = rhs;
+	cg_value lv = lhs;
+	cg_value rv = rhs;
 
 	if( lhint != rhint )
 	{
@@ -2360,7 +2360,7 @@ value_t cg_service::emit_bin_es_ta_sva( value_t const& lhs, value_t const& rhs, 
 	return emit_bin_ps_ta_sva( lv, rv, signed_sv_fn, unsigned_sv_fn, float_sv_fn );
 }
 
-value_t cg_service::emit_tex_lod_impl( value_t const& samp, value_t const& coord, intrin_ids vs_intrin, intrin_ids ps_intrin )
+cg_value cg_service::emit_tex_lod_impl( cg_value const& samp, cg_value const& coord, intrin_ids vs_intrin, intrin_ids ps_intrin )
 {
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
 	abis abi = param_abi(false);
@@ -2385,7 +2385,7 @@ value_t cg_service::emit_tex_lod_impl( value_t const& samp, value_t const& coord
 	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
 }
 
-value_t cg_service::emit_tex_grad_impl( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy, intrin_ids ps_intrin )
+cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy, intrin_ids ps_intrin )
 {
 	builtin_types coord_hint = coord.hint();
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
@@ -2417,16 +2417,16 @@ value_t cg_service::emit_tex_grad_impl( value_t const& samp, value_t const& coor
 	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
 }
 
-value_t cg_service::emit_tex_bias_impl( value_t const& /*samp*/, value_t const& /*coord*/, intrin_ids /*ps_intrin*/ )
+cg_value cg_service::emit_tex_bias_impl( cg_value const& /*samp*/, cg_value const& /*coord*/, intrin_ids /*ps_intrin*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return value_t();
+	return cg_value();
 }
 
-value_t cg_service::emit_tex_proj_impl( value_t const& samp, value_t const& coord, intrin_ids ps_intrin )
+cg_value cg_service::emit_tex_proj_impl( cg_value const& samp, cg_value const& coord, intrin_ids ps_intrin )
 {
-	value_t ddx = emit_ddx( coord );
-	value_t ddy = emit_ddy( coord );
+	cg_value ddx = emit_ddx( coord );
+	cg_value ddy = emit_ddy( coord );
 
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
 
@@ -2456,22 +2456,22 @@ value_t cg_service::emit_tex_proj_impl( value_t const& samp, value_t const& coor
 	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
 }
 
-value_t cg_service::emit_texCUBElod( value_t const& samp, value_t const& coord )
+cg_value cg_service::emit_texCUBElod( cg_value const& samp, cg_value const& coord )
 {
 	return emit_tex_lod_impl(samp, coord, texCUBElod_vs, texCUBElod_ps);
 }
 
-value_t cg_service::emit_texCUBEgrad( value_t const& samp, value_t const& coord, value_t const& ddx, value_t const& ddy )
+cg_value cg_service::emit_texCUBEgrad( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy )
 {
 	return emit_tex_grad_impl(samp, coord, ddx, ddy, texCUBEgrad_ps);
 }
 
-value_t cg_service::emit_texCUBEbias( value_t const& samp, value_t const& coord )
+cg_value cg_service::emit_texCUBEbias( cg_value const& samp, cg_value const& coord )
 {
 	return emit_tex_bias_impl(samp, coord, texCUBEbias_ps);
 }
 
-value_t cg_service::emit_texCUBEproj( value_t const& samp, value_t const& coord )
+cg_value cg_service::emit_texCUBEproj( cg_value const& samp, cg_value const& coord )
 {
 	return emit_tex_proj_impl(samp, coord, texCUBEproj_ps);
 }
@@ -2486,7 +2486,7 @@ node_semantic* cg_service::get_node_semantic( sasl::syntax_tree::node* v )
 	return sem_->get_semantic(v);
 }
 
-value_t cg_service::emit_select( value_t const& flag, value_t const& v0, value_t const& v1 )
+cg_value cg_service::emit_select( cg_value const& flag, cg_value const& v0, cg_value const& v1 )
 {
 	abis promoted_abi = promote_abi(flag.abi(), v0.abi(), v1.abi() );
 
@@ -2593,13 +2593,13 @@ Value* cg_service::get_llvm_struct_( Type* ty, ArrayRef<Value*> const& elements 
 	return ret;
 }
 
-value_t cg_service::emit_not( value_t const& v )
+cg_value cg_service::emit_not( cg_value const& v )
 {
-	value_t mask_value = create_constant_int( NULL, v.hint(), v.abi(), 1 );
+	cg_value mask_value = create_constant_int( NULL, v.hint(), v.abi(), 1 );
 	return emit_bit_xor( mask_value, v );
 }
 
-value_t cg_service::inf_from_value( value_t const& v, bool negative )
+cg_value cg_service::inf_from_value( cg_value const& v, bool negative )
 {
 	Value* v_v = v.load();
 	builtin_types scalar_of_v = scalar_of( v.hint() );
@@ -2609,20 +2609,20 @@ value_t cg_service::inf_from_value( value_t const& v, bool negative )
 	return create_value( v.tyinfo(), v.hint(), inf_value, vkind_value, v.abi() );
 }
 
-value_t cg_service::emit_isinf(value_t const& v)
+cg_value cg_service::emit_isinf(cg_value const& v)
 {
-	value_t abs_v = emit_abs(v);
+	cg_value abs_v = emit_abs(v);
 	return emit_cmp(abs_v, inf_from_value(v, false), ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_OEQ);
 }
 
-value_t cg_service::emit_isfinite( value_t const& v )
+cg_value cg_service::emit_isfinite( cg_value const& v )
 {
-	value_t is_eq = emit_cmp(v, v, ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_OEQ);
-	value_t is_inf = emit_isinf(v);
+	cg_value is_eq = emit_cmp(v, v, ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_OEQ);
+	cg_value is_inf = emit_isinf(v);
 	return emit_and(emit_not(is_inf), is_eq);
 }
 
-value_t cg_service::emit_isnan( value_t const& v )
+cg_value cg_service::emit_isnan( cg_value const& v )
 {
 	return emit_cmp(v, v, ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_UNO);
 }
@@ -2678,7 +2678,7 @@ Value* cg_service::abs_( Value* v, and_< sasl::code_generator::vector_<of_llvm>,
 	}
 }
 
-value_t cg_service::one_value( value_t const& proto )
+cg_value cg_service::one_value( cg_value const& proto )
 {
 	return numeric_value(proto, 1.0f, 1);
 }
@@ -2706,31 +2706,31 @@ llvm::Type* cg_service::extract_scalar_ty_( llvm::Type* ty )
 	return ty;
 }
 
-value_t cg_service::emit_sign( value_t const& v )
+cg_value cg_service::emit_sign( cg_value const& v )
 {
 	builtin_types ret_btc = replace_scalar(v.hint(), builtin_types::_sint32);
-	value_t zero = null_value( v.hint(), v.abi() );
-	value_t i_zero = null_value( ret_btc, v.abi() );
-	value_t i_one = one_value( i_zero );
-	value_t i_neg_one = emit_sub(i_zero, i_one);
+	cg_value zero = null_value( v.hint(), v.abi() );
+	cg_value i_zero = null_value( ret_btc, v.abi() );
+	cg_value i_one = one_value( i_zero );
+	cg_value i_neg_one = emit_sub(i_zero, i_one);
 
-	value_t v0 = emit_select( emit_cmp_lt(v, zero), i_neg_one, i_zero );
-	value_t v1 = emit_select( emit_cmp_gt(v, zero), i_one, i_zero );
+	cg_value v0 = emit_select( emit_cmp_lt(v, zero), i_neg_one, i_zero );
+	cg_value v1 = emit_select( emit_cmp_gt(v, zero), i_one, i_zero );
 	return emit_add(v0, v1);
 }
 
-value_t cg_service::emit_clamp( value_t const& v, value_t const& min_v, value_t const& max_v )
+cg_value cg_service::emit_clamp( cg_value const& v, cg_value const& min_v, cg_value const& max_v )
 {
-	value_t ret = emit_select(emit_cmp_ge(v, min_v), v, min_v);
+	cg_value ret = emit_select(emit_cmp_ge(v, min_v), v, min_v);
 	return emit_select(emit_cmp_le(ret, max_v), ret, max_v);
 }
 
-value_t cg_service::emit_saturate( value_t const& v )
+cg_value cg_service::emit_saturate( cg_value const& v )
 {
 	return emit_clamp(v, null_value( v.hint(), v.abi() ), one_value(v) );
 }
 
-value_t cg_service::numeric_value(value_t const& proto, double fp, uint64_t ui)
+cg_value cg_service::numeric_value(cg_value const& proto, double fp, uint64_t ui)
 {
 	Type* ty = NULL;
 	if( proto.tyinfo() ){

@@ -74,7 +74,7 @@ private:
 
 	cgllvm_module_impl* mod_ptr();
 
-	value_t layout_to_value(salviar::sv_layout* si);
+	cg_value layout_to_value(salviar::sv_layout* si);
 	void layout_to_sc(node_context* psc, salviar::sv_layout* si, bool store_to_existed_value);
 
 	void create_entry_params();
@@ -86,7 +86,7 @@ private:
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
 
-	value_t param_values[salviar::storage_usage_count];
+	cg_value param_values[salviar::storage_usage_count];
 
 	std::vector<builtin_types> entry_param_tys[salviar::storage_usage_count];
 	std::vector< llvm::Type* > entry_params_types[salviar::storage_usage_count];

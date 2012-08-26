@@ -5,7 +5,7 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
-#include <llvm/Support/IRBuilder.h>
+#include <llvm/IRBuilder.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>
 
