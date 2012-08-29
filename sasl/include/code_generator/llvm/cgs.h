@@ -407,7 +407,7 @@ protected:
 	std::vector<function_t*>			fn_ctxts;
 	llvm_intrin_cache					intrins;
 	llvm::Function*						external_intrins[intrins_count];
-	cg_value								exec_mask;
+	cg_value							exec_mask;
 	
 	cg_value emit_cmp(
 		cg_value const& lhs, cg_value const& rhs,
@@ -547,7 +547,6 @@ protected:
 	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_ops op);
 	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
 
-	llvm::Value* countbits_( llvm::Value*, all_<of_llvm> );
 	llvm::Value* select_( llvm::Value*, llvm::Value*, llvm::Value*, all_<of_llvm> );
 
 	llvm::Value* constant_value_by_scalar_(llvm::Type* ty, llvm::Value* scalar_value, scalar_<of_llvm>);
