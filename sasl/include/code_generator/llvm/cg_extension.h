@@ -7,6 +7,8 @@
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/TypeBuilder.h>
+#include <llvm/Constants.h>
+#include <llvm/ADT/APInt.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -159,12 +161,34 @@ public:
 	llvm::Value* get_vector(llvm::ArrayRef<llvm::Value*> const& elements);
 
 	template <typename T>
-	llvm::ConstantInt* get_int( T v, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
-	llvm::ConstantInt* get_int(llvm::Type* ty, llvm::APInt const& v);
+	llvm::APInt apint(T v)
+	{
+		return llvm::APInt( sizeof(v) << 3, static_cast<uint64_t>(v), boost::is_signed<T>::value );
+	}
 	template <typename T>
+	llvm::ConstantInt* get_int( T v, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
+	{
+		return llvm::ConstantInt::get( context_, apint(v) );
+	}
+	llvm::Value* get_int(llvm::Type* ty, llvm::APInt const& v)
+	{
+		return get_constant_by_scalar( ty, llvm::ConstantInt::get(context_, v) );
+	}
+	
+	template <typename U, typename T>
 	llvm::ConstantVector* get_vector(llvm::ArrayRef<T> const& elements, EFLIB_ENABLE_IF_PRED1(is_floating_point, T) );
-	template <typename T>
-	llvm::ConstantVector* get_vector(llvm::ArrayRef<T> const& elements, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+
+	template <typename U, typename T>
+	llvm::Constant* get_vector(llvm::ArrayRef<T> const& elements, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
+	{
+		assert( !elements.empty() );
+		std::vector<llvm::Constant*> constant_elems( elements.size() );
+		for( size_t i = 0; i < elements.size(); ++i ){
+			constant_elems[i] = get_int( U(elements[i]) );
+		}
+
+		return llvm::ConstantVector::get(constant_elems);
+	}
 
 	llvm::Value* get_struct(llvm::Type* ty, llvm::ArrayRef<llvm::Value*> const& elements);
 

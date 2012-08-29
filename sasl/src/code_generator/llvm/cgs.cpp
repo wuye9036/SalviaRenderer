@@ -93,7 +93,7 @@ bool cg_service::initialize( cgllvm_module_impl* mod, module_context* ctxt, modu
 	sem_ = sem;
 
 	initialize_cache( context() );
-
+	ext_.reset( new cg_extension( llvm_mod_->builder(), llvm_mod_->llvm_context(), llvm_mod_->llvm_module() ) );
 	return true;
 }
 
@@ -1349,10 +1349,7 @@ cg_value cg_service::emit_abs( cg_value const& arg_value )
 
 	Value* v = arg_value.load(arg_abi);
 
-	Value* ret_v = unary_op_ps_ts_sva_(
-		v->getType(), v,
-		unary_fn_t(), unary_fn_t(), unary_fn_t(), boost::bind( &cg_service::abs_, this, _1, and_< sasl::code_generator::vector_<of_llvm>, scalar_<of_llvm> >() )
-		);
+	Value* ret_v = ext_->call_unary_intrin( v->getType(), v, boost::bind(&cg_extension::abs_sv, ext_.get(), _1) );
 	return create_value(arg_value.tyinfo(), hint, ret_v, vkind_value, arg_abi);
 }
 
@@ -2496,73 +2493,8 @@ cg_value cg_service::emit_select( cg_value const& flag, cg_value const& v0, cg_v
 
 	return create_value(
 		v0.tyinfo(), v0.hint(), 
-		select_(flag_v, v0_v, v1_v, all_<of_llvm>() ), vkind_value, promoted_abi
+		ext_->select(flag_v, v0_v, v1_v), vkind_value, promoted_abi
 		);
-}
-
-Value* cg_service::select_(Value* flag, Value* v0, Value* v1, all_<of_llvm> )
-{
-	Type* flag_ty = flag->getType();
-
-	if( !flag_ty->isAggregateType() )
-	{
-		Value* flag_i1 = flag;
-		if( !flag_ty->isIntegerTy(1) ) { flag_i1 = i8toi1_(flag); }
-		return builder().CreateSelect(flag_i1, v0, v1);
-	}
-	else if( flag_ty->isStructTy() )
-	{
-		Value* ret = UndefValue::get( v0->getType() );
-		size_t elem_count = flag_ty->getStructNumElements();
-		unsigned int elem_index[1] = {0};
-		for( unsigned int i = 0; i < elem_count; ++i )
-		{
-			elem_index[0] = i;
-			Value* v0_elem   = builder().CreateExtractValue(v0, elem_index);
-			Value* v1_elem   = builder().CreateExtractValue(v1, elem_index);
-			Value* flag_elem = builder().CreateExtractValue(flag, elem_index);
-			Value* ret_elem = select_(flag_elem, v0_elem, v1_elem, all_<of_llvm>() );
-			ret = builder().CreateInsertValue( ret, ret_elem, elem_index );
-		}
-		return ret;
-	}
-}
-
-Value* cg_service::constant_value_by_scalar_( Type* ty, Value* scalar_value, scalar_<of_llvm> )
-{
-	Type* scalar_ty = scalar_value->getType();
-	assert( !scalar_ty->isAggregateType() && !scalar_ty->isVectorTy() );
-	if ( ty->isVectorTy() )
-	{
-		// Vector
-		unsigned vector_size = ty->getVectorNumElements();
-		assert( ty->getVectorElementType() == scalar_ty );
-
-		vector<Value*> scalar_values(vector_size, scalar_value);
-		return get_llvm_vector_(scalar_values);
-	}
-	else if ( !ty->isAggregateType() )
-	{
-		assert(ty == scalar_ty);
-		return scalar_value;
-	}
-	else if ( ty->isStructTy() )
-	{
-		// Struct
-		vector<Value*> elem_values;
-		for(unsigned i = 0; i < ty->getStructNumElements(); ++i)
-		{
-			elem_values.push_back(
-				constant_value_by_scalar_( ty->getStructElementType(i), scalar_value, scalar_<of_llvm>() )
-				);
-		}
-		return get_llvm_struct_(ty, elem_values);
-	}
-	else
-	{
-		EFLIB_ASSERT_UNIMPLEMENTED();
-		return NULL;
-	}
 }
 
 Value* cg_service::get_llvm_vector_(ArrayRef<Value*> const& elements )
@@ -2605,7 +2537,7 @@ cg_value cg_service::inf_from_value( cg_value const& v, bool negative )
 	builtin_types scalar_of_v = scalar_of( v.hint() );
 	Type* scalar_ty = type_(scalar_of_v, abi_llvm);
 	Value* scalar_inf = ConstantFP::getInfinity(scalar_ty, negative);
-	Value* inf_value = constant_value_by_scalar_( v_v->getType(), scalar_inf, scalar_<of_llvm>() );
+	Value* inf_value = ext_->get_constant_by_scalar(v_v->getType(), scalar_inf);
 	return create_value( v.tyinfo(), v.hint(), inf_value, vkind_value, v.abi() );
 }
 
@@ -2625,57 +2557,6 @@ cg_value cg_service::emit_isfinite( cg_value const& v )
 cg_value cg_service::emit_isnan( cg_value const& v )
 {
 	return emit_cmp(v, v, ICmpInst::ICMP_EQ, ICmpInst::ICMP_EQ, FCmpInst::FCMP_UNO);
-}
-
-Value* cg_service::abs_( Value* v, and_< sasl::code_generator::vector_<of_llvm>, scalar_<of_llvm> > )
-{
-	Type* ty = v->getType();
-	assert( !ty->isAggregateType() );
-
-	Type*    elem_ty   = NULL;
-	unsigned elem_size = 0;
-
-	if( ty->isVectorTy() )
-	{
-		elem_ty   = ty->getVectorElementType();
-		elem_size = ty->getVectorNumElements();
-	}
-	else
-	{
-		elem_ty   = ty;
-		elem_size = 1;
-	}
-	
-	if( ty->isFPOrFPVectorTy() )
-	{
-		Type* elem_int_ty = NULL;
-		uint64_t mask = 0;
-		if( elem_ty->isFloatTy() )
-		{
-			elem_int_ty = Type::getInt32Ty( context() );
-			mask = (1ULL << 31) - 1;
-		}
-		else if ( elem_ty->isDoubleTy() )
-		{
-			elem_int_ty = Type::getInt32Ty( context() );
-			mask = (1ULL << 63) - 1;
-		}
-		else
-		{
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-
-		Type* int_ty = ty->isVectorTy() ? VectorType::get(elem_int_ty, elem_size) : elem_int_ty;
-		Value* i = builder().CreateBitCast( v, int_ty );
-		i = builder().CreateAnd(i, mask);
-		return builder().CreateBitCast(i, ty);
-	}
-	else
-	{
-		Value* sign = builder().CreateICmpSGT( v, Constant::getNullValue( v->getType() ) );
-		Value* neg = builder().CreateNeg( v );
-		return builder().CreateSelect(sign, v, neg);
-	}
 }
 
 cg_value cg_service::one_value( cg_value const& proto )
@@ -2753,7 +2634,7 @@ cg_value cg_service::numeric_value(cg_value const& proto, double fp, uint64_t ui
 
 	assert(scalar_value);
 
-	Value* ret_value = constant_value_by_scalar_( ty, scalar_value, scalar_<of_llvm>() );
+	Value* ret_value = ext_->get_constant_by_scalar(ty, scalar_value);
 	return create_value( proto.tyinfo(), proto.hint(), ret_value, vkind_value, proto.abi() );
 }
 

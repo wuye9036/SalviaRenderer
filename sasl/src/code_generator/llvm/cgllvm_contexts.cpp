@@ -2,6 +2,7 @@
 #include <sasl/include/code_generator/llvm/cgs.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
@@ -82,7 +83,11 @@ private:
 	}
 
 	template <typename T>
-	void deconstruct_object(T* v){ v->~T(); }
+	void deconstruct_object(T* v)
+	{
+		EFLIB_UNREF_DECLARATOR(v);
+		v->~T();
+	}
 
 	template <typename ContainerT>
 	void deconstruct_objects( ContainerT& cont )

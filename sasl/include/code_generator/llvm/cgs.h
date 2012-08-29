@@ -5,12 +5,12 @@
 
 #include <sasl/include/code_generator/llvm/cgs_objects.h>
 #include <sasl/include/code_generator/llvm/cgllvm_intrins.h>
+#include <sasl/include/code_generator/llvm/cg_extension.h>
+
 #include <sasl/enums/builtin_types.h>
 
 #include <eflib/include/utility/enable_if.h>
 #include <eflib/include/diagnostics/assert.h>
-
-//#include <eflib/include/utility/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
@@ -31,21 +31,9 @@ namespace sasl
 
 BEGIN_NS_SASL_CODE_GENERATOR();
 
-class cg_value;
+class  cg_value;
+class  cgllvm_module_impl;
 struct node_context;
-class cgllvm_module_impl;
-class cg_service;
-
-class of_llvm{};
-class of_sasl{};
-
-template <typename T0, typename T1> class and_{};
-
-template<typename OfT> class scalar_{};
-template<typename OfT> class vector_{};
-template<typename OfT> class matrix_{};
-template<typename OfT> class aggr_{};
-template<typename OfT> class all_{};
 
 class cg_service
 {
@@ -541,15 +529,9 @@ protected:
 		cast_op_i2i_unsigned
 	};
 
-	llvm::Value* abs_(llvm::Value* v, and_< sasl::code_generator::vector_<of_llvm>, scalar_<of_llvm> >);
-
 	llvm::Value* cast_sv_( llvm::Value*, llvm::Type* elem_ty, cast_ops op );
 	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_ops op);
 	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
-
-	llvm::Value* select_( llvm::Value*, llvm::Value*, llvm::Value*, all_<of_llvm> );
-
-	llvm::Value* constant_value_by_scalar_(llvm::Type* ty, llvm::Value* scalar_value, scalar_<of_llvm>);
 
 	llvm::Value* get_llvm_vector_(llvm::ArrayRef<llvm::Value*> const& elements);
 	llvm::Value* get_llvm_struct_(llvm::Type* ty, llvm::ArrayRef<llvm::Value*> const& elements);
@@ -558,6 +540,9 @@ protected:
 
 	cg_value inf_from_value(cg_value const& v, bool negative);
 private:
+
+	boost::scoped_ptr<cg_extension>		ext_;
+
 	llvm::Value* load_as_llvm_c			( cg_value const& v, abis abi );
 	llvm::Value* load_c_as_package		( cg_value const& v );
 	llvm::Value* load_llvm_as_vec		( cg_value const& v );

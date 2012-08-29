@@ -249,7 +249,7 @@ Value* cg_extension::extract_elements( Value* src, size_t start_pos, size_t leng
 	for ( size_t i_elem = 0; i_elem < length; ++i_elem ){
 		indexes[i_elem] = i_elem + start_pos;
 	}
-	Value* mask = get_vector( ArrayRef<int>(indexes) );
+	Value* mask = get_vector<int>( ArrayRef<int>(indexes) );
 	return builder_->CreateShuffleVector( src, UndefValue::get( src->getType() ), mask );
 }
 
@@ -376,6 +376,9 @@ Value* cg_extension::select( Value* flag, Value* v0, Value* v1 )
 		}
 		return ret;
 	}
+
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
 }
 
 Type* cg_extension::extract_scalar_type( Type* ty )
