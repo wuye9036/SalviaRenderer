@@ -296,37 +296,6 @@ public:
 	/// @{
 	llvm::Type* type_( builtin_types bt, abis abi );
 	llvm::Type* type_( cg_type const*, abis abi );
-	template <typename T>
-	llvm::ConstantInt* int_( T v ){
-		return llvm::ConstantInt::get( context(), apint(v) );
-	}
-	template <typename T>
-	llvm::Constant* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
-	{
-		assert( vals && length > 0 );
-
-		std::vector<llvm::Constant*> elems(length);
-		for( size_t i = 0; i < length; ++i ){
-			elems[i] = int_(vals[i]);
-		}
-
-		return llvm::cast<llvm::Constant>( llvm::ConstantVector::get( elems ) );
-	}
-
-	template <typename U, typename T>
-	llvm::Constant* vector_( T const* vals, size_t length, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
-	{
-		assert( vals && length > 0 );
-
-		std::vector<llvm::Constant*> elems(length);
-		for( size_t i = 0; i < length; ++i ){
-			elems[i] = int_( U(vals[i]) );
-		}
-
-		return llvm::cast<llvm::Constant>( llvm::ConstantVector::get( elems ) );
-	}
-
-	llvm::Value* integer_value_( llvm::Type* ty, llvm::APInt const& );
 
 	llvm::Value* load_as( cg_value const& v, abis abi );
 	/// @}
@@ -539,8 +508,8 @@ protected:
 	llvm::Type* extract_scalar_ty_( llvm::Type* );
 
 	cg_value inf_from_value(cg_value const& v, bool negative);
-private:
 
+protected:
 	boost::scoped_ptr<cg_extension>		ext_;
 
 	llvm::Value* load_as_llvm_c			( cg_value const& v, abis abi );

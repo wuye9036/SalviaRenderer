@@ -48,6 +48,7 @@ using eflib::ceil_to_pow2;
 
 using namespace sasl::utility;
 
+using llvm::ArrayRef;
 using llvm::APInt;
 using llvm::Argument;
 using llvm::LLVMContext;
@@ -105,7 +106,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 				Value* selected = UndefValue::get( src->getType() );
 				for(unsigned i = 0; i < mask->getType()->getVectorNumElements(); ++i)
 				{
-					Value* index = int_(i);
+					Value* index = ext_->get_int(i);
 					Value* mask_elem = i8toi1_( builder().CreateExtractElement(mask, index) );
 					Value* src_elem = builder().CreateExtractElement(src, index);
 					Value* dest_elem = builder().CreateExtractElement(dest_value, index);
@@ -166,11 +167,11 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 							int src_index = static_cast<int>( src_elem_pitch*i_elem+i_write_idx );
 							int dst_index = static_cast<int>( dst_elem_pitch*i_elem+indexes[i_write_idx] );
 					
-							Value* new_val = builder().CreateExtractElement( r_value, int_(src_index) );
-							Value* old_val = builder().CreateExtractElement( parent_value, int_(dst_index) ); 
-							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), int_( static_cast<int>(i_elem) ) );
+							Value* new_val = builder().CreateExtractElement( r_value, ext_->get_int(src_index) );
+							Value* old_val = builder().CreateExtractElement( parent_value, ext_->get_int(dst_index) ); 
+							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), ext_->get_int( static_cast<int>(i_elem) ) );
 							Value* elem_val = builder().CreateSelect( i8toi1_(elem_exec_mask), new_val, old_val );
-							parent_value = builder().CreateInsertElement( parent_value, elem_val, int_(dst_index) );
+							parent_value = builder().CreateInsertElement( parent_value, elem_val, ext_->get_int(dst_index) );
 						}
 					}
 					cg_value new_v = *lhs.parent();
@@ -275,7 +276,7 @@ cg_value cgs_simd::create_scalar( llvm::Value* v, cg_type* tyi, builtin_types hi
 	Value* vectorize_v = Constant::getNullValue( ty );
 
 	for( size_t i_elem = 0; i_elem < llvm::cast<VectorType>(ty)->getNumElements(); ++i_elem ){
-		vectorize_v = builder().CreateInsertElement( vectorize_v, v, int_( static_cast<int>(i_elem) ) );
+		vectorize_v = builder().CreateInsertElement( vectorize_v, v, ext_->get_int( static_cast<int>(i_elem) ) );
 	}
 
 	return create_value( tyi, hint, vectorize_v, vkind_value, abi_vectorize );
@@ -312,7 +313,7 @@ Value* cgs_simd::expanded_mask( uint32_t expanded_times )
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		shuffle_mask.insert( shuffle_mask.end(), expanded_times, i );
 	}
-	Constant* shuffle_mask_v = vector_( &(shuffle_mask[0]), shuffle_mask.size() );
+	Constant* shuffle_mask_v = ext_->get_vector<int>( ArrayRef<int>(shuffle_mask) );
 	return builder().CreateShuffleVector( exec_mask_v, exec_mask_v, shuffle_mask_v );
 }
 
@@ -435,8 +436,8 @@ Value* cgs_simd::pack_slices( Value** slices, int slice_count, int slice_size, i
 	for( int i_slice = 0; i_slice < slice_count; ++i_slice ){
 		for( int i_elem = 0; i_elem < slice_size; ++i_elem ){
 			for( int i_scalar = 0; i_scalar < elem_width; ++i_scalar ){
-				Value* scalar  = builder().CreateExtractElement( slices[i_slice], int_( i_elem * elem_width + i_scalar ) );
-				Value* index_v = int_(index+i_scalar);
+				Value* scalar  = builder().CreateExtractElement( slices[i_slice], ext_->get_int( i_elem * elem_width + i_scalar ) );
+				Value* index_v = ext_->get_int(index+i_scalar);
 				vec = builder().CreateInsertElement( vec, scalar, index_v );
 			}
 			index += ( elem_stride * elem_width );
@@ -463,7 +464,7 @@ void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int s
 		}
 
 		// Extract slices
-		Constant* slice_indexes_v = vector_( &slice_indexes[0], slice_size*elem_width );
+		Constant* slice_indexes_v = ext_->get_vector<int>( ArrayRef<int>(slice_indexes) );
 		out_slices[i_slice] = builder().CreateShuffleVector( pkg, pkg, slice_indexes_v );
 
 		index += slice_stride * elem_width;
@@ -544,9 +545,9 @@ void cgs_simd::continue_()
 cg_value cgs_simd::joinable()
 {
 	Value* v = exec_masks.back();
-	Value* ret_bool = builder().CreateExtractElement( v, int_(0) );
+	Value* ret_bool = builder().CreateExtractElement( v, ext_->get_int(0) );
 	for( int i = 1; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		ret_bool = builder().CreateOr( ret_bool, builder().CreateExtractElement( v, int_(i) ) );
+		ret_bool = builder().CreateOr( ret_bool, builder().CreateExtractElement( v, ext_->get_int(i) ) );
 	}
 	return create_value( builtin_types::_boolean, ret_bool, vkind_value, abi_llvm );
 }
@@ -634,7 +635,7 @@ cg_value cgs_simd::packed_mask()
 	Type* packed_mask_ty = type_( builtin_types::_sint16, abi_llvm);
 	Value* ret = Constant::getNullValue( packed_mask_ty );
 	for( size_t i_mask = 0; i_mask < PACKAGE_ELEMENT_COUNT; ++i_mask ){
-		Value* mask_bit = builder().CreateExtractElement( mask_vec, int_<int32_t>(i_mask) );
+		Value* mask_bit = builder().CreateExtractElement( mask_vec, ext_->get_int<int32_t>(i_mask) );
 		mask_bit = builder().CreateZExt( mask_bit, packed_mask_ty );
 		ret = builder().CreateShl( ret, 1 );
 		ret = builder().CreateOr( ret, mask_bit );

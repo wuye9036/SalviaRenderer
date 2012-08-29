@@ -179,7 +179,9 @@ public:
 	llvm::ConstantVector* get_vector(llvm::ArrayRef<T> const& elements, EFLIB_ENABLE_IF_PRED1(is_floating_point, T) );
 
 	template <typename U, typename T>
-	llvm::Constant* get_vector(llvm::ArrayRef<T> const& elements, EFLIB_ENABLE_IF_PRED1(is_integral, T) )
+	llvm::Constant* get_vector(
+		llvm::ArrayRef<T> const& elements,
+		EFLIB_ENABLE_IF_PRED1(is_integral, T) )
 	{
 		assert( !elements.empty() );
 		std::vector<llvm::Constant*> constant_elems( elements.size() );

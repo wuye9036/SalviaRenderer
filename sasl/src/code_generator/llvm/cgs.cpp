@@ -651,7 +651,7 @@ cg_value cg_service::emit_insert_val( cg_value const& lhs, int index, cg_value c
 		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
-		cg_value index_value = create_value( builtin_types::_sint32, int_(index), vkind_value, abi_llvm );
+		cg_value index_value = create_value( builtin_types::_sint32, ext_->get_int(index), vkind_value, abi_llvm );
 		return emit_insert_val( lhs, index_value, elem_value );
 	}
 	assert(new_value);
@@ -669,7 +669,7 @@ Value* cg_service::load_vec_as_package( cg_value const& v )
 		vector<Constant*> indexes;
 		indexes.reserve( PACKAGE_ELEMENT_COUNT );
 		for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-			indexes.push_back( int_( static_cast<int>(i) % SIMD_ELEMENT_COUNT() ) );
+			indexes.push_back( ext_->get_int( static_cast<int>(i) % SIMD_ELEMENT_COUNT() ) );
 		}
 		return builder().CreateShuffleVector( vec_v, vec_v, ConstantVector::get( indexes ) );
 	} else {
@@ -710,7 +710,7 @@ Value* cg_service::load_c_as_package( cg_value const& v )
 				}
 			}
 
-			Value* shuffle_mask = vector_<int>( &(shuffle_indexes[0]), package_scalar_count );
+			Value* shuffle_mask = ext_->get_vector<int>( ArrayRef<size_t>(shuffle_indexes) );
 			return builder().CreateShuffleVector( vec_val, UndefValue::get(vec_val->getType()), shuffle_mask );
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -1002,7 +1002,7 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, int idx )
 			elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
 			break;
 		case abi_llvm:
-			elem_val = builder().CreateExtractElement(val, int_(idx) );
+			elem_val = builder().CreateExtractElement(val, ext_->get_int(idx) );
 			break;
 		case abi_vectorize:
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -1134,7 +1134,9 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 			case abi_c:
 			case abi_llvm:
 				{
-					Value* v = builder().CreateShuffleVector( vec_v, vec_v, vector_<int>(indexes, idx_len) );
+					Value* v = builder().CreateShuffleVector( vec_v, vec_v,
+						ext_->get_vector<int>( ArrayRef<char>(indexes, idx_len) )
+						);
 					return create_value( NULL, swz_hint, v, vkind_value, abi_llvm );
 				}
 			case abi_vectorize:
@@ -1146,7 +1148,7 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 
 					Value* v = builder().CreateShuffleVector(
 						vec_v, UndefValue::get(vec_v->getType()),
-						vector_<int>( &(vectorize_idx[0]), vectorize_idx.size() )
+						ext_->get_vector<int>( ArrayRef<char>(vectorize_idx) )
 						);
 					return create_value( NULL, swz_hint, v, vkind_value, abi_vectorize );
 				}
@@ -1171,7 +1173,7 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 
 					Value* v = builder().CreateShuffleVector(
 						vec_v, UndefValue::get(vec_v->getType()),
-						vector_<int>( &(package_idx[0]), package_idx.size() )
+						ext_->get_vector<int>( ArrayRef<char>(package_idx) )
 						);
 					return create_value( NULL, swz_hint, v, vkind_value, abi_package );
 				}
@@ -1319,7 +1321,7 @@ Value* cg_service::extract_elements_( Value* src, size_t start_pos, size_t lengt
 	for ( size_t i_elem = 0; i_elem < length; ++i_elem ){
 		indexes[i_elem] = i_elem + start_pos;
 	}
-	Value* mask = vector_( &indexes[0], indexes.size() );
+	Value* mask = ext_->get_vector<int>( ArrayRef<int>(indexes) );
 	return builder().CreateShuffleVector( src, UndefValue::get( src->getType() ), mask );
 }
 
@@ -1334,8 +1336,8 @@ Value* cg_service::insert_elements_( Value* dst, Value* src, size_t start_pos ){
 	// Expand source to dest size
 	Value* ret = dst;
 	for( size_t i_elem = 0; i_elem < count; ++i_elem ){
-		Value* src_elem = builder().CreateExtractElement( src, int_<int>(i_elem) );
-		ret = builder().CreateInsertElement( ret, src_elem, int_<int>(i_elem+start_pos) );
+		Value* src_elem = builder().CreateExtractElement( src, ext_->get_int<int>(i_elem) );
+		ret = builder().CreateInsertElement( ret, src_elem, ext_->get_int<int>(i_elem+start_pos) );
 	}
 	
 	return ret;
@@ -1807,13 +1809,13 @@ Value* cg_service::bin_op_ps_ts_sva_( Type* ret_ty, Value* lhs, llvm::Value* rhs
 		ret_v = UndefValue::get( ret_ty );
 		for( unsigned i = 0; i < elem_count; ++i )
 		{
-			Value* lhs_elem = builder().CreateExtractElement( lhs, int_(i) );
-			Value* rhs_elem = builder().CreateExtractElement( rhs, int_(i) );
+			Value* lhs_elem = builder().CreateExtractElement( lhs, ext_->get_int(i) );
+			Value* rhs_elem = builder().CreateExtractElement( rhs, ext_->get_int(i) );
 			Value* ret_elem = sfn(lhs_elem, rhs_elem);
 
 			if( cast_sv_fn ) { ret_elem = cast_sv_fn(ret_elem); }
 
-			ret_v = builder().CreateInsertElement( ret_v, ret_elem, int_(i) );
+			ret_v = builder().CreateInsertElement( ret_v, ret_elem, ext_->get_int(i) );
 		}
 
 		return ret_v;
@@ -1904,9 +1906,9 @@ llvm::Value* cg_service::unary_op_ps_ts_sva_( llvm::Type* ret_ty, llvm::Value* v
 		Value* ret_v = UndefValue::get( v->getType() );
 		for( unsigned i = 0; i < elem_count; ++i )
 		{
-			Value* src_elem = builder().CreateExtractElement( v, int_(i) );
+			Value* src_elem = builder().CreateExtractElement( v, ext_->get_int(i) );
 			Value* ret_elem = sfn(src_elem);
-			ret_v = builder().CreateInsertElement( ret_v, ret_elem, int_(i) );
+			ret_v = builder().CreateInsertElement( ret_v, ret_elem, ext_->get_int(i) );
 		}
 		return ret_v;
 	}
@@ -2170,32 +2172,8 @@ cg_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abi
 	uint32_t bits = static_cast<uint32_t>( storage_size(scalar_hint) ) << 3; 
 
 	Type* ret_ty = type_( hint, abi );
-	Value* ret = integer_value_( ret_ty, APInt( bits, v, is_signed(scalar_hint) ) );
+	Value* ret = ext_->get_int( ret_ty, APInt( bits, v, is_signed(scalar_hint) ) );
 	return create_value(tyinfo, bt, ret, vkind_value, abi);
-}
-
-Value* cg_service::integer_value_( Type* ty, llvm::APInt const& v )
-{
-	if( !ty->isAggregateType() )
-	{
-		return Constant::getIntegerValue(ty, v);
-	}
-
-	if( ty->isStructTy() )
-	{
-		Value* ret = UndefValue::get(ty);
-		unsigned indexes[1] = {0};
-		for( uint32_t i = 0; i < ty->getStructNumElements(); ++i )
-		{
-			indexes[0] = i;
-			Value* elem_v = integer_value_( ty->getStructElementType(i), v );
-			ret = builder().CreateInsertValue( ret, elem_v, indexes );
-		}
-		return ret;
-	}
-
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return NULL;
 }
 
 cg_service::unary_fn_t cg_service::bind_cast_sv_( llvm::Type* elem_ty, cast_ops op )
@@ -2505,7 +2483,7 @@ Value* cg_service::get_llvm_vector_(ArrayRef<Value*> const& elements )
 
 	for(unsigned i = 0; i < elements.size(); ++i)
 	{
-		ret = builder().CreateInsertElement( ret, elements[i], int_(i) );
+		ret = builder().CreateInsertElement( ret, elements[i], ext_->get_int(i) );
 	}
 
 	return ret;
