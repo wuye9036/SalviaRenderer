@@ -259,7 +259,7 @@ void			cg_value::index( cg_value const* v ){ if(v) index(*v); }
 llvm::Value* cg_value::load_i1() const{
 	if( hint() == builtin_types::_boolean )
 	{
-		return cg_->i8toi1_( load(abi_llvm) );
+		return cg_->extension()->i8toi1_sv( load(abi_llvm) );
 	}
 	else
 	{

@@ -169,8 +169,8 @@ cg_value cgs_sisd::cast_ints( cg_value const& v, cg_type* dest_tyi )
 	Type* dest_ty = dest_tyi->ty(v.abi());
 	Type* elem_ty = type_( scalar_of(hint_dst), abi_llvm );
 
-	cast_ops op = is_signed(scalar_hint_src) ? cast_op_i2i_signed : cast_op_i2i_unsigned;
-	unary_fn_t cast_sv_fn = bind_cast_sv_( elem_ty, op );
+	cast_ops::id op = is_signed(scalar_hint_src) ? cast_ops::i2i_signed : cast_ops::i2i_unsigned;
+	unary_fn_t cast_sv_fn = ext_->bind_cast_sv( elem_ty, op );
 	
 	Value* val = unary_op_ps_ts_sva_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
 
@@ -187,8 +187,8 @@ cg_value cgs_sisd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
 	Type* dest_ty = dest_tyi->ty(v.abi());
 	Type* elem_ty = type_( scalar_of(hint_f), abi_llvm );
 
-	cast_ops op = is_signed(hint_i) ? cast_op_i2f : cast_op_u2f;
-	unary_fn_t cast_sv_fn = bind_cast_sv_( elem_ty, op );
+	cast_ops::id op = is_signed(hint_i) ? cast_ops::i2f : cast_ops::u2f;
+	unary_fn_t cast_sv_fn = ext_->bind_cast_sv( elem_ty, op );
 
 	Value* val = unary_op_ps_ts_sva_( dest_ty, v.load(), unary_fn_t(), unary_fn_t(), unary_fn_t(), cast_sv_fn );
 

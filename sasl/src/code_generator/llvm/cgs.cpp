@@ -71,17 +71,6 @@ BEGIN_NS_SASL_CODE_GENERATOR();
 
 /// @}
 
-Function* cg_service::intrin_( int v )
-{
-	return intrins.get( llvm::Intrinsic::ID(v), module() );
-}
-
-template <typename FunctionT>
-Function* cg_service::intrin_( int id )
-{
-	return intrins.get(id, module(), TypeBuilder<FunctionT, false>::get( context() ) );
-}
-
 bool cg_service::initialize( cgllvm_module_impl* mod, module_context* ctxt, module_semantic* sem )
 {
 	assert(mod);
@@ -326,13 +315,13 @@ cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 cg_value cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
 {
 	Type* vty = type_( bt, abi );
-	return create_value( bt, alloca_(vty, name), vkind_ref, abi );
+	return create_value( bt, ext_->stack_alloc(vty, name), vkind_ref, abi );
 }
 
 cg_value cg_service::create_variable( cg_type const* ty, abis abi, std::string const& name )
 {
 	Type* vty = type_( ty, abi );
-	return create_value( const_cast<cg_type*>(ty), alloca_(vty, name), vkind_ref, abi );
+	return create_value( const_cast<cg_type*>(ty), ext_->stack_alloc(vty, name), vkind_ref, abi );
 }
 
 insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
@@ -819,8 +808,8 @@ cg_value cg_service::emit_div( cg_value const& lhs, cg_value const& rhs )
 	bin_fn_t f_div = boost::bind( &DefaultIRBuilder::CreateFDiv, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	bin_fn_t i_div = boost::bind( &DefaultIRBuilder::CreateSDiv, builder(), _1, _2, "", false );
 	bin_fn_t u_div = boost::bind( &DefaultIRBuilder::CreateUDiv, builder(), _1, _2, "", false );
-	bin_fn_t i_safe_div = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, i_div );
-	bin_fn_t u_safe_div = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, u_div );
+	bin_fn_t i_safe_div = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_div );
+	bin_fn_t u_safe_div = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_div );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_safe_div, u_safe_div, f_div );
 }
@@ -830,10 +819,10 @@ cg_value cg_service::emit_mod( cg_value const& lhs, cg_value const& rhs )
 	bin_fn_t i_mod = boost::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
 	bin_fn_t u_mod = boost::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
 		
-	bin_fn_t i_safe_mod = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, i_mod );
-	bin_fn_t u_safe_mod = boost::bind( &cg_service::safe_idiv_imod_sv_, this, _1, _2, u_mod );
+	bin_fn_t i_safe_mod = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_mod );
+	bin_fn_t u_safe_mod = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_mod );
 
-	bin_fn_t intrin_mod_f32 = bind_binary_external_( external_intrins[mod_f32] );
+	bin_fn_t intrin_mod_f32 = ext_->bind_external_to_binary(externals::mod_f32);
 	bin_fn_t f_mod = boost::bind( &cg_service::bin_op_ps_ts_sva_, this, (Type*)NULL, _1, _2, intrin_mod_f32, bin_fn_t(), bin_fn_t(), bin_fn_t(), unary_fn_t() );
 
 	return emit_bin_es_ta_sva( lhs, rhs, i_safe_mod, u_safe_mod, f_mod );
@@ -1305,44 +1294,6 @@ cg_value cg_service::emit_mul_mm( cg_value const& lhs, cg_value const& rhs )
 	return ret_value;
 }
 
-Value* cg_service::shrink_( Value* vec, size_t vsize ){
-	return extract_elements_( vec, 0, vsize );
-}
-
-Value* cg_service::extract_elements_( Value* src, size_t start_pos, size_t length ){
-	VectorType* vty = cast<VectorType>(src->getType());
-	uint32_t elem_count = vty->getNumElements();
-	if( start_pos == 0 && length == elem_count ){
-		return src;
-	}
-
-	vector<int> indexes;
-	indexes.resize( length, 0 );
-	for ( size_t i_elem = 0; i_elem < length; ++i_elem ){
-		indexes[i_elem] = i_elem + start_pos;
-	}
-	Value* mask = ext_->get_vector<int>( ArrayRef<int>(indexes) );
-	return builder().CreateShuffleVector( src, UndefValue::get( src->getType() ), mask );
-}
-
-Value* cg_service::insert_elements_( Value* dst, Value* src, size_t start_pos ){
-	if( src->getType() == dst->getType() ){
-		return src;
-	}
-
-	VectorType* src_ty = cast<VectorType>(src->getType());
-	uint32_t count = src_ty->getNumElements();
-
-	// Expand source to dest size
-	Value* ret = dst;
-	for( size_t i_elem = 0; i_elem < count; ++i_elem ){
-		Value* src_elem = builder().CreateExtractElement( src, ext_->get_int<int>(i_elem) );
-		ret = builder().CreateInsertElement( ret, src_elem, ext_->get_int<int>(i_elem+start_pos) );
-	}
-	
-	return ret;
-}
-
 cg_value cg_service::emit_abs( cg_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
@@ -1368,9 +1319,9 @@ cg_value cg_service::emit_sqrt( cg_value const& arg_value )
 		Value* ret_v = unary_op_ps_ts_sva_(
 			NULL,
 			v,
-			bind_unary_call_( intrin_<float(float)>(Intrinsic::sqrt) ),
+			ext_->bind_to_unary( ext_->vm_intrin<float(float)>(Intrinsic::sqrt) ),
 			unary_fn_t(),
-			bind_unary_call_( intrin_(Intrinsic::x86_sse_sqrt_ps) ),
+			ext_->bind_to_unary( ext_->vm_intrin(Intrinsic::x86_sse_sqrt_ps) ),
 			unary_fn_t()
 			);
 
@@ -1488,7 +1439,7 @@ cg_value cg_service::cast_bits( cg_value const& v, cg_type* dest_tyi )
 	Type* ty = dest_tyi->ty(abi);
 	builtin_types dest_scalar_hint = scalar_of( dest_tyi->hint() );
 	Type* dest_scalar_ty = type_( dest_scalar_hint, abi_llvm );
-	unary_fn_t sv_cast_fn = bind_cast_sv_( dest_scalar_ty, cast_op_bitcast );
+	unary_fn_t sv_cast_fn = ext_->bind_cast_sv( dest_scalar_ty, cast_ops::bitcast );
 	Value* ret = unary_op_ps_ts_sva_( ty, v.load(abi), unary_fn_t(), unary_fn_t(), unary_fn_t(), sv_cast_fn );
 	return create_value( dest_tyi, ret, vkind_value, abi );
 }
@@ -1626,28 +1577,6 @@ cg_value cg_service::emit_all( cg_value const& v )
 	return cg_value();
 }
 
-Value* cg_service::i8toi1_( Value* v )
-{
-	Type* ty = IntegerType::get( v->getContext(), 1 );
-	if( v->getType()->isVectorTy() )
-	{
-		ty = VectorType::get( ty, llvm::cast<VectorType>(v->getType())->getNumElements() );
-	}
-
-	return builder().CreateTruncOrBitCast(v, ty);
-}
-
-Value* cg_service::i1toi8_( Value* v )
-{
-	Type* ty = IntegerType::get( v->getContext(), 8 );
-	if( v->getType()->isVectorTy() )
-	{
-		ty = VectorType::get( ty, llvm::cast<VectorType>(v->getType())->getNumElements() );
-	}
-
-	return builder().CreateZExtOrBitCast(v, ty);
-}
-
 cg_value cg_service::emit_cmp( cg_value const& lhs, cg_value const& rhs, uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float )
 {
 	builtin_types hint = lhs.hint();
@@ -1674,7 +1603,7 @@ cg_value cg_service::emit_cmp( cg_value const& lhs, cg_value const& rhs, uint32_
 		cmp_fn = boost::bind( &DefaultIRBuilder::CreateICmp, builder(), (CmpInst::Predicate)pred, _1, _2, "" );
 	}
 
-	unary_fn_t cast_fn = boost::bind( &cg_service::i1toi8_, this, _1 );
+	unary_fn_t cast_fn = boost::bind( &cg_extension::i1toi8_sv, ext_.get(), _1 );
 	Value* ret = bin_op_ps_ts_sva_( ret_ty, lhs_v, rhs_v, bin_fn_t(), bin_fn_t(), bin_fn_t(), cmp_fn, cast_fn );
 
 	return create_value( ret_hint, ret, vkind_value, promoted_abi );
@@ -1794,11 +1723,11 @@ Value* cg_service::bin_op_ps_ts_sva_( Type* ret_ty, Value* lhs, llvm::Value* rhs
 
 			ret_v = UndefValue::get(ret_ty);
 			for( int i_batch = 0; i_batch < batch_count; ++i_batch ){
-				Value* lhs_simd_elem = extract_elements_( lhs, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
-				Value* rhs_simd_elem = extract_elements_( rhs, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
+				Value* lhs_simd_elem = ext_->extract_elements( lhs, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
+				Value* rhs_simd_elem = ext_->extract_elements( rhs, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
 				Value* ret_simd_elem = simd_fn( lhs_simd_elem, rhs_simd_elem );
 				if( cast_sv_fn ) { ret_simd_elem = cast_sv_fn(ret_simd_elem); }
-				ret_v = insert_elements_( ret_v, ret_simd_elem, i_batch*SIMD_ELEMENT_COUNT() );
+				ret_v = ext_->insert_elements( ret_v, ret_simd_elem, i_batch*SIMD_ELEMENT_COUNT() );
 			}
 
 			return ret_v;
@@ -1858,15 +1787,6 @@ cg_value cg_service::emit_or( cg_value const& lhs, cg_value const& rhs )
 	return emit_bit_or( lhs, rhs );
 }
 
-AllocaInst* cg_service::alloca_( Type* ty, string const& name )
-{
-	insert_point_t ip = insert_point();
-	set_insert_point( fn().allocation_block() );
-	AllocaInst* ret = builder().CreateAlloca( ty, NULL, name );
-	set_insert_point( ip );
-	return ret;
-}
-
 llvm::Value* cg_service::unary_op_ps_ts_sva_( llvm::Type* ret_ty, llvm::Value* v, unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn )
 {
 	Type* ty = v->getType();
@@ -1893,9 +1813,9 @@ llvm::Value* cg_service::unary_op_ps_ts_sva_( llvm::Type* ret_ty, llvm::Value* v
 
 			Value* ret_v = UndefValue::get(ret_ty);
 			for( int i_batch = 0; i_batch < batch_count; ++i_batch ){
-				Value* src_simd_elem = extract_elements_( v, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
+				Value* src_simd_elem = ext_->extract_elements( v, i_batch*SIMD_ELEMENT_COUNT(), SIMD_ELEMENT_COUNT() );
 				Value* ret_simd_elem = simd_fn( src_simd_elem );
-				ret_v = insert_elements_( ret_v, ret_simd_elem, i_batch*SIMD_ELEMENT_COUNT() );
+				ret_v = ext_->insert_elements( ret_v, ret_simd_elem, i_batch*SIMD_ELEMENT_COUNT() );
 			}
 
 			return ret_v;
@@ -1932,236 +1852,24 @@ llvm::Value* cg_service::unary_op_ps_ts_sva_( llvm::Type* ret_ty, llvm::Value* v
 	return NULL;
 }
 
-llvm::Value* cg_service::call_external1_( llvm::Function* f, llvm::Value* v )
-{
-	Argument* ret_arg = f->getArgumentList().begin();
-	Type* ret_ty = ret_arg->getType()->getPointerElementType();
-	Value* tmp = alloca_(ret_ty, "tmp");
-	builder().CreateCall2( f, tmp, v );
-	return builder().CreateLoad( tmp );
-}
-
-llvm::Value* cg_service::call_external2_( llvm::Function* f, llvm::Value* v0, llvm::Value* v1 )
-{
-	Argument* ret_arg = f->getArgumentList().begin();
-	Type* ret_ty = ret_arg->getType()->getPointerElementType();
-	Value* tmp = alloca_(ret_ty, "tmp");
-	builder().CreateCall3( f, tmp, v0, v1 );
-	return builder().CreateLoad( tmp );
-}
-
-cg_service::unary_fn_t cg_service::bind_unary_call_( llvm::Function* fn )
-{
-	typedef CallInst* (DefaultIRBuilder::*call1_ptr_t)(Value*, Value*, Twine const&) ;
-	return boost::bind( static_cast<call1_ptr_t>(&DefaultIRBuilder::CreateCall), builder(), fn, _1, "" );
-}
-
-cg_service::bin_fn_t cg_service::bind_binary_call_( llvm::Function* fn )
-{
-	return boost::bind( &DefaultIRBuilder::CreateCall2, builder(), fn, _1, _2, "" );
-}
-
-cg_service::unary_fn_t cg_service::bind_unary_external_( llvm::Function* fn )
-{
-	return boost::bind( &cg_service::call_external1_, this, fn, _1 );
-}
-
-cg_service::bin_fn_t cg_service::bind_binary_external_( llvm::Function* fn )
-{
-	return boost::bind( &cg_service::call_external2_, this, fn, _1, _2 );
-}
-
-bool cg_service::register_external_intrinsic()
-{
-	// Get types used in external intrinsic registration.
-	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
-	builtin_types v3f32_hint = vector_of( builtin_types::_float, 3 );
-	builtin_types v2f32_hint = vector_of( builtin_types::_float, 2 );
-
-	Type* void_ty		= Type::getVoidTy( context() );
-	Type* u16_ty		= Type::getInt16Ty( context() );
-	Type* u32_ty		= Type::getInt32Ty( context() );
-	Type* f32_ty		= Type::getFloatTy( context() );
-	Type* samp_ty		= Type::getInt8PtrTy( context() );
-	Type* f32ptr_ty		= Type::getFloatPtrTy( context() );
-	Type* u32ptr_ty		= Type::getInt32PtrTy( context() );
-	
-	Type* v4f32_ty		= type_(v4f32_hint, abi_llvm);
-	Type* v4f32_pkg_ty	= type_(v4f32_hint, abi_package);
-	Type* v3f32_pkg_ty	= type_(v3f32_hint, abi_package);
-	Type* v2f32_pkg_ty	= type_(v2f32_hint, abi_package);
-
-	FunctionType* f_f = NULL;
-	{
-		Type* arg_tys[2] = { f32ptr_ty, f32_ty };
-		f_f = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* f_ff = NULL;
-	{
-		Type* arg_tys[3] = { f32ptr_ty, f32_ty, f32_ty };
-		f_ff = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* vs_texlod_ty = NULL;
-	{
-		Type* arg_tys[3] =
-		{
-			PointerType::getUnqual( v4f32_ty ),	/*Pixel*/
-			samp_ty,							/*Sampler*/
-			PointerType::getUnqual( v4f32_ty )	/*Coords(x, y, _, lod)*/
-		};
-		vs_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* ps_texlod_ty = NULL;
-	{
-		Type* arg_tys[4] =
-		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty )	/*Coords(x, y, _, lod)*/
-		};
-		ps_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* ps_tex2dgrad_ty = NULL;
-	{
-		Type* arg_tys[6] =
-		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*Coords(x, y)*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddy*/
-		};
-		ps_tex2dgrad_ty = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* ps_texCUBEgrad_ty = NULL;
-	{
-		Type* arg_tys[6] =
-		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*Coords(x, y)*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddy*/
-		};
-		ps_texCUBEgrad_ty = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* ps_tex2dbias_ty = NULL;
-	{
-		Type* arg_tys[6] =
-		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Coords(x, y, _, bias)*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddy*/
-		};
-		ps_tex2dbias_ty = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* ps_texCUBEbias_ty = NULL;
-	{
-		Type* arg_tys[6] =
-		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Coords(x, y, _, bias)*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddy*/
-		};
-		ps_texCUBEbias_ty = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* ps_texproj_ty = NULL;
-	{
-		Type* arg_tys[6] =
-		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Coords(x, y, _, proj)*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*ddy*/
-		};
-		ps_texproj_ty = FunctionType::get( void_ty, arg_tys, false );
-	}
-
-	FunctionType* u32_u32_ty = NULL;
-	{
-		Type* arg_tys[2] = { u32ptr_ty, u32_ty };
-		u32_u32_ty = FunctionType::get(void_ty, arg_tys, false);
-	}
-
-	external_intrins[exp_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.exp.f32", module() );
-	external_intrins[exp2_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.exp2.f32", module() );
-	external_intrins[sin_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.sin.f32", module() );
-	external_intrins[cos_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.cos.f32", module() );
-	external_intrins[tan_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.tan.f32", module() );
-	external_intrins[asin_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.asin.f32", module() );
-	external_intrins[acos_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.acos.f32", module() );
-	external_intrins[atan_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.atan.f32", module() );
-	external_intrins[ceil_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.ceil.f32", module() );
-	external_intrins[floor_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.floor.f32", module() );
-	external_intrins[round_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.round.f32", module() );
-	external_intrins[trunc_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.trunc.f32", module() );
-	external_intrins[log_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log.f32", module() );
-	external_intrins[log2_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log2.f32", module() );
-	external_intrins[log10_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.log10.f32", module() );
-	external_intrins[rsqrt_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.rsqrt.f32", module() );
-	external_intrins[mod_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.mod.f32", module() );
-	external_intrins[ldexp_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.ldexp.f32", module() );
-	external_intrins[pow_f32]		= Function::Create(f_ff, GlobalValue::ExternalLinkage, "sasl.pow.f32", module() );
-	external_intrins[sinh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.sinh.f32", module() );
-	external_intrins[cosh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.cosh.f32", module() );
-	external_intrins[tanh_f32]		= Function::Create(f_f , GlobalValue::ExternalLinkage, "sasl.tanh.f32", module() );
-
-	external_intrins[countbits_u32]   = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.countbits.u32", module() );
-	external_intrins[firstbithigh_u32]= Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.firstbithigh.u32", module() );
-	external_intrins[firstbitlow_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.firstbitlow.u32", module() );
-	external_intrins[reversebits_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.reversebits.u32", module() );
-	
-	external_intrins[tex2dlod_vs]	= Function::Create(vs_texlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.tex2d.lod", module() );
-	external_intrins[tex2dlod_ps]	= Function::Create(ps_texlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.tex2d.lod", module() );
-	external_intrins[tex2dgrad_ps]	= Function::Create(ps_tex2dgrad_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.grad", module() );
-	external_intrins[tex2dbias_ps]	= Function::Create(ps_tex2dbias_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.bias", module() );
-	external_intrins[tex2dproj_ps]	= Function::Create(ps_texproj_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.proj", module() );
-
-	external_intrins[texCUBElod_vs]	= Function::Create(vs_texlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.texCUBE.lod", module() );
-	external_intrins[texCUBElod_ps]	= Function::Create(ps_texlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.lod", module() );
-	external_intrins[texCUBEgrad_ps]= Function::Create(ps_texCUBEgrad_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.grad", module() );
-	external_intrins[texCUBEbias_ps]= Function::Create(ps_texCUBEbias_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.bias", module() );
-	external_intrins[texCUBEproj_ps]= Function::Create(ps_texproj_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.proj", module() );
-	return true;
-}
-
 cg_value cg_service::emit_tex2Dlod( cg_value const& samp, cg_value const& coord )
 {
-	return emit_tex_lod_impl(samp, coord, tex2dlod_vs, tex2dlod_ps);
+	return emit_tex_lod_impl(samp, coord, externals::tex2dlod_vs, externals::tex2dlod_ps);
 }
 
 cg_value cg_service::emit_tex2Dgrad( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy )
 {
-	return emit_tex_grad_impl(samp, coord, ddx, ddy, tex2dgrad_ps);
+	return emit_tex_grad_impl(samp, coord, ddx, ddy, externals::tex2dgrad_ps);
 }
 
 cg_value cg_service::emit_tex2Dbias( cg_value const& samp, cg_value const& coord )
 {
-	return emit_tex_bias_impl(samp, coord, tex2dbias_ps);
+	return emit_tex_bias_impl(samp, coord, externals::tex2dbias_ps);
 }
 
 cg_value cg_service::emit_tex2Dproj( cg_value const& samp, cg_value const& coord )
 {
-	return emit_tex_proj_impl(samp, coord, tex2dproj_ps);
+	return emit_tex_proj_impl(samp, coord, externals::tex2dproj_ps);
 }
 
 cg_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v )
@@ -2176,48 +1884,6 @@ cg_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abi
 	return create_value(tyinfo, bt, ret, vkind_value, abi);
 }
 
-cg_service::unary_fn_t cg_service::bind_cast_sv_( llvm::Type* elem_ty, cast_ops op )
-{
-	return boost::bind( &cg_service::cast_sv_, this, _1, elem_ty, op );
-}
-
-Value* cg_service::cast_sv_( Value* v, Type* elem_ty, cast_ops op )
-{
-	assert( !v->getType()->isAggregateType() );
-	Type* ret_ty
-		= v->getType()->isVectorTy()
-		? VectorType::get( elem_ty, v->getType()->getVectorNumElements() )
-		: elem_ty;
-
-	Instruction::CastOps llvm_op = Instruction::BitCast;
-	switch ( op )
-	{
-	case cast_op_f2u:
-		llvm_op = Instruction::FPToUI;
-		break;
-	case cast_op_f2i:
-		llvm_op = Instruction::FPToSI;
-		break;
-	case cast_op_u2f:
-		llvm_op = Instruction::UIToFP;
-		break;
-	case cast_op_i2f:
-		llvm_op = Instruction::SIToFP;
-		break;
-	case cast_op_bitcast:
-		llvm_op = Instruction::BitCast;
-		break;
-	case cast_op_i2i_signed:
-		return builder().CreateIntCast( v, ret_ty, true );
-	case cast_op_i2i_unsigned:
-		return builder().CreateIntCast( v, ret_ty, false);
-	default:
-		assert(false);
-	}
-
-	return builder().CreateCast( llvm_op, v, ret_ty );
-}
-
 cg_value cg_service::emit_unary_ps( std::string const& scalar_external_intrin_name, cg_value const& v )
 {
 	Function* scalar_intrin = module()->getFunction( scalar_external_intrin_name );
@@ -2226,7 +1892,7 @@ cg_value cg_service::emit_unary_ps( std::string const& scalar_external_intrin_na
 	Value* ret_v = unary_op_ps_ts_sva_(
 		NULL,
 		v.load(),
-		bind_unary_external_( scalar_intrin ),
+		ext_->bind_external_to_unary( scalar_intrin ),
 		unary_fn_t(),
 		unary_fn_t(),
 		unary_fn_t()
@@ -2245,25 +1911,11 @@ cg_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_intr
 
 	Value* ret_v = bin_op_ps_ts_sva_(
 		(Type*)NULL, v0.load(abi), v1.load(abi),
-		bind_binary_external_(scalar_intrin), bin_fn_t(), bin_fn_t(), bin_fn_t(), 
+		ext_->bind_external_to_binary(scalar_intrin), bin_fn_t(), bin_fn_t(), bin_fn_t(), 
 		unary_fn_t()
 		);
 
 	return create_value( v0.tyinfo(), v0.hint(), ret_v, vkind_value, abi );
-}
-
-Value* cg_service::safe_idiv_imod_sv_( Value* lhs, Value* rhs, bin_fn_t div_or_mod_sv_fn )
-{
-	Type* rhs_ty = rhs->getType();
-	Type* rhs_scalar_ty = rhs_ty->getScalarType();
-	assert( rhs_scalar_ty->isIntegerTy() );
-
-	Value* zero = Constant::getNullValue( rhs_ty );
-	Value* is_zero = builder().CreateICmpEQ( rhs, zero );
-	Value* one_value = Constant::getIntegerValue( rhs_ty, APInt(rhs_scalar_ty->getIntegerBitWidth(), 1) );
-	Value* non_zero_rhs = builder().CreateSelect( is_zero, one_value, rhs );
-
-	return div_or_mod_sv_fn( lhs, non_zero_rhs );
 }
 
 cg_value cg_service::extend_to_vm( cg_value const& v, builtin_types complex_hint )
@@ -2335,32 +1987,32 @@ cg_value cg_service::emit_bin_es_ta_sva( cg_value const& lhs, cg_value const& rh
 	return emit_bin_ps_ta_sva( lv, rv, signed_sv_fn, unsigned_sv_fn, float_sv_fn );
 }
 
-cg_value cg_service::emit_tex_lod_impl( cg_value const& samp, cg_value const& coord, intrin_ids vs_intrin, intrin_ids ps_intrin )
+cg_value cg_service::emit_tex_lod_impl( cg_value const& samp, cg_value const& coord, externals::id vs_intrin, externals::id ps_intrin )
 {
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
 	abis abi = param_abi(false);
 	assert( abi == abi_llvm || abi == abi_package );
 
 	Type* ret_ty = type_( v4f32_hint, abi );
-	Value* ret_ptr = alloca_( ret_ty, "ret.tmp" );
+	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
 
 	Type* coord_ty = ret_ty;
-	Value* coord_ptr = alloca_(coord_ty, "coord.tmp");
+	Value* coord_ptr = ext_->stack_alloc(coord_ty, "coord.tmp");
 	builder().CreateStore( coord.load(abi), coord_ptr );
 
 	if( abi == abi_llvm)
 	{
-		builder().CreateCall3( external_intrins[vs_intrin], ret_ptr, samp.load(), coord_ptr );
+		builder().CreateCall3(ext_->external(vs_intrin), ret_ptr, samp.load(), coord_ptr);
 	}
 	else
 	{
-		builder().CreateCall4( external_intrins[ps_intrin], ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr );
+		builder().CreateCall4( ext_->external(ps_intrin), ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr );
 	}
 
-	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
+	return create_value(NULL, v4f32_hint, ret_ptr, vkind_ref, abi);
 }
 
-cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy, intrin_ids ps_intrin )
+cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy, externals::id ps_intrin )
 {
 	builtin_types coord_hint = coord.hint();
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
@@ -2369,17 +2021,17 @@ cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& c
 	assert( abi == abi_package );
 
 	Type* ret_ty = type_( v4f32_hint, abi );
-	Value* ret_ptr = alloca_( ret_ty, "ret.tmp" );
+	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
 
 	Type* coord_ty = type_(coord_hint, abi);
 
-	Value* coord_ptr = alloca_(coord_ty, "coord.tmp");
+	Value* coord_ptr = ext_->stack_alloc(coord_ty, "coord.tmp");
 	builder().CreateStore( coord.load(abi), coord_ptr );
 
-	Value* ddx_ptr = alloca_(coord_ty, "ddx.tmp");
+	Value* ddx_ptr = ext_->stack_alloc(coord_ty, "ddx.tmp");
 	builder().CreateStore( ddx.load(abi), ddx_ptr );
 
-	Value* ddy_ptr = alloca_(coord_ty, "ddy.tmp");
+	Value* ddy_ptr = ext_->stack_alloc(coord_ty, "ddy.tmp");
 	builder().CreateStore( ddy.load(abi), ddy_ptr );
 
 	Value* args[] = 
@@ -2387,18 +2039,18 @@ cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& c
 		ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
 
-	builder().CreateCall( external_intrins[ps_intrin], args );
+	builder().CreateCall( ext_->external(ps_intrin), args );
 
 	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
 }
 
-cg_value cg_service::emit_tex_bias_impl( cg_value const& /*samp*/, cg_value const& /*coord*/, intrin_ids /*ps_intrin*/ )
+cg_value cg_service::emit_tex_bias_impl( cg_value const& /*samp*/, cg_value const& /*coord*/, externals::id /*ps_intrin*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return cg_value();
 }
 
-cg_value cg_service::emit_tex_proj_impl( cg_value const& samp, cg_value const& coord, intrin_ids ps_intrin )
+cg_value cg_service::emit_tex_proj_impl( cg_value const& samp, cg_value const& coord, externals::id ps_intrin )
 {
 	cg_value ddx = emit_ddx( coord );
 	cg_value ddy = emit_ddy( coord );
@@ -2409,46 +2061,46 @@ cg_value cg_service::emit_tex_proj_impl( cg_value const& samp, cg_value const& c
 	assert( abi == abi_package );
 
 	Type* ret_ty = type_( v4f32_hint, abi );
-	Value* ret_ptr = alloca_( ret_ty, "ret.tmp" );
+	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
 
 	Type* v4f32_ty = type_( v4f32_hint, abi );
 
-	Value* coord_ptr = alloca_(v4f32_ty, "coord.tmp");
+	Value* coord_ptr = ext_->stack_alloc(v4f32_ty, "coord.tmp");
 	builder().CreateStore( coord.load(abi), coord_ptr );
 
-	Value* ddx_ptr = alloca_(v4f32_ty, "ddx.tmp");
+	Value* ddx_ptr = ext_->stack_alloc(v4f32_ty, "ddx.tmp");
 	builder().CreateStore( ddx.load(abi), ddx_ptr );
 
-	Value* ddy_ptr = alloca_(v4f32_ty, "ddy.tmp");
+	Value* ddy_ptr = ext_->stack_alloc(v4f32_ty, "ddy.tmp");
 	builder().CreateStore( coord.load(abi), ddy_ptr );
 
 	Value* args[] = 
 	{
 		ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
-	builder().CreateCall( external_intrins[ps_intrin], args );
+	builder().CreateCall(ext_->external(ps_intrin), args );
 
 	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
 }
 
 cg_value cg_service::emit_texCUBElod( cg_value const& samp, cg_value const& coord )
 {
-	return emit_tex_lod_impl(samp, coord, texCUBElod_vs, texCUBElod_ps);
+	return emit_tex_lod_impl(samp, coord, externals::texCUBElod_vs, externals::texCUBElod_ps);
 }
 
 cg_value cg_service::emit_texCUBEgrad( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy )
 {
-	return emit_tex_grad_impl(samp, coord, ddx, ddy, texCUBEgrad_ps);
+	return emit_tex_grad_impl(samp, coord, ddx, ddy, externals::texCUBEgrad_ps);
 }
 
 cg_value cg_service::emit_texCUBEbias( cg_value const& samp, cg_value const& coord )
 {
-	return emit_tex_bias_impl(samp, coord, texCUBEbias_ps);
+	return emit_tex_bias_impl(samp, coord, externals::texCUBEbias_ps);
 }
 
 cg_value cg_service::emit_texCUBEproj( cg_value const& samp, cg_value const& coord )
 {
-	return emit_tex_proj_impl(samp, coord, texCUBEproj_ps);
+	return emit_tex_proj_impl(samp, coord, externals::texCUBEproj_ps);
 }
 
 node_context* cg_service::get_node_context(node* v)
@@ -2473,34 +2125,6 @@ cg_value cg_service::emit_select( cg_value const& flag, cg_value const& v0, cg_v
 		v0.tyinfo(), v0.hint(), 
 		ext_->select(flag_v, v0_v, v1_v), vkind_value, promoted_abi
 		);
-}
-
-Value* cg_service::get_llvm_vector_(ArrayRef<Value*> const& elements )
-{
-	assert( !elements.empty() );
-	Type* vector_ty = VectorType::get( elements[0]->getType(), elements.size() );
-	Value* ret = UndefValue::get(vector_ty);
-
-	for(unsigned i = 0; i < elements.size(); ++i)
-	{
-		ret = builder().CreateInsertElement( ret, elements[i], ext_->get_int(i) );
-	}
-
-	return ret;
-}
-
-Value* cg_service::get_llvm_struct_( Type* ty, ArrayRef<Value*> const& elements )
-{
-	assert( !elements.empty() );
-	Value* ret = UndefValue::get(ty);
-
-	for(unsigned i = 0; i < elements.size(); ++i)
-	{
-		unsigned indexes[] = {i};
-		ret = builder().CreateInsertValue(ret, elements[i], indexes);
-	}
-
-	return ret;
 }
 
 cg_value cg_service::emit_not( cg_value const& v )
@@ -2542,29 +2166,6 @@ cg_value cg_service::one_value( cg_value const& proto )
 	return numeric_value(proto, 1.0f, 1);
 }
 
-llvm::Type* cg_service::extract_scalar_ty_( llvm::Type* ty )
-{
-	if( ty->isVectorTy() )
-	{
-		return ty->getVectorElementType();
-	}
-
-	if( ty->isAggregateType() )
-	{
-		if( ty->isStructTy() )
-		{
-			assert( ty->getStructNumElements() > 0 );
-			return extract_scalar_ty_( ty->getStructElementType(0) );
-		}
-		else
-		{
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	}
-
-	return ty;
-}
-
 cg_value cg_service::emit_sign( cg_value const& v )
 {
 	builtin_types ret_btc = replace_scalar(v.hint(), builtin_types::_sint32);
@@ -2598,7 +2199,7 @@ cg_value cg_service::numeric_value(cg_value const& proto, double fp, uint64_t ui
 		ty = type_( proto.hint(), proto.abi() );
 	}
 
-	Type* scalar_ty = extract_scalar_ty_(ty);
+	Type* scalar_ty = ext_->extract_scalar_type(ty);
 
 	Value* scalar_value = NULL;
 	if( scalar_ty->isFloatingPointTy() )
@@ -2614,6 +2215,21 @@ cg_value cg_service::numeric_value(cg_value const& proto, double fp, uint64_t ui
 
 	Value* ret_value = ext_->get_constant_by_scalar(ty, scalar_value);
 	return create_value( proto.tyinfo(), proto.hint(), ret_value, vkind_value, proto.abi() );
+}
+
+cg_extension* cg_service::extension()
+{
+	return ext_.get();
+}
+
+void cg_service::function_body_beg()
+{
+	ext_->set_stack_alloc_point( fn().allocation_block().block );
+}
+
+void cg_service::function_body_end()
+{
+	ext_->set_stack_alloc_point(NULL);
 }
 
 END_NS_SASL_CODE_GENERATOR();

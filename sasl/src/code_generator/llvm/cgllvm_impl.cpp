@@ -407,12 +407,12 @@ SASL_VISIT_DEF( function_type )
 	if ( v.body )
 	{
 		CGS_FUNCTION_SCOPE(fn_ctxt->function_scope);
-
-		service()->function_beg();
 		service()->fn().allocation_block( service()->new_block(".alloc", true) );
+		
+		service()->function_body_beg();
 		create_fnargs(v, NULL);
 		create_fnbody(v, NULL);
-		service()->function_end();
+		service()->function_body_end();
 	}
 }
 
@@ -777,8 +777,6 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 	EFLIB_UNREF_DECLARATOR(data);
 	EFLIB_UNREF_DECLARATOR(v);
 
-	service()->register_external_intrinsic();
-
 	vector<symbol*> const& intrinsics = sem_->intrinsics();
 
 	BOOST_FOREACH(symbol* intr, intrinsics)
@@ -801,6 +799,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		cg_scope_guard<void> pop_fn_on_exit( bind( &cg_service::pop_fn, service() ) );
 
 		service()->fn().allocation_block( service()->new_block(".alloc", true) );
+
+		service()->function_body_beg();
 		insert_point_t ip_body = service()->new_block( ".body", true );
 
 		// Parse Parameter Informations
@@ -1484,6 +1484,8 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			EFLIB_ASSERT( !"Unprocessed intrinsic.", intr->unmangled_name().c_str() );
 		}
 		service()->clean_empty_blocks();
+
+		service()->function_body_end();
 	}
 }
 

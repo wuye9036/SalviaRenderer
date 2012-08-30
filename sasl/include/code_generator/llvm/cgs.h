@@ -44,7 +44,6 @@ public:
 		cgllvm_module_impl* mod, module_context* ctxt,
 		sasl::semantic::module_semantic* sem
 		);
-	virtual bool register_external_intrinsic();
 
 	/// @name Service States
 	/// @{
@@ -176,8 +175,8 @@ public:
 
 	/// @name Context switch
 	/// @{
-	virtual void function_beg(){}
-	virtual void function_end(){}
+	virtual void function_body_beg();
+	virtual void function_body_end();
 
 	virtual void for_init_beg(){}
 	virtual void for_init_end(){}
@@ -316,54 +315,11 @@ public:
 	sasl::semantic::node_semantic*
 							get_node_semantic( sasl::syntax_tree::node* );
 protected:
-	enum intrin_ids
-	{
-		exp_f32,
-		exp2_f32,
-		sin_f32,
-		cos_f32,
-		tan_f32,
-		asin_f32,
-		acos_f32,
-		atan_f32,
-		ceil_f32,
-		floor_f32,
-		round_f32,
-		trunc_f32,
-		log_f32,
-		log2_f32,
-		log10_f32,
-		rsqrt_f32,
-		ldexp_f32,
-		sinh_f32,
-		cosh_f32,
-		tanh_f32,
-		mod_f32,
-		pow_f32,
-		countbits_u32,
-		firstbithigh_u32,
-		firstbitlow_u32,
-		reversebits_u32,
-		tex2dlod_vs,
-		tex2dlod_ps,
-		tex2dgrad_ps,
-		tex2dbias_ps,
-		tex2dproj_ps,
-		texCUBElod_vs,
-		texCUBElod_ps,
-		texCUBEgrad_ps,
-		texCUBEbias_ps,
-		texCUBEproj_ps,
-		intrins_count
-	};
-
 	sasl::semantic::module_semantic*	sem_;
 	cgllvm_module_impl*					llvm_mod_;
 	module_context*						ctxt_;
 	
 	std::vector<function_t*>			fn_ctxts;
-	llvm_intrin_cache					intrins;
-	llvm::Function*						external_intrins[intrins_count];
 	cg_value							exec_mask;
 	
 	cg_value emit_cmp(
@@ -374,16 +330,7 @@ protected:
 	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	bin_fn_t;
 	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Type*)>	cast_fn;
 	typedef boost::function<llvm::Value* (llvm::Value*)>				unary_fn_t;
-
-	llvm::Value* call_external1_		( llvm::Function* f, llvm::Value* v );
-	llvm::Value* call_external2_		( llvm::Function* f, llvm::Value* v0, llvm::Value* v1 );
-
-	unary_fn_t	bind_unary_call_		( llvm::Function* fn );
-	bin_fn_t	bind_binary_call_		( llvm::Function* fn );
 	
-	unary_fn_t	bind_unary_external_	( llvm::Function* fn );
-	bin_fn_t	bind_binary_external_	( llvm::Function* fn );
-
 	// LLVM have some instructions/intrinsics to support unary and binary operations.
 	// But even simple instruction 'add', there are two overloads to support 'iadd' and 'fadd' separately.
 	// Additional, some intrinsics are only support scalar or SIMD vector as argument.
@@ -445,6 +392,7 @@ public:
 		);
 	cg_value emit_unary_ps( std::string const& scalar_external_intrin_name, cg_value const& v );
 
+	cg_extension* extension();
 protected:
 	cg_value emit_bin_mm(
 		cg_value const& lhs, cg_value const& rhs,
@@ -460,52 +408,19 @@ protected:
 
 	virtual cg_value emit_tex_lod_impl(
 		cg_value const& samp, cg_value const& coord,
-		intrin_ids vs_intrin, intrin_ids ps_intrin );
+		externals::id vs_intrin, externals::id ps_intrin );
 	virtual cg_value emit_tex_grad_impl(
 		cg_value const& samp, cg_value const& coord,
 		cg_value const& ddx, cg_value const& ddy,
-		intrin_ids ps_intrin );
+		externals::id ps_intrin );
 	virtual cg_value emit_tex_bias_impl(
 		cg_value const& samp, cg_value const& coord,
-		intrin_ids ps_intrin );
+		externals::id ps_intrin );
 	virtual cg_value emit_tex_proj_impl(
 		cg_value const& samp, cg_value const& coord,
-		intrin_ids ps_intrin );
+		externals::id ps_intrin );
 
 	void merge_swizzle( cg_value const*& root, char indexes[], cg_value const& v );
-
-	llvm::AllocaInst* alloca_(llvm::Type* ty, std::string const& name);
-
-	llvm::Function* intrin_( int );
-	template <typename FunctionT>
-	llvm::Function* intrin_( int );
-	
-	llvm::Value* shrink_( llvm::Value* vec, size_t vsize );
-	llvm::Value* extract_elements_( llvm::Value* src, size_t start_pos, size_t length );
-	llvm::Value* insert_elements_ ( llvm::Value* dst, llvm::Value* src, size_t start_pos );
-	llvm::Value* i8toi1_( llvm::Value* );
-	llvm::Value* i1toi8_( llvm::Value* );
-
-	enum cast_ops
-	{
-		cast_op_unknown,
-		cast_op_f2u,
-		cast_op_f2i,
-		cast_op_u2f,
-		cast_op_i2f,
-		cast_op_bitcast,
-		cast_op_i2i_signed,
-		cast_op_i2i_unsigned
-	};
-
-	llvm::Value* cast_sv_( llvm::Value*, llvm::Type* elem_ty, cast_ops op );
-	unary_fn_t	 bind_cast_sv_(llvm::Type* elem_ty, cast_ops op);
-	llvm::Value* safe_idiv_imod_sv_( llvm::Value*, llvm::Value*, bin_fn_t div_or_mod_fn );
-
-	llvm::Value* get_llvm_vector_(llvm::ArrayRef<llvm::Value*> const& elements);
-	llvm::Value* get_llvm_struct_(llvm::Type* ty, llvm::ArrayRef<llvm::Value*> const& elements);
-
-	llvm::Type* extract_scalar_ty_( llvm::Type* );
 
 	cg_value inf_from_value(cg_value const& v, bool negative);
 

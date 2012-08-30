@@ -107,7 +107,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 				for(unsigned i = 0; i < mask->getType()->getVectorNumElements(); ++i)
 				{
 					Value* index = ext_->get_int(i);
-					Value* mask_elem = i8toi1_( builder().CreateExtractElement(mask, index) );
+					Value* mask_elem = ext_->i8toi1_sv( builder().CreateExtractElement(mask, index) );
 					Value* src_elem = builder().CreateExtractElement(src, index);
 					Value* dest_elem = builder().CreateExtractElement(dest_value, index);
 					Value* selected_elem = builder().CreateSelect(mask_elem, src_elem, dest_elem);
@@ -117,7 +117,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 			}
 			else
 			{
-				src = builder().CreateSelect( i8toi1_(mask), src, dest_value, "Merged" );
+				src = builder().CreateSelect( ext_->i8toi1_sv(mask), src, dest_value, "Merged" );
 			}
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -170,7 +170,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 							Value* new_val = builder().CreateExtractElement( r_value, ext_->get_int(src_index) );
 							Value* old_val = builder().CreateExtractElement( parent_value, ext_->get_int(dst_index) ); 
 							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), ext_->get_int( static_cast<int>(i_elem) ) );
-							Value* elem_val = builder().CreateSelect( i8toi1_(elem_exec_mask), new_val, old_val );
+							Value* elem_val = builder().CreateSelect( ext_->i8toi1_sv(elem_exec_mask), new_val, old_val );
 							parent_value = builder().CreateInsertElement( parent_value, elem_val, ext_->get_int(dst_index) );
 						}
 					}
