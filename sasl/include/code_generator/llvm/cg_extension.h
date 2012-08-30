@@ -110,6 +110,9 @@ typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	binary_intrin
 typedef boost::function<llvm::Value* (llvm::Value*, llvm::Type*)>	cast_intrin_functor;
 typedef boost::function<llvm::Value* (llvm::Value*)>				unary_intrin_functor;
 
+static binary_intrin_functor null_binary;
+static unary_intrin_functor  null_unary;
+
 class cg_extension
 {
 public:
@@ -129,6 +132,7 @@ public:
 	unary_intrin_functor	bind_to_unary(llvm::Function* fn);
 	binary_intrin_functor	bind_to_binary(llvm::Function* fn);
 	unary_intrin_functor	bind_external_to_unary ( llvm::Function* fn );
+	// unary_intrin_functor	bind_external_to_unary ( externals::id id );
 	binary_intrin_functor	bind_external_to_binary( llvm::Function* fn );
 	binary_intrin_functor	bind_external_to_binary( externals::id id );
 	unary_intrin_functor	bind_cast_sv(llvm::Type* elem_ty, cast_ops::id op);
