@@ -89,9 +89,9 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 {
 	Value* src = rhs.load( lhs.abi() );
 	Value* address = NULL;
-	value_kinds kind = lhs.kind();
+	value_kinds::id kind = lhs.kind();
 
-	if( kind == vkind_ref ){	
+	if( kind == value_kinds::reference ){	
 		address = lhs.raw();
 
 		if( is_scalar( lhs.hint() ) || is_vector( lhs.hint() ) ){
@@ -122,7 +122,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
-	} else if ( kind == vkind_swizzle ){
+	} else if ( kind == value_kinds::elements ){
 		if( is_vector( lhs.parent()->hint()) )
 		{
 			assert( lhs.parent()->storable() );
@@ -134,7 +134,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 			uint32_t idx_len = indexes_length( indexes );
 
 			switch ( lhs.abi() ){	
-			case abi_c:
+			case abis::c:
 				{
 					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
 						cg_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
@@ -143,7 +143,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 					}
 					return;
 				}
-			case abi_llvm:
+			case abis::llvm:
 				{
 					cg_value parent_v = lhs.parent()->to_rvalue();
 					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
@@ -153,10 +153,10 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 					lhs.parent()->store( parent_v );
 					return;
 				}
-			case abi_vectorize:
+			case abis::vectorize:
 				EFLIB_ASSERT_UNIMPLEMENTED();
 				break;
-			case abi_package:
+			case abis::package:
 				{
 					int dst_elem_pitch = ceil_to_pow2( vector_size( lhs.parent()->hint() ) );
 					int src_elem_pitch = ceil_to_pow2( vector_size( rhs.hint() ) );
@@ -175,7 +175,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 						}
 					}
 					cg_value new_v = *lhs.parent();
-					new_v.emplace( parent_value, vkind_value, lhs.abi() );
+					new_v.emplace( parent_value, value_kinds::value, lhs.abi() );
 					lhs.parent()->store( new_v );
 					return;
 				}
@@ -228,15 +228,15 @@ cg_value cgs_simd::cast_f2b( cg_value const& v )
 	return cg_value();
 }
 
-cg_value cgs_simd::create_vector( vector<cg_value> const& scalars, abis abi )
+cg_value cgs_simd::create_vector( vector<cg_value> const& scalars, abis::id abi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return cg_value();
 }
 
-abis cgs_simd::intrinsic_abi() const
+abis::id cgs_simd::intrinsic_abi() const
 {
-	return abi_vectorize;
+	return abis::vectorize;
 }
 
 void cgs_simd::emit_return()
@@ -244,9 +244,9 @@ void cgs_simd::emit_return()
 	builder().CreateRetVoid();
 }
 
-void cgs_simd::emit_return( cg_value const& ret_v, abis abi )
+void cgs_simd::emit_return( cg_value const& ret_v, abis::id abi )
 {
-	if( abi == abi_unknown ){ abi = fn().abi(); }
+	if( abi == abis::unknown ){ abi = fn().abi(); }
 
 	if( fn().first_arg_is_return_address() ){
 		builder().CreateStore( ret_v.load(abi), fn().return_address() );
@@ -256,9 +256,9 @@ void cgs_simd::emit_return( cg_value const& ret_v, abis abi )
 	}
 }
 
-abis cgs_simd::param_abi( bool /*c_compatible*/ ) const
+abis::id cgs_simd::param_abi( bool /*c_compatible*/ ) const
 {
-	return abi_package;
+	return abis::package;
 }
 
 cg_value cgs_simd::create_scalar( llvm::Value* v, cg_type* tyi, builtin_types hint )
@@ -266,11 +266,11 @@ cg_value cgs_simd::create_scalar( llvm::Value* v, cg_type* tyi, builtin_types hi
 	Type* ty = NULL;
 	if( tyi )
 	{
-		ty = tyi->ty( abi_vectorize );
+		ty = tyi->ty( abis::vectorize );
 	}
 	else
 	{
-		ty = type_( hint, abi_vectorize );
+		ty = type_( hint, abis::vectorize );
 	}
 	
 	Value* vectorize_v = Constant::getNullValue( ty );
@@ -279,7 +279,7 @@ cg_value cgs_simd::create_scalar( llvm::Value* v, cg_type* tyi, builtin_types hi
 		vectorize_v = builder().CreateInsertElement( vectorize_v, v, ext_->get_int( static_cast<int>(i_elem) ) );
 	}
 
-	return create_value( tyi, hint, vectorize_v, vkind_value, abi_vectorize );
+	return create_value( tyi, hint, vectorize_v, value_kinds::value, abis::vectorize );
 }
 
 void cgs_simd::function_body_beg()
@@ -298,7 +298,7 @@ void cgs_simd::function_body_end()
 
 Value* cgs_simd::all_one_mask()
 {
-	Type* mask_ty = type_( builtin_types::_boolean, abi_package );
+	Type* mask_ty = type_( builtin_types::_boolean, abis::package );
 	Value* mask_v = Constant::getAllOnesValue(mask_ty);
 	return mask_v;
 }
@@ -326,7 +326,7 @@ void cgs_simd::if_cond_beg()
 
 void cgs_simd::if_cond_end( cg_value const& cond )
 {
-	cond_exec_masks.push_back( cond.load( abi_package ) );
+	cond_exec_masks.push_back( cond.load( abis::package ) );
 }
 
 void cgs_simd::then_beg()
@@ -366,7 +366,7 @@ cg_value cgs_simd::emit_ddy( cg_value const& v )
 
 cg_value cgs_simd::derivation( cg_value const& v, slice_layout_mode slm )
 {
-	if( v.abi() != abi_package ){
+	if( v.abi() != abis::package ){
 		return null_value( v.hint(), v.abi() );
 	}
 
@@ -426,7 +426,7 @@ cg_value cgs_simd::derivation( cg_value const& v, slice_layout_mode slm )
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	return create_value( v.tyinfo(), v.hint(), diff_v, vkind_value, abi_package );
+	return create_value( v.ty(), v.hint(), diff_v, value_kinds::value, abis::package );
 }
 
 /// Pack slides to vector.
@@ -484,7 +484,7 @@ void cgs_simd::for_iter_end(){ save_next_iteration_exec_mask(); exit_loop(); }
 
 llvm::Value* cgs_simd::all_zero_mask()
 {
-	Type* mask_ty = type_( builtin_types::_boolean, abi_package );
+	Type* mask_ty = type_( builtin_types::_boolean, abis::package );
 	Value* mask_v = Constant::getNullValue(mask_ty);
 	return mask_v;
 }
@@ -551,7 +551,7 @@ cg_value cgs_simd::joinable()
 	for( int i = 1; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		ret_bool = builder().CreateOr( ret_bool, builder().CreateExtractElement( v, ext_->get_int(i) ) );
 	}
-	return create_value( builtin_types::_boolean, ret_bool, vkind_value, abi_llvm );
+	return create_value( builtin_types::_boolean, ret_bool, value_kinds::value, abis::llvm );
 }
 
 void cgs_simd::while_beg(){ enter_loop(); }
@@ -569,7 +569,7 @@ void cgs_simd::enter_loop()
 	// TODO
 	//  store <16 x i1>, <16 x i1>* var is crashed by LLVM bug.
 	// We ext to i8 array and store.
-	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8, abi_package), NULL, ".for.mask.tmpvar" ) );
+	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8, abis::package), NULL, ".for.mask.tmpvar" ) );
 	save_loop_execution_mask( exec_masks.back() );
 
 	exec_masks.push_back( exec_masks.back() );
@@ -587,8 +587,8 @@ void cgs_simd::exit_loop()
 void cgs_simd::apply_loop_condition( cg_value const& cond )
 {
 	Value* exec_mask = load_loop_execution_mask();
-	if( cond.abi() != abi_unknown ){
-		Value* cond_exec_mask = cond.load( abi_package );
+	if( cond.abi() != abis::unknown ){
+		Value* cond_exec_mask = cond.load( abis::package );
 		exec_mask = builder().CreateAnd( exec_mask, cond_exec_mask );
 	}
 
@@ -619,12 +619,12 @@ void cgs_simd::save_next_iteration_exec_mask()
 llvm::Value* cgs_simd::load_loop_execution_mask()
 {
 	Value* mask_as_uchar = builder().CreateLoad( mask_vars.back() );
-	return builder().CreateTruncOrBitCast( mask_as_uchar, type_(builtin_types::_boolean, abi_package) );
+	return builder().CreateTruncOrBitCast( mask_as_uchar, type_(builtin_types::_boolean, abis::package) );
 }
 
 void cgs_simd::save_loop_execution_mask( Value* mask )
 {
-	Value* mask_as_uchar = builder().CreateZExtOrBitCast( mask, type_( builtin_types::_uint8, abi_package) );
+	Value* mask_as_uchar = builder().CreateZExtOrBitCast( mask, type_( builtin_types::_uint8, abis::package) );
 	builder().CreateStore( mask_as_uchar, mask_vars.back() );
 }
 
@@ -634,7 +634,7 @@ cg_value cgs_simd::packed_mask()
 
 	Value* mask_vec = exec_masks.back();
 
-	Type* packed_mask_ty = type_( builtin_types::_sint16, abi_llvm);
+	Type* packed_mask_ty = type_( builtin_types::_sint16, abis::llvm);
 	Value* ret = Constant::getNullValue( packed_mask_ty );
 	for( size_t i_mask = 0; i_mask < PACKAGE_ELEMENT_COUNT; ++i_mask ){
 		Value* mask_bit = builder().CreateExtractElement( mask_vec, ext_->get_int<int32_t>(i_mask) );
@@ -643,7 +643,7 @@ cg_value cgs_simd::packed_mask()
 		ret = builder().CreateOr( ret, mask_bit );
 	}
 
-	return create_value( NULL, builtin_types::_sint16, ret, vkind_value, abi_llvm );
+	return create_value( NULL, builtin_types::_sint16, ret, value_kinds::value, abis::llvm );
 }
 
 cg_value cgs_simd::emit_and( cg_value const& lhs, cg_value const& rhs )

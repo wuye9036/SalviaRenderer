@@ -31,7 +31,7 @@ using std::string;
 using std::vector;
 
 void initialize_cache( LLVMContext& ctxt );
-Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis abi );
+Type* get_llvm_type( LLVMContext& ctxt, builtin_types bt, abis::id abi );
 
 END_NS_SASL_CODEGEN();
 

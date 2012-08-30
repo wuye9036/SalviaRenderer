@@ -10,7 +10,7 @@ BEGIN_NS_SASL_CODEGEN();
 class cgs_simd: public cg_service
 {
 public:
-	abis intrinsic_abi() const;
+	abis::id intrinsic_abi() const;
 
 	virtual void store( cg_value& lhs, cg_value const& rhs );
 
@@ -25,15 +25,15 @@ public:
 	virtual cg_value cast_f2b ( cg_value const& v );
 
 	void emit_return();
-	void emit_return( cg_value const&, abis abi );
+	void emit_return( cg_value const&, abis::id abi );
 	
 	virtual cg_value emit_ddx( cg_value const& v );
 	virtual cg_value emit_ddy( cg_value const& v );
 	
 	cg_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
-	virtual cg_value create_vector( std::vector<cg_value> const& scalars, abis abi );
+	virtual cg_value create_vector( std::vector<cg_value> const& scalars, abis::id abi );
 
-	abis param_abi( bool c_compatible ) const;
+	abis::id param_abi( bool c_compatible ) const;
 	bool prefer_externals() const{ return false; }
 	bool prefer_scalar_code() const{ return false; }
 

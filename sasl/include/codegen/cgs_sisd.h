@@ -58,7 +58,7 @@ class llvm_intrin_cache;
 
 class cgs_sisd: public cg_service{
 public:
-	abis intrinsic_abi() const;
+	abis::id intrinsic_abi() const;
 
 	/** @name Emit expressions
 	Some simple overload-able operators such as '+' '-' '*' '/'
@@ -102,7 +102,7 @@ public:
 	/// @name Emit statement
 	/// @{
 	void emit_return();
-	void emit_return( cg_value const&, abis abi );
+	void emit_return( cg_value const&, abis::id abi );
 	/// @}
 
 	/// @name Emit assignment
@@ -113,13 +113,13 @@ public:
 	/// @name Emit values
 	/// @{
 	template <typename T>
-	cg_value create_constant_vector( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	cg_value create_constant_vector( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	
 	cg_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
-	cg_value create_vector( std::vector<cg_value> const& scalars, abis abi );
+	cg_value create_vector( std::vector<cg_value> const& scalars, abis::id abi );
 
 	template <typename T>
-	cg_value create_constant_matrix( T const* vals, size_t length, abis abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	cg_value create_constant_matrix( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	/// @}
 
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
@@ -143,7 +143,7 @@ public:
 	/// @{
 	cg_value packed_mask();
 
-	abis param_abi( bool c_compatible ) const;
+	abis::id param_abi( bool c_compatible ) const;
 	/// Prefer to use external functions as intrinsic.
 	bool prefer_externals() const;
 	/// Prefer to use scalar code to intrinsic.

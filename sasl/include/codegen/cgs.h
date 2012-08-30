@@ -47,15 +47,15 @@ public:
 
 	/// @name Service States
 	/// @{
-	virtual abis intrinsic_abi() const = 0;
+	virtual abis::id intrinsic_abi() const = 0;
 	/// @}
 
 	/// @name Value Operators
 	/// @{
 	virtual llvm::Value* load( cg_value const& );
-	virtual llvm::Value* load( cg_value const&, abis abi );
+	virtual llvm::Value* load( cg_value const&, abis::id abi );
 	virtual llvm::Value* load_ref( cg_value const& );
-	virtual llvm::Value* load_ref( cg_value const& v, abis abi );
+	virtual llvm::Value* load_ref( cg_value const& v, abis::id abi );
 	virtual void store( cg_value& lhs, cg_value const& rhs ) = 0;
 	/// @}
 
@@ -170,7 +170,7 @@ public:
 	/// @name Emit statement
 	/// @{
 	virtual void emit_return() = 0;
-	virtual void emit_return( cg_value const&, abis abi ) = 0;
+	virtual void emit_return( cg_value const&, abis::id abi ) = 0;
 	/// @}
 
 	/// @name Context switch
@@ -253,22 +253,22 @@ public:
 	}
 	virtual cg_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint ) = 0;
 
-	cg_value null_value( cg_type* tyinfo, abis abi );
-	cg_value null_value( builtin_types bt, abis abi );
-	cg_value undef_value( builtin_types bt, abis abi );
+	cg_value null_value( cg_type* tyinfo, abis::id abi );
+	cg_value null_value( builtin_types bt, abis::id abi );
+	cg_value undef_value( builtin_types bt, abis::id abi );
 	cg_value one_value(cg_value const& proto);
 	cg_value numeric_value(cg_value const& proto, double fp, uint64_t ui);
 
-	cg_value create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v );
+	cg_value create_constant_int( cg_type* tyinfo, builtin_types bt, abis::id abi, uint64_t v );
 
-	cg_value create_value( cg_type* tyinfo, llvm::Value* val, value_kinds k, abis abi );
-	cg_value create_value( builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
-	cg_value create_value( cg_type* tyinfo, builtin_types hint, llvm::Value* val, value_kinds k, abis abi );
+	cg_value create_value( cg_type* tyinfo, llvm::Value* val, value_kinds::id k, abis::id abi );
+	cg_value create_value( builtin_types hint, llvm::Value* val, value_kinds::id k, abis::id abi );
+	cg_value create_value( cg_type* tyinfo, builtin_types hint, llvm::Value* val, value_kinds::id k, abis::id abi );
 
-	cg_value create_variable( cg_type const*, abis abi, std::string const& name );
-	cg_value create_variable( builtin_types bt, abis abi, std::string const& name );
+	cg_value create_variable( cg_type const*, abis::id abi, std::string const& name );
+	cg_value create_variable( builtin_types bt, abis::id abi, std::string const& name );
 
-	virtual cg_value create_vector( std::vector<cg_value> const& scalars, abis abi ) = 0;
+	virtual cg_value create_vector( std::vector<cg_value> const& scalars, abis::id abi ) = 0;
 	virtual cg_value create_value_by_scalar( cg_value const& scalar, cg_type* tyinfo, builtin_types hint );
 	/// @}
 
@@ -293,10 +293,10 @@ public:
 	
 	/// @name Bridges
 	/// @{
-	llvm::Type* type_( builtin_types bt, abis abi );
-	llvm::Type* type_( cg_type const*, abis abi );
+	llvm::Type* type_( builtin_types bt, abis::id abi );
+	llvm::Type* type_( cg_type const*, abis::id abi );
 
-	llvm::Value* load_as( cg_value const& v, abis abi );
+	llvm::Value* load_as( cg_value const& v, abis::id abi );
 	/// @}
 
 	llvm::Module*			module () const;
@@ -306,9 +306,9 @@ public:
 	virtual bool			prefer_externals() const	= 0;
 	virtual bool			prefer_scalar_code() const	= 0;
 
-	virtual abis			param_abi( bool is_c_compatible ) const = 0;
-			abis			promote_abi( abis abi0, abis abi1 );
-			abis			promote_abi( abis abi0, abis abi1, abis abi2 );
+	virtual abis::id			param_abi( bool is_c_compatible ) const = 0;
+			abis::id			promote_abi( abis::id abi0, abis::id abi1 );
+			abis::id			promote_abi( abis::id abi0, abis::id abi1, abis::id abi2 );
 
 	node_context*			get_node_context( sasl::syntax_tree::node* );
 	node_context*			get_or_create_node_context( sasl::syntax_tree::node* );
@@ -417,7 +417,7 @@ protected:
 protected:
 	boost::scoped_ptr<cg_extension>		ext_;
 
-	llvm::Value* load_as_llvm_c			( cg_value const& v, abis abi );
+	llvm::Value* load_as_llvm_c			( cg_value const& v, abis::id abi );
 	llvm::Value* load_c_as_package		( cg_value const& v );
 	llvm::Value* load_llvm_as_vec		( cg_value const& v );
 	llvm::Value* load_vec_as_llvm		( cg_value const& v );

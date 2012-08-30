@@ -106,7 +106,7 @@ void cg_vs::fill_llvm_type_from_si( sv_usage su ){
 	BOOST_FOREACH( sv_layout* si, svls ){
 		builtin_types storage_bt = to_builtin_types(si->value_type);
 		entry_param_tys[su].push_back( storage_bt );
-		Type* storage_ty = service()->type_( storage_bt, abi_c );
+		Type* storage_ty = service()->type_( storage_bt, abis::c );
 
 		if( su_stream_in == su || su_stream_out == su || si->agg_type == salviar::aggt_array ){
 			tys.push_back( PointerType::getUnqual( storage_ty ) );
@@ -137,7 +137,7 @@ void cg_vs::fill_llvm_type_from_si( sv_usage su ){
 	assert( struct_name );
 
 	// Tys must not be empty. So placeholder (int8) will be inserted if tys is empty.
-	StructType* out_struct = tys.empty() ? StructType::create( struct_name, service()->type_(builtin_types::_sint8, abi_llvm), NULL ) : StructType::create( tys, struct_name );
+	StructType* out_struct = tys.empty() ? StructType::create( struct_name, service()->type_(builtin_types::_sint8, abis::llvm), NULL ) : StructType::create( tys, struct_name );
 	entry_params_structs[su].data() = out_struct;
 
 	// Update Layout physical informations.
@@ -307,19 +307,19 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		Function::arg_iterator arg_it = fn->arg_begin();
 
 		arg_it->setName( ".arg.stri" );
-		param_values[su_stream_in] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		param_values[su_stream_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
 		++arg_it;
 
 		arg_it->setName( ".arg.bufi" );
-		param_values[su_buffer_in] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		param_values[su_buffer_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
 		++arg_it;
 
 		arg_it->setName( ".arg.stro" );
-		param_values[su_stream_out] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		param_values[su_stream_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
 		++arg_it;
 
 		arg_it->setName( ".arg.bufo" );
-		param_values[su_buffer_out] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		param_values[su_buffer_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
 		++arg_it;
 
 		// Create virtual arguments
@@ -352,7 +352,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			sv_layout* psi = abii->input_sv_layout( par_sem );
 
 			builtin_types hint = par_ssi->ty_proto()->tycode;
-			pctxt->node_value = service()->create_variable( hint, abi_c, par->name->str );
+			pctxt->node_value = service()->create_variable( hint, abis::c, par->name->str );
 			layout_to_sc(pctxt, psi, true);
 		} else {
 			// Virtual args for aggregated argument
@@ -473,7 +473,7 @@ void cg_vs::layout_to_sc(node_context* psc, salviar::sv_layout* svl, bool store_
 	else
 	{
 		psc->ty = service()->create_ty( sem_->pety()->get_proto(svl->internal_type) );
-		ret.tyinfo( psc->ty );
+		ret.ty(psc->ty);
 	}
 
 	if( store_to_existed_value && psc->node_value.storable() )

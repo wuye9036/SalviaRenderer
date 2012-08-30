@@ -122,8 +122,8 @@ cg_value cg_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<node>
 	service()->set_insert_point(merge_ip);
 	cg_value result_value;
 	Value*		merged = service()->phi_( yes_ip_end.block, yes_v, no_ip_end.block, no_v );
-	value_kinds	vkind = (yes_ref && no_ref) ? vkind_ref : vkind_value;
-	result_value = service()->create_value( yes_value.tyinfo(), yes_value.hint(), merged, vkind, yes_value.abi() );
+	value_kinds::id	vkind = (yes_ref && no_ref) ? value_kinds::reference : value_kinds::value;
+	result_value = service()->create_value( yes_value.ty(), yes_value.hint(), merged, vkind, yes_value.abi() );
 
 	return result_value;
 }
@@ -533,9 +533,9 @@ cgs_sisd* cg_sisd::service() const
 	return static_cast<cgs_sisd*>(service_);
 }
 
-abis cg_sisd::local_abi( bool is_c_compatible ) const
+abis::id cg_sisd::local_abi( bool is_c_compatible ) const
 {
-	return is_c_compatible ? abi_c : abi_llvm;
+	return is_c_compatible ? abis::c : abis::llvm;
 }
 
 END_NS_SASL_CODEGEN();

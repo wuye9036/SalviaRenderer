@@ -127,12 +127,12 @@ namespace {
 void cgs_sisd::store( cg_value& lhs, cg_value const& rhs ){
 	Value* src = NULL;
 	Value* address = NULL;
-	value_kinds kind = lhs.kind();
+	value_kinds::id kind = lhs.kind();
 
-	if( kind == vkind_ref ){	
+	if( kind == value_kinds::reference ){	
 		src = rhs.load( lhs.abi() );
 		address = lhs.raw();
-	} else if ( kind == vkind_swizzle ){
+	} else if ( kind == value_kinds::elements ){
 		char indexes[4] = {-1, -1, -1, -1};
 		cg_value const* root = NULL;
 		merge_swizzle(root, indexes, lhs);
@@ -167,13 +167,13 @@ cg_value cgs_sisd::cast_ints( cg_value const& v, cg_type* dest_tyi )
 	builtin_types scalar_hint_src = scalar_of(hint_src);
 
 	Type* dest_ty = dest_tyi->ty(v.abi());
-	Type* elem_ty = type_( scalar_of(hint_dst), abi_llvm );
+	Type* elem_ty = type_( scalar_of(hint_dst), abis::llvm );
 
 	cast_ops::id op = is_signed(scalar_hint_src) ? cast_ops::i2i_signed : cast_ops::i2i_unsigned;
 	unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
 	Value* val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
 
-	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
+	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
 
 cg_value cgs_sisd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
@@ -184,14 +184,14 @@ cg_value cgs_sisd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
 	builtin_types scalar_hint_i = scalar_of(hint_i);
 
 	Type* dest_ty = dest_tyi->ty(v.abi());
-	Type* elem_ty = type_( scalar_of(hint_f), abi_llvm );
+	Type* elem_ty = type_( scalar_of(hint_f), abis::llvm );
 
 	cast_ops::id op = is_signed(hint_i) ? cast_ops::i2f : cast_ops::u2f;
 	unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
 
 	Value* val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
 
-	return create_value( dest_tyi, builtin_types::none, val, vkind_value, v.abi() );
+	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
 
 cg_value cgs_sisd::cast_f2i( cg_value const& v, cg_type* dest_tyi )
@@ -206,7 +206,7 @@ cg_value cgs_sisd::cast_f2f( cg_value const& v, cg_type* dest_tyi )
 	return cg_value();
 }
 
-cg_value cgs_sisd::create_vector( std::vector<cg_value> const& scalars, abis abi ){
+cg_value cgs_sisd::create_vector( std::vector<cg_value> const& scalars, abis::id abi ){
 	builtin_types scalar_hint = scalars[0].hint();
 	builtin_types hint = vector_of(scalar_hint, scalars.size());
 
@@ -222,8 +222,8 @@ void cgs_sisd::emit_return(){
 	builder().CreateRetVoid();
 }
 
-void cgs_sisd::emit_return( cg_value const& ret_v, abis abi ){
-	if( abi == abi_unknown ){ abi = fn().abi(); }
+void cgs_sisd::emit_return( cg_value const& ret_v, abis::id abi ){
+	if( abi == abis::unknown ){ abi = fn().abi(); }
 
 	if( fn().first_arg_is_return_address() ){
 		builder().CreateStore( ret_v.load(abi), fn().return_address() );
@@ -235,7 +235,7 @@ void cgs_sisd::emit_return( cg_value const& ret_v, abis abi ){
 
 cg_value cgs_sisd::create_scalar( Value* val, cg_type* tyinfo, builtin_types hint ){
 	assert( is_scalar(hint) );
-	return create_value( tyinfo, hint, val, vkind_value, abi_llvm );
+	return create_value( tyinfo, hint, val, value_kinds::value, abis::llvm );
 }
 
 Value* cgs_sisd::select_( Value* cond, Value* yes, Value* no )
@@ -289,14 +289,14 @@ cg_value cgs_sisd::cast_f2b( cg_value const& v )
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
 }
 
-abis cgs_sisd::intrinsic_abi() const
+abis::id cgs_sisd::intrinsic_abi() const
 {
-	return abi_llvm;
+	return abis::llvm;
 }
 
-abis cgs_sisd::param_abi( bool c_compatible ) const
+abis::id cgs_sisd::param_abi( bool c_compatible ) const
 {
-	return c_compatible ? abi_c : abi_llvm;
+	return c_compatible ? abis::c : abis::llvm;
 }
 
 cg_value cgs_sisd::emit_ddx( cg_value const& v )

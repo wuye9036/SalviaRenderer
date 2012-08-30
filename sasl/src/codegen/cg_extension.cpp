@@ -639,10 +639,10 @@ bool cg_extension::initialize_external_intrinsics()
 	Type* f32ptr_ty		= Type::getFloatPtrTy( context_ );
 	Type* u32ptr_ty		= Type::getInt32PtrTy( context_ );
 	
-	Type* v4f32_ty		= get_llvm_type(context_, v4f32_hint, abi_llvm);
-	Type* v4f32_pkg_ty	= get_llvm_type(context_, v4f32_hint, abi_package);
-	Type* v3f32_pkg_ty	= get_llvm_type(context_, v3f32_hint, abi_package);
-	Type* v2f32_pkg_ty	= get_llvm_type(context_, v2f32_hint, abi_package);
+	Type* v4f32_ty		= get_llvm_type(context_, v4f32_hint, abis::llvm);
+	Type* v4f32_pkg_ty	= get_llvm_type(context_, v4f32_hint, abis::package);
+	Type* v3f32_pkg_ty	= get_llvm_type(context_, v3f32_hint, abis::package);
+	Type* v2f32_pkg_ty	= get_llvm_type(context_, v2f32_hint, abis::package);
 
 	FunctionType* f_f = NULL;
 	{

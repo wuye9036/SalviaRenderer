@@ -21,7 +21,7 @@ class symbol;
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 EFLIB_DECLARE_CLASS_SHARED_PTR(abi_info);
 
-// If entry of VS and PS was set, match the ABIs to generate interpolating code.
+// If entry of VS and PS was set, match the abis::id to generate interpolating code.
 class abi_analyser{
 public:
 	bool entry( module_semantic_ptr const& mod, std::string const& name, salviar::languages lang );

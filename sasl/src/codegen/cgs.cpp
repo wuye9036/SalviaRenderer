@@ -112,14 +112,14 @@ cg_function* cg_service::fetch_function(function_type* fn_node){
 	ret->external			= sem_->get_semantic(fn_node)->is_external();
 	ret->partial_execution	= sem_->get_semantic(fn_node)->partial_execution();
 
-	abis abi = param_abi( ret->c_compatible );
+	abis::id abi = param_abi( ret->c_compatible );
 
 	vector<Type*> par_tys;
 
 	Type* ret_ty = ctxt_->get_node_context( fn_node->retval_type.get() )->ty->ty(abi);
 
 	ret->ret_void = true;
-	if( abi == abi_c || ret->external ){
+	if( abi == abis::c || ret->external ){
 		if( fn_node->retval_type->tycode != builtin_types::_void ){
 			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
 			Type* ret_ptr = PointerType::getUnqual( ret_ty );
@@ -130,7 +130,7 @@ cg_function* cg_service::fetch_function(function_type* fn_node){
 		ret_ty = Type::getVoidTy( context() );
 	}
 
-	if( abi == abi_package && ret->partial_execution ){
+	if( abi == abis::package && ret->partial_execution ){
 		Type* mask_ty = Type::getInt16Ty( context() );
 		par_tys.push_back(mask_ty);
 	}
@@ -149,7 +149,7 @@ cg_function* cg_service::fetch_function(function_type* fn_node){
 		if( ret->c_compatible || ret->external ){
 			if( is_sampler( par_hint ) ){
 				as_ref = false;
-			} else if ( is_scalar(par_hint) && ( promote_abi( param_abi(false), abi_llvm ) == abi_llvm ) ){
+			} else if ( is_scalar(par_hint) && ( promote_abi( param_abi(false), abis::llvm ) == abis::llvm ) ){
 				as_ref = false;
 			} else {
 				as_ref = true;
@@ -176,32 +176,32 @@ cg_function* cg_service::fetch_function(function_type* fn_node){
 	return ret;
 }
 
-cg_value cg_service::null_value( cg_type* tyinfo, abis abi )
+cg_value cg_service::null_value( cg_type* tyinfo, abis::id abi )
 {
-	assert( tyinfo && abi != abi_unknown );
+	assert( tyinfo && abi != abis::unknown );
 	Type* value_type = tyinfo->ty(abi);
 	assert( value_type );
-	return create_value( tyinfo, Constant::getNullValue(value_type), vkind_value, abi );
+	return create_value( tyinfo, Constant::getNullValue(value_type), value_kinds::value, abi );
 }
 
-cg_value cg_service::null_value( builtin_types bt, abis abi )
+cg_value cg_service::null_value( builtin_types bt, abis::id abi )
 {
 	assert( bt != builtin_types::none );
 	Type* valty = type_( bt, abi );
-	cg_value val = create_value( bt, Constant::getNullValue( valty ), vkind_value, abi );
+	cg_value val = create_value( bt, Constant::getNullValue( valty ), value_kinds::value, abi );
 	return val;
 }
 
-cg_value cg_service::create_value( cg_type* tyinfo, Value* val, value_kinds k, abis abi ){
+cg_value cg_service::create_value( cg_type* tyinfo, Value* val, value_kinds::id k, abis::id abi ){
 	return cg_value( tyinfo, val, k, abi, this );
 }
 
-cg_value cg_service::create_value( builtin_types hint, Value* val, value_kinds k, abis abi )
+cg_value cg_service::create_value( builtin_types hint, Value* val, value_kinds::id k, abis::id abi )
 {
 	return cg_value( hint, val, k, abi, this );
 }
 
-cg_value cg_service::create_value( cg_type* tyinfo, builtin_types hint, Value* val, value_kinds k, abis abi )
+cg_value cg_service::create_value( cg_type* tyinfo, builtin_types hint, Value* val, value_kinds::id k, abis::id abi )
 {
 	if( tyinfo ){
 		return create_value( tyinfo, val, k, abi );
@@ -218,17 +218,13 @@ cg_type* cg_service::create_ty(tynode* tyn)
 
 	cg_type* ret= ctxt_->create_cg_type();
 	ret->tyn		= tyn;
-	ret->cls		= cg_type::unknown_type;
 
 	if( tyn->is_builtin() ){
-		ret->tys[abi_c]			= type_(tyn->tycode, abi_c);
-		ret->tys[abi_llvm]		= type_(tyn->tycode, abi_llvm);
-		ret->tys[abi_vectorize]	= type_(tyn->tycode, abi_vectorize);
-		ret->tys[abi_package]	= type_(tyn->tycode, abi_package);
-		ret->cls = cg_type::builtin;
+		ret->tys[abis::c]			= type_(tyn->tycode, abis::c);
+		ret->tys[abis::llvm]		= type_(tyn->tycode, abis::llvm);
+		ret->tys[abis::vectorize]	= type_(tyn->tycode, abis::vectorize);
+		ret->tys[abis::package]	= type_(tyn->tycode, abis::package);
 	} else {
-		ret->cls = cg_type::aggregated;
-
 		if( tyn->is_struct() )
 		{
 			shared_ptr<struct_type> struct_tyn = tyn->as_handle<struct_type>();
@@ -243,10 +239,10 @@ cg_type* cg_service::create_ty(tynode* tyn)
 					shared_ptr<variable_declaration> decl_tyn = decl->as_handle<variable_declaration>();
 					cg_type* decl_cgty = create_ty( sem_->get_semantic(decl_tyn->type_info)->ty_proto() );
 					size_t declarator_count = decl_tyn->declarators.size();
-					c_member_types.insert( c_member_types.end(), declarator_count, decl_cgty->ty(abi_c) );
-					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_cgty->ty(abi_llvm) );
-					vectorize_member_types.insert( vectorize_member_types.end(), declarator_count, decl_cgty->ty(abi_vectorize) );
-					package_member_types.insert( package_member_types.end(), declarator_count, decl_cgty->ty(abi_package) );
+					c_member_types.insert( c_member_types.end(), declarator_count, decl_cgty->ty(abis::c) );
+					llvm_member_types.insert( llvm_member_types.end(), declarator_count, decl_cgty->ty(abis::llvm) );
+					vectorize_member_types.insert( vectorize_member_types.end(), declarator_count, decl_cgty->ty(abis::vectorize) );
+					package_member_types.insert( package_member_types.end(), declarator_count, decl_cgty->ty(abis::package) );
 				}
 			}
 
@@ -262,20 +258,20 @@ cg_type* cg_service::create_ty(tynode* tyn)
 				ty_pkg = StructType::create( package_member_types,	struct_tyn->name->str + ".abi.pkg" );
 			}
 
-			ret->tys[abi_c]			= ty_c;
-			ret->tys[abi_llvm]		= ty_llvm;
-			ret->tys[abi_vectorize]	= ty_vec;
-			ret->tys[abi_package]	= ty_pkg;
+			ret->tys[abis::c]			= ty_c;
+			ret->tys[abis::llvm]		= ty_llvm;
+			ret->tys[abis::vectorize]	= ty_vec;
+			ret->tys[abis::package]	= ty_pkg;
 		}
 		else if( tyn->is_array() )
 		{
 			array_type*	array_tyn	= polymorphic_cast<array_type*>(tyn);
 			cg_type*	elem_ti		= create_ty( array_tyn->elem_type.get() );
 
-			ret->tys[abi_c]			= PointerType::getUnqual( elem_ti->ty(abi_c) );
-			ret->tys[abi_llvm]		= PointerType::getUnqual( elem_ti->ty(abi_llvm) );
-			ret->tys[abi_vectorize]	= PointerType::getUnqual( elem_ti->ty(abi_vectorize) );
-			ret->tys[abi_package]	= PointerType::getUnqual( elem_ti->ty(abi_package) );
+			ret->tys[abis::c]			= PointerType::getUnqual( elem_ti->ty(abis::c) );
+			ret->tys[abis::llvm]		= PointerType::getUnqual( elem_ti->ty(abis::llvm) );
+			ret->tys[abis::vectorize]	= PointerType::getUnqual( elem_ti->ty(abis::vectorize) );
+			ret->tys[abis::package]	= PointerType::getUnqual( elem_ti->ty(abis::package) );
 		}
 		else
 		{
@@ -312,16 +308,16 @@ cg_type* cg_service::member_tyinfo( cg_type const* agg, size_t index ) const
 	return NULL;
 }
 
-cg_value cg_service::create_variable( builtin_types bt, abis abi, std::string const& name )
+cg_value cg_service::create_variable( builtin_types bt, abis::id abi, std::string const& name )
 {
 	Type* vty = type_( bt, abi );
-	return create_value( bt, ext_->stack_alloc(vty, name), vkind_ref, abi );
+	return create_value( bt, ext_->stack_alloc(vty, name), value_kinds::reference, abi );
 }
 
-cg_value cg_service::create_variable( cg_type const* ty, abis abi, std::string const& name )
+cg_value cg_service::create_variable( cg_type const* ty, abis::id abi, std::string const& name )
 {
 	Type* vty = type_( ty, abi );
-	return create_value( const_cast<cg_type*>(ty), ext_->stack_alloc(vty, name), vkind_ref, abi );
+	return create_value( const_cast<cg_type*>(ty), ext_->stack_alloc(vty, name), value_kinds::reference, abi );
 }
 
 insert_point_t cg_service::new_block( std::string const& hint, bool set_as_current )
@@ -413,13 +409,13 @@ insert_point_t cg_service::insert_point() const
 	return ret;
 }
 
-Type* cg_service::type_( builtin_types bt, abis abi )
+Type* cg_service::type_( builtin_types bt, abis::id abi )
 {
-	assert( abi != abi_unknown );
+	assert( abi != abis::unknown );
 	return get_llvm_type( context(), bt, abi );
 }
 
-Type* cg_service::type_( cg_type const* ty, abis abi )
+Type* cg_service::type_( cg_type const* ty, abis::id abi )
 {
 	assert( ty->ty(abi) );
 	return ty->ty(abi);
@@ -427,17 +423,17 @@ Type* cg_service::type_( cg_type const* ty, abis abi )
 
 llvm::Value* cg_service::load( cg_value const& v )
 {
-	value_kinds kind = v.kind();
+	value_kinds::id kind = v.kind();
 	Value* raw = v.raw();
 
 	uint32_t masks = v.masks();
 
-	assert( kind != vkind_unknown && kind != vkind_tyinfo_only );
+	assert( kind != value_kinds::unknown && kind != value_kinds::ty_only );
 
 	Value* ref_val = NULL;
-	if( kind == vkind_ref || kind == vkind_value ){
+	if( kind == value_kinds::reference || kind == value_kinds::value ){
 		ref_val = raw;
-	} else if( ( kind & (~vkind_ref) ) == vkind_swizzle ){
+	} else if( ( kind & (~value_kinds::reference) ) == value_kinds::elements ){
 		if( masks > 0 )
 		{
 			// Decompose indexes.
@@ -456,7 +452,7 @@ llvm::Value* cg_service::load( cg_value const& v )
 				ref_val = emit_extract_val( v.parent()->to_rvalue(), index_values[0] ).load();
 			} else {
 				// Multi-members must be swizzle/writemask.
-				assert( (kind & vkind_ref) == 0 );
+				assert( (kind & value_kinds::reference) == 0 );
 				cg_value ret_val = emit_extract_elem_mask( v.parent()->to_rvalue(), masks );
 				return ret_val.load( v.abi() );
 			}
@@ -470,36 +466,36 @@ llvm::Value* cg_service::load( cg_value const& v )
 		assert(false);
 	}
 
-	if( kind & vkind_ref ){
+	if( kind & value_kinds::reference ){
 		return builder().CreateLoad( ref_val );
 	} else {
 		return ref_val;
 	}
 }
 
-llvm::Value* cg_service::load( cg_value const& v, abis abi )
+llvm::Value* cg_service::load( cg_value const& v, abis::id abi )
 {
 	return load_as( v, abi );
 }
 
 llvm::Value* cg_service::load_ref( cg_value const& v )
 {
-	value_kinds kind = v.kind();
+	value_kinds::id kind = v.kind();
 
-	if( kind == vkind_ref ){
+	if( kind == value_kinds::reference ){
 		return v.raw();
-	} else if( kind == (vkind_swizzle|vkind_ref) ){
+	} else if( kind == (value_kinds::elements|value_kinds::reference) ){
 		cg_value non_ref( v );
-		non_ref.kind( vkind_swizzle );
+		non_ref.kind( value_kinds::elements );
 		return non_ref.load();
-	} if( kind == vkind_swizzle ){
+	} if( kind == value_kinds::elements ){
 		assert( v.masks() );
 		return emit_extract_elem_mask( *v.parent(), v.masks() ).load_ref();
 	}
 	return NULL;
 }
 
-Value* cg_service::load_ref( cg_value const& v, abis abi )
+Value* cg_service::load_ref( cg_value const& v, abis::id abi )
 {
 	if( v.abi() == abi || v.hint() == builtin_types::_sampler ){
 		return load_ref(v);
@@ -508,60 +504,60 @@ Value* cg_service::load_ref( cg_value const& v, abis abi )
 	}
 }
 
-Value* cg_service::load_as( cg_value const& v, abis abi )
+Value* cg_service::load_as( cg_value const& v, abis::id abi )
 {
-	assert( abi != abi_unknown );
+	assert( abi != abis::unknown );
 
 	if( v.abi() == abi ){ return v.load(); }
 
 	switch( v.abi() )
 	{
-	case abi_c:
-		if( abi == abi_llvm ){
+	case abis::c:
+		if( abi == abis::llvm ){
 			return load_as_llvm_c(v, abi);
-		} else if ( abi == abi_vectorize ){
+		} else if ( abi == abis::vectorize ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
-		} else if ( abi == abi_package ) {
+		} else if ( abi == abis::package ) {
 			return load_c_as_package( v );
 		} else {
 			assert(false);
 			return NULL;
 		}
-	case abi_llvm:
-		if( abi == abi_c ){
+	case abis::llvm:
+		if( abi == abis::c ){
 			return load_as_llvm_c(v, abi);
-		} else if ( abi == abi_vectorize ){
+		} else if ( abi == abis::vectorize ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
-		} else if ( abi == abi_package ) {
+		} else if ( abi == abis::package ) {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
 		} else {
 			assert(false);
 			return NULL;
 		}
-	case abi_vectorize:
-		if( abi == abi_c ){
+	case abis::vectorize:
+		if( abi == abis::c ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
-		} else if ( abi == abi_llvm ){
+		} else if ( abi == abis::llvm ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
-		} else if ( abi == abi_package ) {
+		} else if ( abi == abis::package ) {
 			return load_vec_as_package( v );
 		} else {
 			assert(false);
 			return NULL;
 		}
-	case abi_package:
-		if( abi == abi_c ){
+	case abis::package:
+		if( abi == abis::c ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
-		} else if ( abi == abi_llvm ){
+		} else if ( abi == abis::llvm ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
-		} else if ( abi == abi_vectorize ) {
+		} else if ( abi == abis::vectorize ) {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return NULL;
 		} else {
@@ -574,7 +570,7 @@ Value* cg_service::load_as( cg_value const& v, abis abi )
 	return NULL;
 }
 
-Value* cg_service::load_as_llvm_c( cg_value const& v, abis abi )
+Value* cg_service::load_as_llvm_c( cg_value const& v, abis::id abi )
 {
 	builtin_types hint = v.hint();
 
@@ -600,7 +596,7 @@ Value* cg_service::load_as_llvm_c( cg_value const& v, abis abi )
 		return ret_value.load();
 	} else {
 		// NOTE: We assume that, if tyinfo is null and hint is none, it is only the entry of vs/ps. Otherwise, tyinfo must be not NULL.
-		if( !v.tyinfo() && hint == builtin_types::none ){
+		if( !v.ty() && hint == builtin_types::none ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -617,14 +613,14 @@ cg_value cg_service::emit_insert_val( cg_value const& lhs, cg_value const& idx, 
 	if( agg->getType()->isStructTy() ){
 		assert(false);
 	} else if ( agg->getType()->isVectorTy() ){
-		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
+		if( lhs.abi() == abis::vectorize || lhs.abi() == abis::package ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 		new_value = builder().CreateInsertElement( agg, elem_value.load(), indexes[0] );
 	}
 	assert(new_value);
 	
-	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
+	return create_value( lhs.ty(), lhs.hint(), new_value, value_kinds::value, lhs.abi() );
 }
 
 cg_value cg_service::emit_insert_val( cg_value const& lhs, int index, cg_value const& elem_value )
@@ -632,20 +628,20 @@ cg_value cg_service::emit_insert_val( cg_value const& lhs, int index, cg_value c
 	Value* agg = lhs.load();
 	Value* new_value = NULL;
 	if( agg->getType()->isStructTy() ){
-		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
+		if( lhs.abi() == abis::vectorize || lhs.abi() == abis::package ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
 		new_value = builder().CreateInsertValue( agg, elem_value.load(lhs.abi()), (unsigned)index );
 	} else if ( agg->getType()->isVectorTy() ){
-		if( lhs.abi() == abi_vectorize || lhs.abi() == abi_package ){
+		if( lhs.abi() == abis::vectorize || lhs.abi() == abis::package ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
-		cg_value index_value = create_value( builtin_types::_sint32, ext_->get_int(index), vkind_value, abi_llvm );
+		cg_value index_value = create_value( builtin_types::_sint32, ext_->get_int(index), value_kinds::value, abis::llvm );
 		return emit_insert_val( lhs, index_value, elem_value );
 	}
 	assert(new_value);
 
-	return create_value( lhs.tyinfo(), lhs.hint(), new_value, vkind_value, lhs.abi() );
+	return create_value( lhs.ty(), lhs.hint(), new_value, value_kinds::value, lhs.abi() );
 }
 
 Value* cg_service::load_vec_as_package( cg_value const& v )
@@ -674,7 +670,7 @@ Value* cg_service::load_c_as_package( cg_value const& v )
 		return v.load();
 	} else {
 		
-		cg_value llvm_v = create_value( v.tyinfo(), v.hint(), v.load(abi_llvm), vkind_value, abi_llvm );
+		cg_value llvm_v = create_value( v.ty(), v.hint(), v.load(abis::llvm), value_kinds::value, abis::llvm );
 
 		if( is_scalar( v.hint() ) || is_vector( v.hint() ) ){
 
@@ -683,7 +679,7 @@ Value* cg_service::load_c_as_package( cg_value const& v )
 			if( is_scalar(v.hint()) ){
 				vec_val = cast_s2v( llvm_v ).load();
 			} else {
-				vec_val = v.load(abi_llvm);
+				vec_val = v.load(abis::llvm);
 			}
 
 			// Shuffle llvm value to package value.
@@ -708,18 +704,18 @@ Value* cg_service::load_c_as_package( cg_value const& v )
 	}
 }
 
-abis cg_service::promote_abi( abis abi0, abis abi1 )
+abis::id cg_service::promote_abi( abis::id abi0, abis::id abi1 )
 {
-	if( abi0 == abi_c ){ return abi1; }
-	if( abi1 == abi_c ){ return abi0; }
-	if( abi0 == abi_llvm ){ return abi1; }
-	if( abi1 == abi_llvm ){ return abi0; }
-	if( abi0 == abi_vectorize ){ return abi1; }
-	if( abi1 == abi_vectorize ){ return abi0; }
+	if( abi0 == abis::c ){ return abi1; }
+	if( abi1 == abis::c ){ return abi0; }
+	if( abi0 == abis::llvm ){ return abi1; }
+	if( abi1 == abis::llvm ){ return abi0; }
+	if( abi0 == abis::vectorize ){ return abi1; }
+	if( abi1 == abis::vectorize ){ return abi0; }
 	return abi0;
 }
 
-abis cg_service::promote_abi( abis abi0, abis abi1, abis abi2 )
+abis::id cg_service::promote_abi( abis::id abi0, abis::id abi1, abis::id abi2 )
 {
 	return promote_abi( promote_abi( abi0, abi1 ), abi2 );
 }
@@ -899,10 +895,10 @@ cg_value cg_service::emit_extract_ref( cg_value const& lhs, int idx )
 		Value* agg_address = lhs.load_ref();
 		Value* elem_address = builder().CreateStructGEP( agg_address, (unsigned)idx );
 		cg_type* tyinfo = NULL;
-		if( lhs.tyinfo() ){
-			tyinfo = member_tyinfo( lhs.tyinfo(), (size_t)idx );
+		if( lhs.ty() ){
+			tyinfo = member_tyinfo( lhs.ty(), (size_t)idx );
 		}
-		return create_value( tyinfo, elem_address, vkind_ref, lhs.abi() );
+		return create_value( tyinfo, elem_address, value_kinds::reference, lhs.abi() );
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return cg_value();
@@ -912,7 +908,7 @@ cg_value cg_service::emit_extract_ref( cg_value const& lhs, cg_value const& idx 
 {
 	assert( lhs.storable() );
 	
-	abis promoted_abi = promote_abi( lhs.abi(), idx.abi() );
+	abis::id promoted_abi = promote_abi( lhs.abi(), idx.abi() );
 	builtin_types agg_hint = lhs.hint();
 
 	if( is_vector(agg_hint) )
@@ -924,17 +920,17 @@ cg_value cg_service::emit_extract_ref( cg_value const& lhs, cg_value const& idx 
 		Value* addr = lhs.load_ref();
 		switch (promoted_abi)
 		{
-		case abi_c:
-		case abi_llvm:
+		case abis::c:
+		case abis::llvm:
 			{
 				Type*  value_ty = addr->getType()->getPointerElementType();
 				Type*  element_ty = value_ty->getStructElementType(0);
 				Value* first_elem_ptr = builder().CreateBitCast( addr, PointerType::getUnqual(element_ty) );
 				Value* indexes[] = { idx.load() };
 				Value* elem_ptr = builder().CreateGEP(first_elem_ptr, indexes);
-				return create_value(NULL, row_vector_of(lhs.hint()), elem_ptr, vkind_ref, lhs.abi() );
+				return create_value(NULL, row_vector_of(lhs.hint()), elem_ptr, value_kinds::reference, lhs.abi() );
 			}
-		case abi_package:
+		case abis::package:
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		default:
 			assert(false);
@@ -946,7 +942,7 @@ cg_value cg_service::emit_extract_ref( cg_value const& lhs, cg_value const& idx 
 		// Array only
 		Value* addr = lhs.load_ref();
 		assert(addr);
-		array_type_ptr array_tyn = lhs.tyinfo()->tyn_ptr()->as_handle<array_type>();
+		array_type_ptr array_tyn = lhs.ty()->tyn_ptr()->as_handle<array_type>();
 
 		// Support one-dimension array only.
 		if( array_tyn->array_lens.size() > 1 ){
@@ -955,12 +951,12 @@ cg_value cg_service::emit_extract_ref( cg_value const& lhs, cg_value const& idx 
 
 		switch(promoted_abi)
 		{
-		case abi_c:
-		case abi_llvm:
+		case abis::c:
+		case abis::llvm:
 			{
 				Value* elem_addr = builder().CreateGEP(addr, idx.load() );
 				cg_type* elem_tyinfo = ctxt_->get_node_context( array_tyn->elem_type.get() )->ty;
-				return create_value( elem_tyinfo, elem_addr, vkind_ref, lhs.abi() );
+				return create_value( elem_tyinfo, elem_addr, value_kinds::reference, lhs.abi() );
 			}
 		default:
 			assert(false);
@@ -975,7 +971,7 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, int idx )
 
 	Value* val = lhs.load();
 	Value* elem_val = NULL;
-	abis abi = abi_unknown;
+	abis::id abi = abis::unknown;
 
 	builtin_types elem_hint = builtin_types::none;
 	cg_type* elem_tyi = NULL;
@@ -983,23 +979,23 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, int idx )
 	if( agg_hint == builtin_types::none ){
 		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
 		abi = lhs.abi();
-		elem_tyi = member_tyinfo( lhs.tyinfo(), (size_t)idx );
+		elem_tyi = member_tyinfo( lhs.ty(), (size_t)idx );
 	} else if( is_scalar(agg_hint) ){
 		assert( idx == 0 );
 		elem_val = val;
 		elem_hint = agg_hint;
 	} else if( is_vector(agg_hint) ){
 		switch( lhs.abi() ){
-		case abi_c:
+		case abis::c:
 			elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
 			break;
-		case abi_llvm:
+		case abis::llvm:
 			elem_val = builder().CreateExtractElement(val, ext_->get_int(idx) );
 			break;
-		case abi_vectorize:
+		case abis::vectorize:
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			break;
-		case abi_package:
+		case abis::package:
 			{
 				char indexes[4] = { char(idx), -1, -1, -1};
 				elem_val = emit_extract_elem_mask( lhs, indexes_to_mask(indexes) ).load();
@@ -1009,16 +1005,16 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, int idx )
 			assert(!"Unknown ABI");
 			break;
 		}
-		abi = promote_abi( abi_llvm, lhs.abi() );
+		abi = promote_abi( abis::llvm, lhs.abi() );
 		elem_hint = scalar_of(agg_hint);
 	} else if( is_matrix(agg_hint) ){
-		assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
+		assert( promote_abi(lhs.abi(), abis::llvm) == abis::llvm );
 		elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
 		abi = lhs.abi();
 		elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
 	}
 
-	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
+	return create_value( elem_tyi, elem_hint, elem_val, value_kinds::value, abi );
 }
 
 cg_value cg_service::emit_extract_val( cg_value const& lhs, cg_value const& idx )
@@ -1026,7 +1022,7 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, cg_value const& idx 
 	builtin_types agg_hint = lhs.hint();
 
 	Value* elem_val = NULL;
-	abis abi = promote_abi(lhs.abi(), idx.abi());
+	abis::id abi = promote_abi(lhs.abi(), idx.abi());
 
 	builtin_types elem_hint = builtin_types::none;
 	cg_type* elem_tyi = NULL;
@@ -1035,7 +1031,7 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, cg_value const& idx 
 		// Array only
 		Value* addr = lhs.load_ref();
 		assert(addr);
-		array_type_ptr array_tyn = lhs.tyinfo()->tyn_ptr()->as_handle<array_type>();
+		array_type_ptr array_tyn = lhs.ty()->tyn_ptr()->as_handle<array_type>();
 
 		// Support one-dimension array only.
 		if( array_tyn->array_lens.size() > 1 ){
@@ -1044,12 +1040,12 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, cg_value const& idx 
 
 		switch(abi)
 		{
-		case abi_c:
-		case abi_llvm:
+		case abis::c:
+		case abis::llvm:
 			{
 				Value* elem_addr = builder().CreateGEP(addr, idx.load() );
 				cg_type* elem_tyinfo = ctxt_->get_node_context( array_tyn->elem_type.get() )->ty;
-				return create_value( elem_tyinfo, builtin_types::none, elem_addr, vkind_ref, lhs.abi() );
+				return create_value( elem_tyinfo, builtin_types::none, elem_addr, value_kinds::reference, lhs.abi() );
 			}
 		default:
 			assert(false);
@@ -1060,14 +1056,14 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, cg_value const& idx 
 		elem_hint	= agg_hint;
 	} else if( is_vector(agg_hint) ){
 		switch( abi ){
-		case abi_c:
-		case abi_llvm:
-			elem_val = builder().CreateExtractElement( lhs.load(abi_llvm), idx.load() );
+		case abis::c:
+		case abis::llvm:
+			elem_val = builder().CreateExtractElement( lhs.load(abis::llvm), idx.load() );
 			break;
-		case abi_vectorize:
+		case abis::vectorize:
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			break;
-		case abi_package:
+		case abis::package:
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			break;
 		default:
@@ -1077,13 +1073,13 @@ cg_value cg_service::emit_extract_val( cg_value const& lhs, cg_value const& idx 
 		elem_hint = scalar_of(agg_hint);
 	} else if( is_matrix(agg_hint) ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		//assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
+		//assert( promote_abi(lhs.abi(), abis::llvm) == abis::llvm );
 		//elem_val = builder().CreateExtractValue(val, static_cast<unsigned>(idx));
 		//abi = lhs.abi();
 		//elem_hint = vector_of( scalar_of(agg_hint), vector_size(agg_hint) );
 	}
 
-	return create_value( elem_tyi, elem_hint, elem_val, vkind_value, abi );
+	return create_value( elem_tyi, elem_hint, elem_val, value_kinds::value, abi );
 }
 
 cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask )
@@ -1096,7 +1092,7 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 	if( vec.hint() == builtin_types::none && idx_len == 1 ){
 		// struct, array or not-package, return extract elem.
 		// Else do extract mask.
-		if( vec.abi() != abi_package || vec.hint() == builtin_types::none ){
+		if( vec.abi() != abis::package || vec.hint() == builtin_types::none ){
 			return emit_extract_elem( vec, indexes[0] );
 		}
 	}
@@ -1113,7 +1109,7 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 	}
 
 	if( vec.storable() ){
-		cg_value swz_proxy = create_value( NULL, swz_hint, NULL, vkind_swizzle, vec.abi() );
+		cg_value swz_proxy = create_value( NULL, swz_hint, NULL, value_kinds::elements, vec.abi() );
 		swz_proxy.parent( vec );
 		swz_proxy.masks( mask );
 		return swz_proxy;
@@ -1121,17 +1117,17 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 		if( is_scalar( vec.hint() ) ) {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		} else if( is_vector( vec.hint() ) ) {
-			Value* vec_v = vec.load( promote_abi(abi_llvm, vec.abi()) );
+			Value* vec_v = vec.load( promote_abi(abis::llvm, vec.abi()) );
 			switch( vec.abi() ){
-			case abi_c:
-			case abi_llvm:
+			case abis::c:
+			case abis::llvm:
 				{
 					Value* v = builder().CreateShuffleVector( vec_v, vec_v,
 						ext_->get_vector<int>( ArrayRef<char>(indexes, idx_len) )
 						);
-					return create_value( NULL, swz_hint, v, vkind_value, abi_llvm );
+					return create_value( NULL, swz_hint, v, value_kinds::value, abis::llvm );
 				}
-			case abi_vectorize:
+			case abis::vectorize:
 				{
 					vector<char> vectorize_idx( SIMD_ELEMENT_COUNT(), -1 );
 					assert( idx_len < static_cast<uint32_t>(SIMD_ELEMENT_COUNT()) );
@@ -1142,9 +1138,9 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 						vec_v, UndefValue::get(vec_v->getType()),
 						ext_->get_vector<int>( ArrayRef<char>(vectorize_idx) )
 						);
-					return create_value( NULL, swz_hint, v, vkind_value, abi_vectorize );
+					return create_value( NULL, swz_hint, v, value_kinds::value, abis::vectorize );
 				}
-			case abi_package:
+			case abis::package:
 				{
 					int src_element_pitch = ceil_to_pow2( static_cast<int>(vector_size(vec.hint())) );
 					int swz_element_pitch = ceil_to_pow2( static_cast<int>(idx_len) );
@@ -1167,7 +1163,7 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 						vec_v, UndefValue::get(vec_v->getType()),
 						ext_->get_vector<int>( ArrayRef<char>(package_idx) )
 						);
-					return create_value( NULL, swz_hint, v, vkind_value, abi_package );
+					return create_value( NULL, swz_hint, v, value_kinds::value, abis::package );
 				}
 			default:
 				assert(false);
@@ -1182,7 +1178,7 @@ cg_value cg_service::emit_extract_elem_mask( cg_value const& vec, uint32_t mask 
 
 cg_value cg_service::emit_extract_col( cg_value const& lhs, size_t index )
 {
-	assert( promote_abi(lhs.abi(), abi_llvm) == abi_llvm );
+	assert( promote_abi(lhs.abi(), abis::llvm) == abis::llvm );
 
 	cg_value val = lhs.to_rvalue();
 	builtin_types mat_hint( lhs.hint() );
@@ -1204,8 +1200,8 @@ cg_value cg_service::emit_extract_col( cg_value const& lhs, size_t index )
 
 cg_value cg_service::emit_dot_vv( cg_value const& lhs, cg_value const& rhs )
 {
-	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abi_llvm);
-	// assert( promoted_abi == abi_llvm );
+	abis::id promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abis::llvm);
+	// assert( promoted_abi == abis::llvm );
 	
 	size_t vec_size = vector_size( lhs.hint() );
 	cg_value total = null_value( scalar_of( lhs.hint() ), promoted_abi );
@@ -1220,7 +1216,7 @@ cg_value cg_service::emit_dot_vv( cg_value const& lhs, cg_value const& rhs )
 
 cg_value cg_service::emit_mul_mv( cg_value const& lhs, cg_value const& rhs )
 {
-	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
+	assert( promote_abi(lhs.abi(), rhs.abi(), abis::llvm) == abis::llvm );
 
 	builtin_types mhint = lhs.hint();
 	builtin_types vhint = rhs.hint();
@@ -1240,7 +1236,7 @@ cg_value cg_service::emit_mul_mv( cg_value const& lhs, cg_value const& rhs )
 
 cg_value cg_service::emit_mul_vm( cg_value const& lhs, cg_value const& rhs )
 {
-	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
+	assert( promote_abi(lhs.abi(), rhs.abi(), abis::llvm) == abis::llvm );
 
 	size_t out_v = vector_size( rhs.hint() );
 
@@ -1257,7 +1253,7 @@ cg_value cg_service::emit_mul_vm( cg_value const& lhs, cg_value const& rhs )
 
 cg_value cg_service::emit_mul_mm( cg_value const& lhs, cg_value const& rhs )
 {
-	assert( promote_abi(lhs.abi(), rhs.abi(), abi_llvm) == abi_llvm );
+	assert( promote_abi(lhs.abi(), rhs.abi(), abis::llvm) == abis::llvm );
 
 	builtin_types lhint = lhs.hint();
 	builtin_types rhint = rhs.hint();
@@ -1269,7 +1265,7 @@ cg_value cg_service::emit_mul_mm( cg_value const& lhs, cg_value const& rhs )
 
 	builtin_types out_row_hint = vector_of( scalar_of(lhint), out_v );
 	builtin_types out_hint = matrix_of( scalar_of(lhint), out_v, out_r );
-	abis out_abi = lhs.abi();
+	abis::id out_abi = lhs.abi();
 
 	vector<cg_value> out_cells(out_v*out_r);
 	out_cells.resize( out_v*out_r );
@@ -1301,19 +1297,19 @@ cg_value cg_service::emit_abs( cg_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
-	abis arg_abi = arg_value.abi();
+	abis::id arg_abi = arg_value.abi();
 
 	Value* v = arg_value.load(arg_abi);
 
 	Value* ret_v = ext_->call_unary_intrin( v->getType(), v, boost::bind(&cg_extension::abs_sv, ext_.get(), _1) );
-	return create_value(arg_value.tyinfo(), hint, ret_v, vkind_value, arg_abi);
+	return create_value(arg_value.ty(), hint, ret_v, value_kinds::value, arg_abi);
 }
 
 cg_value cg_service::emit_sqrt( cg_value const& arg_value )
 {
 	builtin_types hint = arg_value.hint();
 	builtin_types scalar_hint = scalar_of( arg_value.hint() );
-	abis arg_abi = arg_value.abi();
+	abis::id arg_abi = arg_value.abi();
 
 	Value* v = arg_value.load(arg_abi);
 
@@ -1325,7 +1321,7 @@ cg_value cg_service::emit_sqrt( cg_value const& arg_value )
 			ext_->bind_to_unary( ext_->vm_intrin(Intrinsic::x86_sse_sqrt_ps) )
 			);
 		Value* ret_v = ext_->call_unary_intrin(NULL, v, sqrt_sv);
-		return create_value( arg_value.tyinfo(), arg_value.hint(), ret_v, vkind_value, arg_abi );
+		return create_value( arg_value.ty(), arg_value.hint(), ret_v, value_kinds::value, arg_abi );
 	}
 	else
 	{
@@ -1334,11 +1330,11 @@ cg_value cg_service::emit_sqrt( cg_value const& arg_value )
 	}
 }
 
-cg_value cg_service::undef_value( builtin_types bt, abis abi )
+cg_value cg_service::undef_value( builtin_types bt, abis::id abi )
 {
 	assert( bt != builtin_types::none );
 	Type* valty = type_( bt, abi );
-	cg_value val = create_value( bt, UndefValue::get(valty), vkind_value, abi );
+	cg_value val = create_value( bt, UndefValue::get(valty), value_kinds::value, abi );
 	return val;
 }
 
@@ -1349,7 +1345,7 @@ cg_value cg_service::emit_call( cg_function const& fn, vector<cg_value> const& a
 
 cg_value cg_service::emit_call( cg_function const& fn, vector<cg_value> const& args, cg_value const& exec_mask )
 {
-	abis promoted_abi = abi_llvm;
+	abis::id promoted_abi = abis::llvm;
 	BOOST_FOREACH( cg_value const& arg, args )
 	{
 		promoted_abi = promote_abi( arg.abi(), promoted_abi );
@@ -1363,19 +1359,19 @@ cg_value cg_service::emit_call( cg_function const& fn, vector<cg_value> const& a
 		arg_values.push_back( var.load_ref() );
 	}
 
-	abis arg_abi = fn.c_compatible ? abi_c : promoted_abi;
-	if( arg_abi == abi_package && fn.partial_execution ){
-		if( exec_mask.abi() == abi_unknown ){
-			arg_values.push_back( packed_mask().load( abi_llvm ) );
+	abis::id arg_abi = fn.c_compatible ? abis::c : promoted_abi;
+	if( arg_abi == abis::package && fn.partial_execution ){
+		if( exec_mask.abi() == abis::unknown ){
+			arg_values.push_back( packed_mask().load( abis::llvm ) );
 		} else {
-			arg_values.push_back( exec_mask.load( abi_llvm ) );
+			arg_values.push_back( exec_mask.load( abis::llvm ) );
 		}
 	}
 
 	if( fn.c_compatible || fn.external ){
 		BOOST_FOREACH( cg_value const& arg, args ){
 			builtin_types hint = arg.hint();
-			if( ( is_scalar(hint) && (arg_abi == abi_c || arg_abi == abi_llvm) ) || is_sampler(hint) ){
+			if( ( is_scalar(hint) && (arg_abi == abis::c || arg_abi == abis::llvm) ) || is_sampler(hint) ){
 				arg_values.push_back( arg.load( arg_abi ) );
 			} else {
 				Value* ref_arg = load_ref( arg, arg_abi );
@@ -1399,8 +1395,8 @@ cg_value cg_service::emit_call( cg_function const& fn, vector<cg_value> const& a
 		return var;
 	}
 
-	abis ret_abi = fn.c_compatible ? abi_c : promoted_abi;
-	return create_value( fn.get_return_ty(), ret_val, vkind_value, ret_abi );
+	abis::id ret_abi = fn.c_compatible ? abis::c : promoted_abi;
+	return create_value( fn.get_return_ty(), ret_val, value_kinds::value, ret_abi );
 }
 
 cg_value cg_service::cast_s2v( cg_value const& v )
@@ -1410,9 +1406,9 @@ cg_value cg_service::cast_s2v( cg_value const& v )
 	builtin_types vhint = vector_of(hint, 1);
 
 	// vector1 and scalar are same LLVM vector type when abi is Vectorize and Package 
-	if( v.abi() == abi_vectorize || v.abi() == abi_package )
+	if( v.abi() == abis::vectorize || v.abi() == abis::package )
 	{
-		return create_value( NULL, vhint, v.load(), vkind_value, v.abi() );
+		return create_value( NULL, vhint, v.load(), value_kinds::value, v.abi() );
 	}
 
 	// Otherwise return a new vector
@@ -1425,23 +1421,23 @@ cg_value cg_service::cast_v2s( cg_value const& v )
 	assert( is_vector(v.hint()) );
 
 	// vector1 and scalar are same LLVM vector type when abi is Vectorize and Package 
-	if( v.abi() == abi_vectorize || v.abi() == abi_package )
+	if( v.abi() == abis::vectorize || v.abi() == abis::package )
 	{
-		return create_value( NULL, scalar_of(v.hint()), v.load(), vkind_value, v.abi() );
+		return create_value( NULL, scalar_of(v.hint()), v.load(), value_kinds::value, v.abi() );
 	}
 	return emit_extract_val( v, 0 );
 }
 
 cg_value cg_service::cast_bits( cg_value const& v, cg_type* dest_tyi )
 {
-	abis abi = promote_abi(v.abi(), abi_llvm);
+	abis::id abi = promote_abi(v.abi(), abis::llvm);
 
 	Type* ty = dest_tyi->ty(abi);
 	builtin_types dest_scalar_hint = scalar_of( dest_tyi->hint() );
-	Type* dest_scalar_ty = type_( dest_scalar_hint, abi_llvm );
+	Type* dest_scalar_ty = type_( dest_scalar_hint, abis::llvm );
 	unary_intrin_functor bitcast_sv = ext_->bind_cast_sv( dest_scalar_ty, cast_ops::bitcast );
 	Value* ret = ext_->call_unary_intrin( ty, v.load(abi), bitcast_sv );
-	return create_value( dest_tyi, ret, vkind_value, abi );
+	return create_value( dest_tyi, ret, value_kinds::value, abi );
 }
 
 void cg_service::jump_to( insert_point_t const& ip )
@@ -1586,7 +1582,7 @@ cg_value cg_service::emit_cmp( cg_value const& lhs, cg_value const& rhs, uint32_
 	assert( hint == rhs.hint() );
 	assert( is_scalar(scalar_hint) );
 
-	abis promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abi_llvm);
+	abis::id promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abis::llvm);
 
 	Value* lhs_v = lhs.load(promoted_abi);
 	Value* rhs_v = rhs.load(promoted_abi);
@@ -1606,7 +1602,7 @@ cg_value cg_service::emit_cmp( cg_value const& lhs, cg_value const& rhs, uint32_
 	unary_intrin_functor cast_fn = boost::bind( &cg_extension::i1toi8_sv, ext_.get(), _1 );
 	Value* ret = ext_->call_binary_intrin( ret_ty, lhs_v, rhs_v, cmp_fn, cast_fn );
 
-	return create_value( ret_hint, ret, vkind_value, promoted_abi );
+	return create_value( ret_hint, ret, value_kinds::value, promoted_abi );
 }
 
 cg_value cg_service::emit_cmp_eq( cg_value const& lhs, cg_value const& rhs )
@@ -1647,8 +1643,8 @@ cg_value cg_service::emit_bin_ps_ta_sva( cg_value const& lhs, cg_value const& rh
 	Value* ret = NULL;
 
 	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
-	abis promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
-	abis internal_abi = promote_abi( promoted_abi, abi_llvm );
+	abis::id promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
+	abis::id internal_abi = promote_abi( promoted_abi, abis::llvm );
 
 	Value* lhs_v = lhs.load(internal_abi);
 	Value* rhs_v = rhs.load(internal_abi);
@@ -1679,9 +1675,9 @@ cg_value cg_service::emit_bin_ps_ta_sva( cg_value const& lhs, cg_value const& rh
 		assert(false);
 	}
 
-	cg_value retval = create_value( hint, ret, vkind_value, internal_abi );
-	abis ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
-	return create_value( hint, retval.load(ret_abi), vkind_value, ret_abi );
+	cg_value retval = create_value( hint, ret, value_kinds::value, internal_abi );
+	abis::id ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
+	return create_value( hint, retval.load(ret_abi), value_kinds::value, ret_abi );
 }
 
 cg_value cg_service::emit_and( cg_value const& lhs, cg_value const& rhs )
@@ -1720,7 +1716,7 @@ cg_value cg_service::emit_tex2Dproj( cg_value const& samp, cg_value const& coord
 	return emit_tex_proj_impl(samp, coord, externals::tex2dproj_ps);
 }
 
-cg_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis abi, uint64_t v )
+cg_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abis::id abi, uint64_t v )
 {
 	builtin_types hint = tyinfo ? tyinfo->hint() : bt;
 	builtin_types scalar_hint = scalar_of(hint);
@@ -1729,7 +1725,7 @@ cg_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, abi
 
 	Type* ret_ty = type_( hint, abi );
 	Value* ret = ext_->get_int( ret_ty, APInt( bits, v, is_signed(scalar_hint) ) );
-	return create_value(tyinfo, bt, ret, vkind_value, abi);
+	return create_value(tyinfo, bt, ret, value_kinds::value, abi);
 }
 
 cg_value cg_service::emit_unary_ps( std::string const& scalar_external_intrin_name, cg_value const& v )
@@ -1742,7 +1738,7 @@ cg_value cg_service::emit_unary_ps( std::string const& scalar_external_intrin_na
 		);
 
 	Value* ret_v = ext_->call_unary_intrin(NULL, v.load(), intrin_sv);
-	return create_value( v.tyinfo(), v.hint(), ret_v, vkind_value, v.abi() );
+	return create_value( v.ty(), v.hint(), ret_v, value_kinds::value, v.abi() );
 }
 
 cg_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_intrin_name, cg_value const& v0, cg_value const& v1 )
@@ -1752,7 +1748,7 @@ cg_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_intr
 
 	builtin_types hint = v0.hint();
 	assert( hint == v1.hint() );
-	abis abi = promote_abi( v0.abi(), v1.abi() );
+	abis::id abi = promote_abi( v0.abi(), v1.abi() );
 
 	binary_intrin_functor intrin_sv = ext_->promote_to_binary_sv(
 		ext_->bind_external_to_binary(scalar_intrin), null_binary, null_binary
@@ -1760,7 +1756,7 @@ cg_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_intr
 
 	Value* ret_v = ext_->call_binary_intrin( (Type*)NULL, v0.load(abi), v1.load(abi), intrin_sv, null_unary );
 
-	return create_value( v0.tyinfo(), v0.hint(), ret_v, vkind_value, abi );
+	return create_value( v0.ty(), v0.hint(), ret_v, value_kinds::value, abi );
 }
 
 cg_value cg_service::extend_to_vm( cg_value const& v, builtin_types complex_hint )
@@ -1835,8 +1831,8 @@ cg_value cg_service::emit_bin_es_ta_sva( cg_value const& lhs, cg_value const& rh
 cg_value cg_service::emit_tex_lod_impl( cg_value const& samp, cg_value const& coord, externals::id vs_intrin, externals::id ps_intrin )
 {
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
-	abis abi = param_abi(false);
-	assert( abi == abi_llvm || abi == abi_package );
+	abis::id abi = param_abi(false);
+	assert( abi == abis::llvm || abi == abis::package );
 
 	Type* ret_ty = type_( v4f32_hint, abi );
 	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
@@ -1845,7 +1841,7 @@ cg_value cg_service::emit_tex_lod_impl( cg_value const& samp, cg_value const& co
 	Value* coord_ptr = ext_->stack_alloc(coord_ty, "coord.tmp");
 	builder().CreateStore( coord.load(abi), coord_ptr );
 
-	if( abi == abi_llvm)
+	if( abi == abis::llvm)
 	{
 		builder().CreateCall3(ext_->external(vs_intrin), ret_ptr, samp.load(), coord_ptr);
 	}
@@ -1854,7 +1850,7 @@ cg_value cg_service::emit_tex_lod_impl( cg_value const& samp, cg_value const& co
 		builder().CreateCall4( ext_->external(ps_intrin), ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr );
 	}
 
-	return create_value(NULL, v4f32_hint, ret_ptr, vkind_ref, abi);
+	return create_value(NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi);
 }
 
 cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& coord, cg_value const& ddx, cg_value const& ddy, externals::id ps_intrin )
@@ -1862,8 +1858,8 @@ cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& c
 	builtin_types coord_hint = coord.hint();
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
 
-	abis abi = param_abi(false);
-	assert( abi == abi_package );
+	abis::id abi = param_abi(false);
+	assert( abi == abis::package );
 
 	Type* ret_ty = type_( v4f32_hint, abi );
 	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
@@ -1886,7 +1882,7 @@ cg_value cg_service::emit_tex_grad_impl( cg_value const& samp, cg_value const& c
 
 	builder().CreateCall( ext_->external(ps_intrin), args );
 
-	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
+	return create_value( NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi );
 }
 
 cg_value cg_service::emit_tex_bias_impl( cg_value const& /*samp*/, cg_value const& /*coord*/, externals::id /*ps_intrin*/ )
@@ -1902,8 +1898,8 @@ cg_value cg_service::emit_tex_proj_impl( cg_value const& samp, cg_value const& c
 
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
 
-	abis abi = param_abi(false);
-	assert( abi == abi_package );
+	abis::id abi = param_abi(false);
+	assert( abi == abis::package );
 
 	Type* ret_ty = type_( v4f32_hint, abi );
 	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
@@ -1925,7 +1921,7 @@ cg_value cg_service::emit_tex_proj_impl( cg_value const& samp, cg_value const& c
 	};
 	builder().CreateCall(ext_->external(ps_intrin), args );
 
-	return create_value( NULL, v4f32_hint, ret_ptr, vkind_ref, abi );
+	return create_value( NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi );
 }
 
 cg_value cg_service::emit_texCUBElod( cg_value const& samp, cg_value const& coord )
@@ -1960,15 +1956,15 @@ node_semantic* cg_service::get_node_semantic( sasl::syntax_tree::node* v )
 
 cg_value cg_service::emit_select( cg_value const& flag, cg_value const& v0, cg_value const& v1 )
 {
-	abis promoted_abi = promote_abi(flag.abi(), v0.abi(), v1.abi() );
+	abis::id promoted_abi = promote_abi(flag.abi(), v0.abi(), v1.abi() );
 
 	Value* flag_v = flag.load(promoted_abi);
 	Value* v0_v = v0.load(promoted_abi);
 	Value* v1_v = v1.load(promoted_abi);
 
 	return create_value(
-		v0.tyinfo(), v0.hint(), 
-		ext_->select(flag_v, v0_v, v1_v), vkind_value, promoted_abi
+		v0.ty(), v0.hint(), 
+		ext_->select(flag_v, v0_v, v1_v), value_kinds::value, promoted_abi
 		);
 }
 
@@ -1982,10 +1978,10 @@ cg_value cg_service::inf_from_value( cg_value const& v, bool negative )
 {
 	Value* v_v = v.load();
 	builtin_types scalar_of_v = scalar_of( v.hint() );
-	Type* scalar_ty = type_(scalar_of_v, abi_llvm);
+	Type* scalar_ty = type_(scalar_of_v, abis::llvm);
 	Value* scalar_inf = ConstantFP::getInfinity(scalar_ty, negative);
 	Value* inf_value = ext_->get_constant_by_scalar(v_v->getType(), scalar_inf);
-	return create_value( v.tyinfo(), v.hint(), inf_value, vkind_value, v.abi() );
+	return create_value( v.ty(), v.hint(), inf_value, value_kinds::value, v.abi() );
 }
 
 cg_value cg_service::emit_isinf(cg_value const& v)
@@ -2038,8 +2034,8 @@ cg_value cg_service::emit_saturate( cg_value const& v )
 cg_value cg_service::numeric_value(cg_value const& proto, double fp, uint64_t ui)
 {
 	Type* ty = NULL;
-	if( proto.tyinfo() ){
-		ty = proto.tyinfo()->ty( proto.abi() );
+	if( proto.ty() ){
+		ty = proto.ty()->ty( proto.abi() );
 	} else {
 		ty = type_( proto.hint(), proto.abi() );
 	}
@@ -2059,7 +2055,7 @@ cg_value cg_service::numeric_value(cg_value const& proto, double fp, uint64_t ui
 	assert(scalar_value);
 
 	Value* ret_value = ext_->get_constant_by_scalar(ty, scalar_value);
-	return create_value( proto.tyinfo(), proto.hint(), ret_value, vkind_value, proto.abi() );
+	return create_value( proto.ty(), proto.hint(), ret_value, value_kinds::value, proto.abi() );
 }
 
 cg_extension* cg_service::extension()

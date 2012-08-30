@@ -596,7 +596,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){
 	node_semantic* sem = sem_->get_semantic(&v);
 	node_context* ctxt = node_ctxt(v, true);
 	ctxt->ty = current_cg_type_;
-	ctxt->node_value = service()->create_value(current_cg_type_, NULL, vkind_swizzle, abi_unknown );
+	ctxt->node_value = service()->create_value(current_cg_type_, NULL, value_kinds::elements, abis::unknown );
 	ctxt->node_value.index( sem->member_index() );
 }
 
@@ -1078,7 +1078,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, ".deg");
 			float deg2rad = (float)(eflib::PI/180.0f);
 			cg_value deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
-			cg_value deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
+			cg_value deg2rad_v = service()->create_value_by_scalar( deg2rad_scalar_v, fn.arg(0).ty(), fn.arg(0).ty()->hint() );
 			service()->emit_return( service()->emit_mul_comp( deg2rad_v, fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "degrees" )
@@ -1088,7 +1088,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			fn.arg_name(0, ".rad");
 			float rad2deg = (float)(180.0f/eflib::PI);
 			cg_value rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
-			cg_value rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).tyinfo(), fn.arg(0).tyinfo()->hint() );
+			cg_value rad2deg_v = service()->create_value_by_scalar( rad2deg_scalar_v, fn.arg(0).ty(), fn.arg(0).ty()->hint() );
 			service()->emit_return( service()->emit_mul_comp( rad2deg_v, fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "lerp" )
@@ -1474,7 +1474,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 			values.push_back(diffuse);
 			values.push_back(specular);
 			values.push_back(one);
-			abis promoted_abi = service()->promote_abi(one.abi(), diffuse.abi(), specular.abi() );
+			abis::id promoted_abi = service()->promote_abi(one.abi(), diffuse.abi(), specular.abi() );
 			cg_value lit_packed = service()->create_vector( values, promoted_abi );
 
 			service()->emit_return( lit_packed, service()->param_abi(false) );

@@ -30,13 +30,13 @@ BEGIN_NS_SASL_CODEGEN();
 cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm, Type* ty_vec, Type* ty_pkg )
 	: tyn(tyn)
 {
-	tys[abi_c]			= ty_c;
-	tys[abi_llvm]		= ty_llvm;
-	tys[abi_vectorize]	= ty_vec;
-	tys[abi_package]	= ty_pkg;
+	tys[abis::c]			= ty_c;
+	tys[abis::llvm]		= ty_llvm;
+	tys[abis::vectorize]	= ty_vec;
+	tys[abis::package]	= ty_pkg;
 }
 
-cg_type::cg_type(): tyn(NULL), cls(unknown_type)
+cg_type::cg_type(): tyn(NULL)
 {
 	memset( tys, 0, sizeof(tys) );
 }
@@ -52,41 +52,36 @@ tynode* cg_type::tyn_ptr() const{
 	return tyn;
 }
 
-llvm::Type* cg_type::ty( abis abi ) const{
+llvm::Type* cg_type::ty( abis::id abi ) const{
 	return tys[abi];
 }
 
 cg_value::cg_value()
-	: tyinfo_(NULL), val_(NULL), cg_(NULL), kind_(vkind_unknown), hint_(builtin_types::none), abi_(abi_unknown), masks_(0)
+	: ty_(NULL), val_(NULL), cg_(NULL), kind_(value_kinds::unknown), builtin_ty_(builtin_types::none), abi_(abis::unknown), masks_(0)
 {
 }
 
-cg_value::cg_value(
-	cg_type* tyinfo,
-	llvm::Value* val, value_kinds k, abis abi,
-	cg_service* cg 
-	) 
-	: tyinfo_(tyinfo), val_(val), cg_(cg), kind_(k), hint_(builtin_types::none), abi_(abi), masks_(0)
+cg_value::cg_value(cg_type* ty, Value* val, value_kinds::id k, abis::id abi, cg_service* cg)
+	: ty_(ty), val_(val), cg_(cg), kind_(k), builtin_ty_(builtin_types::none), abi_(abi), masks_(0)
 {
 }
 
-cg_value::cg_value( builtin_types hint,
-	llvm::Value* val, value_kinds k, abis abi,
-	cg_service* cg 
-	)
-	: tyinfo_(NULL), hint_(hint), abi_(abi), val_(val), kind_(k), cg_(cg), masks_(0)
+cg_value::cg_value(builtin_types hint, Value* val, value_kinds::id k, abis::id abi, cg_service* cg)
+	: ty_(NULL), builtin_ty_(hint), abi_(abi), val_(val), kind_(k), cg_(cg), masks_(0)
 {
 
 }
 
 cg_value::cg_value( cg_value const& rhs )
-	: tyinfo_(rhs.tyinfo_), hint_(rhs.hint_), abi_(rhs.abi_), val_( rhs.val_ ), kind_(rhs.kind_), cg_(rhs.cg_), masks_(rhs.masks_)
+	: ty_(rhs.ty_), builtin_ty_(rhs.builtin_ty_)
+	, abi_(rhs.abi_), val_( rhs.val_ )
+	, kind_(rhs.kind_), cg_(rhs.cg_), masks_(rhs.masks_)
 {
 	parent(rhs.parent_.get());
 	index(rhs.index_.get());
 }
 
-abis cg_value::abi() const{
+abis::id cg_value::abi() const{
 	return abi_;
 }
 
@@ -102,20 +97,19 @@ llvm::Value* cg_value::raw() const{
 
 cg_value cg_value::to_rvalue() const
 {
-	if( tyinfo_ ){
-		return cg_value( tyinfo_, load(abi_), vkind_value, abi_, cg_ );
+	if( ty_ ){
+		return cg_value( ty_, load(abi_), value_kinds::value, abi_, cg_ );
 	} else {
-		return cg_value( hint_, load(abi_), vkind_value, abi_, cg_ );
+		return cg_value( builtin_ty_, load(abi_), value_kinds::value, abi_, cg_ );
 	}
 }
 
 builtin_types cg_value::hint() const
 {
-	if( tyinfo_ ) return tyinfo_->hint();
-	return hint_;
+	return ty_ ? ty_->hint() : builtin_ty_;
 }
 
-llvm::Value* cg_value::load( abis abi ) const{
+llvm::Value* cg_value::load( abis::id abi ) const{
 	return cg_->load( *this, abi );
 }
 
@@ -123,18 +117,18 @@ Value* cg_value::load() const{
 	return cg_->load( *this );
 }
 
-value_kinds cg_value::kind() const{
+value_kinds::id cg_value::kind() const{
 	return kind_;
 }
 
 bool cg_value::storable() const{
 	switch( kind_ ){
-	case vkind_ref:
+	case value_kinds::reference:
 		return true;
-	case vkind_value:
-	case vkind_unknown:
+	case value_kinds::value:
+	case value_kinds::unknown:
 		return false;
-	case vkind_swizzle:
+	case value_kinds::elements:
 		return parent()->storable();
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -145,10 +139,10 @@ bool cg_value::storable() const{
 bool cg_value::load_only() const
 {
 	switch( kind_ ){
-	case vkind_ref:
-	case vkind_unknown:
+	case value_kinds::reference:
+	case value_kinds::unknown:
 		return false;
-	case vkind_value:
+	case value_kinds::value:
 		return true;
 	default:
 		EFLIB_ASSERT_UNIMPLEMENTED();
@@ -156,7 +150,7 @@ bool cg_value::load_only() const
 	}
 }
 
-void cg_value::emplace( Value* v, value_kinds k, abis abi ){
+void cg_value::emplace( Value* v, value_kinds::id k, abis::id abi ){
 	val_ = v;
 	kind_ = k;
 	abi_ = abi;
@@ -176,8 +170,8 @@ cg_value& cg_value::operator=( cg_value const& rhs )
 {
 	kind_ = rhs.kind_;
 	val_ = rhs.val_;
-	tyinfo_ = rhs.tyinfo_;
-	hint_ = rhs.hint_;
+	ty_ = rhs.ty_;
+	builtin_ty_ = rhs.builtin_ty_;
 	abi_ = rhs.abi_;
 	cg_ = rhs.cg_;
 	masks_ = rhs.masks_;
@@ -192,7 +186,7 @@ cg_value cg_value::slice( cg_value const& vec, uint32_t masks )
 	builtin_types hint = vec.hint();
 	assert( is_vector(hint) );
 
-	cg_value ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi_, vec.cg_ );
+	cg_value ret( scalar_of(hint), NULL, value_kinds::elements, vec.abi_, vec.cg_ );
 	ret.masks_ = masks;
 	ret.parent(vec);
 
@@ -204,7 +198,7 @@ cg_value cg_value::slice( cg_value const& vec, cg_value const& index )
 	builtin_types hint = vec.hint();
 	assert( is_vector(hint) );
 
-	cg_value ret( scalar_of(hint), NULL, vkind_swizzle, vec.abi_, vec.cg_ );
+	cg_value ret( scalar_of(hint), NULL, value_kinds::elements, vec.abi_, vec.cg_ );
 	ret.index(index);
 	ret.parent(vec);
 
@@ -216,11 +210,11 @@ cg_value cg_value::as_ref() const
 	cg_value ret(*this);
 
 	switch( ret.kind_ ){
-	case vkind_value:
-		ret.kind_ = vkind_ref;
+	case value_kinds::value:
+		ret.kind_ = value_kinds::reference;
 		break;
-	case vkind_swizzle:
-		ret.kind_ = (value_kinds)( vkind_swizzle | vkind_ref );
+	case value_kinds::elements:
+		ret.kind_ = (value_kinds::id)( value_kinds::elements | value_kinds::reference );
 		break;
 	}
 
@@ -238,15 +232,15 @@ void cg_value::index( size_t index )
 	masks_ = indexes_to_mask( indexes );
 }
 
-cg_type*	cg_value::tyinfo() const{ return tyinfo_; }
-void			cg_value::tyinfo( cg_type* v ){ tyinfo_ = v; }
+cg_type*		cg_value::ty() const		{ return ty_; }
+void			cg_value::ty( cg_type* v )	{ ty_ = v; }
 
-void			cg_value::hint( builtin_types bt ){ hint_ = bt; }
-void			cg_value::abi( abis abi ){ this->abi_ = abi; }
+void			cg_value::hint( builtin_types bt ){ builtin_ty_ = bt; }
+void			cg_value::abi( abis::id abi ){ this->abi_ = abi; }
 uint32_t		cg_value::masks() const{ return masks_; }
 void			cg_value::masks( uint32_t v ){ masks_ = v; }
 
-void			cg_value::kind( value_kinds vkind ) { kind_ = vkind; }
+void			cg_value::kind( value_kinds::id vkind ) { kind_ = vkind; }
 void			cg_value::parent( cg_value const& v ){ parent_.reset( new cg_value(v) ); }
 void			cg_value::parent( cg_value const* v ){ if(v){ parent(*v); } }
 cg_value*		cg_value::parent() const { return parent_.get(); }
@@ -259,7 +253,7 @@ void			cg_value::index( cg_value const* v ){ if(v) index(*v); }
 llvm::Value* cg_value::load_i1() const{
 	if( hint() == builtin_types::_boolean )
 	{
-		return cg_->extension()->i8toi1_sv( load(abi_llvm) );
+		return cg_->extension()->i8toi1_sv( load(abis::llvm) );
 	}
 	else
 	{
@@ -339,8 +333,8 @@ cg_value cg_function::arg( size_t index ) const
 		++it;
 	}
 
-	abis arg_abi = cg->param_abi( c_compatible );
-	return cg->create_value( par_ty, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
+	abis::id arg_abi = cg->param_abi( c_compatible );
+	return cg->create_value( par_ty, &(*it), arg_is_ref(index) ? value_kinds::reference : value_kinds::value, arg_abi );
 }
 
 cg_value cg_function::packed_execution_mask() const
@@ -350,7 +344,7 @@ cg_value cg_function::packed_execution_mask() const
 	Function::ArgumentListType::iterator it = fn->arg_begin();
 	if( first_arg_is_return_address() ){ ++it; }
 
-	return cg->create_value( builtin_types::_uint16, &(*it), vkind_value, abi_llvm );
+	return cg->create_value( builtin_types::_uint16, &(*it), value_kinds::value, abis::llvm );
 }
 
 cg_function::cg_function(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(false), cg(NULL), external(false), partial_execution(false)
@@ -369,7 +363,7 @@ bool cg_function::first_arg_is_return_address() const
 	return ( c_compatible || external ) && !ret_void;
 }
 
-abis cg_function::abi() const
+abis::id cg_function::abi() const
 {
 	return cg->param_abi( c_compatible );
 }

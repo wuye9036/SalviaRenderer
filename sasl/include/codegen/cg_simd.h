@@ -63,7 +63,7 @@ public:
 
 protected:
 	cgs_simd*	service() const;
-	abis		local_abi( bool is_c_compatible ) const;
+	abis::id		local_abi( bool is_c_compatible ) const;
 
 	void	create_entries();
 	void	create_entry_param( salviar::sv_usage usage );

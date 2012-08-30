@@ -67,9 +67,9 @@ cgs_simd* cg_simd::service() const{
 	return static_cast<cgs_simd*>(service_);
 }
 
-abis cg_simd::local_abi( bool /*is_c_compatible*/ ) const
+abis::id cg_simd::local_abi( bool /*is_c_compatible*/ ) const
 {
-	return abi_package;
+	return abis::package;
 }
 
 void cg_simd::create_entries()
@@ -91,10 +91,10 @@ void cg_simd::create_entry_param( sv_usage usage )
 		entry_tyns[usage].push_back( storage_bt );
 		
 		if( su_stream_in == usage || su_stream_out == usage ){
-			Type* storage_ty = service()->type_( storage_bt, abi_package );
+			Type* storage_ty = service()->type_( storage_bt, abis::package );
 			tys.push_back( storage_ty );
 		} else {
-			Type* storage_ty = service()->type_( storage_bt, abi_c );
+			Type* storage_ty = service()->type_( storage_bt, abis::c );
 			tys.push_back( storage_ty );
 		}
 	}
@@ -118,7 +118,7 @@ void cg_simd::create_entry_param( sv_usage usage )
 
 	// Tys must not be empty. So placeholder (int8) will be inserted if tys is empty.
 	StructType* out_struct = tys.empty()
-		? StructType::create( struct_name, service()->type_(builtin_types::_sint8, abi_llvm), NULL )
+		? StructType::create( struct_name, service()->type_(builtin_types::_sint8, abis::llvm), NULL )
 		: StructType::create( tys, struct_name, true );
 
 	entry_structs[usage] = out_struct;
@@ -487,16 +487,16 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 		Function::arg_iterator arg_it = fn->arg_begin();
 
 		arg_it->setName( ".arg.stri" );
-		entry_values[su_stream_in] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_package );
+		entry_values[su_stream_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::package );
 		++arg_it;
 		arg_it->setName( ".arg.bufi" );
-		entry_values[su_buffer_in] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		entry_values[su_buffer_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
 		++arg_it;
 		arg_it->setName( ".arg.stro" );
-		entry_values[su_stream_out] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_package );
+		entry_values[su_stream_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::package );
 		++arg_it;
 		arg_it->setName( ".arg.bufo" );
-		entry_values[su_buffer_out] = service()->create_value( builtin_types::none, arg_it, vkind_ref, abi_c );
+		entry_values[su_buffer_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
 		++arg_it;
 
 		// Create virtual arguments
