@@ -282,15 +282,17 @@ cg_value cgs_simd::create_scalar( llvm::Value* v, cg_type* tyi, builtin_types hi
 	return create_value( tyi, hint, vectorize_v, vkind_value, abi_vectorize );
 }
 
-void cgs_simd::function_beg()
+void cgs_simd::function_body_beg()
 {
+	cg_service::function_body_beg();
 	exec_masks.push_back( all_one_mask() );
 	break_masks.push_back(NULL);
 	continue_masks.push_back(NULL);
 }
 
-void cgs_simd::function_end()
+void cgs_simd::function_body_end()
 {
+	cg_service::function_body_end();
 	// Do nothing
 }
 

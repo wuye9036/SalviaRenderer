@@ -327,10 +327,6 @@ protected:
 		uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float
 		);
 	
-	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Value*)>	bin_fn_t;
-	typedef boost::function<llvm::Value* (llvm::Value*, llvm::Type*)>	cast_fn;
-	typedef boost::function<llvm::Value* (llvm::Value*)>				unary_fn_t;
-	
 	// LLVM have some instructions/intrinsics to support unary and binary operations.
 	// But even simple instruction 'add', there are two overloads to support 'iadd' and 'fadd' separately.
 	// Additional, some intrinsics are only support scalar or SIMD vector as argument.
@@ -361,22 +357,12 @@ protected:
     //     A: Aggregated (Structure, Array)
 	//	   M: SIMD Vector
 	//       e.g. SVA means Value could be Scalar, Vector or Aggregated.
-
-	llvm::Value* bin_op_ps_ts_sva_		(
-		llvm::Type* ret_ty, llvm::Value* lhs, llvm::Value* rhs,
-		bin_fn_t sfn, bin_fn_t vfn, bin_fn_t simd_fn, bin_fn_t sv_fn,
-		unary_fn_t cast_result_sv_fn
-		);
-
-	llvm::Value* unary_op_ps_ts_sva_	(
-		llvm::Type* ret_ty, llvm::Value* v,
-		unary_fn_t sfn, unary_fn_t vfn, unary_fn_t simd_fn, unary_fn_t sv_fn
-		);
-
 public:
 	cg_value emit_bin_ps_ta_sva(
 		cg_value const& lhs, cg_value const& rhs,
-		bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn
+		binary_intrin_functor signed_sv_fn,
+		binary_intrin_functor unsigned_sv_fn,
+		binary_intrin_functor float_sv_fn
 		);
 	cg_value emit_bin_ps_ta_sva(
 		std::string const& scalar_external_intrin_name,
@@ -388,7 +374,9 @@ public:
 		);
 	cg_value emit_bin_es_ta_sva(
 		cg_value const& lhs, cg_value const& rhs,
-		bin_fn_t signed_sv_fn, bin_fn_t unsigned_sv_fn, bin_fn_t float_sv_fn
+		binary_intrin_functor signed_sv_fn,
+		binary_intrin_functor unsigned_sv_fn,
+		binary_intrin_functor float_sv_fn
 		);
 	cg_value emit_unary_ps( std::string const& scalar_external_intrin_name, cg_value const& v );
 
@@ -396,7 +384,9 @@ public:
 protected:
 	cg_value emit_bin_mm(
 		cg_value const& lhs, cg_value const& rhs,
-		bin_fn_t signed_fn, bin_fn_t unsigned_fn, bin_fn_t float_fn
+		binary_intrin_functor signed_fn,
+		binary_intrin_functor unsigned_fn,
+		binary_intrin_functor float_fn
 		);
 	cg_value emit_dot_vv( cg_value const& lhs, cg_value const& rhs );
 

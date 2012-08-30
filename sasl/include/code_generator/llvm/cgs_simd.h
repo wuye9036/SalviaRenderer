@@ -37,8 +37,8 @@ public:
 	bool prefer_externals() const{ return false; }
 	bool prefer_scalar_code() const{ return false; }
 
-	virtual void function_beg();
-	virtual void function_end();
+	virtual void function_body_beg();
+	virtual void function_body_end();
 
 	virtual void for_init_beg();
 	virtual void for_init_end();
