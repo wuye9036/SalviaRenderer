@@ -39,16 +39,16 @@ public:
 
 	virtual boost::shared_ptr<sasl::common::diag_chat> compile(){ return boost::shared_ptr<sasl::common::diag_chat>(); }
 
-	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit(){ return boost::shared_ptr<sasl::code_generator::jit_engine>(); }
-	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit( external_function_array const& ){ return boost::shared_ptr<sasl::code_generator::jit_engine>(); }
+	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit(){ return boost::shared_ptr<sasl::codegen::jit_engine>(); }
+	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& ){ return boost::shared_ptr<sasl::codegen::jit_engine>(); }
 
 	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const{ return boost::shared_ptr<sasl::semantic::module_semantic>(); }
-	virtual boost::shared_ptr<sasl::code_generator::cgllvm_module>	module() const{ return boost::shared_ptr<sasl::code_generator::cgllvm_module>(); }
+	virtual boost::shared_ptr<sasl::codegen::cgllvm_module>	module() const{ return boost::shared_ptr<sasl::codegen::cgllvm_module>(); }
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const{ return boost::shared_ptr<sasl::syntax_tree::node>(); }
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const{ return boost::shared_ptr<sasl::semantic::abi_info>(); }
 	/*
 	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
-	boost::shared_ptr<sasl::code_generator::cgllvm_module>	mod;
+	boost::shared_ptr<sasl::codegen::cgllvm_module>	mod;
 	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
 	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
 
@@ -112,11 +112,11 @@ public:
 
 	virtual boost::shared_ptr<sasl::common::diag_chat> compile();
 
-	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit();
-	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit( external_function_array const& );
+	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit();
+	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& );
 
 	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const;
-	virtual boost::shared_ptr<sasl::code_generator::cgllvm_module>	module() const;
+	virtual boost::shared_ptr<sasl::codegen::cgllvm_module>	module() const;
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const;
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const;
 
@@ -130,11 +130,11 @@ private:
 
 	template <typename ParserT> bool parse( ParserT& parser );
 	void inject_function(
-		boost::shared_ptr<sasl::code_generator::jit_engine> const& je,
+		boost::shared_ptr<sasl::codegen::jit_engine> const& je,
 		void* pfn, std::string const& name, bool is_raw_name);
 	
 	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
-	boost::shared_ptr<sasl::code_generator::cgllvm_module>	mod;
+	boost::shared_ptr<sasl::codegen::cgllvm_module>	mod;
 	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
 	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
 	

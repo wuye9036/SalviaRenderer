@@ -24,7 +24,7 @@ private:	\
 #define COMMON_( type_name ) ::sasl::common::type_name
 #define SYNTAX_( type_name ) ::sasl::syntax_tree::type_name
 #define SEMANTIC_( type_name ) ::sasl::semantic::type_name
-#define CODEGEN_( type_name ) ::sasl::code_generator::type_name
+#define CODEGEN_( type_name ) ::sasl::codegen::type_name
 
 #define LOCVAR_( var_name ) var_name##_
 #define NAME_( var_name ) var_name##_name()

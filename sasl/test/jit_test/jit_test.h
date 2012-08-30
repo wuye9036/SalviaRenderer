@@ -33,7 +33,7 @@ namespace sasl
 	{
 		class symbol;
 	}
-	namespace code_generator
+	namespace codegen
 	{
 		class jit_engine;
 	}
@@ -45,7 +45,7 @@ namespace sasl
 }
 
 using sasl::driver::driver;
-using sasl::code_generator::jit_engine;
+using sasl::codegen::jit_engine;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
 using sasl::semantic::symbol;

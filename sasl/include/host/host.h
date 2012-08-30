@@ -14,7 +14,7 @@ namespace sasl {
 	{
 		class abi_info;
 	}
-	namespace code_generator
+	namespace codegen
 	{
 		class jit_engine;
 	}
@@ -31,10 +31,10 @@ public:
 	virtual void update_native_function();
 	virtual void* function_pointer() const;
 
-	virtual void jit( boost::shared_ptr<sasl::code_generator::jit_engine> const&  );
+	virtual void jit( boost::shared_ptr<sasl::codegen::jit_engine> const&  );
 private:
 	boost::shared_ptr<sasl::semantic::abi_info>			abi;
-	boost::shared_ptr<sasl::code_generator::jit_engine>	je;
+	boost::shared_ptr<sasl::codegen::jit_engine>	je;
 	void* pfn;
 };
 

@@ -20,7 +20,7 @@ namespace sasl{
 	namespace semantic{
 		class module_semantic;
 	}
-	namespace code_generator{
+	namespace codegen{
 		class cgllvm_module;
 	}
 }

@@ -4,7 +4,7 @@
 #include <sasl/include/common/diag_item.h>
 #include <sasl/include/common/diag_formatter.h>
 #include <sasl/include/driver/driver_api.h>
-#include <sasl/include/code_generator/jit_api.h>
+#include <sasl/include/codegen/jit_api.h>
 #include <sasl/include/semantic/abi_info.h>
 
 #include <fstream>
@@ -23,7 +23,7 @@ using boost::tuple;
 using boost::make_shared;
 
 using namespace salviar;
-using namespace sasl::code_generator;
+using namespace sasl::codegen;
 using namespace sasl::common;
 using namespace sasl::syntax_tree;
 using namespace sasl::host;

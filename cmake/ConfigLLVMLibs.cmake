@@ -1,6 +1,6 @@
 macro( config_llvm_libs )
 set( SASL_LLVM_LIBS
-		EFLIB sasl_cgllvm
+		EFLIB sasl_codegen
 		LLVMSupport
 		LLVMJIT
 		LLVMInterpreter

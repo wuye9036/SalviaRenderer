@@ -1,8 +1,8 @@
 #include <sasl/test/test_cases/cgllvm_cases.h>
 #include <sasl/test/test_cases/syntax_cases.h>
-#include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_contexts.h>
-#include <sasl/include/code_generator/llvm/cgllvm_module_impl.h>
+#include <sasl/include/codegen/cg_api.h>
+#include <sasl/include/codegen/cg_contexts.h>
+#include <sasl/include/codegen/cg_module_impl.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/syntax_tree/utility.h>

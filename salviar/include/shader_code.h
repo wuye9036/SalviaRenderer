@@ -15,7 +15,7 @@ namespace sasl{
 		class abi_info;
 		class module_si;
 	}
-	namespace code_generator{
+	namespace codegen{
 		class jit_engine;
 	}
 }

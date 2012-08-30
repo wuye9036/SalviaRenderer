@@ -15,7 +15,7 @@ LINK_DIRECTORIES(
 # Config Dynamic Link Driver.
 ADD_LIBRARY( sasl_driver SHARED ${SASL_HOME_DIR}/sasl/include/driver/driver_api.h driver_api.cpp )
 TARGET_LINK_LIBRARIES( sasl_driver
-	EFLIB sasl_semantic sasl_syntaxtree sasl_parser sasl_enums sasl_common sasl_cgllvm sasl_driver_lib
+	EFLIB sasl_semantic sasl_syntaxtree sasl_parser sasl_enums sasl_common sasl_codegen sasl_driver_lib
 	${SASL_LLVM_LIBS}
 	${SALVIA_BOOST_LIBS}
 )

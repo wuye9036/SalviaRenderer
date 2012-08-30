@@ -25,7 +25,7 @@ namespace sasl{
 		EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 		EFLIB_DECLARE_CLASS_SHARED_PTR(node_semantic);
 	}
-	namespace code_generator{
+	namespace codegen{
 		EFLIB_DECLARE_CLASS_SHARED_PTR(cgllvm_module);
 	}
 }

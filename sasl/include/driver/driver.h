@@ -26,7 +26,7 @@ namespace sasl
 		class module_semantic;
 		class abi_info;
 	}
-	namespace code_generator
+	namespace codegen
 	{
 		class cgllvm_module;
 		class jit_engine;
@@ -58,8 +58,8 @@ public:
 	virtual void set_code_file  ( std::string const& code_file )	= 0;
 
 	virtual sasl::common::diag_chat_ptr compile()					= 0;
-	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit() = 0;
-	virtual boost::shared_ptr<sasl::code_generator::jit_engine> create_jit(external_function_array const&) = 0;
+	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit() = 0;
+	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit(external_function_array const&) = 0;
 	virtual void add_virtual_file(
 		std::string const& file_name,
 		std::string const& code_content,
@@ -67,7 +67,7 @@ public:
 	virtual void set_include_handler( include_handler_fn inc_handler ) = 0;
 
 	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const		= 0;
-	virtual boost::shared_ptr<sasl::code_generator::cgllvm_module>	module() const= 0;
+	virtual boost::shared_ptr<sasl::codegen::cgllvm_module>	module() const= 0;
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const		= 0;
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const	= 0;
 

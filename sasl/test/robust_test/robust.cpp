@@ -5,8 +5,8 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <sasl/include/driver/driver_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
+#include <sasl/include/codegen/cg_api.h>
+#include <sasl/include/codegen/cg_jit.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_formatter.h>
@@ -30,8 +30,8 @@
 using namespace eflib;
 
 using sasl::driver::driver;
-using sasl::code_generator::jit_engine;
-using sasl::code_generator::cgllvm_module;
+using sasl::codegen::jit_engine;
+using sasl::codegen::cgllvm_module;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
 using sasl::semantic::symbol;

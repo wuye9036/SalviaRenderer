@@ -4,8 +4,8 @@
 #include <sasl/include/driver/code_sources.h>
 #include <sasl/include/driver/options.h>
 
-#include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
+#include <sasl/include/codegen/cg_api.h>
+#include <sasl/include/codegen/cg_jit.h>
 #include <sasl/include/semantic/semantic_api.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/symbol.h>
@@ -26,10 +26,10 @@
 
 namespace po = boost::program_options;
 
-using sasl::code_generator::cgllvm_module;
-using sasl::code_generator::generate_llvm_code;
-using sasl::code_generator::jit_engine;
-using sasl::code_generator::cgllvm_jit_engine;
+using sasl::codegen::cgllvm_module;
+using sasl::codegen::generate_llvm_code;
+using sasl::codegen::jit_engine;
+using sasl::codegen::cgllvm_jit_engine;
 using sasl::semantic::module_semantic;
 using sasl::semantic::analysis_semantic;
 using sasl::semantic::abi_analyser;

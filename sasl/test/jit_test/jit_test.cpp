@@ -1,8 +1,8 @@
 #include <sasl/test/jit_test/jit_test.h>
 
 #include <sasl/include/driver/driver_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_api.h>
-#include <sasl/include/code_generator/llvm/cgllvm_jit.h>
+#include <sasl/include/codegen/cg_api.h>
+#include <sasl/include/codegen/cg_jit.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_formatter.h>
@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-using sasl::code_generator::cgllvm_module;
+using sasl::codegen::cgllvm_module;
 using std::fstream;
 
 #include <eflib/include/platform/disable_warnings.h>
