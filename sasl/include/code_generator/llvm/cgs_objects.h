@@ -236,10 +236,10 @@ struct insert_point_t{
 	llvm::BasicBlock* block;
 };
 
-struct function_t{
-	function_t();
+struct cg_function{
+	cg_function();
 
-	EFLIB_OPERATOR_BOOL( function_t ){ return NULL != fn; }
+	EFLIB_OPERATOR_BOOL( cg_function ){ return NULL != fn; }
 
 	/// Get argument's value by index.
 	cg_value arg( size_t index ) const;

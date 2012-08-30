@@ -15,7 +15,7 @@ namespace sasl{
 BEGIN_NS_SASL_SEMANTIC();
 
 struct block_t;
-struct function_t;
+struct cg_function;
 struct cg_value;
 struct variable_t;
 
@@ -63,7 +63,7 @@ struct variable_t: public cg_value
 {
 	friend class ssa_context;
 	std::vector<size_t> members;
-	function_t*			fn;
+	cg_function*			fn;
 private:
 	variable_t(){}
 	~variable_t(){}
@@ -86,7 +86,7 @@ private:
 	~block_t(){}
 };
 
-struct function_t
+struct cg_function
 {
 	sasl::syntax_tree::function_type* fn;
 

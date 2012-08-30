@@ -50,10 +50,10 @@ public:
 		return ret;
 	}
 
-	virtual function_t* create_cg_function()
+	virtual cg_function* create_cg_function()
 	{
-		function_t* ret = alloc_object<function_t>(functions_pool_);
-		new (ret) function_t();
+		cg_function* ret = alloc_object<cg_function>(functions_pool_);
+		new (ret) cg_function();
 		functions_.push_back(ret);
 		return ret;
 	}
@@ -61,7 +61,7 @@ public:
 	module_context_impl()
 		: contexts_pool_( sizeof(node_context) )
 		, types_pool_( sizeof(cg_type) )
-		, functions_pool_( sizeof(function_t) )
+		, functions_pool_( sizeof(cg_function) )
 		, caster_(NULL)
 	{
 	}
@@ -106,7 +106,7 @@ private:
 	node_context_dict		context_dict_;
 	vector<node_context*>	contexts_;
 	vector<cg_type*>		cg_types_;
-	vector<function_t*>		functions_;
+	vector<cg_function*>		functions_;
 	cgllvm_caster*			caster_;
 };
 

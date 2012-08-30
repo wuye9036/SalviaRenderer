@@ -129,7 +129,7 @@ protected:
 	virtual cg_service*		service() const = 0;
 	virtual abis			local_abi( bool c_compatible ) const = 0;
 	sasl::semantic::symbol* find_symbol(std::string const&);
-	function_t*				get_function( std::string const& name ) const;
+	cg_function*				get_function( std::string const& name ) const;
 
 	// Store global informations
 	boost::shared_ptr<sasl::semantic::module_semantic>

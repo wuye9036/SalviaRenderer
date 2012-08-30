@@ -20,7 +20,7 @@ class symbol;
 
 class ssa_context;
 class ssa_graph;
-struct function_t;
+struct cg_function;
 struct block_t;
 
 enum scopes
@@ -95,7 +95,7 @@ private:
 	// States
 	scopes			current_scope;
 	symbol*			current_symbol;
-	function_t*		current_fn;
+	cg_function*		current_fn;
 	block_t*		current_block;
 
 	ssa_graph*		dg;

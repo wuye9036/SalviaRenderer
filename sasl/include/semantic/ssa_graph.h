@@ -26,16 +26,16 @@ class ssa_context;
 
 struct block_t;
 struct instruction_t;
-struct function_t;
+struct cg_function;
 struct variable_t;
 struct cg_value;
 
 class ssa_graph
 {
 public:
-	std::vector<function_t*>	functions() const;
+	std::vector<cg_function*>	functions() const;
 	std::vector<variable_t*>	global_vars() const;
-	function_t*					ssa_fn( sasl::syntax_tree::node* fn ) const;
+	cg_function*					ssa_fn( sasl::syntax_tree::node* fn ) const;
 	ssa_context*				context();
 private:
 	boost::shared_ptr<ssa_context> ctxt;
@@ -45,7 +45,7 @@ struct ssa_attribute
 {
 	cg_value*	val;
 	variable_t*	var;
-	function_t*	fn;
+	cg_function*	fn;
 };
 
 struct dom_tree_node;
@@ -69,7 +69,7 @@ public:
 	bool			post_idominance( block_t* b0, block_t* b1 ); //b0 pidom b1;
 
 private:
-	boost::unordered_map<function_t*, dom_tree_node*>	dom_roots;
+	boost::unordered_map<cg_function*, dom_tree_node*>	dom_roots;
 	boost::unordered_map<block_t*, dom_tree_node*>		dom_nodes;
 };
 

@@ -90,8 +90,8 @@ public:
 
 	/// @name Emit Declarations
 	/// @{
-	function_t begin_fndecl();
-	function_t end_fndecl();
+	cg_function begin_fndecl();
+	cg_function end_fndecl();
 	/// @}
 
 	/// @name Intrinsics

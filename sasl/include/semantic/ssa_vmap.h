@@ -12,7 +12,7 @@
 BEGIN_NS_SASL_SEMANTIC();
 
 struct block_t;
-struct function_t;
+struct cg_function;
 struct instruction_t;
 struct cg_value;
 struct variable_t;
@@ -27,7 +27,7 @@ struct block_vmap
 class function_vmap
 {
 public:
-	void		construct_vmap( function_t* fn );
+	void		construct_vmap( cg_function* fn );
 	void		store( instruction_t* position, variable_t* var, cg_value* v );
 	cg_value*	load ( instruction_t* position, variable_t* var );
 

@@ -268,11 +268,11 @@ llvm::Value* cg_value::load_i1() const{
 	}
 }
 
-void function_t::allocation_block( insert_point_t const& ip )
+void cg_function::allocation_block( insert_point_t const& ip )
 {
 	alloc_block = ip;
 }
-void function_t::arg_name( size_t index, std::string const& name ){
+void cg_function::arg_name( size_t index, std::string const& name ){
 	assert( index < fn->arg_size() );
 
 	Function::arg_iterator arg_it = fn->arg_begin();
@@ -287,7 +287,7 @@ void function_t::arg_name( size_t index, std::string const& name ){
 	arg_it->setName( name );
 }
 
-void function_t::args_name( vector<string> const& names )
+void cg_function::args_name( vector<string> const& names )
 {
 	Function::arg_iterator arg_it = fn->arg_begin();
 	vector<string>::const_iterator name_it = names.begin();
@@ -308,12 +308,12 @@ void function_t::args_name( vector<string> const& names )
 	}
 }
 
-cg_type* function_t::get_return_ty() const{
+cg_type* cg_function::get_return_ty() const{
 	assert( fnty->is_function() );
 	return cg->get_node_context( fnty->retval_type.get() )->ty;
 }
 
-size_t function_t::arg_size() const{
+size_t cg_function::arg_size() const{
 	assert( fn );
 	size_t arg_size = fn->arg_size();
 	if( fn ){
@@ -324,7 +324,7 @@ size_t function_t::arg_size() const{
 	return 0;
 }
 
-cg_value function_t::arg( size_t index ) const
+cg_value cg_function::arg( size_t index ) const
 {
 	// If c_compatible and not void return, the first argument is address of return value.
 	size_t arg_index = index;
@@ -343,7 +343,7 @@ cg_value function_t::arg( size_t index ) const
 	return cg->create_value( par_ty, &(*it), arg_is_ref(index) ? vkind_ref : vkind_value, arg_abi );
 }
 
-cg_value function_t::packed_execution_mask() const
+cg_value cg_function::packed_execution_mask() const
 {
 	if( !partial_execution ){ return cg_value(); }
 
@@ -353,28 +353,28 @@ cg_value function_t::packed_execution_mask() const
 	return cg->create_value( builtin_types::_uint16, &(*it), vkind_value, abi_llvm );
 }
 
-function_t::function_t(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(false), cg(NULL), external(false), partial_execution(false)
+cg_function::cg_function(): fn(NULL), fnty(NULL), ret_void(true), c_compatible(false), cg(NULL), external(false), partial_execution(false)
 {
 }
 
-bool function_t::arg_is_ref( size_t index ) const{
+bool cg_function::arg_is_ref( size_t index ) const{
 	assert( index < fnty->params.size() );
 
 	builtin_types hint = cg->get_node_semantic( fnty->params[index].get() )->value_builtin_type();
 	return c_compatible && !is_scalar(hint) && !is_sampler(hint);
 }
 
-bool function_t::first_arg_is_return_address() const
+bool cg_function::first_arg_is_return_address() const
 {
 	return ( c_compatible || external ) && !ret_void;
 }
 
-abis function_t::abi() const
+abis cg_function::abi() const
 {
 	return cg->param_abi( c_compatible );
 }
 
-llvm::Value* function_t::return_address() const
+llvm::Value* cg_function::return_address() const
 {
 	if( first_arg_is_return_address() ){
 		return &(*fn->arg_begin());
@@ -382,14 +382,14 @@ llvm::Value* function_t::return_address() const
 	return NULL;
 }
 
-void function_t::return_name( std::string const& s )
+void cg_function::return_name( std::string const& s )
 {
 	if( first_arg_is_return_address() ){
 		fn->arg_begin()->setName( s );
 	}
 }
 
-void function_t::inline_hint()
+void cg_function::inline_hint()
 {
 	fn->addAttribute( 0, llvm::Attribute::InlineHint );
 }
@@ -398,7 +398,7 @@ insert_point_t::insert_point_t(): block(NULL)
 {
 }
 
-insert_point_t function_t::allocation_block() const
+insert_point_t cg_function::allocation_block() const
 {
 	return alloc_block;
 }

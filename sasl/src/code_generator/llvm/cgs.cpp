@@ -98,14 +98,14 @@ DefaultIRBuilder& cg_service::builder() const{
 	return *( llvm_mod_->builder() );
 }
 
-function_t* cg_service::fetch_function(function_type* fn_node){
+cg_function* cg_service::fetch_function(function_type* fn_node){
 	node_context* fn_ctxt = ctxt_->get_node_context(fn_node);
 	if(fn_ctxt->function_scope)
 	{
 		return fn_ctxt->function_scope;
 	}
 
-	function_t* ret = ctxt_->create_cg_function();
+	cg_function* ret = ctxt_->create_cg_function();
 
 	ret->fnty = fn_node;
 	ret->c_compatible		= sem_->get_semantic(fn_node)->msc_compatible();
@@ -386,11 +386,11 @@ bool cg_service::in_function() const{
 	return !fn_ctxts.empty();
 }
 
-function_t& cg_service::fn(){
+cg_function& cg_service::fn(){
 	return *fn_ctxts.back();
 }
 
-void cg_service::push_fn(function_t* fn){
+void cg_service::push_fn(cg_function* fn){
 	if( !fn_ctxts.empty() )
 	{
 		assert( fn->fn != this->fn().fn );
@@ -1342,12 +1342,12 @@ cg_value cg_service::undef_value( builtin_types bt, abis abi )
 	return val;
 }
 
-cg_value cg_service::emit_call( function_t const& fn, vector<cg_value> const& args )
+cg_value cg_service::emit_call( cg_function const& fn, vector<cg_value> const& args )
 {
 	return emit_call( fn, args, cg_value() );
 }
 
-cg_value cg_service::emit_call( function_t const& fn, vector<cg_value> const& args, cg_value const& exec_mask )
+cg_value cg_service::emit_call( cg_function const& fn, vector<cg_value> const& args, cg_value const& exec_mask )
 {
 	abis promoted_abi = abi_llvm;
 	BOOST_FOREACH( cg_value const& arg, args )

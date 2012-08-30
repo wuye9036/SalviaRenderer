@@ -21,17 +21,17 @@ struct expr_t;
 struct block_t;
 struct variable_t;
 struct cg_value;
-struct function_t;
+struct cg_function;
 struct instruction_t;
 struct ssa_attribute;
 
 class ssa_context
 {
 public:
-	function_t*		create_function();
+	cg_function*		create_function();
 	cg_value*		create_value( block_t* parent, sasl::syntax_tree::node* attached );
-	variable_t*		create_variable( function_t* parent, sasl::syntax_tree::node* decl );
-	block_t*		create_block( function_t* parent );
+	variable_t*		create_variable( cg_function* parent, sasl::syntax_tree::node* decl );
+	block_t*		create_block( cg_function* parent );
 	instruction_t*	emit( block_t* parent, int id );
 	instruction_t*	emit( block_t* parent, instruction_t* position, int id );
 
@@ -49,7 +49,7 @@ private:
 	ssa_attrs_t ssa_attrs;
 
 	std::vector<variable_t*>	vars;
-	std::vector<function_t*>	fns;
+	std::vector<cg_function*>	fns;
 	std::vector<cg_value*>		values;
 	std::vector<block_t*>		blocks;
 	std::vector<instruction_t*>	instructions;

@@ -89,8 +89,8 @@ public:
 	virtual cg_value emit_and( cg_value const& lhs, cg_value const& rhs );
 	virtual cg_value emit_or ( cg_value const& lhs, cg_value const& rhs );
 
-	virtual cg_value emit_call( function_t const& fn, std::vector<cg_value> const& args );
-	virtual cg_value emit_call( function_t const& fn, std::vector<cg_value> const& args, cg_value const& exec_mask );
+	virtual cg_value emit_call( cg_function const& fn, std::vector<cg_value> const& args );
+	virtual cg_value emit_call( cg_function const& fn, std::vector<cg_value> const& args, cg_value const& exec_mask );
 	/// @}
 
 	/// @name Emit element extraction
@@ -220,7 +220,7 @@ public:
 	virtual void break_(){}
 	virtual void continue_(){}
 
-	virtual void push_fn(function_t* fn);
+	virtual void push_fn(cg_function* fn);
 	virtual void pop_fn();
 	virtual void set_insert_point( insert_point_t const& ip );
 	virtual insert_point_t insert_point() const;
@@ -229,7 +229,7 @@ public:
 	/// @name Context queries
 	/// @{
 	bool in_function() const;
-	function_t& fn();
+	cg_function& fn();
 	/// Get Packed Mask Which is a uint16_t.
 	virtual cg_value packed_mask() = 0;
 	/// @}
@@ -238,7 +238,7 @@ public:
 	/// @{
 	cg_value extend_to_vm( cg_value const&, builtin_types hint );
 
-	function_t* fetch_function(sasl::syntax_tree::function_type* fn_node);
+	cg_function* fetch_function(sasl::syntax_tree::function_type* fn_node);
 	
 	template <typename T>
 	cg_value create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
@@ -319,7 +319,7 @@ protected:
 	cgllvm_module_impl*					llvm_mod_;
 	module_context*						ctxt_;
 	
-	std::vector<function_t*>			fn_ctxts;
+	std::vector<cg_function*>			fn_ctxts;
 	cg_value							exec_mask;
 	
 	cg_value emit_cmp(
