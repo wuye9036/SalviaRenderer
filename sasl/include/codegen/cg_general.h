@@ -42,15 +42,14 @@ struct builtin_types;
 
 BEGIN_NS_SASL_CODEGEN();
 
-class cgllvm_sctxt;
-class cgllvm_module_impl;
-class cgllvm_module;
+class cg_module_impl;
+class cg_module;
 
-class cgllvm_general: public cgllvm_sisd{
+class cg_general: public cg_sisd{
 public:
-	typedef cgllvm_sisd parent_class;
+	typedef cg_sisd parent_class;
 
-	cgllvm_general();
+	cg_general();
 
 	SASL_VISIT_DCL( cast_expression );
 	SASL_VISIT_DCL( expression_list );
@@ -70,7 +69,7 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit	, program );
 	SASL_SPECIFIC_VISIT_DCL( bin_logic			, binary_expression );
 private:
-	cgllvm_module_impl* mod_ptr();
+	cg_module_impl* mod_ptr();
 };
 
 END_NS_SASL_CODEGEN()

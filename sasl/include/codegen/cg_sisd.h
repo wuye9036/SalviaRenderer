@@ -41,14 +41,11 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODEGEN();
 
-struct cgllvm_sctxt_data;
-struct cgllvm_sctxt_env;
-
 // Code generation for SISD( Single Instruction Single Data )
-class cgllvm_sisd: public cgllvm_impl
+class cg_sisd: public cg_impl
 {
 public:
-	~cgllvm_sisd();
+	~cg_sisd();
 
 	SASL_VISIT_DCL( member_expression );
 	SASL_VISIT_DCL( cond_expression );
@@ -87,10 +84,10 @@ protected:
 		boost::shared_ptr<sasl::syntax_tree::node> const& no
 		);
 
-	// Override node_ctxt of cgllvm_impl
+	// Override node_ctxt of cg_impl
 	
 	void	mask_to_indexes( char index[4], uint32_t mask );
-	cgllvm_module_impl* mod_ptr();
+	cg_module_impl* mod_ptr();
 };
 
 END_NS_SASL_CODEGEN();

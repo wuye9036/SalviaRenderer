@@ -34,7 +34,7 @@ class	cg_service;
 typedef boost::function<
 	node_context* (sasl::syntax_tree::node const*)> get_context_fn;
 
-boost::shared_ptr< ::sasl::semantic::caster_t> create_cgllvm_caster(
+boost::shared_ptr< ::sasl::semantic::caster_t> create_cg_caster(
 		get_context_fn const&					get_context,
 		sasl::semantic::get_semantic_fn const&	get_semantic,
 		sasl::semantic::get_tynode_fn const&	get_tynode,

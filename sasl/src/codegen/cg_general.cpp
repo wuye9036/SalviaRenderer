@@ -53,15 +53,13 @@ using boost::any_cast;
 
 using std::vector;
 
-typedef cgllvm_sctxt* sctxt_handle;
-
 #define is_node_class( handle_of_node, typecode ) ( (handle_of_node)->node_class() == node_ids::typecode )
 
 //////////////////////////////////////////////////////////////////////////
 //
-#define SASL_VISITOR_TYPE_NAME cgllvm_general
+#define SASL_VISITOR_TYPE_NAME cg_general
 
-cgllvm_general::cgllvm_general()
+cg_general::cg_general()
 {
 	service_ = new cgs_sisd();
 }
@@ -91,7 +89,7 @@ SASL_VISIT_DEF( cast_expression ){
 	//	caster->convert( v.as_handle(), v.expr );
 	//}
 
-	//cgllvm_sctxt* vctxt = node_ctxt(v, false);
+	//cg_sctxt* vctxt = node_ctxt(v, false);
 	//sc_data_ptr(data)->val_type = vctxt->data().val_type;
 	//sc_data_ptr(data)->val = load( vctxt );
 }
@@ -132,7 +130,7 @@ SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)
 	node_ctxt(v,true)->node_value = ret_value.to_rvalue();
 }
 
-cgllvm_module_impl* cgllvm_general::mod_ptr(){
+cg_module_impl* cg_general::mod_ptr(){
 	return llvm_mod_.get();
 }
 

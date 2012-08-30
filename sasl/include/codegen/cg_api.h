@@ -27,7 +27,7 @@ BEGIN_NS_SASL_CODEGEN();
 
 class module_context;
 
-class cgllvm_module
+class cg_module
 {
 public:
 	virtual sasl::semantic::module_semantic*
@@ -42,7 +42,7 @@ public:
 	virtual void				dump_ir() const						= 0;
 	virtual void				dump_ir( std::ostream& ostr ) const	= 0;
 
-	virtual ~cgllvm_module(){};
+	virtual ~cg_module(){};
 };
 
 enum optimization_options{
@@ -50,11 +50,11 @@ enum optimization_options{
 	opt_preset_std_for_function
 };
 
-boost::shared_ptr<cgllvm_module> generate_llvm_code(
+boost::shared_ptr<cg_module> generate_llvm_code(
 	boost::shared_ptr<sasl::semantic::module_semantic> const&,
 	sasl::semantic::abi_info const*
 	);
-void optimize( boost::shared_ptr<cgllvm_module>, std::vector<optimization_options> opt_options );
+void optimize( boost::shared_ptr<cg_module>, std::vector<optimization_options> opt_options );
 
 // void optimize( boost::shared_ptr<llvm_module>, const std::string& params );
 

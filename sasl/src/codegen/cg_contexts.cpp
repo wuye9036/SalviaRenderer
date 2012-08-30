@@ -19,7 +19,7 @@ using std::ostream;
 
 BEGIN_NS_SASL_CODEGEN();
 
-class cgllvm_caster;
+class cg_caster;
 
 class module_context_impl : public module_context
 {
@@ -107,7 +107,7 @@ private:
 	vector<node_context*>	contexts_;
 	vector<cg_type*>		cg_types_;
 	vector<cg_function*>		functions_;
-	cgllvm_caster*			caster_;
+	cg_caster*			caster_;
 };
 
 

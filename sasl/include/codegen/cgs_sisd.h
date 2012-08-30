@@ -54,7 +54,6 @@ namespace sasl{
 
 BEGIN_NS_SASL_CODEGEN();
 
-class cgllvm_sctxt;
 class llvm_intrin_cache;
 
 class cgs_sisd: public cg_service{

@@ -27,7 +27,7 @@
 #include <boost/foreach.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#define SASL_VISITOR_TYPE_NAME cgllvm_vs
+#define SASL_VISITOR_TYPE_NAME cg_vs
 
 using salviar::sv_usage;
 using salviar::su_buffer_in;
@@ -99,7 +99,7 @@ void rearrange_layouts( vector<sv_layout*>& sorted_layouts, vector<Type*>& sorte
 	std::transform( layout_ty_pairs.begin(), layout_ty_pairs.end(), back_inserter(sorted_tys), boost::bind(&pair<sv_layout*, Type*>::second, _1) );
 }
 
-void cgllvm_vs::fill_llvm_type_from_si( sv_usage su ){
+void cg_vs::fill_llvm_type_from_si( sv_usage su ){
 	vector<sv_layout*> svls = abii->layouts( su );
 	vector<Type*>& tys = entry_params_types[su];
 
@@ -163,14 +163,14 @@ void cgllvm_vs::fill_llvm_type_from_si( sv_usage su ){
 	}
 }
 
-void cgllvm_vs::create_entry_params(){
+void cg_vs::create_entry_params(){
 	fill_llvm_type_from_si ( su_buffer_in );
 	fill_llvm_type_from_si ( su_buffer_out );
 	fill_llvm_type_from_si ( su_stream_in );
 	fill_llvm_type_from_si ( su_stream_out );
 }
 
-void cgllvm_vs::add_entry_param_type( sv_usage st, vector<Type*>& par_types ){
+void cg_vs::add_entry_param_type( sv_usage st, vector<Type*>& par_types ){
 	StructType* par_type = entry_params_structs[st].data();
 	PointerType* parref_type = PointerType::getUnqual( par_type );
 
@@ -243,7 +243,7 @@ SASL_VISIT_DEF( variable_expression ){
 	}
 
 	// Argument("virtual args") or local variable or in non-entry
-	cgllvm_impl::visit( v, data );
+	cg_impl::visit( v, data );
 }
 
 SASL_VISIT_DEF_UNIMPL( identifier );
@@ -258,7 +258,7 @@ SASL_VISIT_DEF_UNIMPL( tynode );
 
 SASL_VISIT_DEF_UNIMPL( alias_type );
 
-// In cgllvm_vs, you would initialize entry function before call
+// In cg_vs, you would initialize entry function before call
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	// Call parent for initialization
 	parent_class::before_decls_visit( v, data );
@@ -284,8 +284,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 		add_entry_param_type( su_stream_out, param_types );
 		add_entry_param_type( su_buffer_out, param_types );
 
-		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cgllvm_impl::context() ), param_types, false );
-		Function* fn = Function::Create( fntype, Function::ExternalLinkage, sem_->get_symbol(&v)->mangled_name(), cgllvm_impl::module() );
+		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
+		Function* fn = Function::Create( fntype, Function::ExternalLinkage, sem_->get_symbol(&v)->mangled_name(), cg_impl::module() );
 		fn->addFnAttr( Attribute::constructStackAlignmentFromInt(16) );
 		entry_fn = fn;
 		entry_sym = sem_->get_symbol(&v);
@@ -419,23 +419,23 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 	}
 }
 
-cgllvm_vs::cgllvm_vs()
+cg_vs::cg_vs()
 	: entry_fn(NULL), entry_sym(NULL)
 {
 	service_ = new cgs_sisd();
 }
 
-bool cgllvm_vs::is_entry( llvm::Function* fn ) const{
+bool cg_vs::is_entry( llvm::Function* fn ) const{
 	assert(fn && entry_fn);
 	return fn && fn == entry_fn;
 }
 
-cgllvm_module_impl* cgllvm_vs::mod_ptr(){
+cg_module_impl* cg_vs::mod_ptr(){
 	return llvm_mod_.get();
 }
 
 
-cg_value cgllvm_vs::layout_to_value(sv_layout* svl)
+cg_value cg_vs::layout_to_value(sv_layout* svl)
 {
 	cg_value ret;
 
@@ -453,7 +453,7 @@ cg_value cgllvm_vs::layout_to_value(sv_layout* svl)
 	return ret;
 }
 
-void cgllvm_vs::layout_to_sc(node_context* psc, salviar::sv_layout* svl, bool store_to_existed_value)
+void cg_vs::layout_to_sc(node_context* psc, salviar::sv_layout* svl, bool store_to_existed_value)
 {
 	builtin_types bt = to_builtin_types(svl->value_type);
 
@@ -486,6 +486,6 @@ void cgllvm_vs::layout_to_sc(node_context* psc, salviar::sv_layout* svl, bool st
 	}
 }
 
-cgllvm_vs::~cgllvm_vs(){}
+cg_vs::~cg_vs(){}
 
 END_NS_SASL_CODEGEN();

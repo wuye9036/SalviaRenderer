@@ -5,7 +5,7 @@
 
 BEGIN_NS_SASL_CODEGEN();
 
-class cgllvm_ps: public cgllvm_simd{
+class cg_ps: public cg_simd{
 };
 
 END_NS_SASL_CODEGEN();

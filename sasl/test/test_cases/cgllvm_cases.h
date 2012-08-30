@@ -14,21 +14,21 @@
 #include <boost/thread.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
-class cgllvm_cases{
+class cg_cases{
 public:
-	static cgllvm_cases& instance();
+	static cg_cases& instance();
 	static bool is_avaliable();
 	static void release();
 
-	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_jit_engine), jit );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cg_jit_engine), jit );
 
-	TEST_CASE_SP_VARIABLE( CODEGEN_(cgllvm_module), root );
+	TEST_CASE_SP_VARIABLE( CODEGEN_(cg_module), root );
 private:
-	cgllvm_cases();
+	cg_cases();
 	void initialize();
 
-	static boost::shared_ptr<cgllvm_cases> tcase;
+	static boost::shared_ptr<cg_cases> tcase;
 	static boost::mutex mtx;
 };
 
-#endif // SASL_TEST_TEST_CASES_cgllvm_cases_H
+#endif // SASL_TEST_TEST_CASES_cg_cases_H

@@ -20,27 +20,27 @@ using boost::shared_ptr;
 
 BEGIN_NS_SASL_CODEGEN();
 
-cgllvm_module_impl::cgllvm_module_impl()
+cg_module_impl::cg_module_impl()
 : llvm_mod_(NULL), have_mod_(true)
 {
 	llvm_ctxt_.reset( new llvm::LLVMContext() );
 	irbuilder_.reset( new llvm::IRBuilder<>( *llvm_ctxt_ ) );
 }
 
-void cgllvm_module_impl::create_llvm_module( const std::string& modname ){
+void cg_module_impl::create_llvm_module( const std::string& modname ){
 	llvm_mod_ = new llvm::Module( modname, *llvm_ctxt_ );
 	have_mod_ = true;
 }
 
-llvm::Module* cgllvm_module_impl::llvm_module() const{
+llvm::Module* cg_module_impl::llvm_module() const{
 	return llvm_mod_;
 }
 
-llvm::LLVMContext& cgllvm_module_impl::llvm_context(){
+llvm::LLVMContext& cg_module_impl::llvm_context(){
 	return *llvm_ctxt_;
 }
 
-cgllvm_module_impl::~cgllvm_module_impl(){
+cg_module_impl::~cg_module_impl(){
 	if( have_mod_ && llvm_mod_ ){
 		delete llvm_mod_;
 		llvm_mod_ = NULL;
@@ -48,7 +48,7 @@ cgllvm_module_impl::~cgllvm_module_impl(){
 	}
 }
 
-llvm::Module* cgllvm_module_impl::take_ownership() const{
+llvm::Module* cg_module_impl::take_ownership() const{
 	if ( have_mod_ ){
 		have_mod_ = false;
 		return llvm_mod_;
@@ -56,38 +56,38 @@ llvm::Module* cgllvm_module_impl::take_ownership() const{
 	return NULL;
 }
 
-llvm::DefaultIRBuilder* cgllvm_module_impl::builder() const{
+llvm::DefaultIRBuilder* cg_module_impl::builder() const{
 	return irbuilder_.get();
 }
 
-void cgllvm_module_impl::dump_ir() const
+void cg_module_impl::dump_ir() const
 {
 	llvm_mod_->dump();
 }
 
-void cgllvm_module_impl::dump_ir( std::ostream& ostr ) const
+void cg_module_impl::dump_ir( std::ostream& ostr ) const
 {
 	llvm::raw_os_ostream raw_os(ostr);
 	llvm_mod_->print( raw_os, NULL );
 	raw_os.flush();
 }
 
-module_semantic* cgllvm_module_impl::get_semantic() const
+module_semantic* cg_module_impl::get_semantic() const
 {
 	return sem_.get();
 }
 
-void cgllvm_module_impl::set_semantic( shared_ptr<module_semantic> const& v )
+void cg_module_impl::set_semantic( shared_ptr<module_semantic> const& v )
 {
 	sem_ = v;
 }
 
-module_context* cgllvm_module_impl::get_context() const
+module_context* cg_module_impl::get_context() const
 {
 	return ctxt_.get();
 }
 
-void cgllvm_module_impl::set_context( shared_ptr<module_context> const& v )
+void cg_module_impl::set_context( shared_ptr<module_context> const& v )
 {
 	ctxt_ = v;
 }

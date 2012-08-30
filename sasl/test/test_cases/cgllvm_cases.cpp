@@ -25,26 +25,26 @@ using boost::shared_ptr;
 #define SEMCASE_(case_name) semantic_cases::instance().case_name ()
 #define SEMCASENAME_( case_name ) semantic_cases::instance(). case_name##_name()
 
-boost::mutex cgllvm_cases::mtx;
-boost::shared_ptr<cgllvm_cases> cgllvm_cases::tcase;
+boost::mutex cg_cases::mtx;
+boost::shared_ptr<cg_cases> cg_cases::tcase;
 
-cgllvm_cases& cgllvm_cases::instance(){
+cg_cases& cg_cases::instance(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( !tcase ) {
-		eflib::lifetime_manager::at_main_exit( cgllvm_cases::release );
-		tcase.reset( new cgllvm_cases() );
+		eflib::lifetime_manager::at_main_exit( cg_cases::release );
+		tcase.reset( new cg_cases() );
 		tcase->initialize();
 	}
 	return *tcase;
 }
 
-bool cgllvm_cases::is_avaliable()
+bool cg_cases::is_avaliable()
 {
 	boost::mutex::scoped_lock lg(mtx);
 	return tcase;
 }
 
-void cgllvm_cases::release(){
+void cg_cases::release(){
 	boost::mutex::scoped_lock lg(mtx);
 	if ( tcase ){
 		tcase->LOCVAR_(jit).reset();
@@ -52,10 +52,10 @@ void cgllvm_cases::release(){
 	}
 }
 
-cgllvm_cases::cgllvm_cases(){
+cg_cases::cg_cases(){
 }
 
-void cgllvm_cases::initialize(){
+void cg_cases::initialize(){
 
 	shared_ptr< SEMANTIC_(module_semantic) > si_jit_root = SEMANTIC_(analysis_semantic)( SYNCASE_(prog_for_jit_test), NULL, 1 );
 	SEMANTIC_(abi_analyser) aa;
@@ -89,6 +89,6 @@ void cgllvm_cases::initialize(){
 	eflib::logrout::write_state( eflib::logrout::screen(), eflib::logrout::on() );
 
 	std::string err;
-	LOCVAR_(jit) = CODEGEN_(cgllvm_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cgllvm_module_impl)>( LOCVAR_(root) ), err);
+	LOCVAR_(jit) = CODEGEN_(cg_jit_engine::create)( boost::shared_polymorphic_cast<CODEGEN_(cg_module_impl)>( LOCVAR_(root) ), err);
 	EFLIB_ASSERT( LOCVAR_(jit), err.c_str() );
 }

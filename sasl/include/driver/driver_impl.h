@@ -43,12 +43,12 @@ public:
 	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& ){ return boost::shared_ptr<sasl::codegen::jit_engine>(); }
 
 	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const{ return boost::shared_ptr<sasl::semantic::module_semantic>(); }
-	virtual boost::shared_ptr<sasl::codegen::cgllvm_module>	module() const{ return boost::shared_ptr<sasl::codegen::cgllvm_module>(); }
+	virtual boost::shared_ptr<sasl::codegen::cg_module>	module() const{ return boost::shared_ptr<sasl::codegen::cg_module>(); }
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const{ return boost::shared_ptr<sasl::syntax_tree::node>(); }
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const{ return boost::shared_ptr<sasl::semantic::abi_info>(); }
 	/*
 	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
-	boost::shared_ptr<sasl::codegen::cgllvm_module>	mod;
+	boost::shared_ptr<sasl::codegen::cg_module>	mod;
 	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
 	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
 
@@ -116,7 +116,7 @@ public:
 	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& );
 
 	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const;
-	virtual boost::shared_ptr<sasl::codegen::cgllvm_module>	module() const;
+	virtual boost::shared_ptr<sasl::codegen::cg_module>	module() const;
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const;
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const;
 
@@ -134,7 +134,7 @@ private:
 		void* pfn, std::string const& name, bool is_raw_name);
 	
 	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
-	boost::shared_ptr<sasl::codegen::cgllvm_module>	mod;
+	boost::shared_ptr<sasl::codegen::cg_module>	mod;
 	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
 	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
 	

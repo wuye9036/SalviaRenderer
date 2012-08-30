@@ -30,15 +30,13 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODEGEN();
 
-class cgllvm_modvs;
-
-class cgllvm_vs: public cgllvm_sisd
+class cg_vs: public cg_sisd
 {
 public:
-	typedef cgllvm_sisd parent_class;
+	typedef cg_sisd parent_class;
 
-	cgllvm_vs();
-	~cgllvm_vs();
+	cg_vs();
+	~cg_vs();
 
 	// expressions
 	SASL_VISIT_DCL( member_expression );
@@ -72,7 +70,7 @@ private:
 
 	bool is_entry( llvm::Function* ) const;
 
-	cgllvm_module_impl* mod_ptr();
+	cg_module_impl* mod_ptr();
 
 	cg_value layout_to_value(salviar::sv_layout* si);
 	void layout_to_sc(node_context* psc, salviar::sv_layout* si, bool store_to_existed_value);

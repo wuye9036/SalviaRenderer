@@ -60,14 +60,14 @@ using std::string;
 using std::pair;
 using std::make_pair;
 
-#define SASL_VISITOR_TYPE_NAME cgllvm_sisd
+#define SASL_VISITOR_TYPE_NAME cg_sisd
 
 BEGIN_NS_SASL_CODEGEN();
 
-cgllvm_sisd::~cgllvm_sisd(){
+cg_sisd::~cg_sisd(){
 }
 
-cg_value cgllvm_sisd::emit_logic_op(operators op, shared_ptr<node> const& left, shared_ptr<node> const& right )
+cg_value cg_sisd::emit_logic_op(operators op, shared_ptr<node> const& left, shared_ptr<node> const& right )
 {
 	visit_child(left);
 	visit_child(right);
@@ -82,7 +82,7 @@ cg_value cgllvm_sisd::emit_logic_op(operators op, shared_ptr<node> const& left, 
 	}
 }
 
-cg_value cgllvm_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
+cg_value cg_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<node> const& yes, shared_ptr<node> const& no )
 {
 	// NOTE
 	//  If 'yes' and 'no' expression are all reference/variable,
@@ -524,16 +524,16 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement )
 	service()->jump_to(break_to_);
 }
 
-cgllvm_module_impl* cgllvm_sisd::mod_ptr(){
+cg_module_impl* cg_sisd::mod_ptr(){
 	return llvm_mod_.get();
 }
 
-cgs_sisd* cgllvm_sisd::service() const
+cgs_sisd* cg_sisd::service() const
 {
 	return static_cast<cgs_sisd*>(service_);
 }
 
-abis cgllvm_sisd::local_abi( bool is_c_compatible ) const
+abis cg_sisd::local_abi( bool is_c_compatible ) const
 {
 	return is_c_compatible ? abi_c : abi_llvm;
 }

@@ -32,7 +32,7 @@ namespace sasl
 BEGIN_NS_SASL_CODEGEN();
 
 class  cg_value;
-class  cgllvm_module_impl;
+class  cg_module_impl;
 struct node_context;
 
 class cg_service
@@ -41,7 +41,7 @@ class cg_service
 
 public:
 	virtual bool initialize(
-		cgllvm_module_impl* mod, module_context* ctxt,
+		cg_module_impl* mod, module_context* ctxt,
 		sasl::semantic::module_semantic* sem
 		);
 
@@ -316,7 +316,7 @@ public:
 							get_node_semantic( sasl::syntax_tree::node* );
 protected:
 	sasl::semantic::module_semantic*	sem_;
-	cgllvm_module_impl*					llvm_mod_;
+	cg_module_impl*					llvm_mod_;
 	module_context*						ctxt_;
 	
 	std::vector<cg_function*>			fn_ctxts;

@@ -51,28 +51,28 @@ using boost::bind;
 using boost::shared_ptr;
 using std::vector;
 
-#define SASL_VISITOR_TYPE_NAME cgllvm_simd
+#define SASL_VISITOR_TYPE_NAME cg_simd
 
 BEGIN_NS_SASL_CODEGEN();
 
-cgllvm_simd::cgllvm_simd(): entry_fn(NULL)
+cg_simd::cg_simd(): entry_fn(NULL)
 {
 	memset( entry_structs, 0, sizeof( entry_structs ) );
 	service_ = new cgs_simd();
 }
 
-cgllvm_simd::~cgllvm_simd(){}
+cg_simd::~cg_simd(){}
 
-cgs_simd* cgllvm_simd::service() const{
+cgs_simd* cg_simd::service() const{
 	return static_cast<cgs_simd*>(service_);
 }
 
-abis cgllvm_simd::local_abi( bool /*is_c_compatible*/ ) const
+abis cg_simd::local_abi( bool /*is_c_compatible*/ ) const
 {
 	return abi_package;
 }
 
-void cgllvm_simd::create_entries()
+void cg_simd::create_entries()
 {
 	create_entry_param( su_stream_in );
 	create_entry_param( su_stream_out );
@@ -80,7 +80,7 @@ void cgllvm_simd::create_entries()
 	create_entry_param( su_buffer_out );
 }
 
-void cgllvm_simd::create_entry_param( sv_usage usage )
+void cg_simd::create_entry_param( sv_usage usage )
 {
 	vector<sv_layout*> svls = abii->layouts(usage);
 	vector<Type*>& tys = entry_tys[usage];
@@ -182,7 +182,7 @@ SASL_VISIT_DEF( member_expression ){
 			ctxt->node_value = layout_to_value( psi );
 		} else {
 			// If it is not semantic mode, use general code
-			node_context* mem_ctxt = cgllvm_impl::node_ctxt( mem_sym->associated_node() );
+			node_context* mem_ctxt = cg_impl::node_ctxt( mem_sym->associated_node() );
 			assert( mem_ctxt );
 			ctxt->node_value = mem_ctxt->node_value;
 			ctxt->node_value.parent( agg_ctxt->node_value );
@@ -239,7 +239,7 @@ SASL_VISIT_DEF( if_statement )
 			assert(false);
 		}
 	}
-	service()->if_cond_end( cgllvm_impl::node_ctxt(v.cond)->node_value );
+	service()->if_cond_end( cg_impl::node_ctxt(v.cond)->node_value );
 	insert_point_t ip_cond = service()->insert_point();
 
 	insert_point_t ip_yes_beg = service()->new_block( "if.yes", true );
@@ -290,7 +290,7 @@ SASL_VISIT_DEF( while_statement )
 	if( cond_tid != bool_tid ){
 		caster->cast(sem_->pety()->get_proto(bool_tid), v.cond.get());
 	}
-	service()->while_cond_end( cgllvm_impl::node_ctxt(v.cond)->node_value );
+	service()->while_cond_end( cg_impl::node_ctxt(v.cond)->node_value );
 	cg_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
@@ -335,7 +335,7 @@ SASL_VISIT_DEF( dowhile_statement )
 			assert( false );
 		}
 	}
-	service()->do_cond_end( cgllvm_impl::node_ctxt(v.cond)->node_value );
+	service()->do_cond_end( cg_impl::node_ctxt(v.cond)->node_value );
 	cg_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
@@ -386,7 +386,7 @@ SASL_VISIT_DEF( for_statement )
 	cg_value cond_value;
 	if( v.cond ){ 
 		visit_child( v.cond );
-		cond_value = cgllvm_impl::node_ctxt( v.cond, false )->node_value;
+		cond_value = cg_impl::node_ctxt( v.cond, false )->node_value;
 	}
 	service()->for_cond_end( cond_value );
 	cg_value joinable = service()->joinable();
@@ -463,8 +463,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
 		add_type_ref( entry_structs[su_stream_out], param_types );
 		add_type_ref( entry_structs[su_buffer_out], param_types );
 
-		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cgllvm_impl::context() ), param_types, false );
-		Function* fn = Function::Create( fntype, Function::ExternalLinkage, sem_->get_symbol(&v)->mangled_name(), cgllvm_impl::module() );
+		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
+		Function* fn = Function::Create( fntype, Function::ExternalLinkage, sem_->get_symbol(&v)->mangled_name(), cg_impl::module() );
 		entry_fn = fn;
 		// entry_sym = v.symbol().get();
 
@@ -562,7 +562,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
 		visit_child( v.jump_expr );
 
 		// Copy result.
-		cg_value ret_value = cgllvm_impl::node_ctxt( v.jump_expr )->node_value;
+		cg_value ret_value = cg_impl::node_ctxt( v.jump_expr )->node_value;
 
 		if( ret_value.hint() != builtin_types::none ){
 			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
@@ -602,7 +602,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement ){
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
-cg_value cgllvm_simd::layout_to_value( sv_layout* svl )
+cg_value cg_simd::layout_to_value( sv_layout* svl )
 {
 	builtin_types bt = to_builtin_types( svl->value_type );
 	cg_value ret = service()->emit_extract_ref( entry_values[svl->usage], svl->physical_index );

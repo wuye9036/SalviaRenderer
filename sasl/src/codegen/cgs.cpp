@@ -71,7 +71,7 @@ BEGIN_NS_SASL_CODEGEN();
 
 /// @}
 
-bool cg_service::initialize( cgllvm_module_impl* mod, module_context* ctxt, module_semantic* sem )
+bool cg_service::initialize( cg_module_impl* mod, module_context* ctxt, module_semantic* sem )
 {
 	assert(mod);
 	assert(ctxt);

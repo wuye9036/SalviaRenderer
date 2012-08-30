@@ -26,10 +26,10 @@
 
 namespace po = boost::program_options;
 
-using sasl::codegen::cgllvm_module;
+using sasl::codegen::cg_module;
 using sasl::codegen::generate_llvm_code;
 using sasl::codegen::jit_engine;
-using sasl::codegen::cgllvm_jit_engine;
+using sasl::codegen::cg_jit_engine;
 using sasl::semantic::module_semantic;
 using sasl::semantic::analysis_semantic;
 using sasl::semantic::abi_analyser;
@@ -256,7 +256,7 @@ shared_ptr<diag_chat> driver_impl::compile()
 	}
 	mabi = aa.shared_abii(lang);
 
-	shared_ptr<cgllvm_module> llvmcode = generate_llvm_code( msem, mabi.get() );
+	shared_ptr<cg_module> llvmcode = generate_llvm_code( msem, mabi.get() );
 	mod = llvmcode;
 
 	if( !llvmcode ){
@@ -277,7 +277,7 @@ shared_ptr<module_semantic> driver_impl::module_sem() const{
 	return msem;
 }
 
-shared_ptr<cgllvm_module> driver_impl::module() const{
+shared_ptr<cg_module> driver_impl::module() const{
 	return mod;
 }
 
@@ -374,7 +374,7 @@ shared_ptr<jit_engine> driver_impl::create_jit()
 	if(!mod){
 		return shared_ptr<jit_engine>();
 	}
-	shared_ptr<cgllvm_jit_engine> ret_jit = cgllvm_jit_engine::create( shared_polymorphic_cast<cgllvm_module>(mod), err );
+	shared_ptr<cg_jit_engine> ret_jit = cg_jit_engine::create( shared_polymorphic_cast<cg_module>(mod), err );
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
 	inject_function(ret_jit, &sasl_exp_f32,		"sasl.exp.f32",		true);

@@ -22,14 +22,14 @@ namespace llvm{
 BEGIN_NS_SASL_CODEGEN();
 
 // Code generation for SIMD( Single Instruction Multiple Data )
-class cgllvm_simd: public cgllvm_impl
+class cg_simd: public cg_impl
 {
 
 public:
-	typedef cgllvm_impl parent_class;
+	typedef cg_impl parent_class;
 
-	cgllvm_simd();
-	~cgllvm_simd();
+	cg_simd();
+	~cg_simd();
 
 	// expression
 	SASL_VISIT_DCL( unary_expression );

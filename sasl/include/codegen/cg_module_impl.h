@@ -33,9 +33,9 @@ BEGIN_NS_SASL_CODEGEN();
 /////////////////////////////////////////
 // support LLVMContext, Module, IRBuilder and other data use by code generator.
 // General module created by llvm code generator.
-class cgllvm_module_impl: public cgllvm_module{
+class cg_module_impl: public cg_module{
 public:
-	cgllvm_module_impl();
+	cg_module_impl();
 	void create_llvm_module(std::string const& module_name);
 
 	virtual sasl::semantic::module_semantic*
@@ -56,7 +56,7 @@ public:
 	llvm::Type*	entry_param_type( salviar::sv_usage st ) const;
 	void		entry_param_type( salviar::sv_usage st, llvm::Type* t );
 
-	~cgllvm_module_impl();
+	~cg_module_impl();
 
 protected:
 	boost::shared_ptr<llvm::LLVMContext>		llvm_ctxt_;

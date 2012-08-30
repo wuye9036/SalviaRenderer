@@ -29,7 +29,7 @@ using std::ostream;
 
 BEGIN_NS_SASL_CODEGEN();
 
-void optimize( shared_ptr<cgllvm_module> code, vector<optimization_options> opt_options )
+void optimize( shared_ptr<cg_module> code, vector<optimization_options> opt_options )
 {
 	Module* mod = code->llvm_module();
 

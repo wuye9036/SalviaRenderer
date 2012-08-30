@@ -41,8 +41,8 @@ void initialize_llvm_options()
 
 BEGIN_NS_SASL_CODEGEN();
 
-boost::shared_ptr<cgllvm_jit_engine> cgllvm_jit_engine::create( boost::shared_ptr<cgllvm_module> ctxt, std::string& error ){
-	boost::shared_ptr<cgllvm_jit_engine> ret = boost::shared_ptr<cgllvm_jit_engine>( new cgllvm_jit_engine( ctxt ) );
+boost::shared_ptr<cg_jit_engine> cg_jit_engine::create( boost::shared_ptr<cg_module> ctxt, std::string& error ){
+	boost::shared_ptr<cg_jit_engine> ret = boost::shared_ptr<cg_jit_engine>( new cg_jit_engine( ctxt ) );
 	if( !ret ){
 		error.assign( "Unknown error occurred." );
 	} else if ( !ret->is_valid() ){
@@ -52,7 +52,7 @@ boost::shared_ptr<cgllvm_jit_engine> cgllvm_jit_engine::create( boost::shared_pt
 	return ret;
 }
 
-void* cgllvm_jit_engine::get_function( const std::string& func_name ){
+void* cg_jit_engine::get_function( const std::string& func_name ){
 	assert( global_ctxt );
 	assert( engine );
 
@@ -69,13 +69,13 @@ void* cgllvm_jit_engine::get_function( const std::string& func_name ){
 	return native_fn;
 }
 
-cgllvm_jit_engine::cgllvm_jit_engine( boost::shared_ptr<cgllvm_module> ctxt )
+cg_jit_engine::cg_jit_engine( boost::shared_ptr<cg_module> ctxt )
 : jit_engine(), global_ctxt( ctxt )
 {
 	build();
 }
 
-void cgllvm_jit_engine::build(){
+void cg_jit_engine::build(){
 	if ( !global_ctxt || !global_ctxt->llvm_module() ){
 		engine.reset();
 	}
@@ -105,22 +105,22 @@ void cgllvm_jit_engine::build(){
 	}
 }
 
-bool cgllvm_jit_engine::is_valid(){
+bool cg_jit_engine::is_valid(){
 	return (bool)engine;
 }
 
-std::string cgllvm_jit_engine::error(){
+std::string cg_jit_engine::error(){
 	return err;
 }
 
-cgllvm_jit_engine::~cgllvm_jit_engine()
+cg_jit_engine::~cg_jit_engine()
 {
 	BOOST_FOREACH( llvm::Function* fn, fns ){
 		engine->freeMachineCodeForFunction( fn );
 	}
 }
 
-void cgllvm_jit_engine::inject_function( void* fn, std::string const& name )
+void cg_jit_engine::inject_function( void* fn, std::string const& name )
 {
 	llvm::Function* func = global_ctxt->llvm_module()->getFunction( name );
 	if ( func ){

@@ -21,11 +21,11 @@ using sasl::semantic::abi_info;
 using sasl::syntax_tree::node;
 using boost::shared_ptr;
 
-boost::shared_ptr<cgllvm_module> generate_llvm_code(
+boost::shared_ptr<cg_module> generate_llvm_code(
 	boost::shared_ptr<sasl::semantic::module_semantic> const& mod,
 	sasl::semantic::abi_info const* abii )
 {
-	shared_ptr<cgllvm_module> ret;
+	shared_ptr<cg_module> ret;
 	
 	symbol* root = mod->root_symbol();
 	if(!root) { return ret; }
@@ -35,21 +35,21 @@ boost::shared_ptr<cgllvm_module> generate_llvm_code(
 	if(assoc_node->node_class() != node_ids::program) { return ret; }
 	
 	if( !abii || abii->lang == salviar::lang_general ){
-		cgllvm_general cg;
+		cg_general cg;
 		if( cg.generate(mod, abii) ){
 			return cg.generated_module();
 		}
 	}
 		
 	if ( abii->lang == salviar::lang_vertex_shader ){
-		cgllvm_vs cg;
+		cg_vs cg;
 		if( cg.generate(mod, abii) ){
 			return cg.generated_module();
 		}
 	}
 
 	if( abii->lang == salviar::lang_pixel_shader ){
-		cgllvm_ps cg;
+		cg_ps cg;
 		if( cg.generate(mod, abii) ){
 			return cg.generated_module();
 		}

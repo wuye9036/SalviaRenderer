@@ -45,14 +45,14 @@ struct builtin_types;
 
 BEGIN_NS_SASL_CODEGEN();
 
-class  cgllvm_module;
-class  cgllvm_module_impl;
+class  cg_module;
+class  cg_module_impl;
 struct node_context;
 
-class cgllvm_impl: public sasl::syntax_tree::syntax_tree_visitor
+class cg_impl: public sasl::syntax_tree::syntax_tree_visitor
 {
 public:
-	boost::shared_ptr<cgllvm_module> generated_module() const;
+	boost::shared_ptr<cg_module> generated_module() const;
 	bool generate(
 		boost::shared_ptr<sasl::semantic::module_semantic> const& msem,
 		sasl::semantic::abi_info const* abii
@@ -62,8 +62,8 @@ public:
 	node_context* node_ctxt(sasl::syntax_tree::node const* n, bool create_if_need = false);
 
 protected:
-	cgllvm_impl();
-	~cgllvm_impl();
+	cg_impl();
+	~cg_impl();
 
 	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( variable_expression );
@@ -135,7 +135,7 @@ protected:
 	boost::shared_ptr<sasl::semantic::module_semantic>
 											sem_;
 	boost::shared_ptr<module_context>		ctxt_;
-	boost::shared_ptr<cgllvm_module_impl>	llvm_mod_;
+	boost::shared_ptr<cg_module_impl>	llvm_mod_;
 	sasl::semantic::abi_info const*			abii;
 	boost::shared_ptr<sasl::semantic::caster_t>
 											caster;			///< For type conversation.

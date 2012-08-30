@@ -53,26 +53,26 @@ using boost::format;
 
 using std::vector;
 
-#define SASL_VISITOR_TYPE_NAME cgllvm_impl
+#define SASL_VISITOR_TYPE_NAME cg_impl
 
 BEGIN_NS_SASL_CODEGEN();
 
-llvm::DefaultIRBuilder* cgllvm_impl::builder() const
+llvm::DefaultIRBuilder* cg_impl::builder() const
 {
 	return llvm_mod_->builder();
 }
 
-llvm::LLVMContext& cgllvm_impl::context() const
+llvm::LLVMContext& cg_impl::context() const
 {
 	return llvm_mod_->llvm_context();
 }
 
-llvm::Module* cgllvm_impl::module() const
+llvm::Module* cg_impl::module() const
 {
 	return llvm_mod_->llvm_module();
 }
 
-node_context* cgllvm_impl::node_ctxt( node const* n, bool create_if_need /*= false */ )
+node_context* cg_impl::node_ctxt( node const* n, bool create_if_need /*= false */ )
 {
 	if(!create_if_need)
 	{
@@ -84,12 +84,12 @@ node_context* cgllvm_impl::node_ctxt( node const* n, bool create_if_need /*= fal
 	}
 }
 
-shared_ptr<cgllvm_module> cgllvm_impl::generated_module() const
+shared_ptr<cg_module> cg_impl::generated_module() const
 {
 	return llvm_mod_;
 }
 
-bool cgllvm_impl::generate( shared_ptr<module_semantic> const& mod, abi_info const* abii )
+bool cg_impl::generate( shared_ptr<module_semantic> const& mod, abi_info const* abii )
 {
 	sem_ = mod;
 	this->abii = abii;
@@ -104,7 +104,7 @@ bool cgllvm_impl::generate( shared_ptr<module_semantic> const& mod, abi_info con
 	return false;
 }
 
-cgllvm_impl::~cgllvm_impl()
+cg_impl::~cg_impl()
 {
 	if( service_ )
 	{
@@ -115,26 +115,26 @@ cgllvm_impl::~cgllvm_impl()
 	// if( target_data ){ delete target_data; }
 }
 
-symbol* cgllvm_impl::find_symbol(std::string const& str)
+symbol* cg_impl::find_symbol(std::string const& str)
 {
 	return current_symbol_->find(str);
 }  
 
-cg_function* cgllvm_impl::get_function( std::string const& name ) const
+cg_function* cg_impl::get_function( std::string const& name ) const
 {
 	symbol* callee_sym = sem_->root_symbol()->find_overloads(name)[0];
-	node_context* callee_ctxt = const_cast<cgllvm_impl*>(this)->node_ctxt( callee_sym->associated_node() );
+	node_context* callee_ctxt = const_cast<cg_impl*>(this)->node_ctxt( callee_sym->associated_node() );
 	return callee_ctxt->function_scope;
 }
 
-cgllvm_impl::cgllvm_impl()
+cg_impl::cg_impl()
 	: abii(NULL), target_data(NULL), service_(NULL)
 	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(NULL)
 	, parent_struct_(NULL), block_(NULL), current_symbol_(NULL), variable_to_initialize_(NULL)
 {
 }
 
-void cgllvm_impl::visit_child( sasl::syntax_tree::node* child )
+void cg_impl::visit_child( sasl::syntax_tree::node* child )
 {
 	child->accept(this, NULL);
 }
@@ -537,7 +537,7 @@ SASL_VISIT_DEF( program )
 
 	// Create module.
 	assert( !llvm_mod_ );
-	llvm_mod_.reset( new cgllvm_module_impl() );
+	llvm_mod_.reset( new cg_module_impl() );
 	ctxt_ = module_context::create();
 
 	// Initialization.
@@ -562,7 +562,7 @@ SASL_VISIT_DEF( program )
 			static_cast<get_semantic_mem_fn>(&module_semantic::get_semantic),
 			sem_.get(), _1 );
 
-	caster = create_cgllvm_caster( get_context, get_semantic, get_proto, service() );
+	caster = create_cg_caster( get_context, get_semantic, get_proto, service() );
 	add_builtin_casts( caster, sem_->pety() );
 	
 	process_intrinsics(v, NULL);

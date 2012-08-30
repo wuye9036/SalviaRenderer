@@ -28,7 +28,7 @@ namespace sasl
 	}
 	namespace codegen
 	{
-		class cgllvm_module;
+		class cg_module;
 		class jit_engine;
 	}
 	namespace syntax_tree
@@ -67,7 +67,7 @@ public:
 	virtual void set_include_handler( include_handler_fn inc_handler ) = 0;
 
 	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const		= 0;
-	virtual boost::shared_ptr<sasl::codegen::cgllvm_module>	module() const= 0;
+	virtual boost::shared_ptr<sasl::codegen::cg_module>	module() const= 0;
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const		= 0;
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const	= 0;
 

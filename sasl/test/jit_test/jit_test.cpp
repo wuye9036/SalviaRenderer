@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-using sasl::codegen::cgllvm_module;
+using sasl::codegen::cg_module;
 using std::fstream;
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -86,7 +86,7 @@ void jit_fixture::init( string const& file_name, string const& options )
 
 	root_sym = drv->module_sem()->root_symbol();
 
-	shared_ptr<cgllvm_module> llvm_mod = shared_polymorphic_cast<cgllvm_module>( drv->module() );
+	shared_ptr<cg_module> llvm_mod = shared_polymorphic_cast<cg_module>( drv->module() );
 	fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
 	llvm_mod->dump_ir( dump_file );
 	dump_file.close();
