@@ -168,20 +168,13 @@ def install_prebuild_binaries( proj ):
 def clean_all():
 	pass
 
-if __name__ == "__main__":
+def build(proj_props):
 	log_f = open("build.log", "w")
 	atexit.register(close_log)
 	
-	if copy_newer( "build_conf.tmpl", "proj.py" ):
-		print( "Project file was generated.\nPlease edit proj.py and run build_all.py again." )
-		os.system('pause')
-		sys.exit(1)
-
-	# Load Project
-	prj_props = __import__( "proj" )
-	proj = project( prj_props )
+	proj = project(proj_props)
 	proj.print_props()
-
+	
 	# Support win32 only.
 	if proj.current_os() != systems.win32:
 		print("ERROR: Boost build doesn't support non-win32 for now.")
@@ -209,6 +202,16 @@ if __name__ == "__main__":
 	make_salvia( proj )
 
 	install_prebuild_binaries( proj )
+	
+if __name__ == "__main__":
+	if copy_newer( "build_conf.tmpl", "proj.py" ):
+		print( "Project file was generated.\nPlease edit proj.py and run build_all.py again." )
+		os.system('pause')
+		sys.exit(1)
+
+	# Load Project
+	prj_props = __import__( "proj" )
+	build(prj_props)
 	
 	# print( 'Build done.')
 	os.system("pause")
