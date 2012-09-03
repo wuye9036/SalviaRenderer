@@ -95,6 +95,15 @@ public:
 	virtual void	link_symbol(sasl::syntax_tree::node*, symbol*) = 0;
 };
 
+namespace lvalue_or_rvalue
+{
+	enum id
+	{
+		lvalue,
+		rvalue
+	};
+}
+
 class node_semantic
 {
 public:
@@ -204,40 +213,41 @@ public:
 	void has_loop(bool v) { has_loop_ = v; }
 
 private:
-	sasl::syntax_tree::node* assoc_node_;
-	module_semantic*	owner_;
-	symbol*				assoc_symbol_;
+	sasl::syntax_tree::node*	assoc_node_;
+	module_semantic*			owner_;
+	symbol*						assoc_symbol_;
 	
 	// Type
-	sasl::syntax_tree::tynode*	
-			proto_type_;
-	int 	tid_;
+	sasl::syntax_tree::tynode*	proto_type_;
+	int 						tid_;
 	
 	// Constant
-	int64_t			signed_constant_;
-	uint64_t		unsigned_constant_;
-	std::string*	string_constant_;
-	double			double_constant_;
+	int64_t						signed_constant_;
+	uint64_t					unsigned_constant_;
+	std::string*				string_constant_;
+	double						double_constant_;
 	
 	// Expression and variable
-	salviar::semantic_value* semantic_value_;
-	int		member_index_;
-	int32_t	swizzle_code_;
-	bool	is_reference_;
-	bool	is_function_pointer_;
+	salviar::semantic_value*	semantic_value_;
+	int							member_index_;
+	int32_t						swizzle_code_;
+	bool						is_reference_;
+	bool						is_function_pointer_;
+	bool						modified_;
+	lvalue_or_rvalue::id		lrv_;					
 	
 	// Function and intrinsic
-	std::string* function_name_;
-	symbol*	overloaded_function_;
-	bool	is_intrinsic_;
-	bool	is_invoked_;
-	bool	msc_compatible_;
-	bool	is_external_;
-	bool	partial_execution_;
-	bool	is_constructor_;
+	std::string*				function_name_;
+	symbol*						overloaded_function_;
+	bool						is_intrinsic_;
+	bool						is_invoked_;
+	bool						msc_compatible_;
+	bool						is_external_;
+	bool						partial_execution_;
+	bool						is_constructor_;
 	
 	// Statement
-	labeled_statement_array* labeled_statements_;
+	labeled_statement_array*	labeled_statements_;
 	//sasl::syntax_tree::node* parent_block_;
 	bool	has_loop_;
 };
