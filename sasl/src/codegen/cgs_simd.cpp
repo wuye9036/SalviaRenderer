@@ -102,7 +102,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 
 			if( mask->getType()->isVectorTy() )
 			{
-				// TODO Just fix for making ps_for_loop works. Expand vector select instruction manually.
+				// TODO: Just fix for making ps_for_loop works. Expand vector select instruction manually.
 				Value* selected = UndefValue::get( src->getType() );
 				for(unsigned i = 0; i < mask->getType()->getVectorNumElements(); ++i)
 				{
@@ -566,7 +566,7 @@ void cgs_simd::while_body_end() { save_next_iteration_exec_mask(); }
 
 void cgs_simd::enter_loop()
 {
-	// TODO
+	// TODO:
 	//  store <16 x i1>, <16 x i1>* var is crashed by LLVM bug.
 	// We ext to i8 array and store.
 	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8, abis::package), NULL, ".for.mask.tmpvar" ) );

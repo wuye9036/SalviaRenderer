@@ -164,7 +164,7 @@ bool abi_analyser::auto_entry( shared_ptr<module_semantic> const& mod, salviar::
 	BOOST_FOREACH( symbol* fnsym, mod->functions() ){
 		if( entry(mod, fnsym, lang) ){
 			if( candidate ){
-				// TODO More than one matched. conflict error.
+				// TODO: More than one matched. conflict error.
 				reset(lang);
 				return false;
 			}
@@ -258,7 +258,7 @@ bool abi_analyser::update( salviar::languages lang ){
 				}
 				else
 				{
-					//TODO It an semantic error need to be reported.
+					//TODO: It an semantic error need to be reported.
 					return false;
 				}
 			}
@@ -287,9 +287,9 @@ bool abi_analyser::add_semantic(
 	abi_info* ai = abii(lang);
 	assert( ai );
 	node_semantic* pssi = mods[lang]->get_semantic( v.get() );
-	assert(pssi); // TODO Here are semantic analysis error.
+	assert(pssi); // TODO: Here are semantic analysis error.
 	tynode* ptspec = pssi->ty_proto();
-	assert(ptspec); // TODO Here are semantic analysis error.
+	assert(ptspec); // TODO: Here are semantic analysis error.
 
 	salviar::semantic_value const& node_sem = pssi->semantic_value_ref();
 
@@ -317,7 +317,7 @@ bool abi_analyser::add_semantic(
 			return false;
 		}
 
-		// TODO do not support nested aggregated variable. 
+		// TODO: do not support nested aggregated variable. 
 		struct_type* pstructspec = dynamic_cast<struct_type*>( ptspec );
 		assert( pstructspec );
 		BOOST_FOREACH( shared_ptr<declaration> const& decl, pstructspec->decls )

@@ -13,7 +13,7 @@ BEGIN_NS_SALVIAR();
 enum input_classifications{
 	input_per_vertex
 
-	// TODO
+	// TODO:
 	// input_per_instance
 };
 

@@ -67,7 +67,7 @@ void vertex_shader_unit::execute( vs_output& out )
 	invoke(p, psi, pbi, pso, pbo );
 
 	// Copy output attributes to vs_output.
-	// TODO Semantic will be mapped.
+	// TODO: Semantic will be mapped.
 	shader_abi const* abii = code->abii();
 	vector<sv_layout*> infos = abii->layouts( su_buffer_out );
 
@@ -130,7 +130,7 @@ vertex_shader_unit::~vertex_shader_unit()
 }
 
 uint32_t vertex_shader_unit::output_attributes_count() const{
-	// TODO Need to be optimized.
+	// TODO: Need to be optimized.
 	shader_abi const* abii = code->abii();
 	vector<sv_layout*> infos = abii->layouts( su_buffer_out );
 

@@ -86,7 +86,7 @@ void options_io::fill_desc( po::options_description& desc )
 void options_io::filterate( po::variables_map const & vm )
 {
 	if( !vm.count("out") ){
-		// TODO Guess output from input.
+		// TODO: Guess output from input.
 	}
 
 	if( !vm.count("export-as") ){

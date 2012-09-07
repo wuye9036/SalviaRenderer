@@ -470,7 +470,7 @@ SASL_VISIT_DEF( declarator ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	// local or member.
-	// TODO TBD: Support member function and nested structure ?
+	// TODO: TBD - Support member function and nested structure ?
 	if( service()->in_function() ){
 		visit_local_declarator(v, NULL);
 	} else if(parent_struct_){

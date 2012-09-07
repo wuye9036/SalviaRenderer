@@ -75,7 +75,7 @@ public:
 			}
 		}
 	}
-	// TODO if dest == src, maybe some bad thing happen ...
+	// TODO: if dest == src, maybe some bad thing happen ...
 	void int2int(node* dest, node* src){
 		node_context* dest_ctxt = get_context(dest);
 		node_context* src_ctxt = get_context(src);

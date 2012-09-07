@@ -186,7 +186,7 @@ SASL_VISIT_DEF( member_expression ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child(v.expr);
-	node_context* agg_ctxt = node_ctxt( v.expr );
+	node_context* agg_ctxt = node_ctxt(v.expr);
 	assert(agg_ctxt);
 	
 	// Aggregated value
@@ -213,7 +213,10 @@ SASL_VISIT_DEF( member_expression ){
 
 			salviar::semantic_value const& sem = par_mem_ssi->semantic_value_ref();
 			sv_layout* psvl = abii->input_sv_layout( sem );
-			layout_to_sc(ctxt, psvl, false);
+			layout_to_node_context(
+				ctxt, psvl,
+				false, sem_->is_modified( tisi->associated_symbol() )
+				);
 		} else {
 			// If it is not semantic mode, use general code
 			node_context* mem_ctxt = node_ctxt( mem_sym->associated_node(), true );
@@ -236,7 +239,7 @@ SASL_VISIT_DEF( variable_expression ){
 	node_context* varctxt = node_ctxt( sym->associated_node() );
 	node_context* ctxt = node_ctxt(v, true);
 	if( var_si ){
-		// TODO global only available in entry function.
+		// TODO: global only available in entry function.
 		assert( is_entry( service()->fn().fn ) );
 		ctxt->node_value = varctxt->node_value;
 		return;
@@ -332,14 +335,14 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 
 SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 	EFLIB_UNREF_DECLARATOR(data);
-	
+
 	service()->new_block( ".init.vargs", true );
-
 	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
-		visit_child( par->param_type );
+		visit_child(par->param_type);
 		node_semantic* par_ssi = sem_->get_semantic(par);
+		symbol* par_sym = sem_->get_symbol(par.get());
 
-		node_context* pctxt = node_ctxt( par, true );
+		node_context* pctxt = node_ctxt(par, true);
 
 		// Create local variable for 'virtual argument' and 'virtual result'.
 		if( par_ssi->ty_proto()->is_builtin() ){
@@ -348,12 +351,16 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			// Get Value from semantic.
 			// Store value to local variable.
 			salviar::semantic_value const& par_sem = par_ssi->semantic_value_ref();
-			assert( par_sem != salviar::sv_none );
-			sv_layout* psi = abii->input_sv_layout( par_sem );
+			assert( par_sem != salviar::sv_none);
+			sv_layout* psi = abii->input_sv_layout(par_sem);
 
 			builtin_types hint = par_ssi->ty_proto()->tycode;
-			pctxt->node_value = service()->create_variable( hint, abis::c, par->name->str );
-			layout_to_sc(pctxt, psi, true);
+			pctxt->node_value = service()->create_variable(hint, abis::c, par->name->str);
+			layout_to_node_context(
+				pctxt, psi, 
+				true,						/*store if value existed*/ 
+				sem_->is_modified(par_sym)	/*copy from input*/
+				);
 		} else {
 			// Virtual args for aggregated argument
 			pctxt->is_semantic_mode = true;
@@ -373,7 +380,10 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 			svl = abii->input_sv_layout( pssi->semantic_value_ref() );
 		}
 
-		layout_to_sc(node_ctxt(gsym->associated_node(), true), svl, false);
+		layout_to_node_context(
+			node_ctxt(gsym->associated_node(), true), svl,
+			false, sem_->is_modified(gsym)
+			);
 
 		//if (v.init){
 		//	EFLIB_ASSERT_UNIMPLEMENTED();
@@ -394,7 +404,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
 			sv_layout* ret_si = abii->input_sv_layout( ret_ssi->semantic_value_ref() );
 			assert( ret_si );
-			layout_to_value(ret_si).store( ret_value );
+			layout_to_value(ret_si, false).store(ret_value);
 		} else {
 			shared_ptr<struct_type> ret_struct = service()->fn().fnty->retval_type->as_handle<struct_type>();
 			size_t member_index = 0;
@@ -405,7 +415,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 						node_semantic* decl_ssi = sem_->get_semantic(decl);
 						sv_layout* decl_si = abii->output_sv_layout( decl_ssi->semantic_value_ref() );
 						assert( decl_si );
-						layout_to_value(decl_si).store( service()->emit_extract_val(ret_value, (int)member_index) );
+						layout_to_value(decl_si, false).store( service()->emit_extract_val(ret_value, (int)member_index) );
 						++member_index;
 					}
 				}
@@ -435,11 +445,11 @@ cg_module_impl* cg_vs::mod_ptr(){
 }
 
 
-cg_value cg_vs::layout_to_value(sv_layout* svl)
+cg_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input)
 {
 	cg_value ret;
 
-	// TODO need to emit_extract_ref
+	// TODO: need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
 		ret = service()->emit_extract_val( param_values[svl->usage], svl->physical_index );
 		ret = ret.as_ref();
@@ -453,17 +463,20 @@ cg_value cg_vs::layout_to_value(sv_layout* svl)
 	return ret;
 }
 
-void cg_vs::layout_to_sc(node_context* psc, salviar::sv_layout* svl, bool store_to_existed_value)
+void cg_vs::layout_to_node_context(
+	node_context* psc, salviar::sv_layout* svl,
+	bool store_to_existed_value, bool copy_from_input
+	)
 {
 	builtin_types bt = to_builtin_types(svl->value_type);
 
 	cg_value ret;
-	// TODO need to emit_extract_ref
+	// TODO: need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
-		ret = service()->emit_extract_val( param_values[svl->usage], svl->physical_index );
+		ret = service()->emit_extract_val(param_values[svl->usage], svl->physical_index);
 		ret = ret.as_ref();
 	} else {
-		ret = service()->emit_extract_ref( param_values[svl->usage], svl->physical_index );
+		ret = service()->emit_extract_ref(param_values[svl->usage], svl->physical_index);
 	}
 
 	if(svl->internal_type == -1)
@@ -476,12 +489,23 @@ void cg_vs::layout_to_sc(node_context* psc, salviar::sv_layout* svl, bool store_
 		ret.ty(psc->ty);
 	}
 
+
 	if( store_to_existed_value && psc->node_value.storable() )
 	{
 		psc->node_value.store(ret);
 	}
 	else
 	{
+		if(copy_from_input)
+		{
+			// TODO: only support builtin type copy.
+			//		Need to support array copy later.
+			assert( ret.hint() != builtin_types::none );
+			cg_value copied_var = service()->create_variable(ret.hint(), ret.abi(), ".arg.copy");
+			copied_var.store(ret);
+			ret = copied_var;
+		}
+
 		psc->node_value = ret;
 	}
 }

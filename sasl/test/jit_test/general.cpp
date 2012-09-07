@@ -763,7 +763,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -2005,7 +2005,7 @@ BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 int do_arith_assign( int v0, int v1 )
 {

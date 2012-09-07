@@ -85,7 +85,7 @@ void cg_jit_engine::build(){
 
 	// Add Attrs
 	vector<string> attrs;
-	if( cpu_features( cpu_sse2 ) ){
+	if( support_feature(cpu_sse2) ){
 		attrs.push_back("+sse");
 		attrs.push_back("+sse2");
 	}

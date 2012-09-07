@@ -72,8 +72,10 @@ private:
 
 	cg_module_impl* mod_ptr();
 
-	cg_value layout_to_value(salviar::sv_layout* si);
-	void layout_to_sc(node_context* psc, salviar::sv_layout* si, bool store_to_existed_value);
+	cg_value layout_to_value(salviar::sv_layout* si, bool copy_from_input);
+	void layout_to_node_context(
+		node_context* psc, salviar::sv_layout* si,
+		bool store_to_existed_value, bool copy_from_input);
 
 	void create_entry_params();
 	void add_entry_param_type( salviar::sv_usage st, std::vector< llvm::Type* >& par_types );

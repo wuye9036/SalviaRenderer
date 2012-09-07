@@ -192,7 +192,7 @@ SASL_VISIT_DEF( member_expression ){
 }
 
 SASL_VISIT_DEF( variable_expression ){
-	// TODO Referenced symbol must be evaluated in semantic analysis stages.
+	// TODO: Referenced symbol must be evaluated in semantic analysis stages.
 	symbol* sym = find_symbol(v.var_name->str);
 	assert(sym);
 	
@@ -203,7 +203,7 @@ SASL_VISIT_DEF( variable_expression ){
 	node_context* ctxt = node_ctxt(v, true);
 
 	if( var_si ){
-		// TODO global only available in entry function.
+		// TODO: global only available in entry function.
 		assert( service()->fn().fn == entry_fn );
 		ctxt->node_value = varctxt->node_value;
 		return;
