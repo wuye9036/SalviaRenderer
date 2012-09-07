@@ -195,6 +195,8 @@ class project:
 		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
 	def salvia_build(self):
 		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
+	def salvia_lib(self):
+		return os.path.join( self.install_lib(), self.target_modifier(['platform']), self.target_modifier(['config']) )
 	def salvia_bin(self):
 		return os.path.join( self.install_bin(), self.target_modifier(['platform']), self.target_modifier(['config']) )
 		

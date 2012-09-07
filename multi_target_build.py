@@ -8,12 +8,12 @@ class build_properties:
 if __name__ == "__main__":
 	props = build_properties( {
 			'boost_root' 	: 'D:/Programming/boost_1_48_0',
-			'build_root' 	: '.\\build',
-			'install_root'	: './',
+			'build_root' 	: './salvia_build',
+			'install_root'	: './salvia_install',
 			'arch'			: 'x86',
 			'toolset'		: 'msvc-10.0',
 			'config'		: 'Debug',
 			'cmake'			: 'cmake'
 		} )
-	build_all.build_all(props)
+	build_all.build_all(props, True)
 	pass

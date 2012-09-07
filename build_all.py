@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python
 #-*- coding:utf-8 -#-
 
-import os, sys, re, atexit
+import os, sys, re, atexit, getopt
 from functools	import *
 
 from blibs			import *
@@ -9,6 +9,10 @@ from blibs.copy		import *
 from blibs.env		import *
 from blibs.util		import *
 from blibs.project	import *
+
+def guarded_rmtree(path):
+	if os.path.isdir(path):
+		shutil.rmtree(path)
 
 log_f = None
 def close_log():
@@ -33,7 +37,22 @@ def make_bjam( prj ):
 	os.chdir( old_dir )
 	return True
 
-def make_boost( proj ):
+def clean_boost(proj):
+	src = proj.boost_root()
+	stage = proj.boost_stage()
+
+	os.chdir(src)
+	if proj.current_os() == systems.win32:
+		boost_cmd = "bjam --clean"
+		print( 'Executing: %s' % boost_cmd )
+		os.system(boost_cmd)
+	else:
+		return False
+
+	os.chdir( proj.source_root() )
+	guarded_rmtree( proj.boost_stage() )
+
+def make_boost(proj):
 	src = proj.boost_root()
 	stage = proj.boost_stage()
 
@@ -72,7 +91,11 @@ def make_boost( proj ):
 	os.chdir( proj.source_root() )
 	return True
 
-def config_llvm( proj ):
+def clean_llvm(proj):
+	guarded_rmtree( proj.llvm_build() )
+	guarded_rmtree( proj.llvm_install() )
+	
+def config_llvm(proj):
 	# Add definitions here
 	defs = {}
 	defs["LLVM_BOOST_DIR"] = ("PATH", proj.boost_root())
@@ -88,7 +111,7 @@ def config_llvm( proj ):
 	llvm_cmd.execute()
 	pass
 	
-def make_llvm( proj ):
+def make_llvm(proj):
 	#Write command to build.bat
 	cmd = batch_command( proj.llvm_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
@@ -99,7 +122,16 @@ def make_llvm( proj ):
 	cmd.execute()
 	pass
 
-def make_freetype( proj ):
+def clean_freetype(proj):
+	guarded_rmtree( proj.freetype_build() )
+	objs_root = os.path.join(proj.freetype_root(), "objs")
+	for dir in os.listdir(objs_root):
+		full_path = os.path.join(objs_root, dir)
+		if os.path.isdir(full_path):
+			guarded_rmtree(full_path)
+	guarded_rmtree(proj.freetype_install())
+	
+def make_freetype(proj):
 	cmd = batch_command( proj.freetype_solution() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building FreeType2 %s ...' % proj.config_name() )
@@ -112,7 +144,12 @@ def make_freetype( proj ):
 	cmd.add_command( '@copy /y "%s" "%s"' % ( os.path.join(proj.freetype_build(), "freetype.lib"), os.path.join(proj.freetype_install(), "freetype.lib") ) )
 	cmd.execute()
 
-def config_salvia( proj ):
+def clean_salvia(proj):
+	guarded_rmtree( proj.salvia_build() )
+	guarded_rmtree( proj.salvia_lib() )
+	guarded_rmtree( proj.salvia_bin() )
+	
+def config_salvia(proj):
 	# Add definitions here
 	defs = {}
 	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", proj.boost_root())
@@ -134,14 +171,14 @@ def config_salvia( proj ):
 	salvia_cmd.add_command( 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.source_root()) )
 	salvia_cmd.execute()
 	
-def make_salvia( proj ):
+def make_salvia(proj):
 	cmd = batch_command( proj.salvia_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building SALVIA %s ...' % proj.config_name() )
 	cmd.add_command( '@%s salvia.sln /build %s /project ALL_BUILD' % (proj.maker_name(), proj.config_name()) )
 	cmd.execute()
 
-def install_prebuild_binaries( proj ):
+def install_prebuild_binaries(proj):
 	print( "Installing dependencies ..." )
 	# Copy FreeImage
 	fi_bin_root = os.path.join( proj.source_root(), "3rd_party", "FreeImage", "bin" )
@@ -164,11 +201,19 @@ def install_prebuild_binaries( proj ):
 	
 	for f in need_copy:
 		copy_newer( f, proj.salvia_bin() )
-		
-def clean_all():
+	
+def clean_all(proj):
+	print('clean Boost ...')
+	clean_boost(proj)
+	print('clean FreeType2 ...')
+	clean_freetype(proj)
+	print('clean LLVM ...')
+	clean_llvm(proj)
+	print('clean SALVIA ...')
+	clean_salvia(proj)
 	pass
 
-def build(proj_props):
+def build(proj_props, cleanBuild):
 	log_f = open("build.log", "w")
 	atexit.register(close_log)
 	
@@ -188,22 +233,32 @@ def build(proj_props):
 		print('Boost is checked.')
 
 	print( 'Checking bjam ...' )
-	if not make_bjam( proj ):
+	if not make_bjam(proj):
 		sys.exit(1)
 
+	if cleanBuild:
+		clean_all(proj)
+		
 	print( 'Building boost ...' )
-	if not make_boost( proj ):
+	if not make_boost(proj):
 		sys.exit(1)
 
-	config_llvm( proj )
-	make_llvm( proj )
+	config_llvm(proj)
+	make_llvm(proj)
 	make_freetype(proj)
-	config_salvia( proj )
-	make_salvia( proj )
+	config_salvia(proj)
+	make_salvia(proj)
 
-	install_prebuild_binaries( proj )
+	install_prebuild_binaries(proj)
 	
 if __name__ == "__main__":
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "c", ['clean'])
+	except getopt.GetoptError:
+		print("Option parsed error.")
+		os.system("pause")
+		sys.exit(1)
+
 	if copy_newer( "build_conf.tmpl", "proj.py" ):
 		print( "Project file was generated.\nPlease edit proj.py and run build_all.py again." )
 		os.system('pause')
@@ -211,8 +266,15 @@ if __name__ == "__main__":
 
 	# Load Project
 	prj_props = __import__( "proj" )
-	build(prj_props)
 	
-	# print( 'Build done.')
+	for opt, arg in opts:
+		if opt == "-c" or opt == "--clean":
+			proj = project(prj_props)
+			proj.print_props()
+			clean_all(proj)
+			os.system("pause")
+			sys.exit(0)
+
+	build(prj_props, False)
 	os.system("pause")
 	
