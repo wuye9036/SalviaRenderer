@@ -2,3 +2,4 @@
 @build_all.py --clean
 @echo Building SALVIA ...
 @build_all.py
+@pause

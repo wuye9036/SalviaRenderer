@@ -34,9 +34,10 @@ struct llvm_options
 	}
 };
 
-void initialize_llvm_options()
+llvm_options& initialize_llvm_options()
 {
 	static llvm_options opt;
+	return opt;
 };
 
 BEGIN_NS_SASL_CODEGEN();

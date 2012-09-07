@@ -68,7 +68,7 @@ public:
 	semantic_value( std::string const& name, uint32_t index = 0 ){
 		assert( !name.empty() );
 
-		std::string lower_name = lower_copy( name );
+		std::string lower_name = lower_copy(name);
 
 		if( lower_name == "position" || lower_name == "sv_position" ){
 			sv = sv_position;
@@ -86,7 +86,7 @@ public:
 			sv = sv_blend_weights;
 		} else {
 			sv = sv_customized;
-			this->name = name;
+			this->name = lower_name;
 		}
 		this->index = index;
 	}
@@ -140,8 +140,14 @@ private:
 
 inline size_t hash_value( semantic_value const& v ){
 	size_t seed = v.get_index();
-	boost::hash_combine( seed, static_cast<size_t>( v.get_system_value() ) );
-	boost::hash_combine( seed, v.get_name() );
+	if(v.get_system_value() != sv_customized )
+	{
+		boost::hash_combine( seed, static_cast<size_t>( v.get_system_value() ) );
+	}
+	else
+	{
+		boost::hash_combine( seed, v.get_name() );
+	}
 	return seed;
 }
 

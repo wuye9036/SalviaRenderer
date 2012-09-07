@@ -25,6 +25,7 @@ namespace sasl{
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(builtin_type);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(function_type);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(expression);
 	}
 }
 
@@ -116,6 +117,8 @@ private:
 	static std::string unique_structure_name();
 	void mark_intrin_invoked_recursive(symbol* sym);
 
+	void mark_modified(sasl::syntax_tree::expression* expr);
+
 	void add_cast();
 	void register_builtin_functions();
 	void hold_node( sasl::syntax_tree::node_ptr const& );
@@ -157,7 +160,7 @@ private:
 		int param_scalar_counts, std::vector<sasl::syntax_tree::builtin_type_ptr>& param_tys );
 	void register_builtin_types();
 
-	void empty_caster( sasl::syntax_tree::node*, sasl::syntax_tree::node*);
+	void empty_caster(sasl::syntax_tree::node*, sasl::syntax_tree::node*);
 
 	module_semantic_ptr			module_semantic_;
 	caster_t_ptr				caster;

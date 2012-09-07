@@ -64,6 +64,9 @@ public:
 	virtual std::vector<symbol*> const&	global_vars() const = 0;
 	virtual std::vector<symbol*>&		global_vars() = 0;
 
+	virtual bool						is_modified(symbol*) const = 0;
+	virtual void						modify(symbol*) = 0;
+
 	virtual std::vector<symbol*> const&	functions() const = 0;
 	virtual std::vector<symbol*>&		functions() = 0;
 	
@@ -99,6 +102,7 @@ namespace lvalue_or_rvalue
 {
 	enum id
 	{
+		unknown,
 		lvalue,
 		rvalue
 	};
@@ -149,6 +153,9 @@ public:
 	int32_t	swizzle() const {return swizzle_code_; }
 	bool	is_reference() const { return is_reference_; }
 	bool	is_function_pointer() const { return is_function_pointer_; }
+	lvalue_or_rvalue::id
+			lr_value() const { return lrv_; }
+	bool	is_modified() const { return modified_; }
 
 	// Function and intrinsic
 	std::string const&
@@ -160,7 +167,8 @@ public:
 	bool	is_invoked() const { return is_invoked_; }
 	bool	partial_execution() const { return partial_execution_; }
 	bool	is_constructor() const { return is_constructor_; }
-
+	sasl::syntax_tree::node*
+		referenced_declarator() const { return referenced_declarator_; }
 	// Statement
 	labeled_statement_array const&
 			labeled_statements() const;
@@ -191,11 +199,13 @@ public:
 
 	// Expression and variable
 	void semantic_value(salviar::semantic_value const& v);
-
+	void lr_value(lvalue_or_rvalue::id lrv) { lrv_ = lrv; }
 	void member_index(int v) { member_index_ = v; }
 	void swizzle(int32_t v) { swizzle_code_ = v; }
 	void is_reference(bool v) { is_reference_ = v; }
 	void is_function_pointer(bool v) { is_function_pointer_ = v; }
+	void modify_value() { modified_ = true; }
+	void referenced_declarator(sasl::syntax_tree::node* v) { referenced_declarator_ = v; }
 
 	// Function and intrinsic
 	void function_name(std::string const& v);
@@ -228,6 +238,7 @@ private:
 	double						double_constant_;
 	
 	// Expression and variable
+	sasl::syntax_tree::node*	referenced_declarator_;
 	salviar::semantic_value*	semantic_value_;
 	int							member_index_;
 	int32_t						swizzle_code_;

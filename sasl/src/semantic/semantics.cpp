@@ -12,6 +12,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/pool/pool.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <boost/lexical_cast.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -21,6 +22,7 @@ EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
 using boost::unordered_map;
+using boost::unordered_set;
 using boost::shared_ptr;
 using std::vector;
 using std::string;
@@ -163,6 +165,16 @@ public:
 		return intrinsics_;
 	}
 
+	virtual bool is_modified(symbol* v) const
+	{
+		return modified_symbols_.count(v) > 0;
+	}
+			 
+	virtual void modify(symbol* v)
+	{
+		modified_symbols_.insert(v);
+	}
+
 	virtual node_semantic* get_semantic(node const* v) const
 	{
 		//static int counter = 0;
@@ -288,6 +300,8 @@ private:
 	typedef unordered_map<node const*, symbol*>			symbols_dict;
 	semantics_dict	semantics_dict_;
 	symbols_dict	symbols_dict_;
+
+	unordered_set<symbol const*> modified_symbols_;
 };
 
 string const& node_semantic::function_name() const

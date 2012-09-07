@@ -254,7 +254,8 @@ SASL_VISIT_DEF( binary_expression )
 
 	vector<symbol*> overloads;
 
-	if( is_assign(v.op) || is_arith_assign(v.op) ){
+	bool is_assign_operation = is_assign(v.op) || is_arith_assign(v.op);
+	if(is_assign_operation){
 		overloads = current_symbol->find_assign_overloads(opname, caster.get(), exprs);
 	} else {
 		overloads = current_symbol->find_overloads(opname, caster.get(), exprs);
@@ -275,9 +276,12 @@ SASL_VISIT_DEF( binary_expression )
 	}
 	else
 	{
+		if(is_assign_operation){
+			mark_modified( dup_expr->right_expr.get() );
+		}
 		tid_t result_tid = get_node_semantic( overloads[0]->associated_node() )->tid();
 		generated_sem = create_node_semantic(dup_expr);
-		generated_sem->tid( result_tid );
+		generated_sem->tid(result_tid);
 	}
 }
 
@@ -599,15 +603,17 @@ SASL_VISIT_DEF( variable_expression ){
 
 		if( ty_node )
 		{
-			diags->report( illegal_use_type_as_expr )
+			diags->report(illegal_use_type_as_expr)
 				->token_range( *v.token_begin(), *v.token_end() )
-				->p( name );
+				->p(name);
 		}
 		else if ( decl_node || param_node )
 		{
 			generated_sem = create_node_semantic(dup_vexpr);
 			*generated_sem = *get_node_semantic(node);
 			generated_sem->associated_symbol(vdecl);
+			generated_sem->lr_value(lvalue_or_rvalue::lvalue);
+			generated_sem->referenced_declarator(node);
 		}
 		else
 		{
@@ -2061,6 +2067,41 @@ semantic_analyser::function_register& semantic_analyser::function_register::as_c
 {
 	is_constr = true;
 	return *this;
+}
+
+void semantic_analyser::mark_modified(expression* expr)
+{
+	node_semantic* sem = get_node_semantic(expr);
+	assert(sem);
+
+	if(expr->node_class() == node_ids::variable_expression)
+	{
+		node* decl = sem->referenced_declarator();
+		symbol* decl_sym = get_symbol(decl);
+		module_semantic_->modify(decl_sym);
+		return;
+	}
+
+	if(expr->node_class() == node_ids::member_expression)
+	{
+		member_expression* mem_expr = static_cast<member_expression*>(expr);
+		mark_modified( mem_expr->expr.get() );
+		return;
+	}
+
+	if(expr->node_class() == node_ids::binary_expression)
+	{
+		binary_expression* bin_expr = static_cast<binary_expression*>(expr);
+		if( is_assign(bin_expr->op) || is_arith_assign(bin_expr->op) )
+		{
+			// Marked as modified when sub expression is evaluated.
+			return;
+		}
+
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		return;
+	}
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 END_NS_SASL_SEMANTIC();
