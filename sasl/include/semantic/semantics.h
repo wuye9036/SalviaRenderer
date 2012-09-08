@@ -92,7 +92,7 @@ public:
 	virtual node_semantic* create_semantic(sasl::syntax_tree::node const*) = 0;
 	virtual node_semantic* get_or_create_semantic(sasl::syntax_tree::node const*) = 0;
 	
-	virtual void	hold_node(sasl::syntax_tree::node_ptr const& ) = 0;
+	virtual void	hold_generated_node(sasl::syntax_tree::node_ptr const& ) = 0;
 	virtual symbol* get_symbol(sasl::syntax_tree::node*) const = 0;
 	virtual symbol* alloc_symbol() = 0; ///< Only called by symbol.
 	virtual void	link_symbol(sasl::syntax_tree::node*, symbol*) = 0;
@@ -103,8 +103,9 @@ namespace lvalue_or_rvalue
 	enum id
 	{
 		unknown,
-		lvalue,
-		rvalue
+		lvalue = 1 << 0,
+		rvalue = 1 << 1,
+		lrvalue= lvalue | rvalue
 	};
 }
 

@@ -367,7 +367,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 		}
 	}
 	
-	// Update globals
+	// Get globals address to node context.
 	BOOST_FOREACH( symbol* gsym, sem_->global_vars() ){
 		node_semantic* pssi = sem_->get_semantic( gsym->associated_node() );
 
@@ -397,15 +397,17 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 	if( is_entry( service()->fn().fn ) ){
 		visit_child( v.jump_expr );
 
-		// Copy result.
+		// Copy result to semantic storage.
 		cg_value ret_value = node_ctxt( v.jump_expr )->node_value;
 
 		if( ret_value.hint() != builtin_types::none ){
+			// Builtin: Copy directly.
 			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
 			sv_layout* ret_si = abii->input_sv_layout( ret_ssi->semantic_value_ref() );
 			assert( ret_si );
 			layout_to_value(ret_si, false).store(ret_value);
 		} else {
+			// Struct: Copy member-by-member.
 			shared_ptr<struct_type> ret_struct = service()->fn().fnty->retval_type->as_handle<struct_type>();
 			size_t member_index = 0;
 			BOOST_FOREACH( shared_ptr<declaration> const& child, ret_struct->decls ){

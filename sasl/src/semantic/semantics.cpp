@@ -249,7 +249,7 @@ public:
 		sym->associated_node(v);
 	}
 
-	void hold_node(sasl::syntax_tree::node_ptr const& v)
+	void hold_generated_node(sasl::syntax_tree::node_ptr const& v)
 	{
 		extra_nodes_.push_back(v);
 	}

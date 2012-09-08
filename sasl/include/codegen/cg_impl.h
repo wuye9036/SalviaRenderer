@@ -127,20 +127,20 @@ protected:
 	
 protected:
 	virtual cg_service*		service() const = 0;
-	virtual abis::id			local_abi( bool c_compatible ) const = 0;
+	virtual abis::id		local_abi( bool c_compatible ) const = 0;
 	sasl::semantic::symbol* find_symbol(std::string const&);
-	cg_function*				get_function( std::string const& name ) const;
+	cg_function*			get_function( std::string const& name ) const;
 
 	// Store global informations
 	boost::shared_ptr<sasl::semantic::module_semantic>
-											sem_;
-	boost::shared_ptr<module_context>		ctxt_;
+										sem_;
+	boost::shared_ptr<module_context>	ctxt_;
 	boost::shared_ptr<cg_module_impl>	llvm_mod_;
-	sasl::semantic::abi_info const*			abii;
+	sasl::semantic::abi_info const*		abii;
 	boost::shared_ptr<sasl::semantic::caster_t>
-											caster;			///< For type conversation.
-	llvm::TargetData const *				target_data;
-	cg_service*								service_;
+										caster;		///< For type conversation.
+	llvm::TargetData const *			target_data;
+	cg_service*							service_;
 
 	// Status
 	bool				semantic_mode_;

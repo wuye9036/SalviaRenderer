@@ -167,7 +167,8 @@ SASL_VISIT_DEF( cond_expression ){
 		= emit_short_cond(v.cond_expr, v.yes_expr, v.no_expr);
 }
 
-SASL_VISIT_DEF( unary_expression ){
+SASL_VISIT_DEF(unary_expression)
+{
 	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child(v.expr);

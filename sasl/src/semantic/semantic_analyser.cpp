@@ -187,7 +187,7 @@ SASL_VISIT_DEF( unary_expression ){
 	assert(inner_tisi);
 
 	if( v.op == operators::prefix_incr || v.op == operators::postfix_incr || v.op == operators::prefix_decr || v.op == operators::postfix_decr ){
-		if( !is_integer( inner_tisi->ty_proto()->tycode ) ){
+		if( !is_integer(inner_tisi->ty_proto()->tycode) ){
 			// REPORT ERROR
 			EFLIB_ASSERT_UNIMPLEMENTED();
 			return;
@@ -276,6 +276,22 @@ SASL_VISIT_DEF( binary_expression )
 	}
 	else
 	{
+		// Verify L-Value And R-Value
+		assert(left_expr_sem ->lr_value() != lvalue_or_rvalue::unknown);
+		assert(right_expr_sem->lr_value() != lvalue_or_rvalue::unknown);
+
+		if(left_expr_sem ->lr_value() != lvalue_or_rvalue::rvalue)
+		{
+			// TODO: Try to report error.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+
+		if(right_expr_sem->lr_value() != lvalue_or_rvalue::rvalue)
+		{
+			// TODO: Try to report error.
+			EFLIB_ASSERT_UNIMPLEMENTED();
+		}
+
 		if(is_assign_operation){
 			mark_modified( dup_expr->right_expr.get() );
 		}
@@ -1193,7 +1209,7 @@ SASL_VISIT_DEF( program ){
 	SYMBOL_SCOPE( module_semantic_->root_symbol() );
 	
 	register_builtin_types();
-	add_cast();
+	initialize_casts();
 	caster->set_function_get_tynode( boost::bind( &pety_t::get_proto, module_semantic_->pety(), _1) );
 	register_builtin_functions();
 
@@ -1237,7 +1253,7 @@ void add_svm_casters(
 	}
 }
 
-void semantic_analyser::add_cast(){
+void semantic_analyser::initialize_casts(){
 	// register default type converter
 	pety_t* pety = module_semantic_->pety();
 
@@ -1401,6 +1417,62 @@ void semantic_analyser::add_cast(){
 		caster->add_cast( caster_t::eql, bt_tid, v1bt_tid, default_conv );
 		caster->add_cast( caster_t::eql, v1bt_tid, bt_tid, default_conv );
 	}
+}
+
+void semantic_analyser::initialize_operator_parameter_lrvs()
+{
+	using lvalue_or_rvalue::lvalue;
+	using lvalue_or_rvalue::rvalue;
+
+	// Binary operators
+	operator_parameter_lrvs_.insert( make_pair( operators::add, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::sub, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::mul, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::div, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::mod, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+											    
+	operator_parameter_lrvs_.insert( make_pair( operators::bit_and, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::bit_or , parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::bit_xor, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+											    
+	operator_parameter_lrvs_.insert( make_pair( operators::logic_and, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::logic_or , parameter_lrvs(rvalue, rvalue, rvalue) ) );
+											    
+	operator_parameter_lrvs_.insert( make_pair( operators::left_shift , parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::right_shift, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+										    
+	operator_parameter_lrvs_.insert( make_pair( operators::less			, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::less_equal	, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::equal		, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::greater_equal, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::greater		, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::not_equal	, parameter_lrvs(rvalue, rvalue, rvalue) ) );
+
+	// Assigns
+	operator_parameter_lrvs_.insert( make_pair( operators::assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+
+	operator_parameter_lrvs_.insert( make_pair( operators::add_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::sub_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::mul_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::div_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::mod_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+
+	operator_parameter_lrvs_.insert( make_pair( operators::bit_and_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::bit_or_assign , parameter_lrvs(lvalue, rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::bit_xor_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+										    
+	operator_parameter_lrvs_.insert( make_pair( operators::lshift_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::rshift_assign, parameter_lrvs(lvalue, rvalue, lvalue) ) );
+
+	// Unary operators
+	operator_parameter_lrvs_.insert( make_pair( operators::positive, parameter_lrvs(rvalue, rvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::negative, parameter_lrvs(rvalue, rvalue) ) );
+
+	operator_parameter_lrvs_.insert( make_pair( operators::prefix_incr, parameter_lrvs(lvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::prefix_decr, parameter_lrvs(lvalue, lvalue) ) );
+
+	operator_parameter_lrvs_.insert( make_pair( operators::postfix_incr, parameter_lrvs(rvalue, lvalue) ) );
+	operator_parameter_lrvs_.insert( make_pair( operators::postfix_decr, parameter_lrvs(rvalue, lvalue) ) );
 }
 
 void semantic_analyser::register_builtin_functions(){
@@ -1989,9 +2061,9 @@ symbol* semantic_analyser::get_symbol(node_ptr const& v)
 	return module_semantic_->get_symbol( v.get() );
 }
 
-void semantic_analyser::hold_node(node_ptr const& v)
+void semantic_analyser::hold_generated_node(node_ptr const& v)
 {
-	module_semantic_->hold_node(v);
+	module_semantic_->hold_generated_node(v);
 }
 
 // function_register
@@ -2035,12 +2107,12 @@ void semantic_analyser::function_register::r(
 	semantic_analyser::function_register::typenode_ptr const& ret_type 
 	)
 {
-	assert( ret_type && fn );
+	assert(ret_type && fn);
 
 	fn->retval_type = ret_type;
 
 	shared_ptr<node> new_node = owner.visit_child(fn);
-	owner.hold_node(new_node);
+	owner.hold_generated_node(new_node);
 
 	node_semantic* fn_ssi = owner.get_node_semantic(new_node);
 
@@ -2102,6 +2174,18 @@ void semantic_analyser::mark_modified(expression* expr)
 		return;
 	}
 	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+semantic_analyser::parameter_lrvs::parameter_lrvs(
+	lvalue_or_rvalue::id ret_lrv,
+	lvalue_or_rvalue::id lrv_p0,
+	lvalue_or_rvalue::id lrv_p1,
+	lvalue_or_rvalue::id lrv_p2 )
+	: ret_lrv(ret_lrv)
+{
+	param_lrvs[0] = lrv_p0;
+	param_lrvs[1] = lrv_p1;
+	param_lrvs[2] = lrv_p2;
 }
 
 END_NS_SASL_SEMANTIC();

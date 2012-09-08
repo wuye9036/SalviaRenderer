@@ -3,12 +3,15 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 #include <sasl/include/syntax_tree/visitor.h>
+#include <sasl/include/semantic/semantics.h>
+#include <sasl/enums/operators.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/platform/typedefs.h>
@@ -119,9 +122,11 @@ private:
 
 	void mark_modified(sasl::syntax_tree::expression* expr);
 
-	void add_cast();
+	void initialize_casts();
+	void initialize_operator_parameter_lrvs();
 	void register_builtin_functions();
-	void hold_node( sasl::syntax_tree::node_ptr const& );
+	void hold_generated_node( sasl::syntax_tree::node_ptr const& );
+	void initialize_operator_parameter_to_lrv_lookup_table();
 
 	class function_register{
 	public:
@@ -180,6 +185,20 @@ private:
 	sasl::syntax_tree::node_ptr generated_node;
 	node_semantic*				generated_sem;
 
+	struct parameter_lrvs
+	{
+		parameter_lrvs(
+			lvalue_or_rvalue::id ret_lrv,
+			lvalue_or_rvalue::id lrv_p0 = lvalue_or_rvalue::unknown,
+			lvalue_or_rvalue::id lrv_p1 = lvalue_or_rvalue::unknown,
+			lvalue_or_rvalue::id lrv_p2 = lvalue_or_rvalue::unknown
+			);
+		lvalue_or_rvalue::id ret_lrv;
+		lvalue_or_rvalue::id param_lrvs[3];
+	};
+
+	boost::unordered_map<operators, parameter_lrvs>
+			operator_parameter_lrvs_;
 	bool	is_global_scope;
 	symbol*	current_symbol;
 	int		declaration_tid;
