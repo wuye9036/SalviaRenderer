@@ -365,13 +365,14 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attri
 	return ret;
 }
 
-operators syntax_tree_builder::build_prefix_op( shared_ptr<attribute> attr )
+operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, shared_ptr<token_t>& op_tok)
 {
 	SASL_TYPED_ATTRIBUTE( terminal_attribute, tok_attr, attr );
 
 	assert( tok_attr );
 
-	std::string const& op_str = tok_attr->tok->str;
+	op_tok = tok_attr->tok;
+	std::string const& op_str = op_tok->str;
 	char op_chars[4] = {'\0', '\0', '\0', '\0'};
 	for( size_t i = 0; i < op_str.length(); ++i ){ op_chars[i] = op_str[i]; }
 
@@ -393,10 +394,11 @@ operators syntax_tree_builder::build_prefix_op( shared_ptr<attribute> attr )
 	return operators::none;
 }
 
-operators syntax_tree_builder::build_postfix_op( shared_ptr<attribute> attr )
+operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr, shared_ptr<token_t>& op_tok)
 {
-	SASL_TYPED_ATTRIBUTE( terminal_attribute, tok_attr, attr );
-	switch( tok_attr->tok->str[0] )
+	SASL_TYPED_ATTRIBUTE(terminal_attribute, tok_attr, attr);
+	op_tok = tok_attr->tok;
+	switch(op_tok->str[0])
 	{
 	case '+': // ++
 		return operators::postfix_incr;
@@ -405,7 +407,7 @@ operators syntax_tree_builder::build_postfix_op( shared_ptr<attribute> attr )
 	}
 
 	string assertion("Unsupported operator: ");
-	assertion += tok_attr->tok->str;
+	assertion += op_tok->str;
 	EFLIB_ASSERT_UNIMPLEMENTED0( assertion.c_str() );
 
 	return operators::none;
@@ -426,7 +428,7 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 	// Make expression list and operators list.
 	vector< shared_ptr<expression> > exprs;
 	vector< operators > ops;
-	// vector< shared_ptr<token_t> > op_tokens;
+	vector< shared_ptr<token_t> > op_tokens;
 
 	exprs.push_back( build_rhsexpr( attr->child(0) ) );
 	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, attr->child(1) );
@@ -435,8 +437,9 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 			build_rhsexpr( follow_pair->child(1) )
 			);
 		shared_ptr<attribute> op_attr = follow_pair->child(0);
-		// op_tokens.push_back( op_attr->token_beg );
-		ops.push_back( build_binop(op_attr) );
+		shared_ptr<token_t> op_token;
+		ops.push_back( build_binop(op_attr, op_token) );
+		op_tokens.push_back(op_token);
 	}
 
 	// Build tree
@@ -451,8 +454,8 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 			new_root->left_expr = root;
 			new_root->right_expr = expr;
 			new_root->op = ops.back();
-			// new_root->op_token = ops.back();
-			// op_tokens.pop_back();
+			new_root->op_token = op_tokens.back();
+			op_tokens.pop_back();
 			ops.pop_back();
 			root = new_root;
 		}
@@ -472,7 +475,9 @@ shared_ptr<expression> syntax_tree_builder::build_lcomb_expr( shared_ptr<attribu
 		assert( dynamic_cast<queuer_attribute*>(follow_pair.get()) != NULL );
 		binexpr = create_node<binary_expression>( lexpr->token_begin(), follow_pair->child(1)->token_end() );
 		binexpr->left_expr = lexpr;
-		binexpr->op = build_binop(follow_pair->child(0));
+		shared_ptr<token_t> op_token;
+		binexpr->op = build_binop(follow_pair->child(0), op_token);
+		binexpr->op_token = op_token;
 		binexpr->right_expr = dispatch_lcomb_expr(follow_pair->child(1));
 		lexpr = binexpr;
 	}
@@ -609,7 +614,9 @@ shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<
 
 	shared_ptr<unary_expression> ret = create_node<unary_expression>( attr->token_beg(), attr->token_end() );
 	ret->expr = expr;
-	ret->op = build_prefix_op( op_attr );
+	shared_ptr<token_t> op_token;
+	ret->op = build_prefix_op(op_attr, op_token);
+	ret->op_token = op_token;
 
 	return ret;
 }
@@ -632,7 +639,9 @@ shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute
 			}
 			SASL_CASE_RULE( opinc ){
 				shared_ptr<unary_expression> ret_unary = create_node<unary_expression>( ret->token_begin(), expr_attr->token_end() );
-				ret_unary->op = build_postfix_op(expr_attr);
+				shared_ptr<token_t> op_token;
+				ret_unary->op = build_postfix_op(expr_attr, op_token);
+				ret_unary->op_token = op_token;
 				ret_unary->expr = ret;
 				ret = ret_unary;
 			}
@@ -1139,15 +1148,19 @@ void syntax_tree_builder::build_initdecl(
 	}
 }
 
-operators syntax_tree_builder::build_binop( shared_ptr<attribute> attr ){
-	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, tok_attr, attr );
+operators syntax_tree_builder::build_binop(
+	shared_ptr<attribute> attr,
+	shared_ptr<token_t>& op_tok)
+{
+	// Get terminal attribute of operator from attr or direct child of attr.
+	SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
 	if( !tok_attr ){
 		tok_attr = shared_polymorphic_cast<terminal_attribute>( attr->child(0) );
 	}
 
 	assert( tok_attr );
-
-	std::string const& op_str = tok_attr->tok->str;
+	op_tok = tok_attr->tok;
+	std::string const& op_str = op_tok->str;
 	char op_chars[4] = {'\0', '\0', '\0', '\0'};
 	for( size_t i = 0; i < op_str.length(); ++i ){ op_chars[i] = op_str[i]; }
 

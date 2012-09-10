@@ -131,9 +131,17 @@ public:
 		boost::shared_ptr<tynode> unqual
 		);
 
-	operators build_binop( boost::shared_ptr<sasl::parser::attribute> attr );
-	operators build_prefix_op( boost::shared_ptr<sasl::parser::attribute> attr );
-	operators build_postfix_op( boost::shared_ptr<sasl::parser::attribute> attr );
+	operators build_binop(
+		boost::shared_ptr<sasl::parser::attribute> attr,
+		boost::shared_ptr<token_t>& op_tok );
+
+	operators build_prefix_op(
+		boost::shared_ptr<sasl::parser::attribute> attr,
+		boost::shared_ptr<token_t>& op_tok );
+	
+	operators build_postfix_op(
+		boost::shared_ptr<sasl::parser::attribute> attr,
+		boost::shared_ptr<token_t>& op_tok );
 
 	void build_semantic(
 		boost::shared_ptr<sasl::parser::attribute> const& attr,

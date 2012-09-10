@@ -315,16 +315,16 @@ SASL_VISIT_DEF( call_expression ){
 		{
 			visit_child( v.args[i_arg] );
 
-			node_semantic* arg_tisi = sem_->get_semantic(v.args[i_arg]);
-			node_semantic* par_tisi = sem_->get_semantic(proto->params[i_arg]);
+			node_semantic* arg_sem = sem_->get_semantic(v.args[i_arg]);
+			node_semantic* par_sem = sem_->get_semantic(proto->params[i_arg]);
 			
-			if( par_tisi->tid() != arg_tisi->tid() )
+			if( par_sem->tid() != arg_sem->tid() )
 			{
-				if( !node_ctxt( par_tisi->ty_proto() ) )
+				if( !node_ctxt( par_sem->ty_proto() ) )
 				{
 					visit_child( proto->params[i_arg]->param_type );
 				}
-				caster->cast( par_tisi->ty_proto(), v.args[i_arg].get() );
+				caster->cast( par_sem->ty_proto(), v.args[i_arg].get() );
 			}
 
 			node_context* arg_ctxt = node_ctxt(v.args[i_arg], false);

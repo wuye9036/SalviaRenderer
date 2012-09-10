@@ -188,7 +188,7 @@ private:
 	struct parameter_lrvs
 	{
 		parameter_lrvs(
-			lvalue_or_rvalue::id ret_lrv,
+			lvalue_or_rvalue::id ret_lrv = lvalue_or_rvalue::unknown,
 			lvalue_or_rvalue::id lrv_p0 = lvalue_or_rvalue::unknown,
 			lvalue_or_rvalue::id lrv_p1 = lvalue_or_rvalue::unknown,
 			lvalue_or_rvalue::id lrv_p2 = lvalue_or_rvalue::unknown

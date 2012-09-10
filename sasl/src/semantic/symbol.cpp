@@ -185,6 +185,11 @@ bool symbol::add_function_end(symbol* sym){
 	return true;
 }
 
+void symbol::cancel_function(symbol* /*sym*/)
+{
+	// Do nothing while function is cancelled.
+}
+
 void symbol::remove_child( const string& mangled ){
 	named_children_dict_iterator ret_it = named_children_.find( mangled );
 	if ( ret_it == named_children_.end() ){
@@ -303,10 +308,10 @@ void is_same_or_equiva( module_semantic* msem, node* nd0, node* nd1, bool& same,
 	same = false;
 	equiva = false;
 
-	node_semantic* nd0_tisi = msem->get_semantic(nd0);
-	node_semantic* nd1_tisi = msem->get_semantic(nd1);
+	node_semantic* nd0_sem = msem->get_semantic(nd0);
+	node_semantic* nd1_sem = msem->get_semantic(nd1);
 
-	bool same_tid = ( nd0_tisi->tid() == nd1_tisi->tid() );
+	bool same_tid = ( nd0_sem->tid() == nd1_sem->tid() );
 
 	if( same_tid ){
 		same = true;
@@ -314,8 +319,8 @@ void is_same_or_equiva( module_semantic* msem, node* nd0, node* nd1, bool& same,
 		return;
 	}
 
-	builtin_types nd0_bt = nd0_tisi->ty_proto()->tycode;
-	builtin_types nd1_bt = nd1_tisi->ty_proto()->tycode;
+	builtin_types nd0_bt = nd0_sem->ty_proto()->tycode;
+	builtin_types nd1_bt = nd1_sem->ty_proto()->tycode;
 	equiva = is_equiva(nd0_bt, nd1_bt);
 
 	return;
@@ -369,16 +374,16 @@ symbol::symbol_array symbol::find_overloads_impl(
 
 	// Extract type info of args
 	vector<tid_t> arg_tids;
-	vector<node_semantic*> arg_tisis; 
+	vector<node_semantic*> arg_sems; 
 	BOOST_FOREACH(expression* arg, args)
 	{
-		arg_tisis.push_back( owner_->get_semantic(arg) );
-		if( !arg_tisis.back() )
+		arg_sems.push_back( owner_->get_semantic(arg) );
+		if( !arg_sems.back() )
 		{
 			overloads_.clear();
 			return overloads_;
 		}
-		arg_tids.push_back( arg_tisis.back()->tid() );
+		arg_tids.push_back( arg_sems.back()->tid() );
 	}
 
 	// Find candidates.
@@ -401,10 +406,10 @@ symbol::symbol_array symbol::find_overloads_impl(
 		// try to match all parameters.
 		bool all_parameter_success = true;
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-			node_semantic* arg_tisi = arg_tisis[i_param];
-			node_semantic* par_tisi = owner_->get_semantic(matching_func->params[i_param]);
+			node_semantic* arg_sem = arg_sems[i_param];
+			node_semantic* par_sem = owner_->get_semantic(matching_func->params[i_param]);
 			tid_t arg_type = arg_tids[i_param];
-			tid_t par_type = par_tisi->tid();
+			tid_t par_type = par_sem->tid();
 			if( arg_type == -1 || par_type == -1 ){
 			all_parameter_success = false;
 				break;

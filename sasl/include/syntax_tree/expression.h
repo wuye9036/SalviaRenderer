@@ -72,6 +72,7 @@ struct unary_expression: public expression{
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	boost::shared_ptr<expression> expr;
+	boost::shared_ptr<token_t> op_token;
 	operators op;
 protected:
 	unary_expression( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
@@ -94,6 +95,7 @@ struct binary_expression: public expression {
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
 	operators op;
+	boost::shared_ptr<token_t> op_token;
 	boost::shared_ptr<expression> left_expr;
 	boost::shared_ptr<expression> right_expr;
 protected:

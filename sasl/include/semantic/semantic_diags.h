@@ -97,6 +97,8 @@ extern sasl::common::diag_template case_expr_not_constant;
 extern sasl::common::diag_template illegal_type_for_case_expr;
 extern sasl::common::diag_template not_an_acceptable_operator;
 extern sasl::common::diag_template subscript_not_integral;
+extern sasl::common::diag_template left_operand_must_be_lvalue;
+extern sasl::common::diag_template operator_needs_lvalue;
 
 END_NS_SASL_SEMANTIC();
 

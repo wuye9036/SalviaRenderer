@@ -74,6 +74,7 @@ public:
 	symbol*	add_child(node* child_node);
 	symbol*	add_function_begin(function_type* child_fn );
 	bool	add_function_end(symbol* sym);
+	void	cancel_function(symbol* sym);
 
 	void remove_child(std::string const& mangled);
 	void remove_child(symbol*);

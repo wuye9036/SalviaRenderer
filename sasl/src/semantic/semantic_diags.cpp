@@ -50,6 +50,8 @@ diag_template illegal_type_for_case_expr(dl_error, "'%s': illegal type for case 
 diag_template identifier_not_found(dl_error, "'%s': identifier not found");
 diag_template not_an_acceptable_operator(dl_error, "binary '%s': '%s' is not acceptable to the predefined operator");
 diag_template subscript_not_integral(dl_error, "subscript is not of integral type");
+diag_template left_operand_must_be_lvalue(dl_error, "'%s': left operand must be l-value");
+diag_template operator_needs_lvalue(dl_error, "'%s' needs l-value");
 
 char const* scalar_nick_name( builtin_types btcode )
 {

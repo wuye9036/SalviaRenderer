@@ -272,7 +272,7 @@ public:
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, unary_expression, (op)(expr) );
 
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, cast_expression, (casted_type)(expr) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, binary_expression, (op)(left_expr)(right_expr) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, binary_expression, (op)(op_token)(left_expr)(right_expr) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( expression_list );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, cond_expression, (cond_expr)(yes_expr)(no_expr) );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, index_expression, (expr)(index_expr) );

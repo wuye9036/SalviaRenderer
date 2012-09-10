@@ -58,18 +58,26 @@ bool sasl::parser::parse(
 	sasl::parser::token_seq toks;
 
 	l.begin_incremental();
-	while( !src->eof() ){
-		std::string next_token = src->next();
-		bool tok_result = l.incremental_tokenize( next_token, ctxt, toks );
-		if( !tok_result ){
-			diags->report( sasl::parser::unrecognized_token )
-				->file( ctxt->file_name() )->span( sasl::common::code_span(ctxt->line(), ctxt->column(), 1) )
-				->p(next_token);
-			return false;
+	try
+	{
+		while( !src->eof() ){
+			std::string next_token = src->next();
+			bool tok_result = l.incremental_tokenize( next_token, ctxt, toks );
+			if( !tok_result ){
+				diags->report( sasl::parser::unrecognized_token )
+					->file( ctxt->file_name() )->span( sasl::common::code_span(ctxt->line(), ctxt->column(), 1) )
+					->p(next_token);
+				return false;
+			}
 		}
 	}
+	catch(...)
+	{
+		l.end_incremental( ctxt, toks );
+		return false;
+	}
+	
 	l.end_incremental( ctxt, toks );
-
 	token_iterator it = toks.begin();
 	return !src->failed() && g.prog.parse( it, toks.end()-1, pt_root, diags ).is_succeed();
 }
