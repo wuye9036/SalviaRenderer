@@ -1,3 +1,4 @@
+/*
 float test_no_overloaded_function()
 {
 	return cross(5);
@@ -70,4 +71,20 @@ int test_case_expr_type()
 int test_function_parameter_error( xx )
 {
 	return 0;
+}
+*/
+void test_lvalue_error()
+{
+	int a = 3;
+	int b = 5;
+	int c = 0;
+
+	++++a;
+	a++;
+	++(a+b);
+
+	(a+b) += 5;
+	7 += 3;
+	++(a == 0 ? b : c);
+	(a == 1 ? b : c++)++;
 }

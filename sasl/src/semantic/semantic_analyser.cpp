@@ -116,6 +116,8 @@ semantic_analyser::semantic_analyser()
 {
 	caster.reset( new caster_t() );
 
+	initialize_operator_parameter_lrvs();
+
 	// Initialize global state
 	lang = salviar::lang_none;
 	is_global_scope = true;
@@ -138,8 +140,11 @@ shared_ptr<NodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const& child
 
 	child->accept(this, NULL);
 	
-	shared_ptr<NodeT> ret;
-	if(generated_node) { ret = generated_node->as_handle<NodeT>(); }
+	// Node semantic is looked up by node pointer, 
+	// And Windows 7 used pool based object allocation,
+	// So every node if its semantic is created, it must not be deleted.
+	// We assume that generated node is always holded by its parent.
+	shared_ptr<NodeT> ret = generated_node->as_handle<NodeT>();
 	if(return_sem) { *return_sem = generated_sem; }
 
 	generated_node = old_generated_node;
@@ -182,6 +187,7 @@ SASL_VISIT_DEF( unary_expression ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	shared_ptr<unary_expression> dup_expr = duplicate( v.as_handle() )->as_handle<unary_expression>();
+	generated_node = dup_expr;
 
 	node_semantic* inner_sem = NULL;
 	dup_expr->expr = visit_child(v.expr, &inner_sem);
@@ -197,7 +203,7 @@ SASL_VISIT_DEF( unary_expression ){
 
 	// Verify L-Value and R-Value of operand.
 	parameter_lrvs& operator_lrvs = operator_parameter_lrvs_[v.op];
-	if( (operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) != 0)
+	if( (operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) == 0)
 	{
 		if( (inner_sem->lr_value() & lvalue_or_rvalue::lvalue) == 0)
 		{
@@ -205,10 +211,9 @@ SASL_VISIT_DEF( unary_expression ){
 				->report(operator_needs_lvalue)
 				->token_range( *v.token_begin(), *v.token_end() )
 				->p(v.op_token->str);
+			return;
 		}
 	}
-
-	generated_node = dup_expr;
 
 	generated_sem = create_node_semantic(dup_expr);
 	generated_sem->tid( inner_sem->tid() );
@@ -303,14 +308,14 @@ SASL_VISIT_DEF( binary_expression )
 
 	// rvalue we consider that it is always mactched suceeded.
 	parameter_lrvs& operator_lrvs( operator_parameter_lrvs_[v.op] );
-	if( (operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) != 0)
+	if( (operator_lrvs.param_lrvs[0] & lvalue_or_rvalue::rvalue) == 0)
 	{
 		// TODO: Try to report error.
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
 	// rvalue we consider that it is always mactched suceeded.
-	if( (operator_lrvs.param_lrvs[1] & lvalue_or_rvalue::rvalue) != 0)
+	if( (operator_lrvs.param_lrvs[1] & lvalue_or_rvalue::rvalue) == 0)
 	{
 		if (is_assign_operation)
 		{
@@ -320,6 +325,7 @@ SASL_VISIT_DEF( binary_expression )
 					->report(left_operand_must_be_lvalue)
 					->token_range( *v.token_begin(), *v.token_end() )
 					->p(v.op_token->str);
+				return;
 			}
 		}
 		else
@@ -398,8 +404,8 @@ SASL_VISIT_DEF( cond_expression ){
 	generated_sem = create_node_semantic(dup_expr);
 	generated_sem->tid(expr_tid);
 
-	if( yes_sem->lr_value() == lvalue_or_rvalue::lrvalue
-		&& no_sem->lr_value() == lvalue_or_rvalue::lvalue )
+	if( yes_sem->lr_value() & lvalue_or_rvalue::lvalue == lvalue_or_rvalue::lvalue
+		&& no_sem->lr_value() & lvalue_or_rvalue::lvalue == lvalue_or_rvalue::lvalue )
 	{
 		generated_sem->lr_value(lvalue_or_rvalue::lvalue);
 	}
