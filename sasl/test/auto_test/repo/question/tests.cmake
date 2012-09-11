@@ -21,6 +21,7 @@ set( V1A1_TESTS
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/arithmetic.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/arithmetic.sps"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/function.ss"
+	"${SALVIA_AUTO_TEST_HOME}/v1a1/input_assigned.svs"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/intrinsics.ss"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/intrinsics.svs"
 	"${SALVIA_AUTO_TEST_HOME}/v1a1/intrinsics.sps"

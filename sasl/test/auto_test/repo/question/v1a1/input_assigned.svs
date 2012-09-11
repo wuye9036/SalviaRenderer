@@ -1,0 +1,20 @@
+float x;
+
+struct VSIN{
+	float4 pos: SV_Position;
+};
+
+struct VSOUT{
+	float4 pos: SV_Position;
+};
+
+VSOUT fn( VSIN in ){
+	VSOUT o;
+	
+	x += 0.5f;
+	in.pos.x += x;
+	o.pos = in.pos;
+	o.pos.x += 0.5f;
+	
+	return o;
+}

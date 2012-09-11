@@ -763,7 +763,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -2044,8 +2044,8 @@ BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 	int2x3 lhs( reinterpret_cast<int2x3&>(lhs_arr) );
 	int2x3 rhs( reinterpret_cast<int2x3&>(rhs_arr) );
 
-	//int scalar_ret = test_scalar_arith_assign(-1, 788);
-	//BOOST_CHECK_EQUAL( scalar_ret, do_arith_assign(-1, 788) );
+	int scalar_ret = test_scalar_arith_assign(-1, 788);
+	BOOST_CHECK_EQUAL( scalar_ret, do_arith_assign(-1, 788) );
 
 	int2x3 arith_ret = test_arith_assign(lhs, rhs);
 	int2x3 bit_ret = test_bit_assign(lhs, rhs);
@@ -2191,6 +2191,14 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 		BOOST_CHECK_CLOSE( ref_v[2], bout.pos[2], 0.000001f );
 		BOOST_CHECK_CLOSE( ref_v[3], bout.pos[3], 0.000001f );
 	}
+}
+#endif
+
+#if 1 || ALL_TESTS_ENABLED
+BOOST_FIXTURE_TEST_CASE(input_assigned, jit_fixture)
+{
+	init_vs("./repo/question/v1a1/input_assigned.svs");
+
 }
 #endif
 BOOST_AUTO_TEST_SUITE_END();

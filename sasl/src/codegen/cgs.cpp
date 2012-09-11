@@ -1458,7 +1458,7 @@ void cg_service::merge_swizzle( cg_value const*& root, char indexes[], cg_value 
 {
 	root = &v;
 	vector<uint32_t> masks;
-	while( root->masks() != 0 ){
+	while( root->masks() != 0 && root->parent()->hint() != builtin_types::none ){
 		masks.push_back(root->masks());
 		root = root->parent();
 	}
