@@ -35,10 +35,16 @@ public:
 	{
 		node_context* ret = get_node_context(v);
 		if( ret ){ return ret; }
-		ret = alloc_object<node_context>(contexts_pool_);
+		ret = create_temporary_node_context();
+		context_dict_.insert( make_pair(v, ret) );
+		return ret;
+	}
+	
+	virtual node_context* create_temporary_node_context()
+	{
+		node_context* ret = alloc_object<node_context>(contexts_pool_);
 		new (ret) node_context(this);
 		contexts_.push_back(ret);
-		context_dict_.insert( make_pair(v, ret) );
 		return ret;
 	}
 
@@ -106,10 +112,9 @@ private:
 	node_context_dict		context_dict_;
 	vector<node_context*>	contexts_;
 	vector<cg_type*>		cg_types_;
-	vector<cg_function*>		functions_;
-	cg_caster*			caster_;
+	vector<cg_function*>	functions_;
+	cg_caster*				caster_;
 };
-
 
 shared_ptr<module_context> module_context::create()
 {

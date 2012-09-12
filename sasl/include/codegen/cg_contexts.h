@@ -58,8 +58,10 @@ public:
 
 	virtual node_context*	get_node_context(sasl::syntax_tree::node const*) const = 0;
 	virtual node_context*	get_or_create_node_context(sasl::syntax_tree::node const*) = 0;
+	virtual node_context*	create_temporary_node_context() = 0;
+
 	virtual cg_type*		create_cg_type() = 0;
-	virtual cg_function*		create_cg_function() = 0;
+	virtual cg_function*	create_cg_function() = 0;
 
 	virtual ~module_context(){}
 };
@@ -76,8 +78,8 @@ struct node_context
 	}
 
 	module_context*	owner;
-	cg_function*		function_scope;		///< Function type.
-	cg_value			node_value;			///< Value attached to node.
+	cg_function*	function_scope;		///< Function type.
+	cg_value		node_value;			///< Value attached to node.
 	bool			is_semantic_mode;	///< Expression is a semantic mode. In this mode, the memory get from semantic but not
 	cg_type*		ty;					///< Type attached to node.
 	insert_point_t	label_position;		///< For labeled statement

@@ -410,7 +410,7 @@ protected:
 		cg_value const& samp, cg_value const& coord,
 		externals::id ps_intrin );
 
-	void merge_swizzle( cg_value const*& root, char indexes[], cg_value const& v );
+	bool merge_swizzle( cg_value const*& root, char indexes[], cg_value const& v );
 
 	cg_value inf_from_value(cg_value const& v, bool negative);
 

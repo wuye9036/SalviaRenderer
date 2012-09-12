@@ -73,8 +73,11 @@ private:
 	cg_module_impl* mod_ptr();
 
 	cg_value layout_to_value(salviar::sv_layout* si, bool copy_from_input);
-	void layout_to_node_context(
-		node_context* psc, salviar::sv_layout* si,
+
+	// If ctxt is NULL, the generated value and type will be cached.
+	// Return true if context is fetched from cache.
+	bool layout_to_node_context(
+		node_context* ctxt, salviar::sv_layout* si,
 		bool store_to_existed_value, bool copy_from_input);
 
 	void create_entry_params();
@@ -91,6 +94,9 @@ private:
 	std::vector<builtin_types> entry_param_tys[salviar::storage_usage_count];
 	std::vector< llvm::Type* > entry_params_types[salviar::storage_usage_count];
 	boost::value_initialized<llvm::StructType*> entry_params_structs[salviar::storage_usage_count];
+
+	typedef boost::unordered_map<salviar::semantic_value, node_context*> input_copies_dict;
+	input_copies_dict input_copies_;
 };
 
 END_NS_SASL_CODEGEN();

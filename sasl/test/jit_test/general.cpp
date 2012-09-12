@@ -2199,6 +2199,33 @@ BOOST_FIXTURE_TEST_CASE(input_assigned, jit_fixture)
 {
 	init_vs("./repo/question/v1a1/input_assigned.svs");
 
+	JIT_FUNCTION( void(vec4**, float*, void*, vec4*), fn );
+
+	vec4  pos(0.3f, -0.6f, 2.2f, 8.0f);
+	vec4  out;
+	vec4* sin = &pos;
+	float x = 9.7f;
+
+	float new_x = x;
+	new_x += 0.5f;
+	vec4 new_pos = pos;
+	new_pos[0] += new_x;
+	vec4 new_out = new_pos;
+	new_out[0] += 0.5f;
+
+	fn(&sin, &x, (void*)NULL, &out);
+
+	BOOST_CHECK_EQUAL(pos[0], 0.3f );
+	BOOST_CHECK_EQUAL(pos[1], -0.6f);
+	BOOST_CHECK_EQUAL(pos[2], 2.2f );
+	BOOST_CHECK_EQUAL(pos[3], 8.0f );
+
+	BOOST_CHECK_EQUAL(x, 9.7f);
+
+	BOOST_CHECK_EQUAL(out[0], new_out[0]);
+	BOOST_CHECK_EQUAL(out[1], new_out[1]);
+	BOOST_CHECK_EQUAL(out[2], new_out[2]);
+	BOOST_CHECK_EQUAL(out[3], new_out[3]);
 }
 #endif
 BOOST_AUTO_TEST_SUITE_END();

@@ -625,8 +625,11 @@ cg_value cg_service::emit_insert_val( cg_value const& lhs, cg_value const& idx, 
 
 cg_value cg_service::emit_insert_val( cg_value const& lhs, int index, cg_value const& elem_value )
 {
+	assert(index >= 0);
+
 	Value* agg = lhs.load();
 	Value* new_value = NULL;
+	
 	if( agg->getType()->isStructTy() ){
 		if( lhs.abi() == abis::vectorize || lhs.abi() == abis::package ){
 			EFLIB_ASSERT_UNIMPLEMENTED();
@@ -1454,15 +1457,22 @@ void cg_service::jump_cond( cg_value const& cond_v, insert_point_t const & true_
 	builder().CreateCondBr( cond, true_ip.block, false_ip.block );
 }
 
-void cg_service::merge_swizzle( cg_value const*& root, char indexes[], cg_value const& v )
+bool cg_service::merge_swizzle( cg_value const*& root, char indexes[], cg_value const& v )
 {
+	bool is_swizzle = false;
+
+	// Find root of swizzle.
 	root = &v;
 	vector<uint32_t> masks;
 	while( root->masks() != 0 && root->parent()->hint() != builtin_types::none ){
+		is_swizzle = true;
 		masks.push_back(root->masks());
 		root = root->parent();
 	}
 
+	if(!is_swizzle){ return false; }
+
+	// Merge swizzles
 	for( vector<uint32_t>::reverse_iterator it = masks.rbegin();
 		it != masks.rend(); ++it )
 	{
@@ -1484,6 +1494,8 @@ void cg_service::merge_swizzle( cg_value const*& root, char indexes[], cg_value 
 
 		std::copy(tmp_indexes, tmp_indexes+4, indexes);
 	}
+
+	return true;
 }
 
 cg_value cg_service::create_value_by_scalar( cg_value const& scalar, cg_type* tyinfo, builtin_types hint )

@@ -208,17 +208,15 @@ SASL_VISIT_DEF( member_expression ){
 		assert( mem_sym );
 
 		if( agg_ctxt->is_semantic_mode ){
-			node_semantic* par_mem_ssi = sem_->get_semantic( mem_sym->associated_node() );
-			assert( par_mem_ssi && par_mem_ssi->ty_proto()->is_builtin() );
+			node_semantic* param_member_sem = sem_->get_semantic( mem_sym->associated_node() );
+			assert( param_member_sem && param_member_sem->ty_proto()->is_builtin() );
 
-			salviar::semantic_value const& sem = par_mem_ssi->semantic_value_ref();
+			salviar::semantic_value const& sem = param_member_sem->semantic_value_ref();
 			sv_layout* psvl = abii->input_sv_layout( sem );
-			layout_to_node_context(
-				ctxt, psvl,
-				false, sem_->is_modified( tisi->associated_symbol() )
-				);
+			bool from_cache = layout_to_node_context(ctxt, psvl, false, true);
+			// Value and type must get from cache
+			assert(from_cache);
 		} else {
-			// If it is not semantic mode, use general code
 			node_context* mem_ctxt = node_ctxt( mem_sym->associated_node(), true );
 			assert( mem_ctxt );
 			ctxt->node_value = mem_ctxt->node_value;
@@ -364,6 +362,31 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
 		} else {
 			// Virtual args for aggregated argument
 			pctxt->is_semantic_mode = true;
+			bool is_param_modified = sem_->is_modified(par_sym);
+
+			// Add values and types of all used semantics to cache.
+			if( par->param_type->node_class() == node_ids::struct_type )
+			{
+				struct_type* param_struct = static_cast<struct_type*>( par->param_type.get() );
+				BOOST_FOREACH(shared_ptr<declaration> const& decl, param_struct->decls)
+				{
+					shared_ptr<variable_declaration> var_decl = decl->as_handle<variable_declaration>();
+					if(!var_decl) { continue; }
+					BOOST_FOREACH(shared_ptr<declarator> const& dclr, var_decl->declarators)
+					{
+						node_semantic* dclr_sem = sem_->get_semantic(dclr);
+						dclr_sem->semantic_value_ref() ;
+
+						salviar::semantic_value const& sem_value = dclr_sem->semantic_value_ref();
+						sv_layout* psvl = abii->input_sv_layout(sem_value);
+						layout_to_node_context(NULL, psvl, false, is_param_modified);
+					}
+				}
+			}
+			else
+			{
+				EFLIB_ASSERT_UNIMPLEMENTED();
+			}
 		}
 	}
 	
@@ -446,9 +469,10 @@ cg_module_impl* cg_vs::mod_ptr(){
 	return llvm_mod_.get();
 }
 
-
 cg_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input)
 {
+	if(copy_from_input) EFLIB_ASSERT_UNIMPLEMENTED();
+
 	cg_value ret;
 
 	// TODO: need to emit_extract_ref
@@ -465,36 +489,71 @@ cg_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input)
 	return ret;
 }
 
-void cg_vs::layout_to_node_context(
+bool cg_vs::layout_to_node_context(
 	node_context* psc, salviar::sv_layout* svl,
 	bool store_to_existed_value, bool copy_from_input
 	)
 {
-	builtin_types bt = to_builtin_types(svl->value_type);
+	bool could_cached =
+		(svl->usage == su_stream_in || svl->usage == su_buffer_in)
+		&& svl->sv.get_system_value() != salviar::sv_none;
 
-	cg_value ret;
+	assert(psc || could_cached);
+
+	// Find cached node context prototype.
+	if(could_cached)
+	{
+		input_copies_dict::iterator it = input_copies_.find(svl->sv);
+
+		if( it != input_copies_.end() )
+		{
+			// Fetch from cache.
+
+			// No output.
+			if(!psc) return false;
+
+			// Copy cached value and ty to output context
+			if( store_to_existed_value && psc->node_value.storable() ){
+				psc->node_value.store( it->second->node_value );
+			} else {
+				psc->node_value = it->second->node_value;
+			}
+			psc->ty = it->second->ty;
+			return true;
+		}
+	}
+
+	// if psc is not existed, create a temporary node context.
+	if(!psc) psc = ctxt_->create_temporary_node_context();
+
+	if(could_cached){
+		input_copies_.insert( make_pair(svl->sv, psc) );
+	}
+
+	// Otherwise create value and type for layout, and fill into context.
+	builtin_types bt = to_builtin_types(svl->value_type);
+	cg_value layout_value;
 	// TODO: need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
-		ret = service()->emit_extract_val(param_values[svl->usage], svl->physical_index);
-		ret = ret.as_ref();
+		layout_value = service()->emit_extract_val(param_values[svl->usage], svl->physical_index);
+		layout_value = layout_value.as_ref();
 	} else {
-		ret = service()->emit_extract_ref(param_values[svl->usage], svl->physical_index);
+		layout_value = service()->emit_extract_ref(param_values[svl->usage], svl->physical_index);
 	}
 
 	if(svl->internal_type == -1)
 	{
-		ret.hint( to_builtin_types(svl->value_type) );
+		layout_value.hint( to_builtin_types(svl->value_type) );
 	}
 	else
 	{
 		psc->ty = service()->create_ty( sem_->pety()->get_proto(svl->internal_type) );
-		ret.ty(psc->ty);
+		layout_value.ty(psc->ty);
 	}
-
 
 	if( store_to_existed_value && psc->node_value.storable() )
 	{
-		psc->node_value.store(ret);
+		psc->node_value.store(layout_value);
 	}
 	else
 	{
@@ -502,14 +561,16 @@ void cg_vs::layout_to_node_context(
 		{
 			// TODO: only support builtin type copy.
 			//		Need to support array copy later.
-			assert( ret.hint() != builtin_types::none );
-			cg_value copied_var = service()->create_variable(ret.hint(), ret.abi(), ".arg.copy");
-			copied_var.store(ret);
-			ret = copied_var;
+			assert( layout_value.hint() != builtin_types::none );
+			cg_value copied_var = service()->create_variable(layout_value.hint(), layout_value.abi(), ".arg.copy");
+			copied_var.store(layout_value);
+			layout_value = copied_var;
 		}
 
-		psc->node_value = ret;
+		psc->node_value = layout_value;
 	}
+
+	return false;
 }
 
 cg_vs::~cg_vs(){}

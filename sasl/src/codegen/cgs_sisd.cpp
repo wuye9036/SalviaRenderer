@@ -135,9 +135,9 @@ void cgs_sisd::store( cg_value& lhs, cg_value const& rhs ){
 	} else if ( kind == value_kinds::elements ){
 		char indexes[4] = {-1, -1, -1, -1};
 		cg_value const* root = NULL;
-		merge_swizzle(root, indexes, lhs);
+		bool is_swizzle = merge_swizzle(root, indexes, lhs);
 
-		if( is_vector( root->hint()) ){
+		if( is_swizzle && is_vector( root->hint()) ){
 			assert( lhs.parent()->storable() );
 			
 			cg_value rhs_rvalue = rhs.to_rvalue();
