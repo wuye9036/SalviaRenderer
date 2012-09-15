@@ -43,10 +43,12 @@
 namespace eflib{
 	const bool Interrupted = false;
 	const bool Unimplemented = false;
+	const bool Unexpected = false;
 }
 
 #define EFLIB_ASSERT_UNIMPLEMENTED0( desc ) EFLIB_ASSERT( eflib::Unimplemented, desc );
 #define EFLIB_ASSERT_UNIMPLEMENTED() EFLIB_ASSERT_UNIMPLEMENTED0( " An unimplemented code block was invoked! " );
+#define EFLIB_ASSERT_UNEXPECTED() EFLIB_ASSERT(eflib::Unexpected, "Here is not expected to be executed.");
 #define EFLIB_INTERRUPT(desc) EFLIB_ASSERT(eflib::Interrupted, desc)
 
 namespace eflib{

@@ -11,7 +11,7 @@ using namespace eflib;
  ****************************************/
 const eflib::vec4& triangle_info::base_vert() const
 {
-	EFLIB_ASSERT(pbase_vert, "");
+	assert(pbase_vert);
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)
@@ -24,7 +24,7 @@ const eflib::vec4& triangle_info::base_vert() const
 
 const vs_output& triangle_info::ddx() const
 {
-	EFLIB_ASSERT(pddx, "");
+	assert(pddx);
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)
@@ -37,7 +37,7 @@ const vs_output& triangle_info::ddx() const
 
 const vs_output& triangle_info::ddy() const
 {
-	EFLIB_ASSERT(pddy, "");
+	assert(pddy);
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)
@@ -234,7 +234,7 @@ color_rgba32f pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, c
  * Execution
  *****************************************/
 bool pixel_shader::execute(const vs_output& in, ps_output& out){
-	EFLIB_ASSERT(ptriangleinfo_, "");
+	assert(ptriangleinfo_);
 	ppxin_ = &in;
 	bool rv = shader_prog(in, out);
 	out.depth = in.position[2];

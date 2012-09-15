@@ -307,7 +307,7 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& operator_selfdiv_n(vs_output& lhs, float f)
 	{
-		EFLIB_ASSERT(!eflib::equal<float>(f, 0.0f), "");
+		assert( !eflib::equal<float>(f, 0.0f) );
 		return operator_selfmul_n<N>(lhs, 1 / f);
 	}
 

@@ -1,11 +1,11 @@
 #ifndef SALVIAR_RESOURCE_MANAGER_H
 #define SALVIAR_RESOURCE_MANAGER_H
 
-#include "buffer.h"
-#include "texture.h"
+#include <salviar/include/buffer.h>
+#include <salviar/include/texture.h>
 #include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
 
+BEGIN_NS_SALVIAR();
 
 class buffer_manager
 {
@@ -15,11 +15,8 @@ public:
 	}
 
 	void release_buffer(h_buffer& hbuf){
-		if(hbuf){
-			hbuf.reset();
-			return;
-		}
-		EFLIB_ASSERT(false, "");
+		assert(hbuf);
+		hbuf.reset();
 	}
 };
 
@@ -34,14 +31,11 @@ public:
 	}
 
 	void release_texture(h_texture& htex){
-		if(htex){
-			htex.reset();
-			return;
-		}
-		EFLIB_ASSERT(false, "");
+		assert(htex);
+		htex.reset();
 	}
 };
 
-END_NS_SALVIAR()
+END_NS_SALVIAR();
 
 #endif

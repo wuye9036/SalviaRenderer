@@ -37,16 +37,14 @@ struct color_rgba32f
 		return *this;
 	}
 
-	eflib::float4* get_pointer()
+	eflib::vec4* get_pointer()
 	{
-		EFLIB_ASSERT(is_aligned(this, 16), "");
-		return (eflib::float4*)this;
+		return (eflib::vec4*)this;
 	}
 
-	const eflib::float4* get_pointer() const
+	const eflib::vec4* get_pointer() const
 	{
-		EFLIB_ASSERT(is_aligned(this, 16), "");
-		return (const eflib::float4*)this;
+		return (const eflib::vec4*)this;
 	}
 
 	eflib::vec4& get_vec4()

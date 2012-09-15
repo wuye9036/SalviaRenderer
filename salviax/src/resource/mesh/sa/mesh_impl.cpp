@@ -12,7 +12,7 @@ BEGIN_NS_SALVIAX_RESOURCE();
 
 mesh_impl::mesh_impl(salviar::renderer* psr)
 {
-	EFLIB_ASSERT(psr, "");
+	assert(psr);
 
 	device_ = psr;
 	primcount_ = 0;
@@ -51,7 +51,7 @@ void mesh_impl::gen_adjancency(){
 }
 
 void mesh_impl::render(){
-	EFLIB_ASSERT(device_, "");
+	assert(device_);
 	if(!device_) return;
 	
 	if ( device_->get_vertex_shader_code()  ){
@@ -106,7 +106,7 @@ void mesh_impl::set_index_type( format fmt )
 			index_fmt_ = fmt;
 			break;
 		default:
-			EFLIB_ASSERT(false, "");
+			EFLIB_ASSERT_UNEXPECTED();
 	}
 }
 

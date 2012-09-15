@@ -1,7 +1,7 @@
-#include "../include/buffer.h"
-#include "../include/index_fetcher.h"
+#include <salviar/include/buffer.h>
+#include <salviar/include/index_fetcher.h>
 
-BEGIN_NS_SALVIAR()
+BEGIN_NS_SALVIAR();
 
 void index_fetcher::initialize(h_buffer hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
 {
@@ -14,7 +14,7 @@ void index_fetcher::initialize(h_buffer hbuf, format index_fmt, primitive_topolo
 	}
 	else
 	{
-		EFLIB_ASSERT(format_r32_uint == index_fmt_, "Wrong index type");
+		EFLIB_ASSERT(format_r32_uint == index_fmt_, "Index type is wrong.");
 		stride_ = 4;
 	}
 	startpos_ = startpos * stride_;
@@ -60,7 +60,7 @@ void index_fetcher::fetch_indices(uint32_t* prim_indices, uint32_t id)
 		break;
 
 	default:
-		EFLIB_ASSERT(false, "");
+		EFLIB_ASSERT_UNEXPECTED();
 		count = 0;
 		break;
 	}
@@ -77,7 +77,7 @@ void index_fetcher::fetch_indices(uint32_t* prim_indices, uint32_t id)
 		}
 		else
 		{
-			EFLIB_ASSERT(format_r32_uint == index_fmt_, "Wrong index type");
+			EFLIB_ASSERT(format_r32_uint == index_fmt_, "Index type is wrong.");
 
 			uint32_t* pidx = reinterpret_cast<uint32_t*>(indexbuf_->raw_data(startpos_));
 			for (uint32_t i = 0; i < count; ++ i)
@@ -95,4 +95,4 @@ void index_fetcher::fetch_indices(uint32_t* prim_indices, uint32_t id)
 	}
 }
 
-END_NS_SALVIAR()
+END_NS_SALVIAR();

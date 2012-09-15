@@ -175,7 +175,7 @@ rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
 		break;
 
 	default:
-		EFLIB_ASSERT(false, "");
+		EFLIB_ASSERT_UNEXPECTED();
 		break;
 	}
 	switch (desc.fm)
@@ -191,7 +191,7 @@ rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
 		break;
 
 	default:
-		EFLIB_ASSERT(false, "");
+		EFLIB_ASSERT_UNEXPECTED();
 		break;
 	}
 }
@@ -831,7 +831,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 		int rejections = ~_mm_movemask_ps(mask_rej) & 0xF;
 		unsigned long t;
 		while (_BitScanForward(&t, rejections)){
-			EFLIB_ASSERT(t < 4, "");
+			assert(t < 4);
 
 			test_regions[test_region_size] = region_code[t];
 			++ test_region_size;
@@ -1112,7 +1112,7 @@ void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* cli
 		prim_size = 3;
 		break;
 	default:
-		EFLIB_ASSERT(false, "枚举值无效：无效的Primitive Topology");
+		EFLIB_ASSERT(false, "Primitive topology is invalid.");
 		return;
 	}
 
@@ -1373,8 +1373,7 @@ void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uin
 }
 
 void rasterizer::draw(size_t prim_count){
-
-	EFLIB_ASSERT(pparent_, "pparent_ != NULL");
+	assert(pparent_);
 	if(!pparent_) return;
 
 	const size_t num_samples = hfb_->get_num_samples();
@@ -1415,7 +1414,7 @@ void rasterizer::draw(size_t prim_count){
 		state_->triangle_rast_func(prim_size, rasterize_func_);
 		break;
 	default:
-		EFLIB_ASSERT(false, "枚举值无效：无效的Primitive Topology");
+		EFLIB_ASSERT(false, "Primitive topology is invalid.");
 		return;
 	}
 

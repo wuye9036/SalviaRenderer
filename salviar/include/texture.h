@@ -25,7 +25,7 @@ protected:
 
 	static size_t calc_lod_limit(size_t x, size_t y = 1, size_t z = 1)
 	{
-		EFLIB_ASSERT(x > 0 && y > 0 && z > 0, "");
+		assert(x > 0 && y > 0 && z > 0);
 
 		int rv = 0;
 		while (x > 0 || y > 0 || z > 0){

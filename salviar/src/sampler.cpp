@@ -800,7 +800,7 @@ color_rgba32f sampler::sample_cube(
 
 	if(ptex_->get_texture_type() != texture_type_cube)
 	{
-		EFLIB_ASSERT(false , "texture type not texture_type_cube.");
+		EFLIB_ASSERT(false , "texture is not a cube texture.");
 	}
 	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
 	return sample_impl(&pcube->get_face(major_dir), s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));

@@ -50,7 +50,8 @@ surface::~surface()
 }
 
 void surface::release(){
-	EFLIB_ASSERT(!is_mapped_, "");
+	EFLIB_ASSERT(!is_mapped_, "Surface has been mapped when it is released.");
+
 	if(is_mapped()){
 		std::vector<byte>().swap(mapped_data_);
 	}

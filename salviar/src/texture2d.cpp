@@ -118,20 +118,20 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 	}
 }
 
-void  texture_2d::map(void** pData, size_t subresource, map_mode mm)
+void  texture_2d::map(void** pdata, size_t subresource, map_mode mm)
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
-	EFLIB_ASSERT(pData != 0, "pData不可为NULL！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
+	assert(pdata);
 
 #ifdef EFLIB_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011)
 #endif
-	*pData = NULL;
+	*pdata = NULL;
 #ifdef EFLIB_MSVC
 #pragma warning(pop)
 #endif
-	get_surface(subresource).map(pData, mm);
+	get_surface(subresource).map(pdata, mm);
 }
 
 void  texture_2d::unmap(size_t subresource)
@@ -141,35 +141,35 @@ void  texture_2d::unmap(size_t subresource)
 
 surface&  texture_2d::get_surface(size_t subresource)
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 
 	return surfs_[subresource];
 }
 
 const surface& texture_2d::get_surface(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 
 	return surfs_[subresource];
 }
 
 size_t texture_2d::get_width(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 
 	return get_surface(subresource).get_width();
 }
 
 size_t texture_2d::get_height(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 
 	return get_surface(subresource).get_width();
 }
 
 size_t texture_2d::get_depth(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 	EFLIB_UNREF_DECLARATOR(subresource);
 
 	return 1;
@@ -177,14 +177,14 @@ size_t texture_2d::get_depth(size_t subresource) const
 
 size_t texture_2d::get_num_samples(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap Level越界！");
+	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 
 	return get_surface(subresource).get_num_samples();
 }
 
 void texture_2d::set_max_lod(size_t miplevel)
 {
-	EFLIB_ASSERT(max_lod_ <= min_lod_, "最低细节的Mip等级设置错误！");
+	EFLIB_ASSERT(max_lod_ <= min_lod_, "Max lod is less than min lod.");
 
 	if(! (max_lod_ <= min_lod_)) return;
 	max_lod_ = miplevel;
@@ -193,7 +193,8 @@ void texture_2d::set_max_lod(size_t miplevel)
 void texture_2d::set_min_lod(size_t miplevel)
 {
 	size_t ml_limit = calc_lod_limit(surfs_[0].get_width());
-	EFLIB_ASSERT(max_lod_ <= miplevel && miplevel < ml_limit, "最低细节的Mip等级设置错误！");
+	EFLIB_ASSERT(max_lod_ <= miplevel, "Mip level is larger than max LoD level that is set by user.");
+	EFLIB_ASSERT(miplevel < ml_limit, "Mip level is larger than max LoD level that texture supported.");
 
 	if(! (max_lod_ <= miplevel && miplevel < ml_limit)) return;
 	min_lod_ = miplevel;

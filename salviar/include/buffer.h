@@ -35,7 +35,8 @@ public:
 	void unmap();
 
 	void transfer( size_t offset, void const* psrcdata, size_t size, size_t count ){
-		EFLIB_ASSERT_AND_IF(offset + size * count <= get_size(), "Out of buffer."){
+		EFLIB_ASSERT_AND_IF(offset + size * count <= get_size(), "Out of boundary of buffer.")
+		{
 			return;
 		}
 

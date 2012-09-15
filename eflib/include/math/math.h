@@ -11,10 +11,13 @@
 #include <emmintrin.h>
 #endif
 
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #include <limits>
+#include <cassert>
 
 namespace eflib{
 	template <class T>
@@ -81,7 +84,7 @@ namespace eflib{
 	T clamp(T v, T minv, T maxv)
 	{
 		BOOST_STATIC_ASSERT(boost::is_arithmetic<T>::value);
-		EFLIB_ASSERT(minv <= maxv, "");
+		assert(minv <= maxv);
 
 		if(v < minv) return minv;
 		if(v > maxv) return maxv;

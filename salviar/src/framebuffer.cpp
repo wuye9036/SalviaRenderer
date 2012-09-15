@@ -354,73 +354,72 @@ void framebuffer::reset(size_t width, size_t height, size_t num_samples, pixel_f
 }
 
 void framebuffer::set_render_target_disabled(render_target tar, size_t target_index){
-	EFLIB_ASSERT_AND_IF(tar == render_target_color, "只能禁用颜色缓冲"){
+	EFLIB_ASSERT_AND_IF(tar == render_target_color, "You cannot disable any buffer except color buffer."){
 		return;
 	}
 
-	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "颜色缓冲ID的设置错误"){
+	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "Index of target is out of bound"){
 		return;
 	}
 
-	//简单的设置为无效
 	buf_valids[target_index] = false;
 }
 
 void framebuffer::set_render_target_enabled(render_target tar, size_t target_index){
-	EFLIB_ASSERT_AND_IF(tar == render_target_color, "只能启用颜色缓冲"){
+	EFLIB_ASSERT_AND_IF(tar == render_target_color, "You cannot enable any buffer except color buffer."){
 		return;
 	}
-	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "颜色缓冲ID的设置错误"){
+	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "Index of target is out of bound"){
 		return;
 	}
 
-	//重分配后缓冲
+	// Reallocate back buffers
 	if(back_cbufs_[target_index] && check_buf(back_cbufs_[target_index].get())){
 		back_cbufs_[target_index].reset(new surface(width_, height_, num_samples_, fmt_));
 	}
 
-	//如果渲染目标为空则自动挂接后缓冲
+	// Attach back buffer if current buffer is null or invalid.
 	if(cbufs_[target_index] == NULL){
 		cbufs_[target_index] = back_cbufs_[target_index].get();
 	}
 
-	//检测后缓冲有效性
+	// Check back buffer.
 	if(check_buf(cbufs_[target_index])){
-		EFLIB_ASSERT(false, "目标缓冲无效！");
+		EFLIB_ASSERT(false, "Target buffer is invalid.");
 		cbufs_[target_index] = back_cbufs_[target_index].get();
 	}
 
-	//设置有效性
+	// Enable buffer.
 	buf_valids[target_index] = true;
 }
 
-//渲染目标设置。暂时不支持depth buffer和stencil buffer的绑定和读取。
+// Redirect render target. Just support color buffer for now.
 void framebuffer::set_render_target(render_target tar, size_t target_index, surface* psurf)
 {
-	EFLIB_ASSERT_AND_IF(tar == render_target_color, "只能绑定颜色缓冲"){
+	EFLIB_ASSERT_AND_IF(tar == render_target_color, "You cannot set any type of render target except color type."){
 		return;
 	}
-	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "颜色缓冲ID的绑定错误"){
+	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "Index of target is out of bound"){
 		return;
 	}
 
-	//如果传入的表面为空则恢复渲染目标为后备缓冲
+	// If surface passed into function is null, then activate back buffer as current.
 	if(!psurf){
 		cbufs_[target_index] = back_cbufs_[target_index].get();
 		return;
 	}
 
-	EFLIB_ASSERT(psurf->get_width() >= width_ && psurf->get_height() >= height_, "渲染目标的大小不足");
+	EFLIB_ASSERT(psurf->get_width() >= width_ && psurf->get_height() >= height_, "Size of render target is not enough.");
 	cbufs_[target_index] = psurf;
 }
 
 surface* framebuffer::get_render_target(render_target tar, size_t target_index) const
 {
-	EFLIB_ASSERT_AND_IF(tar == render_target_color, "只能获得颜色缓冲"){
+	EFLIB_ASSERT_AND_IF(tar == render_target_color, "You cannot get any render target except color."){
 		return NULL;
 	}
 
-	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "颜色缓冲ID设置错误"){
+	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "Index of target is out of bound"){
 		return NULL;
 	}
 
@@ -450,8 +449,8 @@ pixel_format framebuffer::get_buffer_format() const{
 //渲染
 void framebuffer::render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
 {
-	EFLIB_ASSERT(hbs, "未设置Target Shader!");
-	if(! hbs) return;
+	EFLIB_ASSERT(hbs, "Blend shader is null or invalid.");
+	if(!hbs) return;
 
 	//composing output...
 	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
@@ -480,8 +479,8 @@ void framebuffer::render_sample(const h_blend_shader& hbs, size_t x, size_t y, s
 
 void framebuffer::clear_color(size_t target_index, const color_rgba32f& c){
 
-	EFLIB_ASSERT(target_index < cbufs_.size(), "渲染目标标识设置错误！");
-	EFLIB_ASSERT(cbufs_[target_index] && buf_valids[target_index], "试图对一个无效的渲染目标设置颜色！");
+	EFLIB_ASSERT(target_index < cbufs_.size(), "Target index is out of bound.");
+	EFLIB_ASSERT(cbufs_[target_index] && buf_valids[target_index], "Cannot clear an invalid target.");
 
 	cbufs_[target_index]->fill_texels(0, 0, width_, height_, c);
 }
@@ -496,21 +495,21 @@ void framebuffer::clear_stencil(int32_t s){
 
 void framebuffer::clear_color(size_t target_index, const rect<size_t>& rc, const color_rgba32f& c){
 
-	EFLIB_ASSERT(target_index < cbufs_.size(), "渲染目标标识设置错误！");
-	EFLIB_ASSERT(cbufs_[target_index] && buf_valids[target_index], "试图对一个无效的渲染目标设置颜色！");
-	EFLIB_ASSERT(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "锁定区域超过了帧缓冲范围！");
+	EFLIB_ASSERT(target_index < cbufs_.size(), "Target index is out of bound");
+	EFLIB_ASSERT(cbufs_[target_index] && buf_valids[target_index], "Cannot clear an invalid target.");
+	EFLIB_ASSERT(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "Invalid clear region.");
 
 	cbufs_[target_index]->fill_texels(rc.x, rc.y, rc.w, rc.h, c);
 }
 
 void framebuffer::clear_depth(const rect<size_t>& rc, float d){
-	EFLIB_ASSERT(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "锁定区域超过了帧缓冲范围！");
+	EFLIB_ASSERT(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "Invalid clear region.");
 
 	dbuf_->fill_texels(rc.x, rc.y, rc.w, rc.h, color_rgba32f(d, 0, 0, 0));
 }
 
 void framebuffer::clear_stencil(const rect<size_t>& rc, int32_t s){
-	EFLIB_ASSERT(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "锁定区域超过了帧缓冲范围！");
+	EFLIB_ASSERT(rc.w + rc.x <= width_ && rc.h +rc.y <= height_, "Invalid clear region.");
 
 	sbuf_->fill_texels(rc.x, rc.y, rc.w, rc.h, color_rgba32f(float(s), 0, 0, 0));
 }
