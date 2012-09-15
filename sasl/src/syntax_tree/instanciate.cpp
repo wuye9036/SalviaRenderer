@@ -1,6 +1,5 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/node_creation.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/program.h>

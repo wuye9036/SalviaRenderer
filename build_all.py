@@ -155,12 +155,9 @@ def config_salvia(proj):
 	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", proj.boost_root())
 	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", proj.boost_lib_dir() )
 	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", proj.prebuilt_llvm() )
-	defs["SALVIA_BUILD_WITH_LLVM"] = ("BOOL", "TRUE")
 	defs["SALVIA_FREETYPE_LIB_DIR"] = ( "PATH", proj.freetype_install_in_msvc() )
 	defs["SALVIA_BUILD_WITH_DIRECTX"] = ("BOOL", "TRUE" if proj.directx() else "FALSE")
-	defs["SALVIA_ENABLE_SASL_REGRESSION_TEST"] = ("BOOL", "TRUE")
-	defs["SALVIA_ENABLE_SASL_SEPERATED_TESTS"] = ("BOOL", "TRUE")
-	
+
 	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ '-D %s:%s="%s" ' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
 	
 	if not os.path.exists( proj.salvia_build() ):

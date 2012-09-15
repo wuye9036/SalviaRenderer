@@ -10,7 +10,6 @@
 #include <sasl/include/semantic/caster.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
-#include <sasl/include/syntax_tree/make_tree.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/syntax_tree/statement.h>
 #include <sasl/include/syntax_tree/utility.h>
@@ -31,6 +30,7 @@
 #include <boost/bind/apply.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -404,8 +404,8 @@ SASL_VISIT_DEF( cond_expression ){
 	generated_sem = create_node_semantic(dup_expr);
 	generated_sem->tid(expr_tid);
 
-	if( yes_sem->lr_value() & lvalue_or_rvalue::lvalue == lvalue_or_rvalue::lvalue
-		&& no_sem->lr_value() & lvalue_or_rvalue::lvalue == lvalue_or_rvalue::lvalue )
+	if( (yes_sem->lr_value() & lvalue_or_rvalue::lvalue) == lvalue_or_rvalue::lvalue
+		&& (no_sem->lr_value() & lvalue_or_rvalue::lvalue) == lvalue_or_rvalue::lvalue )
 	{
 		generated_sem->lr_value(lvalue_or_rvalue::lvalue);
 	}

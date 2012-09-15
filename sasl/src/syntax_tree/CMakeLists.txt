@@ -12,7 +12,6 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/syntax_tree/syntax_tree_builder.h
 	${SASL_HOME_DIR}/sasl/include/syntax_tree/syntax_tree_fwd.h
 	${SASL_HOME_DIR}/sasl/include/syntax_tree/visitor.h
-	${SASL_HOME_DIR}/sasl/include/syntax_tree/make_tree.h
 	${SASL_HOME_DIR}/sasl/include/syntax_tree/utility.h
 )
 
@@ -26,7 +25,6 @@ set( SOURCE_FILES
 	program.cpp
 	statement.cpp
 	syntax_tree_builder.cpp
-	make_tree.cpp
 	utility.cpp
 )
 

@@ -1,7 +1,3 @@
-option( SALVIA_BUILD_WITH_LLVM "Build llvm code generator & llvm test." TRUE )
-option( SALVIA_ENABLE_SASL_REGRESSION_TEST "Regression test will combine all test to one test module." FALSE )
-option( SALVIA_ENABLE_SASL_SEPERATED_TESTS "Seperated tests are enabled when regression test is used if set to true, otherwise seperated tests were disabled." FALSE )
-
 SET( EFLIB_HOME_PATH ${SALVIA_HOME_DIR} )
 include( ConfigureSASLProject.cmake )
 
