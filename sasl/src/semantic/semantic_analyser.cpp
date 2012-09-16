@@ -228,8 +228,8 @@ SASL_VISIT_DEF( cast_expression ){
 	node_semantic* src_tsi		= NULL;
 	node_semantic* casted_tsi	= NULL;
 
-	dup_cexpr->casted_type = visit_child(v.casted_type, &src_tsi);
-	dup_cexpr->expr = visit_child(v.expr, &casted_tsi);
+	dup_cexpr->casted_type = visit_child(v.casted_type, &casted_tsi);
+	dup_cexpr->expr = visit_child(v.expr, &src_tsi);
 
 	assert(src_tsi);
 	assert(casted_tsi);

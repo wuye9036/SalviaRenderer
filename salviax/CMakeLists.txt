@@ -44,7 +44,6 @@ set (SOURCE_FILES
 	src/resource/mesh/sa/mesh_io_collada.cpp
 	src/resource/mesh/sa/collada.cpp
 	
-	src/resource/texture/sa/tex_io.cpp
 	src/resource/texture/freeimage/tex_io_freeimage.cpp
 	src/resource/font/font.cpp
 	src/resource/terrain/gen_terrain.cpp

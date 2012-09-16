@@ -71,8 +71,8 @@ void grammars::set_exprs()
 	SRULE( shfexpr, addexpr >> *( opshift > addexpr ) );
 	SRULE( addexpr, mulexpr >> *( opadd > mulexpr ) );
 	SRULE( mulexpr, castexpr >> *( opmul > castexpr ) );
-	SRULE( castexpr, unaryexpr | typecastedexpr );
-	SRULE( typecastedexpr, ( lparen > declspec > rparen ) > expr );
+	SRULE( castexpr, typecastedexpr | unaryexpr );
+	SRULE( typecastedexpr, ( lparen > declspec > rparen ) > unaryexpr );
 	SRULE( unaryexpr, postexpr | unariedexpr );
 	SRULE( unariedexpr, (opinc | opunary) > castexpr );
 	SRULE( postexpr, pmexpr >> *(idxexpr | callexpr | memexpr | opinc) );

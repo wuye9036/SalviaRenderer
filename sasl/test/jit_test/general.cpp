@@ -1172,7 +1172,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
@@ -1189,6 +1189,8 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	JIT_FUNCTION( float(uint32_t,int32_t),	test_bitcast_to_f );
 	JIT_FUNCTION( int2x3(float2x3,uint2x3),	test_bitcast_to_mi );
 	JIT_FUNCTION( float2x3(int2x3),			test_mat_i2f );
+	JIT_FUNCTION( int2(vec2),				test_explicit_cast_f2i );
+	JIT_FUNCTION( uint2(vec2),				test_explicit_cast_f2u );
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
@@ -1875,7 +1877,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if /*1 ||*/ ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
@@ -2194,7 +2196,7 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE(input_assigned, jit_fixture)
 {
 	init_vs("./repo/question/v1a1/input_assigned.svs");

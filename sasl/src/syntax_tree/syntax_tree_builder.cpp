@@ -726,8 +726,20 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> 
 }
 
 shared_ptr<cast_expression> syntax_tree_builder::build_typecastedexpr( shared_ptr<attribute> attr ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return shared_ptr<cast_expression>();
+	shared_ptr<attribute> typespec_attr = attr->child(1);
+	shared_ptr<attribute> expr_attr = attr->child(3);
+
+	shared_ptr<tynode> ty = build_postqualedtype(typespec_attr);
+	shared_ptr<expression> expr = build_unaryexpr(expr_attr);
+
+	assert(ty);
+	assert(expr);
+
+	shared_ptr<cast_expression> ret = create_node<cast_expression>( attr->token_beg(), attr->token_end() );
+	ret->casted_type = ty;
+	ret->expr = expr;
+
+	return ret;
 }
 
 shared_ptr<tynode> syntax_tree_builder::build_typespec( shared_ptr<attribute> attr ){
@@ -752,7 +764,6 @@ vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators(
 
 	return ret;
 }
-
 
 shared_ptr<tynode> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute> attr ){
 	shared_ptr<tynode> ret;
@@ -955,12 +966,9 @@ shared_ptr<for_statement> syntax_tree_builder::build_stmt_for( shared_ptr<attrib
 {
 	shared_ptr<for_statement> ret = build_for_loop( attr->child(1) ) ;
 
-	if( ret ){
-		shared_ptr<statement> body_stmt = build_stmt( attr->child(2) );
-		ret->body = wrap_to_compound( body_stmt );
-	} else {
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
+	assert(ret);
+	shared_ptr<statement> body_stmt = build_stmt( attr->child(2) );
+	ret->body = wrap_to_compound( body_stmt );
 	
 	return ret;
 }

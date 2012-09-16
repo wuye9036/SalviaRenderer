@@ -61,6 +61,9 @@ struct skin_info
 	vector<mat44>		joint_inv_matrix;
 	vector<float>		weights;
 
+	// Joints and weights of vertex 'i' are
+	//  : FROM vertex_skin_infos[ vertex_skin_info_start_pos[i] ]
+	//      TO vertex_skin_infos[ vertex_skin_info_start_pos[i]+vertex_skin_info_count[i] ]
 	vector<uint32_t>	vertex_skin_info_start_pos;
 	vector<uint32_t>	vertex_skin_info_count;
 	vector<
@@ -164,22 +167,22 @@ void transfer_element( vector<char>& out_buffer, vector<char> const& in_buffer, 
 	out_buffer.insert( out_buffer.end(), src_beg_it, src_end_it );
 }
 
-struct vertex_index_group
+struct indexes_of_vertex_attributes
 {
-	vertex_index_group(){}
-	vertex_index_group( size_t sz ): indexes(sz){}
+	indexes_of_vertex_attributes(){}
+	indexes_of_vertex_attributes( size_t sz ): indexes(sz){}
 
 	vector<uint32_t> indexes;	
 };
 
-bool operator == (vertex_index_group const& lhs, vertex_index_group const& rhs)
+bool operator == (indexes_of_vertex_attributes const& lhs, indexes_of_vertex_attributes const& rhs)
 {
 	return
 		( lhs.indexes.size() == rhs.indexes.size() )
 		&& std::equal( lhs.indexes.begin(), lhs.indexes.end(), rhs.indexes.begin() );
 }
 
-size_t hash_value( vertex_index_group const& v )
+size_t hash_value( indexes_of_vertex_attributes const& v )
 {
 	size_t ret = 0;
 	boost::hash_range( ret, v.indexes.begin(), v.indexes.end() );
@@ -246,6 +249,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 				&& *input->semantic == "VERTEX"
 				&& input_source->is_a<dae_verts>() )
 			{
+				// 'VERTEX' is an composited stream. Split to atomic streams and add them into inputs.
 				dae_verts* verts = input_source->as<dae_verts>();
 				inputs.insert( inputs.end(), verts->inputs.begin(), verts->inputs.end() );
 				offsets.insert( offsets.end(), verts->inputs.size(), input->offset );
@@ -257,28 +261,34 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 				offsets.push_back(input->offset);
 			}
 		}
-		size_t index_group_size = inputs.size();
+		size_t vertex_attributes_count = inputs.size();
 
-		// Merge per-input index to an unified index, and re-order the data to matching unified index.
-		typedef unordered_map<vertex_index_group, uint32_t> index_dict_t;
-		vector< vector<char> >	buffers_data(skinfo ? index_group_size + 2 : index_group_size ); // If skinfo is available, last two buffers for joints and weights.
-		vector<uint32_t>		attribute_merged_indexes;
-		index_dict_t			index_dict; // a map from grouped index to merged index.
-		size_t					merged_vertex_counter = 0;
-		vertex_index_group		index_group(index_group_size);
+		// Unified index is the index of final vertex data streams used in graphics pipeline.
+		// Here we merge per-input index to an unified index, and re-order data to matching unified index.
+		typedef unordered_map<indexes_of_vertex_attributes, uint32_t> index_dict_t;
+		vector< vector<char> >			buffers_data(skinfo ? vertex_attributes_count + 2 : vertex_attributes_count ); // If skinfo is available, last two buffers for joints and weights.
+		vector<uint32_t>				attribute_merged_indexes;
+		index_dict_t					index_dict; // a map from grouped index to merged index.
+		size_t							merged_vertex_counter = 0;
+		indexes_of_vertex_attributes	index_group(vertex_attributes_count);
 
+		// FOR: index of triangle vertexes.
 		for( size_t i_tri_vert = 0; i_tri_vert < triangles->count*3; ++i_tri_vert ){
-			// make index group
-			for( size_t i_comp = 0; i_comp < index_group_size; ++i_comp ){
+
+			// Make indexes
+			for( size_t i_comp = 0; i_comp < vertex_attributes_count; ++i_comp ){
 				index_group.indexes[i_comp] = (uint32_t)triangles->indexes[ i_tri_vert*index_stride+offsets[i_comp] ];
 			}
 
+			// Find it is as same as old vertex.
 			index_dict_t::iterator it = index_dict.find(index_group);
 			if( it != index_dict.end() ) {
 				attribute_merged_indexes.push_back(it->second);
 			} else {
-				// Copy data to buffer.
-				for( size_t i_comp = 0; i_comp < index_group_size; ++i_comp )
+				// Copy data for new vertex.
+
+				// Copy stream data to buffer.
+				for( size_t i_comp = 0; i_comp < vertex_attributes_count; ++i_comp )
 				{
 					dae_source* source_of_input = inputs[i_comp]->source_node()->as<dae_source>();
 					assert( source_of_input );
@@ -303,8 +313,11 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 						vert_joint_ids.data_[i] = skinfo->vertex_skin_infos[skin_info_index].first;
 						vert_joint_weights.data_[i] = skinfo->weights[skinfo->vertex_skin_infos[skin_info_index].second];
 					}
+
+					// The last two buffers are weights buffer and joints buffer
 					vector<char>& weights_buffer = buffers_data.back();
 					vector<char>& joint_buffer = *(buffers_data.end()-2);
+
 					joint_buffer.insert(
 						joint_buffer.end(), (char*)(&vert_joint_ids), (char*)(&vert_joint_ids) + sizeof(vert_joint_ids)
 						);
@@ -319,11 +332,13 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 			}
 		}
 
-		// Build vertex buffer and input description
+		// Build vertex buffer and input description for pipeline
 		vector<h_buffer>			buffers;
 		vector<size_t>				buffer_strides;
 		vector<input_element_desc>	input_descs;
 
+
+		// Add streams
 		for( size_t i_source = 0; i_source < inputs.size(); ++i_source )
 		{
 			dae_input*  input = inputs[i_source].get();

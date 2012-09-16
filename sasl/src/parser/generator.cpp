@@ -7,7 +7,7 @@
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/common/diag_item.h>
 
-//#include <eflib/include/utility/util.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/foreach.hpp>
@@ -34,7 +34,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
-#define OUTPUT_GRAMMAR_MATCHING_PATH 0
+#define OUTPUT_GRAMMAR_MATCHING_PATH 1
 
 BEGIN_NS_SASL_PARSER();
 
@@ -268,8 +268,13 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 
 	parse_results final_result = parse_results::succeed;
 
-	for(size_t matched_count = 0;; ++matched_count )
+	for(size_t matched_count = 0;; ++matched_count)
 	{
+		if(matched_count == upper_bound)
+		{
+			break;
+		}
+
 		shared_ptr<attribute> out;
 		shared_ptr<diag_chat> children_diags = diag_chat::create();
 
@@ -280,7 +285,6 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 		if( result.is_succeed() ) {
 			out->token_range( *iter_beg, *iter );
 			seq_attr->attrs.push_back(out);
-			if( matched_count == upper_bound ){ break; }
 			continue;
 		}
 		
@@ -296,7 +300,7 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 		if( result.is_expected_failed_or_recovered() )
 		{
 			diag_chat::merge( diags, children_diags.get(), true );
-			final_result = parse_results::worse( result, final_result );
+			final_result = parse_results::worse(result, final_result);
 			continue;
 		}
 		else
@@ -306,7 +310,6 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 		}
 	}
 
-	assert(false);
 	return final_result;
 }
 
