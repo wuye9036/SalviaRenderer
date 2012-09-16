@@ -69,31 +69,6 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 	parent_class::before_decls_visit(v, data);
 }
 
-SASL_VISIT_DEF( cast_expression ){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	//any child_ctxt_init = *data;
-	//any child_ctxt;
-
-	//visit_child( child_ctxt, child_ctxt_init, v.casted_type );
-	//visit_child( child_ctxt, child_ctxt_init, v.expr );
-
-	//shared_ptr<node_semantic> src_tsi = extract_semantic_info<node_semantic>( v.expr );
-	//shared_ptr<node_semantic> casted_tsi = extract_semantic_info<node_semantic>( v.casted_type );
-
-	//if( src_tsi->tid() != casted_tsi->tid() ){
-	//	if( caster->try_cast( casted_tsi->tid(), src_tsi->tid() ) == caster_t::nocast ){
-	//		// Here is code error. Compiler should report it.
-	//		EFLIB_ASSERT_UNIMPLEMENTED();
-	//	}
-	//	node_ctxt(v, true)->data().val_type = node_ctxt(v.casted_type)->data().val_type;
-	//	caster->convert( v.as_handle(), v.expr );
-	//}
-
-	//cg_sctxt* vctxt = node_ctxt(v, false);
-	//sc_data_ptr(data)->val_type = vctxt->data().val_type;
-	//sc_data_ptr(data)->val = load( vctxt );
-}
-
 SASL_VISIT_DEF_UNIMPL( expression_list );
 
 SASL_VISIT_DEF_UNIMPL( identifier );

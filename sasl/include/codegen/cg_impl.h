@@ -65,6 +65,7 @@ protected:
 	cg_impl();
 	~cg_impl();
 
+	SASL_VISIT_DCL( cast_expression );
 	SASL_VISIT_DCL( constant_expression );
 	SASL_VISIT_DCL( variable_expression );
 	SASL_VISIT_DCL( binary_expression );
