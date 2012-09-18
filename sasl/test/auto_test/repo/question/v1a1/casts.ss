@@ -1,4 +1,3 @@
-/*
 int test_implicit_cast_i32_b( int i ){
 	if( i ){
 		return 33;
@@ -65,13 +64,12 @@ float2x3 test_mat_i2f( int2x3 i )
 	return i;
 }
 
-int2 test_explicit_cast_f2i(float2 v)
+int2x3 test_explicit_cast_f2i(float2x3 v)
 {
-	return (int2)v;
+	return (int2x3)v;
 }
-*/
 
-uint2 test_explicit_cast_f2u(float2 v)
+uint2x3 test_explicit_cast_f2u(float2x3 v)
 {
-	return (uint2)v;
+	return (uint2x3)v;
 }

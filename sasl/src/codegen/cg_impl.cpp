@@ -300,26 +300,34 @@ SASL_VISIT_DEF( constant_expression ){
 
 SASL_VISIT_DEF(cast_expression)
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	EFLIB_UNREF_DECLARATOR(data);
 
-	//visit_child( child_ctxt, child_ctxt_init, v.casted_type );
-	//visit_child( child_ctxt, child_ctxt_init, v.expr );
+	visit_child(v.casted_type);
+	visit_child(v.expr);
+	
+	node_semantic* ty_sem = sem_->get_semantic( v.casted_type.get() );
+	node_semantic* expr_sem = sem_->get_semantic( v.expr.get() );
 
-	//shared_ptr<node_semantic> src_tsi = extract_semantic_info<node_semantic>( v.expr );
-	//shared_ptr<node_semantic> casted_tsi = extract_semantic_info<node_semantic>( v.casted_type );
+	assert(ty_sem);
+	assert(expr_sem);
 
-	//if( src_tsi->tid() != casted_tsi->tid() ){
-	//	if( caster->try_cast( casted_tsi->tid(), src_tsi->tid() ) == caster_t::nocast ){
-	//		// Here is code error. Compiler should report it.
-	//		EFLIB_ASSERT_UNIMPLEMENTED();
-	//	}
-	//	node_ctxt(v, true)->data().val_type = node_ctxt(v.casted_type)->data().val_type;
-	//	caster->convert( v.as_handle(), v.expr );
-	//}
+	node_context* ty_ctxt = node_ctxt(v.casted_type);
+	node_context* expr_ctxt = node_ctxt(v.expr);
 
-	//cg_sctxt* vctxt = node_ctxt(v, false);
-	//sc_data_ptr(data)->val_type = vctxt->data().val_type;
-	//sc_data_ptr(data)->val = load( vctxt );
+	node_context* ctxt = node_ctxt(&v, true);
+	ctxt->ty = ty_ctxt->ty;
+
+	if( ty_sem->tid() != expr_sem->tid() )
+	{
+		caster_t::casts cast_result = caster->try_cast( ty_sem->tid(), expr_sem->tid() );
+		EFLIB_UNREF_DECLARATOR(cast_result);
+		assert( cast_result != caster_t::nocast );
+		caster->cast( &v, v.expr.get() );
+	}
+	else
+	{
+		ctxt->node_value = expr_ctxt->node_value;
+	}
 }
 
 SASL_VISIT_DEF( call_expression ){

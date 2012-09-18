@@ -196,8 +196,20 @@ cg_value cgs_sisd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
 
 cg_value cgs_sisd::cast_f2i( cg_value const& v, cg_type* dest_tyi )
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	builtin_types hint_i = dest_tyi->hint();
+	builtin_types hint_f = v.hint();
+
+	builtin_types scalar_hint_i = scalar_of(hint_i);
+
+	Type* dest_ty = dest_tyi->ty(v.abi());
+	Type* elem_ty = type_( scalar_of(hint_i), abis::llvm );
+
+	cast_ops::id op = is_signed(hint_i) ? cast_ops::f2i : cast_ops::f2u;
+	unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
+
+	Value* val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
+
+	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
 
 cg_value cgs_sisd::cast_f2f( cg_value const& v, cg_type* dest_tyi )

@@ -63,15 +63,18 @@ public:
 
 	void store(node* dest, node* src, cg_value const& v)
 	{
+		node_context* src_ctxt = get_context(src);
+		node_context* dest_ctxt = get_context(dest);
+
 		if( (dest->node_class().to_value() & node_ids::tynode.to_value()) != 0 ){
 			// Overwrite source.
-			get_context(src)->node_value = v;
+			src_ctxt->node_value = v;
 		} else {
 			// Store to dest.
-			if( get_context(dest)->node_value.storable() ){
-				get_context(dest)->node_value.store(v);
+			if( dest_ctxt->node_value.storable() ){
+				dest_ctxt->node_value.store(v);
 			} else {
-				get_context(dest)->node_value = v;
+				dest_ctxt->node_value = v;
 			}
 		}
 	}
@@ -119,7 +122,7 @@ public:
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
-		cgs->store( dest_ctxt->node_value, casted );
+		store(dest, src, casted);
 	}
 
 	void float2float(node* dest, node* src){

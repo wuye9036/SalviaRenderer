@@ -1189,8 +1189,8 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	JIT_FUNCTION( float(uint32_t,int32_t),	test_bitcast_to_f );
 	JIT_FUNCTION( int2x3(float2x3,uint2x3),	test_bitcast_to_mi );
 	JIT_FUNCTION( float2x3(int2x3),			test_mat_i2f );
-	JIT_FUNCTION( int2(vec2),				test_explicit_cast_f2i );
-	JIT_FUNCTION( uint2(vec2),				test_explicit_cast_f2u );
+	JIT_FUNCTION( int2x3(float2x3),			test_explicit_cast_f2i );
+	JIT_FUNCTION( uint2x3(float2x3),		test_explicit_cast_f2u );
 
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(0), 85 );
 	BOOST_CHECK_EQUAL( test_implicit_cast_i32_b(19), 33 );
@@ -1260,7 +1260,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 		};
 
 		int2x3 ret = test_bitcast_to_mi( reinterpret_cast<float2x3&>(farr), reinterpret_cast<uint2x3&>(uarr) );
-
+		
 		for(int i = 0; i < 2; ++i)
 		{
 			for(int j = 0; j < 3; ++j)
@@ -1282,13 +1282,20 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 			{0, 97532589, 9870}
 		};
 
-		float2x3 ret = test_mat_i2f( reinterpret_cast<int2x3&>(m23) );
 		
+
+		float2x3	ret0 = test_mat_i2f( reinterpret_cast<int2x3&>(m23) );
+		m23[0][1] += static_cast<uint32_t>(ret0.data_[0][1]);
+		int2x3		ret1 = test_explicit_cast_f2i(ret0);
+		uint2x3		ret2 = test_explicit_cast_f2u(ret0);
+
 		for(int i = 0; i < 2; ++i)
 		{
 			for(int j = 0; j < 3; ++j)
 			{
-				BOOST_CHECK_EQUAL( static_cast<float>(m23[i][j]), ret.data_[i][j] );
+				BOOST_CHECK_EQUAL( static_cast<float>(m23[i][j]),			ret0.data_[i][j] );
+				BOOST_CHECK_EQUAL( static_cast<int>(ret0.data_[i][j]),		ret1.data_[i][j] );
+				BOOST_CHECK_EQUAL( static_cast<uint32_t>(ret0.data_[i][j]),	ret2.data_[i][j] );
 			}
 		}
 	}
@@ -1877,7 +1884,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if /*1 ||*/ ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );
