@@ -77,7 +77,7 @@ namespace eflib{
 	{
 		BOOST_STATIC_ASSERT(boost::is_floating_point<U>::value);
 		BOOST_STATIC_ASSERT(boost::is_integral<T>::value);
-		t = (T)(d+0.5);
+		t = (T)floor(d+0.5);
 	}
 
 	template <class T>
@@ -167,8 +167,10 @@ namespace eflib{
 	// From http://www.stereopsis.com/sree/fpu2006.html
 	inline int fast_roundi(double d)
 	{
+		return static_cast<int>( floor(d+0.5) );
+		/*
 		const double DOUBLE_MAGIC = 6755399441055744.0; // 2^51 + 2^52
-
+		
 		union INTORDOUBLE
 		{
 			int i;
@@ -178,6 +180,7 @@ namespace eflib{
 		INTORDOUBLE n;
 		n.d = d + DOUBLE_MAGIC;
 		return n.i;
+		*/
 	}
 
 	inline int fast_ceili(double d)

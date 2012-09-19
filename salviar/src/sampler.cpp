@@ -635,6 +635,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 	if(desc_.mip_filter == filter_anisotropic)
 	{
 		int int_ratio = min( fast_roundi(ratio), static_cast<int>(desc_.max_anisotropy) );
+
 		float miplevel_af_bias = fast_log2(ratio / int_ratio);
 		if( miplevel_af_bias < 1.5f )
 		{
@@ -642,15 +643,15 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		}
 
 		float start_relative_distance = - 0.5f * (int_ratio - 1.0f);
-		
+
 		float sample_coord_x = coordx + long_axis.x() * start_relative_distance;
 		float sample_coord_y = coordy + long_axis.y() * start_relative_distance;
 
 		size_t low = fast_floori(miplevel+miplevel_af_bias);
 		size_t up = low + 1;
-		
-		float frac = miplevel+miplevel_af_bias - low;
-		
+
+		float frac = miplevel + miplevel_af_bias - low;
+
 		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
 		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());
 
@@ -667,6 +668,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		}
 
 		color /= int_ratio;
+		
 		return color_rgba32f(color);
 	}
 
