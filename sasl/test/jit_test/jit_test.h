@@ -23,6 +23,10 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#if defined(EFLIB_WINDOWS)
+#include <excpt.h>
+#endif
+
 namespace sasl
 {
 	namespace driver
@@ -74,6 +78,11 @@ using boost::disable_if;
 
 using std::string;
 
+#if defined(EFLIB_WINDOWS)
+#pragma warning(push)
+#pragma warning(disable: 4701) // C4701: potentially uninitialized local variable 'X' used
+#pragma warning(disable: 4244) // C4244: conversion from 'X' to 'Y', possible loss of data
+
 template <typename Fn>
 class jit_function_forward_base{
 protected:
@@ -93,7 +102,9 @@ public:
 	typedef typename function_pointer<callee_return_parameters>::type
 		callee_ptr_t;
 	callee_ptr_t callee;
+	std::string  name;
 	jit_function_forward_base():callee(NULL){}
+	void on_error(char const* desc) { BOOST_ERROR( (std::string(desc) + " @ " + name).c_str() ); }
 };
 
 void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo );
@@ -103,28 +114,72 @@ class jit_function_forward: public jit_function_forward_base<Fn>{
 public:
 	result_t operator ()(){
 		result_t tmp;
+#if defined(EFLIB_WINDOWS)
+		__try
+		{
+			callee(&tmp);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER )
+		{
+			on_error("SEH exception was raised");
+		}
+#else
 		callee(&tmp);
+#endif
 		return tmp;
 	}
 
 	template <typename T0>
 	result_t operator() (T0 p0 ){
 		result_t tmp;
+#if defined(EFLIB_WINDOWS)
+		__try
+		{
+			callee(&tmp, p0);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER )
+		{
+			on_error("SEH exception was raised");
+		}
+#else
 		callee(&tmp, p0);
+#endif
 		return tmp;
 	}
 
 	template <typename T0, typename T1>
 	result_t operator() (T0 p0, T1 p1){
 		result_t tmp;
+#if defined(EFLIB_WINDOWS)
+		__try
+		{
+			callee(&tmp, p0, p1);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER )
+		{
+			on_error("SEH exception was raised");
+		}
+#else
 		callee(&tmp, p0, p1);
+#endif
 		return tmp;
 	}
 
 	template <typename T0, typename T1, typename T2>
 	result_t operator() (T0 p0, T1 p1, T2 p2){
 		result_t tmp;
+#if defined(EFLIB_WINDOWS)
+		__try
+		{
+			callee(&tmp, p0, p1, p2);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER )
+		{
+			on_error("SEH exception was raised");
+		}
+#else
 		callee(&tmp, p0, p1, p2);
+#endif
 		return tmp;
 	}
 };
@@ -158,9 +213,23 @@ public:
 
 	template <typename T0, typename T1, typename T2, typename T3>
 	result_t operator() (T0* psi, T1* pbi, T2* pso, T3* pbo){
+#if defined(EFLIB_WINDOWS)
+		__try
+		{
+			invoke( (void*)callee, psi, pbi, pso, pbo );
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER )
+		{
+			on_error("SEH exception was raised");
+		}
+#else
 		invoke( (void*)callee, psi, pbi, pso, pbo );
+#endif
 	}
 };
+
+#pragma warning(pop)
+#endif
 
 template <typename Fn>
 class jit_function: public jit_function_forward< typename result_type<Fn>::type, Fn >
@@ -180,6 +249,7 @@ struct jit_fixture {
 	void function( FunctionT& fn, string const& unmangled_name )
 	{
 		fn.callee = reinterpret_cast<typename FunctionT::callee_ptr_t>( function(unmangled_name) );
+		fn.name = unmangled_name;
 	}
 
 	void set_function( void* fn, string const& unmangled_name );

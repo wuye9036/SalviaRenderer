@@ -67,7 +67,8 @@ namespace sasl{
 		bool is_bit_assign( const operators& );
 		bool is_shift_assign( const operators& );
 		bool is_assign( const operators& );
-
+		bool is_general_assign( const operators& );
+		
 		const std::vector<operators>& list_of_operators();
 	}
 }

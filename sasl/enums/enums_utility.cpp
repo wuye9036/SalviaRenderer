@@ -310,6 +310,14 @@ namespace sasl{
 			return op == operators::assign;
 		}
 
+		bool is_general_assign(operators const& op)
+		{
+			return is_assign(op) 
+				|| is_arith_assign(op)
+				|| is_bit_assign(op)
+				|| is_shift_assign(op);
+		}
+
 		boost::mutex mtx_oplist_init;
 		std::vector<operators> op_list;
 

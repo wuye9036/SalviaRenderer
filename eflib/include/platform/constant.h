@@ -7,6 +7,7 @@ namespace eflib{
 	static const double	ln10				=	2.30258509299405e+000;
 	static const double	invLn10				=	0.43429448190325e+000;
 	static const double	PI					=	3.141592653589793238462643383279502884197169399375105820974944592308;	
+	static const float	PI_FLOAT			=   float(PI);
 	static const double	HALF_PI				=	PI / 2.0;	
 	static const double	TWO_PI				=	PI * 2.0;	
 	static const double rad_degree			=	57.30;

@@ -276,7 +276,8 @@ SASL_VISIT_DEF( binary_expression )
 	// Find overloads
 	vector<symbol*> overloads;
 
-	bool is_assign_operation = is_assign(v.op) || is_arith_assign(v.op);
+	bool is_assign_operation = is_general_assign(v.op);
+
 	if(is_assign_operation){
 		overloads = current_symbol->find_assign_overloads(opname, caster.get(), exprs);
 	} else {
@@ -2231,7 +2232,7 @@ void semantic_analyser::mark_modified(expression* expr)
 	if(expr->node_class() == node_ids::binary_expression)
 	{
 		binary_expression* bin_expr = static_cast<binary_expression*>(expr);
-		if( is_assign(bin_expr->op) || is_arith_assign(bin_expr->op) )
+		if( is_general_assign(bin_expr->op) )
 		{
 			// Marked as modified when sub expression is evaluated.
 			return;

@@ -417,7 +417,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		float ref0 = ( v2-v1.xy() ).length() + ( v2.xyxy() - dst ).length();
 		vec4  ref1 = vec4( fmodf(v0[0], v1[0]), fmodf(v0[1], v1[1]), fmodf(v0[2], v1[2]), fmodf(f, v1[1]) );
 		vec3  ref2 = v0 + (v1-v0)*vec3(v2[0], v2[1], f);
-		vec3  ref3 = ( (eflib::PI/180.0f)*v0.xy() ).xxy() + (180.0f/eflib::PI)*v0;
+		vec3  ref3 = ( (eflib::PI_FLOAT/180.0f)*v0.xy() ).xxy() + (180.0f/eflib::PI_FLOAT)*v0;
 		vec2  ref4(v2.length(), v0.xyzy().length());
 
 		float ret0 = test_distance(v2, v0, v1);
@@ -513,7 +513,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				
 				union { float f; uint32_t u; } ret, ref;
 
-				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0, lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
+				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0f, lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_sin.data_[i][j];	ref.f = sinf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_cos.data_[i][j];	ref.f = cosf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 				ret.f = ret_tan.data_[i][j];	ref.f = tanf(lhs_array[i][j]);			BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
@@ -1000,9 +1000,9 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 
 		char3 ret_v = test_vbool(x, y, z);
 
-		BOOST_CHECK_EQUAL( bool(ret_v.data_[0]), ref_v[0] );
-		BOOST_CHECK_EQUAL( bool(ret_v.data_[1]), ref_v[1] );
-		BOOST_CHECK_EQUAL( bool(ret_v.data_[2]), ref_v[2] );
+		BOOST_CHECK_EQUAL( static_cast<bool>(ret_v.data_[0]), ref_v[0] );
+		BOOST_CHECK_EQUAL( static_cast<bool>(ret_v.data_[1]), ref_v[1] );
+		BOOST_CHECK_EQUAL( static_cast<bool>(ret_v.data_[2]), ref_v[2] );
 	}
 
 	{
@@ -1281,8 +1281,6 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 			{17, -82999738, -89287},
 			{0, 97532589, 9870}
 		};
-
-		
 
 		float2x3	ret0 = test_mat_i2f( reinterpret_cast<int2x3&>(m23) );
 		m23[0][1] += static_cast<uint32_t>(ret0.data_[0][1]);
