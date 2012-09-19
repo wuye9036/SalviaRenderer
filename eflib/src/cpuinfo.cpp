@@ -41,7 +41,7 @@ namespace eflib{
 			feats[cpu_sse41]	= ( cpu_infos[2] & 0x80000) || false;
 			feats[cpu_sse42]	= ( cpu_infos[2] & 0x100000) || false;
 			feats[cpu_sse4a]	= ( cpu_infos_ex[2] & 0x40) || false;
-			feats[cpu_avx]		= ( cpu_infos[2] & (1 << 28) ) || false;
+			feats[cpu_avx]		= (( cpu_infos[2] & (1 << 27) ) && ( cpu_infos[2] & (1 << 28) )) || false;
 
 			// others are unchecked.
 		};
