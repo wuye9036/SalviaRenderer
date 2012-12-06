@@ -67,11 +67,6 @@ cgs_simd* cg_simd::service() const{
 	return static_cast<cgs_simd*>(service_);
 }
 
-abis::id cg_simd::local_abi( bool /*is_c_compatible*/ ) const
-{
-	return abis::package;
-}
-
 void cg_simd::create_entries()
 {
 	create_entry_param( su_stream_in );
@@ -91,7 +86,8 @@ void cg_simd::create_entry_param( sv_usage usage )
 		entry_tyns[usage].push_back( storage_bt );
 		
 		if( su_stream_in == usage || su_stream_out == usage ){
-			Type* storage_ty = service()->type_( storage_bt, abis::package );
+			assert(false);
+			Type* storage_ty = NULL; //service()->type_( storage_bt, abis::package );
 			tys.push_back( storage_ty );
 		} else {
 			Type* storage_ty = service()->type_( storage_bt, abis::c );
@@ -164,7 +160,7 @@ SASL_VISIT_DEF( member_expression ){
 	if( tisi->ty_proto()->is_builtin() ){
 		// Swizzle or write mask
 		uint32_t masks = sem_->get_semantic(&v)->swizzle();
-		cg_value agg_value = agg_ctxt->node_value;
+		multi_value agg_value = agg_ctxt->node_value;
 		ctxt->node_value = service()->emit_extract_elem_mask( agg_value, masks );
 	} else {
 		// Member
@@ -291,7 +287,7 @@ SASL_VISIT_DEF( while_statement )
 		caster->cast(sem_->pety()->get_proto(bool_tid), v.cond.get());
 	}
 	service()->while_cond_end( cg_impl::node_ctxt(v.cond)->node_value );
-	cg_value joinable = service()->joinable();
+	multi_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t body_beg = service()->new_block( "while.body", true );
@@ -336,7 +332,7 @@ SASL_VISIT_DEF( dowhile_statement )
 		}
 	}
 	service()->do_cond_end( cg_impl::node_ctxt(v.cond)->node_value );
-	cg_value joinable = service()->joinable();
+	multi_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t while_end = service()->new_block( "dowhile.end", true );
@@ -383,13 +379,13 @@ SASL_VISIT_DEF( for_statement )
 
 	insert_point_t cond_beg = service()->new_block( "for_cond", true );
 	service()->for_cond_beg();
-	cg_value cond_value;
+	multi_value cond_value;
 	if( v.cond ){ 
 		visit_child( v.cond );
 		cond_value = cg_impl::node_ctxt( v.cond, false )->node_value;
 	}
 	service()->for_cond_end( cond_value );
-	cg_value joinable = service()->joinable();
+	multi_value joinable = service()->joinable();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t body_beg = service()->new_block( "for_body", true );
@@ -562,7 +558,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
 		visit_child( v.jump_expr );
 
 		// Copy result.
-		cg_value ret_value = cg_impl::node_ctxt( v.jump_expr )->node_value;
+		multi_value ret_value = cg_impl::node_ctxt( v.jump_expr )->node_value;
 
 		if( ret_value.hint() != builtin_types::none ){
 			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
@@ -602,10 +598,10 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement ){
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
-cg_value cg_simd::layout_to_value( sv_layout* svl )
+multi_value cg_simd::layout_to_value( sv_layout* svl )
 {
 	builtin_types bt = to_builtin_types( svl->value_type );
-	cg_value ret = service()->emit_extract_ref( entry_values[svl->usage], svl->physical_index );
+	multi_value ret = service()->emit_extract_ref( entry_values[svl->usage], svl->physical_index );
 	ret.hint( to_builtin_types( svl->value_type ) );
 	return ret;
 }

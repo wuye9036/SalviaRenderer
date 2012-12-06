@@ -64,27 +64,27 @@ public:
 	Some simple overload-able operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
 	@{ */
-	cg_value emit_cond_expr( cg_value cond, cg_value const& yes, cg_value const& no );
+	multi_value emit_cond_expr( multi_value cond, multi_value const& yes, multi_value const& no );
 
 	/// Didn't support swizzle yet.
-	cg_value emit_swizzle( cg_value const& vec, uint32_t mask );
-	cg_value emit_write_mask( cg_value const& vec, uint32_t mask );
+	multi_value emit_swizzle( multi_value const& vec, uint32_t mask );
+	multi_value emit_write_mask( multi_value const& vec, uint32_t mask );
 	/** @} */
 
 	/// @name Emit type casts
 	/// @{
 	/// Cast between integer types.
-	cg_value cast_ints( cg_value const& v, cg_type* dest_tyi );
+	multi_value cast_ints( multi_value const& v, cg_type* dest_tyi );
 	/// Cast integer to float.
-	cg_value cast_i2f( cg_value const& v, cg_type* dest_tyi );
+	multi_value cast_i2f( multi_value const& v, cg_type* dest_tyi );
 	/// Cast float to integer.
-	cg_value cast_f2i( cg_value const& v, cg_type* dest_tyi );
+	multi_value cast_f2i( multi_value const& v, cg_type* dest_tyi );
 	/// Cast between float types.
-	cg_value cast_f2f( cg_value const& v, cg_type* dest_tyi );
+	multi_value cast_f2f( multi_value const& v, cg_type* dest_tyi );
 	/// Cast integer to bool
-	cg_value cast_i2b( cg_value const& v );
+	multi_value cast_i2b( multi_value const& v );
 	/// Cast float to bool
-	cg_value cast_f2b( cg_value const& v );
+	multi_value cast_f2b( multi_value const& v );
 	/// @}
 
 	/// @name Emit Declarations
@@ -95,31 +95,31 @@ public:
 
 	/// @name Intrinsics
 	/// @{
-	virtual cg_value emit_ddx( cg_value const& v );
-	virtual cg_value emit_ddy( cg_value const& v );
+	virtual multi_value emit_ddx( multi_value const& v );
+	virtual multi_value emit_ddy( multi_value const& v );
 	/// @}
 
 	/// @name Emit statement
 	/// @{
 	void emit_return();
-	void emit_return( cg_value const&, abis::id abi );
+	void emit_return( multi_value const&, abis::id abi );
 	/// @}
 
 	/// @name Emit assignment
 	/// @{
-	virtual void store( cg_value& lhs, cg_value const& rhs );
+	virtual void store( multi_value& lhs, multi_value const& rhs );
 	/// @}
 
 	/// @name Emit values
 	/// @{
 	template <typename T>
-	cg_value create_constant_vector( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	multi_value create_constant_vector( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	
-	cg_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
-	cg_value create_vector( std::vector<cg_value> const& scalars, abis::id abi );
+	multi_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
+	multi_value create_vector( std::vector<multi_value> const& scalars, abis::id abi );
 
 	template <typename T>
-	cg_value create_constant_matrix( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
+	multi_value create_constant_matrix( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
 	/// @}
 
 	//virtual shared_ptr<sasl::syntax_tree::tynode> get_unique_ty( size_t tyid ) = 0;
@@ -128,7 +128,7 @@ public:
 	/// @name Utilities
 	/// @{
 	/// Switch to blocks
-	void switch_to( cg_value const& cond, std::vector< std::pair<cg_value, insert_point_t> > const& cases, insert_point_t const& default_branch );
+	void switch_to( multi_value const& cond, std::vector< std::pair<multi_value, insert_point_t> > const& cases, insert_point_t const& default_branch );
 	/// @}
 
 	/// @name Bridges
@@ -141,7 +141,7 @@ public:
 
 	/// @name State
 	/// @{
-	cg_value packed_mask();
+	multi_value packed_mask();
 
 	abis::id param_abi( bool c_compatible ) const;
 	/// Prefer to use external functions as intrinsic.

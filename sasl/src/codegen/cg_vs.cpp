@@ -196,7 +196,7 @@ SASL_VISIT_DEF( member_expression ){
 	if( tisi->ty_proto()->is_builtin() ){
 		// Swizzle or write mask
 		uint32_t masks = sem_->get_semantic(&v)->swizzle();
-		cg_value agg_value = agg_ctxt->node_value;
+		multi_value agg_value = agg_ctxt->node_value;
 		if( is_scalar(tisi->ty_proto()->tycode) ){
 			agg_value = service()->cast_s2v(agg_value);
 		}
@@ -269,7 +269,7 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 	EFLIB_UNREF_DECLARATOR(data);
-	cg_value ret_value = emit_logic_op(v.op, v.left_expr, v.right_expr);
+	multi_value ret_value = emit_logic_op(v.op, v.left_expr, v.right_expr);
 	node_ctxt(v, true)->node_value = ret_value.to_rvalue();
 }
 
@@ -421,7 +421,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 		visit_child( v.jump_expr );
 
 		// Copy result to semantic storage.
-		cg_value ret_value = node_ctxt( v.jump_expr )->node_value;
+		multi_value ret_value = node_ctxt( v.jump_expr )->node_value;
 
 		if( ret_value.hint() != builtin_types::none ){
 			// Builtin: Copy directly.
@@ -469,11 +469,11 @@ cg_module_impl* cg_vs::mod_ptr(){
 	return llvm_mod_.get();
 }
 
-cg_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input)
+multi_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input)
 {
 	if(copy_from_input) EFLIB_ASSERT_UNIMPLEMENTED();
 
-	cg_value ret;
+	multi_value ret;
 
 	// TODO: need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
@@ -532,7 +532,7 @@ bool cg_vs::layout_to_node_context(
 
 	// Otherwise create value and type for layout, and fill into context.
 	builtin_types bt = to_builtin_types(svl->value_type);
-	cg_value layout_value;
+	multi_value layout_value;
 	// TODO: need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
 		layout_value = service()->emit_extract_val(param_values[svl->usage], svl->physical_index);
@@ -562,7 +562,7 @@ bool cg_vs::layout_to_node_context(
 			// TODO: only support builtin type copy.
 			//		Need to support array copy later.
 			assert( layout_value.hint() != builtin_types::none );
-			cg_value copied_var = service()->create_variable(layout_value.hint(), layout_value.abi(), ".arg.copy");
+			multi_value copied_var = service()->create_variable(layout_value.hint(), layout_value.abi(), ".arg.copy");
 			copied_var.store(layout_value);
 			layout_value = copied_var;
 		}

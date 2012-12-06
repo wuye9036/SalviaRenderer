@@ -47,6 +47,8 @@ namespace llvm
 
 BEGIN_NS_SASL_CODEGEN();
 
+typedef std::vector<llvm::Value*> value_array;
+
 namespace externals
 {
 	enum id
@@ -120,13 +122,18 @@ public:
 
 	// Type of lhs and type of rhs are same.
 	// Scalar, vector and aggregated type could be used as type of lhs and rhs.
-	llvm::Value* call_binary_intrin(
+	llvm::Value* call_binary_intrin_mono(
 		llvm::Type* ret_ty,
 		llvm::Value* lhs, llvm::Value* rhs,
 		binary_intrin_functor sv_fn, unary_intrin_functor cast_result_sv_fn );
-		
+	value_array  call_binary_intrin(
+		llvm::Type* ret_ty,
+		value_array const& lhs, value_array const& rhs,
+		binary_intrin_functor sv_fn, unary_intrin_functor cast_result_sv_fn );
+
 	// Scalar, vector and aggregated type could be used as type of lhs and rhs.
 	llvm::Value* call_unary_intrin( llvm::Type* ret_ty, llvm::Value* v, unary_intrin_functor sv_fn );
+	value_array call_unary_intrin(llvm::Type* ret_ty, value_array const& v, unary_intrin_functor sv_fn);
 
 	// Bind functions and externals to functor.
 	unary_intrin_functor	bind_to_unary(llvm::Function* fn);
@@ -207,6 +214,19 @@ public:
 	}
 
 	llvm::Value* get_struct(llvm::Type* ty, llvm::ArrayRef<llvm::Value*> const& elements);
+	llvm::Value* get_array (llvm::ArrayRef<llvm::Value*> const& elements);
+	value_array  split_array(llvm::Value*);
+
+	// value_array extensions
+	value_array extract_value	(value_array const& agg, uint32_t index);
+	value_array extract_value	(value_array const& agg, int32_t  index)
+	{
+		assert(index > 0);
+		return extract_value( agg, static_cast<uint32_t>(index) );
+	}
+	value_array extract_element	(value_array const& agg, value_array const& index);
+	value_array create_gep		(value_array const& agg_addr, value_array const& index);
+	value_array shuffle_vector	(value_array const& v1, value_array const& v2, value_array const& mask);
 
 private:
 	cg_extension& operator = (cg_extension const&);

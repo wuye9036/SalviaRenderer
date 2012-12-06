@@ -71,14 +71,14 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_break	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( bin_logic	, binary_expression ) = 0;
 	
-	cg_value emit_logic_op(
+	multi_value emit_logic_op(
 		operators op,
 		boost::shared_ptr<sasl::syntax_tree::node> const& left,
 		boost::shared_ptr<sasl::syntax_tree::node> const& right
 		);
 
 	/// Create short-circuit evaluation for condition expression. And logic operators will use it.
-	cg_value emit_short_cond(
+	multi_value emit_short_cond(
 		boost::shared_ptr<sasl::syntax_tree::node> const& cond,
 		boost::shared_ptr<sasl::syntax_tree::node> const& yes,
 		boost::shared_ptr<sasl::syntax_tree::node> const& no

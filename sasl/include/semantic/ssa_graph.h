@@ -28,7 +28,7 @@ struct block_t;
 struct instruction_t;
 struct cg_function;
 struct variable_t;
-struct cg_value;
+struct multi_value;
 
 class ssa_graph
 {
@@ -43,7 +43,7 @@ private:
 
 struct ssa_attribute
 {
-	cg_value*	val;
+	multi_value*	val;
 	variable_t*	var;
 	cg_function*	fn;
 };

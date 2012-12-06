@@ -74,12 +74,13 @@ struct node_context
 		, is_semantic_mode(false)
 		, ty(NULL)
 		, declarator_count(0)
+		, node_value(0)
 	{
 	}
 
 	module_context*	owner;
 	cg_function*	function_scope;		///< Function type.
-	cg_value		node_value;			///< Value attached to node.
+	multi_value		node_value;			///< Value attached to node.
 	bool			is_semantic_mode;	///< Expression is a semantic mode. In this mode, the memory get from semantic but not
 	cg_type*		ty;					///< Type attached to node.
 	insert_point_t	label_position;		///< For labeled statement

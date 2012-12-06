@@ -72,7 +72,7 @@ private:
 
 	cg_module_impl* mod_ptr();
 
-	cg_value layout_to_value(salviar::sv_layout* si, bool copy_from_input);
+	multi_value layout_to_value(salviar::sv_layout* si, bool copy_from_input);
 
 	// If ctxt is NULL, the generated value and type will be cached.
 	// Return true if context is fetched from cache.
@@ -89,7 +89,7 @@ private:
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
 
-	cg_value param_values[salviar::storage_usage_count];
+	multi_value param_values[salviar::storage_usage_count];
 
 	std::vector<builtin_types> entry_param_tys[salviar::storage_usage_count];
 	std::vector< llvm::Type* > entry_params_types[salviar::storage_usage_count];

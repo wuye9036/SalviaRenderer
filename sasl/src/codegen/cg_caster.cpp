@@ -61,7 +61,7 @@ public:
 	{
 	}
 
-	void store(node* dest, node* src, cg_value const& v)
+	void store(node* dest, node* src, multi_value const& v)
 	{
 		node_context* src_ctxt = get_context(src);
 		node_context* dest_ctxt = get_context(dest);
@@ -85,7 +85,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		cg_value casted = cgs->cast_ints(
+		multi_value casted = cgs->cast_ints(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -95,7 +95,7 @@ public:
 
 	void int2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		cg_value casted = cgs->cast_i2b( get_context(src)->node_value );
+		multi_value casted = cgs->cast_i2b( get_context(src)->node_value );
 		store(dest, src, casted);
 	}
 
@@ -105,7 +105,7 @@ public:
 		
 		assert( src_ctxt != dest_ctxt );
 
-		cg_value casted = cgs->cast_i2f(
+		multi_value casted = cgs->cast_i2f(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -118,7 +118,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		cg_value casted = cgs->cast_f2i(
+		multi_value casted = cgs->cast_f2i(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -131,7 +131,7 @@ public:
 
 		assert( src_ctxt != dest_ctxt );
 
-		cg_value casted = cgs->cast_f2f(
+		multi_value casted = cgs->cast_f2f(
 			src_ctxt->node_value.to_rvalue(),
 			dest_ctxt->ty
 			);
@@ -140,7 +140,7 @@ public:
 
 	void float2bool(node* dest, node* src){
 		if( src == dest ){ return; }
-		cg_value casted = cgs->cast_f2b( get_context(src)->node_value );
+		multi_value casted = cgs->cast_f2b( get_context(src)->node_value );
 		store( dest, src, casted );
 	}
 
@@ -165,7 +165,7 @@ public:
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 
-		cg_value vector_value = dest_ctxt->node_value.to_rvalue();
+		multi_value vector_value = dest_ctxt->node_value.to_rvalue();
 		size_t swz_code = encode_sized_swizzle(dest_size);
 
 		cgs->store(

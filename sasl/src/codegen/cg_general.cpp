@@ -85,7 +85,7 @@ SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)
 {
 	EFLIB_UNREF_DECLARATOR(data);
 
-	cg_value ret_value;
+	multi_value ret_value;
 	builtin_types bt = sem_->get_semantic(v.left_expr)->value_builtin_type();
 	if( is_scalar(bt) )
 	{

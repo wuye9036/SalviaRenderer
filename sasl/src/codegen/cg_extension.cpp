@@ -55,7 +55,34 @@ cg_extension::cg_extension( DefaultIRBuilder* builder, LLVMContext& context, Mod
 	initialize_external_intrinsics();
 }
 
-Value* cg_extension::call_binary_intrin( Type* ret_ty, Value* lhs, Value* rhs, binary_intrin_functor sv_fn, unary_intrin_functor cast_result_sv_fn )
+value_array cg_extension::call_binary_intrin(
+	Type* ret_ty,
+	value_array const& lhs, value_array const& rhs,
+	binary_intrin_functor sv_fn, unary_intrin_functor cast_result_sv_fn
+	)
+{
+	assert( valid_all(lhs) );
+	assert( valid_all(rhs) );
+	assert( lhs.size() == rhs.size() );
+	assert( sv_fn );
+	assert( cast_result_sv_fn );
+
+	size_t parallel_factor = lhs.size();
+	value_array ret(parallel_factor, NULL);
+	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
+	{
+		ret[value_index] = call_binary_intrin_mono(
+			ret_ty, lhs[value_index], rhs[value_index], sv_fn, cast_result_sv_fn
+			);
+	}
+	return ret;
+}
+
+Value* cg_extension::call_binary_intrin_mono(
+	Type* ret_ty,
+	Value* lhs, Value* rhs,
+	binary_intrin_functor sv_fn, unary_intrin_functor cast_result_sv_fn
+	)
 {
 	Type* ty = lhs->getType();
 	if( !ret_ty ) ret_ty = ty;
@@ -80,7 +107,7 @@ Value* cg_extension::call_binary_intrin( Type* ret_ty, Value* lhs, Value* rhs, b
 			Value* lhs_elem = builder_->CreateExtractValue(lhs, elem_index);
 			Value* rhs_elem = builder_->CreateExtractValue(rhs, elem_index);
 			Type* ret_elem_ty = ret_ty->getStructElementType(i);
-			Value* ret_elem = call_binary_intrin(ret_elem_ty, lhs_elem, rhs_elem, sv_fn, cast_result_sv_fn);
+			Value* ret_elem = call_binary_intrin_mono(ret_elem_ty, lhs_elem, rhs_elem, sv_fn, cast_result_sv_fn);
 			ret = builder_->CreateInsertValue(ret, ret_elem, elem_index);
 		}
 		return ret;
@@ -88,6 +115,19 @@ Value* cg_extension::call_binary_intrin( Type* ret_ty, Value* lhs, Value* rhs, b
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return NULL;
+}
+
+value_array cg_extension::call_unary_intrin( Type* ret_ty, value_array const& v, unary_intrin_functor sv_fn )
+{
+	assert( valid_all(v) );
+	assert( sv_fn );
+	size_t parallel_factor = v.size();
+	value_array ret(parallel_factor, NULL);
+	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
+	{
+		ret[value_index] = call_unary_intrin(ret_ty, v[value_index], sv_fn);
+	}
+	return ret;
 }
 
 Value* cg_extension::call_unary_intrin( Type* ret_ty, Value* v, unary_intrin_functor sv_fn )
@@ -485,6 +525,32 @@ Value* cg_extension::get_struct( Type* ty, ArrayRef<Value*> const& elements )
 	return ret;
 }
 
+Value* cg_extension::get_array (ArrayRef<Value*> const& elements)
+{
+	ArrayType* arr_type = ArrayType::get( elements[0]->getType(), elements.size() );
+	Value* return_val = UndefValue::get(arr_type);
+	uint32_t indexes[1] = {0};
+	for(; indexes[0] < elements.size(); ++indexes[0])
+	{
+		return_val = builder_->CreateInsertValue(return_val, elements[ indexes[0] ], indexes);
+	}
+	return return_val;
+}
+
+value_array cg_extension::split_array(llvm::Value* v)
+{
+	Type* ty = v->getType();
+	assert( ty->isArrayTy() );
+	size_t parallel_factor = ty->getArrayNumElements();
+	value_array ret(parallel_factor, NULL);
+	unsigned value_index[] = {0};
+	for(; value_index[0] < parallel_factor; ++value_index[0])
+	{
+		ret[ value_index[0] ] = builder_->CreateExtractValue(v, value_index);
+	}
+	return ret;
+}
+
 Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 		binary_intrin_functor sfn, binary_intrin_functor vfn, binary_intrin_functor simd_fn )
 {
@@ -622,6 +688,45 @@ AllocaInst* cg_extension::stack_alloc(Type* ty, Twine const& name)
 	return new AllocaInst(ty, NULL, name, alloc_point_);
 }
 
+value_array cg_extension::extract_element(value_array const& agg, value_array const& index)
+{
+	assert( agg.size() == index.size() );
+	assert( valid_all(agg) );
+	assert( valid_all(index) );
+	value_array ret(agg.size(), NULL);
+
+	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
+	{
+		ret[value_index] = builder_->CreateExtractElement(agg[value_index], index[value_index]);
+	}
+	return ret;
+}
+
+value_array cg_extension::extract_value(value_array const& agg, uint32_t index)
+{
+	assert( valid_all(agg) );
+	value_array ret(agg.size(), NULL);
+	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
+	{
+		ret[value_index] = builder_->CreateExtractValue(	agg[value_index], index);
+	}
+	return ret;
+}
+
+value_array cg_extension::create_gep(value_array const& agg_addr, value_array const& index)
+{
+	assert( agg_addr.size() == index.size() );
+	assert( valid_all(agg_addr) );
+	assert( valid_all(index) );
+	
+	value_array ret(agg_addr.size(), NULL);
+	for(size_t value_index = 0; value_index < agg_addr.size(); ++value_index)
+	{
+		ret[value_index] = builder_->CreateGEP(agg_addr[value_index], index[value_index] );
+	}
+	return ret;
+}
+
 using namespace externals;
 
 bool cg_extension::initialize_external_intrinsics()
@@ -640,9 +745,9 @@ bool cg_extension::initialize_external_intrinsics()
 	Type* u32ptr_ty		= Type::getInt32PtrTy( context_ );
 	
 	Type* v4f32_ty		= get_llvm_type(context_, v4f32_hint, abis::llvm);
-	Type* v4f32_pkg_ty	= get_llvm_type(context_, v4f32_hint, abis::package);
+	/*Type* v4f32_pkg_ty	= get_llvm_type(context_, v4f32_hint, abis::package);
 	Type* v3f32_pkg_ty	= get_llvm_type(context_, v3f32_hint, abis::package);
-	Type* v2f32_pkg_ty	= get_llvm_type(context_, v2f32_hint, abis::package);
+	Type* v2f32_pkg_ty	= get_llvm_type(context_, v2f32_hint, abis::package);*/
 
 	FunctionType* f_f = NULL;
 	{
@@ -667,6 +772,7 @@ bool cg_extension::initialize_external_intrinsics()
 		vs_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
+#if 0
 	FunctionType* ps_texlod_ty = NULL;
 	{
 		Type* arg_tys[4] =
@@ -748,6 +854,7 @@ bool cg_extension::initialize_external_intrinsics()
 		};
 		ps_texproj_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
+#endif
 
 	FunctionType* u32_u32_ty = NULL;
 	{
@@ -782,7 +889,8 @@ bool cg_extension::initialize_external_intrinsics()
 	externals_[firstbithigh_u32]= Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.firstbithigh.u32", module_ );
 	externals_[firstbitlow_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.firstbitlow.u32", module_ );
 	externals_[reversebits_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.reversebits.u32", module_ );
-	
+
+#if 0
 	externals_[tex2dlod_vs]	= Function::Create(vs_texlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.tex2d.lod", module_ );
 	externals_[tex2dlod_ps]	= Function::Create(ps_texlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.tex2d.lod", module_ );
 	externals_[tex2dgrad_ps]= Function::Create(ps_tex2dgrad_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.grad", module_ );
@@ -794,6 +902,7 @@ bool cg_extension::initialize_external_intrinsics()
 	externals_[texCUBEgrad_ps]	= Function::Create(ps_texCUBEgrad_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.grad", module_ );
 	externals_[texCUBEbias_ps]	= Function::Create(ps_texCUBEbias_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.bias", module_ );
 	externals_[texCUBEproj_ps]	= Function::Create(ps_texproj_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.proj", module_ );
+#endif
 	return true;
 }
 END_NS_SASL_CODEGEN();

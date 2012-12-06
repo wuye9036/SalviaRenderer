@@ -64,8 +64,6 @@ namespace abis
 		unknown,
 		c,
 		llvm,
-		vectorize,
-		package,
 		count
 	};
 }
@@ -109,14 +107,14 @@ public:
 		llvm::Type* ty_vec,
 		llvm::Type* ty_pkg
 		);
-	
+
 	cg_type();
 
 	cg_type( cg_type const& );
 	cg_type& operator = ( cg_type const& );
 
 	sasl::syntax_tree::tynode*
-					tyn_ptr() const;
+		tyn_ptr() const;
 	builtin_types	hint() const;
 	llvm::Type*		ty( abis::id abi ) const;
 
@@ -125,57 +123,86 @@ protected:
 	sasl::syntax_tree::tynode*	tyn;
 };
 
-class cg_value{
+typedef std::vector<llvm::Value*> value_array;
+bool valid_any(value_array const& arr);
+bool valid_all(value_array const& arr);
+
+class multi_value{
 public:
 	friend class cg_service;
 
-	cg_value();
-	cg_value( cg_value const& );
-	cg_value& operator = ( cg_value const& );
+	multi_value(size_t num_value = 0);
+	multi_value(multi_value const&);
+	multi_value& operator = (multi_value const&);
 
 	/// @name State accessors 
 	/// @{
 	/// Get service.
-	cg_service* service() const;
-	/// Return internal llvm value.
-	llvm::Value* raw() const;
+	cg_service*		service() const;
 
-	/// Load llvm value from cg_value.
-	llvm::Value* load() const;
-	llvm::Value* load( abis::id abi ) const;
-	llvm::Value* load_i1() const;
-	llvm::Value* load_ref() const;
+	/// Load llvm value from multi_value.
+	llvm::Value*	raw(size_t index) const;
+	llvm::Value*	load(size_t index) const;
+	llvm::Value*	load(size_t index, abis::id abi) const;
+	llvm::Value*	load_i1	(size_t index) const;
+	llvm::Value*	load_ref(size_t index) const;
 
-	void store( cg_value const& ) const;
+	value_array		raw() const;
+	value_array		load    (abis::id abi) const;
+	value_array		load    () const;
+	value_array		load_i1 () const;
+	value_array		load_ref() const;
 
-	/// Store llvm value to cg_value
-	void emplace( cg_value const& );
-	void emplace( llvm::Value* v, value_kinds::id k, abis::id abi );
+	/// Store llvm value to multi_value
+	void			store	(multi_value const&) const;
+	void			emplace	(multi_value const&);
+	void			emplace	(llvm::Value* v, value_kinds::id k, abis::id abi);
 
-	bool storable() const;
-	bool load_only() const;
+	template <typename IteratorT>
+	void			emplace	(
+		IteratorT const& values_begin,
+		IteratorT const& values_end,
+		value_kinds::id k,
+		abis::id abi
+		)
+	{
+		size_t index = 0;
+		for(IteratorT iter = values_begin; iter != values_end; ++iter)
+		{
+			emplace(index++, *iter, k, abi);
+		}
+	}
+	template <typename IteratableT>
+	void			emplace ( IteratableT const& v, value_kinds::id k, abis::id abi)
+	{
+		return emplace(v.begin(), v.end(), k, abi);
+	}
 
-	cg_value as_ref() const;
+	bool			storable () const;
+	bool			load_only() const;
+	size_t			value_count() const;
+	bool			is_mono	 ()	const;
+	multi_value		as_ref	 () const;
 
-	cg_type*		ty() const;				///< Get type information of value.
-	void			ty(cg_type*);		///< Set type information of value.
+	cg_type*		ty() const;		///< Get type information of value.
+	void			ty(cg_type*);	///< Set type information of value.
 
-	builtin_types	hint() const;				///< Get type hint. if type is not built-in type it returns builtin_type::none.
-	void			hint( builtin_types bt );	///< Set type hint.
+	builtin_types	hint() const;			///< Get type hint. if type is not built-in type it returns builtin_type::none.
+	void			hint(builtin_types bt);	///< Set type hint.
 
-	value_kinds::id		kind() const;				///< Get kind.
-	void			kind( value_kinds::id vkind );	///< Set kind.
+	value_kinds::id	kind() const;					///< Get kind.
+	void			kind(value_kinds::id vkind);	///< Set kind.
 
-	cg_value*		parent() const;				///< Get parent. If value is not a member of aggragation, it return NULL.
-	void			parent( cg_value const& v );
-	void			parent( cg_value const* v );
+	multi_value*	parent() const;					///< Get parent. If value is not a member of aggragation, it return NULL.
+	void			parent(multi_value const& v);
+	void			parent(multi_value const* v);
 
-	abis::id			abi() const;				///< Get ABI.
-	void			abi( abis::id abi );			///< Set ABI
+	abis::id		abi() const;				///< Get ABI.
+	void			abi( abis::id abi );		///< Set ABI
 
-	cg_value*		index() const;
-	void			index( cg_value const& );
-	void			index( cg_value const* );
+	multi_value*	index() const;
+	void			index( multi_value const& );
+	void			index( multi_value const* );
 	void			index( size_t v );			///< Set Index. It is only make sense if parent is available.
 	uint32_t		masks() const;				///< Get masks
 	void			masks( uint32_t v );		///< Set masks.
@@ -183,34 +210,48 @@ public:
 
 	/// @name Operators
 	/// @{
-	cg_value swizzle( size_t swz_code ) const;
-	cg_value to_rvalue() const;
+	multi_value		swizzle( size_t swz_code ) const;
+	multi_value		to_rvalue() const;
 	/// @}
 
-	static cg_value slice( cg_value const& vec, uint32_t masks );
-	static cg_value slice( cg_value const& vec, cg_value const& index );
+	static multi_value slice( multi_value const& vec, uint32_t masks );
+	static multi_value slice( multi_value const& vec, multi_value const& index );
 
 protected:
 	/// @name Constructor, Destructor, Copy constructor and assignment operator
 	/// @{
-	cg_value(cg_type* ty, llvm::Value* val, value_kinds::id k, abis::id abi, cg_service* cg);
-	cg_value(builtin_types hint, llvm::Value* val, value_kinds::id k, abis::id abi, cg_service* cg);
+	multi_value(cg_type* ty
+		, std::vector<llvm::Value*> const& val
+		, value_kinds::id k, abis::id abi
+		, cg_service* cg);
+
+	multi_value(builtin_types hint
+		, std::vector<llvm::Value*> const& val
+		, value_kinds::id k, abis::id abi
+		, cg_service* cg);
 	/// @}
 
 	/// @name Members
 	/// @{
-	boost::scoped_ptr<cg_value>	parent_; // For write mask and swizzle.
-	boost::scoped_ptr<cg_value>	index_;
-	uint32_t					masks_;
+	
+	// Parent, Index and Masks.
+	boost::scoped_ptr<multi_value>	parent_;
+	boost::scoped_ptr<multi_value>	index_;
+	uint32_t						masks_;
 
-	cg_type*					ty_;
-	builtin_types				builtin_ty_;
-	value_kinds::id				kind_;
-	abis::id					abi_;
+	// Value
+	std::vector<llvm::Value*>		val_;
 
-	llvm::Value*				val_;
+	// Types
+	cg_type*						ty_;
+	builtin_types					builtin_ty_;
 
-	cg_service*					cg_;
+	// Kind and ABI
+	value_kinds::id					kind_;
+	abis::id						abi_;
+
+	// Owner
+	cg_service*						cg_;
 	/// @}
 };
 
@@ -235,7 +276,7 @@ struct cg_function{
 	EFLIB_OPERATOR_BOOL( cg_function ){ return NULL != fn; }
 
 	/// Get argument's value by index.
-	cg_value arg( size_t index ) const;
+	multi_value arg( size_t index ) const;
 	/// Get argument size.
 	size_t arg_size() const;
 	/// Set argument name.
@@ -245,13 +286,15 @@ struct cg_function{
 	/// Return true if argument is a reference.
 	bool arg_is_ref( size_t index ) const;
 	/// Return true if first argument is pointer to return value.
-	bool first_arg_is_return_address() const;
+	bool return_via_arg() const;
 	/// Get ABI
 	abis::id abi() const;
 	/// Get return address value.
 	llvm::Value* return_address() const;
 	/// Get Execution Mask.
-	cg_value packed_execution_mask() const;
+	multi_value packed_execution_mask() const;
+	/// Need mask
+	bool need_mask() const;
 	/// Return name
 	void return_name( std::string const& s );
 	/// Set Inline hint
@@ -259,7 +302,7 @@ struct cg_function{
 	void allocation_block( insert_point_t const& ip);
 	insert_point_t allocation_block() const;
 
-	cg_type* get_return_ty() const;
+	cg_type* result_type() const;
 
 	insert_point_t						alloc_block;
 	std::vector<llvm::Argument*>		argCache;

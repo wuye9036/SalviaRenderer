@@ -12,26 +12,26 @@ class cgs_simd: public cg_service
 public:
 	abis::id intrinsic_abi() const;
 
-	virtual void store( cg_value& lhs, cg_value const& rhs );
+	virtual void store( multi_value& lhs, multi_value const& rhs );
 
-	cg_value emit_and(cg_value const& lhs, cg_value const& rhs);
-	cg_value emit_or (cg_value const& lhs, cg_value const& rhs);
+	multi_value emit_and(multi_value const& lhs, multi_value const& rhs);
+	multi_value emit_or (multi_value const& lhs, multi_value const& rhs);
 
-	virtual cg_value cast_ints( cg_value const& v, cg_type* dest_tyi );
-	virtual cg_value cast_i2f ( cg_value const& v, cg_type* dest_tyi );
-	virtual cg_value cast_f2i ( cg_value const& v, cg_type* dest_tyi );
-	virtual cg_value cast_f2f ( cg_value const& v, cg_type* dest_tyi );
-	virtual cg_value cast_i2b ( cg_value const& v );
-	virtual cg_value cast_f2b ( cg_value const& v );
+	virtual multi_value cast_ints( multi_value const& v, cg_type* dest_tyi );
+	virtual multi_value cast_i2f ( multi_value const& v, cg_type* dest_tyi );
+	virtual multi_value cast_f2i ( multi_value const& v, cg_type* dest_tyi );
+	virtual multi_value cast_f2f ( multi_value const& v, cg_type* dest_tyi );
+	virtual multi_value cast_i2b ( multi_value const& v );
+	virtual multi_value cast_f2b ( multi_value const& v );
 
 	void emit_return();
-	void emit_return( cg_value const&, abis::id abi );
+	void emit_return( multi_value const&, abis::id abi );
 	
-	virtual cg_value emit_ddx( cg_value const& v );
-	virtual cg_value emit_ddy( cg_value const& v );
+	virtual multi_value emit_ddx( multi_value const& v );
+	virtual multi_value emit_ddy( multi_value const& v );
 	
-	cg_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
-	virtual cg_value create_vector( std::vector<cg_value> const& scalars, abis::id abi );
+	multi_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
+	virtual multi_value create_vector( std::vector<multi_value> const& scalars, abis::id abi );
 
 	abis::id param_abi( bool c_compatible ) const;
 	bool prefer_externals() const{ return false; }
@@ -43,18 +43,18 @@ public:
 	virtual void for_init_beg();
 	virtual void for_init_end();
 	virtual void for_cond_beg();
-	virtual void for_cond_end( cg_value const& );
+	virtual void for_cond_end( multi_value const& );
 	virtual void for_body_beg();
 	virtual void for_body_end();
 	virtual void for_iter_beg();
 	virtual void for_iter_end();
 
-	virtual cg_value joinable();
+	virtual multi_value joinable();
 
 	virtual void if_beg();
 	virtual void if_end();
 	virtual void if_cond_beg();
-	virtual void if_cond_end( cg_value const& );
+	virtual void if_cond_end( multi_value const& );
 	virtual void then_beg();
 	virtual void then_end();
 	virtual void else_beg();
@@ -68,7 +68,7 @@ public:
 	virtual void while_beg();
 	virtual void while_end();
 	virtual void while_cond_beg();
-	virtual void while_cond_end( cg_value const& );
+	virtual void while_cond_end( multi_value const& );
 	virtual void while_body_beg();
 	virtual void while_body_end();
 
@@ -77,7 +77,7 @@ public:
 	virtual void do_body_beg();
 	virtual void do_body_end();
 	virtual void do_cond_beg();
-	virtual void do_cond_end( cg_value const& );
+	virtual void do_cond_end( multi_value const& );
 
 	virtual void break_();
 	virtual void continue_();
@@ -87,10 +87,10 @@ private:
 	void			save_loop_execution_mask( llvm::Value* );
 	virtual void	enter_loop();
 	virtual void	exit_loop();
-	virtual void	apply_loop_condition( cg_value const& );
+	virtual void	apply_loop_condition( multi_value const& );
 	virtual void	save_next_iteration_exec_mask();
 
-	cg_value			packed_mask();
+	multi_value			packed_mask();
 	llvm::Value*	all_one_mask();
 	llvm::Value*	all_zero_mask();
 	llvm::Value*	expanded_mask( uint32_t expanded_times );
@@ -100,7 +100,7 @@ private:
 		slm_vertical
 	};
 
-	cg_value derivation( cg_value const& v, slice_layout_mode slm );
+	multi_value derivation( multi_value const& v, slice_layout_mode slm );
 
 	llvm::Value* pack_slices(
 		llvm::Value** slices,

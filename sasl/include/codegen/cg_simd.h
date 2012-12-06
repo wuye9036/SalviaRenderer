@@ -67,7 +67,7 @@ protected:
 
 	void	create_entries();
 	void	create_entry_param( salviar::sv_usage usage );
-	cg_value	layout_to_value( salviar::sv_layout* svl );
+	multi_value	layout_to_value( salviar::sv_layout* svl );
 
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 
@@ -85,7 +85,7 @@ protected:
 	std::vector<llvm::Type*>	entry_tys[salviar::storage_usage_count];
 	llvm::StructType*			entry_structs[salviar::storage_usage_count];
 	std::vector<builtin_types>	entry_tyns[salviar::storage_usage_count];
-	cg_value						entry_values[salviar::storage_usage_count];
+	multi_value						entry_values[salviar::storage_usage_count];
 };
 
 END_NS_SASL_CODEGEN();

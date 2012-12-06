@@ -124,7 +124,7 @@ namespace {
 	}
 }
 
-void cgs_sisd::store( cg_value& lhs, cg_value const& rhs ){
+void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
 	Value* src = NULL;
 	Value* address = NULL;
 	value_kinds::id kind = lhs.kind();
@@ -134,14 +134,14 @@ void cgs_sisd::store( cg_value& lhs, cg_value const& rhs ){
 		address = lhs.raw();
 	} else if ( kind == value_kinds::elements ){
 		char indexes[4] = {-1, -1, -1, -1};
-		cg_value const* root = NULL;
+		multi_value const* root = NULL;
 		bool is_swizzle = merge_swizzle(root, indexes, lhs);
 
 		if( is_swizzle && is_vector( root->hint()) ){
 			assert( lhs.parent()->storable() );
 			
-			cg_value rhs_rvalue = rhs.to_rvalue();
-			cg_value ret_v = root->to_rvalue();
+			multi_value rhs_rvalue = rhs.to_rvalue();
+			multi_value ret_v = root->to_rvalue();
 			for(size_t i = 0; i < vector_size(rhs.hint()); ++i)
 			{
 				ret_v = emit_insert_val( ret_v, indexes[i], emit_extract_val(rhs_rvalue, i) );
@@ -159,7 +159,7 @@ void cgs_sisd::store( cg_value& lhs, cg_value const& rhs ){
 	builder().CreateStore( src, address );
 }
 
-cg_value cgs_sisd::cast_ints( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_sisd::cast_ints( multi_value const& v, cg_type* dest_tyi )
 {
 	builtin_types hint_src = v.hint();
 	builtin_types hint_dst = dest_tyi->hint();
@@ -176,7 +176,7 @@ cg_value cgs_sisd::cast_ints( cg_value const& v, cg_type* dest_tyi )
 	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
 
-cg_value cgs_sisd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_sisd::cast_i2f( multi_value const& v, cg_type* dest_tyi )
 {
 	builtin_types hint_i = v.hint();
 	builtin_types hint_f = dest_tyi->hint();
@@ -194,7 +194,7 @@ cg_value cgs_sisd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
 	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
 
-cg_value cgs_sisd::cast_f2i( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_sisd::cast_f2i( multi_value const& v, cg_type* dest_tyi )
 {
 	builtin_types hint_i = dest_tyi->hint();
 	builtin_types hint_f = v.hint();
@@ -212,17 +212,17 @@ cg_value cgs_sisd::cast_f2i( cg_value const& v, cg_type* dest_tyi )
 	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
 
-cg_value cgs_sisd::cast_f2f( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_sisd::cast_f2f( multi_value const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_sisd::create_vector( std::vector<cg_value> const& scalars, abis::id abi ){
+multi_value cgs_sisd::create_vector( std::vector<multi_value> const& scalars, abis::id abi ){
 	builtin_types scalar_hint = scalars[0].hint();
 	builtin_types hint = vector_of(scalar_hint, scalars.size());
 
-	cg_value ret = undef_value(hint, abi);
+	multi_value ret = undef_value(hint, abi);
 	for( size_t i = 0; i < scalars.size(); ++i )
 	{
 		ret = emit_insert_val( ret, (int)i, scalars[i] );
@@ -234,10 +234,10 @@ void cgs_sisd::emit_return(){
 	builder().CreateRetVoid();
 }
 
-void cgs_sisd::emit_return( cg_value const& ret_v, abis::id abi ){
+void cgs_sisd::emit_return( multi_value const& ret_v, abis::id abi ){
 	if( abi == abis::unknown ){ abi = fn().abi(); }
 
-	if( fn().first_arg_is_return_address() ){
+	if( fn().return_via_arg() ){
 		builder().CreateStore( ret_v.load(abi), fn().return_address() );
 		builder().CreateRetVoid();
 	} else {
@@ -245,7 +245,7 @@ void cgs_sisd::emit_return( cg_value const& ret_v, abis::id abi ){
 	}
 }
 
-cg_value cgs_sisd::create_scalar( Value* val, cg_type* tyinfo, builtin_types hint ){
+multi_value cgs_sisd::create_scalar( Value* val, cg_type* tyinfo, builtin_types hint ){
 	assert( is_scalar(hint) );
 	return create_value( tyinfo, hint, val, value_kinds::value, abis::llvm );
 }
@@ -265,22 +265,22 @@ bool cgs_sisd::prefer_scalar_code() const
 	return false;
 }
 
-cg_value cgs_sisd::emit_swizzle( cg_value const& lhs, uint32_t mask )
+multi_value cgs_sisd::emit_swizzle( multi_value const& lhs, uint32_t mask )
 {
 	EFLIB_UNREF_DECLARATOR(lhs);
 	EFLIB_UNREF_DECLARATOR(mask);
 
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_sisd::emit_write_mask( cg_value const& vec, uint32_t mask )
+multi_value cgs_sisd::emit_write_mask( multi_value const& vec, uint32_t mask )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-void cgs_sisd::switch_to( cg_value const& cond, std::vector< std::pair<cg_value, insert_point_t> > const& cases, insert_point_t const& default_branch )
+void cgs_sisd::switch_to( multi_value const& cond, std::vector< std::pair<multi_value, insert_point_t> > const& cases, insert_point_t const& default_branch )
 {
 	Value* v = cond.load();
 	SwitchInst* inst = builder().CreateSwitch( v, default_branch.block, static_cast<unsigned>(cases.size()) );
@@ -289,13 +289,13 @@ void cgs_sisd::switch_to( cg_value const& cond, std::vector< std::pair<cg_value,
 	}
 }
 
-cg_value cgs_sisd::cast_i2b( cg_value const& v )
+multi_value cgs_sisd::cast_i2b( multi_value const& v )
 {
 	assert( is_integer(v.hint()) );
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
 }
 
-cg_value cgs_sisd::cast_f2b( cg_value const& v )
+multi_value cgs_sisd::cast_f2b( multi_value const& v )
 {
 	assert( is_real(v.hint()) );
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
@@ -311,24 +311,24 @@ abis::id cgs_sisd::param_abi( bool c_compatible ) const
 	return c_compatible ? abis::c : abis::llvm;
 }
 
-cg_value cgs_sisd::emit_ddx( cg_value const& v )
+multi_value cgs_sisd::emit_ddx( multi_value const& v )
 {
 	// It is not available in SISD mode.
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return v;
 }
 
-cg_value cgs_sisd::emit_ddy( cg_value const& v )
+multi_value cgs_sisd::emit_ddy( multi_value const& v )
 {
 	// It is not available in SISD mode.
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return v;
 }
 
-cg_value cgs_sisd::packed_mask()
+multi_value cgs_sisd::packed_mask()
 {
 	assert(false);
-	return cg_value();
+	return multi_value();
 }
 
 Value* cgs_sisd::phi_( BasicBlock* b0, Value* v0, BasicBlock* b1, Value* v1 )

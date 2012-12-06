@@ -85,7 +85,7 @@ using std::string;
 
 BEGIN_NS_SASL_CODEGEN();
 
-void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
+void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 {
 	Value* src = rhs.load( lhs.abi() );
 	Value* address = NULL;
@@ -137,7 +137,7 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 			case abis::c:
 				{
 					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
-						cg_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
+						multi_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
 						Value* mem_ptr = builder().CreateStructGEP( parent_address, indexes[i_write_idx] );
 						builder().CreateStore( element_val.load(), mem_ptr );
 					}
@@ -145,38 +145,12 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 				}
 			case abis::llvm:
 				{
-					cg_value parent_v = lhs.parent()->to_rvalue();
+					multi_value parent_v = lhs.parent()->to_rvalue();
 					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
-						cg_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
+						multi_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
 						parent_v = emit_insert_val( rhs, indexes[i_write_idx], element_val );
 					}
 					lhs.parent()->store( parent_v );
-					return;
-				}
-			case abis::vectorize:
-				EFLIB_ASSERT_UNIMPLEMENTED();
-				break;
-			case abis::package:
-				{
-					int dst_elem_pitch = ceil_to_pow2( vector_size( lhs.parent()->hint() ) );
-					int src_elem_pitch = ceil_to_pow2( vector_size( rhs.hint() ) );
-
-					Value* parent_value = lhs.parent()->load();
-					for( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
-						for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
-							int src_index = static_cast<int>( src_elem_pitch*i_elem+i_write_idx );
-							int dst_index = static_cast<int>( dst_elem_pitch*i_elem+indexes[i_write_idx] );
-					
-							Value* new_val = builder().CreateExtractElement( r_value, ext_->get_int(src_index) );
-							Value* old_val = builder().CreateExtractElement( parent_value, ext_->get_int(dst_index) ); 
-							Value* elem_exec_mask = builder().CreateExtractElement( exec_masks.back(), ext_->get_int( static_cast<int>(i_elem) ) );
-							Value* elem_val = builder().CreateSelect( ext_->i8toi1_sv(elem_exec_mask), new_val, old_val );
-							parent_value = builder().CreateInsertElement( parent_value, elem_val, ext_->get_int(dst_index) );
-						}
-					}
-					cg_value new_v = *lhs.parent();
-					new_v.emplace( parent_value, value_kinds::value, lhs.abi() );
-					lhs.parent()->store( new_v );
 					return;
 				}
 			default:
@@ -192,51 +166,46 @@ void cgs_simd::store( cg_value& lhs, cg_value const& rhs )
 	//inst->setAlignment(4);
 }
 
-cg_value cgs_simd::cast_ints( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_simd::cast_ints( multi_value const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_simd::cast_i2f( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_simd::cast_i2f( multi_value const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_simd::cast_f2i( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_simd::cast_f2i( multi_value const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_simd::cast_f2f( cg_value const& v, cg_type* dest_tyi )
+multi_value cgs_simd::cast_f2f( multi_value const& v, cg_type* dest_tyi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_simd::cast_i2b( cg_value const& v )
+multi_value cgs_simd::cast_i2b( multi_value const& v )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_simd::cast_f2b( cg_value const& v )
+multi_value cgs_simd::cast_f2b( multi_value const& v )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_simd::create_vector( vector<cg_value> const& scalars, abis::id abi )
+multi_value cgs_simd::create_vector( vector<multi_value> const& scalars, abis::id abi )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
-}
-
-abis::id cgs_simd::intrinsic_abi() const
-{
-	return abis::vectorize;
+	return multi_value();
 }
 
 void cgs_simd::emit_return()
@@ -244,42 +213,16 @@ void cgs_simd::emit_return()
 	builder().CreateRetVoid();
 }
 
-void cgs_simd::emit_return( cg_value const& ret_v, abis::id abi )
+void cgs_simd::emit_return( multi_value const& ret_v, abis::id abi )
 {
 	if( abi == abis::unknown ){ abi = fn().abi(); }
 
-	if( fn().first_arg_is_return_address() ){
+	if( fn().return_via_arg() ){
 		builder().CreateStore( ret_v.load(abi), fn().return_address() );
 		builder().CreateRetVoid();
 	} else {
 		builder().CreateRet( ret_v.load(abi) );
 	}
-}
-
-abis::id cgs_simd::param_abi( bool /*c_compatible*/ ) const
-{
-	return abis::package;
-}
-
-cg_value cgs_simd::create_scalar( llvm::Value* v, cg_type* tyi, builtin_types hint )
-{
-	Type* ty = NULL;
-	if( tyi )
-	{
-		ty = tyi->ty( abis::vectorize );
-	}
-	else
-	{
-		ty = type_( hint, abis::vectorize );
-	}
-	
-	Value* vectorize_v = Constant::getNullValue( ty );
-
-	for( size_t i_elem = 0; i_elem < llvm::cast<VectorType>(ty)->getNumElements(); ++i_elem ){
-		vectorize_v = builder().CreateInsertElement( vectorize_v, v, ext_->get_int( static_cast<int>(i_elem) ) );
-	}
-
-	return create_value( tyi, hint, vectorize_v, value_kinds::value, abis::vectorize );
 }
 
 void cgs_simd::function_body_beg()
@@ -298,7 +241,8 @@ void cgs_simd::function_body_end()
 
 Value* cgs_simd::all_one_mask()
 {
-	Type* mask_ty = type_( builtin_types::_boolean, abis::package );
+	//TODO
+	Type* mask_ty = type_(builtin_types::_boolean);
 	Value* mask_v = Constant::getAllOnesValue(mask_ty);
 	return mask_v;
 }
@@ -324,9 +268,10 @@ void cgs_simd::if_cond_beg()
 	// Do nothing
 }
 
-void cgs_simd::if_cond_end( cg_value const& cond )
+void cgs_simd::if_cond_end( multi_value const& cond )
 {
-	cond_exec_masks.push_back( cond.load( abis::package ) );
+	assert(false);
+	// cond_exec_masks.push_back( cond.load( abis::package ) );
 }
 
 void cgs_simd::then_beg()
@@ -354,18 +299,19 @@ void cgs_simd::else_end()
 	apply_break_and_continue();
 }
 
-cg_value cgs_simd::emit_ddx( cg_value const& v )
+multi_value cgs_simd::emit_ddx( multi_value const& v )
 {
 	return derivation( v, slm_vertical );
 }
 
-cg_value cgs_simd::emit_ddy( cg_value const& v )
+multi_value cgs_simd::emit_ddy( multi_value const& v )
 {
 	return derivation( v, slm_horizontal );
 }
 
-cg_value cgs_simd::derivation( cg_value const& v, slice_layout_mode slm )
+multi_value cgs_simd::derivation( multi_value const& v, slice_layout_mode slm )
 {
+#if 0
 	if( v.abi() != abis::package ){
 		return null_value( v.hint(), v.abi() );
 	}
@@ -427,6 +373,8 @@ cg_value cgs_simd::derivation( cg_value const& v, slice_layout_mode slm )
 	}
 
 	return create_value( v.ty(), v.hint(), diff_v, value_kinds::value, abis::package );
+#endif
+	return multi_value(0);
 }
 
 /// Pack slides to vector.
@@ -476,7 +424,7 @@ void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int s
 void cgs_simd::for_init_beg() {	enter_loop(); }
 void cgs_simd::for_init_end() {}
 void cgs_simd::for_cond_beg() {}
-void cgs_simd::for_cond_end( cg_value const& cond ) { apply_loop_condition( cond ); }
+void cgs_simd::for_cond_end( multi_value const& cond ) { apply_loop_condition( cond ); }
 void cgs_simd::for_body_beg(){}
 void cgs_simd::for_body_end(){}
 void cgs_simd::for_iter_beg(){}
@@ -484,9 +432,13 @@ void cgs_simd::for_iter_end(){ save_next_iteration_exec_mask(); exit_loop(); }
 
 llvm::Value* cgs_simd::all_zero_mask()
 {
+	assert(false);
+	return NULL;
+	/*
 	Type* mask_ty = type_( builtin_types::_boolean, abis::package );
 	Value* mask_v = Constant::getNullValue(mask_ty);
 	return mask_v;
+	*/
 }
 
 void cgs_simd::apply_break_and_continue()
@@ -544,7 +496,7 @@ void cgs_simd::continue_()
 	apply_continue();
 }
 
-cg_value cgs_simd::joinable()
+multi_value cgs_simd::joinable()
 {
 	Value* v = exec_masks.back();
 	Value* ret_bool = builder().CreateExtractElement( v, ext_->get_int(0) );
@@ -557,7 +509,7 @@ cg_value cgs_simd::joinable()
 void cgs_simd::while_beg(){ enter_loop(); }
 void cgs_simd::while_end(){ exit_loop(); }
 void cgs_simd::while_cond_beg(){}
-void cgs_simd::while_cond_end( cg_value const& cond )
+void cgs_simd::while_cond_end( multi_value const& cond )
 {
 	apply_loop_condition(cond);
 }
@@ -569,7 +521,7 @@ void cgs_simd::enter_loop()
 	// TODO:
 	//  store <16 x i1>, <16 x i1>* var is crashed by LLVM bug.
 	// We ext to i8 array and store.
-	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8, abis::package), NULL, ".for.mask.tmpvar" ) );
+	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8), NULL, ".for.mask.tmpvar" ) );
 	save_loop_execution_mask( exec_masks.back() );
 
 	exec_masks.push_back( exec_masks.back() );
@@ -584,7 +536,7 @@ void cgs_simd::exit_loop()
 	continue_masks.pop_back();
 }
 
-void cgs_simd::apply_loop_condition( cg_value const& cond )
+void cgs_simd::apply_loop_condition( multi_value const& cond )
 {
 	Value* exec_mask = load_loop_execution_mask();
 	if( cond.abi() != abis::unknown ){
@@ -602,7 +554,7 @@ void cgs_simd::do_end(){ exit_loop(); }
 void cgs_simd::do_body_beg(){ exec_masks.back() = load_loop_execution_mask(); }
 void cgs_simd::do_body_end(){ save_next_iteration_exec_mask(); }
 void cgs_simd::do_cond_beg(){}
-void cgs_simd::do_cond_end( cg_value const& cond ) {	
+void cgs_simd::do_cond_end( multi_value const& cond ) {	
 	apply_loop_condition( cond );
 	save_loop_execution_mask( exec_masks.back() );
 }
@@ -628,7 +580,7 @@ void cgs_simd::save_loop_execution_mask( Value* mask )
 	builder().CreateStore( mask_as_uchar, mask_vars.back() );
 }
 
-cg_value cgs_simd::packed_mask()
+multi_value cgs_simd::packed_mask()
 {
 	assert( PACKAGE_ELEMENT_COUNT == 16 );
 
@@ -646,16 +598,16 @@ cg_value cgs_simd::packed_mask()
 	return create_value( NULL, builtin_types::_sint16, ret, value_kinds::value, abis::llvm );
 }
 
-cg_value cgs_simd::emit_and( cg_value const& lhs, cg_value const& rhs )
+multi_value cgs_simd::emit_and( multi_value const& lhs, multi_value const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
-cg_value cgs_simd::emit_or( cg_value const& lhs, cg_value const& rhs )
+multi_value cgs_simd::emit_or( multi_value const& lhs, multi_value const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
-	return cg_value();
+	return multi_value();
 }
 
 END_NS_SASL_CODEGEN();
