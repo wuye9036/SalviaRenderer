@@ -45,11 +45,6 @@ public:
 		sasl::semantic::module_semantic* sem
 		);
 
-	/// @name Service States
-	/// @{
-	virtual abis::id intrinsic_abi() const = 0;
-	/// @}
-
 	/// @name Value Operators
 	/// @{
 	virtual value_array	 load(multi_value const&);
@@ -57,10 +52,10 @@ public:
 	virtual value_array	 load_ref(multi_value const&);
 	virtual value_array	 load_ref(multi_value const& v, abis::id abi);
 
-	virtual llvm::Value* load(multi_value const&, size_t index);
+	/*virtual llvm::Value* load(multi_value const&, size_t index);
 	virtual llvm::Value* load(multi_value const&, size_t index, abis::id abi);
 	virtual llvm::Value* load_ref(multi_value const&, size_t index);
-	virtual llvm::Value* load_ref(multi_value const& v, size_t index, abis::id abi);
+	virtual llvm::Value* load_ref(multi_value const& v, size_t index, abis::id abi);*/
 
 	virtual void store( multi_value& lhs, multi_value const& rhs ) = 0;
 	/// @}
@@ -193,7 +188,7 @@ public:
 	virtual void for_iter_beg(){}
 	virtual void for_iter_end(){}
 
-	virtual multi_value joinable(){ return multi_value(parallel_factor_); }
+	virtual multi_value any_mask_true(){ return multi_value(parallel_factor_); }
 
 	virtual void if_beg(){}
 	virtual void if_end(){}
@@ -236,8 +231,6 @@ public:
 	/// @{
 	bool in_function() const;
 	cg_function& fn();
-	/// Get Packed Mask Which is a uint16_t.
-	virtual multi_value packed_mask() = 0;
 	/// @}
 
 	/// @name Emit value and variables
@@ -257,13 +250,18 @@ public:
 		Value* ll_val = ConstantFP::get( Type::getFloatTy( context() ), v );
 		return create_scalar( ll_val, tyinfo, hint );
 	}
-	virtual multi_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint ) = 0;
+	virtual multi_value create_scalar(llvm::Value* val, cg_type* tyinfo, builtin_types hint);
 
-	multi_value null_value	 (cg_type* tyinfo, abis::id abi);
-	multi_value null_value	 (builtin_types bt, abis::id abi);
-	multi_value undef_value	 (builtin_types bt, abis::id abi);
-	multi_value one_value	 (multi_value const& proto);
-	multi_value numeric_value(multi_value const& proto, double fp, uint64_t ui);
+	multi_value  null_value		(cg_type* tyinfo, abis::id abi);
+	multi_value  null_value		(builtin_types bt, abis::id abi);
+	multi_value  undef_value	(builtin_types bt, abis::id abi);
+	multi_value  one_value		(multi_value const& proto);
+	multi_value  numeric_value	(multi_value const& proto, double fp, uint64_t ui);
+	llvm::Value* get_mask_flag	(llvm::Value* mask, size_t index);
+	void		 set_mask_flag	(llvm::Value* mask, size_t index, llvm::Value* flag);
+	llvm::Value* get_mask		(value_array const& flags);
+	value_array  split_mask		(llvm::Value* mask);
+
 
 	multi_value create_constant_int( cg_type* tyinfo, builtin_types bt, abis::id abi, uint64_t v );
 
@@ -304,11 +302,12 @@ public:
 	
 	/// @name Bridges
 	/// @{
-	llvm::Type*	type_(builtin_types bt, abis::id abi);
-	llvm::Type* type_(cg_type const*, abis::id abi);
+	llvm::Type*	 type_(builtin_types bt, abis::id abi);
+	llvm::Type*  type_(cg_type const*, abis::id abi);
 
-	value_array load_as( multi_value const& v, abis::id abi );
+	value_array  load_as( multi_value const& v, abis::id abi );
 	llvm::Value* restore(llvm::Value* v);
+	value_array  restore(value_array const& v);
 	/// @}
 
 	llvm::Module*			module () const;
@@ -317,8 +316,9 @@ public:
 
 	virtual bool			prefer_externals() const	= 0;
 	virtual bool			prefer_scalar_code() const	= 0;
+	virtual size_t			parallel_factor() const;
 
-	virtual abis::id		param_abi( bool is_c_compatible ) const = 0;
+	virtual abis::id		param_abi( bool is_c_compatible ) const;
 			abis::id		promote_abi( abis::id abi0, abis::id abi1 );
 			abis::id		promote_abi( abis::id abi0, abis::id abi1, abis::id abi2 );
 

@@ -125,8 +125,8 @@ void cg_simd::create_entry_param( sv_usage usage )
 	size_t next_offset = 0;
 	for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
 		size_t offset = next_offset;
-		svls[i_elem]->offset = offset;
-		svls[i_elem]->physical_index = i_elem;
+		svls[i_elem]->offset			= static_cast<int>(offset);
+		svls[i_elem]->physical_index= static_cast<int>(i_elem);
 
 		size_t next_i_elem = i_elem + 1;
 		if( next_i_elem < tys.size() ){
@@ -135,8 +135,10 @@ void cg_simd::create_entry_param( sv_usage usage )
 			next_offset = struct_layout->getSizeInBytes();
 		}
 		
-		svls[i_elem]->element_padding = ( (next_offset - offset) / svls[i_elem]->element_count ) - svls[i_elem]->element_size ;
-		svls[i_elem]->padding =			(next_offset - offset) - ( svls[i_elem]->element_size + svls[i_elem]->element_padding ) * svls[i_elem]->element_count ;
+		svls[i_elem]->element_padding =
+			static_cast<int>( ( (next_offset - offset) / svls[i_elem]->element_count ) - svls[i_elem]->element_size );
+		svls[i_elem]->padding =
+			static_cast<int>( (next_offset - offset) - ( svls[i_elem]->element_size + svls[i_elem]->element_padding ) * svls[i_elem]->element_count );
 	}
 }
 
@@ -188,6 +190,8 @@ SASL_VISIT_DEF( member_expression ){
 }
 
 SASL_VISIT_DEF( variable_expression ){
+	EFLIB_UNREF_DECLARATOR(data);
+
 	// TODO: Referenced symbol must be evaluated in semantic analysis stages.
 	symbol* sym = find_symbol(v.var_name->str);
 	assert(sym);
@@ -287,7 +291,7 @@ SASL_VISIT_DEF( while_statement )
 		caster->cast(sem_->pety()->get_proto(bool_tid), v.cond.get());
 	}
 	service()->while_cond_end( cg_impl::node_ctxt(v.cond)->node_value );
-	multi_value joinable = service()->joinable();
+	multi_value any_mask_true = service()->any_mask_true();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t body_beg = service()->new_block( "while.body", true );
@@ -302,7 +306,7 @@ SASL_VISIT_DEF( while_statement )
 
 	// Fill back
 	service()->set_insert_point( cond_end );
-	service()->jump_cond( joinable, body_beg, while_end );
+	service()->jump_cond( any_mask_true, body_beg, while_end );
 
 	service()->set_insert_point( body_end );
 	service()->jump_to( cond_beg );
@@ -332,7 +336,7 @@ SASL_VISIT_DEF( dowhile_statement )
 		}
 	}
 	service()->do_cond_end( cg_impl::node_ctxt(v.cond)->node_value );
-	multi_value joinable = service()->joinable();
+	multi_value any_mask_true = service()->any_mask_true();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t while_end = service()->new_block( "dowhile.end", true );
@@ -343,7 +347,7 @@ SASL_VISIT_DEF( dowhile_statement )
 	service()->jump_to( cond_beg );
 
 	service()->set_insert_point( cond_end );
-	service()->jump_cond( joinable, body_beg, while_end );
+	service()->jump_cond( any_mask_true, body_beg, while_end );
 
 	service()->set_insert_point( while_end );
 }
@@ -385,7 +389,7 @@ SASL_VISIT_DEF( for_statement )
 		cond_value = cg_impl::node_ctxt( v.cond, false )->node_value;
 	}
 	service()->for_cond_end( cond_value );
-	multi_value joinable = service()->joinable();
+	multi_value any_mask_true = service()->any_mask_true();
 	insert_point_t cond_end = service()->insert_point();
 
 	insert_point_t body_beg = service()->new_block( "for_body", true );
@@ -407,7 +411,7 @@ SASL_VISIT_DEF( for_statement )
 	service()->jump_to( cond_beg );
 
 	service()->set_insert_point( cond_end );
-	service()->jump_cond( joinable, body_beg, for_end );
+	service()->jump_cond( any_mask_true, body_beg, for_end );
 
 	service()->set_insert_point( body_end );
 	service()->jump_to( iter_beg );
@@ -482,17 +486,26 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 		// Create entry arguments.
 		Function::arg_iterator arg_it = fn->arg_begin();
 
+		assert(false);
 		arg_it->setName( ".arg.stri" );
-		entry_values[su_stream_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::package );
+		entry_values[su_stream_in]  = service()->create_value(
+			builtin_types::none, service()->extension()->split_array_ref(arg_it),
+			value_kinds::reference, abis::c);
 		++arg_it;
 		arg_it->setName( ".arg.bufi" );
-		entry_values[su_buffer_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
+		entry_values[su_buffer_in]  = service()->create_value(
+			builtin_types::none, value_array(1, arg_it),
+			value_kinds::reference, abis::c);
 		++arg_it;
 		arg_it->setName( ".arg.stro" );
-		entry_values[su_stream_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::package );
+		entry_values[su_stream_out] = service()->create_value(
+			builtin_types::none, service()->extension()->split_array_ref(arg_it),
+			value_kinds::reference, abis::c);
 		++arg_it;
 		arg_it->setName( ".arg.bufo" );
-		entry_values[su_buffer_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
+		entry_values[su_buffer_out] = service()->create_value(
+			builtin_types::none, value_array(1, arg_it),
+			value_kinds::reference, abis::c);
 		++arg_it;
 
 		// Create virtual arguments
@@ -589,13 +602,19 @@ SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
 	}
 }
 SASL_SPECIFIC_VISIT_DEF( visit_continue	, jump_statement ){
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement ){
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 	service()->break_();
 }
 
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 multi_value cg_simd::layout_to_value( sv_layout* svl )
@@ -604,6 +623,11 @@ multi_value cg_simd::layout_to_value( sv_layout* svl )
 	multi_value ret = service()->emit_extract_ref( entry_values[svl->usage], svl->physical_index );
 	ret.hint( to_builtin_types( svl->value_type ) );
 	return ret;
+}
+
+abis::id cg_simd::local_abi( bool /*is_c_compatible*/ ) const
+{
+	return abis::llvm;
 }
 
 END_NS_SASL_CODEGEN();

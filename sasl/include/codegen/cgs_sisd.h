@@ -58,8 +58,6 @@ class llvm_intrin_cache;
 
 class cgs_sisd: public cg_service{
 public:
-	abis::id intrinsic_abi() const;
-
 	/** @name Emit expressions
 	Some simple overload-able operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
@@ -114,8 +112,6 @@ public:
 	/// @{
 	template <typename T>
 	multi_value create_constant_vector( T const* vals, size_t length, abis::id abi, EFLIB_ENABLE_IF_PRED1(is_integral, T) );
-	
-	multi_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
 	multi_value create_vector( std::vector<multi_value> const& scalars, abis::id abi );
 
 	template <typename T>
@@ -141,9 +137,6 @@ public:
 
 	/// @name State
 	/// @{
-	multi_value packed_mask();
-
-	abis::id param_abi( bool c_compatible ) const;
 	/// Prefer to use external functions as intrinsic.
 	bool prefer_externals() const;
 	/// Prefer to use scalar code to intrinsic.

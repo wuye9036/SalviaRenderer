@@ -141,12 +141,6 @@ public:
 	cg_service*		service() const;
 
 	/// Load llvm value from multi_value.
-	llvm::Value*	raw(size_t index) const;
-	llvm::Value*	load(size_t index) const;
-	llvm::Value*	load(size_t index, abis::id abi) const;
-	llvm::Value*	load_i1	(size_t index) const;
-	llvm::Value*	load_ref(size_t index) const;
-
 	value_array		raw() const;
 	value_array		load    (abis::id abi) const;
 	value_array		load    () const;
@@ -156,27 +150,7 @@ public:
 	/// Store llvm value to multi_value
 	void			store	(multi_value const&) const;
 	void			emplace	(multi_value const&);
-	void			emplace	(llvm::Value* v, value_kinds::id k, abis::id abi);
-
-	template <typename IteratorT>
-	void			emplace	(
-		IteratorT const& values_begin,
-		IteratorT const& values_end,
-		value_kinds::id k,
-		abis::id abi
-		)
-	{
-		size_t index = 0;
-		for(IteratorT iter = values_begin; iter != values_end; ++iter)
-		{
-			emplace(index++, *iter, k, abi);
-		}
-	}
-	template <typename IteratableT>
-	void			emplace ( IteratableT const& v, value_kinds::id k, abis::id abi)
-	{
-		return emplace(v.begin(), v.end(), k, abi);
-	}
+	void			emplace	(value_array const& v, value_kinds::id k, abis::id abi);
 
 	bool			storable () const;
 	bool			load_only() const;
@@ -276,21 +250,47 @@ struct cg_function{
 	EFLIB_OPERATOR_BOOL( cg_function ){ return NULL != fn; }
 
 	/// Get argument's value by index.
-	multi_value arg( size_t index ) const;
-	/// Get argument size.
-	size_t arg_size() const;
-	/// Set argument name.
-	void arg_name( size_t index, std::string const& );
+	multi_value arg(size_t logical_index) const;
+	/// Get logical argument size.
+	size_t logical_args_count() const;
+	/// Get physical argument size.
+	size_t physical_args_count() const;
+	
 	/// Set arguments name. Size of names must be less than argument size.
-	void args_name( std::vector<std::string> const& names );
-	/// Return true if argument is a reference.
-	bool arg_is_ref( size_t index ) const;
-	/// Return true if first argument is pointer to return value.
-	bool return_via_arg() const;
+	void args_name(std::vector<std::string> const& names);
+
+	/// Set argument name.
+	void arg_name (size_t logical_index, std::string const&);
+	
+	// -------- Argument Properties ----------
+
+	/** Function arguments will be reformed on some platform 
+		for ABI compatiblity and special requirements.
+	    Some implicit arguments will be added at the front of
+		LLVM function signature. This method indicates the
+		index of first logical argument in LLVM function
+		signature.
+	*/
+	size_t logical_arg_offset	() const;
+	/// Argument is smaller than register.
+	bool is_small_arg			(size_t logical_index) const;
+	/// Argument is input argument.
+	bool is_in_arg				(size_t logical_index) const;
+	/// Argument is [out] modified.
+	bool ref_arg				(size_t logical_index) const;
+	/// Argument is [in]  modified, but passed by reference.
+	bool value_arg_as_ref		(size_t logical_index) const;
+	/// All arguments (include result value) are arrays which represents multi_value.
+	bool multi_value_args		() const;
+	/// All arguments are arrays which represents multi_value, but passed by reference.
+	bool multi_value_arg_as_ref	() const;
+	/// The first physical argument is for returning function result back.
+	bool return_via_arg			() const;
+
 	/// Get ABI
 	abis::id abi() const;
 	/// Get return address value.
-	llvm::Value* return_address() const;
+	value_array return_address() const;
 	/// Get Execution Mask.
 	multi_value packed_execution_mask() const;
 	/// Need mask
@@ -305,7 +305,7 @@ struct cg_function{
 	cg_type* result_type() const;
 
 	insert_point_t						alloc_block;
-	std::vector<llvm::Argument*>		argCache;
+	std::vector<llvm::Argument*>		arg_cache;
 	sasl::syntax_tree::function_type*	fnty;
 	llvm::Function*						fn;
 	bool								c_compatible;

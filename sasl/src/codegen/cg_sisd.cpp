@@ -97,8 +97,8 @@ multi_value cg_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<no
 		visit_child(yes);
 	}
 	multi_value yes_value = node_ctxt(yes)->node_value;
-	Value* yes_v = yes_value.load();
-	Value* yes_ref = yes_value.load_ref();
+	value_array yes_v = yes_value.load();
+	value_array yes_ref = yes_value.load_ref();
 	insert_point_t yes_ip_end = service()->insert_point();
 
 	insert_point_t no_ip_beg = service()->new_block( "no_expr", true );
@@ -106,24 +106,31 @@ multi_value cg_sisd::emit_short_cond(shared_ptr<node> const& cond, shared_ptr<no
 		visit_child(no);
 	}
 	multi_value no_value = node_ctxt( no, false )->node_value;
-	Value* no_ref = ( no_value.abi() == yes_value.abi() ) ? no_value.load_ref() : NULL;
-	Value* no_v = no_value.load( yes_value.abi() );
+	value_array no_ref =
+		( no_value.abi() == yes_value.abi() )
+			? no_value.load_ref()
+			: value_array(service()->parallel_factor(), NULL);
+	value_array no_v = no_value.load( yes_value.abi() );
 	insert_point_t no_ip_end = service()->insert_point();
 
 	service()->set_insert_point(cond_ip);
-	service()->jump_cond( cond_value, yes_ip_beg, no_ip_beg );
+	service()->jump_cond(cond_value, yes_ip_beg, no_ip_beg);
 
-	insert_point_t merge_ip =service()->new_block( "cond_merge", false );
-	service()->set_insert_point( yes_ip_end );
-	service()->jump_to( merge_ip );
-	service()->set_insert_point( no_ip_end );
-	service()->jump_to( merge_ip );
+	insert_point_t merge_ip = service()->new_block("cond_merge", false);
+	service()->set_insert_point(yes_ip_end);
+	service()->jump_to(merge_ip);
+	service()->set_insert_point(no_ip_end);
+	service()->jump_to(merge_ip);
 
 	service()->set_insert_point(merge_ip);
 	multi_value result_value;
-	Value*		merged = service()->phi_( yes_ip_end.block, yes_v, no_ip_end.block, no_v );
-	value_kinds::id	vkind = (yes_ref && no_ref) ? value_kinds::reference : value_kinds::value;
-	result_value = service()->create_value( yes_value.ty(), yes_value.hint(), merged, vkind, yes_value.abi() );
+	Value*		merged = service()->phi_(yes_ip_end.block, yes_v[0], no_ip_end.block, no_v[0]);
+	value_kinds::id	vkind = ( valid_all(yes_ref) && valid_all(no_ref) )
+		? value_kinds::reference
+		: value_kinds::value;
+	result_value = service()->create_value(
+		yes_value.ty(), yes_value.hint(), value_array(1, merged), vkind, yes_value.abi()
+		);
 
 	return result_value;
 }
@@ -447,7 +454,8 @@ SASL_VISIT_DEF( for_statement ){
 
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 
-	node_context* ctxt = node_ctxt(v, true);
+	// COULD BE REMOVED ? node_context* ctxt = node_ctxt(v, true);
+
 	// For instructions layout:
 	//		... before code ...
 	//		for initializer
@@ -515,12 +523,16 @@ SASL_VISIT_DEF( for_statement ){
 
 SASL_SPECIFIC_VISIT_DEF( visit_continue	, jump_statement )
 {
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 	assert(continue_to_);
 	service()->jump_to(continue_to_);
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement )
 {
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
 	assert(break_to_);
 	service()->jump_to(break_to_);
 }

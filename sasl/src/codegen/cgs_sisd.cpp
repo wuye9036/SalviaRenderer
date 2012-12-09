@@ -125,8 +125,12 @@ namespace {
 }
 
 void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
-	Value* src = NULL;
-	Value* address = NULL;
+	
+	assert(parallel_factor_ == 1);
+
+	value_array src(parallel_factor_, NULL);
+	value_array address(parallel_factor_, NULL);
+
 	value_kinds::id kind = lhs.kind();
 
 	if( kind == value_kinds::reference ){	
@@ -155,8 +159,9 @@ void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
 		}
 	}
 
-	assert( src && address );
-	builder().CreateStore( src, address );
+	assert( valid_all(src) );
+	assert( valid_all(address) );
+	ext_->store(src, address);
 }
 
 multi_value cgs_sisd::cast_ints( multi_value const& v, cg_type* dest_tyi )
@@ -171,7 +176,7 @@ multi_value cgs_sisd::cast_ints( multi_value const& v, cg_type* dest_tyi )
 
 	cast_ops::id op = is_signed(scalar_hint_src) ? cast_ops::i2i_signed : cast_ops::i2i_unsigned;
 	unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
-	Value* val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
+	value_array val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
 
 	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
@@ -189,7 +194,7 @@ multi_value cgs_sisd::cast_i2f( multi_value const& v, cg_type* dest_tyi )
 	cast_ops::id op = is_signed(hint_i) ? cast_ops::i2f : cast_ops::u2f;
 	unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
 
-	Value* val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
+	value_array val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
 
 	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
@@ -207,7 +212,7 @@ multi_value cgs_sisd::cast_f2i( multi_value const& v, cg_type* dest_tyi )
 	cast_ops::id op = is_signed(hint_i) ? cast_ops::f2i : cast_ops::f2u;
 	unary_intrin_functor cast_sv_fn = ext_->bind_cast_sv(elem_ty, op);
 
-	Value* val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
+	value_array val = ext_->call_unary_intrin(dest_ty, v.load(), cast_sv_fn);
 
 	return create_value( dest_tyi, builtin_types::none, val, value_kinds::value, v.abi() );
 }
@@ -237,17 +242,21 @@ void cgs_sisd::emit_return(){
 void cgs_sisd::emit_return( multi_value const& ret_v, abis::id abi ){
 	if( abi == abis::unknown ){ abi = fn().abi(); }
 
-	if( fn().return_via_arg() ){
-		builder().CreateStore( ret_v.load(abi), fn().return_address() );
+	if( fn().return_via_arg() )
+	{
+		ext_->store( ret_v.load(abi), fn().return_address() );
 		builder().CreateRetVoid();
-	} else {
-		builder().CreateRet( ret_v.load(abi) );
 	}
-}
-
-multi_value cgs_sisd::create_scalar( Value* val, cg_type* tyinfo, builtin_types hint ){
-	assert( is_scalar(hint) );
-	return create_value( tyinfo, hint, val, value_kinds::value, abis::llvm );
+	else
+	{
+		Value* ret_value = NULL;
+		if ( fn().multi_value_args() ) {
+			ret_value = ext_->get_array( ret_v.load(abi) );
+		} else {
+			ret_value = ret_v.load(abi)[0];
+		}
+		builder().CreateRet(ret_value);
+	}
 }
 
 Value* cgs_sisd::select_( Value* cond, Value* yes, Value* no )
@@ -282,10 +291,11 @@ multi_value cgs_sisd::emit_write_mask( multi_value const& vec, uint32_t mask )
 
 void cgs_sisd::switch_to( multi_value const& cond, std::vector< std::pair<multi_value, insert_point_t> > const& cases, insert_point_t const& default_branch )
 {
-	Value* v = cond.load();
+	assert(parallel_factor_ == 1);
+	Value* v = cond.load()[0];
 	SwitchInst* inst = builder().CreateSwitch( v, default_branch.block, static_cast<unsigned>(cases.size()) );
 	for( size_t i_case = 0; i_case < cases.size(); ++i_case ){
-		inst->addCase( llvm::cast<ConstantInt>( cases[i_case].first.load() ), cases[i_case].second.block );
+		inst->addCase( llvm::cast<ConstantInt>( cases[i_case].first.load()[0] ), cases[i_case].second.block );
 	}
 }
 
@@ -299,11 +309,6 @@ multi_value cgs_sisd::cast_f2b( multi_value const& v )
 {
 	assert( is_real(v.hint()) );
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
-}
-
-abis::id cgs_sisd::intrinsic_abi() const
-{
-	return abis::llvm;
 }
 
 abis::id cgs_sisd::param_abi( bool c_compatible ) const

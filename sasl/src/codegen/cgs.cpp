@@ -255,7 +255,6 @@ cg_type* cg_service::create_ty(tynode* tyn)
 
 			StructType* ty_c	= StructType::create( c_member_types,			struct_tyn->name->str + ".abi.c" );
 			StructType* ty_llvm	= StructType::create( llvm_member_types,		struct_tyn->name->str + ".abi.llvm" );
-			StructType* ty_vec	= NULL;
 
 			ret->tys[abis::c]	= ty_c;
 			ret->tys[abis::llvm]	= ty_llvm;
@@ -996,7 +995,7 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, multi_value co
 		case abis::c:
 		case abis::llvm:
 			{
-				value_array elem_addr = ext_->create_gep( addr, idx.load() );
+				value_array elem_addr = ext_->gep( addr, idx.load() );
 				cg_type* elem_tyinfo = ctxt_->get_node_context( array_tyn->elem_type.get() )->ty;
 				return create_value( elem_tyinfo, builtin_types::none, elem_addr, value_kinds::reference, lhs.abi() );
 			}
@@ -1251,150 +1250,127 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 	return emit_call( fn, args, multi_value() );
 }
 
-/// LLVM-level calling convention: (to avoid clang abi error on windows platform)
-///	mono-value basic mode (Default CC):
-///		<result> = call <v0>, <v1>, <v2>  ; all value could be any type.
-///	mono-value return-via-arg mode (General use with 'best compatibility' mode)
-///		call &<result>, <v0>, <v1>, <v2>  ; all value could be any type.
-///	mono-value return-via-arg + best compatibility mode (MS ABI compatility)
-///		call &<result>, &<v0>, <v1>, <v2> ; v1, v2 must less or equal size than intptr_t on platform. v0 and result could be any type.
-///	multi-value basic mode (Default Pixel Shader CC)
-///		array<result> = call array<v0>, array<v1>, array<v2> ; all value could be any type.
-///	multi-value return-via-arg + best compatiblity mode (MS ABI Compability)
-///      call &array< &<result> >, call &array<v0>, &array<v1>, &array<v2> ; all value could be any type.
+/**
+Argument passing rules:
+
+   Arg Passing   |    Mono LLVM ABI    |    Mono C ABI   |  Multi-Value LLVM ABI  |   Multi-Value C ABI
+-----------------|---------------------|-----------------|------------------------|-----------------------
+Ret  Value small |     direct, <v>     | 1st arg, <&ret> |   direct, array<ret>   | 1st arg, &array<&ret>
+-----------------|---------------------|-----------------|------------------------|-----------------------
+Ret  Value big   |     direct, <v>     | 1st arg, <&ret> |   direct, array<ret>   | 1st arg, &array<&ret>
+-----------------|---------------------|-----------------|------------------------|-----------------------
+Out  Value small |        <&v>         |      <&v>       |       array<&v>        |      &array<&v>
+-----------------|---------------------|-----------------|------------------------|-----------------------
+Out  Value big   |        <&v>         |      <&v>       |       array<&v>        |      &array<&v>
+-----------------|---------------------|-----------------|------------------------|-----------------------
+In   Value small |         <v>         |       <v>       |        array<v>        |      &array <v>
+-----------------|---------------------|-----------------|------------------------|-----------------------
+In   Value big   |         <v>         |      <&v>       |        array<v>        |      &array <v>
+-----------------|---------------------|-----------------|------------------------|-----------------------
+Mask Value       |         N/A         |       N/A       |        uint32_t        |       uint32_t
+*/
 multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> const& args, multi_value const& exec_mask )
 {
 	abis::id promoted_abi = abis::llvm;
-	BOOST_FOREACH( multi_value const& arg, args )
+	BOOST_FOREACH(multi_value const& arg, args)
 	{
 		promoted_abi = promote_abi( arg.abi(), promoted_abi );
 	}
 	abis::id arg_abi = fn.c_compatible ? abis::c : promoted_abi;
 
-	vector< vector<Value*> >	arg_multi_values(args.size() + 2); // arg_multi_values[arg_count][value_count];
-	vector<Value*>				arg_values(args.size() + 1);
-
-	multi_value ret_var(parallel_factor_);
-	Value*		ret_val(NULL);
+	vector<Value*>	arg_multi_values(fn.physical_args_count(), NULL);
+	vector<Value*>	physical_args   (fn.physical_args_count(), NULL);
 
 	// Create temporary variable for catching result.
-	if ( fn.return_via_arg() ){
-		ret_var = create_variable(fn.result_type(), fn.abi(), ".temp.result");
-	}
+	multi_value ret_variable(parallel_factor_);
 
-	// Collect arguments if best-compatible with ABI.
-	vector<uint8_t> compatible_with_abi(args.size(), 0);
+	// Fill values for arguments.
 	{
-		uint32_t i_arg = 0;
-		BOOST_FOREACH( multi_value const& arg, args ){
-			builtin_types hint = arg.hint();
- 
-			if( fn.c_compatible || fn.external ){
-				// If need C compatibility, 
-				// all arguments with parallel mode function *MUST* be passed by pointer.
-				if( parallel_factor_ > 1 )
-				{
-					compatible_with_abi[i_arg++] = 0;
-					continue;
-				}
-
-				// Otherwise, check value type.
-				if( is_scalar(hint) || is_sampler(hint) ){
-					compatible_with_abi[i_arg++] = 1;
-				} else {
-					compatible_with_abi[i_arg++] = 0;
-				}
+		size_t physical_index = 0;
+	
+		// Add return address to args.
+		if( fn.return_via_arg() )
+		{
+			ret_variable = create_variable(fn.result_type(), fn.abi(), ".temp.result");
+			arg_multi_values = ret_variable.load_ref();
+			if( fn.multi_value_args() )
+			{
+				physical_args[physical_index++] = ext_->get_array(arg_multi_values);
 			}
 			else
 			{
-				// If c compatible is not needed,
-				// whatever value could be passed to callee correctly.
-				compatible_with_abi[i_arg++] = 1;
+				physical_args[physical_index++] = arg_multi_values[0];
 			}
 		}
-	}
 
-	// Rearrange arguments.
-	{
-		size_t i_physical_arg = 0;
-	
-		// Return address if need.
-		if( fn.return_via_arg() ){
-			arg_multi_values[i_physical_arg++] = ret_var.load_ref();
-		}
-
-		// Execution mask if need.
+		// Add execution mask to args.
 		if( fn.need_mask() )
 		{
-			if( exec_mask.abi() == abis::unknown ){
-				arg_multi_values[i_physical_arg++] = packed_mask().load(abis::llvm);
-			} else {
-				arg_multi_values[i_physical_arg++] = exec_mask.load(abis::llvm);
-			}
+			arg_multi_values = exec_mask.load(abis::llvm);
+			physical_args[physical_index++] = arg_multi_values[0];
 		}
 
-		size_t num_implicit_args = i_physical_arg;
-
-		// Push arguments to list. if mono-value mode, try to convert unsupported value to pointer.
-		for(size_t i_logical_arg = 0; i_logical_arg < args.size(); ++i_logical_arg)
+		// Push arguments to list. 
+		for(size_t logical_index = 0; logical_index < args.size(); ++logical_index, ++physical_index)
 		{
-			multi_value const& arg(args[i_logical_arg]);
+			multi_value const& arg(args[logical_index]);
 			vector<Value*> val;
 			
-			if(compatible_with_abi[i_logical_arg] == 1 || parallel_factor_ > 1)
+			// Get values, and convert big value to pointer if needed.
+			if( !fn.value_arg_as_ref(logical_index) )
 			{
-				arg_multi_values[i_physical_arg++] = arg.load();
+				arg_multi_values = arg.load();
 			}
 			else
 			{
 				vector<Value*> arg_addr = load_ref( arg, arg_abi );
-				if( !arg_addr.empty() ){
-					arg_multi_values[i_physical_arg++] = arg_addr;
-					compatible_with_abi[i_logical_arg] = 1;
+				if( !arg_addr.empty() )
+				{
+					arg_multi_values = arg_addr;
 				}
 				else
 				{
-					arg_multi_values[i_physical_arg++] = arg.load();
+					value_array arg_values = arg.load();
+					arg_multi_values = restore( arg.load() );
 				}
 			}
-		}
-		size_t num_physical_arg = i_physical_arg;
 
-		// Collapse multi value to single value
-		if(parallel_factor_ == 1)
-		{
-			for(size_t i_arg = 0; i_arg < num_physical_arg; ++i_arg)
+			if( fn.multi_value_args() )
 			{
-				arg_values[i_arg] = arg_multi_values[i_arg][0];
-			}
+				// Merge all value to array.
+				physical_args[physical_index] = ext_->get_array(arg_multi_values);
 
-			// Convert incompatibility arguments to pointer.
-			for(size_t i_arg = 0; i_arg < args.size(); ++i_arg)
-			{
-				size_t physical_arg_index = i_arg + num_implicit_args;
-				if( compatible_with_abi[i_arg] == 0 )
+				if( fn.multi_value_arg_as_ref() )
 				{
-					arg_values[physical_arg_index] = restore( arg_values[physical_arg_index] );
+					physical_args[physical_index] = restore( physical_args[physical_index] );
 				}
 			}
-		}
-		else
-		{
-			for(size_t i_arg = 0; i_arg < num_physical_arg; ++i_arg)
+			else
 			{
-				arg_values[i_arg] = restore( extension()->get_array(arg_multi_values[i_arg]) );
+				physical_args[physical_index] = arg_multi_values[0];
 			}
 		}
 	}
 
-	// Summerize argument values
-	ret_val = builder().CreateCall( fn.fn, arg_values );
-	if( fn.return_via_arg() ){
-		return ret_var;
+	Value* ret_value = builder().CreateCall( fn.fn, physical_args );
+
+	// Parse result.
+	if( fn.return_via_arg() )
+	{
+		return ret_variable;
+	}
+	value_array ret_value_array(parallel_factor_, 0);
+	if( fn.multi_value_args() )
+	{
+		ret_value_array = ext_->split_array(ret_value);
+	}
+	else
+	{
+		ret_value_array[0] = ret_value;
 	}
 
 	abis::id ret_abi = fn.c_compatible ? abis::c : promoted_abi;
-	return create_value(fn.result_type(), ext_->split_array(ret_val), value_kinds::value, ret_abi);
+	return create_value(fn.result_type(), ret_value_array, value_kinds::value, ret_abi);
 }
 
 multi_value cg_service::cast_s2v( multi_value const& v )
@@ -1436,7 +1412,7 @@ void cg_service::jump_to( insert_point_t const& ip )
 void cg_service::jump_cond(multi_value const& cond_v, insert_point_t const & true_ip, insert_point_t const& false_ip)
 {
 	assert( cond_v.is_mono() );
-	Value* cond = cond_v.load_i1(0);
+	Value* cond = cond_v.load_i1()[0];
 	builder().CreateCondBr(cond, true_ip.block, false_ip.block);
 }
 
@@ -1635,16 +1611,20 @@ multi_value cg_service::emit_bin_ps_ta_sva( multi_value const& lhs, multi_value 
 	builtin_types hint( lhs.hint() );
 	assert( hint == rhs.hint() );
 
-	Value* ret = NULL;
+	value_array ret(parallel_factor_, NULL);
 
 	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
 	abis::id promoted_abi = promote_abi( rhs.abi(), lhs.abi() );
 	abis::id internal_abi = promote_abi( promoted_abi, abis::llvm );
 
-	Value* lhs_v = lhs.load(internal_abi);
-	Value* rhs_v = rhs.load(internal_abi);
+	value_array lhs_v = lhs.load(internal_abi);
+	value_array rhs_v = rhs.load(internal_abi);
 	
-	Type* ret_ty = lhs_v->getType();
+	assert( valid_all(lhs_v) );
+	assert( valid_all(rhs_v) );
+	assert( lhs_v.size() == rhs_v.size() );
+
+	Type* ret_ty = lhs_v[0]->getType();
 
 	if( is_real(scalar_hint) )
 	{
@@ -1670,9 +1650,9 @@ multi_value cg_service::emit_bin_ps_ta_sva( multi_value const& lhs, multi_value 
 		assert(false);
 	}
 
-	multi_value retval = create_value( hint, ret, value_kinds::value, internal_abi );
+	multi_value retval = create_value(hint, ret, value_kinds::value, internal_abi);
 	abis::id ret_abi = is_scalar(hint) ? internal_abi : promoted_abi;
-	return create_value( hint, retval.load(ret_abi), value_kinds::value, ret_abi );
+	return create_value(hint, retval.load(ret_abi), value_kinds::value, ret_abi);
 }
 
 multi_value cg_service::emit_and( multi_value const& lhs, multi_value const& rhs )
@@ -1719,7 +1699,8 @@ multi_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, 
 	uint32_t bits = static_cast<uint32_t>( storage_size(scalar_hint) ) << 3; 
 
 	Type* ret_ty = type_( hint, abi );
-	Value* ret = ext_->get_int( ret_ty, APInt( bits, v, is_signed(scalar_hint) ) );
+	Value* value_mono = ext_->get_int( ret_ty, APInt( bits, v, is_signed(scalar_hint) ) );
+	value_array ret(parallel_factor_, value_mono);
 	return create_value(tyinfo, bt, ret, value_kinds::value, abi);
 }
 
@@ -1732,7 +1713,7 @@ multi_value cg_service::emit_unary_ps( std::string const& scalar_external_intrin
 		ext_->bind_external_to_unary(scalar_intrin), null_unary, null_unary
 		);
 
-	Value* ret_v = ext_->call_unary_intrin(NULL, v.load(), intrin_sv);
+	value_array ret_v = ext_->call_unary_intrin(NULL, v.load(), intrin_sv);
 	return create_value( v.ty(), v.hint(), ret_v, value_kinds::value, v.abi() );
 }
 
@@ -1749,9 +1730,9 @@ multi_value cg_service::emit_bin_ps_ta_sva( std::string const& scalar_external_i
 		ext_->bind_external_to_binary(scalar_intrin), null_binary, null_binary
 		);
 
-	Value* ret_v = ext_->call_binary_intrin( (Type*)NULL, v0.load(abi), v1.load(abi), intrin_sv, null_unary );
+	value_array ret_v = ext_->call_binary_intrin(NULL, v0.load(abi), v1.load(abi), intrin_sv, null_unary);
 
-	return create_value( v0.ty(), v0.hint(), ret_v, value_kinds::value, abi );
+	return create_value(v0.ty(), v0.hint(), ret_v, value_kinds::value, abi);
 }
 
 multi_value cg_service::extend_to_vm( multi_value const& v, builtin_types complex_hint )
@@ -1829,20 +1810,25 @@ multi_value cg_service::emit_tex_lod_impl( multi_value const& samp, multi_value 
 	abis::id abi = param_abi(false);
 	assert(abi == abis::llvm);
 
-	Type* ret_ty = type_( v4f32_hint, abi );
-	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
+	Type* ret_ty = type_(v4f32_hint, abi);
+	value_array ret_ptr = ext_->stack_alloc( ret_ty, parallel_factor_, "ret.tmp" );
 
 	Type* coord_ty = ret_ty;
-	Value* coord_ptr = ext_->stack_alloc(coord_ty, "coord.tmp");
-	builder().CreateStore( coord.load(abi), coord_ptr );
+	value_array coord_ptr = ext_->stack_alloc(coord_ty, parallel_factor_, "coord.tmp");
+	ext_->store(coord.load(abi), coord_ptr);
 
+	value_array samp_value( samp.load() );
+	value_array intrin_fn( parallel_factor_, ext_->external(vs_intrin) );
 	if( abi == abis::llvm)
 	{
-		builder().CreateCall3(ext_->external(vs_intrin), ret_ptr, samp.load(), coord_ptr);
+		value_array const* args[] = {&ret_ptr, &samp_value, &coord_ptr};
+		ext_->call(intrin_fn, args);
 	}
 	else
 	{
-		builder().CreateCall4( ext_->external(ps_intrin), ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr );
+		value_array mask = fn().packed_execution_mask().load();
+		value_array const* args[] = {&ret_ptr, &mask, &samp_value, &coord_ptr};
+		ext_->call(intrin_fn, args);
 	}
 
 	return create_value(NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi);
@@ -1856,27 +1842,28 @@ multi_value cg_service::emit_tex_grad_impl( multi_value const& samp, multi_value
 	abis::id abi = param_abi(false);
 
 	Type* ret_ty = type_( v4f32_hint, abi );
-	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
+	value_array ret_ptr = ext_->stack_alloc(ret_ty, parallel_factor_, "ret.tmp");
 
 	Type* coord_ty = type_(coord_hint, abi);
 
-	Value* coord_ptr = ext_->stack_alloc(coord_ty, "coord.tmp");
-	builder().CreateStore( coord.load(abi), coord_ptr );
+	value_array coord_ptr = ext_->stack_alloc(coord_ty, parallel_factor_, "coord.tmp");
+	ext_->store(coord.load(abi), coord_ptr);
 
-	Value* ddx_ptr = ext_->stack_alloc(coord_ty, "ddx.tmp");
-	builder().CreateStore( ddx.load(abi), ddx_ptr );
+	value_array ddx_ptr = ext_->stack_alloc(coord_ty, parallel_factor_, "ddx.tmp");
+	ext_->store(ddx.load(abi), ddx_ptr);
 
-	Value* ddy_ptr = ext_->stack_alloc(coord_ty, "ddy.tmp");
-	builder().CreateStore( ddy.load(abi), ddy_ptr );
+	value_array ddy_ptr = ext_->stack_alloc(coord_ty, parallel_factor_, "ddy.tmp");
+	ext_->store(ddy.load(abi), ddy_ptr);
 
-	Value* args[] = 
+	value_array args[] = 
 	{
 		ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
 
-	builder().CreateCall( ext_->external(ps_intrin), args );
+	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
+	ext_->call( intrin_fn, ArrayRef<value_array>(args) );
 
-	return create_value( NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi );
+	return create_value(NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi);
 }
 
 multi_value cg_service::emit_tex_bias_impl( multi_value const& /*samp*/, multi_value const& /*coord*/, externals::id /*ps_intrin*/ )
@@ -1895,24 +1882,25 @@ multi_value cg_service::emit_tex_proj_impl( multi_value const& samp, multi_value
 	abis::id abi = param_abi(false);
 
 	Type* ret_ty = type_( v4f32_hint, abi );
-	Value* ret_ptr = ext_->stack_alloc( ret_ty, "ret.tmp" );
+	value_array ret_ptr = ext_->stack_alloc( ret_ty, parallel_factor_, "ret.tmp" );
 
 	Type* v4f32_ty = type_( v4f32_hint, abi );
 
-	Value* coord_ptr = ext_->stack_alloc(v4f32_ty, "coord.tmp");
-	builder().CreateStore( coord.load(abi), coord_ptr );
+	value_array coord_ptr = ext_->stack_alloc(v4f32_ty, parallel_factor_, "coord.tmp");
+	ext_->store(coord.load(abi), coord_ptr);
 
-	Value* ddx_ptr = ext_->stack_alloc(v4f32_ty, "ddx.tmp");
-	builder().CreateStore( ddx.load(abi), ddx_ptr );
+	value_array ddx_ptr = ext_->stack_alloc(v4f32_ty, parallel_factor_, "ddx.tmp");
+	ext_->store(ddx.load(abi), ddx_ptr);
 
-	Value* ddy_ptr = ext_->stack_alloc(v4f32_ty, "ddy.tmp");
-	builder().CreateStore( coord.load(abi), ddy_ptr );
+	value_array ddy_ptr = ext_->stack_alloc(v4f32_ty, parallel_factor_, "ddy.tmp");
+	ext_->store(coord.load(abi), ddy_ptr);
 
-	Value* args[] = 
+	value_array args[] = 
 	{
 		ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
-	builder().CreateCall(ext_->external(ps_intrin), args );
+	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
+	ext_->call( intrin_fn, ArrayRef<value_array>(args) );
 
 	return create_value( NULL, v4f32_hint, ret_ptr, value_kinds::reference, abi );
 }
@@ -1951,9 +1939,9 @@ multi_value cg_service::emit_select( multi_value const& flag, multi_value const&
 {
 	abis::id promoted_abi = promote_abi(flag.abi(), v0.abi(), v1.abi() );
 
-	Value* flag_v = flag.load(promoted_abi);
-	Value* v0_v = v0.load(promoted_abi);
-	Value* v1_v = v1.load(promoted_abi);
+	value_array flag_v = flag.load(promoted_abi);
+	value_array v0_v = v0.load(promoted_abi);
+	value_array v1_v = v1.load(promoted_abi);
 
 	return create_value(
 		v0.ty(), v0.hint(), 
@@ -1967,14 +1955,18 @@ multi_value cg_service::emit_not( multi_value const& v )
 	return emit_bit_xor( mask_value, v );
 }
 
-multi_value cg_service::inf_from_value( multi_value const& v, bool negative )
+multi_value cg_service::inf_from_value(multi_value const& v, bool negative)
 {
-	Value* v_v = v.load();
+	value_array v_v = v.load();
 	builtin_types scalar_of_v = scalar_of( v.hint() );
 	Type* scalar_ty = type_(scalar_of_v, abis::llvm);
 	Value* scalar_inf = ConstantFP::getInfinity(scalar_ty, negative);
-	Value* inf_value = ext_->get_constant_by_scalar(v_v->getType(), scalar_inf);
-	return create_value( v.ty(), v.hint(), inf_value, value_kinds::value, v.abi() );
+	Value* inf_value = ext_->get_constant_by_scalar(v_v[0]->getType(), scalar_inf);
+	return create_value(
+		v.ty(), v.hint(),
+		value_array(parallel_factor_, inf_value),
+		value_kinds::value, v.abi()
+		);
 }
 
 multi_value cg_service::emit_isinf(multi_value const& v)
@@ -2047,7 +2039,8 @@ multi_value cg_service::numeric_value(multi_value const& proto, double fp, uint6
 
 	assert(scalar_value);
 
-	Value* ret_value = ext_->get_constant_by_scalar(ty, scalar_value);
+	Value* ret_mono = ext_->get_constant_by_scalar(ty, scalar_value);
+	value_array ret_value(parallel_factor_, ret_mono);
 	return create_value( proto.ty(), proto.hint(), ret_value, value_kinds::value, proto.abi() );
 }
 
@@ -2068,9 +2061,35 @@ void cg_service::function_body_end()
 
 Value* cg_service::restore(Value* v)
 {
-	Value* addr = ext_->stack_alloc( v->getType() );
+	Value* addr = ext_->stack_alloc(v->getType(), "restore.tmp");
 	builder().CreateStore(v, addr, false);
 	return addr;
+}
+
+value_array cg_service::restore(value_array const& v)
+{
+	assert( valid_all(v) );
+	value_array addr(v.size(), NULL);
+	for(size_t value_index = 0; value_index < v.size(); ++value_index)
+	{
+		addr[value_index] = restore(v[value_index]);
+	}
+	return addr;
+}
+
+size_t cg_service::parallel_factor() const
+{
+	return parallel_factor_;
+}
+
+multi_value cg_service::create_scalar(Value* val, cg_type* tyinfo, builtin_types hint){
+	assert( is_scalar(hint) );
+	return create_value( tyinfo, hint, value_array(parallel_factor_, val), value_kinds::value, abis::llvm );
+}
+
+abis::id cg_service::param_abi( bool is_c_compatible ) const
+{
+	return is_c_compatible ? abis::c : abis::llvm;
 }
 
 END_NS_SASL_CODEGEN();

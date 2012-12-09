@@ -679,7 +679,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	// Register arguments names.
-	assert( service()->fn().arg_size() == v.params.size() );
+	assert( service()->fn().logical_args_count() == v.params.size() );
 
 	service()->fn().return_name( ".ret" );
 	size_t i_arg = 0;
@@ -1053,7 +1053,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if ( intrin_ssi->is_constructor() )
 		{
 			cg_function& fn = service()->fn();
-			for(size_t i = 0; i < fn.arg_size(); ++i)
+			for(size_t i = 0; i < fn.logical_args_count(); ++i)
 			{
 				char name[4] = ".v0";
 				name[2] += (char)i;
@@ -1066,7 +1066,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 				multi_value ret_v = service()->undef_value( ret_hint, service()->param_abi(false) );
 
 				size_t i_scalar = 0;
-				for( size_t i_arg = 0; i_arg < fn.arg_size(); ++i_arg ){
+				for( size_t i_arg = 0; i_arg < fn.logical_args_count(); ++i_arg ){
 					multi_value arg_value = fn.arg(i_arg);
 					builtin_types arg_hint = arg_value.hint();
 					if( is_scalar(arg_hint) ){
@@ -1100,7 +1100,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			cg_function& fn = service()->fn();
 
-			assert( fn.arg_size() == 2 );
+			assert( fn.logical_args_count() == 2 );
 			fn.arg_name(0, "lhs");
 			fn.arg_name(1, "rhs");
 			
@@ -1109,7 +1109,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "radians" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 1 );
+			assert( fn.logical_args_count() == 1 );
 			fn.arg_name(0, ".deg");
 			float deg2rad = (float)(eflib::PI/180.0f);
 			multi_value deg2rad_scalar_v = service()->create_constant_scalar(deg2rad, NULL, builtin_types::_float);
@@ -1119,7 +1119,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "degrees" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 1 );
+			assert( fn.logical_args_count() == 1 );
 			fn.arg_name(0, ".rad");
 			float rad2deg = (float)(180.0f/eflib::PI);
 			multi_value rad2deg_scalar_v = service()->create_constant_scalar(rad2deg, NULL, builtin_types::_float);
@@ -1129,7 +1129,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "lerp" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 3 );
+			assert( fn.logical_args_count() == 3 );
 			fn.arg_name(0, ".s");
 			fn.arg_name(1, ".d");
 			fn.arg_name(2, ".t");
@@ -1141,7 +1141,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "distance" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 2 );
+			assert( fn.logical_args_count() == 2 );
 			fn.arg_name(0, ".s");
 			fn.arg_name(1, ".d");
 			multi_value diff = service()->emit_sub( fn.arg(1), fn.arg(0) );
@@ -1152,7 +1152,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "dst" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 2 );
+			assert( fn.logical_args_count() == 2 );
 			fn.arg_name(0, ".sqr");
 			fn.arg_name(1, ".inv");
 			multi_value x2 = service()->create_constant_scalar(1.0f, NULL, builtin_types::_float);
@@ -1172,21 +1172,21 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "any" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 1 );
+			assert( fn.logical_args_count() == 1 );
 			fn.arg_name(0, ".v");
 			service()->emit_return( service()->emit_any(fn.arg(0)), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "all" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 1 );
+			assert( fn.logical_args_count() == 1 );
 			fn.arg_name(0, ".v");
 			service()->emit_return( service()->emit_all(fn.arg(0)), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "length" )
 		{
 			cg_function& fn = service()->fn();
-			assert( fn.arg_size() == 1 );
+			assert( fn.logical_args_count() == 1 );
 			fn.arg_name(0, ".v");
 
 			multi_value length_sqr = service()->emit_dot( fn.arg(0), fn.arg(0) );
@@ -1195,7 +1195,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "clamp" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 3);
+			assert(fn.logical_args_count() == 3);
 			
 			fn.arg_name(0, "v0");
 			fn.arg_name(1, "v1");
@@ -1210,7 +1210,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "isinf" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 			fn.arg_name(0, "v");
 
 			service()->emit_return(
@@ -1221,7 +1221,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "isfinite" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 			fn.arg_name(0, "v");
 
 			service()->emit_return(
@@ -1232,7 +1232,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "isnan" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 			fn.arg_name(0, "v");
 
 			service()->emit_return(
@@ -1243,7 +1243,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "min" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 2);
+			assert(fn.logical_args_count() == 2);
 
 			fn.arg_name(0, "v0");
 			fn.arg_name(1, "v1");
@@ -1257,7 +1257,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "max" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 2);
+			assert(fn.logical_args_count() == 2);
 
 			fn.arg_name(0, "v0");
 			fn.arg_name(1, "v1");
@@ -1272,7 +1272,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		{
 			// frac = abs(v) - abs( floor(v) );
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 
 			fn.arg_name(0, "v");
 
@@ -1285,7 +1285,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "saturate" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 
 			fn.arg_name(0, "v");
 
@@ -1294,7 +1294,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "rcp" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 
 			fn.arg_name(0, "v");
 
@@ -1308,7 +1308,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "normalize" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 
 			fn.arg_name(0, "v");
 
@@ -1322,7 +1322,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "reflect" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 2);
+			assert(fn.logical_args_count() == 2);
 
 			fn.arg_name(0, "i");
 			fn.arg_name(1, "n");
@@ -1339,14 +1339,14 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "sign" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 1);
+			assert(fn.logical_args_count() == 1);
 			fn.arg_name(0, "v");
 			service()->emit_return( service()->emit_sign( fn.arg(0) ), service()->param_abi(false) );
 		}
 		else if( intr->unmangled_name() == "smoothstep" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 3);
+			assert(fn.logical_args_count() == 3);
 
 			fn.arg_name(0, "v0");
 			fn.arg_name(1, "v1");
@@ -1380,7 +1380,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "refract" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 3);
+			assert(fn.logical_args_count() == 3);
 
 			fn.arg_name(0, "i");
 			fn.arg_name(1, "n");
@@ -1424,7 +1424,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if (intr->unmangled_name() == "step")
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 2);
+			assert(fn.logical_args_count() == 2);
 
 			fn.arg_name(0, "y");
 			fn.arg_name(1, "x");
@@ -1442,7 +1442,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if (intr->unmangled_name() == "mad")
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 3);
+			assert(fn.logical_args_count() == 3);
 
 			fn.arg_name(0, "m");
 			fn.arg_name(1, "a");
@@ -1458,7 +1458,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if( intr->unmangled_name() == "faceforward" )
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 3);
+			assert(fn.logical_args_count() == 3);
 
 			fn.arg_name(0, "n");
 			fn.arg_name(1, "i");
@@ -1480,7 +1480,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		else if (intr->unmangled_name() == "lit")
 		{
 			cg_function& fn = service()->fn();
-			assert(fn.arg_size() == 3);
+			assert(fn.logical_args_count() == 3);
 
 			fn.arg_name(0, "n_dot_l");
 			fn.arg_name(1, "n_dot_h");

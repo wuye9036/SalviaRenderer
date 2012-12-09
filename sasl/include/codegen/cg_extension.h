@@ -165,17 +165,21 @@ public:
 	llvm::Value* extract_elements( llvm::Value* src, size_t start_pos, size_t length );
 	llvm::Value* insert_elements( llvm::Value* dst, llvm::Value* src, size_t start_pos );
 	llvm::Value* i8toi1_sv( llvm::Value* );
+	value_array  i8toi1_sv( value_array const& );
 	llvm::Value* i1toi8_sv( llvm::Value* );
 	llvm::Value* call_external_1( llvm::Function* f, llvm::Value* v );
 	llvm::Value* call_external_2( llvm::Function* f, llvm::Value* v0, llvm::Value* v1 );
 	llvm::Value* cast_sv(llvm::Value* v, llvm::Type* ty, cast_ops::id op);
 	llvm::Value* select(llvm::Value*, llvm::Value*, llvm::Value*);
+	value_array  select(value_array const& flag, value_array const& v0, value_array const& v1);
+	value_array  select(llvm::Value* mask, value_array const& v0, value_array const& v1);
 	llvm::Type*  extract_scalar_type(llvm::Type* ty);
 	llvm::PHINode* phi( llvm::BasicBlock* b0, llvm::Value* v0, llvm::BasicBlock* b1, llvm::Value* v1 );
 	
 	// Alloca
 	void set_stack_alloc_point(llvm::BasicBlock* alloc_point);
 	llvm::AllocaInst* stack_alloc(llvm::Type* ty, llvm::Twine const& name);
+	value_array		  stack_alloc(llvm::Type* ty, size_t parallel_factor, llvm::Twine const& name);
 
 	// Value generator
 	llvm::Value* get_constant_by_scalar(llvm::Type* ty, llvm::Value* scalar);
@@ -216,17 +220,24 @@ public:
 	llvm::Value* get_struct(llvm::Type* ty, llvm::ArrayRef<llvm::Value*> const& elements);
 	llvm::Value* get_array (llvm::ArrayRef<llvm::Value*> const& elements);
 	value_array  split_array(llvm::Value*);
+	value_array  split_array_ref(llvm::Value*);
 
 	// value_array extensions
+	value_array gep				(value_array const& agg_addr, value_array const& index);
+	value_array call			(value_array const& fn, llvm::ArrayRef<value_array> const& args);
+	value_array call			(value_array const& fn, llvm::ArrayRef<value_array const*> const& args);
+	value_array load			(value_array const& addr);
+	value_array store			(value_array const& values, value_array const& addr);
+	value_array struct_gep		(value_array const& agg, uint32_t index);
 	value_array extract_value	(value_array const& agg, uint32_t index);
 	value_array extract_value	(value_array const& agg, int32_t  index)
 	{
 		assert(index > 0);
 		return extract_value( agg, static_cast<uint32_t>(index) );
 	}
-	value_array extract_element	(value_array const& agg, value_array const& index);
-	value_array create_gep		(value_array const& agg_addr, value_array const& index);
+	
 	value_array shuffle_vector	(value_array const& v1, value_array const& v2, value_array const& mask);
+	value_array extract_element	(value_array const& agg, value_array const& index);
 
 private:
 	cg_extension& operator = (cg_extension const&);

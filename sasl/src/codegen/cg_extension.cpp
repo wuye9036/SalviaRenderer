@@ -296,7 +296,7 @@ Value* cg_extension::extract_elements( Value* src, size_t start_pos, size_t leng
 	vector<int> indexes;
 	indexes.resize( length, 0 );
 	for ( size_t i_elem = 0; i_elem < length; ++i_elem ){
-		indexes[i_elem] = i_elem + start_pos;
+		indexes[i_elem] = static_cast<int>(i_elem + start_pos);
 	}
 	Value* mask = get_vector<int>( ArrayRef<int>(indexes) );
 	return builder_->CreateShuffleVector( src, UndefValue::get( src->getType() ), mask );
@@ -314,8 +314,8 @@ Value* cg_extension::insert_elements( Value* dst, Value* src, size_t start_pos )
 	// Expand source to dest size
 	Value* ret = dst;
 	for( size_t i_elem = 0; i_elem < count; ++i_elem ){
-		Value* src_elem = builder_->CreateExtractElement( src, get_int<int>(i_elem) );
-		ret = builder_->CreateInsertElement( ret, src_elem, get_int<int>(i_elem+start_pos) );
+		Value* src_elem = builder_->CreateExtractElement( src, get_int(i_elem) );
+		ret = builder_->CreateInsertElement( ret, src_elem, get_int(i_elem+start_pos) );
 	}
 	
 	return ret;
@@ -330,6 +330,17 @@ Value* cg_extension::i8toi1_sv( Value* v )
 	}
 
 	return builder_->CreateTruncOrBitCast(v, ty);
+}
+
+value_array cg_extension::i8toi1_sv(value_array const& v)
+{
+	assert( valid_all(v) );
+	value_array ret(v.size(), NULL);
+	for(size_t value_index = 0; value_index < v.size(); ++value_index)
+	{
+		ret[value_index] = i8toi1_sv(v[value_index]);
+	}
+	return ret;
 }
 
 Value* cg_extension::i1toi8_sv( Value* v )
@@ -430,6 +441,43 @@ Value* cg_extension::select( Value* flag, Value* v0, Value* v1 )
 	return NULL;
 }
 
+value_array cg_extension::select(
+	value_array const& flag, value_array const& v0, value_array const& v1
+	)
+{
+	assert( valid_all(flag) );
+	assert( valid_all(v0) );
+	assert( valid_all(v1) );
+	assert( flag.size() == v0.size() );
+	assert( v0.size() == v1.size() );
+
+	value_array ret(flag.size(), NULL);
+	for(size_t value_index = 0; value_index < flag.size(); ++value_index)
+	{
+		ret[value_index] = select(flag[value_index], v0[value_index], v1[value_index]);
+	}
+	return ret;
+}
+
+value_array cg_extension::select(
+	Value* mask, value_array const& v0, value_array const& v1
+	)
+{
+	assert( mask != NULL );
+	assert( valid_all(v0) );
+	assert( valid_all(v1) );
+	assert( v0.size() == v1.size() );
+
+	value_array ret(v0.size(), NULL);
+	for(size_t value_index = 0; value_index < v0.size(); ++value_index)
+	{
+		uint32_t flag_mask = (1U << value_index);
+		Value* flag = builder_->CreateICmpNE( builder_->CreateAnd(mask, flag_mask), get_int(0) );
+		ret[value_index] = builder_->CreateSelect(flag, v0[value_index], v1[value_index]);
+	}
+	return ret;
+}
+
 Type* cg_extension::extract_scalar_type( Type* ty )
 {
 	if( ty->isVectorTy() )
@@ -500,7 +548,9 @@ Value* cg_extension::get_constant_by_scalar( Type* ty, Value* scalar )
 Value* cg_extension::get_vector( ArrayRef<Value*> const& elements )
 {
 	assert( !elements.empty() );
-	Type* vector_ty = VectorType::get( elements.front()->getType(), elements.size() );
+	Type* vector_ty = VectorType::get(
+		elements.front()->getType(), static_cast<uint32_t>( elements.size() )
+		);
 	Value* ret = UndefValue::get(vector_ty);
 
 	for(unsigned i = 0; i < elements.size(); ++i)
@@ -688,6 +738,16 @@ AllocaInst* cg_extension::stack_alloc(Type* ty, Twine const& name)
 	return new AllocaInst(ty, NULL, name, alloc_point_);
 }
 
+value_array cg_extension::stack_alloc(Type* ty, size_t parallel_factor, llvm::Twine const& name)
+{
+	value_array ret(parallel_factor, NULL);
+	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
+	{
+		ret[value_index] = new AllocaInst(ty, NULL, name, alloc_point_);
+	}
+	return ret;
+}
+
 value_array cg_extension::extract_element(value_array const& agg, value_array const& index)
 {
 	assert( agg.size() == index.size() );
@@ -713,7 +773,7 @@ value_array cg_extension::extract_value(value_array const& agg, uint32_t index)
 	return ret;
 }
 
-value_array cg_extension::create_gep(value_array const& agg_addr, value_array const& index)
+value_array cg_extension::gep(value_array const& agg_addr, value_array const& index)
 {
 	assert( agg_addr.size() == index.size() );
 	assert( valid_all(agg_addr) );
@@ -723,6 +783,77 @@ value_array cg_extension::create_gep(value_array const& agg_addr, value_array co
 	for(size_t value_index = 0; value_index < agg_addr.size(); ++value_index)
 	{
 		ret[value_index] = builder_->CreateGEP(agg_addr[value_index], index[value_index] );
+	}
+	return ret;
+}
+
+value_array cg_extension::struct_gep(value_array const& agg, uint32_t index)
+{
+	assert( valid_all(agg) );
+	
+	value_array ret(agg.size(), NULL);
+	for(size_t value_index = 0; value_index < agg.size(); ++value_index)
+	{
+		ret[value_index] = builder_->CreateStructGEP(agg[value_index], index);
+	}
+	return ret;
+}
+
+value_array cg_extension::load(value_array const& addr)
+{
+	assert( valid_all(addr) );
+	value_array ret(addr.size(), NULL);
+	for(size_t value_index = 0; value_index < addr.size(); ++value_index)
+	{
+		ret[value_index] = builder_->CreateLoad(addr[value_index]);
+	}
+	return ret;
+}
+
+value_array cg_extension::store(value_array const& values, value_array const& addr)
+{
+	assert( values.size() == addr.size() );
+	assert( valid_all(addr) );
+	assert( valid_all(values) );
+	
+	value_array ret(values.size(), NULL);
+	for(size_t value_index = 0; value_index < values.size(); ++value_index)
+	{
+		ret[value_index] = builder_->CreateStore(values[value_index], addr[value_index]);
+	}
+	return ret;
+}
+
+value_array cg_extension::call(
+	value_array const& fn, ArrayRef<value_array> const& args
+	)
+{	
+	value_array ret(fn.size(), NULL);
+	vector<Value*> arg_values(args.size(), NULL);
+	for(size_t value_index = 0; value_index < fn.size(); ++value_index)
+	{
+		for(size_t i_arg = 0; i_arg < args.size(); ++i_arg)
+		{
+			arg_values[i_arg] = args[i_arg][value_index];
+		}
+		ret[value_index] = builder_->CreateCall(fn[value_index], arg_values);
+	}
+	return ret;
+}
+
+value_array cg_extension::call(
+	value_array const& fn, ArrayRef<value_array const*> const& args
+	)
+{	
+	value_array ret(fn.size(), NULL);
+	vector<Value*> arg_values(args.size(), NULL);
+	for(size_t value_index = 0; value_index < fn.size(); ++value_index)
+	{
+		for(size_t i_arg = 0; i_arg < args.size(); ++i_arg)
+		{
+			arg_values[i_arg] = (*args[i_arg])[value_index];
+		}
+		ret[value_index] = builder_->CreateCall(fn[value_index], arg_values);
 	}
 	return ret;
 }

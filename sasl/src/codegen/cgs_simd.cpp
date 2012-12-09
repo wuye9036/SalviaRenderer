@@ -87,38 +87,23 @@ BEGIN_NS_SASL_CODEGEN();
 
 void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 {
-	Value* src = rhs.load( lhs.abi() );
-	Value* address = NULL;
+	value_array src = rhs.load( lhs.abi() );
+	value_array address(src.size(), NULL);
 	value_kinds::id kind = lhs.kind();
 
 	if( kind == value_kinds::reference ){	
 		address = lhs.raw();
 
 		if( is_scalar( lhs.hint() ) || is_vector( lhs.hint() ) ){
-			size_t value_length = is_scalar( lhs.hint() ) ? 1 : vector_size( lhs.hint() );
-			size_t padded_value_length = ceil_to_pow2(value_length);
-			Value* mask = expanded_mask( padded_value_length );
-			Value* dest_value = builder().CreateLoad( address );
+			Value* mask = exec_masks.back();
+			value_array dest_value = ext_->load(address);
 
-			if( mask->getType()->isVectorTy() )
+			for(uint32_t value_index = 0; value_index < parallel_factor_; ++value_index)
 			{
-				// TODO: Just fix for making ps_for_loop works. Expand vector select instruction manually.
-				Value* selected = UndefValue::get( src->getType() );
-				for(unsigned i = 0; i < mask->getType()->getVectorNumElements(); ++i)
-				{
-					Value* index = ext_->get_int(i);
-					Value* mask_elem = ext_->i8toi1_sv( builder().CreateExtractElement(mask, index) );
-					Value* src_elem = builder().CreateExtractElement(src, index);
-					Value* dest_elem = builder().CreateExtractElement(dest_value, index);
-					Value* selected_elem = builder().CreateSelect(mask_elem, src_elem, dest_elem);
-					selected = builder().CreateInsertElement(selected, selected_elem, index);
-				}
-				src = selected;
+				assert(false);
 			}
-			else
-			{
-				src = builder().CreateSelect( ext_->i8toi1_sv(mask), src, dest_value, "Merged" );
-			}
+			value_array selected = ext_->select(mask, src, dest_value);
+			src = selected;
 		} else {
 			EFLIB_ASSERT_UNIMPLEMENTED();
 		}
@@ -126,8 +111,8 @@ void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 		if( is_vector( lhs.parent()->hint()) )
 		{
 			assert( lhs.parent()->storable() );
-			Value* parent_address = lhs.parent()->load_ref();
-			Value* r_value = rhs.load( lhs.abi() );
+			value_array parent_address = lhs.parent()->load_ref();
+			value_array r_value = rhs.load( lhs.abi() );
 
 			char indexes[4];
 			mask_to_indexes( indexes, lhs.masks() );
@@ -136,10 +121,11 @@ void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 			switch ( lhs.abi() ){	
 			case abis::c:
 				{
-					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
+					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx )
+					{
 						multi_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
-						Value* mem_ptr = builder().CreateStructGEP( parent_address, indexes[i_write_idx] );
-						builder().CreateStore( element_val.load(), mem_ptr );
+						value_array mem_ptr = ext_->struct_gep(parent_address, indexes[i_write_idx]);
+						ext_->store(element_val.load(), mem_ptr);
 					}
 					return;
 				}
@@ -161,9 +147,7 @@ void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 		}
 	}
 
-	// Masked Store
-	StoreInst* inst = builder().CreateStore( src, address );
-	//inst->setAlignment(4);
+	ext_->store(src, address);
 }
 
 multi_value cgs_simd::cast_ints( multi_value const& v, cg_type* dest_tyi )
@@ -217,11 +201,12 @@ void cgs_simd::emit_return( multi_value const& ret_v, abis::id abi )
 {
 	if( abi == abis::unknown ){ abi = fn().abi(); }
 
+	value_array ret_value = ret_v.load(abi);
 	if( fn().return_via_arg() ){
-		builder().CreateStore( ret_v.load(abi), fn().return_address() );
+		ext_->store( ret_value, fn().return_address() );
 		builder().CreateRetVoid();
 	} else {
-		builder().CreateRet( ret_v.load(abi) );
+		builder().CreateRet( ext_->get_array(ret_value) );
 	}
 }
 
@@ -241,10 +226,8 @@ void cgs_simd::function_body_end()
 
 Value* cgs_simd::all_one_mask()
 {
-	//TODO
-	Type* mask_ty = type_(builtin_types::_boolean);
-	Value* mask_v = Constant::getAllOnesValue(mask_ty);
-	return mask_v;
+	uint64_t mask = (1ULL << parallel_factor_) - 1;
+	return ext_->get_int( static_cast<uint32_t>(mask) );
 }
 
 Value* cgs_simd::expanded_mask( uint32_t expanded_times )
@@ -496,14 +479,11 @@ void cgs_simd::continue_()
 	apply_continue();
 }
 
-multi_value cgs_simd::joinable()
+multi_value cgs_simd::any_mask_true()
 {
-	Value* v = exec_masks.back();
-	Value* ret_bool = builder().CreateExtractElement( v, ext_->get_int(0) );
-	for( int i = 1; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		ret_bool = builder().CreateOr( ret_bool, builder().CreateExtractElement( v, ext_->get_int(i) ) );
-	}
-	return create_value( builtin_types::_boolean, ret_bool, value_kinds::value, abis::llvm );
+	Value* mask = exec_masks.back();
+	Value* ret_value = builder().CreateICmpNE( mask, ext_->get_int(0) );
+	return create_value(builtin_types::_boolean, value_array(1, ret_value), value_kinds::value, abis::llvm);
 }
 
 void cgs_simd::while_beg(){ enter_loop(); }
@@ -518,12 +498,7 @@ void cgs_simd::while_body_end() { save_next_iteration_exec_mask(); }
 
 void cgs_simd::enter_loop()
 {
-	// TODO:
-	//  store <16 x i1>, <16 x i1>* var is crashed by LLVM bug.
-	// We ext to i8 array and store.
-	mask_vars.push_back( builder().CreateAlloca( type_(builtin_types::_uint8), NULL, ".for.mask.tmpvar" ) );
-	save_loop_execution_mask( exec_masks.back() );
-
+	mask_vars.push_back( restore( exec_masks.back() ) );
 	exec_masks.push_back( exec_masks.back() );
 	break_masks.push_back(NULL);
 	continue_masks.push_back(NULL);
@@ -540,8 +515,9 @@ void cgs_simd::apply_loop_condition( multi_value const& cond )
 {
 	Value* exec_mask = load_loop_execution_mask();
 	if( cond.abi() != abis::unknown ){
-		Value* cond_exec_mask = cond.load( abis::package );
-		exec_mask = builder().CreateAnd( exec_mask, cond_exec_mask );
+		value_array cond_exec_flags = cond.load();
+		Value* cond_exec_mask = get_mask(cond_exec_flags);
+		exec_mask = builder().CreateAnd(exec_mask, cond_exec_mask);
 	}
 
 	exec_masks.back() = exec_mask;
@@ -570,32 +546,12 @@ void cgs_simd::save_next_iteration_exec_mask()
 
 llvm::Value* cgs_simd::load_loop_execution_mask()
 {
-	Value* mask_as_uchar = builder().CreateLoad( mask_vars.back() );
-	return builder().CreateTruncOrBitCast( mask_as_uchar, type_(builtin_types::_boolean, abis::package) );
+	return builder().CreateLoad( mask_vars.back() );
 }
 
-void cgs_simd::save_loop_execution_mask( Value* mask )
+void cgs_simd::save_loop_execution_mask(Value* mask)
 {
-	Value* mask_as_uchar = builder().CreateZExtOrBitCast( mask, type_( builtin_types::_uint8, abis::package) );
-	builder().CreateStore( mask_as_uchar, mask_vars.back() );
-}
-
-multi_value cgs_simd::packed_mask()
-{
-	assert( PACKAGE_ELEMENT_COUNT == 16 );
-
-	Value* mask_vec = exec_masks.back();
-
-	Type* packed_mask_ty = type_( builtin_types::_sint16, abis::llvm);
-	Value* ret = Constant::getNullValue( packed_mask_ty );
-	for( size_t i_mask = 0; i_mask < PACKAGE_ELEMENT_COUNT; ++i_mask ){
-		Value* mask_bit = builder().CreateExtractElement( mask_vec, ext_->get_int<int32_t>(i_mask) );
-		mask_bit = builder().CreateZExt( mask_bit, packed_mask_ty );
-		ret = builder().CreateShl( ret, 1 );
-		ret = builder().CreateOr( ret, mask_bit );
-	}
-
-	return create_value( NULL, builtin_types::_sint16, ret, value_kinds::value, abis::llvm );
+	builder().CreateStore( exec_masks.back(), mask_vars.back() );
 }
 
 multi_value cgs_simd::emit_and( multi_value const& lhs, multi_value const& rhs )

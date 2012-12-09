@@ -10,8 +10,6 @@ BEGIN_NS_SASL_CODEGEN();
 class cgs_simd: public cg_service
 {
 public:
-	abis::id intrinsic_abi() const;
-
 	virtual void store( multi_value& lhs, multi_value const& rhs );
 
 	multi_value emit_and(multi_value const& lhs, multi_value const& rhs);
@@ -30,10 +28,8 @@ public:
 	virtual multi_value emit_ddx( multi_value const& v );
 	virtual multi_value emit_ddy( multi_value const& v );
 	
-	multi_value create_scalar( llvm::Value* val, cg_type* tyinfo, builtin_types hint );
 	virtual multi_value create_vector( std::vector<multi_value> const& scalars, abis::id abi );
 
-	abis::id param_abi( bool c_compatible ) const;
 	bool prefer_externals() const{ return false; }
 	bool prefer_scalar_code() const{ return false; }
 
@@ -49,7 +45,7 @@ public:
 	virtual void for_iter_beg();
 	virtual void for_iter_end();
 
-	virtual multi_value joinable();
+	virtual multi_value any_mask_true();
 
 	virtual void if_beg();
 	virtual void if_end();
@@ -90,7 +86,6 @@ private:
 	virtual void	apply_loop_condition( multi_value const& );
 	virtual void	save_next_iteration_exec_mask();
 
-	multi_value			packed_mask();
 	llvm::Value*	all_one_mask();
 	llvm::Value*	all_zero_mask();
 	llvm::Value*	expanded_mask( uint32_t expanded_times );

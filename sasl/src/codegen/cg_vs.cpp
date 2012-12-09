@@ -85,7 +85,7 @@ void rearrange_layouts( vector<sv_layout*>& sorted_layouts, vector<Type*>& sorte
 	vector<sv_layout*>::const_iterator layout_it = layouts.begin();
 	BOOST_FOREACH( Type* ty, tys ){
 		size_t sz = (size_t)target->getTypeStoreSize(ty);
-		(*layout_it)->element_size = sz;
+		(*layout_it)->element_size = static_cast<int>(sz);
 		layout_ty_pairs.push_back( make_pair(*layout_it, ty) );
 		++layout_it;
 	}
@@ -147,15 +147,15 @@ void cg_vs::fill_llvm_type_from_si( sv_usage su ){
 		size_t next_offset = 0;
 		for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
 			size_t offset = next_offset;
-			svls[i_elem]->offset = offset;
-			svls[i_elem]->physical_index = i_elem;
+			svls[i_elem]->offset = static_cast<int>(offset);
+			svls[i_elem]->physical_index = static_cast<int>(i_elem);
 
 			size_t next_i_elem = i_elem + 1;
 			if( next_i_elem < tys.size() ){
 				next_offset = (size_t)struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
 			} else {
 				next_offset = (size_t)struct_layout->getSizeInBytes();
-				const_cast<abi_info*>(abii)->update_size( next_offset, su );
+				const_cast<abi_info*>(abii)->update_size(next_offset, su);
 			}
 		
 			svls[i_elem]->element_padding = (next_offset - offset) - svls[i_elem]->element_size;
@@ -308,24 +308,27 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 		Function::arg_iterator arg_it = fn->arg_begin();
 
 		arg_it->setName( ".arg.stri" );
-		param_values[su_stream_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
+		param_values[su_stream_in]  = service()->create_value(
+			builtin_types::none, value_array(1, arg_it), value_kinds::reference, abis::c);
 		++arg_it;
 
 		arg_it->setName( ".arg.bufi" );
-		param_values[su_buffer_in] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
+		param_values[su_buffer_in]  = service()->create_value(
+			builtin_types::none, value_array(1, arg_it), value_kinds::reference, abis::c);
 		++arg_it;
 
 		arg_it->setName( ".arg.stro" );
-		param_values[su_stream_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
+		param_values[su_stream_out] = service()->create_value(
+			builtin_types::none, value_array(1, arg_it), value_kinds::reference, abis::c);
 		++arg_it;
 
 		arg_it->setName( ".arg.bufo" );
-		param_values[su_buffer_out] = service()->create_value( builtin_types::none, arg_it, value_kinds::reference, abis::c );
+		param_values[su_buffer_out] = service()->create_value(
+			builtin_types::none, value_array(1, arg_it), value_kinds::reference, abis::c);
 		++arg_it;
 
 		// Create virtual arguments
 		create_virtual_args(v, data);
-
 	} else {
 		parent_class::create_fnargs(v, data);
 	}
