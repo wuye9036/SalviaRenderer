@@ -232,7 +232,7 @@ public:
 	value_array extract_value	(value_array const& agg, uint32_t index);
 	value_array extract_value	(value_array const& agg, int32_t  index)
 	{
-		assert(index > 0);
+		assert(index >= 0);
 		return extract_value( agg, static_cast<uint32_t>(index) );
 	}
 	

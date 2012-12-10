@@ -1275,12 +1275,7 @@ Mask Value       |         N/A         |       N/A       |        uint32_t      
 */
 multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> const& args, Value* exec_mask )
 {
-	abis::id promoted_abi = abis::llvm;
-	BOOST_FOREACH(multi_value const& arg, args)
-	{
-		promoted_abi = promote_abi( arg.abi(), promoted_abi );
-	}
-	abis::id arg_abi = fn.c_compatible ? abis::c : promoted_abi;
+	abis::id arg_abi = fn.c_compatible ? abis::c : abis::llvm;
 
 	vector<Value*>	arg_multi_values(fn.physical_args_count(), NULL);
 	vector<Value*>	physical_args   (fn.physical_args_count(), NULL);
@@ -1322,11 +1317,11 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 			// Get values, and convert big value to pointer if needed.
 			if( !fn.value_arg_as_ref(logical_index) )
 			{
-				arg_multi_values = arg.load();
+				arg_multi_values = arg.load(arg_abi);
 			}
 			else
 			{
-				vector<Value*> arg_addr = load_ref( arg, arg_abi );
+				vector<Value*> arg_addr = load_ref(arg, arg_abi);
 				if( !arg_addr.empty() )
 				{
 					arg_multi_values = arg_addr;
@@ -1372,7 +1367,7 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 		ret_value_array[0] = ret_value;
 	}
 
-	abis::id ret_abi = fn.c_compatible ? abis::c : promoted_abi;
+	abis::id ret_abi = arg_abi;
 	return create_value(fn.result_type(), ret_value_array, value_kinds::value, ret_abi);
 }
 

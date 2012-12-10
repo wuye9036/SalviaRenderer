@@ -65,7 +65,6 @@ value_array cg_extension::call_binary_intrin(
 	assert( valid_all(rhs) );
 	assert( lhs.size() == rhs.size() );
 	assert( sv_fn );
-	assert( cast_result_sv_fn );
 
 	size_t parallel_factor = lhs.size();
 	value_array ret(parallel_factor, NULL);
@@ -89,8 +88,7 @@ Value* cg_extension::call_binary_intrin_mono(
 
 	if( !ty->isAggregateType() )
 	{
-		Value* ret_v = NULL;
-		ret_v = sv_fn(lhs, rhs);
+		Value* ret_v = sv_fn(lhs, rhs);
 		assert(ret_v);
 		if( cast_result_sv_fn ){ ret_v = cast_result_sv_fn(ret_v); }
 		return ret_v;

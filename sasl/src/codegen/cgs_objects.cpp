@@ -72,7 +72,6 @@ multi_value::multi_value(
 	, builtin_ty_(builtin_types::none), abi_(abi)
 	, masks_(0)
 {
-	assert(false);
 }
 
 multi_value::multi_value(
@@ -83,7 +82,6 @@ multi_value::multi_value(
 	, kind_(k), cg_(cg), masks_(0)
 	
 {
-	assert(false);
 }
 
 multi_value::multi_value(multi_value const& rhs)
@@ -354,7 +352,7 @@ multi_value cg_function::arg(size_t index) const
 	cg_type* par_ty = cg->get_node_context( par.get() )->ty;
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
-	std::advance(it, logical_args_count() + index);
+	std::advance(it, logical_arg_offset() + index);
 	abis::id arg_abi = cg->param_abi(c_compatible);
 
 	Value* physical_arg_value = &(*it);
