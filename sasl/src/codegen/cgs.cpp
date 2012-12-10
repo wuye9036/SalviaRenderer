@@ -1826,7 +1826,7 @@ multi_value cg_service::emit_tex_lod_impl( multi_value const& samp, multi_value 
 	}
 	else
 	{
-		value_array mask = fn().packed_execution_mask().load();
+		value_array mask = fn().execution_mask().load();
 		value_array const* args[] = {&ret_ptr, &mask, &samp_value, &coord_ptr};
 		ext_->call(intrin_fn, args);
 	}
@@ -1857,7 +1857,7 @@ multi_value cg_service::emit_tex_grad_impl( multi_value const& samp, multi_value
 
 	value_array args[] = 
 	{
-		ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
+		ret_ptr, fn().execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
 
 	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
@@ -1897,7 +1897,7 @@ multi_value cg_service::emit_tex_proj_impl( multi_value const& samp, multi_value
 
 	value_array args[] = 
 	{
-		ret_ptr, fn().packed_execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
+		ret_ptr, fn().execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
 	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
 	ext_->call( intrin_fn, ArrayRef<value_array>(args) );
@@ -2090,6 +2090,19 @@ multi_value cg_service::create_scalar(Value* val, cg_type* tyinfo, builtin_types
 abis::id cg_service::param_abi( bool is_c_compatible ) const
 {
 	return is_c_compatible ? abis::c : abis::llvm;
+}
+
+Value* cg_service::combine_flags(value_array const& flags)
+{
+	assert( flags.size() == parallel_factor_ );
+	Value* ret = ext_->get_int<uint32_t>(0);
+	for(size_t i_flag = 0; i_flag < parallel_factor_; ++i_flag)
+	{
+		Value* flag_u32 = builder().CreateZExt( flags[i_flag], Type::getInt32Ty( context() ) );
+		Value* shifted_flag = builder().CreateShl(flag_u32, i_flag);
+		ret = builder().CreateOr(shifted_flag, ret);
+	}
+	return ret;
 }
 
 END_NS_SASL_CODEGEN();

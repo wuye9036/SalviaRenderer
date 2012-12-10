@@ -230,22 +230,6 @@ Value* cgs_simd::all_one_mask()
 	return ext_->get_int( static_cast<uint32_t>(mask) );
 }
 
-Value* cgs_simd::expanded_mask( uint32_t expanded_times )
-{
-	Value* exec_mask_v = exec_masks.back();
-	if( expanded_times == 1 ){
-		return exec_mask_v;
-	}
-
-	vector<int> shuffle_mask;
-	shuffle_mask.reserve( expanded_times * PACKAGE_ELEMENT_COUNT );
-	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		shuffle_mask.insert( shuffle_mask.end(), expanded_times, i );
-	}
-	Constant* shuffle_mask_v = ext_->get_vector<int>( ArrayRef<int>(shuffle_mask) );
-	return builder().CreateShuffleVector( exec_mask_v, exec_mask_v, shuffle_mask_v );
-}
-
 void cgs_simd::if_cond_beg()
 {
 	// Do nothing
@@ -516,7 +500,7 @@ void cgs_simd::apply_loop_condition( multi_value const& cond )
 	Value* exec_mask = load_loop_execution_mask();
 	if( cond.abi() != abis::unknown ){
 		value_array cond_exec_flags = cond.load();
-		Value* cond_exec_mask = get_mask(cond_exec_flags);
+		Value* cond_exec_mask = combine_flags(cond_exec_flags);
 		exec_mask = builder().CreateAnd(exec_mask, cond_exec_mask);
 	}
 

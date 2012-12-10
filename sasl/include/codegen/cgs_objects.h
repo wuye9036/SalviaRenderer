@@ -103,9 +103,7 @@ public:
 	cg_type(
 		sasl::syntax_tree::tynode* sty,
 		llvm::Type* ty_c,
-		llvm::Type* ty_llvm,
-		llvm::Type* ty_vec,
-		llvm::Type* ty_pkg
+		llvm::Type* ty_llvm
 		);
 
 	cg_type();
@@ -292,7 +290,7 @@ struct cg_function{
 	/// Get return address value.
 	value_array return_address() const;
 	/// Get Execution Mask.
-	multi_value packed_execution_mask() const;
+	multi_value execution_mask() const;
 	/// Need mask
 	bool need_mask() const;
 	/// Return name

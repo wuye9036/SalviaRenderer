@@ -311,11 +311,6 @@ multi_value cgs_sisd::cast_f2b( multi_value const& v )
 	return emit_cmp_ne( v, null_value( v.hint(), v.abi() ) );
 }
 
-abis::id cgs_sisd::param_abi( bool c_compatible ) const
-{
-	return c_compatible ? abis::c : abis::llvm;
-}
-
 multi_value cgs_sisd::emit_ddx( multi_value const& v )
 {
 	// It is not available in SISD mode.
@@ -328,12 +323,6 @@ multi_value cgs_sisd::emit_ddy( multi_value const& v )
 	// It is not available in SISD mode.
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return v;
-}
-
-multi_value cgs_sisd::packed_mask()
-{
-	assert(false);
-	return multi_value();
 }
 
 Value* cgs_sisd::phi_( BasicBlock* b0, Value* v0, BasicBlock* b1, Value* v1 )

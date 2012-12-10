@@ -88,7 +88,6 @@ private:
 
 	llvm::Value*	all_one_mask();
 	llvm::Value*	all_zero_mask();
-	llvm::Value*	expanded_mask( uint32_t expanded_times );
 
 	enum slice_layout_mode{
 		slm_horizontal,

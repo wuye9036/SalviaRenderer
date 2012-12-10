@@ -601,6 +601,11 @@ value_array cg_extension::split_array(llvm::Value* v)
 	return ret;
 }
 
+value_array cg_extension::split_array_ref(Value* v)
+{
+	return split_array( builder_->CreateLoad(v) );
+}
+
 Value* cg_extension::promote_to_binary_sv_impl(Value* lhs, Value* rhs,
 		binary_intrin_functor sfn, binary_intrin_functor vfn, binary_intrin_functor simd_fn )
 {
@@ -854,6 +859,23 @@ value_array cg_extension::call(
 			arg_values[i_arg] = (*args[i_arg])[value_index];
 		}
 		ret[value_index] = builder_->CreateCall(fn[value_index], arg_values);
+	}
+	return ret;
+}
+
+value_array cg_extension::shuffle_vector(value_array const& v1, value_array const& v2, value_array const& mask)
+{
+	assert( valid_all(v1) );
+	assert( valid_all(v2) );
+	assert( valid_all(mask) );
+	assert( v1.size() == v2.size() );
+	assert( v1.size() == mask.size() );
+	size_t parallel_factor = v1.size();
+
+	value_array ret(parallel_factor, NULL);
+	for(size_t value_index = 0; value_index < parallel_factor; ++value_index)
+	{
+		ret[value_index] = builder_->CreateShuffleVector(v1[value_index], v2[value_index], mask[value_index]);
 	}
 	return ret;
 }

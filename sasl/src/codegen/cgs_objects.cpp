@@ -29,7 +29,7 @@ using std::string;
 
 BEGIN_NS_SASL_CODEGEN();
 
-cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm, Type* ty_vec, Type* ty_pkg )
+cg_type::cg_type(tynode* tyn, Type* ty_c, Type* ty_llvm)
 	: tyn(tyn)
 {
 	tys[abis::c]		= ty_c;
@@ -52,7 +52,7 @@ tynode* cg_type::tyn_ptr() const{
 	return tyn;
 }
 
-llvm::Type* cg_type::ty( abis::id abi ) const{
+llvm::Type* cg_type::ty(abis::id abi) const{
 	return tys[abi];
 }
 
@@ -64,19 +64,29 @@ multi_value::multi_value(size_t num_value)
 {
 }
 
-multi_value::multi_value(cg_type* ty, value_array const& val, value_kinds::id k, abis::id abi, cg_service* cg)
-	: ty_(ty), cg_(cg), kind_(k), builtin_ty_(builtin_types::none), abi_(abi), masks_(0), val_(val)
+multi_value::multi_value(
+	cg_type* ty, value_array const& val,
+	value_kinds::id k, abis::id abi, cg_service* cg)
+	: ty_(ty), val_(val)
+	, cg_(cg), kind_(k)
+	, builtin_ty_(builtin_types::none), abi_(abi)
+	, masks_(0)
 {
 	assert(false);
 }
 
-multi_value::multi_value(builtin_types hint, value_array const& val, value_kinds::id k, abis::id abi, cg_service* cg)
-	: ty_(NULL), builtin_ty_(hint), abi_(abi), kind_(k), cg_(cg), masks_(0), val_(val)
+multi_value::multi_value(
+	builtin_types hint, value_array const& val,
+	value_kinds::id k, abis::id abi, cg_service* cg)
+	: ty_(NULL), val_(val)
+	, builtin_ty_(hint), abi_(abi)
+	, kind_(k), cg_(cg), masks_(0)
+	
 {
 	assert(false);
 }
 
-multi_value::multi_value( multi_value const& rhs )
+multi_value::multi_value(multi_value const& rhs)
 	: ty_(rhs.ty_), builtin_ty_(rhs.builtin_ty_)
 	, abi_(rhs.abi_), val_( rhs.val_ )
 	, kind_(rhs.kind_), masks_(rhs.masks_), cg_(rhs.cg_)
@@ -259,6 +269,8 @@ multi_value*	multi_value::index() const { return index_.get(); }
 void			multi_value::index( multi_value const& v ){ index_.reset( new multi_value(v) ); }
 void			multi_value::index( multi_value const* v ){ if(v) index(*v); }
 
+size_t			multi_value::value_count() const { return val_.size(); }
+
 //Workaround for llvm issue 12618
 value_array multi_value::load_i1() const{
 	if( hint() == builtin_types::_boolean )
@@ -368,13 +380,13 @@ multi_value cg_function::arg(size_t index) const
 	return cg->create_value(par_ty, physical_multi_value, vkind, arg_abi);
 }
 
-multi_value cg_function::packed_execution_mask() const
+multi_value cg_function::execution_mask() const
 {
 	if( !partial_execution ){ return multi_value(); }
 	Function::ArgumentListType::iterator it = fn->arg_begin();
 	if( return_via_arg() ){ ++it; }
 	return cg->create_value(
-		builtin_types::_uint16, value_array(1, &(*it)), value_kinds::value, abis::llvm
+		builtin_types::_uint32, value_array(1, &(*it)), value_kinds::value, abis::llvm
 		);
 }
 
@@ -396,6 +408,16 @@ bool cg_function::value_arg_as_ref(size_t logical_index) const
 bool cg_function::return_via_arg() const
 {
 	return (c_compatible || external) && !ret_void;
+}
+
+bool cg_function::multi_value_arg_as_ref() const
+{
+	return (c_compatible || external) && multi_value_args();
+}
+
+bool cg_function::multi_value_args() const
+{
+	return cg->parallel_factor() > 1;
 }
 
 abis::id cg_function::abi() const

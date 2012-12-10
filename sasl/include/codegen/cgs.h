@@ -259,7 +259,7 @@ public:
 	multi_value  numeric_value	(multi_value const& proto, double fp, uint64_t ui);
 	llvm::Value* get_mask_flag	(llvm::Value* mask, size_t index);
 	void		 set_mask_flag	(llvm::Value* mask, size_t index, llvm::Value* flag);
-	llvm::Value* get_mask		(value_array const& flags);
+	llvm::Value* combine_flags	(value_array const& flags);
 	value_array  split_mask		(llvm::Value* mask);
 
 
