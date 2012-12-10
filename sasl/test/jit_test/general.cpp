@@ -1283,7 +1283,6 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 		};
 
 		float2x3	ret0 = test_mat_i2f( reinterpret_cast<int2x3&>(m23) );
-		m23[0][1] += static_cast<uint32_t>(ret0.data_[0][1]);
 		int2x3		ret1 = test_explicit_cast_f2i(ret0);
 		uint2x3		ret2 = test_explicit_cast_f2u(ret0);
 
