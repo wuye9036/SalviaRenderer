@@ -10,6 +10,8 @@ BEGIN_NS_SASL_CODEGEN();
 class cgs_simd: public cg_service
 {
 public:
+	cgs_simd();
+
 	virtual void store( multi_value& lhs, multi_value const& rhs );
 
 	multi_value emit_and(multi_value const& lhs, multi_value const& rhs);
@@ -32,6 +34,7 @@ public:
 
 	bool prefer_externals() const{ return false; }
 	bool prefer_scalar_code() const{ return false; }
+	llvm::Value* current_execution_mask() const;
 
 	virtual void function_body_beg();
 	virtual void function_body_end();
@@ -89,31 +92,12 @@ private:
 	llvm::Value*	all_one_mask();
 	llvm::Value*	all_zero_mask();
 
-	enum slice_layout_mode{
-		slm_horizontal,
-		slm_vertical
+	enum derivation_directional{
+		dd_horizontal,
+		dd_vertical
 	};
 
-	multi_value derivation( multi_value const& v, slice_layout_mode slm );
-
-	llvm::Value* pack_slices(
-		llvm::Value** slices,
-		int slice_count,
-		int slice_size,
-		int slice_stride,
-		int elem_stride,
-		int elem_width
-		);
-
-	void unpack_slices(
-		llvm::Value* pkg,
-		int slice_count,
-		int slice_size,
-		int slice_stride,
-		int elem_stride,
-		int elem_width,
-		llvm::Value** out_slices
-		);
+	multi_value derivation( multi_value const& v, derivation_directional dd );
 
 	// Apply break mask and continue mask to top of exec mask stack.
 	//  It affects the following execution.

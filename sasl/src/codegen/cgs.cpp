@@ -69,7 +69,11 @@ using namespace eflib;
 
 BEGIN_NS_SASL_CODEGEN();
 
-/// @}
+cg_service::cg_service(size_t parallel_factor)
+	: llvm_mod_(NULL), ctxt_(NULL), sem_(NULL)
+	, parallel_factor_(parallel_factor)
+{
+}
 
 bool cg_service::initialize( cg_module_impl* mod, module_context* ctxt, module_semantic* sem )
 {
@@ -1247,7 +1251,7 @@ multi_value cg_service::undef_value( builtin_types bt, abis::id abi )
 
 multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> const& args )
 {
-	return emit_call( fn, args, multi_value() );
+	return emit_call(fn, args, NULL);
 }
 
 /**
@@ -1269,7 +1273,7 @@ In   Value big   |         <v>         |      <&v>       |        array<v>      
 -----------------|---------------------|-----------------|------------------------|-----------------------
 Mask Value       |         N/A         |       N/A       |        uint32_t        |       uint32_t
 */
-multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> const& args, multi_value const& exec_mask )
+multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> const& args, Value* exec_mask )
 {
 	abis::id promoted_abi = abis::llvm;
 	BOOST_FOREACH(multi_value const& arg, args)
@@ -1306,8 +1310,7 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 		// Add execution mask to args.
 		if( fn.need_mask() )
 		{
-			arg_multi_values = exec_mask.load(abis::llvm);
-			physical_args[physical_index++] = arg_multi_values[0];
+			physical_args[physical_index++] = exec_mask ? exec_mask : current_execution_mask();
 		}
 
 		// Push arguments to list. 

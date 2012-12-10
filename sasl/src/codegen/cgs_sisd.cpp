@@ -124,6 +124,11 @@ namespace {
 	}
 }
 
+cgs_sisd::cgs_sisd()
+	: cg_service(1)
+{
+}
+
 void cgs_sisd::store( multi_value& lhs, multi_value const& rhs ){
 	
 	assert(parallel_factor_ == 1);

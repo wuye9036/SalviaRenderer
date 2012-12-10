@@ -58,6 +58,8 @@ class llvm_intrin_cache;
 
 class cgs_sisd: public cg_service{
 public:
+	cgs_sisd();
+
 	/** @name Emit expressions
 	Some simple overload-able operators such as '+' '-' '*' '/'
 	will be implemented in 'cgv_*' classes in operator overload form.
@@ -143,6 +145,7 @@ public:
 	bool prefer_scalar_code() const;
 	/// @}
 
+	llvm::Value* current_execution_mask() const { return NULL; }
 };
 
 END_NS_SASL_CODEGEN();

@@ -40,6 +40,8 @@ class cg_service
 	friend class multi_value;
 
 public:
+	cg_service(size_t parallel_factor);
+
 	virtual bool initialize(
 		cg_module_impl* mod, module_context* ctxt,
 		sasl::semantic::module_semantic* sem
@@ -91,7 +93,7 @@ public:
 	virtual multi_value emit_or ( multi_value const& lhs, multi_value const& rhs );
 
 	virtual multi_value emit_call( cg_function const& fn, std::vector<multi_value> const& args );
-	virtual multi_value emit_call( cg_function const& fn, std::vector<multi_value> const& args, multi_value const& exec_mask );
+	virtual multi_value emit_call( cg_function const& fn, std::vector<multi_value> const& args, llvm::Value* exec_mask );
 	/// @}
 
 	/// @name Emit element extraction
@@ -174,7 +176,7 @@ public:
 	virtual void emit_return( multi_value const&, abis::id abi ) = 0;
 	/// @}
 
-	/// @name Context switch
+	/// @name Context switch hooks
 	/// @{
 	virtual void function_body_beg();
 	virtual void function_body_end();
@@ -261,8 +263,7 @@ public:
 	void		 set_mask_flag	(llvm::Value* mask, size_t index, llvm::Value* flag);
 	llvm::Value* combine_flags	(value_array const& flags);
 	value_array  split_mask		(llvm::Value* mask);
-
-
+	
 	multi_value create_constant_int( cg_type* tyinfo, builtin_types bt, abis::id abi, uint64_t v );
 
 	value_array invalid_value_array();
@@ -314,6 +315,7 @@ public:
 	llvm::LLVMContext&		context() const;
 	llvm::DefaultIRBuilder& builder() const;
 
+	virtual llvm::Value*	current_execution_mask() const = 0;
 	virtual bool			prefer_externals() const	= 0;
 	virtual bool			prefer_scalar_code() const	= 0;
 	virtual size_t			parallel_factor() const;

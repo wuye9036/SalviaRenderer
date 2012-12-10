@@ -85,6 +85,11 @@ using std::string;
 
 BEGIN_NS_SASL_CODEGEN();
 
+cgs_simd::cgs_simd()
+	: cg_service(PACKAGE_ELEMENT_COUNT)
+{
+}
+
 void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 {
 	value_array src = rhs.load( lhs.abi() );
@@ -237,8 +242,7 @@ void cgs_simd::if_cond_beg()
 
 void cgs_simd::if_cond_end( multi_value const& cond )
 {
-	assert(false);
-	// cond_exec_masks.push_back( cond.load( abis::package ) );
+	cond_exec_masks.push_back( combine_flags( cond.load(abis::llvm) ) );
 }
 
 void cgs_simd::then_beg()
@@ -268,124 +272,61 @@ void cgs_simd::else_end()
 
 multi_value cgs_simd::emit_ddx( multi_value const& v )
 {
-	return derivation( v, slm_vertical );
+	return derivation( v, dd_horizontal );
 }
 
 multi_value cgs_simd::emit_ddy( multi_value const& v )
 {
-	return derivation( v, slm_horizontal );
+	return derivation( v, dd_vertical );
 }
 
-multi_value cgs_simd::derivation( multi_value const& v, slice_layout_mode slm )
+multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd)
 {
-#if 0
-	if( v.abi() != abis::package ){
-		return null_value( v.hint(), v.abi() );
-	}
-
 	int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
-	int const MAX_SLICES_COUNT = ( PACKAGE_LINES > PACKAGE_LINE_ELEMENT_COUNT ? PACKAGE_LINES : PACKAGE_LINE_ELEMENT_COUNT );
-
-	Value* pkg_v = v.load();
-	Value* diff_v = NULL;
 
 	builtin_types hint = v.hint();
 	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
-	
-	if( is_scalar(hint) || is_vector(hint) )
+
+	assert( parallel_factor_ == 16 );
+
+	value_array values = v.load();
+	value_array diff_values(parallel_factor_, NULL);
+
+	multi_value source0 = create_value(
+		v.ty(), v.hint(), value_array(1, NULL), value_kinds::value, v.abi()
+		);
+	multi_value source1 = source0;
+
+	for(size_t i = 0; i < 4; i+=2)
 	{
-		int elem_width = static_cast<int>( hint == scalar_hint ? 1 : vector_size(hint) );
-		int padded_elem_width = ceil_to_pow2(elem_width);
-
-		int slice_stride = 0;
-		int elem_stride = 0;
-		int slice_count = 0;
-		int slice_size = 0;
-		if( slm == slm_horizontal ){
-			slice_stride = 0;
-			elem_stride = 1;
-			slice_count = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
-			slice_size = PACKAGE_LINE_ELEMENT_COUNT;
-		} else {
-			slice_stride = -PACKAGE_ELEMENT_COUNT+1;
-			elem_stride = PACKAGE_LINE_ELEMENT_COUNT;
-			slice_count = PACKAGE_LINE_ELEMENT_COUNT;
-			slice_size = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
-		}
-
-		Value* slides[MAX_SLICES_COUNT] = {NULL};
-		unpack_slices( pkg_v, slice_count, slice_size, slice_stride, elem_stride, padded_elem_width, slides );
-
-		// Compute derivations
-		Value* diff[MAX_SLICES_COUNT] = {NULL};
-		for( int i = 0; i < slice_count; i+=2 )
+		for(size_t j = 0; j < 4; ++j)
 		{
-			if( is_integer(scalar_hint) ){
-				if( is_signed(scalar_hint) ){
-					diff[i] = builder().CreateNSWSub( slides[i+1], slides[i] );
-				} else {
-					diff[i] = builder().CreateNUWSub( slides[i+1], slides[i] );
-				}
-			} else {
-				diff[i] = builder().CreateFSub( slides[i+1], slides[i] );
+			size_t value_index0(0);
+			size_t value_index1(0);
+
+			if(dd == dd_horizontal)
+			{
+				value_index0 = j * 4 + i;
+				value_index1 = value_index0 + 1;
 			}
-			diff[i+1] = diff[i];
-		}
-
-		diff_v = pack_slices( diff, slice_count, slice_size, slice_stride, elem_stride, padded_elem_width );
-	}
-	else if( is_matrix(hint) )
-	{
-		EFLIB_ASSERT_UNIMPLEMENTED();
-	}
-
-	return create_value( v.ty(), v.hint(), diff_v, value_kinds::value, abis::package );
-#endif
-	return multi_value(0);
-}
-
-/// Pack slides to vector.
-Value* cgs_simd::pack_slices( Value** slices, int slice_count, int slice_size, int slice_stride, int elem_stride, int elem_width )
-{
-	Type* element_ty = ((VectorType*)slices[0]->getType())->getElementType();
-	Value* vec = UndefValue::get( VectorType::get( element_ty, PACKAGE_ELEMENT_COUNT*elem_width ) );
-	int index = 0;
-	for( int i_slice = 0; i_slice < slice_count; ++i_slice ){
-		for( int i_elem = 0; i_elem < slice_size; ++i_elem ){
-			for( int i_scalar = 0; i_scalar < elem_width; ++i_scalar ){
-				Value* scalar  = builder().CreateExtractElement( slices[i_slice], ext_->get_int( i_elem * elem_width + i_scalar ) );
-				Value* index_v = ext_->get_int(index+i_scalar);
-				vec = builder().CreateInsertElement( vec, scalar, index_v );
+			else
+			{
+				value_index0 = i * 4 + j;
+				value_index1 = value_index0 + 4;
 			}
-			index += ( elem_stride * elem_width );
+			
+			Value* source_vm_value[2] = {values[value_index0], values[value_index1] };
+			source0.emplace( value_array(1, source_vm_value[0]), value_kinds::value, v.abi() );
+			source1.emplace( value_array(1, source_vm_value[1]), value_kinds::value, v.abi() );
+
+			multi_value diff = emit_sub(source0, source1);
+			diff_values[value_index0]
+			= diff_values[value_index1]
+			= diff.load()[0];
 		}
-		index += slice_stride * elem_width;
 	}
 
-	return vec;
-}
-
-void cgs_simd::unpack_slices( Value* pkg, int slice_count, int slice_size, int slice_stride, int elem_stride, int elem_width, Value** out_slices )
-{
-	vector<int> slice_indexes( slice_size*elem_width, 0 );
-
-	int index = 0;
-	for( int i_slice = 0; i_slice < slice_count; ++i_slice ){
-
-		// Compute slice indexes
-		for( int i_elem = 0; i_elem < slice_size; ++i_elem ){
-			for( int i_scalar = 0; i_scalar < elem_width; ++i_scalar ){
-				slice_indexes[i_elem*elem_width+i_scalar] = ( index+i_scalar );
-			}
-			index += ( elem_stride * elem_width );
-		}
-
-		// Extract slices
-		Constant* slice_indexes_v = ext_->get_vector<int>( ArrayRef<int>(slice_indexes) );
-		out_slices[i_slice] = builder().CreateShuffleVector( pkg, pkg, slice_indexes_v );
-
-		index += slice_stride * elem_width;
-	}
+	return create_value( v.ty(), v.hint(), diff_values, value_kinds::value, v.abi() );
 }
 
 void cgs_simd::for_init_beg() {	enter_loop(); }
@@ -399,13 +340,7 @@ void cgs_simd::for_iter_end(){ save_next_iteration_exec_mask(); exit_loop(); }
 
 llvm::Value* cgs_simd::all_zero_mask()
 {
-	assert(false);
-	return NULL;
-	/*
-	Type* mask_ty = type_( builtin_types::_boolean, abis::package );
-	Value* mask_v = Constant::getNullValue(mask_ty);
-	return mask_v;
-	*/
+	return ext_->get_int<uint32_t>(0);
 }
 
 void cgs_simd::apply_break_and_continue()
@@ -548,6 +483,11 @@ multi_value cgs_simd::emit_or( multi_value const& lhs, multi_value const& rhs )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
+}
+
+Value* cgs_simd::current_execution_mask() const
+{
+	return exec_masks.back();
 }
 
 END_NS_SASL_CODEGEN();
