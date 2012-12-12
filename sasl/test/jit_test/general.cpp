@@ -1369,7 +1369,7 @@ BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/swizzle_and_wm.sps" );
@@ -1406,7 +1406,7 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 __m128 to_mm( vec4 const& v ){
 	__m128 tmp;
@@ -1414,9 +1414,27 @@ __m128 to_mm( vec4 const& v ){
 	return tmp;
 }
 
+__m128 to_mm( vec3 const& v ){
+	__m128 tmp;
+	*(vec4*)(&tmp) = vec4(v, 0.0f);
+	return tmp;
+}
+
 vec4 to_vec4( __m128 const& v ){
 	return *reinterpret_cast<vec4 const*>(&v);
 }
+
+struct intrinsic_ps_in
+{
+	vec3 in0;
+	vec3 in1;
+};
+
+struct intrinsic_ps_out
+{
+	vec3 out0;
+	vec2 out1;
+};
 
 BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 {
@@ -1425,51 +1443,55 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
-	vec4* in0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4) * 2, SIMD_ALIGNMENT );
-	vec4* in1	= (vec4*)(in0 + PACKAGE_ELEMENT_COUNT);
-	vec4* out0	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * ( sizeof(vec4) + sizeof(vec2) ), SIMD_ALIGNMENT );
-	vec2* out1	= (vec2*)(out0 + PACKAGE_ELEMENT_COUNT);
+	intrinsic_ps_in*  in [PACKAGE_ELEMENT_COUNT] = {NULL};
+	intrinsic_ps_out* out[PACKAGE_ELEMENT_COUNT] = {NULL};
 
-	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
-		((float*)in0)[i] = (i+3.77f)*(0.76f*i);
-		((float*)in1)[i] = (i-4.62f)*(0.11f*i);
+	intrinsic_ps_in  in_data [PACKAGE_ELEMENT_COUNT];
+	intrinsic_ps_out out_data[PACKAGE_ELEMENT_COUNT];
+
+	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
+		for(size_t j = 0; j < 3; ++j)
+		{
+			size_t base = i * 3 + j;
+			in_data[i].in0[j] = (base+3.77f)*(0.76f*base);
+			in_data[i].in1[j] = (base-4.62f)*(0.11f*base);
+		}
+		in[i]  = in_data  + i;
+		out[i] = out_data + i;
 	}
 	
-	struct { vec3 out0; vec2 out1; } dest_ref[PACKAGE_ELEMENT_COUNT];
+	intrinsic_ps_out dest_ref[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
 		// SSE dot
-		vec4 prod = to_vec4( _mm_mul_ps( to_mm(in0[i]), to_mm(in1[i]) ) );
+		vec4 prod = to_vec4( _mm_mul_ps( to_mm(in_data[i].in0), to_mm(in_data[i].in1) ) );
 		float x = prod[0] + prod[1] + prod[2];
 
 		// SSE prod
-		__m128 a0 = to_mm(in0[i].yzxw());
-		__m128 a1 = to_mm(in1[i].zxyw());
-		__m128 b0 = to_mm(in0[i].zxyw());
-		__m128 b1 = to_mm(in1[i].yzxw());
+		__m128 a0 = to_mm(in_data[i].in0.yzx());
+		__m128 a1 = to_mm(in_data[i].in1.zxy());
+		__m128 b0 = to_mm(in_data[i].in0.zxy());
+		__m128 b1 = to_mm(in_data[i].in1.yzx());
 		__m128 first_prod = _mm_mul_ps(a0, a1);
 		__m128 second_prod = _mm_mul_ps(b0, b1);
 		__m128 f3_m = _mm_sub_ps( first_prod, second_prod );
 		vec3 f3 = to_vec4( f3_m ).xyz();
 		
-		dest_ref[i].out0 = to_vec4( _mm_sqrt_ps(to_mm(in0[i])) ).xyz();
+		dest_ref[i].out0 = to_vec4( _mm_sqrt_ps(to_mm(in_data[i].in0)) ).xyz();
 		dest_ref[i].out1[0] = x;
-		dest_ref[i].out1[1] = sqrt(in0[i][0]);
+		dest_ref[i].out1[1] = sqrt(in_data[i].in0[0]);
 	}
 
-	fn( (void*)in0, (void*)NULL, (void*)out0, (void*)NULL );
+	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out0[i][0], dest_ref[i].out0[0], 0.00001f );
-		BOOST_CHECK_CLOSE( out0[i][1], dest_ref[i].out0[1], 0.00001f );
-		BOOST_CHECK_CLOSE( out0[i][2], dest_ref[i].out0[2], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out0[0], dest_ref[i].out0[0], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out0[1], dest_ref[i].out0[1], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out0[2], dest_ref[i].out0[2], 0.00001f );
 
-		BOOST_CHECK_CLOSE( out1[i][0], dest_ref[i].out1[0], 0.00001f );
-		BOOST_CHECK_CLOSE( out1[i][1], dest_ref[i].out1[1], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out1[0], dest_ref[i].out1[0], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out1[1], dest_ref[i].out1[1], 0.00001f );
 	}
-
-	_aligned_free( in0 );
-	_aligned_free( out0 );
 }
 #endif
 

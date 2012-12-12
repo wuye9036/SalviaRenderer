@@ -103,80 +103,92 @@ DefaultIRBuilder& cg_service::builder() const{
 }
 
 cg_function* cg_service::fetch_function(function_type* fn_node){
+	// Fetch first
 	node_context* fn_ctxt = ctxt_->get_node_context(fn_node);
 	if(fn_ctxt->function_scope)
 	{
 		return fn_ctxt->function_scope;
 	}
 
+	// Create function and fill fields.
 	cg_function* ret = ctxt_->create_cg_function();
-
 	ret->fnty = fn_node;
 	ret->c_compatible		= sem_->get_semantic(fn_node)->msc_compatible();
 	ret->external			= sem_->get_semantic(fn_node)->is_external();
 	ret->partial_execution	= sem_->get_semantic(fn_node)->partial_execution();
+	ret->ret_void			= (fn_node->retval_type->tycode == builtin_types::_void);
+	ret->cg					= this;
 
 	abis::id abi = param_abi( ret->c_compatible );
-
+	
+	// Create function signature.
 	vector<Type*> par_tys;
 
 	Type* ret_ty = ctxt_->get_node_context( fn_node->retval_type.get() )->ty->ty(abi);
+	if( ret->return_via_arg() )
+	{
+		if( !ret->ret_void )
+		{
+			// If function need C compatible and return value is not void,
+			// The first parameter is set to point to return value, and parameters moves right.
+			Type* ret_ptr = PointerType::getUnqual(ret_ty);
 
-	ret->ret_void = true;
-	if( abi == abis::c || ret->external ){
-		if( fn_node->retval_type->tycode != builtin_types::_void ){
-			// If function need C compatible and return value is not void, The first parameter is set to point to return value, and parameters moves right.
-			Type* ret_ptr = PointerType::getUnqual( ret_ty );
-			par_tys.push_back( ret_ptr );
+			if( ret->multi_value_args() )
+			{
+				assert( ret->multi_value_arg_as_ref() );
+				ret_ptr = ArrayType::get(ret_ptr, parallel_factor_);
+				ret_ptr = PointerType::getUnqual(ret_ptr);
+			}
+
+			par_tys.push_back(ret_ptr);
 			ret->ret_void = false;
 		}
-
 		ret_ty = Type::getVoidTy( context() );
 	}
+	else
+	{
+		if( ret->multi_value_args() )
+		{
+			ret_ty = ArrayType::get(ret_ty, parallel_factor_);
+		}
+	}
 
-	if( parallel_factor_ > 1 && ret->partial_execution ){
-		Type* mask_ty = Type::getInt16Ty( context() );
+	if( ret->need_mask() )
+	{
+		Type* mask_ty = Type::getInt32Ty( context() );
 		par_tys.push_back(mask_ty);
 	}
 
-	// Create function type.
-	BOOST_FOREACH( shared_ptr<parameter> const& par, fn_node->params )
+	for(size_t i_param = 0; i_param < fn_node->params.size(); ++i_param)
 	{
-		node_context* par_ctxt = ctxt_->get_node_context( par.get() );
-		cg_type* par_ty = par_ctxt->ty;
+		parameter*	  par		= fn_node->params[i_param].get();
+		node_context* par_ctxt	= ctxt_->get_node_context(par);
+		cg_type*	  par_ty	= par_ctxt->ty;
 		assert(par_ty);
 
-		Type* par_llty = par_ty->ty( abi );
-		
-		bool as_ref = false;
-		builtin_types par_hint = par_ty->hint();
-		if( ret->c_compatible || ret->external ){
-			if( is_sampler( par_hint ) ){
-				as_ref = false;
-			} else if ( is_scalar(par_hint) && ( promote_abi( param_abi(false), abis::llvm ) == abis::llvm ) ){
-				as_ref = false;
-			} else {
-				as_ref = true;
-			}
-		} else {
-			as_ref = false;
+		Type* param_vm_ty = par_ty->ty(abi);
+		if( ret->value_arg_as_ref(i_param) )
+		{
+			param_vm_ty = PointerType::getUnqual(param_vm_ty);
 		}
 
-		if( as_ref )
+		if( ret->multi_value_args() )
 		{
-			par_tys.push_back( PointerType::getUnqual( par_llty ) );
+			param_vm_ty = ArrayType::get(param_vm_ty, parallel_factor_);
+			if( ret->multi_value_arg_as_ref() )
+			{
+				param_vm_ty = PointerType::getUnqual(param_vm_ty);
+			}
 		}
-		else
-		{
-			par_tys.push_back( par_llty );
-		}
+
+		par_tys.push_back(param_vm_ty);
 	}
 
-	FunctionType* fty = FunctionType::get( ret_ty, par_tys, false );
+	FunctionType* fty = FunctionType::get(ret_ty, par_tys, false);
 
-	// Create function
+	// Create function.
 	ret->fn = Function::Create( fty, Function::ExternalLinkage, sem_->get_symbol(fn_node)->mangled_name(), module() );
-	ret->cg = this;
+
 	return ret;
 }
 
@@ -940,6 +952,7 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, int idx )
 		elem_tyi = member_tyinfo( lhs.ty(), static_cast<size_t>(idx) );
 	} else if( is_scalar(agg_hint) ){
 		assert( idx == 0 );
+		abi = lhs.abi();
 		elem_val = val;
 		elem_hint = agg_hint;
 	} else if( is_vector(agg_hint) ){
@@ -1270,7 +1283,7 @@ Out  Value big   |        <&v>         |      <&v>       |       array<&v>      
 -----------------|---------------------|-----------------|------------------------|-----------------------
 In   Value small |         <v>         |       <v>       |        array<v>        |      &array <v>
 -----------------|---------------------|-----------------|------------------------|-----------------------
-In   Value big   |         <v>         |      <&v>       |        array<v>        |      &array <v>
+In   Value big   |         <v>         |      <&v>       |        array<v>        |      &array <&v>
 -----------------|---------------------|-----------------|------------------------|-----------------------
 Mask Value       |         N/A         |       N/A       |        uint32_t        |       uint32_t
 */

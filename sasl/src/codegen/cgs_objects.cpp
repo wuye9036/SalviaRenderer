@@ -335,7 +335,7 @@ size_t cg_function::physical_args_count() const
 size_t cg_function::logical_args_count() const
 {
 	assert(fn);
-	return physical_args_count() - logical_arg_offset();
+	return fnty->params.size();
 }
 
 size_t cg_function::logical_arg_offset() const
