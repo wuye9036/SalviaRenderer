@@ -24,7 +24,7 @@ using salviar::su_stream_in;
 using salviar::su_stream_out;
 using salviar::su_buffer_in;
 using salviar::su_buffer_out;
-using salviar::storage_usage_count;
+using salviar::sv_usage_count;
 using salviar::lang_pixel_shader;
 using salviar::lang_vertex_shader;
 using salviar::PACKAGE_ELEMENT_COUNT;
@@ -200,6 +200,7 @@ sv_layout* abi_info::alloc_output_storage( salviar::semantic_value const& sem ){
 
 // Update ABI Information
 void abi_info::compute_layout(){
+	/*
 	if ( !module_sem_ || !entry_point_ ) return;
 
 	if ( lang == salviar::lang_general ){
@@ -213,12 +214,13 @@ void abi_info::compute_layout(){
 		compute_output_stream_layout();
 		break;
 	case lang_pixel_shader:
-		compute_input_package_layout();
-		compute_output_package_layout();
+		compute_input_wrap_layout();
+		compute_output_wrap_layout();
 		break;
 	}
 	
 	compute_input_constant_layout();
+	*/
 }
 
 std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
@@ -251,7 +253,7 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 
 	return ret;
 }
-
+/*
 void abi_info::compute_input_semantics_layout(){
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
 
@@ -261,12 +263,10 @@ void abi_info::compute_input_semantics_layout(){
 		svl->physical_index = counts[svl->usage];
 		svl->logical_index  = counts[svl->usage];
 		svl->offset			= offsets[svl->usage];
-		svl->element_count = 1;
 		compute_element_size(svl, false);
 
 		counts[svl->usage]++;
 		offsets[svl->usage] += svl->total_size();
-
 	}
 }
 
@@ -279,7 +279,6 @@ void abi_info::compute_output_buffer_layout(){
 		svl->physical_index =  counts[svl->usage];
 		svl->logical_index  =  counts[svl->usage];
 		svl->offset = offsets[svl->usage];
-		svl->element_count = 1;
 		compute_element_size(svl, false);
 		
 		counts[svl->usage]++;
@@ -298,85 +297,62 @@ void abi_info::compute_input_constant_layout(){
 		svl->usage = su_buffer_in;
 		svl->physical_index =  counts[svl->usage];
 		svl->logical_index  =  counts[svl->usage];
-		svl->offset = offsets[su_buffer_in];
+		svl->offset			= offsets[su_buffer_in];
 
-		svl->element_count = 1;
 		compute_element_size(svl, false);
 
 		counts[su_buffer_in]++;
-		offsets[su_buffer_in] += svl->element_size;
+		offsets[su_buffer_in] += svl->size;
 	}
 }
 
-void abi_info::compute_input_package_layout()
+void abi_info::compute_input_wrap_layout()
 {
 	for ( size_t index = 0; index < sems_in.size(); ++index ){
-		compute_package_layout( input_sv_layout( sems_in[index] ) );
+		compute_wrap_layout( input_sv_layout( sems_in[index] ) );
 	}
 }
 
-void abi_info::compute_output_package_layout()
+void abi_info::compute_output_wrap_layout()
 {
 	for ( size_t index = 0; index < sems_out.size(); ++index ){
-		compute_package_layout( output_sv_layout( sems_out[index] ) );
+		compute_wrap_layout( output_sv_layout( sems_out[index] ) );
 	}
 }
-
+*/
 void abi_info::update_size( size_t sz, salviar::sv_usage usage )
 {
 	offsets[usage] = sz;
 }
-
-void abi_info::compute_package_layout( sv_layout* svl )
+/*
+void abi_info::compute_wrap_layout( sv_layout* svl )
 {
 	assert( svl );
 
-	svl->physical_index = counts[svl->usage];
-	svl->logical_index  = counts[svl->usage];
-	svl->offset = offsets[svl->usage];
+	svl->physical_index = counts [svl->usage];
+	svl->logical_index  = counts [svl->usage];
+	svl->offset			= offsets[svl->usage];
 
 	builtin_types elem_bt = to_builtin_types(svl->value_type);
-
-	if( svl->usage == su_buffer_in || svl->usage == su_buffer_out ){
-		svl->element_count = 1;
-		compute_element_size(svl, true);
-	} else {
-		if( is_vector(elem_bt) || is_scalar( elem_bt ) ){
-			compute_element_size(svl, true);
-			int pow2_elem_size = ceil_to_pow2(svl->element_size);
-			svl->element_count = PACKAGE_ELEMENT_COUNT;
-			svl->element_padding = pow2_elem_size - svl->element_size;
-		} else if ( is_matrix( elem_bt ) ){
-			int row_size = static_cast<int>( storage_size( row_vector_of(elem_bt) ) );
-			int pow2_row_size = ceil_to_pow2( row_size );
-			int mat_size = pow2_row_size * static_cast<int>( vector_count(elem_bt) );
-			int pow2_mat_size = ceil_to_pow2( mat_size );
-			svl->element_size = mat_size;
-			svl->element_padding = pow2_mat_size - mat_size;
-			svl->element_count = PACKAGE_ELEMENT_COUNT;
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	}
-
-	counts[svl->usage]++;
+	compute_element_size(svl, true);
+	counts [svl->usage]++;
 	offsets[svl->usage] += svl->total_size();
 }
 
-int abi_info::compute_element_size(sv_layout* svl, bool package) const
+int abi_info::compute_element_size(sv_layout* svl, bool wrapped) const
 {
-	int elem_sz = 0;
-	if( (svl->usage != su_buffer_in && !package) || svl->agg_type == salviar::aggt_array )
+	size_t elem_sz = 0;
+	if( (svl->usage != su_buffer_in && !wrapped) || svl->agg_type == salviar::aggt_array )
 	{
-		elem_sz = static_cast<int>( sizeof(void*) );
+		elem_sz = sizeof(void*);
 	}
 	else
 	{
-		elem_sz = static_cast<int>( storage_size( to_builtin_types(svl->value_type) ) );
+		elem_sz = storage_size( to_builtin_types(svl->value_type) );
 	}
-	svl->element_size = elem_sz;
+	svl->size = elem_sz;
 
 	return elem_sz;
 }
-
+*/
 END_NS_SASL_SEMANTIC();

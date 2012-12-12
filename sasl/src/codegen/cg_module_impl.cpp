@@ -15,7 +15,7 @@ using salviar::su_buffer_in;
 using salviar::su_buffer_out;
 using salviar::su_stream_in;
 using salviar::su_stream_out;
-using salviar::storage_usage_count;
+using salviar::sv_usage_count;
 using boost::shared_ptr;
 
 BEGIN_NS_SASL_CODEGEN();

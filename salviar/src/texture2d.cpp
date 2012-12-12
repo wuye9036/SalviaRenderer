@@ -52,7 +52,7 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 		surfs_[iLevel].map((void**)&dst_data, map_write);
 		surfs_[iLevel - 1].map((void**)&src_data, map_read);
 
-#if 0
+#if TEST_CODE
 		float r = iLevel % 3 == 0 ? 1.0f : 0.0f;
 		float g = iLevel % 3 == 1 ? 1.0f : 0.0f;
 		float b = iLevel % 3 == 2 ? 1.0f : 0.0f;

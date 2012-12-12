@@ -75,9 +75,9 @@ void vertex_shader_unit::execute( vs_output& out )
 	BOOST_FOREACH( sv_layout* info, infos ){
 		if( info->sv == semantic_value(sv_position) ){
 			memset( &out.position, 0, sizeof(out.position) );
-			memcpy( &out.position, &(buffer_odata[info->offset]), info->element_size );
+			memcpy( &out.position, &(buffer_odata[info->offset]), info->size );
 		} else {
-			memcpy( &out.attributes[register_index], &(buffer_odata[info->offset]), info->element_size );
+			memcpy( &out.attributes[register_index], &(buffer_odata[info->offset]), info->size );
 			++register_index;
 		}
 	}
@@ -90,7 +90,7 @@ void vertex_shader_unit::set_variable( std::string const& name, void const* pvar
 	{
 		return;
 	}
-	memcpy( &buffer_data[vsi->offset], pvariable, vsi->element_size );
+	memcpy( &buffer_data[vsi->offset], pvariable, vsi->size );
 }
 
 void vertex_shader_unit::set_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
@@ -197,7 +197,7 @@ pixel_shader_unit& pixel_shader_unit::operator=( pixel_shader_unit const& rhs )
 void pixel_shader_unit::set_variable( std::string const& name, void const* data )
 {
 	sv_layout* vsi = code->abii()->input_sv_layout( name );
-	memcpy( &buffer_data[vsi->offset], data, vsi->element_size );
+	memcpy( &buffer_data[vsi->offset], data, vsi->size );
 }
 
 shared_ptr<pixel_shader_unit> pixel_shader_unit::clone() const
@@ -214,8 +214,11 @@ void pixel_shader_unit::update( vs_output* inputs, shader_abi const* vs_abi )
 	vector<sv_layout*> infos = code->abii()->layouts( su_stream_in );
 
 	size_t register_index = 0;
+	assert(false);
+
+#if 0
 	BOOST_FOREACH( sv_layout* info, infos ){
-		int elem_stride = info->element_size + info->element_padding;
+		int elem_stride = info->total_size();
 		if( info->sv == semantic_value(sv_position) ){
 			for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
 				void* pdata = &(stream_data[info->offset+elem_stride*i_elem]);
@@ -238,6 +241,7 @@ void pixel_shader_unit::update( vs_output* inputs, shader_abi const* vs_abi )
 			}
 		}
 	}
+#endif
 }
 
 void pixel_shader_unit::execute( ps_output* outs )
@@ -252,6 +256,8 @@ void pixel_shader_unit::execute( ps_output* outs )
 	shader_abi const* abii = code->abii();
 	vector<sv_layout*> infos = abii->layouts( su_stream_out );
 
+	assert(false);
+#if 0
 	BOOST_FOREACH( sv_layout* info, infos ){
 		size_t elem_stride = info->element_size + info->element_padding;
 		for ( size_t i_elem = 0; i_elem < PACKAGE_ELEMENT_COUNT; ++i_elem ){
@@ -267,6 +273,7 @@ void pixel_shader_unit::execute( ps_output* outs )
 			}
 		}
 	}
+#endif
 }
 
 void pixel_shader_unit::set_sampler( std::string const& name, h_sampler const& samp )

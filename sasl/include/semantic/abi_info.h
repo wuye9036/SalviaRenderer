@@ -65,7 +65,6 @@ public:
 	void entry(symbol*);
 	bool is_entry(symbol*) const;
 	
-
 	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
 	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
 	void add_global_var( symbol*, sasl::syntax_tree::tynode_ptr btc );
@@ -82,16 +81,16 @@ private:
 	// This function will compute the data layout.
 	void compute_layout();
 
-	void compute_input_semantics_layout();
-	void compute_output_buffer_layout();
-	void compute_output_stream_layout();
-	void compute_input_constant_layout();
-	
-	void compute_input_package_layout();
-	void compute_output_package_layout();
-	void compute_package_layout( salviar::sv_layout* );
+	//void compute_input_semantics_layout();
+	//void compute_output_buffer_layout();
+	//void compute_output_stream_layout();
+	//void compute_input_constant_layout();
+	//
+	//void compute_input_wrap_layout();
+	//void compute_output_wrap_layout();
+	//void compute_wrap_layout( salviar::sv_layout* );
 
-	int compute_element_size(salviar::sv_layout* svl, bool package) const;
+	//int compute_element_size(salviar::sv_layout* svl, bool package) const;
 
 	module_semantic*	module_sem_;
 	symbol*				entry_point_;
@@ -114,8 +113,8 @@ private:
 	boost::unordered_map< semantic_value_t, sv_layout_t > semout_storages;
 
 	// The count and offsets of 
-	int counts[salviar::storage_usage_count];
-	int offsets[salviar::storage_usage_count];
+	int counts[salviar::sv_usage_count];
+	int offsets[salviar::sv_usage_count];
 };
 
 END_NS_SASL_SEMANTIC();

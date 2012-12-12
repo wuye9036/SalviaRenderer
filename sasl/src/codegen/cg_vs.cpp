@@ -3,6 +3,8 @@
 #include <sasl/include/codegen/cg_contexts.h>
 #include <sasl/include/codegen/cg_module_impl.h>
 #include <sasl/include/codegen/cg_impl.imp.h>
+#include <sasl/include/codegen/generate_entry.h>
+
 #include <sasl/include/semantic/pety.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
@@ -34,7 +36,7 @@ using salviar::su_buffer_in;
 using salviar::su_buffer_out;
 using salviar::su_stream_in;
 using salviar::su_stream_out;
-using salviar::storage_usage_count;
+using salviar::sv_usage_count;
 
 using salviar::sv_layout;
 
@@ -62,120 +64,6 @@ using std::make_pair;
 	scope_guard<void> pop_fn_on_exit##__LINE__( bind( &cgs_sisd::pop_fn, this ) );
 
 BEGIN_NS_SASL_CODEGEN();
-
-bool layout_type_pairs_cmp( pair<sv_layout*, Type*> const& lhs, pair<sv_layout*, Type*> const& rhs ){
-	return lhs.first->element_size < rhs.first->element_size;
-}
-
-/// Re-arrange layouts will Sort up struct members by storage size.
-/// For e.g.
-///   struct { int i; byte b; float f; ushort us; }
-/// Will be arranged to
-///   struct { byte b; ushort us; int i; float f; };
-/// It will minimize the structure size.
-void rearrange_layouts( vector<sv_layout*>& sorted_layouts, vector<Type*>& sorted_tys, vector<sv_layout*> const& layouts, vector<Type*> const& tys, TargetData const* target )
-{
-	size_t layouts_count = layouts.size();
-	vector<size_t> elems_size;
-	elems_size.reserve( layouts_count );
-
-	vector< pair<sv_layout*, Type*> > layout_ty_pairs;
-	layout_ty_pairs.reserve( layouts_count );
-
-	vector<sv_layout*>::const_iterator layout_it = layouts.begin();
-	BOOST_FOREACH( Type* ty, tys ){
-		size_t sz = (size_t)target->getTypeStoreSize(ty);
-		(*layout_it)->element_size = static_cast<int>(sz);
-		layout_ty_pairs.push_back( make_pair(*layout_it, ty) );
-		++layout_it;
-	}
-
-	sort( layout_ty_pairs.begin(), layout_ty_pairs.end(), layout_type_pairs_cmp );
-
-	sorted_layouts.clear();
-	std::transform( layout_ty_pairs.begin(), layout_ty_pairs.end(), back_inserter(sorted_layouts), boost::bind(&pair<sv_layout*, Type*>::first, _1) );
-
-	sorted_tys.clear();
-	std::transform( layout_ty_pairs.begin(), layout_ty_pairs.end(), back_inserter(sorted_tys), boost::bind(&pair<sv_layout*, Type*>::second, _1) );
-}
-
-void cg_vs::fill_llvm_type_from_si( sv_usage su ){
-	vector<sv_layout*> svls = abii->layouts( su );
-	vector<Type*>& tys = entry_params_types[su];
-
-	BOOST_FOREACH( sv_layout* si, svls ){
-		builtin_types storage_bt = to_builtin_types(si->value_type);
-		entry_param_tys[su].push_back( storage_bt );
-		Type* storage_ty = service()->type_( storage_bt, abis::c );
-
-		if( su_stream_in == su || su_stream_out == su || si->agg_type == salviar::aggt_array ){
-			tys.push_back( PointerType::getUnqual( storage_ty ) );
-		} else {
-			tys.push_back( storage_ty );
-		}
-	}
-	
-	if( su_buffer_in == su || su_buffer_out == su ){
-		rearrange_layouts( svls, tys, svls, tys, target_data );
-	}
-
-	char const* struct_name = NULL;
-	switch( su ){
-	case su_stream_in:
-		struct_name = ".s.stri";
-		break;
-	case su_buffer_in:
-		struct_name = ".s.bufi";
-		break;
-	case su_stream_out:
-		struct_name = ".s.stro";
-		break;
-	case su_buffer_out:
-		struct_name = ".s.bufo";
-		break;
-	}
-	assert( struct_name );
-
-	// Tys must not be empty. So placeholder (int8) will be inserted if tys is empty.
-	StructType* out_struct = tys.empty() ? StructType::create( struct_name, service()->type_(builtin_types::_sint8, abis::llvm), NULL ) : StructType::create( tys, struct_name );
-	entry_params_structs[su].data() = out_struct;
-
-	// Update Layout physical informations.
-	if( su_buffer_in == su || su_buffer_out == su ){
-		StructLayout const* struct_layout = target_data->getStructLayout( out_struct );
-
-		size_t next_offset = 0;
-		for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
-			size_t offset = next_offset;
-			svls[i_elem]->offset = static_cast<int>(offset);
-			svls[i_elem]->physical_index = static_cast<int>(i_elem);
-
-			size_t next_i_elem = i_elem + 1;
-			if( next_i_elem < tys.size() ){
-				next_offset = (size_t)struct_layout->getElementOffset( static_cast<unsigned>(next_i_elem) );
-			} else {
-				next_offset = (size_t)struct_layout->getSizeInBytes();
-				const_cast<abi_info*>(abii)->update_size(next_offset, su);
-			}
-		
-			svls[i_elem]->element_padding = (next_offset - offset) - svls[i_elem]->element_size;
-		}
-	}
-}
-
-void cg_vs::create_entry_params(){
-	fill_llvm_type_from_si ( su_buffer_in );
-	fill_llvm_type_from_si ( su_buffer_out );
-	fill_llvm_type_from_si ( su_stream_in );
-	fill_llvm_type_from_si ( su_stream_out );
-}
-
-void cg_vs::add_entry_param_type( sv_usage st, vector<Type*>& par_types ){
-	StructType* par_type = entry_params_structs[st].data();
-	PointerType* parref_type = PointerType::getUnqual( par_type );
-
-	par_types.push_back(parref_type);
-}
 
 // expressions
 SASL_VISIT_DEF_UNIMPL( cast_expression );
@@ -263,8 +151,6 @@ SASL_VISIT_DEF_UNIMPL( alias_type );
 SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program ){
 	// Call parent for initialization
 	parent_class::before_decls_visit( v, data );
-	// Create entry function
-	create_entry_params();
 }
 
 SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
@@ -279,11 +165,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 
 		node_context* ctxt = node_ctxt(v, true);
 
-		vector<Type*> param_types;
-		add_entry_param_type( su_stream_in, param_types );
-		add_entry_param_type( su_buffer_in, param_types );
-		add_entry_param_type( su_stream_out, param_types );
-		add_entry_param_type( su_buffer_out, param_types );
+		vector<Type*> param_types = generate_vs_entry_param_type( abii, target_data, service() );
 
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, sem_->get_symbol(&v)->mangled_name(), cg_impl::module() );

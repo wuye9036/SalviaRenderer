@@ -80,37 +80,33 @@ enum sv_usage{
 	su_none = 0,
 
 	su_stream_in,
-	su_stream_out,
 	su_buffer_in,
+	su_stream_out,
 	su_buffer_out,
 	
-	storage_usage_count
+	sv_usage_count
 };
 
 struct sv_layout{
 	sv_layout()
-		: logical_index(-1), physical_index(-1)
+		: logical_index(0), physical_index(0)
 		, offset(0)
-		, element_size(0), element_padding(0), element_count(0)
+		, size(0)
 		, padding(0)
 		, usage(su_none), value_type( lvt_none ), sv(sv_none)
 		, agg_type(aggt_none)
 	{}
 
-	int total_size() const{
-		return (element_size+element_padding)*element_count+padding;
+	size_t total_size() const{
+		return size + padding;
 	}
 
-	int						logical_index;
-	int						physical_index;
+	size_t					logical_index;
+	size_t					physical_index;
 
-	int						offset;
-	
-	int						element_size;
-	int						element_padding;
-
-	int						element_count;
-	int						padding;
+	size_t					offset;
+	size_t					size;
+	size_t					padding;
 
 	sv_usage				usage;
 	

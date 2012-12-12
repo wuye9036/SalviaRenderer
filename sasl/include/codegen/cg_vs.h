@@ -80,20 +80,13 @@ private:
 		node_context* ctxt, salviar::sv_layout* si,
 		bool store_to_existed_value, bool copy_from_input);
 
-	void create_entry_params();
-	void add_entry_param_type( salviar::sv_usage st, std::vector< llvm::Type* >& par_types );
-	void fill_llvm_type_from_si( salviar::sv_usage st );
 	void copy_to_result( boost::shared_ptr<sasl::syntax_tree::expression> const& );
 	void copy_to_agg_result( node_context* data );
 
 	llvm::Function* entry_fn;
 	sasl::semantic::symbol* entry_sym;
 
-	multi_value param_values[salviar::storage_usage_count];
-
-	std::vector<builtin_types> entry_param_tys[salviar::storage_usage_count];
-	std::vector< llvm::Type* > entry_params_types[salviar::storage_usage_count];
-	boost::value_initialized<llvm::StructType*> entry_params_structs[salviar::storage_usage_count];
+	multi_value param_values[salviar::sv_usage_count];
 
 	typedef boost::unordered_map<salviar::semantic_value, node_context*> input_copies_dict;
 	input_copies_dict input_copies_;

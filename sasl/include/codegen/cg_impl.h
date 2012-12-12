@@ -154,7 +154,7 @@ protected:
 	sasl::semantic::symbol*
 						current_symbol_;		///< Current symbol scope.
 	sasl::syntax_tree::node*
-						variable_to_initialize_;	///< The variable which will pass in initializer to generate initialization code.
+						variable_to_initialize_;///< The variable which will pass in initializer to generate initialization code.
 };
 
 END_NS_SASL_CODEGEN()

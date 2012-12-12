@@ -745,8 +745,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		}
 	}
 	{
-		vec3 v0(-2.0, 1.7, 0.0);
-		vec3 v1(-2.11, 22.05, 3.8);
+		vec3 v0(-2.0f, 1.7f, 0.0f);
+		vec3 v1(-2.11f, 22.05f, 3.8f);
 
 		vec3 ret0 = test_frac_f3(v0);
 		vec3 ret1 = test_frac_f3(v1);
@@ -763,7 +763,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -1172,7 +1172,7 @@ BOOST_FIXTURE_TEST_CASE( initializer_test, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 	init_g( "./repo/question/v1a1/casts.ss" );
@@ -1881,7 +1881,7 @@ BOOST_FIXTURE_TEST_CASE( local_var, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 {
 	init_g( "./repo/question/v1a1/arithmetic.ss" );

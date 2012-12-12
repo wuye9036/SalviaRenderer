@@ -7,6 +7,7 @@ set( ADDITIONAL_INCLUDE_DIRECTORIES
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/codegen/utility.h
 	${SASL_HOME_DIR}/sasl/include/codegen/ty_cache.h
+	${SASL_HOME_DIR}/sasl/include/codegen/generate_entry.h
 	
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_extension.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cgs.h
@@ -35,6 +36,7 @@ set( HEADER_FILES
 set( SOURCE_FILES
 	utility.cpp
 	ty_cache.cpp
+	generate_entry.cpp
 	
 	cg_extension.cpp
 	cgs.cpp

@@ -63,10 +63,8 @@ public:
 
 protected:
 	cgs_simd*	service() const;
-	abis::id		local_abi( bool is_c_compatible ) const;
+	abis::id	local_abi( bool is_c_compatible ) const;
 
-	void	create_entries();
-	void	create_entry_param( salviar::sv_usage usage );
 	multi_value	layout_to_value( salviar::sv_layout* svl );
 
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
@@ -81,11 +79,8 @@ protected:
 
 	SASL_SPECIFIC_VISIT_DCL( bin_logic, binary_expression );
 
-	llvm::Function*				entry_fn;
-	std::vector<llvm::Type*>	entry_tys[salviar::storage_usage_count];
-	llvm::StructType*			entry_structs[salviar::storage_usage_count];
-	std::vector<builtin_types>	entry_tyns[salviar::storage_usage_count];
-	multi_value						entry_values[salviar::storage_usage_count];
+	llvm::Function*	entry_fn;
+	multi_value		entry_values[salviar::sv_usage_count];
 };
 
 END_NS_SASL_CODEGEN();

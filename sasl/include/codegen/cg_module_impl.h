@@ -68,7 +68,7 @@ protected:
 	llvm::Module*								llvm_mod_;
 	mutable bool								have_mod_;
 
-	llvm::Type* param_types[salviar::storage_usage_count];
+	llvm::Type* param_types[salviar::sv_usage_count];
 };
 
 END_NS_SASL_CODEGEN();
