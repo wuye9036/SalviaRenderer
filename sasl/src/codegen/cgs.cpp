@@ -611,8 +611,9 @@ multi_value cg_service::emit_insert_val( multi_value const& lhs, multi_value con
 					agg[value_index], elem[value_index], indexes[value_index]
 				);
 		}
-		assert( valid_all(new_value) );
 	}
+
+	assert( valid_all(new_value) );
 
 	return create_value( lhs.ty(), lhs.hint(), new_value, value_kinds::value, lhs.abi() );
 }

@@ -134,7 +134,7 @@ void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 					multi_value parent_v = lhs.parent()->to_rvalue();
 					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
 						multi_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
-						parent_v = emit_insert_val( rhs, indexes[i_write_idx], element_val );
+						parent_v = emit_insert_val( parent_v, indexes[i_write_idx], element_val );
 					}
 					lhs.parent()->store( parent_v );
 					return;

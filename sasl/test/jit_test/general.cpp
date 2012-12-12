@@ -763,7 +763,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct intrinsics_vs_data{
 	float norm[3];
@@ -1308,7 +1308,7 @@ BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/arithmetic.sps" );
 
@@ -1369,7 +1369,7 @@ BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/swizzle_and_wm.sps" );
@@ -1377,28 +1377,32 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
-	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
-	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
+	vec4* src[PACKAGE_ELEMENT_COUNT] = {NULL};
+	vec4* dst[PACKAGE_ELEMENT_COUNT] = {NULL};
+	vec4* src_data = (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
+	vec4* dst_data = (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
 	vec4 dest_ref[PACKAGE_ELEMENT_COUNT];
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
-		((float*)src)[i] = (i+3.77f)*(0.76f*i);
+		((float*)src_data)[i] = (i+3.77f)*(0.76f*i);
 	}
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		dest_ref[i].yzx( src[i].xyz() + src[i].wxy() );
+		src[i] = src_data + i;
+		dst[i] = dst_data + i;
+		dest_ref[i].yzx( src_data[i].xyz() + src_data[i].wxy() );
 	}
 
-	fn( src, (void*)NULL, dest, (void*)NULL );
+	fn( src, (void*)NULL, dst, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( dest_ref[i][0], dest[i][0], 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i][1], dest[i][1], 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i][2], dest[i][2], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][0], dst_data[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][1], dst_data[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( dest_ref[i][2], dst_data[i][2], 0.00001f );
 	}
 
-	_aligned_free( src );
-	_aligned_free( dest );
+	_aligned_free( src_data );
+	_aligned_free( dst_data );
 }
 #endif
 
