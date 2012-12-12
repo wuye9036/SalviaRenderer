@@ -98,7 +98,15 @@ Type* generate_parameter_type(
 		tycodes.push_back(value_bt);
 		Type* value_vm_ty = cg->type_(value_bt, abis::c);
 
-		if( su_stream_in == su || su_stream_out == su || svl->agg_type == salviar::aggt_array ){
+		// The stream of vertex shader is composed by pointer, like this
+		// struct stream { float4* position; float3* normal; };
+		// Otherwise the members of stream are values at all.
+		if(	(  su_stream_in == su
+			|| su_stream_out == su
+			|| svl->agg_type == salviar::aggt_array )
+			&& cg->parallel_factor() == 1
+			)
+		{
 			sem_tys.push_back( PointerType::getUnqual(value_vm_ty) );
 		} else {
 			sem_tys.push_back(value_vm_ty);
@@ -167,6 +175,7 @@ Type* generate_parameter_type(
 
 vector<Type*> generate_vs_entry_param_type(abi_info const* abii, TargetData const* tar, cg_service* cg)
 {
+	assert(cg->parallel_factor() == 1);
 	vector<Type*> ret(sv_usage_count, NULL);
 
 	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, tar);
@@ -184,6 +193,7 @@ vector<Type*> generate_vs_entry_param_type(abi_info const* abii, TargetData cons
 
 vector<Type*> generate_ps_entry_param_type(abi_info const* abii, TargetData const* tar, cg_service* cg)
 {
+	assert(cg->parallel_factor() > 1);
 	vector<Type*> ret(sv_usage_count, NULL);
 
 	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, tar);

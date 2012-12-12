@@ -71,6 +71,6 @@ private:
 	cg_module_impl* mod_ptr();
 };
 
-END_NS_SASL_CODEGEN()
+END_NS_SASL_CODEGEN();
 
 #endif

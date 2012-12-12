@@ -380,7 +380,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
 {
 	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) )
 	{
-		vector<Type*> param_types = generate_vs_entry_param_type( abii, target_data, service() );
+		vector<Type*> param_types = generate_ps_entry_param_type( abii, target_data, service() );
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
 		Function* fn = Function::Create( fntype, Function::ExternalLinkage, sem_->get_symbol(&v)->mangled_name(), cg_impl::module() );
 		entry_fn = fn;
@@ -404,7 +404,6 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 		// Create entry arguments.
 		Function::arg_iterator arg_it = fn->arg_begin();
 
-		assert(false);
 		arg_it->setName( ".arg.stri" );
 		entry_values[su_stream_in]  = service()->create_value(
 			builtin_types::none, service()->extension()->split_array_ref(arg_it),

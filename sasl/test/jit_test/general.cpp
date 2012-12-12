@@ -1308,33 +1308,37 @@ BOOST_FIXTURE_TEST_CASE( scalar_tests, jit_fixture ){
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	init_ps( "./repo/question/v1a1/arithmetic.sps" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
-	float* src	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float* dest	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* src[16] = {NULL};
+	float* dst[16] = {NULL};
+	float* src_data = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* dst_data = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
 	float dest_ref[PACKAGE_ELEMENT_COUNT];
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		src[i] = (i+3.77f)*(0.76f*i);
+		src[i] = src_data + i;
+		dst[i] = dst_data + i;
+		src_data[i] = (i+3.77f)*(0.76f*i);
 
-		dest_ref[i] = src[i] + 5.0f;
-		dest_ref[i] += (src[i] - 5.0f);
-		dest_ref[i] += (src[i] * 5.0f);
+		dest_ref[i] = src_data[i] + 5.0f;
+		dest_ref[i] += (src_data[i] - 5.0f);
+		dest_ref[i] += (src_data[i] * 5.0f);
 	}
 
-	fn( src, (void*)NULL, dest, (void*)NULL );
+	fn( src, (void*)NULL, dst, (void*)NULL );
 	
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( dest_ref[i], dest[i], 0.000012f );
+		BOOST_CHECK_CLOSE( dest_ref[i], *dst[i], 0.000012f );
 	}
 
-	_aligned_free( src );
-	_aligned_free( dest );
+	_aligned_free( src_data );
+	_aligned_free( dst_data );
 }
 #endif
 

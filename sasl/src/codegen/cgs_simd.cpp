@@ -102,11 +102,6 @@ void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
 		if( is_scalar( lhs.hint() ) || is_vector( lhs.hint() ) ){
 			Value* mask = exec_masks.back();
 			value_array dest_value = ext_->load(address);
-
-			for(uint32_t value_index = 0; value_index < parallel_factor_; ++value_index)
-			{
-				assert(false);
-			}
 			value_array selected = ext_->select(mask, src, dest_value);
 			src = selected;
 		} else {
