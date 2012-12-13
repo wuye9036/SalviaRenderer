@@ -165,7 +165,7 @@ Type* generate_parameter_type(
 			const_cast<abi_info*>(abii)->update_size(next_offset, su);
 		}
 
-		svls[i_elem]->offset		= offset;
+		svls[i_elem]->offset			= offset;
 		svls[i_elem]->physical_index= i_elem;
 		svls[i_elem]->padding		= (next_offset - offset) - svls[i_elem]->size;
 	}
@@ -203,9 +203,18 @@ vector<Type*> generate_ps_entry_param_type(abi_info const* abii, TargetData cons
 
 	for(size_t i = 1; i < sv_usage_count; ++i)
 	{
-		ret[i] = PointerType::getUnqual(ret[i]);
-		ret[i] = ArrayType::get( ret[i], cg->parallel_factor() );
-		ret[i] = PointerType::getUnqual(ret[i]);
+		sv_usage usage = static_cast<sv_usage>(i);
+		// Only one copy of data in buffer even if it is wrapped mode.
+		if( usage == su_buffer_in || usage == su_buffer_out)
+		{
+			ret[i] = PointerType::getUnqual(ret[i]);
+		}
+		else
+		{
+			ret[i] = PointerType::getUnqual(ret[i]);
+			ret[i] = ArrayType::get( ret[i], cg->parallel_factor() );
+			ret[i] = PointerType::getUnqual(ret[i]);
+		}
 	}
 
 	return vector<Type*>( ret.begin()+1, ret.end() );

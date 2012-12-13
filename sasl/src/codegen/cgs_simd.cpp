@@ -232,7 +232,7 @@ void cgs_simd::emit_return( multi_value const& ret_v, abis::id abi )
 void cgs_simd::function_body_beg()
 {
 	cg_service::function_body_beg();
-	exec_masks.push_back( all_one_mask() );
+	exec_masks.push_back( fn().partial_execution ? fn().execution_mask().load()[0] : all_one_mask() );
 	break_masks.push_back(NULL);
 	continue_masks.push_back(NULL);
 }

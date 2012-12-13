@@ -1517,10 +1517,10 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 
 	ps_in   in_data [PACKAGE_ELEMENT_COUNT];
 	ps_out  out_data[PACKAGE_ELEMENT_COUNT];
-	ps_in*  in [PACKAGE_ELEMENT_COUNT];
-	ps_out* out[PACKAGE_ELEMENT_COUNT];
+	ps_in*  in [PACKAGE_ELEMENT_COUNT] = {NULL};
+	ps_out* out[PACKAGE_ELEMENT_COUNT] = {NULL};
 
-	vec2 ref_out[ PACKAGE_ELEMENT_COUNT ];
+	vec2 ref_out[PACKAGE_ELEMENT_COUNT];
 
 	srand(0);
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
@@ -1567,7 +1567,7 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 template<typename T, typename MemberPtr>
 void get_ddx(T* out, T const* in, MemberPtr ptr)
@@ -1678,20 +1678,17 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 struct sampler_t{
 	uintptr_t ss, tex;
 };
 
-void tex2Dlod_ps(vec4* ret, uint16_t /*mask*/, sampler_t* s, vec4* t)
+void tex2Dlod_ps(vec4* ret, uint32_t /*mask*/, sampler_t* s, vec4* t)
 {
 	BOOST_CHECK_EQUAL( s->ss, 0xF3DE89C );
 	BOOST_CHECK_EQUAL( s->tex, 0xB785D3A );
-
-	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		ret[i] = t[i].zyxw() + t[i].wxzy();
-	}
+	*ret = t->zyxw() + t->wxzy();
 }
 
 BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
@@ -1705,34 +1702,37 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 
 	BOOST_REQUIRE( fn );
 
-	vec4* src	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
-	vec4* dest	= (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
-	vec4  dest_ref[PACKAGE_ELEMENT_COUNT];
+	vec4* in [PACKAGE_ELEMENT_COUNT] = {NULL};
+	vec4* out[PACKAGE_ELEMENT_COUNT] = {NULL};
+
+	vec4  in_data [PACKAGE_ELEMENT_COUNT];
+	vec4  out_data[PACKAGE_ELEMENT_COUNT];
+
+	vec4  out_ref[PACKAGE_ELEMENT_COUNT];
 
 	srand(0);
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
-		((float*)src)[i] = rand() / 177.8f;
+		((float*)in_data)[i] = rand() / 177.8f;
 	}
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		dest_ref[i] = src[i].zyxw() + src[i].wxzy();
+		in[i]  = in_data + i;
+		out[i] = out_data + i;
+		out_ref[i] = in_data[i].zyxw() + in_data[i].wxzy();
 	}
 	sampler_t smpr;
 	
 	smpr.ss = 0xF3DE89C;
 	smpr.tex = 0xB785D3A;
 
-	intptr_t addr = reinterpret_cast<intptr_t>(&smpr);
-	fn( src, (void*)&addr, dest, (void*)NULL );
+	sampler_t* psmpr = &smpr;
+	fn(in, (void*)&psmpr, out, (void*)NULL);
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( dest_ref[i][0], dest[i][0], 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i][1], dest[i][1], 0.00001f );
-		BOOST_CHECK_CLOSE( dest_ref[i][2], dest[i][2], 0.00001f );
+		BOOST_CHECK_CLOSE( out_ref[i][0], out_data[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( out_ref[i][1], out_data[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( out_ref[i][2], out_data[i][2], 0.00001f );
 	}
-
-	_aligned_free( src );
-	_aligned_free( dest );
 }
 
 #endif

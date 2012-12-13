@@ -1,15 +1,15 @@
-struct VSIN{
+struct PSIN{
 	float4	in0: TEXCOORD(0);
 };
 
-struct VSOUT{
+struct PSOUT{
 	float4	out0: COLOR(0);
 };
 
 sampler s;
 
-VSOUT fn( VSIN in ){
-	VSOUT o;
+PSOUT fn( PSIN in ){
+	PSOUT o;
 	
 	o.out0 = tex2Dlod(s, in.in0);
 

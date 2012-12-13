@@ -150,9 +150,10 @@ public:
 	void			emplace	(multi_value const&);
 	void			emplace	(value_array const& v, value_kinds::id k, abis::id abi);
 
+	size_t			value_count() const;
 	bool			storable () const;
 	bool			load_only() const;
-	size_t			value_count() const;
+	bool			valid	 () const;
 	bool			is_mono	 ()	const;
 	multi_value		as_ref	 () const;
 

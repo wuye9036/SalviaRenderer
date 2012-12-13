@@ -411,7 +411,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 		++arg_it;
 		arg_it->setName( ".arg.bufi" );
 		entry_values[su_buffer_in]  = service()->create_value(
-			builtin_types::none, value_array(1, arg_it),
+			builtin_types::none, value_array(service()->parallel_factor(), arg_it),
 			value_kinds::reference, abis::c);
 		++arg_it;
 		arg_it->setName( ".arg.stro" );

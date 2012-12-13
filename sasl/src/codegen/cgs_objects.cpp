@@ -162,6 +162,14 @@ bool multi_value::load_only() const
 	}
 }
 
+bool multi_value::valid() const
+{
+	return ( valid_all(val_) || parent_ )
+		&& kind_ != value_kinds::unknown
+		&& abi_ != abis::unknown
+		;
+}
+
 void multi_value::emplace(value_array const& v, value_kinds::id k, abis::id abi)
 {
 	val_ = v;

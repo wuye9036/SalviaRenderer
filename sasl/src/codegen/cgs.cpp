@@ -453,7 +453,7 @@ value_array cg_service::load(multi_value const& v)
 	value_kinds::id kind = v.kind();
 	value_array raw = v.raw();
 	uint32_t masks = v.masks();
-	value_array ret = value_array(parallel_factor_, NULL);
+	value_array ret = value_array(v.value_count(), NULL);
 
 	assert( kind != value_kinds::unknown && kind != value_kinds::ty_only );
 
@@ -498,7 +498,7 @@ value_array cg_service::load(multi_value const& v)
 
 	// Resolve reference
 	if( kind & value_kinds::reference ){
-		for(size_t i = 0; i < parallel_factor_; ++i)
+		for(size_t i = 0; i < v.value_count(); ++i)
 		{
 			ret[i] = builder().CreateLoad(ret[i]);
 		}
@@ -845,19 +845,25 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, int idx )
 	assert( lhs.storable() );
 
 	builtin_types agg_hint = lhs.hint();
+	size_t		  value_parallel_factor = lhs.value_count();
 
-	if( is_vector(agg_hint) ){
+	if( is_vector(agg_hint) )
+	{
 		char indexes[4] = { (char)idx, -1, -1, -1 };
 		uint32_t mask = indexes_to_mask( indexes );
 		return multi_value::slice( lhs, mask );
-	} else if( is_matrix(agg_hint) ){
+	}
+	else if( is_matrix(agg_hint) )
+	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return multi_value();
-	} else if ( agg_hint == builtin_types::none ){
+	}
+	else if (agg_hint == builtin_types::none)
+	{
 		value_array agg_address = lhs.load_ref();
 
-		value_array elem_address(parallel_factor_, NULL);
-		for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
+		value_array elem_address(value_parallel_factor, NULL);
+		for(size_t value_index = 0; value_index < value_parallel_factor; ++value_index)
 		{
 			elem_address[value_index] = builder().CreateStructGEP(
 				agg_address[value_index], static_cast<unsigned>(idx)
@@ -865,7 +871,8 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, int idx )
 		}
 
 		cg_type* tyinfo = NULL;
-		if( lhs.ty() ){
+		if( lhs.ty() )
+		{
 			tyinfo = member_tyinfo( lhs.ty(), (size_t)idx );
 		}
 		return create_value( tyinfo, elem_address, value_kinds::reference, lhs.abi() );
@@ -1333,6 +1340,8 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 		for(size_t logical_index = 0; logical_index < args.size(); ++logical_index, ++physical_index)
 		{
 			multi_value const& arg(args[logical_index]);
+			assert( arg.valid() );
+
 			vector<Value*> val;
 			
 			// Get values, and convert big value to pointer if needed.
@@ -1838,14 +1847,16 @@ multi_value cg_service::emit_tex_lod_impl( multi_value const& samp, multi_value 
 
 	value_array samp_value( samp.load() );
 	value_array intrin_fn( parallel_factor_, ext_->external(vs_intrin) );
-	if( abi == abis::llvm)
+	if(parallel_factor_ == 1)
 	{
+		value_array intrin_fn( parallel_factor_, ext_->external(vs_intrin) );
 		value_array const* args[] = {&ret_ptr, &samp_value, &coord_ptr};
 		ext_->call(intrin_fn, args);
 	}
 	else
 	{
-		value_array mask = fn().execution_mask().load();
+		value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
+		value_array mask = split_mask( current_execution_mask() );
 		value_array const* args[] = {&ret_ptr, &mask, &samp_value, &coord_ptr};
 		ext_->call(intrin_fn, args);
 	}
@@ -2124,4 +2135,14 @@ Value* cg_service::combine_flags(value_array const& flags)
 	return ret;
 }
 
+value_array cg_service::split_mask(Value* mask)
+{
+	value_array ret(parallel_factor_, NULL);
+	for(size_t value_index = 0; value_index < parallel_factor_; ++value_index)
+	{
+		uint32_t flag_mask = (1U << value_index);
+		ret[value_index]   = builder().CreateAnd(mask, flag_mask);
+	}
+	return ret;
+}
 END_NS_SASL_CODEGEN();

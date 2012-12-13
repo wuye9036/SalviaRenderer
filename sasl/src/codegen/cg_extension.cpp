@@ -929,10 +929,10 @@ bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 	{
 		Type* arg_tys[4] =
 		{
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
-			u32_ty,										/*Mask*/
-			samp_ty,									/*Sampler*/
-			PointerType::getUnqual( v4f32_wrapped_ty )	/*Coords(x, y, _, lod)*/
+			PointerType::getUnqual( v4f32_ty ),	/*Pixels*/
+			u32_ty,								/*Mask*/
+			samp_ty,							/*Sampler*/
+			PointerType::getUnqual( v4f32_ty )	/*Coords(x, y, _, lod)*/
 		};
 		ps_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
 	}

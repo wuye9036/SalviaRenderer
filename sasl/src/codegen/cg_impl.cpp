@@ -364,7 +364,7 @@ SASL_VISIT_DEF( call_expression ){
 		}
 		
 		cg_function* fn	= service()->fetch_function(proto);
-		multi_value	rslt	= service()->emit_call(*fn, args);
+		multi_value	rslt= service()->emit_call(*fn, args);
 
 		node_context* expr_ctxt = node_ctxt( v, true );
 		expr_ctxt->node_value = rslt;

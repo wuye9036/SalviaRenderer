@@ -15,6 +15,16 @@
 
 namespace chrono = boost::chrono;
 
+bool normal_exit = false;
+
+void check_on_exit()
+{
+	if(!normal_exit)
+	{
+		assert(false);
+	}
+}
+
 bool enable_pause(int argc, char* argv[])
 {
 	for(int i_arg = 0; i_arg < argc; ++i_arg)
@@ -42,6 +52,9 @@ bool display_time(int argc, char* argv[])
 int BOOST_TEST_CALL_DECL
 main( int argc, char* argv[] )
 {
+	normal_exit = false;
+	atexit(&check_on_exit);
+	
 #if defined(SASL_USE_LLVM)	
 	sasl_initialize_driver();
 #endif
@@ -73,6 +86,7 @@ main( int argc, char* argv[] )
 #if defined(SASL_USE_LLVM)
 	sasl_finalize_driver();
 #endif
-
+	
+	normal_exit = true;
 	return ret;
 }
