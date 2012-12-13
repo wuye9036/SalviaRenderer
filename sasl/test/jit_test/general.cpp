@@ -1678,7 +1678,7 @@ BOOST_FIXTURE_TEST_CASE( ddx_ddy, jit_fixture ){
 
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 struct sampler_t{
 	uintptr_t ss, tex;
@@ -1747,16 +1747,21 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float ref_out[ PACKAGE_ELEMENT_COUNT ];
+	float in_data [PACKAGE_ELEMENT_COUNT];
+	float out_data[PACKAGE_ELEMENT_COUNT];
+
+	float* in [PACKAGE_ELEMENT_COUNT] = {NULL};
+	float* out[PACKAGE_ELEMENT_COUNT] = {NULL};
+	float  ref_out[PACKAGE_ELEMENT_COUNT];
 
 	srand(0);
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
 		// Init Data
-		in[i] = rand() / 1000.0f;
+		in_data[i] = rand() / 1000.0f;
+		in[i] = in_data + i;
+		out[i] = out_data + i;
 
-		float x = in[i];
+		float x = in_data[i];
 		for( int j = 0; j < 10; ++j )
 		{
 			x *= 2.0f;
@@ -1769,11 +1774,8 @@ BOOST_FIXTURE_TEST_CASE( ps_for_loop, jit_fixture ){
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
 	}
-
-	_aligned_free( in );
-	_aligned_free( out );
 }
 
 #endif
@@ -1788,16 +1790,21 @@ BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float ref_out[ PACKAGE_ELEMENT_COUNT ];
+	float in_data [PACKAGE_ELEMENT_COUNT];
+	float out_data[PACKAGE_ELEMENT_COUNT];
+
+	float* in [PACKAGE_ELEMENT_COUNT] = {NULL};
+	float* out[PACKAGE_ELEMENT_COUNT] = {NULL};
+	float  ref_out[PACKAGE_ELEMENT_COUNT];
 
 	srand(0);
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
 		// Init Data
-		in[i] = 0.79f * ( i * i * i );
+		in_data[i] = 0.79f * ( i * i * i );
+		in[i] = in_data + i;
+		out[i] = out_data + i;
 
-		float x = in[i];
+		float x = in_data[i];
 		while( x < 3000.0f )
 		{
 			if( x < 1.0f ) {
@@ -1812,12 +1819,9 @@ BOOST_FIXTURE_TEST_CASE( ps_while, jit_fixture ){
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
-		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
 	}
-
-	_aligned_free( in );
-	_aligned_free( out );
 }
 
 #endif
@@ -1832,16 +1836,21 @@ BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float* out	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float ref_out[ PACKAGE_ELEMENT_COUNT ];
+	float in_data [PACKAGE_ELEMENT_COUNT];
+	float out_data[PACKAGE_ELEMENT_COUNT];
+
+	float* in [PACKAGE_ELEMENT_COUNT] = {NULL};
+	float* out[PACKAGE_ELEMENT_COUNT] = {NULL};
+	float  ref_out[PACKAGE_ELEMENT_COUNT];
 
 	srand(0);
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
 		// Init Data
-		in[i] = 0.79f * ( i * i * i );
+		in_data[i] = 0.79f * ( i * i * i );
+		in[i] = in_data + i;
+		out[i] = out_data + i;
 
-		float x = in[i];
+		float x = in_data[i];
 		do {
 			if( x < 1.0f ) {
 				break;
@@ -1855,12 +1864,9 @@ BOOST_FIXTURE_TEST_CASE( ps_do_while, jit_fixture ){
 	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
-		BOOST_CHECK_CLOSE( out[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i], ref_out[i], 0.00001f );
 	}
-
-	_aligned_free( in );
-	_aligned_free( out );
 }
 
 #endif

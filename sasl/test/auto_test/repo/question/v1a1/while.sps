@@ -1,13 +1,13 @@
-struct VSIN{
+struct PSIN{
 	float in0: TEXCOORD(0);
 };
 
-struct VSOUT{
+struct PSOUT{
 	float out: COLOR;
 };
 
-VSOUT fn( VSIN in ){
-	VSOUT o;
+PSOUT fn( PSIN in ){
+	PSOUT o;
 	float x = in.in0;
 
 	while( x < 3000.0f )
