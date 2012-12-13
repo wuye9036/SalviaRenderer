@@ -1406,7 +1406,7 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 }
 #endif
 
-#if 1 || ALL_TESTS_ENABLED
+#if ALL_TESTS_ENABLED
 
 __m128 to_mm( vec4 const& v ){
 	__m128 tmp;
@@ -1495,7 +1495,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	init_ps( "./repo/question/v1a1/branches.sps" );
 	
@@ -1504,49 +1504,66 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 
 	BOOST_REQUIRE( fn );
 
-	float* in0	= (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * (sizeof(float) + sizeof(vec4)), SIMD_ALIGNMENT );
-	vec4* in1	= (vec4*)(in0 + PACKAGE_ELEMENT_COUNT);
-	vec2* out	= (vec2*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec2), SIMD_ALIGNMENT );
+	struct ps_in
+	{
+		float in0;
+		vec3  in1;
+	};
+
+	struct ps_out
+	{
+		vec2 out;
+	};
+
+	ps_in   in_data [PACKAGE_ELEMENT_COUNT];
+	ps_out  out_data[PACKAGE_ELEMENT_COUNT];
+	ps_in*  in [PACKAGE_ELEMENT_COUNT];
+	ps_out* out[PACKAGE_ELEMENT_COUNT];
+
 	vec2 ref_out[ PACKAGE_ELEMENT_COUNT ];
 
 	srand(0);
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i){
+		in[i]  = in_data  + i;
+		out[i] = out_data + i;
+
 		// Init Data
-		in0[i] = (i * 0.34f) - 1.0f;
-		for( int j = 0; j < 4; ++j ){
-			((float*)(in1))[i*4+j] = rand() / 35.0f;
+		in_data[i].in0 = (i * 0.34f) - 1.0f;
+		for( int j = 0; j < 3; ++j ){
+			in_data[i].in1[j] = rand() / 35.0f;
 		}
 
 		// Compute reference data
 		ref_out[i][0] = 88.3f;
 		ref_out[i][1] = 75.4f;
-		if( in0[i] > 0.0f ){
-			ref_out[i][0] = in0[i];
+
+		
+		if( in_data[i].in0 > 0.0f ){
+			ref_out[i][0] = in_data[i].in0;
 		}
-		if( in0[i] > 1.0f ){
-			ref_out[i][1] = in1[i][0];
+
+		if( in_data[i].in0 > 1.0f ){
+			ref_out[i][1] = in_data[i].in1[0];
 		} else {
-			ref_out[i][1] = in1[i][1];
+			ref_out[i][1] = in_data[i].in1[1];
 		}
-		if( in0[i] > 2.0f ){
-			ref_out[i][1] = in1[i][2];
-			if ( in0[i] > 3.0f ){
+
+		if( in_data[i].in0 > 2.0f ){
+			ref_out[i][1] = in_data[i].in1[2];
+			if ( in_data[i].in0 > 3.0f ){
 				ref_out[i][1] = ref_out[i][1] + 1.0f;
-			} else if( in0[i] > 2.5f ){
+			} else if( in_data[i].in0 > 2.5f ){
 				ref_out[i][1] = ref_out[i][1] + 2.0f;
 			}
 		}
 	}
 
-	fn( (void*)in0, (void*)NULL, (void*)out, (void*)NULL );
+	fn( (void*)in, (void*)NULL, (void*)out, (void*)NULL );
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
-		BOOST_CHECK_CLOSE( out[i][0], ref_out[i][0], 0.00001f );
-		BOOST_CHECK_CLOSE( out[i][1], ref_out[i][1], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out[0], ref_out[i][0], 0.00001f );
+		BOOST_CHECK_CLOSE( out_data[i].out[1], ref_out[i][1], 0.00001f );
 	}
-
-	_aligned_free( in0 );
-	_aligned_free( out );
 }
 #endif
 

@@ -90,64 +90,83 @@ cgs_simd::cgs_simd()
 {
 }
 
-void cgs_simd::store( multi_value& lhs, multi_value const& rhs )
+void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 {
-	value_array src = rhs.load( lhs.abi() );
-	value_array address(src.size(), NULL);
+	assert( lhs.value_count() == rhs.value_count() );
+
+	value_array selected_value;
+	value_array address(selected_value.size(), NULL);
 	value_kinds::id kind = lhs.kind();
+	Value* mask = exec_masks.back();
 
-	if( kind == value_kinds::reference ){	
+	if( kind == value_kinds::reference )
+	{
 		address = lhs.raw();
-
-		if( is_scalar( lhs.hint() ) || is_vector( lhs.hint() ) ){
-			Value* mask = exec_masks.back();
-			value_array dest_value = ext_->load(address);
-			value_array selected = ext_->select(mask, src, dest_value);
-			src = selected;
-		} else {
-			EFLIB_ASSERT_UNIMPLEMENTED();
-		}
-	} else if ( kind == value_kinds::elements ){
+		value_array new_value = rhs.load( lhs.abi() );
+		value_array old_value = ext_->load(address);
+		selected_value = ext_->select(mask, new_value, old_value);
+	}
+	else if ( kind == value_kinds::elements )
+	{
 		if( is_vector( lhs.parent()->hint()) )
 		{
 			assert( lhs.parent()->storable() );
-			value_array parent_address = lhs.parent()->load_ref();
-			value_array r_value = rhs.load( lhs.abi() );
-
+			
 			char indexes[4];
 			mask_to_indexes( indexes, lhs.masks() );
 			uint32_t idx_len = indexes_length( indexes );
 
-			switch ( lhs.abi() ){	
-			case abis::c:
+			if(lhs.abi() == abis::c)
+			{
+				value_array parent_address = lhs.parent()->load_ref();
+				for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx )
 				{
-					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx )
-					{
-						multi_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
-						value_array mem_ptr = ext_->struct_gep(parent_address, indexes[i_write_idx]);
-						ext_->store(element_val.load(), mem_ptr);
-					}
-					return;
+					value_array mem_ptr = ext_->struct_gep(parent_address, indexes[i_write_idx]);
+					value_array old_elem = ext_->load(mem_ptr);
+					multi_value new_element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
+					value_array masked_new_elem = ext_->select(mask, new_element_val.load( lhs.abi() ), old_elem);
+					ext_->store(masked_new_elem, mem_ptr);
 				}
-			case abis::llvm:
-				{
-					multi_value parent_v = lhs.parent()->to_rvalue();
-					for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx ){
-						multi_value element_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
-						parent_v = emit_insert_val( parent_v, indexes[i_write_idx], element_val );
-					}
-					lhs.parent()->store( parent_v );
-					return;
-				}
-			default:
-				EFLIB_ASSERT_UNIMPLEMENTED();
+				return;
 			}
-		} else {
+			else if(lhs.abi() == abis::llvm)
+			{
+				multi_value old_parent = lhs.parent()->to_rvalue();
+				multi_value selected_parent = old_parent;
+
+				for( size_t i_write_idx = 0; i_write_idx < idx_len; ++i_write_idx )
+				{
+					multi_value new_elem_val = emit_extract_val( rhs, static_cast<int>(i_write_idx) );
+					multi_value old_elem_val = emit_extract_val( old_parent, static_cast<int>(indexes[i_write_idx]) );
+
+					value_array selected_new_elem = ext_->select( mask, new_elem_val.load( lhs.abi() ), old_elem_val.load() );
+					multi_value selected_new_elem_val = create_value(
+						new_elem_val.hint(),
+						selected_new_elem,
+						value_kinds::value,
+						new_elem_val.abi()
+						);
+					
+					selected_parent = emit_insert_val(selected_parent, indexes[i_write_idx], selected_new_elem_val);
+				}
+				lhs.parent()->store(selected_parent);
+				return;
+			}
+			else
+			{
+				assert(false);
+			}
+		}
+		else
+		{
 			address = lhs.load_ref();
+			value_array new_value = rhs.load( lhs.abi() );
+			value_array old_value = ext_->load(address);
+			selected_value = ext_->select(mask, new_value, old_value);
 		}
 	}
 
-	ext_->store(src, address);
+	ext_->store(selected_value, address);
 }
 
 multi_value cgs_simd::cast_ints( multi_value const& v, cg_type* dest_tyi )

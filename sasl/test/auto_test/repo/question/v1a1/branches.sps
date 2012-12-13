@@ -1,14 +1,14 @@
-struct VSIN{
+struct PSIN{
 	float in0: TEXCOORD(0);
 	float3 in1: TEXCOORD(1);
 };
 
-struct VSOUT{
+struct PSOUT{
 	float2 out: COLOR;
 };
 
-VSOUT fn( VSIN in ){
-	VSOUT o;
+PSOUT fn( PSIN in ){
+	PSOUT o;
 
 	o.out.x = 88.3f;
 	o.out.y = 75.4f;
@@ -34,5 +34,6 @@ VSOUT fn( VSIN in ){
 			o.out.y = o.out.y + 2.0f;
 		}
 	}
+
 	return o;
 }

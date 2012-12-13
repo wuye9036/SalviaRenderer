@@ -49,10 +49,10 @@ static int const SASL_SIMD_ELEMENT_COUNT = 4;
 
 BEGIN_NS_SASL_CODEGEN();
 
-cg_extension::cg_extension( DefaultIRBuilder* builder, LLVMContext& context, Module* module )
+cg_extension::cg_extension( DefaultIRBuilder* builder, LLVMContext& context, Module* module, size_t parallel_factor )
 	: builder_(builder), context_(context), module_(module), alloc_point_(NULL)
 {
-	initialize_external_intrinsics();
+	initialize_external_intrinsics(parallel_factor);
 }
 
 value_array cg_extension::call_binary_intrin(
@@ -880,7 +880,7 @@ value_array cg_extension::shuffle_vector(value_array const& v1, value_array cons
 
 using namespace externals;
 
-bool cg_extension::initialize_external_intrinsics()
+bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 {
 	// Get types used in external intrinsic registration.
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );
@@ -888,7 +888,6 @@ bool cg_extension::initialize_external_intrinsics()
 	builtin_types v2f32_hint = vector_of( builtin_types::_float, 2 );
 
 	Type* void_ty		= Type::getVoidTy( context_ );
-	Type* u16_ty		= Type::getInt16Ty( context_ );
 	Type* u32_ty		= Type::getInt32Ty( context_ );
 	Type* f32_ty		= Type::getFloatTy( context_ );
 	Type* samp_ty		= Type::getInt8PtrTy( context_ );
@@ -896,9 +895,12 @@ bool cg_extension::initialize_external_intrinsics()
 	Type* u32ptr_ty		= Type::getInt32PtrTy( context_ );
 	
 	Type* v4f32_ty		= get_llvm_type(context_, v4f32_hint, abis::llvm);
-	/*Type* v4f32_pkg_ty	= get_llvm_type(context_, v4f32_hint, abis::package);
-	Type* v3f32_pkg_ty	= get_llvm_type(context_, v3f32_hint, abis::package);
-	Type* v2f32_pkg_ty	= get_llvm_type(context_, v2f32_hint, abis::package);*/
+	Type* v3f32_ty		= get_llvm_type(context_, v3f32_hint, abis::llvm);
+	Type* v2f32_ty		= get_llvm_type(context_, v2f32_hint, abis::llvm);
+
+	Type* v4f32_wrapped_ty	= ArrayType::get(v4f32_ty, parallel_factor);
+	Type* v3f32_wrapped_ty	= ArrayType::get(v3f32_ty, parallel_factor);
+	Type* v2f32_wrapped_ty	= ArrayType::get(v2f32_ty, parallel_factor);
 
 	FunctionType* f_f = NULL;
 	{
@@ -923,15 +925,14 @@ bool cg_extension::initialize_external_intrinsics()
 		vs_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
 
-#if 0
 	FunctionType* ps_texlod_ty = NULL;
 	{
 		Type* arg_tys[4] =
 		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty )	/*Coords(x, y, _, lod)*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
+			u32_ty,										/*Mask*/
+			samp_ty,									/*Sampler*/
+			PointerType::getUnqual( v4f32_wrapped_ty )	/*Coords(x, y, _, lod)*/
 		};
 		ps_texlod_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -940,12 +941,12 @@ bool cg_extension::initialize_external_intrinsics()
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*Coords(x, y)*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
+			u32_ty,										/*Mask*/
+			samp_ty,									/*Sampler*/
+			PointerType::getUnqual( v2f32_wrapped_ty ),	/*Coords(x, y)*/
+			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddx*/
+			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddy*/
 		};
 		ps_tex2dgrad_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -954,12 +955,12 @@ bool cg_extension::initialize_external_intrinsics()
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*Coords(x, y)*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
+			u32_ty,										/*Mask*/
+			samp_ty,									/*Sampler*/
+			PointerType::getUnqual( v3f32_wrapped_ty ),	/*Coords(x, y)*/
+			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddx*/
+			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddy*/
 		};
 		ps_texCUBEgrad_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -968,12 +969,12 @@ bool cg_extension::initialize_external_intrinsics()
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Coords(x, y, _, bias)*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v2f32_pkg_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
+			u32_ty,										/*Mask*/
+			samp_ty,									/*Sampler*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Coords(x, y, _, bias)*/
+			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddx*/
+			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddy*/
 		};
 		ps_tex2dbias_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -982,12 +983,12 @@ bool cg_extension::initialize_external_intrinsics()
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Coords(x, y, _, bias)*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v3f32_pkg_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
+			u32_ty,										/*Mask*/
+			samp_ty,									/*Sampler*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Coords(x, y, _, bias)*/
+			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddx*/
+			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddy*/
 		};
 		ps_texCUBEbias_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -996,16 +997,15 @@ bool cg_extension::initialize_external_intrinsics()
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Pixels*/
-			u16_ty,									/*Mask*/
-			samp_ty,								/*Sampler*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*Coords(x, y, _, proj)*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*ddx*/
-			PointerType::getUnqual( v4f32_pkg_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
+			u32_ty,										/*Mask*/
+			samp_ty,									/*Sampler*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Coords(x, y, _, proj)*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*ddx*/
+			PointerType::getUnqual( v4f32_wrapped_ty ),	/*ddy*/
 		};
 		ps_texproj_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
-#endif
 
 	FunctionType* u32_u32_ty = NULL;
 	{
@@ -1041,19 +1041,18 @@ bool cg_extension::initialize_external_intrinsics()
 	externals_[firstbitlow_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.firstbitlow.u32", module_ );
 	externals_[reversebits_u32] = Function::Create(u32_u32_ty, GlobalValue::ExternalLinkage, "sasl.reversebits.u32", module_ );
 
-#if 0
-	externals_[tex2dlod_vs]	= Function::Create(vs_texlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.tex2d.lod", module_ );
-	externals_[tex2dlod_ps]	= Function::Create(ps_texlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.tex2d.lod", module_ );
-	externals_[tex2dgrad_ps]= Function::Create(ps_tex2dgrad_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.grad", module_ );
-	externals_[tex2dbias_ps]= Function::Create(ps_tex2dbias_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.bias", module_ );
-	externals_[tex2dproj_ps]= Function::Create(ps_texproj_ty, GlobalValue::ExternalLinkage, "sasl.ps.tex2d.proj", module_ );
+	externals_[tex2dlod_vs]	= Function::Create(vs_texlod_ty,	GlobalValue::ExternalLinkage, "sasl.vs.tex2d.lod", module_ );
+	externals_[tex2dlod_ps]	= Function::Create(ps_texlod_ty,	GlobalValue::ExternalLinkage, "sasl.ps.tex2d.lod", module_ );
+	externals_[tex2dgrad_ps]= Function::Create(ps_tex2dgrad_ty,	GlobalValue::ExternalLinkage, "sasl.ps.tex2d.grad", module_ );
+	externals_[tex2dbias_ps]= Function::Create(ps_tex2dbias_ty,	GlobalValue::ExternalLinkage, "sasl.ps.tex2d.bias", module_ );
+	externals_[tex2dproj_ps]= Function::Create(ps_texproj_ty,	GlobalValue::ExternalLinkage, "sasl.ps.tex2d.proj", module_ );
 
-	externals_[texCUBElod_vs]	= Function::Create(vs_texlod_ty , GlobalValue::ExternalLinkage, "sasl.vs.texCUBE.lod", module_ );
-	externals_[texCUBElod_ps]	= Function::Create(ps_texlod_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.lod", module_ );
-	externals_[texCUBEgrad_ps]	= Function::Create(ps_texCUBEgrad_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.grad", module_ );
-	externals_[texCUBEbias_ps]	= Function::Create(ps_texCUBEbias_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.bias", module_ );
-	externals_[texCUBEproj_ps]	= Function::Create(ps_texproj_ty , GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.proj", module_ );
-#endif
+	externals_[texCUBElod_vs]	= Function::Create(vs_texlod_ty,		GlobalValue::ExternalLinkage, "sasl.vs.texCUBE.lod", module_ );
+	externals_[texCUBElod_ps]	= Function::Create(ps_texlod_ty,		GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.lod", module_ );
+	externals_[texCUBEgrad_ps]	= Function::Create(ps_texCUBEgrad_ty,	GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.grad", module_ );
+	externals_[texCUBEbias_ps]	= Function::Create(ps_texCUBEbias_ty,	GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.bias", module_ );
+	externals_[texCUBEproj_ps]	= Function::Create(ps_texproj_ty,		GlobalValue::ExternalLinkage, "sasl.ps.texCUBE.proj", module_ );
+
 	return true;
 }
 END_NS_SASL_CODEGEN();

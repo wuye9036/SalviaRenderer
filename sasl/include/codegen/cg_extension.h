@@ -118,7 +118,10 @@ static unary_intrin_functor  null_unary;
 class cg_extension
 {
 public:
-	cg_extension( llvm::DefaultIRBuilder* builder, llvm::LLVMContext& context, llvm::Module* module );
+	cg_extension(
+		llvm::DefaultIRBuilder* builder, llvm::LLVMContext& context, llvm::Module* module,
+		size_t parallel_factor
+		);
 
 	// Type of lhs and type of rhs are same.
 	// Scalar, vector and aggregated type could be used as type of lhs and rhs.
@@ -248,7 +251,7 @@ private:
 		llvm::Value* lhs, llvm::Value* rhs,
 		binary_intrin_functor sfn, binary_intrin_functor vfn, binary_intrin_functor simd_fn );
 
-	bool initialize_external_intrinsics();
+	bool initialize_external_intrinsics(size_t parallel_factor);
 
 	llvm::DefaultIRBuilder* builder_;
 	llvm::Module*			module_;

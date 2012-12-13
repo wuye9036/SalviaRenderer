@@ -86,7 +86,14 @@ bool cg_service::initialize( cg_module_impl* mod, module_context* ctxt, module_s
 	sem_ = sem;
 
 	initialize_cache( context() );
-	ext_.reset( new cg_extension( llvm_mod_->builder(), llvm_mod_->llvm_context(), llvm_mod_->llvm_module() ) );
+	ext_.reset(
+		new cg_extension(
+			llvm_mod_->builder(),
+			llvm_mod_->llvm_context(),
+			llvm_mod_->llvm_module(),
+			parallel_factor_
+			)
+		);
 	return true;
 }
 

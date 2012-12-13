@@ -1,4 +1,8 @@
-/*
+void test_unknown_type()
+{
+	unkown_type x;
+}
+
 float test_no_overloaded_function()
 {
 	return cross(5);
@@ -72,7 +76,7 @@ int test_function_parameter_error( xx )
 {
 	return 0;
 }
-*/
+
 void test_lvalue_error()
 {
 	int a = 3;
