@@ -434,8 +434,8 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE( ret2[0], ref2[0], 0.00001f );
 		BOOST_CHECK_CLOSE( ret2[1], ref2[1], 0.00001f );
 		BOOST_CHECK_CLOSE( ret2[2], ref2[2], 0.00001f );
-		BOOST_CHECK_CLOSE( ret3[0], ref3[0], 0.000001f );
-		BOOST_CHECK_CLOSE( ret3[1], ref3[1], 0.000001f );
+		BOOST_CHECK_CLOSE( ret3[0], ref3[0], 0.00001f );
+		BOOST_CHECK_CLOSE( ret3[1], ref3[1], 0.00001f );
 		BOOST_CHECK_CLOSE( ret3[2], ref3[2], 0.000001f );
 		BOOST_CHECK_CLOSE( ret4[0], ref4[0], 0.00001f );
 		BOOST_CHECK_CLOSE( ret4[1], ref4[1], 0.00001f );
@@ -2069,7 +2069,7 @@ BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 }
 #endif
 
-#if ALL_TESTS_ENABLED
+#if 1 || ALL_TESTS_ENABLED
 
 int do_arith_assign( int v0, int v1 )
 {

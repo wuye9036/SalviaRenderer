@@ -81,6 +81,7 @@ public:
 	boost::shared_ptr<pixel_shader_unit> clone() const;
 
 	void initialize( shader_code const* );
+	void reset_pointers();
 
 	void set_variable( std::string const&, void const* data );
 	void set_sampler( std::string const&, h_sampler const& samp );
@@ -93,11 +94,13 @@ public:
 
 	std::vector<h_sampler>									used_samplers;	// For take ownership
 
-	std::vector<char, eflib::aligned_allocator<char, 32> >	stream_data;
-	std::vector<char, eflib::aligned_allocator<char, 32> >	buffer_data;
+	typedef std::vector<char, eflib::aligned_allocator<char, 32> > aligned_vector;
 
-	std::vector<char, eflib::aligned_allocator<char, 32> >	stream_odata;
-	std::vector<char, eflib::aligned_allocator<char, 32> >	buffer_odata;
+	aligned_vector stream_data;
+	aligned_vector buffer_data;
+
+	aligned_vector stream_odata;
+	aligned_vector buffer_odata;
 };
 
 END_NS_SALVIAR();

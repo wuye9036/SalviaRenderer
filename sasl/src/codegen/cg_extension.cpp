@@ -898,10 +898,6 @@ bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 	Type* v3f32_ty		= get_llvm_type(context_, v3f32_hint, abis::llvm);
 	Type* v2f32_ty		= get_llvm_type(context_, v2f32_hint, abis::llvm);
 
-	Type* v4f32_wrapped_ty	= ArrayType::get(v4f32_ty, parallel_factor);
-	Type* v3f32_wrapped_ty	= ArrayType::get(v3f32_ty, parallel_factor);
-	Type* v2f32_wrapped_ty	= ArrayType::get(v2f32_ty, parallel_factor);
-
 	FunctionType* f_f = NULL;
 	{
 		Type* arg_tys[2] = { f32ptr_ty, f32_ty };
@@ -941,12 +937,12 @@ bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
-			u32_ty,										/*Mask*/
-			samp_ty,									/*Sampler*/
-			PointerType::getUnqual( v2f32_wrapped_ty ),	/*Coords(x, y)*/
-			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddx*/
-			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_ty ),	/*Pixels*/
+			u32_ty,								/*Mask*/
+			samp_ty,							/*Sampler*/
+			PointerType::getUnqual( v2f32_ty ),	/*Coords(x, y)*/
+			PointerType::getUnqual( v2f32_ty ),	/*ddx*/
+			PointerType::getUnqual( v2f32_ty ),	/*ddy*/
 		};
 		ps_tex2dgrad_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -955,12 +951,12 @@ bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
-			u32_ty,										/*Mask*/
-			samp_ty,									/*Sampler*/
-			PointerType::getUnqual( v3f32_wrapped_ty ),	/*Coords(x, y)*/
-			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddx*/
-			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_ty ),	/*Pixels*/
+			u32_ty,								/*Mask*/
+			samp_ty,							/*Sampler*/
+			PointerType::getUnqual( v3f32_ty ),	/*Coords(x, y)*/
+			PointerType::getUnqual( v3f32_ty ),	/*ddx*/
+			PointerType::getUnqual( v3f32_ty ),	/*ddy*/
 		};
 		ps_texCUBEgrad_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -969,12 +965,12 @@ bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
-			u32_ty,										/*Mask*/
-			samp_ty,									/*Sampler*/
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Coords(x, y, _, bias)*/
-			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddx*/
-			PointerType::getUnqual( v2f32_wrapped_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_ty ),	/*Pixels*/
+			u32_ty,								/*Mask*/
+			samp_ty,							/*Sampler*/
+			PointerType::getUnqual( v4f32_ty ),	/*Coords(x, y, _, bias)*/
+			PointerType::getUnqual( v2f32_ty ),	/*ddx*/
+			PointerType::getUnqual( v2f32_ty ),	/*ddy*/
 		};
 		ps_tex2dbias_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -983,12 +979,12 @@ bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
-			u32_ty,										/*Mask*/
-			samp_ty,									/*Sampler*/
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Coords(x, y, _, bias)*/
-			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddx*/
-			PointerType::getUnqual( v3f32_wrapped_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_ty ),	/*Pixels*/
+			u32_ty,								/*Mask*/
+			samp_ty,							/*Sampler*/
+			PointerType::getUnqual( v4f32_ty ),	/*Coords(x, y, _, bias)*/
+			PointerType::getUnqual( v3f32_ty ),	/*ddx*/
+			PointerType::getUnqual( v3f32_ty ),	/*ddy*/
 		};
 		ps_texCUBEbias_ty = FunctionType::get( void_ty, arg_tys, false );
 	}
@@ -997,12 +993,12 @@ bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
 	{
 		Type* arg_tys[6] =
 		{
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Pixels*/
-			u32_ty,										/*Mask*/
-			samp_ty,									/*Sampler*/
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*Coords(x, y, _, proj)*/
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*ddx*/
-			PointerType::getUnqual( v4f32_wrapped_ty ),	/*ddy*/
+			PointerType::getUnqual( v4f32_ty ),	/*Pixels*/
+			u32_ty,								/*Mask*/
+			samp_ty,							/*Sampler*/
+			PointerType::getUnqual( v4f32_ty ),	/*Coords(x, y, _, proj)*/
+			PointerType::getUnqual( v4f32_ty ),	/*ddx*/
+			PointerType::getUnqual( v4f32_ty ),	/*ddy*/
 		};
 		ps_texproj_ty = FunctionType::get( void_ty, arg_tys, false );
 	}

@@ -1885,9 +1885,10 @@ multi_value cg_service::emit_tex_grad_impl( multi_value const& samp, multi_value
 	value_array ddy_ptr = ext_->stack_alloc(coord_ty, parallel_factor_, "ddy.tmp");
 	ext_->store(ddy.load(abi), ddy_ptr);
 
+	value_array masks = split_mask( current_execution_mask() );
 	value_array args[] = 
 	{
-		ret_ptr, fn().execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
+		ret_ptr, masks, samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
 
 	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
@@ -1925,9 +1926,10 @@ multi_value cg_service::emit_tex_proj_impl( multi_value const& samp, multi_value
 	value_array ddy_ptr = ext_->stack_alloc(v4f32_ty, parallel_factor_, "ddy.tmp");
 	ext_->store(coord.load(abi), ddy_ptr);
 
+	value_array masks = split_mask( current_execution_mask() );
 	value_array args[] = 
 	{
-		ret_ptr, fn().execution_mask().load(), samp.load(), coord_ptr, ddx_ptr, ddy_ptr
+		ret_ptr, masks, samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
 	value_array intrin_fn( parallel_factor_, ext_->external(ps_intrin) );
 	ext_->call( intrin_fn, ArrayRef<value_array>(args) );
