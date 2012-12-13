@@ -11,12 +11,13 @@
 #include <ostream>
 
 namespace eflib{
-	//实际的log序列化工作
-	//输出格式：
-	//output ::= items
-	//items ::= {item|(indent items)}
-	//item ::= {content}item_splitter
-	//content ::= {string|(key keyval_splitter val)}
+	/** Serializing the log
+		And the format of log is：
+			output	::= items
+			items	::= {item|(indent items)}
+			item	::= {content}item_splitter
+			content ::= {string|(key keyval_splitter val)}
+	*/
 	class text_log_serializer
 	{
 	public:
@@ -65,7 +66,6 @@ namespace eflib{
 		}
 
 		void begin_log(){
-			//将增加缩进量并压栈
 			indent_stack_.push_back(indent_stack_.back() + indent_);
 		}
 
@@ -73,7 +73,6 @@ namespace eflib{
 			indent_stack_.pop_back();
 		}
 
-		//向日志文件中写入信息。类型必须要支持 << 流操作符。
 		template <class T> void write(const std::_tstring& key, const T& val){
 			ostr_ << indent_stack_.back() << key << keyval_splitter_ << val << item_splitter_;
 		}

@@ -16,7 +16,7 @@ class quaternion
 private:
 	float x, y, z, w;
 public:
-	//д╛хо╣д
+	// Constructors
 	quaternion();
 	quaternion(float x, float y, float z, float w);
 	quaternion(const vec4& raw_v);

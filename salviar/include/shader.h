@@ -247,11 +247,11 @@ protected:
 	const eflib::vec4& get_pos_ddx() const;
 	const eflib::vec4& get_pos_ddy() const;
 
-	//获得乘以投影系数之后的ddx与ddy，可以用它计算投影纠正后的ddx和ddy。
+	// unproj_dd? = dd?(proj_attr)
 	const eflib::vec4& unproj_ddx(size_t iReg) const;
 	const eflib::vec4& unproj_ddy(size_t iReg) const;
 
-	//获得投影纠正以后的ddx与ddy
+	// dd? = dd?(proj_attr/proj_attr.w)
 	const eflib::vec4 ddx(size_t iReg) const;
 	const eflib::vec4 ddy(size_t iReg) const;
 

@@ -1,8 +1,12 @@
-//特意没有防卫头
 
-//防止一些平台头文件的宏与std的函数冲突
-
-//需要引用头文件时，先定义宏（如EFLIB_INCLUDE_WINDOWS_H），然后在包含includer.h即可
+/* 
+NO HEADER GUARD IS *EXPECTED*.
+It is designed to resolve confliction between macros or function in stl.
+It is used as following case:
+	
+	#define EFLIB_INCLUDE_WINDOWS_H
+	#include "win32.h"
+*/
 
 #include <eflib/include/platform/config.h>
 

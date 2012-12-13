@@ -17,10 +17,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 created:	2008/06/08
 author:		Ye Wu
-
-purpose:	该文件提供了与D3D9有关的模型的构造与读取、写入的接口声明。
-
-Modify Log:
 		
 *********************************************************************/
 

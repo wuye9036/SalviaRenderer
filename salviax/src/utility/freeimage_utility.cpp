@@ -70,13 +70,14 @@ FIBITMAP* make_bitmap_copy(
 	size_t img_w = FreeImage_GetWidth(image);
 	size_t img_h = FreeImage_GetHeight(image);
 
-	// 如果不需要缩放，则直接返回传入的Image及Region
+	// If the dest is same size with source, just return the source image and region.
 	if ( dest_width == src_region.w && dest_height == src_region.h ){
 		out_region = src_region;
 		return image;
 	}
 
-	// 如果不是全局大小，则先拷贝一个副本
+	// If it is not that the whole image is wanted to copy,
+	// region should be copied to a new image.
 	FIBITMAP* sub_image = NULL;
 	if(src_region.x == 0 && src_region.y == 0 && src_region.w == img_w && src_region.h == img_h){
 		sub_image = image;

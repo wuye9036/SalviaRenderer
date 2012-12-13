@@ -4,7 +4,7 @@ namespace eflib{
 	namespace detail{
 		void do_init()
 		{
-			//此处添加初始化代码
+			// All eflib initialization code is at here.
 
 			//initialize debug helper
 			#ifndef EFLIB_WINDOWS

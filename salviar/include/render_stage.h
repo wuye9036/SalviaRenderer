@@ -9,16 +9,16 @@
 BEGIN_NS_SALVIAR()
 
 
-//声明 RenderState Updated 事件的默认处理函数
+// Declare the default handler of event 'RenderState Updated'
 #define DECL_RS_UPDATED(rsname) virtual result on_##rsname##_updated(){return result::ok;}
 
-//声明 RenderState Updated的处理函数
+// Declare handler of event 'RenderState Updated'
 #define PROC_RS_UPDATED(rsname) virtual result on_##rsname##_updated();
 
-//实现RenderState Updated事件处理
+// Implements handler of event 'RenderState Updated'
 #define IMPL_RS_UPDATED(class_name, rsname) result class_name::on_##rsname##_updated()
 
-//调用RenderStage
+// Invoke handlers.
 #define DISPATCH_RS_UPDATED(hobj, rsname) hobj->on_##rsname##_updated();
 
 class render_stage

@@ -84,7 +84,7 @@ private:
 	boost::shared_ptr<surface> sbuf_;
 	
 	std::vector<bool> buf_valids;
-	std::vector<surface* > cbufs_; //framebuffer没有释放surface的权力
+	std::vector<surface* > cbufs_; ///< NOTE: Framebuffer doesn't take ownership of surfaces
 
 	size_t width_, height_;
 	size_t num_samples_;
@@ -99,27 +99,26 @@ public:
 	framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	~framebuffer(void);
 
-	//重置
 	void reset(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 
-	//渲染目标设置
+	// Render target accessors.
 	void set_render_target_disabled(render_target tar, size_t target_index);
 	void set_render_target_enabled(render_target tar, size_t target_index);
 
 	void set_render_target(render_target tar, size_t target_index, surface* psurf);
 	surface* get_render_target(render_target tar, size_t target_index) const;
 
-	//获得渲染状态	
+	// Render states accessors.
 	eflib::rect<size_t> get_rect();
 	size_t get_width() const;
 	size_t get_height() const;
 	size_t get_num_samples() const;
 	pixel_format get_buffer_format() const;
 
-	//渲染
+	// Rendering functions.
 	void render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
 
-	//清理
+	// Cleanup functions.
 	void clear_color(size_t target_index, const color_rgba32f& c);
 	void clear_depth(float d);
 	void clear_stencil(int32_t s);

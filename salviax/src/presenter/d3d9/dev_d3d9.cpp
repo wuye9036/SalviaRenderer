@@ -98,7 +98,6 @@ void dev_d3d9::present(const salviar::surface& surf)
 	
 		IDirect3DDevice9* pdxdev = dev_->get_d3d_device9();
 
-		//设置渲染顶点
 		Vertex verts[] = 
 		{
 			/* x,  y, z, u, v */
@@ -123,7 +122,7 @@ void dev_d3d9::present(const salviar::surface& surf)
 		pdxdev->SetTexture(0, buftex_);
 	}
 
-	//首先将framebuffer copy到纹理上
+	// Copy frame buffer to texture.
 	D3DLOCKED_RECT locked_rc;
 	byte* src_addr = NULL;
 

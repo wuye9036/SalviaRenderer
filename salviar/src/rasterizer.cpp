@@ -591,14 +591,13 @@ void rasterizer::draw_pixels(
 	const float offsetx = left + 0.5f - v0.position.x();
 	const float offsety = top + 0.5f - v0.position.y();
 
-	//设置基准扫描线的属性
+	// Set attributes of base scan line
 	vs_output base_vert;
 	vs_output_ops->integral2(base_vert, v0, offsety, ddy);
 	vs_output_ops->selfintegral2(base_vert, offsetx, ddx);
 
 #if !defined( SALVIA_ENABLE_PIXEL_SHADER )
 	for(int iy = 0; iy < 4; ++iy){
-		//光栅化
 		vs_output px_in;
 		ps_output px_out;
 		vs_output unprojed;
@@ -874,17 +873,17 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 }
 
 /*************************************************
-*   三角形的光栅化步骤：
-*			1 光栅化生成扫描线及扫描线差分信息
-*			2 rasterizer_scanline_impl处理扫描线
-*			3 生成逐个像素的vs_output
-*			4 执行pixel shader
-*			5 将像素渲染到framebuffer中
+*   Steps of triangle rasterization：
+*			1 Generate scan line and compute derivation of scanlines
+*			2 Rasterize scan line by rasterizer_scanline_impl 
+*			3 Generate vs_output/ps_input for pixels.
+*			4 Execute pixel shader
+*			5 Render pixel to frame buffer.
 *
 *   Note: 
-*			1 参数的postion将位于窗口坐标系下
-*			2 wpos的x y z分量已经除以了clip w
-*			3 positon.w()为1.0f / clip w
+*			1 All of position pixel is in window coordinate system.
+*			2 x, y, z components of wpos have been devided by 'clip w'.
+*			3 positon.w() == 1.0f / 'clip w'
 **************************************************/
 void rasterizer::rasterize_triangle(
 	uint32_t prim_id, uint32_t full,

@@ -17,10 +17,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 created:	2008/06/08
 author:		Ye Wu
-
-purpose:	文件声明了依赖于GDIPlus的文件读、写、创建函数。
-
-Modify Log:
 		
 *********************************************************************/
 

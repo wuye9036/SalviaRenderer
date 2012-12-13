@@ -18,10 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 created:	2008/06/08
 author:		Ye Wu
 
-purpose:	文件声明了平台无关的纹理读、写、创建函数。
-
-Modify Log:
-
 *********************************************************************/
 
 #ifndef SALVIAX_TEX_IO_H

@@ -50,7 +50,7 @@ void dev_gdiplus::present(const salviar::surface& surf){
 
 	Gdiplus::Graphics g(::GetDC(hwnd_));
 
-	//将framebuffer的surface拷贝到bitmap中
+	// Copy frame buffer to bitmap.
 	Rect rcFramebuffer(0, 0, (INT)surf.get_width(), (INT)surf.get_height());
 
 	void* pfbdata = NULL;
@@ -77,7 +77,7 @@ void dev_gdiplus::present(const salviar::surface& surf){
 	surf.unmap();
 	pbmp_->UnlockBits(&bmpData);
 
-	//渲染到设备上
+	// Draw
 	g.DrawImage(pbmp_.get(),
 		Rect(0, 0, static_cast<UINT>(surf.get_width()), static_cast<UINT>(surf.get_height())));
 }

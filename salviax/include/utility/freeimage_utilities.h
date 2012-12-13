@@ -15,19 +15,19 @@
 #include <tchar.h>
 
 BEGIN_NS_SALVIAX_UTILITY()
-// 读取位图
+
 FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 
-// 检查位图是否为材质装载器支持的类型
+// Return true if image type is supported for loading.
 bool check_image_type_support(FIBITMAP* image);
 
-// 将位图的指定区域缩放拷贝成指定大小的副本。
+// Stretch region of bitmap to another region with specified size.
 FIBITMAP* make_bitmap_copy( eflib::rect<size_t>& out_region,
 						   size_t dest_width, size_t dest_height,
 						   FIBITMAP* image, const eflib::rect<size_t>& src_region );
 
-// 统一颜色的字节序列访问。
-// 将不同字节序列表示的颜色，通过适配器转换成统一的访问接口。
+// Make all colors with different byte orders to the same interface
+// to access color components.
 template <class ColorType>
 struct FREE_IMAGE_UNIFORM_COLOR
 {
@@ -104,7 +104,9 @@ private:
 
 #define FIUC FREE_IMAGE_UNIFORM_COLOR 
 
-// 获得与FreeImage内部颜色格式相同的，并按照RGBA色序排列的SoftArt颜色类型。
+// Get the salvia supported color type
+// which is compatible with internal color format in FreeImage
+// but components order of it is RGBA.
 template<typename FIColorT>
 struct softart_rgba_color_type{
 	typedef salviar::color_max type;

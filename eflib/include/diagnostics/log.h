@@ -19,10 +19,8 @@ created:	2008/05/30
 author:		Ye Wu
 
 purpose:
-slog是一个轻量级的日志系统。
+slog is a light-weight log system.
 
-Modify Log:
-2008/06/06 - 添加了Log的单变量写入 By Ye Wu
 *********************************************************************/
 #ifndef EFLIB_DIAGNOSTICS_LOG_H
 #define EFLIB_DIAGNOSTICS_LOG_H
@@ -42,9 +40,8 @@ Modify Log:
 
 namespace eflib{
 	//////////////////////////////////////////////////////////////////////////
-	//日志等级定义.
-	//每隔一位定义一次，中间的位次可以留给用户自定义用。
-	//最低一位保留给DEBUG/RELEASE模式。
+	// Define log levels
+	// The last bit is reserved for mode Debug/Release.
 
 	const uint32_t LOGLEVEL_FATAL_ERROR = 0x8000;
 	const uint32_t LOGLEVEL_ERROR = 0x2000;
@@ -54,12 +51,12 @@ namespace eflib{
 	const uint32_t LOGLEVEL_DEBUGONLY = 0x0001;
 
 	//////////////////////////////////////////////////////////////////////////
-	//打开方式：追加或者删除。
+	// Open modes
 	const uint32_t LOG_OPENMODE_APPEND = 0x0;
 	const uint32_t LOG_OPENMODE_WRITE = 0x1;
 
 	//////////////////////////////////////////////////////////////////////////
-	//比较器，用于验证log是否会被记录
+	// Compare function for pick logged message out.
 	struct log_level_cmp_equal{
 		bool operator()(const uint32_t cur_log_level, const uint32_t ref_log_level){
 			return cur_log_level == ref_log_level;
@@ -80,10 +77,11 @@ namespace eflib{
 		}
 	};
 
-	//////////////////////////////////////////////////////////////////////////
-	//slog的状态对象，用于保存与恢复状态。
+	
 	template<class T> class log;
 
+	//////////////////////////////////////////////////////////////////////////
+	// State for slog, saving and loading are supported.
 	template<class SerializerT>
 	class log_state
 	{
@@ -110,7 +108,7 @@ namespace eflib{
 		boost::shared_ptr<SerializerT> h_logserializer;
 	};
 
-	//slog状态栈对象。
+	// Slog state stack
 	template<class SerializerT>
 	class log_state_stack
 	{
@@ -138,8 +136,8 @@ namespace eflib{
 		std::vector<boost::shared_ptr<const state_t> > states_;
 	};
 
-	// slog类。slog既是soft art log的简称，也是simple log的简称 :-)
-	// slog是外部代码访问的类，序列化放在log_serializer中，该类主要负责访问控制。
+	/// slog is not only the short name of "soft art log" but also the shorten for "simple log"
+	/// class slog API of our log system, serialization is supported by log_serializer.
 	template <class SerializerT>
 	class log
 	{
@@ -155,12 +153,11 @@ namespace eflib{
 			return boost::make_shared<this_type>( ref_log_level );
 		}
 
-		//构造一个log。默认的log等级为允许所有的log
+		// Default is that all level of logs are enabled.
 		log(const uint32_t ref_log_level = 0) :loglvlcmp_(log_level_cmp_ge()), ref_log_level_(ref_log_level)
 		{
 		}
 
-		//状态设置函数
 		void set_serializer(boost::shared_ptr<serializier_t> hsrl)
 		{
 			h_logserializer = hsrl;
@@ -176,7 +173,7 @@ namespace eflib{
 			loglvlcmp_ = cmpr;
 		}
 
-		//保存函数log state的当前状态
+		// Save current slog state.
 		void push_current_log_state()
 		{
 			state_type* pstate = new state_type();
@@ -184,7 +181,7 @@ namespace eflib{
 			state_stack_.push(pstate);
 		}
 
-		//恢复log state的上一次状态。
+		// Restore the lastest slog state.
 		void pop_current_log_state()
 		{
 			boost::shared_ptr<const state_type > hstate = state_stack_.pop();
@@ -245,10 +242,6 @@ namespace eflib{
 		log_state_stack<SerializerT> state_stack_;
 	};
 
-	//////////////////////////////////////////////////////////////////////////
-	//用于状态进出栈的配对。
-
-	//slog状态的进出栈
 	template <class T>
 	class log_state_scope
 	{
@@ -265,7 +258,6 @@ namespace eflib{
 		T* plog_;
 	};
 
-	//序列化器的状态栈。
 	template<class T>
 	class log_serializer_state_scope
 	{
@@ -282,7 +274,7 @@ namespace eflib{
 		T* psrl_;
 	};
 
-	//序列化时层次关系域。构造时进入一个子层，析构时退出到父层上。
+	// Scope for indent in and out.
 	template<class T>
 	class log_serializer_indent_scope
 	{
@@ -300,7 +292,7 @@ namespace eflib{
 		T* pserializer_;
 	};
 
-	//实际的log系统，独体模式
+	// Log system as singleton.
 	template<class LogT>
 	class log_system
 	{

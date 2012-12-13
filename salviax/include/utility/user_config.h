@@ -18,10 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 created:	2008/06/08
 author:		Ye Wu
 
-purpose:	≈‰÷√“¿¿µª∑æ≥°£
-
-Modify Log:
-		
 *********************************************************************/
 
 #ifndef SALVIAX_USER_CONFIG_H

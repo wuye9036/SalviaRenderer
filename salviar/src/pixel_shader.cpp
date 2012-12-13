@@ -208,8 +208,12 @@ color_rgba32f pixel_shader::texcubeproj(const sampler& s, size_t iReg){
 
 	float invq = (attr[3] == 0.0f) ? 1.0f : 1.0f / attr[3];
 
-	//注意这里的透视纹理，不需要除以position[3]回到纹理空间，但是由于在光栅化传递进入的时候
-	//执行了除法操作，因此需要再乘w回来。
+	// NOTE: 
+	//  Projective texture is special.
+	//  We need to divide components by position.w to transform texture
+	//  coordinate back to linear texture coordinate space, 
+	//  But they had been devided by 'w' when it is passed by rasterizer.
+	//  So we need to multiply 'w' to recover the texture coord.
 	float proj_factor = ppxin_->position[3] * invq;
 	eflib::vec4 projected_attr;
 	projected_attr.xyz() = (attr * proj_factor).xyz();

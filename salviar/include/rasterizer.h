@@ -179,7 +179,6 @@ public:
 		const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
 		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
 
-	//»æÖÆº¯Êý
 	void draw(size_t prim_count);
 };
 

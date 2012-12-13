@@ -104,7 +104,7 @@ void clipper::clip(
 	const vs_output* clipped_verts[2][5];
 	uint32_t num_clipped_verts[2];
 
-	//¿ªÊ¼clip, Ping-Pong idioms
+	// clip by all faces as Ping-Pong idiom
 	clipped_verts[0][0] = &v0;
 	clipped_verts[0][1] = &v1;
 	clipped_verts[0][2] = &v2;

@@ -45,13 +45,15 @@ texture_io_gdiplus& texture_io_gdiplus::instance(){
 	return s_instance;
 }
 
-//将指定的GDI位图部分拷贝到Surface的指定区域。目标区域需要与源区域大小相同，且源位图格式为PixelFormat32bppARGB格式。
+/** Remarks:
+     1. The size of dest region must be same as source region.
+	 2. The pixel format of source image must be PixelFormat32bppARGB.
+*/
 bool texture_io_gdiplus::copy_image_to_surface(salviar::surface& surf, const rect<size_t>& dest_region, Bitmap* src_bmp, const rect<size_t>& src_region){
 	if (src_bmp == NULL || dest_region.w != src_region.w || dest_region.h != src_region.h ){
 		return false;
 	}
 
-	//锁定纹理与位图，拷贝数据
 	void* ptexdata = NULL;
 	BitmapData bmp_data;
 
@@ -85,7 +87,10 @@ salviar::h_texture texture_io_gdiplus::load(salviar::renderer* pr, const std::_t
 	return ret;
 }
 
-//使用六张图像创建Cube纹理。Cube纹理的每面大小和第一张纹理的大小相同。如果其他文件的大小与第一张不同，则按第一张的大小缩放。
+/**
+Create cube texture with 6 images.
+If images are not the same size, they would be stretched to the first image size.
+*/
 salviar::h_texture texture_io_gdiplus::load_cube(salviar::renderer *pr, const vector<_tstring> &filenames, salviar::pixel_format fmt){
 	salviar::h_texture ret;
 	rect<size_t> dest_region;

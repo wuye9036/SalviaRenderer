@@ -347,7 +347,7 @@ framebuffer::~framebuffer(void)
 {
 }
 
-//重置，第一个RT将设置为帧缓冲表面，其它RT置空
+/// The first render target is framebuffer surface and others are null.
 void framebuffer::reset(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
 	new(this) framebuffer(width, height, num_samples, fmt);
@@ -446,13 +446,12 @@ pixel_format framebuffer::get_buffer_format() const{
 	return fmt_;
 }
 
-//渲染
 void framebuffer::render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
 {
 	EFLIB_ASSERT(hbs, "Blend shader is null or invalid.");
 	if(!hbs) return;
 
-	//composing output...
+	//composing output
 	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
 	target_pixel.set_pos(x, y);
 

@@ -21,14 +21,12 @@ struct pixel_fmt_to_type{};
 	template<>\
 	struct pixel_fmt_to_type< fmt_code >\
 	{ typedef color_type type; };
-/*****************************
- *    像素格式的枚举值
- *****************************/
+
 typedef int pixel_format;
 
-/**************************************
- * 编译期枚举值与像素类型的转换
- **************************************/
+// ------------------------------------------
+// enumeration in compiling time and translation between different pixel format
+
 struct pixel_information
 {
 	int size;
@@ -48,9 +46,9 @@ decl_type_fmt_pair(color_r32i, 6);
 decl_type_fmt_pair(color_max, 7);
 
 const int pixel_format_color_ub = pixel_format_color_max - 1;
-/*************************************
- * 颜色信息
- *************************************/
+
+// Pixel format informations
+
 const pixel_information color_infos[pixel_type_to_fmt<color_max>::fmt] = {
 	decl_color_info(color_rgba32f),
 	decl_color_info(color_rgb32f),
@@ -65,9 +63,6 @@ inline const pixel_information& get_color_info( pixel_format pf ){
 	return color_infos[pf];
 }
 
-/**************************************
- * 颜色转换工具
- *************************************/
 class pixel_format_convertor
 {
 	 template <int outColor, int inColor> friend struct color_convertor_initializer;
