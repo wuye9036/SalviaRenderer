@@ -333,7 +333,7 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 			source0.emplace( value_array(1, source_vm_value[0]), value_kinds::value, v.abi() );
 			source1.emplace( value_array(1, source_vm_value[1]), value_kinds::value, v.abi() );
 
-			multi_value diff = emit_sub(source0, source1);
+			multi_value diff = emit_sub(source1, source0);
 			diff_values[value_index0]
 			= diff_values[value_index1]
 			= diff.load()[0];
