@@ -11,6 +11,7 @@ set (HEADER_FILES
 	include/diagnostics/log.h
 	include/diagnostics/log_serializer.h
 	include/diagnostics/logrout.h
+	include/diagnostics/profiler.h
 	include/io/stream.h
 	include/math/math.h
 	include/math/matrix.h
@@ -51,6 +52,7 @@ set (SOURCE_FILES
 	src/logrout.cpp
 	src/cpuinfo.cpp
 	src/dl_loader.cpp
+	src/profiler.cpp
 )
 
 ADD_LIBRARY( EFLIB STATIC
