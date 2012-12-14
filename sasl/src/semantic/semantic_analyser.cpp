@@ -905,7 +905,8 @@ SASL_VISIT_DEF( alias_type ){
 	
 	if( dup_struct_id == -1 )
 	{
-		diags->report( undeclared_identifier )->token_range( *v.alias, *v.alias )->p(v.alias->str);
+		generated_node = duplicate( v.as_handle() );
+		diags->report( undeclared_identifier )->token_range(*v.alias, *v.alias)->p(v.alias->str);
 		return;
 	}
 
@@ -982,7 +983,6 @@ SASL_VISIT_DEF( function_type )
 		}
 		if( !successful ){
 			current_symbol->cancel_function(sym);
-			generated_node.reset();
 			return;
 		}
 	}
