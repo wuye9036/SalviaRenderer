@@ -34,7 +34,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
-#define OUTPUT_GRAMMAR_MATCHING_PATH 1
+#define OUTPUT_GRAMMAR_MATCHING_PATH 0
 
 BEGIN_NS_SASL_PARSER();
 

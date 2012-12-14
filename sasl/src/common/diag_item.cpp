@@ -5,7 +5,7 @@ using std::string;
 BEGIN_NS_SASL_COMMON();
 
 diag_item::diag_item( diag_template const* tmpl )
-	: tmpl(tmpl), fmt( tmpl->template_str() )
+	: tmpl(tmpl)
 {
 }
 
@@ -49,8 +49,8 @@ void diag_item::release()
 
 diag_item& diag_item::eval()
 {
-	std::string str = fmt.str();
-	fmt = boost::format(str);
+	std::string str = this->str();
+	fmt.reset( new boost::format(str) );
 	return *this;
 }
 
@@ -61,7 +61,13 @@ diag_levels diag_item::level() const
 
 string diag_item::str() const
 {
-	return fmt.str();
+	for(size_t i = 0; i < fmt_params.size(); ++i)
+	{
+		fmt_params[i]->apply( const_cast<diag_item*>(this)->formatter() );
+		fmt_params[i]->release();
+	}
+	fmt_params.clear();
+	return formatter().str();
 }
 
 size_t diag_item::id() const
@@ -69,6 +75,33 @@ size_t diag_item::id() const
 	return tmpl->id();
 }
 
+boost::format& diag_item::formatter()
+{
+	if(!fmt)
+	{
+		fmt.reset(new boost::format( tmpl->template_str() ) );
+	}
+	return *fmt;
+}
+
+boost::format const& diag_item::formatter() const
+{
+	if(!fmt)
+	{
+		const_cast<diag_item*>(this)->fmt.reset(
+			new boost::format( tmpl->template_str() )
+			);
+	}
+	return *fmt;
+}
+
+diag_item::~diag_item()
+{
+	for(size_t i = 0; i < fmt_params.size(); ++i)
+	{
+		fmt_params[i]->release();
+	}
+}
 std::string const& diag_template::template_str() const
 {
 	return tmpl;

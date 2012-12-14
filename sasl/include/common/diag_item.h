@@ -7,6 +7,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <string>
@@ -24,15 +25,42 @@ enum diag_levels{
 class diag_template;
 class fname_t;
 
+class diag_data
+{
+public:
+	virtual void apply( boost::format& fmt ) = 0;
+	virtual ~diag_data() = 0 {}
+	virtual void release()
+	{
+		delete this;
+	}
+};
+
+template <typename T>
+class diag_data_impl: public diag_data
+{
+public:
+	diag_data_impl(T const& v): value(v)
+	{
+	}
+	void apply( boost::format& fmt )
+	{
+		fmt % value;
+	}
+private:
+	T value;
+};
+
 class diag_item
 {
 public:
 	diag_item( diag_template const* tmpl );
-	
+	~diag_item();
+
 	template <typename T>
-	diag_item& operator %( T const& v )
+	diag_item& operator % ( T const& v )
 	{
-		fmt % v;
+		fmt_params.push_back( new diag_data_impl<T>(v) );
 		return *this;
 	}
 
@@ -51,10 +79,16 @@ public:
 	void		release();
 
 private:
+	boost::format&		 formatter();
+	boost::format const& formatter() const;
+
 	fname_t					item_file;
 	code_span				item_span;
 	diag_template const*	tmpl;
-	boost::format			fmt;
+	boost::scoped_ptr<boost::format>
+							fmt;
+	mutable std::vector<diag_data*>
+							fmt_params;
 };
 
 class diag_template

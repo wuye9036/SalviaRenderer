@@ -10,6 +10,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
+#include <string>
 
 BEGIN_NS_SASL_COMMON();
 
@@ -34,6 +35,7 @@ public:
 		(*item) % v;
 		return shared_from_this();
 	}
+	boost::shared_ptr<diag_item_committer> p(char const* v);
 
 	boost::shared_ptr<diag_item_committer>	eval();
 	boost::shared_ptr<diag_item_committer>	token_range( token_t const& beg, token_t const& end );

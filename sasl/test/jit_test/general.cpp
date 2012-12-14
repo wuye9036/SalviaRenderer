@@ -171,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
-
+#if 0
 	JIT_FUNCTION(float (vec3*, vec3*), test_dot_f3);
 	JIT_FUNCTION(vec4 (mat44*, vec4*), test_mul_m44v4);
 	JIT_FUNCTION(vec4 (mat44*), test_fetch_m44v4);
@@ -774,6 +774,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_CLOSE(ret1[1], 0.05f, 0.00001f*fabsf(v1[1])/0.05f);
 		BOOST_CHECK_CLOSE(ret1[2], 0.8f , 0.00001f*fabsf(v1[2])/0.8f );
 	}
+#endif
 }
 
 #endif

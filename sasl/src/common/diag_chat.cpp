@@ -8,6 +8,12 @@ using std::vector;
 
 BEGIN_NS_SASL_COMMON();
 
+shared_ptr<diag_item_committer> diag_item_committer::p(char const* v)
+{
+	(*item) % std::string(v);
+	return shared_from_this();
+}
+
 shared_ptr<diag_chat> diag_chat::create()
 {
 	return shared_ptr<diag_chat>( new diag_chat() );
