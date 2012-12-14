@@ -15,6 +15,8 @@
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/common/diag_chat.h>
 
+#include <eflib/include/diagnostics/profiler.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
 #include <boost/foreach.hpp>
@@ -232,37 +234,62 @@ shared_ptr<diag_chat> driver_impl::compile()
 		}
 	}
 
-	// Compiling
-	mroot = sasl::syntax_tree::parse( code_src.get(), lex_ctxt, diags.get() );
-	if( !mroot ){ return diags; }
+	
 
-	shared_ptr<diag_chat> semantic_diags = diag_chat::create();
-	msem = analysis_semantic( mroot.get(), semantic_diags.get(), lang );
-	if( error_count( semantic_diags.get(), false ) > 0 )
+	eflib::profiler			prof;
+	shared_ptr<diag_chat>	semantic_diags;
+	shared_ptr<cg_module>	llvmcode;
+	abi_analyser			aa;
+
 	{
-		msem.reset();
-	}
-	diag_chat::merge( diags.get(), semantic_diags.get(), true );
+		// Compiling with profiling
 
-	if( !msem ){ return diags; }
+		eflib::profiling_scope prof_scope(&prof, "driver impl compiling");
+		
+		{
+			eflib::profiling_scope prof_scope(&prof, "parse @ driver_impl");
+			mroot = sasl::syntax_tree::parse( code_src.get(), lex_ctxt, diags.get() );
+			if( !mroot ){ return diags; }
+		}
 
-	abi_analyser aa;
+		{
+			eflib::profiling_scope prof_scope(&prof, "semantic analysis @ driver_impl");
+			semantic_diags = diag_chat::create();
+			msem = analysis_semantic( mroot.get(), semantic_diags.get(), lang );
+			if( error_count( semantic_diags.get(), false ) > 0 )
+			{
+				msem.reset();
+			}
+			diag_chat::merge( diags.get(), semantic_diags.get(), true );
+			if( !msem ){ return diags; }
+		}
 
-	if( !aa.auto_entry(msem, lang) ){
-		if ( lang != salviar::lang_general ){
-			cout << "ABI analysis error occurs!" << endl;
-			return diags;
+		{
+			eflib::profiling_scope prof_scope(&prof, "ABI analysis @ driver_impl");
+
+			if( !aa.auto_entry(msem, lang) )
+			{
+				if ( lang != salviar::lang_general ){
+					cout << "ABI analysis error occurs!" << endl;
+					return diags;
+				}
+			}
+			mabi = aa.shared_abii(lang);
+		}
+		
+		{
+			eflib::profiling_scope prof_scope(&prof, "Code generation @ driver_impl");
+
+			llvmcode = generate_llvm_code( msem, mabi.get() );
+			mod = llvmcode;
+			if( !llvmcode ){
+				cout << "Code generation error occurs!" << endl;
+				return diags;
+			}
 		}
 	}
-	mabi = aa.shared_abii(lang);
 
-	shared_ptr<cg_module> llvmcode = generate_llvm_code( msem, mabi.get() );
-	mod = llvmcode;
-
-	if( !llvmcode ){
-		cout << "Code generation error occurs!" << endl;
-		return diags;
-	}
+	eflib::print_profiler(&prof, 3);
 
 	if( opt_io.fmt == options_io::llvm_ir ){
 		if( !opt_io.output_file_name.empty() ){

@@ -7,6 +7,7 @@
 #include <sasl/test/jit_test/jit_test.h>
 #include <salviar/include/shader_abi.h>
 #include <eflib/include/platform/cpuinfo.h>
+#include <eflib/include/diagnostics/profiler.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -22,16 +23,6 @@ using std::endl;
 using std::numeric_limits;
 
 int const SIMD_ALIGNMENT = 32;
-
-void on_exit()
-{
-	cout << "Finished." << endl;
-}
-
-struct atexit_register
-{
-	atexit_register(){ atexit(&on_exit); }
-} atexit_reg;
 
 uint32_t naive_reversebits(uint32_t v)
 {
@@ -89,6 +80,30 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 
 	BOOST_CHECK(true);
 }
+
+#if 1
+BOOST_AUTO_TEST_CASE( test_profiler )
+{
+	profiler prof;
+
+	{
+		profiling_scope ps(&prof, "A");
+		{
+			{
+				profiling_scope ps(&prof, "B");
+			}
+			{
+				profiling_scope ps(&prof, "SooooooooooooooooooooooooooooooooooooooooLoooooooooooooooooooooooongName");
+			}
+			{
+				profiling_scope ps(&prof, "C");
+			}
+		}
+	}
+
+	print_profiler(&prof, 3);
+}
+#endif
 
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( empty_test, jit_fixture ){
