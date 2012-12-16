@@ -13,6 +13,11 @@
 
 #include <eflib/include/memory/lifetime_manager.h>
 
+#if defined(EFLIB_WINDOWS)
+#define NOMINMAX
+#include <Windows.h>
+#endif
+
 namespace chrono = boost::chrono;
 
 bool normal_exit = false;
@@ -49,9 +54,28 @@ bool display_time(int argc, char* argv[])
 	return false;
 }
 
+bool set_highest_priority(int argc, char* argv[])
+{
+	for(int i_arg = 0; i_arg < argc; ++i_arg)
+	{
+		if( strncmp("--highest-prior", argv[i_arg], 15) == 0 )
+		{
+			printf("Process Priority is HIGH_PRIORITY_CLASS");
+#if defined(EFLIB_WINDOWS)
+			HANDLE process_handle = GetCurrentProcess();
+			SetPriorityClass(process_handle, HIGH_PRIORITY_CLASS);
+#endif
+			return true;
+		}
+	}
+	return false;
+}
+
 int BOOST_TEST_CALL_DECL
 main( int argc, char* argv[] )
 {
+	set_highest_priority(argc, argv);
+	
 	normal_exit = false;
 	atexit(&check_on_exit);
 	

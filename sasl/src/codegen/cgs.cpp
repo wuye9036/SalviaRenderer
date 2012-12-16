@@ -194,7 +194,10 @@ cg_function* cg_service::fetch_function(function_type* fn_node){
 	FunctionType* fty = FunctionType::get(ret_ty, par_tys, false);
 
 	// Create function.
-	ret->fn = Function::Create( fty, Function::ExternalLinkage, sem_->get_symbol(fn_node)->mangled_name(), module() );
+	ret->fn = Function::Create(
+		fty, Function::ExternalLinkage,
+		sem_->get_symbol(fn_node)->mangled_name().raw_string(), module()
+		);
 
 	return ret;
 }
@@ -276,8 +279,8 @@ cg_type* cg_service::create_ty(tynode* tyn)
 				}
 			}
 
-			StructType* ty_c	= StructType::create( c_member_types,			struct_tyn->name->str + ".abi.c" );
-			StructType* ty_llvm	= StructType::create( llvm_member_types,		struct_tyn->name->str + ".abi.llvm" );
+			StructType* ty_c	= StructType::create( c_member_types,	struct_tyn->name->str.raw_string() + ".abi.c" );
+			StructType* ty_llvm	= StructType::create( llvm_member_types,struct_tyn->name->str.raw_string() + ".abi.llvm" );
 
 			ret->tys[abis::c]	= ty_c;
 			ret->tys[abis::llvm]	= ty_llvm;

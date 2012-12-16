@@ -3,13 +3,14 @@
 
 #include <sasl/include/semantic/semantic_forward.h>
 
+#include <eflib/include/string/ustring.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/static_assert.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/type_traits.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <string>
 #include <vector>
 
 namespace sasl
@@ -62,21 +63,21 @@ public:
 
 	module_semantic* owner() const;
 
-	symbol* find		(std::string const& name) const;
-	symbol* find_this	(std::string const& mangled) const;
-	int		count		(std::string const& name) const;
+	symbol* find		(eflib::fixed_string const& name) const;
+	symbol* find_this	(eflib::fixed_string const& mangled) const;
+	int		count		(eflib::fixed_string const& name) const;
 
-	symbol_array find_overloads(std::string const& name) const;
-	symbol_array find_overloads(std::string const& name, caster_t* conv, expression_array const& args) const;
-	symbol_array find_assign_overloads(std::string const& name, caster_t* conv, expression_array const& args) const;
+	symbol_array find_overloads(eflib::fixed_string const& name) const;
+	symbol_array find_overloads(eflib::fixed_string const& name, caster_t* conv, expression_array const& args) const;
+	symbol_array find_assign_overloads(eflib::fixed_string const& name, caster_t* conv, expression_array const& args) const;
 	
-	symbol*	add_named_child(std::string const& mangled, node* child_node);
+	symbol*	add_named_child(eflib::fixed_string const& mangled, node* child_node);
 	symbol*	add_child(node* child_node);
 	symbol*	add_function_begin(function_type* child_fn );
 	bool	add_function_end(symbol* sym);
 	void	cancel_function(symbol* sym);
 
-	void remove_child(std::string const& mangled);
+	void remove_child(eflib::fixed_string const& mangled);
 	void remove_child(symbol*);
 	void remove();
 
@@ -85,42 +86,44 @@ public:
 	node* associated_node() const;
 	void associated_node(node*); ///< Don't call it as common API. It is reserved for internal class.
 
-	std::string const& unmangled_name() const;
-	std::string const& mangled_name() const;
+	eflib::fixed_string const& unmangled_name() const;
+	eflib::fixed_string const& mangled_name() const;
 
 private:
 	static symbol* create(module_semantic* owner, symbol* parent, node* assoc_node);
-	static symbol* create(module_semantic* owner, symbol* parent, node* assoc_node, std::string const& mangled);
+	static symbol* create(module_semantic* owner, symbol* parent, node* assoc_node, eflib::fixed_string const& mangled);
+	
+	symbol(module_semantic* owner, symbol* parent, node* assoc_node, eflib::fixed_string const* mangled);
 
-	symbol(module_semantic* owner, symbol* parent, node* assoc_node, std::string const* mangled);
+	std::vector<eflib::fixed_string> const& get_overloads(eflib::fixed_string const& umnalged) const;
 
-	std::vector<std::string> const& get_overloads(std::string const& umnalged) const;
-
-	symbol_array find_overloads_impl(std::string const& name, caster_t* conv, expression_array const& args) const;
+	symbol_array find_overloads_impl(eflib::fixed_string const& name, caster_t* conv, expression_array const& args) const;
 	void collapse_vector1_overloads( symbol_array& candidates ) const;
 
-	typedef boost::unordered_map<node*, symbol*>		children_dict;
-	typedef children_dict::iterator						children_dict_iterator;
+	typedef boost::unordered_map<node*, symbol*>	children_dict;
+	typedef children_dict::iterator					children_dict_iterator;
 
-	typedef boost::unordered_map<std::string, symbol*>	named_children_dict;
-	typedef named_children_dict::iterator				named_children_dict_iterator; 
+	typedef boost::unordered_map<eflib::fixed_string, symbol*>	named_children_dict;
+	typedef named_children_dict::iterator						named_children_dict_iterator; 
 
 	typedef boost::unordered_map<
-		std::string, std::vector<std::string> >			overload_dict;
+		eflib::fixed_string, std::vector<eflib::fixed_string> >	overload_dict;
 	
 	module_semantic*	owner_;
 	node*				associated_node_;
 	symbol*				parent_;
 
 	// name
-	std::string			mangled_name_;
-	std::string			unmangled_name_;
+	eflib::fixed_string			mangled_name_;
+	eflib::fixed_string			unmangled_name_;
 
-	children_dict		children_;
-	named_children_dict	named_children_;
-	overload_dict		overloads_;
+	children_dict				children_;
+	named_children_dict			named_children_;
+	overload_dict				overloads_;
 	std::vector<
-		std::string>	null_overloads_;
+		eflib::fixed_string>	null_overloads_;
+
+	static eflib::fixed_string  null_name;
 };
 
 END_NS_SASL_SEMANTIC()

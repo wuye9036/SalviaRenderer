@@ -232,6 +232,9 @@ public:
 
 	virtual void link_symbol(node* v, symbol* sym)
 	{
+		// static size_t erase_counter = 0;
+		// static size_t insert_counter = 0;
+
 		// Only available for symbol create by this module.
 		assert( sym->owner() == this );
 		// symbol* ref_sym = get_symbol(v);
@@ -239,12 +242,23 @@ public:
 
 		node* old_assoc_node = sym->associated_node();
 		if(old_assoc_node != NULL) {
+			// ++erase_counter;
 			symbols_dict_.erase(old_assoc_node);	
 		}
 
 		if( v != NULL ) {
+			// ++insert_counter;
 			symbols_dict_.insert( make_pair(const_cast<node const*>(v), sym) );
 		}
+
+		//if( erase_counter % 1000 == 0 )
+		//{
+		//	printf("erase counter: %d\n", erase_counter);
+		//}
+		//if( insert_counter % 1000 == 0 )
+		//{
+		//	printf("insert counter: %d\n", insert_counter);
+		//}
 
 		sym->associated_node(v);
 	}

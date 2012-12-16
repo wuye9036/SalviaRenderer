@@ -382,7 +382,11 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
 	{
 		vector<Type*> param_types = generate_ps_entry_param_type( abii, target_data, service() );
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
-		Function* fn = Function::Create( fntype, Function::ExternalLinkage, sem_->get_symbol(&v)->mangled_name(), cg_impl::module() );
+		Function* fn = Function::Create(
+			fntype, Function::ExternalLinkage,
+			sem_->get_symbol(&v)->mangled_name().raw_string(),
+			cg_impl::module()
+			);
 		entry_fn = fn;
 		// entry_sym = v.symbol().get();
 

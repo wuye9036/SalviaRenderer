@@ -1,4 +1,5 @@
 #include <eflib/include/string/string.h>
+#include <eflib/include/string/ustring.h>
 
 #include <cstdlib>
 #include <vector>

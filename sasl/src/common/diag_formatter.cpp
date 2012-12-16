@@ -1,5 +1,7 @@
 #include <sasl/include/common/diag_formatter.h>
 
+#include <eflib/include/string/ustring.h>
+
 #include <sasl/include/common/diag_item.h>
 #include <eflib/include/diagnostics/assert.h>
 
@@ -7,12 +9,12 @@
 #include <boost/format.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-using std::string;
+using eflib::fixed_string;
 using boost::format;
 
 BEGIN_NS_SASL_COMMON();
 
-string str( diag_item const* item, compiler_compatibility cc )
+fixed_string str( diag_item const* item, compiler_compatibility cc )
 {
 	std::string error_level;
 

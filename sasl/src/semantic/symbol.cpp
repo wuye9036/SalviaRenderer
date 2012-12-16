@@ -28,6 +28,7 @@
 
 using boost::bind;
 using eflib::polymorphic_cast;
+using eflib::fixed_string;
 using namespace std;
 
 
@@ -46,14 +47,17 @@ using sasl::utility::vector_count;
 
 using ::boost::shared_ptr;
 
+fixed_string symbol::null_name;
+
 symbol* symbol::create_root(module_semantic* owner, node* root_node){
-	return create( owner, NULL, root_node );
+	null_name = fixed_string("");
+	return create(owner, NULL, root_node);
 }
 
-symbol* symbol::create(module_semantic* owner, symbol* parent, node* assoc_node, string const& mangled)
+symbol* symbol::create(module_semantic* owner, symbol* parent, node* assoc_node, fixed_string const& mangled)
 {
 	assert( owner->get_symbol(assoc_node) == NULL );
-	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, assoc_node, &mangled);
+	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, NULL, &mangled);
 	owner->link_symbol(assoc_node, ret);
 	return ret;
 }
@@ -61,24 +65,24 @@ symbol* symbol::create(module_semantic* owner, symbol* parent, node* assoc_node,
 symbol* symbol::create( module_semantic* owner, symbol* parent, node* assoc_node )
 {
 	assert( owner->get_symbol(assoc_node) == NULL );
-	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, assoc_node, NULL);
+	symbol* ret = new ( owner->alloc_symbol() ) symbol(owner, parent, NULL, NULL);
 	owner->link_symbol(assoc_node, ret);
 	return ret;
 }
 
-symbol::symbol(module_semantic* owner, symbol* parent, node* assoc_node, string const* mangled)
+symbol::symbol(module_semantic* owner, symbol* parent, node* assoc_node, fixed_string const* mangled)
 	: owner_(owner), parent_(parent), associated_node_(assoc_node)
-	, unmangled_name_(mangled ? *mangled : ""), mangled_name_(mangled ? *mangled : "")
+	, unmangled_name_(mangled ? *mangled : null_name), mangled_name_(mangled ? *mangled : null_name)
 {
 }
 
-symbol* symbol::find_this( string const& mangled ) const
+symbol* symbol::find_this( fixed_string const& mangled ) const
 {
 	named_children_dict::const_iterator iter = named_children_.find(mangled);
 	return iter == named_children_.end() ? NULL : iter->second;
 }
 
-symbol* symbol::find( string const& mangled ) const
+symbol* symbol::find( fixed_string const& mangled ) const
 {
 	symbol* ret = find_this(mangled);
 	if (ret) {	return ret; }
@@ -86,17 +90,17 @@ symbol* symbol::find( string const& mangled ) const
 	return parent_->find(mangled);
 }
 
-vector<string> empty_strings;
-vector<string> const& symbol::get_overloads(string const& unmangled_name) const
+vector<fixed_string> empty_strings;
+vector<fixed_string> const& symbol::get_overloads(fixed_string const& unmangled_name) const
 {
 	overload_dict::const_iterator iter = overloads_.find(unmangled_name);
 	return iter == overloads_.end() ? empty_strings : iter->second;
 }
 
-symbol::symbol_array symbol::find_overloads(string const& unmangled) const
+symbol::symbol_array symbol::find_overloads(fixed_string const& unmangled) const
 {
 	symbol_array ret;
-	vector<string> const& name_of_ret = get_overloads( unmangled );
+	vector<fixed_string> const& name_of_ret = get_overloads( unmangled );
 	if ( !name_of_ret.empty() )
 	{
 		for( size_t i_name = 0; i_name < name_of_ret.size(); ++i_name )
@@ -109,7 +113,7 @@ symbol::symbol_array symbol::find_overloads(string const& unmangled) const
 	return parent_->find_overloads(unmangled);
 }
 
-symbol::symbol_array symbol::find_overloads(const string& unmangled, caster_t* conv, expression_array const& args) const
+symbol::symbol_array symbol::find_overloads(const fixed_string& unmangled, caster_t* conv, expression_array const& args) const
 {
 	// find all overloads_
 	symbol_array overloads_ = find_overloads_impl(unmangled, conv, args);
@@ -117,7 +121,7 @@ symbol::symbol_array symbol::find_overloads(const string& unmangled, caster_t* c
 	return overloads_;
 }
 
-symbol::symbol_array symbol::find_assign_overloads(const string& unmangled, caster_t* conv, expression_array const& args) const
+symbol::symbol_array symbol::find_assign_overloads(const fixed_string& unmangled, caster_t* conv, expression_array const& args) const
 {
 	symbol_array candidates = find_overloads_impl(unmangled, conv, args);
 	tid_t lhs_arg_tid = owner_->get_semantic( args.back() )->tid();
@@ -134,7 +138,7 @@ symbol::symbol_array symbol::find_assign_overloads(const string& unmangled, cast
 	return ret;
 }
 
-symbol* symbol::add_named_child( const string& mangled, node* child_node )
+symbol* symbol::add_named_child( const fixed_string& mangled, node* child_node )
 {
 	named_children_dict_iterator iter = named_children_.find(mangled);
 	if ( iter != named_children_.end() )
@@ -190,7 +194,7 @@ void symbol::cancel_function(symbol* /*sym*/)
 	// Do nothing while function is cancelled.
 }
 
-void symbol::remove_child( const string& mangled ){
+void symbol::remove_child( const fixed_string& mangled ){
 	named_children_dict_iterator ret_it = named_children_.find( mangled );
 	if ( ret_it == named_children_.end() ){
 		return;
@@ -243,11 +247,11 @@ void symbol::associated_node( node* v )
 	associated_node_ = v;
 }
 
-string const& symbol::mangled_name() const{
+fixed_string const& symbol::mangled_name() const{
 	return mangled_name_;
 }
 
-string const& symbol::unmangled_name() const{
+fixed_string const& symbol::unmangled_name() const{
 	return unmangled_name_;
 }
 
@@ -366,7 +370,7 @@ bool get_deprecated_and_next( symbol* const& sym, symbol* const* begin_addr, vec
 }
 
 symbol::symbol_array symbol::find_overloads_impl(
-	string const& unmangled, caster_t* conv, expression_array const& args) const
+	fixed_string const& unmangled, caster_t* conv, expression_array const& args) const
 {
 	// find all overloads_
 	symbol_array overloads_ = find_overloads(unmangled);

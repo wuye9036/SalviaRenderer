@@ -287,7 +287,7 @@ public:
 	SASL_VISIT_INLINE_DEF_UNIMPL( member_initializer );
 	SASL_VISIT_INLINE_DEF_UNIMPL( declaration );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, variable_declaration,	(type_info)(declarators) );
-	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter,				(param_type)(name)(init) );
+	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, parameter,				(name)/*(param_type)(init)*/ );
 	SASL_CLONE_NODE_FUNCTION_DEF( SWALLOW, declarator,				(name)(init)(semantic)(semantic_index) );
 	SASL_VISIT_INLINE_DEF_UNIMPL( type_definition );
 	SASL_VISIT_INLINE_DEF_UNIMPL( tynode );

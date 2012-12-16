@@ -16,6 +16,7 @@
 #include <sasl/include/common/diag_chat.h>
 
 #include <eflib/include/diagnostics/profiler.h>
+#include <eflib/include/string/ustring.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
@@ -40,6 +41,8 @@ using sasl::syntax_tree::node;
 using sasl::common::lex_context;
 using sasl::common::diag_chat;
 using sasl::common::code_source;
+
+using eflib::fixed_string;
 
 using boost::shared_polymorphic_cast;
 using boost::shared_ptr;
@@ -397,11 +400,13 @@ void sasl_reversebits_u32(uint32_t* ret, uint32_t v)
 
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
-	std::string err;
+	fixed_string err;
 	if(!mod){
 		return shared_ptr<jit_engine>();
 	}
-	shared_ptr<cg_jit_engine> ret_jit = cg_jit_engine::create( shared_polymorphic_cast<cg_module>(mod), err );
+	shared_ptr<cg_jit_engine> ret_jit = cg_jit_engine::create(
+		shared_polymorphic_cast<cg_module>(mod), err
+		);
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
 	inject_function(ret_jit, &sasl_exp_f32,		"sasl.exp.f32",		true);
@@ -473,9 +478,9 @@ shared_ptr<abi_info> driver_impl::mod_abi() const
 	return mabi;
 }
 
-void driver_impl::inject_function(shared_ptr<jit_engine> const& je, void* pfn, string const& name, bool is_raw_name )
+void driver_impl::inject_function(shared_ptr<jit_engine> const& je, void* pfn, fixed_string const& name, bool is_raw_name )
 {
-	std::string const* raw_name;
+	eflib::fixed_string const* raw_name;
 	if( is_raw_name )
 	{
 		raw_name = &name;

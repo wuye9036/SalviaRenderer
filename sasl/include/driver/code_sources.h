@@ -184,20 +184,21 @@ public:
 	bool set_file( std::string const& );
 
 	// code source
-	virtual bool		eof();
-	virtual std::string next();
-	virtual std::string error();
-	virtual bool		failed();
-
+	virtual bool				eof();
+	virtual eflib::fixed_string next();
+	virtual eflib::fixed_string error();
+	virtual bool				failed();
+	
 	// lex_context
-	virtual std::string const&	file_name() const;
-	virtual size_t				column() const;
-	virtual size_t				line() const;
-	virtual void				update_position( std::string const& /*lit*/ );
+	virtual eflib::fixed_string const&
+					file_name() const;
+	virtual size_t	column() const;
+	virtual size_t	line() const;
+	virtual void	update_position( eflib::fixed_string const& /*lit*/ );
 
 	// hooks. It's enabled after function is called.
-	virtual void				add_virtual_file( std::string const& file_name, std::string const& content, bool high_priority );
-	virtual void				set_include_handler( include_handler_fn ihandler );
+	virtual void	add_virtual_file( std::string const& file_name, std::string const& content, bool high_priority );
+	virtual void	set_include_handler( include_handler_fn ihandler );
 	
 	// Inputs of preprocessor.
 	bool add_include_path( std::string const& );
@@ -221,6 +222,12 @@ private:
 	{
 		return std::string( str.begin(), str.end() );
 	}
+
+	template<typename StringT>
+	eflib::fixed_string to_fixed_string( StringT const& str ) const
+	{
+		return eflib::fixed_string( str.begin(), str.end() );
+	}
 	
 	friend void load_virtual_file(
 		bool& is_succeed, bool& is_exclusive, std::string& content,
@@ -235,10 +242,12 @@ private:
 	boost::scoped_ptr<wave_context_wrapper>	wctxt_wrapper;
 	sasl::common::diag_chat*				diags;
 
+	mutable eflib::fixed_string
+						filename;
 	bool				is_failed;
 	std::string			code;
-	std::string			errtok;
-	mutable std::string	filename;
+	eflib::fixed_string	errtok;
+	
 
 	wcontext_t::iterator_type cur_it;
 	wcontext_t::iterator_type next_it;

@@ -3,6 +3,8 @@
 
 #include <sasl/include/codegen/forward.h>
 
+#include <eflib/include/string/ustring.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
@@ -17,8 +19,8 @@ class codegen_context;
 
 class jit_engine{
 public:
-	virtual void* get_function( const std::string& func_name ) = 0;
-	virtual void inject_function( void* fn, std::string const& fn_name ) = 0;
+	virtual void* get_function(eflib::fixed_string const& func_name ) = 0;
+	virtual void inject_function( void* fn, eflib::fixed_string const& fn_name ) = 0;
 protected:
 	jit_engine(){}
 	virtual ~jit_engine(){}

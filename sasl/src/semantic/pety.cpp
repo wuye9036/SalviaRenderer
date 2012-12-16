@@ -290,7 +290,7 @@ void pety_t::add_builtin_type(builtin_types btc, node_semantic** out_sem, tid_t*
 void pety_t::add_proto_tynode(tynode_ptr const& proto_node, node_semantic** out_sem, tid_t* out_tid)
 {
 	// add to pool and allocate an id
-	tid_t proto_tid = type_items_.size();
+	tid_t proto_tid = static_cast<tid_t>( type_items_.size() );
 
 	pety_item_t proto_item;
 	proto_item.stored = proto_node;

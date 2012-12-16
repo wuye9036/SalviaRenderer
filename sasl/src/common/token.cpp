@@ -1,9 +1,8 @@
 #include <sasl/include/common/token.h>
 
+using eflib::fixed_string;
 using boost::shared_ptr;
 using boost::make_shared;
-
-using std::string;
 
 BEGIN_NS_SASL_COMMON();
 
@@ -15,7 +14,10 @@ token_t::token_t(const token_t& rhs) : file_name(rhs.file_name), span(rhs.span),
 {
 }
 
-boost::shared_ptr<token_t> token_t::make( size_t id, std::string const& str, size_t line, size_t col, std::string const& fname )
+boost::shared_ptr<token_t> token_t::make(
+	size_t id, eflib::fixed_string const& str,
+	size_t line, size_t col, eflib::fixed_string const& fname
+	)
 {
 	boost::shared_ptr<token_t> ret = boost::make_shared<token_t>();
 	ret->id = id;
@@ -26,7 +28,7 @@ boost::shared_ptr<token_t> token_t::make( size_t id, std::string const& str, siz
 
 	size_t cur_line = line;
 	size_t cur_col = col;
-	for( string::const_iterator it = str.begin(); it < str.end(); ++it )
+	for(fixed_string::const_iterator it = str.begin(); it != str.end(); ++it)
 	{
 		char ch = *it;
 		if( ch == '\n' ){
@@ -63,7 +65,7 @@ shared_ptr<token_t> token_t::null()
 	return shared_ptr<token_t>();
 }
 
-shared_ptr<token_t> token_t::from_string( const std::string& str )
+shared_ptr<token_t> token_t::from_string(fixed_string const& str)
 {
 	return shared_ptr<token_t>( new token_t(str.begin(), str.end()) );
 }
@@ -120,22 +122,6 @@ void code_span::set( size_t line_beg, size_t col_beg, size_t length )
 	this->col_beg  = col_beg;
 	this->line_end = line_beg;
 	this->col_end  = col_beg + length;
-}
-
-std::string fname_t::null_name;
-
-fname_t::fname_t()
-{
-}
-
-fname_t::fname_t( std::string const& name )
-{
-	fname = shared_ptr<string>( new string(name) );
-}
-
-std::string const& fname_t::str() const
-{
-	return fname ? *fname : null_name;
 }
 
 END_NS_SASL_COMMON();

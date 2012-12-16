@@ -4,6 +4,7 @@
 #include <sasl/include/driver/driver_forward.h>
 #include <sasl/include/driver/driver.h>
 #include <sasl/include/driver/options.h>
+#include <eflib/include/string/ustring.h>
 
 BEGIN_NS_SASL_DRIVER();
 
@@ -43,41 +44,9 @@ public:
 	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& ){ return boost::shared_ptr<sasl::codegen::jit_engine>(); }
 
 	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const{ return boost::shared_ptr<sasl::semantic::module_semantic>(); }
-	virtual boost::shared_ptr<sasl::codegen::cg_module>	module() const{ return boost::shared_ptr<sasl::codegen::cg_module>(); }
+	virtual boost::shared_ptr<sasl::codegen::cg_module>				module() const{ return boost::shared_ptr<sasl::codegen::cg_module>(); }
 	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const{ return boost::shared_ptr<sasl::syntax_tree::node>(); }
 	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const{ return boost::shared_ptr<sasl::semantic::abi_info>(); }
-	/*
-	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
-	boost::shared_ptr<sasl::codegen::cg_module>	mod;
-	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
-	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
-
-	options_global			opt_global;
-	options_display_info	opt_disp;
-	options_io				opt_io;
-	option_macros			opt_macros;
-	options_includes		opt_includes;
-
-	po::options_description	desc;
-	po::variables_map		vm;
-
-	// Overridden options
-	boost::shared_ptr<sasl::common::code_source>	user_code_src;
-	boost::shared_ptr<sasl::common::lex_context>	user_lex_ctxt;
-
-	typedef boost::unordered_map< std::string,
-		std::pair<std::string, bool> > virtual_file_dict;
-	enum macro_states
-	{
-		ms_normal,
-		ms_predef,
-		ms_remove
-	};
-	std::vector<std::string>	sys_paths, inc_paths;
-	std::vector< std::pair<std::string, macro_states> > macros;
-	include_handler_fn			user_inc_handler;
-	virtual_file_dict			virtual_files;
-	*/
 };
 
 class driver_impl: public driver{
@@ -115,10 +84,10 @@ public:
 	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit();
 	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& );
 
-	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const;
-	virtual boost::shared_ptr<sasl::codegen::cg_module>	module() const;
-	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const;
-	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const;
+	virtual boost::shared_ptr<sasl::semantic::module_semantic>	module_sem() const;
+	virtual boost::shared_ptr<sasl::codegen::cg_module>			module() const;
+	virtual boost::shared_ptr<sasl::syntax_tree::node>			root() const;
+	virtual boost::shared_ptr<sasl::semantic::abi_info>			mod_abi() const;
 
 	boost::program_options::variables_map const &	variables() const;
 	options_display_info const &					display_info() const;
@@ -131,7 +100,7 @@ private:
 	template <typename ParserT> bool parse( ParserT& parser );
 	void inject_function(
 		boost::shared_ptr<sasl::codegen::jit_engine> const& je,
-		void* pfn, std::string const& name, bool is_raw_name);
+		void* pfn, eflib::fixed_string const& name, bool is_raw_name);
 	
 	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
 	boost::shared_ptr<sasl::codegen::cg_module>	mod;

@@ -4,6 +4,7 @@
 #include <sasl/include/common/common_fwd.h>
 
 #include <sasl/include/common/token.h>
+#include <eflib/include/string/ustring.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
@@ -23,7 +24,6 @@ enum diag_levels{
 };
 
 class diag_template;
-class fname_t;
 
 class diag_data
 {
@@ -48,6 +48,8 @@ public:
 		fmt % value;
 	}
 private:
+	diag_data_impl(diag_data_impl<T> const&);
+	diag_data_impl<T>& operator = (diag_data_impl<T> const&);
 	T value;
 };
 
@@ -65,16 +67,16 @@ public:
 	}
 
 	diag_item&	eval();
-	diag_item&	file( fname_t const& f );	
-	diag_item&	span( token_t const& beg, token_t const& end );
-	diag_item&	span( code_span const& s );
+	diag_item&	file(eflib::fixed_string const& f);	
+	diag_item&	span(token_t const& beg, token_t const& end);
+	diag_item&	span(code_span const& s);
 
-	bool		is_template( diag_template const& v ) const;
-	diag_levels	level() const;
-	std::string str() const;
-	code_span	span() const;
-	std::string file() const;
-	size_t		id() const;
+	bool				is_template( diag_template const& v ) const;
+	diag_levels			level() const;
+	eflib::fixed_string str() const;
+	code_span			span() const;
+	eflib::fixed_string file() const;
+	size_t				id() const;
 
 	void		release();
 
@@ -82,7 +84,7 @@ private:
 	boost::format&		 formatter();
 	boost::format const& formatter() const;
 
-	fname_t					item_file;
+	eflib::fixed_string		item_file;
 	code_span				item_span;
 	diag_template const*	tmpl;
 	boost::scoped_ptr<boost::format>

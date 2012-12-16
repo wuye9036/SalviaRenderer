@@ -1,6 +1,6 @@
 #include <sasl/include/common/diag_item.h>
 
-using std::string;
+using eflib::fixed_string;
 
 BEGIN_NS_SASL_COMMON();
 
@@ -31,15 +31,15 @@ code_span diag_item::span() const
 	return item_span;
 }
 
-diag_item& diag_item::file( fname_t const& f )
+diag_item& diag_item::file( fixed_string const& f )
 {
 	item_file = f;
 	return *this;
 }
 
-string diag_item::file() const
+fixed_string diag_item::file() const
 {
-	return item_file.str();
+	return item_file;
 }
 
 void diag_item::release()
@@ -49,8 +49,7 @@ void diag_item::release()
 
 diag_item& diag_item::eval()
 {
-	std::string str = this->str();
-	fmt.reset( new boost::format(str) );
+	fmt.reset( new boost::format( this->str().raw_string() ) );
 	return *this;
 }
 
@@ -59,7 +58,7 @@ diag_levels diag_item::level() const
 	return tmpl->level();
 }
 
-string diag_item::str() const
+fixed_string diag_item::str() const
 {
 	for(size_t i = 0; i < fmt_params.size(); ++i)
 	{
@@ -67,7 +66,7 @@ string diag_item::str() const
 		fmt_params[i]->release();
 	}
 	fmt_params.clear();
-	return formatter().str();
+	return fixed_string( formatter().str() );
 }
 
 size_t diag_item::id() const

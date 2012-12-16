@@ -38,6 +38,7 @@ using boost::addressof;
 using boost::shared_ptr;
 
 using std::vector;
+using std::make_pair;
 
 BEGIN_NS_SASL_SEMANTIC();
 

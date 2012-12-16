@@ -3,7 +3,7 @@
 
 #include <sasl/include/common/common_fwd.h>
 
-#include <string>
+#include <eflib/include/string/ustring.h>
 
 BEGIN_NS_SASL_COMMON();
 
@@ -15,7 +15,7 @@ enum compiler_compatibility
 	cc_gcc
 };
 
-std::string str( diag_item const*, compiler_compatibility cc = cc_msvc );
+eflib::fixed_string str(diag_item const*, compiler_compatibility cc = cc_msvc);
 
 END_NS_SASL_COMMON();
 

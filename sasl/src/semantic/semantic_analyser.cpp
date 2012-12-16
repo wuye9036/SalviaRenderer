@@ -926,10 +926,10 @@ SASL_VISIT_DEF( parameter )
 	{
 		current_symbol->add_named_child( v.name->str, dup_par.get() );
 	}
-	else
-	{
-		current_symbol->add_child( dup_par.get() );
-	}
+	//else
+	//{
+	//	current_symbol->add_child( dup_par.get() );
+	//}
 
 	node_semantic* par_sem = NULL;
 	dup_par->param_type = visit_child(v.param_type, &par_sem);

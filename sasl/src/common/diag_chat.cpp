@@ -3,6 +3,7 @@
 #include <sasl/include/common/diag_item.h>
 #include <eflib/include/diagnostics/assert.h>
 
+using eflib::fixed_string;
 using boost::shared_ptr;
 using std::vector;
 
@@ -87,7 +88,7 @@ diag_item_committer::diag_item_committer( diag_item* item, diag_chat* chat )
 {
 }
 
-shared_ptr<diag_item_committer> diag_item_committer::file( fname_t const& f )
+shared_ptr<diag_item_committer> diag_item_committer::file(fixed_string const& f)
 {
 	item->file(f);
 	return shared_from_this();

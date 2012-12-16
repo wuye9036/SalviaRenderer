@@ -4,10 +4,12 @@
 #include <sasl/include/parser/diags.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/string/ustring.h>
 
 using sasl::common::diag_chat;
 using sasl::common::code_span;
 using sasl::common::diag_item_committer;
+using eflib::fixed_string;
 using boost::shared_ptr;
 using boost::wave::preprocess_exception;
 using boost::unordered_map;
@@ -49,7 +51,7 @@ bool driver_code_source::eof()
 	return next_it == wctxt_wrapper->get_wctxt()->end();
 }
 
-string driver_code_source::next()
+fixed_string driver_code_source::next()
 {
 	assert( next_it != wctxt_wrapper->get_wctxt()->end() );
 	cur_it = next_it;
@@ -80,33 +82,33 @@ string driver_code_source::next()
 			committer
 				->p( preprocess_exception::error_text( e.get_errorcode() ) )
 				->span( current_span() )
-				->file( to_std_string(cur_it->get_position().get_file()) );
+				->file( to_fixed_string(cur_it->get_position().get_file()) );
 		}
-		errtok = to_std_string( cur_it->get_value() );
+		errtok = to_fixed_string( cur_it->get_value() );
 		next_it = wctxt_wrapper->get_wctxt()->end();
 	} catch( wave_reported_fatal_error& ) {
 		// Error has been reported to diag_chat.
-		errtok = to_std_string( cur_it->get_value() );
+		errtok = to_fixed_string( cur_it->get_value() );
 		next_it = wctxt_wrapper->get_wctxt()->end();
 		is_failed = true;
 	}
 
-	return to_std_string( cur_it->get_value() ) ;
+	return to_fixed_string( cur_it->get_value() ) ;
 }
 
-string driver_code_source::error()
+fixed_string driver_code_source::error()
 {
 	if( errtok.empty() ){
-		errtok = to_std_string( cur_it->get_value() );
+		errtok = to_fixed_string( cur_it->get_value() );
 	}
 	return errtok;
 }
 
-const std::string& driver_code_source::file_name() const
+fixed_string const& driver_code_source::file_name() const
 {
 	assert( cur_it != wctxt_wrapper->get_wctxt()->end() );
 
-	filename = to_std_string( cur_it->get_position().get_file() );
+	filename = to_fixed_string( cur_it->get_position().get_file() );
 	return filename;
 }
 
@@ -122,7 +124,7 @@ size_t driver_code_source::line() const
 	return cur_it->get_position().get_line();
 }
 
-void driver_code_source::update_position( const std::string& /*lit*/ )
+void driver_code_source::update_position( const fixed_string& /*lit*/ )
 {
 	// Do nothing.
 	return;
@@ -270,7 +272,7 @@ bool driver_code_source::remove_macro( vector<string> const& macros )
 	return ret;
 }
 
-void report_load_file_failed( void* ctxt, std::string const& name, bool is_system )
+void report_load_file_failed( void* ctxt, std::string const& name, bool /*is_system*/ )
 {
 	driver_code_source* code_src = driver_code_source::get_code_source(ctxt);
 	code_src->diags

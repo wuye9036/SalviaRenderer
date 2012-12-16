@@ -3,6 +3,8 @@
 
 #include <sasl/include/common/common_fwd.h>
 
+#include <eflib/include/string/ustring.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
@@ -10,12 +12,10 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
-#include <string>
 
 BEGIN_NS_SASL_COMMON();
 
 struct	token_t;
-class	fname_t;
 class	diag_chat;
 class	diag_item;
 class	diag_template;
@@ -38,9 +38,9 @@ public:
 	boost::shared_ptr<diag_item_committer> p(char const* v);
 
 	boost::shared_ptr<diag_item_committer>	eval();
-	boost::shared_ptr<diag_item_committer>	token_range( token_t const& beg, token_t const& end );
-	boost::shared_ptr<diag_item_committer>	file( fname_t const& f );
-	boost::shared_ptr<diag_item_committer>	span( code_span const& s );
+	boost::shared_ptr<diag_item_committer>	token_range(token_t const& beg, token_t const& end);
+	boost::shared_ptr<diag_item_committer>	file(eflib::fixed_string const& f);
+	boost::shared_ptr<diag_item_committer>	span(code_span const& s);
 
 private:
 	diag_item_committer( diag_item* item, diag_chat* chat );

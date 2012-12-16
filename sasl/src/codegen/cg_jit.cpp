@@ -17,7 +17,6 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <vector>
-#include <string>
 
 #include <assert.h>
 
@@ -42,7 +41,7 @@ llvm_options& initialize_llvm_options()
 
 BEGIN_NS_SASL_CODEGEN();
 
-boost::shared_ptr<cg_jit_engine> cg_jit_engine::create( boost::shared_ptr<cg_module> ctxt, std::string& error ){
+boost::shared_ptr<cg_jit_engine> cg_jit_engine::create( boost::shared_ptr<cg_module> ctxt, fixed_string& error ){
 	boost::shared_ptr<cg_jit_engine> ret = boost::shared_ptr<cg_jit_engine>( new cg_jit_engine( ctxt ) );
 	if( !ret ){
 		error.assign( "Unknown error occurred." );
@@ -53,11 +52,11 @@ boost::shared_ptr<cg_jit_engine> cg_jit_engine::create( boost::shared_ptr<cg_mod
 	return ret;
 }
 
-void* cg_jit_engine::get_function( const std::string& func_name ){
+void* cg_jit_engine::get_function( const fixed_string& func_name ){
 	assert( global_ctxt );
 	assert( engine );
 
-	llvm::Function* func = global_ctxt->llvm_module()->getFunction( func_name );
+	llvm::Function* func = global_ctxt->llvm_module()->getFunction( func_name.raw_string() );
 	if (!func){
 		return NULL;
 	}
@@ -70,7 +69,7 @@ void* cg_jit_engine::get_function( const std::string& func_name ){
 	return native_fn;
 }
 
-cg_jit_engine::cg_jit_engine( boost::shared_ptr<cg_module> ctxt )
+cg_jit_engine::cg_jit_engine(boost::shared_ptr<cg_module> const& ctxt)
 : jit_engine(), global_ctxt( ctxt )
 {
 	build();
@@ -92,13 +91,16 @@ void cg_jit_engine::build(){
 	
 	llvm::TargetOptions opts;
 
+	std::string err_str;
 	engine.reset(
 		llvm::EngineBuilder( global_ctxt->llvm_module() )
 		.setTargetOptions(opts)
 		.setMAttrs(attrs)
-		.setErrorStr(&err)
+		.setErrorStr(&err_str)
 		.create()
 		);
+	err = err_str;
+
 	if ( engine ){
 		if( !global_ctxt->take_ownership() ){
 			engine.reset();
@@ -110,7 +112,7 @@ bool cg_jit_engine::is_valid(){
 	return (bool)engine;
 }
 
-std::string cg_jit_engine::error(){
+fixed_string cg_jit_engine::error(){
 	return err;
 }
 
@@ -121,9 +123,9 @@ cg_jit_engine::~cg_jit_engine()
 	}
 }
 
-void cg_jit_engine::inject_function( void* fn, std::string const& name )
+void cg_jit_engine::inject_function( void* fn, eflib::fixed_string const& name )
 {
-	llvm::Function* func = global_ctxt->llvm_module()->getFunction( name );
+	llvm::Function* func = global_ctxt->llvm_module()->getFunction( name.raw_string() );
 	if ( func ){
 		engine->addGlobalMapping( func, fn );
 	}
