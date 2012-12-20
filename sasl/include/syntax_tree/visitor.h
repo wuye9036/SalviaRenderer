@@ -36,6 +36,9 @@ struct struct_type;
 struct alias_type;
 struct parameter_full;
 struct function_full_def;
+struct parameter;
+struct function_type;
+struct function_def;
 
 struct statement;
 struct declaration_statement;
@@ -115,13 +118,16 @@ public:
 	SASL_VISIT_DCL( declarator ) = 0;
 	SASL_VISIT_DCL( variable_declaration ) = 0;
 	SASL_VISIT_DCL( type_definition ) = 0;
+	SASL_VISIT_DCL( function_def ) = 0;
+	SASL_VISIT_DCL( parameter ) = 0;
+	SASL_VISIT_DCL( function_full_def ) = 0;
+	SASL_VISIT_DCL( parameter_full ) = 0;
 	SASL_VISIT_DCL( tynode ) = 0;
 	SASL_VISIT_DCL( builtin_type ) = 0;
 	SASL_VISIT_DCL( array_type ) = 0;
 	SASL_VISIT_DCL( struct_type ) = 0;
 	SASL_VISIT_DCL( alias_type ) = 0;
-	SASL_VISIT_DCL( parameter_full ) = 0;
-	SASL_VISIT_DCL( function_full_def ) = 0;
+	SASL_VISIT_DCL( function_type ) = 0;
 
 	// statement
 	SASL_VISIT_DCL( statement ) = 0;

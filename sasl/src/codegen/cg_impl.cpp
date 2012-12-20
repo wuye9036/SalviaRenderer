@@ -448,6 +448,20 @@ SASL_VISIT_DEF( function_full_def )
 	}
 }
 
+SASL_VISIT_DEF( parameter )
+{
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_VISIT_DEF( function_def )
+{
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
 SASL_VISIT_DEF( struct_type ){
 	EFLIB_UNREF_DECLARATOR(data);
 
@@ -478,6 +492,13 @@ SASL_VISIT_DEF( array_type )
 	visit_child(v.elem_type);
 
 	ctxt->ty = service()->create_ty( sem_->get_semantic(&v)->ty_proto() );
+}
+
+SASL_VISIT_DEF(function_type)
+{
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 SASL_VISIT_DEF( variable_declaration ){

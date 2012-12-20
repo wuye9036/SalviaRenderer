@@ -73,14 +73,17 @@ protected:
 	SASL_VISIT_DCL( index_expression );
 
 	SASL_VISIT_DCL( declaration ){ data = data; (&v); }
-	
-	SASL_VISIT_DCL( builtin_type );
 	SASL_VISIT_DCL( parameter_full );
 	SASL_VISIT_DCL( function_full_def );
-	SASL_VISIT_DCL( struct_type );
-	SASL_VISIT_DCL( array_type );
+	SASL_VISIT_DCL( parameter );
+	SASL_VISIT_DCL( function_def );
 	SASL_VISIT_DCL( variable_declaration );
 	SASL_VISIT_DCL( declarator );
+
+	SASL_VISIT_DCL( builtin_type );
+	SASL_VISIT_DCL( struct_type );
+	SASL_VISIT_DCL( array_type );
+	SASL_VISIT_DCL( function_type );
 	
 	SASL_VISIT_DCL( expression_initializer );
 

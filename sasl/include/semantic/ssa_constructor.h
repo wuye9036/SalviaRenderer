@@ -95,7 +95,7 @@ private:
 	// States
 	scopes			current_scope;
 	symbol*			current_symbol;
-	cg_function*		current_fn;
+	cg_function*	current_fn;
 	block_t*		current_block;
 
 	ssa_graph*		dg;

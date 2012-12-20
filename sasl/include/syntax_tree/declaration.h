@@ -245,8 +245,8 @@ struct function_def: public declaration
 
 	boost::shared_ptr<token_t>					name;
 	std::vector< boost::shared_ptr<parameter> > params;
-	boost::shared_ptr< token_t >				semantic;
-	boost::shared_ptr< token_t >				semantic_index;
+	boost::shared_ptr<token_t>					semantic;
+	boost::shared_ptr<token_t>					semantic_index;
 
 	boost::shared_ptr<compound_statement>		body;
 
