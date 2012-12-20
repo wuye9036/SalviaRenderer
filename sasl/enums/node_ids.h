@@ -38,6 +38,7 @@ public:
 	const static this_type typedef_definition;
 	const static this_type struct_type;
 	const static this_type label;
+	const static this_type function_full_def;
 	const static this_type while_statement;
 	const static this_type program;
 	const static this_type builtin_type;
@@ -51,6 +52,8 @@ public:
 	const static this_type node;
 	const static this_type variable_expression;
 	const static this_type dowhile_statement;
+	const static this_type function_def;
+	const static this_type parameter_full;
 	const static this_type ident_label;
 	const static this_type declaration;
 	const static this_type array_type;

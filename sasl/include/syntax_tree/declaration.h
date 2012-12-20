@@ -25,10 +25,12 @@ namespace sasl{
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 class syntax_tree_visitor;
-struct tynode;
-struct compound_statement;
-struct statement;
-struct expression;
+
+EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(compound_statement);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(statement);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(expression);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(function_type);
 
 using sasl::common::token_t;
 
@@ -109,7 +111,7 @@ protected:
 	type_definition( const type_definition& );
 };
 
-EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
+
 struct tynode: public declaration{
 	builtin_types tycode;
 	type_qualifiers qual;
@@ -173,43 +175,111 @@ protected:
 	struct_type( const struct_type& );
 };
 
-struct parameter: public declaration{
+struct parameter_full: public declaration{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr<tynode> param_type;
-	boost::shared_ptr<token_t> name;
-	boost::shared_ptr<initializer> init;
-	boost::shared_ptr<token_t> semantic;
-	boost::shared_ptr<token_t> semantic_index;
+	boost::shared_ptr<tynode>		param_type;
+	boost::shared_ptr<token_t>		name;
+	boost::shared_ptr<initializer>	init;
+	boost::shared_ptr<token_t>		semantic;
+	boost::shared_ptr<token_t>		semantic_index;
 
 protected:
-	parameter( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
-	parameter& operator = ( parameter const & );
-	parameter( parameter const & );
+	parameter_full(
+		boost::shared_ptr<token_t> const& tok_beg,
+		boost::shared_ptr<token_t> const& tok_end
+		);
+	parameter_full& operator = (parameter_full const &);
+	parameter_full(parameter_full const &);
 };
 
-struct function_type: public tynode{
+struct function_full_def: public tynode{
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
 
-	boost::shared_ptr< token_t > name;
-	boost::shared_ptr< tynode > retval_type;
-	std::vector< boost::shared_ptr<parameter> > params;
-	boost::shared_ptr< token_t > semantic;
-	boost::shared_ptr< token_t > semantic_index;
-	boost::shared_ptr<compound_statement> body;
+	boost::shared_ptr< token_t >						name;
+	boost::shared_ptr< tynode >							retval_type;
+	std::vector< boost::shared_ptr<parameter_full> >	params;
+	boost::shared_ptr<token_t>							semantic;
+	boost::shared_ptr<token_t>							semantic_index;
+	boost::shared_ptr<compound_statement>				body;
 
 	bool declaration_only();
 
-	~function_type()
+	~function_full_def()
 	{
 		;
 	}
 protected:
-	function_type( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
-	function_type& operator = ( const function_type& );
-	function_type( const function_type& );
+	function_full_def( boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );
+	function_full_def& operator = ( const function_full_def& );
+	function_full_def( const function_full_def& );
+};
+
+struct parameter: public declaration
+{
+	SASL_SYNTAX_NODE_CREATORS();
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
+
+	boost::shared_ptr<token_t>	   name;
+	boost::shared_ptr<initializer> init;
+	boost::shared_ptr<token_t>	   semantic;
+	boost::shared_ptr<token_t>	   semantic_index;
+
+protected:
+	parameter(
+		boost::shared_ptr<token_t> const& tok_beg,
+		boost::shared_ptr<token_t> const& tok_end
+		);
+	parameter& operator = ( parameter const & );
+	parameter( parameter const & );
+};
+
+struct function_def: public declaration
+{
+	SASL_SYNTAX_NODE_CREATORS();
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
+
+	boost::shared_ptr<function_type>			type;
+
+	boost::shared_ptr<token_t>					name;
+	std::vector< boost::shared_ptr<parameter> > params;
+	boost::shared_ptr< token_t >				semantic;
+	boost::shared_ptr< token_t >				semantic_index;
+
+	boost::shared_ptr<compound_statement>		body;
+
+	bool declaration_only();
+
+	~function_def()
+	{
+		;
+	}
+protected:
+	function_def(
+		boost::shared_ptr<token_t> const& tok_beg,
+		boost::shared_ptr<token_t> const& tok_end
+		);
+	function_def& operator = ( const function_def& );
+	function_def( const function_def& );
+};
+
+struct function_type: public tynode
+{
+	SASL_SYNTAX_NODE_CREATORS();
+	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
+	std::vector<
+		boost::shared_ptr<tynode> >		param_types;
+	boost::shared_ptr<function_type>	result_type;
+
+protected:
+	function_type(
+		boost::shared_ptr<token_t> const& tok_beg,
+		boost::shared_ptr<token_t> const& tok_end
+		);
+	function_type& operator = ( const function_def& );
+	function_type( const function_def& );
 };
 
 struct null_declaration: public declaration{

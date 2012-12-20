@@ -48,7 +48,7 @@ namespace sasl{
 	namespace syntax_tree{
 		struct node;
 		struct tynode;
-		struct function_type;
+		struct function_full_def;
 	}
 }
 

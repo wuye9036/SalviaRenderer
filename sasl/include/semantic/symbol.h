@@ -23,14 +23,14 @@ namespace sasl
 	{
 		struct node;
 		struct expression;
-		struct function_type;
+		struct function_full_def;
 		struct tynode;
 	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
 
-using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::function_full_def;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
 
@@ -73,7 +73,7 @@ public:
 	
 	symbol*	add_named_child(eflib::fixed_string const& mangled, node* child_node);
 	symbol*	add_child(node* child_node);
-	symbol*	add_function_begin(function_type* child_fn );
+	symbol*	add_function_begin(function_full_def* child_fn );
 	bool	add_function_end(symbol* sym);
 	void	cancel_function(symbol* sym);
 

@@ -7,7 +7,7 @@
 BEGIN_NS_SASL_SEMANTIC();
 using ::sasl::syntax_tree::builtin_type;
 using ::sasl::syntax_tree::tynode;
-using ::sasl::syntax_tree::function_type;
+using ::sasl::syntax_tree::function_full_def;
 using ::sasl::syntax_tree::variable_declaration;
 
 using ::boost::shared_ptr;

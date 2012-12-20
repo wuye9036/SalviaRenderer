@@ -25,7 +25,7 @@ Look at the documentation in sasl/docs/Name Mangling Syntax.docx
 using sasl::syntax_tree::array_type;
 using sasl::syntax_tree::builtin_type;
 using sasl::syntax_tree::expression;
-using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::function_full_def;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::struct_type;
 using sasl::syntax_tree::tynode;
@@ -127,14 +127,14 @@ static void append( std::string& str, tynode* typespec ){
 		append( str, polymorphic_cast<struct_type*>(typespec) );
 	} else if( typespec->node_class() == node_ids::array_type ){
 		append( str, polymorphic_cast<array_type*>(typespec) );
-	} else if ( typespec->node_class() == node_ids::function_type ){
-		// append( str, boost::shared_polymorphic_cast<function_type>(typespec) );
+	} else if ( typespec->node_class() == node_ids::function_full_def ){
+		// append( str, boost::shared_polymorphic_cast<function_full_def>(typespec) );
 	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
 
-std::string mangle( module_semantic* sem, function_type* mangling_function ){
+std::string mangle( module_semantic* sem, function_full_def* mangling_function ){
 	initialize_lookup_table();
 
 	// start char

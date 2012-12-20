@@ -168,7 +168,7 @@ vector< shared_ptr<declaration> > syntax_tree_builder::build_decl( shared_ptr<at
 		SASL_CASE_RULE( basic_decl ){
 			return build_basic_decl( typed_attr->attr );
 		}
-		SASL_CASE_RULE( function_def ){
+		SASL_CASE_RULE( function_full_def ){
 			ret.push_back( build_fndef(typed_attr->attr) );
 			return ret;
 		}
@@ -181,9 +181,9 @@ vector< shared_ptr<declaration> > syntax_tree_builder::build_decl( shared_ptr<at
 	return ret;
 }
 
-shared_ptr<function_type> syntax_tree_builder::build_fndef( shared_ptr<attribute> attr ){
+shared_ptr<function_full_def> syntax_tree_builder::build_fndef( shared_ptr<attribute> attr ){
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
-	shared_ptr<function_type> ret = build_fndecl(typed_attr->attrs[0]);
+	shared_ptr<function_full_def> ret = build_fndecl(typed_attr->attrs[0]);
 	ret->body = build_stmt_compound( typed_attr->attrs[1] );
 
 	return ret;
@@ -244,8 +244,8 @@ vector< shared_ptr<variable_declaration> > syntax_tree_builder::build_vardecl( s
 	return ret;
 }
 
-shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribute> attr ){
-	shared_ptr<function_type> ret = create_node<function_type>( attr->token_beg(), attr->token_end() );
+shared_ptr<function_full_def> syntax_tree_builder::build_fndecl( shared_ptr<attribute> attr ){
+	shared_ptr<function_full_def> ret = create_node<function_full_def>( attr->token_beg(), attr->token_end() );
 
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->retval_type = build_typespec( typed_attr->attrs[0] );
@@ -279,8 +279,8 @@ shared_ptr<function_type> syntax_tree_builder::build_fndecl( shared_ptr<attribut
 	return ret;
 }
 
-shared_ptr<parameter> syntax_tree_builder::build_param( shared_ptr<attribute> attr ){
-	shared_ptr<parameter> ret = create_node<parameter>( attr->token_beg(), attr->token_end() );
+shared_ptr<parameter_full> syntax_tree_builder::build_param( shared_ptr<attribute> attr ){
+	shared_ptr<parameter_full> ret = create_node<parameter_full>( attr->token_beg(), attr->token_end() );
 	
 	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->param_type = build_typespec( typed_attr->attrs[0] );

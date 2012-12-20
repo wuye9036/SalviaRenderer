@@ -87,6 +87,7 @@ void node_ids::force_initialize(){
 	new ( const_cast<node_ids*>(&typedef_definition) ) node_ids ( UINT64_C( 281474976710658 ), "typedef_definition" );
 	new ( const_cast<node_ids*>(&struct_type) ) node_ids ( UINT64_C( 281479271677955 ), "struct_type" );
 	new ( const_cast<node_ids*>(&label) ) node_ids ( UINT64_C( 18014398509481984 ), "label" );
+	new ( const_cast<node_ids*>(&function_full_def) ) node_ids ( UINT64_C( 281474976710662 ), "function_full_def" );
 	new ( const_cast<node_ids*>(&while_statement) ) node_ids ( UINT64_C( 1125899906842627 ), "while_statement" );
 	new ( const_cast<node_ids*>(&program) ) node_ids ( UINT64_C( 9007199254740992 ), "program" );
 	new ( const_cast<node_ids*>(&builtin_type) ) node_ids ( UINT64_C( 281479271677953 ), "builtin_type" );
@@ -95,11 +96,13 @@ void node_ids::force_initialize(){
 	new ( const_cast<node_ids*>(&expression_initializer) ) node_ids ( UINT64_C( 2251799813685249 ), "expression_initializer" );
 	new ( const_cast<node_ids*>(&cast_expression) ) node_ids ( UINT64_C( 562949953421316 ), "cast_expression" );
 	new ( const_cast<node_ids*>(&if_statement) ) node_ids ( UINT64_C( 1125899906842626 ), "if_statement" );
-	new ( const_cast<node_ids*>(&parameter) ) node_ids ( UINT64_C( 281474976710659 ), "parameter" );
+	new ( const_cast<node_ids*>(&parameter) ) node_ids ( UINT64_C( 281474976710660 ), "parameter" );
 	new ( const_cast<node_ids*>(&constant_expression) ) node_ids ( UINT64_C( 562949953421313 ), "constant_expression" );
 	new ( const_cast<node_ids*>(&node) ) node_ids ( UINT64_C( 0 ), "node" );
 	new ( const_cast<node_ids*>(&variable_expression) ) node_ids ( UINT64_C( 562949953421314 ), "variable_expression" );
 	new ( const_cast<node_ids*>(&dowhile_statement) ) node_ids ( UINT64_C( 1125899906842628 ), "dowhile_statement" );
+	new ( const_cast<node_ids*>(&function_def) ) node_ids ( UINT64_C( 281474976710661 ), "function_def" );
+	new ( const_cast<node_ids*>(&parameter_full) ) node_ids ( UINT64_C( 281474976710659 ), "parameter_full" );
 	new ( const_cast<node_ids*>(&ident_label) ) node_ids ( UINT64_C( 18014398509481985 ), "ident_label" );
 	new ( const_cast<node_ids*>(&declaration) ) node_ids ( UINT64_C( 281474976710656 ), "declaration" );
 	new ( const_cast<node_ids*>(&array_type) ) node_ids ( UINT64_C( 281479271677954 ), "array_type" );
@@ -111,8 +114,8 @@ void node_ids::force_initialize(){
 	new ( const_cast<node_ids*>(&labeled_statement) ) node_ids ( UINT64_C( 1125899906842634 ), "labeled_statement" );
 	new ( const_cast<node_ids*>(&declaration_statement) ) node_ids ( UINT64_C( 1125899906842625 ), "declaration_statement" );
 	new ( const_cast<node_ids*>(&index_expression) ) node_ids ( UINT64_C( 562949953421320 ), "index_expression" );
-	new ( const_cast<node_ids*>(&declarator) ) node_ids ( UINT64_C( 281474976710661 ), "declarator" );
-	new ( const_cast<node_ids*>(&null_declaration) ) node_ids ( UINT64_C( 281474976710660 ), "null_declaration" );
+	new ( const_cast<node_ids*>(&declarator) ) node_ids ( UINT64_C( 281474976710664 ), "declarator" );
+	new ( const_cast<node_ids*>(&null_declaration) ) node_ids ( UINT64_C( 281474976710663 ), "null_declaration" );
 	new ( const_cast<node_ids*>(&identifier) ) node_ids ( UINT64_C( 4503599627370496 ), "identifier" );
 	new ( const_cast<node_ids*>(&expression) ) node_ids ( UINT64_C( 562949953421312 ), "expression" );
 	new ( const_cast<node_ids*>(&call_expression) ) node_ids ( UINT64_C( 562949953421321 ), "call_expression" );
@@ -140,6 +143,7 @@ const node_ids node_ids::compound_statement ( UINT64_C( 1125899906842630 ), "com
 const node_ids node_ids::typedef_definition ( UINT64_C( 281474976710658 ), "typedef_definition" );
 const node_ids node_ids::struct_type ( UINT64_C( 281479271677955 ), "struct_type" );
 const node_ids node_ids::label ( UINT64_C( 18014398509481984 ), "label" );
+const node_ids node_ids::function_full_def ( UINT64_C( 281474976710662 ), "function_full_def" );
 const node_ids node_ids::while_statement ( UINT64_C( 1125899906842627 ), "while_statement" );
 const node_ids node_ids::program ( UINT64_C( 9007199254740992 ), "program" );
 const node_ids node_ids::builtin_type ( UINT64_C( 281479271677953 ), "builtin_type" );
@@ -148,11 +152,13 @@ const node_ids node_ids::statement ( UINT64_C( 1125899906842624 ), "statement" )
 const node_ids node_ids::expression_initializer ( UINT64_C( 2251799813685249 ), "expression_initializer" );
 const node_ids node_ids::cast_expression ( UINT64_C( 562949953421316 ), "cast_expression" );
 const node_ids node_ids::if_statement ( UINT64_C( 1125899906842626 ), "if_statement" );
-const node_ids node_ids::parameter ( UINT64_C( 281474976710659 ), "parameter" );
+const node_ids node_ids::parameter ( UINT64_C( 281474976710660 ), "parameter" );
 const node_ids node_ids::constant_expression ( UINT64_C( 562949953421313 ), "constant_expression" );
 const node_ids node_ids::node ( UINT64_C( 0 ), "node" );
 const node_ids node_ids::variable_expression ( UINT64_C( 562949953421314 ), "variable_expression" );
 const node_ids node_ids::dowhile_statement ( UINT64_C( 1125899906842628 ), "dowhile_statement" );
+const node_ids node_ids::function_def ( UINT64_C( 281474976710661 ), "function_def" );
+const node_ids node_ids::parameter_full ( UINT64_C( 281474976710659 ), "parameter_full" );
 const node_ids node_ids::ident_label ( UINT64_C( 18014398509481985 ), "ident_label" );
 const node_ids node_ids::declaration ( UINT64_C( 281474976710656 ), "declaration" );
 const node_ids node_ids::array_type ( UINT64_C( 281479271677954 ), "array_type" );
@@ -164,8 +170,8 @@ const node_ids node_ids::member_initializer ( UINT64_C( 2251799813685250 ), "mem
 const node_ids node_ids::labeled_statement ( UINT64_C( 1125899906842634 ), "labeled_statement" );
 const node_ids node_ids::declaration_statement ( UINT64_C( 1125899906842625 ), "declaration_statement" );
 const node_ids node_ids::index_expression ( UINT64_C( 562949953421320 ), "index_expression" );
-const node_ids node_ids::declarator ( UINT64_C( 281474976710661 ), "declarator" );
-const node_ids node_ids::null_declaration ( UINT64_C( 281474976710660 ), "null_declaration" );
+const node_ids node_ids::declarator ( UINT64_C( 281474976710664 ), "declarator" );
+const node_ids node_ids::null_declaration ( UINT64_C( 281474976710663 ), "null_declaration" );
 const node_ids node_ids::identifier ( UINT64_C( 4503599627370496 ), "identifier" );
 const node_ids node_ids::expression ( UINT64_C( 562949953421312 ), "expression" );
 const node_ids node_ids::call_expression ( UINT64_C( 562949953421321 ), "call_expression" );

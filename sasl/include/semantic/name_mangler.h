@@ -17,7 +17,7 @@ namespace sasl{
 		struct tynode;
 		struct array_type;
 		struct struct_type;
-		struct function_type;
+		struct function_full_def;
 	}
 }
 
@@ -26,7 +26,7 @@ struct operators;
 BEGIN_NS_SASL_SEMANTIC();
 class module_semantic;
 
-std::string mangle(module_semantic* sem, sasl::syntax_tree::function_type* node);
+std::string mangle(module_semantic* sem, sasl::syntax_tree::function_full_def* node);
 std::string operator_name( const operators& );
 
 END_NS_SASL_SEMANTIC();

@@ -28,7 +28,7 @@ void grammars::set_prog(){
 
 void grammars::set_decls()
 {
-	SRULE( decl, function_def | ( function_decl > semicolon ) | basic_decl );
+	SRULE( decl, function_full_def | ( function_decl > semicolon ) | basic_decl );
 	SRULE(
 		basic_decl,
 		semicolon | 
@@ -39,7 +39,7 @@ void grammars::set_decls()
 			) > semicolon
 		)
 		);
-	SRULE( function_def, function_decl >> function_body	);
+	SRULE( function_full_def, function_decl >> function_body	);
 	SRULE( vardecl, declspec >> decllist );
 	SRULE( function_decl, declspec >> ident >> ( lparen >> -( param >> *( comma > param ) ) > rparen ) >> -sem );
 	SRULE( struct_decl, kw_struct > ( struct_body | named_struct_body ) );

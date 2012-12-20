@@ -151,9 +151,12 @@
 		<item value = "$declaration$ + 1 * (2 ** 32)">tynode</item>
 		<item value = "$declaration$ + 1">variable_declaration</item>
 		<item value = "$declaration$ + 2">typedef_definition</item>
-		<item value = "$declaration$ + 3">parameter</item>
-		<item value = "$declaration$ + 4">null_declaration</item>
-		<item value = "$declaration$ + 5">declarator</item>
+		<item value = "$declaration$ + 3">parameter_full</item>
+		<item value = "$declaration$ + 4">parameter</item>
+		<item value = "$declaration$ + 5">function_def</item>
+		<item value = "$declaration$ + 6">function_full_def</item>
+		<item value = "$declaration$ + 7">null_declaration</item>
+		<item value = "$declaration$ + 8">declarator</item>
 		
 		<let var = "expression_start" value = "$index$-1"/>
 		<lazylet var = "expr_index" value = "$expression$ + $index$ - $expression_start$"/>

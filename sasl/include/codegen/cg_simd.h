@@ -69,9 +69,9 @@ protected:
 
 	SASL_SPECIFIC_VISIT_DCL( before_decls_visit, program );
 
-	SASL_SPECIFIC_VISIT_DCL( create_fnsig,			function_type );
-	SASL_SPECIFIC_VISIT_DCL( create_fnargs,			function_type );
-	SASL_SPECIFIC_VISIT_DCL( create_virtual_args,	function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig,			function_full_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs,			function_full_def );
+	SASL_SPECIFIC_VISIT_DCL( create_virtual_args,	function_full_def );
 
 	SASL_SPECIFIC_VISIT_DCL( visit_return	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement );

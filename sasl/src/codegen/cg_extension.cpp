@@ -880,7 +880,7 @@ value_array cg_extension::shuffle_vector(value_array const& v1, value_array cons
 
 using namespace externals;
 
-bool cg_extension::initialize_external_intrinsics(size_t parallel_factor)
+bool cg_extension::initialize_external_intrinsics(size_t /*parallel_factor*/)
 {
 	// Get types used in external intrinsic registration.
 	builtin_types v4f32_hint = vector_of( builtin_types::_float, 4 );

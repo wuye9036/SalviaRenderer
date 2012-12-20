@@ -195,7 +195,7 @@ SASL_VISIT_DEF( binary_expression ){
 			symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
 			EFLIB_ASSERT( overloads.size() == 1, "No or more an one overloads." );
 
-			function_type* op_proto = dynamic_cast<function_type*>( overloads[0]->associated_node() );
+			function_full_def* op_proto = dynamic_cast<function_full_def*>( overloads[0]->associated_node() );
 
 			node_semantic* p0_tsi = sem_->get_semantic(op_proto->params[0]);
 			node_semantic* p1_tsi = sem_->get_semantic(op_proto->params[1]);;
@@ -340,7 +340,7 @@ SASL_VISIT_DEF( call_expression ){
 	} else {
 		// Get LLVM Function
 		symbol* fn_sym = csi->overloaded_function();
-		function_type* proto = polymorphic_cast<function_type*>( fn_sym->associated_node() );
+		function_full_def* proto = polymorphic_cast<function_full_def*>( fn_sym->associated_node() );
 		
 		vector<multi_value> args;
 		for( size_t i_arg = 0; i_arg < v.args.size(); ++i_arg )
@@ -409,7 +409,7 @@ SASL_VISIT_DEF( builtin_type ){
 	*ctxt = *proto_ctxt;
 }
 
-SASL_VISIT_DEF( parameter ){
+SASL_VISIT_DEF( parameter_full ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	visit_child( v.param_type );
@@ -424,7 +424,7 @@ SASL_VISIT_DEF( parameter ){
 }
 
 // Generate normal function code.
-SASL_VISIT_DEF( function_type )
+SASL_VISIT_DEF( function_full_def )
 {
 	EFLIB_UNREF_DECLARATOR(data);
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
@@ -657,7 +657,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_full_def ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	// Generate return type node.
@@ -667,14 +667,14 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type ){
 	// Generate parameters.
 	node_context* ctxt = node_ctxt(v);
 
-	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
+	BOOST_FOREACH( shared_ptr<parameter_full> const& par, v.params )
 	{
 		visit_child( par );
 	}
 
 	ctxt->function_scope = service()->fetch_function(&v);
 }
-SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def ){
 
 	EFLIB_UNREF_DECLARATOR(data);
 
@@ -683,7 +683,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 
 	service()->fn().return_name( ".ret" );
 	size_t i_arg = 0;
-	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
+	BOOST_FOREACH( shared_ptr<parameter_full> const& par, v.params )
 	{
 		node_context* par_ctxt = node_ctxt( par );
 		service()->fn().arg_name( i_arg, sem_->get_symbol( par.get() )->unmangled_name() );
@@ -691,7 +691,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_type ){
+SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_full_def ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->new_block(".body", true);
@@ -734,7 +734,7 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
 	EFLIB_ASSERT( overloads.size() == 1, "No or more an one overloads." );
 
-	function_type* op_proto = polymorphic_cast<function_type*>( overloads[0]->associated_node() );
+	function_full_def* op_proto = polymorphic_cast<function_full_def*>( overloads[0]->associated_node() );
 
 	node_semantic* p0_tsi = sem_->get_semantic(op_proto->params[0]);
 	if( p0_tsi->tid() != larg_tsi->tid() )
@@ -816,7 +816,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 	BOOST_FOREACH(symbol* intr, intrinsics)
 	{
-		function_type* intr_fn = polymorphic_cast<function_type*>( intr->associated_node() );
+		function_full_def* intr_fn = polymorphic_cast<function_full_def*>( intr->associated_node() );
 		node_semantic* intrin_ssi = sem_->get_semantic(intr_fn);
 		bool external = intrin_ssi->is_external();
 
@@ -843,7 +843,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		vector<builtin_types> par_tycodes;
 		vector<node_context*> par_ctxts;
 
-		BOOST_FOREACH( shared_ptr<parameter> const& par, intr_fn->params )
+		BOOST_FOREACH( shared_ptr<parameter_full> const& par, intr_fn->params )
 		{
 			par_tys.push_back( sem_->get_semantic(par)->ty_proto() );
 			assert( par_tys.back() );

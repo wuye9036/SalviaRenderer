@@ -62,8 +62,8 @@ public:
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( alias_type );
-	SASL_VISIT_DCL( parameter );
-	SASL_VISIT_DCL( function_type );
+	SASL_VISIT_DCL( parameter_full );
+	SASL_VISIT_DCL( function_full_def );
 
 	// statement
 	SASL_VISIT_DCL( statement );

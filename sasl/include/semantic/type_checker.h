@@ -8,7 +8,7 @@
 namespace sasl{
 	namespace syntax_tree{
 		struct tynode;
-		struct function_type;
+		struct function_full_def;
 		struct builtin_type;
 	}
 }

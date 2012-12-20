@@ -29,7 +29,6 @@ using sasl::semantic::encode_sized_swizzle;
 using sasl::semantic::symbol;
 using sasl::semantic::caster_t;
 using sasl::semantic::tid_t;
-using sasl::semantic::pety_item_t;
 using sasl::semantic::node_semantic;
 using sasl::semantic::pety_t;
 using sasl::semantic::get_semantic_fn;

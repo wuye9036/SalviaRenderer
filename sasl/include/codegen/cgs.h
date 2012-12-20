@@ -239,7 +239,7 @@ public:
 	/// @{
 	multi_value extend_to_vm( multi_value const&, builtin_types hint );
 
-	cg_function* fetch_function(sasl::syntax_tree::function_type* fn_node);
+	cg_function* fetch_function(sasl::syntax_tree::function_full_def* fn_node);
 	
 	template <typename T>
 	multi_value create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){

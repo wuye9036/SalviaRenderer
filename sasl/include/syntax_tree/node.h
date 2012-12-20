@@ -81,7 +81,7 @@ END_NS_SASL_SYNTAX_TREE();
 #define SASL_SYNTAX_NODE_CREATORS() \
 	template <typename R> friend boost::shared_ptr<R> create_node(); \
 	template <typename R, typename P0> friend boost::shared_ptr<R> create_node( P0 ); \
-	template <typename R, typename P0, typename P1> friend boost::shared_ptr<R> create_node( P0, P1 );
+	template <typename R> friend boost::shared_ptr<R> create_node(boost::shared_ptr<token_t> const&, boost::shared_ptr<token_t> const&);
 
 	
 #endif //SASL_SYNTAX_TREE_NODE_H

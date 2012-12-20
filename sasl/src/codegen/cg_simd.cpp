@@ -376,7 +376,7 @@ void add_type_ref( Type* ty, vector<Type*>& tys )
 	tys.push_back( PointerType::getUnqual( ty ) );
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_full_def )
 {
 	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) )
 	{
@@ -399,7 +399,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_type )
 		parent_class::create_fnsig(v, data);
 	}
 }
-SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def )
 {
 	node_context* ctxt = node_ctxt(v);
 	Function* fn = ctxt->function_scope->fn;
@@ -435,11 +435,11 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_type )
 		parent_class::create_fnargs(v, data);
 	}
 }
-SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_type ){
+SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_full_def ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->new_block( ".init.vargs", true );
-	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params ){
+	BOOST_FOREACH( shared_ptr<parameter_full> const& par, v.params ){
 		visit_child( par->param_type );
 		node_semantic* par_ssi = sem_->get_semantic(par);
 

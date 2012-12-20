@@ -1325,5 +1325,31 @@ namespace eflib{
 #endif
 	};
 #endif
+
+	template <typename T>
+	void lock_atomic(atomic<T>& v)
+	{
+		while( v.cas(0, 1) ) { ; }
+	}
+
+	template <typename T>
+	void unlock_atomic(atomic<T>& v)
+	{
+		while( v.cas(1, 0) ) { ; }
+	}
+
+	template <typename T>
+	class scoped_atomic_locker
+	{
+	public:
+		scoped_atomic_locker(atomic<T>& v): v(v) { lock_atomic(v); }
+		~scoped_atomic_locker() { unlock_atomic(v); }
+	private:
+		scoped_atomic_locker(scoped_atomic_locker const&);
+		scoped_atomic_locker& operator = (scoped_atomic_locker const&);
+		atomic<T>& v;
+	};
 }
+
+
 #endif		// SALVIAR_ATOMIC_H

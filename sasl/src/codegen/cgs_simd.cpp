@@ -29,8 +29,8 @@
 #include <eflib/include/platform/cpuinfo.h>
 
 using sasl::syntax_tree::node;
-using sasl::syntax_tree::function_type;
-using sasl::syntax_tree::parameter;
+using sasl::syntax_tree::function_full_def;
+using sasl::syntax_tree::parameter_full;
 using sasl::syntax_tree::tynode;
 using sasl::syntax_tree::declaration;
 using sasl::syntax_tree::variable_declaration;

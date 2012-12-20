@@ -23,7 +23,7 @@ using sasl::common::token_t;
 using sasl::common::compiler_compatibility;
 using sasl::syntax_tree::tynode;
 using sasl::syntax_tree::struct_type;
-using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::function_full_def;
 
 using boost::shared_ptr;
 
@@ -133,7 +133,7 @@ string type_repr::str()
 		}
 		else if ( ty->is_function() )
 		{
-			shared_ptr<function_type> fn = ty->as_handle<function_type>();
+			shared_ptr<function_full_def> fn = ty->as_handle<function_full_def>();
 			str_cache = type_repr(fn->retval_type).str();
 			str_cache += " ";
 			str_cache += fn->name->str;

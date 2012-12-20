@@ -8,7 +8,7 @@
 namespace sasl{
 	namespace syntax_tree{
 		struct node;
-		struct function_type;
+		struct function_full_def;
 	}
 }
 
@@ -88,7 +88,7 @@ private:
 
 struct cg_function
 {
-	sasl::syntax_tree::function_type* fn;
+	sasl::syntax_tree::function_full_def* fn;
 
 	std::vector<variable_t*> locals;
 

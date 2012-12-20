@@ -36,7 +36,7 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using sasl::common::diag_chat;
 using sasl::syntax_tree::expression;
-using sasl::syntax_tree::function_type;
+using sasl::syntax_tree::function_full_def;
 using sasl::syntax_tree::tynode;
 using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
@@ -128,7 +128,7 @@ symbol::symbol_array symbol::find_assign_overloads(const fixed_string& unmangled
 	symbol_array ret;
 	BOOST_FOREACH( symbol* proto, candidates )
 	{
-		function_type* proto_fn = dynamic_cast<function_type*>( proto->associated_node() );
+		function_full_def* proto_fn = dynamic_cast<function_full_def*>( proto->associated_node() );
 		tid_t lhs_par_tid = owner_->get_semantic( proto_fn->params.back() )->tid();
 		if( lhs_par_tid == lhs_arg_tid )
 		{
@@ -153,7 +153,7 @@ symbol* symbol::add_named_child( const fixed_string& mangled, node* child_node )
 	return ret;
 }
 
-symbol* symbol::add_function_begin(function_type* child_fn){
+symbol* symbol::add_function_begin(function_full_def* child_fn){
 	if( !child_fn ){ return NULL; }
 	symbol* ret = new ( owner_->alloc_symbol() ) symbol(owner_, this, child_fn, &child_fn->name->str);
 	return ret;
@@ -172,7 +172,7 @@ bool symbol::add_function_end(symbol* sym){
 		return false;
 	}
 
-	sym->mangled_name_ = mangle( owner_, polymorphic_cast<function_type*>( sym->associated_node() ) );
+	sym->mangled_name_ = mangle( owner_, polymorphic_cast<function_full_def*>( sym->associated_node() ) );
 
 	named_children_dict_iterator ret_it = named_children_.find(sym->mangled_name_);
 	if ( ret_it != named_children_.end() ){
@@ -336,12 +336,12 @@ void symbol::collapse_vector1_overloads( symbol_array& candidates ) const
 
 	BOOST_FOREACH(symbol* cand, candidates)
 	{
-		shared_ptr<function_type> cand_fn = cand->associated_node()->as_handle<function_type>();
+		shared_ptr<function_full_def> cand_fn = cand->associated_node()->as_handle<function_full_def>();
 
 		bool matched = false;
 		BOOST_FOREACH(symbol* filterated, ret)
 		{
-			shared_ptr<function_type> filterated_fn = filterated->associated_node()->as_handle<function_type>();
+			shared_ptr<function_full_def> filterated_fn = filterated->associated_node()->as_handle<function_full_def>();
 			size_t param_count = filterated_fn->params.size();
 
 			bool same_function = true;
@@ -402,7 +402,7 @@ symbol::symbol_array symbol::find_overloads_impl(
 	symbol_array candidates;
 	for( size_t i_func = 0; i_func < overloads_.size(); ++i_func )
 	{
-		shared_ptr<function_type> matching_func = overloads_[i_func]->associated_node()->as_handle<function_type>();
+		shared_ptr<function_full_def> matching_func = overloads_[i_func]->associated_node()->as_handle<function_full_def>();
 
 		// could not matched.
 		if ( matching_func->params.size() != args.size() ){ continue; }
@@ -437,12 +437,12 @@ symbol::symbol_array symbol::find_overloads_impl(
 	for ( size_t i_cand = 0; i_cand < candidates.size(); ++i_cand )
 	{
 		if( deprecated[i_cand] ){ continue; }
-		shared_ptr<function_type> a_matched_func = (candidates[i_cand])->associated_node()->as_handle<function_type>();
+		shared_ptr<function_full_def> a_matched_func = (candidates[i_cand])->associated_node()->as_handle<function_full_def>();
 		for( size_t j_cand = i_cand+1; j_cand < candidates.size(); ++j_cand )
 		{
 			if( deprecated[j_cand] ){ continue; }
 
-			shared_ptr<function_type> matching_func = (candidates[j_cand])->associated_node()->as_handle<function_type>();
+			shared_ptr<function_full_def> matching_func = (candidates[j_cand])->associated_node()->as_handle<function_full_def>();
 
 			size_t better_param_count = 0;
 			size_t worse_param_count = 0;

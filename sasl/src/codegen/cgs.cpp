@@ -109,7 +109,7 @@ DefaultIRBuilder& cg_service::builder() const{
 	return *( llvm_mod_->builder() );
 }
 
-cg_function* cg_service::fetch_function(function_type* fn_node){
+cg_function* cg_service::fetch_function(function_full_def* fn_node){
 	// Fetch first
 	node_context* fn_ctxt = ctxt_->get_node_context(fn_node);
 	if(fn_ctxt->function_scope)
@@ -168,9 +168,9 @@ cg_function* cg_service::fetch_function(function_type* fn_node){
 
 	for(size_t i_param = 0; i_param < fn_node->params.size(); ++i_param)
 	{
-		parameter*	  par		= fn_node->params[i_param].get();
-		node_context* par_ctxt	= ctxt_->get_node_context(par);
-		cg_type*	  par_ty	= par_ctxt->ty;
+		parameter_full*	par		= fn_node->params[i_param].get();
+		node_context*	par_ctxt= ctxt_->get_node_context(par);
+		cg_type*		par_ty	= par_ctxt->ty;
 		assert(par_ty);
 
 		Type* param_vm_ty = par_ty->ty(abi);

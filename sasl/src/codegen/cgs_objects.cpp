@@ -13,7 +13,7 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 using sasl::syntax_tree::tynode;
-using sasl::syntax_tree::parameter;
+using sasl::syntax_tree::parameter_full;
 using sasl::utility::is_vector;
 using sasl::utility::scalar_of;
 using sasl::utility::is_scalar;
@@ -356,7 +356,7 @@ size_t cg_function::logical_arg_offset() const
 
 multi_value cg_function::arg(size_t index) const
 {
-	shared_ptr<parameter> par = fnty->params[index];
+	shared_ptr<parameter_full> par = fnty->params[index];
 	cg_type* par_ty = cg->get_node_context( par.get() )->ty;
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
@@ -405,8 +405,8 @@ cg_function::cg_function()
 bool cg_function::value_arg_as_ref(size_t logical_index) const
 {
 	assert( logical_index < fnty->params.size() );
-	parameter* param = fnty->params[logical_index].get();
-	node_semantic* param_semantic = cg->get_node_semantic(param);
+	parameter_full* param = fnty->params[logical_index].get();
+	node_semantic*  param_semantic = cg->get_node_semantic(param);
 	builtin_types param_hint = param_semantic->value_builtin_type();
 	return (c_compatible || external) && !is_scalar(param_hint) && !is_sampler(param_hint);
 }

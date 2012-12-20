@@ -15,7 +15,7 @@
 namespace sasl{
 	namespace syntax_tree{
 		struct node;
-		struct function_type;
+		struct function_full_def;
 	}
 }
 

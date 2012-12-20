@@ -69,17 +69,12 @@ namespace eflib{
 
 			void lock() const
 			{
-				bool result = false;
-				do
-				{
-					result = write_guard.cas(0, 1);
-				} while(!result) ;
-				return;
+				lock_atomic<int32_t>(write_guard);
 			}
 
 			void unlock() const
 			{
-				write_guard = 0;
+				unlock_atomic<int32_t>(write_guard);
 			}
 
 			mutable atomic<int32_t>		write_guard;
@@ -202,6 +197,24 @@ namespace eflib{
 		std::string const& raw_string() const
 		{
 			return data_->content;
+		}
+
+		std::string& mutable_raw_string()
+		{
+			if( data_.use_count() == 1 )
+			{
+				data_->hash_code = 0;
+				return data_->content;
+			}
+			else
+			{
+				data_->hash_code = 0;
+				data_->lock();
+				content_data* new_content = new content_data(data_->content);
+				data_->unlock();
+				data_.reset(new_content);
+				return data_->content;
+			}
 		}
 
 		size_t compute_hash() const

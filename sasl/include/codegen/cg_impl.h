@@ -75,8 +75,8 @@ protected:
 	SASL_VISIT_DCL( declaration ){ data = data; (&v); }
 	
 	SASL_VISIT_DCL( builtin_type );
-	SASL_VISIT_DCL( parameter );
-	SASL_VISIT_DCL( function_type );
+	SASL_VISIT_DCL( parameter_full );
+	SASL_VISIT_DCL( function_full_def );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( variable_declaration );
@@ -100,9 +100,9 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
 	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator , declarator );
 
-	SASL_SPECIFIC_VISIT_DCL( create_fnsig , function_type );
-	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_type );
-	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_type );
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig , function_full_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_full_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_full_def );
 
 	SASL_SPECIFIC_VISIT_DCL( visit_return	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement ) = 0;

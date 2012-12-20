@@ -43,7 +43,6 @@ using semantic::module_semantic;
 using semantic::operator_name;
 using semantic::symbol;
 using semantic::caster_t;
-using semantic::pety_item_t;
 using semantic::type_equal;
 using semantic::node_semantic;
 

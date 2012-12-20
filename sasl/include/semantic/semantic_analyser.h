@@ -27,7 +27,7 @@ namespace sasl{
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(builtin_type);
-		EFLIB_DECLARE_STRUCT_SHARED_PTR(function_type);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(function_full_def);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(expression);
 	}
 }
@@ -69,8 +69,8 @@ public:
 	SASL_VISIT_DCL( array_type );
 	SASL_VISIT_DCL( struct_type );
 	SASL_VISIT_DCL( alias_type );
-	SASL_VISIT_DCL( parameter );
-	SASL_VISIT_DCL( function_type );
+	SASL_VISIT_DCL( parameter_full );
+	SASL_VISIT_DCL( function_full_def );
 
 	// statement
 	SASL_VISIT_DCL( statement );
@@ -134,7 +134,7 @@ private:
 
 		function_register(
 			semantic_analyser& owner,
-			sasl::syntax_tree::function_type_ptr const& fn,
+			sasl::syntax_tree::function_full_def_ptr const& fn,
 			bool is_intrinsic, bool is_external, bool partial_exec
 			);
 		function_register( function_register const& );
@@ -149,7 +149,7 @@ private:
 	private:
 		function_register& operator = ( function_register const& );
 
-		sasl::syntax_tree::function_type_ptr fn;
+		sasl::syntax_tree::function_full_def_ptr fn;
 		semantic_analyser& owner;
 		bool is_intrinsic;
 		bool is_external;
@@ -177,9 +177,9 @@ private:
 	typedef std::vector< boost::weak_ptr<
 		sasl::syntax_tree::labeled_statement
 	> >												label_list_t;
-	typedef sasl::syntax_tree::function_type_ptr	function_type_ptr;
+	typedef sasl::syntax_tree::function_full_def_ptr	function_full_def_ptr;
 
-	function_type_ptr	current_function;
+	function_full_def_ptr	current_function;
 	label_list_t		*label_list;
 	sasl::syntax_tree::node_ptr	variable_to_initialized;
 	sasl::syntax_tree::node_ptr generated_node;

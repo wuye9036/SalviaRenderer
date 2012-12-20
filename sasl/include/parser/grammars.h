@@ -16,7 +16,7 @@ public:
 		
 		/* Declarations */
 		decl,
-		basic_decl, function_def,
+		basic_decl, function_full_def,
 		vardecl, function_decl, struct_decl, typedef_decl,
 		param, function_body,
 		decllist, init_declarator, sem, anno,

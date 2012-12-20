@@ -62,7 +62,7 @@ bool tynode::is_array() const{
 }
 
 bool tynode::is_function() const{
-	return node_class() == node_ids::function_type;
+	return node_class() == node_ids::function_full_def;
 }
 
 bool tynode::is_alias() const{
@@ -95,16 +95,38 @@ parameter::parameter( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> co
 
 SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( parameter );
 
-function_type::function_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
-	: tynode( node_ids::function_type, tok_beg, tok_end )
+parameter_full::parameter_full( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: declaration(node_ids::parameter_full, tok_beg, tok_end) {
+}
+
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL(parameter_full);
+
+function_full_def::function_full_def( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: tynode( node_ids::function_full_def, tok_beg, tok_end )
 {
 }
 
-SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( function_type );
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL( function_full_def );
 
-bool function_type::declaration_only(){
+bool function_full_def::declaration_only(){
 	return body || body->stmts.empty();
 }
+
+function_def::function_def( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: declaration(node_ids::function_def, tok_beg, tok_end)
+{
+}
+
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL(function_def);
+
+bool function_def::declaration_only(){
+	return body || body->stmts.empty();
+}
+
+function_type::function_type( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
+	: tynode(node_ids::function_type, tok_beg, tok_end) {
+}
+SASL_SYNTAX_NODE_ACCEPT_METHOD_IMPL(function_type);
 
 null_declaration::null_declaration( shared_ptr<token_t> const& tok_beg, shared_ptr<token_t> const& tok_end )
 : declaration( node_ids::null_declaration, tok_beg, tok_end ){

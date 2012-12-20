@@ -63,7 +63,7 @@ using sasl::syntax_tree::expression;
 using sasl::syntax_tree::expression_initializer;
 using sasl::syntax_tree::expression_statement;
 using sasl::syntax_tree::for_statement;
-EFLIB_USING_SHARED_PTR(sasl::syntax_tree, function_type);
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, function_full_def);
 using sasl::syntax_tree::if_statement;
 using sasl::syntax_tree::index_expression;
 using sasl::syntax_tree::jump_statement;
@@ -71,7 +71,7 @@ using sasl::syntax_tree::label;
 using sasl::syntax_tree::labeled_statement;
 using sasl::syntax_tree::member_expression;
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
-using sasl::syntax_tree::parameter;
+using sasl::syntax_tree::parameter_full;
 using sasl::syntax_tree::program;
 using sasl::syntax_tree::statement;
 using sasl::syntax_tree::struct_type;
@@ -98,7 +98,7 @@ using std::pair;
 using std::make_pair;
 
 #define FUNCTION_SCOPE( new_fn ) \
-	scoped_value<function_type_ptr> __sasl_fn_scope_##__LINE__( current_function, (new_fn) );
+	scoped_value<function_full_def_ptr> __sasl_fn_scope_##__LINE__( current_function, (new_fn) );
 #define SYMBOL_SCOPE( new_sym ) \
 	scoped_value<symbol*> __sasl_sym_scope_##__LINE__( current_symbol, (new_sym) );
 #define GLOBAL_FLAG_SCOPE( new_global_flag ) \
@@ -681,7 +681,7 @@ SASL_VISIT_DEF( variable_expression ){
 		node* node = vdecl->associated_node();
 		shared_ptr<tynode> ty_node = node->as_handle<tynode>();
 		shared_ptr<declarator> decl_node = node->as_handle<declarator>();
-		shared_ptr<parameter> param_node = node->as_handle<parameter>();
+		shared_ptr<parameter_full> param_node = node->as_handle<parameter_full>();
 
 		if( ty_node )
 		{
@@ -915,11 +915,11 @@ SASL_VISIT_DEF( alias_type ){
 	generated_node = proto_node->as_handle();
 }
 
-SASL_VISIT_DEF( parameter )
+SASL_VISIT_DEF( parameter_full )
 {
 	EFLIB_UNREF_DECLARATOR(data);
 
-	shared_ptr<parameter> dup_par = duplicate( v.as_handle() )->as_handle<parameter>();
+	shared_ptr<parameter_full> dup_par = duplicate( v.as_handle() )->as_handle<parameter_full>();
 	generated_node = dup_par;
 
 	if( v.name )
@@ -946,7 +946,7 @@ SASL_VISIT_DEF( parameter )
 	parse_semantic( v.semantic, v.semantic_index, generated_sem );
 }
 
-SASL_VISIT_DEF( function_type )
+SASL_VISIT_DEF( function_full_def )
 {
 	EFLIB_UNREF_DECLARATOR(data);
 
@@ -955,7 +955,7 @@ SASL_VISIT_DEF( function_type )
 	EFLIB_ASSERT_AND_IF( dup_node, "Node swallow duplicated error !"){
 		return;
 	}
-	shared_ptr<function_type> dup_fn = dup_node->as_handle<function_type>();
+	shared_ptr<function_full_def> dup_fn = dup_node->as_handle<function_full_def>();
 	generated_node = dup_fn;
 	dup_fn->params.clear();
 
@@ -971,11 +971,11 @@ SASL_VISIT_DEF( function_type )
 		if( !ret_type_sem ) { return; }
 
 		bool successful = true;
-		for( vector< shared_ptr<parameter> >::iterator it = v.params.begin();
+		for( vector< shared_ptr<parameter_full> >::iterator it = v.params.begin();
 			it != v.params.end(); ++it )
 		{
 			node_semantic* param_sem = NULL;
-			shared_ptr<parameter> fn_param = visit_child(*it, &param_sem);
+			shared_ptr<parameter_full> fn_param = visit_child(*it, &param_sem);
 			dup_fn->params.push_back(fn_param);
 			if( !param_sem || param_sem->tid() == -1 ){
 				successful = false; 
@@ -2009,7 +2009,7 @@ module_semantic_ptr const& semantic_analyser::get_module_semantic() const{
 
 semantic_analyser::function_register semantic_analyser::register_function(std::string const& name)
 {
-	shared_ptr<function_type> fn = create_node<function_type>( token_t::null(), token_t::null() );
+	shared_ptr<function_full_def> fn = create_node<function_full_def>( token_t::null(), token_t::null() );
 	fn->name = token_t::from_string( name );
 
 	function_register ret(*this, fn, false, false, false);
@@ -2019,7 +2019,7 @@ semantic_analyser::function_register semantic_analyser::register_function(std::s
 
 semantic_analyser::function_register semantic_analyser::register_intrinsic(std::string const& name, /*bool external, */bool partial_exec )
 {
-	shared_ptr<function_type> fn = create_node<function_type>( token_t::null(), token_t::null() );
+	shared_ptr<function_full_def> fn = create_node<function_full_def>( token_t::null(), token_t::null() );
 	fn->name = token_t::from_string( name );
 
 	function_register ret(*this, fn, true, /*external*/false, partial_exec);
@@ -2137,7 +2137,7 @@ void semantic_analyser::hold_generated_node(node_ptr const& v)
 // function_register
 semantic_analyser::function_register::function_register(
 	semantic_analyser& owner,
-	shared_ptr<function_type> const& fn,
+	shared_ptr<function_full_def> const& fn,
 	bool is_intrinsic,
 	bool is_external,
 	bool exec_partial
@@ -2164,7 +2164,7 @@ semantic_analyser::function_register& semantic_analyser::function_register::p( s
 {
 	assert( par_type && fn );
 	
-	shared_ptr<parameter> par = create_node<parameter>( token_t::null(), token_t::null() );
+	shared_ptr<parameter_full> par = create_node<parameter_full>( token_t::null(), token_t::null() );
 	par->param_type = par_type;
 	fn->params.push_back( par );
 

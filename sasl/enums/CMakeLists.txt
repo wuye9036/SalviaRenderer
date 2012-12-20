@@ -22,15 +22,9 @@ LIST(APPEND enum_confs enums.xgt )
 	# ${ci_confs}
 # )
 
-SET_SOURCE_FILES_PROPERTIES( enums.cmake compiler_infos.cmake
-	PROPERTIES GENERATED 1
-)
+SET_SOURCE_FILES_PROPERTIES(enums.cmake PROPERTIES GENERATED 1)
 
 include( enums.cmake )
-LIST(APPEND FILES_ALL ${HEADER_FILES} )
-LIST(APPEND FILES_ALL ${SOURCE_FILES} )
-	
-include( compiler_infos.cmake )
 LIST(APPEND FILES_ALL ${HEADER_FILES} )
 LIST(APPEND FILES_ALL ${SOURCE_FILES} )
 
@@ -51,8 +45,7 @@ SET_SOURCE_FILES_PROPERTIES(
 ADD_LIBRARY( sasl_enums STATIC 
 	enum_base.h		default_hasher.h
 	enums_utility.h enums_utility.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/enums.cmake 
-	${CMAKE_CURRENT_SOURCE_DIR}/compiler_infos.cmake
+	${CMAKE_CURRENT_SOURCE_DIR}/enums.cmake
 	${code_fullpath}
 	enums_generator.py
 )

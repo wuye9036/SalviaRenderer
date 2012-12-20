@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 0
+#define ALL_TESTS_ENABLED 1
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -171,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE( functions, jit_fixture ){
 
 BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 	init_g("./repo/question/v1a1/intrinsics.ss");
-#if 0
+#if 1
 	JIT_FUNCTION(float (vec3*, vec3*), test_dot_f3);
 	JIT_FUNCTION(vec4 (mat44*, vec4*), test_mul_m44v4);
 	JIT_FUNCTION(vec4 (mat44*), test_fetch_m44v4);
