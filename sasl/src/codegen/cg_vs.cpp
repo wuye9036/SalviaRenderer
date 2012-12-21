@@ -159,7 +159,7 @@ SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 	node_ctxt(v, true)->node_value = ret_value.to_rvalue();
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_full_def ){
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_def ){
 	
 	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) ){
 
@@ -178,14 +178,14 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_full_def ){
 
 		ctxt->function_scope = ctxt_->create_cg_function();
 		ctxt->function_scope->fn = fn;
-		ctxt->function_scope->fnty = &v;
+		ctxt->function_scope->fn_def = &v;
 		ctxt->function_scope->cg = service();
 	} else {
 		parent_class::create_fnsig(v, data);
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def ){
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_def ){
 	Function* fn = node_ctxt(v)->function_scope->fn;
 
 	if( abii->is_entry( sem_->get_symbol(&v) ) ){
@@ -219,16 +219,21 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_full_def ){
+SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->new_block( ".init.vargs", true );
-	BOOST_FOREACH( shared_ptr<parameter_full> const& par, v.params ){
-		visit_child(par->param_type);
-		node_semantic* par_ssi = sem_->get_semantic(par);
-		symbol* par_sym = sem_->get_symbol(par.get());
+	for(size_t i_param = 0; i_param < v.params.size(); ++i_param)
+	{
+		parameter*	param = v.params[i_param].get();
+		tynode*		param_type = v.type->param_types[i_param].get();
 
-		node_context* pctxt = node_ctxt(par, true);
+		visit_child(param_type);
+		
+		node_semantic* par_ssi	= sem_->get_semantic(param);
+		symbol*		   par_sym	= par_ssi->associated_symbol();
+
+		node_context* pctxt = node_ctxt(param, true);
 
 		// Create local variable for 'virtual argument' and 'virtual result'.
 		if( par_ssi->ty_proto()->is_builtin() ){
@@ -241,7 +246,7 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_full_def ){
 			sv_layout* psi = abii->input_sv_layout(par_sem);
 
 			builtin_types hint = par_ssi->ty_proto()->tycode;
-			pctxt->node_value = service()->create_variable(hint, abis::c, par->name->str);
+			pctxt->node_value = service()->create_variable(hint, abis::c, param->name->str);
 			layout_to_node_context(
 				pctxt, psi, 
 				true,						/*store if value existed*/ 
@@ -253,9 +258,9 @@ SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_full_def ){
 			bool is_param_modified = sem_->is_modified(par_sym);
 
 			// Add values and types of all used semantics to cache.
-			if( par->param_type->node_class() == node_ids::struct_type )
+			if( param_type->node_class() == node_ids::struct_type )
 			{
-				struct_type* param_struct = static_cast<struct_type*>( par->param_type.get() );
+				struct_type* param_struct = static_cast<struct_type*>(param_type);
 				BOOST_FOREACH(shared_ptr<declaration> const& decl, param_struct->decls)
 				{
 					shared_ptr<variable_declaration> var_decl = decl->as_handle<variable_declaration>();
@@ -313,13 +318,13 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 
 		if( ret_value.hint() != builtin_types::none ){
 			// Builtin: Copy directly.
-			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
+			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fn_def);
 			sv_layout* ret_si = abii->input_sv_layout( ret_ssi->semantic_value_ref() );
 			assert( ret_si );
 			layout_to_value(ret_si, false).store(ret_value);
 		} else {
 			// Struct: Copy member-by-member.
-			shared_ptr<struct_type> ret_struct = service()->fn().fnty->retval_type->as_handle<struct_type>();
+			shared_ptr<struct_type> ret_struct = service()->fn().fn_def->type->result_type->as_handle<struct_type>();
 			size_t member_index = 0;
 			BOOST_FOREACH( shared_ptr<declaration> const& child, ret_struct->decls ){
 				if( child->node_class() == node_ids::variable_declaration ){
@@ -365,10 +370,16 @@ multi_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input)
 
 	// TODO: need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
-		ret = service()->emit_extract_val( param_values[svl->usage], svl->physical_index );
+		ret = service()->emit_extract_val(
+			param_values[svl->usage],
+			static_cast<int>(svl->physical_index)
+			);
 		ret = ret.as_ref();
 	} else {
-		ret = service()->emit_extract_ref( param_values[svl->usage], svl->physical_index );
+		ret = service()->emit_extract_ref(
+			param_values[svl->usage],
+			static_cast<int>(svl->physical_index)
+			);
 	}
 
 	assert(svl->value_type != salviar::lvt_none);
@@ -423,10 +434,16 @@ bool cg_vs::layout_to_node_context(
 	multi_value layout_value;
 	// TODO: need to emit_extract_ref
 	if( svl->usage == su_stream_in || svl->usage == su_stream_out || svl->agg_type == salviar::aggt_array ){
-		layout_value = service()->emit_extract_val(param_values[svl->usage], svl->physical_index);
+		layout_value = service()->emit_extract_val(
+			param_values[svl->usage],
+			static_cast<int>(svl->physical_index)
+			);
 		layout_value = layout_value.as_ref();
 	} else {
-		layout_value = service()->emit_extract_ref(param_values[svl->usage], svl->physical_index);
+		layout_value = service()->emit_extract_ref(
+			param_values[svl->usage],
+			static_cast<int>(svl->physical_index)
+			);
 	}
 
 	if(svl->internal_type == -1)

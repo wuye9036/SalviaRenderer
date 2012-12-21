@@ -63,7 +63,9 @@ using sasl::syntax_tree::expression;
 using sasl::syntax_tree::expression_initializer;
 using sasl::syntax_tree::expression_statement;
 using sasl::syntax_tree::for_statement;
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, function_def);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, function_full_def);
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, function_type);
 using sasl::syntax_tree::if_statement;
 using sasl::syntax_tree::index_expression;
 using sasl::syntax_tree::jump_statement;
@@ -71,6 +73,7 @@ using sasl::syntax_tree::label;
 using sasl::syntax_tree::labeled_statement;
 using sasl::syntax_tree::member_expression;
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, parameter);
 using sasl::syntax_tree::parameter_full;
 using sasl::syntax_tree::program;
 using sasl::syntax_tree::statement;
@@ -98,7 +101,7 @@ using std::pair;
 using std::make_pair;
 
 #define FUNCTION_SCOPE( new_fn ) \
-	scoped_value<function_full_def_ptr> __sasl_fn_scope_##__LINE__( current_function, (new_fn) );
+	scoped_value<function_def_ptr> __sasl_fn_scope_##__LINE__( current_function, (new_fn) );
 #define SYMBOL_SCOPE( new_sym ) \
 	scoped_value<symbol*> __sasl_sym_scope_##__LINE__( current_symbol, (new_sym) );
 #define GLOBAL_FLAG_SCOPE( new_global_flag ) \
@@ -129,8 +132,8 @@ semantic_analyser::semantic_analyser()
 
 #define SASL_VISITOR_TYPE_NAME semantic_analyser
 
-template <typename NodeT>
-shared_ptr<NodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const& child, node_semantic** return_sem )
+template <typename ReturnNodeT, typename NodeT>
+shared_ptr<ReturnNodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const& child, node_semantic** return_sem )
 {
 	node_ptr old_generated_node = generated_node;
 	node_semantic* old_semantic = generated_sem;
@@ -139,18 +142,24 @@ shared_ptr<NodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const& child
 	generated_sem = NULL;
 
 	child->accept(this, NULL);
-	
+
 	// Node semantic is looked up by node pointer, 
 	// And Windows 7 used pool based object allocation,
 	// So every node if its semantic is created, it must not be deleted.
 	// We assume that generated node is always holded by its parent.
-	shared_ptr<NodeT> ret = generated_node->as_handle<NodeT>();
+	shared_ptr<ReturnNodeT> ret = generated_node->as_handle<ReturnNodeT>();
 	if(return_sem) { *return_sem = generated_sem; }
 
 	generated_node = old_generated_node;
 	generated_sem = old_semantic;
 
 	return ret;
+}
+
+template <typename NodeT>
+shared_ptr<NodeT> semantic_analyser::visit_child( shared_ptr<NodeT> const& child, node_semantic** return_sem )
+{
+	return visit_child<NodeT, NodeT>(child, return_sem);
 }
 
 void semantic_analyser::parse_semantic(token_t_ptr const& sem_tok, token_t_ptr const& sem_idx_tok, node_semantic* ssi)
@@ -681,7 +690,7 @@ SASL_VISIT_DEF( variable_expression ){
 		node* node = vdecl->associated_node();
 		shared_ptr<tynode> ty_node = node->as_handle<tynode>();
 		shared_ptr<declarator> decl_node = node->as_handle<declarator>();
-		shared_ptr<parameter_full> param_node = node->as_handle<parameter_full>();
+		shared_ptr<parameter> param_node = node->as_handle<parameter>();
 
 		if( ty_node )
 		{
@@ -940,20 +949,20 @@ SASL_VISIT_DEF( parameter_full )
 {
 	EFLIB_UNREF_DECLARATOR(data);
 
-	shared_ptr<parameter_full> dup_par = duplicate( v.as_handle() )->as_handle<parameter_full>();
+	shared_ptr<parameter> dup_par = create_node<parameter>( v.token_begin(), v.token_end() );
+	dup_par->semantic = v.semantic;
+	dup_par->semantic_index = v.semantic_index;
+	dup_par->name = v.name;
+
 	generated_node = dup_par;
 
 	if( v.name )
 	{
 		current_symbol->add_named_child( v.name->str, dup_par.get() );
 	}
-	//else
-	//{
-	//	current_symbol->add_child( dup_par.get() );
-	//}
 
 	node_semantic* par_sem = NULL;
-	dup_par->param_type = visit_child(v.param_type, &par_sem);
+	visit_child(v.param_type, &par_sem);
 
 	if ( v.init ){ dup_par->init = visit_child(v.init); }
 	tid_t tid = par_sem ? par_sem->tid() : -1;
@@ -961,70 +970,79 @@ SASL_VISIT_DEF( parameter_full )
 	if( tid == -1 ) { return; }
 
 	generated_sem = create_node_semantic(dup_par);
-	generated_sem->tid( tid );
-	// SEMANTIC_TODO: Nonsupports reference yet.
+	generated_sem->tid(tid);
+	// TODO: Nonsupports reference yet.
 	generated_sem->is_reference(false);
-	parse_semantic( v.semantic, v.semantic_index, generated_sem );
+	parse_semantic(v.semantic, v.semantic_index, generated_sem);
 }
 
 SASL_VISIT_DEF( function_full_def )
 {
 	EFLIB_UNREF_DECLARATOR(data);
 
-	// Copy node
-	shared_ptr<node> dup_node = duplicate( v.as_handle() );
-	EFLIB_ASSERT_AND_IF( dup_node, "Node swallow duplicated error !"){
-		return;
-	}
-	shared_ptr<function_full_def> dup_fn = dup_node->as_handle<function_full_def>();
-	generated_node = dup_fn;
-	dup_fn->params.clear();
+	shared_ptr<function_def> def_node = create_node<function_def>(
+		v.token_begin(), v.token_end()
+		);
+	def_node->name = v.name;
+	def_node->semantic = v.semantic;
+	def_node->semantic_index = v.semantic_index;
 
-	symbol* sym = current_symbol->add_function_begin( dup_fn.get() );
-
-	node_semantic* ret_type_sem = NULL;
+	generated_node = def_node;
+	
+	node_semantic* result_type_sem = NULL;
+	tid_t fn_tid = -1;
+	symbol* sym = current_symbol->add_function_begin( def_node.get() );
 	{
 		SYMBOL_SCOPE(sym);
-		FUNCTION_SCOPE(dup_fn);
+		FUNCTION_SCOPE(def_node);
 
-		dup_fn->retval_type = visit_child(v.retval_type, &ret_type_sem);
-
-		if( !ret_type_sem ) { return; }
+		vector<tid_t> fn_tids;
+		visit_child(v.retval_type, &result_type_sem);
+		if( !result_type_sem ) { return; }
+		fn_tids.push_back( result_type_sem->tid() );
 
 		bool successful = true;
-		for( vector< shared_ptr<parameter_full> >::iterator it = v.params.begin();
-			it != v.params.end(); ++it )
+		for(size_t i_param = 0; i_param < v.params.size(); ++i_param)
 		{
 			node_semantic* param_sem = NULL;
-			shared_ptr<parameter_full> fn_param = visit_child(*it, &param_sem);
-			dup_fn->params.push_back(fn_param);
-			if( !param_sem || param_sem->tid() == -1 ){
+			shared_ptr<parameter> param = visit_child<parameter>(v.params[i_param], &param_sem);
+			def_node->params.push_back(param);
+			fn_tids.push_back( param_sem->tid() );
+
+			if( !param_sem || param_sem->tid() == -1 )
+			{
 				successful = false; 
 			}
 		}
-		if( !successful ){
+
+		if(!successful)
+		{
 			current_symbol->cancel_function(sym);
 			return;
 		}
+
+		fn_tid = module_semantic_->pety()->get_function_type(fn_tids);
+		assert(fn_tid != -1);
+		def_node->type = module_semantic_->pety()->get_proto(fn_tid)->as_handle<function_type>();
 	}
 
-	current_symbol->add_function_end(sym);
+	current_symbol->add_function_end(sym, fn_tid);
 
-	generated_sem = create_node_semantic(dup_fn);
-	generated_sem->tid( ret_type_sem->tid() );
+	generated_sem = create_node_semantic(def_node);
+	generated_sem->tid( result_type_sem->tid() );
 
 	// SEMANTIC_TODO judge the true abi.
-	generated_sem->msc_compatible( true );
+	generated_sem->msc_compatible(true);
 
-	parse_semantic( v.semantic, v.semantic_index, generated_sem );
+	parse_semantic(def_node->semantic, def_node->semantic_index, generated_sem);
 
 	if ( v.body )
 	{
 		SYMBOL_SCOPE(sym);
-		FUNCTION_SCOPE(dup_fn);
+		FUNCTION_SCOPE(def_node);
 		GLOBAL_FLAG_SCOPE(false);
 
-		dup_fn->body = visit_child(v.body);
+		def_node->body = visit_child(v.body);
 		module_semantic_->functions().push_back(sym);
 	}
 }
@@ -1249,12 +1267,12 @@ SASL_VISIT_DEF( jump_statement )
 		}
 
 		node_semantic* expr_sem = get_node_semantic(dup_jump->jump_expr);
-		node_semantic* fret_sem = get_node_semantic(current_function->retval_type);
+		node_semantic* func_sem = get_node_semantic(current_function);
 
-		if( !expr_sem || !fret_sem ){ return; }
+		if(!expr_sem){ return; }
 
 		tid_t expr_tid = expr_sem->tid();
-		tid_t fret_tid = fret_sem->tid();
+		tid_t fret_tid = func_sem->tid();
 
 		if( expr_tid == -1 || fret_tid == -1 ){ return; }
 
@@ -1264,7 +1282,7 @@ SASL_VISIT_DEF( jump_statement )
 				->token_range( *dup_jump->jump_expr->token_begin(), *dup_jump->jump_expr->token_end() )
 				->p("return")
 				->p( type_repr(expr_sem->ty_proto()).str() )
-				->p( type_repr(fret_sem->ty_proto()).str() );
+				->p( type_repr(func_sem->ty_proto()).str() );
 		}
 	}
 }
@@ -2200,7 +2218,7 @@ void semantic_analyser::function_register::r(
 
 	fn->retval_type = ret_type;
 
-	shared_ptr<node> new_node = owner.visit_child(fn);
+	shared_ptr<node> new_node = owner.visit_child<function_def>(fn);
 	owner.hold_generated_node(new_node);
 
 	node_semantic* fn_ssi = owner.get_node_semantic(new_node);

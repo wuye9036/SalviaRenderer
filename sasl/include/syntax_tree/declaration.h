@@ -269,9 +269,8 @@ struct function_type: public tynode
 {
 	SASL_SYNTAX_NODE_CREATORS();
 	SASL_SYNTAX_NODE_ACCEPT_METHOD_DECL();
-	std::vector<
-		boost::shared_ptr<tynode> >		param_types;
-	boost::shared_ptr<function_type>	result_type;
+	std::vector<tynode_ptr>	param_types;
+	tynode_ptr				result_type;
 
 protected:
 	function_type(

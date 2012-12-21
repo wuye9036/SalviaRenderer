@@ -90,24 +90,12 @@ symbol* symbol::find( fixed_string const& mangled ) const
 	return parent_->find(mangled);
 }
 
-vector<fixed_string> empty_strings;
-vector<fixed_string> const& symbol::get_overloads(fixed_string const& unmangled_name) const
-{
-	overload_dict::const_iterator iter = overloads_.find(unmangled_name);
-	return iter == overloads_.end() ? empty_strings : iter->second;
-}
-
 symbol::symbol_array symbol::find_overloads(fixed_string const& unmangled) const
 {
-	symbol_array ret;
-	vector<fixed_string> const& name_of_ret = get_overloads( unmangled );
-	if ( !name_of_ret.empty() )
+	overload_dict::const_iterator it = overloads_.find(unmangled);
+	if( it != overloads_.end() )
 	{
-		for( size_t i_name = 0; i_name < name_of_ret.size(); ++i_name )
-		{
-			ret.push_back( find(name_of_ret[i_name]) );
-		}
-		return ret;
+		return it->second.first;
 	}
 	if ( !parent_ ) { return symbol_array(); }
 	return parent_->find_overloads(unmangled);
@@ -140,7 +128,7 @@ symbol::symbol_array symbol::find_assign_overloads(const fixed_string& unmangled
 
 symbol* symbol::add_named_child( const fixed_string& mangled, node* child_node )
 {
-	named_children_dict_iterator iter = named_children_.find(mangled);
+	named_children_dict::iterator iter = named_children_.find(mangled);
 	if ( iter != named_children_.end() )
 	{
 		return NULL;
@@ -153,39 +141,54 @@ symbol* symbol::add_named_child( const fixed_string& mangled, node* child_node )
 	return ret;
 }
 
-symbol* symbol::add_function_begin(function_full_def* child_fn){
+symbol* symbol::add_function_begin(function_def* child_fn){
 	if( !child_fn ){ return NULL; }
 	symbol* ret = new ( owner_->alloc_symbol() ) symbol(owner_, this, child_fn, &child_fn->name->str);
 	return ret;
 }
 
-bool symbol::add_function_end(symbol* sym){
+bool symbol::add_function_end(symbol* sym, tid_t fn_tid)
+{
 	EFLIB_ASSERT_AND_IF( sym, "Input symbol is NULL." ){
 		return false;
 	}
 
+	node* sym_node = sym->associated_node();
+
 	EFLIB_ASSERT_AND_IF(
-		sym->associated_node(),
+		sym_node,
 		"Node of input symbol is NULL. Maybe the symbol is not created by add_function_begin()."
 		)
 	{
 		return false;
 	}
 
-	sym->mangled_name_ = mangle( owner_, polymorphic_cast<function_full_def*>( sym->associated_node() ) );
+	overload_dict::iterator iter = overloads_.find(sym->unmangled_name_);
+	if( iter == overloads_.end() )
+	{
+		iter = overloads_.insert(
+			make_pair( sym->unmangled_name_, make_pair(vector<symbol*>(), vector<tid_t>()) )
+			).first;
+	}
 
-	named_children_dict_iterator ret_it = named_children_.find(sym->mangled_name_);
-	if ( ret_it != named_children_.end() ){
+	// Check function had same signature yet. It is not overloading, it's error.
+	vector<tid_t>::iterator tid_iter = std::find( iter->second.second.begin(), iter->second.second.end(), fn_tid );
+	if( tid_iter != iter->second.second.end() )
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED0("Overloadings are same signature.");
 		return false;
 	}
 
-	children_.insert( make_pair(sym->associated_node(), sym) );
-	owner_->link_symbol(sym->associated_node(), sym);
-	named_children_.insert( make_pair( sym->mangled_name_, sym ) );
-	if( overloads_.count(sym->unmangled_name_) == 0 ){
-		overloads_[sym->unmangled_name_].resize(0);
-	}
-	overloads_[sym->unmangled_name_].push_back( sym->mangled_name_ );
+	iter->second.first.push_back(sym);
+	iter->second.second.push_back(fn_tid);
+	children_.insert( make_pair(sym_node, sym) );
+
+	// If associated node of symbol is not null,
+	// the old node will remove from symbol-node dictionary firstly.
+	// In normal case, we assume that associated node of symbol has not been added to dictionary yet.
+	// So we set associated node to NULL to prevent old node erasing.
+	sym->associated_node(NULL);
+	owner_->link_symbol(sym_node, sym);
 	return true;
 }
 
@@ -194,34 +197,7 @@ void symbol::cancel_function(symbol* /*sym*/)
 	// Do nothing while function is cancelled.
 }
 
-void symbol::remove_child( const fixed_string& mangled ){
-	named_children_dict_iterator ret_it = named_children_.find( mangled );
-	if ( ret_it == named_children_.end() ){
-		return;
-	}
-	// remove symbol from corresponding node.
-	symbol* rmsym = ret_it->second;
-	if( rmsym->associated_node() )
-	{
-		children_.erase( rmsym->associated_node() );
-		owner_->link_symbol(NULL, rmsym);
-	}
-
-	// remove itself.
-	named_children_.erase( ret_it );
-
-	//remove mangled item from overloaded items table.
-	if ( overloads_.count( rmsym->unmangled_name() ) > 0)
-	{
-		overload_dict::mapped_type& mt = overloads_[unmangled_name_];
-		overload_dict::mapped_type::iterator mt_it
-			= std::find(mt.begin(), mt.end(), mangled_name_);
-		mt.erase(mt_it);
-		if ( mt.empty() ) { overloads_.erase(unmangled_name_); }
-	}
-}
-
-void symbol::remove_child( symbol* sym )
+void symbol::remove_child( symbol* /*sym*/ )
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
@@ -248,10 +224,17 @@ void symbol::associated_node( node* v )
 }
 
 fixed_string const& symbol::mangled_name() const{
+	if( !mangled_name_.empty() )
+	{
+		// TODO Unavailable until function type is finished.
+		// node_semantic* node_sem = owner_->get_semantic(associated_node_);
+		// mangled_name_ = owner_->pety()->mangle(unmangled_name_, node_sem->tid() );
+	}
 	return mangled_name_;
 }
 
-fixed_string const& symbol::unmangled_name() const{
+fixed_string const& symbol::unmangled_name() const
+{
 	return unmangled_name_;
 }
 
@@ -336,12 +319,12 @@ void symbol::collapse_vector1_overloads( symbol_array& candidates ) const
 
 	BOOST_FOREACH(symbol* cand, candidates)
 	{
-		shared_ptr<function_full_def> cand_fn = cand->associated_node()->as_handle<function_full_def>();
+		shared_ptr<function_def> cand_fn = cand->associated_node()->as_handle<function_def>();
 
 		bool matched = false;
 		BOOST_FOREACH(symbol* filterated, ret)
 		{
-			shared_ptr<function_full_def> filterated_fn = filterated->associated_node()->as_handle<function_full_def>();
+			shared_ptr<function_def> filterated_fn = filterated->associated_node()->as_handle<function_def>();
 			size_t param_count = filterated_fn->params.size();
 
 			bool same_function = true;
@@ -402,7 +385,7 @@ symbol::symbol_array symbol::find_overloads_impl(
 	symbol_array candidates;
 	for( size_t i_func = 0; i_func < overloads_.size(); ++i_func )
 	{
-		shared_ptr<function_full_def> matching_func = overloads_[i_func]->associated_node()->as_handle<function_full_def>();
+		shared_ptr<function_def> matching_func = overloads_[i_func]->associated_node()->as_handle<function_def>();
 
 		// could not matched.
 		if ( matching_func->params.size() != args.size() ){ continue; }
@@ -410,12 +393,11 @@ symbol::symbol_array symbol::find_overloads_impl(
 		// try to match all parameters.
 		bool all_parameter_success = true;
 		for( size_t i_param = 0; i_param < args.size(); ++i_param ){
-			node_semantic* arg_sem = arg_sems[i_param];
 			node_semantic* par_sem = owner_->get_semantic(matching_func->params[i_param]);
 			tid_t arg_type = arg_tids[i_param];
 			tid_t par_type = par_sem->tid();
 			if( arg_type == -1 || par_type == -1 ){
-			all_parameter_success = false;
+				all_parameter_success = false;
 				break;
 			}
 			if ( !( arg_type == par_type || conv->try_implicit(par_type, arg_type) ) ){
@@ -437,12 +419,12 @@ symbol::symbol_array symbol::find_overloads_impl(
 	for ( size_t i_cand = 0; i_cand < candidates.size(); ++i_cand )
 	{
 		if( deprecated[i_cand] ){ continue; }
-		shared_ptr<function_full_def> a_matched_func = (candidates[i_cand])->associated_node()->as_handle<function_full_def>();
+		shared_ptr<function_def> a_matched_func = (candidates[i_cand])->associated_node()->as_handle<function_def>();
 		for( size_t j_cand = i_cand+1; j_cand < candidates.size(); ++j_cand )
 		{
 			if( deprecated[j_cand] ){ continue; }
 
-			shared_ptr<function_full_def> matching_func = (candidates[j_cand])->associated_node()->as_handle<function_full_def>();
+			shared_ptr<function_def> matching_func = (candidates[j_cand])->associated_node()->as_handle<function_def>();
 
 			size_t better_param_count = 0;
 			size_t worse_param_count = 0;

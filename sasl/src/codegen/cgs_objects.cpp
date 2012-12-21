@@ -13,7 +13,8 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 using sasl::syntax_tree::tynode;
-using sasl::syntax_tree::parameter_full;
+using sasl::syntax_tree::parameter;
+using sasl::syntax_tree::node;
 using sasl::utility::is_vector;
 using sasl::utility::scalar_of;
 using sasl::utility::is_scalar;
@@ -330,8 +331,8 @@ void cg_function::args_name( vector<string> const& names )
 }
 
 cg_type* cg_function::result_type() const{
-	assert( fnty->is_function() );
-	return cg->get_node_context( fnty->retval_type.get() )->ty;
+	node* result_type = fn_def->type->result_type.get();
+	return cg->get_node_context(result_type)->ty;
 }
 
 size_t cg_function::physical_args_count() const
@@ -343,7 +344,7 @@ size_t cg_function::physical_args_count() const
 size_t cg_function::logical_args_count() const
 {
 	assert(fn);
-	return fnty->params.size();
+	return fn_def->params.size();
 }
 
 size_t cg_function::logical_arg_offset() const
@@ -356,7 +357,7 @@ size_t cg_function::logical_arg_offset() const
 
 multi_value cg_function::arg(size_t index) const
 {
-	shared_ptr<parameter_full> par = fnty->params[index];
+	shared_ptr<parameter> par = fn_def->params[index];
 	cg_type* par_ty = cg->get_node_context( par.get() )->ty;
 
 	Function::ArgumentListType::iterator it = fn->arg_begin();
@@ -397,17 +398,17 @@ multi_value cg_function::execution_mask() const
 }
 
 cg_function::cg_function()
-	: fn(NULL), fnty(NULL), ret_void(true), partial_execution(false)
+	: fn(NULL), fn_def(NULL), ret_void(true), partial_execution(false)
 	, c_compatible(false), external(false), cg(NULL)
 {
 }
 
 bool cg_function::value_arg_as_ref(size_t logical_index) const
 {
-	assert( logical_index < fnty->params.size() );
-	parameter_full* param = fnty->params[logical_index].get();
+	assert( logical_index < fn_def->params.size() );
+	parameter*		param = fn_def->params[logical_index].get();
 	node_semantic*  param_semantic = cg->get_node_semantic(param);
-	builtin_types param_hint = param_semantic->value_builtin_type();
+	builtin_types	param_hint = param_semantic->value_builtin_type();
 	return (c_compatible || external) && !is_scalar(param_hint) && !is_sampler(param_hint);
 }
 

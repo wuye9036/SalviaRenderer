@@ -103,9 +103,9 @@ protected:
 	SASL_SPECIFIC_VISIT_DCL( visit_global_declarator, declarator );
 	SASL_SPECIFIC_VISIT_DCL( visit_local_declarator , declarator );
 
-	SASL_SPECIFIC_VISIT_DCL( create_fnsig , function_full_def );
-	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_full_def );
-	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_full_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig , function_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnbody, function_def );
 
 	SASL_SPECIFIC_VISIT_DCL( visit_return	, jump_statement );
 	SASL_SPECIFIC_VISIT_DCL( visit_continue	, jump_statement ) = 0;

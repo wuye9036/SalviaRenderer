@@ -109,7 +109,7 @@ DefaultIRBuilder& cg_service::builder() const{
 	return *( llvm_mod_->builder() );
 }
 
-cg_function* cg_service::fetch_function(function_full_def* fn_node){
+cg_function* cg_service::fetch_function(function_def* fn_node){
 	// Fetch first
 	node_context* fn_ctxt = ctxt_->get_node_context(fn_node);
 	if(fn_ctxt->function_scope)
@@ -119,11 +119,11 @@ cg_function* cg_service::fetch_function(function_full_def* fn_node){
 
 	// Create function and fill fields.
 	cg_function* ret = ctxt_->create_cg_function();
-	ret->fnty = fn_node;
+	ret->fn_def = fn_node;
 	ret->c_compatible		= sem_->get_semantic(fn_node)->msc_compatible();
 	ret->external			= sem_->get_semantic(fn_node)->is_external();
 	ret->partial_execution	= sem_->get_semantic(fn_node)->partial_execution();
-	ret->ret_void			= (fn_node->retval_type->tycode == builtin_types::_void);
+	ret->ret_void			= (fn_node->type->result_type->tycode == builtin_types::_void);
 	ret->cg					= this;
 
 	abis::id abi = param_abi( ret->c_compatible );
@@ -131,7 +131,7 @@ cg_function* cg_service::fetch_function(function_full_def* fn_node){
 	// Create function signature.
 	vector<Type*> par_tys;
 
-	Type* ret_ty = ctxt_->get_node_context( fn_node->retval_type.get() )->ty->ty(abi);
+	Type* ret_ty = ctxt_->get_node_context( fn_node->type->result_type.get() )->ty->ty(abi);
 	if( ret->return_via_arg() )
 	{
 		if( !ret->ret_void )
@@ -168,7 +168,7 @@ cg_function* cg_service::fetch_function(function_full_def* fn_node){
 
 	for(size_t i_param = 0; i_param < fn_node->params.size(); ++i_param)
 	{
-		parameter_full*	par		= fn_node->params[i_param].get();
+		parameter*		par		= fn_node->params[i_param].get();
 		node_context*	par_ctxt= ctxt_->get_node_context(par);
 		cg_type*		par_ty	= par_ctxt->ty;
 		assert(par_ty);

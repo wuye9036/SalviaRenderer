@@ -376,7 +376,7 @@ void add_type_ref( Type* ty, vector<Type*>& tys )
 	tys.push_back( PointerType::getUnqual( ty ) );
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_full_def )
+SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_def )
 {
 	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) )
 	{
@@ -393,13 +393,13 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_full_def )
 		node_context* ctxt = node_ctxt(v, true);
 		ctxt->function_scope = ctxt_->create_cg_function();
 		ctxt->function_scope->fn = fn;
-		ctxt->function_scope->fnty = &v;
+		ctxt->function_scope->fn_def = &v;
 		ctxt->function_scope->cg = service();
 	} else {
 		parent_class::create_fnsig(v, data);
 	}
 }
-SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def )
+SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_def )
 {
 	node_context* ctxt = node_ctxt(v);
 	Function* fn = ctxt->function_scope->fn;
@@ -435,30 +435,37 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def )
 		parent_class::create_fnargs(v, data);
 	}
 }
-SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_full_def ){
+SASL_SPECIFIC_VISIT_DEF( create_virtual_args, function_def ){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->new_block( ".init.vargs", true );
-	BOOST_FOREACH( shared_ptr<parameter_full> const& par, v.params ){
-		visit_child( par->param_type );
-		node_semantic* par_ssi = sem_->get_semantic(par);
+	for(size_t i_param = 0; i_param < v.params.size(); ++i_param)
+	{
+		parameter*	param = v.params[i_param].get();
+		tynode*		param_type = v.type->param_types[i_param].get();
 
-		node_context* pctxt = node_ctxt( par, true );
+		visit_child(param_type);
+		node_semantic* par_ssi = sem_->get_semantic(param);
+
+		node_context* pctxt = node_ctxt(param, true);
 
 		// Create local variable for 'virtual argument' and 'virtual result'.
-		if( par_ssi->ty_proto()->is_builtin() ){
+		if( par_ssi->ty_proto()->is_builtin() )
+		{
 			// Virtual args for built in typed argument.
 
 			// Get Value from semantic.
 			// Store value to local variable.
 			salviar::semantic_value const& par_sem = par_ssi->semantic_value_ref();
 			assert( par_sem != salviar::sv_none );
-			sv_layout* psi = abii->input_sv_layout( par_sem );
+			sv_layout* psi = abii->input_sv_layout(par_sem);
 
 			builtin_types hint = par_ssi->ty_proto()->tycode;
-			pctxt->node_value = service()->create_variable( hint, service()->param_abi(false), par->name->str );
+			pctxt->node_value = service()->create_variable( hint, service()->param_abi(false), param->name->str );
 			pctxt->node_value.store( layout_to_value(psi) );
-		} else {
+		}
+		else
+		{
 			// Virtual args for aggregated argument
 			pctxt->is_semantic_mode = true;
 		}
@@ -495,12 +502,12 @@ SASL_SPECIFIC_VISIT_DEF( visit_return	, jump_statement ){
 		multi_value ret_value = cg_impl::node_ctxt( v.jump_expr )->node_value;
 
 		if( ret_value.hint() != builtin_types::none ){
-			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fnty);
+			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fn_def);
 			sv_layout* ret_si = abii->output_sv_layout( ret_ssi->semantic_value_ref() );
 			assert( ret_si );
 			layout_to_value(ret_si).store( ret_value );
 		} else {
-			shared_ptr<struct_type> ret_struct = service()->fn().fnty->retval_type->as_handle<struct_type>();
+			shared_ptr<struct_type> ret_struct = service()->fn().fn_def->type->result_type->as_handle<struct_type>();
 			size_t member_index = 0;
 			BOOST_FOREACH( shared_ptr<declaration> const& child, ret_struct->decls ){
 				if( child->node_class() == node_ids::variable_declaration ){
@@ -541,7 +548,10 @@ SASL_SPECIFIC_VISIT_DEF( bin_logic, binary_expression ){
 multi_value cg_simd::layout_to_value( sv_layout* svl )
 {
 	builtin_types bt = to_builtin_types( svl->value_type );
-	multi_value ret = service()->emit_extract_ref( entry_values[svl->usage], svl->physical_index );
+	multi_value ret = service()->emit_extract_ref(
+		entry_values[svl->usage], 
+		static_cast<int>(svl->physical_index)
+		);
 	ret.hint( to_builtin_types( svl->value_type ) );
 	return ret;
 }

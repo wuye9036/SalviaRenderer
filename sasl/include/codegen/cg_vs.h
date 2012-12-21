@@ -62,9 +62,9 @@ private:
 	SASL_SPECIFIC_VISIT_DCL( bin_logic, binary_expression );
 
 	// Overrides them for generating entry function if need.
-	SASL_SPECIFIC_VISIT_DCL( create_fnsig, function_full_def );
-	SASL_SPECIFIC_VISIT_DCL( create_fnargs, function_full_def );
-	SASL_SPECIFIC_VISIT_DCL( create_virtual_args, function_full_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnsig,			function_def );
+	SASL_SPECIFIC_VISIT_DCL( create_fnargs,			function_def );
+	SASL_SPECIFIC_VISIT_DCL( create_virtual_args,	function_def );
 
 	SASL_SPECIFIC_VISIT_DCL( visit_return, jump_statement );
 

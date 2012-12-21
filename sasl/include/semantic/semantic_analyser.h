@@ -28,6 +28,8 @@ namespace sasl{
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(tynode);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(builtin_type);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(function_full_def);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(function_def);
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(parameter);
 		EFLIB_DECLARE_STRUCT_SHARED_PTR(expression);
 	}
 }
@@ -101,6 +103,8 @@ public:
 private:
 	template <typename NodeT> 
 	boost::shared_ptr<NodeT> visit_child( boost::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
+	template <typename ReturnNodeT, typename NodeT> 
+	boost::shared_ptr<ReturnNodeT> visit_child( boost::shared_ptr<NodeT> const& child, node_semantic** return_sem = NULL );
 
 	void parse_semantic(
 		sasl::common::token_t_ptr const& sem_tok,
@@ -178,12 +182,11 @@ private:
 
 	// Global States
 	typedef std::vector< boost::weak_ptr<
-		sasl::syntax_tree::labeled_statement
-	> >												label_list_t;
-	typedef sasl::syntax_tree::function_full_def_ptr	function_full_def_ptr;
+		sasl::syntax_tree::labeled_statement> >	label_list_t;
+	typedef sasl::syntax_tree::function_def_ptr function_def_ptr;
 
-	function_full_def_ptr	current_function;
-	label_list_t		*label_list;
+	function_def_ptr			current_function;
+	label_list_t				*label_list;
 	sasl::syntax_tree::node_ptr	variable_to_initialized;
 	sasl::syntax_tree::node_ptr generated_node;
 	node_semantic*				generated_sem;

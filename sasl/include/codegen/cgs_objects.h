@@ -46,7 +46,7 @@ namespace sasl
 	{
 		struct node;
 		struct tynode;
-		struct function_full_def;
+		struct function_def;
 	}
 	namespace semantic
 	{
@@ -305,7 +305,7 @@ struct cg_function{
 
 	insert_point_t						alloc_block;
 	std::vector<llvm::Argument*>		arg_cache;
-	sasl::syntax_tree::function_full_def*	fnty;
+	sasl::syntax_tree::function_def*	fn_def;
 	llvm::Function*						fn;
 	bool								c_compatible;
 	bool								external;

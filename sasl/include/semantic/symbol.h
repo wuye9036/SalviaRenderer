@@ -23,19 +23,21 @@ namespace sasl
 	{
 		struct node;
 		struct expression;
-		struct function_full_def;
+		struct function_def;
 		struct tynode;
 	}
 }
 
 BEGIN_NS_SASL_SEMANTIC();
 
-using sasl::syntax_tree::function_full_def;
+using sasl::syntax_tree::function_def;
 using sasl::syntax_tree::node;
 using sasl::syntax_tree::tynode;
 
 class caster_t;
 class module_semantic;
+
+typedef int tid_t;
 
 //////////////////////////////////////////////////////////////////////////
 /*
@@ -73,11 +75,10 @@ public:
 	
 	symbol*	add_named_child(eflib::fixed_string const& mangled, node* child_node);
 	symbol*	add_child(node* child_node);
-	symbol*	add_function_begin(function_full_def* child_fn );
-	bool	add_function_end(symbol* sym);
+	symbol*	add_function_begin(function_def* child_fn);
+	bool	add_function_end(symbol* sym, tid_t fn_tid);
 	void	cancel_function(symbol* sym);
 
-	void remove_child(eflib::fixed_string const& mangled);
 	void remove_child(symbol*);
 	void remove();
 
@@ -95,23 +96,19 @@ private:
 	
 	symbol(module_semantic* owner, symbol* parent, node* assoc_node, eflib::fixed_string const* mangled);
 
-	std::vector<eflib::fixed_string> const& get_overloads(eflib::fixed_string const& umnalged) const;
-
 	symbol_array find_overloads_impl(eflib::fixed_string const& name, caster_t* conv, expression_array const& args) const;
 	void collapse_vector1_overloads( symbol_array& candidates ) const;
 
-	typedef boost::unordered_map<node*, symbol*>	children_dict;
-	typedef children_dict::iterator					children_dict_iterator;
-
-	typedef boost::unordered_map<eflib::fixed_string, symbol*>	named_children_dict;
-	typedef named_children_dict::iterator						named_children_dict_iterator; 
-
+	typedef boost::unordered_map
+		<node*, symbol*>								children_dict;
 	typedef boost::unordered_map<
-		eflib::fixed_string, std::vector<eflib::fixed_string> >	overload_dict;
+		eflib::fixed_string, symbol*>					named_children_dict;
+	typedef boost::unordered_map<eflib::fixed_string,
+		std::pair<symbol_array, std::vector<tid_t> > >	overload_dict;
 	
-	module_semantic*	owner_;
-	node*				associated_node_;
-	symbol*				parent_;
+	module_semantic*			owner_;
+	node*						associated_node_;
+	symbol*						parent_;
 
 	// name
 	eflib::fixed_string			mangled_name_;

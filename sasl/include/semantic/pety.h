@@ -12,6 +12,8 @@
 #include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+#include <vector>
+
 namespace sasl
 {
 	namespace syntax_tree
@@ -42,7 +44,7 @@ public:
 	virtual tid_t	get(const builtin_types& btc) = 0;
 	virtual tid_t	get(sasl::syntax_tree::tynode*, symbol*) = 0;
 	virtual tid_t	get_array(tid_t elem_type, size_t dimension) = 0;
-
+	virtual tid_t	get_function_type(std::vector<tid_t> const& fn_tids) = 0;
 	// Get proto or semantic from TID.
 	virtual sasl::syntax_tree::tynode* get_proto(tid_t tid) = 0;
 	virtual sasl::syntax_tree::tynode* get_proto_by_builtin(builtin_types bt) = 0;

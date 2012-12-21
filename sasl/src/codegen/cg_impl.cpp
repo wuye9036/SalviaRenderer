@@ -195,7 +195,7 @@ SASL_VISIT_DEF( binary_expression ){
 			symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
 			EFLIB_ASSERT( overloads.size() == 1, "No or more an one overloads." );
 
-			function_full_def* op_proto = dynamic_cast<function_full_def*>( overloads[0]->associated_node() );
+			function_def* op_proto = dynamic_cast<function_def*>( overloads[0]->associated_node() );
 
 			node_semantic* p0_tsi = sem_->get_semantic(op_proto->params[0]);
 			node_semantic* p1_tsi = sem_->get_semantic(op_proto->params[1]);;
@@ -203,13 +203,13 @@ SASL_VISIT_DEF( binary_expression ){
 			// cast value type to match proto type.
 			if( p0_tsi->tid() != larg_tsi->tid() ){
 				if( !node_ctxt( p0_tsi->ty_proto() ) ){
-					visit_child(op_proto->params[0]->param_type);
+					visit_child(op_proto->type->param_types[0]);
 				}
 				caster->cast( p0_tsi->ty_proto(), v.left_expr.get() );
 			}
 			if( p1_tsi->tid() != rarg_tsi->tid() ){
 				if( !node_ctxt( p1_tsi->ty_proto() ) ){
-					visit_child(op_proto->params[1]->param_type);
+					visit_child(op_proto->type->param_types[1]);
 				}
 				caster->cast( p1_tsi->ty_proto(), v.right_expr.get() );
 			}
@@ -340,7 +340,7 @@ SASL_VISIT_DEF( call_expression ){
 	} else {
 		// Get LLVM Function
 		symbol* fn_sym = csi->overloaded_function();
-		function_full_def* proto = polymorphic_cast<function_full_def*>( fn_sym->associated_node() );
+		function_def* proto = polymorphic_cast<function_def*>( fn_sym->associated_node() );
 		
 		vector<multi_value> args;
 		for( size_t i_arg = 0; i_arg < v.args.size(); ++i_arg )
@@ -354,7 +354,7 @@ SASL_VISIT_DEF( call_expression ){
 			{
 				if( !node_ctxt( par_sem->ty_proto() ) )
 				{
-					visit_child( proto->params[i_arg]->param_type );
+					visit_child( proto->type->param_types[i_arg] );
 				}
 				caster->cast( par_sem->ty_proto(), v.args[i_arg].get() );
 			}
@@ -382,7 +382,7 @@ SASL_VISIT_DEF( index_expression )
 	node_context* index_ctxt = node_ctxt(v.index_expr);
 	assert( expr_ctxt && index_ctxt );
 
-	node_context* ret_ctxt = node_ctxt( v, true );
+	node_context* ret_ctxt	= node_ctxt( v, true );
 	ret_ctxt->node_value	= service()->emit_extract_elem( expr_ctxt->node_value, index_ctxt->node_value );
 	ret_ctxt->ty			= service()->create_ty( sem_->get_semantic(&v)->ty_proto() );
 }
@@ -411,22 +411,31 @@ SASL_VISIT_DEF( builtin_type ){
 
 SASL_VISIT_DEF( parameter_full ){
 	EFLIB_UNREF_DECLARATOR(data);
-
-	visit_child( v.param_type );
-
-	if( v.init ){ visit_child( v.init ); }
-	
-	node_context* init_ctxt	= node_ctxt(v.param_type);
-	node_context* ctxt		= node_ctxt(v, true);
-
-	ctxt->node_value= init_ctxt->node_value;
-	ctxt->ty			= init_ctxt->ty;
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 
 // Generate normal function code.
 SASL_VISIT_DEF( function_full_def )
 {
 	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_ASSERT_UNIMPLEMENTED();
+}
+
+SASL_VISIT_DEF(parameter)
+{
+	EFLIB_UNREF_DECLARATOR(data);
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	// Implementation was inlined in create_fnsig
+}
+
+SASL_VISIT_DEF(function_def)
+{
+	EFLIB_UNREF_DECLARATOR(data);
+
 	SYMBOL_SCOPE( sem_->get_symbol(&v) );
 
 	node_context* fn_ctxt = node_ctxt(v, true);
@@ -440,7 +449,7 @@ SASL_VISIT_DEF( function_full_def )
 	{
 		CGS_FUNCTION_SCOPE(fn_ctxt->function_scope);
 		service()->fn().allocation_block( service()->new_block(".alloc", true) );
-		
+
 		service()->function_body_beg();
 		create_fnargs(v, NULL);
 		create_fnbody(v, NULL);
@@ -448,21 +457,7 @@ SASL_VISIT_DEF( function_full_def )
 	}
 }
 
-SASL_VISIT_DEF( parameter )
-{
-	EFLIB_UNREF_DECLARATOR(data);
-	EFLIB_UNREF_DECLARATOR(v);
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
-
-SASL_VISIT_DEF( function_def )
-{
-	EFLIB_UNREF_DECLARATOR(data);
-	EFLIB_UNREF_DECLARATOR(v);
-	EFLIB_ASSERT_UNIMPLEMENTED();
-}
-
-SASL_VISIT_DEF( struct_type ){
+SASL_VISIT_DEF(struct_type){
 	EFLIB_UNREF_DECLARATOR(data);
 
 	// Create context.
@@ -483,7 +478,7 @@ SASL_VISIT_DEF( struct_type ){
 	ctxt->ty = service()->create_ty( sem_->get_semantic(&v)->ty_proto() );
 }
 
-SASL_VISIT_DEF( array_type )
+SASL_VISIT_DEF(array_type)
 {
 	EFLIB_UNREF_DECLARATOR(data);
 	node_context* ctxt = node_ctxt(v, true);
@@ -497,8 +492,16 @@ SASL_VISIT_DEF( array_type )
 SASL_VISIT_DEF(function_type)
 {
 	EFLIB_UNREF_DECLARATOR(data);
-	EFLIB_UNREF_DECLARATOR(v);
-	EFLIB_ASSERT_UNIMPLEMENTED();
+
+	visit_child(v.result_type);
+	for(size_t i_param = 0; i_param < v.param_types.size(); ++i_param)
+	{
+		visit_child(v.param_types[i_param]);
+	}
+
+	// Do not create Context for function type.
+	// Because function type could be generated 
+	// to sorts of llvm::FunctionType with different ABI and requirements.
 }
 
 SASL_VISIT_DEF( variable_declaration ){
@@ -678,24 +681,36 @@ SASL_SPECIFIC_VISIT_DEF( visit_local_declarator , declarator ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_full_def ){
+SASL_SPECIFIC_VISIT_DEF(create_fnsig, function_def)
+{
 	EFLIB_UNREF_DECLARATOR(data);
 
 	// Generate return type node.
-	visit_child( v.retval_type );
-	assert( node_ctxt(v.retval_type)->ty );
+	visit_child(v.type);
 
 	// Generate parameters.
 	node_context* ctxt = node_ctxt(v);
 
-	BOOST_FOREACH( shared_ptr<parameter_full> const& par, v.params )
+	for(size_t i_param = 0; i_param < v.params.size(); ++i_param)
 	{
-		visit_child( par );
+		parameter* param = v.params[i_param].get();
+		if( param->init )
+		{
+			visit_child( param->init );
+		}
+		node_context*  type_ctxt = node_ctxt(v.type->param_types[i_param]);
+		assert(type_ctxt);
+		assert(type_ctxt->ty);
+		node_context* param_ctxt = node_ctxt(param, true);
+		param_ctxt->node_value = type_ctxt->node_value;
+		param_ctxt->ty = type_ctxt->ty;
 	}
 
 	ctxt->function_scope = service()->fetch_function(&v);
 }
-SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def ){
+
+SASL_SPECIFIC_VISIT_DEF(create_fnargs, function_def)
+{
 
 	EFLIB_UNREF_DECLARATOR(data);
 
@@ -704,7 +719,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def ){
 
 	service()->fn().return_name( ".ret" );
 	size_t i_arg = 0;
-	BOOST_FOREACH( shared_ptr<parameter_full> const& par, v.params )
+	BOOST_FOREACH( shared_ptr<parameter> const& par, v.params )
 	{
 		node_context* par_ctxt = node_ctxt( par );
 		service()->fn().arg_name( i_arg, sem_->get_symbol( par.get() )->unmangled_name() );
@@ -712,7 +727,8 @@ SASL_SPECIFIC_VISIT_DEF( create_fnargs, function_full_def ){
 	}
 }
 
-SASL_SPECIFIC_VISIT_DEF( create_fnbody, function_full_def ){
+SASL_SPECIFIC_VISIT_DEF(create_fnbody, function_def)
+{
 	EFLIB_UNREF_DECLARATOR(data);
 
 	service()->new_block(".body", true);
@@ -727,12 +743,12 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 	if ( !v.jump_expr ){
 		service()->emit_return();
 	} else {
-		shared_ptr<tynode> fn_retty = service()->fn().fnty->retval_type;
-		tid_t fret_tid = sem_->get_semantic(fn_retty)->tid();
+		shared_ptr<tynode> const& fn_result_ty = service()->fn().fn_def->type->result_type;
+		tid_t fret_tid = sem_->get_semantic(fn_result_ty)->tid();
 		tid_t expr_tid = sem_->get_semantic(v.jump_expr)->tid();
 		if( fret_tid != expr_tid )
 		{
-			caster->cast( fn_retty, v.jump_expr );
+			caster->cast(fn_result_ty, v.jump_expr);
 		}
 		service()->emit_return( node_ctxt(v.jump_expr)->node_value, service()->param_abi( service()->fn().c_compatible ) );
 	}
@@ -837,7 +853,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 
 	BOOST_FOREACH(symbol* intr, intrinsics)
 	{
-		function_full_def* intr_fn = polymorphic_cast<function_full_def*>( intr->associated_node() );
+		function_def* intr_fn = polymorphic_cast<function_def*>( intr->associated_node() );
 		node_semantic* intrin_ssi = sem_->get_semantic(intr_fn);
 		bool external = intrin_ssi->is_external();
 
@@ -864,7 +880,7 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 		vector<builtin_types> par_tycodes;
 		vector<node_context*> par_ctxts;
 
-		BOOST_FOREACH( shared_ptr<parameter_full> const& par, intr_fn->params )
+		BOOST_FOREACH( shared_ptr<parameter> const& par, intr_fn->params )
 		{
 			par_tys.push_back( sem_->get_semantic(par)->ty_proto() );
 			assert( par_tys.back() );

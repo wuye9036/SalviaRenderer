@@ -82,7 +82,7 @@ public:
 
 		// Otherwise create a new type and push into type manager.
 		tid_t btc_tid = -1;
-		add_builtin_type(btc, NULL, &btc_tid);
+		register_builtin_type(btc, NULL, &btc_tid);
 		bt_dict_.insert( make_pair(btc, btc_tid) );
 
 		return btc_tid;
@@ -101,7 +101,33 @@ public:
 		}
 		return ret_tid;
 	}
+	tid_t	get_function_type(vector<tid_t> const& fn_tids)
+	{
+		function_dict::iterator iter = fn_dict_.find(fn_tids);
+		if( iter != fn_dict_.end() )
+		{
+			return iter->second;
+		}
 
+		// Construct function type prototype.
+		shared_ptr<function_type> fn_proto = create_node<function_type>( token_t_ptr(), token_t_ptr() );
+		fn_proto->result_type = get_proto(fn_tids[0])->as_handle<tynode>();
+		fn_proto->param_types.reserve(4);
+		for(size_t i_param = 1; i_param < fn_tids.size(); ++i_param)
+		{
+			fn_proto->param_types.push_back( get_proto(fn_tids[i_param])->as_handle<tynode>() );
+		}
+
+		// Register function type prototype.
+		tid_t ret(-1);
+		register_proto_tynode(fn_proto, NULL, &ret);
+
+		// Update cache.
+		param_tids_cache_.insert(
+			make_pair(ret, vector<tid_t>( fn_tids.begin()+1, fn_tids.end() ) )
+			);
+		return ret;
+	}
 	// Get prototype or node semantic from tid or builtin_type
 	tynode* get_proto(tid_t id)
 	{
@@ -157,7 +183,7 @@ public:
 	~pety_impl(){}
 
 private:
-	void add_proto_tynode(tynode_ptr const& proto_node, node_semantic** out_sem, tid_t* out_tid)
+	void register_proto_tynode(tynode_ptr const& proto_node, node_semantic** out_sem, tid_t* out_tid)
 	{
 		// add to pool and allocate an id
 		tid_t proto_tid = static_cast<tid_t>( type_items_.size() );
@@ -173,11 +199,11 @@ private:
 		if(out_tid) { *out_tid = proto_tid; }
 	}
 
-	void add_tynode(tynode* tyn, bool attach_tid_to_input, node_semantic** out_sem, tid_t* out_tid )
+	void register_tynode(tynode* tyn, bool attach_tid_to_input, node_semantic** out_sem, tid_t* out_tid )
 	{
 		tynode_ptr dup_node = duplicate_tynode( tyn->as_handle<tynode>() );
 		tid_t tid = -1;
-		add_proto_tynode(dup_node, out_sem, &tid);
+		register_proto_tynode(dup_node, out_sem, &tid);
 		if(out_tid) { *out_tid = tid; }
 
 		if(attach_tid_to_input)
@@ -187,7 +213,7 @@ private:
 	}
 
 	/// Add builtin type to pety.
-	void add_builtin_type(builtin_types btc, node_semantic** out_sem, tid_t* out_tid)
+	void register_builtin_type(builtin_types btc, node_semantic** out_sem, tid_t* out_tid)
 	{
 		std::string name = builtin_type_name(btc);
 
@@ -198,7 +224,7 @@ private:
 
 		tynode_ptr tyn = create_builtin_type(btc);
 		node_semantic* sem = NULL;
-		add_proto_tynode(tyn, &sem, out_tid);
+		register_proto_tynode(tyn, &sem, out_tid);
 		if(out_sem) { *out_sem = sem; }
 		assert( sem->associated_node() == tyn.get() );
 		root_symbol_->add_named_child( name, tyn.get() );
@@ -411,7 +437,7 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 			return type_items_[decoratee_id].*qual;
 		} else {
 			// else allocate an new node.
-			add_tynode(v, attach_tid_to_input, NULL, &ret);
+			register_tynode(v, attach_tid_to_input, NULL, &ret);
 			return ret;
 		}
 	}
@@ -456,7 +482,7 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 			}
 
 			tid_t tid = -1;
-			add_tynode(v, attach_tid_to_input, NULL, &tid);
+			register_tynode(v, attach_tid_to_input, NULL, &tid);
 
 			if( !name.empty() )
 			{
