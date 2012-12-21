@@ -11,6 +11,7 @@ using sasl::common::code_span;
 using sasl::common::diag_item_committer;
 using eflib::fixed_string;
 using boost::shared_ptr;
+using boost::scoped_ptr;
 using boost::wave::preprocess_exception;
 using boost::unordered_map;
 using std::string;
@@ -59,16 +60,16 @@ fixed_string driver_code_source::next()
 	try{
 		++next_it;
 	} catch ( preprocess_exception& e ){
-		shared_ptr<diag_item_committer> committer;
+		diag_chat::committer_pointer committer;
 		switch( e.get_errorcode() )
 		{
 		case preprocess_exception::no_error:
 			break;
 		case preprocess_exception::last_line_not_terminated:
-			committer = diags->report( sasl::parser::boost_wave_exception_warning );
+			committer.swap( diags->report( sasl::parser::boost_wave_exception_warning ) );
 			break;
 		case preprocess_exception::ill_formed_directive:
-			committer = diags->report( sasl::parser::boost_wave_exception_fatal_error );
+			committer.swap( diags->report( sasl::parser::boost_wave_exception_fatal_error ) );
 			is_failed = true;
 			break;
 		default:

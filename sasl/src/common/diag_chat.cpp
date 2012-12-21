@@ -4,15 +4,16 @@
 #include <eflib/include/diagnostics/assert.h>
 
 using eflib::fixed_string;
+using boost::scoped_ptr;
 using boost::shared_ptr;
 using std::vector;
 
 BEGIN_NS_SASL_COMMON();
 
-shared_ptr<diag_item_committer> diag_item_committer::p(char const* v)
+diag_item_committer* diag_item_committer::p(char const* v)
 {
 	(*item) % std::string(v);
-	return shared_from_this();
+	return this;
 }
 
 shared_ptr<diag_chat> diag_chat::create()
@@ -25,11 +26,11 @@ void diag_chat::add_report_raised_handler( report_handler_fn const& handler )
 	handlers.push_back( handler );
 }
 
-shared_ptr<diag_item_committer> diag_chat::report( diag_template const& tmpl )
+diag_chat::committer_pointer diag_chat::report( diag_template const& tmpl )
 {
 	diag_item* diag = new diag_item(&tmpl);
-	shared_ptr<diag_item_committer> ret( new diag_item_committer(diag, this) );
-	return ret;
+	diag_item_committer* ret( new diag_item_committer(diag, this) );
+	return committer_pointer(ret);
 }
 
 diag_chat* diag_chat::merge( diag_chat* dest, diag_chat* src, bool trigger_callback )
@@ -88,16 +89,16 @@ diag_item_committer::diag_item_committer( diag_item* item, diag_chat* chat )
 {
 }
 
-shared_ptr<diag_item_committer> diag_item_committer::file(fixed_string const& f)
+diag_item_committer* diag_item_committer::file(fixed_string const& f)
 {
 	item->file(f);
-	return shared_from_this();
+	return this;
 }
 
-shared_ptr<diag_item_committer> diag_item_committer::span( code_span const& s )
+diag_item_committer* diag_item_committer::span( code_span const& s )
 {
 	item->span(s);
-	return shared_from_this();
+	return this;
 }
 
 diag_item_committer::~diag_item_committer()
@@ -105,17 +106,17 @@ diag_item_committer::~diag_item_committer()
 	chat->commit(item);
 }
 
-shared_ptr<diag_item_committer> diag_item_committer::eval()
+diag_item_committer* diag_item_committer::eval()
 {
 	item->eval();
-	return shared_from_this();
+	return this;
 }
 
-shared_ptr<diag_item_committer> diag_item_committer::token_range( token_t const& beg, token_t const& end )
+diag_item_committer* diag_item_committer::token_range( token_t const& beg, token_t const& end )
 {
 	item->file( beg.file_name );
 	item->span( beg, end );
-	return shared_from_this();
+	return this;
 }
 
 size_t error_count( diag_chat* chat, bool warning_as_error )
