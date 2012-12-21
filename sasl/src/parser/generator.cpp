@@ -23,6 +23,7 @@
 using sasl::common::diag_template;
 using sasl::common::diag_item;
 using sasl::common::diag_chat;
+using sasl::common::chat_scope;
 using sasl::common::token_t;
 
 using boost::shared_ptr;
@@ -585,15 +586,19 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	}
 #endif
 
-	shared_ptr<diag_chat> chat = diag_chat::create();
+	chat_scope scope(diags);
+
+	// shared_ptr<diag_chat> chat = diag_chat::create();
 	
 	assert( expr );
 	if( !expr ){ return parse_results::failed; }
 
+#if 0
 	if( rule_name == "assignexpr" )
 	{
 		// cout << "fuck" << endl;
 	}
+#endif
 
 #if OUTPUT_GRAMMAR_MATCHING_PATH
 	shared_ptr<path_tree> current_path( make_shared<path_tree>() );
@@ -606,7 +611,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	current_path->element = rule_name;
 #endif
 
-	parse_results result = expr->parse(iter, end, attr, chat.get());
+	parse_results result = expr->parse(iter, end, attr, diags);
 
 #if OUTPUT_GRAMMAR_MATCHING_PATH
 	current_path->attributes.push_back( make_pair( "diag_count", boost::format("\"%d\"") % chat->diag_items().size() ) );
@@ -639,8 +644,8 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	if( result.is_continuable() ){
 		attr->rule_id( id() );
 	}
-	if( !result.is_succeed() ){
-		diag_chat::merge( diags, chat.get(), true );
+	if( result.is_succeed() ){
+		scope.save_new_diags();
 	}
 
 	return result;

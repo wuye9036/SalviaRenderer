@@ -68,19 +68,34 @@ public:
 	friend class diag_item_committer;
 	static boost::shared_ptr<diag_chat> create();
 	static diag_chat* merge( diag_chat* dest, diag_chat* src, bool trigger_callback );
+
 	void add_report_raised_handler( report_handler_fn const& handler );
 	committer_pointer report( diag_template const& tmpl );
 	
 	std::vector<diag_item*> const& diag_items() const;
 	void clear();
 
+	void save();
+	void restore();
+
 	~diag_chat();
 private:
 	void commit(diag_item* diag);
 	std::vector<report_handler_fn>	handlers;
 	std::vector<diag_item*>			diags;
+	std::vector<size_t>				cursors;
 };
 
+class chat_scope
+{
+public:
+	chat_scope(diag_chat* chat): chat(chat), need_save(false) { chat->save(); }
+	~chat_scope() { if(!need_save) chat->restore(); }
+	void save_new_diags(){ need_save = true; }
+private:
+	bool		need_save;
+	diag_chat*	chat;
+};
 // Functions
 
 size_t error_count( diag_chat* chat, bool warning_as_error );

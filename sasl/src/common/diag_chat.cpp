@@ -52,6 +52,21 @@ diag_chat* diag_chat::merge( diag_chat* dest, diag_chat* src, bool trigger_callb
 	return dest; 
 }
 
+void diag_chat::restore()
+{
+	for(size_t i_diag = cursors.back(); i_diag < diags.size(); ++i_diag)
+	{
+		diags[i_diag]->release();
+	}
+	diags.resize( cursors.back() );
+	cursors.pop_back();
+}
+
+void diag_chat::save()
+{
+	cursors.push_back( diags.size() );
+}
+
 diag_chat::~diag_chat()
 {
 	for( vector<diag_item*>::iterator it = diags.begin(); it != diags.end(); ++it )
