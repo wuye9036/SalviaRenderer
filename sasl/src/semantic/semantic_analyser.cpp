@@ -958,9 +958,10 @@ SASL_VISIT_DEF( parameter_full )
 
 	generated_node = dup_par;
 
+	symbol* sym = NULL;
 	if( v.name )
 	{
-		current_symbol->add_named_child( v.name->str, dup_par.get() );
+		sym = current_symbol->add_named_child( v.name->str, dup_par.get() );
 	}
 
 	node_semantic* par_sem = NULL;
@@ -975,6 +976,11 @@ SASL_VISIT_DEF( parameter_full )
 	generated_sem->tid(tid);
 	// TODO: Nonsupports reference yet.
 	generated_sem->is_reference(false);
+	if(sym)
+	{
+		generated_sem->associated_symbol(sym);
+	}
+
 	parse_semantic(v.semantic, v.semantic_index, generated_sem);
 }
 
@@ -1032,7 +1038,7 @@ SASL_VISIT_DEF( function_full_def )
 
 	generated_sem = create_node_semantic(def_node);
 	generated_sem->tid( result_type_sem->tid() );
-
+	generated_sem->associated_symbol(sym);
 	// SEMANTIC_TODO judge the true abi.
 	generated_sem->msc_compatible(true);
 

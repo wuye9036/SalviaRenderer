@@ -215,7 +215,7 @@ namespace eflib{
 
 			data_->lock();
 			content_data* new_content = new content_data(data_->content);
-			data_->unlock();https://mail.google.com/mail/u/0/#inbox
+			data_->unlock();
 			data_.reset(new_content);
 			return data_->content;
 		}

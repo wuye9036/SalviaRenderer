@@ -771,14 +771,14 @@ SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	symbol::symbol_array overloads = current_symbol_->find_overloads(op_name, caster.get(), args);
 	EFLIB_ASSERT( overloads.size() == 1, "No or more an one overloads." );
 
-	function_full_def* op_proto = polymorphic_cast<function_full_def*>( overloads[0]->associated_node() );
+	function_def* op_proto = polymorphic_cast<function_def*>( overloads[0]->associated_node() );
 
 	node_semantic* p0_tsi = sem_->get_semantic(op_proto->params[0]);
 	if( p0_tsi->tid() != larg_tsi->tid() )
 	{
 		if( !node_ctxt( p0_tsi->ty_proto() ) )
 		{
-			visit_child( op_proto->params[0]->param_type );
+			visit_child(op_proto->type->param_types[0]);
 		}
 		caster->cast( p0_tsi->ty_proto(), v.left_expr.get() );
 	}

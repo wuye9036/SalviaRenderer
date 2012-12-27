@@ -223,7 +223,7 @@ bool abi_analyser::update( salviar::languages lang ){
 		)
 	{
 		// Process entry function.
-		shared_ptr<function_full_def> entry_fn = entries[lang]->associated_node()->as_handle<function_full_def>();
+		shared_ptr<function_def> entry_fn = entries[lang]->associated_node()->as_handle<function_def>();
 		assert( entry_fn );
 
 		if( !add_semantic( entry_fn, false, false, lang, true ) ){
@@ -232,7 +232,7 @@ bool abi_analyser::update( salviar::languages lang ){
 			return false;
 		}
 
-		BOOST_FOREACH( shared_ptr<parameter_full> const& param, entry_fn->params )
+		BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
 		{
 			if( !add_semantic( param, false, false, lang, false ) ){
 				reset(lang);
