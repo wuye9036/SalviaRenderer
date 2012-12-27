@@ -201,20 +201,23 @@ namespace eflib{
 
 		std::string& mutable_raw_string()
 		{
+			if( !data_ )
+			{
+				data_.reset( new content_data() );
+				return data_->content;
+			}
+			
 			if( data_.use_count() == 1 )
 			{
 				data_->hash_code = 0;
 				return data_->content;
 			}
-			else
-			{
-				data_->hash_code = 0;
-				data_->lock();
-				content_data* new_content = new content_data(data_->content);
-				data_->unlock();
-				data_.reset(new_content);
-				return data_->content;
-			}
+
+			data_->lock();
+			content_data* new_content = new content_data(data_->content);
+			data_->unlock();https://mail.google.com/mail/u/0/#inbox
+			data_.reset(new_content);
+			return data_->content;
 		}
 
 		size_t compute_hash() const

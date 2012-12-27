@@ -39,8 +39,7 @@ class module_semantic;
 
 typedef int tid_t;
 
-//////////////////////////////////////////////////////////////////////////
-/*
+/**
 	In sasl, symbol can assigned to any syntax node. But in fact, only some
 	sorts of node make senses, such as variable declaration, function and
 	struct declaration/definition, type re-definition, statement.
@@ -54,12 +53,23 @@ typedef int tid_t;
 	a target unique name, even a global unique name. Some external interface
 	may use it.
 */
-//////////////////////////////////////////////////////////////////////////
+
 class symbol{
 public:
 	typedef std::vector<sasl::syntax_tree::expression*> expression_array;
 	typedef std::vector<symbol*>	symbol_array;
 	typedef symbol_array::iterator	symbol_array_iterator;
+	
+	class overload_position
+	{
+	public:
+		friend class symbol;
+		overload_position(overload_position const& v): pos(v.pos){}
+	private:
+		typedef std::pair< symbol_array, std::vector<tid_t> > overload_array;
+		overload_position(overload_array* pos): pos(pos) {}
+		overload_array* pos;
+	};
 
 	static symbol* create_root(module_semantic* owner, node* root_node = NULL);
 
@@ -89,6 +99,9 @@ public:
 
 	eflib::fixed_string const& unmangled_name() const;
 	eflib::fixed_string const& mangled_name() const;
+
+	overload_position	get_overload_position(eflib::fixed_string const&);
+	symbol*				unchecked_insert_overload(overload_position pos, function_def* def, tid_t tid);
 
 private:
 	static symbol* create(module_semantic* owner, symbol* parent, node* assoc_node);

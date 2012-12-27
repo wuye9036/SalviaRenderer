@@ -7,6 +7,7 @@
 #include <sasl/enums/operators.h>
 
 #include <eflib/include/utility/shared_declaration.h>
+#include <eflib/include/string/ustring.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/any.hpp>
@@ -41,6 +42,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(caster_t);
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 EFLIB_DECLARE_CLASS_SHARED_PTR(node_semantic);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(sacontext);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(proto_info);
 
 class semantic_analyser: public sasl::syntax_tree::syntax_tree_visitor{
 public:
@@ -132,6 +134,7 @@ private:
 	void initialize_casts();
 	void initialize_operator_parameter_lrvs();
 	void register_builtin_functions();
+	void register_builtin_functions2();
 	void hold_generated_node( sasl::syntax_tree::node_ptr const& );
 	void initialize_operator_parameter_to_lrv_lookup_table();
 
@@ -142,7 +145,7 @@ private:
 		function_register(
 			semantic_analyser& owner,
 			sasl::syntax_tree::function_full_def_ptr const& fn,
-			bool is_intrinsic, bool is_external, bool partial_exec
+			bool is_intrinsic, bool partial_exec
 			);
 		function_register( function_register const& );
 
@@ -164,9 +167,34 @@ private:
 		bool is_constr;
 	};
 
+	void register_function2(
+		eflib::fixed_string		const& name,
+		std::vector<size_t>		const& proto_indexes,
+		std::vector<proto_info> const& protos,
+		bool is_intrinsic = false,
+		bool is_partial_exec = false,
+		bool is_constructor = false
+		);
+	void register_intrinsic2(
+		eflib::fixed_string		const& name,
+		std::vector<size_t>		const& proto_indexes,
+		std::vector<proto_info> const& protos,
+		bool partial_exec = false
+		);
+	void register_constructor2(
+		eflib::fixed_string		const& name,
+		std::vector<size_t>		const& proto_indexes,
+		std::vector<proto_info> const& protos
+		);
+
 	function_register register_function(std::string const& name );
-	function_register register_intrinsic(std::string const& name, /*bool external = false,*/ bool parital_exec = false );
+	function_register register_intrinsic(std::string const& name, bool parital_exec = false );
 	void register_constructor(std::string const& name, sasl::syntax_tree::builtin_type_ptr* tys, int total );
+
+	//void register_function2		(eflib::fixed_string const& name, tid_t const& fn_protos);
+	//void register_intrinsic2	(eflib::fixed_string const& name, tid_t fn_proto, bool partial_exec);
+	//void register_constructor2	(eflib::fixed_string const& name, tid_t fn_proto);
+
 	void register_constructor_impl(
 		std::string const& name,	sasl::syntax_tree::builtin_type_ptr* tys, int total,
 		int param_scalar_counts, std::vector<sasl::syntax_tree::builtin_type_ptr>& param_tys );

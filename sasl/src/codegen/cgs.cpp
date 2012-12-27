@@ -121,7 +121,6 @@ cg_function* cg_service::fetch_function(function_def* fn_node){
 	cg_function* ret = ctxt_->create_cg_function();
 	ret->fn_def = fn_node;
 	ret->c_compatible		= sem_->get_semantic(fn_node)->msc_compatible();
-	ret->external			= sem_->get_semantic(fn_node)->is_external();
 	ret->partial_execution	= sem_->get_semantic(fn_node)->partial_execution();
 	ret->ret_void			= (fn_node->type->result_type->tycode == builtin_types::_void);
 	ret->cg					= this;

@@ -399,7 +399,7 @@ multi_value cg_function::execution_mask() const
 
 cg_function::cg_function()
 	: fn(NULL), fn_def(NULL), ret_void(true), partial_execution(false)
-	, c_compatible(false), external(false), cg(NULL)
+	, c_compatible(false), cg(NULL)
 {
 }
 
@@ -409,17 +409,17 @@ bool cg_function::value_arg_as_ref(size_t logical_index) const
 	parameter*		param = fn_def->params[logical_index].get();
 	node_semantic*  param_semantic = cg->get_node_semantic(param);
 	builtin_types	param_hint = param_semantic->value_builtin_type();
-	return (c_compatible || external) && !is_scalar(param_hint) && !is_sampler(param_hint);
+	return c_compatible && !is_scalar(param_hint) && !is_sampler(param_hint);
 }
 
 bool cg_function::return_via_arg() const
 {
-	return (c_compatible || external) && !ret_void;
+	return c_compatible && !ret_void;
 }
 
 bool cg_function::multi_value_arg_as_ref() const
 {
-	return (c_compatible || external) && multi_value_args();
+	return c_compatible && multi_value_args();
 }
 
 bool cg_function::multi_value_args() const

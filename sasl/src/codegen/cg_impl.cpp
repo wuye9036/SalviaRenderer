@@ -855,14 +855,11 @@ SASL_SPECIFIC_VISIT_DEF( process_intrinsics, program )
 	{
 		function_def* intr_fn = polymorphic_cast<function_def*>( intr->associated_node() );
 		node_semantic* intrin_ssi = sem_->get_semantic(intr_fn);
-		bool external = intrin_ssi->is_external();
 
 		// If intrinsic is not invoked, we don't generate code for it.
-		if( !intrin_ssi->is_invoked() && !external ){ continue;	}
+		if( !intrin_ssi->is_invoked() ){ continue;	}
 
 		visit_child(intr_fn);
-		// Deal with external functions. External function has nobody.
-		if ( external ){ continue; }
 
 		node_context* intrinsic_ctxt = node_ctxt( intr_fn, false );
 		assert( intrinsic_ctxt );

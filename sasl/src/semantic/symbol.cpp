@@ -36,7 +36,7 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using sasl::common::diag_chat;
 using sasl::syntax_tree::expression;
-using sasl::syntax_tree::function_full_def;
+using sasl::syntax_tree::function_def;
 using sasl::syntax_tree::tynode;
 using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
@@ -116,7 +116,7 @@ symbol::symbol_array symbol::find_assign_overloads(const fixed_string& unmangled
 	symbol_array ret;
 	BOOST_FOREACH( symbol* proto, candidates )
 	{
-		function_full_def* proto_fn = dynamic_cast<function_full_def*>( proto->associated_node() );
+		function_def* proto_fn = dynamic_cast<function_def*>( proto->associated_node() );
 		tid_t lhs_par_tid = owner_->get_semantic( proto_fn->params.back() )->tid();
 		if( lhs_par_tid == lhs_arg_tid )
 		{
@@ -143,7 +143,8 @@ symbol* symbol::add_named_child( const fixed_string& mangled, node* child_node )
 
 symbol* symbol::add_function_begin(function_def* child_fn){
 	if( !child_fn ){ return NULL; }
-	symbol* ret = new ( owner_->alloc_symbol() ) symbol(owner_, this, child_fn, &child_fn->name->str);
+	symbol* ret = new ( owner_->alloc_symbol() ) symbol(owner_, this, child_fn, NULL);
+	ret->unmangled_name_ = child_fn->name->str;
 	return ret;
 }
 
@@ -224,11 +225,12 @@ void symbol::associated_node( node* v )
 }
 
 fixed_string const& symbol::mangled_name() const{
-	if( !mangled_name_.empty() )
+	if( mangled_name_.empty() )
 	{
 		// TODO Unavailable until function type is finished.
-		// node_semantic* node_sem = owner_->get_semantic(associated_node_);
-		// mangled_name_ = owner_->pety()->mangle(unmangled_name_, node_sem->tid() );
+		node_semantic* node_sem = owner_->get_semantic(associated_node_);
+		const_cast<symbol*>(this)->mangled_name_
+			= owner_->pety()->mangle(unmangled_name_, node_sem->tid() );
 	}
 	return mangled_name_;
 }
@@ -461,6 +463,30 @@ symbol::symbol_array symbol::find_overloads_impl(
 	}
 
 	return candidates;
+}
+
+symbol::overload_position symbol::get_overload_position(eflib::fixed_string const& name)
+{
+	overload_dict::iterator iter = overloads_.find(name);
+	if( iter != overloads_.end() )
+	{
+		return &(iter->second);
+	}
+	return overload_position(NULL);
+}
+
+symbol* symbol::unchecked_insert_overload(
+	symbol::overload_position pos, function_def* def, tid_t tid
+	)
+{
+	symbol* sym = symbol::create(owner_, this, def);
+	sym->unmangled_name_ = def->name->str;
+	children_.insert( make_pair(static_cast<node*>(def), sym) );
+
+	pos.pos->first.push_back(sym);
+	pos.pos->second.push_back(tid);
+
+	return sym;
 }
 
 module_semantic* symbol::owner() const

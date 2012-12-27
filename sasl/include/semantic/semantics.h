@@ -212,7 +212,6 @@ public:
 	void function_name(std::string const& v);
 	void overloaded_function(symbol* v) { overloaded_function_ = v; }
 	void is_intrinsic(bool v) { is_intrinsic_ = v; }
-	void is_external(bool v) { is_external_ = v; }
 	void msc_compatible(bool v) { msc_compatible_ = v; }
 	void is_invoked(bool v) { is_invoked_ = v; }
 	void partial_execution(bool v) { partial_execution_ = v; }
