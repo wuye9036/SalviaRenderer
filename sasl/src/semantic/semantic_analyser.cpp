@@ -1326,7 +1326,7 @@ SASL_VISIT_DEF( program ){
 	register_builtin_types();
 	initialize_casts();
 	caster->set_function_get_tynode( boost::bind( &pety_t::get_proto, module_semantic_->pety(), _1) );
-	register_builtin_functions();
+	register_builtin_functions2();
 
 	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
 	prog_ = dup_prog.get();
@@ -1595,11 +1595,11 @@ struct proto_info
 public:
 	proto_info() {}
 	proto_info(tid_t fn_tid, std::vector<tid_t> const& params_tid)
-		: fn_tid(fn_tid), ret_tid(params_tid[0]), params_count( params_tid.size() )
+		: fn_tid(fn_tid), ret_tid(params_tid[0]), params_count( params_tid.size()-1 )
 	{
 		memset( this->params_tid, -1, sizeof(this->params_tid) );
-		assert( params_count <= 4 );
-		memcpy( &(this->params_tid[0]), &params_tid[0], sizeof(tid_t) * params_tid.size() );
+		assert( params_count <= 5 );
+		memcpy( &(this->params_tid[0]), &params_tid[1], sizeof(tid_t) * params_count );
 	}
 
 	proto_info(proto_info const& rhs)
@@ -1615,7 +1615,7 @@ public:
 
 	tid_t	fn_tid;
 	tid_t	ret_tid;
-	tid_t	params_tid[4];
+	tid_t	params_tid[5];
 	size_t	params_count;
 };
 
@@ -1732,6 +1732,7 @@ void semantic_analyser::register_builtin_functions2()
 	vector<size_t>	ddx_ddy_fns;
 	vector<size_t>	vf_vf_intrins;
 	vector<size_t>	vf_vfvf_intrins;
+	vector<size_t>	vf_vfvfvf_intrins;
 	vector<size_t>	vb_vf_intrins;
 
 	// Function groups
@@ -1753,6 +1754,11 @@ void semantic_analyser::register_builtin_functions2()
 	vf_vfvf_intrin_names +=
 		fixed_string("fmod"), fixed_string("ldexp"), fixed_string("pow"), fixed_string("step");
 
+	vector<fixed_string>	vf_vfvfvf_intrin_names;
+	vf_vfvfvf_intrin_names.reserve(4);
+	vf_vfvfvf_intrin_names +=
+		fixed_string("lerp"), fixed_string("smoothstep");
+
 	vector<fixed_string>	vb_vf_intrin_names;
 	vb_vf_intrin_names.reserve(3);
 	vb_vf_intrin_names +=
@@ -1765,6 +1771,7 @@ void semantic_analyser::register_builtin_functions2()
 		tids.push_back( pety->get(builtins[i_builtin]) );
 	}
 
+	tid_t bool_tid = pety->get(builtin_types::_boolean);
 	for(size_t i_builtin = 0; i_builtin < builtins.size(); ++i_builtin)
 	{
 		builtin_types	btc = builtins[i_builtin];
@@ -1773,6 +1780,7 @@ void semantic_analyser::register_builtin_functions2()
 
 		// Generate protos
 		size_t b_v  = protos.add_proto(bttid).result(same_dimension_bool);
+		size_t sb_v = protos.add_proto(bttid).result(bool_tid);
 		size_t v_v  = protos.add_proto(bttid).result(bttid);
 		size_t b_vv = protos.add_proto(bttid, bttid).result(same_dimension_bool);
 		size_t v_vv = protos.add_proto(bttid, bttid).result(bttid);
@@ -1810,6 +1818,7 @@ void semantic_analyser::register_builtin_functions2()
 			{
 				vf_vf_intrins.push_back(v_v);
 				vf_vfvf_intrins.push_back(v_vv);
+				vf_vfvfvf_intrins.push_back(v_vvv);
 				vb_vf_intrins.push_back(b_v);
 			}
 
@@ -1843,7 +1852,7 @@ void semantic_analyser::register_builtin_functions2()
 		assign_fns.push_back(v_vv);
 		relationship_fns.push_back(b_vv);
 		min_max_fns.push_back(v_vv);
-		all_any_fns.push_back(b_v);
+		all_any_fns.push_back(sb_v);
 	}
 
 	// Register operators
@@ -1913,6 +1922,11 @@ void semantic_analyser::register_builtin_functions2()
 		{
 			register_intrinsic2( vf_vfvf_intrin_names[i], vf_vfvf_intrins, protos.protos() );
 		}
+		
+		for(size_t i = 0; i < vf_vfvfvf_intrin_names.size(); ++i)
+		{
+			register_intrinsic2( vf_vfvfvf_intrin_names[i], vf_vfvfvf_intrins, protos.protos() );
+		}
 
 		register_intrinsic2( "abs",		abs_negative_fns,	protos.protos() );
 		register_intrinsic2( "min",		min_max_fns,		protos.protos() );
@@ -1931,10 +1945,10 @@ void semantic_analyser::register_builtin_functions2()
 		tid_t fvec_tids[5];
 		tid_t float_matrix_tids[5][5];
 
-		for(size_t vec_size = 1; vec_size <= 5; ++vec_size)
+		for(size_t vec_size = 1; vec_size <= 4; ++vec_size)
 		{
 			fvec_tids[vec_size] = pety->get( vector_of(builtin_types::_float, vec_size) );
-			for(size_t vec_cnt = 1; vec_cnt <= 5; ++vec_cnt)
+			for(size_t vec_cnt = 1; vec_cnt <= 4; ++vec_cnt)
 			{
 				float_matrix_tids[vec_size][vec_cnt] =  pety->get(
 					matrix_of(builtin_types::_float, vec_size, vec_cnt)
@@ -1960,13 +1974,13 @@ void semantic_analyser::register_builtin_functions2()
 			reflect_fns.push_back(
 				protos.add_proto(fvec_tids[i], fvec_tids[i]).result(fvec_tids[i]) );
 			refract_fns.push_back(
-				protos.add_proto(fvec_tids[i], fvec_tids[i], float_tid).result(float_tid) );
+				protos.add_proto(fvec_tids[i], fvec_tids[i], float_tid).result(fvec_tids[i]) );
 			faceforward_fns.push_back(
 				protos.add_proto(fvec_tids[i], fvec_tids[i], fvec_tids[i]).result(fvec_tids[i]) );
 		}
 							 
 		register_intrinsic2( "dot",			dist_dot_fns,		protos.protos() );
-		register_intrinsic2( "dist",		dist_dot_fns,		protos.protos() );
+		register_intrinsic2( "distance",	dist_dot_fns,		protos.protos() );
 		register_intrinsic2( "reflect",		reflect_fns,		protos.protos() );
 		register_intrinsic2( "refract",		refract_fns,		protos.protos() );
 		register_intrinsic2( "length",		length_fns,			protos.protos() );
@@ -1985,6 +1999,13 @@ void semantic_analyser::register_builtin_functions2()
 			);
 		register_intrinsic2( "cross", cross_fns, protos.protos() );
 
+		
+		vector<size_t> lit_fns;
+		lit_fns.push_back(
+			protos.add_proto(float_tid, float_tid, float_tid).result(fvec_tids[4])
+			);
+		register_intrinsic2( "lit", lit_fns, protos.protos() );
+
 		tid_t sampler_tid = pety->get(builtin_types::_sampler);
 
 		vector<size_t> tex_fns(1);
@@ -1992,7 +2013,7 @@ void semantic_analyser::register_builtin_functions2()
 		{
 			tex_fns[0] = protos.add_proto(sampler_tid, fvec_tids[4]).result(fvec_tids[4]);
 
-			register_intrinsic2("tex2dlod",   tex_fns, protos.protos(), lang == salviar::lang_pixel_shader);
+			register_intrinsic2("tex2Dlod",   tex_fns, protos.protos(), lang == salviar::lang_pixel_shader);
 			register_intrinsic2("texCUBElod", tex_fns, protos.protos(), lang == salviar::lang_pixel_shader);
 
 			if(lang == salviar::lang_pixel_shader)
@@ -2177,7 +2198,7 @@ void semantic_analyser::register_function2(
 
 		fn_def->name = token_t::from_string(name);
 		fn_def->type
-			= pety->get_proto(protos[i_proto].fn_tid)->as_handle<function_type>();
+			= pety->get_proto(proto.fn_tid)->as_handle<function_type>();
 		assert(fn_def->type);
 
 		for(size_t i_param = 0; i_param < proto.params_count; ++i_param)
@@ -2198,6 +2219,7 @@ void semantic_analyser::register_function2(
 		fn_sem->is_constructor(is_constructor);
 		
 		symbol* sym = current_symbol->unchecked_insert_overload(overload_pos, fn_def.get(), proto.fn_tid);
+
 		if( is_intrinsic )
 		{
 			module_semantic_->intrinsics().push_back(sym);

@@ -37,6 +37,7 @@ BEGIN_NS_SASL_SEMANTIC();
 using sasl::common::diag_chat;
 using sasl::syntax_tree::expression;
 using sasl::syntax_tree::function_def;
+using sasl::syntax_tree::function_type;
 using sasl::syntax_tree::tynode;
 using sasl::utility::is_scalar;
 using sasl::utility::is_vector;
@@ -229,8 +230,13 @@ fixed_string const& symbol::mangled_name() const{
 	{
 		// TODO Unavailable until function type is finished.
 		node_semantic* node_sem = owner_->get_semantic(associated_node_);
-		const_cast<symbol*>(this)->mangled_name_
-			= owner_->pety()->mangle(unmangled_name_, node_sem->tid() );
+		if(associated_node_->node_class() == node_ids::function_def)
+		{
+			node* fn_ty
+				= static_cast<function_def*>(associated_node_)->type.get();
+			const_cast<symbol*>(this)->mangled_name_
+				= owner_->pety()->mangle( unmangled_name_, owner_->get_semantic(fn_ty)->tid() );
+		}
 	}
 	return mangled_name_;
 }
@@ -472,7 +478,14 @@ symbol::overload_position symbol::get_overload_position(eflib::fixed_string cons
 	{
 		return &(iter->second);
 	}
-	return overload_position(NULL);
+	else
+	{
+		pair<overload_dict::iterator, bool> result = overloads_.insert(
+			make_pair(name, make_pair( symbol_array(), vector<tid_t>() ) )
+			);
+
+		return &(result.first->second);
+	}
 }
 
 symbol* symbol::unchecked_insert_overload(
