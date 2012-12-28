@@ -332,6 +332,8 @@ protected:
 #ifdef _DEBUG
 				// if (mtl->name != "sponza_07SG"){ continue; }
 #endif
+				hsr->flush();
+
 				pps->set_constant( _T("Ambient"),  &mtl->ambient );
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				pps->set_constant( _T("Specular"), &mtl->specular );
