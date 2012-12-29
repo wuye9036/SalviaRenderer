@@ -214,7 +214,7 @@ def build(proj_props, cleanBuild):
 	log_f = open("build.log", "w")
 	atexit.register(close_log)
 	
-	proj = project(proj_props)
+	proj = project( proj_props, os.getcwd() )
 	proj.print_props()
 	
 	# Support win32 only.
@@ -266,7 +266,7 @@ if __name__ == "__main__":
 	
 	for opt, arg in opts:
 		if opt == "-c" or opt == "--clean":
-			proj = project(prj_props)
+			proj = project( prj_props, os.getcwd() )
 			proj.print_props()
 			clean_all(proj)
 			os.system("pause")

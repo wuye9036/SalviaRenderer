@@ -4,7 +4,7 @@ from blibs.env			import *
 from blibs.boost_build	import *
 
 class project:
-	def __init__(self, props):
+	def __init__(self, props, cwd):
 		self.boost_ver_ = boost_version(props.boost_root)
 		if self.boost_ver_:
 			self.boost_root_ = props.boost_root
@@ -15,6 +15,7 @@ class project:
 		self.arch_ = arch.from_machine(props.arch)
 		self.os_ = systems.current()
 		self.config_ = props.config
+		self.cwd_ = cwd
 		
 		# Initialize toolset
 		self.cmake_ = props.cmake
@@ -143,7 +144,9 @@ class project:
 		else: return os.path.abspath( os.path.join( self.source_root(), path ) )
 	
 	def source_root(self):
-		return os.path.dirname( sys.argv[0] )
+		source_root_path = os.path.dirname( sys.argv[0] )
+		if os.path.isabs(source_root_path): return source_root_path
+		else: return os.path.abspath( os.path.join(self.cwd_, source_root_path) )
 	def build_root(self):
 		return self.to_abs( self.build_root_ )
 	def install_root(self):
