@@ -25,6 +25,8 @@ class project:
 		self.directx_ = ("DXSDK_DIR" in env)
 			
 		if default_toolset == None or default_toolset == "":
+			if "VS110COMNTOOLS" in env:
+				default_toolset = "msvc-11.0"
 			if "VS100COMNTOOLS" in env:
 				default_toolset = "msvc-10.0"
 			elif "VS90COMNTOOLS" in env:
@@ -36,6 +38,9 @@ class project:
 			else:
 				print('ERROR: Cannot found any valid compiler on your computer. Please set toolset in "build_conf.py" ')
 				
+		if default_toolset == "msvc-11.0":
+			self.toolset_ = toolset('vs', 'msvc', 11, 0, None)
+			self.builder_root_ = os.path.join( env['VS110COMNTOOLS'], "../../" )
 		if default_toolset == "msvc-10.0":
 			self.toolset_ = toolset('vs', 'msvc', 10, 0, None)
 			self.builder_root_ = os.path.join( env['VS100COMNTOOLS'], "../../" )
@@ -189,6 +194,8 @@ class project:
 				return os.path.join( self.freetype_root(), "builds", "win32", "vc2008" )
 			elif self.toolset().short_name() == "msvc10":
 				return os.path.join( self.freetype_root(), "builds", "win32", "vc2010" )
+			elif self.toolset().short_name() == "msvc11":
+				return os.path.join( self.freetype_root(), "builds", "win32", "vc2012" )
 		return None
 	def freetype_build(self):
 		return os.path.join( self.freetype_root(), "libs", self.target_modifier(['platform', 'tool', 'config']) )
@@ -199,12 +206,14 @@ class project:
 	def salvia_build(self):
 		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
 	def salvia_lib(self):
-		return os.path.join( self.install_lib(), self.target_modifier(['platform']), self.target_modifier(['config']) )
+		return os.path.join( self.install_lib(), self.target_modifier(['platform', 'tool']), self.target_modifier(['config']) )
 	def salvia_bin(self):
-		return os.path.join( self.install_bin(), self.target_modifier(['platform']), self.target_modifier(['config']) )
+		return os.path.join( self.install_bin(), self.target_modifier(['platform', 'tool']), self.target_modifier(['config']) )
 		
 	def generator(self):
 		if self.arch() == arch.x86:
+			if self.toolset().short_name() == 'msvc11':
+				return "Visual Studio 11"
 			if self.toolset().short_name() == 'msvc10':
 				return "Visual Studio 10"
 			elif self.toolset().short_name() == 'msvc9':
@@ -215,6 +224,8 @@ class project:
 				print( "Unknown generator.")
 				return None
 		elif self.arch() == arch.x64:
+			if self.toolset().short_name() == 'msvc11':
+				return "Visual Studio 11 Win64"
 			if self.toolset().short_name() == 'msvc10':
 				return "Visual Studio 10 Win64"
 			elif self.toolset().short_name() == 'msvc9':

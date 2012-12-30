@@ -34,6 +34,10 @@ if(WIN32)
       set(SALVIA_COMPILER_NAME "vc-10.0") #Visual Studio 2010
 	  set(SALVIA_COMPILER_SHOWNAME "msvc10")
     endif(MSVC_VERSION EQUAL 1600)
+	if(MSVC_VERSION EQUAL 1700)
+      set(SALVIA_COMPILER_NAME "vc-11.0") #Visual Studio 2012
+	  set(SALVIA_COMPILER_SHOWNAME "msvc11")
+    endif(MSVC_VERSION EQUAL 1700)
   endif(MSVC)
   
   if( MINGW )

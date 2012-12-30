@@ -4,7 +4,11 @@
 #include <sasl/include/syntax_tree/syntax_tree_fwd.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/tr1/type_traits.hpp>
+#if _MSC_VER >= 1700
+#	include <type_traits>
+#else
+#	include <boost/tr1/type_traits.hpp>
+#endif
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
