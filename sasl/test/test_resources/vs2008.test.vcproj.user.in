@@ -9,8 +9,8 @@
 			Name="Debug|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)"
 				CommandArguments="--show_progress=yes --report_level=short --log_level=test_suite"
 				Attach="false"
 				DebuggerType="3"
@@ -37,8 +37,8 @@
 			Name="Release|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)"
 				CommandArguments="--show_progress=yes --report_level=short --log_level=test_suite"
 				Attach="false"
 				DebuggerType="3"
@@ -65,8 +65,8 @@
 			Name="RelWithDebInfo|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)"
 				CommandArguments="--show_progress=yes --report_level=short --log_level=test_suite"
 				Attach="false"
 				DebuggerType="3"
@@ -93,8 +93,8 @@
 			Name="MinSizeRel|@SALVIA_VS_PLATFORM_NAME@"
 			>
 			<DebugSettings
-				Command="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)/$(TargetFileName)"
-				WorkingDirectory="@CMAKE_HOME_DIRECTORY@/bin/@SALVIA_PLATFORM_NAME@/$(ConfigurationName)"
+				Command="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)/$(TargetFileName)"
+				WorkingDirectory="@SALVIA_RUNTIME_OUTPUT_DIRECTORY@/$(ConfigurationName)"
 				CommandArguments="--show_progress=yes --report_level=short --log_level=test_suite"
 				Attach="false"
 				DebuggerType="3"
