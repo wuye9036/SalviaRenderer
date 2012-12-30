@@ -2,10 +2,43 @@
 # !!!! DO NOT DELETE ANY FIELD OF THIS FILE !!!!
 ################################################
 
+# ----------------------------------------------------------------
+# Notes of parameters:
+#   boost_root:
+#      The root directory of boost.
+#
+#   build_root:
+#      The root directory for LLVM and SALVIA building.
+#
+#   install_root:
+#      Root directory to installing all output of binaries.
+#      <install_root>/bin is for DLL and executable files,
+#      <install_root>/lib is directory for all static libraries.
+#
+#   arch:
+#      Target architecture.
+#      Available values are:
+#            x86
+#            x64
+#
+#   toolset:
+#      Toolset for compiling.
+#      Available values are:
+#            msvc-<major>.<minor>     for e.g.: 'msvc-10.0', 'msvc-11.0'
+#            gcc-<major>.<minor>
+#
+#   config:
+#      Build configuration.
+#      It could be one of 'Debug', 'Release', 'MinSizeRel', 'RelWithDebInfo'
+#   
+#   cmake:
+#      Path which include CMAKE executable file.
+# --------------------------------------------------------------
+
 boost_root		= 'E:/Programming/Library/boost_1_44_0'
 build_root		= '.\\build'
 install_root	= './'
-arch			= 'x64'			# or 'x86'
-toolset			= 'msvc-10.0'	# toolset = 'msvc-10.0', 'msvc-9.0', 'msvc-8.0', 'gcc-4.3', etc, or None.
+arch			= 'x64'
+toolset			= 'msvc-10.0'
 config			= 'Debug'
-cmake			= 'cmake'		# Path of cmake executable. Environment variable PATH is available on windows platform. 
+cmake			= 'cmake'		
