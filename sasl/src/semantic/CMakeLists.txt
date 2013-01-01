@@ -4,7 +4,6 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_forward.h
 	${SASL_HOME_DIR}/sasl/include/semantic/abi_analyser.h
 	${SASL_HOME_DIR}/sasl/include/semantic/abi_info.h
-	${SASL_HOME_DIR}/sasl/include/semantic/name_mangler.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_analyser.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_api.h
 	${SASL_HOME_DIR}/sasl/include/semantic/semantic_diags.h
@@ -24,7 +23,6 @@ set( HEADER_FILES
 set( SOURCE_FILES
 	abi_analyser.cpp
 	abi_info.cpp
-	name_mangler.cpp
 	semantic_analyser.cpp
 	semantic_api.cpp
 	semantic_diags.cpp

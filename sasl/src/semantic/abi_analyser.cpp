@@ -264,9 +264,6 @@ bool abi_analyser::update( salviar::languages lang ){
 			}
 		}
 	}
-	
-	// Compute ABI memory layout.
-	abiis[lang]->compute_layout();
 
 	return true;
 }

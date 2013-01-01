@@ -6,7 +6,6 @@
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>
-#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/expression.h>
 #include <sasl/include/syntax_tree/statement.h>
@@ -46,6 +45,7 @@ using namespace sasl::common;
 
 using eflib::polymorphic_cast;
 using eflib::scoped_value;
+using eflib::fixed_string;
 
 using boost::bind;
 using boost::addressof;
@@ -183,7 +183,7 @@ SASL_VISIT_DEF( binary_expression ){
 		}
 		else
 		{
-			std::string op_name = operator_name(v.op);
+			fixed_string op_name = sem_->pety()->operator_name(v.op);
 
 			node_semantic* larg_tsi = sem_->get_semantic(v.left_expr);
 			node_semantic* rarg_tsi = sem_->get_semantic(v.right_expr);
@@ -760,7 +760,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 SASL_SPECIFIC_VISIT_DEF( bin_assign, binary_expression ){
 	EFLIB_UNREF_DECLARATOR(data);
 
-	std::string op_name = operator_name(v.op);
+	fixed_string op_name = sem_->pety()->operator_name(v.op);
 
 	node_semantic* larg_tsi = sem_->get_semantic(v.left_expr);
 

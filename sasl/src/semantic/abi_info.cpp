@@ -199,31 +199,6 @@ sv_layout* abi_info::alloc_output_storage( salviar::semantic_value const& sem ){
 	return addressof( semout_storages[sem] );
 }
 
-// Update ABI Information
-void abi_info::compute_layout(){
-	/*
-	if ( !module_sem_ || !entry_point_ ) return;
-
-	if ( lang == salviar::lang_general ){
-		return;
-	}
-
-	switch( lang ){
-	case lang_vertex_shader:
-		compute_input_semantics_layout();
-		compute_output_buffer_layout();
-		compute_output_stream_layout();
-		break;
-	case lang_pixel_shader:
-		compute_input_wrap_layout();
-		compute_output_wrap_layout();
-		break;
-	}
-	
-	compute_input_constant_layout();
-	*/
-}
-
 std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 	std::vector<sv_layout*> ret;
 
@@ -254,106 +229,10 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 
 	return ret;
 }
-/*
-void abi_info::compute_input_semantics_layout(){
-	for ( size_t index = 0; index < sems_in.size(); ++index ){
 
-		sv_layout* svl = input_sv_layout( sems_in[index] );
-		assert( svl );
-
-		svl->physical_index = counts[svl->usage];
-		svl->logical_index  = counts[svl->usage];
-		svl->offset			= offsets[svl->usage];
-		compute_element_size(svl, false);
-
-		counts[svl->usage]++;
-		offsets[svl->usage] += svl->total_size();
-	}
-}
-
-void abi_info::compute_output_buffer_layout(){
-	for ( size_t index = 0; index < sems_out.size(); ++index ){
-		sv_layout* svl = output_sv_layout( sems_out[index] );
-		assert(svl);
-
-		svl->usage = su_buffer_out;
-		svl->physical_index =  counts[svl->usage];
-		svl->logical_index  =  counts[svl->usage];
-		svl->offset = offsets[svl->usage];
-		compute_element_size(svl, false);
-		
-		counts[svl->usage]++;
-		offsets[svl->usage] += svl->total_size();
-	}
-}
-
-void abi_info::compute_output_stream_layout()
-{
-	// Do nothing.
-}
-
-void abi_info::compute_input_constant_layout(){
-	for ( size_t index = 0; index < syms_in.size(); ++index ){
-		sv_layout* svl = addressof( symin_storages[ syms_in[index] ] );
-		svl->usage = su_buffer_in;
-		svl->physical_index =  counts[svl->usage];
-		svl->logical_index  =  counts[svl->usage];
-		svl->offset			= offsets[su_buffer_in];
-
-		compute_element_size(svl, false);
-
-		counts[su_buffer_in]++;
-		offsets[su_buffer_in] += svl->size;
-	}
-}
-
-void abi_info::compute_input_wrap_layout()
-{
-	for ( size_t index = 0; index < sems_in.size(); ++index ){
-		compute_wrap_layout( input_sv_layout( sems_in[index] ) );
-	}
-}
-
-void abi_info::compute_output_wrap_layout()
-{
-	for ( size_t index = 0; index < sems_out.size(); ++index ){
-		compute_wrap_layout( output_sv_layout( sems_out[index] ) );
-	}
-}
-*/
 void abi_info::update_size( size_t sz, salviar::sv_usage usage )
 {
 	offsets[usage] = sz;
 }
-/*
-void abi_info::compute_wrap_layout( sv_layout* svl )
-{
-	assert( svl );
 
-	svl->physical_index = counts [svl->usage];
-	svl->logical_index  = counts [svl->usage];
-	svl->offset			= offsets[svl->usage];
-
-	builtin_types elem_bt = to_builtin_types(svl->value_type);
-	compute_element_size(svl, true);
-	counts [svl->usage]++;
-	offsets[svl->usage] += svl->total_size();
-}
-
-int abi_info::compute_element_size(sv_layout* svl, bool wrapped) const
-{
-	size_t elem_sz = 0;
-	if( (svl->usage != su_buffer_in && !wrapped) || svl->agg_type == salviar::aggt_array )
-	{
-		elem_sz = sizeof(void*);
-	}
-	else
-	{
-		elem_sz = storage_size( to_builtin_types(svl->value_type) );
-	}
-	svl->size = elem_sz;
-
-	return elem_sz;
-}
-*/
 END_NS_SASL_SEMANTIC();

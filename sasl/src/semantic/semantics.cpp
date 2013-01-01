@@ -182,7 +182,7 @@ public:
 		//if(counter % 10000 == 0) {
 		//	printf("get_semantic() has been called %d times.\n", counter);
 		//}
-
+		assert(v);
 		semantics_dict::const_iterator it = semantics_dict_.find(v);
 		if( it == semantics_dict_.end() ){ 
 			return NULL;
@@ -192,6 +192,7 @@ public:
 
 	virtual node_semantic* create_semantic(node const* v)
 	{
+		assert(v);
 		assert( !get_semantic(v) );
 		node_semantic* ret = alloc_semantic();
 		ret->associated_node( const_cast<node*>(v) );
@@ -201,6 +202,7 @@ public:
 
 	virtual node_semantic* get_or_create_semantic(node const* v)
 	{
+		assert(v);
 		node_semantic* ret = get_semantic(v);
 		return ret ? ret : create_semantic(v);
 	}
@@ -212,7 +214,6 @@ public:
 		//if(counter % 1000 == 0) {
 		//	printf("get_symbol() has been called %d times.\n", counter);
 		//}
-
 		symbols_dict::const_iterator it = symbols_dict_.find(v);
 
 		if ( it != symbols_dict_.end() )

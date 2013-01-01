@@ -476,6 +476,11 @@ void framebuffer::render_sample(const h_blend_shader& hbs, size_t x, size_t y, s
 	}
 }
 
+float framebuffer::get_z(size_t x, size_t y) const
+{
+	return dbuf_->get_texel(x, y, 0).r;
+}
+
 void framebuffer::clear_color(size_t target_index, const color_rgba32f& c){
 
 	EFLIB_ASSERT(target_index < cbufs_.size(), "Target index is out of bound.");

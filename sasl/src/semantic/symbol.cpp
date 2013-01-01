@@ -1,6 +1,5 @@
 #include <sasl/include/semantic/symbol.h>
 
-#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/caster.h>

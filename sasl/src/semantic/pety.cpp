@@ -3,11 +3,11 @@
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/syntax_tree/node.h>
 #include <sasl/include/syntax_tree/utility.h>
-#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/builtin_types.h>
 #include <sasl/enums/operators.h>
+#include <sasl/enums/default_hasher.h>
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/polymorphic_cast.h>
 
@@ -403,7 +403,9 @@ fixed_string name_of_unqualified_type(module_semantic* sem, tynode* typespec)
 	}
 	else if(node_cls == node_ids::function_full_def)
 	{
-		return mangle( sem, polymorphic_cast<function_full_def*>(typespec) );
+		assert(!"Function full def is not supported.");
+		return fixed_string();
+		// return mangle( sem, polymorphic_cast<function_full_def*>(typespec) );
 	}
 	else if(node_cls == node_ids::struct_type)
 	{
@@ -547,7 +549,7 @@ void append_mangling(string& str, builtin_types btc, bool as_comp)
 			, 0
 		};
 		str.append(matrix_len_buf);
-		append_mangling( str, scalar_of(btc), true );
+		append_mangling(str, scalar_of(btc), true);
 	}
 }
 

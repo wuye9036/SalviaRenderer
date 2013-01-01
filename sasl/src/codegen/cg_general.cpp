@@ -5,7 +5,6 @@
 #include <sasl/include/codegen/cg_impl.imp.h>
 #include <sasl/include/codegen/cg_module_impl.h>
 #include <sasl/include/codegen/cg_caster.h>
-#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/abi_analyser.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
@@ -40,7 +39,6 @@ using namespace sasl::utility;
 using semantic::abi_info;
 using semantic::node_semantic;
 using semantic::module_semantic;
-using semantic::operator_name;
 using semantic::symbol;
 using semantic::caster_t;
 using semantic::type_equal;

@@ -1,6 +1,5 @@
 #include <sasl/include/semantic/type_checker.h>
 #include <sasl/include/semantic/symbol.h>
-#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <cassert>
 

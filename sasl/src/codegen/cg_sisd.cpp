@@ -6,7 +6,6 @@
 #include <sasl/include/codegen/cg_caster.h>
 #include <sasl/include/codegen/utility.h>
 #include <sasl/include/codegen/cgs.h>
-#include <sasl/include/semantic/name_mangler.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>
@@ -44,7 +43,6 @@ using namespace sasl::utility;
 
 using sasl::semantic::symbol;
 using sasl::semantic::node_semantic;
-using sasl::semantic::operator_name;
 using sasl::semantic::tid_t;
 using sasl::semantic::caster_t;
 

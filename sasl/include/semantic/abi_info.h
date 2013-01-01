@@ -77,21 +77,6 @@ private:
 	sv_layout_t* alloc_input_storage( symbol* );
 	sv_layout_t* alloc_output_storage( semantic_value_t const& );
 
-	// Called by abi_analyser after all semantic and global var was set.
-	// This function will compute the data layout.
-	void compute_layout();
-
-	//void compute_input_semantics_layout();
-	//void compute_output_buffer_layout();
-	//void compute_output_stream_layout();
-	//void compute_input_constant_layout();
-	//
-	//void compute_input_wrap_layout();
-	//void compute_output_wrap_layout();
-	//void compute_wrap_layout( salviar::sv_layout* );
-
-	//int compute_element_size(salviar::sv_layout* svl, bool package) const;
-
 	module_semantic*	module_sem_;
 	symbol*				entry_point_;
 	std::string			entry_point_name_;

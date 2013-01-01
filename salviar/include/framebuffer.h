@@ -115,6 +115,8 @@ public:
 	size_t get_num_samples() const;
 	pixel_format get_buffer_format() const;
 
+	float get_z(size_t x, size_t y) const;
+
 	// Rendering functions.
 	void render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
 
