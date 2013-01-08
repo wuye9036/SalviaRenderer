@@ -83,7 +83,7 @@ public:
 
 private:
 	llvm::Value*	load_loop_execution_mask();
-	void			save_loop_execution_mask( llvm::Value* );
+	void			save_loop_execution_mask(llvm::Value* mask = NULL);
 	virtual void	enter_loop();
 	virtual void	exit_loop();
 	virtual void	apply_loop_condition( multi_value const& );

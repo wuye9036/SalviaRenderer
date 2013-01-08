@@ -1,9 +1,9 @@
 #include <sasl/include/codegen/generate_entry.h>
 
 #include <sasl/include/codegen/cgs.h>
-#include <sasl/include/semantic/abi_info.h>
+#include <sasl/include/semantic/reflection_impl.h>
 #include <sasl/include/host/utility.h>
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
 
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -20,7 +20,7 @@
 
 #include <vector>
 
-using sasl::semantic::abi_info;
+using sasl::semantic::reflection_impl;
 using sasl::utility::to_builtin_types;
 using salviar::sv_usage;
 using salviar::su_buffer_in;
@@ -85,7 +85,7 @@ void sort_struct_members(
 }
 
 Type* generate_parameter_type(
-	abi_info const* abii, sv_usage su, cg_service* cg, TargetData const* target
+	reflection_impl const* abii, sv_usage su, cg_service* cg, TargetData const* target
 	)
 {
 	vector<sv_layout*>		svls = abii->layouts(su);
@@ -162,7 +162,7 @@ Type* generate_parameter_type(
 		else
 		{
 			next_offset = (size_t)struct_layout->getSizeInBytes();
-			const_cast<abi_info*>(abii)->update_size(next_offset, su);
+			const_cast<reflection_impl*>(abii)->update_size(next_offset, su);
 		}
 
 		svls[i_elem]->offset			= offset;
@@ -173,7 +173,7 @@ Type* generate_parameter_type(
 	return param_struct;
 }
 
-vector<Type*> generate_vs_entry_param_type(abi_info const* abii, TargetData const* tar, cg_service* cg)
+vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, TargetData const* tar, cg_service* cg)
 {
 	assert(cg->parallel_factor() == 1);
 	vector<Type*> ret(sv_usage_count, NULL);
@@ -191,7 +191,7 @@ vector<Type*> generate_vs_entry_param_type(abi_info const* abii, TargetData cons
 	return vector<Type*>( ret.begin()+1, ret.end() );
 }
 
-vector<Type*> generate_ps_entry_param_type(abi_info const* abii, TargetData const* tar, cg_service* cg)
+vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, TargetData const* tar, cg_service* cg)
 {
 	assert(cg->parallel_factor() > 1);
 	vector<Type*> ret(sv_usage_count, NULL);

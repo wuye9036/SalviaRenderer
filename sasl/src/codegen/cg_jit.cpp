@@ -7,7 +7,7 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <sasl/include/codegen/cg_jit.h>
-#include <sasl/include/codegen/cg_module_impl.h>
+#include <sasl/include/codegen/module_vmcode_impl.h>
 
 #include <eflib/include/platform/cpuinfo.h>
 
@@ -41,7 +41,8 @@ llvm_options& initialize_llvm_options()
 
 BEGIN_NS_SASL_CODEGEN();
 
-boost::shared_ptr<cg_jit_engine> cg_jit_engine::create( boost::shared_ptr<cg_module> ctxt, fixed_string& error ){
+/*
+boost::shared_ptr<cg_jit_engine> cg_jit_engine::create( boost::shared_ptr<module_vmcode> ctxt, fixed_string& error ){
 	boost::shared_ptr<cg_jit_engine> ret = boost::shared_ptr<cg_jit_engine>( new cg_jit_engine( ctxt ) );
 	if( !ret ){
 		error.assign( "Unknown error occurred." );
@@ -69,7 +70,7 @@ void* cg_jit_engine::get_function( const fixed_string& func_name ){
 	return native_fn;
 }
 
-cg_jit_engine::cg_jit_engine(boost::shared_ptr<cg_module> const& ctxt)
+cg_jit_engine::cg_jit_engine(boost::shared_ptr<module_vmcode> const& ctxt)
 : jit_engine(), global_ctxt( ctxt )
 {
 	build();
@@ -130,5 +131,6 @@ void cg_jit_engine::inject_function( void* fn, eflib::fixed_string const& name )
 		engine->addGlobalMapping( func, fn );
 	}
 }
+*/
 
 END_NS_SASL_CODEGEN();

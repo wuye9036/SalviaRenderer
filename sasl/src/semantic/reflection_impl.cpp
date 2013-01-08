@@ -1,4 +1,4 @@
-#include <sasl/include/semantic/abi_info.h>
+#include <sasl/include/semantic/reflection_impl.h>
 
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/semantics.h>
@@ -33,6 +33,7 @@ using salviar::SIMD_ELEMENT_COUNT;
 using salviar::sv_layout;
 
 using eflib::ceil_to_pow2;
+using eflib::fixed_string;
 
 using boost::addressof;
 using boost::shared_ptr;
@@ -44,35 +45,35 @@ BEGIN_NS_SASL_SEMANTIC();
 
 using namespace sasl::utility::ops;
 
-abi_info::abi_info()
+reflection_impl::reflection_impl()
 	: module_sem_(NULL), entry_point_(NULL), lang(salviar::lang_none)
 {
 	memset( counts, 0, sizeof(counts) );
 	memset( offsets, 0, sizeof(offsets) );
 }
 
-void abi_info::module( shared_ptr<module_semantic> const& v ){
+void reflection_impl::module( shared_ptr<module_semantic> const& v ){
 	module_sem_ = v.get();
 }
 
-bool abi_info::is_module( shared_ptr<module_semantic> const& v ) const{
+bool reflection_impl::is_module( shared_ptr<module_semantic> const& v ) const{
 	return module_sem_ == v.get();
 }
 
-void abi_info::entry( symbol* v ){
+void reflection_impl::entry( symbol* v ){
 	entry_point_ = v;
 	entry_point_name_ = entry_point_->mangled_name();
 }
 
-bool abi_info::is_entry( symbol* v ) const{
+bool reflection_impl::is_entry( symbol* v ) const{
 	return entry_point_ == v;
 }
 
-std::string abi_info::entry_name() const{
+fixed_string reflection_impl::entry_name() const{
 	return entry_point_name_;
 }
 
-bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream )
+bool reflection_impl::add_input_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream )
 {
 	vector<salviar::semantic_value>::iterator it = std::lower_bound( sems_in.begin(), sems_in.end(), sem );
 	if( it != sems_in.end() ){
@@ -99,7 +100,7 @@ bool abi_info::add_input_semantic( salviar::semantic_value const& sem, builtin_t
 	return true;
 }
 
-bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream  ){
+bool reflection_impl::add_output_semantic( salviar::semantic_value const& sem, builtin_types btc, bool is_stream  ){
 	vector<salviar::semantic_value>::iterator it = std::lower_bound( sems_out.begin(), sems_out.end(), sem );
 	if( it != sems_out.end() ){
 		if( *it == sem ){
@@ -124,7 +125,7 @@ bool abi_info::add_output_semantic( salviar::semantic_value const& sem, builtin_
 	return true;
 }
 
-void abi_info::add_global_var(symbol* v, tynode_ptr tyn)
+void reflection_impl::add_global_var(symbol* v, tynode_ptr tyn)
 {
 	syms_in.push_back( v );
 
@@ -151,7 +152,7 @@ void abi_info::add_global_var(symbol* v, tynode_ptr tyn)
 	name_storages.insert( make_pair(v->unmangled_name(), si) );
 }
 
-sv_layout* abi_info::input_sv_layout( salviar::semantic_value const& sem ) const {
+sv_layout* reflection_impl::input_sv_layout( salviar::semantic_value const& sem ) const {
 	sem_storages_t::const_iterator it = semin_storages.find( sem );
 	if ( it == semin_storages.end() ){
 		return NULL;
@@ -159,11 +160,11 @@ sv_layout* abi_info::input_sv_layout( salviar::semantic_value const& sem ) const
 	return const_cast<sv_layout*>( addressof( it->second ) );
 }
 
-sv_layout* abi_info::alloc_input_storage( salviar::semantic_value const& sem ){
+sv_layout* reflection_impl::alloc_input_storage( salviar::semantic_value const& sem ){
 	return addressof( semin_storages[sem] );
 }
 
-sv_layout* abi_info::input_sv_layout( symbol* v ) const {
+sv_layout* reflection_impl::input_sv_layout( symbol* v ) const {
 	sym_storages_t::const_iterator it = symin_storages.find(v);
 	if ( it == symin_storages.end() ){
 		return NULL;
@@ -171,7 +172,7 @@ sv_layout* abi_info::input_sv_layout( symbol* v ) const {
 	return const_cast<sv_layout*>( addressof( it->second ) );
 }
 
-sv_layout* abi_info::input_sv_layout( std::string const& name ) const
+sv_layout* reflection_impl::input_sv_layout(fixed_string const& name ) const
 {
 	name_storages_t::const_iterator it = name_storages.find( name );
 	if( it == name_storages.end() ){
@@ -179,11 +180,11 @@ sv_layout* abi_info::input_sv_layout( std::string const& name ) const
 	}
 	return it->second;
 }
-sv_layout* abi_info::alloc_input_storage( symbol* v ){
+sv_layout* reflection_impl::alloc_input_storage( symbol* v ){
 	return addressof( symin_storages[v] );
 }
 
-sv_layout* abi_info::output_sv_layout( salviar::semantic_value const& sem ) const{
+sv_layout* reflection_impl::output_sv_layout( salviar::semantic_value const& sem ) const{
 	sem_storages_t::const_iterator it = semout_storages.find( sem );
 	if ( it == semout_storages.end() ){
 		return NULL;
@@ -191,15 +192,15 @@ sv_layout* abi_info::output_sv_layout( salviar::semantic_value const& sem ) cons
 	return const_cast<sv_layout*>( addressof( it->second ) );
 }
 
-size_t abi_info::total_size( sv_usage st ) const{
+size_t reflection_impl::total_size( sv_usage st ) const{
 	return offsets[st];
 }
 
-sv_layout* abi_info::alloc_output_storage( salviar::semantic_value const& sem ){
+sv_layout* reflection_impl::alloc_output_storage( salviar::semantic_value const& sem ){
 	return addressof( semout_storages[sem] );
 }
 
-std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
+std::vector<sv_layout*> reflection_impl::layouts( sv_usage st ) const{
 	std::vector<sv_layout*> ret;
 
 	// Process output
@@ -230,7 +231,7 @@ std::vector<sv_layout*> abi_info::layouts( sv_usage st ) const{
 	return ret;
 }
 
-void abi_info::update_size( size_t sz, salviar::sv_usage usage )
+void reflection_impl::update_size( size_t sz, salviar::sv_usage usage )
 {
 	offsets[usage] = sz;
 }

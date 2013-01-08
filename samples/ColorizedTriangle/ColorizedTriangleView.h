@@ -6,7 +6,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
@@ -199,8 +199,8 @@ public:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
-		shared_ptr<shader_code> compiled_code;
-		compiled_code = shader_code::create_and_log( vs_code, lang_vertex_shader );
+		shader_object_ptr compiled_code;
+		compiled_code = compile( vs_code, lang_vertex_shader );
 
 		hsr->set_vertex_shader_code( compiled_code );
 

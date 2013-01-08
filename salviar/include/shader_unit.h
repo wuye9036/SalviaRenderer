@@ -23,8 +23,8 @@
 
 BEGIN_NS_SALVIAR();
 
-class shader_abi;
-class shader_code;
+class shader_reflection;
+class shader_object;
 class vs_output;
 class stream_assembler;
 
@@ -37,7 +37,7 @@ public:
 	vertex_shader_unit( vertex_shader_unit const& );
 	vertex_shader_unit& operator = ( vertex_shader_unit const& );
 
-	void initialize( shader_code const* );
+	void initialize( shader_object const* );
 
 	void bind_streams( stream_assembler const* sa );
 	void set_variable( std::string const&, void const* pvariable );
@@ -52,7 +52,7 @@ public:
 	void execute( vs_output& out );
 
 public:
-	shader_code const* code;
+	shader_object const* code;
 	stream_assembler const* sa;
 
 	std::vector<h_sampler>	used_samplers;	// For take ownership
@@ -80,17 +80,17 @@ public:
 	
 	boost::shared_ptr<pixel_shader_unit> clone() const;
 
-	void initialize( shader_code const* );
+	void initialize( shader_object const* );
 	void reset_pointers();
 
 	void set_variable( std::string const&, void const* data );
 	void set_sampler( std::string const&, h_sampler const& samp );
 
-	void update( vs_output* inputs, shader_abi const* vs_abi );
+	void update( vs_output* inputs, shader_reflection const* vs_abi );
 	void execute( ps_output* outs );
 
 public:
-	shader_code const* code;
+	shader_object const* code;
 
 	std::vector<h_sampler>									used_samplers;	// For take ownership
 

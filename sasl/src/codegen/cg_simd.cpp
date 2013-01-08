@@ -5,7 +5,7 @@
 #include <sasl/include/codegen/utility.h>
 #include <sasl/include/codegen/cg_contexts.h>
 #include <sasl/include/codegen/generate_entry.h>
-#include <sasl/include/semantic/abi_info.h>
+#include <sasl/include/semantic/reflection_impl.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>

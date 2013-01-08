@@ -15,7 +15,7 @@
 #include <sasl/include/common/diag_chat.h>
 
 #include <salviar/include/enums.h>
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
 
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/utility/scoped_value.h>

@@ -21,8 +21,11 @@
 #include <string>
 #include <map>
 
-
 BEGIN_NS_SALVIAR();
+
+struct viewport;
+struct scanline_info;
+class  triangle_info;
 
 enum languages{
 	lang_none,
@@ -65,7 +68,7 @@ public:
 
 	semantic_value(): sv(sv_none), index(0){}
 
-	semantic_value( std::string const& name, uint32_t index = 0 ){
+	explicit semantic_value( std::string const& name, uint32_t index = 0 ){
 		assert( !name.empty() );
 
 		std::string lower_name = lower_copy(name);
@@ -151,9 +154,10 @@ inline size_t hash_value( semantic_value const& v ){
 	return seed;
 }
 
-struct viewport;
-struct scanline_info;
-class triangle_info;
+struct shader_profile
+{
+	languages language;
+};
 
 class shader
 {

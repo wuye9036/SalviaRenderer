@@ -4,7 +4,7 @@
 #include <sasl/include/codegen/cg_vs.h>
 #include <sasl/include/codegen/cg_ps.h>
 
-#include <sasl/include/semantic/abi_info.h>
+#include <sasl/include/semantic/reflection_impl.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/node.h>
@@ -12,45 +12,54 @@
 #include <salviar/include/enums.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 BEGIN_NS_SASL_CODEGEN();
 
-using sasl::semantic::module_semantic;
+EFLIB_USING_SHARED_PTR(sasl::semantic, module_semantic);
+EFLIB_USING_SHARED_PTR(sasl::semantic, reflection_impl);
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
+
 using sasl::semantic::symbol;
-using sasl::semantic::abi_info;
-using sasl::syntax_tree::node;
 using boost::shared_ptr;
 
-boost::shared_ptr<cg_module> generate_llvm_code(
-	boost::shared_ptr<sasl::semantic::module_semantic> const& mod,
-	sasl::semantic::abi_info const* abii )
+module_vmcode_ptr generate_vmcode(
+	module_semantic_ptr const&	sem,
+	reflection_impl const*		reflection
+	)
 {
-	shared_ptr<cg_module> ret;
+	module_vmcode_ptr ret;
 	
-	symbol* root = mod->root_symbol();
+	symbol* root = sem->root_symbol();
 	if(!root) { return ret; }
 
 	node* assoc_node = root->associated_node();
 	if(!assoc_node) { return ret; }
 	if(assoc_node->node_class() != node_ids::program) { return ret; }
 	
-	if( !abii || abii->lang == salviar::lang_general ){
+	if(!reflection || reflection->lang == salviar::lang_general)
+	{
 		cg_general cg;
-		if( cg.generate(mod, abii) ){
+		if( cg.generate(sem, reflection) )
+		{
 			return cg.generated_module();
 		}
 	}
 		
-	if ( abii->lang == salviar::lang_vertex_shader ){
+	if ( reflection->lang == salviar::lang_vertex_shader )
+	{
 		cg_vs cg;
-		if( cg.generate(mod, abii) ){
+		if( cg.generate(sem, reflection) )
+		{
 			return cg.generated_module();
 		}
 	}
 
-	if( abii->lang == salviar::lang_pixel_shader ){
+	if( reflection->lang == salviar::lang_pixel_shader )
+	{
 		cg_ps cg;
-		if( cg.generate(mod, abii) ){
+		if( cg.generate(sem, reflection) )
+		{
 			return cg.generated_module();
 		}
 	}

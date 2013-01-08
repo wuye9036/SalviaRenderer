@@ -2,7 +2,7 @@
 
 #include <sasl/include/codegen/cg_intrins.h>
 #include <sasl/include/codegen/cg_impl.imp.h>
-#include <sasl/include/codegen/cg_module_impl.h>
+#include <sasl/include/codegen/module_vmcode_impl.h>
 #include <sasl/include/codegen/cg_caster.h>
 #include <sasl/include/codegen/utility.h>
 #include <sasl/include/codegen/cgs.h>
@@ -535,8 +535,8 @@ SASL_SPECIFIC_VISIT_DEF( visit_break	, jump_statement )
 	service()->jump_to(break_to_);
 }
 
-cg_module_impl* cg_sisd::mod_ptr(){
-	return llvm_mod_.get();
+module_vmcode_impl* cg_sisd::mod_ptr(){
+	return vmcode_.get();
 }
 
 cgs_sisd* cg_sisd::service() const

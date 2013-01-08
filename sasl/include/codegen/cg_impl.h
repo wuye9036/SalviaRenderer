@@ -20,7 +20,7 @@ namespace sasl{
 	}
 	namespace semantic{
 		class module_semantic;
-		class abi_info;
+		class reflection_impl;
 		class caster_t;
 		class symbol;
 	}
@@ -45,17 +45,17 @@ struct builtin_types;
 
 BEGIN_NS_SASL_CODEGEN();
 
-class  cg_module;
-class  cg_module_impl;
+class  module_vmcode;
+class  module_vmcode_impl;
 struct node_context;
 
 class cg_impl: public sasl::syntax_tree::syntax_tree_visitor
 {
 public:
-	boost::shared_ptr<cg_module> generated_module() const;
+	boost::shared_ptr<module_vmcode> generated_module() const;
 	bool generate(
 		boost::shared_ptr<sasl::semantic::module_semantic> const& msem,
-		sasl::semantic::abi_info const* abii
+		sasl::semantic::reflection_impl const* abii
 		);
 
 	// Get context by node.
@@ -137,10 +137,10 @@ protected:
 
 	// Store global informations
 	boost::shared_ptr<sasl::semantic::module_semantic>
-										sem_;
-	boost::shared_ptr<module_context>	ctxt_;
-	boost::shared_ptr<cg_module_impl>	llvm_mod_;
-	sasl::semantic::abi_info const*		abii;
+											sem_;
+	boost::shared_ptr<module_context>		ctxt_;
+	boost::shared_ptr<module_vmcode_impl>	vmcode_;
+	sasl::semantic::reflection_impl const*	abii;
 	boost::shared_ptr<sasl::semantic::caster_t>
 										caster;		///< For type conversation.
 	llvm::TargetData const *			target_data;

@@ -15,6 +15,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <vector>
 
@@ -146,6 +147,7 @@ public:
 	void scalar2vec1(node* dest, node* src){
 		node_context* dest_ctxt = get_context(dest);
 		node_context* src_ctxt = get_context(src);
+		EFLIB_UNREF_DECLARATOR(dest_ctxt);
 		assert( src_ctxt != dest_ctxt );
 		store( dest, src, cgs->cast_s2v( src_ctxt->node_value.to_rvalue() ) );
 	}
@@ -153,6 +155,7 @@ public:
 	void vec2scalar(node* dest, node* src){
 		node_context* dest_ctxt = get_context(dest);
 		node_context* src_ctxt = get_context(src);
+		EFLIB_UNREF_DECLARATOR(dest_ctxt);
 		assert( src_ctxt != dest_ctxt );
 		store( dest, src, cgs->cast_v2s( src_ctxt->node_value.to_rvalue() ) );
 	}
@@ -160,7 +163,8 @@ public:
 	void shrink_vector(node* dest, node* src, int source_size, int dest_size ){
 		node_context* dest_ctxt = get_context(dest);
 		node_context* src_ctxt = get_context(src);
-
+		EFLIB_UNREF_DECLARATOR(src_ctxt);
+		EFLIB_UNREF_DECLARATOR(source_size);
 		assert( src_ctxt != dest_ctxt );
 		assert( source_size > dest_size );
 

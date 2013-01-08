@@ -5,6 +5,7 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/colors.h>
 #include <salviar/include/format.h>
+#include <salviar/include/shader.h>
 
 #include <eflib/include/math/collision_detection.h>
 #include <eflib/include/utility/shared_declaration.h>
@@ -19,9 +20,10 @@
 
 BEGIN_NS_SALVIAR();
 
+struct shader_profile;
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
-
-class shader_code;
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
 
 struct viewport{
 	float x;
@@ -61,9 +63,9 @@ public:
 		size_t buffers_count, h_buffer const* buffers,
 		size_t const* strides, size_t const* offsets ) = 0;
 
-	virtual result set_index_buffer(h_buffer const& hbuf, format index_fmt) = 0;
-	virtual h_buffer get_index_buffer() const = 0;
-	virtual format get_index_format() const = 0;
+	virtual result		set_index_buffer(h_buffer const& hbuf, format index_fmt) = 0;
+	virtual h_buffer	get_index_buffer() const = 0;
+	virtual format		get_index_format() const = 0;
 
 	virtual result set_primitive_topology(primitive_topology primtopo) = 0;
 	virtual primitive_topology get_primitive_topology() const = 0;
@@ -145,7 +147,10 @@ public:
 	virtual result present() = 0;
 };
 
-h_renderer create_software_renderer(renderer_parameters const* pparam, h_device const& hdev);
+h_renderer			create_software_renderer(renderer_parameters const* pparam, h_device const& hdev);
+shader_object_ptr	compile(std::string const& code, shader_profile const& profile, shader_log_ptr& logs);
+shader_object_ptr	compile(std::string const& code, shader_profile const& profile);
+shader_object_ptr	compile(std::string const& code, languages lang);
 
 END_NS_SALVIAR();
 

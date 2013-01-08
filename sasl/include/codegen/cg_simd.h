@@ -5,12 +5,12 @@
 
 #include <sasl/include/codegen/cgs_simd.h>
 #include <sasl/enums/builtin_types.h>
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
 
 namespace sasl{
 	namespace semantic{
 		class module_semantic;
-		class abi_info;
+		class reflection_impl;
 	}
 }
 

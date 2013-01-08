@@ -386,7 +386,7 @@ tynode_ptr duplicate_tynode(tynode_ptr const& typespec){
 	}
 }
 
-fixed_string name_of_unqualified_type(module_semantic* sem, tynode* typespec)
+fixed_string name_of_unqualified_type(module_semantic* /*sem*/, tynode* typespec)
 {
 	// Only build in, struct and function are potential unqualified type.
 	// Array type is qualified type.

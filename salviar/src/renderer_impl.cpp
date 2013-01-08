@@ -107,7 +107,7 @@ h_vertex_shader renderer_impl::get_vertex_shader() const
 	return hvs_;
 }
 
-result renderer_impl::set_vertex_shader_code( shared_ptr<shader_code> const& code ){
+result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& code ){
 	vs_output_ops_ = &get_vs_output_op(0);
 
 	vscode_ = code;
@@ -124,7 +124,7 @@ result renderer_impl::set_vertex_shader_code( shared_ptr<shader_code> const& cod
 	return result::ok;
 }
 
-shared_ptr<shader_code> renderer_impl::get_vertex_shader_code() const{
+shared_ptr<shader_object> renderer_impl::get_vertex_shader_code() const{
 	return vscode_;
 }
 
@@ -434,7 +434,7 @@ salviar::h_input_layout renderer_impl::create_input_layout(
 	return input_layout::create( elem_descs, elems_count, vs );
 }
 
-result renderer_impl::set_pixel_shader_code( shared_ptr<shader_code> const& code )
+result renderer_impl::set_pixel_shader_code( shared_ptr<shader_object> const& code )
 {
 	pscode_ = code;
 	ps_proto_.reset( new pixel_shader_unit() );
@@ -443,7 +443,7 @@ result renderer_impl::set_pixel_shader_code( shared_ptr<shader_code> const& code
 	return result::ok;
 }
 
-shared_ptr<shader_code> renderer_impl::get_pixel_shader_code() const{
+shared_ptr<shader_object> renderer_impl::get_pixel_shader_code() const{
 	return pscode_;
 }
 

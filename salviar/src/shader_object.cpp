@@ -1,4 +1,4 @@
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 
 #include <salviar/include/sampler_api.h>
 #include <eflib/include/platform/dl_loader.h>
@@ -57,7 +57,7 @@ public:
 
 	typedef vector< tuple<void*, string, bool> > external_function_array;
 	static void (*create_shader_code)(
-		shared_ptr<shader_code>&,
+		shared_ptr<shader_object>&,
 		string const&,
 		salviar::languages,
 		external_function_array const&,
@@ -71,7 +71,7 @@ private:
 void (*host_module::sasl_initialize_host)();
 void (*host_module::sasl_finalize_host)();
 void (*host_module::create_shader_code)(
-	shared_ptr<shader_code>&,
+	shared_ptr<shader_object>&,
 	string const&,
 	salviar::languages,
 	host_module::external_function_array const&,
@@ -85,7 +85,10 @@ public:
 	~auto_init_host(){ host_module::finalize(); }
 } auto_init_host_obj;
 
-shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::languages lang, vector<string>& results )
+/*
+shader_object_ptr shader_object::create(
+	std::string const& code, salviar::languages lang, shader_log_ptr& log
+	)
 {
 	host_module::external_function_array extfns;
 	extfns.push_back( make_tuple(&salviar_tex2Dlod,		  "sasl.vs.tex2d.lod" ,  true ) );
@@ -94,7 +97,7 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 	extfns.push_back( make_tuple(&salviar_tex2Dgrad_pkg,  "sasl.ps.tex2d.grad",  true ) );
 	extfns.push_back( make_tuple(&salviar_tex2Dbias_pkg,  "sasl.ps.tex2d.bias",  true ) );
 	extfns.push_back( make_tuple(&salviar_tex2Dproj_pkg,  "sasl.ps.tex2d.proj",  true ) );
-	shared_ptr<shader_code> ret;
+	shared_ptr<shader_object> ret;
 	shared_ptr< vector<string> > presults;
 	host_module::create_shader_code( ret, code, lang, extfns, presults );
 	results = *presults;
@@ -106,10 +109,10 @@ shared_ptr<shader_code> shader_code::create( std::string const& code, salviar::l
 	return ret;
 }
 
-shared_ptr<shader_code> shader_code::create_and_log( string const& code, salviar::languages lang )
+shared_ptr<shader_object> compile( string const& code, salviar::languages lang )
 {
 	vector<string> logs;
-	shared_ptr<shader_code> ret = shader_code::create( code, lang, logs );
+	shared_ptr<shader_object> ret = shader_object::create( code, lang, logs );
 	if(!ret){
 		cout << "Shader was compiled failed!" << endl;
 		for( size_t i = 0; i < logs.size(); ++i ){
@@ -120,15 +123,15 @@ shared_ptr<shader_code> shader_code::create_and_log( string const& code, salviar
 	return ret;
 }
 
-void shader_code::initialize()
+void shader_object::initialize()
 {
 	host_module::initialize();
 }
 
-void shader_code::finalize()
+void shader_object::finalize()
 {
 	host_module::finalize();
 }
-
+*/
 END_NS_SALVIAR();
 

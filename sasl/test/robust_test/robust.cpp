@@ -11,7 +11,7 @@
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_formatter.h>
 #include <sasl/include/common/diag_chat.h>
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
 
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
@@ -31,7 +31,7 @@ using namespace eflib;
 
 using sasl::driver::driver;
 using sasl::codegen::jit_engine;
-using sasl::codegen::cg_module;
+using sasl::codegen::module_vmcode;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
 using sasl::semantic::symbol;
@@ -116,7 +116,7 @@ struct jit_fixture {
 
 		root_sym = drv->module_sem()->root_symbol();
 
-		shared_ptr<cg_module> llvm_mod = shared_polymorphic_cast<cg_module>( drv->module() );
+		shared_ptr<module_vmcode> llvm_mod = shared_polymorphic_cast<module_vmcode>( drv->module() );
 		fstream dump_file( ( dump_file_name + "_ir.ll" ).c_str(), std::ios::out );
 		llvm_mod->dump_ir( dump_file );
 		dump_file.close();

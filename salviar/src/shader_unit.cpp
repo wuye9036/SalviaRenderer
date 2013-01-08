@@ -1,6 +1,6 @@
 #include <salviar/include/shader_unit.h>
 
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/renderer.h>
 #include <salviar/include/buffer.h>
@@ -14,7 +14,6 @@
 #include <boost/make_shared.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-using namespace sasl::semantic;
 using namespace eflib;
 using std::vector;
 using boost::shared_ptr;
@@ -28,12 +27,12 @@ void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo )
 
 BEGIN_NS_SALVIAR();
 
-void vertex_shader_unit::initialize( shader_code const* code ){
+void vertex_shader_unit::initialize( shader_object const* code ){
 	this->code = code;
-	this->stream_data.resize( code->abii()->total_size( su_stream_in), 0 );
-	this->buffer_data.resize( code->abii()->total_size(su_buffer_in), 0 );
-	this->stream_odata.resize( code->abii()->total_size(su_stream_out), 0 );
-	this->buffer_odata.resize( code->abii()->total_size(su_buffer_out), 0 );
+	this->stream_data.resize( code->get_reflection()->total_size( su_stream_in), 0 );
+	this->buffer_data.resize( code->get_reflection()->total_size(su_buffer_in), 0 );
+	this->stream_odata.resize( code->get_reflection()->total_size(su_stream_out), 0 );
+	this->buffer_odata.resize( code->get_reflection()->total_size(su_buffer_out), 0 );
 }
 
 void vertex_shader_unit::bind_streams( stream_assembler const* sa ){
@@ -42,7 +41,7 @@ void vertex_shader_unit::bind_streams( stream_assembler const* sa ){
 
 void vertex_shader_unit::update( size_t ivert )
 {
-	shader_abi const* abii = code->abii();
+	shader_reflection const* abii = code->get_reflection();
 	vector<sv_layout*> infos = abii->layouts( su_stream_in );
 
 	BOOST_FOREACH( sv_layout* info, infos ){
@@ -57,7 +56,7 @@ void vertex_shader_unit::update( size_t ivert )
 void vertex_shader_unit::execute( vs_output& out )
 {
 	void (*p)(void*, void*, void*, void*)
-		= static_cast<void (*)(void*, void*, void*, void*)>( code->function_pointer() );
+		= static_cast<void (*)(void*, void*, void*, void*)>( code->native_function() );
 
 	void* psi = stream_data.empty() ? NULL : &(stream_data[0]);
 	void* pbi = buffer_data.empty() ? NULL : &(buffer_data[0]);
@@ -68,7 +67,7 @@ void vertex_shader_unit::execute( vs_output& out )
 
 	// Copy output attributes to vs_output.
 	// TODO: Semantic will be mapped.
-	shader_abi const* abii = code->abii();
+	shader_reflection const* abii = code->get_reflection();
 	vector<sv_layout*> infos = abii->layouts( su_buffer_out );
 
 	size_t register_index = 0;
@@ -85,7 +84,7 @@ void vertex_shader_unit::execute( vs_output& out )
 
 void vertex_shader_unit::set_variable( std::string const& name, void const* pvariable )
 {
-	sv_layout* vsi = code->abii()->input_sv_layout( name );
+	sv_layout* vsi = code->get_reflection()->input_sv_layout( fixed_string(name) );
 	EFLIB_ASSERT_AND_IF(vsi, "Cannot found variable.")
 	{
 		return;
@@ -131,7 +130,7 @@ vertex_shader_unit::~vertex_shader_unit()
 
 uint32_t vertex_shader_unit::output_attributes_count() const{
 	// TODO: Need to be optimized.
-	shader_abi const* abii = code->abii();
+	shader_reflection const* abii = code->get_reflection();
 	vector<sv_layout*> infos = abii->layouts( su_buffer_out );
 
 	uint32_t register_index = 0;
@@ -158,11 +157,11 @@ void vertex_shader_unit::set_sampler( std::string const& name, h_sampler const& 
 	set_variable( name, &psamp );
 }
 
-void pixel_shader_unit::initialize( shader_code const* code )
+void pixel_shader_unit::initialize( shader_object const* code )
 {
 	this->code = code;
-	size_t pixel_input_data_size = code->abii()->total_size(su_stream_in);
-	size_t pixel_output_data_size = code->abii()->total_size(su_stream_out);
+	size_t pixel_input_data_size = code->get_reflection()->total_size(su_stream_in);
+	size_t pixel_output_data_size = code->get_reflection()->total_size(su_stream_out);
 
 	size_t ps_input_size =
 		PACKAGE_ELEMENT_COUNT * sizeof(void*) +
@@ -173,9 +172,9 @@ void pixel_shader_unit::initialize( shader_code const* code )
 		PACKAGE_ELEMENT_COUNT * pixel_output_data_size;
 
 	this->stream_data.resize ( ps_input_size, 0 );
-	this->buffer_data.resize ( code->abii()->total_size(su_buffer_in ), 0 );
+	this->buffer_data.resize ( code->get_reflection()->total_size(su_buffer_in ), 0 );
 	this->stream_odata.resize( ps_output_size, 0 );
-	this->buffer_odata.resize( code->abii()->total_size(su_buffer_out), 0 );
+	this->buffer_odata.resize( code->get_reflection()->total_size(su_buffer_out), 0 );
 
 	reset_pointers();
 }
@@ -234,7 +233,7 @@ pixel_shader_unit& pixel_shader_unit::operator=( pixel_shader_unit const& rhs )
 
 void pixel_shader_unit::set_variable( std::string const& name, void const* data )
 {
-	sv_layout* vsi = code->abii()->input_sv_layout( name );
+	sv_layout* vsi = code->get_reflection()->input_sv_layout(name);
 	memcpy( &buffer_data[vsi->offset], data, vsi->size );
 }
 
@@ -247,9 +246,9 @@ shared_ptr<pixel_shader_unit> pixel_shader_unit::clone() const
 	}
 }
 
-void pixel_shader_unit::update( vs_output* inputs, shader_abi const* vs_abi )
+void pixel_shader_unit::update( vs_output* inputs, shader_reflection const* vs_abi )
 {
-	vector<sv_layout*> infos = code->abii()->layouts( su_stream_in );
+	vector<sv_layout*> infos = code->get_reflection()->layouts( su_stream_in );
 
 	size_t register_index = 0;
 
@@ -297,9 +296,9 @@ void pixel_shader_unit::execute( ps_output* outs )
 	void* pso = stream_odata.empty() ? NULL : &(stream_odata[0]);
 	void* pbo = buffer_odata.empty() ? NULL : &(buffer_odata[0]);
 
-	invoke( code->function_pointer(), psi, pbi, pso, pbo );
+	invoke( code->native_function(), psi, pbi, pso, pbo );
 
-	shader_abi const* abii = code->abii();
+	shader_reflection const* abii = code->get_reflection();
 	vector<sv_layout*> infos = abii->layouts( su_stream_out );
 
 	BOOST_FOREACH(sv_layout* info, infos)

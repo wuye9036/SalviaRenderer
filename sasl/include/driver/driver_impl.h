@@ -14,39 +14,57 @@ public:
 	driver_null();
 
 	virtual void set_parameter( int argc, char** argv );
-	virtual void set_parameter( std::string const& cmd ){}
+	virtual void set_parameter( std::string const& /*cmd*/ ){}
 
-	virtual void set_code       ( std::string const& code_text ){}
-	virtual void set_code_file  ( std::string const& code_file ){}
-	virtual void set_code_source( boost::shared_ptr<sasl::common::code_source> const& ){}
-	virtual void set_lex_context( boost::shared_ptr<sasl::common::lex_context> const& ){}
+	virtual void set_code       ( std::string const& /*code_text*/ ){}
+	virtual void set_code_file  ( std::string const& /*file_name*/ ){}
+	virtual void set_code_source( sasl::common::code_source_ptr const& ){}
+	virtual void set_lex_context( sasl::common::lex_context_ptr const& ){}
 
 	/// Only support by default code_source.
-	virtual void add_virtual_file( std::string const& file_name, std::string const& code_content, bool high_priority ){}
+	virtual void add_virtual_file(
+		std::string const& /*file_name*/,
+		std::string const& /*code_content*/,
+		bool /*high_priority*/ ){}
 	/// Only support by default code_source.
-	virtual void set_include_handler( include_handler_fn inc_handler ){}
+	virtual void set_include_handler( include_handler_fn /*inc_handler*/ ){}
 	/// Only support by default code source.
-	virtual void add_include_path( std::string const& inc_path ){}
+	virtual void add_include_path( std::string const& /*inc_path*/ ){}
 	/// Only support by default code source.
-	virtual void add_sysinclude_path( std::string const& sys_path ){}
+	virtual void add_sysinclude_path( std::string const& /*sys_path*/ ){}
 	/// Only support by default code source.
 	virtual void clear_sysinclude_paths(){}
 	/// Only support by default code source.
-	virtual void add_macro( std::string const& macro, bool predef ){}
+	virtual void add_macro( std::string const& /*macro*/, bool /*predef*/ ){}
 	/// Only support by default code source.
-	virtual void remove_macro( std::string const& macro ){}
+	virtual void remove_macro( std::string const& /*macro*/ ){}
 	/// Only support by default code source.
 	virtual void clear_macros(){}
 
-	virtual boost::shared_ptr<sasl::common::diag_chat> compile(){ return boost::shared_ptr<sasl::common::diag_chat>(); }
+	virtual sasl::common::diag_chat_ptr compile()
+	{
+		return sasl::common::diag_chat_ptr();
+	}
 
-	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit(){ return boost::shared_ptr<sasl::codegen::jit_engine>(); }
-	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& ){ return boost::shared_ptr<sasl::codegen::jit_engine>(); }
+	virtual sasl::semantic::module_semantic_ptr	get_semantic() const
+	{
+		return sasl::semantic::module_semantic_ptr();
+	}
 
-	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const{ return boost::shared_ptr<sasl::semantic::module_semantic>(); }
-	virtual boost::shared_ptr<sasl::codegen::cg_module>				module() const{ return boost::shared_ptr<sasl::codegen::cg_module>(); }
-	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const{ return boost::shared_ptr<sasl::syntax_tree::node>(); }
-	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const{ return boost::shared_ptr<sasl::semantic::abi_info>(); }
+	virtual sasl::codegen::module_vmcode_ptr	get_vmcode() const
+	{
+		return sasl::codegen::module_vmcode_ptr();
+	}
+
+	virtual sasl::syntax_tree::node_ptr			get_root() const
+	{
+		return sasl::syntax_tree::node_ptr();
+	}
+
+	virtual sasl::semantic::reflection_impl_ptr	get_reflection() const
+	{
+		return sasl::semantic::reflection_impl_ptr();
+	}
 };
 
 class driver_impl: public driver{
@@ -79,15 +97,12 @@ public:
 	/// Only support by default code source.
 	virtual void clear_macros();
 
-	virtual boost::shared_ptr<sasl::common::diag_chat> compile();
+	virtual sasl::common::diag_chat_ptr			compile();
 
-	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit();
-	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit( external_function_array const& );
-
-	virtual boost::shared_ptr<sasl::semantic::module_semantic>	module_sem() const;
-	virtual boost::shared_ptr<sasl::codegen::cg_module>			module() const;
-	virtual boost::shared_ptr<sasl::syntax_tree::node>			root() const;
-	virtual boost::shared_ptr<sasl::semantic::abi_info>			mod_abi() const;
+	virtual sasl::semantic::module_semantic_ptr	get_semantic() const;
+	virtual sasl::codegen::module_vmcode_ptr	get_vmcode() const;
+	virtual sasl::syntax_tree::node_ptr			get_root() const;
+	virtual sasl::semantic::reflection_impl_ptr	get_reflection() const;
 
 	boost::program_options::variables_map const &	variables() const;
 	options_display_info const &					display_info() const;
@@ -99,13 +114,16 @@ private:
 
 	template <typename ParserT> bool parse( ParserT& parser );
 	void inject_function(
-		boost::shared_ptr<sasl::codegen::jit_engine> const& je,
-		void* pfn, eflib::fixed_string const& name, bool is_raw_name);
+		sasl::codegen::module_vmcode_ptr const& vmc,
+		void* pfn,
+		eflib::fixed_string const& name,
+		bool is_raw_name
+		);
 	
-	boost::shared_ptr<sasl::semantic::module_semantic>		msem;
-	boost::shared_ptr<sasl::codegen::cg_module>	mod;
-	boost::shared_ptr<sasl::syntax_tree::node>				mroot;
-	boost::shared_ptr<sasl::semantic::abi_info>				mabi;
+	sasl::semantic::module_semantic_ptr		msem;
+	sasl::codegen::module_vmcode_ptr		mvmc;
+	sasl::syntax_tree::node_ptr				mroot;
+	sasl::semantic::reflection_impl_ptr		mreflection;
 	
 	// Options
 	options_global			opt_global;

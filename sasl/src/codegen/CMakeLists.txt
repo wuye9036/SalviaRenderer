@@ -27,7 +27,7 @@ set( HEADER_FILES
 	
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_jit.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_contexts.h
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_module_impl.h
+	${SASL_HOME_DIR}/sasl/include/codegen/module_vmcode_impl.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_caster.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_intrins.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_type_builder.h
@@ -54,7 +54,7 @@ set( SOURCE_FILES
 	
 	cg_jit.cpp
 	cg_contexts.cpp
-	cg_module_impl.cpp
+	module_vmcode_impl.cpp
 	
 	cg_caster.cpp
 	cg_opt.cpp

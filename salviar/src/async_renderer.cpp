@@ -80,7 +80,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& vsc )
+	virtual result set_vertex_shader_code( boost::shared_ptr<shader_object> const& vsc )
 	{
 		vertex_shader_code_ = vsc;
 		boost::function<result()> cmd = boost::bind(
@@ -147,7 +147,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_pixel_shader_code( boost::shared_ptr<shader_code> const& psc )
+	virtual result set_pixel_shader_code( boost::shared_ptr<shader_object> const& psc )
 	{
 		pixel_shader_code_ = psc;
 
@@ -400,7 +400,7 @@ public:
 		return eflib::rect<size_t>();
 	}
 	
-	virtual boost::shared_ptr<shader_code> get_pixel_shader_code() const
+	virtual boost::shared_ptr<shader_object> get_pixel_shader_code() const
 	{
 		return pixel_shader_code_;
 	}
@@ -410,7 +410,7 @@ public:
 		return vertex_shader_;
 	}
 
-	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const
+	virtual boost::shared_ptr<shader_object> get_vertex_shader_code() const
 	{
 		return vertex_shader_code_;
 	}
@@ -542,8 +542,8 @@ private:
 
 	// Cached states
 	mutable h_framebuffer			current_frame_buffer_;
-	boost::shared_ptr<shader_code>	vertex_shader_code_;
-	boost::shared_ptr<shader_code>	pixel_shader_code_;
+	boost::shared_ptr<shader_object>	vertex_shader_code_;
+	boost::shared_ptr<shader_object>	pixel_shader_code_;
 	h_vertex_shader					vertex_shader_;
 	h_pixel_shader					pixel_shader_;
 };

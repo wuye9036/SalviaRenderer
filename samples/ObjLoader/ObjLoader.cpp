@@ -4,7 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
@@ -189,7 +189,7 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new rasterizer_state(rs_desc));
 
-		cup_vs = shader_code::create_and_log(cup_vs_code, lang_vertex_shader);
+		cup_vs = compile(cup_vs_code, lang_vertex_shader);
 
 		num_frames = 0;
 		accumulate_time = 0;
@@ -287,8 +287,8 @@ protected:
 
 	vector<h_mesh> cup_mesh;
 
-	shared_ptr<shader_code> plane_vs;
-	shared_ptr<shader_code> cup_vs;
+	shared_ptr<shader_object> plane_vs;
+	shared_ptr<shader_object> cup_vs;
 
 	h_pixel_shader pps;
 	h_blend_shader pbs;

@@ -4,7 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
@@ -321,7 +321,7 @@ protected:
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Cone Pixel Shader ..." << endl;
-			psc_cone = shader_code::create_and_log( cone_ps_code, lang_pixel_shader );
+			psc_cone = compile( cone_ps_code, lang_pixel_shader );
 #endif
 		}
 
@@ -341,7 +341,7 @@ protected:
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Plane Pixel Shader ..." << endl;
-			psc_plane = shader_code::create_and_log( plane_ps_code, lang_pixel_shader );
+			psc_plane = compile( plane_ps_code, lang_pixel_shader );
 #endif
 		}
 

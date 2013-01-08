@@ -4,7 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
@@ -289,7 +289,7 @@ protected:
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
-		morph_sc = shader_code::create_and_log( morph_vs_code, lang_vertex_shader );
+		morph_sc = compile( morph_vs_code, lang_vertex_shader );
 #endif
 
 		pvs.reset( new morph_vs() );
@@ -389,7 +389,7 @@ protected:
 
 	mesh_ptr morph_mesh;
 
-	shared_ptr<shader_code> morph_sc;
+	shared_ptr<shader_object> morph_sc;
 
 	h_vertex_shader	pvs;
 	h_pixel_shader	pps;

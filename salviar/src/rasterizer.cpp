@@ -3,8 +3,8 @@
 #include <salviar/include/clipper.h>
 #include <salviar/include/framebuffer.h>
 #include <salviar/include/renderer_impl.h>
-#include <salviar/include/shader_abi.h>
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_reflection.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/shader_unit.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/thread_pool.h>
@@ -25,7 +25,7 @@
 using eflib::num_available_threads;
 using eflib::atomic;
 
-class shader_abi;
+class shader_reflection;
 
 BEGIN_NS_SALVIAR();
 
@@ -1512,7 +1512,7 @@ void rasterizer::draw_package(
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
 
-	shader_abi const* vs_abi = pparent_->vs_proto() ? pparent_->vs_proto()->code->abii() : NULL;
+	shader_reflection const* vs_abi = pparent_->vs_proto() ? pparent_->vs_proto()->code->get_reflection() : NULL;
 
 	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
@@ -1575,9 +1575,9 @@ void rasterizer::draw_full_package(
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
 
-	shader_abi const* vs_abi = NULL;
+	shader_reflection const* vs_abi = NULL;
 	if( pparent_->vs_proto() ){
-		vs_abi = pparent_->vs_proto()->code->abii();
+		vs_abi = pparent_->vs_proto()->code->get_reflection();
 	}
 	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )

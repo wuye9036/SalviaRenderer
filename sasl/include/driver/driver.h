@@ -20,20 +20,20 @@ namespace sasl
 	{
 		EFLIB_DECLARE_CLASS_SHARED_PTR(diag_chat);
 		EFLIB_DECLARE_CLASS_SHARED_PTR(code_source);
+		EFLIB_DECLARE_CLASS_SHARED_PTR(lex_context);
 	}
 	namespace semantic
 	{
-		class module_semantic;
-		class abi_info;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
+		EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl);
 	}
 	namespace codegen
 	{
-		class cg_module;
-		class jit_engine;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(module_vmcode);
 	}
 	namespace syntax_tree
 	{
-		struct node;
+		EFLIB_DECLARE_STRUCT_SHARED_PTR(node);
 	}
 }
 
@@ -57,19 +57,18 @@ public:
 	virtual void set_code       ( std::string const& code_text )	= 0;
 	virtual void set_code_file  ( std::string const& code_file )	= 0;
 
-	virtual sasl::common::diag_chat_ptr compile()					= 0;
-	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit() = 0;
-	virtual boost::shared_ptr<sasl::codegen::jit_engine> create_jit(external_function_array const&) = 0;
 	virtual void add_virtual_file(
 		std::string const& file_name,
 		std::string const& code_content,
 		bool high_priority ) = 0;
 	virtual void set_include_handler( include_handler_fn inc_handler ) = 0;
 
-	virtual boost::shared_ptr<sasl::semantic::module_semantic>		module_sem() const		= 0;
-	virtual boost::shared_ptr<sasl::codegen::cg_module>	module() const= 0;
-	virtual boost::shared_ptr<sasl::syntax_tree::node>				root() const		= 0;
-	virtual boost::shared_ptr<sasl::semantic::abi_info>				mod_abi() const	= 0;
+	virtual sasl::common::diag_chat_ptr				compile()				= 0;
+
+	virtual sasl::semantic::module_semantic_ptr		get_semantic() const	= 0;
+	virtual sasl::codegen::module_vmcode_ptr		get_vmcode() const		= 0;
+	virtual sasl::syntax_tree::node_ptr				get_root() const		= 0;
+	virtual sasl::semantic::reflection_impl_ptr		get_reflection() const	= 0;
 
 	virtual ~driver(){}
 };

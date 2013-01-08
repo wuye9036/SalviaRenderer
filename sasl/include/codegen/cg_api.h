@@ -3,6 +3,9 @@
 
 #include <sasl/include/codegen/forward.h>
 
+#include <eflib/include/utility/shared_declaration.h>
+#include <eflib/include/string/ustring.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -11,15 +14,18 @@
 #include <string>
 #include <vector>
 
-namespace llvm {
+namespace llvm
+{
 	class Module;
 	class LLVMContext;
 }
 
-namespace sasl {
-	namespace semantic{
-		class module_semantic;
-		class abi_info;
+namespace sasl
+{
+	namespace semantic
+	{
+		EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
+		EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl);
 	}
 }
 
@@ -27,22 +33,29 @@ BEGIN_NS_SASL_CODEGEN();
 
 class module_context;
 
-class cg_module
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_vmcode);
+
+class module_vmcode
 {
 public:
 	virtual sasl::semantic::module_semantic*
-								get_semantic() const				= 0;
+					get_semantic() const	= 0;
 	virtual sasl::codegen::module_context*
-								get_context() const					= 0;
+					get_context() const		= 0;
 
-	virtual llvm::Module*		llvm_module() const					= 0;
-	virtual llvm::LLVMContext&	llvm_context()						= 0;
-	virtual llvm::Module*		take_ownership() const				= 0;
+	virtual llvm::Module*
+					get_vm_module() const	= 0;
+	virtual llvm::LLVMContext&
+					get_vm_context()		= 0;
 
-	virtual void				dump_ir() const						= 0;
-	virtual void				dump_ir( std::ostream& ostr ) const	= 0;
+	virtual bool	enable_jit()			= 0;
+	virtual void*	get_function	(eflib::fixed_string const& /*func_name*/)			= 0;
+	virtual void	inject_function	(void* fn, eflib::fixed_string const& /*func_name*/)= 0;
 
-	virtual ~cg_module(){};
+	virtual void	dump_ir() const						= 0;
+	virtual void	dump_ir( std::ostream& ostr ) const	= 0;
+
+	virtual ~module_vmcode(){};
 };
 
 enum optimization_options{
@@ -50,11 +63,10 @@ enum optimization_options{
 	opt_preset_std_for_function
 };
 
-boost::shared_ptr<cg_module> generate_llvm_code(
-	boost::shared_ptr<sasl::semantic::module_semantic> const&,
-	sasl::semantic::abi_info const*
+module_vmcode_ptr generate_vmcode(
+	sasl::semantic::module_semantic_ptr const&,
+	sasl::semantic::reflection_impl const*
 	);
-void optimize( boost::shared_ptr<cg_module>, std::vector<optimization_options> opt_options );
 
 // void optimize( boost::shared_ptr<llvm_module>, const std::string& params );
 

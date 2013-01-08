@@ -2,7 +2,7 @@
 
 #include <sasl/include/codegen/utility.h>
 #include <sasl/include/codegen/cg_caster.h>
-#include <sasl/include/codegen/cg_module_impl.h>
+#include <sasl/include/codegen/module_vmcode_impl.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/caster.h>
@@ -59,17 +59,17 @@ BEGIN_NS_SASL_CODEGEN();
 
 llvm::DefaultIRBuilder* cg_impl::builder() const
 {
-	return llvm_mod_->builder();
+	return vmcode_->builder();
 }
 
 llvm::LLVMContext& cg_impl::context() const
 {
-	return llvm_mod_->llvm_context();
+	return vmcode_->get_vm_context();
 }
 
 llvm::Module* cg_impl::module() const
 {
-	return llvm_mod_->llvm_module();
+	return vmcode_->get_vm_module();
 }
 
 node_context* cg_impl::node_ctxt( node const* n, bool create_if_need /*= false */ )
@@ -84,12 +84,12 @@ node_context* cg_impl::node_ctxt( node const* n, bool create_if_need /*= false *
 	}
 }
 
-shared_ptr<cg_module> cg_impl::generated_module() const
+shared_ptr<module_vmcode> cg_impl::generated_module() const
 {
-	return llvm_mod_;
+	return vmcode_;
 }
 
-bool cg_impl::generate( shared_ptr<module_semantic> const& mod, abi_info const* abii )
+bool cg_impl::generate( shared_ptr<module_semantic> const& mod, reflection_impl const* abii )
 {
 	sem_ = mod;
 	this->abii = abii;
@@ -592,16 +592,15 @@ SASL_VISIT_DEF( program )
 	EFLIB_UNREF_DECLARATOR(data);
 
 	// Create module.
-	assert( !llvm_mod_ );
-	llvm_mod_.reset( new cg_module_impl() );
+	assert( !vmcode_ );
+	
 	ctxt_ = module_context::create();
 
-	// Initialization.
-	llvm_mod_->create_llvm_module(v.name);
-	llvm_mod_->set_semantic(sem_);
-	llvm_mod_->set_context(ctxt_);
+	vmcode_.reset( new module_vmcode_impl(v.name) );
+	vmcode_->set_semantic(sem_);
+	vmcode_->set_context(ctxt_);
 
-	service()->initialize( llvm_mod_.get(), ctxt_.get(), sem_.get() );
+	service()->initialize( vmcode_.get(), ctxt_.get(), sem_.get() );
 
 	typedef node_context* (get_context_native_fn) (node const*);
 	boost::function<get_context_native_fn> get_context

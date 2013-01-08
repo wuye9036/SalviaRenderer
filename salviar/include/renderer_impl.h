@@ -8,10 +8,11 @@
 
 BEGIN_NS_SALVIAR();
 
+EFLIB_DECLARE_CLASS_SHARED_PTR(host);
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer_impl);
-
-class vertex_shader_unit;
-class pixel_shader_unit;
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
+EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
+EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 
 struct state_block{
 	viewport vp;	
@@ -23,31 +24,33 @@ class renderer_impl : public renderer
 	viewport vp_;
 	cull_mode cm_;
 
-	h_buffer_manager			hbufmgr_;
-	h_texture_manager			htexmgr_;
-	h_vertex_shader				hvs_;
-	h_clipper					hclipper_;
-	h_rasterizer				hrast_;
-	h_pixel_shader				hps_;
-	h_framebuffer				hfb_;
-	h_device					hdev_;
-	h_vertex_cache				hvertcache_;
-	h_blend_shader				hbs_;
+	h_buffer_manager		hbufmgr_;
+	h_texture_manager		htexmgr_;
+	h_vertex_shader			hvs_;
+	h_clipper				hclipper_;
+	h_rasterizer			hrast_;
+	h_pixel_shader			hps_;
+	h_framebuffer			hfb_;
+	h_device				hdev_;
+	h_vertex_cache			hvertcache_;
+	h_blend_shader			hbs_;
 
-	h_buffer indexbuf_;
+	h_buffer				indexbuf_;
 	format index_fmt_;
 
-	primitive_topology primtopo_;
+	primitive_topology		primtopo_;
 
-	h_rasterizer_state			hrs_;
-	h_depth_stencil_state		hdss_;
-	int32_t						stencil_ref_;
+	h_rasterizer_state		hrs_;
+	h_depth_stencil_state	hdss_;
+	int32_t					stencil_ref_;
 
-	vs_input_op*				vs_input_ops_;
-	vs_output_op*				vs_output_ops_;
+	vs_input_op*			vs_input_ops_;
+	vs_output_op*			vs_output_ops_;
 
-	boost::shared_ptr<shader_code>			vscode_;
-	boost::shared_ptr<shader_code>			pscode_;
+	host_ptr				host_;
+
+	shader_object_ptr		vscode_;
+	shader_object_ptr		pscode_;
 	boost::shared_ptr<vertex_shader_unit>	vs_proto_;
 	boost::shared_ptr<pixel_shader_unit>	ps_proto_;
 	void initialize();
@@ -80,8 +83,8 @@ public:
 	virtual result set_vertex_shader(h_vertex_shader const& hvs);
 	virtual h_vertex_shader get_vertex_shader() const;
 	
-	virtual result set_vertex_shader_code( boost::shared_ptr<shader_code> const& );
-	virtual boost::shared_ptr<shader_code> get_vertex_shader_code() const;
+	virtual result set_vertex_shader_code( boost::shared_ptr<shader_object> const& );
+	virtual boost::shared_ptr<shader_object> get_vertex_shader_code() const;
 	virtual result set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz );
 	virtual result set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz );
 	virtual result set_vs_sampler( std::string const& name, h_sampler const& samp );
@@ -99,8 +102,8 @@ public:
 	virtual result set_pixel_shader(h_pixel_shader const& hps);
 	virtual h_pixel_shader get_pixel_shader() const;
 
-	virtual result set_pixel_shader_code( boost::shared_ptr<shader_code> const& );
-	virtual boost::shared_ptr<shader_code> get_pixel_shader_code() const;
+	virtual result set_pixel_shader_code( boost::shared_ptr<shader_object> const& );
+	virtual boost::shared_ptr<shader_object> get_pixel_shader_code() const;
 	virtual result set_ps_variable( std::string const& name, void const* data, size_t sz );
 	virtual result set_ps_sampler( std::string const& name, h_sampler const& samp );
 

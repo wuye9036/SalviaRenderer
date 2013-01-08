@@ -1,6 +1,6 @@
-#include <sasl/include/semantic/abi_analyser.h>
+#include <sasl/include/semantic/reflector.h>
 
-#include <sasl/include/semantic/abi_info.h>
+#include <sasl/include/semantic/reflection_impl.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/syntax_tree/declaration.h>
@@ -27,6 +27,8 @@ using salviar::su_stream_out;
 using salviar::su_buffer_in;
 using salviar::su_buffer_out;
 using salviar::sv_usage_count;
+
+using eflib::fixed_string;
 
 using boost::addressof;
 using boost::make_shared;
@@ -125,191 +127,152 @@ sv_usage semantic_usage( salviar::languages lang, bool is_output, salviar::seman
 	return su_none;
 }
 
-void abi_analyser::reset( salviar::languages lang ){
-	assert( lang < salviar::lang_count );
-	
-	mods[lang].reset();
-	entries[lang] = NULL;
-	abiis[lang].reset();
-}
-
-void abi_analyser::reset_all(){
-	for( int i = 0; i < salviar::lang_count; ++i ){
-		reset( static_cast<salviar::languages>(i) );
+reflection_impl_ptr reflector::reflect(
+	module_semantic_ptr const& sem, fixed_string const& entry_name )
+{
+	vector<symbol*> overloads = sem->root_symbol()->find_overloads(entry_name);
+	if ( overloads.size() != 1 )
+	{
+		return reflection_impl_ptr();
 	}
+	sem_	= sem.get();
+	entry_	= overloads[0];
+	return do_reflect();
 }
 
-bool abi_analyser::entry( shared_ptr<module_semantic> const& mod, string const& name, salviar::languages lang ){
-	vector<symbol*> overloads = mod->root_symbol()->find_overloads( name );
-	if ( overloads.size() != 1 ){
-		return false;
-	}
-
-	return entry( mod, overloads[0], lang );
-}
-
-bool abi_analyser::entry( module_semantic_ptr const& mod, symbol* fnsym, salviar::languages lang ){
-	assert( lang < salviar::lang_count );
-
-	mods[lang] = mod;
-	entries[lang] = fnsym;
-	abiis[lang].reset();
-	return update(lang);
-}
-
-bool abi_analyser::auto_entry( shared_ptr<module_semantic> const& mod, salviar::languages lang ){
-	symbol*			candidate = NULL;
-	abi_info_ptr	candidate_abii;
-
-	BOOST_FOREACH( symbol* fnsym, mod->functions() ){
-		if( entry(mod, fnsym, lang) ){
-			if( candidate ){
-				// TODO: More than one matched. conflict error.
-				reset(lang);
-				return false;
-			}
-			candidate = fnsym;
-			candidate_abii = abiis[lang];
-		}
+reflection_impl_ptr reflector::do_reflect()
+{
+	if( ! (sem_ && entry_) )
+	{
+		return reflection_impl_ptr();
 	}
 
-	if( candidate ){
-		mods[lang] = mod;
-		entries[lang] = candidate;
-		abiis[lang] = candidate_abii;
-		return true;
-	}
-
-	return false;
-}
-
-symbol* abi_analyser::entry( salviar::languages lang ) const{
-	return entries[lang];
-}
-
-bool abi_analyser::update_abiis(){
-	return update( salviar::lang_vertex_shader )
-		&& update( salviar::lang_pixel_shader )
-		&& update( salviar::lang_blending_shader )
-		;
-}
-
-bool abi_analyser::verify_abiis(){
-	return verify_vs_ps() && verify_ps_bs();
-}
-
-bool abi_analyser::update( salviar::languages lang ){
-	if ( abiis[lang] ){
-		return true;
-	}
-
-	if( ! (mods[lang] && entries[lang]) ){
-		return false;
-	}
+	salviar::languages lang = sem_->get_language();
 
 	// Initialize language ABI information.
-	abiis[lang] = make_shared<abi_info>();
-	abiis[lang]->lang		 = lang;
-	abiis[lang]->module_sem_	 = mods[lang].get();
-	abiis[lang]->entry_point_= entries[lang];
+	reflection_impl_ptr ret = make_shared<reflection_impl>();
+	ret->lang				= lang;
+	ret->module_sem_			= sem_;
+	ret->entry_point_		= entry_;
+	ret->entry_point_name_	= entry_->mangled_name();
+	reflection_ = ret.get();
 	
-	if( entries[lang] ){
-		abiis[lang]->entry_point_name_ = entries[lang]->mangled_name();
-	}
-
 	if( lang == salviar::lang_vertex_shader
 		|| lang == salviar::lang_pixel_shader
 		|| lang == salviar::lang_blending_shader
 		)
 	{
 		// Process entry function.
-		shared_ptr<function_def> entry_fn = entries[lang]->associated_node()->as_handle<function_def>();
+		shared_ptr<function_def> entry_fn = entry_->associated_node()->as_handle<function_def>();
 		assert( entry_fn );
 
-		if( !add_semantic( entry_fn, false, false, lang, true ) ){
+		if( !add_semantic(entry_fn, false, false, lang, true) )
+		{
 			assert( false );
-			reset(lang);
-			return false;
+			ret.reset();
+			return ret;
 		}
 
 		BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
 		{
-			if( !add_semantic( param, false, false, lang, false ) ){
-				reset(lang);
-				return false;
+			if( !add_semantic(param, false, false, lang, false) )
+			{
+				ret.reset();
+				return ret;
 			}
 		}
 
 		// Process global variables.
-		BOOST_FOREACH( symbol* gvar_sym, mods[lang]->global_vars() ){
+		BOOST_FOREACH( symbol* gvar_sym, sem_->global_vars() ){
 			shared_ptr<declarator> gvar = gvar_sym->associated_node()->as_handle<declarator>();
 			assert(gvar);
 
 			// is_member is set to true for preventing aggregated variable.
 			// And global variable only be treated as input.
-			if( !add_semantic( gvar, true, false, lang, false ) ){
+			if( !add_semantic(gvar, true, false, lang, false) ){
 				// If it is not attached to an valid semantic, it should be uniform variable.
 
 				// Check the data type of global. Now global variables only support built-in types.
-				node_semantic* psi = mods[lang]->get_semantic( gvar.get() );
+				node_semantic* psi = sem_->get_semantic( gvar.get() );
 				if( psi->ty_proto()->is_builtin() || psi->ty_proto()->is_array()  )
 				{
-					abiis[lang]->add_global_var(gvar_sym, psi->ty_proto()->as_handle<tynode>() );
+					ret->add_global_var(gvar_sym, psi->ty_proto()->as_handle<tynode>() );
 				}
 				else
 				{
 					//TODO: It an semantic error need to be reported.
-					return false;
+					ret.reset();
+					return ret;
 				}
 			}
 		}
 	}
 
-	return true;
+	return ret;
 }
 
-abi_info const* abi_analyser::abii( salviar::languages lang ) const{
-	return abiis[lang].get();
+reflection_impl_ptr reflector::reflect(module_semantic_ptr const& sem)
+{
+	symbol*				candidate = NULL;
+	reflection_impl_ptr	candidate_reflection;
+
+	BOOST_FOREACH( symbol* fn_sym, sem_->functions() )
+	{
+		entry_	= fn_sym;
+		sem_	= sem.get();
+
+		candidate_reflection = do_reflect();
+
+		if(candidate_reflection)
+		{
+			if(candidate)
+			{
+				// TODO: More than one matched. conflict error.
+				return reflection_impl_ptr();
+			}
+			candidate = fn_sym;
+		}
+	}
+
+	return candidate_reflection;
 }
 
-abi_info* abi_analyser::abii( salviar::languages lang ){
-	return abiis[lang].get();
-}
-
-bool abi_analyser::add_semantic(
+bool reflector::add_semantic(
 	shared_ptr<node> const& v,
 	bool is_member, bool enable_nested,
 	salviar::languages lang, bool is_output)
 {
-	abi_info* ai = abii(lang);
-	assert( ai );
-	node_semantic* pssi = mods[lang]->get_semantic( v.get() );
+	assert(reflection_);
+	node_semantic* pssi = sem_->get_semantic( v.get() );
 	assert(pssi); // TODO: Here are semantic analysis error.
 	tynode* ptspec = pssi->ty_proto();
 	assert(ptspec); // TODO: Here are semantic analysis error.
 
 	salviar::semantic_value const& node_sem = pssi->semantic_value_ref();
 
-	if( ptspec->is_builtin() ){
+	if( ptspec->is_builtin() )
+	{
 		builtin_types btc = ptspec->tycode;
 		if ( verify_semantic_type( btc, node_sem ) ) {
 			sv_usage sem_s = semantic_usage( lang, is_output, node_sem );
 			switch( sem_s ){
 
 			case su_stream_in:
-				return ai->add_input_semantic( node_sem, btc, true );
+				return reflection_->add_input_semantic( node_sem, btc, true );
 			case su_buffer_in:
-				return ai->add_input_semantic( node_sem, btc, false );
+				return reflection_->add_input_semantic( node_sem, btc, false );
 			case su_stream_out:
-				return ai->add_output_semantic( node_sem, btc, true );
+				return reflection_->add_output_semantic( node_sem, btc, true );
 			case su_buffer_out:
-				return ai->add_output_semantic( node_sem, btc, false );
+				return reflection_->add_output_semantic( node_sem, btc, false );
 			}
 
 			assert( false );
 			return false;
 		}
-	} else if( ptspec->node_class() == node_ids::struct_type ){
+	}
+	else if( ptspec->node_class() == node_ids::struct_type )
+	{
 		if( is_member && !enable_nested ){
 			return false;
 		}
@@ -336,18 +299,15 @@ bool abi_analyser::add_semantic(
 	return false;
 }
 
-bool abi_analyser::verify_vs_ps(){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return false;
+reflection_impl_ptr reflect(module_semantic_ptr const& sem)
+{
+	reflector rfl;
+	return rfl.reflect(sem);
 }
 
-bool abi_analyser::verify_ps_bs(){
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return false;
+reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
+{
+	reflector rfl;
+	return rfl.reflect(sem, entry_name);
 }
-
-shared_ptr<abi_info> abi_analyser::shared_abii( salviar::languages lang ) const{
-	return abiis[lang];
-}
-
 END_NS_SASL_SEMANTIC();

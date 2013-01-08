@@ -4,7 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
@@ -293,7 +293,7 @@ protected:
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
-		astro_boy_sc = shader_code::create_and_log( astro_boy_vs_code, lang_vertex_shader );
+		astro_boy_sc = compile( astro_boy_vs_code, lang_vertex_shader );
 #endif
 
 		pvs.reset( new astro_boy_vs() );
@@ -408,7 +408,7 @@ protected:
 
 	h_skin_mesh astro_boy_mesh;
 
-	shared_ptr<shader_code> astro_boy_sc;
+	shader_object_ptr astro_boy_sc;
 
 	h_vertex_shader	pvs;
 	h_pixel_shader	pps;

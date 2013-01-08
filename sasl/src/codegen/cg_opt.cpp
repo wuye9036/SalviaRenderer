@@ -29,9 +29,9 @@ using std::ostream;
 
 BEGIN_NS_SASL_CODEGEN();
 
-void optimize( shared_ptr<cg_module> code, vector<optimization_options> opt_options )
+void optimize( shared_ptr<module_vmcode> code, vector<optimization_options> opt_options )
 {
-	Module* mod = code->llvm_module();
+	Module* mod = code->get_vm_module();
 
 	FunctionPassManager fpm(mod);
 

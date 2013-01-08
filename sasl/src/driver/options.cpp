@@ -170,7 +170,7 @@ void option_macros::fill_desc( po::options_description& desc ){
 		;
 }
 
-void option_macros::filterate( po::variables_map const & vm ){
+void option_macros::filterate( po::variables_map const & /*vm*/ ){
 	// Do nothing. parse_predef will hook all legal definitions.
 	return;
 }
@@ -190,7 +190,7 @@ void options_includes::fill_desc( po::options_description& desc )
 		;
 }
 
-void options_includes::filterate( po::variables_map const & vm )
+void options_includes::filterate( po::variables_map const & /*vm*/ )
 {
 	// Nothing special to deal with.
 	return;

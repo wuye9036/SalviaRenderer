@@ -4,7 +4,9 @@
 #include <sasl/include/codegen/forward.h>
 
 #include <sasl/include/codegen/cgs_sisd.h>
+
 #include <eflib/include/platform/typedefs.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -14,7 +16,6 @@
 #include <eflib/include/diagnostics/assert.h>
 
 namespace llvm{
-	// Node
 	class AllocaInst;
 	class Argument;
 	class Constant;
@@ -23,33 +24,31 @@ namespace llvm{
 	class Value;
 	class BasicBlock;
 	
-	// Type
 	class Type;
 	class StructType;
 
-	// Instructions
 	class ReturnInst;
-}
 
-namespace sasl{
-	namespace semantic{
-		class symbol;
-	}
-}
-
-namespace llvm{
 	class LLVMContext;
 	class Module;
 	class ConstantFolder;
-	class Type;
 	template <bool preserveNames> class IRBuilderDefaultInserter;
-	template< bool preserveNames, typename T, typename Inserter
-	> class IRBuilder;
+	template <bool preserveNames, typename T, typename Inserter> class IRBuilder;
 	typedef IRBuilder<true, ConstantFolder, IRBuilderDefaultInserter<true> >
 		DefaultIRBuilder;
 }
 
+namespace sasl
+{
+	namespace semantic
+	{
+		class symbol;
+	}
+}
+
 BEGIN_NS_SASL_CODEGEN();
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(module_context);
 
 class module_context
 {

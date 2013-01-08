@@ -5,6 +5,9 @@
 
 #include <sasl/enums/literal_classifications.h>
 #include <sasl/enums/builtin_types.h>
+
+#include <salviar/include/shader.h>
+
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/platform/typedefs.h>
 
@@ -54,26 +57,30 @@ public:
 
 	virtual ~module_semantic(){}
 	
+	virtual salviar::languages				get_language() const = 0;
+	virtual void							set_language(salviar::languages lang) = 0;
+
 	virtual symbol*							root_symbol() const = 0;
+	
 	virtual sasl::syntax_tree::program_ptr	get_program() const = 0;
 	virtual	void							set_program(sasl::syntax_tree::program_ptr const&) = 0;
 
 	virtual pety_t*							pety() const = 0;
 	virtual sasl::common::diag_chat_ptr		diags() const = 0;
 
-	virtual std::vector<symbol*> const&	global_vars() const = 0;
-	virtual std::vector<symbol*>&		global_vars() = 0;
+	virtual std::vector<symbol*> const&		global_vars() const = 0;
+	virtual std::vector<symbol*>&			global_vars() = 0;
 
-	virtual bool						is_modified(symbol*) const = 0;
-	virtual void						modify(symbol*) = 0;
+	virtual bool							is_modified(symbol*) const = 0;
+	virtual void							modify(symbol*) = 0;
 
-	virtual std::vector<symbol*> const&	functions() const = 0;
-	virtual std::vector<symbol*>&		functions() = 0;
+	virtual std::vector<symbol*> const&		functions() const = 0;
+	virtual std::vector<symbol*>&			functions() = 0;
 	
-	virtual std::vector<symbol*> const&	intrinsics() const = 0;
-	virtual std::vector<symbol*>&		intrinsics() = 0;
+	virtual std::vector<symbol*> const&		intrinsics() const = 0;
+	virtual std::vector<symbol*>&			intrinsics() = 0;
 
-	template <typename T> node_semantic* get_semantic( boost::shared_ptr<T> const& v )
+	template <typename T> node_semantic*	get_semantic( boost::shared_ptr<T> const& v )
 	{
 		return get_semantic( v.get() );
 	}

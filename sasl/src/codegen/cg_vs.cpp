@@ -1,7 +1,7 @@
 #include <sasl/include/codegen/cg_vs.h>
 
 #include <sasl/include/codegen/cg_contexts.h>
-#include <sasl/include/codegen/cg_module_impl.h>
+#include <sasl/include/codegen/module_vmcode_impl.h>
 #include <sasl/include/codegen/cg_impl.imp.h>
 #include <sasl/include/codegen/generate_entry.h>
 
@@ -43,7 +43,7 @@ using salviar::sv_layout;
 using sasl::semantic::node_semantic;
 using sasl::semantic::symbol;
 using sasl::semantic::node_semantic;
-using sasl::semantic::abi_info;
+using sasl::semantic::reflection_impl;
 
 using namespace sasl::syntax_tree;
 using namespace llvm;
@@ -103,6 +103,7 @@ SASL_VISIT_DEF( member_expression ){
 			sv_layout* psvl = abii->input_sv_layout( sem );
 			bool from_cache = layout_to_node_context(ctxt, psvl, false, true);
 			// Value and type must get from cache
+			EFLIB_UNREF_DECLARATOR(from_cache);
 			assert(from_cache);
 		} else {
 			node_context* mem_ctxt = node_ctxt( mem_sym->associated_node(), true );
@@ -358,13 +359,16 @@ bool cg_vs::is_entry( llvm::Function* fn ) const{
 	return fn && fn == entry_fn;
 }
 
-cg_module_impl* cg_vs::mod_ptr(){
-	return llvm_mod_.get();
+module_vmcode_impl* cg_vs::mod_ptr(){
+	return vmcode_.get();
 }
 
 multi_value cg_vs::layout_to_value(sv_layout* svl, bool copy_from_input)
 {
-	if(copy_from_input) EFLIB_ASSERT_UNIMPLEMENTED();
+	if(copy_from_input)
+	{
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
 
 	multi_value ret;
 

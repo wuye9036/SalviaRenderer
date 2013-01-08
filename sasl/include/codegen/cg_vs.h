@@ -3,7 +3,7 @@
 
 #include <sasl/include/codegen/cg_sisd.h>
 
-#include <sasl/include/semantic/abi_info.h>
+#include <sasl/include/semantic/reflection_impl.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/utility/value_init.hpp>
@@ -70,7 +70,7 @@ private:
 
 	bool is_entry( llvm::Function* ) const;
 
-	cg_module_impl* mod_ptr();
+	module_vmcode_impl* mod_ptr();
 
 	multi_value layout_to_value(salviar::sv_layout* si, bool copy_from_input);
 

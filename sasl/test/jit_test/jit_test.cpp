@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-using sasl::codegen::cg_module;
+using sasl::codegen::module_vmcode;
 using std::fstream;
 
 #include <eflib/include/platform/disable_warnings.h>
@@ -80,17 +80,17 @@ void jit_fixture::init( string const& file_name, string const& options )
 	shared_ptr<diag_chat> results = drv->compile();
 	diag_chat::merge(diags.get(), results.get(), true);
 
-	BOOST_REQUIRE( drv->root() );
-	BOOST_REQUIRE( drv->module_sem() );
-	BOOST_REQUIRE( drv->module() );
+	BOOST_REQUIRE( drv->get_root() );
+	BOOST_REQUIRE( drv->get_semantic() );
+	BOOST_REQUIRE( drv->get_vmcode() );
 
-	root_sym = drv->module_sem()->root_symbol();
+	root_sym = drv->get_semantic()->root_symbol();
 
-	shared_ptr<cg_module> llvm_mod = shared_polymorphic_cast<cg_module>( drv->module() );
+	shared_ptr<module_vmcode> vmc = shared_polymorphic_cast<module_vmcode>( drv->get_vmcode() );
 	fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
-	llvm_mod->dump_ir( dump_file );
+	vmc->dump_ir( dump_file );
 	dump_file.close();
 
-	je = drv->create_jit();
-	BOOST_REQUIRE( je );
+	bool is_jit_enabled = vmc->enable_jit();
+	BOOST_REQUIRE(is_jit_enabled);
 }

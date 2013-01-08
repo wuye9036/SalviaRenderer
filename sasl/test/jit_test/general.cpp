@@ -5,7 +5,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <sasl/test/jit_test/jit_test.h>
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
 #include <eflib/include/platform/cpuinfo.h>
 #include <eflib/include/diagnostics/profiler.h>
 

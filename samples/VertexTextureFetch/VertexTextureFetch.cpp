@@ -4,7 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_code.h>
+#include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
@@ -217,12 +217,12 @@ protected:
 		}
 
 		cout << "Compiling vertex shader ... " << endl;
-		vsc = shader_code::create_and_log( vs_code, lang_vertex_shader );
+		vsc = compile( vs_code, lang_vertex_shader );
 		hsr->set_vertex_shader_code( vsc );
 
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
 		cout << "Compiling pixel shader ... " << endl;
-		psc = shader_code::create_and_log( ps_code, lang_pixel_shader );
+		psc = compile( ps_code, lang_pixel_shader );
 		hsr->set_pixel_shader_code(psc);
 #endif
 
@@ -327,8 +327,8 @@ protected:
 	texture_ptr		terrain_tex;
 	h_sampler		terrain_samp;
 
-	shared_ptr<shader_code> vsc;
-	shared_ptr<shader_code> psc;
+	shared_ptr<shader_object> vsc;
+	shared_ptr<shader_object> psc;
 
 	h_vertex_shader	pvs;
 	h_pixel_shader	pps;

@@ -7,8 +7,10 @@
 
 #include <sasl/enums/enums_utility.h>
 
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
+
 #include <eflib/include/math/math.h>
+#include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/IRBuilder.h>
@@ -171,42 +173,61 @@ void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 
 multi_value cgs_simd::cast_ints( multi_value const& v, cg_type* dest_tyi )
 {
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_UNREF_DECLARATOR(dest_tyi);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
 
 multi_value cgs_simd::cast_i2f( multi_value const& v, cg_type* dest_tyi )
 {
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_UNREF_DECLARATOR(dest_tyi);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
 
 multi_value cgs_simd::cast_f2i( multi_value const& v, cg_type* dest_tyi )
 {
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_UNREF_DECLARATOR(dest_tyi);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
 
 multi_value cgs_simd::cast_f2f( multi_value const& v, cg_type* dest_tyi )
 {
+	EFLIB_UNREF_DECLARATOR(v);
+	EFLIB_UNREF_DECLARATOR(dest_tyi);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
 
 multi_value cgs_simd::cast_i2b( multi_value const& v )
 {
+	EFLIB_UNREF_DECLARATOR(v);
+	
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
 
 multi_value cgs_simd::cast_f2b( multi_value const& v )
 {
+	EFLIB_UNREF_DECLARATOR(v);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
 
 multi_value cgs_simd::create_vector( vector<multi_value> const& scalars, abis::id abi )
 {
+	EFLIB_UNREF_DECLARATOR(scalars);
+	EFLIB_UNREF_DECLARATOR(abi);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
@@ -296,7 +317,7 @@ multi_value cgs_simd::emit_ddy( multi_value const& v )
 
 multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd)
 {
-	int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
+	// int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
 
 	builtin_types hint = v.hint();
 	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
@@ -484,17 +505,27 @@ llvm::Value* cgs_simd::load_loop_execution_mask()
 
 void cgs_simd::save_loop_execution_mask(Value* mask)
 {
-	builder().CreateStore( exec_masks.back(), mask_vars.back() );
+	if (mask == NULL )
+	{
+		mask = exec_masks.back();
+	}
+	builder().CreateStore( mask, mask_vars.back() );
 }
 
 multi_value cgs_simd::emit_and( multi_value const& lhs, multi_value const& rhs )
 {
+	EFLIB_UNREF_DECLARATOR(lhs);
+	EFLIB_UNREF_DECLARATOR(rhs);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
 
 multi_value cgs_simd::emit_or( multi_value const& lhs, multi_value const& rhs )
 {
+	EFLIB_UNREF_DECLARATOR(lhs);
+	EFLIB_UNREF_DECLARATOR(rhs);
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }

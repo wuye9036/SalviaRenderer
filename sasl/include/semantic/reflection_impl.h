@@ -4,7 +4,7 @@
 #include <sasl/include/semantic/semantic_forward.h>
 
 #include <salviar/include/shader.h>
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
 
 #include <sasl/enums/builtin_types.h>
 
@@ -33,29 +33,28 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(symbol);
 //////////////////////////////////////////////////////////////////////////
 // Application binary interface information.
 // Used by host and interpolator / rasterizer.
-class abi_analyser;
+class reflector;
 
-class abi_info: public salviar::shader_abi{
+class reflection_impl: public salviar::shader_reflection{
 public:
 	typedef salviar::sv_layout		sv_layout_t;
 	typedef salviar::semantic_value	semantic_value_t;
 
-	// Friend for abi_analyser could call compute_layout();
-	friend class abi_analyser;
+	// Friend for reflector could call compute_layout();
+	friend class reflector;
 
-	// Implements members of shader_abi
-	std::string entry_name() const;
+	// Implements members of shader_reflection
+	eflib::fixed_string entry_name() const;
 
 	std::vector<sv_layout_t*> layouts( salviar::sv_usage usage ) const;
-	size_t total_size( salviar::sv_usage usage ) const;
-	void update_size( size_t sz, salviar::sv_usage usage );
+	size_t total_size(salviar::sv_usage usage) const;
+	void update_size(size_t sz, salviar::sv_usage usage);
 
-	sv_layout_t* input_sv_layout( std::string const& ) const;
+	sv_layout_t* input_sv_layout( eflib::fixed_string const& ) const;
 	sv_layout_t* output_sv_layout( semantic_value_t const& ) const;
 
-	// End members of shader_abi
-
-	abi_info();
+	// Impl specific members
+	reflection_impl();
 
 	salviar::languages lang;
 
@@ -79,7 +78,7 @@ private:
 
 	module_semantic*	module_sem_;
 	symbol*				entry_point_;
-	std::string			entry_point_name_;
+	eflib::fixed_string	entry_point_name_;
 
 	// Include su_stream_in and su_buffer_in
 	std::vector< semantic_value_t > sems_in;
@@ -90,7 +89,7 @@ private:
 	std::vector< symbol* > syms_in;
 	typedef boost::unordered_map< symbol*, sv_layout_t > sym_storages_t;
 	sym_storages_t symin_storages;
-	typedef boost::unordered_map< std::string, sv_layout_t* > name_storages_t;
+	typedef boost::unordered_map<eflib::fixed_string, sv_layout_t*> name_storages_t;
 	name_storages_t name_storages;
 
 	// Include su_stream_out and su_buffer_out

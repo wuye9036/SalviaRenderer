@@ -1,10 +1,12 @@
-#ifndef SALVIAR_SHADER_ABI_H
-#define SALVIAR_SHADER_ABI_H
+#ifndef SALVIAR_SHADER_REFLECTION_H
+#define SALVIAR_SHADER_REFLECTION_H
 
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/shader.h>
 #include <eflib/include/platform/cpuinfo.h>
+#include <eflib/include/string/ustring.h>
+#include <eflib/include/utility/shared_declaration.h>
 #include <vector>
 
 BEGIN_NS_SALVIAR();
@@ -133,19 +135,20 @@ inline int SIMD_VECTOR_BITS(){
 	return SIMD_VECTOR_BYTES() << 3;
 }
 
-// ! Application binary interface of shader.
+// ! Reflection of shader.
 //
-class shader_abi{
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_reflection);
+class shader_reflection
+{
 public:
-	virtual std::string entry_name() const = 0;
-
-	virtual std::vector<sv_layout*> layouts( sv_usage usage ) const = 0;
-	virtual size_t total_size( sv_usage usage ) const = 0;
-
-	virtual sv_layout* input_sv_layout( salviar::semantic_value const& ) const = 0;
-	virtual sv_layout* input_sv_layout( std::string const& ) const = 0;
-
-	virtual sv_layout* output_sv_layout( salviar::semantic_value const& ) const = 0;
+	virtual eflib::fixed_string
+						entry_name() const = 0;
+	virtual std::vector<sv_layout*>
+						layouts			(sv_usage usage) const = 0;
+	virtual size_t 		total_size		(sv_usage usage) const = 0;
+	virtual sv_layout*	input_sv_layout	(salviar::semantic_value const&) const = 0;
+	virtual sv_layout*	input_sv_layout	(eflib::fixed_string const&) const = 0;
+	virtual sv_layout*	output_sv_layout(salviar::semantic_value const&) const = 0;
 };
 
 END_NS_SALVIAR();

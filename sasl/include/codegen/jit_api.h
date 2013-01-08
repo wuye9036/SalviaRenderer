@@ -29,24 +29,6 @@ private:
 	jit_engine& operator = (const jit_engine& );
 };
 
-
-//class jit_engine_manager{
-//public:
-//	typedef boost::function< bool ( const codegen_context& ) > filter_t;
-//	typedef boost::function< boost::shared_ptr<jit_engine_manager> ( const codegen_context& ) > creator_t;
-//
-//	void register_creator( filter_t filter, creator_t creator );
-//	boost::shared_ptr<jit_engine_manager> create( const codegen_context& );
-//
-//	static boost::shared_ptr<jit_engine_manager> instance();
-//
-//private:
-//	std::vector< std::pair< filter_t, creator_t > > creators;
-//
-//	static boost::shared_ptr<jit_engine_manager> ins;
-//	static boost::shared_ptr<boost::mutex> mtx;
-//};
-
 END_NS_SASL_CODEGEN();
 
 #endif

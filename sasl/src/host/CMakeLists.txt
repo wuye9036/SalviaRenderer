@@ -13,12 +13,15 @@ LINK_DIRECTORIES(
 )
 
 set( HEADER_FILES
-	${SASL_HOME_DIR}/sasl/include/host/host.h
-	${SALVIA_HOME_DIR}/salviar/include/shader_enums.h
+	${SASL_HOME_DIR}/sasl/include/host/host_impl.h
+	${SASL_HOME_DIR}/sasl/include/host/shader_log_impl.h
+	${SASL_HOME_DIR}/sasl/include/host/shader_object_impl.h
 )
 
 set( SOURCE_FILES
-	host.cpp
+	host_impl.cpp
+	shader_log_impl.cpp
+	shader_object_impl.cpp
 )
 
 ADD_LIBRARY( sasl_host SHARED

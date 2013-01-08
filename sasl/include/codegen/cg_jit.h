@@ -15,19 +15,20 @@ namespace llvm{
 
 BEGIN_NS_SASL_CODEGEN();
 
-class cg_module;
+class module_vmcode;
 
+#if 0
 class cg_jit_engine : public jit_engine{
 public:
 
-	static boost::shared_ptr<cg_jit_engine> create(boost::shared_ptr<cg_module>, eflib::fixed_string& error);
+	static boost::shared_ptr<cg_jit_engine> create(boost::shared_ptr<module_vmcode>, eflib::fixed_string& error);
 
 	virtual void* get_function( eflib::fixed_string const& /*func_name*/ );
 	virtual void inject_function(void* fn, eflib::fixed_string const&);
 
 	virtual ~cg_jit_engine();
 protected:
-	cg_jit_engine( boost::shared_ptr<cg_module> const& );
+	cg_jit_engine( boost::shared_ptr<module_vmcode> const& );
 	void build();
 	bool is_valid();
 	eflib::fixed_string error();
@@ -36,11 +37,12 @@ private:
 	cg_jit_engine(cg_jit_engine const&);
 	cg_jit_engine& operator = (cg_jit_engine const&);
 
-	boost::shared_ptr<cg_module> global_ctxt;
+	boost::shared_ptr<module_vmcode> global_ctxt;
 	boost::shared_ptr<llvm::ExecutionEngine> engine;
 	std::vector<llvm::Function*> fns;
 	eflib::fixed_string err;
 };
+#endif
 
 END_NS_SASL_CODEGEN();
 

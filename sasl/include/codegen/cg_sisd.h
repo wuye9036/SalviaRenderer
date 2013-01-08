@@ -87,7 +87,7 @@ protected:
 	// Override node_ctxt of cg_impl
 	
 	void	mask_to_indexes( char index[4], uint32_t mask );
-	cg_module_impl* mod_ptr();
+	module_vmcode_impl* mod_ptr();
 };
 
 END_NS_SASL_CODEGEN();

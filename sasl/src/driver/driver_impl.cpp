@@ -7,7 +7,7 @@
 #include <sasl/include/codegen/cg_api.h>
 #include <sasl/include/codegen/cg_jit.h>
 #include <sasl/include/semantic/semantic_api.h>
-#include <sasl/include/semantic/abi_analyser.h>
+#include <sasl/include/semantic/reflector.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/parser/parse_api.h>
@@ -17,6 +17,7 @@
 
 #include <eflib/include/diagnostics/profiler.h>
 #include <eflib/include/string/ustring.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
@@ -29,18 +30,18 @@
 
 namespace po = boost::program_options;
 
-using sasl::codegen::cg_module;
-using sasl::codegen::generate_llvm_code;
-using sasl::codegen::jit_engine;
-using sasl::codegen::cg_jit_engine;
-using sasl::semantic::module_semantic;
+EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
+EFLIB_USING_SHARED_PTR(sasl::semantic, module_semantic);
+
+EFLIB_USING_SHARED_PTR(sasl::semantic, reflection_impl);
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
+EFLIB_USING_SHARED_PTR(sasl::common, lex_context);
+EFLIB_USING_SHARED_PTR(sasl::common, diag_chat);
+EFLIB_USING_SHARED_PTR(sasl::common, code_source);
+
 using sasl::semantic::analysis_semantic;
-using sasl::semantic::abi_analyser;
-using sasl::semantic::abi_info;
-using sasl::syntax_tree::node;
-using sasl::common::lex_context;
-using sasl::common::diag_chat;
-using sasl::common::code_source;
+using sasl::semantic::reflect;
+using sasl::codegen::generate_vmcode;
 
 using eflib::fixed_string;
 
@@ -239,10 +240,9 @@ shared_ptr<diag_chat> driver_impl::compile()
 
 	
 
-	eflib::profiler			prof;
-	shared_ptr<diag_chat>	semantic_diags;
-	shared_ptr<cg_module>	llvmcode;
-	abi_analyser			aa;
+	eflib::profiler		prof;
+	diag_chat_ptr		semantic_diags;
+	module_vmcode_ptr	vmcode;
 
 	{
 		// Compiling with profiling
@@ -270,22 +270,22 @@ shared_ptr<diag_chat> driver_impl::compile()
 		{
 			eflib::profiling_scope prof_scope(&prof, "ABI analysis @ driver_impl");
 
-			if( !aa.auto_entry(msem, lang) )
+			mreflection = reflect(msem);
+			if(!mreflection)
 			{
-				if ( lang != salviar::lang_general ){
+				if ( lang != salviar::lang_general )
+				{
 					cout << "ABI analysis error occurs!" << endl;
 					return diags;
 				}
 			}
-			mabi = aa.shared_abii(lang);
 		}
 		
 		{
 			eflib::profiling_scope prof_scope(&prof, "Code generation @ driver_impl");
 
-			llvmcode = generate_llvm_code( msem, mabi.get() );
-			mod = llvmcode;
-			if( !llvmcode ){
+			vmcode = generate_vmcode( msem, mreflection.get() );
+			if( !vmcode ){
 				cout << "Code generation error occurs!" << endl;
 				return diags;
 			}
@@ -297,21 +297,21 @@ shared_ptr<diag_chat> driver_impl::compile()
 	if( opt_io.fmt == options_io::llvm_ir ){
 		if( !opt_io.output_file_name.empty() ){
 			ofstream out_file( opt_io.output_file_name.c_str(), std::ios_base::out );
-			llvmcode->dump_ir( out_file );
+			vmcode->dump_ir( out_file );
 		}
 	}
 	return diags;
 }
 
-shared_ptr<module_semantic> driver_impl::module_sem() const{
+module_semantic_ptr driver_impl::get_semantic() const{
 	return msem;
 }
 
-shared_ptr<cg_module> driver_impl::module() const{
-	return mod;
+module_vmcode_ptr driver_impl::get_vmcode() const{
+	return mvmc;
 }
 
-shared_ptr<node> driver_impl::root() const{
+node_ptr driver_impl::get_root() const{
 	return mroot;
 }
 
@@ -345,7 +345,7 @@ void driver_impl::set_code_source( shared_ptr<code_source> const& src )
 
 // WORDAROUNDS_TODO LLVM 3.0 Intrinsic to native call error.
 void sasl_exp_f32	( float* ret, float v ) { *ret = expf(v); }
-void sasl_exp2_f32	( float* ret, float v ) { *ret = ldexpf(1.0f, v); }
+void sasl_exp2_f32	( float* ret, float v ) { *ret = ldexpf(1.0f, static_cast<int>(v) ); }
 void sasl_sin_f32	( float* ret, float v ) { *ret = sinf(v); }
 void sasl_cos_f32	( float* ret, float v ) { *ret = cosf(v); }
 void sasl_tan_f32	( float* ret, float v ) { *ret = tanf(v); }
@@ -364,7 +364,7 @@ void sasl_log10_f32	( float* ret, float v ) { *ret = log10f(v); }
 void sasl_log2_f32	( float* ret, float v ) { *ret = eflib::fast_log2(v); }
 void sasl_rsqrt_f32	( float* ret, float v ) { *ret = 1.0f / sqrtf(v); }
 void sasl_mod_f32	( float* ret, float lhs, float rhs ){ *ret = fmodf(lhs, rhs); }
-void sasl_ldexp_f32	( float* ret, float lhs, float rhs ){ *ret = ldexpf(lhs, rhs); }
+void sasl_ldexp_f32	( float* ret, float lhs, float rhs ){ *ret = ldexpf(lhs, static_cast<int>(rhs) ); }
 void sasl_pow_f32	( float* ret, float lhs, float rhs ){ *ret = powf(lhs, rhs); }
 void sasl_countbits_u32(uint32_t* ret, uint32_t v)
 {
@@ -398,14 +398,15 @@ void sasl_reversebits_u32(uint32_t* ret, uint32_t v)
 	*ret= ( v >> 16             ) | ( v               << 16);
 }
 
+/*
 shared_ptr<jit_engine> driver_impl::create_jit()
 {
 	fixed_string err;
-	if(!mod){
+	if(!mcgm){
 		return shared_ptr<jit_engine>();
 	}
 	shared_ptr<cg_jit_engine> ret_jit = cg_jit_engine::create(
-		shared_polymorphic_cast<cg_module>(mod), err
+		shared_polymorphic_cast<module_vmcode>(mcgm), err
 		);
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
@@ -452,6 +453,7 @@ shared_ptr<jit_engine> driver_impl::create_jit( external_function_array const& e
 	}
 	return ret_jit;
 }
+*/
 
 void driver_impl::set_code_file( std::string const& code_file )
 {
@@ -473,24 +475,24 @@ void driver_impl::set_include_handler( include_handler_fn inc_handler )
 	user_inc_handler = inc_handler;
 }
 
-shared_ptr<abi_info> driver_impl::mod_abi() const
+reflection_impl_ptr driver_impl::get_reflection() const
 {
-	return mabi;
+	return mreflection;
 }
 
-void driver_impl::inject_function(shared_ptr<jit_engine> const& je, void* pfn, fixed_string const& name, bool is_raw_name )
+void driver_impl::inject_function(module_vmcode_ptr const& vmc, void* pfn, fixed_string const& fn_name, bool is_raw_name )
 {
-	eflib::fixed_string const* raw_name;
+	eflib::fixed_string raw_name;
 	if( is_raw_name )
 	{
-		raw_name = &name;
+		raw_name = fn_name;
 	}
 	else
 	{
-		raw_name = &( msem->root_symbol()->find_overloads(name)[0]->mangled_name() );
+		raw_name = msem->root_symbol()->find_overloads(fn_name)[0]->mangled_name();
 	}
 	
-	je->inject_function(pfn, *raw_name);
+	vmc->inject_function(pfn, raw_name);
 }
 
 void driver_impl::add_sysinclude_path( std::string const& sys_path )
@@ -524,7 +526,7 @@ void driver_impl::remove_macro( std::string const& macro )
 }
 
 
-void driver_null::set_parameter( int argc, char** argv )
+void driver_null::set_parameter( int /*argc*/, char** /*argv*/ )
 {
 
 }

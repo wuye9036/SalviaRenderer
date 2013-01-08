@@ -3,9 +3,9 @@
 #include <sasl/enums/enums_utility.h>
 #include <sasl/include/codegen/cg_contexts.h>
 #include <sasl/include/codegen/cg_impl.imp.h>
-#include <sasl/include/codegen/cg_module_impl.h>
+#include <sasl/include/codegen/module_vmcode_impl.h>
 #include <sasl/include/codegen/cg_caster.h>
-#include <sasl/include/semantic/abi_analyser.h>
+#include <sasl/include/semantic/reflector.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/type_checker.h>
@@ -36,7 +36,7 @@ using namespace boost::assign;
 using namespace llvm;
 using namespace sasl::utility;
 
-using semantic::abi_info;
+using semantic::reflection_impl;
 using semantic::node_semantic;
 using semantic::module_semantic;
 using semantic::symbol;
@@ -102,8 +102,8 @@ SASL_SPECIFIC_VISIT_DEF(bin_logic, binary_expression)
 	node_ctxt(v,true)->node_value = ret_value.to_rvalue();
 }
 
-cg_module_impl* cg_general::mod_ptr(){
-	return llvm_mod_.get();
+module_vmcode_impl* cg_general::mod_ptr(){
+	return vmcode_.get();
 }
 
 END_NS_SASL_CODEGEN();

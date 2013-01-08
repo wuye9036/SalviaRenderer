@@ -2,14 +2,14 @@
 
 #include <sasl/include/codegen/utility.h>
 #include <sasl/include/codegen/ty_cache.h>
-#include <sasl/include/codegen/cg_module_impl.h>
+#include <sasl/include/codegen/module_vmcode_impl.h>
 #include <sasl/include/codegen/cg_contexts.h>
 #include <sasl/include/syntax_tree/declaration.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/enums/enums_utility.h>
 
-#include <salviar/include/shader_abi.h>
+#include <salviar/include/shader_reflection.h>
 
 #include <eflib/include/math/math.h>
 #include <eflib/include/utility/polymorphic_cast.h>
@@ -70,27 +70,27 @@ using namespace eflib;
 BEGIN_NS_SASL_CODEGEN();
 
 cg_service::cg_service(size_t parallel_factor)
-	: llvm_mod_(NULL), ctxt_(NULL), sem_(NULL)
+	: vmcode_(NULL), ctxt_(NULL), sem_(NULL)
 	, parallel_factor_(parallel_factor)
 {
 }
 
-bool cg_service::initialize( cg_module_impl* mod, module_context* ctxt, module_semantic* sem )
+bool cg_service::initialize( module_vmcode_impl* mod, module_context* ctxt, module_semantic* sem )
 {
 	assert(mod);
 	assert(ctxt);
 	assert(sem);
 
-	llvm_mod_ = mod;
+	vmcode_ = mod;
 	ctxt_ = ctxt;
 	sem_ = sem;
 
 	initialize_cache( context() );
 	ext_.reset(
 		new cg_extension(
-			llvm_mod_->builder(),
-			llvm_mod_->llvm_context(),
-			llvm_mod_->llvm_module(),
+			vmcode_->builder(),
+			vmcode_->get_vm_context(),
+			vmcode_->get_vm_module(),
 			parallel_factor_
 			)
 		);
@@ -98,15 +98,15 @@ bool cg_service::initialize( cg_module_impl* mod, module_context* ctxt, module_s
 }
 
 Module* cg_service::module() const{
-	return llvm_mod_->llvm_module();
+	return vmcode_->get_vm_module();
 }
 
 LLVMContext& cg_service::context() const{
-	return llvm_mod_->llvm_context();
+	return vmcode_->get_vm_context();
 }
 
 DefaultIRBuilder& cg_service::builder() const{
-	return *( llvm_mod_->builder() );
+	return *( vmcode_->builder() );
 }
 
 cg_function* cg_service::fetch_function(function_def* fn_node){
@@ -518,19 +518,19 @@ value_array cg_service::load_ref( multi_value const& v )
 {
 	value_kinds::id kind = v.kind();
 
-	switch(kind)
+	switch( static_cast<int>(kind) )
 	{
-	case value_kinds::reference:
+	case static_cast<int>(value_kinds::reference):
 		{
 			return v.raw();
 		}
-	case value_kinds::elements|value_kinds::reference:
+	case static_cast<int>(value_kinds::elements|value_kinds::reference):
 		{
 			multi_value non_ref( v );
 			non_ref.kind( value_kinds::elements );
 			return non_ref.load();
 		}
-	case value_kinds::elements:
+	case static_cast<int>(value_kinds::elements):
 		{
 			assert( v.masks() );
 			return emit_extract_elem_mask( *v.parent(), v.masks() ).load_ref();
