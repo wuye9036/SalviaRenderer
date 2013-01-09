@@ -19,6 +19,7 @@ class shader_reflection;
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
 class shader_log
 {
+public:
 	virtual size_t				count() const = 0;
 	virtual std::string const&	log_string(size_t index) const = 0;
 };

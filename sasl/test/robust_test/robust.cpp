@@ -29,8 +29,9 @@
 
 using namespace eflib;
 
+EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
+
 using sasl::driver::driver;
-using sasl::codegen::jit_engine;
 using sasl::codegen::module_vmcode;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
@@ -110,25 +111,24 @@ struct jit_fixture {
 		shared_ptr<diag_chat> results = drv->compile();
 		diag_chat::merge(diags.get(), results.get(), true);
 
-		BOOST_REQUIRE( drv->root() );
-		BOOST_REQUIRE( drv->module_sem() );
-		BOOST_REQUIRE( drv->module() );
+		BOOST_REQUIRE( drv->get_root() );
+		BOOST_REQUIRE( drv->get_semantic() );
+		BOOST_REQUIRE( drv->get_vmcode() );
 
-		root_sym = drv->module_sem()->root_symbol();
+		root_sym = drv->get_semantic()->root_symbol();
 
-		shared_ptr<module_vmcode> llvm_mod = shared_polymorphic_cast<module_vmcode>( drv->module() );
+		module_vmcode_ptr vmcode = drv->get_vmcode();
 		fstream dump_file( ( dump_file_name + "_ir.ll" ).c_str(), std::ios::out );
-		llvm_mod->dump_ir( dump_file );
+		vmcode->dump_ir(dump_file);
 		dump_file.close();
 
-		je = drv->create_jit();
-		BOOST_REQUIRE( je );
+		bool jit_enabled = drv->get_vmcode()->enable_jit();
+		BOOST_REQUIRE(jit_enabled);
 	}
 	~jit_fixture(){}
 
 	shared_ptr<driver>		drv;
 	symbol*					root_sym;
-	shared_ptr<jit_engine>	je;
 	shared_ptr<diag_chat>	diags;
 	vector< pair<char const*, char const*> > vfiles;
 };

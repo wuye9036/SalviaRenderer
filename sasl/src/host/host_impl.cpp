@@ -89,8 +89,9 @@ salviar::host* salvia_create_host()
 void salvia_compile_shader(
 	shader_object_ptr& out_shader_object,
 	shader_log_ptr& out_logs,
+	std::string  const& code,
 	shader_profile const& profile,
-	std::string  const& code
+	vector<external_function_desc> const& external_funcs
 	)
 {
 	out_shader_object.reset();

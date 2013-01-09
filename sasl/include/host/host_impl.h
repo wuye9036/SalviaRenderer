@@ -4,6 +4,7 @@
 #include <sasl/include/host/host_forward.h>
 
 #include <salviar/include/host.h>
+#include <salviar/include/shader_impl.h>
 #include <salviar/include/shader_object.h>
 
 #include <eflib/include/utility/shared_declaration.h>
@@ -53,8 +54,9 @@ extern "C"
 	SASL_HOST_API void			 salvia_compile_shader(
 		salviar::shader_object_ptr& out_shader_object,
 		salviar::shader_log_ptr& out_logs,
-		salviar::shader_profile const&,
-		std::string const& code
+		std::string const& code,
+		salviar::shader_profile const& profile,
+		std::vector<salviar::external_function_desc> const& external_funcs
 		);
 };
 

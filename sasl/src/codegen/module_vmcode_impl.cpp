@@ -85,4 +85,23 @@ void module_vmcode_impl::set_context( shared_ptr<module_context> const& v )
 	ctxt_ = v;
 }
 
+bool module_vmcode_impl::enable_jit()
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return false;
+}
+
+void* module_vmcode_impl::get_function(fixed_string const& /*name*/)
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return NULL;
+}
+
+void module_vmcode_impl::inject_function(void* /*pfn*/, fixed_string const& /*name*/)
+{
+	EFLIB_ASSERT_UNIMPLEMENTED();
+	return;
+}
+
+
 END_NS_SASL_CODEGEN();
