@@ -20,6 +20,7 @@
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
 
+using salviar::languages;
 using salviar::sv_usage;
 using salviar::su_none;
 using salviar::su_stream_in;
@@ -127,187 +128,202 @@ sv_usage semantic_usage( salviar::languages lang, bool is_output, salviar::seman
 	return su_none;
 }
 
-reflection_impl_ptr reflector::reflect(
-	module_semantic_ptr const& sem, fixed_string const& entry_name )
+class reflector
 {
-	vector<symbol*> overloads = sem->root_symbol()->find_overloads(entry_name);
-	if ( overloads.size() != 1 )
+public:
+	reflector(module_semantic* sem, eflib::fixed_string const& entry_name)
+		: sem_(sem), current_entry_(NULL), reflection_(NULL), entry_name_(entry_name)
 	{
-		return reflection_impl_ptr();
-	}
-	sem_	= sem.get();
-	entry_	= overloads[0];
-	return do_reflect();
-}
-
-reflection_impl_ptr reflector::do_reflect()
-{
-	if( ! (sem_ && entry_) )
-	{
-		return reflection_impl_ptr();
 	}
 
-	salviar::languages lang = sem_->get_language();
-
-	// Initialize language ABI information.
-	reflection_impl_ptr ret = make_shared<reflection_impl>();
-	ret->lang				= lang;
-	ret->module_sem_			= sem_;
-	ret->entry_point_		= entry_;
-	ret->entry_point_name_	= entry_->mangled_name();
-	reflection_ = ret.get();
-	
-	if( lang == salviar::lang_vertex_shader
-		|| lang == salviar::lang_pixel_shader
-		|| lang == salviar::lang_blending_shader
-		)
+	reflector(module_semantic* sem)	: sem_(sem), current_entry_(NULL), reflection_(NULL)
 	{
-		// Process entry function.
-		shared_ptr<function_def> entry_fn = entry_->associated_node()->as_handle<function_def>();
-		assert( entry_fn );
+	}
 
-		if( !add_semantic(entry_fn, false, false, lang, true) )
+	reflection_impl_ptr reflect()
+	{
+		if( !entry_name_.empty() )
 		{
-			assert( false );
-			ret.reset();
-			return ret;
+			vector<symbol*> overloads = sem_->root_symbol()->find_overloads(entry_name_);
+			if ( overloads.size() != 1 )
+			{
+				return reflection_impl_ptr();
+			}
+			current_entry_ = overloads[0];
+			return do_reflect();
+		}
+		else
+		{
+			symbol*				candidate = NULL;
+			reflection_impl_ptr	candidate_reflection;
+			BOOST_FOREACH( symbol* fn_sym, sem_->functions() )
+			{
+				current_entry_ = fn_sym;
+				candidate_reflection = do_reflect();
+
+				if(candidate_reflection)
+				{
+					if(candidate)
+					{
+						// TODO: More than one matched. conflict error.
+						return reflection_impl_ptr();
+					}
+					candidate = fn_sym;
+				}
+			}
+			return candidate_reflection;
+		}
+	}
+
+
+private:
+	reflection_impl_ptr do_reflect()
+
+	{
+		if( ! (sem_ && current_entry_) )
+		{
+			return reflection_impl_ptr();
 		}
 
-		BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
+		salviar::languages lang = sem_->get_language();
+
+		// Initialize language ABI information.
+		reflection_impl_ptr ret = make_shared<reflection_impl>();
+		ret->lang				= lang;
+		ret->module_sem_			= sem_;
+		ret->entry_point_		= current_entry_;
+		ret->entry_point_name_	= current_entry_->mangled_name();
+		reflection_ = ret.get();
+
+		if( lang == salviar::lang_vertex_shader
+			|| lang == salviar::lang_pixel_shader
+			|| lang == salviar::lang_blending_shader
+			)
 		{
-			if( !add_semantic(param, false, false, lang, false) )
+			// Process entry function.
+			shared_ptr<function_def> entry_fn = current_entry_->associated_node()->as_handle<function_def>();
+			assert( entry_fn );
+
+			if( !add_semantic(entry_fn, false, false, lang, true) )
 			{
+				assert( false );
 				ret.reset();
 				return ret;
 			}
-		}
 
-		// Process global variables.
-		BOOST_FOREACH( symbol* gvar_sym, sem_->global_vars() ){
-			shared_ptr<declarator> gvar = gvar_sym->associated_node()->as_handle<declarator>();
-			assert(gvar);
-
-			// is_member is set to true for preventing aggregated variable.
-			// And global variable only be treated as input.
-			if( !add_semantic(gvar, true, false, lang, false) ){
-				// If it is not attached to an valid semantic, it should be uniform variable.
-
-				// Check the data type of global. Now global variables only support built-in types.
-				node_semantic* psi = sem_->get_semantic( gvar.get() );
-				if( psi->ty_proto()->is_builtin() || psi->ty_proto()->is_array()  )
+			BOOST_FOREACH( shared_ptr<parameter> const& param, entry_fn->params )
+			{
+				if( !add_semantic(param, false, false, lang, false) )
 				{
-					ret->add_global_var(gvar_sym, psi->ty_proto()->as_handle<tynode>() );
-				}
-				else
-				{
-					//TODO: It an semantic error need to be reported.
 					ret.reset();
 					return ret;
 				}
 			}
-		}
-	}
 
-	return ret;
-}
+			// Process global variables.
+			BOOST_FOREACH( symbol* gvar_sym, sem_->global_vars() ){
+				shared_ptr<declarator> gvar = gvar_sym->associated_node()->as_handle<declarator>();
+				assert(gvar);
 
-reflection_impl_ptr reflector::reflect(module_semantic_ptr const& sem)
-{
-	symbol*				candidate = NULL;
-	reflection_impl_ptr	candidate_reflection;
+				// is_member is set to true for preventing aggregated variable.
+				// And global variable only be treated as input.
+				if( !add_semantic(gvar, true, false, lang, false) ){
+					// If it is not attached to an valid semantic, it should be uniform variable.
 
-	BOOST_FOREACH( symbol* fn_sym, sem_->functions() )
-	{
-		entry_	= fn_sym;
-		sem_	= sem.get();
-
-		candidate_reflection = do_reflect();
-
-		if(candidate_reflection)
-		{
-			if(candidate)
-			{
-				// TODO: More than one matched. conflict error.
-				return reflection_impl_ptr();
-			}
-			candidate = fn_sym;
-		}
-	}
-
-	return candidate_reflection;
-}
-
-bool reflector::add_semantic(
-	shared_ptr<node> const& v,
-	bool is_member, bool enable_nested,
-	salviar::languages lang, bool is_output)
-{
-	assert(reflection_);
-	node_semantic* pssi = sem_->get_semantic( v.get() );
-	assert(pssi); // TODO: Here are semantic analysis error.
-	tynode* ptspec = pssi->ty_proto();
-	assert(ptspec); // TODO: Here are semantic analysis error.
-
-	salviar::semantic_value const& node_sem = pssi->semantic_value_ref();
-
-	if( ptspec->is_builtin() )
-	{
-		builtin_types btc = ptspec->tycode;
-		if ( verify_semantic_type( btc, node_sem ) ) {
-			sv_usage sem_s = semantic_usage( lang, is_output, node_sem );
-			switch( sem_s ){
-
-			case su_stream_in:
-				return reflection_->add_input_semantic( node_sem, btc, true );
-			case su_buffer_in:
-				return reflection_->add_input_semantic( node_sem, btc, false );
-			case su_stream_out:
-				return reflection_->add_output_semantic( node_sem, btc, true );
-			case su_buffer_out:
-				return reflection_->add_output_semantic( node_sem, btc, false );
-			}
-
-			assert( false );
-			return false;
-		}
-	}
-	else if( ptspec->node_class() == node_ids::struct_type )
-	{
-		if( is_member && !enable_nested ){
-			return false;
-		}
-
-		// TODO: do not support nested aggregated variable. 
-		struct_type* pstructspec = dynamic_cast<struct_type*>( ptspec );
-		assert( pstructspec );
-		BOOST_FOREACH( shared_ptr<declaration> const& decl, pstructspec->decls )
-		{
-			if ( decl->node_class() == node_ids::variable_declaration ){
-				shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
-				BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators ){
-					if ( !add_semantic( dclr, true, enable_nested, lang, is_output ) ){
-						assert( false );
-						return false;
+					// Check the data type of global. Now global variables only support built-in types.
+					node_semantic* psi = sem_->get_semantic( gvar.get() );
+					if( psi->ty_proto()->is_builtin() || psi->ty_proto()->is_array()  )
+					{
+						ret->add_global_var(gvar_sym, psi->ty_proto()->as_handle<tynode>() );
+					}
+					else
+					{
+						//TODO: It an semantic error need to be reported.
+						ret.reset();
+						return ret;
 					}
 				}
 			}
 		}
 
-		return true;
+		return ret;
 	}
 
-	return false;
-}
+	bool add_semantic(node_ptr const& v, bool is_member, bool enable_nested, languages lang, bool is_output_semantic)
+	{
+		assert(reflection_);
+		node_semantic* pssi = sem_->get_semantic( v.get() );
+		assert(pssi); // TODO: Here are semantic analysis error.
+		tynode* ptspec = pssi->ty_proto();
+		assert(ptspec); // TODO: Here are semantic analysis error.
+
+		salviar::semantic_value const& node_sem = pssi->semantic_value_ref();
+
+		if( ptspec->is_builtin() )
+		{
+			builtin_types btc = ptspec->tycode;
+			if ( verify_semantic_type( btc, node_sem ) ) {
+				sv_usage sem_s = semantic_usage( lang, is_output_semantic, node_sem );
+				switch( sem_s ){
+
+				case su_stream_in:
+					return reflection_->add_input_semantic( node_sem, btc, true );
+				case su_buffer_in:
+					return reflection_->add_input_semantic( node_sem, btc, false );
+				case su_stream_out:
+					return reflection_->add_output_semantic( node_sem, btc, true );
+				case su_buffer_out:
+					return reflection_->add_output_semantic( node_sem, btc, false );
+				}
+
+				assert( false );
+				return false;
+			}
+		}
+		else if( ptspec->node_class() == node_ids::struct_type )
+		{
+			if( is_member && !enable_nested ){
+				return false;
+			}
+
+			// TODO: do not support nested aggregated variable. 
+			struct_type* pstructspec = dynamic_cast<struct_type*>( ptspec );
+			assert( pstructspec );
+			BOOST_FOREACH( shared_ptr<declaration> const& decl, pstructspec->decls )
+			{
+				if ( decl->node_class() == node_ids::variable_declaration ){
+					shared_ptr<variable_declaration> vardecl = decl->as_handle<variable_declaration>();
+					BOOST_FOREACH( shared_ptr<declarator> const& dclr, vardecl->declarators ){
+						if ( !add_semantic( dclr, true, enable_nested, lang, is_output_semantic ) ){
+							assert( false );
+							return false;
+						}
+					}
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	module_semantic*	sem_;
+	fixed_string		entry_name_;
+	symbol*				current_entry_;
+	reflection_impl*	reflection_;
+};
 
 reflection_impl_ptr reflect(module_semantic_ptr const& sem)
 {
-	reflector rfl;
-	return rfl.reflect(sem);
+	reflector rfl( sem.get() );
+	return rfl.reflect();
 }
 
 reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name)
 {
-	reflector rfl;
-	return rfl.reflect(sem, entry_name);
+	reflector rfl( sem.get(), entry_name );
+	return rfl.reflect();
 }
+
 END_NS_SASL_SEMANTIC();

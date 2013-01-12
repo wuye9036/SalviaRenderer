@@ -8,7 +8,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #if defined(SASL_USE_LLVM)
-#	include <sasl/include/driver/driver_api.h>
+#	include <sasl/include/drivers/drivers_api.h>
 #endif
 
 #include <eflib/include/memory/lifetime_manager.h>
@@ -78,10 +78,6 @@ main( int argc, char* argv[] )
 	
 	normal_exit = false;
 	atexit(&check_on_exit);
-	
-#if defined(SASL_USE_LLVM)	
-	sasl_initialize_driver();
-#endif
 
 	setvbuf( stdout, NULL, _IONBF, 0 );
 	setvbuf( stderr, NULL, _IONBF, 0 );
@@ -106,10 +102,6 @@ main( int argc, char* argv[] )
 	{
 		system("pause");
 	}
-	
-#if defined(SASL_USE_LLVM)
-	sasl_finalize_driver();
-#endif
 	
 	normal_exit = true;
 	return ret;

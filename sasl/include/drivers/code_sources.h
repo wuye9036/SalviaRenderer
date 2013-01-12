@@ -1,7 +1,7 @@
-#ifndef SASL_DRIVER_CODE_SOURCES_H
-#define SASL_DRIVER_CODE_SOURCES_H
+#ifndef SASL_DRIVERS_CODE_SOURCES_H
+#define SASL_DRIVERS_CODE_SOURCES_H
 
-#include <sasl/include/driver/driver_forward.h>
+#include <sasl/include/drivers/drivers_forward.h>
 
 #include <sasl/include/common/lex_context.h>
 #include <sasl/include/common/diag_item.h>
@@ -26,7 +26,7 @@ namespace sasl
 	}
 }
 
-BEGIN_NS_SASL_DRIVER();
+BEGIN_NS_SASL_DRIVERS();
 
 class wave_reported_fatal_error: public boost::exception
 {
@@ -158,26 +158,26 @@ typedef boost::wave::cpplexer::lex_iterator<
 typedef boost::wave::context< std::string::iterator, wlex_iterator_t,
 	load_file_to_string, wave_hooks> wcontext_t;
 
-class driver_code_source;
+class compiler_code_source;
 
 class wave_context_wrapper
 {
 public:
-	wave_context_wrapper( driver_code_source* src, wcontext_t* ctx );
+	wave_context_wrapper( compiler_code_source* src, wcontext_t* ctx );
 	~wave_context_wrapper();
 	wcontext_t* get_wctxt() const;
 private:
 	boost::scoped_ptr<wcontext_t> wctxt;
 };
 
-class driver_code_source: public sasl::common::lex_context, public sasl::common::code_source{
+class compiler_code_source: public sasl::common::lex_context, public sasl::common::code_source{
 
 private:
 	friend class wave_context_wrapper;
 
 public:
-	driver_code_source();
-	~driver_code_source();
+	compiler_code_source();
+	~compiler_code_source();
 
 	void set_diag_chat( sasl::common::diag_chat* );
 	bool set_code( std::string const& );
@@ -256,10 +256,10 @@ private:
 	virtual_file_dict	virtual_files;
 	include_handler_fn	inc_handler;
 
-	static boost::unordered_map<void*, driver_code_source*> ctxt_to_source;
-	static driver_code_source* get_code_source(void*);
+	static boost::unordered_map<void*, compiler_code_source*> ctxt_to_source;
+	static compiler_code_source* get_code_source(void*);
 };
 
-END_NS_SASL_DRIVER();
+END_NS_SASL_DRIVERS();
 
 #endif

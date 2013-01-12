@@ -4,7 +4,7 @@
 #include <boost/test/unit_test.hpp>
 #include <eflib/include/platform/boost_end.h>
 
-#include <sasl/include/driver/driver_api.h>
+#include <sasl/include/drivers/drivers_api.h>
 #include <sasl/include/codegen/cg_api.h>
 #include <sasl/include/codegen/cg_jit.h>
 #include <sasl/include/semantic/symbol.h>
@@ -15,7 +15,6 @@
 
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
-//#include <eflib/include/utility/util.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/format.hpp>
@@ -31,7 +30,7 @@ using namespace eflib;
 
 EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
 
-using sasl::driver::driver;
+using sasl::drivers::compiler;
 using sasl::codegen::module_vmcode;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
@@ -100,7 +99,7 @@ struct jit_fixture {
 	{
 		diags = diag_chat::create();
 		diags->add_report_raised_handler( print_diagnostic );
-		sasl_create_driver(drv);
+		sasl_create_compiler(drv);
 		BOOST_REQUIRE(drv);
 		drv->set_parameter(cmd);
 		for( size_t i = 0; i < vfiles.size(); ++i )
@@ -108,7 +107,7 @@ struct jit_fixture {
 			drv->add_virtual_file( vfiles[i].first, vfiles[i].second, true );
 		}
 
-		shared_ptr<diag_chat> results = drv->compile();
+		shared_ptr<diag_chat> results = drv->compile(false);
 		diag_chat::merge(diags.get(), results.get(), true);
 
 		BOOST_REQUIRE( drv->get_root() );
@@ -127,7 +126,7 @@ struct jit_fixture {
 	}
 	~jit_fixture(){}
 
-	shared_ptr<driver>		drv;
+	shared_ptr<compiler>		drv;
 	symbol*					root_sym;
 	shared_ptr<diag_chat>	diags;
 	vector< pair<char const*, char const*> > vfiles;

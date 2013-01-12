@@ -1,17 +1,17 @@
 #ifndef SASL_DRIVER_DRIVER_IMPL_H
 #define SASL_DRIVER_DRIVER_IMPL_H
 
-#include <sasl/include/driver/driver_forward.h>
-#include <sasl/include/driver/driver.h>
-#include <sasl/include/driver/options.h>
+#include <sasl/include/drivers/drivers_forward.h>
+#include <sasl/include/drivers/compiler.h>
+#include <sasl/include/drivers/options.h>
 #include <eflib/include/string/ustring.h>
 
-BEGIN_NS_SASL_DRIVER();
+BEGIN_NS_SASL_DRIVERS();
 
-class driver_null: public driver
+class null_compiler: public compiler
 {
 public:
-	driver_null();
+	null_compiler();
 
 	virtual void set_parameter( int argc, char** argv );
 	virtual void set_parameter( std::string const& /*cmd*/ ){}
@@ -41,7 +41,12 @@ public:
 	/// Only support by default code source.
 	virtual void clear_macros(){}
 
-	virtual sasl::common::diag_chat_ptr compile()
+	virtual sasl::common::diag_chat_ptr compile(bool /*jit_enabled*/)
+	{
+		return sasl::common::diag_chat_ptr();
+	}
+
+	virtual sasl::common::diag_chat_ptr	compile(std::vector<salviar::external_function_desc> const&)
 	{
 		return sasl::common::diag_chat_ptr();
 	}
@@ -67,9 +72,9 @@ public:
 	}
 };
 
-class driver_impl: public driver{
+class compiler_impl: public compiler{
 public:
-	driver_impl();
+	compiler_impl();
 
 	// All setting functions must be called before calling compile().
 	virtual void set_parameter( int argc, char** argv );
@@ -97,7 +102,8 @@ public:
 	/// Only support by default code source.
 	virtual void clear_macros();
 
-	virtual sasl::common::diag_chat_ptr			compile();
+	virtual sasl::common::diag_chat_ptr			compile(bool enable_jit);
+	virtual sasl::common::diag_chat_ptr			compile(std::vector<salviar::external_function_desc> const&);
 
 	virtual sasl::semantic::module_semantic_ptr	get_semantic() const;
 	virtual sasl::codegen::module_vmcode_ptr	get_vmcode() const;
@@ -109,16 +115,14 @@ public:
 	options_io const &								io_info() const;
 
 private:
-	driver_impl( driver_impl const& );
-	driver_impl& operator = ( driver_impl const& );
+	compiler_impl( compiler_impl const& );
+	compiler_impl& operator = ( compiler_impl const& );
 
 	template <typename ParserT> bool parse( ParserT& parser );
-	void inject_function(
-		sasl::codegen::module_vmcode_ptr const& vmc,
-		void* pfn,
-		eflib::fixed_string const& name,
-		bool is_raw_name
-		);
+
+	void inject_default_functions();
+
+	void inject_function(void* pfn, eflib::fixed_string const& name, bool is_raw_name);
 	
 	sasl::semantic::module_semantic_ptr		msem;
 	sasl::codegen::module_vmcode_ptr		mvmc;
@@ -153,6 +157,6 @@ private:
 	virtual_file_dict			virtual_files;
 };
 
-END_NS_SASL_DRIVER();
+END_NS_SASL_DRIVERS();
 
 #endif

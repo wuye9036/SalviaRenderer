@@ -13,7 +13,7 @@ namespace eflib{
 	class dynamic_lib{
 	public:
 		static boost::shared_ptr<dynamic_lib> load( std::string const& name );
-		
+
 		template <typename PFnT>
 		bool get_function( PFnT& fn, std::string const& name ) const
 		{
@@ -27,6 +27,8 @@ namespace eflib{
 		}
 		
 		virtual bool available() const = 0;
+		virtual ~dynamic_lib() {}
+
 	private:
 		virtual void* get_function( std::string const& name ) const = 0;
 	};

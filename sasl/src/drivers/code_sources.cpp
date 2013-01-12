@@ -1,4 +1,4 @@
-#include <sasl/include/driver/code_sources.h>
+#include <sasl/include/drivers/code_sources.h>
 
 #include <sasl/include/common/diag_chat.h>
 #include <sasl/include/parser/diags.h>
@@ -19,11 +19,11 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-BEGIN_NS_SASL_DRIVER();
+BEGIN_NS_SASL_DRIVERS();
 
-boost::unordered_map<void*, driver_code_source*> driver_code_source::ctxt_to_source;
+boost::unordered_map<void*, compiler_code_source*> compiler_code_source::ctxt_to_source;
 
-bool driver_code_source::set_code( string const& code )
+bool compiler_code_source::set_code( string const& code )
 {
 	this->code = code;
 	fixes_file_end_with_newline(this->code);
@@ -31,7 +31,7 @@ bool driver_code_source::set_code( string const& code )
 	return process();
 }
 
-bool driver_code_source::set_file( string const& file_name )
+bool compiler_code_source::set_file( string const& file_name )
 {
 	std::ifstream in(file_name.c_str(), std::ios_base::in);
 	if (!in){
@@ -47,12 +47,12 @@ bool driver_code_source::set_file( string const& file_name )
 	return process();
 }
 
-bool driver_code_source::eof()
+bool compiler_code_source::eof()
 {
 	return next_it == wctxt_wrapper->get_wctxt()->end();
 }
 
-fixed_string driver_code_source::next()
+fixed_string compiler_code_source::next()
 {
 	assert( next_it != wctxt_wrapper->get_wctxt()->end() );
 	cur_it = next_it;
@@ -97,7 +97,7 @@ fixed_string driver_code_source::next()
 	return to_fixed_string( cur_it->get_value() ) ;
 }
 
-fixed_string driver_code_source::error()
+fixed_string compiler_code_source::error()
 {
 	if( errtok.empty() ){
 		errtok = to_fixed_string( cur_it->get_value() );
@@ -105,7 +105,7 @@ fixed_string driver_code_source::error()
 	return errtok;
 }
 
-fixed_string const& driver_code_source::file_name() const
+fixed_string const& compiler_code_source::file_name() const
 {
 	assert( cur_it != wctxt_wrapper->get_wctxt()->end() );
 
@@ -113,25 +113,25 @@ fixed_string const& driver_code_source::file_name() const
 	return filename;
 }
 
-size_t driver_code_source::column() const
+size_t compiler_code_source::column() const
 {
 	assert( cur_it != wctxt_wrapper->get_wctxt()->end() );
 	return cur_it->get_position().get_column();
 }
 
-size_t driver_code_source::line() const
+size_t compiler_code_source::line() const
 {
 	assert( cur_it != wctxt_wrapper->get_wctxt()->end() );
 	return cur_it->get_position().get_line();
 }
 
-void driver_code_source::update_position( const fixed_string& /*lit*/ )
+void compiler_code_source::update_position( const fixed_string& /*lit*/ )
 {
 	// Do nothing.
 	return;
 }
 
-bool driver_code_source::process()
+bool compiler_code_source::process()
 {
 	wctxt_wrapper.reset( new wave_context_wrapper( this, new wcontext_t( code.begin(), code.end(), filename.c_str() ) ) );
 
@@ -148,42 +148,42 @@ bool driver_code_source::process()
 	return true;
 }
 
-void driver_code_source::set_diag_chat( sasl::common::diag_chat* diags )
+void compiler_code_source::set_diag_chat( sasl::common::diag_chat* diags )
 {
 	this->diags = diags;
 }
 
-driver_code_source::driver_code_source()
+compiler_code_source::compiler_code_source()
 	: diags(NULL)
 {
 	
 }
 
-driver_code_source::~driver_code_source()
+compiler_code_source::~compiler_code_source()
 {
 	
 }
 
-code_span driver_code_source::current_span() const
+code_span compiler_code_source::current_span() const
 {
 	return code_span( cur_it->get_position().get_line(), cur_it->get_position().get_column(), 1 );
 }
 
-void driver_code_source::add_virtual_file( std::string const& file_name, std::string const& content, bool high_priority )
+void compiler_code_source::add_virtual_file( std::string const& file_name, std::string const& content, bool high_priority )
 {
 	virtual_files[file_name] = make_pair( high_priority, content );
 }
 
-void driver_code_source::set_include_handler( include_handler_fn handler )
+void compiler_code_source::set_include_handler( include_handler_fn handler )
 {
 	inc_handler = handler;
 }
 
-driver_code_source* driver_code_source::get_code_source( void* ctxt )
+compiler_code_source* compiler_code_source::get_code_source( void* ctxt )
 {
 	if( ctxt )
 	{
-		unordered_map<void*, driver_code_source*>::iterator it = ctxt_to_source.find(ctxt);
+		unordered_map<void*, compiler_code_source*>::iterator it = ctxt_to_source.find(ctxt);
 		if( it != ctxt_to_source.end() )
 		{
 			return it->second;
@@ -193,19 +193,19 @@ driver_code_source* driver_code_source::get_code_source( void* ctxt )
 	return NULL;
 }
 
-bool driver_code_source::failed()
+bool compiler_code_source::failed()
 {
 	return is_failed;
 }
 
-bool driver_code_source::add_sys_include_path( string const& path )
+bool compiler_code_source::add_sys_include_path( string const& path )
 {
 	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
 	assert(wctxt);
 	return wctxt->add_sysinclude_path( path.c_str() );
 }
 
-bool driver_code_source::add_sys_include_path( vector<string> const& paths )
+bool compiler_code_source::add_sys_include_path( vector<string> const& paths )
 {
 	bool ret = true;
 	for(size_t i = 0; i < paths.size(); ++i)
@@ -216,14 +216,14 @@ bool driver_code_source::add_sys_include_path( vector<string> const& paths )
 	return ret;
 }
 
-bool driver_code_source::add_include_path( std::string const& path )
+bool compiler_code_source::add_include_path( std::string const& path )
 {
 	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
 	assert(wctxt);
 	return wctxt->add_include_path( path.c_str() );
 }
 
-bool driver_code_source::add_include_path( std::vector<std::string> const& paths )
+bool compiler_code_source::add_include_path( std::vector<std::string> const& paths )
 {
 	bool ret = true;
 	for(size_t i = 0; i < paths.size(); ++i)
@@ -233,14 +233,14 @@ bool driver_code_source::add_include_path( std::vector<std::string> const& paths
 	return ret;
 }
 
-bool driver_code_source::add_macro( std::string const& macro_def, bool predef )
+bool compiler_code_source::add_macro( std::string const& macro_def, bool predef )
 {
 	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
 	assert(wctxt);
 	return wctxt->add_macro_definition(macro_def, predef);
 }
 
-bool driver_code_source::add_macro( vector<string> const& macros, bool predef )
+bool compiler_code_source::add_macro( vector<string> const& macros, bool predef )
 {
 	bool ret = true;
 	for( size_t i = 0; i < macros.size(); ++i ) {
@@ -249,7 +249,7 @@ bool driver_code_source::add_macro( vector<string> const& macros, bool predef )
 	return ret;
 }
 
-bool driver_code_source::clear_macros()
+bool compiler_code_source::clear_macros()
 {
 	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
 	assert(wctxt);
@@ -257,14 +257,14 @@ bool driver_code_source::clear_macros()
 	return true;
 }
 
-bool driver_code_source::remove_macro( std::string const& macro_def )
+bool compiler_code_source::remove_macro( std::string const& macro_def )
 {
 	wcontext_t* wctxt = wctxt_wrapper->get_wctxt();
 	assert(wctxt);
 	return wctxt->remove_macro_definition(macro_def);
 }
 
-bool driver_code_source::remove_macro( vector<string> const& macros )
+bool compiler_code_source::remove_macro( vector<string> const& macros )
 {
 	bool ret = true;
 	for( size_t i = 0; i < macros.size(); ++i ) {
@@ -275,7 +275,7 @@ bool driver_code_source::remove_macro( vector<string> const& macros )
 
 void report_load_file_failed( void* ctxt, std::string const& name, bool /*is_system*/ )
 {
-	driver_code_source* code_src = driver_code_source::get_code_source(ctxt);
+	compiler_code_source* code_src = compiler_code_source::get_code_source(ctxt);
 	code_src->diags
 		->report( sasl::parser::cannot_open_include_file )
 		->file(code_src->file_name() )->span( code_src->current_span() )
@@ -290,7 +290,7 @@ void load_virtual_file(
 	is_exclusive = false;
 	is_succeed = false;
 
-	driver_code_source* code_src = driver_code_source::get_code_source(ctxt);
+	compiler_code_source* code_src = compiler_code_source::get_code_source(ctxt);
 	assert( code_src );
 	if( code_src->inc_handler )
 	{
@@ -303,7 +303,7 @@ void load_virtual_file(
 
 	if( !is_system ) { return; }
 
-	driver_code_source::virtual_file_dict::iterator it 
+	compiler_code_source::virtual_file_dict::iterator it 
 		= code_src->virtual_files.find(name);
 	if ( it == code_src->virtual_files.end() )
 	{
@@ -329,7 +329,7 @@ void check_file( bool& is_succeed, bool& is_exclusive, string& native_name,
 	is_exclusive = false;
 	is_succeed = false;
 
-	driver_code_source* code_src = driver_code_source::get_code_source(ctxt);
+	compiler_code_source* code_src = compiler_code_source::get_code_source(ctxt);
 	assert( code_src );
 
 	// If inc handler is enabled, it is exclusive. 
@@ -341,7 +341,7 @@ void check_file( bool& is_succeed, bool& is_exclusive, string& native_name,
 		return;
 	}
 
-	driver_code_source::virtual_file_dict::iterator it 
+	compiler_code_source::virtual_file_dict::iterator it 
 		= code_src->virtual_files.find(name);
 	if ( it == code_src->virtual_files.end() )
 	{
@@ -359,13 +359,13 @@ void check_file( bool& is_succeed, bool& is_exclusive, string& native_name,
 	return;
 }
 
-wave_context_wrapper::wave_context_wrapper( driver_code_source* src, wcontext_t* ctx )
+wave_context_wrapper::wave_context_wrapper( compiler_code_source* src, wcontext_t* ctx )
 {
 	if( wctxt )
 	{
-		driver_code_source::ctxt_to_source.erase(wctxt.get());
+		compiler_code_source::ctxt_to_source.erase(wctxt.get());
 	}
-	driver_code_source::ctxt_to_source[ctx] = src;
+	compiler_code_source::ctxt_to_source[ctx] = src;
 	wctxt.reset(ctx);
 }
 
@@ -373,7 +373,7 @@ wave_context_wrapper::~wave_context_wrapper()
 {
 	if( wctxt )
 	{
-		driver_code_source::ctxt_to_source.erase(wctxt.get());
+		compiler_code_source::ctxt_to_source.erase(wctxt.get());
 	}
 	wctxt.reset(NULL);
 }
@@ -402,4 +402,4 @@ void fixes_file_end_with_newline( std::string& content )
 #endif
 }
 
-END_NS_SASL_DRIVER();
+END_NS_SASL_DRIVERS();

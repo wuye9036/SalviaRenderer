@@ -1,8 +1,8 @@
-#include <sasl/include/driver/driver_impl.h>
+#include <sasl/include/drivers/compiler_impl.h>
 
-#include <sasl/include/driver/driver_diags.h>
-#include <sasl/include/driver/code_sources.h>
-#include <sasl/include/driver/options.h>
+#include <sasl/include/drivers/compiler_diags.h>
+#include <sasl/include/drivers/code_sources.h>
+#include <sasl/include/drivers/options.h>
 
 #include <sasl/include/codegen/cg_api.h>
 #include <sasl/include/codegen/cg_jit.h>
@@ -14,6 +14,8 @@
 #include <sasl/include/parser/diags.h>
 #include <sasl/include/syntax_tree/program.h>
 #include <sasl/include/common/diag_chat.h>
+
+#include <salviar/include/shader_impl.h>
 
 #include <eflib/include/diagnostics/profiler.h>
 #include <eflib/include/string/ustring.h>
@@ -43,6 +45,8 @@ using sasl::semantic::analysis_semantic;
 using sasl::semantic::reflect;
 using sasl::codegen::generate_vmcode;
 
+using salviar::external_function_desc;
+
 using eflib::fixed_string;
 
 using boost::shared_polymorphic_cast;
@@ -55,10 +59,10 @@ using std::endl;
 using std::ostream;
 using std::ofstream;
 
-BEGIN_NS_SASL_DRIVER();
+BEGIN_NS_SASL_DRIVERS();
 
 template <typename ParserT>
-bool driver_impl::parse( ParserT& parser )
+bool compiler_impl::parse( ParserT& parser )
 {
 	try{
 		opt_disp.reg_extra_parser( parser );
@@ -93,7 +97,7 @@ bool driver_impl::parse( ParserT& parser )
 	return true;
 }
 
-void driver_impl::set_parameter( int argc, char** argv )
+void compiler_impl::set_parameter( int argc, char** argv )
 {
 	po::basic_command_line_parser<char> parser
 		= po::command_line_parser(argc, argv).options( desc ).allow_unregistered();
@@ -103,7 +107,7 @@ void driver_impl::set_parameter( int argc, char** argv )
 	}
 }
 
-void driver_impl::set_parameter( std::string const& cmd )
+void compiler_impl::set_parameter( std::string const& cmd )
 {
 #if defined(EFLIB_WINDOWS)
 	vector<string> cmds = po::split_winmain(cmd);
@@ -119,7 +123,7 @@ void driver_impl::set_parameter( std::string const& cmd )
 	}
 }
 
-driver_impl::driver_impl()
+compiler_impl::compiler_impl()
 {
 	opt_disp.fill_desc(desc);
 	opt_global.fill_desc(desc);
@@ -128,7 +132,7 @@ driver_impl::driver_impl()
 	opt_includes.fill_desc(desc);
 }
 
-shared_ptr<diag_chat> driver_impl::compile()
+shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 {
 	// Initialize env for compiling. 
 	shared_ptr<diag_chat> diags = diag_chat::create();
@@ -165,7 +169,7 @@ shared_ptr<diag_chat> driver_impl::compile()
 	// Set code source.
 	if( !fname.empty() )
 	{
-		shared_ptr<driver_code_source> file_code_source( new driver_code_source() );
+		shared_ptr<compiler_code_source> file_code_source( new compiler_code_source() );
 		
 		if ( !file_code_source->set_file(fname) ){
 			diags->report( sasl::parser::cannot_open_input_file )->p(fname);
@@ -189,7 +193,7 @@ shared_ptr<diag_chat> driver_impl::compile()
 
 	// Set include and virtual include.
 
-	driver_code_source* driver_sc = dynamic_cast<driver_code_source*>( code_src.get() );
+	compiler_code_source* driver_sc = dynamic_cast<compiler_code_source*>( code_src.get() );
 
 	if( driver_sc )
 	{
@@ -238,11 +242,8 @@ shared_ptr<diag_chat> driver_impl::compile()
 		}
 	}
 
-	
-
 	eflib::profiler		prof;
 	diag_chat_ptr		semantic_diags;
-	module_vmcode_ptr	vmcode;
 
 	{
 		// Compiling with profiling
@@ -250,13 +251,13 @@ shared_ptr<diag_chat> driver_impl::compile()
 		eflib::profiling_scope prof_scope(&prof, "driver impl compiling");
 		
 		{
-			eflib::profiling_scope prof_scope(&prof, "parse @ driver_impl");
+			eflib::profiling_scope prof_scope(&prof, "parse @ compiler_impl");
 			mroot = sasl::syntax_tree::parse( code_src.get(), lex_ctxt, diags.get() );
 			if( !mroot ){ return diags; }
 		}
 
 		{
-			eflib::profiling_scope prof_scope(&prof, "semantic analysis @ driver_impl");
+			eflib::profiling_scope prof_scope(&prof, "semantic analysis @ compiler_impl");
 			semantic_diags = diag_chat::create();
 			msem = analysis_semantic( mroot.get(), semantic_diags.get(), lang );
 			if( error_count( semantic_diags.get(), false ) > 0 )
@@ -268,7 +269,7 @@ shared_ptr<diag_chat> driver_impl::compile()
 		}
 
 		{
-			eflib::profiling_scope prof_scope(&prof, "ABI analysis @ driver_impl");
+			eflib::profiling_scope prof_scope(&prof, "ABI analysis @ compiler_impl");
 
 			mreflection = reflect(msem);
 			if(!mreflection)
@@ -282,63 +283,92 @@ shared_ptr<diag_chat> driver_impl::compile()
 		}
 		
 		{
-			eflib::profiling_scope prof_scope(&prof, "Code generation @ driver_impl");
+			eflib::profiling_scope prof_scope(&prof, "Code generation @ compiler_impl");
 
-			vmcode = generate_vmcode( msem, mreflection.get() );
-			if( !vmcode ){
+			mvmc = generate_vmcode( msem, mreflection.get() );
+			if( !mvmc ){
 				cout << "Code generation error occurs!" << endl;
 				return diags;
+			}
+
+			if (enable_jit)
+			{
+				if( mvmc->enable_jit() )
+				{
+					inject_default_functions();
+				}
 			}
 		}
 	}
 
 	eflib::print_profiler(&prof, 3);
 
-	if( opt_io.fmt == options_io::llvm_ir ){
-		if( !opt_io.output_file_name.empty() ){
+	if( opt_io.fmt == options_io::llvm_ir )
+	{
+		if( !opt_io.output_file_name.empty() )
+		{
 			ofstream out_file( opt_io.output_file_name.c_str(), std::ios_base::out );
-			vmcode->dump_ir( out_file );
+			mvmc->dump_ir( out_file );
 		}
 	}
 	return diags;
 }
 
-module_semantic_ptr driver_impl::get_semantic() const{
+shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> const& external_funcs)
+{
+	shared_ptr<diag_chat> results = compile(true);
+	if(!mvmc)
+	{
+		return results;
+	}
+
+	if( mvmc->enable_jit() )
+	{	
+		for( size_t i = 0; i < external_funcs.size(); ++i )
+		{
+			inject_function(external_funcs[i].func, external_funcs[i].func_name, external_funcs[i].is_raw_name);
+		}
+	}
+
+	return results;
+}
+
+module_semantic_ptr compiler_impl::get_semantic() const{
 	return msem;
 }
 
-module_vmcode_ptr driver_impl::get_vmcode() const{
+module_vmcode_ptr compiler_impl::get_vmcode() const{
 	return mvmc;
 }
 
-node_ptr driver_impl::get_root() const{
+node_ptr compiler_impl::get_root() const{
 	return mroot;
 }
 
-po::variables_map const & driver_impl::variables() const
+po::variables_map const & compiler_impl::variables() const
 {
 	return vm;
 }
 
-options_display_info const & driver_impl::display_info() const
+options_display_info const & compiler_impl::display_info() const
 {
 	return opt_disp;
 }
 
-options_io const & driver_impl::io_info() const
+options_io const & compiler_impl::io_info() const
 {
 	return opt_io;
 }
 
-void driver_impl::set_code( std::string const& code )
+void compiler_impl::set_code( std::string const& code )
 {
-	shared_ptr<driver_code_source> src( new driver_code_source() );
+	shared_ptr<compiler_code_source> src( new compiler_code_source() );
 	src->set_code( code );
 	user_code_src = src;
 	user_lex_ctxt = src;
 }
 
-void driver_impl::set_code_source( shared_ptr<code_source> const& src )
+void compiler_impl::set_code_source( shared_ptr<code_source> const& src )
 {
 	user_code_src = src;
 }
@@ -398,89 +428,69 @@ void sasl_reversebits_u32(uint32_t* ret, uint32_t v)
 	*ret= ( v >> 16             ) | ( v               << 16);
 }
 
-/*
-shared_ptr<jit_engine> driver_impl::create_jit()
+void compiler_impl::inject_default_functions()
 {
-	fixed_string err;
-	if(!mcgm){
-		return shared_ptr<jit_engine>();
+	if(!mvmc || !mvmc->enable_jit())
+	{
+		return;
 	}
-	shared_ptr<cg_jit_engine> ret_jit = cg_jit_engine::create(
-		shared_polymorphic_cast<module_vmcode>(mcgm), err
-		);
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
-	inject_function(ret_jit, &sasl_exp_f32,		"sasl.exp.f32",		true);
-	inject_function(ret_jit, &sasl_mod_f32,		"sasl.mod.f32",		true);
-	inject_function(ret_jit, &sasl_exp2_f32,	"sasl.exp2.f32",	true);
-	inject_function(ret_jit, &sasl_sin_f32,		"sasl.sin.f32",		true);
-	inject_function(ret_jit, &sasl_cos_f32,		"sasl.cos.f32",		true);
-	inject_function(ret_jit, &sasl_tan_f32,		"sasl.tan.f32",		true);
-	inject_function(ret_jit, &sasl_asin_f32,	"sasl.asin.f32",	true);
-	inject_function(ret_jit, &sasl_acos_f32,	"sasl.acos.f32",	true);
-	inject_function(ret_jit, &sasl_atan_f32,	"sasl.atan.f32",	true);
-	inject_function(ret_jit, &sasl_ceil_f32,	"sasl.ceil.f32",	true);
-	inject_function(ret_jit, &sasl_floor_f32,	"sasl.floor.f32",	true);
-	inject_function(ret_jit, &sasl_round_f32,	"sasl.round.f32",	true);
-	inject_function(ret_jit, &sasl_trunc_f32,	"sasl.trunc.f32",	true);
-	inject_function(ret_jit, &sasl_log_f32,		"sasl.log.f32",		true);
-	inject_function(ret_jit, &sasl_log2_f32,	"sasl.log2.f32",	true);
-	inject_function(ret_jit, &sasl_log10_f32,	"sasl.log10.f32",	true);
-	inject_function(ret_jit, &sasl_rsqrt_f32,	"sasl.rsqrt.f32",	true);
-	inject_function(ret_jit, &sasl_ldexp_f32,	"sasl.ldexp.f32",	true);
-	inject_function(ret_jit, &sasl_pow_f32,		"sasl.pow.f32",		true);
-	inject_function(ret_jit, &sasl_sinh_f32,	"sasl.sinh.f32",	true);
-	inject_function(ret_jit, &sasl_cosh_f32,	"sasl.cosh.f32",	true);
-	inject_function(ret_jit, &sasl_tanh_f32,	"sasl.tanh.f32",	true);
+	inject_function(&sasl_exp_f32,	"sasl.exp.f32",		true);
+	inject_function(&sasl_mod_f32,	"sasl.mod.f32",		true);
+	inject_function(&sasl_exp2_f32,	"sasl.exp2.f32",	true);
+	inject_function(&sasl_sin_f32,	"sasl.sin.f32",		true);
+	inject_function(&sasl_cos_f32,	"sasl.cos.f32",		true);
+	inject_function(&sasl_tan_f32,	"sasl.tan.f32",		true);
+	inject_function(&sasl_asin_f32,	"sasl.asin.f32",	true);
+	inject_function(&sasl_acos_f32,	"sasl.acos.f32",	true);
+	inject_function(&sasl_atan_f32,	"sasl.atan.f32",	true);
+	inject_function(&sasl_ceil_f32,	"sasl.ceil.f32",	true);
+	inject_function(&sasl_floor_f32,"sasl.floor.f32",	true);
+	inject_function(&sasl_round_f32,"sasl.round.f32",	true);
+	inject_function(&sasl_trunc_f32,"sasl.trunc.f32",	true);
+	inject_function(&sasl_log_f32,	"sasl.log.f32",		true);
+	inject_function(&sasl_log2_f32,	"sasl.log2.f32",	true);
+	inject_function(&sasl_log10_f32,"sasl.log10.f32",	true);
+	inject_function(&sasl_rsqrt_f32,"sasl.rsqrt.f32",	true);
+	inject_function(&sasl_ldexp_f32,"sasl.ldexp.f32",	true);
+	inject_function(&sasl_pow_f32,	"sasl.pow.f32",		true);
+	inject_function(&sasl_sinh_f32,	"sasl.sinh.f32",	true);
+	inject_function(&sasl_cosh_f32,	"sasl.cosh.f32",	true);
+	inject_function(&sasl_tanh_f32,	"sasl.tanh.f32",	true);
 
-	inject_function(ret_jit, &sasl_countbits_u32, "sasl.countbits.u32", true);
-	inject_function(ret_jit, &sasl_firstbithigh_u32, "sasl.firstbithigh.u32", true);
-	inject_function(ret_jit, &sasl_firstbitlow_u32 , "sasl.firstbitlow.u32" , true);
-	inject_function(ret_jit, &sasl_reversebits_u32 , "sasl.reversebits.u32" , true);
-
-	return ret_jit;
+	inject_function(&sasl_countbits_u32,	"sasl.countbits.u32",	true);
+	inject_function(&sasl_firstbithigh_u32, "sasl.firstbithigh.u32",true);
+	inject_function(&sasl_firstbitlow_u32 , "sasl.firstbitlow.u32" ,true);
+	inject_function(&sasl_reversebits_u32 , "sasl.reversebits.u32" ,true);
 }
 
-shared_ptr<jit_engine> driver_impl::create_jit( external_function_array const& extfns )
-{
-	shared_ptr<jit_engine> ret_jit = create_jit();
-	if(ret_jit)
-	{
-		for( size_t i = 0; i < extfns.size(); ++i )
-		{
-			inject_function( ret_jit, extfns[i].get<0>(), extfns[i].get<1>(), extfns[i].get<2>() );
-		}
-	}
-	return ret_jit;
-}
-*/
-
-void driver_impl::set_code_file( std::string const& code_file )
+void compiler_impl::set_code_file( std::string const& code_file )
 {
 	opt_io.input_file = code_file;
 }
 
-void driver_impl::set_lex_context( shared_ptr<lex_context> const& lex_ctxt )
+void compiler_impl::set_lex_context( shared_ptr<lex_context> const& lex_ctxt )
 {
 	user_lex_ctxt = lex_ctxt;
 }
 
-void driver_impl::add_virtual_file( string const& file_name, string const& code_content, bool high_priority )
+void compiler_impl::add_virtual_file( string const& file_name, string const& code_content, bool high_priority )
 {
 	virtual_files[file_name] = make_pair( code_content, high_priority );
 }
 
-void driver_impl::set_include_handler( include_handler_fn inc_handler )
+void compiler_impl::set_include_handler( include_handler_fn inc_handler )
 {
 	user_inc_handler = inc_handler;
 }
 
-reflection_impl_ptr driver_impl::get_reflection() const
+reflection_impl_ptr compiler_impl::get_reflection() const
 {
 	return mreflection;
 }
 
-void driver_impl::inject_function(module_vmcode_ptr const& vmc, void* pfn, fixed_string const& fn_name, bool is_raw_name )
+void compiler_impl::inject_function(void* pfn, fixed_string const& fn_name, bool is_raw_name )
 {
 	eflib::fixed_string raw_name;
 	if( is_raw_name )
@@ -492,48 +502,48 @@ void driver_impl::inject_function(module_vmcode_ptr const& vmc, void* pfn, fixed
 		raw_name = msem->root_symbol()->find_overloads(fn_name)[0]->mangled_name();
 	}
 	
-	vmc->inject_function(pfn, raw_name);
+	mvmc->inject_function(pfn, raw_name);
 }
 
-void driver_impl::add_sysinclude_path( std::string const& sys_path )
+void compiler_impl::add_sysinclude_path( std::string const& sys_path )
 {
 	sys_paths.push_back(sys_path);
 }
 
-void driver_impl::add_include_path( std::string const& inc_path )
+void compiler_impl::add_include_path( std::string const& inc_path )
 {
 	inc_paths.push_back(inc_path);
 }
 
-void driver_impl::clear_sysinclude_paths()
+void compiler_impl::clear_sysinclude_paths()
 {
 	sys_paths.clear();
 }
 
-void driver_impl::add_macro( std::string const& macro, bool predef )
+void compiler_impl::add_macro( std::string const& macro, bool predef )
 {
 	macros.push_back( make_pair(macro, predef?ms_predef:ms_normal) );
 }
 
-void driver_impl::clear_macros()
+void compiler_impl::clear_macros()
 {
 	macros.clear();
 }
 
-void driver_impl::remove_macro( std::string const& macro )
+void compiler_impl::remove_macro( std::string const& macro )
 {
 	macros.push_back( make_pair(macro, ms_remove) );
 }
 
 
-void driver_null::set_parameter( int /*argc*/, char** /*argv*/ )
+void null_compiler::set_parameter( int /*argc*/, char** /*argv*/ )
 {
 
 }
 
-driver_null::driver_null()
+null_compiler::null_compiler()
 {
 
 }
 
-END_NS_SASL_DRIVER();
+END_NS_SASL_DRIVERS();

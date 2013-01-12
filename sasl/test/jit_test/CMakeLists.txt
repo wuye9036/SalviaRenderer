@@ -27,7 +27,7 @@ set( SOURCE_FILES test_main.cpp ${SASL_JIT_TEST_SOURCES} )
 
 ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
-	sasl_driver
+	sasl_drivers
 	sasl_semantic sasl_syntaxtree
 	sasl_parser
 	sasl_enums sasl_common

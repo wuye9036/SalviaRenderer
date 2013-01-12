@@ -1,6 +1,7 @@
 #include <sasl/include/host/shader_object_impl.h>
 
 #include <sasl/include/semantic/reflection_impl.h>
+#include <sasl/include/codegen/cg_api.h>
 
 using namespace salviar;
 using namespace sasl::semantic;
@@ -20,6 +21,11 @@ shader_reflection const* shader_object_impl::get_reflection() const
 
 void* shader_object_impl::native_function() const
 {
+	if(!entry_)
+	{
+		const_cast<shader_object_impl*>(this)->entry_
+			= module_vmc_->get_function( reflection_->entry_name() );
+	}
 	return entry_;
 }
 

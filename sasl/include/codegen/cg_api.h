@@ -58,17 +58,10 @@ public:
 	virtual ~module_vmcode(){};
 };
 
-enum optimization_options{
-	opt_verify,
-	opt_preset_std_for_function
-};
-
 module_vmcode_ptr generate_vmcode(
 	sasl::semantic::module_semantic_ptr const&,
 	sasl::semantic::reflection_impl const*
 	);
-
-// void optimize( boost::shared_ptr<llvm_module>, const std::string& params );
 
 END_NS_SASL_CODEGEN();
 

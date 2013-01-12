@@ -27,7 +27,7 @@ set( SOURCE_FILES test_main.cpp ${SASL_ROBUST_TEST_SOURCES} )
 
 ADD_EXECUTABLE( ${SASL_TEST_PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES( ${SASL_TEST_PROJECT_NAME}
-	sasl_driver sasl_enums sasl_common
+	sasl_drivers sasl_enums sasl_common
 	${SASL_ROBUST_TEST_LIBS}
 	${SALVIA_BOOST_LIBS}
 )

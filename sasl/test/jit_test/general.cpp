@@ -1,4 +1,4 @@
-#define ALL_TESTS_ENABLED 1
+#define ALL_TESTS_ENABLED 0
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
@@ -1016,9 +1016,9 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 
 		char3 ret_v = test_vbool(x, y, z);
 
-		BOOST_CHECK_EQUAL( static_cast<bool>(ret_v.data_[0]), ref_v[0] );
-		BOOST_CHECK_EQUAL( static_cast<bool>(ret_v.data_[1]), ref_v[1] );
-		BOOST_CHECK_EQUAL( static_cast<bool>(ret_v.data_[2]), ref_v[2] );
+		BOOST_CHECK_EQUAL( ret_v.data_[0] != 0, ref_v[0] );
+		BOOST_CHECK_EQUAL( ret_v.data_[1] != 0, ref_v[1] );
+		BOOST_CHECK_EQUAL( ret_v.data_[2] != 0, ref_v[2] );
 	}
 
 	{

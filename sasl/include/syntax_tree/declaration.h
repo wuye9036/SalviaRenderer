@@ -16,8 +16,10 @@
 
 #include <vector>
 
-namespace sasl{
-	namespace common{
+namespace sasl
+{
+	namespace common
+	{
 		struct token_t;
 	}
 }
@@ -64,6 +66,7 @@ private:
 	member_initializer( const member_initializer& );
 };
 
+EFLIB_DECLARE_STRUCT_SHARED_PTR(declaration);
 struct declaration: public node{
 protected:
 	declaration(node_ids type_id, boost::shared_ptr<token_t> const& tok_beg, boost::shared_ptr<token_t> const& tok_end );

@@ -38,7 +38,28 @@ h_renderer create_software_renderer(renderer_parameters const* pparam, h_device 
 class host_module
 {
 public:
-	static void initialize()
+	static void compile(
+		shader_object_ptr& obj, shader_log_ptr& log,
+		string const& code, shader_profile const& prof,
+		vector<external_function_desc> const& funcs
+		)
+	{
+		if(!compile_impl)
+		{
+			load_function();
+		}
+		assert(compile_impl);
+
+		if(!compile_impl) return;
+		compile_impl(obj, log, code, prof, funcs);
+	}
+	static void (*compile_impl)(
+		shader_object_ptr&, shader_log_ptr&,
+		string const&, shader_profile const&,
+		vector<external_function_desc> const&
+		);
+private:
+	static void load_function()
 	{
 		assert(!lib_);
 		std::string dll_name = "sasl_host";
@@ -48,24 +69,19 @@ public:
 		dll_name += ".dll";
 
 		lib_ = dynamic_lib::load(dll_name);
-		lib_->get_function(compile, "salvia_compile_shader");
-		assert(compile);
+		lib_->get_function(compile_impl, "salvia_compile_shader");
+		assert(compile_impl);
 	}
 
-	static void (*compile)(
-		shader_object_ptr&, shader_log_ptr&,
-		string const&, shader_profile const&,
-		vector<external_function_desc> const&
-		);
-private:
 	static shared_ptr<dynamic_lib> lib_;
 };
 
-void (*host_module::compile) (
+shared_ptr<dynamic_lib> host_module::lib_;
+void (*host_module::compile_impl) (
 	shader_object_ptr&, shader_log_ptr&,
 	string const&, shader_profile const&,
 	vector<external_function_desc> const&
-	);
+	) = NULL;
 
 shader_object_ptr	compile(std::string const& code, shader_profile const& profile, shader_log_ptr& logs)
 {

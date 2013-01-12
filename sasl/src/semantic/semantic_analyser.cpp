@@ -54,7 +54,7 @@ using sasl::syntax_tree::create_builtin_type;
 using sasl::syntax_tree::create_node;
 using sasl::syntax_tree::compound_statement;
 using sasl::syntax_tree::constant_expression;
-using sasl::syntax_tree::declaration;
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, declaration);
 using sasl::syntax_tree::declarator;
 using sasl::syntax_tree::declaration_statement;
 using sasl::syntax_tree::dowhile_statement;
@@ -74,7 +74,7 @@ using sasl::syntax_tree::member_expression;
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, node);
 EFLIB_USING_SHARED_PTR(sasl::syntax_tree, parameter);
 using sasl::syntax_tree::parameter_full;
-using sasl::syntax_tree::program;
+EFLIB_USING_SHARED_PTR(sasl::syntax_tree, program);
 using sasl::syntax_tree::statement;
 using sasl::syntax_tree::struct_type;
 using sasl::syntax_tree::switch_statement;
@@ -1327,16 +1327,18 @@ SASL_VISIT_DEF( program ){
 	caster->set_function_get_tynode( boost::bind( &pety_t::get_proto, module_semantic_->pety(), _1) );
 	register_builtin_functions2();
 
-	shared_ptr<program> dup_prog = duplicate( v.as_handle() )->as_handle<program>();
+	program_ptr dup_prog = duplicate( v.as_handle() )->as_handle<program>();
 	prog_ = dup_prog.get();
 	dup_prog->decls.clear();
 
 	// analysis declarations.
-	for( vector< shared_ptr<declaration> >::iterator it = v.decls.begin(); it != v.decls.end(); ++it ){
-		shared_ptr<declaration> node_gen = visit_child(*it);
+	for( vector<declaration_ptr>::iterator it = v.decls.begin(); it != v.decls.end(); ++it )
+	{
+		declaration_ptr node_gen = visit_child(*it);
 		dup_prog->decls.push_back( node_gen );
 	}
 
+	module_semantic_->set_language( static_cast<salviar::languages>(lang) );
 	module_semantic_->link_symbol(dup_prog.get(), module_semantic_->root_symbol() );
 	module_semantic_->set_program(dup_prog);
 }

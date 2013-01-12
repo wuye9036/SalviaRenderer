@@ -1,7 +1,7 @@
-#ifndef SASL_DRIVER_OPTIONS_H
-#define SASL_DRIVER_OPTIONS_H
+#ifndef SASL_DRIVERS_OPTIONS_H
+#define SASL_DRIVERS_OPTIONS_H
 
-#include <sasl/include/driver/driver_forward.h>
+#include <sasl/include/drivers/drivers_forward.h>
 #include <sasl/include/syntax_tree/parse_api.h>
 
 #include <salviar/include/shader.h>
@@ -25,7 +25,7 @@ namespace sasl{
 	}
 }
 
-BEGIN_NS_SASL_DRIVER();
+BEGIN_NS_SASL_DRIVERS();
 
 namespace po = boost::program_options;
 
@@ -150,6 +150,6 @@ private:
 	static char const* sysincl_desc;
 };
 
-END_NS_SASL_DRIVER();
+END_NS_SASL_DRIVERS();
 
 #endif

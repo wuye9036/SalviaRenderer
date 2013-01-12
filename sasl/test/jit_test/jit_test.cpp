@@ -1,6 +1,6 @@
 #include <sasl/test/jit_test/jit_test.h>
 
-#include <sasl/include/driver/driver_api.h>
+#include <sasl/include/drivers/drivers_api.h>
 #include <sasl/include/codegen/cg_api.h>
 #include <sasl/include/codegen/cg_jit.h>
 #include <sasl/include/semantic/symbol.h>
@@ -55,29 +55,29 @@ void* jit_fixture::function( string const& unmangled_name )
 {
 	assert( !root_sym->find_overloads(unmangled_name).empty() );
 	string fn_name = root_sym->find_overloads(unmangled_name)[0]->mangled_name();
-	return je->get_function(fn_name);
+	return vmc->get_function(fn_name);
 }
 
 void jit_fixture::set_function( void* fn, string const& unmangled_name )
 {
 	assert( !root_sym->find_overloads(unmangled_name).empty() );
 	string fn_name = root_sym->find_overloads(unmangled_name)[0]->mangled_name();
-	je->inject_function( fn, fn_name );
+	vmc->inject_function(fn, fn_name);
 }
 
 void jit_fixture::set_raw_function( void* fn, string const& mangled_name )
 {
-	je->inject_function(fn, mangled_name);
+	vmc->inject_function(fn, mangled_name);
 }
 
 void jit_fixture::init( string const& file_name, string const& options )
 {
 	diags = diag_chat::create();
 	diags->add_report_raised_handler( print_diagnostic );
-	sasl_create_driver(drv);
+	sasl_create_compiler(drv);
 	BOOST_REQUIRE(drv);
 	drv->set_parameter( make_command(file_name, options) );
-	shared_ptr<diag_chat> results = drv->compile();
+	shared_ptr<diag_chat> results = drv->compile(true);
 	diag_chat::merge(diags.get(), results.get(), true);
 
 	BOOST_REQUIRE( drv->get_root() );
@@ -86,9 +86,9 @@ void jit_fixture::init( string const& file_name, string const& options )
 
 	root_sym = drv->get_semantic()->root_symbol();
 
-	shared_ptr<module_vmcode> vmc = shared_polymorphic_cast<module_vmcode>( drv->get_vmcode() );
-	fstream dump_file( ( file_name + "_ir.ll" ).c_str(), std::ios::out );
-	vmc->dump_ir( dump_file );
+	vmc = drv->get_vmcode();
+	fstream dump_file( (file_name + "_ir.ll").c_str(), std::ios::out );
+	vmc->dump_ir(dump_file);
 	dump_file.close();
 
 	bool is_jit_enabled = vmc->enable_jit();

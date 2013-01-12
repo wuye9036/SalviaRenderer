@@ -29,6 +29,7 @@ using std::ostream;
 
 BEGIN_NS_SASL_CODEGEN();
 
+#if TODO
 void optimize( shared_ptr<module_vmcode> code, vector<optimization_options> opt_options )
 {
 	Module* mod = code->get_vm_module();
@@ -58,5 +59,6 @@ void optimize( shared_ptr<module_vmcode> code, vector<optimization_options> opt_
 		}
 	}
 }
+#endif
 
 END_NS_SASL_CODEGEN();

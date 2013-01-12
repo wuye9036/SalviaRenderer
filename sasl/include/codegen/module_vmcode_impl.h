@@ -5,12 +5,15 @@
 #include <sasl/include/codegen/cg_api.h>
 #include <sasl/include/semantic/reflection_impl.h>
 
+#include <eflib/include/string/ustring.h>
+
 namespace llvm
 {
 	class LLVMContext;
 	class Module;
 	class ConstantFolder;
 	class ExecutionEngine;
+	class Function;
 	class Type;
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -59,14 +62,17 @@ public:
 	~module_vmcode_impl();
 
 protected:
-	sasl::semantic::module_semantic_ptr sem_;
+	sasl::semantic::module_semantic_ptr	sem_;
 
-	module_context_ptr		ctxt_;
+	module_context_ptr					ctxt_;
 
-	llvm::LLVMContext*		vm_ctx_;
-	llvm::DefaultIRBuilder*	irbuilder_;
-	llvm::Module*			vm_module_;
-	llvm::ExecutionEngine*	vm_engine_;
+	llvm::LLVMContext*					vm_ctx_;
+	llvm::DefaultIRBuilder*				irbuilder_;
+	llvm::Module*						vm_module_;
+	llvm::ExecutionEngine*				vm_engine_;
+	eflib::fixed_string					error_;
+
+	std::vector<llvm::Function*>		jitted_funcs_;
 };
 
 END_NS_SASL_CODEGEN();

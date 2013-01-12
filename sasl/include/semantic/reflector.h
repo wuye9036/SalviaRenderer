@@ -26,28 +26,9 @@ class symbol;
 EFLIB_DECLARE_CLASS_SHARED_PTR(module_semantic);
 EFLIB_DECLARE_CLASS_SHARED_PTR(reflection_impl);
 
-class reflector
-{
-public:
-	reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name);
-	reflection_impl_ptr reflect(module_semantic_ptr const& sem);
-
-private:
-	reflection_impl_ptr do_reflect();
-
-	bool add_semantic(
-		sasl::syntax_tree::node_ptr const& v,
-		bool is_member, bool enable_nested,
-		salviar::languages lang, bool is_output_semantic
-		);
-
-	module_semantic*	sem_;
-	symbol*				entry_;
-	reflection_impl*	reflection_;
-};
-
 reflection_impl_ptr reflect(module_semantic_ptr const& sem);
 reflection_impl_ptr reflect(module_semantic_ptr const& sem, eflib::fixed_string const& entry_name);
+
 END_NS_SASL_SEMANTIC();
 
 #endif

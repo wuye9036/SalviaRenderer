@@ -4,6 +4,7 @@
 #include <eflib/include/utility/operator_bool.h>
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/function.hpp>
@@ -29,9 +30,9 @@
 
 namespace sasl
 {
-	namespace driver
+	namespace drivers
 	{
-		class driver;
+		class compiler;
 	}
 	namespace semantic
 	{
@@ -39,7 +40,7 @@ namespace sasl
 	}
 	namespace codegen
 	{
-		class jit_engine;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(module_vmcode);
 	}
 	namespace common
 	{
@@ -48,11 +49,11 @@ namespace sasl
 	}
 }
 
-using sasl::driver::driver;
-using sasl::codegen::jit_engine;
+using sasl::drivers::compiler;
 using sasl::common::diag_chat;
 using sasl::common::diag_item;
 using sasl::semantic::symbol;
+EFLIB_USING_SHARED_PTR(sasl::codegen, module_vmcode);
 
 using eflib::vector_;
 using eflib::matrix_;
@@ -235,7 +236,8 @@ template <typename Fn>
 class jit_function: public jit_function_forward< typename result_type<Fn>::type, Fn >
 {};
 
-struct jit_fixture {
+class jit_fixture {
+public:
 	jit_fixture() {}
 
 	void init_g ( string const& file_name );
@@ -258,10 +260,13 @@ struct jit_fixture {
 
 	~jit_fixture(){}
 
-	shared_ptr<driver>		drv;
+	shared_ptr<compiler>	drv;
 	symbol*					root_sym;
-	shared_ptr<jit_engine>	je;
+	module_vmcode_ptr		vmc;
 	shared_ptr<diag_chat>	diags;
+private:
+	jit_fixture(jit_fixture const&);
+	jit_fixture& operator = (jit_fixture const&);
 };
 
 #define INIT_JIT_FUNCTION(fn_name) function( fn_name, #fn_name ); BOOST_REQUIRE(fn_name);
