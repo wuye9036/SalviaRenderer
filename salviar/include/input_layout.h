@@ -52,9 +52,11 @@ struct input_element_desc
 		, input_slot(0), aligned_byte_offset(0xFFFFFFFF)
 		, slot_class(input_per_vertex), instance_data_step_rate(0)
 	{}
+
 };
 
-class input_layout{
+class input_layout
+{
 public:
 	static h_input_layout create( input_element_desc const* pdesc, size_t desc_count, h_shader_code const& vs );
 	static h_input_layout create( input_element_desc const* pdesc, size_t desc_count, h_vertex_shader const& vs );
@@ -66,12 +68,6 @@ public:
 
 	semantic_value get_semantic( iterator it ) const;
 
-	/** Get a slot number that is belonged to a input elememt description has the same semantic value as parameter.
-		@param sv
-			The semantic value used to look up.
-		@return 
-			If the semantic is exists, tt return the found slot number, otherwise return the maximum value of size_t.
-	*/
 	size_t find_slot( semantic_value const& ) const;
 
 	input_element_desc const* find_desc( size_t slot ) const;
@@ -82,6 +78,9 @@ public:
 private:
 	std::vector<input_element_desc> descs;
 };
+
+size_t hash_value(input_element_desc const&);
+size_t hash_value(input_layout const&);
 
 END_NS_SALVIAR();
 

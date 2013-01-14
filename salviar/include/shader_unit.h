@@ -18,6 +18,7 @@
 
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/memory/allocator.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <vector>
 
@@ -103,6 +104,18 @@ public:
 	aligned_vector buffer_odata;
 };
 
+EFLIB_DECLARE_CLASS_SHARED_PTR(vx_shader_unit);
+class vx_shader_unit
+{
+public:
+	virtual uint32_t output_attributes_count() const = 0;
+	virtual uint32_t output_attribute_modifiers(size_t index) const = 0;
+
+	virtual void execute(size_t ivert, void* out_data) = 0;
+	virtual void execute(size_t ivert, vs_output& out) = 0;
+
+	virtual ~vx_shader_unit(){}
+};
 END_NS_SALVIAR();
 
 #endif

@@ -37,26 +37,28 @@ class reflector;
 
 class reflection_impl: public salviar::shader_reflection{
 public:
-	typedef salviar::sv_layout		sv_layout_t;
-	typedef salviar::semantic_value	semantic_value_t;
+	typedef salviar::sv_layout		sv_layout;
+	typedef salviar::semantic_value semantic_value;
 
 	// Friend for reflector could call compute_layout();
 	friend class reflector;
 
 	// Implements members of shader_reflection
-	eflib::fixed_string entry_name() const;
+	virtual salviar::languages		get_language() const;
+	virtual eflib::fixed_string		entry_name() const;
+	virtual std::vector<sv_layout*>	layouts			(salviar::sv_usage usage) const;
+	virtual size_t					layouts_count	(salviar::sv_usage usage) const;
+	virtual size_t					total_size		(salviar::sv_usage usage) const;
+	
+	virtual salviar::sv_layout*		input_sv_layout	(eflib::fixed_string const&) const;
+	virtual salviar::sv_layout*		output_sv_layout(semantic_value const&) const;
 
-	std::vector<sv_layout_t*> layouts( salviar::sv_usage usage ) const;
-	size_t total_size(salviar::sv_usage usage) const;
-	void update_size(size_t sz, salviar::sv_usage usage);
-
-	sv_layout_t* input_sv_layout( eflib::fixed_string const& ) const;
-	sv_layout_t* output_sv_layout( semantic_value_t const& ) const;
+	virtual bool					has_position_output() const;
 
 	// Impl specific members
 	reflection_impl();
 
-	salviar::languages lang;
+	void update_size(size_t sz, salviar::sv_usage usage);
 
 	void module( module_semantic_ptr const& );
 	bool is_module( module_semantic_ptr const& ) const;
@@ -64,41 +66,41 @@ public:
 	void entry(symbol*);
 	bool is_entry(symbol*) const;
 	
-	bool add_input_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
-	bool add_output_semantic( semantic_value_t const& sem, builtin_types btc, bool is_stream );
-	void add_global_var( symbol*, sasl::syntax_tree::tynode_ptr btc );
+	bool add_input_semantic	(semantic_value const& sem, builtin_types btc, bool is_stream);
+	bool add_output_semantic(semantic_value const& sem, builtin_types btc, bool is_stream);
+	void add_global_var		(symbol*, sasl::syntax_tree::tynode_ptr btc );
 
-	sv_layout_t* input_sv_layout( semantic_value_t const& ) const;
-	sv_layout_t* input_sv_layout( symbol* ) const;
+	sv_layout* input_sv_layout(semantic_value const&) const;
+	sv_layout* input_sv_layout(symbol*) const;
 
 private:
-	sv_layout_t* alloc_input_storage( semantic_value_t const& );
-	sv_layout_t* alloc_input_storage( symbol* );
-	sv_layout_t* alloc_output_storage( semantic_value_t const& );
+	sv_layout* alloc_input_layout	(semantic_value const&);
+	sv_layout* alloc_input_layout	(symbol*);
+	sv_layout* alloc_output_layout	(semantic_value const&);
 
 	module_semantic*	module_sem_;
 	symbol*				entry_point_;
 	eflib::fixed_string	entry_point_name_;
+	sv_layout*			position_output_;
 
 	// Include su_stream_in and su_buffer_in
-	std::vector< semantic_value_t > sems_in;
-	typedef boost::unordered_map< semantic_value_t, sv_layout_t > sem_storages_t;
-	sem_storages_t semin_storages;
+	typedef boost::unordered_map<semantic_value, sv_layout>			semantic_layout_dict;
+	typedef boost::unordered_map<symbol*, sv_layout>				symbol_layout_dict;
+	typedef boost::unordered_map<eflib::fixed_string, sv_layout*>	name_layout_dict;
 
-	// for uniform only.
-	std::vector< symbol* > syms_in;
-	typedef boost::unordered_map< symbol*, sv_layout_t > sym_storages_t;
-	sym_storages_t symin_storages;
-	typedef boost::unordered_map<eflib::fixed_string, sv_layout_t*> name_storages_t;
-	name_storages_t name_storages;
+	semantic_layout_dict		semantic_input_layouts_;
+	semantic_layout_dict		semantic_output_layouts_;
+	symbol_layout_dict			uniform_input_layouts_;
 
-	// Include su_stream_out and su_buffer_out
-	std::vector< semantic_value_t > sems_out;
-	boost::unordered_map< semantic_value_t, sv_layout_t > semout_storages;
+	std::vector<symbol*>		uniform_inputs_;
+	std::vector<semantic_value>	semantic_inputs_;
+	std::vector<semantic_value> semantic_outputs_;
 
-	// The count and offsets of 
-	int counts[salviar::sv_usage_count];
-	int offsets[salviar::sv_usage_count];
+	name_layout_dict			name_layouts_;
+
+	// The count and offsets of sv_usages
+	size_t counts_	[salviar::sv_usage_count];
+	size_t offsets_	[salviar::sv_usage_count];
 };
 
 END_NS_SASL_SEMANTIC();

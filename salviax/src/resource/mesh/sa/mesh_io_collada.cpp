@@ -269,7 +269,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 		vector< vector<char> >			buffers_data(skinfo ? vertex_attributes_count + 2 : vertex_attributes_count ); // If skinfo is available, last two buffers for joints and weights.
 		vector<uint32_t>				attribute_merged_indexes;
 		index_dict_t					index_dict; // a map from grouped index to merged index.
-		size_t							merged_vertex_counter = 0;
+		uint32_t						merged_vertex_counter = 0;
 		indexes_of_vertex_attributes	index_group(vertex_attributes_count);
 
 		// FOR: index of triangle vertexes.

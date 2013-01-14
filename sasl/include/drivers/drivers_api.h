@@ -5,6 +5,8 @@
 
 #include <sasl/include/drivers/compiler.h>
 
+#include <eflib/include/utility/shared_declaration.h>
+
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -23,13 +25,18 @@ namespace sasl
 {
 	namespace drivers
 	{
-		class compiler;
+		EFLIB_DECLARE_CLASS_SHARED_PTR(compiler);
+	}
+	namespace shims
+	{
+		EFLIB_DECLARE_CLASS_SHARED_PTR(ia_shim);
 	}
 }
 
 extern "C"
 {
-	SASL_DRIVERS_API void sasl_create_compiler( boost::shared_ptr<sasl::drivers::compiler>& out );
+	SASL_DRIVERS_API void sasl_create_compiler	(sasl::drivers::compiler_ptr& out);
+	SASL_DRIVERS_API void sasl_create_ia_shim	(sasl::shims::ia_shim_ptr&    out);
 };
 
 #endif

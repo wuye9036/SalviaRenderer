@@ -37,7 +37,7 @@ module_vmcode_ptr generate_vmcode(
 	if(!assoc_node) { return ret; }
 	if(assoc_node->node_class() != node_ids::program) { return ret; }
 	
-	if(!reflection || reflection->lang == salviar::lang_general)
+	if(!reflection || reflection->get_language() == salviar::lang_general)
 	{
 		cg_general cg;
 		if( cg.generate(sem, reflection) )
@@ -46,7 +46,7 @@ module_vmcode_ptr generate_vmcode(
 		}
 	}
 		
-	if ( reflection->lang == salviar::lang_vertex_shader )
+	if ( reflection->get_language() == salviar::lang_vertex_shader )
 	{
 		cg_vs cg;
 		if( cg.generate(sem, reflection) )
@@ -55,7 +55,7 @@ module_vmcode_ptr generate_vmcode(
 		}
 	}
 
-	if( reflection->lang == salviar::lang_pixel_shader )
+	if( reflection->get_language() == salviar::lang_pixel_shader )
 	{
 		cg_ps cg;
 		if( cg.generate(sem, reflection) )

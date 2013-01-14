@@ -200,7 +200,7 @@ void default_vertex_cache::delete_vertex(vs_output* const pvert)
 result default_vertex_cache::set_input_layout(const h_input_layout& layout)
 {
 	//layout_ will be checked at runtime.
-	hsa_->set_input_layout(layout.get());
+	hsa_->set_input_layout(layout);
 	return result::ok;
 }
 
