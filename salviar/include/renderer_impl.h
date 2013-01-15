@@ -24,24 +24,24 @@ class renderer_impl : public renderer
 	viewport vp_;
 	cull_mode cm_;
 
-	h_buffer_manager		hbufmgr_;
-	h_texture_manager		htexmgr_;
-	h_vertex_shader			hvs_;
-	h_clipper				hclipper_;
-	h_rasterizer			hrast_;
-	h_pixel_shader			hps_;
-	h_framebuffer			hfb_;
-	h_device				hdev_;
-	h_vertex_cache			hvertcache_;
-	h_blend_shader			hbs_;
+	h_buffer_manager		buffer_pool_;
+	h_texture_manager		texture_pool_;
+	h_vertex_shader			cpp_vs_;
+	h_clipper				clipper_;
+	h_rasterizer			rast_;
+	h_pixel_shader			cpp_ps_;
+	h_framebuffer			frame_buffer_;
+	h_device				native_dev_;
+	h_vertex_cache			vertex_cache_;
+	h_blend_shader			cpp_bs_;
 
-	h_buffer				indexbuf_;
-	format index_fmt_;
+	h_buffer				index_buffer_;
+	format					index_format_;
 
 	primitive_topology		primtopo_;
 
-	h_rasterizer_state		hrs_;
-	h_depth_stencil_state	hdss_;
+	h_rasterizer_state		rast_state_;
+	h_depth_stencil_state	ds_state_;
 	int32_t					stencil_ref_;
 
 	vs_input_op*			vs_input_ops_;
@@ -49,10 +49,11 @@ class renderer_impl : public renderer
 
 	host_ptr				host_;
 
-	shader_object_ptr		vscode_;
-	shader_object_ptr		pscode_;
-	boost::shared_ptr<vertex_shader_unit>	vs_proto_;
-	boost::shared_ptr<pixel_shader_unit>	ps_proto_;
+	shader_object_ptr		vx_shader_;
+	shader_object_ptr		px_shader_;
+	vertex_shader_unit_ptr	vs_proto_;
+	pixel_shader_unit_ptr	ps_proto_;
+
 	void initialize();
 
 public:

@@ -1,5 +1,14 @@
 #include <salviar/include/binary_modules.h>
 
+#include <eflib/include/platform/dl_loader.h>
+
+using eflib::dynamic_lib;
+
+using boost::shared_ptr;
+
+using std::string;
+using std::vector;
+
 BEGIN_NS_SALVIAR();
 
 namespace modules
@@ -29,7 +38,7 @@ namespace modules
 		assert(create_host_func);
 	}
 	
-	static void host::compile(
+	void host::compile(
 		shader_object_ptr& obj, shader_log_ptr& log,
 		string const& code, shader_profile const& prof,
 		vector<external_function_desc> const& funcs )
@@ -44,7 +53,7 @@ namespace modules
 		compile_func(obj, log, code, prof, funcs);
 	}
 	
-	static host_ptr host::create_host()
+	host_ptr host::create_host()
 	{
 		host_ptr ret;
 		

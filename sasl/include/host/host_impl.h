@@ -18,11 +18,12 @@
 
 namespace salviar
 {
-	struct stream_desc;
 	class  stream_assembler;
+	struct stream_desc;
 	struct external_function_desc;
 
 	EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
+	EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
 }
 
 namespace sasl
@@ -57,10 +58,7 @@ class host_impl: public salviar::host
 public:
 	host_impl();
 
-	void initialize(salviar::stream_assembler* sa)
-	{
-		sa_ = sa;
-	}
+	void initialize(salviar::stream_assembler* sa);
 
 	void buffers_changed		();
 	void input_layout_changed	();

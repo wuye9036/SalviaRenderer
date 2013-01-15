@@ -16,7 +16,7 @@ mesh_impl::mesh_impl(salviar::renderer* psr)
 
 	device_ = psr;
 	primcount_ = 0;
-	index_fmt_ = format_unknown;
+	index_format_ = format_unknown;
 }
 
 /*
@@ -75,7 +75,7 @@ void mesh_impl::render(){
 			);
 	}
 
-	device_->set_index_buffer( get_index_buffer(), index_fmt_ );
+	device_->set_index_buffer( get_index_buffer(), index_format_ );
 	device_->set_input_layout( cached_layout_ );
 	device_->set_primitive_topology( primitive_triangle_list );
 
@@ -103,7 +103,7 @@ void mesh_impl::set_index_type( format fmt )
 	switch(fmt){
 		case format_r16_uint:
 		case format_r32_uint:
-			index_fmt_ = fmt;
+			index_format_ = fmt;
 			break;
 		default:
 			EFLIB_ASSERT_UNEXPECTED();

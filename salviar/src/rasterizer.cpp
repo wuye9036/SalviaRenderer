@@ -237,7 +237,7 @@ void rasterizer_state::triangle_rast_func(
 void rasterizer::initialize(renderer_impl* pparent)
 {
 	pparent_ = pparent;
-	hfb_ = pparent->get_framebuffer();
+	frame_buffer_ = pparent->get_framebuffer();
 }
 
 /*************************************************
@@ -274,8 +274,8 @@ void rasterizer::rasterize_line(
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
 	int vptop = fast_floori(max(0.0f, vp.y));
-	int vpright = fast_floori(min(vp.x+vp.w, (float)(hfb_->get_width())));
-	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(hfb_->get_height())));
+	int vpright = fast_floori(min(vp.x+vp.w, (float)(frame_buffer_->get_width())));
+	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(frame_buffer_->get_height())));
 
 	ps_output px_out;
 
@@ -332,7 +332,7 @@ void rasterizer::rasterize_line(
 			// Render pixel.
 			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_sample(hbs, iPixel, fast_floori(px_in.position.y()), 0, px_out, px_out.depth);
+				frame_buffer_->render_sample(hbs, iPixel, fast_floori(px_in.position.y()), 0, px_out, px_out.depth);
 			}
 
 			// Increment ddx
@@ -385,7 +385,7 @@ void rasterizer::rasterize_line(
 
 			vs_output_ops->unproject(unprojed, px_in);
 			if(pps->execute(unprojed, px_out)){
-				hfb_->render_sample(hbs, fast_floori(px_in.position.x()), iPixel, 0, px_out, px_out.depth);
+				frame_buffer_->render_sample(hbs, fast_floori(px_in.position.x()), iPixel, 0, px_out, px_out.depth);
 			}
 
 			++ step;
@@ -432,11 +432,11 @@ void rasterizer::draw_whole_tile(
 						const int x_coord = ix + dx;
 						const int y_coord = iy + dy;
 						if (1 == num_samples){
-							hfb_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
+							frame_buffer_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
 						}
 						else{
 							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-								hfb_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+								frame_buffer_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
 							}
 						}
 					}
@@ -649,18 +649,18 @@ void rasterizer::draw_pixels(
 					const int x_coord = left + ix;
 					const int y_coord = top + iy;
 					if (1 == num_samples){
-						hfb_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
+						frame_buffer_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
 					}
 					else{
 						if (full_mask == mask){
 							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-								hfb_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+								frame_buffer_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
 							}
 						}
 						else{
 							unsigned long i_sample;
 							while (_BitScanForward(&i_sample, mask)){
-								hfb_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
+								frame_buffer_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
 								mask &= mask - 1;
 							}
 						}
@@ -891,7 +891,7 @@ void rasterizer::rasterize_triangle(
 	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
 	const h_blend_shader& hbs = pparent_->get_blend_shader();
-	const size_t num_samples = hfb_->get_num_samples();
+	const size_t num_samples = frame_buffer_->get_num_samples();
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 
 	vs_output const* verts[3] = { &v0, &v1, &v2 };
@@ -1031,8 +1031,8 @@ void rasterizer::rasterize_triangle(
 
 			const int vpleft = max(0U, static_cast<unsigned>(vpleft0 + cur_region.x) );
 			const int vptop = max(0U, static_cast<unsigned>(vptop0 + cur_region.y) );
-			const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(hfb_->get_width()));
-			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(hfb_->get_height()));
+			const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(frame_buffer_->get_width()));
+			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(frame_buffer_->get_height()));
 
 			// For one pixel region
 			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1)){
@@ -1375,7 +1375,7 @@ void rasterizer::draw(size_t prim_count){
 	assert(pparent_);
 	if(!pparent_) return;
 
-	const size_t num_samples = hfb_->get_num_samples();
+	const size_t num_samples = frame_buffer_->get_num_samples();
 	switch (num_samples){
 	case 1:
 		samples_pattern_[0] = vec2(0.5f, 0.5f);
@@ -1544,7 +1544,7 @@ void rasterizer::draw_package(
 
 			// Whole pixel
 			if (1 == num_samples){
-				hfb_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
+				frame_buffer_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
 
@@ -1553,13 +1553,13 @@ void rasterizer::draw_package(
 			// MSAA.
 			if (full_mask == mask){
 				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 				}
 			} 
 			else{
 				unsigned long i_sample;
 				while (_BitScanForward(&i_sample, mask)){
-					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 					mask &= mask - 1;
 				}
 			}
@@ -1604,7 +1604,7 @@ void rasterizer::draw_full_package(
 			const int x_coord = left + ix;
 			const int y_coord = top + iy;
 			if (1 == num_samples){
-				hfb_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
+				frame_buffer_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
 
@@ -1612,13 +1612,13 @@ void rasterizer::draw_full_package(
 			
 			if (full_mask == mask){
 				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 				}
 			}
 			else{
 				unsigned long i_sample;
 				while (_BitScanForward(&i_sample, mask)){
-					hfb_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
 					mask &= mask - 1;
 				}
 			}

@@ -21,7 +21,7 @@ public:
 	
 	// Primitive and input descriptions
 	size_t primcount_;
-	salviar::format index_fmt_;
+	salviar::format index_format_;
 	std::vector<salviar::input_element_desc> elem_descs_;
 	salviar::h_input_layout cached_layout_;
 

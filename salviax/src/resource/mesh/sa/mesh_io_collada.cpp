@@ -745,7 +745,7 @@ h_mesh merge_mesh_for_morphing( h_mesh lm, h_mesh rm )
 		return h_mesh();
 	}
 
-	EFLIB_ASSERT_AND_IF( left_mesh->index_fmt_ == right_mesh->index_fmt_, "Index format is not matched." )
+	EFLIB_ASSERT_AND_IF( left_mesh->index_format_ == right_mesh->index_format_, "Index format is not matched." )
 	{
 		return h_mesh();
 	}
@@ -773,7 +773,7 @@ h_mesh merge_mesh_for_morphing( h_mesh lm, h_mesh rm )
 	ret->set_input_element_descs(merged_mesh_ieds);
 
 	ret->set_attached_data( left_mesh->get_attached() );
-	ret->set_index_type( left_mesh->index_fmt_ );
+	ret->set_index_type( left_mesh->index_format_ );
 	ret->set_index_buffer( left_mesh->index_buffer_ );
 	ret->set_primitive_count( left_mesh->primcount_ );
 

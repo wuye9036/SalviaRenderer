@@ -23,7 +23,7 @@ result renderer_impl::set_input_layout(const h_input_layout& layout)
 	layout->slot_range( min_slot, max_slot );
 	vs_input_ops_ = &get_vs_input_op( static_cast<uint32_t>(max_slot) );
 
-	return hvertcache_->set_input_layout(layout);
+	return vertex_cache_->set_input_layout(layout);
 }
 
 result renderer_impl::set_vertex_buffers(
@@ -32,7 +32,7 @@ result renderer_impl::set_vertex_buffers(
 		size_t const* strides, size_t const* offsets
 		)
 {
-	hvertcache_->set_vertex_buffers(
+	vertex_cache_->set_vertex_buffers(
 		starts_slot,
 		buffers_count, buffers,
 		strides, offsets
@@ -52,18 +52,18 @@ result renderer_impl::set_index_buffer(h_buffer const& hbuf, format index_fmt)
 		return result::failed;
 	}
 
-	indexbuf_ = hbuf;
-	index_fmt_ = index_fmt;
+	index_buffer_ = hbuf;
+	index_format_ = index_fmt;
 
 	return result::ok;
 }
 
 h_buffer renderer_impl::get_index_buffer() const{
-	return indexbuf_;
+	return index_buffer_;
 }
 
 format renderer_impl::get_index_format() const{
-	return index_fmt_;
+	return index_format_;
 }
 
 //
@@ -91,13 +91,13 @@ primitive_topology renderer_impl::get_primitive_topology() const{
 
 result renderer_impl::set_vertex_shader(h_vertex_shader const& hvs)
 {
-	hvs_ = hvs;
+	cpp_vs_ = hvs;
 
-	uint32_t n = hvs_->num_output_attributes();
+	uint32_t n = cpp_vs_->num_output_attributes();
 	vs_output_ops_ = &get_vs_output_op(n);
 	for (uint32_t i = 0; i < n; ++ i)
 	{
-		vs_output_ops_->attribute_modifiers[i] = hvs_->output_attribute_modifiers(i);
+		vs_output_ops_->attribute_modifiers[i] = cpp_vs_->output_attribute_modifiers(i);
 	}
 
 	return result::ok;
@@ -105,15 +105,15 @@ result renderer_impl::set_vertex_shader(h_vertex_shader const& hvs)
 
 h_vertex_shader renderer_impl::get_vertex_shader() const
 {
-	return hvs_;
+	return cpp_vs_;
 }
 
 result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& code ){
 	vs_output_ops_ = &get_vs_output_op(0);
 
-	vscode_ = code;
+	vx_shader_ = code;
 	vs_proto_.reset( new vertex_shader_unit() );
-	vs_proto_->initialize( vscode_.get() );
+	vs_proto_->initialize( vx_shader_.get() );
 
 	uint32_t n = vs_proto_->output_attributes_count();
 	vs_output_ops_ = &get_vs_output_op(n);
@@ -126,7 +126,7 @@ result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& c
 }
 
 shared_ptr<shader_object> renderer_impl::get_vertex_shader_code() const{
-	return vscode_;
+	return vx_shader_;
 }
 
 const vs_input_op* renderer_impl::get_vs_input_ops() const
@@ -141,25 +141,25 @@ const vs_output_op* renderer_impl::get_vs_output_ops() const
 
 result renderer_impl::set_rasterizer_state(const h_rasterizer_state& rs)
 {
-	hrs_ = rs;
+	rast_state_ = rs;
 	return result::ok;
 }
 
 h_rasterizer_state renderer_impl::get_rasterizer_state() const
 {
-	return hrs_;
+	return rast_state_;
 }
 
 result renderer_impl::set_depth_stencil_state(const h_depth_stencil_state& dss, int32_t stencil_ref)
 {
-	hdss_ = dss;
+	ds_state_ = dss;
 	stencil_ref_ = stencil_ref;
 	return result::ok;
 }
 
 const h_depth_stencil_state& renderer_impl::get_depth_stencil_state() const
 {
-	return hdss_;
+	return ds_state_;
 }
 
 int32_t renderer_impl::get_stencil_ref() const
@@ -169,24 +169,24 @@ int32_t renderer_impl::get_stencil_ref() const
 
 result renderer_impl::set_pixel_shader(h_pixel_shader const& hps)
 {
-	hps_ = hps;
+	cpp_ps_ = hps;
 	return result::ok;
 }
 
 h_pixel_shader renderer_impl::get_pixel_shader() const
 {
-	return hps_;
+	return cpp_ps_;
 }
 
 result renderer_impl::set_blend_shader(h_blend_shader const& hbs)
 {
-	hbs_ = hbs;
+	cpp_bs_ = hbs;
 	return result::ok;
 }
 
 h_blend_shader renderer_impl::get_blend_shader() const
 {
-	return hbs_;
+	return cpp_bs_;
 }
 
 result renderer_impl::set_viewport(const viewport& vp)
@@ -202,33 +202,33 @@ viewport renderer_impl::get_viewport() const
 
 result renderer_impl::set_framebuffer_size(size_t width, size_t height, size_t num_samples)
 {
-	hfb_->reset(width, height, num_samples, hfb_->get_buffer_format());
+	frame_buffer_->reset(width, height, num_samples, frame_buffer_->get_buffer_format());
 	return result::ok;
 }
 
 eflib::rect<size_t> renderer_impl::get_framebuffer_size() const
 {
-	return hfb_->get_rect();
+	return frame_buffer_->get_rect();
 }
 
 //
 result renderer_impl::set_framebuffer_format(pixel_format pxfmt)
 {
-	hfb_->reset(hfb_->get_width(), hfb_->get_height(), hfb_->get_num_samples(), pxfmt);
+	frame_buffer_->reset(frame_buffer_->get_width(), frame_buffer_->get_height(), frame_buffer_->get_num_samples(), pxfmt);
 	return result::ok;
 }
 
 pixel_format renderer_impl::get_framebuffer_format(pixel_format /*pxfmt*/) const
 {
-	return hfb_->get_buffer_format();
+	return frame_buffer_->get_buffer_format();
 }
 
 result renderer_impl::set_render_target_available(render_target tar, size_t target_index, bool valid)
 {
 	if(valid){
-		hfb_->set_render_target_enabled(tar, target_index);
+		frame_buffer_->set_render_target_enabled(tar, target_index);
 	} else {
-		hfb_->set_render_target_disabled(tar, target_index);
+		frame_buffer_->set_render_target_disabled(tar, target_index);
 	}
 
 	return result::ok;
@@ -243,23 +243,23 @@ bool renderer_impl::get_render_target_available(render_target /*tar*/, size_t /*
 //do not support get function for a while
 result renderer_impl::set_render_target(render_target tar, size_t target_index, h_surface const& surf)
 {
-	hfb_->set_render_target( tar, target_index, surf.get() );
+	frame_buffer_->set_render_target( tar, target_index, surf.get() );
 	return result::ok;
 }
 
 h_buffer renderer_impl::create_buffer(size_t size)
 {
-	return hbufmgr_->create_buffer(size);
+	return buffer_pool_->create_buffer(size);
 }
 
 h_texture renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	return htexmgr_->create_texture_2d(width, height, num_samples, fmt);
+	return texture_pool_->create_texture_2d(width, height, num_samples, fmt);
 }
 
 h_texture renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	return htexmgr_->create_texture_cube(width, height, num_samples, fmt);
+	return texture_pool_->create_texture_cube(width, height, num_samples, fmt);
 }
 
 h_sampler renderer_impl::create_sampler(const sampler_desc& desc)
@@ -269,59 +269,59 @@ h_sampler renderer_impl::create_sampler(const sampler_desc& desc)
 
 result renderer_impl::draw(size_t startpos, size_t primcnt)
 {
-	hrast_->set_state(hrs_);
+	rast_->set_state(rast_state_);
 
-	hvertcache_->reset(h_buffer(), index_fmt_, primtopo_, static_cast<uint32_t>(startpos), 0);
-	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
+	vertex_cache_->reset(h_buffer(), index_format_, primtopo_, static_cast<uint32_t>(startpos), 0);
+	vertex_cache_->transform_vertices(static_cast<uint32_t>(primcnt));
 	
-	hrast_->draw(primcnt);
+	rast_->draw(primcnt);
 	return result::ok;
 }
 
 result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
-	hrast_->set_state(hrs_);
+	rast_->set_state(rast_state_);
 
-	hvertcache_->reset(indexbuf_, index_fmt_, primtopo_, static_cast<uint32_t>(startpos), basevert);
-	hvertcache_->transform_vertices(static_cast<uint32_t>(primcnt));
+	vertex_cache_->reset(index_buffer_, index_format_, primtopo_, static_cast<uint32_t>(startpos), basevert);
+	vertex_cache_->transform_vertices(static_cast<uint32_t>(primcnt));
 
-	hrast_->draw(primcnt);
+	rast_->draw(primcnt);
 	return result::ok;
 }
 
 result renderer_impl::clear_color(size_t target_index, const color_rgba32f& c)
 {
-	hfb_->clear_color(target_index, c);
+	frame_buffer_->clear_color(target_index, c);
 	return result::ok;
 }
 
 result renderer_impl::clear_depth(float d)
 {
-	hfb_->clear_depth(d);
+	frame_buffer_->clear_depth(d);
 	return result::ok;
 }
 
 result renderer_impl::clear_stencil(uint32_t s)
 {
-	hfb_->clear_stencil(s);
+	frame_buffer_->clear_stencil(s);
 	return result::ok;
 }
 
 result renderer_impl::clear_color(size_t target_index, const eflib::rect<size_t>& rc, const color_rgba32f& c)
 {
-	hfb_->clear_color(target_index, rc, c);
+	frame_buffer_->clear_color(target_index, rc, c);
 	return result::ok;
 }
 
 result renderer_impl::clear_depth(const eflib::rect<size_t>& rc, float d)
 {
-	hfb_->clear_depth(rc, d);
+	frame_buffer_->clear_depth(rc, d);
 	return result::ok;
 }
 
 result renderer_impl::clear_stencil(const eflib::rect<size_t>& rc, uint32_t s)
 {
-	hfb_->clear_stencil(rc, s);
+	frame_buffer_->clear_stencil(rc, s);
 	return result::ok;
 }
 
@@ -338,22 +338,22 @@ result renderer_impl::present()
 
 void renderer_impl::initialize()
 {
-	hrast_->initialize(this);
-	hfb_->initialize(this);
-	hvertcache_->initialize(this);
+	rast_->initialize(this);
+	frame_buffer_->initialize(this);
+	vertex_cache_->initialize(this);
 }
 
 renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
-	: index_fmt_(format_r16_uint), primtopo_(primitive_triangle_list)
+	: index_format_(format_r16_uint), primtopo_(primitive_triangle_list)
 {
-	hdev_ = hdev;
+	native_dev_ = hdev;
 
-	hbufmgr_.reset(new buffer_manager());
-	htexmgr_.reset(new texture_manager());
+	buffer_pool_.reset(new buffer_manager());
+	texture_pool_.reset(new texture_manager());
 
-	hclipper_.reset(new clipper());
-	hrast_.reset(new rasterizer());
-	hfb_.reset(
+	clipper_.reset(new clipper());
+	rast_.reset(new rasterizer());
+	frame_buffer_.reset(
 		new framebuffer(
 		pparam->backbuffer_width,
 		pparam->backbuffer_height,
@@ -362,9 +362,9 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 		)
 		);
 	
-	hvertcache_.reset(new default_vertex_cache);
-	hrs_.reset(new rasterizer_state(rasterizer_desc()));
-	hdss_.reset(new depth_stencil_state(depth_stencil_desc()));
+	vertex_cache_.reset(new default_vertex_cache);
+	rast_state_.reset(new rasterizer_state(rasterizer_desc()));
+	ds_state_.reset(new depth_stencil_state(depth_stencil_desc()));
 
 	vp_.minz = 0.0f;
 	vp_.maxz = 1.0f;
@@ -377,27 +377,27 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 
 h_rasterizer renderer_impl::get_rasterizer()
 {
-	return hrast_;
+	return rast_;
 }
 
 h_framebuffer renderer_impl::get_framebuffer() const
 {
-	return hfb_; 
+	return frame_buffer_; 
 }
 
 h_device renderer_impl::get_device()
 {
-	return hdev_;
+	return native_dev_;
 }
 
 h_vertex_cache renderer_impl::get_vertex_cache()
 {
-	return hvertcache_;
+	return vertex_cache_;
 }
 
 h_clipper renderer_impl::get_clipper()
 {
-	return hclipper_;
+	return clipper_;
 }
 
 result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
@@ -438,15 +438,15 @@ salviar::h_input_layout renderer_impl::create_input_layout(
 
 result renderer_impl::set_pixel_shader_code( shared_ptr<shader_object> const& code )
 {
-	pscode_ = code;
+	px_shader_ = code;
 	ps_proto_.reset( new pixel_shader_unit() );
-	ps_proto_->initialize( pscode_.get() );
+	ps_proto_->initialize( px_shader_.get() );
 
 	return result::ok;
 }
 
 shared_ptr<shader_object> renderer_impl::get_pixel_shader_code() const{
-	return pscode_;
+	return px_shader_;
 }
 
 shared_ptr<pixel_shader_unit> renderer_impl::ps_proto() const

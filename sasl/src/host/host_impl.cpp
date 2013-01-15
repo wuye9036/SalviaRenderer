@@ -58,6 +58,11 @@ host_impl::host_impl()
 	sa_						= NULL;
 }
 
+void host_impl::initialize(stream_assembler* sa)
+{
+	sa_ = sa;
+}
+
 void host_impl::buffers_changed()
 {
 	stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
