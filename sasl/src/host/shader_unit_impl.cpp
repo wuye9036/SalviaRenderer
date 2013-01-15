@@ -6,6 +6,7 @@
 #include <eflib/include/diagnostics/assert.h>
 
 using namespace salviar;
+using namespace sasl::shims;
 
 BEGIN_NS_SASL_HOST();
 
@@ -13,7 +14,7 @@ vx_shader_unit_impl::vx_shader_unit_impl(
 	ia_shim_func_ptr	shim_func,
 	shader_func_ptr		shader_func,
 	void const*			cbuffer,
-	stream_desc const*	stream_descs,
+	shim_data const*	data,
 	size_t				istr_size,
 	size_t				obuf_size,
 	size_t				ostr_size,
@@ -22,7 +23,7 @@ vx_shader_unit_impl::vx_shader_unit_impl(
 	: shim_func_(shim_func)
 	, shader_func_(shader_func)
 	, buffer_data(cbuffer)
-	, stream_descs_(stream_descs)
+	, shim_data_(*data)
 	, stream_data(istr_size)
 	, stream_odata(ostr_size)
 	, buffer_odata(obuf_size)
@@ -34,7 +35,7 @@ vx_shader_unit_impl::vx_shader_unit_impl(vx_shader_unit_impl const& rhs)
 	: shim_func_	(rhs.shim_func_)
 	, shader_func_	(rhs.shader_func_)
 	, buffer_data	(rhs.buffer_data)
-	, stream_descs_	(rhs.stream_descs_)
+	, shim_data_	(rhs.shim_data_)
 	, stream_data	( rhs.stream_data.size() )
 	, stream_odata	( rhs.stream_odata.size() )
 	, buffer_odata	( rhs.buffer_odata.size() )
@@ -58,7 +59,7 @@ uint32_t vx_shader_unit_impl::output_attribute_modifiers(size_t /*index*/) const
 
 void vx_shader_unit_impl::execute(size_t ivert, void* out_data)
 {
-	shim_func_(&(stream_data[0]), stream_descs_, ivert);
+	shim_func_(&(stream_data[0]), &shim_data_, ivert);
 	shader_func_(&(stream_data[0]), buffer_data, &(stream_odata[0]), out_data);
 }
 

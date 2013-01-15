@@ -7,10 +7,6 @@ INCLUDE_DIRECTORIES(
 	${SALVIA_WTL_INCLUDE_PATH}
 )
 
-# LINK_DIRECTORIES(
-	# ${SALVIA_3RD_PARTY_LIBS}
-	# )
-
 set( APP_COMMON_HEADERS
 	${SALVIA_HOME_DIR}/salviau/include/common/application.h
 	${SALVIA_HOME_DIR}/salviau/include/common/window.h

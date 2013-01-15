@@ -1,5 +1,6 @@
 #include <salviar/include/renderer.h>
 
+#include <salviar/include/binary_modules.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/sampler_api.h>
 #include <salviar/include/shader_impl.h>
@@ -35,53 +36,10 @@ h_renderer create_software_renderer(renderer_parameters const* pparam, h_device 
 #endif
 }
 
-class host_module
+h_renderer create_benchmark_renderer(renderer_parameters const* pparam, h_device const& hdev)
 {
-public:
-	static void compile(
-		shader_object_ptr& obj, shader_log_ptr& log,
-		string const& code, shader_profile const& prof,
-		vector<external_function_desc> const& funcs
-		)
-	{
-		if(!compile_impl)
-		{
-			load_function();
-		}
-		assert(compile_impl);
-
-		if(!compile_impl) return;
-		compile_impl(obj, log, code, prof, funcs);
-	}
-	static void (*compile_impl)(
-		shader_object_ptr&, shader_log_ptr&,
-		string const&, shader_profile const&,
-		vector<external_function_desc> const&
-		);
-private:
-	static void load_function()
-	{
-		assert(!lib_);
-		std::string dll_name = "sasl_host";
-#ifdef EFLIB_DEBUG
-		dll_name += "_d";
-#endif
-		dll_name += ".dll";
-
-		lib_ = dynamic_lib::load(dll_name);
-		lib_->get_function(compile_impl, "salvia_compile_shader");
-		assert(compile_impl);
-	}
-
-	static shared_ptr<dynamic_lib> lib_;
-};
-
-shared_ptr<dynamic_lib> host_module::lib_;
-void (*host_module::compile_impl) (
-	shader_object_ptr&, shader_log_ptr&,
-	string const&, shader_profile const&,
-	vector<external_function_desc> const&
-	) = NULL;
+	return create_renderer_impl(pparam, hdev);
+}
 
 shader_object_ptr	compile(std::string const& code, shader_profile const& profile, shader_log_ptr& logs)
 {
@@ -94,7 +52,7 @@ shader_object_ptr	compile(std::string const& code, shader_profile const& profile
 	external_funcs.push_back( external_function_desc(&tex2Dproj_ps,	"sasl.ps.tex2d.proj",	true) );
 
 	shader_object_ptr ret;
-	host_module::compile(ret, logs, code, profile, external_funcs);
+	modules::host::compile(ret, logs, code, profile, external_funcs);
 
 	return ret;
 }

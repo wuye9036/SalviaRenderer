@@ -1,5 +1,6 @@
 #include <salviar/include/renderer_impl.h>
 
+#include <salviar/include/binary_modules.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/clipper.h>
 #include <salviar/include/resource_manager.h>
@@ -335,14 +336,18 @@ result renderer_impl::present()
 	return result::ok;
 }
 
-void renderer_impl::initialize(){
+void renderer_impl::initialize()
+{
 	hrast_->initialize(this);
 	hfb_->initialize(this);
+	hvertcache_->initialize(this);
 }
 
 renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 	: index_fmt_(format_r16_uint), primtopo_(primitive_triangle_list)
 {
+	hdev_ = hdev;
+
 	hbufmgr_.reset(new buffer_manager());
 	htexmgr_.reset(new texture_manager());
 
@@ -356,11 +361,8 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 		pparam->backbuffer_format
 		)
 		);
-	hdev_ = hdev;
-
+	
 	hvertcache_.reset(new default_vertex_cache);
-	hvertcache_->initialize(this);
-
 	hrs_.reset(new rasterizer_state(rasterizer_desc()));
 	hdss_.reset(new depth_stencil_state(depth_stencil_desc()));
 

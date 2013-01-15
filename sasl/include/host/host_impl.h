@@ -29,6 +29,7 @@ namespace sasl
 {
 	namespace shims
 	{
+		struct shim_data;
 		EFLIB_DECLARE_CLASS_SHARED_PTR(ia_shim);
 		EFLIB_DECLARE_CLASS_SHARED_PTR(interp_shim);
 		EFLIB_DECLARE_CLASS_SHARED_PTR(om_shim);
@@ -41,9 +42,9 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(host_impl);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log_impl);
 
 typedef void (*ia_shim_func_ptr)(
-	void* output_buffer,
-	salviar::stream_desc const* stream_descs,
-	size_t i_vert
+	void*					output_buffer,
+	shims::shim_data const* data,
+	size_t					i_vert
 	);
 
 typedef void (*shader_func_ptr)(
@@ -98,6 +99,9 @@ private:
 								sampler_cache_;
 
 	ia_shim_func_ptr			ia_shim_func_;
+	std::vector<size_t>			ia_shim_slots_;
+	size_t*						ia_shim_dest_offsets_;
+
 	shader_func_ptr				vx_shader_func_;
 	salviar::stream_desc const*	stream_descs_;
 
@@ -107,8 +111,8 @@ END_NS_SASL_HOST();
 
 extern "C"
 {
-	SASL_HOST_API salviar::host* salvia_create_host();
-	SASL_HOST_API void			 salvia_compile_shader(
+	SASL_HOST_API void salvia_create_host   (salviar::host_ptr& out);
+	SASL_HOST_API void salvia_compile_shader(
 		salviar::shader_object_ptr& out_shader_object,
 		salviar::shader_log_ptr& out_logs,
 		std::string const& code,

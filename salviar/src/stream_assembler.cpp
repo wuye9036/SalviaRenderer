@@ -152,9 +152,32 @@ int stream_assembler::find_buffer(size_t slot) const
 	return static_cast<int>( distance( slots_.begin(), slot_it ) );
 }
 
-vector<stream_desc> const& stream_assembler::get_stream_descs()
+vector<stream_desc> const& stream_assembler::get_stream_descs(vector<size_t> const& slots)
 {
-	EFLIB_ASSERT_UNIMPLEMENTED();
+	stream_descs_.clear();
+
+	for(size_t i_slot = 0; i_slot < slots.size(); ++i_slot)
+	{
+		size_t slot = slots[i_slot];
+		stream_desc str_desc;
+		int buffer_index = find_buffer(slot);
+		
+		if(buffer_index == 0)
+		{
+			str_desc.buffer = NULL;
+			str_desc.offset = 0;
+			str_desc.stride = 0;
+		}
+		else
+		{
+			str_desc.buffer = vbufs_[buffer_index]->raw_data(0);
+			str_desc.offset = offsets_[buffer_index];
+			str_desc.stride = strides_[buffer_index];
+		}
+		
+		stream_descs_.push_back(str_desc);
+	}
+
 	return stream_descs_;
 }
 

@@ -51,7 +51,7 @@ public:
 	void const* element_address( semantic_value const&, size_t vert_index ) const;
 
 	// Used by New Shader Unit
-	virtual std::vector<stream_desc> const& get_stream_descs();
+	virtual std::vector<stream_desc> const& get_stream_descs(std::vector<size_t> const& slots);
 
 	size_t num_vertices() const;
 

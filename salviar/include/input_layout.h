@@ -70,8 +70,8 @@ public:
 
 	size_t find_slot( semantic_value const& ) const;
 
-	input_element_desc const* find_desc( size_t slot ) const;
-	input_element_desc const* find_desc( semantic_value const& ) const;
+	virtual input_element_desc const* find_desc( size_t slot ) const;
+	virtual input_element_desc const* find_desc( semantic_value const& ) const;
 
 	void slot_range( size_t& min_slot, size_t& max_slot ) const;
 

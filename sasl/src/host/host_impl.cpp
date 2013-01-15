@@ -49,23 +49,28 @@ host_impl::host_impl()
 {
 	sasl_create_ia_shim(ia_shim_);
 
-	ia_shim_func_	= NULL;
-	vx_shader_func_	= NULL;
-	stream_descs_	= NULL;
+	ia_shim_func_			= NULL;
+	ia_shim_dest_offsets_	= NULL;
 
-	sa_				= NULL;
+	vx_shader_func_			= NULL;
+	stream_descs_			= NULL;
+
+	sa_						= NULL;
 }
 
 void host_impl::buffers_changed()
 {
-	stream_descs_ = &(sa_->get_stream_descs()[0]);
+	stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
 }
 
 void host_impl::input_layout_changed()
 {
 	// Update shim function.
-	stream_descs_ = &(sa_->get_stream_descs()[0]);
-	void* func = ia_shim_->get_shim_function( sa_->layout(), px_shader_->get_reflection() );
+	void* func = ia_shim_->get_shim_function(
+		ia_shim_slots_, &ia_shim_dest_offsets_,
+		sa_->layout(), px_shader_->get_reflection()
+		);
+	stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
 	ia_shim_func_ = static_cast<ia_shim_func_ptr>(func);
 }
 
@@ -73,7 +78,10 @@ void host_impl::update_vertex_shader(shader_object_ptr const& vso)
 {
 	// Update shim and shader native function.
 	vx_shader_ = vso;
-	void* shim_func = ia_shim_->get_shim_function( sa_->layout(), px_shader_->get_reflection() );
+	void* shim_func = ia_shim_->get_shim_function(
+		ia_shim_slots_, &ia_shim_dest_offsets_,
+		sa_->layout(), px_shader_->get_reflection() );
+	stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
 	ia_shim_func_ = static_cast<ia_shim_func_ptr>(shim_func);
 
 	void* shader_func = vx_shader_->native_function();
@@ -100,11 +108,16 @@ vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 	size_t attrs_count = vx_reflection->layouts_count(su_buffer_out);
 	if( vx_reflection->has_position_output() ) { --attrs_count; }
 
+	shim_data data;
+	data.stream_descs = stream_descs_;
+	data.dest_offsets = ia_shim_dest_offsets_;
+	data.count		  = ia_shim_slots_.size();
+
 	vx_shader_unit_impl* ret = new vx_shader_unit_impl(
 		ia_shim_func_,
 		vx_shader_func_,
 		&(vx_cbuffer_[0]),
-		stream_descs_,
+		&data,
 		vx_reflection->total_size(salviar::su_stream_in),
 		vx_reflection->total_size(salviar::su_buffer_out),
 		vx_reflection->total_size(salviar::su_stream_out),
@@ -148,10 +161,9 @@ END_NS_SASL_HOST();
 using namespace sasl::host;
 using namespace salviar;
 
-salviar::host* salvia_create_host()
+void salvia_create_host(host_ptr& out)
 {
-	assert(false);
-	return NULL;
+	out.reset( new host_impl() );
 }
 
 void salvia_compile_shader(
