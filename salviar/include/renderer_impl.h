@@ -1,8 +1,9 @@
 #ifndef SALVIAR_RENDERER_IMPL_H
 #define SALVIAR_RENDERER_IMPL_H
 
-#include <salviar/include/renderer.h>
 #include <salviar/include/salviar_forward.h>
+
+#include <salviar/include/renderer.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 
@@ -13,46 +14,52 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(renderer_impl);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
+EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
-struct state_block{
+struct state_block
+{
 	viewport vp;	
 };
 
 class renderer_impl : public renderer
 {
-	//some states
-	viewport vp_;
-	cull_mode cm_;
-
-	h_buffer_manager		buffer_pool_;
-	h_texture_manager		texture_pool_;
-	h_vertex_shader			cpp_vs_;
-	h_clipper				clipper_;
-	h_rasterizer			rast_;
-	h_pixel_shader			cpp_ps_;
-	h_framebuffer			frame_buffer_;
-	h_device				native_dev_;
-	h_vertex_cache			vertex_cache_;
-	h_blend_shader			cpp_bs_;
-
+	//Rendering States
+	viewport				vp_;
+	cull_mode				cm_;
+	primitive_topology		primtopo_;
 	h_buffer				index_buffer_;
 	format					index_format_;
-
-	primitive_topology		primtopo_;
-
 	h_rasterizer_state		rast_state_;
 	h_depth_stencil_state	ds_state_;
 	int32_t					stencil_ref_;
+	
+	// Stages
+	host_ptr				host_;
+	h_vertex_shader			cpp_vs_;
+	h_pixel_shader			cpp_ps_;
+	h_blend_shader			cpp_bs_;
 
+	stream_assembler_ptr	assembler_;
+	h_clipper				clipper_;
+	h_vertex_cache			vertex_cache_;
+	h_rasterizer			rast_;
+	
+	h_framebuffer			frame_buffer_;
+	
 	vs_input_op*			vs_input_ops_;
 	vs_output_op*			vs_output_ops_;
 
-	host_ptr				host_;
+	
 
 	shader_object_ptr		vx_shader_;
 	shader_object_ptr		px_shader_;
 	vertex_shader_unit_ptr	vs_proto_;
 	pixel_shader_unit_ptr	ps_proto_;
+
+	// Resources
+	h_buffer_manager		buffer_pool_;
+	h_texture_manager		texture_pool_;
+	h_device				native_dev_;
 
 	void initialize();
 
@@ -151,11 +158,11 @@ public:
 	//this class for inner system
 	renderer_impl(const renderer_parameters* pparam, h_device hdev);
 
-	h_rasterizer get_rasterizer();
-	
-	h_device get_device();
-	h_vertex_cache get_vertex_cache();
-	h_clipper get_clipper();
+	stream_assembler_ptr	get_assembler();
+	h_rasterizer			get_rasterizer();
+	h_device				get_native_device();
+	h_vertex_cache			get_vertex_cache();
+	h_clipper				get_clipper();
 };
 
 renderer_ptr create_renderer_impl(renderer_parameters const* pparam, h_device const& hdev);

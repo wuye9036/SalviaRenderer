@@ -8,6 +8,7 @@
 #include <salviar/include/framebuffer.h>
 #include <salviar/include/surface.h>
 #include <salviar/include/vertex_cache.h>
+#include <salviar/include/stream_assembler.h>
 #include <salviar/include/shader_unit.h>
 #include <salviar/include/input_layout.h>
 
@@ -20,19 +21,20 @@ using boost::shared_ptr;
 result renderer_impl::set_input_layout(const h_input_layout& layout)
 {
 	size_t min_slot = 0, max_slot = 0;
-	layout->slot_range( min_slot, max_slot );
+	layout->slot_range(min_slot, max_slot);
 	vs_input_ops_ = &get_vs_input_op( static_cast<uint32_t>(max_slot) );
 
-	return vertex_cache_->set_input_layout(layout);
+	assembler_->set_input_layout(layout);
+	
+	return result::ok;
 }
 
 result renderer_impl::set_vertex_buffers(
 		size_t starts_slot,
 		size_t buffers_count, h_buffer const* buffers,
-		size_t const* strides, size_t const* offsets
-		)
+		size_t const* strides, size_t const* offsets)
 {
-	vertex_cache_->set_vertex_buffers(
+	assembler_->set_vertex_buffers(
 		starts_slot,
 		buffers_count, buffers,
 		strides, offsets
@@ -271,7 +273,7 @@ result renderer_impl::draw(size_t startpos, size_t primcnt)
 {
 	rast_->set_state(rast_state_);
 
-	vertex_cache_->reset(h_buffer(), index_format_, primtopo_, static_cast<uint32_t>(startpos), 0);
+	vertex_cache_->update_index_buffer(h_buffer(), index_format_, primtopo_, static_cast<uint32_t>(startpos), 0);
 	vertex_cache_->transform_vertices(static_cast<uint32_t>(primcnt));
 	
 	rast_->draw(primcnt);
@@ -282,7 +284,7 @@ result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
 	rast_->set_state(rast_state_);
 
-	vertex_cache_->reset(index_buffer_, index_format_, primtopo_, static_cast<uint32_t>(startpos), basevert);
+	vertex_cache_->update_index_buffer(index_buffer_, index_format_, primtopo_, static_cast<uint32_t>(startpos), basevert);
 	vertex_cache_->transform_vertices(static_cast<uint32_t>(primcnt));
 
 	rast_->draw(primcnt);
@@ -340,7 +342,6 @@ void renderer_impl::initialize()
 {
 	rast_->initialize(this);
 	frame_buffer_->initialize(this);
-	vertex_cache_->initialize(this);
 }
 
 renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
@@ -351,6 +352,7 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 	buffer_pool_.reset(new buffer_manager());
 	texture_pool_.reset(new texture_manager());
 
+	assembler_.reset(new stream_assembler() );
 	clipper_.reset(new clipper());
 	rast_.reset(new rasterizer());
 	frame_buffer_.reset(
@@ -362,7 +364,7 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 		)
 		);
 	
-	vertex_cache_.reset(new default_vertex_cache);
+	vertex_cache_ = create_default_vertex_cache(this);
 	rast_state_.reset(new rasterizer_state(rasterizer_desc()));
 	ds_state_.reset(new depth_stencil_state(depth_stencil_desc()));
 
@@ -385,7 +387,7 @@ h_framebuffer renderer_impl::get_framebuffer() const
 	return frame_buffer_; 
 }
 
-h_device renderer_impl::get_device()
+h_device renderer_impl::get_native_device()
 {
 	return native_dev_;
 }
@@ -398,6 +400,11 @@ h_vertex_cache renderer_impl::get_vertex_cache()
 h_clipper renderer_impl::get_clipper()
 {
 	return clipper_;
+}
+
+stream_assembler_ptr renderer_impl::get_assembler()
+{
+	return assembler_;
 }
 
 result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
