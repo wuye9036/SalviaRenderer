@@ -162,7 +162,7 @@ vector<stream_desc> const& stream_assembler::get_stream_descs(vector<size_t> con
 		stream_desc str_desc;
 		int buffer_index = find_buffer(slot);
 		
-		if(buffer_index == 0)
+		if(buffer_index == -1)
 		{
 			str_desc.buffer = NULL;
 			str_desc.offset = 0;

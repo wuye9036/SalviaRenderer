@@ -65,29 +65,45 @@ void host_impl::initialize(stream_assembler* sa)
 
 void host_impl::buffers_changed()
 {
-	stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
+	update_stream_descs();
+}
+
+void host_impl::update_stream_descs()
+{
+	if( ia_shim_slots_.empty() )
+	{
+		stream_descs_ = NULL;
+	}
+	else
+	{
+		stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
+	}
+}
+
+void host_impl::update_ia_shim_func()
+{
+	// Update shim function.
+	if (!sa_ || !sa_->layout() || !vx_shader_)
+		return;
+
+	void* shim_func = ia_shim_->get_shim_function(
+		ia_shim_slots_, &ia_shim_dest_offsets_,
+		sa_->layout(), vx_shader_->get_reflection()
+		);
+	update_stream_descs();
+	ia_shim_func_ = static_cast<ia_shim_func_ptr>(shim_func);
 }
 
 void host_impl::input_layout_changed()
 {
-	// Update shim function.
-	void* func = ia_shim_->get_shim_function(
-		ia_shim_slots_, &ia_shim_dest_offsets_,
-		sa_->layout(), px_shader_->get_reflection()
-		);
-	stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
-	ia_shim_func_ = static_cast<ia_shim_func_ptr>(func);
+	update_ia_shim_func();
 }
 
 void host_impl::update_vertex_shader(shader_object_ptr const& vso)
 {
 	// Update shim and shader native function.
 	vx_shader_ = vso;
-	void* shim_func = ia_shim_->get_shim_function(
-		ia_shim_slots_, &ia_shim_dest_offsets_,
-		sa_->layout(), px_shader_->get_reflection() );
-	stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
-	ia_shim_func_ = static_cast<ia_shim_func_ptr>(shim_func);
+	update_ia_shim_func();
 
 	void* shader_func = vx_shader_->native_function();
 	vx_shader_func_ = static_cast<shader_func_ptr>(shader_func);

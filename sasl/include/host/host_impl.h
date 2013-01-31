@@ -103,6 +103,8 @@ private:
 	shader_func_ptr				vx_shader_func_;
 	salviar::stream_desc const*	stream_descs_;
 
+	void update_ia_shim_func();
+	void update_stream_descs();
 };
 
 END_NS_SASL_HOST();

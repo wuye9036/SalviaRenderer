@@ -11,6 +11,7 @@
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/shader_unit.h>
 #include <salviar/include/input_layout.h>
+#include <salviar/include/host.h>
 
 BEGIN_NS_SALVIAR();
 
@@ -25,6 +26,10 @@ result renderer_impl::set_input_layout(const h_input_layout& layout)
 	vs_input_ops_ = &get_vs_input_op( static_cast<uint32_t>(max_slot) );
 
 	assembler_->set_input_layout(layout);
+	if(host_)
+	{
+		host_->input_layout_changed();
+	}
 	
 	return result::ok;
 }
@@ -39,6 +44,10 @@ result renderer_impl::set_vertex_buffers(
 		buffers_count, buffers,
 		strides, offsets
 		);
+	if(host_)
+	{
+		host_->buffers_changed();
+	}
 	return result::ok;
 }
 
@@ -111,17 +120,22 @@ h_vertex_shader renderer_impl::get_vertex_shader() const
 }
 
 result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& code ){
-	vs_output_ops_ = &get_vs_output_op(0);
-
 	vx_shader_ = code;
+	
 	vs_proto_.reset( new vertex_shader_unit() );
 	vs_proto_->initialize( vx_shader_.get() );
 
 	uint32_t n = vs_proto_->output_attributes_count();
 	vs_output_ops_ = &get_vs_output_op(n);
+
 	for (uint32_t i = 0; i < n; ++ i)
 	{
 		vs_output_ops_->attribute_modifiers[i] = vs_proto_->output_attribute_modifiers(i);
+	}
+
+	if(host_)
+	{
+		host_->update_vertex_shader(vx_shader_);
 	}
 
 	return result::ok;
@@ -340,6 +354,7 @@ result renderer_impl::present()
 
 void renderer_impl::initialize()
 {
+	host_->initialize( assembler_.get() );
 	rast_->initialize(this);
 	frame_buffer_->initialize(this);
 }
@@ -352,6 +367,7 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 	buffer_pool_.reset(new buffer_manager());
 	texture_pool_.reset(new texture_manager());
 
+	host_ = modules::host::create_host();
 	assembler_.reset(new stream_assembler() );
 	clipper_.reset(new clipper());
 	rast_.reset(new rasterizer());
@@ -407,20 +423,35 @@ stream_assembler_ptr renderer_impl::get_assembler()
 	return assembler_;
 }
 
+host_ptr renderer_impl::get_host()
+{
+	return host_;
+}
+
 result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
 {
-	if( vs_proto_ ){
+	if(vs_proto_)
+	{
 		vs_proto_->set_variable(name, pvariable);
 		return result::ok;
+	}
+	if(host_)
+	{
+		host_->vx_set_constant(name, pvariable);
 	}
 	return result::failed;
 }
 
 result renderer_impl::set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
 {
-	if( vs_proto_ ){
+	if( vs_proto_ )
+	{
 		vs_proto_->set_variable_pointer(name, pvariable, sz);
 		return result::ok;
+	}
+	if(host_)
+	{
+		host_->vx_set_constant_pointer(name, pvariable, sz);
 	}
 	return result::failed;
 }
@@ -481,9 +512,14 @@ result renderer_impl::set_ps_sampler( std::string const& name, h_sampler const& 
 
 result renderer_impl::set_vs_sampler( std::string const& name, h_sampler const& samp )
 {
-	if ( vs_proto_ ){
+	if ( vs_proto_ )
+	{
 		vs_proto_->set_sampler( name, samp );
 		return result::ok;
+	}
+	if(host_)
+	{
+		host_->vx_set_sampler(name, samp);
 	}
 	return result::failed;
 }

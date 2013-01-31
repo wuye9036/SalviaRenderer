@@ -3,6 +3,7 @@
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/stream_assembler.h>
 
+#include <salviar/include/host.h>
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/renderer_impl.h>
@@ -44,18 +45,18 @@ public:
 		h_buffer const& index_buffer, format index_format,
 		primitive_topology topology, uint32_t start_pos, uint32_t base_vert)
 	{
-		verts_.reset();
-
-		assembler_	= owner_->get_assembler().get();
-		cpp_vs_		= owner_->get_vertex_shader().get();
-		viewport_	= &(owner_->get_viewport());
+		transformed_verts_.reset();
 		topology_	= topology;
-
 		index_fetcher_.initialize(index_buffer, index_format, topology, start_pos, base_vert);
 	}
 
 	void transform_vertices(uint32_t prim_count)
 	{
+		assembler_	= owner_->get_assembler().get();
+		cpp_vs_		= owner_->get_vertex_shader().get();
+		viewport_	= &(owner_->get_viewport());
+
+		
 		uint32_t prim_size = 0;
 		switch(topology_)
 		{
@@ -92,7 +93,7 @@ public:
 		std::vector<uint32_t> unique_indices = indices_;
 		std::sort(unique_indices.begin(), unique_indices.end());
 		unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
-		verts_.reset(new vs_output[unique_indices.size()]);
+		transformed_verts_.reset(new vs_output[unique_indices.size()]);
 		used_verts_.resize(assembler_->num_vertices());
 
 		// Transform vertexes
@@ -106,7 +107,15 @@ public:
 		if( owner_->get_vertex_shader() )
 		{
 			task_transform_vertex = boost::bind(
-				&default_vertex_cache::transform_vertex,
+				&default_vertex_cache::transform_vertex_cppvs,
+				this, boost::ref(unique_indices),
+				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
+				);
+		}
+		else if ( owner_->get_host() )
+		{
+			task_transform_vertex = boost::bind(
+				&default_vertex_cache::transform_vertex_vs2,
 				this, boost::ref(unique_indices),
 				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
 				);
@@ -114,11 +123,12 @@ public:
 		else
 		{
 			task_transform_vertex = boost::bind(
-				&default_vertex_cache::transform_vertex_by_shader,
+				&default_vertex_cache::transform_vertex_vs,
 				this, boost::ref(unique_indices),
 				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
 				);
 		}
+
 		for (size_t i = 0; i < num_threads - 1; ++ i)
 		{
 			global_thread_pool().schedule(task_transform_vertex);
@@ -140,22 +150,7 @@ public:
 		}
 #endif
 
-		return verts_[used_verts_[id]];
-	}
-
-	vs_output* new_vertex()
-	{
-		return (vs_output*)(verts_pool_.malloc());
-	}
-
-	void delete_vertex(vs_output* const pvert)
-	{
-#if defined(EFLIB_DEBUG)
-		assert( verts_pool_.is_from(pvert) );
-#endif
-
-		pvert->~vs_output();
-		verts_pool_.free(pvert);
+		return transformed_verts_[used_verts_[id]];
 	}
 
 private:
@@ -178,7 +173,7 @@ private:
 		}
 	}
 
-	void transform_vertex(
+	void transform_vertex_cppvs(
 		vector<uint32_t> const& indices, int32_t index_count,
 		atomic<int32_t>& working_package, int32_t package_size)
 	{
@@ -195,18 +190,18 @@ private:
 
 				vs_input vertex;
 				assembler_->fetch_vertex(vertex, id);
-				cpp_vs_->execute(vertex, verts_[i]);
+				cpp_vs_->execute(vertex, transformed_verts_[i]);
 			}
 
 			local_working_package = working_package ++;
 		}
 	}
 
-	void transform_vertex_by_shader(
+	void transform_vertex_vs(
 		vector<uint32_t> const& indices, int32_t index_count,
 		atomic<int32_t>& working_package, int32_t package_size )
 	{
-		vertex_shader_unit vsu = *(owner_->vs_proto());
+		vertex_shader_unit vsu	= *(owner_->vs_proto());
 
 		vsu.bind_streams(assembler_);
 
@@ -222,16 +217,38 @@ private:
 				uint32_t id = indices[i];
 				used_verts_[id] = i;
 
-				vs_input vertex;
-
 				vsu.update( id );
-				vsu.execute( verts_[i] );
+				vsu.execute( transformed_verts_[i] );
 			}
 
 			local_working_package = working_package ++;
 		}
 	}
 
+	void transform_vertex_vs2(
+		vector<uint32_t> const& indices, int32_t index_count,
+		atomic<int32_t>& working_package, int32_t package_size )
+	{
+		vx_shader_unit_ptr vsu	= owner_->get_host()->get_vx_shader_unit();
+
+		const int32_t num_packages = (index_count + package_size - 1) / package_size;
+
+		int32_t local_working_package = working_package ++;
+		while (local_working_package < num_packages)
+		{
+			const int32_t start = local_working_package * package_size;
+			const int32_t end = std::min(index_count, start+package_size);
+			for (int32_t i = start; i < end; ++ i)
+			{
+				uint32_t vert_index = indices[i];
+				used_verts_[vert_index] = i;
+
+				vsu->execute(vert_index, transformed_verts_[i]);
+			}
+
+			local_working_package = working_package ++;
+		}
+	}
 private:
 	renderer_impl*			owner_;
 
@@ -243,7 +260,7 @@ private:
 	primitive_topology		topology_;
 	index_fetcher			index_fetcher_;
 
-	shared_array<vs_output> verts_;
+	shared_array<vs_output> transformed_verts_;
 	vector<int32_t>			used_verts_;
 
 	boost::pool<>			verts_pool_;

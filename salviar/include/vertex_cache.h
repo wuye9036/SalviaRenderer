@@ -35,8 +35,6 @@ public:
 	virtual void		transform_vertices(uint32_t prim_count) = 0;
 
 	virtual vs_output&	fetch(cache_entry_index id) = 0;
-	virtual vs_output*	new_vertex() = 0;
-	virtual void		delete_vertex(vs_output* const pvert) = 0;
 	virtual ~vertex_cache(){}
 };
 

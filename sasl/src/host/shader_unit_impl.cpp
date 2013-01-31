@@ -60,12 +60,14 @@ uint32_t vx_shader_unit_impl::output_attribute_modifiers(size_t /*index*/) const
 void vx_shader_unit_impl::execute(size_t ivert, void* out_data)
 {
 	shim_func_(&(stream_data[0]), &shim_data_, ivert);
-	shader_func_(&(stream_data[0]), buffer_data, &(stream_odata[0]), out_data);
+	shader_func_(&(stream_data[0]), buffer_data, NULL /*stream output data*/, out_data);
 }
 
 void vx_shader_unit_impl::execute(size_t ivert, vs_output& /*out*/)
 {
 	execute( ivert, &(buffer_odata[0]) );
+
+	// Convert vertex shader result to registers.
 	EFLIB_ASSERT_UNIMPLEMENTED();
 }
 

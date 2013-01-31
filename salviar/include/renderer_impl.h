@@ -91,12 +91,12 @@ public:
 	virtual result set_vertex_shader(h_vertex_shader const& hvs);
 	virtual h_vertex_shader get_vertex_shader() const;
 	
-	virtual result set_vertex_shader_code( boost::shared_ptr<shader_object> const& );
-	virtual boost::shared_ptr<shader_object> get_vertex_shader_code() const;
-	virtual result set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz );
-	virtual result set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz );
-	virtual result set_vs_sampler( std::string const& name, h_sampler const& samp );
-	virtual boost::shared_ptr<vertex_shader_unit> vs_proto() const;
+	virtual result					set_vertex_shader_code( boost::shared_ptr<shader_object> const& );
+	virtual shader_object_ptr		get_vertex_shader_code() const;
+	virtual result					set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz );
+	virtual result					set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz );
+	virtual result					set_vs_sampler( std::string const& name, h_sampler const& samp );
+	virtual vertex_shader_unit_ptr	vs_proto() const;
 
 	virtual const vs_input_op* get_vs_input_ops() const;
 	virtual const vs_output_op* get_vs_output_ops() const;
@@ -158,6 +158,7 @@ public:
 	//this class for inner system
 	renderer_impl(const renderer_parameters* pparam, h_device hdev);
 
+	host_ptr				get_host();
 	stream_assembler_ptr	get_assembler();
 	h_rasterizer			get_rasterizer();
 	h_device				get_native_device();
