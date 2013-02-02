@@ -216,14 +216,14 @@ public:
 
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in.attributes[0];
+		vec4 pos = in.attribute(0);
 		vec4 pos_es, normal_es;
 		transform(pos_es, pos, wv);
-		transform33(normal_es, in.attributes[1], wv);
-		transform(out.position, pos_es, proj);
-		out.attributes[0] = vec4(light_pos - pos_es.xyz(), 1);
-		out.attributes[1] = vec4(eye_pos - pos_es.xyz(), 1);
-		out.attributes[2] = normal_es;
+		transform33(normal_es, in.attribute(1), wv);
+		transform(out.position(), pos_es, proj);
+		out.attribute(0) = vec4(light_pos - pos_es.xyz(), 1);
+		out.attribute(1) = vec4(eye_pos - pos_es.xyz(), 1);
+		out.attribute(2) = normal_es;
 	}
 
 	uint32_t num_output_attributes() const
@@ -258,9 +258,9 @@ public:
 	}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		vec3 l = normalize3(in.attributes[0].xyz());
-		vec3 e = normalize3(in.attributes[1].xyz());
-		vec3 n = normalize3(in.attributes[2].xyz());
+		vec3 l = normalize3(in.attribute(0).xyz());
+		vec3 e = normalize3(in.attribute(1).xyz());
+		vec3 n = normalize3(in.attribute(2).xyz());
 		float n_dot_l = dot_prod3(n, l);
 		float roughness = 5;
 		float spec = (roughness + 2) / 2 * pow(max(dot_prod3(normalize3(l + e), n), 0.0f), roughness);

@@ -55,7 +55,7 @@ vs_output_op gen_vs_output_op_n()
 	return ret;
 }
 
-vs_input_op vs_input_ops[vso_attrib_regcnt] = {
+vs_input_op vs_input_ops[vso_attribute_count] = {
 	gen_vs_input_op_n<0>(),
 	gen_vs_input_op_n<1>(),
 	gen_vs_input_op_n<2>(),
@@ -90,7 +90,7 @@ vs_input_op vs_input_ops[vso_attrib_regcnt] = {
 	gen_vs_input_op_n<31>()
 };
 
-vs_output_op vs_output_ops[vso_attrib_regcnt] = {
+vs_output_op vs_output_ops[vso_attribute_count] = {
 	gen_vs_output_op_n<0>(),
 	gen_vs_output_op_n<1>(),
 	gen_vs_output_op_n<2>(),
@@ -128,11 +128,10 @@ vs_output_op vs_output_ops[vso_attrib_regcnt] = {
 namespace vs_input_op_funcs
 {
 	template <int N>
-	vs_input& construct_n(vs_input& out,
-			const vs_input::vsinput_attributes_t& attribs)
+	vs_input& construct_n(vs_input& out, eflib::vec4 const* attrs)
 	{
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = attribs[i_attr];
+			out.attribute(i_attr) = attrs[i_attr];
 		}
 		return out;
 	}
@@ -140,7 +139,7 @@ namespace vs_input_op_funcs
 	vs_input& copy_n(vs_input& out, const vs_input& in)
 	{
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = in.attributes[i_attr];
+			out.attribute(i_attr) = in.attribute(i_attr);
 		}
 		return out;
 	}
@@ -151,22 +150,22 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& construct_n(vs_output& out,
 			const eflib::vec4& position, bool front_face,
-			const vs_output::attrib_array_type& attribs)
+			eflib::vec4 const* attribs)
 	{
-		out.position = position;
-		out.front_face = front_face;
+		out.position() = position;
+		out.front_face(front_face);
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = attribs[i_attr];
+			out.attribute(i_attr) = attribs[i_attr];
 		}
 		return out;
 	}
 	template <int N>
 	vs_output& copy_n(vs_output& out, const vs_output& in)
 	{
-		out.position = in.position;
-		out.front_face = in.front_face;
+		out.position() = in.position();
+		out.front_face( in.front_face() );
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = in.attributes[i_attr];
+			out.attribute(i_attr) = in.attribute(i_attr);
 		}
 		return out;
 	}
@@ -176,18 +175,18 @@ namespace vs_output_op_funcs
 	{
 		if (&out != &in){
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
-				out.attributes[i_attr] = in.attributes[i_attr];
+				out.attribute(i_attr) = in.attribute(i_attr);
 				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attributes[i_attr] *= in.position[3];
+					out.attribute(i_attr) *= in.position().w();
 				}
 			}
-			out.position = in.position;
-			out.front_face = in.front_face;
+			out.position() = in.position();
+			out.front_face( in.front_face() );
 		}
 		else{
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
 				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attributes[i_attr] *= in.position[3];
+					out.attribute(i_attr) *= in.position().w();
 				}
 			}
 		}
@@ -197,21 +196,21 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& unproject_n(vs_output& out, const vs_output& in)
 	{
-		const float inv_w = 1.0f / in.position[3];
+		const float inv_w = 1.0f / in.position().w();
 		if (&out != &in){
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
-				out.attributes[i_attr] = in.attributes[i_attr];
+				out.attribute(i_attr) = in.attribute(i_attr);
 				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attributes[i_attr] *= inv_w;
+					out.attribute(i_attr) *= inv_w;
 				}
 			}
-			out.position = in.position;
-			out.front_face = in.front_face;
+			out.position() = in.position();
+			out.front_face( in.front_face() );
 		}
 		else{
 			for(size_t i_attr = 0; i_attr < N; ++i_attr){
 				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attributes[i_attr] *= inv_w;
+					out.attribute(i_attr) *= inv_w;
 				}
 			}
 		}
@@ -221,12 +220,12 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& lerp_n(vs_output& out, const vs_output& start, const vs_output& end, float step)
 	{
-		out.position = start.position + (end.position - start.position) * step;
-		out.front_face = start.front_face;
+		out.position() = start.position() + ( end.position() - start.position() ) * step;
+		out.front_face( start.front_face() );
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = start.attributes[i_attr];
+			out.attribute(i_attr) = start.attribute(i_attr);
 			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-				out.attributes[i_attr] += (end.attributes[i_attr] - start.attributes[i_attr]) * step;
+				out.attribute(i_attr) += (end.attribute(i_attr) - start.attribute(i_attr)) * step;
 			}
 		}
 		return out;
@@ -235,10 +234,10 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& integral1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
 	{
-		out.position = in.position + derivation.position;
+		out.position() = in.position() + derivation.position();
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-				out.attributes[i_attr] = in.attributes[i_attr] + derivation.attributes[i_attr];
+				out.attribute(i_attr) = in.attribute(i_attr) + derivation.attribute(i_attr);
 			}
 		}
 		return out;
@@ -246,10 +245,10 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& integral2_n(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
 	{
-		out.position = in.position + (derivation.position * step);
+		out.position() = in.position() + (derivation.position() * step);
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-				out.attributes[i_attr] = in.attributes[i_attr] + (derivation.attributes[i_attr] * step);
+				out.attribute(i_attr) = in.attribute(i_attr) + (derivation.attribute(i_attr) * step);
 			}
 		}
 		return out;
@@ -257,10 +256,10 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& selfintegral1_n(vs_output& inout, const vs_output& derivation)
 	{
-		inout.position += derivation.position;
+		inout.position() += derivation.position();
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-				inout.attributes[i_attr] += derivation.attributes[i_attr];
+				inout.attribute(i_attr) += derivation.attribute(i_attr);
 			}
 		}
 		return inout;
@@ -268,10 +267,10 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& selfintegral2_n(vs_output& inout, float step, const vs_output& derivation)
 	{
-		inout.position += (derivation.position * step);
+		inout.position() += (derivation.position() * step);
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
-				inout.attributes[i_attr] += (derivation.attributes[i_attr] * step);
+				inout.attribute(i_attr) += (derivation.attribute(i_attr) * step);
 			}
 		}
 		return inout;
@@ -280,27 +279,27 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& operator_selfadd_n(vs_output& lhs, const vs_output& rhs)
 	{
-		lhs.position += rhs.position;
+		lhs.position() += rhs.position();
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			lhs.attributes[i_attr] += rhs.attributes[i_attr];
+			lhs.attribute(i_attr) += rhs.attribute(i_attr);
 		}
 		return lhs;
 	}
 	template <int N>
 	vs_output& operator_selfsub_n(vs_output& lhs, const vs_output& rhs)
 	{
-		lhs.position -= rhs.position;
+		lhs.position() -= rhs.position();
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			lhs.attributes[i_attr] -= rhs.attributes[i_attr];
+			lhs.attribute(i_attr) -= rhs.attribute(i_attr);
 		}
 		return lhs;
 	}
 	template <int N>
 	vs_output& operator_selfmul_n(vs_output& lhs, float f)
 	{
-		lhs.position *= f;
+		lhs.position() *= f;
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			lhs.attributes[i_attr] *= f;
+			lhs.attribute(i_attr) *= f;
 		}
 		return lhs;
 	}
@@ -314,30 +313,30 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& operator_add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
-		out.position = vso0.position + vso1.position;
-		out.front_face = vso0.front_face;
+		out.position() = vso0.position() + vso1.position();
+		out.front_face( vso0.front_face() );
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = vso0.attributes[i_attr] + vso1.attributes[i_attr];
+			out.attribute(i_attr) = vso0.attribute(i_attr) + vso1.attribute(i_attr);
 		}
 		return out;
 	}
 	template <int N>
 	vs_output& operator_sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
-		out.position = vso0.position - vso1.position;
-		out.front_face = vso0.front_face;
+		out.position() = vso0.position() - vso1.position();
+		out.front_face( vso0.front_face() );
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = vso0.attributes[i_attr] - vso1.attributes[i_attr];
+			out.attribute(i_attr) = vso0.attribute(i_attr) - vso1.attribute(i_attr);
 		}
 		return out;
 	}
 	template <int N>
 	vs_output& operator_mul_n(vs_output& out, const vs_output& vso0, float f)
 	{
-		out.position = vso0.position * f;
-		out.front_face = vso0.front_face;
+		out.position() = vso0.position() * f;
+		out.front_face( vso0.front_face() );
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attributes[i_attr] = vso0.attributes[i_attr] * f;
+			out.attribute(i_attr) = vso0.attribute(i_attr) * f;
 		}
 		return out;
 	}
@@ -376,7 +375,7 @@ void viewport_transform(vec4& position, const viewport& vp)
 
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2)
 {
-	return cross_prod2( (v1.position - v0.position).xy(), (v2.position - v0.position).xy() );
+	return cross_prod2( ( v1.position() - v0.position() ).xy(), (v2.position() - v0.position() ).xy() );
 }
 
 /*****************************************

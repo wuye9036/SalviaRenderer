@@ -44,8 +44,8 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 		// Clip
 		if (num_clipped_verts[src_stage] != 0)
 		{
-			di = dot_prod4(planes_[i_plane], clipped_verts[src_stage][0]->position);
-			dj = dot_prod4(planes_[i_plane], clipped_verts[src_stage][1]->position);
+			di = dot_prod4( planes_[i_plane], clipped_verts[src_stage][0]->position() );
+			dj = dot_prod4( planes_[i_plane], clipped_verts[src_stage][1]->position() );
 
 			if(di >= 0.0f){
 				num_clipped_verts[dest_stage] = 2;
@@ -88,7 +88,7 @@ void clipper::clip(vs_output* out_clipped_verts, uint32_t& num_out_clipped_verts
 	num_out_clipped_verts = num_clipped_verts[src_stage];
 	for(size_t i = 0; i < num_out_clipped_verts; ++i){
 		vs_output_ops.copy(out_clipped_verts[i], *clipped_verts_ptrs[i]);
-		viewport_transform(out_clipped_verts[i].position, vp);
+		viewport_transform(out_clipped_verts[i].position(), vp);
 	}
 }
 
@@ -119,14 +119,14 @@ void clipper::clip(
 		num_clipped_verts[dest_stage] = 0;
 
 		if (num_clipped_verts[src_stage] != 0){
-			d[0] = dot_prod4(planes_[i_plane], clipped_verts[src_stage][0]->position);
+			d[0] = dot_prod4( planes_[i_plane], clipped_verts[src_stage][0]->position() );
 		}
 		for(size_t i = 0, j = 1; i < num_clipped_verts[src_stage]; ++i, ++j)
 		{
 			//wrap
 			j %= num_clipped_verts[src_stage];
 
-			d[1] = dot_prod4(planes_[i_plane], clipped_verts[src_stage][j]->position);
+			d[1] = dot_prod4( planes_[i_plane], clipped_verts[src_stage][j]->position() );
 
 			if(d[0] >= 0.0f){
 				clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = clipped_verts[src_stage][i];
@@ -164,9 +164,9 @@ void clipper::clip(
 				for (size_t i = 0; i < 3; ++i){
 					
 					const vs_output& v = *clipped_verts[dest_stage][i];
-					const float inv_abs_w = 1 / abs( v.position.w() );
-					const float x = v.position.x() * inv_abs_w;
-					const float y = v.position.y() * inv_abs_w;
+					const float inv_abs_w = 1 / abs( v.position().w() );
+					const float x = v.position().x() * inv_abs_w;
+					const float y = v.position().y() * inv_abs_w;
 					pv_2d[i] = vec2(x, y);
 				}
 
@@ -192,7 +192,7 @@ void clipper::clip(
 	assert( num_out_clipped_verts <= 5 );
 	for(size_t i = 0; i < num_out_clipped_verts; ++i){
 		vs_output_ops.copy(out_clipped_verts[i], *clipped_verts_ptrs[i]);
-		viewport_transform(out_clipped_verts[i].position, vp);
+		viewport_transform(out_clipped_verts[i].position(), vp);
 	}
 }
 END_NS_SALVIAR()

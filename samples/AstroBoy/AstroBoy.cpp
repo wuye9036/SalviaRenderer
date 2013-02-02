@@ -110,20 +110,20 @@ public:
 	astro_boy_vs(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in.attributes[0];
-		vec4 nor = in.attributes[1];
+		vec4 pos = in.attribute(0);
+		vec4 nor = in.attribute(1);
 
-		out.position = out.attributes[0] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		out.position() = out.attribute(0) = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		pos.w(1.0f);
 		nor.w(0.0f);
 		/*out.position = pos;
-		out.attributes[0] = nor;*/
+		out.attribute(0) = nor;*/
 		
 		for(int i = 0; i < 4; ++i)
 		{
 			union {float f; int i;} f2i;
-			f2i.f = in.attributes[3][i];
-			float w = in.attributes[4][i];
+			f2i.f = in.attribute(3)[i];
+			float w = in.attribute(4)[i];
 			int boneIndex = f2i.i;
 			if(boneIndex == -1){break;}
 			// fprintf(f, "%2d ", boneIndex);
@@ -133,22 +133,24 @@ public:
 			transform(skin_pos, boneMatrices[boneIndex], skin_pos);
 			transform(skin_nor, invMatrices[boneIndex], nor);
 			transform(skin_nor, boneMatrices[boneIndex], skin_nor);
-			out.position += (skin_pos*w);
-			out.attributes[0] += (skin_nor*w);
+			out.position() += (skin_pos*w);
+			out.attribute(0) += (skin_nor*w);
 		}
 		
 #ifdef EFLIB_DEBUG
-		fprintf(f, "(%8.4f %8.4f %8.4f %8.4f)", out.position[0], out.position[1], out.position[2], out.position[3]);
+		fprintf( f, "(%8.4f %8.4f %8.4f %8.4f)",
+			out.position().x(), out.position().y(), out.position().z(), out.position().w()
+			);
 #endif
-		transform(out.position, out.position, wvp);
+		transform(out.position(), out.position(), wvp);
 #ifdef EFLIB_DEBUG
 		fprintf(f, "\n");
 #endif
 
-		// out.attributes[0] = in.attributes[1];
-		out.attributes[1] = in.attributes[2];
-		out.attributes[2] = light_pos - pos;
-		out.attributes[3] = eye_pos - pos;
+		// out.attribute(0) = in.attribute(1);
+		out.attribute(1) = in.attribute(2);
+		out.attribute(2) = light_pos - pos;
+		out.attribute(3) = eye_pos - pos;
 	}
 
 	uint32_t num_output_attributes() const{
@@ -201,9 +203,9 @@ public:
 			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
 
-		vec3 norm( normalize3( in.attributes[0].xyz() ) );
-		vec3 light_dir( normalize3( in.attributes[1].xyz() ) );
-		vec3 eye_dir( normalize3( in.attributes[2].xyz() ) );
+		vec3 norm( normalize3( in.attribute(0).xyz() ) );
+		vec3 light_dir( normalize3( in.attribute(1).xyz() ) );
+		vec3 eye_dir( normalize3( in.attribute(2).xyz() ) );
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
 		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );

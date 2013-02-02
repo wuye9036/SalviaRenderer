@@ -16,6 +16,12 @@
 
 #include <vector>
 
+namespace eflib
+{
+	template <typename T, int Size> struct vector_;
+	typedef vector_<float, 4> vec4;
+}
+
 namespace salviar
 {
 	class  stream_assembler;
@@ -30,7 +36,7 @@ namespace sasl
 {
 	namespace shims
 	{
-		struct shim_data;
+		struct ia_shim_data;
 		EFLIB_DECLARE_CLASS_SHARED_PTR(ia_shim);
 		EFLIB_DECLARE_CLASS_SHARED_PTR(interp_shim);
 		EFLIB_DECLARE_CLASS_SHARED_PTR(om_shim);
@@ -43,14 +49,37 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(host_impl);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log_impl);
 
 typedef void (*ia_shim_func_ptr)(
-	void*					output_buffer,
-	shims::shim_data const* data,
-	size_t					i_vert
+	void*						output_buffer,
+	shims::ia_shim_data const*	data,
+	size_t						i_vert
 	);
 
 typedef void (*shader_func_ptr)(
 	void const* input_stream,  void const* input_buffer,
 	void*       output_stream, void*       output_buffer
+	);
+
+typedef void (*vso2reg_func_ptr)(
+	eflib::vec4*		out_registers,
+	void const*			in_data,
+	intptr_t const*		in_offsets,			// TODO: OPTIMIZED BY JIT
+	uint32_t const*		in_value_types,		// TODO: OPTIMIZED BY JIT
+	uint32_t			register_count		// TODO: OPTIMIZED BY JIT
+	);
+
+typedef void (*interp_func_ptr)(
+	eflib::vec4*		out_registers,
+	eflib::vec4 const*	in_registers,
+	uint32_t const*		interp_modifiers,	// TODO: OPTIMIZED BY JIT
+	uint32_t			register_count		// TODO: OPTIMIZED BY JIT
+	);
+
+typedef void (*reg2psi_func_ptr)(
+	void const*			out_data,
+	intptr_t*			out_offsets,		// TODO: OPTIMIZED BY JIT
+	uint32_t*			out_value_types,	// TODO: OPTIMIZED BY JIT
+	eflib::vec4 const*	in_registers,
+	uint32_t			register_count		// TODO: OPTIMIZED BY JIT
 	);
 
 class host_impl: public salviar::host
@@ -98,13 +127,24 @@ private:
 
 	ia_shim_func_ptr			ia_shim_func_;
 	std::vector<size_t>			ia_shim_slots_;
-	size_t*						ia_shim_dest_offsets_;
+	std::vector<intptr_t>		ia_shim_element_offsets_;
+	std::vector<size_t>			ia_shim_dest_offsets_;
+	
+	vso2reg_func_ptr			vso2reg_func_;
+	interp_func_ptr				interp_func_;
+	reg2psi_func_ptr			reg2psi_func_;
+	std::vector<intptr_t>		vso_offsets_;
+	std::vector<uint32_t>		vso_types_;
+	std::vector<intptr_t>		psi_offsets_;
+	std::vector<uint32_t>		psi_types_;
+	std::vector<uint32_t>		interp_modifiers_;
 
 	shader_func_ptr				vx_shader_func_;
 	salviar::stream_desc const*	stream_descs_;
 
-	void update_ia_shim_func();
 	void update_stream_descs();
+	void update_ia_shim_func();
+	void update_interp_funcs();
 };
 
 END_NS_SASL_HOST();

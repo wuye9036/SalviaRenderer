@@ -89,7 +89,7 @@ void stream_assembler::fetch_vertex(vs_input& rv, size_t vert_index) const
 		size_t buffer_index = get<2>( reg_elem_buffer_index );
 
 		void const* pdata = element_address( buffer_index, desc->aligned_byte_offset, vert_index );
-		rv.attributes[reg_index] = get_vec4( desc->data_format, semantic_value(desc->semantic_name, desc->semantic_index), pdata);
+		rv.attribute(reg_index) = get_vec4( desc->data_format, semantic_value(desc->semantic_name, desc->semantic_index), pdata);
 	}
 }
 
@@ -160,8 +160,8 @@ vector<stream_desc> const& stream_assembler::get_stream_descs(vector<size_t> con
 	{
 		size_t slot = slots[i_slot];
 		stream_desc str_desc;
-		int buffer_index = find_buffer(slot);
-		
+		int buffer_index	= find_buffer(slot);
+
 		if(buffer_index == -1)
 		{
 			str_desc.buffer = NULL;

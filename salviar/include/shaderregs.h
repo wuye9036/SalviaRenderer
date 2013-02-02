@@ -23,14 +23,24 @@ BEGIN_NS_SALVIAR()
 class vs_input
 {
 public:
-	typedef boost::array<eflib::vec4, vsi_attrib_regcnt> vsinput_attributes_t;
-
 	vs_input()
 	{}
-
-	vsinput_attributes_t attributes;
+	
+	eflib::vec4& attribute(size_t index)
+	{
+		return attributes_[index];
+	}
+	
+	eflib::vec4 const& attribute(size_t index) const
+	{
+		return attributes_[index];
+	}
 
 private:
+	typedef boost::array<
+		eflib::vec4, vsi_attribute_count > attribute_array;
+	attribute_array attributes_;
+
 	vs_input(const vs_input& rhs);
 	vs_input& operator=(const vs_input& rhs);
 };
@@ -48,17 +58,66 @@ public:
 	};
 
 public:
-	typedef boost::array<eflib::vec4, vso_attrib_regcnt> attrib_array_type;
+	eflib::vec4& position()
+	{
+		return registers_[0];
+	}
+	
+	eflib::vec4 const& position() const
+	{
+		return registers_[0];
+	}
 
-	eflib::vec4 position;
-	bool front_face;
+	eflib::vec4* attribute_data()
+	{
+		return registers_.data() + 1;
+	}
 
-	attrib_array_type attributes;
+	eflib::vec4 const* attribute_data() const
+	{
+		return registers_.data() + 1;
+	}
+
+	eflib::vec4* raw_data()
+	{
+		return registers_.data();
+	}
+
+	eflib::vec4 const* raw_data() const
+	{
+		return registers_.data();
+	}
+
+	eflib::vec4 const& attribute(size_t index) const
+	{
+		return attribute_data()[index];
+	}
+
+	eflib::vec4& attribute(size_t index)
+	{
+		return attribute_data()[index];
+	}
+
+	bool front_face() const
+	{
+		return front_face_;
+	}
+
+	void front_face(bool v)
+	{
+		front_face_ = v;
+	}
 
 	vs_output()
 	{}
 
 private:
+	typedef boost::array<
+		eflib::vec4, vso_attribute_count+1 > register_array;
+	register_array registers_;
+
+	bool front_face_;
+	
 	vs_output(const vs_output& rhs);
 	vs_output& operator=(const vs_output& rhs);
 };
@@ -66,7 +125,7 @@ private:
 struct vs_input_op
 {
 	typedef vs_input& (*vs_input_construct)(vs_input& out,
-		const vs_input::vsinput_attributes_t& attrs);
+		eflib::vec4 const* attrs);
 	typedef vs_input& (*vs_input_copy)(vs_input& out, const vs_input& in);
 
 	vs_input_construct construct;
@@ -75,9 +134,11 @@ struct vs_input_op
 
 struct vs_output_op
 {
-	typedef vs_output& (*vs_output_construct)(vs_output& out,
-		const eflib::vec4& position, bool front_face,
-		const vs_output::attrib_array_type& attribs);
+	typedef vs_output& (*vs_output_construct)(
+		vs_output& out,
+		eflib::vec4 const& position, bool front_face,
+		eflib::vec4 const* attrs
+		);
 	typedef vs_output& (*vs_output_copy)(vs_output& out, const vs_output& in);
 	
 	typedef vs_output& (*vs_output_project)(vs_output& out, const vs_output& in);
@@ -100,7 +161,7 @@ struct vs_output_op
 	typedef vs_output& (*vs_output_selfintegral1)(vs_output& inout, const vs_output& derivation);
 	typedef vs_output& (*vs_output_selfintegral2)(vs_output& inout, float step, const vs_output& derivation);
 
-	typedef boost::array<uint32_t, vso_attrib_regcnt> attrib_modifier_array_type;
+	typedef boost::array<uint32_t, vso_attribute_count> interpolation_modifier_array;
 
 
 	vs_output_construct construct;
@@ -126,7 +187,7 @@ struct vs_output_op
 	vs_output_selfintegral1 selfintegral1;
 	vs_output_selfintegral2 selfintegral2;
 
-	attrib_modifier_array_type attribute_modifiers;
+	interpolation_modifier_array attribute_modifiers;
 };
 
 vs_input_op& get_vs_input_op(uint32_t n);

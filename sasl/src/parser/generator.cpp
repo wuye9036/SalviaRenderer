@@ -554,7 +554,7 @@ void print_path_tree( std::ostream& o, shared_ptr<path_tree> const& path_node, i
 	// Print Attribute
 	for( size_t i = 0; i < path_node->attributes.size(); ++i )
 	{
-		o << " " << path_node->attributes[i].first << "=" << path_node->attributes[i].second;
+		o << " " << path_node->attribute(i).first << "=" << path_node->attribute(i).second;
 	}
 
 	if( path_node->children.empty() )

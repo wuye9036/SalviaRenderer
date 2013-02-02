@@ -17,6 +17,11 @@
 #include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/boost_end.h>
 
+namespace eflib
+{
+	template <typename T, int Size> struct vector_;
+	typedef vector_<float, 4> vec4;
+}
 namespace salviar
 {
 	struct stream_desc;
@@ -27,16 +32,16 @@ namespace sasl
 {
 	namespace shims
 	{
-		struct shim_data;
+		struct ia_shim_data;
 	}
 }
 
 BEGIN_NS_SASL_HOST();
 
 typedef void (*ia_shim_func_ptr)(
-	void*					output_buffer,
-	shims::shim_data const* data,
-	size_t					i_vert
+	void*						output_buffer,
+	shims::ia_shim_data const*	data,
+	size_t						i_vert
 	);
 
 typedef void (*shader_func_ptr)(
@@ -44,18 +49,29 @@ typedef void (*shader_func_ptr)(
 	void*       output_stream, void*       output_buffer
 	);
 
+typedef void (*vso2reg_func_ptr)(
+	eflib::vec4*		out_registers,
+	void const*			in_data,
+	intptr_t const*		in_offsets,			// TODO: OPTIMIZED BY JIT
+	uint32_t const*		in_value_types,		// TODO: OPTIMIZED BY JIT
+	uint32_t			register_count		// TODO: OPTIMIZED BY JIT
+	);
+
 class vx_shader_unit_impl: public salviar::vx_shader_unit
 {
 public:
 	vx_shader_unit_impl(
-		ia_shim_func_ptr		shim_func,
-		shader_func_ptr			shader_func,
-		void const*				cbuffer,
-		shims::shim_data const*	data,
-		size_t					istr_size,
-		size_t					obuf_size,
-		size_t					ostr_size,
-		size_t					output_attrs_count
+		ia_shim_func_ptr			shim_func,
+		shader_func_ptr				shader_func,
+		void const*					cbuffer,
+		shims::ia_shim_data const*	data,
+		size_t						istr_size,
+		size_t						obuf_size,
+		size_t						ostr_size,
+		vso2reg_func_ptr			vso2reg_func,
+		uint32_t					vso_attrs_count,
+		intptr_t const*				vso_attr_offsets,
+		uint32_t const*				vso_attr_types
 		);
 	
 	vx_shader_unit_impl(vx_shader_unit_impl const& rhs);
@@ -71,10 +87,13 @@ public:
 private:
 	ia_shim_func_ptr		shim_func_;
 	shader_func_ptr			shader_func_;
-	shims::shim_data		shim_data_;
+	vso2reg_func_ptr		vso2reg_func_;
+	shims::ia_shim_data		shim_data_;
 
-	size_t					output_attrs_count_;	// Only used by Cpp interpolator
-
+	uint32_t				vso_attrs_count_;	// Only used by Cpp interpolator
+	intptr_t const*			vso_attr_offsets_;
+	uint32_t const*			vso_attr_types_;
+	
 	void const*				buffer_data;
 	std::vector<char>		stream_data;
 	std::vector<char>		stream_odata;

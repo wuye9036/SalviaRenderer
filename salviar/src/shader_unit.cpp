@@ -73,10 +73,10 @@ void vertex_shader_unit::execute( vs_output& out )
 	size_t register_index = 0;
 	BOOST_FOREACH( sv_layout* info, infos ){
 		if( info->sv == semantic_value(sv_position) ){
-			memset( &out.position, 0, sizeof(out.position) );
-			memcpy( &out.position, &(buffer_odata[info->offset]), info->size );
+			memset( &out.position(), 0, sizeof( out.position() ) );
+			memcpy( &out.position(), &(buffer_odata[info->offset]), info->size );
 		} else {
-			memcpy( &out.attributes[register_index], &(buffer_odata[info->offset]), info->size );
+			memcpy( &out.attribute(register_index), &(buffer_odata[info->offset]), info->size );
 			++register_index;
 		}
 	}
@@ -263,15 +263,15 @@ void pixel_shader_unit::update( vs_output* inputs, shader_reflection const* vs_a
 				uintptr_t data_addr = pixel_addr + static_cast<uintptr_t>(info->offset);
 				void* pdata = reinterpret_cast<void*>(data_addr);
 				memset(pdata, 0, pixel_data_size);
-				memcpy(pdata, &(inputs[i_pixel].position), info->size);
+				memcpy(pdata, &( inputs[i_pixel].position() ), info->size);
 			}
 		}
 		else
 		{
 			size_t attr_index = 0;
 			if(vs_abi){
-				sv_layout* src_sv_layout = vs_abi->input_sv_layout( info->sv );
-				attr_index = static_cast<size_t>( src_sv_layout->logical_index );
+				sv_layout* src_sv_layout = vs_abi->input_sv_layout(info->sv);
+				attr_index = static_cast<size_t>(src_sv_layout->logical_index);
 			} else {
 				attr_index = register_index++;
 			}
@@ -283,7 +283,7 @@ void pixel_shader_unit::update( vs_output* inputs, shader_reflection const* vs_a
 				void* pdata = reinterpret_cast<void*>(data_addr);
 
 				memset(pdata, 0, pixel_data_size);
-				memcpy(pdata, &(inputs[i_pixel].attributes[attr_index]), info->size);
+				memcpy(pdata, &(inputs[i_pixel].attribute(attr_index)), info->size);
 			}
 		}
 	}

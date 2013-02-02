@@ -89,7 +89,7 @@ public:
 	}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		float height = in.attributes[0][0];
+		float height = in.attribute(0)[0];
 
 		vec4 colors[] = 
 		{

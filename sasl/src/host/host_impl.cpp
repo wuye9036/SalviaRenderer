@@ -1,6 +1,7 @@
 #include <sasl/include/host/host_impl.h>
 
 #include <sasl/include/shims/ia_shim.h>
+#include <sasl/include/shims/interp_shim.h>
 
 #include <sasl/include/host/shader_object_impl.h>
 #include <sasl/include/host/shader_log_impl.h>
@@ -48,13 +49,11 @@ BEGIN_NS_SASL_HOST();
 host_impl::host_impl()
 {
 	sasl_create_ia_shim(ia_shim_);
+	sasl_create_interp_shim(interp_shim_);
 
 	ia_shim_func_			= NULL;
-	ia_shim_dest_offsets_	= NULL;
-
 	vx_shader_func_			= NULL;
 	stream_descs_			= NULL;
-
 	sa_						= NULL;
 }
 
@@ -87,11 +86,29 @@ void host_impl::update_ia_shim_func()
 		return;
 
 	void* shim_func = ia_shim_->get_shim_function(
-		ia_shim_slots_, &ia_shim_dest_offsets_,
+		ia_shim_slots_, ia_shim_element_offsets_, ia_shim_dest_offsets_,
 		sa_->layout(), vx_shader_->get_reflection()
 		);
 	update_stream_descs();
 	ia_shim_func_ = static_cast<ia_shim_func_ptr>(shim_func);
+}
+
+void host_impl::update_interp_funcs()
+{
+	assert(interp_shim_);
+
+	interp_shim_->get_shim_functions(
+		&vso2reg_func_,
+		&interp_func_,
+		&reg2psi_func_,
+		interp_modifiers_,
+		vso_offsets_,
+		vso_types_,
+		psi_offsets_,
+		psi_types_,
+		vx_shader_ ? vx_shader_->get_reflection() : NULL,
+		px_shader_ ? px_shader_->get_reflection() : NULL
+		);
 }
 
 void host_impl::input_layout_changed()
@@ -107,6 +124,8 @@ void host_impl::update_vertex_shader(shader_object_ptr const& vso)
 
 	void* shader_func = vx_shader_->native_function();
 	vx_shader_func_ = static_cast<shader_func_ptr>(shader_func);
+
+	update_interp_funcs();
 
 	// Reset all cached constant and samplers.
 	vx_cbuffer_.resize( vx_shader_->get_reflection()->total_size(su_buffer_in) );
@@ -127,12 +146,12 @@ vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 	shader_reflection const* vx_reflection = vx_shader_->get_reflection();
 
 	size_t attrs_count = vx_reflection->layouts_count(su_buffer_out);
-	if( vx_reflection->has_position_output() ) { --attrs_count; }
 
-	shim_data data;
-	data.stream_descs = stream_descs_;
-	data.dest_offsets = ia_shim_dest_offsets_;
-	data.count		  = ia_shim_slots_.size();
+	ia_shim_data data;
+	data.stream_descs	= stream_descs_;
+	data.dest_offsets	= &(ia_shim_dest_offsets_[0]);
+	data.element_offsets= &(ia_shim_element_offsets_[0]);
+	data.count			= ia_shim_slots_.size();
 
 	vx_shader_unit_impl* ret = new vx_shader_unit_impl(
 		ia_shim_func_,
@@ -142,7 +161,10 @@ vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 		vx_reflection->total_size(salviar::su_stream_in),
 		vx_reflection->total_size(salviar::su_buffer_out),
 		vx_reflection->total_size(salviar::su_stream_out),
-		attrs_count
+		vso2reg_func_,
+		static_cast<uint32_t>(attrs_count),
+		vso_offsets_.empty() ? NULL : &(vso_offsets_[0]),
+		vso_types_.empty()   ? NULL : &(vso_types_[0])
 		);
 	return vx_shader_unit_ptr(ret);
 }

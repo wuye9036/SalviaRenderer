@@ -430,30 +430,34 @@ host_ptr renderer_impl::get_host()
 
 result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
 {
+	result ret = result::failed;
 	if(vs_proto_)
 	{
 		vs_proto_->set_variable(name, pvariable);
-		return result::ok;
+		ret = result::ok;
 	}
 	if(host_)
 	{
 		host_->vx_set_constant(name, pvariable);
+		ret = result::ok;
 	}
-	return result::failed;
+	return ret;
 }
 
 result renderer_impl::set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
 {
+	result ret = result::failed;
 	if( vs_proto_ )
 	{
 		vs_proto_->set_variable_pointer(name, pvariable, sz);
-		return result::ok;
+		ret = result::ok;
 	}
 	if(host_)
 	{
 		host_->vx_set_constant_pointer(name, pvariable, sz);
+		ret = result::ok;
 	}
-	return result::failed;
+	return ret;
 }
 
 shared_ptr<vertex_shader_unit> renderer_impl::vs_proto() const{

@@ -48,11 +48,12 @@ struct ia_shim_key
 
 size_t hash_value(ia_shim_key const&);
 
-struct shim_data
+struct ia_shim_data
 {
 	salviar::stream_desc const*	stream_descs;
-	size_t*						dest_offsets;
-	size_t						count;
+	intptr_t const*				element_offsets;// TODO: OPTIMIZED BY JIT
+	size_t const*				dest_offsets;	// TODO: OPTIMIZED BY JIT
+	size_t						count;			// TODO: OPTIMIZED BY JIT
 };
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(ia_shim);
@@ -63,16 +64,18 @@ public:
 
 	virtual void* get_shim_function(
 		std::vector<size_t>&				used_slots,
-		size_t**							dest_offsets,
+		std::vector<intptr_t>&				aligned_element_offsets,
+		std::vector<size_t>&				dest_offsets,
 		salviar::input_layout_ptr const&	input,
 		salviar::shader_reflection const*	reflection
 	);
 private:
 	struct shim_func_data
 	{
-		void*						func;
-		boost::shared_array<size_t>	dest_offsets;
-		std::vector<size_t>			used_slots;
+		void*					func;
+		std::vector<size_t>		dest_offsets;
+		std::vector<size_t>		used_slots;
+		std::vector<intptr_t>	aligned_element_offsets;
 	};
 	typedef boost::unordered_map<ia_shim_key, shim_func_data> cached_shim_function_dict;
 	cached_shim_function_dict cached_shim_funcs_;

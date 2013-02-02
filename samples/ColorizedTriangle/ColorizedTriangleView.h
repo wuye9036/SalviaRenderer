@@ -67,11 +67,11 @@ public:
 	{}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		vec3 lightDir0 = in.attributes[1].xyz();
-		vec3 lightDir1 = in.attributes[2].xyz();
-		vec3 lightDir2 = in.attributes[3].xyz();
+		vec3 lightDir0 = in.attribute(1).xyz();
+		vec3 lightDir1 = in.attribute(2).xyz();
+		vec3 lightDir2 = in.attribute(3).xyz();
 
-		vec3 norm = in.attributes[0].xyz();
+		vec3 norm = in.attribute(0).xyz();
 
 		float invLight0Distance = 1.0f / lightDir0.length();
 		float invLight1Distance = 1.0f / lightDir1.length();
