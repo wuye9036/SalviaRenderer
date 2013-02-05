@@ -1,14 +1,12 @@
-#include "salviar/include/shaderregs_op.h"
-#include "salviar/include/shader.h"
-BEGIN_NS_SALVIAR()
+#include <salviar/include/shaderregs.h>
+#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader.h>
 
+BEGIN_NS_SALVIAR();
 
 using namespace boost;
 using namespace eflib;
 
-/*****************************************
- * Triangle Info
- ****************************************/
 const eflib::vec4& triangle_info::base_vert() const
 {
 	assert(pbase_vert);
@@ -55,9 +53,8 @@ void triangle_info::set(const eflib::vec4& base_vert, const vs_output& ddx, cons
 	pbase_vert = &base_vert;
 }
 
-/*****************************************
- *  Get Partial Derivation
- *****************************************/
+// ------------------------------------------
+//  Get Partial Derivation
 const eflib::vec4& pixel_shader::get_pos_ddx() const{
 	return ptriangleinfo_->ddx().position();
 }
@@ -103,9 +100,10 @@ const eflib::vec4 pixel_shader::ddy(size_t iReg) const
 
 	return new_proj_attr - attr;
 }
-/*****************************************
- * Sample Texture
- ****************************************/
+
+// ---------------------------------------
+// Sample Texture
+
 color_rgba32f pixel_shader::tex2d(const sampler& s, const vec4& proj_coord, const vec4& ddx, const vec4& ddy, float bias){
 	return s.sample_2d(
 		proj_coord, ddx, ddy,
@@ -234,10 +232,8 @@ color_rgba32f pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, c
 		1.0f / (ppxin_->position().w() + unproj_ddx(0)[3]), 1.0f / (ppxin_->position().w() + unproj_ddy(0)[3]), invq, 0.0f);
 }
 
-/******************************************
- * Execution
- *****************************************/
-bool pixel_shader::execute(const vs_output& in, ps_output& out){
+bool pixel_shader::execute(const vs_output& in, ps_output& out)
+{
 	assert(ptriangleinfo_);
 	ppxin_ = &in;
 	bool rv = shader_prog(in, out);
@@ -245,4 +241,5 @@ bool pixel_shader::execute(const vs_output& in, ps_output& out){
 	out.front_face = in.front_face();
 	return rv;
 }
+
 END_NS_SALVIAR()

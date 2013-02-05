@@ -1,3 +1,4 @@
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/shader.h>
 #include <salviar/include/renderer.h>
@@ -162,11 +163,13 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& copy_n(vs_output& out, const vs_output& in)
 	{
-		out.position() = in.position();
-		out.front_face( in.front_face() );
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attribute(i_attr) = in.attribute(i_attr);
+		for(size_t i_register = 0; i_register < N+1; ++i_register)
+		{
+			__m128* dst = reinterpret_cast<__m128*>( out.raw_data() + i_register );
+			__m128 const* src = reinterpret_cast<__m128 const*>( in.raw_data() + i_register );
+			*dst = *src;
 		}
+		out.front_face( in.front_face() );
 		return out;
 	}
 
@@ -196,24 +199,29 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& unproject_n(vs_output& out, const vs_output& in)
 	{
+		__m128*			dst = NULL;
+		__m128 const*	src = NULL;
+
 		const float inv_w = 1.0f / in.position().w();
-		if (&out != &in){
-			for(size_t i_attr = 0; i_attr < N; ++i_attr){
-				out.attribute(i_attr) = in.attribute(i_attr);
-				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attribute(i_attr) *= inv_w;
-				}
+		__m128 inv_w4 = _mm_load_ps1(&inv_w);
+
+		out.position() = in.position();
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			src = reinterpret_cast<__m128 const*>(&in.attribute(i_attr));
+			dst = reinterpret_cast<__m128*>(&out.attribute(i_attr));
+
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)
+			{
+				*dst = *src;
 			}
-			out.position() = in.position();
-			out.front_face( in.front_face() );
-		}
-		else{
-			for(size_t i_attr = 0; i_attr < N; ++i_attr){
-				if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)){
-					out.attribute(i_attr) *= inv_w;
-				}
+			else
+			{
+				*dst = _mm_mul_ps(*src, inv_w4);
 			}
 		}
+		out.front_face( in.front_face() );
+
 		return out;
 	}
 
@@ -256,12 +264,34 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& selfintegral1_n(vs_output& inout, const vs_output& derivation)
 	{
+#if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) && !defined(EFLIB_NO_SIMD)
+		__m128 const*	src = NULL;
+		__m128*			dst = NULL;
+
+		src = reinterpret_cast<__m128 const*>( &derivation.position() );
+		dst = reinterpret_cast<__m128*>( &inout.position() );
+		*dst = _mm_add_ps(*src, *dst);
+
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			uint32_t modifier
+				= vs_output_ops[N].attribute_modifiers[i_attr];
+			if (!(modifier & vs_output::am_nointerpolation) )
+			{
+				src = reinterpret_cast<__m128 const*>( &derivation.attribute(i_attr) );
+				dst = reinterpret_cast<__m128*>( &inout.attribute(i_attr) );
+
+				*dst = _mm_add_ps(*src, *dst);
+			}
+		}
+#else
 		inout.position() += derivation.position();
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
 			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
 				inout.attribute(i_attr) += derivation.attribute(i_attr);
 			}
 		}
+#endif
 		return inout;
 	}
 	template <int N>

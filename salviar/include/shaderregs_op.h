@@ -1,14 +1,15 @@
+#pragma once
+
 #ifndef SALVIAR_SHADERREGS_OP_H
 #define SALVIAR_SHADERREGS_OP_H
 
-#include "shaderregs.h"
-
-#include <boost/static_assert.hpp>
 #include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
+#include <eflib/include/math/vector.h>
 
+BEGIN_NS_SALVIAR();
 
 struct viewport;
+class  vs_output;
 
 class triangle_info
 {
@@ -26,6 +27,6 @@ public:
 	void set(const eflib::vec4& base_vert, const vs_output& ddx, const vs_output& ddy);
 };
 
-END_NS_SALVIAR()
+END_NS_SALVIAR();
 
 #endif

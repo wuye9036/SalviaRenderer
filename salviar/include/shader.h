@@ -1,10 +1,11 @@
+#pragma once
+
 #ifndef SALVIAR_SHADER_H
 #define SALVIAR_SHADER_H
 
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/shader_utility.h>
-#include <salviar/include/shaderregs.h>
 #include <salviar/include/sampler.h>
 #include <salviar/include/renderer_capacity.h>
 #include <salviar/include/enums.h>
@@ -25,9 +26,11 @@ BEGIN_NS_SALVIAR();
 
 struct viewport;
 struct scanline_info;
+struct backbuffer_pixel_out;
 class  triangle_info;
 
-enum languages{
+enum languages
+{
 	lang_none,
 	
 	lang_general,
@@ -38,7 +41,8 @@ enum languages{
 	lang_count
 };
 
-enum system_values{
+enum system_values
+{
 	sv_none,
 
 	sv_position,

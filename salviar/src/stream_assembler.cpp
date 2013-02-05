@@ -1,6 +1,7 @@
 #include <salviar/include/stream_assembler.h>
 
 #include <salviar/include/input_layout.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/buffer.h>
 #include <salviar/include/shader.h>

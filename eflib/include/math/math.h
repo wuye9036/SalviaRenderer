@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef EFLIB_MATH_MATH_H
 #define EFLIB_MATH_MATH_H
 
@@ -321,9 +323,35 @@ namespace eflib{
 	mat44& mat_perspective_fov(mat44& out, float fovy, float aspect, float n, float f);
 	mat44& mat_ortho(mat44& out, float l, float r, float b, float t, float n, float f);
 
+#if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64)
+	inline __m128&			to_m128(vec4& v)
+	{
+		return reinterpret_cast<__m128&>(v);
+	}
 
-	/////////////////////////////////////////////
-	//  quaternions
-	/////////////////////////////////////////////
+	inline __m128 const&	to_m128(vec4 const& v)
+	{
+		return reinterpret_cast<__m128 const&>(v);
+	}
+
+	inline vec4&			to_vec4(__m128& v)
+	{
+		return reinterpret_cast<vec4&>(v);
+	}
+
+	inline vec4 const&		to_vec4(__m128 const& v)
+	{
+		return reinterpret_cast<vec4 const&>(v);
+	}
+
+#if !defined(EFLIB_NO_SIMD)
+	inline vec4& sse_add_assign(vec4& dst, vec4 const& src)
+	{
+		to_m128(dst) = _mm_add_ps( to_m128(dst), to_m128(src) );
+		return dst;
+	}
+#endif
+
+#endif
 }
 #endif

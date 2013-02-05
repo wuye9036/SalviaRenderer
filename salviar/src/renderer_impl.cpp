@@ -1,6 +1,7 @@
 #include <salviar/include/renderer_impl.h>
 
 #include <salviar/include/binary_modules.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/clipper.h>
 #include <salviar/include/resource_manager.h>

@@ -1,24 +1,23 @@
+#pragma once
+
 #ifndef SALVIAR_SHADERREGS_H
 #define SALVIAR_SHADERREGS_H
 
-#include "decl.h"
-#include "colors.h"
-#include "surface.h"
-#include "renderer_capacity.h"
+#include <salviar/include/salviar_forward.h>
+
+#include <salviar/include/decl.h>
+#include <salviar/include/colors.h>
+#include <salviar/include/surface.h>
+#include <salviar/include/renderer_capacity.h>
 
 #include <eflib/include/math/math.h>
+#include <eflib/include/memory/allocator.h>
 
-#ifdef EFLIB_MSVC
-#pragma warning(push)
-#pragma warning(disable : 6385)
-#endif
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/array.hpp>
-#ifdef EFLIB_MSVC
-#pragma warning(pop)
-#endif
-#include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
+#include <eflib/include/platform/boost_end.h>
 
+BEGIN_NS_SALVIAR();
 
 class vs_input
 {
@@ -45,7 +44,8 @@ private:
 	vs_input& operator=(const vs_input& rhs);
 };
 
-class vs_output
+#include <eflib/include/platform/disable_warnings.h>
+class ALIGN16 vs_output
 {
 public:
 	enum attrib_modifier_type
@@ -121,6 +121,7 @@ private:
 	vs_output(const vs_output& rhs);
 	vs_output& operator=(const vs_output& rhs);
 };
+#include <eflib/include/platform/enable_warnings.h>
 
 struct vs_input_op
 {

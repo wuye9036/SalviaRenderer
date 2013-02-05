@@ -5,6 +5,7 @@
 
 #include <salviar/include/host.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/stream_assembler.h>

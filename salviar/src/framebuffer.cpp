@@ -1,30 +1,14 @@
-/*
-Copyright (C) 2007-2010 Minmin Gong, Ye Wu
+#include <salviar/include/framebuffer.h>
+#include <salviar/include/shader.h>
+#include <salviar/include/shaderregs.h>
+#include <salviar/include/surface.h>
+#include <salviar/include/renderer_impl.h>
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published
-by the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*/
-
-#include "../include/framebuffer.h"
-#include "../include/surface.h"
-#include "../include/renderer_impl.h"
-#include "../include/shader.h"
+#include <eflib/include/math/collision_detection.h>
 
 #include <algorithm>
 
-BEGIN_NS_SALVIAR()
-
+BEGIN_NS_SALVIAR();
 
 using namespace eflib;
 using namespace std;
@@ -426,9 +410,10 @@ surface* framebuffer::get_render_target(render_target tar, size_t target_index) 
 	return cbufs_[target_index];
 }
 	
-rect<size_t> framebuffer::get_rect(){
-		return rect<size_t>(0, 0, width_, height_);
-	}
+rect<size_t> framebuffer::get_rect()
+{
+	return rect<size_t>(0, 0, width_, height_);
+}
 
 size_t framebuffer::get_width() const{
 	return width_;
@@ -518,4 +503,4 @@ void framebuffer::clear_stencil(const rect<size_t>& rc, int32_t s){
 	sbuf_->fill_texels(rc.x, rc.y, rc.w, rc.h, color_rgba32f(float(s), 0, 0, 0));
 }
 
-END_NS_SALVIAR()
+END_NS_SALVIAR();

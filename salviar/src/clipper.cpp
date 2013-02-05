@@ -1,7 +1,8 @@
-#include "../include/clipper.h"
+#include <salviar/include/clipper.h>
 
-#include "../include/shaderregs_op.h"
-#include "../include/shader.h"
+#include <salviar/include/shaderregs.h>
+#include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader.h>
 
 #include <eflib/include/memory/pool.h>
 
@@ -100,7 +101,8 @@ void clipper::clip(
 	const vs_output_op& vs_output_ops
 	) const
 {
-	eflib::pool::stack_pool< vs_output, 6 > pool;
+	eflib::pool::stack_pool<vs_output, 6> ALIGN16 pool;
+
 	const vs_output* clipped_verts[2][5];
 	uint32_t num_clipped_verts[2];
 
