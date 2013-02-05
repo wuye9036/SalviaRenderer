@@ -35,7 +35,7 @@ using namespace salviax::resource;
 using namespace salviau;
 
 using boost::shared_ptr;
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 
 using std::string;
 using std::vector;

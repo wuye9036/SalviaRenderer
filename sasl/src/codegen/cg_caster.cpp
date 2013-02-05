@@ -42,9 +42,9 @@ using sasl::syntax_tree::tynode;
 using boost::bind;
 using boost::function;
 using boost::make_shared;
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 using boost::shared_ptr;
-using boost::shared_static_cast;
+using boost::static_pointer_cast;
 
 using std::vector;
 
@@ -209,7 +209,7 @@ void add_builtin_casts(
 	)
 {
 	typedef caster_t::cast_t cast_t;
-	shared_ptr<cg_caster> cst = shared_polymorphic_cast<cg_caster>(caster);
+	shared_ptr<cg_caster> cst = dynamic_pointer_cast<cg_caster>(caster);
 
 	cast_t int2int_pfn		= bind(&cg_caster::int2int,		cst.get(), _1, _2);
 	cast_t int2bool_pfn		= bind(&cg_caster::int2bool,	cst.get(), _1, _2);

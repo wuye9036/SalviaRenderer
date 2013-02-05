@@ -62,7 +62,7 @@ using boost::function_types::result_type;
 using boost::function_types::function_pointer;
 using boost::function_types::parameter_types;
 using boost::shared_ptr;
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 using boost::mpl::_;
 using boost::mpl::if_;
 using boost::mpl::or_;

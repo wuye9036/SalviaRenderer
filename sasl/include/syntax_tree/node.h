@@ -51,7 +51,7 @@ struct node: public boost::enable_shared_from_this<node>{
 	node_ptr as_handle() const;
 	template <typename T> boost::shared_ptr<T> as_handle() const
 	{
-		return boost::shared_dynamic_cast<T>( as_handle() );
+		return boost::dynamic_pointer_cast<T>( as_handle() );
 	}
 
 	token_t_ptr	token_begin() const;

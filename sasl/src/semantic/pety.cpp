@@ -29,7 +29,7 @@ using eflib::scoped_atomic_locker;
 using eflib::fixed_string;
 using boost::make_shared;
 using boost::shared_ptr; // prevent conflicting with std::tr1.
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 using boost::unordered_map;
 using std::make_pair;
 using std::vector;

@@ -31,7 +31,7 @@ void* shader_object_impl::native_function() const
 
 void shader_object_impl::set_reflection(shader_reflection_ptr const& reflection)
 {
-	reflection_ = boost::shared_static_cast<reflection_impl>(reflection);
+	reflection_ = boost::static_pointer_cast<reflection_impl>(reflection);
 }
 
 void shader_object_impl::set_module_semantic(module_semantic_ptr const& semantic)

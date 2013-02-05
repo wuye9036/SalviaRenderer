@@ -22,8 +22,8 @@ using std::fstream;
 using std::string;
 using std::vector;
 
-using boost::shared_static_cast;
-using boost::shared_dynamic_cast;
+using boost::static_pointer_cast;
+using boost::dynamic_pointer_cast;
 using boost::tuple;
 using boost::make_shared;
 

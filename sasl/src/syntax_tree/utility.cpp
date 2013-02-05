@@ -24,7 +24,7 @@ using std::vector;
 using boost::any;
 using boost::any_cast;
 using boost::is_base_of;
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 using boost::shared_ptr;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
@@ -239,7 +239,7 @@ boost::shared_ptr<builtin_type> create_builtin_type( const builtin_types& btc )
 template< typename NodeT >
 void store_node_to_data( any* lhs, shared_ptr< NodeT > rhs ){
 	if( rhs ){
-		*lhs = shared_polymorphic_cast<node>( rhs );
+		*lhs = dynamic_pointer_cast<node>( rhs );
 	} else {
 		*lhs = shared_ptr<node>();
 	}
@@ -260,7 +260,7 @@ template<typename T> void copy_from_any( T& lhs, const boost::any& rhs ){
 template<typename NodeT> void copy_from_any( shared_ptr<NodeT>& lhs, const any& rhs, EFLIB_ENABLE_IF_PRED2(is_base_of, node, NodeT) ){
 	shared_ptr<node> any_v = any_cast< shared_ptr<node> >( rhs );
 	if ( any_v ){
-		lhs = shared_polymorphic_cast<NodeT>(any_v);
+		lhs = dynamic_pointer_cast<NodeT>(any_v);
 	} else {
 		lhs.reset();
 	}
@@ -398,7 +398,7 @@ public:
 		BOOST_FOREACH( shared_ptr<NodeT> item, v ){
 			boost::any cloned;
 			visit( item, &cloned );
-			out_v.push_back( shared_polymorphic_cast<NodeT>( boost::any_cast< shared_ptr<node> > (cloned) ) );
+			out_v.push_back( dynamic_pointer_cast<NodeT>( boost::any_cast< shared_ptr<node> > (cloned) ) );
 		}
 		*data = out_v;
 	}

@@ -39,7 +39,7 @@ using boost::optional;
 using boost::make_shared;
 using boost::unordered_map;
 using boost::shared_ptr;
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 
 using std::vector;
 using std::string;
@@ -563,7 +563,7 @@ vector<animation_player_ptr> build_animations(
 				anim_player_mat44->anim_info2()->Y.push_back(*pmat); 
 			}
 			
-			mat44* target_data = dae_node_to_matrix[shared_polymorphic_cast<dae_matrix>(target_node)];
+			mat44* target_data = dae_node_to_matrix[dynamic_pointer_cast<dae_matrix>(target_node)];
 			anim_player_mat44->anim_info2()->applier = boost::bind( assign_mat44, target_data, _1 );
 		}
 

@@ -49,7 +49,7 @@ using salviar::external_function_desc;
 
 using eflib::fixed_string;
 
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 using boost::shared_ptr;
 
 using std::vector;

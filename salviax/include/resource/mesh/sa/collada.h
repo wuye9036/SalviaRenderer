@@ -51,7 +51,7 @@ struct dae_dom
 		std::string unqual_name = (name[0] == '#' ? name.substr(1) : name);
 		unordered_map<string, dae_node_ptr>::iterator it = id_nodes.find(unqual_name);
 		if( it == id_nodes.end() ) { return boost::shared_ptr<T>(); }
-		return boost::shared_dynamic_cast<T>(it->second);
+		return boost::dynamic_pointer_cast<T>(it->second);
 	}
 
 	template <typename T>

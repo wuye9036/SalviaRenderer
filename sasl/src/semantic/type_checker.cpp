@@ -10,7 +10,7 @@ using ::sasl::syntax_tree::function_full_def;
 using ::sasl::syntax_tree::variable_declaration;
 
 using ::boost::shared_ptr;
-using ::boost::shared_polymorphic_cast;
+using ::boost::dynamic_pointer_cast;
 
 bool type_equal( shared_ptr<builtin_type> lhs, shared_ptr<builtin_type> rhs ){
 	return lhs->tycode == rhs->tycode;
@@ -33,8 +33,8 @@ bool type_equal( shared_ptr<tynode> lhs, shared_ptr<tynode> rhs ){
 	}
 	if( lhs->node_class() == node_ids::builtin_type ){
 		return type_equal(
-			shared_polymorphic_cast<builtin_type>(lhs),
-			shared_polymorphic_cast<builtin_type>(rhs)
+			dynamic_pointer_cast<builtin_type>(lhs),
+			dynamic_pointer_cast<builtin_type>(rhs)
 			);
 	}
 	assert(!"need to be implemented!");

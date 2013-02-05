@@ -26,8 +26,7 @@ using sasl::parser::selector_attribute;
 using sasl::parser::sequence_attribute;
 using sasl::parser::terminal_attribute;
 
-using boost::shared_dynamic_cast;
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 using boost::shared_ptr;
 using boost::unordered_map;
 
@@ -37,11 +36,8 @@ using std::vector;
 
 BEGIN_NS_SASL_SYNTAX_TREE();
 
-#define SASL_TYPED_ATTRIBUTE( type, dest, src ) \
-	shared_ptr< type > dest = shared_polymorphic_cast<type>(src);
-
 #define SASL_DYNCAST_ATTRIBUTE( type, dest, src ) \
-	shared_ptr< type > dest = shared_dynamic_cast<type>(src);
+	shared_ptr< type > dest = dynamic_pointer_cast<type>(src);
 
 #define SASL_SWITCH_RULE( attr ) \
 	{ \
@@ -141,7 +137,7 @@ shared_ptr<program> syntax_tree_builder::build_prog( shared_ptr< attribute > att
 {
 	shared_ptr<program> ret;
 	
-	SASL_TYPED_ATTRIBUTE(sequence_attribute, typed_attr, attr->child(0));
+	SASL_DYNCAST_ATTRIBUTE(sequence_attribute, typed_attr, attr->child(0));
 
 	if( typed_attr ){
 		ret = create_node<program>("prog");
@@ -159,7 +155,7 @@ vector< shared_ptr<declaration> > syntax_tree_builder::build_decl( shared_ptr<at
 {
 	vector< shared_ptr<declaration> > ret;
 	
-	SASL_TYPED_ATTRIBUTE(selector_attribute, typed_attr, attr);
+	SASL_DYNCAST_ATTRIBUTE(selector_attribute, typed_attr, attr);
 	EFLIB_ASSERT_AND_IF( typed_attr->selected_idx >= 0, "Attribute error: least one branch was selected." ){
 		return ret;
 	}
@@ -182,7 +178,7 @@ vector< shared_ptr<declaration> > syntax_tree_builder::build_decl( shared_ptr<at
 }
 
 shared_ptr<function_full_def> syntax_tree_builder::build_fndef( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	shared_ptr<function_full_def> ret = build_fndecl(typed_attr->attrs[0]);
 	ret->body = build_stmt_compound( typed_attr->attrs[1] );
 
@@ -192,7 +188,7 @@ shared_ptr<function_full_def> syntax_tree_builder::build_fndef( shared_ptr<attri
 vector< shared_ptr<declaration> > syntax_tree_builder::build_basic_decl( shared_ptr<attribute> attr ){
 	vector< shared_ptr<declaration> > ret;
 
-	SASL_TYPED_ATTRIBUTE(selector_attribute, typed_attr, attr);
+	SASL_DYNCAST_ATTRIBUTE(selector_attribute, typed_attr, attr);
 
 	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, semicolon_attr, typed_attr->attr );
 	if( semicolon_attr ){
@@ -200,12 +196,12 @@ vector< shared_ptr<declaration> > syntax_tree_builder::build_basic_decl( shared_
 		return ret;
 	}
 
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, not_empty_typed_attr, typed_attr->attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, not_empty_typed_attr, typed_attr->attr );
 	EFLIB_ASSERT_AND_IF( not_empty_typed_attr->attrs.size() == 2, "Basic declaration must not a empty queuer." ){
 		return ret;
 	}
 
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_decl_attr, not_empty_typed_attr->attrs[0] );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_decl_attr, not_empty_typed_attr->attrs[0] );
 	
 	SASL_SWITCH_RULE( typed_decl_attr->attr )
 		SASL_CASE_RULE( vardecl ){
@@ -231,7 +227,7 @@ vector< shared_ptr<declaration> > syntax_tree_builder::build_basic_decl( shared_
 vector< shared_ptr<variable_declaration> > syntax_tree_builder::build_vardecl( shared_ptr<attribute> attr ){
 	vector< shared_ptr<variable_declaration> > ret;
 
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 
 	assert( typed_attr->attrs.size() == 2 );
 
@@ -247,17 +243,17 @@ vector< shared_ptr<variable_declaration> > syntax_tree_builder::build_vardecl( s
 shared_ptr<function_full_def> syntax_tree_builder::build_fndecl( shared_ptr<attribute> attr ){
 	shared_ptr<function_full_def> ret = create_node<function_full_def>( attr->token_beg(), attr->token_end() );
 
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->retval_type = build_typespec( typed_attr->attrs[0] );
 
-	SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[1] );
 	ret->name = name_attr->tok;
 	
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, paren_params_attr, typed_attr->attrs[2] );
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_params_attr, paren_params_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, paren_params_attr, typed_attr->attrs[2] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_params_attr, paren_params_attr->attrs[1] );
 
 	if( !optional_params_attr->attrs.empty() ){
-		SASL_TYPED_ATTRIBUTE( queuer_attribute, params_attr, optional_params_attr->attrs[0] );
+		SASL_DYNCAST_ATTRIBUTE( queuer_attribute, params_attr, optional_params_attr->attrs[0] );
 		
 		// params_attr: param >> *( comma > param )
 
@@ -265,7 +261,7 @@ shared_ptr<function_full_def> syntax_tree_builder::build_fndecl( shared_ptr<attr
 		ret->params.push_back( build_param( params_attr->child(0) ) );
 
 		// Follows
-		SASL_TYPED_ATTRIBUTE( sequence_attribute, follow_params_attr, params_attr->child(1) );
+		SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follow_params_attr, params_attr->child(1) );
 		BOOST_FOREACH( shared_ptr<attribute> comma_param_attr, follow_params_attr->attrs )
 		{
 			ret->params.push_back(
@@ -282,15 +278,15 @@ shared_ptr<function_full_def> syntax_tree_builder::build_fndecl( shared_ptr<attr
 shared_ptr<parameter_full> syntax_tree_builder::build_param( shared_ptr<attribute> attr ){
 	shared_ptr<parameter_full> ret = create_node<parameter_full>( attr->token_beg(), attr->token_end() );
 	
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->param_type = build_typespec( typed_attr->attrs[0] );
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_ident, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_ident, typed_attr->attrs[1] );
 	build_semantic( typed_attr->attrs[2], ret->semantic, ret->semantic_index );
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_init, typed_attr->attrs[3] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_init, typed_attr->attrs[3] );
 	if( !optional_ident->attrs.empty() ){
-		SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, optional_ident->attrs[0] );
+		SASL_DYNCAST_ATTRIBUTE( terminal_attribute, ident_attr, optional_ident->attrs[0] );
 		ret->name = ident_attr->tok;
 	}
 
@@ -304,18 +300,18 @@ shared_ptr<parameter_full> syntax_tree_builder::build_param( shared_ptr<attribut
 shared_ptr<struct_type> syntax_tree_builder::build_struct( shared_ptr<attribute> attr ){
 	shared_ptr<struct_type> ret = create_node<struct_type>( attr->token_beg(), attr->token_end() );
 
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
-	SASL_TYPED_ATTRIBUTE( selector_attribute, body_attr, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, body_attr, typed_attr->attrs[1] );
 
 	SASL_SWITCH_RULE( body_attr->attr )
 		SASL_CASE_RULE( struct_body ){
 			build_struct_body( body_attr->attr, ret );
 		}
 		SASL_CASE_RULE( named_struct_body ){
-			SASL_TYPED_ATTRIBUTE( queuer_attribute, named_body_attr, body_attr->attr );
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, named_body_attr->attrs[0] );
+			SASL_DYNCAST_ATTRIBUTE( queuer_attribute, named_body_attr, body_attr->attr );
+			SASL_DYNCAST_ATTRIBUTE( terminal_attribute, name_attr, named_body_attr->attrs[0] );
 			ret->name = name_attr->tok;
-			SASL_TYPED_ATTRIBUTE( sequence_attribute, opt_body_attr, named_body_attr->attrs[1] );
+			SASL_DYNCAST_ATTRIBUTE( sequence_attribute, opt_body_attr, named_body_attr->attrs[1] );
 			if( !opt_body_attr->attrs.empty() ){
 				build_struct_body( opt_body_attr->attrs[0], ret );
 			}
@@ -327,8 +323,8 @@ shared_ptr<struct_type> syntax_tree_builder::build_struct( shared_ptr<attribute>
 
 void syntax_tree_builder::build_struct_body( shared_ptr<attribute> attr, shared_ptr<struct_type> out ){
 	assert( out );
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, decls_attr, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, decls_attr, typed_attr->attrs[1] );
 
 	out->has_body = true;
 	BOOST_FOREACH( shared_ptr<attribute> const& decl_attr, decls_attr->attrs )
@@ -353,12 +349,12 @@ shared_ptr<expression> syntax_tree_builder::build_expr( shared_ptr<attribute> at
 shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attribute> attr ){
 	shared_ptr<expression_list> ret = create_node<expression_list>( attr->token_beg(), attr->token_end() );
 
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	ret->exprs.push_back( build_assignexpr( typed_attr->attrs[0] ) );
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
-		SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
+		SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_follow_pair, follow_pair );
 		ret->exprs.push_back( build_assignexpr( typed_follow_pair->attrs[1] ) );
 	}
 
@@ -367,7 +363,7 @@ shared_ptr<expression_list> syntax_tree_builder::build_exprlst( shared_ptr<attri
 
 operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, shared_ptr<token_t>& op_tok)
 {
-	SASL_TYPED_ATTRIBUTE( terminal_attribute, tok_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, tok_attr, attr );
 
 	assert( tok_attr );
 
@@ -396,7 +392,7 @@ operators syntax_tree_builder::build_prefix_op(shared_ptr<attribute> attr, share
 
 operators syntax_tree_builder::build_postfix_op(shared_ptr<attribute> attr, shared_ptr<token_t>& op_tok)
 {
-	SASL_TYPED_ATTRIBUTE(terminal_attribute, tok_attr, attr);
+	SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
 	op_tok = tok_attr->tok;
 	switch(op_tok->str[0])
 	{
@@ -431,7 +427,7 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 	vector< shared_ptr<token_t> > op_tokens;
 
 	exprs.push_back( build_rhsexpr( attr->child(0) ) );
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, attr->child(1) );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, attr->child(1) );
 	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
 		exprs.push_back( 
 			build_rhsexpr( follow_pair->child(1) )
@@ -466,11 +462,11 @@ shared_ptr<expression> syntax_tree_builder::build_assignexpr( shared_ptr<attribu
 
 shared_ptr<expression> syntax_tree_builder::build_lcomb_expr( shared_ptr<attribute> attr ){
 
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	shared_ptr<expression> lexpr = dispatch_lcomb_expr( typed_attr->attrs[0] );
 
 	shared_ptr<binary_expression> binexpr;
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> follow_pair, follows->attrs ){
 		assert( dynamic_cast<queuer_attribute*>(follow_pair.get()) != NULL );
 		binexpr = create_node<binary_expression>( lexpr->token_begin(), follow_pair->child(1)->token_end() );
@@ -530,7 +526,7 @@ shared_ptr<expression> syntax_tree_builder::dispatch_lcomb_expr( shared_ptr<attr
 }
 
 shared_ptr<expression> syntax_tree_builder::build_rhsexpr( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( condexpr ){
 			return build_condexpr( typed_attr->attr );
@@ -566,7 +562,7 @@ shared_ptr<expression> syntax_tree_builder::build_condexpr( shared_ptr<attribute
 }
 
 shared_ptr<expression> syntax_tree_builder::build_castexpr( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( unaryexpr ){
 			return build_unaryexpr( typed_attr->attr );
@@ -583,7 +579,7 @@ shared_ptr<expression> syntax_tree_builder::build_castexpr( shared_ptr<attribute
 }
 
 shared_ptr<expression> syntax_tree_builder::build_unaryexpr( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( unariedexpr ){
 			return build_unariedexpr( typed_attr->attr );
@@ -624,7 +620,7 @@ shared_ptr<unary_expression> syntax_tree_builder::build_unariedexpr( shared_ptr<
 shared_ptr<expression> syntax_tree_builder::build_postexpr( shared_ptr<attribute> attr ){
 	shared_ptr<expression> ret = build_pmexpr( attr->child(0) );
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, postfix_attrs, attr->child(1) );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, postfix_attrs, attr->child(1) );
 	BOOST_FOREACH( shared_ptr<attribute> postfix_attr, postfix_attrs->attrs ){
 		shared_ptr<attribute> expr_attr = postfix_attr->child(0);
 		SASL_SWITCH_RULE( expr_attr )
@@ -658,7 +654,7 @@ shared_ptr<expression> syntax_tree_builder::build_callexpr(
 	shared_ptr<call_expression> ret = create_node<call_expression>( expr->token_begin(), attr->token_end() );
 	ret->expr = expr;
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_args, attr );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_args, attr );
 	if( !optional_args->attrs.empty() )
 	{
 		shared_ptr<expression_list> arglst = build_exprlst( attr->child(0) );
@@ -685,17 +681,17 @@ shared_ptr<expression> syntax_tree_builder::build_memexpr(
 {
 	shared_ptr<member_expression> ret = create_node<member_expression>( expr->token_begin(), attr->token_end() );
 	ret->expr = expr;
-	SASL_TYPED_ATTRIBUTE( terminal_attribute, mem_attr, attr->child(1) );
+	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, mem_attr, attr->child(1) );
 	ret->member = mem_attr->tok;
 
 	return ret;
 }
 
 shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( lit_const ){
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, const_attr, typed_attr->attr->child(0) );
+			SASL_DYNCAST_ATTRIBUTE( terminal_attribute, const_attr, typed_attr->attr->child(0) );
 			shared_ptr<constant_expression> ret = create_node<constant_expression>( const_attr->tok, const_attr->tok );
 			ret->value_tok = const_attr->tok;
 			SASL_SWITCH_RULE( const_attr )
@@ -712,7 +708,7 @@ shared_ptr<expression> syntax_tree_builder::build_pmexpr( shared_ptr<attribute> 
 			return ret;
 		}
 		SASL_CASE_RULE( ident ){
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, var_attr, typed_attr->attr );
+			SASL_DYNCAST_ATTRIBUTE( terminal_attribute, var_attr, typed_attr->attr );
 			shared_ptr<variable_expression> varexpr = create_node<variable_expression>( var_attr->tok, var_attr->tok );
 			varexpr->var_name = var_attr->tok;
 			return varexpr;
@@ -751,14 +747,14 @@ vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators(
 	shared_ptr<tynode> tyn,
 	vector< shared_ptr<variable_declaration> >& decls  )
 {
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 
 	vector< shared_ptr<declarator> > ret;
 	build_initdecl(typed_attr->attrs[0], tyn, ret, decls);
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, follows, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> follow_attr, follows->attrs ){
-		SASL_TYPED_ATTRIBUTE( queuer_attribute, follow_pair, follow_attr );
+		SASL_DYNCAST_ATTRIBUTE( queuer_attribute, follow_pair, follow_attr );
 		build_initdecl(follow_pair->attrs[1], tyn, ret, decls);
 	}
 
@@ -768,7 +764,7 @@ vector< shared_ptr<declarator> > syntax_tree_builder::build_declarators(
 shared_ptr<tynode> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute> attr ){
 	shared_ptr<tynode> ret;
 
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_attr, attr );
 
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( ident ){
@@ -776,7 +772,7 @@ shared_ptr<tynode> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute
 			shared_ptr<builtin_type> bt = get_builtin( typed_attr->attr );
 			if( bt ) { return bt; }
 
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, typed_attr->attr );
+			SASL_DYNCAST_ATTRIBUTE( terminal_attribute, ident_attr, typed_attr->attr );
 			shared_ptr<alias_type> type_ident = create_node<alias_type>( ident_attr->tok, ident_attr->tok );
 			type_ident->alias = ident_attr->tok;
 
@@ -795,10 +791,10 @@ shared_ptr<tynode> syntax_tree_builder::build_unqualedtype( shared_ptr<attribute
 }
 
 shared_ptr<tynode> syntax_tree_builder::build_prequaledtype( shared_ptr<attribute> attr ){
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	shared_ptr<tynode> ret_type = build_unqualedtype( typed_attr->attrs[1] );
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[0] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[0] );
 	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
 		ret_type = bind_typequal( attr, ret_type );
 	}
@@ -808,10 +804,10 @@ shared_ptr<tynode> syntax_tree_builder::build_prequaledtype( shared_ptr<attribut
 
 shared_ptr<tynode> syntax_tree_builder::build_postqualedtype( shared_ptr<attribute> attr )
 {
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 	shared_ptr<tynode> ret_type = build_prequaledtype( typed_attr->attrs[0] );
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, quals_attr, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> qual_attr, quals_attr->attrs ){
 		ret_type = bind_typequal( ret_type, attr );
 	}
@@ -840,7 +836,7 @@ shared_ptr<initializer> syntax_tree_builder::build_init( shared_ptr<attribute> a
 
 shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> attr ){
 	shared_ptr<statement> ret;
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	
 	SASL_SWITCH_RULE( typed_attr->attr )
 		SASL_CASE_RULE( stmt_flowctrl ){
@@ -891,8 +887,8 @@ shared_ptr<statement> syntax_tree_builder::build_stmt( shared_ptr<attribute> att
 shared_ptr<compound_statement> syntax_tree_builder::build_stmt_compound( shared_ptr<attribute> attr ){
 	shared_ptr<compound_statement> ret
 		= create_node<compound_statement>( attr->token_beg(), attr->token_end() );
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, stmts_attr, typed_attr->attrs[1] );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, stmts_attr, typed_attr->attrs[1] );
 	BOOST_FOREACH( shared_ptr<attribute> stmt_attr, stmts_attr->attrs ){
 		ret->stmts.push_back( build_stmt(stmt_attr) );
 	}
@@ -902,7 +898,7 @@ shared_ptr<compound_statement> syntax_tree_builder::build_stmt_compound( shared_
 shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl( shared_ptr<attribute> attr ){
 	shared_ptr<jump_statement> ret = create_node<jump_statement>( attr->token_beg(), attr->token_end() );
 
-	SASL_TYPED_ATTRIBUTE( selector_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( selector_attribute, typed_attr, attr );
 	shared_ptr<attribute> stmt_attr = typed_attr->attr;
 
 	SASL_SWITCH_RULE( stmt_attr )
@@ -914,8 +910,8 @@ shared_ptr<jump_statement> syntax_tree_builder::build_flowctrl( shared_ptr<attri
 		}
 		SASL_CASE_RULE( stmt_return ){
 			ret->code = jump_mode::_return;
-			SASL_TYPED_ATTRIBUTE( queuer_attribute, ret_expr_attr, stmt_attr );
-			SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_expr_attr, ret_expr_attr->attrs[1] );
+			SASL_DYNCAST_ATTRIBUTE( queuer_attribute, ret_expr_attr, stmt_attr );
+			SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_expr_attr, ret_expr_attr->attrs[1] );
 			if( !optional_expr_attr->attrs.empty() ){
 				ret->jump_expr = build_expr( optional_expr_attr->attrs[0] );
 			}
@@ -944,7 +940,7 @@ shared_ptr<if_statement> syntax_tree_builder::build_stmt_if( shared_ptr<attribut
 	shared_ptr<statement> yes_stmt = build_stmt( attr->child(4) );
 	shared_ptr<statement> no_stmt;
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_else_stmt, attr->child(5) );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_else_stmt, attr->child(5) );
 	if( !optional_else_stmt->attrs.empty() ){
 		no_stmt = build_stmt( optional_else_stmt->attrs[0]->child(1) );
 		assert( no_stmt );
@@ -1047,7 +1043,7 @@ shared_ptr<label> syntax_tree_builder::build_label( shared_ptr<attribute> attr )
 		}
 		SASL_CASE_RULE( ident ){
 			shared_ptr<ident_label> ret = create_node<ident_label>( attr->token_beg(), attr->token_end() );
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, ident_attr, label_attr );
+			SASL_DYNCAST_ATTRIBUTE( terminal_attribute, ident_attr, label_attr );
 			ret->label_tok = ident_attr->tok;
 			return ret;
 		}
@@ -1106,9 +1102,9 @@ void syntax_tree_builder::build_initdecl(
 {
 	shared_ptr<declarator> decltor = create_node<declarator>( attr->token_beg(), attr->token_end() ) ;
 
-	SASL_TYPED_ATTRIBUTE( queuer_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( queuer_attribute, typed_attr, attr );
 
-	SASL_TYPED_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[0] );
+	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, name_attr, typed_attr->attrs[0] );
 	decltor->name = name_attr->tok;
 	
 	shared_ptr<attribute> arr_qual_attr = typed_attr->child(1);
@@ -1145,12 +1141,12 @@ void syntax_tree_builder::build_initdecl(
 
 	build_semantic( typed_attr->attrs[2], decltor->semantic, decltor->semantic_index );
 	
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_anno_attr, typed_attr->attrs[3] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_anno_attr, typed_attr->attrs[3] );
 	if( !optional_anno_attr->attrs.empty() ){
 		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_init_attr, typed_attr->attrs[4] );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_init_attr, typed_attr->attrs[4] );
 	if( !optional_init_attr->attrs.empty() ){
 		decltor->init = build_init( optional_init_attr->child(0) );
 	}
@@ -1163,7 +1159,7 @@ operators syntax_tree_builder::build_binop(
 	// Get terminal attribute of operator from attr or direct child of attr.
 	SASL_DYNCAST_ATTRIBUTE(terminal_attribute, tok_attr, attr);
 	if( !tok_attr ){
-		tok_attr = shared_polymorphic_cast<terminal_attribute>( attr->child(0) );
+		tok_attr = dynamic_pointer_cast<terminal_attribute>( attr->child(0) );
 	}
 
 	assert( tok_attr );
@@ -1232,15 +1228,15 @@ void syntax_tree_builder::build_semantic(
 	shared_ptr<token_t>& out_semantic, shared_ptr<token_t>& out_semantic_index
 	)
 {
-	SASL_TYPED_ATTRIBUTE( sequence_attribute, typed_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( sequence_attribute, typed_attr, attr );
 	if( !typed_attr->attrs.empty() ){
-		SASL_TYPED_ATTRIBUTE( queuer_attribute, sem_attr, typed_attr->attrs[0] );
-		SASL_TYPED_ATTRIBUTE( terminal_attribute, sem_name_attr, sem_attr->attrs[1] );
+		SASL_DYNCAST_ATTRIBUTE( queuer_attribute, sem_attr, typed_attr->attrs[0] );
+		SASL_DYNCAST_ATTRIBUTE( terminal_attribute, sem_name_attr, sem_attr->attrs[1] );
 		out_semantic = sem_name_attr->tok;
-		SASL_TYPED_ATTRIBUTE( sequence_attribute, optional_semindex_attr, sem_attr->attrs[2] );
+		SASL_DYNCAST_ATTRIBUTE( sequence_attribute, optional_semindex_attr, sem_attr->attrs[2] );
 		if( !optional_semindex_attr->attrs.empty() ){
-			SASL_TYPED_ATTRIBUTE( queuer_attribute, parened_semindex_attr, optional_semindex_attr->attrs[0] );
-			SASL_TYPED_ATTRIBUTE( terminal_attribute, index_attr, parened_semindex_attr->attrs[1] );
+			SASL_DYNCAST_ATTRIBUTE( queuer_attribute, parened_semindex_attr, optional_semindex_attr->attrs[0] );
+			SASL_DYNCAST_ATTRIBUTE( terminal_attribute, index_attr, parened_semindex_attr->attrs[1] );
 			out_semantic_index = index_attr->tok;
 		}
 	}
@@ -1249,7 +1245,7 @@ void syntax_tree_builder::build_semantic(
 shared_ptr<builtin_type> syntax_tree_builder::get_builtin( boost::shared_ptr<sasl::parser::attribute> const& attr )
 {
 	initialize_bt_cache();
-	SASL_TYPED_ATTRIBUTE( terminal_attribute, term_attr, attr );
+	SASL_DYNCAST_ATTRIBUTE( terminal_attribute, term_attr, attr );
 	std::string name = term_attr->tok->str;
 	shared_ptr<builtin_type> ret;
 	if( bt_cache.count(name) > 0 )
