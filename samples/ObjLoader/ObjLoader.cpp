@@ -4,6 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
@@ -105,9 +106,9 @@ public:
 		if( tex_ ){
 			tex_color = tex2d(*sampler_ , 0);
 		}
-		vec3 norm( normalize3( in.attributes[1].xyz() ) );
-		vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
-		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
+		vec3 norm( normalize3( in.attribute(1).xyz() ) );
+		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
+		vec3 eye_dir( normalize3( in.attribute(3).xyz() ) );
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
 		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );

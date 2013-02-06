@@ -4,6 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
@@ -89,7 +90,7 @@ public:
 	}
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		float height = in.attributes[0][0];
+		float height = in.attribute(0)[0];
 
 		vec4 colors[] = 
 		{

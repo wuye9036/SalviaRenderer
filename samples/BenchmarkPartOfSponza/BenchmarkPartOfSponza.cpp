@@ -14,11 +14,19 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/mesh/sa/material.h>
+#include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 
 #include <salviau/include/common/timer.h>
 #include <salviau/include/common/window.h>
 
+#include <eflib/include/diagnostics/profiler.h>
+
 #include <vector>
+
+#if defined(EFLIB_WINDOWS)
+#define NOMINMAX
+#include <Windows.h>
+#endif
 
 #if defined( SALVIA_BUILD_WITH_DIRECTX )
 #define PRESENTER_NAME "d3d9"
@@ -33,7 +41,7 @@ using namespace salviax::resource;
 using namespace salviau;
 
 using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
+using boost::shared_polymorphic_cast;
 
 using std::string;
 using std::vector;
@@ -42,7 +50,7 @@ using std::endl;
 
 #define SASL_VERTEX_SHADER_ENABLED
 
-char const* sponza_vs_code =
+char const* benchmark_vs_code =
 "float4x4 wvpMatrix; \r\n"
 "float4   eyePos; \r\n"
 "float4	  lightPos; \r\n"
@@ -69,12 +77,12 @@ char const* sponza_vs_code =
 "} \r\n"
 ;
 
-class sponza_vs : public vertex_shader
+class benchmark_vs : public vertex_shader
 {
 	mat44 wvp;
 	vec4 light_pos, eye_pos;
 public:
-	sponza_vs():wvp(mat44::identity()){
+	benchmark_vs():wvp(mat44::identity()){
 		declare_constant(_T("wvpMatrix"), wvp);
 		declare_constant(_T("lightPos"), light_pos);
 		declare_constant(_T("eyePos"), eye_pos );
@@ -84,7 +92,7 @@ public:
 		bind_semantic( "NORMAL", 0, 2 );
 	}
 
-	sponza_vs(const mat44& wvp):wvp(wvp){}
+	benchmark_vs(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
 		vec4 pos = in.attribute(0);
@@ -104,7 +112,7 @@ public:
 	}
 };
 
-class sponza_ps : public pixel_shader
+class benchmark_ps : public pixel_shader
 {
 	salviar::h_sampler sampler_;
 	salviar::h_texture tex_;
@@ -120,7 +128,7 @@ public:
 		sampler_->set_texture(tex_.get());
 	}
 
-	sponza_ps()
+	benchmark_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
@@ -160,7 +168,7 @@ public:
 	}
 	virtual h_pixel_shader create_clone()
 	{
-		return h_pixel_shader(new sponza_ps(*this));
+		return h_pixel_shader(new benchmark_ps(*this));
 	}
 	virtual void destroy_clone(h_pixel_shader& ps_clone)
 	{
@@ -180,52 +188,30 @@ public:
 	}
 };
 
-class sponza: public quick_app{
+class benchmark
+{
 public:
-	sponza(): quick_app( create_wtl_application() ){}
+	benchmark()
+	{
+		prof.start("Benchmark", 0);
+		initialize();
+	}
 
-protected:
-	/** Event handlers @{ */
-	virtual void on_create(){
+	~benchmark()
+	{
+		prof.end("Benchmark");
+		print_profiler(&prof, 3);
+	}
 
-		cout << "Creating window and device ..." << endl;
-
-		string title( "Sample: Sponza" );
-		impl->main_window()->set_title( title );
-
-		std::_tstring dll_name = TEXT("salviax_");
-		dll_name += TEXT(PRESENTER_NAME);
-		dll_name += TEXT("_presenter");
-#ifdef EFLIB_DEBUG
-		dll_name += TEXT("_d");
-#endif
-		dll_name += TEXT(".dll");
-
-		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
-		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
-		
-		boost::any view_handle_any = impl->main_window()->view_handle();
-		presenter_func(present_dev, *boost::unsafe_any_cast<void*>( &view_handle_any ) );
-
+	void initialize()
+	{
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const h_framebuffer& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+		renderer_ = create_benchmark_renderer( &render_params, h_device() );
 
 		rasterizer_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -233,152 +219,141 @@ protected:
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
-		sponza_sc = compile( sponza_vs_code, lang_vertex_shader );
+		prof.start("Vertex Shader Compiling", 0);
+		benchmark_vs = compile( benchmark_vs_code, lang_vertex_shader );
+		prof.end("Vertex Shader Compiling");
 #endif
-
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
 
 		cout << "Loading mesh ... " << endl;
-#ifdef EFLIB_DEBUG
-		cout << "Application is built in debug mode. Mesh loading is *VERY SLOW*." << endl;
-#endif
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/part_of_sponza.obj", false );
+		prof.start("Mesh Loading", 0);
+		benchmark_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/sponza/part_of_sponza.obj", false );
+		prof.end("Mesh Loading");
 		cout << "Loading pixel and blend shader... " << endl;
 
-		pvs.reset( new sponza_vs() );
-		pps.reset( new sponza_ps() );
-		pbs.reset( new bs() );
+		cpp_vs.reset( new ::benchmark_vs() );
+		cpp_ps.reset( new ::benchmark_ps() );
+		cpp_bs.reset( new ::bs() );
 	}
 	/** @} */
 
-	void on_draw(){
-		present_dev->present(*pdsurf);
+	void save_frame(std::string const& file_name)
+	{
+		cout << "Save" << endl;
+		prof.start("Saving", 0);
+		surface* rt_surface = renderer_->get_framebuffer()->get_render_target(render_target_color, 0);
+		surface* resolved_surface = NULL;
+		if (renderer_->get_framebuffer()->get_num_samples() > 1)
+		{
+			resolved_surface = new surface(
+				rt_surface->get_width(), rt_surface->get_height(),
+				1, rt_surface->get_pixel_format()
+				);
+			rt_surface->resolve(*resolved_surface);
+		}
+		else
+		{
+			resolved_surface = rt_surface;
+		}
+		
+		texture_io_fi::instance().save(*resolved_surface, to_tstring(file_name), pixel_format_color_bgra8);
+		
+		if(resolved_surface != rt_surface)
+		{
+			delete resolved_surface;
+		}
+		prof.end("Saving");
 	}
 
-	void on_idle(){
-		// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
+	void render()
+	{
+		cout << "Clearing back buffer ..." << endl;
 
-		// check if new second
-		if (accumulate_time > 1)
-		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
+		prof.start("Back buffer Clearing", 0);
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
+		prof.end("Back buffer Clearing");
 
-			accumulate_time = 0;
-			num_frames  = 0;
+		prof.start("Set rendering parameters", 0);
 
-			cout << fps << endl;
-		}
-
-		timer.restart();
-
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
-
-		static float xpos = -36.0f;
-		xpos += 0.2f;
-		if( xpos > 30.0f ){
-			xpos = -36.0f;
-		}
-		vec3 camera( xpos, 8.0f, 0.0f);
+		vec3 camera(-36.0f, 8.0f, 0.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
-
+		
 		mat44 world(mat44::identity()), view, proj, wvp;
-
 		mat_lookat(view, camera, vec3(40.0f, 15.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
+		
+		vec4 lightPos( 0.0f, 40.0f, 0.0f, 1.0f );
 
-		static float ypos = 40.0f;
-		ypos -= elapsed_time;
-		if ( ypos < 1.0f ){
-			ypos = 40.0f;
-		}
-		vec4 lightPos( 0.0f, ypos, 0.0f, 1.0f );
+		renderer_->set_pixel_shader(cpp_ps);
+		renderer_->set_blend_shader(cpp_bs);
 
-		hsr->set_pixel_shader(pps);
-		hsr->set_blend_shader(pbs);
+		mat_translate(world , -0.5f, 0, -0.5f);
+		mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-		for(float i = 0 ; i < 1 ; i ++)
-		{
-			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
+		renderer_->set_rasterizer_state(rs_back);
 
-			hsr->set_rasterizer_state(rs_back);
-
-			// C++ vertex shader and SASL vertex shader are all available.
+		// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
-			hsr->set_vertex_shader_code( sponza_sc );
+		renderer_->set_vertex_shader_code(benchmark_vs);
 #else
-			pvs->set_constant( _T("wvpMatrix"), &wvp );
-			pvs->set_constant( _T("eyePos"), &camera_pos );
-			pvs->set_constant( _T("lightPos"), &lightPos );
-			hsr->set_vertex_shader(pvs);
+		pvs->set_constant( _T("wvpMatrix"), &wvp );
+		pvs->set_constant( _T("eyePos"), &camera_pos );
+		pvs->set_constant( _T("lightPos"), &lightPos );
+		renderer_->set_vertex_shader(pvs);
 #endif
-			hsr->set_vs_variable( "wvpMatrix", &wvp );
+		renderer_->set_vs_variable( "wvpMatrix", &wvp );
+		
+		renderer_->set_vs_variable( "eyePos", &camera_pos );
+		renderer_->set_vs_variable( "lightPos", &lightPos );
+		
+		prof.end("Set rendering parameters");
+
+		cout << "Rendering ..." << endl;
+		prof.start("Rendering", 0);
+		for( size_t i_mesh = 0; i_mesh < benchmark_mesh.size(); ++i_mesh )
+		{
+			h_mesh cur_mesh = benchmark_mesh[i_mesh];
+
+			shared_ptr<obj_material> mtl
+				= shared_polymorphic_cast<obj_material>( cur_mesh->get_attached() );
+
+			cpp_ps->set_constant( _T("Ambient"),  &mtl->ambient );
+			cpp_ps->set_constant( _T("Diffuse"),  &mtl->diffuse );
+			cpp_ps->set_constant( _T("Specular"), &mtl->specular );
+			cpp_ps->set_constant( _T("Shininess"),&mtl->ambient );
+			shared_polymorphic_cast<benchmark_ps>(cpp_ps)->set_texture(mtl->tex);
 			
-			hsr->set_vs_variable( "eyePos", &camera_pos );
-			hsr->set_vs_variable( "lightPos", &lightPos );
-
-			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
-				h_mesh cur_mesh = sponza_mesh[i_mesh];
-
-				shared_ptr<obj_material> mtl
-					= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
-
-#ifdef _DEBUG
-				// if (mtl->name != "sponza_07SG"){ continue; }
-#endif
-				hsr->flush();
-
-				pps->set_constant( _T("Ambient"),  &mtl->ambient );
-				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
-				pps->set_constant( _T("Specular"), &mtl->specular );
-				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				dynamic_pointer_cast<sponza_ps>( pps )->set_texture( mtl->tex );
-
-				cur_mesh->render();
-			}
+			cur_mesh->render();
 		}
-
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
-		}
-
-		impl->main_window()->refresh();
+		prof.end("Rendering");
 	}
 
 protected:
 	/** Properties @{ */
-	h_device present_dev;
-	h_renderer hsr;
+	h_renderer			renderer_;
+	vector<h_mesh>		benchmark_mesh;
+	shader_object_ptr 	benchmark_vs;
 
-	vector<h_mesh> sponza_mesh;
+	h_vertex_shader		cpp_vs;
+	h_pixel_shader		cpp_ps;
+	h_blend_shader		cpp_bs;
 
-	shared_ptr<shader_object> sponza_sc;
-
-	h_vertex_shader	pvs;
-	h_pixel_shader	pps;
-	h_blend_shader	pbs;
-
-	h_rasterizer_state rs_back;
-
-	h_surface display_surf;
-	surface* pdsurf;
-
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer_t timer;
-	/** @} */
+	h_rasterizer_state	rs_back;
+	profiler			prof;
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] ){
-	sponza loader;
-	return loader.run();
+int main( int /*argc*/, TCHAR* /*argv*/[] )
+{
+#if defined(EFLIB_WINDOWS)
+	HANDLE process_handle = GetCurrentProcess();
+	SetPriorityClass(process_handle, HIGH_PRIORITY_CLASS);
+#endif
+
+	{
+		benchmark bm;
+		bm.render();
+		bm.save_frame("frame.png");
+	}
+	system("pause");
+	return 0;
 }

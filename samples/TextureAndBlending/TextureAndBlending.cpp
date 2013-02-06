@@ -4,6 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
@@ -59,10 +60,10 @@ public:
 	vs_box(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in.attributes[0];
-		transform(out.position, pos, wvp);
-		out.attributes[0] = in.attributes[0];//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
-		out.attributes[1] = in.attributes[1];
+		vec4 pos = in.attribute(0);
+		transform(out.position(), pos, wvp);
+		out.attribute(0) = in.attribute(0);//(vec4(1.0f, 1.0f, 1.0f, 1.0f) - in[0]);
+		out.attribute(1) = in.attribute(1);
 	}
 
 	uint32_t num_output_attributes() const
@@ -159,9 +160,9 @@ public:
 	vs_plane(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in.attributes[0];
-		transform(out.position, pos, wvp);
-		out.attributes[0] = vec4(in.attributes[0].x(), in.attributes[0].z(), 0, 0);
+		vec4 pos = in.attribute(0);
+		transform(out.position(), pos, wvp);
+		out.attribute(0) = vec4(in.attribute(0).x(), in.attribute(0).z(), 0, 0);
 	}
 
 	uint32_t num_output_attributes() const

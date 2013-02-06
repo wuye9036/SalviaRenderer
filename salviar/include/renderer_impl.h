@@ -1,8 +1,9 @@
 #ifndef SALVIAR_RENDERER_IMPL_H
 #define SALVIAR_RENDERER_IMPL_H
 
-#include <salviar/include/renderer.h>
 #include <salviar/include/salviar_forward.h>
+
+#include <salviar/include/renderer.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 
@@ -13,46 +14,53 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(renderer_impl);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
+EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
-struct state_block{
+struct state_block
+{
 	viewport vp;	
 };
 
 class renderer_impl : public renderer
 {
-	//some states
-	viewport vp_;
-	cull_mode cm_;
-
-	h_buffer_manager		hbufmgr_;
-	h_texture_manager		htexmgr_;
-	h_vertex_shader			hvs_;
-	h_clipper				hclipper_;
-	h_rasterizer			hrast_;
-	h_pixel_shader			hps_;
-	h_framebuffer			hfb_;
-	h_device				hdev_;
-	h_vertex_cache			hvertcache_;
-	h_blend_shader			hbs_;
-
-	h_buffer				indexbuf_;
-	format index_fmt_;
-
+	//Rendering States
+	viewport				vp_;
+	cull_mode				cm_;
 	primitive_topology		primtopo_;
-
-	h_rasterizer_state		hrs_;
-	h_depth_stencil_state	hdss_;
+	h_buffer				index_buffer_;
+	format					index_format_;
+	h_rasterizer_state		rast_state_;
+	h_depth_stencil_state	ds_state_;
 	int32_t					stencil_ref_;
+	
+	// Stages
+	host_ptr				host_;
+	h_vertex_shader			cpp_vs_;
+	h_pixel_shader			cpp_ps_;
+	h_blend_shader			cpp_bs_;
 
+	stream_assembler_ptr	assembler_;
+	h_clipper				clipper_;
+	h_vertex_cache			vertex_cache_;
+	h_rasterizer			rast_;
+	
+	h_framebuffer			frame_buffer_;
+	
 	vs_input_op*			vs_input_ops_;
 	vs_output_op*			vs_output_ops_;
 
-	host_ptr				host_;
+	
 
-	shader_object_ptr		vscode_;
-	shader_object_ptr		pscode_;
-	boost::shared_ptr<vertex_shader_unit>	vs_proto_;
-	boost::shared_ptr<pixel_shader_unit>	ps_proto_;
+	shader_object_ptr		vx_shader_;
+	shader_object_ptr		px_shader_;
+	vertex_shader_unit_ptr	vs_proto_;
+	pixel_shader_unit_ptr	ps_proto_;
+
+	// Resources
+	h_buffer_manager		buffer_pool_;
+	h_texture_manager		texture_pool_;
+	h_device				native_dev_;
+
 	void initialize();
 
 public:
@@ -83,12 +91,12 @@ public:
 	virtual result set_vertex_shader(h_vertex_shader const& hvs);
 	virtual h_vertex_shader get_vertex_shader() const;
 	
-	virtual result set_vertex_shader_code( boost::shared_ptr<shader_object> const& );
-	virtual boost::shared_ptr<shader_object> get_vertex_shader_code() const;
-	virtual result set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz );
-	virtual result set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz );
-	virtual result set_vs_sampler( std::string const& name, h_sampler const& samp );
-	virtual boost::shared_ptr<vertex_shader_unit> vs_proto() const;
+	virtual result					set_vertex_shader_code( boost::shared_ptr<shader_object> const& );
+	virtual shader_object_ptr		get_vertex_shader_code() const;
+	virtual result					set_vs_variable_value( std::string const& name, void const* pvariable, size_t sz );
+	virtual result					set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz );
+	virtual result					set_vs_sampler( std::string const& name, h_sampler const& samp );
+	virtual vertex_shader_unit_ptr	vs_proto() const;
 
 	virtual const vs_input_op* get_vs_input_ops() const;
 	virtual const vs_output_op* get_vs_output_ops() const;
@@ -150,11 +158,12 @@ public:
 	//this class for inner system
 	renderer_impl(const renderer_parameters* pparam, h_device hdev);
 
-	h_rasterizer get_rasterizer();
-	
-	h_device get_device();
-	h_vertex_cache get_vertex_cache();
-	h_clipper get_clipper();
+	host_ptr				get_host();
+	stream_assembler_ptr	get_assembler();
+	h_rasterizer			get_rasterizer();
+	h_device				get_native_device();
+	h_vertex_cache			get_vertex_cache();
+	h_clipper				get_clipper();
 };
 
 renderer_ptr create_renderer_impl(renderer_parameters const* pparam, h_device const& hdev);

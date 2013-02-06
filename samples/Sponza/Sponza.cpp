@@ -4,6 +4,7 @@
 
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/resource_manager.h>
@@ -86,12 +87,12 @@ public:
 	sponza_vs(const mat44& wvp):wvp(wvp){}
 	void shader_prog(const vs_input& in, vs_output& out)
 	{
-		vec4 pos = in.attributes[0];
-		transform(out.position, pos, wvp);
-		out.attributes[0] = in.attributes[1];
-		out.attributes[1] = in.attributes[2];
-		out.attributes[2] = light_pos - pos;
-		out.attributes[3] = eye_pos - pos;
+		vec4 pos = in.attribute(0);
+		transform(out.position(), pos, wvp);
+		out.attribute(0) = in.attribute(1);
+		out.attribute(1) = in.attribute(2);
+		out.attribute(2) = light_pos - pos;
+		out.attribute(3) = eye_pos - pos;
 	}
 
 	uint32_t num_output_attributes() const{
@@ -140,13 +141,13 @@ public:
 	{
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
-		if( tex_ ){
+		/*if( tex_ ){
 			diff_color = tex2d(*sampler_, 0).get_vec4();
-		}
+		}*/
 
-		vec3 norm( normalize3( in.attributes[1].xyz() ) );
-		vec3 light_dir( normalize3( in.attributes[2].xyz() ) );
-		vec3 eye_dir( normalize3( in.attributes[3].xyz() ) );
+		vec3 norm( normalize3( in.attribute(1).xyz() ) );
+		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
+		vec3 eye_dir( normalize3( in.attribute(3).xyz() ) );
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
 		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );

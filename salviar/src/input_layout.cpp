@@ -4,6 +4,7 @@
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <boost/functional/hash.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #include <algorithm>
@@ -82,6 +83,26 @@ h_input_layout input_layout::create( input_element_desc const* pdesc, size_t des
 	// Caculate member offset.
 
 	return ret;
+}
+
+size_t hash_value(input_element_desc const& v)
+{
+	size_t seed = 0;
+
+	boost::hash_combine(seed, v.aligned_byte_offset);
+	boost::hash_combine(seed, static_cast<size_t>(v.data_format) );
+	boost::hash_combine(seed, v.input_slot);
+	boost::hash_combine(seed, v.instance_data_step_rate);
+	boost::hash_combine(seed, v.semantic_index);
+	boost::hash_combine(seed, v.semantic_name);
+	boost::hash_combine(seed, static_cast<size_t>(v.slot_class) );
+
+	return seed;
+}
+
+size_t hash_value(input_layout const& v)
+{
+	return boost::hash_range( v.desc_begin(), v.desc_end() );
 }
 
 END_NS_SALVIAR();

@@ -39,6 +39,7 @@ struct result
 	result& operator = (const result& rhs){
 		code_ = rhs.code_;
 		desc_ = rhs.desc_;
+		return *this;
 	}
 
 	const std::_tstring& desc(){

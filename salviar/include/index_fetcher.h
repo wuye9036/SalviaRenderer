@@ -17,8 +17,8 @@ public:
 	void fetch_indices(uint32_t* prim_indices, uint32_t id);
 
 private:
-	h_buffer indexbuf_;
-	format index_fmt_;
+	h_buffer index_buffer_;
+	format index_format_;
 	primitive_topology primtopo_;
 	uint32_t startpos_;
 	uint32_t basevert_;

@@ -4,9 +4,14 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/shader.h>
+
 #include <eflib/include/platform/cpuinfo.h>
 #include <eflib/include/string/ustring.h>
 #include <eflib/include/utility/shared_declaration.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/enable_shared_from_this.hpp>
+#include <eflib/include/platform/boost_end.h>
 #include <vector>
 
 BEGIN_NS_SALVIAR();
@@ -141,14 +146,19 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(shader_reflection);
 class shader_reflection
 {
 public:
+	virtual languages	get_language() const = 0;
 	virtual eflib::fixed_string
 						entry_name() const = 0;
 	virtual std::vector<sv_layout*>
 						layouts			(sv_usage usage) const = 0;
+	virtual size_t		layouts_count	(sv_usage usage) const = 0;
 	virtual size_t 		total_size		(sv_usage usage) const = 0;
 	virtual sv_layout*	input_sv_layout	(salviar::semantic_value const&) const = 0;
 	virtual sv_layout*	input_sv_layout	(eflib::fixed_string const&) const = 0;
 	virtual sv_layout*	output_sv_layout(salviar::semantic_value const&) const = 0;
+	virtual bool		has_position_output() const = 0;
+
+	virtual ~shader_reflection() {}
 };
 
 END_NS_SALVIAR();

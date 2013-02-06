@@ -189,7 +189,6 @@ private:
 
 		// Initialize language ABI information.
 		reflection_impl_ptr ret = make_shared<reflection_impl>();
-		ret->lang				= lang;
 		ret->module_sem_			= sem_;
 		ret->entry_point_		= current_entry_;
 		ret->entry_point_name_	= current_entry_->mangled_name();

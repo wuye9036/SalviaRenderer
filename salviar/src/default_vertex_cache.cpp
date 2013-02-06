@@ -3,7 +3,9 @@
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/stream_assembler.h>
 
+#include <salviar/include/host.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/renderer_impl.h>
 #include <salviar/include/stream_assembler.h>
@@ -20,6 +22,10 @@
 using eflib::num_available_threads;
 using eflib::atomic;
 
+using boost::shared_array;
+
+using std::vector;
+
 BEGIN_NS_SALVIAR();
 
 const int GENERATE_INDICES_PACKAGE_SIZE = 8;
@@ -27,195 +33,243 @@ const int TRANSFORM_VERTEX_PACKAGE_SIZE = 8;
 
 const size_t invalid_id = 0xffffffff;
 
-default_vertex_cache::default_vertex_cache() : verts_pool_( sizeof(vs_output) )
+class default_vertex_cache : public vertex_cache
 {
-	hsa_.reset(new stream_assembler);
-}
+public:
+	default_vertex_cache(renderer_impl* owner)
+		: owner_(owner)
+		, verts_pool_( sizeof(vs_output) )
+	{
+	}
 
-void default_vertex_cache::initialize(renderer_impl* psr){
-	pparent_ = psr;
-}
+	void update_index_buffer(
+		h_buffer const& index_buffer, format index_format,
+		primitive_topology topology, uint32_t start_pos, uint32_t base_vert)
+	{
+		transformed_verts_.reset();
+		topology_	= topology;
+		index_fetcher_.initialize(index_buffer, index_format, topology, start_pos, base_vert);
+	}
 
-void default_vertex_cache::reset(const h_buffer& hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
-{
-	verts_.reset();
+	void transform_vertices(uint32_t prim_count)
+	{
+		assembler_	= owner_->get_assembler().get();
+		cpp_vs_		= owner_->get_vertex_shader().get();
+		viewport_	= &(owner_->get_viewport());
 
-	pvs_ = get_weak_handle(pparent_->get_vertex_shader());
-	pvp_ = &(pparent_->get_viewport());
+		
+		uint32_t prim_size = 0;
+		switch(topology_)
+		{
+		case primitive_line_list:
+		case primitive_line_strip:
+			prim_size = 2;
+			break;
 
-	primtopo_ = primtopo;
-	ind_fetcher_.initialize(hbuf, index_fmt, primtopo, startpos, basevert);
-}
-
-void default_vertex_cache::generate_indices_func(std::vector<uint32_t>& indices, int32_t prim_count, uint32_t stride, atomic<int32_t>& working_package, int32_t package_size)
-{
-	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
-
-	int32_t local_working_package = working_package ++;
-	while (local_working_package < num_packages){
-		const int32_t start = local_working_package * package_size;
-		const int32_t end = std::min(prim_count, start + package_size);
-		for (int32_t i = start; i < end; ++ i){
-			ind_fetcher_.fetch_indices(&indices[i * stride], i);
+		case primitive_triangle_list:
+		case primitive_triangle_strip:
+			prim_size = 3;
+			break;
 		}
 
-		local_working_package = working_package ++;
-	}
-}
+		indices_.resize(prim_count * prim_size);
 
-void default_vertex_cache::transform_vertex_func(const std::vector<uint32_t>& indices, int32_t index_count, atomic<int32_t>& working_package, int32_t package_size)
-{
-	const int32_t num_packages = (index_count + package_size - 1) / package_size;
+		atomic<int32_t> working_package(0);
+		size_t num_threads = num_available_threads( );
 
-	int32_t local_working_package = working_package ++;
-	while (local_working_package < num_packages)
-	{
-		const int32_t start = local_working_package * package_size;
-		const int32_t end = std::min(index_count, start + package_size);
-		for (int32_t i = start; i < end; ++ i){
-			uint32_t id = indices[i];
-			used_verts_[id] = i;
+		// Generate indices
+		boost::function<void()> task_generate_indices = 
+			boost::bind( &default_vertex_cache::generate_indices, this,
+			boost::ref(indices_), static_cast<int32_t>(prim_count),
+			prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE
+			);
+		for (size_t i = 0; i < num_threads - 1; ++ i)
+		{
+			global_thread_pool().schedule(task_generate_indices);
+		}
+		task_generate_indices();
+		global_thread_pool().wait();
 
-			vs_input vertex;
-			hsa_->fetch_vertex(vertex, id);
-			pvs_->execute(vertex, verts_[i]);
+		// Unique indices
+		std::vector<uint32_t> unique_indices = indices_;
+		std::sort(unique_indices.begin(), unique_indices.end());
+		unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
+		transformed_verts_.reset(new vs_output[unique_indices.size()]);
+		used_verts_.resize(assembler_->num_vertices());
+
+		// Transform vertexes
+		if( cpp_vs_ )
+		{
+			assembler_->update_register_map( cpp_vs_->get_register_map() );
 		}
 
-		local_working_package = working_package ++;
-	}
-}
-
-void default_vertex_cache::transform_vertex_by_shader( const std::vector<uint32_t>& indices, int32_t index_count, eflib::atomic<int32_t>& working_package, int32_t package_size )
-{
-	vertex_shader_unit vsu = *(pparent_->vs_proto());
-
-	vsu.bind_streams( hsa_.get() );
-
-	const int32_t num_packages = (index_count + package_size - 1) / package_size;
-
-	int32_t local_working_package = working_package ++;
-	while (local_working_package < num_packages)
-	{
-		const int32_t start = local_working_package * package_size;
-		const int32_t end = std::min(index_count, start + package_size);
-		for (int32_t i = start; i < end; ++ i){
-			uint32_t id = indices[i];
-			used_verts_[id] = i;
-
-			vs_input vertex;
-
-			vsu.update( id );
-			vsu.execute( verts_[i] );
+		working_package = 0;
+		boost::function<void()> task_transform_vertex;
+		if( owner_->get_vertex_shader() )
+		{
+			task_transform_vertex = boost::bind(
+				&default_vertex_cache::transform_vertex_cppvs,
+				this, boost::ref(unique_indices),
+				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
+				);
+		}
+		else if ( owner_->get_host() )
+		{
+			task_transform_vertex = boost::bind(
+				&default_vertex_cache::transform_vertex_vs2,
+				this, boost::ref(unique_indices),
+				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
+				);
+		}
+		else
+		{
+			task_transform_vertex = boost::bind(
+				&default_vertex_cache::transform_vertex_vs,
+				this, boost::ref(unique_indices),
+				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
+				);
 		}
 
-		local_working_package = working_package ++;
+		for (size_t i = 0; i < num_threads - 1; ++ i)
+		{
+			global_thread_pool().schedule(task_transform_vertex);
+		}
+		task_transform_vertex();
+		global_thread_pool().wait();
 	}
-}
 
-void default_vertex_cache::transform_vertices(uint32_t prim_count)
-{
-	uint32_t prim_size = 0;
-	switch(primtopo_)
+	vs_output& fetch(cache_entry_index id)
 	{
-	case primitive_line_list:
-	case primitive_line_strip:
-		prim_size = 2;
-		break;
+		static vs_output null_obj;
+		id = indices_[id];
 
-	case primitive_triangle_list:
-	case primitive_triangle_strip:
-		prim_size = 3;
-		break;
+#if defined(EFLIB_DEBUG)
+		if((id > used_verts_.size()) || (-1 == used_verts_[id]))
+		{
+			assert( !"The vertex could not be transformed. Maybe errors occurred on index statistics or vertex tranformation." );
+			return null_obj;
+		}
+#endif
+
+		return transformed_verts_[used_verts_[id]];
 	}
 
-	indices_.resize(prim_count * prim_size);
-
-	atomic<int32_t> working_package(0);
-	size_t num_threads = num_available_threads( );
-
-	for (size_t i = 0; i < num_threads - 1; ++ i){
-		global_thread_pool().schedule(boost::bind(&default_vertex_cache::generate_indices_func, this, boost::ref(indices_), static_cast<int32_t>(prim_count), prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE));
-	}
-	generate_indices_func(boost::ref(indices_), static_cast<int32_t>(prim_count), prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE);
-	global_thread_pool().wait();
-
-	std::vector<uint32_t> unique_indices = indices_;
-	std::sort(unique_indices.begin(), unique_indices.end());
-	unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
-	verts_.reset(new vs_output[unique_indices.size()]);
-	used_verts_.resize(hsa_->num_vertices());
-
-	if( pvs_ ){
-		hsa_->update_register_map( pvs_->get_register_map() );
-	}
-
-	working_package = 0;
-	for (size_t i = 0; i < num_threads - 1; ++ i)
+private:
+	void generate_indices(
+		vector<uint32_t>& indices, int32_t prim_count,
+		uint32_t stride, atomic<int32_t>& working_package, int32_t package_size)
 	{
-		if( pparent_->get_vertex_shader() ){
-			global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_func, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
-		} else {
-			global_thread_pool().schedule(boost::bind(&default_vertex_cache::transform_vertex_by_shader, this, boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE));
+		const int32_t num_packages = (prim_count + package_size - 1) / package_size;
+
+		int32_t local_working_package = working_package ++;
+		while (local_working_package < num_packages)
+		{
+			const int32_t start = local_working_package * package_size;
+			const int32_t end = std::min(prim_count, start + package_size);
+			for (int32_t i = start; i < end; ++ i){
+				index_fetcher_.fetch_indices(&indices[i*stride], i);
+			}
+
+			local_working_package = working_package++;
 		}
 	}
-	if( pparent_->get_vertex_shader() ){
-		transform_vertex_func(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
-	} else {
-		transform_vertex_by_shader(boost::ref(unique_indices), static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE);
-	}
-	global_thread_pool().wait();
-}
 
-vs_output& default_vertex_cache::fetch(cache_entry_index id)
-{
-	static vs_output null_obj;
-
-	id = indices_[id];
-
-	if((id > used_verts_.size()) || (-1 == used_verts_[id])){
-		assert( !"The vertex could not be transformed. Maybe errors occurred on index statistics or vertex tranformation." );
-		return null_obj;
-	}
-
-	return verts_[used_verts_[id]];
-}
-
-vs_output* default_vertex_cache::new_vertex()
-{
-	return (vs_output*)(verts_pool_.malloc());
-}
-
-void default_vertex_cache::delete_vertex(vs_output* const pvert)
-{
-	bool isfrom = verts_pool_.is_from(pvert);
-	EFLIB_ASSERT(isfrom, "");
-
-	if(isfrom)
+	void transform_vertex_cppvs(
+		vector<uint32_t> const& indices, int32_t index_count,
+		atomic<int32_t>& working_package, int32_t package_size)
 	{
-		pvert->~vs_output();
-		verts_pool_.free(pvert);
+		const int32_t num_packages = (index_count + package_size - 1) / package_size;
+
+		int32_t local_working_package = working_package ++;
+		while (local_working_package < num_packages)
+		{
+			const int32_t start = local_working_package * package_size;
+			const int32_t end = std::min(index_count, start + package_size);
+			for (int32_t i = start; i < end; ++ i){
+				uint32_t id = indices[i];
+				used_verts_[id] = i;
+
+				vs_input vertex;
+				assembler_->fetch_vertex(vertex, id);
+				cpp_vs_->execute(vertex, transformed_verts_[i]);
+			}
+
+			local_working_package = working_package ++;
+		}
 	}
-}
 
-result default_vertex_cache::set_input_layout(const h_input_layout& layout)
-{
-	//layout_ will be checked at runtime.
-	hsa_->set_input_layout(layout.get());
-	return result::ok;
-}
+	void transform_vertex_vs(
+		vector<uint32_t> const& indices, int32_t index_count,
+		atomic<int32_t>& working_package, int32_t package_size )
+	{
+		vertex_shader_unit vsu	= *(owner_->vs_proto());
 
-result default_vertex_cache::set_vertex_buffers(
-		size_t starts_slot,
-		size_t buffers_count, h_buffer const* buffers,
-		size_t const* strides, size_t const* offsets
-		)
+		vsu.bind_streams(assembler_);
+
+		const int32_t num_packages = (index_count + package_size - 1) / package_size;
+
+		int32_t local_working_package = working_package ++;
+		while (local_working_package < num_packages)
+		{
+			const int32_t start = local_working_package * package_size;
+			const int32_t end = std::min(index_count, start+package_size);
+			for (int32_t i = start; i < end; ++ i)
+			{
+				uint32_t id = indices[i];
+				used_verts_[id] = i;
+
+				vsu.update( id );
+				vsu.execute( transformed_verts_[i] );
+			}
+
+			local_working_package = working_package ++;
+		}
+	}
+
+	void transform_vertex_vs2(
+		vector<uint32_t> const& indices, int32_t index_count,
+		atomic<int32_t>& working_package, int32_t package_size )
+	{
+		vx_shader_unit_ptr vsu	= owner_->get_host()->get_vx_shader_unit();
+
+		const int32_t num_packages = (index_count + package_size - 1) / package_size;
+
+		int32_t local_working_package = working_package ++;
+		while (local_working_package < num_packages)
+		{
+			const int32_t start = local_working_package * package_size;
+			const int32_t end = std::min(index_count, start+package_size);
+			for (int32_t i = start; i < end; ++ i)
+			{
+				uint32_t vert_index = indices[i];
+				used_verts_[vert_index] = i;
+
+				vsu->execute(vert_index, transformed_verts_[i]);
+			}
+
+			local_working_package = working_package ++;
+		}
+	}
+private:
+	renderer_impl*			owner_;
+
+	stream_assembler*		assembler_;
+	vertex_shader*			cpp_vs_;
+	viewport const*			viewport_;
+
+	vector<uint32_t>		indices_;
+	primitive_topology		topology_;
+	index_fetcher			index_fetcher_;
+
+	shared_array<vs_output> transformed_verts_;
+	vector<int32_t>			used_verts_;
+
+	boost::pool<>			verts_pool_;
+};
+
+vertex_cache_ptr create_default_vertex_cache(renderer_impl* owner)
 {
-	hsa_->set_vertex_buffers(
-		starts_slot,
-		buffers_count, buffers,
-		strides, offsets
-		);
-	return result::ok;
+	return vertex_cache_ptr( new default_vertex_cache(owner) );
 }
 
 END_NS_SALVIAR();

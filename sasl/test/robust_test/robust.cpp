@@ -6,7 +6,6 @@
 
 #include <sasl/include/drivers/drivers_api.h>
 #include <sasl/include/codegen/cg_api.h>
-#include <sasl/include/codegen/cg_jit.h>
 #include <sasl/include/semantic/symbol.h>
 #include <sasl/include/semantic/semantics.h>
 #include <sasl/include/common/diag_formatter.h>

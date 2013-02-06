@@ -25,7 +25,6 @@ set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_simd.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_ps.h
 	
-	${SASL_HOME_DIR}/sasl/include/codegen/cg_jit.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_contexts.h
 	${SASL_HOME_DIR}/sasl/include/codegen/module_vmcode_impl.h
 	${SASL_HOME_DIR}/sasl/include/codegen/cg_caster.h
@@ -52,7 +51,6 @@ set( SOURCE_FILES
 	cg_vs.cpp
 	cg_simd.cpp
 	
-	cg_jit.cpp
 	cg_contexts.cpp
 	module_vmcode_impl.cpp
 	

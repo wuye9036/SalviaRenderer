@@ -1,15 +1,22 @@
+#pragma once
+
 #ifndef SALVIAR_FRAMEBUFFER_H
 #define SALVIAR_FRAMEBUFFER_H
 
-#include "enums.h"
-#include "decl.h"
-#include "colors.h"
-#include "render_stage.h"
-#include "shaderregs.h"
+#include <salviar/include/salviar_forward.h>
+
+#include <salviar/include/enums.h>
+#include <salviar/include/decl.h>
+#include <salviar/include/colors.h>
+#include <salviar/include/render_stage.h>
+
+#include <eflib/include/math/collision_detection.h>
 
 #include <vector>
-#include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
+
+BEGIN_NS_SALVIAR();
+
+struct backbuffer_pixel_out;
 
 struct depth_stencil_op_desc {
     stencil_op stencil_fail_op;

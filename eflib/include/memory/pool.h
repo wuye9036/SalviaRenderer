@@ -67,41 +67,52 @@ namespace eflib{
 			boost::array<bool, MaxCount> usage;
 			char data[ObjectSize * MaxCount];
 		};
+
 		template <typename ObjectT, int MaxCount>
-		class stack_pool <ObjectT, MaxCount, true>{
-				public:
-			stack_pool(){
+		class stack_pool<ObjectT, MaxCount, true>
+		{
+		private:
+			static const size_t ObjectSize = sizeof(ObjectT);
+			unsigned char data[ObjectSize * MaxCount];
+			size_t usage;
+
+		public:
+			stack_pool()
+			{
 				initialize_usage();
 			}
 
-			void* malloc(){
+			void* malloc()
+			{
 				return malloc_impl();
 			}
 
-			void free( void* p ){
+			void free(void* p)
+			{
 				free_impl(p);
 			}
 
 			~stack_pool(){
 			}
 
-		protected:
-			void initialize_usage( ){
+		private:
+			void initialize_usage()
+			{
 				usage = 0;
 			}
 
-			void* malloc_impl(){
-				assert( usage < MaxCount );
-				return boost::addressof( data[ObjectSize*(usage++)] );
+			void* malloc_impl()
+			{
+				assert(usage < MaxCount);
+				void* ret = boost::addressof(data[ObjectSize*usage]);
+				++usage;
+				return ret;
 			}
 
-			void free_impl( void* const p){
+			void free_impl(void* const p)
+			{
 				return;
 			}
-
-			static const int ObjectSize = sizeof(ObjectT);
-			int usage;
-			char data[ObjectSize * MaxCount];
 		};
 	}
 }
