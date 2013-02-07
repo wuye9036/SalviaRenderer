@@ -31,6 +31,7 @@ using boost::static_pointer_cast;
 using boost::dynamic_pointer_cast;
 using boost::tuple;
 using boost::make_shared;
+using boost::shared_ptr;
 using boost::shared_array;
 
 using eflib::fixed_string;

@@ -41,7 +41,7 @@ using namespace salviax::resource;
 using namespace salviau;
 
 using boost::shared_ptr;
-using boost::shared_polymorphic_cast;
+using boost::dynamic_pointer_cast;
 
 using std::string;
 using std::vector;
@@ -315,13 +315,13 @@ public:
 			h_mesh cur_mesh = benchmark_mesh[i_mesh];
 
 			shared_ptr<obj_material> mtl
-				= shared_polymorphic_cast<obj_material>( cur_mesh->get_attached() );
+				= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
 
 			cpp_ps->set_constant( _T("Ambient"),  &mtl->ambient );
 			cpp_ps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 			cpp_ps->set_constant( _T("Specular"), &mtl->specular );
 			cpp_ps->set_constant( _T("Shininess"),&mtl->ambient );
-			shared_polymorphic_cast<benchmark_ps>(cpp_ps)->set_texture(mtl->tex);
+			dynamic_pointer_cast<benchmark_ps>(cpp_ps)->set_texture(mtl->tex);
 			
 			cur_mesh->render();
 		}
