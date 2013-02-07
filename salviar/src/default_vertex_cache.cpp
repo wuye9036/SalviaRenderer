@@ -20,8 +20,8 @@
 #include <eflib/include/platform/boost_end.h>
 
 using eflib::num_available_threads;
-using eflib::atomic;
 
+using boost::atomic;
 using boost::shared_array;
 
 using std::vector;

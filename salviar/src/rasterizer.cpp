@@ -24,7 +24,8 @@
 #include <algorithm>
 
 using eflib::num_available_threads;
-using eflib::atomic;
+
+using boost::atomic;
 
 class shader_reflection;
 

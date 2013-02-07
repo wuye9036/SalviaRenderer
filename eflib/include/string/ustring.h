@@ -38,7 +38,6 @@ namespace eflib{
 		{
 			content_data()
 				: hash_code(0)
-				, write_guard(0)
 			{
 			}
 
@@ -46,7 +45,6 @@ namespace eflib{
 			content_data(IteratorT const& begin, IteratorT const& end)
 				: hash_code(0)
 				, content(begin, end)
-				, write_guard(0)
 				// , begin( content.begin() ), end( content.end() )
 			{
 			}
@@ -54,7 +52,6 @@ namespace eflib{
 			content_data(CharT const* str)
 				: hash_code(0)
 				, content(str)
-				, write_guard(0)
 				// , begin( content.begin() ), end( content.end() )
 			{
 			}
@@ -62,24 +59,23 @@ namespace eflib{
 			content_data(std::string const& content)
 				: hash_code(0)
 				, content(content)
-				, write_guard(0)
 				// , begin( content.begin() ), end( content.end() )
 			{
 			}
 
 			void lock() const
 			{
-				lock_atomic<int32_t>(write_guard);
+				write_mutex.lock();
 			}
 
 			void unlock() const
 			{
-				unlock_atomic<int32_t>(write_guard);
+				write_mutex.unlock();
 			}
 
-			mutable atomic<int32_t>		write_guard;
-			size_t						hash_code;
-			string_type					content;
+			mutable spinlock	write_mutex;
+			size_t				hash_code;
+			string_type			content;
 			/*
 			const_iterator				begin;
 			const_iterator				end;

@@ -1,12 +1,15 @@
+#pragma once
+
 #ifndef SALVIAR_RASTERIZER_H
 #define SALVIAR_RASTERIZER_H
 
 #include <salviar/include/salviar_forward.h>
 
-#include "decl.h"
-#include "enums.h"
-#include "shader.h"
-#include "framebuffer.h"
+#include <salviar/include/decl.h>
+#include <salviar/include/enums.h>
+#include <salviar/include/shader.h>
+#include <salviar/include/framebuffer.h>
+
 #include <eflib/include/memory/atomic.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -102,19 +105,31 @@ class rasterizer : public render_stage
 	std::vector<eflib::vec3> edge_factors_;
 	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
 
-	void geometry_setup_func(uint32_t* num_clipped_prims, vs_output* clipped_verts, uint32_t* cliped_indices,
-		int32_t prim_count, primitive_topology primtopo, eflib::atomic<int32_t>& working_package, int32_t package_size);
-	void dispatch_primitive_func(std::vector<std::vector<uint32_t> >& tiles, const uint32_t* clipped_indices,
-		const vs_output* clipped_verts_full, int32_t prim_count, uint32_t stride, eflib::atomic<int32_t>& working_package, int32_t package_size);
+	void geometry_setup_func(
+		uint32_t* num_clipped_prims, vs_output* clipped_verts, uint32_t* cliped_indices,
+		int32_t prim_count, primitive_topology primtopo,
+		boost::atomic<int32_t>& working_package, int32_t package_size
+		);
+
+	void dispatch_primitive_func(
+		std::vector<std::vector<uint32_t> >& tiles, uint32_t const* clipped_indices, vs_output const* clipped_verts_full,
+		int32_t prim_count, uint32_t stride,
+		boost::atomic<int32_t>& working_package, int32_t package_size
+		);
 	
 	void rasterize_primitive_func(
 		std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x,
 		const uint32_t* clipped_indices, const vs_output* clipped_verts_full,
 		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
-		eflib::atomic<int32_t>& working_package, int32_t package_size);
+		boost::atomic<int32_t>& working_package, int32_t package_size
+		);
 	
-	void compact_clipped_verts_func(uint32_t* clipped_indices, const uint32_t* cliiped_indices_full,
-		const uint32_t* addresses, const uint32_t* num_clipped_prims, int32_t prim_count, eflib::atomic<int32_t>& working_package, int32_t package_size);
+	void compact_clipped_verts_func(
+		uint32_t* clipped_indices, const uint32_t* cliiped_indices_full,
+		const uint32_t* addresses, const uint32_t* num_clipped_prims,
+		int32_t prim_count,
+		boost::atomic<int32_t>& working_package, int32_t package_size
+		);
 
 	boost::function<
 		void ( rasterizer*, const uint32_t* /*Clipped Indexes*/, const vs_output* /*Clipped Vertexes*/, 

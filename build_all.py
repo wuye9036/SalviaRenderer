@@ -60,7 +60,7 @@ def make_boost(proj):
 	#Get boost build command
 	if proj.current_os() == systems.win32:
 		# Add configs
-		libs = ["thread", "system", "filesystem", "date_time", "test", "wave", "program_options", "serialization"]
+		libs = ["atomic", "thread", "system", "filesystem", "date_time", "test", "wave", "program_options", "serialization"]
 		address_model = 'address-model=%d' % proj.arch().bits()
 		options = "--build-dir=./ link=shared runtime-link=shared threading=multi stage"
 		toolset = proj.toolset()

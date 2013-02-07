@@ -7,6 +7,10 @@ INCLUDE_DIRECTORIES(
 	${SALVIA_WTL_INCLUDE_PATH}
 )
 
+LINK_DIRECTORIES(
+	${SALVIA_BOOST_LIB_DIR}
+)
+
 set( APP_COMMON_HEADERS
 	${SALVIA_HOME_DIR}/salviau/include/common/application.h
 	${SALVIA_HOME_DIR}/salviau/include/common/window.h

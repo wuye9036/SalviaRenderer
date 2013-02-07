@@ -24,9 +24,10 @@
 using namespace sasl::syntax_tree;
 using namespace sasl::utility;
 using eflib::polymorphic_cast;
-using eflib::atomic;
-using eflib::scoped_atomic_locker;
 using eflib::fixed_string;
+using eflib::spinlock;
+using eflib::scoped_spin_locker;
+using boost::atomic;
 using boost::make_shared;
 using boost::shared_ptr; // prevent conflicting with std::tr1.
 using boost::dynamic_pointer_cast;
@@ -501,11 +502,11 @@ tid_t pety_impl::get_impl(tynode* v, symbol* scope, bool attach_tid_to_input)
 // lookup table for translating enumerations to string.
 string mangling_tag("M");
 unordered_map<builtin_types, string> btc_decorators;
-atomic<int32_t> builtin_shorten_mutex(0);
+spinlock builtin_shorten_mutex;
 bool builtin_shorten_initialized(false);
 void init_builtin_short_name()
 {
-	scoped_atomic_locker<int32_t> lck(builtin_shorten_mutex);
+	scoped_spin_locker lck(builtin_shorten_mutex);
 
 	if(builtin_shorten_initialized) { return; }
 
