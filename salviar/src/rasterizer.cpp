@@ -263,7 +263,7 @@ void rasterizer::rasterize_line(
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 
 	vs_output diff;
-	vs_output_ops->operator_sub(diff, v1, v0);
+	vs_output_ops->sub(diff, v1, v0);
 	eflib::vec4 const& dir = diff.position();
 	float diff_dir = abs(dir.x()) > abs(dir.y()) ? dir.x() : dir.y();
 
@@ -271,8 +271,8 @@ void rasterizer::rasterize_line(
 
 	// Computing differential.
 	vs_output ddx, ddy;
-	vs_output_ops->operator_mul(ddx, diff, (diff.position().x() / (diff.position().xy().length_sqr())));
-	vs_output_ops->operator_mul(ddy, diff, (diff.position().y() / (diff.position().xy().length_sqr())));
+	vs_output_ops->mul(ddx, diff, (diff.position().x() / (diff.position().xy().length_sqr())));
+	vs_output_ops->mul(ddy, diff, (diff.position().y() / (diff.position().xy().length_sqr())));
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
 	int vptop = fast_floori(max(0.0f, vp.y));
@@ -409,8 +409,7 @@ void rasterizer::draw_whole_tile(
 
 	// Set base vertex of scan-lines
 	vs_output base_vert;
-	vs_output_ops->integral2(base_vert, v0, offsety, ddy);
-	vs_output_ops->selfintegral2(base_vert, offsetx, ddx);
+	vs_output_ops->step_2d(base_vert, v0, offsetx, ddx, offsety, ddy);
 
 #ifndef SALVIA_ENABLE_PIXEL_SHADER
 	for(int iy = top; iy < bottom; iy += 4)
@@ -419,12 +418,13 @@ void rasterizer::draw_whole_tile(
 		ps_output px_out;
 		vs_output unprojed;
 
-		for(int ix = left; ix < right; ix += 4){
+		for(int ix = left; ix < right; ix += 4)
+		{
 			vs_output start_vert;
-			vs_output_ops->integral2(start_vert, base_vert, iy - top, ddy);
-			vs_output_ops->selfintegral2(start_vert, ix - left, ddx);
+			vs_output_ops->step_2d(start_vert, base_vert, ix-left, ddx, iy-top, ddy);
 
-			for(int dy = 0; dy < 4; ++dy){
+			for(int dy = 0; dy < 4; ++dy)
+			{
 				vs_output_ops->copy(px_in, start_vert);
 
 				for(int dx = 0; dx < 4; ++dx){
@@ -461,16 +461,15 @@ void rasterizer::draw_whole_tile(
 			vs_output unprojed[4*4];
 
 			vs_output start_vert;
-			vs_output_ops->integral2(start_vert, base_vert, iy - top, ddy);
-			vs_output_ops->selfintegral2(start_vert, ix - left, ddx);
+			vs_output_ops->step_2d(start_vert, base_vert, ix-left, ddx, iy-top, ddy);
 
 			for(int dy = 0; dy < 4; ++dy){
 				vs_output_ops->copy(px_in, start_vert);
 				for(int dx = 0; dx < 4; ++dx){
 					vs_output_ops->unproject(unprojed[dx+dy*4], px_in);
-					vs_output_ops->selfintegral1(px_in, ddx);
+					vs_output_ops->self_step1(px_in, ddx);
 				}
-				vs_output_ops->selfintegral1(start_vert, ddy);
+				vs_output_ops->self_step1(start_vert, ddy);
 			}
 
 			draw_full_package( unprojed, iy, ix, num_samples, hbs, pps, psu, aa_z_offset );
@@ -595,8 +594,7 @@ void rasterizer::draw_pixels(
 
 	// Set attributes of base scan line
 	vs_output base_vert;
-	vs_output_ops->integral2(base_vert, v0, offsety, ddy);
-	vs_output_ops->selfintegral2(base_vert, offsetx, ddx);
+	vs_output_ops->step_2d(base_vert, v0, offsetx, ddx, offsety, ddy);
 
 #if !defined( SALVIA_ENABLE_PIXEL_SHADER )
 	for(int iy = 0; iy < 4; ++iy){
@@ -720,9 +718,9 @@ void rasterizer::draw_pixels(
 			}
 			//}
 
-			vs_output_ops->selfintegral1(px_in, ddx);
+			vs_output_ops->self_step1(px_in, ddx);
 		}
-		vs_output_ops->selfintegral1(base_vert, ddy);
+		vs_output_ops->self_step1(base_vert, ddy);
 	}
 
 	// Execute pixel shader and render to target.
@@ -939,8 +937,8 @@ void rasterizer::rasterize_triangle(
 
 	// Compute difference along edge.
 	vs_output e01, e02;
-	vs_output_ops->operator_sub(e01, *reordered_verts[1], *reordered_verts[0]);
-	vs_output_ops->operator_sub(e02, *reordered_verts[2], *reordered_verts[0]);
+	vs_output_ops->sub(e01, *reordered_verts[1], *reordered_verts[0]);
+	vs_output_ops->sub(e02, *reordered_verts[2], *reordered_verts[0]);
 
 	// Compute area of triangle.
 	float area = cross_prod2(e02.position().xy(), e01.position().xy());
@@ -952,11 +950,23 @@ void rasterizer::rasterize_triangle(
 	*********************************************************/
 	vs_output ddx, ddy;
 	{
-		// ddx = (e02 * e01.position().y() - e02.position().y() * e01) * inv_area;
-		// ddy = (e01 * e02.position().x() - e01.position().x() * e02) * inv_area;
+		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
+		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
 		vs_output tmp0, tmp1, tmp2;
-		vs_output_ops->operator_mul(ddx, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e02, e01.position().y()), vs_output_ops->operator_mul(tmp1, e01, e02.position().y())), inv_area);
-		vs_output_ops->operator_mul(ddy, vs_output_ops->operator_sub(tmp2, vs_output_ops->operator_mul(tmp0, e01, e02.position().x()), vs_output_ops->operator_mul(tmp1, e02, e01.position().x())), inv_area);
+		vs_output_ops->mul(
+			ddx,
+			vs_output_ops->sub(
+				tmp2,
+				vs_output_ops->mul( tmp0, e02, e01.position().y() ),
+				vs_output_ops->mul( tmp1, e01, e02.position().y() )
+			), inv_area);
+		vs_output_ops->mul(
+			ddy,
+			vs_output_ops->sub(
+				tmp2,
+				vs_output_ops->mul( tmp0, e01, e02.position().x() ),
+				vs_output_ops->mul( tmp1, e02, e01.position().x() )
+			), inv_area);
 	}
 
 	triangle_info info;

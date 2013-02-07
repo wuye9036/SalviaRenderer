@@ -30,28 +30,31 @@ vs_output_op gen_vs_output_op_n()
 
 	vs_output_op ret;
 
-	ret.construct = construct_n<N>;
-	ret.copy = copy_n<N>;
+	ret.construct	= construct_n<N>;
+	ret.copy		= copy_n<N>;
 	
-	ret.project = project_n<N>;
-	ret.unproject = unproject_n<N>;
+	ret.project		= project_n<N>;
+	ret.unproject	= unproject_n<N>;
 
-	ret.operator_selfadd = operator_selfadd_n<N>;
-	ret.operator_selfsub = operator_selfsub_n<N>;
-	ret.operator_selfmul = operator_selfmul_n<N>;
-	ret.operator_selfdiv = operator_selfdiv_n<N>;
+	ret.self_add = self_add_n<N>;
+	ret.self_sub = self_sub_n<N>;
+	ret.self_mul = self_mul_n<N>;
+	ret.self_div = self_div_n<N>;
 	
-	ret.operator_add = operator_add_n<N>;
-	ret.operator_sub = operator_sub_n<N>;
-	ret.operator_mul = operator_mul_n<N>;
-	ret.operator_div = operator_div_n<N>;
+	ret.add = add_n<N>;
+	ret.sub = sub_n<N>;
+	ret.mul = mul_n<N>;
+	ret.div = div_n<N>;
 
 	ret.lerp = lerp_n<N>;
+	ret.step_unproj = step_unproj_n<N>;
 	
-	ret.integral1 = integral1_n<N>;
-	ret.integral2 = integral2_n<N>;
-	ret.selfintegral1 = selfintegral1_n<N>;
-	ret.selfintegral2 = selfintegral2_n<N>;
+	ret.step1		= step1_n<N>;
+	ret.step_1d		= step_1d_n<N>;
+	ret.step_2d		= step_2d_n<N>;
+
+	ret.self_step1	= self_step1_n<N>;
+	ret.self_step_1d= self_step_1d_n<N>;
 
 	return ret;
 }
@@ -240,7 +243,57 @@ namespace vs_output_op_funcs
 	}
 
 	template <int N>
-	vs_output& integral1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
+	vs_output& step_unproj_n(vs_output& out, vs_output const& start, vs_output const& derivation)
+	{
+#if ( defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) ) && !defined(EFLIB_NO_SIMD)
+		__m128 const* deri_m128  = reinterpret_cast<__m128 const*>( derivation.raw_data() );
+		__m128 const* start_m128 = reinterpret_cast<__m128 const*>( start.raw_data() );
+		__m128*		  out_m128   = reinterpret_cast<__m128 *>( out.raw_data() );
+
+		// Position
+		out_m128[0] = _mm_add_ps(start_m128[0], deri_m128[0]);
+		float inv_w = out_m128[0].m128_f32[3];
+		__m128 inv_w4 = _mm_load_ps1(&inv_w);
+
+		for(size_t register_index = 1; register_index <= N; ++register_index)
+		{
+			__m128 interp_attr;
+
+			// Interpolation
+			if (vs_output_ops[N].attribute_modifiers[register_index-1] & vs_output::am_nointerpolation)
+			{
+				interp_attr = start_m128[register_index];
+			}
+			else
+			{
+				interp_attr = _mm_add_ps(start_m128[register_index], deri_m128[register_index]);
+			}
+
+			// Perspective
+			if (vs_output_ops[N].attribute_modifiers[register_index-1] & vs_output::am_noperspective)
+			{
+				out_m128[register_index] = interp_attr;
+			}
+			else
+			{
+				out_m128[register_index] = _mm_mul_ps(interp_attr, inv_w4);
+			}
+
+			// Face
+			out.front_face( start.front_face() );
+		}
+
+		return out;
+#else
+		vs_output tmp;
+		integral1_n<N>(tmp, start, derivation);
+		unproject_n(out, tmp);
+		return out;
+#endif
+	}
+
+	template <int N>
+	vs_output& step1_n(vs_output& out, const vs_output& in, const vs_output& derivation)
 	{
 		out.position() = in.position() + derivation.position();
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -251,7 +304,7 @@ namespace vs_output_op_funcs
 		return out;
 	}
 	template <int N>
-	vs_output& integral2_n(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
+	vs_output& step_1d_n(vs_output& out, const vs_output& in, float step, const vs_output& derivation)
 	{
 		out.position() = in.position() + (derivation.position() * step);
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -262,7 +315,67 @@ namespace vs_output_op_funcs
 		return out;
 	}
 	template <int N>
-	vs_output& selfintegral1_n(vs_output& inout, const vs_output& derivation)
+	vs_output& step_2d_n(
+		vs_output& out, const vs_output& in,
+		float step0, const vs_output& derivation0,
+		float step1, const vs_output& derivation1)
+	{
+#if ( defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) ) && !defined(EFLIB_NO_SIMD)
+		__m128 const* d0_m128	= reinterpret_cast<__m128 const*>( derivation0.raw_data() );
+		__m128 const* d1_m128	= reinterpret_cast<__m128 const*>( derivation1.raw_data() );
+		__m128 const* in_m128	= reinterpret_cast<__m128 const*>( in.raw_data() );
+		__m128*		  out_m128	= reinterpret_cast<__m128 *>( out.raw_data() );
+		__m128		  step0_m128= _mm_load_ps1(&step0);
+		__m128		  step1_m128= _mm_load_ps1(&step1);
+
+		out_m128[0] = _mm_add_ps(
+			in_m128[0],
+			_mm_add_ps( _mm_mul_ps(d0_m128[0], step0_m128), _mm_mul_ps(d1_m128[0], step1_m128) )
+			);
+
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
+			{
+				out_m128[i_attr+1] = in_m128[i_attr+1];
+			}
+			else
+			{
+				out_m128[i_attr+1] = _mm_add_ps(
+					in_m128[i_attr+1],
+					_mm_add_ps(
+						_mm_mul_ps(d0_m128[i_attr+1], step0_m128),
+						_mm_mul_ps(d1_m128[i_attr+1], step1_m128)
+						)
+					);
+			}
+		}
+#else
+		out.position() =
+			in.position()
+			+ (derivation0.position() * step0)
+			+ (derivation1.position() * step1);
+
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
+			{
+				out.attribute(i_attr) = in.attribute(i_attr);
+			}
+			else
+			{
+				out.attribute(i_attr) =
+					in.attribute(i_attr)
+					+ (derivation0.attribute(i_attr) * step0)
+					+ (derivation1.attribute(i_attr) * step1);
+			}
+		}
+#endif
+		return out;
+	}
+
+	template <int N>
+	vs_output& self_step1_n(vs_output& inout, const vs_output& derivation)
 	{
 #if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) && !defined(EFLIB_NO_SIMD)
 		__m128 const*	src = NULL;
@@ -295,7 +408,7 @@ namespace vs_output_op_funcs
 		return inout;
 	}
 	template <int N>
-	vs_output& selfintegral2_n(vs_output& inout, float step, const vs_output& derivation)
+	vs_output& self_step_1d_n(vs_output& inout, float step, const vs_output& derivation)
 	{
 		inout.position() += (derivation.position() * step);
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -307,25 +420,29 @@ namespace vs_output_op_funcs
 	}
 
 	template <int N>
-	vs_output& operator_selfadd_n(vs_output& lhs, const vs_output& rhs)
+	vs_output& self_add_n(vs_output& lhs, const vs_output& rhs)
 	{
 		lhs.position() += rhs.position();
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
 			lhs.attribute(i_attr) += rhs.attribute(i_attr);
 		}
 		return lhs;
 	}
+
 	template <int N>
-	vs_output& operator_selfsub_n(vs_output& lhs, const vs_output& rhs)
+	vs_output& self_sub_n(vs_output& lhs, const vs_output& rhs)
 	{
 		lhs.position() -= rhs.position();
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
 			lhs.attribute(i_attr) -= rhs.attribute(i_attr);
 		}
 		return lhs;
 	}
+	
 	template <int N>
-	vs_output& operator_selfmul_n(vs_output& lhs, float f)
+	vs_output& self_mul_n(vs_output& lhs, float f)
 	{
 		lhs.position() *= f;
 		for(size_t i_attr = 0; i_attr < N; ++i_attr){
@@ -334,14 +451,14 @@ namespace vs_output_op_funcs
 		return lhs;
 	}
 	template <int N>
-	vs_output& operator_selfdiv_n(vs_output& lhs, float f)
+	vs_output& self_div_n(vs_output& lhs, float f)
 	{
 		assert( !eflib::equal<float>(f, 0.0f) );
-		return operator_selfmul_n<N>(lhs, 1 / f);
+		return self_mul_n<N>(lhs, 1 / f);
 	}
 
 	template <int N>
-	vs_output& operator_add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
+	vs_output& add_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
 		out.position() = vso0.position() + vso1.position();
 		out.front_face( vso0.front_face() );
@@ -351,17 +468,23 @@ namespace vs_output_op_funcs
 		return out;
 	}
 	template <int N>
-	vs_output& operator_sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
+	vs_output& sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
-		out.position() = vso0.position() - vso1.position();
-		out.front_face( vso0.front_face() );
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			out.attribute(i_attr) = vso0.attribute(i_attr) - vso1.attribute(i_attr);
+		__m128 const* v1_m128 = reinterpret_cast<__m128 const*>( vso1.raw_data() );
+		__m128 const* v0_m128 = reinterpret_cast<__m128 const*>( vso0.raw_data() );
+
+		__m128* out_m128 = reinterpret_cast<__m128*>( out.raw_data() );
+
+		for(size_t register_index = 0; register_index < N+1; ++register_index)
+		{
+			out_m128[register_index] =
+				_mm_sub_ps(v0_m128[register_index], v1_m128[register_index]);
 		}
+		out.front_face( vso0.front_face() );
 		return out;
 	}
 	template <int N>
-	vs_output& operator_mul_n(vs_output& out, const vs_output& vso0, float f)
+	vs_output& mul_n(vs_output& out, const vs_output& vso0, float f)
 	{
 		out.position() = vso0.position() * f;
 		out.front_face( vso0.front_face() );
@@ -370,10 +493,11 @@ namespace vs_output_op_funcs
 		}
 		return out;
 	}
+
 	template <int N>
-	vs_output& operator_div_n(vs_output& out, const vs_output& vso0, float f)
+	vs_output& div_n(vs_output& out, const vs_output& vso0, float f)
 	{
-		return operator_mul_n<N>(out, vso0, 1 / f);
+		return mul_n<N>(out, vso0, 1 / f);
 	}
 }
 
