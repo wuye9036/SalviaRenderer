@@ -3,6 +3,25 @@
 
 BEGIN_NS_SALVIAU();
 
-uint64_t timer_t::cps_ = 0;
+timer::timer()
+{
+	restart();
+}
+
+void timer::restart()
+{
+	start_time_ = current_time();
+}
+
+double timer::elapsed() const
+{
+	seconds sec = current_time() - start_time_;
+	return sec.count();
+}
+
+timer::time_point timer::current_time() const
+{
+	return clock_type::now();
+}
 
 END_NS_SALVIAU();

@@ -16,17 +16,12 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 
 #include <salviau/include/common/timer.h>
+#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <eflib/include/platform/dl_loader.h>
 
 #include <vector>
-
-#if defined( SALVIA_BUILD_WITH_DIRECTX )
-#define PRESENTER_NAME "d3d9"
-#else
-#define PRESENTER_NAME "opengl"
-#endif
 
 using namespace eflib;
 using namespace salviar;
@@ -240,25 +235,8 @@ protected:
 
 		string title( "Sample: Morph" );
 		impl->main_window()->set_title( title );
-
-		std::string dll_name = "salviax_";
-		dll_name += (PRESENTER_NAME);
-		dll_name += "_presenter";
-#ifdef EFLIB_DEBUG
-		dll_name += "_d";
-#endif
-		dll_name += ".dll";
-
-		shared_ptr<dynamic_lib> presenter_dll = eflib::dynamic_lib::load(dll_name);
-		EFLIB_IMPORT_DLL_FUNCTION(
-			void (*)(salviar::h_device&, void*),
-			create_presenter_device,
-			presenter_dll,
-			salviax_create_presenter_device
-			);
-		
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		create_presenter_device(present_dev, *boost::unsafe_any_cast<void*>( &view_handle_any ) );
+		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
 
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
@@ -407,7 +385,7 @@ protected:
 	float accumulate_time;
 	float fps;
 
-	timer_t timer;
+	timer timer;
 	/** @} */
 };
 

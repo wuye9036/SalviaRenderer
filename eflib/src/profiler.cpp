@@ -1,15 +1,6 @@
 #include <eflib/include/diagnostics/profiler.h>
 #include <eflib/include/utility/unref_declarator.h>
 
-#include <limits>
-#if defined(EFLIB_WINDOWS)
-	#define NOMINMAX
-	#include <windows.h>
-#else
-	#include <ctime>
-	#include <limits>
-#endif
-
 #include <cassert>
 #include <iostream>
 #include <algorithm>
@@ -19,28 +10,70 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+namespace chrono = boost::chrono;
+
 namespace eflib
 {
-	uint64_t current_counter()
+	profiling_item::profiling_item()
+		: duration_(0.0), tag(0), parent(NULL)
 	{
-#if defined(EFLIB_WINDOWS)
-		LARGE_INTEGER count;
-		QueryPerformanceCounter(&count);
-		return static_cast<uint64_t>(count.QuadPart);
-#else
-		return static_cast<uint64_t>(std::clock());
-#endif
+	}
+
+	profiling_item::~profiling_item()
+	{
+		for(size_t i = 0; i < children.size(); ++i)
+		{
+			delete children[i];
+		}
+	}
+
+	void profiling_item::start(profiling_item::clock::time_point start_time)
+	{
+		start_time_ = start_time;
+	}
+
+	void profiling_item::end(profiling_item::clock::time_point end_time)
+	{
+		typedef chrono::duration< double, boost::ratio<1> > dseconds;
+		profiling_item::duration_ +=
+			chrono::duration_cast<dseconds>(end_time - start_time_).count();
+	}
+
+	double profiling_item::duration() const
+	{
+		return duration_;
+	}
+
+	double profiling_item::children_duration() const
+	{
+		double ret = 0.0;
+		for(size_t i = 0; i < children.size(); ++i)
+		{
+			ret += children[i]->duration();
+		}
+		return ret;
+	}
+
+	double profiling_item::exclusive_duration() const
+	{
+		return duration() - children_duration();
+	}
+
+	bool profiling_item::try_merge(profiling_item const* rhs)
+	{
+		assert(parent == rhs->parent);
+		assert(this != rhs);
+		if(name == rhs->name && tag == rhs->tag)
+		{
+			children.insert(children.end(), rhs->children.begin(), rhs->children.end());
+			duration_ += rhs->duration_;
+			return true;
+		}
+		return false;
 	}
 
 	profiler::profiler(): current_(NULL)
 	{
-#ifdef EFLIB_WINDOWS
-		LARGE_INTEGER frequency;
-		QueryPerformanceFrequency(&frequency);
-		cps_ = static_cast<uint64_t>(frequency.QuadPart);
-#else
-		cps_ = CLOCKS_PER_SEC;
-#endif
 	}
 
 	void profiler::start(string const& name, size_t tag)
@@ -53,14 +86,13 @@ namespace eflib
 		}
 		else
 		{
-			current_->children.push_back( profiling_item() );
-			current_ = &current_->children.back();
+			current_->children.push_back( new profiling_item() );
+			current_ = current_->children.back();
 		}
 
 		current_->name = name;
 		current_->tag = tag;
-		current_->start_time = current_counter();
-		current_->end_time = current_->start_time;
+		current_->start( profiling_item::clock::now() );
 		current_->parent = parent;
 	}
 
@@ -68,8 +100,42 @@ namespace eflib
 	{
 		EFLIB_UNREF_DECLARATOR(name);
 		assert(name == current_->name);
-		current_->end_time = current_counter();
+		current_->end( profiling_item::clock::now() );
 		current_ = current_->parent;
+	}
+
+	void merge_children(profiling_item* parent)
+	{
+		// Merge children items of parent.
+		size_t unique_count = parent->children.size();
+		for(size_t i = 0; i < unique_count; ++i)
+		{
+			profiling_item* processing_item = parent->children[i];
+
+			for(size_t j = 0; j < i; ++j)
+			{
+				profiling_item* processed_item = parent->children[j];
+				if( processed_item->try_merge(processing_item) )
+				{
+					std::swap(parent->children[i], parent->children.back());
+					delete parent->children.back();
+					parent->children.pop_back();
+					--unique_count;
+					break;
+				}
+			}
+		}
+
+		// Merge recursively.
+		for(size_t i = 0; i < unique_count; ++i)
+		{
+			merge_children(parent->children[i]);
+		}
+	}
+
+	void profiler::merge_items()
+	{
+		merge_children(&root_);
 	}
 
 	profiling_item const* profiler::root() const
@@ -77,23 +143,11 @@ namespace eflib
 		return &root_;
 	}
 
-	uint64_t profiler::cps() const
-	{
-		return cps_;
-	}
-
 	void visit_profiling_item_recursively(
-		profiling_item const* item, size_t level, size_t max_level, uint64_t cps, uint64_t parent_ticks
+		profiling_item const* item, size_t level, size_t max_level
 		)
 	{
 		assert(level < 40);
-
-		uint64_t inclusive_ticks = item->end_time - item->start_time;
-		uint64_t nested_used_ticks = 0;
-		for(size_t i_child = 0; i_child < item->children.size(); ++i_child)
-		{
-			nested_used_ticks += (item->children[i_child].end_time - item->children[i_child].start_time);
-		}
 
 		if(level > max_level)
 		{
@@ -137,24 +191,22 @@ namespace eflib
 		}
 
 		// Print inclusive seconds.
-		double inclusive_second = inclusive_ticks / (double)cps;
 		char is_string[inclusive_ms_width];
 		std::fill_n(is_string, inclusive_ms_width, ' ');
-		_snprintf(is_string, inclusive_ms_width, "%8.3f", inclusive_second);
+		_snprintf( is_string, inclusive_ms_width, "%8.3f", item->duration() );
 		std::copy(is_string, is_string+inclusive_ms_width, line+inclusive_ms_offset);
 
 		// Print exclusive seconds.
-		double exclusive_second = (inclusive_ticks-nested_used_ticks) / (double)cps;
 		char es_string[exclusive_ms_width];
 		std::fill_n(es_string, exclusive_ms_width, ' ');
-		_snprintf(es_string, exclusive_ms_width, "%8.3f", exclusive_second);
+		_snprintf( es_string, exclusive_ms_width, "%8.3f", item->exclusive_duration() );
 		std::copy(es_string, es_string+exclusive_ms_width, line+exclusive_ms_offset);
 
 		// Print percentage
 		double percent = 1.0f;
-		if(parent_ticks > 0)
+		if(item->parent != NULL && item->parent->duration() > 0)
 		{
-			percent = inclusive_ticks / (double)parent_ticks;
+			percent = item->duration() / item->parent->duration();
 		}
 		char pc_string[percent_width];
 		std::fill_n(pc_string, percent_width, ' ');
@@ -167,7 +219,7 @@ namespace eflib
 		for(size_t i_child = 0; i_child < item->children.size(); ++i_child)
 		{
 			visit_profiling_item_recursively(
-				&(item->children[i_child]), level+1, max_level, cps, inclusive_ticks
+				item->children[i_child], level+1, max_level
 				);
 		}
 
@@ -178,7 +230,7 @@ namespace eflib
 	{
 		cout << " --- Profiling Result BEG --- " << endl;
 		cout << "                      Name                            Secs(I)   Secs(E)    %  " << endl;
-		visit_profiling_item_recursively(prof->root(), 0, max_level, prof->cps(), 0);
+		visit_profiling_item_recursively(prof->root(), 0, max_level);
 		cout << " --- Profiling Result END --- " << endl;
 	}
 

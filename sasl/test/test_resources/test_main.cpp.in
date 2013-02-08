@@ -3,7 +3,6 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/test/unit_test.hpp>
-#define BOOST_CHRONO_HEADER_ONLY
 #include <boost/chrono.hpp>
 #include <eflib/include/platform/boost_end.h>
 

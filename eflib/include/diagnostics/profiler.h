@@ -1,7 +1,13 @@
+#pragma once
+
 #ifndef EFLIB_DIAGNOSTICS_PROFILER_H
 #define EFLIB_DIAGNOSTICS_PROFILER_H
 
 #include <eflib/include/platform/typedefs.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/chrono.hpp>
+#include <eflib/include/platform/boost_end.h>
 
 #include <string>
 #include <vector>
@@ -11,12 +17,29 @@ namespace eflib
 	class profiling_item
 	{
 	public:
-		size_t						tag;
-		std::string					name;
-		uint64_t					start_time;
-		uint64_t					end_time;
-		std::vector<profiling_item>	children;
-		profiling_item*				parent;
+		typedef boost::chrono::high_resolution_clock clock;
+
+		profiling_item();
+		~profiling_item();
+		
+		void start(clock::time_point start_time);
+		void end(clock::time_point end_time);
+
+		double	duration() const;
+		double	children_duration() const;
+		double	exclusive_duration() const;
+
+		bool	try_merge(profiling_item const* rhs);
+		
+		size_t							tag;
+		std::string						name;
+		
+		std::vector<profiling_item*>	children;
+		profiling_item*					parent;
+
+	private:
+		clock::time_point	start_time_;
+		double				duration_;
 	};
 	
 	class profiler
@@ -27,11 +50,11 @@ namespace eflib
 		void start	(std::string const&, size_t tag);
 		void end	(std::string const&);
 
+		void merge_items();
+
 		profiling_item const* root() const;
-		uint64_t			  cps() const;
 
 	private:
-		uint64_t		cps_;
 		profiling_item 	root_;
 		profiling_item* current_;
 	};

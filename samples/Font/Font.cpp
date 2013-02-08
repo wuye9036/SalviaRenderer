@@ -10,20 +10,17 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
+
 #include <salviax/include/resource/font/font.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+
 #include <salviau/include/common/timer.h>
+#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <vector>
-
-#if defined( SALVIA_BUILD_WITH_DIRECTX )
-#define PRESENTER_NAME "d3d9"
-#else
-#define PRESENTER_NAME "opengl"
-#endif
 
 using namespace eflib;
 using namespace salviar;
@@ -250,21 +247,9 @@ protected:
 		cout << "Creating window and device ..." << endl;
 
 		string title( "Sample: Font" );
-		impl->main_window()->set_title( title );
-		
-		std::_tstring dll_name = TEXT("salviax_");
-		dll_name += TEXT(PRESENTER_NAME);
-		dll_name += TEXT("_presenter");
-#ifdef EFLIB_DEBUG
-		dll_name += TEXT("_d");
-#endif
-		dll_name += TEXT(".dll");
-
-		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
-		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
+		impl->main_window()->set_title(title);
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		presenter_func(present_dev, *boost::unsafe_any_cast<void*>( &view_handle_any ) );
+		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
 		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
@@ -483,7 +468,7 @@ protected:
 	float accumulate_time;
 	float fps;
 
-	timer_t timer;
+	timer timer;
 	/** @} */
 };
 

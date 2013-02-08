@@ -14,16 +14,12 @@
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+
 #include <salviau/include/common/timer.h>
+#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <vector>
-
-#if defined( SALVIA_BUILD_WITH_DIRECTX )
-#define PRESENTER_NAME "d3d9"
-#else
-#define PRESENTER_NAME "opengl"
-#endif
 
 using namespace eflib;
 using namespace salviar;
@@ -250,20 +246,9 @@ protected:
 
 		string title( "Sample: Texture And Blending" );
 		impl->main_window()->set_title( title );
-		
-		std::_tstring dll_name = TEXT("salviax_");
-		dll_name += TEXT(PRESENTER_NAME);
-		dll_name += TEXT("_presenter");
-#ifdef EFLIB_DEBUG
-		dll_name += TEXT("_d");
-#endif
-		dll_name += TEXT(".dll");
 
-		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
-		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		presenter_func(present_dev, *boost::unsafe_any_cast<void*>( &view_handle_any ) );
+		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
 		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
@@ -440,9 +425,9 @@ protected:
 
 protected:
 	/** Properties @{ */
-	h_device present_dev;
-	h_renderer hsr;
-	h_texture sm_tex;
+	h_device	present_dev;
+	h_renderer	hsr;
+	h_texture	sm_tex;
 
 	h_mesh planar_mesh;
 	h_mesh box_mesh;
@@ -453,13 +438,13 @@ protected:
 	h_sampler plane_sampler;
 	h_sampler box_sampler;
 
-	h_vertex_shader pvs_box;
-	h_pixel_shader pps_box;
-	h_shader_code psc_box;
+	h_vertex_shader	pvs_box;
+	h_pixel_shader	pps_box;
+	h_shader_code	psc_box;
 
-	h_vertex_shader pvs_plane;
-	h_pixel_shader pps_plane;
-	h_shader_code psc_plane;
+	h_vertex_shader	pvs_plane;
+	h_pixel_shader	pps_plane;
+	h_shader_code	psc_plane;
 
 	h_blend_shader pbs_box;
 	h_blend_shader pbs_plane;
@@ -467,14 +452,14 @@ protected:
 	h_rasterizer_state rs_front;
 	h_rasterizer_state rs_back;
 
-	h_surface display_surf;
-	surface* pdsurf;
+	h_surface	display_surf;
+	surface*	pdsurf;
 
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
+	uint32_t	num_frames;
+	float		accumulate_time;
+	float		fps;
 
-	timer_t timer;
+	timer		timer;
 	/** @} */
 };
 
