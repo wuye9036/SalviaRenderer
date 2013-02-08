@@ -31,8 +31,6 @@ class shader_reflection;
 
 BEGIN_NS_SALVIAR();
 
-#define SALVIA_ENABLE_PIXEL_SHADER
-
 using namespace std;
 using namespace eflib;
 using namespace boost;
@@ -410,60 +408,19 @@ void rasterizer::draw_whole_tile(
 	// Set base vertex of scan-lines
 	vs_output base_vert;
 	vs_output_ops->step_2d(base_vert, v0, offsetx, ddx, offsety, ddy);
-
-#ifndef SALVIA_ENABLE_PIXEL_SHADER
-	for(int iy = top; iy < bottom; iy += 4)
-	{
-		vs_output px_in;
-		ps_output px_out;
-		vs_output unprojed;
-
-		for(int ix = left; ix < right; ix += 4)
-		{
-			vs_output start_vert;
-			vs_output_ops->step_2d(start_vert, base_vert, ix-left, ddx, iy-top, ddy);
-
-			for(int dy = 0; dy < 4; ++dy)
-			{
-				vs_output_ops->copy(px_in, start_vert);
-
-				for(int dx = 0; dx < 4; ++dx){
-					vs_output_ops->unproject(unprojed, px_in);
-
-					if(pps->execute(unprojed, px_out)){
-						const int x_coord = ix + dx;
-						const int y_coord = iy + dy;
-						if (1 == num_samples){
-							frame_buffer_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
-						}
-						else{
-							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-								frame_buffer_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
-							}
-						}
-					}
-
-					// Integral X
-					vs_output_ops->selfintegral1(px_in, ddx);
-				}
-
-				// Integral Y
-				vs_output_ops->selfintegral1(start_vert, ddy);
-			}
-		}
-	}
-#else
 	
 	for(int iy = top; iy < bottom; iy += 4)
 	{
 		vs_output px_in;
-		for(int ix = left; ix < right; ix += 4){
+		for(int ix = left; ix < right; ix += 4)
+		{
 			vs_output unprojed[4*4];
 
 			vs_output start_vert;
 			vs_output_ops->step_2d(start_vert, base_vert, ix-left, ddx, iy-top, ddy);
 
-			for(int dy = 0; dy < 4; ++dy){
+			for(int dy = 0; dy < 4; ++dy)
+			{
 				vs_output_ops->copy(px_in, start_vert);
 				for(int dx = 0; dx < 4; ++dx){
 					vs_output_ops->unproject(unprojed[dx+dy*4], px_in);
@@ -472,10 +429,9 @@ void rasterizer::draw_whole_tile(
 				vs_output_ops->self_step1(start_vert, ddy);
 			}
 
-			draw_full_package( unprojed, iy, ix, num_samples, hbs, pps, psu, aa_z_offset );
+			draw_full_package(unprojed, iy, ix, num_samples, hbs, pps, psu, aa_z_offset);
 		}
 	}
-#endif
 }
 
 void rasterizer::draw_pixels(
@@ -596,84 +552,6 @@ void rasterizer::draw_pixels(
 	vs_output base_vert;
 	vs_output_ops->step_2d(base_vert, v0, offsetx, ddx, offsety, ddy);
 
-#if !defined( SALVIA_ENABLE_PIXEL_SHADER )
-	for(int iy = 0; iy < 4; ++iy){
-		vs_output px_in;
-		ps_output px_out;
-		vs_output unprojed;
-
-		vs_output_ops->copy(px_in, base_vert);
-
-		for(int ix = 0; ix < 4; ++ix){
-			uint32_t mask = pixel_mask[iy * 4 + ix];
-			if (mask){
-				if (has_centroid && (mask != full_mask)){
-					vs_output projed;
-					vs_output_ops->copy(projed, px_in);
-
-					// centroid interpolate
-					vec2 sp_centroid(0, 0);
-					int n = 0;
-					unsigned long i_sample;
-					const uint32_t mask_backup = mask;
-					while (_BitScanForward(&i_sample, mask)){
-						const vec2& sp = samples_pattern_[i_sample];
-						sp_centroid.x() += sp.x() - 0.5f;
-						sp_centroid.y() += sp.y() - 0.5f;
-						++ n;
-
-						mask &= mask - 1;
-					}
-					sp_centroid /= n;
-
-					mask = mask_backup;
-
-					for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
-						if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
-							projed.attribute(i_attr) += ddx.attribute(i_attr) * sp_centroid.x() + ddy.attribute(i_attr) * sp_centroid.y();
-						}
-					}
-
-					vs_output_ops->unproject(unprojed, projed);
-				}
-				else{
-					vs_output_ops->unproject(unprojed, px_in);
-				}
-
-				if ((unprojed.position().x() < 0) || (unprojed.position().y() < 0))
-				{
-					printf("%f %f\n", unprojed.position().x(), unprojed.position().y());
-				}
-
-				if(pps->execute(unprojed, px_out)){
-					const int x_coord = left + ix;
-					const int y_coord = top + iy;
-					if (1 == num_samples){
-						frame_buffer_->render_sample(hbs, x_coord, y_coord, 0, px_out, px_out.depth);
-					}
-					else{
-						if (full_mask == mask){
-							for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-								frame_buffer_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
-							}
-						}
-						else{
-							unsigned long i_sample;
-							while (_BitScanForward(&i_sample, mask)){
-								frame_buffer_->render_sample(hbs, x_coord, y_coord, i_sample, px_out, px_out.depth + aa_z_offset[i_sample]);
-								mask &= mask - 1;
-							}
-						}
-					}
-				}
-			}
-
-			vs_output_ops->selfintegral1(px_in, ddx);
-		}
-
-		vs_output_ops->selfintegral1(base_vert, ddy);
-	}
-#else
 	vs_output unprojed[4*4];
 
 	// Compute unprojected pixels.
@@ -684,7 +562,8 @@ void rasterizer::draw_pixels(
 			uint32_t mask = pixel_mask[iy * 4 + ix];
 
 			// if ( mask ){
-			if (has_centroid && (mask != full_mask) && mask != 0){
+			if (has_centroid && (mask != full_mask) && mask != 0)
+			{
 				vs_output projed;
 				vs_output_ops->copy(projed, px_in);
 
@@ -693,7 +572,8 @@ void rasterizer::draw_pixels(
 				int n = 0;
 				unsigned long i_sample;
 				const uint32_t mask_backup = mask;
-				while (_BitScanForward(&i_sample, mask)){
+				while (_BitScanForward(&i_sample, mask))
+				{
 					const vec2& sp = samples_pattern_[i_sample];
 					sp_centroid.x() += sp.x() - 0.5f;
 					sp_centroid.y() += sp.y() - 0.5f;
@@ -705,8 +585,10 @@ void rasterizer::draw_pixels(
 
 				mask = mask_backup;
 
-				for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
-					if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
+				for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr)
+				{
+					if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid)
+					{
 						projed.attribute(i_attr) += ddx.attribute(i_attr) * sp_centroid.x() + ddy.attribute(i_attr) * sp_centroid.y();
 					}
 				}
@@ -716,16 +598,13 @@ void rasterizer::draw_pixels(
 			{
 				vs_output_ops->unproject(unprojed[iy*4+ix], px_in);
 			}
-			//}
-
 			vs_output_ops->self_step1(px_in, ddx);
 		}
 		vs_output_ops->self_step1(base_vert, ddy);
 	}
 
 	// Execute pixel shader and render to target.
-	draw_package( unprojed, top, left, num_samples, hbs, pps, psu, pixel_mask, aa_z_offset );
-#endif
+	draw_package(unprojed, top, left, num_samples, hbs, pps, psu, pixel_mask, aa_z_offset);
 }
 
 void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region,
@@ -1534,19 +1413,21 @@ void rasterizer::draw_package(
 		pso[i].coverage = 0xFFFFFFFF;
 	}
 
-	if( psu ){
+	if(psu)
+	{
 		psu->update( pixels, vs_abi );
 		psu->execute( pso );
 	}	
 
-	for( int iy = 0; iy < 4; ++iy ){
-		for ( int ix = 0; ix < 4; ++ix ){
-
+	for( int iy = 0; iy < 4; ++iy )
+	{
+		for ( int ix = 0; ix < 4; ++ix )
+		{
 			int px_index = iy * 4 + ix;
 			uint32_t mask = masks[px_index];
 
 			// No sampler need to be draw.
-			if( !mask ) continue;
+			if(!mask) continue;
 
 			// Clipped by pixel shader.
 			if( !psu && !pps->execute(pixels[px_index], pso[px_index]) ) continue;
@@ -1563,15 +1444,25 @@ void rasterizer::draw_package(
 			mask &= pso[px_index].coverage;
 
 			// MSAA.
-			if (full_mask == mask){
-				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+			if (full_mask == mask)
+			{
+				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample)
+				{
+					frame_buffer_->render_sample(
+						bs, x_coord, y_coord, i_sample,
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+					);
 				}
 			} 
-			else{
+			else
+			{
 				unsigned long i_sample;
-				while (_BitScanForward(&i_sample, mask)){
-					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+				while (_BitScanForward(&i_sample, mask))
+				{
+					frame_buffer_->render_sample(
+						bs, x_coord, y_coord, i_sample,
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+					);
 					mask &= mask - 1;
 				}
 			}
@@ -1605,32 +1496,45 @@ void rasterizer::draw_full_package(
 	}
 
 	for ( int iy = 0; iy < 4; ++iy ){
-
 		for( int ix = 0; ix < 4; ++ix ){
+
 			int const px_index = ix + iy * 4;
 
-			if( !psu && !pps->execute(pixels[px_index], pso[px_index]) ) {
+			if( !psu && !pps->execute(pixels[px_index], pso[px_index]) )
+			{
 				continue;
 			}
 
 			const int x_coord = left + ix;
 			const int y_coord = top + iy;
-			if (1 == num_samples){
-				frame_buffer_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
+			if (1 == num_samples)
+			{
+				frame_buffer_->render_sample(
+					bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
 
 			uint32_t mask = pso[px_index].coverage;
 			
-			if (full_mask == mask){
-				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
-					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+			if (full_mask == mask)
+			{
+				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample)
+				{
+					frame_buffer_->render_sample(
+						bs, x_coord, y_coord, i_sample,
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+					);
 				}
 			}
-			else{
+			else
+			{
 				unsigned long i_sample;
-				while (_BitScanForward(&i_sample, mask)){
-					frame_buffer_->render_sample(bs, x_coord, y_coord, i_sample, pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]);
+				while (_BitScanForward(&i_sample, mask))
+				{
+					frame_buffer_->render_sample(
+						bs, x_coord, y_coord, i_sample,
+						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
+					);
 					mask &= mask - 1;
 				}
 			}

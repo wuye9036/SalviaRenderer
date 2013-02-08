@@ -423,12 +423,12 @@ int main( int /*argc*/, TCHAR* /*argv*/[] )
 
 	{
 		benchmark bm;
-		for(size_t i = 0; i < RENDER_FRAME_COUNT; ++i)
+		for(size_t i = 1; i <= RENDER_FRAME_COUNT; ++i)
 		{
 			cout << "Render Frame #" << i << "/" << RENDER_FRAME_COUNT << endl;
 			bm.render();
 		}
-		bm.save_frame("frame.png");
+		bm.save_frame("complexmesh_frame.png");
 	}
 	::system("pause");
 	return 0;
