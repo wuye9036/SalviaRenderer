@@ -110,18 +110,22 @@ namespace eflib
 		size_t unique_count = parent->children.size();
 		for(size_t i = 0; i < unique_count; ++i)
 		{
-			profiling_item* processing_item = parent->children[i];
+			profiling_item* processed_item = parent->children[i];
 
-			for(size_t j = 0; j < i; ++j)
+			size_t i_processing = i+1;
+			while(i_processing < unique_count)
 			{
-				profiling_item* processed_item = parent->children[j];
+				profiling_item* processing_item = parent->children[i_processing];
 				if( processed_item->try_merge(processing_item) )
 				{
-					std::swap(parent->children[i], parent->children.back());
+					std::swap(parent->children[i_processing], parent->children.back());
 					delete parent->children.back();
 					parent->children.pop_back();
 					--unique_count;
-					break;
+				}
+				else
+				{
+					++i_processing;
 				}
 			}
 		}
