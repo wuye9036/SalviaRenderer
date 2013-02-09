@@ -48,7 +48,8 @@ vs_output_op gen_vs_output_op_n()
 
 	ret.lerp = lerp_n<N>;
 	ret.step_unproj = step_unproj_n<N>;
-	
+	ret.step_2d_unproj = step_2d_unproj_n<N>;
+
 	ret.step1		= step1_n<N>;
 	ret.step_1d		= step_1d_n<N>;
 	ret.step_2d		= step_2d_n<N>;
@@ -59,7 +60,7 @@ vs_output_op gen_vs_output_op_n()
 	return ret;
 }
 
-vs_input_op vs_input_ops[vso_attribute_count] = {
+vs_input_op vs_input_ops[vsi_attribute_count] = {
 	gen_vs_input_op_n<0>(),
 	gen_vs_input_op_n<1>(),
 	gen_vs_input_op_n<2>(),
@@ -67,31 +68,15 @@ vs_input_op vs_input_ops[vso_attribute_count] = {
 	gen_vs_input_op_n<4>(),
 	gen_vs_input_op_n<5>(),
 	gen_vs_input_op_n<6>(),
-	gen_vs_input_op_n<7>(),
-	gen_vs_input_op_n<8>(),
-	gen_vs_input_op_n<9>(),
-	gen_vs_input_op_n<10>(),
-	gen_vs_input_op_n<11>(),
-	gen_vs_input_op_n<12>(),
-	gen_vs_input_op_n<13>(),
-	gen_vs_input_op_n<14>(),
-	gen_vs_input_op_n<15>(),
-	gen_vs_input_op_n<16>(),
-	gen_vs_input_op_n<17>(),
-	gen_vs_input_op_n<18>(),
-	gen_vs_input_op_n<19>(),
-	gen_vs_input_op_n<20>(),
-	gen_vs_input_op_n<21>(),
-	gen_vs_input_op_n<22>(),
-	gen_vs_input_op_n<23>(),
-	gen_vs_input_op_n<24>(),
-	gen_vs_input_op_n<25>(),
-	gen_vs_input_op_n<26>(),
-	gen_vs_input_op_n<27>(),
-	gen_vs_input_op_n<28>(),
-	gen_vs_input_op_n<29>(),
-	gen_vs_input_op_n<30>(),
-	gen_vs_input_op_n<31>()
+	gen_vs_input_op_n<7>()
+	//gen_vs_input_op_n<8>(),
+	//gen_vs_input_op_n<9>(),
+	//gen_vs_input_op_n<10>(),
+	//gen_vs_input_op_n<11>(),
+	//gen_vs_input_op_n<12>(),
+	//gen_vs_input_op_n<13>(),
+	//gen_vs_input_op_n<14>(),
+	//gen_vs_input_op_n<15>()
 };
 
 vs_output_op vs_output_ops[vso_attribute_count] = {
@@ -100,33 +85,33 @@ vs_output_op vs_output_ops[vso_attribute_count] = {
 	gen_vs_output_op_n<2>(),
 	gen_vs_output_op_n<3>(),
 	gen_vs_output_op_n<4>(),
-	gen_vs_output_op_n<5>(),
-	gen_vs_output_op_n<6>(),
-	gen_vs_output_op_n<7>(),
-	gen_vs_output_op_n<8>(),
-	gen_vs_output_op_n<9>(),
-	gen_vs_output_op_n<10>(),
-	gen_vs_output_op_n<11>(),
-	gen_vs_output_op_n<12>(),
-	gen_vs_output_op_n<13>(),
-	gen_vs_output_op_n<14>(),
-	gen_vs_output_op_n<15>(),
-	gen_vs_output_op_n<16>(),
-	gen_vs_output_op_n<17>(),
-	gen_vs_output_op_n<18>(),
-	gen_vs_output_op_n<19>(),
-	gen_vs_output_op_n<20>(),
-	gen_vs_output_op_n<21>(),
-	gen_vs_output_op_n<22>(),
-	gen_vs_output_op_n<23>(),
-	gen_vs_output_op_n<24>(),
-	gen_vs_output_op_n<25>(),
-	gen_vs_output_op_n<26>(),
-	gen_vs_output_op_n<27>(),
-	gen_vs_output_op_n<28>(),
-	gen_vs_output_op_n<29>(),
-	gen_vs_output_op_n<30>(),
-	gen_vs_output_op_n<31>()
+	gen_vs_output_op_n<5>()
+	//gen_vs_output_op_n<6>(),
+	//gen_vs_output_op_n<7>(),
+	//gen_vs_output_op_n<8>(),
+	//gen_vs_output_op_n<9>(),
+	//gen_vs_output_op_n<10>(),
+	//gen_vs_output_op_n<11>(),
+	//gen_vs_output_op_n<12>(),
+	//gen_vs_output_op_n<13>(),
+	//gen_vs_output_op_n<14>(),
+	//gen_vs_output_op_n<15>(),
+	//gen_vs_output_op_n<16>(),
+	//gen_vs_output_op_n<17>(),
+	//gen_vs_output_op_n<18>(),
+	//gen_vs_output_op_n<19>(),
+	//gen_vs_output_op_n<20>(),
+	//gen_vs_output_op_n<21>(),
+	//gen_vs_output_op_n<22>(),
+	//gen_vs_output_op_n<23>(),
+	//gen_vs_output_op_n<24>(),
+	//gen_vs_output_op_n<25>(),
+	//gen_vs_output_op_n<26>(),
+	//gen_vs_output_op_n<27>(),
+	//gen_vs_output_op_n<28>(),
+	//gen_vs_output_op_n<29>(),
+	//gen_vs_output_op_n<30>(),
+	//gen_vs_output_op_n<31>()
 };
 
 namespace vs_input_op_funcs
@@ -290,6 +275,101 @@ namespace vs_output_op_funcs
 		unproject_n(out, tmp);
 		return out;
 #endif
+	}
+
+	template <int N>
+	vs_output& step_2d_unproj_n(
+		vs_output& out, const vs_output& in,
+		float step0, const vs_output& derivation0,
+		float step1, const vs_output& derivation1)
+	{
+#if ( defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) ) && !defined(EFLIB_NO_SIMD)
+		__m128 const* d0_m128	= reinterpret_cast<__m128 const*>( derivation0.raw_data() );
+		__m128 const* d1_m128	= reinterpret_cast<__m128 const*>( derivation1.raw_data() );
+		__m128 const* in_m128	= reinterpret_cast<__m128 const*>( in.raw_data() );
+		__m128*		  out_m128	= reinterpret_cast<__m128 *>( out.raw_data() );
+		__m128		  step0_m128= _mm_load_ps1(&step0);
+		__m128		  step1_m128= _mm_load_ps1(&step1);
+
+		out_m128[0] = _mm_add_ps(
+			in_m128[0],
+			_mm_add_ps( _mm_mul_ps(d0_m128[0], step0_m128), _mm_mul_ps(d1_m128[0], step1_m128) )
+			);
+		float inv_w = 1.0f / out_m128[0].m128_f32[3];
+		__m128 inv_w4 = _mm_load_ps1(&inv_w);
+
+		// for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			__m128 interp_attr;
+			//if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
+			//{
+			//	interp_attr = in_m128[i_attr+1];
+			//}
+			//else
+			{
+				interp_attr = _mm_add_ps(
+					in_m128[1],
+					_mm_add_ps(
+						_mm_mul_ps(d0_m128[1], step0_m128),
+						_mm_mul_ps(d1_m128[1], step1_m128)
+						)
+					);
+				out_m128[1] = _mm_mul_ps(interp_attr, inv_w4);
+
+				interp_attr = _mm_add_ps(
+					in_m128[2],
+					_mm_add_ps(
+						_mm_mul_ps(d0_m128[2], step0_m128),
+						_mm_mul_ps(d1_m128[2], step1_m128)
+						)
+					);
+				out_m128[2] = _mm_mul_ps(interp_attr, inv_w4);
+
+				interp_attr = _mm_add_ps(
+					in_m128[3],
+					_mm_add_ps(
+						_mm_mul_ps(d0_m128[3], step0_m128),
+						_mm_mul_ps(d1_m128[3], step1_m128)
+						)
+					);
+				out_m128[3] = _mm_mul_ps(interp_attr, inv_w4);
+			}
+
+			// Perspective
+			//if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)
+			//{
+			//	out_m128[i_attr+1] = interp_attr;
+			//}
+			//else
+			{
+				
+			}
+		}
+
+		// Face
+		out.front_face( in.front_face() );
+#else
+		out.position() =
+			in.position()
+			+ (derivation0.position() * step0)
+			+ (derivation1.position() * step1);
+
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
+			{
+				out.attribute(i_attr) = in.attribute(i_attr);
+			}
+			else
+			{
+				out.attribute(i_attr) =
+					in.attribute(i_attr)
+					+ (derivation0.attribute(i_attr) * step0)
+					+ (derivation1.attribute(i_attr) * step1);
+			}
+		}
+#endif
+		return out;
 	}
 
 	template <int N>

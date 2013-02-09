@@ -7,7 +7,6 @@
 
 #include <salviar/include/shader_utility.h>
 #include <salviar/include/sampler.h>
-#include <salviar/include/renderer_capacity.h>
 #include <salviar/include/enums.h>
 
 #include <eflib/include/platform/disable_warnings.h>

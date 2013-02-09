@@ -97,10 +97,11 @@ class rasterizer : public render_stage
 {
 	const static int MAX_NUM_MULTI_SAMPLES = 4;
 
-	h_rasterizer_state state_;
-	uint32_t num_vs_output_attributes_;
+	h_rasterizer_state	state_;
+	uint32_t			num_vs_output_attributes_;
 
-	h_framebuffer frame_buffer_;
+	h_framebuffer		frame_buffer_;
+	h_blend_shader		blend_shader_;
 
 	std::vector<eflib::vec3> edge_factors_;
 	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];

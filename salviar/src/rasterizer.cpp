@@ -769,7 +769,6 @@ void rasterizer::rasterize_triangle(
 	const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, 
 	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
-	const h_blend_shader& hbs = pparent_->get_blend_shader();
 	const size_t num_samples = frame_buffer_->get_num_samples();
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 
@@ -939,20 +938,26 @@ void rasterizer::rasterize_triangle(
 			case TVT_FULL:
 				// The whole tile is inside a triangle.
 				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, num_samples,
-					*reordered_verts[0], ddx, ddy, vs_output_ops, pps, psu, hbs, aa_z_offset);
+					*reordered_verts[0], ddx, ddy, vs_output_ops,
+					pps, psu, blend_shader_, aa_z_offset);
 				break;
 
 			case TVT_PIXEL:
 				// The tile is small enough for pixel level matching.
 				this->draw_pixels(vpleft0, vptop0, vpleft, vptop, 
 					edge_factors, num_samples,
-					has_centroid, *reordered_verts[0], ddx, ddy, vs_output_ops, pps, psu, hbs, aa_z_offset);
+					has_centroid, *reordered_verts[0], ddx, ddy, vs_output_ops,
+					pps, psu, blend_shader_, aa_z_offset);
 				break;
 
 			default:
 				// Only a part of the triangle is inside the tile. So subdivide the tile into small ones.
-				this->subdivide_tile(vpleft, vptop, cur_region, edge_factors, test_regions[dst_stage], test_region_size[dst_stage],
-					x_min, x_max, y_min, y_max, rej_to_acc, evalue, step_x, step_y);
+				this->subdivide_tile(
+					vpleft, vptop,
+					cur_region, edge_factors,
+					test_regions[dst_stage], test_region_size[dst_stage],
+					x_min, x_max, y_min, y_max,
+					rej_to_acc, evalue, step_x, step_y);
 				break;
 			}
 		}
@@ -1265,6 +1270,8 @@ void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uin
 void rasterizer::draw(size_t prim_count){
 	assert(pparent_);
 	if(!pparent_) return;
+
+	blend_shader_ = pparent_->get_blend_shader();
 
 	const size_t num_samples = frame_buffer_->get_num_samples();
 	switch (num_samples){
