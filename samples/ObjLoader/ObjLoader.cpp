@@ -95,10 +95,21 @@ public:
 		sampler_.reset(new sampler(desc));
 	}
 
+	vec4 to_color(vec3 const& v)
+	{
+		return vec4(
+			(v.x() + 1.0f) / 2.0f,
+			(v.y() + 1.0f) / 2.0f,
+			(v.z() + 1.0f) / 2.0f,
+			1.0f
+			);
+	}
+
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
-		if( tex_ ){
+		if( tex_ )
+		{
 			tex_color = tex2d(*sampler_ , 0);
 		}
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );

@@ -28,11 +28,11 @@ void default_vso2reg(
 		switch(lvt)
 		{
 		case salviar::lvt_f32v4:
-			memcpy(current_register, attr_data, sizeof(eflib::vec4)*4);
-			return;
+			memcpy(current_register, attr_data, sizeof(float)*4);
+			continue;
 		case salviar::lvt_f32v3:
-			memcpy(current_register, attr_data, sizeof(eflib::vec4)*3);
-			return;
+			memcpy(current_register, attr_data, sizeof(float)*3);
+			continue;
 		default:
 			assert(!"unsupported lvt");
 		}

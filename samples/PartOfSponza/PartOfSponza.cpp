@@ -132,25 +132,37 @@ public:
 		sampler_.reset(new sampler(desc));
 	}
 
+	vec4 to_color(vec3 const& v)
+	{
+		return vec4(
+			(v.x() + 1.0f) / 2.0f,
+			(v.y() + 1.0f) / 2.0f,
+			(v.z() + 1.0f) / 2.0f,
+			1.0f
+			);
+	}
+
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
-		if( tex_ ){
+		if( tex_ )
+		{
 			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
 
+		
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
 		vec3 eye_dir( normalize3( in.attribute(3).xyz() ) );
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
-		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
 
-		out.color[0] = ambient * 0.01f + diff_color * illum_diffuse + specular * illum_specular;
 		out.color[0] = diff_color * illum_diffuse;
 		out.color[0][3] = 1.0f;
 
+		/*out.color[0].xy( in.attribute(0).xy() );
+		out.color[0].zw( 0.0f, 1.0f );*/
 		return true;
 	}
 	virtual h_pixel_shader create_clone()
@@ -196,7 +208,7 @@ protected:
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
 
-		hsr = create_software_renderer(&render_params, present_dev);
+		hsr = create_benchmark_renderer(&render_params, present_dev);
 
 		const h_framebuffer& fb = hsr->get_framebuffer();
 		if (fb->get_num_samples() > 1){
@@ -313,7 +325,7 @@ protected:
 					= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
 
 #ifdef _DEBUG
-				// if (mtl->name != "sponza_07SG"){ continue; }
+				// if (mtl->name != "sponza_22SG"){ continue; }
 #endif
 				hsr->flush();
 

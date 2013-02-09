@@ -772,33 +772,61 @@ void rasterizer::rasterize_triangle(
 	const size_t num_samples = frame_buffer_->get_num_samples();
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
 
+	// Pick the vertex which is nearby center of viewport
+	// It will get more precision in interpolation.
 	vs_output const* verts[3] = { &v0, &v1, &v2 };
-	double dist_sqr[3] = { 
-		double(v0.position().x()) * v0.position().x() + v0.position().y() * v0.position().y(),
-		double(v1.position().x()) * v1.position().x() + v1.position().y() * v1.position().y(),
-		double(v2.position().x()) * v2.position().x() + v2.position().y() * v2.position().y()
+	double dist_sqr[3] =
+	{ 
+		fabs( v0.position().x() ) + fabs( v0.position().y() ),
+		fabs( v1.position().x() ) + fabs( v1.position().y() ),
+		fabs( v2.position().x() ) + fabs( v2.position().y() )
 	};
 
-	float min_dist_sqr = min( min( dist_sqr[0], dist_sqr[1] ), dist_sqr[2] );
 	int reordered_index[3];
-	reordered_index[0] = min_dist_sqr == dist_sqr[0] ? 0 : ( min_dist_sqr == dist_sqr[1] ? 1 : 2 );
+	if(dist_sqr[0] < dist_sqr[1])
+	{
+		if(dist_sqr[0] < dist_sqr[2])
+		{
+			reordered_index[0] = 0;
+		}
+		else
+		{
+			reordered_index[0] = 2;
+		}
+	}
+	else
+	{
+		if(dist_sqr[1] < dist_sqr[2])
+		{
+			reordered_index[0] = 1;
+		}
+		else
+		{
+			reordered_index[0] = 2;
+		}
+	}
 	reordered_index[1] = ( reordered_index[0] + 1 ) % 3;
 	reordered_index[2] = ( reordered_index[1] + 1 ) % 3;
 
 	vs_output const* reordered_verts[3] = { verts[reordered_index[0]], verts[reordered_index[1]], verts[reordered_index[2]] };
 
+	// Compute centroid.
 	bool has_centroid = false;
-	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr){
-		if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid){
+	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr)
+	{
+		if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid)
+		{
 			has_centroid = true;
 		}
 	}
 
+	// Compute edge factor.
 	const ALIGN16 vec4 edge_factors[3] = {
 		vec4(edge_factors_[prim_id * 3 + 0], 0),
 		vec4(edge_factors_[prim_id * 3 + 1], 0),
 		vec4(edge_factors_[prim_id * 3 + 2], 0)
 	};
+
 	const bool mark_x[3] = {
 		edge_factors[0].x() > 0, edge_factors[1].x() > 0, edge_factors[2].x() > 0
 	};
@@ -985,9 +1013,11 @@ const h_rasterizer_state& rasterizer::get_state() const
 	return state_;
 }
 
-void rasterizer::geometry_setup_func(uint32_t* num_clipped_verts, vs_output* clipped_verts, uint32_t* cliped_indices,
-		int32_t prim_count, primitive_topology primtopo, atomic<int32_t>& working_package, int32_t package_size){
-
+void rasterizer::geometry_setup_func(
+	uint32_t* num_clipped_verts, vs_output* clipped_verts, uint32_t* cliped_indices,
+	int32_t prim_count, primitive_topology primtopo,
+	atomic<int32_t>& working_package, int32_t package_size)
+{
 	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
 
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
@@ -1096,10 +1126,12 @@ void rasterizer::dispatch_primitive_func(
 				pv[j] = &clipped_verts_full[clipped_indices[i * stride + j]].position();
 			}
 
-			if (3 == stride){
+			if (3 == stride)
+			{
 				// x * (y1 - y0) - y * (x1 - x0) - (y1 * x0 - x1 * y0)
 				vec3* edge_factors = &edge_factors_[i * 3];
-				for (int e = 0; e < 3; ++ e){
+				for (int e = 0; e < 3; ++ e)
+				{
 					const int se = e;
 					const int ee = (e + 1) % 3;
 					edge_factors[e].x() = pv[se]->y() - pv[ee]->y();

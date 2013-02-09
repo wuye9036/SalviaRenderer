@@ -10,6 +10,10 @@ using namespace eflib;
 
 using std::make_pair;
 
+#if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) && !defined(EFLIB_NO_SIMD)
+#define VSO_INTERP_SSE_ENABLED
+#endif
+
 template <int N>
 vs_input_op gen_vs_input_op_n()
 {
@@ -187,10 +191,11 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& unproject_n(vs_output& out, const vs_output& in)
 	{
+		const float inv_w = 1.0f / in.position().w();
+#if defined(VSO_INTERP_SSE_ENABLED)
 		__m128*			dst = NULL;
 		__m128 const*	src = NULL;
 
-		const float inv_w = 1.0f / in.position().w();
 		__m128 inv_w4 = _mm_load_ps1(&inv_w);
 
 		out.position() = in.position();
@@ -208,6 +213,20 @@ namespace vs_output_op_funcs
 				*dst = _mm_mul_ps(*src, inv_w4);
 			}
 		}
+#else
+		out.position() = in.position();
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)
+			{
+				out.attribute(i_attr) = in.attribute(i_attr);
+			}
+			else
+			{
+				out.attribute(i_attr) = in.attribute(i_attr) * inv_w;
+			}
+		}
+#endif
 		out.front_face( in.front_face() );
 
 		return out;
@@ -230,7 +249,7 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& step_unproj_n(vs_output& out, vs_output const& start, vs_output const& derivation)
 	{
-#if ( defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) ) && !defined(EFLIB_NO_SIMD)
+#if defined(VSO_INTERP_SSE_ENABLED)
 		__m128 const* deri_m128  = reinterpret_cast<__m128 const*>( derivation.raw_data() );
 		__m128 const* start_m128 = reinterpret_cast<__m128 const*>( start.raw_data() );
 		__m128*		  out_m128   = reinterpret_cast<__m128 *>( out.raw_data() );
@@ -271,8 +290,8 @@ namespace vs_output_op_funcs
 		return out;
 #else
 		vs_output tmp;
-		integral1_n<N>(tmp, start, derivation);
-		unproject_n(out, tmp);
+		step1_n<N>(tmp, start, derivation);
+		unproject_n<N>(out, tmp);
 		return out;
 #endif
 	}
@@ -283,7 +302,7 @@ namespace vs_output_op_funcs
 		float step0, const vs_output& derivation0,
 		float step1, const vs_output& derivation1)
 	{
-#if ( defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) ) && !defined(EFLIB_NO_SIMD)
+#if defined(VSO_INTERP_SSE_ENABLED)
 		__m128 const* d0_m128	= reinterpret_cast<__m128 const*>( derivation0.raw_data() );
 		__m128 const* d1_m128	= reinterpret_cast<__m128 const*>( derivation1.raw_data() );
 		__m128 const* in_m128	= reinterpret_cast<__m128 const*>( in.raw_data() );
@@ -298,56 +317,35 @@ namespace vs_output_op_funcs
 		float inv_w = 1.0f / out_m128[0].m128_f32[3];
 		__m128 inv_w4 = _mm_load_ps1(&inv_w);
 
-		// for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
 		{
 			__m128 interp_attr;
-			//if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
-			//{
-			//	interp_attr = in_m128[i_attr+1];
-			//}
-			//else
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)
+			{
+				interp_attr = in_m128[i_attr+1];
+			}
+			else
 			{
 				interp_attr = _mm_add_ps(
-					in_m128[1],
+					in_m128[i_attr + 1],
 					_mm_add_ps(
-						_mm_mul_ps(d0_m128[1], step0_m128),
-						_mm_mul_ps(d1_m128[1], step1_m128)
+						_mm_mul_ps(d0_m128[i_attr + 1], step0_m128),
+						_mm_mul_ps(d1_m128[i_attr + 1], step1_m128)
 						)
 					);
-				out_m128[1] = _mm_mul_ps(interp_attr, inv_w4);
-
-				interp_attr = _mm_add_ps(
-					in_m128[2],
-					_mm_add_ps(
-						_mm_mul_ps(d0_m128[2], step0_m128),
-						_mm_mul_ps(d1_m128[2], step1_m128)
-						)
-					);
-				out_m128[2] = _mm_mul_ps(interp_attr, inv_w4);
-
-				interp_attr = _mm_add_ps(
-					in_m128[3],
-					_mm_add_ps(
-						_mm_mul_ps(d0_m128[3], step0_m128),
-						_mm_mul_ps(d1_m128[3], step1_m128)
-						)
-					);
-				out_m128[3] = _mm_mul_ps(interp_attr, inv_w4);
+				
 			}
 
 			// Perspective
-			//if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)
-			//{
-			//	out_m128[i_attr+1] = interp_attr;
-			//}
-			//else
+			if (vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_noperspective)
 			{
-				
+				out_m128[i_attr+1] = interp_attr;
+			}
+			else
+			{
+				out_m128[i_attr+1] = _mm_mul_ps(interp_attr, inv_w4);
 			}
 		}
-
-		// Face
-		out.front_face( in.front_face() );
 #else
 		out.position() =
 			in.position()
@@ -369,6 +367,9 @@ namespace vs_output_op_funcs
 			}
 		}
 #endif
+		// Face
+		out.front_face( in.front_face() );
+
 		return out;
 	}
 
@@ -400,7 +401,7 @@ namespace vs_output_op_funcs
 		float step0, const vs_output& derivation0,
 		float step1, const vs_output& derivation1)
 	{
-#if ( defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) ) && !defined(EFLIB_NO_SIMD)
+#if defined(VSO_INTERP_SSE_ENABLED)
 		__m128 const* d0_m128	= reinterpret_cast<__m128 const*>( derivation0.raw_data() );
 		__m128 const* d1_m128	= reinterpret_cast<__m128 const*>( derivation1.raw_data() );
 		__m128 const* in_m128	= reinterpret_cast<__m128 const*>( in.raw_data() );
@@ -457,7 +458,7 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& self_step1_n(vs_output& inout, const vs_output& derivation)
 	{
-#if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64) && !defined(EFLIB_NO_SIMD)
+#if defined(VSO_INTERP_SSE_ENABLED)
 		__m128 const*	src = NULL;
 		__m128*			dst = NULL;
 
@@ -479,20 +480,25 @@ namespace vs_output_op_funcs
 		}
 #else
 		inout.position() += derivation.position();
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation))
+			{
 				inout.attribute(i_attr) += derivation.attribute(i_attr);
 			}
 		}
 #endif
 		return inout;
 	}
+
 	template <int N>
 	vs_output& self_step_1d_n(vs_output& inout, float step, const vs_output& derivation)
 	{
 		inout.position() += (derivation.position() * step);
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
-			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation)){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			if (!(vs_output_ops[N].attribute_modifiers[i_attr] & vs_output::am_nointerpolation))
+			{
 				inout.attribute(i_attr) += (derivation.attribute(i_attr) * step);
 			}
 		}
@@ -550,6 +556,7 @@ namespace vs_output_op_funcs
 	template <int N>
 	vs_output& sub_n(vs_output& out, const vs_output& vso0, const vs_output& vso1)
 	{
+#if defined(VSO_INTERP_SSE_ENABLED)
 		__m128 const* v1_m128 = reinterpret_cast<__m128 const*>( vso1.raw_data() );
 		__m128 const* v0_m128 = reinterpret_cast<__m128 const*>( vso0.raw_data() );
 
@@ -560,6 +567,15 @@ namespace vs_output_op_funcs
 			out_m128[register_index] =
 				_mm_sub_ps(v0_m128[register_index], v1_m128[register_index]);
 		}
+#else
+		out.position() = vso0.position() - vso1.position();
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
+			out.attribute(i_attr)
+				= vso0.attribute(i_attr) - vso1.attribute(i_attr);
+		}
+#endif
+
 		out.front_face( vso0.front_face() );
 		return out;
 	}
@@ -567,10 +583,11 @@ namespace vs_output_op_funcs
 	vs_output& mul_n(vs_output& out, const vs_output& vso0, float f)
 	{
 		out.position() = vso0.position() * f;
-		out.front_face( vso0.front_face() );
-		for(size_t i_attr = 0; i_attr < N; ++i_attr){
+		for(size_t i_attr = 0; i_attr < N; ++i_attr)
+		{
 			out.attribute(i_attr) = vso0.attribute(i_attr) * f;
 		}
+		out.front_face( vso0.front_face() );
 		return out;
 	}
 
