@@ -176,6 +176,7 @@ px_shader_unit_ptr host_impl::get_px_shader_unit() const
 
 bool host_impl::vx_set_constant(fixed_string const& name, void const* value)
 {
+	if(!vx_shader_) return false;
 	sv_layout* layout = vx_shader_->get_reflection()->input_sv_layout(name);
 	if(!layout) return false;
 	memcpy(&(vx_cbuffer_[layout->offset]), value, layout->size);

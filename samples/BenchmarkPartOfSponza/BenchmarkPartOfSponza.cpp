@@ -28,12 +28,6 @@
 #include <Windows.h>
 #endif
 
-#if defined( SALVIA_BUILD_WITH_DIRECTX )
-#define PRESENTER_NAME "d3d9"
-#else
-#define PRESENTER_NAME "opengl"
-#endif
-
 using namespace eflib;
 using namespace salviar;
 using namespace salviax;
@@ -296,10 +290,10 @@ public:
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		renderer_->set_vertex_shader_code(benchmark_vs);
 #else
-		pvs->set_constant( _T("wvpMatrix"), &wvp );
-		pvs->set_constant( _T("eyePos"), &camera_pos );
-		pvs->set_constant( _T("lightPos"), &lightPos );
-		renderer_->set_vertex_shader(pvs);
+		cpp_vs->set_constant( _T("wvpMatrix"), &wvp );
+		cpp_vs->set_constant( _T("eyePos"), &camera_pos );
+		cpp_vs->set_constant( _T("lightPos"), &lightPos );
+		renderer_->set_vertex_shader(cpp_vs);
 #endif
 		renderer_->set_vs_variable( "wvpMatrix", &wvp );
 		

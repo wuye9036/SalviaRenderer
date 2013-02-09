@@ -103,11 +103,13 @@ public:
 		out.attribute(3) = eye_pos - pos;
 	}
 
-	uint32_t num_output_attributes() const{
+	uint32_t num_output_attributes() const
+	{
 		return 4;
 	}
 
-	uint32_t output_attribute_modifiers(uint32_t) const{
+	uint32_t output_attribute_modifiers(uint32_t) const
+	{
 		return salviar::vs_output::am_linear;
 	}
 };
@@ -296,10 +298,10 @@ public:
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		renderer_->set_vertex_shader_code(benchmark_vs);
 #else
-		pvs->set_constant( _T("wvpMatrix"), &wvp );
-		pvs->set_constant( _T("eyePos"), &camera_pos );
-		pvs->set_constant( _T("lightPos"), &lightPos );
-		renderer_->set_vertex_shader(pvs);
+		cpp_vs->set_constant( _T("wvpMatrix"), &wvp );
+		cpp_vs->set_constant( _T("eyePos"), &camera_pos );
+		cpp_vs->set_constant( _T("lightPos"), &lightPos );
+		renderer_->set_vertex_shader(cpp_vs);
 #endif
 		renderer_->set_vs_variable( "wvpMatrix", &wvp );
 		
