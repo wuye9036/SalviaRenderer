@@ -165,7 +165,7 @@ def config_salvia(proj):
 
 	print("Configuring Salvia ...")
 	salvia_cmd = batch_command( proj.salvia_build() )
-	salvia_cmd.add_command( 'cmake -G "%s" %s %s ' % (proj.generator(), defs_cmd, proj.source_root()) )
+	salvia_cmd.add_command( '@"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), defs_cmd, proj.source_root()) )
 	salvia_cmd.execute()
 	
 def make_salvia(proj):
