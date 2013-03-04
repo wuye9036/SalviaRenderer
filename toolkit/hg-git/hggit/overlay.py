@@ -14,6 +14,11 @@ class overlaymanifest(object):
         self._map = None
         self._flagmap = None
 
+    def withflags(self):
+        self.load()
+        return set([path for path, flag in self._flagmap.iteritems()
+                    if flag & 020100])
+
     def copy(self):
         return overlaymanifest(self.repo, self.tree.id)
 
@@ -145,6 +150,13 @@ class overlaychangectx(context.changectx):
 
     def __nonzero__(self):
         return True
+
+    def phase(self):
+        try:
+            from mercurial import phases
+            return phases.draft
+        except ImportError:
+            return 1
 
 class overlayrevlog(object):
     def __init__(self, repo, base):

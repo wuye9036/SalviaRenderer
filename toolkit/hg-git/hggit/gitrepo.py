@@ -1,13 +1,21 @@
-from mercurial import repo, util
+from mercurial import util
 try:
     from mercurial.error import RepoError
 except ImportError:
     from mercurial.repo import RepoError
 
+try:
+    from mercurial.peer import peerrepository
+except ImportError:
+    from mercurial.repo import repository as peerrepository
+
 from git_handler import GitHandler
 
-class gitrepo(repo.repository):
+class gitrepo(peerrepository):
     capabilities = ['lookup']
+
+    def _capabilities(self):
+        return self.capabilities
 
     def __init__(self, ui, path, create):
         if create: # pragma: no cover

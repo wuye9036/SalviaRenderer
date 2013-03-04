@@ -86,8 +86,21 @@ class GitHandler(object):
 
         self.branch_bookmark_suffix = ui.config('git', 'branch_bookmark_suffix')
 
-        self.load_map()
+        self._map_git_real = {}
+        self._map_hg_real = {}
         self.load_tags()
+
+    @property
+    def _map_git(self):
+      if not self._map_git_real:
+        self.load_map()
+      return self._map_git_real
+
+    @property
+    def _map_hg(self):
+      if not self._map_hg_real:
+        self.load_map()
+      return self._map_hg_real
 
     # make the git data directory
     def init_if_missing(self):
@@ -123,13 +136,11 @@ class GitHandler(object):
         return self._map_hg.get(hgsha)
 
     def load_map(self):
-        self._map_git = {}
-        self._map_hg = {}
         if os.path.exists(self.repo.join(self.mapfile)):
             for line in self.repo.opener(self.mapfile):
                 gitsha, hgsha = line.strip().split(' ', 1)
-                self._map_git[gitsha] = hgsha
-                self._map_hg[hgsha] = gitsha
+                self._map_git_real[gitsha] = hgsha
+                self._map_hg_real[hgsha] = gitsha
 
     def save_map(self):
         file = self.repo.opener(self.mapfile, 'w+', atomictemp=True)
@@ -241,15 +252,26 @@ class GitHandler(object):
 
     def push(self, remote, revs, force):
         self.export_commits()
-        changed_refs = self.upload_pack(remote, revs, force)
+        old_refs, new_refs = self.upload_pack(remote, revs, force)
         remote_name = self.remote_name(remote)
 
-        if remote_name and changed_refs:
-            for ref, sha in changed_refs.iteritems():
-                self.ui.status("    %s::%s => GIT:%s\n" %
-                               (remote_name, ref, sha[0:8]))
+        if remote_name and new_refs:
+            for ref, new_sha in new_refs.iteritems():
+                if new_sha != old_refs.get(ref):
+                    self.ui.status("    %s::%s => GIT:%s\n" %
+                                   (remote_name, ref, new_sha[0:8]))
 
-            self.update_remote_branches(remote_name, changed_refs)
+            self.update_remote_branches(remote_name, new_refs)
+        if old_refs == new_refs:
+            self.ui.status(_("no changes found\n"))
+            ret = None
+        elif len(new_refs) > len(old_refs):
+            ret = 1 + (len(new_refs) - len(old_refs))
+        elif len(old_refs) > len(new_refs):
+            ret = -1 - (len(new_refs) - len(old_refs))
+        else:
+            ret = 1
+        return ret
 
     def clear(self):
         mapfile = self.repo.join(self.mapfile)
@@ -597,8 +619,18 @@ class GitHandler(object):
                         'name' in self._tags:
                     # Mercurial 1.5 and later.
                     del self.repo._tags[name]
-                if name in self.repo._tagtypes:
+                if (hgutil.safehasattr(self.repo, '_tagtypes') and
+                    self.repo._tagtypes and
+                    name in self.repo._tagtypes):
+                    # Mercurial 1.9 and earlier.
                     del self.repo._tagtypes[name]
+                elif (hgutil.safehasattr(self.repo, 'tagscache') and
+                      self.repo.tagscache and
+                      hgutil.safehasattr(self.repo.tagscache, '_tagtypes') and
+                      self.repo.tagscache._tagtypes and
+                      name in self.repo.tagscache._tagtypes):
+                    # Mercurial 2.0 and later.
+                    del self.repo.tagscache._tagtypes[name]
 
     def import_git_commit(self, commit):
         self.ui.debug(_("importing: %s\n") % commit.id)
@@ -755,15 +787,17 @@ class GitHandler(object):
 
     def upload_pack(self, remote, revs, force):
         client, path = self.get_transport_and_path(remote)
+        old_refs = {}
         def changed(refs):
+            old_refs.update(refs)
             to_push = revs or set(self.local_heads().values() + self.tags.values())
             return self.get_changed_refs(refs, to_push, force)
 
         genpack = self.git.object_store.generate_pack_contents
         try:
             self.ui.status(_("creating and sending data\n"))
-            changed_refs = client.send_pack(path, changed, genpack)
-            return changed_refs
+            new_refs = client.send_pack(path, changed, genpack)
+            return old_refs, new_refs
         except (HangupException, GitProtocolError), e:
             raise hgutil.Abort(_("git remote error: ") + str(e))
 

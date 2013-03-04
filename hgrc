@@ -1,0 +1,11 @@
+[paths]
+googlecode = https://softart.googlecode.com/hg
+bitbucket = https://bitbucket.org/wuye9036/salvia
+codeplex = https://hg.codeplex.com/salvia
+googlecode2 = https://code.google.com/p/softart
+
+[git]
+authors = git_authors.txt
+
+
+[http_proxy]
