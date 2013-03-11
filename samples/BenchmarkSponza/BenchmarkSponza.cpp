@@ -346,7 +346,7 @@ protected:
 #if defined(EFLIB_DEBUG)
 static size_t const RENDER_FRAME_COUNT = 1;
 #else
-static size_t const RENDER_FRAME_COUNT = 10;
+static size_t const RENDER_FRAME_COUNT = 60;
 #endif
 
 int main( int /*argc*/, TCHAR* /*argv*/[] )
