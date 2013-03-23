@@ -315,7 +315,7 @@ protected:
 			desc.addr_mode_v = address_wrap;
 
 			plane_tex = hsr->create_tex2d(512, 512, 1, pixel_format_color_rgba8);
-			fnt = font::create_in_system_path("msyh.ttf", 0, 14, font::points);
+			fnt = font::create_in_system_path("msyh.ttc", 0, 14, font::points);
 			fnt->draw( "HelloÄãºÃ123", &plane_tex->get_surface(0), rect<int32_t>(0, 0, 512, 512),
 				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
 			plane_tex->gen_mipmap(filter_linear, true);

@@ -124,9 +124,7 @@ class project:
 		
 	def maker_name(self):
 		if self.toolset().compiler_name == 'msvc':
-			if os.path.exists( os.path.join( self.builder_root_, 'Common7', 'IDE', 'VCExpress.exe' ) ):
-				return 'VCExpress.exe'
-			return 'devenv.exe'
+			return 'MSBuild'
 		else:
 			return 'make'
 	
@@ -135,14 +133,25 @@ class project:
 	
 	def config_name(self):
 		return self.config_
-
-	def msvc_config_name_with_platform(self):
-		platform_name_in_msvc = None
+	
+	def msvc_platform_name(self):
 		if self.arch() == arch.x86:
 			platform_name_in_msvc = "Win32"
 		elif self.arch() == arch.x64:
 			platform_name_in_msvc = "x64"
-		return '"' + self.config_ + "|" + platform_name_in_msvc + '"'
+		return platform_name_in_msvc
+		
+	def project_file_ext(self):
+		if self.toolset_.short_compiler_name() == "vc":
+			if self.toolset_.major_ver >= 10:
+				return "vcxproj"
+			return "vcproj"
+		else:
+			assert False
+			return None
+		
+	def msvc_config_name_with_platform(self):
+		return '"' + self.config_ + "|" + self.msvc_platform_name() + '"'
 	
 	def to_abs(self, path):
 		if os.path.isabs( path ): return path

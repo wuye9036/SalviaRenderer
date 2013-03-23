@@ -116,9 +116,9 @@ def make_llvm(proj):
 	cmd = batch_command( proj.llvm_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building LLVM %s ...' % proj.config_name() )
-	cmd.add_command( '@%s LLVM.sln /build %s /project ALL_BUILD' % (proj.maker_name(), proj.config_name()) )
+	cmd.add_command( '@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.add_command( '@echo Installing LLVM %s ...' % proj.config_name() )
-	cmd.add_command( '@%s LLVM.sln /build %s /project Install' % (proj.maker_name(), proj.config_name()) )
+	cmd.add_command( '@%s INSTALL.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.execute()
 	pass
 
@@ -135,7 +135,7 @@ def make_freetype(proj):
 	cmd = batch_command( proj.freetype_solution() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building FreeType2 %s ...' % proj.config_name() )
-	cmd.add_command( '@%s freetype.sln /build %s /project freetype' % (proj.maker_name(), proj.msvc_config_name_with_platform()) )
+	cmd.add_command( '@%s freetype.sln /m /v:m /p:Configuration=%s;Platform=%s' % (proj.maker_name(), proj.config_name(), proj.msvc_platform_name()) )
 	cmd.execute()
 
 	cmd = batch_command( proj.source_root() )
@@ -172,7 +172,7 @@ def make_salvia(proj):
 	cmd = batch_command( proj.salvia_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@echo Building SALVIA %s ...' % proj.config_name() )
-	cmd.add_command( '@%s salvia.sln /build %s /project ALL_BUILD' % (proj.maker_name(), proj.config_name()) )
+	cmd.add_command( '@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.execute()
 
 def install_prebuild_binaries(proj):
