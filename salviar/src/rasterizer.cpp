@@ -394,6 +394,20 @@ void rasterizer::rasterize_line(
 	}
 }
 
+struct tile_render_context
+{
+	int					left, top, right, bottom;
+	size_t				num_samples;
+	vs_output const*	v0;
+	vs_output const*	ddx;
+	vs_output const*	ddy;
+	vs_output_op const* vs_output_ops;
+	pixel_shader*		cpp_ps;
+	blend_shader*		cpp_bs;
+	pixel_shader_unit*	ps;
+	float const*		aa_z_offset;
+};
+
 void rasterizer::draw_whole_tile(
 	int left, int top, int right, int bottom, 
 	size_t num_samples, const vs_output& v0,
@@ -401,14 +415,12 @@ void rasterizer::draw_whole_tile(
 	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const h_blend_shader& hbs,
 	const float* aa_z_offset)
 {
-	
-	const float offsetx = left + 0.5f - v0.position().x();
-	const float offsety = top + 0.5f - v0.position().y();
+	float v0x = v0.position().x();
+	float v0y = v0.position().y();
 
-	// Set base vertex of scan-lines
-	vs_output base_vert;
-	vs_output_ops->step_2d(base_vert, v0, offsetx, ddx, offsety, ddy);
-	
+	const float offsetx = 0.5f - v0x;
+	const float offsety = 0.5f - v0y;
+
 	for(int iy = top; iy < bottom; iy += 4)
 	{
 		vs_output px_in;
@@ -416,17 +428,17 @@ void rasterizer::draw_whole_tile(
 		{
 			vs_output unprojed[4*4];
 
-			vs_output start_vert;
-			vs_output_ops->step_2d(start_vert, base_vert, ix-left, ddx, iy-top, ddy);
-
 			for(int dy = 0; dy < 4; ++dy)
 			{
-				vs_output_ops->copy(px_in, start_vert);
-				for(int dx = 0; dx < 4; ++dx){
-					vs_output_ops->unproject(unprojed[dx+dy*4], px_in);
-					vs_output_ops->self_step1(px_in, ddx);
+				for(int dx = 0; dx < 4; ++dx)
+				{
+					vs_output_ops->step_2d_unproj(
+						unprojed[dx+dy*4],
+						v0,
+						offsetx+ix+dx, ddx,
+						offsety+iy+dy, ddy
+						);
 				}
-				vs_output_ops->self_step1(start_vert, ddy);
 			}
 
 			draw_full_package(unprojed, iy, ix, num_samples, hbs, pps, psu, aa_z_offset);
@@ -517,7 +529,8 @@ void rasterizer::draw_pixels(
 	}
 #else
 	float evalue[3];
-	for (int e = 0; e < 3; ++ e){
+	for (int e = 0; e < 3; ++ e)
+	{
 		evalue[e] = edge_factors[e].z() - (left * edge_factors[e].x() + top * edge_factors[e].y());
 	}
 
@@ -526,18 +539,23 @@ void rasterizer::draw_pixels(
 		// Rasterizer.
 		for(size_t ix = 0; ix < 4; ++ix)
 		{
-			for (int i_sample = 0; i_sample < num_samples; ++ i_sample){
-				const vec2& sp = samples_pattern_[i_sample];
-				const float fx = ix + sp.x();
-				const float fy = iy + sp.y();
+			for (int i_sample = 0; i_sample < num_samples; ++ i_sample)
+			{
+				vec2  const& sp = samples_pattern_[i_sample];
+				float const  fx = ix + sp.x();
+				float const  fy = iy + sp.y();
 				bool inside = true;
-				for (int e = 0; e < 3; ++ e){
-					if (fx * edge_factors[e].x() + fy * edge_factors[e].y() < evalue[e]){
+				for (int e = 0; e < 3; ++ e)
+				{
+					if (fx * edge_factors[e].x() + fy * edge_factors[e].y() < evalue[e])
+					{
 						inside = false;
 						break;
 					}
 				}
-				if (inside){
+				
+				if (inside)
+				{
 					pixel_mask[iy * 4 + ix] |= 1UL << i_sample;
 				}
 			}
@@ -546,32 +564,28 @@ void rasterizer::draw_pixels(
 #endif
 
 	const float offsetx = left + 0.5f - v0.position().x();
-	const float offsety = top + 0.5f - v0.position().y();
-
-	// Set attributes of base scan line
-	vs_output base_vert;
-	vs_output_ops->step_2d(base_vert, v0, offsetx, ddx, offsety, ddy);
-
-	vs_output unprojed[4*4];
+	const float offsety = top  + 0.5f - v0.position().y();
 
 	// Compute unprojected pixels.
-	for( int iy = 0; iy < 4; ++iy ){
-		vs_output px_in;
-		vs_output_ops->copy(px_in, base_vert);
-		for(int ix = 0; ix < 4; ++ix){
-			uint32_t mask = pixel_mask[iy * 4 + ix];
+	vs_output unprojed[4*4];
+	float dx, dy;
 
+	for( int iy = 0; iy < 4; ++iy )
+	{
+		dy = offsety + iy;
+		for(int ix = 0; ix < 4; ++ix)
+		{
+			uint32_t mask = pixel_mask[iy*4+ix];
+			dx = offsetx + ix;
+			
 			// if ( mask ){
 			if (has_centroid && (mask != full_mask) && mask != 0)
 			{
-				vs_output projed;
-				vs_output_ops->copy(projed, px_in);
-
 				// centroid interpolate
 				vec2 sp_centroid(0, 0);
 				int n = 0;
 				unsigned long i_sample;
-				const uint32_t mask_backup = mask;
+				uint32_t const mask_backup = mask;
 				while (_BitScanForward(&i_sample, mask))
 				{
 					const vec2& sp = samples_pattern_[i_sample];
@@ -585,22 +599,12 @@ void rasterizer::draw_pixels(
 
 				mask = mask_backup;
 
-				for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr)
-				{
-					if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid)
-					{
-						projed.attribute(i_attr) += ddx.attribute(i_attr) * sp_centroid.x() + ddy.attribute(i_attr) * sp_centroid.y();
-					}
-				}
-				vs_output_ops->unproject(unprojed[iy*4+ix], projed);
+				dx += sp_centroid.x();
+				dy += sp_centroid.y();
 			}
-			else
-			{
-				vs_output_ops->unproject(unprojed[iy*4+ix], px_in);
-			}
-			vs_output_ops->self_step1(px_in, ddx);
+
+			vs_output_ops->step_2d_unproj(unprojed[iy*4+ix], v0, dx, ddx, dy, ddy);
 		}
-		vs_output_ops->self_step1(base_vert, ddy);
 	}
 
 	// Execute pixel shader and render to target.
