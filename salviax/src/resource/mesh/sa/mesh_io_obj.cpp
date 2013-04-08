@@ -168,7 +168,7 @@ bool load_obj_mesh_c(
 
 	uint32_t subset = 0;
 
-	unordered_map< smooth_id_t, uint32_t > smooth_id_to_vertex_index;
+	unordered_map<smooth_id_t, uint32_t> smooth_id_to_vertex_index;
 
 	for(;;){
 		fscanf( objf, "%s", obj_cmd );
@@ -214,8 +214,8 @@ bool load_obj_mesh_c(
 				}
 
 				uint32_t vert_index = 0;
-				smooth_id_t smooth_id = make_tuple( pos_index, texcoord_index, normal_index );
-				if( smooth_id_to_vertex_index.count(pos_index) == 0){
+				smooth_id_t smooth_id = make_tuple(pos_index, texcoord_index, normal_index);
+				if( smooth_id_to_vertex_index.count(smooth_id) == 0){
 					vert_index = static_cast<uint32_t>( verts.size() );
 					smooth_id_to_vertex_index[smooth_id] = vert_index;
 					verts.push_back( vert );

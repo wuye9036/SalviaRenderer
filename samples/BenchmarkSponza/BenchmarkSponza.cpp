@@ -230,7 +230,7 @@ public:
 
 		cout << "Loading mesh ... " << endl;
 		prof.start("Mesh Loading", 0);
-		benchmark_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/sponza/sponza.obj", false );
+		benchmark_mesh = create_mesh_from_obj(renderer_.get(), "../../resources/models/sponza/sponza.obj", false);
 		prof.end("Mesh Loading");
 		cout << "Loading pixel and blend shader... " << endl;
 

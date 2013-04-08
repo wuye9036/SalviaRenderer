@@ -1250,7 +1250,6 @@ void rasterizer::rasterize_triangle_func(
 	const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
 	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
-	/*
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter >> 1;
 		uint32_t full = *iter & 1;
@@ -1261,7 +1260,6 @@ void rasterizer::rasterize_triangle_func(
 			*clipped_verts[iprim * 3 + 2],
 			tile_vp, pps, psu);
 	}
-	*/
 }
 
 void rasterizer::compact_clipped_verts_func(
