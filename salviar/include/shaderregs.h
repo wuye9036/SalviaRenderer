@@ -117,7 +117,7 @@ private:
 	register_array registers_;
 
 	bool front_face_;
-	
+
 	vs_output(const vs_output& rhs);
 	vs_output& operator=(const vs_output& rhs);
 };

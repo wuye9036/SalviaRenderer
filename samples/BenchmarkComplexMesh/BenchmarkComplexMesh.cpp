@@ -409,7 +409,7 @@ protected:
 };
 
 #if defined(EFLIB_DEBUG)
-static size_t const RENDER_FRAME_COUNT = 2;
+static size_t const RENDER_FRAME_COUNT = 5;
 #else
 static size_t const RENDER_FRAME_COUNT = 300;
 #endif

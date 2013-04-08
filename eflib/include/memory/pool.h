@@ -15,7 +15,8 @@
 #include <vector>
 
 namespace eflib{
-	namespace pool{
+	namespace pool
+	{
 		template <typename ObjectT, int MaxCount, bool IsFreeTogether = true>
 		class stack_pool{
 		public:
@@ -113,6 +114,62 @@ namespace eflib{
 			{
 				return;
 			}
+		};
+	
+		template <typename T>
+		class preserved_pool
+		{
+		public:
+			preserved_pool(): data_mem(NULL), sz(0), cap(0)
+			{}
+
+			~preserved_pool()
+			{
+				::free(data_mem);
+			}
+
+			void reserve(size_t capacity)
+			{
+				if(data_mem == NULL)
+				{
+					data_mem = static_cast<T*>(::malloc(sizeof(T)*capacity));
+					sz = 0;
+					cap = capacity;
+				}
+				assert(capacity <= cap);
+			}
+
+			T* alloc()
+			{
+				++sz;
+#if defined(EFLIB_DEBUG)
+				if(sz >= cap)
+				{
+					assert(false);
+					return NULL;
+				}
+#endif
+				return data_mem + sz;
+			}
+
+			void dealloc(T*) {}
+
+			T* begin() const
+			{
+				return data_mem;
+			}
+
+			T* end() const
+			{
+				return data_mem + sz;
+			}
+		private:
+			preserved_pool(preserved_pool const&);
+			preserved_pool& operator = (preserved_pool const&);
+
+			size_t	sz;
+			size_t	cap;
+			T*		data_mem;
 		};
 	}
 }

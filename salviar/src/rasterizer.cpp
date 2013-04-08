@@ -56,78 +56,60 @@ bool cull_mode_cw(float area)
 	return area >= 0;
 }
 
-void fill_wireframe_clipping(
-	uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts,
-	vs_output* clipped_verts, uint32_t* clipped_indices,
-	uint32_t base_vertex,
-	const h_clipper& clipper, const viewport& vp, const vs_output** pv,
-	bool (*cull_fn)( float ),
-	const vs_output_op& vs_output_ops
-	)
+void fill_wireframe_clipping(clip_context const* /*clip_ctxt*/, clipper* /*clipper*/)
 {
-	num_clipped_verts = 0;
-	bool front_face = true;
-
-	clipper->clip(&clipped_verts[num_clipped_verts], num_out_clipped_verts, vp, *pv[0], *pv[1], vs_output_ops);
-	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
-		clipped_verts[num_clipped_verts + j].front_face(front_face);
-	}
-	num_clipped_verts += num_out_clipped_verts;
-
-	clipper->clip(&clipped_verts[num_clipped_verts], num_out_clipped_verts, vp, *pv[1], *pv[2], vs_output_ops);
-	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
-		clipped_verts[num_clipped_verts + j].front_face(front_face);
-	}
-	num_clipped_verts += num_out_clipped_verts;
-						
-	clipper->clip(&clipped_verts[num_clipped_verts], num_out_clipped_verts, vp, *pv[2], *pv[0], vs_output_ops);
-	for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-		clipped_indices[num_clipped_verts + j] = base_vertex + num_clipped_verts + j;
-		clipped_verts[num_clipped_verts + j].front_face(front_face);
-	}
-	num_clipped_verts += num_out_clipped_verts;
-
-	num_out_clipped_verts = num_clipped_verts;
 }
 
-void fill_solid_clipping(
-	uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts,
-	vs_output* clipped_verts, uint32_t* clipped_indices,
-	uint32_t base_vertex,
-	const h_clipper& clipper, const viewport& vp, const vs_output** pv,
-	bool (*cull_fn) ( float ),
-	const vs_output_op& vs_output_ops
-	)
+void fill_solid_clipping(clip_context const* clip_ctxt, clipper* clipper)
 {
-	bool front_face = true;
+	bool		front_face = true;
+	uint32_t	num_tri_clipped_verts = 0;
+	uint32_t&	num_clipped_verts(*(clip_ctxt->num_clipped_verts));
+	vs_output*	tri_clipped_verts[5];
 
-	clipper->clip(
-		clipped_verts, num_out_clipped_verts,
-		front_face, cull_fn,
-		vp, *pv[0], *pv[1], *pv[2],
-		vs_output_ops
-		);
+	clip_context tri_clip_ctxt;
 
-	assert(num_out_clipped_verts <= 5);
+	tri_clip_ctxt.clipped_verts		= tri_clipped_verts;
+	tri_clip_ctxt.cull_fn			= clip_ctxt->cull_fn;
+	tri_clip_ctxt.is_front			= &front_face;
+	tri_clip_ctxt.num_clipped_verts	= &num_tri_clipped_verts;
+	tri_clip_ctxt.prim_verts[0]		= clip_ctxt->prim_verts[0];
+	tri_clip_ctxt.prim_verts[1]		= clip_ctxt->prim_verts[1];
+	tri_clip_ctxt.prim_verts[2]		= clip_ctxt->prim_verts[2];
+	tri_clip_ctxt.vso_pool			= clip_ctxt->vso_pool;
+	tri_clip_ctxt.vs_output_ops		= clip_ctxt->vs_output_ops;
 
-	num_clipped_verts = (0 == num_out_clipped_verts) ? 0 : (num_out_clipped_verts - 2) * 3;
+	clipper->clip_triangle(&tri_clip_ctxt);
 
-	for (uint32_t i = 0; i < num_out_clipped_verts; ++ i){
-		clipped_verts[i].front_face(front_face);
+	assert(num_tri_clipped_verts <= 5);
+	if (num_tri_clipped_verts < 3 )
+	{
+		num_clipped_verts = 0;
+		return;
 	}
 
-	for(int i_tri = 1; i_tri < static_cast<int>(num_out_clipped_verts) - 1; ++ i_tri){
-		clipped_indices[(i_tri - 1) * 3 + 0] = base_vertex + 0;
-		if (front_face){
-			clipped_indices[(i_tri - 1) * 3 + 1] = base_vertex + i_tri + 0;
-			clipped_indices[(i_tri - 1) * 3 + 2] = base_vertex + i_tri + 1;
+	num_clipped_verts = (num_tri_clipped_verts - 2) * 3;
+
+	for (uint32_t i = 0; i < num_tri_clipped_verts; ++i)
+	{
+		tri_clip_ctxt.clipped_verts[i]->front_face(front_face);
+	}
+
+	vs_output** clipped_cursor = clip_ctxt->clipped_verts;
+	for(size_t i_tri = 1; i_tri < num_clipped_verts-1; ++i_tri)
+	{
+		*(clipped_cursor+0) = tri_clipped_verts[0];
+		if (front_face)
+		{
+			*(clipped_cursor+1) = tri_clipped_verts[i_tri];
+			*(clipped_cursor+2) = tri_clipped_verts[i_tri+1];
 		}
-		else{
-			clipped_indices[(i_tri - 1) * 3 + 1] = base_vertex + i_tri + 1;
-			clipped_indices[(i_tri - 1) * 3 + 2] = base_vertex + i_tri + 0;
+		else
+		{
+			*(clipped_cursor+1) = tri_clipped_verts[i_tri+1];
+			*(clipped_cursor+2) = tri_clipped_verts[i_tri];
 		}
+		clipped_cursor += 3;
 	}
 }
 
@@ -135,7 +117,7 @@ void fill_wireframe_triangle_rasterize_func(
 	uint32_t& prim_size, 
 	boost::function< void (
 		rasterizer*,
-		const uint32_t*, const vs_output*,
+		vs_output**,
 		const std::vector<uint32_t>&, const viewport&,
 		const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const& )
 	>& rasterize_func )
@@ -148,7 +130,7 @@ void fill_solid_triangle_rasterize_func(
 	uint32_t& prim_size, 
 	boost::function< void (
 		rasterizer*,
-		const uint32_t*, const vs_output*,
+		vs_output**,
 		const std::vector<uint32_t>&, const viewport&,
 		const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const& )
 	>& rasterize_func )
@@ -207,25 +189,18 @@ bool rasterizer_state::cull(float area) const
 }
 
 void rasterizer_state::clipping(
-	uint32_t& num_clipped_verts, uint32_t& num_out_clipped_verts,
-	vs_output* clipped_verts, uint32_t* clipped_indices,
-	uint32_t base_vertex,
-	const h_clipper& clipper, const viewport& vp, const vs_output** pv, const vs_output_op& vs_output_ops) const
+	clip_context const* clip_ctxt,
+	clipper*			clipper) const
 {
-	clipping_func_(
-		num_clipped_verts, num_out_clipped_verts,
-		clipped_verts, clipped_indices,
-		base_vertex, clipper, vp, pv,
-		cm_func_,
-		vs_output_ops
-		);
+	clip_context local_clip_ctxt = *clip_ctxt;
+	local_clip_ctxt.cull_fn = cm_func_;
+	clipping_func_(&local_clip_ctxt, clipper);
 }
 
 void rasterizer_state::triangle_rast_func(
 	uint32_t& prim_size,
 	boost::function< void (
-		rasterizer*,
-		const uint32_t*, const vs_output*,
+		rasterizer*, vs_output**,
 		const std::vector<uint32_t>&, const viewport&,
 		const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const& )
 	>& rasterize_func ) const
@@ -1017,20 +992,17 @@ const h_rasterizer_state& rasterizer::get_state() const
 	return state_;
 }
 
-void rasterizer::geometry_setup_func(
-	uint32_t* num_clipped_verts, vs_output* clipped_verts, uint32_t* cliped_indices,
-	int32_t prim_count, primitive_topology primtopo,
-	atomic<int32_t>& working_package, int32_t package_size)
+void rasterizer::geometry_setup_func(geometry_setup_context const* ctxt)
 {
-	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
+	int32_t const num_packages = (ctxt->num_primitive + ctxt->package_size - 1) / ctxt->package_size;
 
-	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
-	const h_vertex_cache& dvc = pparent_->get_vertex_cache();
-	const h_clipper& clipper = pparent_->get_clipper();
-	const viewport& vp = pparent_->get_viewport();
+	vs_output_op const*		vs_output_ops	= pparent_->get_vs_output_ops();
+	vertex_cache*			dvc				= pparent_->get_vertex_cache().get();
+	clipper*				clipper			= pparent_->get_clipper().get();
+	viewport const&			vp				= pparent_->get_viewport();
 
 	uint32_t prim_size = 0;
-	switch(primtopo)
+	switch(ctxt->topo)
 	{
 	case primitive_line_list:
 	case primitive_line_strip:
@@ -1045,65 +1017,69 @@ void rasterizer::geometry_setup_func(
 		return;
 	}
 
-	int32_t local_working_package = working_package ++;
-	while (local_working_package < num_packages){
-		const int32_t start = local_working_package * package_size;
-		const int32_t end = min(prim_count, start + package_size);
-		for (int32_t i = start; i < end; ++ i){
-			if (3 == prim_size){
+	int32_t local_working_package = (*ctxt->working_package)++;
+	
+	while (local_working_package < num_packages)
+	{
+		const int32_t start = local_working_package * ctxt->package_size;
+		const int32_t end = min(ctxt->num_primitive, start + ctxt->package_size);
 
-				const vs_output* pv[3];
-				for (size_t j = 0; j < 3; ++ j){
-					const vs_output& v = dvc->fetch(i * 3 + j);
-					pv[j] = &v;
-				}
+		vs_output** package_clipped_verts = ctxt->clipped_vertices + start*9;
+		uint32_t&	package_num_clipped_verts = ctxt->num_clipped_vertices[local_working_package];
+		
+		package_num_clipped_verts = 0;
 
+		for (int32_t i = start; i < end; ++ i)
+		{
+			if (3 == prim_size)
+			{
+				vs_output* pv[3] = {
+					&dvc->fetch(i*3+0),
+					&dvc->fetch(i*3+1),
+					&dvc->fetch(i*3+2)
+				};
+				
 				// grand band culling
 				float const GRAND_BAND_SCALE = 1.2f;
 				eflib::vec4 t0 = clampss(eflib::vec4(-pv[0]->position().x(), -pv[0]->position().y(), pv[0]->position().x(), pv[0]->position().y()) - pv[0]->position().w() * GRAND_BAND_SCALE, 0, 1);
 				eflib::vec4 t1 = clampss(eflib::vec4(-pv[1]->position().x(), -pv[1]->position().y(), pv[1]->position().x(), pv[1]->position().y()) - pv[1]->position().w() * GRAND_BAND_SCALE, 0, 1);
 				eflib::vec4 t2 = clampss(eflib::vec4(-pv[2]->position().x(), -pv[2]->position().y(), pv[2]->position().x(), pv[2]->position().y()) - pv[2]->position().w() * GRAND_BAND_SCALE, 0, 1);
 				eflib::vec4 t = t0 * t1 * t2;
+
 				if ((0 == t.x()) && (0 == t.y()) && (0 == t.z()) && (0 == t.w()))
 				{
-					uint32_t num_out_clipped_verts;
-					state_->clipping(
-						num_clipped_verts[i], num_out_clipped_verts,
-						&clipped_verts[i * 4], &cliped_indices[i * 6], 
-						i * 4, clipper, vp, pv, *vs_output_ops
-						);
+					uint32_t num_tri_clipped_verts;
+					
+					clip_context clip_ctxt;
+					
+					clip_ctxt.num_clipped_verts = &num_tri_clipped_verts;
+					clip_ctxt.cull_fn = NULL;
+					clip_ctxt.clipped_verts = package_clipped_verts;
+					clip_ctxt.vso_pool = ctxt->vso_pool;
+					clip_ctxt.prim_verts[0] = pv[0];
+					clip_ctxt.prim_verts[1] = pv[1];
+					clip_ctxt.prim_verts[2] = pv[2];
+					clip_ctxt.vs_output_ops = vs_output_ops;
 
-					for (uint32_t j = 0; j < num_out_clipped_verts; ++ j){
-						vs_output_ops->project(clipped_verts[i * 4 + j], clipped_verts[i * 4 + j]);
-					}
-				}
-				else
-				{
-					num_clipped_verts[i] = 0;
+					state_->clipping(&clip_ctxt, clipper);
+
+					package_clipped_verts += num_tri_clipped_verts;
+					package_num_clipped_verts += num_tri_clipped_verts;
 				}
 			}
-			else if (2 == prim_size){
-				const vs_output* pv[2];
-				for (size_t j = 0; j < prim_size; ++ j){
-					const vs_output& v = dvc->fetch(i * prim_size + j);
-					pv[j] = &v;
-				}
-
-				clipper->clip(&clipped_verts[i * 4], num_clipped_verts[i], vp, *pv[0], *pv[1], *vs_output_ops);
-				for (uint32_t j = 0; j < num_clipped_verts[i]; ++ j){
-					vs_output_ops->project(clipped_verts[i * 4 + j], clipped_verts[i * 4 + j]);
-					cliped_indices[i * 6 + j] = static_cast<uint32_t>(i * 4 + j);
-				}
+			else if (2 == prim_size)
+			{
+				assert(false);
 			}
 		}
 
-		local_working_package = working_package ++;
+		local_working_package = (*ctxt->working_package)++;
 	}
 }
 
 void rasterizer::dispatch_primitive_func(
 	std::vector<std::vector<uint32_t> >& tiles,
-	const uint32_t* clipped_indices, const vs_output* clipped_verts_full,
+	vs_output** clipped_verts,
 	int32_t prim_count, uint32_t stride,
 	atomic<int32_t>& working_package, int32_t package_size )
 {
@@ -1126,8 +1102,9 @@ void rasterizer::dispatch_primitive_func(
 		for (int32_t i = start; i < end; ++ i)
 		{
 			const vec4* pv[3];
-			for (size_t j = 0; j < stride; ++ j){
-				pv[j] = &clipped_verts_full[clipped_indices[i * stride + j]].position();
+			for (size_t j = 0; j < stride; ++ j)
+			{
+				pv[j] = &( clipped_verts[i*stride+j]->position() );
 			}
 
 			if (3 == stride)
@@ -1217,7 +1194,7 @@ void rasterizer::dispatch_primitive_func(
 
 void rasterizer::rasterize_primitive_func(
 	std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x,
-	const uint32_t* clipped_indices, const vs_output* clipped_verts_full,
+	vs_output** clipped_verts,
 	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu, 
 	atomic<int32_t>& working_package, int32_t package_size )
 {
@@ -1248,7 +1225,7 @@ void rasterizer::rasterize_primitive_func(
 			tile_vp.x = static_cast<float>(x * TILE_SIZE);
 			tile_vp.y = static_cast<float>(y * TILE_SIZE);
 
-			rasterize_func_(this, clipped_indices, clipped_verts_full, prims, tile_vp, pps, psu);
+			rasterize_func_(this, clipped_verts, prims, tile_vp, pps, psu);
 		}
 
 		local_working_package = working_package ++;
@@ -1256,47 +1233,52 @@ void rasterizer::rasterize_primitive_func(
 }
 
 void rasterizer::rasterize_line_func(
-	const uint32_t* clipped_indices, const vs_output* clipped_verts_full,
+	vs_output** clipped_verts,
 	const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
 	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter >> 1;
 		this->rasterize_line(
-			iprim, clipped_verts_full[clipped_indices[iprim * 2 + 0]], clipped_verts_full[clipped_indices[iprim * 2 + 1]],
+			iprim, *clipped_verts[iprim * 2 + 0], *clipped_verts[iprim * 2 + 1],
 			tile_vp, pps, psu);
 	}
 }
 
 void rasterizer::rasterize_triangle_func(
-	const uint32_t* clipped_indices, const vs_output* clipped_verts_full, 
+	vs_output** clipped_verts, 
 	const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
 	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
+	/*
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter >> 1;
 		uint32_t full = *iter & 1;
 		this->rasterize_triangle(
 			iprim, full,
-			clipped_verts_full[clipped_indices[iprim * 3 + 0]],
-			clipped_verts_full[clipped_indices[iprim * 3 + 1]],
-			clipped_verts_full[clipped_indices[iprim * 3 + 2]],
+			*clipped_verts[iprim * 3 + 0],
+			*clipped_verts[iprim * 3 + 1],
+			*clipped_verts[iprim * 3 + 2],
 			tile_vp, pps, psu);
 	}
+	*/
 }
 
-void rasterizer::compact_clipped_verts_func(uint32_t* clipped_indices, const uint32_t* clipped_indices_full,
-		const uint32_t* addresses, const uint32_t* num_clipped_verts, int32_t prim_count,
-		atomic<int32_t>& working_package, int32_t package_size){
-	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
+void rasterizer::compact_clipped_verts_func(
+	vs_output** compacted, vs_output** sparse,
+	uint32_t const* addresses, uint32_t const* num_clipped_verts,
+	int32_t workset, atomic<int32_t>& working_package, int32_t package_size)
+{
+	int32_t const num_packages = (workset + package_size - 1) / package_size;
 	
 	int32_t local_working_package = working_package ++;
 	while (local_working_package < num_packages)
 	{
 		const int32_t start = local_working_package * package_size;
-		const int32_t end = min(prim_count, start + package_size);
-		for (int32_t i = start; i < end; ++ i){
-			memcpy(&clipped_indices[addresses[i]], &clipped_indices_full[i * 6], num_clipped_verts[i] * sizeof(*clipped_indices));
+		const int32_t end = min(workset, start + package_size);
+		for (int32_t i = start; i < end; ++ i)
+		{
+			memcpy(compacted+addresses[i], sparse+GEOMETRY_SETUP_PACKAGE_SIZE*i*9, num_clipped_verts[i]*sizeof(vs_output*));
 		}
 
 		local_working_package = working_package ++;
@@ -1351,62 +1333,109 @@ void rasterizer::draw(size_t prim_count){
 		return;
 	}
 
-	if( pparent_->get_vertex_shader() ){
+	if( pparent_->get_vertex_shader() )
+	{
 		num_vs_output_attributes_ = pparent_->get_vertex_shader()->num_output_attributes();
-	} else {
+	}
+	else
+	{
 		num_vs_output_attributes_ = 0;
 	}
-	const viewport& vp = pparent_->get_viewport();
+
+	viewport const& vp = pparent_->get_viewport();
 	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
 	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
 
 	atomic<int32_t> working_package(0);
+	size_t			geom_package_size = static_cast<size_t>(GEOMETRY_SETUP_PACKAGE_SIZE);
+	size_t			num_geom_package  = (prim_count+geom_package_size-1)/geom_package_size;
+
 	size_t num_threads = num_available_threads();
 
-	// Culling, Clipping, Geometry setup
-	boost::shared_array<uint32_t> num_clipped_verts(new uint32_t[prim_count]);
-	boost::shared_array<vs_output> clipped_verts_full(new vs_output[prim_count * 4]);
-	boost::shared_array<uint32_t> clipped_indices_full(new uint32_t[prim_count * 6]);
-	for (size_t i = 0; i < num_threads - 1; ++ i){
-		global_thread_pool().schedule(boost::bind(&rasterizer::geometry_setup_func, this, &num_clipped_verts[0],
-			&clipped_verts_full[0], &clipped_indices_full[0], static_cast<int32_t>(prim_count), primtopo,
-			boost::ref(working_package), GEOMETRY_SETUP_PACKAGE_SIZE));
+	// Culling, Clipping, Geometry Setup
+	typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
+
+	boost::shared_array<vs_output_pool>	vso_pools			(new vs_output_pool	[num_threads]);
+	boost::shared_array<vs_output*>		clipped_verts		(new vs_output*		[prim_count*9]);
+	boost::shared_array<uint32_t>		num_clipped_verts	(new uint32_t		[num_geom_package]);
+	vector<geometry_setup_context>		geom_setup_ctxts	(num_threads);
+
+	for (size_t i = 0; i < num_threads; ++ i)
+	{
+		vso_pools[i].reserve(prim_count*4);
+
+		geom_setup_ctxts[i].clipped_vertices	= &(clipped_verts[0]);
+		geom_setup_ctxts[i].num_clipped_vertices= &(num_clipped_verts[0]);
+		geom_setup_ctxts[i].vso_pool			= &(vso_pools[i]);
+		geom_setup_ctxts[i].num_primitive		= prim_count;
+		geom_setup_ctxts[i].topo				= primtopo;
+		geom_setup_ctxts[i].working_package		= &working_package;
+		geom_setup_ctxts[i].package_size		= GEOMETRY_SETUP_PACKAGE_SIZE;
+
+		if(i != num_threads-1)
+		{
+			global_thread_pool().schedule(
+				boost::bind(&rasterizer::geometry_setup_func, this, &(geom_setup_ctxts[i]) )
+				);
+		}
+		else
+		{
+			geometry_setup_func( &(geom_setup_ctxts[i]) );
+		}
 	}
-	geometry_setup_func(&num_clipped_verts[0], &clipped_verts_full[0], &clipped_indices_full[0],
-		static_cast<int32_t>(prim_count), primtopo, boost::ref(working_package), GEOMETRY_SETUP_PACKAGE_SIZE);
+	
 	global_thread_pool().wait();
 
-	boost::shared_array<uint32_t> addresses(new uint32_t[prim_count]);
+	// Compact Clipped Vertexes
+	boost::shared_array<uint32_t> addresses(new uint32_t[num_geom_package]);
 	addresses[0] = 0;
-	for (size_t i = 1; i < prim_count; ++ i){
-		addresses[i] = addresses[i - 1] + num_clipped_verts[i - 1];
+	for (size_t i = 1; i < num_geom_package; ++ i)
+	{
+		addresses[i] = addresses[i-1] + num_clipped_verts[i-1];
 	}
+	uint32_t total_num_clipped_verts = addresses[num_geom_package-1] + num_clipped_verts[num_geom_package-1];
 
-	uint32_t num_clipped_indices = addresses[prim_count - 1] + num_clipped_verts[prim_count - 1];
-	boost::shared_array<uint32_t> clipped_indices(new uint32_t[num_clipped_indices]);
+	boost::shared_array<vs_output*> compacted_verts(new vs_output*[total_num_clipped_verts]);
 	working_package = 0;
-	for (size_t i = 0; i < num_threads - 1; ++ i){
-		global_thread_pool().schedule(boost::bind(&rasterizer::compact_clipped_verts_func, this, &clipped_indices[0],
-			&clipped_indices_full[0], &addresses[0],
-			&num_clipped_verts[0], static_cast<int32_t>(prim_count), boost::ref(working_package), COMPACT_CLIPPED_VERTS_PACKAGE_SIZE));
+	for (size_t i = 0; i < num_threads - 1; ++ i)
+	{
+		global_thread_pool().schedule(
+			boost::bind(
+			&rasterizer::compact_clipped_verts_func, this, &compacted_verts[0],
+			&clipped_verts[0], &addresses[0],
+			&num_clipped_verts[0],
+			static_cast<int32_t>(num_geom_package),
+			boost::ref(working_package),
+			COMPACT_CLIPPED_VERTS_PACKAGE_SIZE)
+			);
 	}
-	compact_clipped_verts_func(&clipped_indices[0], &clipped_indices_full[0], &addresses[0],
-			&num_clipped_verts[0], static_cast<int32_t>(prim_count), boost::ref(working_package), COMPACT_CLIPPED_VERTS_PACKAGE_SIZE);
+	compact_clipped_verts_func(
+		&compacted_verts[0],
+		&clipped_verts[0], &addresses[0],
+		&num_clipped_verts[0],
+		static_cast<int32_t>(num_geom_package),
+		boost::ref(working_package),
+		COMPACT_CLIPPED_VERTS_PACKAGE_SIZE
+		);
+
 	global_thread_pool().wait();
+
+	// Project and Transformed to Viewport
+	viewport_and_project_transform(compacted_verts.get(), total_num_clipped_verts); 
 
 	// Dispatch primitives into tiles' bucket
 	std::vector<std::vector<std::vector<uint32_t> > > thread_tiles(num_threads);
 	working_package = 0;
-	edge_factors_.resize(num_clipped_indices / prim_size * 3);
+	edge_factors_.resize(total_num_clipped_verts / prim_size * 3);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		thread_tiles[i].resize(num_tiles_x * num_tiles_y);
 		global_thread_pool().schedule(boost::bind(&rasterizer::dispatch_primitive_func, this, boost::ref(thread_tiles[i]),
-			&clipped_indices[0], &clipped_verts_full[0], static_cast<int32_t>(num_clipped_indices / prim_size),
+			&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size),
 			prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
 	}
 	thread_tiles[num_threads - 1].resize(num_tiles_x * num_tiles_y);
 	dispatch_primitive_func(boost::ref(thread_tiles[num_threads - 1]),
-		&clipped_indices[0], &clipped_verts_full[0], static_cast<int32_t>(num_clipped_indices / prim_size),
+		&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size),
 		prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
@@ -1426,10 +1455,11 @@ void rasterizer::draw(size_t prim_count){
 			ppsu[i] = psu->clone();
 		}
 		global_thread_pool().schedule(boost::bind(&rasterizer::rasterize_primitive_func, this, boost::ref(thread_tiles),
-			num_tiles_x, &clipped_indices[0], &clipped_verts_full[0], ppps[i], ppsu[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
+			num_tiles_x, &compacted_verts[0], ppps[i], ppsu[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
 	}
-	rasterize_primitive_func(boost::ref(thread_tiles), num_tiles_x, &clipped_indices[0], &clipped_verts_full[0], hps, psu, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
+	rasterize_primitive_func(boost::ref(thread_tiles), num_tiles_x, &compacted_verts[0], hps, psu, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
+
 	// destroy all pixel_shader clone
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		if( hps ){
@@ -1586,4 +1616,25 @@ void rasterizer::draw_full_package(
 
 }
 
-END_NS_SALVIAR()
+
+void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num_verts)
+{
+	vs_output_functions::project proj_fn = pparent_->get_vs_output_ops()->project;
+	viewport const& vp = pparent_->get_viewport();
+
+	// Gathering vs_output need to be processed.
+	vector<vs_output*> sorted;
+	sorted.insert( sorted.end(), vertexes, vertexes+num_verts );
+	std::sort( sorted.begin(), sorted.end() );
+	sorted.erase( std::unique(sorted.begin(), sorted.end()), sorted.end() );
+
+	// Transform vertex
+	for(vector<vs_output*>::iterator iter = sorted.begin(); iter != sorted.end(); ++iter)
+	{
+		vs_output* vso = *iter;
+		viewport_transform(vso->position(), vp);
+		proj_fn(*vso, *vso);
+	}
+}
+
+END_NS_SALVIAR();
