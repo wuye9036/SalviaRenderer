@@ -13,7 +13,13 @@ BEGIN_NS_SALVIAR();
 using namespace eflib;
 using namespace std;
 
-clipper::clipper(){
+clip_context::clip_context()
+	: vert_pool(NULL), prim(pt_none), vso_ops(NULL), cull(NULL)
+{
+}
+
+clipper::clipper()
+{
 	// Near plane is 0.
 	planes_[0] = vec4(0.0f, 0.0f, 1.0f, 0.0f);
 
@@ -21,15 +27,75 @@ clipper::clipper(){
 	planes_[1] = vec4(0.0f, 0.0f, -1.0f, 1.0f);
 }
 
-void clipper::clip_triangle(clip_context const* ctxt) const
+void clipper::set_context(clip_context const* ctxt)
+{
+	ctxt_ = *ctxt;
+
+	// Select clipping function
+	switch(ctxt->prim)
+	{
+	case pt_solid_tri:
+		clip_impl_ = &clipper::clip_solid_triangle;
+		break;
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+}
+
+void clipper::clip_wireframe_triangle(vs_output** /*tri_verts*/, clip_results* /*results*/)
+{
+}
+
+void clipper::clip_solid_triangle(vs_output** tri_verts, clip_results* results)
+{
+	// Clip triangles to vertex of result polygon
+	vs_output*	tri_clipped_verts[5];
+	clip_results tri_clip_results;
+	tri_clip_results.clipped_verts = tri_clipped_verts;
+	clip_triangle_to_poly(tri_verts, &tri_clip_results);
+
+	// Re-topo/subdivde polygon to triangles.
+	assert(tri_clip_results.num_clipped_verts <= 5);
+	if (tri_clip_results.num_clipped_verts < 3 )
+	{
+		results->num_clipped_verts = 0;
+		return;
+	}
+
+	results->num_clipped_verts = (tri_clip_results.num_clipped_verts - 2) * 3;
+
+	for (uint32_t i = 0; i < tri_clip_results.num_clipped_verts; ++i)
+	{
+		tri_clip_results.clipped_verts[i]->front_face(tri_clip_results.is_front);
+	}
+
+	vs_output** clipped_cursor = results->clipped_verts;
+	for(size_t i_tri = 1; i_tri < results->num_clipped_verts-1; ++i_tri)
+	{
+		*(clipped_cursor+0) = tri_clipped_verts[0];
+		if (results->is_front)
+		{
+			*(clipped_cursor+1) = tri_clipped_verts[i_tri];
+			*(clipped_cursor+2) = tri_clipped_verts[i_tri+1];
+		}
+		else
+		{
+			*(clipped_cursor+1) = tri_clipped_verts[i_tri+1];
+			*(clipped_cursor+2) = tri_clipped_verts[i_tri];
+		}
+		clipped_cursor += 3;
+	}
+}
+
+void clipper::clip_triangle_to_poly(vs_output** tri_verts, clip_results* results) const
 {
 	vs_output*	clipped_verts[2][5];
 	uint32_t	num_clipped_verts[2];
 	
 	// clip by all faces as Ping-Pong idiom
-	clipped_verts[0][0] = ctxt->prim_verts[0];
-	clipped_verts[0][1] = ctxt->prim_verts[1];
-	clipped_verts[0][2] = ctxt->prim_verts[2];
+	clipped_verts[0][0] = tri_verts[0];
+	clipped_verts[0][1] = tri_verts[1];
+	clipped_verts[0][2] = tri_verts[2];
 	num_clipped_verts[0] = 3;
 
 	float d[2];
@@ -59,10 +125,10 @@ void clipper::clip_triangle(clip_context const* ctxt) const
 
 				if(d[1] < 0.0f)
 				{
-					vs_output* pclipped = ctxt->vso_pool->alloc();
+					vs_output* pclipped = ctxt_.vert_pool->alloc();
 
 					//LERP
-					ctxt->vs_output_ops->lerp(*pclipped, *clipped_verts[src_stage][i], *clipped_verts[src_stage][j], d[0] / (d[0] - d[1]));
+					ctxt_.vso_ops->lerp(*pclipped, *clipped_verts[src_stage][i], *clipped_verts[src_stage][j], d[0] / (d[0] - d[1]));
 
 					clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
 					++ num_clipped_verts[dest_stage];
@@ -72,10 +138,10 @@ void clipper::clip_triangle(clip_context const* ctxt) const
 			{
 				if(d[1] >= 0.0f)
 				{
-					vs_output* pclipped = ctxt->vso_pool->alloc();
+					vs_output* pclipped = ctxt_.vert_pool->alloc();
 
 					//LERP
-					ctxt->vs_output_ops->lerp(*pclipped, *clipped_verts[src_stage][j], *clipped_verts[src_stage][i], d[1] / (d[1] - d[0]));
+					ctxt_.vso_ops->lerp(*pclipped, *clipped_verts[src_stage][j], *clipped_verts[src_stage][i], d[1] / (d[1] - d[0]));
 
 					clipped_verts[dest_stage][num_clipped_verts[dest_stage]] = pclipped;
 					++ num_clipped_verts[dest_stage];
@@ -101,12 +167,12 @@ void clipper::clip_triangle(clip_context const* ctxt) const
 				}
 
 				float const area = cross_prod2(pv_2d[2] - pv_2d[0], pv_2d[1] - pv_2d[0]);
-				(*ctxt->is_front) = area > 0.0f;
+				results->is_front = area > 0.0f;
 
 				// If triangle is culled, return 0.
-				if( ctxt->cull_fn(area) )
+				if( ctxt_.cull(area) )
 				{
-					(*ctxt->num_clipped_verts) = 0;
+					results->num_clipped_verts = 0;
 					return;
 				}
 			}
@@ -120,10 +186,10 @@ void clipper::clip_triangle(clip_context const* ctxt) const
 	uint32_t num_final_clipped_verts = num_clipped_verts[src_stage];
 	assert(num_final_clipped_verts <= 5);
 
-	(*ctxt->num_clipped_verts) = num_final_clipped_verts;
+	results->num_clipped_verts = num_final_clipped_verts;
 	for(size_t i = 0; i < num_final_clipped_verts; ++i)
 	{
-		ctxt->clipped_verts[i] = clipped_verts[src_stage][i];
+		results->clipped_verts[i] = clipped_verts[src_stage][i];
 	}
 }
 

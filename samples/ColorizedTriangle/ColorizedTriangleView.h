@@ -196,9 +196,9 @@ public:
 			pdsurf = fb->get_render_target(render_target_color, 0);
 		}
 
-		rasterizer_desc rs_desc;
+		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
-		rs_back.reset(new rasterizer_state(rs_desc));
+		rs_back.reset(new raster_state(rs_desc));
 
 		shader_object_ptr compiled_code;
 		compiled_code = compile( vs_code, lang_vertex_shader );

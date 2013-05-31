@@ -9,6 +9,7 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/shader.h>
 #include <salviar/include/framebuffer.h>
+#include <salviar/include/raster_state.h>
 
 #include <eflib/include/memory/atomic.h>
 #include <eflib/include/memory/pool.h>
@@ -26,71 +27,7 @@ typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
 struct scanline_info;
 class pixel_shader_unit;
 
-struct rasterizer_desc {
-	fill_mode fm;
-	cull_mode cm;
-	bool front_ccw;
-	int32_t depth_bias;
-	float depth_bias_clamp;
-	float slope_scaled_depth_bias;
-	bool depth_clip_enable;
-	bool scissor_enable;
-	bool multisample_enable;
-	bool anti_aliased_line_enable;
-
-	rasterizer_desc()
-		: fm(fill_solid), cm(cull_back),
-			front_ccw(false),
-			depth_bias(0), depth_bias_clamp(0), slope_scaled_depth_bias(0),
-			depth_clip_enable(true), scissor_enable(false),
-			multisample_enable(true), anti_aliased_line_enable(false)
-	{
-	}
-};
-
 struct clip_context;
-
-class rasterizer_state {
-	rasterizer_desc desc_;
-
-	typedef bool (*cm_func_type)(float area);
-	typedef void (*clipping_func_type)(
-		clip_context const* clip_ctxt,
-		clipper*			clipper
-		);
-	typedef void (*triangle_rast_func_type)(
-		uint32_t& /*Primitive Size*/, 
-		boost::function< void (
-			rasterizer*,
-			vs_output**,
-			const std::vector<uint32_t>&, const viewport&,
-			const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const&)
-		>& /*Rasterizer Function*/ );
-
-	cm_func_type cm_func_;
-	clipping_func_type clipping_func_;
-	triangle_rast_func_type triangle_rast_func_;
-
-public:
-	rasterizer_state(const rasterizer_desc& desc);
-	const rasterizer_desc& get_desc() const;
-
-	bool cull(float area) const;
-	void clipping(
-		clip_context const* clip_ctxt,
-		clipper*			clipper
-		) const;
-
-	void triangle_rast_func(uint32_t& prim_size,
-		boost::function<
-			void (
-			rasterizer*,
-			vs_output**,
-			const std::vector<uint32_t>&, const viewport&,
-			const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const&)
-		>& rasterize_func
-		) const;
-};
 
 struct geometry_setup_context
 {
@@ -146,14 +83,18 @@ class rasterizer : public render_stage
 private:
 	const static int MAX_NUM_MULTI_SAMPLES = 4;
 
-	h_rasterizer_state	state_;
-	uint32_t			num_vs_output_attributes_;
+	std::vector<clipper>	clippers_;
+	h_rasterizer_state		state_;
+	uint32_t				num_vs_output_attributes_;
 
-	h_framebuffer		frame_buffer_;
-	h_blend_shader		blend_shader_;
+	h_framebuffer			frame_buffer_;
+	h_blend_shader			blend_shader_;
 
 	std::vector<eflib::vec3> edge_factors_;
 	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
+
+	prim_type				prim_;
+	uint32_t				prim_size_;
 
 	void geometry_setup_func(geometry_setup_context const* ctxt);
 	void dispatch_primitive_func(
@@ -242,6 +183,8 @@ public:
 		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
 
 	void draw(size_t prim_count);
+
+	void update_prim_info();
 };
 
 //DECL_HANDLE(rasterizer, h_rasterizer);

@@ -41,180 +41,6 @@ const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
 const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
 
-bool cull_mode_none(float /*area*/)
-{
-	return false;
-}
-
-bool cull_mode_ccw(float area)
-{
-	return area <= 0;
-}
-
-bool cull_mode_cw(float area)
-{
-	return area >= 0;
-}
-
-void fill_wireframe_clipping(clip_context const* /*clip_ctxt*/, clipper* /*clipper*/)
-{
-}
-
-void fill_solid_clipping(clip_context const* clip_ctxt, clipper* clipper)
-{
-	bool		front_face = true;
-	uint32_t	num_tri_clipped_verts = 0;
-	uint32_t&	num_clipped_verts(*(clip_ctxt->num_clipped_verts));
-	vs_output*	tri_clipped_verts[5];
-
-	clip_context tri_clip_ctxt;
-
-	tri_clip_ctxt.clipped_verts		= tri_clipped_verts;
-	tri_clip_ctxt.cull_fn			= clip_ctxt->cull_fn;
-	tri_clip_ctxt.is_front			= &front_face;
-	tri_clip_ctxt.num_clipped_verts	= &num_tri_clipped_verts;
-	tri_clip_ctxt.prim_verts[0]		= clip_ctxt->prim_verts[0];
-	tri_clip_ctxt.prim_verts[1]		= clip_ctxt->prim_verts[1];
-	tri_clip_ctxt.prim_verts[2]		= clip_ctxt->prim_verts[2];
-	tri_clip_ctxt.vso_pool			= clip_ctxt->vso_pool;
-	tri_clip_ctxt.vs_output_ops		= clip_ctxt->vs_output_ops;
-
-	clipper->clip_triangle(&tri_clip_ctxt);
-
-	assert(num_tri_clipped_verts <= 5);
-	if (num_tri_clipped_verts < 3 )
-	{
-		num_clipped_verts = 0;
-		return;
-	}
-
-	num_clipped_verts = (num_tri_clipped_verts - 2) * 3;
-
-	for (uint32_t i = 0; i < num_tri_clipped_verts; ++i)
-	{
-		tri_clip_ctxt.clipped_verts[i]->front_face(front_face);
-	}
-
-	vs_output** clipped_cursor = clip_ctxt->clipped_verts;
-	for(size_t i_tri = 1; i_tri < num_clipped_verts-1; ++i_tri)
-	{
-		*(clipped_cursor+0) = tri_clipped_verts[0];
-		if (front_face)
-		{
-			*(clipped_cursor+1) = tri_clipped_verts[i_tri];
-			*(clipped_cursor+2) = tri_clipped_verts[i_tri+1];
-		}
-		else
-		{
-			*(clipped_cursor+1) = tri_clipped_verts[i_tri+1];
-			*(clipped_cursor+2) = tri_clipped_verts[i_tri];
-		}
-		clipped_cursor += 3;
-	}
-}
-
-void fill_wireframe_triangle_rasterize_func(
-	uint32_t& prim_size, 
-	boost::function< void (
-		rasterizer*,
-		vs_output**,
-		const std::vector<uint32_t>&, const viewport&,
-		const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const& )
-	>& rasterize_func )
-{
-	prim_size = 2;
-	rasterize_func = boost::mem_fn(&rasterizer::rasterize_line_func);
-}
-
-void fill_solid_triangle_rasterize_func(
-	uint32_t& prim_size, 
-	boost::function< void (
-		rasterizer*,
-		vs_output**,
-		const std::vector<uint32_t>&, const viewport&,
-		const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const& )
-	>& rasterize_func )
-{
-	prim_size = 3;
-	rasterize_func = boost::mem_fn(&rasterizer::rasterize_triangle_func);
-}
-
-rasterizer_state::rasterizer_state(const rasterizer_desc& desc)
-	: desc_(desc)
-{
-	switch (desc.cm)
-	{
-	case cull_none:
-		cm_func_ = cull_mode_none;
-		break;
-
-	case cull_front:
-		cm_func_ = desc.front_ccw ? cull_mode_ccw : cull_mode_cw;
-		break;
-
-	case cull_back:
-		cm_func_ = desc.front_ccw ? cull_mode_cw : cull_mode_ccw;
-		break;
-
-	default:
-		EFLIB_ASSERT_UNEXPECTED();
-		break;
-	}
-	switch (desc.fm)
-	{
-	case fill_wireframe:
-		clipping_func_ = fill_wireframe_clipping;
-		triangle_rast_func_ = fill_wireframe_triangle_rasterize_func;
-		break;
-
-	case fill_solid:
-		clipping_func_ = fill_solid_clipping;
-		triangle_rast_func_ = fill_solid_triangle_rasterize_func;
-		break;
-
-	default:
-		EFLIB_ASSERT_UNEXPECTED();
-		break;
-	}
-}
-
-const rasterizer_desc& rasterizer_state::get_desc() const
-{
-	return desc_;
-}
-
-bool rasterizer_state::cull(float area) const
-{
-	return cm_func_(area);
-}
-
-void rasterizer_state::clipping(
-	clip_context const* clip_ctxt,
-	clipper*			clipper) const
-{
-	clip_context local_clip_ctxt = *clip_ctxt;
-	local_clip_ctxt.cull_fn = cm_func_;
-	clipping_func_(&local_clip_ctxt, clipper);
-}
-
-void rasterizer_state::triangle_rast_func(
-	uint32_t& prim_size,
-	boost::function< void (
-		rasterizer*, vs_output**,
-		const std::vector<uint32_t>&, const viewport&,
-		const h_pixel_shader&, boost::shared_ptr<pixel_shader_unit> const& )
-	>& rasterize_func ) const
-{
-	triangle_rast_func_(prim_size, rasterize_func);
-}
-
-//inherited
-void rasterizer::initialize(renderer_impl* pparent)
-{
-	pparent_ = pparent;
-	frame_buffer_ = pparent->get_framebuffer();
-}
-
 /*************************************************
  *   Steps for line rasterization£º
  *			1 Find major direction and computing distance and differential on major direction.
@@ -382,6 +208,12 @@ struct tile_render_context
 	pixel_shader_unit*	ps;
 	float const*		aa_z_offset;
 };
+
+void rasterizer::initialize(renderer_impl* pparent)
+{
+	pparent_ = pparent;
+	frame_buffer_ = pparent->get_framebuffer();
+}
 
 void rasterizer::draw_whole_tile(
 	int left, int top, int right, int bottom, 
@@ -976,7 +808,7 @@ void rasterizer::rasterize_triangle(
 
 rasterizer::rasterizer()
 {
-	state_.reset(new rasterizer_state(rasterizer_desc()));
+	state_.reset(new raster_state(raster_desc()));
 }
 rasterizer::~rasterizer()
 {
@@ -998,24 +830,18 @@ void rasterizer::geometry_setup_func(geometry_setup_context const* ctxt)
 
 	vs_output_op const*		vs_output_ops	= pparent_->get_vs_output_ops();
 	vertex_cache*			dvc				= pparent_->get_vertex_cache().get();
-	clipper*				clipper			= pparent_->get_clipper().get();
 	viewport const&			vp				= pparent_->get_viewport();
 
-	uint32_t prim_size = 0;
-	switch(ctxt->topo)
-	{
-	case primitive_line_list:
-	case primitive_line_strip:
-		prim_size = 2;
-		break;
-	case primitive_triangle_list:
-	case primitive_triangle_strip:
-		prim_size = 3;
-		break;
-	default:
-		EFLIB_ASSERT(false, "Primitive topology is invalid.");
-		return;
-	}
+	clip_context clip_ctxt;
+	clip_ctxt.vert_pool	= ctxt->vso_pool;
+	clip_ctxt.vso_ops	= vs_output_ops;
+	clip_ctxt.cull		= state_->get_cull_func();
+	clip_ctxt.prim		= prim_;
+
+	clipper clp;
+	clp.set_context(&clip_ctxt);
+
+	clip_results clip_rslt;
 
 	int32_t local_working_package = (*ctxt->working_package)++;
 	
@@ -1024,14 +850,14 @@ void rasterizer::geometry_setup_func(geometry_setup_context const* ctxt)
 		const int32_t start = local_working_package * ctxt->package_size;
 		const int32_t end = min(ctxt->num_primitive, start + ctxt->package_size);
 
-		vs_output** package_clipped_verts = ctxt->clipped_vertices + start*9;
+		clip_rslt.clipped_verts = ctxt->clipped_vertices + start*9;
 		uint32_t&	package_num_clipped_verts = ctxt->num_clipped_vertices[local_working_package];
 		
 		package_num_clipped_verts = 0;
 
 		for (int32_t i = start; i < end; ++ i)
 		{
-			if (3 == prim_size)
+			if (3 == prim_size_)
 			{
 				vs_output* pv[3] = {
 					&dvc->fetch(i*3+0),
@@ -1048,26 +874,13 @@ void rasterizer::geometry_setup_func(geometry_setup_context const* ctxt)
 
 				if ((0 == t.x()) && (0 == t.y()) && (0 == t.z()) && (0 == t.w()))
 				{
-					uint32_t num_tri_clipped_verts;
-					
-					clip_context clip_ctxt;
-					
-					clip_ctxt.num_clipped_verts = &num_tri_clipped_verts;
-					clip_ctxt.cull_fn = NULL;
-					clip_ctxt.clipped_verts = package_clipped_verts;
-					clip_ctxt.vso_pool = ctxt->vso_pool;
-					clip_ctxt.prim_verts[0] = pv[0];
-					clip_ctxt.prim_verts[1] = pv[1];
-					clip_ctxt.prim_verts[2] = pv[2];
-					clip_ctxt.vs_output_ops = vs_output_ops;
+					clp.clip(pv, &clip_rslt);
 
-					state_->clipping(&clip_ctxt, clipper);
-
-					package_clipped_verts += num_tri_clipped_verts;
-					package_num_clipped_verts += num_tri_clipped_verts;
+					clip_rslt.clipped_verts += clip_rslt.num_clipped_verts;
+					package_num_clipped_verts += clip_rslt.num_clipped_verts;
 				}
 			}
-			else if (2 == prim_size)
+			else if (2 == prim_size_)
 			{
 				assert(false);
 			}
@@ -1283,6 +1096,71 @@ void rasterizer::compact_clipped_verts_func(
 	}
 }
 
+void rasterizer::update_prim_info()
+{	
+	bool is_tri = false;
+	bool is_line = false;
+	bool is_point = false;
+
+	bool is_wireframe = false;
+	bool is_solid = false;
+
+	switch (state_->get_desc().fm)
+	{
+	case fill_solid:
+		is_solid = true;
+		break;
+	case fill_wireframe:
+		is_wireframe = true;
+		break;
+	}
+
+	primitive_topology prim_topo = pparent_->get_primitive_topology();
+	switch (prim_topo)
+	{
+	case primitive_point_list:
+	case primitive_point_sprite:
+		is_point = false;
+		break;
+	case primitive_line_list:
+	case primitive_line_strip:
+		is_line = false;
+		break;
+	case primitive_triangle_list:
+	case primitive_triangle_fan:
+	case primitive_triangle_strip:
+		is_tri = true;
+		break;
+	}
+
+	if (is_solid && is_tri)
+	{
+		prim_ = pt_solid_tri;
+	}
+	else if (is_wireframe && is_tri)
+	{
+		prim_ = pt_wireframe_tri;
+	}
+	else
+	{
+		prim_ = pt_none;
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+
+	switch(prim_)
+	{
+	case pt_line:
+	case pt_wireframe_tri:
+		prim_size_ = 2;
+		break;
+	case pt_solid_tri:
+		prim_size_ = 3;
+		break;
+	default:
+		EFLIB_ASSERT_UNIMPLEMENTED();
+	}
+}
+
 void rasterizer::draw(size_t prim_count){
 	assert(pparent_);
 	if(!pparent_) return;
@@ -1311,24 +1189,20 @@ void rasterizer::draw(size_t prim_count){
 		break;
 	}
 
-	primitive_topology primtopo = pparent_->get_primitive_topology();
+	update_prim_info();
 
-	uint32_t prim_size = 0;
-	switch(primtopo)
+	// Select rasterize func
+	switch(prim_)
 	{
-	case primitive_line_list:
-	case primitive_line_strip:
-		prim_size = 2;
+	case pt_line:
+	case pt_wireframe_tri:
 		rasterize_func_ = boost::mem_fn(&rasterizer::rasterize_line_func);
 		break;
-	case primitive_triangle_list:
-	case primitive_triangle_strip:
-		prim_size = 3;
-		state_->triangle_rast_func(prim_size, rasterize_func_);
+	case pt_solid_tri:
+		rasterize_func_ = boost::mem_fn(&rasterizer::rasterize_triangle_func);
 		break;
 	default:
-		EFLIB_ASSERT(false, "Primitive topology is invalid.");
-		return;
+		EFLIB_ASSERT(false, "Primitive type is not correct.");
 	}
 
 	if( pparent_->get_vertex_shader() )
@@ -1366,7 +1240,6 @@ void rasterizer::draw(size_t prim_count){
 		geom_setup_ctxts[i].num_clipped_vertices= &(num_clipped_verts[0]);
 		geom_setup_ctxts[i].vso_pool			= &(vso_pools[i]);
 		geom_setup_ctxts[i].num_primitive		= prim_count;
-		geom_setup_ctxts[i].topo				= primtopo;
 		geom_setup_ctxts[i].working_package		= &working_package;
 		geom_setup_ctxts[i].package_size		= GEOMETRY_SETUP_PACKAGE_SIZE;
 
@@ -1424,17 +1297,17 @@ void rasterizer::draw(size_t prim_count){
 	// Dispatch primitives into tiles' bucket
 	std::vector<std::vector<std::vector<uint32_t> > > thread_tiles(num_threads);
 	working_package = 0;
-	edge_factors_.resize(total_num_clipped_verts / prim_size * 3);
+	edge_factors_.resize(total_num_clipped_verts / prim_size_ * 3);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		thread_tiles[i].resize(num_tiles_x * num_tiles_y);
 		global_thread_pool().schedule(boost::bind(&rasterizer::dispatch_primitive_func, this, boost::ref(thread_tiles[i]),
-			&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size),
-			prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
+			&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size_),
+			prim_size_, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
 	}
 	thread_tiles[num_threads - 1].resize(num_tiles_x * num_tiles_y);
 	dispatch_primitive_func(boost::ref(thread_tiles[num_threads - 1]),
-		&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size),
-		prim_size, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
+		&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size_),
+		prim_size_, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
 	global_thread_pool().wait();
 
 	// Rasterize tiles

@@ -382,7 +382,7 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 		);
 	
 	vertex_cache_ = create_default_vertex_cache(this);
-	rast_state_.reset(new rasterizer_state(rasterizer_desc()));
+	rast_state_.reset(new raster_state(raster_desc()));
 	ds_state_.reset(new depth_stencil_state(depth_stencil_desc()));
 
 	vp_.minz = 0.0f;

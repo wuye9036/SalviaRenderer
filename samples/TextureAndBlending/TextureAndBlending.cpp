@@ -327,11 +327,11 @@ protected:
 		pbs_box.reset(new ts_blend_on);
 		pbs_plane.reset(new ts_blend_off);
 
-		rasterizer_desc rs_desc;
+		raster_desc rs_desc;
 		rs_desc.cm = cull_front;
-		rs_front.reset(new rasterizer_state(rs_desc));
+		rs_front.reset(new raster_state(rs_desc));
 		rs_desc.cm = cull_back;
-		rs_back.reset(new rasterizer_state(rs_desc));
+		rs_back.reset(new raster_state(rs_desc));
 
 		num_frames = 0;
 		accumulate_time = 0;

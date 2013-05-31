@@ -26,6 +26,7 @@ SET( PIPELINE_HEADERS
 	include/input_layout.h
 	include/presenter_dev.h
 	include/rasterizer.h
+	include/raster_state.h
 	include/render_stage.h
 	include/renderer.h
 	include/renderer_capacity.h
@@ -98,6 +99,7 @@ set(PIPELINE_SOURCES
 	src/default_vertex_cache.cpp
 	src/framebuffer.cpp
 	src/rasterizer.cpp
+	src/raster_state.cpp
 	src/renderer.cpp
 	src/renderer_impl.cpp
 	src/resource_manager.cpp

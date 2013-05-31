@@ -29,8 +29,8 @@ class texture_manager;
 
 struct sampler_desc;
 
-struct rasterizer_desc;
-class rasterizer_state;
+struct raster_desc;
+class raster_state;
 
 struct depth_stencil_op_desc;
 struct depth_stencil_desc;
@@ -82,7 +82,7 @@ DECL_HANDLE(renderer, h_renderer);
 DECL_HANDLE(clipper, h_clipper);
 DECL_HANDLE(renderer_mementor, h_renderer_mementor);
 
-DECL_HANDLE(rasterizer_state, h_rasterizer_state);
+DECL_HANDLE(raster_state, h_rasterizer_state);
 DECL_HANDLE(depth_stencil_state, h_depth_stencil_state);
 
 END_NS_SALVIAR()

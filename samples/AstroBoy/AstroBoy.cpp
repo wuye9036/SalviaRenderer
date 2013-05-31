@@ -269,9 +269,9 @@ protected:
 			pdsurf = fb->get_render_target(render_target_color, 0);
 		}
 
-		rasterizer_desc rs_desc;
+		raster_desc rs_desc;
 		rs_desc.cm = cull_none;
-		rs_back.reset(new rasterizer_state(rs_desc));
+		rs_back.reset(new raster_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
 		astro_boy_mesh = create_mesh_from_collada( hsr.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );

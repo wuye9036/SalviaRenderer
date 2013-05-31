@@ -306,9 +306,9 @@ public:
 		renderer_ = create_benchmark_renderer( &render_params, h_device() );
 
 		// Rasterizer state
-		rasterizer_desc rs_desc;
+		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
-		rs_back.reset(new rasterizer_state(rs_desc));
+		rs_back.reset(new raster_state(rs_desc));
 
 		// Loading mesh
 		cout << "Loading mesh ... " << endl;

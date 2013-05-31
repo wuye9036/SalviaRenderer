@@ -1,5 +1,4 @@
-#ifndef SALVIAR_ENUMS_H
-#define SALVIAR_ENUMS_H
+#pragma once
 
 #include <salviar/include/salviar_forward.h>
 
@@ -7,19 +6,13 @@
 #include <eflib/include/string/string.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <boost/smart_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <string>
 
-BEGIN_NS_SALVIAR()
+BEGIN_NS_SALVIAR();
 
-
-#define BEGIN_ENUM(enum_type) enum enum_type{
-#define END_ENUM(enum_type) enum_type##_invalid_value = 0x7FFFFFFF, enum_type##_invalid
-/**********************************
- * Device
- *********************************/
 struct result
 {
 	typedef int result_code_type;
@@ -65,9 +58,6 @@ private:
 	desc_type desc_;
 };
 
-/**********************************
- *  Resources
- *********************************/
 enum map_mode
 {
 	map_read = 1,
@@ -77,9 +67,6 @@ enum map_mode
 	map_write_no_overwrite = 5
 };
 
-/***************************
- * Input Assembler
- **************************/
 #define RESERVED(i) 0xFFFF0000 + i
 enum primitive_topology
 {
@@ -113,9 +100,14 @@ enum fill_mode
 	fill_mode_count = 2
 };
 
-/****************************
- * Texture
- ***************************/
+enum prim_type
+{
+	pt_none,
+	pt_point,
+	pt_line,
+	pt_solid_tri,
+	pt_wireframe_tri
+};
 
 enum texture_type
 {
@@ -169,9 +161,6 @@ enum cubemap_faces
 	cubemap_faces_count = 6
 };
 
-/****************************
- * Shader
- ***************************/
 // Usage describes the default component value will be filled to unfilled component if source data isn't a 4-components vector.
 // Position means fill to (0, 0, 0, 1)
 // Attrib means fill to (0,0,0,0)
@@ -182,9 +171,6 @@ enum input_register_usage_decl
 	input_register_usage_decl_count = 2
 };
 
-/****************************
- * Framebuffer
- ***************************/
 enum render_target
 {
 	render_target_color = 0,
@@ -217,6 +203,4 @@ enum stencil_op
     stencil_op_decr_wrap = 8,
 };
 
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();
