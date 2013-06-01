@@ -272,7 +272,7 @@ public:
 class ts_blend_off : public blend_shader
 {
 public:
-	bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in)
+	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
 	{
 		inout.color(0, sample, color_rgba32f(in.color[0]));
 		return true;

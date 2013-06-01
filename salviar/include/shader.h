@@ -22,7 +22,7 @@ BEGIN_NS_SALVIAR();
 
 struct viewport;
 struct scanline_info;
-struct backbuffer_pixel_out;
+struct pixel_accessor;
 class  triangle_info;
 class  vs_input;
 class  vs_output;
@@ -285,8 +285,8 @@ public:
 class blend_shader : public shader_impl
 {
 public:
-	void execute(size_t sample, backbuffer_pixel_out& inout, const ps_output& in);
-	virtual bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in) = 0;
+	void execute(size_t sample, pixel_accessor& inout, const ps_output& in);
+	virtual bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in) = 0;
 };
 
 END_NS_SALVIAR();

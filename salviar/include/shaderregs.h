@@ -214,9 +214,9 @@ struct ps_output
 	uint32_t coverage;
 };
 
-struct backbuffer_pixel_out
+struct pixel_accessor
 {
-	backbuffer_pixel_out(std::vector<surface*>& cbuf, surface* dbuf, surface* sbuf)
+	pixel_accessor(std::vector<surface*>& cbuf, surface* dbuf, surface* sbuf)
 		:cbuf_(&cbuf), dbuf_(dbuf), sbuf_(sbuf) {
 	}
 
@@ -248,8 +248,8 @@ struct backbuffer_pixel_out
 	}
 
 private:
-	backbuffer_pixel_out(const backbuffer_pixel_out& rhs);
-	backbuffer_pixel_out& operator = (const backbuffer_pixel_out& rhs);
+	pixel_accessor(const pixel_accessor& rhs);
+	pixel_accessor& operator = (const pixel_accessor& rhs);
 
 	std::vector<surface*>* cbuf_;
 	surface* dbuf_;

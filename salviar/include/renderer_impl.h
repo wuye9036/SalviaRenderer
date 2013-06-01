@@ -1,5 +1,4 @@
-#ifndef SALVIAR_RENDERER_IMPL_H
-#define SALVIAR_RENDERER_IMPL_H
+#pragma once
 
 #include <salviar/include/salviar_forward.h>
 
@@ -112,11 +111,11 @@ public:
 	virtual pixel_shader_ptr get_pixel_shader() const;
 
 	virtual result set_pixel_shader_code( boost::shared_ptr<shader_object> const& );
-	virtual boost::shared_ptr<shader_object> get_pixel_shader_code() const;
+	virtual shader_object_ptr get_pixel_shader_code() const;
 	virtual result set_ps_variable( std::string const& name, void const* data, size_t sz );
 	virtual result set_ps_sampler( std::string const& name, sampler_ptr const& samp );
 
-	virtual boost::shared_ptr<pixel_shader_unit> ps_proto() const;
+	virtual pixel_shader_unit_ptr ps_proto() const;
 
 	virtual result set_blend_shader(blend_shader_ptr const& hbs);
 	virtual blend_shader_ptr get_blend_shader() const;
@@ -170,5 +169,3 @@ public:
 renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev);
 
 END_NS_SALVIAR();
-
-#endif

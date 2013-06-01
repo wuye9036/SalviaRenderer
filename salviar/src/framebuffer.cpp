@@ -21,11 +21,11 @@ int32_t mask_stencil_1(int32_t stencil, int32_t mask){
 	return stencil & mask;
 }
 
-int32_t read_stencil_0(const backbuffer_pixel_out& /*target_pixel*/, size_t /*sample*/, int32_t /*mask*/){
+int32_t read_stencil_0(const pixel_accessor& /*target_pixel*/, size_t /*sample*/, int32_t /*mask*/){
 	return 0;
 }
 
-int32_t read_stencil_1(const backbuffer_pixel_out& target_pixel, size_t sample, int32_t mask){
+int32_t read_stencil_1(const pixel_accessor& target_pixel, size_t sample, int32_t mask){
 	return target_pixel.stencil(sample) & mask;
 }
 
@@ -102,17 +102,17 @@ int32_t sop_decr_wrap(int32_t /*ref*/, int32_t cur_stencil){
 	return (cur_stencil - 1 + 256) & 0xFF;
 }
 
-void write_depth_depth_mask_0(size_t /*sample*/, float /*depth*/, backbuffer_pixel_out& /*target_pixel*/){
+void write_depth_depth_mask_0(size_t /*sample*/, float /*depth*/, pixel_accessor& /*target_pixel*/){
 }
 
-void write_depth_depth_mask_1(size_t sample, float depth, backbuffer_pixel_out& target_pixel){
+void write_depth_depth_mask_1(size_t sample, float depth, pixel_accessor& target_pixel){
 	target_pixel.depth(sample, depth);
 }
 
-void write_stencil_0(size_t /*sample*/, int32_t /*stencil*/, int32_t /*mask*/, backbuffer_pixel_out& /*target_pixel*/){
+void write_stencil_0(size_t /*sample*/, int32_t /*stencil*/, int32_t /*mask*/, pixel_accessor& /*target_pixel*/){
 }
 
-void write_stencil_1(size_t sample, int32_t stencil, int32_t mask, backbuffer_pixel_out& target_pixel){
+void write_stencil_1(size_t sample, int32_t stencil, int32_t mask, pixel_accessor& target_pixel){
 	target_pixel.stencil(sample, stencil & mask);
 }
 
@@ -269,7 +269,7 @@ int32_t depth_stencil_state::read_stencil(int32_t stencil) const{
 	return mask_stencil_func_(stencil, desc_.stencil_read_mask);
 }
 
-int32_t depth_stencil_state::read_stencil(const backbuffer_pixel_out& target_pixel, size_t sample) const{
+int32_t depth_stencil_state::read_stencil(const pixel_accessor& target_pixel, size_t sample) const{
 	return read_stencil_func_(target_pixel, sample, desc_.stencil_read_mask);
 }
 
@@ -285,11 +285,11 @@ int32_t depth_stencil_state::stencil_operation(bool front_face, bool depth_pass,
 	return stencil_op_func_[(!front_face) * 3 + (!depth_pass) + static_cast<int>(stencil_pass)](ref, cur_stencil);
 }
 
-void depth_stencil_state::write_depth(size_t sample, float depth, backbuffer_pixel_out& target_pixel) const{
+void depth_stencil_state::write_depth(size_t sample, float depth, pixel_accessor& target_pixel) const{
 	write_depth_func_(sample, depth, target_pixel);
 }
 
-void depth_stencil_state::write_stencil(size_t sample, int32_t stencil, backbuffer_pixel_out& target_pixel) const{
+void depth_stencil_state::write_stencil(size_t sample, int32_t stencil, pixel_accessor& target_pixel) const{
 	write_stencil_func_(sample, stencil, desc_.stencil_write_mask, target_pixel);
 }
 
@@ -437,7 +437,7 @@ void framebuffer::render_sample(const blend_shader_ptr& hbs, size_t x, size_t y,
 	if(!hbs) return;
 
 	//composing output
-	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
+	pixel_accessor target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
 	target_pixel.set_pos(x, y);
 
 	const depth_stencil_state_ptr& dss = pparent_->get_depth_stencil_state();

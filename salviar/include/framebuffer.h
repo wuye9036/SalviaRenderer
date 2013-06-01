@@ -13,8 +13,7 @@
 
 BEGIN_NS_SALVIAR();
 
-struct backbuffer_pixel_out;
-
+struct pixel_accessor;
 
 struct depth_stencil_op_desc {
     stencil_op stencil_fail_op;
@@ -53,12 +52,12 @@ class depth_stencil_state {
 	depth_stencil_desc desc_;
 
 	typedef int32_t (*mask_stencil_func_type)(int32_t stencil, int32_t mask);
-	typedef int32_t (*read_stencil_func_type)(const backbuffer_pixel_out& target_pixel, size_t sample, int32_t mask);
+	typedef int32_t (*read_stencil_func_type)(const pixel_accessor& target_pixel, size_t sample, int32_t mask);
 	typedef bool (*depth_test_func_type)(float ps_depth, float cur_depth);
 	typedef bool (*stencil_test_func_type)(int32_t ref, int32_t cur_stencil);
 	typedef int32_t (*stencil_op_func_type)(int32_t ref, int32_t cur_stencil);
-	typedef void (*write_depth_func_type)(size_t sample, float depth, backbuffer_pixel_out& target_pixel);
-	typedef void (*write_stencil_func_type)(size_t sample, int32_t stencil, int32_t mask, backbuffer_pixel_out& target_pixel);
+	typedef void (*write_depth_func_type)(size_t sample, float depth, pixel_accessor& target_pixel);
+	typedef void (*write_stencil_func_type)(size_t sample, int32_t stencil, int32_t mask, pixel_accessor& target_pixel);
 
 	mask_stencil_func_type mask_stencil_func_;
 	read_stencil_func_type read_stencil_func_;
@@ -73,12 +72,12 @@ public:
 	const depth_stencil_desc& get_desc() const;
 
 	int32_t read_stencil(int32_t stencil) const;
-	int32_t read_stencil(const backbuffer_pixel_out& target_pixel, size_t sample) const;
+	int32_t read_stencil(const pixel_accessor& target_pixel, size_t sample) const;
 	bool depth_test(float ps_depth, float cur_depth) const;
 	bool stencil_test(bool front_face, int32_t ref, int32_t cur_stencil) const;
 	int32_t stencil_operation(bool front_face, bool depth_pass, bool stencil_pass, int32_t ref, int32_t cur_stencil) const;
-	void write_depth(size_t sample, float depth, backbuffer_pixel_out& target_pixel) const;
-	void write_stencil(size_t sample, int32_t stencil, backbuffer_pixel_out& target_pixel) const;
+	void write_depth(size_t sample, float depth, pixel_accessor& target_pixel) const;
+	void write_stencil(size_t sample, int32_t stencil, pixel_accessor& target_pixel) const;
 };
 
 class framebuffer : public render_stage

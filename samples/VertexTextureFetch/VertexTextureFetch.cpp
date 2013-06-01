@@ -134,7 +134,7 @@ public:
 class bs : public blend_shader
 {
 public:
-	bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in)
+	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
 	{
 		color_rgba32f color(in.color[0]);
 		inout.color( 0, sample, color_rgba32f(in.color[0]) );

@@ -358,12 +358,11 @@ mesh_ptr create_cone(
 	uint16_t* index_cursor = reinterpret_cast<uint16_t*>( indices->raw_data(0) );
 	for(int i_seg = 0; i_seg < circle_segments; ++i_seg)
 	{
-
-		*index_cursor = i_seg*2; // Top
+		*index_cursor = static_cast<uint16_t>(i_seg*2); // Top
 		++index_cursor;
-		*index_cursor = (i_seg*2+3) % (circle_segments*2);
+		*index_cursor = static_cast<uint16_t>((i_seg*2+3) % (circle_segments*2));
 		++index_cursor;
-		*index_cursor = i_seg*2+1;
+		*index_cursor = static_cast<uint16_t>(i_seg*2+1);
 		++index_cursor;
 	}
 
