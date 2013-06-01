@@ -81,14 +81,14 @@ class rasterizer : public render_stage
 private:
 	const static int MAX_NUM_MULTI_SAMPLES = 4;
 
-	std::vector<clipper>	clippers_;
-	raster_state_ptr		state_;
-	uint32_t				num_vs_output_attributes_;
+	std::vector<clipper>		clippers_;
+	raster_state_ptr			state_;
+	uint32_t					num_vs_output_attributes_;
 
-	framebuffer_ptr			frame_buffer_;
-	cpp_blend_shader_ptr			blend_shader_;
+	framebuffer_ptr				frame_buffer_;
+	cpp_blend_shader_ptr		blend_shader_;
 
-	std::vector<eflib::vec3> edge_factors_;
+	std::vector<eflib::vec3>	edge_factors_;
 	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
 
 	prim_type				prim_;
