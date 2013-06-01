@@ -110,7 +110,7 @@ set(PIPELINE_SOURCES
 
 set(SHADER_SOURCES
 	src/host.cpp
-	src/pixel_shader.cpp
+	src/cpp_pixel_shader.cpp
 	src/sampler_api.cpp
 	src/shader.cpp
 	src/shader_object.cpp

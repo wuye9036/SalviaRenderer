@@ -43,7 +43,7 @@ struct vert
 	vec4 pos;
 };
 
-class vs_box : public vertex_shader
+class vs_box : public cpp_vertex_shader
 {
 	mat44 wvp;
 public:
@@ -108,7 +108,7 @@ char const* plane_ps_code =
 	;
 	
 
-class ps_box : public pixel_shader
+class ps_box : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
 	salviar::texture_ptr tex_;
@@ -135,17 +135,17 @@ public:
 
 		return true;
 	}
-	virtual pixel_shader_ptr create_clone()
+	virtual cpp_pixel_shader_ptr create_clone()
 	{
-		return pixel_shader_ptr(new ps_box(*this));
+		return cpp_pixel_shader_ptr(new ps_box(*this));
 	}
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
 
-class vs_plane : public vertex_shader
+class vs_plane : public cpp_vertex_shader
 {
 	mat44 wvp;
 public:
@@ -181,7 +181,7 @@ public:
 	}
 };
 
-class ps_plane : public pixel_shader
+class ps_plane : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
 	salviar::texture_ptr tex_;
@@ -205,17 +205,17 @@ public:
 
 		return true;
 	}
-	virtual pixel_shader_ptr create_clone()
+	virtual cpp_pixel_shader_ptr create_clone()
 	{
-		return pixel_shader_ptr(new ps_plane(*this));
+		return cpp_pixel_shader_ptr(new ps_plane(*this));
 	}
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
 
-class ts_blend_on : public blend_shader
+class ts_blend_on : public cpp_blend_shader
 {
 public:
 	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
@@ -226,7 +226,7 @@ public:
 	}
 };
 
-class ts_blend_off : public blend_shader
+class ts_blend_off : public cpp_blend_shader
 {
 public:
 	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
@@ -446,16 +446,16 @@ protected:
 	sampler_ptr plane_sampler;
 	sampler_ptr box_sampler;
 
-	vertex_shader_ptr pvs_box;
-	pixel_shader_ptr pps_box;
+	cpp_vertex_shader_ptr pvs_box;
+	cpp_pixel_shader_ptr pps_box;
 	shader_object_ptr psc_box;
 
-	vertex_shader_ptr pvs_plane;
-	pixel_shader_ptr pps_plane;
+	cpp_vertex_shader_ptr pvs_plane;
+	cpp_pixel_shader_ptr pps_plane;
 	shader_object_ptr psc_plane;
 
-	blend_shader_ptr pbs_box;
-	blend_shader_ptr pbs_plane;
+	cpp_blend_shader_ptr pbs_box;
+	cpp_blend_shader_ptr pbs_plane;
 
 	raster_state_ptr rs_front;
 	raster_state_ptr rs_back;

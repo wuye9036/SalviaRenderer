@@ -39,7 +39,7 @@ struct raster_desc
 };
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(clipper);
-EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_pixel_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 
 struct clip_context;

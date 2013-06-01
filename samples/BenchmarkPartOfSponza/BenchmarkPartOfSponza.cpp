@@ -71,7 +71,7 @@ char const* benchmark_vs_code =
 "} \r\n"
 ;
 
-class benchmark_vs : public vertex_shader
+class benchmark_vs : public cpp_vertex_shader
 {
 	mat44 wvp;
 	vec4 light_pos, eye_pos;
@@ -106,7 +106,7 @@ public:
 	}
 };
 
-class benchmark_ps : public pixel_shader
+class benchmark_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
 	salviar::texture_ptr tex_;
@@ -160,18 +160,18 @@ public:
 
 		return true;
 	}
-	virtual pixel_shader_ptr create_clone()
+	virtual cpp_pixel_shader_ptr create_clone()
 	{
-		return pixel_shader_ptr(new benchmark_ps(*this));
+		return cpp_pixel_shader_ptr(new benchmark_ps(*this));
 	}
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
 
 
-class bs : public blend_shader
+class bs : public cpp_blend_shader
 {
 public:
 	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
@@ -328,9 +328,9 @@ protected:
 	vector<mesh_ptr>		benchmark_mesh;
 	shader_object_ptr 	benchmark_vs;
 
-	vertex_shader_ptr		cpp_vs;
-	pixel_shader_ptr		cpp_ps;
-	blend_shader_ptr		cpp_bs;
+	cpp_vertex_shader_ptr		cpp_vs;
+	cpp_pixel_shader_ptr		cpp_ps;
+	cpp_blend_shader_ptr		cpp_bs;
 
 	raster_state_ptr	rs_back;
 	profiler			prof;

@@ -13,7 +13,7 @@ class  vs_output;
 
 class triangle_info
 {
-	friend class pixel_shader;
+	friend class cpp_pixel_shader;
 
 	const eflib::vec4* pbase_vert;
 	const vs_output* pddx;

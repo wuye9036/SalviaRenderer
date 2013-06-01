@@ -55,23 +55,23 @@ void triangle_info::set(const eflib::vec4& base_vert, const vs_output& ddx, cons
 
 // ------------------------------------------
 //  Get Partial Derivation
-const eflib::vec4& pixel_shader::get_pos_ddx() const{
+const eflib::vec4& cpp_pixel_shader::get_pos_ddx() const{
 	return ptriangleinfo_->ddx().position();
 }
 
-const eflib::vec4& pixel_shader::get_pos_ddy() const{
+const eflib::vec4& cpp_pixel_shader::get_pos_ddy() const{
 	return ptriangleinfo_->ddy().position();
 }
 
-const eflib::vec4& pixel_shader::unproj_ddx(size_t iReg) const{
+const eflib::vec4& cpp_pixel_shader::unproj_ddx(size_t iReg) const{
 	return ptriangleinfo_->ddx().attribute(iReg);
 }
 
-const eflib::vec4& pixel_shader::unproj_ddy(size_t iReg) const{
+const eflib::vec4& cpp_pixel_shader::unproj_ddy(size_t iReg) const{
 	return ptriangleinfo_->ddy().attribute(iReg);
 }
 
-const eflib::vec4 pixel_shader::ddx(size_t iReg) const
+const eflib::vec4 cpp_pixel_shader::ddx(size_t iReg) const
 {
 	vec4 attr_org_ddx = unproj_ddx(iReg);
 
@@ -86,7 +86,7 @@ const eflib::vec4 pixel_shader::ddx(size_t iReg) const
 	return new_proj_attr - attr;
 }
 
-const eflib::vec4 pixel_shader::ddy(size_t iReg) const
+const eflib::vec4 cpp_pixel_shader::ddy(size_t iReg) const
 {
 	vec4 attr_org_ddy = unproj_ddy(iReg);
 
@@ -104,7 +104,7 @@ const eflib::vec4 pixel_shader::ddy(size_t iReg) const
 // ---------------------------------------
 // Sample Texture
 
-color_rgba32f pixel_shader::tex2d(const sampler& s, const vec4& proj_coord, const vec4& ddx, const vec4& ddy, float bias){
+color_rgba32f cpp_pixel_shader::tex2d(const sampler& s, const vec4& proj_coord, const vec4& ddx, const vec4& ddy, float bias){
 	return s.sample_2d(
 		proj_coord, ddx, ddy,
 		1.0f / ( ppxin_->position().w() + get_pos_ddx().w() ),
@@ -114,12 +114,12 @@ color_rgba32f pixel_shader::tex2d(const sampler& s, const vec4& proj_coord, cons
 		);
 }
 
-color_rgba32f pixel_shader::tex2d(const sampler& s, size_t iReg)
+color_rgba32f cpp_pixel_shader::tex2d(const sampler& s, size_t iReg)
 {
 	return tex2d(s, ppxin_->attribute(iReg), unproj_ddx(iReg), unproj_ddy(iReg));
 }
 
-color_rgba32f pixel_shader::tex2dlod(const sampler& s, size_t iReg)
+color_rgba32f cpp_pixel_shader::tex2dlod(const sampler& s, size_t iReg)
 {
 	float x = ppxin_->attribute(iReg)[0];
 	float y = ppxin_->attribute(iReg)[1];
@@ -128,7 +128,7 @@ color_rgba32f pixel_shader::tex2dlod(const sampler& s, size_t iReg)
 	return s.sample(x, y, lod);
 }
 
-color_rgba32f pixel_shader::tex2dproj(const sampler& s, size_t iReg)
+color_rgba32f cpp_pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 {
 	const eflib::vec4& attr = ppxin_->attribute(iReg);
 
@@ -164,7 +164,7 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, size_t iReg)
 		);
 }
 
-color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec4& ddx, const vec4& ddy){
+color_rgba32f cpp_pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec4& ddx, const vec4& ddy){
 
 	float invq = (v[3] == 0.0f) ? 1.0f : 1.0f / v[3];
 	//float proj_factor = ppxin_->wpos[3] * invq;
@@ -180,18 +180,18 @@ color_rgba32f pixel_shader::tex2dproj(const sampler& s, const vec4& v, const vec
 		1.0f / (ppxin_->position().w() + unproj_ddx(0)[3] ), 1.0f / (ppxin_->position().w() + unproj_ddy(0)[3] ), invq, 0.0f);
 }
 
-color_rgba32f pixel_shader::texcube(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float /*bias*/){
+color_rgba32f cpp_pixel_shader::texcube(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float /*bias*/){
 	return s.sample_cube(
 		coord, ddx, ddy,
 		1.0f / (ppxin_->position().w() + unproj_ddx(0)[3]), 1.0f / (ppxin_->position().w() + unproj_ddy(0)[3] ),
 		1.0f / ppxin_->position().w(), 0.0f);
 }
 
-color_rgba32f pixel_shader::texcube(const sampler&s, size_t iReg){
+color_rgba32f cpp_pixel_shader::texcube(const sampler&s, size_t iReg){
 	return texcube(s, ppxin_->attribute(iReg), unproj_ddx(iReg), unproj_ddy(iReg));
 }
 
-color_rgba32f pixel_shader::texcubelod(const sampler& s, size_t iReg){
+color_rgba32f cpp_pixel_shader::texcubelod(const sampler& s, size_t iReg){
 	float x = ppxin_->attribute(iReg)[0];
 	float y = ppxin_->attribute(iReg)[1];
 	float z = ppxin_->attribute(iReg)[2];
@@ -201,7 +201,7 @@ color_rgba32f pixel_shader::texcubelod(const sampler& s, size_t iReg){
 	return s.sample_cube(x, y, z, lod);
 }
 
-color_rgba32f pixel_shader::texcubeproj(const sampler& s, size_t iReg){
+color_rgba32f cpp_pixel_shader::texcubeproj(const sampler& s, size_t iReg){
 	const eflib::vec4& attr = ppxin_->attribute(iReg);
 
 	float invq = (attr[3] == 0.0f) ? 1.0f : 1.0f / attr[3];
@@ -221,7 +221,7 @@ color_rgba32f pixel_shader::texcubeproj(const sampler& s, size_t iReg){
 		1.0f / (ppxin_->position().w() + unproj_ddx(0)[3]), 1.0f / (ppxin_->position().w() + unproj_ddy(0)[3]), invq, 0.0f);
 }
 
-color_rgba32f pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy){
+color_rgba32f cpp_pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy){
 	float invq = (v[3] == 0.0f) ? 1.0f : 1.0f / v[3];
 	float proj_factor = ppxin_->position().w() * invq;
 	eflib::vec4 projected_v;
@@ -232,7 +232,7 @@ color_rgba32f pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& v, c
 		1.0f / (ppxin_->position().w() + unproj_ddx(0)[3]), 1.0f / (ppxin_->position().w() + unproj_ddy(0)[3]), invq, 0.0f);
 }
 
-bool pixel_shader::execute(const vs_output& in, ps_output& out)
+bool cpp_pixel_shader::execute(const vs_output& in, ps_output& out)
 {
 	assert(ptriangleinfo_);
 	ppxin_ = &in;

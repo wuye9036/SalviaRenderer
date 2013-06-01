@@ -187,7 +187,7 @@ mesh_ptr LoadModel(salviar::renderer_ptr hsr, std::string const & mesh_name)
 	return mesh_ptr(pmesh);
 }
 
-class vs_mesh : public vertex_shader
+class vs_mesh : public cpp_vertex_shader
 {
 	mat44 wv;
 	mat44 proj;
@@ -241,7 +241,7 @@ public:
 	}
 };
 
-class ps_mesh : public pixel_shader
+class ps_mesh : public cpp_pixel_shader
 {
 public:
 	ps_mesh()
@@ -259,17 +259,17 @@ public:
 		out.color[0] = vec4(clr, clr, clr, 1);
 		return true;
 	}
-	virtual pixel_shader_ptr create_clone()
+	virtual cpp_pixel_shader_ptr create_clone()
 	{
-		return pixel_shader_ptr(new ps_mesh(*this));
+		return cpp_pixel_shader_ptr(new ps_mesh(*this));
 	}
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
 
-class ts_blend_off : public blend_shader
+class ts_blend_off : public cpp_blend_shader
 {
 public:
 	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
@@ -400,9 +400,9 @@ protected:
 	renderer_ptr			renderer_;
 	mesh_ptr				complex_mesh;
 	
-	vertex_shader_ptr		cpp_vs;
-	pixel_shader_ptr		cpp_ps;
-	blend_shader_ptr		cpp_bs;
+	cpp_vertex_shader_ptr		cpp_vs;
+	cpp_pixel_shader_ptr		cpp_ps;
+	cpp_blend_shader_ptr		cpp_bs;
 
 	raster_state_ptr	rs_back;
 	profiler			prof;

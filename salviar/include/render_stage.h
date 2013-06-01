@@ -38,12 +38,12 @@ public:
 	DECL_RS_UPDATED(stream);
 	DECL_RS_UPDATED(index_buffer);
 	DECL_RS_UPDATED(primitive_topology);
-	DECL_RS_UPDATED(vertex_shader);
+	DECL_RS_UPDATED(cpp_vertex_shader);
 	DECL_RS_UPDATED(viewport);
 	DECL_RS_UPDATED(cull_mode);
 	DECL_RS_UPDATED(fill_mode);
-	DECL_RS_UPDATED(pixel_shader);
-	DECL_RS_UPDATED(blend_shader);
+	DECL_RS_UPDATED(cpp_pixel_shader);
+	DECL_RS_UPDATED(cpp_blend_shader);
 	DECL_RS_UPDATED(framebuffer_size);
 	DECL_RS_UPDATED(render_target);
 	DECL_RS_UPDATED(rt_avaliable);

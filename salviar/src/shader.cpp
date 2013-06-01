@@ -632,11 +632,11 @@ float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2
 /*****************************************
  *  Vertex Shader
  ****************************************/
-void vertex_shader::execute(const vs_input& in, vs_output& out){
+void cpp_vertex_shader::execute(const vs_input& in, vs_output& out){
 	shader_prog(in, out);
 }
 
-void blend_shader::execute(size_t sample, pixel_accessor& out, const ps_output& in){
+void cpp_blend_shader::execute(size_t sample, pixel_accessor& out, const ps_output& in){
 	shader_prog(sample, out, in);
 }
 

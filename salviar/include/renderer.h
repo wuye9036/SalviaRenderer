@@ -58,7 +58,7 @@ public:
 
 	virtual input_layout_ptr create_input_layout(
 		input_element_desc const* elem_descs, size_t elems_count,
-		vertex_shader_ptr const& vs ) = 0;
+		cpp_vertex_shader_ptr const& vs ) = 0;
 
 	virtual result set_vertex_buffers(
 		size_t starts_slot,
@@ -72,8 +72,8 @@ public:
 	virtual result set_primitive_topology(primitive_topology primtopo) = 0;
 	virtual primitive_topology get_primitive_topology() const = 0;
 
-	virtual result set_vertex_shader(vertex_shader_ptr const& hvs) = 0;
-	virtual vertex_shader_ptr get_vertex_shader() const = 0;
+	virtual result set_vertex_shader(cpp_vertex_shader_ptr const& hvs) = 0;
+	virtual cpp_vertex_shader_ptr get_vertex_shader() const = 0;
 
 	virtual result set_vertex_shader_code( shader_object_ptr const& ) = 0;
 	virtual shader_object_ptr get_vertex_shader_code() const = 0;
@@ -92,8 +92,8 @@ public:
 	virtual result set_rasterizer_state(raster_state_ptr const& rs) = 0;
 	virtual raster_state_ptr get_rasterizer_state() const = 0;
 
-	virtual result set_pixel_shader(pixel_shader_ptr const& hps) = 0;
-	virtual pixel_shader_ptr get_pixel_shader() const = 0;
+	virtual result set_pixel_shader(cpp_pixel_shader_ptr const& hps) = 0;
+	virtual cpp_pixel_shader_ptr get_pixel_shader() const = 0;
 
 	virtual result set_pixel_shader_code( shader_object_ptr const& ) = 0;
 	virtual shader_object_ptr get_pixel_shader_code() const = 0;
@@ -106,8 +106,8 @@ public:
 	virtual result set_ps_variable( std::string const& name, void const* data, size_t sz ) = 0;
 	virtual result set_ps_sampler( std::string const& name, sampler_ptr const& samp ) = 0;
 
-	virtual result set_blend_shader(blend_shader_ptr const& hbs) = 0;
-	virtual blend_shader_ptr get_blend_shader() const = 0;
+	virtual result set_blend_shader(cpp_blend_shader_ptr const& hbs) = 0;
+	virtual cpp_blend_shader_ptr get_blend_shader() const = 0;
 
 	virtual result		set_viewport(viewport const& vp) = 0;
 	virtual viewport	get_viewport() const = 0;

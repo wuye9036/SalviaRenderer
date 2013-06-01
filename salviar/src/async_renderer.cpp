@@ -69,7 +69,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_vertex_shader(vertex_shader_ptr const& hvs)
+	virtual result set_vertex_shader(cpp_vertex_shader_ptr const& hvs)
 	{
 		vertex_shader_ = hvs;
 
@@ -137,7 +137,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_pixel_shader(pixel_shader_ptr const& hps)
+	virtual result set_pixel_shader(cpp_pixel_shader_ptr const& hps)
 	{
 		pixel_shader_ = hps;
 
@@ -175,7 +175,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_blend_shader(blend_shader_ptr const& hbs)
+	virtual result set_blend_shader(cpp_blend_shader_ptr const& hbs)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_blend_shader, impl_, hbs);
 		cmds_.push_front(cmd);
@@ -327,7 +327,7 @@ public:
 	
 	virtual input_layout_ptr create_input_layout(
 		input_element_desc const* elem_descs, size_t elems_count,
-		vertex_shader_ptr const& vs )
+		cpp_vertex_shader_ptr const& vs )
 	{
 		return impl_->create_input_layout(elem_descs, elems_count, vs);
 	}
@@ -405,7 +405,7 @@ public:
 		return pixel_shader_code_;
 	}
 
-	virtual vertex_shader_ptr get_vertex_shader() const
+	virtual cpp_vertex_shader_ptr get_vertex_shader() const
 	{
 		return vertex_shader_;
 	}
@@ -421,15 +421,15 @@ public:
 		return raster_state_ptr();
 	}
 
-	virtual pixel_shader_ptr get_pixel_shader() const
+	virtual cpp_pixel_shader_ptr get_pixel_shader() const
 	{
 		return pixel_shader_;
 	}
 
-	virtual blend_shader_ptr get_blend_shader() const
+	virtual cpp_blend_shader_ptr get_blend_shader() const
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		return blend_shader_ptr();
+		return cpp_blend_shader_ptr();
 	}
 
 	virtual viewport get_viewport() const
@@ -544,8 +544,8 @@ private:
 	mutable framebuffer_ptr			current_frame_buffer_;
 	boost::shared_ptr<shader_object>	vertex_shader_code_;
 	boost::shared_ptr<shader_object>	pixel_shader_code_;
-	vertex_shader_ptr					vertex_shader_;
-	pixel_shader_ptr					pixel_shader_;
+	cpp_vertex_shader_ptr					vertex_shader_;
+	cpp_pixel_shader_ptr					pixel_shader_;
 };
 
 renderer_ptr create_async_renderer(renderer_parameters const* pparam, device_ptr const& hdev)

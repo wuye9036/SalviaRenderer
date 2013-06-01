@@ -64,7 +64,7 @@ char const* sponza_vs_code =
 "} \r\n"
 ;
 
-class sponza_vs : public vertex_shader
+class sponza_vs : public cpp_vertex_shader
 {
 	mat44 wvp;
 	vec4 light_pos, eye_pos;
@@ -99,7 +99,7 @@ public:
 	}
 };
 
-class sponza_ps : public pixel_shader
+class sponza_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
 	salviar::texture_ptr tex_;
@@ -153,18 +153,18 @@ public:
 
 		return true;
 	}
-	virtual pixel_shader_ptr create_clone()
+	virtual cpp_pixel_shader_ptr create_clone()
 	{
-		return pixel_shader_ptr(new sponza_ps(*this));
+		return cpp_pixel_shader_ptr(new sponza_ps(*this));
 	}
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
 
 
-class bs : public blend_shader
+class bs : public cpp_blend_shader
 {
 public:
 	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
@@ -344,9 +344,9 @@ protected:
 
 	shared_ptr<shader_object> sponza_sc;
 
-	vertex_shader_ptr	pvs;
-	pixel_shader_ptr	pps;
-	blend_shader_ptr	pbs;
+	cpp_vertex_shader_ptr	pvs;
+	cpp_pixel_shader_ptr	pps;
+	cpp_blend_shader_ptr	pbs;
 
 	raster_state_ptr rs_back;
 

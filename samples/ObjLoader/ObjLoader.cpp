@@ -62,7 +62,7 @@ char const* cup_vs_code =
 "} \r\n"
 ;
 
-class cup_ps : public pixel_shader
+class cup_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
 	salviar::texture_ptr tex_;
@@ -125,18 +125,18 @@ public:
 
 		return true;
 	}
-	virtual pixel_shader_ptr create_clone()
+	virtual cpp_pixel_shader_ptr create_clone()
 	{
-		return pixel_shader_ptr(new cup_ps(*this));
+		return cpp_pixel_shader_ptr(new cup_ps(*this));
 	}
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
 
 
-class bs : public blend_shader
+class bs : public cpp_blend_shader
 {
 public:
 	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
@@ -284,8 +284,8 @@ protected:
 	shared_ptr<shader_object> plane_vs;
 	shared_ptr<shader_object> cup_vs;
 
-	pixel_shader_ptr pps;
-	blend_shader_ptr pbs;
+	cpp_pixel_shader_ptr pps;
+	cpp_blend_shader_ptr pbs;
 
 	raster_state_ptr rs_back;
 

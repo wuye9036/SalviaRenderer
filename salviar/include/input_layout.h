@@ -59,7 +59,7 @@ class input_layout
 {
 public:
 	static input_layout_ptr create( input_element_desc const* pdesc, size_t desc_count, shader_object_ptr const& vs );
-	static input_layout_ptr create( input_element_desc const* pdesc, size_t desc_count, vertex_shader_ptr const& vs );
+	static input_layout_ptr create( input_element_desc const* pdesc, size_t desc_count, cpp_vertex_shader_ptr const& vs );
 
 	typedef std::vector<input_element_desc>::const_iterator iterator;
 

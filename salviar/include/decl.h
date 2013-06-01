@@ -9,9 +9,9 @@ struct ps_output;
 class  vs_output;
 class  vs_input;
 
-EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader);
-EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader);
-EFLIB_DECLARE_CLASS_SHARED_PTR(blend_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_pixel_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_blend_shader);
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_cache);
 EFLIB_DECLARE_CLASS_SHARED_PTR(rasterizer);

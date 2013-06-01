@@ -66,7 +66,7 @@ const char* options_io::export_as_tag = "export-as";
 const char* options_io::export_as_desc = "Specifies the content of output file that the compiler should generate.";
 
 const char* options_io::lang_tag = "lang";
-const char* options_io::lang_desc = "Specifies language the input file was treated as.'general(g)','vertex_shader(vs)','pixel_shader(ps)','blend_shader(bs)' are available. ";
+const char* options_io::lang_desc = "Specifies language the input file was treated as.'general(g)','cpp_vertex_shader(vs)','cpp_pixel_shader(ps)','cpp_blend_shader(bs)' are available. ";
 
 options_io::options_io() : fmt(none), lang(salviar::lang_none)
 {
@@ -104,11 +104,11 @@ void options_io::filterate( po::variables_map const & vm )
 		to_lower( lang_str );
 		if ( lang_str == "general" || lang_str == "g" ){
 			lang = salviar::lang_general;
-		} else if ( lang_str == "vertex_shader" || lang_str == "vs" ){
+		} else if ( lang_str == "cpp_vertex_shader" || lang_str == "vs" ){
 			lang = salviar::lang_vertex_shader;
-		} else if ( lang_str == "pixel_shader" || lang_str == "ps" ){
+		} else if ( lang_str == "cpp_pixel_shader" || lang_str == "ps" ){
 			lang = salviar::lang_pixel_shader;
-		} else if ( lang_str == "blend_shader" || lang_str == "bs" ){
+		} else if ( lang_str == "cpp_blend_shader" || lang_str == "bs" ){
 			lang = salviar::lang_blending_shader;
 		}
 	}

@@ -37,9 +37,9 @@ class renderer_impl : public renderer
 	
 	// Stages
 	host_ptr				host_;
-	vertex_shader_ptr			cpp_vs_;
-	pixel_shader_ptr			cpp_ps_;
-	blend_shader_ptr			cpp_bs_;
+	cpp_vertex_shader_ptr			cpp_vs_;
+	cpp_pixel_shader_ptr			cpp_ps_;
+	cpp_blend_shader_ptr			cpp_bs_;
 
 	stream_assembler_ptr	assembler_;
 	clipper_ptr				clipper_;
@@ -71,7 +71,7 @@ public:
 	
 	virtual input_layout_ptr create_input_layout(
 		input_element_desc const* elem_descs, size_t elems_count,
-		vertex_shader_ptr const& vs );
+		cpp_vertex_shader_ptr const& vs );
 
 	virtual result set_input_layout(input_layout_ptr const& layout);
 
@@ -88,8 +88,8 @@ public:
 	virtual result set_primitive_topology(primitive_topology primtopo);
 	virtual primitive_topology get_primitive_topology() const;
 
-	virtual result set_vertex_shader(vertex_shader_ptr const& hvs);
-	virtual vertex_shader_ptr get_vertex_shader() const;
+	virtual result set_vertex_shader(cpp_vertex_shader_ptr const& hvs);
+	virtual cpp_vertex_shader_ptr get_vertex_shader() const;
 	
 	virtual result					set_vertex_shader_code( boost::shared_ptr<shader_object> const& );
 	virtual shader_object_ptr		get_vertex_shader_code() const;
@@ -107,8 +107,8 @@ public:
 	virtual const depth_stencil_state_ptr& get_depth_stencil_state() const;
 	virtual int32_t get_stencil_ref() const;
 
-	virtual result set_pixel_shader(pixel_shader_ptr const& hps);
-	virtual pixel_shader_ptr get_pixel_shader() const;
+	virtual result set_pixel_shader(cpp_pixel_shader_ptr const& hps);
+	virtual cpp_pixel_shader_ptr get_pixel_shader() const;
 
 	virtual result set_pixel_shader_code( boost::shared_ptr<shader_object> const& );
 	virtual shader_object_ptr get_pixel_shader_code() const;
@@ -117,8 +117,8 @@ public:
 
 	virtual pixel_shader_unit_ptr ps_proto() const;
 
-	virtual result set_blend_shader(blend_shader_ptr const& hbs);
-	virtual blend_shader_ptr get_blend_shader() const;
+	virtual result set_blend_shader(cpp_blend_shader_ptr const& hbs);
+	virtual cpp_blend_shader_ptr get_blend_shader() const;
 
 	virtual result set_viewport(viewport const& vp);
 	virtual viewport get_viewport() const;

@@ -73,7 +73,7 @@ char const* ps_code =
 "} \r\n"
 ;
 
-class ps : public pixel_shader
+class ps : public cpp_pixel_shader
 {
 public:
 	vec4 color;
@@ -121,17 +121,17 @@ public:
 
 		return true;
 	}
-	virtual pixel_shader_ptr create_clone()
+	virtual cpp_pixel_shader_ptr create_clone()
 	{
-		return pixel_shader_ptr(new ps(*this));
+		return cpp_pixel_shader_ptr(new ps(*this));
 	}
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
 };
 
-class bs : public blend_shader
+class bs : public cpp_blend_shader
 {
 public:
 	bool shader_prog(size_t sample, pixel_accessor& inout, const ps_output& in)
@@ -313,9 +313,9 @@ protected:
 	shared_ptr<shader_object> vsc;
 	shared_ptr<shader_object> psc;
 
-	vertex_shader_ptr	pvs;
-	pixel_shader_ptr	pps;
-	blend_shader_ptr	pbs;
+	cpp_vertex_shader_ptr	pvs;
+	cpp_pixel_shader_ptr	pps;
+	cpp_blend_shader_ptr	pbs;
 
 	raster_state_ptr rs_back;
 

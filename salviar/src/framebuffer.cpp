@@ -431,7 +431,7 @@ pixel_format framebuffer::get_buffer_format() const{
 	return fmt_;
 }
 
-void framebuffer::render_sample(const blend_shader_ptr& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
+void framebuffer::render_sample(const cpp_blend_shader_ptr& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
 {
 	EFLIB_ASSERT(hbs, "Blend shader is null or invalid.");
 	if(!hbs) return;

@@ -234,7 +234,7 @@ private:
 	}
 };
 
-class vertex_shader : public shader_impl
+class cpp_vertex_shader : public shader_impl
 {
 public:
 	void execute(const vs_input& in, vs_output& out);
@@ -243,7 +243,7 @@ public:
 	virtual uint32_t output_attribute_modifiers(uint32_t index) const = 0;
 };
 
-class pixel_shader : public shader_impl
+class cpp_pixel_shader : public shader_impl
 {
 	friend class rasterizer;
 	
@@ -277,12 +277,12 @@ public:
 	bool execute(const vs_output& in, ps_output& out);
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;
 
-	virtual pixel_shader_ptr create_clone() = 0;
-	virtual void destroy_clone(pixel_shader_ptr& ps_clone) = 0;
+	virtual cpp_pixel_shader_ptr create_clone() = 0;
+	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone) = 0;
 };
 
 //it is called when render a shaded pixel into framebuffer
-class blend_shader : public shader_impl
+class cpp_blend_shader : public shader_impl
 {
 public:
 	void execute(size_t sample, pixel_accessor& inout, const ps_output& in);

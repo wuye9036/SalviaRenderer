@@ -101,7 +101,7 @@ primitive_topology renderer_impl::get_primitive_topology() const{
 	return primtopo_;
 }
 
-result renderer_impl::set_vertex_shader(vertex_shader_ptr const& hvs)
+result renderer_impl::set_vertex_shader(cpp_vertex_shader_ptr const& hvs)
 {
 	cpp_vs_ = hvs;
 
@@ -115,7 +115,7 @@ result renderer_impl::set_vertex_shader(vertex_shader_ptr const& hvs)
 	return result::ok;
 }
 
-vertex_shader_ptr renderer_impl::get_vertex_shader() const
+cpp_vertex_shader_ptr renderer_impl::get_vertex_shader() const
 {
 	return cpp_vs_;
 }
@@ -184,24 +184,24 @@ int32_t renderer_impl::get_stencil_ref() const
 	return stencil_ref_;
 }
 
-result renderer_impl::set_pixel_shader(pixel_shader_ptr const& hps)
+result renderer_impl::set_pixel_shader(cpp_pixel_shader_ptr const& hps)
 {
 	cpp_ps_ = hps;
 	return result::ok;
 }
 
-pixel_shader_ptr renderer_impl::get_pixel_shader() const
+cpp_pixel_shader_ptr renderer_impl::get_pixel_shader() const
 {
 	return cpp_ps_;
 }
 
-result renderer_impl::set_blend_shader(blend_shader_ptr const& hbs)
+result renderer_impl::set_blend_shader(cpp_blend_shader_ptr const& hbs)
 {
 	cpp_bs_ = hbs;
 	return result::ok;
 }
 
-blend_shader_ptr renderer_impl::get_blend_shader() const
+cpp_blend_shader_ptr renderer_impl::get_blend_shader() const
 {
 	return cpp_bs_;
 }
@@ -474,7 +474,7 @@ input_layout_ptr renderer_impl::create_input_layout(
 
 salviar::input_layout_ptr renderer_impl::create_input_layout(
 	input_element_desc const* elem_descs, size_t elems_count,
-	vertex_shader_ptr const& vs )
+	cpp_vertex_shader_ptr const& vs )
 {
 	return input_layout::create( elem_descs, elems_count, vs );
 }

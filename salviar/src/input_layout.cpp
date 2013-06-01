@@ -75,7 +75,7 @@ input_layout_ptr input_layout::create( input_element_desc const* pdesc, size_t d
 	return ret;
 }
 
-input_layout_ptr input_layout::create( input_element_desc const* pdesc, size_t desc_count, vertex_shader_ptr const& /*vs*/ ){
+input_layout_ptr input_layout::create( input_element_desc const* pdesc, size_t desc_count, cpp_vertex_shader_ptr const& /*vs*/ ){
 	input_layout_ptr ret = make_shared<input_layout>();
 	ret->descs.assign( pdesc, pdesc + desc_count );
 

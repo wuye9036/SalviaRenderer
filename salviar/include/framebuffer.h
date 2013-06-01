@@ -122,7 +122,7 @@ public:
 	float get_z(size_t x, size_t y) const;
 
 	// Rendering functions.
-	void render_sample(const blend_shader_ptr& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
+	void render_sample(const cpp_blend_shader_ptr& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
 
 	// Cleanup functions.
 	void clear_color(size_t target_index, const color_rgba32f& c);
