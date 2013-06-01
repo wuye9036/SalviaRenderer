@@ -1,5 +1,4 @@
-#ifndef SALVIAX_MESH_H
-#define SALVIAX_MESH_H
+#pragma once
 
 #include <salviax/include/resource/resource_forward.h>
 #include <salviar/include/decl.h>
@@ -14,12 +13,14 @@
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
+EFLIB_DECLARE_CLASS_SHARED_PTR(attached_data);
+EFLIB_DECLARE_CLASS_SHARED_PTR(mesh);
+EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh);
+
 class attached_data{
 public:
 	virtual ~attached_data() = 0{}
 };
-
-DECL_HANDLE(attached_data, h_attached_data);
 
 class mesh
 {
@@ -27,10 +28,10 @@ public:
 	virtual size_t get_buffer_count() = 0;
 	virtual size_t get_face_count() = 0;
 
-	virtual salviar::h_buffer get_index_buffer() = 0;
-	virtual salviar::h_buffer get_vertex_buffer( size_t buffer_index ) = 0;
+	virtual salviar::buffer_ptr get_index_buffer() = 0;
+	virtual salviar::buffer_ptr get_vertex_buffer( size_t buffer_index ) = 0;
 	
-	virtual h_attached_data get_attached() = 0;
+	virtual attached_data_ptr get_attached() = 0;
 
 	virtual void gen_adjancency() = 0;
 
@@ -38,7 +39,6 @@ public:
 
 	virtual ~mesh(){}
 };
-DECL_HANDLE(mesh, h_mesh);
 
 class skin_mesh
 {
@@ -52,11 +52,8 @@ public:
 
 	virtual ~skin_mesh(){}
 };
-DECL_HANDLE(skin_mesh, h_skin_mesh);
 
 END_NS_SALVIAX_RESOURCE();
-
-#endif
 
 /********************************************************************
 Copyright (C) 2007-2012 Ye Wu

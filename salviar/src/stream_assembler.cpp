@@ -110,7 +110,7 @@ void const* stream_assembler::element_address( size_t buffer_index, size_t membe
 
 void stream_assembler::set_vertex_buffers(
 	size_t starts_slot,
-	size_t buffers_count, h_buffer const* pbufs,
+	size_t buffers_count, buffer_ptr const* pbufs,
 	size_t const* strides, size_t const* offsets
 	)
 {

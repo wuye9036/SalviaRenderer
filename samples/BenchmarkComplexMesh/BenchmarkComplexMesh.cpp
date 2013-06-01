@@ -59,7 +59,7 @@ void ReadShortString(std::istream& file, std::string& str)
 	file.read(reinterpret_cast<char*>(&str[0]), len * sizeof(str[0]));
 }
 
-h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
+mesh_ptr LoadModel(salviar::renderer_ptr hsr, std::string const & mesh_name)
 {
 	std::vector<Material> mtls;
 	std::vector<std::string> mesh_names;
@@ -155,8 +155,8 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 		uint32_t max_num_blend;
 		file.read(reinterpret_cast<char*>(&max_num_blend), sizeof(max_num_blend));
 
-		salviar::h_buffer verts		= pmesh->create_buffer( sizeof(vec3) * num_vertices );
-		salviar::h_buffer normals	= pmesh->create_buffer( sizeof(vec3) * num_vertices );
+		salviar::buffer_ptr verts		= pmesh->create_buffer( sizeof(vec3) * num_vertices );
+		salviar::buffer_ptr normals	= pmesh->create_buffer( sizeof(vec3) * num_vertices );
 		vec3* verts_data   = reinterpret_cast<vec3*>(verts->raw_data(0));
 		vec3* normals_data = reinterpret_cast<vec3*>(normals->raw_data(0));
 		file.read(reinterpret_cast<char*>(verts_data), num_vertices * sizeof(vec3));
@@ -168,7 +168,7 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 		uint32_t num_triangles;
 		file.read(reinterpret_cast<char*>(&num_triangles), sizeof(num_triangles));
 
-		salviar::h_buffer indices = pmesh->create_buffer( sizeof(uint16_t) * num_triangles * 3);
+		salviar::buffer_ptr indices = pmesh->create_buffer( sizeof(uint16_t) * num_triangles * 3);
 		uint16_t* indices_data = reinterpret_cast<uint16_t*>(indices->raw_data(0));
 
 		char is_index_16_bit;
@@ -184,7 +184,7 @@ h_mesh LoadModel(salviar::h_renderer hsr, std::string const & mesh_name)
 		pmesh->set_input_element_descs( elem_descs );
 	}
 
-	return h_mesh(pmesh);
+	return mesh_ptr(pmesh);
 }
 
 class vs_mesh : public vertex_shader
@@ -259,11 +259,11 @@ public:
 		out.color[0] = vec4(clr, clr, clr, 1);
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new ps_mesh(*this));
+		return pixel_shader_ptr(new ps_mesh(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -303,7 +303,7 @@ public:
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
 
-		renderer_ = create_benchmark_renderer( &render_params, h_device() );
+		renderer_ = create_benchmark_renderer( &render_params, device_ptr() );
 
 		// Rasterizer state
 		raster_desc rs_desc;
@@ -397,14 +397,14 @@ public:
 
 protected:
 	/** Properties @{ */
-	h_renderer			renderer_;
-	h_mesh				complex_mesh;
+	renderer_ptr			renderer_;
+	mesh_ptr				complex_mesh;
 	
-	h_vertex_shader		cpp_vs;
-	h_pixel_shader		cpp_ps;
-	h_blend_shader		cpp_bs;
+	vertex_shader_ptr		cpp_vs;
+	pixel_shader_ptr		cpp_ps;
+	blend_shader_ptr		cpp_bs;
 
-	h_rasterizer_state	rs_back;
+	raster_state_ptr	rs_back;
 	profiler			prof;
 };
 

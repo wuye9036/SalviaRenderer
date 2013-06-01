@@ -10,11 +10,11 @@ BEGIN_NS_SALVIAR();
 class buffer_manager
 {
 public:
-	h_buffer create_buffer(size_t size){
+	buffer_ptr create_buffer(size_t size){
 		return boost::shared_ptr<buffer>(new buffer(size));
 	}
 
-	void release_buffer(h_buffer& hbuf){
+	void release_buffer(buffer_ptr& hbuf){
 		assert(hbuf);
 		hbuf.reset();
 	}
@@ -23,14 +23,14 @@ public:
 class texture_manager
 {
 public:
-	h_texture create_texture_2d(size_t width, size_t height, size_t num_samples, pixel_format fmt){
-		return h_texture(new texture_2d(width, height, num_samples, fmt));
+	texture_ptr create_texture_2d(size_t width, size_t height, size_t num_samples, pixel_format fmt){
+		return texture_ptr(new texture_2d(width, height, num_samples, fmt));
 	}
-	h_texture create_texture_cube(size_t width, size_t height, size_t num_samples, pixel_format fmt){
-		return h_texture(new texture_cube(width, height, num_samples, fmt));
+	texture_ptr create_texture_cube(size_t width, size_t height, size_t num_samples, pixel_format fmt){
+		return texture_ptr(new texture_cube(width, height, num_samples, fmt));
 	}
 
-	void release_texture(h_texture& htex){
+	void release_texture(texture_ptr& htex){
 		assert(htex);
 		htex.reset();
 	}

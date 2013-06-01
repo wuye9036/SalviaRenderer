@@ -13,11 +13,11 @@ BEGIN_NS_SALVIAR();
 class index_fetcher
 {
 public:
-	void initialize(h_buffer hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
+	void initialize(buffer_ptr hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert);
 	void fetch_indices(uint32_t* prim_indices, uint32_t id);
 
 private:
-	h_buffer index_buffer_;
+	buffer_ptr index_buffer_;
 	format index_format_;
 	primitive_topology primtopo_;
 	uint32_t startpos_;

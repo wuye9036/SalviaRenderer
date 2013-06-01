@@ -36,8 +36,8 @@ dev_gdiplus::dev_gdiplus(HWND hwnd): hwnd_(hwnd){
 dev_gdiplus::~dev_gdiplus(){
 }
 
-h_dev_gdiplus dev_gdiplus::create_device(HWND hwnd){
-	return h_dev_gdiplus( new dev_gdiplus( hwnd ) );
+dev_gdiplus_ptr dev_gdiplus::create_device(HWND hwnd){
+	return dev_gdiplus_ptr( new dev_gdiplus( hwnd ) );
 }
 
 void dev_gdiplus::present(const salviar::surface& surf){
@@ -84,7 +84,7 @@ void dev_gdiplus::present(const salviar::surface& surf){
 
 END_NS_SALVIAX_PRESENTER()
 
-void salviax_create_presenter_device(salviar::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::device_ptr& dev, void* param)
 {
 	dev = salviax::presenter::dev_gdiplus::create_device(static_cast<HWND>(param));
 }

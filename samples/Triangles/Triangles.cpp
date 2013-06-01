@@ -73,11 +73,11 @@ public:
 		out.color[0] = color;
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new ps(*this));
+		return pixel_shader_ptr(new ps(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -118,7 +118,7 @@ protected:
 
 		hsr = create_software_renderer(&render_params, present_dev);
 
-		const h_framebuffer& fb = hsr->get_framebuffer();
+		const framebuffer_ptr& fb = hsr->get_framebuffer();
 		if (fb->get_num_samples() > 1){
 			display_surf.reset(new surface(fb->get_width(),
 				fb->get_height(), 1, fb->get_buffer_format()));
@@ -143,7 +143,7 @@ protected:
 		hsr->set_pixel_shader_code(psc);
 #endif
 
-		h_mesh pmesh = create_planar(
+		mesh_ptr pmesh = create_planar(
 			hsr.get(), 
 			vec3(-30.0f, -1.0f, -30.0f), 
 			vec3(15.0f, 0.0f, 1.0f), 
@@ -244,7 +244,7 @@ protected:
 			color[2] = vec4( 0.7f, 0.3f, 0.3f, 1.0f );
 
 			for( size_t i_mesh = 0; i_mesh < meshes.size(); ++i_mesh ){
-				h_mesh cur_mesh = meshes[i_mesh];
+				mesh_ptr cur_mesh = meshes[i_mesh];
 				hsr->set_ps_variable( "color", &color[i_mesh] );
 				pps->set_constant( _T("Color"), &color[i_mesh] );
 				cur_mesh->render();
@@ -260,20 +260,20 @@ protected:
 
 protected:
 	/** Properties @{ */
-	h_device present_dev;
-	h_renderer hsr;
+	device_ptr present_dev;
+	renderer_ptr hsr;
 
-	vector<h_mesh>			meshes;
+	vector<mesh_ptr>			meshes;
 	shared_ptr<shader_object> vsc;
 	shared_ptr<shader_object> psc;
 
-	h_vertex_shader	pvs;
-	h_pixel_shader	pps;
-	h_blend_shader	pbs;
+	vertex_shader_ptr	pvs;
+	pixel_shader_ptr	pps;
+	blend_shader_ptr	pbs;
 
-	h_rasterizer_state rs_back;
+	raster_state_ptr rs_back;
 
-	h_surface display_surf;
+	surface_ptr display_surf;
 	surface* pdsurf;
 
 	uint32_t num_frames;

@@ -146,8 +146,8 @@ public:
 
 class morph_ps : public pixel_shader
 {
-	salviar::h_sampler sampler_;
-	salviar::h_texture tex_;
+	salviar::sampler_ptr sampler_;
+	salviar::texture_ptr tex_;
 
 	vec4 ambient;
 	vec4 diffuse;
@@ -155,7 +155,7 @@ class morph_ps : public pixel_shader
 
 	int shininess;
 public:
-	void set_texture( salviar::h_texture tex ){
+	void set_texture( salviar::texture_ptr tex ){
 		tex_ = tex;
 		sampler_->set_texture(tex_.get());
 	}
@@ -202,11 +202,11 @@ public:
 
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new morph_ps(*this));
+		return pixel_shader_ptr(new morph_ps(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -246,7 +246,7 @@ protected:
 
 		hsr = create_software_renderer(&render_params, present_dev);
 
-		const h_framebuffer& fb = hsr->get_framebuffer();
+		const framebuffer_ptr& fb = hsr->get_framebuffer();
 		if (fb->get_num_samples() > 1){
 			display_surf.reset(new surface(fb->get_width(),
 				fb->get_height(), 1, fb->get_buffer_format()));
@@ -365,20 +365,20 @@ protected:
 
 protected:
 	/** Properties @{ */
-	h_device present_dev;
-	h_renderer hsr;
+	device_ptr present_dev;
+	renderer_ptr hsr;
 
 	mesh_ptr morph_mesh;
 
 	shared_ptr<shader_object> morph_sc;
 
-	h_vertex_shader	pvs;
-	h_pixel_shader	pps;
-	h_blend_shader	pbs;
+	vertex_shader_ptr	pvs;
+	pixel_shader_ptr	pps;
+	blend_shader_ptr	pbs;
 
-	h_rasterizer_state rs_back;
+	raster_state_ptr rs_back;
 
-	h_surface display_surf;
+	surface_ptr display_surf;
 	surface* pdsurf;
 
 	uint32_t num_frames;

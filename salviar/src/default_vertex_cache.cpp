@@ -43,7 +43,7 @@ public:
 	}
 
 	void update_index_buffer(
-		h_buffer const& index_buffer, format index_format,
+		buffer_ptr const& index_buffer, format index_format,
 		primitive_topology topology, uint32_t start_pos, uint32_t base_vert)
 	{
 		transformed_verts_.reset();

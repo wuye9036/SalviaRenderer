@@ -1,5 +1,4 @@
-#ifndef SALVIA_SHADER_UNIT_H
-#define SALVIA_SHADER_UNIT_H
+#pragma once
 
 #if defined( sasl_host_EXPORTS )
 #define SALVIA_API __declspec( dllexport )
@@ -13,6 +12,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 #include <boost/unordered_map.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -24,10 +24,11 @@
 
 BEGIN_NS_SALVIAR();
 
-class shader_reflection;
-class shader_object;
-class vs_output;
-class stream_assembler;
+class  shader_reflection;
+class  shader_object;
+class  vs_output;
+struct ps_output;
+class  stream_assembler;
 
 class vertex_shader_unit
 {
@@ -43,7 +44,7 @@ public:
 	void bind_streams( stream_assembler const* sa );
 	void set_variable( std::string const&, void const* pvariable );
 	void set_variable_pointer( std::string const&, void const* pvariable, size_t sz);
-	void set_sampler( std::string const&, h_sampler const& samp );
+	void set_sampler( std::string const&, sampler_ptr const& samp );
 
 	uint32_t output_attributes_count() const;
 	uint32_t output_attribute_modifiers( size_t index ) const;
@@ -56,7 +57,7 @@ public:
 	shader_object const* code;
 	stream_assembler const* sa;
 
-	std::vector<h_sampler>	used_samplers;	// For take ownership
+	std::vector<sampler_ptr>	used_samplers;	// For take ownership
 
 	std::vector<char>		stream_data;
 	std::vector<char>		buffer_data;
@@ -85,7 +86,7 @@ public:
 	void reset_pointers();
 
 	void set_variable( std::string const&, void const* data );
-	void set_sampler( std::string const&, h_sampler const& samp );
+	void set_sampler( std::string const&, sampler_ptr const& samp );
 
 	void update( vs_output* inputs, shader_reflection const* vs_abi );
 	void execute( ps_output* outs );
@@ -93,7 +94,7 @@ public:
 public:
 	shader_object const* code;
 
-	std::vector<h_sampler>									used_samplers;	// For take ownership
+	std::vector<sampler_ptr>									used_samplers;	// For take ownership
 
 	typedef std::vector<char, eflib::aligned_allocator<char, 32> > aligned_vector;
 
@@ -116,6 +117,5 @@ public:
 
 	virtual ~vx_shader_unit(){}
 };
-END_NS_SALVIAR();
 
-#endif
+END_NS_SALVIAR();

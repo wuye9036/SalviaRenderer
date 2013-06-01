@@ -24,23 +24,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <salviax/include/presenter/presenter_forward.h>
 #include <salviar/include/presenter_dev.h>
 #include <eflib/include/math/math.h>
-
-#include <eflib/include/platform/boost_begin.h>
-#include <boost/smart_ptr.hpp>
-#include <eflib/include/platform/boost_end.h>
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <windows.h>
 #include <GL/GL.h>
 
 BEGIN_NS_SALVIAX_PRESENTER();
 
-class dev_opengl;
-DECL_HANDLE(dev_opengl, h_dev_opengl);
+EFLIB_DECLARE_CLASS_SHARED_PTR(dev_opengl);
 
 class dev_opengl : public salviar::device
 {
 public:
-	static h_dev_opengl create_device(HWND hwnd);
+	static dev_opengl_ptr create_device(HWND hwnd);
 
 	//inherited
 	virtual void present(const salviar::surface& surf);
@@ -69,7 +65,7 @@ END_NS_SALVIAX_PRESENTER();
 
 extern "C"
 {
-	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
+	SALVIAX_API void salviax_create_presenter_device(salviar::device_ptr& dev, void* param);
 }
 
 #endif //SALVIAX_DEV_OPENGL_H

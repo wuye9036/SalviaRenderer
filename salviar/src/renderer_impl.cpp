@@ -20,7 +20,7 @@ using namespace eflib;
 using boost::shared_ptr;
 
 //inherited
-result renderer_impl::set_input_layout(const h_input_layout& layout)
+result renderer_impl::set_input_layout(const input_layout_ptr& layout)
 {
 	size_t min_slot = 0, max_slot = 0;
 	layout->slot_range(min_slot, max_slot);
@@ -37,7 +37,7 @@ result renderer_impl::set_input_layout(const h_input_layout& layout)
 
 result renderer_impl::set_vertex_buffers(
 		size_t starts_slot,
-		size_t buffers_count, h_buffer const* buffers,
+		size_t buffers_count, buffer_ptr const* buffers,
 		size_t const* strides, size_t const* offsets)
 {
 	assembler_->set_vertex_buffers(
@@ -52,7 +52,7 @@ result renderer_impl::set_vertex_buffers(
 	return result::ok;
 }
 
-result renderer_impl::set_index_buffer(h_buffer const& hbuf, format index_fmt)
+result renderer_impl::set_index_buffer(buffer_ptr const& hbuf, format index_fmt)
 {
 	switch (index_fmt)
 	{
@@ -70,7 +70,7 @@ result renderer_impl::set_index_buffer(h_buffer const& hbuf, format index_fmt)
 	return result::ok;
 }
 
-h_buffer renderer_impl::get_index_buffer() const{
+buffer_ptr renderer_impl::get_index_buffer() const{
 	return index_buffer_;
 }
 
@@ -101,7 +101,7 @@ primitive_topology renderer_impl::get_primitive_topology() const{
 	return primtopo_;
 }
 
-result renderer_impl::set_vertex_shader(h_vertex_shader const& hvs)
+result renderer_impl::set_vertex_shader(vertex_shader_ptr const& hvs)
 {
 	cpp_vs_ = hvs;
 
@@ -115,7 +115,7 @@ result renderer_impl::set_vertex_shader(h_vertex_shader const& hvs)
 	return result::ok;
 }
 
-h_vertex_shader renderer_impl::get_vertex_shader() const
+vertex_shader_ptr renderer_impl::get_vertex_shader() const
 {
 	return cpp_vs_;
 }
@@ -156,25 +156,25 @@ const vs_output_op* renderer_impl::get_vs_output_ops() const
 	return vs_output_ops_;
 }
 
-result renderer_impl::set_rasterizer_state(const h_rasterizer_state& rs)
+result renderer_impl::set_rasterizer_state(const raster_state_ptr& rs)
 {
 	rast_state_ = rs;
 	return result::ok;
 }
 
-h_rasterizer_state renderer_impl::get_rasterizer_state() const
+raster_state_ptr renderer_impl::get_rasterizer_state() const
 {
 	return rast_state_;
 }
 
-result renderer_impl::set_depth_stencil_state(const h_depth_stencil_state& dss, int32_t stencil_ref)
+result renderer_impl::set_depth_stencil_state(const depth_stencil_state_ptr& dss, int32_t stencil_ref)
 {
 	ds_state_ = dss;
 	stencil_ref_ = stencil_ref;
 	return result::ok;
 }
 
-const h_depth_stencil_state& renderer_impl::get_depth_stencil_state() const
+const depth_stencil_state_ptr& renderer_impl::get_depth_stencil_state() const
 {
 	return ds_state_;
 }
@@ -184,24 +184,24 @@ int32_t renderer_impl::get_stencil_ref() const
 	return stencil_ref_;
 }
 
-result renderer_impl::set_pixel_shader(h_pixel_shader const& hps)
+result renderer_impl::set_pixel_shader(pixel_shader_ptr const& hps)
 {
 	cpp_ps_ = hps;
 	return result::ok;
 }
 
-h_pixel_shader renderer_impl::get_pixel_shader() const
+pixel_shader_ptr renderer_impl::get_pixel_shader() const
 {
 	return cpp_ps_;
 }
 
-result renderer_impl::set_blend_shader(h_blend_shader const& hbs)
+result renderer_impl::set_blend_shader(blend_shader_ptr const& hbs)
 {
 	cpp_bs_ = hbs;
 	return result::ok;
 }
 
-h_blend_shader renderer_impl::get_blend_shader() const
+blend_shader_ptr renderer_impl::get_blend_shader() const
 {
 	return cpp_bs_;
 }
@@ -258,37 +258,37 @@ bool renderer_impl::get_render_target_available(render_target /*tar*/, size_t /*
 }
 
 //do not support get function for a while
-result renderer_impl::set_render_target(render_target tar, size_t target_index, h_surface const& surf)
+result renderer_impl::set_render_target(render_target tar, size_t target_index, surface_ptr const& surf)
 {
 	frame_buffer_->set_render_target( tar, target_index, surf.get() );
 	return result::ok;
 }
 
-h_buffer renderer_impl::create_buffer(size_t size)
+buffer_ptr renderer_impl::create_buffer(size_t size)
 {
 	return buffer_pool_->create_buffer(size);
 }
 
-h_texture renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+texture_ptr renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
 	return texture_pool_->create_texture_2d(width, height, num_samples, fmt);
 }
 
-h_texture renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+texture_ptr renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
 	return texture_pool_->create_texture_cube(width, height, num_samples, fmt);
 }
 
-h_sampler renderer_impl::create_sampler(const sampler_desc& desc)
+sampler_ptr renderer_impl::create_sampler(const sampler_desc& desc)
 {
-	return h_sampler(new sampler(desc));
+	return sampler_ptr(new sampler(desc));
 }
 
 result renderer_impl::draw(size_t startpos, size_t primcnt)
 {
 	rast_->set_state(rast_state_);
 
-	vertex_cache_->update_index_buffer(h_buffer(), index_format_, primtopo_, static_cast<uint32_t>(startpos), 0);
+	vertex_cache_->update_index_buffer(buffer_ptr(), index_format_, primtopo_, static_cast<uint32_t>(startpos), 0);
 	vertex_cache_->transform_vertices(static_cast<uint32_t>(primcnt));
 	
 	rast_->draw(primcnt);
@@ -360,7 +360,7 @@ void renderer_impl::initialize()
 	frame_buffer_->initialize(this);
 }
 
-renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
+renderer_impl::renderer_impl(const renderer_parameters* pparam, device_ptr hdev)
 	: index_format_(format_r16_uint), primtopo_(primitive_triangle_list)
 {
 	native_dev_ = hdev;
@@ -394,27 +394,27 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, h_device hdev)
 	initialize();
 }
 
-h_rasterizer renderer_impl::get_rasterizer()
+rasterizer_ptr renderer_impl::get_rasterizer()
 {
 	return rast_;
 }
 
-h_framebuffer renderer_impl::get_framebuffer() const
+framebuffer_ptr renderer_impl::get_framebuffer() const
 {
 	return frame_buffer_; 
 }
 
-h_device renderer_impl::get_native_device()
+device_ptr renderer_impl::get_native_device()
 {
 	return native_dev_;
 }
 
-h_vertex_cache renderer_impl::get_vertex_cache()
+vertex_cache_ptr renderer_impl::get_vertex_cache()
 {
 	return vertex_cache_;
 }
 
-h_clipper renderer_impl::get_clipper()
+clipper_ptr renderer_impl::get_clipper()
 {
 	return clipper_;
 }
@@ -465,16 +465,16 @@ shared_ptr<vertex_shader_unit> renderer_impl::vs_proto() const{
 	return vs_proto_;
 }
 
-h_input_layout renderer_impl::create_input_layout(
+input_layout_ptr renderer_impl::create_input_layout(
 	input_element_desc const* elem_descs, size_t elems_count,
-	h_shader_code const& vs )
+	shader_object_ptr const& vs )
 {
 	return input_layout::create( elem_descs, elems_count, vs );
 }
 
-salviar::h_input_layout renderer_impl::create_input_layout(
+salviar::input_layout_ptr renderer_impl::create_input_layout(
 	input_element_desc const* elem_descs, size_t elems_count,
-	h_vertex_shader const& vs )
+	vertex_shader_ptr const& vs )
 {
 	return input_layout::create( elem_descs, elems_count, vs );
 }
@@ -506,7 +506,7 @@ result renderer_impl::set_ps_variable( std::string const& name, void const* data
 	return result::failed;
 }
 
-result renderer_impl::set_ps_sampler( std::string const& name, h_sampler const& samp )
+result renderer_impl::set_ps_sampler( std::string const& name, sampler_ptr const& samp )
 {
 	if ( ps_proto_ ){
 		ps_proto_->set_sampler( name, samp );
@@ -515,7 +515,7 @@ result renderer_impl::set_ps_sampler( std::string const& name, h_sampler const& 
 	return result::failed;
 }
 
-result renderer_impl::set_vs_sampler( std::string const& name, h_sampler const& samp )
+result renderer_impl::set_vs_sampler( std::string const& name, sampler_ptr const& samp )
 {
 	if ( vs_proto_ )
 	{
@@ -529,7 +529,7 @@ result renderer_impl::set_vs_sampler( std::string const& name, h_sampler const& 
 	return result::failed;
 }
 
-renderer_ptr create_renderer_impl(renderer_parameters const* pparam, h_device const& hdev)
+renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev)
 {
 	return renderer_ptr(new renderer_impl(pparam, hdev));
 }

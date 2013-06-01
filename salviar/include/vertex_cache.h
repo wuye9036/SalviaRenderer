@@ -29,7 +29,7 @@ class vertex_cache
 {
 public:
 	virtual void		update_index_buffer(
-		h_buffer const& index_buffer,format index_format, primitive_topology topology,
+		buffer_ptr const& index_buffer,format index_format, primitive_topology topology,
 		uint32_t startpos, uint32_t base_vert ) = 0;
 
 	virtual void		transform_vertices(uint32_t prim_count) = 0;

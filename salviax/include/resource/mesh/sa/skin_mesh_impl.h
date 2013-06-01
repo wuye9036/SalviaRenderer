@@ -155,7 +155,7 @@ public:
 	std::vector<animation_player_ptr>	anims;
 	std::vector<std::string>			joints;
 	std::vector<eflib::mat44*>			joint_mats;
-	std::vector<h_mesh>					submeshes;
+	std::vector<mesh_ptr>					submeshes;
 	std::vector<scene_node_ptr>			roots;
 };
 

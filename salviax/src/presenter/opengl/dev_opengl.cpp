@@ -82,8 +82,8 @@ void dev_opengl::init_device()
 	glGenTextures(1, &buftex_);
 }
 
-h_dev_opengl dev_opengl::create_device(HWND hwnd){
-	return h_dev_opengl(new dev_opengl( hwnd ));
+dev_opengl_ptr dev_opengl::create_device(HWND hwnd){
+	return dev_opengl_ptr(new dev_opengl( hwnd ));
 }
 
 //inherited
@@ -150,7 +150,7 @@ void dev_opengl::present(const salviar::surface& surf)
 
 END_NS_SALVIAX_PRESENTER()
 
-void salviax_create_presenter_device(salviar::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::device_ptr& dev, void* param)
 {
 	dev = salviax::presenter::dev_opengl::create_device(static_cast<HWND>(param));
 }

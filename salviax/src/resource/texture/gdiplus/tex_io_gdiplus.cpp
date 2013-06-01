@@ -75,14 +75,14 @@ bool texture_io_gdiplus::copy_image_to_surface(salviar::surface& surf, const rec
 	return true;
 }
 
-salviar::h_texture texture_io_gdiplus::load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt){
+salviar::texture_ptr texture_io_gdiplus::load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt){
 	Bitmap file_bmp(to_wide_string(filename).c_str());
 
 	size_t src_w = (size_t)file_bmp.GetWidth();
 	size_t src_h = (size_t)file_bmp.GetHeight();
 
 	rect<size_t> region(0, 0, src_w, src_h);
-	salviar::h_texture ret(pr->create_tex2d(src_w, src_h, 1, tex_pxfmt));
+	salviar::texture_ptr ret(pr->create_tex2d(src_w, src_h, 1, tex_pxfmt));
 	load( ret->get_surface(0), region, &file_bmp, region);
 	return ret;
 }
@@ -91,8 +91,8 @@ salviar::h_texture texture_io_gdiplus::load(salviar::renderer* pr, const std::_t
 Create cube texture with 6 images.
 If images are not the same size, they would be stretched to the first image size.
 */
-salviar::h_texture texture_io_gdiplus::load_cube(salviar::renderer *pr, const vector<_tstring> &filenames, salviar::pixel_format fmt){
-	salviar::h_texture ret;
+salviar::texture_ptr texture_io_gdiplus::load_cube(salviar::renderer *pr, const vector<_tstring> &filenames, salviar::pixel_format fmt){
+	salviar::texture_ptr ret;
 	rect<size_t> dest_region;
 
 	if (filenames.size() != 6){

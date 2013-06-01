@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef SALVIAR_SHADERREGS_H
-#define SALVIAR_SHADERREGS_H
-
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/decl.h>
@@ -18,6 +15,8 @@
 #include <eflib/include/platform/boost_end.h>
 
 BEGIN_NS_SALVIAR();
+
+struct viewport;
 
 class vs_input
 {
@@ -204,7 +203,7 @@ struct vs_output_op
 vs_input_op& get_vs_input_op(uint32_t n);
 vs_output_op& get_vs_output_op(uint32_t n);
 float compute_area(const vs_output& v0, const vs_output& v1, const vs_output& v2);
-void viewport_transform(eflib::vec4& position, const viewport& vp);
+void viewport_transform(eflib::vec4& position, viewport const& vp);
 
 //vs_output compute_derivate
 struct ps_output
@@ -257,6 +256,5 @@ private:
 	surface* sbuf_;
 	size_t buf_x_, buf_y_;
 };
-END_NS_SALVIAR()
 
-#endif
+END_NS_SALVIAR();

@@ -388,13 +388,13 @@ bool load_obj_mesh(
 }
 
 void construct_meshes(
-	std::vector<h_mesh>& meshes,
+	std::vector<mesh_ptr>& meshes,
 	salviar::renderer* render,
 	vector<obj_mesh_vertex> const& verts, vector<uint32_t> const& indices,
 	vector<uint32_t> const& attrs, vector<obj_material> const& mtls 
 	)
 {
-	h_buffer vert_buf = render->create_buffer( sizeof(obj_mesh_vertex) * verts.size() );
+	buffer_ptr vert_buf = render->create_buffer( sizeof(obj_mesh_vertex) * verts.size() );
 	vert_buf->transfer( 0, &verts[0], sizeof( obj_mesh_vertex ), verts.size() );
 
 	vector<input_element_desc> descs;
@@ -409,7 +409,7 @@ void construct_meshes(
 		// Fill data
 		pmesh->add_vertex_buffer( 0, vert_buf, sizeof(obj_mesh_vertex), 0 );
 		pmesh->set_input_element_descs( descs );
-		h_attached_data mtl_data( new obj_material(mtls[i_mtl]) );
+		attached_data_ptr mtl_data( new obj_material(mtls[i_mtl]) );
 		pmesh->set_attached_data( mtl_data );
 
 
@@ -424,25 +424,25 @@ void construct_meshes(
 
 		// Set mesh indices.
 		if ( !mesh_indices.empty() ){
-			h_buffer index_buffer = render->create_buffer( sizeof(uint32_t) * mesh_indices.size() );
+			buffer_ptr index_buffer = render->create_buffer( sizeof(uint32_t) * mesh_indices.size() );
 			index_buffer->transfer( 0, &mesh_indices[0], sizeof(uint32_t), mesh_indices.size() );
 			pmesh->set_index_buffer(index_buffer);
 			pmesh->set_index_type(format_r32_uint);
 			pmesh->set_primitive_count( mesh_indices.size() / 3 );
 
-			meshes.push_back( h_mesh(pmesh) );
+			meshes.push_back( mesh_ptr(pmesh) );
 		}
 	}
 }
 
-vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name, bool flip_tex_v )
+vector<mesh_ptr> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name, bool flip_tex_v )
 {
 	vector<obj_mesh_vertex> verts;
 	vector<uint32_t> indices;
 	vector<uint32_t> attrs;
 	vector<obj_material> mtls;
 
-	vector<h_mesh> meshes;
+	vector<mesh_ptr> meshes;
 
 	if( !load_obj_mesh_c( render, file_name, verts, indices, attrs, mtls, flip_tex_v ) ){
 		return meshes;

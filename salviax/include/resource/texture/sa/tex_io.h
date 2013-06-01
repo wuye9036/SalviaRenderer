@@ -33,8 +33,8 @@ BEGIN_NS_SALVIAX_RESOURCE()
 
 class texture_io{
 public:
-	virtual salviar::h_texture load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt) = 0;
-	virtual salviar::h_texture load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& cube_imgs, salviar::pixel_format tex_pxfmt) = 0;
+	virtual salviar::texture_ptr load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt) = 0;
+	virtual salviar::texture_ptr load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& cube_imgs, salviar::pixel_format tex_pxfmt) = 0;
 
 	virtual void save(const salviar::surface& surf, const std::_tstring& filename, salviar::pixel_format pxfmt) = 0;
 };

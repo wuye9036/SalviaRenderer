@@ -25,7 +25,7 @@ public:
 	bool is_specular;
 
 	std::string	tex_name;
-	salviar::h_texture tex;
+	salviar::texture_ptr tex;
 	~obj_material(){}
 };
 

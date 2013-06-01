@@ -3,7 +3,7 @@
 
 BEGIN_NS_SALVIAR();
 
-void index_fetcher::initialize(h_buffer hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
+void index_fetcher::initialize(buffer_ptr hbuf, format index_fmt, primitive_topology primtopo, uint32_t startpos, uint32_t basevert)
 {
 	index_buffer_ = hbuf;
 	index_format_ = index_fmt;

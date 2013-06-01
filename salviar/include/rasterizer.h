@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef SALVIAR_RASTERIZER_H
-#define SALVIAR_RASTERIZER_H
-
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/decl.h>
@@ -25,8 +22,9 @@ BEGIN_NS_SALVIAR();
 typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
 
 struct scanline_info;
-class pixel_shader_unit;
-
+class  pixel_shader_unit;
+class  vs_output;
+struct vs_output_op;
 struct clip_context;
 
 struct geometry_setup_context
@@ -84,11 +82,11 @@ private:
 	const static int MAX_NUM_MULTI_SAMPLES = 4;
 
 	std::vector<clipper>	clippers_;
-	h_rasterizer_state		state_;
+	raster_state_ptr		state_;
 	uint32_t				num_vs_output_attributes_;
 
-	h_framebuffer			frame_buffer_;
-	h_blend_shader			blend_shader_;
+	framebuffer_ptr			frame_buffer_;
+	blend_shader_ptr			blend_shader_;
 
 	std::vector<eflib::vec3> edge_factors_;
 	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
@@ -107,7 +105,7 @@ private:
 	void rasterize_primitive_func(
 		std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x,
 		vs_output** clipped_verts_full,
-		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+		const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 		boost::atomic<int32_t>& working_package, int32_t package_size
 		);
 	
@@ -120,20 +118,20 @@ private:
 	boost::function<
 		void ( rasterizer*, vs_output** /*Clipped Vertexes*/, 
 			const std::vector<uint32_t>& /*Sorted Primitives*/, const viewport& /*Tile VP*/, 
-			const h_pixel_shader& /*Pixel Shader*/, boost::shared_ptr<pixel_shader_unit> const& /*Pixel Shader Unit*/)
+			const pixel_shader_ptr& /*Pixel Shader*/, boost::shared_ptr<pixel_shader_unit> const& /*Pixel Shader Unit*/)
 	> rasterize_func_;
 
 	void draw_whole_tile(
 		int left, int top, int right, int bottom,
 		size_t num_samples, const vs_output& v0,
 		const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const h_blend_shader& hbs,
+		const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const blend_shader_ptr& hbs,
 		const float* aa_z_offset );
 	void draw_pixels(
 		int left0, int top0, int left, int top,
 		const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
 		const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const h_blend_shader& hbs, 
+		const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const blend_shader_ptr& hbs, 
 		const float* aa_z_offset);
 	void subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const eflib::vec4* edge_factors,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
@@ -142,12 +140,12 @@ private:
 	void draw_full_package(
 		vs_output* pixels,
 		uint32_t top, uint32_t left, size_t num_samples,
-		h_blend_shader const& bs, h_pixel_shader const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+		blend_shader_ptr const& bs, pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 		float const* aa_z_offset );
 	void draw_package(
 		vs_output* pixels,
 		uint32_t top, uint32_t left, size_t num_samples,
-		h_blend_shader const& bs, h_pixel_shader const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+		blend_shader_ptr const& bs, pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 		uint32_t const* masks, float const* aa_z_offset );
 
 	void viewport_and_project_transform(vs_output** vertexes, size_t num_verts);
@@ -161,34 +159,30 @@ public:
 	~rasterizer();
 
 	//state_seter
-	void set_state(const h_rasterizer_state& state);
-	const h_rasterizer_state& get_state() const;
+	void set_state(const raster_state_ptr& state);
+	const raster_state_ptr& get_state() const;
 
 	//drawer
 	void rasterize_line(
 		uint32_t prim_id, const vs_output& v0, const vs_output& v1, const viewport& vp,
-		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu);
+		const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu);
 	void rasterize_triangle(
 		uint32_t prim_id, uint32_t full, const vs_output& v0, const vs_output& v1, const vs_output& v2,
 		const viewport& vp,
-		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu);
+		const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu);
 
 	void rasterize_line_func(
 		vs_output** clipped_verts_full,
 		const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
+		const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
 	void rasterize_triangle_func(
 		vs_output** clipped_verts_full, 
 		const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-		const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
+		const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
 
 	void draw(size_t prim_count);
 
 	void update_prim_info();
 };
 
-//DECL_HANDLE(rasterizer, h_rasterizer);
-
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();

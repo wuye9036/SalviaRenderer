@@ -15,8 +15,8 @@ namespace salviar
 }
 
 BEGIN_NS_SALVIAX_RESOURCE();
-typedef boost::shared_ptr<class mesh> h_mesh;
-std::vector<h_mesh> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name, bool flip_tex_v );
+typedef boost::shared_ptr<class mesh> mesh_ptr;
+std::vector<mesh_ptr> create_mesh_from_obj( salviar::renderer* render, std::string const& file_name, bool flip_tex_v );
 END_NS_SALVIAX_RESOURCE();
 
 #endif

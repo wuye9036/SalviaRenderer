@@ -431,7 +431,7 @@ pixel_format framebuffer::get_buffer_format() const{
 	return fmt_;
 }
 
-void framebuffer::render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
+void framebuffer::render_sample(const blend_shader_ptr& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
 {
 	EFLIB_ASSERT(hbs, "Blend shader is null or invalid.");
 	if(!hbs) return;
@@ -440,7 +440,7 @@ void framebuffer::render_sample(const h_blend_shader& hbs, size_t x, size_t y, s
 	backbuffer_pixel_out target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
 	target_pixel.set_pos(x, y);
 
-	const h_depth_stencil_state& dss = pparent_->get_depth_stencil_state();
+	const depth_stencil_state_ptr& dss = pparent_->get_depth_stencil_state();
 
 	const int32_t stencil_ref = dss->read_stencil(pparent_->get_stencil_ref());
 	

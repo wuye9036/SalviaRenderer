@@ -31,7 +31,7 @@ using namespace salviar;
 BEGIN_NS_SALVIAX_RESOURCE();
 
 //0, 0, 0 - 1, 1, 1
-h_mesh create_box(salviar::renderer* psr)
+mesh_ptr create_box(salviar::renderer* psr)
 {
 	mesh_impl* pmesh = new mesh_impl(psr);
 
@@ -39,11 +39,11 @@ h_mesh create_box(salviar::renderer* psr)
 	size_t const normal_slot	= 1;
 	size_t const uv_slot		= 2;
 
-	salviar::h_buffer indices	= pmesh->create_buffer( sizeof(uint16_t)*36 );
+	salviar::buffer_ptr indices	= pmesh->create_buffer( sizeof(uint16_t)*36 );
 
-	salviar::h_buffer verts		= pmesh->create_buffer( sizeof(vec4)*24 );
-	salviar::h_buffer normals	= pmesh->create_buffer( sizeof(vec4)*24 );
-	salviar::h_buffer uvs		= pmesh->create_buffer( sizeof(vec4)*24 );
+	salviar::buffer_ptr verts		= pmesh->create_buffer( sizeof(vec4)*24 );
+	salviar::buffer_ptr normals	= pmesh->create_buffer( sizeof(vec4)*24 );
+	salviar::buffer_ptr uvs		= pmesh->create_buffer( sizeof(vec4)*24 );
 
 	// Generate data
 	uint16_t* pidxs = reinterpret_cast<uint16_t*>(indices->raw_data(0));
@@ -149,10 +149,10 @@ h_mesh create_box(salviar::renderer* psr)
 
 	pmesh->set_primitive_count(12);
 
-	return h_mesh(pmesh);
+	return mesh_ptr(pmesh);
 }
 
-h_mesh create_planar(
+mesh_ptr create_planar(
 					 salviar::renderer* psr,
 					 const eflib::vec3& start_pos,
 					 const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
@@ -168,11 +168,11 @@ h_mesh create_planar(
 	size_t const normal_slot	= 1;
 	size_t const uv_slot		= 2;
 
-	salviar::h_buffer indices	= pmesh->create_buffer( repeat_x * repeat_y * 6 * sizeof(uint16_t) );
+	salviar::buffer_ptr indices	= pmesh->create_buffer( repeat_x * repeat_y * 6 * sizeof(uint16_t) );
 
-	salviar::h_buffer verts		= pmesh->create_buffer( nverts * sizeof(vec4) );
-	salviar::h_buffer normals	= pmesh->create_buffer( nverts * sizeof(vec4) );
-	salviar::h_buffer uvs		= pmesh->create_buffer( nverts * sizeof(vec4) );
+	salviar::buffer_ptr verts		= pmesh->create_buffer( nverts * sizeof(vec4) );
+	salviar::buffer_ptr normals	= pmesh->create_buffer( nverts * sizeof(vec4) );
+	salviar::buffer_ptr uvs		= pmesh->create_buffer( nverts * sizeof(vec4) );
 
 	//Generate data
  	vec4 normal(cross_prod3(x_dir, y_dir), 0.0f);
@@ -236,10 +236,10 @@ h_mesh create_planar(
 
 	pmesh->set_primitive_count(repeat_x * repeat_y * 2);
 
-	return h_mesh(pmesh);
+	return mesh_ptr(pmesh);
 }
 
-h_mesh create_cone(
+mesh_ptr create_cone(
 	salviar::renderer* psr,
 	eflib::vec3 const& bottom_center,
 	float radius, eflib::vec3 const& up_dir, int circle_segments)
@@ -319,10 +319,10 @@ h_mesh create_cone(
 	size_t const normal_slot = 1;
 	size_t const uv_slot = 2;
 
-	h_buffer indices = pmesh->create_buffer( sizeof(uint16_t)*circle_segments*3 );
-	h_buffer verts   = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
-	h_buffer norms   = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
-	h_buffer uvs     = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
+	buffer_ptr indices = pmesh->create_buffer( sizeof(uint16_t)*circle_segments*3 );
+	buffer_ptr verts   = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
+	buffer_ptr norms   = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
+	buffer_ptr uvs     = pmesh->create_buffer( sizeof(vec4)*circle_segments*2 );
 
 	// Fill vertex buffer
 	vec4* vert_cursor = reinterpret_cast<vec4*>( verts->raw_data(0) );
@@ -385,7 +385,7 @@ h_mesh create_cone(
 
 	pmesh->set_primitive_count(circle_segments);
 
-	return h_mesh(pmesh);
+	return mesh_ptr(pmesh);
 }
 
 END_NS_SALVIAX_RESOURCE();

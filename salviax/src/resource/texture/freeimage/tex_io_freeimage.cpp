@@ -114,7 +114,7 @@ bool texture_io_fi::load( salviar::surface& surf, const rect<size_t>& dest_regio
 }
 
 // Load image file to new texture
-salviar::h_texture texture_io_fi::load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt){
+salviar::texture_ptr texture_io_fi::load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt){
 	FIBITMAP* img = load_image( filename );
 	
 	size_t src_w = FreeImage_GetWidth(img);
@@ -124,11 +124,11 @@ salviar::h_texture texture_io_fi::load(salviar::renderer* pr, const std::_tstrin
 }
 
 // Create texture by region of image
-salviar::h_texture texture_io_fi::load(salviar::renderer* pr,
+salviar::texture_ptr texture_io_fi::load(salviar::renderer* pr,
 		FIBITMAP* img, const eflib::rect<size_t>& src,
 		salviar::pixel_format tex_pxfmt, size_t dest_width, size_t dest_height)
 {
-	salviar::h_texture ret((texture*)NULL);
+	salviar::texture_ptr ret((texture*)NULL);
 	ret = pr->create_tex2d(src.w, src.h, 1, tex_pxfmt);
 
 	if( !load(ret->get_surface(0), rect<size_t>(0, 0, dest_width, dest_height), img, src) ){
@@ -140,8 +140,8 @@ salviar::h_texture texture_io_fi::load(salviar::renderer* pr,
 // Create cube texture by six images.
 // Size of first texture is the size of cube face.
 // If other textures are not same size as first, just stretch it.
-salviar::h_texture texture_io_fi::load_cube(salviar::renderer* pr, const vector<_tstring>& filenames, salviar::pixel_format fmt){
-	salviar::h_texture ret;
+salviar::texture_ptr texture_io_fi::load_cube(salviar::renderer* pr, const vector<_tstring>& filenames, salviar::pixel_format fmt){
+	salviar::texture_ptr ret;
 
 	for(int i_cubeface = 0; i_cubeface < 6; ++i_cubeface){
 		FIBITMAP* cube_img = load_image( filenames[i_cubeface] );

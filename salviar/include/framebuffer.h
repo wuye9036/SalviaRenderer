@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef SALVIAR_FRAMEBUFFER_H
-#define SALVIAR_FRAMEBUFFER_H
-
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/enums.h>
@@ -17,6 +14,7 @@
 BEGIN_NS_SALVIAR();
 
 struct backbuffer_pixel_out;
+
 
 struct depth_stencil_op_desc {
     stencil_op stencil_fail_op;
@@ -125,7 +123,7 @@ public:
 	float get_z(size_t x, size_t y) const;
 
 	// Rendering functions.
-	void render_sample(const h_blend_shader& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
+	void render_sample(const blend_shader_ptr& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
 
 	// Cleanup functions.
 	void clear_color(size_t target_index, const color_rgba32f& c);
@@ -136,8 +134,4 @@ public:
 	void clear_stencil(const eflib::rect<size_t>& rc, int32_t s);
 };
 
-//DECL_HANDLE(framebuffer, h_framebuffer);
-
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();

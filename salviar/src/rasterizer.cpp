@@ -55,7 +55,7 @@ const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
  *			3 positon.w() = 1.0f / clip w
  **************************************************/
 void rasterizer::rasterize_line(
-	uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu)
+	uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu)
 {
 	EFLIB_UNREF_DECLARATOR( psu );
 
@@ -66,7 +66,7 @@ void rasterizer::rasterize_line(
 	eflib::vec4 const& dir = diff.position();
 	float diff_dir = abs(dir.x()) > abs(dir.y()) ? dir.x() : dir.y();
 
-	h_blend_shader hbs = pparent_->get_blend_shader();
+	blend_shader_ptr hbs = pparent_->get_blend_shader();
 
 	// Computing differential.
 	vs_output ddx, ddy;
@@ -219,7 +219,7 @@ void rasterizer::draw_whole_tile(
 	int left, int top, int right, int bottom, 
 	size_t num_samples, const vs_output& v0,
 	const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const h_blend_shader& hbs,
+	const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const blend_shader_ptr& hbs,
 	const float* aa_z_offset)
 {
 	float v0x = v0.position().x();
@@ -257,7 +257,7 @@ void rasterizer::draw_pixels(
 	int left0, int top0, int left, int top,
 	const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
 	const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const h_blend_shader& hbs,
+	const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const blend_shader_ptr& hbs,
 	const float* aa_z_offset )
 {
 	size_t sx = left - left0;
@@ -578,7 +578,7 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 void rasterizer::rasterize_triangle(
 	uint32_t prim_id, uint32_t full,
 	const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, 
-	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
+	const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
 	const size_t num_samples = frame_buffer_->get_num_samples();
 	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
@@ -814,12 +814,12 @@ rasterizer::~rasterizer()
 {
 }
 
-void rasterizer::set_state(const h_rasterizer_state& state)
+void rasterizer::set_state(const raster_state_ptr& state)
 {
 	state_ = state;
 }
 
-const h_rasterizer_state& rasterizer::get_state() const
+const raster_state_ptr& rasterizer::get_state() const
 {
 	return state_;
 }
@@ -1008,7 +1008,7 @@ void rasterizer::dispatch_primitive_func(
 void rasterizer::rasterize_primitive_func(
 	std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x,
 	vs_output** clipped_verts,
-	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu, 
+	const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, 
 	atomic<int32_t>& working_package, int32_t package_size )
 {
 	const int32_t num_tiles = static_cast<int32_t>(thread_tiles[0].size());
@@ -1048,7 +1048,7 @@ void rasterizer::rasterize_primitive_func(
 void rasterizer::rasterize_line_func(
 	vs_output** clipped_verts,
 	const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
+	const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter >> 1;
@@ -1061,7 +1061,7 @@ void rasterizer::rasterize_line_func(
 void rasterizer::rasterize_triangle_func(
 	vs_output** clipped_verts, 
 	const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-	const h_pixel_shader& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
+	const pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
 {
 	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
 		uint32_t iprim = *iter >> 1;
@@ -1312,10 +1312,10 @@ void rasterizer::draw(size_t prim_count){
 
 	// Rasterize tiles
 	working_package = 0;
-	h_pixel_shader hps = pparent_->get_pixel_shader();
+	pixel_shader_ptr hps = pparent_->get_pixel_shader();
 	boost::shared_ptr<pixel_shader_unit> psu = pparent_->ps_proto();
 
-	std::vector<h_pixel_shader> ppps(num_threads - 1);
+	std::vector<pixel_shader_ptr> ppps(num_threads - 1);
 	std::vector< boost::shared_ptr<pixel_shader_unit> > ppsu(num_threads-1);
 	for (size_t i = 0; i < num_threads - 1; ++ i){
 		// create pixel_shader clone per thread from hps
@@ -1342,7 +1342,7 @@ void rasterizer::draw(size_t prim_count){
 void rasterizer::draw_package(
 	vs_output* pixels,
 	uint32_t top, uint32_t left, size_t num_samples,
-	h_blend_shader const& bs, h_pixel_shader const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+	blend_shader_ptr const& bs, pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 	uint32_t const* masks, float const* aa_z_offset )
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
@@ -1417,7 +1417,7 @@ void rasterizer::draw_package(
 void rasterizer::draw_full_package(
 	vs_output* pixels,
 	uint32_t top, uint32_t left, size_t num_samples,
-	h_blend_shader const& bs, h_pixel_shader const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+	blend_shader_ptr const& bs, pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
 	float const* aa_z_offset )
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;

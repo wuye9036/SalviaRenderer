@@ -16,6 +16,9 @@
 
 BEGIN_NS_SALVIAR();
 
+class vs_output;
+struct vs_output_op;
+
 const size_t plane_num = 2;
 
 struct clip_context

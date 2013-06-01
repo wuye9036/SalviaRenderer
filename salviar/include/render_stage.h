@@ -1,13 +1,17 @@
-#ifndef SALVIAR_RENDER_STAGE_H
-#define SALVIAR_RENDER_STAGE_H
+#pragma once
 
-#include "decl.h"
-#include "enums.h"
-
-#include <boost/any.hpp>
 #include <salviar/include/salviar_forward.h>
-BEGIN_NS_SALVIAR()
 
+#include <salviar/include/decl.h>
+#include <salviar/include/enums.h>
+
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/any.hpp>
+#include <eflib/include/platform/boost_end.h>
+
+BEGIN_NS_SALVIAR();
+
+class  renderer_impl;
 
 // Declare the default handler of event 'RenderState Updated'
 #define DECL_RS_UPDATED(rsname) virtual result on_##rsname##_updated(){return result::ok;}
@@ -47,6 +51,4 @@ public:
 	virtual ~render_stage(){}
 };
 
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();

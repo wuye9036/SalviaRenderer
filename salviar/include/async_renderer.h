@@ -18,7 +18,7 @@ BEGIN_NS_SALVIAR();
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
-renderer_ptr create_async_renderer(renderer_parameters const* pparam, h_device const& hdev);
+renderer_ptr create_async_renderer(renderer_parameters const* pparam, device_ptr const& hdev);
 
 END_NS_SALVIAR();
 

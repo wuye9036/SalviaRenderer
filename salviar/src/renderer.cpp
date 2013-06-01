@@ -27,7 +27,7 @@ using std::endl;
 BEGIN_NS_SALVIAR();
 
 #define USE_ASYNC_RENDERER
-h_renderer create_software_renderer(renderer_parameters const* pparam, h_device const& hdev)
+renderer_ptr create_software_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
 {
 #if defined(USE_ASYNC_RENDERER)
 	return create_async_renderer(pparam, hdev);
@@ -36,7 +36,7 @@ h_renderer create_software_renderer(renderer_parameters const* pparam, h_device 
 #endif
 }
 
-h_renderer create_benchmark_renderer(renderer_parameters const* pparam, h_device const& hdev)
+renderer_ptr create_benchmark_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
 {
 	return create_renderer_impl(pparam, hdev);
 }

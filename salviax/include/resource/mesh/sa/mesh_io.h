@@ -33,16 +33,16 @@ Modify Log:
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
-h_mesh create_box(salviar::renderer* psr);
-h_mesh create_cylinder(salviar::renderer* psr);
-h_mesh create_planar(
+mesh_ptr create_box(salviar::renderer* psr);
+mesh_ptr create_cylinder(salviar::renderer* psr);
+mesh_ptr create_planar(
 					 salviar::renderer* psr,
 					 const eflib::vec3& start_pos,
 					 const eflib::vec3& x_dir,	 const eflib::vec3& y_dir,
 					 size_t repeat_x, size_t repeat_y,
 					 bool positive_normal
 					 );
-h_mesh create_cone(
+mesh_ptr create_cone(
 	salviar::renderer* psr,
 	eflib::vec3 const& bottom_center,
 	float radius, eflib::vec3 const& up_dir, int segments

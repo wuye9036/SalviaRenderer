@@ -97,11 +97,11 @@ public:
 
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new ps(*this));
+		return pixel_shader_ptr(new ps(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -121,18 +121,18 @@ public:
 class CColorizedTriangleView : public CWindowImpl<CColorizedTriangleView>
 {
 public:
-	h_device present_dev;
-	h_renderer hsr;
-	h_texture sm_tex;
+	device_ptr present_dev;
+	renderer_ptr hsr;
+	texture_ptr sm_tex;
 
-	h_mesh planar_mesh;
+	mesh_ptr planar_mesh;
 
-	h_pixel_shader pps;
-	h_blend_shader pbs;
+	pixel_shader_ptr pps;
+	blend_shader_ptr pbs;
 
-	h_rasterizer_state rs_back;
+	raster_state_ptr rs_back;
 
-	h_surface display_surf;
+	surface_ptr display_surf;
 	surface* pdsurf;
 
 	uint32_t num_frames;
@@ -173,7 +173,7 @@ public:
 		dll_name += TEXT(".dll");
 
 		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*create_presenter_device_func)(salviar::h_device& dev, void* param);
+		typedef void (*create_presenter_device_func)(salviar::device_ptr& dev, void* param);
 		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
 		presenter_func(present_dev, static_cast<void*>(m_hWnd));
 
@@ -185,7 +185,7 @@ public:
 
 		hsr = create_software_renderer(&render_params, present_dev);
 
-		const h_framebuffer& fb = hsr->get_framebuffer();
+		const framebuffer_ptr& fb = hsr->get_framebuffer();
 		if (fb->get_num_samples() > 1){
 			display_surf.reset(new surface(fb->get_width(),
 				fb->get_height(), 1, fb->get_buffer_format()));

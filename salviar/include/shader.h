@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef SALVIAR_SHADER_H
-#define SALVIAR_SHADER_H
-
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/shader_utility.h>
@@ -27,6 +24,9 @@ struct viewport;
 struct scanline_info;
 struct backbuffer_pixel_out;
 class  triangle_info;
+class  vs_input;
+class  vs_output;
+struct ps_output;
 
 enum languages
 {
@@ -277,8 +277,8 @@ public:
 	bool execute(const vs_output& in, ps_output& out);
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;
 
-	virtual h_pixel_shader create_clone() = 0;
-	virtual void destroy_clone(h_pixel_shader& ps_clone) = 0;
+	virtual pixel_shader_ptr create_clone() = 0;
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone) = 0;
 };
 
 //it is called when render a shaded pixel into framebuffer
@@ -289,6 +289,4 @@ public:
 	virtual bool shader_prog(size_t sample, backbuffer_pixel_out& inout, const ps_output& in) = 0;
 };
 
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();

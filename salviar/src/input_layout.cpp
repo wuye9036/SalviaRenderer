@@ -65,8 +65,8 @@ input_element_desc const* input_layout::find_desc( semantic_value const& v ) con
 	return NULL;
 }
 
-h_input_layout input_layout::create( input_element_desc const* pdesc, size_t desc_count, h_shader_code const& /*vs*/ ){
-	h_input_layout ret = make_shared<input_layout>();
+input_layout_ptr input_layout::create( input_element_desc const* pdesc, size_t desc_count, shader_object_ptr const& /*vs*/ ){
+	input_layout_ptr ret = make_shared<input_layout>();
 	ret->descs.assign( pdesc, pdesc + desc_count );
 
 	// Check shader code.
@@ -75,8 +75,8 @@ h_input_layout input_layout::create( input_element_desc const* pdesc, size_t des
 	return ret;
 }
 
-h_input_layout input_layout::create( input_element_desc const* pdesc, size_t desc_count, h_vertex_shader const& /*vs*/ ){
-	h_input_layout ret = make_shared<input_layout>();
+input_layout_ptr input_layout::create( input_element_desc const* pdesc, size_t desc_count, vertex_shader_ptr const& /*vs*/ ){
+	input_layout_ptr ret = make_shared<input_layout>();
 	ret->descs.assign( pdesc, pdesc + desc_count );
 
 	// Check vertex shader.

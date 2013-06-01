@@ -18,6 +18,9 @@
 
 BEGIN_NS_SALVIAR();
 
+class  vs_input;
+struct input_element_desc;
+
 EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
 EFLIB_DECLARE_CLASS_WEAK_PTR  (input_layout);
 
@@ -36,7 +39,7 @@ public:
 	void set_input_layout(input_layout_ptr const&);
 	void set_vertex_buffers(
 		size_t starts_slot,
-		size_t buffers_count, h_buffer const* pbufs,
+		size_t buffers_count, buffer_ptr const* pbufs,
 		size_t const* strides, size_t const* offsets
 		);
 
@@ -76,7 +79,7 @@ private:
 							stream_descs_;
 	input_layout_weak_ptr	layout_;
 	std::vector<size_t>		slots_;
-	std::vector<h_buffer>	vbufs_;
+	std::vector<buffer_ptr>	vbufs_;
 	std::vector<size_t>		strides_;
 	std::vector<size_t>		offsets_;
 

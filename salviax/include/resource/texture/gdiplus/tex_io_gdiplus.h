@@ -34,8 +34,8 @@ author:		Ye Wu
 BEGIN_NS_SALVIAX_RESOURCE()
 class texture_io_gdiplus: public texture_io{
 public:
-	virtual salviar::h_texture load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt);
-	virtual salviar::h_texture load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& filenames, salviar::pixel_format fmt);
+	virtual salviar::texture_ptr load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt);
+	virtual salviar::texture_ptr load_cube(salviar::renderer* pr, const std::vector<std::_tstring>& filenames, salviar::pixel_format fmt);
 
 	virtual void save(const salviar::surface& /*surf*/, const std::_tstring& /*filename*/, salviar::pixel_format /*pxfmt*/){};
 

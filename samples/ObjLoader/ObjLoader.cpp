@@ -64,8 +64,8 @@ char const* cup_vs_code =
 
 class cup_ps : public pixel_shader
 {
-	salviar::h_sampler sampler_;
-	salviar::h_texture tex_;
+	salviar::sampler_ptr sampler_;
+	salviar::texture_ptr tex_;
 
 	vec4 ambient;
 	vec4 diffuse;
@@ -73,7 +73,7 @@ class cup_ps : public pixel_shader
 
 	int shininess;
 public:
-	void set_texture( salviar::h_texture tex ){
+	void set_texture( salviar::texture_ptr tex ){
 		tex_ = tex;
 		sampler_->set_texture(tex_.get());
 	}
@@ -125,11 +125,11 @@ public:
 
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new cup_ps(*this));
+		return pixel_shader_ptr(new cup_ps(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -168,7 +168,7 @@ protected:
 
 		hsr = create_software_renderer(&render_params, present_dev);
 
-		const h_framebuffer& fb = hsr->get_framebuffer();
+		const framebuffer_ptr& fb = hsr->get_framebuffer();
 		if (fb->get_num_samples() > 1){
 			display_surf.reset(new surface(fb->get_width(),
 				fb->get_height(), 1, fb->get_buffer_format()));
@@ -253,7 +253,7 @@ protected:
 			hsr->set_vs_variable( "lightPos", &lightPos );
 
 			for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh ){
-				h_mesh cur_mesh = cup_mesh[i_mesh];
+				mesh_ptr cur_mesh = cup_mesh[i_mesh];
 
 				shared_ptr<obj_material> mtl
 					= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
@@ -276,20 +276,20 @@ protected:
 
 protected:
 	/** Properties @{ */
-	h_device present_dev;
-	h_renderer hsr;
+	device_ptr present_dev;
+	renderer_ptr hsr;
 
-	vector<h_mesh> cup_mesh;
+	vector<mesh_ptr> cup_mesh;
 
 	shared_ptr<shader_object> plane_vs;
 	shared_ptr<shader_object> cup_vs;
 
-	h_pixel_shader pps;
-	h_blend_shader pbs;
+	pixel_shader_ptr pps;
+	blend_shader_ptr pbs;
 
-	h_rasterizer_state rs_back;
+	raster_state_ptr rs_back;
 
-	h_surface display_surf;
+	surface_ptr display_surf;
 	surface* pdsurf;
 
 	uint32_t num_frames;

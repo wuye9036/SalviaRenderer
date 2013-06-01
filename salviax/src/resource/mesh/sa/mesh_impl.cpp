@@ -32,17 +32,17 @@ size_t mesh_impl::get_face_count()
 	return primcount_;
 }
 
-salviar::h_buffer mesh_impl::get_index_buffer()
+salviar::buffer_ptr mesh_impl::get_index_buffer()
 {
 	return index_buffer_;
 }
 
-salviar::h_buffer mesh_impl::get_vertex_buffer( size_t buffer_index )
+salviar::buffer_ptr mesh_impl::get_vertex_buffer( size_t buffer_index )
 {
 	if( buffer_index < vertex_buffers_.size() ){
 		return vertex_buffers_[buffer_index];
 	} else {
-		return h_buffer();
+		return buffer_ptr();
 	}
 }
 
@@ -85,7 +85,7 @@ void mesh_impl::render(){
 /*
 mesh
 */
-salviar::h_buffer mesh_impl::create_buffer( size_t size ){
+salviar::buffer_ptr mesh_impl::create_buffer( size_t size ){
 	return device_->create_buffer(size);
 }
 
@@ -94,7 +94,7 @@ void mesh_impl::set_primitive_count(size_t primcount)
 	primcount_ = primcount;
 }
 
-void mesh_impl::set_index_buffer( salviar::h_buffer const& v ){
+void mesh_impl::set_index_buffer( salviar::buffer_ptr const& v ){
 	index_buffer_ = v;
 }
 
@@ -110,7 +110,7 @@ void mesh_impl::set_index_type( format fmt )
 	}
 }
 
-void mesh_impl::add_vertex_buffer( size_t slot, salviar::h_buffer const& buf, size_t stride, size_t offset ){
+void mesh_impl::add_vertex_buffer( size_t slot, salviar::buffer_ptr const& buf, size_t stride, size_t offset ){
 	assert(buf);
 	vertex_buffers_.push_back( buf );
 	strides_.push_back( stride );
@@ -122,11 +122,11 @@ void mesh_impl::set_input_element_descs(const vector<input_element_desc>& descs)
 	elem_descs_ = descs;
 }
 
-salviax::resource::h_attached_data mesh_impl::get_attached(){
+salviax::resource::attached_data_ptr mesh_impl::get_attached(){
 	return attached_;
 }
 
-void mesh_impl::set_attached_data( h_attached_data const& attached ){
+void mesh_impl::set_attached_data( attached_data_ptr const& attached ){
 	attached_ = attached;
 }
 

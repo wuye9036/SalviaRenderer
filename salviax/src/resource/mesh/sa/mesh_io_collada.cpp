@@ -23,7 +23,7 @@
 typedef salviar::format color_formats;
 
 using salviar::renderer;
-using salviar::h_buffer;
+using salviar::buffer_ptr;
 using salviar::language_value_types;
 using salviar::input_element_desc;
 using salviar::input_per_vertex;
@@ -189,9 +189,9 @@ size_t hash_value( indexes_of_vertex_attributes const& v )
 	return ret;
 }
 
-vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
+vector<mesh_ptr> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 {
-	vector<h_mesh> ret;
+	vector<mesh_ptr> ret;
 
 	// Collect used sources.
 	set<dae_source*> used_sources_set;
@@ -333,7 +333,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 		}
 
 		// Build vertex buffer and input description for pipeline
-		vector<h_buffer>			buffers;
+		vector<buffer_ptr>			buffers;
 		vector<size_t>				buffer_strides;
 		vector<input_element_desc>	input_descs;
 
@@ -355,7 +355,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 			input_descs.back().aligned_byte_offset = 0;
 
 			size_t buffer_data_size = buffers_data[i_source].size();
-			h_buffer buf = render->create_buffer(buffer_data_size);
+			buffer_ptr buf = render->create_buffer(buffer_data_size);
 			buf->transfer(0, &(buffers_data[i_source][0]), buffer_data_size, buffer_data_size, buffer_data_size, 1 );
 			buffers.push_back( buf );
 			buffer_strides.push_back( strides[input_source] );
@@ -375,7 +375,7 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 
 			vector<char>& joint_indices_buffer = buffers_data[buffers_data.size()-2];
 			size_t buffer_data_size = joint_indices_buffer.size();
-			h_buffer buf = render->create_buffer(buffer_data_size);
+			buffer_ptr buf = render->create_buffer(buffer_data_size);
 			buf->transfer(0, &(joint_indices_buffer[0]), buffer_data_size, buffer_data_size, buffer_data_size, 1 );
 			buffers.push_back( buf );
 			buffer_strides.push_back( sizeof(int4) );
@@ -407,14 +407,14 @@ vector<h_mesh> build_mesh( dae_mesh_ptr m, skin_info* skinfo, renderer* render )
 		// Build Index Buffer and Topo
 		size_t index_size = attribute_merged_indexes.size();
 		size_t index_buffer_size = index_size * 4;
-		h_buffer index_buf = render->create_buffer(index_buffer_size);
+		buffer_ptr index_buf = render->create_buffer(index_buffer_size);
 		index_buf->transfer(0, &(attribute_merged_indexes[0]), index_buffer_size, index_buffer_size, index_buffer_size, 1 );
 		
 		pmesh->set_index_buffer(index_buf);
 		pmesh->set_index_type(salviar::format_r32_uint);
 		pmesh->set_primitive_count(index_size/3);
 
-		ret.push_back( h_mesh(pmesh) );
+		ret.push_back( mesh_ptr(pmesh) );
 	}
 
 	return ret;
@@ -669,9 +669,9 @@ skin_mesh_ptr create_mesh_from_collada( renderer* render, std::string const& fil
 	return ret;
 }
 
-vector<h_mesh> build_mesh_from_file(renderer* render, std::string const& file_name)
+vector<mesh_ptr> build_mesh_from_file(renderer* render, std::string const& file_name)
 {
-	vector<h_mesh> ret;
+	vector<mesh_ptr> ret;
 
 	fstream fstr( file_name, std::ios::in );
 	if( !fstr.is_open() ) { return ret; }
@@ -730,24 +730,24 @@ void merge_buffer_to_mesh(
 	++slot_counter;
 }
 
-h_mesh merge_mesh_for_morphing( h_mesh lm, h_mesh rm )
+mesh_ptr merge_mesh_for_morphing( mesh_ptr lm, mesh_ptr rm )
 {
 	mesh_impl* left_mesh  = dynamic_cast<mesh_impl*>( lm.get() );
 	mesh_impl* right_mesh = dynamic_cast<mesh_impl*>( rm.get() );
 
 	EFLIB_ASSERT_AND_IF( left_mesh && right_mesh, "Left mesh or right mesh is invalid." )
 	{
-		return h_mesh();
+		return mesh_ptr();
 	}
 
 	EFLIB_ASSERT_AND_IF( left_mesh->primcount_ == right_mesh->primcount_, "Primitives amount is not matched." )
 	{
-		return h_mesh();
+		return mesh_ptr();
 	}
 
 	EFLIB_ASSERT_AND_IF( left_mesh->index_format_ == right_mesh->index_format_, "Index format is not matched." )
 	{
-		return h_mesh();
+		return mesh_ptr();
 	}
 
 	mesh_impl_ptr ret = make_shared<mesh_impl>(left_mesh->device_);
@@ -782,8 +782,8 @@ h_mesh merge_mesh_for_morphing( h_mesh lm, h_mesh rm )
 
 mesh_ptr create_morph_mesh_from_collada( salviar::renderer* render, std::string const& src, std::string const& dst )
 {
-	vector<h_mesh> src_meshes = build_mesh_from_file(render, src);
-	vector<h_mesh> dst_meshes = build_mesh_from_file(render, dst);
+	vector<mesh_ptr> src_meshes = build_mesh_from_file(render, src);
+	vector<mesh_ptr> dst_meshes = build_mesh_from_file(render, dst);
 
 	EFLIB_ASSERT_AND_IF( src_meshes.size() == dst_meshes.size(), "Morph meshes need to be combined from two meshes with same size." )
 	{

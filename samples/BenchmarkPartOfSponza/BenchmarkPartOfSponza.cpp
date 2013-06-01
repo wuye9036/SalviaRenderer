@@ -108,8 +108,8 @@ public:
 
 class benchmark_ps : public pixel_shader
 {
-	salviar::h_sampler sampler_;
-	salviar::h_texture tex_;
+	salviar::sampler_ptr sampler_;
+	salviar::texture_ptr tex_;
 
 	vec4 ambient;
 	vec4 diffuse;
@@ -117,7 +117,7 @@ class benchmark_ps : public pixel_shader
 
 	int shininess;
 public:
-	void set_texture( salviar::h_texture tex ){
+	void set_texture( salviar::texture_ptr tex ){
 		tex_ = tex;
 		sampler_->set_texture(tex_.get());
 	}
@@ -160,11 +160,11 @@ public:
 
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new benchmark_ps(*this));
+		return pixel_shader_ptr(new benchmark_ps(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -205,7 +205,7 @@ public:
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
 
-		renderer_ = create_benchmark_renderer( &render_params, h_device() );
+		renderer_ = create_benchmark_renderer( &render_params, device_ptr() );
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -306,7 +306,7 @@ public:
 		prof.start("Rendering", 0);
 		for( size_t i_mesh = 0; i_mesh < benchmark_mesh.size(); ++i_mesh )
 		{
-			h_mesh cur_mesh = benchmark_mesh[i_mesh];
+			mesh_ptr cur_mesh = benchmark_mesh[i_mesh];
 
 			shared_ptr<obj_material> mtl
 				= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
@@ -324,15 +324,15 @@ public:
 
 protected:
 	/** Properties @{ */
-	h_renderer			renderer_;
-	vector<h_mesh>		benchmark_mesh;
+	renderer_ptr			renderer_;
+	vector<mesh_ptr>		benchmark_mesh;
 	shader_object_ptr 	benchmark_vs;
 
-	h_vertex_shader		cpp_vs;
-	h_pixel_shader		cpp_ps;
-	h_blend_shader		cpp_bs;
+	vertex_shader_ptr		cpp_vs;
+	pixel_shader_ptr		cpp_ps;
+	blend_shader_ptr		cpp_bs;
 
-	h_rasterizer_state	rs_back;
+	raster_state_ptr	rs_back;
 	profiler			prof;
 };
 

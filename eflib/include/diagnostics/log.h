@@ -92,20 +92,20 @@ namespace eflib{
 		{
 			ref_log_level_ = plog->ref_log_level_;
 			loglvlcmp_ = plog->loglvlcmp_;
-			h_logserializer = plog->h_logserializer;
+			logserializer_ptr = plog->logserializer_ptr;
 		}
 
 		void set_state(log_t* plog) const
 		{
 			plog->ref_log_level_ = ref_log_level_;
 			plog->loglvlcmp_ = loglvlcmp_;
-			plog->h_logserializer = h_logserializer;
+			plog->logserializer_ptr = logserializer_ptr;
 		}
 
 	private:
 		uint32_t ref_log_level_;
 		boost::function<bool (uint32_t, uint32_t)> loglvlcmp_;
-		boost::shared_ptr<SerializerT> h_logserializer;
+		boost::shared_ptr<SerializerT> logserializer_ptr;
 	};
 
 	// Slog state stack
@@ -160,7 +160,7 @@ namespace eflib{
 
 		void set_serializer(boost::shared_ptr<serializier_t> hsrl)
 		{
-			h_logserializer = hsrl;
+			logserializer_ptr = hsrl;
 		}
 
 		void set_log_level(uint32_t loglvl)
@@ -190,16 +190,16 @@ namespace eflib{
 
 		void begin_log()
 		{
-			if(!h_logserializer) return;
+			if(!logserializer_ptr) return;
 
-			h_logserializer->begin_log();
+			logserializer_ptr->begin_log();
 		}
 
 		void end_log()
 		{
-			if(!h_logserializer) return;
+			if(!logserializer_ptr) return;
 
-			h_logserializer->end_log();
+			logserializer_ptr->end_log();
 		}
 
 		template <class T>
@@ -209,12 +209,12 @@ namespace eflib{
 			{
 				return false;
 			}
-			if (!h_logserializer)
+			if (!logserializer_ptr)
 			{
 				return false;
 			}
 
-			h_logserializer->write(key, val);
+			logserializer_ptr->write(key, val);
 			return true;
 		}
 
@@ -225,19 +225,19 @@ namespace eflib{
 			{
 				return false;
 			}
-			if (!h_logserializer)
+			if (!logserializer_ptr)
 			{
 				return false;
 			}
 
-			h_logserializer->write(val);
+			logserializer_ptr->write(val);
 			return true;
 		}
 
 	private:
 		uint32_t ref_log_level_;
 		boost::function<bool (uint32_t, uint32_t)> loglvlcmp_;
-		boost::shared_ptr<SerializerT> h_logserializer;
+		boost::shared_ptr<SerializerT> logserializer_ptr;
 
 		log_state_stack<SerializerT> state_stack_;
 	};
@@ -298,7 +298,7 @@ namespace eflib{
 	{
 	public:
 		typedef LogT log_t;
-		typedef boost::shared_ptr<typename log_t::serializier_t> h_serializer;
+		typedef boost::shared_ptr<typename log_t::serializier_t> serializer_ptr;
 
 		static LogT& instance(boost::shared_ptr<std::_tostream> hos = boost::shared_ptr<std::_tostream>())
 		{
@@ -306,9 +306,9 @@ namespace eflib{
 			static LogT log_instance;
 			if (is_first_run)
 			{
-				h_serializer hsrl;
+				serializer_ptr hsrl;
 				if (hos){
-					hsrl = h_serializer(new (typename log_t::serializier_t)(*hos, _EFLIB_T("\t"), _EFLIB_T("\n"), _EFLIB_T("=")));
+					hsrl = serializer_ptr(new (typename log_t::serializier_t)(*hos, _EFLIB_T("\t"), _EFLIB_T("\n"), _EFLIB_T("=")));
 				}
 				log_instance.set_serializer(hsrl);
 				is_first_run = false;

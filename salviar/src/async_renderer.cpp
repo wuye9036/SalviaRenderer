@@ -26,7 +26,7 @@ public:
 	}
 
 	//inherited
-	virtual result set_input_layout(h_input_layout const& layout)
+	virtual result set_input_layout(input_layout_ptr const& layout)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_input_layout, impl_, layout);
 		cmds_.push_front(cmd);
@@ -35,11 +35,11 @@ public:
 
 	virtual result set_vertex_buffers(
 		size_t starts_slot,
-		size_t buffers_count, h_buffer const* buffers,
+		size_t buffers_count, buffer_ptr const* buffers,
 		size_t const* strides, size_t const* offsets
 		)
 	{
-		vector<h_buffer>	buffers_vector(buffers, buffers+buffers_count);
+		vector<buffer_ptr>	buffers_vector(buffers, buffers+buffers_count);
 		vector<size_t>		strides_vector(strides, strides+buffers_count);
 		vector<size_t>		offsets_vector(offsets, offsets+buffers_count);
 
@@ -51,7 +51,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_index_buffer(h_buffer const& hbuf, format index_fmt)
+	virtual result set_index_buffer(buffer_ptr const& hbuf, format index_fmt)
 	{
 		boost::function<result()> cmd = boost::bind(
 			&renderer::set_index_buffer, impl_, hbuf, index_fmt );
@@ -69,7 +69,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_vertex_shader(h_vertex_shader const& hvs)
+	virtual result set_vertex_shader(vertex_shader_ptr const& hvs)
 	{
 		vertex_shader_ = hvs;
 
@@ -112,7 +112,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_vs_sampler( std::string const& name, h_sampler const& samp )
+	virtual result set_vs_sampler( std::string const& name, sampler_ptr const& samp )
 	{
 		boost::function<result()> cmd =
 			boost::bind(&renderer::set_vs_sampler, impl_, name, samp);
@@ -121,7 +121,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_rasterizer_state(h_rasterizer_state const& rs)
+	virtual result set_rasterizer_state(raster_state_ptr const& rs)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_rasterizer_state, impl_, rs);
 		cmds_.push_front(cmd);
@@ -129,7 +129,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_depth_stencil_state(h_depth_stencil_state const& dss, int32_t stencil_ref)
+	virtual result set_depth_stencil_state(depth_stencil_state_ptr const& dss, int32_t stencil_ref)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_depth_stencil_state, impl_, dss, stencil_ref);
 		cmds_.push_front(cmd);
@@ -137,7 +137,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_pixel_shader(h_pixel_shader const& hps)
+	virtual result set_pixel_shader(pixel_shader_ptr const& hps)
 	{
 		pixel_shader_ = hps;
 
@@ -167,7 +167,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_ps_sampler( std::string const& name, h_sampler const& samp )
+	virtual result set_ps_sampler( std::string const& name, sampler_ptr const& samp )
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_ps_sampler, impl_, name, samp);
 		cmds_.push_front(cmd);
@@ -175,7 +175,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_blend_shader(h_blend_shader const& hbs)
+	virtual result set_blend_shader(blend_shader_ptr const& hbs)
 	{
 		boost::function<result()> cmd = boost::bind(&renderer::set_blend_shader, impl_, hbs);
 		cmds_.push_front(cmd);
@@ -216,7 +216,7 @@ public:
 		return result::ok;
 	}
 
-	virtual result set_render_target(render_target tar, size_t target_index, h_surface const& surf)
+	virtual result set_render_target(render_target tar, size_t target_index, surface_ptr const& surf)
 	{
 		boost::function<result()> cmd =
 			boost::bind(&renderer::set_render_target, impl_, tar, target_index, surf);
@@ -318,44 +318,44 @@ public:
 	}
 	
 	// Resources
-	virtual h_input_layout create_input_layout(
+	virtual input_layout_ptr create_input_layout(
 		input_element_desc const* elem_descs, size_t elems_count,
-		h_shader_code const& vs )
+		shader_object_ptr const& vs )
 	{
 		return impl_->create_input_layout(elem_descs, elems_count, vs);
 	}
 	
-	virtual h_input_layout create_input_layout(
+	virtual input_layout_ptr create_input_layout(
 		input_element_desc const* elem_descs, size_t elems_count,
-		h_vertex_shader const& vs )
+		vertex_shader_ptr const& vs )
 	{
 		return impl_->create_input_layout(elem_descs, elems_count, vs);
 	}
 
-	virtual h_buffer	create_buffer(size_t size)
+	virtual buffer_ptr	create_buffer(size_t size)
 	{
 		return impl_->create_buffer(size);
 	}
 
-	virtual h_texture	create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+	virtual texture_ptr	create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 	{
 		return impl_->create_tex2d(width, height, num_samples, fmt);
 	}
 
-	virtual h_texture	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+	virtual texture_ptr	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 	{
 		return impl_->create_texcube(width, height, num_samples, fmt);
 	}
 
-	virtual h_sampler	create_sampler(const sampler_desc& desc)
+	virtual sampler_ptr	create_sampler(const sampler_desc& desc)
 	{
 		return impl_->create_sampler(desc);
 	}
 
-	virtual h_buffer get_index_buffer() const
+	virtual buffer_ptr get_index_buffer() const
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		return h_buffer();
+		return buffer_ptr();
 	}
 
 	virtual format get_index_format() const
@@ -370,13 +370,13 @@ public:
 		return primitive_topology(0);
 	}
 
-	virtual bool get_render_target_available(render_target tar, size_t target_index) const
+	virtual bool get_render_target_available(render_target /*tar*/, size_t /*target_index*/) const
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return false;
 	}
 
-	virtual h_framebuffer get_framebuffer() const
+	virtual framebuffer_ptr get_framebuffer() const
 	{
 		boost::mutex::scoped_lock locker(waiting_mutex_);
 		
@@ -388,7 +388,7 @@ public:
 		return current_frame_buffer_;
 	}
 
-	virtual pixel_format get_framebuffer_format(pixel_format pxfmt) const
+	virtual pixel_format get_framebuffer_format(pixel_format /*pxfmt*/) const
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
 		return 0;
@@ -405,7 +405,7 @@ public:
 		return pixel_shader_code_;
 	}
 
-	virtual h_vertex_shader get_vertex_shader() const
+	virtual vertex_shader_ptr get_vertex_shader() const
 	{
 		return vertex_shader_;
 	}
@@ -415,21 +415,21 @@ public:
 		return vertex_shader_code_;
 	}
 
-	virtual h_rasterizer_state get_rasterizer_state() const
+	virtual raster_state_ptr get_rasterizer_state() const
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		return h_rasterizer_state();
+		return raster_state_ptr();
 	}
 
-	virtual h_pixel_shader get_pixel_shader() const
+	virtual pixel_shader_ptr get_pixel_shader() const
 	{
 		return pixel_shader_;
 	}
 
-	virtual h_blend_shader get_blend_shader() const
+	virtual blend_shader_ptr get_blend_shader() const
 	{
 		EFLIB_ASSERT_UNIMPLEMENTED();
-		return h_blend_shader();
+		return blend_shader_ptr();
 	}
 
 	virtual viewport get_viewport() const
@@ -437,7 +437,7 @@ public:
 		return viewport();
 	}
 
-	void run(renderer_parameters const* pparam, h_device const& hdev)
+	void run(renderer_parameters const* pparam, device_ptr const& hdev)
 	{
 		shared_impl_ = create_renderer_impl(pparam, hdev);
 		impl_ = shared_impl_.get();
@@ -448,7 +448,7 @@ public:
 private:
 	virtual result set_vertex_buffer_impl(
 		size_t starts_slot,
-		vector<h_buffer> const& buffers,
+		vector<buffer_ptr> const& buffers,
 		vector<size_t> const& strides,
 		vector<size_t> const& offsets
 		)
@@ -541,14 +541,14 @@ private:
 	mutable boost::mutex		waiting_mutex_;
 
 	// Cached states
-	mutable h_framebuffer			current_frame_buffer_;
+	mutable framebuffer_ptr			current_frame_buffer_;
 	boost::shared_ptr<shader_object>	vertex_shader_code_;
 	boost::shared_ptr<shader_object>	pixel_shader_code_;
-	h_vertex_shader					vertex_shader_;
-	h_pixel_shader					pixel_shader_;
+	vertex_shader_ptr					vertex_shader_;
+	pixel_shader_ptr					pixel_shader_;
 };
 
-renderer_ptr create_async_renderer(renderer_parameters const* pparam, h_device const& hdev)
+renderer_ptr create_async_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
 {
 	boost::shared_ptr<async_renderer> ret( new async_renderer() );
 	ret->run(pparam, hdev);

@@ -111,11 +111,11 @@ char const* plane_ps_code =
 
 class ps_cone : public pixel_shader
 {
-	salviar::h_sampler sampler_;
-	salviar::h_texture tex_;
+	salviar::sampler_ptr sampler_;
+	salviar::texture_ptr tex_;
 public:
 
-	ps_cone(const salviar::h_texture& tex)
+	ps_cone(const salviar::texture_ptr& tex)
 		: tex_(tex)
 	{
 		sampler_desc desc;
@@ -136,11 +136,11 @@ public:
 
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new ps_cone(*this));
+		return pixel_shader_ptr(new ps_cone(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -183,11 +183,11 @@ public:
 
 class ps_plane : public pixel_shader
 {
-	salviar::h_sampler sampler_;
-	salviar::h_texture tex_;
+	salviar::sampler_ptr sampler_;
+	salviar::texture_ptr tex_;
 public:
 
-	ps_plane(const salviar::h_texture& tex)
+	ps_plane(const salviar::texture_ptr& tex)
 		: tex_(tex)
 	{
 		sampler_desc desc;
@@ -207,11 +207,11 @@ public:
 
 		return true;
 	}
-	virtual h_pixel_shader create_clone()
+	virtual pixel_shader_ptr create_clone()
 	{
-		return h_pixel_shader(new ps_plane(*this));
+		return pixel_shader_ptr(new ps_plane(*this));
 	}
-	virtual void destroy_clone(h_pixel_shader& ps_clone)
+	virtual void destroy_clone(pixel_shader_ptr& ps_clone)
 	{
 		ps_clone.reset();
 	}
@@ -261,7 +261,7 @@ protected:
 
 		hsr = create_software_renderer(&render_params, present_dev);
 
-		const h_framebuffer& fb = hsr->get_framebuffer();
+		const framebuffer_ptr& fb = hsr->get_framebuffer();
 		if (fb->get_num_samples() > 1){
 			display_surf.reset(new surface(fb->get_width(),
 				fb->get_height(), 1, fb->get_buffer_format()));
@@ -450,34 +450,34 @@ protected:
 
 protected:
 	/** Properties @{ */
-	h_device present_dev;
-	h_renderer hsr;
-	h_texture sm_tex;
+	device_ptr present_dev;
+	renderer_ptr hsr;
+	texture_ptr sm_tex;
 
-	h_mesh planar_mesh;
-	h_mesh cone_mesh;
+	mesh_ptr planar_mesh;
+	mesh_ptr cone_mesh;
 
-	h_texture plane_tex;
-	h_texture cone_tex;
+	texture_ptr plane_tex;
+	texture_ptr cone_tex;
 
-	h_sampler plane_sampler;
-	h_sampler cone_sampler;
+	sampler_ptr plane_sampler;
+	sampler_ptr cone_sampler;
 
-	h_vertex_shader pvs_cone;
-	h_pixel_shader pps_cone;
-	h_shader_code psc_cone;
+	vertex_shader_ptr pvs_cone;
+	pixel_shader_ptr pps_cone;
+	shader_object_ptr psc_cone;
 
-	h_vertex_shader pvs_plane;
-	h_pixel_shader pps_plane;
-	h_shader_code psc_plane;
+	vertex_shader_ptr pvs_plane;
+	pixel_shader_ptr pps_plane;
+	shader_object_ptr psc_plane;
 
-	h_blend_shader pbs_cone;
-	h_blend_shader pbs_plane;
+	blend_shader_ptr pbs_cone;
+	blend_shader_ptr pbs_plane;
 
-	h_rasterizer_state rs_front;
-	h_rasterizer_state rs_back;
+	raster_state_ptr rs_front;
+	raster_state_ptr rs_back;
 
-	h_surface display_surf;
+	surface_ptr display_surf;
 	surface* pdsurf;
 
 	uint32_t num_frames;
