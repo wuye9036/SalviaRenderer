@@ -13,7 +13,6 @@ SET( FOUNDATION_HEADERS
 	include/enums.h
 	include/colors.h
 	include/colors_convertors.h
-	include/handles.h
 	include/lockfree_queue.h
 	include/thread_pool.h
 	include/binary_modules.h
