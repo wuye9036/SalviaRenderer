@@ -68,11 +68,12 @@ struct drawing_context
 	vs_output const*	ddx;
 	vs_output const*	ddy;
 	vs_output const*	pixels;
-	vs_output_op const*	vs_output_ops;
-	cpp_pixel_shader*		cpp_ps;
-	pixel_shader_unit*	ps_unit;
-	cpp_blend_shader*		cpp_bs;
 	uint32_t const*		masks;
+
+	vs_output_op const*	vs_output_ops;
+	cpp_pixel_shader*	cpp_ps;
+	pixel_shader_unit*	ps_unit;
+	cpp_blend_shader*	cpp_bs;
 	float const*		aa_z_offset;
 };
 
@@ -81,6 +82,8 @@ class rasterizer : public render_stage
 private:
 	const static int MAX_NUM_MULTI_SAMPLES = 4;
 
+	// Status per drawing.
+
 	std::vector<clipper>		clippers_;
 	raster_state_ptr			state_;
 	uint32_t					num_vs_output_attributes_;
@@ -88,11 +91,11 @@ private:
 	framebuffer_ptr				frame_buffer_;
 	cpp_blend_shader_ptr		blend_shader_;
 
-	std::vector<eflib::vec3>	edge_factors_;
-	eflib::vec2 samples_pattern_[MAX_NUM_MULTI_SAMPLES];
+	prim_type					prim_;
+	uint32_t					prim_size_;
+	eflib::vec2					samples_pattern_[MAX_NUM_MULTI_SAMPLES];
 
-	prim_type				prim_;
-	uint32_t				prim_size_;
+	std::vector<eflib::vec3>	edge_factors_;
 
 	void geometry_setup_func(geometry_setup_context const* ctxt);
 	void dispatch_primitive_func(
