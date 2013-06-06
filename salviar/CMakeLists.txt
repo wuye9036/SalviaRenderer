@@ -21,6 +21,7 @@ SET( FOUNDATION_HEADERS
 SET( PIPELINE_HEADERS
 	include/stream_assembler.h
 	include/clipper.h
+	include/geom_setup_engine.h
 	include/index_fetcher.h
 	include/input_layout.h
 	include/presenter_dev.h
@@ -97,6 +98,7 @@ set(PIPELINE_SOURCES
 	src/clipper.cpp
 	src/default_vertex_cache.cpp
 	src/framebuffer.cpp
+	src/geom_setup_engine.cpp
 	src/rasterizer.cpp
 	src/raster_state.cpp
 	src/renderer.cpp
