@@ -7,6 +7,7 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/framebuffer.h>
 #include <salviar/include/raster_state.h>
+#include <salviar/include/geom_setup_engine.h>
 
 #include <eflib/include/memory/atomic.h>
 #include <eflib/include/memory/pool.h>
@@ -26,36 +27,6 @@ class  pixel_shader_unit;
 class  vs_output;
 struct vs_output_op;
 struct clip_context;
-
-struct geometry_setup_context
-{
-	/* Outputs */
-	vs_output**				clipped_vertices;
-	uint32_t*				num_clipped_vertices;
-
-	/* Inputs */
-	vs_output_pool*			vso_pool;
-	int32_t					num_primitive;
-	primitive_topology		topo;
-	boost::atomic<int32_t>*	working_package;
-	int32_t					package_size;
-};
-
-struct dispatch_primitive_context
-{
-	typedef std::vector<std::vector<uint32_t>> tile_list;
-
-	/* Outputs */
-	tile_list*				tiles;
-	boost::atomic<int32_t>*	working_package;
-
-	/* Inputs */
-	uint32_t const*			clipped_indices;
-	vs_output const**		clipped_verts_full;
-	int32_t					prim_count;
-	uint32_t				stride;
-	int32_t					package_size;
-};
 
 struct drawing_context
 {
@@ -77,64 +48,74 @@ struct drawing_context
 	float const*		aa_z_offset;
 };
 
+struct rasterize_multi_prim_context
+{
+	std::vector<uint32_t> const*	sorted_prims;
+	viewport const*					tile_vp;
+	cpp_pixel_shader*				cpp_ps;
+	pixel_shader_unit*				psu;
+};
+
+struct rasterize_prim_context
+{
+	uint32_t						prim_id;
+	viewport const*					tile_vp;
+	cpp_pixel_shader*				cpp_ps;
+	pixel_shader_unit*				psu;
+};
+
 class rasterizer : public render_stage
 {
 private:
-	const static int MAX_NUM_MULTI_SAMPLES = 4;
+	static const int MAX_NUM_MULTI_SAMPLES = 4;
 
 	// Status per drawing.
+	raster_state_ptr				state_;
+	uint32_t						num_vs_output_attributes_;
 
-	std::vector<clipper>		clippers_;
-	raster_state_ptr			state_;
-	uint32_t					num_vs_output_attributes_;
+	framebuffer_ptr					frame_buffer_;
+	cpp_blend_shader*				cpp_bs_;
 
-	framebuffer_ptr				frame_buffer_;
-	cpp_blend_shader_ptr		blend_shader_;
+	viewport const*					vp_;
+	vs_output_op const*				vso_ops_;
 
-	prim_type					prim_;
-	uint32_t					prim_size_;
-	eflib::vec2					samples_pattern_[MAX_NUM_MULTI_SAMPLES];
+	// Intermediate data
+	prim_type						prim_;
+	uint32_t						prim_size_;
+	eflib::vec2						samples_pattern_[MAX_NUM_MULTI_SAMPLES];
 
-	std::vector<eflib::vec3>	edge_factors_;
+	std::vector<std::vector<std::vector<uint32_t>>>
+									threaded_tiled_prims_;		// vector<prim> prims = thread_tiled_prims[ThreadID][TileID]
+	std::vector<eflib::vec3>		edge_factors_;
 
-	void geometry_setup_func(geometry_setup_context const* ctxt);
-	void dispatch_primitive_func(
-		std::vector<std::vector<uint32_t> >& tiles,
-		vs_output** clipped_verts,
-		int32_t prim_count, uint32_t stride,
-		boost::atomic<int32_t>& working_package, int32_t package_size
-		);
-	
-	void rasterize_primitive_func(
-		std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x,
-		vs_output** clipped_verts_full,
-		const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
-		boost::atomic<int32_t>& working_package, int32_t package_size
-		);
-	
-	void compact_clipped_verts_func(
-		vs_output** compacted, vs_output** sparse,
-		uint32_t const* addresses, uint32_t const* num_clipped_verts,
-		int32_t workset, boost::atomic<int32_t>& working_package, int32_t package_size
-	);
+	vs_output**						clipped_verts_;
+	size_t							clipped_verts_count_;
+	size_t							clipped_prims_count_;
 
-	boost::function<
-		void ( rasterizer*, vs_output** /*Clipped Vertexes*/, 
-			const std::vector<uint32_t>& /*Sorted Primitives*/, const viewport& /*Tile VP*/, 
-			const cpp_pixel_shader_ptr& /*Pixel Shader*/, boost::shared_ptr<pixel_shader_unit> const& /*Pixel Shader Unit*/)
-	> rasterize_func_;
+	size_t							tile_x_count_;
+	size_t							tile_y_count_;
+	size_t							tile_count_;
+
+	std::vector<cpp_pixel_shader*>	threaded_cpp_ps_;
+	std::vector<pixel_shader_unit*>	threaded_psu_;					
+
+	void threaded_dispatch_primitive(thread_context const*);
+	void threaded_rasterize_multi_prim(thread_context const*);
+
+	boost::function< void (rasterizer*, rasterize_multi_prim_context*)>
+		rasterize_prims_;
 
 	void draw_whole_tile(
 		int left, int top, int right, int bottom,
 		size_t num_samples, const vs_output& v0,
-		const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-		const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const cpp_blend_shader_ptr& hbs,
+		const vs_output& ddx, const vs_output& ddy,
+		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 		const float* aa_z_offset );
 	void draw_pixels(
 		int left0, int top0, int left, int top,
 		const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
-		const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-		const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const cpp_blend_shader_ptr& hbs, 
+		const vs_output& v0, const vs_output& ddx, const vs_output& ddy,
+		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 		const float* aa_z_offset);
 	void subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const eflib::vec4* edge_factors,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
@@ -143,12 +124,12 @@ private:
 	void draw_full_package(
 		vs_output* pixels,
 		uint32_t top, uint32_t left, size_t num_samples,
-		cpp_blend_shader_ptr const& bs, cpp_pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 		float const* aa_z_offset );
 	void draw_package(
 		vs_output* pixels,
 		uint32_t top, uint32_t left, size_t num_samples,
-		cpp_blend_shader_ptr const& bs, cpp_pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 		uint32_t const* masks, float const* aa_z_offset );
 
 	void viewport_and_project_transform(vs_output** vertexes, size_t num_verts);
@@ -166,22 +147,11 @@ public:
 	const raster_state_ptr& get_state() const;
 
 	//drawer
-	void rasterize_line(
-		uint32_t prim_id, const vs_output& v0, const vs_output& v1, const viewport& vp,
-		const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu);
-	void rasterize_triangle(
-		uint32_t prim_id, uint32_t full, const vs_output& v0, const vs_output& v1, const vs_output& v2,
-		const viewport& vp,
-		const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu);
+	void rasterize_line(rasterize_prim_context const*);
+	void rasterize_triangle(rasterize_prim_context const*);
 
-	void rasterize_line_func(
-		vs_output** clipped_verts_full,
-		const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-		const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
-	void rasterize_triangle_func(
-		vs_output** clipped_verts_full, 
-		const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-		const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu );
+	void rasterize_multi_line(rasterize_multi_prim_context const*);
+	void rasterize_multi_triangle(rasterize_multi_prim_context const*);
 
 	void draw(size_t prim_count);
 
