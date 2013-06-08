@@ -431,10 +431,10 @@ pixel_format framebuffer::get_buffer_format() const{
 	return fmt_;
 }
 
-void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
+void framebuffer::render_sample(const cpp_blend_shader_ptr& hbs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth)
 {
-	EFLIB_ASSERT(cpp_bs, "Blend shader is null or invalid.");
-	if(!cpp_bs) return;
+	EFLIB_ASSERT(hbs, "Blend shader is null or invalid.");
+	if(!hbs) return;
 
 	//composing output
 	pixel_accessor target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
@@ -454,7 +454,7 @@ void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, si
 		int32_t new_stencil = dss->stencil_operation(ps.front_face, depth_passed, stencil_passed, stencil_ref, cur_stencil);
 
 		//execute target shader
-		cpp_bs->execute(i_sample, target_pixel, ps);
+		hbs->execute(i_sample, target_pixel, ps);
 
 		dss->write_depth(i_sample, depth, target_pixel);
 		dss->write_stencil(i_sample, new_stencil, target_pixel);

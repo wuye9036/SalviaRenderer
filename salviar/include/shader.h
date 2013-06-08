@@ -247,7 +247,7 @@ class cpp_pixel_shader : public shader_impl
 {
 	friend class rasterizer;
 	
-	const triangle_info* triangle_info;
+	const triangle_info* ptriangleinfo_;
 	const vs_output* ppxin_;
 
 protected:

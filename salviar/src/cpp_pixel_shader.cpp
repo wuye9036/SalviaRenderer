@@ -56,19 +56,19 @@ void triangle_info::set(const eflib::vec4& base_vert, const vs_output& ddx, cons
 // ------------------------------------------
 //  Get Partial Derivation
 const eflib::vec4& cpp_pixel_shader::get_pos_ddx() const{
-	return triangle_info->ddx().position();
+	return ptriangleinfo_->ddx().position();
 }
 
 const eflib::vec4& cpp_pixel_shader::get_pos_ddy() const{
-	return triangle_info->ddy().position();
+	return ptriangleinfo_->ddy().position();
 }
 
 const eflib::vec4& cpp_pixel_shader::unproj_ddx(size_t iReg) const{
-	return triangle_info->ddx().attribute(iReg);
+	return ptriangleinfo_->ddx().attribute(iReg);
 }
 
 const eflib::vec4& cpp_pixel_shader::unproj_ddy(size_t iReg) const{
-	return triangle_info->ddy().attribute(iReg);
+	return ptriangleinfo_->ddy().attribute(iReg);
 }
 
 const eflib::vec4 cpp_pixel_shader::ddx(size_t iReg) const
@@ -80,7 +80,7 @@ const eflib::vec4 cpp_pixel_shader::ddx(size_t iReg) const
 
 	unproj_attr += attr_org_ddx;
 
-	float new_pos_w = ppxin_->position().w() + triangle_info->ddx().position().w();
+	float new_pos_w = ppxin_->position().w() + ptriangleinfo_->ddx().position().w();
 	vec4 new_proj_attr = unproj_attr / new_pos_w;
 
 	return new_proj_attr - attr;
@@ -95,7 +95,7 @@ const eflib::vec4 cpp_pixel_shader::ddy(size_t iReg) const
 
 	unproj_attr += attr_org_ddy;
 
-	float new_pos_w = ppxin_->position().w() + triangle_info->ddy().position().w();
+	float new_pos_w = ppxin_->position().w() + ptriangleinfo_->ddy().position().w();
 	vec4 new_proj_attr = unproj_attr / new_pos_w;
 
 	return new_proj_attr - attr;
@@ -234,7 +234,7 @@ color_rgba32f cpp_pixel_shader::texcubeproj(const sampler&s, const eflib::vec4& 
 
 bool cpp_pixel_shader::execute(const vs_output& in, ps_output& out)
 {
-	assert(triangle_info);
+	assert(ptriangleinfo_);
 	ppxin_ = &in;
 	bool rv = shader_prog(in, out);
 	out.depth = in.position().z();
