@@ -517,16 +517,21 @@ result renderer_impl::set_ps_sampler( std::string const& name, sampler_ptr const
 
 result renderer_impl::set_vs_sampler( std::string const& name, sampler_ptr const& samp )
 {
+	result ret = result::failed;
+	
 	if ( vs_proto_ )
 	{
 		vs_proto_->set_sampler( name, samp );
-		return result::ok;
+		ret = result::ok;
 	}
+	
 	if(host_)
 	{
 		host_->vx_set_sampler(name, samp);
+		ret = result::ok;
 	}
-	return result::failed;
+
+	return ret;
 }
 
 renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev)

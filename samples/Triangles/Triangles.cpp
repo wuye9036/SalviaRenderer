@@ -142,8 +142,9 @@ protected:
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
 		hsr->set_pixel_shader_code(psc);
 #endif
+		mesh_ptr pmesh;
 
-		mesh_ptr pmesh = create_planar(
+		pmesh = create_planar(
 			hsr.get(), 
 			vec3(-30.0f, -1.0f, -30.0f), 
 			vec3(15.0f, 0.0f, 1.0f), 

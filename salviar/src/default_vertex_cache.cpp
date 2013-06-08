@@ -254,7 +254,7 @@ private:
 	renderer_impl*			owner_;
 
 	stream_assembler*		assembler_;
-	cpp_vertex_shader*			cpp_vs_;
+	cpp_vertex_shader*		cpp_vs_;
 	viewport const*			viewport_;
 
 	vector<uint32_t>		indices_;

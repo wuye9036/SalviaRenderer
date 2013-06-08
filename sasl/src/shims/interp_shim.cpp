@@ -33,6 +33,9 @@ void default_vso2reg(
 		case salviar::lvt_f32v3:
 			memcpy(current_register, attr_data, sizeof(float)*3);
 			continue;
+		case salviar::lvt_float:
+			memcpy(current_register, attr_data, sizeof(float));
+			continue;
 		default:
 			assert(!"unsupported lvt");
 		}

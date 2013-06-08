@@ -63,6 +63,7 @@ void clipper::clip_solid_triangle(vs_output** tri_verts, clip_results* results)
 	}
 
 	results->num_clipped_verts = (tri_clip_results.num_clipped_verts - 2) * 3;
+	results->is_front = tri_clip_results.is_front;
 
 	for (uint32_t i = 0; i < tri_clip_results.num_clipped_verts; ++i)
 	{
