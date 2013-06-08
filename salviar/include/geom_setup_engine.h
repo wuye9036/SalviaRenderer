@@ -34,6 +34,8 @@ struct geom_setup_context
 class geom_setup_engine
 {	
 public:
+	geom_setup_engine();
+
 	void execute(geom_setup_context const*);
 
 	size_t verts_count() const
@@ -47,8 +49,6 @@ public:
 	}
 	
 private:
-	geom_setup_engine();
-
 	typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
 
 	void clip_geometries();

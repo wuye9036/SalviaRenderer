@@ -9,6 +9,7 @@
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/thread_pool.h>
+#include <salviar/include/thread_context.h>
 #include <salviar/include/vertex_cache.h>
 
 #include <eflib/include/diagnostics/log.h>
@@ -35,11 +36,9 @@ using namespace std;
 using namespace eflib;
 using namespace boost;
 
-const int TILE_SIZE = 64;
-const int GEOMETRY_SETUP_PACKAGE_SIZE = 8;
-const int DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
-const int RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
-const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
+int const TILE_SIZE = 64;
+int const DISPATCH_PRIMITIVE_PACKAGE_SIZE = 8;
+int const RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 
 /*************************************************
  *   Steps for line rasterization£º
@@ -54,24 +53,26 @@ const int COMPACT_CLIPPED_VERTS_PACKAGE_SIZE = 8;
  *			2 x y z components of w-pos have been divided by w component.
  *			3 positon.w() = 1.0f / clip w
  **************************************************/
-void rasterizer::rasterize_line(
-	uint32_t /*prim_id*/, const vs_output& v0, const vs_output& v1, const viewport& vp, const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu)
+void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 {
-	EFLIB_UNREF_DECLARATOR( psu );
-
-	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
-
+	// Extract to local variables
+	cpp_blend_shader*	cpp_bs			= pparent_->get_blend_shader().get();
+	cpp_pixel_shader*	cpp_ps			= ctx->cpp_ps;
+	pixel_shader_unit*	psu				= ctx->psu;
+	viewport  const&	vp				= *ctx->tile_vp;
+	vs_output const&	v0				= *clipped_verts_[ctx->prim_id*2+0];
+	vs_output const&	v1				= *clipped_verts_[ctx->prim_id*2+1];
+	
+	// Rasterize
 	vs_output diff;
-	vs_output_ops->sub(diff, v1, v0);
+	vso_ops_->sub(diff, v1, v0);
 	eflib::vec4 const& dir = diff.position();
 	float diff_dir = abs(dir.x()) > abs(dir.y()) ? dir.x() : dir.y();
 
-	cpp_blend_shader_ptr hbs = pparent_->get_blend_shader();
-
 	// Computing differential.
 	vs_output ddx, ddy;
-	vs_output_ops->mul(ddx, diff, (diff.position().x() / (diff.position().xy().length_sqr())));
-	vs_output_ops->mul(ddy, diff, (diff.position().y() / (diff.position().xy().length_sqr())));
+	vso_ops_->mul(ddx, diff, (diff.position().x() / (diff.position().xy().length_sqr())));
+	vso_ops_->mul(ddy, diff, (diff.position().y() / (diff.position().xy().length_sqr())));
 
 	int vpleft = fast_floori(max(0.0f, vp.x));
 	int vptop = fast_floori(max(0.0f, vp.y));
@@ -97,7 +98,7 @@ void rasterizer::rasterize_line(
 
 		triangle_info info;
 		info.set(start->position(), ddx, ddy);
-		pps->ptriangleinfo_ = &info;
+		cpp_ps->triangle_info = &info;
 
 		float fsx = fast_floor(start->position().x() + 0.5f);
 
@@ -110,11 +111,11 @@ void rasterizer::rasterize_line(
 
 		// Set attributes of start point.
 		vs_output px_start, px_end;
-		vs_output_ops->copy(px_start, *start);
-		vs_output_ops->copy(px_end, *end);
+		vso_ops_->copy(px_start, *start);
+		vso_ops_->copy(px_end, *end);
 		float step = sx + 0.5f - start->position().x();
 		vs_output px_in;
-		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
+		vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 
 		// Draw line with x major DDA.
 		vs_output unprojed;
@@ -131,14 +132,14 @@ void rasterizer::rasterize_line(
 			}
 
 			// Render pixel.
-			vs_output_ops->unproject(unprojed, px_in);
-			if(pps->execute(unprojed, px_out)){
-				frame_buffer_->render_sample(hbs, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
+			vso_ops_->unproject(unprojed, px_in);
+			if(cpp_ps->execute(unprojed, px_out)){
+				frame_buffer_->render_sample(cpp_bs, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
 			}
 
 			// Increment ddx
 			++ step;
-			vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
+			vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
 	}
 	else //y major
@@ -155,7 +156,7 @@ void rasterizer::rasterize_line(
 
 		triangle_info info;
 		info.set(start->position(), ddx, ddy);
-		pps->ptriangleinfo_ = &info;
+		cpp_ps->triangle_info = &info;
 
 		float fsy = fast_floor(start->position().y() + 0.5f);
 
@@ -166,11 +167,11 @@ void rasterizer::rasterize_line(
 		ey = eflib::clamp<int>(ey, vptop, int(vpbottom));
 
 		vs_output px_start, px_end;
-		vs_output_ops->copy(px_start, *start);
-		vs_output_ops->copy(px_end, *end);
+		vso_ops_->copy(px_start, *start);
+		vso_ops_->copy(px_end, *end);
 		float step = sy + 0.5f - start->position().y();
 		vs_output px_in;
-		vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
+		vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 
 		vs_output unprojed;
 		for(int iPixel = sy; iPixel < ey; ++iPixel)
@@ -184,13 +185,13 @@ void rasterizer::rasterize_line(
 				continue;
 			}
 
-			vs_output_ops->unproject(unprojed, px_in);
-			if(pps->execute(unprojed, px_out)){
-				frame_buffer_->render_sample(hbs, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
+			vso_ops_->unproject(unprojed, px_in);
+			if(cpp_ps->execute(unprojed, px_out)){
+				frame_buffer_->render_sample(cpp_bs, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
 			}
 
 			++ step;
-			vs_output_ops->lerp(px_in, px_start, px_end, step / diff_dir);
+			vso_ops_->lerp(px_in, px_start, px_end, step / diff_dir);
 		}
 	}
 }
@@ -202,9 +203,9 @@ struct tile_render_context
 	vs_output const*	v0;
 	vs_output const*	ddx;
 	vs_output const*	ddy;
-	vs_output_op const* vs_output_ops;
-	cpp_pixel_shader*		cpp_ps;
-	cpp_blend_shader*		cpp_bs;
+	vs_output_op const* vso_ops_;
+	cpp_pixel_shader*	cpp_ps;
+	cpp_blend_shader*	cpp_bs;
 	pixel_shader_unit*	ps;
 	float const*		aa_z_offset;
 };
@@ -218,8 +219,8 @@ void rasterizer::initialize(renderer_impl* pparent)
 void rasterizer::draw_whole_tile(
 	int left, int top, int right, int bottom, 
 	size_t num_samples, const vs_output& v0,
-	const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-	const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const cpp_blend_shader_ptr& hbs,
+	const vs_output& ddx, const vs_output& ddy, 
+	cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 	const float* aa_z_offset)
 {
 	float v0x = v0.position().x();
@@ -239,7 +240,7 @@ void rasterizer::draw_whole_tile(
 			{
 				for(int dx = 0; dx < 4; ++dx)
 				{
-					vs_output_ops->step_2d_unproj(
+					vso_ops_->step_2d_unproj(
 						unprojed[dx+dy*4],
 						v0,
 						offsetx+ix+dx, ddx,
@@ -248,7 +249,7 @@ void rasterizer::draw_whole_tile(
 				}
 			}
 
-			draw_full_package(unprojed, iy, ix, num_samples, hbs, pps, psu, aa_z_offset);
+			draw_full_package(unprojed, iy, ix, num_samples, cpp_ps, psu, cpp_bs, aa_z_offset);
 		}
 	}
 }
@@ -256,8 +257,8 @@ void rasterizer::draw_whole_tile(
 void rasterizer::draw_pixels(
 	int left0, int top0, int left, int top,
 	const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
-	const vs_output& v0, const vs_output& ddx, const vs_output& ddy, const vs_output_op* vs_output_ops,
-	const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, const cpp_blend_shader_ptr& hbs,
+	const vs_output& v0, const vs_output& ddx, const vs_output& ddy,
+	cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 	const float* aa_z_offset )
 {
 	size_t sx = left - left0;
@@ -410,12 +411,12 @@ void rasterizer::draw_pixels(
 				dy += sp_centroid.y();
 			}
 
-			vs_output_ops->step_2d_unproj(unprojed[iy*4+ix], v0, dx, ddx, dy, ddy);
+			vso_ops_->step_2d_unproj(unprojed[iy*4+ix], v0, dx, ddx, dy, ddy);
 		}
 	}
 
 	// Execute pixel shader and render to target.
-	draw_package(unprojed, top, left, num_samples, hbs, pps, psu, pixel_mask, aa_z_offset);
+	draw_package(unprojed, top, left, num_samples, cpp_ps, psu, cpp_bs, pixel_mask, aa_z_offset);
 }
 
 void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region,
@@ -575,14 +576,20 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 *			2 x, y, z components of wpos have been devided by 'clip w'.
 *			3 positon.w() == 1.0f / 'clip w'
 **************************************************/
-void rasterizer::rasterize_triangle(
-	uint32_t prim_id, uint32_t full,
-	const vs_output& v0, const vs_output& v1, const vs_output& v2, const viewport& vp, 
-	const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
+void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 {
-	const size_t num_samples = frame_buffer_->get_num_samples();
-	const vs_output_op* vs_output_ops = pparent_->get_vs_output_ops();
-
+	// Extract to local variables
+	size_t const		num_samples		= frame_buffer_->get_num_samples();
+	cpp_blend_shader*	cpp_bs			= pparent_->get_blend_shader().get();
+	cpp_pixel_shader*	cpp_ps			= ctx->cpp_ps;
+	pixel_shader_unit*	psu				= ctx->psu;
+	viewport  const&	vp				= *ctx->tile_vp;
+	uint32_t			prim_id			= ctx->prim_id >> 1;
+	uint32_t			full			= ctx->prim_id & 1;
+	vs_output const&	v0				= *clipped_verts_[prim_id*3+0];
+	vs_output const&	v1				= *clipped_verts_[prim_id*3+1];
+	vs_output const&	v2				= *clipped_verts_[prim_id*3+2];
+	
 	// Pick the vertex which is nearby center of viewport
 	// It will get more precision in interpolation.
 	vs_output const* verts[3] = { &v0, &v1, &v2 };
@@ -625,14 +632,15 @@ void rasterizer::rasterize_triangle(
 	bool has_centroid = false;
 	for(size_t i_attr = 0; i_attr < num_vs_output_attributes_; ++i_attr)
 	{
-		if (vs_output_ops->attribute_modifiers[i_attr] & vs_output::am_centroid)
+		if (vso_ops_->attribute_modifiers[i_attr] & vs_output::am_centroid)
 		{
 			has_centroid = true;
 		}
 	}
 
 	// Compute edge factor.
-	const ALIGN16 vec4 edge_factors[3] = {
+	const ALIGN16 vec4 edge_factors[3] =
+	{
 		vec4(edge_factors_[prim_id * 3 + 0], 0),
 		vec4(edge_factors_[prim_id * 3 + 1], 0),
 		vec4(edge_factors_[prim_id * 3 + 2], 0)
@@ -654,8 +662,8 @@ void rasterizer::rasterize_triangle(
 
 	// Compute difference along edge.
 	vs_output e01, e02;
-	vs_output_ops->sub(e01, *reordered_verts[1], *reordered_verts[0]);
-	vs_output_ops->sub(e02, *reordered_verts[2], *reordered_verts[0]);
+	vso_ops_->sub(e01, *reordered_verts[1], *reordered_verts[0]);
+	vso_ops_->sub(e02, *reordered_verts[2], *reordered_verts[0]);
 
 	// Compute area of triangle.
 	float area = cross_prod2(e02.position().xy(), e01.position().xy());
@@ -670,27 +678,25 @@ void rasterizer::rasterize_triangle(
 		// ddx = (e02 * e01.position.y - e02.position.y * e01) * inv_area;
 		// ddy = (e01 * e02.position.x - e01.position.x * e02) * inv_area;
 		vs_output tmp0, tmp1, tmp2;
-		vs_output_ops->mul(
+		vso_ops_->mul(
 			ddx,
-			vs_output_ops->sub(
+			vso_ops_->sub(
 				tmp2,
-				vs_output_ops->mul( tmp0, e02, e01.position().y() ),
-				vs_output_ops->mul( tmp1, e01, e02.position().y() )
+				vso_ops_->mul( tmp0, e02, e01.position().y() ),
+				vso_ops_->mul( tmp1, e01, e02.position().y() )
 			), inv_area);
-		vs_output_ops->mul(
+		vso_ops_->mul(
 			ddy,
-			vs_output_ops->sub(
+			vso_ops_->sub(
 				tmp2,
-				vs_output_ops->mul( tmp0, e01, e02.position().x() ),
-				vs_output_ops->mul( tmp1, e02, e01.position().x() )
+				vso_ops_->mul( tmp0, e01, e02.position().x() ),
+				vso_ops_->mul( tmp1, e02, e01.position().x() )
 			), inv_area);
 	}
 
 	triangle_info info;
 	info.set(reordered_verts[0]->position(), ddx, ddy);
-	if( !psu ){
-		pps->ptriangleinfo_ = &info;
-	}
+	if( !psu ){ cpp_ps->triangle_info = &info; }
 	
 	const float x_min = min(reordered_verts[0]->position().x(), min(reordered_verts[1]->position().x(), reordered_verts[2]->position().x())) - vp.x;
 	const float x_max = max(reordered_verts[0]->position().x(), max(reordered_verts[1]->position().x(), reordered_verts[2]->position().x())) - vp.x;
@@ -721,7 +727,8 @@ void rasterizer::rasterize_triangle(
 	ALIGN16 float rej_to_acc[4];
 	ALIGN16 float evalue[4];
 	float part_evalue[4];
-	for (int e = 0; e < 3; ++ e){
+	for (int e = 0; e < 3; ++ e)
+	{
 		step_x[e] = TILE_SIZE * edge_factors[e].x();
 		step_y[e] = TILE_SIZE * edge_factors[e].y();
 		rej_to_acc[e] = -abs(step_x[e]) - abs(step_y[e]);
@@ -731,20 +738,24 @@ void rasterizer::rasterize_triangle(
 	step_x[3] = step_y[3] = 0;
 
 	float aa_z_offset[MAX_NUM_MULTI_SAMPLES];
-	if (num_samples > 1){
-		for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample){
+	if (num_samples > 1)
+	{
+		for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample)
+		{
 			const vec2& sp = samples_pattern_[i_sample];
 			aa_z_offset[i_sample] = (sp.x() - 0.5f) * ddx.position().z() + (sp.y() - 0.5f) * ddy.position().z();
 		}
 	}
 
-	while (test_region_size[src_stage] > 0){
+	while (test_region_size[src_stage] > 0)
+	{
 		test_region_size[dst_stage] = 0;
 		
 		subtile_w /= 4;
 		subtile_h /= 4;
 
-		for (int e = 0; e < 3; ++ e){
+		for (int e = 0; e < 3; ++ e)
+		{
 			step_x[e] *= 0.25f;
 			step_y[e] *= 0.25f;
 			rej_to_acc[e] *= 0.25f;
@@ -752,7 +763,8 @@ void rasterizer::rasterize_triangle(
 			evalue[e] = edge_factors[e].z() - part_evalue[e];
 		}
 
-		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp){
+		for (size_t ivp = 0; ivp < test_region_size[src_stage]; ++ ivp)
+		{
 			const uint32_t packed_region = test_regions[src_stage][ivp];
 			eflib::rect<uint32_t> cur_region(packed_region & 0xFF, (packed_region >> 8) & 0xFF,
 				subtile_w, subtile_h);
@@ -764,7 +776,8 @@ void rasterizer::rasterize_triangle(
 			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(frame_buffer_->get_height()));
 
 			// For one pixel region
-			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1)){
+			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1))
+			{
 				intersect = TVT_PIXEL;
 			}
 
@@ -777,16 +790,16 @@ void rasterizer::rasterize_triangle(
 			case TVT_FULL:
 				// The whole tile is inside a triangle.
 				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, num_samples,
-					*reordered_verts[0], ddx, ddy, vs_output_ops,
-					pps, psu, blend_shader_, aa_z_offset);
+					*reordered_verts[0], ddx, ddy,
+					cpp_ps, psu, cpp_bs_, aa_z_offset);
 				break;
 
 			case TVT_PIXEL:
 				// The tile is small enough for pixel level matching.
 				this->draw_pixels(vpleft0, vptop0, vpleft, vptop, 
 					edge_factors, num_samples,
-					has_centroid, *reordered_verts[0], ddx, ddy, vs_output_ops,
-					pps, psu, blend_shader_, aa_z_offset);
+					has_centroid, *reordered_verts[0], ddx, ddy,
+					cpp_ps, psu, cpp_bs_, aa_z_offset);
 				break;
 
 			default:
@@ -810,6 +823,7 @@ rasterizer::rasterizer()
 {
 	state_.reset(new raster_state(raster_desc()));
 }
+
 rasterizer::~rasterizer()
 {
 }
@@ -824,103 +838,33 @@ const raster_state_ptr& rasterizer::get_state() const
 	return state_;
 }
 
-void rasterizer::geometry_setup_func(geometry_setup_context const* ctxt)
+void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx)
 {
-	int32_t const num_packages = (ctxt->num_primitive + ctxt->package_size - 1) / ctxt->package_size;
-
-	vs_output_op const*		vs_output_ops	= pparent_->get_vs_output_ops();
-	vertex_cache*			dvc				= pparent_->get_vertex_cache().get();
-	viewport const&			vp				= pparent_->get_viewport();
-
-	clip_context clip_ctxt;
-	clip_ctxt.vert_pool	= ctxt->vso_pool;
-	clip_ctxt.vso_ops	= vs_output_ops;
-	clip_ctxt.cull		= state_->get_cull_func();
-	clip_ctxt.prim		= prim_;
-
-	clipper clp;
-	clp.set_context(&clip_ctxt);
-
-	clip_results clip_rslt;
-
-	int32_t local_working_package = (*ctxt->working_package)++;
-	
-	while (local_working_package < num_packages)
-	{
-		const int32_t start = local_working_package * ctxt->package_size;
-		const int32_t end = min(ctxt->num_primitive, start + ctxt->package_size);
-
-		clip_rslt.clipped_verts = ctxt->clipped_vertices + start*9;
-		uint32_t&	package_num_clipped_verts = ctxt->num_clipped_vertices[local_working_package];
-		
-		package_num_clipped_verts = 0;
-
-		for (int32_t i = start; i < end; ++ i)
-		{
-			if (3 == prim_size_)
-			{
-				vs_output* pv[3] = {
-					&dvc->fetch(i*3+0),
-					&dvc->fetch(i*3+1),
-					&dvc->fetch(i*3+2)
-				};
-				
-				// grand band culling
-				float const GRAND_BAND_SCALE = 1.2f;
-				eflib::vec4 t0 = clampss(eflib::vec4(-pv[0]->position().x(), -pv[0]->position().y(), pv[0]->position().x(), pv[0]->position().y()) - pv[0]->position().w() * GRAND_BAND_SCALE, 0, 1);
-				eflib::vec4 t1 = clampss(eflib::vec4(-pv[1]->position().x(), -pv[1]->position().y(), pv[1]->position().x(), pv[1]->position().y()) - pv[1]->position().w() * GRAND_BAND_SCALE, 0, 1);
-				eflib::vec4 t2 = clampss(eflib::vec4(-pv[2]->position().x(), -pv[2]->position().y(), pv[2]->position().x(), pv[2]->position().y()) - pv[2]->position().w() * GRAND_BAND_SCALE, 0, 1);
-				eflib::vec4 t = t0 * t1 * t2;
-
-				if ((0 == t.x()) && (0 == t.y()) && (0 == t.z()) && (0 == t.w()))
-				{
-					clp.clip(pv, &clip_rslt);
-
-					clip_rslt.clipped_verts += clip_rslt.num_clipped_verts;
-					package_num_clipped_verts += clip_rslt.num_clipped_verts;
-				}
-			}
-			else if (2 == prim_size_)
-			{
-				assert(false);
-			}
-		}
-
-		local_working_package = (*ctxt->working_package)++;
-	}
-}
-
-void rasterizer::dispatch_primitive_func(
-	std::vector<std::vector<uint32_t> >& tiles,
-	vs_output** clipped_verts,
-	int32_t prim_count, uint32_t stride,
-	atomic<int32_t>& working_package, int32_t package_size )
-{
-
-	const viewport& vp = pparent_->get_viewport();
-	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
-	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
-
-	const int32_t num_packages = (prim_count + package_size - 1) / package_size;
-
 	float x_min;
 	float x_max;
 	float y_min;
 	float y_max;
-	int32_t local_working_package = working_package ++;
-	while (local_working_package < num_packages)
+	
+	vector<vector<uint32_t>>& tiled_prims = threaded_tiled_prims_[thread_ctx->thread_id];
+	for(auto& prims: tiled_prims)
 	{
-		const int32_t start = local_working_package * package_size;
-		const int32_t end = min(prim_count, start + package_size);
-		for (int32_t i = start; i < end; ++ i)
+		prims.clear();
+	}
+
+	thread_context::package_cursor current_package = thread_ctx->next_package();
+	while ( current_package.valid() )
+	{
+		auto prim_range = current_package.item_range();
+
+		for (int32_t i = prim_range.first; i < prim_range.second; ++ i)
 		{
 			const vec4* pv[3];
-			for (size_t j = 0; j < stride; ++ j)
+			for (size_t j = 0; j < prim_size_; ++ j)
 			{
-				pv[j] = &( clipped_verts[i*stride+j]->position() );
+				pv[j] = &( clipped_verts_[i*prim_size_+j]->position() );
 			}
 
-			if (3 == stride)
+			if (3 == prim_size_)
 			{
 				// x * (y1 - y0) - y * (x1 - x0) - (y1 * x0 - x1 * y0)
 				vec3* edge_factors = &edge_factors_[i * 3];
@@ -934,165 +878,161 @@ void rasterizer::dispatch_primitive_func(
 				}
 			}
 
-			x_min = pv[0]->x();
-			x_max = pv[0]->x();
-			y_min = pv[0]->y();
-			y_max = pv[0]->y();
-			for (size_t j = 1; j < stride; ++ j){
+			x_min = x_max = pv[0]->x();
+			y_min = y_max = pv[0]->y();
+			
+			for (size_t j = 1; j < prim_size_; ++ j)
+			{
 				x_min = min(x_min, pv[j]->x());
 				x_max = max(x_max, pv[j]->x());
 				y_min = min(y_min, pv[j]->y());
 				y_max = max(y_max, pv[j]->y());
 			}
 
-			const int sx = std::min(fast_floori(std::max(0.0f, x_min) / TILE_SIZE), num_tiles_x);
-			const int sy = std::min(fast_floori(std::max(0.0f, y_min) / TILE_SIZE), num_tiles_y);
-			const int ex = std::min(fast_ceili(std::max(0.0f, x_max) / TILE_SIZE) + 1, num_tiles_x);
-			const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1, num_tiles_y);
-			if ((sx + 1 == ex) && (sy + 1 == ey)){
+			const int sx = std::min(fast_floori(std::max(0.0f, x_min) / TILE_SIZE),		static_cast<int>(tile_x_count_));
+			const int sy = std::min(fast_floori(std::max(0.0f, y_min) / TILE_SIZE),		static_cast<int>(tile_y_count_));
+			const int ex = std::min(fast_ceili(std::max(0.0f, x_max) / TILE_SIZE) + 1,	static_cast<int>(tile_x_count_));
+			const int ey = std::min(fast_ceili(std::max(0.0f, y_max) / TILE_SIZE) + 1,	static_cast<int>(tile_y_count_));
+
+			if ((sx + 1 == ex) && (sy + 1 == ey))
+			{
 				// Small primitive
-				tiles[sy * num_tiles_x + sx].push_back(i << 1);
+				tiled_prims[sy * tile_x_count_ + sx].push_back(i << 1);
 			}
-			else{
-				if (3 == stride){
+			else
+			{
+				if (3 == prim_size_)
+				{
 					vec3* edge_factors = &edge_factors_[i * 3];
 
-					const bool mark_x[3] = {
+					bool const mark_x[3] =
+					{
 						edge_factors[0].x() > 0, edge_factors[1].x() > 0, edge_factors[2].x() > 0
 					};
-					const bool mark_y[3] = {
+					
+					bool const mark_y[3] =
+					{
 						edge_factors[0].y() > 0, edge_factors[1].y() > 0, edge_factors[2].y() > 0
 					};
 					
 					float step_x[3];
 					float step_y[3];
 					float rej_to_acc[3];
-					for (int e = 0; e < 3; ++ e){
+					for (int e = 0; e < 3; ++ e)
+					{
 						step_x[e] = TILE_SIZE * edge_factors[e].x();
 						step_y[e] = TILE_SIZE * edge_factors[e].y();
 						rej_to_acc[e] = -abs(step_x[e]) - abs(step_y[e]);
 					}
 
-					for (int y = sy; y < ey; ++ y){
-						for (int x = sx; x < ex; ++ x){
+					for (int y = sy; y < ey; ++ y)
+					{
+						for (int x = sx; x < ex; ++ x)
+						{
 							int rejection = 0;
 							int acception = 1;
 
 							// Trival rejection & acception
-							for (int e = 0; e < 3; ++ e){
+							for (int e = 0; e < 3; ++ e)
+							{
 								float evalue = edge_factors[e].z() - ((x + mark_x[e]) * TILE_SIZE * edge_factors[e].x() + (y + mark_y[e]) * TILE_SIZE * edge_factors[e].y());
 								rejection |= (0 < evalue);
 								acception &= (rej_to_acc[e] >= evalue);
 							}
 
-							if (!rejection){
-								tiles[y * num_tiles_x + x].push_back((i << 1) | acception);
+							if (!rejection)
+							{
+								tiled_prims[y * tile_x_count_ + x].push_back((i << 1) | acception);
 							}
 						}
 					}
 				}
-				else{
-					for (int y = sy; y < ey; ++ y){
-						for (int x = sx; x < ex; ++ x){
-							tiles[y * num_tiles_x + x].push_back(i << 1);
+				else
+				{
+					for (int y = sy; y < ey; ++ y)
+					{
+						for (int x = sx; x < ex; ++ x)
+						{
+							tiled_prims[y * tile_x_count_ + x].push_back(i << 1);
 						}
 					}
 				}
 			}
 		}
 
-		local_working_package = working_package ++;
+		current_package = thread_ctx->next_package();
 	}
 }
 
-void rasterizer::rasterize_primitive_func(
-	std::vector<std::vector<std::vector<uint32_t> > >& thread_tiles, int num_tiles_x,
-	vs_output** clipped_verts,
-	const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu, 
-	atomic<int32_t>& working_package, int32_t package_size )
+void rasterizer::threaded_rasterize_multi_prim(thread_context const* thread_ctx)
 {
-	const int32_t num_tiles = static_cast<int32_t>(thread_tiles[0].size());
-	const int32_t num_packages = (num_tiles + package_size - 1) / package_size;
-
-	const viewport& vp = pparent_->get_viewport();
-
 	viewport tile_vp;
 	tile_vp.w = TILE_SIZE;
 	tile_vp.h = TILE_SIZE;
-	tile_vp.minz = vp.minz;
-	tile_vp.maxz = vp.maxz;
+	tile_vp.minz = vp_->minz;
+	tile_vp.maxz = vp_->maxz;
 
-	int32_t local_working_package = working_package ++;
-	while (local_working_package < num_packages){
-		const int32_t start = local_working_package * package_size;
-		const int32_t end = min(num_tiles, start + package_size);
-		for (int32_t i = start; i < end; ++ i){
-			std::vector<uint32_t> prims;
-			for (size_t j = 0; j < thread_tiles.size(); ++ j){
-				prims.insert(prims.end(), thread_tiles[j][i].begin(), thread_tiles[j][i].end());
+	std::vector<uint32_t> prims;
+
+	rasterize_multi_prim_context rast_ctxt;
+	rast_ctxt.cpp_ps		= threaded_cpp_ps_[thread_ctx->thread_id];
+	rast_ctxt.psu			= threaded_psu_[thread_ctx->thread_id];
+	rast_ctxt.tile_vp		= &tile_vp;
+	rast_ctxt.sorted_prims	= &prims;
+
+	thread_context::package_cursor current_package = thread_ctx->next_package();
+	while ( current_package.valid() )
+	{
+		auto tile_range = current_package.item_range();
+		for (int32_t i = tile_range.first; i < tile_range.second; ++ i)
+		{
+			prims.clear();		
+			for (size_t j = 0; j < threaded_tiled_prims_.size(); ++ j)
+			{
+				prims.insert(prims.end(), threaded_tiled_prims_[j][i].begin(), threaded_tiled_prims_[j][i].end());
 			}
 			std::sort(prims.begin(), prims.end());
 
-			int y = i / num_tiles_x;
-			int x = i - y * num_tiles_x;
+			int y = i / tile_x_count_;
+			int x = i - y * tile_x_count_;
+
 			tile_vp.x = static_cast<float>(x * TILE_SIZE);
 			tile_vp.y = static_cast<float>(y * TILE_SIZE);
 
-			rasterize_func_(this, clipped_verts, prims, tile_vp, pps, psu);
+			rast_ctxt.sorted_prims = &prims;
+
+			rasterize_prims_(this, &rast_ctxt);
+
+			current_package = thread_ctx->next_package();
 		}
-
-		local_working_package = working_package ++;
 	}
 }
 
-void rasterizer::rasterize_line_func(
-	vs_output** clipped_verts,
-	const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-	const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
+void rasterizer::rasterize_multi_line(rasterize_multi_prim_context const* ctx)
 {
-	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
-		uint32_t iprim = *iter >> 1;
-		this->rasterize_line(
-			iprim, *clipped_verts[iprim * 2 + 0], *clipped_verts[iprim * 2 + 1],
-			tile_vp, pps, psu);
-	}
-}
+	rasterize_prim_context prim_ctxt;
+	prim_ctxt.psu		= ctx->psu;
+	prim_ctxt.cpp_ps	= ctx->cpp_ps;
+	prim_ctxt.tile_vp	= ctx->tile_vp;
 
-void rasterizer::rasterize_triangle_func(
-	vs_output** clipped_verts, 
-	const std::vector<uint32_t>& sorted_prims, const viewport& tile_vp,
-	const cpp_pixel_shader_ptr& pps, boost::shared_ptr<pixel_shader_unit> const& psu )
-{
-	for (std::vector<uint32_t>::const_iterator iter = sorted_prims.begin(); iter != sorted_prims.end(); ++ iter){
-		uint32_t iprim = *iter >> 1;
-		uint32_t full = *iter & 1;
-		this->rasterize_triangle(
-			iprim, full,
-			*clipped_verts[iprim * 3 + 0],
-			*clipped_verts[iprim * 3 + 1],
-			*clipped_verts[iprim * 3 + 2],
-			tile_vp, pps, psu);
-	}
-}
-
-void rasterizer::compact_clipped_verts_func(
-	vs_output** compacted, vs_output** sparse,
-	uint32_t const* addresses, uint32_t const* num_clipped_verts,
-	int32_t workset, atomic<int32_t>& working_package, int32_t package_size)
-{
-	int32_t const num_packages = (workset + package_size - 1) / package_size;
-	
-	int32_t local_working_package = working_package ++;
-	while (local_working_package < num_packages)
+	for (uint32_t prim_with_mask: *ctx->sorted_prims)
 	{
-		const int32_t start = local_working_package * package_size;
-		const int32_t end = min(workset, start + package_size);
-		for (int32_t i = start; i < end; ++ i)
-		{
-			memcpy(compacted+addresses[i], sparse+GEOMETRY_SETUP_PACKAGE_SIZE*i*9, num_clipped_verts[i]*sizeof(vs_output*));
-		}
+		prim_ctxt.prim_id = prim_with_mask >> 1;
+		rasterize_line(&prim_ctxt);
+	}
+}
 
-		local_working_package = working_package ++;
+void rasterizer::rasterize_multi_triangle(rasterize_multi_prim_context const* ctx)
+{
+	rasterize_prim_context prim_ctxt;
+	prim_ctxt.psu		= ctx->psu;
+	prim_ctxt.cpp_ps	= ctx->cpp_ps;
+	prim_ctxt.tile_vp	= ctx->tile_vp;
+
+	for (uint32_t prim_with_mask: *ctx->sorted_prims)
+	{
+		prim_ctxt.prim_id = prim_with_mask;
+		rasterize_triangle(&prim_ctxt);
 	}
 }
 
@@ -1165,7 +1105,7 @@ void rasterizer::draw(size_t prim_count){
 	assert(pparent_);
 	if(!pparent_) return;
 
-	blend_shader_ = pparent_->get_blend_shader();
+	cpp_bs_ = pparent_->get_blend_shader().get();
 
 	const size_t num_samples = frame_buffer_->get_num_samples();
 	switch (num_samples){
@@ -1191,20 +1131,6 @@ void rasterizer::draw(size_t prim_count){
 
 	update_prim_info();
 
-	// Select rasterize func
-	switch(prim_)
-	{
-	case pt_line:
-	case pt_wireframe_tri:
-		rasterize_func_ = boost::mem_fn(&rasterizer::rasterize_line_func);
-		break;
-	case pt_solid_tri:
-		rasterize_func_ = boost::mem_fn(&rasterizer::rasterize_triangle_func);
-		break;
-	default:
-		EFLIB_ASSERT(false, "Primitive type is not correct.");
-	}
-
 	if( pparent_->get_vertex_shader() )
 	{
 		num_vs_output_attributes_ = pparent_->get_vertex_shader()->num_output_attributes();
@@ -1214,127 +1140,96 @@ void rasterizer::draw(size_t prim_count){
 		num_vs_output_attributes_ = 0;
 	}
 
-	viewport const& vp = pparent_->get_viewport();
-	int num_tiles_x = static_cast<size_t>(vp.w + TILE_SIZE - 1) / TILE_SIZE;
-	int num_tiles_y = static_cast<size_t>(vp.h + TILE_SIZE - 1) / TILE_SIZE;
+	vso_ops_		= pparent_->get_vs_output_ops();
+	vp_				= &( pparent_->get_viewport() );
+	tile_x_count_	= static_cast<size_t>(vp_->w + TILE_SIZE - 1) / TILE_SIZE;
+	tile_y_count_	= static_cast<size_t>(vp_->h + TILE_SIZE - 1) / TILE_SIZE;
+	tile_count_		= tile_x_count_ * tile_y_count_;
 
-	atomic<int32_t> working_package(0);
-	size_t			geom_package_size = static_cast<size_t>(GEOMETRY_SETUP_PACKAGE_SIZE);
-	size_t			num_geom_package  = (prim_count+geom_package_size-1)/geom_package_size;
+	size_t num_threads	= num_available_threads();
 
-	size_t num_threads = num_available_threads();
+	geom_setup_engine	gse;
+	geom_setup_context	geom_setup_ctx;
 
-	// Culling, Clipping, Geometry Setup
-	typedef eflib::pool::preserved_pool<vs_output> vs_output_pool;
+	geom_setup_ctx.cull			= state_->get_cull_func();
+	geom_setup_ctx.dvc			= pparent_->get_vertex_cache().get();
+	geom_setup_ctx.prim			= prim_;
+	geom_setup_ctx.prim_count	= prim_count;
+	geom_setup_ctx.prim_size	= prim_size_;
+	geom_setup_ctx.vso_ops		= vso_ops_;
 
-	boost::shared_array<vs_output_pool>	vso_pools			(new vs_output_pool	[num_threads]);
-	boost::shared_array<vs_output*>		clipped_verts		(new vs_output*		[prim_count*9]);
-	boost::shared_array<uint32_t>		num_clipped_verts	(new uint32_t		[num_geom_package]);
-	vector<geometry_setup_context>		geom_setup_ctxts	(num_threads);
+	gse.execute(&geom_setup_ctx);
+
+	clipped_verts_			= gse.verts();
+	clipped_verts_count_	= gse.verts_count();
+	clipped_prims_count_	= clipped_verts_count_ / prim_size_;
+
+	// Project and Transformed to Viewport
+	viewport_and_project_transform(clipped_verts_, clipped_verts_count_); 
+
+	// Dispatch primitives into tiles' bucket
+	threaded_tiled_prims_.resize(num_threads);
+	edge_factors_.resize(clipped_prims_count_ * 3);
+	for (size_t i = 0; i < num_threads; ++ i)
+	{
+		threaded_tiled_prims_[i].resize(tile_count_);
+	}
+
+	// Execute dispatching primitive
+	execute_threads(
+		[this](thread_context const* thread_ctx) { this->threaded_dispatch_primitive(thread_ctx); },
+		clipped_prims_count_, DISPATCH_PRIMITIVE_PACKAGE_SIZE, num_threads
+		);
+
+	// Rasterize tiles
+	switch(prim_)
+	{
+	case pt_line:
+	case pt_wireframe_tri:
+		rasterize_prims_ = boost::mem_fn(&rasterizer::rasterize_multi_line);
+		break;
+	case pt_solid_tri:
+		rasterize_prims_ = boost::mem_fn(&rasterizer::rasterize_multi_triangle);
+		break;
+	default:
+		EFLIB_ASSERT(false, "Primitive type is not correct.");
+	}
+
+	cpp_pixel_shader_ptr	cpp_ps_proto	= pparent_->get_pixel_shader();
+	pixel_shader_unit_ptr	psu_proto		= pparent_->ps_proto();
+
+	std::vector<cpp_pixel_shader_ptr>	ppps(num_threads);
+	std::vector<pixel_shader_unit_ptr>	ppsu(num_threads);
+	
+	threaded_cpp_ps_.resize(num_threads);
+	threaded_psu_.resize(num_threads);
 
 	for (size_t i = 0; i < num_threads; ++ i)
 	{
-		vso_pools[i].reserve(prim_count*4);
-
-		geom_setup_ctxts[i].clipped_vertices	= &(clipped_verts[0]);
-		geom_setup_ctxts[i].num_clipped_vertices= &(num_clipped_verts[0]);
-		geom_setup_ctxts[i].vso_pool			= &(vso_pools[i]);
-		geom_setup_ctxts[i].num_primitive		= prim_count;
-		geom_setup_ctxts[i].working_package		= &working_package;
-		geom_setup_ctxts[i].package_size		= GEOMETRY_SETUP_PACKAGE_SIZE;
-
-		if(i != num_threads-1)
+		// create cpp_pixel_shader clone per thread from hps
+		if( cpp_ps_proto )
 		{
-			global_thread_pool().schedule(
-				boost::bind(&rasterizer::geometry_setup_func, this, &(geom_setup_ctxts[i]) )
-				);
-		}
-		else
+			ppps[i] = cpp_ps_proto->create_clone();
+			threaded_cpp_ps_[i] = ppps[i].get();
+		} 
+		if( psu_proto )
 		{
-			geometry_setup_func( &(geom_setup_ctxts[i]) );
+			ppsu[i] = psu_proto->clone();
+			threaded_psu_[i] = ppsu[i].get();
 		}
 	}
-	
-	global_thread_pool().wait();
 
-	// Compact Clipped Vertexes
-	boost::shared_array<uint32_t> addresses(new uint32_t[num_geom_package]);
-	addresses[0] = 0;
-	for (size_t i = 1; i < num_geom_package; ++ i)
-	{
-		addresses[i] = addresses[i-1] + num_clipped_verts[i-1];
-	}
-	uint32_t total_num_clipped_verts = addresses[num_geom_package-1] + num_clipped_verts[num_geom_package-1];
-
-	boost::shared_array<vs_output*> compacted_verts(new vs_output*[total_num_clipped_verts]);
-	working_package = 0;
-	for (size_t i = 0; i < num_threads - 1; ++ i)
-	{
-		global_thread_pool().schedule(
-			boost::bind(
-			&rasterizer::compact_clipped_verts_func, this, &compacted_verts[0],
-			&clipped_verts[0], &addresses[0],
-			&num_clipped_verts[0],
-			static_cast<int32_t>(num_geom_package),
-			boost::ref(working_package),
-			COMPACT_CLIPPED_VERTS_PACKAGE_SIZE)
-			);
-	}
-	compact_clipped_verts_func(
-		&compacted_verts[0],
-		&clipped_verts[0], &addresses[0],
-		&num_clipped_verts[0],
-		static_cast<int32_t>(num_geom_package),
-		boost::ref(working_package),
-		COMPACT_CLIPPED_VERTS_PACKAGE_SIZE
+	execute_threads(
+		[this](thread_context const* thread_ctx){ this->threaded_rasterize_multi_prim(thread_ctx); },
+		tile_count_, RASTERIZE_PRIMITIVE_PACKAGE_SIZE, num_threads
 		);
 
-	global_thread_pool().wait();
-
-	// Project and Transformed to Viewport
-	viewport_and_project_transform(compacted_verts.get(), total_num_clipped_verts); 
-
-	// Dispatch primitives into tiles' bucket
-	std::vector<std::vector<std::vector<uint32_t> > > thread_tiles(num_threads);
-	working_package = 0;
-	edge_factors_.resize(total_num_clipped_verts / prim_size_ * 3);
-	for (size_t i = 0; i < num_threads - 1; ++ i){
-		thread_tiles[i].resize(num_tiles_x * num_tiles_y);
-		global_thread_pool().schedule(boost::bind(&rasterizer::dispatch_primitive_func, this, boost::ref(thread_tiles[i]),
-			&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size_),
-			prim_size_, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE));
-	}
-	thread_tiles[num_threads - 1].resize(num_tiles_x * num_tiles_y);
-	dispatch_primitive_func(boost::ref(thread_tiles[num_threads - 1]),
-		&compacted_verts[0], static_cast<int32_t>(total_num_clipped_verts / prim_size_),
-		prim_size_, boost::ref(working_package), DISPATCH_PRIMITIVE_PACKAGE_SIZE);
-	global_thread_pool().wait();
-
-	// Rasterize tiles
-	working_package = 0;
-	cpp_pixel_shader_ptr hps = pparent_->get_pixel_shader();
-	boost::shared_ptr<pixel_shader_unit> psu = pparent_->ps_proto();
-
-	std::vector<cpp_pixel_shader_ptr> ppps(num_threads - 1);
-	std::vector< boost::shared_ptr<pixel_shader_unit> > ppsu(num_threads-1);
-	for (size_t i = 0; i < num_threads - 1; ++ i){
-		// create cpp_pixel_shader clone per thread from hps
-		if( hps ){
-			ppps[i] = hps->create_clone();
-		} 
-		if( psu ) {
-			ppsu[i] = psu->clone();
-		}
-		global_thread_pool().schedule(boost::bind(&rasterizer::rasterize_primitive_func, this, boost::ref(thread_tiles),
-			num_tiles_x, &compacted_verts[0], ppps[i], ppsu[i], boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE));
-	}
-	rasterize_primitive_func(boost::ref(thread_tiles), num_tiles_x, &compacted_verts[0], hps, psu, boost::ref(working_package), RASTERIZE_PRIMITIVE_PACKAGE_SIZE);
-	global_thread_pool().wait();
-
 	// destroy all cpp_pixel_shader clone
-	for (size_t i = 0; i < num_threads - 1; ++ i){
-		if( hps ){
-			hps->destroy_clone(ppps[i]);
+	for (size_t i = 0; i < num_threads; ++ i)
+	{
+		if( cpp_ps_proto )
+		{
+			cpp_ps_proto->destroy_clone(ppps[i]);
 		}
 	}
 }
@@ -1342,7 +1237,7 @@ void rasterizer::draw(size_t prim_count){
 void rasterizer::draw_package(
 	vs_output* pixels,
 	uint32_t top, uint32_t left, size_t num_samples,
-	cpp_blend_shader_ptr const& bs, cpp_pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+	cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 	uint32_t const* masks, float const* aa_z_offset )
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
@@ -1374,14 +1269,14 @@ void rasterizer::draw_package(
 			if(!mask) continue;
 
 			// Clipped by pixel shader.
-			if( !psu && !pps->execute(pixels[px_index], pso[px_index]) ) continue;
+			if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) ) continue;
 
 			const int x_coord = left + ix;
 			const int y_coord = top + iy;
 
 			// Whole pixel
 			if (1 == num_samples){
-				frame_buffer_->render_sample(bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
+				frame_buffer_->render_sample(cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
 
@@ -1393,7 +1288,7 @@ void rasterizer::draw_package(
 				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample)
 				{
 					frame_buffer_->render_sample(
-						bs, x_coord, y_coord, i_sample,
+						cpp_bs, x_coord, y_coord, i_sample,
 						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
 					);
 				}
@@ -1404,7 +1299,7 @@ void rasterizer::draw_package(
 				while (_BitScanForward(&i_sample, mask))
 				{
 					frame_buffer_->render_sample(
-						bs, x_coord, y_coord, i_sample,
+						cpp_bs, x_coord, y_coord, i_sample,
 						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
 					);
 					mask &= mask - 1;
@@ -1417,7 +1312,7 @@ void rasterizer::draw_package(
 void rasterizer::draw_full_package(
 	vs_output* pixels,
 	uint32_t top, uint32_t left, size_t num_samples,
-	cpp_blend_shader_ptr const& bs, cpp_pixel_shader_ptr const& pps, boost::shared_ptr<pixel_shader_unit> const& psu,
+	cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 	float const* aa_z_offset )
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
@@ -1444,7 +1339,7 @@ void rasterizer::draw_full_package(
 
 			int const px_index = ix + iy * 4;
 
-			if( !psu && !pps->execute(pixels[px_index], pso[px_index]) )
+			if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) )
 			{
 				continue;
 			}
@@ -1454,7 +1349,7 @@ void rasterizer::draw_full_package(
 			if (1 == num_samples)
 			{
 				frame_buffer_->render_sample(
-					bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
+					cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
 
@@ -1465,7 +1360,7 @@ void rasterizer::draw_full_package(
 				for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample)
 				{
 					frame_buffer_->render_sample(
-						bs, x_coord, y_coord, i_sample,
+						cpp_bs, x_coord, y_coord, i_sample,
 						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
 					);
 				}
@@ -1476,7 +1371,7 @@ void rasterizer::draw_full_package(
 				while (_BitScanForward(&i_sample, mask))
 				{
 					frame_buffer_->render_sample(
-						bs, x_coord, y_coord, i_sample,
+						cpp_bs, x_coord, y_coord, i_sample,
 						pso[px_index], pso[px_index].depth + aa_z_offset[i_sample]
 					);
 					mask &= mask - 1;
@@ -1490,7 +1385,7 @@ void rasterizer::draw_full_package(
 
 void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num_verts)
 {
-	vs_output_functions::project proj_fn = pparent_->get_vs_output_ops()->project;
+	vs_output_functions::project proj_fn = vso_ops_->project;
 	viewport const& vp = pparent_->get_viewport();
 
 	// Gathering vs_output need to be processed.
