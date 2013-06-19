@@ -90,4 +90,8 @@ class toolset:
 			return "mgw"
 		else:
 			return None
-		
+			
+	def vs_version_string(self):
+		if self.compiler_name == "msvc":
+			return '%d.%d' % (self.major_ver, self.minor_ver)
+		return None
