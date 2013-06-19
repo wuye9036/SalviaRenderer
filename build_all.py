@@ -115,6 +115,7 @@ def make_llvm(proj):
 	#Write command to build.bat
 	cmd = batch_command( proj.llvm_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
+	cmd.add_command( '@set VisualStudioVersion=%s' % proj.toolset().vs_version_string() )
 	cmd.add_command( '@echo Building LLVM %s ...' % proj.config_name() )
 	cmd.add_command( '@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.add_command( '@echo Installing LLVM %s ...' % proj.config_name() )
