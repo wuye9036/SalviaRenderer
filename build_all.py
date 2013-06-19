@@ -135,6 +135,7 @@ def clean_freetype(proj):
 def make_freetype(proj):
 	cmd = batch_command( proj.freetype_solution() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
+	cmd.add_command( '@set VisualStudioVersion=%s' % proj.toolset().vs_version_string() )
 	cmd.add_command( '@echo Building FreeType2 %s ...' % proj.config_name() )
 	cmd.add_command( '@%s freetype.sln /m /v:m /p:Configuration=%s;Platform=%s' % (proj.maker_name(), proj.config_name(), proj.msvc_platform_name()) )
 	cmd.execute()
@@ -172,6 +173,7 @@ def config_salvia(proj):
 def make_salvia(proj):
 	cmd = batch_command( proj.salvia_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
+	cmd.add_command( '@set VisualStudioVersion=%s' % proj.toolset().vs_version_string() )
 	cmd.add_command( '@echo Building SALVIA %s ...' % proj.config_name() )
 	cmd.add_command( '@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.execute()
