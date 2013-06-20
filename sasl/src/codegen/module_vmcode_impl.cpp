@@ -5,9 +5,9 @@
 #include <eflib/include/platform/cpuinfo.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>

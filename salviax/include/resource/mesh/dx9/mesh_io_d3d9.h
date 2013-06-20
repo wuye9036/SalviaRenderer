@@ -20,20 +20,18 @@ author:		Ye Wu
 		
 *********************************************************************/
 
-#ifndef SALVIAX_MESH_IO_D3D9_H
-#define SALVIAX_MESH_IO_D3D9_H
+#pragma once
 
-#include "salviax/include/resource/resource_forward.h"
-#include "salviax/include/utility/inc_d3d9x.h"
-#include "salviax/include/resource/mesh/sa/mesh.h"
-#include "salviax/include/utility/d3d9_utilities.h"
-#include "salviar/include/decl.h"
+#include <salviax/include/resource/resource_forward.h>
+#include <salviax/include/utility/inc_d3d9x.h>
+#include <salviax/include/resource/mesh/sa/mesh.h>
+#include <salviax/include/utility/d3d9_utilities.h>
+#include <salviar/include/decl.h>
 
-BEGIN_NS_SALVIAX_RESOURCE()
+BEGIN_NS_SALVIAX_RESOURCE();
 
-h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh);
-h_mesh create_mesh_from_xfile(salviar::renderer* psr, salviax::utility::d3d9_device* dev, const std::_tstring& filename);
+mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh);
+mesh_ptr create_mesh_from_xfile(salviar::renderer* psr, salviax::utility::d3d9_device* dev, const std::_tstring& filename);
 
-END_NS_SALVIAX_RESOURCE()
+END_NS_SALVIAX_RESOURCE();
 
-#endif //SALVIAX_MESH_IO_D3D9_H

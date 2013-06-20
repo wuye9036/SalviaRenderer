@@ -1,5 +1,5 @@
 #include <eflib/include/platform/disable_warnings.h>
-#include <LLVM/IRBuilder.h>
+#include <llvm/IR/IRBuilder.h>
 #include <eflib/include/platform/enable_warnings.h>
 #include <sasl/include/codegen/cg_caster.h>
 #include <sasl/include/codegen/cg_contexts.h>

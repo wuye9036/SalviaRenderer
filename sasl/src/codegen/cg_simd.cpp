@@ -18,10 +18,10 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Target/TargetData.h>
-#include <llvm/Function.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/DataLayout.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Function.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -380,7 +380,7 @@ SASL_SPECIFIC_VISIT_DEF( create_fnsig, function_def )
 {
 	if( !entry_fn && abii->is_entry( sem_->get_symbol(&v) ) )
 	{
-		vector<Type*> param_types = generate_ps_entry_param_type( abii, target_data, service() );
+		vector<Type*> param_types = generate_ps_entry_param_type( abii, vm_data_layout_, service() );
 		FunctionType* fntype = FunctionType::get( Type::getVoidTy( cg_impl::context() ), param_types, false );
 		Function* fn = Function::Create(
 			fntype, Function::ExternalLinkage,

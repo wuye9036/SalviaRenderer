@@ -20,10 +20,9 @@
 #include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Target/TargetData.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/Support/TargetSelect.h>
 #include <eflib/include/platform/enable_warnings.h>
 
@@ -128,7 +127,7 @@ cg_function* cg_impl::get_function( std::string const& name ) const
 }
 
 cg_impl::cg_impl()
-	: abii(NULL), target_data(NULL), service_(NULL)
+	: abii(NULL), vm_data_layout_(NULL), service_(NULL)
 	, semantic_mode_(false), msc_compatible_(false), current_cg_type_(NULL)
 	, parent_struct_(NULL), block_(NULL), current_symbol_(NULL), variable_to_initialize_(NULL)
 {
@@ -639,7 +638,7 @@ SASL_SPECIFIC_VISIT_DEF( before_decls_visit, program )
 	EFLIB_UNREF_DECLARATOR(v);
 
 	TargetMachine* tm = EngineBuilder(module()).selectTarget();
-	target_data = tm->getTargetData();
+	vm_data_layout_ = tm->getDataLayout();
 }
 
 SASL_SPECIFIC_VISIT_DEF( visit_member_declarator, declarator ){

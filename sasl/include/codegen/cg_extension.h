@@ -9,8 +9,8 @@
 #include <eflib/include/utility/enable_if.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/TypeBuilder.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/TypeBuilder.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/ADT/APInt.h>
 #include <eflib/include/platform/enable_warnings.h>
 

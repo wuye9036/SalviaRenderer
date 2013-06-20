@@ -7,10 +7,10 @@
 
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Function.h>
-#include <llvm/Module.h>
-#include <llvm/Target/TargetData.h>
+#include <llvm/IR/DataLayout.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Module.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -31,7 +31,7 @@ using salviar::sv_layout;
 using salviar::sv_usage_count;
 using llvm::PointerType;
 using llvm::Type;
-using llvm::TargetData;
+using llvm::DataLayout;
 using llvm::StructLayout;
 using llvm::StructType;
 using llvm::ArrayType;
@@ -57,7 +57,7 @@ bool compare_layout(
 void sort_struct_members(
 	vector<sv_layout*>& sorted_layouts, vector<Type*>& sorted_tys,
 	vector<sv_layout*> const& layouts, vector<Type*> const& tys,
-	TargetData const* target)
+	DataLayout const* dataLayout)
 {
 	size_t layouts_count = layouts.size();
 	vector<size_t> elems_size;
@@ -69,7 +69,7 @@ void sort_struct_members(
 	vector<sv_layout*>::const_iterator layout_it = layouts.begin();
 	BOOST_FOREACH( Type* ty, tys )
 	{
-		size_t sz = (size_t)target->getTypeStoreSize(ty);
+		size_t sz = (size_t)dataLayout->getTypeStoreSize(ty);
 		(*layout_it)->size = sz;
 		layout_ty_pairs.push_back( make_pair(*layout_it, ty) );
 		++layout_it;
@@ -85,7 +85,7 @@ void sort_struct_members(
 }
 
 Type* generate_parameter_type(
-	reflection_impl const* abii, sv_usage su, cg_service* cg, TargetData const* target
+	reflection_impl const* abii, sv_usage su, cg_service* cg, DataLayout const* dataLayout
 	)
 {
 	vector<sv_layout*>		svls = abii->layouts(su);
@@ -111,12 +111,12 @@ Type* generate_parameter_type(
 		} else {
 			sem_tys.push_back(value_vm_ty);
 		}
-		svl->size = (size_t)target->getTypeStoreSize(value_vm_ty);
+		svl->size = (size_t)dataLayout->getTypeStoreSize(value_vm_ty);
 	}
 	
 	if(su_buffer_in == su || su_buffer_out == su)
 	{
-		sort_struct_members(svls, sem_tys, svls, sem_tys, target);
+		sort_struct_members(svls, sem_tys, svls, sem_tys, dataLayout);
 	}
 
 	char const* param_struct_name = NULL;
@@ -148,7 +148,7 @@ Type* generate_parameter_type(
 	}
 
 	// Update Layout physical informations.
-	StructLayout const* struct_layout = target->getStructLayout(param_struct);
+	StructLayout const* struct_layout = dataLayout->getStructLayout(param_struct);
 
 	size_t next_offset = 0;
 	for( size_t i_elem = 0; i_elem < svls.size(); ++i_elem ){
@@ -173,15 +173,15 @@ Type* generate_parameter_type(
 	return param_struct;
 }
 
-vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, TargetData const* tar, cg_service* cg)
+vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, DataLayout const* dataLayout, cg_service* cg)
 {
 	assert(cg->parallel_factor() == 1);
 	vector<Type*> ret(sv_usage_count, NULL);
 
-	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, tar);
-	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg, tar);
-	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg, tar);
-	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg, tar);
+	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, dataLayout);
+	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg, dataLayout);
+	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg, dataLayout);
+	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg, dataLayout);
 
 	for(size_t i = 1; i < sv_usage_count; ++i)
 	{
@@ -191,15 +191,15 @@ vector<Type*> generate_vs_entry_param_type(reflection_impl const* abii, TargetDa
 	return vector<Type*>( ret.begin()+1, ret.end() );
 }
 
-vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, TargetData const* tar, cg_service* cg)
+vector<Type*> generate_ps_entry_param_type(reflection_impl const* abii, DataLayout const* dataLayout, cg_service* cg)
 {
 	assert(cg->parallel_factor() > 1);
 	vector<Type*> ret(sv_usage_count, NULL);
 
-	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, tar);
-	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg, tar);
-	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg, tar);
-	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg, tar);
+	ret[su_buffer_in] = generate_parameter_type(abii, su_buffer_in , cg, dataLayout);
+	ret[su_buffer_out]= generate_parameter_type(abii, su_buffer_out, cg, dataLayout);
+	ret[su_stream_in] = generate_parameter_type(abii, su_stream_in , cg, dataLayout);
+	ret[su_stream_out]= generate_parameter_type(abii, su_stream_out, cg, dataLayout);
 
 	for(size_t i = 1; i < sv_usage_count; ++i)
 	{

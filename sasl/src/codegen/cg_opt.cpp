@@ -1,7 +1,7 @@
 #include <eflib/include/platform/disable_warnings.h>
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/Analysis/Passes.h>
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 #include <llvm/PassManager.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <eflib/include/platform/enable_warnings.h>

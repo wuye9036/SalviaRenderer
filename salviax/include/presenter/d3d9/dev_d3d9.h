@@ -24,20 +24,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <salviar/include/presenter_dev.h>
 
 #include <eflib/include/math/math.h>
-#include <boost/shared_ptr.hpp>
+#include <eflib/include/utility/shared_declaration.h>
 
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
 
 BEGIN_NS_SALVIAX_PRESENTER();
 
-class dev_d3d9;
-DECL_HANDLE(dev_d3d9, h_dev_d3d9);
+EFLIB_DECLARE_CLASS_SHARED_PTR(dev_d3d9);
 
 class dev_d3d9 : public salviar::device
 {
 public:
-	static h_dev_d3d9 create_device(HWND hwnd, salviax::utility::h_d3d9_device dev = salviax::utility::h_d3d9_device());
+	static dev_d3d9_ptr create_device(HWND hwnd, salviax::utility::d3d9_device_ptr dev = salviax::utility::d3d9_device_ptr());
 
 	//inherited
 	virtual void present(const salviar::surface& surf);
@@ -45,11 +44,11 @@ public:
 	~dev_d3d9();
 
 private:
-	dev_d3d9(HWND hwnd, salviax::utility::h_d3d9_device dev);
+	dev_d3d9(HWND hwnd, salviax::utility::d3d9_device_ptr dev);
 	void init_device();
 
 	HWND hwnd_;
-	salviax::utility::h_d3d9_device dev_;
+	salviax::utility::d3d9_device_ptr dev_;
 	IDirect3DTexture9* buftex_;
 
 	IDirect3DVertexBuffer9* vb_;
@@ -65,7 +64,7 @@ END_NS_SALVIAX_PRESENTER()
 
 extern "C"
 {
-	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
+	SALVIAX_API void salviax_create_presenter_device(salviar::device_ptr& dev, void* param);
 }
 
 #endif //SALVIAX_DEV_D3D9_H

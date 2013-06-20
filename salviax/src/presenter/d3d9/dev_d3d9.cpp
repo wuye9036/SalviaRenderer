@@ -33,7 +33,7 @@ struct Vertex
 
 BEGIN_NS_SALVIAX_PRESENTER();
 
-dev_d3d9::dev_d3d9(HWND hwnd, h_d3d9_device dev): hwnd_(hwnd), dev_(dev), buftex_(NULL), vb_(NULL){
+dev_d3d9::dev_d3d9(HWND hwnd, d3d9_device_ptr dev): hwnd_(hwnd), dev_(dev), buftex_(NULL), vb_(NULL){
 	init_device();
 }
 
@@ -66,8 +66,8 @@ void dev_d3d9::init_device()
 	}
 }
 
-h_dev_d3d9 dev_d3d9::create_device(HWND hwnd, h_d3d9_device dev){
-	return h_dev_d3d9(new dev_d3d9( hwnd, dev ));
+dev_d3d9_ptr dev_d3d9::create_device(HWND hwnd, d3d9_device_ptr dev){
+	return dev_d3d9_ptr(new dev_d3d9( hwnd, dev ));
 }
 
 //inherited
@@ -163,7 +163,7 @@ void dev_d3d9::present(const salviar::surface& surf)
 
 END_NS_SALVIAX_PRESENTER()
 
-void salviax_create_presenter_device(salviar::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::device_ptr& dev, void* param)
 {
 	dev = salviax::presenter::dev_d3d9::create_device(static_cast<HWND>(param));
 }

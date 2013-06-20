@@ -25,7 +25,7 @@ namespace sasl{
 namespace llvm{
 	class PointerType;
 	class StructType;
-	class TargetData;
+	class DataLayout;
 }
 
 BEGIN_NS_SASL_CODEGEN();

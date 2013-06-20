@@ -29,7 +29,7 @@ using namespace salviar;
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
-h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
+mesh_ptr create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 {
 	vec3* dx_verts = NULL;
 	byte* dx_indices = NULL;
@@ -43,10 +43,10 @@ h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 	DWORD index_size	= (dx_mesh->GetOptions() & D3DXMESH_32BIT) == 0 ? 2 : 4;
 
 	mesh_impl* psrmesh= new mesh_impl(psr);
-	h_mesh ret(psrmesh);
+	mesh_ptr ret(psrmesh);
 	
-	salviar::h_buffer verts = psrmesh->create_buffer( nverts * vert_size );
-	salviar::h_buffer indices = psrmesh->create_buffer( nfaces * index_size * 3 );
+	salviar::buffer_ptr verts = psrmesh->create_buffer( nverts * vert_size );
+	salviar::buffer_ptr indices = psrmesh->create_buffer( nfaces * index_size * 3 );
 
 	//parse dx9 decl to layout
 	D3DVERTEXELEMENT9 dx_decls[MAX_FVF_DECL_SIZE];
@@ -108,10 +108,10 @@ h_mesh create_mesh_from_dx9mesh(salviar::renderer* psr, LPD3DXMESH dx_mesh)
 	return ret;
 }
 
-h_mesh create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const _tstring& filename)
+mesh_ptr create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const _tstring& filename)
 {
 	IDirect3DDevice9* d3ddev = dev->get_d3d_device9();
-	if(d3ddev == NULL) return h_mesh();
+	if(d3ddev == NULL) return mesh_ptr();
 
 	DWORD material_counts;
 	LPD3DXMESH pmesh;
@@ -120,7 +120,7 @@ h_mesh create_mesh_from_xfile(salviar::renderer* psr, d3d9_device* dev, const _t
 	LPD3DXBUFFER peffectinstances;
 	D3DXLoadMeshFromX(filename.c_str(), D3DXMESH_SYSTEMMEM, d3ddev, &padjbuf, &pmaterials, &peffectinstances, &material_counts, &pmesh);
 
-	h_mesh ret = create_mesh_from_dx9mesh(psr, pmesh);
+	mesh_ptr ret = create_mesh_from_dx9mesh(psr, pmesh);
 
 	pmesh->Release();
 	padjbuf->Release();

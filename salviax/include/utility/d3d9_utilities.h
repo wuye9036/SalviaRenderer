@@ -16,19 +16,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SALVIAX_D3D9_UTILITIES_H
-#define SALVIAX_D3D9_UTILITIES_H
+#pragma once
 
-#include "utility_forward.h"
-#include "inc_d3d9.h"
-#include "salviar/include/handles.h"
+#include <salviax/include/utility/utility_forward.h>
+#include <salviax/include/utility/inc_d3d9.h>
+#include <eflib/include/utility/shared_declaration.h>
 
-BEGIN_NS_SALVIAX_UTILITY()
+BEGIN_NS_SALVIAX_UTILITY();
 
-class d3d9_device;
-DECL_HANDLE( d3d9_device, h_d3d9_device );
+EFLIB_DECLARE_CLASS_SHARED_PTR(d3d9_device);
 
-struct d3d9_device_param{
+struct d3d9_device_param
+{
 	UINT adapter;
 	D3DDEVTYPE devtype;
 	HWND focuswnd;
@@ -42,12 +41,10 @@ private:
 
 	d3d9_device(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params);
 public:
-	static h_d3d9_device create(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params);
+	static d3d9_device_ptr create(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params);
 	IDirect3D9* get_d3d9() const;
 	IDirect3DDevice9* get_d3d_device9() const;
 	~d3d9_device();
 };
 
-END_NS_SALVIAX_UTILITY()
-
-#endif // SALVIAX_D3D9_UTILITIES_H
+END_NS_SALVIAX_UTILITY();
