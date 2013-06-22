@@ -19,20 +19,6 @@ function(SASL_TEST_CREATE_VCPROJ_USERFILE TARGETNAME)
 	  @ONLY
 	)
 	endif()
-	if(MSVC_VERSION EQUAL 1500)
-      configure_file(
-	  ${SASL_HOME_DIR}/sasl/test/test_resources/vs2008.test.vcproj.user.in
-	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.${SYSTEM_NAME}.${USER_NAME}.user
-	  @ONLY
-	)
-	endif()
-	if(MSVC_VERSION EQUAL 1400)
-      configure_file(
-	  ${SASL_HOME_DIR}/sasl/test/test_resources/vs2005.test.vcproj.user.in
-	  ${CMAKE_CURRENT_BINARY_DIR}/${TARGETNAME}.vcproj.${SYSTEM_NAME}.${USER_NAME}.user
-	  @ONLY
-	)
-    endif()
   endif()
 endfunction(SASL_TEST_CREATE_VCPROJ_USERFILE)
 
