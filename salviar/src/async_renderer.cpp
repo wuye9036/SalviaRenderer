@@ -14,6 +14,42 @@ using std::vector;
 
 BEGIN_NS_SALVIAR();
 
+/* TODO Prototypes
+class render_board
+{
+	// Basic data
+	raster_state ras_state;
+};
+
+class render_context
+{
+	void delivery(render_board& board);
+};
+
+bool is_free()
+{
+	return context_queue.empty();
+}
+
+void draw_to_queue()
+{
+	check_context();
+	context_queue.push_back(current_context);
+	current_context = free_context_queue.pop_back();
+}
+
+void delivery_drawing()
+{
+	while(!waiting_exit)
+	{
+		context = context_queue.pop_back();
+		render_board board;
+		context->delivery(board);
+		render_dev->draw(board);
+		free_context_queue.push_back(context);
+	}
+}
+*/
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
 class async_renderer: public renderer

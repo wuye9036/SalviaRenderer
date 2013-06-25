@@ -15,10 +15,15 @@ namespace eflib{
 
 	public:
 		spinlock() : state_(Unlocked) {}
+		
+		bool try_lock()
+		{
+			return state_.exchange(Locked, boost::memory_order_acquire) == Unlocked;
+		}
 
 		void lock()
 		{
-			while (state_.exchange(Locked, boost::memory_order_acquire) == Locked)
+			while ( !try_lock() )
 			{
 				/* busy-wait */
 			}

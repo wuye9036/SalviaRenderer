@@ -60,6 +60,7 @@ private:
 
 enum map_mode
 {
+	map_mode_none = 0,
 	map_read = 1,
 	map_write = 2,
 	map_read_write = 3,
