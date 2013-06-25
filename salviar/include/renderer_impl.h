@@ -57,8 +57,7 @@ class renderer_impl : public renderer
 	pixel_shader_unit_ptr	ps_proto_;
 
 	// Resources
-	buffer_manager_ptr		buffer_pool_;
-	texture_manager_ptr		texture_pool_;
+	resource_manager_ptr	resource_pool_;
 	device_ptr				native_dev_;
 
 	void initialize();

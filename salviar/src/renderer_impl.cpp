@@ -266,17 +266,17 @@ result renderer_impl::set_render_target(render_target tar, size_t target_index, 
 
 buffer_ptr renderer_impl::create_buffer(size_t size)
 {
-	return buffer_pool_->create_buffer(size);
+	return resource_pool_->create_buffer(size);
 }
 
 texture_ptr renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	return texture_pool_->create_texture_2d(width, height, num_samples, fmt);
+	return resource_pool_->create_texture_2d(width, height, num_samples, fmt);
 }
 
 texture_ptr renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	return texture_pool_->create_texture_cube(width, height, num_samples, fmt);
+	return resource_pool_->create_texture_cube(width, height, num_samples, fmt);
 }
 
 sampler_ptr renderer_impl::create_sampler(const sampler_desc& desc)
@@ -365,8 +365,7 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, device_ptr hdev)
 {
 	native_dev_ = hdev;
 
-	buffer_pool_.reset(new buffer_manager());
-	texture_pool_.reset(new texture_manager());
+	resource_pool_.reset( new resource_manager() );
 
 	host_ = modules::host::create_host();
 	assembler_.reset(new stream_assembler() );
