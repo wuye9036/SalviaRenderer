@@ -15,15 +15,70 @@ using std::vector;
 BEGIN_NS_SALVIAR();
 
 /* TODO Prototypes
-class render_board
+
+struct vb_desc
 {
-	// Basic data
-	raster_state ras_state;
+	buffer_ptr	vert_buf;
+	size_t		stride;
+	size_t		offset;
 };
 
-class render_context
+struct ia_context
 {
-	void delivery(render_board& board);
+	buffer_ptr				index_buffer;
+	format					index_format;
+		
+	primitive_topology		prim_topo;
+		
+	size_t					start_slot;
+	vector<vb_desc>			vb_descs;
+		
+	input_layout_ptr		layout;
+	
+	vs_input_op*			vs_input_ops_;
+};
+
+struct rast_context
+{
+	raster_state_ptr		rast_state;
+	vs_output_op*			vso_ops;
+	viewport				vp;
+};
+
+struct vs_context
+{
+	cpp_vertex_shader_ptr				cpp_vs;
+	vertex_shader_unit_ptr				vs_proto;
+	shader_object_ptr					vx_shader;
+	
+	unordered_map<string, sampler_ptr>	samplers;
+};
+
+struct ps_context
+{
+	cpp_pixel_shader_ptr				cpp_ps;
+	pixel_shader_unit_ptr				ps_proto;
+	shader_object_ptr					px_shader;
+	unordered_map<string, sampler_ptr>	samplers;
+};
+
+struct blending_context
+{
+	depth_stencil_state_ptr		ds_state;
+	int32_t						stencil_ref;
+	cpp_blend_shader_ptr		cpp_bs;
+		
+	vector<surface_ptr>			color_targets;
+	surface_ptr					ds_target;
+};
+
+struct render_context
+{
+	ia_context				ia_ctx;
+	rast_context			rast_ctx;
+	vs_context				vs_ctx;
+	ps_context				ps_ctx;
+	blending_context		blending_ctx;
 };
 
 bool is_free()
