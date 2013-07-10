@@ -1,7 +1,6 @@
-#ifndef SALVIAR_BUFFER_H
-#define SALVIAR_BUFFER_H
+#pragma once
 
-#include "enums.h"
+#include <salviar/include/enums.h>
 
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/diagnostics/assert.h>
@@ -68,6 +67,4 @@ public:
 	}
 };
 
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();
