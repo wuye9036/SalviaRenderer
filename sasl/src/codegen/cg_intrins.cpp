@@ -1,10 +1,10 @@
 #include <sasl/include/codegen/cg_intrins.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/Intrinsics.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/adt/StringRef.h>
-#include <llvm/Module.h>
-#include <llvm/DerivedTypes.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
@@ -27,7 +27,7 @@ llvm::Intrinsic::ID get_intrinsic_id( char const* Name ){
 		return llvm::Intrinsic::ID(0);  // All intrinsics start with 'llvm.'
 
 #define GET_FUNCTION_RECOGNIZER
-#include "llvm/Intrinsics.gen"
+#include "llvm/IR/Intrinsics.gen"
 #undef GET_FUNCTION_RECOGNIZER
 
 	return llvm::Intrinsic::ID(0);

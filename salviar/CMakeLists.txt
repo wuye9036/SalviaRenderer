@@ -16,6 +16,7 @@ SET( FOUNDATION_HEADERS
 	include/lockfree_queue.h
 	include/thread_pool.h
 	include/binary_modules.h
+	include/resource_data.h
 )
 
 SET( PIPELINE_HEADERS
@@ -86,6 +87,7 @@ set(FOUNDATION_SOURCES
 	src/color_convertors.cpp
 	src/result.cpp
 	src/binary_modules.cpp
+	src/resource_data.cpp
 )
 
 set(BUFFER_SOURCES

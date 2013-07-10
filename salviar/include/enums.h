@@ -60,11 +60,41 @@ private:
 
 enum map_mode
 {
+	map_mode_none = 0,
 	map_read = 1,
 	map_write = 2,
 	map_read_write = 3,
 	map_write_discard = 4,
 	map_write_no_overwrite = 5
+};
+
+enum map_result
+{
+	map_succeed,
+	map_failed,
+	map_do_not_wait
+};
+
+enum resource_usage
+{
+	resource_access_none= 0x0,
+	
+	resource_read		= 0x1,	// xxx1
+	resource_write		= 0x2, 	// xx1x
+	
+	resource_client		= 0x4,	// x1xx
+	resource_device		= 0x8,	// 1xxx
+	
+	client_read			= 0x5,	// 0101
+	client_write		= 0x6,	// 0110
+	
+	device_read			= 0x9,	// 1001
+	device_write		= 0xa,	// 1010
+
+	resource_default	= device_read | device_write,
+	resource_immutable	= device_read | client_read,
+	resource_dynamic	= device_read | client_write,
+	resource_staging	= 0xf	// 1111
 };
 
 #define RESERVED(i) 0xFFFF0000 + i

@@ -15,13 +15,13 @@
 #include <eflib/include/utility/polymorphic_cast.h>
 
 #include <eflib/include/platform/disable_warnings.h>
-#include <llvm/Module.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/IRBuilder.h>
-#include <llvm/TypeBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/TypeBuilder.h>
 #include <llvm/Support/CFG.h>
-#include <llvm/Intrinsics.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/Constants.h>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <eflib/include/platform/boost_begin.h>

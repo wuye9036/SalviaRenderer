@@ -29,10 +29,6 @@ class project:
 				default_toolset = "msvc-11.0"
 			if "VS100COMNTOOLS" in env:
 				default_toolset = "msvc-10.0"
-			elif "VS90COMNTOOLS" in env:
-				default_toolset = "msvc-9.0"
-			elif "VS80COMNTOOLS" in env:
-				default_toolset = "msvc-8.0"
 			elif os.path.exists("C:\\Mingw\\bin\\gcc.exe"):
 				default_toolset = "mingw"
 			else:
@@ -44,12 +40,6 @@ class project:
 		if default_toolset == "msvc-10.0":
 			self.toolset_ = toolset('vs', 'msvc', 10, 0, None)
 			self.builder_root_ = os.path.join( env['VS100COMNTOOLS'], "../../" )
-		elif default_toolset == 'msvc-9.0':
-			self.toolset_ = toolset('vs', 'msvc', 9, 0, None)
-			self.builder_root_ = os.path.join( env['VS90COMNTOOLS'], "../../" )
-		elif default_toolset == 'msvc-8.0':
-			self.toolset_ = toolset('vs', 'msvc', 8, 0, None)
-			self.builder_root_ = os.path.join( env['VS80COMNTOOLS'], "../../" )
 		else:
 			print('ERROR: Unsupported toolset name: %s' % default_toolset)
 	
@@ -197,11 +187,7 @@ class project:
 		return os.path.join( self.source_root(), "3rd_party", "freetype2")
 	def freetype_solution(self):
 		if self.current_os() == systems.win32:
-			if self.toolset().short_name() == "msvc8":
-				return os.path.join( self.freetype_root(), "builds", "win32", "vc2005" )
-			elif self.toolset().short_name() == "msvc9":
-				return os.path.join( self.freetype_root(), "builds", "win32", "vc2008" )
-			elif self.toolset().short_name() == "msvc10":
+			if self.toolset().short_name() == "msvc10":
 				return os.path.join( self.freetype_root(), "builds", "win32", "vc2010" )
 			elif self.toolset().short_name() == "msvc11":
 				return os.path.join( self.freetype_root(), "builds", "win32", "vc2012" )
@@ -225,10 +211,6 @@ class project:
 				return "Visual Studio 11"
 			if self.toolset().short_name() == 'msvc10':
 				return "Visual Studio 10"
-			elif self.toolset().short_name() == 'msvc9':
-				return "Visual Studio 9 2008"
-			elif self.toolset().short_name() == 'msvc8':
-				return "Visual Studio 8 2005"
 			else:
 				print( "Unknown generator.")
 				return None
@@ -237,10 +219,6 @@ class project:
 				return "Visual Studio 11 Win64"
 			if self.toolset().short_name() == 'msvc10':
 				return "Visual Studio 10 Win64"
-			elif self.toolset().short_name() == 'msvc9':
-				return "Visual Studio 9 2008 Win64"
-			elif self.toolset().short_name() == 'msvc8':
-				return "Visual Studio 8 2005 Win64"
 			else:
 				print ("Unknown generator.")
 				return None

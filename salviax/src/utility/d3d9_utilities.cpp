@@ -16,8 +16,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "salviax/include/utility/d3d9_utilities.h"
-BEGIN_NS_SALVIAX_UTILITY()
+#include <salviax/include/utility/d3d9_utilities.h>
+
+BEGIN_NS_SALVIAX_UTILITY();
+
 d3d9_device::d3d9_device(const d3d9_device_param& param, D3DPRESENT_PARAMETERS& present_params){
 	pd3d9_ = Direct3DCreate9(D3D_SDK_VERSION);
 
@@ -38,8 +40,8 @@ d3d9_device::~d3d9_device(){
 	}
 }
 
-h_d3d9_device d3d9_device::create(const d3d9_device_param &param, D3DPRESENT_PARAMETERS &present_params){
-	return h_d3d9_device( new d3d9_device( param, present_params ) );
+d3d9_device_ptr d3d9_device::create(const d3d9_device_param &param, D3DPRESENT_PARAMETERS &present_params){
+	return d3d9_device_ptr( new d3d9_device( param, present_params ) );
 }
 
 IDirect3D9* d3d9_device::get_d3d9() const{
@@ -50,4 +52,4 @@ IDirect3DDevice9* d3d9_device::get_d3d_device9() const{
 	return pd3ddev9_;
 }
 
-END_NS_SALVIAX_UTILITY()
+END_NS_SALVIAX_UTILITY();

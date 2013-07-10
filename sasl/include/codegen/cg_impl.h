@@ -32,7 +32,7 @@ namespace llvm{
 	class LLVMContext;
 	class Module;
 	class Type;
-	class TargetData;
+	class DataLayout;
 	
 	template <bool preserveNames> class IRBuilderDefaultInserter;
 	template< bool preserveNames, typename T, typename Inserter
@@ -142,9 +142,9 @@ protected:
 	boost::shared_ptr<module_vmcode_impl>	vmcode_;
 	sasl::semantic::reflection_impl const*	abii;
 	boost::shared_ptr<sasl::semantic::caster_t>
-										caster;		///< For type conversation.
-	llvm::TargetData const *			target_data;
-	cg_service*							service_;
+											caster;		///< For type conversation.
+	llvm::DataLayout const *				vm_data_layout_;
+	cg_service*								service_;
 
 	// Status
 	bool				semantic_mode_;

@@ -7,6 +7,8 @@
 #   boost_root:
 #      The root directory of boost.
 #
+#	   Only support boost 1.53 and later.
+#
 #   build_root:
 #      The root directory for LLVM and SALVIA building.
 #
@@ -27,6 +29,8 @@
 #            msvc-<major>.<minor>     for e.g.: 'msvc-10.0', 'msvc-11.0'
 #            gcc-<major>.<minor>
 #
+#	   Only support Visual Studio 10.0 and later.
+#
 #   config:
 #      Build configuration.
 #      It could be one of 'Debug', 'Release', 'MinSizeRel', 'RelWithDebInfo'
@@ -35,10 +39,10 @@
 #      Path which include CMAKE executable file.
 # --------------------------------------------------------------
 
-boost_root		= 'E:/Programming/Library/boost_1_44_0'
+boost_root		= 'E:/Programming/Library/boost_1_53_0'
 build_root		= '.\\build'
 install_root	= './'
 arch			= 'x64'
-toolset			= 'msvc-10.0'
+toolset			= 'msvc-11.0'
 config			= 'Debug'
 cmake			= 'cmake'		

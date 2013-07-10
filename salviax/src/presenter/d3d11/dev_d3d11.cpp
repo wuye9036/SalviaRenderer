@@ -130,8 +130,8 @@ dev_d3d11::~dev_d3d11(){
 	}
 }
 
-h_dev_d3d11 dev_d3d11::create_device(HWND hwnd){
-	return h_dev_d3d11(new dev_d3d11(hwnd));
+dev_d3d11_ptr dev_d3d11::create_device(HWND hwnd){
+	return dev_d3d11_ptr(new dev_d3d11(hwnd));
 }
 
 //inherited
@@ -352,7 +352,7 @@ void dev_d3d11::present(const salviar::surface& surf)
 
 END_NS_SALVIAX_PRESENTER()
 
-void salviax_create_presenter_device(salviar::h_device& dev, void* param)
+void salviax_create_presenter_device(salviar::device_ptr& dev, void* param)
 {
 	dev = salviax::presenter::dev_d3d11::create_device(static_cast<HWND>(param));
 }

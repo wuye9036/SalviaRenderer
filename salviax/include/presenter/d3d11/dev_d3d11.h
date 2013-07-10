@@ -16,8 +16,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef SALVIAX_DEV_D3D11_H
-#define SALVIAX_DEV_D3D11_H
+#pragma once
 
 #ifndef NOMINMAX
 #	define NOMINMAX
@@ -27,19 +26,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include <DXGI.h>
 #include <D3D11.h>
-#include "salviar/include/presenter_dev.h"
+#include <salviar/include/presenter_dev.h>
 #include <eflib/include/math/math.h>
-#include <boost/smart_ptr.hpp>
+#include <eflib/include/utility/shared_declaration.h>
 
 BEGIN_NS_SALVIAX_PRESENTER();
 
-class dev_d3d11;
-DECL_HANDLE(dev_d3d11, h_dev_d3d11);
+EFLIB_DECLARE_CLASS_SHARED_PTR(dev_d3d11);
 
 class dev_d3d11 : public salviar::device
 {
 public:
-	static h_dev_d3d11 create_device(HWND hwnd);
+	static dev_d3d11_ptr create_device(HWND hwnd);
 
 	//inherited
 	virtual void present(const salviar::surface& surf);
@@ -78,7 +76,7 @@ private:
 	ID3D11PixelShader* ps_;
 };
 
-END_NS_SALVIAX_PRESENTER()
+END_NS_SALVIAX_PRESENTER();
 
 #ifdef salviax_d3d11_presenter_EXPORTS
 	#define SALVIAX_API __declspec(dllexport)
@@ -88,7 +86,5 @@ END_NS_SALVIAX_PRESENTER()
 
 extern "C"
 {
-	SALVIAX_API void salviax_create_presenter_device(salviar::h_device& dev, void* param);
+	SALVIAX_API void salviax_create_presenter_device(salviar::device_ptr& dev, void* param);
 }
-
-#endif //SALVIAX_DEV_D3D11_H
