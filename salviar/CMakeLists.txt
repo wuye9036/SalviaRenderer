@@ -31,9 +31,11 @@ SET( PIPELINE_HEADERS
 	include/renderer.h
 	include/renderer_capacity.h
 	include/renderer_impl.h
+	include/render_state.h
 	include/vertex_cache.h
 	include/framebuffer.h
 	include/async_renderer.h
+	include/brand_renderer.h
 )
 
 set( SHADER_HEADERS
