@@ -112,6 +112,7 @@ set(PIPELINE_SOURCES
 	src/index_fetcher.cpp
 	src/input_layout.cpp
 	src/async_renderer.cpp
+	src/brand_renderer.cpp
 )
 
 set(SHADER_SOURCES

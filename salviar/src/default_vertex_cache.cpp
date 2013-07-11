@@ -2,12 +2,12 @@
 
 #include <salviar/include/vertex_cache.h>
 #include <salviar/include/stream_assembler.h>
-
 #include <salviar/include/host.h>
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
 #include <salviar/include/renderer_impl.h>
+#include <salviar/include/render_state.h>
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/thread_pool.h>
 
@@ -42,6 +42,21 @@ public:
 	{
 	}
 
+	void update(render_state const* state, stream_assembler* assembler)
+	{
+		transformed_verts_.reset();
+		index_fetcher_.initialize(
+			state->index_buffer, state->index_format,
+			state->prim_topo, state->start_index,
+			state->base_vertex
+			);
+		topology_	= state->prim_topo;
+		viewport_	= &(state->vp);
+		assembler_	= assembler;
+		cpp_vs_		= state->cpp_vs.get();
+
+	}
+
 	void update_index_buffer(
 		buffer_ptr const& index_buffer, format index_format,
 		primitive_topology topology, uint32_t start_pos, uint32_t base_vert)
@@ -53,11 +68,13 @@ public:
 
 	void transform_vertices(uint32_t prim_count)
 	{
-		assembler_	= owner_->get_assembler().get();
-		cpp_vs_		= owner_->get_vertex_shader().get();
-		viewport_	= &(owner_->get_viewport());
+		if(owner_)
+		{
+			assembler_	= owner_->get_assembler().get();
+			cpp_vs_		= owner_->get_vertex_shader().get();
+			viewport_	= &(owner_->get_viewport());
+		}
 
-		
 		uint32_t prim_size = 0;
 		switch(topology_)
 		{

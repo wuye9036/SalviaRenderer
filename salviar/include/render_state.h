@@ -17,43 +17,48 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(depth_stencil_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(raster_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(stream_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
-EFLIB_DECLARE_CLASS_SHARED_PTR(blend_shader);
-EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader);
-EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_blend_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_pixel_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
+EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 
 struct vs_input_op;
 struct vs_output_op;
 
 struct render_state
 {
-	buffer_ptr				index_buffer;
-	format					index_format;
-	primitive_topology		prim_topo;
-	size_t					start_index;
-	size_t					draw_prim_count;
+	buffer_ptr					index_buffer;
+	format						index_format;
+	primitive_topology			prim_topo;
+	int32_t						base_vertex;
+	uint32_t					start_index;
+	uint32_t					prim_count;
 	
-	stream_state_ptr		stream_states;
-	input_layout_ptr		layout;
+	stream_state_ptr			stream_states;
+	input_layout_ptr			layout;
 
-	viewport				vp;
-	raster_state_ptr		ras_state;
+	viewport					vp;
+	raster_state_ptr			ras_state;
 
-	int32_t					stencil_ref;
-	depth_stencil_state_ptr	ds_state;
+	int32_t						stencil_ref;
+	depth_stencil_state_ptr		ds_state;
 
-	// Shader as states
-	vertex_shader_ptr		cpp_vs;
-	pixel_shader_ptr		cpp_ps;
-	blend_shader_ptr		cpp_bs;
+	cpp_vertex_shader_ptr		cpp_vs;
+	cpp_pixel_shader_ptr		cpp_ps;
+	cpp_blend_shader_ptr		cpp_bs;
 
-	shader_object_ptr		vx_shader;
-	shader_object_ptr		px_shader;
+	shader_object_ptr			vx_shader;
+	shader_object_ptr			px_shader;
 
-	vs_input_op*			vsi_ops;
-	vs_output_op*			vso_ops;
+	vs_input_op*				vsi_ops;
+	vs_output_op*				vso_ops;
 
-	vertex_shader_unit_ptr	vs_proto_;
-	pixel_shader_unit_ptr	ps_proto_;
+	vertex_shader_unit_ptr		vs_proto;
+	pixel_shader_unit_ptr		ps_proto;
+
+	std::vector<surface_ptr>	color_targets;
+	surface_ptr					depth_stencil_target;
 };
 
 END_NS_SALVIAR();

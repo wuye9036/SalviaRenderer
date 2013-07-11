@@ -19,7 +19,8 @@
 
 BEGIN_NS_SALVIAR();
 
-class stream_assembler;
+class  stream_assembler;
+struct render_state;
 
 typedef size_t cache_entry_index;
 
@@ -28,11 +29,15 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_cache);
 class vertex_cache
 {
 public:
-	virtual void		update_index_buffer(
+	virtual void update_index_buffer(
 		buffer_ptr const& index_buffer,format index_format, primitive_topology topology,
 		uint32_t startpos, uint32_t base_vert ) = 0;
 
-	virtual void		transform_vertices(uint32_t prim_count) = 0;
+	virtual void update(
+		render_state const* state,
+		stream_assembler* assembler ) = 0;
+	
+	virtual void transform_vertices(uint32_t prim_count) = 0;
 
 	virtual vs_output&	fetch(cache_entry_index id) = 0;
 	virtual ~vertex_cache(){}
