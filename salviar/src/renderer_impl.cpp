@@ -287,23 +287,37 @@ sampler_ptr renderer_impl::create_sampler(const sampler_desc& desc)
 
 result renderer_impl::draw(size_t startpos, size_t primcnt)
 {
-	stages_.ras->set_state(state_->ras_state);
+	state_->start_index = static_cast<uint32_t>(startpos);
+	state_->prim_count  = static_cast<uint32_t>(primcnt);
+	state_->base_vertex = 0;
 
-	stages_.vert_cache->update_index_buffer(buffer_ptr(), state_->index_format, state_->prim_topo, static_cast<uint32_t>(startpos), 0);
+	// TODO just save/restore index buffer in current version.
+	auto current_ib = state_->index_buffer;
+	state_->index_buffer.reset();
+
+	stages_.ras->update(state_.get());
+	stages_.vert_cache->update( state_.get() );
 	stages_.vert_cache->transform_vertices(static_cast<uint32_t>(primcnt));
-	
 	stages_.ras->draw(primcnt);
+
+	state_->index_buffer = current_ib;
 	return result::ok;
 }
 
 result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
-	stages_.ras->set_state(state_->ras_state);
+	state_->start_index = static_cast<uint32_t>(startpos);
+	state_->prim_count  = static_cast<uint32_t>(primcnt);
+	state_->base_vertex = basevert;
 
-	stages_.vert_cache->update_index_buffer(state_->index_buffer, state_->index_format, state_->prim_topo, static_cast<uint32_t>(startpos), basevert);
+	// TODO just save/restore index buffer in current version.
+	stages_.ras	->update( state_.get() );
+	stages_.vert_cache->update( state_.get() );
+	stages_.backend->update( state_.get() );
+
 	stages_.vert_cache->transform_vertices(static_cast<uint32_t>(primcnt));
-
 	stages_.ras->draw(primcnt);
+
 	return result::ok;
 }
 
@@ -356,9 +370,11 @@ result renderer_impl::present()
 
 void renderer_impl::initialize()
 {
+	// stages_.assembler->initialize(stages_);
+	stages_.vert_cache->initialize(&stages_);
 	stages_.host->initialize( stages_.assembler.get() );
-	stages_.ras->initialize(this);
-	stages_.backend->initialize(this);
+	stages_.ras->initialize(&stages_);
+	stages_.backend->initialize(&stages_);
 }
 
 renderer_impl::renderer_impl(const renderer_parameters* pparam, device_ptr hdev)
@@ -382,7 +398,7 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, device_ptr hdev)
 		)
 		);
 	
-	stages_.vert_cache = create_default_vertex_cache(this);
+	stages_.vert_cache = create_default_vertex_cache();
 	state_->ras_state.reset(new raster_state(raster_desc()));
 	state_->ds_state.reset(new depth_stencil_state(depth_stencil_desc()));
 

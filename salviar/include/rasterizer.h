@@ -27,6 +27,8 @@ class  pixel_shader_unit;
 class  vs_output;
 struct vs_output_op;
 struct clip_context;
+class  vertex_shader_unit;
+class  shader_reflection;
 
 struct drawing_context
 {
@@ -64,18 +66,22 @@ struct rasterize_prim_context
 	pixel_shader_unit*				psu;
 };
 
-class rasterizer : public render_stage
+class rasterizer
 {
 private:
 	static const int MAX_NUM_MULTI_SAMPLES = 4;
 
 	// Status per drawing.
-	raster_state_ptr				state_;
 	uint32_t						num_vs_output_attributes_;
 
-	framebuffer_ptr					frame_buffer_;
-	cpp_blend_shader*				cpp_bs_;
+	vertex_cache*					vert_cache_;
+	framebuffer*					frame_buffer_;
 
+	raster_state*					state_;
+	vertex_shader_unit*				vs_proto_;
+	pixel_shader_unit*				ps_proto_;
+	cpp_pixel_shader*				cpp_ps_;
+	cpp_blend_shader*				cpp_bs_;
 	viewport const*					vp_;
 	vs_output_op const*				vso_ops_;
 
@@ -95,6 +101,8 @@ private:
 	size_t							tile_x_count_;
 	size_t							tile_y_count_;
 	size_t							tile_count_;
+
+	shader_reflection const*		vs_reflection_;
 
 	std::vector<cpp_pixel_shader*>	threaded_cpp_ps_;
 	std::vector<pixel_shader_unit*>	threaded_psu_;					
@@ -136,15 +144,12 @@ private:
 
 public:
 	//inherited
-	void initialize(renderer_impl* pparent);
+	void initialize	(render_stages* stages);
+	void update		(render_state* state);
 
 	//constructor
 	rasterizer();
 	~rasterizer();
-
-	//state_seter
-	void set_state(const raster_state_ptr& state);
-	const raster_state_ptr& get_state() const;
 
 	//drawer
 	void rasterize_line(rasterize_prim_context const*);
@@ -155,7 +160,7 @@ public:
 
 	void draw(size_t prim_count);
 
-	void update_prim_info();
+	void update_prim_info(render_state* state);
 };
 
 END_NS_SALVIAR();

@@ -23,13 +23,7 @@ result renderer_impl2::draw(render_state_ptr const& state)
 {
 	state_ = state;
 
-	vertex_cache_->update_index_buffer(
-		state_->index_buffer,
-		state_->index_format, 
-		state_->prim_topo,
-		state_->start_index,
-		state_->base_vertex
-		);
+	vertex_cache_->update(state.get());
 	vertex_cache_->transform_vertices(state_->prim_count);
 	
 	/*
@@ -61,7 +55,7 @@ result renderer_impl2::clear_stencil(uint32_t s)
 renderer_impl2::renderer_impl2()
 {
 	host_			= modules::host::create_host();
-	vertex_cache_	= create_default_vertex_cache(nullptr);
+	vertex_cache_	= create_default_vertex_cache();
 
 	assembler_		.reset(new stream_assembler() );
 	clipper_		.reset(new clipper());

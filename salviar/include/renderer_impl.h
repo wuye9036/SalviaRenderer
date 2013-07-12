@@ -21,11 +21,6 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(render_state);
 
-struct state_block
-{
-	viewport vp;	
-};
-
 class renderer_impl : public renderer
 {
 	render_state_ptr		state_;

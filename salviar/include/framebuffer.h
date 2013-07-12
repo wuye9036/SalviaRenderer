@@ -5,7 +5,6 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/decl.h>
 #include <salviar/include/colors.h>
-#include <salviar/include/render_stage.h>
 
 #include <eflib/include/math/collision_detection.h>
 
@@ -14,6 +13,8 @@
 BEGIN_NS_SALVIAR();
 
 struct pixel_accessor;
+struct render_stages;
+struct render_state;
 
 struct depth_stencil_op_desc {
     stencil_op stencil_fail_op;
@@ -80,25 +81,28 @@ public:
 	void write_stencil(size_t sample, int32_t stencil, pixel_accessor& target_pixel) const;
 };
 
-class framebuffer : public render_stage
+class framebuffer
 {
 private:
-	std::vector<boost::shared_ptr<surface> > back_cbufs_;
-	boost::shared_ptr<surface> dbuf_;
-	boost::shared_ptr<surface> sbuf_;
+	std::vector<boost::shared_ptr<surface> >	back_cbufs_;
+	boost::shared_ptr<surface>					dbuf_;
+	boost::shared_ptr<surface>					sbuf_;
 	
-	std::vector<bool> buf_valids;
-	std::vector<surface* > cbufs_; ///< NOTE: Framebuffer doesn't take ownership of surfaces
+	std::vector<bool>							buf_valids;
+	std::vector<surface* >						cbufs_;			///< NOTE: Framebuffer doesn't take ownership of surfaces
 
-	size_t width_, height_;
-	size_t num_samples_;
-	pixel_format fmt_;
+	size_t										width_, height_;
+	size_t										num_samples_;
+	pixel_format								fmt_;
+
+	depth_stencil_state*						ds_state_;
+	int32_t										stencil_ref_;
 
 	bool check_buf(surface* psurf);
 
 public:
-	//inherited
-	void initialize(renderer_impl* pparent);
+	void initialize	(render_stages* stages);
+	void update		(render_state* state);
 
 	framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	~framebuffer(void);

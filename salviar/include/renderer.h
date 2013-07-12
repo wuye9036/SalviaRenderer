@@ -6,6 +6,7 @@
 #include <salviar/include/colors.h>
 #include <salviar/include/format.h>
 #include <salviar/include/shader.h>
+#include <salviar/include/viewport.h>
 
 #include <eflib/include/math/collision_detection.h>
 #include <eflib/include/utility/shared_declaration.h>
@@ -26,15 +27,6 @@ struct input_element_desc;
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
-
-struct viewport{
-	float x;
-	float y;
-	float w;
-	float h;
-	float minz;
-	float maxz;
-};
 
 struct renderer_parameters
 {

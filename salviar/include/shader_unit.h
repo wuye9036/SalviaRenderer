@@ -54,21 +54,21 @@ public:
 	void execute( vs_output& out );
 
 public:
-	shader_object const* code;
-	stream_assembler const* sa;
+	shader_object const*		code;
+	stream_assembler const*		sa;
 
 	std::vector<sampler_ptr>	used_samplers;	// For take ownership
 
-	std::vector<char>		stream_data;
-	std::vector<char>		buffer_data;
+	std::vector<char>			stream_data;
+	std::vector<char>			buffer_data;
 
-	std::vector<char>		stream_odata;
-	std::vector<char>		buffer_odata;
+	std::vector<char>			stream_odata;
+	std::vector<char>			buffer_odata;
 
 	boost::unordered_map<
 		std::string,
 		boost::shared_array<char> 
-	>						dynamic_datas;
+	>							dynamic_datas;
 };
 
 class pixel_shader_unit

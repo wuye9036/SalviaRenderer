@@ -17,6 +17,7 @@ SET( FOUNDATION_HEADERS
 	include/thread_pool.h
 	include/binary_modules.h
 	include/resource_data.h
+	include/viewport.h
 )
 
 SET( PIPELINE_HEADERS
@@ -29,7 +30,6 @@ SET( PIPELINE_HEADERS
 	include/presenter_dev.h
 	include/rasterizer.h
 	include/raster_state.h
-	include/render_stage.h
 	include/render_stages.h
 	include/renderer.h
 	include/renderer_capacity.h

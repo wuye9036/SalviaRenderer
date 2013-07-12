@@ -36,13 +36,19 @@ const size_t invalid_id = 0xffffffff;
 class default_vertex_cache : public vertex_cache
 {
 public:
-	default_vertex_cache(renderer_impl* owner)
-		: owner_(owner)
+	default_vertex_cache()
+		: assembler_(nullptr)
 		, verts_pool_( sizeof(vs_output) )
 	{
 	}
 
-	void update(render_state const* state, stream_assembler* assembler)
+	void initialize(render_stages* stages)
+	{
+		assembler_	= stages->assembler.get();
+		host_		= stages->host.get();
+	}
+
+	void update(render_state const* state)
 	{
 		transformed_verts_.reset();
 		index_fetcher_.initialize(
@@ -52,29 +58,12 @@ public:
 			);
 		topology_	= state->prim_topo;
 		viewport_	= &(state->vp);
-		assembler_	= assembler;
 		cpp_vs_		= state->cpp_vs.get();
-
-	}
-
-	void update_index_buffer(
-		buffer_ptr const& index_buffer, format index_format,
-		primitive_topology topology, uint32_t start_pos, uint32_t base_vert)
-	{
-		transformed_verts_.reset();
-		topology_	= topology;
-		index_fetcher_.initialize(index_buffer, index_format, topology, start_pos, base_vert);
+		vs_proto_	= state->vs_proto;
 	}
 
 	void transform_vertices(uint32_t prim_count)
 	{
-		if(owner_)
-		{
-			assembler_	= owner_->get_assembler().get();
-			cpp_vs_		= owner_->get_vertex_shader().get();
-			viewport_	= &(owner_->get_viewport());
-		}
-
 		uint32_t prim_size = 0;
 		switch(topology_)
 		{
@@ -122,7 +111,7 @@ public:
 
 		working_package = 0;
 		boost::function<void()> task_transform_vertex;
-		if( owner_->get_vertex_shader() )
+		if(cpp_vs_)
 		{
 			task_transform_vertex = boost::bind(
 				&default_vertex_cache::transform_vertex_cppvs,
@@ -130,7 +119,7 @@ public:
 				static_cast<int32_t>(unique_indices.size()), boost::ref(working_package), TRANSFORM_VERTEX_PACKAGE_SIZE
 				);
 		}
-		else if ( owner_->get_host() )
+		else if (host_ != nullptr)
 		{
 			task_transform_vertex = boost::bind(
 				&default_vertex_cache::transform_vertex_vs2,
@@ -219,7 +208,7 @@ private:
 		vector<uint32_t> const& indices, int32_t index_count,
 		atomic<int32_t>& working_package, int32_t package_size )
 	{
-		vertex_shader_unit vsu	= *(owner_->vs_proto());
+		vertex_shader_unit vsu	= *vs_proto_;
 
 		vsu.bind_streams(assembler_);
 
@@ -247,7 +236,7 @@ private:
 		vector<uint32_t> const& indices, int32_t index_count,
 		atomic<int32_t>& working_package, int32_t package_size )
 	{
-		vx_shader_unit_ptr vsu	= owner_->get_host()->get_vx_shader_unit();
+		vx_shader_unit_ptr vsu	= host_->get_vx_shader_unit();
 
 		const int32_t num_packages = (index_count + package_size - 1) / package_size;
 
@@ -268,10 +257,11 @@ private:
 		}
 	}
 private:
-	renderer_impl*			owner_;
-
 	stream_assembler*		assembler_;
+	host*					host_;
+
 	cpp_vertex_shader*		cpp_vs_;
+	vertex_shader_unit_ptr	vs_proto_;
 	viewport const*			viewport_;
 
 	vector<uint32_t>		indices_;
@@ -284,9 +274,9 @@ private:
 	boost::pool<>			verts_pool_;
 };
 
-vertex_cache_ptr create_default_vertex_cache(renderer_impl* owner)
+vertex_cache_ptr create_default_vertex_cache()
 {
-	return vertex_cache_ptr( new default_vertex_cache(owner) );
+	return vertex_cache_ptr( new default_vertex_cache() );
 }
 
 END_NS_SALVIAR();

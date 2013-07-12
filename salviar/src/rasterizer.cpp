@@ -2,7 +2,8 @@
 
 #include <salviar/include/clipper.h>
 #include <salviar/include/framebuffer.h>
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/render_state.h>
+#include <salviar/include/render_stages.h>
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/shader_unit.h>
@@ -56,12 +57,11 @@ int const RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 {
 	// Extract to local variables
-	cpp_blend_shader*	cpp_bs			= pparent_->get_blend_shader().get();
-	cpp_pixel_shader*	cpp_ps			= ctx->cpp_ps;
-	pixel_shader_unit*	psu				= ctx->psu;
-	viewport  const&	vp				= *ctx->tile_vp;
-	vs_output const&	v0				= *clipped_verts_[ctx->prim_id*2+0];
-	vs_output const&	v1				= *clipped_verts_[ctx->prim_id*2+1];
+	cpp_pixel_shader*	cpp_ps	= ctx->cpp_ps;
+	pixel_shader_unit*	psu		= ctx->psu;
+	viewport  const&	vp		= *ctx->tile_vp;
+	vs_output const&	v0		= *clipped_verts_[ctx->prim_id*2+0];
+	vs_output const&	v1		= *clipped_verts_[ctx->prim_id*2+1];
 	
 	// Rasterize
 	vs_output diff;
@@ -133,8 +133,9 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 
 			// Render pixel.
 			vso_ops_->unproject(unprojed, px_in);
-			if(cpp_ps->execute(unprojed, px_out)){
-				frame_buffer_->render_sample(cpp_bs, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
+			if(cpp_ps->execute(unprojed, px_out))
+			{
+				frame_buffer_->render_sample(cpp_bs_, iPixel, fast_floori(px_in.position().y()), 0, px_out, px_out.depth);
 			}
 
 			// Increment ddx
@@ -186,8 +187,9 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 			}
 
 			vso_ops_->unproject(unprojed, px_in);
-			if(cpp_ps->execute(unprojed, px_out)){
-				frame_buffer_->render_sample(cpp_bs, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
+			if(cpp_ps->execute(unprojed, px_out))
+			{
+				frame_buffer_->render_sample(cpp_bs_, fast_floori(px_in.position().x()), iPixel, 0, px_out, px_out.depth);
 			}
 
 			++ step;
@@ -210,10 +212,41 @@ struct tile_render_context
 	float const*		aa_z_offset;
 };
 
-void rasterizer::initialize(renderer_impl* pparent)
+void rasterizer::initialize(render_stages* stages)
 {
-	pparent_ = pparent;
-	frame_buffer_ = pparent->get_framebuffer();
+	frame_buffer_	= stages->backend.get();
+	vert_cache_		= stages->vert_cache.get();
+}
+
+void rasterizer::update(render_state* state)
+{
+	state_		= state->ras_state.get();
+	vs_proto_	= state->vs_proto.get();
+	ps_proto_	= state->ps_proto.get();
+	cpp_ps_		= state->cpp_ps.get();
+	cpp_bs_		= state->cpp_bs.get();
+	vp_			= &(state->vp);
+	vso_ops_	= state->vso_ops;
+	
+	if(state->cpp_vs)
+	{
+		num_vs_output_attributes_ = state->cpp_vs->num_output_attributes();
+	}
+	else
+	{
+		num_vs_output_attributes_ = 0;
+	}
+
+	if(vs_proto_ != nullptr)
+	{
+		vs_reflection_ = vs_proto_->code->get_reflection();
+	}
+	else
+	{
+		vs_reflection_ = nullptr;
+	}
+
+	update_prim_info(state);
 }
 
 void rasterizer::draw_whole_tile(
@@ -580,7 +613,6 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 {
 	// Extract to local variables
 	size_t const		num_samples		= frame_buffer_->get_num_samples();
-	cpp_blend_shader*	cpp_bs			= pparent_->get_blend_shader().get();
 	cpp_pixel_shader*	cpp_ps			= ctx->cpp_ps;
 	pixel_shader_unit*	psu				= ctx->psu;
 	viewport  const&	vp				= *ctx->tile_vp;
@@ -821,21 +853,10 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 
 rasterizer::rasterizer()
 {
-	state_.reset(new raster_state(raster_desc()));
 }
 
 rasterizer::~rasterizer()
 {
-}
-
-void rasterizer::set_state(const raster_state_ptr& state)
-{
-	state_ = state;
-}
-
-const raster_state_ptr& rasterizer::get_state() const
-{
-	return state_;
 }
 
 void rasterizer::threaded_dispatch_primitive(thread_context const* thread_ctx)
@@ -1036,7 +1057,7 @@ void rasterizer::rasterize_multi_triangle(rasterize_multi_prim_context const* ct
 	}
 }
 
-void rasterizer::update_prim_info()
+void rasterizer::update_prim_info(render_state* state)
 {	
 	bool is_tri = false;
 	bool is_line = false;
@@ -1055,8 +1076,7 @@ void rasterizer::update_prim_info()
 		break;
 	}
 
-	primitive_topology prim_topo = pparent_->get_primitive_topology();
-	switch (prim_topo)
+	switch (state->prim_topo)
 	{
 	case primitive_point_list:
 	case primitive_point_sprite:
@@ -1101,12 +1121,8 @@ void rasterizer::update_prim_info()
 	}
 }
 
-void rasterizer::draw(size_t prim_count){
-	assert(pparent_);
-	if(!pparent_) return;
-
-	cpp_bs_ = pparent_->get_blend_shader().get();
-
+void rasterizer::draw(size_t prim_count)
+{
 	const size_t num_samples = frame_buffer_->get_num_samples();
 	switch (num_samples){
 	case 1:
@@ -1129,19 +1145,6 @@ void rasterizer::draw(size_t prim_count){
 		break;
 	}
 
-	update_prim_info();
-
-	if( pparent_->get_vertex_shader() )
-	{
-		num_vs_output_attributes_ = pparent_->get_vertex_shader()->num_output_attributes();
-	}
-	else
-	{
-		num_vs_output_attributes_ = 0;
-	}
-
-	vso_ops_		= pparent_->get_vs_output_ops();
-	vp_				= &( pparent_->get_viewport() );
 	tile_x_count_	= static_cast<size_t>(vp_->w + TILE_SIZE - 1) / TILE_SIZE;
 	tile_y_count_	= static_cast<size_t>(vp_->h + TILE_SIZE - 1) / TILE_SIZE;
 	tile_count_		= tile_x_count_ * tile_y_count_;
@@ -1152,7 +1155,7 @@ void rasterizer::draw(size_t prim_count){
 	geom_setup_context	geom_setup_ctx;
 
 	geom_setup_ctx.cull			= state_->get_cull_func();
-	geom_setup_ctx.dvc			= pparent_->get_vertex_cache().get();
+	geom_setup_ctx.dvc			= vert_cache_;
 	geom_setup_ctx.prim			= prim_;
 	geom_setup_ctx.prim_count	= prim_count;
 	geom_setup_ctx.prim_size	= prim_size_;
@@ -1195,9 +1198,6 @@ void rasterizer::draw(size_t prim_count){
 		EFLIB_ASSERT(false, "Primitive type is not correct.");
 	}
 
-	cpp_pixel_shader_ptr	cpp_ps_proto	= pparent_->get_pixel_shader();
-	pixel_shader_unit_ptr	psu_proto		= pparent_->ps_proto();
-
 	std::vector<cpp_pixel_shader_ptr>	ppps(num_threads);
 	std::vector<pixel_shader_unit_ptr>	ppsu(num_threads);
 	
@@ -1207,14 +1207,14 @@ void rasterizer::draw(size_t prim_count){
 	for (size_t i = 0; i < num_threads; ++ i)
 	{
 		// create cpp_pixel_shader clone per thread from hps
-		if( cpp_ps_proto )
+		if(cpp_ps_ != nullptr)
 		{
-			ppps[i] = cpp_ps_proto->create_clone();
+			ppps[i] = cpp_ps_->create_clone();
 			threaded_cpp_ps_[i] = ppps[i].get();
 		} 
-		if( psu_proto )
+		if(ps_proto_ != nullptr)
 		{
-			ppsu[i] = psu_proto->clone();
+			ppsu[i] = ps_proto_->clone();
 			threaded_psu_[i] = ppsu[i].get();
 		}
 	}
@@ -1227,9 +1227,9 @@ void rasterizer::draw(size_t prim_count){
 	// destroy all cpp_pixel_shader clone
 	for (size_t i = 0; i < num_threads; ++ i)
 	{
-		if( cpp_ps_proto )
+		if(cpp_ps_ != nullptr)
 		{
-			cpp_ps_proto->destroy_clone(ppps[i]);
+			cpp_ps_->destroy_clone(ppps[i]);
 		}
 	}
 }
@@ -1242,8 +1242,6 @@ void rasterizer::draw_package(
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
 
-	shader_reflection const* vs_abi = pparent_->vs_proto() ? pparent_->vs_proto()->code->get_reflection() : NULL;
-
 	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
@@ -1254,8 +1252,8 @@ void rasterizer::draw_package(
 
 	if(psu)
 	{
-		psu->update( pixels, vs_abi );
-		psu->execute( pso );
+		psu->update(pixels, vs_reflection_);
+		psu->execute(pso);
 	}	
 
 	for( int iy = 0; iy < 4; ++iy )
@@ -1317,10 +1315,6 @@ void rasterizer::draw_full_package(
 {
 	uint32_t const full_mask = (1UL << num_samples) - 1;
 
-	shader_reflection const* vs_abi = NULL;
-	if( pparent_->vs_proto() ){
-		vs_abi = pparent_->vs_proto()->code->get_reflection();
-	}
 	ps_output pso[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
@@ -1329,9 +1323,10 @@ void rasterizer::draw_full_package(
 		pso[i].coverage = 0xFFFFFFFF;
 	}
 
-	if( psu ){
-		psu->update( pixels, vs_abi );
-		psu->execute( pso );
+	if( psu )
+	{
+		psu->update(pixels, vs_reflection_);
+		psu->execute(pso);
 	}
 
 	for ( int iy = 0; iy < 4; ++iy ){
@@ -1379,14 +1374,12 @@ void rasterizer::draw_full_package(
 			}
 		}
 	}
-
 }
 
 
 void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num_verts)
 {
 	vs_output_functions::project proj_fn = vso_ops_->project;
-	viewport const& vp = pparent_->get_viewport();
 
 	// Gathering vs_output need to be processed.
 	vector<vs_output*> sorted;
@@ -1398,7 +1391,7 @@ void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num
 	for(vector<vs_output*>::iterator iter = sorted.begin(); iter != sorted.end(); ++iter)
 	{
 		vs_output* vso = *iter;
-		viewport_transform(vso->position(), vp);
+		viewport_transform(vso->position(), *vp_);
 		proj_fn(*vso, *vso);
 	}
 }

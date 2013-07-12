@@ -2,6 +2,7 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/surface.h>
+#include <salviar/include/render_state.h>
 #include <salviar/include/renderer_impl.h>
 
 #include <eflib/include/math/collision_detection.h>
@@ -300,9 +301,14 @@ bool framebuffer::check_buf(surface* psurf){
 	return psurf && (psurf->get_width() < width_ || psurf->get_height() < height_);
 }
 
-void framebuffer::initialize(renderer_impl* pparent)
+void framebuffer::initialize(render_stages* /*stages*/)
 {
-	pparent_ = pparent;
+}
+
+void framebuffer::update(render_state* state)
+{
+	ds_state_	= state->ds_state.get();
+	stencil_ref_= ds_state_->read_stencil(state->stencil_ref);
 }
 
 framebuffer::framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt)
@@ -440,24 +446,21 @@ void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, si
 	pixel_accessor target_pixel(cbufs_, dbuf_.get(), sbuf_.get());
 	target_pixel.set_pos(x, y);
 
-	const depth_stencil_state_ptr& dss = pparent_->get_depth_stencil_state();
+	float   const cur_depth   = target_pixel.depth(i_sample);
+	int32_t const cur_stencil = ds_state_->read_stencil(target_pixel, i_sample);
 
-	const int32_t stencil_ref = dss->read_stencil(pparent_->get_stencil_ref());
-	
-	const float cur_depth = target_pixel.depth(i_sample);
-	const int32_t cur_stencil = dss->read_stencil(target_pixel, i_sample);
+	bool depth_passed	= ds_state_->depth_test(depth, cur_depth);
+	bool stencil_passed = ds_state_->stencil_test(ps.front_face, stencil_ref_, cur_stencil);
 
-	bool depth_passed = dss->depth_test(depth, cur_depth);
-	bool stencil_passed = dss->stencil_test(ps.front_face, stencil_ref, cur_stencil);
-
-	if (depth_passed && stencil_passed){
-		int32_t new_stencil = dss->stencil_operation(ps.front_face, depth_passed, stencil_passed, stencil_ref, cur_stencil);
+	if (depth_passed && stencil_passed)
+	{
+		int32_t new_stencil = ds_state_->stencil_operation(ps.front_face, depth_passed, stencil_passed, stencil_ref_, cur_stencil);
 
 		//execute target shader
 		cpp_bs->execute(i_sample, target_pixel, ps);
 
-		dss->write_depth(i_sample, depth, target_pixel);
-		dss->write_stencil(i_sample, new_stencil, target_pixel);
+		ds_state_->write_depth(i_sample, depth, target_pixel);
+		ds_state_->write_stencil(i_sample, new_stencil, target_pixel);
 	}
 }
 

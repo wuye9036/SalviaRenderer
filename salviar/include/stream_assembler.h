@@ -3,8 +3,6 @@
 
 #include <salviar/include/salviar_forward.h>
 
-#include <salviar/include/render_stage.h>
-
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -21,6 +19,7 @@ BEGIN_NS_SALVIAR();
 class  vs_input;
 struct input_element_desc;
 
+EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
 EFLIB_DECLARE_CLASS_WEAK_PTR  (input_layout);
 

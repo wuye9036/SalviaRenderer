@@ -4,6 +4,7 @@
 
 #include <salviar/include/enums.h>
 #include <salviar/include/format.h>
+#include <salviar/include/viewport.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 
