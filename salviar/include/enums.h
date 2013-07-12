@@ -233,4 +233,14 @@ enum stencil_op
     stencil_op_decr_wrap = 8,
 };
 
+enum counter_ids
+{
+	counter_unknown,
+	counter_vs_invocation,
+	counter_rasterized_quad,
+	counter_early_z_rejected_quad,
+	counter_ps_invocation,
+	counter_count
+};
+
 END_NS_SALVIAR();

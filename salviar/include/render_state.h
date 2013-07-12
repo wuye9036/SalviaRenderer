@@ -2,7 +2,9 @@
 
 #include <salviar/include/salviar_forward.h>
 
+#include <salviar/include/enums.h>
 #include <salviar/include/format.h>
+
 #include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
@@ -13,6 +15,7 @@ BEGIN_NS_SALVIAR();
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
+EFLIB_DECLARE_CLASS_SHARED_PTR(counter);
 EFLIB_DECLARE_CLASS_SHARED_PTR(depth_stencil_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(raster_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(stream_state);
@@ -59,6 +62,8 @@ struct render_state
 
 	std::vector<surface_ptr>	color_targets;
 	surface_ptr					depth_stencil_target;
+
+	counter_ptr					counters[counter_ids::counter_count];
 };
 
 END_NS_SALVIAR();
