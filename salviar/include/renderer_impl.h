@@ -3,6 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/renderer.h>
+#include <salviar/include/render_stages.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 
@@ -18,6 +19,8 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
+EFLIB_DECLARE_STRUCT_SHARED_PTR(render_state);
+
 struct state_block
 {
 	viewport vp;	
@@ -25,36 +28,8 @@ struct state_block
 
 class renderer_impl : public renderer
 {
-	//Rendering States
-	viewport				vp_;
-	cull_mode				cm_;
-	primitive_topology		primtopo_;
-	buffer_ptr				index_buffer_;
-	format					index_format_;
-	raster_state_ptr		rast_state_;
-	depth_stencil_state_ptr	ds_state_;
-	int32_t					stencil_ref_;
-	
-	// Stages
-	host_ptr				host_;
-	cpp_vertex_shader_ptr			cpp_vs_;
-	cpp_pixel_shader_ptr			cpp_ps_;
-	cpp_blend_shader_ptr			cpp_bs_;
-
-	stream_assembler_ptr	assembler_;
-	clipper_ptr				clipper_;
-	vertex_cache_ptr			vertex_cache_;
-	rasterizer_ptr			rast_;
-	
-	framebuffer_ptr			frame_buffer_;
-	
-	vs_input_op*			vs_input_ops_;
-	vs_output_op*			vs_output_ops_;
-
-	shader_object_ptr		vx_shader_;
-	shader_object_ptr		px_shader_;
-	vertex_shader_unit_ptr	vs_proto_;
-	pixel_shader_unit_ptr	ps_proto_;
+	render_state_ptr		state_;
+	render_stages			stages_;
 
 	// Resources
 	resource_manager_ptr	resource_pool_;
@@ -161,8 +136,7 @@ public:
 	stream_assembler_ptr	get_assembler();
 	rasterizer_ptr			get_rasterizer();
 	device_ptr				get_native_device();
-	vertex_cache_ptr			get_vertex_cache();
-	clipper_ptr				get_clipper();
+	vertex_cache_ptr		get_vertex_cache();
 };
 
 renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev);

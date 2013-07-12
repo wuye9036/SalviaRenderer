@@ -30,6 +30,7 @@ SET( PIPELINE_HEADERS
 	include/rasterizer.h
 	include/raster_state.h
 	include/render_stage.h
+	include/render_stages.h
 	include/renderer.h
 	include/renderer_capacity.h
 	include/renderer_impl.h
