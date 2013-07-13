@@ -225,25 +225,33 @@ struct pixel_accessor
 		buf_y_ = y;
 	}
 
-	color_rgba32f color(size_t regidx, size_t sample) const{
-		return (*cbuf_)[regidx]->get_texel(buf_x_, buf_y_, sample);
+	color_rgba32f color(size_t target_index, size_t sample_index) const
+	{
+		return (*cbuf_)[target_index]->get_texel(buf_x_, buf_y_, sample_index);
 	}
-	float depth(size_t sample) const{
+
+	float depth(size_t sample) const
+	{
 		return dbuf_->get_texel(buf_x_, buf_y_, sample).r;
 	}
-	int32_t stencil(size_t sample) const{
+
+	int32_t stencil(size_t sample) const
+	{
 		return int32_t(sbuf_->get_texel(buf_x_, buf_y_, sample).r);
 	}
 
-	void color(size_t regidx, size_t sample, const color_rgba32f& clr){
+	void color(size_t regidx, size_t sample, const color_rgba32f& clr)
+	{
 		(*cbuf_)[regidx]->set_texel(buf_x_, buf_y_, sample, clr);
 	}
 
-	void depth(size_t sample, float depth){
+	void depth(size_t sample, float depth)
+	{
 		dbuf_->set_texel(buf_x_, buf_y_, sample, color_rgba32f(depth, 0, 0, 0));
 	}
 
-	void stencil(size_t sample, int32_t stencil){
+	void stencil(size_t sample, int32_t stencil)
+	{
 		sbuf_->set_texel(buf_x_, buf_y_, sample, color_rgba32f(float(stencil), 0, 0, 0));
 	}
 

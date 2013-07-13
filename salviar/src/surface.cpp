@@ -271,11 +271,12 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 size_t surface::get_texel_addr(size_t x, size_t y, size_t sample) const
 {
 #ifdef TILE_BASED_STORAGE
-	if (tile_mode_){
-		const size_t tile_x = x >> TILE_BITS;
-		const size_t tile_y = y >> TILE_BITS;
-		const size_t x_in_tile = x & TILE_MASK;
-		const size_t y_in_tile = y & TILE_MASK;
+	if (tile_mode_)
+	{
+		size_t const tile_x		= x >> TILE_BITS;
+		size_t const tile_y		= y >> TILE_BITS;
+		size_t const x_in_tile	= x & TILE_MASK;
+		size_t const y_in_tile	= y & TILE_MASK;
 		return (((tile_y * tile_width_ + tile_x) * TILE_SIZE * TILE_SIZE + (y_in_tile * TILE_SIZE + x_in_tile)) * num_samples_ + sample) * elem_size_;
 	}
 	else
