@@ -13,7 +13,7 @@
 BEGIN_NS_SALVIAR();
 
 class  stream_assembler;
-class  renderer_parameters;
+struct renderer_parameters;
 struct shader_profile;
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);

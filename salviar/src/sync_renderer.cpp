@@ -393,29 +393,9 @@ sync_renderer::sync_renderer(const renderer_parameters* pparam, device_ptr hdev)
 	initialize();
 }
 
-rasterizer_ptr sync_renderer::get_rasterizer()
-{
-	return stages_.ras;
-}
-
 framebuffer_ptr sync_renderer::get_framebuffer() const
 {
 	return stages_.backend; 
-}
-
-vertex_cache_ptr sync_renderer::get_vertex_cache()
-{
-	return stages_.vert_cache;
-}
-
-stream_assembler_ptr sync_renderer::get_assembler()
-{
-	return stages_.assembler;
-}
-
-host_ptr sync_renderer::get_host()
-{
-	return stages_.host;
 }
 
 result sync_renderer::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )

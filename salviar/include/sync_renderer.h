@@ -122,11 +122,6 @@ public:
 
 	//this class for inner system
 	sync_renderer(const renderer_parameters* pparam, device_ptr hdev);
-
-	host_ptr				get_host();
-	stream_assembler_ptr	get_assembler();
-	rasterizer_ptr			get_rasterizer();
-	vertex_cache_ptr		get_vertex_cache();
 };
 
 renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev);
