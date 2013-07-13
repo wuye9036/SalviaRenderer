@@ -32,19 +32,19 @@ private:
 	size_t						alignment_;
 };
 
-class renderer_impl;
+class sync_renderer;
 
 class resource_data
 {
 private:
-	renderer_impl*	renderer_;
+	sync_renderer*	renderer_;
 	resource_usage	usage_;
 	aligned_array	data_;
 	bool			client_mapped_;
 
 public:
 	resource_data(
-		renderer_impl* renderer,
+		sync_renderer* renderer,
 		size_t sz, size_t alignment, resource_usage usage,
 		void* init_data
 		)

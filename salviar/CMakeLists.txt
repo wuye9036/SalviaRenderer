@@ -33,7 +33,7 @@ SET( PIPELINE_HEADERS
 	include/render_stages.h
 	include/renderer.h
 	include/renderer_capacity.h
-	include/renderer_impl.h
+	include/sync_renderer.h
 	include/render_state.h
 	include/vertex_cache.h
 	include/framebuffer.h
@@ -108,7 +108,7 @@ set(PIPELINE_SOURCES
 	src/rasterizer.cpp
 	src/raster_state.cpp
 	src/renderer.cpp
-	src/renderer_impl.cpp
+	src/sync_renderer.cpp
 	src/resource_manager.cpp
 	src/stream_assembler.cpp
 	src/index_fetcher.cpp

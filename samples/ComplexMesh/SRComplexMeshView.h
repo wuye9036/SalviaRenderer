@@ -11,7 +11,7 @@
 #include <salviar/include/presenter_dev.h>
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/sync_renderer.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 
@@ -461,7 +461,7 @@ public:
 
 	LRESULT OnClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
 	{
-		framebuffer* pfb = static_pointer_cast<renderer_impl>(hsr)->get_framebuffer().get();
+		framebuffer* pfb = static_pointer_cast<sync_renderer>(hsr)->get_framebuffer().get();
 		PPOINTS pp = (PPOINTS)(&lParam);
 		if(pfb && size_t(pp->x) < pfb->get_width() && size_t(pp->y) < pfb->get_height())
 		{

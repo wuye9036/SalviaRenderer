@@ -1,7 +1,7 @@
 #include <salviar/include/async_renderer.h>
 
 #include <salviar/include/renderer.h>
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/sync_renderer.h>
 #include <eflib/include/memory/bounded_buffer.h>
 #include <eflib/include/diagnostics/assert.h>
 

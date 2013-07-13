@@ -1,4 +1,4 @@
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/sync_renderer.h>
 
 #include <salviar/include/binary_modules.h>
 #include <salviar/include/shaderregs.h>
@@ -21,7 +21,7 @@ using namespace eflib;
 using boost::shared_ptr;
 
 //inherited
-result renderer_impl::set_input_layout(const input_layout_ptr& layout)
+result sync_renderer::set_input_layout(const input_layout_ptr& layout)
 {
 	size_t min_slot = 0, max_slot = 0;
 	layout->slot_range(min_slot, max_slot);
@@ -36,7 +36,7 @@ result renderer_impl::set_input_layout(const input_layout_ptr& layout)
 	return result::ok;
 }
 
-result renderer_impl::set_vertex_buffers(
+result sync_renderer::set_vertex_buffers(
 		size_t starts_slot,
 		size_t buffers_count, buffer_ptr const* buffers,
 		size_t const* strides, size_t const* offsets)
@@ -53,7 +53,7 @@ result renderer_impl::set_vertex_buffers(
 	return result::ok;
 }
 
-result renderer_impl::set_index_buffer(buffer_ptr const& hbuf, format index_fmt)
+result sync_renderer::set_index_buffer(buffer_ptr const& hbuf, format index_fmt)
 {
 	switch (index_fmt)
 	{
@@ -71,16 +71,16 @@ result renderer_impl::set_index_buffer(buffer_ptr const& hbuf, format index_fmt)
 	return result::ok;
 }
 
-buffer_ptr renderer_impl::get_index_buffer() const{
+buffer_ptr sync_renderer::get_index_buffer() const{
 	return state_->index_buffer;
 }
 
-format renderer_impl::get_index_format() const{
+format sync_renderer::get_index_format() const{
 	return state_->index_format;
 }
 
 //
-result renderer_impl::set_primitive_topology(primitive_topology primtopo)
+result sync_renderer::set_primitive_topology(primitive_topology primtopo)
 {
 	switch (primtopo)
 	{
@@ -98,11 +98,11 @@ result renderer_impl::set_primitive_topology(primitive_topology primtopo)
 	return result::ok;
 }
 
-primitive_topology renderer_impl::get_primitive_topology() const{
+primitive_topology sync_renderer::get_primitive_topology() const{
 	return state_->prim_topo;
 }
 
-result renderer_impl::set_vertex_shader(cpp_vertex_shader_ptr const& hvs)
+result sync_renderer::set_vertex_shader(cpp_vertex_shader_ptr const& hvs)
 {
 	state_->cpp_vs = hvs;
 
@@ -116,12 +116,12 @@ result renderer_impl::set_vertex_shader(cpp_vertex_shader_ptr const& hvs)
 	return result::ok;
 }
 
-cpp_vertex_shader_ptr renderer_impl::get_vertex_shader() const
+cpp_vertex_shader_ptr sync_renderer::get_vertex_shader() const
 {
 	return state_->cpp_vs;
 }
 
-result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& code ){
+result sync_renderer::set_vertex_shader_code( shared_ptr<shader_object> const& code ){
 	state_->vx_shader = code;
 	
 	state_->vs_proto.reset( new vertex_shader_unit() );
@@ -143,132 +143,132 @@ result renderer_impl::set_vertex_shader_code( shared_ptr<shader_object> const& c
 	return result::ok;
 }
 
-shared_ptr<shader_object> renderer_impl::get_vertex_shader_code() const{
+shared_ptr<shader_object> sync_renderer::get_vertex_shader_code() const{
 	return state_->vx_shader;
 }
 
-const vs_input_op* renderer_impl::get_vs_input_ops() const
+const vs_input_op* sync_renderer::get_vs_input_ops() const
 {
 	return state_->vsi_ops;
 }
 
-const vs_output_op* renderer_impl::get_vs_output_ops() const
+const vs_output_op* sync_renderer::get_vs_output_ops() const
 {
 	return state_->vso_ops;
 }
 
-result renderer_impl::set_rasterizer_state(const raster_state_ptr& rs)
+result sync_renderer::set_rasterizer_state(const raster_state_ptr& rs)
 {
 	state_->ras_state = rs;
 	return result::ok;
 }
 
-raster_state_ptr renderer_impl::get_rasterizer_state() const
+raster_state_ptr sync_renderer::get_rasterizer_state() const
 {
 	return state_->ras_state;
 }
 
-result renderer_impl::set_depth_stencil_state(const depth_stencil_state_ptr& dss, int32_t stencil_ref)
+result sync_renderer::set_depth_stencil_state(const depth_stencil_state_ptr& dss, int32_t stencil_ref)
 {
 	state_->ds_state = dss;
 	state_->stencil_ref = stencil_ref;
 	return result::ok;
 }
 
-const depth_stencil_state_ptr& renderer_impl::get_depth_stencil_state() const
+const depth_stencil_state_ptr& sync_renderer::get_depth_stencil_state() const
 {
 	return state_->ds_state;
 }
 
-int32_t renderer_impl::get_stencil_ref() const
+int32_t sync_renderer::get_stencil_ref() const
 {
 	return state_->stencil_ref;
 }
 
-result renderer_impl::set_pixel_shader(cpp_pixel_shader_ptr const& hps)
+result sync_renderer::set_pixel_shader(cpp_pixel_shader_ptr const& hps)
 {
 	state_->cpp_ps = hps;
 	return result::ok;
 }
 
-cpp_pixel_shader_ptr renderer_impl::get_pixel_shader() const
+cpp_pixel_shader_ptr sync_renderer::get_pixel_shader() const
 {
 	return state_->cpp_ps;
 }
 
-result renderer_impl::set_blend_shader(cpp_blend_shader_ptr const& hbs)
+result sync_renderer::set_blend_shader(cpp_blend_shader_ptr const& hbs)
 {
 	state_->cpp_bs = hbs;
 	return result::ok;
 }
 
-cpp_blend_shader_ptr renderer_impl::get_blend_shader() const
+cpp_blend_shader_ptr sync_renderer::get_blend_shader() const
 {
 	return state_->cpp_bs;
 }
 
-result renderer_impl::set_viewport(const viewport& vp)
+result sync_renderer::set_viewport(const viewport& vp)
 {
 	state_->vp = vp;
 	return result::ok;
 }
 
-viewport renderer_impl::get_viewport() const
+viewport sync_renderer::get_viewport() const
 {
 	return state_->vp;
 }
 
-result renderer_impl::set_framebuffer_size(size_t width, size_t height, size_t num_samples)
+result sync_renderer::set_framebuffer_size(size_t width, size_t height, size_t num_samples)
 {
 	stages_.backend->reset(width, height, num_samples, stages_.backend->get_buffer_format());
 	return result::ok;
 }
 
-eflib::rect<size_t> renderer_impl::get_framebuffer_size() const
+eflib::rect<size_t> sync_renderer::get_framebuffer_size() const
 {
 	return stages_.backend->get_rect();
 }
 
 //
-result renderer_impl::set_framebuffer_format(pixel_format pxfmt)
+result sync_renderer::set_framebuffer_format(pixel_format pxfmt)
 {
 	stages_.backend->reset(stages_.backend->get_width(), stages_.backend->get_height(), stages_.backend->get_num_samples(), pxfmt);
 	return result::ok;
 }
 
-pixel_format renderer_impl::get_framebuffer_format(pixel_format /*pxfmt*/) const
+pixel_format sync_renderer::get_framebuffer_format(pixel_format /*pxfmt*/) const
 {
 	return stages_.backend->get_buffer_format();
 }
 
 //do not support get function for a while
-result renderer_impl::set_render_target(render_target tar, size_t target_index, surface_ptr const& surf)
+result sync_renderer::set_render_target(render_target tar, size_t target_index, surface_ptr const& surf)
 {
 	stages_.backend->set_render_target( tar, target_index, surf.get() );
 	return result::ok;
 }
 
-buffer_ptr renderer_impl::create_buffer(size_t size)
+buffer_ptr sync_renderer::create_buffer(size_t size)
 {
 	return resource_pool_->create_buffer(size);
 }
 
-texture_ptr renderer_impl::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+texture_ptr sync_renderer::create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
 	return resource_pool_->create_texture_2d(width, height, num_samples, fmt);
 }
 
-texture_ptr renderer_impl::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+texture_ptr sync_renderer::create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
 	return resource_pool_->create_texture_cube(width, height, num_samples, fmt);
 }
 
-sampler_ptr renderer_impl::create_sampler(const sampler_desc& desc)
+sampler_ptr sync_renderer::create_sampler(const sampler_desc& desc)
 {
 	return sampler_ptr(new sampler(desc));
 }
 
-result renderer_impl::draw(size_t startpos, size_t primcnt)
+result sync_renderer::draw(size_t startpos, size_t primcnt)
 {
 	state_->start_index = static_cast<uint32_t>(startpos);
 	state_->prim_count  = static_cast<uint32_t>(primcnt);
@@ -287,7 +287,7 @@ result renderer_impl::draw(size_t startpos, size_t primcnt)
 	return result::ok;
 }
 
-result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
+result sync_renderer::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
 	state_->start_index = static_cast<uint32_t>(startpos);
 	state_->prim_count  = static_cast<uint32_t>(primcnt);
@@ -304,54 +304,54 @@ result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
 	return result::ok;
 }
 
-result renderer_impl::clear_color(size_t target_index, const color_rgba32f& c)
+result sync_renderer::clear_color(size_t target_index, const color_rgba32f& c)
 {
 	stages_.backend->clear_color(target_index, c);
 	return result::ok;
 }
 
-result renderer_impl::clear_depth(float d)
+result sync_renderer::clear_depth(float d)
 {
 	stages_.backend->clear_depth(d);
 	return result::ok;
 }
 
-result renderer_impl::clear_stencil(uint32_t s)
+result sync_renderer::clear_stencil(uint32_t s)
 {
 	stages_.backend->clear_stencil(s);
 	return result::ok;
 }
 
-result renderer_impl::clear_color(size_t target_index, const eflib::rect<size_t>& rc, const color_rgba32f& c)
+result sync_renderer::clear_color(size_t target_index, const eflib::rect<size_t>& rc, const color_rgba32f& c)
 {
 	stages_.backend->clear_color(target_index, rc, c);
 	return result::ok;
 }
 
-result renderer_impl::clear_depth(const eflib::rect<size_t>& rc, float d)
+result sync_renderer::clear_depth(const eflib::rect<size_t>& rc, float d)
 {
 	stages_.backend->clear_depth(rc, d);
 	return result::ok;
 }
 
-result renderer_impl::clear_stencil(const eflib::rect<size_t>& rc, uint32_t s)
+result sync_renderer::clear_stencil(const eflib::rect<size_t>& rc, uint32_t s)
 {
 	stages_.backend->clear_stencil(rc, s);
 	return result::ok;
 }
 
-result renderer_impl::flush()
+result sync_renderer::flush()
 {
 	return result::ok;
 }
 
-result renderer_impl::present()
+result sync_renderer::present()
 {
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return result::ok;
 }
 
-void renderer_impl::initialize()
+void sync_renderer::initialize()
 {
 	// stages_.assembler->initialize(stages_);
 	stages_.vert_cache->initialize(&stages_);
@@ -360,7 +360,7 @@ void renderer_impl::initialize()
 	stages_.backend->initialize(&stages_);
 }
 
-renderer_impl::renderer_impl(const renderer_parameters* pparam, device_ptr hdev)
+sync_renderer::sync_renderer(const renderer_parameters* pparam, device_ptr hdev)
 {
 	resource_pool_	.reset( new resource_manager() );
 	state_			.reset( new render_state() );
@@ -393,32 +393,32 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, device_ptr hdev)
 	initialize();
 }
 
-rasterizer_ptr renderer_impl::get_rasterizer()
+rasterizer_ptr sync_renderer::get_rasterizer()
 {
 	return stages_.ras;
 }
 
-framebuffer_ptr renderer_impl::get_framebuffer() const
+framebuffer_ptr sync_renderer::get_framebuffer() const
 {
 	return stages_.backend; 
 }
 
-vertex_cache_ptr renderer_impl::get_vertex_cache()
+vertex_cache_ptr sync_renderer::get_vertex_cache()
 {
 	return stages_.vert_cache;
 }
 
-stream_assembler_ptr renderer_impl::get_assembler()
+stream_assembler_ptr sync_renderer::get_assembler()
 {
 	return stages_.assembler;
 }
 
-host_ptr renderer_impl::get_host()
+host_ptr sync_renderer::get_host()
 {
 	return stages_.host;
 }
 
-result renderer_impl::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
+result sync_renderer::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
 {
 	result ret = result::failed;
 	if(state_->vs_proto)
@@ -434,7 +434,7 @@ result renderer_impl::set_vs_variable_value( std::string const& name, void const
 	return ret;
 }
 
-result renderer_impl::set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
+result sync_renderer::set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
 {
 	result ret = result::failed;
 	if( state_->vs_proto )
@@ -450,25 +450,25 @@ result renderer_impl::set_vs_variable_pointer( std::string const& name, void con
 	return ret;
 }
 
-shared_ptr<vertex_shader_unit> renderer_impl::vs_proto() const{
+shared_ptr<vertex_shader_unit> sync_renderer::vs_proto() const{
 	return state_->vs_proto;
 }
 
-input_layout_ptr renderer_impl::create_input_layout(
+input_layout_ptr sync_renderer::create_input_layout(
 	input_element_desc const* elem_descs, size_t elems_count,
 	shader_object_ptr const& vs )
 {
 	return input_layout::create( elem_descs, elems_count, vs );
 }
 
-salviar::input_layout_ptr renderer_impl::create_input_layout(
+salviar::input_layout_ptr sync_renderer::create_input_layout(
 	input_element_desc const* elem_descs, size_t elems_count,
 	cpp_vertex_shader_ptr const& vs )
 {
 	return input_layout::create( elem_descs, elems_count, vs );
 }
 
-result renderer_impl::set_pixel_shader_code( shared_ptr<shader_object> const& code )
+result sync_renderer::set_pixel_shader_code( shared_ptr<shader_object> const& code )
 {
 	state_->px_shader = code;
 	state_->ps_proto.reset( new pixel_shader_unit() );
@@ -477,16 +477,16 @@ result renderer_impl::set_pixel_shader_code( shared_ptr<shader_object> const& co
 	return result::ok;
 }
 
-shared_ptr<shader_object> renderer_impl::get_pixel_shader_code() const{
+shared_ptr<shader_object> sync_renderer::get_pixel_shader_code() const{
 	return state_->px_shader;
 }
 
-shared_ptr<pixel_shader_unit> renderer_impl::ps_proto() const
+shared_ptr<pixel_shader_unit> sync_renderer::ps_proto() const
 {
 	return state_->ps_proto;
 }
 
-result renderer_impl::set_ps_variable( std::string const& name, void const* data, size_t /*sz*/ )
+result sync_renderer::set_ps_variable( std::string const& name, void const* data, size_t /*sz*/ )
 {
 	if( state_->ps_proto ){
 		state_->ps_proto->set_variable(name, data);
@@ -495,7 +495,7 @@ result renderer_impl::set_ps_variable( std::string const& name, void const* data
 	return result::failed;
 }
 
-result renderer_impl::set_ps_sampler( std::string const& name, sampler_ptr const& samp )
+result sync_renderer::set_ps_sampler( std::string const& name, sampler_ptr const& samp )
 {
 	if ( state_->ps_proto ){
 		state_->ps_proto->set_sampler( name, samp );
@@ -504,7 +504,7 @@ result renderer_impl::set_ps_sampler( std::string const& name, sampler_ptr const
 	return result::failed;
 }
 
-result renderer_impl::set_vs_sampler( std::string const& name, sampler_ptr const& samp )
+result sync_renderer::set_vs_sampler( std::string const& name, sampler_ptr const& samp )
 {
 	result ret = result::failed;
 	
@@ -525,7 +525,7 @@ result renderer_impl::set_vs_sampler( std::string const& name, sampler_ptr const
 
 renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev)
 {
-	return renderer_ptr(new renderer_impl(pparam, hdev));
+	return renderer_ptr(new sync_renderer(pparam, hdev));
 }
 
 END_NS_SALVIAR();

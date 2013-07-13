@@ -13,7 +13,7 @@ struct vs_input_op;
 struct vs_output_op;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(host);
-EFLIB_DECLARE_CLASS_SHARED_PTR(renderer_impl);
+EFLIB_DECLARE_CLASS_SHARED_PTR(sync_renderer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
@@ -21,7 +21,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(stream_assembler);
 
 EFLIB_DECLARE_STRUCT_SHARED_PTR(render_state);
 
-class renderer_impl : public renderer
+class sync_renderer : public renderer
 {
 	render_state_ptr		state_;
 	render_stages			stages_;
@@ -121,7 +121,7 @@ public:
 	virtual result present();
 
 	//this class for inner system
-	renderer_impl(const renderer_parameters* pparam, device_ptr hdev);
+	sync_renderer(const renderer_parameters* pparam, device_ptr hdev);
 
 	host_ptr				get_host();
 	stream_assembler_ptr	get_assembler();

@@ -1,7 +1,7 @@
 #include <salviar/include/renderer.h>
 
 #include <salviar/include/binary_modules.h>
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/sync_renderer.h>
 #include <salviar/include/sampler_api.h>
 #include <salviar/include/shader_impl.h>
 #include <salviar/include/shader_object.h>

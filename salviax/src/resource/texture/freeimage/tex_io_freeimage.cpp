@@ -3,7 +3,7 @@
 #ifdef SALVIAX_FREEIMAGE_ENABLED
 
 #include <salviax/include/utility/freeimage_utilities.h>
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/sync_renderer.h>
 #include <salviar/include/resource_manager.h>
 #include <FreeImage.h>
 #include <tchar.h>

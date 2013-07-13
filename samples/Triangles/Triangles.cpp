@@ -6,7 +6,7 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/shader_object.h>
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/sync_renderer.h>
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>

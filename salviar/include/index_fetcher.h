@@ -10,7 +10,7 @@
 
 BEGIN_NS_SALVIAR();
 
-class render_state;
+struct render_state;
 
 class index_fetcher
 {
