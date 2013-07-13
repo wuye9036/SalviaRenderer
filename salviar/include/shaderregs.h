@@ -208,10 +208,10 @@ void viewport_transform(eflib::vec4& position, viewport const& vp);
 //vs_output compute_derivate
 struct ps_output
 {
-	float depth;
+	float		depth;
+	bool		front_face;
+	uint32_t	coverage;
 	boost::array<eflib::vec4, pso_color_regcnt> color;
-	bool front_face;
-	uint32_t coverage;
 };
 
 struct pixel_accessor

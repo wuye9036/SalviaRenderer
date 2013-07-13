@@ -51,11 +51,7 @@ public:
 	void update(render_state const* state)
 	{
 		transformed_verts_.reset();
-		index_fetcher_.initialize(
-			state->index_buffer, state->index_format,
-			state->prim_topo, state->start_index,
-			state->base_vertex
-			);
+		index_fetcher_.update(state);
 		topology_	= state->prim_topo;
 		viewport_	= &(state->vp);
 		cpp_vs_		= state->cpp_vs.get();
@@ -172,10 +168,7 @@ private:
 		{
 			const int32_t start = local_working_package * package_size;
 			const int32_t end = std::min(prim_count, start + package_size);
-			for (int32_t i = start; i < end; ++ i){
-				index_fetcher_.fetch_indices(&indices[i*stride], i);
-			}
-
+			index_fetcher_.fetch_indexes(&indices[start*stride], start, end);
 			local_working_package = working_package++;
 		}
 	}
