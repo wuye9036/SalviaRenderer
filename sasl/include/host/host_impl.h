@@ -94,7 +94,7 @@ public:
 
 	void update_vertex_shader	(salviar::shader_object_ptr const& vso);
 	void update_pixel_shader	(salviar::shader_object_ptr const& pso);
-	void update_target_params	(salviar::render_parameters const& rp, 
+	void update_target_params	(salviar::renderer_parameters const& rp, 
 								salviar::buffer_ptr const& target);
 
 	bool vx_set_constant		(eflib::fixed_string const&, void const* value);

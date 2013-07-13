@@ -13,6 +13,8 @@
 #include <salviar/include/shader_unit.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/host.h>
+#include <salviar/include/render_stages.h>
+#include <salviar/include/renderer.h>
 
 BEGIN_NS_SALVIAR();
 
@@ -21,46 +23,43 @@ using boost::shared_ptr;
 
 result renderer_impl2::draw(render_state_ptr const& state)
 {
-	state_ = state;
-
-	vertex_cache_->update(state.get());
-	vertex_cache_->transform_vertices(state_->prim_count);
-	
-	/*
-	rast_->update(state);
-	rast_->draw();
-	*/
+	stages_.ras->update(state.get());
+	stages_.vert_cache->update( state.get() );
+	stages_.vert_cache->transform_vertices(state->prim_count);
+	stages_.ras->draw(state->prim_count);
 
 	return result::ok;
 }
 
-result renderer_impl2::clear_color(size_t target_index, const color_rgba32f& c)
+result renderer_impl2::clear_color(render_state_ptr const& state)
 {
-	frame_buffer_->clear_color(target_index, c);
-	return result::ok;
+	return result::failed;
 }
 
-result renderer_impl2::clear_depth(float d)
+result renderer_impl2::clear_depth(render_state_ptr const& state)
 {
-	frame_buffer_->clear_depth(d);
-	return result::ok;
+	return result::failed;
 }
 
-result renderer_impl2::clear_stencil(uint32_t s)
+result renderer_impl2::clear_stencil(render_state_ptr const& state)
 {
-	frame_buffer_->clear_stencil(s);
-	return result::ok;
+	return result::failed;
 }
 
-renderer_impl2::renderer_impl2()
+renderer_impl2::renderer_impl2(renderer_parameters const* params)
 {
-	host_			= modules::host::create_host();
-	vertex_cache_	= create_default_vertex_cache();
+	// Create stages
+	stages_.host		= modules::host::create_host();
+	stages_.vert_cache	= create_default_vertex_cache();
+	stages_.assembler	.reset( new stream_assembler() );
+	stages_.ras			.reset( new rasterizer() );
+	stages_.backend		.reset( new framebuffer(params) );
 
-	assembler_		.reset(new stream_assembler() );
-	clipper_		.reset(new clipper());
-	rast_			.reset(new rasterizer());
-	frame_buffer_	.reset();
+	// Initialize stages
+	stages_.vert_cache	->initialize(&stages_);
+	stages_.host		->initialize( stages_.assembler.get() );
+	stages_.ras			->initialize(&stages_);
+	stages_.backend		->initialize(&stages_);
 }
 
 END_NS_SALVIAR();

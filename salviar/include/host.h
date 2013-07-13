@@ -13,7 +13,7 @@
 BEGIN_NS_SALVIAR();
 
 class  stream_assembler;
-class  render_parameters;
+class  renderer_parameters;
 struct shader_profile;
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
@@ -32,7 +32,7 @@ public:
 
 	virtual void update_vertex_shader	(shader_object_ptr const& vso) = 0;
 	// virtual void update_pixel_shader	(shader_object_ptr const& pso) = 0;
-	// virtual void update_target_params	(render_parameters const& rp, buffer_ptr const& target) = 0;
+	// virtual void update_target_params	(renderer_parameters const& rp, buffer_ptr const& target) = 0;
 
 	virtual bool vx_set_constant		(eflib::fixed_string const&, void const* value) = 0;
 	virtual bool vx_set_constant_pointer(eflib::fixed_string const&, void const* pvalue, size_t sz) = 0;

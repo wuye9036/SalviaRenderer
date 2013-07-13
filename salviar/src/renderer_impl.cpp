@@ -241,23 +241,6 @@ pixel_format renderer_impl::get_framebuffer_format(pixel_format /*pxfmt*/) const
 	return stages_.backend->get_buffer_format();
 }
 
-result renderer_impl::set_render_target_available(render_target tar, size_t target_index, bool valid)
-{
-	if(valid){
-		stages_.backend->set_render_target_enabled(tar, target_index);
-	} else {
-		stages_.backend->set_render_target_disabled(tar, target_index);
-	}
-
-	return result::ok;
-}
-
-bool renderer_impl::get_render_target_available(render_target /*tar*/, size_t /*target_index*/) const
-{
-	EFLIB_ASSERT_UNIMPLEMENTED();
-	return false;
-}
-
 //do not support get function for a while
 result renderer_impl::set_render_target(render_target tar, size_t target_index, surface_ptr const& surf)
 {
@@ -382,7 +365,6 @@ renderer_impl::renderer_impl(const renderer_parameters* pparam, device_ptr hdev)
 	resource_pool_	.reset( new resource_manager() );
 	state_			.reset( new render_state() );
 
-	native_dev_			= hdev;
 	state_->index_format= format_r16_uint;
 	state_->prim_topo	= primitive_triangle_list;
 	
@@ -419,11 +401,6 @@ rasterizer_ptr renderer_impl::get_rasterizer()
 framebuffer_ptr renderer_impl::get_framebuffer() const
 {
 	return stages_.backend; 
-}
-
-device_ptr renderer_impl::get_native_device()
-{
-	return native_dev_;
 }
 
 vertex_cache_ptr renderer_impl::get_vertex_cache()

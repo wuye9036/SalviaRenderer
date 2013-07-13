@@ -298,15 +298,6 @@ public:
 		return result::ok;
 	};
 
-	virtual result set_render_target_available(render_target tar, size_t target_index, bool valid)
-	{
-		boost::function<result()> cmd =
-			boost::bind(&renderer::set_render_target_available, impl_, tar, target_index, valid);
-		cmds_.push_front(cmd);
-
-		return result::ok;
-	}
-
 	virtual result set_render_target(render_target tar, size_t target_index, surface_ptr const& surf)
 	{
 		boost::function<result()> cmd =

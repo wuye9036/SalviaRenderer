@@ -3,7 +3,7 @@
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/surface.h>
 #include <salviar/include/render_state.h>
-#include <salviar/include/renderer_impl.h>
+#include <salviar/include/renderer.h>
 
 #include <eflib/include/math/collision_detection.h>
 
@@ -311,76 +311,53 @@ void framebuffer::update(render_state* state)
 	stencil_ref_= ds_state_->read_stencil(state->stencil_ref);
 }
 
-framebuffer::framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt)
-:width_(width), height_(height), num_samples_(num_samples), fmt_(fmt),
-back_cbufs_(pso_color_regcnt), cbufs_(pso_color_regcnt), buf_valids(pso_color_regcnt),
-dbuf_(new surface(width, height, num_samples, pixel_format_color_r32f)),
-sbuf_(new surface(width, height, num_samples, pixel_format_color_r32i))
+framebuffer::framebuffer(renderer_parameters const* params)
 {
-	for(size_t i = 0; i < back_cbufs_.size(); ++i){
-		back_cbufs_[i].reset();
-	}
-
-	back_cbufs_[0].reset(new surface(width, height, num_samples, fmt));
-
-	for(size_t i = 0; i < cbufs_.size(); ++i){
-		cbufs_[i] = back_cbufs_[i].get();
-	}
-
-	buf_valids[0] = true;
-	for(size_t i = 1; i < buf_valids.size(); ++i){
-		buf_valids[i] = false;
-	}
+	reset(
+		params->backbuffer_width, params->backbuffer_height,
+		params->backbuffer_num_samples, params->backbuffer_format
+		);
 }
 
-framebuffer::~framebuffer(void)
+framebuffer::framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt)
+{
+	reset(width, height, num_samples, fmt);
+}
+
+framebuffer::~framebuffer()
 {
 }
 
 /// The first render target is framebuffer surface and others are null.
 void framebuffer::reset(size_t width, size_t height, size_t num_samples, pixel_format fmt)
 {
-	new(this) framebuffer(width, height, num_samples, fmt);
-}
+	width_			= width;
+	height_			= height;
+	num_samples_	= num_samples;
+	fmt_			= fmt;
+	back_cbufs_		= std::vector<surface_ptr>(pso_color_regcnt);
+	cbufs_			= std::vector<surface*>(pso_color_regcnt);
+	buf_valids		= std::vector<bool>(pso_color_regcnt);
+	dbuf_			.reset(new surface(width, height, num_samples, pixel_format_color_r32f));
+	sbuf_			.reset(new surface(width, height, num_samples, pixel_format_color_r32i));
 
-void framebuffer::set_render_target_disabled(render_target tar, size_t target_index){
-	EFLIB_ASSERT_AND_IF(tar == render_target_color, "You cannot disable any buffer except color buffer."){
-		return;
+	for(auto& buf: back_cbufs_)
+	{
+		buf.reset();
 	}
 
-	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "Index of target is out of bound"){
-		return;
+	back_cbufs_[0].reset(new surface(width, height, num_samples, fmt));
+
+	for(size_t i = 0; i < cbufs_.size(); ++i)
+	{
+		cbufs_[i] = back_cbufs_[i].get();
 	}
 
-	buf_valids[target_index] = false;
-}
-
-void framebuffer::set_render_target_enabled(render_target tar, size_t target_index){
-	EFLIB_ASSERT_AND_IF(tar == render_target_color, "You cannot enable any buffer except color buffer."){
-		return;
+	buf_valids[0] = true;
+	for(size_t i = 1; i < buf_valids.size(); ++i)
+	{
+		buf_valids[i] = false;
 	}
-	EFLIB_ASSERT_AND_IF(target_index < cbufs_.size(), "Index of target is out of bound"){
-		return;
-	}
-
-	// Reallocate back buffers
-	if(back_cbufs_[target_index] && check_buf(back_cbufs_[target_index].get())){
-		back_cbufs_[target_index].reset(new surface(width_, height_, num_samples_, fmt_));
-	}
-
-	// Attach back buffer if current buffer is null or invalid.
-	if(cbufs_[target_index] == NULL){
-		cbufs_[target_index] = back_cbufs_[target_index].get();
-	}
-
-	// Check back buffer.
-	if(check_buf(cbufs_[target_index])){
-		EFLIB_ASSERT(false, "Target buffer is invalid.");
-		cbufs_[target_index] = back_cbufs_[target_index].get();
-	}
-
-	// Enable buffer.
-	buf_valids[target_index] = true;
 }
 
 // Redirect render target. Just support color buffer for now.

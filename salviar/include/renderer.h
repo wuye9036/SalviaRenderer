@@ -30,11 +30,10 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
 
 struct renderer_parameters
 {
-	size_t backbuffer_width;
-	size_t backbuffer_height;
-	size_t backbuffer_num_samples;
-
-	pixel_format backbuffer_format;
+	size_t			backbuffer_width;
+	size_t			backbuffer_height;
+	size_t			backbuffer_num_samples;
+	pixel_format	backbuffer_format;
 };
 
 class renderer
@@ -109,9 +108,6 @@ public:
 
 	virtual result set_framebuffer_format(pixel_format pxfmt) = 0;
 	virtual pixel_format get_framebuffer_format(pixel_format pxfmt) const = 0;
-
-	virtual result set_render_target_available(render_target tar, size_t target_index, bool valid) = 0;
-	virtual bool get_render_target_available(render_target tar, size_t target_index) const = 0;
 
 	virtual framebuffer_ptr get_framebuffer() const = 0;
 

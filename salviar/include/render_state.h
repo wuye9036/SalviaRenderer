@@ -7,6 +7,7 @@
 #include <salviar/include/viewport.h>
 
 #include <eflib/include/utility/shared_declaration.h>
+#include <eflib/include/math/vector.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -66,6 +67,11 @@ struct render_state
 	surface_ptr					depth_stencil_target;
 
 	counter_ptr					counters[counter_ids::counter_count];
+
+	surface_ptr					clear_target;
+	float						clear_z;
+	uint32_t					clear_stencil;
+	eflib::vec4					clear_color;
 };
 
 END_NS_SALVIAR();

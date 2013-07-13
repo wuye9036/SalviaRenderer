@@ -15,6 +15,7 @@ BEGIN_NS_SALVIAR();
 struct pixel_accessor;
 struct render_stages;
 struct render_state;
+struct renderer_parameters;
 
 struct depth_stencil_op_desc {
     stencil_op stencil_fail_op;
@@ -54,19 +55,19 @@ class depth_stencil_state {
 
 	typedef int32_t (*mask_stencil_func_type)(int32_t stencil, int32_t mask);
 	typedef int32_t (*read_stencil_func_type)(const pixel_accessor& target_pixel, size_t sample, int32_t mask);
-	typedef bool (*depth_test_func_type)(float ps_depth, float cur_depth);
-	typedef bool (*stencil_test_func_type)(int32_t ref, int32_t cur_stencil);
+	typedef bool	(*depth_test_func_type)(float ps_depth, float cur_depth);
+	typedef bool	(*stencil_test_func_type)(int32_t ref, int32_t cur_stencil);
 	typedef int32_t (*stencil_op_func_type)(int32_t ref, int32_t cur_stencil);
-	typedef void (*write_depth_func_type)(size_t sample, float depth, pixel_accessor& target_pixel);
-	typedef void (*write_stencil_func_type)(size_t sample, int32_t stencil, int32_t mask, pixel_accessor& target_pixel);
+	typedef void	(*write_depth_func_type)(size_t sample, float depth, pixel_accessor& target_pixel);
+	typedef void	(*write_stencil_func_type)(size_t sample, int32_t stencil, int32_t mask, pixel_accessor& target_pixel);
 
-	mask_stencil_func_type mask_stencil_func_;
-	read_stencil_func_type read_stencil_func_;
-	depth_test_func_type depth_test_func_;
-	stencil_test_func_type stencil_test_func_[2];
-	stencil_op_func_type stencil_op_func_[6];
-	write_depth_func_type write_depth_func_;
-	write_stencil_func_type write_stencil_func_;
+	mask_stencil_func_type	mask_stencil_func_;
+	read_stencil_func_type	read_stencil_func_;
+	depth_test_func_type	depth_test_func_;
+	stencil_test_func_type	stencil_test_func_[2];
+	stencil_op_func_type	stencil_op_func_[6];
+	write_depth_func_type	write_depth_func_;
+	write_stencil_func_type	write_stencil_func_;
 
 public:
 	depth_stencil_state(const depth_stencil_desc& desc);
@@ -104,24 +105,21 @@ public:
 	void initialize	(render_stages* stages);
 	void update		(render_state* state);
 
+	framebuffer(renderer_parameters const* params);
 	framebuffer(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	~framebuffer(void);
 
 	void reset(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 
-	// Render target accessors.
-	void set_render_target_disabled(render_target tar, size_t target_index);
-	void set_render_target_enabled(render_target tar, size_t target_index);
-
-	void set_render_target(render_target tar, size_t target_index, surface* psurf);
-	surface* get_render_target(render_target tar, size_t target_index) const;
+	void		set_render_target(render_target tar, size_t target_index, surface* psurf);
+	surface*	get_render_target(render_target tar, size_t target_index) const;
 
 	// Render states accessors.
 	eflib::rect<size_t> get_rect();
-	size_t get_width() const;
-	size_t get_height() const;
-	size_t get_num_samples() const;
-	pixel_format get_buffer_format() const;
+	size_t				get_width() const;
+	size_t				get_height() const;
+	size_t				get_num_samples() const;
+	pixel_format		get_buffer_format() const;
 
 	float get_z(size_t x, size_t y) const;
 

@@ -28,7 +28,6 @@ class renderer_impl : public renderer
 
 	// Resources
 	resource_manager_ptr	resource_pool_;
-	device_ptr				native_dev_;
 
 	void initialize();
 
@@ -98,9 +97,6 @@ public:
 	virtual result set_framebuffer_format(pixel_format pxfmt);
 	virtual pixel_format get_framebuffer_format(pixel_format pxfmt) const;
 
-	virtual result set_render_target_available(render_target tar, size_t target_index, bool valid);
-	virtual bool get_render_target_available(render_target tar, size_t target_index) const;
-
 	virtual framebuffer_ptr get_framebuffer() const;
 
 	//do not support get function for a while
@@ -130,7 +126,6 @@ public:
 	host_ptr				get_host();
 	stream_assembler_ptr	get_assembler();
 	rasterizer_ptr			get_rasterizer();
-	device_ptr				get_native_device();
 	vertex_cache_ptr		get_vertex_cache();
 };
 

@@ -137,7 +137,7 @@ void host_impl::update_pixel_shader(shader_object_ptr const& /*pso*/)
 {
 }
 
-void host_impl::update_target_params(render_parameters const& /*rp*/, buffer_ptr const& /*target*/)
+void host_impl::update_target_params(renderer_parameters const& /*rp*/, buffer_ptr const& /*target*/)
 {
 }
 	
