@@ -31,24 +31,28 @@ void shader_cbuffer_impl::set_variable(eflib::fixed_string const& name, void con
 	{
 		offset = existed_cdata->offset;
 		existed_cdata->length = data_length;
-		return;
-	}
-	
-	shader_cdata cdata;
-	cdata.array_size= 0;
-	cdata.length	= data_length;
-	cdata.offset	= data_memory_.size();
-	data_memory_.resize(data_memory_.size() + data_length);
-	memcpy(data_memory_.data()+offset, data, data_length);
-
-	if(existed_cdata == nullptr)
-	{
-		variables_.emplace(name, cdata);
 	}
 	else
 	{
-		*existed_cdata = cdata;
+		offset = data_memory_.size();
+
+		shader_cdata cdata;
+		cdata.array_size= 0;
+		cdata.length	= data_length;
+		cdata.offset	= offset;
+		data_memory_.resize(data_memory_.size() + data_length);
+	
+		if(existed_cdata == nullptr)
+		{
+			variables_.emplace(name, cdata);
+		}
+		else
+		{
+			*existed_cdata = cdata;
+		}
 	}
+
+	memcpy(data_memory_.data()+offset, data, data_length);
 }
 
 END_NS_SALVIAR();
