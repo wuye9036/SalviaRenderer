@@ -3,6 +3,7 @@
 #include <salviar/include/binary_modules.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
+#include <salviar/include/shader_cbuffer_impl.h>
 #include <salviar/include/clipper.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/resource_manager.h>
@@ -14,6 +15,8 @@
 #include <salviar/include/shader_unit.h>
 #include <salviar/include/input_layout.h>
 #include <salviar/include/host.h>
+#include <salviar/include/shader_reflection.h>
+#include <salviar/include/shader_object.h>
 
 BEGIN_NS_SALVIAR();
 
@@ -25,14 +28,9 @@ result sync_renderer::set_input_layout(const input_layout_ptr& layout)
 {
 	size_t min_slot = 0, max_slot = 0;
 	layout->slot_range(min_slot, max_slot);
-	state_->vsi_ops = &get_vs_input_op( static_cast<uint32_t>(max_slot) );
+	state_->vsi_ops	= &get_vs_input_op( static_cast<uint32_t>(max_slot) );
+	state_->layout	= layout;
 
-	stages_.assembler->set_input_layout(layout);
-	if(stages_.host)
-	{
-		stages_.host->input_layout_changed();
-	}
-	
 	return result::ok;
 }
 
@@ -41,15 +39,7 @@ result sync_renderer::set_vertex_buffers(
 		size_t buffers_count, buffer_ptr const* buffers,
 		size_t const* strides, size_t const* offsets)
 {
-	stages_.assembler->set_vertex_buffers(
-		starts_slot,
-		buffers_count, buffers,
-		strides, offsets
-		);
-	if(stages_.host)
-	{
-		stages_.host->buffers_changed();
-	}
+	state_->str_state->update(starts_slot, buffers_count, buffers, strides, offsets);
 	return result::ok;
 }
 
@@ -133,11 +123,6 @@ result sync_renderer::set_vertex_shader_code( shared_ptr<shader_object> const& c
 	for (uint32_t i = 0; i < n; ++ i)
 	{
 		state_->vso_ops->attribute_modifiers[i] = state_->vs_proto->output_attribute_modifiers(i);
-	}
-
-	if(stages_.host)
-	{
-		stages_.host->update_vertex_shader(state_->vx_shader);
 	}
 
 	return result::ok;
@@ -278,11 +263,16 @@ result sync_renderer::draw(size_t startpos, size_t primcnt)
 	auto current_ib = state_->index_buffer;
 	state_->index_buffer.reset();
 
+	stages_.assembler->update(state_.get());
 	stages_.ras->update(state_.get());
-	stages_.vert_cache->update( state_.get() );
+	stages_.vert_cache->update(state_.get());
+	stages_.host->update(state_.get());
+	
+	apply_shader_cbuffer();
+
 	stages_.vert_cache->transform_vertices(static_cast<uint32_t>(primcnt));
 	stages_.ras->draw(primcnt);
-
+	
 	state_->index_buffer = current_ib;
 	return result::ok;
 }
@@ -294,9 +284,13 @@ result sync_renderer::draw_index(size_t startpos, size_t primcnt, int basevert)
 	state_->base_vertex = basevert;
 
 	// TODO just save/restore index buffer in current version.
+	stages_.assembler->update(state_.get());
 	stages_.ras	->update( state_.get() );
 	stages_.vert_cache->update( state_.get() );
 	stages_.backend->update( state_.get() );
+	stages_.host->update(state_.get());
+	
+	apply_shader_cbuffer();
 
 	stages_.vert_cache->transform_vertices(static_cast<uint32_t>(primcnt));
 	stages_.ras->draw(primcnt);
@@ -355,7 +349,7 @@ void sync_renderer::initialize()
 {
 	// stages_.assembler->initialize(stages_);
 	stages_.vert_cache->initialize(&stages_);
-	stages_.host->initialize( stages_.assembler.get() );
+	stages_.host->initialize(&stages_);
 	stages_.ras->initialize(&stages_);
 	stages_.backend->initialize(&stages_);
 }
@@ -381,8 +375,11 @@ sync_renderer::sync_renderer(const renderer_parameters* pparam, device_ptr hdev)
 		);
 	
 	stages_.vert_cache = create_default_vertex_cache();
+	state_->str_state.reset(new stream_state());
 	state_->ras_state.reset(new raster_state(raster_desc()));
 	state_->ds_state.reset(new depth_stencil_state(depth_stencil_desc()));
+	state_->vx_cbuffer.reset(new shader_cbuffer_impl());
+	state_->px_cbuffer.reset(new shader_cbuffer_impl());
 
 	state_->vp.minz = 0.0f;
 	state_->vp.maxz = 1.0f;
@@ -398,36 +395,16 @@ framebuffer_ptr sync_renderer::get_framebuffer() const
 	return stages_.backend; 
 }
 
-result sync_renderer::set_vs_variable_value( std::string const& name, void const* pvariable, size_t /*sz*/ )
+result sync_renderer::set_vs_variable_value( std::string const& name, void const* var_addr, size_t sz)
 {
-	result ret = result::failed;
-	if(state_->vs_proto)
-	{
-		state_->vs_proto->set_variable(name, pvariable);
-		ret = result::ok;
-	}
-	if(stages_.host)
-	{
-		stages_.host->vx_set_constant(name, pvariable);
-		ret = result::ok;
-	}
-	return ret;
+	state_->vx_cbuffer->set_variable(name, var_addr, sz);
+	return result::ok;
 }
 
-result sync_renderer::set_vs_variable_pointer( std::string const& name, void const* pvariable, size_t sz )
+result sync_renderer::set_vs_variable_pointer( std::string const& name, void const* var_addr, size_t sz )
 {
-	result ret = result::failed;
-	if( state_->vs_proto )
-	{
-		state_->vs_proto->set_variable_pointer(name, pvariable, sz);
-		ret = result::ok;
-	}
-	if(stages_.host)
-	{
-		stages_.host->vx_set_constant_pointer(name, pvariable, sz);
-		ret = result::ok;
-	}
-	return ret;
+	state_->vx_cbuffer->set_variable(name, var_addr, sz);
+	return result::ok;
 }
 
 shared_ptr<vertex_shader_unit> sync_renderer::vs_proto() const{
@@ -466,44 +443,69 @@ shared_ptr<pixel_shader_unit> sync_renderer::ps_proto() const
 	return state_->ps_proto;
 }
 
-result sync_renderer::set_ps_variable( std::string const& name, void const* data, size_t /*sz*/ )
+result sync_renderer::set_ps_variable( std::string const& name, void const* data, size_t sz)
 {
-	if( state_->ps_proto ){
-		state_->ps_proto->set_variable(name, data);
-		return result::ok;
-	}
-	return result::failed;
+	state_->px_cbuffer->set_variable(name, data, sz);
+	return result::ok;
 }
 
 result sync_renderer::set_ps_sampler( std::string const& name, sampler_ptr const& samp )
 {
-	if ( state_->ps_proto ){
-		state_->ps_proto->set_sampler( name, samp );
-		return result::ok;
-	}
-	return result::failed;
+	state_->px_cbuffer->set_sampler(name, samp);
+	return result::ok;
 }
 
 result sync_renderer::set_vs_sampler( std::string const& name, sampler_ptr const& samp )
 {
-	result ret = result::failed;
-	
-	if ( state_->vs_proto )
-	{
-		state_->vs_proto->set_sampler( name, samp );
-		ret = result::ok;
-	}
-	
-	if(stages_.host)
-	{
-		stages_.host->vx_set_sampler(name, samp);
-		ret = result::ok;
-	}
-
-	return ret;
+	state_->vx_cbuffer->set_sampler(name, samp);
+	return result::ok;
 }
 
-renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev)
+void sync_renderer::apply_shader_cbuffer()
+{
+	if(state_->vs_proto)
+	{
+		for(auto const& variable: state_->vx_cbuffer->variables())
+		{
+			auto const& var_name = variable.first;
+			auto const& var_data = variable.second;
+			auto var_data_addr = state_->vx_cbuffer->data_pointer(var_data);
+
+			sv_layout* layout = state_->vx_shader->get_reflection()->input_sv_layout(var_name);
+			if(layout->agg_type == aggt_array)
+			{
+				state_->vs_proto->set_variable_pointer(var_name, var_data_addr, var_data.length);
+			}
+			else
+			{
+				state_->vs_proto->set_variable(var_name, var_data_addr);
+			}
+		}
+
+		for(auto const& samp: state_->vx_cbuffer->samplers())
+		{
+			state_->vs_proto->set_sampler(samp.first, samp.second);
+		}
+	}
+
+	if(state_->ps_proto)
+	{
+		for(auto const& variable: state_->px_cbuffer->variables())
+		{
+			auto const& var_name = variable.first;
+			auto const& var_data = variable.second;
+			auto var_data_addr = state_->px_cbuffer->data_pointer(var_data);
+			state_->ps_proto->set_variable(var_name, var_data_addr);
+		}
+
+		for(auto const& samp: state_->px_cbuffer->samplers())
+		{
+			state_->ps_proto->set_sampler(samp.first, samp.second);
+		}
+	}
+}
+
+renderer_ptr create_sync_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
 {
 	return renderer_ptr(new sync_renderer(pparam, hdev));
 }

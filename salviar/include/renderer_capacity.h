@@ -1,21 +1,14 @@
 #pragma once
 
-#ifndef SALVIAR_RENDERER_CAPACITY_H
-#define SALVIAR_RENDERER_CAPACITY_H
-
 #include <salviar/include/salviar_forward.h>
+#include <eflib/include/platform/typedefs.h>
 
 BEGIN_NS_SALVIAR();
 
-//the count of vs input resigters
-const size_t vsi_attribute_count = 8;
-
-//the count of vs output resigters
-const size_t vso_attribute_count = 6;
-
-//the count of ps output registers
-const size_t pso_color_regcnt = 8;
+static uint32_t const MAX_VS_INPUT_ATTRS	= 8;
+static uint32_t const MAX_VS_OUTPUT_ATTRS	= 8;
+static uint32_t const MAX_RENDER_TARGETS	= 8;
+static uint32_t const MAX_INPUT_SLOTS		= 32;
+static uint32_t const MAX_COMMAND_QUEUE		= 32;
 
 END_NS_SALVIAR();
-
-#endif

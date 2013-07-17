@@ -36,7 +36,7 @@ public:
 
 private:
 	typedef boost::array<
-		eflib::vec4, vsi_attribute_count > attribute_array;
+		eflib::vec4, MAX_VS_INPUT_ATTRS > attribute_array;
 	attribute_array attributes_;
 
 	vs_input(const vs_input& rhs);
@@ -112,7 +112,7 @@ public:
 
 private:
 	typedef boost::array<
-		eflib::vec4, vso_attribute_count+1 > register_array;
+		eflib::vec4, MAX_VS_OUTPUT_ATTRS+1 > register_array;
 	register_array registers_;
 
 	bool front_face_;
@@ -196,7 +196,7 @@ struct vs_output_op
 	vs_output_functions::self_step1		self_step1;
 	vs_output_functions::self_step_1d	self_step_1d;
 
-	typedef boost::array<uint32_t, vso_attribute_count> interpolation_modifier_array;
+	typedef boost::array<uint32_t, MAX_VS_OUTPUT_ATTRS> interpolation_modifier_array;
 	interpolation_modifier_array		attribute_modifiers;
 };
 
@@ -211,7 +211,7 @@ struct ps_output
 	float		depth;
 	bool		front_face;
 	uint32_t	coverage;
-	boost::array<eflib::vec4, pso_color_regcnt> color;
+	boost::array<eflib::vec4, MAX_RENDER_TARGETS> color;
 };
 
 struct pixel_accessor

@@ -335,9 +335,9 @@ void framebuffer::reset(size_t width, size_t height, size_t num_samples, pixel_f
 	height_			= height;
 	num_samples_	= num_samples;
 	fmt_			= fmt;
-	back_cbufs_		= std::vector<surface_ptr>(pso_color_regcnt);
-	cbufs_			= std::vector<surface*>(pso_color_regcnt);
-	buf_valids		= std::vector<bool>(pso_color_regcnt);
+	back_cbufs_		= std::vector<surface_ptr>(MAX_RENDER_TARGETS);
+	cbufs_			= std::vector<surface*>(MAX_RENDER_TARGETS);
+	buf_valids		= std::vector<bool>(MAX_RENDER_TARGETS);
 	dbuf_			.reset(new surface(width, height, num_samples, pixel_format_color_r32f));
 	sbuf_			.reset(new surface(width, height, num_samples, pixel_format_color_r32i));
 

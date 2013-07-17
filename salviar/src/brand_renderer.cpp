@@ -57,7 +57,7 @@ renderer_impl2::renderer_impl2(renderer_parameters const* params)
 
 	// Initialize stages
 	stages_.vert_cache	->initialize(&stages_);
-	stages_.host		->initialize( stages_.assembler.get() );
+	stages_.host		->initialize(&stages_);
 	stages_.ras			->initialize(&stages_);
 	stages_.backend		->initialize(&stages_);
 }

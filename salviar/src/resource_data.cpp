@@ -7,7 +7,7 @@ BEGIN_NS_SALVIAR();
 aligned_array::aligned_array(size_t sz, size_t alignment)
 	: size_(sz)
 {
-	assert(alignment & (alignment-1) != 0);
+	assert( (alignment & (alignment-1)) != 0);
 	alignment_ = eflib::ceil_to_pow2( static_cast<int>(alignment) );
 	reallocate();
 }

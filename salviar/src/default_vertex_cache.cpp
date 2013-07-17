@@ -97,7 +97,7 @@ public:
 		std::sort(unique_indices.begin(), unique_indices.end());
 		unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
 		transformed_verts_.reset(new vs_output[unique_indices.size()]);
-		used_verts_.resize(assembler_->num_vertices());
+		used_verts_.resize( unique_indices.back()+1 );
 
 		// Transform vertexes
 		if( cpp_vs_ )

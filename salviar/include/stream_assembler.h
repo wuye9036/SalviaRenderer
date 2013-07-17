@@ -1,5 +1,4 @@
-#ifndef SALVIAR_STREAM_ASSEMBLER_H
-#define SALVIAR_STREAM_ASSEMBLER_H
+#pragma once
 
 #include <salviar/include/salviar_forward.h>
 
@@ -18,10 +17,11 @@ BEGIN_NS_SALVIAR();
 
 class  vs_input;
 struct input_element_desc;
+struct render_state;
+struct stream_buffer_desc;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(buffer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
-EFLIB_DECLARE_CLASS_WEAK_PTR  (input_layout);
 
 class semantic_value;
 
@@ -35,14 +35,7 @@ struct stream_desc
 class stream_assembler
 {
 public:
-	void set_input_layout(input_layout_ptr const&);
-	void set_vertex_buffers(
-		size_t starts_slot,
-		size_t buffers_count, buffer_ptr const* pbufs,
-		size_t const* strides, size_t const* offsets
-		);
-
-	virtual input_layout_ptr layout() const;
+	void update(render_state const* state);
 
 	// Used by Cpp Vertex Shader
 	void update_register_map( boost::unordered_map<semantic_value, size_t> const& reg_map );
@@ -55,38 +48,16 @@ public:
 	// Used by New Shader Unit
 	virtual std::vector<stream_desc> const& get_stream_descs(std::vector<size_t> const& slots);
 
-	size_t num_vertices() const;
-
 private:
-	void const* element_address( size_t buffer_index, size_t member_offset, size_t vert_index ) const;
-
-	/** Find buffer index by slot number.
-		@param slot
-			Slot number
-		@return
-			Buffer index found. If slot is invalid, it return -1.
-	*/
-	int find_buffer( size_t slot ) const;
-
 	// Used by Cpp Vertex Shader
 	std::vector<
-		boost::tuple<size_t, input_element_desc const*, size_t>
-	> reg_and_pelem_and_buffer_index;
+		std::pair<size_t, input_element_desc const*>
+	>							register_to_input_element_desc;
 
 	// Used by new shader unit
-	std::vector<stream_desc>
-							stream_descs_;
-	input_layout_weak_ptr	layout_;
-	std::vector<size_t>		slots_;
-	std::vector<buffer_ptr>	vbufs_;
-	std::vector<size_t>		strides_;
-	std::vector<size_t>		offsets_;
-
-	// Dirty flags
-	bool					layout_dirty_;
-	bool					buffer_dirty_;
+	std::vector<stream_desc>	stream_descs_;
+	input_layout*				layout_;
+	stream_buffer_desc*			stream_buffer_descs_;	
 };
 
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();

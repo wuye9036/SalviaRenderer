@@ -16,6 +16,9 @@
 
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/stream_assembler.h>
+#include <salviar/include/render_state.h>
+#include <salviar/include/render_stages.h>
+#include <salviar/include/shader_cbuffer_impl.h>
 
 #include <eflib/include/memory/atomic.h>
 
@@ -51,52 +54,60 @@ host_impl::host_impl()
 	sasl_create_ia_shim(ia_shim_);
 	sasl_create_interp_shim(interp_shim_);
 
-	ia_shim_func_			= NULL;
-	vx_shader_func_			= NULL;
-	stream_descs_			= NULL;
-	sa_						= NULL;
+	ia_shim_func_			= nullptr;
+	vx_shader_func_			= nullptr;
+	
+	sa_						= nullptr;
+	input_layout_			= nullptr;
+
+	px_shader_				= nullptr;
+	vx_shader_				= nullptr;
+
+	vso2reg_func_			= nullptr;
+	interp_func_			= nullptr;
+	reg2psi_func_			= nullptr;
+	vx_shader_func_			= nullptr;
+	stream_descs_			= nullptr;
 }
 
-void host_impl::initialize(stream_assembler* sa)
+void host_impl::initialize(render_stages const* stages)
 {
-	sa_ = sa;
+	sa_ = stages->assembler.get();
 }
 
-void host_impl::buffers_changed()
+void host_impl::update(render_state const* state)
 {
-	update_stream_descs();
-}
+	// TODO: Need to reduce shim generates by detecting state changes.
+	input_layout_	= state->layout.get();
+	vx_shader_		= state->vx_shader.get();
+	// px_shader_		= state->px_shader.get();
 
-void host_impl::update_stream_descs()
-{
-	if( ia_shim_slots_.empty() )
+	if (!sa_ || !input_layout_ || !vx_shader_)
 	{
-		stream_descs_ = NULL;
+		ia_shim_func_	= nullptr;
+		vx_shader_func_ = nullptr;
+		stream_descs_	= nullptr;
+		vso2reg_func_	= nullptr;
+		interp_func_	= nullptr;
+		reg2psi_func_	= nullptr;
+		return;
 	}
-	else
+
+	// Compute shim function.
+	void* ia_shim_func_typeless = ia_shim_->get_shim_function(
+		ia_shim_slots_, ia_shim_element_offsets_, ia_shim_dest_offsets_,
+		input_layout_, vx_shader_->get_reflection()
+		);
+	ia_shim_func_	= static_cast<ia_shim_func_ptr>(ia_shim_func_typeless);
+	vx_shader_func_ = vx_shader_->native_function<shader_func_ptr>();
+
+	// Compute stream descs for input assembler.
+	if( !ia_shim_slots_.empty() )
 	{
 		stream_descs_ = &(sa_->get_stream_descs(ia_shim_slots_)[0]);
 	}
-}
 
-void host_impl::update_ia_shim_func()
-{
-	// Update shim function.
-	if (!sa_ || !sa_->layout() || !vx_shader_)
-		return;
-
-	void* shim_func = ia_shim_->get_shim_function(
-		ia_shim_slots_, ia_shim_element_offsets_, ia_shim_dest_offsets_,
-		sa_->layout(), vx_shader_->get_reflection()
-		);
-	update_stream_descs();
-	ia_shim_func_ = static_cast<ia_shim_func_ptr>(shim_func);
-}
-
-void host_impl::update_interp_funcs()
-{
-	assert(interp_shim_);
-
+	// Update shims
 	interp_shim_->get_shim_functions(
 		&vso2reg_func_,
 		&interp_func_,
@@ -109,32 +120,31 @@ void host_impl::update_interp_funcs()
 		vx_shader_ ? vx_shader_->get_reflection() : NULL,
 		px_shader_ ? px_shader_->get_reflection() : NULL
 		);
-}
 
-void host_impl::input_layout_changed()
-{
-	update_ia_shim_func();
-}
-
-void host_impl::update_vertex_shader(shader_object_ptr const& vso)
-{
-	// Update shim and shader native function.
-	vx_shader_ = vso;
-	update_ia_shim_func();
-
-	void* shader_func = vx_shader_->native_function();
-	vx_shader_func_ = static_cast<shader_func_ptr>(shader_func);
-
-	update_interp_funcs();
-
-	// Reset all cached constant and samplers.
+	// Update vertex buffers from state.
 	vx_cbuffer_.resize( vx_shader_->get_reflection()->total_size(su_buffer_in) );
-	vx_dynamic_cbuffers_.clear();
-	sampler_cache_.clear();
-}
 
-void host_impl::update_pixel_shader(shader_object_ptr const& /*pso*/)
-{
+	for(auto const& variable: state->vx_cbuffer->variables())
+	{
+		auto const& var_name = variable.first;
+		auto const& var_data = variable.second;
+		auto var_data_addr = state->vx_cbuffer->data_pointer(var_data);
+
+		sv_layout* layout = vx_shader_->get_reflection()->input_sv_layout(var_name);
+		if(layout->agg_type == aggt_array)
+		{
+			vx_update_constant_pointer(var_name, var_data_addr);
+		}
+		else
+		{
+			vx_update_constant(var_name, var_data_addr, var_data.length);
+		}
+	}
+
+	for(auto const& samp: state->vx_cbuffer->samplers())
+	{
+		vx_update_sampler(samp.first, samp.second);
+	}
 }
 
 void host_impl::update_target_params(renderer_parameters const& /*rp*/, buffer_ptr const& /*target*/)
@@ -174,30 +184,25 @@ px_shader_unit_ptr host_impl::get_px_shader_unit() const
 	return px_shader_unit_ptr();
 }
 
-bool host_impl::vx_set_constant(fixed_string const& name, void const* value)
+bool host_impl::vx_update_constant(fixed_string const& name, void const* value, size_t sz)
 {
 	if(!vx_shader_) return false;
 	sv_layout* layout = vx_shader_->get_reflection()->input_sv_layout(name);
-	if(!layout) return false;
+	if(!layout || layout->size != sz) return false;
 	memcpy(&(vx_cbuffer_[layout->offset]), value, layout->size);
 	return true;
 }
 
-bool host_impl::vx_set_constant_pointer(fixed_string const& name, void const* pvalue, size_t sz)
+bool host_impl::vx_update_constant_pointer(fixed_string const& name, void const* pvalue)
 {
-	shared_array<char> data_array(new char[sz]);
-	memcpy(data_array.get(), pvalue, sz);
-	vx_dynamic_cbuffers_[name] = data_array;
-
-	void* array_ptr[2] = {data_array.get(), data_array.get()};
-	return vx_set_constant( name, &(array_ptr[0]) );
+	void const* array_ptr[2] = {pvalue, pvalue};
+	return vx_update_constant(name, &(array_ptr[0]), sizeof(void const*));
 }
 
-bool host_impl::vx_set_sampler(fixed_string const& name, sampler_ptr const& samp)
+bool host_impl::vx_update_sampler(fixed_string const& name, sampler_ptr const& samp)
 {
-	sampler_cache_.push_back(samp);
 	sampler* psamp = samp.get();
-	return vx_set_constant(name, &psamp);
+	return vx_update_constant(name, &psamp, sizeof(void*));
 }
 
 END_NS_SASL_HOST();

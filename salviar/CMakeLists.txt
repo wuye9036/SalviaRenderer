@@ -39,6 +39,7 @@ SET( PIPELINE_HEADERS
 	include/framebuffer.h
 	include/async_renderer.h
 	include/brand_renderer.h
+	include/stream_state.h
 )
 
 set( SHADER_HEADERS
@@ -51,6 +52,8 @@ set( SHADER_HEADERS
 	include/shader_utility.h
 	include/shaderregs.h
 	include/shaderregs_op.h
+	include/shader_cbuffer.h
+	include/shader_cbuffer_impl.h
 )
 
 set( BUFFER_HEADERS
@@ -115,15 +118,16 @@ set(PIPELINE_SOURCES
 	src/input_layout.cpp
 	src/async_renderer.cpp
 	src/brand_renderer.cpp
+	src/stream_state.cpp
 )
 
 set(SHADER_SOURCES
-	src/host.cpp
 	src/cpp_pixel_shader.cpp
 	src/sampler_api.cpp
 	src/shader.cpp
 	src/shader_object.cpp
 	src/shader_unit.cpp
+	src/shader_cbuffer_impl.cpp
 )
 
 SOURCE_GROUP( "Header Files" )

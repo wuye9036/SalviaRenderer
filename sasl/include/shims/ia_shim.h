@@ -33,11 +33,11 @@ BEGIN_NS_SASL_SHIMS();
 struct ia_shim_key
 {
 	ia_shim_key(
-		salviar::input_layout_ptr const& input,
+		salviar::input_layout* input,
 		salviar::shader_reflection const* reflection)
 		: input(input), reflection(reflection) {}
 
-	salviar::input_layout_ptr			input;
+	salviar::input_layout*		input;
 	salviar::shader_reflection const*	reflection;
 
 	bool operator == (ia_shim_key const& rhs) const
@@ -66,7 +66,7 @@ public:
 		std::vector<size_t>&				used_slots,
 		std::vector<intptr_t>&				aligned_element_offsets,
 		std::vector<size_t>&				dest_offsets,
-		salviar::input_layout_ptr const&	input,
+		salviar::input_layout*				input,
 		salviar::shader_reflection const*	reflection
 	);
 private:

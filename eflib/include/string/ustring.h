@@ -329,4 +329,15 @@ namespace eflib{
 	typedef fixed_basic_string<wchar_t> fixed_wstring;
 }
 
+namespace std
+{
+	template <typename CharT>
+	struct hash< eflib::fixed_basic_string<CharT> >
+	{
+		size_t operator()(const eflib::fixed_basic_string<CharT>& v) const
+		{
+			return eflib::hash_value(v);
+		}
+	};
+}
 #endif

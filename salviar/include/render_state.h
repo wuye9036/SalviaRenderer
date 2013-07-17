@@ -5,6 +5,7 @@
 #include <salviar/include/enums.h>
 #include <salviar/include/format.h>
 #include <salviar/include/viewport.h>
+#include <salviar/include/stream_state.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/math/vector.h>
@@ -21,13 +22,14 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
 EFLIB_DECLARE_CLASS_SHARED_PTR(counter);
 EFLIB_DECLARE_CLASS_SHARED_PTR(depth_stencil_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(raster_state);
-EFLIB_DECLARE_CLASS_SHARED_PTR(stream_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_blend_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_pixel_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_cbuffer_impl);
+EFLIB_DECLARE_STRUCT_SHARED_PTR(stream_state);
 
 struct vs_input_op;
 struct vs_output_op;
@@ -41,7 +43,7 @@ struct render_state
 	uint32_t					start_index;
 	uint32_t					prim_count;
 	
-	stream_state_ptr			stream_states;
+	stream_state_ptr			str_state;
 	input_layout_ptr			layout;
 
 	viewport					vp;
@@ -56,6 +58,9 @@ struct render_state
 
 	shader_object_ptr			vx_shader;
 	shader_object_ptr			px_shader;
+
+	shader_cbuffer_impl_ptr		vx_cbuffer;
+	shader_cbuffer_impl_ptr		px_cbuffer;
 
 	vs_input_op*				vsi_ops;
 	vs_output_op*				vso_ops;

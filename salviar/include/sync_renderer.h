@@ -30,6 +30,7 @@ class sync_renderer : public renderer
 	resource_manager_ptr	resource_pool_;
 
 	void initialize();
+	void apply_shader_cbuffer();
 
 public:
 	//inherited
@@ -124,6 +125,6 @@ public:
 	sync_renderer(const renderer_parameters* pparam, device_ptr hdev);
 };
 
-renderer_ptr create_renderer_impl(renderer_parameters const* pparam, device_ptr const& hdev);
+renderer_ptr create_sync_renderer(renderer_parameters const* pparam, device_ptr const& hdev);
 
 END_NS_SALVIAR();

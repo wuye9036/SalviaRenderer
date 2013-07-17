@@ -27,6 +27,9 @@ namespace salviar
 	class  stream_assembler;
 	struct stream_desc;
 	struct external_function_desc;
+	struct render_state;
+	struct render_stages;
+	class  input_layout;
 
 	EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
 	EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
@@ -87,19 +90,11 @@ class host_impl: public salviar::host
 public:
 	host_impl();
 
-	void initialize(salviar::stream_assembler* sa);
+	void initialize				(salviar::render_stages const* stages);
 
-	void buffers_changed		();
-	void input_layout_changed	();
-
-	void update_vertex_shader	(salviar::shader_object_ptr const& vso);
-	void update_pixel_shader	(salviar::shader_object_ptr const& pso);
+	void update					(salviar::render_state const* state);
 	void update_target_params	(salviar::renderer_parameters const& rp, 
 								salviar::buffer_ptr const& target);
-
-	bool vx_set_constant		(eflib::fixed_string const&, void const* value);
-	bool vx_set_constant_pointer(eflib::fixed_string const&, void const* pvalue, size_t sz);
-	bool vx_set_sampler			(eflib::fixed_string const&, salviar::sampler_ptr const& samp);
 
 	salviar::vx_shader_unit_ptr get_vx_shader_unit() const;
 	salviar::px_shader_unit_ptr get_px_shader_unit() const;
@@ -107,23 +102,18 @@ public:
 private:
 	// Data used by Shim and Shader
 	salviar::stream_assembler*	sa_;
+	salviar::input_layout*		input_layout_;
 
 	shims::om_shim_ptr			om_shim_;
 	shims::interp_shim_ptr		interp_shim_;
 	shims::ia_shim_ptr			ia_shim_;
 	
-	salviar::shader_object_ptr	px_shader_;
-	salviar::shader_object_ptr	vx_shader_;
+	salviar::shader_object*		px_shader_;
+	salviar::shader_object*		vx_shader_;
 
 	// Cached data
 	std::vector<char>			vx_cbuffer_;
 	std::vector<char>			px_cbuffer_;
-	boost::unordered_map<
-		eflib::fixed_string,
-		boost::shared_array<char> 
-	>							vx_dynamic_cbuffers_;
-	std::vector<salviar::sampler_ptr>
-								sampler_cache_;
 
 	ia_shim_func_ptr			ia_shim_func_;
 	std::vector<size_t>			ia_shim_slots_;
@@ -141,6 +131,10 @@ private:
 
 	shader_func_ptr				vx_shader_func_;
 	salviar::stream_desc const*	stream_descs_;
+
+	bool vx_update_constant			(eflib::fixed_string const&, void const* value,	size_t sz);
+	bool vx_update_constant_pointer	(eflib::fixed_string const&, void const* value);
+	bool vx_update_sampler			(eflib::fixed_string const&, salviar::sampler_ptr const& samp);
 
 	void update_stream_descs();
 	void update_ia_shim_func();

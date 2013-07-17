@@ -29,6 +29,11 @@ class shader_object{
 public:
 	virtual shader_reflection const* get_reflection() const = 0;
 	virtual void* 					 native_function() const = 0;
+	
+	template <typename FuncPtrT> FuncPtrT native_function() const
+	{
+		return static_cast<FuncPtrT>( native_function() );
+	}
 };
 
 END_NS_SALVIAR();

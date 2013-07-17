@@ -64,7 +64,7 @@ vs_output_op gen_vs_output_op_n()
 	return ret;
 }
 
-vs_input_op vs_input_ops[vsi_attribute_count] = {
+vs_input_op vs_input_ops[MAX_VS_INPUT_ATTRS] = {
 	gen_vs_input_op_n<0>(),
 	gen_vs_input_op_n<1>(),
 	gen_vs_input_op_n<2>(),
@@ -83,7 +83,7 @@ vs_input_op vs_input_ops[vsi_attribute_count] = {
 	//gen_vs_input_op_n<15>()
 };
 
-vs_output_op vs_output_ops[vso_attribute_count] = {
+vs_output_op vs_output_ops[MAX_VS_OUTPUT_ATTRS] = {
 	gen_vs_output_op_n<0>(),
 	gen_vs_output_op_n<1>(),
 	gen_vs_output_op_n<2>(),

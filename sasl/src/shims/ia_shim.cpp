@@ -41,7 +41,7 @@ void* ia_shim::get_shim_function(
 		std::vector<size_t>&				used_slots,
 		std::vector<intptr_t>&				aligned_element_offsets,
 		std::vector<size_t>&				dest_offsets,
-		salviar::input_layout_ptr  const&	input,
+		salviar::input_layout*				input,
 		salviar::shader_reflection const*	reflection
 	)
 {
