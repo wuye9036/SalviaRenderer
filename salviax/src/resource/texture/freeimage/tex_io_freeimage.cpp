@@ -131,7 +131,7 @@ salviar::texture_ptr texture_io_fi::load(salviar::renderer* pr,
 	salviar::texture_ptr ret((texture*)NULL);
 	ret = pr->create_tex2d(src.w, src.h, 1, tex_pxfmt);
 
-	if( !load(ret->get_surface(0), rect<size_t>(0, 0, dest_width, dest_height), img, src) ){
+	if( !load(*ret->get_surface(0), rect<size_t>(0, 0, dest_width, dest_height), img, src) ){
 		ret.reset();
 	}
 	return ret;
@@ -161,7 +161,7 @@ salviar::texture_ptr texture_io_fi::load_cube(salviar::renderer* pr, const vecto
 		texture_cube* ptexcube = (texture_cube*)(ret.get());
 		texture& face_tex = ptexcube->get_face(cubemap_faces(i_cubeface));
 		rect<size_t> copy_region(0, 0, face_tex.get_width(0), face_tex.get_height(0));
-		load( face_tex.get_surface(0), copy_region, cube_img, copy_region );
+		load(*face_tex.get_surface(0), copy_region, cube_img, copy_region );
 	}
 
 	return ret;

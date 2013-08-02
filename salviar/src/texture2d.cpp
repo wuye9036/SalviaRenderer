@@ -16,7 +16,7 @@ texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_fo
 
 	fmt_ = format;
 	surfs_.resize(1);
-	surfs_[0].rebuild(width, height, num_samples, format);
+	surfs_[0]->rebuild(width, height, num_samples, format);
 }
 
 void texture_2d::reset(size_t width, size_t height, size_t num_samples, pixel_format format)
@@ -31,9 +31,9 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 		min_lod_ = calc_lod_limit( width_, height_ ) - 1;
 	}
 
-	size_t cur_sizex = surfs_[max_lod_].get_width();
-	size_t cur_sizey = surfs_[max_lod_].get_height();
-	size_t num_samples = surfs_[max_lod_].get_num_samples();
+	size_t cur_sizex = surfs_[max_lod_]	 ->get_width();
+	size_t cur_sizey = surfs_[max_lod_]	 ->get_height();
+	size_t num_samples = surfs_[max_lod_]->get_num_samples();
 
 	surfs_.resize(min_lod_ + 1);
 
@@ -48,9 +48,9 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 		byte* dst_data = NULL;
 		byte* src_data = NULL;
 
-		surfs_[iLevel].rebuild(cur_sizex, cur_sizey, num_samples, fmt_);
-		surfs_[iLevel].map((void**)&dst_data, map_write);
-		surfs_[iLevel - 1].map((void**)&src_data, map_read);
+		surfs_[iLevel]	->rebuild(cur_sizex, cur_sizey, num_samples, fmt_);
+		surfs_[iLevel]	->map((void**)&dst_data, map_write);
+		surfs_[iLevel-1]->map((void**)&src_data, map_read);
 
 #if TEST_CODE
 		float r = iLevel % 3 == 0 ? 1.0f : 0.0f;
@@ -113,8 +113,8 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 			break;
 		}
 
-		surfs_[iLevel - 1].unmap();
-		surfs_[iLevel].unmap();
+		surfs_[iLevel-1]->unmap();
+		surfs_[iLevel  ]->unmap();
 	}
 }
 
@@ -131,47 +131,31 @@ void  texture_2d::map(void** pdata, size_t subresource, map_mode mm)
 #ifdef EFLIB_MSVC
 #pragma warning(pop)
 #endif
-	get_surface(subresource).map(pdata, mm);
+	get_surface(subresource)->map(pdata, mm);
 }
 
 void  texture_2d::unmap(size_t subresource)
 {
-	get_surface(subresource).unmap();
+	get_surface(subresource)->unmap();
 }
 
-surface&  texture_2d::get_surface(size_t subresource)
+surface_ptr const& texture_2d::get_surface(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
-
-	return surfs_[subresource];
-}
-
-const surface& texture_2d::get_surface(size_t subresource) const
-{
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
-
 	return surfs_[subresource];
 }
 
 size_t texture_2d::get_width(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
-
-	return get_surface(subresource).get_width();
+	return get_surface(subresource)->get_width();
 }
 
 size_t texture_2d::get_height(size_t subresource) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
-
-	return get_surface(subresource).get_width();
+	return get_surface(subresource)->get_height();
 }
 
-size_t texture_2d::get_depth(size_t subresource) const
+size_t texture_2d::get_depth(size_t /*subresource*/) const
 {
-	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
-	EFLIB_UNREF_DECLARATOR(subresource);
-
 	return 1;
 }
 
@@ -179,7 +163,7 @@ size_t texture_2d::get_num_samples(size_t subresource) const
 {
 	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 
-	return get_surface(subresource).get_num_samples();
+	return get_surface(subresource)->get_num_samples();
 }
 
 void texture_2d::set_max_lod(size_t miplevel)
@@ -192,7 +176,7 @@ void texture_2d::set_max_lod(size_t miplevel)
 
 void texture_2d::set_min_lod(size_t miplevel)
 {
-	size_t ml_limit = calc_lod_limit(surfs_[0].get_width());
+	size_t ml_limit = calc_lod_limit(surfs_[0]->get_width());
 	EFLIB_ASSERT(max_lod_ <= miplevel, "Mip level is larger than max LoD level that is set by user.");
 	EFLIB_ASSERT(miplevel < ml_limit, "Mip level is larger than max LoD level that texture supported.");
 

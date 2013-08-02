@@ -83,7 +83,7 @@ salviar::texture_ptr texture_io_gdiplus::load(salviar::renderer* pr, const std::
 
 	rect<size_t> region(0, 0, src_w, src_h);
 	salviar::texture_ptr ret(pr->create_tex2d(src_w, src_h, 1, tex_pxfmt));
-	load( ret->get_surface(0), region, &file_bmp, region);
+	load(*ret->get_surface(0), region, &file_bmp, region);
 	return ret;
 }
 
@@ -107,7 +107,7 @@ salviar::texture_ptr texture_io_gdiplus::load_cube(salviar::renderer *pr, const 
 			ret = pr->create_texcube( dest_region.w, dest_region.h, 1, fmt );
 		}
 		texture_cube* texcube = static_cast<texture_cube*>(ret.get());
-		salviar::surface& cur_surf = texcube->get_face((cubemap_faces)i_file).get_surface(0);
+		salviar::surface& cur_surf = *texcube->get_face((cubemap_faces)i_file).get_surface(0);
 		load(cur_surf, dest_region, &file_bmp, src_region);
 	}
 

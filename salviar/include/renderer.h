@@ -34,6 +34,7 @@ struct renderer_parameters
 	size_t			backbuffer_height;
 	size_t			backbuffer_num_samples;
 	pixel_format	backbuffer_format;
+	void*			native_window;
 };
 
 class renderer

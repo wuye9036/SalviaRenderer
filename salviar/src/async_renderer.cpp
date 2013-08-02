@@ -428,12 +428,12 @@ public:
 		return viewport();
 	}
 
-	void run(renderer_parameters const* pparam, device_ptr const& hdev)
+	void run(renderer_parameters const* pparam)
 	{
-		shared_impl_ = create_sync_renderer(pparam, hdev);
+		shared_impl_ = create_sync_renderer(pparam);
 		impl_ = shared_impl_.get();
 
-		rendering_thread_ = boost::thread( &async_renderer::working, this );
+		rendering_thread_ = boost::thread(&async_renderer::working, this);
 	}
 
 private:
@@ -532,17 +532,17 @@ private:
 	mutable boost::mutex		waiting_mutex_;
 
 	// Cached states
-	mutable framebuffer_ptr			current_frame_buffer_;
+	mutable framebuffer_ptr				current_frame_buffer_;
 	boost::shared_ptr<shader_object>	vertex_shader_code_;
 	boost::shared_ptr<shader_object>	pixel_shader_code_;
-	cpp_vertex_shader_ptr					vertex_shader_;
-	cpp_pixel_shader_ptr					pixel_shader_;
+	cpp_vertex_shader_ptr				vertex_shader_;
+	cpp_pixel_shader_ptr				pixel_shader_;
 };
 
-renderer_ptr create_async_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
+renderer_ptr create_async_renderer(renderer_parameters const* pparam)
 {
 	boost::shared_ptr<async_renderer> ret( new async_renderer() );
-	ret->run(pparam, hdev);
+	ret->run(pparam);
 	return ret;
 }
 

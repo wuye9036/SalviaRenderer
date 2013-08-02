@@ -122,9 +122,9 @@ public:
 	virtual result present();
 
 	//this class for inner system
-	sync_renderer(const renderer_parameters* pparam, device_ptr hdev);
+	sync_renderer(const renderer_parameters* pparam);
 };
 
-renderer_ptr create_sync_renderer(renderer_parameters const* pparam, device_ptr const& hdev);
+renderer_ptr create_sync_renderer(renderer_parameters const* pparam);
 
 END_NS_SALVIAR();

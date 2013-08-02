@@ -30,15 +30,15 @@ BEGIN_NS_SALVIAR();
 renderer_ptr create_software_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
 {
 #if defined(USE_ASYNC_RENDERER)
-	return create_async_renderer(pparam, hdev);
+	return create_async_renderer(pparam);
 #else
-	return create_sync_renderer(pparam, hdev);
+	return create_sync_renderer(pparam);
 #endif
 }
 
-renderer_ptr create_benchmark_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
+renderer_ptr create_benchmark_renderer(renderer_parameters const* pparam, device_ptr const& /*hdev*/)
 {
-	return create_sync_renderer(pparam, hdev);
+	return create_sync_renderer(pparam);
 }
 
 shader_object_ptr	compile(std::string const& code, shader_profile const& profile, shader_log_ptr& logs)

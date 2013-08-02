@@ -17,6 +17,7 @@ LINK_DIRECTORIES(
 	$ENV{DXSDK_DIR}/Lib/${SALVIA_ARCH_NAME}
 	${SALVIA_3RD_PARTY_LIBS}
 	${SALVIA_FREETYPE_LIB_DIR}
+	${SALVIA_BOOST_LIB_DIR}
 	)
 
 set (HEADER_FILES
@@ -101,7 +102,9 @@ if( SALVIA_BUILD_WITH_DIRECTX )
 	SALVIA_CONFIG_OUTPUT_PATHS(salviax_d3d9_presenter)
 
 	# D3D11
-	set (HEADER_FILES include/presenter/d3d11/dev_d3d11.h)
+	set (HEADER_FILES
+		include/presenter/d3d11/dev_d3d11.h
+	)
 	set (SOURCE_FILES
 		src/presenter/d3d11/dev_d3d11.cpp
 		src/presenter/d3d11/dev_d3d11.rc
@@ -138,3 +141,30 @@ ADD_LIBRARY( salviax_opengl_presenter SHARED
 TARGET_LINK_LIBRARIES(salviax_opengl_presenter EFLIB salviar )
 SET_TARGET_PROPERTIES(salviax_opengl_presenter PROPERTIES FOLDER "Presenters")
 SALVIA_CONFIG_OUTPUT_PATHS(salviax_opengl_presenter)
+
+# Swap Chain
+ADD_DEFINITIONS(-DSALVIAX_GL_ENABLED)
+set (HEADER_FILES
+	include/swap_chain/swap_chain.h
+	include/swap_chain/swap_chain_impl.h
+)
+set (SOURCE_FILES
+	src/swap_chain/swap_chain_impl.cpp
+	src/swap_chain/swap_chain_gl.cpp
+)
+# D3D11
+if( SALVIA_BUILD_WITH_DIRECTX )
+	ADD_DEFINITIONS(-DSALVIAX_D3D_ENABLED)
+	set (SOURCE_FILES
+		${SOURCE_FILES}
+		src/swap_chain/swap_chain_d3d11.cpp
+		src/swap_chain/swap_chain_d3d11.rc
+		src/swap_chain/vs.hlsl
+		src/swap_chain/ps.hlsl
+	)
+endif()
+
+ADD_LIBRARY			 (salviax_swap_chain SHARED ${HEADER_FILES} ${SOURCE_FILES} )
+TARGET_LINK_LIBRARIES(salviax_swap_chain EFLIB salviar)
+SET_TARGET_PROPERTIES(salviax_swap_chain PROPERTIES FOLDER "SALVIA Renderer")
+SALVIA_CONFIG_OUTPUT_PATHS(salviax_swap_chain)

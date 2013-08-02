@@ -354,7 +354,7 @@ void sync_renderer::initialize()
 	stages_.backend->initialize(&stages_);
 }
 
-sync_renderer::sync_renderer(const renderer_parameters* pparam, device_ptr hdev)
+sync_renderer::sync_renderer(const renderer_parameters* pparam)
 {
 	resource_pool_	.reset( new resource_manager() );
 	state_			.reset( new render_state() );
@@ -505,9 +505,9 @@ void sync_renderer::apply_shader_cbuffer()
 	}
 }
 
-renderer_ptr create_sync_renderer(renderer_parameters const* pparam, device_ptr const& hdev)
+renderer_ptr create_sync_renderer(renderer_parameters const* pparam)
 {
-	return renderer_ptr(new sync_renderer(pparam, hdev));
+	return renderer_ptr(new sync_renderer(pparam));
 }
 
 END_NS_SALVIAR();

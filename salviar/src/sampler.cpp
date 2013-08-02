@@ -606,15 +606,16 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		is_mag = (miplevel < 0);
 	}
 
-	if(is_mag){
-		return sample_surface(tex->get_surface(tex->get_max_lod()), coordx, coordy, sample, sampler_state_mag);
+	if(is_mag)
+	{
+		return sample_surface(*tex->get_surface(tex->get_max_lod()), coordx, coordy, sample, sampler_state_mag);
 	}
 
 	if(desc_.mip_filter == filter_point){
 		size_t ml = fast_floori(miplevel + 0.5f);
 		ml = clamp(ml, tex->get_max_lod(), tex->get_min_lod());
 
-		return sample_surface(tex->get_surface(ml), coordx, coordy, sample, sampler_state_min);
+		return sample_surface(*tex->get_surface(ml), coordx, coordy, sample, sampler_state_min);
 	}
 
 	if(desc_.mip_filter == filter_linear){
@@ -626,8 +627,8 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		low = clamp(low, tex->get_max_lod(), tex->get_min_lod());
 		up = clamp(up, tex->get_max_lod(), tex->get_min_lod());
 
-		color_rgba32f c0 = sample_surface(tex->get_surface(low), coordx, coordy, sample, sampler_state_min);
-		color_rgba32f c1 = sample_surface(tex->get_surface(up), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c0 = sample_surface(*tex->get_surface(low), coordx, coordy, sample, sampler_state_min);
+		color_rgba32f c1 = sample_surface(*tex->get_surface(up), coordx, coordy, sample, sampler_state_min);
 	
 		return lerp(c0, c1, frac);
 	}
@@ -658,7 +659,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		vec4 color(0.0f, 0.0f, 0.0f, 0.0f);
 		for(int i_sample = 0; i_sample < int_ratio; ++i_sample)
 		{
-			color_rgba32f c0 = sample_surface(tex->get_surface(low), sample_coord_x, sample_coord_y, sample, sampler_state_min);
+			color_rgba32f c0 = sample_surface(*tex->get_surface(low), sample_coord_x, sample_coord_y, sample, sampler_state_min);
 			// color_rgba32f c1 = sample_surface(tex->get_surface(up), sample_coord_x, sample_coord_y, sample, sampler_state_min);
 
 			color += c0.get_vec4(); //lerp(c0, c1, frac).get_vec4();
