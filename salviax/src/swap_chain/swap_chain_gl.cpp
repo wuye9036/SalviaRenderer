@@ -1,6 +1,9 @@
+#if defined(SALVIAX_GL_ENABLED)
+
 #include <salviax/include/swap_chain/swap_chain_impl.h>
 
 #include <salviar/include/surface.h>
+#include <salviar/include/renderer.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/make_shared.hpp>
@@ -11,6 +14,8 @@
 #include <windows.h>
 #include <GL/GL.h>
 
+#pragma comment(lib, "opengl32.lib")
+
 using namespace salviar;
 
 BEGIN_NS_SALVIAX();
@@ -20,9 +25,14 @@ class gl_swap_chain: public swap_chain_impl
 public:
 	gl_swap_chain(
 		renderer_ptr const& renderer,
-		renderer_parameters const& params
-		) : swap_chain_impl(renderer, params)
+		renderer_parameters const& params)
+		: swap_chain_impl(renderer, params)
+		, window_(nullptr)
+		, dc_(nullptr), glrc_(nullptr)
+		, tex_(0)
+		, width_(0), height_(0)
 	{
+		window_ = reinterpret_cast<HWND>(params.native_window);
 		initialize();
 	}
 
@@ -167,3 +177,5 @@ swap_chain_ptr create_gl_swap_chain(
 }
 
 END_NS_SALVIAX();
+
+#endif

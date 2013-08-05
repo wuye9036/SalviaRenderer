@@ -7,7 +7,7 @@ namespace salviar
 {
 	EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
 	EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
-	class renderer_parameters;
+	struct renderer_parameters;
 }
 
 BEGIN_NS_SALVIAX();
