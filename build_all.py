@@ -98,6 +98,7 @@ def clean_llvm(proj):
 def config_llvm(proj):
 	# Add definitions here
 	defs = {}
+	defs["PYTHON_EXECUTABLE"] = ("PATH", sys.executable)
 	defs["LLVM_BOOST_DIR"] = ("PATH", proj.boost_root())
 	defs["LLVM_BOOST_STDINT"] = ("BOOL", "TRUE")
 	defs["CMAKE_INSTALL_PREFIX"] = ("PATH", proj.llvm_install())
@@ -154,6 +155,7 @@ def clean_salvia(proj):
 def config_salvia(proj):
 	# Add definitions here
 	defs = {}
+	defs["PYTHON_EXECUTABLE"] = ("PATH", sys.executable)
 	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", proj.boost_root())
 	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", proj.boost_lib_dir() )
 	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", proj.prebuilt_llvm() )
