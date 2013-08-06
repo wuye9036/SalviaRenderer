@@ -5,35 +5,34 @@
 
 #include <eflib/include/utility/unref_declarator.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/make_shared.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 BEGIN_NS_SALVIAR()
 
 using namespace eflib;
+using boost::make_shared;
 
 texture_2d::texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format)
 {
-	width_ = width;
+	width_  = width;
 	height_ = height;
-
-	fmt_ = format;
-	surfs_.resize(1);
-	surfs_[0]->rebuild(width, height, num_samples, format);
-}
-
-void texture_2d::reset(size_t width, size_t height, size_t num_samples, pixel_format format)
-{
-	new(this) texture_2d(width, height, num_samples, format);
+	fmt_    = format;
+	surfs_.push_back( make_shared<surface>(width, height, num_samples, format) );
 }
 
 void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 {
-	if( auto_gen ){
+	if( auto_gen )
+    {
 		max_lod_ = 0;
-		min_lod_ = calc_lod_limit( width_, height_ ) - 1;
+		min_lod_ = calc_lod_limit(width_, height_) - 1;
 	}
 
-	size_t cur_sizex = surfs_[max_lod_]	 ->get_width();
-	size_t cur_sizey = surfs_[max_lod_]	 ->get_height();
-	size_t num_samples = surfs_[max_lod_]->get_num_samples();
+	size_t cur_sizex    = surfs_[max_lod_]->get_width();
+	size_t cur_sizey    = surfs_[max_lod_]->get_height();
+	size_t num_samples  = surfs_[max_lod_]->get_num_samples();
 
 	surfs_.resize(min_lod_ + 1);
 
@@ -48,7 +47,8 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 		byte* dst_data = NULL;
 		byte* src_data = NULL;
 
-		surfs_[iLevel]	->rebuild(cur_sizex, cur_sizey, num_samples, fmt_);
+		surfs_[iLevel] = make_shared<surface>(cur_sizex, cur_sizey, num_samples, fmt_);
+
 		surfs_[iLevel]	->map((void**)&dst_data, map_write);
 		surfs_[iLevel-1]->map((void**)&src_data, map_read);
 
@@ -62,14 +62,15 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 		switch (filter)
 		{
 		case filter_point:
-			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely){
-				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx){
+			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely)
+            {
+				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx)
+                {
 					color_rgba32f c;
 					pixel_format_convertor::convert(
 						pixel_format_color_rgba32f, fmt_, 
 						(void*)&c, (const void*)(src_data + ((iPixelx * 2) + (iPixely * 2) * last_sizex) * elem_size)
 						);
-
 					pixel_format_convertor::convert(
 						fmt_, pixel_format_color_rgba32f, 
 						(void*)(dst_data + (iPixelx + iPixely * cur_sizex) * elem_size), (const void*)&c
@@ -79,8 +80,10 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 			break;
 
 		case filter_linear:
-			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely){
-				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx){
+			for(size_t iPixely = 0; iPixely < cur_sizey; ++iPixely)
+            {
+				for(size_t iPixelx = 0; iPixelx < cur_sizex; ++iPixelx)
+                {
 					color_rgba32f c0, c1, c2, c3;
 					pixel_format_convertor::convert(
 						pixel_format_color_rgba32f, fmt_, 

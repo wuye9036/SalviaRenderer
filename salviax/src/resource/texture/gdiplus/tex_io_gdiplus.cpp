@@ -95,20 +95,23 @@ salviar::texture_ptr texture_io_gdiplus::load_cube(salviar::renderer *pr, const 
 	salviar::texture_ptr ret;
 	rect<size_t> dest_region;
 
-	if (filenames.size() != 6){
+	if (filenames.size() != 6)
+    {
 		return ret;
 	}
 
-	for(int i_file = 0; i_file < 6; ++i_file){
+	for(int i_file = 0; i_file < 6; ++i_file)
+    {
 		Bitmap file_bmp( to_wide_string(filenames[i_file]).c_str() );
 		rect<size_t> src_region(0, 0, file_bmp.GetWidth(), file_bmp.GetHeight());
-		if (!ret){
+		if (!ret)
+        {
 			dest_region = src_region;
 			ret = pr->create_texcube( dest_region.w, dest_region.h, 1, fmt );
 		}
 		texture_cube* texcube = static_cast<texture_cube*>(ret.get());
-		salviar::surface& cur_surf = *texcube->get_face((cubemap_faces)i_file).get_surface(0);
-		load(cur_surf, dest_region, &file_bmp, src_region);
+		surface* cur_surf = texcube->get_face((cubemap_faces)i_file)->get_surface(0).get();
+		load(*cur_surf, dest_region, &file_bmp, src_region);
 	}
 
 	return ret;

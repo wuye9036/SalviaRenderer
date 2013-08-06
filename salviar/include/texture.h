@@ -1,10 +1,13 @@
-#ifndef SALVIAR_TEXTURE_H
-#define SALVIAR_TEXTURE_H
+#pragma once
+
+#include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/colors.h>
 #include <salviar/include/decl.h>
 #include <salviar/include/enums.h>
 #include <salviar/include/surface.h>
+
+#include <eflib/include/utility/shared_declaration.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
@@ -12,16 +15,16 @@
 
 #include <vector>
 
-#include <salviar/include/salviar_forward.h>
-
 BEGIN_NS_SALVIAR();
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(texture_2d);
 
 class texture
 {
 protected:
-	pixel_format fmt_;
-	size_t min_lod_;
-	size_t max_lod_;
+	pixel_format    fmt_;
+	size_t          min_lod_;
+	size_t          max_lod_;
 
 	static size_t calc_lod_limit(size_t x, size_t y = 1, size_t z = 1)
 	{
@@ -42,9 +45,9 @@ public:
 
 	virtual texture_type get_texture_type()const = 0;
 
-	size_t get_min_lod() const{return min_lod_;}
-	size_t get_max_lod() const{return max_lod_;}
-	pixel_format get_pixel_format() const{return fmt_;}
+	size_t          get_min_lod() const{return min_lod_;}
+	size_t          get_max_lod() const{return max_lod_;}
+	pixel_format    get_pixel_format() const{return fmt_;}
 
 	virtual void map(void** pData, size_t subresource, map_mode mm) = 0;
 	virtual void unmap(size_t subresource) = 0;
@@ -64,15 +67,13 @@ public:
 
 class texture_2d : public texture
 {
-	std::vector<surface_ptr> surfs_;
-
-	size_t width_;
-	size_t height_;
-	size_t num_samples_;
+	std::vector<surface_ptr>    surfs_;
+	size_t                      width_;
+	size_t                      height_;
+	size_t                      num_samples_;
 
 public:
 	texture_2d(size_t width, size_t height, size_t num_samples, pixel_format format);
-	void reset(size_t width, size_t height, size_t num_samples, pixel_format format);
 
 	virtual texture_type get_texture_type()const
 	{
@@ -97,15 +98,13 @@ public:
 
 class texture_cube : public texture
 {
-	std::vector<texture_2d> subtexs_;
-
-	size_t width_;
-	size_t height_;
-	size_t num_samples_;
+	std::vector<texture_2d_ptr> faces_;
+	size_t                      width_;
+	size_t                      height_;
+	size_t                      num_samples_;
 
 public:
 	texture_cube(size_t width, size_t height, size_t num_samples, pixel_format format);
-	void reset(size_t width, size_t height, size_t num_samples, pixel_format format);
 
 	virtual texture_type get_texture_type()const
 	{
@@ -116,10 +115,8 @@ public:
 	virtual void map(void** pData, size_t subresource, map_mode mm);
 	virtual void unmap(size_t subresource);
 
-	virtual surface_ptr const& get_surface(size_t subresource) const;
-
-	virtual texture& get_face(cubemap_faces face);
-	virtual const texture& get_face(cubemap_faces face) const;
+	virtual surface_ptr     const& get_surface(size_t subresource) const;
+	virtual texture_2d_ptr  const& get_face(cubemap_faces face) const;
 
 	virtual size_t get_width(size_t subresource) const;
 	virtual size_t get_height(size_t subresource) const;
@@ -130,6 +127,4 @@ public:
 	virtual void set_min_lod(size_t miplevel);
 };
 
-END_NS_SALVIAR()
-
-#endif
+END_NS_SALVIAR();

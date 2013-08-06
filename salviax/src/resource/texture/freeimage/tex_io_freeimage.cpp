@@ -158,10 +158,10 @@ salviar::texture_ptr texture_io_fi::load_cube(salviar::renderer* pr, const vecto
 			ret = pr->create_texcube( img_w, img_h, 1, fmt );
 		}
 
-		texture_cube* ptexcube = (texture_cube*)(ret.get());
-		texture& face_tex = ptexcube->get_face(cubemap_faces(i_cubeface));
-		rect<size_t> copy_region(0, 0, face_tex.get_width(0), face_tex.get_height(0));
-		load(*face_tex.get_surface(0), copy_region, cube_img, copy_region );
+		texture_cube* cube_tex = (texture_cube*)(ret.get());
+		texture*      face_tex = cube_tex->get_face( cubemap_faces(i_cubeface) ).get();
+		rect<size_t> copy_region(0, 0, face_tex->get_width(0), face_tex->get_height(0));
+		load(*face_tex->get_surface(0), copy_region, cube_img, copy_region );
 	}
 
 	return ret;
