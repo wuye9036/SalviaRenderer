@@ -40,7 +40,6 @@ using namespace std;
 using namespace salviar;
 using namespace salviax;
 using namespace salviax::resource;
-using namespace Gdiplus;
 
 struct vert
 {

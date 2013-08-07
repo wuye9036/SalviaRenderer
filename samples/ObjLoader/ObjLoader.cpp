@@ -10,6 +10,7 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
@@ -156,26 +157,17 @@ protected:
 		string title( "Sample: Obj File Loader" );
 		impl->main_window()->set_title( title );
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
-
+        void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -187,18 +179,20 @@ protected:
 		accumulate_time = 0;
 		fps = 0;
 
-		cup_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/cup/cup.obj", true );
+		cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
 
 		pps.reset( new cup_ps() );
 		pbs.reset( new bs() );
 	}
 	/** @} */
 
-	void on_draw(){
-		present_dev->present(*pdsurf);
+	void on_draw()
+    {
+		swap_chain_->present();
 	}
 
-	void on_idle(){
+	void on_idle()
+    {
 		// measure statistics
 		++ num_frames;
 		float elapsed_time = static_cast<float>(timer.elapsed());
@@ -218,8 +212,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		if(!cup_vs){ return; }
 
@@ -234,21 +228,21 @@ protected:
 
 		vec4 lightPos( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
 
-		hsr->set_pixel_shader(pps);
-		hsr->set_blend_shader(pbs);
+		renderer_->set_pixel_shader(pps);
+		renderer_->set_blend_shader(pbs);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_rasterizer_state(rs_back);
+			renderer_->set_rasterizer_state(rs_back);
 
-			hsr->set_vertex_shader_code( cup_vs );
-			hsr->set_vs_variable( "wvpMatrix", &wvp );
+			renderer_->set_vertex_shader_code( cup_vs );
+			renderer_->set_vs_variable( "wvpMatrix", &wvp );
 			vec4 camera_pos = vec4( camera, 1.0f );
-			hsr->set_vs_variable( "eyePos", &camera_pos );
-			hsr->set_vs_variable( "lightPos", &lightPos );
+			renderer_->set_vs_variable( "eyePos", &camera_pos );
+			renderer_->set_vs_variable( "lightPos", &lightPos );
 
 			for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh ){
 				mesh_ptr cur_mesh = cup_mesh[i_mesh];
@@ -265,36 +259,29 @@ protected:
 			}
 		}
 
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
-		}
-
 		impl->main_window()->refresh();
 	}
 
 protected:
 	/** Properties @{ */
-	device_ptr present_dev;
-	renderer_ptr hsr;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr            renderer_;
 
-	vector<mesh_ptr> cup_mesh;
+	vector<mesh_ptr>        cup_mesh;
 
-	shared_ptr<shader_object> plane_vs;
-	shared_ptr<shader_object> cup_vs;
+	shader_object_ptr       plane_vs;
+	shader_object_ptr       cup_vs;
 
-	cpp_pixel_shader_ptr pps;
-	cpp_blend_shader_ptr pbs;
+	cpp_pixel_shader_ptr    pps;
+	cpp_blend_shader_ptr    pbs;
 
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_back;
 
-	surface_ptr display_surf;
-	surface* pdsurf;
+	uint32_t                num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer timer;
+	timer                   timer;
 	/** @} */
 };
 

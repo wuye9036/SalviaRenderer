@@ -10,6 +10,7 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
@@ -246,33 +247,25 @@ protected:
 		string title( "Sample: Astro Boy" );
 		impl->main_window()->set_title( title );
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
-
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_none;
 		rs_back.reset(new raster_state(rs_desc));
 
 		cout << "Loading mesh ... " << endl;
-		astro_boy_mesh = create_mesh_from_collada( hsr.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
+		astro_boy_mesh = create_mesh_from_collada( renderer_.get(), "../../resources/models/astro_boy/astroBoy_walk_Maya.dae" );
 
 #ifdef SASL_VERTEX_SHADER_ENABLED
 		cout << "Compiling vertex shader ... " << endl;
@@ -288,8 +281,9 @@ protected:
 	}
 	/** @} */
 
-	void on_draw(){
-		present_dev->present(*pdsurf);
+	void on_draw()
+    {
+		swap_chain_->present();
 	}
 
 	void on_idle(){
@@ -314,8 +308,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		vec4 camera_pos = vec4( 0.0f, 10.0f, 14.0f, 1.0f );
 
@@ -328,15 +322,15 @@ protected:
 		ang += elapsed_time/3.0f;
 		vec4 lightPos( sin(ang)*15.0f, 10.0f, cos(ang)*15.0f, 1.0f );
 
-		hsr->set_pixel_shader(pps);
-		hsr->set_blend_shader(pbs);
+		renderer_->set_pixel_shader(pps);
+		renderer_->set_blend_shader(pbs);
 		
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_rasterizer_state(rs_back);
+			renderer_->set_rasterizer_state(rs_back);
 
 			static float cur_time = 0.0f;
 			cur_time = fmodf(cur_time+elapsed_time/1.5f, 1.0f);
@@ -348,25 +342,25 @@ protected:
 
 			// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
-			hsr->set_vertex_shader_code( astro_boy_sc );
+			renderer_->set_vertex_shader_code( astro_boy_sc );
 
-			hsr->set_vs_variable( "wvpMatrix", &wvp );
-			hsr->set_vs_variable( "eyePos", &camera_pos );
-			hsr->set_vs_variable( "lightPos", &lightPos );
+			renderer_->set_vs_variable( "wvpMatrix", &wvp );
+			renderer_->set_vs_variable( "eyePos", &camera_pos );
+			renderer_->set_vs_variable( "lightPos", &lightPos );
 
-			hsr->set_vs_variable( "boneCount", &boneSize );
-			hsr->set_vs_variable_pointer( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
-			hsr->set_vs_variable_pointer( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
+			renderer_->set_vs_variable( "boneCount", &boneSize );
+			renderer_->set_vs_variable_pointer( "boneMatrices", &boneMatrices[0], sizeof(mat44)*boneMatrices.size() );
+			renderer_->set_vs_variable_pointer( "invMatrices", &boneInvMatrices[0], sizeof(mat44)*boneInvMatrices.size() );
 #else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
 			pvs->set_constant( _T("eyePos"), &camera_pos );
 			pvs->set_constant( _T("lightPos"), &lightPos );
 
-			// hsr->set_constant( "boneCount", &boneSize );
+			// renderer_->set_constant( "boneCount", &boneSize );
 			pvs->set_constant( _T("boneMatrices"), &boneMatrices );
 			pvs->set_constant( _T("invMatrices"), &boneInvMatrices );
 
-			hsr->set_vertex_shader(pvs);
+			renderer_->set_vertex_shader(pvs);
 #endif
 			f = fopen("indices.txt", "a");
 			fprintf(f, "FRAME %d", frame_count);
@@ -377,36 +371,29 @@ protected:
 			fclose(f);
 		}
 
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
-		}
-
 		impl->main_window()->refresh();
 	}
 
 protected:
 	/** Properties @{ */
-	device_ptr present_dev;
-	renderer_ptr hsr;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr            renderer_;
 
-	skin_mesh_ptr astro_boy_mesh;
+	skin_mesh_ptr           astro_boy_mesh;
 
-	shader_object_ptr astro_boy_sc;
+	shader_object_ptr       astro_boy_sc;
 
 	cpp_vertex_shader_ptr	pvs;
 	cpp_pixel_shader_ptr	pps;
 	cpp_blend_shader_ptr	pbs;
 
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_back;
 
-	surface_ptr display_surf;
-	surface* pdsurf;
+	uint32_t                num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer timer;
+	timer                   timer;
 	/** @} */
 };
 

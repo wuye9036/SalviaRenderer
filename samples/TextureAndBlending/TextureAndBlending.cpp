@@ -10,6 +10,7 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
@@ -246,36 +247,27 @@ protected:
 		impl->main_window()->set_title( title );
 
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
 		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
 		planar_mesh = create_planar(
-			hsr.get(), 
+			renderer_.get(), 
 			vec3(-3.0f, -1.0f, -3.0f), 
 			vec3(6, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 6),
 			1, 1, true
 			);
 		
-		box_mesh = create_box(hsr.get());
+		box_mesh = create_box(renderer_.get());
 
 		pvs_box.reset(new vs_box());
 		pvs_plane.reset(new vs_plane());
@@ -289,12 +281,12 @@ protected:
 			desc.addr_mode_v = address_clamp;
 			desc.addr_mode_w = address_clamp;
 
-			box_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
+			box_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			box_tex->gen_mipmap(filter_linear, true);
 
 			pps_box.reset(new ps_box(box_tex));
 
-			box_sampler = hsr->create_sampler( desc );
+			box_sampler = renderer_->create_sampler( desc );
 			box_sampler->set_texture( box_tex.get() );
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
@@ -309,11 +301,11 @@ protected:
 			desc.mag_filter = filter_linear;
 			desc.mip_filter = filter_linear;
 
-			plane_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+			plane_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
 			
 			pps_plane.reset(new ps_plane(plane_tex));
-			plane_sampler = hsr->create_sampler( desc );
+			plane_sampler = renderer_->create_sampler( desc );
 			plane_sampler->set_texture( plane_tex.get() );
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
@@ -337,11 +329,13 @@ protected:
 	}
 	/** @} */
 
-	void on_draw(){
-		present_dev->present(*pdsurf);
+	void on_draw()
+    {
+		swap_chain_->present();
 	}
 
-	void on_idle(){
+	void on_idle()
+    {
 			// measure statistics
 		++ num_frames;
 		float elapsed_time = static_cast<float>(timer.elapsed());
@@ -361,8 +355,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		static float s_angle = 0;
 		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
@@ -378,44 +372,40 @@ protected:
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_rasterizer_state(rs_back);
+			renderer_->set_rasterizer_state(rs_back);
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
-			hsr->set_vertex_shader(pvs_plane);
+			renderer_->set_vertex_shader(pvs_plane);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			hsr->set_pixel_shader_code( psc_plane );
-			hsr->set_ps_sampler( "samp", plane_sampler );
+			renderer_->set_pixel_shader_code( psc_plane );
+			renderer_->set_ps_sampler( "samp", plane_sampler );
 #else
-			hsr->set_pixel_shader(pps_plane);
+			renderer_->set_pixel_shader(pps_plane);
 #endif
-			hsr->set_blend_shader(pbs_plane);
+			renderer_->set_blend_shader(pbs_plane);
 			planar_mesh->render();
 			
-			hsr->set_rasterizer_state(rs_front);
+			renderer_->set_rasterizer_state(rs_front);
 			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
-			hsr->set_vertex_shader(pvs_box);
+			renderer_->set_vertex_shader(pvs_box);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			hsr->set_pixel_shader_code( psc_box );
-			hsr->set_ps_sampler( "samp", box_sampler );
+			renderer_->set_pixel_shader_code( psc_box );
+			renderer_->set_ps_sampler( "samp", box_sampler );
 #else
-			hsr->set_pixel_shader(pps_box);
+			renderer_->set_pixel_shader(pps_box);
 #endif
-			hsr->set_blend_shader(pbs_box);
+			renderer_->set_blend_shader(pbs_box);
 			box_mesh->render();
 
-			hsr->set_rasterizer_state(rs_back);
-			hsr->set_vertex_shader(pvs_box);
+			renderer_->set_rasterizer_state(rs_back);
+			renderer_->set_vertex_shader(pvs_box);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			hsr->set_pixel_shader_code( psc_box );
-			hsr->set_ps_sampler( "samp", box_sampler );
+			renderer_->set_pixel_shader_code( psc_box );
+			renderer_->set_ps_sampler( "samp", box_sampler );
 #else
-			hsr->set_pixel_shader(pps_box);
+			renderer_->set_pixel_shader(pps_box);
 #endif
-			hsr->set_blend_shader(pbs_box);
+			renderer_->set_blend_shader(pbs_box);
 			box_mesh->render();
-		}
-
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
 		}
 
 		impl->main_window()->refresh();
@@ -423,41 +413,38 @@ protected:
 
 protected:
 	/** Properties @{ */
-	device_ptr	present_dev;
-	renderer_ptr	hsr;
-	texture_ptr	sm_tex;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr	        renderer_;
+	texture_ptr             sm_tex;
 
-	mesh_ptr planar_mesh;
-	mesh_ptr box_mesh;
+	mesh_ptr                planar_mesh;
+	mesh_ptr                box_mesh;
 
-	texture_ptr plane_tex;
-	texture_ptr box_tex;
+	texture_ptr             plane_tex;
+	texture_ptr             box_tex;
 
-	sampler_ptr plane_sampler;
-	sampler_ptr box_sampler;
+	sampler_ptr             plane_sampler;
+	sampler_ptr             box_sampler;
 
 	cpp_vertex_shader_ptr	pvs_box;
 	cpp_pixel_shader_ptr	pps_box;
-	shader_object_ptr	psc_box;
+	shader_object_ptr	    psc_box;
 
 	cpp_vertex_shader_ptr	pvs_plane;
 	cpp_pixel_shader_ptr	pps_plane;
-	shader_object_ptr	psc_plane;
+	shader_object_ptr	    psc_plane;
 
-	cpp_blend_shader_ptr pbs_box;
-	cpp_blend_shader_ptr pbs_plane;
+	cpp_blend_shader_ptr    pbs_box;
+	cpp_blend_shader_ptr    pbs_plane;
 
-	raster_state_ptr rs_front;
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_front;
+	raster_state_ptr        rs_back;
 
-	surface_ptr	display_surf;
-	surface*	pdsurf;
+	uint32_t	            num_frames;
+	float		            accumulate_time;
+	float		            fps;
 
-	uint32_t	num_frames;
-	float		accumulate_time;
-	float		fps;
-
-	timer		timer;
+	timer		            timer;
 	/** @} */
 };
 

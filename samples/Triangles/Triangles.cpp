@@ -10,6 +10,7 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 
@@ -106,26 +107,17 @@ protected:
 		impl->main_window()->set_title( title );
 		
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
-
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_none;
@@ -133,17 +125,17 @@ protected:
 
 		cout << "Compiling vertex shader ... " << endl;
 		vsc = compile( vs_code, lang_vertex_shader );
-		hsr->set_vertex_shader_code( vsc );
+		renderer_->set_vertex_shader_code( vsc );
 
 		cout << "Compiling pixel shader ... " << endl;
 		psc = compile( ps_code, lang_pixel_shader );
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
-		hsr->set_pixel_shader_code(psc);
+		renderer_->set_pixel_shader_code(psc);
 #endif
 		mesh_ptr pmesh;
 
 		pmesh = create_planar(
-			hsr.get(), 
+			renderer_.get(), 
 			vec3(-30.0f, -1.0f, -30.0f), 
 			vec3(15.0f, 0.0f, 1.0f), 
 			vec3(0.0f, 0.0f, 1.0f),
@@ -152,7 +144,7 @@ protected:
 		meshes.push_back( pmesh );
 
 		pmesh = create_planar(
-			hsr.get(), 
+			renderer_.get(), 
 			vec3(-5.0f, -5.0f, -30.0f), 
 			vec3(0.0f, 4.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 1.0f),
@@ -161,7 +153,7 @@ protected:
 
 		meshes.push_back( pmesh );
 
-		pmesh = create_box( hsr.get() );
+		pmesh = create_box( renderer_.get() );
 		meshes.push_back( pmesh );
 
 		num_frames = 0;
@@ -173,8 +165,9 @@ protected:
 	}
 	/** @} */
 
-	void on_draw(){
-		present_dev->present(*pdsurf);
+	void on_draw()
+    {
+		swap_chain_->present();
 	}
 
 	void on_idle(){
@@ -197,8 +190,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.05f, 0.05f, 0.2f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.05f, 0.05f, 0.2f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		static float t = 17.08067f;
 		// t += elapsed_time / 50000.0f;
@@ -220,22 +213,22 @@ protected:
 			ypos = 40.0f;
 		}
 
-		hsr->set_pixel_shader(pps);
-		hsr->set_blend_shader(pbs);
+		renderer_->set_pixel_shader(pps);
+		renderer_->set_blend_shader(pbs);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			// mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_rasterizer_state(rs_back);
+			renderer_->set_rasterizer_state(rs_back);
 
 			// C++ vertex shader and SASL vertex shader are all available.
-			hsr->set_vertex_shader_code( vsc );
-			hsr->set_vs_variable( "wvpMatrix", &wvp );
+			renderer_->set_vertex_shader_code( vsc );
+			renderer_->set_vs_variable( "wvpMatrix", &wvp );
 
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
-			hsr->set_pixel_shader_code(psc);
+			renderer_->set_pixel_shader_code(psc);
 #endif
 			vec4 color[3];
 			color[0] = vec4( 0.3f, 0.7f, 0.3f, 1.0f );
@@ -244,14 +237,10 @@ protected:
 
 			for( size_t i_mesh = 0; i_mesh < meshes.size(); ++i_mesh ){
 				mesh_ptr cur_mesh = meshes[i_mesh];
-				hsr->set_ps_variable( "color", &color[i_mesh] );
+				renderer_->set_ps_variable( "color", &color[i_mesh] );
 				pps->set_constant( _T("Color"), &color[i_mesh] );
 				cur_mesh->render();
 			}
-		}
-
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
 		}
 
 		impl->main_window()->refresh();
@@ -259,27 +248,24 @@ protected:
 
 protected:
 	/** Properties @{ */
-	device_ptr present_dev;
-	renderer_ptr hsr;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr            renderer_;
 
-	vector<mesh_ptr>			meshes;
-	shared_ptr<shader_object> vsc;
-	shared_ptr<shader_object> psc;
+	vector<mesh_ptr>		meshes;
+	shader_object_ptr       vsc;
+	shader_object_ptr       psc;
 
 	cpp_vertex_shader_ptr	pvs;
 	cpp_pixel_shader_ptr	pps;
 	cpp_blend_shader_ptr	pbs;
 
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_back;
+    
+	uint32_t                num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	surface_ptr display_surf;
-	surface* pdsurf;
-
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer timer;
+	timer                   timer;
 	/** @} */
 };
 

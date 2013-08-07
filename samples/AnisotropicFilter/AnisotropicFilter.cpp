@@ -10,6 +10,7 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
@@ -249,36 +250,27 @@ protected:
 		string title( "Sample: Anisotropic Filter" );
 		impl->main_window()->set_title( title );
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
 		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
 		planar_mesh = create_planar(
-			hsr.get(), 
+			renderer_.get(), 
 			vec3(-50.0f, 0.0f, -50.0f), 
 			vec3(1.0f, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 1.0f),
 			100, 100, true
 			);
 		
-		cone_mesh = create_cone(hsr.get(), vec3(0.0f, 0.0f, 0.0f), 1.0f, vec3(0.0f, 1.0f, 0.0f), 120);
+		cone_mesh = create_cone(renderer_.get(), vec3(0.0f, 0.0f, 0.0f), 1.0f, vec3(0.0f, 1.0f, 0.0f), 120);
 
 		pvs_cone.reset(new vs_cone());
 		pvs_plane.reset(new vs_plane());
@@ -293,12 +285,12 @@ protected:
 			desc.addr_mode_w = address_clamp;
 			desc.max_anisotropy = 16;
 
-			cone_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
+			cone_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			cone_tex->gen_mipmap(filter_linear, true);
 
 			pps_cone.reset(new ps_cone(cone_tex));
 
-			cone_sampler = hsr->create_sampler( desc );
+			cone_sampler = renderer_->create_sampler( desc );
 			cone_sampler->set_texture( cone_tex.get() );
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
@@ -314,11 +306,11 @@ protected:
 			desc.mip_filter = filter_anisotropic;
 			desc.max_anisotropy = 16;
 
-			plane_tex = texture_io_fi::instance().load(hsr.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
+			plane_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
 			
 			pps_plane.reset(new ps_plane(plane_tex));
-			plane_sampler = hsr->create_sampler( desc );
+			plane_sampler = renderer_->create_sampler( desc );
 			plane_sampler->set_texture( plane_tex.get() );
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
@@ -342,8 +334,9 @@ protected:
 	}
 	/** @} */
 
-	void on_draw(){
-		present_dev->present(*pdsurf);
+	void on_draw()
+    {
+        swap_chain_->present();
 	}
 
 	void on_idle(){
@@ -366,8 +359,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
@@ -401,46 +394,42 @@ protected:
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_rasterizer_state(rs_back);
+			renderer_->set_rasterizer_state(rs_back);
 			pvs_plane->set_constant(_T("WorldViewProjMat"), &wvp);
-			hsr->set_vertex_shader(pvs_plane);
+			renderer_->set_vertex_shader(pvs_plane);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			hsr->set_pixel_shader_code( psc_plane );
-			hsr->set_ps_sampler( "samp", plane_sampler );
+			renderer_->set_pixel_shader_code( psc_plane );
+			renderer_->set_ps_sampler( "samp", plane_sampler );
 #else
-			hsr->set_pixel_shader(pps_plane);
+			renderer_->set_pixel_shader(pps_plane);
 #endif
-			hsr->set_blend_shader(pbs_plane);
+			renderer_->set_blend_shader(pbs_plane);
 			planar_mesh->render();
 			
 			/*
-			hsr->set_rasterizer_state(rs_front);
+			renderer_->set_rasterizer_state(rs_front);
 			pvs_cone->set_constant(_T("WorldViewProjMat"), &wvp);
-			hsr->set_vertex_shader(pvs_cone);
+			renderer_->set_vertex_shader(pvs_cone);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			hsr->set_pixel_shader_code( psc_cone );
-			hsr->set_ps_sampler( "samp", cone_sampler );
+			renderer_->set_pixel_shader_code( psc_cone );
+			renderer_->set_ps_sampler( "samp", cone_sampler );
 #else
-			hsr->set_pixel_shader(pps_cone);
+			renderer_->set_pixel_shader(pps_cone);
 #endif
-			hsr->set_blend_shader(pbs_cone);
+			renderer_->set_blend_shader(pbs_cone);
 			cone_mesh->render();
 
-			hsr->set_rasterizer_state(rs_back);
-			hsr->set_vertex_shader(pvs_cone);
+			renderer_->set_rasterizer_state(rs_back);
+			renderer_->set_vertex_shader(pvs_cone);
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
-			hsr->set_pixel_shader_code( psc_cone );
-			hsr->set_ps_sampler( "samp", cone_sampler );
+			renderer_->set_pixel_shader_code( psc_cone );
+			renderer_->set_ps_sampler( "samp", cone_sampler );
 #else
-			hsr->set_pixel_shader(pps_cone);
+			renderer_->set_pixel_shader(pps_cone);
 #endif
-			hsr->set_blend_shader(pbs_cone);
+			renderer_->set_blend_shader(pbs_cone);
 			cone_mesh->render();
 			*/
-		}
-
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
 		}
 
 		impl->main_window()->refresh();
@@ -448,41 +437,38 @@ protected:
 
 protected:
 	/** Properties @{ */
-	device_ptr present_dev;
-	renderer_ptr hsr;
-	texture_ptr sm_tex;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr            renderer_;
+	texture_ptr             sm_tex;
 
-	mesh_ptr planar_mesh;
-	mesh_ptr cone_mesh;
+	mesh_ptr                planar_mesh;
+	mesh_ptr                cone_mesh;
 
-	texture_ptr plane_tex;
-	texture_ptr cone_tex;
+	texture_ptr             plane_tex;
+	texture_ptr             cone_tex;
 
-	sampler_ptr plane_sampler;
-	sampler_ptr cone_sampler;
+	sampler_ptr             plane_sampler;
+	sampler_ptr             cone_sampler;
 
-	cpp_vertex_shader_ptr pvs_cone;
-	cpp_pixel_shader_ptr pps_cone;
-	shader_object_ptr psc_cone;
+	cpp_vertex_shader_ptr   pvs_cone;
+	cpp_pixel_shader_ptr    pps_cone;
+	shader_object_ptr       psc_cone;
 
-	cpp_vertex_shader_ptr pvs_plane;
-	cpp_pixel_shader_ptr pps_plane;
-	shader_object_ptr psc_plane;
+	cpp_vertex_shader_ptr   pvs_plane;
+	cpp_pixel_shader_ptr    pps_plane;
+	shader_object_ptr       psc_plane;
 
-	cpp_blend_shader_ptr pbs_cone;
-	cpp_blend_shader_ptr pbs_plane;
+	cpp_blend_shader_ptr    pbs_cone;
+	cpp_blend_shader_ptr    pbs_plane;
 
-	raster_state_ptr rs_front;
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_front;
+	raster_state_ptr        rs_back;
 
-	surface_ptr display_surf;
-	surface* pdsurf;
+	uint32_t                num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer timer;
+	timer                   timer;
 	/** @} */
 };
 

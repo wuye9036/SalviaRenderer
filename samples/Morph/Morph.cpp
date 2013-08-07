@@ -10,12 +10,12 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 
 #include <salviau/include/common/timer.h>
-#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <eflib/include/platform/dl_loader.h>
@@ -235,26 +235,17 @@ protected:
 		string title( "Sample: Morph" );
 		impl->main_window()->set_title( title );
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
-
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_none;
@@ -263,7 +254,7 @@ protected:
 		cout << "Loading mesh ... " << endl;
 		char const* src_file = "../../resources/models/morph/src.dae";
 		char const* dst_file = "../../resources/models/morph/dst.dae";
-		morph_mesh = create_morph_mesh_from_collada( hsr.get(), src_file, dst_file );
+		morph_mesh = create_morph_mesh_from_collada( renderer_.get(), src_file, dst_file );
 
 		assert(morph_mesh);
 
@@ -281,8 +272,9 @@ protected:
 	}
 	/** @} */
 
-	void on_draw(){
-		present_dev->present(*pdsurf);
+	void on_draw()
+    {
+		swap_chain_->present();
 	}
 
 	void on_idle(){
@@ -307,8 +299,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		vec4 camera_pos = vec4( 0.0f, 70.0f, -160.0f, 1.0f );
 
@@ -321,8 +313,8 @@ protected:
 		ang += elapsed_time/2.0f;
 		vec4 lightPos( sin(ang)*160.0f, 40.0f, cos(ang)*160.0f, 1.0f );
 
-		hsr->set_pixel_shader(pps);
-		hsr->set_blend_shader(pbs);
+		renderer_->set_pixel_shader(pps);
+		renderer_->set_blend_shader(pbs);
 		
 		static float blendWeight = 1.0f;
 		blendWeight += elapsed_time/5.0f;
@@ -335,28 +327,24 @@ protected:
 			world = mat44::identity();
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_rasterizer_state(rs_back);
+			renderer_->set_rasterizer_state(rs_back);
 
 			// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
-			hsr->set_vertex_shader_code( morph_sc );
+			renderer_->set_vertex_shader_code( morph_sc );
 
-			hsr->set_vs_variable( "wvpMatrix", &wvp );
-			hsr->set_vs_variable( "eyePos", &camera_pos );
-			hsr->set_vs_variable( "lightPos", &lightPos );
-			hsr->set_vs_variable( "blendWeight", &finalBlendWeight );
+			renderer_->set_vs_variable( "wvpMatrix", &wvp );
+			renderer_->set_vs_variable( "eyePos", &camera_pos );
+			renderer_->set_vs_variable( "lightPos", &lightPos );
+			renderer_->set_vs_variable( "blendWeight", &finalBlendWeight );
 #else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
 			pvs->set_constant( _T("eyePos"), &camera_pos );
 			pvs->set_constant( _T("lightPos"), &lightPos );
 
-			hsr->set_vertex_shader(pvs);
+			renderer_->set_vertex_shader(pvs);
 #endif
 			morph_mesh->render();
-		}
-
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
 		}
 
 		impl->main_window()->refresh();
@@ -364,27 +352,24 @@ protected:
 
 protected:
 	/** Properties @{ */
-	device_ptr present_dev;
-	renderer_ptr hsr;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr            renderer_;
 
-	mesh_ptr morph_mesh;
+	mesh_ptr                morph_mesh;
 
-	shared_ptr<shader_object> morph_sc;
+	shader_object_ptr       morph_sc;
 
 	cpp_vertex_shader_ptr	pvs;
 	cpp_pixel_shader_ptr	pps;
 	cpp_blend_shader_ptr	pbs;
 
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_back;
 
-	surface_ptr display_surf;
-	surface* pdsurf;
+	uint32_t                num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer timer;
+	timer                   timer;
 	/** @} */
 };
 

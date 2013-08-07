@@ -10,6 +10,7 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/terrain/gen_terrain.h>
 
@@ -153,26 +154,17 @@ protected:
 		string title( "Sample: Vertex Texture Fetch" );
 		impl->main_window()->set_title( title );
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
-
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_none;
@@ -183,7 +175,7 @@ protected:
 		salviax::resource::make_terrain_plasma(field, TERRAIN_SIZE, 0.5f);
 		salviax::resource::filter_terrain(field, TERRAIN_SIZE, 0.15f);
 
-		terrain_tex = salviax::resource::make_terrain_texture(hsr.get(), field, TERRAIN_SIZE);
+		terrain_tex = salviax::resource::make_terrain_texture(renderer_.get(), field, TERRAIN_SIZE);
 		{
 			sampler_desc desc;
 			desc.min_filter = filter_linear;
@@ -193,22 +185,22 @@ protected:
 			desc.addr_mode_v = address_mirror;
 			desc.addr_mode_w = address_mirror;
 
-			terrain_samp = hsr->create_sampler( desc );
+			terrain_samp = renderer_->create_sampler( desc );
 			terrain_samp->set_texture( terrain_tex.get() );
 		}
 
 		cout << "Compiling vertex shader ... " << endl;
 		vsc = compile( vs_code, lang_vertex_shader );
-		hsr->set_vertex_shader_code( vsc );
+		renderer_->set_vertex_shader_code( vsc );
 
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
 		cout << "Compiling pixel shader ... " << endl;
 		psc = compile( ps_code, lang_pixel_shader );
-		hsr->set_pixel_shader_code(psc);
+		renderer_->set_pixel_shader_code(psc);
 #endif
 
 		plane = create_planar(
-			hsr.get(), 
+			renderer_.get(), 
 			vec3(-TERRAIN_BLOCK_SIZE/2.0f, 0.0f, -TERRAIN_BLOCK_SIZE/2.0f), 
 			vec3(0.5f, 0.0f, 0.0f), 
 			vec3(0.0f, 0.0f, 0.5f),
@@ -225,7 +217,7 @@ protected:
 	/** @} */
 
 	void on_draw(){
-		present_dev->present(*pdsurf);
+		swap_chain_->present();
 	}
 
 	void on_idle(){
@@ -248,8 +240,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.05f, 0.05f, 0.2f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.05f, 0.05f, 0.2f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		vec3 camera( 0.0f, 32.0f, -7.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
@@ -266,65 +258,58 @@ protected:
 		offset_x += (0.006f * elapsed_time);
 		offset_y += (0.0088f * elapsed_time);
 
-		hsr->set_pixel_shader(pps);
-		hsr->set_blend_shader(pbs);
+		renderer_->set_pixel_shader(pps);
+		renderer_->set_blend_shader(pbs);
 
-		hsr->set_rasterizer_state(rs_back);
+		renderer_->set_rasterizer_state(rs_back);
 
 		vec2 terrain_scale(scale, scale);
 		vec2 terrain_offset(offset_x, offset_y);
 
-		hsr->set_vertex_shader_code( vsc );
+		renderer_->set_vertex_shader_code( vsc );
 
 		mat_mul(wvp, world, mat_mul(wvp, view, proj));
-		hsr->set_vs_variable( "wvpMatrix", &wvp );
+		renderer_->set_vs_variable( "wvpMatrix", &wvp );
 
-		hsr->set_vs_variable( "terrainScale", &terrain_scale );
-		hsr->set_vs_variable( "terrainOffset", &terrain_offset );
-		hsr->set_vs_sampler( "terrainSamp", terrain_samp);
+		renderer_->set_vs_variable( "terrainScale", &terrain_scale );
+		renderer_->set_vs_variable( "terrainOffset", &terrain_offset );
+		renderer_->set_vs_sampler( "terrainSamp", terrain_samp);
 		
 #ifdef SALVIA_PIXEL_SHADER_ENABLED
-		hsr->set_pixel_shader_code(psc);
-		hsr->set_ps_variable( "color", &color );
+		renderer_->set_pixel_shader_code(psc);
+		renderer_->set_ps_variable( "color", &color );
 #endif
 		vec4 color = vec4( 0.3f, 0.7f, 0.3f, 1.0f );
 
 		pps->set_constant( _T("Color"), &color );
 		plane->render();
 
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
-		}
-
 		impl->main_window()->refresh();
 	}
 
 protected:
 	/** Properties @{ */
-	device_ptr present_dev;
-	renderer_ptr hsr;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr            renderer_;
 
-	mesh_ptr			plane;
-	texture_ptr		terrain_tex;
-	sampler_ptr		terrain_samp;
+	mesh_ptr			    plane;
+	texture_ptr		        terrain_tex;
+	sampler_ptr		        terrain_samp;
 
-	shared_ptr<shader_object> vsc;
-	shared_ptr<shader_object> psc;
+	shader_object_ptr       vsc;
+	shader_object_ptr       psc;
 
 	cpp_vertex_shader_ptr	pvs;
 	cpp_pixel_shader_ptr	pps;
 	cpp_blend_shader_ptr	pbs;
 
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_back;
 
-	surface_ptr display_surf;
-	surface* pdsurf;
+	uint32_t                num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer timer;
+	timer                   timer;
 	/** @} */
 };
 

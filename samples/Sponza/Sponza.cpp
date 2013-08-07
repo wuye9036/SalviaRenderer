@@ -10,6 +10,7 @@
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
 
+#include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/mesh/sa/material.h>
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
@@ -187,26 +188,17 @@ protected:
 		impl->main_window()->set_title( title );
 		
 		boost::any view_handle_any = impl->main_window()->view_handle();
-		present_dev = create_default_presenter( *boost::unsafe_any_cast<void*>(&view_handle_any) );
-
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
@@ -225,7 +217,7 @@ protected:
 #ifdef EFLIB_DEBUG
 		cout << "Application is built in debug mode. Mesh loading is *VERY SLOW*." << endl;
 #endif
-		sponza_mesh = create_mesh_from_obj( hsr.get(), "../../resources/models/sponza/sponza.obj", false );
+		sponza_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/sponza/sponza.obj", false );
 		cout << "Loading pixel and blend shader... " << endl;
 
 		pvs.reset( new sponza_vs() );
@@ -235,7 +227,7 @@ protected:
 	/** @} */
 
 	void on_draw(){
-		present_dev->present(*pdsurf);
+		swap_chain_->present();
 	}
 
 	void on_idle(){
@@ -258,8 +250,8 @@ protected:
 
 		timer.restart();
 
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		static float xpos = -36.0f;
 		xpos += 0.2f;
@@ -281,29 +273,29 @@ protected:
 		}
 		vec4 lightPos( 0.0f, ypos, 0.0f, 1.0f );
 
-		hsr->set_pixel_shader(pps);
-		hsr->set_blend_shader(pbs);
+		renderer_->set_pixel_shader(pps);
+		renderer_->set_blend_shader(pbs);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
 			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
 			mat_mul(wvp, world, mat_mul(wvp, view, proj));
 
-			hsr->set_rasterizer_state(rs_back);
+			renderer_->set_rasterizer_state(rs_back);
 
 			// C++ vertex shader and SASL vertex shader are all available.
 #ifdef SASL_VERTEX_SHADER_ENABLED
-			hsr->set_vertex_shader_code( sponza_sc );
+			renderer_->set_vertex_shader_code( sponza_sc );
 #else
 			pvs->set_constant( _T("wvpMatrix"), &wvp );
 			pvs->set_constant( _T("eyePos"), &camera_pos );
 			pvs->set_constant( _T("lightPos"), &lightPos );
-			hsr->set_vertex_shader(pvs);
+			renderer_->set_vertex_shader(pvs);
 #endif
-			hsr->set_vs_variable( "wvpMatrix", &wvp );
+			renderer_->set_vs_variable( "wvpMatrix", &wvp );
 			
-			hsr->set_vs_variable( "eyePos", &camera_pos );
-			hsr->set_vs_variable( "lightPos", &lightPos );
+			renderer_->set_vs_variable( "eyePos", &camera_pos );
+			renderer_->set_vs_variable( "lightPos", &lightPos );
 
 			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
 				mesh_ptr cur_mesh = sponza_mesh[i_mesh];
@@ -314,7 +306,7 @@ protected:
 #ifdef _DEBUG
 				// if (mtl->name != "sponza_07SG"){ continue; }
 #endif
-				hsr->flush();
+				renderer_->flush();
 
 				pps->set_constant( _T("Ambient"),  &mtl->ambient );
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
@@ -326,36 +318,29 @@ protected:
 			}
 		}
 
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
-		}
-
 		impl->main_window()->refresh();
 	}
 
 protected:
 	/** Properties @{ */
-	device_ptr present_dev;
-	renderer_ptr hsr;
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr            renderer_;
 
-	vector<mesh_ptr> sponza_mesh;
+	vector<mesh_ptr>        sponza_mesh;
 
-	shared_ptr<shader_object> sponza_sc;
+	shader_object_ptr       sponza_sc;
 
 	cpp_vertex_shader_ptr	pvs;
 	cpp_pixel_shader_ptr	pps;
 	cpp_blend_shader_ptr	pbs;
 
-	raster_state_ptr rs_back;
+	raster_state_ptr        rs_back;
 
-	surface_ptr display_surf;
-	surface* pdsurf;
+	uint32_t                num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	timer timer;
+	timer                   timer;
 	/** @} */
 };
 
