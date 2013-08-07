@@ -41,6 +41,9 @@ set (HEADER_FILES
 	include/utility/freeimage_utilities.h
 	include/utility/user_config.h
 	include/utility/utility_forward.h
+	
+	include/swap_chain/swap_chain.h
+	include/swap_chain/swap_chain_impl.h
 )
 
 set (SOURCE_FILES
@@ -57,15 +60,26 @@ set (SOURCE_FILES
 	src/resource/terrain/gen_terrain.cpp
 	
 	src/utility/freeimage_utility.cpp
+	
+	src/swap_chain/swap_chain_impl.cpp
+	src/swap_chain/swap_chain_gl.cpp
 )
 
+# Platform-specified files
+ADD_DEFINITIONS(-DSALVIAX_GL_ENABLED)
+
 if( WIN32 )
-	set (HEADER_FILES ${HEADER_FILES}
-		include/utility/inc_gdiplus.h
+	set (HEADER_FILES
+		${HEADER_FILES}
 		include/utility/inc_windows.h
-		)
-	set (SOURCE_FILES ${SOURCE_FILES}
-		src/resource/texture/gdiplus/tex_io_gdiplus.cpp
+	)
+endif()
+
+if( SALVIA_BUILD_WITH_DIRECTX )
+	ADD_DEFINITIONS(-DSALVIAX_D3D11_ENABLED)
+	set (SOURCE_FILES
+		${SOURCE_FILES}
+		src/swap_chain/swap_chain_d3d11.cpp
 	)
 endif()
 
@@ -73,30 +87,3 @@ ADD_LIBRARY( salviax STATIC	${HEADER_FILES}	${SOURCE_FILES} )
 TARGET_LINK_LIBRARIES(salviax EFLIB	salviar FreeImage freetype)
 SET_TARGET_PROPERTIES(salviax PROPERTIES FOLDER "SALVIA Renderer")
 SALVIA_CONFIG_OUTPUT_PATHS(salviax)
-
-# Swap Chain
-ADD_DEFINITIONS(-DSALVIAX_GL_ENABLED)
-set (HEADER_FILES
-	include/swap_chain/swap_chain.h
-	include/swap_chain/swap_chain_impl.h
-)
-set (SOURCE_FILES
-	src/swap_chain/swap_chain_impl.cpp
-	src/swap_chain/swap_chain_gl.cpp
-)
-# D3D11
-if( SALVIA_BUILD_WITH_DIRECTX )
-	ADD_DEFINITIONS(-DSALVIAX_D3D11_ENABLED)
-	set (SOURCE_FILES
-		${SOURCE_FILES}
-		src/swap_chain/swap_chain_d3d11.cpp
-		src/swap_chain/swap_chain_d3d11.rc
-		src/swap_chain/vs.hlsl
-		src/swap_chain/ps.hlsl
-	)
-endif()
-
-ADD_LIBRARY			 (salviax_swap_chain SHARED ${HEADER_FILES} ${SOURCE_FILES} )
-TARGET_LINK_LIBRARIES(salviax_swap_chain EFLIB salviar)
-SET_TARGET_PROPERTIES(salviax_swap_chain PROPERTIES FOLDER "SALVIA Renderer")
-SALVIA_CONFIG_OUTPUT_PATHS(salviax_swap_chain)

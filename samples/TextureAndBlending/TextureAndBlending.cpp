@@ -15,7 +15,6 @@
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 
 #include <salviau/include/common/timer.h>
-#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <vector>

@@ -6,7 +6,6 @@
 
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
-#include <salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 
 #include <salviar/include/shader.h>

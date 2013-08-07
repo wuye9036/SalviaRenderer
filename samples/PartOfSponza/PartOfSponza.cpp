@@ -8,7 +8,6 @@
 #include <salviax/include/resource/mesh/sa/material.h>
 
 #include <salviau/include/common/timer.h>
-#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <salviar/include/shader.h>
@@ -208,10 +207,10 @@ protected:
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
         salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-
-        renderer_->set_render_target(0, swap_chain_->get_surface());
+        renderer_->set_render_target(salviar::render_target_color, 0, swap_chain_->get_surface());
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;

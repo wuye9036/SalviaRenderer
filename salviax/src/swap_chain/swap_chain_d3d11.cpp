@@ -47,6 +47,25 @@ HINSTANCE get_dll_instance()
 	return NULL;
 }
 
+char const ps_data[] =
+    "Texture2D sa_tex : register(t0); \n"
+    "SamplerState point_sampler : register(s0);\n"
+    "float4 PSMain(float2 tex0 : TEXCOORD0) : SV_Target\n"
+    "{\n"
+	"   return sa_tex.Sample(point_sampler, tex0);\n"
+    "}\n"
+    ;
+
+char const vs_data[] =
+    "void VSMain(float2 pos : POSITION,\n"
+	"	out float2 oTex0 : TEXCOORD0,\n"
+	"	out float4 oPos : SV_Position)\n"
+    "{\n"
+	"   oPos = float4(pos, 0, 1);\n"
+	"   oTex0 = float2(float2(pos.x, -pos.y) * 0.5f + 0.5f);\n"
+    "}\n"
+    ;
+
 class d3d11_swap_chain: public swap_chain_impl
 {
 public:
@@ -246,19 +265,9 @@ public:
 			UINT offsets[] = { 0 };
 			d3d_imm_ctx_->IASetVertexBuffers(0, 1, &vb_, strides, offsets);
 
-			HINSTANCE hModule = get_dll_instance();
-			HRSRC rc;
-			HGLOBAL global;
-			LPCSTR rc_data;
-			DWORD rc_size;
-
-			rc = FindResource(hModule, TEXT("IDR_VS_HLSL"), TEXT("HLSL"));
-			global = rc ? LoadResource(hModule, rc) : NULL;
-			rc_data = global ? static_cast<LPCSTR>(LockResource(global)) : NULL;
-			rc_size = rc ? SizeofResource(hModule, rc) : 0;
 			ID3D10Blob* vs_code = NULL;
 			ID3D10Blob* err_msg = NULL;
-			D3DX11CompileFromMemory(rc_data, rc_size, NULL, NULL, NULL, "VSMain", "vs_4_0", 0, 0, NULL, &vs_code, &err_msg, NULL);
+			D3DX11CompileFromMemory(vs_data, sizeof(vs_data), NULL, NULL, NULL, "VSMain", "vs_4_0", 0, 0, NULL, &vs_code, &err_msg, NULL);
 			if (err_msg)
 			{
 				std::cerr << err_msg->GetBufferPointer() << std::endl;
@@ -268,13 +277,9 @@ public:
 
 			d3d_imm_ctx_->VSSetShader(vs_, NULL, 0);
 
-			rc = FindResource(hModule, TEXT("IDR_PS_HLSL"), TEXT("HLSL"));
-			global = rc ? LoadResource(hModule, rc) : NULL;
-			rc_data = global ? static_cast<LPCSTR>(LockResource(global)) : NULL;
-			rc_size = rc ? SizeofResource(hModule, rc) : 0;
 			ID3D10Blob* ps_code = NULL;
 			err_msg = NULL;
-			D3DX11CompileFromMemory(rc_data, rc_size, NULL, NULL, NULL, "PSMain", "ps_4_0", 0, 0, NULL, &ps_code, &err_msg, NULL);
+			D3DX11CompileFromMemory(ps_data, sizeof(ps_data), NULL, NULL, NULL, "PSMain", "ps_4_0", 0, 0, NULL, &ps_code, &err_msg, NULL);
 			if (err_msg)
 			{
 				std::cerr << err_msg->GetBufferPointer() << std::endl;

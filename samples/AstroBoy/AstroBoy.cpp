@@ -15,7 +15,6 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_collada.h>
 
 #include <salviau/include/common/timer.h>
-#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <vector>

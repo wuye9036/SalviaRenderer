@@ -14,7 +14,6 @@
 #include <salviax/include/resource/terrain/gen_terrain.h>
 
 #include <salviau/include/common/timer.h>
-#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <vector>

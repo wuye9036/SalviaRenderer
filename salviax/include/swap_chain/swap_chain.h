@@ -35,15 +35,9 @@ enum renderer_types
 
 END_NS_SALVIAX();
 
-#ifdef salviax_swap_chain_EXPORTS
-	#define SALVIAX_SWAP_CHAIN_API __declspec(dllexport)
-#else
-	#define SALVIAX_SWAP_CHAIN_API __declspec(dllimport)
-#endif
-
 extern "C"
 {
-	SALVIAX_SWAP_CHAIN_API void salviax_create_swap_chain_and_renderer(
+	void salviax_create_swap_chain_and_renderer(
 		salviax::swap_chain_ptr&			out_swap_chain,
 		salviar::renderer_ptr&				out_renderer,
 		salviar::renderer_parameters const*	render_params,

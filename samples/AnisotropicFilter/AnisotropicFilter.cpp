@@ -14,7 +14,6 @@
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 #include <salviau/include/common/timer.h>
-#include <salviau/include/common/presenter_utility.h>
 #include <salviau/include/common/window.h>
 
 #include <eflib/include/platform/boost_begin.h>
