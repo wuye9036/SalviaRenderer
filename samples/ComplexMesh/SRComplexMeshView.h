@@ -8,7 +8,7 @@
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviax/include/resource/texture/gdiplus/tex_io_gdiplus.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
-#include <salviar/include/presenter_dev.h>
+
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/sync_renderer.h>

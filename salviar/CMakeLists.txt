@@ -27,7 +27,6 @@ SET( PIPELINE_HEADERS
 	include/geom_setup_engine.h
 	include/index_fetcher.h
 	include/input_layout.h
-	include/presenter_dev.h
 	include/rasterizer.h
 	include/raster_state.h
 	include/render_stages.h
