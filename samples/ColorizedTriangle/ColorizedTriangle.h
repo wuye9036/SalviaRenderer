@@ -1,1 +1,0 @@
-// ColorizedTriangle.h

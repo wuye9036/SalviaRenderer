@@ -1,12 +1,11 @@
-// SRComplexMeshView.h : interface of the CSRComplexMeshView class
-//
-/////////////////////////////////////////////////////////////////////////////
-
-#pragma once
-
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_impl.h>
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
+#include <salviax/include/swap_chain/swap_chain.h>
+
+#include <salviau/include/common/timer.h>
+#include <salviau/include/common/window.h>
+#include <salviau/include/wtl/wtl_application.h>
 
 #include <salviar/include/shader.h>
 #include <salviar/include/shaderregs.h>
@@ -15,6 +14,7 @@
 #include <salviar/include/rasterizer.h>
 
 #include <eflib/include/utility/unref_declarator.h>
+#include <eflib/include/diagnostics/profiler.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/assign.hpp>
@@ -24,14 +24,7 @@
 #include <fstream>
 #include <string>
 
-#include "Timer.h"
-
-#if defined(SASL_BUILD_WITH_DIRECTX)
-#	define PRESENTER_NAME "d3d9"
-#else
-#	define PRESENTER_NAME "opengl"
-#endif
-//#define PRESENTER_NAME "d3d11"
+#include <tchar.h>
 
 using namespace eflib;
 using namespace boost;
@@ -40,6 +33,7 @@ using namespace std;
 using namespace salviar;
 using namespace salviax;
 using namespace salviax::resource;
+using namespace salviau;
 
 struct vert
 {
@@ -203,7 +197,8 @@ class vs_mesh : public cpp_vertex_shader
 	vec3 light_pos;
 	vec3 eye_pos;
 public:
-	vs_mesh():wv(mat44::identity()), proj(mat44::identity()){
+	vs_mesh():wv(mat44::identity()), proj(mat44::identity())
+	{
 		declare_constant(_T("WorldViewMat"), wv);
 		declare_constant(_T("ProjMat"), proj);
 		declare_constant(_T("LightPos"), light_pos);
@@ -287,120 +282,63 @@ public:
 	}
 };
 
-class CSRComplexMeshView : public CWindowImpl<CSRComplexMeshView>
+class complex_mesh: public quick_app
 {
 public:
-	device_ptr present_dev;
-	renderer_ptr hsr;
-
-	mesh_ptr complex_mesh;
-
-	cpp_vertex_shader_ptr pvs_mesh;
-	cpp_pixel_shader_ptr pps_mesh;
-	cpp_blend_shader_ptr pbs_mesh;
-
-	raster_state_ptr rs_back;
-
-	surface_ptr display_surf;
-	surface* pdsurf;
-
-	uint32_t num_frames;
-	float accumulate_time;
-	float fps;
-
-	Timer timer;
-
-	CSRComplexMeshView::CSRComplexMeshView()
+	complex_mesh()
+		: quick_app( create_wtl_application() )
+		, num_frames(0)
+		, accumulate_time(0.0f)
+		, fps(0.0f)
 	{
 	}
 
-	CSRComplexMeshView::~CSRComplexMeshView()
+	virtual void on_create()
 	{
-	}
+		cout << "Creating window and device ..." << endl;
 
-	DECLARE_WND_CLASS(NULL)
-
-	BOOL PreTranslateMessage(MSG* pMsg)
-	{
-		pMsg;
-		return FALSE;
-	}
-
-	BEGIN_MSG_MAP(CSRComplexMeshView)
-		MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		MESSAGE_HANDLER(WM_PAINT, OnPaint)
-		MESSAGE_HANDLER(WM_LBUTTONUP, OnClick)
-		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-		MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
-	END_MSG_MAP()
-
-	// Handler prototypes (uncomment arguments if needed):
-	//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
-
-	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		std::_tstring dll_name = TEXT("salviax_");
-		dll_name += TEXT(PRESENTER_NAME);
-		dll_name += TEXT("_presenter");
-#ifdef EFLIB_DEBUG
-		dll_name += TEXT("_d");
-#endif
-		dll_name += TEXT(".dll");
-
-		HMODULE presenter_dll = LoadLibrary(dll_name.c_str());
-		typedef void (*create_presenter_device_func)(salviar::device_ptr& dev, void* param);
-		create_presenter_device_func presenter_func = (create_presenter_device_func)GetProcAddress(presenter_dll, "salviax_create_presenter_device");
-		presenter_func(present_dev, static_cast<void*>(m_hWnd));
-
+		string title( "Sample: Complex Mesh" );
+		impl->main_window()->set_title( title );
+		boost::any view_handle_any = impl->main_window()->view_handle();
+		void* window_handle = *boost::unsafe_any_cast<void*>(&view_handle_any);
+		
 		renderer_parameters render_params = {0};
 		render_params.backbuffer_format = pixel_format_color_bgra8;
 		render_params.backbuffer_height = 512;
 		render_params.backbuffer_width = 512;
 		render_params.backbuffer_num_samples = 1;
+        render_params.native_window = window_handle;
 
-		hsr = create_software_renderer(&render_params, present_dev);
-
-		const framebuffer_ptr& fb = hsr->get_framebuffer();
-		if (fb->get_num_samples() > 1){
-			display_surf.reset(new surface(fb->get_width(),
-				fb->get_height(), 1, fb->get_buffer_format()));
-			pdsurf = display_surf.get();
-		}
-		else{
-			display_surf.reset();
-			pdsurf = fb->get_render_target(render_target_color, 0);
-		}
-
-		complex_mesh = LoadModel(hsr, "../../resources/M134 Predator.MESHML.model_bin");
-		pvs_mesh.reset(new vs_mesh());
-		pps_mesh.reset(new ps_mesh());
-		pbs_mesh.reset(new ts_blend_off);
-
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
+		
+		// Rasterizer state
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
+		// Loading mesh
+		cout << "Loading mesh ... " << endl;
+		mesh_ = LoadModel(renderer_, "../../resources/M134 Predator.MESHML.model_bin");
+		cout << "Loading pixel and blend shader... " << endl;
 
-		return 0;
+		// Initialize shader
+		cpp_vs.reset(new vs_mesh());
+		cpp_ps.reset(new ps_mesh());
+		cpp_bs.reset(new ts_blend_off());
+	}
+	/** @} */
+
+	void on_draw()
+    {
+		swap_chain_->present();
 	}
 
-	LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+	void on_idle()
 	{
-		CPaintDC dc(m_hWnd);
-		//TODO: Add your drawing code here
-
-		present_dev->present(*pdsurf);
-		return 0;
-	}
-
-	void Render()
-	{
+		static int frame_count = 0;
 		// measure statistics
+		++frame_count;
 		++ num_frames;
 		float elapsed_time = static_cast<float>(timer.elapsed());
 		accumulate_time += elapsed_time;
@@ -416,81 +354,56 @@ public:
 
 			cout << fps << endl;
 		}
-
 		timer.restart();
-
-		hsr->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		hsr->clear_depth(1.0f);
-
-		static float s_angle = -1;
-		//s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
+		
+		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth(1.0f);
 
 		mat44 world(mat44::identity()), view, proj, wv;
-		
+		static float s_angle = -1;
+		vec3 camera(cos(s_angle) * 400.0f, 600.0f, sin(s_angle) * 400.0f);
 		vec3 eye(0.0f, 0.0f, 0.0f);
 		mat_lookat(view, camera, eye, vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 1000.0f);
+		mat_mul(wv, world, view);
+		
+		vec3 light_pos(vec3(-4, 2, 0));
 
-		for(float i = 0 ; i < 1 ; i ++)
-		{
-			mat_identity(world);
-			mat_mul(wv, world, view);
+		renderer_->set_vertex_shader(cpp_vs);
+		renderer_->set_pixel_shader(cpp_ps);
+		renderer_->set_blend_shader(cpp_bs);
 
-			hsr->set_rasterizer_state(rs_back);
-			pvs_mesh->set_constant(_T("WorldViewMat"), &wv);
-			pvs_mesh->set_constant(_T("ProjMat"), &proj);
-			vec3 light_pos(vec3(-4, 2, 0));
-			pvs_mesh->set_constant(_T("LightPos"), &light_pos);
-			pvs_mesh->set_constant(_T("EyePos"), &eye);
+		renderer_->set_rasterizer_state(rs_back);
 
-			hsr->set_vertex_shader(pvs_mesh);
-			hsr->set_pixel_shader(pps_mesh);
-			hsr->set_blend_shader(pbs_mesh);
-			complex_mesh->render();
-		}
-
-		if (hsr->get_framebuffer()->get_num_samples() > 1){
-			hsr->get_framebuffer()->get_render_target(render_target_color, 0)->resolve(*display_surf);
-		}
-
-		InvalidateRect(NULL);
+		cpp_vs->set_constant(_T("WorldViewMat"), &wv);
+		cpp_vs->set_constant(_T("ProjMat"), &proj);
+		cpp_vs->set_constant(_T("LightPos"), &light_pos);
+		cpp_vs->set_constant(_T("EyePos"), &eye);
+		
+		mesh_->render();
+		
+		impl->main_window()->refresh();
 	}
 
-	LRESULT OnClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
-	{
-		framebuffer* pfb = static_pointer_cast<sync_renderer>(hsr)->get_framebuffer().get();
-		PPOINTS pp = (PPOINTS)(&lParam);
-		if(pfb && size_t(pp->x) < pfb->get_width() && size_t(pp->y) < pfb->get_height())
-		{
-			color_rgba32f c = pfb->get_render_target(render_target_color, 0)->get_texel(pp->x, pfb->get_height() - 1 - pp->y, 0);
-			TCHAR str[512];
-#ifdef EFLIB_MSVC
-			_stprintf_s(str, sizeof(str) / sizeof(str[0]), _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
-#else
-			_stprintf(str, _T("Pos: %3d, %3d, Color: %8.6f,%8.6f,%8.6f"), pp->x, pp->y, c.r, c.g, c.b);
-#endif
-			this->GetParent().SetWindowText(str);
-		}
-		return 0;
-	}
+protected:
+	swap_chain_ptr          swap_chain_;
+	renderer_ptr			renderer_;
+	mesh_ptr				mesh_;
+	
+	cpp_vertex_shader_ptr	cpp_vs;
+	cpp_pixel_shader_ptr	cpp_ps;
+	cpp_blend_shader_ptr	cpp_bs;
 
-	LRESULT OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		{
-			MSG msg;
-			PeekMessage(&msg, m_hWnd, WM_MOUSEMOVE, WM_MOUSEMOVE, PM_REMOVE);
-		}
-		return 0;
-	}
+	raster_state_ptr		rs_back;
+	uint32_t				num_frames;
+	float                   accumulate_time;
+	float                   fps;
 
-	LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-	{
-		EFLIB_UNREF_DECLARATOR(uMsg);
-		EFLIB_UNREF_DECLARATOR(wParam);
-		EFLIB_UNREF_DECLARATOR(lParam);
-		EFLIB_UNREF_DECLARATOR(bHandled);
-
-		return 1;
-    }
+	timer                   timer;
 };
+
+int main( int /*argc*/, TCHAR* /*argv*/[] )
+{
+    complex_mesh loader;
+	return loader.run();
+}
