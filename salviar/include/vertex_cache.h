@@ -29,9 +29,9 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_cache);
 class vertex_cache
 {
 public:
-	virtual void initialize(render_stages* stages) = 0;
+	virtual void initialize(render_stages const* stages) = 0;
 	virtual void update(render_state const* state) = 0;
-	virtual void transform_vertices(uint32_t prim_count) = 0;
+	virtual void transform_vertices() = 0;
 
 	virtual vs_output&	fetch(cache_entry_index id) = 0;
 	virtual ~vertex_cache(){}

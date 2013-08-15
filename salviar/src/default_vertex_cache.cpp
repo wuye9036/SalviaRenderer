@@ -42,7 +42,7 @@ public:
 	{
 	}
 
-	void initialize(render_stages* stages)
+	void initialize(render_stages const* stages)
 	{
 		assembler_	= stages->assembler.get();
 		host_		= stages->host.get();
@@ -56,9 +56,10 @@ public:
 		viewport_	= &(state->vp);
 		cpp_vs_		= state->cpp_vs.get();
 		vs_proto_	= state->vs_proto;
+        prim_count_ = state->prim_count;
 	}
 
-	void transform_vertices(uint32_t prim_count)
+	void transform_vertices()
 	{
 		uint32_t prim_size = 0;
 		switch(topology_)
@@ -74,7 +75,7 @@ public:
 			break;
 		}
 
-		indices_.resize(prim_count * prim_size);
+		indices_.resize(prim_count_ * prim_size);
 
 		atomic<int32_t> working_package(0);
 		size_t num_threads = num_available_threads( );
@@ -82,7 +83,7 @@ public:
 		// Generate indices
 		boost::function<void()> task_generate_indices = 
 			boost::bind( &default_vertex_cache::generate_indices, this,
-			boost::ref(indices_), static_cast<int32_t>(prim_count),
+			boost::ref(indices_), static_cast<int32_t>(prim_count_),
 			prim_size, boost::ref(working_package), GENERATE_INDICES_PACKAGE_SIZE
 			);
 		for (size_t i = 0; i < num_threads - 1; ++ i)
@@ -253,6 +254,7 @@ private:
 	stream_assembler*		assembler_;
 	host*					host_;
 
+    uint32_t                prim_count_;
 	cpp_vertex_shader*		cpp_vs_;
 	vertex_shader_unit_ptr	vs_proto_;
 	viewport const*			viewport_;

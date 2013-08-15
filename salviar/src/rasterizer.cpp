@@ -212,13 +212,13 @@ struct tile_render_context
 	float const*		aa_z_offset;
 };
 
-void rasterizer::initialize(render_stages* stages)
+void rasterizer::initialize(render_stages const* stages)
 {
 	frame_buffer_	= stages->backend.get();
 	vert_cache_		= stages->vert_cache.get();
 }
 
-void rasterizer::update(render_state* state)
+void rasterizer::update(render_state const* state)
 {
 	state_		= state->ras_state.get();
 	vs_proto_	= state->vs_proto.get();
@@ -1057,7 +1057,7 @@ void rasterizer::rasterize_multi_triangle(rasterize_multi_prim_context const* ct
 	}
 }
 
-void rasterizer::update_prim_info(render_state* state)
+void rasterizer::update_prim_info(render_state const* state)
 {	
 	bool is_tri = false;
 	bool is_line = false;
@@ -1065,6 +1065,8 @@ void rasterizer::update_prim_info(render_state* state)
 
 	bool is_wireframe = false;
 	bool is_solid = false;
+
+    prim_count_ = state->prim_count;
 
 	switch (state_->get_desc().fm)
 	{
@@ -1121,7 +1123,7 @@ void rasterizer::update_prim_info(render_state* state)
 	}
 }
 
-void rasterizer::draw(size_t prim_count)
+void rasterizer::draw()
 {
 	const size_t num_samples = frame_buffer_->get_num_samples();
 	switch (num_samples){
@@ -1157,7 +1159,7 @@ void rasterizer::draw(size_t prim_count)
 	geom_setup_ctx.cull			= state_->get_cull_func();
 	geom_setup_ctx.dvc			= vert_cache_;
 	geom_setup_ctx.prim			= prim_;
-	geom_setup_ctx.prim_count	= prim_count;
+	geom_setup_ctx.prim_count	= prim_count_;
 	geom_setup_ctx.prim_size	= prim_size_;
 	geom_setup_ctx.vso_ops		= vso_ops_;
 

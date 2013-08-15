@@ -37,7 +37,7 @@ SET( PIPELINE_HEADERS
 	include/vertex_cache.h
 	include/framebuffer.h
 	include/async_renderer.h
-	include/brand_renderer.h
+	include/render_core.h
 	include/stream_state.h
 )
 
@@ -116,7 +116,7 @@ set(PIPELINE_SOURCES
 	src/index_fetcher.cpp
 	src/input_layout.cpp
 	src/async_renderer.cpp
-	src/brand_renderer.cpp
+	src/render_core.cpp
 	src/stream_state.cpp
 )
 

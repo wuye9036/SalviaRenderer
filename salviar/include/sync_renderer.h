@@ -4,6 +4,7 @@
 
 #include <salviar/include/renderer.h>
 #include <salviar/include/render_stages.h>
+#include <salviar/include/render_core.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 
@@ -25,6 +26,7 @@ class sync_renderer : public renderer
 {
 	render_state_ptr		state_;
 	render_stages			stages_;
+    render_core             core_;
 
 	// Resources
 	resource_manager_ptr	resource_pool_;

@@ -84,6 +84,7 @@ private:
 	cpp_blend_shader*				cpp_bs_;
 	viewport const*					vp_;
 	vs_output_op const*				vso_ops_;
+    uint32_t                        prim_count_;
 
 	// Intermediate data
 	prim_type						prim_;
@@ -144,8 +145,8 @@ private:
 
 public:
 	//inherited
-	void initialize	(render_stages* stages);
-	void update		(render_state* state);
+	void initialize	(render_stages const* stages);
+	void update		(render_state const* state);
 
 	//constructor
 	rasterizer();
@@ -158,9 +159,9 @@ public:
 	void rasterize_multi_line(rasterize_multi_prim_context const*);
 	void rasterize_multi_triangle(rasterize_multi_prim_context const*);
 
-	void draw(size_t prim_count);
+	void draw();
 
-	void update_prim_info(render_state* state);
+	void update_prim_info(render_state const* state);
 };
 
 END_NS_SALVIAR();

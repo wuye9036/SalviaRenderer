@@ -255,6 +255,7 @@ sampler_ptr sync_renderer::create_sampler(const sampler_desc& desc)
 
 result sync_renderer::draw(size_t startpos, size_t primcnt)
 {
+    state_->cmd = command_id::draw;
 	state_->start_index = static_cast<uint32_t>(startpos);
 	state_->prim_count  = static_cast<uint32_t>(primcnt);
 	state_->base_vertex = 0;
@@ -270,8 +271,8 @@ result sync_renderer::draw(size_t startpos, size_t primcnt)
 	
 	apply_shader_cbuffer();
 
-	stages_.vert_cache->transform_vertices(static_cast<uint32_t>(primcnt));
-	stages_.ras->draw(primcnt);
+	stages_.vert_cache->transform_vertices();
+	stages_.ras->draw();
 	
 	state_->index_buffer = current_ib;
 	return result::ok;
@@ -279,6 +280,7 @@ result sync_renderer::draw(size_t startpos, size_t primcnt)
 
 result sync_renderer::draw_index(size_t startpos, size_t primcnt, int basevert)
 {
+    state_->cmd = command_id::draw_index;
 	state_->start_index = static_cast<uint32_t>(startpos);
 	state_->prim_count  = static_cast<uint32_t>(primcnt);
 	state_->base_vertex = basevert;
@@ -292,8 +294,8 @@ result sync_renderer::draw_index(size_t startpos, size_t primcnt, int basevert)
 	
 	apply_shader_cbuffer();
 
-	stages_.vert_cache->transform_vertices(static_cast<uint32_t>(primcnt));
-	stages_.ras->draw(primcnt);
+	stages_.vert_cache->transform_vertices();
+	stages_.ras->draw();
 
 	return result::ok;
 }
@@ -355,6 +357,7 @@ void sync_renderer::initialize()
 }
 
 sync_renderer::sync_renderer(const renderer_parameters* pparam)
+    : core_(pparam)
 {
 	resource_pool_	.reset( new resource_manager() );
 	state_			.reset( new render_state() );

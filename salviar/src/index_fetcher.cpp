@@ -6,7 +6,7 @@ BEGIN_NS_SALVIAR();
 
 void index_fetcher::update(render_state const* state)
 {
-	index_buffer_	= state->index_buffer.get();
+    index_buffer_	= state->cmd == command_id::draw_index ? state->index_buffer.get() : nullptr;
 	index_format_	= state->index_format;
 	prim_topo_		= state->prim_topo;
 

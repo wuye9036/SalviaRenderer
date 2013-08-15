@@ -34,8 +34,19 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(stream_state);
 struct vs_input_op;
 struct vs_output_op;
 
+enum class command_id
+{
+    draw,
+    draw_index,
+    clear_depth,
+    clear_stencil,
+    clear_color
+};
+
 struct render_state
 {
+    command_id                  cmd;
+
 	buffer_ptr					index_buffer;
 	format						index_format;
 	primitive_topology			prim_topo;
