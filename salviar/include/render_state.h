@@ -38,8 +38,7 @@ enum class command_id
 {
     draw,
     draw_index,
-    clear_depth,
-    clear_stencil,
+    clear_depth_stencil,
     clear_color
 };
 
@@ -84,7 +83,9 @@ struct render_state
 
 	counter_ptr					counters[counter_ids::counter_count];
 
-	surface_ptr					clear_target;
+	surface_ptr					clear_color_target;
+    surface_ptr                 clear_ds_target;
+
 	float						clear_z;
 	uint32_t					clear_stencil;
 	eflib::vec4					clear_color;

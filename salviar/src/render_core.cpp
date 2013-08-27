@@ -38,10 +38,8 @@ result render_core::execute()
         return draw();
     case command_id::clear_color:
         return clear_color();
-    case command_id::clear_depth:
-        return clear_depth();
-    case command_id::clear_stencil:
-        return clear_stencil();
+    case command_id::clear_depth_stencil:
+        return clear_depth_stencil();
     }
 
     return result::failed;
@@ -123,17 +121,17 @@ void render_core::apply_shader_cbuffer()
 
 result render_core::clear_color()
 {
-    return result::failed;
+    state_->clear_color_target->fill_texels( color_rgba32f(state_->clear_color) );
+    return result::ok;
 }
 
-result render_core::clear_depth()
+result render_core::clear_depth_stencil()
 {
-    return result::failed;
-}
-
-result render_core::clear_stencil()
-{
-    return result::failed;
+    auto ds_color = color_rgba32f(
+            state_->clear_z, *reinterpret_cast<float*>(&state_->clear_stencil), 0.0f, 0.0f
+            );
+    state_->clear_ds_target->fill_texels(ds_color);
+    return result::ok;
 }
 
 END_NS_SALVIAR();

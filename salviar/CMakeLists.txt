@@ -31,6 +31,7 @@ SET( PIPELINE_HEADERS
 	include/raster_state.h
 	include/render_stages.h
 	include/renderer.h
+	include/renderer_impl.h
 	include/renderer_capacity.h
 	include/sync_renderer.h
 	include/render_state.h
@@ -96,7 +97,6 @@ set(FOUNDATION_SOURCES
 
 set(BUFFER_SOURCES
 	src/surface.cpp
-	src/texture1d.cpp
 	src/texture2d.cpp
 	src/sampler.cpp
 	src/texture_cube.cpp
@@ -118,6 +118,7 @@ set(PIPELINE_SOURCES
 	src/async_renderer.cpp
 	src/render_core.cpp
 	src/stream_state.cpp
+	src/renderer_impl.cpp
 )
 
 set(SHADER_SOURCES

@@ -138,8 +138,8 @@ public:
 	virtual result present() = 0;
 };
 
-renderer_ptr			create_software_renderer(renderer_parameters const* pparam, device_ptr const& hdev);
-renderer_ptr			create_benchmark_renderer(renderer_parameters const* pparam, device_ptr const& hdev);
+renderer_ptr		create_software_renderer(renderer_parameters const* pparam, device_ptr const& hdev);
+renderer_ptr		create_benchmark_renderer(renderer_parameters const* pparam, device_ptr const& hdev);
 
 shader_object_ptr	compile(std::string const& code, shader_profile const& profile, shader_log_ptr& logs);
 shader_object_ptr	compile(std::string const& code, shader_profile const& profile);

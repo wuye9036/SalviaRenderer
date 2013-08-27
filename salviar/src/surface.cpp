@@ -183,8 +183,10 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 	from_rgba32_func_(pix_clr, &color);
 
 #ifdef TILE_BASED_STORAGE
-	if (tile_mode_){
-		if ((0 == sx) && (0 == sy) && (width == width_) && (height == height_)){
+	if (tile_mode_)
+    {
+		if ((0 == sx) && (0 == sy) && (width == width_) && (height == height_))
+        {
 			for (uint32_t x = 0; x < TILE_SIZE; ++ x){
 				for (size_t s = 0; s < num_samples_; ++ s){
 					memcpy(&datas_[this->get_texel_addr(x, 0, s)], pix_clr, elem_size_);
@@ -200,7 +202,8 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 				memcpy(&datas_[this->get_texel_addr(0, ty << TILE_BITS, 0)], &datas_[this->get_texel_addr(0, 0, 0)], TILE_SIZE * TILE_SIZE * tile_width_ * num_samples_ * elem_size_);
 			}
 		}
-		else{
+		else
+        {
 			size_t begin_tile_x = sx >> TILE_BITS;
 			size_t begin_x_in_tile = sx & TILE_MASK;
 			size_t end_tile_x = (sx + width - 1) >> TILE_BITS;
@@ -246,7 +249,8 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 			}
 		}
 	}
-	else{
+	else
+    {
 		for (size_t x = sx; x < sx + width; ++ x){
 			for (size_t s = 0; s < num_samples_; ++ s){
 				memcpy(&datas_[((width_ * sy + x) * num_samples_ + s) * elem_size_], pix_clr, elem_size_);
@@ -266,6 +270,11 @@ void surface::fill_texels(size_t sx, size_t sy, size_t width, size_t height, con
 		memcpy(&datas_[(width_ * y + sx) * num_samples_ * elem_size_], &datas_[(width_ * sy + sx) * num_samples_ * elem_size_], num_samples_ * elem_size_ * width);
 	}
 #endif
+}
+
+void surface::fill_texels(color_rgba32f const& color)
+{
+    fill_texels(0, 0, width_, height_, color);
 }
 
 size_t surface::get_texel_addr(size_t x, size_t y, size_t sample) const

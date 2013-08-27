@@ -97,12 +97,14 @@ public:
 	}
 
 	color_rgba32f get_texel(size_t x, size_t y, size_t sample) const;
+    color_rgba32f get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty, size_t sample) const;
+
 	void get_texel(void* color, size_t x, size_t y, size_t sample) const;
-	color_rgba32f get_texel(size_t x0, size_t y0, size_t x1, size_t y1, float tx, float ty, size_t sample) const;
 	void set_texel(size_t x, size_t y, size_t sample, const color_rgba32f& color);
 	void set_texel(size_t x, size_t y, size_t sample, const void* color);
 
 	void fill_texels(size_t sx, size_t sy, size_t width, size_t height, const color_rgba32f& color);
+    void fill_texels(color_rgba32f const& color);
 };
 
 END_NS_SALVIAR()

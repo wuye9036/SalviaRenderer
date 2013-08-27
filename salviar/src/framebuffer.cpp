@@ -446,12 +446,17 @@ float framebuffer::get_z(size_t x, size_t y) const
 	return dbuf_->get_texel(x, y, 0).r;
 }
 
-void framebuffer::clear_color(size_t target_index, const color_rgba32f& c){
-
+void framebuffer::clear_color(size_t target_index, const color_rgba32f& c)
+{
 	EFLIB_ASSERT(target_index < cbufs_.size(), "Target index is out of bound.");
 	EFLIB_ASSERT(cbufs_[target_index] && buf_valids[target_index], "Cannot clear an invalid target.");
 
 	cbufs_[target_index]->fill_texels(0, 0, width_, height_, c);
+}
+
+void framebuffer::clear_color(surface_ptr const& target, const color_rgba32f& c)
+{
+    target->fill_texels(0, 0, width_, height_, c);
 }
 
 void framebuffer::clear_depth(float d){

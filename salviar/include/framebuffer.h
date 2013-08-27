@@ -128,6 +128,7 @@ public:
 
 	// Cleanup functions.
 	void clear_color(size_t target_index, const color_rgba32f& c);
+    void clear_color(surface_ptr const& target, color_rgba32f const& c);
 	void clear_depth(float d);
 	void clear_stencil(int32_t s);
 	void clear_color(size_t target_index, const eflib::rect<size_t>& rc, const color_rgba32f& c);

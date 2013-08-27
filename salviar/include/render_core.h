@@ -37,8 +37,7 @@ private:
 
 	result	draw();
 	result	clear_color();
-	result	clear_depth();
-	result	clear_stencil();
+	result	clear_depth_stencil();
     void    apply_shader_cbuffer();
 };
 

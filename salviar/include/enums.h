@@ -203,9 +203,9 @@ enum input_register_usage_decl
 
 enum render_target
 {
-	render_target_color = 0,
-	render_target_depth = 1,
-	render_target_stencil = 2,
+    render_target_none = 0,
+	render_target_color = 1,
+	render_target_depth_stencil = 2,
 	render_target_count = 3
 };
 
