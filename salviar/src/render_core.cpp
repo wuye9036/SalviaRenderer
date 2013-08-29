@@ -51,7 +51,7 @@ result render_core::draw()
 	stages_.ras->update(state_.get());
 	stages_.vert_cache->update(state_.get());
 	stages_.host->update(state_.get());
-	
+    stages_.backend->update(state_.get());
 	apply_shader_cbuffer();
 
     stages_.vert_cache->transform_vertices();

@@ -317,6 +317,7 @@ depth_stencil_state::depth_stencil_state(const depth_stencil_desc& desc)
 	}
 	else
     {
+        mask_stencil_ = mask_stencil_0;
 		for (int i = 0; i < 2; ++ i)
         {
 			stencil_test_[i] = compare_always<uint32_t>;
