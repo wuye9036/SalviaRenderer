@@ -60,14 +60,14 @@ result render_core::draw()
 	return result::ok;
 }
 
-render_core::render_core(renderer_parameters const* params)
+render_core::render_core()
 {
 	// Create stages
 	stages_.host		= modules::host::create_host();
 	stages_.vert_cache	= create_default_vertex_cache();
 	stages_.assembler	.reset( new stream_assembler() );
 	stages_.ras			.reset( new rasterizer() );
-	stages_.backend		.reset( new framebuffer(params) );
+	stages_.backend		.reset( new framebuffer() );
 
 	stages_.vert_cache->initialize(&stages_);
 	stages_.host->initialize(&stages_);
@@ -121,7 +121,7 @@ void render_core::apply_shader_cbuffer()
 
 result render_core::clear_color()
 {
-    state_->clear_color_target->fill_texels( color_rgba32f(state_->clear_color) );
+    state_->clear_color_target->fill_texels(state_->clear_color);
     return result::ok;
 }
 

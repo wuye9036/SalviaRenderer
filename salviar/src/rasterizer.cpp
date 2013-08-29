@@ -74,17 +74,16 @@ void rasterizer::rasterize_line(rasterize_prim_context const* ctx)
 	vso_ops_->mul(ddx, diff, (diff.position().x() / (diff.position().xy().length_sqr())));
 	vso_ops_->mul(ddy, diff, (diff.position().y() / (diff.position().xy().length_sqr())));
 
-	int vpleft = fast_floori(max(0.0f, vp.x));
-	int vptop = fast_floori(max(0.0f, vp.y));
-	int vpright = fast_floori(min(vp.x+vp.w, (float)(frame_buffer_->get_width())));
-	int vpbottom = fast_floori(min(vp.y+vp.h, (float)(frame_buffer_->get_height())));
+	int vpleft  = fast_floori( max(0.0f, vp.x) );
+	int vptop   = fast_floori( max(0.0f, vp.y) );
+    int vpright = fast_floori( min(vp.x+vp.w, target_vp_->w) );
+    int vpbottom= fast_floori( min(vp.y+vp.h, target_vp_->h) );
 
 	ps_output px_out;
 
 	// Divided drawing to x major DDA method and y major DDA method.
 	if( abs(dir.x()) > abs(dir.y()))
 	{
-
 		//Swap start and end to make diff is positive.
 		const vs_output *start, *end;
 		if(dir.x() < 0){
@@ -220,13 +219,15 @@ void rasterizer::initialize(render_stages const* stages)
 
 void rasterizer::update(render_state const* state)
 {
-	state_		= state->ras_state.get();
-	vs_proto_	= state->vs_proto.get();
-	ps_proto_	= state->ps_proto.get();
-	cpp_ps_		= state->cpp_ps.get();
-	cpp_bs_		= state->cpp_bs.get();
-	vp_			= &(state->vp);
-	vso_ops_	= state->vso_ops;
+	state_		            = state->ras_state.get();
+	vs_proto_	            = state->vs_proto.get();
+	ps_proto_	            = state->ps_proto.get();
+	cpp_ps_		            = state->cpp_ps.get();
+	cpp_bs_		            = state->cpp_bs.get();
+	vp_			            = &(state->vp);
+    target_vp_              = &(state->target_vp);
+    target_sample_count_    = state->target_sample_count;
+	vso_ops_	            = state->vso_ops;
 	
 	if(state->cpp_vs)
 	{
@@ -612,7 +613,6 @@ void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& 
 void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 {
 	// Extract to local variables
-	size_t const		num_samples		= frame_buffer_->get_num_samples();
 	cpp_pixel_shader*	cpp_ps			= ctx->cpp_ps;
 	pixel_shader_unit*	psu				= ctx->psu;
 	viewport  const&	vp				= *ctx->tile_vp;
@@ -770,9 +770,9 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 	step_x[3] = step_y[3] = 0;
 
 	float aa_z_offset[MAX_NUM_MULTI_SAMPLES];
-	if (num_samples > 1)
+	if (target_sample_count_ > 1)
 	{
-		for (unsigned long i_sample = 0; i_sample < num_samples; ++ i_sample)
+		for (unsigned long i_sample = 0; i_sample < target_sample_count_; ++ i_sample)
 		{
 			const vec2& sp = samples_pattern_[i_sample];
 			aa_z_offset[i_sample] = (sp.x() - 0.5f) * ddx.position().z() + (sp.y() - 0.5f) * ddy.position().z();
@@ -804,8 +804,8 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 
 			const int vpleft = max(0U, static_cast<unsigned>(vpleft0 + cur_region.x) );
 			const int vptop = max(0U, static_cast<unsigned>(vptop0 + cur_region.y) );
-			const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(frame_buffer_->get_width()));
-			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(frame_buffer_->get_height()));
+            const int vpright = min(vpleft0 + cur_region.x + cur_region.w * 4, static_cast<uint32_t>(target_vp_->w));
+			const int vpbottom = min(vptop0 + cur_region.y + cur_region.h * 4, static_cast<uint32_t>(target_vp_->h));
 
 			// For one pixel region
 			if ((TVT_PARTIAL == intersect) && (cur_region.w <= 1) && (cur_region.h <= 1))
@@ -821,7 +821,7 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 
 			case TVT_FULL:
 				// The whole tile is inside a triangle.
-				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, num_samples,
+				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, target_sample_count_,
 					*reordered_verts[0], ddx, ddy,
 					cpp_ps, psu, cpp_bs_, aa_z_offset);
 				break;
@@ -829,7 +829,7 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 			case TVT_PIXEL:
 				// The tile is small enough for pixel level matching.
 				this->draw_pixels(vpleft0, vptop0, vpleft, vptop, 
-					edge_factors, num_samples,
+					edge_factors, target_sample_count_,
 					has_centroid, *reordered_verts[0], ddx, ddy,
 					cpp_ps, psu, cpp_bs_, aa_z_offset);
 				break;
@@ -1125,8 +1125,8 @@ void rasterizer::update_prim_info(render_state const* state)
 
 void rasterizer::draw()
 {
-	const size_t num_samples = frame_buffer_->get_num_samples();
-	switch (num_samples){
+	switch (target_sample_count_)
+    {
 	case 1:
 		samples_pattern_[0] = vec2(0.5f, 0.5f);
 		break;

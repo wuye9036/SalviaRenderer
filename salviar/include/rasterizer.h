@@ -83,6 +83,8 @@ private:
 	cpp_pixel_shader*				cpp_ps_;
 	cpp_blend_shader*				cpp_bs_;
 	viewport const*					vp_;
+    viewport const*                 target_vp_;
+    size_t                          target_sample_count_;
 	vs_output_op const*				vso_ops_;
     uint32_t                        prim_count_;
 

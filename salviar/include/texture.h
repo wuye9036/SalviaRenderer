@@ -57,7 +57,7 @@ public:
 	virtual size_t get_width(size_t subresource) const= 0;
 	virtual size_t get_height(size_t subresource) const= 0;
 	virtual size_t get_depth(size_t subresource) const= 0;
-	virtual size_t get_num_samples(size_t subresource) const= 0;
+	virtual size_t sample_count(size_t subresource) const= 0;
 	
 	virtual void set_max_lod(size_t miplevel) = 0;
 	virtual void set_min_lod(size_t miplevel) = 0;
@@ -90,7 +90,7 @@ public:
 	virtual size_t get_width(size_t subresource) const;
 	virtual size_t get_height(size_t subresource) const;
 	virtual size_t get_depth(size_t subresource) const;
-	virtual size_t get_num_samples(size_t subresource) const;
+	virtual size_t sample_count(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);
@@ -121,7 +121,7 @@ public:
 	virtual size_t get_width(size_t subresource) const;
 	virtual size_t get_height(size_t subresource) const;
 	virtual size_t get_depth(size_t subresource) const;
-	virtual size_t get_num_samples(size_t subresource) const;
+	virtual size_t sample_count(size_t subresource) const;
 	
 	virtual void set_max_lod(size_t miplevel);
 	virtual void set_min_lod(size_t miplevel);

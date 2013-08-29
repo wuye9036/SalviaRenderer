@@ -65,9 +65,9 @@ size_t texture_cube::get_depth(size_t /*subresource*/) const
 	return 1;
 }
 
-size_t texture_cube::get_num_samples(size_t subresource) const
+size_t texture_cube::sample_count(size_t subresource) const
 {
-	return get_surface(subresource)->get_num_samples();
+	return get_surface(subresource)->sample_count();
 }
 
 void texture_cube::set_max_lod(size_t miplevel)

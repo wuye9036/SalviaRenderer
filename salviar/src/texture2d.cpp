@@ -32,7 +32,7 @@ void texture_2d::gen_mipmap(filter_type filter, bool auto_gen)
 
 	size_t cur_sizex    = surfs_[max_lod_]->get_width();
 	size_t cur_sizey    = surfs_[max_lod_]->get_height();
-	size_t num_samples  = surfs_[max_lod_]->get_num_samples();
+	size_t num_samples  = surfs_[max_lod_]->sample_count();
 
 	surfs_.resize(min_lod_ + 1);
 
@@ -162,11 +162,11 @@ size_t texture_2d::get_depth(size_t /*subresource*/) const
 	return 1;
 }
 
-size_t texture_2d::get_num_samples(size_t subresource) const
+size_t texture_2d::sample_count(size_t subresource) const
 {
 	EFLIB_ASSERT(max_lod_ <= subresource && subresource <= min_lod_, "Mipmap level is out of bound.");
 
-	return get_surface(subresource)->get_num_samples();
+	return get_surface(subresource)->sample_count();
 }
 
 void texture_2d::set_max_lod(size_t miplevel)

@@ -3,6 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/enums.h>
+#include <salviar/include/colors.h>
 #include <salviar/include/format.h>
 #include <salviar/include/viewport.h>
 #include <salviar/include/stream_state.h>
@@ -83,12 +84,35 @@ struct render_state
 
 	counter_ptr					counters[counter_ids::counter_count];
 
+    viewport                    target_vp;
+    size_t                      target_sample_count;
+
 	surface_ptr					clear_color_target;
     surface_ptr                 clear_ds_target;
-
 	float						clear_z;
 	uint32_t					clear_stencil;
-	eflib::vec4					clear_color;
+    color_rgba32f				clear_color;
 };
+
+inline void copy_using_state(render_state* dest, render_state const* src)
+{
+    switch(src->cmd)
+    {
+    case command_id::draw:
+    case command_id::draw_index:
+        *dest = *src;
+        break;
+    case command_id::clear_color:
+    case command_id::clear_depth_stencil:
+        dest->cmd                = src->cmd;
+        dest->clear_color_target = src->clear_color_target;
+        dest->clear_ds_target    = src->clear_ds_target   ;
+                                 
+	    dest->clear_z            = src->clear_z           ;
+	    dest->clear_stencil      = src->clear_stencil     ;
+        dest->clear_color        = src->clear_color       ;
+        break;
+    }
+}
 
 END_NS_SALVIAR();

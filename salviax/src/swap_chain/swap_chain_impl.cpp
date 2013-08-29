@@ -70,12 +70,12 @@ extern "C"
 
 		if(renderer_type == salviax::renderer_sync)
 		{
-			out_renderer = create_sync_renderer(render_params);
+			out_renderer = create_sync_renderer();
 		}
 		
 		if(renderer_type == salviax::renderer_async)
 		{
-			out_renderer = create_async_renderer(render_params);
+			out_renderer = create_async_renderer();
 		}
 
 		if(!out_renderer)

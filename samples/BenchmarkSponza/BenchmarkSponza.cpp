@@ -208,14 +208,25 @@ public:
 
 	void initialize()
 	{
-		renderer_parameters render_params = {0};
-		render_params.backbuffer_format = pixel_format_color_bgra8;
-		render_params.backbuffer_height = 512;
-		render_params.backbuffer_width = 512;
-		render_params.backbuffer_num_samples = 1;
+		color_format_ = pixel_format_color_bgra8;
+		height_ = 512;
+		width_ = 512;
+		sample_count_ = 1;
 
-		renderer_ = create_benchmark_renderer( &render_params, device_ptr() );
+		renderer_ = create_benchmark_renderer();
 
+        color_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, color_format_)->get_surface(0);
+        ds_surface_ = renderer_->create_tex2d(width_, height_, sample_count_, pixel_format_color_rg32f)->get_surface(0);
+        if(sample_count_ == 1)
+        {
+            resolved_color_surface_ = color_surface_;
+        }
+        else
+        {
+            resolved_color_surface_ = renderer_->create_tex2d(width_, height_, 1, color_format_)->get_surface(0);
+        }
+        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
+        
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
@@ -243,35 +254,19 @@ public:
 	{
 		cout << "Save" << endl;
 		prof.start("Saving", 0);
-		surface* rt_surface = renderer_->get_framebuffer()->get_render_target(render_target_color, 0);
-		surface* resolved_surface = NULL;
-		if (renderer_->get_framebuffer()->get_num_samples() > 1)
+        if (color_surface_ != resolved_color_surface_)
 		{
-			resolved_surface = new surface(
-				rt_surface->get_width(), rt_surface->get_height(),
-				1, rt_surface->get_pixel_format()
-				);
-			rt_surface->resolve(*resolved_surface);
+			color_surface_->resolve(*resolved_color_surface_);
 		}
-		else
-		{
-			resolved_surface = rt_surface;
-		}
-		
-		texture_io_fi::instance().save(*resolved_surface, to_tstring(file_name), pixel_format_color_bgra8);
-		
-		if(resolved_surface != rt_surface)
-		{
-			delete resolved_surface;
-		}
+		texture_io_fi::instance().save(*resolved_color_surface_, to_tstring(file_name), pixel_format_color_bgra8);
 		prof.end("Saving");
 	}
 
 	void render()
 	{
 		prof.start("Back buffer Clearing", 0);
-		renderer_->clear_color(0, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth(1.0f);
+        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth_stencil(ds_surface_, 1.0f, 0);
 		prof.end("Back buffer Clearing");
 
 		prof.start("Set rendering parameters", 0);
@@ -332,14 +327,22 @@ protected:
 	/** Properties @{ */
 	renderer_ptr			renderer_;
 	vector<mesh_ptr>		benchmark_mesh;
-	shader_object_ptr 	benchmark_vs;
+	shader_object_ptr 	    benchmark_vs;
 
-	cpp_vertex_shader_ptr		cpp_vs;
-	cpp_pixel_shader_ptr		cpp_ps;
-	cpp_blend_shader_ptr		cpp_bs;
+    pixel_format            color_format_;
+    size_t                  width_;
+    size_t                  height_;
+    uint32_t                sample_count_;
+    surface_ptr             color_surface_;
+    surface_ptr             resolved_color_surface_;
+    surface_ptr             ds_surface_;
 
-	raster_state_ptr	rs_back;
-	profiler			prof;
+	cpp_vertex_shader_ptr	cpp_vs;
+	cpp_pixel_shader_ptr	cpp_ps;
+	cpp_blend_shader_ptr	cpp_bs;
+
+	raster_state_ptr	    rs_back;
+	profiler			    prof;
 };
 
 #if defined(EFLIB_DEBUG)

@@ -164,7 +164,14 @@ protected:
         render_params.native_window = window_handle;
 
         salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
-        renderer_->set_render_target(render_target_color, 0, swap_chain_->get_surface());
+        color_surface_ = swap_chain_->get_surface();
+        ds_surface_ = renderer_->create_tex2d(
+            render_params.backbuffer_width,
+            render_params.backbuffer_height,
+            render_params.backbuffer_num_samples,
+            pixel_format_color_rg32f
+            )->get_surface(0);
+        renderer_->set_render_targets(1, &color_surface_, ds_surface_);
 
 		raster_desc rs_desc;
 		rs_desc.cm = cull_none;
@@ -240,8 +247,8 @@ protected:
 
 		timer.restart();
 
-		renderer_->clear_color(0, color_rgba32f(0.05f, 0.05f, 0.2f, 1.0f));
-		renderer_->clear_depth(1.0f);
+        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth_stencil(ds_surface_, 1.0f, 0);
 
 		vec3 camera( 0.0f, 32.0f, -7.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
@@ -291,6 +298,9 @@ protected:
 	/** Properties @{ */
 	swap_chain_ptr          swap_chain_;
 	renderer_ptr            renderer_;
+
+    surface_ptr             ds_surface_;
+    surface_ptr             color_surface_;
 
 	mesh_ptr			    plane;
 	texture_ptr		        terrain_tex;

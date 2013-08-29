@@ -27,7 +27,7 @@ class render_core
 private:
 
 public:
-	render_core		(renderer_parameters const* render_params);
+	render_core		();
     void    update  (render_state_ptr const& state);
     result  execute ();
 

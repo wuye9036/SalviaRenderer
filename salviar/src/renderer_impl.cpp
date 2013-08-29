@@ -193,25 +193,75 @@ viewport renderer_impl::get_viewport() const
 }
 
 //do not support get function for a while
-result renderer_impl::set_render_target(size_t target_index, surface_ptr const& surf)
+result renderer_impl::set_render_targets(size_t color_target_count, surface_ptr const* color_targets, surface_ptr const& ds_target)
 {
-    if(target_index >= MAX_RENDER_TARGETS)
+    if(color_target_count <= 0 || color_target_count >= MAX_RENDER_TARGETS)
     {
         return result::failed;
     }
-    state_->color_targets.resize(MAX_RENDER_TARGETS);
-    state_->color_targets[target_index] = surf;
-	return result::ok;
-}
 
-result renderer_impl::set_depth_stencil_target(surface_ptr const& surf)
-{
-    if(surf->get_pixel_format() != pixel_format_color_rg32f)
+    size_t   target_sample_count = 0;
+    viewport target_vp;
+    target_vp.x = 0;
+    target_vp.y = 0;
+    target_vp.w = std::numeric_limits<float>::max();
+    target_vp.h = std::numeric_limits<float>::max();
+    target_vp.minz = 0;
+    target_vp.maxz = 0;
+
+    for(size_t i = 0; i < color_target_count; ++i)
     {
-        return result::failed;
+        auto const& color_target = color_targets[i];
+        if(color_target.get() != nullptr)
+        {
+            target_vp.w = std::min<float>(static_cast<float>(color_target->get_width()), target_vp.w);
+            target_vp.h = std::min<float>(static_cast<float>(color_target->get_height()), target_vp.h);
+
+            if(target_sample_count == 0)
+            {
+                target_sample_count = color_target->sample_count();
+            }
+            else
+            {
+                if(color_target->sample_count() != target_sample_count)
+                {
+                    return result::failed;
+                }
+            }
+        }
     }
-    state_->depth_stencil_target = surf;
-    return result::ok;
+
+    if(ds_target)
+    {
+        switch(ds_target->get_pixel_format())
+        {
+        case pixel_format_color_rg32f:
+            break;
+        default:
+            return result::failed;
+        }
+
+        if(static_cast<float>(ds_target->get_width()) < target_vp.w)
+        {
+            return result::failed;
+        }
+
+        if(static_cast<float>(ds_target->get_height()) < target_vp.h)
+        {
+            return result::failed;
+        }
+
+        if(ds_target->sample_count() != target_sample_count)
+        {
+            return result::failed;
+        }
+    }
+
+    state_->target_vp = target_vp;
+    state_->target_sample_count = target_sample_count;
+    state_->color_targets.assign(color_targets, color_targets+color_target_count);
+    state_->depth_stencil_target = ds_target;
+	return result::ok;
 }
 
 buffer_ptr renderer_impl::create_buffer(size_t size)
@@ -234,14 +284,25 @@ sampler_ptr renderer_impl::create_sampler(const sampler_desc& desc)
 	return sampler_ptr(new sampler(desc));
 }
 
-renderer_impl::renderer_impl(const renderer_parameters* pparam)
-    : core_(pparam)
+renderer_impl::renderer_impl()
 {
 	resource_pool_	.reset( new resource_manager() );
 	state_			.reset( new render_state() );
 
-	state_->index_format= format_r16_uint;
-	state_->prim_topo	= primitive_triangle_list;
+	state_->index_format = format_r16_uint;
+	state_->prim_topo	 = primitive_triangle_list;
+
+    state_->str_state.reset(new stream_state());
+	state_->ras_state.reset(new raster_state(raster_desc()));
+	state_->ds_state.reset(new depth_stencil_state(depth_stencil_desc()));
+	state_->vx_cbuffer.reset(new shader_cbuffer_impl());
+	state_->px_cbuffer.reset(new shader_cbuffer_impl());
+
+	state_->vp.minz = 0.0f;
+	state_->vp.maxz = 1.0f;
+	state_->vp.w = 0.0f;
+	state_->vp.h = 0.0f;
+	state_->vp.x = state_->vp.y = 0;
 }
 
 result renderer_impl::set_vs_variable_value( std::string const& name, void const* var_addr, size_t sz)

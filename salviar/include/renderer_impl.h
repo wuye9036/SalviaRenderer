@@ -74,13 +74,7 @@ public:
 	virtual result                  set_viewport(viewport const& vp);
 	virtual viewport                get_viewport() const;
 
-	virtual result                  set_framebuffer_size(size_t width, size_t height, size_t num_samples);
-	virtual eflib::rect<size_t>     get_framebuffer_size() const;
-
-	virtual result                  set_framebuffer_format(pixel_format pxfmt);
-	virtual pixel_format            get_framebuffer_format(pixel_format pxfmt) const;
-	virtual result                  set_render_target(size_t target_index, surface_ptr const& surf);
-    virtual result                  set_depth_stencil_target(surface_ptr const& surf);
+	virtual result                  set_render_targets(size_t color_target_count, surface_ptr const* color_targets, surface_ptr const& ds_target);
 
     virtual input_layout_ptr        create_input_layout(
 		input_element_desc const* elem_descs, size_t elems_count, shader_object_ptr const& vs );
@@ -91,15 +85,7 @@ public:
 	virtual texture_ptr         	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	virtual sampler_ptr         	create_sampler(sampler_desc const& desc);
 
-	virtual result                  draw(size_t startpos, size_t primcnt) = 0;
-	virtual result                  draw_index(size_t startpos, size_t primcnt, int basevert) = 0;
-
-	virtual result                  clear_color(size_t target_index, color_rgba32f const& c) = 0;
-	virtual result                  clear_depth_stencil(float d, uint32_t s) = 0;
-
-	virtual result                  flush() = 0;
-
-	renderer_impl(const renderer_parameters* pparam);
+	renderer_impl();
 };
 
 END_NS_SALVIAR();

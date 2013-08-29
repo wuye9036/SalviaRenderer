@@ -216,53 +216,40 @@ struct ps_output
 
 struct pixel_accessor
 {
-	pixel_accessor(std::vector<surface*>& cbuf, surface* dbuf, surface* sbuf)
-		:cbuf_(&cbuf), dbuf_(dbuf), sbuf_(sbuf) {
+	pixel_accessor(surface** const& color_buffers, surface* ds_buffer)
+    {
+        color_buffers_ = color_buffers;
+        ds_buffer_ = ds_buffer;
 	}
 
-	void set_pos(size_t x, size_t y){
-		buf_x_ = x;
-		buf_y_ = y;
+	void set_pos(size_t x, size_t y)
+    {
+		x_ = x;
+		y_ = y;
 	}
 
 	color_rgba32f color(size_t target_index, size_t sample_index) const
 	{
-		return (*cbuf_)[target_index]->get_texel(buf_x_, buf_y_, sample_index);
+		return color_buffers_[target_index]->get_texel(x_, y_, sample_index);
 	}
 
-	float depth(size_t sample) const
+	void color(size_t register_index, size_t sample, const color_rgba32f& clr)
 	{
-		return dbuf_->get_texel(buf_x_, buf_y_, sample).r;
+        color_buffers_[register_index]->set_texel(x_, y_, sample, clr);
 	}
 
-	int32_t stencil(size_t sample) const
+    void* depth_stencil_address(size_t sample) const
 	{
-		return int32_t(sbuf_->get_texel(buf_x_, buf_y_, sample).r);
-	}
-
-	void color(size_t regidx, size_t sample, const color_rgba32f& clr)
-	{
-		(*cbuf_)[regidx]->set_texel(buf_x_, buf_y_, sample, clr);
-	}
-
-	void depth(size_t sample, float depth)
-	{
-		dbuf_->set_texel(buf_x_, buf_y_, sample, color_rgba32f(depth, 0, 0, 0));
-	}
-
-	void stencil(size_t sample, int32_t stencil)
-	{
-		sbuf_->set_texel(buf_x_, buf_y_, sample, color_rgba32f(float(stencil), 0, 0, 0));
+        return ds_buffer_->texel_address(x_, y_, sample);
 	}
 
 private:
 	pixel_accessor(const pixel_accessor& rhs);
 	pixel_accessor& operator = (const pixel_accessor& rhs);
 
-	std::vector<surface*>* cbuf_;
-	surface* dbuf_;
-	surface* sbuf_;
-	size_t buf_x_, buf_y_;
+    surface**   color_buffers_;
+	surface*    ds_buffer_;
+	size_t      x_, y_;
 };
 
 END_NS_SALVIAR();

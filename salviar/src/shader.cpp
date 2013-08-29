@@ -636,7 +636,8 @@ void cpp_vertex_shader::execute(const vs_input& in, vs_output& out){
 	shader_prog(in, out);
 }
 
-void cpp_blend_shader::execute(size_t sample, pixel_accessor& out, const ps_output& in){
+void cpp_blend_shader::execute(size_t sample, pixel_accessor& out, const ps_output& in)
+{
 	shader_prog(sample, out, in);
 }
 

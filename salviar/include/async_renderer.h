@@ -18,7 +18,7 @@ BEGIN_NS_SALVIAR();
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 
-renderer_ptr create_async_renderer(renderer_parameters const* pparam);
+renderer_ptr create_async_renderer();
 
 END_NS_SALVIAR();
 
