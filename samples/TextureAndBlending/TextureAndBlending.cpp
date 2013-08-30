@@ -266,6 +266,15 @@ protected:
             )->get_surface(0);
         renderer_->set_render_targets(1, &color_surface_, ds_surface_);
 
+        viewport vp;
+        vp.w = static_cast<float>(render_params.backbuffer_width);
+        vp.h = static_cast<float>(render_params.backbuffer_height);
+        vp.x = 0;
+        vp.y = 0;
+        vp.minz = 0.0f;
+        vp.maxz = 1.0f;
+        renderer_->set_viewport(vp);
+		
 		planar_mesh = create_planar(
 			renderer_.get(), 
 			vec3(-3.0f, -1.0f, -3.0f), 

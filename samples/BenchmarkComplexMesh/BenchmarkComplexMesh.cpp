@@ -316,7 +316,16 @@ public:
         }
         renderer_->set_render_targets(1, &color_surface_, ds_surface_);
 
-		// Rasterizer state
+        viewport vp;
+        vp.w = static_cast<float>(width_);
+        vp.h = static_cast<float>(height_);
+        vp.x = 0;
+        vp.y = 0;
+        vp.minz = 0.0f;
+        vp.maxz = 1.0f;
+        renderer_->set_viewport(vp);
+		
+        // Rasterizer state
 		raster_desc rs_desc;
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));

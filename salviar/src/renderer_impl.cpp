@@ -183,6 +183,15 @@ cpp_blend_shader_ptr renderer_impl::get_blend_shader() const
 
 result renderer_impl::set_viewport(const viewport& vp)
 {
+    if( vp.x < 0 ||
+        vp.y < 0 ||
+        vp.w >= MAX_RENDER_TARGET_WIDTH ||
+        vp.h >= MAX_RENDER_TARGET_HEIGHT
+        )
+    {
+        EFLIB_ASSERT(false, "Viewport size is invalid.");
+        return result::failed;
+    }
 	state_->vp = vp;
 	return result::ok;
 }
