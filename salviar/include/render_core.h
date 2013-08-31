@@ -39,6 +39,8 @@ private:
 	result	clear_color();
 	result	clear_depth_stencil();
     void    apply_shader_cbuffer();
+    result  async_start();
+    result  async_stop();
 };
 
 END_NS_SALVIAR();

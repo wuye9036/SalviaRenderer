@@ -17,6 +17,7 @@
 #include <salviar/include/host.h>
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_object.h>
+#include <salviar/include/counter.h>
 
 BEGIN_NS_SALVIAR();
 
@@ -293,6 +294,17 @@ sampler_ptr renderer_impl::create_sampler(const sampler_desc& desc)
 	return sampler_ptr(new sampler(desc));
 }
 
+async_object_ptr renderer_impl::create_query(async_object_ids id)
+{
+    switch(id)
+    {
+    case async_object_ids::pipeline_statistics:
+        return async_object_ptr(new async_pipeline_statistics());
+    }
+
+    return async_object_ptr();
+}
+
 renderer_impl::renderer_impl()
 {
 	resource_pool_	.reset( new resource_manager() );
@@ -369,6 +381,86 @@ result renderer_impl::set_vs_sampler( std::string const& name, sampler_ptr const
 {
 	state_->vx_cbuffer->set_sampler(name, samp);
 	return result::ok;
+}
+
+result renderer_impl::draw(size_t startpos, size_t primcnt)
+{
+    state_->cmd = command_id::draw;
+	state_->start_index = static_cast<uint32_t>(startpos);
+	state_->prim_count  = static_cast<uint32_t>(primcnt);
+	state_->base_vertex = 0;
+
+    return commit_state_and_command();
+}
+
+result renderer_impl::draw_index(size_t startpos, size_t primcnt, int basevert)
+{
+    state_->cmd = command_id::draw_index;
+	state_->start_index = static_cast<uint32_t>(startpos);
+	state_->prim_count  = static_cast<uint32_t>(primcnt);
+	state_->base_vertex = basevert;
+
+    return commit_state_and_command();
+}
+
+result renderer_impl::clear_color(surface_ptr const& color_target, color_rgba32f const& c)
+{
+    state_->clear_color_target = color_target;
+    state_->clear_color = c;
+    state_->cmd = command_id::clear_color;
+
+    return commit_state_and_command();
+}
+
+result renderer_impl::clear_depth_stencil(surface_ptr const& depth_stencil_target, float d, uint32_t s)
+{
+    state_->clear_z = d;
+    state_->clear_stencil = s;
+    state_->clear_ds_target = depth_stencil_target;
+    state_->cmd = command_id::clear_depth_stencil;
+
+    return commit_state_and_command();
+}
+
+result renderer_impl::begin(async_object_ptr const& async_obj)
+{
+    if(!async_obj->begin())
+    {
+        return result::failed;
+    }
+    
+    if(state_->asyncs[async_obj->uint_id()])
+    {
+        return result::failed;
+    }
+
+    state_->asyncs[async_obj->uint_id()] = async_obj;
+    state_->current_async = async_obj;
+    state_->cmd = command_id::async_begin;
+
+    return commit_state_and_command();
+}
+
+result renderer_impl::end(async_object_ptr const& async_obj)
+{
+    if(!async_obj->end())
+    {
+        return result::failed;
+    }
+    if(state_->asyncs[async_obj->uint_id()] != async_obj)
+    {
+        return result::failed;
+    }
+    state_->cmd = command_id::async_end;
+    state_->current_async = async_obj;
+    state_->asyncs[async_obj->uint_id()].reset();
+
+    return commit_state_and_command();
+}
+
+async_status renderer_impl::get_data(async_object_ptr const& async_obj, void* data, bool do_not_wait)
+{
+    return async_obj->get(data, do_not_wait);
 }
 
 END_NS_SALVIAR();

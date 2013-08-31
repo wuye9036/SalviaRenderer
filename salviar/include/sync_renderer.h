@@ -23,14 +23,8 @@ EFLIB_DECLARE_STRUCT_SHARED_PTR(render_state);
 class sync_renderer : public renderer_impl
 {
 public:
-	virtual result draw(size_t startpos, size_t primcnt);
-	virtual result draw_index(size_t startpos, size_t primcnt, int basevert);
-
-    virtual result clear_color(surface_ptr const& color_target, color_rgba32f const& c);
-	virtual result clear_depth_stencil(surface_ptr const& depth_stencil_target, float d, uint32_t s);
-
 	virtual result flush();
-
+    virtual result commit_state_and_command();
 	sync_renderer();
 };
 

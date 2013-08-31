@@ -18,6 +18,7 @@
 #include <salviar/include/shader_cbuffer_impl.h>
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_object.h>
+#include <salviar/include/counter.h>
 
 BEGIN_NS_SALVIAR();
 
@@ -40,6 +41,12 @@ result render_core::execute()
         return clear_color();
     case command_id::clear_depth_stencil:
         return clear_depth_stencil();
+    case command_id::async_begin:
+        return async_start();
+    case command_id::async_end:
+        return async_stop();
+    default:
+        EFLIB_ASSERT(false, "Unused command id.");
     }
 
     return result::failed;
@@ -131,6 +138,18 @@ result render_core::clear_depth_stencil()
             state_->clear_z, *reinterpret_cast<float*>(&state_->clear_stencil), 0.0f, 0.0f
             );
     state_->clear_ds_target->fill_texels(ds_color);
+    return result::ok;
+}
+
+result render_core::async_start()
+{
+    state_->current_async->start_counting();
+    return result::ok;
+}
+
+result render_core::async_stop()
+{
+    state_->current_async->stop_counting();
     return result::ok;
 }
 

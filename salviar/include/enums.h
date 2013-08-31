@@ -233,14 +233,22 @@ enum stencil_op
     stencil_op_decr_wrap = 8,
 };
 
-enum counter_ids
+enum class async_object_ids: uint32_t
 {
-	counter_unknown,
-	counter_vs_invocation,
-	counter_rasterized_quad,
-	counter_early_z_rejected_quad,
-	counter_ps_invocation,
-	counter_count
+    none,
+    event,
+    occlusion,
+    pipeline_statistics,
+    occlusion_predicate,
+    internal_statistics,
+    count
+};
+
+enum class async_status: uint32_t
+{
+    error,
+    timeout,
+    ready
 };
 
 END_NS_SALVIAR();

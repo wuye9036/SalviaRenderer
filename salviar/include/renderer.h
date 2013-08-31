@@ -27,7 +27,9 @@ struct input_element_desc;
 EFLIB_DECLARE_CLASS_SHARED_PTR(renderer);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_log);
+EFLIB_DECLARE_CLASS_SHARED_PTR(async_object);
 
+enum class async_status :uint32_t;
 struct renderer_parameters
 {
     size_t			backbuffer_width;
@@ -41,10 +43,11 @@ class renderer
 {
 public:
     // Creators
-    virtual buffer_ptr  create_buffer(size_t size) = 0;
-    virtual texture_ptr create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt) = 0;
-    virtual texture_ptr create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt) = 0;
-    virtual sampler_ptr create_sampler(sampler_desc const& desc) = 0;
+    virtual buffer_ptr       create_buffer(size_t size) = 0;
+    virtual texture_ptr      create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt) = 0;
+    virtual texture_ptr      create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt) = 0;
+    virtual sampler_ptr      create_sampler(sampler_desc const& desc) = 0;
+    virtual async_object_ptr create_query(async_object_ids id) = 0;
 
     virtual input_layout_ptr create_input_layout(
         input_element_desc const* elem_descs, size_t elems_count,
@@ -101,6 +104,10 @@ public:
     virtual viewport	            get_viewport() const = 0;
 
     //render operations
+    virtual result begin(async_object_ptr const& async_obj) = 0;
+    virtual result end(async_object_ptr const& async_obj) = 0;
+    virtual async_status get_data(async_object_ptr const& async_obj, void* data, bool do_not_wait) = 0;
+
     virtual result draw(size_t startpos, size_t primcnt) = 0;
     virtual result draw_index(size_t startpos, size_t primcnt, int basevert) = 0;
 

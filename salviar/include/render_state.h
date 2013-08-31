@@ -31,6 +31,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(shader_cbuffer_impl);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(stream_state);
+EFLIB_DECLARE_CLASS_SHARED_PTR(async_object);
 
 struct vs_input_op;
 struct vs_output_op;
@@ -40,7 +41,9 @@ enum class command_id
     draw,
     draw_index,
     clear_depth_stencil,
-    clear_color
+    clear_color,
+    async_begin,
+    async_end
 };
 
 struct render_state
@@ -82,7 +85,8 @@ struct render_state
 	std::vector<surface_ptr>	color_targets;
 	surface_ptr					depth_stencil_target;
 
-	counter_ptr					counters[counter_ids::counter_count];
+    async_object_ptr			asyncs[async_object_ids::count];
+    async_object_ptr            current_async;
 
     viewport                    target_vp;
     size_t                      target_sample_count;
@@ -111,6 +115,11 @@ inline void copy_using_state(render_state* dest, render_state const* src)
 	    dest->clear_z            = src->clear_z           ;
 	    dest->clear_stencil      = src->clear_stencil     ;
         dest->clear_color        = src->clear_color       ;
+        break;
+    case command_id::async_begin:
+    case command_id::async_end:
+        dest->cmd                = src->cmd;
+        dest->current_async      = src->current_async;
         break;
     }
 }

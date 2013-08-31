@@ -38,53 +38,6 @@ public:
 		release();
 	}
 
-	virtual result draw(size_t startpos, size_t primcnt)
-	{
-		state_->cmd = command_id::draw;
-	    state_->start_index = static_cast<uint32_t>(startpos);
-	    state_->prim_count  = static_cast<uint32_t>(primcnt);
-	    state_->base_vertex = 0;
-
-        commit_current_state();
-
-		return result::ok;
-	}
-
-	virtual result draw_index(size_t startpos, size_t primcnt, int basevert)
-	{
-        state_->cmd = command_id::draw_index;
-	    state_->start_index = static_cast<uint32_t>(startpos);
-	    state_->prim_count  = static_cast<uint32_t>(primcnt);
-	    state_->base_vertex = basevert;
-
-        commit_current_state();
-
-		return result::ok;
-	}
-
-    result clear_color(surface_ptr const& color_target, color_rgba32f const& c)
-    {
-        state_->clear_color_target = color_target;
-        state_->clear_color = c;
-        state_->cmd = command_id::clear_color;
-
-        commit_current_state();
-
-        return result::ok;
-    }
-
-    result clear_depth_stencil(surface_ptr const& depth_stencil_target, float d, uint32_t s)
-    {
-        state_->clear_ds_target = depth_stencil_target;
-        state_->clear_z = d;
-        state_->clear_stencil = s;
-        state_->cmd = command_id::clear_depth_stencil;
-
-        commit_current_state();
-
-        return result::ok;
-    }
-
 	virtual result flush()
 	{
         while(object_count_in_pool() != MAX_COMMAND_QUEUE)
@@ -131,7 +84,7 @@ private:
         return state_pool_.size();
     }
 
-    result commit_current_state()
+    virtual result commit_state_and_command()
     {
         auto dest_state = alloc_render_state();
         copy_using_state(dest_state.get(), state_.get());
@@ -148,12 +101,6 @@ private:
             state_queue_.push_front(render_state_ptr());
 			rendering_thread_.join();
 		}
-		return result::ok;
-	}
-
-	result exit_rendering_thread()
-	{
-		// Running in working thread.
 		return result::ok;
 	}
 

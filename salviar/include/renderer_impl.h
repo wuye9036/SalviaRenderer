@@ -76,6 +76,14 @@ public:
 
 	virtual result                  set_render_targets(size_t color_target_count, surface_ptr const* color_targets, surface_ptr const& ds_target);
 
+    virtual result                  draw(size_t startpos, size_t primcnt);
+	virtual result                  draw_index(size_t startpos, size_t primcnt, int basevert);
+    virtual result                  clear_color(surface_ptr const& color_target, color_rgba32f const& c);
+	virtual result                  clear_depth_stencil(surface_ptr const& depth_stencil_target, float d, uint32_t s);
+    virtual result                  begin(async_object_ptr const& async_obj);
+    virtual result                  end(async_object_ptr const& async_obj);
+    virtual async_status            get_data(async_object_ptr const& async_obj, void* data, bool do_not_wait);
+
     virtual input_layout_ptr        create_input_layout(
 		input_element_desc const* elem_descs, size_t elems_count, shader_object_ptr const& vs );
 	virtual input_layout_ptr        create_input_layout(
@@ -84,8 +92,11 @@ public:
 	virtual texture_ptr         	create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	virtual texture_ptr         	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	virtual sampler_ptr         	create_sampler(sampler_desc const& desc);
-
+    virtual async_object_ptr        create_query(async_object_ids id);
 	renderer_impl();
+
+protected:
+    virtual result                  commit_state_and_command() = 0;
 };
 
 END_NS_SALVIAR();
