@@ -41,7 +41,7 @@ extern "C"
 		salviax::swap_chain_ptr&			out_swap_chain,
 		salviar::renderer_ptr&				out_renderer,
 		salviar::renderer_parameters const*	render_params,
-        uint32_t							renderer_type	= salviax::renderer_sync,
+        uint32_t							renderer_type	= salviax::renderer_async,
 		uint32_t		 					swap_chain_type	= salviax::swap_chain_default
 	);
 }

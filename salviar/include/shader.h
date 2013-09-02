@@ -6,12 +6,15 @@
 #include <salviar/include/sampler.h>
 #include <salviar/include/enums.h>
 
+#include <eflib/include/utility/shared_declaration.h>
+
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/array.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/pointer_cast.hpp>
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
@@ -27,6 +30,8 @@ class  triangle_info;
 class  vs_input;
 class  vs_output;
 struct ps_output;
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_shader);
 
 enum languages
 {
@@ -162,7 +167,7 @@ struct shader_profile
 	languages language;
 };
 
-class shader
+class cpp_shader
 {
 public:
 	virtual result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval) = 0;
@@ -171,10 +176,19 @@ public:
 	virtual result find_register( semantic_value const& sv, size_t& index ) = 0;
 	virtual boost::unordered_map<semantic_value, size_t> const& get_register_map() = 0;
 
-	virtual ~shader(){}
+    template <typename T>
+    boost::shared_ptr<T> clone()
+    {
+        auto ret = boost::dynamic_pointer_cast<T>( clone() );
+        assert(ret);
+        return ret;
+    }
+
+    virtual cpp_shader_ptr clone() = 0;
+	virtual ~cpp_shader(){}
 };
 
-class shader_impl : public shader
+class cpp_shader_impl : public cpp_shader
 {
 public:
 	result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval){
@@ -234,7 +248,7 @@ private:
 	}
 };
 
-class cpp_vertex_shader : public shader_impl
+class cpp_vertex_shader : public cpp_shader_impl
 {
 public:
 	void execute(const vs_input& in, vs_output& out);
@@ -243,7 +257,7 @@ public:
 	virtual uint32_t output_attribute_modifiers(uint32_t index) const = 0;
 };
 
-class cpp_pixel_shader : public shader_impl
+class cpp_pixel_shader : public cpp_shader_impl
 {
 	friend class rasterizer;
 	
@@ -276,13 +290,10 @@ protected:
 public:
 	bool execute(const vs_output& in, ps_output& out);
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;
-
-	virtual cpp_pixel_shader_ptr create_clone() = 0;
-	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone) = 0;
 };
 
 //it is called when render a shaded pixel into framebuffer
-class cpp_blend_shader : public shader_impl
+class cpp_blend_shader : public cpp_shader_impl
 {
 public:
 	void execute(size_t sample, pixel_accessor& inout, const ps_output& in);

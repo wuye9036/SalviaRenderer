@@ -1,9 +1,9 @@
-#include <salviar/include/shader_cbuffer_impl.h>
+#include <salviar/include/shader_cbuffer.h>
 using eflib::fixed_string;
 
 BEGIN_NS_SALVIAR();
 
-void shader_cbuffer_impl::set_sampler(eflib::fixed_string const& name, sampler_ptr const& samp)
+void shader_cbuffer::set_sampler(eflib::fixed_string const& name, sampler_ptr const& samp)
 {
 	auto iter = samplers_.find(name);
 	if (iter != samplers_.end() )
@@ -16,7 +16,7 @@ void shader_cbuffer_impl::set_sampler(eflib::fixed_string const& name, sampler_p
 	}
 }
 
-void shader_cbuffer_impl::set_variable(eflib::fixed_string const& name, void const* data, size_t data_length)
+void shader_cbuffer::set_variable(eflib::fixed_string const& name, void const* data, size_t data_length)
 {
 	shader_cdata* existed_cdata = nullptr;
 

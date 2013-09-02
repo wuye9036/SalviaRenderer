@@ -3,7 +3,7 @@
 #include <salviar/include/binary_modules.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
-#include <salviar/include/shader_cbuffer_impl.h>
+#include <salviar/include/shader_cbuffer.h>
 #include <salviar/include/clipper.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/resource_manager.h>

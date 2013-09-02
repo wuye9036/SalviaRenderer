@@ -15,7 +15,7 @@
 #include <salviar/include/host.h>
 #include <salviar/include/render_stages.h>
 #include <salviar/include/renderer.h>
-#include <salviar/include/shader_cbuffer_impl.h>
+#include <salviar/include/shader_cbuffer.h>
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_object.h>
 #include <salviar/include/counter.h>
@@ -86,11 +86,11 @@ void render_core::apply_shader_cbuffer()
 {
 	if(state_->vs_proto)
 	{
-		for(auto const& variable: state_->vx_cbuffer->variables())
+		for(auto const& variable: state_->vx_cbuffer.variables())
 		{
 			auto const& var_name = variable.first;
 			auto const& var_data = variable.second;
-			auto var_data_addr = state_->vx_cbuffer->data_pointer(var_data);
+			auto var_data_addr = state_->vx_cbuffer.data_pointer(var_data);
 
 			sv_layout* layout = state_->vx_shader->get_reflection()->input_sv_layout(var_name);
 			if(layout->agg_type == aggt_array)
@@ -103,7 +103,7 @@ void render_core::apply_shader_cbuffer()
 			}
 		}
 
-		for(auto const& samp: state_->vx_cbuffer->samplers())
+		for(auto const& samp: state_->vx_cbuffer.samplers())
 		{
 			state_->vs_proto->set_sampler(samp.first, samp.second);
 		}
@@ -111,15 +111,15 @@ void render_core::apply_shader_cbuffer()
 
 	if(state_->ps_proto)
 	{
-		for(auto const& variable: state_->px_cbuffer->variables())
+		for(auto const& variable: state_->px_cbuffer.variables())
 		{
 			auto const& var_name = variable.first;
 			auto const& var_data = variable.second;
-			auto var_data_addr = state_->px_cbuffer->data_pointer(var_data);
+			auto var_data_addr = state_->px_cbuffer.data_pointer(var_data);
 			state_->ps_proto->set_variable(var_name, var_data_addr);
 		}
 
-		for(auto const& samp: state_->px_cbuffer->samplers())
+		for(auto const& samp: state_->px_cbuffer.samplers())
 		{
 			state_->ps_proto->set_sampler(samp.first, samp.second);
 		}

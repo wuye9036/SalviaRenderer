@@ -641,7 +641,8 @@ void cpp_blend_shader::execute(size_t sample, pixel_accessor& out, const ps_outp
 	shader_prog(sample, out, in);
 }
 
-result shader_impl::find_register( semantic_value const& sv, size_t& index ){
+result cpp_shader_impl::find_register( semantic_value const& sv, size_t& index )
+{
 	register_map::const_iterator it = regmap_.find( sv );
 	if( it != regmap_.end() ){
 		index = it->second;
@@ -650,15 +651,18 @@ result shader_impl::find_register( semantic_value const& sv, size_t& index ){
 	return result::failed;
 }
 
-boost::unordered_map<semantic_value, size_t> const& shader_impl::get_register_map(){
+boost::unordered_map<semantic_value, size_t> const& cpp_shader_impl::get_register_map()
+{
 	return regmap_;
 }
 
-void shader_impl::bind_semantic( char const* name, size_t semantic_index, size_t register_index ){
+void cpp_shader_impl::bind_semantic( char const* name, size_t semantic_index, size_t register_index )
+{
 	bind_semantic( semantic_value(name, static_cast<uint32_t>(semantic_index)), register_index );
 }
 
-void shader_impl::bind_semantic( semantic_value const& s, size_t register_index ){
+void cpp_shader_impl::bind_semantic( semantic_value const& s, size_t register_index )
+{
 	regmap_.insert( make_pair(s, register_index) );
 }
 

@@ -103,6 +103,12 @@ public:
 	uint32_t output_attribute_modifiers(uint32_t) const{
 		return salviar::vs_output::am_linear;
 	}
+
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
 };
 
 class benchmark_ps : public cpp_pixel_shader
@@ -159,13 +165,11 @@ public:
 
 		return true;
 	}
-	virtual cpp_pixel_shader_ptr create_clone()
+
+    virtual cpp_shader_ptr clone()
 	{
-		return cpp_pixel_shader_ptr(new benchmark_ps(*this));
-	}
-	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
-	{
-		ps_clone.reset();
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
 	}
 };
 
@@ -179,6 +183,13 @@ public:
 		inout.color( 0, sample, color_rgba32f(in.color[0]) );
 		return true;
 	}
+    
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+
 };
 
 class benchmark

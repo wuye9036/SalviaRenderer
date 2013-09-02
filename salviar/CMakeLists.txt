@@ -53,7 +53,6 @@ set( SHADER_HEADERS
 	include/shaderregs.h
 	include/shaderregs_op.h
 	include/shader_cbuffer.h
-	include/shader_cbuffer_impl.h
 )
 
 set( BUFFER_HEADERS
@@ -119,6 +118,7 @@ set(PIPELINE_SOURCES
 	src/render_core.cpp
 	src/stream_state.cpp
 	src/renderer_impl.cpp
+	src/render_state.cpp
 )
 
 set(SHADER_SOURCES
@@ -127,7 +127,7 @@ set(SHADER_SOURCES
 	src/shader.cpp
 	src/shader_object.cpp
 	src/shader_unit.cpp
-	src/shader_cbuffer_impl.cpp
+	src/shader_cbuffer.cpp
 )
 
 SOURCE_GROUP( "Header Files" )

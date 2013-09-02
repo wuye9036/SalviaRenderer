@@ -62,7 +62,7 @@ private:
 
                 if(!state_pool_.empty())
                 {
-                    auto const& ret = state_pool_.back();
+                    auto ret = state_pool_.back();
                     state_pool_.pop_back();
                     return ret;
                 }

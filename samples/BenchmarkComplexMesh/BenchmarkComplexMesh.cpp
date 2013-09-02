@@ -239,6 +239,13 @@ public:
 			return salviar::vs_output::am_linear;
 		}
 	}
+    
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+
 };
 
 class ps_mesh : public cpp_pixel_shader
@@ -259,14 +266,13 @@ public:
 		out.color[0] = vec4(clr, clr, clr, 1);
 		return true;
 	}
-	virtual cpp_pixel_shader_ptr create_clone()
+
+    virtual cpp_shader_ptr clone()
 	{
-		return cpp_pixel_shader_ptr(new ps_mesh(*this));
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
 	}
-	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
-	{
-		ps_clone.reset();
-	}
+
 };
 
 class ts_blend_off : public cpp_blend_shader
@@ -277,6 +283,13 @@ public:
 		inout.color(0, sample, color_rgba32f(in.color[0]));
 		return true;
 	}
+    
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+
 };
 
 class benchmark

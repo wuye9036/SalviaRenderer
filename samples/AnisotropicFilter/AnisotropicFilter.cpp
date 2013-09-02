@@ -86,6 +86,13 @@ public:
 			return salviar::vs_output::am_linear;
 		}
 	}
+    
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+
 };
 
 char const* cone_ps_code =
@@ -135,14 +142,13 @@ public:
 
 		return true;
 	}
-	virtual cpp_pixel_shader_ptr create_clone()
+
+    virtual cpp_shader_ptr clone()
 	{
-		return cpp_pixel_shader_ptr(new ps_cone(*this));
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
 	}
-	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
-	{
-		ps_clone.reset();
-	}
+
 };
 
 class vs_plane : public cpp_vertex_shader
@@ -178,6 +184,13 @@ public:
 			return salviar::vs_output::am_linear;
 		}
 	}
+    
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+
 };
 
 class ps_plane : public cpp_pixel_shader
@@ -206,14 +219,13 @@ public:
 
 		return true;
 	}
-	virtual cpp_pixel_shader_ptr create_clone()
+
+    virtual cpp_shader_ptr clone()
 	{
-		return cpp_pixel_shader_ptr(new ps_plane(*this));
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
 	}
-	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
-	{
-		ps_clone.reset();
-	}
+
 };
 
 class ts_blend_on : public cpp_blend_shader
@@ -225,6 +237,13 @@ public:
 		inout.color(0, sample, lerp(inout.color(0, sample), color, color.a));
 		return true;
 	}
+    
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+
 };
 
 class ts_blend_off : public cpp_blend_shader
@@ -235,6 +254,13 @@ public:
 		inout.color(0, sample, color_rgba32f(in.color[0]));
 		return true;
 	}
+    
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+
 };
 
 class anisotropic_filter: public quick_app{

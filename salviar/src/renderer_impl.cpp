@@ -3,7 +3,7 @@
 #include <salviar/include/binary_modules.h>
 #include <salviar/include/shaderregs.h>
 #include <salviar/include/shaderregs_op.h>
-#include <salviar/include/shader_cbuffer_impl.h>
+#include <salviar/include/shader_cbuffer.h>
 #include <salviar/include/clipper.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/resource_manager.h>
@@ -39,7 +39,7 @@ result renderer_impl::set_vertex_buffers(
 		size_t buffers_count, buffer_ptr const* buffers,
 		size_t const* strides, size_t const* offsets)
 {
-	state_->str_state->update(starts_slot, buffers_count, buffers, strides, offsets);
+	state_->str_state.update(starts_slot, buffers_count, buffers, strides, offsets);
 	return result::ok;
 }
 
@@ -313,11 +313,8 @@ renderer_impl::renderer_impl()
 	state_->index_format = format_r16_uint;
 	state_->prim_topo	 = primitive_triangle_list;
 
-    state_->str_state.reset(new stream_state());
 	state_->ras_state.reset(new raster_state(raster_desc()));
 	state_->ds_state.reset(new depth_stencil_state(depth_stencil_desc()));
-	state_->vx_cbuffer.reset(new shader_cbuffer_impl());
-	state_->px_cbuffer.reset(new shader_cbuffer_impl());
 
 	state_->vp.minz = 0.0f;
 	state_->vp.maxz = 1.0f;
@@ -328,13 +325,13 @@ renderer_impl::renderer_impl()
 
 result renderer_impl::set_vs_variable_value( std::string const& name, void const* var_addr, size_t sz)
 {
-	state_->vx_cbuffer->set_variable(name, var_addr, sz);
+	state_->vx_cbuffer.set_variable(name, var_addr, sz);
 	return result::ok;
 }
 
 result renderer_impl::set_vs_variable_pointer( std::string const& name, void const* var_addr, size_t sz )
 {
-	state_->vx_cbuffer->set_variable(name, var_addr, sz);
+	state_->vx_cbuffer.set_variable(name, var_addr, sz);
 	return result::ok;
 }
 
@@ -367,19 +364,19 @@ shared_ptr<shader_object> renderer_impl::get_pixel_shader_code() const{
 
 result renderer_impl::set_ps_variable( std::string const& name, void const* data, size_t sz)
 {
-	state_->px_cbuffer->set_variable(name, data, sz);
+	state_->px_cbuffer.set_variable(name, data, sz);
 	return result::ok;
 }
 
 result renderer_impl::set_ps_sampler( std::string const& name, sampler_ptr const& samp )
 {
-	state_->px_cbuffer->set_sampler(name, samp);
+	state_->px_cbuffer.set_sampler(name, samp);
 	return result::ok;
 }
 
 result renderer_impl::set_vs_sampler( std::string const& name, sampler_ptr const& samp )
 {
-	state_->vx_cbuffer->set_sampler(name, samp);
+	state_->vx_cbuffer.set_sampler(name, samp);
 	return result::ok;
 }
 

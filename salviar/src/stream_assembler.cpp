@@ -57,7 +57,7 @@ vec4 get_vec4(format fmt, semantic_value const& sv, const void* data)
 void stream_assembler::update(render_state const* state)
 {
 	layout_				= state->layout.get();
-	stream_buffer_descs_= state->str_state->buffer_descs.data();
+	stream_buffer_descs_= state->str_state.buffer_descs.data();
 }
 
 /// Only used by Cpp Vertex Shader

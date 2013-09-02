@@ -1211,7 +1211,7 @@ void rasterizer::draw()
 		// create cpp_pixel_shader clone per thread from hps
 		if(cpp_ps_ != nullptr)
 		{
-			ppps[i] = cpp_ps_->create_clone();
+			ppps[i] = cpp_ps_->clone<cpp_pixel_shader>();
 			threaded_cpp_ps_[i] = ppps[i].get();
 		} 
 		if(ps_proto_ != nullptr)
@@ -1229,10 +1229,7 @@ void rasterizer::draw()
 	// destroy all cpp_pixel_shader clone
 	for (size_t i = 0; i < num_threads; ++ i)
 	{
-		if(cpp_ps_ != nullptr)
-		{
-			cpp_ps_->destroy_clone(ppps[i]);
-		}
+        ppps[i].reset();
 	}
 }
 

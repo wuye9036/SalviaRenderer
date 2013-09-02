@@ -7,6 +7,7 @@
 #include <salviar/include/format.h>
 #include <salviar/include/viewport.h>
 #include <salviar/include/stream_state.h>
+#include <salviar/include/shader_cbuffer.h>
 
 #include <eflib/include/utility/shared_declaration.h>
 #include <eflib/include/math/vector.h>
@@ -29,7 +30,6 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_pixel_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
 EFLIB_DECLARE_CLASS_SHARED_PTR(vertex_shader_unit);
 EFLIB_DECLARE_CLASS_SHARED_PTR(pixel_shader_unit);
-EFLIB_DECLARE_CLASS_SHARED_PTR(shader_cbuffer_impl);
 EFLIB_DECLARE_STRUCT_SHARED_PTR(stream_state);
 EFLIB_DECLARE_CLASS_SHARED_PTR(async_object);
 
@@ -57,7 +57,7 @@ struct render_state
 	uint32_t					start_index;
 	uint32_t					prim_count;
 	
-	stream_state_ptr			str_state;
+	stream_state			    str_state;
 	input_layout_ptr			layout;
 
 	viewport					vp;
@@ -73,8 +73,8 @@ struct render_state
 	shader_object_ptr			vx_shader;
 	shader_object_ptr			px_shader;
 
-	shader_cbuffer_impl_ptr		vx_cbuffer;
-	shader_cbuffer_impl_ptr		px_cbuffer;
+	shader_cbuffer  		    vx_cbuffer;
+	shader_cbuffer	    	    px_cbuffer;
 
 	vs_input_op*				vsi_ops;
 	vs_output_op*				vso_ops;
@@ -98,30 +98,6 @@ struct render_state
     color_rgba32f				clear_color;
 };
 
-inline void copy_using_state(render_state* dest, render_state const* src)
-{
-    switch(src->cmd)
-    {
-    case command_id::draw:
-    case command_id::draw_index:
-        *dest = *src;
-        break;
-    case command_id::clear_color:
-    case command_id::clear_depth_stencil:
-        dest->cmd                = src->cmd;
-        dest->clear_color_target = src->clear_color_target;
-        dest->clear_ds_target    = src->clear_ds_target   ;
-                                 
-	    dest->clear_z            = src->clear_z           ;
-	    dest->clear_stencil      = src->clear_stencil     ;
-        dest->clear_color        = src->clear_color       ;
-        break;
-    case command_id::async_begin:
-    case command_id::async_end:
-        dest->cmd                = src->cmd;
-        dest->current_async      = src->current_async;
-        break;
-    }
-}
+void copy_using_state(render_state* dest, render_state const* src);
 
 END_NS_SALVIAR();

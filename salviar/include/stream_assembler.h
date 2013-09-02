@@ -57,7 +57,7 @@ private:
 	// Used by new shader unit
 	std::vector<stream_desc>	stream_descs_;
 	input_layout*				layout_;
-	stream_buffer_desc*			stream_buffer_descs_;	
+	stream_buffer_desc const*	stream_buffer_descs_;	
 };
 
 END_NS_SALVIAR();

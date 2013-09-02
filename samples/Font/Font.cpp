@@ -84,6 +84,12 @@ public:
 			return salviar::vs_output::am_linear;
 		}
 	}
+
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
 };
 
 char const* box_ps_code =
@@ -134,13 +140,10 @@ public:
 
 		return true;
 	}
-	virtual cpp_pixel_shader_ptr create_clone()
+    virtual cpp_shader_ptr clone()
 	{
-		return cpp_pixel_shader_ptr(new ps_box(*this));
-	}
-	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
-	{
-		ps_clone.reset();
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
 	}
 };
 
@@ -178,6 +181,11 @@ public:
 			return salviar::vs_output::am_linear;
 		}
 	}
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
 };
 
 class ps_plane : public cpp_pixel_shader
@@ -204,13 +212,10 @@ public:
 
 		return true;
 	}
-	virtual cpp_pixel_shader_ptr create_clone()
+    virtual cpp_shader_ptr clone()
 	{
-		return cpp_pixel_shader_ptr(new ps_plane(*this));
-	}
-	virtual void destroy_clone(cpp_pixel_shader_ptr& ps_clone)
-	{
-		ps_clone.reset();
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
 	}
 };
 
@@ -223,6 +228,11 @@ public:
 		inout.color(0, sample, lerp(inout.color(0, sample), color, color.a));
 		return true;
 	}
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
 };
 
 class ts_blend_off : public cpp_blend_shader
@@ -232,6 +242,11 @@ public:
 	{
 		inout.color(0, sample, color_rgba32f(in.color[0]));
 		return true;
+	}
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
 	}
 };
 

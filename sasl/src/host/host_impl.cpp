@@ -18,7 +18,7 @@
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/render_state.h>
 #include <salviar/include/render_stages.h>
-#include <salviar/include/shader_cbuffer_impl.h>
+#include <salviar/include/shader_cbuffer.h>
 
 #include <eflib/include/memory/atomic.h>
 
@@ -124,11 +124,11 @@ void host_impl::update(render_state const* state)
 	// Update vertex buffers from state.
 	vx_cbuffer_.resize( vx_shader_->get_reflection()->total_size(su_buffer_in) );
 
-	for(auto const& variable: state->vx_cbuffer->variables())
+	for(auto const& variable: state->vx_cbuffer.variables())
 	{
 		auto const& var_name = variable.first;
 		auto const& var_data = variable.second;
-		auto var_data_addr = state->vx_cbuffer->data_pointer(var_data);
+		auto var_data_addr = state->vx_cbuffer.data_pointer(var_data);
 
 		sv_layout* layout = vx_shader_->get_reflection()->input_sv_layout(var_name);
 		if(layout->agg_type == aggt_array)
@@ -141,7 +141,7 @@ void host_impl::update(render_state const* state)
 		}
 	}
 
-	for(auto const& samp: state->vx_cbuffer->samplers())
+	for(auto const& samp: state->vx_cbuffer.samplers())
 	{
 		vx_update_sampler(samp.first, samp.second);
 	}
