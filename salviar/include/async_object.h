@@ -159,6 +159,7 @@ protected:
         ret->gs_invocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::gs_invocations)];
         ret->gs_primitives = counters_[static_cast<uint32_t>(pipeline_statistic_id::gs_primitives)];
         ret->ia_primitives = counters_[static_cast<uint32_t>(pipeline_statistic_id::ia_primitives)];
+        ret->ia_vertices = counters_[static_cast<uint32_t>(pipeline_statistic_id::ia_vertices)];
         ret->ps_invocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::ps_invocations)];
         ret->vs_invocations = counters_[static_cast<uint32_t>(pipeline_statistic_id::vs_invocations)];
     }

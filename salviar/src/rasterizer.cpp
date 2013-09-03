@@ -261,7 +261,7 @@ void rasterizer::update(render_state const* state)
     pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
     if(pipeline_stat_)
     {
-        acc_ia_primitives_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_vertices>;
+        acc_ia_primitives_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_primitives>;
         acc_cinvocations_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::cinvocations>;
         acc_cprimitives_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::cprimitives>;
         acc_ps_invocations_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ps_invocations>;
