@@ -31,47 +31,29 @@ struct clip_context;
 class  vertex_shader_unit;
 class  shader_reflection;
 
-struct drawing_package_context
+struct pixel_statistic;
+struct drawing_triangle_context;
+struct drawing_shader_context
 {
-    vs_output_op const*	vs_output_ops;
-	
     cpp_pixel_shader*	cpp_ps;
 	pixel_shader_unit*	ps_unit;
 	cpp_blend_shader*	cpp_bs;
-    size_t				num_samples;
-	bool				has_centroid;
-
-	float const*		aa_z_offset;
-    uint32_t const*		masks;
-};
-
-struct drawing_context
-{
-	int					vp_left, vp_top;
-	int					rgn_left, rgn_top, rgn_right, rgn_bottom;
-	eflib::vec4 const*	edge_factors;
-
-	vs_output const*	v0;
-	vs_output const*	ddx;
-	vs_output const*	ddy;
-	vs_output const*	pixels;
-	
 };
 
 struct rasterize_multi_prim_context
 {
 	std::vector<uint32_t> const*	sorted_prims;
 	viewport const*					tile_vp;
-	cpp_pixel_shader*				cpp_ps;
-	pixel_shader_unit*				psu;
+    pixel_statistic*                pixel_stat;
+    drawing_shader_context          shaders;
 };
 
 struct rasterize_prim_context
 {
 	uint32_t						prim_id;
 	viewport const*					tile_vp;
-	cpp_pixel_shader*				cpp_ps;
-	pixel_shader_unit*				psu;
+    pixel_statistic*                pixel_stat;
+    drawing_shader_context          shaders;
 };
 
 class rasterizer
@@ -94,12 +76,15 @@ private:
     viewport const*                 target_vp_;
     size_t                          target_sample_count_;
 	vs_output_op const*				vso_ops_;
+    bool                            has_centroid_;
     uint32_t                        prim_count_;
+
     
     async_object*                   pipeline_stat_;
     accumulate_fn<uint64_t>::type   acc_ia_primitives_;
     accumulate_fn<uint64_t>::type   acc_cinvocations_;
     accumulate_fn<uint64_t>::type   acc_cprimitives_;
+    accumulate_fn<uint64_t>::type   acc_ps_invocations_;
 
 	// Intermediate data
 	prim_type						prim_;
@@ -131,30 +116,31 @@ private:
 
 	void draw_full_tile(
 		int left, int top, int right, int bottom,
-		size_t num_samples, const vs_output& v0,
-		const vs_output& ddx, const vs_output& ddy,
-		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
-		const float* aa_z_offset );
+		drawing_shader_context const* shaders,
+		drawing_triangle_context const* triangle_ctx);
 	void draw_partial_tile(
 		int left0, int top0, int left, int top,
-		const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
-		const vs_output& v0, const vs_output& ddx, const vs_output& ddy,
-		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
-		const float* aa_z_offset);
-	void subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region, const eflib::vec4* edge_factors,
+		const eflib::vec4* edge_factors,
+		drawing_shader_context const* shaders,
+        drawing_triangle_context const* triangle_ctx);
+	void subdivide_tile(
+        int left, int top, const eflib::rect<uint32_t>& cur_region, const eflib::vec4* edge_factors,
 		uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
 		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y);
 
 	void draw_full_package(
+        uint32_t top, uint32_t left, 
 		vs_output* pixels,
-		uint32_t top, uint32_t left, size_t num_samples,
-		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
-		float const* aa_z_offset );
+        drawing_shader_context const* shaders,
+		drawing_triangle_context const* triangle_ctx
+        );
+
 	void draw_package(
-		vs_output* pixels,
-		uint32_t top, uint32_t left, size_t num_samples,
-		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
-		uint32_t const* masks, float const* aa_z_offset );
+        uint32_t top, uint32_t left,
+		vs_output* pixels, uint32_t const* masks,
+        drawing_shader_context const* shaders,
+        drawing_triangle_context const* triangle_ctx
+        );
 
 	void viewport_and_project_transform(vs_output** vertexes, size_t num_verts);
 
