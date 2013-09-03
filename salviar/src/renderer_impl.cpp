@@ -17,7 +17,7 @@
 #include <salviar/include/host.h>
 #include <salviar/include/shader_reflection.h>
 #include <salviar/include/shader_object.h>
-#include <salviar/include/counter.h>
+#include <salviar/include/async_object.h>
 
 BEGIN_NS_SALVIAR();
 

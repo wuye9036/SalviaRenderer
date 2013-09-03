@@ -10,7 +10,7 @@
 #include <salviar/include/render_state.h>
 #include <salviar/include/stream_assembler.h>
 #include <salviar/include/thread_pool.h>
-
+#include <salviar/include/async_object.h>
 #include <salviar/include/shader_unit.h>
 
 #include <eflib/include/platform/cpuinfo.h>
@@ -57,6 +57,18 @@ public:
 		cpp_vs_		= state->cpp_vs.get();
 		vs_proto_	= state->vs_proto;
         prim_count_ = state->prim_count;
+
+        pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
+        if(pipeline_stat_)
+        {
+            acc_ia_vertices_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_vertices>;
+            acc_vs_invocations_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::vs_invocations>;
+        }
+        else
+        {
+            acc_ia_vertices_ = &accumulate_fn<uint64_t>::null;
+            acc_vs_invocations_ = &accumulate_fn<uint64_t>::null;
+        }
 	}
 
 	void transform_vertices()
@@ -99,6 +111,10 @@ public:
 		unique_indices.erase(std::unique(unique_indices.begin(), unique_indices.end()), unique_indices.end());
 		transformed_verts_.reset(new vs_output[unique_indices.size()]);
 		used_verts_.resize( unique_indices.back()+1 );
+
+        // Accumulate query counters.
+        acc_ia_vertices_( pipeline_stat_, static_cast<uint64_t>(prim_count_*prim_size) );
+        acc_vs_invocations_( pipeline_stat_, static_cast<uint64_t>(unique_indices.size()) );
 
 		// Transform vertexes
 		if( cpp_vs_ )
@@ -265,6 +281,11 @@ private:
 
 	shared_array<vs_output> transformed_verts_;
 	vector<int32_t>			used_verts_;
+    async_object*           pipeline_stat_;
+    accumulate_fn<uint64_t>::type
+                            acc_ia_vertices_;
+    accumulate_fn<uint64_t>::type
+                            acc_vs_invocations_;
 
 	boost::pool<>			verts_pool_;
 };

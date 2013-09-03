@@ -8,6 +8,7 @@
 #include <salviar/include/framebuffer.h>
 #include <salviar/include/raster_state.h>
 #include <salviar/include/geom_setup_engine.h>
+#include <salviar/include/async_object.h>
 
 #include <eflib/include/memory/atomic.h>
 #include <eflib/include/memory/pool.h>
@@ -30,24 +31,31 @@ struct clip_context;
 class  vertex_shader_unit;
 class  shader_reflection;
 
+struct drawing_package_context
+{
+    vs_output_op const*	vs_output_ops;
+	
+    cpp_pixel_shader*	cpp_ps;
+	pixel_shader_unit*	ps_unit;
+	cpp_blend_shader*	cpp_bs;
+    size_t				num_samples;
+	bool				has_centroid;
+
+	float const*		aa_z_offset;
+    uint32_t const*		masks;
+};
+
 struct drawing_context
 {
 	int					vp_left, vp_top;
 	int					rgn_left, rgn_top, rgn_right, rgn_bottom;
 	eflib::vec4 const*	edge_factors;
-	size_t				num_samples;
-	bool				has_centroid;
+
 	vs_output const*	v0;
 	vs_output const*	ddx;
 	vs_output const*	ddy;
 	vs_output const*	pixels;
-	uint32_t const*		masks;
-
-	vs_output_op const*	vs_output_ops;
-	cpp_pixel_shader*	cpp_ps;
-	pixel_shader_unit*	ps_unit;
-	cpp_blend_shader*	cpp_bs;
-	float const*		aa_z_offset;
+	
 };
 
 struct rasterize_multi_prim_context
@@ -87,6 +95,11 @@ private:
     size_t                          target_sample_count_;
 	vs_output_op const*				vso_ops_;
     uint32_t                        prim_count_;
+    
+    async_object*                   pipeline_stat_;
+    accumulate_fn<uint64_t>::type   acc_ia_primitives_;
+    accumulate_fn<uint64_t>::type   acc_cinvocations_;
+    accumulate_fn<uint64_t>::type   acc_cprimitives_;
 
 	// Intermediate data
 	prim_type						prim_;
@@ -116,13 +129,13 @@ private:
 	boost::function< void (rasterizer*, rasterize_multi_prim_context*)>
 		rasterize_prims_;
 
-	void draw_whole_tile(
+	void draw_full_tile(
 		int left, int top, int right, int bottom,
 		size_t num_samples, const vs_output& v0,
 		const vs_output& ddx, const vs_output& ddy,
 		cpp_pixel_shader* cpp_ps, pixel_shader_unit* psu, cpp_blend_shader* cpp_bs,
 		const float* aa_z_offset );
-	void draw_pixels(
+	void draw_partial_tile(
 		int left0, int top0, int left, int top,
 		const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
 		const vs_output& v0, const vs_output& ddx, const vs_output& ddy,

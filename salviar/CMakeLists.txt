@@ -23,7 +23,7 @@ SET( FOUNDATION_HEADERS
 SET( PIPELINE_HEADERS
 	include/stream_assembler.h
 	include/clipper.h
-	include/counter.h
+	include/async_object.h
 	include/geom_setup_engine.h
 	include/index_fetcher.h
 	include/input_layout.h

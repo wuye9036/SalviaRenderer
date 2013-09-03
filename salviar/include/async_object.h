@@ -10,6 +10,7 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/array.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 BEGIN_NS_SALVIAR();
@@ -134,13 +135,12 @@ enum class pipeline_statistic_id: uint32_t
 
 class async_pipeline_statistics: public async_object
 {
-private:
-    boost::array<boost::atomic<uint64_t>, 8> counters_;
-
-    template <uint32_t StatID>
-    void accumulate(uint64_t v)
+public:
+    template <pipeline_statistic_id StatID>
+    static void accumulate(async_object* query_obj, uint64_t v)
     {
-        counters_[StatID] += v;
+        assert(dynamic_cast<async_pipeline_statistics*>(query_obj) != nullptr);
+	    static_cast<async_pipeline_statistics*>(query_obj)->counters_[static_cast<uint32_t>(StatID)] += v;
     }
 
     virtual async_object_ids id()
@@ -149,6 +149,8 @@ private:
     }
 
 protected:
+    boost::array<boost::atomic<uint64_t>, 8> counters_;
+
     void get_value(void* v)
     {
         auto ret = reinterpret_cast<pipeline_statistics*>(v);
@@ -170,15 +172,14 @@ protected:
     }
 };
 
-template <bool Enabled>
-struct query_accumulators
+template <typename ValueT>
+struct accumulate_fn
 {
-    template <typename QueryT, uint32_t CounterID>
-    static void accumulate(async_object* query_obj, uint64_t v)
+    typedef void (*type)(async_object*, ValueT);
+    static void null(async_object*, ValueT)
     {
-        assert(dynamic_cast<QueryT*>(query_obj) != nullptr);
-        static_cast<QueryT*>(query_obj)->accumulate<CounterID>(v);
     }
 };
+
 
 END_NS_SALVIAR();

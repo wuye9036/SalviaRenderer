@@ -24,7 +24,7 @@ geom_setup_engine::geom_setup_engine():
 	thread_count_( eflib::num_available_threads() )
 {				 
 }
-				 
+	 
 void geom_setup_engine::execute(geom_setup_context const* ctxt)
 {
 	ctxt_ = ctxt;
@@ -69,6 +69,8 @@ void geom_setup_engine::threaded_clip_geometries(thread_context const* thread_ct
 
 	clip_results clip_rslt;
 
+    uint32_t clip_invocations = 0;
+
 	thread_context::package_cursor cur = thread_ctx->next_package();
 	while( cur.valid() )
 	{
@@ -98,6 +100,7 @@ void geom_setup_engine::threaded_clip_geometries(thread_context const* thread_ct
 
 				if ((0 == t.x()) && (0 == t.y()) && (0 == t.z()) && (0 == t.w()))
 				{
+                    ++clip_invocations;
 					clp.clip(pv, &clip_rslt);
 
 					// Step output to next range, sum total clipped verts count
@@ -113,6 +116,8 @@ void geom_setup_engine::threaded_clip_geometries(thread_context const* thread_ct
 
 		cur = thread_ctx->next_package();
 	}
+
+    ctxt_->acc_cinvocations(ctxt_->pipeline_stat, clip_invocations);
 }
 
 void geom_setup_engine::compact_geometries()

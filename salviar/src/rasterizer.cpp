@@ -248,9 +248,23 @@ void rasterizer::update(render_state const* state)
 	}
 
 	update_prim_info(state);
+
+    pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
+    if(pipeline_stat_)
+    {
+        acc_ia_primitives_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_vertices>;
+        acc_cinvocations_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::cinvocations>;
+        acc_cprimitives_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::cprimitives>;
+    }
+    else
+    {
+        acc_ia_primitives_ = &accumulate_fn<uint64_t>::null;
+        acc_cprimitives_ = &accumulate_fn<uint64_t>::null;
+        acc_cinvocations_ = &accumulate_fn<uint64_t>::null;
+    }
 }
 
-void rasterizer::draw_whole_tile(
+void rasterizer::draw_full_tile(
 	int left, int top, int right, int bottom, 
 	size_t num_samples, const vs_output& v0,
 	const vs_output& ddx, const vs_output& ddy, 
@@ -288,7 +302,7 @@ void rasterizer::draw_whole_tile(
 	}
 }
 
-void rasterizer::draw_pixels(
+void rasterizer::draw_partial_tile(
 	int left0, int top0, int left, int top,
 	const eflib::vec4* edge_factors, size_t num_samples, bool has_centroid,
 	const vs_output& v0, const vs_output& ddx, const vs_output& ddy,
@@ -455,7 +469,8 @@ void rasterizer::draw_pixels(
 
 void rasterizer::subdivide_tile(int left, int top, const eflib::rect<uint32_t>& cur_region,
 		const vec4* edge_factors, uint32_t* test_regions, uint32_t& test_region_size, float x_min, float x_max, float y_min, float y_max,
-		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y){
+		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y)
+{
 	const uint32_t new_w = cur_region.w;
 	const uint32_t new_h = cur_region.h;
 
@@ -821,14 +836,14 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 
 			case TVT_FULL:
 				// The whole tile is inside a triangle.
-				this->draw_whole_tile(vpleft, vptop, vpright, vpbottom, target_sample_count_,
+				this->draw_full_tile(vpleft, vptop, vpright, vpbottom, target_sample_count_,
 					*reordered_verts[0], ddx, ddy,
 					cpp_ps, psu, cpp_bs_, aa_z_offset);
 				break;
 
 			case TVT_PIXEL:
 				// The tile is small enough for pixel level matching.
-				this->draw_pixels(vpleft0, vptop0, vpleft, vptop, 
+				this->draw_partial_tile(vpleft0, vptop0, vpleft, vptop, 
 					edge_factors, target_sample_count_,
 					has_centroid, *reordered_verts[0], ddx, ddy,
 					cpp_ps, psu, cpp_bs_, aa_z_offset);
@@ -1156,18 +1171,23 @@ void rasterizer::draw()
 	geom_setup_engine	gse;
 	geom_setup_context	geom_setup_ctx;
 
-	geom_setup_ctx.cull			= state_->get_cull_func();
-	geom_setup_ctx.dvc			= vert_cache_;
-	geom_setup_ctx.prim			= prim_;
-	geom_setup_ctx.prim_count	= prim_count_;
-	geom_setup_ctx.prim_size	= prim_size_;
-	geom_setup_ctx.vso_ops		= vso_ops_;
+	geom_setup_ctx.cull			    = state_->get_cull_func();
+	geom_setup_ctx.dvc			    = vert_cache_;
+	geom_setup_ctx.prim			    = prim_;
+	geom_setup_ctx.prim_count	    = prim_count_;
+	geom_setup_ctx.prim_size	    = prim_size_;
+	geom_setup_ctx.vso_ops		    = vso_ops_;
+    geom_setup_ctx.pipeline_stat    = pipeline_stat_;
+    geom_setup_ctx.acc_cinvocations = acc_cinvocations_; 
 
 	gse.execute(&geom_setup_ctx);
 
 	clipped_verts_			= gse.verts();
 	clipped_verts_count_	= gse.verts_count();
 	clipped_prims_count_	= clipped_verts_count_ / prim_size_;
+
+    acc_ia_primitives_(pipeline_stat_, prim_count_);
+    acc_cprimitives_(pipeline_stat_, clipped_prims_count_);
 
 	// Project and Transformed to Viewport
 	viewport_and_project_transform(clipped_verts_, clipped_verts_count_); 

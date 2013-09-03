@@ -3,6 +3,7 @@
 #include <salviar/include/salviar_forward.h>
 
 #include <salviar/include/enums.h>
+#include <salviar/include/async_object.h>
 
 #include <eflib/include/memory/pool.h>
 
@@ -26,6 +27,10 @@ struct geom_setup_context
 	size_t				prim_size;
 	size_t				prim_count;
 	bool				(*cull)(float area);
+
+    async_object*       pipeline_stat;
+    accumulate_fn<uint64_t>::type
+                        acc_cinvocations;
 };
 
 /*
@@ -33,6 +38,7 @@ struct geom_setup_context
 */
 class geom_setup_engine
 {	
+
 public:
 	geom_setup_engine();
 
@@ -57,18 +63,18 @@ private:
 	void threaded_clip_geometries(thread_context const* thread_ctx);
 	void threaded_compact_geometries(thread_context const* thread_ctx);
 	
-	boost::shared_array<vs_output_pool>		vso_pools_;
-	boost::shared_array<vs_output*>			clipped_verts_;
-	boost::shared_array<uint32_t>			clipped_package_verts_count_;
+	boost::shared_array<vs_output_pool>	vso_pools_;
+	boost::shared_array<vs_output*>		clipped_verts_;
+	boost::shared_array<uint32_t>		clipped_package_verts_count_;
 	
-	boost::shared_array<vs_output*>			compacted_verts_;
+	boost::shared_array<vs_output*>		compacted_verts_;
 
-	boost::shared_array<uint32_t>			clipped_package_compacted_addresses_;
-	int32_t									clipping_package_count_;
+	boost::shared_array<uint32_t>		clipped_package_compacted_addresses_;
+	int32_t								clipping_package_count_;
 
-	size_t									thread_count_;
-	
-	geom_setup_context const*				ctxt_;
+	size_t								thread_count_;
+
+	geom_setup_context const*			ctxt_;
 };
 
 END_NS_SALVIAR();
