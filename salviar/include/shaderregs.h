@@ -190,6 +190,9 @@ struct vs_output_op
 	vs_output_functions::lerp			lerp;
 	vs_output_functions::step_unproj	step_unproj;
 	vs_output_functions::step_2d_unproj	step_2d_unproj;
+    vs_output_functions::step_2d_unproj	step_2d_unproj_pos;
+    vs_output_functions::step_2d_unproj	step_2d_unproj_attr;
+
 	vs_output_functions::step1			step1;
 	vs_output_functions::step_1d		step_1d;
 	vs_output_functions::step_2d		step_2d;

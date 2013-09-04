@@ -88,10 +88,12 @@ private:
 	uint32_t				stencil_ref_;
     uint32_t                stencil_read_mask_;
     uint32_t                stencil_write_mask_;
-    
+    bool                    early_z_enabled_;
+    uint32_t                sample_count_;
+
 	void (*read_depth_stencil_)(float& depth, uint32_t& stencil, uint32_t stencil_mask, void const* ds_data);
 	void (*write_depth_stencil_)(void* ds_data, float depth, uint32_t stencil, uint32_t stencil_mask);
-
+    
     void update_ds_rw_functions(bool ds_format_changed, bool ds_state_changed);
 
 public:
@@ -102,7 +104,7 @@ public:
 	~framebuffer(void);
 
 	void render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, size_t i_sample, const ps_output& ps, float depth);
-    // bool check_z(size_t x, size_t y, float depth);
+    bool early_z_test(size_t x, size_t y, float depth, float const* aa_z_offset);
 };
 
 END_NS_SALVIAR();
