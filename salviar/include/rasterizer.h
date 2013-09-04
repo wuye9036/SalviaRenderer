@@ -81,10 +81,12 @@ private:
 
     
     async_object*                   pipeline_stat_;
+    async_object*                   internal_stat_;
     accumulate_fn<uint64_t>::type   acc_ia_primitives_;
     accumulate_fn<uint64_t>::type   acc_cinvocations_;
     accumulate_fn<uint64_t>::type   acc_cprimitives_;
     accumulate_fn<uint64_t>::type   acc_ps_invocations_;
+    accumulate_fn<uint64_t>::type   acc_backend_input_pixels_;
 
 	// Intermediate data
 	prim_type						prim_;

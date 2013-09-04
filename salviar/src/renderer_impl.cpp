@@ -300,6 +300,8 @@ async_object_ptr renderer_impl::create_query(async_object_ids id)
     {
     case async_object_ids::pipeline_statistics:
         return async_object_ptr(new async_pipeline_statistics());
+    case async_object_ids::internal_statistics:
+        return async_object_ptr(new async_internal_statistics());
     }
 
     return async_object_ptr();

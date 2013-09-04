@@ -44,6 +44,7 @@ int const RASTERIZE_PRIMITIVE_PACKAGE_SIZE = 1;
 struct pixel_statistic
 {
     uint64_t ps_invocations;
+    uint64_t backend_input_pixels;
 };
 
 struct drawing_triangle_context
@@ -258,7 +259,9 @@ void rasterizer::update(render_state const* state)
 
 	update_prim_info(state);
 
+    // Initialize statistics.
     pipeline_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::pipeline_statistics)].get();
+    internal_stat_ = state->asyncs[static_cast<uint32_t>(async_object_ids::internal_statistics)].get();
     if(pipeline_stat_)
     {
         acc_ia_primitives_ = &async_pipeline_statistics::accumulate<pipeline_statistic_id::ia_primitives>;
@@ -272,6 +275,15 @@ void rasterizer::update(render_state const* state)
         acc_cprimitives_ = &accumulate_fn<uint64_t>::null;
         acc_cinvocations_ = &accumulate_fn<uint64_t>::null;
         acc_ps_invocations_ = &accumulate_fn<uint64_t>::null;
+    }
+
+    if(internal_stat_)
+    {
+        acc_backend_input_pixels_ = &async_internal_statistics::accumulate<internal_statistics_id::backend_input_pixels>;
+    }
+    else
+    {
+        acc_backend_input_pixels_ = &accumulate_fn<uint64_t>::null;
     }
 }
 
@@ -312,7 +324,7 @@ void rasterizer::draw_full_tile(
 		}
 	}
 
-    triangle_ctx->pixel_stat->ps_invocations += ( (bottom - top) * (right - left) ) << 4;
+    triangle_ctx->pixel_stat->ps_invocations += ( (bottom - top) * (right - left) );
 }
 
 void rasterizer::draw_partial_tile(
@@ -1027,6 +1039,7 @@ void rasterizer::threaded_rasterize_multi_prim(thread_context const* thread_ctx)
 	std::vector<uint32_t> prims;
     pixel_statistic pixel_stat;
     pixel_stat.ps_invocations = 0;
+    pixel_stat.backend_input_pixels = 0;
 
 	rasterize_multi_prim_context rast_ctxt;
     rast_ctxt.shaders.cpp_ps	= threaded_cpp_ps_[thread_ctx->thread_id];
@@ -1064,6 +1077,7 @@ void rasterizer::threaded_rasterize_multi_prim(thread_context const* thread_ctx)
 	}
 
     acc_ps_invocations_(pipeline_stat_, pixel_stat.ps_invocations);
+    acc_backend_input_pixels_(internal_stat_, pixel_stat.backend_input_pixels);
 }
 
 void rasterizer::rasterize_multi_line(rasterize_multi_prim_context const* ctx)
@@ -1301,6 +1315,7 @@ void rasterizer::draw_package(
 		psu->execute(pso);
 	}	
 
+    uint64_t backend_input_pixels = 0;
 	for( int iy = 0; iy < 4; ++iy )
 	{
 		for ( int ix = 0; ix < 4; ++ix )
@@ -1310,6 +1325,8 @@ void rasterizer::draw_package(
 
 			// No sampler need to be draw.
 			if(!mask) continue;
+
+            ++backend_input_pixels;
 
 			// Clipped by pixel shader.
 			if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) ) continue;
@@ -1350,6 +1367,8 @@ void rasterizer::draw_package(
 			}
 		}
 	}
+
+    triangle_ctx->pixel_stat->backend_input_pixels += backend_input_pixels;
 }
 
 void rasterizer::draw_full_package(
@@ -1424,6 +1443,8 @@ void rasterizer::draw_full_package(
 			}
 		}
 	}
+
+    triangle_ctx->pixel_stat->backend_input_pixels += PACKAGE_ELEMENT_COUNT;
 }
 
 void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num_verts)

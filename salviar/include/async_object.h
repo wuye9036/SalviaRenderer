@@ -123,7 +123,7 @@ struct pipeline_statistics
 
 enum class pipeline_statistic_id: uint32_t
 {
-    ia_vertices,
+    ia_vertices = 0,
     ia_primitives,
     vs_invocations,
     gs_invocations,
@@ -173,6 +173,54 @@ protected:
     }
 };
 
+enum class internal_statistics_id: uint32_t
+{
+    backend_input_pixels = 0,
+    count
+};
+
+struct internal_statistics
+{
+    uint64_t backend_input_pixels;
+};
+
+class async_internal_statistics: public async_object
+{
+public:
+    template <internal_statistics_id StatID>
+    static void accumulate(async_object* query_obj, uint64_t v)
+    {
+        assert(dynamic_cast<async_internal_statistics*>(query_obj) != nullptr);
+	    static_cast<async_internal_statistics*>(query_obj)->counters_[static_cast<uint32_t>(StatID)] += v;
+    }
+
+    virtual async_object_ids id()
+    {
+        return async_object_ids::internal_statistics;
+    }
+
+protected:
+    boost::array<
+        boost::atomic<uint64_t>,
+        static_cast<uint32_t>(internal_statistics_id::count)
+    > counters_;
+
+    void get_value(void* v)
+    {
+        auto ret = reinterpret_cast<internal_statistics*>(v);
+        ret->backend_input_pixels = counters_[static_cast<uint32_t>(internal_statistics_id::backend_input_pixels)];
+    }
+
+    virtual void init_async_data()
+    {
+        for(auto& counter: counters_)
+        {
+            counter = 0;
+        }
+    }
+};
+
+
 template <typename ValueT>
 struct accumulate_fn
 {
@@ -181,6 +229,5 @@ struct accumulate_fn
     {
     }
 };
-
 
 END_NS_SALVIAR();
