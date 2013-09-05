@@ -141,9 +141,10 @@ public:
 	{
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
-		/*if( tex_ ){
+		if( tex_ )
+        {
 			diff_color = tex2d(*sampler_, 0).get_vec4();
-		}*/
+		}
 
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
@@ -286,10 +287,6 @@ protected:
 		renderer_->clear_depth_stencil(ds_surface_, 1.0f, 0);
 
 		static float xpos = -36.0f;
-		xpos += 0.2f;
-		if( xpos > 30.0f ){
-			xpos = -36.0f;
-		}
 		vec3 camera( xpos, 8.0f, 0.0f);
 		vec4 camera_pos = vec4( camera, 1.0f );
 

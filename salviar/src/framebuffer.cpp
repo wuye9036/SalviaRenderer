@@ -529,7 +529,7 @@ void framebuffer::update_ds_rw_functions(bool ds_format_changed, bool ds_state_c
         return;
     }
 
-    early_z_enabled_ = false; //!ds_state_->get_desc().stencil_enable;
+    early_z_enabled_ = !ds_state_->get_desc().stencil_enable;
 }
 
 framebuffer::framebuffer()
@@ -567,7 +567,7 @@ void framebuffer::render_sample(cpp_blend_shader* cpp_bs, size_t x, size_t y, si
     uint32_t    old_stencil;
     read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
 
-    bool depth_passed	= early_z_enabled_ || ds_state_->depth_test(depth, old_depth);
+    bool depth_passed	= ds_state_->depth_test(depth, old_depth);
     bool stencil_passed = ds_state_->stencil_test(ps.front_face, stencil_ref_, old_stencil);
 
 	if (depth_passed && stencil_passed)
@@ -594,13 +594,13 @@ bool framebuffer::early_z_test(size_t x, size_t y, float depth, float const* aa_
         float       old_depth;
         uint32_t    old_stencil;
         read_depth_stencil_(old_depth, old_stencil, stencil_read_mask_, ds_data);
-        if( !ds_state_->depth_test(aa_z_offset[i] + depth, old_depth) )
+        if( ds_state_->depth_test(aa_z_offset[i] + depth, old_depth) )
         {
-            return false;
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 END_NS_SALVIAR();

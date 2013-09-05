@@ -288,7 +288,7 @@ void rasterizer::update(render_state const* state)
 }
 
 void rasterizer::draw_full_tile(
-	int left, int top, int right, int bottom,
+	int tile_left, int tile_top, int tile_right, int tile_bottom,
 	drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
@@ -297,34 +297,81 @@ void rasterizer::draw_full_tile(
 	float v0x = v0.position().x();
 	float v0y = v0.position().y();
 
-	const float offsetx = 0.5f - v0x;
-	const float offsety = 0.5f - v0y;
-
-	for(int iy = top; iy < bottom; iy += 4)
+	for(int top = tile_top; top < tile_bottom; top += 4)
 	{
-		vs_output px_in;
-		for(int ix = left; ix < right; ix += 4)
+		for(int left = tile_left; left < tile_right; left += 4)
 		{
 			vs_output unprojed[4*4];
 
-			for(int dy = 0; dy < 4; ++dy)
-			{
-				for(int dx = 0; dx < 4; ++dx)
-				{
-					vso_ops_->step_2d_unproj(
-						unprojed[dx+dy*4],
-						v0,
-						offsetx+ix+dx, *triangle_ctx->ddx,
-						offsety+iy+dy, *triangle_ctx->ddy
-						);
-				}
-			}
+            float const offsetx = 0.5f + left - v0x;
+	        float const offsety = 0.5f + top - v0y;
 
-            draw_full_package(iy, ix, unprojed, shaders, triangle_ctx);
+            // Compute Mask with Early Z
+            float dx, dy;
+            uint16_t packed_pixel_mask = 0;
+            uint32_t bit_pos = 0;
+            for(int quad = 0; quad < 4; ++quad)
+            {
+                for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+                {
+                    int ix = ((quad & 1) << 1) | (i_pixel & 1);
+                    int iy = (quad & 2) | ((i_pixel & 2) >> 1);
+
+			        dx = offsetx + ix;
+                    dy = offsety + iy;
+            
+                    auto interpolated_pixel = unprojed + iy * 4 + ix;
+                    vso_ops_->step_2d_unproj_pos(
+                        *interpolated_pixel, v0,
+                        dx, *triangle_ctx->ddx,
+                        dy, *triangle_ctx->ddy
+                        );
+
+                    if( frame_buffer_->early_z_test(left+ix, top+iy, interpolated_pixel->position().z(), triangle_ctx->aa_z_offset) )
+                    {
+                        packed_pixel_mask |= (1 << bit_pos);
+                    }
+
+                    ++bit_pos;
+                }
+            }
+
+            // Full tile was rejected.
+            if(packed_pixel_mask == 0)
+            {
+                continue;
+            }
+
+            // Do interpolation
+            for(int quad = 0; quad < 4; ++quad)
+            {
+                // all 2x2 is masked.
+                if((packed_pixel_mask & (0xF << (quad << 2))) == 0)
+                {
+                    continue;
+                }
+
+                for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+                {
+                    int ix = ((quad & 1) << 1) | (i_pixel & 1);
+                    int iy = (quad & 2) | ((i_pixel & 2) >> 1);
+
+			        dx = offsetx + ix;
+                    dy = offsety + iy;
+			
+                    vso_ops_->step_2d_unproj_attr(
+                        unprojed[iy*4+ix], v0,
+                        dx, *triangle_ctx->ddx,
+                        dy, *triangle_ctx->ddy
+                        );
+		        }
+	        }
+
+            draw_full_package(top, left, unprojed, shaders, triangle_ctx);
 		}
 	}
 
-    triangle_ctx->pixel_stat->ps_invocations += ( (bottom - top) * (right - left) );
+    triangle_ctx->pixel_stat->ps_invocations += ( (tile_bottom - tile_top) * (tile_right - tile_left) );
 }
 
 void rasterizer::draw_partial_tile(
@@ -452,15 +499,86 @@ void rasterizer::draw_partial_tile(
 	vs_output unprojed[4*4];
 	float dx, dy;
 
-	for( int iy = 0; iy < 4; ++iy )
-	{
-		dy = offsety + iy;
-		for(int ix = 0; ix < 4; ++ix)
-		{
-			uint32_t mask = pixel_mask[iy*4+ix];
+    // Compute Mask with Early Z
+    uint16_t packed_pixel_mask = 0;
+    uint32_t bit_pos = 0;
+    for(int quad = 0; quad < 4; ++quad)
+    {
+        // Quad test by mask.
+        uint32_t quad_merged_mask = false;
+        for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+        {
+            int ix = ((quad & 1) << 1) | (i_pixel & 1);
+            int iy = (quad & 2) | ((i_pixel & 2) >> 1);
+            uint32_t mask = pixel_mask[iy*4+ix];
+            quad_merged_mask |= mask;
+        }
+
+        if(quad_merged_mask == 0)
+        {
+            bit_pos += 4;
+            continue;
+        }
+
+        for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+        {
+            int ix = ((quad & 1) << 1) | (i_pixel & 1);
+            int iy = (quad & 2) | ((i_pixel & 2) >> 1);
+
+            uint32_t mask = pixel_mask[iy*4+ix];
 			dx = offsetx + ix;
+            dy = offsety + iy;
+            
+            auto interpolated_pixel = unprojed + iy * 4 + ix;
+            vso_ops_->step_2d_unproj_pos(
+                *interpolated_pixel, v0,
+                dx, *triangle_ctx->ddx,
+                dy, *triangle_ctx->ddy
+                );
+
+            if( mask != 0 && frame_buffer_->early_z_test(left+ix, top+iy, interpolated_pixel->position().z(), triangle_ctx->aa_z_offset) )
+            {
+                packed_pixel_mask |= (1 << bit_pos);
+            }
+
+            ++bit_pos;
+        }
+    }
+
+    triangle_ctx->pixel_stat->ps_invocations += 16;
+
+    // Full tile was rejected.
+    if(packed_pixel_mask == 0)
+    {
+        return;
+    }
+
+    // Do interpolation
+    uint16_t quad_mask = 0xF;
+    for(int quad = 0; quad < 4; ++quad)
+    {
+        // all 2x2 is masked.
+        if((packed_pixel_mask & (0xF << (quad << 2))) == 0)
+        {
+            for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+            {
+                int ix = ((quad & 1) << 1) | (i_pixel & 1);
+                int iy = (quad & 2) | ((i_pixel & 2) >> 1);
+                
+                pixel_mask[iy*4+ix] = 0;
+            }
+            continue;
+        }
+
+        for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+        {
+            int ix = ((quad & 1) << 1) | (i_pixel & 1);
+            int iy = (quad & 2) | ((i_pixel & 2) >> 1);
+
+            uint32_t mask = pixel_mask[iy*4+ix];
+			dx = offsetx + ix;
+            dy = offsety + iy;
 			
-			// if ( mask ){
 			if (has_centroid_ && (mask != full_mask) && mask != 0)
 			{
 				// centroid interpolate
@@ -485,14 +603,13 @@ void rasterizer::draw_partial_tile(
 				dy += sp_centroid.y();
 			}
 
-            vso_ops_->step_2d_unproj(
+            vso_ops_->step_2d_unproj_attr(
                 unprojed[iy*4+ix], v0,
                 dx, *triangle_ctx->ddx,
                 dy, *triangle_ctx->ddy
                 );
 		}
 	}
-    triangle_ctx->pixel_stat->ps_invocations += 16;
 
 	// Execute pixel shader and render to target.
     draw_package(top, left, unprojed, pixel_mask, shaders, triangle_ctx);
@@ -819,6 +936,10 @@ void rasterizer::rasterize_triangle(rasterize_prim_context const* ctx)
 			aa_z_offset[i_sample] = (sp.x() - 0.5f) * ddx.position().z() + (sp.y() - 0.5f) * ddy.position().z();
 		}
 	}
+    else
+    {
+        aa_z_offset[0] = 0.0f;
+    }
 
     drawing_triangle_context tri_ctx;
     tri_ctx.aa_z_offset = aa_z_offset;
@@ -1325,17 +1446,17 @@ void rasterizer::draw_package(
 
 			// No sampler need to be draw.
 			if(!mask) continue;
-
-            ++backend_input_pixels;
-
 			// Clipped by pixel shader.
 			if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) ) continue;
+
+            ++backend_input_pixels;
 
 			const int x_coord = left + ix;
 			const int y_coord = top + iy;
 
 			// Whole pixel
-			if (1 == target_sample_count_){
+			if (1 == target_sample_count_)
+            {
 				frame_buffer_->render_sample(cpp_bs, x_coord, y_coord, 0, pso[px_index], pso[px_index].depth);
 				continue;
 			}
