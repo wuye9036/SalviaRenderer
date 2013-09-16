@@ -88,7 +88,7 @@ extern "C"
 #if defined(SALVIAX_D3D11_ENABLED)
             swap_chain_type = salviax::swap_chain_d3d11;
 #elif defined(SALVIAX_GL_ENABLED)
-            swap_chian_type = salviax::swap_chain_gl;
+            swap_chain_type = salviax::swap_chain_gl;
 #else
             out_renderer.reset();
             return;
