@@ -147,6 +147,14 @@ namespace eflib
 			ScalarT len = length();
 			(*this) /= len;
 		}
+		
+		void set_ps(ScalarT s)
+		{
+			for(int i = 0; i < Size; ++i)
+			{
+				data_[i] = s;
+			}
+		}
 	};
 
 	template <typename ScalarT, int i> struct vector_swizzle;
@@ -162,7 +170,7 @@ namespace eflib
 		ScalarT	const&		x() const;
 		vector_<ScalarT, 2> xx() const;
 		vector_<ScalarT, 3> xxx() const;
-		vector_<ScalarT, 4> xxx() const;
+		vector_<ScalarT, 4> xxxx() const;
 	};
 
 	template <typename ScalarT>
@@ -347,6 +355,20 @@ namespace eflib
 	inline vector_<ScalarT,Size> operator / (float s, vector_<ScalarT,Size> const& lhs){
 		vector_<ScalarT,Size> ret;
 		for( int i = 0; i < Size; ++i ){ ret[i] = s / lhs[i]; }
+		return ret;
+	}
+	
+	template <typename ScalarT, int Size>
+	inline vector_<ScalarT,Size> max_ps (vector_<ScalarT,Size> const& lhs, vector_<ScalarT,Size> const& rhs){
+		vector_<ScalarT,Size> ret;
+		for( int i = 0; i < Size; ++i ){ ret[i] = std::max(lhs[i], rhs[i]); }
+		return ret;
+	}
+	
+	template <typename ScalarT, int Size>
+	inline vector_<ScalarT,Size> min_ps (vector_<ScalarT,Size> const& lhs, vector_<ScalarT,Size> const& rhs){
+		vector_<ScalarT,Size> ret;
+		for( int i = 0; i < Size; ++i ){ ret[i] = std::min(lhs[i], rhs[i]); }
 		return ret;
 	}
 }

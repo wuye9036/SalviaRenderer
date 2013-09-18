@@ -21,7 +21,8 @@
 #include <limits>
 #include <cassert>
 
-namespace eflib{
+namespace eflib
+{
 	template <class T>
 	T sign(const T& in)
 	{
@@ -323,6 +324,10 @@ namespace eflib{
 	mat44& mat_perspective_fov(mat44& out, float fovy, float aspect, float n, float f);
 	mat44& mat_ortho(mat44& out, float l, float r, float b, float t, float n, float f);
 
+	class bounding_box;
+
+	bool mat_perspective_eye_bounding_box(mat44& out, vec3 const& eye, bounding_box const& bb);
+	
 #if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64)
 	inline __m128&			to_m128(vec4& v)
 	{

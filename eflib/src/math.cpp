@@ -460,10 +460,10 @@ namespace eflib{
 	mat44& mat_projection(mat44& out, float l, float r, float b, float t, float n, float f)
 	{
 		out = mat44(
-			2.0f*n/(r-l),	0.0f,				0.0f,	0.0f,
-			0.0f,				2.0f*n/(t-b),	0.0f,	0.0f,
-			-(r+l)/(r-l),		-(t+b)/(t-b),	-f/(f-n),	1.0f,
-			0.0f,				0.0f,			-n*f/(f-n),	0.0f
+			2.0f*n/(r-l),	0.0f,			0.0f,		0.0f,
+			0.0f,			2.0f*n/(t-b),	0.0f,		0.0f,
+			-(r+l)/(r-l),	-(t+b)/(t-b),	-f/(f-n),	1.0f,
+			0.0f,			0.0f,			-n*f/(f-n),	0.0f
 			);
 
 		return out;
@@ -473,9 +473,9 @@ namespace eflib{
 	{
 		out = mat44(
 			2*n/w,	0.0f,		0.0f,		0.0f,
-			0.0f,		2*n/h,	0.0f,		0.0f,
-			0.0f,		0.0f,		f/(f-n),	1.0f,
-			0.0f,		0.0f,		-n*f/(f-n),	0.0f
+			0.0f,	2*n/h,		0.0f,		0.0f,
+			0.0f,	0.0f,		f/(f-n),	1.0f,
+			0.0f,	0.0f,		-n*f/(f-n),	0.0f
 			);
 		return out;
 	}
@@ -501,7 +501,7 @@ namespace eflib{
 			2.0f/(r-l),		0.0f,			0.0f,			0.0f,
 			0.0f,			2.0f/(t-b),		0.0f,			0.0f,
 			0.0f,			0.0f,			1.0f/(f-n),		0.0f,
-			(r+l)/(l-r),		(t+b)/(b-t),		n/(n-f),			1.0f
+			(r+l)/(l-r),	(t+b)/(b-t),	n/(n-f),		1.0f
 			);
 
 		return out;
@@ -522,5 +522,11 @@ namespace eflib{
 			-dot_prod3(xdir, eye), -dot_prod3(ydir, eye), -dot_prod3(zdir, eye), 1.0f);
 
 		return out;
+	}
+	
+	bool mat_perspective_eye_bounding_box(mat44& /*out*/, vec3 const& /*eye*/, bounding_box const& /*bb*/)
+	{
+		// Eye 
+		return false;
 	}
 }
