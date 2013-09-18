@@ -1,0 +1,32 @@
+float4x4	wvpMatrix;
+float4   	eyePos; 
+float4		lightPos;
+ 
+struct VSIn
+{ 
+	float4 pos: POSITION; 
+	float4 norm: NORMAL; 
+	float4 tex: TEXCOORD0; 
+}; 
+
+struct VSOut
+{ 
+	float4 pos: sv_position; 
+	float4 tex: TEXCOORD; 
+	float4 norm: TEXCOORD1; 
+	float4 lightDir: TEXCOORD2; 
+	float4 eyeDir: TEXCOORD3;
+	float4 originPos: TEXCOORD4;
+};
+ 
+VSOut vs_main(VSIn in)
+{
+	VSOut out; 
+	out.norm = in.norm; 
+	out.pos = mul(in.pos, wvpMatrix);
+	out.originPos = in.pos;
+	out.lightDir = lightPos - in.pos;
+	out.eyeDir = eyePos - in.pos; 
+	out.tex = in.tex; 
+	return out; 
+}

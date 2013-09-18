@@ -1,0 +1,33 @@
+float4x4	lightMatrix;
+float4		ambient;
+float4		diffuse;
+float4		specular;
+int			shininess;
+sampler		texSamp;
+sampler		smSamp;
+
+struct PSIn
+{
+	float4 tex: TEXCOORD;
+	float4 norm: TEXCOORD1;
+	float4 lightDir: TEXCOORD2;
+	float4 eyeDir: TEXCOORD3;
+	float4 originPos: TEXCOORD4;
+};
+
+float4 main(PSIn in): COLOR
+{
+	float3 norm = normalize(in.norm.xyz);
+	float3 light_dir = normalize(in.lightDir.xyz);
+	float3 eye_dir = normalize(in.eyeDir.xyz);
+	float illum_diffuse = clamp(dot(light_dir, norm), 0.0f, 1.0f);
+	float illum_specular = clamp(dot(reflect(light_dir, norm), eye_dir), 0.0f, 1.0f);
+	
+	float4 posInLight = mul(pos, lightMatrix);
+	float3 posInLightProj = posInLight.xy / posInLight.w;
+	float illuminated = tex2D(smSamp, posInLightProj.xy) < posInLightProj.z ? 1.0f : 0.0f;
+	
+	float4 light_color = diffuse * illum_diffuse + specular * illum_specular;
+	float3 illum = (ambient + illuminated * light_color).xyz;
+	return float4(illum * tex2D(texSamp, tex.xy).xyz, 1.0f);
+}
