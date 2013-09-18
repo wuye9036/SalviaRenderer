@@ -153,6 +153,13 @@ extern "C"
 		salviar::shader_profile const& profile,
 		std::vector<salviar::external_function_desc> const& external_funcs
 		);
+	SASL_HOST_API void salvia_compile_shader_file(
+		salviar::shader_object_ptr& out_shader_object,
+		salviar::shader_log_ptr& out_logs,
+		std::string const& code,
+		salviar::shader_profile const& profile,
+		std::vector<salviar::external_function_desc> const& external_funcs
+		);
 }
 
 #endif

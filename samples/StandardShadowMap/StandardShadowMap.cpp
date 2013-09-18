@@ -34,6 +34,14 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+class cpp_gensm_vs: public cpp_vertex_shader
+{
+};
+
+class cpp_gensm_ps: public cpp_pixel_shader
+{
+};
+
 class cup_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
@@ -45,7 +53,8 @@ class cup_ps : public cpp_pixel_shader
 
 	int shininess;
 public:
-	void set_texture( salviar::texture_ptr tex ){
+	void set_texture( salviar::texture_ptr tex )
+	{
 		tex_ = tex;
 		sampler_->set_texture(tex_.get());
 	}
@@ -103,7 +112,6 @@ public:
 		return cpp_shader_ptr(new this_type(*this));
 	}
 };
-
 
 class bs : public cpp_blend_shader
 {
@@ -163,7 +171,7 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		cup_vs = compile(cup_vs_code, lang_vertex_shader);
+		// cup_vs = compile(cup_vs_code, lang_vertex_shader);
 
 		num_frames = 0;
 		accumulate_time = 0;
@@ -201,17 +209,15 @@ protected:
 		{
 			// new second - not 100% precise
 			fps = num_frames / accumulate_time;
-
 			accumulate_time = 0;
 			num_frames  = 0;
-
 			cout << fps << endl;
 		}
 
 		timer.restart();
 
-		draw_depth_texture();
-		draw_with_shadow();
+		generate_depth_texture();
+		draw();
 		
         renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		renderer_->clear_depth_stencil(ds_surface_, 1.0f, 0);
@@ -245,7 +251,8 @@ protected:
 			renderer_->set_vs_variable( "eyePos", &camera_pos );
 			renderer_->set_vs_variable( "lightPos", &lightPos );
 
-			for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh ){
+			for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
+			{
 				mesh_ptr cur_mesh = cup_mesh[i_mesh];
 
 				shared_ptr<obj_material> mtl
@@ -254,7 +261,7 @@ protected:
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				pps->set_constant( _T("Specular"), &mtl->specular );
 				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				dynamic_pointer_cast<cup_ps>( pps )->set_texture( mtl->tex );
+				dynamic_pointer_cast<cup_ps>(pps)->set_texture(mtl->tex);
 
 				cur_mesh->render();
 			}

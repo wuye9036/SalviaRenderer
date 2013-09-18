@@ -215,19 +215,28 @@ void salvia_create_host(host_ptr& out)
 	out.reset( new host_impl() );
 }
 
-void salvia_compile_shader(
+void salvia_compile_shader_impl(
 	shader_object_ptr& out_shader_object,
 	shader_log_ptr& out_logs,
-	std::string  const& code,
+	std::string const& code_or_file_name,
 	shader_profile const& profile,
-	vector<external_function_desc> const& external_funcs
+	vector<external_function_desc> const& external_funcs,
+	bool from_file
 	)
 {
 	out_shader_object.reset();
 	
 	boost::shared_ptr<sasl::drivers::compiler> drv;
 	sasl_create_compiler(drv);
-	drv->set_code(code);
+
+	if(from_file)
+	{
+		drv->set_code_file(code_or_file_name);
+	}
+	else
+	{
+		drv->set_code(code_or_file_name);
+	}
 
 	const char* lang_name = NULL;
 	switch(profile.language)
@@ -262,4 +271,34 @@ void salvia_compile_shader(
 
 	out_shader_object = ret;
 	return;
+}
+
+void salvia_compile_shader(
+	shader_object_ptr& out_shader_object,
+	shader_log_ptr& out_logs,
+	std::string  const& code,
+	shader_profile const& profile,
+	vector<external_function_desc> const& external_funcs
+	)
+{
+	salvia_compile_shader_impl(
+		out_shader_object, out_logs,
+		code, profile, external_funcs,
+		false
+		);
+}
+
+void salvia_compile_shader_file(
+	shader_object_ptr& out_shader_object,
+	shader_log_ptr& out_logs,
+	std::string  const& file_name,
+	shader_profile const& profile,
+	vector<external_function_desc> const& external_funcs
+	)
+{
+	salvia_compile_shader_impl(
+		out_shader_object, out_logs,
+		file_name, profile, external_funcs,
+		true
+		);
 }

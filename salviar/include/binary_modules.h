@@ -33,6 +33,11 @@ namespace modules
 			std::string const& code, shader_profile const& prof,
 			std::vector<external_function_desc> const& funcs
 			);
+		static void compile_from_file(
+			shader_object_ptr& obj, shader_log_ptr& log,
+			std::string const& file_name, shader_profile const& prof,
+			std::vector<external_function_desc> const& funcs
+			);
 		static host_ptr create_host();
 	};
 

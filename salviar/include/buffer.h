@@ -4,6 +4,7 @@
 
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/diagnostics/assert.h>
+#include <eflib/include/memory/allocator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/shared_ptr.hpp>
@@ -17,8 +18,11 @@ BEGIN_NS_SALVIAR();
 
 class buffer
 {
-	std::vector<uint8_t> bufdata_;
-	bool is_locked_;
+	std::vector< uint8_t, 
+		eflib::aligned_allocator<uint8_t, 16>
+	>		bufdata_;
+	bool	is_locked_;
+
 	bool islocked();
 
 public:

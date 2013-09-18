@@ -233,12 +233,19 @@ struct pixel_accessor
 
 	color_rgba32f color(size_t target_index, size_t sample_index) const
 	{
+		if(color_buffers_[target_index] == nullptr)
+		{
+			return color_rgba32f(0.0f, 0.0f, 0.0f, 0.0f);
+		}
 		return color_buffers_[target_index]->get_texel(x_, y_, sample_index);
 	}
 
-	void color(size_t register_index, size_t sample, const color_rgba32f& clr)
+	void color(size_t target_index, size_t sample, const color_rgba32f& clr)
 	{
-        color_buffers_[register_index]->set_texel(x_, y_, sample, clr);
+        if(color_buffers_[target_index] != nullptr)
+		{
+			color_buffers_[target_index]->set_texel(x_, y_, sample, clr);
+		}
 	}
 
     void* depth_stencil_address(size_t sample) const

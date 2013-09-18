@@ -124,6 +124,10 @@ shader_object_ptr	compile(std::string const& code, shader_profile const& profile
 shader_object_ptr	compile(std::string const& code, shader_profile const& profile);
 shader_object_ptr	compile(std::string const& code, languages lang);
 
+shader_object_ptr	compile_from_file(std::string const& file_name, shader_profile const& profile, shader_log_ptr& logs);
+shader_object_ptr	compile_from_file(std::string const& file_name, shader_profile const& profile);
+shader_object_ptr	compile_from_file(std::string const& file_name, languages lang);
+
 END_NS_SALVIAR();
 
 #endif

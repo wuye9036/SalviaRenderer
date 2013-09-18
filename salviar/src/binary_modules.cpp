@@ -18,6 +18,11 @@ namespace modules
 		string const&, shader_profile const&,
 		vector<external_function_desc> const&
 		) = NULL;
+	static void (*compile_from_file_func)(
+		shader_object_ptr&, shader_log_ptr&,
+		string const&, shader_profile const&,
+		vector<external_function_desc> const&
+		) = NULL;
 	static void (*create_host_func)(host_ptr& out) = NULL;
 	
 	static shared_ptr<dynamic_lib> host_lib;
@@ -32,8 +37,9 @@ namespace modules
 		dll_name += ".dll";
 
 		host_lib = dynamic_lib::load(dll_name);
-		host_lib->get_function(compile_func, 	"salvia_compile_shader");
-		host_lib->get_function(create_host_func,"salvia_create_host");
+		host_lib->get_function(compile_func, 			"salvia_compile_shader");
+		host_lib->get_function(compile_from_file_func,	"salvia_compile_shader_file");
+		host_lib->get_function(create_host_func,			"salvia_create_host");
 		assert(compile_func);
 		assert(create_host_func);
 	}
@@ -53,6 +59,21 @@ namespace modules
 		compile_func(obj, log, code, prof, funcs);
 	}
 	
+	void host::compile_from_file(
+		shader_object_ptr& obj, shader_log_ptr& log,
+		string const& file_name, shader_profile const& prof,
+		vector<external_function_desc> const& funcs )
+	{
+		if(!compile_from_file_func)
+		{
+			load_function();
+		}
+		assert(compile_from_file_func);
+
+		if(!compile_from_file_func) return;
+		compile_from_file_func(obj, log, file_name, prof, funcs);
+	}
+
 	host_ptr host::create_host()
 	{
 		host_ptr ret;
