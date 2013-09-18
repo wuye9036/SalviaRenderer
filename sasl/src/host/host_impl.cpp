@@ -264,12 +264,15 @@ void salvia_compile_shader_impl(
 			);
 	}
 
-	shader_object_impl_ptr ret( new shader_object_impl() );
-
-	ret->set_reflection	( drv->get_reflection() );
-	ret->set_vm_code	( drv->get_vmcode() );
-
+	shader_object_impl_ptr ret;
+	if( error_count(results.get(), false) == 0 )
+	{
+		ret.reset( new shader_object_impl() );
+		ret->set_reflection	( drv->get_reflection() );
+		ret->set_vm_code	( drv->get_vmcode() );
+	}
 	out_shader_object = ret;
+	
 	return;
 }
 

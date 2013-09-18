@@ -39,7 +39,7 @@ diag_item& diag_item::file( fixed_string const& f )
 
 fixed_string diag_item::file() const
 {
-	return item_file;
+	return item_file.empty() ? fixed_string("<unknown>") : item_file;
 }
 
 void diag_item::release()

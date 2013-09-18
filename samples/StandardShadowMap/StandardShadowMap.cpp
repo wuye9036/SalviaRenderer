@@ -34,24 +34,16 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-class cpp_gensm_vs: public cpp_vertex_shader
-{
-};
-
-class cpp_gensm_ps: public cpp_pixel_shader
-{
-};
-
-class cup_ps : public cpp_pixel_shader
+class cpp_draw_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
 	salviar::texture_ptr tex_;
 
-	vec4 ambient;
-	vec4 diffuse;
-	vec4 specular;
+	vec4	ambient;
+	vec4	diffuse;
+	vec4	specular;
+	int		shininess;
 
-	int shininess;
 public:
 	void set_texture( salviar::texture_ptr tex )
 	{
@@ -59,7 +51,7 @@ public:
 		sampler_->set_texture(tex_.get());
 	}
 
-	cup_ps()
+	cpp_draw_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
@@ -171,16 +163,17 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		// cup_vs = compile(cup_vs_code, lang_vertex_shader);
+		gen_sm_vs_ = compile_from_file("GenSM.savs", lang_vertex_shader);
 
 		num_frames = 0;
 		accumulate_time = 0;
 		fps = 0;
 
-		cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
+		
+		// cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
 
-		pps.reset( new cup_ps() );
-		pbs.reset( new bs() );
+		// pps.reset( new cup_ps() );
+		// pbs.reset( new bs() );
 	}
 	/** @} */
 
@@ -261,7 +254,7 @@ protected:
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				pps->set_constant( _T("Specular"), &mtl->specular );
 				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				dynamic_pointer_cast<cup_ps>(pps)->set_texture(mtl->tex);
+				// dynamic_pointer_cast<cup_ps>(pps)->set_texture(mtl->tex);
 
 				cur_mesh->render();
 			}
@@ -280,6 +273,7 @@ protected:
 
 	vector<mesh_ptr>        cup_mesh;
 
+	shader_object_ptr		gen_sm_vs_;
 	shader_object_ptr       plane_vs;
 	shader_object_ptr       cup_vs;
 
@@ -296,7 +290,8 @@ protected:
 	/** @} */
 };
 
-int main( int /*argc*/, TCHAR* /*argv*/[] ){
+int main( int /*argc*/, TCHAR* /*argv*/[] )
+{
 	obj_loader loader;
 	return loader.run();
 }
