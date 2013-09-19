@@ -60,10 +60,12 @@ bool sasl::parser::parse(
 	l.begin_incremental();
 	try
 	{
-		while( !src->eof() ){
+		while( !src->eof() && !src->failed() )
+		{
 			std::string next_token = src->next();
 			bool tok_result = l.incremental_tokenize( next_token, ctxt, toks );
-			if( !tok_result ){
+			if( !tok_result )
+			{
 				diags->report( sasl::parser::unrecognized_token )
 					->file( ctxt->file_name() )->span( sasl::common::code_span(ctxt->line(), ctxt->column(), 1) )
 					->p(next_token);

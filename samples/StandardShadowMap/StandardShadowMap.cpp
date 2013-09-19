@@ -163,7 +163,7 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		gen_sm_vs_ = compile_from_file("GenSM.savs", lang_vertex_shader);
+		gen_sm_vs_ = compile_from_file("../../resources/models/sponza/sponza.obj", lang_vertex_shader);
 
 		num_frames = 0;
 		accumulate_time = 0;

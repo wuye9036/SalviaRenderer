@@ -141,7 +141,7 @@ size_t error_count( diag_chat* chat, bool warning_as_error )
 	for( size_t i_diag = 0; i_diag < chat->diag_items().size(); ++i_diag )
 	{
 		diag_item* diag = chat->diag_items()[i_diag];
-		if( diag->level() == dl_error )
+		if( diag->level() == dl_error || diag->level() == dl_fatal_error )
 		{
 			++count;
 		} 

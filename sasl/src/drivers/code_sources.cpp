@@ -49,45 +49,34 @@ bool compiler_code_source::set_file( string const& file_name )
 
 bool compiler_code_source::eof()
 {
-	return next_it == wctxt_wrapper->get_wctxt()->end();
+	try
+	{
+		return (next_it == wctxt_wrapper->get_wctxt()->end());
+	}
+	catch(preprocess_exception& e)
+	{
+		report_wave_pp_exception(diags, e);
+		next_it = wctxt_wrapper->get_wctxt()->end();
+		return false;
+	}
 }
 
 fixed_string compiler_code_source::next()
 {
-	assert( next_it != wctxt_wrapper->get_wctxt()->end() );
 	cur_it = next_it;
 
-	try{
+	try
+	{
 		++next_it;
-	} catch ( preprocess_exception& e ){
-		diag_chat::committer_pointer committer;
-		switch( e.get_errorcode() )
-		{
-		case preprocess_exception::no_error:
-			break;
-		case preprocess_exception::last_line_not_terminated:
-			committer.swap( diags->report( sasl::parser::boost_wave_exception_warning ) );
-			break;
-		case preprocess_exception::ill_formed_directive:
-			committer.swap( diags->report( sasl::parser::boost_wave_exception_fatal_error ) );
-			is_failed = true;
-			break;
-		default:
-			is_failed = true;
-			EFLIB_ASSERT_UNIMPLEMENTED();
-			break;
-		}
-
-		if( committer )
-		{
-			committer
-				->p( preprocess_exception::error_text( e.get_errorcode() ) )
-				->span( current_span() )
-				->file( to_fixed_string(cur_it->get_position().get_file()) );
-		}
+	}
+	catch ( preprocess_exception& e )
+	{
+		report_wave_pp_exception(diags, e);
 		errtok = to_fixed_string( cur_it->get_value() );
 		next_it = wctxt_wrapper->get_wctxt()->end();
-	} catch( wave_reported_fatal_error& ) {
+	}
+	catch( wave_reported_fatal_error& )
+	{
 		// Error has been reported to diag_chat.
 		errtok = to_fixed_string( cur_it->get_value() );
 		next_it = wctxt_wrapper->get_wctxt()->end();
@@ -105,9 +94,51 @@ fixed_string compiler_code_source::error()
 	return errtok;
 }
 
+void compiler_code_source::report_wave_pp_exception(
+	diag_chat* diags, preprocess_exception& e
+	)
+{
+	diag_chat::committer_pointer committer;
+	switch( e.get_errorcode() )
+	{
+	case preprocess_exception::no_error:
+		break;
+	case preprocess_exception::last_line_not_terminated:
+		committer = diags->report(sasl::parser::boost_wave_exception_warning);
+		break;
+	case preprocess_exception::ill_formed_directive:
+		committer = diags->report(sasl::parser::boost_wave_exception_fatal_error);
+		is_failed = true;
+		break;
+	default:
+		is_failed = true;
+		EFLIB_ASSERT_UNIMPLEMENTED();
+		break;
+	}
+
+	
+	if( committer )
+	{
+		fixed_string file_name;
+		try
+		{
+			file_name = to_fixed_string(cur_it->get_position().get_file());
+		}
+		catch(...)
+		{
+			file_name = to_fixed_string(wctxt_wrapper->get_wctxt()->get_current_filename());
+		}
+
+		committer
+			->p( preprocess_exception::error_text( e.get_errorcode() ) )
+			->span( current_span() )
+			->file(file_name);
+	}
+}
+
 fixed_string const& compiler_code_source::file_name() const
 {
-	assert( cur_it != wctxt_wrapper->get_wctxt()->end() );
+	assert(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end() );
 
 	filename = to_fixed_string( cur_it->get_position().get_file() );
 	return filename;
@@ -115,13 +146,13 @@ fixed_string const& compiler_code_source::file_name() const
 
 size_t compiler_code_source::column() const
 {
-	assert( cur_it != wctxt_wrapper->get_wctxt()->end() );
+	assert(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end() );
 	return cur_it->get_position().get_column();
 }
 
 size_t compiler_code_source::line() const
 {
-	assert( cur_it != wctxt_wrapper->get_wctxt()->end() );
+	assert(is_failed || cur_it != wctxt_wrapper->get_wctxt()->end() );
 	return cur_it->get_position().get_line();
 }
 

@@ -213,8 +213,13 @@ public:
 	bool clear_macros();
 
 private:
+	void report_wave_pp_exception(
+		sasl::common::diag_chat* diags,
+		boost::wave::preprocess_exception& exc
+		);
+
 	// Utilities
-	sasl::common::code_span		current_span() const;
+	sasl::common::code_span current_span() const;
 	bool process();
 
 	template<typename StringT>
