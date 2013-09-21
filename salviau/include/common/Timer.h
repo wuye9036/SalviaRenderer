@@ -27,6 +27,20 @@ private:
 	clock_type::time_point start_time_;
 };
 
+class SALVIAU_API fps_counter
+{
+public:
+	fps_counter(float interval);
+	bool on_frame(float& fps);
+
+private:
+	timer		timer_;
+	uint32_t	elapsed_frame_; 
+	float		elapsed_seconds_;
+	float		fps_;
+	float		interval_;
+};
+
 END_NS_SALVIAU();
 
 #endif		// _TIMER_H

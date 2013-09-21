@@ -34,24 +34,42 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-class cpp_draw_ps : public cpp_pixel_shader
+class gen_sm_cpp_ps : public cpp_pixel_shader
 {
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
+	bool shader_prog(const vs_output& in, ps_output& out)
+	{
+		return true;
+	}
 
-	vec4	ambient;
-	vec4	diffuse;
-	vec4	specular;
-	int		shininess;
+    virtual cpp_shader_ptr clone()
+	{
+        typedef std::remove_pointer<decltype(this)>::type this_type;
+		return cpp_shader_ptr(new this_type(*this));
+	}
+};
+
+class draw_cpp_ps : public cpp_pixel_shader
+{
+	sampler_ptr	sampler_;
+	texture_ptr	tex_;
+
+	texture_ptr	dtex_;
+	sampler_ptr dsamp_;
+
+	vec4		ambient;
+	vec4		diffuse;
+	vec4		specular;
+	int			shininess;
 
 public:
-	void set_texture( salviar::texture_ptr tex )
+	void set_texture(texture_ptr const& tex, texture_ptr const& dtex )
 	{
 		tex_ = tex;
+		dtex_ = tex;
 		sampler_->set_texture(tex_.get());
 	}
 
-	cpp_draw_ps()
+	draw_cpp_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
@@ -66,6 +84,16 @@ public:
 		desc.addr_mode_v = address_clamp;
 		desc.addr_mode_w = address_clamp;
 		sampler_.reset(new sampler(desc));
+
+		sampler_desc sm_desc;
+		sm_desc.min_filter = filter_point;
+		sm_desc.mag_filter = filter_point;
+		sm_desc.mip_filter = filter_point;
+		sm_desc.addr_mode_u = address_border;
+		sm_desc.addr_mode_v = address_border;
+		sm_desc.addr_mode_w = address_border;
+		sm_desc.border_color = color_rgba32f(1.0f, 1.0f, 1.0f, 1.0f);
+		dsamp_.reset(new sampler(sm_desc));
 	}
 
 	vec4 to_color(vec3 const& v)
@@ -81,10 +109,8 @@ public:
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
-		if( tex_ )
-		{
-			tex_color = tex2d(*sampler_ , 0);
-		}
+		tex_color = tex2d(*sampler_ , 0);
+
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
 		vec3 eye_dir( normalize3( in.attribute(3).xyz() ) );
@@ -121,14 +147,18 @@ public:
 	}
 };
 
-class obj_loader: public quick_app{
+class ssm: public quick_app
+{
 public:
-	obj_loader(): quick_app( create_wtl_application() ){}
+	ssm()
+		: quick_app( create_wtl_application() )
+		, fps_counter_(3.0f)
+	{}
 
 protected:
 	/** Event handlers @{ */
-	virtual void on_create(){
-
+	virtual void on_create()
+	{
 		string title( "Sample: Obj File Loader" );
 		impl->main_window()->set_title( title );
 		boost::any view_handle_any = impl->main_window()->view_handle();
@@ -143,13 +173,19 @@ protected:
 
         salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
         color_surface_ = swap_chain_->get_surface();
-        ds_surface_ = renderer_->create_tex2d(
+        sm_texture_ = renderer_->create_tex2d(
+            render_params.backbuffer_width,
+            render_params.backbuffer_height,
+            render_params.backbuffer_num_samples,
+            pixel_format_color_rg32f
+            );
+		draw_ds_surface_ = renderer_->create_tex2d(
             render_params.backbuffer_width,
             render_params.backbuffer_height,
             render_params.backbuffer_num_samples,
             pixel_format_color_rg32f
             )->get_surface(0);
-        
+
         viewport vp;
         vp.w = static_cast<float>(render_params.backbuffer_width);
         vp.h = static_cast<float>(render_params.backbuffer_height);
@@ -163,17 +199,13 @@ protected:
 		rs_desc.cm = cull_back;
 		rs_back.reset(new raster_state(rs_desc));
 
-		gen_sm_vs_ = compile_from_file("../../resources/models/sponza/sponza.obj", lang_vertex_shader);
-
-		num_frames = 0;
-		accumulate_time = 0;
-		fps = 0;
-
+		gen_sm_vs_ = compile_from_file("../../resources/shaders/ssm/GenSM.savs", lang_vertex_shader);
+		draw_vs_ = compile_from_file("../../resources/shaders/ssm/Draw.savs", lang_vertex_shader);
+		gen_sm_ps_.reset(new gen_sm_cpp_ps());
+		draw_ps_.reset(new draw_cpp_ps());
+		pbs.reset( new bs() );
 		
-		// cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
-
-		// pps.reset( new cup_ps() );
-		// pbs.reset( new bs() );
+		cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
 	}
 	/** @} */
 
@@ -182,84 +214,72 @@ protected:
 		swap_chain_->present();
 	}
 
-	void generate_depth_texture()
+	void gen_sm()
 	{
+		renderer_->set_render_targets(0, nullptr, sm_texture_->get_surface(0));
+		renderer_->clear_depth_stencil(sm_texture_->get_surface(0), 1.0f, 0);
 	}
 	
 	void draw()
 	{
+		renderer_->set_render_targets(1, &color_surface_, draw_ds_surface_);
+
+		renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
+		renderer_->clear_depth_stencil(draw_ds_surface_, 1.0f, 0);
+
+		renderer_->set_vertex_shader_code(draw_vs_);
+		renderer_->set_pixel_shader(draw_ps_);
+		renderer_->set_blend_shader(pbs);
+
+		renderer_->set_rasterizer_state(rs_back);
+
+		renderer_->set_vs_variable("wvpMatrix", &camera_wvp_);
+		renderer_->set_vs_variable("eyePos", &camera_pos_);
+		renderer_->set_vs_variable("lightPos", &light_pos_);
+
+		for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
+		{
+			mesh_ptr cur_mesh = cup_mesh[i_mesh];
+
+			shared_ptr<obj_material> mtl
+				= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
+			draw_ps_->set_constant( _T("Ambient"),  &mtl->ambient );
+			draw_ps_->set_constant( _T("Diffuse"),  &mtl->diffuse );
+			draw_ps_->set_constant( _T("Specular"), &mtl->specular );
+			draw_ps_->set_constant( _T("Shininess"),&mtl->ambient );
+			dynamic_pointer_cast<draw_cpp_ps>(draw_ps_)->set_texture(mtl->tex, sm_texture_);
+
+			cur_mesh->render();
+		}
 	}
 	
 	void on_idle()
     {
-		// measure statistics
-		++ num_frames;
-		float elapsed_time = static_cast<float>(timer.elapsed());
-		accumulate_time += elapsed_time;
-
-		// check if new second
-		if (accumulate_time > 1)
+		float fps;
+		if( fps_counter_.on_frame(fps) )
 		{
-			// new second - not 100% precise
-			fps = num_frames / accumulate_time;
-			accumulate_time = 0;
-			num_frames  = 0;
 			cout << fps << endl;
 		}
 
-		timer.restart();
-
-		generate_depth_texture();
-		draw();
-		
-        renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
-		renderer_->clear_depth_stencil(ds_surface_, 1.0f, 0);
-
-		if(!cup_vs){ return; }
-
-		static float s_angle = 0;
-		s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f) * 0.15f;
-
-		vec3 camera(cos(s_angle) * 2.0f, 0.5f, sin(s_angle) * 2.0f);
-		mat44 world(mat44::identity()), view, proj, wvp;
-
-		mat_lookat(view, camera, vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
-
-		vec4 lightPos( sin( -s_angle * 1.5f) * 2.2f, 0.15f, cos(s_angle * 0.9f) * 1.8f, 0.0f );
-
-		renderer_->set_pixel_shader(pps);
-		renderer_->set_blend_shader(pbs);
-
-		for(float i = 0 ; i < 1 ; i ++)
+		if(!gen_sm_vs_ || !draw_vs_ || !gen_sm_ps_ || !draw_ps_)
 		{
-			mat_translate(world , -0.5f + i * 0.5f, 0, -0.5f + i * 0.5f);
-			mat_mul(wvp, world, mat_mul(wvp, view, proj));
-
-			renderer_->set_rasterizer_state(rs_back);
-
-			renderer_->set_vertex_shader_code( cup_vs );
-			renderer_->set_vs_variable( "wvpMatrix", &wvp );
-			vec4 camera_pos = vec4( camera, 1.0f );
-			renderer_->set_vs_variable( "eyePos", &camera_pos );
-			renderer_->set_vs_variable( "lightPos", &lightPos );
-
-			for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
-			{
-				mesh_ptr cur_mesh = cup_mesh[i_mesh];
-
-				shared_ptr<obj_material> mtl
-					= dynamic_pointer_cast<obj_material>( cur_mesh->get_attached() );
-				pps->set_constant( _T("Ambient"),  &mtl->ambient );
-				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
-				pps->set_constant( _T("Specular"), &mtl->specular );
-				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				// dynamic_pointer_cast<cup_ps>(pps)->set_texture(mtl->tex);
-
-				cur_mesh->render();
-			}
+			return;
 		}
 
+		camera_pos_ = vec4(cos(0.0f) * 2.0f, 0.5f, sin(0.0f) * 2.0f, 1.0f);
+		mat44 view, proj;
+		mat_lookat(view, camera_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
+		mat_mul(camera_wvp_, view, proj);
+
+		light_pos_ = vec4( sin(0.0f) * 8.2f, 7.0f, cos(0.0f * 0.9f) * 6.8f, 0.0f );
+		mat_lookat(view, light_pos_.xyz(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
+		mat_mul(light_wvp_, view, proj);
+
+		// gen_sm();
+		draw();
+		
 		impl->main_window()->refresh();
 	}
 
@@ -267,31 +287,33 @@ protected:
 	/** Properties @{ */
 	swap_chain_ptr          swap_chain_;
 	renderer_ptr            renderer_;
-	surface_ptr				depth_surface_;
-    surface_ptr             ds_surface_;
+
+    texture_ptr             sm_texture_;
+	surface_ptr				draw_ds_surface_;
     surface_ptr             color_surface_;
 
+	vec4					camera_pos_;
+	mat44					camera_wvp_;
+	vec4					light_pos_;
+	mat44					light_wvp_;
+	
 	vector<mesh_ptr>        cup_mesh;
 
 	shader_object_ptr		gen_sm_vs_;
-	shader_object_ptr       plane_vs;
-	shader_object_ptr       cup_vs;
-
-	cpp_pixel_shader_ptr    pps;
+	cpp_pixel_shader_ptr    gen_sm_ps_;
+	shader_object_ptr		draw_vs_;
+	cpp_pixel_shader_ptr    draw_ps_;
+	
 	cpp_blend_shader_ptr    pbs;
 
 	raster_state_ptr        rs_back;
 
-	uint32_t                num_frames;
-	float                   accumulate_time;
-	float                   fps;
-
-	timer                   timer;
+	fps_counter				fps_counter_;
 	/** @} */
 };
 
 int main( int /*argc*/, TCHAR* /*argv*/[] )
 {
-	obj_loader loader;
+	ssm loader;
 	return loader.run();
 }

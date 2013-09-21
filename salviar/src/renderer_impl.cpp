@@ -251,6 +251,13 @@ result renderer_impl::set_render_targets(size_t color_target_count, surface_ptr 
             return result::failed;
         }
 
+		if(color_target_count == 0)
+		{
+			target_sample_count = ds_target->sample_count();
+			target_vp.w = static_cast<float>(ds_target->get_width());
+            target_vp.h = static_cast<float>(ds_target->get_height());
+		}
+
         if(static_cast<float>(ds_target->get_width()) < target_vp.w)
         {
             return result::failed;
