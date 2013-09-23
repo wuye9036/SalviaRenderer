@@ -114,6 +114,7 @@ public:
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
 		vec3 eye_dir( normalize3( in.attribute(3).xyz() ) );
+		vec3 light_space_pos( in.attribute(4).xyz() / in.attribute(4).w() );
 
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
 		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
@@ -233,9 +234,10 @@ protected:
 
 		renderer_->set_rasterizer_state(rs_back);
 
-		renderer_->set_vs_variable("wvpMatrix", &camera_wvp_);
-		renderer_->set_vs_variable("eyePos", &camera_pos_);
-		renderer_->set_vs_variable("lightPos", &light_pos_);
+		renderer_->set_vs_variable("cameraPos",	&camera_pos_);
+		renderer_->set_vs_variable("cameraWvp", &camera_wvp_);
+		renderer_->set_vs_variable("lightPos",	&light_pos_);
+		renderer_->set_vs_variable("lightWvp",	&light_wvp_);
 
 		for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
 		{
@@ -277,7 +279,7 @@ protected:
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 		mat_mul(light_wvp_, view, proj);
 
-		// gen_sm();
+		gen_sm();
 		draw();
 		
 		impl->main_window()->refresh();
