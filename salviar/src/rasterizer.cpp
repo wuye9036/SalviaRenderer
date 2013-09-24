@@ -343,6 +343,7 @@ void rasterizer::draw_full_tile(
             }
 
             // Do interpolation
+
             for(int quad = 0; quad < 4; ++quad)
             {
                 // all 2x2 is masked.

@@ -109,7 +109,10 @@ public:
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
-		tex_color = tex2d(*sampler_ , 0);
+        if(tex_)
+        {
+		    tex_color = tex2d(*sampler_ , 0);
+        }
 
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
@@ -207,6 +210,13 @@ protected:
 		pbs.reset( new bs() );
 		
 		cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
+        plane_mesh = create_planar(
+            renderer_.get(),
+            vec3(-10.0f, 0.0f, -10.0f),
+            vec3(1.0f, 0.0f, 0.0f),
+            vec3(0.0f, 0.0f, 1.0f),
+            20, 20, true
+            );
 	}
 	/** @} */
 
@@ -300,6 +310,7 @@ protected:
 	mat44					light_wvp_;
 	
 	vector<mesh_ptr>        cup_mesh;
+    mesh_ptr                plane_mesh;
 
 	shader_object_ptr		gen_sm_vs_;
 	cpp_pixel_shader_ptr    gen_sm_ps_;
