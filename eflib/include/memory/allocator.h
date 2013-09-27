@@ -1,9 +1,14 @@
-#ifndef EFLIB_MEMORY_ALLOCATOR_H
-#define EFLIB_MEMORY_ALLOCATOR_H
+#pragma once
 
+#include <eflib/include/utility/unref_declarator.h>
+
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/type_traits.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <limits>
 #include <vector>
+
 #include <stdlib.h>
 
 #ifdef max
@@ -114,6 +119,7 @@ namespace eflib{
 
 		void destroy(pointer p)
 		{
+            EFLIB_UNREF_DECLARATOR(p);
 			p->~T();
 		}
 
@@ -253,7 +259,8 @@ namespace eflib{
 			::new (vp) T(val);
 		}
 
-		void destroy(pointer p){
+		void destroy(pointer p)
+        {
 			p->~T();
 		}
 
@@ -308,5 +315,3 @@ namespace eflib{
 		}
 	};
 }
-
-#endif
