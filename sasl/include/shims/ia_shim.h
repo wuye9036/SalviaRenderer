@@ -69,16 +69,6 @@ public:
 		salviar::input_layout*				input,
 		salviar::shader_reflection const*	reflection
 	);
-private:
-	struct shim_func_data
-	{
-		void*					func;
-		std::vector<size_t>		dest_offsets;
-		std::vector<size_t>		used_slots;
-		std::vector<intptr_t>	aligned_element_offsets;
-	};
-	typedef boost::unordered_map<ia_shim_key, shim_func_data> cached_shim_function_dict;
-	cached_shim_function_dict cached_shim_funcs_;
 };
 
 END_NS_SASL_SHIMS();

@@ -44,39 +44,21 @@ void* ia_shim::get_shim_function(
 		salviar::input_layout*				input,
 		salviar::shader_reflection const*	reflection
 	)
-{
-	ia_shim_key key(input, reflection);
-	cached_shim_function_dict::iterator iter = cached_shim_funcs_.find(key);
-
-	if (iter != cached_shim_funcs_.end() )
-	{
-		used_slots				= iter->second.used_slots;
-		aligned_element_offsets	= iter->second.aligned_element_offsets;
-		dest_offsets			= iter->second.dest_offsets;
-		return iter->second.func;
-	}
-	
+{	
 	// Compute output address and input slots.
 	vector<sv_layout*> layouts = reflection->layouts(su_stream_in);
 	
-	shim_func_data data;
+    used_slots.clear();
+    aligned_element_offsets.clear();
+    dest_offsets.clear();
 
-	data.func = &common_ia_shim;
-
-	for(size_t i_layout = 0; i_layout < layouts.size(); ++i_layout)
-	{
-		sv_layout* layout = layouts[i_layout];
+    for(auto layout: layouts)
+    {
 		input_element_desc const* element_desc = input->find_desc(layout->sv);
-		data.used_slots				.push_back(element_desc->input_slot);
-		data.aligned_element_offsets.push_back(element_desc->aligned_byte_offset);
-		data.dest_offsets			.push_back(layout->offset);
-	}
-
-	cached_shim_funcs_.insert( make_pair(key, data) );
-
-	used_slots				= data.used_slots;
-	aligned_element_offsets	= data.aligned_element_offsets;
-	dest_offsets			= data.dest_offsets;
+		used_slots				.push_back(element_desc->input_slot);
+		aligned_element_offsets .push_back(element_desc->aligned_byte_offset);
+		dest_offsets			.push_back(layout->offset);
+    }
 
 	return &common_ia_shim;
 }
