@@ -170,6 +170,7 @@ struct shader_profile
 class cpp_shader
 {
 public:
+	virtual result set_sampler(const std::_tstring& varname, sampler_ptr const& samp) = 0;
 	virtual result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval) = 0;
 	virtual result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval, size_t index) = 0;
 
@@ -191,6 +192,17 @@ public:
 class cpp_shader_impl : public cpp_shader
 {
 public:
+	result set_sampler(std::_tstring const& samp_name, sampler_ptr const& samp)
+	{
+		auto samp_it = sampmap_.find(samp_name);
+		if( samp_it == sampmap_.end() )
+		{
+			return result::failed;
+		}
+		samp_it->second = samp;
+		return result::ok;
+	}
+
 	result set_constant(const std::_tstring& varname, shader_constant::const_voidptr pval){
 		variable_map::iterator var_it = varmap_.find(varname);
 		if( var_it == varmap_.end() ){
@@ -224,6 +236,12 @@ public:
 		return result::ok;
 	}
 
+	result declare_sampler(const std::_tstring& varname, sampler_ptr& var)
+	{
+		sampmap_[varname] = &var;
+		return result::ok;
+	}
+
 	template<class T>
 	result declare_container_constant(const std::_tstring& varname, T& var)
 	{
@@ -231,13 +249,19 @@ public:
 	}
 
 private:
-	typedef std::map<std::_tstring, shader_constant::voidptr> variable_map;
-	typedef std::map<std::_tstring, boost::shared_ptr<detail::container> > container_variable_map;
-	typedef boost::unordered_map<semantic_value, size_t> register_map;
+	typedef std::map<std::_tstring, shader_constant::voidptr>
+		variable_map;
+	typedef std::map<std::_tstring, sampler_ptr>
+		sampler_map;
+	typedef std::map<std::_tstring, boost::shared_ptr<detail::container> >
+		container_variable_map;
+	typedef boost::unordered_map<semantic_value, size_t>
+		register_map;
 
-	variable_map varmap_;
-	container_variable_map contmap_;
-	register_map regmap_;
+	variable_map			varmap_;
+	container_variable_map	contmap_;
+	register_map			regmap_;
+	sampler_map				sampmap_;
 
 	template<class T, class ElemType>
 	result declare_container_constant_impl(const std::_tstring& varname, T& var, const ElemType&)
