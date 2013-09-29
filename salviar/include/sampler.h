@@ -1,20 +1,22 @@
-#ifndef SALVIAR_SAMPLER_H
-#define SALVIAR_SAMPLER_H
+#pragma once
 
-#include "../include/colors.h"
-#include "../include/enums.h"
+#include <salviar/include/salviar_forward.h>
+
+#include <salviar/include/colors.h>
+#include <salviar/include/enums.h>
 
 #include <eflib/include/platform/typedefs.h>
-#include <salviar/include/salviar_forward.h>
-#include "texture.h"
-BEGIN_NS_SALVIAR()
+#include <eflib/include/utility/shared_declaration.h>
 
+BEGIN_NS_SALVIAR();
 
-class texture_1d;
-class texture_2d;
-class surface;
+EFLIB_DECLARE_CLASS_SHARED_PTR(texture);
+EFLIB_DECLARE_CLASS_SHARED_PTR(texture_1d);
+EFLIB_DECLARE_CLASS_SHARED_PTR(texture_2d);
+EFLIB_DECLARE_CLASS_SHARED_PTR(surface);
 
-struct sampler_desc {
+struct sampler_desc
+{
     filter_type min_filter;
 	filter_type mag_filter;
 	filter_type mip_filter;
@@ -51,9 +53,9 @@ public:
 	typedef color_rgba32f (*filter_op_type)(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color);
 
 private:
-	sampler_desc desc_;
-	const texture* ptex_;
-	filter_op_type filters_[sampler_state_count];
+	sampler_desc    desc_;
+	texture_ptr     tex_;
+	filter_op_type  filters_[sampler_state_count];
 
 	float calc_lod( eflib::int4 const& size, eflib::vec4 const& ddx, eflib::vec4 const& ddy, float bias ) const;
 	float calc_lod(
@@ -97,10 +99,7 @@ private:
 		float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const;
 
 public:
-	explicit sampler(const sampler_desc& desc);
-
-	void set_texture(const texture* ptex){ptex_ = ptex;}
-	void set_sampler_desc( sampler_desc const& desc );
+	explicit sampler(const sampler_desc& desc, texture_ptr const& tex);
 
 	color_rgba32f sample(float coordx, float coordy, float miplevel) const;
 
@@ -139,6 +138,4 @@ public:
 		) const;
 };
 
-
-END_NS_SALVIAR()
-#endif
+END_NS_SALVIAR();

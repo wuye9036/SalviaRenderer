@@ -1,11 +1,11 @@
-#include "../include/sampler.h"
+#include <salviar/include/sampler.h>
 
-#include "../include/surface.h"
-#include "../include/texture.h"
+#include <salviar/include/surface.h>
+#include <salviar/include/texture.h>
 
 #include <eflib/include/platform/ext_intrinsics.h>
 
-BEGIN_NS_SALVIAR()
+BEGIN_NS_SALVIAR();
 
 using namespace eflib;
 using namespace std;
@@ -588,8 +588,9 @@ color_rgba32f sampler::sample_surface(
 			);
 }
 
-sampler::sampler(const sampler_desc& desc)
+sampler::sampler(sampler_desc const& desc, texture_ptr const& tex)
 	: desc_(desc)
+    , tex_(tex)
 {
 	filters_[sampler_state_min] = surface_sampler::filter_table[desc_.min_filter][desc_.addr_mode_u][desc.addr_mode_v];
 	filters_[sampler_state_mag] = surface_sampler::filter_table[desc_.mag_filter][desc_.addr_mode_u][desc.addr_mode_v];
@@ -668,7 +669,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 			sample_coord_y += long_axis.y();
 		}
 
-		color /= int_ratio;
+		color /= static_cast<float>(int_ratio);
 		
 		return color_rgba32f(color);
 	}
@@ -719,7 +720,7 @@ color_rgba32f sampler::sample_2d_impl(const texture *tex ,
 
 color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 {
-	return sample_impl( ptex_, coordx, coordy, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f) );
+	return sample_impl(tex_.get(), coordx, coordy, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 color_rgba32f sampler::sample(
@@ -727,7 +728,7 @@ color_rgba32f sampler::sample(
 					 const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
 					 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_impl(ptex_, coordx, coordy, 0, unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	return sample_impl(tex_.get(), coordx, coordy, 0, unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 }
 
 
@@ -736,7 +737,7 @@ color_rgba32f sampler::sample_2d(
 						const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
 						float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
-	return sample_2d_impl(ptex_, proj_coord, 0, unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
+	return sample_2d_impl(tex_.get(), proj_coord, 0, unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 }
 
 
@@ -801,11 +802,11 @@ color_rgba32f sampler::sample_cube(
 		}
 	}
 
-	if(ptex_->get_texture_type() != texture_type_cube)
+	if(tex_->get_texture_type() != texture_type_cube)
 	{
 		EFLIB_ASSERT(false , "texture is not a cube texture.");
 	}
-	const texture_cube* cube_tex = static_cast<const texture_cube*>(ptex_);
+	const texture_cube* cube_tex = static_cast<const texture_cube*>(tex_.get());
 	return sample_impl(cube_tex->get_face(major_dir).get(), s, t, 0, miplevel, 1.0f, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
@@ -819,11 +820,11 @@ color_rgba32f sampler::sample_cube(
 	float q = inv_w == 0 ? 1.0f : 1.0f / inv_w;
 	vec4 origin_coord(coord * q);
 
-	if(ptex_->get_texture_type() != texture_type_cube)
+	if(tex_->get_texture_type() != texture_type_cube)
 	{
 		EFLIB_ASSERT(false , "texture type not texture_type_cube.");
 	}
-	const texture_cube* pcube = static_cast<const texture_cube*>(ptex_);
+	const texture_cube* pcube = static_cast<const texture_cube*>(tex_.get());
 	float lod = calc_lod(origin_coord, int4(static_cast<int>(pcube->get_width(0)),
 		static_cast<int>(pcube->get_height(0)), 0, 0), unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
 	//return color_rgba32f(vec4(coord.xyz(), 1.0f));
@@ -838,8 +839,8 @@ color_rgba32f sampler::sample_2d_lod( eflib::vec2 const& proj_coord, float lod )
 
 color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec2 const& ddx, eflib::vec2 const& ddy, float lod_bias ) const
 {
-	int4 size(static_cast<int>(ptex_->get_width(0)), static_cast<int>(ptex_->get_height(0)),
-		static_cast<int>(ptex_->get_depth(0)), 0);
+	int4 size(static_cast<int>(tex_->get_width(0)), static_cast<int>(tex_->get_height(0)),
+		static_cast<int>(tex_->get_depth(0)), 0);
 
 	vec4 ddx_vec4(ddx[0], ddx[1], 0.0f, 0.0f);
 	vec4 ddy_vec4(ddy[0], ddy[1], 0.0f, 0.0f);
@@ -856,7 +857,7 @@ color_rgba32f sampler::sample_2d_grad( eflib::vec2 const& proj_coord, eflib::vec
 		ratio = 1.0f;
 	}
 
-	return sample_impl(ptex_, proj_coord[0], proj_coord[1], 0, lod, ratio, long_axis);
+	return sample_impl(tex_.get(), proj_coord[0], proj_coord[1], 0, lod, ratio, long_axis);
 }
 
 void sampler::calc_anisotropic_lod(
@@ -904,9 +905,4 @@ void sampler::calc_anisotropic_lod(
 	calc_anisotropic_lod(size, ddx2, ddy2, bias, out_lod, out_ratio, out_long_axis);
 }
 
-void sampler::set_sampler_desc( sampler_desc const& desc )
-{
-	desc_ = desc;
-}
-
-END_NS_SALVIAR()
+END_NS_SALVIAR();

@@ -46,7 +46,7 @@ public:
     virtual buffer_ptr       create_buffer(size_t size) = 0;
     virtual texture_ptr      create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt) = 0;
     virtual texture_ptr      create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt) = 0;
-    virtual sampler_ptr      create_sampler(sampler_desc const& desc) = 0;
+    virtual sampler_ptr      create_sampler(sampler_desc const& desc, texture_ptr const& tex) = 0;
     virtual async_object_ptr create_query(async_object_ids id) = 0;
 
     virtual input_layout_ptr create_input_layout(

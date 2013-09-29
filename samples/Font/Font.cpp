@@ -9,6 +9,7 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
+#include <salviar/include/texture.h>
 
 #include <salviax/include/swap_chain/swap_chain.h>
 #include <salviax/include/resource/font/font.h>
@@ -119,19 +120,11 @@ class ps_box : public cpp_pixel_shader
 	salviar::texture_ptr tex_;
 public:
 
-	ps_box(const salviar::texture_ptr& tex)
-		: tex_(tex)
+	ps_box(sampler_ptr const& samp)
+        : sampler_(samp)
 	{
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_clamp;
-		desc.addr_mode_v = address_clamp;
-		desc.addr_mode_w = address_clamp;
-		sampler_.reset(new sampler(desc));
-		sampler_->set_texture(tex_.get());
 	}
+
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		color_rgba32f color = tex2d(*sampler_ , 1);
@@ -140,6 +133,7 @@ public:
 
 		return true;
 	}
+
     virtual cpp_shader_ptr clone()
 	{
         typedef std::remove_pointer<decltype(this)>::type this_type;
@@ -190,20 +184,14 @@ public:
 
 class ps_plane : public cpp_pixel_shader
 {
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
-public:
+	sampler_ptr sampler_;
 
-	ps_plane(const salviar::texture_ptr& tex)
-		: tex_(tex)
+public:
+	ps_plane(sampler_ptr const& samp)
+		: sampler_(samp)
 	{
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		sampler_.reset(new sampler(desc));
-		sampler_->set_texture(tex_.get());
 	}
+
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		color_rgba32f color = tex2d(*sampler_, 0);
@@ -212,6 +200,7 @@ public:
 
 		return true;
 	}
+
     virtual cpp_shader_ptr clone()
 	{
         typedef std::remove_pointer<decltype(this)>::type this_type;
@@ -228,6 +217,7 @@ public:
 		inout.color(0, sample, lerp(inout.color(0, sample), color, color.a));
 		return true;
 	}
+
     virtual cpp_shader_ptr clone()
 	{
         typedef std::remove_pointer<decltype(this)>::type this_type;
@@ -316,10 +306,8 @@ protected:
 			box_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			box_tex->gen_mipmap(filter_linear, true);
 
-			pps_box.reset(new ps_box(box_tex));
-
-			box_sampler = renderer_->create_sampler( desc );
-			box_sampler->set_texture( box_tex.get() );
+			box_sampler = renderer_->create_sampler(desc, box_tex);
+            pps_box.reset(new ps_box(box_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Box Pixel Shader ..." << endl;
@@ -341,9 +329,8 @@ protected:
 				color_rgba32f(0.8f, 0.8f, 1.0f, 1.0f), color_rgba32f(0.0f, 0.0f, 0.0f, 1.0f), font::antialias );
 			plane_tex->gen_mipmap(filter_linear, true);
 			
-			pps_plane.reset(new ps_plane(plane_tex));
-			plane_sampler = renderer_->create_sampler( desc );
-			plane_sampler->set_texture( plane_tex.get() );
+			plane_sampler = renderer_->create_sampler(desc, plane_tex);
+            pps_plane.reset(new ps_plane(plane_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Plane Pixel Shader ..." << endl;
@@ -394,16 +381,12 @@ protected:
         renderer_->clear_color(color_surface_, color_rgba32f(0.2f, 0.2f, 0.5f, 1.0f));
 		renderer_->clear_depth_stencil(ds_surface_, 1.0f, 0);
 
-		//static float s_angle = 0;
-		//s_angle -= elapsed_time * 60.0f * (static_cast<float>(TWO_PI) / 360.0f);
-		//vec3 camera(cos(s_angle) * 1.5f, 1.5f, sin(s_angle) * 1.5f);
 		vec3 camera(0.0f, 0.0f, -2.2f);
 
 		mat44 world(mat44::identity()), view, proj, wvp;
 		
 		mat_lookat(view, camera, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_ortho(proj, -1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1000.0f);
-		// mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{
@@ -420,30 +403,6 @@ protected:
 #endif
 			renderer_->set_blend_shader(pbs_plane);
 			planar_mesh->render();
-			/*
-			renderer_->set_rasterizer_state(rs_front);
-			pvs_box->set_constant(_T("WorldViewProjMat"), &wvp);
-			renderer_->set_vertex_shader(pvs_box);
-#ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_box );
-			renderer_->set_ps_sampler( "samp", box_sampler );
-#else
-			renderer_->set_pixel_shader(pps_box);
-#endif
-			renderer_->set_blend_shader(pbs_box);
-			box_mesh->render();
-			
-			renderer_->set_rasterizer_state(rs_back);
-			renderer_->set_vertex_shader(pvs_box);
-#ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_box );
-			renderer_->set_ps_sampler( "samp", box_sampler );
-#else
-			renderer_->set_pixel_shader(pps_box);
-#endif
-			renderer_->set_blend_shader(pbs_box);
-			box_mesh->render();
-			*/
 		}
 
 		impl->main_window()->refresh();

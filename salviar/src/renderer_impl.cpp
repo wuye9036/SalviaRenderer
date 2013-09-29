@@ -296,9 +296,9 @@ texture_ptr renderer_impl::create_texcube(size_t width, size_t height, size_t nu
 	return resource_pool_->create_texture_cube(width, height, num_samples, fmt);
 }
 
-sampler_ptr renderer_impl::create_sampler(const sampler_desc& desc)
+sampler_ptr renderer_impl::create_sampler(sampler_desc const& desc, texture_ptr const& tex)
 {
-	return sampler_ptr(new sampler(desc));
+	return sampler_ptr(new sampler(desc, tex));
 }
 
 async_object_ptr renderer_impl::create_query(async_object_ids id)

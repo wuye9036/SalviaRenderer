@@ -17,6 +17,7 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
+#include <salviar/include/texture.h>
 
 #include <vector>
 
@@ -106,34 +107,21 @@ public:
 class sponza_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
 
 	vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
 
 	int shininess;
-public:
-	void set_texture( salviar::texture_ptr tex ){
-		tex_ = tex;
-		sampler_->set_texture(tex_.get());
-	}
 
+public:
 	sponza_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
 		declare_constant(_T("Specular"),  specular );
 		declare_constant(_T("Shininess"), shininess );
-
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_wrap;
-		desc.addr_mode_v = address_wrap;
-		desc.addr_mode_w = address_wrap;
-		sampler_.reset(new sampler(desc));
+        declare_sampler(_T("Sampler"), sampler_);
 	}
 
 	vec4 to_color(vec3 const& v)
@@ -150,7 +138,7 @@ public:
 	{
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
-		if( tex_ )
+		if( sampler_ )
 		{
 			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
@@ -347,7 +335,15 @@ protected:
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				pps->set_constant( _T("Specular"), &mtl->specular );
 				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				dynamic_pointer_cast<sponza_ps>( pps )->set_texture( mtl->tex );
+
+                sampler_desc desc;
+		        desc.min_filter = filter_linear;
+		        desc.mag_filter = filter_linear;
+		        desc.mip_filter = filter_linear;
+		        desc.addr_mode_u = address_wrap;
+		        desc.addr_mode_v = address_wrap;
+		        desc.addr_mode_w = address_wrap;
+				pps->set_sampler( renderer_->create_sampler(desc, mtl->tex) );
 
 				cur_mesh->render();
 			}

@@ -2,6 +2,7 @@
 #include <salviar/include/renderer.h>
 #include <salviar/include/async_renderer.h>
 #include <salviar/include/sync_renderer.h>
+#include <salviar/include/texture.h>
 #include <eflib/include/platform/dl_loader.h>
 
 using namespace salviar;

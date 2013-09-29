@@ -6,9 +6,14 @@
 #include <salviar/include/format.h>
 #include <salviar/include/shader.h>
 
+#include <eflib/include/utility/shared_declaration.h>
+
 #include <vector>
 
 BEGIN_NS_SALVIAR();
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(shader_object);
+EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_vertex_shader);
 
 enum input_classifications{
 	input_per_vertex
@@ -54,6 +59,8 @@ struct input_element_desc
 	{}
 
 };
+
+EFLIB_DECLARE_CLASS_SHARED_PTR(input_layout);
 
 class input_layout
 {

@@ -91,7 +91,7 @@ public:
 	virtual buffer_ptr	            create_buffer(size_t size);
 	virtual texture_ptr         	create_tex2d(size_t width, size_t height, size_t num_samples, pixel_format fmt);
 	virtual texture_ptr         	create_texcube(size_t width, size_t height, size_t num_samples, pixel_format fmt);
-	virtual sampler_ptr         	create_sampler(sampler_desc const& desc);
+	virtual sampler_ptr         	create_sampler(sampler_desc const& desc, texture_ptr const& tex);
     virtual async_object_ptr        create_query(async_object_ids id);
 	renderer_impl();
 

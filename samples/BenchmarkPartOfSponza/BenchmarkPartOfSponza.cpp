@@ -9,6 +9,7 @@
 #include <salviar/include/resource_manager.h>
 #include <salviar/include/rasterizer.h>
 #include <salviar/include/colors.h>
+#include <salviar/include/texture.h>
 
 #include <salviax/include/resource/mesh/sa/mesh_io.h>
 #include <salviax/include/resource/mesh/sa/mesh_io_obj.h>
