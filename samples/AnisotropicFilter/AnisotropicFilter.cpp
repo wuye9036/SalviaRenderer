@@ -116,42 +116,6 @@ char const* plane_ps_code =
 	"}\r\n"
 	;
 
-class ps_cone : public cpp_pixel_shader
-{
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
-public:
-
-	ps_cone(const salviar::texture_ptr& tex)
-		: tex_(tex)
-	{
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_clamp;
-		desc.addr_mode_v = address_clamp;
-		desc.addr_mode_w = address_clamp;
-		sampler_.reset(new sampler(desc));
-		sampler_->set_texture(tex_.get());
-	}
-	bool shader_prog(const vs_output& /*in*/, ps_output& out)
-	{
-		color_rgba32f color = tex2d(*sampler_ , 1);
-		color.a = 0.5;
-		out.color[0] = color.get_vec4();
-
-		return true;
-	}
-
-    virtual cpp_shader_ptr clone()
-	{
-        typedef std::remove_pointer<decltype(this)>::type this_type;
-		return cpp_shader_ptr(new this_type(*this));
-	}
-
-};
-
 class vs_plane : public cpp_vertex_shader
 {
 	mat44 wvp;
@@ -196,25 +160,17 @@ public:
 
 class ps_plane : public cpp_pixel_shader
 {
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
-public:
+	salviar::sampler_ptr samp_;
 
-	ps_plane(const salviar::texture_ptr& tex)
-		: tex_(tex)
+public:
+	ps_plane(sampler_ptr const& samp)
+		: samp_(samp)
 	{
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_anisotropic;
-		desc.max_anisotropy = 16;
-		sampler_.reset(new sampler(desc));
-		sampler_->set_texture(tex_.get());
 	}
 
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
-		color_rgba32f color = tex2d(*sampler_, 0);
+		color_rgba32f color = tex2d(*samp_, 0);
 		color.a = 1;
 		out.color[0] = color.get_vec4();
 
@@ -313,34 +269,7 @@ protected:
 			100, 100, true
 			);
 		
-		cone_mesh = create_cone(renderer_.get(), vec3(0.0f, 0.0f, 0.0f), 1.0f, vec3(0.0f, 1.0f, 0.0f), 120);
-
-		pvs_cone.reset(new vs_cone());
 		pvs_plane.reset(new vs_plane());
-
-		{
-			sampler_desc desc;
-			desc.min_filter = filter_linear;
-			desc.mag_filter = filter_linear;
-			desc.mip_filter = filter_anisotropic;
-			desc.addr_mode_u = address_clamp;
-			desc.addr_mode_v = address_clamp;
-			desc.addr_mode_w = address_clamp;
-			desc.max_anisotropy = 16;
-
-			cone_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
-			cone_tex->gen_mipmap(filter_linear, true);
-
-			pps_cone.reset(new ps_cone(cone_tex));
-
-			cone_sampler = renderer_->create_sampler( desc );
-			cone_sampler->set_texture( cone_tex.get() );
-
-#ifdef SALVIA_ENABLE_PIXEL_SHADER
-			cout << "Creating Cone Pixel Shader ..." << endl;
-			psc_cone = compile( cone_ps_code, lang_pixel_shader );
-#endif
-		}
 
 		{
 			sampler_desc desc;
@@ -352,9 +281,8 @@ protected:
 			plane_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
 			
-			pps_plane.reset(new ps_plane(plane_tex));
-			plane_sampler = renderer_->create_sampler( desc );
-			plane_sampler->set_texture( plane_tex.get() );
+			plane_sampler = renderer_->create_sampler(desc, plane_tex);
+            pps_plane.reset(new ps_plane(plane_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Plane Pixel Shader ..." << endl;
@@ -362,7 +290,6 @@ protected:
 #endif
 		}
 
-		pbs_cone.reset(new ts_blend_on);
 		pbs_plane.reset(new ts_blend_off);
 
 		raster_desc rs_desc;
@@ -430,7 +357,7 @@ protected:
 			desc.max_anisotropy = 1 << (total_time/3000);
 			impl->main_window()->set_title( ( boost::format("Sample: Anisotropic Filter - AF %dX") % desc.max_anisotropy ).str() );
 		}
-		plane_sampler->set_sampler_desc(desc);
+        plane_sampler = renderer_->create_sampler(desc, plane_tex);
 
 		for(float i = 0 ; i < 1 ; i ++)
 		{	
@@ -448,31 +375,6 @@ protected:
 #endif
 			renderer_->set_blend_shader(pbs_plane);
 			planar_mesh->render();
-			
-			/*
-			renderer_->set_rasterizer_state(rs_front);
-			pvs_cone->set_constant(_T("WorldViewProjMat"), &wvp);
-			renderer_->set_vertex_shader(pvs_cone);
-#ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_cone );
-			renderer_->set_ps_sampler( "samp", cone_sampler );
-#else
-			renderer_->set_pixel_shader(pps_cone);
-#endif
-			renderer_->set_blend_shader(pbs_cone);
-			cone_mesh->render();
-
-			renderer_->set_rasterizer_state(rs_back);
-			renderer_->set_vertex_shader(pvs_cone);
-#ifdef SALVIA_ENABLE_PIXEL_SHADER
-			renderer_->set_pixel_shader_code( psc_cone );
-			renderer_->set_ps_sampler( "samp", cone_sampler );
-#else
-			renderer_->set_pixel_shader(pps_cone);
-#endif
-			renderer_->set_blend_shader(pbs_cone);
-			cone_mesh->render();
-			*/
 		}
 
 		impl->main_window()->refresh();
@@ -488,23 +390,13 @@ protected:
     surface_ptr             color_surface_;
 
 	mesh_ptr                planar_mesh;
-	mesh_ptr                cone_mesh;
-
 	texture_ptr             plane_tex;
-	texture_ptr             cone_tex;
-
 	sampler_ptr             plane_sampler;
-	sampler_ptr             cone_sampler;
-
-	cpp_vertex_shader_ptr   pvs_cone;
-	cpp_pixel_shader_ptr    pps_cone;
-	shader_object_ptr       psc_cone;
 
 	cpp_vertex_shader_ptr   pvs_plane;
 	cpp_pixel_shader_ptr    pps_plane;
 	shader_object_ptr       psc_plane;
 
-	cpp_blend_shader_ptr    pbs_cone;
 	cpp_blend_shader_ptr    pbs_plane;
 
 	raster_state_ptr        rs_front;

@@ -51,10 +51,7 @@ class gen_sm_cpp_ps : public cpp_pixel_shader
 
 class draw_cpp_ps : public cpp_pixel_shader
 {
-	sampler_ptr	sampler_;
-	texture_ptr	tex_;
-
-	texture_ptr	dtex_;
+	sampler_ptr	texsamp_;
 	sampler_ptr dsamp_;
 
 	vec4		ambient;
@@ -63,38 +60,14 @@ class draw_cpp_ps : public cpp_pixel_shader
 	int			shininess;
 
 public:
-	void set_texture(texture_ptr const& tex, texture_ptr const& dtex )
-	{
-		tex_ = tex;
-		dtex_ = tex;
-		sampler_->set_texture(tex_.get());
-	}
-
 	draw_cpp_ps()
 	{
-		declare_constant(_T("Ambient"),   ambient );
-		declare_constant(_T("Diffuse"),   diffuse );
-		declare_constant(_T("Specular"),  specular );
-		declare_constant(_T("Shininess"), shininess );
-
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_clamp;
-		desc.addr_mode_v = address_clamp;
-		desc.addr_mode_w = address_clamp;
-		sampler_.reset(new sampler(desc));
-
-		sampler_desc sm_desc;
-		sm_desc.min_filter = filter_point;
-		sm_desc.mag_filter = filter_point;
-		sm_desc.mip_filter = filter_point;
-		sm_desc.addr_mode_u = address_border;
-		sm_desc.addr_mode_v = address_border;
-		sm_desc.addr_mode_w = address_border;
-		sm_desc.border_color = color_rgba32f(1.0f, 1.0f, 1.0f, 1.0f);
-		dsamp_.reset(new sampler(sm_desc));
+		declare_constant(_T("Ambient"),     ambient );
+		declare_constant(_T("Diffuse"),     diffuse );
+		declare_constant(_T("Specular"),    specular );
+		declare_constant(_T("Shininess"),   shininess );
+        declare_sampler (_T("DepthSampler"),dsamp_);
+        declare_sampler (_T("TexSampler"),  texsamp_);
 	}
 
 	vec4 to_color(vec3 const& v)
@@ -110,9 +83,9 @@ public:
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
-        if(tex_)
+        if(texsamp_)
         {
-		    tex_color = tex2d(*sampler_ , 0);
+            tex_color = tex2d(*texsamp_ , 0);
         }
 
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
@@ -191,6 +164,16 @@ protected:
             pixel_format_color_rg32f
             )->get_surface(0);
 
+		sampler_desc sm_desc;
+		sm_desc.min_filter = filter_point;
+		sm_desc.mag_filter = filter_point;
+		sm_desc.mip_filter = filter_point;
+		sm_desc.addr_mode_u = address_border;
+		sm_desc.addr_mode_v = address_border;
+		sm_desc.addr_mode_w = address_border;
+		sm_desc.border_color = color_rgba32f(1.0f, 1.0f, 1.0f, 1.0f);
+        sm_sampler_ = renderer_->create_sampler(sm_desc, sm_texture_);
+
         viewport vp;
         vp.w = static_cast<float>(render_params.backbuffer_width);
         vp.h = static_cast<float>(render_params.backbuffer_height);
@@ -260,7 +243,17 @@ protected:
 			draw_ps_->set_constant( _T("Diffuse"),  &mtl->diffuse );
 			draw_ps_->set_constant( _T("Specular"), &mtl->specular );
 			draw_ps_->set_constant( _T("Shininess"),&mtl->ambient );
-			dynamic_pointer_cast<draw_cpp_ps>(draw_ps_)->set_texture(mtl->tex, sm_texture_);
+
+        	sampler_desc desc;
+		    desc.min_filter = filter_linear;
+		    desc.mag_filter = filter_linear;
+		    desc.mip_filter = filter_linear;
+		    desc.addr_mode_u = address_clamp;
+		    desc.addr_mode_v = address_clamp;
+		    desc.addr_mode_w = address_clamp;
+
+            draw_ps_->set_sampler(_T("TexSampler"), renderer_->create_sampler(desc, mtl->tex));
+            draw_ps_->set_sampler(_T("DepthSampler"), sm_sampler_);
 
 			cur_mesh->render();
 		}
@@ -304,6 +297,7 @@ protected:
     texture_ptr             sm_texture_;
 	surface_ptr				draw_ds_surface_;
     surface_ptr             color_surface_;
+    sampler_ptr             sm_sampler_;
 
 	vec4					camera_pos_;
 	mat44					camera_wvp_;

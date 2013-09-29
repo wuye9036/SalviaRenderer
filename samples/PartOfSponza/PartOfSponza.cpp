@@ -343,7 +343,7 @@ protected:
 		        desc.addr_mode_u = address_wrap;
 		        desc.addr_mode_v = address_wrap;
 		        desc.addr_mode_w = address_wrap;
-				pps->set_sampler( renderer_->create_sampler(desc, mtl->tex) );
+				pps->set_sampler(_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
 
 				cur_mesh->render();
 			}

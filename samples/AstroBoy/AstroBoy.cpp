@@ -167,44 +167,24 @@ public:
 
 class astro_boy_ps : public cpp_pixel_shader
 {
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
-
 	vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
 
 	int shininess;
-public:
-	void set_texture( salviar::texture_ptr tex ){
-		tex_ = tex;
-		sampler_->set_texture(tex_.get());
-	}
 
+public:
 	astro_boy_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
 		declare_constant(_T("Specular"),  specular );
 		declare_constant(_T("Shininess"), shininess );
-
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_wrap;
-		desc.addr_mode_v = address_wrap;
-		desc.addr_mode_w = address_wrap;
-		sampler_.reset(new sampler(desc));
 	}
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
-
-		if( tex_ ){
-			diff_color = tex2d(*sampler_, 0).get_vec4();
-		}
 
 		vec3 norm( normalize3( in.attribute(0).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(1).xyz() ) );
@@ -393,7 +373,7 @@ protected:
 #endif
 			f = fopen("indices.txt", "a");
 			fprintf(f, "FRAME %d", frame_count);
-			for( size_t i_mesh = 0; i_mesh < 1 /*astro_boy_mesh->submesh_count()*/; ++i_mesh )
+			for(uint32_t i_mesh = 0; i_mesh < 1 /*astro_boy_mesh->submesh_count()*/; ++i_mesh)
 			{
 				astro_boy_mesh->render(i_mesh);
 			}

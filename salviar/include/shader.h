@@ -8,14 +8,14 @@
 
 #include <eflib/include/utility/shared_declaration.h>
 
-#include <eflib/include/platform/disable_warnings.h>
+#include <eflib/include/platform/boost_begin.h>
 #include <boost/array.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/pointer_cast.hpp>
-#include <eflib/include/platform/enable_warnings.h>
+#include <eflib/include/platform/boost_end.h>
 
 #include <vector>
 #include <string>
@@ -32,6 +32,7 @@ class  vs_output;
 struct ps_output;
 
 EFLIB_DECLARE_CLASS_SHARED_PTR(cpp_shader);
+EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
 
 enum languages
 {
@@ -199,7 +200,7 @@ public:
 		{
 			return result::failed;
 		}
-		samp_it->second = samp;
+		*(samp_it->second) = samp;
 		return result::ok;
 	}
 
@@ -251,7 +252,7 @@ public:
 private:
 	typedef std::map<std::_tstring, shader_constant::voidptr>
 		variable_map;
-	typedef std::map<std::_tstring, sampler_ptr>
+	typedef std::map<std::_tstring, sampler_ptr*>
 		sampler_map;
 	typedef std::map<std::_tstring, boost::shared_ptr<detail::container> >
 		container_variable_map;

@@ -115,23 +115,14 @@ char const* plane_ps_code =
 
 class ps_box : public cpp_pixel_shader
 {
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
+	sampler_ptr sampler_;
+
 public:
 
-	ps_box(const salviar::texture_ptr& tex)
-		: tex_(tex)
+	ps_box(sampler_ptr const& samp): sampler_(samp)
 	{
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_clamp;
-		desc.addr_mode_v = address_clamp;
-		desc.addr_mode_w = address_clamp;
-		sampler_.reset(new sampler(desc));
-		sampler_->set_texture(tex_.get());
 	}
+
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		color_rgba32f color = tex2d(*sampler_ , 1);
@@ -193,20 +184,13 @@ public:
 
 class ps_plane : public cpp_pixel_shader
 {
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
+	sampler_ptr sampler_;
 public:
 
-	ps_plane(const salviar::texture_ptr& tex)
-		: tex_(tex)
+	ps_plane(sampler_ptr const& samp): sampler_(samp)
 	{
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		sampler_.reset(new sampler(desc));
-		sampler_->set_texture(tex_.get());
 	}
+
 	bool shader_prog(const vs_output& /*in*/, ps_output& out)
 	{
 		color_rgba32f color = tex2d(*sampler_, 0);
@@ -221,7 +205,6 @@ public:
         typedef std::remove_pointer<decltype(this)>::type this_type;
 		return cpp_shader_ptr(new this_type(*this));
 	}
-
 };
 
 class ts_blend_on : public cpp_blend_shader
@@ -326,10 +309,8 @@ protected:
 			box_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/Dirt.jpg") , salviar::pixel_format_color_rgba8);
 			box_tex->gen_mipmap(filter_linear, true);
 
-			pps_box.reset(new ps_box(box_tex));
-
-			box_sampler = renderer_->create_sampler( desc );
-			box_sampler->set_texture( box_tex.get() );
+			box_sampler = renderer_->create_sampler(desc, box_tex);
+            pps_box.reset(new ps_box(box_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Box Pixel Shader ..." << endl;
@@ -346,9 +327,8 @@ protected:
 			plane_tex = texture_io_fi::instance().load(renderer_.get() , _T("../../resources/chessboard.png") , salviar::pixel_format_color_rgba8);
 			plane_tex->gen_mipmap(filter_linear, true);
 			
-			pps_plane.reset(new ps_plane(plane_tex));
-			plane_sampler = renderer_->create_sampler( desc );
-			plane_sampler->set_texture( plane_tex.get() );
+            plane_sampler = renderer_->create_sampler(desc, plane_tex);
+            pps_plane.reset(new ps_plane(plane_sampler));
 
 #ifdef SALVIA_ENABLE_PIXEL_SHADER
 			cout << "Creating Plane Pixel Shader ..." << endl;

@@ -108,7 +108,6 @@ public:
 class sponza_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
 
 	vec4 ambient;
 	vec4 diffuse;
@@ -116,10 +115,6 @@ class sponza_ps : public cpp_pixel_shader
 
 	int shininess;
 public:
-	void set_texture( salviar::texture_ptr tex ){
-		tex_ = tex;
-		sampler_->set_texture(tex_.get());
-	}
 
 	sponza_ps()
 	{
@@ -127,15 +122,7 @@ public:
 		declare_constant(_T("Diffuse"),   diffuse );
 		declare_constant(_T("Specular"),  specular );
 		declare_constant(_T("Shininess"), shininess );
-
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_wrap;
-		desc.addr_mode_v = address_wrap;
-		desc.addr_mode_w = address_wrap;
-		sampler_.reset(new sampler(desc));
+        declare_sampler (_T("Sampler"),   sampler_);
 	}
 
 	bool shader_prog(const vs_output& in, ps_output& out)
@@ -324,7 +311,8 @@ protected:
 			renderer_->set_vs_variable( "eyePos", &camera_pos );
 			renderer_->set_vs_variable( "lightPos", &lightPos );
 
-			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh ){
+			for( size_t i_mesh = 0; i_mesh < sponza_mesh.size(); ++i_mesh )
+            {
 				mesh_ptr cur_mesh = sponza_mesh[i_mesh];
 
 				shared_ptr<obj_material> mtl
@@ -333,13 +321,21 @@ protected:
 #ifdef _DEBUG
 				// if (mtl->name != "sponza_07SG"){ continue; }
 #endif
-				renderer_->flush();
 
 				pps->set_constant( _T("Ambient"),  &mtl->ambient );
 				pps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 				pps->set_constant( _T("Specular"), &mtl->specular );
 				pps->set_constant( _T("Shininess"),&mtl->ambient );
-				dynamic_pointer_cast<sponza_ps>( pps )->set_texture( mtl->tex );
+
+                sampler_desc desc;
+		        desc.min_filter = filter_linear;
+		        desc.mag_filter = filter_linear;
+		        desc.mip_filter = filter_linear;
+		        desc.addr_mode_u = address_wrap;
+		        desc.addr_mode_v = address_wrap;
+		        desc.addr_mode_w = address_wrap;
+
+                pps->set_sampler(_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
 
 				cur_mesh->render();
 			}

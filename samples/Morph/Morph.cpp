@@ -153,35 +153,19 @@ public:
 
 class morph_ps : public cpp_pixel_shader
 {
-	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
-
 	vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
 
 	int shininess;
-public:
-	void set_texture( salviar::texture_ptr tex ){
-		tex_ = tex;
-		sampler_->set_texture(tex_.get());
-	}
 
+public:
 	morph_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
 		declare_constant(_T("Specular"),  specular );
 		declare_constant(_T("Shininess"), shininess );
-
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_linear;
-		desc.addr_mode_u = address_wrap;
-		desc.addr_mode_v = address_wrap;
-		desc.addr_mode_w = address_wrap;
-		sampler_.reset(new sampler(desc));
 	}
 
 	bool shader_prog(const vs_output& in, ps_output& out)
@@ -189,10 +173,6 @@ public:
 		vec4 ambi_color(0.22f, 0.20f, 0.09f, 1.0f);
 		vec4 diff_color(0.75f, 0.75f, 0.25f, 1.0f);
 		vec4 spec_color(2.0f, 1.7f, 0.0f, 1.0f);
-
-		if( tex_ ){
-			diff_color = tex2d(*sampler_, 0).get_vec4();
-		}
 
 		vec3 norm( normalize3( in.attribute(0).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(1).xyz() ) );

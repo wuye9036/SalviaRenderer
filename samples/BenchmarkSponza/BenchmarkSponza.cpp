@@ -124,7 +124,6 @@ public:
 class benchmark_ps : public cpp_pixel_shader
 {
 	salviar::sampler_ptr sampler_;
-	salviar::texture_ptr tex_;
 
 	vec4 ambient;
 	vec4 diffuse;
@@ -132,33 +131,20 @@ class benchmark_ps : public cpp_pixel_shader
 
 	int shininess;
 public:
-	void set_texture( salviar::texture_ptr tex ){
-		tex_ = tex;
-		sampler_->set_texture(tex_.get());
-	}
-
 	benchmark_ps()
 	{
 		declare_constant(_T("Ambient"),   ambient );
 		declare_constant(_T("Diffuse"),   diffuse );
 		declare_constant(_T("Specular"),  specular );
 		declare_constant(_T("Shininess"), shininess );
-
-		sampler_desc desc;
-		desc.min_filter = filter_linear;
-		desc.mag_filter = filter_linear;
-		desc.mip_filter = filter_point;
-		desc.addr_mode_u = address_wrap;
-		desc.addr_mode_v = address_wrap;
-		desc.addr_mode_w = address_wrap;
-		sampler_.reset(new sampler(desc));
+        declare_sampler (_T("Sampler"),   sampler_);
 	}
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
 		vec4 diff_color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // diffuse;
 
-		if( tex_ )
+		if(sampler_)
 		{
 			diff_color = tex2d(*sampler_, 0).get_vec4();
 		}
@@ -182,7 +168,6 @@ public:
         typedef std::remove_pointer<decltype(this)>::type this_type;
 		return cpp_shader_ptr(new this_type(*this));
 	}
-
 };
 
 
@@ -339,7 +324,16 @@ public:
 			cpp_ps->set_constant( _T("Diffuse"),  &mtl->diffuse );
 			cpp_ps->set_constant( _T("Specular"), &mtl->specular );
 			cpp_ps->set_constant( _T("Shininess"),&mtl->ambient );
-			dynamic_pointer_cast<benchmark_ps>(cpp_ps)->set_texture(mtl->tex);
+
+            sampler_desc desc;
+            desc.min_filter = filter_linear;
+            desc.mag_filter = filter_linear;
+            desc.mip_filter = filter_point;
+            desc.addr_mode_u = address_wrap;
+            desc.addr_mode_v = address_wrap;
+            desc.addr_mode_w = address_wrap;
+
+            cpp_ps->set_sampler(_T("Sampler"), renderer_->create_sampler(desc, mtl->tex));
 			
 			cur_mesh->render();
 		}
