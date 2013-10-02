@@ -22,9 +22,11 @@ class project:
 		env = os.environ
 		default_toolset = props.toolset
 		
-		self.directx_ = ("DXSDK_DIR" in env)
+		self.directx_ = ("DXSDK_DIR" in env) 
 			
 		if default_toolset == None or default_toolset == "":
+			if "VS120COMNTOOLS" in env:
+				default_toolset = "msvc-12.0"
 			if "VS110COMNTOOLS" in env:
 				default_toolset = "msvc-11.0"
 			if "VS100COMNTOOLS" in env:
@@ -33,11 +35,14 @@ class project:
 				default_toolset = "mingw"
 			else:
 				print('ERROR: Cannot found any valid compiler on your computer. Please set toolset in "build_conf.py" ')
-				
-		if default_toolset == "msvc-11.0":
+		
+		if default_toolset == "msvc-12.0":
+			self.toolset_ = toolset('vs', 'msvc', 12, 0, None)
+			self.builder_root_ = os.path.join( env['VS120COMNTOOLS'], "../../" )
+		elif default_toolset == "msvc-11.0":
 			self.toolset_ = toolset('vs', 'msvc', 11, 0, None)
 			self.builder_root_ = os.path.join( env['VS110COMNTOOLS'], "../../" )
-		if default_toolset == "msvc-10.0":
+		elif default_toolset == "msvc-10.0":
 			self.toolset_ = toolset('vs', 'msvc', 10, 0, None)
 			self.builder_root_ = os.path.join( env['VS100COMNTOOLS'], "../../" )
 		else:
@@ -102,15 +107,12 @@ class project:
 	def env_setup_commands(self):
 		if self.os() == systems.win32 and self.toolset().compiler_name == 'msvc':
 			base_dir = os.path.join( self.builder_root_, "vc", "bin" )
-			if self.current_arch() == arch.x86 or self.vc_express():
+			if self.current_arch() == arch.x86:
 				return os.path.join( base_dir, "vcvars32.bat" )
 			if self.current_arch() == arch.x64:
 				return os.path.join( base_dir, "x86_amd64", "vcvarsx86_amd64.bat" )
 		else:
 			print("Unrecognized OS.")
-	
-	def vc_express(self):
-		return self.maker_name() == "VCExpress.exe"
 		
 	def maker_name(self):
 		if self.toolset().compiler_name == 'msvc':
@@ -191,6 +193,8 @@ class project:
 				return os.path.join( self.freetype_root(), "builds", "win32", "vc2010" )
 			elif self.toolset().short_name() == "msvc11":
 				return os.path.join( self.freetype_root(), "builds", "win32", "vc2012" )
+			elif self.toolset().short_name() == "msvc12":
+				return os.path.join( self.freetype_root(), "builds", "win32", "vc2013" )
 		return None
 	def freetype_build(self):
 		return os.path.join( self.freetype_root(), "libs", self.target_modifier(['platform', 'tool', 'config']) )
@@ -207,6 +211,8 @@ class project:
 		
 	def generator(self):
 		if self.arch() == arch.x86:
+			if self.toolset().short_name() == 'msvc12':
+				return "Visual Studio 12"
 			if self.toolset().short_name() == 'msvc11':
 				return "Visual Studio 11"
 			if self.toolset().short_name() == 'msvc10':
@@ -215,6 +221,8 @@ class project:
 				print( "Unknown generator.")
 				return None
 		elif self.arch() == arch.x64:
+			if self.toolset().short_name() == 'msvc12':
+				return "Visual Studio 12 Win64"
 			if self.toolset().short_name() == 'msvc11':
 				return "Visual Studio 11 Win64"
 			if self.toolset().short_name() == 'msvc10':
