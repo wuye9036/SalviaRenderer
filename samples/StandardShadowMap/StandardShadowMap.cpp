@@ -252,7 +252,14 @@ protected:
 		    desc.addr_mode_v = address_clamp;
 		    desc.addr_mode_w = address_clamp;
 
-            draw_ps_->set_sampler(_T("TexSampler"), renderer_->create_sampler(desc, mtl->tex));
+            if(mtl->tex)
+            {
+                draw_ps_->set_sampler(_T("TexSampler"), renderer_->create_sampler(desc, mtl->tex));
+            }
+            else
+            {
+                draw_ps_->set_sampler(_T("TexSampler"), sampler_ptr());
+            }
             draw_ps_->set_sampler(_T("DepthSampler"), sm_sampler_);
 
 			cur_mesh->render();
