@@ -93,6 +93,9 @@ void render_core::apply_shader_cbuffer()
 			auto var_data_addr = state_->vx_cbuffer.data_pointer(var_data);
 
 			sv_layout* layout = state_->vx_shader->get_reflection()->input_sv_layout(var_name);
+
+            if(!layout) continue;
+
 			if(layout->agg_type == aggt_array)
 			{
 				state_->vs_proto->set_variable_pointer(var_name, var_data_addr, var_data.length);

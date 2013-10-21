@@ -39,7 +39,7 @@ bool fps_counter::on_frame(float& fps)
 	timer_.restart();
 	if(elapsed_seconds_ >= interval_)
 	{
-		fps = elapsed_seconds_ / elapsed_frame_;
+		fps = elapsed_frame_ / elapsed_seconds_;
 		elapsed_seconds_ = 0;
 		elapsed_frame_ = 0;
 		return true;

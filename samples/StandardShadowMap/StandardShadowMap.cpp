@@ -213,6 +213,15 @@ protected:
 	{
 		renderer_->set_render_targets(0, nullptr, sm_texture_->get_surface(0));
 		renderer_->clear_depth_stencil(sm_texture_->get_surface(0), 1.0f, 0);
+
+        renderer_->set_vertex_shader_code(gen_sm_vs_);
+		renderer_->set_pixel_shader(gen_sm_ps_);
+		renderer_->set_blend_shader(pbs);
+
+		renderer_->set_rasterizer_state(rs_back);
+
+        renderer_->set_vs_variable("wvpMatrix",	&camera_wvp_);
+        // cup_mesh[1]->render();
 	}
 	
 	void draw()
@@ -233,7 +242,7 @@ protected:
 		renderer_->set_vs_variable("lightPos",	&light_pos_);
 		renderer_->set_vs_variable("lightWvp",	&light_wvp_);
 
-		for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
+		for( size_t i_mesh = 1; i_mesh < cup_mesh.size(); ++i_mesh )
 		{
 			mesh_ptr cur_mesh = cup_mesh[i_mesh];
 

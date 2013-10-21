@@ -131,6 +131,9 @@ void host_impl::update(render_state const* state)
 		auto var_data_addr = state->vx_cbuffer.data_pointer(var_data);
 
 		sv_layout* layout = vx_shader_->get_reflection()->input_sv_layout(var_name);
+
+        if(!layout) continue;
+
 		if(layout->agg_type == aggt_array)
 		{
 			vx_update_constant_pointer(var_name, var_data_addr);
