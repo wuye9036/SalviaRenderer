@@ -205,13 +205,31 @@ viewport renderer_impl::get_viewport() const
 //do not support get function for a while
 result renderer_impl::set_render_targets(size_t color_target_count, surface_ptr const* color_targets, surface_ptr const& ds_target)
 {
-    if(color_target_count <= 0 || color_target_count >= MAX_RENDER_TARGETS)
+    // Initialize target attributes
+    viewport target_vp;
+    target_vp.x = 0;
+    target_vp.y = 0;
+    target_vp.w = 0;
+    target_vp.h = 0;
+    target_vp.minz = 0;
+    target_vp.maxz = 0;
+
+    state_->target_vp = target_vp;
+    state_->target_sample_count = 0;
+    state_->color_targets.clear();
+    state_->depth_stencil_target.reset();
+
+    if(color_target_count < 0 || color_target_count >= MAX_RENDER_TARGETS)
+    {
+        return result::failed;
+    }
+
+    if( (color_target_count == 0 || color_targets == nullptr) && !ds_target )
     {
         return result::failed;
     }
 
     size_t   target_sample_count = 0;
-    viewport target_vp;
     target_vp.x = 0;
     target_vp.y = 0;
     target_vp.w = std::numeric_limits<float>::max();
