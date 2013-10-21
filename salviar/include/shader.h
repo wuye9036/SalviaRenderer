@@ -304,6 +304,7 @@ protected:
 	color_rgba32f tex2d(const sampler& s, const eflib::vec4& coord, const eflib::vec4& ddx, const eflib::vec4& ddy, float bias = 0);
 	color_rgba32f tex2d(const sampler& s, size_t iReg);
 	color_rgba32f tex2dlod(const sampler& s, size_t iReg);
+    color_rgba32f tex2dlod(sampler const& s, eflib::vec4 const& coord_with_lod);
 	color_rgba32f tex2dproj(const sampler& s, size_t iReg);
 	color_rgba32f tex2dproj(const sampler& s, const eflib::vec4& v, const eflib::vec4& ddx, const eflib::vec4& ddy);
 
@@ -315,6 +316,7 @@ protected:
 public:
 	bool execute(const vs_output& in, ps_output& out);
 	virtual bool shader_prog(const vs_output& in, ps_output& out) = 0;
+    virtual bool output_depth() const;
 };
 
 //it is called when render a shaded pixel into framebuffer

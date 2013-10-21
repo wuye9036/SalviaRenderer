@@ -119,13 +119,14 @@ color_rgba32f cpp_pixel_shader::tex2d(const sampler& s, size_t iReg)
 	return tex2d(s, ppxin_->attribute(iReg), unproj_ddx(iReg), unproj_ddy(iReg));
 }
 
+color_rgba32f cpp_pixel_shader::tex2dlod(sampler const& s, eflib::vec4 const& coord_with_lod)
+{
+    return s.sample(coord_with_lod[0], coord_with_lod[1], coord_with_lod[3]);
+}
+
 color_rgba32f cpp_pixel_shader::tex2dlod(const sampler& s, size_t iReg)
 {
-	float x = ppxin_->attribute(iReg)[0];
-	float y = ppxin_->attribute(iReg)[1];
-	float lod = ppxin_->attribute(iReg)[3];
-
-	return s.sample(x, y, lod);
+    return tex2dlod(s, ppxin_->attribute(iReg));
 }
 
 color_rgba32f cpp_pixel_shader::tex2dproj(const sampler& s, size_t iReg)
@@ -236,10 +237,15 @@ bool cpp_pixel_shader::execute(const vs_output& in, ps_output& out)
 {
 	assert(triangle_info);
 	ppxin_ = &in;
+    out.depth = in.position().z();
 	bool rv = shader_prog(in, out);
-	out.depth = in.position().z();
 	out.front_face = in.front_face();
 	return rv;
+}
+
+bool cpp_pixel_shader::output_depth() const
+{
+    return false;
 }
 
 END_NS_SALVIAR()

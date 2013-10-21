@@ -94,7 +94,7 @@ private:
 	void (*read_depth_stencil_)(float& depth, uint32_t& stencil, uint32_t stencil_mask, void const* ds_data);
 	void (*write_depth_stencil_)(void* ds_data, float depth, uint32_t stencil, uint32_t stencil_mask);
     
-    void update_ds_rw_functions(bool ds_format_changed, bool ds_state_changed);
+    void update_ds_rw_functions(bool ds_format_changed, bool ds_state_changed, bool output_depth_enabled);
 
 public:
 	void initialize	(render_stages const* stages);

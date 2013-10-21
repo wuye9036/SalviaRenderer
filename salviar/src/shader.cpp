@@ -722,7 +722,7 @@ void viewport_transform(vec4& position, const viewport& vp)
 
 	position[0] = (float(vp.w) * 0.5f) *  pos.x() + ox;
 	position[1] = (float(vp.h) * 0.5f) * -pos.y() + oy;
-	position[2] = (vp.maxz - vp.minz) * 0.5f * pos.z() + vp.minz;
+	position[2] = (vp.maxz - vp.minz) * pos.z() + vp.minz;
 	position[3] = invw;
 }
 

@@ -437,10 +437,19 @@ void framebuffer::update(render_state* state)
     ds_target_ = state->depth_stencil_target.get();
     sample_count_ = state->target_sample_count;
 
-    update_ds_rw_functions(ds_format_changed, ds_state_changed);
+    bool output_depth_enabled = false;
+    if(!state->vx_shader || !state->vs_proto)
+    {
+        if(state->cpp_ps && state->cpp_ps->output_depth())
+        {
+            output_depth_enabled = true;
+        }
+    }
+
+    update_ds_rw_functions(ds_format_changed, ds_state_changed, output_depth_enabled);
 }
 
-void framebuffer::update_ds_rw_functions(bool ds_format_changed, bool ds_state_changed)
+void framebuffer::update_ds_rw_functions(bool ds_format_changed, bool ds_state_changed, bool output_depth_enabled)
 {
     if(!ds_format_changed && !ds_state_changed)
     {
@@ -529,7 +538,7 @@ void framebuffer::update_ds_rw_functions(bool ds_format_changed, bool ds_state_c
         return;
     }
 
-    early_z_enabled_ = !ds_state_->get_desc().stencil_enable;
+    early_z_enabled_ = !ds_state_->get_desc().stencil_enable || !output_depth_enabled;
 }
 
 framebuffer::framebuffer()

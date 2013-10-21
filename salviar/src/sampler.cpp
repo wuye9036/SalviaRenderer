@@ -434,11 +434,15 @@ namespace surface_sampler
 	{
 		static color_rgba32f op(const surface& surf, float x, float y, size_t sample, const color_rgba32f& border_color)
 		{
-			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0),
-				int4(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0));
+            int4 region_size(static_cast<int>(surf.get_width()), static_cast<int>(surf.get_height()), 0, 0);
+			int4 ixy = coord_calculator::point_cc<addresser_type_uv>(vec4(x, y, 0, 0), region_size);
 
-			if(ixy[0] < 0 || ixy[1] < 0) return border_color;
-			return surf.get_texel(ixy[0], ixy[1], sample);
+            if( 0 <= ixy[0] && ixy[0] < region_size[0] && 0 <= ixy[1] && ixy[1] < region_size[1] )
+            {
+                return surf.get_texel(ixy[0], ixy[1], sample);
+            }
+            
+            return border_color;
 		}
 	};
 

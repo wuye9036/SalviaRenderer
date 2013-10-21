@@ -35,10 +35,18 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+static float const esm_constant = 87.0f;
+
 class gen_sm_cpp_ps : public cpp_pixel_shader
 {
+    bool output_depth() const
+    {
+        return true;
+    }
+
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
+        out.depth = exp(esm_constant * in.position().z());
 		return true;
 	}
 
@@ -82,7 +90,18 @@ public:
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-		color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
+        float occlusion = 0.0f;
+        if(dsamp_)
+        {
+            vec3 light_space_pos( in.attribute(4).xyz() / in.attribute(4).w() );
+            vec3 light_texture_coord = (light_space_pos + vec3(1.0f, 1.0f, 1.0f)) * 0.5f;
+            light_texture_coord.y( 1.0f - light_texture_coord.y() );
+            float shadow_depth = tex2dlod(*dsamp_, vec4(light_texture_coord.xyz(), 0.0f)).r;
+            occlusion = eflib::clamp(shadow_depth * exp(-esm_constant * light_space_pos.z()), 0.0f, 1.0f);
+            occlusion = occlusion < 0.99f ? 0.0f : 1.0f;
+        }
+
+        color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
         if(texsamp_)
         {
             tex_color = tex2d(*texsamp_ , 0);
@@ -91,13 +110,12 @@ public:
 		vec3 norm( normalize3( in.attribute(1).xyz() ) );
 		vec3 light_dir( normalize3( in.attribute(2).xyz() ) );
 		vec3 eye_dir( normalize3( in.attribute(3).xyz() ) );
-		vec3 light_space_pos( in.attribute(4).xyz() / in.attribute(4).w() );
-
+		
 		float illum_diffuse = clamp( dot_prod3( light_dir, norm ), 0.0f, 1.0f );
-		float illum_specular = clamp( dot_prod3( reflect3( light_dir, norm ), eye_dir ), 0.0f, 1.0f );
-		vec4 illum = ambient + diffuse * illum_diffuse + specular * illum_specular;
+		float illum_specular = clamp( dot_prod3(-reflect3(light_dir, norm), eye_dir), 0.0f, 1.0f );
+		vec4 illum = ambient + ( diffuse * illum_diffuse + specular * pow(illum_specular, shininess) ) * occlusion;
 
-		out.color[0] = tex_color.get_vec4() * illum;
+        out.color[0] = tex_color.get_vec4() * illum;
 		out.color[0][3] = 1.0f;
 
 		return true;
@@ -149,7 +167,7 @@ protected:
 		render_params.backbuffer_num_samples = 1;
         render_params.native_window = window_handle;
 
-        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params);
+        salviax_create_swap_chain_and_renderer(swap_chain_, renderer_, &render_params, renderer_sync);
         color_surface_ = swap_chain_->get_surface();
         sm_texture_ = renderer_->create_tex2d(
             render_params.backbuffer_width,
@@ -171,7 +189,7 @@ protected:
 		sm_desc.addr_mode_u = address_border;
 		sm_desc.addr_mode_v = address_border;
 		sm_desc.addr_mode_w = address_border;
-		sm_desc.border_color = color_rgba32f(1.0f, 1.0f, 1.0f, 1.0f);
+		sm_desc.border_color = color_rgba32f(exp(esm_constant), 0.0f, 0.0f, 0.0f);
         sm_sampler_ = renderer_->create_sampler(sm_desc, sm_texture_);
 
         viewport vp;
@@ -196,10 +214,10 @@ protected:
 		cup_mesh = create_mesh_from_obj( renderer_.get(), "../../resources/models/cup/cup.obj", true );
         plane_mesh = create_planar(
             renderer_.get(),
-            vec3(-10.0f, 0.0f, -10.0f),
-            vec3(1.0f, 0.0f, 0.0f),
-            vec3(0.0f, 0.0f, 1.0f),
-            20, 20, true
+            vec3(-3.0f, 0.0f, -3.0f),
+            vec3(6.0f, -1.0f, 0.0f),
+            vec3(0.0f, -1.0f, 6.0f),
+            1, 1, false
             );
 	}
 	/** @} */
@@ -212,7 +230,7 @@ protected:
 	void gen_sm()
 	{
 		renderer_->set_render_targets(0, nullptr, sm_texture_->get_surface(0));
-		renderer_->clear_depth_stencil(sm_texture_->get_surface(0), 1.0f, 0);
+        renderer_->clear_depth_stencil(sm_texture_->get_surface(0), exp(esm_constant), 0);
 
         renderer_->set_vertex_shader_code(gen_sm_vs_);
 		renderer_->set_pixel_shader(gen_sm_ps_);
@@ -220,8 +238,14 @@ protected:
 
 		renderer_->set_rasterizer_state(rs_back);
 
-        renderer_->set_vs_variable("wvpMatrix",	&camera_wvp_);
-        // cup_mesh[1]->render();
+        renderer_->set_vs_variable("wvpMatrix",	&light_wvp_);
+        plane_mesh->render();
+
+        for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
+		{
+			mesh_ptr cur_mesh = cup_mesh[i_mesh];
+			cur_mesh->render();
+		}
 	}
 	
 	void draw()
@@ -242,7 +266,19 @@ protected:
 		renderer_->set_vs_variable("lightPos",	&light_pos_);
 		renderer_->set_vs_variable("lightWvp",	&light_wvp_);
 
-		for( size_t i_mesh = 1; i_mesh < cup_mesh.size(); ++i_mesh )
+        vec4 ambient (0.1f, 0.1f, 0.1f, 0.1f);
+        vec4 diffuse (0.8f, 0.8f, 0.8f, 0.1f);
+        vec4 specular(0.4f, 0.4f, 0.4f, 0.1f);
+        int  shininess(32);
+        draw_ps_->set_constant( _T("Ambient"),  &ambient );
+	    draw_ps_->set_constant( _T("Diffuse"),  &diffuse );
+		draw_ps_->set_constant( _T("Specular"), &specular );
+        draw_ps_->set_constant( _T("Shininess"),&shininess);
+        draw_ps_->set_sampler(_T("TexSampler"), sampler_ptr());
+        draw_ps_->set_sampler(_T("DepthSampler"), sm_sampler_);
+
+        plane_mesh->render();
+		for( size_t i_mesh = 0; i_mesh < cup_mesh.size(); ++i_mesh )
 		{
 			mesh_ptr cur_mesh = cup_mesh[i_mesh];
 
@@ -288,15 +324,17 @@ protected:
 			return;
 		}
 
-		camera_pos_ = vec4(cos(0.0f) * 2.0f, 0.5f, sin(0.0f) * 2.0f, 1.0f);
+		camera_pos_ = vec4(6.0f, 3.1f, 3.0f, 1.0f);
 		mat44 view, proj;
 		mat_lookat(view, camera_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 100.0f);
 		mat_mul(camera_wvp_, view, proj);
 
-		light_pos_ = vec4( sin(0.0f) * 8.2f, 7.0f, cos(0.0f * 0.9f) * 6.8f, 0.0f );
-		mat_lookat(view, light_pos_.xyz(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI), 1.0f, 0.1f, 100.0f);
+        static float theta = 0.0f;
+        theta += 0.01f;
+		light_pos_ = vec4(-4.0f * sin(theta), 6.1f, 3.5f * cos(theta), 1.0f);
+		mat_lookat(view, light_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 100.0f);
 		mat_mul(light_wvp_, view, proj);
 
 		gen_sm();

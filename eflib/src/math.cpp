@@ -480,6 +480,7 @@ namespace eflib{
 		return out;
 	}
 
+    // RH, Z Range: 0-1 (D3D Perspective Matrix)
 	mat44& mat_perspective_fov(mat44& out, float fovy, float aspect, float n, float f)
 	{
 		float ys = 1.0f / std::tan(fovy/2);
