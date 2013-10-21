@@ -35,7 +35,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-static float const esm_constant = 87.0f;
+static float const esm_constant = 4000.0f;
 
 class gen_sm_cpp_ps : public cpp_pixel_shader
 {
@@ -46,7 +46,7 @@ class gen_sm_cpp_ps : public cpp_pixel_shader
 
 	bool shader_prog(const vs_output& in, ps_output& out)
 	{
-        out.depth = exp(esm_constant * in.position().z());
+        out.depth = in.position().z();
 		return true;
 	}
 
@@ -97,8 +97,7 @@ public:
             vec3 light_texture_coord = (light_space_pos + vec3(1.0f, 1.0f, 1.0f)) * 0.5f;
             light_texture_coord.y( 1.0f - light_texture_coord.y() );
             float shadow_depth = tex2dlod(*dsamp_, vec4(light_texture_coord.xyz(), 0.0f)).r;
-            occlusion = eflib::clamp(shadow_depth * exp(-esm_constant * light_space_pos.z()), 0.0f, 1.0f);
-            occlusion = occlusion < 0.99f ? 0.0f : 1.0f;
+            occlusion = eflib::clamp(exp(esm_constant * (shadow_depth - light_space_pos.z())), 0.0f, 1.0f);
         }
 
         color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -189,7 +188,7 @@ protected:
 		sm_desc.addr_mode_u = address_border;
 		sm_desc.addr_mode_v = address_border;
 		sm_desc.addr_mode_w = address_border;
-		sm_desc.border_color = color_rgba32f(exp(esm_constant), 0.0f, 0.0f, 0.0f);
+		sm_desc.border_color = color_rgba32f(1.0f, 0.0f, 0.0f, 0.0f);
         sm_sampler_ = renderer_->create_sampler(sm_desc, sm_texture_);
 
         viewport vp;
@@ -230,7 +229,7 @@ protected:
 	void gen_sm()
 	{
 		renderer_->set_render_targets(0, nullptr, sm_texture_->get_surface(0));
-        renderer_->clear_depth_stencil(sm_texture_->get_surface(0), exp(esm_constant), 0);
+        renderer_->clear_depth_stencil(sm_texture_->get_surface(0), 1.0f, 0);
 
         renderer_->set_vertex_shader_code(gen_sm_vs_);
 		renderer_->set_pixel_shader(gen_sm_ps_);
@@ -334,7 +333,7 @@ protected:
         theta += 0.01f;
 		light_pos_ = vec4(-4.0f * sin(theta), 6.1f, 3.5f * cos(theta), 1.0f);
 		mat_lookat(view, light_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 100.0f);
+		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 40.0f);
 		mat_mul(light_wvp_, view, proj);
 
 		gen_sm();
