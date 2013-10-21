@@ -320,7 +320,7 @@ SASL_SPECIFIC_VISIT_DEF( visit_return, jump_statement ){
 		if( ret_value.hint() != builtin_types::none ){
 			// Builtin: Copy directly.
 			node_semantic* ret_ssi = sem_->get_semantic(service()->fn().fn_def);
-			sv_layout* ret_si = abii->input_sv_layout( ret_ssi->semantic_value_ref() );
+            sv_layout* ret_si = abii->output_sv_layout( ret_ssi->semantic_value_ref() );
 			assert( ret_si );
 			layout_to_value(ret_si, false).store(ret_value);
 		} else {
