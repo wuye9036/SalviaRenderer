@@ -35,7 +35,13 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-static float const esm_constant = 4000.0f;
+static float const esm_constant = 25000.0f;
+static float const gaussian_weights[] =
+{
+	0.027681f, 0.111014f, 0.027681f,
+	0.111014f, 0.445213f, 0.111014f,
+	0.027681f, 0.111014f, 0.027681f
+};
 
 class gen_sm_cpp_ps : public cpp_pixel_shader
 {
@@ -93,11 +99,40 @@ public:
         float occlusion = 0.0f;
         if(dsamp_)
         {
-            vec3 light_space_pos( in.attribute(4).xyz() / in.attribute(4).w() );
-            vec3 light_texture_coord = (light_space_pos + vec3(1.0f, 1.0f, 1.0f)) * 0.5f;
-            light_texture_coord.y( 1.0f - light_texture_coord.y() );
-            float shadow_depth = tex2dlod(*dsamp_, vec4(light_texture_coord.xyz(), 0.0f)).r;
-            occlusion = eflib::clamp(exp(esm_constant * (shadow_depth - light_space_pos.z())), 0.0f, 1.0f);
+            vec3 lis_pos( in.attribute(4).xyz() / in.attribute(4).w() );
+            vec2 sm_center( (lis_pos.x() + 1.0f)*0.5f, (1.0f-(lis_pos.y()+1.0f)*0.5f) );
+
+			float sm_offset = 1 / 512.0f;
+			vec2 sm_coords[] = 
+			{
+				sm_center + vec2(-sm_offset, -sm_offset),
+				sm_center + vec2(      0.0f, -sm_offset),
+				sm_center + vec2(+sm_offset, -sm_offset),
+				sm_center + vec2(-sm_offset,       0.0f),
+				sm_center + vec2(      0.0f,       0.0f),
+				sm_center + vec2(+sm_offset,       0.0f),
+				sm_center + vec2(-sm_offset, +sm_offset),
+				sm_center + vec2(      0.0f, +sm_offset),
+				sm_center + vec2(+sm_offset, +sm_offset)
+			};
+
+            float shadow_depth[9];
+			for(int i = 0; i < 9; ++i)
+			{
+				vec4 sm_coord_lod(sm_coords[i].x(), sm_coords[i].y(), 0.0f, 0.0f);
+				shadow_depth[i] = tex2dlod(*dsamp_, sm_coord_lod).r;
+			}
+
+			float occluder = 0.0f;
+			for(int i = 1; i < 9; ++i)
+			{
+				occluder += gaussian_weights[i] * exp(esm_constant * (shadow_depth[i] - shadow_depth[0]));
+			}
+			occluder += gaussian_weights[0];
+			occluder = log(occluder);
+			occluder += esm_constant * shadow_depth[0];
+
+			occlusion = eflib::clamp(exp(occluder - esm_constant * lis_pos[2]), 0.0f, 1.0f);
         }
 
         color_rgba32f tex_color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -312,7 +347,7 @@ protected:
 	
 	void on_idle()
     {
-		float fps;
+		static float fps = 1.0f;
 		if( fps_counter_.on_frame(fps) )
 		{
 			cout << fps << endl;
@@ -330,7 +365,7 @@ protected:
 		mat_mul(camera_wvp_, view, proj);
 
         static float theta = 0.0f;
-        theta += 0.01f;
+		theta += 0.01f * 30 / fps;
 		light_pos_ = vec4(-4.0f * sin(theta), 6.1f, 3.5f * cos(theta), 1.0f);
 		mat_lookat(view, light_pos_.xyz(), vec3(0.0f, 0.6f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 		mat_perspective_fov(proj, static_cast<float>(HALF_PI * 0.5f), 1.0f, 0.1f, 40.0f);
