@@ -1,12 +1,12 @@
 
-set( SALVIA_BOOST_DIRECTORY CACHE PATH "Specify a path to boost." )
-if( SALVIA_BOOST_DIRECTORY )
-	set( BOOST_ROOT ${SALVIA_BOOST_DIRECTORY} )
+set( SALVIA_BOOST_DIR CACHE PATH "Specify a path to boost." )
+if( SALVIA_BOOST_DIR )
+	set( BOOST_ROOT ${SALVIA_BOOST_DIR} )
 endif()
 FIND_PACKAGE( Boost 1.53.0 )
 
 if( Boost_FOUND )
-	set( SALVIA_BOOST_HOME_DIR "${Boost_INCLUDE_DIRS}" )
+	set( SALVIA_BOOST_INCLUDE_DIR ${SALVIA_BOOST_DIR} )
 else ( Boost_FOUND )	
 	MESSAGE( FATAL_ERROR "Can not find boost 1.53 or later. Please specify a path with 'SALVIA_BOOST_DIRECOTRY' or run './build_all.py'." )
 endif()

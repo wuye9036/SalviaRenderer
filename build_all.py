@@ -123,28 +123,50 @@ def make_llvm(proj):
 	cmd.add_command( '@%s INSTALL.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.execute()
 	pass
-
-def clean_freetype(proj):
-	guarded_rmtree( proj.freetype_build() )
-	objs_root = os.path.join(proj.freetype_root(), "objs")
-	for dir in os.listdir(objs_root):
-		full_path = os.path.join(objs_root, dir)
-		if os.path.isdir(full_path):
-			guarded_rmtree(full_path)
-	guarded_rmtree(proj.freetype_install())
 	
-def make_freetype(proj):
-	cmd = batch_command( proj.freetype_solution() )
+def config_freeimage(proj):
+	defs = {}
+	defs["CMAKE_INSTALL_PREFIX"] = ("PATH", proj.freeimage_install())
+	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ ' -D %s:%s="%s"' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
+	
+	print("Configuring FreeImage ...")
+	if not os.path.exists( proj.freeimage_build() ):
+		os.makedirs( proj.freeimage_build() )
+	llvm_cmd = batch_command( proj.freeimage_build() )
+	llvm_cmd.add_command( '"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), defs_cmd, proj.freeimage_root() ) )
+	llvm_cmd.execute()
+
+def make_freeimage(proj):
+	cmd = batch_command( proj.freeimage_build() )
 	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
 	cmd.add_command( '@set VisualStudioVersion=%s' % proj.toolset().vs_version_string() )
-	cmd.add_command( '@echo Building FreeType2 %s ...' % proj.config_name() )
-	cmd.add_command( '@%s freetype.sln /m /v:m /p:Configuration=%s;Platform=%s' % (proj.maker_name(), proj.config_name(), proj.msvc_platform_name()) )
+	cmd.add_command( '@echo Building FreeImage %s ...' % proj.config_name() )
+	cmd.add_command( '@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
+	cmd.add_command( '@echo Installing FreeImage %s ...' % proj.config_name() )
+	cmd.add_command( '@%s INSTALL.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.execute()
-
-	cmd = batch_command( proj.source_root() )
-	cmd.add_command( '@echo Installing FreeType2 %s ...' % proj.config_name() )
-	cmd.add_command( '@mkdir "%s"' % proj.freetype_install() )
-	cmd.add_command( '@copy /y "%s" "%s"' % ( os.path.join(proj.freetype_build(), "freetype.lib"), os.path.join(proj.freetype_install(), "freetype.lib") ) )
+	
+def config_freetype(proj):
+	# Add definitions here
+	defs = {}
+	defs["CMAKE_INSTALL_PREFIX"] = ("PATH", proj.freetype_install())
+	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ ' -D %s:%s="%s"' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
+	
+	print("Configuring FreeType ...")
+	if not os.path.exists( proj.freetype_build() ):
+		os.makedirs( proj.freetype_build() )
+	llvm_cmd = batch_command( proj.freetype_build() )
+	llvm_cmd.add_command( '"%s" -G "%s" %s %s ' % (proj.cmake_exe(), proj.generator(), defs_cmd, proj.freetype_root() ) )
+	llvm_cmd.execute()
+	
+def make_freetype(proj):
+	cmd = batch_command( proj.freetype_build() )
+	cmd.add_command( '@call "%s"' % proj.env_setup_commands() )
+	cmd.add_command( '@set VisualStudioVersion=%s' % proj.toolset().vs_version_string() )
+	cmd.add_command( '@echo Building FreeType %s ...' % proj.config_name() )
+	cmd.add_command( '@%s ALL_BUILD.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
+	cmd.add_command( '@echo Installing FreeType %s ...' % proj.config_name() )
+	cmd.add_command( '@%s INSTALL.%s /m /v:m /p:Configuration=%s' % (proj.maker_name(), proj.project_file_ext(), proj.config_name()) )
 	cmd.execute()
 
 def clean_salvia(proj):
@@ -155,10 +177,12 @@ def clean_salvia(proj):
 def config_salvia(proj):
 	# Add definitions here
 	defs = {}
+
+	defs["SALVIA_BOOST_DIR"] = ("PATH", proj.boost_root())
 	defs["PYTHON_EXECUTABLE"] = ("PATH", sys.executable)
-	defs["SALVIA_BOOST_DIRECTORY"] = ("PATH", proj.boost_root())
 	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", proj.boost_lib_dir() )
-	defs["SALVIA_LLVM_INSTALL_PATH"] = ("PATH", proj.prebuilt_llvm() )
+	defs["SALVIA_FREEIMAGE_DIR"] = ( "PATH", proj.freeimage_install_in_msvc() )
+	defs["SALVIA_LLVM_INSTALL_DIR"] = ("PATH", proj.llvm_install_in_msvc() )
 	defs["SALVIA_FREETYPE_LIB_DIR"] = ( "PATH", proj.freetype_install_in_msvc() )
 	defs["SALVIA_BUILD_WITH_DIRECTX"] = ("BOOL", "TRUE" if proj.directx() else "FALSE")
 
@@ -183,11 +207,11 @@ def make_salvia(proj):
 def install_prebuild_binaries(proj):
 	print( "Installing dependencies ..." )
 	# Copy FreeImage
-	fi_bin_root = os.path.join( proj.source_root(), "3rd_party", "FreeImage", "bin" )
-	fi_dll = None
-	fi_bin_dir = os.path.join( fi_bin_root, proj.target_modifier(['platform']) )
-	fi_dll = os.path.join( fi_bin_dir, 'FreeImage.dll')
-	copy_newer( fi_dll, proj.salvia_bin() )
+	#fi_bin_root = os.path.join( proj.source_root(), "3rd_party", "FreeImage", "bin" )
+	#fi_dll = None
+	#fi_bin_dir = os.path.join( fi_bin_root, proj.target_modifier(['platform']) )
+	#fi_dll = os.path.join( fi_bin_dir, 'FreeImage.dll')
+	#copy_newer( fi_dll, proj.salvia_bin() )
 		
 	# Copy boost
 	files = os.listdir( proj.boost_lib_dir() )
@@ -196,9 +220,12 @@ def install_prebuild_binaries(proj):
 		for f in files:
 			f_basename = os.path.basename(f)
 			name, ext = os.path.splitext(f)
-			if( ext != ".dll" ): continue
-			if ( '-gd' in name ) != (proj.config_name() == "Debug"): continue
-			if ( not proj.toolset().boost_lib_name() in name ): continue
+			if ext != ".dll":
+				continue
+			if '-gd' in name != (proj.config_name() == "Debug"):
+				continue
+			if not proj.toolset().boost_lib_name() in name:
+				continue
 			need_copy.append( os.path.join( proj.boost_lib_dir(), f_basename ) )
 	
 	for f in need_copy:
@@ -207,8 +234,6 @@ def install_prebuild_binaries(proj):
 def clean_all(proj):
 	print('clean Boost ...')
 	clean_boost(proj)
-	print('clean FreeType2 ...')
-	clean_freetype(proj)
 	print('clean LLVM ...')
 	clean_llvm(proj)
 	print('clean SALVIA ...')
@@ -227,7 +252,7 @@ def build(proj_props, cleanBuild):
 		print("ERROR: Boost build doesn't support non-win32 for now.")
 		sys.exit(1)
 
-	print( 'Checking boost...')
+	print('Checking boost...')
 	if not proj.boost_version():
 		print('ERROR: Boost is not found. Please specify boost path in \'proj.py\'.')
 		sys.exit(1)
@@ -245,13 +270,19 @@ def build(proj_props, cleanBuild):
 	if not make_boost(proj):
 		sys.exit(1)
 
-	config_llvm(proj)
-	make_llvm(proj)
-	make_freetype(proj)
-	config_salvia(proj)
-	make_salvia(proj)
+	#config_freetype(proj)
+	#make_freetype(proj)
 
-	install_prebuild_binaries(proj)
+	config_freeimage(proj)
+	make_freeimage(proj)
+
+	#config_llvm(proj)
+	#make_llvm(proj)
+	
+	#config_salvia(proj)
+	#make_salvia(proj)
+
+	#install_prebuild_binaries(proj)
 	
 if __name__ == "__main__":
 	try:

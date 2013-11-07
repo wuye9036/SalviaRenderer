@@ -17,3 +17,4 @@ doc/roadmap.mpp
 proj.py
 build.log
 bin_release
+.idea

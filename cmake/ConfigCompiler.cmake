@@ -1,7 +1,8 @@
 
 if(MSVC)
-	include( ${SALVIA_HOME_DIR}/cmake/MSVC.cmake )
+	include(${CMAKE_CURRENT_LIST_DIR}/MSVC.cmake)
 endif(MSVC)
+
 if(MINGW)
-	include( ${SALVIA_HOME_DIR}/cmake/GCC.cmake )
+	include(${CMAKE_CURRENT_LIST_DIR}/GCC.cmake)
 endif(MINGW)

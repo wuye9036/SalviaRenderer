@@ -22,7 +22,9 @@ class project:
 		env = os.environ
 		default_toolset = props.toolset
 		
-		self.directx_ = ("DXSDK_DIR" in env) 
+		self.directx_ = \
+			("DXSDK_DIR" in env) or\
+			(self.toolset().compiler_name == "msvc" and self.toolset().major_ver >= 11 )
 			
 		if default_toolset == None or default_toolset == "":
 			if "VS120COMNTOOLS" in env:
@@ -71,8 +73,10 @@ class project:
 		print( ' * LLVM .................... %s' % self.llvm_root() )
 		print( ' * LLVM Build .............. %s' % self.llvm_build() )
 		print( ' * LLVM Install ............ %s' % self.llvm_install() )
+		print( ' * FreeImage ............... %s' % self.freeimage_root() )
+		print( ' * FreeImage Build ......... %s' % self.freeimage_build() )
+		print( ' * FreeImage Install ....... %s' % self.freeimage_install() )
 		print( ' * FreeType2 ............... %s' % self.freetype_root() )
-		print( ' * FreeType2 Solution....... %s' % self.freetype_solution() )
 		print( ' * FreeType2 Build ......... %s' % self.freetype_build() )
 		print( ' * FreeType2 Install ....... %s' % self.freetype_install() )
 		print('')
@@ -127,6 +131,7 @@ class project:
 		return self.config_
 	
 	def msvc_platform_name(self):
+		platform_name_in_msvc = ""
 		if self.arch() == arch.x86:
 			platform_name_in_msvc = "Win32"
 		elif self.arch() == arch.x64:
@@ -140,7 +145,6 @@ class project:
 			return "vcproj"
 		else:
 			assert False
-			return None
 		
 	def msvc_config_name_with_platform(self):
 		return '"' + self.config_ + "|" + self.msvc_platform_name() + '"'
@@ -173,9 +177,9 @@ class project:
 	def boost_lib_dir(self):
 		return os.path.join( self.boost_stage(), "lib" )
 		
-	def prebuilt_llvm(self):
+	def llvm_install_in_msvc(self):
 		if self.os() != systems.win32:
-			return llvm_install
+			return self.llvm_install()
 		elif self.toolset().compiler_name == 'msvc':
 			return os.path.join( self.install_lib(), "llvm_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
 	def llvm_root(self):
@@ -185,23 +189,24 @@ class project:
 	def llvm_install(self):
 		return os.path.join( self.install_lib(), "llvm_" + self.target_modifier(['platform', 'tool', 'config']) )
 
+	def freeimage_root(self):
+		return os.path.join( self.source_root(), "3rd_party", "FreeImage")
+	def freeimage_build(self):
+		return os.path.join( self.build_root(), "freeimage_" + self.target_modifier(['platform', 'tool']) )
+	def freeimage_install(self):
+		return os.path.join( self.install_lib(), "freeimage_" + self.target_modifier(['platform', 'tool', 'config']) )
+	def freeimage_install_in_msvc(self):
+		return os.path.join( self.install_lib(), "freeimage_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
+
 	def freetype_root(self):
 		return os.path.join( self.source_root(), "3rd_party", "freetype2")
-	def freetype_solution(self):
-		if self.current_os() == systems.win32:
-			if self.toolset().short_name() == "msvc10":
-				return os.path.join( self.freetype_root(), "builds", "win32", "vc2010" )
-			elif self.toolset().short_name() == "msvc11":
-				return os.path.join( self.freetype_root(), "builds", "win32", "vc2012" )
-			elif self.toolset().short_name() == "msvc12":
-				return os.path.join( self.freetype_root(), "builds", "win32", "vc2013" )
-		return None
 	def freetype_build(self):
-		return os.path.join( self.freetype_root(), "libs", self.target_modifier(['platform', 'tool', 'config']) )
+		return os.path.join( self.build_root(), "freetype_" + self.target_modifier(['platform', 'tool']) )
 	def freetype_install(self):
 		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool', 'config']) )
 	def freetype_install_in_msvc(self):
 		return os.path.join( self.install_lib(), "freetype_" + self.target_modifier(['platform', 'tool']) + '_$(ConfigurationName)' )
+
 	def salvia_build(self):
 		return os.path.join( self.build_root(), "salvia_" + self.target_modifier(['platform', 'tool']) )
 	def salvia_lib(self):
