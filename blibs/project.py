@@ -21,10 +21,6 @@ class project:
 		self.cmake_ = props.cmake
 		env = os.environ
 		default_toolset = props.toolset
-		
-		self.directx_ = \
-			("DXSDK_DIR" in env) or\
-			(self.toolset().compiler_name == "msvc" and self.toolset().major_ver >= 11 )
 			
 		if default_toolset == None or default_toolset == "":
 			if "VS120COMNTOOLS" in env:
@@ -50,6 +46,10 @@ class project:
 		else:
 			print('ERROR: Unsupported toolset name: %s' % default_toolset)
 	
+		self.directx_ = \
+			("DXSDK_DIR" in env) or\
+			(self.toolset().compiler_name == "msvc" and self.toolset().major_ver >= 11 )
+			
 	def print_props(self):
 		print( '='*25 + ' Checking Project Properties ' + '='*25 )
 		print( ' * Current Arch ............ %s' % str( self.current_arch() ) )

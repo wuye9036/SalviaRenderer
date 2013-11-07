@@ -7,12 +7,6 @@ INCLUDE_DIRECTORIES(
 	${SALVIA_FREEIMAGE_INCLUDE_DIR}
 )
 
-LINK_DIRECTORIES(
-	${SALVIA_BOOST_LIB_DIR}
-	${SALVIA_FREETYPE_LIB_DIR}
-	${SALVIA_FREEIMAGE_LIB_DIR}
-	)
-
 set (HEADER_FILES
 	include/resource/mesh/sa/material.h
 	include/resource/mesh/sa/mesh.h

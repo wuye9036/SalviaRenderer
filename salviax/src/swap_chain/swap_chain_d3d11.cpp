@@ -13,17 +13,27 @@
 #	define NOMINMAX
 #endif
 
-#include <DXGI.h>
-#include <D3D11.h>
-#include <D3DX11.h>
+#include <dxgi.h>
+#include <d3d11.h>
+
+#include <sdkddkver.h>
+#if WINVER >= 0x0602
+#	include <d3dcompiler.h>
+#	pragma comment(lib, "d3dcompiler.lib")
+#else
+#	include <d3dx11.h>
+#	ifdef EFLIB_DEBUG
+#		pragma comment(lib, "d3dx11d.lib")
+#	else
+#		pragma comment(lib, "d3dx11.lib")
+#	endif
+#endif
 
 #include <tchar.h>
 
 #ifdef EFLIB_DEBUG
-#	pragma comment(lib, "d3dx11d.lib")
 #	pragma comment(lib, "dxguid.lib")
 #else
-#	pragma comment(lib, "d3dx11.lib")
 #	pragma comment(lib, "dxguid.lib")
 #endif
 
@@ -267,7 +277,13 @@ public:
 
 			ID3D10Blob* vs_code = NULL;
 			ID3D10Blob* err_msg = NULL;
+
+#if WINVER >= 0x0602
+			D3DCompile(vs_data, sizeof(vs_data), NULL, NULL, NULL, "VSMain", "vs_4_0", 0, 0, &vs_code, &err_msg);
+#else
 			D3DX11CompileFromMemory(vs_data, sizeof(vs_data), NULL, NULL, NULL, "VSMain", "vs_4_0", 0, 0, NULL, &vs_code, &err_msg, NULL);
+#endif
+
 			if (err_msg)
 			{
 				std::cerr << err_msg->GetBufferPointer() << std::endl;
@@ -279,7 +295,13 @@ public:
 
 			ID3D10Blob* ps_code = NULL;
 			err_msg = NULL;
+
+#if WINVER >= 0x0602
+			D3DCompile(ps_data, sizeof(ps_data), NULL, NULL, NULL, "PSMain", "ps_4_0", 0, 0, &ps_code, &err_msg);
+#else
 			D3DX11CompileFromMemory(ps_data, sizeof(ps_data), NULL, NULL, NULL, "PSMain", "ps_4_0", 0, 0, NULL, &ps_code, &err_msg, NULL);
+#endif
+
 			if (err_msg)
 			{
 				std::cerr << err_msg->GetBufferPointer() << std::endl;

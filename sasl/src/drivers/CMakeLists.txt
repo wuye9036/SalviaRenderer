@@ -2,17 +2,17 @@ SALVIA_CHECK_BUILD_WITH_UNICODE()
 
 INCLUDE_DIRECTORIES(
 	${SASL_HOME_DIR}
-	${SALVIA_BOOST_HOME_DIR}
 	${SALVIA_HOME_DIR}
-	${SALVIA_LLVM_INCLUDE_PATH}
+	${SALVIA_LLVM_INCLUDE_DIR}
+	${SALVIA_BOOST_INCLUDE_DIR}
 )
 
 LINK_DIRECTORIES(
 	${SALVIA_BOOST_LIB_DIR}
-	${SALVIA_LLVM_LIB_PATH}
+	${SALVIA_LLVM_LIB_DIR}
 )
 
-# Config Dynamic Link Driver.
+# Configure Dynamic Link Driver.
 ADD_LIBRARY( sasl_drivers
 	SHARED
 	${SASL_HOME_DIR}/sasl/include/drivers/drivers_api.h
@@ -27,8 +27,7 @@ TARGET_LINK_LIBRARIES( sasl_drivers
 SET_TARGET_PROPERTIES( sasl_drivers PROPERTIES FOLDER "Shader Drivers")
 SALVIA_CONFIG_OUTPUT_PATHS( sasl_drivers )
 
-# Config Static Link Driver.
-
+# Configure Static Link Driver.
 set( HEADER_FILES
 	${SASL_HOME_DIR}/sasl/include/drivers/drivers_forward.h
 	

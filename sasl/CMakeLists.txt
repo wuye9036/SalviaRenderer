@@ -1,4 +1,7 @@
 SET( EFLIB_HOME_PATH ${SALVIA_HOME_DIR} )
+
+SET(SASL_HOME_DIR ${CMAKE_CURRENT_LIST_DIR}/../)
+
 include( ConfigureSASLProject.cmake )
 
 # Check CMAKE_BUILD_TYPE

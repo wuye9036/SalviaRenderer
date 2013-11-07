@@ -183,7 +183,7 @@ def config_salvia(proj):
 	defs["SALVIA_BOOST_LIB_DIR"] = ("PATH", proj.boost_lib_dir() )
 	defs["SALVIA_FREEIMAGE_DIR"] = ( "PATH", proj.freeimage_install_in_msvc() )
 	defs["SALVIA_LLVM_INSTALL_DIR"] = ("PATH", proj.llvm_install_in_msvc() )
-	defs["SALVIA_FREETYPE_LIB_DIR"] = ( "PATH", proj.freetype_install_in_msvc() )
+	defs["SALVIA_FREETYPE_DIR"] = ( "PATH", proj.freetype_install_in_msvc() )
 	defs["SALVIA_BUILD_WITH_DIRECTX"] = ("BOOL", "TRUE" if proj.directx() else "FALSE")
 
 	defs_cmd = reduce( lambda cmd, lib: cmd+lib, [ '-D %s:%s="%s" ' % (k, v[0], v[1]) for (k, v) in defs.items() ] )
@@ -270,19 +270,19 @@ def build(proj_props, cleanBuild):
 	if not make_boost(proj):
 		sys.exit(1)
 
-	#config_freetype(proj)
-	#make_freetype(proj)
+	config_freetype(proj)
+	make_freetype(proj)
 
 	config_freeimage(proj)
 	make_freeimage(proj)
 
-	#config_llvm(proj)
-	#make_llvm(proj)
+	config_llvm(proj)
+	make_llvm(proj)
 	
-	#config_salvia(proj)
-	#make_salvia(proj)
+	config_salvia(proj)
+	make_salvia(proj)
 
-	#install_prebuild_binaries(proj)
+	install_prebuild_binaries(proj)
 	
 if __name__ == "__main__":
 	try:
