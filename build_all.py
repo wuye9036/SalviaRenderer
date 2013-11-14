@@ -231,7 +231,7 @@ def install_prebuild_binaries(proj):
 			name, ext = os.path.splitext(f)
 			if not ext in ['.dll', '.so']:
 				continue
-			if ('-gd' in name) != (proj.config_name() == "Debug"):
+			if ('-gd-' in name or '-d-' in name) != (proj.config_name() == "Debug"):
 				continue
 			if not proj.toolset().boost_lib_name() in name:
 				continue

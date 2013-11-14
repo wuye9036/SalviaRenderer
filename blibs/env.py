@@ -81,9 +81,6 @@ class toolset:
 
 	def boost_lib_name(self):
 		ret = "%s%d%d" % ( self.short_compiler_name(), self.major_ver, self.minor_ver )
-		need_patch_ver = ( self.patch_ver and self.patch_ver != 0 )
-		if need_patch_ver:
-			ret += str(self.patch_ver)
 		return ret
 		
 	def short_compiler_name(self):
