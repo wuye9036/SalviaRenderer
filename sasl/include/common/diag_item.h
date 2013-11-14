@@ -29,7 +29,7 @@ class diag_data
 {
 public:
 	virtual void apply( boost::format& fmt ) = 0;
-	virtual ~diag_data() = 0 {}
+	virtual ~diag_data() {}
 	virtual void release()
 	{
 		delete this;
@@ -67,7 +67,7 @@ public:
 	}
 
 	diag_item&	eval();
-	diag_item&	file(eflib::fixed_string const& f);	
+	diag_item&	file(eflib::fixed_string const& f);
 	diag_item&	span(token_t const& beg, token_t const& end);
 	diag_item&	span(code_span const& s);
 
@@ -98,11 +98,11 @@ class diag_template
 public:
 	diag_template( size_t uid, diag_levels lvl, std::string const& str );
 	diag_template( diag_levels lvl, std::string const& str );
-	
+
 	std::string const&	template_str() const;
 	diag_levels			level() const;
 	size_t				id() const;
-	
+
 	static size_t automatic_id();
 private:
 	size_t			uid;

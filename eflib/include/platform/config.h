@@ -5,37 +5,26 @@
 #	define EFLIB_DEBUG
 #endif
 
+#if defined(_UNICODE)
+#define EFLIB_UNICODE
+#endif
+
 #ifdef _MSC_VER
 #	define EFLIB_MSVC
 #	define EFILB_COMPILE_VER _MSC_VER
-#	ifdef _UNICODE
-#		define EFLIB_UNICODE
+#	define _SECURE_SCL 0
+#	pragma warning(disable: 4251 4275 4819)
+#	ifndef _CRT_SECURE_NO_DEPRECATE
+#		define _CRT_SECURE_NO_DEPRECATE
+#		define _CRT_SECURE_NO_WARNINGS
 #	endif
-
-#	if _MSC_VER >= 1600
-#	elif _MSC_VER >= 1500
-#		ifndef EFLIB_DEBUG
-#			define _SECURE_SCL 0
-#		endif
-#	elif _MSC_VER >= 1400
-#		ifndef EFLIB_DEBUG
-#			define _SECURE_SCL 0
-#		endif
+#	ifndef _SCL_SECURE_NO_DEPRECATE
+#		define _SCL_SECURE_NO_DEPRECATE
+#		define _SCL_SECURE_NO_WARNINGS
 #	endif
-
-#	if _MSC_VER >= 1400
-#		pragma warning(disable: 4251 4275 4819)
-#		ifndef _CRT_SECURE_NO_DEPRECATE
-#			define _CRT_SECURE_NO_DEPRECATE
-#		endif
-#		ifndef _SCL_SECURE_NO_DEPRECATE
-#			define _SCL_SECURE_NO_DEPRECATE
-#			define _SCL_SECURE_NO_WARNINGS
-#		endif
-#	endif
-#endif
-
-#if defined( __GNUC__ )
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+#	define EFLIB_MINGW
+#elif defined( __GNUC__ )
 #   define EFLIB_GCC
 #endif
 
@@ -65,7 +54,7 @@
 	#else
 		#error Unknown CPU type.
 	#endif
-#elif defined(EFLIB_GCC)
+#elif defined(EFLIB_GCC) || defined(EFLIB_MINGW)
 	#if defined(__x86_64__)
 		#define EFLIB_CPU_X64
 		#define EFLIB_COMPILER_TARGET x64
@@ -77,4 +66,9 @@
 	#endif
 #endif
 
+#ifdef EFLIB_MSVC
+#	define EFLIB_ALIGN(x)	__declspec(align( x ))
+#else
+#	define EFLIB_ALIGN(x)   __attribute__ ((aligned ( x )))
+#endif
 #endif

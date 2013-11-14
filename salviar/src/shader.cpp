@@ -3,6 +3,8 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/renderer.h>
 
+#include <eflib/include/platform/ext_intrinsics.h>
+
 BEGIN_NS_SALVIAR();
 
 using namespace boost;
@@ -14,57 +16,8 @@ using std::make_pair;
 #define VSO_INTERP_SSE_ENABLED
 #endif
 
-template <int N>
-vs_input_op gen_vs_input_op_n()
-{
-	using namespace vs_input_op_funcs;
-
-	vs_input_op ret;
-
-	ret.construct = construct_n<N>;
-	ret.copy = copy_n<N>;
-
-	return ret;
-}
-
-template <int N>
-vs_output_op gen_vs_output_op_n()
-{
-	using namespace vs_output_op_funcs;
-
-	vs_output_op ret;
-
-	ret.construct	= construct_n<N>;
-	ret.copy		= copy_n<N>;
-	
-	ret.project		= project_n<N>;
-	ret.unproject	= unproject_n<N>;
-
-	ret.self_add = self_add_n<N>;
-	ret.self_sub = self_sub_n<N>;
-	ret.self_mul = self_mul_n<N>;
-	ret.self_div = self_div_n<N>;
-	
-	ret.add = add_n<N>;
-	ret.sub = sub_n<N>;
-	ret.mul = mul_n<N>;
-	ret.div = div_n<N>;
-
-	ret.lerp = lerp_n<N>;
-	ret.step_unproj = step_unproj_n<N>;
-	ret.step_2d_unproj = step_2d_unproj_n<N>;
-    ret.step_2d_unproj_pos = step_2d_unproj_pos;
-    ret.step_2d_unproj_attr = step_2d_unproj_attr_n<N>;
-
-	ret.step1		= step1_n<N>;
-	ret.step_1d		= step_1d_n<N>;
-	ret.step_2d		= step_2d_n<N>;
-
-	ret.self_step1	= self_step1_n<N>;
-	ret.self_step_1d= self_step_1d_n<N>;
-
-	return ret;
-}
+template <int N> vs_input_op  gen_vs_input_op_n();
+template <int N> vs_output_op gen_vs_output_op_n();
 
 vs_input_op vs_input_ops[MAX_VS_INPUT_ATTRS] = {
 	gen_vs_input_op_n<0>(),
@@ -258,7 +211,7 @@ namespace vs_output_op_funcs
 
 		// Position
 		out_m128[0] = _mm_add_ps(start_m128[0], deri_m128[0]);
-		float inv_w = out_m128[0].m128_f32[3];
+		float inv_w = _xmm_extract_ps(out_m128[0], 3);
 		__m128 inv_w4 = _mm_load_ps1(&inv_w);
 
 		for(size_t register_index = 1; register_index <= N; ++register_index)
@@ -318,7 +271,7 @@ namespace vs_output_op_funcs
 			_mm_add_ps( _mm_mul_ps(d0_m128[0], step0_m128), _mm_mul_ps(d1_m128[0], step1_m128) )
 			);
 
-		float inv_w = 1.0f / out_m128[0].m128_f32[3];
+		float inv_w = 1.0f / _xmm_extract_ps(out_m128[0], 3);
 		__m128 inv_w4 = _mm_load_ps1(&inv_w);
 
 		for(size_t i_attr = 0; i_attr < N; ++i_attr)
@@ -337,7 +290,7 @@ namespace vs_output_op_funcs
 						_mm_mul_ps(d1_m128[i_attr + 1], step1_m128)
 						)
 					);
-				
+
 			}
 
 			// Perspective
@@ -421,7 +374,7 @@ namespace vs_output_op_funcs
 		__m128		  step0_m128= _mm_load_ps1(&step0);
 		__m128		  step1_m128= _mm_load_ps1(&step1);
 
-		float inv_w = 1.0f / out_m128[0].m128_f32[3];
+		float inv_w = 1.0f / _xmm_extract_ps(out_m128[0], 3);
 		__m128 inv_w4 = _mm_load_ps1(&inv_w);
 
 		for(size_t i_attr = 0; i_attr < N; ++i_attr)
@@ -440,7 +393,7 @@ namespace vs_output_op_funcs
 						_mm_mul_ps(d1_m128[i_attr + 1], step1_m128)
 						)
 					);
-				
+
 			}
 
 			// Perspective
@@ -628,7 +581,7 @@ namespace vs_output_op_funcs
 		}
 		return lhs;
 	}
-	
+
 	template <int N>
 	vs_output& self_mul_n(vs_output& lhs, float f)
 	{
@@ -700,6 +653,57 @@ namespace vs_output_op_funcs
 	}
 }
 
+template <int N>
+vs_input_op gen_vs_input_op_n()
+{
+	using namespace vs_input_op_funcs;
+
+	vs_input_op ret;
+
+	ret.construct = construct_n<N>;
+	ret.copy = copy_n<N>;
+
+	return ret;
+}
+
+template <int N>
+vs_output_op gen_vs_output_op_n()
+{
+	using namespace vs_output_op_funcs;
+
+	vs_output_op ret;
+
+	ret.construct	= construct_n<N>;
+	ret.copy		= copy_n<N>;
+
+	ret.project		= project_n<N>;
+	ret.unproject	= unproject_n<N>;
+
+	ret.self_add = self_add_n<N>;
+	ret.self_sub = self_sub_n<N>;
+	ret.self_mul = self_mul_n<N>;
+	ret.self_div = self_div_n<N>;
+
+	ret.add = add_n<N>;
+	ret.sub = sub_n<N>;
+	ret.mul = mul_n<N>;
+	ret.div = div_n<N>;
+
+	ret.lerp = lerp_n<N>;
+	ret.step_unproj = step_unproj_n<N>;
+	ret.step_2d_unproj = step_2d_unproj_n<N>;
+    ret.step_2d_unproj_pos = step_2d_unproj_pos;
+    ret.step_2d_unproj_attr = step_2d_unproj_attr_n<N>;
+
+	ret.step1		= step1_n<N>;
+	ret.step_1d		= step_1d_n<N>;
+	ret.step_2d		= step_2d_n<N>;
+
+	ret.self_step1	= self_step1_n<N>;
+	ret.self_step_1d= self_step_1d_n<N>;
+
+	return ret;
+}
 
 vs_input_op& get_vs_input_op(uint32_t n)
 {

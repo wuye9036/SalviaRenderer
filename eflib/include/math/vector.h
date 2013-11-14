@@ -11,8 +11,8 @@
 namespace eflib{
 
 #ifndef EFLIB_NO_SIMD
-	typedef ALIGN16 float float4[4];
-	typedef float4 float4x4[4];
+	typedef EFLIB_ALIGN(16) float float4[4];
+	typedef float4				  float4x4[4];
 #endif
 
 	typedef vector_<float, 2>	vec2;

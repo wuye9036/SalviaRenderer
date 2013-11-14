@@ -1,5 +1,7 @@
 #pragma once
 
+#include <salviar/include/salviar_forward.h>
+
 #include <salviar/include/enums.h>
 
 #include <eflib/include/platform/typedefs.h>
@@ -11,14 +13,13 @@
 #include <eflib/include/platform/enable_warnings.h>
 
 #include <vector>
-
-#include <salviar/include/salviar_forward.h>
+#include <memory.h>
 
 BEGIN_NS_SALVIAR();
 
 class buffer
 {
-	std::vector< uint8_t, 
+	std::vector< uint8_t,
 		eflib::aligned_allocator<uint8_t, 16>
 	>		bufdata_;
 	bool	is_locked_;

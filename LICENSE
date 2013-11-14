@@ -26,8 +26,7 @@ licenses, and/or restrictions:
 		
 	Program               Position
 	=================     ===================
-	LLVM                  /3rd_party/src/llvm
-						  /3rd_party/llvm
+	LLVM                  /3rd_party/llvm
 	WTL                   /3rd_party/wtl
 	FreeImage             /3rd_party/FreeImage
 	threadpool            /3rd_party/threadpool

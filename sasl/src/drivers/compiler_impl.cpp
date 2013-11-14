@@ -19,6 +19,7 @@
 #include <eflib/include/diagnostics/profiler.h>
 #include <eflib/include/string/ustring.h>
 #include <eflib/include/utility/shared_declaration.h>
+#include <eflib/include/platform/intrin.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/program_options.hpp>
@@ -133,7 +134,7 @@ compiler_impl::compiler_impl()
 
 shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 {
-	// Initialize env for compiling. 
+	// Initialize env for compiling.
 	shared_ptr<diag_chat> diags = diag_chat::create();
 
 	opt_disp.filterate(vm);
@@ -169,11 +170,11 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 	if( !fname.empty() )
 	{
 		shared_ptr<compiler_code_source> file_code_source( new compiler_code_source() );
-		
+
 		if ( !file_code_source->set_file(fname) ){
 			diags->report( sasl::parser::cannot_open_input_file )->p(fname);
 			return diags;
-		} 
+		}
 
 		diags->report(compiling_input)->p(fname);
 		code_src = file_code_source;
@@ -248,7 +249,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 		// Compiling with profiling
 
 		eflib::profiling_scope prof_scope(&prof, "driver impl compiling");
-		
+
 		{
 			eflib::profiling_scope prof_scope(&prof, "parse @ compiler_impl");
 			mroot = sasl::syntax_tree::parse( code_src.get(), lex_ctxt, diags.get() );
@@ -280,7 +281,7 @@ shared_ptr<diag_chat> compiler_impl::compile(bool enable_jit)
 				}
 			}
 		}
-		
+
 		{
 			eflib::profiling_scope prof_scope(&prof, "Code generation @ compiler_impl");
 
@@ -322,7 +323,7 @@ shared_ptr<diag_chat> compiler_impl::compile(vector<external_function_desc> cons
 	}
 
 	if( mvmc->enable_jit() )
-	{	
+	{
 		for( size_t i = 0; i < external_funcs.size(); ++i )
 		{
 			inject_function(external_funcs[i].func, external_funcs[i].func_name, external_funcs[i].is_raw_name);
@@ -406,14 +407,22 @@ void sasl_countbits_u32(uint32_t* ret, uint32_t v)
 
 void sasl_firstbithigh_u32(uint32_t* ret, uint32_t v)
 {
+#if defined(EFLIB_MSVC)
 	unsigned long index;
+#else
+	uint32_t index;
+#endif
 	_BitScanReverse(&index, v);
 	*ret = static_cast<uint32_t>(31-index);
 }
 
 void sasl_firstbitlow_u32(uint32_t* ret, uint32_t v)
 {
+#if defined(EFLIB_MSVC)
 	unsigned long index;
+#else
+	uint32_t index;
+#endif
 	_BitScanForward(&index, v);
 	*ret = static_cast<uint32_t>(index);
 }
@@ -435,33 +444,33 @@ void compiler_impl::inject_default_functions()
 	}
 
 	// WORKAROUND_TODO LLVM 3.0 Some intrinsic generated incorrect function call.
-	inject_function(&sasl_exp_f32,	"sasl.exp.f32",		true);
-	inject_function(&sasl_mod_f32,	"sasl.mod.f32",		true);
-	inject_function(&sasl_exp2_f32,	"sasl.exp2.f32",	true);
-	inject_function(&sasl_sin_f32,	"sasl.sin.f32",		true);
-	inject_function(&sasl_cos_f32,	"sasl.cos.f32",		true);
-	inject_function(&sasl_tan_f32,	"sasl.tan.f32",		true);
-	inject_function(&sasl_asin_f32,	"sasl.asin.f32",	true);
-	inject_function(&sasl_acos_f32,	"sasl.acos.f32",	true);
-	inject_function(&sasl_atan_f32,	"sasl.atan.f32",	true);
-	inject_function(&sasl_ceil_f32,	"sasl.ceil.f32",	true);
-	inject_function(&sasl_floor_f32,"sasl.floor.f32",	true);
-	inject_function(&sasl_round_f32,"sasl.round.f32",	true);
-	inject_function(&sasl_trunc_f32,"sasl.trunc.f32",	true);
-	inject_function(&sasl_log_f32,	"sasl.log.f32",		true);
-	inject_function(&sasl_log2_f32,	"sasl.log2.f32",	true);
-	inject_function(&sasl_log10_f32,"sasl.log10.f32",	true);
-	inject_function(&sasl_rsqrt_f32,"sasl.rsqrt.f32",	true);
-	inject_function(&sasl_ldexp_f32,"sasl.ldexp.f32",	true);
-	inject_function(&sasl_pow_f32,	"sasl.pow.f32",		true);
-	inject_function(&sasl_sinh_f32,	"sasl.sinh.f32",	true);
-	inject_function(&sasl_cosh_f32,	"sasl.cosh.f32",	true);
-	inject_function(&sasl_tanh_f32,	"sasl.tanh.f32",	true);
+	inject_function((void*)&sasl_exp_f32,	"sasl.exp.f32",		true);
+	inject_function((void*)&sasl_mod_f32,	"sasl.mod.f32",		true);
+	inject_function((void*)&sasl_exp2_f32,	"sasl.exp2.f32",	true);
+	inject_function((void*)&sasl_sin_f32,	"sasl.sin.f32",		true);
+	inject_function((void*)&sasl_cos_f32,	"sasl.cos.f32",		true);
+	inject_function((void*)&sasl_tan_f32,	"sasl.tan.f32",		true);
+	inject_function((void*)&sasl_asin_f32,	"sasl.asin.f32",	true);
+	inject_function((void*)&sasl_acos_f32,	"sasl.acos.f32",	true);
+	inject_function((void*)&sasl_atan_f32,	"sasl.atan.f32",	true);
+	inject_function((void*)&sasl_ceil_f32,	"sasl.ceil.f32",	true);
+	inject_function((void*)&sasl_floor_f32,	"sasl.floor.f32",	true);
+	inject_function((void*)&sasl_round_f32,	"sasl.round.f32",	true);
+	inject_function((void*)&sasl_trunc_f32,	"sasl.trunc.f32",	true);
+	inject_function((void*)&sasl_log_f32,	"sasl.log.f32",		true);
+	inject_function((void*)&sasl_log2_f32,	"sasl.log2.f32",	true);
+	inject_function((void*)&sasl_log10_f32,	"sasl.log10.f32",	true);
+	inject_function((void*)&sasl_rsqrt_f32,	"sasl.rsqrt.f32",	true);
+	inject_function((void*)&sasl_ldexp_f32,	"sasl.ldexp.f32",	true);
+	inject_function((void*)&sasl_pow_f32,	"sasl.pow.f32",		true);
+	inject_function((void*)&sasl_sinh_f32,	"sasl.sinh.f32",	true);
+	inject_function((void*)&sasl_cosh_f32,	"sasl.cosh.f32",	true);
+	inject_function((void*)&sasl_tanh_f32,	"sasl.tanh.f32",	true);
 
-	inject_function(&sasl_countbits_u32,	"sasl.countbits.u32",	true);
-	inject_function(&sasl_firstbithigh_u32, "sasl.firstbithigh.u32",true);
-	inject_function(&sasl_firstbitlow_u32 , "sasl.firstbitlow.u32" ,true);
-	inject_function(&sasl_reversebits_u32 , "sasl.reversebits.u32" ,true);
+	inject_function((void*)&sasl_countbits_u32,		"sasl.countbits.u32",	true);
+	inject_function((void*)&sasl_firstbithigh_u32, 	"sasl.firstbithigh.u32",true);
+	inject_function((void*)&sasl_firstbitlow_u32, 	"sasl.firstbitlow.u32" ,true);
+	inject_function((void*)&sasl_reversebits_u32, 	"sasl.reversebits.u32" ,true);
 }
 
 void compiler_impl::set_code_file( std::string const& code_file )
@@ -500,7 +509,7 @@ void compiler_impl::inject_function(void* pfn, fixed_string const& fn_name, bool
 	{
 		raw_name = msem->root_symbol()->find_overloads(fn_name)[0]->mangled_name();
 	}
-	
+
 	mvmc->inject_function(pfn, raw_name);
 }
 

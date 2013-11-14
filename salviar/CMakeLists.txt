@@ -17,6 +17,7 @@ SET( FOUNDATION_HEADERS
 	include/binary_modules.h
 	include/resource_data.h
 	include/viewport.h
+	include/voidptr.h
 )
 
 SET( PIPELINE_HEADERS

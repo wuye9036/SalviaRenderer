@@ -56,7 +56,7 @@ namespace parse_result_values
 
 	int const expected_failed			= expected | failed;
 	int const recovered_expected_failed	= expected | recovered;
-	
+
 };
 
 
@@ -129,7 +129,7 @@ expectation_failure::expectation_failure( token_iterator iter, parser const* p )
 }
 
 parser const* expectation_failure::get_parser(){ return p; }
-const char* expectation_failure::what() const {	return what_str.c_str(); }
+const char* expectation_failure::what() const throw() {	return what_str.c_str(); }
 
 //////////////////////////////////////////////////////////////////////////
 // Attributes.
@@ -262,7 +262,7 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 	token_iterator iter_beg = iter;
 
 	vector< shared_ptr<diag_chat> > children_diags;
-	
+
 	shared_ptr<sequence_attribute> seq_attr = make_shared<sequence_attribute>();
 	attr = seq_attr;
 	attr->token_range( *iter_beg, *iter_beg );
@@ -281,14 +281,14 @@ parse_results repeater::parse( token_iterator& iter, token_iterator end, shared_
 
 		token_iterator child_start = iter;
 		parse_results result = expr->parse( iter, end, out, children_diags.get() );
-		
+
 		// Child matched succeed.
 		if( result.is_succeed() ) {
 			out->token_range( *iter_beg, *iter );
 			seq_attr->attrs.push_back(out);
 			continue;
 		}
-		
+
 		// Repeater matched failed.
 		if( matched_count < lower_bound ){
 			iter = iter_beg;
@@ -417,18 +417,18 @@ queuer::queuer( queuer const& rhs ) :exprlst(rhs.exprlst){}
 queuer& queuer::append( shared_ptr<parser> p, bool is_expected )
 {
 	p->is_expected(is_expected);
-	
+
 	// Add default error handler
 	if( is_expected )
 	{
 		terminal* term = dynamic_cast<terminal*>( p.get() );
 		if( term )
-		{ 
+		{
 			shared_ptr<error_catcher> err_catcher( new error_catcher( p, get_expected_failed_handler(term->get_desc()) ) );
 			exprlst.push_back( err_catcher );
 			return *this;
 		}
-		else 
+		else
 		{
 			rule_wrapper* rule_wrp = dynamic_cast<rule_wrapper*>(p.get());
 			if( rule_wrp )
@@ -450,7 +450,7 @@ queuer& queuer::append( shared_ptr<parser> p, bool is_expected )
 			}
 		}
 	}
-	
+
 	exprlst.push_back(p);
 	return *this;
 }
@@ -472,7 +472,7 @@ parse_results queuer::parse( token_iterator& iter, token_iterator end, shared_pt
 	BOOST_FOREACH( shared_ptr<parser> p, exprlst ){
 		out.reset();
 		token_iterator cur_iter = iter;
-		
+
 		parse_results result = p->parse(iter, end, out, diags);
 
 		ret->attrs.push_back(out);
@@ -579,7 +579,7 @@ std::fstream* pf = NULL;
 
 parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<attribute>& attr, diag_chat* diags ) const{
 	static int indent = 0;
-	
+
 #if OUTPUT_GRAMMAR_MATCHING_PATH
 	if(!pf){
 		pf = new std::fstream( "rules.xml", std::ios::out );
@@ -589,7 +589,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	chat_scope scope(diags);
 
 	// shared_ptr<diag_chat> chat = diag_chat::create();
-	
+
 	assert( expr );
 	if( !expr ){ return parse_results::failed; }
 
@@ -606,7 +606,7 @@ parse_results rule::parse( token_iterator& iter, token_iterator end, shared_ptr<
 	{
 		path_stack.back()->children.push_back( current_path );
 	}
-	
+
 	path_stack.push_back( current_path );
 	current_path->element = rule_name;
 #endif

@@ -44,12 +44,12 @@ renderer_ptr create_benchmark_renderer()
 shader_object_ptr	compile(std::string const& code, shader_profile const& profile, shader_log_ptr& logs)
 {
 	vector<external_function_desc> external_funcs;
-	external_funcs.push_back( external_function_desc(&tex2Dlod,		"sasl.vs.tex2d.lod",	true) );
-	external_funcs.push_back( external_function_desc(&texCUBElod,	"sasl.vs.texCUBE.lod",	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dlod_ps,	"sasl.ps.tex2d.lod" ,	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dgrad_ps,	"sasl.ps.tex2d.grad",	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dbias_ps,	"sasl.ps.tex2d.bias",	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dproj_ps,	"sasl.ps.tex2d.proj",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dlod,		"sasl.vs.tex2d.lod",	true) );
+	external_funcs.push_back( external_function_desc((void*)&texCUBElod,	"sasl.vs.texCUBE.lod",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dlod_ps,	"sasl.ps.tex2d.lod" ,	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dgrad_ps,	"sasl.ps.tex2d.grad",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dbias_ps,	"sasl.ps.tex2d.bias",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dproj_ps,	"sasl.ps.tex2d.proj",	true) );
 
 	shader_object_ptr ret;
 	modules::host::compile(ret, logs, code, profile, external_funcs);
@@ -84,12 +84,12 @@ shader_object_ptr	compile(std::string const& code, languages lang)
 shader_object_ptr	compile_from_file(std::string const& file_name, shader_profile const& profile, shader_log_ptr& logs)
 {
 	vector<external_function_desc> external_funcs;
-	external_funcs.push_back( external_function_desc(&tex2Dlod,		"sasl.vs.tex2d.lod",	true) );
-	external_funcs.push_back( external_function_desc(&texCUBElod,	"sasl.vs.texCUBE.lod",	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dlod_ps,	"sasl.ps.tex2d.lod" ,	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dgrad_ps,	"sasl.ps.tex2d.grad",	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dbias_ps,	"sasl.ps.tex2d.bias",	true) );
-	external_funcs.push_back( external_function_desc(&tex2Dproj_ps,	"sasl.ps.tex2d.proj",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dlod,		"sasl.vs.tex2d.lod",	true) );
+	external_funcs.push_back( external_function_desc((void*)&texCUBElod,	"sasl.vs.texCUBE.lod",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dlod_ps,	"sasl.ps.tex2d.lod" ,	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dgrad_ps,	"sasl.ps.tex2d.grad",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dbias_ps,	"sasl.ps.tex2d.bias",	true) );
+	external_funcs.push_back( external_function_desc((void*)&tex2Dproj_ps,	"sasl.ps.tex2d.proj",	true) );
 
 	shader_object_ptr ret;
 	modules::host::compile_from_file(ret, logs, file_name, profile, external_funcs);

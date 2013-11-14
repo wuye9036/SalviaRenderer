@@ -7,6 +7,8 @@
 #include <eflib/include/math/write_mask.h>
 #include <eflib/include/diagnostics/assert.h>
 
+#include <cmath>
+
 namespace eflib
 {
 	template <typename ScalarT, int Size> struct vector_;
@@ -139,7 +141,7 @@ namespace eflib
 
 		ScalarT length() const
 		{
-			return std::sqrt(length_sqr());
+			return ::sqrt(length_sqr());
 		}
 
 		void normalize()
@@ -147,7 +149,7 @@ namespace eflib
 			ScalarT len = length();
 			(*this) /= len;
 		}
-		
+
 		void set_ps(ScalarT s)
 		{
 			for(int i = 0; i < Size; ++i)
@@ -200,7 +202,7 @@ namespace eflib
 	struct vector_<ScalarT,1>: public vector_swizzle<ScalarT, 1>, public vector_data<ScalarT, 1>
 	{
 		vector_<ScalarT,1>() {}
-		explicit vector_<ScalarT,1>( ScalarT v ){ data_[0] = v; }
+		explicit vector_<ScalarT,1>( ScalarT v ){ this->data_[0] = v; }
 	};
 
 	template <typename ScalarT>
@@ -209,8 +211,8 @@ namespace eflib
 		vector_<ScalarT,2>() {}
 		explicit vector_<ScalarT,2>( ScalarT v0, ScalarT v1 )
 		{
-			data_[0] = v0;
-			data_[1] = v1;
+			this->data_[0] = v0;
+			this->data_[1] = v1;
 		}
 	};
 
@@ -220,9 +222,9 @@ namespace eflib
 		vector_<ScalarT,3>() {}
 		explicit vector_<ScalarT,3>( ScalarT v0, ScalarT v1, ScalarT v2 )
 		{
-			data_[0] = v0;
-			data_[1] = v1;
-			data_[2] = v2;
+			this->data_[0] = v0;
+			this->data_[1] = v1;
+			this->data_[2] = v2;
 		}
 	};
 
@@ -232,17 +234,17 @@ namespace eflib
 		vector_<ScalarT,4>() {}
 		explicit vector_<ScalarT,4>( ScalarT v0, ScalarT v1=ScalarT(0), ScalarT v2=ScalarT(0), ScalarT v3=ScalarT(0) )
 		{
-			data_[0] = v0;
-			data_[1] = v1;
-			data_[2] = v2;
-			data_[3] = v3;
+			this->data_[0] = v0;
+			this->data_[1] = v1;
+			this->data_[2] = v2;
+			this->data_[3] = v3;
 		}
 		explicit vector_<ScalarT,4>( vector_<ScalarT,3> const& v, ScalarT s=ScalarT(0) )
 		{
-			data_[0] = v[0];
-			data_[1] = v[1];
-			data_[2] = v[2];
-			data_[3] = s;
+			this->data_[0] = v[0];
+			this->data_[1] = v[1];
+			this->data_[2] = v[2];
+			this->data_[3] = s;
 		}
 
 		void normalize3()
@@ -252,15 +254,17 @@ namespace eflib
 
 		void projection()
 		{
-			data_[0] /= data_[3];
-			data_[1] /= data_[3];
-			data_[2] /= data_[3];
-			data_[3] = 1.0f;
+			this->data_[0] /= this->data_[3];
+			this->data_[1] /= this->data_[3];
+			this->data_[2] /= this->data_[3];
+			this->data_[3] = 1.0f;
 		}
 
 		// Special vectors
 		static vector_<ScalarT,4> zero(){
-			return vec4(ScalarT(0), ScalarT(0), ScalarT(0), ScalarT(0));
+			ScalarT o = 0;
+			vector_<float, 4> r;
+			return r;
 		}
 
 		static vector_<ScalarT,4> gen_coord(ScalarT x, ScalarT y, ScalarT z){
@@ -357,14 +361,14 @@ namespace eflib
 		for( int i = 0; i < Size; ++i ){ ret[i] = s / lhs[i]; }
 		return ret;
 	}
-	
+
 	template <typename ScalarT, int Size>
 	inline vector_<ScalarT,Size> max_ps (vector_<ScalarT,Size> const& lhs, vector_<ScalarT,Size> const& rhs){
 		vector_<ScalarT,Size> ret;
 		for( int i = 0; i < Size; ++i ){ ret[i] = std::max(lhs[i], rhs[i]); }
 		return ret;
 	}
-	
+
 	template <typename ScalarT, int Size>
 	inline vector_<ScalarT,Size> min_ps (vector_<ScalarT,Size> const& lhs, vector_<ScalarT,Size> const& rhs){
 		vector_<ScalarT,Size> ret;

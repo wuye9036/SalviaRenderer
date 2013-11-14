@@ -1,7 +1,9 @@
 #include <eflib/include/platform/dl_loader.h>
 
 #ifdef EFLIB_WINDOWS
-#	define NOMINMAX
+#	if !defined NOMINMAX
+#		define NOMINMAX
+#	endif
 #	include <windows.h>
 #endif
 
@@ -36,11 +38,11 @@ namespace eflib{
 			::FreeLibrary(mod);
 			mod = (HMODULE)0;
 		}
-		
+
 		virtual void* get_function( std::string const& name ) const
 		{
 			if ( !mod ) return NULL;
-			return static_cast<void*>( ::GetProcAddress( mod, name.c_str() ) );
+			return (void*)( ::GetProcAddress( mod, name.c_str() ) );
 		}
 
 		virtual bool available() const

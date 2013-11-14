@@ -55,15 +55,12 @@ void vertex_shader_unit::update( size_t ivert )
 
 void vertex_shader_unit::execute( vs_output& out )
 {
-	void (*p)(void*, void*, void*, void*)
-		= static_cast<void (*)(void*, void*, void*, void*)>( code->native_function() );
-
 	void* psi = stream_data.empty() ? NULL : &(stream_data[0]);
 	void* pbi = buffer_data.empty() ? NULL : &(buffer_data[0]);
 	void* pso = stream_odata.empty() ? NULL : &(stream_odata[0]);
 	void* pbo = buffer_odata.empty() ? NULL : &(buffer_odata[0]);
 
-	invoke(p, psi, pbi, pso, pbo );
+	invoke(code->native_function(), psi, pbi, pso, pbo );
 
 	// Copy output attributes to vs_output.
 	// TODO: Semantic will be mapped.
@@ -166,7 +163,7 @@ void pixel_shader_unit::initialize( shader_object const* code )
 	size_t ps_input_size =
 		PACKAGE_ELEMENT_COUNT * sizeof(void*) +
 		PACKAGE_ELEMENT_COUNT * pixel_input_data_size;
-	
+
 	size_t ps_output_size =
 		PACKAGE_ELEMENT_COUNT * sizeof(void*) +
 		PACKAGE_ELEMENT_COUNT * pixel_output_data_size;

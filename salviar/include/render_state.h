@@ -56,7 +56,7 @@ struct render_state
 	int32_t						base_vertex;
 	uint32_t					start_index;
 	uint32_t					prim_count;
-	
+
 	stream_state			    str_state;
 	input_layout_ptr			layout;
 
@@ -85,7 +85,7 @@ struct render_state
 	std::vector<surface_ptr>	color_targets;
 	surface_ptr					depth_stencil_target;
 
-    async_object_ptr			asyncs[async_object_ids::count];
+    async_object_ptr			asyncs[static_cast<int32_t>(async_object_ids::count)];
     async_object_ptr            current_async;
 
     viewport                    target_vp;

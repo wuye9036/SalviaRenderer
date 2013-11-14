@@ -26,7 +26,7 @@ size_t hash_value(ia_shim_key const& key)
 
 	boost::hash_combine(seed, key.input);		// Input layout we need to hash all fields.
 	boost::hash_combine(seed, key.reflection);	// Shader layout we just use address as hash code.
-	
+
 	return seed;
 }
 
@@ -44,10 +44,10 @@ void* ia_shim::get_shim_function(
 		salviar::input_layout*				input,
 		salviar::shader_reflection const*	reflection
 	)
-{	
+{
 	// Compute output address and input slots.
 	vector<sv_layout*> layouts = reflection->layouts(su_stream_in);
-	
+
     used_slots.clear();
     aligned_element_offsets.clear();
     dest_offsets.clear();
@@ -60,7 +60,7 @@ void* ia_shim::get_shim_function(
 		dest_offsets			.push_back(layout->offset);
     }
 
-	return &common_ia_shim;
+	return (void*)(&common_ia_shim);
 }
 
 void common_ia_shim(void* output_buffer, ia_shim_data const* mapping, size_t ivert)

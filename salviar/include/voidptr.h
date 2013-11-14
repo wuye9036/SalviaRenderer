@@ -1,10 +1,12 @@
 //no guard for including repeatly.
 //but note that you may include it only one time in one scope.
 
+struct const_voidptr;
+
 struct voidptr
 {
 	friend struct const_voidptr;
-	friend voidptr voidptr_const_cast(const const_voidptr& ptr);
+	friend voidptr voidptr_const_cast(const_voidptr const& ptr);
 	template<class T> friend T* voidptr_cast(const voidptr& ptr);
 
 	voidptr():

@@ -78,7 +78,7 @@ namespace value_kinds
 
 		value = 4,
 		/// \brief Does treat type as reference if ABI is C compatible.
-		///  
+		///
 		/// An important fact is LLVM's ABI is not same as C API.
 		/// If structure was passed into function by value,
 		/// C compiler will copy a temporary instance and pass in its pointer on x64 calling convention.
@@ -86,7 +86,7 @@ namespace value_kinds
 		/// So this variable will qualify the type of arguments/parameters indicates the compiler.
 		/// For e.g. we have a prototype:
 		///		void foo( struct S );
-		/// If is only called by LLVM code, the IR signature will be 
+		/// If is only called by LLVM code, the IR signature will be
 		///		def foo( %S %arg );
 		/// But if it maybe called by external function as convention as "C" code,
 		/// The IR signature will be generated as following:
@@ -125,6 +125,8 @@ typedef std::vector<llvm::Value*> value_array;
 bool valid_any(value_array const& arr);
 bool valid_all(value_array const& arr);
 
+class cg_service;
+
 class multi_value{
 public:
 	friend class cg_service;
@@ -133,7 +135,7 @@ public:
 	multi_value(multi_value const&);
 	multi_value& operator = (multi_value const&);
 
-	/// @name State accessors 
+	/// @name State accessors
 	/// @{
 	/// Get service.
 	cg_service*		service() const;
@@ -206,7 +208,7 @@ protected:
 
 	/// @name Members
 	/// @{
-	
+
 	// Parent, Index and Masks.
 	boost::scoped_ptr<multi_value>	parent_;
 	boost::scoped_ptr<multi_value>	index_;
@@ -254,16 +256,16 @@ struct cg_function{
 	size_t logical_args_count() const;
 	/// Get physical argument size.
 	size_t physical_args_count() const;
-	
+
 	/// Set arguments name. Size of names must be less than argument size.
 	void args_name(std::vector<std::string> const& names);
 
 	/// Set argument name.
 	void arg_name (size_t logical_index, std::string const&);
-	
+
 	// -------- Argument Properties ----------
 
-	/** Function arguments will be reformed on some platform 
+	/** Function arguments will be reformed on some platform
 		for ABI compatiblity and special requirements.
 	    Some implicit arguments will be added at the front of
 		LLVM function signature. This method indicates the

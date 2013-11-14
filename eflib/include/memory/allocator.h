@@ -11,21 +11,41 @@
 
 #include <stdlib.h>
 
+#if defined(__MINGW32__)
+#if defined(__MSVCRT_VERSION__) && __MSVCRT_VERSION__ < 0x0700
+#undef __MSVCRT_VERSION__
+#endif // defined
+#if !defined(__MSVCRT_VERSION__)
+#define __MSVCRT_VERSION__ 0x0700
+#endif
+#endif
+
+#include <malloc.h>
+
 #ifdef max
 #	undef max
 #	undef min
 #endif
 
-namespace eflib{
-
-#ifdef _MSC_VER
-#	define ALIGN16	__declspec(align(16))
-#	define ALIGN4	__declspec(align(4))
+namespace eflib
+{
+	inline void* aligned_malloc(size_t size, uint32_t alignment)
+	{
+#if defined(EFLIB_MSVC) || defined(EFLIB_MINGW)
+		return _aligned_malloc(size, alignment);
 #else
-#	define ALIGN16
-#	define ALIGN4
+		return ::aligned_alloc(size, alignment);
 #endif
+	}
 
+	inline void  aligned_free(void* p)
+	{
+#if defined(EFLIB_MSVC) || defined(EFLIB_MINGW)
+		::_aligned_free(p);
+#else
+		::free(p);
+#endif
+	}
 
 	/**
 	 * Aligned allocator£¬from KlayGE

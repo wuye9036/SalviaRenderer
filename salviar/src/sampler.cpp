@@ -68,7 +68,7 @@ namespace addresser
 			mfcoord0 = _mm_mul_ps(mfsize, mfcoord0);
 			const __m128 mhalf = _mm_set1_ps(0.5f);
 			mfcoord0 = _mm_sub_ps(mfcoord0, mhalf);
-			
+
 			__m128 mfcoord_ipart = _mm_cvtepi32_ps(_mm_cvttps_epi32(mfcoord0));
 			__m128 mask = _mm_cmpgt_ps(mfcoord_ipart, mfcoord0);	// if it increased (i.e. if it was negative...)
 			mask = _mm_and_ps(mask, _mm_set1_ps(1.0f));				// ...without a conditional branch...
@@ -105,8 +105,8 @@ namespace addresser
 		static float do_coordf(float coord, int size)
 		{
 			int selection_coord = fast_floori(coord);
-			return 
-				(selection_coord & 1 
+			return
+				(selection_coord & 1
 				? 1 + selection_coord - coord
 				: coord - selection_coord) * size - 0.5f;
 		}
@@ -119,10 +119,10 @@ namespace addresser
 		{
 			int selection_coord_x = fast_floori(coord[0]);
 			int selection_coord_y = fast_floori(coord[1]);
-			vec4 o_coord((selection_coord_x & 1 
+			vec4 o_coord((selection_coord_x & 1
 				? 1 + selection_coord_x - coord[0]
 				: coord[0] - selection_coord_x) * size[0],
-				(selection_coord_y & 1 
+				(selection_coord_y & 1
 				? 1 + selection_coord_y - coord[1]
 				: coord[1] - selection_coord_y) * size[1],
 				0, 0);
@@ -155,10 +155,10 @@ namespace addresser
 		{
 			int selection_coord_x = fast_floori(coord[0]);
 			int selection_coord_y = fast_floori(coord[1]);
-			vec4 o_coord((selection_coord_x & 1 
+			vec4 o_coord((selection_coord_x & 1
 				? 1 + selection_coord_x - coord[0]
 				: coord[0] - selection_coord_x) * size[0] - 0.5f,
-				(selection_coord_y & 1 
+				(selection_coord_y & 1
 				? 1 + selection_coord_y - coord[1]
 				: coord[1] - selection_coord_y) * size[1] - 0.5f,
 				0, 0);
@@ -441,7 +441,7 @@ namespace surface_sampler
             {
                 return surf.get_texel(ixy[0], ixy[1], sample);
             }
-            
+
             return border_color;
 		}
 	};
@@ -460,7 +460,7 @@ namespace surface_sampler
 		}
 	};
 
-	const sampler::filter_op_type filter_table[filter_type_count][address_mode_count][address_mode_count] = 
+	const sampler::filter_op_type filter_table[filter_type_count][address_mode_count][address_mode_count] =
 	{
 		{
 			{
@@ -542,11 +542,11 @@ float sampler::calc_lod(const vec4& unproj_attr, const int4& size, const vec4& u
 	__m128 mrho = _mm_max_ss(tmp, _mm_set_ss(0.000001f));
 
 	// log 2
-	__m128i mx = eflib_mm_castps_si128(mrho);
+	__m128i mx = _mm_castps_si128(mrho);
 	__m128 mlog2 = _mm_cvtepi32_ps(_mm_sub_epi32(_mm_and_si128(_mm_srli_epi32(mx, 23), _mm_set1_epi32(255)), _mm_set1_epi32(128)));
 	mx = _mm_and_si128(mx, _mm_set1_epi32(0x007FFFFF));
 	mx = _mm_or_si128(mx, _mm_set1_epi32(0x3F800000));
-	tmp = eflib_mm_castsi128_ps(mx);
+	tmp = _mm_castsi128_ps(mx);
 	tmp = _mm_sub_ss(_mm_mul_ss(_mm_add_ss(_mm_mul_ss(tmp, _mm_set_ss(-1.0f / 3)), _mm_set_ss(2)), tmp), _mm_set_ss(2.0f / 3));
 	__m128 mlambda = _mm_add_ss(tmp, mlog2);
 
@@ -568,9 +568,9 @@ float sampler::calc_lod( eflib::int4 const& size, eflib::vec4 const& ddx, eflib:
 	float rho, lambda;
 
 	vec4 maxD(
-		max(abs(ddx[0]), abs(ddy[0])), 
-		max(abs(ddx[1]), abs(ddy[1])), 
-		max(abs(ddx[2]), abs(ddy[2])), 
+		max(abs(ddx[0]), abs(ddy[0])),
+		max(abs(ddx[1]), abs(ddy[1])),
+		max(abs(ddx[2]), abs(ddy[2])),
 		0.0f);
 	maxD *= vec4(static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0);
 
@@ -582,11 +582,11 @@ float sampler::calc_lod( eflib::int4 const& size, eflib::vec4 const& ddx, eflib:
 
 color_rgba32f sampler::sample_surface(
 	const surface& surf,
-	float x, float y, size_t sample, 
+	float x, float y, size_t sample,
 	sampler_state ss) const
 {
 	return filters_[ss](
-			surf, 
+			surf,
 			x, y, sample,
 			desc_.border_color
 			);
@@ -634,7 +634,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 
 		color_rgba32f c0 = sample_surface(*tex->get_surface(low), coordx, coordy, sample, sampler_state_min);
 		color_rgba32f c1 = sample_surface(*tex->get_surface(up), coordx, coordy, sample, sampler_state_min);
-	
+
 		return lerp(c0, c1, frac);
 	}
 
@@ -674,7 +674,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 		}
 
 		color /= static_cast<float>(int_ratio);
-		
+
 		return color_rgba32f(color);
 	}
 
@@ -682,7 +682,7 @@ color_rgba32f sampler::sample_impl(const texture *tex , float coordx, float coor
 	return desc_.border_color;
 }
 
-color_rgba32f sampler::sample_impl(const texture *tex , 
+color_rgba32f sampler::sample_impl(const texture *tex ,
 								 float coordx, float coordy, size_t sample,
 								 const vec4& unproj_ddx, const vec4& unproj_ddy,
 								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
@@ -693,7 +693,7 @@ color_rgba32f sampler::sample_impl(const texture *tex ,
 		);
 }
 
-color_rgba32f sampler::sample_2d_impl(const texture *tex , 
+color_rgba32f sampler::sample_2d_impl(const texture *tex ,
 								 const vec4& proj_coord, size_t sample,
 								 const vec4& unproj_ddx, const vec4& unproj_ddy,
 								 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
@@ -728,8 +728,8 @@ color_rgba32f sampler::sample(float coordx, float coordy, float miplevel) const
 }
 
 color_rgba32f sampler::sample(
-					 float coordx, float coordy, 
-					 const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy, 
+					 float coordx, float coordy,
+					 const eflib::vec4& unproj_ddx, const eflib::vec4& unproj_ddy,
 					 float inv_x_w, float inv_y_w, float inv_w, float lod_bias) const
 {
 	return sample_impl(tex_.get(), coordx, coordy, 0, unproj_ddx, unproj_ddy, inv_x_w, inv_y_w, inv_w, lod_bias);
@@ -872,7 +872,7 @@ void sampler::calc_anisotropic_lod(
 	float rho, lambda;
 
 	vec4 size_vec4( static_cast<float>(size[0]), static_cast<float>(size[1]), static_cast<float>(size[2]), 0 );
-	
+
 	vec4 ddx_in_texcoord = ddx * size_vec4;
 	vec4 ddy_in_texcoord = ddy * size_vec4;
 

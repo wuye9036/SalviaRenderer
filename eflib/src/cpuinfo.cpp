@@ -1,13 +1,7 @@
 #include <eflib/include/platform/config.h>
 #include <eflib/include/platform/cpuinfo.h>
-
+#include <eflib/include/platform/native_intrin.h>
 #include <eflib/include/platform/typedefs.h>
-
-#if defined( EFLIB_WINDOWS ) && defined( EFLIB_MSVC )
-#	include <intrin.h>
-#else
-#	error	"Can not support other compiler than MSVC yet."
-#endif
 
 #ifdef EFLIB_WINDOWS
 #	ifndef NOMINMAX
@@ -19,7 +13,7 @@
 #include <algorithm>
 
 namespace eflib{
-#if defined( EFLIB_CPU_X64 ) || defined( EFLIB_CPU_X86 )
+#if defined(EFLIB_CPU_X64) || defined(EFLIB_CPU_X86)
 
 	class x86_cpuinfo{
 	public:
@@ -28,12 +22,12 @@ namespace eflib{
 
 			int cpu_infos[4];
 			int cpu_infos_ex[4];
-
-#if defined(EFLIB_MSVC)
+#if defined(EFLIB_MINGW) || defined(EFLIB_GCC)
+			__cpuid(1, cpu_infos[0], cpu_infos[1], cpu_infos[2], cpu_infos[3]);
+			__cpuid(0x80000001, cpu_infos_ex[0], cpu_infos_ex[1], cpu_infos_ex[2], cpu_infos_ex[3]);
+#elif defined(EFLIB_MSVC)
 			__cpuid(cpu_infos, 1);
 			__cpuid(cpu_infos_ex, 0x80000001);
-#else
-#	error "Unsupported compiler."
 #endif
 			feats[cpu_sse2]		= ( cpu_infos[3] & (1 << 26) ) || false;
 			feats[cpu_sse3]		= ( cpu_infos[2] & 0x1 ) || false;

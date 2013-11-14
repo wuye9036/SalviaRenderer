@@ -14,6 +14,8 @@
 
 #include <vector>
 
+using namespace boost::assign;
+
 BEGIN_NS_SASL_SYNTAX_TREE();
 
 //////////////////////////////////////////////////////////////////////////
@@ -33,7 +35,7 @@ template<typename ContainerT, typename PredT>
 void map_of_builtin_type( ContainerT& cont, const PredT& pred){
 	cont.clear();
 	typedef std::vector<builtin_types> btc_list_t;
-	const btc_list_t& btclst( list_of_builtin_types() );
+	btc_list_t const& btclst( sasl::utility::list_of_builtin_types() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
 			boost::shared_ptr<builtin_type> bt = create_node<builtin_type>( token_t::null(), token_t::null() );
@@ -60,7 +62,7 @@ template<typename ContainerT, typename PredT>
 void list_of_builtin_type( ContainerT& cont, const PredT& pred ){
 	cont.clear();
 	typedef std::vector<builtin_types> btc_list_t;
-	const btc_list_t& btclst( list_of_builtin_types() );
+	btc_list_t const& btclst( sasl::utility::list_of_builtin_types() );
 	for( btc_list_t::const_iterator it = btclst.begin(); it != btclst.end(); ++it ){
 		if ( pred(*it) ){
 			cont += *it;

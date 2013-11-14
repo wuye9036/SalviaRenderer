@@ -20,7 +20,7 @@ ADD_LIBRARY( sasl_drivers
 	)
 	
 TARGET_LINK_LIBRARIES( sasl_drivers
-	EFLIB sasl_semantic sasl_syntaxtree sasl_parser sasl_enums sasl_common sasl_codegen sasl_drivers_lib sasl_shims
+	sasl_drivers_lib sasl_shims sasl_codegen sasl_semantic sasl_syntaxtree sasl_parser sasl_enums sasl_common EFLIB
 	${SASL_LLVM_LIBS}
 	${SALVIA_BOOST_LIBS}
 )

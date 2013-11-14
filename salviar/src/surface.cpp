@@ -1,6 +1,8 @@
-#include "../include/surface.h"
+#include <salviar/include/surface.h>
 
-BEGIN_NS_SALVIAR()
+#include <memory.h>
+
+BEGIN_NS_SALVIAR();
 
 #ifdef TILE_BASED_STORAGE
 const size_t TILE_BITS = 5;
@@ -162,7 +164,7 @@ color_rgba32f surface::get_texel(size_t x0, size_t y0, size_t x1, size_t y1, flo
 	return lerp_2d_func_(&datas_[this->texel_offset(x0, y0, sample)], &datas_[this->texel_offset(x1, y0, sample)],
 		&datas_[this->texel_offset(x0, y1, sample)], &datas_[this->texel_offset(x1, y1, sample)], tx, ty);
 }
-	
+
 void surface::set_texel(size_t x, size_t y, size_t sample, const color_rgba32f& color)
 {
 	from_rgba32_func_(&datas_[texel_offset(x, y, sample)], &color);

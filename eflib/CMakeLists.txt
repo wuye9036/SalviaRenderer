@@ -37,6 +37,7 @@ set (HEADER_FILES
 	include/platform/typedefs.h
 	include/platform/win32.h
 	include/platform/dl_loader.h
+	include/platform/intrin.h
 	include/string/string.h
 	include/string/ustring.h
 )

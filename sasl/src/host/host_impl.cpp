@@ -56,7 +56,7 @@ host_impl::host_impl()
 
 	ia_shim_func_			= nullptr;
 	vx_shader_func_			= nullptr;
-	
+
 	sa_						= nullptr;
 	input_layout_			= nullptr;
 
@@ -98,7 +98,7 @@ void host_impl::update(render_state const* state)
 		ia_shim_slots_, ia_shim_element_offsets_, ia_shim_dest_offsets_,
 		input_layout_, vx_shader_->get_reflection()
 		);
-	ia_shim_func_	= static_cast<ia_shim_func_ptr>(ia_shim_func_typeless);
+	ia_shim_func_	= reinterpret_cast<ia_shim_func_ptr>(ia_shim_func_typeless);
 	vx_shader_func_ = vx_shader_->native_function<shader_func_ptr>();
 
 	// Compute stream descs for input assembler.
@@ -153,7 +153,7 @@ void host_impl::update(render_state const* state)
 void host_impl::update_target_params(renderer_parameters const& /*rp*/, buffer_ptr const& /*target*/)
 {
 }
-	
+
 vx_shader_unit_ptr host_impl::get_vx_shader_unit() const
 {
 	shader_reflection const* vx_reflection = vx_shader_->get_reflection();
@@ -228,7 +228,7 @@ void salvia_compile_shader_impl(
 	)
 {
 	out_shader_object.reset();
-	
+
 	boost::shared_ptr<sasl::drivers::compiler> drv;
 	sasl_create_compiler(drv);
 
@@ -275,7 +275,7 @@ void salvia_compile_shader_impl(
 		ret->set_vm_code	( drv->get_vmcode() );
 	}
 	out_shader_object = ret;
-	
+
 	return;
 }
 

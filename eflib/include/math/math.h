@@ -5,13 +5,10 @@
 
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/platform/constant.h>
+#include <eflib/include/platform/native_intrin.h>
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>
-
-#ifndef EFLIB_NO_SIMD
-#include <emmintrin.h>
-#endif
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/static_assert.hpp>
@@ -37,14 +34,14 @@ namespace eflib
 	}
 
 	inline bool equal(const vec2& v1, const vec2& v2){
-		return 
+		return
 			equal(v1.x(), v2.x()) &&
 			equal(v1.y(), v2.y());
 	}
 
 	inline bool equal(const vec3& v1, const vec3& v2)
 	{
-		return 
+		return
 			equal(v1.x(), v2.x()) &&
 			equal(v1.y(), v2.y()) &&
 			equal(v1.z(), v2.z());
@@ -52,7 +49,7 @@ namespace eflib
 
 	inline bool equal(const vec4& v1, const vec4& v2)
 	{
-		return 
+		return
 			equal(v1.x(), v2.x()) &&
 			equal(v1.y(), v2.y()) &&
 			equal(v1.z(), v2.z()) &&
@@ -67,6 +64,9 @@ namespace eflib
 		BOOST_STATIC_ASSERT(boost::is_integral<T>::value);
 		return (T)(d+0.5);
 	}
+
+	float fast_ceil(float val);
+	float fast_floor(float val);
 
 	template <class T>
 	T trunc(T d)
@@ -98,7 +98,7 @@ namespace eflib
 	T radians(T angle)
 	{
 		BOOST_STATIC_ASSERT(boost::is_float<T>::value);
-		
+
 		return T(angle * PI / T(180.0));
 	}
 
@@ -120,7 +120,7 @@ namespace eflib
 			int i;
 			float f;
 		};
-		
+
 		INTORFLOAT iof;
 		iof.f = val;
 		int x = iof.i;
@@ -173,7 +173,7 @@ namespace eflib
 		return static_cast<int>( floor(d+0.5) );
 		/*
 		const double DOUBLE_MAGIC = 6755399441055744.0; // 2^51 + 2^52
-		
+
 		union INTORDOUBLE
 		{
 			int i;
@@ -228,13 +228,13 @@ namespace eflib
 	{
 		v = v - ( (v >> 1) & 0x55555555 );                    // reuse input as temporary
 		v = (v & 0x33333333) + ( (v >> 2) & 0x33333333 );     // temp
-		return ( (v + (v >> 4) & 0xF0F0F0F) * 0x1010101 ) >> 24; // count
+		return ( (v + ((v >> 4) & 0xF0F0F0F)) * 0x1010101 ) >> 24; // count
 	}
 
 	template <typename T> T count_bits(T v)
 	{
 		T c = 0;
-		while(i)
+		while(v)
 		{
 			++c;
 			v &= v-1;
@@ -327,7 +327,7 @@ namespace eflib
 	class bounding_box;
 
 	bool mat_perspective_eye_bounding_box(mat44& out, vec3 const& eye, bounding_box const& bb);
-	
+
 #if defined(EFLIB_CPU_X86) || defined(EFLIB_CPU_X64)
 	inline __m128&			to_m128(vec4& v)
 	{

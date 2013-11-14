@@ -23,12 +23,12 @@ class vs_input
 public:
 	vs_input()
 	{}
-	
+
 	eflib::vec4& attribute(size_t index)
 	{
 		return attributes_[index];
 	}
-	
+
 	eflib::vec4 const& attribute(size_t index) const
 	{
 		return attributes_[index];
@@ -44,7 +44,7 @@ private:
 };
 
 #include <eflib/include/platform/disable_warnings.h>
-class ALIGN16 vs_output
+class EFLIB_ALIGN(16) vs_output
 {
 public:
 	enum attrib_modifier_type
@@ -61,7 +61,7 @@ public:
 	{
 		return registers_[0];
 	}
-	
+
 	eflib::vec4 const& position() const
 	{
 		return registers_[0];
@@ -138,7 +138,7 @@ namespace vs_output_functions
 
 	typedef vs_output& (*construct)		(vs_output& out, vec4 const& position, bool front_face, vec4 const* attrs);
 	typedef vs_output& (*copy)			(vs_output& out, const vs_output& in);
-	
+
 	typedef vs_output& (*project)		(vs_output& out, const vs_output& in);
 	typedef vs_output& (*unproject)		(vs_output& out, const vs_output& in);
 
@@ -176,7 +176,7 @@ struct vs_output_op
 
 	vs_output_functions::project		project;
 	vs_output_functions::unproject		unproject;
-	
+
 	vs_output_functions::self_add		self_add;
 	vs_output_functions::self_sub		self_sub;
 	vs_output_functions::self_mul		self_mul;

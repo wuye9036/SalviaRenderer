@@ -1,8 +1,10 @@
 #pragma once
 
 #include <salviar/include/salviar_forward.h>
+#include <salviar/include/thread_pool.h>
 
 #include <eflib/include/platform/typedefs.h>
+#include <eflib/include/platform/cpuinfo.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/atomic/atomic.hpp>

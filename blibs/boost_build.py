@@ -28,7 +28,7 @@ def boost_version( boost_root ):
 	f.close()
 	for line in version_lines:
 		matched = re.match('\s*#\s*define\s+BOOST_VERSION\s+(?P<version>\d+)\s*', line )
-		if matched and matched.groupdict() != None:
+		if matched and not matched.groupdict() is None:
 			if 'version' in matched.groupdict():
 				return version_object( int(matched.group('version')) )
 	return None

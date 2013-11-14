@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <salviar/include/resource_manager.h>
 
 #include <eflib/include/math/quaternion.h>
+#include <eflib/include/math/math.h>
 
 using namespace std;
 using namespace eflib;
@@ -123,7 +124,7 @@ mesh_ptr create_box(salviar::renderer* psr)
 	pidxs[ 6] = 4;	pidxs[ 7] = 5;	pidxs[ 8] = 6;
 	pidxs[ 9] = 6;	pidxs[10] = 7;	pidxs[11] = 4;
 	pidxs[12] = 8;	pidxs[13] = 9;	pidxs[14] = 10;
-	pidxs[15] = 10;	pidxs[16] = 11;	pidxs[17] = 8;	
+	pidxs[15] = 10;	pidxs[16] = 11;	pidxs[17] = 8;
 	pidxs[18] = 12;	pidxs[19] = 13;	pidxs[20] = 14;
 	pidxs[21] = 14;pidxs[22] = 15;pidxs[23] = 12;
 	pidxs[24] = 16;pidxs[25] = 17;pidxs[26] = 18;
@@ -250,11 +251,11 @@ mesh_ptr create_cone(
 	}
 
 	// Pick an guide vector for generating bottom plane
-	vec3 guide_vector; 
+	vec3 guide_vector;
 	if( eflib::equal(up_dir.x(), 0.0f) )
 	{
 		guide_vector = vec3(1.0f, 0.0f, 0.0f);
-	} 
+	}
 	else if( eflib::equal(up_dir.y(), 0.0f) )
 	{
 		guide_vector = vec3(0.0f, 1.0f, 0.0f);
@@ -293,7 +294,7 @@ mesh_ptr create_cone(
 		vec3 face_normal = cross_prod3(edge0, edge1);
 		face_normals.push_back(face_normal);
 	}
-	
+
 	// Compute bottom circle vert normals
 	vector<vec3> circle_normals;
 	circle_normals.push_back( (face_normals.back() + face_normals[0]) * 0.5f );
@@ -311,7 +312,7 @@ mesh_ptr create_cone(
 		float v = cos(segment_angle*i_seg) * 0.5f + 0.5f;
 		circle_uvs.push_back( vec2(u, v) );
 	}
-	
+
 	// Fill buffers
 	mesh_impl* pmesh = new mesh_impl(psr);
 

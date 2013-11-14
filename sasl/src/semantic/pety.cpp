@@ -44,7 +44,7 @@ class type_item{
 public:
 	typedef int type_item::*id_ptr_t;
 
-	type_item::type_item()
+	type_item()
 		: u_qual(-1), a_qual(-1), ty_sem(NULL) {}
 
 	tynode_ptr		stored;
@@ -63,7 +63,8 @@ void			init_builtin_short_name();
 void			append_mangling		(string&, tynode*);
 void			append_mangling		(string&, builtin_types btc, bool as_comp = false);
 
-class pety_impl: public pety_t{
+class pety_impl: public pety_t
+{
 public:
 	friend class pety_t;
 	void root_symbol( symbol* sym )
@@ -72,7 +73,7 @@ public:
 	}
 
 	// From builtin code to tid.
-	tid_t pety_impl::get(builtin_types const& btc)
+	tid_t get(builtin_types const& btc)
 	{
 		// If it is existed, return it.
 		bt_dict::iterator it = bt_dict_.find(btc);
@@ -88,7 +89,7 @@ public:
 
 		return btc_tid;
 	}
-	tid_t pety_impl::get(tynode* v, symbol* scope)
+	tid_t get(tynode* v, symbol* scope)
 	{
 		return get_impl(v, scope, true);
 	}
@@ -319,8 +320,8 @@ fixed_string builtin_type_name( builtin_types btc ){
 	std::string ret;
 	if( is_vector(btc) )
 	{
-		ret = 
-			( boost::format("%1%_%2%") 
+		ret =
+			( boost::format("%1%_%2%")
 			% builtin_type_name( scalar_of(btc) )
 			% vector_size( btc )
 			).str();
@@ -329,7 +330,7 @@ fixed_string builtin_type_name( builtin_types btc ){
 	else if( is_matrix(btc) )
 	{
 		ret =
-			( boost::format("%1%_%2%x%3%") 
+			( boost::format("%1%_%2%x%3%")
 			% builtin_type_name( scalar_of(btc) )
 			% vector_size( btc )
 			% vector_count( btc )

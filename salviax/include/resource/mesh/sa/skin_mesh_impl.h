@@ -9,6 +9,7 @@
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 #include <eflib/include/platform/boost_end.h>
 
@@ -53,7 +54,7 @@ class animation_player_impl : public animation_player
 {
 public:
 	animation_player_impl()
-		: current_time(0), aninfo( make_shared< animation_info_impl<T> >() )
+		: current_time(0), aninfo( boost::make_shared< animation_info_impl<T> >() )
 	{}
 
 	virtual void set_play_time(float t)
@@ -71,7 +72,7 @@ public:
 	animation_info_ptr anim_info() { return aninfo; }
 	boost::shared_ptr< animation_info_impl<T> >
 		anim_info2() { return aninfo; }
-							
+
 private:
 	T resolve(float time)
 	{

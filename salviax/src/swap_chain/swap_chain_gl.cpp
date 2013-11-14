@@ -70,7 +70,7 @@ public:
 			if (ext_str.find("WGL_EXT_swap_control") != std::string::npos)
 			{
 				typedef BOOL (APIENTRY *wglSwapIntervalEXTFUNC)(int interval);
-				wglSwapIntervalEXTFUNC wglSwapIntervalEXT = static_cast<wglSwapIntervalEXTFUNC>((void*)(::wglGetProcAddress("wglSwapIntervalEXT")));
+				wglSwapIntervalEXTFUNC wglSwapIntervalEXT = reinterpret_cast<wglSwapIntervalEXTFUNC>((void*)(::wglGetProcAddress("wglSwapIntervalEXT")));
 				wglSwapIntervalEXT(0);
 			}
 		}
@@ -127,7 +127,7 @@ public:
 		}
 		else
 		{
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 				static_cast<GLsizei>(surface_width),
 				static_cast<GLsizei>(surface_height),
 				GL_RGBA, GL_UNSIGNED_BYTE, &dest[0]

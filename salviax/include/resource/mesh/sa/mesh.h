@@ -19,7 +19,9 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(skin_mesh);
 
 class attached_data{
 public:
-	virtual ~attached_data() = 0{}
+	virtual ~attached_data()
+	{
+	}
 };
 
 class mesh
@@ -30,7 +32,7 @@ public:
 
 	virtual salviar::buffer_ptr get_index_buffer() = 0;
 	virtual salviar::buffer_ptr get_vertex_buffer( size_t buffer_index ) = 0;
-	
+
 	virtual attached_data_ptr get_attached() = 0;
 
 	virtual void gen_adjancency() = 0;

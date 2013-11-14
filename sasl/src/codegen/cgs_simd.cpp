@@ -112,7 +112,7 @@ void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 		if( is_vector( lhs.parent()->hint()) )
 		{
 			assert( lhs.parent()->storable() );
-			
+
 			char indexes[4];
 			mask_to_indexes( indexes, lhs.masks() );
 			uint32_t idx_len = indexes_length( indexes );
@@ -147,7 +147,7 @@ void cgs_simd::store(multi_value& lhs, multi_value const& rhs)
 						value_kinds::value,
 						new_elem_val.abi()
 						);
-					
+
 					selected_parent = emit_insert_val(selected_parent, indexes[i_write_idx], selected_new_elem_val);
 				}
 				lhs.parent()->store(selected_parent);
@@ -209,7 +209,7 @@ multi_value cgs_simd::cast_f2f( multi_value const& v, cg_type* dest_tyi )
 multi_value cgs_simd::cast_i2b( multi_value const& v )
 {
 	EFLIB_UNREF_DECLARATOR(v);
-	
+
 	EFLIB_ASSERT_UNIMPLEMENTED();
 	return multi_value();
 }
@@ -319,7 +319,6 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 	// int const PACKAGE_LINES = PACKAGE_ELEMENT_COUNT / PACKAGE_LINE_ELEMENT_COUNT;
 
 	builtin_types hint = v.hint();
-	builtin_types scalar_hint = is_scalar(hint) ? hint : scalar_of(hint);
 
 	assert( parallel_factor_ == 16 );
 
@@ -327,7 +326,7 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 	value_array diff_values(parallel_factor_, NULL);
 
 	multi_value source0 = create_value(
-		v.ty(), v.hint(), value_array(1, NULL), value_kinds::value, v.abi()
+		v.ty(), v.hint(), value_array(1, nullptr), value_kinds::value, v.abi()
 		);
 	multi_value source1 = source0;
 
@@ -348,7 +347,7 @@ multi_value cgs_simd::derivation(multi_value const& v, derivation_directional dd
 				value_index0 = i * 4 + j;
 				value_index1 = value_index0 + 4;
 			}
-			
+
 			Value* source_vm_value[2] = {values[value_index0], values[value_index1] };
 			source0.emplace( value_array(1, source_vm_value[0]), value_kinds::value, v.abi() );
 			source1.emplace( value_array(1, source_vm_value[1]), value_kinds::value, v.abi() );
@@ -483,7 +482,7 @@ void cgs_simd::do_end(){ exit_loop(); }
 void cgs_simd::do_body_beg(){ exec_masks.back() = load_loop_execution_mask(); }
 void cgs_simd::do_body_end(){ save_next_iteration_exec_mask(); }
 void cgs_simd::do_cond_beg(){}
-void cgs_simd::do_cond_end( multi_value const& cond ) {	
+void cgs_simd::do_cond_end( multi_value const& cond ) {
 	apply_loop_condition( cond );
 	save_loop_execution_mask( exec_masks.back() );
 }

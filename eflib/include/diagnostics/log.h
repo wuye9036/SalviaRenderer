@@ -77,7 +77,7 @@ namespace eflib{
 		}
 	};
 
-	
+
 	template<class T> class log;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -171,21 +171,6 @@ namespace eflib{
 		void set_comparer(boost::function<bool (uint32_t, uint32_t)> cmpr)
 		{
 			loglvlcmp_ = cmpr;
-		}
-
-		// Save current slog state.
-		void push_current_log_state()
-		{
-			state_type* pstate = new state_type();
-			pstate->load_state(this);
-			state_stack_.push(pstate);
-		}
-
-		// Restore the lastest slog state.
-		void pop_current_log_state()
-		{
-			boost::shared_ptr<const state_type > hstate = state_stack_.pop();
-			hstate->set_state(this);
 		}
 
 		void begin_log()

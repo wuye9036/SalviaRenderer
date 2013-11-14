@@ -1,5 +1,4 @@
-#ifndef SASL_TEST_JIT_TEST_H
-#define SASL_TEST_JIT_TEST_H
+#pragma once
 
 #include <eflib/include/utility/operator_bool.h>
 #include <eflib/include/math/vector.h>
@@ -22,6 +21,7 @@
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/test/test_tools.hpp>
 #include <eflib/include/platform/boost_end.h>
 
 #if defined(EFLIB_WINDOWS)
@@ -113,9 +113,10 @@ void invoke( void* callee, void* psi, void* pbi, void* pso, void* pbo );
 template <typename RT, typename Fn>
 class jit_function_forward: public jit_function_forward_base<Fn>{
 public:
+	using typename jit_function_forward_base<Fn>::result_t;
 	result_t operator ()(){
 		result_t tmp;
-#if defined(EFLIB_WINDOWS)
+#if defined(EFLIB_MSVC)
 		__try
 		{
 			callee(&tmp);
@@ -125,7 +126,7 @@ public:
 			on_error("SEH exception was raised");
 		}
 #else
-		callee(&tmp);
+		this->callee(&tmp);
 #endif
 		return tmp;
 	}
@@ -133,7 +134,7 @@ public:
 	template <typename T0>
 	result_t operator() (T0 p0 ){
 		result_t tmp;
-#if defined(EFLIB_WINDOWS)
+#if defined(EFLIB_MSVC)
 		__try
 		{
 			callee(&tmp, p0);
@@ -143,7 +144,7 @@ public:
 			on_error("SEH exception was raised");
 		}
 #else
-		callee(&tmp, p0);
+		this->callee(&tmp, p0);
 #endif
 		return tmp;
 	}
@@ -151,7 +152,7 @@ public:
 	template <typename T0, typename T1>
 	result_t operator() (T0 p0, T1 p1){
 		result_t tmp;
-#if defined(EFLIB_WINDOWS)
+#if defined(EFLIB_MSVC)
 		__try
 		{
 			callee(&tmp, p0, p1);
@@ -161,7 +162,7 @@ public:
 			on_error("SEH exception was raised");
 		}
 #else
-		callee(&tmp, p0, p1);
+		this->callee(&tmp, p0, p1);
 #endif
 		return tmp;
 	}
@@ -169,7 +170,7 @@ public:
 	template <typename T0, typename T1, typename T2>
 	result_t operator() (T0 p0, T1 p1, T2 p2){
 		result_t tmp;
-#if defined(EFLIB_WINDOWS)
+#if defined(EFLIB_MSVC)
 		__try
 		{
 			callee(&tmp, p0, p1, p2);
@@ -179,7 +180,7 @@ public:
 			on_error("SEH exception was raised");
 		}
 #else
-		callee(&tmp, p0, p1, p2);
+		this->callee(&tmp, p0, p1, p2);
 #endif
 		return tmp;
 	}
@@ -188,33 +189,34 @@ public:
 template <typename Fn>
 class jit_function_forward<void, Fn>: public jit_function_forward_base<Fn>{
 public:
+	using typename jit_function_forward_base<Fn>::result_t;
 	result_t operator ()(){
-		callee();
+		this->callee();
 	}
 
 	template <typename T0>
 	result_t operator() (T0 p0 ){
-		callee(p0);
+		this->callee(p0);
 	}
 
 	template <typename T0, typename T1>
 	result_t operator() (T0 p0, T1 p1){
-		callee(p0, p1);
+		this->callee(p0, p1);
 	}
 
 	template <typename T0, typename T1, typename T2>
 	result_t operator() (T0 p0, T1 p1, T2 p2){
-		callee(p0, p1, p2);
+		this->callee(p0, p1, p2);
 	}
 
 	template <typename T0, typename T1, typename T2, typename T3>
 	result_t operator() (T0 p0, T1 p1, T2 p2, T3 p3){
-		callee(p0, p1, p2, p3);
+		this->callee(p0, p1, p2, p3);
 	}
 
 	template <typename T0, typename T1, typename T2, typename T3>
 	result_t operator() (T0* psi, T1* pbi, T2* pso, T3* pbo){
-#if defined(EFLIB_WINDOWS)
+#if defined(EFLIB_MSVC)
 		__try
 		{
 			invoke( (void*)callee, psi, pbi, pso, pbo );
@@ -224,7 +226,7 @@ public:
 			on_error("SEH exception was raised");
 		}
 #else
-		invoke( (void*)callee, psi, pbi, pso, pbo );
+		invoke( (void*)(this->callee), psi, pbi, pso, pbo );
 #endif
 	}
 };
@@ -295,5 +297,3 @@ typedef matrix_<float,4,3>		float3x4;
 
 string	make_command( string const& file_name, string const& options);
 bool	print_diagnostic( diag_chat*, diag_item* item );
-
-#endif

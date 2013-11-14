@@ -8,6 +8,8 @@
 #include <salviar/include/shader_reflection.h>
 #include <eflib/include/platform/cpuinfo.h>
 #include <eflib/include/diagnostics/profiler.h>
+#include <eflib/include/memory/allocator.h>
+#include <eflib/include/platform/native_intrin.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -24,6 +26,18 @@ using std::numeric_limits;
 
 int const SIMD_ALIGNMENT = 32;
 
+float v4_get_float(__m128 v, int i)
+{
+	float f[4];
+	_mm_store_ps(f, v);
+	return f[i];
+}
+
+void v4_set_float(__m128& v, int i, float f)
+{
+
+}
+
 uint32_t naive_reversebits(uint32_t v)
 {
 	uint32_t ret = 0;
@@ -38,7 +52,7 @@ vec4 lit(float n_dot_l, float n_dot_h, float m)
 {
 	return vec4(
 		1.0f,
-		std::max(n_dot_l, 0.0f), 
+		std::max(n_dot_l, 0.0f),
 		(n_dot_l < 0.0f) || (n_dot_h < 0.0f) ? 0.0f : (n_dot_h*m),
 		1.0f
 		);
@@ -56,16 +70,16 @@ BOOST_AUTO_TEST_CASE( detect_cpu_features ){
 
 	if( support_feature(cpu_sse2) ){
 		cout << "    ... SSE2 Detected" << endl;
-	} 
+	}
 	if( support_feature(cpu_sse3) ){
 		cout << "    ... SSE3 Detected" << endl;
 	}
 	if( support_feature(cpu_ssse3) ){
 		cout << "    ... Supplemental SSE3 Detected" << endl;
-	} 
+	}
 	if( support_feature(cpu_sse41) ){
 		cout << "    ... SSE4.1 Detected" << endl;
-	} 
+	}
 	if( support_feature(cpu_sse42) ){
 		cout << "    ... SSE4.2 Detected" << endl;
 	}
@@ -261,7 +275,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		vec3 ret9 = test_faceforward_f3(rhs, ng, lhs);
 		vec3 ret10= test_faceforward_f3(rhs, lhs, ng);
 
-		
+
 		vec4 ret11= test_lit(lhs[0], lhs[1], lhs[2]);
 		vec4 ret12= test_lit(rhs[0], rhs[1], rhs[2]);
 		vec4 ret13= test_lit(ng [0], ng [1], ng [2]);
@@ -368,7 +382,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		{
 			17.7f, 66.3f, 0.92f,
 			-88.7f, 8.6f, -0.22f,
-			17.1f, -64.4f, 199.8f, 
+			17.1f, -64.4f, 199.8f,
 			0.1f, -0.1f, 99.73f
 		};
 
@@ -383,7 +397,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		}
 
 		float3x4&  m34( reinterpret_cast<float3x4&>(arr) );
-		
+
 		float3x4 ret = test_exp_m34(m34);
 
 		for( int i = 0; i < 3; ++i )
@@ -525,7 +539,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		for( int i = 0; i < 3; ++i ) {
 			for( int j = 0; j < 4; ++j ) {
-				
+
 				union { float f; uint32_t u; } ret, ref;
 
 				ret.f = ret_exp2.data_[i][j];	ref.f = ldexp(1.0f, lhs_array[i][j]);	BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
@@ -551,7 +565,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 				ret.f = ret_pow.data_[i][j];	ref.f = powf(lhs_array[i][j], rhs_array[i][j]);		BOOST_CHECK_BITWISE_EQUAL( ret.u, ref.u );
 			}
 		}
-	}	
+	}
 	{
 		int3 min_v( 98, -76, 0 );
 		int3 max_v( 226, 19, 0 );
@@ -647,7 +661,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 			{
 				BOOST_CHECK_EQUAL(
 					ret0.data_[i][j],
-					clamp( m[i][j], min_m[i][j], max_m[i][j] ) 
+					clamp( m[i][j], min_m[i][j], max_m[i][j] )
 					);
 				BOOST_CHECK_EQUAL(
 					ret1.data_[i][j],
@@ -683,7 +697,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		uint3 ret0 = test_countbits_u3(v0);
 		uint3 ret1 = test_count_bits_u3(v1);
-		
+
 		BOOST_CHECK_EQUAL( ret0[0], 0 );
 		BOOST_CHECK_EQUAL( ret0[1], 32 );
 		BOOST_CHECK_EQUAL( ret0[2], count_bits(v0[2]) );
@@ -698,13 +712,13 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 
 		int3  ret0 = test_firstbithigh_i3(v0);
 		int3  ret1 = test_firstbitlow_i3 (v0);
-		
+
 		uint2 ret2 = test_firstbithigh_u2(v1);
 		uint2 ret3 = test_firstbitlow_u2 (v1);
 
 		int3  ret4 = test_reversebits_i3(v0);
 		uint2 ret5 = test_reversebits_u2(v1);
-		
+
 		int32_t  ref4[3] = {
 			static_cast<int32_t>( naive_reversebits( static_cast<uint32_t>(v0[0]) ) ),
 			static_cast<int32_t>( naive_reversebits( static_cast<uint32_t>(v0[1]) ) ),
@@ -737,7 +751,7 @@ BOOST_FIXTURE_TEST_CASE( intrinsics, jit_fixture ){
 		BOOST_CHECK_EQUAL(ret5[1], ref5[1]);
 	}
 	{
-		float v[3][3] = 
+		float v[3][3] =
 		{
 			{ 0.0f,  numeric_limits<float>::quiet_NaN(), 75.5f },
 			{ -886.8f, numeric_limits<float>::infinity(), numeric_limits<float>::signaling_NaN() },
@@ -802,14 +816,14 @@ struct intrinsics_vs_bin{
 
 BOOST_FIXTURE_TEST_CASE( intrinsics_vs, jit_fixture ){
 	init_vs("./repo/question/v1a1/intrinsics.svs");
-	
+
 	intrinsics_vs_data data;
 	intrinsics_vs_sin sin;
 	sin.position = &( data.pos[0] );
 	sin.normal = &(data.norm[0]);
 	intrinsics_vs_bin bin;
 	intrinsics_vs_bout bout;
-	
+
 	vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
 	vec3 norm(1.5f, 1.2f, 0.8f);
 	vec3 light(0.6f, 1.1f, 4.7f);
@@ -881,7 +895,7 @@ int tex2d_vs_bin::ph = 335;
 BOOST_FIXTURE_TEST_CASE( tex_vs, jit_fixture ){
 	init_vs("./repo/question/v1a1/tex.svs");
 
-	set_raw_function( &tex2Dlod_vs, "sasl.vs.tex2d.lod" );
+	set_raw_function( (void*)&tex2Dlod_vs, "sasl.vs.tex2d.lod" );
 
 	vec4 pos(3.0f, 4.5f, 2.6f, 1.0f);
 
@@ -893,11 +907,11 @@ BOOST_FIXTURE_TEST_CASE( tex_vs, jit_fixture ){
 
 	tex2d_vs_bin bin;
 	bin.s = &tex2d_vs_bin::ph;
-	
+
 	tex2d_vs_bout bout;
 
 	JIT_FUNCTION( void(tex2d_vs_sin*, tex2d_vs_bin*, void*, tex2d_vs_bout*), fn );
-	
+
 	fn(&sin, &bin, (void*)NULL, &bout);
 
 	vec4 out_pos(9.3f, 8.7f, -29.6f, 0.0f);
@@ -1010,9 +1024,9 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 		int3 z(37,  16,  22);
 
 		bool ref_v[3];
-		ref_v[0] = x[0] > y[0] || x[0] > z[0] && x[0] <= y[0]+z[0];  
-		ref_v[1] = x[1] > y[1] || x[1] > z[1] && x[1] <= y[1]+z[1];  
-		ref_v[2] = x[2] > y[2] || x[2] > z[2] && x[2] <= y[2]+z[2];  
+		ref_v[0] = x[0] > y[0] || x[0] > z[0] && x[0] <= y[0]+z[0];
+		ref_v[1] = x[1] > y[1] || x[1] > z[1] && x[1] <= y[1]+z[1];
+		ref_v[2] = x[2] > y[2] || x[2] > z[2] && x[2] <= y[2]+z[2];
 
 		char3 ret_v = test_vbool(x, y, z);
 
@@ -1036,7 +1050,7 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 			{44.1f, 0.027f, 19.9f, -33.5f}
 		};
 
-		float array2[3][4] = 
+		float array2[3][4] =
 		{
 			{0.198f, 10.3f, -0.82f, 9.37f},
 			{7.3f, -7.92f, 93.3f,  10.22f},
@@ -1048,9 +1062,9 @@ BOOST_FIXTURE_TEST_CASE( bool_test, jit_fixture )
 		{
 			for( int j = 0; j < 4; ++j )
 			{
-				// i > j || i > k && i <= j+k;  
+				// i > j || i > k && i <= j+k;
 
-				ref_v[i][j] 
+				ref_v[i][j]
 				=  array0[i][j] > array1[i][j]
 				|| array0[i][j] > array2[i][j]
 				&& array0[i][j] < (array1[i][j] + array2[i][j])
@@ -1136,7 +1150,7 @@ BOOST_FIXTURE_TEST_CASE( unary_operators_test, jit_fixture )
 	}
 
 	{
-		char arr[2][3] = 
+		char arr[2][3] =
 		{
 			{ 0, 1, 0 },
 			{ 0, 1, 1 },
@@ -1276,7 +1290,7 @@ BOOST_FIXTURE_TEST_CASE( cast_tests, jit_fixture ){
 		};
 
 		int2x3 ret = test_bitcast_to_mi( reinterpret_cast<float2x3&>(farr), reinterpret_cast<uint2x3&>(uarr) );
-		
+
 		for(int i = 0; i < 2; ++i)
 		{
 			for(int j = 0; j < 3; ++j)
@@ -1333,8 +1347,8 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 
 	float* src[16] = {NULL};
 	float* dst[16] = {NULL};
-	float* src_data = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
-	float* dst_data = (float*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* src_data = (float*)eflib::aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
+	float* dst_data = (float*)eflib::aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(float), SIMD_ALIGNMENT );
 	float dest_ref[PACKAGE_ELEMENT_COUNT];
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
@@ -1348,13 +1362,13 @@ BOOST_FIXTURE_TEST_CASE( ps_arith_tests, jit_fixture ){
 	}
 
 	fn( src, (void*)NULL, dst, (void*)NULL );
-	
+
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT; ++i ){
 		BOOST_CHECK_CLOSE( dest_ref[i], *dst[i], 0.000012f );
 	}
 
-	_aligned_free( src_data );
-	_aligned_free( dst_data );
+	eflib::aligned_free( src_data );
+	eflib::aligned_free( dst_data );
 }
 #endif
 
@@ -1370,7 +1384,7 @@ BOOST_FIXTURE_TEST_CASE(swizzle, jit_fixture)
 	int2 y(5, 6);
 
 	int3 ref_v;
-	ref_v[0] = x[2] + y[1]; 
+	ref_v[0] = x[2] + y[1];
 	ref_v[1] = x[3] + y[0];
 	ref_v[2] = x[3] + y[1];
 	int3 tmp = int3( ref_v[2], ref_v[1], ref_v[0] );
@@ -1395,8 +1409,8 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 
 	vec4* src[PACKAGE_ELEMENT_COUNT] = {NULL};
 	vec4* dst[PACKAGE_ELEMENT_COUNT] = {NULL};
-	vec4* src_data = (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
-	vec4* dst_data = (vec4*)_aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
+	vec4* src_data = (vec4*)eflib::aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
+	vec4* dst_data = (vec4*)eflib::aligned_malloc( PACKAGE_ELEMENT_COUNT * sizeof(vec4), SIMD_ALIGNMENT );
 	vec4 dest_ref[PACKAGE_ELEMENT_COUNT];
 
 	for( size_t i = 0; i < PACKAGE_ELEMENT_COUNT * 4; ++i ){
@@ -1417,8 +1431,8 @@ BOOST_FIXTURE_TEST_CASE( ps_swz_and_wm, jit_fixture )
 		BOOST_CHECK_CLOSE( dest_ref[i][2], dst_data[i][2], 0.00001f );
 	}
 
-	_aligned_free( src_data );
-	_aligned_free( dst_data );
+	eflib::aligned_free( src_data );
+	eflib::aligned_free( dst_data );
 }
 #endif
 
@@ -1475,7 +1489,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 		in[i]  = in_data  + i;
 		out[i] = out_data + i;
 	}
-	
+
 	intrinsic_ps_out dest_ref[PACKAGE_ELEMENT_COUNT];
 	for( int i = 0; i < PACKAGE_ELEMENT_COUNT; ++i )
 	{
@@ -1492,7 +1506,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 		__m128 second_prod = _mm_mul_ps(b0, b1);
 		__m128 f3_m = _mm_sub_ps( first_prod, second_prod );
 		vec3 f3 = to_vec4( f3_m ).xyz();
-		
+
 		dest_ref[i].out0 = to_vec4( _mm_sqrt_ps(to_mm(in_data[i].in0)) ).xyz();
 		dest_ref[i].out1[0] = x;
 		dest_ref[i].out1[1] = sqrt(in_data[i].in0[0]);
@@ -1514,7 +1528,7 @@ BOOST_FIXTURE_TEST_CASE( ps_intrinsics, jit_fixture )
 #if ALL_TESTS_ENABLED
 BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 	init_ps( "./repo/question/v1a1/branches.sps" );
-	
+
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
 
@@ -1553,7 +1567,7 @@ BOOST_FIXTURE_TEST_CASE( ps_branches, jit_fixture ){
 		ref_out[i][0] = 88.3f;
 		ref_out[i][1] = 75.4f;
 
-		
+
 		if( in_data[i].in0 > 0.0f ){
 			ref_out[i][0] = in_data[i].in0;
 		}
@@ -1592,7 +1606,7 @@ void get_ddx(T* out, T const* in, MemberPtr ptr)
 
 	for( int col = 0; col < PACKAGE_LINE_ELEMENT_COUNT; col+=2 ){
 		for( int row = 0; row < LINES; ++row ){
-			int index = row * PACKAGE_LINE_ELEMENT_COUNT + col; 
+			int index = row * PACKAGE_LINE_ELEMENT_COUNT + col;
 			out[index+1].*ptr = out[index].*ptr =
 				in[index+1].*ptr - in[index].*ptr;
 		}
@@ -1711,7 +1725,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 {
 	init_ps( "./repo/question/v1a1/tex.sps" );
 
-	set_raw_function( &tex2Dlod_ps, "sasl.ps.tex2d.lod" );
+	set_raw_function( (void*)&tex2Dlod_ps, "sasl.ps.tex2d.lod" );
 
 	jit_function<void(void*, void*, void*, void*)> fn;
 	function( fn, "fn" );
@@ -1737,7 +1751,7 @@ BOOST_FIXTURE_TEST_CASE( tex_ps, jit_fixture )
 		out_ref[i] = in_data[i].zyxw() + in_data[i].wxzy();
 	}
 	sampler_t smpr;
-	
+
 	smpr.ss = 0xF3DE89C;
 	smpr.tex = 0xB785D3A;
 
@@ -2007,7 +2021,7 @@ BOOST_FIXTURE_TEST_CASE( arith_ops, jit_fixture )
 		{
 			for( int j = 0; j < 4; ++j )
 			{
-				ref_v[i][j] 
+				ref_v[i][j]
 				= (lhs_array[i][j] + rhs_array[i][j]) * lhs_array[i][j]
 				- fmodf( (rhs_array[i][j] / lhs_array[i][j]), rhs_array[i][j] );
 			}
@@ -2075,7 +2089,7 @@ BOOST_FIXTURE_TEST_CASE( bit_ops, jit_fixture )
 
 	jit_function<uint32_t(uint4, uint32_t)> test_bitwise_ops;
 	function( test_bitwise_ops, "test_bitwise_ops" );
-	
+
 	uint4	 a = { {0x3C657DBAU, 13, 0x76337BEC, 4} };
 	uint32_t b(0xCB6F34A3);
 	uint64_t ref_v = ( (a.v[0]<<a.v[1]) + (a.v[1]<<3u) - (a.v[1]>>2u) ) & (a.v[2]>>a.v[3]) | b;
@@ -2108,7 +2122,7 @@ BOOST_FIXTURE_TEST_CASE( assigns, jit_fixture )
 	JIT_FUNCTION( int2x3(int2x3,int2x3), test_arith_assign );
 	JIT_FUNCTION( int2x3(int2x3,int2x3), test_bit_assign );
 	JIT_FUNCTION( int(int,int),			 test_scalar_arith_assign );
-	
+
 	int32_t lhs_arr[2][3] =
 	{
 		{ 786, 0, 33769097 },
@@ -2206,16 +2220,13 @@ vec4 my_transform(mat44& m, vec4& v)
 	__m128 v4f;
 	for(int i = 0; i < 4; ++i)
 	{
-		for(int j = 0; j < 4; ++j)
-		{
-			col.m128_f32[j] = m.data_[i][j];
-			v4f.m128_f32[j] = v.data_[j];
-		}
+		col = _mm_load_ps(m.data_[i]);
+		v4f = _mm_load_ps(v.data_);
 		__m128 elem_v4f = _mm_mul_ps(v4f, col);
 
 		for(int j = 0; j < 4; ++j)
 		{
-			ret[i] += elem_v4f.m128_f32[j];
+			ret[i] += v4_get_float(elem_v4f, j);
 		}
 	}
 #else
@@ -2243,7 +2254,7 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 
 	array_vertex_data data;
 	data.pos = vec4(-10.0f, 77.8f, 8.3f, -87.3f);
-	
+
 	array_vs_sin sin;
 	sin.ids = &data.ids;
 	sin.pos = &data.pos;
@@ -2251,7 +2262,7 @@ BOOST_FIXTURE_TEST_CASE( array_test, jit_fixture )
 	array_vs_bin bin;
 	bin.mat_size = 50;
 	bin.mat_arr = &mats[0];
-	
+
 	array_vs_bout bout;
 
 	for(int i = 0; i < 100; ++i)

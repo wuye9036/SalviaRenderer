@@ -39,7 +39,7 @@ using llvm::TypeBuilder;
 using llvm::BasicBlock;
 using llvm::Instruction;
 
-namespace Intrinsic = llvm::Intrinsic;
+namespace VMIntrin = llvm::Intrinsic;
 
 using boost::shared_ptr;
 
@@ -126,7 +126,7 @@ cg_function* cg_service::fetch_function(function_def* fn_node){
 	ret->cg					= this;
 
 	abis::id abi = param_abi( ret->c_compatible );
-	
+
 	// Create function signature.
 	vector<Type*> par_tys;
 
@@ -251,7 +251,7 @@ multi_value cg_service::create_value( cg_type* tyinfo, builtin_types hint, value
 cg_type* cg_service::create_ty(tynode* tyn)
 {
 	node_context* ctxt = ctxt_->get_or_create_node_context(tyn);
-	
+
 	if( ctxt->ty ) { return ctxt->ty; }
 
 	cg_type* ret= ctxt_->create_cg_type();
@@ -707,7 +707,7 @@ multi_value cg_service::emit_mul_comp( multi_value const& lhs, multi_value const
 	return emit_bin_ps_ta_sva( lv, rv, i_mul, i_mul, f_mul );
 }
 
-bool xor(bool l, bool r)
+bool bool_xor(bool l, bool r)
 {
 	return (l && !r) || (!l && r);
 }
@@ -724,7 +724,7 @@ multi_value cg_service::emit_sub( multi_value const& lhs, multi_value const& rhs
 {
 	binary_intrin_functor f_sub = boost::bind( &DefaultIRBuilder::CreateFSub, builder(), _1, _2, "", (llvm::MDNode*)(NULL) );
 	binary_intrin_functor i_sub = boost::bind( &DefaultIRBuilder::CreateSub,  builder(), _1, _2, "", false, false );
-	
+
 	return emit_bin_es_ta_sva( lhs, rhs, i_sub, i_sub, f_sub );
 }
 
@@ -775,10 +775,10 @@ multi_value cg_service::emit_div( multi_value const& lhs, multi_value const& rhs
 }
 
 multi_value cg_service::emit_mod( multi_value const& lhs, multi_value const& rhs )
-{	
+{
 	binary_intrin_functor i_mod = boost::bind( &DefaultIRBuilder::CreateSRem, builder(), _1, _2, "" );
 	binary_intrin_functor u_mod = boost::bind( &DefaultIRBuilder::CreateURem, builder(), _1, _2, "" );
-		
+
 	binary_intrin_functor i_safe_mod = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, i_mod );
 	binary_intrin_functor u_safe_mod = boost::bind( &cg_extension::safe_idiv_imod_sv, ext_.get(), _1, _2, u_mod );
 
@@ -886,7 +886,7 @@ multi_value cg_service::emit_extract_ref( multi_value const& lhs, int idx )
 multi_value cg_service::emit_extract_ref( multi_value const& lhs, multi_value const& idx )
 {
 	assert( lhs.storable() );
-	
+
 	abis::id promoted_abi = promote_abi( lhs.abi(), idx.abi() );
 	builtin_types agg_hint = lhs.hint();
 
@@ -1036,7 +1036,7 @@ multi_value cg_service::emit_extract_val( multi_value const& lhs, multi_value co
 		default:
 			assert(false);
 		}
-		
+
 	} else if( is_scalar(agg_hint) ){
 		elem_val	= lhs.load();
 		elem_hint	= agg_hint;
@@ -1144,7 +1144,7 @@ multi_value cg_service::emit_dot_vv( multi_value const& lhs, multi_value const& 
 {
 	abis::id promoted_abi = promote_abi(lhs.abi(), rhs.abi(), abis::llvm);
 	// assert( promoted_abi == abis::llvm );
-	
+
 	size_t vec_size = vector_size( lhs.hint() );
 	multi_value total = null_value( scalar_of( lhs.hint() ), promoted_abi );
 	multi_value prod = emit_mul_comp( lhs, rhs );
@@ -1257,9 +1257,9 @@ multi_value cg_service::emit_sqrt( multi_value const& arg_value )
 	if( scalar_hint == builtin_types::_float )
 	{
 		unary_intrin_functor sqrt_sv = ext_->promote_to_unary_sv(
-			ext_->bind_to_unary( ext_->vm_intrin<float(float)>(Intrinsic::sqrt) ),
+			ext_->bind_to_unary( ext_->vm_intrin<float(float)>(VMIntrin::sqrt) ),
 			null_unary,
-			ext_->bind_to_unary( ext_->vm_intrin(Intrinsic::x86_sse_sqrt_ps) )
+			ext_->bind_to_unary( ext_->vm_intrin(VMIntrin::x86_sse_sqrt_ps) )
 			);
 		value_array ret_v = ext_->call_unary_intrin(NULL, v, sqrt_sv);
 		return create_value( arg_value.ty(), arg_value.hint(), ret_v, value_kinds::value, arg_abi );
@@ -1316,7 +1316,7 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 	// Fill values for arguments.
 	{
 		size_t physical_index = 0;
-	
+
 		// Add return address to args.
 		if( fn.return_via_arg() )
 		{
@@ -1338,14 +1338,14 @@ multi_value cg_service::emit_call( cg_function const& fn, vector<multi_value> co
 			physical_args[physical_index++] = exec_mask ? exec_mask : current_execution_mask();
 		}
 
-		// Push arguments to list. 
+		// Push arguments to list.
 		for(size_t logical_index = 0; logical_index < args.size(); ++logical_index, ++physical_index)
 		{
 			multi_value const& arg(args[logical_index]);
 			assert( arg.valid() );
 
 			vector<Value*> val;
-			
+
 			// Get values, and convert big value to pointer if needed.
 			if( !fn.value_arg_as_ref(logical_index) )
 			{
@@ -1535,7 +1535,7 @@ multi_value cg_service::emit_any( multi_value const& v )
 	}
 	else if( is_matrix(hint) )
 	{
-		EFLIB_ASSERT_UNIMPLEMENTED();	
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 	else
 	{
@@ -1565,7 +1565,7 @@ multi_value cg_service::emit_all( multi_value const& v )
 	}
 	else if( is_matrix(hint) )
 	{
-		EFLIB_ASSERT_UNIMPLEMENTED();	
+		EFLIB_ASSERT_UNIMPLEMENTED();
 	}
 	else
 	{
@@ -1649,7 +1649,7 @@ multi_value cg_service::emit_bin_ps_ta_sva( multi_value const& lhs, multi_value 
 
 	value_array lhs_v = lhs.load(internal_abi);
 	value_array rhs_v = rhs.load(internal_abi);
-	
+
 	assert( valid_all(lhs_v) );
 	assert( valid_all(rhs_v) );
 	assert( lhs_v.size() == rhs_v.size() );
@@ -1660,7 +1660,7 @@ multi_value cg_service::emit_bin_ps_ta_sva( multi_value const& lhs, multi_value 
 	{
 		ret = ext_->call_binary_intrin(ret_ty, lhs_v, rhs_v, float_sv_fn, null_unary);
 	}
-	else if( is_integer(scalar_hint) ) 
+	else if( is_integer(scalar_hint) )
 	{
 		if( is_signed(scalar_hint) )
 		{
@@ -1726,7 +1726,7 @@ multi_value cg_service::create_constant_int( cg_type* tyinfo, builtin_types bt, 
 	builtin_types hint = tyinfo ? tyinfo->hint() : bt;
 	builtin_types scalar_hint = scalar_of(hint);
 	assert( is_integer(scalar_hint) || scalar_hint == builtin_types::_boolean );
-	uint32_t bits = static_cast<uint32_t>( storage_size(scalar_hint) ) << 3; 
+	uint32_t bits = static_cast<uint32_t>( storage_size(scalar_hint) ) << 3;
 
 	Type* ret_ty = type_( hint, abi );
 	Value* value_mono = ext_->get_int( ret_ty, APInt( bits, v, is_signed(scalar_hint) ) );
@@ -1888,7 +1888,7 @@ multi_value cg_service::emit_tex_grad_impl( multi_value const& samp, multi_value
 	ext_->store(ddy.load(abi), ddy_ptr);
 
 	value_array masks = split_mask( current_execution_mask() );
-	value_array args[] = 
+	value_array args[] =
 	{
 		ret_ptr, masks, samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
@@ -1929,7 +1929,7 @@ multi_value cg_service::emit_tex_proj_impl( multi_value const& samp, multi_value
 	ext_->store(coord.load(abi), ddy_ptr);
 
 	value_array masks = split_mask( current_execution_mask() );
-	value_array args[] = 
+	value_array args[] =
 	{
 		ret_ptr, masks, samp.load(), coord_ptr, ddx_ptr, ddy_ptr
 	};
@@ -1978,7 +1978,7 @@ multi_value cg_service::emit_select( multi_value const& flag, multi_value const&
 	value_array v1_v = v1.load(promoted_abi);
 
 	return create_value(
-		v0.ty(), v0.hint(), 
+		v0.ty(), v0.hint(),
 		ext_->select(flag_v, v0_v, v1_v), value_kinds::value, promoted_abi
 		);
 }

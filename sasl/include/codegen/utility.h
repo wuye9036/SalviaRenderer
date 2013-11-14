@@ -7,6 +7,10 @@
 #include <llvm/ADT/APInt.h>
 #include <eflib/include/platform/enable_warnings.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/type_traits/is_signed.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 namespace llvm
 {
 	class Function;

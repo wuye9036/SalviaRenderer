@@ -1,5 +1,7 @@
-#include "../include/colors.h"
-BEGIN_NS_SALVIAR()
+#include <salviar/include/colors.h>
+#include <memory.h>
+
+BEGIN_NS_SALVIAR();
 
 static pixel_format_convertor pfc_instance;
 
@@ -16,7 +18,7 @@ struct convert_array_t
 	{
 		byte* o_pbytes = (byte*)outpixel;
 		const byte* i_pbytes = (const byte*)inpixel;
-		
+
 		for(int i = 0; i < count; ++i){
 			*(OutColorType*)(o_pbytes) = *(const InColorType*)(i_pbytes);
 			o_pbytes += outstride;
@@ -35,7 +37,7 @@ struct convert_array_t<ColorType, ColorType>
 		else{
 			byte* o_pbytes = (byte*)outpixel;
 			const byte* i_pbytes = (const byte*)inpixel;
-		
+
 			for(int i = 0; i < count; ++i){
 				*(ColorType*)(o_pbytes) = *(const ColorType*)(i_pbytes);
 				o_pbytes += outstride;
@@ -67,10 +69,10 @@ struct color_convertor_initializer
 		pixel_format_convertor::pixel_lerp_1d* pxlerp_1d_table,
 		pixel_format_convertor::pixel_lerp_2d* pxlerp_2d_table)
 		:cci_(pxcvt_table, pxacvt_table, pxlerp_1d_table, pxlerp_2d_table){
-			pxcvt_table[inColor + outColor * pixel_type_to_fmt<color_max>::fmt] = &convert_t<pixel_fmt_to_type<outColor>::type, pixel_fmt_to_type<inColor>::type>;
-			pxacvt_table[inColor + outColor * pixel_type_to_fmt<color_max>::fmt] = &convert_array_t<pixel_fmt_to_type<outColor>::type, pixel_fmt_to_type<inColor>::type>::op;
-			pxlerp_1d_table[inColor] = &lerp_1d_t<pixel_fmt_to_type<inColor>::type>;
-			pxlerp_2d_table[inColor] = &lerp_2d_t<pixel_fmt_to_type<inColor>::type>;
+			pxcvt_table[inColor + outColor * pixel_type_to_fmt<color_max>::fmt] = &convert_t<typename pixel_fmt_to_type<outColor>::type, typename pixel_fmt_to_type<inColor>::type>;
+			pxacvt_table[inColor + outColor * pixel_type_to_fmt<color_max>::fmt] = &convert_array_t<typename pixel_fmt_to_type<outColor>::type, typename pixel_fmt_to_type<inColor>::type>::op;
+			pxlerp_1d_table[inColor] = &lerp_1d_t<typename pixel_fmt_to_type<inColor>::type>;
+			pxlerp_2d_table[inColor] = &lerp_2d_t<typename pixel_fmt_to_type<inColor>::type>;
 	}
 };
 
@@ -97,8 +99,10 @@ struct color_convertor_initializer<outColor, 0>
 		pixel_format_convertor::pixel_lerp_1d* pxlerp_1d_table,
 		pixel_format_convertor::pixel_lerp_2d* pxlerp_2d_table)
 		:cci_(pxcvt_table, pxacvt_table, pxlerp_1d_table, pxlerp_2d_table){
-			pxcvt_table[outColor * pixel_type_to_fmt<color_max>::fmt] = &convert_t<pixel_fmt_to_type<outColor>::type, pixel_fmt_to_type<0>::type>;
-			pxacvt_table[outColor * pixel_type_to_fmt<color_max>::fmt] = &convert_array_t<pixel_fmt_to_type<outColor>::type, pixel_fmt_to_type<0>::type>::op;
+			pxcvt_table[outColor * pixel_type_to_fmt<color_max>::fmt]
+				= &convert_t<typename pixel_fmt_to_type<outColor>::type, pixel_fmt_to_type<0>::type>;
+			pxacvt_table[outColor * pixel_type_to_fmt<color_max>::fmt]
+				= &convert_array_t<typename pixel_fmt_to_type<outColor>::type, pixel_fmt_to_type<0>::type>::op;
 			pxlerp_1d_table[0] = &lerp_1d_t<pixel_fmt_to_type<0>::type>;
 			pxlerp_2d_table[0] = &lerp_2d_t<pixel_fmt_to_type<0>::type>;
 	}

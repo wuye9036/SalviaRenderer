@@ -19,13 +19,13 @@ namespace eflib{
 		{
 			void* pfn = get_function(name);
 			if( pfn ) {
-				fn = static_cast<PFnT>(pfn);
+				fn = (PFnT)(pfn);
 				return true;
 			}
 			fn = NULL;
 			return false;
 		}
-		
+
 		virtual bool available() const = 0;
 		virtual ~dynamic_lib() {}
 

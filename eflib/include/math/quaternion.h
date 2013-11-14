@@ -66,5 +66,25 @@ public:
 	friend quaternion slerp(const quaternion& src, const quaternion& dest, float t);
 };
 
+quaternion normalize(const quaternion& lhs);
+
+quaternion conj(const quaternion& lhs);
+quaternion inv(const quaternion& lhs);
+
+quaternion exp(const quaternion& lhs);
+quaternion pow(const quaternion& lhs, float t);
+quaternion log(const quaternion& lhs);
+
+quaternion operator * (const quaternion& lhs, const quaternion& rhs);
+quaternion operator * (const quaternion& q, float scalar);
+quaternion operator * (float scalar, const quaternion& q);
+
+quaternion operator / (const quaternion& lhs, const quaternion& rhs);
+quaternion operator / (const quaternion& q, float scalar);
+
+vec3& transform(vec3& out, const quaternion& q, const vec3& v);
+
+quaternion lerp(const quaternion& src, const quaternion& dest, float t);
+quaternion slerp(const quaternion& src, const quaternion& dest, float t);
 }//namespace
 #endif

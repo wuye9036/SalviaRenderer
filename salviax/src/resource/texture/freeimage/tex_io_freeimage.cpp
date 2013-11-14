@@ -1,7 +1,5 @@
 #include <salviax/include/resource/texture/freeimage/tex_io_freeimage.h>
 
-#ifdef SALVIAX_FREEIMAGE_ENABLED
-
 #include <salviax/include/utility/freeimage_utilities.h>
 #include <salviar/include/sync_renderer.h>
 #include <salviar/include/resource_manager.h>
@@ -29,7 +27,7 @@ BEGIN_NS_SALVIAX_RESOURCE();
 template<typename FIColorT> bool copy_image_to_surface(
 	salviar::surface& surf, const rect<size_t>& dest_rect,
 	FIBITMAP* image, const rect<size_t>& src_rect,
-	typename FIUC<FIColorT>::CompT default_alpha = (FIUC<FIColorT>::CompT)(0) 
+	typename FIUC<FIColorT>::CompT default_alpha = (typename FIUC<FIColorT>::CompT)(0)
 	)
 {
 	if (image == NULL){
@@ -62,7 +60,7 @@ template<typename FIColorT> bool copy_image_to_surface(
 
 			pixel_format_convertor::convert(
 				surf.get_pixel_format(),
-				softart_rgba_color_type<FIColorT>::fmt, 
+				softart_rgba_color_type<FIColorT>::fmt,
 				pdata + iwidth * color_infos[surf.get_pixel_format()].size,
 				&c);
 
@@ -81,7 +79,7 @@ template<typename FIColorT> bool copy_image_to_surface(
 bool texture_io_fi::load( salviar::surface& surf, const rect<size_t>& dest_region, FIBITMAP* img, const rect<size_t>& src_region ){
 	rect<size_t> scaled_img_region ;
 	FIBITMAP* scaled_img = make_bitmap_copy(scaled_img_region, dest_region.w, dest_region.h, img, src_region);
-	
+
 	if ( scaled_img == NULL ){
 		return false;
 	}
@@ -116,7 +114,7 @@ bool texture_io_fi::load( salviar::surface& surf, const rect<size_t>& dest_regio
 // Load image file to new texture
 salviar::texture_ptr texture_io_fi::load(salviar::renderer* pr, const std::_tstring& filename, salviar::pixel_format tex_pxfmt){
 	FIBITMAP* img = load_image( filename );
-	
+
 	size_t src_w = FreeImage_GetWidth(img);
 	size_t src_h = FreeImage_GetHeight(img);
 
@@ -186,7 +184,7 @@ case pixel_format_color_rgb32f:
 	image = FreeImage_AllocateT(fit, int(surf.get_width()), int(surf.get_height()), 96);
 	break;
 default:
-	EFLIB_ASSERT(false, "Unsupport format was used£¡");
+	EFLIB_ASSERT(false, "Unsupport format was usedÂ£Â¡");
 	return;
 	}
 
@@ -211,9 +209,8 @@ default:
 	FreeImage_Save(fif, image, to_ansi_string(filename).c_str());
 	FreeImage_Unload(image);
 }
-END_NS_SALVIAX_RESOURCE()
 
-#endif
+END_NS_SALVIAX_RESOURCE();
 
 /*
 Copyright (C) 2007-2012 Minmin Gong, Ye Wu

@@ -17,6 +17,7 @@
 #include <eflib/include/platform/boost_end.h>
 
 #include <fstream>
+#include <cstring>
 
 using boost::unordered_map;
 using boost::filesystem::path;
@@ -35,14 +36,20 @@ using namespace salviar;
 
 typedef tuple< uint32_t, uint32_t, uint32_t > smooth_id_t;
 
-namespace boost{
-	size_t hash_value( smooth_id_t const& id ){
-		size_t ret = hash_value( get<0>(id) );
-		hash_combine( ret, get<1>(id) );
-		hash_combine( ret, get<2>(id) );
-		return ret;
+namespace boost
+{
+	namespace tuples
+	{
+		std::size_t hash_value( smooth_id_t const& id )
+		{
+			size_t ret = boost::hash_value( get<0>(id) );
+			boost::hash_combine( ret, get<1>(id) );
+			boost::hash_combine( ret, get<2>(id) );
+			return ret;
+		}
 	}
 }
+
 
 BEGIN_NS_SALVIAX_RESOURCE();
 
@@ -81,7 +88,7 @@ bool load_material( renderer* r, vector<obj_material>& mtls, string const& mtl_f
 	for(;;){
 		mtlf >> cmd;
 		if( !mtlf ){ break; }
-		
+
 		if( cmd == "#" ){
 			mtlf.ignore(1000, '\n');
 			continue;
@@ -168,7 +175,7 @@ bool load_obj_mesh_c(
 
 	uint32_t subset = 0;
 
-	unordered_map<smooth_id_t, uint32_t> smooth_id_to_vertex_index;
+	unordered_map<smooth_id_t, uint32_t, boost::hash<smooth_id_t>> smooth_id_to_vertex_index;
 
 	for(;;){
 		fscanf( objf, "%s", obj_cmd );
@@ -259,7 +266,7 @@ bool load_obj_mesh_c(
 	fclose(objf);
 
 	path base_path = absolute( path(fname) );
-	if( strnlen( mtl_fname, BUFFER_SIZE ) != 0 ){
+	if( strlen( mtl_fname ) != 0 ){
 		load_material( r, mtls, mtl_fname, base_path.parent_path() );
 	}
 	return true;
@@ -291,7 +298,7 @@ bool load_obj_mesh(
 
 	uint32_t subset = 0;
 
-	
+
 	unordered_map< smooth_id_t, uint32_t > smooth_id_to_vertex_index;
 
 	for(;;){
@@ -391,7 +398,7 @@ void construct_meshes(
 	std::vector<mesh_ptr>& meshes,
 	salviar::renderer* render,
 	vector<obj_mesh_vertex> const& verts, vector<uint32_t> const& indices,
-	vector<uint32_t> const& attrs, vector<obj_material> const& mtls 
+	vector<uint32_t> const& attrs, vector<obj_material> const& mtls
 	)
 {
 	buffer_ptr vert_buf = render->create_buffer( sizeof(obj_mesh_vertex) * verts.size() );

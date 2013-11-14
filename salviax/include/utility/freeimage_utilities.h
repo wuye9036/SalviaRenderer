@@ -3,10 +3,8 @@
 
 #include <salviax/include/utility/user_config.h>
 
-#ifdef SALVIAX_FREEIMAGE_ENABLED
-
 #include "utility_forward.h"
-#include "salviar/include/colors.h"
+#include <salviar/include/colors.h>
 #include <eflib/include/string/string.h>
 #include <eflib/include/math/collision_detection.h>
 #include <FreeImage.h>
@@ -14,7 +12,7 @@
 #include <algorithm>
 #include <tchar.h>
 
-BEGIN_NS_SALVIAX_UTILITY()
+BEGIN_NS_SALVIAX_UTILITY();
 
 FIBITMAP* load_image(const std::_tstring& fname, int flag FI_DEFAULT(0));
 
@@ -31,18 +29,6 @@ FIBITMAP* make_bitmap_copy( eflib::rect<size_t>& out_region,
 template <class ColorType>
 struct FREE_IMAGE_UNIFORM_COLOR
 {
-	STATIC_ASSERT_INFO(FIUC_RECIEVED_A_ILLEGAL_TYPE);
-	BOOST_STATIC_ASSERT(FIUC_RECIEVED_A_ILLEGAL_TYPE);
-
-	typedef int CompT;
-	const CompT& r;
-	const CompT& g;
-	const CompT& b;
-	const CompT& a;
-	FREE_IMAGE_UNIFORM_COLOR(const ColorType& color);
-private:
-	FREE_IMAGE_UNIFORM_COLOR(const FREE_IMAGE_UNIFORM_COLOR<ColorType>&);
-	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<ColorType>&);
 };
 
 template <>
@@ -102,7 +88,7 @@ private:
 	FREE_IMAGE_UNIFORM_COLOR& operator = (const FREE_IMAGE_UNIFORM_COLOR<FIRGBAF>&);
 };
 
-#define FIUC FREE_IMAGE_UNIFORM_COLOR 
+#define FIUC FREE_IMAGE_UNIFORM_COLOR
 
 // Get the salvia supported color type
 // which is compatible with internal color format in FreeImage
@@ -110,33 +96,34 @@ private:
 template<typename FIColorT>
 struct softart_rgba_color_type{
 	typedef salviar::color_max type;
-	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 template<>
 struct softart_rgba_color_type<RGBQUAD>{
 	typedef salviar::color_rgba8 type;
-	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<RGBTRIPLE>{
 	typedef salviar::color_rgba8 type;
-	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBF>{
 	typedef salviar::color_rgba32f type;
-	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
 
 template<>
 struct softart_rgba_color_type<FIRGBAF>{
 	typedef salviar::color_rgba32f type;
-	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<typename type>::fmt;
+	static const salviar::pixel_format fmt = salviar::pixel_type_to_fmt<type>::fmt;
 };
-END_NS_SALVIAX_UTILITY()
 
-#endif // SOFTART_FREEIMAGE_ENABLED
+static softart_rgba_color_type<FIRGBAF> x;
+
+END_NS_SALVIAX_UTILITY();
 
 #endif

@@ -33,7 +33,7 @@ class expectation_failure: public std::exception{
 public:
 	expectation_failure( token_iterator iter, parser const* p  );
 	parser const* get_parser();
-	virtual const char* what() const;
+	virtual const char* what() const throw();
 private:
 	token_iterator iter;
 	parser const* p;

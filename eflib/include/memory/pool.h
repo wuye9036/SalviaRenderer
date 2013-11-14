@@ -21,11 +21,11 @@ namespace eflib{
 		class stack_pool{
 		public:
 			stack_pool(){
-				initialize_usage();
+				this->initialize_usage();
 			}
 
 			void* malloc(){
-				return malloc_impl(p);
+				return malloc_impl();
 			}
 
 			void free( void* p ){
@@ -52,7 +52,7 @@ namespace eflib{
 			}
 
 			void free_impl( void* const p ){
-				::assert( is_from_pool(p) );
+				assert( is_from_pool(p) );
 				intptr_t pos = ( (intptr_t)p - (intptr_t)boost::addressof(data[0]) ) / ObjectSize;
 				usage[pos] = false;
 			}
@@ -115,7 +115,7 @@ namespace eflib{
 				return;
 			}
 		};
-	
+
 		template <typename T>
 		class preserved_pool
 		{

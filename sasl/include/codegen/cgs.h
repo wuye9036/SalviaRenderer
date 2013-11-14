@@ -73,7 +73,7 @@ public:
 
 	virtual multi_value emit_mul_comp  ( multi_value const& lhs, multi_value const& rhs );
 	virtual multi_value emit_mul_intrin( multi_value const& lhs, multi_value const& rhs );
-	
+
 	virtual multi_value emit_lshift ( multi_value const& lhs, multi_value const& rhs );
 	virtual multi_value emit_rshift ( multi_value const& lhs, multi_value const& rhs );
 
@@ -240,16 +240,20 @@ public:
 	multi_value extend_to_vm( multi_value const&, builtin_types hint );
 
 	cg_function* fetch_function(sasl::syntax_tree::function_def* fn_node);
-	
+
 	template <typename T>
-	multi_value create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_integral<T> ) ){
-		Value* ll_val = ConstantInt::get( IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value );
+	multi_value create_constant_scalar(
+		T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND(boost::is_integral<T>) )
+	{
+		llvm::Value* ll_val = llvm::ConstantInt::get(
+			llvm::IntegerType::get( context(), sizeof(T) * 8 ), uint64_t(v), boost::is_signed<T>::value
+		);
 		return create_scalar( ll_val, tyinfo, hint );
 	}
 
 	template <typename T>
 	multi_value create_constant_scalar( T const& v, cg_type* tyinfo, builtin_types hint, EFLIB_ENABLE_IF_COND( boost::is_floating_point<T> ) ){
-		Value* ll_val = ConstantFP::get( Type::getFloatTy( context() ), v );
+		llvm::Value* ll_val = llvm::ConstantFP::get( llvm::Type::getFloatTy( context() ), v );
 		return create_scalar( ll_val, tyinfo, hint );
 	}
 	virtual multi_value create_scalar(llvm::Value* val, cg_type* tyinfo, builtin_types hint);
@@ -263,7 +267,7 @@ public:
 	void		 set_mask_flag	(llvm::Value* mask, size_t index, llvm::Value* flag);
 	llvm::Value* combine_flags	(value_array const& flags);
 	value_array  split_mask		(llvm::Value* mask);
-	
+
 	multi_value create_constant_int( cg_type* tyinfo, builtin_types bt, abis::id abi, uint64_t v );
 
 	value_array invalid_value_array();
@@ -300,7 +304,7 @@ public:
 	/// Get member type information is type is aggregated.
 	cg_type* member_tyinfo( cg_type const* agg, size_t index ) const;
 	/// @}
-	
+
 	/// @name Bridges
 	/// @{
 	llvm::Type*	 type_(builtin_types bt, abis::id abi);
@@ -332,16 +336,16 @@ protected:
 	sasl::semantic::module_semantic*	sem_;
 	module_vmcode_impl*					vmcode_;
 	module_context*						ctxt_;
-	
+
 	std::vector<cg_function*>			fn_ctxts;
 	size_t								parallel_factor_;
 	multi_value							exec_mask;
-	
+
 	multi_value emit_cmp(
 		multi_value const& lhs, multi_value const& rhs,
 		uint32_t pred_signed, uint32_t pred_unsigned, uint32_t pred_float
 		);
-	
+
 	// LLVM have some instructions/intrinsics to support unary and binary operations.
 	// But even simple instruction 'add', there are two overloads to support 'iadd' and 'fadd' separately.
 	// Additional, some intrinsics only support scalar or SIMD vector as argument.

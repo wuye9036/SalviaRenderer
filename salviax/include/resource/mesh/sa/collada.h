@@ -10,6 +10,7 @@
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/unordered_map.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/optional.hpp>
 #include <eflib/include/platform/boost_end.h>
@@ -49,7 +50,7 @@ struct dae_dom
 	boost::shared_ptr<T> get_node( std::string const& name )
 	{
 		std::string unqual_name = (name[0] == '#' ? name.substr(1) : name);
-		unordered_map<string, dae_node_ptr>::iterator it = id_nodes.find(unqual_name);
+		boost::unordered_map<std::string, dae_node_ptr>::iterator it = id_nodes.find(unqual_name);
 		if( it == id_nodes.end() ) { return boost::shared_ptr<T>(); }
 		return boost::dynamic_pointer_cast<T>(it->second);
 	}
@@ -62,18 +63,7 @@ struct dae_dom
 	}
 
 	template <typename T>
-	boost::shared_ptr<T> load_node(boost::property_tree::ptree& xml_node, dae_node* parent)
-	{
-		boost::shared_ptr<T> ret = make_shared<T>();
-		ret->owner	= this;
-		ret->parent	= parent; 
-		ret->parse_attribute(xml_node);
-		ret->parse(xml_node);
-		if( ret->sid && parent ){ parent->sid_children.insert( make_pair(*ret->sid, ret) ); }
-		if( ret->id  ){ id_nodes.insert( make_pair(*ret->id, ret) ); }
-
-		return ret;
-	}
+	boost::shared_ptr<T> load_node(boost::property_tree::ptree& xml_node, dae_node* parent);
 
 	dae_node_ptr node_by_path(std::string const& path);
 };
@@ -81,7 +71,7 @@ struct dae_dom
 struct dae_node
 {
 	void parse_attribute(boost::property_tree::ptree& xml_node);
-	
+
 	virtual bool parse(boost::property_tree::ptree& xml_node) = 0;
 
 	template <typename T>
@@ -127,11 +117,25 @@ struct dae_node
 	dae_dom*			owner;
 	dae_node*			parent;
 	boost::unordered_map<
-		std::string, 
+		std::string,
 		dae_node_ptr >	sid_children;
 
 	virtual ~dae_node(){}
 };
+
+template <typename T>
+boost::shared_ptr<T> dae_dom::load_node(boost::property_tree::ptree& xml_node, dae_node* parent)
+{
+	boost::shared_ptr<T> ret = boost::make_shared<T>();
+	ret->owner	= this;
+	ret->parent	= parent;
+	ret->parse_attribute(xml_node);
+	ret->parse(xml_node);
+	if( ret->sid && parent ){ parent->sid_children.insert( make_pair(*ret->sid, ret) ); }
+	if( ret->id  ){ id_nodes.insert( make_pair(*ret->id, ret) ); }
+
+	return ret;
+}
 
 struct dae_mesh: public dae_node
 {
@@ -211,7 +215,7 @@ struct dae_param: public dae_node
 	enum special_types
 	{
 		st_none,
-		st_name	
+		st_name
 	};
 
 	salviar::language_value_types	vtype;

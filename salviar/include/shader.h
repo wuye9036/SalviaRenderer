@@ -37,7 +37,7 @@ EFLIB_DECLARE_CLASS_SHARED_PTR(sampler);
 enum languages
 {
 	lang_none,
-	
+
 	lang_general,
 	lang_vertex_shader,
 	lang_pixel_shader,
@@ -285,9 +285,9 @@ public:
 class cpp_pixel_shader : public cpp_shader_impl
 {
 	friend class rasterizer;
-	
-	const triangle_info* triangle_info;
-	const vs_output* ppxin_;
+
+	triangle_info const*	tri_info_;
+	vs_output const*		ppxin_;
 
 protected:
 	const eflib::vec4& get_pos_ddx() const;

@@ -106,15 +106,16 @@ namespace eflib
 	template <typename ScalarT, int ColumnSize, int RowSize>
 	struct matrix_operators<ScalarT,ColumnSize,RowSize,true>: public matrix_operators<ScalarT,ColumnSize,RowSize,false>
 	{
+		typedef matrix_operators<ScalarT,ColumnSize,RowSize,true> this_type;
 		static matrix_<ScalarT,ColumnSize,RowSize> diag( ScalarT d0, ScalarT d1 = ScalarT(0), ScalarT d2 = ScalarT(0), ScalarT d3 = ScalarT(0) )
 		{
-			ScalarT diags[4] = {d0, d1, d2, d3}; 
+			ScalarT diags[4] = {d0, d1, d2, d3};
 			return diag(diags);
 		}
 
 		static matrix_<ScalarT,ColumnSize,RowSize> diag( ScalarT const* v )
 		{
-			matrix_<ScalarT,ColumnSize,RowSize> ret = zero();
+			matrix_<ScalarT,ColumnSize,RowSize> ret = this_type::zero();
 			for( size_t i = 0; i < ColumnSize; ++i )
 			{
 				ret.data_[i][i] = v[i];
@@ -137,7 +138,7 @@ namespace eflib
 			for( size_t i = 0; i < RowSize; ++i )
 			{
 				for( size_t j = 0; j < ColumnSize; ++j )
-				data_[i][j] = v.data_[i][j];
+				this->data_[i][j] = v.data_[i][j];
 			}
 		}
 	};
@@ -151,7 +152,7 @@ namespace eflib
 			for( size_t i = 0; i < 4; ++i )
 			{
 				for( size_t j = 0; j < 4; ++j )
-					data_[i][j] = v.data_[i][j];
+					this->data_[i][j] = v.data_[i][j];
 			}
 		}
 		matrix_<ScalarT,4,4>(
@@ -161,25 +162,25 @@ namespace eflib
 			ScalarT _41, ScalarT _42, ScalarT _43, ScalarT _44
 			)
 		{
-			data_[0][0] = _11;
-			data_[0][1] = _12;
-			data_[0][2] = _13;
-			data_[0][3] = _14;
-				
-			data_[1][0] = _21;
-			data_[1][1] = _22;
-			data_[1][2] = _23;
-			data_[1][3] = _24;
-				
-			data_[2][0] = _31;
-			data_[2][1] = _32;
-			data_[2][2] = _33;
-			data_[2][3] = _34;
-				
-			data_[3][0] = _41;
-			data_[3][1] = _42;
-			data_[3][2] = _43;
-			data_[3][3] = _44;
+			this->data_[0][0] = _11;
+			this->data_[0][1] = _12;
+			this->data_[0][2] = _13;
+			this->data_[0][3] = _14;
+
+			this->data_[1][0] = _21;
+			this->data_[1][1] = _22;
+			this->data_[1][2] = _23;
+			this->data_[1][3] = _24;
+
+			this->data_[2][0] = _31;
+			this->data_[2][1] = _32;
+			this->data_[2][2] = _33;
+			this->data_[2][3] = _34;
+
+			this->data_[3][0] = _41;
+			this->data_[3][1] = _42;
+			this->data_[3][2] = _43;
+			this->data_[3][3] = _44;
 		}
 	};
 

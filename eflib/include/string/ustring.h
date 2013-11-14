@@ -95,20 +95,20 @@ namespace eflib{
 		fixed_basic_string(int /*for initialize static.*/)
 		{
 		}
-		
+
 		fixed_basic_string(std::string const& content)
 		{
 			 data_.reset( new content_data(content) );
 		}
-		
+
 		fixed_basic_string(CharT const* str)
 		{
 			if( str[0] != CharT(0) )
 			{
 				data_.reset( new content_data(str) );
-			}		
+			}
 		}
-		
+
 		fixed_basic_string(const fixed_basic_string& rhs)
 			: data_(rhs.data_)
 		{
@@ -137,7 +137,7 @@ namespace eflib{
 		{
 			return data_->content[index];
 		}
-		
+
 		fixed_basic_string& operator = (string_type const& str)
 		{
 			data_.reset( new content_data(str) );
@@ -202,7 +202,7 @@ namespace eflib{
 				data_.reset( new content_data() );
 				return data_->content;
 			}
-			
+
 			if( data_.use_count() == 1 )
 			{
 				data_->hash_code = 0;
@@ -220,13 +220,13 @@ namespace eflib{
 		{
 			size_t hc = data_->hash_code;
 			if(hc == 0)
-			{	
+			{
 				hc = boost::hash_value(data_->content);
 				if( !data_->content.empty() )
 				{
 					assert(hc != 0);
 				}
-				data_->hash_code = hc; 
+				data_->hash_code = hc;
 			}
 			return hc;
 		}
@@ -268,8 +268,8 @@ namespace eflib{
 			data_->hash_code = 0;
 		}
 
-		template <typename CharT> friend bool operator == (
-			fixed_basic_string<CharT> const& lhs, fixed_basic_string<CharT> const& rhs
+		template <typename CharU> friend bool operator == (
+			fixed_basic_string<CharU> const& lhs, fixed_basic_string<CharU> const& rhs
 			);
 	};
 
