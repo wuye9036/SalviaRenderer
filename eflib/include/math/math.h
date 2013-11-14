@@ -5,7 +5,7 @@
 
 #include <eflib/include/platform/typedefs.h>
 #include <eflib/include/platform/constant.h>
-#include <eflib/include/platform/native_intrin.h>
+#include <eflib/include/platform/intrin.h>
 #include <eflib/include/diagnostics/assert.h>
 #include <eflib/include/math/vector.h>
 #include <eflib/include/math/matrix.h>

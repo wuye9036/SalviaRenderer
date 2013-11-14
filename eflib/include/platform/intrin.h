@@ -17,27 +17,27 @@
 #endif
 
 #if defined(EFLIB_MSVC)
-uint8_t _bit_scan_reverse(uint32_t* index, uint32_t mask)
+inline uint8_t _bit_scan_reverse(uint32_t* index, uint32_t mask)
 {
 	return _BitScanReverse( (unsigned long*)index, mask );
 }
 
-uint8_t _bit_scan_forward(uint32_t* index, uint32_t mask)
+inline uint8_t _bit_scan_forward(uint32_t* index, uint32_t mask)
 {
 	return _BitScanForward( (unsigned long*)index, mask );
 }
 
-uint8_t _bit_scan_reverse(uint32_t* index, uint64_t mask)
+inline uint8_t _bit_scan_reverse(uint32_t* index, uint64_t mask)
 {
 	return _BitScanReverse64( (unsigned long*)index, mask );
 }
 
-uint8_t _bit_scan_forward(uint32_t* index, uint64_t mask)
+inline uint8_t _bit_scan_forward(uint32_t* index, uint64_t mask)
 {
 	return _BitScanForward64( (unsigned long*)index, mask );
 }
 #elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
-uint8_t _bit_scan_reverse(uint32_t* index, uint32_t mask)
+inline uint8_t _bit_scan_reverse(uint32_t* index, uint32_t mask)
 {
 	if(mask == 0)
 	{
@@ -47,7 +47,7 @@ uint8_t _bit_scan_reverse(uint32_t* index, uint32_t mask)
 	return 1;
 }
 
-uint8_t _bit_scan_forward(uint32_t* index, uint32_t mask)
+inline uint8_t _bit_scan_forward(uint32_t* index, uint32_t mask)
 {
 	if(mask == 0)
 	{
@@ -57,7 +57,7 @@ uint8_t _bit_scan_forward(uint32_t* index, uint32_t mask)
 	return 1;
 }
 
-uint8_t _bit_scan_reverse(uint32_t* index, uint64_t mask)
+inline uint8_t _bit_scan_reverse(uint32_t* index, uint64_t mask)
 {
 	if(mask == 0)
 	{
@@ -67,7 +67,7 @@ uint8_t _bit_scan_reverse(uint32_t* index, uint64_t mask)
 	return 1;
 }
 
-uint8_t _bit_scan_forward(uint32_t* index, uint64_t mask)
+inline uint8_t _bit_scan_forward(uint32_t* index, uint64_t mask)
 {
 	if(mask == 0)
 	{

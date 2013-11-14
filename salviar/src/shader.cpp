@@ -3,7 +3,7 @@
 #include <salviar/include/shader.h>
 #include <salviar/include/renderer.h>
 
-#include <eflib/include/platform/ext_intrinsics.h>
+#include <eflib/include/platform/intrin.h>
 
 BEGIN_NS_SALVIAR();
 

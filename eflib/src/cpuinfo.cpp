@@ -1,6 +1,6 @@
 #include <eflib/include/platform/config.h>
 #include <eflib/include/platform/cpuinfo.h>
-#include <eflib/include/platform/native_intrin.h>
+#include <eflib/include/platform/intrin.h>
 #include <eflib/include/platform/typedefs.h>
 
 #ifdef EFLIB_WINDOWS

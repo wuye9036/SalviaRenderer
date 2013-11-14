@@ -9,7 +9,7 @@
 #include <eflib/include/platform/cpuinfo.h>
 #include <eflib/include/diagnostics/profiler.h>
 #include <eflib/include/memory/allocator.h>
-#include <eflib/include/platform/native_intrin.h>
+#include <eflib/include/platform/intrin.h>
 
 #include <eflib/include/platform/boost_begin.h>
 #include <boost/math/special_functions/fpclassify.hpp>

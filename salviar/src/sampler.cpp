@@ -3,7 +3,7 @@
 #include <salviar/include/surface.h>
 #include <salviar/include/texture.h>
 
-#include <eflib/include/platform/ext_intrinsics.h>
+#include <eflib/include/platform/intrin.h>
 
 BEGIN_NS_SALVIAR();
 
