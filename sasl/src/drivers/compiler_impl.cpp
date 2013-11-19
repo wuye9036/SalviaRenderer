@@ -407,23 +407,15 @@ void sasl_countbits_u32(uint32_t* ret, uint32_t v)
 
 void sasl_firstbithigh_u32(uint32_t* ret, uint32_t v)
 {
-#if defined(EFLIB_MSVC)
-	unsigned long index;
-#else
 	uint32_t index;
-#endif
-	_BitScanReverse(&index, v);
+	_xmm_bsr(&index, v);
 	*ret = static_cast<uint32_t>(31-index);
 }
 
 void sasl_firstbitlow_u32(uint32_t* ret, uint32_t v)
 {
-#if defined(EFLIB_MSVC)
-	unsigned long index;
-#else
 	uint32_t index;
-#endif
-	_BitScanForward(&index, v);
+	_xmm_bsf(&index, v);
 	*ret = static_cast<uint32_t>(index);
 }
 

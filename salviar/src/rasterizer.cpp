@@ -585,10 +585,10 @@ void rasterizer::draw_partial_tile(
 				// centroid interpolate
 				vec2 sp_centroid(0, 0);
 				int n = 0;
-				
+
 				uint32_t		i_sample;
 				uint32_t const mask_backup = mask;
-				while (_bit_scan_forward(&i_sample, mask))
+				while (_xmm_bsf(&i_sample, mask))
 				{
 					const vec2& sp = samples_pattern_[i_sample];
 					sp_centroid.x() += sp.x() - 0.5f;
@@ -724,7 +724,7 @@ void rasterizer::subdivide_tile(
 
 		int rejections = ~_mm_movemask_ps(mask_rej) & 0xF;
 		uint32_t t;
-		while (_bit_scan_forward(&t, (uint32_t)rejections))
+		while (_xmm_bsf(&t, (uint32_t)rejections))
 		{
 			assert(t < 4);
 
@@ -1480,7 +1480,7 @@ void rasterizer::draw_package(
 			else
 			{
 				uint32_t i_sample;
-				while (_bit_scan_forward(&i_sample, mask))
+				while (_xmm_bsf(&i_sample, mask))
 				{
 					frame_buffer_->render_sample(
 						cpp_bs, x_coord, y_coord, i_sample,
@@ -1556,7 +1556,7 @@ void rasterizer::draw_full_package(
 			else
 			{
 				uint32_t i_sample;
-				while (_bit_scan_forward(&i_sample, mask))
+				while (_xmm_bsf(&i_sample, mask))
 				{
 					frame_buffer_->render_sample(
 						cpp_bs, x_coord, y_coord, i_sample,
