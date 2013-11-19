@@ -29,12 +29,36 @@ inline uint8_t _bit_scan_forward(uint32_t* index, uint32_t mask)
 
 inline uint8_t _bit_scan_reverse(uint32_t* index, uint64_t mask)
 {
+#if defined(EFLIB_CPU_X64)
 	return _BitScanReverse64( (unsigned long*)index, mask );
+#else
+	if (mask == 0) return 0;
+	uint64_t indicator = 1;
+	*index = 0;
+	while(indicator < mask)
+	{
+		++(*index);
+		indicator <<= 1;
+	}
+	return 1;
+#endif
 }
 
 inline uint8_t _bit_scan_forward(uint32_t* index, uint64_t mask)
 {
+#if defined(EFLIB_CPU_X64)
 	return _BitScanForward64( (unsigned long*)index, mask );
+#else
+	if (mask == 0) return 0;
+	uint64_t indicator = 1;
+	*index = 0;
+	while( (indicator & mask) == 0)
+	{
+		++(*index);
+		indicator <<= 1;
+	}
+	return 1;
+#endif
 }
 #elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
 inline uint8_t _bit_scan_reverse(uint32_t* index, uint32_t mask)
