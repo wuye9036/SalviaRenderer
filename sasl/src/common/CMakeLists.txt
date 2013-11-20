@@ -13,3 +13,5 @@ set( SOURCE_FILES diag_chat.cpp diag_item.cpp token.cpp diag_formatter.cpp)
 
 SASL_CONFIG_LIBRARY( sasl_common )
 
+target_link_libraries(sasl_common EFLIB)
+

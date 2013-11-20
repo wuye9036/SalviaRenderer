@@ -1,29 +1,20 @@
 #include <eflib/include/string/string.h>
 #include <eflib/include/string/ustring.h>
 
+#include <eflib/include/platform/boost_begin.h>
+#include <boost/locale.hpp>
+#include <eflib/include/platform/boost_end.h>
+
 #include <cstdlib>
 #include <vector>
+#include <locale>
 
 using namespace std;
 
 namespace eflib{
 	bool to_ansi_string(string& outstr, const wstring& instr){
-		// Preserve space for converting.
-#ifdef EFLIB_MSVC
-		size_t required;
-		wcstombs_s(&required, NULL, 0, instr.c_str(), 0);
-#else
-		size_t required = std::wcstombs(NULL, instr.c_str(), 0);
-#endif
-		outstr.resize(required);
-
-		// Convert.
-#ifdef EFLIB_MSVC
-		size_t l;
-		wcstombs_s(&l, &(outstr[0]), outstr.size(), instr.c_str(), required-1);
-#else
-		size_t l = std::wcstombs(&(outstr[0]), instr.c_str(), required-1);
-#endif
+		boost::locale::generator gen;
+		outstr = boost::locale::conv::from_utf(instr, gen(""));
 		return true;
 	}
 
@@ -44,24 +35,8 @@ namespace eflib{
 
 	bool to_wide_string(wstring& outstr, const string& instr)
 	{
-		// Preserve space for converting.
-#ifdef EFLIB_MSVC
-		size_t required;
-		mbstowcs_s(&required, NULL, 0, instr.c_str(), 0);
-#else
-		size_t required = mbstowcs(NULL, instr.c_str(), 0);
-#endif
-		outstr.resize(required);
-
-		// Convert.
-#ifdef EFLIB_MSVC
-		size_t len;
-		mbstowcs_s(&len, &(outstr[0]), required, instr.c_str(), required-1);
-#else
-		size_t len = mbstowcs(&(outstr[0]), instr.c_str(), required-1);
-#endif
-
-		outstr.resize(required-1);
+		boost::locale::generator gen;
+		outstr = boost::locale::conv::to_utf<wchar_t>(instr, gen(""));
 		return true;
 	}
 

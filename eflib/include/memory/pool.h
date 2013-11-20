@@ -2,6 +2,7 @@
 #define EFLIB_MEMORY_POOL_H
 
 #include <eflib/include/platform/typedefs.h>
+#include <eflib/include/memory/allocator.h>
 
 #include <eflib/include/platform/disable_warnings.h>
 #include <boost/array.hpp>
@@ -120,23 +121,39 @@ namespace eflib{
 		class preserved_pool
 		{
 		public:
-			preserved_pool(): data_mem(NULL), sz(0), cap(0)
+			preserved_pool(): data_mem(NULL), sz(0), cap(0), align(0)
 			{}
 
 			~preserved_pool()
 			{
-				::free(data_mem);
+				if(align == 1)
+				{
+					::free(data_mem);
+				}
+				else
+				{
+					aligned_free(data_mem);
+				}
 			}
 
-			void reserve(size_t capacity)
+			void reserve(size_t capacity, size_t alignment)
 			{
-				if(data_mem == NULL)
+				if(data_mem == nullptr)
 				{
-					data_mem = static_cast<T*>(::malloc(sizeof(T)*capacity));
+					align = (alignment == 0 ? 1 : alignment);
+					if(align == 1)
+					{
+						data_mem = static_cast<T*>(::malloc(sizeof(T)*capacity));
+					}
+					else
+					{
+						data_mem = static_cast<T*>( aligned_malloc(sizeof(T) * capacity, alignment) );
+					}
+
 					sz = 0;
 					cap = capacity;
 				}
-				assert(capacity <= cap);
+				assert((capacity <= cap) && (align % alignment == 0));
 			}
 
 			T* alloc()
@@ -167,6 +184,7 @@ namespace eflib{
 			preserved_pool(preserved_pool const&);
 			preserved_pool& operator = (preserved_pool const&);
 
+			size_t	align;
 			size_t	sz;
 			size_t	cap;
 			T*		data_mem;

@@ -1,7 +1,7 @@
 #ifndef EFLIB_PLATFORM_CONFIG_H
 #define EFLIB_PLATFORM_CONFIG_H
 
-#if defined(DEBUG) | defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
 #	define EFLIB_DEBUG
 #endif
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eflib/include/platform/config.h>
 #include <eflib/include/utility/unref_declarator.h>
 
 #include <eflib/include/platform/boost_begin.h>

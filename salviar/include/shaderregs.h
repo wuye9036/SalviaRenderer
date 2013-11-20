@@ -47,6 +47,26 @@ private:
 class EFLIB_ALIGN(16) vs_output
 {
 public:
+#if defined(EFLIB_MINGW) || defined(EFLIB_GCC)
+	/*
+	BUG FIX:
+		Type A is aligned by A bytes, new A is A bytes aligned too, but address of new A[] is not aligned.
+		It is known bug but not fixed yet.
+		operator new/delete will ensure the address is aligned.
+	*/
+	static void* operator new[] (size_t size)
+	{
+		if(size == 0) { size = 1; }
+		return eflib::aligned_malloc(size, 16);
+	}
+
+	static void operator delete[](void* p)
+	{
+		if(p == nullptr) return;
+		return eflib::aligned_free(p);
+	}
+#endif // defined
+
 	enum attrib_modifier_type
 	{
 		am_linear = 1UL << 0,

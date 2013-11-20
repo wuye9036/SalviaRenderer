@@ -79,7 +79,7 @@ private:
     bool                            has_centroid_;
     uint32_t                        prim_count_;
 
-    
+
     async_object*                   pipeline_stat_;
     async_object*                   internal_stat_;
     accumulate_fn<uint64_t>::type   acc_ia_primitives_;
@@ -108,7 +108,7 @@ private:
 	shader_reflection const*		vs_reflection_;
 
 	std::vector<cpp_pixel_shader*>	threaded_cpp_ps_;
-	std::vector<pixel_shader_unit*>	threaded_psu_;					
+	std::vector<pixel_shader_unit*>	threaded_psu_;
 
 	void threaded_dispatch_primitive(thread_context const*);
 	void threaded_rasterize_multi_prim(thread_context const*);
@@ -131,8 +131,8 @@ private:
 		const float* rej_to_acc, const float* evalue, const float* step_x, const float* step_y);
 
 	void draw_full_package(
-        uint32_t top, uint32_t left, 
-		vs_output* pixels,
+        uint32_t top, uint32_t left,
+		vs_output* pixels, uint16_t packed_pixel_mask,
         drawing_shader_context const* shaders,
 		drawing_triangle_context const* triangle_ctx
         );

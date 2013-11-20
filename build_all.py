@@ -80,7 +80,7 @@ def make_boost(proj):
 	if systems.current() == systems.win32:
 		# Add configs
 		libs = ["atomic", "chrono", "thread", "system", "filesystem", "date_time", "test", "wave", "program_options",
-				"serialization"]
+				"serialization", "locale"]
 		address_model = 'address-model=%d' % proj.arch().bits()
 		options = "--build-dir=./ link=shared runtime-link=shared threading=multi stage"
 		toolset = proj.toolset()

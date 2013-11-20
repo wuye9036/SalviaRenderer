@@ -2,9 +2,11 @@
 #define EFLIB_STRING_STRING_H
 
 #include <eflib/include/platform/config.h>
+
 #include <string>
 
-namespace std{
+namespace std
+{
 	#ifdef EFLIB_UNICODE
 		typedef wchar_t _tchar;
 		typedef std::wstring _tstring;

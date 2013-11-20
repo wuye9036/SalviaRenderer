@@ -4,6 +4,7 @@
 #include <eflib/include/platform/config.h>
 
 #include <iostream>
+#include <cstdlib>
 
 #ifdef _DEBUG
 

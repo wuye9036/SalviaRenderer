@@ -24,13 +24,19 @@ namespace modules
 		vector<external_function_desc> const&
 		) = NULL;
 	static void (*create_host_func)(host_ptr& out) = NULL;
-	
+
 	static shared_ptr<dynamic_lib> host_lib;
-	
+
 	static void load_function()
 	{
 		assert(!host_lib);
-		std::string dll_name = "sasl_host";
+		std::string dll_name;
+#if defined(EFLIB_MSVC)
+		dll_name = "sasl_host";
+#elif defined(EFLIB_MINGW) || defined(EFLIB_GCC)
+		dll_name = "libsasl_host";
+#endif // defined
+
 #ifdef EFLIB_DEBUG
 		dll_name += "_d";
 #endif
@@ -43,7 +49,7 @@ namespace modules
 		assert(compile_func);
 		assert(create_host_func);
 	}
-	
+
 	void host::compile(
 		shader_object_ptr& obj, shader_log_ptr& log,
 		string const& code, shader_profile const& prof,
@@ -58,7 +64,7 @@ namespace modules
 		if(!compile_func) return;
 		compile_func(obj, log, code, prof, funcs);
 	}
-	
+
 	void host::compile_from_file(
 		shader_object_ptr& obj, shader_log_ptr& log,
 		string const& file_name, shader_profile const& prof,
@@ -77,18 +83,18 @@ namespace modules
 	host_ptr host::create_host()
 	{
 		host_ptr ret;
-		
+
 		if(!create_host_func)
 		{
 			load_function();
 		}
 		assert(create_host_func);
-		
+
 		if (create_host_func)
 		{
 			create_host_func(ret);
 		}
-		
+
 		return ret;
 	}
 }

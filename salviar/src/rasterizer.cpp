@@ -343,7 +343,6 @@ void rasterizer::draw_full_tile(
             }
 
             // Do interpolation
-
             for(int quad = 0; quad < 4; ++quad)
             {
                 // all 2x2 is masked.
@@ -368,11 +367,11 @@ void rasterizer::draw_full_tile(
 		        }
 	        }
 
-            draw_full_package(top, left, unprojed, shaders, triangle_ctx);
+            draw_full_package(top, left, unprojed, packed_pixel_mask, shaders, triangle_ctx);
 		}
 	}
 
-    triangle_ctx->pixel_stat->ps_invocations += ( (tile_bottom - tile_top) * (tile_right - tile_left) );
+    triangle_ctx->pixel_stat->ps_invocations += ((tile_bottom - tile_top) * (tile_right - tile_left));
 }
 
 void rasterizer::draw_partial_tile(
@@ -1497,7 +1496,7 @@ void rasterizer::draw_package(
 
 void rasterizer::draw_full_package(
 	uint32_t top, uint32_t left,
-	vs_output* pixels,
+	vs_output* pixels, uint16_t packed_pixel_mask,
     drawing_shader_context const* shaders,
 	drawing_triangle_context const* triangle_ctx)
 {
@@ -1516,24 +1515,38 @@ void rasterizer::draw_full_package(
 		pso[i].coverage = 0xFFFFFFFF;
 	}
 
-	if( psu )
+	if(psu)
 	{
 		psu->update(pixels, vs_reflection_);
 		psu->execute(pso);
 	}
 
-	for ( int iy = 0; iy < 4; ++iy ){
-		for( int ix = 0; ix < 4; ++ix ){
+	int drawing_quad_count = 0;
+	for(int quad = 0; quad < 4; ++quad)
+	{
+		// all 2x2 is masked.
+		if((packed_pixel_mask & (0xF << (quad << 2))) == 0)
+		{
+			continue;
+		}
 
-			int const px_index = ix + iy * 4;
+		// Write quad
+        for(int i_pixel = 0; i_pixel < 4; ++i_pixel)
+        {
+            int ix = ((quad & 1) << 1) | (i_pixel & 1);
+            int iy = (quad & 2) | ((i_pixel & 2) >> 1);
 
-			if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) )
+			int px_index = iy * 4 + ix;
+
+            if( !psu && !cpp_ps->execute(pixels[px_index], pso[px_index]) )
 			{
 				continue;
 			}
+			++drawing_quad_count;
 
 			const int x_coord = left + ix;
 			const int y_coord = top + iy;
+
 			if (1 == target_sample_count_)
 			{
 				frame_buffer_->render_sample(
@@ -1565,10 +1578,10 @@ void rasterizer::draw_full_package(
 					mask &= mask - 1;
 				}
 			}
-		}
+        }
 	}
 
-    triangle_ctx->pixel_stat->backend_input_pixels += PACKAGE_ELEMENT_COUNT;
+    triangle_ctx->pixel_stat->backend_input_pixels += (drawing_quad_count * 4);
 }
 
 void rasterizer::viewport_and_project_transform(vs_output** vertexes, size_t num_verts)
