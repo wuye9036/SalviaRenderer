@@ -110,14 +110,14 @@ def detect_cmake(candidate_cmake_executable):
 def detect_gcc(gcc_dir, min_major_ver, min_minor_ver):
 	gcc_executables = []
 	if gcc_dir is not None:
-		gcc_executables += os.path.join(gcc_dir, "g++")
+		gcc_executables.append( os.path.join(gcc_dir, "g++") )
 	if systems.current() == systems.win32:
 		try:
 			gcc_paths = subprocess.check_output(["where", "g++"])
-			gcc_executables = gcc_paths.split("\n")
+			gcc_executables += gcc_paths.split("\n")
 		except:
 			pass
-		os.path.join("C:/MinGW/bin", "g++")
+		gcc_executables.append(os.path.join("C:/MinGW/bin", "g++"))
 
 	for gcc_executable in gcc_executables:
 		try:

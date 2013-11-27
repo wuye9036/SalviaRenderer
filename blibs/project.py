@@ -64,7 +64,7 @@ class project:
 		self.directx_ = \
 			(self.toolset_.short_compiler_name() == "msvc") and\
 			( "DXSDK_DIR" in env or self.use_win_kit_ )
-		self.dx_dlls_dir_ = None
+		self.dx_dlls_dirs_ = None
 
 		if self.use_win_kit_:
 			wdk_dirs = windows_kit_dirs()

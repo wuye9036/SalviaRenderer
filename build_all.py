@@ -228,8 +228,8 @@ def install_prebuild_binaries(proj):
 	if proj.toolset().short_compiler_name() == "mgw":
 		mgw_dir = proj.customized_toolset_dir()
 		libs = ["stdc++", "sjlj"]
-		for f in mgw_dir:
-			if os.path.splitext("f")[1] != dynamic_lib_ext:
+		for f in os.listdir(mgw_dir):
+			if os.path.splitext(f)[1] != dynamic_lib_ext:
 				continue
 			for lib_name in libs:
 				if lib_name in f:
@@ -242,7 +242,7 @@ def install_prebuild_binaries(proj):
 		name, ext = os.path.splitext(f)
 		if ext != dynamic_lib_ext:
 			continue
-		src = os.path.join(proj.boost_lib_dir(), f)
+		src = os.path.join(freeimage_dist_dir, f)
 		copy_newer(src, proj.salvia_bin())
 
 	# Copy d3dcompile_xx.dll
